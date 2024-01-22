@@ -100,7 +100,6 @@ INTENT=ld
 GOT_SOME=0
 NEED_OUTPUT=
 RELOCATABLE=0
-OUTPUT_IS_TEXT=0
 for x; do
   if [ $FIRST -eq 1 ]; then
     set --
@@ -128,7 +127,9 @@ for x; do
     continue
   elif [ x"$x" = x"-r" ]; then
     RELOCATABLE=1
-  elif [ x"$x" = x"-E" ]; then
+  elif [ x"$x" = x"-E" ] ||
+       [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ]; then
     INTENT=cpp
   elif [ x"$x" = x"-o" ]; then
     NEED_OUTPUT=1
@@ -176,12 +177,6 @@ for x; do
     GOT_SOME=1
   elif [ x"$x" = x"-dumpmachine" ]; then
     GOT_SOME=1
-  elif [ x"$x" = x"-M" ] ||
-       [ x"$x" = x"-MM" ] ||
-       [ x"$x" = x"-MD" ] ||
-       [ x"$x" = x"-MMD" ] ||
-       [ x"$x" = x"-E" ]; then
-    OUTPUT_IS_TEXT=1
   fi
   set -- "$@" "$x"
 done
@@ -223,10 +218,7 @@ log_command "$@"
 
 if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
   if [ $INTENT = cc ] || [ $INTENT = ld ]; then
-    if [ $OUTPUT_IS_TEXT -eq 0 ]; then
-      "$BIN/fixupobj" "$OUTPUT"
-    fi
-    exit
+    "$BIN/fixupobj" "$OUTPUT" || exit
   fi
   if [ $INTENT = ld ]; then
     if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||

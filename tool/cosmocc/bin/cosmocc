@@ -88,7 +88,9 @@ APELINKFLAGS=
 FLAGS_X86_64=
 FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
-OUTPUT_IS_TEXT=0
+MDFLAG=0
+NEED_DEPENDENCY_OUTPUT=
+DEPENDENCY_OUTPUT=
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
@@ -96,6 +98,10 @@ for x; do
   if [ -n "$NEED_OUTPUT" ]; then
     NEED_OUTPUT=
     OUTPUT=$x
+    continue
+  elif [ -n "$NEED_DEPENDENCY_OUTPUT" ]; then
+    NEED_DEPENDENCY_OUTPUT=
+    DEPENDENCY_OUTPUT=$x
     continue
   elif [ -n "$NEED_JOIN" ]; then
     x="${NEED_JOIN}${x}"
@@ -124,11 +130,19 @@ for x; do
   elif [ x"$x" != x"${x#-o}" ]; then  # startswith(x, "-o")
     OUTPUT=${x#-o}
     continue
+  elif [ x"$x" = x"-MF" ]; then
+    NEED_DEPENDENCY_OUTPUT=1
+    continue
+  elif [ x"$x" != x"${x#-MF}" ]; then  # startswith(x, "-MF")
+    DEPENDENCY_OUTPUT=${x#-MF}
+    continue
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
     INTENT=cc
-  elif [ x"$x" = x"-E" ]; then
+  elif [ x"$x" = x"-E" ] ||
+       [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ]; then
     INTENT=cpp
   elif [ x"$x" = x"-s" ]; then
     APELINKFLAGS="$APELINKFLAGS -s"
@@ -205,12 +219,9 @@ for x; do
   elif [ x"$x" = x"--param" ]; then
     NEED_EQUAL=$x
     continue
-  elif [ x"$x" = x"-M" ] ||
-       [ x"$x" = x"-MM" ] ||
-       [ x"$x" = x"-MD" ] ||
-       [ x"$x" = x"-MMD" ] ||
-       [ x"$x" = x"-E" ]; then
-    OUTPUT_IS_TEXT=1
+  elif [ x"$x" = x"-MD" ] ||
+       [ x"$x" = x"-MMD" ]; then
+    MDFLAG=1
   fi
   FLAGS="$FLAGS $x"
   ARGS="$ARGS $x"
@@ -311,6 +322,21 @@ mangle_object_path() {
   mangled_path="${outdir}.$arch/$outbas"
 }
 
+get_dependency_outputs() {
+  if [ $MDFLAG -eq 1 ]; then
+    if [ -n "$DEPENDENCY_OUTPUT" ]; then
+      DEPENDENCY_FLAGS_x86_64="-MF $DEPENDENCY_OUTPUT"
+      mangle_object_path "$DEPENDENCY_OUTPUT" aarch64
+      DEPENDENCY_FLAGS_AARCH64="-MF $mangled_path"
+    else
+      base="$1.d"
+      DEPENDENCY_FLAGS_x86_64="-MF $base"
+      mangle_object_path "$base" aarch64
+      DEPENDENCY_FLAGS_AARCH64="-MF $mangled_path"
+    fi
+  fi
+}
+
 mktemper() {
   "$BIN/mktemper" \
     "$TMPDIR/fatcosmocc.XXXXXXXXXXXXX$1"
@@ -328,19 +354,16 @@ build_object() {
         $CFLAGS_X86_64 \
         $CPPFLAGS_X86_64 \
         "$@" \
+        $DEPENDENCY_FLAGS_x86_64 \
         $FLAGS_X86_64 \
         $PRECIOUS
     log_command "$@"
     "$@" || exit
-    if [ $OUTPUT_IS_TEXT -eq 0 ]; then
-      set -- \
-          "$BIN/fixupobj" \
-          "$OUTPUT_X86_64"
-      log_command "$@"
-      exec "$@"
-    else
-      exit
-    fi
+    set -- \
+        "$BIN/fixupobj" \
+        "$OUTPUT_X86_64"
+    log_command "$@"
+    exec "$@"
   ) &
   pid1=$!
   (
@@ -352,19 +375,16 @@ build_object() {
         $CFLAGS_AARCH64 \
         $CPPFLAGS_AARCH64 \
         "$@" \
+        $DEPENDENCY_FLAGS_AARCH64 \
         $FLAGS_AARCH64 \
         $PRECIOUS
     log_command "$@"
     "$@" || exit
-    if [ $OUTPUT_IS_TEXT -eq 0 ]; then
-      set -- \
-          "$BIN/fixupobj" \
-          "$OUTPUT_AARCH64"
-      log_command "$@"
-      exec "$@"
-    else
-      exit
-    fi
+    set -- \
+        "$BIN/fixupobj" \
+        "$OUTPUT_AARCH64"
+    log_command "$@"
+    exec "$@"
   ) 2>"$out2" &
   pid2=$!
   if ! wait $pid1; then
@@ -411,6 +431,7 @@ for x in $ARGS; do
         OUTPUT_X86_64=$OUTPUT
         mangle_object_path "$OUTPUT" aarch64
         OUTPUT_AARCH64="$mangled_path"
+        get_dependency_outputs "$OUTPUT"
         build_object $FLAGS -c "$x"
       else
         # e.g. `cc -c dir/foo.c` builds foo.o
@@ -418,6 +439,7 @@ for x in $ARGS; do
         OUTPUT_X86_64="${o%.*}.o"
         mangle_object_path "${o%.*}.o" aarch64
         OUTPUT_AARCH64="$mangled_path"
+        get_dependency_outputs "${o%.*}"
         build_object $FLAGS -c "$x"
       fi
     else
@@ -425,10 +447,15 @@ for x in $ARGS; do
       if [ -z "$OUTPUT" ]; then
         OUTPUT=a.out
       fi
+      if [ -z "$DEPENDENCY_OUTPUT" ]; then
+        o=${x##*/}
+        DEPENDENCY_OUTPUT="a-${o%.*}.d"
+      fi
       # e.g. `cc -o foo foo.c` should *not* build foo.o
       OUTPUT_X86_64=$(mktemper .o) || Exit
       OUTPUT_AARCH64=$(mktemper .o) || Exit
       TEMP_FILES="${TEMP_FILES} ${OUTPUT_X86_64} ${OUTPUT_AARCH64}"
+      get_dependency_outputs
       build_object $FLAGS -c "$x"
       LDARGS_X86_64="${LDARGS_X86_64} ${OUTPUT_X86_64}"
       LDARGS_AARCH64="${LDARGS_AARCH64} ${OUTPUT_AARCH64}"
