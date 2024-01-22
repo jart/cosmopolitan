@@ -175,6 +175,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     errno = e;
     return EAGAIN;
   }
+  dll_init(&pt->list);
   pt->pt_start = start_routine;
   pt->pt_arg = arg;
 
@@ -289,7 +290,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // add thread to global list
   // we add it to the beginning since zombies go at the end
-  dll_init(&pt->list);
   _pthread_lock();
   dll_make_first(&_pthread_list, &pt->list);
   _pthread_unlock();
