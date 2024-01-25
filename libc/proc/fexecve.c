@@ -86,84 +86,56 @@ void cleanup_unlink(const char **path) {
 }
 #define defer_unlink defer(cleanup_unlink)
 
-static bool ape_to_elf_execve(void *ape, const size_t apesize) {
-  if (!_weaken(fork) || !_weaken(exit) || !IsLinux()) {
-    return false;
-  }
-  defer_unlink const char *tempfile = "/dev/shm/ape_to_elf_execve_XXXXXX";
-  defer_close int fd = open(tempfile, O_RDWR | O_CREAT | O_EXCL, S_IRWXU);
-  if (fd == -1) {
-    tempfile = NULL;
-    return false;
-  }
-  if ((sys_ftruncate(fd, apesize, apesize) == -1) || (write(fd, ape, apesize) != apesize)) {
-    return false;
-  }
-  close(fd);
-  fd = -1;
-  int child = _weaken(fork)();
-  if (child == -1) {
-    return false;
-  } else if (child == 0) {
-    __sys_execve(_PATH_BSHELL, (char *const[]){_PATH_BSHELL, (char*)tempfile, "--assimilate", NULL}, (char *const[]){NULL});
-    _weaken(exit)(1);
-  }
-  int wstatus;
-  if ((child != waitpid(child, &wstatus, 0)) || !WIFEXITED(wstatus) || (WEXITSTATUS(wstatus) != 0)) {
-    return false;
-  }
-  return ((fd = open(tempfile, O_RDWR, S_IRWXU)) != -1) && (pread(fd, ape, apesize, 0) == apesize);
-}
-
 #undef defer_unlink
 #undef defer_close
 #undef defer
 
-typedef enum {
-  PTF_NUM = 1 << 0,
-  PTF_NUM2 = 1 << 1,
-  PTF_NUM3 = 1 << 2,
-  PTF_ANY = 1 << 3
-} PTF_PARSE;
-
-static bool ape_to_elf(void *ape, const size_t apesize) {
-  return ape_to_elf_execve(ape, apesize);
-  static const char printftok[] = "printf '";
-  static const size_t printftoklen = sizeof(printftok) - 1;
-  const char *tok = memmem(ape, apesize, printftok, printftoklen);
-  if (tok) {
-    tok += printftoklen;
-    uint8_t *dest = ape;
-    PTF_PARSE state = PTF_ANY;
-    uint8_t value = 0;
-    for (; tok < (const char *)(dest + apesize); tok++) {
-      if ((state & (PTF_NUM | PTF_NUM2 | PTF_NUM3)) &&
-          (*tok >= '0' && *tok <= '7')) {
-        value = (value << 3) | (*tok - '0');
-        state <<= 1;
-        if (state & PTF_ANY) {
-          *dest++ = value;
-        }
-      } else if (state & PTF_NUM) {
-        break;
-      } else {
-        if (state & (PTF_NUM2 | PTF_NUM3)) {
-          *dest++ = value;
-        }
-        if (*tok == '\\') {
-          state = PTF_NUM;
-          value = 0;
-        } else if (*tok == '\'') {
-          return true;
-        } else {
-          *dest++ = *tok;
-          state = PTF_ANY;
-        }
-      }
-    }
+static inline int isZipFile(const void *data, size_t data_size) {
+  if (!_weaken(GetZipEocd)) {
+    return enosys();
   }
-  errno = ENOEXEC;
-  return false;
+  int ziperror;
+  return _weaken(GetZipEocd)(data, data_size, &ziperror) != NULL;
+}
+
+static int isFdAZipFile(const int fd) {
+  if (!_weaken(mmap) || !_weaken(munmap) || !_weaken(GetZipEocd) || __vforked) {
+    return enosys();
+  }
+
+  struct stat st;
+  if (fstat(fd, &st) == -1) {
+    return -1;
+  }
+  void *space = _weaken(mmap)(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  if (space == MAP_FAILED) {
+    return -1;
+  }
+  int rc = isZipFile(space, st.st_size);
+  if(_weaken(munmap)(space, st.st_size) == -1) {
+    return -1;
+  }
+  return rc;
+}
+
+typedef enum {
+  FEXEF_ZIP = 1 << 0,
+  FEXEF_APE = 1 << 1
+} FEXEF;
+
+static inline int getFexeFlags(const void *data, size_t data_size) {
+  if (!_weaken(GetZipEocd)) {
+    return enosys();
+  }
+  int rc = isZipFile(data, data_size);
+  if (rc == -1) {
+    return -1;
+  }
+  int flags = rc << 0;
+  if (data_size >= 8) {
+    flags |= (int)IsApeMagic(data) << 1;
+  }
+  return flags;
 }
 
 /**
@@ -171,7 +143,7 @@ static bool ape_to_elf(void *ape, const size_t apesize) {
  *
  * This does an inplace conversion of APE to ELF when detected!!!!
  */
-static int fd_to_mem_fd(const int infd, char *path) {
+static int fd_to_mem_fd(const int infd, FEXEF *flags) {
   if ((!IsLinux() && !IsFreebsd()) || !_weaken(mmap) || !_weaken(munmap)) {
     return enosys();
   }
@@ -199,28 +171,12 @@ static int fd_to_mem_fd(const int infd, char *path) {
     readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
     if (success) {
-      int ziperror;
-      //if ((st.st_size > 8) && IsApeMagic(space)) {
-      //  success = ape_to_elf(space, st.st_size);
-      //}
-      // we need to preserve the fd over exec if there's zipos
-      if (success && _weaken(GetZipEocd) && _weaken(GetZipEocd)(space, st.st_size, &ziperror)) {
-        int flags = fcntl(fd, F_GETFD);
-        if ((success = (flags != -1) &&
-                       (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1))) {
-          const int newfd = fcntl(fd, F_DUPFD, 9001);
-          if (newfd != -1) {
-            close(fd);
-            fd = newfd;
-          }
-        }
-      }
+      int fexe_flags = getFexeFlags(space, st.st_size);
+      success = fexe_flags != -1;
+      *flags = fexe_flags;
     }
     const int e = errno;
     if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
-      if (path) {
-        FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
-      }
       unassert(readRc == st.st_size);
       return fd;
     } else if (!success) {
@@ -233,37 +189,13 @@ static int fd_to_mem_fd(const int infd, char *path) {
   return -1;
 }
 
-static int isZipFd(const int fd) {
-  if (!_weaken(mmap) || !_weaken(munmap) || !_weaken(GetZipEocd)) {
-    return enosys();
-  }
-  if (__vforked) {
-    return 0;
-  }
-  struct stat st;
-  if (fstat(fd, &st) == -1) {
-    return -1;
-  }
-  void *space = _weaken(mmap)(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-  if (space == MAP_FAILED) {
-    STRACE("map failed");
-    return -1;
-  }
-  int ziperror;
-  int rc = _weaken(GetZipEocd)(space, st.st_size, &ziperror) != NULL;
-  if(_weaken(munmap)(space, st.st_size) == -1) {
-    return -1;
-  }
-  return rc;
-}
-
 /**
  * Executes binary executable at file descriptor.
  *
  * This is only supported on Linux and FreeBSD. APE binaries are
- * supported. Zipos is supported. Zipos fds or FD_CLOEXEC APE fds or
- * fds that fail fexecve with ENOEXEC are copied to a new memfd (with
- * in-memory APE to ELF conversion) and fexecve is (re)attempted.
+ * supported. Zipos is supported. Zipos fds are copied to a new memfd. Zip files
+ * and APE files are F_DUPFD to a high number with FD_CLOEXEC turned off. APE
+ * files are ran with execve.
  *
  * @param fd is opened executable and current file position is ignored
  * @return doesn't return on success, otherwise -1 w/ errno
@@ -279,59 +211,71 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
-    int savedErr = 0;
+    int newfd = fd;
     do {
       if (!IsLinux() && !IsFreebsd()) {
         rc = enosys();
         break;
       }
-      int newfd = fd;
+      FEXEF fflags;
       if (__isfdkind(fd, kFdZip)) {
         BLOCK_SIGNALS;
         BLOCK_CANCELATION;
         strace_enabled(-1);
-        newfd = fd_to_mem_fd(fd, NULL);
+        newfd = fd_to_mem_fd(fd, &fflags);
         strace_enabled(+1);
         ALLOW_CANCELATION;
         ALLOW_SIGNALS;
         if (newfd == -1) {
           break;
         }
+      } else {
+        if (!__vforked) {
+          int isFdAZipFileRc;
+          BLOCK_SIGNALS;
+          BLOCK_CANCELATION;
+          strace_enabled(-1);
+          isFdAZipFileRc = isFdAZipFile(newfd);
+          strace_enabled(+1);
+          ALLOW_CANCELATION;
+          ALLOW_SIGNALS;
+          if (isFdAZipFileRc == -1) {
+            break;
+          }
+          fflags = isFdAZipFileRc << 0;
+        }
+        bool isAPE;
+        BLOCK_SIGNALS;
+        BLOCK_CANCELATION;
+        isAPE = IsAPEFd(newfd);
+        ALLOW_CANCELATION;
+        ALLOW_SIGNALS;
+        fflags |= (int)isAPE << 1;
       }
-      int isZipFdRc;
-      BLOCK_SIGNALS;
-      BLOCK_CANCELATION;
-      //strace_enabled(-1);
-      isZipFdRc = isZipFd(newfd);
-      strace_enabled(+1);
-      ALLOW_CANCELATION;
-      ALLOW_SIGNALS;
-      if (isZipFdRc == -1) {
-        //savedErr = EACCES;
-        //STRACE("EACCESS 1");
-        //break;
-        isZipFdRc = 0;
-      }
-      bool isAPE;
-      BLOCK_SIGNALS;
-      BLOCK_CANCELATION;
-      isAPE = IsAPEFd(newfd);
-      ALLOW_CANCELATION;
-      ALLOW_SIGNALS;
-      if ((isZipFdRc == 1) || isAPE) {
-        int flags = fcntl(newfd, F_GETFD);
-        if ((flags == -1) || (fcntl(newfd, F_SETFD, flags & (~FD_CLOEXEC)) == -1)) {
-          savedErr = EACCES;
-          STRACE("EACCESS 2");
+      if (fflags) {
+        int flags;
+        BLOCK_SIGNALS;
+        BLOCK_CANCELATION;
+        flags = fcntl(newfd, F_GETFD);
+        if (flags != -1) {
+          flags = fcntl(newfd, F_SETFD, flags & (~FD_CLOEXEC));
+        }
+        ALLOW_CANCELATION;
+        ALLOW_SIGNALS;
+        if (flags == -1) {
           break;
         }
+        BLOCK_SIGNALS;
+        BLOCK_CANCELATION;
         const int highfd = fcntl(newfd, F_DUPFD, 9001);
         if (highfd != -1) {
           close(newfd);
           newfd = highfd;
         }
+        ALLOW_CANCELATION;
+        ALLOW_SIGNALS;
       }
-      if (isZipFdRc == 1) {
+      if (fflags & FEXEF_ZIP) {
         char *path = alloca(PATH_MAX);
         FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), newfd);
         size_t numenvs;
@@ -342,27 +286,24 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         envs[numenvs + 1] = NULL;
         envp = envs;
       }
-      if (isAPE) {
+      if (fflags & FEXEF_APE) {
         char path[14 + 12];
-        FormatInt32(stpcpy(path, "/proc/self/fd/"), newfd);
-        rc = sys_execve(path, argv, envp);
-        savedErr = errno;
-        BLOCK_SIGNALS;
-        BLOCK_CANCELATION;
-        strace_enabled(-1);
-        if (newfd != fd) {
-          close(newfd);
-        }
-        strace_enabled(+1);
-        ALLOW_CANCELATION;
-        ALLOW_SIGNALS;
+        FormatInt32(stpcpy(path, "/dev/fd/"), newfd);
+        sys_execve(path, argv, envp);
         break;
       }
       fexecve_impl(newfd, argv, envp);
-      savedErr = errno;
     } while (0);
-    if (savedErr) {
-      errno = savedErr;
+    if (newfd != fd) {
+      int keepErrno = errno;
+      BLOCK_SIGNALS;
+      BLOCK_CANCELATION;
+      strace_enabled(-1);
+      close(newfd);
+      strace_enabled(+1);
+      ALLOW_CANCELATION;
+      ALLOW_SIGNALS;
+      errno = keepErrno;
     }
     rc = -1;
   }

@@ -32,7 +32,7 @@ bool IsApeLoadable(char buf[8]) {
 /**
  * Returns true if executable image is an APE
  */
-bool IsApeMagic(char buf[8]) {
+bool IsApeMagic(const char buf[8]) {
   return READ64LE(buf) == READ64LE("MZqFpD='") ||
          READ64LE(buf) == READ64LE("JTqFpD='");
 }
