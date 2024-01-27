@@ -59,9 +59,7 @@ for x in .ape \
          .ape-1.7 \
          .ape-1.8 \
          .ape-1.9 \
-         .ape-1.10 \
-         .ape-blink-0.9.2 \
-         .ape-blink-1.0.0; do
+         .ape-1.10; do
   rm -f \
      ~/$x \
      /tmp/$x \

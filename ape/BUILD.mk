@@ -173,8 +173,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
 		libc/sysv/consts/prot.h		\
-		ape/blink-linux-aarch64.gz	\
-		ape/blink-xnu-aarch64.gz	\
 		o/$(MODE)/ape/ape.elf
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
@@ -202,9 +200,7 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/runtime/e820.internal.h	\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
-		libc/sysv/consts/prot.h		\
-		ape/blink-linux-aarch64.gz	\
-		ape/blink-xnu-aarch64.gz
+		libc/sysv/consts/prot.h
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
 		$(OBJECTIFY.S)			\
@@ -262,10 +258,6 @@ endif
 # these assembly files are safe to build on aarch64
 o/$(MODE)/ape/ape.o: ape/ape.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-
-o/$(MODE)/ape/ape.o:				\
-		ape/blink-linux-aarch64.gz	\
-		ape/blink-xnu-aarch64.gz
 
 o/$(MODE)/ape/ape.lds:				\
 		ape/ape.lds			\
