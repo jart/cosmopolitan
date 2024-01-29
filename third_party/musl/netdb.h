@@ -99,6 +99,9 @@ struct protoent *getprotoent (void);
 struct protoent *getprotobyname (const char *);
 struct protoent *getprotobynumber (int);
 
+#define NI_MAXHOST 255
+#define NI_MAXSERV 32
+
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || defined(_POSIX_SOURCE) \
  || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE+0 < 200809L) \
  || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE+0 < 700)
@@ -130,8 +133,6 @@ int getservbyname_r(const char *, const char *, struct servent *, char *, size_t
 #define EAI_ALLDONE    -103
 #define EAI_INTR       -104
 #define EAI_IDN_ENCODE -105
-#define NI_MAXHOST 255
-#define NI_MAXSERV 32
 #endif
 
 COSMOPOLITAN_C_END_

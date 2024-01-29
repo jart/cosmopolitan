@@ -14,3 +14,4 @@ LOCAL CHANGES
   - Ran third_party/openmp/generate.sh
   - Removed usage of syscall() function
   - Turned off quad floating point support (why does openmp have it?)
+  - Remove bloat for checking if multiple OpenMP libraries are linked

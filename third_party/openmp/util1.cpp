@@ -2054,6 +2054,7 @@ void __kmp_initialize_system_tick() {
 }
 #endif
 
+#ifndef __COSMOPOLITAN__
 /* Determine whether the given address is mapped into the current address
    space. */
 
@@ -2062,12 +2063,7 @@ int __kmp_is_address_mapped(void *addr) {
   int found = 0;
   int rc;
 
-#if defined(__COSMOPOLITAN__)
-
-  (void)rc;
-  found = kisdangerous(addr);
-
-#elif KMP_OS_LINUX || KMP_OS_HURD
+#if KMP_OS_LINUX || KMP_OS_HURD
 
   /* On GNUish OSes, read the /proc/<pid>/maps pseudo-file to get all the
      address ranges mapped into the address space. */
@@ -2236,6 +2232,7 @@ int __kmp_is_address_mapped(void *addr) {
   return found;
 
 } // __kmp_is_address_mapped
+#endif // __COSMOPOLITAN__
 
 #ifdef USE_LOAD_BALANCE
 

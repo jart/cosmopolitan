@@ -68,7 +68,7 @@ void matmul(long m, long n, long k, const T *A, long sa, const T *B, long sb,
 }
 
 template <long BM, long BN, typename T>
-void sgemmk(long k, const T *A, long sa, const T *B, long sb, T *C, long sc) {
+void gemmk(long k, const T *A, long sa, const T *B, long sb, T *C, long sc) {
   T S[BM][BN] = {0};
   for (long l = 0; l < k; ++l) {
     for (long i = 0; i < BM; ++i) {
@@ -86,12 +86,12 @@ void sgemmk(long k, const T *A, long sa, const T *B, long sb, T *C, long sc) {
 
 // (m×k)ᵀ * k×n → m×n
 template <long BM, long BN, typename T>
-void sgemm(long m, long n, long k, const T *A, long sa, const T *B, long sb,
-           T *C, long sc) {
+void gemm(long m, long n, long k, const T *A, long sa, const T *B, long sb,
+          T *C, long sc) {
 #pragma omp parallel for collapse(2)
   for (long i = 0; i < m; i += BM) {
     for (long j = 0; j < n; j += BN) {
-      sgemmk<BM, BN>(k, A + i, sa, B + j, sb, C + sc * i + j, sc);
+      gemmk<BM, BN>(k, A + i, sa, B + j, sb, C + sc * i + j, sc);
     }
   }
 }
@@ -221,7 +221,7 @@ void check_transposed_blocking_gemm_is_ok(void) {
   bench(matmul(m, n, k, A, k, B, n, C, n));
   float *At = new float[k * m];
   bench(transpose(m, k, A, k, At, m));
-  bench((sgemm<8, 4>(m, n, k, At, m, B, n, D, n)));
+  bench((gemm<8, 4>(m, n, k, At, m, B, n, D, n)));
   check(FLAWLESS, m, n, C, n, D, n);
   delete[] At;
   delete[] D;

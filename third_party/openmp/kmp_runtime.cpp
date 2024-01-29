@@ -6699,10 +6699,12 @@ void __kmp_internal_end_thread(int gtid_req) {
 // -----------------------------------------------------------------------------
 // Library registration stuff.
 
+#ifndef __COSMOPOLITAN__
 static long __kmp_registration_flag = 0;
 // Random value used to indicate library initialization.
 static char *__kmp_registration_str = NULL;
 // Value to be saved in env var __KMP_REGISTERED_LIB_<pid>.
+#endif // __COSMOPOLITAN__
 
 static inline char *__kmp_reg_status_name() {
 /* On RHEL 3u5 if linked statically, getpid() returns different values in
@@ -6726,6 +6728,7 @@ char *temp_reg_status_file_name = nullptr;
 #endif
 
 void __kmp_register_library_startup(void) {
+#ifndef __COSMOPOLITAN__
 
   char *name = __kmp_reg_status_name(); // Name of the environment variable.
   int done = 0;
@@ -6937,9 +6940,11 @@ void __kmp_register_library_startup(void) {
   } // while
   KMP_INTERNAL_FREE((void *)name);
 
+#endif // __COSMOPOLITAN__
 } // func __kmp_register_library_startup
 
 void __kmp_unregister_library(void) {
+#ifndef __COSMOPOLITAN__
 
   char *name = __kmp_reg_status_name();
   char *value = NULL;
@@ -7006,6 +7011,7 @@ void __kmp_unregister_library(void) {
   __kmp_registration_flag = 0;
   __kmp_registration_str = NULL;
 
+#endif // __COSMOPOLITAN__
 } // __kmp_unregister_library
 
 // End of Library registration stuff.

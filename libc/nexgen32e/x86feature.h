@@ -28,7 +28,9 @@
 #define X86_ARCH_CAPABILITIES    7H,        EDX, 29, 0
 #define X86_AVX                  1H,        ECX, 28, _X86_CC_AVX              /* sandybridge c. 2012 */
 #define X86_AVX2                 7H,        EBX,  5, _X86_CC_AVX2             /* haswell c. 2013 */
-#define X86_AVXVNNI              7H,        EAX,  4, _X86_CC_AVXVNNI
+#define X86_AVXVNNI              7H_1H,     EAX,  4, _X86_CC_AVXVNNI
+#define X86_AVXVNNIINT8          7H_1H,     EDX,  4, _X86_CC_AVXVNNIINT8
+#define X86_AVXVNNIINT16         7H_1H,     EDX, 10, _X86_CC_AVXVNNIINT16
 #define X86_AVX512BW             7H,        EBX, 30, 0
 #define X86_AVX512CD             7H,        EBX, 28, 0
 #define X86_AVX512DQ             7H,        EBX, 17, 0

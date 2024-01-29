@@ -37,7 +37,8 @@ THIRD_PARTY_LIBUNWIND_A_SRCS_CC =					\
 THIRD_PARTY_LIBUNWIND_A_SRCS_C =					\
 	third_party/libunwind/Unwind-sjlj.c				\
 	third_party/libunwind/UnwindLevel1-gcc-ext.c			\
-	third_party/libunwind/UnwindLevel1.c
+	third_party/libunwind/UnwindLevel1.c				\
+	third_party/libunwind/gcc_personality_v0.c
 
 THIRD_PARTY_LIBUNWIND_A_SRCS =						\
 	$(THIRD_PARTY_LIBUNWIND_A_SRCS_C)				\
@@ -70,6 +71,7 @@ $(THIRD_PARTY_LIBUNWIND_A).pkg:						\
 
 $(THIRD_PARTY_LIBUNWIND_A_OBJS): private				\
 		CFLAGS +=						\
+			-fexceptions					\
 			-fno-sanitize=all				\
 			-ffunction-sections				\
 			-fdata-sections					\
@@ -77,6 +79,7 @@ $(THIRD_PARTY_LIBUNWIND_A_OBJS): private				\
 
 $(THIRD_PARTY_LIBUNWIND_A_OBJS): private				\
 		CXXFLAGS +=						\
+			-fexceptions					\
 			-fno-sanitize=all				\
 			-ffunction-sections				\
 			-fdata-sections					\

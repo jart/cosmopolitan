@@ -649,8 +649,9 @@ void abort(void) wontreturn;
 #pragma GCC diagnostic ignored "-Wformat-extra-args"     /* todo: patch gcc */
 #pragma GCC diagnostic ignored "-Wunused-function"       /* contradicts dce */
 #pragma GCC diagnostic ignored "-Wunused-const-variable" /* sooo ridiculous */
+#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
 #ifndef __cplusplus
-#pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bulls */
+#pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bullsh */
 #endif
 
 #ifndef __STRICT_ANSI__

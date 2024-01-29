@@ -23,7 +23,6 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -126,7 +125,7 @@ TEST(writev, empty_stillPerformsIoOperation) {
   ASSERT_NE(-1, (fd = open("file", O_RDONLY)));
   errno = 0;
   EXPECT_SYS(EBADF, -1, writev(fd, iov, ARRAYLEN(iov)));
-  if (!(IsAarch64() && IsQemu())) {
+  if (!(IsAarch64() && IsQemuUser())) {
     EXPECT_EQ(-1, writev(fd, NULL, 0));
   }
   EXPECT_NE(-1, close(fd));

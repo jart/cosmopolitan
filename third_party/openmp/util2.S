@@ -11,6 +11,14 @@
 ////===----------------------------------------------------------------------===//
 //
 
+#ifdef __COSMOPOLITAN__
+	.macro	no.comm name:req size:req align:req
+	.globl	\name
+\name:	.align	\align
+	.byte	\size
+	.endm
+#endif
+
 // -----------------------------------------------------------------------
 // macros
 // -----------------------------------------------------------------------
@@ -180,11 +188,11 @@ KMP_PREFIX_UNDERSCORE(\proc):
 
 .macro COMMON name, size, align_power
 #if KMP_OS_DARWIN
-	.comm \name, \size
+	no.comm \name, \size
 #elif KMP_OS_WINDOWS
-	.comm \name, \size, \align_power
+	no.comm \name, \size, \align_power
 #else // !KMP_OS_DARWIN && !KMP_OS_WINDOWS
-	.comm \name, \size, (1<<(\align_power))
+	no.comm \name, \size, (1<<(\align_power))
 #endif
 .endm
 
@@ -202,14 +210,14 @@ KMP_PREFIX_UNDERSCORE(\proc):
 # if KMP_ARCH_X86
 #  if KMP_OS_DARWIN
         .data
-        .comm .gomp_critical_user_,32
+        no.comm .gomp_critical_user_,32
         .data
         .globl ___kmp_unnamed_critical_addr
 ___kmp_unnamed_critical_addr:
         .long .gomp_critical_user_
 #  else /* Linux* OS */
         .data
-        .comm .gomp_critical_user_,32,8
+        no.comm .gomp_critical_user_,32,8
         .data
 	ALIGN 4
         .global __kmp_unnamed_critical_addr
@@ -223,21 +231,14 @@ __kmp_unnamed_critical_addr:
 # if KMP_ARCH_X86_64
 #  if KMP_OS_DARWIN
         .data
-        .comm .gomp_critical_user_,32
+        no.comm .gomp_critical_user_,32
         .data
         .globl ___kmp_unnamed_critical_addr
 ___kmp_unnamed_critical_addr:
         .quad .gomp_critical_user_
 #  else /* Linux* OS */
         .data
-#ifdef __COSMOPOLITAN__
-	.globl	.gomp_critical_user_
-".gomp_critical_user_":
-	.align	8
-	.byte	32
-#else
-        .comm .gomp_critical_user_,32,8
-#endif
+        no.comm .gomp_critical_user_,32,8
         .data
 	ALIGN 8
         .global __kmp_unnamed_critical_addr

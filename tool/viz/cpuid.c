@@ -175,6 +175,8 @@ int main(int argc, char *argv[]) {
              : "");
 
   CANIUSE(AVXVNNI);
+  CANIUSE(AVXVNNIINT8);
+  CANIUSE(AVXVNNIINT16);
   CANIUSE(AVX512BW);
   CANIUSE(AVX512CD);
   CANIUSE(AVX512DQ);

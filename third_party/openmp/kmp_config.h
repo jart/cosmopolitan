@@ -18,12 +18,14 @@
 #include "libc/stdio/syscall.h"
 #endif
 
+#if IsModeDbg()
+#define KMP_DEBUG 1
+#endif
+
 #define KMP_USE_FUTEX 0
 #define KMP_FTN_ENTRIES KMP_FTN_PLAIN
 #define syscall {{openmp_shall_not_use_syscall}}
 
-#define DEBUG_BUILD IsModeDbg()
-#define RELWITHDEBINFO_BUILD (IsOptimized() && !IsTiny())
 #define LIBOMP_USE_ITT_NOTIFY 0
 #define USE_ITT_NOTIFY LIBOMP_USE_ITT_NOTIFY
 #if ! LIBOMP_USE_ITT_NOTIFY
@@ -152,9 +154,6 @@
 #if STUBS_LIBRARY
 # define KMP_STUB 1
 #endif
-#if DEBUG_BUILD || RELWITHDEBINFO_BUILD
-# define KMP_DEBUG 1
-#endif
 
 #if KMP_OS_WINDOWS
 # define KMP_WIN_CDECL
@@ -166,10 +165,6 @@
 // use shared memory with dynamic library (except Android, where shm_*
 // functions don't exist).
 #if KMP_OS_UNIX && KMP_DYNAMIC_LIB && !__ANDROID__
-#define KMP_USE_SHM
-#endif
-
-#ifdef __COSMOPOLITAN__
 #define KMP_USE_SHM
 #endif
 

@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/nt/createfile.h"

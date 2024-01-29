@@ -37,6 +37,18 @@
 #define _X86_CC_AVXVNNI 0
 #endif
 
+#ifdef __AVXVNNIINT8__
+#define _X86_CC_AVXVNNIINT8 1
+#else
+#define _X86_CC_AVXVNNIINT8 0
+#endif
+
+#ifdef __AVXVNNIINT16__
+#define _X86_CC_AVXVNNIINT16 1
+#else
+#define _X86_CC_AVXVNNIINT16 0
+#endif
+
 #ifdef __AVX512F__
 #define _X86_CC_AVX512F 1
 #else
