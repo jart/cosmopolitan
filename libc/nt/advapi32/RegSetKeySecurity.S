@@ -2,9 +2,9 @@
 .imp	advapi32,__imp_RegSetKeySecurity,RegSetKeySecurity
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RegSetKeySecurity:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

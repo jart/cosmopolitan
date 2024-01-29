@@ -2,9 +2,9 @@
 .imp	gdi32,__imp_SetTextColor,SetTextColor
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 SetTextColor:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

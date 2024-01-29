@@ -2,9 +2,9 @@
 .imp	ws2_32,__imp_FreeAddrInfoW,FreeAddrInfoW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 FreeAddrInfo:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

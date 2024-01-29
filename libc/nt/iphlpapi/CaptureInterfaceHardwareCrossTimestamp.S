@@ -2,9 +2,9 @@
 .imp	iphlpapi,__imp_CaptureInterfaceHardwareCrossTimestamp,CaptureInterfaceHardwareCrossTimestamp
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 CaptureInterfaceHardwareCrossTimestamp:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

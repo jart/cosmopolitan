@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_SetConsoleWindowInfo,SetConsoleWindowInfo
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 SetConsoleWindowInfo:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

@@ -2,9 +2,9 @@
 .imp	advapi32,__imp_RegEnumKeyExW,RegEnumKeyExW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RegEnumKeyEx:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

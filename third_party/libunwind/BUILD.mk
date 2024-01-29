@@ -69,7 +69,15 @@ $(THIRD_PARTY_LIBUNWIND_A).pkg:						\
 		$(foreach x,$(THIRD_PARTY_LIBUNWIND_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_LIBUNWIND_A_OBJS): private				\
+		CFLAGS +=						\
+			-fno-sanitize=all				\
+			-ffunction-sections				\
+			-fdata-sections					\
+			-D_LIBUNWIND_USE_DLADDR=0
+
+$(THIRD_PARTY_LIBUNWIND_A_OBJS): private				\
 		CXXFLAGS +=						\
+			-fno-sanitize=all				\
 			-ffunction-sections				\
 			-fdata-sections					\
 			-D_LIBUNWIND_USE_DLADDR=0

@@ -105,7 +105,7 @@ __Unwind_SjLj_SetTopOfFunctionStack(struct _Unwind_FunctionContext *fc) {
 
 
 /// Called at start of each function that catches exceptions
-_LIBUNWIND_EXPORT void dontasan
+_LIBUNWIND_EXPORT void
 _Unwind_SjLj_Register(struct _Unwind_FunctionContext *fc) {
   fc->prev = __Unwind_SjLj_GetTopOfFunctionStack();
   __Unwind_SjLj_SetTopOfFunctionStack(fc);
@@ -113,7 +113,7 @@ _Unwind_SjLj_Register(struct _Unwind_FunctionContext *fc) {
 
 
 /// Called at end of each function that catches exceptions
-_LIBUNWIND_EXPORT void dontasan
+_LIBUNWIND_EXPORT void
 _Unwind_SjLj_Unregister(struct _Unwind_FunctionContext *fc) {
   __Unwind_SjLj_SetTopOfFunctionStack(fc->prev);
 }
@@ -426,7 +426,6 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetGR(struct _Unwind_Context *context,
 
 
 /// Called by personality handler during phase 2 to alter register values.
-dontasan
 _LIBUNWIND_EXPORT void _Unwind_SetGR(struct _Unwind_Context *context, int index,
                                      uintptr_t new_value) {
   _LIBUNWIND_TRACE_API("_Unwind_SetGR(context=%p, reg=%d, value=0x%" PRIuPTR

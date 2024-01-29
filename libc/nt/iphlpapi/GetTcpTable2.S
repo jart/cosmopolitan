@@ -2,9 +2,9 @@
 .imp	iphlpapi,__imp_GetTcpTable2,GetTcpTable2
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetTcpTable2:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

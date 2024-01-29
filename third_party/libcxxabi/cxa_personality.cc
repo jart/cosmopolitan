@@ -202,7 +202,7 @@ enum
 /// @link http://dwarfstd.org/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
-static dontasan
+static
 uintptr_t
 readULEB128(const uint8_t** data)
 {
@@ -225,7 +225,7 @@ readULEB128(const uint8_t** data)
 /// @link http://dwarfstd.org/Dwarf4.pdf @unlink
 /// @param data reference variable holding memory pointer to decode from
 /// @returns decoded value
-static dontasan
+static
 intptr_t
 readSLEB128(const uint8_t** data)
 {
@@ -542,7 +542,7 @@ struct scan_results
 
 }  // unnamed namespace
 
-static dontasan
+static
 void
 set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
               const scan_results& results)
@@ -581,7 +581,6 @@ set_registers(_Unwind_Exception* unwind_exception, _Unwind_Context* context,
         _UA_CLEANUP_PHASE && !_UA_HANDLER_FRAME
 */
 
-dontasan
 static void scan_eh_tab(scan_results &results, _Unwind_Action actions,
                         bool native_exception,
                         _Unwind_Exception *unwind_exception,
@@ -912,7 +911,6 @@ static _Unwind_Reason_Code __gxx_personality_imp
 #else
 _LIBCXXABI_FUNC_VIS _Unwind_Reason_Code
 #ifdef __USING_SJLJ_EXCEPTIONS__
-dontasan
 __gxx_personality_sj0
 #elif defined(__MVS__)
 __zos_cxx_personality_v2

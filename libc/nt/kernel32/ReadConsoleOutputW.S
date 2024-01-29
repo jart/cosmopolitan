@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_ReadConsoleOutputW,ReadConsoleOutputW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 ReadConsoleOutput:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

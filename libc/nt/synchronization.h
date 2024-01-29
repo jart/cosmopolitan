@@ -4,6 +4,7 @@
 #include "libc/nt/struct/criticalsection.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/linkedlist.h"
+#include "libc/nt/struct/processornumber.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/systemtime.h"
 #include "libc/nt/thunk/msabi.h"
@@ -114,6 +115,8 @@ bool32 QueryPerformanceCounter(uint64_t *lpPerformanceCount);
 bool32 GetSystemTimeAdjustment(uint32_t *lpTimeAdjustment,
                                uint32_t *lpTimeIncrement,
                                bool32 *lpTimeAdjustmentDisabled);
+
+void GetCurrentProcessorNumberEx(struct NtProcessorNumber *out_ProcNumber);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/synchronization.inc"

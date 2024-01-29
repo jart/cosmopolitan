@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_SetConsoleScreenBufferInfoEx,SetConsoleScreenBufferInfoEx
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 SetConsoleScreenBufferInfoEx:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

@@ -2,9 +2,9 @@
 .ntimp	RtlDestroyProcessParameters,RtlDestroyProcessParameters
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RtlDestroyProcessParameters:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

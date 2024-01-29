@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_ClearCommBreak,ClearCommBreak
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 ClearCommBreak:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

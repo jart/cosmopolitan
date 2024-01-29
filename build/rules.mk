@@ -40,6 +40,9 @@ o/$(MODE)/%.h: %.c
 o/$(MODE)/%.o: %.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 
+o/$(MODE)/%.o: %.cpp
+	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
+
 o/$(MODE)/%.lds: %.lds
 	@$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 

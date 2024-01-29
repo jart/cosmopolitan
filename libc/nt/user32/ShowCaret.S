@@ -2,9 +2,9 @@
 .imp	user32,__imp_ShowCaret,ShowCaret
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 ShowCaret:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

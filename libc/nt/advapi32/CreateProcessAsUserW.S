@@ -2,9 +2,9 @@
 .imp	advapi32,__imp_CreateProcessAsUserW,CreateProcessAsUserW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 CreateProcessAsUser:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

@@ -2,9 +2,9 @@
 .imp	iphlpapi,__imp_GetAdaptersInfo,GetAdaptersInfo
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetAdaptersInfo:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

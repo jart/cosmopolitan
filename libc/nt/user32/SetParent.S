@@ -2,9 +2,9 @@
 .imp	user32,__imp_SetParent,SetParent
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 SetParent:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
