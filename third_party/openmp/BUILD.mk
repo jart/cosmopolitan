@@ -58,10 +58,11 @@ $(THIRD_PARTY_OPENMP_A_OBJS): private				\
 			-ffunction-sections			\
 			-Wno-maybe-uninitialized		\
 			-Wno-stringop-truncation		\
-			-Wno-class-memaccess			\
 			-Wno-unused-but-set-variable		\
+			-Wno-class-memaccess			\
+			-fno-strict-aliasing			\
 			-Wno-frame-address			\
-			-fno-strict-aliasing
+			-Wno-sign-compare
 
 o/$(MODE)/third_party/openmp/util1.o: private COPTS += -fportcosmo
 

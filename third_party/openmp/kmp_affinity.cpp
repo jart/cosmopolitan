@@ -1547,7 +1547,6 @@ kmp_affin_mask_t *__kmp_affinity_get_offline_cpus() {
   kmp_affin_mask_t *offline;
   KMP_CPU_ALLOC(offline);
   KMP_CPU_ZERO(offline);
-#if KMP_OS_LINUX
   int n, begin_cpu, end_cpu;
   kmp_safe_raii_file_t offline_file;
   auto skip_ws = [](FILE *f) {
@@ -1595,7 +1594,6 @@ kmp_affin_mask_t *__kmp_affinity_get_offline_cpus() {
       KMP_CPU_SET(cpu, offline);
     }
   }
-#endif
   return offline;
 }
 

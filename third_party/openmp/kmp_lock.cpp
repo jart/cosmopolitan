@@ -22,6 +22,9 @@
 #include "kmp_wrapper_getpid.h"
 
 #if KMP_USE_FUTEX
+#ifdef __COSMOPOLITAN__
+#include "third_party/nsync/futex.internal.h"
+#else
 #include <sys/syscall.h>
 #include <unistd.h>
 // We should really include <futex.h>, but that causes compatibility problems on
@@ -34,6 +37,7 @@
 #endif
 #ifndef FUTEX_WAKE
 #define FUTEX_WAKE 1
+#endif
 #endif
 #endif
 
@@ -375,8 +379,12 @@ __kmp_acquire_futex_lock_timed_template(kmp_futex_lock_t *lck, kmp_int32 gtid) {
          lck, gtid, poll_val));
 
     long rc;
+#ifdef __COSMOPOLITAN__
+    if ((rc = nsync_futex_wait_(&(lck->lk.poll), poll_val, false, NULL)) != 0) {
+#else
     if ((rc = syscall(__NR_futex, &(lck->lk.poll), FUTEX_WAIT, poll_val, NULL,
                       NULL, 0)) != 0) {
+#endif
       KA_TRACE(1000, ("__kmp_acquire_futex_lock: lck:%p, T#%d futex_wait(0x%x) "
                       "failed (rc=%ld errno=%d)\n",
                       lck, gtid, poll_val, rc, errno));
@@ -453,8 +461,12 @@ int __kmp_release_futex_lock(kmp_futex_lock_t *lck, kmp_int32 gtid) {
     KA_TRACE(1000,
              ("__kmp_release_futex_lock: lck:%p, T#%d futex_wake 1 thread\n",
               lck, gtid));
+#ifdef __COSMOPOLITAN__
+    nsync_futex_wake_(&(lck->lk.poll), 1, false);
+#else
     syscall(__NR_futex, &(lck->lk.poll), FUTEX_WAKE, KMP_LOCK_BUSY(1, futex),
             NULL, NULL, 0);
+#endif
   }
 
   KMP_MB(); /* Flush all pending memory write invalidates.  */
