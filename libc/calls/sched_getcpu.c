@@ -19,15 +19,19 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/struct/processornumber.h"
 #include "libc/nt/synchronization.h"
+#include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/errfuns.h"
 
 int sys_getcpu(unsigned *opt_cpu, unsigned *opt_node, void *tcache);
 
 /**
  * Returns ID of CPU on which thread is currently scheduled.
+ * @return cpu number on success, or -1 w/ errno
  */
 int sched_getcpu(void) {
   if (X86_HAVE(RDTSCP)) {
@@ -38,6 +42,19 @@ int sched_getcpu(void) {
     struct NtProcessorNumber pn;
     GetCurrentProcessorNumberEx(&pn);
     return 64 * pn.Group + pn.Number;
+  } else if (IsXnuSilicon()) {
+    if (__syslib->__version >= 9) {
+      size_t cpu;
+      errno_t err = __syslib->__pthread_cpu_number_np(&cpu);
+      if (!err) {
+        return cpu;
+      } else {
+        errno = err;
+        return -1;
+      }
+    } else {
+      return enosys();
+    }
   } else {
     unsigned cpu = 0;
     int rc = sys_getcpu(&cpu, 0, 0);

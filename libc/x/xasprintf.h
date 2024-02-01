@@ -3,9 +3,9 @@
 COSMOPOLITAN_C_START_
 
 char *xasprintf(const char *, ...) paramsnonnull((1))
-    returnspointerwithnoaliases dontthrow nocallback __wur returnsnonnull;
+    returnspointerwithnoaliases dontthrow dontcallback __wur returnsnonnull;
 char *xvasprintf(const char *, va_list) paramsnonnull()
-    returnspointerwithnoaliases dontthrow nocallback __wur returnsnonnull;
+    returnspointerwithnoaliases dontthrow dontcallback __wur returnsnonnull;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_X_XASPRINTF_H_ */

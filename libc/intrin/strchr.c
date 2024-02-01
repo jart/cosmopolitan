@@ -94,7 +94,7 @@ static inline const char *strchr_x64(const char *p, uint64_t c) {
  * @asyncsignalsafe
  * @vforksafe
  */
-char *strchr(const char *s, int c) {
+__vex char *strchr(const char *s, int c) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const char *r;
   if (X86_HAVE(SSE)) {

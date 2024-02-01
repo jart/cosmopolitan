@@ -88,7 +88,7 @@ o/$(MODE)/libc/str/windowstimetotimespec.o: private		\
 			-O2
 
 $(LIBC_STR_A_OBJS): private					\
-		COPTS +=					\
+		CFLAGS +=					\
 			-fno-sanitize=all			\
 			-Wframe-larger-than=4096		\
 			-Walloca-larger-than=4096

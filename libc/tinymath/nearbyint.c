@@ -29,7 +29,7 @@ double nearbyint(double x) {
   asm("fidbra\t%0,0,%1,4" : "=f"(x) : "f"(x));
 #else
 #ifdef FE_INEXACT
-  // #pragma STDC FENV_ACCESS ON
+  /* #pragma STDC FENV_ACCESS ON */
   int e;
   e = fetestexcept(FE_INEXACT);
 #endif

@@ -75,7 +75,9 @@ textstartup void InitializeMetalFile(void) {
     memcpy(copied_base, (void *)(BANE + IMAGE_BASE_PHYSICAL), size);
     __ape_com_base = copied_base;
     __ape_com_size = size;
-    KINFOF("%s @ %p,+%#zx", APE_COM_NAME, copied_base, size);
+    // TODO(tkchia): LIBC_CALLS doesn't depend on LIBC_VGA so references
+    //               to its functions need to be weak
+    // KINFOF("%s @ %p,+%#zx", APE_COM_NAME, copied_base, size);
   }
 }
 

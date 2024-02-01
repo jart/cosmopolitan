@@ -16,22 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/elf/def.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
+#include "libc/stdio/ftw.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 
-void __clear_cache2(const void *base, const void *end) {
-#ifdef __aarch64__
-  int icache, dcache;
-  const char *p, *pe = end;
-  static unsigned int ctr_el0 = 0;
-  if (!ctr_el0) asm volatile("mrs\t%0,ctr_el0" : "=r"(ctr_el0));
-  icache = 4 << (ctr_el0 & 15);
-  dcache = 4 << ((ctr_el0 >> 16) & 15);
-  for (p = (const char *)((uintptr_t)base & -dcache); p < pe; p += dcache) {
-    asm volatile("dc\tcvau,%0" : : "r"(p) : "memory");
+// finds elf executables
+// usage: findelf PATH...
+
+static int OnFile(const char *fpath, const struct stat *st, int typeflag,
+                  struct FTW *ftwbuf) {
+  if (typeflag == FTW_F && (st->st_mode & 0111)) {
+    Elf64_Ehdr ehdr = {0};
+    int fd = open(fpath, O_RDONLY);
+    if (fd != -1) {
+      pread(fd, &ehdr, sizeof(ehdr), 0);
+      close(fd);
+      if (READ32LE(ehdr.e_ident) == READ32LE(ELFMAG) && ehdr.e_type != ET_REL) {
+        tinyprint(1, fpath, "\n", NULL);
+      }
+    } else {
+      perror(fpath);
+    }
   }
-  asm volatile("dsb\tish" ::: "memory");
-  for (p = (const char *)((uintptr_t)base & -icache); p < pe; p += icache) {
-    asm volatile("ic\tivau,%0" : : "r"(p) : "memory");
+  return 0;
+}
+
+static void HandleArg(const char *path) {
+  if (nftw(path, OnFile, 128, FTW_PHYS | FTW_DEPTH)) {
+    perror(path);
+    exit(1);
   }
-  asm volatile("dsb\tish\nisb" ::: "memory");
-#endif
+}
+
+int main(int argc, char *argv[]) {
+  if (argc <= 1) {
+    HandleArg(".");
+  } else {
+    for (int i = 1; i < argc; ++i) {
+      HandleArg(argv[i]);
+    }
+  }
 }

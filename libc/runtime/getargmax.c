@@ -19,6 +19,8 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/_posix.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/rlimit.h"
 
@@ -29,6 +31,7 @@
  * Returns expensive but more correct version of `ARG_MAX`.
  */
 int __get_arg_max(void) {
+  int res;
   if (IsLinux()) {
     // You might think that just returning a constant 128KiB (ARG_MAX)
     // would make sense, as this guy did:
@@ -57,10 +60,11 @@ int __get_arg_max(void) {
     // does. Right now (2019, Linux 5.3) that amounts to:
     uint64_t stacksz;
     stacksz = __get_rlimit(RLIMIT_STACK);
-    return MAX(MIN(stacksz / 4, 3 * (8 * 1024 * 1024) / 4), _ARG_MAX);
+    res = MAX(MIN(stacksz / 4, 3 * (8 * 1024 * 1024) / 4), _ARG_MAX);
   } else if (IsBsd()) {
-    return __get_sysctl(CTL_KERN, KERN_ARGMAX);
+    res = __get_sysctl(CTL_KERN, KERN_ARGMAX);
   } else {
-    return _ARG_MAX;
+    res = _ARG_MAX;
   }
+  return MAX(res, _POSIX_ARG_MAX);
 }

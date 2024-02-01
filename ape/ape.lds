@@ -282,12 +282,9 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.init.*)))
     KEEP(*(.init))
     KEEP(*(.initepilogue))
-    KEEP(*(.pltprologue))
     *(.plt)
-    KEEP(*(.pltepilogue))
-    KEEP(*(.pltgotprologue))
     *(.plt.got)
-    KEEP(*(.pltgotepilogue))
+    *(.iplt)
     *(.text.startup .text.startup.*)
     *(.text.exit .text.exit.*)
     *(.text.unlikely .text.*_unlikely .text.unlikely.*)
@@ -323,7 +320,7 @@ SECTIONS {
 
 /*BEGIN: Read Only Data */
 
-  .rodata . : {
+  .rodata ALIGN(CONSTANT(COMMONPAGESIZE)) : {
     KEEP(*(.rodata.pytab.0));
     KEEP(*(.rodata.pytab.1));
     KEEP(*(.rodata.pytab.2));
@@ -398,13 +395,12 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     . += . > 0 ? CODE_GRANULE : 0;
 
-    KEEP(*(.gotprologue))
+    . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
+    __got_start = .;
     *(.got)
-    KEEP(*(.gotepilogue))
+    __got_end = .;
 
-    KEEP(*(.gotpltprologue))
     *(.got.plt)
-    KEEP(*(.gotpltepilogue))
 
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     __init_array_start = .;
@@ -430,6 +426,8 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
+    *(.igot.plt)
+
     . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: NT FORK COPYING */
     _edata = .;
@@ -528,6 +526,7 @@ SECTIONS {
 #endif
     *(__patchable_function_entries)
     *(__mcount_loc)
+    *(.rela.dyn)
     *(.discard)
     *(.yoink)
   }

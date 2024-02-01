@@ -226,65 +226,6 @@ const char *const kSafeEnv[] = {
     "SYSTEMROOT",  // needed by socket()
 };
 
-const char *const kGccOnlyFlags[] = {
-    "--nocompress-debug-sections",
-    "--noexecstack",
-    "-Wa,--nocompress-debug-sections",
-    "-Wa,--noexecstack",
-    "-Wa,-msse2avx",
-    "-Wno-unused-but-set-variable",
-    "-Wunsafe-loop-optimizations",
-    "-fbranch-target-load-optimize",
-    "-fcx-limited-range",
-    "-fdelete-dead-exceptions",
-    "-femit-struct-debug-baseonly",
-    "-ffp-int-builtin-inexact",
-    "-finline-functions-called-once",
-    "-fipa-pta",
-    "-fivopts",
-    "-flimit-function-alignment",
-    "-fmerge-constants",
-    "-fmodulo-sched",
-    "-fmodulo-sched-allow-regmoves",
-    "-fno-align-jumps",
-    "-fno-align-labels",
-    "-fno-align-loops",
-    "-fno-cx-limited-range",
-    "-fno-fp-int-builtin-inexact",
-    "-fno-gnu-unique",
-    "-fno-gnu-unique",
-    "-fno-inline-functions-called-once",
-    "-fno-instrument-functions",
-    "-fno-schedule-insns2",
-    "-fno-whole-program",
-    "-fopt-info-vec",
-    "-fopt-info-vec-missed",
-    "-freg-struct-return",
-    "-freschedule-modulo-scheduled-loops",
-    "-frounding-math",
-    "-fsched2-use-superblocks",
-    "-fschedule-insns",
-    "-fschedule-insns2",
-    "-fshrink-wrap",
-    "-fshrink-wrap-separate",
-    "-fsignaling-nans",
-    "-fstack-clash-protection",
-    "-ftracer",
-    "-ftrapv",
-    "-ftree-loop-im",
-    "-ftree-loop-vectorize",
-    "-funsafe-loop-optimizations",
-    "-fversion-loops-for-strides",
-    "-fwhole-program",
-    "-gdescribe-dies",
-    "-gstabs",
-    "-mcall-ms2sysv-xlogues",
-    "-mdispatch-scheduler",
-    "-mfpmath=sse+387",
-    "-mmitigate-rop",
-    "-mno-fentry",
-};
-
 void OnAlrm(int sig) {
   ++gotalrm;
 }
@@ -400,21 +341,38 @@ bool IsSafeEnv(const char *s) {
   return false;
 }
 
-bool IsGccOnlyFlag(const char *s) {
-  int m, l, r, x;
-  l = 0;
-  r = ARRAYLEN(kGccOnlyFlags) - 1;
-  while (l <= r) {
-    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-    x = strcmp(s, kGccOnlyFlags[m]);
-    if (x < 0) {
-      r = m - 1;
-    } else if (x > 0) {
-      l = m + 1;
-    } else {
-      return true;
+char *Slurp(const char *path) {
+  int fd;
+  char *res = 0;
+  if ((fd = open(path, O_RDONLY)) != -1) {
+    ssize_t size;
+    if ((size = lseek(fd, 0, SEEK_END)) != -1) {
+      char *buf;
+      if ((buf = calloc(1, size + 1))) {
+        if (pread(fd, buf, size, 0) == size) {
+          res = buf;
+        } else {
+          free(buf);
+        }
+      }
     }
+    close(fd);
   }
+  return res;
+}
+
+bool HasFlag(const char *flags, const char *s) {
+  char buf[256];
+  size_t n = strlen(s);
+  if (!flags) return false;
+  if (n + 2 > sizeof(buf)) return false;
+  memcpy(buf, s, n);
+  buf[n] = '\n';
+  buf[n + 1] = 0;
+  return !!strstr(flags, buf);
+}
+
+bool IsGccOnlyFlag(const char *s) {
   if (s[0] == '-') {
     if (s[1] == 'f') {
       if (startswith(s, "-ffixed-")) return true;
@@ -428,8 +386,25 @@ bool IsGccOnlyFlag(const char *s) {
     if (startswith(s, "-mstringop-strategy=")) return true;
     if (startswith(s, "-mpreferred-stack-boundary=")) return true;
     if (startswith(s, "-Wframe-larger-than=")) return true;
+    if (startswith(s, "-Walloca-larger-than=")) return true;
   }
-  return false;
+  static bool once;
+  static char *gcc_only_flags;
+  if (!once) {
+    gcc_only_flags = Slurp("build/bootstrap/gcc-only-flags.txt");
+    once = true;
+  }
+  return HasFlag(gcc_only_flags, s);
+}
+
+bool IsClangOnlyFlag(const char *s) {
+  static bool once;
+  static char *clang_only_flags;
+  if (!once) {
+    clang_only_flags = Slurp("build/bootstrap/clang-only-flags.txt");
+    once = true;
+  }
+  return HasFlag(clang_only_flags, s);
 }
 
 bool FileExistsAndIsNewerThan(const char *filepath, const char *thanpath) {
@@ -926,12 +901,12 @@ int main(int argc, char *argv[]) {
   }
 
   s = basename(strdup(cmd));
-  if (strstr(s, "gcc") || strstr(s, "g++")) {
-    iscc = true;
-    isgcc = true;
-  } else if (strstr(s, "clang") || strstr(s, "clang++")) {
+  if (strstr(s, "clang") || strstr(s, "clang++")) {
     iscc = true;
     isclang = true;
+  } else if (strstr(s, "gcc") || strstr(s, "g++")) {
+    iscc = true;
+    isgcc = true;
   } else if (strstr(s, "ld.bfd")) {
     isbfd = true;
   } else if (strstr(s, "ar.com")) {
@@ -988,6 +963,9 @@ int main(int argc, char *argv[]) {
     }
     if (!iscc) {
       AddArg(argv[i]);
+      continue;
+    }
+    if (isgcc && IsClangOnlyFlag(argv[i])) {
       continue;
     }
     if (isclang && IsGccOnlyFlag(argv[i])) {
@@ -1188,7 +1166,9 @@ int main(int argc, char *argv[]) {
                          !strcmp(argv[i], "-O3"))) {
       /* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97623 */
       AddArg(argv[i]);
-      AddArg("-fno-code-hoisting");
+      if (!isclang) {
+        AddArg("-fno-code-hoisting");
+      }
     } else {
       AddArg(argv[i]);
     }

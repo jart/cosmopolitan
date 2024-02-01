@@ -159,7 +159,7 @@ typedef struct {
 #include "libc/integral/lp64arg.inc"
 #endif
 
-#define libcesque   dontthrow nocallback
+#define libcesque   dontthrow dontcallback
 #define memcpyesque libcesque
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
@@ -364,14 +364,14 @@ typedef struct {
 #endif
 #endif
 
-#ifndef nocallback
+#ifndef dontcallback
 #if !defined(__STRICT_ANSI__) &&  \
     (__has_attribute(__leaf__) || \
      (!defined(__llvm__) &&       \
       (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406))
-#define nocallback __attribute__((__leaf__))
+#define dontcallback __attribute__((__leaf__))
 #else
-#define nocallback
+#define dontcallback
 #endif
 #endif
 
@@ -645,11 +645,23 @@ void abort(void) wontreturn;
 #define initarray _Section(".init_array")
 #endif
 
-#pragma GCC diagnostic ignored "-Wformat"                /* todo: patch gcc */
+#ifndef __llvm__
+#pragma GCC diagnostic ignored "-Wformat=0" /* todo: patch gcc */
+#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
+#pragma GCC diagnostic warning "-Wunknown-pragmas"
+#else
+#pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wconstant-logical-operand" /* what */
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wstring-plus-int"       /* features 4 losers */
+#pragma GCC diagnostic ignored "-Wkeyword-compat"        /* c++ upgrade */
+#pragma GCC diagnostic ignored "-Wuser-defined-literals" /* reserved for me */
+#endif
+
 #pragma GCC diagnostic ignored "-Wformat-extra-args"     /* todo: patch gcc */
 #pragma GCC diagnostic ignored "-Wunused-function"       /* contradicts dce */
 #pragma GCC diagnostic ignored "-Wunused-const-variable" /* sooo ridiculous */
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bullsh */
 #endif
@@ -743,6 +755,19 @@ void abort(void) wontreturn;
       __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 #else
 #define __funline static inline
+#endif
+
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__llvm__)) && \
+    !defined(__chibicc__) && 0 /* TODO: enable with toolchain upgrade */
+#define __target_clones(x) __attribute__((__target_clones__(x ",default")))
+#else
+#define __target_clones(x)
+#endif
+
+#if !defined(TINY) && !defined(__AVX__) && 0
+#define __vex __target_clones("avx")
+#else
+#define __vex
 #endif
 
 #define MACHINE_CODE_ANALYSIS_BEGIN_

@@ -82,15 +82,27 @@ static textwindows void GetNtName(char *name, int kind) {
 }
 
 static inline textwindows int GetNtMajorVersion(void) {
+#ifdef __x86_64__
   return NtGetPeb()->OSMajorVersion;
+#else
+  return 0;
+#endif
 }
 
 static inline textwindows int GetNtMinorVersion(void) {
+#ifdef __x86_64__
   return NtGetPeb()->OSMinorVersion;
+#else
+  return 0;
+#endif
 }
 
 static inline textwindows int GetNtBuildNumber(void) {
+#ifdef __x86_64__
   return NtGetPeb()->OSBuildNumber;
+#else
+  return 0;
+#endif
 }
 
 static textwindows void GetNtVersion(char *p) {

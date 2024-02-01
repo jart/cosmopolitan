@@ -1,18 +1,18 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_SystemFunction036,SystemFunction036
+.imp	BCryptPrimitives,__imp_ProcessPrng,ProcessPrng
 
 	.text.windows
 	.ftrace1
-RtlGenRandom:
+ProcessPrng:
 	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	mov	__imp_SystemFunction036(%rip),%rax
+	mov	__imp_ProcessPrng(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)
 	mov	x0,#0
 	ret
 #endif
-	.endfn	RtlGenRandom,globl
+	.endfn	ProcessPrng,globl
 	.previous

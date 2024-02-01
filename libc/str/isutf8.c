@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/str/str.h"
 
@@ -53,7 +52,6 @@ bool32 isutf8(const void *data, size_t size) {
   long c;
   const char *p, *e;
   if (size == -1) size = data ? strlen(data) : 0;
-  if (IsAsan()) __asan_verify(data, size);
   p = data;
   e = p + size;
   while (p < e) {

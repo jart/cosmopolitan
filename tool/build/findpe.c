@@ -22,6 +22,9 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 
+// finds portable executables (and actually portable executable)
+// usage: findelf PATH...
+
 static int OnFile(const char *fpath, const struct stat *st, int typeflag,
                   struct FTW *ftwbuf) {
   if (typeflag == FTW_F) {

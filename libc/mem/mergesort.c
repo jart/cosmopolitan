@@ -54,8 +54,8 @@ asm(".include \"libc/disclaimer.inc\"");
  * (The default is pairwise merging.)
  */
 
-static void setup(uint8_t *, uint8_t *, size_t, size_t, int (*)(), void *);
-static void insertionsort(uint8_t *, size_t, size_t, int (*)(), void *);
+static void setup(uint8_t *, uint8_t *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
+static void insertionsort(uint8_t *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
 
 #define ISIZE sizeof(int)
 #define PSIZE sizeof(uint8_t *)

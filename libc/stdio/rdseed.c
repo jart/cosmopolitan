@@ -27,7 +27,7 @@
  *
  * If RDSEED isn't available, we'll try RDRAND (which we automatically
  * disable for microarchitectures where it's known to be slow or buggy).
- * If RDRAND isn't available then we try getrandom(), RtlGenRandom(), or
+ * If RDRAND isn't available then we try getrandom(), ProcessPrng(), or
  * sysctl(KERN_ARND). If those aren't available then we try /dev/urandom
  * and if that fails, we use RDTSC and getpid().
  *

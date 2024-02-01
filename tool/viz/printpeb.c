@@ -188,7 +188,7 @@ dontasan void PrintTeb(void) {
 }
 
 void PrintPeb(void) {
-  struct NtPeb *peb = NtGetPeb();
+  __seg_gs struct NtPeb *peb = NtGetPeb();
   printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
 │ new technology § peb                                                         │\n\
@@ -327,8 +327,6 @@ void PrintPeb(void) {
          "pShimData", peb->pShimData);
   printf("0x%04x: %-40s = 0x%lx\n", offsetof(struct NtPeb, AppCompatInfo),
          "AppCompatInfo", peb->AppCompatInfo);
-  printf("0x%04x: %-40s = \"%s\"\n", offsetof(struct NtPeb, CSDVersion),
-         "CSDVersion", GetString(&peb->CSDVersion));
   printf("0x%04x: %-40s = 0x%lx\n",
          offsetof(struct NtPeb, ActivationContextData), "ActivationContextData",
          peb->ActivationContextData);

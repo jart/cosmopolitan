@@ -167,22 +167,22 @@ void TearDownOnce(void);
 #define ASSERT_IN(NEEDLE, GOT) \
   assertContains(FILIFU sizeof(*(NEEDLE)), NEEDLE, GOT, #GOT, true)
 
-#define ASSERT_BINEQ(WANT, GOT)              \
-  _Generic((WANT)[0], char                   \
-           : assertBinaryEquals_hex, default \
-           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, true)
-#define ASSERT_BINNE(NOPE, GOT)                 \
-  _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals_hex, default \
-           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
-#define ASSERT_BINEQN(WANT, GOT, N)          \
-  _Generic((WANT)[0], char                   \
-           : assertBinaryEquals_hex, default \
-           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, true)
-#define ASSERT_BINNEN(NOPE, GOT, N)             \
-  _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals_hex, default \
-           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
+#define ASSERT_BINEQ(WANT, GOT)     \
+  _Generic((WANT)[0],               \
+      char: assertBinaryEquals_hex, \
+      default: assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, true)
+#define ASSERT_BINNE(NOPE, GOT)        \
+  _Generic((NOPE)[0],                  \
+      char: assertBinaryNotEquals_hex, \
+      default: assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
+#define ASSERT_BINEQN(WANT, GOT, N) \
+  _Generic((WANT)[0],               \
+      char: assertBinaryEquals_hex, \
+      default: assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, true)
+#define ASSERT_BINNEN(NOPE, GOT, N)    \
+  _Generic((NOPE)[0],                  \
+      char: assertBinaryNotEquals_hex, \
+      default: assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, true)
 
 #define ASSERT_FLOAT_EQ(WANT, GOT) \
   assertLongDoubleEquals(FILIFU WANT, GOT, #GOT, true)
@@ -243,22 +243,22 @@ void TearDownOnce(void);
 #define EXPECT_IN(NEEDLE, GOT) \
   assertContains(FILIFU sizeof(*(NEEDLE)), NEEDLE, GOT, #GOT, false)
 
-#define EXPECT_BINEQ(WANT, GOT)              \
-  _Generic((WANT)[0], char                   \
-           : assertBinaryEquals_hex, default \
-           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, false)
-#define EXPECT_BINNE(NOPE, GOT)                 \
-  _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals_hex, default \
-           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
-#define EXPECT_BINEQN(WANT, GOT, N)          \
-  _Generic((WANT)[0], char                   \
-           : assertBinaryEquals_hex, default \
-           : assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, false)
-#define EXPECT_BINNEN(NOPE, GOT, N)             \
-  _Generic((NOPE)[0], char                      \
-           : assertBinaryNotEquals_hex, default \
-           : assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
+#define EXPECT_BINEQ(WANT, GOT)     \
+  _Generic((WANT)[0],               \
+      char: assertBinaryEquals_hex, \
+      default: assertBinaryEquals_cp437)(FILIFU WANT, GOT, -1, #GOT, false)
+#define EXPECT_BINNE(NOPE, GOT)        \
+  _Generic((NOPE)[0],                  \
+      char: assertBinaryNotEquals_hex, \
+      default: assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
+#define EXPECT_BINEQN(WANT, GOT, N) \
+  _Generic((WANT)[0],               \
+      char: assertBinaryEquals_hex, \
+      default: assertBinaryEquals_cp437)(FILIFU WANT, GOT, N, #GOT, false)
+#define EXPECT_BINNEN(NOPE, GOT, N)    \
+  _Generic((NOPE)[0],                  \
+      char: assertBinaryNotEquals_hex, \
+      default: assertBinaryNotEquals_cp437)(FILIFU NOPE, GOT, -1, #GOT, false)
 
 #define EXPECT_FLOAT_EQ(WANT, GOT) \
   assertLongDoubleEquals(FILIFU WANT, GOT, #GOT, false)

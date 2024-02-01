@@ -44,14 +44,16 @@
 #include "libc/runtime/runtime.h"
 #ifdef __x86_64__
 
-#define INVERT(x) (BANE + PHYSICAL(x))
-#define NOPAGE    ((uint64_t)-1)
+#define INVERT(x) (BANE + PHYSICAL((uintptr_t)(x)))
+#define NOPAGE    ((uint64_t) - 1)
 
-#define ABS64(x)                                     \
-  ({                                                 \
-    int64_t vAddr;                                   \
-    __asm__("movabs\t%1,%0" : "=r"(vAddr) : "i"(x)); \
-    vAddr;                                           \
+#define APE_STACK_VADDR                   \
+  ({                                      \
+    int64_t vAddr;                        \
+    __asm__(".weak\tape_stack_vaddr\n\t"  \
+            "movabs\t$ape_stack_vaddr,%0" \
+            : "=r"(vAddr));               \
+    vAddr;                                \
   })
 
 struct ReclaimedPage {
@@ -305,7 +307,6 @@ textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
   extern char ape_phdrs_end[] __attribute__((__weak__));
   extern char ape_stack_pf[] __attribute__((__weak__));
   extern char ape_stack_offset[] __attribute__((__weak__));
-  extern char ape_stack_vaddr[] __attribute__((__weak__));
   extern char ape_stack_filesz[] __attribute__((__weak__));
   extern char ape_stack_memsz[] __attribute__((__weak__));
   __setup_mman(mm, pml4t, top);
@@ -318,7 +319,7 @@ textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
                      .p_type = PT_LOAD,
                      .p_flags = (uintptr_t)ape_stack_pf,
                      .p_offset = (uintptr_t)ape_stack_offset,
-                     .p_vaddr = ABS64(ape_stack_vaddr),
+                     .p_vaddr = APE_STACK_VADDR,
                      .p_filesz = (uintptr_t)ape_stack_filesz,
                      .p_memsz = (uintptr_t)ape_stack_memsz,
                  });

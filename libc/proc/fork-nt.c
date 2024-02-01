@@ -78,7 +78,9 @@ static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
 }
 
 static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
-                                         bool32 (*f)()) {
+                                         bool32 (*f)(int64_t, void *, uint32_t,
+                                                     uint32_t *,
+                                                     struct NtOverlapped *)) {
   size_t i;
   uint32_t x;
   for (i = 0; i < n; i += x) {
@@ -90,8 +92,10 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
 }
 
 static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
-                                           bool32 (*fn)(), const char *sf,
-                                           bool ischild) {
+                                           bool32 (*fn)(int64_t, void *,
+                                                        uint32_t, uint32_t *,
+                                                        struct NtOverlapped *),
+                                           const char *sf, bool ischild) {
   ssize_t rc = ForkIo(h, buf, n, fn);
   if (ischild) __tls_enabled_set(false);  // prevent tls crash in kprintf
   NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
@@ -100,9 +104,9 @@ static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
 
 static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   bool ok;
-  ok = ForkIo2(h, buf, n, WriteFile, "WriteFile", false);
+  ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false);
 #ifndef NDEBUG
-  if (ok) ok = ForkIo2(h, &n, sizeof(n), WriteFile, "WriteFile", false);
+  if (ok) ok = ForkIo2(h, &n, sizeof(n), (void *)WriteFile, "WriteFile", false);
 #endif
 #if SYSDEBUG
   if (!ok) {

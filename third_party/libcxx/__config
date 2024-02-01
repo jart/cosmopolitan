@@ -78,7 +78,7 @@
 #if defined(_LIBCPP_ABI_UNSTABLE) || _LIBCPP_ABI_VERSION >= 2
 // Change short string representation so that string data starts at offset 0,
 // improving its alignment in some cases.
-#  define _LIBCPP_ABI_ALTERNATE_STRING_LAYOUT
+// #  define _LIBCPP_ABI_ALTERNATE_STRING_LAYOUT
 // Fix deque iterator type in order to support incomplete types.
 #  define _LIBCPP_ABI_INCOMPLETE_TYPES_IN_DEQUE
 // Fix undefined behavior in how std::list stores its linked nodes.
@@ -332,7 +332,7 @@
 #if (defined(__APPLE__) && !defined(__i386__) && !defined(__x86_64__) &&       \
      (!defined(__arm__) || __ARM_ARCH_7K__ >= 2)) ||                           \
     defined(_LIBCPP_ALTERNATE_STRING_LAYOUT)
-#define _LIBCPP_ABI_ALTERNATE_STRING_LAYOUT
+// #define _LIBCPP_ABI_ALTERNATE_STRING_LAYOUT
 #endif
 
 #if __has_feature(cxx_alignas)

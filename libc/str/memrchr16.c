@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -36,8 +35,8 @@ static inline const char16_t *memrchr16_pure(const char16_t *s, char16_t c,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-static inline const char16_t *memrchr16_sse(const char16_t *s,
-                                                     char16_t c, size_t n) {
+static inline const char16_t *memrchr16_sse(const char16_t *s, char16_t c,
+                                            size_t n) {
   size_t i;
   unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c};
@@ -67,11 +66,10 @@ static inline const char16_t *memrchr16_sse(const char16_t *s,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *memrchr16(const void *s, int c, size_t n) {
+__vex void *memrchr16(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
   if (!IsTiny() && X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_verify(s, n * 2);
     r = memrchr16_sse(s, c, n);
   } else {
     r = memrchr16_pure(s, c, n);

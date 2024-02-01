@@ -28,6 +28,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/kernel.internal.h"
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
 Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");

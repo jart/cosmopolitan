@@ -143,7 +143,7 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 		if (abstime && timespec_cmp (timespec_real (), *abstime) >= 0) {
 			return -ETIMEDOUT;
 		}
-		pthread_yield ();
+		pthread_yield_np ();
 	}
 }
 
@@ -373,7 +373,7 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 		}
 	} else {
 	Polyfill:
-		pthread_yield ();
+		pthread_yield_np ();
 		rc = 0;
 	}
 

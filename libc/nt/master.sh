@@ -362,7 +362,6 @@ imp	'RegisterEventSource'					RegisterEventSourceW					advapi32	2
 imp	'ReportEvent'						ReportEventW						advapi32	9
 imp	'ReportEventA'						ReportEventA						advapi32	9
 imp	'RevertToSelf'						RevertToSelf						advapi32	0
-imp	'RtlGenRandom'						SystemFunction036					advapi32	2
 imp	'TraceSetInformation'					TraceSetInformation					advapi32 # Windows 7+
 
 # USER32.DLL
@@ -610,6 +609,11 @@ imp	'EnumProcesses'						EnumProcesses						psapi		3
 imp	'GetModuleBaseName'					GetModuleBaseNameW					psapi		4
 imp	'GetProcessImageFileName'				GetProcessImageFileNameW				psapi		3
 imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					psapi		3
+
+# BCryptPrimitives.dll
+#
+#	Name							Actual							DLL			Arity
+imp	'ProcessPrng'						ProcessPrng						BCryptPrimitives	2
 
 # API-MS-Win-Core-Synch-l1-2-0.dll (Windows 8+)
 #

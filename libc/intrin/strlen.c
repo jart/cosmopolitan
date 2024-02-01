@@ -37,7 +37,7 @@ size_t strlen(const char *s) {
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   return (const char *)p + __builtin_ctzl(m) - s;
 #else
-#define ONES ((word)-1 / 255)
+#define ONES ((word) - 1 / 255)
 #define BANE (ONES * (255 / 2 + 1))
   typedef unsigned long mayalias word;
   word w;
@@ -56,5 +56,4 @@ size_t strlen(const char *s) {
   return (const char *)p + (__builtin_ctzl(w) >> 3) - s;
 #endif
 }
-
 #endif /* __aarch64__ */

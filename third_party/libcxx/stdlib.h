@@ -9,13 +9,7 @@
 
 #if defined(__need_malloc_and_calloc) || defined(_LIBCPP_STDLIB_INCLUDE_NEXT)
 
-#include "libc/stdio/rand.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/mem/alg.h"
-#include "libc/stdio/stdio.h"
-#include "libc/fmt/conv.h"
+#include "libc/isystem/stdlib.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

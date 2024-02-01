@@ -35,6 +35,7 @@ Types:
 
 #include "third_party/libcxx/__config"
 #include "third_party/libcxx/version"
+#include "libc/isystem/stddef.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

@@ -52,7 +52,7 @@ static dontinline uint64_t rdrand_failover(void) {
  *
  * If RDRAND isn't available (we check CPUID and we also disable it
  * automatically for microarchitectures where it's slow or buggy) then
- * we try getrandom(), RtlGenRandom(), or sysctl(KERN_ARND). If those
+ * we try getrandom(), ProcessPrng(), or sysctl(KERN_ARND). If those
  * aren't available then we try /dev/urandom and if that fails, we try
  * getauxval(AT_RANDOM), and if not we finally use RDTSC and getpid().
  *

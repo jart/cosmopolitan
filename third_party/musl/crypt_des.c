@@ -32,6 +32,8 @@
 #include "third_party/musl/crypt.internal.h"
 #include "third_party/musl/crypt_des.internal.h"
 
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");

@@ -30,7 +30,8 @@
 typedef double vect __attribute__((__vector_size__(16), __aligned__(16)));
 
 struct Gadget {
-  void (*func)();
+  void (*func)(long, long, long, long, long, long,  //
+               vect, vect, vect, vect, vect, vect);
   long longs[6];
   vect vects[6];
 };
@@ -89,7 +90,7 @@ static void runcontext(struct Gadget *call, ucontext_t *link) {
  * @param argc is effectively ignored (see notes above)
  * @see setcontext(), getcontext(), swapcontext()
  */
-void makecontext(ucontext_t *uc, void func(), int argc, ...) {
+void makecontext(ucontext_t *uc, void *func, int argc, ...) {
   va_list va;
   long sp, sb;
   struct Gadget *call;

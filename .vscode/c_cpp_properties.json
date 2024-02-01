@@ -48,7 +48,7 @@
 				"notpossible=",
 				"thatispacked=",
 				"dontthrow=",
-				"nocallback=",
+				"dontcallback=",
 				"relegated=",
 				"hidden=",
 				"textstartup=",

@@ -157,6 +157,8 @@ static textwindows struct Keystroke *NewKeystroke(void) {
   struct Keystroke *k = KEYSTROKE_CONTAINER(e);
   dll_remove(&__keystroke.free, &k->elem);
   --__keystroke.freekeys;
+  // TODO(jart): What's wrong with GCC 12.3?
+  asm("" : "+r"(k));
   k->buflen = 0;
   return k;
 }

@@ -36,11 +36,11 @@ bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode);
 void TerminateThisProcess(uint32_t dwWaitStatus) wontreturn;
 void ExitProcess(uint32_t uExitCode) wontreturn;
 uint32_t GetLastError(void) nosideeffect;
-bool32 CloseHandle(int64_t hObject) dontthrow nocallback;
+bool32 CloseHandle(int64_t hObject) dontthrow dontcallback;
 intptr_t GetStdHandle(uint32_t nStdHandle) nosideeffect;
 bool32 SetStdHandle(uint32_t nStdHandle, int64_t hHandle);
 bool32 SetDefaultDllDirectories(unsigned dirflags);
-bool32 RtlGenRandom(void *RandomBuffer, uint32_t RandomBufferLength);
+bool32 ProcessPrng(void *RandomBuffer, uint32_t RandomBufferLength);
 uint32_t GetModuleFileName(int64_t hModule, char16_t *lpFilename,
                            uint32_t nSize);
 

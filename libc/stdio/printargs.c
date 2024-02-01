@@ -84,6 +84,7 @@ static const char *FindNameById(const struct IdName *names, unsigned long id) {
 }
 
 static void PrintDependencies(const char *prologue) {
+#ifdef __x86_64__
   struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
   struct NtLinkedList *ldr = head->Next;
   do {
@@ -92,6 +93,7 @@ static void PrintDependencies(const char *prologue) {
     PRINT(" ☼ %.*!hs (%'zukb @ %p)", dll->FullDllName.Length,
           dll->FullDllName.Data, dll->SizeOfImage / 1024, dll->DllBase);
   } while ((ldr = ldr->Next) && ldr != head);
+#endif
 }
 
 static void Print(const char *prologue) {
@@ -624,6 +626,7 @@ textstartup void __printargs(const char *prologue) {
     if (GetConsoleMode(GetStdHandle(kNtStdErrorHandle), &cm))
       PRINT("   %s", DescribeNtConsoleOutFlags(cm));
 
+#ifdef __x86_64__
     PRINT("");
     PRINT("TEB");
     PRINT(" ☼ gs:0x%02x %s = %p", 0x00, "NtGetSeh()", _NtGetSeh());
@@ -640,6 +643,7 @@ textstartup void __printargs(const char *prologue) {
     PRINT(" ☼ gs:0x%02x %s = %p", 0x58, "NtGetTls()", _NtGetTls());
     PRINT(" ☼ gs:0x%02x %s = %p", 0x60, "NtGetPeb()", NtGetPeb());
     PRINT(" ☼ gs:0x%02x %s = %p", 0x68, "NtGetErr()", NtGetErr());
+#endif
 
     PRINT("");
     PRINT("DEPENDENCIES");

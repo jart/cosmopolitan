@@ -54,7 +54,7 @@ char *getlogin(void);
 int getlogin_r(char *, size_t);
 int login_tty(int);
 int getpagesize(void);
-int syncfs(int);
+int syncfs(int) dontthrow;
 int vhangup(void);
 int getdtablesize(void);
 int sethostname(const char *, size_t);

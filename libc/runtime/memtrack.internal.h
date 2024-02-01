@@ -164,9 +164,9 @@ forceinline pureconst bool OverlapsImageSpace(const void *p, size_t n) {
   const unsigned char *BegA, *EndA, *BegB, *EndB;
   if (n) {
     BegA = p;
-    EndA = BegA + (n - 1);
+    EndA = BegA + n;
     BegB = __executable_start;
-    EndB = _end - 1;
+    EndB = _end;
     return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;
@@ -177,9 +177,9 @@ forceinline pureconst bool OverlapsShadowSpace(const void *p, size_t n) {
   intptr_t BegA, EndA, BegB, EndB;
   if (n) {
     BegA = (intptr_t)p;
-    EndA = BegA + (n - 1);
+    EndA = BegA + n;
     BegB = 0x7fff0000;
-    EndB = 0x10007fffffff;
+    EndB = 0x100080000000;
     return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;

@@ -67,10 +67,9 @@ static inline const unsigned char *memchr_sse(const unsigned char *s,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *memchr(const void *s, int c, size_t n) {
+__vex void *memchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
-  if (IsAsan()) __asan_verify(s, n);
   r = memchr_sse(s, c, n);
   return (void *)r;
 #else

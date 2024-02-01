@@ -83,6 +83,7 @@ $(THIRD_PARTY_BASH_OBJS): private					\
 			-Wno-nonnull-compare				\
 			-Wno-unused-variable				\
 			-Wno-missing-braces				\
+			-Wno-use-after-free				\
 			-Wno-unused-label				\
 			-Wno-unused-value				\
 			-Wno-return-type				\

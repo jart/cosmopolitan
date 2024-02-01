@@ -17,7 +17,7 @@ Macros:
 */
 
 #include "third_party/libcxx/__config"
-#include "libc/assert.h"
+#include "libc/isystem/assert.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

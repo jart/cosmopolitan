@@ -93,7 +93,7 @@ static int close_impl(int fd) {
  */
 int close(int fd) {
   int rc;
-  if (__isfdkind(fd, kFdZip)) {   // XXX IsWindows()?
+  if (__isfdkind(fd, kFdZip)) {  // XXX IsWindows()?
     BLOCK_SIGNALS;
     __fds_lock();
     rc = close_impl(fd);

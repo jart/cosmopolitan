@@ -102,9 +102,7 @@ void perror(const char* s);
 #pragma GCC system_header
 #endif
 
-#include "libc/calls/calls.h"
-#include "libc/temp.h"
-#include "libc/stdio/stdio.h"
+#include "libc/isystem/stdio.h"
 
 #ifdef __cplusplus
 

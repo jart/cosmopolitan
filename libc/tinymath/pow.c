@@ -154,7 +154,7 @@ static inline double_t log_inline(uint64_t ix, double_t *tail)
    a double.  (int32_t)KI is the k used in the argument reduction and exponent
    adjustment of scale, positive k here means the result may overflow and
    negative k means the result may underflow.  */
-static inline double specialcase(double_t tmp, uint64_t sbits, uint64_t ki)
+forceinline double specialcase(double_t tmp, uint64_t sbits, uint64_t ki)
 {
 	double_t scale, y;
 
@@ -196,7 +196,7 @@ static inline double specialcase(double_t tmp, uint64_t sbits, uint64_t ki)
 
 /* Computes sign*exp(x+xtail) where |xtail| < 2^-8/N and |xtail| <= |x|.
    The sign_bias argument is SIGN_BIAS or 0 and sets the sign to -1 or 1.  */
-static inline double exp_inline(double_t x, double_t xtail, uint32_t sign_bias)
+forceinline double exp_inline(double_t x, double_t xtail, uint32_t sign_bias)
 {
 	uint32_t abstop;
 	uint64_t ki, idx, top, sbits;

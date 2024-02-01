@@ -39,7 +39,7 @@
 /* maximum path size that cosmo can take */
 #define PATHSIZE       (PATH_MAX < 1024 ? PATH_MAX : 1024)
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 8
+#define SYSLIB_VERSION 9 /* sync with libc/runtime/syslib.internal.h */
 
 struct Syslib {
   int magic;
@@ -96,11 +96,16 @@ struct Syslib {
   long (*sem_trywait)(int *);
   long (*getrlimit)(int, struct rlimit *);
   long (*setrlimit)(int, const struct rlimit *);
-  // v6 (2023-11-03)
+  /* v6 (2023-11-03) */
   void *(*dlopen)(const char *, int);
   void *(*dlsym)(void *, const char *);
   int (*dlclose)(void *);
   char *(*dlerror)(void);
+  /* MANDATORY (cosmo runtime won't load if version < 8)
+     ---------------------------------------------------
+     OPTIONAL (cosmo lib should check __syslib->version) */
+  /* v9 (2024-01-31) */
+  int (*pthread_cpu_number_np)(size_t *);
 };
 
 #define ELFCLASS32                  1
@@ -660,9 +665,9 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
       if (prot1 & PROT_EXEC) {
 #ifdef SIP_DISABLED
-        // if sip is disabled then we can load the executable segments
-        // off the binary into memory without needing to copy anything
-        // which provides considerably better performance for building
+        /* if sip is disabled then we can load the executable segments
+           off the binary into memory without needing to copy anything
+           which provides considerably better performance for building */
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
         if (rc < 0) {
           if (rc == -EPERM) {
@@ -674,12 +679,12 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
           }
         }
 #else
-        // the issue is that if sip is enabled then, attempting to map
-        // it with exec permission will cause xnu to phone home a hash
-        // of the entire file to apple intelligence as a one time cost
-        // which is literally minutes for executables holding big data
-        // since there's no public apple api for detecting sip we read
-        // as the default strategy which is slow but it works for both
+        /* the issue is that if sip is enabled then, attempting to map
+           it with exec permission will cause xnu to phone home a hash
+           of the entire file to apple intelligence as a one time cost
+           which is literally minutes for executables holding big data
+           since there's no public apple api for detecting sip we read
+           as the default strategy which is slow but it works for both */
         rc = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
                       MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
         if (rc < 0) Pexit(exe, rc, "prog mmap anon");
@@ -812,12 +817,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
     }
   }
 
-  /*
-   * merge adjacent loads that are contiguous with equal protection,
-   * which prevents our program header overlap check from needlessly
-   * failing later on; it also shaves away a microsecond of latency,
-   * since every program header requires invoking at least 1 syscall
-   */
+  /* merge adjacent loads that are contiguous with equal protection,
+     which prevents our program header overlap check from needlessly
+     failing later on; it also shaves away a microsecond of latency,
+     since every program header requires invoking at least 1 syscall */
   for (i = 0; i + 1 < e->e_phnum;) {
     if (p[i].p_type == PT_LOAD && p[i + 1].p_type == PT_LOAD &&
         ((p[i].p_flags & (PF_R | PF_W | PF_X)) ==
@@ -944,6 +947,7 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlsym = dlsym;
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
+  M->lib.pthread_cpu_number_np = pthread_cpu_number_np;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = 0;

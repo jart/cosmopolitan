@@ -86,6 +86,11 @@ o/$(MODE)/libc/intrin/memmove.o: private		\
 		CFLAGS +=				\
 			-fpie
 
+o/$(MODE)/libc/intrin/x86.o: private			\
+		CFLAGS +=				\
+			-ffreestanding			\
+			-fno-jump-tables
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

@@ -441,8 +441,7 @@ textwindows void __sig_generate(int sig, int sic) {
     // to unblock our sig once the wait operation is completed; when
     // that's the case we can cancel the thread's i/o to deliver sig
     if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
-        !(atomic_load_explicit(&pt->pt_blkmask, memory_order_relaxed) &
-          (1ull << (sig - 1)))) {
+        !(pt->pt_blkmask & (1ull << (sig - 1)))) {
       _pthread_ref(pt);
       mark = pt;
       break;

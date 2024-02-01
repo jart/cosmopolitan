@@ -149,7 +149,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   }
 
   // check system call abi compatibility
-  if (IsXnu() && __syslib->__version < SYSLIB_VERSION) {
+  if (IsXnu() && __syslib->__version < SYSLIB_VERSION_MANDATORY) {
     sys_write(2, "need newer ape loader\n", 22);
     _Exit(127);
   }

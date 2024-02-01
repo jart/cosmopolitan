@@ -64,6 +64,8 @@
 #include "third_party/hiredis/sds.h"
 #include "third_party/hiredis/sdsalloc.h"
 
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+
 static inline int sdsHdrSize(char type) {
     switch(type&SDS_TYPE_MASK) {
         case SDS_TYPE_5:

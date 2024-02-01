@@ -31,6 +31,8 @@ _Thread_local long y[1] = {40};
 _Alignas(A) _Thread_local long a;
 
 dontubsan void *Worker(void *arg) {
+  ASSERT_EQ(A, _Alignof(a));
+  ASSERT_EQ(0, (uintptr_t)&a & (_Alignof(a) - 1));
   ASSERT_EQ(42, x + y[0] + z);
   ASSERT_EQ(0, (intptr_t)&a & (A - 1));
   if (IsAsan()) {
@@ -41,6 +43,7 @@ dontubsan void *Worker(void *arg) {
 
 TEST(tls, test) {
   ASSERT_EQ(A, _Alignof(a));
+  ASSERT_EQ(0, (uintptr_t)&a & (_Alignof(a) - 1));
   ASSERT_EQ(0, sizeof(struct CosmoTib) % A);
   ASSERT_EQ(0, (intptr_t)__get_tls() & (A - 1));
   EXPECT_EQ(2, z);

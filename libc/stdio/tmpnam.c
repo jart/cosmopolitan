@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -35,7 +34,6 @@ static char g_tmpnam[L_tmpnam];
  *     is only mutated on success
  */
 char *tmpnam(char *buf) {
-  if (IsAsan()) __asan_verify(buf, L_tmpnam);
   char path[] = P_tmpdir "/tmpnam_XXXXXX";
   for (int t = 0; t < 100; ++t) {
     int w = _rand64();

@@ -101,7 +101,6 @@ XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
 CLANG = clang
 TMPDIR = o/tmp
-
 AR = build/bootstrap/ar.com
 CP = build/bootstrap/cp.com
 RM = build/bootstrap/rm.com -f
@@ -134,10 +133,10 @@ endif
 
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
-HOSTS ?= pi studio freebsdarm
+HOSTS ?= pi pi5 studio freebsdarm
 else
 ARCH = x86_64
-HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
+HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd meatball nightmare
 endif
 
 ZIPOBJ_FLAGS += -a$(ARCH)
@@ -209,7 +208,7 @@ endif
 	libc/stdbool.h				\
 	libc/disclaimer.inc			\
 	rwc:/dev/shm				\
-	rx:cosmocc				\
+	rx:.cosmocc				\
 	rx:build/bootstrap			\
 	r:build/portcosmo.h			\
 	/proc/stat				\
@@ -481,6 +480,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_STR			\
 	LIBC_SYSV			\
 	LIBC_INTRIN			\
+	LIBC_NT_BCRYPTPRIMITIVES	\
 	LIBC_NT_KERNEL32		\
 	LIBC_NEXGEN32E
 

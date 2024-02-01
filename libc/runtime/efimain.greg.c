@@ -30,6 +30,9 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+
 #ifdef __x86_64__
 
 /* TODO: Why can't we change CR3? Could it really need PML5T? */
@@ -162,7 +165,7 @@ static void EfiInitAcpi(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
  * @see libc/dce.h
  */
 __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
-                                    EFI_SYSTEM_TABLE *SystemTable) {
+                           EFI_SYSTEM_TABLE *SystemTable) {
   struct mman *mm;
   uint32_t DescVersion;
   uintptr_t i, j, MapSize;
@@ -215,9 +218,8 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                                             &kEfiLoadedImageProtocol, &ImgInfo);
   CmdLine = (const char16_t *)ImgInfo->LoadOptions;
   if (!CmdLine || !CmdLine[0]) CmdLine = u"BOOTX64.EFI";
-  Args = GetDosArgv(CmdLine, ArgBlock->ArgBlock,
-                    sizeof(ArgBlock->ArgBlock), ArgBlock->Args,
-                    ARRAYLEN(ArgBlock->Args));
+  Args = GetDosArgv(CmdLine, ArgBlock->ArgBlock, sizeof(ArgBlock->ArgBlock),
+                    ArgBlock->Args, ARRAYLEN(ArgBlock->Args));
 
   /*
    * Gets information about our current video mode.  Clears the screen.

@@ -103,7 +103,7 @@ static ssize_t GetDevUrandom(char *p, size_t n) {
 ssize_t __getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;
   if (IsWindows()) {
-    rc = RtlGenRandom(p, n) ? n : __winerr();
+    rc = ProcessPrng(p, n) ? n : __winerr();
   } else if (have_getrandom) {
     if (IsXnu() || IsOpenbsd()) {
       rc = GetRandomBsd(p, n, GetRandomEntropy);
@@ -131,7 +131,7 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
  *
  * This random number seed generator obtains information from:
  *
- * - RtlGenRandom() on Windows
+ * - ProcessPrng() on Windows
  * - getentropy() on XNU and OpenBSD
  * - getrandom() on Linux, FreeBSD, and NetBSD
  * - sysctl(KERN_ARND) on older versions of FreeBSD and NetBSD

@@ -27,8 +27,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 
-static volatile size_t mapsize;
-
 /**
  * Grows file descriptor array memory if needed.
  *

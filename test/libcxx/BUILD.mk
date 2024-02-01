@@ -14,9 +14,13 @@ TEST_LIBCXX_TESTS = $(TEST_LIBCXX_COMS:%=%.ok)
 TEST_LIBCXX_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
+	LIBC_SYSV					\
+	LIBC_THREAD					\
+	LIBC_TINYMATH					\
 	THIRD_PARTY_LIBCXX				\
 	THIRD_PARTY_OPENMP
 
@@ -37,7 +41,8 @@ o/$(MODE)/test/libcxx/%.com.dbg:			\
 
 $(TEST_LIBCXX_OBJS): private CCFLAGS += -fexceptions -frtti
 
-o/$(MODE)/test/libcxx/openmp_test.o: private CXXFLAGS += -fopenmp -O3
+o/$(MODE)/test/libcxx/openmp_test.o: private CXXFLAGS += -fopenmp
+o/$(MODE)/test/libcxx/openmp_test.com.runs: private QUOTA += -C100
 
 .PHONY: o/$(MODE)/test/libcxx
 o/$(MODE)/test/libcxx:					\

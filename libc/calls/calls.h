@@ -247,6 +247,8 @@ ssize_t tinyprint(int, const char *, ...) libcesque nullterminated();
 void shm_path_np(const char *, char[hasatleast 78]) libcesque;
 #endif /* _COSMO_SOURCE */
 
+int system(const char *) libcesque;
+
 int __wifstopped(int) libcesque pureconst;
 int __wifcontinued(int) libcesque pureconst;
 int __wifsignaled(int) libcesque pureconst;

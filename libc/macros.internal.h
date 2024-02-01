@@ -21,8 +21,8 @@
 #define TRUE  1
 #define FALSE 0
 
-#define IS2POW(X)       (!((X) & ((X)-1)))
-#define ROUNDUP(X, K)   (((X) + (K)-1) & -(K))
+#define IS2POW(X)       (!((X) & ((X) - 1)))
+#define ROUNDUP(X, K)   (((X) + (K) - 1) & -(K))
 #define ROUNDDOWN(X, K) ((X) & -(K))
 #ifndef __ASSEMBLER__
 #define ABS(X)    ((X) >= 0 ? (X) : -(X))
@@ -40,7 +40,7 @@
 #define STRINGIFY(A)        __STRINGIFY(A)
 #define EQUIVALENT(X, Y)    (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))
 #define TYPE_BIT(type)      (sizeof(type) * CHAR_BIT)
-#define TYPE_SIGNED(type)   (((type)-1) < 0)
+#define TYPE_SIGNED(type)   (((type) - 1) < 0)
 #define TYPE_INTEGRAL(type) (((type)0.5) != 0.5)
 
 #define ARRAYLEN(A) \

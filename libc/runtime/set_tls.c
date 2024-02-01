@@ -29,7 +29,7 @@
 #define AMD64_SET_FSBASE 129
 #define AMD64_SET_GSBASE 131
 
-int sys_set_tls();
+int sys_set_tls(uintptr_t, void *);
 
 // we can't allow --ftrace here because cosmo_dlopen() calls this
 // function to fix the tls register, and ftrace needs it unbroken
@@ -47,12 +47,12 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
     // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
     // signal handlers will cause it to be reset due to not setting the
     // _mc_tlsbase field in struct mcontext_netbsd.
-    sys_set_tls(tib);
+    sys_set_tls((uintptr_t)tib, 0);
   } else if (IsOpenbsd()) {
-    sys_set_tls(tib);
+    sys_set_tls((uintptr_t)tib, 0);
   } else if (IsXnu()) {
     // thread_fast_set_cthread_self has a weird ABI
-    sys_set_tls((intptr_t)tib - 0x30);
+    sys_set_tls((intptr_t)tib - 0x30, 0);
   } else {
     uint64_t val = (uint64_t)tib;
     asm volatile("wrmsr"

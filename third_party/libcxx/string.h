@@ -16,7 +16,7 @@
 #pragma GCC system_header
 #endif
 
-#include "libc/str/str.h"
+#include "libc/isystem/string.h"
 
 /*
     string.h synopsis

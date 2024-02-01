@@ -234,7 +234,9 @@ syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			-1			-1			0x00000080		-1			# make
 syscon	mmap	MAP_HASSEMAPHORE			0			0			0x00000200		0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
 syscon	mmap	MAP_NOSYNC				0			0			0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
 syscon	mmap	MAP_CONCEAL				0			0			0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
-syscon	mmap	MAP_JIT					0			0			0			0x00000800		0			0			0			0			# omit from core dumps; MAP_NOCORE on FreeBSD
+syscon	mmap	MAP_JIT					0			0			0			0x00000800		0			0			0			0			# allocate region used for just-in-time compilation
+syscon	mmap	MAP_NOCACHE				0			0			0x00000400		0x00000400		0			0			0			0			# don't cache pages for this mapping
+syscon	mmap	MAP_NOEXTEND				0			0			0x00000100		0x00000100		0			0			0			0			# for MAP_FILE, don't change file size
 syscon	compat	MAP_NOCORE				0			0			0			0			0x00020000		0x00008000		0x00008000		0			# use MAP_CONCEAL
 syscon	compat	MAP_ANON				0x00000020		0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
 syscon	compat	MAP_EXECUTABLE				0x00001000		0x00001000		0			0			0			0			0			0			# ignored
@@ -269,17 +271,18 @@ syscon	madv	MADV_WIPEONFORK				18			18			127			127			127			127			127			127			# T
 syscon	madv	MADV_KEEPONFORK				19			19			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_COLD				20			20			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_PAGEOUT				21			21			127			127			127			127			127			127			# TODO: add support ?
-syscon	madv	MADV_POPULATE_READ				22			22			127			127			127			127			127			127			# TODO: add support ?
-syscon	madv	MADV_POPULATE_WRITE				23			23			127			127			127			127			127			127			# TODO: add support ?
-syscon	madv	MADV_DONTNEED_LOCKED				24			24			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_POPULATE_READ			22			22			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_POPULATE_WRITE			23			23			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_DONTNEED_LOCKED			24			24			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_COLLAPSE				25			25			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_DOFORK				11			11			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_DONTDUMP				16			16			127			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
 syscon	madv	MADV_DONTFORK				10			10			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_HWPOISON				100			100			127			127			127			127			127			127			# TODO(jart): what is it?
-syscon	madv	MADV_SOFT_OFFLINE				101			101			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_SOFT_OFFLINE			101			101			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_REMOVE				9			9			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	fadv	POSIX_FADV_NOREUSE			5			5			127			127			5			127			5			127			# wut
+syscon	madv	MADV_REMOVE				9			9			127			127			127			127			127			127			# TODO(jart): what is it?
 
 #	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
@@ -579,19 +582,19 @@ syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			0			0			# consensus
 syscon	clock	CLOCK_REALTIME_PRECISE			0			0			0			0			9			0			0			0			#
 syscon	clock	CLOCK_REALTIME_FAST			0			0			0			0			10			0			0			0			#
 syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			2			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_MONOTONIC				1			1			1			6			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
-syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			1			6			11			3			3			1			#
-syscon	clock	CLOCK_MONOTONIC_FAST			1			1			1			6			12			3			3			1			#
-syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			1			6			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_MONOTONIC_RAW			4			4			127			4			127			127			127			127			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			127			12			15			2			0x40000000		127			# NetBSD lets you bitwise a PID into clockid_t
-syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			127			16			14			4			0x20000000		127			#
+syscon	clock	CLOCK_MONOTONIC				1			1			6			6			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
+syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			6			6			11			3			3			1			#
+syscon	clock	CLOCK_MONOTONIC_FAST			1			1			6			6			12			3			3			1			#
+syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			5			5			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
+syscon	clock	CLOCK_MONOTONIC_RAW			4			4			4			4			127			127			127			127			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			12			12			15			2			0x40000000		4			# NetBSD lets you bitwise a PID into clockid_t
+syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			16			16			14			4			0x20000000		5			#
 syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#
 syscon	clock	CLOCK_BOOTTIME				7			7			7			127			127			6			127			3			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			8			127			127			127			127			127			127			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			9			127			127			127			127			127			127			#
 syscon	clock	CLOCK_TAI				11			11			127			127			127			127			127			127			#
-syscon	clock	CLOCK_UPTIME				127			127			127			127			5			5			127			127			#
+syscon	clock	CLOCK_UPTIME				127			127			8			8			5			5			127			127			#
 syscon	clock	CLOCK_UPTIME_PRECISE			127			127			127			127			7			127			127			127			#
 syscon	clock	CLOCK_UPTIME_FAST			127			127			127			127			8			127			127			127			#
 syscon	clock	CLOCK_SECOND				127			127			127			127			13			127			127			127			#

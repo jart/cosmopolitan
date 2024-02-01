@@ -55,7 +55,7 @@ set -- --regex-c='/_Atomic(\([^)]*\))/\1/b' "$@"
 set -- --regex-c='/^\(\(hidden\|extern\|const\) \)*[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]*[ *][ *]*\)*\([_[:alpha:]][_$[:alnum:]]*\)/\4/b' "$@"
 
 # ctags doesn't understand function prototypes, e.g.
-#   bool isheap(void *p) dontthrow nocallback;
+#   bool isheap(void *p) dontthrow dontcallback;
 set -- --regex-c='/^[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]*[ *][ *]*\)*\([_[:alpha:]][_$[:alnum:]]*\)(.*/\2/b' "$@"
 
 # ctags doesn't understand function pointers, e.g.

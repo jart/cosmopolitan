@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
@@ -33,8 +32,7 @@ static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
 
 #if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-static inline const char *rawmemchr_sse(const char *s,
-                                                 unsigned char c) {
+static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
   const xmm_t *p;
@@ -67,11 +65,10 @@ static inline uint64_t UncheckedAlignedRead64(const unsigned char *p) {
  * @param c is search byte which is masked with 255
  * @return is pointer to first instance of c
  */
-void *rawmemchr(const void *s, int c) {
+__vex void *rawmemchr(const void *s, int c) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
   if (X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_verify(s, 1);
     r = rawmemchr_sse(s, c);
   } else {
     r = rawmemchr_pure(s, c);

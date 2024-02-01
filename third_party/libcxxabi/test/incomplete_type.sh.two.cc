@@ -1,1 +1,0 @@
-incomplete_type.sh.cc

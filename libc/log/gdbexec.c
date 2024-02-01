@@ -41,7 +41,7 @@ relegated int(gdbexec)(const char *cmd) {
     elf = "-q";
   }
   bp = __builtin_frame_address(0);
-  sprintf(breakcmd, "%s *%#p", "break", bp->addr);
+  sprintf(breakcmd, "%s *%#lx", "break", (unsigned long)bp->addr);
   if (!(pid = vfork())) {
     execv(gdb, (char *const[]){
                    "gdb",

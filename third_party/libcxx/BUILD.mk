@@ -223,6 +223,7 @@ $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
 			-fdata-sections				\
 			-fexceptions				\
 			-frtti					\
+			-Wno-alloc-size-larger-than		\
 			-DLIBCXX_BUILDING_LIBCXXABI
 
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))

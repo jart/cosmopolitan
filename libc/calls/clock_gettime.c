@@ -61,24 +61,13 @@ static int __clock_gettime_init(int clockid, struct timespec *ts) {
 /**
  * Returns nanosecond time.
  *
- * @param clock can be one of:
- *    - `CLOCK_REALTIME`: universally supported
- *    - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
- *    - `CLOCK_REALTIME_PRECISE`: ditto but better on freebsd
- *    - `CLOCK_REALTIME_COARSE`: : like `CLOCK_REALTIME_FAST` w/ Linux 2.6.32+
- *    - `CLOCK_MONOTONIC`: universally supported (except on XNU/NT w/o INVTSC)
- *    - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
- *    - `CLOCK_MONOTONIC_PRECISE`: ditto but better on freebsd
- *    - `CLOCK_MONOTONIC_COARSE`: : like `CLOCK_MONOTONIC_FAST` w/ Linux 2.6.32+
- *    - `CLOCK_MONOTONIC_RAW`: is actually monotonic but needs Linux 2.6.28+
- *    - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd (NetBSD permits OR'd PID)
- *    - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd (NetBSD permits OR'd TID)
- *    - `CLOCK_MONOTONIC_COARSE`: linux, freebsd
- *    - `CLOCK_PROF`: linux and netbsd
- *    - `CLOCK_BOOTTIME`: linux and openbsd
- *    - `CLOCK_REALTIME_ALARM`: linux-only
- *    - `CLOCK_BOOTTIME_ALARM`: linux-only
- *    - `CLOCK_TAI`: linux-only
+ * @param clock supports the following values across OSes:
+ *    - `CLOCK_REALTIME`
+ *    - `CLOCK_MONOTONIC`
+ *    - `CLOCK_REALTIME_COARSE`
+ *    - `CLOCK_MONOTONIC_COARSE`
+ *    - `CLOCK_THREAD_CPUTIME_ID`
+ *    - `CLOCK_PROCESS_CPUTIME_ID`
  * @param ts is where the result is stored (or null to do clock check)
  * @return 0 on success, or -1 w/ errno
  * @raise EFAULT if `ts` points to invalid memory

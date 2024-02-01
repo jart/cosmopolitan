@@ -42,7 +42,7 @@ double __testlib_ezbenchcontrol(void) {
     } while (++Tries < 10 && (__testlib_getcore() != Core &&
                               __testlib_getinterrupts() > Interrupts));
     if (Tries == 10) {
-      tinyprint(2, "warning: failed to accurately benchmark control\n");
+      tinyprint(2, "warning: failed to accurately benchmark control\n", NULL);
     }
     strcpy(host, "unknown");
     gethostname(host, 64);

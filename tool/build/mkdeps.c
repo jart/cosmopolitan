@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -45,48 +46,48 @@
   "copyright 2023 justine tunney\n" \
   "https://github.com/jart/cosmopolitan\n"
 
-#define MANUAL                                                      \
-  " -r o// -o OUTPUT INPUT...\n"                                    \
-  "\n"                                                              \
-  "DESCRIPTION\n"                                                   \
-  "\n"                                                              \
-  "  Generates header file dependencies for your makefile\n"        \
-  "\n"                                                              \
-  "  This tool computes the transitive closure of included paths\n" \
-  "  for every source file in your repository. This program does\n" \
-  "  it orders of a magnitude faster than `gcc -M` on each file.\n" \
-  "\n"                                                              \
-  "  Includes look like this:\n"                                    \
-  "\n"                                                              \
-  "    - #include <stdio.h>\n"                                      \
-  "    - #include \"samedir.h\"\n"                                  \
-  "    - #include \"root/of/repository/foo.h\"\n"                   \
-  "    - .include \"asm/x86_64/foo.s\"\n"                           \
-  "\n"                                                              \
-  "  Your generated make code looks like this:\n"                   \
-  "\n"                                                              \
-  "    o//package/foo.o: \\\n"                                      \
-  "      package/foo.c \\\n"                                        \
-  "      package/foo.h \\\n"                                        \
-  "      package/bar.h \\\n"                                        \
-  "      libc/isystem/stdio.h\n"                                    \
-  "    o//package/bar.o: \\\n"                                      \
-  "      package/bar.c \\\n"                                        \
-  "      package/bar.h\n"                                           \
-  "\n"                                                              \
-  "FLAGS\n"                                                         \
-  "\n"                                                              \
-  "  -h         show usage\n"                                       \
-  "  -o OUTPUT  set output path\n"                                  \
-  "  -g ROOT    set generated path [default: o/]\n"                 \
-  "  -r ROOT    set build output path, e.g. o/$(MODE)/\n"           \
-  "  -S PATH    isystem include path [default: libc/isystem/]\n"    \
-  "  -s         hermetically sealed mode [repeatable]\n"            \
-  "\n"                                                              \
-  "ARGUMENTS\n"                                                     \
-  "\n"                                                              \
-  "  OUTPUT     shall be makefile code\n"                           \
-  "  INPUT      should be source or @args.txt\n"                    \
+#define MANUAL                                                               \
+  " -r o// -o OUTPUT INPUT...\n"                                             \
+  "\n"                                                                       \
+  "DESCRIPTION\n"                                                            \
+  "\n"                                                                       \
+  "  Generates header file dependencies for your makefile\n"                 \
+  "\n"                                                                       \
+  "  This tool computes the transitive closure of included paths\n"          \
+  "  for every source file in your repository. This program does\n"          \
+  "  it orders of a magnitude faster than `gcc -M` on each file.\n"          \
+  "\n"                                                                       \
+  "  Includes look like this:\n"                                             \
+  "\n"                                                                       \
+  "    - #include <stdio.h>\n"                                               \
+  "    - #include \"samedir.h\"\n"                                           \
+  "    - #include \"root/of/repository/foo.h\"\n"                            \
+  "    - .include \"asm/x86_64/foo.s\"\n"                                    \
+  "\n"                                                                       \
+  "  Your generated make code looks like this:\n"                            \
+  "\n"                                                                       \
+  "    o//package/foo.o: \\\n"                                               \
+  "      package/foo.c \\\n"                                                 \
+  "      package/foo.h \\\n"                                                 \
+  "      package/bar.h \\\n"                                                 \
+  "      libc/isystem/stdio.h\n"                                             \
+  "    o//package/bar.o: \\\n"                                               \
+  "      package/bar.c \\\n"                                                 \
+  "      package/bar.h\n"                                                    \
+  "\n"                                                                       \
+  "FLAGS\n"                                                                  \
+  "\n"                                                                       \
+  "  -h         show usage\n"                                                \
+  "  -o OUTPUT  set output path\n"                                           \
+  "  -g ROOT    set generated path [default: o/]\n"                          \
+  "  -r ROOT    set build output path, e.g. o/$(MODE)/\n"                    \
+  "  -S PATH    isystem include path [repeatable; default: libc/isystem/]\n" \
+  "  -s         hermetically sealed mode [repeatable]\n"                     \
+  "\n"                                                                       \
+  "ARGUMENTS\n"                                                              \
+  "\n"                                                                       \
+  "  OUTPUT     shall be makefile code\n"                                    \
+  "  INPUT      should be source or @args.txt\n"                             \
   "\n"
 
 #define Read32(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
@@ -118,6 +119,11 @@ struct Edges {
   struct Edge *p;
 };
 
+struct Paths {
+  long n;
+  const char *p[64];
+};
+
 static const uint32_t kSourceExts[] = {
     EXT("s"),    // assembly
     EXT("S"),    // assembly with c preprocessor
@@ -135,7 +141,7 @@ static const char *prog;
 static struct Edges edges;
 static struct Sauce *sauces;
 static struct Sources sources;
-static const char *systempath;
+static struct Paths systempaths;
 static const char *buildroot;
 static const char *genroot;
 static const char *outpath;
@@ -329,7 +335,7 @@ static const char *FindIncludePath(const char *map, size_t mapsize,
   // scan backwards for hash character
   for (;;) {
     if (q == map) {
-      return false;
+      return 0;
     }
     if (IsBlank(q[-1])) {
       --q;
@@ -342,7 +348,7 @@ static const char *FindIncludePath(const char *map, size_t mapsize,
       --q;
       break;
     } else {
-      return false;
+      return 0;
     }
   }
 
@@ -359,7 +365,7 @@ static const char *FindIncludePath(const char *map, size_t mapsize,
       if (q[-1] == '\n') {
         break;
       } else {
-        return false;
+        return 0;
       }
     }
   }
@@ -378,7 +384,7 @@ static const char *FindIncludePath(const char *map, size_t mapsize,
       ++q;
       break;
     } else {
-      return false;
+      return 0;
     }
   }
 
@@ -395,7 +401,7 @@ static void LoadRelationships(int argc, char *argv[]) {
   struct GetArgs ga;
   int srcid, dependency;
   static char srcdirbuf[PATH_MAX];
-  const char *p, *pe, *src, *path, *pathend, *srcdir;
+  const char *p, *pe, *src, *path, *pathend, *srcdir, *final;
   getargs_init(&ga, argv + optind);
   while ((src = getargs_next(&ga))) {
     CreateSourceId(src);
@@ -433,51 +439,71 @@ static void LoadRelationships(int argc, char *argv[]) {
         DieSys(src);
       }
       for (p = map, pe = map + size; p < pe; ++p) {
-        char *bp;
-        char right;
-        char buf[PATH_MAX];
         if (!(p = memmem(p, pe - p, "include ", 8))) break;
         if (!(path = FindIncludePath(map, size, p, is_assembly))) continue;
-        bp = buf;
+        // copy the specified include path
+        char right;
         if (path[-1] == '<') {
-          if (!systempath) continue;
-          bp = stpcpy(bp, systempath);
+          if (!systempaths.n) continue;
           right = '>';
         } else {
           right = '"';
         }
-        if ((pathend = memchr(path, right, pe - path))) {
-          const char *final;
-          char juf[PATH_MAX];
-          if ((bp - buf) + (pathend - path) >= PATH_MAX) {
-            tinyprint(2, src, ": include path too long\n", NULL);
-            exit(1);
-          }
-          *(bp = mempcpy(bp, path, pathend - path)) = 0;
-          // let foo/bar.c say `#include "foo/hdr.h"`
-          dependency = GetSourceId((final = buf));
-          // let foo/bar.c say `#include "hdr.h"`
-          if (dependency == -1 && right == '"' && !strchr(buf, '/')) {
-            if (!(final = __join_paths(juf, PATH_MAX, srcdir, buf))) {
-              DiePathTooLong(buf);
+        if (!(pathend = memchr(path, right, pe - path))) continue;
+        if (pathend - path >= PATH_MAX) {
+          tinyprint(2, src, ": uses really long include path\n", NULL);
+          exit(1);
+        }
+        char juf[PATH_MAX];
+        char incpath[PATH_MAX];
+        *(char *)mempcpy(incpath, path, pathend - path) = 0;
+        if (right == '>') {
+          // handle angle bracket includes
+          dependency = -1;
+          for (long i = 0; i < systempaths.n; ++i) {
+            if (!(final =
+                      __join_paths(juf, PATH_MAX, systempaths.p[i], incpath))) {
+              DiePathTooLong(incpath);
             }
-            dependency = GetSourceId(final);
+            if ((dependency = GetSourceId(final)) != -1) {
+              break;
+            }
           }
-          if (dependency == -1) {
-            if (startswith(buf, genroot)) {
-              dependency = CreateSourceId(src);
-            } else if (!hermetic) {
-              continue;
-            } else if (hermetic == 1 && right == '>') {
+          if (dependency != -1) {
+            AppendEdge(&edges, dependency, srcid);
+            p = pathend + 1;
+          } else {
+            if (hermetic == 1) {
               // chances are the `#include <foo>` is in some #ifdef
               // that'll never actually be executed; thus we ignore
               // since landlock make unveil() shall catch it anyway
               continue;
+            }
+            tinyprint(2, incpath,
+                      ": system header not specified by the HDRS/SRCS/INCS "
+                      "make variables defined by the hermetic mono repo\n",
+                      NULL);
+            exit(1);
+          }
+        } else {
+          // handle double quote includes
+          // let foo/bar.c say `#include "foo/hdr.h"`
+          dependency = GetSourceId((final = incpath));
+          // let foo/bar.c say `#include "hdr.h"`
+          if (dependency == -1 && !strchr(final, '/')) {
+            if (!(final = __join_paths(juf, PATH_MAX, srcdir, final))) {
+              DiePathTooLong(incpath);
+            }
+            dependency = GetSourceId(final);
+          }
+          if (dependency == -1) {
+            if (startswith(final, genroot)) {
+              dependency = CreateSourceId(src);
             } else {
-              tinyprint(
-                  2, final,
-                  ": path not specified by HDRS/SRCS/INCS make variables\n",
-                  NULL);
+              tinyprint(2, incpath,
+                        ": path not specified by HDRS/SRCS/INCS make variables "
+                        "(it was included by ",
+                        src, ")\n", NULL);
               exit(1);
             }
           }
@@ -498,6 +524,13 @@ static wontreturn void ShowUsage(int rc, int fd) {
   exit(rc);
 }
 
+static void AddPath(struct Paths *paths, const char *path) {
+  if (paths->n == ARRAYLEN(paths->p)) {
+    Die("too many path arguments");
+  }
+  paths->p[paths->n++] = path;
+}
+
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, "hnsgS:o:r:")) != -1) {
@@ -506,10 +539,7 @@ static void GetOpts(int argc, char *argv[]) {
         ++hermetic;
         break;
       case 'S':
-        if (systempath) {
-          Die("multiple system paths not supported yet");
-        }
-        systempath = optarg;
+        AddPath(&systempaths, optarg);
         break;
       case 'o':
         if (outpath) {
@@ -555,29 +585,33 @@ static void GetOpts(int argc, char *argv[]) {
   if (!startswith(buildroot, genroot)) {
     Die("build output path must start with generated output path");
   }
-  if (!systempath && hermetic) {
-    systempath = "libc/isystem/";
+  if (!systempaths.n && hermetic) {
+    AddPath(&systempaths, "third_party/libcxx/include/");
+    AddPath(&systempaths, "libc/isystem/");
   }
-  if (systempath && !hermetic) {
+  if (systempaths.n && !hermetic) {
     Die("system path can only be specified in hermetic mode");
   }
-  if (systempath) {
+  long j = 0;
+  for (long i = 0; i < systempaths.n; ++i) {
     size_t n;
     struct stat st;
-    if (stat(systempath, &st)) {
-      DieSys(systempath);
+    const char *path = systempaths.p[i];
+    if (!stat(path, &st)) {
+      systempaths.p[j++] = path;
+      if (!S_ISDIR(st.st_mode)) {
+        errno = ENOTDIR;
+        DieSys(path);
+      }
     }
-    if (!S_ISDIR(st.st_mode)) {
-      errno = ENOTDIR;
-      DieSys(systempath);
+    if ((n = strlen(path)) >= PATH_MAX) {
+      DiePathTooLong(path);
     }
-    if ((n = strlen(systempath)) >= PATH_MAX) {
-      DiePathTooLong(systempath);
-    }
-    if (!n || systempath[n - 1] != '/') {
+    if (!n || path[n - 1] != '/') {
       Die("system path must end with slash");
     }
   }
+  systempaths.n = j;
 }
 
 static const char *StripExt(char pathbuf[hasatleast PATH_MAX], const char *s) {

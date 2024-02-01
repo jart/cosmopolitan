@@ -71,7 +71,8 @@
            "__SUPPORT_SNAN__"
            "__GCC_IEC_559_COMPLEX"
            "__NO_MATH_ERRNO__"
-           "__gnu__"))
+           "__gnu__"
+           "_OPENMP"))
 
         (cosmo
          '("__LINKER__"))

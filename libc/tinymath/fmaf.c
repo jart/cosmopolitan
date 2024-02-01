@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/fenv.h"
 
 asm(".ident\t\"\\n\\n\
@@ -110,7 +111,7 @@ float fmaf(float x, float y, float z)
 	   so direct double-precision arithmetic suffices, except where
 	   double rounding occurs. */
 
-	/* #pragma STDC FENV_ACCESS ON */
+/* #pragma STDC FENV_ACCESS ON */
 	double xy, result;
 	union {double f; uint64_t i;} u;
 	int e;

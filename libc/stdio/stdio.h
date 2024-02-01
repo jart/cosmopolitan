@@ -90,7 +90,7 @@ int fsetpos(FILE *, const fpos_t *) libcesque paramsnonnull();
 FILE *tmpfile(void) libcesque __wur;
 char *tmpnam(char *) libcesque __wur;
 char *tmpnam_r(char *) libcesque __wur;
-int system(const char *) libcesque;
+
 FILE *popen(const char *, const char *) libcesque;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

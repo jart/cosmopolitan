@@ -24,7 +24,7 @@
  */
 float nearbyintf(float x) {
 #ifdef FE_INEXACT
-  // #pragma STDC FENV_ACCESS ON
+  /* #pragma STDC FENV_ACCESS ON */
   int e;
   e = fetestexcept(FE_INEXACT);
 #endif

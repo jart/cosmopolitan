@@ -252,16 +252,9 @@ static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
 }
 
 relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
-  ucontext_t *ctx = arg;
-  int gdbpid, err;
-  err = errno;
-  if ((gdbpid = IsDebuggerPresent(true))) {
-    DebugBreak();
-  }
-  if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
-    __restore_tty();
-    ShowCrashReport(err, sig, si, ctx);
-  }
+  int err = errno;
+  __restore_tty();
+  ShowCrashReport(err, sig, si, arg);
 }
 
 #endif /* __x86_64__ */

@@ -41,6 +41,7 @@ LIBC_CALLS_A_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_ADVAPI32				\
+	LIBC_NT_BCRYPTPRIMITIVES			\
 	LIBC_NT_IPHLPAPI				\
 	LIBC_NT_KERNEL32				\
 	LIBC_NT_NTDLL					\
@@ -132,7 +133,8 @@ endif
 o/$(MODE)/libc/calls/pledge-linux.o: private		\
 		CFLAGS +=				\
 			-Os				\
-			-fPIC
+			-fPIC				\
+			-ffreestanding
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S

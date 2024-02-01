@@ -86,7 +86,7 @@ typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
  * @return dst
  * @asyncsignalsafe
  */
-void *memmove(void *dst, const void *src, size_t n) {
+__vex void *memmove(void *dst, const void *src, size_t n) {
   char *d;
   size_t i;
   const char *s;

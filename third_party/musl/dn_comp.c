@@ -93,7 +93,7 @@ int dn_comp(const char *src,
 	    unsigned char **dnptrs,
 	    unsigned char **lastdnptr)
 {
-	int i, j, n, m=0, offset, bestlen=0, bestoff;
+	int i, j, n, m=0, offset, bestlen=0, bestoff=0;
 	unsigned char lens[127];
 	unsigned char **p;
 	const char *end;

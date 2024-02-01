@@ -43,22 +43,6 @@ Macros:
 #pragma GCC system_header
 #endif
 
-#ifndef __GNUC__
-#include "libc/limits.h"
-#else
-// GCC header limits.h recursively includes itself through another header called
-// syslimits.h for some reason. This setup breaks down if we directly
-// #include_next GCC's limits.h (reasons not entirely clear to me). Therefore,
-// we manually re-create the necessary include sequence below:
-
-// Get the system limits.h defines (force recurse into the next level)
-#define _GCC_LIMITS_H_
-#define _GCC_NEXT_LIMITS_H
-#include "libc/limits.h"
-
-// Get the ISO C defines
-#undef _GCC_LIMITS_H_
-#include "libc/limits.h"
-#endif // __GNUC__
+#include "libc/isystem/limits.h"
 
 #endif // _LIBCPP_LIMITS_H

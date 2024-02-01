@@ -94,7 +94,7 @@ struct CloneArgs {
   void *arg;
 };
 
-int sys_set_tls();
+int sys_set_tls(uintptr_t, void *);
 int __stack_call(void *, int, long, long, int (*)(void *, int), void *);
 
 static struct CloneArgs *AllocateCloneArgs(char *stk, size_t stksz) {

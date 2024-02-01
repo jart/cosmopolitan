@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/nexgen32e/x86feature.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -92,41 +93,51 @@ static void mul(uint64_t *hi, uint64_t *lo, uint64_t x, uint64_t y)
  */
 double fma(double x, double y, double z)
 {
-#if defined(__x86_64__) && defined(__FMA__) && defined(__FAST_MATH__)
+#if defined(__x86_64__) && defined(__FMA__)
 
 	// Intel Haswell+ (c. 2013)
 	// AMD Piledriver+ (c. 2011)
 	asm("vfmadd132sd\t%1,%2,%0" : "+x"(x) : "x"(y), "x"(z));
 	return x;
 
-#elif defined(__x86_64__) && defined(__FMA4__) && defined(__FAST_MATH__)
+#elif defined(__x86_64__) && defined(__FMA4__)
 
 	// AMD Bulldozer+ (c. 2011)
 	asm("vfmaddsd\t%3,%2,%1,%0" : "=x"(x) : "x"(x), "x"(y), "x"(z));
 	return x;
 
-#elif defined(__aarch64__) && defined(__FAST_MATH__)
+#elif defined(__aarch64__)
 
 	asm("fmadd\t%d0,%d1,%d2,%d3" : "=w"(x) : "w"(x), "w"(y), "w"(z));
 	return x;
 
-#elif defined(__powerpc64__) && defined(__FAST_MATH__)
+#elif defined(__powerpc64__)
 
 	asm("fmadd\t%0,%1,%2,%3" : "=d"(x) : "d"(x), "d"(y), "d"(z));
 	return x;
 
-#elif defined(__riscv) && __riscv_flen >= 64 && defined(__FAST_MATH__)
+#elif defined(__riscv) && __riscv_flen >= 64
 
 	asm("fmadd.d\t%0,%1,%2,%3" : "=f"(x) : "f"(x), "f"(y), "f"(z));
 	return x;
 
-#elif defined(__s390x__) && defined(__FAST_MATH__)
+#elif defined(__s390x__)
 
 	asm("madbr\t%0,\t%1,\t%2" : "+f"(z) : "f"(x), "f"(y));
 	return z;
 
 #else
-// #pragma STDC FENV_ACCESS ON
+/* #pragma STDC FENV_ACCESS ON */
+
+#ifdef __x86_64__
+	if (X86_HAVE(FMA)) {
+		asm("vfmadd132sd\t%1,%2,%0" : "+x"(x) : "x"(y), "x"(z));
+		return x;
+	} else if (X86_HAVE(FMA4)) {
+		asm("vfmaddsd\t%3,%2,%1,%0" : "=x"(x) : "x"(x), "x"(y), "x"(z));
+		return x;
+	}
+#endif
 
 	/* normalize so top 10bits and last bit are 0 */
 	struct num nx, ny, nz;
@@ -268,3 +279,7 @@ double fma(double x, double y, double z)
 
 #endif /* __x86_64__ */
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(fma, fmal);
+#endif

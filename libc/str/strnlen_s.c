@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 
 static size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
@@ -48,7 +47,6 @@ static size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
 size_t strnlen_s(const char *s, size_t n) {
   size_t i;
   if (!s) return 0;
-  if (IsAsan()) __asan_verify(s, n);
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
     if (i == n || !s[i]) return i;
   }
