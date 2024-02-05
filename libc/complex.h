@@ -1,5 +1,5 @@
-#ifndef _COMPLEX_H
-#define _COMPLEX_H
+#ifndef COSMOPOLITAN_LIBC_COMPLEX_H_
+#define COSMOPOLITAN_LIBC_COMPLEX_H_
 COSMOPOLITAN_C_START_
 #if __STDC_VERSION__ + 0 >= 201112 && !defined(__STDC_NO_COMPLEX__)
 
@@ -116,4 +116,4 @@ complex long double cpowl(complex long double, complex long double) libcesque;
 
 #endif /* C11 */
 COSMOPOLITAN_C_END_
-#endif /* _COMPLEX_H */
+#endif /* COSMOPOLITAN_LIBC_COMPLEX_H_ */
