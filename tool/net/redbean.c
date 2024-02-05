@@ -456,6 +456,7 @@ static bool isexitingworker;
 static bool hasonworkerstart;
 static bool leakcrashreports;
 static bool hasonhttprequest;
+static bool hasonerror;
 static bool ishandlingrequest;
 static bool listeningonport443;
 static bool hasonprocesscreate;
@@ -3243,6 +3244,7 @@ static bool ShouldServeCrashReportDetails(void) {
 
 static char *LuaOnHttpRequest(void) {
   char *error;
+  const char *errormessage;
   lua_State *L = GL;
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
@@ -3251,12 +3253,32 @@ static char *LuaOnHttpRequest(void) {
   if (LuaCallWithYield(L) == LUA_OK) {
     return CommitOutput(GetLuaResponse());
   } else {
-    LogLuaError("OnHttpRequest", lua_tostring(L, -1));
-    error = ServeErrorWithDetail(
-        500, "Internal Server Error",
-        ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
-    lua_pop(L, 1);  // pop error
-    return error;
+    errormessage = lua_tostring(L, -1);
+    LogLuaError("OnHttpRequest", errormessage);
+
+    if (hasonerror) {
+      lua_pushstring(L, errormessage);
+      lua_setglobal(L, errormessage);
+
+      lua_settop(L, 0);
+      lua_getglobal(L, "OnError");
+      if (LuaCallWithYield(L) == LUA_OK) {
+        return CommitOutput(GetLuaResponse());
+      } else {
+        error = ServeErrorWithDetail(
+          500, "Internal Server Error",
+          ShouldServeCrashReportDetails() ? errormessage : NULL);
+
+        return error;
+      }
+    } else {
+      error = ServeErrorWithDetail(
+          500, "Internal Server Error",
+          ShouldServeCrashReportDetails() ? errormessage : NULL);
+
+      lua_pop(L, 1);  // pop error
+      return error;
+    }
   }
 }
 
@@ -5569,6 +5591,7 @@ static void LuaInit(void) {
   }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");
+    hasonerror = IsHookDefined("OnError");
     hasonclientconnection = IsHookDefined("OnClientConnection");
     hasonprocesscreate = IsHookDefined("OnProcessCreate");
     hasonprocessdestroy = IsHookDefined("OnProcessDestroy");
