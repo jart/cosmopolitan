@@ -2,9 +2,9 @@
 .imp	advapi32,__imp_RegSaveKeyW,RegSaveKeyW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RegSaveKey:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

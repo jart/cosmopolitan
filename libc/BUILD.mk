@@ -142,6 +142,9 @@ libc/isystem/nsync_once.h \
 libc/isystem/nsync_time.h \
 libc/isystem/nsync_waiter.h \
 libc/isystem/numeric \
+libc/isystem/omp-tools.h \
+libc/isystem/omp.h \
+libc/isystem/ompx.h \
 libc/isystem/optional \
 libc/isystem/ostream \
 libc/isystem/paths.h \
@@ -251,6 +254,7 @@ libc/isystem/uio.h \
 libc/isystem/unistd.h \
 libc/isystem/unordered_map \
 libc/isystem/unordered_set \
+libc/isystem/unwind.h \
 libc/isystem/utility \
 libc/isystem/utime.h \
 libc/isystem/utmp.h \
@@ -272,6 +276,8 @@ LIBC_HDRS_H = $(filter %.h,$(LIBC_HDRS))
 LIBC_INCS = $(filter %.inc,$(LIBC_FILES))
 LIBC_CHECKS = $(LIBC_HDRS_H:%=o/$(MODE)/%.ok)
 LIBC_FILES := $(wildcard libc/*)
+
+o/$(MODE)/libc/isystem/ompx.h.ok: private CPPFLAGS += -Wno-unknown-pragmas
 
 .PHONY:		o/$(MODE)/libc
 o/$(MODE)/libc:	o/$(MODE)/libc/calls		\

@@ -28,6 +28,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/musl		\
 	o/$(MODE)/third_party/ncurses		\
 	o/$(MODE)/third_party/nsync		\
+	o/$(MODE)/third_party/openmp		\
 	o/$(MODE)/third_party/pcre		\
 	o/$(MODE)/third_party/puff		\
 	o/$(MODE)/third_party/python		\

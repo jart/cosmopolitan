@@ -116,7 +116,7 @@ ZIPCOPY = build/bootstrap/zipcopy.com
 PECHECK = build/bootstrap/pecheck.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
-COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
+COMPILE = build/bootstrap/compile.com -V9 -M2048m -P8192 $(QUOTA)
 
 IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
@@ -286,6 +286,7 @@ include third_party/readline/BUILD.mk		# │
 include third_party/libunwind/BUILD.mk		# |
 include third_party/libcxxabi/BUILD.mk		# |
 include third_party/libcxx/BUILD.mk		# │
+include third_party/openmp/BUILD.mk		# │
 include third_party/double-conversion/BUILD.mk	# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
@@ -441,6 +442,7 @@ COSMOPOLITAN_OBJECTS =			\
 	THIRD_PARTY_GETOPT		\
 	LIBC_LOG			\
 	LIBC_TIME			\
+	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB_GZ		\
 	THIRD_PARTY_LIBCXXABI		\
@@ -522,6 +524,8 @@ COSMOCC_PKGS =				\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
 	THIRD_PARTY_LIBCXXABI		\
+	THIRD_PARTY_LIBUNWIND		\
+	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_INTEL
 
 o/$(MODE)/cosmopolitan.a:		\

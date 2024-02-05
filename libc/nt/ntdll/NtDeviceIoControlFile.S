@@ -2,9 +2,9 @@
 .ntimp	NtDeviceIoControlFile,NtDeviceIoControlFile
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtDeviceIoControlFile:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

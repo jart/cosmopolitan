@@ -383,7 +383,8 @@ TEST(sscanf, floating_point_infinity) {
 TEST(sscanf, floating_point_infinity_double_precision) {
   double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f;
   EXPECT_EQ(4, sscanf("inf +INF -iNf InF", "%lf %lf %lf %lf", &a, &b, &c, &d));
-  EXPECT_EQ(3, sscanf("+infinity -INFINITY iNfInItY", "%lf %lf %lf", &e, &f, &g));
+  EXPECT_EQ(3,
+            sscanf("+infinity -INFINITY iNfInItY", "%lf %lf %lf", &e, &f, &g));
   EXPECT_TRUE(isinf(a));
   EXPECT_TRUE(isinf(b));
   EXPECT_TRUE(isinf(c));
@@ -394,11 +395,14 @@ TEST(sscanf, floating_point_infinity_double_precision) {
 }
 
 TEST(sscanf, floating_point_documentation_examples) {
-  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
+  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h,
+        j = i;
 
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%f %f", &a, &b));
   EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%f %f %f", &c, &d, &e));
-  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%f %f %f %f %f", &f, &g, &h, &i, &j));
+  EXPECT_EQ(
+      5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
+                "%f %f %f %f %f", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11f, a);
   EXPECT_EQ(-2.22f, b);
@@ -413,11 +417,14 @@ TEST(sscanf, floating_point_documentation_examples) {
 }
 
 TEST(sscanf, floating_point_documentation_examples_double_precision) {
-  double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
+  double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h,
+         j = i;
 
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%lf %lf", &a, &b));
   EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%lf %lf %lf", &c, &d, &e));
-  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
+  EXPECT_EQ(
+      5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
+                "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11, a);
   EXPECT_EQ(-2.22, b);
@@ -469,4 +476,17 @@ TEST(fscanf, wantDecimalButGotLetter_returnsZeroMatches) {
   EXPECT_EQ(0, fscanf(f, "%d", &x));
   EXPECT_EQ(666, x);
   fclose(f);
+}
+
+TEST(scanf, n) {
+  int rc;
+  unsigned int a, b, c, d, port, len;
+  rc = sscanf("1.2.3.4:1848", "%u.%u.%u.%u:%u%n", &a, &b, &c, &d, &port, &len);
+  ASSERT_EQ(5, rc);
+  ASSERT_EQ(1, a);
+  ASSERT_EQ(2, b);
+  ASSERT_EQ(3, c);
+  ASSERT_EQ(4, d);
+  ASSERT_EQ(1848, port);
+  ASSERT_EQ(12, len);
 }

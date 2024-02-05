@@ -2,9 +2,9 @@
 .ntimp	NtQueryInformationToken,NtQueryInformationToken
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtQueryInformationToken:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

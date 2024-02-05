@@ -2,9 +2,9 @@
 .ntimp	RtlInitializeCriticalSection,RtlInitializeCriticalSection
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RtlInitializeCriticalSection:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

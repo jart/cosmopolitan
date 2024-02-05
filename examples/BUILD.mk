@@ -152,7 +152,6 @@ o/$(MODE)/examples/picol.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/examples/nesemu1.o: private QUOTA += -M512m
 o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
 
 $(EXAMPLES_OBJS): examples/BUILD.mk

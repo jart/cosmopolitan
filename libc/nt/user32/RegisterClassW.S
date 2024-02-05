@@ -2,9 +2,9 @@
 .imp	user32,__imp_RegisterClassW,RegisterClassW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RegisterClass:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

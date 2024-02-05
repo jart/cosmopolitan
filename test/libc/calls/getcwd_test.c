@@ -33,7 +33,7 @@ void SetUpOnce(void) {
 }
 
 TEST(__getcwd, zero) {
-  if (IsQemu()) return;
+  if (IsQemuUser()) return;
   ASSERT_SYS(ERANGE, -1, __getcwd(0, 0));
 }
 

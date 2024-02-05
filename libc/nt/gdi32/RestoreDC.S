@@ -2,9 +2,9 @@
 .imp	gdi32,__imp_RestoreDC,RestoreDC
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RestoreDC:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

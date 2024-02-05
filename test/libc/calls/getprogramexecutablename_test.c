@@ -122,7 +122,7 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
 
 TEST(GetProgramExecutableName, movedSelf) {
   if (skiptests) return;
-  if (IsAarch64() && IsQemu()) {
+  if (IsAarch64() && IsQemuUser()) {
     // clang-format off
     // TODO(mrdomino): fix: make -j8 m=aarch64 o/aarch64/test/libc/calls/getprogramexecutablename_test.com.ok
     //                 possibly related to the intersection of binfmt_misc and qemu-aarch64

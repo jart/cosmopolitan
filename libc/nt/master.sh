@@ -109,6 +109,7 @@ imp	'GetConsoleTitle'					GetConsoleTitleW					kernel32	2
 imp	'GetConsoleWindow'					GetConsoleWindow					kernel32	0
 imp	'GetCurrentDirectory'					GetCurrentDirectoryW					kernel32	2
 imp	'GetCurrentProcessId'					GetCurrentProcessId					kernel32	0
+imp	'GetCurrentProcessorNumberEx'				GetCurrentProcessorNumberEx				kernel32	1
 imp	'GetCurrentThread'					GetCurrentThread					kernel32	0
 imp	'GetCurrentThreadId'					GetCurrentThreadId					kernel32	0
 imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					kernel32	1

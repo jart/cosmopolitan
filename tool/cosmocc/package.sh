@@ -20,10 +20,10 @@ APELINK=o/$(mode)/tool/build/apelink.com
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
 
-make -j8 m= \
+make -j32 m= \
   $APELINK
 
-make -j8 m=$AMD64 \
+make -j32 m=$AMD64 \
   o/cosmocc.h.txt \
   o/$AMD64/ape/ape.lds \
   o/$AMD64/libc/crt/crt.o \
@@ -46,7 +46,7 @@ make -j8 m=$AMD64 \
   o/$AMD64/third_party/make/make.com.dbg \
   o/$AMD64/third_party/ctags/ctags.com.dbg
 
-make -j8 m=$ARM64 \
+make -j32 m=$ARM64 \
   o/$ARM64/ape/ape.elf \
   o/$ARM64/ape/aarch64.lds \
   o/$ARM64/libc/crt/crt.o \
@@ -129,9 +129,11 @@ for arch in $AMD64 $ARM64; do
   cp -f o/$arch/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/"
   cp -f o/$arch/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/libcosmo.a"
   cp -f o/$arch/third_party/libcxx/libcxx.a "$OUTDIR/$arch-linux-cosmo/lib/"
-  for lib in c dl gcc_s m pthread resolv rt dl z stdc++; do
+  for lib in c dl gcc_s m pthread resolv rt dl unwind gomp stdc++; do
     printf '\041\074\141\162\143\150\076\012' >"$OUTDIR/$arch-linux-cosmo/lib/lib$lib.a"
   done
+  mkdir -p "$OUTDIR/lib/gcc/"
+  touch "$OUTDIR/lib/gcc/libgomp.spec"  # needed if user passes -fopenmp but not -lgomp
 done
 cp -f o/$AMD64/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/"
 cp -f o/$AMD64/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/"

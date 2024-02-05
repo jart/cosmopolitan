@@ -2,9 +2,9 @@
 .imp	gdi32,__imp_ChoosePixelFormat,ChoosePixelFormat
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 ChoosePixelFormat:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

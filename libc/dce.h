@@ -121,7 +121,7 @@ COSMOPOLITAN_C_START_
 
 extern const int __hostos;
 
-int IsQemu(void);
+int IsQemuUser(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

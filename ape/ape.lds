@@ -229,7 +229,6 @@ SECTIONS {
 
     /* Real Mode */
     KEEP(*(.head))
-    KEEP(*(.apesh))
     KEEP(*(.text.head))
 
     /* Executable & Linkable Format */
@@ -237,10 +236,6 @@ SECTIONS {
     ape_phdrs = .;
     KEEP(*(.elf.phdrs))
     ape_phdrs_end = .;
-
-    KEEP(*(.emushprologue))
-    KEEP(*(.emush))
-    KEEP(*(.emushepilogue))
 
     /* OpenBSD */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
@@ -301,7 +296,6 @@ SECTIONS {
     KEEP(*(.textwindowsprologue))
     *(.text.windows)
     KEEP(*(.textwindowsepilogue))
-    KEEP(*(.blink))
     *(SORT_BY_ALIGNMENT(.text.modernity))
     *(SORT_BY_ALIGNMENT(.text.modernity.*))
     *(SORT_BY_ALIGNMENT(.text.hot))
@@ -612,29 +606,6 @@ SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
             ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(COMMONPAGESIZE)) / 64
             : 0);
-
-#if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()
-
-#define IDENTITY(X) X
-
-#define APE_DECLARE_FIXED_DECIMAL(F, X)                                                      \
-    X##_quad = DEFINED(X) ? ((F(X) < 1000000000 ? 32 : F(X) / 1000000000 % 10 + 48) << 000 | \
-                             (F(X) < 100000000 ? 32 : F(X) / 100000000 % 10 + 48) << 010 |   \
-                             (F(X) < 10000000 ? 32 : F(X) / 10000000 % 10 + 48) << 020 |     \
-                             (F(X) < 1000000 ? 32 : F(X) / 1000000 % 10 + 48) << 030 |       \
-                             (F(X) < 100000 ? 32 : F(X) / 100000 % 10 + 48) << 040 |         \
-                             (F(X) < 10000 ? 32 : F(X) / 10000 % 10 + 48) << 050 |           \
-                             (F(X) < 1000 ? 32 : F(X) / 1000 % 10 + 48) << 060 |             \
-                             (F(X) < 100 ? 32 : F(X) / 100 % 10 + 48) << 070) : 0;           \
-    X##_short = DEFINED(X) ? ((F(X) < 10 ? 32 : F(X) / 10 % 10 + 48) << 000 |                \
-                              (F(X) % 10 + 48) << 010) : 0
-
-APE_DECLARE_FIXED_DECIMAL(RVA,      blink_linux_aarch64);
-APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_linux_aarch64_size);
-APE_DECLARE_FIXED_DECIMAL(RVA,      blink_xnu_aarch64);
-APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_xnu_aarch64_size);
-
-#endif /* APE_IS_SHELL_SCRIPT */
 
 #if SupportsMetal()
 v_ape_realsectors = MIN(0x70000 - IMAGE_BASE_REAL, ROUNDUP(RVA(_ezip), 512)) / 512;

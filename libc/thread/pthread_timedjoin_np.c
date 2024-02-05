@@ -38,6 +38,7 @@ static const char *DescribeReturnValue(char buf[30], int err, void **value) {
   *p++ = '[';
   p = FormatHex64(p, (uintptr_t)*value, 1);
   *p++ = ']';
+  *p = 0;
   return buf;
 }
 

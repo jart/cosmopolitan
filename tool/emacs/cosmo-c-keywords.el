@@ -10,7 +10,11 @@
            "_Complex"))
 
         (cuda
-         '("__device__"
+         '("gridDim"
+           "blockIdx"
+           "blockDim"
+           "threadIdx"
+           "__device__"
            "__forceinline__"
            "__global__"
            "__shared__"

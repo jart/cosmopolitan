@@ -103,7 +103,7 @@ void __get_main_stack(void **out_addr, size_t *out_size, int *out_guardsize) {
   if (IsWindows()) {
     *out_addr = (void *)GetStaticStackAddr(0);
     *out_size = GetStaticStackSize();
-    *out_guardsize = GetGuardSize();
+    *out_guardsize = getauxval(AT_PAGESZ);
     return;
   }
   int pagesz = getauxval(AT_PAGESZ);

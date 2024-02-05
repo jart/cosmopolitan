@@ -83,6 +83,7 @@ $(THIRD_PARTY_LIBCXXABI_A).pkg:						\
 # TODO: Remove constinit hacks when we have C++20
 $(THIRD_PARTY_LIBCXXABI_A_OBJS): private				\
 		CXXFLAGS +=						\
+			-fno-sanitize=all				\
 			-ffunction-sections				\
 			-fdata-sections					\
 			-fexceptions					\

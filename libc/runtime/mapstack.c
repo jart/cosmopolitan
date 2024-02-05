@@ -23,6 +23,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
@@ -42,10 +43,13 @@
 void *NewCosmoStack(void) {
   char *p;
   if ((p = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+                MAP_ANONYMOUS |
+                    (IsAarch64() && IsLinux() && IsQemuUser() ? MAP_PRIVATE
+                                                              : MAP_STACK),
+                -1, 0)) != MAP_FAILED) {
     if (IsAsan()) {
       __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
-      __asan_poison(p, GetGuardSize(), kAsanStackOverflow);
+      __asan_poison(p, getauxval(AT_PAGESZ), kAsanStackOverflow);
     }
     return p;
   } else {

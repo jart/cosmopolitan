@@ -2,9 +2,9 @@
 .ntimp	NtUnmapViewOfSection,NtUnmapViewOfSection
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtUnmapViewOfSection:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

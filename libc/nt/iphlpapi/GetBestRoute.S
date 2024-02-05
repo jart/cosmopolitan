@@ -2,9 +2,9 @@
 .imp	iphlpapi,__imp_GetBestRoute,GetBestRoute
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetBestRoute:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

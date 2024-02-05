@@ -2,9 +2,9 @@
 .imp	user32,__imp_GetDesktopWindow,GetDesktopWindow
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetDesktopWindow:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

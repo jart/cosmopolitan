@@ -2,9 +2,9 @@
 .ntimp	NtSetInformationThread,NtSetInformationThread
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtSetInformationThread:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

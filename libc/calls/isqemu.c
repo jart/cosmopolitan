@@ -24,11 +24,15 @@
 /**
  * Returns true if process is running under qemu-x86_64 or qemu-aarch64.
  */
-int IsQemu(void) {
-  // qemu doesn't validate the advice argument
-  // we could also check if __getcwd(0, 0) raises efault
-  int e = errno;
-  int r = !sys_madvise(__executable_start, 16384, 127);
-  errno = e;
-  return r;
+int IsQemuUser(void) {
+  static char rplus1;
+  if (!rplus1) {
+    // qemu doesn't validate the advice argument
+    // we could also check if __getcwd(0, 0) raises efault
+    int e = errno;
+    int r = !sys_madvise(__executable_start, 16384, 127);
+    errno = e;
+    rplus1 = r + 1;
+  }
+  return rplus1 - 1;
 }

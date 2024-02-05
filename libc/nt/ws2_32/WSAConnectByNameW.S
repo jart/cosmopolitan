@@ -2,9 +2,9 @@
 .imp	ws2_32,__imp_WSAConnectByNameW,WSAConnectByNameW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 WSAConnectByName:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,43 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/sock/struct/sockaddr6.h"
+#include "libc/sysv/consts/inaddr.h"
 
-//	Blink Virtual Machine for Apple Silicon
-//
-//	If you want to support Apple M1 by embedding an emulator in
-//	your APE binary that runs automatically, then put this:
-//
-//	    __static_yoink("blink_xnu_aarch64");
-//
-//	In your main.c file, to pull it into linkage from the static
-//	archive. Alternatively, you may simply add blink_xnu_aarch64.o
-//	as an explicit linker argument.
-
-	.section .blink,"a",@progbits
-	.globl	blink_xnu_aarch64_size
-blink_xnu_aarch64:
-	.incbin	"ape/blink-xnu-aarch64.gz"
-	.endobj	blink_xnu_aarch64,globl
-blink_xnu_aarch64_size = . - blink_xnu_aarch64
-
-	.section .emush,"a",@progbits
-	.ascii	"if [ \"$s\" = Darwin ] && [ \"$m\" = arm64 ]; then\n"
-	.ascii	"if ! [ -x \"$e\" ]; then\n"
-	.ascii	"echo \"extracting blink-darwin-aarch64 to ${e}\" >&2\n"
-	.ascii	"dd if=\"$o\" bs=1 skip=$(("
-	.weak	blink_xnu_aarch64_quad
-	.quad	blink_xnu_aarch64_quad
-	.weak	blink_xnu_aarch64_short
-	.short	blink_xnu_aarch64_short
-	.ascii	")) count=$(("
-	.weak	blink_xnu_aarch64_size_quad
-	.quad	blink_xnu_aarch64_size_quad
-	.weak	blink_xnu_aarch64_size_short
-	.short	blink_xnu_aarch64_size_short
-	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
-	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
-	.ascii	"chmod +x \"$e\"\n"
-	.ascii	"fi\n"
-	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
-	.ascii	"fi\n"
+const struct in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;

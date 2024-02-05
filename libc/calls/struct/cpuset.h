@@ -53,5 +53,7 @@ int CPU_COUNT_S(size_t, const cpu_set_t *) libcesque;
 #define CPU_CLR_S(i, size, set)   _CPU_S(i, size, set, &= ~)
 #define CPU_ISSET_S(i, size, set) _CPU_S(i, size, set, &)
 
+typedef cpu_set_t cpuset_t; /* for freebsd compatibility */
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_CPUSET_H_ */

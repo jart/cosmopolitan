@@ -1,0 +1,20 @@
+DESCRIPTION
+
+  libomp - LLVM's Compiler Runtime for Multiprocessing
+
+ORIGIN
+
+  https://github.com/llvm/llvm-project/
+  commit 70c3e30e01bd123e87824e36b6e38a39451ac28d
+  date   Mon Jan 29 09:54:34 2024 +0800
+
+LOCAL CHANGES
+
+  - Use Cosmo's gettid() function
+  - Ran third_party/openmp/generate.sh
+  - Removed usage of syscall() function
+  - Only enable hidden helper on GNU/Systemd
+  - Made __kmp_get_load_balance() portable at runtime
+  - Made __kmp_affinity_get_offline_cpus() portable at runtime
+  - Turned off quad floating point support (why does openmp have it?)
+  - Remove bloat for checking if multiple OpenMP libraries are linked

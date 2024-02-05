@@ -17,4 +17,7 @@ struct sockaddr_in6 { /* Linux+NT ABI */
   uint32_t sin6_scope_id; /* rfc2553 */
 };
 
+extern const struct in6_addr in6addr_any;
+extern const struct in6_addr in6addr_loopback;
+
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SOCKADDR6_H_ */
