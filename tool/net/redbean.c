@@ -3244,7 +3244,6 @@ static bool ShouldServeCrashReportDetails(void) {
 
 static char *LuaOnHttpRequest(void) {
   char *error;
-  const char *errormessage;
   lua_State *L = GL;
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
@@ -3258,7 +3257,7 @@ static char *LuaOnHttpRequest(void) {
     if (hasonerror) {
       lua_getglobal(L, "OnError");
       lua_pushinteger(L, 500);
-      lua_pushstring(L, errormessage);
+      lua_pushstring(L, lua_tostring(L, -1));
       if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
         return CommitOutput(GetLuaResponse());
       } else {
