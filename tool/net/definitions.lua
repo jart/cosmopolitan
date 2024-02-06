@@ -550,6 +550,17 @@ SPECIAL PATHS
 ---
 function OnHttpRequest() end
 
+--- Hooks catch errors
+---
+--- If this functiopn is defined in the global scope by your `/.init.lua`
+--- then any errors occuring in the OnHttpRequest() hook will be catched.
+--- You'll be able then to do whatever you need with the error status and
+--- error message.
+---
+---@param status uint16
+---@param message string
+function OnError(status, message) end
+
 --- Hooks client connection creation.
 ---
 --- If this function is defined it'll be called from the main process

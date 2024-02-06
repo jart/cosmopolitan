@@ -3253,29 +3253,25 @@ static char *LuaOnHttpRequest(void) {
   if (LuaCallWithYield(L) == LUA_OK) {
     return CommitOutput(GetLuaResponse());
   } else {
-    errormessage = lua_tostring(L, -1);
-    LogLuaError("OnHttpRequest", errormessage);
+    LogLuaError("OnHttpRequest", lua_tostring(L, -1));
 
     if (hasonerror) {
-      lua_pushstring(L, errormessage);
-      lua_setglobal(L, errormessage);
-
-      lua_settop(L, 0);
       lua_getglobal(L, "OnError");
-      if (LuaCallWithYield(L) == LUA_OK) {
+      lua_pushinteger(L, 500);
+      lua_pushstring(L, errormessage);
+      if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
         return CommitOutput(GetLuaResponse());
       } else {
         error = ServeErrorWithDetail(
-          500, "Internal Server Error",
-          ShouldServeCrashReportDetails() ? errormessage : NULL);
-
+          500, "Internal Server Error!!",
+          ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
+        lua_pop(L, 1);  // pop error
         return error;
       }
     } else {
       error = ServeErrorWithDetail(
           500, "Internal Server Error",
-          ShouldServeCrashReportDetails() ? errormessage : NULL);
-
+          ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
       lua_pop(L, 1);  // pop error
       return error;
     }
