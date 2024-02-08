@@ -39,7 +39,7 @@
 #include "libc/x/xasprintf.h"
 
 char buffer[1000];
-/* #define Format(...) _gc(xasprintf(__VA_ARGS__)) */
+/* #define Format(...) gc(xasprintf(__VA_ARGS__)) */
 #define Format(...) (snprintf(buffer, sizeof(buffer), __VA_ARGS__), buffer)
 
 TEST(sprintf, test_space_flag) {
@@ -572,13 +572,13 @@ TEST(xasprintf, hugeNtoa) {
   ASSERT_STREQ(
       "0b1111111111111111111111111111111111111111111111111111111111111111111111"
       "1111111111111111111111111111111111111111111111111111111111",
-      _gc(xasprintf("%#jjb", UINT128_MAX)));
+      gc(xasprintf("%#jjb", UINT128_MAX)));
 }
 
 TEST(xasprintf, twosBane) {
-  ASSERT_STREQ("-2147483648", _gc(xasprintf("%d", 0x80000000)));
+  ASSERT_STREQ("-2147483648", gc(xasprintf("%d", 0x80000000)));
   ASSERT_STREQ("-9223372036854775808",
-               _gc(xasprintf("%ld", 0x8000000000000000)));
+               gc(xasprintf("%ld", 0x8000000000000000)));
 }
 
 TEST(snprintf, testFixedWidthString_wontOverrunInput) {

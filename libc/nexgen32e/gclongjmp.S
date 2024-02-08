@@ -30,7 +30,7 @@
 //	@see	examples/ctrlc.c
 //	@noreturn
 	.ftrace1
-_gclongjmp:
+gclongjmp:
 	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
@@ -65,4 +65,4 @@ _gclongjmp:
 #else
 #error "unsupported architecture"
 #endif /* __x86_64__ */
-	.endfn	_gclongjmp,globl
+	.endfn	gclongjmp,globl

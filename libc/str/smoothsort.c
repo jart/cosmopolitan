@@ -21,7 +21,6 @@
 │ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS │
 │ IN THE SOFTWARE.                                                             │
 └─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/bsf.h"
 #include "libc/limits.h"
 #include "libc/mem/alg.h"

@@ -32,48 +32,48 @@ float _tanhf(float) asm("tanhf");
 long double _tanhl(long double) asm("tanhl");
 
 TEST(tanh, test) {
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", _tanh(0.))));
-  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", _tanh(-0.))));
-  EXPECT_STREQ("0.0996679946249558", _gc(xasprintf("%.15g", _tanh(.1))));
-  EXPECT_STREQ("-0.0996679946249558", _gc(xasprintf("%.15g", _tanh(-.1))));
-  EXPECT_STREQ("0.46211715726001", _gc(xasprintf("%.15g", _tanh(.5))));
-  EXPECT_STREQ("-0.46211715726001", _gc(xasprintf("%.15g", _tanh(-.5))));
-  EXPECT_STREQ("0.761594155955765", _gc(xasprintf("%.15g", _tanh(1.))));
-  EXPECT_STREQ("-0.761594155955765", _gc(xasprintf("%.15g", _tanh(-1.))));
-  EXPECT_STREQ("0.905148253644866", _gc(xasprintf("%.15g", _tanh(1.5))));
-  EXPECT_STREQ("-0.905148253644866", _gc(xasprintf("%.15g", _tanh(-1.5))));
-  EXPECT_STREQ("0.964027580075817", _gc(xasprintf("%.15g", _tanh(2.))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", _tanh(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", _tanh(-0.))));
+  EXPECT_STREQ("0.0996679946249558", gc(xasprintf("%.15g", _tanh(.1))));
+  EXPECT_STREQ("-0.0996679946249558", gc(xasprintf("%.15g", _tanh(-.1))));
+  EXPECT_STREQ("0.46211715726001", gc(xasprintf("%.15g", _tanh(.5))));
+  EXPECT_STREQ("-0.46211715726001", gc(xasprintf("%.15g", _tanh(-.5))));
+  EXPECT_STREQ("0.761594155955765", gc(xasprintf("%.15g", _tanh(1.))));
+  EXPECT_STREQ("-0.761594155955765", gc(xasprintf("%.15g", _tanh(-1.))));
+  EXPECT_STREQ("0.905148253644866", gc(xasprintf("%.15g", _tanh(1.5))));
+  EXPECT_STREQ("-0.905148253644866", gc(xasprintf("%.15g", _tanh(-1.5))));
+  EXPECT_STREQ("0.964027580075817", gc(xasprintf("%.15g", _tanh(2.))));
   EXPECT_TRUE(isnan(_tanh(NAN)));
   EXPECT_TRUE(isnan(_tanh(-NAN)));
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _tanh(INFINITY))));
-  EXPECT_STREQ("-1", _gc(xasprintf("%.15g", _tanh(-INFINITY))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _tanh(INFINITY))));
+  EXPECT_STREQ("-1", gc(xasprintf("%.15g", _tanh(-INFINITY))));
   EXPECT_STREQ("2.2250738585072e-308",
-               _gc(xasprintf("%.15g", _tanh(__DBL_MIN__))));
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _tanh(__DBL_MAX__))));
+               gc(xasprintf("%.15g", _tanh(__DBL_MIN__))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _tanh(__DBL_MAX__))));
   EXPECT_STREQ("-0.761594155955765",
-               _gc(xasprintf("%.15g", _tanh(-1.0000000000000002))));
+               gc(xasprintf("%.15g", _tanh(-1.0000000000000002))));
   EXPECT_STREQ("-2.1073424255447e-08",
-               _gc(xasprintf("%.15g", _tanh(-2.1073424255447e-08))));
+               gc(xasprintf("%.15g", _tanh(-2.1073424255447e-08))));
 }
 
 TEST(tanhf, test) {
-  EXPECT_STREQ(".099668", _gc(xdtoaf(_tanhf(+.1))));
-  EXPECT_STREQ("-.099668", _gc(xdtoaf(_tanhf(-.1))));
-  EXPECT_STREQ("0", _gc(xdtoaf(_tanhf(0))));
-  EXPECT_STREQ("-0", _gc(xdtoaf(_tanhf(-0.))));
+  EXPECT_STREQ(".099668", gc(xdtoaf(_tanhf(+.1))));
+  EXPECT_STREQ("-.099668", gc(xdtoaf(_tanhf(-.1))));
+  EXPECT_STREQ("0", gc(xdtoaf(_tanhf(0))));
+  EXPECT_STREQ("-0", gc(xdtoaf(_tanhf(-0.))));
   EXPECT_TRUE(isnan(_tanhf(NAN)));
-  EXPECT_STREQ("1", _gc(xdtoaf(_tanhf(INFINITY))));
-  EXPECT_STREQ("-1", _gc(xdtoaf(_tanhf(-INFINITY))));
+  EXPECT_STREQ("1", gc(xdtoaf(_tanhf(INFINITY))));
+  EXPECT_STREQ("-1", gc(xdtoaf(_tanhf(-INFINITY))));
 }
 
 TEST(tanhl, test) {
-  EXPECT_STREQ(".09966799462495582", _gc(xdtoal(_tanhl(+.1))));
-  EXPECT_STREQ("-.09966799462495582", _gc(xdtoal(_tanhl(-.1))));
-  EXPECT_STREQ("0", _gc(xdtoal(_tanhl(0))));
-  EXPECT_STREQ("-0", _gc(xdtoal(_tanhl(-0.))));
+  EXPECT_STREQ(".09966799462495582", gc(xdtoal(_tanhl(+.1))));
+  EXPECT_STREQ("-.09966799462495582", gc(xdtoal(_tanhl(-.1))));
+  EXPECT_STREQ("0", gc(xdtoal(_tanhl(0))));
+  EXPECT_STREQ("-0", gc(xdtoal(_tanhl(-0.))));
   EXPECT_TRUE(isnan(_tanhl(NAN)));
-  EXPECT_STREQ("1", _gc(xdtoal(_tanhl(INFINITY))));
-  EXPECT_STREQ("-1", _gc(xdtoal(_tanhl(-INFINITY))));
+  EXPECT_STREQ("1", gc(xdtoal(_tanhl(INFINITY))));
+  EXPECT_STREQ("-1", gc(xdtoal(_tanhl(-INFINITY))));
 }
 
 BENCH(tanhl, bench) {
@@ -107,9 +107,9 @@ TEST(tanhf, brute) {
     x = f2i(tanhf(i2f(i)));
     y = f2i(tanhf2(i2f(i)));
     if (abs(x - y) > 2) {
-      kprintf("bah %#lx %s %d\n", i, _gc(xdtoaf(i2f(i))), abs(x - y));
-      kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(x))), x);
-      kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(y))), y);
+      kprintf("bah %#lx %s %d\n", i, gc(xdtoaf(i2f(i))), abs(x - y));
+      kprintf(" %-12s %#x\n", gc(xdtoaf(i2f(x))), x);
+      kprintf(" %-12s %#x\n", gc(xdtoaf(i2f(y))), y);
       if (!--lim) break;
     }
   }

@@ -175,6 +175,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     errno = e;
     return EAGAIN;
   }
+  dll_init(&pt->list);
   pt->pt_start = start_routine;
   pt->pt_arg = arg;
 
@@ -215,7 +216,9 @@ static errno_t pthread_create_impl(pthread_t *thread,
       _pthread_free(pt, false);
       return EINVAL;
     }
-    if (pt->pt_attr.__guardsize == pagesize) {
+    if (pt->pt_attr.__guardsize == pagesize &&
+        !(IsAarch64() && IsLinux() && IsQemuUser())) {
+      // MAP_GROWSDOWN doesn't work very well on qemu-aarch64
       pt->pt_attr.__stackaddr =
           mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
                MAP_STACK | MAP_ANONYMOUS, -1, 0);
@@ -289,7 +292,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // add thread to global list
   // we add it to the beginning since zombies go at the end
-  dll_init(&pt->list);
   _pthread_lock();
   dll_make_first(&_pthread_list, &pt->list);
   _pthread_unlock();

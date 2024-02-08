@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -31,7 +31,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 
 struct node {
 	struct node *next;

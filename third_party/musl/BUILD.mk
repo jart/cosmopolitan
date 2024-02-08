@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_MUSL
 
@@ -47,6 +47,12 @@ $(THIRD_PARTY_MUSL_A):					\
 $(THIRD_PARTY_MUSL_A).pkg:				\
 		$(THIRD_PARTY_MUSL_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_MUSL_A_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/third_party/musl/getnameinfo.o		\
+o/$(MODE)/third_party/musl/lookup_name.o		\
+o/$(MODE)/third_party/musl/lookup_serv.o:		\
+		private CFLAGS +=			\
+			-fportcosmo
 
 # offer assurances about the stack safety of cosmo libc
 $(THIRD_PARTY_MUSL_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096

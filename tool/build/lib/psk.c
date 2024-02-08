@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/psk.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "tool/build/lib/psk.h"
 
 /**
  * Returns preshared key for runit testing infrastructure.
@@ -35,7 +35,7 @@ void *GetRunitPsk(void) {
   int fd;
   char *r, *p;
   struct stat st;
-  p = _gc(xasprintf("%s/.runit.psk", _gc(xhomedir())));
+  p = gc(xasprintf("%s/.runit.psk", gc(xhomedir())));
   if (stat(p, &st) == -1 || st.st_size != 32) {
     fprintf(stderr, "need o//examples/getrandom.com -bn32 >~/.runit.psk\n");
     exit(1);

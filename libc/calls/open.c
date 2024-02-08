@@ -43,4 +43,4 @@ int open(const char *file, int flags, ...) {
   return openat(AT_FDCWD, file, flags, mode);
 }
 
-__strong_reference(open, open64);
+__weak_reference(open, open64);

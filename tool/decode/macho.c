@@ -23,7 +23,7 @@
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macho.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -886,7 +886,7 @@ PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co,
     else if (cpathobj != NULL) {
         // cpathobj != NULL means cpathname != NULL
         size_t cpathlen = strlen(cpathname);
-        char *pathname2 = _gc(strdup(cpathname));
+        char *pathname2 = gc(strdup(cpathname));
         if (_endswith(pathname2, ".pyc"))
         {
             pathname2[cpathlen-2] = '\0'; // so now ends with .py
@@ -2152,7 +2152,7 @@ static PyObject *_imp_path_isdir(PyObject *module, PyObject *arg) {
   Py_ssize_t n;
   const char *path;
   if (!PyArg_Parse(arg, "z#:_path_isdir", &path, &n)) return 0;
-  if (path == NULL) path = _gc(getcwd(NULL, 0));
+  if (path == NULL) path = gc(getcwd(NULL, 0));
   return _check_path_mode(path, S_IFDIR);
 }
 PyDoc_STRVAR(_imp_path_isdir_doc, "check if path is dir");
@@ -2172,7 +2172,7 @@ static PyObject *_imp_calc_mtime_and_size(PyObject *module, PyObject *arg) {
   Py_ssize_t n;
   const char *path;
   if (!PyArg_Parse(arg, "z#:_calc_mtime_and_size", &path, &n)) return 0;
-  if (path == NULL) path = _gc(getcwd(NULL, 0));
+  if (path == NULL) path = gc(getcwd(NULL, 0));
   if (stat(path, &stinfo))
     return PyTuple_Pack(2, PyLong_FromLong((long)-1), PyLong_FromLong((long)0));
   return PyTuple_Pack(2, PyLong_FromLong((long)stinfo.st_mtime),
@@ -2774,7 +2774,7 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
    */
 
   newpathsize = sizeof(basepath) + cnamelen + sizeof("/__init__.pyc") + 1;
-  newpath = _gc(malloc(newpathsize));
+  newpath = gc(malloc(newpathsize));
   bzero(newpath, newpathsize);
   /* performing a memccpy sequence equivalent to:
    * snprintf(newpath, newpathsize, "/zip/.python/%s.pyc", cname); */

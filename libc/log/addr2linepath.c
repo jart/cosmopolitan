@@ -25,9 +25,9 @@
 #include "libc/str/str.h"
 
 #ifdef __x86_64__
-#define ADDR2LINE "o/third_party/gcc/bin/x86_64-linux-musl-addr2line"
+#define ADDR2LINE "cosmocc/3.2/bin/x86_64-linux-musl-addr2line"
 #elif defined(__aarch64__)
-#define ADDR2LINE "o/third_party/gcc/bin/aarch64-linux-musl-addr2line"
+#define ADDR2LINE "cosmocc/3.2/bin/aarch64-linux-musl-addr2line"
 #endif
 
 static struct {

@@ -81,14 +81,14 @@ TEST(tmpfile, test) {
 }
 
 #ifndef __aarch64__
-// TODO(jart): Find way to detect qemu-aarch64
+// TODO(jart): Why does this apply to pi and qemu-aarch64?
 TEST(tmpfile, renameToRealFile) {
   if (!(IsLinux() && __is_linux_2_6_23())) return;  // need non-ancient linux
   FILE *f;
   f = tmpfile();
   ASSERT_EQ(2, fputs("hi", f));
   ASSERT_SYS(0, 0,
-             linkat(AT_FDCWD, _gc(xasprintf("/proc/self/fd/%d", fileno(f))),
+             linkat(AT_FDCWD, gc(xasprintf("/proc/self/fd/%d", fileno(f))),
                     AT_FDCWD, "real", AT_SYMLINK_FOLLOW));
   ASSERT_EQ(0, fclose(f));
   ASSERT_NE(NULL, (f = fopen("real", "r")));

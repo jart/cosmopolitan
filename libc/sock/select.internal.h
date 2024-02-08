@@ -4,7 +4,7 @@
 #include "libc/sock/select.h"
 COSMOPOLITAN_C_START_
 
-const char *DescribeFdSet(char[100], ssize_t, int, fd_set *);
+const char *DescribeFdSet(char[100], ssize_t, int, fd_set *) libcesque;
 #define DescribeFdSet(x, y, z) DescribeFdSet(alloca(100), x, y, z)
 
 COSMOPOLITAN_C_END_

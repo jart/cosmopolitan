@@ -19,7 +19,7 @@
 #include "libc/str/str.h"
 #include "libc/dce.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/testlib/ezbench.h"

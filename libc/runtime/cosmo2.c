@@ -78,7 +78,8 @@ static const char *DecodeMagnum(const char *p, long *r) {
   return *r = x, p;
 }
 
-wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
+wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
+                                  int os, long *is_freebsd) {
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
@@ -95,6 +96,11 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   };
   __set_tls(&tib);
 
+  // check for freebsd
+  if (is_freebsd) {
+    sp = is_freebsd;
+  }
+
   // extracts arguments from old sysv stack abi
   int argc = *sp;
   char **argv = (char **)(sp + 1);
@@ -108,16 +114,30 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   __envp = envp;
   __auxv = auxv;
   environ = envp;
+  __program_executable_name = exename;
   program_invocation_name = argv[0];
   __oldstack = (intptr_t)sp;
+  if (!(hostos = os)) {
+    if (SupportsFreebsd() && is_freebsd) {
+      hostos = _HOSTFREEBSD;
+    } else if (SupportsXnu() && m1) {
+      hostos = _HOSTXNU;
+    } else if (SupportsLinux()) {
+      hostos = _HOSTLINUX;
+    } else {
+      notpossible;
+    }
+  }
 
-  // detect apple m1 environment
   const char *magnums;
-  if (SupportsXnu() && (__syslib = m1)) {
-    hostos = _HOSTXNU;
+  if (IsFreebsd()) {
+    magnums = syscon_freebsd;
+  } else if (IsXnu()) {
+    if (!(__syslib = m1)) {
+      notpossible;
+    }
     magnums = syscon_xnu;
-  } else if (SupportsLinux()) {
-    hostos = _HOSTLINUX;
+  } else if (IsLinux()) {
     magnums = syscon_linux;
   } else {
     notpossible;
@@ -129,7 +149,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   }
 
   // check system call abi compatibility
-  if (SupportsXnu() && __syslib && __syslib->__version < SYSLIB_VERSION) {
+  if (IsXnu() && __syslib->__version < SYSLIB_VERSION) {
     sys_write(2, "need newer ape loader\n", 22);
     _Exit(127);
   }
@@ -151,6 +171,9 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
 
   // initialize file system
   __init_fds(argc, argv, envp);
+
+  // prepend cwd to executable path
+  __init_program_executable_name();
 
   __enable_tls();
 

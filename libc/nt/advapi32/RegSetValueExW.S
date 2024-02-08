@@ -2,9 +2,9 @@
 .imp	advapi32,__imp_RegSetValueExW,RegSetValueExW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RegSetValueEx:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

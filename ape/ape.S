@@ -1,5 +1,5 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 tw=8 fenc=utf-8                                 :vi │
+│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -592,9 +592,7 @@ ape_disk:
 
 #ifdef APE_IS_SHELL_SCRIPT
 apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
-	.ascii	"m=$(/bin/uname -m 2>/dev/null) || "
-	.ascii	"m=$(/usr/bin/uname -m 2>/dev/null) || "
-	.ascii	"m=x86_64\n"
+	.ascii	"m=$(uname -m 2>/dev/null) || m=x86_64\n"
 
 	.ascii	"if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]; then\n"
 //	Until all operating systems can be updated to support APE,
@@ -617,15 +615,15 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	     APE_VERSION_STR
 	.ascii	     "\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
-	.ascii	      "/bin/mkdir -p \"${t%/*}\" &&\n"
-	.ascii	      "/bin/dd if=\"$o\" of=\"$t.$$\" skip="
+	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
+	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
 	.shstub	        ape_loader_dd_skip,2
 	.ascii	        " count="
 	.shstub	        ape_loader_dd_count,2
 	.ascii	        " bs=64 2>/dev/null\n"
 #if SupportsXnu()
 	.ascii	      "[ -d /Applications ] && "
-	.ascii	        "/bin/dd if=\"$t.$$\""
+	.ascii	        "dd if=\"$t.$$\""
 	.ascii	          " of=\"$t.$$\""
 	.ascii	          " skip=5"
 	.ascii	          " count=8"
@@ -633,8 +631,8 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	          " conv=notrunc"
 	.ascii	          " 2>/dev/null\n"
 #endif /* SupportsXnu() */
-	.ascii	      "/bin/chmod 755 \"$t.$$\"\n"
-	.ascii	      "/bin/mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	      "chmod 755 \"$t.$$\"\n"
+	.ascii	      "mv -f \"$t.$$\" \"$t\"\n"
 	.ascii	    "}\n"
 	.ascii	    "exec \"$t\" \"$o\" \"$@\"\n"
 	.ascii	  "}\n"
@@ -650,9 +648,9 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
 	.ascii	  "[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
 	.ascii	    "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	      "/bin/mkdir -p \"${t%/*}\" 2>/dev/null\n"
-	.ascii	      "/bin/cp -f \"$o\" \"$t.$$\" &&\n"
-	.ascii	      "/bin/mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	      "mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	      "cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	      "mv -f \"$t.$$\" \"$t\" || exit 120\n"
 	.ascii	      "o=\"$t\"\n"
 	.ascii	    "}\n"
 #endif /* APE_NO_MODIFY_SELF */
@@ -683,7 +681,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	  "exec 7<&-\n"
 #if SupportsXnu()
 	.ascii	  "[ -d /Applications ] && "
-	.ascii	    "/bin/dd if=\"$o\""
+	.ascii	    "dd if=\"$o\""
 	.ascii	      " of=\"$o\""
 	.ascii	      " bs=8"
 	.ascii	      " skip="
@@ -702,38 +700,9 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	  "exit $?\n"
 	.ascii	"fi\n"				// x86_64
-//	...
-//	decentralized section (.apesh)
-//	...
-	.ascii	"PHDRS='' <<'@'\n"
-	.endobj	apesh
-
-//	elf program headers get inserted here
-//	because they need to be in the first 4096 bytes
-        .section .emushprologue,"a",@progbits
-emush:	.ascii	"\n@\n#'\"\n"
-	.ascii	"s=$(/bin/uname -s 2>/dev/null) || "
-	.ascii	"s=$(/usr/bin/uname -s 2>/dev/null) || "
-	.ascii	"s=Darwin\n"
-//	our script is running on a non-x86_64 architecture
-//	1. `dd` out the appropriate blink vm blob
-//	2. gunzip the blink virtual machine executable
-//	3. relaunch this program inside the blink vm
-	.ascii	"o=\"$(command -v \"$0\")\"\n"
-	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-1.0.0\"\n"
-	.previous
-//	...
-//	decentralized section (.emush)
-//	- __static_yoink("blink_linux_aarch64");  // for raspberry pi
-//	- __static_yoink("blink_xnu_aarch64");    // is apple silicon
-//	...
-        .section .emushepilogue,"a",@progbits
-	.ascii	"echo \"$0: this ape binary lacks $m support\" >&2\n"
-	.rept	16
-	.ascii	"exit 127\n"
-	.endr
+	.ascii	"echo error: this ape binary only supports x86_64 >&2\n"
 	.ascii	"exit 1\n"
-	.previous
+	.endobj	apesh
 
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits

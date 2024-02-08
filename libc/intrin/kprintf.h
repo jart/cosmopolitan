@@ -16,19 +16,19 @@
 
 COSMOPOLITAN_C_START_
 
-void kprintf(const char *, ...);
-size_t ksnprintf(char *, size_t, const char *, ...);
-void kvprintf(const char *, va_list);
-size_t kvsnprintf(char *, size_t, const char *, va_list);
+void kprintf(const char *, ...) libcesque;
+size_t ksnprintf(char *, size_t, const char *, ...) libcesque;
+void kvprintf(const char *, va_list) libcesque;
+size_t kvsnprintf(char *, size_t, const char *, va_list) libcesque;
 
-bool32 kisdangerous(const void *);
+bool32 kisdangerous(const void *) libcesque;
 
-void klog(const char *, size_t);
-void _klog_serial(const char *, size_t);
-long kloghandle(void);
+void klog(const char *, size_t) libcesque;
+void _klog_serial(const char *, size_t) libcesque;
+long kloghandle(void) libcesque;
 
-void uprintf(const char *, ...);
-void uvprintf(const char *, va_list);
+void uprintf(const char *, ...) libcesque;
+void uvprintf(const char *, va_list) libcesque;
 
 #ifndef TINY
 #define KINFOF(FMT, ...)                                         \

@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -36,6 +36,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sock/sock.h"
 #include "third_party/musl/lookup.internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -62,6 +63,7 @@ static dontinline textwindows int __get_resolv_conf_nt(struct resolvconf *conf)
 		return __winerr();
 	}
 
+	conf->nns = 0;
 	for (i = 0; i < keycount; ++i) {
 		char value8[128];
 		uint32_t valuebytes, uuidlen;
@@ -117,7 +119,7 @@ int __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz)
 	conf->attempts = 2;
 	if (search) *search = 0;
 
-	f = fopen("/etc/resolv.conf", "rb");
+	f = fopen("/etc/resolv.conf", "rbe");
 	if (!f) {
 		if (errno == ENOENT ||
 		    errno == ENOTDIR ||

@@ -122,7 +122,7 @@ TEST(sqlite, test) {
                                   ")"));
   ASSERT_EQ(SQLITE_OK, sqlite3_close(db));
   int i, n = 4;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
   }

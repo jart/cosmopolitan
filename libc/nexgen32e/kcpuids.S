@@ -31,28 +31,38 @@
 //	are quite toilsome.
 //
 //	@see	www.felixcloutier.com/x86/cpuid
-kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
-	.long	0,0,0,0				# EAX=1 (Processor Info)
-	.long	0,0,0,0				# EAX=2
-	.long	0,0,0,0				# EAX=7 (Extended Features)
-	.long	0,0,0,0				# EAX=0x80000001 (NexGen32e)
-	.long	0,0,0,0				# EAX=0x80000007 (APM)
-	.long	0,0,0,0				# EAX=16h (CPU Frequency)
+kCpuids:.long	0,0,0,0				// EAX=0 (Basic Processor Info)
+	.long	0,0,0,0				// EAX=1 (Processor Info)
+	.long	0,0,0,0				// EAX=2
+	.long	0,0,0,0				// EAX=7 (Extended Features)
+	.long	0,0,0,0				// EAX=0x80000001 (NexGen32e)
+	.long	0,0,0,0				// EAX=0x80000007 (APM)
+	.long	0,0,0,0				// EAX=16h (CPU Frequency)
+	.long	0,0,0,0				// EAX=7 ECX=1 (Extended Feats)
 	.endobj	kCpuids,globl
 	.previous
 
 	.init.start 201,_init_kCpuids
 	push	%rbx
 	push	$0
-	push	$0x16
-	push	$0xffffffff80000007
-	push	$0xffffffff80000001
+	push	$1
 	push	$7
+	push	$0
+	push	$0x16
+	push	$0
+	push	$0xffffffff80000007
+	push	$0
+	push	$0xffffffff80000001
+	push	$0
+	push	$7
+	push	$0
 	push	$2
+	push	$0
 	push	$1
 	mov	%rdi,%r8
 	xor	%eax,%eax
-1:	xor	%ecx,%ecx
+	xor	%ecx,%ecx
+1:	nop
 #ifdef FEATURELESS
 //	It's been reported that GDB reverse debugging doesn't
 //	understand VEX encoding. The workaround is to put:
@@ -62,6 +72,7 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 //	Inside your ~/.cosmo.mk file.
 	xor	%eax,%eax
 	xor	%ebx,%ebx
+	xor	%ecx,%ecx
 	xor	%edx,%edx
 #else
 	cpuid
@@ -74,10 +85,11 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 	xchg	%eax,%edx
 	stosl
 2:	pop	%rax
-	test	%eax,%eax			# EAX = stacklist->pop()
-	jz	3f				# EAX ≠ 0 (EOL sentinel)
-	cmp	KCPUIDS(0H,EAX)(%r8),%al	# EAX ≤ CPUID.0 max leaf
-	jbe	1b				# CPUID too new to probe
+	test	%eax,%eax			// EAX = stacklist->pop()
+	jz	3f				// EAX ≠ 0 (EOL sentinel)
+	pop	%rcx				// HERE WE GO AGAIN CPUID
+	cmp	KCPUIDS(0H,EAX)(%r8),%al	// EAX ≤ CPUID.0 max leaf
+	jbe	1b				// CPUID too new to probe
 	add	$4*4,%rdi
 	jmp	2b
 3:	nop

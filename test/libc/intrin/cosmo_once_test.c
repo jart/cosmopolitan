@@ -20,7 +20,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"

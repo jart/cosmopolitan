@@ -16,8 +16,8 @@ struct ifaddrs {
   void *ifa_data;
 };
 
-void freeifaddrs(struct ifaddrs *);
-int getifaddrs(struct ifaddrs **);
+void freeifaddrs(struct ifaddrs *) libcesque;
+int getifaddrs(struct ifaddrs **) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SOCK_IFADDRS_H_ */

@@ -108,7 +108,7 @@ On Apple Silicon, `aarch64-unknown-cosmo-cc` produces ELF binaries. If
 you build a hello world program, then you need to say `ape ./hello`. If
 you don't have an `ape` command then run `cc -o ape bin/ape-m1.c` which
 should be moved to `/usr/local/bin/ape`. Your APE interpreter might
-already exist under a path like `$TMPDIR/.ape-1.9`. It's important to
+already exist under a path like `$TMPDIR/.ape-1.10`. It's important to
 note this is only a gotcha for the cross compiler. Your `cosmocc`
 compiler wraps the actual ELF binaries with a shell script that'll
 extract and compile an APE loader automatically, as needed. This also
@@ -133,6 +133,13 @@ tricked-out assembly instructions. It's not possible to build these
 kinds of codebases using `cosmocc` which is just a convenient wrapper
 around the cross compilers, which would be a better choice to use in
 this type of circumstance.
+
+## Usage
+
+By default, all the code you compile will use the baseline of the X86_64
+and AARCH64, which is K8 and ARMv8.0. You can pass architecture specific
+flags to use newer ISAs by using the `-Xx86_64` and `-Xaarch64` prefixes
+like `-Xx86_64-mssse3` and `-Xaarch64-march=armv8.2-a+dotprod`.
 
 ## Troubleshooting
 
@@ -291,7 +298,7 @@ statements instead, so that Cosmopolitan Libc's system constants will
 work as expected. Our modifications to GNU GCC are published under the
 ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-11.2>. The
 binaries you see here were first published at
-<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.24> which
+<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.30> which
 is regularly updated.
 
 ## Legal

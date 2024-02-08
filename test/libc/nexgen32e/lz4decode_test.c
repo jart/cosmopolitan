@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nexgen32e/lz4.h"

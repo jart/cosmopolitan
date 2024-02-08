@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -49,13 +51,8 @@ static int close_impl(int fd) {
   }
 
   if (__isfdkind(fd, kFdZip)) {
-    if (!__vforked && _weaken(__zipos_close)) {
-      return _weaken(__zipos_close)(fd);
-    }
-    if (!IsWindows() && !IsMetal()) {
-      sys_close(fd);
-    }
-    return 0;
+    unassert(_weaken(__zipos_close));
+    return _weaken(__zipos_close)(fd);
   }
 
   if (!IsWindows() && !IsMetal()) {
@@ -95,8 +92,18 @@ static int close_impl(int fd) {
  * @vforksafe
  */
 int close(int fd) {
-  int rc = close_impl(fd);
-  if (!__vforked) __releasefd(fd);
+  int rc;
+  if (__isfdkind(fd, kFdZip)) {   // XXX IsWindows()?
+    BLOCK_SIGNALS;
+    __fds_lock();
+    rc = close_impl(fd);
+    if (!__vforked) __releasefd(fd);
+    __fds_unlock();
+    ALLOW_SIGNALS;
+  } else {
+    rc = close_impl(fd);
+    if (!__vforked) __releasefd(fd);
+  }
   STRACE("close(%d) → %d% m", fd, rc);
   return rc;
 }

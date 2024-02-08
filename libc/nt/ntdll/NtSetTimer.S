@@ -2,9 +2,9 @@
 .ntimp	NtSetTimer,NtSetTimer
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtSetTimer:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

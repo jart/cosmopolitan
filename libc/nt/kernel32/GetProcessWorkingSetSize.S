@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_GetProcessWorkingSetSize,GetProcessWorkingSetSize
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetProcessWorkingSetSize:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

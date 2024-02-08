@@ -121,10 +121,10 @@ signame_init (void)
   init_sig (SIGKILL, "KILL", _("Killed"));
 #endif
 #if defined (SIGBUS)
-  init_sig (SIGBUS, "BUS", _("Bus error"));
+  // init_sig (SIGBUS, "BUS", _("Bus error"));
 #endif
 #if defined (SIGSEGV)
-  init_sig (SIGSEGV, "SEGV", _("Segmentation fault"));
+  // init_sig (SIGSEGV, "SEGV", _("Segmentation fault"));
 #endif
 #if defined (SIGSYS)
   init_sig (SIGSYS, "SYS", _("Bad system call"));

@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_MBEDTLS
 
@@ -18,7 +18,6 @@ THIRD_PARTY_MBEDTLS_A_CHECKS =						\
 
 THIRD_PARTY_MBEDTLS_A_DIRECTDEPS =					\
 	LIBC_CALLS							\
-	LIBC_DNS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
@@ -31,6 +30,7 @@ THIRD_PARTY_MBEDTLS_A_DIRECTDEPS =					\
 	LIBC_TIME							\
 	NET_HTTP							\
 	THIRD_PARTY_COMPILER_RT						\
+	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_ZLIB
 
 THIRD_PARTY_MBEDTLS_A_DEPS :=						\

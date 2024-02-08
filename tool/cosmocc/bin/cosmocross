@@ -18,9 +18,8 @@ Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
 Copyright (C) 2019 Free Software Foundation, Inc.
 This launches GNU GCC/Binutils subprocesses, which is free software; see
-Cosmopolitan's third_party/gcc/ for source code and copying conditions.
-There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
+cosmocc's LICENSE files for source code and copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 exit
 fi
@@ -128,7 +127,9 @@ for x; do
     continue
   elif [ x"$x" = x"-r" ]; then
     RELOCATABLE=1
-  elif [ x"$x" = x"-E" ]; then
+  elif [ x"$x" = x"-E" ] ||
+       [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ]; then
     INTENT=cpp
   elif [ x"$x" = x"-o" ]; then
     NEED_OUTPUT=1
@@ -143,11 +144,9 @@ for x; do
     continue
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-pie" ] ||
-       [ x"$x" = x"-frtti" ] ||
        [ x"$x" = x"-shared" ] ||
        [ x"$x" = x"-nostdlib" ] ||
        [ x"$x" = x"-mred-zone" ] ||
-       [ x"$x" = x"-fexceptions" ] ||
        [ x"$x" = x"-fsanitize=thread" ]; then
     echo "$PROG: $x not supported" >&2
     exit 1

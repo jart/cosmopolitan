@@ -7,7 +7,7 @@ struct Env {
   int i;
 };
 
-struct Env __getenv(char **, const char *);
+struct Env __getenv(char **, const char *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_INTRIN_GETENV_H_ */

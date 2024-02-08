@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -73,7 +73,7 @@ TEST(system, haveShell) {
 
 TEST(system, echo) {
   ASSERT_EQ(0, system("echo hello >\"hello there.txt\""));
-  EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
+  EXPECT_STREQ("hello\n", gc(xslurp("hello there.txt", 0)));
 }
 
 TEST(system, exit) {
@@ -83,13 +83,13 @@ TEST(system, exit) {
 TEST(system, testStdoutRedirect) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   ASSERT_EQ(0, system("./echo.com hello >hello.txt"));
-  EXPECT_STREQ("hello\n", _gc(xslurp("hello.txt", 0)));
+  EXPECT_STREQ("hello\n", gc(xslurp("hello.txt", 0)));
 }
 
 TEST(system, testStdoutRedirect_withSpacesInFilename) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   ASSERT_EQ(0, system("./echo.com hello >\"hello there.txt\""));
-  EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
+  EXPECT_STREQ("hello\n", gc(xslurp("hello there.txt", 0)));
 }
 
 TEST(system, testStderrRedirect_toStdout) {

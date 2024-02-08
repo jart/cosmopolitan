@@ -1,5 +1,5 @@
 /usr/bin/env echo ' -*-mode:sh;indent-tabs-mode:nil;tab-width:8;coding:utf-8-*-│
-│ vi: set et ft=sh ts=2 sts=2 sw=2 fenc=utf-8                              :vi │
+│ vi: set noet ft=sh ts=8 sts=8 sw=8 fenc=utf-8                            :vi │
 ╚────────────────────────────────────────────────────────────────'>/dev/null #*/
 . libc/nt/codegen.sh
 
@@ -58,6 +58,7 @@ imp	'CancelSynchronousIo'					CancelSynchronousIo					kernel32	1
 imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				kernel32	2
 imp	'ClearCommBreak'					ClearCommBreak						kernel32	1
 imp	'CloseHandle'						CloseHandle						kernel32	1
+imp	'ClosePseudoConsole'					ClosePseudoConsole					kernel32	1	# Windows 10+
 imp	'ConnectNamedPipe'					ConnectNamedPipe					kernel32	2
 imp	'ContinueDebugEvent'					ContinueDebugEvent					kernel32	3
 imp	'CopyFile'						CopyFileW						kernel32	3
@@ -65,6 +66,7 @@ imp	'CreateEvent'						CreateEventW						kernel32	4
 imp	'CreateEventEx'						CreateEventExW						kernel32	4
 imp	'CreateHardLink'					CreateHardLinkW						kernel32	3
 imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	4
+imp	'CreatePseudoConsole'					CreatePseudoConsole					kernel32	5	# Windows 10+
 imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	4
 imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	2
 imp	'CreateWaitableTimer'					CreateWaitableTimerW					kernel32	3
@@ -107,6 +109,7 @@ imp	'GetConsoleTitle'					GetConsoleTitleW					kernel32	2
 imp	'GetConsoleWindow'					GetConsoleWindow					kernel32	0
 imp	'GetCurrentDirectory'					GetCurrentDirectoryW					kernel32	2
 imp	'GetCurrentProcessId'					GetCurrentProcessId					kernel32	0
+imp	'GetCurrentProcessorNumberEx'				GetCurrentProcessorNumberEx				kernel32	1
 imp	'GetCurrentThread'					GetCurrentThread					kernel32	0
 imp	'GetCurrentThreadId'					GetCurrentThreadId					kernel32	0
 imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					kernel32	1
@@ -227,6 +230,7 @@ imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	3
 imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				kernel32	1
 imp	'RemoveVectoredExceptionHandler'			RemoveVectoredExceptionHandler				kernel32	1
 imp	'ResetEvent'						ResetEvent						kernel32	1
+imp	'ResizePseudoConsole'					ResizePseudoConsole					kernel32	2	# Windows 10+
 imp	'ResumeThread'						ResumeThread						kernel32	1
 imp	'SetConsoleActiveScreenBuffer'				SetConsoleActiveScreenBuffer				kernel32	1	# TODO(jart): 6.2 and higher
 imp	'SetConsoleCP'						SetConsoleCP						kernel32	1	# TODO(jart): 6.2 and higher

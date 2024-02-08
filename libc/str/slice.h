@@ -16,8 +16,8 @@ COSMOPOLITAN_C_START_
     __n == (m) && !memcasecmp(a, b, __n); \
   })
 
-int CompareSlices(const char *, size_t, const char *, size_t);
-int CompareSlicesCase(const char *, size_t, const char *, size_t);
+int CompareSlices(const char *, size_t, const char *, size_t) libcesque;
+int CompareSlicesCase(const char *, size_t, const char *, size_t) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STR_SLICE_H_ */

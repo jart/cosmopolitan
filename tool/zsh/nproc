@@ -1,0 +1,19 @@
+[[ -x $(whence -p nproc) ]] && {
+  command nproc && {
+    unfunction nproc
+    return
+  }
+}
+[[ -x $(which sysctl) ]] && {
+  nproc() {
+    sysctl -n hw.ncpu
+  }
+  nproc && return
+}
+# TODO other platforms
+echo nproc: no implementation found >&2
+nproc() {
+  echo 2
+}
+nproc
+# vim:ft=zsh

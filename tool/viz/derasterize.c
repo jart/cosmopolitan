@@ -27,7 +27,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
@@ -551,8 +551,8 @@ static int ParseNumberOption(const char *arg) {
   return x;
 }
 
-static void PrintUsage(int rc, FILE *f) {
-  fputs(HELPTEXT, f);
+static void PrintUsage(int rc, int fd) {
+  tinyprint(fd, HELPTEXT, NULL);
   exit(rc);
 }
 
@@ -573,9 +573,12 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case '?':
       case 'H':
-        PrintUsage(EXIT_SUCCESS, stdout);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        if (opt == optopt) {
+          PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+        } else {
+          PrintUsage(EX_USAGE, STDERR_FILENO);
+        }
     }
   }
 }

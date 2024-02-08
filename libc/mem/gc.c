@@ -39,7 +39,7 @@ static void TeardownGc(void) {
   if (__tls_enabled) {
     t = __get_tls();
     if ((g = t->tib_garbages)) {
-      // exit() currently doesn't use _gclongjmp() like pthread_exit()
+      // exit() currently doesn't use gclongjmp() like pthread_exit()
       // so we need to run the deferred functions manually.
       while (g->i) {
         --g->i;
@@ -88,56 +88,11 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   frame->addr = (intptr_t)__gc;
 }
 
-// the gnu extension macros for _gc / _defer point here
+// the gnu extension macros for gc / defer point here
 void __defer(void *rbp, void *fn, void *arg) {
   struct StackFrame *f, *frame = rbp;
   f = __builtin_frame_address(0);
   unassert(f->next == frame);
   unassert(PointerNotOwnedByParentStackFrame(f, frame, arg));
   DeferFunction(frame, fn, arg);
-}
-
-/**
- * Frees memory when function returns.
- *
- * This garbage collector overwrites the return address on the stack so
- * that the RET instruction calls a trampoline which calls free(). It's
- * loosely analogous to Go's defer keyword rather than a true cycle gc.
- *
- *     const char *s = _gc(strdup("hello"));
- *     puts(s);
- *
- * This macro is equivalent to:
- *
- *      _defer(free, ptr)
- *
- * @warning do not return a gc()'d pointer
- * @warning do not realloc() with gc()'d pointer
- * @warning be careful about static keyword due to impact of inlining
- * @note you should use -fno-omit-frame-pointer
- */
-void *(_gc)(void *thing) {
-  struct StackFrame *frame;
-  frame = __builtin_frame_address(0);
-  DeferFunction(frame->next, _weakfree, thing);
-  return thing;
-}
-
-/**
- * Calls fn(arg) when function returns.
- *
- * This garbage collector overwrites the return address on the stack so
- * that the RET instruction calls a trampoline which calls free(). It's
- * loosely analogous to Go's defer keyword rather than a true cycle gc.
- *
- * @warning do not return a gc()'d pointer
- * @warning do not realloc() with gc()'d pointer
- * @warning be careful about static keyword due to impact of inlining
- * @note you should use -fno-omit-frame-pointer
- */
-void *(_defer)(void *fn, void *arg) {
-  struct StackFrame *frame;
-  frame = __builtin_frame_address(0);
-  DeferFunction(frame->next, fn, arg);
-  return arg;
 }

@@ -8,7 +8,8 @@
 #define KCPUIDS_80000001H 4
 #define KCPUIDS_80000007H 5
 #define KCPUIDS_16H       6
-#define KCPUIDS_LEN       7
+#define KCPUIDS_7H_1H     7
+#define KCPUIDS_LEN       8
 #define KCPUIDS_6H        -1 /* TBD: Thermal and Power Management */
 #define KCPUIDS_DH        -1 /* TBD: Extended state features */
 #define KCPUIDS_80000008H -1 /* TBD: AMD Miscellaneous */

@@ -11,12 +11,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
@@ -41,6 +40,7 @@
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509.h"
+#include "third_party/musl/netdb.h"
 
 /**
  * @fileoverview Downloads HTTP URL to stdout.
@@ -332,7 +332,7 @@ int _curl(int argc, char *argv[]) {
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
-  if (getaddrinfo(host, port, &hints, &addr) != EAI_SUCCESS) {
+  if (getaddrinfo(host, port, &hints, &addr) != 0) {
     tinyprint(2, prog, ": could not resolve host: ", host, "\n", NULL);
     exit(1);
   }

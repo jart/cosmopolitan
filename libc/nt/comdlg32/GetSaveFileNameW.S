@@ -2,9 +2,9 @@
 .imp	comdlg32,__imp_GetSaveFileNameW,GetSaveFileNameW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetSaveFileName:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

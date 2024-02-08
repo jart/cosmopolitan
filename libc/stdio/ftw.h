@@ -79,10 +79,12 @@ struct FTW {
   int level;
 };
 
-int ftw(const char *, int (*)(const char *, const struct stat *, int), int);
+int ftw(const char *, int (*)(const char *, const struct stat *, int),
+        int) dontthrow;
+
 int nftw(const char *,
          int (*)(const char *, const struct stat *, int, struct FTW *), int,
-         int);
+         int) dontthrow;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MUSL_FTW_H_ */

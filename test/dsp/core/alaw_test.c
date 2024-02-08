@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

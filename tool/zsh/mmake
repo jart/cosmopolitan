@@ -1,0 +1,45 @@
+# Cosmopolitan zsh make helper.
+# Setup (in ~/.zshrc, for instance):
+#     fpath+=($COSMO/tool/zsh)
+#     autoload -Uz mmake
+# e.g.:
+#     mmake tiny ape/ape.elf
+local mode
+case $1 in
+  aarch64|x86_64|aarch64-(zero|tiny)|x86_64-tiny)     ;&
+  zero|fastbuild|opt|optlinux|rel|asan|dbg|sysv)      ;&
+  tiny(|linux(|bsd)|sysv|nowin)|nox87|llvm|ansi)      ##
+                    mode=$1;                    shift ;;
+  (m|MODE)=*)       mode=${1#*=};               shift ;;
+  *)                mode=${MODE:-${m}}                ;;
+esac
+[[ -z $mode ]] && {
+  local arch=$(uname -m)
+  case $arch in
+    arm64|aarch64)  mode=aarch64                      ;;
+  esac
+}
+local -a targs
+local -a flags
+local j
+while (( $# > 0 )); do
+  case $1 in
+    all|o|bins|check|test|depend|tags|aarch64)        ;&
+    clean|toolchain|clean_toolchain|o/$mode/*)        ##
+                    targs+=($1);                shift ;;
+    -j*)            j=$1;                       shift ;;
+    -*|*=*)         flags+=($1);                shift ;;
+    o/(|aarch64)/*) targs+=(o/$mode/${1#*/*/}); shift ;;
+    o/*)            targs+=(o/$mode/${1#*/});   shift ;;
+    *)              targs+=(o/$mode/$1);        shift ;;
+  esac
+done
+[[ -z $j ]] && {
+  whence nproc >/dev/null || autoload -Uz nproc
+  j=-j$(nproc)
+}
+local make=${MAKE:-${COSMOCC:-/opt/cosmocc/current}/bin/make}
+[[ -x $make ]] || make=${COSMO:-$PWD}/build/bootstrap/make.com
+( set -x
+  exec $make $j $flags MODE=$mode $targs )
+# vim:ft=zsh

@@ -13,7 +13,7 @@
  */
 #define SUPPORT_VECTOR 255
 #else
-#define SUPPORT_VECTOR (_HOSTLINUX | _HOSTXNU)
+#define SUPPORT_VECTOR (_HOSTLINUX | _HOSTXNU | _HOSTFREEBSD)
 #endif
 #endif
 
@@ -62,8 +62,10 @@
 #endif
 
 #ifdef __aarch64__
+#define IsAarch64()    1
 #define IsXnuSilicon() IsXnu()
 #else
+#define IsAarch64()    0
 #define IsXnuSilicon() 0
 #endif
 
@@ -118,6 +120,8 @@
 COSMOPOLITAN_C_START_
 
 extern const int __hostos;
+
+int IsQemuUser(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

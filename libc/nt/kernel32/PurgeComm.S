@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_PurgeComm,PurgeComm
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 PurgeComm:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

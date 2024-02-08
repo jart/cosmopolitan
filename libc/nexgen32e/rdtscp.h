@@ -18,8 +18,8 @@ COSMOPOLITAN_C_START_
  */
 #define rdtscp(OPT_OUT_IA32_TSC_AUX)               \
   ({                                               \
+    uint64_t Rax, Rdx;                             \
     uint32_t Ecx, *EcxOut;                         \
-    uint64_t Rax, Rcx, Rdx;                        \
     asm volatile("rdtscp"                          \
                  : "=a"(Rax), "=c"(Ecx), "=d"(Rdx) \
                  : /* no inputs */                 \

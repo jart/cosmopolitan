@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += LIBC_SOCK
 
@@ -57,6 +57,8 @@ $(LIBC_SOCK_A).pkg:				\
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/sock/sys_sendfile_xnu.o: libc/sock/sys_sendfile_xnu.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/sock/sys_sendfile_freebsd.o: libc/sock/sys_sendfile_freebsd.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_SOCK_LIBS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)))

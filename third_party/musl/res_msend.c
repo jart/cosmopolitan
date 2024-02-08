@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -25,22 +25,25 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sock/struct/pollfd.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/sock/struct/msghdr.h"
-#include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/tcp.h"
-#include "libc/sysv/consts/msg.h"
-#include "libc/sysv/consts/af.h"
-#include "libc/thread/thread.h"
-#include "libc/str/str.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/sock.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/struct/msghdr.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/ipv6.h"
+#include "libc/sysv/consts/msg.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/tcp.h"
+#include "libc/thread/thread.h"
 #include "lookup.internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -79,7 +82,8 @@ static int start_tcp(struct pollfd *pfd, int family, const void *sa, socklen_t s
 	int fd = socket(family, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
 	pfd->fd = fd;
 	pfd->events = POLLOUT;
-	if (!setsockopt(fd, IPPROTO_TCP, TCP_FASTOPEN_CONNECT,
+	if (IsLinux() &&
+	    !setsockopt(fd, IPPROTO_TCP, TCP_FASTOPEN_CONNECT,
 	    &(int){1}, sizeof(int))) {
 		r = sendmsg(fd, &mh, MSG_FASTOPEN|MSG_NOSIGNAL);
 		if (r == ql+2) pfd->events = POLLIN;

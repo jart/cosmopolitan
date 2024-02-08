@@ -71,6 +71,7 @@ extern char **__argv;
 extern char **__envp;
 extern unsigned long *__auxv;
 extern intptr_t __oldstack;
+extern char *__program_executable_name;
 extern uint64_t __nosync;
 extern int __strace;
 extern int __ftrace;
@@ -135,7 +136,7 @@ long __get_minsigstksz(void) pureconst;
 void __get_main_stack(void **, size_t *, int *);
 long __get_safe_size(long, long);
 char *__get_tmpdir(void);
-__funline int __trace_disabled(int x) {
+forceinline int __trace_disabled(int x) {
   return 0;
 }
 #ifndef FTRACE

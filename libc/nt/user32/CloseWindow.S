@@ -2,9 +2,9 @@
 .imp	user32,__imp_CloseWindow,CloseWindow
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 CloseWindow:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

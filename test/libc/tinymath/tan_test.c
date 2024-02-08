@@ -27,22 +27,22 @@ float _tanf(float) asm("tanf");
 long double _tanl(long double) asm("tanl");
 
 TEST(tan, test) {
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", _tan(0.))));
-  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", _tan(-0.))));
-  EXPECT_STREQ("0.54630248984379", _gc(xasprintf("%.15g", _tan(.5))));
-  EXPECT_STREQ("-0.54630248984379", _gc(xasprintf("%.15g", _tan(-.5))));
-  EXPECT_STREQ("1.5574077246549", _gc(xasprintf("%.15g", _tan(1.))));
-  EXPECT_STREQ("-1.5574077246549", _gc(xasprintf("%.15g", _tan(-1.))));
-  EXPECT_STREQ("14.1014199471717", _gc(xasprintf("%.15g", _tan(1.5))));
-  EXPECT_STREQ("-14.1014199471717", _gc(xasprintf("%.15g", _tan(-1.5))));
-  EXPECT_STREQ("nan", _gc(xasprintf("%.15g", _tan(NAN))));
-  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", _tan(-NAN))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", _tan(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", _tan(-0.))));
+  EXPECT_STREQ("0.54630248984379", gc(xasprintf("%.15g", _tan(.5))));
+  EXPECT_STREQ("-0.54630248984379", gc(xasprintf("%.15g", _tan(-.5))));
+  EXPECT_STREQ("1.5574077246549", gc(xasprintf("%.15g", _tan(1.))));
+  EXPECT_STREQ("-1.5574077246549", gc(xasprintf("%.15g", _tan(-1.))));
+  EXPECT_STREQ("14.1014199471717", gc(xasprintf("%.15g", _tan(1.5))));
+  EXPECT_STREQ("-14.1014199471717", gc(xasprintf("%.15g", _tan(-1.5))));
+  EXPECT_STREQ("nan", gc(xasprintf("%.15g", _tan(NAN))));
+  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", _tan(-NAN))));
   EXPECT_TRUE(isnan(_tan(INFINITY)));
   EXPECT_TRUE(isnan(_tan(-INFINITY)));
   EXPECT_STREQ("2.2250738585072e-308",
-               _gc(xasprintf("%.15g", _tan(__DBL_MIN__))));
+               gc(xasprintf("%.15g", _tan(__DBL_MIN__))));
   EXPECT_STREQ("-0.0049620158744449",
-               _gc(xasprintf("%.15g", _tan(__DBL_MAX__))));
+               gc(xasprintf("%.15g", _tan(__DBL_MAX__))));
 }
 
 BENCH(tan, bench) {

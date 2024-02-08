@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_MBEDTLS_TEST
 
@@ -96,7 +96,6 @@ THIRD_PARTY_MBEDTLS_TEST_CHECKS =										\
 
 THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_CALLS												\
-	LIBC_DNS												\
 	LIBC_FMT												\
 	LIBC_INTRIN												\
 	LIBC_LOG												\
@@ -112,7 +111,8 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_X													\
 	THIRD_PARTY_COMPILER_RT											\
 	THIRD_PARTY_GDTOA											\
-	THIRD_PARTY_MBEDTLS
+	THIRD_PARTY_MBEDTLS											\
+	THIRD_PARTY_MUSL
 
 THIRD_PARTY_MBEDTLS_TEST_DEPS :=										\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS),$($(x))))
@@ -1357,8 +1357,6 @@ o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
 		$(CRT)												\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.runs: private QUOTA = -M512m
 
 # these need to be explictly defined because landlock make won't sandbox
 # prerequisites with a trailing slash.

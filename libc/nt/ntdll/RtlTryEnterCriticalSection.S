@@ -2,9 +2,9 @@
 .ntimp	RtlTryEnterCriticalSection,RtlTryEnterCriticalSection
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RtlTryEnterCriticalSection:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

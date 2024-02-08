@@ -27,12 +27,12 @@ double asin_(double) asm("asin");
 #define asin asin_
 
 TEST(asin, test) {
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", asin(0.))));
-  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", asin(-0.))));
-  EXPECT_STREQ("0.523598775598299", _gc(xasprintf("%.15g", asin(.5))));
-  EXPECT_STREQ("-0.523598775598299", _gc(xasprintf("%.15g", asin(-.5))));
-  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", asin(1.))));
-  EXPECT_STREQ("-1.5707963267949", _gc(xasprintf("%.15g", asin(-1.))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", asin(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", asin(-0.))));
+  EXPECT_STREQ("0.523598775598299", gc(xasprintf("%.15g", asin(.5))));
+  EXPECT_STREQ("-0.523598775598299", gc(xasprintf("%.15g", asin(-.5))));
+  EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", asin(1.))));
+  EXPECT_STREQ("-1.5707963267949", gc(xasprintf("%.15g", asin(-1.))));
   EXPECT_TRUE(isnan(asin(1.5)));
   EXPECT_TRUE(isnan(asin(-1.5)));
   EXPECT_TRUE(isnan(asin(NAN)));
@@ -40,7 +40,7 @@ TEST(asin, test) {
   EXPECT_TRUE(isnan(asin(INFINITY)));
   EXPECT_TRUE(isnan(asin(-INFINITY)));
   EXPECT_STREQ("2.2250738585072e-308",
-               _gc(xasprintf("%.15g", asin(__DBL_MIN__))));
+               gc(xasprintf("%.15g", asin(__DBL_MIN__))));
   EXPECT_TRUE(isnan(asin(__DBL_MAX__)));
 }
 

@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -100,7 +100,7 @@ __fopen_passwd(void)
 		return f;
 	if (!(s = __create_synthetic_passwd_file()))
 		return 0;
-	if (!(f = fmemopen(s, strlen(s), "rb")))
+	if (!(f = fmemopen(s, strlen(s), "rbe")))
 		free(s);
 	return f;
 }

@@ -1,5 +1,5 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 tw=8 fenc=utf-8                                 :vi │
+│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -25,10 +25,11 @@
 //	@returnstwice
 //	@assume	system five nexgen32e abi conformant
 //	@note	code built w/ microsoft abi compiler can't call this
-//	@see	longjmp(), _gclongjmp()
+//	@see	longjmp(), gclongjmp()
 	.ftrace1
 setjmp:
 	.ftrace2
+_setjmp:
 #ifdef __x86_64__
 	lea	8(%rsp),%rax
 	mov	%rax,(%rdi)
@@ -43,14 +44,14 @@ setjmp:
 	xor	%eax,%eax
 	ret
 #elif defined(__aarch64__)
-	stp	x19,x20,[x0,#0]
-	stp	x21,x22,[x0,#16]
+	mov	x2,sp
+	stp	x29,x30,[x0,#0]
+	stp	x2,x22,[x0,#16]
 	stp	x23,x24,[x0,#32]
 	stp	x25,x26,[x0,#48]
 	stp	x27,x28,[x0,#64]
-	stp	x29,x30,[x0,#80]
-	mov	x2,sp
-	str	x2,[x0,#104]
+	stp	x19,x20,[x0,#80]
+	str	x21,[x0,#104]
 	stp	d8,d9,[x0,#112]
 	stp	d10,d11,[x0,#128]
 	stp	d12,d13,[x0,#144]
@@ -60,5 +61,5 @@ setjmp:
 #else
 #error "unsupported architecture"
 #endif
+	.endfn	_setjmp,globl
 	.endfn	setjmp,globl
-	.alias	setjmp,_setjmp

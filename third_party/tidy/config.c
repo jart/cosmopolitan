@@ -15,7 +15,7 @@
 #include "libc/assert.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/tidy/tags.h"

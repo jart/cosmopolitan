@@ -1,5 +1,5 @@
 /*bin/echo   ' -*- mode:sh; indent-tabs-mode:nil; tab-width:8; coding:utf-8 -*-│
-│ vi: set et ft=sh ts=2 sts=2 sw=2 fenc=utf-8                              :vi │
+│ vi: set noet ft=sh ts=8 sts=8 sw=8 fenc=utf-8                            :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -201,7 +201,6 @@ scall	sys_modify_ldt		0xfffffffffffff09a	0xfff	globl # no wrapper
 scall	sys_pivot_root		0xfffffffffffff09b	0x029	globl hidden
 #scall	prctl			0xfffffffffffff09d	0x0a7	globl # wrapped manually
 scall	sys_arch_prctl		0x0a50a50a5ffff09e	0xfff	globl hidden # sysarch() on bsd
-scall	sys_set_tls		0x13d1490a5300309e	0xfff	globl hidden # arch_prctl on linux, sysarch on freebsd, _lwp_setprivate on netbsd, __set_tcb on openbsd, _lwp_setprivate on netbsd, thread_fast_set_cthread_self on xnu
 scall	sys_adjtimex		0xfffffffffffff09f	0x0ab	globl # no wrapper
 scall	sys_swapon		0xffffff05520550a7	0x0e0	globl # no wrapper
 scall	sys_swapoff		0xffffff1a8ffff0a8	0x0e1	globl # no wrapper
@@ -409,7 +408,7 @@ scall	__bsd_seteuid		0xfff0b70b720b7fff	0xfff	globl hidden # wrapped via setreui
 scall	__bsd_setegid		0xfff0b60b620b6fff	0xfff	globl hidden # wrapped via setregid()
 scall	sys_fpathconf		0x0c00c00c020c0fff	0xfff	globl # no wrapper
 scall	sys_fhopen		0x18c10812a20f8fff	0xfff	globl # no wrapper
-scall	sys_issetugid		0xfff0fd0fd2147fff	0xfff	globl hidden
+scall	sys_issetugid		0x1310fd0fd2147fff	0xfff	globl hidden
 scall	sys_minherit		0x1110fa0fa20fafff	0xfff	globl # no wrapper
 scall	sys_pathconf		0x0bf0bf0bf20bffff	0xfff	globl # no wrapper
 scall	sys_sysctl		0x0ca0ca0ca20cafff	0xfff	globl # no wrapper

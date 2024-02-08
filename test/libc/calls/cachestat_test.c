@@ -25,7 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"

@@ -1,85 +1,85 @@
-#ifndef _COMPLEX_H
-#define _COMPLEX_H
+#ifndef COSMOPOLITAN_LIBC_COMPLEX_H_
+#define COSMOPOLITAN_LIBC_COMPLEX_H_
 COSMOPOLITAN_C_START_
 #if __STDC_VERSION__ + 0 >= 201112 && !defined(__STDC_NO_COMPLEX__)
 
 #define complex   _Complex
 #define imaginary _Imaginary
 
-double cabs(complex double);
-double carg(complex double);
-double cimag(complex double);
-double creal(complex double);
+double cabs(complex double) libcesque;
+double carg(complex double) libcesque;
+double cimag(complex double) libcesque;
+double creal(complex double) libcesque;
 
-float cabsf(complex float);
-float cargf(complex float);
-float cimagf(complex float);
-float crealf(complex float);
+float cabsf(complex float) libcesque;
+float cargf(complex float) libcesque;
+float cimagf(complex float) libcesque;
+float crealf(complex float) libcesque;
 
-long double cabsl(complex long double);
-long double cargl(complex long double);
-long double cimagl(complex long double);
-long double creall(complex long double);
+long double cabsl(complex long double) libcesque;
+long double cargl(complex long double) libcesque;
+long double cimagl(complex long double) libcesque;
+long double creall(complex long double) libcesque;
 
-complex double cacos(complex double);
-complex double cacosh(complex double);
-complex double casin(complex double);
-complex double casinh(complex double);
-complex double catan(complex double);
-complex double catanh(complex double);
-complex double ccos(complex double);
-complex double ccosh(complex double);
-complex double cexp(complex double);
-complex double cexp2(complex double);
-complex double clog(complex double);
-complex double conj(complex double);
-complex double cpow(complex double, complex double);
-complex double cproj(complex double);
-complex double csin(complex double);
-complex double csinh(complex double);
-complex double csqrt(complex double);
-complex double ctan(complex double);
-complex double ctanh(complex double);
+complex double cacos(complex double) libcesque;
+complex double cacosh(complex double) libcesque;
+complex double casin(complex double) libcesque;
+complex double casinh(complex double) libcesque;
+complex double catan(complex double) libcesque;
+complex double catanh(complex double) libcesque;
+complex double ccos(complex double) libcesque;
+complex double ccosh(complex double) libcesque;
+complex double cexp(complex double) libcesque;
+complex double cexp2(complex double) libcesque;
+complex double clog(complex double) libcesque;
+complex double conj(complex double) libcesque;
+complex double cpow(complex double, complex double) libcesque;
+complex double cproj(complex double) libcesque;
+complex double csin(complex double) libcesque;
+complex double csinh(complex double) libcesque;
+complex double csqrt(complex double) libcesque;
+complex double ctan(complex double) libcesque;
+complex double ctanh(complex double) libcesque;
 
-complex float cacosf(complex float);
-complex float cacoshf(complex float);
-complex float casinf(complex float);
-complex float casinhf(complex float);
-complex float catanf(complex float);
-complex float catanhf(complex float);
-complex float ccosf(complex float);
-complex float ccoshf(complex float);
-complex float cexpf(complex float);
-complex float cexp2f(complex float);
-complex float clogf(complex float);
-complex float conjf(complex float);
-complex float cpowf(complex float, complex float);
-complex float cprojf(complex float);
-complex float csinf(complex float);
-complex float csinhf(complex float);
-complex float csqrtf(complex float);
-complex float ctanf(complex float);
-complex float ctanhf(complex float);
+complex float cacosf(complex float) libcesque;
+complex float cacoshf(complex float) libcesque;
+complex float casinf(complex float) libcesque;
+complex float casinhf(complex float) libcesque;
+complex float catanf(complex float) libcesque;
+complex float catanhf(complex float) libcesque;
+complex float ccosf(complex float) libcesque;
+complex float ccoshf(complex float) libcesque;
+complex float cexpf(complex float) libcesque;
+complex float cexp2f(complex float) libcesque;
+complex float clogf(complex float) libcesque;
+complex float conjf(complex float) libcesque;
+complex float cpowf(complex float, complex float) libcesque;
+complex float cprojf(complex float) libcesque;
+complex float csinf(complex float) libcesque;
+complex float csinhf(complex float) libcesque;
+complex float csqrtf(complex float) libcesque;
+complex float ctanf(complex float) libcesque;
+complex float ctanhf(complex float) libcesque;
 
-complex long double cprojl(complex long double);
-complex long double csinhl(complex long double);
-complex long double csinl(complex long double);
-complex long double csqrtl(complex long double);
-complex long double ctanhl(complex long double);
-complex long double ctanl(complex long double);
-complex long double cacoshl(complex long double);
-complex long double cacosl(complex long double);
-complex long double casinhl(complex long double);
-complex long double casinl(complex long double);
-complex long double catanhl(complex long double);
-complex long double catanl(complex long double);
-complex long double ccoshl(complex long double);
-complex long double ccosl(complex long double);
-complex long double cexpl(complex long double);
-complex long double cexp2l(complex long double);
-complex long double clogl(complex long double);
-complex long double conjl(complex long double);
-complex long double cpowl(complex long double, complex long double);
+complex long double cprojl(complex long double) libcesque;
+complex long double csinhl(complex long double) libcesque;
+complex long double csinl(complex long double) libcesque;
+complex long double csqrtl(complex long double) libcesque;
+complex long double ctanhl(complex long double) libcesque;
+complex long double ctanl(complex long double) libcesque;
+complex long double cacoshl(complex long double) libcesque;
+complex long double cacosl(complex long double) libcesque;
+complex long double casinhl(complex long double) libcesque;
+complex long double casinl(complex long double) libcesque;
+complex long double catanhl(complex long double) libcesque;
+complex long double catanl(complex long double) libcesque;
+complex long double ccoshl(complex long double) libcesque;
+complex long double ccosl(complex long double) libcesque;
+complex long double cexpl(complex long double) libcesque;
+complex long double cexp2l(complex long double) libcesque;
+complex long double clogl(complex long double) libcesque;
+complex long double conjl(complex long double) libcesque;
+complex long double cpowl(complex long double, complex long double) libcesque;
 
 #ifndef __cplusplus
 #define __CIMAG(x, t)   \
@@ -116,4 +116,4 @@ complex long double cpowl(complex long double, complex long double);
 
 #endif /* C11 */
 COSMOPOLITAN_C_END_
-#endif /* _COMPLEX_H */
+#endif /* COSMOPOLITAN_LIBC_COMPLEX_H_ */

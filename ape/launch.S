@@ -1,5 +1,5 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 tw=8 fenc=utf-8                                 :vi │
+│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -31,17 +31,16 @@
 //
 //	@param	rdi is passed through as-is
 //	@param	rsi is address of entrypoint (becomes zero)
-//	@param	rdx is stack pointer (becomes zero)
+//	@param	rdx is passed through as-is
 //	@param	rcx is passed through as-is
+//	@param	r8  is stack pointer (becomes zero)
 //	@noreturn
 Launch:
 #ifdef __aarch64__
 
 	mov	x16,x1
-	mov	sp,x2
+	mov	sp,x4
 	mov	x1,0
-	mov	x2,0
-	mov	x3,0
 	mov	x4,0
 	mov	x5,0
 	mov	x6,0
@@ -71,6 +70,7 @@ Launch:
 
 #else
 
+	mov	%r8,%rsp
 	xor	%r8d,%r8d
 	xor	%r9d,%r9d
 	xor	%r10d,%r10d
@@ -79,8 +79,6 @@ Launch:
 	xor	%r13d,%r13d
 	xor	%r14d,%r14d
 	xor	%r15d,%r15d
-	mov	%rdx,%rsp
-	xor	%edx,%edx
 	push	%rsi
 	xor	%esi,%esi
 	xor	%ebp,%ebp

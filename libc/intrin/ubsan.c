@@ -112,6 +112,13 @@ struct UbsanOverflowData {
   struct UbsanTypeDescriptor *type;
 };
 
+struct UbsanDynamicTypeCacheMissData {
+  struct UbsanSourceLocation location;
+  struct UbsanTypeDescriptor *type;
+  void *TypeInfo;
+  unsigned char TypeCheckKind;
+};
+
 struct UbsanFloatCastOverflowData {
 #if __GNUC__ + 0 >= 6
   struct UbsanSourceLocation location;
@@ -144,6 +151,8 @@ downcast of\0\
 upcast of\0\
 cast to virtual base of\0\
 \0";
+
+uintptr_t __ubsan_vptr_type_cache[128];
 
 static int __ubsan_bits(struct UbsanTypeDescriptor *t) {
   return 1 << (t->info >> 1);
@@ -439,15 +448,22 @@ void __ubsan_handle_divrem_overflow_abort(
   __ubsan_handle_divrem_overflow(loc);
 }
 
+static bool HandleDynamicTypeCacheMiss(
+    struct UbsanDynamicTypeCacheMissData *data, uintptr_t ptr, uintptr_t hash) {
+  return false;  // TODO: implement me
+}
+
 void __ubsan_handle_dynamic_type_cache_miss(
-    const struct UbsanSourceLocation *loc) {
-  __ubsan_abort(loc, "dynamic type cache miss")();
-  __ubsan_unreachable();
+    struct UbsanDynamicTypeCacheMissData *data, uintptr_t ptr, uintptr_t hash) {
+  HandleDynamicTypeCacheMiss(data, ptr, hash);
 }
 
 void __ubsan_handle_dynamic_type_cache_miss_abort(
-    const struct UbsanSourceLocation *loc) {
-  __ubsan_handle_dynamic_type_cache_miss(loc);
+    struct UbsanDynamicTypeCacheMissData *data, uintptr_t ptr, uintptr_t hash) {
+  if (HandleDynamicTypeCacheMiss(data, ptr, hash)) {
+    __ubsan_abort(&data->location, "dynamic type cache miss")();
+    __ubsan_unreachable();
+  }
 }
 
 void __ubsan_handle_function_type_mismatch(

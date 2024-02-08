@@ -45,7 +45,7 @@ int gettid(void) {
     }
   }
   if (IsXnuSilicon()) {
-    return enosys();
+    return enosys();  // can only happen if we can't access thread local storage
   } else {
     return sys_gettid();
   }

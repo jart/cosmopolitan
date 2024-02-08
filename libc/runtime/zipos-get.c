@@ -96,7 +96,7 @@ static void __zipos_generate_index(struct Zipos *zipos) {
     zipos->index[i] = c;
   }
   // smoothsort() isn't the fastest algorithm, but it guarantees
-  // o(logn), won't smash the stack and doesn't depend on malloc
+  // o(nlogn) won't smash the stack and doesn't depend on malloc
   smoothsort_r(zipos->index, zipos->records, sizeof(size_t),
                __zipos_compare_names, zipos);
 }

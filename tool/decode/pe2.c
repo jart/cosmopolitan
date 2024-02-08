@@ -20,16 +20,16 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/serialize.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"
 #include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -204,7 +204,7 @@ static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
       show(".long",                                                   \
            format(b1, "%#X,%u", opt->DataDirectory[x].VirtualAddress, \
                   opt->DataDirectory[x].Size),                        \
-           _gc(xasprintf("opt->DataDirectory[%s]", #x)));             \
+           gc(xasprintf("opt->DataDirectory[%s]", #x)));              \
     }                                                                 \
   } while (0)
 
@@ -235,8 +235,8 @@ static void ShowIlt(uint32_t rva) {
   do {
     printf("\n");
     show(".quad", format(b1, "%#lx", *ilt),
-         _gc(xasprintf("rva=%#lx off=%#lx", (char *)ilt - (char *)ilt0 + rva,
-                       (intptr_t)ilt - (intptr_t)mz)));
+         gc(xasprintf("rva=%#lx off=%#lx", (char *)ilt - (char *)ilt0 + rva,
+                      (intptr_t)ilt - (intptr_t)mz)));
     if (*ilt) {
       char *hint = GetRva(*ilt);
       printf("/\t.short\t%d\t\t\t# @%#lx\n", READ16LE(hint),
@@ -256,13 +256,13 @@ static void ShowIdt(char *idt, size_t size) {
   for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     printf("\n");
     show(".long", format(b1, "%#x", READ32LE(p)),
-         _gc(xasprintf("ImportLookupTable RVA @%#lx",
-                       (intptr_t)p - (intptr_t)mz)));
+         gc(xasprintf("ImportLookupTable RVA @%#lx",
+                      (intptr_t)p - (intptr_t)mz)));
     show(".long", format(b1, "%#x", READ32LE(p + 4)), "TimeDateStamp");
     show(".long", format(b1, "%#x", READ32LE(p + 8)), "ForwarderChain");
     show(".long", format(b1, "%#x", READ32LE(p + 12)),
          READ32LE(p + 12)
-             ? _gc(xasprintf("DllName RVA (%s)", GetRva(READ32LE(p + 12))))
+             ? gc(xasprintf("DllName RVA (%s)", GetRva(READ32LE(p + 12))))
              : "DllName RVA");
     show(".long", format(b1, "%#x", READ32LE(p + 16)),
          "ImportAddressTable RVA");

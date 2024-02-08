@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set et ft=make ts=8 sw=8 fenc=utf-8 :vi ──────────────────────┘
 #
 # SYNOPSIS
 #
@@ -73,10 +73,13 @@ MODE := $(m)
 endif
 endif
 
+COMMA := ,
+PWD := $(shell pwd)
+
 # detect wsl2 running cosmopolitan binaries on the host by checking whether:
 # - user ran build/bootstrap/make.com, in which case make's working directory is in wsl
 # - user ran make, in which case cocmd.com's working directory is in wsl
-ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(shell pwd)),)
+ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(PWD)),)
 $(warning wsl2 interop is enabled)
 $(error you need to run sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop')
 endif
@@ -89,14 +92,33 @@ ifeq ($(MAKE_VERSION), 3.81)
 $(error please use build/bootstrap/make.com)
 endif
 
-# provide instructions to non-linux users on unbundling gcc
-ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
-ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
-ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
-$(error please run tool/cosmocc/fetch.sh)
-endif
-endif
-endif
+LC_ALL = C
+SOURCE_DATE_EPOCH = 0
+
+ARFLAGS = rcsD
+ZFLAGS ?=
+XARGS ?= xargs -P4 -rs8000
+DOT ?= dot
+CLANG = clang
+TMPDIR = o/tmp
+
+AR = build/bootstrap/ar.com
+CP = build/bootstrap/cp.com
+RM = build/bootstrap/rm.com -f
+GZIP = build/bootstrap/gzip.com
+ECHO = build/bootstrap/echo.com
+CHMOD = build/bootstrap/chmod.com
+TOUCH = build/bootstrap/touch.com
+PKG = build/bootstrap/package.com
+MKDEPS = build/bootstrap/mkdeps.com
+ZIPOBJ = build/bootstrap/zipobj.com
+ZIPCOPY = build/bootstrap/zipcopy.com
+PECHECK = build/bootstrap/pecheck.com
+FIXUPOBJ = build/bootstrap/fixupobj.com
+MKDIR = build/bootstrap/mkdir.com -p
+COMPILE = build/bootstrap/compile.com -V9 -M2048m -P8192 $(QUOTA)
+
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
 # the default build modes is empty string
 # on x86_64 hosts, MODE= is the same as MODE=x86_64
@@ -108,6 +130,44 @@ endif
 ifeq ($(UNAME_M),aarch64)
 MODE := aarch64
 endif
+endif
+
+ifneq ($(findstring aarch64,$(MODE)),)
+ARCH = aarch64
+HOSTS ?= pi studio freebsdarm
+else
+ARCH = x86_64
+HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
+endif
+
+ZIPOBJ_FLAGS += -a$(ARCH)
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
+
+export ADDR2LINE
+export LC_ALL
+export MKDIR
+export MODE
+export SOURCE_DATE_EPOCH
+export TMPDIR
+
+COSMOCC = .cosmocc/3.2
+TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.2 28b48682595f0f46b45ab381118cdffdabc8fcfa29aa54e301fe6ffe35269f5e)
+
+AS = $(TOOLCHAIN)as
+CC = $(TOOLCHAIN)gcc
+CXX = $(TOOLCHAIN)g++
+CXXFILT = $(TOOLCHAIN)c++filt
+LD = $(TOOLCHAIN)ld.bfd
+NM = $(TOOLCHAIN)nm
+GCC = $(TOOLCHAIN)gcc
+STRIP = $(TOOLCHAIN)strip
+OBJCOPY = $(TOOLCHAIN)objcopy
+OBJDUMP = $(TOOLCHAIN)objdump
+ifneq ($(wildcard $(PWD)/$(TOOLCHAIN)addr2line),)
+ADDR2LINE = $(PWD)/$(TOOLCHAIN)addr2line
+else
+ADDR2LINE = $(TOOLCHAIN)addr2line
 endif
 
 # primary build rules
@@ -138,7 +198,7 @@ $(warning please run ape/apeinstall.sh if you intend to use landlock make)
 $(shell sleep .5)
 endif
 endif
-ifeq ($(USE_SYSTEM_TOOLCHAIN),)
+ifneq ($(TOOLCHAIN),)
 .STRICT = 1
 endif
 endif
@@ -149,8 +209,8 @@ endif
 	libc/stdbool.h				\
 	libc/disclaimer.inc			\
 	rwc:/dev/shm				\
+	rx:cosmocc				\
 	rx:build/bootstrap			\
-	rx:o/third_party/gcc			\
 	r:build/portcosmo.h			\
 	/proc/stat				\
 	rw:/dev/null				\
@@ -189,7 +249,6 @@ include libc/calls/BUILD.mk			#─┐
 include libc/irq/BUILD.mk			# ├──SYSTEMS RUNTIME
 include third_party/nsync/BUILD.mk		# │  You can issue system calls
 include libc/runtime/BUILD.mk			# │
-include third_party/double-conversion/BUILD.mk	# │
 include libc/crt/BUILD.mk			# │
 include third_party/dlmalloc/BUILD.mk		#─┘
 include libc/mem/BUILD.mk			#─┐
@@ -198,9 +257,9 @@ include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
 include libc/proc/BUILD.mk			# │  You can now use threads
 include libc/dlopen/BUILD.mk			# │  You can now use processes
 include libc/thread/BUILD.mk			# │  You can finally call malloc()
-include tool/hello/BUILD.mk			# │
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
+include tool/hello/BUILD.mk			# │
 include libc/time/BUILD.mk			# │
 include net/BUILD.mk				# │
 include third_party/vqsort/BUILD.mk		# │
@@ -213,9 +272,8 @@ include third_party/intel/BUILD.mk		# │
 include third_party/aarch64/BUILD.mk		# │
 include libc/BUILD.mk				#─┘
 include libc/sock/BUILD.mk			#─┐
-include libc/dns/BUILD.mk			# ├──ONLINE RUNTIME
-include net/http/BUILD.mk			# │  You can communicate with the network
-include third_party/musl/BUILD.mk		# │
+include net/http/BUILD.mk			# ├──ONLINE RUNTIME
+include third_party/musl/BUILD.mk		# │  You can communicate with the network
 include libc/x/BUILD.mk				# │
 include dsp/scale/BUILD.mk			# │
 include dsp/mpeg/BUILD.mk			# │
@@ -223,11 +281,18 @@ include dsp/tty/BUILD.mk			# │
 include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │
+include third_party/ncurses/BUILD.mk		# │
+include third_party/readline/BUILD.mk		# │
+include third_party/libunwind/BUILD.mk		# |
+include third_party/libcxxabi/BUILD.mk		# |
 include third_party/libcxx/BUILD.mk		# │
-include third_party/ggml/BUILD.mk		# │
-include third_party/radpajama/BUILD.mk		# │
+include third_party/openmp/BUILD.mk		# │
+include third_party/double-conversion/BUILD.mk	# │
+include third_party/pcre/BUILD.mk		# │
+include third_party/less/BUILD.mk		# │
 include net/https/BUILD.mk			# │
-include third_party/regex/BUILD.mk		#─┘
+include third_party/regex/BUILD.mk		# │
+include third_party/bash/BUILD.mk		#─┘
 include third_party/tidy/BUILD.mk
 include third_party/BUILD.mk
 include third_party/nsync/testing/BUILD.mk
@@ -235,6 +300,7 @@ include libc/testlib/BUILD.mk
 include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
 include test/posix/BUILD.mk
+include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk
 include third_party/linenoise/BUILD.mk
 include third_party/maxmind/BUILD.mk
@@ -254,7 +320,6 @@ include third_party/argon2/BUILD.mk
 include third_party/smallz4/BUILD.mk
 include third_party/sqlite3/BUILD.mk
 include third_party/mbedtls/test/BUILD.mk
-include third_party/quickjs/BUILD.mk
 include third_party/lz4cli/BUILD.mk
 include third_party/zip/BUILD.mk
 include third_party/xxhash/BUILD.mk
@@ -266,6 +331,7 @@ include third_party/python/BUILD.mk
 include tool/build/BUILD.mk
 include tool/curl/BUILD.mk
 include third_party/qemu/BUILD.mk
+include third_party/libcxxabi/test/BUILD.mk
 include examples/BUILD.mk
 include examples/pyapp/BUILD.mk
 include examples/pylife/BUILD.mk
@@ -294,7 +360,6 @@ include test/libc/calls/BUILD.mk
 include test/libc/x/BUILD.mk
 include test/libc/xed/BUILD.mk
 include test/libc/fmt/BUILD.mk
-include test/libc/dns/BUILD.mk
 include test/libc/time/BUILD.mk
 include test/libc/proc/BUILD.mk
 include test/libc/stdio/BUILD.mk
@@ -370,7 +435,6 @@ loc: o/$(MODE)/tool/build/summy.com
 COSMOPOLITAN_OBJECTS =			\
 	TOOL_ARGS			\
 	NET_HTTP			\
-	LIBC_DNS			\
 	LIBC_SOCK			\
 	LIBC_NT_WS2_32			\
 	LIBC_NT_IPHLPAPI		\
@@ -378,8 +442,11 @@ COSMOPOLITAN_OBJECTS =			\
 	THIRD_PARTY_GETOPT		\
 	LIBC_LOG			\
 	LIBC_TIME			\
+	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB_GZ		\
+	THIRD_PARTY_LIBCXXABI		\
+	THIRD_PARTY_LIBUNWIND		\
 	LIBC_STDIO			\
 	THIRD_PARTY_GDTOA		\
 	THIRD_PARTY_REGEX		\
@@ -421,7 +488,6 @@ COSMOPOLITAN_H_PKGS =			\
 	APE				\
 	LIBC				\
 	LIBC_CALLS			\
-	LIBC_DNS			\
 	LIBC_ELF			\
 	LIBC_FMT			\
 	LIBC_DLOPEN			\
@@ -450,12 +516,16 @@ COSMOPOLITAN_H_PKGS =			\
 	THIRD_PARTY_GETOPT		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB		\
+	THIRD_PARTY_ZLIB_GZ		\
 	THIRD_PARTY_REGEX
 
 COSMOCC_PKGS =				\
 	$(COSMOPOLITAN_H_PKGS)		\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
+	THIRD_PARTY_LIBCXXABI		\
+	THIRD_PARTY_LIBUNWIND		\
+	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_INTEL
 
 o/$(MODE)/cosmopolitan.a:		\
@@ -480,18 +550,15 @@ o/cosmopolitan.h: o/cosmopolitan.h.txt					\
 		$(wildcard libc/integral/*)				\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
-	@$(ECHO) '#ifndef __STRICT_ANSI__' >$@
-	@$(ECHO) '#define _COSMO_SOURCE' >>$@
-	@$(ECHO) '#endif' >>$@
 	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup.com @$< >>$@
 
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
-		$(SRCS)							\
+		$(filter-out %.cc,$(SRCS))				\
 		$(HDRS)
-	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))
+	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)

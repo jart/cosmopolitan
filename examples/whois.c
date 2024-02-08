@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright (c) 1980, 1993                                                     │
 │      The Regents of the University of California.  All rights reserved.      │
@@ -30,12 +30,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/log/bsd.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
@@ -44,6 +45,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sock.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/musl/netdb.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

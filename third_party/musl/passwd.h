@@ -1,9 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_PASSWD_H_
 #define COSMOPOLITAN_LIBC_PASSWD_H_
+#include "libc/stdio/stdio.h"
 #include "libc/calls/weirdtypes.h"
 COSMOPOLITAN_C_START_
-
-struct FILE;
 
 struct passwd {
   char *pw_name;
@@ -22,8 +21,8 @@ struct passwd *getpwuid(uid_t);
 struct passwd *getpwnam(const char *);
 int getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **);
 int getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
-struct passwd *fgetpwent(struct FILE *);
-int putpwent(const struct passwd *, struct FILE *);
+struct passwd *fgetpwent(FILE *);
+int putpwent(const struct passwd *, FILE *);
 
 struct group {
   char *gr_name;
@@ -39,8 +38,8 @@ int getgrnam_r(const char *, struct group *, char *, size_t, struct group **);
 struct group *getgrent(void);
 void endgrent(void);
 void setgrent(void);
-struct group *fgetgrent(struct FILE *);
-int putgrent(const struct group *, struct FILE *);
+struct group *fgetgrent(FILE *);
+int putgrent(const struct group *, FILE *);
 int getgrouplist(const char *, gid_t, gid_t *, int *);
 int initgroups(const char *, gid_t);
 

@@ -1,0 +1,15 @@
+DESCRIPTION
+
+  PCRE2 is a regular expression library
+
+LICENSE
+
+  PCRE2 License
+
+ORIGIN
+
+  https://github.com/PCRE2Project/pcre2/archive/refs/tags/pcre2-10.42.tar.gz
+
+LOCAL CHANGES
+
+  Removed JIT code.

@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += LIBC
 
@@ -142,6 +142,9 @@ libc/isystem/nsync_once.h \
 libc/isystem/nsync_time.h \
 libc/isystem/nsync_waiter.h \
 libc/isystem/numeric \
+libc/isystem/omp-tools.h \
+libc/isystem/omp.h \
+libc/isystem/ompx.h \
 libc/isystem/optional \
 libc/isystem/ostream \
 libc/isystem/paths.h \
@@ -164,6 +167,7 @@ libc/isystem/semaphore.h \
 libc/isystem/set \
 libc/isystem/setjmp.h \
 libc/isystem/sgxintrin.h \
+libc/isystem/shadow.h \
 libc/isystem/shared_mutex \
 libc/isystem/signal.h \
 libc/isystem/smmintrin.h \
@@ -250,6 +254,7 @@ libc/isystem/uio.h \
 libc/isystem/unistd.h \
 libc/isystem/unordered_map \
 libc/isystem/unordered_set \
+libc/isystem/unwind.h \
 libc/isystem/utility \
 libc/isystem/utime.h \
 libc/isystem/utmp.h \
@@ -272,11 +277,12 @@ LIBC_INCS = $(filter %.inc,$(LIBC_FILES))
 LIBC_CHECKS = $(LIBC_HDRS_H:%=o/$(MODE)/%.ok)
 LIBC_FILES := $(wildcard libc/*)
 
+o/$(MODE)/libc/isystem/ompx.h.ok: private CPPFLAGS += -Wno-unknown-pragmas
+
 .PHONY:		o/$(MODE)/libc
 o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/crt		\
 		o/$(MODE)/libc/dlopen		\
-		o/$(MODE)/libc/dns		\
 		o/$(MODE)/libc/elf		\
 		o/$(MODE)/libc/fmt		\
 		o/$(MODE)/libc/intrin		\

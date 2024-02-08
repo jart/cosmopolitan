@@ -9,33 +9,33 @@ typedef struct cpu_set_t {
   uint64_t __bits[16];
 } cpu_set_t;
 
-int sched_getcpu(void);
-int sched_getaffinity(int, size_t, cpu_set_t *);
-int sched_setaffinity(int, size_t, const cpu_set_t *);
+int sched_getcpu(void) libcesque;
+int sched_getaffinity(int, size_t, cpu_set_t *) libcesque;
+int sched_setaffinity(int, size_t, const cpu_set_t *) libcesque;
 
 #define CPU_SET(i, s)   ((s)->__bits[(i) / 64] |= 1ull << ((i) % 64))
 #define CPU_CLR(i, s)   ((s)->__bits[(i) / 64] &= ~(1ull << ((i) % 64)))
 #define CPU_ISSET(i, s) (!!((s)->__bits[(i) / 64] & (1ull << ((i) % 64))))
 
-void CPU_ZERO(cpu_set_t *);
+void CPU_ZERO(cpu_set_t *) libcesque;
 #define CPU_ZERO(x) CPU_ZERO(x)
 
-int CPU_COUNT(cpu_set_t *);
+int CPU_COUNT(cpu_set_t *) libcesque;
 #define CPU_COUNT(x) CPU_COUNT(x)
 
-int CPU_EQUAL(cpu_set_t *, cpu_set_t *);
+int CPU_EQUAL(cpu_set_t *, cpu_set_t *) libcesque;
 #define CPU_EQUAL(x, y) CPU_EQUAL(x, y)
 
-void CPU_AND(cpu_set_t *, cpu_set_t *, cpu_set_t *);
+void CPU_AND(cpu_set_t *, cpu_set_t *, cpu_set_t *) libcesque;
 #define CPU_AND(x, y, z) CPU_AND(x, y, z)
 
-void CPU_OR(cpu_set_t *, cpu_set_t *, cpu_set_t *);
+void CPU_OR(cpu_set_t *, cpu_set_t *, cpu_set_t *) libcesque;
 #define CPU_OR(x, y, z) CPU_OR(x, y, z)
 
-void CPU_XOR(cpu_set_t *, cpu_set_t *, cpu_set_t *);
+void CPU_XOR(cpu_set_t *, cpu_set_t *, cpu_set_t *) libcesque;
 #define CPU_XOR(x, y, z) CPU_XOR(x, y, z)
 
-int CPU_COUNT_S(size_t, const cpu_set_t *);
+int CPU_COUNT_S(size_t, const cpu_set_t *) libcesque;
 #define CPU_COUNT_S(x, y) CPU_COUNT_S(x, y)
 
 #define CPU_ALLOC_SIZE(n) \
@@ -52,6 +52,8 @@ int CPU_COUNT_S(size_t, const cpu_set_t *);
 #define CPU_SET_S(i, size, set)   _CPU_S(i, size, set, |=)
 #define CPU_CLR_S(i, size, set)   _CPU_S(i, size, set, &= ~)
 #define CPU_ISSET_S(i, size, set) _CPU_S(i, size, set, &)
+
+typedef cpu_set_t cpuset_t; /* for freebsd compatibility */
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_CPUSET_H_ */

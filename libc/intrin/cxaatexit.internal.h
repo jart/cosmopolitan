@@ -13,15 +13,15 @@ struct CxaAtexitBlocks {
       void *arg;
       void *pred;
     } p[32];
-  } * p, root;
+  } *p, root;
 };
 
 extern struct CxaAtexitBlocks __cxa_blocks;
 
-void __cxa_lock(void);
-void __cxa_unlock(void);
-void __cxa_thread_finalize(void);
-void __cxa_printexits(FILE *, void *);
+void __cxa_lock(void) libcesque;
+void __cxa_unlock(void) libcesque;
+void __cxa_thread_finalize(void) libcesque;
+void __cxa_printexits(FILE *, void *) libcesque;
 int __cxa_thread_atexit_impl(void *, void *, void *);
 
 COSMOPOLITAN_C_END_

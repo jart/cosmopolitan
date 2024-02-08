@@ -42,7 +42,7 @@
  * On newer Linux only (c. 2013) it's possible to turn the anonymous
  * returned file back into a real file, by doing this:
  *
- *     linkat(AT_FDCWD, _gc(xasprintf("/proc/self/fd/%d", fileno(f))),
+ *     linkat(AT_FDCWD, gc(xasprintf("/proc/self/fd/%d", fileno(f))),
  *            AT_FDCWD, "real.txt", AT_SYMLINK_FOLLOW)
  *
  * On the New Technology, temporary files created by this function

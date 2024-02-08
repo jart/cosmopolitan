@@ -79,7 +79,7 @@ static textwindows void SetupWinStd(struct Fds *fds, int i, uint32_t x) {
 
 textstartup void __init_fds(int argc, char **argv, char **envp) {
   struct Fds *fds;
-  fds = __veil("r", &g_fds);
+  fds = &g_fds;
   fds->n = 4;
   atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
   if (_weaken(_extend)) {

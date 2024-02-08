@@ -1,7 +1,8 @@
 # -*- conf -*-
 
 /o
-/.prompt.jtlp
+/cosmocc
+/.cosmocc
 
 # TODO: Find some way to have Python write to o/
 __pycache__

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
-#ifdef _COSMO_SOURCE
 #include "libc/stdio/stdio.h"
+#ifdef _COSMO_SOURCE
 
 #define kLogFatal   0
 #define kLogError   1

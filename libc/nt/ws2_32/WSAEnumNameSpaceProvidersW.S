@@ -2,9 +2,9 @@
 .imp	ws2_32,__imp_WSAEnumNameSpaceProvidersW,WSAEnumNameSpaceProvidersW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 WSAEnumNameSpaceProviders:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

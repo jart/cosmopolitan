@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_LIBCXX
 
@@ -70,8 +70,8 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/deque				\
 	third_party/libcxx/errno.h				\
 	third_party/libcxx/exception				\
-	third_party/libcxx/exception_fallback.hh		\
-	third_party/libcxx/exception_pointer_unimplemented.hh	\
+	third_party/libcxx/exception_libcxxabi.hh		\
+	third_party/libcxx/exception_pointer_cxxabi.hh		\
 	third_party/libcxx/execution				\
 	third_party/libcxx/experimental/__config		\
 	third_party/libcxx/filesystem				\
@@ -99,7 +99,6 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/memory				\
 	third_party/libcxx/mutex				\
 	third_party/libcxx/new					\
-	third_party/libcxx/new_handler_fallback.hh		\
 	third_party/libcxx/numeric				\
 	third_party/libcxx/optional				\
 	third_party/libcxx/ostream				\
@@ -142,6 +141,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 
 THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/algorithm.cc				\
+	third_party/libcxx/any.cc				\
 	third_party/libcxx/charconv.cc				\
 	third_party/libcxx/chrono.cc				\
 	third_party/libcxx/condition_variable.cc		\
@@ -171,6 +171,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/system_error.cc			\
 	third_party/libcxx/thread.cc				\
 	third_party/libcxx/valarray.cc				\
+	third_party/libcxx/variant.cc				\
 	third_party/libcxx/vector.cc
 
 THIRD_PARTY_LIBCXX_A_SRCS =					\
@@ -200,7 +201,9 @@ THIRD_PARTY_LIBCXX_A_DIRECTDEPS =				\
 	LIBC_THREAD						\
 	LIBC_TINYMATH						\
 	THIRD_PARTY_COMPILER_RT					\
-	THIRD_PARTY_GDTOA
+	THIRD_PARTY_GDTOA					\
+	THIRD_PARTY_LIBCXXABI					\
+	THIRD_PARTY_LIBUNWIND
 
 THIRD_PARTY_LIBCXX_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LIBCXX_A_DIRECTDEPS),$($(x))))
@@ -217,7 +220,10 @@ $(THIRD_PARTY_LIBCXX_A).pkg:					\
 $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
 		CXXFLAGS +=					\
 			-ffunction-sections			\
-			-fdata-sections
+			-fdata-sections				\
+			-fexceptions				\
+			-frtti					\
+			-DLIBCXX_BUILDING_LIBCXXABI
 
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))
 THIRD_PARTY_LIBCXX_SRCS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_SRCS))

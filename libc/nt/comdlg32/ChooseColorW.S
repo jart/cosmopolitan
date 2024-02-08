@@ -2,9 +2,9 @@
 .imp	comdlg32,__imp_ChooseColorW,ChooseColorW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 ChooseColor:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

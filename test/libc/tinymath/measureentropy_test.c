@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

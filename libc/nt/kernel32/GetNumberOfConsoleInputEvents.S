@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_GetNumberOfConsoleInputEvents,GetNumberOfConsoleInputEvents
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 GetNumberOfConsoleInputEvents:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

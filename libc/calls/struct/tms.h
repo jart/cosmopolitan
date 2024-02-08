@@ -9,7 +9,7 @@ struct tms {
   int64_t tms_cstime; /* children kernelspace time */
 };
 
-long times(struct tms *);
+long times(struct tms *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TMS_H_ */

@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -30,6 +30,7 @@
 #include "libc/str/str.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
+#include "libc/sock/sock.h"
 #include "third_party/musl/lookup.internal.h"
 
 asm(".ident\t\"\\n\\n\

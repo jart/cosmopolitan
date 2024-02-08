@@ -1,0 +1,23 @@
+[[ -f /proc/mounts ]] || {
+  echo "mkofs: only supported on linux" >&2
+  return 2
+}
+local o
+if [[ -d o ]]; then
+  o=$(pwd -P)/o
+else
+  echo "mkofs: o/ not found" >&2
+  echo "suggested preparation:" >&2
+  echo "    mkdir -m 555 o" >&2
+  return 1
+fi
+cut -d' ' -f2 /proc/mounts | while read -r line; do
+  if [[ "$o" = "$line" ]]; then
+    echo "mkofs: $o already mounted" >&2
+    return 0
+  fi
+done
+( set -x
+  sudo mount -t tmpfs -o size=10G,noatime,nodiratime /dev/shm "$o"
+)
+# vim:ft=zsh

@@ -26,7 +26,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

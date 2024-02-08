@@ -241,4 +241,4 @@ int openat(int dirfd, const char *path, int flags, ...) {
   return rc;
 }
 
-__strong_reference(openat, openat64);
+__weak_reference(openat, openat64);

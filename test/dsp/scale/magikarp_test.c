@@ -23,7 +23,7 @@
 #include "libc/fmt/bing.internal.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"

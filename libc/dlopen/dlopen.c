@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.h"
@@ -45,6 +46,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/proc/posix_spawn.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/serialize.h"
@@ -116,7 +118,7 @@ struct Loaded {
   Elf64_Phdr ph[25];
 };
 
-static struct {
+struct {
   atomic_uint once;
   bool is_supported;
   struct CosmoTib *tib;
@@ -125,9 +127,10 @@ static struct {
   int (*dlclose)(void *);
   char *(*dlerror)(void);
   jmp_buf jb;
-} foreign;
+} __foreign;
 
 long __sysv2nt14();
+long foreign_tramp();
 
 static _Thread_local char dlerror_buf[128];
 
@@ -154,28 +157,6 @@ static int is_file_newer_than(const char *path, const char *other) {
     }
   }
   return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
-}
-
-// on system five we sadly need this brutal trampoline
-// todo(jart): add tls trampoline to sigaction() handlers
-// todo(jart): morph binary to get tls from host c library
-static long foreign_tramp(long a, long b, long c, long d, long e,
-                          long func(long, long, long, long, long, double,
-                                    double, double, double, double, double),
-                          double A, double B, double C, double D, double E,
-                          double F) {
-  long res;
-  BLOCK_SIGNALS;
-#ifdef __x86_64__
-  struct CosmoTib *tib = __get_tls();
-  __set_tls(foreign.tib);
-#endif
-  res = func(a, b, c, d, e, A, B, C, D, E, F);
-#ifdef __x86_64__
-  __set_tls(tib);
-#endif
-  ALLOW_SIGNALS;
-  return res;
 }
 
 static unsigned elf2prot(unsigned x) {
@@ -308,11 +289,11 @@ static long *push_strs(long *sp, char **list, int count) {
 }
 
 static wontreturn dontinstrument void foreign_helper(void **p) {
-  foreign.dlopen = p[0];
-  foreign.dlsym = p[1];
-  foreign.dlclose = p[2];
-  foreign.dlerror = p[3];
-  longjmp(foreign.jb, 1);
+  __foreign.dlopen = p[0];
+  __foreign.dlsym = p[1];
+  __foreign.dlclose = p[2];
+  __foreign.dlerror = p[3];
+  _longjmp(__foreign.jb, 1);
 }
 
 static dontinline void elf_exec(const char *file, char **envp) {
@@ -515,11 +496,13 @@ static uint8_t *movimm(uint8_t p[static 16], int reg, uint64_t val) {
 static void *foreign_thunk_sysv(void *func) {
   uint8_t *code, *p;
 #ifdef __x86_64__
-  // movabs $func,%r9
+  // it is no longer needed
+  if (1) return func;
+  // movabs $func,%rax
   // movabs $foreign_tramp,%r10
   // jmp *%r10
   if (!(p = code = foreign_alloc(23))) return 0;  // 10 + 10 + 3 = 23
-  p = movimm(p, 9, (uintptr_t)func);
+  p = movimm(p, 0, (uintptr_t)func);
   p = movimm(p, 10, (uintptr_t)foreign_tramp);
   *p++ = 0x41;
   *p++ = 0xff;
@@ -527,7 +510,7 @@ static void *foreign_thunk_sysv(void *func) {
 #elif defined(__aarch64__)
   __jit_begin();
   if ((p = code = foreign_alloc(36))) {
-    p = movimm(p, 5, (uintptr_t)func);
+    p = movimm(p, 8, (uintptr_t)func);
     p = movimm(p, 10, (uintptr_t)foreign_tramp);
     *(uint32_t *)p = 0xd61f0140;  // br x10
     __clear_cache(code, p + 4);
@@ -636,7 +619,15 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   }
   int pid, ws;
   char *args[] = {
-      "cc", "-pie", "-fPIC", src, "-o", tmp, IsNetbsd() ? 0 : "-ldl", 0,
+      "cc",
+      "-pie",
+      "-fPIC",
+      src,
+      "-o",
+      tmp,
+      IsLinux() ? "-Wl,-z,execstack" : "-DIGNORE",
+      IsNetbsd() ? 0 : "-ldl",
+      0,
   };
   errno_t err = posix_spawnp(&pid, args[0], NULL, NULL, args, environ);
   if (err) {
@@ -671,19 +662,19 @@ static bool foreign_setup(void) {
 #ifdef __x86_64__
   struct CosmoTib *cosmo_tib = __get_tls();
 #endif
-  if (!setjmp(foreign.jb)) {
+  if (!setjmp(__foreign.jb)) {
     elf_exec(exe, environ);
     return false;  // if elf_exec() returns, it failed
   }
 #ifdef __x86_64__
-  foreign.tib = __get_tls();
+  __foreign.tib = __get_tls();
   __set_tls(cosmo_tib);
 #endif
-  foreign.dlopen = foreign_thunk_sysv(foreign.dlopen);
-  foreign.dlsym = foreign_thunk_sysv(foreign.dlsym);
-  foreign.dlclose = foreign_thunk_sysv(foreign.dlclose);
-  foreign.dlerror = foreign_thunk_sysv(foreign.dlerror);
-  foreign.is_supported = true;
+  __foreign.dlopen = foreign_thunk_sysv(__foreign.dlopen);
+  __foreign.dlsym = foreign_thunk_sysv(__foreign.dlsym);
+  __foreign.dlclose = foreign_thunk_sysv(__foreign.dlclose);
+  __foreign.dlerror = foreign_thunk_sysv(__foreign.dlerror);
+  __foreign.is_supported = true;
   return true;
 }
 
@@ -693,8 +684,8 @@ static void foreign_once(void) {
 
 static bool foreign_init(void) {
   bool res;
-  cosmo_once(&foreign.once, foreign_once);
-  if (!(res = foreign.is_supported)) {
+  cosmo_once(&__foreign.once, foreign_once);
+  if (!(res = __foreign.is_supported)) {
     dlerror_set("dlopen() isn't supported on this platform");
   }
   return res;
@@ -740,14 +731,13 @@ static void *dlopen_nt(const char *path, int mode) {
 
 static void *dlsym_nt(void *handle, const char *name) {
   void *x64_abi_func;
-  void *sysv_abi_func = 0;
   if ((x64_abi_func = GetProcAddress((uintptr_t)handle, name))) {
-    sysv_abi_func = foreign_thunk_nt(x64_abi_func);
+    return x64_abi_func;
   } else {
     dlerror_set("symbol not found: ");
     strlcat(dlerror_buf, name, sizeof(dlerror_buf));
+    return 0;
   }
-  return sysv_abi_func;
 }
 
 static void *dlopen_silicon(const char *path, int mode) {
@@ -792,13 +782,10 @@ static void *dlopen_silicon(const char *path, int mode) {
  * WARNING: Our API uses a different naming because cosmo_dlopen() lacks
  * many of the features one would reasonably expect from a UNIX dlopen()
  * implementation; and we don't want to lead ./configure scripts astray.
- * You're limited to 5 integral function parameters maximum. Calling an
- * imported function currently goes much slower than a normal function
- * call. You can't pass callback function pointers to foreign libraries
- * safely. Foreign libraries also can't link symbols defined by your
- * executable; that means using this for high-level language plugins is
- * completely out of the question. What cosmo_dlopen() can do is help
- * you talk to GPU and GUI libraries like CUDA and SDL.
+ * Foreign libraries also can't link symbols defined by your executable,
+ * which means using this for high-level language plugins is completely
+ * out of the question. What cosmo_dlopen() can do is help you talk to
+ * GPU and GUI libraries like CUDA and SDL.
  *
  * @param mode is a bitmask that can contain:
  *     - `RTLD_LOCAL` (default)
@@ -812,6 +799,7 @@ static void *dlopen_silicon(const char *path, int mode) {
 void *cosmo_dlopen(const char *path, int mode) {
   void *res;
   BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
   if (IsWindows()) {
     res = dlopen_nt(path, mode);
   } else if (IsXnuSilicon()) {
@@ -824,10 +812,11 @@ void *cosmo_dlopen(const char *path, int mode) {
     dlerror_set("dlopen() isn't supported on OpenBSD yet");
     res = 0;
   } else if (foreign_init()) {
-    res = foreign.dlopen(path, mode);
+    res = __foreign.dlopen(path, mode);
   } else {
     res = 0;
   }
+  ALLOW_CANCELATION;
   ALLOW_SIGNALS;
   STRACE("dlopen(%#s, %d) → %p% m", path, mode, res);
   return res;
@@ -836,8 +825,26 @@ void *cosmo_dlopen(const char *path, int mode) {
 /**
  * Obtains address of symbol from dynamic shared object.
  *
- * On Windows you can only use this to lookup function addresses.
- * Returned functions are trampolined to conform to System V ABI.
+ * WARNING: You almost always want to say this:
+ *
+ *     pFunction = cosmo_dltramp(cosmo_dlsym(dso, "function"));
+ *
+ * That will generate code at runtime for automatically translating to
+ * Microsoft's x64 calling convention when appropriate. However the
+ * automated solution doesn't always work. For example, the prototype:
+ *
+ *     void func(int, float);
+ *
+ * Won't be translated correctly, due to the differences in ABI. We're
+ * able to smooth over most of them, but that's just one of several
+ * examples where we can't. A good rule of thumb is:
+ *
+ *   - More than four float/double args is problematic
+ *   - Having both integral and floating point parameters is bad
+ *
+ * For those kinds of functions, you need to translate the ABI by hand.
+ * This can be accomplished using the GCC `__ms_abi__` attribute, where
+ * you'd have two function pointer types branched upon `IsWindows()`.
  *
  * @param handle was opened by dlopen()
  * @return address of symbol, or NULL w/ dlerror()
@@ -847,21 +854,28 @@ void *cosmo_dlsym(void *handle, const char *name) {
   if (IsWindows()) {
     func = dlsym_nt(handle, name);
   } else if (IsXnuSilicon()) {
-    if ((func = __syslib->__dlsym(handle, name))) {
-      func = foreign_thunk_sysv(func);
-    }
+    func = __syslib->__dlsym(handle, name);
   } else if (IsXnu()) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     func = 0;
   } else if (foreign_init()) {
-    if ((func = foreign.dlsym(handle, name))) {
-      func = foreign_thunk_sysv(func);
-    }
+    func = __foreign.dlsym(handle, name);
   } else {
     func = 0;
   }
   STRACE("dlsym(%p, %#s) → %p", handle, name, func);
   return func;
+}
+
+/**
+ * Trampolines foreign function pointer so it can be called safely.
+ */
+void *cosmo_dltramp(void *foreign_func) {
+  if (!IsWindows()) {
+    return foreign_thunk_sysv(foreign_func);
+  } else {
+    return foreign_thunk_nt(foreign_func);
+  }
 }
 
 /**
@@ -880,7 +894,7 @@ int cosmo_dlclose(void *handle) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     res = -1;
   } else if (foreign_init()) {
-    res = foreign.dlclose(handle);
+    res = __foreign.dlclose(handle);
   } else {
     res = -1;
   }
@@ -898,7 +912,7 @@ char *cosmo_dlerror(void) {
   } else if (IsWindows() || IsXnu()) {
     res = dlerror_buf;
   } else if (foreign_init()) {
-    res = foreign.dlerror();
+    res = __foreign.dlerror();
     res = dlerror_set(res);
   } else {
     res = dlerror_buf;
@@ -906,3 +920,17 @@ char *cosmo_dlerror(void) {
   STRACE("dlerror() → %#s", res);
   return res;
 }
+
+#ifdef __x86_64__
+static textstartup void dlopen_init() {
+  if (IsLinux() || IsFreebsd()) {
+    // switch from %fs to %gs for tls
+    struct CosmoTib *tib = __get_tls();
+    __morph_tls();
+    __set_tls(tib);
+  }
+}
+const void *const dlopen_ctor[] initarray = {
+    dlopen_init,
+};
+#endif

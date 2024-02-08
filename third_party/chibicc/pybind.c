@@ -538,7 +538,7 @@ const struct _inittab _PyImport_Inittab_%s = {\n\
 };\n\
 ",
           module, module,
-          tok->file->javadown ? _gc(xasprintf("pb_%s_doc", module)) : "0",
+          tok->file->javadown ? gc(xasprintf("pb_%s_doc", module)) : "0",
           module, module, module, module, module, module);
   CHECK_NE(-1, (fd = creat(path, 0644)));
   CHECK_NE(-1, xwrite(fd, b, appendz(b).i));

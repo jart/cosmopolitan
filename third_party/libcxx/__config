@@ -12,13 +12,12 @@
 #include "libc/isystem/features.h"
 
 #define _LIBCPP_ABI_UNSTABLE
-#define _LIBCPP_NO_EXCEPTIONS
 #define _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
 #define _LIBCPP_DISABLE_DEPRECATION_WARNINGS
 #define _LIBCPP_HAS_TRIVIAL_MUTEX_DESTRUCTION
+#define _LIBCPP_HAS_TRIVIAL_CONDVAR_DESTRUCTION
 #define _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 #define _LIBCPP_ENABLE_CXX17_REMOVED_RANDOM_SHUFFLE
-#define _LIBCPP_DEPRECATED_ABI_DISABLE_PAIR_TRIVIAL_COPY_CTOR
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -1429,7 +1428,7 @@ extern "C" _LIBCPP_FUNC_VIS  void __sanitizer_annotate_contiguous_container(
 //
 // Not all platforms support this, but it helps avoid fd-leaks on platforms that
 // do.
-#if defined(__BIONIC__)
+#if defined(__BIONIC__) || defined(__COSMOPOLITAN__)
 #  define _LIBCPP_FOPEN_CLOEXEC_MODE "e"
 #else
 #  define _LIBCPP_FOPEN_CLOEXEC_MODE

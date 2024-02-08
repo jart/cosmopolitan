@@ -93,4 +93,4 @@ int64_t lseek(int fd, int64_t offset, int whence) {
   return rc;
 }
 
-__strong_reference(lseek, lseek64);
+__weak_reference(lseek, lseek64);

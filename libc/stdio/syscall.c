@@ -27,7 +27,7 @@
  * - `SYS_gettid`
  * - `SYS_getrandom`
  *
- * @return negative errno on error
+ * @return system call result, or -1 w/ errno
  */
 long syscall(long number, ...) {
   switch (number) {

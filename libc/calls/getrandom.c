@@ -88,12 +88,14 @@ static ssize_t GetDevUrandom(char *p, size_t n) {
   int fd;
   ssize_t rc;
   BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
   fd = sys_openat(AT_FDCWD, "/dev/urandom", O_RDONLY | O_CLOEXEC, 0);
   if (fd != -1) {
     rc = sys_read(fd, p, n);
   } else {
     rc = -1;
   }
+  ALLOW_CANCELATION;
   ALLOW_SIGNALS;
   return rc;
 }

@@ -41,4 +41,4 @@ int mkostemps(char *template, int suffixlen, unsigned flags) {
   return openatemp(AT_FDCWD, template, suffixlen, flags, 0);
 }
 
-__strong_reference(mkostemps, mkostemps64);
+__weak_reference(mkostemps, mkostemps64);

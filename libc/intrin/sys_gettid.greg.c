@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
@@ -25,9 +26,9 @@
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
 int sys_gettid(void) {
+  int64_t wut;
 #ifdef __x86_64__
   int tid;
-  int64_t wut;
   if (IsWindows()) {
     tid = __imp_GetCurrentThreadId();
   } else if (IsLinux()) {
@@ -65,11 +66,23 @@ int sys_gettid(void) {
 #elif defined(__aarch64__)
   // this can't be used on xnu
   register long res asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res)
-               : "i"(178)
-               : "x8", "memory");
+  if (IsLinux()) {
+    asm volatile("mov\tx8,%1\n\t"
+                 "svc\t0"
+                 : "=r"(res)
+                 : "i"(178)
+                 : "x8", "memory");
+  } else if (IsFreebsd()) {
+    res = (long)&wut;
+    asm volatile("mov\tx8,%2\n\t"
+                 "svc\t0"
+                 : "+r"(res), "=m"(wut)
+                 : "i"(432)  // thr_self()
+                 : "x8", "memory");
+    res = wut;
+  } else {
+    res = __pid;
+  }
   return res;
 #else
 #error "arch unsupported"

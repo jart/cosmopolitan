@@ -38,7 +38,7 @@ void SetUpOnce(void) {
 
 void Make(const char *path, int mode) {
   int fd, n = lemur64() & 0xfffff;
-  char *data = _gc(malloc(n));
+  char *data = gc(malloc(n));
   rngset(data, n, lemur64, -1);
   ASSERT_NE(-1, (fd = creat(path, mode)));
   ASSERT_SYS(0, n, write(fd, data, n));
@@ -77,8 +77,8 @@ TEST(copy_file_range, test) {
   size_t n, m;
   Make("foo", 0644);
   Copy("foo", "bar");
-  p = _gc(xslurp("foo", &n));
-  q = _gc(xslurp("bar", &m));
+  p = gc(xslurp("foo", &n));
+  q = gc(xslurp("bar", &m));
   ASSERT_EQ(n, m);
   ASSERT_EQ(0, memcmp(p, q, n));
 }

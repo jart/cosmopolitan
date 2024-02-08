@@ -54,10 +54,10 @@ void *GenerateTortureImage(unsigned char RGB[YN][YM][XN][XM][3]) {
 
 int main(int argc, char *argv[]) {
   stbi_write_png(
-      _gc(xasprintf("maxwell_%dx%d_%dx%d.png", XN * XM, YN * YM, XM, YM)),
+      gc(xasprintf("maxwell_%dx%d_%dx%d.png", XN * XM, YN * YM, XM, YM)),
       XN * XM, YN * YM, 3,
       GenerateTortureImage(
-          _gc(xmemalign(32, sizeof(unsigned char) * XN * XM * YN * YM * 3))),
+          gc(xmemalign(32, sizeof(unsigned char) * XN * XM * YN * YM * 3))),
       XN * XM * 3);
   return 0;
 }

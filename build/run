@@ -1,9 +1,8 @@
 #!/bin/sh
-if printf '%s\n' "$*" | grep aarch64 >/dev/null 2>&1; then
-  if [ ! -f o/third_party/qemu/qemu-aarch64 ]; then
-    make -j8 o/third_party/qemu/qemu-aarch64
-  fi
-  exec o/third_party/qemu/qemu-aarch64 "$@"
+UNAMEM=$(uname -m)
+UNAMES=$(uname -s)
+if [ x"$UNAMES" = x"Darwin" ] && [ x"$UNAMEM" = x"arm64" ]; then
+  exec ape "$@"
 else
   exec "$@"
 fi

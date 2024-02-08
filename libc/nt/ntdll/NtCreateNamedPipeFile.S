@@ -2,9 +2,9 @@
 .ntimp	NtCreateNamedPipeFile,NtCreateNamedPipeFile
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 NtCreateNamedPipeFile:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

@@ -22,11 +22,9 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/popcnt.h"
@@ -34,13 +32,14 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/highwayhash64.h"
@@ -64,12 +63,14 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/lunix.h"
+#include "third_party/mbedtls/everest.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 
 static int Rdpid(void) {
@@ -558,8 +559,9 @@ int LuaResolveIp(lua_State *L) {
   if ((ip = ParseIp(host, -1)) != -1) {
     lua_pushinteger(L, ip);
     return 1;
-  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == EAI_SUCCESS) {
-    lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));
+  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == 0) {
+    lua_pushinteger(
+        L, ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr));
     freeaddrinfo(ai);
     return 1;
   } else {
@@ -1133,5 +1135,40 @@ int LuaInflate(lua_State *L) {
   }
 
   luaL_pushresultsize(&buf, actualoutsize);
+  return 1;
+}
+
+static void GetCurve25519Arg(lua_State *L, int arg, uint8_t buf[static 32]) {
+  size_t len;
+  const char *val;
+  val = luaL_checklstring(L, arg, &len);
+  bzero(buf, 32);
+  if (len) {
+    if (len > 32) {
+      len = 32;
+    }
+    memcpy(buf, val, len);
+  }
+}
+
+/*
+ * Example usage:
+ *
+ *     >: secret1 = "\1"
+ *     >: secret2 = "\2"
+ *     >: public1 = Curve25519(secret1, "\9")
+ *     >: public2 = Curve25519(secret2, "\9")
+ *     >: Curve25519(secret1, public2)
+ *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
+ *     >: Curve25519(secret2, public1)
+ *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
+ *
+ */
+int LuaCurve25519(lua_State *L) {
+  uint8_t mypublic[32], secret[32], basepoint[32];
+  GetCurve25519Arg(L, 1, secret);
+  GetCurve25519Arg(L, 2, basepoint);
+  curve25519(mypublic, secret, basepoint);
+  lua_pushlstring(L, (const char *)mypublic, 32);
   return 1;
 }

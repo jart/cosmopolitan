@@ -13,19 +13,19 @@ struct dirent {      /* linux getdents64 abi */
 struct dirstream;
 typedef struct dirstream DIR;
 
-DIR *fdopendir(int) __wur;
-DIR *opendir(const char *) __wur;
-int closedir(DIR *);
-int dirfd(DIR *);
-long telldir(DIR *);
-struct dirent *readdir(DIR *);
-int readdir_r(DIR *, struct dirent *, struct dirent **);
-void rewinddir(DIR *);
-void seekdir(DIR *, long);
-int alphasort(const struct dirent **, const struct dirent **);
-int versionsort(const struct dirent **, const struct dirent **);
+DIR *fdopendir(int) libcesque __wur;
+DIR *opendir(const char *) libcesque __wur;
+int closedir(DIR *) libcesque;
+int dirfd(DIR *) libcesque;
+long telldir(DIR *) libcesque;
+struct dirent *readdir(DIR *) libcesque;
+int readdir_r(DIR *, struct dirent *, struct dirent **) libcesque;
+void rewinddir(DIR *) libcesque;
+void seekdir(DIR *, long) libcesque;
+int alphasort(const struct dirent **, const struct dirent **) libcesque;
+int versionsort(const struct dirent **, const struct dirent **) libcesque;
 int scandir(const char *, struct dirent ***, int (*)(const struct dirent *),
-            int (*)(const struct dirent **, const struct dirent **));
+            int (*)(const struct dirent **, const struct dirent **)) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

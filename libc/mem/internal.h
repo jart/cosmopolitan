@@ -8,7 +8,7 @@ struct CritbitNode {
   unsigned otherbits;
 };
 
-int __putenv(char *, bool);
+int __putenv(char *, bool) libcesque;
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 COSMOPOLITAN_C_END_

@@ -35,7 +35,7 @@ TEST(ftrace, test) {
   }
   const char *ftraceasm;
   testlib_extract("/zip/ftraceasm.txt", "ftraceasm.txt", 0755);
-  ftraceasm = _gc(xslurp("ftraceasm.txt", 0));
+  ftraceasm = gc(xslurp("ftraceasm.txt", 0));
 #ifdef __x86_64__
   if (strstr(ftraceasm, "%xmm") ||  //
       strstr(ftraceasm, "%ymm") ||  //

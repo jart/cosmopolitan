@@ -214,7 +214,7 @@
          (buddy (format "test/%s_test.c" name))
          (runs (format "o/$m/%s.com%s V=5 TESTARGS=-b" name runsuffix))
          (buns (format "o/$m/test/%s_test.com%s V=5 TESTARGS=-b" name runsuffix)))
-    (cond ((not (member ext '("c" "cc" "s" "S" "rl" "f")))
+    (cond ((not (member ext '("c" "cc" "cpp" "s" "S" "rl" "f")))
            (format "m=%s; make -j12 MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
@@ -753,6 +753,7 @@
                             (concat dots notest ".c")
                             (concat dots notest ".cc")
                             (concat dots notest ".rl")
+                            (concat dots notest ".cpp")
                             (concat dots notest ".greg.c")
                             (concat dots notest ".ncabi.c")
                             (concat dots notest ".hookabi.c")

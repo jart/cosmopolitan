@@ -37,84 +37,84 @@ void SetUp(void) {
 
 TEST(ldexpl, test) {
   EXPECT_EQ(rando, _ldexpl(rando, 0));
-  EXPECT_STREQ("NAN", _gc(xdtoal(_ldexpl(NAN, 0))));
-  EXPECT_STREQ("-NAN", _gc(xdtoal(_ldexpl(-NAN, 0))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoal(_ldexpl(INFINITY, 0))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoal(_ldexpl(-INFINITY, 0))));
-  EXPECT_STREQ("NAN", _gc(xdtoal(_ldexpl(NAN, 1))));
-  EXPECT_STREQ("-NAN", _gc(xdtoal(_ldexpl(-NAN, 1))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoal(_ldexpl(INFINITY, 1))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoal(_ldexpl(-INFINITY, 1))));
-  EXPECT_STREQ("16384", _gc(xdtoal(log2l(LDBL_MAX))));
-  EXPECT_STREQ(".00390625", _gc(xdtoal(_ldexpl(1, -8))));
-  EXPECT_STREQ("0", _gc(xdtoal(_ldexpl(0, -8))));
-  EXPECT_STREQ("0", _gc(xdtoal(_ldexpl(0, 8))));
-  EXPECT_STREQ("256", _gc(xdtoal(_ldexpl(1, 8))));
-  EXPECT_STREQ("512", _gc(xdtoal(_ldexpl(2, 8))));
-  EXPECT_STREQ("768", _gc(xdtoal(_ldexpl(3, 8))));
-  EXPECT_STREQ("6.997616471358197e+3461", _gc(xdtoal(_ldexpl(1, 11500))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoal(_ldexpl(1, 999999))));
-  // EXPECT_STREQ("0", _gc(xdtoal(_ldexpl(1, -999999))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_ldexpl(NAN, 0))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(_ldexpl(-NAN, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_ldexpl(INFINITY, 0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(_ldexpl(-INFINITY, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_ldexpl(NAN, 1))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(_ldexpl(-NAN, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_ldexpl(INFINITY, 1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(_ldexpl(-INFINITY, 1))));
+  EXPECT_STREQ("16384", gc(xdtoal(log2l(LDBL_MAX))));
+  EXPECT_STREQ(".00390625", gc(xdtoal(_ldexpl(1, -8))));
+  EXPECT_STREQ("0", gc(xdtoal(_ldexpl(0, -8))));
+  EXPECT_STREQ("0", gc(xdtoal(_ldexpl(0, 8))));
+  EXPECT_STREQ("256", gc(xdtoal(_ldexpl(1, 8))));
+  EXPECT_STREQ("512", gc(xdtoal(_ldexpl(2, 8))));
+  EXPECT_STREQ("768", gc(xdtoal(_ldexpl(3, 8))));
+  EXPECT_STREQ("6.997616471358197e+3461", gc(xdtoal(_ldexpl(1, 11500))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_ldexpl(1, 999999))));
+  // EXPECT_STREQ("0", gc(xdtoal(_ldexpl(1, -999999))));
 }
 
 TEST(ldexp, test) {
   EXPECT_EQ(rando, _ldexp(rando, 0));
-  EXPECT_STREQ("NAN", _gc(xdtoa(_ldexp(NAN, 0))));
-  EXPECT_STREQ("-NAN", _gc(xdtoa(_ldexp(-NAN, 0))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoa(_ldexp(INFINITY, 0))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoa(_ldexp(-INFINITY, 0))));
-  EXPECT_STREQ("NAN", _gc(xdtoa(_ldexp(NAN, 1))));
-  EXPECT_STREQ("-NAN", _gc(xdtoa(_ldexp(-NAN, 1))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoa(_ldexp(INFINITY, 1))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoa(_ldexp(-INFINITY, 1))));
-  EXPECT_STREQ("16384", _gc(xdtoa(log2l(LDBL_MAX))));
-  EXPECT_STREQ(".00390625", _gc(xdtoa(_ldexp(1, -8))));
-  EXPECT_STREQ("0", _gc(xdtoa(_ldexp(0, -8))));
-  EXPECT_STREQ("0", _gc(xdtoa(_ldexp(0, 8))));
-  EXPECT_STREQ("256", _gc(xdtoa(_ldexp(1, 8))));
-  EXPECT_STREQ("512", _gc(xdtoa(_ldexp(2, 8))));
-  EXPECT_STREQ("768", _gc(xdtoa(_ldexp(3, 8))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoa(_ldexp(1, 999999))));
-  EXPECT_STREQ("0", _gc(xdtoa(_ldexp(1, -999999))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_ldexp(NAN, 0))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_ldexp(-NAN, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_ldexp(INFINITY, 0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_ldexp(-INFINITY, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_ldexp(NAN, 1))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_ldexp(-NAN, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_ldexp(INFINITY, 1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_ldexp(-INFINITY, 1))));
+  EXPECT_STREQ("16384", gc(xdtoa(log2l(LDBL_MAX))));
+  EXPECT_STREQ(".00390625", gc(xdtoa(_ldexp(1, -8))));
+  EXPECT_STREQ("0", gc(xdtoa(_ldexp(0, -8))));
+  EXPECT_STREQ("0", gc(xdtoa(_ldexp(0, 8))));
+  EXPECT_STREQ("256", gc(xdtoa(_ldexp(1, 8))));
+  EXPECT_STREQ("512", gc(xdtoa(_ldexp(2, 8))));
+  EXPECT_STREQ("768", gc(xdtoa(_ldexp(3, 8))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_ldexp(1, 999999))));
+  EXPECT_STREQ("0", gc(xdtoa(_ldexp(1, -999999))));
 }
 
 TEST(ldexpf, test) {
   EXPECT_EQ(rando, _ldexpf(rando, 0));
-  EXPECT_STREQ("NAN", _gc(xdtoaf(_ldexpf(NAN, 0))));
-  EXPECT_STREQ("-NAN", _gc(xdtoaf(_ldexpf(-NAN, 0))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoaf(_ldexpf(INFINITY, 0))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoaf(_ldexpf(-INFINITY, 0))));
-  EXPECT_STREQ("NAN", _gc(xdtoaf(_ldexpf(NAN, 1))));
-  EXPECT_STREQ("-NAN", _gc(xdtoaf(_ldexpf(-NAN, 1))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoaf(_ldexpf(INFINITY, 1))));
-  EXPECT_STREQ("-INFINITY", _gc(xdtoaf(_ldexpf(-INFINITY, 1))));
-  EXPECT_STREQ("16384", _gc(xdtoaf(log2l(LDBL_MAX))));
-  EXPECT_STREQ(".00390625", _gc(xdtoaf(_ldexpf(1, -8))));
-  EXPECT_STREQ("0", _gc(xdtoaf(_ldexpf(0, -8))));
-  EXPECT_STREQ("0", _gc(xdtoaf(_ldexpf(0, 8))));
-  EXPECT_STREQ("256", _gc(xdtoaf(_ldexpf(1, 8))));
-  EXPECT_STREQ("512", _gc(xdtoaf(_ldexpf(2, 8))));
-  EXPECT_STREQ("768", _gc(xdtoaf(_ldexpf(3, 8))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoaf(_ldexpf(1, 999999))));
-  EXPECT_STREQ("0", _gc(xdtoaf(_ldexpf(1, -999999))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_ldexpf(NAN, 0))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(_ldexpf(-NAN, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_ldexpf(INFINITY, 0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(_ldexpf(-INFINITY, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_ldexpf(NAN, 1))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(_ldexpf(-NAN, 1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_ldexpf(INFINITY, 1))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(_ldexpf(-INFINITY, 1))));
+  EXPECT_STREQ("16384", gc(xdtoaf(log2l(LDBL_MAX))));
+  EXPECT_STREQ(".00390625", gc(xdtoaf(_ldexpf(1, -8))));
+  EXPECT_STREQ("0", gc(xdtoaf(_ldexpf(0, -8))));
+  EXPECT_STREQ("0", gc(xdtoaf(_ldexpf(0, 8))));
+  EXPECT_STREQ("256", gc(xdtoaf(_ldexpf(1, 8))));
+  EXPECT_STREQ("512", gc(xdtoaf(_ldexpf(2, 8))));
+  EXPECT_STREQ("768", gc(xdtoaf(_ldexpf(3, 8))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_ldexpf(1, 999999))));
+  EXPECT_STREQ("0", gc(xdtoaf(_ldexpf(1, -999999))));
 }
 
 TEST(ldexp, stuff) {
   volatile int twopow = 5;
   volatile double pi = 3.14;
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", _ldexp(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", _ldexpf(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalb(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbf(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbn(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbnf(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbln(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalblnf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", _ldexp(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", _ldexpf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalb(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbn(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbnf(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalbln(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2f", scalblnf(pi, twopow))));
 #ifndef __aarch64__
   // TODO: implement quad floating point in printf
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", _ldexpl(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", scalbnl(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", scalblnl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", _ldexpl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalbnl(pi, twopow))));
+  ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalblnl(pi, twopow))));
 #endif
 }
 

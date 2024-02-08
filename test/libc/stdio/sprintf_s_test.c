@@ -22,7 +22,7 @@
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 
-#define Format(...) _gc(xasprintf(__VA_ARGS__))
+#define Format(...) gc(xasprintf(__VA_ARGS__))
 
 /**
  * @fileoverview String formatting tests.

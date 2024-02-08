@@ -6,6 +6,7 @@
 #include "libc/sock/struct/in6_pktinfo.h"
 #include "libc/sock/struct/in_pktinfo.h"
 #include "libc/sock/struct/ip_mreq.h"
+#include "libc/sock/struct/ipv6_mreq.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6.h"
 #include "libc/sysv/consts/in.h"

@@ -22,24 +22,24 @@ COSMOPOLITAN_C_START_
 #define uint64toarray_fixed16 __uint64toarray_fixed16
 #define uint64toarray_radix8  __uint64toarray_radix8
 
-unsigned LengthInt64(int64_t) pureconst;
-unsigned LengthUint64(uint64_t) pureconst;
-unsigned LengthInt64Thousands(int64_t) pureconst;
-unsigned LengthUint64Thousands(uint64_t) pureconst;
-char *FormatInt32(char[hasatleast 12], int32_t);
-char *FormatUint32(char[hasatleast 12], uint32_t);
-char *FormatInt64(char[hasatleast 21], int64_t);
-char *FormatUint64(char[hasatleast 21], uint64_t);
-char *FormatInt64Thousands(char[hasatleast 27], int64_t);
-char *FormatUint64Thousands(char[hasatleast 27], uint64_t);
-char *FormatOctal32(char[hasatleast 13], uint32_t, bool32);
-char *FormatOctal64(char[hasatleast 24], uint64_t, bool32);
-char *FormatBinary64(char[hasatleast 67], uint64_t, char);
-char *FormatHex64(char[hasatleast 19], uint64_t, char);
-char *FormatFlex64(char[hasatleast 24], int64_t, char);
-size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
-size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
-size_t uint64toarray_radix8(uint64_t, char[hasatleast 24]);
+libcesque unsigned LengthInt64(int64_t) pureconst;
+libcesque unsigned LengthUint64(uint64_t) pureconst;
+libcesque unsigned LengthInt64Thousands(int64_t) pureconst;
+libcesque unsigned LengthUint64Thousands(uint64_t) pureconst;
+libcesque char *FormatInt32(char[hasatleast 12], int32_t);
+libcesque char *FormatUint32(char[hasatleast 12], uint32_t);
+libcesque char *FormatInt64(char[hasatleast 21], int64_t);
+libcesque char *FormatUint64(char[hasatleast 21], uint64_t);
+libcesque char *FormatInt64Thousands(char[hasatleast 27], int64_t);
+libcesque char *FormatUint64Thousands(char[hasatleast 27], uint64_t);
+libcesque char *FormatOctal32(char[hasatleast 13], uint32_t, bool32);
+libcesque char *FormatOctal64(char[hasatleast 24], uint64_t, bool32);
+libcesque char *FormatBinary64(char[hasatleast 67], uint64_t, char);
+libcesque char *FormatHex64(char[hasatleast 19], uint64_t, char);
+libcesque char *FormatFlex64(char[hasatleast 24], int64_t, char);
+libcesque size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
+libcesque size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
+libcesque size_t uint64toarray_radix8(uint64_t, char[hasatleast 24]);
 
 COSMOPOLITAN_C_END_
 #endif /* _COSMO_SOURCE */

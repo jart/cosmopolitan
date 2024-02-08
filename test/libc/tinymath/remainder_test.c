@@ -36,7 +36,7 @@ TEST(remainder, test) {
   EXPECT_TRUE(isnan(_remainder(NAN, 7)));
   EXPECT_TRUE(isnan(_remainder(INFINITY, 7)));
   EXPECT_TRUE(isnan(_remainder(7, 0)));
-  EXPECT_STREQ("-1", _gc(xdtoa(_remainder(7, 4))));
+  EXPECT_STREQ("-1", gc(xdtoa(_remainder(7, 4))));
 }
 
 TEST(remainderf, test) {
@@ -44,7 +44,7 @@ TEST(remainderf, test) {
   EXPECT_TRUE(isnan(_remainderf(NAN, 7)));
   EXPECT_TRUE(isnan(_remainderf(INFINITY, 7)));
   EXPECT_TRUE(isnan(_remainderf(7, 0)));
-  EXPECT_STREQ("-1", _gc(xdtoaf(_remainderf(7, 4))));
+  EXPECT_STREQ("-1", gc(xdtoaf(_remainderf(7, 4))));
 }
 
 TEST(remainderl, test) {
@@ -52,7 +52,7 @@ TEST(remainderl, test) {
   EXPECT_TRUE(isnan(_remainderl(NAN, 7)));
   EXPECT_TRUE(isnan(_remainderl(INFINITY, 7)));
   EXPECT_TRUE(isnan(_remainderl(7, 0)));
-  EXPECT_STREQ("-1", _gc(xdtoal(_remainderl(7, 4))));
+  EXPECT_STREQ("-1", gc(xdtoal(_remainderl(7, 4))));
 }
 
 static inline float i2f(uint32_t i) {
@@ -95,10 +95,10 @@ TEST(remainderf, brute) {
       x = f2i(a);
       y = f2i(b);
       if (abs(x - y) > 1) {
-        kprintf("bah %#lx %s %#lx %d\n", i, _gc(xdtoaf(i2f(i))), j,
-                _gc(xdtoaf(i2f(j))), abs(x - y));
-        kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(x))), x);
-        kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(y))), y);
+        kprintf("bah %#lx %s %#lx %d\n", i, gc(xdtoaf(i2f(i))), j,
+                gc(xdtoaf(i2f(j))), abs(x - y));
+        kprintf(" %-12s %#x\n", gc(xdtoaf(i2f(x))), x);
+        kprintf(" %-12s %#x\n", gc(xdtoaf(i2f(y))), y);
         if (!--lim) break;
       }
     }

@@ -1,5 +1,5 @@
 /*bin/echo   ' -*- mode:sh; indent-tabs-mode:nil; tab-width:8; coding:utf-8 -*-│
-│ vi: set et ft=sh ts=2 sts=2 sw=2 fenc=utf-8                              :vi │
+│ vi: set noet ft=sh ts=8 sts=8 sw=8 fenc=utf-8                            :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -427,8 +427,8 @@ syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-2			-2			-1			0x3ffffff
 syscon	auxv	AT_EXECFN				31			31			31			31			15			31			2014			31			# address of string containing first argument passed to execve() used when running program; AT_EXECPATH on FreeBSD
 syscon	auxv	AT_SECURE				23			23			23			23			0			23			0			23
 syscon	auxv	AT_RANDOM				25			25			25			25			16			25			0			25			# address of sixteen bytes of random data; AT_CANARY on FreeBSD whose AT_CANARYLEN should be 64
-syscon	auxv	AT_HWCAP				16			16			16			16			0			16			0			16
-syscon	auxv	AT_HWCAP2				26			26			26			26			0			26			0			26
+syscon	auxv	AT_HWCAP				16			16			16			16			25			16			0			16
+syscon	auxv	AT_HWCAP2				26			26			26			26			26			26			0			26
 syscon	auxv	AT_UID					11			11			11			11			0			11			2001			11
 syscon	auxv	AT_EUID					12			12			12			12			0			12			2000			12
 syscon	auxv	AT_GID					13			13			13			13			0			13			2003			13
@@ -1725,6 +1725,7 @@ syscon	nr	__NR_ioperm				0x00ad			0x0fff			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_init_module			0x00af			0x0069			0xfff			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_delete_module			0x00b0			0x006a			0xfff			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_gettid				0x00ba			0x00b2			0x100001b		0xfff			432			299			311			0xfff		# TODO(jart): thread_self_trap vs. gettid?
+syscon	nr	__NR_set_tls				0x009e			0xfff			0x3000003		0xfff			0x00a5			0x0149			0x13d			0xfff
 syscon	nr	__NR_readahead				0x00bb			0x00d5			0xfff			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_setxattr				0x00bc			0x0005			0x20000ec		0x00ec			0xfff			0xfff			0x177			0xfff
 syscon	nr	__NR_fsetxattr				0x00be			0x0007			0x20000ed		0x00ed			0xfff			0xfff			0x179			0xfff

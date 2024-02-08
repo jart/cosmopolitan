@@ -42,10 +42,11 @@ struct CosmoTib {
 };
 
 extern int __threaded;
+extern char __tls_morphed;
 extern unsigned __tls_index;
 
-char *_mktls(struct CosmoTib **);
-void __bootstrap_tls(struct CosmoTib *, char *);
+char *_mktls(struct CosmoTib **) libcesque;
+void __bootstrap_tls(struct CosmoTib *, char *) libcesque;
 
 #ifdef __x86_64__
 extern char __tls_enabled;
@@ -57,14 +58,14 @@ extern char __tls_enabled;
 #error "unsupported architecture"
 #endif
 
-void __set_tls(struct CosmoTib *);
+void __set_tls(struct CosmoTib *) libcesque;
 
 /**
  * Returns location of thread information block.
  *
  * This can't be used in privileged functions.
  */
-__funline pureconst struct CosmoTib *__get_tls(void) {
+forceinline pureconst struct CosmoTib *__get_tls(void) {
 #ifdef __chibicc__
   return 0;
 #elif __x86_64__

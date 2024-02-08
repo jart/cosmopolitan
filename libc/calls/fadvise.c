@@ -66,4 +66,4 @@ int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
   return rc;
 }
 
-__strong_reference(fadvise, fadvise64);
+__weak_reference(fadvise, fadvise64);

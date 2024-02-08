@@ -2,9 +2,9 @@
 .ntimp	RtlInitUnicodeString,RtlInitUnicodeString
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 RtlInitUnicodeString:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

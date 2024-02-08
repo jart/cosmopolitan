@@ -20,7 +20,6 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/thread/pt.internal.h"
-#include "libc/nexgen32e/macros.h"
 
 #define SIG_IGN 1
 

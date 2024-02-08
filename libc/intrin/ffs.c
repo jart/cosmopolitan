@@ -21,14 +21,14 @@
 /**
  * Finds lowest set bit in word.
  */
-int ffs(int x) {
+int(ffs)(int x) {
   return __builtin_ffs(x);
 }
 
 /**
  * Finds lowest set bit in word.
  */
-int ffsl(long x) {
+int(ffsl)(long x) {
   return __builtin_ffsl(x);
 }
 

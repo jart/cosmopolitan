@@ -102,4 +102,4 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   return rc;
 }
 
-__strong_reference(fstatat, fstatat64);
+__weak_reference(fstatat, fstatat64);

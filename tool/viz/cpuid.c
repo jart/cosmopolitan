@@ -73,17 +73,17 @@ static void showstrata(void) {
 void showcachesizes(void) {
   unsigned i;
   CPUID4_ITERATE(i, {
-    printf("%-19s%s%s %u-way %,7u byte cache w/%s %,5u sets of %u byte lines "
+    printf("%-19s%s%s %2u-way %,9u byte cache w/%s %,6u sets of %u byte lines "
            "shared across %u threads\n",
-           _gc(xasprintf("Level %u%s", CPUID4_CACHE_LEVEL,
-                         CPUID4_CACHE_TYPE == 1   ? " data"
-                         : CPUID4_CACHE_TYPE == 2 ? " code"
-                                                  : "")),
+           gc(xasprintf("Level %u%s", CPUID4_CACHE_LEVEL,
+                        CPUID4_CACHE_TYPE == 1   ? " data"
+                        : CPUID4_CACHE_TYPE == 2 ? " code"
+                                                 : "")),
            CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
            CPUID4_COMPLEX_INDEXING ? " complexly-indexed" : "",
            CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
            CPUID4_PHYSICAL_LINE_PARTITIONS > 1
-               ? _gc(xasprintf(" %u physically partitioned"))
+               ? gc(xasprintf(" %u physically partitioned"))
                : "",
            CPUID4_NUMBER_OF_SETS, CPUID4_SYSTEM_COHERENCY_LINE_SIZE,
            CPUID4_MAX_THREADS_SHARING_CACHE);
@@ -175,6 +175,8 @@ int main(int argc, char *argv[]) {
              : "");
 
   CANIUSE(AVXVNNI);
+  CANIUSE(AVXVNNIINT8);
+  CANIUSE(AVXVNNIINT16);
   CANIUSE(AVX512BW);
   CANIUSE(AVX512CD);
   CANIUSE(AVX512DQ);

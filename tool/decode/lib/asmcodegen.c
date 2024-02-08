@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/decode/lib/asmcodegen.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

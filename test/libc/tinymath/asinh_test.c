@@ -28,29 +28,29 @@ float _asinhf(float) asm("asinhf");
 long double _asinhl(long double) asm("asinhl");
 
 TEST(asinh, test) {
-  EXPECT_STREQ(".481211825059603", _gc(xdtoa(_asinh(+.5))));
-  EXPECT_STREQ("-.481211825059603", _gc(xdtoa(_asinh(-.5))));
-  EXPECT_STREQ("0", _gc(xdtoa(_asinh(0))));
-  EXPECT_STREQ("NAN", _gc(xdtoa(_asinh(NAN))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoa(_asinh(INFINITY))));
+  EXPECT_STREQ(".481211825059603", gc(xdtoa(_asinh(+.5))));
+  EXPECT_STREQ("-.481211825059603", gc(xdtoa(_asinh(-.5))));
+  EXPECT_STREQ("0", gc(xdtoa(_asinh(0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_asinh(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_asinh(INFINITY))));
   EXPECT_STREQ("-2.1073424255447e-08",
-               _gc(xasprintf("%.15g", _asinh(-2.1073424255447e-08))));
+               gc(xasprintf("%.15g", _asinh(-2.1073424255447e-08))));
 }
 
 TEST(asinhf, test) {
-  EXPECT_STREQ(".481212", _gc(xdtoaf(_asinhf(+.5))));
-  EXPECT_STREQ("-.481212", _gc(xdtoaf(_asinhf(-.5))));
-  EXPECT_STREQ("0", _gc(xdtoaf(_asinhf(0))));
-  EXPECT_STREQ("NAN", _gc(xdtoaf(_asinhf(NAN))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoaf(_asinhf(INFINITY))));
+  EXPECT_STREQ(".481212", gc(xdtoaf(_asinhf(+.5))));
+  EXPECT_STREQ("-.481212", gc(xdtoaf(_asinhf(-.5))));
+  EXPECT_STREQ("0", gc(xdtoaf(_asinhf(0))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_asinhf(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_asinhf(INFINITY))));
 }
 
 TEST(asinhl, test) {
-  EXPECT_STREQ(".4812118250596034", _gc(xdtoal(_asinhl(+.5))));
-  EXPECT_STREQ("-.4812118250596034", _gc(xdtoal(_asinhl(-.5))));
-  EXPECT_STREQ("0", _gc(xdtoal(_asinhl(0))));
-  EXPECT_STREQ("NAN", _gc(xdtoal(_asinhl(NAN))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoal(_asinhl(INFINITY))));
+  EXPECT_STREQ(".4812118250596034", gc(xdtoal(_asinhl(+.5))));
+  EXPECT_STREQ("-.4812118250596034", gc(xdtoal(_asinhl(-.5))));
+  EXPECT_STREQ("0", gc(xdtoal(_asinhl(0))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_asinhl(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_asinhl(INFINITY))));
 }
 
 BENCH(asinh, bench) {

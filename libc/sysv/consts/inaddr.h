@@ -21,4 +21,9 @@
 
 #define IN_LOOPBACKNET 127
 
+/* clang-format off */
+#define IN6ADDR_ANY_INIT      { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } }
+#define IN6ADDR_LOOPBACK_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } }
+/* clang-format on */
+
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_INADDR_H_ */

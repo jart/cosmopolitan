@@ -1,0 +1,16 @@
+DESCRIPTION
+
+  the bourne again shell
+
+LICENSE
+
+  GPL v3
+
+ORIGIN
+
+  https://ftp.gnu.org/gnu/bash/bash-5.2.tar.gz
+
+LOCAL CHANGES
+
+  - Force disable mkfifo() code
+  - Added runtime check for broken BSD /dev/fd stuff

@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += TOOL_HELLO
 
@@ -19,7 +19,7 @@ TOOL_HELLO_COMS =						\
 
 TOOL_HELLO_DIRECTDEPS =						\
 	LIBC_CALLS						\
-	LIBC_RUNTIME						\
+	LIBC_RUNTIME
 
 TOOL_HELLO_DEPS :=						\
 	$(call uniq,$(foreach x,$(TOOL_HELLO_DIRECTDEPS),$($(x))))

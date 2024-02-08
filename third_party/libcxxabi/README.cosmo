@@ -1,0 +1,20 @@
+DESCRIPTION
+
+  libcxxabi - C++ Standard Library Support
+
+ORIGIN
+
+  Obtained from the LLVM monorepo, release 17.0.6.
+
+  https://github.com/llvm/llvm-project/tree/llvmorg-17.0.6/libunwind
+  commit 6009708b4367171ccdbf4b5905cb6a803753fe18
+  Author: Tobias Hieta <tobias@hieta.se>
+  Date:   Tue, 28 Nov 2023 09:52:28 +0100
+
+LOCAL CHANGES
+
+  - Add <__memory/aligned_alloc.h> (contains a few inline functions) from
+  upstream libcxx.
+  - Add <test/support/make_test_thread.hh> and <test/support/test_macros.hh>
+  from upstream libcxx.
+  - Enable __cxa_thread_atexit for Cosmopolitan.

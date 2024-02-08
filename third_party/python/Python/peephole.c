@@ -20,7 +20,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Python/wordcode_helpers.inc"
-#include "third_party/quickjs/internal.h"
 
 /* Peephole optimizations for bytecode compiler. */
 

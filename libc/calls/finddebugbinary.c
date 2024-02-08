@@ -26,11 +26,11 @@
 #include "libc/elf/def.h"
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
-#include "libc/serialize.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -80,8 +80,9 @@ static bool IsMyDebugBinary(const char *path) {
     // contains the same number of bytes of code as our .com executable
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-        (dm = sys_mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)).addr !=
-            MAP_FAILED) {
+        (dm = sys_mmap((void *)0x12345000000, size, PROT_READ, MAP_SHARED, fd,
+                       0))
+                .addr != MAP_FAILED) {
       if (READ32LE((char *)dm.addr) == READ32LE("\177ELF") &&
           ((Elf64_Ehdr *)dm.addr)->e_machine == GetElfMachine() &&
           GetElfSymbolValue(dm.addr, "_etext", &value)) {

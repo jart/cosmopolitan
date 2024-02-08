@@ -23,7 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/log/log.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -53,7 +53,7 @@ static const char kRet31337[] = {
 };
 #elif defined(__aarch64__)
 static const uint32_t kRet31337[] = {
-    0x528f4d20,  // mov	w0,#31337
+    0x528f4d20,  // mov w0,#31337
     0xd65f03c0,  // ret
 };
 #else

@@ -1,0 +1,15 @@
+DESCRIPTION
+
+  ncurses is a teletypewriter abstraction library
+
+LICENSE
+
+  ncurses license
+
+ORIGIN
+
+  https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz
+
+LOCAL CHANGES
+
+  None.

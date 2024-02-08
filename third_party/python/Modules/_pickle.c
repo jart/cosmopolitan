@@ -30,7 +30,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
-#include "third_party/quickjs/internal.h"
 
 PYTHON_PROVIDE("_pickle");
 PYTHON_PROVIDE("_pickle.PickleError");

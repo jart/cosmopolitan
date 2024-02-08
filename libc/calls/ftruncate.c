@@ -87,4 +87,4 @@ int ftruncate(int fd, int64_t length) {
   return rc;
 }
 
-__strong_reference(ftruncate, ftruncate64);
+__weak_reference(ftruncate, ftruncate64);

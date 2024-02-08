@@ -47,6 +47,7 @@ void *__mmap_unlocked(void *, size_t, int, int, int, int64_t);
 int __munmap_unlocked(char *, size_t);
 void __on_arithmetic_overflow(void);
 void __init_fds(int, char **, char **);
+void __init_program_executable_name(void);
 
 COSMOPOLITAN_C_END_
 #endif /* ANSI */

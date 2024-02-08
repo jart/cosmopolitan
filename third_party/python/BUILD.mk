@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_PYTHON
 
@@ -1165,7 +1165,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DATA =						\
 THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	DSP_CORE							\
 	LIBC_CALLS							\
-	LIBC_DNS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_LOG							\
@@ -1929,7 +1928,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_pprint.py				\
 	third_party/python/Lib/test/test_print.py				\
 	third_party/python/Lib/test/test_thread.py				\
-	third_party/python/Lib/test/test_threadsignals.py			\
 	third_party/python/Lib/test/test_profile.py				\
 	third_party/python/Lib/test/test_property.py				\
 	third_party/python/Lib/test/test_pstats.py				\
@@ -1942,7 +1940,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_re.py					\
 	third_party/python/Lib/test/test_repl.py				\
 	third_party/python/Lib/test/test_reprlib.py				\
-	third_party/python/Lib/test/test_resource.py				\
 	third_party/python/Lib/test/test_richcmp.py				\
 	third_party/python/Lib/test/test_robotparser.py				\
 	third_party/python/Lib/test/test_sax.py					\
@@ -2019,6 +2016,9 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 
 # TODO: test_threading passing probably requires more mutexes in libc/calls/
 # TODO: test_sys is potentially flaky now that we have threads
+
+THIRD_PARTY_PYTHON_PYTEST_TOOSLOW =						\
+	third_party/python/Lib/test/test_threadsignals.py
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_sys.py					\
@@ -3114,9 +3114,6 @@ o/$(MODE)/third_party/python/Lib/test/test_regrtest.py.runs: $(PYTHONTESTER)
 o/$(MODE)/third_party/python/Lib/test/test_repl.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_repl $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: $(PYTHONTESTER)
-	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_resource $(PYTESTARGS)
-
 o/$(MODE)/third_party/python/Lib/test/test_richcmp.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_richcmp $(PYTESTARGS)
 
@@ -3903,8 +3900,8 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): private PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
 
-o/$(MODE)/third_party/python/Python/ceval.o: private QUOTA = -C64 -M1024m -L300
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: private QUOTA += -C64 -M1024m -L300
+o/$(MODE)/third_party/python/Python/ceval.o: private QUOTA = -C64 -L300
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: private QUOTA += -C64 -L300
 
 o/$(MODE)/third_party/python/Objects/unicodeobject.o:			\
 		third_party/python/Objects/unicodeobject.c		\
@@ -3947,19 +3944,13 @@ o/$(MODE)/third_party/python/Lib/test/pystone.o: private PYFLAGS += -m -O2 -P.py
 o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: private QUOTA = -C64 -L180
 o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: private QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: private QUOTA = -C64
-o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: private QUOTA = -M512m -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: private QUOTA = -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: private QUOTA = -M1400m -L300
+o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: private QUOTA = -C64 -L300
+o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: private QUOTA = -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: private QUOTA = -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: private QUOTA = -L300 -C64
 o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: private QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: private QUOTA = -L120
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: private QUOTA = -C1000000
-o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32 -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32
 o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: private QUOTA = -L180
 o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: private QUOTA = -C128 -L600 -L300

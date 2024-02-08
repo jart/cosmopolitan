@@ -107,15 +107,15 @@ static char *DescribeType(struct Type *ty) {
     case TY_LDOUBLE:
       return DescribeScalar(ty, "long double");
     case TY_FUNC:
-      return xasprintf("%s(*)()", _gc(DescribeType(ty->return_ty)));
+      return xasprintf("%s(*)()", gc(DescribeType(ty->return_ty)));
     case TY_PTR:
       if (ty->base->kind == TY_FUNC) {
         return DescribeType(ty->base);
       } else {
-        return xasprintf("%s*", _gc(DescribeType(ty->base)));
+        return xasprintf("%s*", gc(DescribeType(ty->base)));
       }
     case TY_ARRAY:
-      return xasprintf("%s[%d]", _gc(DescribeType(ty->base)), ty->array_len);
+      return xasprintf("%s[%d]", gc(DescribeType(ty->base)), ty->array_len);
     case TY_ENUM:
       if (ty->name) {
         return xasprintf("enum %.*s", ty->name->len, ty->name->loc);

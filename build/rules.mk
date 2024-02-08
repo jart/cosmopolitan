@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set et ft=make ts=8 sw=8 fenc=utf-8 :vi ──────────────────────┘
 #
 # SYNOPSIS
 #
@@ -38,6 +38,9 @@ o/$(MODE)/%.h: %.c
 	@$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 
 o/$(MODE)/%.o: %.cc
+	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%.o: %.cpp
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.lds: %.lds

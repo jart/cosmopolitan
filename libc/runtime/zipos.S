@@ -1,5 +1,5 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 tw=8 fenc=utf-8                                 :vi │
+│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -35,7 +35,7 @@
 	.yoink	__zipos_mmap
 	.yoink  __zipos_postdup
 	.yoink  __zipos_keep
-	.yoink  __zipos_free
+	.yoink  __zipos_drop
 
 //	TODO(jart): why does corruption happen when zip has no assets?
 	.yoink	.cosmo

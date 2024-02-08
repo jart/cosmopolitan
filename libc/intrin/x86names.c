@@ -55,5 +55,10 @@ const struct IdName kX86MarchNames[] = {
     {X86_MARCH_TREMONT, "Tremont"},                 //
     {X86_MARCH_KNIGHTSLANDING, "Knights Landing"},  //
     {X86_MARCH_KNIGHTSMILL, "Knights Mill"},        //
+    {X86_MARCH_SAPPHIRERAPIDS, "Sapphire Rapids"},  //
+    {X86_MARCH_ALDERLAKE, "Alder Lake"},            //
+    {X86_MARCH_COMETLAKE, "Comet Lake"},            //
+    {X86_MARCH_RAPTORLAKE, "Raptor Lake"},          //
+    {X86_MARCH_ROCKETLAKE, "Rocket Lake"},          //
     {0},                                            //
 };

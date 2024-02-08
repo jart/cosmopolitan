@@ -10,11 +10,6 @@
 #define lz4decode __lz4decode
 
 COSMOPOLITAN_C_START_
-#if 0
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard library » compression                            ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
 
 struct RlDecode {
   uint8_t repititions;

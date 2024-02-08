@@ -12,7 +12,7 @@
 
 COSMOPOLITAN_C_START_
 
-int ftok(const char *, int);
+int ftok(const char *, int) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_IPC_H_ */

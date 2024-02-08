@@ -15,10 +15,10 @@ struct thatispacked epoll_event {
   epoll_data_t data;
 };
 
-int epoll_create(int);
-int epoll_create1(int);
-int epoll_ctl(int, int, int, struct epoll_event *);
-int epoll_wait(int, struct epoll_event *, int, int);
+int epoll_create(int) libcesque;
+int epoll_create1(int) libcesque;
+int epoll_ctl(int, int, int, struct epoll_event *) libcesque;
+int epoll_wait(int, struct epoll_event *, int, int) libcesque;
 int epoll_pwait(int, struct epoll_event *, int, int, const sigset_t *);
 
 COSMOPOLITAN_C_END_

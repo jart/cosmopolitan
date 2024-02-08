@@ -60,4 +60,4 @@ int fstat(int fd, struct stat *st) {
   return rc;
 }
 
-__strong_reference(fstat, fstat64);
+__weak_reference(fstat, fstat64);

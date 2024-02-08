@@ -87,6 +87,8 @@
 #define MIN(X, Y) ((Y) > (X) ? (X) : (Y))
 #define MAX(X, Y) ((Y) < (X) ? (X) : (Y))
 
+#define PATH_MAX 1024 /* XXX verify */
+
 #define SupportsLinux()   (SUPPORT_VECTOR & LINUX)
 #define SupportsXnu()     (SUPPORT_VECTOR & XNU)
 #define SupportsFreebsd() (SUPPORT_VECTOR & FREEBSD)
@@ -111,41 +113,44 @@
 #define EXTERN_C
 #endif
 
-#define O_RDONLY           0
-#define PROT_NONE          0
-#define PROT_READ          1
-#define PROT_WRITE         2
-#define PROT_EXEC          4
-#define MAP_SHARED         1
-#define MAP_PRIVATE        2
-#define MAP_FIXED          16
-#define MAP_ANONYMOUS      (IsLinux() ? 32 : 4096)
-#define MAP_NORESERVE      (IsLinux() ? 16384 : 0)
-#define ELFCLASS32         1
-#define ELFDATA2LSB        1
-#define EM_NEXGEN32E       62
-#define EM_AARCH64         183
-#define ET_EXEC            2
-#define ET_DYN             3
-#define PT_LOAD            1
-#define PT_DYNAMIC         2
-#define PT_INTERP          3
-#define EI_CLASS           4
-#define EI_DATA            5
-#define PF_X               1
-#define PF_W               2
-#define PF_R               4
-#define AT_PHDR            3
-#define AT_PHENT           4
-#define AT_PHNUM           5
-#define AT_PAGESZ          6
-#define AT_EXECFN_LINUX    31
-#define AT_EXECFN_NETBSD   2014
-#define X_OK               1
-#define XCR0_SSE           2
-#define XCR0_AVX           4
-#define PR_SET_MM          35
-#define PR_SET_MM_EXE_FILE 13
+#define O_RDONLY                    0
+#define PROT_NONE                   0
+#define PROT_READ                   1
+#define PROT_WRITE                  2
+#define PROT_EXEC                   4
+#define MAP_SHARED                  1
+#define MAP_PRIVATE                 2
+#define MAP_FIXED                   16
+#define MAP_ANONYMOUS               (IsLinux() ? 32 : 4096)
+#define MAP_NORESERVE               (IsLinux() ? 16384 : 0)
+#define ELFCLASS32                  1
+#define ELFDATA2LSB                 1
+#define EM_NEXGEN32E                62
+#define EM_AARCH64                  183
+#define ET_EXEC                     2
+#define ET_DYN                      3
+#define PT_LOAD                     1
+#define PT_DYNAMIC                  2
+#define PT_INTERP                   3
+#define EI_CLASS                    4
+#define EI_DATA                     5
+#define PF_X                        1
+#define PF_W                        2
+#define PF_R                        4
+#define AT_PHDR                     3
+#define AT_PHENT                    4
+#define AT_PHNUM                    5
+#define AT_PAGESZ                   6
+#define AT_FLAGS                    8
+#define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+#define AT_FLAGS_PRESERVE_ARGV0     (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+#define AT_EXECFN_LINUX             31
+#define AT_EXECFN_NETBSD            2014
+#define X_OK                        1
+#define XCR0_SSE                    2
+#define XCR0_AVX                    4
+#define PR_SET_MM                   35
+#define PR_SET_MM_EXE_FILE          13
 
 #define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -212,17 +217,18 @@ struct PathSearcher {
   const char *name;
   const char *syspath;
   unsigned long namelen;
-  char path[1024];
+  char path[PATH_MAX];
 };
 
 struct ApeLoader {
   union ElfPhdrBuf phdr;
   struct PathSearcher ps;
-  char path[1024];
+  char path[PATH_MAX];
 };
 
 EXTERN_C long SystemCall(long, long, long, long, long, long, long, int);
-EXTERN_C void Launch(void *, long, void *, int) __attribute__((__noreturn__));
+EXTERN_C void Launch(void *, long, void *, int, void *)
+    __attribute__((__noreturn__));
 
 extern char __executable_start[];
 extern char _end[];
@@ -239,18 +245,26 @@ static int StrCmp(const char *l, const char *r) {
   return (l[i] & 255) - (r[i] & 255);
 }
 
-static const char *BaseName(const char *s) {
-  int c;
-  const char *b = "";
+#if 0
+
+static const char *StrRChr(const char *s, int c) {
+  const char *b = 0;
   if (s) {
-    while ((c = *s++)) {
-      if (c == '/') {
+    for (; *s; ++s) {
+      if (*s == c) {
         b = s;
       }
     }
   }
   return b;
 }
+
+static const char *BaseName(const char *s) {
+  const char *b = StrRChr(s, '/');
+  return b ? b + 1 : s;
+}
+
+#endif
 
 static void Bzero(void *a, unsigned long n) {
   long z;
@@ -343,7 +357,7 @@ static char *Utox(char p[19], unsigned long x) {
   return p;
 }
 
-static char *Utoa(char p[21], unsigned long x) {
+static char *Utoa(char p[20], unsigned long x) {
   char t;
   unsigned long i, a, b;
   i = 0;
@@ -561,45 +575,22 @@ static char SearchPath(struct PathSearcher *ps) {
   }
 }
 
-static char FindCommand(struct PathSearcher *ps) {
-  ps->path[0] = 0;
-
-  /* paths are always 100% taken literally when a slash exists
-       $ ape foo/bar.com arg1 arg2 */
-  if (MemChr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, 0);
-  }
-
-  /* we don't run files in the current directory
-       $ ape foo.com arg1 arg2
-     unless $PATH has an empty string entry, e.g.
-       $ expert PATH=":/bin"
-       $ ape foo.com arg1 arg2
-     however we will execute this
-       $ ape - foo.com foo.com arg1 arg2
-     because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, 0)) {
-    return 1;
-  }
-
-  /* otherwise search for name on $PATH */
-  return SearchPath(ps);
-}
-
-static char *Commandv(struct PathSearcher *ps, int os, const char *name,
+static char *Commandv(struct PathSearcher *ps, int os, char *name,
                       const char *syspath) {
+  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
+  if (ps->literally || MemChr(ps->name, '/', ps->namelen)) return name;
   ps->os = os;
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
-  if (FindCommand(ps)) {
+  ps->path[0] = 0;
+  if (SearchPath(ps)) {
     return ps->path;
   } else {
     return 0;
   }
 }
 
-__attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
+__attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
                                                 long *sp, unsigned long pagesz,
                                                 struct ElfEhdr *e,
                                                 struct ElfPhdr *p) {
@@ -757,11 +748,11 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   Msyscall(dynbase + code, codesize, os);
 
   /* call program entrypoint */
-  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, sp, os);
+  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, exe, os, sp);
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
+                          char *exe, int fd, long *sp, long *auxv,
                           unsigned long pagesz, int os) {
   long i, rc;
   unsigned size;
@@ -885,18 +876,13 @@ __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
         "NAME\n"
         "\n"
         "  actually portable executable loader version " APE_VERSION_STR "\n"
-        "  copyright 2023 justine alexandra roberts tunney\n"
+        "  copyrights 2024 justine alexandra roberts tunney\n"
         "  https://justine.lol/ape.html\n"
         "\n"
         "USAGE\n"
         "\n"
-        "  ape [FLAGS]   PROG [ARGV1,ARGV2,...]\n"
-        "  ape [FLAGS] - PROG [ARGV0,ARGV1,...]\n"
-        "\n"
-        "FLAGS\n"
-        "\n"
-        "  -h     show this help\n"
-        "  -f     force loading of program (do not use execve)\n"
+        "  ape   PROG [ARGV1,ARGV2,...]\n"
+        "  ape - PROG [ARGV0,ARGV1,...]\n"
         "\n",
         0l);
   Exit(rc, os);
@@ -906,10 +892,10 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
                                                       char dl) {
   int rc, n;
   unsigned i;
-  char literally;
   const char *ape;
   int c, fd, os, argc;
   struct ApeLoader *M;
+  char arg0, literally;
   unsigned long pagesz;
   union ElfEhdrBuf *ebuf;
   long *auxv, *ap, *endp, *sp2;
@@ -954,11 +940,15 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
 
   /* detect netbsd and find end of words */
   pagesz = 0;
+  arg0 = 0;
   for (ap = auxv; ap[0]; ap += 2) {
     if (ap[0] == AT_PAGESZ) {
       pagesz = ap[1];
     } else if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
       os = NETBSD;
+    } else if (SupportsLinux() && ap[0] == AT_FLAGS) {
+      // TODO(mrdomino): maybe set/insert this when we are called as "ape -".
+      arg0 = !!(ap[1] & AT_FLAGS_PRESERVE_ARGV0);
     }
   }
   if (!pagesz) {
@@ -971,22 +961,13 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     os = LINUX;
   }
 
-  /* parse flags */
-  while (argc > 1) {
-    if (argv[1][0] != '-') break; /* normal argument */
-    if (!argv[1][1]) break;       /* hyphen argument */
-    if (!StrCmp(argv[1], "-h") || !StrCmp(argv[1], "--help")) {
-      ShowUsage(os, 1, 0);
-    } else {
-      Print(os, 2, ape, ": invalid flag (pass -h for help)\n", 0l);
-      Exit(1, os);
-    }
-    *++sp = --argc;
-    ++argv;
-  }
-
   /* we can load via shell, shebang, or binfmt_misc */
-  if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
+  if (arg0) {
+    literally = 1;
+    prog = (char *)sp[2];
+    argc = sp[2] = sp[0] - 2;
+    argv = (char **)((sp += 2) + 1);
+  } else if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -995,9 +976,13 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
   } else if (argc < 2) {
-    Print(os, 2, ape, ": missing command name (pass -h for help)\n", 0l);
-    Exit(1, os);
+    ShowUsage(os, 2, 1);
   } else {
+    if (argv[1][0] == '-') {
+      rc = !((argv[1][1] == 'h' && !argv[1][2]) ||
+             !StrCmp(argv[1] + 1, "-help"));
+      ShowUsage(os, 1 + rc, rc);
+    }
     prog = (char *)sp[2];
     argc = sp[1] = sp[0] - 1;
     argv = (char **)((sp += 1) + 1);
@@ -1041,12 +1026,6 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     Pexit(os, exe, 0, "too small");
   }
   pe = ebuf->buf + rc;
-
-  /* change argv[0] to resolved path if it's ambiguous */
-  if (argc > 0 && ((*prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
-                   !StrCmp(BaseName(prog), argv[0]))) {
-    argv[0] = exe;
-  }
 
   /* ape intended behavior
      1. if ape, will scan shell script for elf printf statements

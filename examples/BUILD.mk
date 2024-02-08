@@ -1,5 +1,5 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
+#── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += EXAMPLES
 
@@ -44,7 +44,6 @@ EXAMPLES_DIRECTDEPS =								\
 	DSP_TTY									\
 	LIBC_CALLS								\
 	LIBC_DLOPEN								\
-	LIBC_DNS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
 	LIBC_IRQ								\
@@ -86,7 +85,6 @@ EXAMPLES_DIRECTDEPS =								\
 	THIRD_PARTY_MUSL							\
 	THIRD_PARTY_NSYNC							\
 	THIRD_PARTY_NSYNC_MEM							\
-	THIRD_PARTY_QUICKJS							\
 	THIRD_PARTY_SED								\
 	THIRD_PARTY_STB								\
 	THIRD_PARTY_TR								\
@@ -154,7 +152,6 @@ o/$(MODE)/examples/picol.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/examples/nesemu1.o: private QUOTA += -M512m
 o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
 
 $(EXAMPLES_OBJS): examples/BUILD.mk

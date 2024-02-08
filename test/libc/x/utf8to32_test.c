@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/mem/shuffle.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

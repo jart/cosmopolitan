@@ -2,9 +2,9 @@
 .imp	kernel32,__imp_Process32NextW,Process32NextW
 
 	.text.windows
-        .ftrace1
+	.ftrace1
 Process32Next:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

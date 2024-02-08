@@ -1,6 +1,6 @@
 #!/bin/sh
 #-*-mode:sh;indent-tabs-mode:nil;tab-width:2;coding:utf-8-*-┐
-#───vi: set net ft=sh ts=2 sts=2 fenc=utf-8 :vi─────────────┘
+#── vi: set et ft=sh ts=2 sts=2 fenc=utf-8 :vi ─────────────┘
 #
 # OVERVIEW
 #
@@ -66,7 +66,7 @@ set -- --regex-c='/^extern [^(]*(\*const \([^)]*\))(/\1/b' "$@"
 #   struct WorstSoftwareEver;
 set -- --regex-c='/^struct.*;$/uehocruehcroue/b' "$@"
 
-exec $TAGS                                                        \
+build/run $TAGS                                                   \
      -e                                                           \
      --langmap=c:.c.h                                             \
      --exclude=libc/nt/struct/imagefileheader.internal.h          \

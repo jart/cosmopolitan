@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 tw=8 fenc=utf-8                                   :vi │
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -25,9 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/stdio/rand.h"
 #include "third_party/musl/resolv.internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -41,7 +41,6 @@ int __res_mkquery(int op, const char *dname, int class, int type,
 {
 	int id, i, j;
 	unsigned char q[280];
-	struct timespec ts;
 	size_t l = strnlen(dname, 255);
 	int n;
 
@@ -66,9 +65,8 @@ int __res_mkquery(int op, const char *dname, int class, int type,
 	q[i+3] = class;
 
 	/* Make a reasonably unpredictable id */
-	clock_gettime(CLOCK_REALTIME, &ts);
-	id = (ts.tv_nsec + ts.tv_nsec/65536UL) & 0xffff;
-	q[0] = id/256;
+	id = _rand64();
+	q[0] = id >> 8;
 	q[1] = id;
 
 	memcpy(buf, q, n);

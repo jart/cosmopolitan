@@ -33,11 +33,27 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/errfuns.h"
 
+static int Atoi(const char *str) {
+  int c;
+  unsigned x = 0;
+  if (!*str) return -1;
+  while ((c = *str++)) {
+    if ('0' <= c && c <= '9') {
+      x *= 10;
+      x += c - '0';
+    } else {
+      return -1;
+    }
+  }
+  return x;
+}
+
 textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
                                int flags) {
 
   // handle special files
   if (startswith(path, "/dev/")) {
+    int fd;
     if (!strcmp(path + 5, "tty")) {
       return sys_fstat_nt_special(kFdConsole, st);
     } else if (!strcmp(path + 5, "null")) {
@@ -48,6 +64,8 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
       return sys_fstat_nt(STDOUT_FILENO, st);
     } else if (!strcmp(path + 5, "stderr")) {
       return sys_fstat_nt(STDERR_FILENO, st);
+    } else if (startswith(path + 5, "fd/") && (fd = Atoi(path + 8)) != -1) {
+      return sys_fstat_nt(fd, st);
     } else {
       return enoent();
     }

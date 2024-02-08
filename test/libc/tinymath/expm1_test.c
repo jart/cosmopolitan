@@ -28,51 +28,51 @@ float _expm1f(float) asm("expm1f");
 long double _expm1l(long double) asm("expm1l");
 
 TEST(expm1, test) {
-  EXPECT_STREQ("0", _gc(xdtoa(_expm1(0))));
-  EXPECT_STREQ("-0", _gc(xdtoa(_expm1(-0.))));
-  EXPECT_STREQ("NAN", _gc(xdtoa(_expm1(NAN))));
-  EXPECT_STREQ("-1", _gc(xdtoa(_expm1(-INFINITY))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoa(_expm1(INFINITY))));
-  /* EXPECT_STREQ("-INFINITY", _gc(xdtoa(_expm1(-132098844872390)))); */
-  /* EXPECT_STREQ("INFINITY", _gc(xdtoa(_expm1(132098844872390)))); */
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", _expm1(0.))));
-  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", _expm1(-0.))));
-  EXPECT_STREQ("0.648721270700128", _gc(xasprintf("%.15g", _expm1(.5))));
-  EXPECT_STREQ("-0.393469340287367", _gc(xasprintf("%.15g", _expm1(-.5))));
-  EXPECT_STREQ("1.71828182845905", _gc(xasprintf("%.15g", _expm1(1.))));
-  EXPECT_STREQ("-0.632120558828558", _gc(xasprintf("%.15g", _expm1(-1.))));
-  EXPECT_STREQ("3.48168907033806", _gc(xasprintf("%.15g", _expm1(1.5))));
-  EXPECT_STREQ("-0.77686983985157", _gc(xasprintf("%.15g", _expm1(-1.5))));
-  EXPECT_STREQ("6.38905609893065", _gc(xasprintf("%.15g", _expm1(2.))));
+  EXPECT_STREQ("0", gc(xdtoa(_expm1(0))));
+  EXPECT_STREQ("-0", gc(xdtoa(_expm1(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_expm1(NAN))));
+  EXPECT_STREQ("-1", gc(xdtoa(_expm1(-INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_expm1(INFINITY))));
+  /* EXPECT_STREQ("-INFINITY", gc(xdtoa(_expm1(-132098844872390)))); */
+  /* EXPECT_STREQ("INFINITY", gc(xdtoa(_expm1(132098844872390)))); */
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", _expm1(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", _expm1(-0.))));
+  EXPECT_STREQ("0.648721270700128", gc(xasprintf("%.15g", _expm1(.5))));
+  EXPECT_STREQ("-0.393469340287367", gc(xasprintf("%.15g", _expm1(-.5))));
+  EXPECT_STREQ("1.71828182845905", gc(xasprintf("%.15g", _expm1(1.))));
+  EXPECT_STREQ("-0.632120558828558", gc(xasprintf("%.15g", _expm1(-1.))));
+  EXPECT_STREQ("3.48168907033806", gc(xasprintf("%.15g", _expm1(1.5))));
+  EXPECT_STREQ("-0.77686983985157", gc(xasprintf("%.15g", _expm1(-1.5))));
+  EXPECT_STREQ("6.38905609893065", gc(xasprintf("%.15g", _expm1(2.))));
   EXPECT_TRUE(isnan(_expm1(NAN)));
   EXPECT_TRUE(isnan(_expm1(-NAN)));
-  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", _expm1(INFINITY))));
-  EXPECT_STREQ("-1", _gc(xasprintf("%.15g", _expm1(-INFINITY))));
+  EXPECT_STREQ("inf", gc(xasprintf("%.15g", _expm1(INFINITY))));
+  EXPECT_STREQ("-1", gc(xasprintf("%.15g", _expm1(-INFINITY))));
   EXPECT_STREQ("2.2250738585072e-308",
-               _gc(xasprintf("%.15g", _expm1(__DBL_MIN__))));
-  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", _expm1(__DBL_MAX__))));
+               gc(xasprintf("%.15g", _expm1(__DBL_MIN__))));
+  EXPECT_STREQ("inf", gc(xasprintf("%.15g", _expm1(__DBL_MAX__))));
 }
 
 TEST(expm1l, test) {
-  EXPECT_STREQ("1.718281828459045", _gc(xdtoal(_expm1l(1))));
-  EXPECT_STREQ("1.718281828459045", _gc(xdtoal(expl(1) - 1)));
-  EXPECT_STREQ("0", _gc(xdtoal(_expm1l(0))));
-  EXPECT_STREQ("-0", _gc(xdtoal(_expm1l(-0.))));
-  EXPECT_STREQ("NAN", _gc(xdtoal(_expm1l(NAN))));
-  EXPECT_STREQ("-1", _gc(xdtoal(_expm1l(-INFINITY))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoal(_expm1l(INFINITY))));
-  /* EXPECT_STREQ("-INFINITY", _gc(xdtoal(_expm1l(-132098844872390)))); */
-  /* EXPECT_STREQ("INFINITY", _gc(xdtoal(_expm1l(132098844872390)))); */
+  EXPECT_STREQ("1.718281828459045", gc(xdtoal(_expm1l(1))));
+  EXPECT_STREQ("1.718281828459045", gc(xdtoal(expl(1) - 1)));
+  EXPECT_STREQ("0", gc(xdtoal(_expm1l(0))));
+  EXPECT_STREQ("-0", gc(xdtoal(_expm1l(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_expm1l(NAN))));
+  EXPECT_STREQ("-1", gc(xdtoal(_expm1l(-INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_expm1l(INFINITY))));
+  /* EXPECT_STREQ("-INFINITY", gc(xdtoal(_expm1l(-132098844872390)))); */
+  /* EXPECT_STREQ("INFINITY", gc(xdtoal(_expm1l(132098844872390)))); */
 }
 
 TEST(expm1f, test) {
-  EXPECT_STREQ("0", _gc(xdtoaf(_expm1f(0))));
-  EXPECT_STREQ("-0", _gc(xdtoaf(_expm1f(-0.))));
-  EXPECT_STREQ("NAN", _gc(xdtoaf(_expm1f(NAN))));
-  EXPECT_STREQ("-1", _gc(xdtoaf(_expm1f(-INFINITY))));
-  EXPECT_STREQ("INFINITY", _gc(xdtoaf(_expm1f(INFINITY))));
-  /* EXPECT_STREQ("-INFINITY", _gc(xdtoaf(_expm1f(-132098844872390)))); */
-  /* EXPECT_STREQ("INFINITY", _gc(xdtoaf(_expm1f(132098844872390)))); */
+  EXPECT_STREQ("0", gc(xdtoaf(_expm1f(0))));
+  EXPECT_STREQ("-0", gc(xdtoaf(_expm1f(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_expm1f(NAN))));
+  EXPECT_STREQ("-1", gc(xdtoaf(_expm1f(-INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_expm1f(INFINITY))));
+  /* EXPECT_STREQ("-INFINITY", gc(xdtoaf(_expm1f(-132098844872390)))); */
+  /* EXPECT_STREQ("INFINITY", gc(xdtoaf(_expm1f(132098844872390)))); */
 }
 
 BENCH(expm1, bench) {

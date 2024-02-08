@@ -31,15 +31,15 @@
  */
 int __zipos_close(int fd) {
   int rc;
-  struct ZiposHandle *h;
-  h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
   if (!IsWindows()) {
     rc = sys_close(fd);
   } else {
     rc = 0;  // no system file descriptor needed on nt
   }
   if (!__vforked) {
-    __zipos_free(h);
+    struct ZiposHandle *h;
+    h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+    __zipos_drop(h);
   }
   return rc;
 }

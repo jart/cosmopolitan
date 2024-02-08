@@ -507,10 +507,10 @@
 #define HAVE_WORKING_VFORK 1
 
 /* Default C++ compiler. */
-#define MAKE_CXX "/opt/cosmocc/bin/aarch64-unknown-cosmo-c++"
+#define MAKE_CXX "c++"
 
 /* Build host information. */
-#define MAKE_HOST "x86_64-pc-linux-musl"
+#define MAKE_HOST "x86_64-linux-cosmo"
 
 /* Define to 1 to enable job server support in GNU Make. */
 #define MAKE_JOBSERVER 1
