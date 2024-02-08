@@ -14,6 +14,5 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/temp.h"
-#include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"
 #endif /* _STDLIB_H */
