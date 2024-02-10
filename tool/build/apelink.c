@@ -2036,7 +2036,7 @@ int main(int argc, char *argv[]) {
     //      let our shell script compile the ape loader on first run.
     //
     if (support_vector & _HOSTXNU) {
-      bool gotsome;
+      bool gotsome = false;
       p = stpcpy(p, "else\n");  // if [ -d /Applications ]; then
 
       // output native mach-o morph
@@ -2136,6 +2136,7 @@ int main(int argc, char *argv[]) {
     }
 
     // extract the ape loader for open platforms
+    bool gotsome = false;
     if (inputs.n && (support_vector & _HOSTXNU)) {
       p = stpcpy(p, "if [ ! -d /Applications ]; then\n");
     }
@@ -2158,9 +2159,13 @@ int main(int argc, char *argv[]) {
                       "mv -f \"$t.$$\" \"$t\" ||exit\n");
         p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
                       "fi\n");
+        gotsome = true;
       }
     }
     if (inputs.n && (support_vector & _HOSTXNU)) {
+      if (!gotsome) {
+        p = stpcpy(p, "true\n");
+      }
       p = stpcpy(p, "fi\n");
     }
 
