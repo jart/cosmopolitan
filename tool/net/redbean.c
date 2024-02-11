@@ -2533,7 +2533,7 @@ img { vertical-align: middle; }\r\n\
   return p;
 }
 
-static char *ServeErrorImpl(unsigned code, const char *reason,
+static char *ServeErrorImplDefault(unsigned code, const char *reason,
                             const char *details) {
   size_t n;
   char *p, *s;
@@ -2569,6 +2569,28 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
       return ServeDefaultErrorPage(p, code, reason, details);
     }
   }
+}
+
+static char *GetLuaResponse(void) {
+  return cpm.luaheaderp ? cpm.luaheaderp : SetStatus(200, "OK");
+}
+
+static char *ServeErrorImpl(unsigned code, const char *reason,
+                            const char *details) {
+  lua_State *L = GL;
+  if (hasonerror) {
+    lua_getglobal(L, "OnError");
+    lua_pushinteger(L, code);
+    lua_pushstring(L, reason);
+    if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
+      return CommitOutput(GetLuaResponse());
+    } else {
+      return ServeErrorImplDefault(code, reason, details);
+    }
+  } else {
+    return ServeErrorImplDefault(code, reason, details);
+  }
+
 }
 
 static char *ServeErrorWithPath(unsigned code, const char *reason,
@@ -3228,10 +3250,6 @@ static char *ServeIndex(const char *path, size_t pathlen) {
   return p;
 }
 
-static char *GetLuaResponse(void) {
-  return cpm.luaheaderp ? cpm.luaheaderp : SetStatus(200, "OK");
-}
-
 static bool ShouldServeCrashReportDetails(void) {
   uint32_t ip;
   uint16_t port;
@@ -3253,27 +3271,11 @@ static char *LuaOnHttpRequest(void) {
     return CommitOutput(GetLuaResponse());
   } else {
     LogLuaError("OnHttpRequest", lua_tostring(L, -1));
-
-    if (hasonerror) {
-      lua_getglobal(L, "OnError");
-      lua_pushinteger(L, 500);
-      lua_pushstring(L, lua_tostring(L, -1));
-      if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
-        return CommitOutput(GetLuaResponse());
-      } else {
-        error = ServeErrorWithDetail(
-          500, "Internal Server Error!!",
-          ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
-        lua_pop(L, 1);  // pop error
-        return error;
-      }
-    } else {
-      error = ServeErrorWithDetail(
-          500, "Internal Server Error",
-          ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
-      lua_pop(L, 1);  // pop error
-      return error;
-    }
+    error = ServeErrorWithDetail(
+        500, "Internal Server Error",
+        ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
+    lua_pop(L, 1);  // pop error
+    return error;
   }
 }
 
