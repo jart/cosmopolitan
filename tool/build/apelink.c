@@ -102,7 +102,7 @@
   "               - 32: freebsd\n"                             \
   "               - 64: netbsd\n"                              \
   "\n"                                                         \
-  "             for example, `-s 0b1110001` may be used to\n"  \
+  "             for example, `-V 0b1110001` may be used to\n"  \
   "             produce ELF binaries that only support the\n"  \
   "             truly open unix systems. in this case when\n"  \
   "             a single input executable is supplied, the\n"  \
@@ -120,8 +120,8 @@
   "             also pass strings in a variety of intuitive\n" \
   "             supported representations. for example, bsd\n" \
   "             will enable freebsd+netbsd+openbsd and that\n" \
-  "             string too is a legal input. the -s flag is\n" \
-  "             also repeatable, e.g. `-s nt -s xnu` to use\n" \
+  "             string too is a legal input. the -V flag is\n" \
+  "             also repeatable, e.g. `-V nt -V xnu` to use\n" \
   "             the union of the two.\n"                       \
   "\n"                                                         \
   "             since the support vector controls the file\n"  \
@@ -988,7 +988,7 @@ static void GetOpts(int argc, char *argv[]) {
         if (ParseSupportVector(optarg, &bits)) {
           support_vector |= bits;
         } else {
-          Die(prog, "unrecognized token passed to -s support vector flag");
+          Die(prog, "unrecognized token passed to -V support vector flag");
           exit(1);
         }
         got_support_vector = true;
