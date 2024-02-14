@@ -295,20 +295,20 @@ class TimeTestCase(unittest.TestCase):
         # http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap08.html
         # They are also documented in the tzset(3) man page on most Unix
         # systems.
-        # eastern = 'EST+05EDT,M4.1.0,M10.5.0'  # [jart] wut
-        # victoria = 'AEST-10AEDT-11,M10.5.0,M3.5.0'
+        # new_york = 'EST+05EDT,M4.1.0,M10.5.0'  # [jart] wut
+        # sydney = 'AEST-10AEDT-11,M10.5.0,M3.5.0'
         # utc='UTC+0'
 
         utc = 'UTC'
-        eastern = 'New_York'
-        victoria = 'Melbourne'
+        new_york = 'New_York'
+        sydney = 'Sydney'
 
         org_TZ = environ.get('TZ',None)
         try:
             # Make sure we can switch to UTC time and results are correct
             # Note that unknown timezones default to UTC.
             # Note that altzone is undefined in UTC, as there is no DST
-            environ['TZ'] = eastern
+            environ['TZ'] = new_york
             time.tzset()
             environ['TZ'] = utc
             time.tzset()
@@ -320,7 +320,7 @@ class TimeTestCase(unittest.TestCase):
             self.assertEqual(time.localtime(xmas2002).tm_isdst, 0)
 
             # Make sure we can switch to US/Eastern
-            environ['TZ'] = eastern
+            environ['TZ'] = new_york
             time.tzset()
             self.assertNotEqual(time.gmtime(xmas2002), time.localtime(xmas2002))
             self.assertEqual(time.tzname, ('EST', 'EDT'))
@@ -332,7 +332,7 @@ class TimeTestCase(unittest.TestCase):
             self.assertEqual(len(time.tzname), 2)
 
             # Now go to the southern hemisphere.
-            environ['TZ'] = victoria
+            environ['TZ'] = sydney
             time.tzset()
             self.assertNotEqual(time.gmtime(xmas2002), time.localtime(xmas2002))
 
