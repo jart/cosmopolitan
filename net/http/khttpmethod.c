@@ -37,4 +37,5 @@ const char kHttpMethod[18][8] = {
     "PATCH",    //
     "REPORT",   //
     "UNLOCK",   //
+    "LIST",     //
 };
