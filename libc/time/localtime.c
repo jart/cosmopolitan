@@ -110,11 +110,10 @@ static const char	gmt[] = "GMT";
 /*
 ** The DST rules to use if TZ has no rules and we can't load TZDEFRULES.
 ** Default to US rules as of 2017-05-07.
-** POSIX does not specify the default DST rules;
-** for historical reasons, US rules are a common default.
+** Default to GMT rules as of 2023-07-25.
 */
 #ifndef TZDEFRULESTRING
-#define TZDEFRULESTRING ",M3.2.0,M11.1.0"
+#define TZDEFRULESTRING "GMT0"
 #endif
 
 struct ttinfo {				/* time type information */
