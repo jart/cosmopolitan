@@ -456,6 +456,7 @@ static bool isexitingworker;
 static bool hasonworkerstart;
 static bool leakcrashreports;
 static bool hasonhttprequest;
+static bool hasonerror;
 static bool ishandlingrequest;
 static bool listeningonport443;
 static bool hasonprocesscreate;
@@ -2532,7 +2533,7 @@ img { vertical-align: middle; }\r\n\
   return p;
 }
 
-static char *ServeErrorImpl(unsigned code, const char *reason,
+static char *ServeErrorImplDefault(unsigned code, const char *reason,
                             const char *details) {
   size_t n;
   char *p, *s;
@@ -2568,6 +2569,28 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
       return ServeDefaultErrorPage(p, code, reason, details);
     }
   }
+}
+
+static char *GetLuaResponse(void) {
+  return cpm.luaheaderp ? cpm.luaheaderp : SetStatus(200, "OK");
+}
+
+static char *ServeErrorImpl(unsigned code, const char *reason,
+                            const char *details) {
+  lua_State *L = GL;
+  if (hasonerror) {
+    lua_getglobal(L, "OnError");
+    lua_pushinteger(L, code);
+    lua_pushstring(L, reason);
+    if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
+      return CommitOutput(GetLuaResponse());
+    } else {
+      return ServeErrorImplDefault(code, reason, details);
+    }
+  } else {
+    return ServeErrorImplDefault(code, reason, details);
+  }
+
 }
 
 static char *ServeErrorWithPath(unsigned code, const char *reason,
@@ -3225,10 +3248,6 @@ static char *ServeIndex(const char *path, size_t pathlen) {
     free(q);
   }
   return p;
-}
-
-static char *GetLuaResponse(void) {
-  return cpm.luaheaderp ? cpm.luaheaderp : SetStatus(200, "OK");
 }
 
 static bool ShouldServeCrashReportDetails(void) {
@@ -5569,6 +5588,7 @@ static void LuaInit(void) {
   }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");
+    hasonerror = IsHookDefined("OnError");
     hasonclientconnection = IsHookDefined("OnClientConnection");
     hasonprocesscreate = IsHookDefined("OnProcessCreate");
     hasonprocessdestroy = IsHookDefined("OnProcessDestroy");
