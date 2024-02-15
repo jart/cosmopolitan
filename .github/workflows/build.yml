@@ -1,31 +1,26 @@
-name: build
-
-on:
-  push:
-    branches:
-      - "master"
-      - "flake"
-  pull_request:
-    branches:
-      - "master"
-
-  # run workflow manually from the Actions tab
-  workflow_dispatch:
+name: build-release
+on: workflow_dispatch
 
 jobs:
-  matrix_on_mode:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        mode: ["", tiny, rel, tinylinux, optlinux]
+  build-release:
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - name: Disable binfmt_misc shenanigans
+        run:  |
+              sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+              sudo chmod +x /usr/bin/ape
+              sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+              sudo sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: support ape bins 1
-        run: sudo cp build/bootstrap/ape.elf /usr/bin/ape
+      - uses: actions/checkout@v4
 
-      - name: support ape bins 2
-        run: sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+      - name: Build Cosmo toolchain
+        run:  tool/cosmocc/package.sh
 
-      - name: make matrix
-        run: V=0 make -j2 MODE=${{ matrix.mode }}
+      - name: Prepare toolchain archive
+        run:  cd cosmocc && zip -ry9A ../cosmocc.zip .
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run:  gh release create cosmocc_${{github.sha}}_${{github.run_id}}_${{github.run_attempt}} -t "Cosmo toolchain" cosmocc.zip
