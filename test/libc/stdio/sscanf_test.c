@@ -69,9 +69,17 @@ TEST(sscanf, testNonDirectiveCharacterMatching) {
 }
 
 TEST(sscanf, testCharacter) {
-  char c = 0;
-  EXPECT_EQ(1, sscanf("a", "%c", &c));
-  EXPECT_EQ('a', c);
+  char c1 = 0, c2 = c1, c3 = c2, c4 = c3;
+  char s1[32] = {0}, s2[32] = {0};
+  EXPECT_EQ(1, sscanf("a", "%c", &c1));
+  EXPECT_EQ(2, sscanf("ab", "%c %c %c", &c2, &c3, &c4));
+  EXPECT_EQ(1, sscanf("abcde", "%5c", s1));
+  EXPECT_EQ(0, sscanf("abcd", "%5c", s2));
+
+  EXPECT_EQ('a', c1);
+  EXPECT_EQ('a', c2);
+  EXPECT_EQ('b', c3);
+  EXPECT_STREQ("abcde", &s1[0]);
 }
 
 TEST(sscanf, testStringBuffer) {
