@@ -410,9 +410,6 @@ int __vcscanf(int callback(void *),    //
                   goto Done;
                 }
               } else {
-                if (c != -1 && unget) {
-                  unget(c, arg);
-                }
                 goto GotFloatingPointNumber;
               }
             } else {
@@ -465,9 +462,6 @@ int __vcscanf(int callback(void *),    //
         Continue:
           continue;
         Break:
-          if (c != -1 && unget) {
-            unget(c, arg);
-          }
           break;
         } while ((c = BUFFER) != -1);
       GotFloatingPointNumber:
