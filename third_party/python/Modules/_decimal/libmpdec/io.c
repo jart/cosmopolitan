@@ -41,6 +41,10 @@ __static_yoink("libmpdec_notice");
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 
+#if __GNUC__ >= 12
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 
 /* This file contains functions for decimal <-> string conversions, including
    PEP-3101 formatting for numeric types. */

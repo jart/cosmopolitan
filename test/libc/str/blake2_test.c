@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/blake2.h"
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
-#include "libc/str/blake2.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/testlib/ezbench.h"
@@ -40,7 +40,7 @@ uint8_t *HEXBLAKE2B256(const char *s) {
   n = strlen(s);
   assert(!(n & 1));
   n /= 2;
-  p = malloc(n);
+  p = malloc(n + 1);
   for (i = 0; i < n; ++i) {
     a = kHexToInt[s[i * 2 + 0] & 255];
     b = kHexToInt[s[i * 2 + 1] & 255];
