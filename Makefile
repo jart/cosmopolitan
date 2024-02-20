@@ -555,9 +555,9 @@ o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
-		$(filter-out %.cc,$(SRCS))				\
+		$(filter-out %.cpp,$(filter-out %.cc,$(SRCS)))				\
 		$(HDRS)
-	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))))
+	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cpp,$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)
