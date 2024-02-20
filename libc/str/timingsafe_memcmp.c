@@ -19,10 +19,9 @@
 #include "libc/limits.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-timingsafe_memcmp (ISC License)\\n\
-Copyright 2014 Google Inc.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(timingsafe_memcmp_notice, "\
+timingsafe_memcmp (ISC License)\n\
+Copyright 2014 Google Inc.");
 
 /**
  * Lexicographically compares the first 𝑛 bytes in 𝑝 and 𝑞.

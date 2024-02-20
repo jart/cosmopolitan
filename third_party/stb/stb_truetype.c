@@ -36,10 +36,9 @@
 #include "libc/str/str.h"
 #include "third_party/stb/stb_rect_pack.h"
 
-asm(".ident\t\"\\n\\n\
-stb_truetype (MIT License)\\n\
-Copyright 2017 Sean Barrett\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(stb_truetype_notice, "\
+stb_truetype (MIT License)\n\
+Copyright 2017 Sean Barrett");
 
 // stb_truetype.h - v1.26 - public domain
 // authored from 2009-2021 by Sean Barrett / RAD Game Tools

@@ -4,7 +4,6 @@
 #include "libc/tinymath/estrin_wrap.internal.h"
 #include "libc/tinymath/horner.internal.h"
 COSMOPOLITAN_C_START_
-// clang-format off
 
 /*
  * Double-precision polynomial evaluation function for scalar and vector atan(x)

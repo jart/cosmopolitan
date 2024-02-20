@@ -239,7 +239,7 @@ PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -isystem $BIN/../include"
 CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
-LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,norelro -Wl,--gc-sections"
+LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then

@@ -65,6 +65,7 @@
            "pltoff"
            "gotpcrel"
            "progbits"
+           "note"
            "nobits"
            "init_array"
            "fini_array"

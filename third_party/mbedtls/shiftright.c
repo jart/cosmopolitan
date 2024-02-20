@@ -21,8 +21,7 @@
 
 void (*ShiftRight)(uint64_t *, size_t, unsigned char);
 
+__attribute__((__constructor__(10)))
 static textstartup void ShiftRightInit(void) {
   ShiftRight = 0 && X86_HAVE(AVX) ? ShiftRightAvx : ShiftRightPure;
 }
-
-const void *const ShiftRightCtor[] initarray = {ShiftRightInit};

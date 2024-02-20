@@ -29,12 +29,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/atanf_common.internal.h"
 #include "libc/tinymath/internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("arm_optimized_routines_notice");
 
 #define Pi (0x1.921fb6p+1f)
 #define PiOver2 (0x1.921fb6p+0f)

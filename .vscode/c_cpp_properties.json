@@ -52,7 +52,6 @@
 				"relegated=",
 				"hidden=",
 				"textstartup=",
-				"initarray=",
 				"returnsnonnull=",
 				"returnspointerwithnoaliases=",
 				"printfesque(x)=",

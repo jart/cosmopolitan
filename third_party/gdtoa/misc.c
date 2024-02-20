@@ -98,7 +98,7 @@ __gdtoa_Bclear(void)
 	__gdtoa_unlock();
 }
 
-__attribute__((__constructor__)) static void
+__attribute__((__constructor__(60))) static void
 __gdtoa_Binit(void)
 {
 	__gdtoa_initlock();

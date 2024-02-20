@@ -30,12 +30,10 @@
  */
 void (*Mul4x4)(uint64_t C[16], const uint64_t A[8], const uint64_t B[8]);
 
-static textstartup void Mul4x4Init()
+__attribute__((__constructor__(10))) static textstartup void Mul4x4Init()
 {
     Mul4x4 = X86_HAVE(ADX) && X86_HAVE(BMI2) ? Mul4x4Adx : Mul4x4Pure;
 }
-
-const void *const Mul4x4Ctor[] initarray = {Mul4x4Init};
 
 void Mul4x4Pure(uint64_t C[16], const uint64_t A[8], const uint64_t B[8])
 {

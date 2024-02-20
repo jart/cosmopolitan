@@ -23,7 +23,6 @@
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"

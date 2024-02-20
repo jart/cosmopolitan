@@ -28,15 +28,9 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+__static_yoink("musl_libc_notice");
+__static_yoink("openbsd_libm_notice");
 
-asm(".ident\t\"\\n\\n\
-OpenBSD libm (ISC License)\\n\
-Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_log10l.c */
 /*

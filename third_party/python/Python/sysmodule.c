@@ -2013,6 +2013,7 @@ _PySys_Init(void)
                          PyBool_FromLong(Py_DontWriteBytecodeFlag));
     SET_SYS_FROM_STRING("api_version",
                         PyLong_FromLong(PYTHON_API_VERSION));
+    // asm("int3");
     SET_SYS_FROM_STRING("copyright",
                         PyUnicode_FromString(Py_GetCopyright()));
     SET_SYS_FROM_STRING("platform",

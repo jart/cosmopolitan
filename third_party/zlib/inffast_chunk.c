@@ -7,10 +7,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-asm(".ident\t\"\\n\\n\
-Chromium (BSD-3 License)\\n\
-Copyright 2017 The Chromium Authors\"");
-
+__static_yoink("chromium_notice");
 #include "third_party/zlib/zutil.internal.h"
 #include "third_party/zlib/inftrees.internal.h"
 #include "third_party/zlib/inflate.internal.h"

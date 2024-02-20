@@ -31,11 +31,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include "pwf.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 /* This implementation support Openwall-style TCB passwords in place of
  * traditional shadow, if the appropriate directories and files exist.

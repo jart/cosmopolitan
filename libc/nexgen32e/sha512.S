@@ -50,10 +50,11 @@
 /////////////////////////////////////////////////////////////////////////
 #include "libc/macros.internal.h"
 
-.ident "\n\
-AVX2 SHA2 (BSD-2 License)\n\
-Copyright 2013 Intel Corporation\n"
-.include "libc/disclaimer.inc"
+.section .notice,"aR",@progbits
+.asciz "\n\n\
+AVX2 SHA512 (BSD-2 License)\n\
+Copyright 2013 Intel Corporation"
+.previous
 
 # Virtual Registers
 Y_0 = %ymm4

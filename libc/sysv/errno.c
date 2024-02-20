@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/tls2.internal.h"
 
 /**
  * Global variable for last error.

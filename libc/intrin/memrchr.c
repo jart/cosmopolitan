@@ -36,8 +36,8 @@ static inline const unsigned char *memrchr_pure(const unsigned char *s,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-static inline const unsigned char *memrchr_sse(const unsigned char *s,
-                                               unsigned char c, size_t n) {
+static __vex const unsigned char *memrchr_sse(const unsigned char *s,
+                                              unsigned char c, size_t n) {
   size_t i;
   unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
@@ -67,11 +67,9 @@ static inline const unsigned char *memrchr_sse(const unsigned char *s,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-__vex void *memrchr(const void *s, int c, size_t n) {
+void *memrchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
-  const void *r;
-  r = memrchr_sse(s, c, n);
-  return (void *)r;
+  return (void *)memrchr_sse(s, c, n);
 #else
   return (void *)memrchr_pure(s, c, n);
 #endif

@@ -30,10 +30,6 @@ bool32 IsRunningUnderMake(void) {
   return g_isrunningundermake;
 }
 
-textstartup void g_isrunningundermake_init(void) {
+__attribute__((__constructor__(30))) textstartup void onmake_init(void) {
   g_isrunningundermake = !!getenv("MAKEFLAGS");
 }
-
-const void *const g_isrunningundermake_ctor[] initarray = {
-    g_isrunningundermake_init,
-};

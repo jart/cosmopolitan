@@ -32,10 +32,9 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 
-asm(".ident\t\"\\n\\n\
-largon2 (MIT License)\\n\
-Copyright 2016 Thibault Charbonnier\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(largon2_notice, "\
+largon2 (MIT License)\n\
+Copyright 2016 Thibault Charbonnier");
 
 // clang-format off
 /***

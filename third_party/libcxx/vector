@@ -1456,6 +1456,8 @@ vector<_Tp, _Allocator>::assign(_ForwardIterator __first, _ForwardIterator __las
     else
     {
         __vdeallocate();
+        // [jart] make compiler not complain about maximum object size
+        __asm__("" : "+r"(__new_size));
         __vallocate(__recommend(__new_size));
         __construct_at_end(__first, __last, __new_size);
     }

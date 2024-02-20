@@ -17,8 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
-#include "libc/math.h"
 
 double complex ccos(double complex z) {
   return ccosh(CMPLX(-cimag(z), creal(z)));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(ccos, ccosl);
+#endif

@@ -20,6 +20,7 @@
 
 uint32_t BZ2_crc32Table[256];
 
+__attribute__((__constructor__(10)))
 static textstartup void BZ2_crc32Table_init() {
   unsigned i, j, u;
   for (i = 0; i < 256; ++i) {
@@ -37,10 +38,6 @@ static textstartup void BZ2_crc32Table_init() {
     __builtin_trap();
   }
 }
-
-const void *const BZ2_crc32Table_ctor[] initarray = {
-    BZ2_crc32Table_init,
-};
 
 #else
 

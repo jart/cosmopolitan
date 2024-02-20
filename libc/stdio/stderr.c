@@ -30,7 +30,7 @@ FILE *stderr;
 
 static FILE __stderr;
 
-__attribute__((__constructor__)) static void __stderr_init(void) {
+__attribute__((__constructor__(60))) static textstartup void errinit(void) {
   stderr = &__stderr;
   stderr->fd = STDERR_FILENO;
   stderr->bufmode = _IONBF;

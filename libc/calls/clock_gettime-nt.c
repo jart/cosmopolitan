@@ -87,13 +87,9 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
   }
 }
 
-static textstartup void winclock_init() {
+__attribute__((__constructor__(40))) static textstartup void winclock_init() {
   if (IsWindows()) {
     QueryPerformanceCounter(&g_winclock.base);
     QueryPerformanceFrequency(&g_winclock.freq);
   }
 }
-
-const void *const winclock_ctor[] initarray = {
-    winclock_init,
-};

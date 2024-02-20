@@ -31,7 +31,7 @@ static inline const char *strchr_pure(const char *s, int c) {
 
 #if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-static inline const char *strchr_sse(const char *s, unsigned char c) {
+static __vex const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
   const xmm_t *p;
@@ -94,7 +94,7 @@ static inline const char *strchr_x64(const char *p, uint64_t c) {
  * @asyncsignalsafe
  * @vforksafe
  */
-__vex char *strchr(const char *s, int c) {
+char *strchr(const char *s, int c) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const char *r;
   if (X86_HAVE(SSE)) {
@@ -102,7 +102,6 @@ __vex char *strchr(const char *s, int c) {
   } else {
     r = strchr_pure(s, c);
   }
-  unassert(!r || *r || !(c & 255));
   return (char *)r;
 #else
   const char *r;
@@ -110,9 +109,7 @@ __vex char *strchr(const char *s, int c) {
     if ((*s & 255) == c) return (char *)s;
     if (!*s) return NULL;
   }
-  r = strchr_x64(s, c);
-  unassert(!r || *r || !c);
-  return (char *)r;
+  return (char *)strchr_x64(s, c);
 #endif
 }
 

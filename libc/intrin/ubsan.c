@@ -627,7 +627,7 @@ void *__ubsan_get_current_report_data(void) {
   return 0;
 }
 
-static textstartup void ubsan_init() {
+__attribute__((__constructor__(90))) static textstartup void ubsan_init() {
   STRACE(" _   _ ____ ____    _    _   _");
   STRACE("| | | | __ ) ___|  / \\  | \\ | |");
   STRACE("| | | |  _ \\___ \\ / _ \\ |  \\| |");
@@ -635,7 +635,3 @@ static textstartup void ubsan_init() {
   STRACE(" \\___/|____/____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan behavior module initialized");
 }
-
-const void *const ubsan_ctor[] initarray = {
-    ubsan_init,
-};

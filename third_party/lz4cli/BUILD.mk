@@ -58,9 +58,6 @@ o/$(MODE)/third_party/lz4cli/lz4cli.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/lz4cli/lz4cli.o:			\
-		third_party/lz4cli/COPYING
-
 $(THIRD_PARTY_LZ4CLI_OBJS):				\
 		$(BUILD_FILES)				\
 		third_party/lz4cli/BUILD.mk

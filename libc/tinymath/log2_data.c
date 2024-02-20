@@ -27,12 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/log2_data.internal.h"
 
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
 /*
  * Data for log2.
  *

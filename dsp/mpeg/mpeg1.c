@@ -41,12 +41,7 @@
 #include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("pl_mpeg_notice");
 
 // -----------------------------------------------------------------------------
 // plm_video implementation
@@ -1104,7 +1099,7 @@ plm_video_t *plm_video_create_with_buffer(plm_buffer_t *buffer,
   return self;
 }
 
-static textstartup void plm_video_init(void) {
+__attribute__((__constructor__)) static textstartup void plm_video_init(void) {
   PLM_VIDEO_MACROBLOCK_TYPE[0] = NULL;
   PLM_VIDEO_MACROBLOCK_TYPE[1] = (void *)PLM_VIDEO_MACROBLOCK_TYPE_INTRA;
   PLM_VIDEO_MACROBLOCK_TYPE[2] = (void *)PLM_VIDEO_MACROBLOCK_TYPE_PREDICTIVE;
@@ -1113,5 +1108,3 @@ static textstartup void plm_video_init(void) {
   PLM_VIDEO_DCT_SIZE[1] = (void *)PLM_VIDEO_DCT_SIZE_CHROMINANCE;
   PLM_VIDEO_DCT_SIZE[2] = (void *)PLM_VIDEO_DCT_SIZE_CHROMINANCE;
 }
-
-const void *const plm_video_init_ctor[] initarray = {plm_video_init};

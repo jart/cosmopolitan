@@ -36,11 +36,6 @@
 
 PYTHON_YOINK("sqlite3.dump");
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 #define ACTION_FINALIZE 1
 #define ACTION_RESET 2
 

@@ -8,9 +8,9 @@
 #include "libc/str/str.h"
 #include "third_party/python/Include/pygetopt.h"
 
-asm(".ident\t\"\\n\\n\
-python getopt (isc license)\\n\
-Copyright 1992-1994 David Gottner\"");
+__notice(python_getopt_notice, "\
+python getopt (isc license)\n\
+Copyright 1992-1994 David Gottner");
 
 /*---------------------------------------------------------------------------*
  * <RCS keywords>

@@ -38,10 +38,8 @@
 #include "libc/macros.internal.h"
 #include "libc/stdio/rand.h"
 
-asm(".ident\t\"\\n\\n\
-mt19937 (BSD-3)\\n\
-Copyright 1997-2004 Makoto Matsumoto and Takuji Nishimura\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(mt19937_notice, "mt19937 (BSD-3)\n\
+Copyright 1997-2004 Makoto Matsumoto and Takuji Nishimura");
 
 /*
  * A C-program for MT19937-64 (2004/9/29 version).

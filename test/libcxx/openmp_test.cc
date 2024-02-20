@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include "libc/stdio/rand.h"
 
 #define PRECISION 2e-6
 #define LV1DCACHE 49152
@@ -63,36 +64,36 @@ void transpose(long m, long n, const TA *A, long lda, TB *B, long ldb) {
 }
 
 // m×k * k×n → m×n
-// k×m * k×n → m×n if aT
-// m×k * n×k → m×n if bT
-// k×m * n×k → m×n if aT and bT
+// k×m * k×n → m×n if aᵀ
+// m×k * n×k → m×n if bᵀ
+// k×m * n×k → m×n if aᵀ and bᵀ
 template <typename TC, typename TA, typename TB>
-void dgemm(bool aT, bool bT, long m, long n, long k, float alpha, const TA *A,
-           long lda, const TB *B, long ldb, float beta, TC *C, long ldc) {
+void dgemm(bool aᵀ, bool bᵀ, long m, long n, long k, float α, const TA *A,
+           long lda, const TB *B, long ldb, float β, TC *C, long ldc) {
 #pragma omp parallel for collapse(2) if (m * n * k > THRESHOLD)
   for (long i = 0; i < m; ++i)
     for (long j = 0; j < n; ++j) {
       double sum = 0;
       for (long l = 0; l < k; ++l)
-        sum = std::fma((aT ? A[lda * l + i] : A[lda * i + l]) * alpha,
-                       (bT ? B[ldb * j + l] : B[ldb * l + j]), sum);
-      C[ldc * i + j] = beta * C[ldc * i + j] + sum;
+        sum = std::fma((aᵀ ? A[lda * l + i] : A[lda * i + l]) * α,
+                       (bᵀ ? B[ldb * j + l] : B[ldb * l + j]), sum);
+      C[ldc * i + j] = C[ldc * i + j] * β + sum;
     }
 }
 
 template <typename T, typename TC, typename TA, typename TB>
 struct Gemmlin {
  public:
-  Gemmlin(bool aT, bool bT, float alpha, const TA *A, long lda, const TB *B,
-          long ldb, float beta, TC *C, long ldc)
+  Gemmlin(bool aT, bool bT, float α, const TA *A, long lda, const TB *B,
+          long ldb, float β, TC *C, long ldc)
       : aT(aT),
         bT(bT),
-        alpha(alpha),
+        α(α),
         A(A),
         lda(lda),
         B(B),
         ldb(ldb),
-        beta(beta),
+        β(β),
         C(C),
         ldc(ldc) {
   }
@@ -101,7 +102,7 @@ struct Gemmlin {
     if (!m || !n) return;
     for (long i = 0; i < m; ++i)
       for (long j = 0; j < n; ++j) {
-        C[ldc * i + j] *= beta;
+        C[ldc * i + j] *= β;
       }
     if (!k) return;
     cub = sqrt(LV1DCACHE) / sqrt(sizeof(T) * 3);
@@ -168,8 +169,8 @@ struct Gemmlin {
     T Ac[mc / mr][kc][mr];
     for (long i = 0; i < mc; ++i)
       for (long j = 0; j < kc; ++j)
-        Ac[i / mr][j][i % mr] = alpha * (aT ? A[lda * (pc + j) + (ic + i)]
-                                            : A[lda * (ic + i) + (pc + j)]);
+        Ac[i / mr][j][i % mr] = α * (aT ? A[lda * (pc + j) + (ic + i)]
+                                        : A[lda * (ic + i) + (pc + j)]);
     for (long jc = n0; jc < n; jc += nc) {
       T Bc[nc / nr][nr][kc];
       for (long j = 0; j < nc; ++j)
@@ -220,12 +221,12 @@ struct Gemmlin {
 
   bool aT;
   bool bT;
-  float alpha;
+  float α;
   const TA *A;
   long lda;
   const TB *B;
   long ldb;
-  float beta;
+  float β;
   TC *C;
   long ldc;
   long ops;
@@ -236,9 +237,9 @@ struct Gemmlin {
 };
 
 template <typename TC, typename TA, typename TB>
-void sgemm(bool aT, bool bT, long m, long n, long k, float alpha, const TA *A,
-           long lda, const TB *B, long ldb, float beta, TC *C, long ldc) {
-  Gemmlin<float, TC, TA, TB> g{aT, bT, alpha, A, lda, B, ldb, beta, C, ldc};
+void sgemm(bool aT, bool bT, long m, long n, long k, float α, const TA *A,
+           long lda, const TB *B, long ldb, float β, TC *C, long ldc) {
+  Gemmlin<float, TC, TA, TB> g{aT, bT, α, A, lda, B, ldb, β, C, ldc};
   g.gemm(m, n, k);
 }
 
@@ -360,20 +361,12 @@ long micros(void) {
            #x);                                                             \
   } while (0)
 
-unsigned long rando(void) {
-  static unsigned long s;
-  unsigned long z = (s += 0x9e3779b97f4a7c15);
-  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
-  z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
-  return z ^ (z >> 31);
-}
-
 double real01(unsigned long x) {  // (0,1)
   return 1. / 4503599627370496. * ((x >> 12) + .5);
 }
 
 double numba(void) {  // (-1,1)
-  return real01(rando()) * 2 - 1;
+  return real01(lemur64()) * 2 - 1;
 }
 
 template <typename T>
@@ -390,20 +383,20 @@ void test_gemm(long m, long n, long k) {
   float *Bt = new float[n * k];
   float *C = new float[m * n];
   float *GOLD = new float[m * n];
-  float alpha = 1;
-  float beta = 0;
+  float α = 1;
+  float β = 0;
   fill(A, m * k);
   fill(B, k * n);
   dgemm(0, 0, m, n, k, 1, A, k, B, n, 0, GOLD, n);
   transpose(m, k, A, k, At, m);
   transpose(k, n, B, n, Bt, k);
-  sgemm(0, 0, m, n, k, alpha, A, k, B, n, beta, C, n);
+  sgemm(0, 0, m, n, k, α, A, k, B, n, β, C, n);
   check(PRECISION, m, n, GOLD, n, C, n);
-  sgemm(1, 0, m, n, k, alpha, At, m, B, n, beta, C, n);
+  sgemm(1, 0, m, n, k, α, At, m, B, n, β, C, n);
   check(PRECISION, m, n, GOLD, n, C, n);
-  sgemm(0, 1, m, n, k, alpha, A, k, Bt, k, beta, C, n);
+  sgemm(0, 1, m, n, k, α, A, k, Bt, k, β, C, n);
   check(PRECISION, m, n, GOLD, n, C, n);
-  sgemm(1, 1, m, n, k, alpha, At, m, Bt, k, beta, C, n);
+  sgemm(1, 1, m, n, k, α, At, m, Bt, k, β, C, n);
   check(PRECISION, m, n, GOLD, n, C, n);
   delete[] GOLD;
   delete[] C;

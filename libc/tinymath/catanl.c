@@ -22,15 +22,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
-
-asm(".ident\t\"\\n\\n\
-OpenBSD libm (ISC License)\\n\
-Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("openbsd_libm_notice");
+__static_yoink("musl_libc_notice");
 
 /*
  *      Complex circular arc tangent

@@ -204,6 +204,7 @@
          '("DebugBreak"
            "__veil"
            "__conceal"
+           "__notice"
            "__expropriate"
            "__yoink"
            "__dll_import"

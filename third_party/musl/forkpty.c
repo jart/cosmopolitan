@@ -35,11 +35,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/errno.h"
 #include "libc/calls/termios.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 int forkpty(int *pm, char *name, const struct termios *tio, const struct winsize *ws)
 {

@@ -48,13 +48,9 @@
  */
 bool __nocolor;
 
-optimizesize textstartup void __nocolor_init(int argc, char **argv, char **envp,
-                                             intptr_t *auxv) {
+__attribute__((__constructor__(20))) optimizesize textstartup void
+__nocolor_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   char *s;
   __nocolor = (IsWindows() && !IsAtLeastWindows10()) ||
               ((s = getenv("TERM")) && IsDumb(s));
 }
-
-const void *const __nocolor_ctor[] initarray = {
-    __nocolor_init,
-};

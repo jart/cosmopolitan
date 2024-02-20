@@ -29,12 +29,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/exp_data.internal.h"
 #include "libc/tinymath/internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("arm_optimized_routines_notice");
 
 /*
  * Double-precision e^x function.

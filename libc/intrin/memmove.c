@@ -27,66 +27,7 @@
 typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
-/**
- * Copies memory.
- *
- *     memmove n=0                        661 picoseconds
- *     memmove n=1                        661 ps/byte          1,476 mb/s
- *     memmove n=2                        330 ps/byte          2,952 mb/s
- *     memmove n=3                        330 ps/byte          2,952 mb/s
- *     memmove n=4                        165 ps/byte          5,904 mb/s
- *     memmove n=7                        141 ps/byte          6,888 mb/s
- *     memmove n=8                         82 ps/byte             11 GB/s
- *     memmove n=15                        44 ps/byte             21 GB/s
- *     memmove n=16                        41 ps/byte             23 GB/s
- *     memmove n=31                        32 ps/byte             29 GB/s
- *     memmove n=32                        31 ps/byte             30 GB/s
- *     memmove n=63                        21 ps/byte             45 GB/s
- *     memmove n=64                        15 ps/byte             61 GB/s
- *     memmove n=127                       13 ps/byte             73 GB/s
- *     memmove n=128                       31 ps/byte             30 GB/s
- *     memmove n=255                       20 ps/byte             45 GB/s
- *     memmove n=256                       19 ps/byte             49 GB/s
- *     memmove n=511                       16 ps/byte             56 GB/s
- *     memmove n=512                       17 ps/byte             54 GB/s
- *     memmove n=1023                      18 ps/byte             52 GB/s
- *     memmove n=1024                      13 ps/byte             72 GB/s
- *     memmove n=2047                       9 ps/byte             96 GB/s
- *     memmove n=2048                       9 ps/byte             98 GB/s
- *     memmove n=4095                       8 ps/byte            112 GB/s
- *     memmove n=4096                       8 ps/byte            109 GB/s
- *     memmove n=8191                       7 ps/byte            124 GB/s
- *     memmove n=8192                       7 ps/byte            125 GB/s
- *     memmove n=16383                      7 ps/byte            134 GB/s
- *     memmove n=16384                      7 ps/byte            134 GB/s
- *     memmove n=32767                     13 ps/byte             72 GB/s
- *     memmove n=32768                     13 ps/byte             72 GB/s
- *     memmove n=65535                     13 ps/byte             68 GB/s
- *     memmove n=65536                     14 ps/byte             67 GB/s
- *     memmove n=131071                    14 ps/byte             65 GB/s
- *     memmove n=131072                    14 ps/byte             64 GB/s
- *     memmove n=262143                    15 ps/byte             63 GB/s
- *     memmove n=262144                    15 ps/byte             63 GB/s
- *     memmove n=524287                    15 ps/byte             61 GB/s
- *     memmove n=524288                    15 ps/byte             61 GB/s
- *     memmove n=1048575                   15 ps/byte             61 GB/s
- *     memmove n=1048576                   15 ps/byte             61 GB/s
- *     memmove n=2097151                   19 ps/byte             48 GB/s
- *     memmove n=2097152                   27 ps/byte             35 GB/s
- *     memmove n=4194303                   28 ps/byte             33 GB/s
- *     memmove n=4194304                   28 ps/byte             33 GB/s
- *     memmove n=8388607                   28 ps/byte             33 GB/s
- *     memmove n=8388608                   28 ps/byte             33 GB/s
- *
- * DST and SRC may overlap.
- *
- * @param dst is destination
- * @param src is memory to copy
- * @param n is number of bytes to copy
- * @return dst
- * @asyncsignalsafe
- */
-__vex void *memmove(void *dst, const void *src, size_t n) {
+static __vex void *__memmove(void *dst, const void *src, size_t n) {
   char *d;
   size_t i;
   const char *s;
@@ -336,6 +277,69 @@ __vex void *memmove(void *dst, const void *src, size_t n) {
 
       return dst;
   }
+}
+
+/**
+ * Copies memory.
+ *
+ *     memmove n=0                        661 picoseconds
+ *     memmove n=1                        661 ps/byte          1,476 mb/s
+ *     memmove n=2                        330 ps/byte          2,952 mb/s
+ *     memmove n=3                        330 ps/byte          2,952 mb/s
+ *     memmove n=4                        165 ps/byte          5,904 mb/s
+ *     memmove n=7                        141 ps/byte          6,888 mb/s
+ *     memmove n=8                         82 ps/byte             11 GB/s
+ *     memmove n=15                        44 ps/byte             21 GB/s
+ *     memmove n=16                        41 ps/byte             23 GB/s
+ *     memmove n=31                        32 ps/byte             29 GB/s
+ *     memmove n=32                        31 ps/byte             30 GB/s
+ *     memmove n=63                        21 ps/byte             45 GB/s
+ *     memmove n=64                        15 ps/byte             61 GB/s
+ *     memmove n=127                       13 ps/byte             73 GB/s
+ *     memmove n=128                       31 ps/byte             30 GB/s
+ *     memmove n=255                       20 ps/byte             45 GB/s
+ *     memmove n=256                       19 ps/byte             49 GB/s
+ *     memmove n=511                       16 ps/byte             56 GB/s
+ *     memmove n=512                       17 ps/byte             54 GB/s
+ *     memmove n=1023                      18 ps/byte             52 GB/s
+ *     memmove n=1024                      13 ps/byte             72 GB/s
+ *     memmove n=2047                       9 ps/byte             96 GB/s
+ *     memmove n=2048                       9 ps/byte             98 GB/s
+ *     memmove n=4095                       8 ps/byte            112 GB/s
+ *     memmove n=4096                       8 ps/byte            109 GB/s
+ *     memmove n=8191                       7 ps/byte            124 GB/s
+ *     memmove n=8192                       7 ps/byte            125 GB/s
+ *     memmove n=16383                      7 ps/byte            134 GB/s
+ *     memmove n=16384                      7 ps/byte            134 GB/s
+ *     memmove n=32767                     13 ps/byte             72 GB/s
+ *     memmove n=32768                     13 ps/byte             72 GB/s
+ *     memmove n=65535                     13 ps/byte             68 GB/s
+ *     memmove n=65536                     14 ps/byte             67 GB/s
+ *     memmove n=131071                    14 ps/byte             65 GB/s
+ *     memmove n=131072                    14 ps/byte             64 GB/s
+ *     memmove n=262143                    15 ps/byte             63 GB/s
+ *     memmove n=262144                    15 ps/byte             63 GB/s
+ *     memmove n=524287                    15 ps/byte             61 GB/s
+ *     memmove n=524288                    15 ps/byte             61 GB/s
+ *     memmove n=1048575                   15 ps/byte             61 GB/s
+ *     memmove n=1048576                   15 ps/byte             61 GB/s
+ *     memmove n=2097151                   19 ps/byte             48 GB/s
+ *     memmove n=2097152                   27 ps/byte             35 GB/s
+ *     memmove n=4194303                   28 ps/byte             33 GB/s
+ *     memmove n=4194304                   28 ps/byte             33 GB/s
+ *     memmove n=8388607                   28 ps/byte             33 GB/s
+ *     memmove n=8388608                   28 ps/byte             33 GB/s
+ *
+ * DST and SRC may overlap.
+ *
+ * @param dst is destination
+ * @param src is memory to copy
+ * @param n is number of bytes to copy
+ * @return dst
+ * @asyncsignalsafe
+ */
+void *memmove(void *dst, const void *src, size_t n) {
+  return __memmove(dst, src, n);
 }
 
 __weak_reference(memmove, memcpy);

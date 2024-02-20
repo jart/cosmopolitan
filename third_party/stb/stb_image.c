@@ -36,10 +36,10 @@
 #include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/ammintrin.internal.h"
 
-asm(".ident\t\"\\n\\n\
-stb_image (Public Domain)\\n\
-Credit: Sean Barrett, et al.\\n\
-http://nothings.org/stb\"");
+__notice(stb_image_notice, "\
+stb_image (Public Domain)\n\
+Credit: Sean Barrett, et al.\n\
+http://nothings.org/stb");
 
 #ifdef __x86_64__
 #define STBI_SSE2

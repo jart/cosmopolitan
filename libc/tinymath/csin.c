@@ -28,19 +28,15 @@
 #include "libc/complex.h"
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-
+__static_yoink("musl_libc_notice");
 
 /* sin(z) = -i sinh(i z) */
-
 double complex csin(double complex z)
 {
 	z = csinh(CMPLX(-cimag(z), creal(z)));
 	return CMPLX(cimag(z), -creal(z));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(csin, csinl);
+#endif

@@ -74,11 +74,15 @@ o//libc/intrin/memmove.o: private			\
 			-fno-toplevel-reorder
 
 o//libc/intrin/bzero.o					\
+o//libc/intrin/strlen.o					\
+o//libc/intrin/strchr.o					\
+o//libc/intrin/memchr.o					\
+o//libc/intrin/memrchr.o				\
 o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o: private			\
 		CFLAGS +=				\
-			-O2 -finline
+			-O2 -finline -foptimize-sibling-calls
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
@@ -89,7 +93,9 @@ o/$(MODE)/libc/intrin/memmove.o: private		\
 o/$(MODE)/libc/intrin/x86.o: private			\
 		CFLAGS +=				\
 			-ffreestanding			\
-			-fno-jump-tables
+			-fno-jump-tables		\
+			-fpatchable-function-entry=0	\
+			-Os
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S

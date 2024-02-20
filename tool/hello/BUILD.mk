@@ -39,7 +39,7 @@ o/$(MODE)/tool/hello/hello.com.dbg:				\
 
 # uses apelink to turn it into an ape executable
 # support vector is set to all operating systems
-o/$(MODE)/tool/hello/hello.com:					\
+o/$(MODE)/tool/hello/hello.ape:					\
 		o/$(MODE)/tool/hello/hello.com.dbg		\
 		o/$(MODE)/tool/build/apelink.com		\
 		o/$(MODE)/tool/build/pecheck.com		\
@@ -49,7 +49,7 @@ o/$(MODE)/tool/hello/hello.com:					\
 
 # uses apelink to generate elf-only executable
 # support vector = linux/freebsd/openbsd/netbsd/metal
-o/$(MODE)/tool/hello/hello-elf.com:				\
+o/$(MODE)/tool/hello/hello-elf.ape:				\
 		o/$(MODE)/tool/hello/hello.com.dbg		\
 		o/$(MODE)/tool/build/apelink.com		\
 		o/$(MODE)/ape/ape.elf
@@ -59,7 +59,7 @@ o/$(MODE)/tool/hello/hello-elf.com:				\
 # support vector = macos/linux/freebsd/openbsd/netbsd
 # - great way to avoid attention from bad virus scanners
 # - creates tinier executable by reducing alignment requirement
-o/$(MODE)/tool/hello/hello-unix.com:				\
+o/$(MODE)/tool/hello/hello-unix.ape:				\
 		o/$(MODE)/tool/hello/hello.com.dbg		\
 		o/$(MODE)/tool/build/apelink.com		\
 		o/$(MODE)/ape/ape.elf
@@ -71,7 +71,7 @@ o/$(MODE)/tool/hello/hello-unix.com:				\
 o/$(MODE)/tool/hello/hello-pe.com.dbg:				\
 		o/$(MODE)/tool/hello/hello-pe.o
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
-o/$(MODE)/tool/hello/hello-pe.com:				\
+o/$(MODE)/tool/hello/hello-pe.ape:				\
 		o/$(MODE)/tool/hello/hello-pe.com.dbg		\
 		o/$(MODE)/tool/build/elf2pe.com
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -o $@ $<
@@ -80,7 +80,7 @@ o/$(MODE)/tool/hello/hello-pe.com:				\
 o/$(MODE)/tool/hello/life-pe.com.dbg:				\
 		o/$(MODE)/tool/hello/life-pe.o
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
-o/$(MODE)/tool/hello/life-pe.com:				\
+o/$(MODE)/tool/hello/life-pe.ape:				\
 		o/$(MODE)/tool/hello/life-pe.com.dbg		\
 		o/$(MODE)/tool/build/elf2pe.com
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -o $@ $<
@@ -89,7 +89,7 @@ o/$(MODE)/tool/hello/life-pe.com:				\
 o/$(MODE)/tool/hello/wait-pe.com.dbg:				\
 		o/$(MODE)/tool/hello/wait-pe.o
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
-o/$(MODE)/tool/hello/wait-pe.com:				\
+o/$(MODE)/tool/hello/wait-pe.ape:				\
 		o/$(MODE)/tool/hello/wait-pe.com.dbg		\
 		o/$(MODE)/tool/build/elf2pe.com
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -R 64kb -S 4kb -o $@ $<

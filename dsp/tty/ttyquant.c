@@ -73,8 +73,6 @@ textstartup void ttyquantsetup(enum TtyQuantizationAlgorithm alg,
   TTYQUANT()->blocks = blocks;
 }
 
-textstartup void ttyquant_init(void) {
+__attribute__((__constructor__)) textstartup void ttyquant_init(void) {
   ttyquantsetup(kTtyQuantXterm256, kTtyQuantRgb, kTtyBlocksUnicode);
 }
-
-const void *const ttyquant_init_ctor[] initarray = {ttyquant_init};

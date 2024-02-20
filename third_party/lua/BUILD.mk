@@ -85,6 +85,7 @@ THIRD_PARTY_LUA_A_SRCS =						\
 	third_party/lua/llock.c						\
 	third_party/lua/lmathlib.c					\
 	third_party/lua/lmem.c						\
+	third_party/lua/lnotice.c					\
 	third_party/lua/loadlib.c					\
 	third_party/lua/lobject.c					\
 	third_party/lua/lopcodes.c					\

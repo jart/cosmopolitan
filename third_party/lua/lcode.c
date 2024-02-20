@@ -42,11 +42,7 @@
 #include "third_party/lua/ltable.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
-
-asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("lua_notice");
 
 
 /* Maximum number of registers in a Lua function (must fit in 8 bits) */

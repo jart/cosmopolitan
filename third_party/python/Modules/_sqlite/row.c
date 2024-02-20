@@ -26,11 +26,6 @@
 #include "third_party/python/Modules/_sqlite/cursor.h"
 #include "third_party/python/Modules/_sqlite/row.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 void pysqlite_row_dealloc(pysqlite_Row* self)
 {
     Py_XDECREF(self->data);

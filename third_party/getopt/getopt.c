@@ -37,10 +37,8 @@
 #include "libc/errno.h"
 #include "third_party/getopt/getopt.internal.h"
 
-asm(".ident\t\"\\n\
-getopt (BSD-3)\\n\
-Copyright 1987, 1993, 1994 The Regents of the University of California\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(notice_getopt, "getopt (BSD-3)\n\
+Copyright 1987, 1993, 1994 The Regents of the University of California");
 
 #define BADCH  '?'
 #define BADARG ':'

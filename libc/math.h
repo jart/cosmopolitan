@@ -4,59 +4,69 @@
 │ cosmopolitan § mathematics                                                   │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-#define M_E        2.7182818284590452354 /* 𝑒 */
-#define M_LOG2_10  0xd.49a784bcd1b8afep-2 /* log₂10 ≈ 3.3219280948873623478 */
-#define M_LOG2E    0xb.8aa3b295c17f0bcp-3 /* log₂𝑒 ≈ 1.4426950408889634074 */
-#define M_LOG10E   0.43429448190325182765  /* log₁₀𝑒 */
-#define M_LN2      0xb.17217f7d1cf79acp-4  /* logₑ2 ≈ */
-#define M_LN10     2.30258509299404568402  /* logₑ10 */
-#define M_TAU      0x1.921fb54442d1846ap+2 /* τ = 2π */
-#define M_PI       0x1.921fb54442d1846ap+1 /* π ≈ 3.14159265358979323846 */
-#define M_PI_2     1.57079632679489661923  /* π/2 */
-#define M_PI_4     0.78539816339744830962  /* π/4 */
-#define M_1_PI     0.31830988618379067154  /* 1/π */
-#define M_2_PI     0.63661977236758134308  /* 2/π */
-#define M_2_SQRTPI 1.12837916709551257390  /* 2/sqrtπ */
-#define M_SQRT2    1.41421356237309504880  /* sqrt2 */
-#define M_SQRT1_2  0.70710678118654752440  /* 1/sqrt2 */
+#define M_E        2.7182818284590452354  /* 𝑒 */
+#define M_LOG2E    1.4426950408889634074  /* log₂𝑒 */
+#define M_LOG10E   0.43429448190325182765 /* log₁₀𝑒 */
+#define M_LN2      0.69314718055994530942 /* logₑ2 */
+#define M_LN10     2.30258509299404568402 /* logₑ10 */
+#define M_PI       3.14159265358979323846 /* pi */
+#define M_PI_2     1.57079632679489661923 /* pi/2 */
+#define M_PI_4     0.78539816339744830962 /* pi/4 */
+#define M_1_PI     0.31830988618379067154 /* 1/pi */
+#define M_2_PI     0.63661977236758134308 /* 2/pi */
+#define M_2_SQRTPI 1.12837916709551257390 /* 2/sqrt(pi) */
+#define M_SQRT2    1.41421356237309504880 /* sqrt(2) */
+#define M_SQRT1_2  0.70710678118654752440 /* 1/sqrt(2) */
 
-#define DBL_DECIMAL_DIG  __DBL_DECIMAL_DIG__
-#define DBL_DIG          __DBL_DIG__
-#define DBL_EPSILON      __DBL_EPSILON__
-#define DBL_MANT_DIG     __DBL_MANT_DIG__
-#define DBL_MANT_DIG     __DBL_MANT_DIG__
-#define DBL_MAX          __DBL_MAX__
-#define DBL_MAX_10_EXP   __DBL_MAX_10_EXP__
-#define DBL_MAX_EXP      __DBL_MAX_EXP__
-#define DBL_MIN          __DBL_MIN__ /* 2.23e–308 ↔ 1.79e308 */
-#define DBL_MIN_10_EXP   __DBL_MIN_10_EXP__
-#define DBL_MIN_EXP      __DBL_MIN_EXP__
-#define DECIMAL_DIG      __LDBL_DECIMAL_DIG__
-#define FLT_DECIMAL_DIG  __FLT_DECIMAL_DIG__
-#define FLT_RADIX        __FLT_RADIX__
-#define FLT_DIG          __FLT_DIG__
-#define FLT_EPSILON      __FLT_EPSILON__
-#define FLT_MANT_DIG     __FLT_MANT_DIG__
-#define FLT_MANT_DIG     __FLT_MANT_DIG__
-#define FLT_MAX          __FLT_MAX__
-#define FLT_MAX_10_EXP   __FLT_MAX_10_EXP__
-#define FLT_MAX_EXP      __FLT_MAX_EXP__
-#define FLT_MIN          __FLT_MIN__ /* 1.18e–38 ↔ 3.40e38 */
-#define FLT_MIN_10_EXP   __FLT_MIN_10_EXP__
-#define FLT_MIN_EXP      __FLT_MIN_EXP__
-#define HLF_MAX          6.50e4f
-#define HLF_MIN          3.10e-5f
-#define LDBL_DECIMAL_DIG __LDBL_DECIMAL_DIG__
-#define LDBL_DIG         __LDBL_DIG__
-#define LDBL_EPSILON     __LDBL_EPSILON__
-#define LDBL_MANT_DIG    __LDBL_MANT_DIG__
-#define LDBL_MANT_DIG    __LDBL_MANT_DIG__
-#define LDBL_MAX         __LDBL_MAX__
-#define LDBL_MAX_10_EXP  __LDBL_MAX_10_EXP__
-#define LDBL_MAX_EXP     __LDBL_MAX_EXP__
-#define LDBL_MIN         __LDBL_MIN__ /* 3.37e–4932 ↔ 1.18e4932 */
-#define LDBL_MIN_10_EXP  __LDBL_MIN_10_EXP__
-#define LDBL_MIN_EXP     __LDBL_MIN_EXP__
+#define DBL_DECIMAL_DIG   __DBL_DECIMAL_DIG__
+#define DBL_DIG           __DBL_DIG__
+#define DBL_EPSILON       __DBL_EPSILON__
+#define DBL_HAS_SUBNORM   __DBL_HAS_DENORM__
+#define DBL_IS_IEC_60559  __DBL_IS_IEC_60559__
+#define DBL_MANT_DIG      __DBL_MANT_DIG__
+#define DBL_MANT_DIG      __DBL_MANT_DIG__
+#define DBL_MAX           __DBL_MAX__
+#define DBL_MAX_10_EXP    __DBL_MAX_10_EXP__
+#define DBL_MAX_EXP       __DBL_MAX_EXP__
+#define DBL_MIN           __DBL_MIN__ /* 2.23e–308 ↔ 1.79e308 */
+#define DBL_MIN_10_EXP    __DBL_MIN_10_EXP__
+#define DBL_MIN_EXP       __DBL_MIN_EXP__
+#define DBL_NORM_MAX      __DBL_NORM_MAX__
+#define DBL_TRUE_MIN      __DBL_DENORM_MIN__
+#define DECIMAL_DIG       __LDBL_DECIMAL_DIG__
+#define FLT_DECIMAL_DIG   __FLT_DECIMAL_DIG__
+#define FLT_DIG           __FLT_DIG__
+#define FLT_EPSILON       __FLT_EPSILON__
+#define FLT_HAS_SUBNORM   __FLT_HAS_DENORM__
+#define FLT_IS_IEC_60559  __FLT_IS_IEC_60559__
+#define FLT_MANT_DIG      __FLT_MANT_DIG__
+#define FLT_MANT_DIG      __FLT_MANT_DIG__
+#define FLT_MAX           __FLT_MAX__
+#define FLT_MAX_10_EXP    __FLT_MAX_10_EXP__
+#define FLT_MAX_EXP       __FLT_MAX_EXP__
+#define FLT_MIN           __FLT_MIN__ /* 1.18e–38 ↔ 3.40e38 */
+#define FLT_MIN_10_EXP    __FLT_MIN_10_EXP__
+#define FLT_MIN_EXP       __FLT_MIN_EXP__
+#define FLT_NORM_MAX      __FLT_NORM_MAX__
+#define FLT_RADIX         __FLT_RADIX__
+#define FLT_TRUE_MIN      __FLT_DENORM_MIN__
+#define HLF_MAX           6.50e4f
+#define HLF_MIN           3.10e-5f
+#define LDBL_DECIMAL_DIG  __LDBL_DECIMAL_DIG__
+#define LDBL_DIG          __LDBL_DIG__
+#define LDBL_EPSILON      __LDBL_EPSILON__
+#define LDBL_HAS_SUBNORM  __LDBL_HAS_DENORM__
+#define LDBL_IS_IEC_60559 __LDBL_IS_IEC_60559__
+#define LDBL_MANT_DIG     __LDBL_MANT_DIG__
+#define LDBL_MANT_DIG     __LDBL_MANT_DIG__
+#define LDBL_MAX          __LDBL_MAX__
+#define LDBL_MAX_10_EXP   __LDBL_MAX_10_EXP__
+#define LDBL_MAX_EXP      __LDBL_MAX_EXP__
+#define LDBL_MIN          __LDBL_MIN__ /* 3.37e–4932 ↔ 1.18e4932 */
+#define LDBL_MIN_10_EXP   __LDBL_MIN_10_EXP__
+#define LDBL_MIN_EXP      __LDBL_MIN_EXP__
+#define LDBL_NORM_MAX     __LDBL_NORM_MAX__
+#define LDBL_TRUE_MIN     __LDBL_DENORM_MIN__
 
 #define FP_NAN       0
 #define FP_INFINITE  1

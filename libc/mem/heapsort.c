@@ -31,6 +31,7 @@
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
+__static_yoink("openbsd_sorting_notice");
 // clang-format off
 
 /*

@@ -4,7 +4,6 @@
 #include "libc/tinymath/estrin_wrap.internal.h"
 #include "libc/tinymath/hornerf.internal.h"
 COSMOPOLITAN_C_START_
-// clang-format off
 
 #if WANT_VMATH
 

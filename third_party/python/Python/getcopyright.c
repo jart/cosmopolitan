@@ -10,16 +10,16 @@
 #include "libc/str/str.h"
 #include "third_party/python/Include/pylifecycle.h"
 
-asm(".ident\t\"\\n\\n\
-Python 3.6 (https://docs.python.org/3/license.html)\\n\
-Copyright (c) 2001-2021 Python Software Foundation.\\n\
-All Rights Reserved.\\n\
-Copyright (c) 2000 BeOpen.com.\\n\
-All Rights Reserved.\\n\
-Copyright (c) 1995-2001 Corporation for National Research Initiatives.\\n\
-All Rights Reserved.\\n\
-Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.\\n\
-All Rights Reserved.\"");
+__notice(python_notice, "\
+Python 3.6 (https://docs.python.org/3/license.html)\n\
+Copyright (c) 2001-2021 Python Software Foundation.\n\
+All Rights Reserved.\n\
+Copyright (c) 2000 BeOpen.com.\n\
+All Rights Reserved.\n\
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.\n\
+All Rights Reserved.\n\
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.\n\
+All Rights Reserved.");
 
 const char *
 Py_GetCopyright(void)
@@ -29,7 +29,7 @@ Py_GetCopyright(void)
         char *r = 0;
         const char *p;
         appends(&r, "");
-        for (p = __comment_start; *p; p += strlen(p) + 1) {
+        for (p = __notices; *p; p += strlen(p) + 1) {
             appends(&r, p);
         }
         res = r;

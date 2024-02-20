@@ -29,11 +29,8 @@
 #include "libc/str/locale.h"
 #include "libc/str/nltypes.h"
 #include "libc/thread/tls.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 static const char c_time[] =

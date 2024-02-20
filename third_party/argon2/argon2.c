@@ -22,11 +22,6 @@
 #include "third_party/argon2/core.h"
 #include "third_party/argon2/encoding.h"
 
-asm(".ident\t\"\\n\\n\
-argon2 (CC0 or Apache2)\\n\
-Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
-Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
-
 /**
  * Function that gives the string representation of an argon2_type.
  * @param type The argon2_type that we want the string for

@@ -28,10 +28,9 @@
 #include "libc/str/unicode.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-asm(".ident\t\"\\n\\n\
-OpenBSD ecvt/gcvt (MIT)\\n\
-Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(gcvt_notice, "\
+OpenBSD gcvt (MIT)\n\
+Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>");
 // clang-format off
 
 #define DEFPREC	6

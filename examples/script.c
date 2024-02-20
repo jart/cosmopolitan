@@ -67,13 +67,10 @@
  * @see https://asciinema.org/
  */
 
-asm(".ident\t\"\\n\\n\
-FreeBSD Script (BSD-3 License)\\n\
-Copyright (c) 2010, 2012 David E. O'Brien\\n\
-Copyright (c) 1980, 1992, 1993\\n\
-\tThe Regents of the University of California.\\n\
-\tAll rights reserved.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(freebsd_script_notice, "\
+FreeBSD Script (BSD-3 License)\n\
+Copyright (c) 2010, 2012 David E. O'Brien\n\
+Copyright (c) 1980, 1992, 1993 The Regents of the University of California");
 
 #define DEF_BUF 65536
 

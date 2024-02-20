@@ -25,11 +25,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_sqlite/cache.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /* only used internally */
 pysqlite_Node* pysqlite_new_node(PyObject* key, PyObject* data)
 {

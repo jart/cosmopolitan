@@ -100,7 +100,7 @@ static const struct sock_filter kUnveilBlacklistLatestAbi[] = {
 static int landlock_abi_version;
 static int landlock_abi_errno;
 
-__attribute__((__constructor__)) void init_landlock_version() {
+__attribute__((__constructor__(40))) textstartup void init_landlock_version() {
   int e = errno;
   landlock_abi_version =
       landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);

@@ -46,11 +46,9 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-asm(".ident\t\"\\n\\n\
-expat (MIT License)\\n\
-Copyright (c) 1997-2000 Thai Open Source Software Center Ltd\\n\
-Copyright (c) 2000-2017 Expat development team\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(expat_notice, "expat (MIT License)\n\
+Copyright (c) 1997-2000 Thai Open Source Software Center Ltd\n\
+Copyright (c) 2000-2017 Expat development team");
 
 #define XML_BUILDING_EXPAT 1
 

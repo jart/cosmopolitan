@@ -9,7 +9,12 @@
 #pragma GCC target("serialize")
 #define __DISABLE_SERIALIZE__
 #endif
-#define _serialize() __builtin_ia32_serialize ()
+extern __inline void
+__attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_serialize (void)
+{
+  __builtin_ia32_serialize ();
+}
 #ifdef __DISABLE_SERIALIZE__
 #undef __DISABLE_SERIALIZE__
 #pragma GCC pop_options

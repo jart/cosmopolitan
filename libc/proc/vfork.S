@@ -61,7 +61,7 @@ vfork:
 #endif
 	pop	%rbp
 #endif
-	mov	%fs:0,%r9		// get thread information block
+	mov	%gs:0x30,%r9		// get thread information block
 	mov	0x3c(%r9),%r8d		// avoid question of @vforksafe errno
 	pop	%rsi			// saves return address in a register
 	mov	__NR_vfork(%rip),%eax

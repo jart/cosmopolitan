@@ -27,12 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/atanf_data.internal.h"
 
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
 /* Coefficients of polynomial P such that atan(x)~x+x*P(x^2) on [2**-128, 1.0].
  */
 const struct atanf_poly_data __atanf_poly_data = {

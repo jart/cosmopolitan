@@ -45,11 +45,7 @@
 #include "libc/sysv/consts/tcp.h"
 #include "libc/thread/thread.h"
 #include "lookup.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 static void cleanup(void *p)
 {

@@ -33,11 +33,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/fnt.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/numbertheory.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 /* Bignum: Fast transform for medium-sized coefficients. */
 

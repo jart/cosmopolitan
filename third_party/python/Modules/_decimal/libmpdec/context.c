@@ -30,11 +30,7 @@
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 void
 mpd_dflt_traphandler(mpd_context_t *ctx)

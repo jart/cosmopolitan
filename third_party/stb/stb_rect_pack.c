@@ -21,10 +21,9 @@
 #include "libc/dce.h"
 #include "libc/mem/alg.h"
 
-asm(".ident\t\"\\n\\n\
-stb_rect_pack (MIT License)\\n\
-Copyright 2017 Sean Barrett\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(stb_rect_pack_notice, "\
+stb_rect_pack (MIT License)\n\
+Copyright 2017 Sean Barrett");
 
 // stb_rect_pack.h - v1.01 - public domain - rectangle packing
 // Sean Barrett 2014

@@ -42,11 +42,7 @@
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
-
-asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("lua_notice");
 
 
 #define noLuaClosure(f)		((f) == NULL || (f)->c.tt == LUA_VCCL)

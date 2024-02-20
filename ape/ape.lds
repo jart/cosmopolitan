@@ -330,11 +330,11 @@ SECTIONS {
     *(.ubsan.data)
 
     /* Legal Notices */
-#if !defined(IM_FEELING_NAUGHTY) || defined(EMBED_NOTICES)
-    KEEP(*(.commentprologue))
-    KEEP(*(.comment))
-    KEEP(*(.commentepilogue))
-#endif
+    __notices = .;
+    KEEP(*(.notice))
+    BYTE(0);
+    BYTE(10);
+    BYTE(10);
 
 /*BEGIN: read-only data that's only needed for initialization */
 
@@ -390,6 +390,9 @@ SECTIONS {
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
+    *(.gnu_extab)
+    *(.gcc_except_table .gcc_except_table.*)
+    *(.exception_ranges*)
     *(.PyRuntime) /* for python */
     *(.subrs) /* for emacs */
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
@@ -404,11 +407,11 @@ SECTIONS {
 
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     __init_array_start = .;
+    KEEP(*(.preinit_array))
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
            SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(.ctors))
     KEEP(*(.init_array))
-    KEEP(*(.preinit_array))
+    KEEP(*(.ctors))
     __init_array_end = .;
 
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
@@ -425,8 +428,8 @@ SECTIONS {
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
-    KEEP(*(.dataepilogue))
     *(.igot.plt)
+    KEEP(*(.dataepilogue))
 
     . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: NT FORK COPYING */

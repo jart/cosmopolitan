@@ -400,9 +400,7 @@ static wontreturn void FreebsdThreadMain(void *p) {
 #ifdef __aarch64__
   asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(wt->tls));
 #elif defined(__x86_64__)
-  if (__tls_morphed) {
-    sys_set_tls(AMD64_SET_GSBASE, wt->tls);
-  }
+  sys_set_tls(AMD64_SET_GSBASE, wt->tls);
 #endif
   *wt->ctid = wt->tid;
   wt->func(wt->arg, wt->tid);
@@ -575,7 +573,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
 #endif
   wt = (struct LinuxCloneArgs *)sp;
 #ifdef __x86_64__
-  if ((flags & CLONE_SETTLS) && __tls_morphed) {
+  if (flags & CLONE_SETTLS) {
     flags &= ~CLONE_SETTLS;
     wt->arg = arg;
     wt->tls = tls;

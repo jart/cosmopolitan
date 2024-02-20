@@ -27,12 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/atan_data.internal.h"
 
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
 const struct atan_poly_data __atan_poly_data = {
   .poly = {/* Coefficients of polynomial P such that atan(x)~x+x*P(x^2) on
 	      [2**-1022, 1.0]. See atan.sollya for details of how these were

@@ -28,11 +28,7 @@
 #include "third_party/double-conversion/diy-fp.h"
 #include "third_party/double-conversion/fast-dtoa.h"
 #include "third_party/double-conversion/ieee.h"
-
-asm(".ident\t\"\\n\\n\
-double-conversion (BSD-3 License)\\n\
-Copyright 2006-2012 the V8 project authors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("double_conversion_notice");
 
 namespace double_conversion {
 

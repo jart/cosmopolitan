@@ -29,12 +29,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/logf_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("arm_optimized_routines_notice");
 
 /*
  * Single-precision log function.

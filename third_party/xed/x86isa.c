@@ -19,13 +19,6 @@
 #include "third_party/xed/x86.h"
 #include "third_party/xed/x86isa.h"
 
-asm(".ident\t\"\\n\\n\
-Xed (Apache 2.0)\\n\
-Copyright 2018 Intel Corporation\\n\
-Copyright 2019 Justine Alexandra Roberts Tunney\\n\
-Modifications: Trimmed down to 3kb [2019-03-22 jart]\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 bool xed_isa_set_is_valid_for_chip(int isa_set, int chip) {
   unsigned n, r;
   n = isa_set / 64;

@@ -26,12 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/sincosf.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+__static_yoink("arm_optimized_routines_notice");
 
 /* The constants and polynomials for sine and cosine.  The 2nd entry
    computes -cos (x) rather than cos (x) to get negation for free.  */

@@ -30,12 +30,7 @@
 #include "libc/tinymath/exp_data.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/pow_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("arm_optimized_routines_notice");
 
 /*
  * Double-precision x^y function.

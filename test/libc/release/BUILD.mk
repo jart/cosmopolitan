@@ -38,10 +38,12 @@ o/$(MODE)/test/libc/release/smoke.o:					\
 		-nostdinc						\
 		-D_COSMO_SOURCE						\
 		-Wl,--gc-sections					\
+		-z noexecstack						\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
 		-Wl,-z,max-page-size=0x1000				\
 		-Wl,-z,common-page-size=0x1000				\
+		-Wl,-z,noexecstack					\
 		$<
 
 o/$(MODE)/test/libc/release/smoke.com.dbg:				\
@@ -55,6 +57,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:				\
 		-no-pie							\
 		-nostdlib						\
 		--gc-sections						\
+		-z noexecstack						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/ape.lds				\
@@ -75,6 +78,7 @@ o/$(MODE)/test/libc/release/smoke-nms.com.dbg:				\
 		-no-pie							\
 		-nostdlib						\
 		--gc-sections						\
+		-z noexecstack						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/ape.lds				\
@@ -96,6 +100,7 @@ o/$(MODE)/test/libc/release/smoke-chibicc.com.dbg:			\
 		-no-pie							\
 		-nostdlib						\
 		--gc-sections						\
+		-z noexecstack						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/ape.lds				\
@@ -138,6 +143,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		-no-pie							\
 		-nostdlib						\
 		--gc-sections						\
+		-z noexecstack						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/ape.lds				\
@@ -158,6 +164,7 @@ o/$(MODE)/test/libc/release/smokecxx.o:					\
 		-fno-pie						\
 		-nostdinc						\
 		-Wl,--gc-sections					\
+		-Wl,-z,noexecstack					\
 		-fno-omit-frame-pointer					\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
@@ -175,6 +182,7 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:				\
 		-no-pie							\
 		-nostdlib						\
 		--gc-sections						\
+		-z noexecstack						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/ape.lds				\
@@ -198,6 +206,7 @@ o/$(MODE)/test/libc/release/smokeansi.o:				\
 		-nostdinc						\
 		-D_COSMO_SOURCE						\
 		-Wl,--gc-sections					\
+		-Wl,-z,noexecstack					\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
 		-Wl,-z,max-page-size=0x1000				\

@@ -28,6 +28,7 @@
 #include "libc/limits.h"
 #include "libc/str/str.h"
 #include "third_party/musl/fnmatch.h"
+__static_yoink("musl_libc_notice");
 
 /*
  * An implementation of what I call the "Sea of Stars" algorithm for
@@ -43,11 +44,6 @@
  *
  * - Rich Felker, April 2012
  */
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 #define END         0
 #define UNMATCHABLE -2

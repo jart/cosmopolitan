@@ -37,11 +37,8 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/freebsd.internal.h"
+__static_yoink("freebsd_libm_notice");
 
-asm(".ident\t\"\\n\\n\
-FreeBSD libm (BSD-2 License)\\n\
-Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
-// clang-format off
 
 /*
  * ld128 version of k_expl.h.  See ../ld80/s_expl.c for most comments.

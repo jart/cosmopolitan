@@ -21,15 +21,11 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-Apache License, Version 2.0\\n\
-Copyright 2010 Google Inc.\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 const char base32def[] = "0123456789abcdefghjkmnpqrstvwxyz";
 
 int tobits(int b) {
-  int bits = 0; while (b && (b >>= 1)) bits++;
+  int bits = 0;
+  while (b && (b >>= 1)) bits++;
   return bits;
 }
 
@@ -48,20 +44,19 @@ int tobits(int b) {
  * @param ol if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char* EncodeBase32(const char *s, size_t sl,
-                   const char *a, size_t al,
+char *EncodeBase32(const char *s, size_t sl, const char *a, size_t al,
                    size_t *ol) {
   size_t count = 0;
   char *r = NULL;
   if (sl == -1) sl = s ? strlen(s) : 0;
   if (al == 0) {
     a = base32def;
-    al = sizeof(base32def)/sizeof(a[0]);
+    al = sizeof(base32def) / sizeof(a[0]);
   }
   unassert(2 <= al && al <= 128);
   int bl = tobits(al);
   int mask = (1 << bl) - 1;
-  size_t n = (sl * 8 + bl - 1) / bl; // calculate output length
+  size_t n = (sl * 8 + bl - 1) / bl;  // calculate output length
   if ((r = malloc(n + 1))) {
     int buffer = s[0];
     size_t next = 1;
@@ -92,11 +87,11 @@ static signed char kBase32[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -2, -2, -1, -1, -2, -1, -1,  // 0x00
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x10
     -2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -2, -1, -1,  // 0x20
-     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,  // 0x30
-    -1, 10, 11, 12, 13, 14, 15, 16, 17,  1, 18, 19,  1, 20, 21, -1,  // 0x40
-    22, 23, 24, 25, 26,  0, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1,  // 0x50
-    -1, 10, 11, 12, 13, 14, 15, 16, 17,  1, 18, 19,  1, 20, 21, -1,  // 0x60
-    22, 23, 24, 25, 26,  0, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1,  // 0x70
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1, -1, -1, -1, -1,  // 0x30
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 1,  18, 19, 1,  20, 21, -1,  // 0x40
+    22, 23, 24, 25, 26, 0,  27, 28, 29, 30, 31, -1, -1, -1, -1, -1,  // 0x50
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 1,  18, 19, 1,  20, 21, -1,  // 0x60
+    22, 23, 24, 25, 26, 0,  27, 28, 29, 30, 31, -1, -1, -1, -1, -1,  // 0x70
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x80
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x90
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0xa0
@@ -120,19 +115,18 @@ static signed char kBase32[256] = {
  * @param ol if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char* DecodeBase32(const char *s, size_t sl,
-                   const char *a, size_t al,
+char *DecodeBase32(const char *s, size_t sl, const char *a, size_t al,
                    size_t *ol) {
   size_t count = 0;
   char *r = NULL;
   if (sl == -1) sl = s ? strlen(s) : 0;
   if (al == 0) {
     a = base32def;
-    al = sizeof(base32def)/sizeof(a[0]);
+    al = sizeof(base32def) / sizeof(a[0]);
   }
   unassert(2 <= al && al <= 128);
   int bl = tobits(al);
-  size_t n = (sl * bl + 1) / 8 + 1; // calculate output length
+  size_t n = (sl * bl + 1) / 8 + 1;  // calculate output length
   // process input
   if ((r = malloc(n + 1))) {
     unsigned int buffer = 0;

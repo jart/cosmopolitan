@@ -31,13 +31,9 @@
 #include "libc/str/str.h"
 #include "third_party/musl/crypt.internal.h"
 #include "third_party/musl/crypt_des.internal.h"
+__static_yoink("musl_libc_notice");
 
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 /*
  * This version has been further modified by Rich Felker, primary author

@@ -25,10 +25,9 @@
 #include "third_party/puff/puff.h"
 #include "libc/runtime/runtime.h"
 
-asm(".ident\t\"\\n\\n\
-puff (zlib License)\\n\
-Copyright 2002-203 Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(puff_notice, "\
+puff (zlib License)\n\
+Copyright 2002-2013 Mark Adler");
 
 // Origin: git@github.com:madler/zlib.git
 // Commit: 03614c56ad299f9b238c75aa1e66f0c08fc4fc8b

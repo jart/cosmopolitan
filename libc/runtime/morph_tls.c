@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
@@ -49,68 +50,105 @@ privileged void __morph_tls(void) {
   unsigned char *p;
   __morph_begin();
 
-  if (IsXnu()) {
-    // Apple is quite straightforward to patch. We basically
-    // just change the segment register, and the linear slot
-    // address 0x30 was promised to us, according to Go team
-    // https://github.com/golang/go/issues/23617
-    dis = 0x30;
-  } else if (IsWindows()) {
+  if (IsWindows()) {
     // MSVC __declspec(thread) generates binary code for this
     // %gs:0x1480 abi. So long as TlsAlloc() isn't called >64
     // times we should be good.
     dis = 0x1480 + __tls_index * 8;
-  } else {
-    dis = 0;
-  }
 
-  // iterate over modifiable code looking for 9 byte instruction
-  // this used to take 30ms with xed to enable tls on python.com
-  for (p = _ereal; p + 9 <= __privileged_start; p += n) {
+    // iterate over modifiable code looking for 9 byte instruction
+    // this used to take 30ms with xed to enable tls on python.com
+    for (p = _ereal; p + 9 <= __privileged_start; p += n) {
 
-    // use sse to zoom zoom to fs register prefixes
-    // that way it'll take 1 ms to morph python.com
-    // we recompiled a 13mb binary in 1 millisecond
-    while (p + 9 + 16 <= __privileged_start) {
-      if ((m = __builtin_ia32_pmovmskb128(
-               *(xmm_t *)p == (xmm_t){0144, 0144, 0144, 0144, 0144, 0144, 0144,
-                                      0144, 0144, 0144, 0144, 0144, 0144, 0144,
-                                      0144, 0144}))) {
-        m = __builtin_ctzll(m);
-        p += m;
-        break;
+      // use sse to zoom zoom to fs register prefixes
+      // that way it'll take 1 ms to morph python.com
+      // we recompiled a 13mb binary in 1 millisecond
+      while (p + 9 + 16 <= __privileged_start) {
+        if ((m = __builtin_ia32_pmovmskb128(
+                 *(xmm_t *)p == (xmm_t){0145, 0145, 0145, 0145, 0145, 0145,
+                                        0145, 0145, 0145, 0145, 0145, 0145,
+                                        0145, 0145, 0145, 0145}))) {
+          m = __builtin_ctzll(m);
+          p += m;
+          break;
+        } else {
+          p += 16;
+        }
+      }
+
+      // we're checking for the following expression:
+      //   0145 == p[0] &&           // %gs
+      //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
+      //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
+      //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
+      //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
+      //   0x30 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
+      //   0000 == p[5] &&           // displacement (von Neumann endian)
+      //   0000 == p[6] &&           // displacement
+      //   0000 == p[7] &&           // displacement
+      //   0000 == p[8]              // displacement
+      w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
+      if ((w == READ64LE("\145\110\213\004\045\060\000\000") ||
+           w == READ64LE("\145\110\003\004\045\060\000\000")) &&
+          !p[8]) {
+
+        // now change the code
+        p[5] = (dis & 0x000000ff) >> 000;  // displacement
+        p[6] = (dis & 0x0000ff00) >> 010;  // displacement
+        p[7] = (dis & 0x00ff0000) >> 020;  // displacement
+        p[8] = (dis & 0xff000000) >> 030;  // displacement
+
+        // advance to the next instruction
+        n = 9;
       } else {
-        p += 16;
+        n = 1;
       }
     }
+  } else {
+    // iterate over modifiable code looking for 9 byte instruction
+    // this used to take 30ms with xed to enable tls on python.com
+    for (p = _ereal; p + 9 <= __privileged_start; p += n) {
 
-    // we're checking for the following expression:
-    //   0144 == p[0] &&           // %fs
-    //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
-    //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
-    //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
-    //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
-    //   0045 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
-    //   0000 == p[5] &&           // displacement (von Neumann endian)
-    //   0000 == p[6] &&           // displacement
-    //   0000 == p[7] &&           // displacement
-    //   0000 == p[8]              // displacement
-    w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
-    if ((w == READ64LE("\144\110\213\004\045\000\000\000") ||
-         w == READ64LE("\144\110\003\004\045\000\000\000")) &&
-        !p[8]) {
+      // use sse to zoom zoom to fs register prefixes
+      // that way it'll take 1 ms to morph python.com
+      // we recompiled a 13mb binary in 1 millisecond
+      while (p + 9 + 16 <= __privileged_start) {
+        if ((m = __builtin_ia32_pmovmskb128(
+                 *(xmm_t *)p == (xmm_t){0145, 0145, 0145, 0145, 0145, 0145,
+                                        0145, 0145, 0145, 0145, 0145, 0145,
+                                        0145, 0145, 0145, 0145}))) {
+          m = __builtin_ctzll(m);
+          p += m;
+          break;
+        } else {
+          p += 16;
+        }
+      }
 
-      // now change the code
-      p[0] = 0145;                       // change %fs to %gs
-      p[5] = (dis & 0x000000ff) >> 000;  // displacement
-      p[6] = (dis & 0x0000ff00) >> 010;  // displacement
-      p[7] = (dis & 0x00ff0000) >> 020;  // displacement
-      p[8] = (dis & 0xff000000) >> 030;  // displacement
+      // we're checking for the following expression:
+      //   0145 == p[0] &&           // %gs
+      //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
+      //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
+      //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
+      //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
+      //   0x30 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
+      //   0000 == p[5] &&           // displacement (von Neumann endian)
+      //   0000 == p[6] &&           // displacement
+      //   0000 == p[7] &&           // displacement
+      //   0000 == p[8]              // displacement
+      w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
+      if ((w == READ64LE("\145\110\213\004\045\060\000\000") ||
+           w == READ64LE("\145\110\003\004\045\060\000\000")) &&
+          !p[8]) {
 
-      // advance to the next instruction
-      n = 9;
-    } else {
-      n = 1;
+        // now change the code
+        p[0] = 0144;  // change %gs to %fs
+
+        // advance to the next instruction
+        n = 9;
+      } else {
+        n = 1;
+      }
     }
   }
 

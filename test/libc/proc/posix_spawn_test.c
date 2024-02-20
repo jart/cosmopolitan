@@ -36,7 +36,6 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
@@ -130,6 +129,7 @@ TEST(posix_spawn, ape) {
 }
 
 TEST(posix_spawn, elf) {
+  if (IsOpenbsd()) return;  // mimmutable() ugh
   if (IsXnu() || IsWindows() || IsMetal()) return;
   int ws, pid;
   char *prog = "./life.elf";  // assimilate -bcef

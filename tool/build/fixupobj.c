@@ -29,7 +29,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -226,8 +225,56 @@ static void CheckPrivilegedCrossReferences(void) {
   }
 }
 
+// Change AMD code to use %gs:0x30 instead of %fs:0
+// We assume -mno-tls-direct-seg-refs has been used
+static void ChangeTlsFsToGs(unsigned char *p, size_t n) {
+  unsigned char *e = p + n - 9;
+  while (p <= e) {
+    // we're checking for the following expression:
+    //   0144 == p[0] &&           // %fs
+    //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
+    //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
+    //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
+    //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
+    //   0045 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
+    //   0000 == p[5] &&           // displacement (von Neumann endian)
+    //   0000 == p[6] &&           // displacement
+    //   0000 == p[7] &&           // displacement
+    //   0000 == p[8]              // displacement
+    uint64_t w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
+    if ((w == READ64LE("\144\110\213\004\045\000\000\000") ||
+         w == READ64LE("\144\110\003\004\045\000\000\000")) &&
+        !p[8]) {
+      p[0] = 0145;  // change %fs to %gs
+      p[5] = 0x30;  // change 0 to 0x30
+      p += 9;
+    } else {
+      ++p;
+    }
+  }
+}
+
+static void RewriteTlsCodeAmd64(void) {
+  int i;
+  uint8_t *p;
+  Elf64_Shdr *shdr;
+  for (i = 0; i < elf->e_shnum; ++i) {
+    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i))) {
+      Die("elf header overflow #1");
+    }
+    if (shdr->sh_type == SHT_PROGBITS &&  //
+        (shdr->sh_flags & SHF_ALLOC) &&   //
+        (shdr->sh_flags & SHF_EXECINSTR)) {
+      if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
+        Die("elf header overflow #2");
+      }
+      ChangeTlsFsToGs(p, shdr->sh_size);
+    }
+  }
+}
+
 // Modify ARM64 code to use x28 for TLS rather than tpidr_el0.
-static void RewriteTlsCode(void) {
+static void RewriteTlsCodeArm64(void) {
   int i;
   Elf64_Shdr *shdr;
   uint32_t *p, *pe;
@@ -594,10 +641,11 @@ static void FixupObject(void) {
     CheckPrivilegedCrossReferences();
     if (mode == O_RDWR) {
       if (elf->e_machine == EM_NEXGEN32E) {
+        RewriteTlsCodeAmd64();
         OptimizePatchableFunctionEntries();
         GenerateIfuncInit();
       } else if (elf->e_machine == EM_AARCH64) {
-        RewriteTlsCode();
+        RewriteTlsCodeArm64();
         if (elf->e_type != ET_REL) {
           UseFreebsdOsAbi();
         }

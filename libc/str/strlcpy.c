@@ -19,11 +19,7 @@
 #include "libc/str/str.h"
 // clang-format off
 // $OpenBSD: strlcpy.c,v 1.16 2019/01/25 00:19:25 millert Exp $
-
-asm(".ident\t\"\\n\\n\
-OpenBSD Strings (ISC)\\n\
-Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("openbsd_strings_notice");
 
 /**
  * Copies string, the BSD way.

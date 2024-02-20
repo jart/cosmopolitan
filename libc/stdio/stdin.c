@@ -30,7 +30,7 @@ FILE *stdin;
 
 static FILE __stdin;
 
-__attribute__((__constructor__)) static void __stdin_init(void) {
+__attribute__((__constructor__(60))) static textstartup void initin(void) {
   stdin = &__stdin;
   stdin->fd = STDIN_FILENO;
   stdin->iomode = O_RDONLY;

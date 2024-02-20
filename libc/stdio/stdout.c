@@ -31,7 +31,7 @@ FILE *stdout;
 
 static FILE __stdout;
 
-__attribute__((__constructor__)) static void __stdout_init(void) {
+__attribute__((__constructor__(60))) static textstartup void outinit(void) {
   stdout = &__stdout;
 
   stdout->fd = STDOUT_FILENO;

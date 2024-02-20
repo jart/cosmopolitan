@@ -40,7 +40,8 @@ void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
 }
 
-static textstartup void TestInit(int argc, char **argv) {
+__attribute__((__constructor__)) static textstartup void TestInit(int argc,
+                                                                  char **argv) {
   int fd;
   if (argc == 2 && !strcmp(argv[1], "boop")) {
     if ((fd = open("/dev/null", O_RDWR | O_CLOEXEC)) == 3) {
@@ -50,8 +51,6 @@ static textstartup void TestInit(int argc, char **argv) {
     }
   }
 }
-
-const void *const TestCtor[] initarray = {TestInit};
 
 TEST(dup, ebadf) {
   ASSERT_SYS(EBADF, -1, dup(-1));

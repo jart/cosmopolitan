@@ -27,10 +27,9 @@
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-asm(".ident\t\"\\n\\n\
-OpenBSD ecvt/gcvt (MIT)\\n\
-Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(ecvt_notice, "\
+OpenBSD ecvt (MIT)\n\
+Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>");
 // clang-format off
 
 static char *s;
@@ -42,7 +41,7 @@ __cvt_atexit(void)
 	s = 0;
 }
 
-static void __attribute__((__constructor__))
+static __attribute__((__constructor__(60))) textstartup void
 __cvt_init(void)
 {
 	atexit(__cvt_atexit);

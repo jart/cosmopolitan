@@ -27,12 +27,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/nexgen32e/x86feature.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 #define ASUINT64(x) ((union {double f; uint64_t i;}){x}).i
 #define ZEROINFNAN (0x7ff-0x3ff-52-1)

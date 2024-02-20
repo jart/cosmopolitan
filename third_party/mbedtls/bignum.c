@@ -33,12 +33,7 @@
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/profile.h"
 #include "third_party/mbedtls/select.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /**
  * @fileoverview Big Numbers.

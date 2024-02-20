@@ -28,12 +28,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/math.h"
 #include "libc/tinymath/sincosf.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("arm_optimized_routines_notice");
 
 /* Fast sincosf implementation.  Worst-case ULP is 0.5607, maximum relative
    error is 0.5303 * 2^-23.  A single-step range reduction is used for

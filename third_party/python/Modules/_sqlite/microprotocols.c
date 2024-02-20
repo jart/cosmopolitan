@@ -27,11 +27,6 @@
 #include "third_party/python/Modules/_sqlite/microprotocols.h"
 #include "third_party/python/Modules/_sqlite/prepare_protocol.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /** the adapters registry **/
 
 PyObject *psyco_adapters;

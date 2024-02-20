@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_
 #include "libc/tinymath/internal.h"
 COSMOPOLITAN_C_START_
-// clang-format off
 
 /*
  * Header for sinf, cosf and sincosf.

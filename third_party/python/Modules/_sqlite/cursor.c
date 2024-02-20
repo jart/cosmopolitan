@@ -27,11 +27,6 @@
 #include "third_party/python/Modules/_sqlite/module.h"
 #include "third_party/python/Modules/_sqlite/util.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 PyObject* pysqlite_cursor_iternext(pysqlite_Cursor* self);
 
 static const char errmsg_fetch_across_rollback[] = "Cursor needed to be reset because of commit/rollback and can no longer be fetched from.";

@@ -28,12 +28,8 @@
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /**
  * Returns log₂𝑥 exponent part of double.

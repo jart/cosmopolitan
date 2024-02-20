@@ -19,16 +19,12 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
+__static_yoink("nsync_notice");
 
 /* Apple's ulock (part by Cosmo futexes) is an internal API, but:
    1. Unlike GCD it's cancellable, i.e. can be EINTR'd by signals
    2. We currently always use ulock anyway for joining threads */
 #define PREFER_GCD_OVER_ULOCK 1
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init (nsync_semaphore *s) {

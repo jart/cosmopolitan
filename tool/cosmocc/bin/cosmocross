@@ -49,7 +49,7 @@ PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
 CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -isystem $BIN/../include"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-z,noexecstack"
 APEFLAGS="-Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 

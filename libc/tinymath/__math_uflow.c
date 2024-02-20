@@ -26,7 +26,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/internal.h"
-// clang-format off
 
 dontinstrument double __math_uflow(uint32_t sign)
 {

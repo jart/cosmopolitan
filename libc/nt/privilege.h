@@ -46,5 +46,8 @@ bool32 AdjustTokenPrivileges(int64_t TokenHandle, bool32 DisableAllPrivileges,
 bool32 ImpersonateSelf(int kNtSecurityImpersonationLevel);
 bool32 RevertToSelf(void);
 
+bool32 OpenThreadToken(intptr_t ThreadHandle, uint32_t DesiredAccess,
+                       bool32 OpenAsSelf, intptr_t *TokenHandle);
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_ */

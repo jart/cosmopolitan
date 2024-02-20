@@ -38,10 +38,9 @@
 #include "third_party/sqlite3/sqlite3.h"
 // clang-format off
 
-asm(".ident\t\"\\n\\n\
-lsqlite3 (MIT License)\\n\
-Copyright 2002-2016 Tiago Dionizio, Doug Currie\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(lsqlite3_notice, "\
+lsqlite3 (MIT License)\n\
+Copyright 2002-2016 Tiago Dionizio, Doug Currie");
 
 // LOCAL CHANGES
 //

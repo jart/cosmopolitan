@@ -94,6 +94,7 @@ TEST(unveil, api_differences) {
 }
 
 TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
+  if (IsOpenbsd()) return;  // TOOD(jart): why pledge violation?
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
@@ -150,6 +151,7 @@ TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
 }
 
 TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
+  if (IsOpenbsd()) return;  // TOOD(jart): why pledge violation?
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwcx"));

@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_APE_SECTIONS_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
-extern const char __comment_start[] __attribute__((__weak__));
+extern const char __notices[] __attribute__((__weak__));
 extern unsigned char __executable_start[] __attribute__((__weak__));
 extern unsigned char __privileged_start[] __attribute__((__weak__));
 extern unsigned char _ehead[] __attribute__((__weak__));

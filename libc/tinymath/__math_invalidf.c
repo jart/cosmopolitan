@@ -26,7 +26,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/internal.h"
-// clang-format off
 
 float __math_invalidf(float x)
 {

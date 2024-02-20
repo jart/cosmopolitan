@@ -39,10 +39,10 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
   // ask the operating system to change the x86 segment register
   if (IsWindows()) {
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
-  } else if (IsFreebsd()) {
-    sys_set_tls(__tls_morphed ? AMD64_SET_GSBASE : AMD64_SET_FSBASE, tib);
   } else if (IsLinux()) {
-    sys_set_tls(__tls_morphed ? ARCH_SET_GS : ARCH_SET_FS, tib);
+    sys_set_tls(ARCH_SET_GS, tib);
+  } else if (IsFreebsd()) {
+    sys_set_tls(AMD64_SET_GSBASE, tib);
   } else if (IsNetbsd()) {
     // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
     // signal handlers will cause it to be reset due to not setting the

@@ -33,14 +33,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-.text
-.balign 32
-.ident "\n\
+.section .notice,"aR",@progbits
+.asciz "\n\n\
 Intel SHA-NI (BSD-3 License)\n\
 Copyright 2015 Intel Corporation\n\
 Sean Gulley <sean.m.gulley@intel.com>\n\
-Tim Chen <tim.c.chen@linux.intel.com>\n"
-.include "libc/disclaimer.inc"
+Tim Chen <tim.c.chen@linux.intel.com>"
+
+.text
+.balign 32
 
 #define DIGEST_PTR	%rdi	/* 1st arg */
 #define DATA_PTR	%rsi	/* 2nd arg */

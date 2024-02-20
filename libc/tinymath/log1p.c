@@ -29,12 +29,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/log_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("freebsd_libm_notice");
+__static_yoink("fdlibm_notice");
 
 /* origin: FreeBSD /usr/src/lib/msun/src/s_log1p.c */
 /*

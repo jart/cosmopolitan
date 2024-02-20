@@ -639,12 +639,6 @@ void abort(void) wontreturn;
 #define _Section(s) __attribute__((__section__(s)))
 #endif
 
-#if defined(__x86_64__) && !defined(__llvm__)
-#define initarray _Section(".init_array,\"a\",@init_array #")
-#else
-#define initarray _Section(".init_array")
-#endif
-
 #ifndef __llvm__
 #pragma GCC diagnostic ignored "-Wformat=0" /* todo: patch gcc */
 #pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
@@ -758,17 +752,21 @@ void abort(void) wontreturn;
 #endif
 
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__llvm__)) && \
-    !defined(__chibicc__) && 0 /* TODO: enable with toolchain upgrade */
+    !defined(__chibicc__) && defined(__OPTIMIZE__)
 #define __target_clones(x) __attribute__((__target_clones__(x ",default")))
 #else
 #define __target_clones(x)
 #endif
 
-#if !defined(TINY) && !defined(__AVX__) && 0
+#if !defined(TINY) && !defined(__AVX__)
 #define __vex __target_clones("avx")
 #else
 #define __vex
 #endif
+
+#define __notice(sym, str)                                                   \
+  __attribute__((__section__(".notice"), __aligned__(1))) const char sym[] = \
+      "\n\n" str
 
 #define MACHINE_CODE_ANALYSIS_BEGIN_
 #define MACHINE_CODE_ANALYSIS_END_

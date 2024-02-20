@@ -29,11 +29,7 @@
 #include "libc/limits.h"
 #include "libc/str/mb.internal.h"
 #include "libc/str/str.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 size_t wcsrtombs(char *s, const wchar_t **ws, size_t n, mbstate_t *st) {
   const wchar_t *ws2;

@@ -1,6 +1,4 @@
-asm(".ident\t\"\\n\\n\
-Chromium (BSD-3 License)\\n\
-Copyright 2017 The Chromium Authors\"");
+__static_yoink("chromium_notice");
 
 /* adler32_simd.c
  *

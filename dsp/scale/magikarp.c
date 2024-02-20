@@ -121,8 +121,7 @@ void *MagikarpY(long dys, long dxs, unsigned char d[restrict dys][dxs],
   return d;
 }
 
-static textstartup void g_magikarp_init() {
+__attribute__((__constructor__)) static textstartup void g_magikarp_init() {
   memcpy(g_magkern, kMagkern[0], sizeof(g_magkern));
   memcpy(g_magikarp, kMagikarp[0], sizeof(g_magikarp));
 }
-const void *const g_magikarp_ctor[] initarray = {g_magikarp_init};

@@ -13,12 +13,8 @@ COSMOPOLITAN_C_START_
  */
 forceinline struct CosmoTib *__get_tls_privileged(void) {
   char *tib, *lin = (char *)0x30;
-  if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd() || IsMetal()) {
-    if (!__tls_morphed) {
-      asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
-    } else {
-      asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
-    }
+  if (IsNetbsd() || IsOpenbsd()) {
+    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   } else {
     asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
     if (IsWindows()) {

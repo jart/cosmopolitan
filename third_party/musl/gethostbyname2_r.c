@@ -30,11 +30,7 @@
 #include "libc/sysv/consts/af.h"
 #include "third_party/musl/lookup.internal.h"
 #include "third_party/musl/netdb.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 errno_t gethostbyname2_r(const char *name, int af,
 	struct hostent *h, char *buf, size_t buflen,

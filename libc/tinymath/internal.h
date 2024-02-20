@@ -8,7 +8,6 @@ COSMOPOLITAN_C_START_
 #define issignalingf_inline(x) 0
 #define issignaling_inline(x)  0
 
-// clang-format off
 #define asuint(f) ((union{float _f; uint32_t _i;}){f})._i
 #define asfloat(i) ((union{uint32_t _i; float _f;}){i})._f
 #define asuint64(f) ((union{double _f; uint64_t _i;}){f})._i

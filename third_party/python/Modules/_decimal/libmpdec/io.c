@@ -35,15 +35,11 @@
 #include "third_party/python/Modules/_decimal/libmpdec/io.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
+__static_yoink("libmpdec_notice");
 
 #if __GNUC__ >= 11
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 
 /* This file contains functions for decimal <-> string conversions, including

@@ -30,12 +30,8 @@
 #ifndef __llvm__
 #include "third_party/intel/smmintrin.internal.h"
 #endif
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /**
  * Rounds to integer, towards zero.

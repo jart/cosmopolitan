@@ -26,10 +26,8 @@
 
 #define DIVISOR	100
 
-asm(".ident\t\"\\n\\n\
-strftime (BSD-3)\\n\
-Copyright 1989 The Regents of the University of California\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(strftime_notice, "strftime (BSD-3)\n\
+Copyright 1989 The Regents of the University of California");
 
 /*
 ** Based on the UCB version with the copyright notice appearing above.

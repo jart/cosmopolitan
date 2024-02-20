@@ -59,8 +59,6 @@ extern char syscon_openbsd[];
 extern char syscon_netbsd[];
 extern char syscon_windows[];
 extern init_f __strace_init;
-extern init_f *__preinit_array_start[] __attribute__((__weak__));
-extern init_f *__preinit_array_end[] __attribute__((__weak__));
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
 extern char ape_stack_prot[] __attribute__((__weak__));
@@ -189,7 +187,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
 #if SYSDEBUG
   argc = __strace_init(argc, argv, envp, auxv);
 #endif
-  for (init_f **fp = __init_array_end; fp-- > __init_array_start;) {
+  for (init_f **fp = __init_array_start; fp < __init_array_end; ++fp) {
     (*fp)(argc, argv, envp, auxv);
   }
 #ifdef FTRACE

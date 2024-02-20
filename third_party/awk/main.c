@@ -39,28 +39,29 @@
 #include "libc/sysv/consts/sig.h"
 #include "third_party/awk/awk.h"
 
-asm(".ident\t\"\\n\\n\
-Copyright (C) Lucent Technologies 1997\\n\
-All Rights Reserved\\n\
-\\n\
-Permission to use, copy, modify, and distribute this software and\\n\
-its documentation for any purpose and without fee is hereby\\n\
-granted, provided that the above copyright notice appear in all\\n\
-copies and that both that the copyright notice and this\\n\
-permission notice and warranty disclaimer appear in supporting\\n\
-documentation, and that the name Lucent Technologies or any of\\n\
-its entities not be used in advertising or publicity pertaining\\n\
-to distribution of the software without specific, written prior\\n\
-permission.\\n\
-\\n\
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,\\n\
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.\\n\
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY\\n\
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\\n\
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER\\n\
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,\\n\
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF\\n\
-THIS SOFTWARE.\"");
+__notice(awk_notice, "\
+The One True Awk\n\
+Copyright (C) Lucent Technologies 1997\n\
+All Rights Reserved\n\
+\n\
+Permission to use, copy, modify, and distribute this software and\n\
+its documentation for any purpose and without fee is hereby\n\
+granted, provided that the above copyright notice appear in all\n\
+copies and that both that the copyright notice and this\n\
+permission notice and warranty disclaimer appear in supporting\n\
+documentation, and that the name Lucent Technologies or any of\n\
+its entities not be used in advertising or publicity pertaining\n\
+to distribution of the software without specific, written prior\n\
+permission.\n\
+\n\
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,\n\
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.\n\
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY\n\
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n\
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER\n\
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,\n\
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF\n\
+THIS SOFTWARE.");
 
 const char	*version = "version 20220530";
 extern	int	nfields;

@@ -34,11 +34,10 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-C++ Demangle (BSD-2)\\n\
-Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>\\n\
-Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(demangle_notice, "\
+FreeBSD C++ Demangle (BSD-2)\n\
+Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>\n\
+Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>");
 // https://github.com/freebsd/freebsd-src/blob/2176c9ab71c85efd90a6c7af4a9e04fe8e3d49ca/contrib/libcxxrt/libelftc_dem_gnu3.c
 // clang-format off
 

@@ -5,9 +5,9 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/cxxabi.h"
-#include "libc/serialize.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
@@ -60,7 +60,8 @@ void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
 
-__attribute__((__constructor__)) static void localtime_init(void) {
+__attribute__((__constructor__(80)))
+static textstartup void localtime_init(void) {
 	localtime_wipe();
 	pthread_atfork(localtime_lock,
 		       localtime_unlock,

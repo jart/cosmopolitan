@@ -32,12 +32,11 @@
 #include "third_party/python/Modules/_sqlite/row.h"
 #include "third_party/python/Modules/_sqlite/statement.h"
 
-PYTHON_PROVIDE("_sqlite3");
+__notice(pysqlite_notice, "\
+pysqlite (zlib license)\n\
+Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>");
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
+PYTHON_PROVIDE("_sqlite3");
 
 /* #if SQLITE_VERSION_NUMBER >= 3003003 */
 /* #define HAVE_SHARED_CACHE */

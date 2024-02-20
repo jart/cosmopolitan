@@ -27,11 +27,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
+__static_yoink("fdlibm_notice");
+__static_yoink("freebsd_libm_notice");
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_acos.c */
 /*

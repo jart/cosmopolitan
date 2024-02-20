@@ -96,12 +96,9 @@ void countbranch_report(void) {
   }
 }
 
-static textstartup void countbranch_init() {
+__attribute__((__constructor__(90))) static textstartup void
+countbranch_init() {
   atexit(countbranch_report);
 }
-
-const void *const countbranch_ctor[] initarray = {
-    countbranch_init,
-};
 
 #endif /* __x86_64__ */

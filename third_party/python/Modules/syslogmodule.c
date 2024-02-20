@@ -59,11 +59,10 @@ PYTHON_PROVIDE("syslog.openlog");
 PYTHON_PROVIDE("syslog.setlogmask");
 PYTHON_PROVIDE("syslog.syslog");
 
-asm(".ident\t\"\\n\\n\
-syslogmodule (mit)\\n\
-Copyright 1994 by Lance Ellinghouse\\n\
-Cathedral City, California Republic, United States of America\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(python_syslogmodule_notice, "\
+syslogmodule (MIT License)\n\
+Copyright 1994 by Lance Ellinghouse\n\
+Cathedral City, California Republic, United States of America");
 
 /***********************************************************
 Copyright 1994 by Lance Ellinghouse,

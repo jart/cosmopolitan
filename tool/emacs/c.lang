@@ -121,7 +121,6 @@ Keywords={
 "hasatleast",
 "nodebuginfo",
 "noreturn",
-"initarray",
 "mayalias",
 "dontinstrument",
 "interruptfn",

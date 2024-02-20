@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
-#include "libc/intrin/strace.internal.h"
-#include "third_party/compiler_rt/cpu_model.h"
 
 enum VendorSignatures {
   SIG_INTEL = 0x756e6547,  // Genu
@@ -740,8 +738,6 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
 #undef setFeature
 }
 
-int __cpu_indicator_init(void) CONSTRUCTOR_ATTRIBUTE;
-
 struct __processor_model {
   unsigned int __cpu_vendor;
   unsigned int __cpu_type;
@@ -757,7 +753,7 @@ unsigned __cpu_features2[(CPU_FEATURE_MAX - 1) / 32];
 // the priority set.  However, it still runs after ifunc initializers and
 // needs to be called explicitly there.
 
-int CONSTRUCTOR_ATTRIBUTE __cpu_indicator_init(void) {
+__attribute__((__constructor__(1))) textstartup int __cpu_indicator_init(void) {
   unsigned EAX, EBX, ECX, EDX;
   unsigned MaxLeaf = 5;
   unsigned Vendor;

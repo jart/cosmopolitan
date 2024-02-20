@@ -27,12 +27,7 @@
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_internal.h"
 #include "third_party/mbedtls/ssl_invasive.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /*
  *  Generic SSL/TLS messaging layer functions

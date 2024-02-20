@@ -1,7 +1,6 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:4;tab-width:4;coding:utf-8   -*-│
 │ vi: set noet ft=c ts=4 sts=4 sw=4 fenc=utf-8                             :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 /*
 
     Compute probability of measured Chi Square value.

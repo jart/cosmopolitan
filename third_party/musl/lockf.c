@@ -32,11 +32,7 @@
 #include "libc/errno.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/errfuns.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 /**
  * Locks file.

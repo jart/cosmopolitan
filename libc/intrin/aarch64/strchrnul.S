@@ -26,13 +26,9 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/aarch64/asmdefs.internal.h"
+.yoink arm_optimized_routines_notice
 
 #define __strchrnul_aarch64 strchrnul
-
-.ident "\n\n\
-Optimized Routines (MIT License)\n\
-Copyright 2022 ARM Limited\n"
-.include "libc/disclaimer.inc"
 
 /* Assumptions:
  *

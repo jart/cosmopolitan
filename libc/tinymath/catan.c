@@ -28,16 +28,8 @@
 #include "libc/complex.h"
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
-
-asm(".ident\t\"\\n\\n\
-OpenBSD libm (ISC License)\\n\
-Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
+__static_yoink("musl_libc_notice");
+__static_yoink("openbsd_libm_notice");
 
 /* origin: OpenBSD /usr/src/lib/libm/src/s_catan.c */
 /*
@@ -98,7 +90,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * had peak relative error 1.5e-16, rms relative error
  * 2.9e-17.  See also clog().
  */
-
 
 #define MAXNUM 1.0e308
 

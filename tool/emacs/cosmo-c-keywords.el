@@ -87,7 +87,6 @@
            "nomsan"
            "dontubsan"
            "nostackprotector"
-           "initarray"
            "mayalias"
            "dontinstrument"
            "interruptfn"

@@ -1,12 +1,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
-// clang-format off
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
-
-asm(".ident\t\"\\n\\n\
-OpenBSD libm (ISC License)\\n\
-Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("openbsd_libm_notice");
 
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_expm1l.c */
 /*

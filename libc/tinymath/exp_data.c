@@ -27,12 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/exp_data.internal.h"
 
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
 /*
  * Shared data between exp, exp2 and pow.
  *
