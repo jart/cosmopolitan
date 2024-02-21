@@ -622,7 +622,7 @@ static void FixupObject(void) {
     SysExit("lseek");
   }
   if (esize) {
-    if ((elf = mmap((void *)0x003210000000, esize, PROT_READ | PROT_WRITE,
+    if ((elf = mmap((void *)0x032100000000, esize, PROT_READ | PROT_WRITE,
                     MAP_FIXED | MAP_SHARED, fildes, 0)) == MAP_FAILED) {
       SysExit("mmap");
     }
