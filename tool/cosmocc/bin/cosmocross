@@ -193,9 +193,9 @@ fi
 if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
    [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   if [ x"$ARCH" = x"x86_64" ]; then
-    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"
+    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
   elif [ x"$ARCH" = x"aarch64" ]; then
-    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6"
+    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6 -fno-inline-functions-called-once"
   fi
 fi
 
