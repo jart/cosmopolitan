@@ -57,6 +57,9 @@ int32_t DeregisterEventSource(uint64_t handle);
 int64_t CreateEvent(const struct NtSecurityAttributes *opt_lpEventAttributes,
                     bool32 bManualReset, bool32 bInitialState,
                     const char16_t *opt_lpName);
+int64_t CreateEventA(const struct NtSecurityAttributes *opt_lpEventAttributes,
+                     bool32 bManualReset, bool32 bInitialState,
+                     const char *opt_lpName);
 int64_t CreateEventEx(const struct NtSecurityAttributes *lpEventAttributes,
                       const char16_t *lpName, uint32_t dwFlags,
                       uint32_t dwDesiredAccess);

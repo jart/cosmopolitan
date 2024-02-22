@@ -63,6 +63,7 @@ imp	'ConnectNamedPipe'					ConnectNamedPipe					kernel32	2
 imp	'ContinueDebugEvent'					ContinueDebugEvent					kernel32	3
 imp	'CopyFile'						CopyFileW						kernel32	3
 imp	'CreateEvent'						CreateEventW						kernel32	4
+imp	'CreateEventA'						CreateEventA						kernel32	4
 imp	'CreateEventEx'						CreateEventExW						kernel32	4
 imp	'CreateHardLink'					CreateHardLinkW						kernel32	3
 imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	4
@@ -195,6 +196,7 @@ imp	'InitializeProcThreadAttributeList'			InitializeProcThreadAttributeList			ke
 imp	'InitializeSRWLock'					InitializeSRWLock					kernel32	1
 imp	'LeaveCriticalSection'					LeaveCriticalSection					kernel32	1
 imp	'LoadLibrary'						LoadLibraryW						kernel32	1
+imp	'LoadLibraryA'						LoadLibraryA						kernel32	1
 imp	'LoadLibraryEx'						LoadLibraryExW						kernel32	3
 imp	'LoadResource'						LoadResource						kernel32	2
 imp	'LocalFree'						LocalFree						kernel32	1
