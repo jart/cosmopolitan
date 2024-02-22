@@ -208,6 +208,7 @@ int execvpe(const char *, char *const[], char *const[]) libcesque;
 int euidaccess(const char *, int) libcesque;
 int eaccess(const char *, int) libcesque;
 int madvise(void *, uint64_t, int) libcesque;
+int getcpu(unsigned *, unsigned *) libcesque;
 #endif
 
 #ifdef _COSMO_SOURCE

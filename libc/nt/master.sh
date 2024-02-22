@@ -135,6 +135,7 @@ imp	'GetModuleHandle'					GetModuleHandleA					kernel32	1
 imp	'GetModuleHandleEx'					GetModuleHandleExW					kernel32	3
 imp	'GetModuleHandleW'					GetModuleHandleW					kernel32	1
 imp	'GetNamedPipeInfo'					GetNamedPipeInfo					kernel32	5
+imp	'GetNumaProcessorNodeEx'				GetNumaProcessorNodeEx					kernel32	2
 imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				kernel32	2
 imp	'GetNumberOfConsoleMouseButtons'			GetNumberOfConsoleMouseButtons				kernel32	1
 imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	4
