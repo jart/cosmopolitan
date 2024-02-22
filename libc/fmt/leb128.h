@@ -1,6 +1,6 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_FMT_LEB128_H_
 #define COSMOPOLITAN_LIBC_FMT_LEB128_H_
-#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
 
 #define sleb64   __sleb64
@@ -16,5 +16,5 @@ int unzleb64(const char *, size_t, int64_t *) libcesque;
 int unuleb64(const char *, size_t, uint64_t *) libcesque;
 
 COSMOPOLITAN_C_END_
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_FMT_LEB128_H_ */
+#endif /* _COSMO_SOURCE */

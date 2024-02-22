@@ -1,7 +1,7 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_X_H_
 #define COSMOPOLITAN_LIBC_X_H_
 
-#ifdef _COSMO_SOURCE
 #define xwrite        __xwrite
 #define xdie          __xdie
 #define xmalloc       __xmalloc
@@ -32,9 +32,7 @@
 #define xfixpath      __xfixpath
 #define xslurp        __xslurp
 #define xbarf         __xbarf
-#endif /* _COSMO_SOURCE */
 
-#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
 
 int xwrite(int, const void *, uint64_t);
@@ -97,5 +95,5 @@ void *xslurp(const char *, size_t *)
 int xbarf(const char *, const void *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_X_H_ */
+#endif /* _COSMO_SOURCE */

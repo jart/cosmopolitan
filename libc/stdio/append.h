@@ -1,6 +1,6 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_STDIO_APPEND_H_
 #define COSMOPOLITAN_LIBC_STDIO_APPEND_H_
-#ifdef _COSMO_SOURCE
 
 #define APPEND_COOKIE 21578
 
@@ -32,5 +32,5 @@ ssize_t kappendf(char **, const char *, ...) libcesque;
 ssize_t kvappendf(char **, const char *, va_list) libcesque;
 
 COSMOPOLITAN_C_END_
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_STDIO_APPEND_H_ */
+#endif /* _COSMO_SOURCE */

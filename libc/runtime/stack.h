@@ -1,6 +1,6 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
-#ifdef _COSMO_SOURCE
 
 /**
  * Returns preferred size and alignment of thread stack.
@@ -156,5 +156,5 @@ int FreeCosmoStack(void *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_STACK_H_ */
+#endif /* _COSMO_SOURCE */
