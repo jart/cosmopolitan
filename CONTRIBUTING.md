@@ -16,10 +16,25 @@ contributors who prefer to remain anonymous to the public.
 
 The first time you send a pull request, you need to send an email to
 Justine Tunney <jtunney@gmail.com> stating that you intend to assign her
-the copyright to the changes you contribute to Cosmopolitan. This only
-applies to the code you *choose* to contribute. It only has to happen
-once. The email should be sent from an email address associated with
-your identity. Your email should link to your pull request.
+the copyright to the changes you contribute to Cosmopolitan. It only
+needs to happen once. This only applies to the code you *choose* to
+contribute. The email should be sent from an email address associated
+with your identity. Your email should link to your pull request.
+
+To make things easy, here's an example of a good email you can use:
+
+> **From**: YOUR NAME (yname@gmail.com)  
+> **To**: Justine Tunney (jtunney@gmail.com)  
+> **Subject**: Cosmopolitan Copyright Assignment for YOUR NAME
+>
+> Hi Justine,
+>
+> I made my first contribution to Cosmopolitan in
+> https://github.com/jart/cosmopolitan/pull/XXXX could you please take a
+> look? I intend to assign you the copyright to the changes I contribute
+> to Cosmopolitan.
+>
+> Thanks!
 
 Please note that in order to give Justine the copyright, it has to be
 yours to give in the first place. If you're employed, then you should
