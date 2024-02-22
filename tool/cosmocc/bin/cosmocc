@@ -6,19 +6,19 @@
 BIN=${0%/*}
 PROG=${0##*/}
 ORIGINAL="$0 $*"
-GCC_VERSION=11.2.0
+GCC_VERSION=12.3.0
 TMPDIR=${TMPDIR:-/tmp}
 
 if [ "$1" = "--version" ]; then
 cat <<EOF
 $PROG (GCC) $GCC_VERSION
-Copyright (c) 2023 Justine Alexandra Roberts Tunney
+Copyright (c) 2024 Justine Alexandra Roberts Tunney
 Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
 notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
 our copyright notices. This toolchain is configured to do so default.
 Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
-Copyright (C) 2019 Free Software Foundation, Inc.
+Copyright (C) 2022 Free Software Foundation, Inc.
 This launches GNU GCC/Binutils subprocesses, which is free software; see
 cosmocc's LICENSE files for source code and copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
