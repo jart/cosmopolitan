@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/http/http.h"
 
-const char kHttpMethod[18][8] = {
+const char kHttpMethod[19][8] = {
     "WUT",      //
     "GET",      //
     "HEAD",     //
