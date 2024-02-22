@@ -267,8 +267,8 @@ LDFLAGS_AARCH64="$LDFLAGS -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$BIN/../aarch
 LDLIBS_AARCH64="-lcosmo"
 
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
-  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
-  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once"
+  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
+  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
 fi
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
