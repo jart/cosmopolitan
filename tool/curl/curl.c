@@ -162,7 +162,7 @@ int _curl(int argc, char *argv[]) {
     size_t n;
     char **p;
   } headers = {0};
-  int method = 0;
+  uint64_t method = 0;
   int authmode = MBEDTLS_SSL_VERIFY_REQUIRED;
   int ciphersuite = MBEDTLS_SSL_PRESET_SUITEC;
   bool includeheaders = false;
@@ -193,7 +193,7 @@ int _curl(int argc, char *argv[]) {
         postdata = optarg;
         break;
       case 'X':
-        if (!(method = GetHttpMethod(optarg, strlen(optarg)))) {
+        if (!(method = ParseHttpMethod(optarg, -1))) {
           tinyprint(2, prog, ": bad http method: ", optarg, "\n", NULL);
           exit(1);
         }
@@ -280,11 +280,13 @@ int _curl(int argc, char *argv[]) {
   }
 
   char *request = 0;
+  char methodstr[9] = {0};
+  WRITE64LE(methodstr, method);
   appendf(&request,
           "%s %s HTTP/1.1\r\n"
           "Connection: close\r\n"
           "User-Agent: %s\r\n",
-          kHttpMethod[method], gc(EncodeUrl(&url, 0)), agent);
+          methodstr, gc(EncodeUrl(&url, 0)), agent);
 
   bool senthost = false;
   bool sentcontenttype = false;

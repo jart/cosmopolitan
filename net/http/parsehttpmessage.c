@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
 #include "net/http/http.h"
@@ -90,23 +91,29 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
     c = p[r->i] & 0xff;
     switch (r->t) {
       case kHttpStateStart:
-        if (c == '\r' || c == '\n') break; /* RFC7230 § 3.5 */
+        if (c == '\r' || c == '\n') break;  // RFC7230 § 3.5
         if (!kHttpToken[c]) return ebadmsg();
-        r->t = r->type == kHttpRequest ? kHttpStateMethod : kHttpStateVersion;
-        r->a = r->i;
+        if (r->type == kHttpRequest) {
+          r->t = kHttpStateMethod;
+          r->method = kToUpper[c];
+          r->a = 8;
+        } else {
+          r->t = kHttpStateVersion;
+          r->a = r->i;
+        }
         break;
       case kHttpStateMethod:
         for (;;) {
           if (c == ' ') {
-            r->method = GetHttpMethod(p + r->a, r->i - r->a);
-            r->xmethod.a = r->a;
-            r->xmethod.b = r->i;
             r->a = r->i + 1;
             r->t = kHttpStateUri;
             break;
-          } else if (!kHttpToken[c]) {
+          } else if (r->a == 64 || !kHttpToken[c]) {
             return ebadmsg();
           }
+          c = kToUpper[c];
+          r->method |= (uint64_t)c << r->a;
+          r->a += 8;
           if (++r->i == n) break;
           c = p[r->i] & 0xff;
         }
@@ -195,10 +202,8 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
         } else if (c == '\n') {
           return ++r->i;
         } else if (!kHttpToken[c]) {
-          /*
-           * 1. Forbid empty header name (RFC2616 §2.2)
-           * 2. Forbid line folding (RFC7230 §3.2.4)
-           */
+          // 1. Forbid empty header name (RFC2616 §2.2)
+          // 2. Forbid line folding (RFC7230 §3.2.4)
           return ebadmsg();
         }
         r->k.a = r->i;
@@ -221,7 +226,7 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
         if (c == ' ' || c == '\t') break;
         r->a = r->i;
         r->t = kHttpStateValue;
-        /* fallthrough */
+        // fallthrough
       case kHttpStateValue:
         for (;;) {
           if (c == '\r' || c == '\n') {

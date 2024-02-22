@@ -16,21 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "net/http/gethttpmethod.inc"
+#include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "net/http/http.h"
 
 /**
- * Converts HTTP method string into internal index
+ * Converts HTTP method to word encoding.
+ *
+ * For example, `ParseHttpMethod("GET", -1)` will return `kHttpGet`.
  *
  * @param len if -1 implies strlen
- * @return small number for HTTP method, or 0 if not found.
+ * @return word encoded method, or 0 if invalid
  */
-int GetHttpMethod(const char *str, size_t len) {
-  const struct HttpMethodSlot *slot;
+uint64_t ParseHttpMethod(const char *str, size_t len) {
+  int s = 0;
+  uint64_t w = 0;
   if (len == -1) len = str ? strlen(str) : 0;
-  if ((slot = LookupHttpMethod(str, len))) {
-    return slot->code;
-  } else {
-    return 0;
+  for (size_t i = 0; i < len; ++i) {
+    int c = kToUpper[str[i] & 255];
+    if (!kHttpToken[c]) return 0;
+    if (s == 64) return 0;
+    w |= (uint64_t)c << s;
+    s += 8;
   }
+  return w;
 }

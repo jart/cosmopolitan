@@ -2534,7 +2534,7 @@ img { vertical-align: middle; }\r\n\
 }
 
 static char *ServeErrorImplDefault(unsigned code, const char *reason,
-                            const char *details) {
+                                   const char *details) {
   size_t n;
   char *p, *s;
   struct Asset *a;
@@ -2590,7 +2590,6 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
   } else {
     return ServeErrorImplDefault(code, reason, details);
   }
-
 }
 
 static char *ServeErrorWithPath(unsigned code, const char *reason,
@@ -2610,9 +2609,10 @@ static char *ServeError(unsigned code, const char *reason) {
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
-  ERRORF("(srvr) failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s",
-         code, reason, DescribeClient(), cpm.msg.version,
-         cpm.msg.xmethod.b - cpm.msg.xmethod.a, inbuf.p + cpm.msg.xmethod.a,
+  char method[9] = {0};
+  WRITE64LE(method, cpm.msg.method);
+  ERRORF("(srvr) failure: %d %s %s HTTP%02d %s %`'.*s %`'.*s %`'.*s %`'.*s",
+         code, reason, DescribeClient(), cpm.msg.version, method,
          HeaderLength(kHttpHost), HeaderData(kHttpHost),
          cpm.msg.uri.b - cpm.msg.uri.a, inbuf.p + cpm.msg.uri.a,
          HeaderLength(kHttpReferer), HeaderData(kHttpReferer),
@@ -2921,12 +2921,8 @@ static const char *GetSystemUrlLauncherCommand(void) {
 }
 
 static void LaunchBrowser(const char *path) {
-  int pid, ws;
-  struct in_addr addr;
-  const char *u, *prog;
-  sigset_t chldmask, savemask;
-  struct sigaction ignore, saveint, savequit;
   uint16_t port = 80;
+  struct in_addr addr;
   path = firstnonnull(path, "/");
   // use the first server address if there is at least one server
   if (servers.n) {
@@ -2936,42 +2932,7 @@ static void LaunchBrowser(const char *path) {
   // assign a loopback address if no server or unknown server address
   if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
-  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX)),
-                       PATH_MAX))) {
-    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path));
-    DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
-    ignore.sa_flags = 0;
-    ignore.sa_handler = SIG_IGN;
-    sigemptyset(&ignore.sa_mask);
-    sigaction(SIGINT, &ignore, &saveint);
-    sigaction(SIGQUIT, &ignore, &savequit);
-    sigemptyset(&chldmask);
-    sigaddset(&chldmask, SIGCHLD);
-    sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-    CHECK_NE(-1, (pid = fork()));
-    if (!pid) {
-      setpgrp();  // ctrl-c'ing redbean shouldn't kill browser
-      sigaction(SIGINT, &saveint, 0);
-      sigaction(SIGQUIT, &savequit, 0);
-      sigprocmask(SIG_SETMASK, &savemask, 0);
-      execv(prog, (char *const[]){(char *)prog, (char *)u, 0});
-      _Exit(127);
-    }
-    while (wait4(pid, &ws, 0, 0) == -1) {
-      CHECK_EQ(EINTR, errno);
-      errno = 0;
-    }
-    sigaction(SIGINT, &saveint, 0);
-    sigaction(SIGQUIT, &savequit, 0);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
-    if (!(WIFEXITED(ws) && WEXITSTATUS(ws) == 0)) {
-      WARNF("(srvr) command %`'s exited with %d", GetSystemUrlLauncherCommand(),
-            WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WEXITSTATUS(ws));
-    }
-  } else {
-    WARNF("(srvr) can't launch browser because %`'s isn't installed",
-          GetSystemUrlLauncherCommand());
-  }
+  launch_browser(gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path)));
 }
 
 static char *BadMethod(void) {
@@ -3971,12 +3932,9 @@ static int LuaGetRedbeanVersion(lua_State *L) {
 
 static int LuaGetMethod(lua_State *L) {
   OnlyCallDuringRequest(L, "GetMethod");
-  if (cpm.msg.method) {
-    lua_pushstring(L, kHttpMethod[cpm.msg.method]);
-  } else {
-    lua_pushlstring(L, inbuf.p + cpm.msg.xmethod.a,
-                    cpm.msg.xmethod.b - cpm.msg.xmethod.a);
-  }
+  char method[9] = {0};
+  WRITE64LE(method, cpm.msg.method);
+  lua_pushstring(L, method);
   return 1;
 }
 
@@ -4868,6 +4826,9 @@ static int LuaBlackhole(lua_State *L) {
   }
   lua_pushboolean(L, Blackhole(ip));
   return 1;
+}
+
+static void BlockSignals(void) {
 }
 
 wontreturn static void Replenisher(void) {
@@ -6052,9 +6013,10 @@ static char *HandleRequest(void) {
     LockInc(&shared->c.urisrefused);
     return ServeFailure(400, "Bad URI");
   }
-  INFOF("(req) received %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),
-        cpm.msg.version, cpm.msg.xmethod.b - cpm.msg.xmethod.a,
-        inbuf.p + cpm.msg.xmethod.a, FreeLater(EncodeUrl(&url, 0)),
+  char method[9] = {0};
+  WRITE64LE(method, cpm.msg.method);
+  INFOF("(req) received %s HTTP%02d %s %s %`'.*s %`'.*s", DescribeClient(),
+        cpm.msg.version, method, FreeLater(EncodeUrl(&url, 0)),
         HeaderLength(kHttpReferer), HeaderData(kHttpReferer),
         HeaderLength(kHttpUserAgent), HeaderData(kHttpUserAgent));
   if (HasHeader(kHttpContentType) &&

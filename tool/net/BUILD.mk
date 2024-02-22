@@ -99,7 +99,8 @@ TOOL_NET_REDBEAN_LUA_MODULES =							\
 	o/$(MODE)/tool/net/ljson.o						\
 	o/$(MODE)/tool/net/lmaxmind.o						\
 	o/$(MODE)/tool/net/lsqlite3.o						\
-	o/$(MODE)/tool/net/largon2.o
+	o/$(MODE)/tool/net/largon2.o						\
+	o/$(MODE)/tool/net/launch.o
 
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\

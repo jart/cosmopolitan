@@ -15,7 +15,7 @@ static int LuaFetch(lua_State *L) {
   bool usingssl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock = -1, methodidx, hdridx;
+  int t, ret, sock = -1, hdridx;
   const char *host, *port;
   char *request;
   struct TlsBio *bio;
@@ -34,7 +34,9 @@ static int LuaFetch(lua_State *L) {
   size_t urlarglen, requestlen, paylen, bodylen;
   size_t i, g, hdrsize;
   int keepalive = kaNONE;
-  int imethod, numredirects = 0, maxredirects = 5;
+  char canmethod[9] = {0};
+  uint64_t imethod;
+  int numredirects = 0, maxredirects = 5;
   bool followredirect = true;
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
@@ -54,9 +56,10 @@ static int LuaFetch(lua_State *L) {
     body = luaL_optlstring(L, -1, "", &bodylen);
     lua_getfield(L, 2, "method");
     // use GET by default if no method is provided
-    method = luaL_optstring(L, -1, kHttpMethod[kHttpGet]);
-    if ((imethod = GetHttpMethod(method, -1))) {
-      method = kHttpMethod[imethod];
+    method = luaL_optstring(L, -1, "GET");
+    if ((imethod = ParseHttpMethod(method, -1))) {
+      WRITE64LE(canmethod, imethod);
+      method = canmethod;
     } else {
       return LuaNilError(L, "bad method");
     }
@@ -123,16 +126,16 @@ static int LuaFetch(lua_State *L) {
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
     bodylen = 0;
-    method = kHttpMethod[kHttpGet];
+    method = "GET";
   } else {
     body = luaL_checklstring(L, 2, &bodylen);
-    method = kHttpMethod[kHttpPost];
+    method = "POST";
   }
   // provide Content-Length header unless it's zero and not expected
-  methodidx = GetHttpMethod(method, -1);
-  if (bodylen > 0 || !(methodidx == kHttpGet || methodidx == kHttpHead ||
-                       methodidx == kHttpTrace || methodidx == kHttpDelete ||
-                       methodidx == kHttpConnect)) {
+  imethod = ParseHttpMethod(method, -1);
+  if (bodylen > 0 ||
+      !(imethod == kHttpGet || imethod == kHttpHead || imethod == kHttpTrace ||
+        imethod == kHttpDelete || imethod == kHttpConnect)) {
     conlenhdr = gc(xasprintf("Content-Length: %zu\r\n", bodylen));
   }
 
@@ -142,8 +145,8 @@ static int LuaFetch(lua_State *L) {
   gc(ParseUrl(urlarg, urlarglen, &url, true));
   gc(url.params.p);
   DEBUGF("(ftch) client fetching %`'s (host=%`'.*s, port=%.*s, path=%`'.*s)",
-         urlarg, url.host.n, url.host.p, url.port.n, url.port.p,
-         url.path.n, url.path.p);
+         urlarg, url.host.n, url.host.p, url.port.n, url.port.p, url.path.n,
+         url.path.p);
 
   usingssl = false;
   if (url.scheme.n) {
@@ -488,7 +491,7 @@ Finished:
     if (msg.status == 303) {
       body = "";
       bodylen = 0;
-      method = kHttpMethod[kHttpGet];
+      method = "GET";
     }
     // create table if needed
     if (!lua_istable(L, 2)) {
@@ -512,8 +515,8 @@ Finished:
     VERBOSEF("(ftch) client redirecting %`'.*s "
              "(scheme=%`'.*s, host=%`'.*s, port=%.*s, path=%`'.*s)",
              FetchHeaderLength(kHttpLocation), FetchHeaderData(kHttpLocation),
-             url.scheme.n, url.scheme.p, url.host.n, url.host.p,
-             url.port.n, url.port.p, url.path.n, url.path.p);
+             url.scheme.n, url.scheme.p, url.host.n, url.host.p, url.port.n,
+             url.port.p, url.path.n, url.path.p);
     // while it's possible to check for IsAcceptableHost/IsAcceptablePort
     // it's not clear what to do if they are not;
     // if they are invalid, redirect returns "invalid host" message
@@ -530,7 +533,7 @@ Finished:
       if (FetchHeaderData(kHttpLocation)[0] == '/') {
         // if the path is absolute, then use it
         // so `/redir/more` -> `/less` becomes `/less`
-        url.path.n = 0; // replace the path
+        url.path.n = 0;  // replace the path
       } else {
         // if the path is relative, then merge it,
         // so `/redir/more` -> `less` becomes `/redir/less`
@@ -539,8 +542,8 @@ Finished:
         }
       }
       url.path.p = gc(xasprintf("%.*s%.*s", url.path.n, url.path.p,
-                      FetchHeaderLength(kHttpLocation),
-                      FetchHeaderData(kHttpLocation)));
+                                FetchHeaderLength(kHttpLocation),
+                                FetchHeaderData(kHttpLocation)));
       url.path.n = strlen(url.path.p);
       lua_pushstring(L, gc(EncodeUrl(&url, 0)));
     }
