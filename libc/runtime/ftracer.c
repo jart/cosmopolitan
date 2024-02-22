@@ -51,7 +51,7 @@ static struct CosmoFtrace g_ftrace;
 
 __funline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
-  while (frame) {
+  while (frame && !kisdangerous(frame)) {
     ++nesting;
     frame = frame->next;
   }
