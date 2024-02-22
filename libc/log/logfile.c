@@ -21,6 +21,6 @@
 
 FILE *__log_file;
 
-__attribute__((__constructor__(60))) static void loginit(void) {
+__attribute__((__constructor__(61))) static void loginit(void) {
   __log_file = stderr;
 }
