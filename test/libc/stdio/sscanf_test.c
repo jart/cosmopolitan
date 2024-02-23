@@ -69,9 +69,17 @@ TEST(sscanf, testNonDirectiveCharacterMatching) {
 }
 
 TEST(sscanf, testCharacter) {
-  char c = 0;
-  EXPECT_EQ(1, sscanf("a", "%c", &c));
-  EXPECT_EQ('a', c);
+  char c1 = 0, c2 = c1, c3 = c2, c4 = c3;
+  char s1[32] = {0}, s2[32] = {0};
+  EXPECT_EQ(1, sscanf("a", "%c", &c1));
+  EXPECT_EQ(2, sscanf("ab", "%c %c %c", &c2, &c3, &c4));
+  EXPECT_EQ(1, sscanf("abcde", "%5c", s1));
+  EXPECT_EQ(0, sscanf("abcd", "%5c", s2));
+
+  EXPECT_EQ('a', c1);
+  EXPECT_EQ('a', c2);
+  EXPECT_EQ('b', c3);
+  EXPECT_STREQ("abcde", &s1[0]);
 }
 
 TEST(sscanf, testStringBuffer) {
@@ -394,6 +402,20 @@ TEST(sscanf, floating_point_infinity_double_precision) {
   EXPECT_TRUE(isinf(g));
 }
 
+TEST(sscanf, floating_point_invalid) {
+  float dummy;
+  EXPECT_EQ(0, sscanf("junk", "%f", &dummy));
+  EXPECT_EQ(0, sscanf("e9", "%f", &dummy));
+  EXPECT_EQ(0, sscanf("-e9", "%f", &dummy));
+}
+
+TEST(sscanf, floating_point_invalid_double_precision) {
+  double dummy;
+  EXPECT_EQ(0, sscanf("junk", "%lf", &dummy));
+  EXPECT_EQ(0, sscanf("e9", "%lf", &dummy));
+  EXPECT_EQ(0, sscanf("-e9", "%lf", &dummy));
+}
+
 TEST(sscanf, floating_point_documentation_examples) {
   float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h,
         j = i;
@@ -401,7 +423,7 @@ TEST(sscanf, floating_point_documentation_examples) {
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%f %f", &a, &b));
   EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%f %f %f", &c, &d, &e));
   EXPECT_EQ(
-      5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
+      2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
                 "%f %f %f %f %f", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11f, a);
@@ -411,9 +433,6 @@ TEST(sscanf, floating_point_documentation_examples) {
   EXPECT_TRUE(isinf(e));
   EXPECT_EQ(0X1.BC70A3D70A3D7P+6f, f);
   EXPECT_TRUE(isinf(g));
-  EXPECT_EQ(-0.0000000123f, h);
-  EXPECT_EQ(.0f, i);
-  EXPECT_EQ(.0f, j);
 }
 
 TEST(sscanf, floating_point_documentation_examples_double_precision) {
@@ -423,7 +442,7 @@ TEST(sscanf, floating_point_documentation_examples_double_precision) {
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%lf %lf", &a, &b));
   EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%lf %lf %lf", &c, &d, &e));
   EXPECT_EQ(
-      5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
+      2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
                 "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11, a);
@@ -433,9 +452,6 @@ TEST(sscanf, floating_point_documentation_examples_double_precision) {
   EXPECT_TRUE(isinf(e));
   EXPECT_EQ(0X1.BC70A3D70A3D7P+6, f);
   EXPECT_TRUE(isinf(g));
-  EXPECT_EQ(-0.0000000123, h);
-  EXPECT_EQ(.0, i);
-  EXPECT_EQ(.0, j);
 }
 
 TEST(sscanf, luplus) {
