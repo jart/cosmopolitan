@@ -84,33 +84,3 @@ clang-format -i -style=file tool/net/redbean.c
 
 If you use Emacs this can be automated on save for Cosmopolitan using
 [tool/emacs/cosmo-format.el]([tool/emacs/cosmo-format.el]).
-
-### Source Files
-
-- Must use include paths relative to the root of the repository
-- Must have comment at top of file documenting copyright and license
-- Must have notice embedding if not owned by Justine (exception: tests)
-- May use language extensions that are supported by both GCC and Clang
-- Should use Google indentation (otherwise use `/* clang-format off */`)
-- Should use asm() instead of compiler APIs (exception: ctz, clz, memcpy)
-
-### Header Files
-
-- Must not have copyright or license comments
-- Must have once guards (otherwise change `.h` to `.inc`)
-- Must be ANSI C89 compatible to be included in the amalgamation header
-- Must include its dependencies (exception: libc/integral/normalize.inc)
-- Must not define objects (i.e. `cc -c -xc foo.h` will produce empty `.o`)
-- Should not use typedefs
-- Should not use forward declarations
-- Should not include documentation comments
-- Should not include parameter names in prototypes
-- Should not pose problems if included by C++ or Assembly sources
-- Should not declare non-ANSI code, at all, when the user requests ANSI
-
-### Build Config
-
-- Must not write files outside `o/`
-- Must not communicate with Internet
-- Must not depend on system libraries
-- Must not depend on system commands (exception: sh, make, gzip, zip)
