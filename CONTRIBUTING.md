@@ -53,6 +53,27 @@ owners and the code should go in the `third_party/` folder. Every third
 party project should have a `README.cosmo` file that documents its
 provenance as well as any local changes you've made.
 
+## Copyright Policy Exceptions
+
+### Tests
+
+You're encoraged to claim ownership of your test code. If you add a new
+file under the `test/` directory, then you should put your name in the
+ISC license header at the top of the file. If you add new test cases to
+an existing unit test file, then you're encouraged to append a line with
+your name to the existing copyright header of that file.
+
+### Exceptional Features
+
+Let's say you discovered a faster better way to implement `log10()` and
+you want to give it to Cosmopolitan. In cases like this, it really isn't
+appropriate for Justine to own your code. What you could do instead, is
+write your own new and improved `log10.c` from scratch, put your name on
+the top with the ISC license, and then add a `__notice()` directive so
+that your name will be embedded inside every executable that links the
+`log10()` function. This will help you get your name out there. Please
+note you need get approval from Justine each time you want to do this.
+
 ## Style Guide
 
 You can use clang-format to automatically format your files:
