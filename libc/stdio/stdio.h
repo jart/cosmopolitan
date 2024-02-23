@@ -1,12 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_H_
 
-#define EOF      -1  /* end of file */
-#define WEOF     -1u /* end of file (multibyte) */
-#define _IOFBF   0   /* fully buffered */
-#define _IOLBF   1   /* line buffered */
-#define _IONBF   2   /* no buffering */
-#define _CS_PATH 0
+#define EOF    -1  /* end of file */
+#define WEOF   -1u /* end of file (multibyte) */
+#define _IOFBF 0   /* fully buffered */
+#define _IOLBF 1   /* line buffered */
+#define _IONBF 2   /* no buffering */
 
 #define L_tmpnam     20
 #define L_ctermid    20

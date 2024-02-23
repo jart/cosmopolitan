@@ -89,6 +89,7 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
+#include "libc/unistd.h"
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("posix");
