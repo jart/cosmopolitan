@@ -83,4 +83,4 @@ clang-format -i -style=file tool/net/redbean.c
 ```
 
 If you use Emacs this can be automated on save for Cosmopolitan using
-[tool/emacs/cosmo-format.el]([tool/emacs/cosmo-format.el]).
+[tool/emacs/cosmo-format.el](tool/emacs/cosmo-format.el).
