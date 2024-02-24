@@ -19,8 +19,8 @@ int timespec_getres(struct timespec *, int) libcesque;
 int timespec_get(struct timespec *, int) libcesque;
 
 #ifdef _COSMO_SOURCE
-/* cosmopolitan libc's non-posix timespec library
-   removed by default due to emacs codebase clash */
+int sys_clock_nanosleep(int, int, const struct timespec *, struct timespec *);
+int cosmo_clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 #define timespec_zero ((struct timespec){0})
 #define timespec_max  ((struct timespec){0x7fffffffffffffff, 999999999})
 libcesque int timespec_cmp(struct timespec, struct timespec) pureconst;
