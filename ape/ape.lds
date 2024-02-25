@@ -528,6 +528,7 @@ SECTIONS {
     *(.piro.data.sort.iat.*)
 #endif
     *(__patchable_function_entries)
+    *(.note.gnu.property)
     *(__mcount_loc)
     *(.rela.dyn)
     *(.discard)
