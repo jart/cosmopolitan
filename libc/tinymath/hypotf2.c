@@ -2,9 +2,7 @@
 │ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│ FreeBSD lib/msun/src/s_asinhl.c                                              │
-│ Converted to ldbl by David Schultz <das@FreeBSD.ORG> and Bruce D. Evans.     │
-│                                                                              │
+│ FreeBSD lib/msun/src/e_hypotf.c                                              │
 │ Copyright (c) 1992-2023 The FreeBSD Project.                                 │
 │                                                                              │
 │ Redistribution and use in source and binary forms, with or without           │
@@ -40,67 +38,138 @@
 __static_yoink("freebsd_libm_notice");
 __static_yoink("fdlibm_notice");
 
-#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
+static	const float	one	= 1.0, tiny=1.0e-30;
 
-/* EXP_LARGE is the threshold above which we use asinh(x) ~= log(2x). */
-/* EXP_TINY is the threshold below which we use asinh(x) ~= x. */
-#if LDBL_MANT_DIG == 64
-#define	EXP_LARGE	34
-#define	EXP_TINY	-34
-#elif LDBL_MANT_DIG == 113
-#define	EXP_LARGE	58
-#define	EXP_TINY	-58
-#else
-#error "Unsupported long double format"
-#endif
-
-#if LDBL_MAX_EXP != 0x4000
-/* We also require the usual expsign encoding. */
-#error "Unsupported long double format"
-#endif
-
-static const double
-one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
-huge=  1.00000000000000000000e+300;
-
-#if LDBL_MANT_DIG == 64
-static const union IEEEl2bits
-u_ln2 =  LD80C(0xb17217f7d1cf79ac, -1, 6.93147180559945309417e-1L);
-#define	ln2	u_ln2.e
-#elif LDBL_MANT_DIG == 113
-static const long double
-ln2 =  6.93147180559945309417232121458176568e-1L;	/* 0x162e42fefa39ef35793c7673007e6.0p-113 */
-#else
-#error "Unsupported long double format"
-#endif
-
-/**
- * Returns inverse hyperbolic sine of 𝑥.
- * @define asinh(x) = sign(x)*log(|x|+sqrt(x*x+1)) ~= x - x^3/6 + o(x^5)
- */
-long double
-asinhl(long double x)
+float
+sqrtf2(float x)
 {
-	long double t, w;
-	uint16_t hx, ix;
+	float z;
+	int32_t sign = (int)0x80000000;
+	int32_t ix,s,q,m,t,i;
+	uint32_t r;
 
-	ENTERI();
-	GET_LDBL_EXPSIGN(hx, x);
-	ix = hx & 0x7fff;
-	if (ix >= 0x7fff) RETURNI(x+x);	/* x is inf, NaN or misnormal */
-	if (ix < BIAS + EXP_TINY) {	/* |x| < TINY, or misnormal */
-	    if (huge + x > one) RETURNI(x);	/* return x inexact except 0 */
+	GET_FLOAT_WORD(ix,x);
+
+    /* take care of Inf and NaN */
+	if((ix&0x7f800000)==0x7f800000) {
+	    return x*x+x;		/* sqrt(NaN)=NaN, sqrt(+inf)=+inf
+					   sqrt(-inf)=sNaN */
 	}
-	if (ix >= BIAS + EXP_LARGE) {	/* |x| >= LARGE, or misnormal */
-	    w = logl(fabsl(x))+ln2;
-	} else if (ix >= 0x4000) {	/* LARGE > |x| >= 2.0, or misnormal */
-	    t = fabsl(x);
-	    w = logl(2.0*t+one/(sqrtl(x*x+one)+t));
-	} else {		/* 2.0 > |x| >= TINY, or misnormal */
-	    t = x*x;
-	    w =log1pl(fabsl(x)+t/(one+sqrtl(one+t)));
+    /* take care of zero */
+	if(ix<=0) {
+	    if((ix&(~sign))==0) return x;/* sqrt(+-0) = +-0 */
+	    else if(ix<0)
+		return (x-x)/(x-x);		/* sqrt(-ve) = sNaN */
 	}
-	RETURNI((hx & 0x8000) == 0 ? w : -w);
+    /* normalize x */
+	m = (ix>>23);
+	if(m==0) {				/* subnormal x */
+	    for(i=0;(ix&0x00800000)==0;i++) ix<<=1;
+	    m -= i-1;
+	}
+	m -= 127;	/* unbias exponent */
+	ix = (ix&0x007fffff)|0x00800000;
+	if(m&1)	/* odd m, double x to make it even */
+	    ix += ix;
+	m >>= 1;	/* m = [m/2] */
+
+    /* generate sqrt(x) bit by bit */
+	ix += ix;
+	q = s = 0;		/* q = sqrt(x) */
+	r = 0x01000000;		/* r = moving bit from right to left */
+
+	while(r!=0) {
+	    t = s+r;
+	    if(t<=ix) {
+		s    = t+r;
+		ix  -= t;
+		q   += r;
+	    }
+	    ix += ix;
+	    r>>=1;
+	}
+
+    /* use floating add to find out rounding direction */
+	if(ix!=0) {
+	    z = one-tiny; /* trigger inexact flag */
+	    if (z>=one) {
+	        z = one+tiny;
+		if (z>one)
+		    q += 2;
+		else
+		    q += (q&1);
+	    }
+	}
+	ix = (q>>1)+0x3f000000;
+	ix += ((uint32_t)m <<23);
+	SET_FLOAT_WORD(z,ix);
+	return z;
 }
 
-#endif /* long double is long */
+/**
+ * Returns euclidean distance.
+ *
+ * Error is less than 1 ULP.
+ */
+float
+hypotf2(float x, float y)
+{
+	float a,b,t1,t2,y1,y2,w;
+	int32_t j,k,ha,hb;
+
+	GET_FLOAT_WORD(ha,x);
+	ha &= 0x7fffffff;
+	GET_FLOAT_WORD(hb,y);
+	hb &= 0x7fffffff;
+	if(hb > ha) {a=y;b=x;j=ha; ha=hb;hb=j;} else {a=x;b=y;}
+	a = fabsf(a);
+	b = fabsf(b);
+	if((ha-hb)>0xf000000) {return a+b;} /* x/y > 2**30 */
+	k=0;
+	if(ha > 0x58800000) {	/* a>2**50 */
+	   if(ha >= 0x7f800000) {	/* Inf or NaN */
+	       /* Use original arg order iff result is NaN; quieten sNaNs. */
+	       w = fabsl(x+0.0L)-fabsf(y+0);
+	       if(ha == 0x7f800000) w = a;
+	       if(hb == 0x7f800000) w = b;
+	       return w;
+	   }
+	   /* scale a and b by 2**-68 */
+	   ha -= 0x22000000; hb -= 0x22000000;	k += 68;
+	   SET_FLOAT_WORD(a,ha);
+	   SET_FLOAT_WORD(b,hb);
+	}
+	if(hb < 0x26800000) {	/* b < 2**-50 */
+	    if(hb <= 0x007fffff) {	/* subnormal b or 0 */
+	        if(hb==0) return a;
+		SET_FLOAT_WORD(t1,0x7e800000);	/* t1=2^126 */
+		b *= t1;
+		a *= t1;
+		k -= 126;
+	    } else {		/* scale a and b by 2^68 */
+	        ha += 0x22000000; 	/* a *= 2^68 */
+		hb += 0x22000000;	/* b *= 2^68 */
+		k -= 68;
+		SET_FLOAT_WORD(a,ha);
+		SET_FLOAT_WORD(b,hb);
+	    }
+	}
+    /* medium size a and b */
+	w = a-b;
+	if (w>b) {
+	    SET_FLOAT_WORD(t1,ha&0xfffff000);
+	    t2 = a-t1;
+	    w  = sqrtf2(t1*t1-(b*(-b)-t2*(a+t1)));
+	} else {
+	    a  = a+a;
+	    SET_FLOAT_WORD(y1,hb&0xfffff000);
+	    y2 = b - y1;
+	    SET_FLOAT_WORD(t1,(ha+0x00800000)&0xfffff000);
+	    t2 = a - t1;
+	    w  = sqrtf2(t1*y1-(w*(-w)-(t1*y2+t2*b)));
+	}
+	if(k!=0) {
+	    SET_FLOAT_WORD(t1,(127+k)<<23);
+	    return t1*w;
+	} else return w;
+}

@@ -29,7 +29,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
-
 __static_yoink("freebsd_libm_notice");
 
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)

@@ -51,8 +51,6 @@ o/$(MODE)/test/posix/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_POSIX_OBJS): private CFLAGS += -isystem isystem/
-
 .PHONY: o/$(MODE)/test/posix
 o/$(MODE)/test/posix:				\
 		$(TEST_POSIX_BINS)		\

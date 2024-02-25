@@ -206,7 +206,7 @@ endif
 .UNVEIL +=					\
 	libc/integral				\
 	libc/stdbool.h				\
-		rwc:/dev/shm				\
+	rwc:/dev/shm				\
 	rx:.cosmocc				\
 	rx:build/bootstrap			\
 	r:build/portcosmo.h			\
@@ -297,6 +297,7 @@ include third_party/nsync/testing/BUILD.mk
 include libc/testlib/BUILD.mk
 include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
+include test/math/BUILD.mk
 include test/posix/BUILD.mk
 include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk

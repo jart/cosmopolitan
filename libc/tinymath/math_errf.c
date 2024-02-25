@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,15 +25,76 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/complex.h"
-#include "libc/math.h"
-#include "libc/tinymath/complex.internal.h"
-__static_yoink("musl_libc_notice");
+#include "libc/errno.h"
+#include "libc/tinymath/arm.internal.h"
 
-float complex cacoshf(float complex z)
+#if WANT_ERRNO
+/* dontinline reduces code size and avoids making math functions non-leaf
+   when the error handling is inlined.  */
+dontinline static float
+with_errnof (float y, int e)
 {
-	int zineg = signbit(cimagf(z));
-	z = cacosf(z);
-	if (zineg) return CMPLXF(cimagf(z), -crealf(z));
-	else       return CMPLXF(-cimagf(z), crealf(z));
+  errno = e;
+  return y;
+}
+#else
+#define with_errnof(x, e) (x)
+#endif
+
+/* dontinline reduces code size.  */
+dontinline static float
+xflowf (uint32_t sign, float y)
+{
+  y = eval_as_float (opt_barrier_float (sign ? -y : y) * y);
+  return with_errnof (y, ERANGE);
+}
+
+float
+__math_uflowf (uint32_t sign)
+{
+  return xflowf (sign, 0x1p-95f);
+}
+
+#if WANT_ERRNO_UFLOW
+/* Underflows to zero in some non-nearest rounding mode, setting errno
+   is valid even if the result is non-zero, but in the subnormal range.  */
+float
+__math_may_uflowf (uint32_t sign)
+{
+  return xflowf (sign, 0x1.4p-75f);
+}
+#endif
+
+float
+__math_oflowf (uint32_t sign)
+{
+  return xflowf (sign, 0x1p97f);
+}
+
+float
+__math_divzerof (uint32_t sign)
+{
+  float y = opt_barrier_float (sign ? -1.0f : 1.0f) / 0.0f;
+  return with_errnof (y, ERANGE);
+}
+
+dontinstrument float
+__math_invalidf (float x)
+{
+  float y = (x - x) / (x - x);
+  return isnan (x) ? y : with_errnof (y, EDOM);
+}
+
+/* Check result and set errno if necessary.  */
+
+dontinstrument float
+__math_check_uflowf (float y)
+{
+  return y == 0.0f ? with_errnof (y, ERANGE) : y;
+}
+
+dontinstrument float
+__math_check_oflowf (float y)
+{
+  return isinf (y) ? with_errnof (y, ERANGE) : y;
 }

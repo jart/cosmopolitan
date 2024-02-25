@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
+#include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
 
-/**
- * Turns string into long.
- *
- * Decimal is the only radix supported. Leading whitespace (as specified
- * by the isspace() function) is skipped over. Unlike strtol(), the atoi
- * function has undefined behavior on error and it never changes `errno`
- *
- * @param nptr is a non-null nul-terminated string
- * @return the decoded signed saturated integer
- */
-long atol(const char *nptr) {
-  long x;
-  int c, d;
-  do c = *nptr++;
-  while (isspace(c));
-  d = c == '-' ? -1 : 1;
-  if (c == '-' || c == '+') c = *nptr++;
-  for (x = 0; isdigit(c); c = *nptr++) {
-    x *= 10;
-    x += (c - '0') * d;
-  }
-  return x;
+#define TEST(x) \
+  if (!(x)) return __LINE__
+
+int main() {
+  TEST(atoi("") == 0);
+  TEST(atoi("-") == 0);
+  TEST(atoi("0") == 0);
+  TEST(atoi("1") == 1);
+  TEST(atoi("+1") == 1);
+  TEST(atoi("-1") == -1);
+  TEST(atoi("1-") == 1);
+  TEST(atoi("--1") == 0);
+  TEST(atoi("16 32") == 16);
+  TEST(atoi("\t 16") == 16);
+  TEST(atoi("\v 16") == 16);
+  TEST(atoi("\n 16") == 16);
+  TEST(atoi("\r 16") == 16);
+  TEST(atoi("rr 16") == 0);
+  TEST(atoi("0123456789") == 123456789);
+  TEST(atoi("2147483647") == INT_MAX);
+  TEST(atoi("-2147483648") == INT_MIN);
+  TEST(atoi("-2147483647") == INT_MIN + 1);
+  TEST(!errno);
 }
-
-__weak_reference(atol, atoll);

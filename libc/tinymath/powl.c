@@ -1,120 +1,42 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
+│ OpenBSD /usr/src/lib/libm/src/ld80/e_powl.c                                  │
+│         /usr/src/lib/libm/src/ld128/e_powl.c                                 │
 │                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
+│ Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>                    │
+│                                                                              │
+│ Permission to use, copy, modify, and distribute this software for any        │
+│ purpose with or without fee is hereby granted, provided that the above       │
+│ copyright notice and this permission notice appear in all copies.            │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES     │
+│ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF             │
+│ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR      │
+│ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES       │
+│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN        │
+│ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF      │
+│                                                                              │
+│ Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.            │
+│                                                                              │
+│ Developed at SunPro, a Sun Microsystems, Inc. business.                      │
+│ Permission to use, copy, modify, and distribute this                         │
+│ software is freely granted, provided that this notice                        │
+│ is preserved.                                                                │
+│                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
-#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
+#include "libc/tinymath/freebsd.internal.h"
 
-#ifdef __x86_64__
-
-/**
- * Returns 𝑥^𝑦.
- * @note should take ~56ns
- */
-long double powl(long double x, long double y) {
-  long double t, u;
-  if (!isunordered(x, y)) {
-    if (!isinf(y)) {
-      if (!isinf(x)) {
-        if (x) {
-          if (y) {
-            if (x < 0 && y != truncl(y)) {
-#ifndef __NO_MATH_ERRNO__
-              errno = EDOM;
-#endif
-              return NAN;
-            }
-            asm("fyl2x" : "=t"(u) : "0"(fabsl(x)), "u"(y) : "st(1)");
-            asm("fprem" : "=t"(t) : "0"(u), "u"(1.L));
-            asm("f2xm1" : "=t"(t) : "0"(t));
-            asm("fscale" : "=t"(t) : "0"(t + 1), "u"(u));
-            if (signbit(x)) {
-              if (y != truncl(y)) return -NAN;
-              if ((int64_t)y & 1) t = -t;
-            }
-            return t;
-          } else {
-            return 1;
-          }
-        } else if (y > 0) {
-          if (signbit(x) && y == truncl(y) && ((int64_t)y & 1)) {
-            return -0.;
-          } else {
-            return 0;
-          }
-        } else if (!y) {
-          return 1;
-        } else {
-#ifndef __NO_MATH_ERRNO__
-          errno = ERANGE;
-#endif
-          if (y == truncl(y) && ((int64_t)y & 1)) {
-            return copysignl(INFINITY, x);
-          } else {
-            return INFINITY;
-          }
-        }
-      } else if (signbit(x)) {
-        if (!y) return 1;
-        x = y < 0 ? 0 : INFINITY;
-        if (y == truncl(y) && ((int64_t)y & 1)) x = -x;
-        return x;
-      } else if (y < 0) {
-        return 0;
-      } else if (y > 0) {
-        return INFINITY;
-      } else {
-        return 1;
-      }
-    } else {
-      x = fabsl(x);
-      if (x < 1) return signbit(y) ? INFINITY : 0;
-      if (x > 1) return signbit(y) ? 0 : INFINITY;
-      return 1;
-    }
-  } else if (!y || x == 1) {
-    return 1;
-  } else {
-    return NAN;
-  }
-}
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
-__static_yoink("musl_libc_notice");
 __static_yoink("openbsd_libm_notice");
+__static_yoink("musl_libc_notice");
+__static_yoink("fdlibm_notice");
 
-/* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_powl.c */
-/*
- * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+
 /*                                                      powl.c
  *
  *      Power function, long double precision
@@ -606,35 +528,9 @@ static long double powil(long double x, int nn)
 	return y;
 }
 
+__weak_reference(powl, __powl_finite);
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-#include "libc/tinymath/freebsd.internal.h"
-
-/*-
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
- */
-
-/*
- * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
 
 /* powl(x,y) return x**y
  *
@@ -1045,8 +941,6 @@ powl(long double x, long double y)
   return s * z;
 }
 
-#endif /* __x86_64__ */
-
 __weak_reference(powl, __powl_finite);
 
-#endif /* long double is long */
+#endif /* __x86_64__ */

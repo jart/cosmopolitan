@@ -28,7 +28,11 @@
 #include "libc/math.h"
 __static_yoink("musl_libc_notice");
 
-
+/**
+ * Returns euclidean distance.
+ *
+ * Max observed error is 1 ulp.
+ */
 float hypotf(float x, float y)
 {
 	union {float f; uint32_t i;} ux = {x}, uy = {y}, ut;

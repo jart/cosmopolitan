@@ -78,7 +78,6 @@ __static_yoink("fdlibm_notice");
 
 /**
  * Returns cosine of 𝑥.
- * @note should take ~5ns
  */
 double cos(double x)
 {

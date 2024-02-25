@@ -30,7 +30,6 @@
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 __static_yoink("musl_libc_notice");
 
-
 #if LDBL_MANT_DIG == 64
 #define SPLIT (0x1p32L+1)
 #elif LDBL_MANT_DIG == 113

@@ -28,7 +28,6 @@
 #include "libc/math.h"
 __static_yoink("musl_libc_notice");
 
-
 #if FLT_EVAL_METHOD > 1U && LDBL_MANT_DIG == 64
 #define SPLIT (0x1p32 + 1)
 #else

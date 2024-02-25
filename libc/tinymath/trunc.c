@@ -32,7 +32,6 @@
 #endif
 __static_yoink("musl_libc_notice");
 
-
 /**
  * Rounds to integer, towards zero.
  */

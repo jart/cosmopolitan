@@ -95,7 +95,6 @@ DEFAULT_CCFLAGS +=							\
 DEFAULT_COPTS ?=							\
 	-fno-ident							\
 	-fno-common							\
-	-fno-math-errno							\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\

@@ -30,7 +30,6 @@
 #include "libc/tinymath/internal.h"
 __static_yoink("musl_libc_notice");
 
-
 #define FENV_SUPPORT 1
 
 /* returns a*b*2^-32 - e, with error 0 <= e < 1.  */
@@ -54,7 +53,7 @@ static inline uint64_t mul64(uint64_t a, uint64_t b)
  */
 double sqrt(double x)
 {
-#if defined(__x86_64__) && defined(__SSE2__)
+#if defined(__x86_64__)
 
 	asm("sqrtsd\t%1,%0" : "=x"(x) : "x"(x));
 	return x;

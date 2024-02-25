@@ -31,7 +31,6 @@
 __static_yoink("musl_libc_notice");
 __static_yoink("fdlibm_notice");
 
-
 /* origin: FreeBSD /usr/src/lib/msun/src/s_tan.c */
 /*
  * ====================================================

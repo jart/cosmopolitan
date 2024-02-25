@@ -70,7 +70,6 @@
            "__GCC_IEC_559"
            "__SUPPORT_SNAN__"
            "__GCC_IEC_559_COMPLEX"
-           "__NO_MATH_ERRNO__"
            "__gnu__"
            "_OPENMP"))
 

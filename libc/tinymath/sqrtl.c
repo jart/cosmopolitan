@@ -32,7 +32,6 @@
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 __static_yoink("musl_libc_notice");
 
-
 #define FENV_SUPPORT 1
 
 typedef struct {
@@ -195,14 +194,12 @@ static inline u128 mul128_tail(u128 a, u128 b)
 	return lo;
 }
 
-/* see sqrt.c for detailed comments.  */
-
 /**
  * Returns square root of 𝑥.
  */
 long double sqrtl(long double x)
 {
-#ifdef __x86__
+#if defined(__x86__)
 
 	asm("fsqrt" : "+t"(x));
 	return x;

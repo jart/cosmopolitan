@@ -30,7 +30,6 @@
 #include "libc/tinymath/internal.h"
 __static_yoink("musl_libc_notice");
 
-
 #define FENV_SUPPORT 1
 
 static inline uint32_t mul32(uint32_t a, uint32_t b)
@@ -38,14 +37,12 @@ static inline uint32_t mul32(uint32_t a, uint32_t b)
 	return (uint64_t)a*b >> 32;
 }
 
-/* see sqrt.c for more detailed comments.  */
-
 /**
  * Returns square root of 𝑥.
  */
 float sqrtf(float x)
 {
-#ifdef __SSE2__
+#if defined(__x86_64__)
 
 	asm("sqrtss\t%1,%0" : "=x"(x) : "x"(x));
 	return x;

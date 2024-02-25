@@ -16,44 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
 /**
- * Decodes decimal integer from ASCII string.
+ * Turns string into int.
  *
- *     atoi 10⁸              22𝑐         7𝑛𝑠
- *     strtol 10⁸            37𝑐        12𝑛𝑠
- *     strtoul 10⁸           35𝑐        11𝑛𝑠
- *     wcstol 10⁸            30𝑐        10𝑛𝑠
- *     wcstoul 10⁸           30𝑐        10𝑛𝑠
- *     strtoimax 10⁸         80𝑐        26𝑛𝑠
- *     strtoumax 10⁸         78𝑐        25𝑛𝑠
- *     wcstoimax 10⁸         77𝑐        25𝑛𝑠
- *     wcstoumax 10⁸         76𝑐        25𝑛𝑠
+ * Decimal is the only radix supported. Leading whitespace (as specified
+ * by the isspace() function) is skipped over. Unlike strtol(), the atoi
+ * function has undefined behavior on error and it never changes `errno`
  *
- * @param s is a non-null nul-terminated string
+ * @param nptr is a non-null nul-terminated string
  * @return the decoded signed saturated integer
- * @raise ERANGE on overflow
  */
-int atoi(const char *s) {
+int atoi(const char *nptr) {
   int x, c, d;
-  do c = *s++;
-  while (c == ' ' || c == '\t');
+  do c = *nptr++;
+  while (isspace(c));
   d = c == '-' ? -1 : 1;
-  if (c == '-' || c == '+') c = *s++;
-  for (x = 0; isdigit(c); c = *s++) {
-    if (ckd_mul(&x, x, 10) || ckd_add(&x, x, (c - '0') * d)) {
-      errno = ERANGE;
-      if (d > 0) {
-        return INT_MAX;
-      } else {
-        return INT_MIN;
-      }
-    }
+  if (c == '-' || c == '+') c = *nptr++;
+  for (x = 0; isdigit(c); c = *nptr++) {
+    x *= 10;
+    x += (c - '0') * d;
   }
   return x;
 }

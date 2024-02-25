@@ -29,10 +29,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
 #include "libc/tinymath/internal.h"
-#include "libc/tinymath/log2_data.internal.h"
 __static_yoink("musl_libc_notice");
 __static_yoink("fdlibm_notice");
-
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log10.c */
 /*

@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -80,11 +80,12 @@ ENTRY (__memcpy_aarch64_simd)
 	PTR_ARG (1)
 	SIZE_ARG (2)
 	add	srcend, src, count
-	add	dstend, dstin, count
 	cmp	count, 128
 	b.hi	L(copy_long)
+	add	dstend, dstin, count
 	cmp	count, 32
 	b.hi	L(copy32_128)
+	nop
 
 	/* Small copies: 0..32 bytes.  */
 	cmp	count, 16
@@ -95,6 +96,18 @@ ENTRY (__memcpy_aarch64_simd)
 	str	B_q, [dstend, -16]
 	ret
 
+	.p2align 4
+	/* Medium copies: 33..128 bytes.  */
+L(copy32_128):
+	ldp	A_q, B_q, [src]
+	ldp	C_q, D_q, [srcend, -32]
+	cmp	count, 64
+	b.hi	L(copy128)
+	stp	A_q, B_q, [dstin]
+	stp	C_q, D_q, [dstend, -32]
+	ret
+
+	.p2align 4
 	/* Copy 8-15 bytes.  */
 L(copy16):
 	tbz	count, 3, L(copy8)
@@ -104,7 +117,6 @@ L(copy16):
 	str	A_h, [dstend, -8]
 	ret
 
-	.p2align 3
 	/* Copy 4-7 bytes.  */
 L(copy8):
 	tbz	count, 2, L(copy4)
@@ -112,6 +124,19 @@ L(copy8):
 	ldr	B_lw, [srcend, -4]
 	str	A_lw, [dstin]
 	str	B_lw, [dstend, -4]
+	ret
+
+	/* Copy 65..128 bytes.  */
+L(copy128):
+	ldp	E_q, F_q, [src, 32]
+	cmp	count, 96
+	b.ls	L(copy96)
+	ldp	G_q, H_q, [srcend, -64]
+	stp	G_q, H_q, [dstend, -64]
+L(copy96):
+	stp	A_q, B_q, [dstin]
+	stp	E_q, F_q, [dstin, 32]
+	stp	C_q, D_q, [dstend, -32]
 	ret
 
 	/* Copy 0..3 bytes using a branchless sequence.  */
@@ -127,33 +152,11 @@ L(copy4):
 L(copy0):
 	ret
 
-	.p2align 4
-	/* Medium copies: 33..128 bytes.  */
-L(copy32_128):
-	ldp	A_q, B_q, [src]
-	ldp	C_q, D_q, [srcend, -32]
-	cmp	count, 64
-	b.hi	L(copy128)
-	stp	A_q, B_q, [dstin]
-	stp	C_q, D_q, [dstend, -32]
-	ret
-
-	.p2align 4
-	/* Copy 65..128 bytes.  */
-L(copy128):
-	ldp	E_q, F_q, [src, 32]
-	cmp	count, 96
-	b.ls	L(copy96)
-	ldp	G_q, H_q, [srcend, -64]
-	stp	G_q, H_q, [dstend, -64]
-L(copy96):
-	stp	A_q, B_q, [dstin]
-	stp	E_q, F_q, [dstin, 32]
-	stp	C_q, D_q, [dstend, -32]
-	ret
-
+	.p2align 3
 	/* Copy more than 128 bytes.  */
 L(copy_long):
+	add	dstend, dstin, count
+
 	/* Use backwards copy if there is an overlap.  */
 	sub	tmp1, dstin, src
 	cmp	tmp1, count
@@ -189,6 +192,9 @@ L(copy64_from_end):
 	stp	E_q, F_q, [dstend, -64]
 	stp	A_q, B_q, [dstend, -32]
 	ret
+
+	.p2align 4
+	nop
 
 	/* Large backwards copy for overlapping copies.
 	   Copy 16 bytes and then align srcend to 16-byte alignment.  */

@@ -46,12 +46,8 @@ TEST(atoi, test) {
   EXPECT_EQ(-1, atoi("-1"));
   EXPECT_EQ(-9, atoi("-9"));
   EXPECT_EQ(-31337, atoi("-31337"));
-  EXPECT_EQ(INT_MIN, atoi("-2147483648"));
-  EXPECT_EQ(INT_MAX, atoi("2147483647"));
-  EXPECT_EQ(INT_MIN, atoi("-2147483649"));
-  EXPECT_EQ(INT_MAX, atoi("2147483648"));
-  EXPECT_EQ(INT_MIN, atoi("-2147483658"));
-  EXPECT_EQ(INT_MAX, atoi("2147483657"));
+  EXPECT_EQ(-2147483648, atoi("-2147483648"));
+  EXPECT_EQ(2147483647, atoi("2147483647"));
   EXPECT_EQ(123, atoi(" 123"));
   EXPECT_EQ(123, atoi(" \t123"));
   EXPECT_EQ(+123, atoi(" +123"));
@@ -63,21 +59,21 @@ TEST(atoi, test) {
 }
 
 TEST(atoi, testWithinLimit_doesntChangeErrno) {
-  errno = 7;
+  errno = 666;
   EXPECT_EQ(INT_MAX, atoi("2147483647"));
-  EXPECT_EQ(7, errno);
-  errno = 7;
+  EXPECT_EQ(666, errno);
+  errno = 666;
   EXPECT_EQ(INT_MIN, atoi("-2147483648"));
-  EXPECT_EQ(7, errno);
+  EXPECT_EQ(666, errno);
 }
 
-TEST(atoi, testOutsideLimit_saturatesAndSetsErangeErrno) {
-  errno = 0;
-  EXPECT_EQ(INT_MAX, atoi("2147483648"));
-  EXPECT_EQ(ERANGE, errno);
-  errno = 0;
-  EXPECT_EQ(INT_MIN, atoi("-2147483649"));
-  EXPECT_EQ(ERANGE, errno);
+TEST(atol, testWithinLimit_doesntChangeErrno) {
+  errno = 666;
+  EXPECT_EQ(INT_MAX, atol("2147483647"));
+  EXPECT_EQ(666, errno);
+  errno = 666;
+  EXPECT_EQ(INT_MIN, atol("-2147483648"));
+  EXPECT_EQ(666, errno);
 }
 
 TEST(atol, test) {
@@ -97,10 +93,6 @@ TEST(atol, test) {
   EXPECT_EQ(-31337, atol("-31337"));
   EXPECT_EQ(LONG_MIN, atol("-9223372036854775808"));
   EXPECT_EQ(LONG_MAX, atol("9223372036854775807"));
-  EXPECT_EQ(LONG_MIN, atol("-9223372036854775809"));
-  EXPECT_EQ(LONG_MAX, atol("9223372036854775808"));
-  EXPECT_EQ(LONG_MIN, atol("-9223372036854775818"));
-  EXPECT_EQ(LONG_MAX, atol("9223372036854775817"));
   EXPECT_EQ(123, atol(" 123"));
   EXPECT_EQ(123, atol(" \t123"));
   EXPECT_EQ(-123, atol(" -123"));
@@ -571,6 +563,8 @@ TEST(strtol, invalidBin2) {
 BENCH(atoi, bench) {
   EZBENCH2("atoi 10⁸", donothing,
            __expropriate(atoi(__veil("r", "100000000"))));
+  EZBENCH2("atol 10⁸", donothing,
+           __expropriate(atol(__veil("r", "100000000"))));
   EZBENCH2("strtol 10⁸", donothing,
            __expropriate(strtol(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("strtoul 10⁸", donothing,

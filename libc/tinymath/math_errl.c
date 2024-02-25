@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,15 +25,25 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/complex.h"
-#include "libc/math.h"
-#include "libc/tinymath/complex.internal.h"
-__static_yoink("musl_libc_notice");
+#include "libc/errno.h"
+#include "libc/tinymath/arm.internal.h"
 
-/* atanh = -i atan(i z) */
-
-double complex catanh(double complex z)
+#if WANT_ERRNO
+/* dontinline reduces code size and avoids making math functions non-leaf
+   when the error handling is inlined.  */
+dontinline static long double
+with_errnol (long double y, int e)
 {
-	z = catan(CMPLX(-cimag(z), creal(z)));
-	return CMPLX(cimag(z), -creal(z));
+  errno = e;
+  return y;
+}
+#else
+#define with_errnol(x, e) (x)
+#endif
+
+dontinstrument long double
+__math_invalidl (long double x)
+{
+  long double y = (x - x) / (x - x);
+  return isnan (x) ? y : with_errnol (y, EDOM);
 }
