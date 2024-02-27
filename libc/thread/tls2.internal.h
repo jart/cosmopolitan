@@ -3,7 +3,7 @@
 #include "libc/dce.h"
 #include "libc/thread/tls.h"
 COSMOPOLITAN_C_START_
-#if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && defined(__x86_64__)
 
 /**
  * Returns location of thread information block.
@@ -14,9 +14,9 @@ COSMOPOLITAN_C_START_
 forceinline struct CosmoTib *__get_tls_privileged(void) {
   char *tib, *lin = (char *)0x30;
   if (IsNetbsd() || IsOpenbsd()) {
-    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
+    __asm__("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   } else {
-    asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
+    __asm__("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
     if (IsWindows()) {
       tib = *(char **)(tib + 0x1480 + __tls_index * 8);
     }
@@ -26,13 +26,13 @@ forceinline struct CosmoTib *__get_tls_privileged(void) {
 
 forceinline struct CosmoTib *__get_tls_win32(void) {
   char *tib, *lin = (char *)0x30;
-  asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
+  __asm__("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   tib = *(char **)(tib + 0x1480 + __tls_index * 8);
   return (struct CosmoTib *)tib;
 }
 
 forceinline void __set_tls_win32(void *tls) {
-  asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tls));
+  __asm__("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tls));
 }
 
 #elif defined(__aarch64__)

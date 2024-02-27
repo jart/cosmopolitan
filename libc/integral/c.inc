@@ -16,8 +16,7 @@
 
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
-#elif (defined(__STRICT_ANSI__) || !defined(__GNUC__)) && \
-    __STDC_VERSION__ + 0 < 201112
+#elif !defined(__GNUC__) && __STDC_VERSION__ + 0 < 201112
 #define typeof(x) __typeof(x)
 #endif
 
@@ -27,7 +26,7 @@
 #endif /* C++11 */
 #else  /* __cplusplus */
 #if __STDC_VERSION__ + 0 < 201112
-#if __GNUC__ + _MSC_VER + 0 && !defined(__STRICT_ANSI__)
+#if __GNUC__ + _MSC_VER + 0
 #define _Alignof(x) __alignof(x)
 #else
 #define _Alignof(x) /* basically all it ever did lool */ sizeof(x)
@@ -36,7 +35,7 @@
 #endif /* __cplusplus */
 
 #if !defined(__cplusplus) && !defined(inline) && __STDC_VERSION__ + 0 < 199901
-#if !defined(__STRICT_ANSI__) && (defined(__GNUC__) || defined(_MSC_VER))
+#if defined(__GNUC__) || defined(_MSC_VER)
 #define inline __inline
 #else
 #define inline
@@ -49,7 +48,7 @@
 #endif
 
 #if __STDC_VERSION__ + 0 < 201112
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#ifdef __GNUC__
 #define _Alignas(x) __attribute__((__aligned__(x)))
 #elif defined(_MSC_VER)
 #define _Alignas(x) __declspec(align(x))
@@ -58,17 +57,15 @@
 
 #ifdef _MSC_VER
 #define __builtin_unreachable() __assume(false)
-#elif defined(__STRICT_ANSI__) ||                           \
-    !((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405 || \
-      defined(__clang__) || defined(__INTEL_COMPILER) ||    \
-      __has_builtin(__builtin_unreachable))
+#elif !((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405 || \
+        defined(__clang__) || defined(__INTEL_COMPILER) ||    \
+        __has_builtin(__builtin_unreachable))
 #define __builtin_unreachable() \
   for (;;) {                    \
   }
 #endif
 
-#if defined(__STRICT_ANSI__) || \
-    (!defined(__llvm__) && !__has_builtin(__builtin_assume))
+#if (!defined(__llvm__) && !__has_builtin(__builtin_assume))
 #define __builtin_assume(x)            \
   do {                                 \
     if (!(x)) __builtin_unreachable(); \
@@ -134,9 +131,7 @@ typedef __UINTMAX_TYPE__ uintmax_t;
 typedef long double max_align_t;
 
 #ifdef _COSMO_SOURCE
-#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || \
-     defined(__llvm__)) &&                                 \
-    !defined(__STRICT_ANSI__)
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__)
 typedef signed __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 #endif
@@ -169,11 +164,7 @@ typedef struct {
 #define interruptfn  nocallersavedregisters forcealignargpointer
 
 #ifndef pureconst
-#ifndef __STRICT_ANSI__
 #define pureconst __attribute__((__const__))
-#else
-#define pureconst
-#endif
 #endif
 
 #ifndef forcealign
@@ -181,15 +172,9 @@ typedef struct {
 #endif
 #define thatispacked __attribute__((__packed__))
 
-#ifndef __STRICT_ANSI__
 #define printfesque(n)   __attribute__((__format__(__gnu_printf__, n, n + 1)))
 #define scanfesque(n)    __attribute__((__format__(__gnu_scanf__, n, n + 1)))
 #define strftimeesque(n) __attribute__((__format__(__strftime__, n, 0)))
-#else
-#define printfesque(n)
-#define scanfesque(n)
-#define strftimeesque(n)
-#endif
 
 #ifndef privileged
 #define privileged \
@@ -197,8 +182,7 @@ typedef struct {
 #endif
 
 #ifndef wontreturn
-#if !defined(__STRICT_ANSI__) &&      \
-    (__has_attribute(__noreturn__) || \
+#if (__has_attribute(__noreturn__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 208)
 #define wontreturn __attribute__((__noreturn__))
 #else
@@ -207,8 +191,7 @@ typedef struct {
 #endif
 
 #ifndef nosideeffect
-#if !defined(__STRICT_ANSI__) &&  \
-    (__has_attribute(__pure__) || \
+#if (__has_attribute(__pure__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 296)
 #define nosideeffect __attribute__((__pure__))
 #else
@@ -219,9 +202,8 @@ typedef struct {
 #ifndef dontinline
 #ifdef _MSC_VER
 #define dontinline __declspec(noinline)
-#elif !defined(__STRICT_ANSI__) &&    \
-    (__has_attribute(__noinline__) || \
-     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301)
+#elif (__has_attribute(__noinline__) || \
+       (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301)
 #define dontinline __attribute__((__noinline__))
 #else
 #define dontinline
@@ -229,8 +211,7 @@ typedef struct {
 #endif
 
 #ifndef dontclone
-#if !defined(__STRICT_ANSI__) &&     \
-    (__has_attribute(__noclone__) || \
+#if (__has_attribute(__noclone__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405)
 #define dontclone __attribute__((__noclone__))
 #else
@@ -242,8 +223,7 @@ typedef struct {
 #ifdef __cplusplus
 #define forceinline inline
 #else
-#if !defined(__STRICT_ANSI__) && \
-    (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 302
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 302
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403 || \
     !defined(__cplusplus) ||                              \
     (defined(__clang__) &&                                \
@@ -267,8 +247,7 @@ typedef struct {
 #endif /* forceinline */
 
 #ifndef __wur
-#if !defined(__STRICT_ANSI__) &&                           \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
+#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
      __has_attribute(__warn_unused_result__))
 #define __wur __attribute__((__warn_unused_result__))
 #else
@@ -277,8 +256,7 @@ typedef struct {
 #endif
 
 #ifndef nullterminated
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__sentinel__) || __GNUC__ + 0 >= 4)
+#if __has_attribute(__sentinel__) || __GNUC__ + 0 >= 4
 #define nullterminated(x) __attribute__((__sentinel__ x))
 #else
 #define nullterminated(x)
@@ -295,8 +273,7 @@ typedef struct {
 #endif
 
 #ifndef externinline
-#if !defined(__STRICT_ANSI__) &&                           \
-    (!defined(__cplusplus) ||                              \
+#if (!defined(__cplusplus) ||                              \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403 || \
      (defined(__clang__) &&                                \
       (defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__))))
@@ -311,8 +288,7 @@ typedef struct {
 #endif
 
 #ifndef relegated
-#if !defined(__STRICT_ANSI__) &&  \
-    (__has_attribute(__cold__) || \
+#if (__has_attribute(__cold__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define relegated __attribute__((__cold__))
 #else
@@ -320,8 +296,7 @@ typedef struct {
 #endif
 #endif
 
-#if !defined(__STRICT_ANSI__) &&     \
-    (__has_attribute(__warning__) || \
+#if (__has_attribute(__warning__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define warnifused(s) __attribute__((__warning__(s)))
 #else
@@ -329,8 +304,7 @@ typedef struct {
 #endif
 
 #ifndef firstclass
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__hot__) || \
+#if (__has_attribute(__hot__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define firstclass __attribute__((__hot__))
 #else
@@ -339,8 +313,7 @@ typedef struct {
 #endif
 
 #ifndef paramsnonnull
-#if !defined(__STRICT_ANSI__) &&     \
-    (__has_attribute(__nonnull__) || \
+#if (__has_attribute(__nonnull__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
 #define paramsnonnull(opt_1idxs) __attribute__((__nonnull__ opt_1idxs))
 #else
@@ -355,7 +328,7 @@ typedef struct {
 #endif
 
 #if __STDC_VERSION__ + 0 < 199901L && !defined(restrict)
-#if !defined(__STRICT_ANSI__) && !defined(__cplusplus) && \
+#if !defined(__cplusplus) && \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301 || defined(_MSC_VER))
 #define restrict __restrict__
 #else
@@ -365,8 +338,7 @@ typedef struct {
 #endif
 
 #ifndef dontcallback
-#if !defined(__STRICT_ANSI__) &&  \
-    (__has_attribute(__leaf__) || \
+#if (__has_attribute(__leaf__) || \
      (!defined(__llvm__) &&       \
       (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406))
 #define dontcallback __attribute__((__leaf__))
@@ -376,8 +348,8 @@ typedef struct {
 #endif
 
 #ifndef dontthrow
-#if defined(__cplusplus) && !defined(__STRICT_ANSI__) && \
-    (__has_attribute(dontthrow) ||                       \
+#if defined(__cplusplus) &&        \
+    (__has_attribute(dontthrow) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
 #define dontthrow __attribute__((__nothrow__))
 #elif defined(_MSC_VER)
@@ -388,8 +360,7 @@ typedef struct {
 #endif
 
 #ifndef returnstwice
-#if !defined(__STRICT_ANSI__) &&           \
-    (__has_attribute(__returns_twice__) || \
+#if (__has_attribute(__returns_twice__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 402)
 #define returnstwice __attribute__((__returns_twice__))
 #else
@@ -398,8 +369,7 @@ typedef struct {
 #endif
 
 #ifndef nodebuginfo
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__nodebug__) || defined(__llvm__))
+#if __has_attribute(__nodebug__) || defined(__llvm__)
 #define nodebuginfo __attribute__((__nodebug__))
 #else
 #define nodebuginfo
@@ -414,8 +384,7 @@ typedef struct {
 #endif
 
 #ifndef returnsnonnull
-#if !defined(__STRICT_ANSI__) &&             \
-    (__has_attribute(__returns_nonnull__) || \
+#if (__has_attribute(__returns_nonnull__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnsnonnull __attribute__((__returns_nonnull__))
 #else
@@ -423,8 +392,7 @@ typedef struct {
 #endif
 #endif
 
-#if !defined(__STRICT_ANSI__) &&            \
-    (__has_attribute(__assume_aligned__) || \
+#if (__has_attribute(__assume_aligned__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnsaligned(x) __attribute__((__assume_aligned__ x))
 #else
@@ -432,8 +400,7 @@ typedef struct {
 #endif
 
 #ifndef returnspointerwithnoaliases
-#if !defined(__STRICT_ANSI__) &&    \
-    (__has_attribute(__malloc__) || \
+#if (__has_attribute(__malloc__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define returnspointerwithnoaliases __attribute__((__malloc__))
 #elif defined(_MSC_VER)
@@ -444,8 +411,7 @@ typedef struct {
 #endif
 
 #ifndef attributeallocsize
-#if !defined(__STRICT_ANSI__) &&        \
-    (__has_attribute(__alloc_size__) || \
+#if (__has_attribute(__alloc_size__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define attributeallocsize(x) __attribute__((__alloc_size__ x))
 #else
@@ -454,8 +420,7 @@ typedef struct {
 #endif
 
 #ifndef attributeallocalign
-#if !defined(__STRICT_ANSI__) &&         \
-    (__has_attribute(__alloc_align__) || \
+#if (__has_attribute(__alloc_align__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409)
 #define attributeallocalign(x) __attribute__((__alloc_align__ x))
 #else
@@ -478,8 +443,7 @@ typedef struct {
 #ifdef _COSMO_SOURCE
 
 #ifndef dontinstrument
-#if !defined(__STRICT_ANSI__) &&                    \
-    (__has_attribute(__no_instrument_function__) || \
+#if (__has_attribute(__no_instrument_function__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
 #if ((__GNUC__ + 0) >= 7 && !defined(__chibicc__)) || \
     __has_attribute(__patchable_function_entry__)
@@ -495,8 +459,7 @@ typedef struct {
 #endif
 
 #ifndef mayalias
-#if !defined(__STRICT_ANSI__) &&       \
-    (__has_attribute(__may_alias__) || \
+#if (__has_attribute(__may_alias__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
 #define mayalias __attribute__((__may_alias__))
 #else
@@ -505,35 +468,26 @@ typedef struct {
 #endif
 
 #ifndef dontoptimize
-#ifndef __STRICT_ANSI__
 #if defined(__llvm__) || __has_attribute(__optnone__)
 #define dontoptimize __attribute__((__optnone__))
 #elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
     __has_attribute(__optimize__)
 #define dontoptimize __attribute__((__optimize__(0)))
 #endif
-#else
-#define dontoptimize
-#endif
 #endif
 
 #ifndef optimizesize
-#ifndef __STRICT_ANSI__
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
     __has_attribute(__optimize__)
 #define optimizesize __attribute__((__optimize__("s")))
 #elif defined(__llvm__) || __has_attribute(__optnone__)
 #define optimizesize __attribute__((__optnone__))
 #endif
-#else
-#define optimizesize
-#endif
 #endif
 
 #ifndef optimizespeed
 /* warning: corrupts frame pointer; only use on leaf functions */
-#if !defined(__STRICT_ANSI__) &&                           \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
      __has_attribute(__optimize__))
 #define optimizespeed __attribute__((__optimize__(3)))
 #else
@@ -542,8 +496,7 @@ typedef struct {
 #endif
 
 #ifndef unrollloops
-#if !defined(__STRICT_ANSI__) &&                           \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
      __has_attribute(__optimize__))
 #define unrollloops __attribute__((__optimize__("unroll-loops")))
 #else
@@ -552,8 +505,7 @@ typedef struct {
 #endif
 
 #ifndef _Microarchitecture
-#if !defined(__STRICT_ANSI__) &&    \
-    (__has_attribute(__target__) || \
+#if (__has_attribute(__target__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 404)
 #define _Microarchitecture(march) __attribute__((__target__(march)))
 #else
@@ -572,64 +524,48 @@ typedef struct {
 #endif
 
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
-     __has_attribute(__no_sanitize_address__)) &&          \
-    !defined(__STRICT_ANSI__)
+     __has_attribute(__no_sanitize_address__))
 #define dontasan __attribute__((__no_sanitize_address__))
 #else
 #define dontasan
 #endif
 
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
-     __has_attribute(__no_sanitize_undefined__)) &&        \
-    !defined(__STRICT_ANSI__)
+     __has_attribute(__no_sanitize_undefined__))
 #define dontubsan __attribute__((__no_sanitize_undefined__))
 #else
 #define dontubsan
 #endif
 
-#ifdef __STRICT_ANSI__
-void abort(void) wontreturn;
-#define notpossible abort()
-#else
 #ifdef __x86_64__
 #define notpossible          \
   do {                       \
-    asm("nop\n\t"            \
-        "ud2\n\t"            \
-        "nop");              \
+    __asm__("nop\n\t"        \
+            "ud2\n\t"        \
+            "nop");          \
     __builtin_unreachable(); \
   } while (0)
 #elif defined(__aarch64__)
 #define notpossible          \
   do {                       \
-    asm("udf\t#0\n\t"        \
-        "nop");              \
+    __asm__("udf\t#0\n\t"    \
+            "nop");          \
     __builtin_unreachable(); \
   } while (0)
 #else
 #define notpossible __builtin_trap()
-#endif
 #endif
 
 #define donothing \
   do {            \
   } while (0)
 
-#ifndef __STRICT_ANSI__
 #define textstartup _Section(".text.startup")
 #define textexit    _Section(".text.exit")
 #define textreal    _Section(".text.real")
 #define texthead    _Section(".text.head")
 #define textwindows _Section(".text.windows")
 #define antiquity   _Section(".text.antiquity")
-#else
-#define textstartup
-#define textexit
-#define textreal
-#define texthead
-#define textwindows
-#define antiquity
-#endif
 
 #ifdef __llvm__
 #define __builtin_ia32_movntdq(x, y) (*(x) = (y))
@@ -660,66 +596,50 @@ void abort(void) wontreturn;
 #pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bullsh */
 #endif
 
-#ifndef __STRICT_ANSI__
 #ifdef __x86_64__
-#define DebugBreak() asm("int3")
+#define DebugBreak() __asm__("int3")
 #else
 #define DebugBreak() __builtin_trap()
-#endif
-#else
-#define DebugBreak() (void)0
 #endif
 
 #endif /* _COSMO_SOURCE */
 
-#ifndef __STRICT_ANSI__
-#define __veil(CONSTRAINT, EXPRESSION)                           \
-  ({                                                             \
-    autotype(EXPRESSION) VeiledValue = (EXPRESSION);             \
-    asm("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
-    VeiledValue;                                                 \
+#define __veil(CONSTRAINT, EXPRESSION)                               \
+  __extension__({                                                    \
+    autotype(EXPRESSION) VeiledValue = (EXPRESSION);                 \
+    __asm__("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
+    VeiledValue;                                                     \
   })
-#else
-#define __veil(CONSTRAINT, EXPRESSION) (EXPRESSION)
-#endif
 
-#ifndef __STRICT_ANSI__
-#define __conceal(CONSTRAINT, EXPRESSION)                                 \
-  ({                                                                      \
-    autotype(EXPRESSION) VeiledValue = (EXPRESSION);                      \
-    asm volatile("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
-    VeiledValue;                                                          \
+#define __conceal(CONSTRAINT, EXPRESSION)                                     \
+  __extension__({                                                             \
+    autotype(EXPRESSION) VeiledValue = (EXPRESSION);                          \
+    __asm__ volatile("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
+    VeiledValue;                                                              \
   })
-#else
-#define __conceal(CONSTRAINT, EXPRESSION) (EXPRESSION)
-#endif
 
-#ifndef __STRICT_ANSI__
-#define __expropriate(EXPRESSION)                  \
-  ({                                               \
-    asm volatile("" ::"g"(EXPRESSION) : "memory"); \
-    0;                                             \
+#define __expropriate(EXPRESSION)                      \
+  __extension__({                                      \
+    __asm__ volatile("" ::"g"(EXPRESSION) : "memory"); \
+    0;                                                 \
   })
-#else
-#define __expropriate(EXPRESSION) (EXPRESSION)
-#endif
 
-#if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
+#if !defined(__APPLE__) && defined(__x86_64__)
 #define __yoink(SYMBOL) \
-  asm(".section .yoink\n\tnopl\t%0\n\t.previous" : : "m"(SYMBOL))
+  __asm__(".section .yoink\n\tnopl\t%0\n\t.previous" : : "m"(SYMBOL))
 #elif defined(__aarch64__)
 #define __yoink(SYMBOL) \
-  asm(".section .yoink\n\tb\t%0\n\t.previous" : : "m"(SYMBOL))
+  __asm__(".section .yoink\n\tb\t%0\n\t.previous" : : "m"(SYMBOL))
 #else
 #define __yoink(SYMBOL) (void)0
 #endif
 
-#if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
+#if !defined(__APPLE__) && defined(__x86_64__)
 #define __static_yoink(SYMBOLSTR) \
-  asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
+  __asm__(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 #elif defined(__aarch64__)
 #define __static_yoink(SYMBOLSTR) \
-  asm(".section .yoink\n\tb\t\"" SYMBOLSTR "\"\n\t.previous")
+  __asm__(".section .yoink\n\tb\t\"" SYMBOLSTR "\"\n\t.previous")
 #else
 #define __static_yoink(SYMBOLSTR)
 #endif

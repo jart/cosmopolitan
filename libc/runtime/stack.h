@@ -56,7 +56,7 @@
 #define _STACK_EXTRA ""
 #endif
 
-#if defined(__GNUC__) && defined(__ELF__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && defined(__ELF__)
 COSMOPOLITAN_C_START_
 
 extern char ape_stack_prot[] __attribute__((__weak__));

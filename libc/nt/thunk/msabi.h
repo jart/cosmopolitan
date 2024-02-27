@@ -2,8 +2,7 @@
 #define COSMOPOLITAN_LIBC_NT_THUNK_MSABI_H_
 #ifdef __x86_64__
 
-#if !defined(__STRICT_ANSI__) &&               \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
+#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 408 || \
      (__has_attribute(__ms_abi__) || defined(__llvm__)))
 /**
  * Defines function as using Microsoft x64 calling convention.

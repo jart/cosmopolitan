@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_TEB_H_
 #define COSMOPOLITAN_LIBC_NT_TEB_H_
 #include "libc/nt/struct/peb.h"
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#ifdef __GNUC__
 
 /*
  * These macros address directly into NT's TEB a.k.a. TIB
@@ -21,5 +21,5 @@
 #define _NtGetRpc()          ((void *)*(__seg_gs uintptr_t *)0x50)
 #define _NtGetTls()          ((void *)*(__seg_gs uintptr_t *)0x58)
 
-#endif /* __GNUC__ && !__STRICT_ANSI__ */
+#endif /* __GNUC__ */
 #endif /* COSMOPOLITAN_LIBC_NT_TEB_H_ */
