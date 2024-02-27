@@ -14,7 +14,9 @@ TEST_LIBC_PROC_COMS =						\
 
 TEST_LIBC_PROC_BINS =						\
 	$(TEST_LIBC_PROC_COMS)					\
-	$(TEST_LIBC_PROC_COMS:%=%.dbg)
+	$(TEST_LIBC_PROC_COMS:%=%.dbg)			\
+	o/$(MODE)/test/libc/proc/zipread.com.dbg	\
+	o/$(MODE)/test/libc/proc/zipread.com
 
 TEST_LIBC_PROC_TESTS =						\
 	$(TEST_LIBC_PROC_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
@@ -90,6 +92,7 @@ o/$(MODE)/test/libc/proc/execve_test.com.dbg:				\
 		o/$(MODE)/test/libc/proc/execve_test.o			\
 		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
 		o/$(MODE)/test/libc/proc/execve_test_prog1.com.zip.o	\
+		o/$(MODE)/test/libc/proc/echo.elf.zip.o			\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
@@ -102,16 +105,38 @@ o/$(MODE)/test/libc/proc/fexecve_test.com.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/fexecve_test.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
+		o/$(MODE)/test/libc/proc/echo.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
-		o/$(MODE)/test/libc/calls/zipread.com.zip.o		\
+		o/$(MODE)/test/libc/proc/zipread.com.zip.o		\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/proc/zipread.com.dbg:			\
+		$(LIBC_RUNTIME)					\
+		o/$(MODE)/test/libc/proc/zipread.o			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/echo.elf:				\
+		o/$(MODE)/tool/build/assimilate.com		\
+		o/$(MODE)/tool/build/echo.com
+	@$(COMPILE) -wACP -T$@					\
+		build/bootstrap/cp.com				\
+		o/$(MODE)/tool/build/echo.com		\
+		o/$(MODE)/test/libc/proc/echo.elf
+	@$(COMPILE) -wAASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate.com -bcef	\
+		o/$(MODE)/test/libc/proc/echo.elf
+
+o/$(MODE)/test/libc/proc/echo.elf.zip.o					\
 o/$(MODE)/test/libc/proc/execve_test_prog1.com.zip.o		\
-o/$(MODE)/test/libc/proc/life-pe.com.zip.o: private		\
+o/$(MODE)/test/libc/proc/life-pe.com.zip.o					\
+o/$(MODE)/test/libc/proc/zipread.com.zip.o: private		\
 		ZIPOBJ_FLAGS +=					\
 			-B
 
