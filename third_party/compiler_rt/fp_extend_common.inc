@@ -41,11 +41,21 @@ static __inline int src_rep_t_clz(src_rep_t a) {
 }
 
 #elif defined SRC_HALF
-typedef uint16_t src_t;
+#error use fp16_extend.inc
+typedef _Float16 src_t;
 typedef uint16_t src_rep_t;
 #define SRC_REP_C UINT16_C
+static const int srcBits = sizeof(src_t) * CHAR_BIT;
 static const int srcSigBits = 10;
-#define src_rep_t_clz __builtin_clz
+// -1 accounts for the sign bit.
+// srcBits - srcSigFracBits - 1
+static const int srcExpBits = 5;
+
+static inline int src_rep_t_clz_impl(src_rep_t a) {
+  return __builtin_clz(a) - 16;
+}
+
+#define src_rep_t_clz src_rep_t_clz_impl
 
 #else
 #error Source should be half, single, or double precision!
