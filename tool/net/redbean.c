@@ -5179,13 +5179,13 @@ int LuaCryptoTlsConnectionWrite(lua_State *L) {
   size_t size;
   const char *data;
   data = luaL_checklstring(L, 2, &size);
-  return TlsConnectionWrite(GetTlsConnection(L), data, size);
+  lua_pushinteger(L, TlsConnectionWrite(GetTlsConnection(L), data, size));
+  return 1;
 }
 
 int LuaCryptoTlsConnectionClose(lua_State *L) {
   TlsConnectionClose(GetTlsConnection(L));
-  lua_pop(L, 1);
-  return 1;
+  return 0;
 }
 
 static int LuaCryptoTlsConnectionTostring(lua_State *L) {

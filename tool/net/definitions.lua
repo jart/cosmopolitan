@@ -7982,8 +7982,8 @@ function unix.Errno:__tostring() end
 ---
 --- Initiates the connection handshake immediately.
 ---@param fd integer
----@param hostname string for validating that the hostname on the certificate matches what is expected
----@return crypto.tls.Connection
+---@param hostname string # for validating that the hostname on the certificate matches what is expected
+---@return crypto.tls.Connection # a connection object, with methods documented below.
 ---@nodiscard
 function crypto.tls.wrap(fd, hostname) end
 
@@ -7998,7 +7998,7 @@ function crypto.tls.Connection:read() end
 ---
 --- This call is blocking.
 ---@param data string # the data to write to the connection.
----@return nil
+---@return integer # the number of bytes written to the connection.
 function crypto.tls.Connectino:write() end
 
 --- Close the connection.
