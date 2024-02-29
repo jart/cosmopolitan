@@ -7978,6 +7978,14 @@ function unix.Errno:doc() end
 --- differs from the System Five error code.
 function unix.Errno:__tostring() end
 
+--- Wraps a plain TCP client socket connection with TLS encryption.
+---
+--- Initiates the connection handshake immediately.
+---@param fd integer
+---@param hostname string for validating that the hostname on the certificate matches what is expected
+---@return crypto.tls.Connection
+---@nodiscard
+function crypto.tls.wrap(fd, hostname)
 -- CONSTANTS
 
 ---@type integer for debug logging level. See `Log`.
