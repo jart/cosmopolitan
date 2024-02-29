@@ -26,15 +26,11 @@
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 #include "third_party/nsync/waiter.h"
+__static_yoink("nsync_notice");
 
 // once we're paying the cost of nsync we might as well get the benefit
 // of a better pthread_once(), since no other component pulls it in now
 __static_yoink("nsync_run_once");
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
 
 /* Initialize *cv. */
 void nsync_cv_init (nsync_cv *cv) {

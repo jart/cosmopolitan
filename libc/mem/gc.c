@@ -51,7 +51,7 @@ static void TeardownGc(void) {
   }
 }
 
-__attribute__((__constructor__)) static void InitializeGc(void) {
+__attribute__((__constructor__(51))) static textstartup void InitGc(void) {
   atexit(TeardownGc);
 }
 

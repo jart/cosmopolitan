@@ -25,10 +25,8 @@
 PYTHON_PROVIDE("_random");
 PYTHON_PROVIDE("_random.Random");
 
-asm(".ident\t\"\\n\\n\
-mt19937 (BSD-3)\\n\
-Copyright 1997-2004 Makoto Matsumoto and Takuji Nishimura\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(python_mt19937_notice, "Python mt19937 (BSD-3)\n\
+Copyright 1997-2004 Makoto Matsumoto and Takuji Nishimura");
 
 /* ------------------------------------------------------------------
    The code in this module was based on a download from:

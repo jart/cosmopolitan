@@ -1,182 +1,120 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│ FreeBSD lib/msun/src/s_asinhl.c                                              │
+│ Converted to ldbl by David Schultz <das@FreeBSD.ORG> and Bruce D. Evans.     │
 │                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
+│ Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.            │
 │                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
+│ Developed at SunPro, a Sun Microsystems, Inc. business.                      │
+│ Permission to use, copy, modify, and distribute this                         │
+│ software is freely granted, provided that this notice                        │
+│ is preserved.                                                                │
 │                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│ Copyright (c) 1992-2023 The FreeBSD Project.                                 │
+│                                                                              │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions           │
+│ are met:                                                                     │
+│ 1. Redistributions of source code must retain the above copyright            │
+│    notice, this list of conditions and the following disclaimer.             │
+│ 2. Redistributions in binary form must reproduce the above copyright         │
+│    notice, this list of conditions and the following disclaimer in the       │
+│    documentation and/or other materials provided with the distribution.      │
+│                                                                              │
+│ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND       │
+│ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE        │
+│ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE   │
+│ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE      │
+│ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL   │
+│ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS      │
+│ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)        │
+│ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   │
+│ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY    │
+│ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF       │
+│ SUCH DAMAGE.                                                                 │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/math.h"
-#include "libc/tinymath/atanf_common.internal.h"
-#include "libc/tinymath/internal.h"
+#include "libc/tinymath/freebsd.internal.h"
+__static_yoink("freebsd_libm_notice");
+__static_yoink("fdlibm_notice");
 
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+static volatile float
+tiny  = 1.0e-30;
+static const float
+zero  = 0.0,
+pi_o_4  = 7.8539818525e-01, /* 0x3f490fdb */
+pi_o_2  = 1.5707963705e+00, /* 0x3fc90fdb */
+pi      = 3.1415927410e+00; /* 0x40490fdb */
+static volatile float
+pi_lo   = -8.7422776573e-08; /* 0xb3bbbd2e */
 
-#define Pi (0x1.921fb6p+1f)
-#define PiOver2 (0x1.921fb6p+0f)
-#define PiOver4 (0x1.921fb6p-1f)
-#define SignMask (0x80000000)
-
-/* We calculate atan2f by P(n/d), where n and d are similar to the input
-   arguments, and P is a polynomial. The polynomial may underflow.
-   POLY_UFLOW_BOUND is the lower bound of the difference in exponents of n and d
-   for which P underflows, and is used to special-case such inputs.  */
-#define POLY_UFLOW_BOUND 24
-
-static inline int32_t
-biased_exponent (float f)
-{
-  uint32_t fi = asuint (f);
-  int32_t ex = (int32_t) ((fi & 0x7f800000) >> 23);
-  if (UNLIKELY (ex == 0))
-    {
-      /* Subnormal case - we still need to get the exponent right for subnormal
-	 numbers as division may take us back inside the normal range.  */
-      return ex - __builtin_clz (fi << 9);
-    }
-  return ex;
-}
-
-/* Fast implementation of scalar atan2f. Largest observed error is
-   2.88ulps in [99.0, 101.0] x [99.0, 101.0]:
-   atan2f(0x1.9332d8p+6, 0x1.8cb6c4p+6) got 0x1.964646p-1
-				       want 0x1.964640p-1.  */
+/**
+ * Returns arc tangent of 𝑦/𝑥.
+ */
 float
-atan2f (float y, float x)
+atan2f(float y, float x)
 {
-  uint32_t ix = asuint (x);
-  uint32_t iy = asuint (y);
+	float z;
+	int32_t k,m,hx,hy,ix,iy;
 
-  uint32_t sign_x = ix & SignMask;
-  uint32_t sign_y = iy & SignMask;
+	GET_FLOAT_WORD(hx,x);
+	ix = hx&0x7fffffff;
+	GET_FLOAT_WORD(hy,y);
+	iy = hy&0x7fffffff;
+	if((ix>0x7f800000)||
+	   (iy>0x7f800000))	/* x or y is NaN */
+	    return nan_mix(x, y);
+	if(hx==0x3f800000) return atanf(y);   /* x=1.0 */
+	m = ((hy>>31)&1)|((hx>>30)&2);	/* 2*sign(x)+sign(y) */
 
-  uint32_t iax = ix & ~SignMask;
-  uint32_t iay = iy & ~SignMask;
-
-  /* x or y is NaN.  */
-  if ((iax > 0x7f800000) || (iay > 0x7f800000))
-    return x + y;
-
-  /* m = 2 * sign(x) + sign(y).  */
-  uint32_t m = ((iy >> 31) & 1) | ((ix >> 30) & 2);
-
-  /* The following follows glibc ieee754 implementation, except
-     that we do not use +-tiny shifts (non-nearest rounding mode).  */
-
-  int32_t exp_diff = biased_exponent (x) - biased_exponent (y);
-
-  /* Special case for (x, y) either on or very close to the x axis. Either y =
-     0, or y is tiny and x is huge (difference in exponents >=
-     POLY_UFLOW_BOUND). In the second case, we only want to use this special
-     case when x is negative (i.e. quadrants 2 or 3).  */
-  if (UNLIKELY (iay == 0 || (exp_diff >= POLY_UFLOW_BOUND && m >= 2)))
-    {
-      switch (m)
-	{
-	case 0:
-	case 1:
-	  return y; /* atan(+-0,+anything)=+-0.  */
-	case 2:
-	  return Pi; /* atan(+0,-anything) = pi.  */
-	case 3:
-	  return -Pi; /* atan(-0,-anything) =-pi.  */
-	}
-    }
-  /* Special case for (x, y) either on or very close to the y axis. Either x =
-     0, or x is tiny and y is huge (difference in exponents >=
-     POLY_UFLOW_BOUND).  */
-  if (UNLIKELY (iax == 0 || exp_diff <= -POLY_UFLOW_BOUND))
-    return sign_y ? -PiOver2 : PiOver2;
-
-  /* x is INF.  */
-  if (iax == 0x7f800000)
-    {
-      if (iay == 0x7f800000)
-	{
-	  switch (m)
-	    {
-	    case 0:
-	      return PiOver4; /* atan(+INF,+INF).  */
-	    case 1:
-	      return -PiOver4; /* atan(-INF,+INF).  */
-	    case 2:
-	      return 3.0f * PiOver4; /* atan(+INF,-INF).  */
-	    case 3:
-	      return -3.0f * PiOver4; /* atan(-INF,-INF).  */
+    /* when y = 0 */
+	if(iy==0) {
+	    switch(m) {
+		case 0:
+		case 1: return y; 	/* atan(+-0,+anything)=+-0 */
+		case 2: return  pi+tiny;/* atan(+0,-anything) = pi */
+		case 3: return -pi-tiny;/* atan(-0,-anything) =-pi */
 	    }
 	}
-      else
-	{
-	  switch (m)
-	    {
-	    case 0:
-	      return 0.0f; /* atan(+...,+INF).  */
-	    case 1:
-	      return -0.0f; /* atan(-...,+INF).  */
-	    case 2:
-	      return Pi; /* atan(+...,-INF).  */
-	    case 3:
-	      return -Pi; /* atan(-...,-INF).  */
+    /* when x = 0 */
+	if(ix==0) return (hy<0)?  -pi_o_2-tiny: pi_o_2+tiny;
+
+    /* when x is INF */
+	if(ix==0x7f800000) {
+	    if(iy==0x7f800000) {
+		switch(m) {
+		    case 0: return  pi_o_4+tiny;/* atan(+INF,+INF) */
+		    case 1: return -pi_o_4-tiny;/* atan(-INF,+INF) */
+		    case 2: return  (float)3.0*pi_o_4+tiny;/*atan(+INF,-INF)*/
+		    case 3: return (float)-3.0*pi_o_4-tiny;/*atan(-INF,-INF)*/
+		}
+	    } else {
+		switch(m) {
+		    case 0: return  zero  ;	/* atan(+...,+INF) */
+		    case 1: return -zero  ;	/* atan(-...,+INF) */
+		    case 2: return  pi+tiny  ;	/* atan(+...,-INF) */
+		    case 3: return -pi-tiny  ;	/* atan(-...,-INF) */
+		}
 	    }
 	}
-    }
-  /* y is INF.  */
-  if (iay == 0x7f800000)
-    return sign_y ? -PiOver2 : PiOver2;
+    /* when y is INF */
+	if(iy==0x7f800000) return (hy<0)? -pi_o_2-tiny: pi_o_2+tiny;
 
-  uint32_t sign_xy = sign_x ^ sign_y;
-
-  float ax = asfloat (iax);
-  float ay = asfloat (iay);
-
-  bool pred_aygtax = (ay > ax);
-
-  /* Set up z for call to atanf.  */
-  float n = pred_aygtax ? -ax : ay;
-  float d = pred_aygtax ? ay : ax;
-  float z = n / d;
-
-  float ret;
-  if (UNLIKELY (m < 2 && exp_diff >= POLY_UFLOW_BOUND))
-    {
-      /* If (x, y) is very close to x axis and x is positive, the polynomial
-	 will underflow and evaluate to z.  */
-      ret = z;
-    }
-  else
-    {
-      /* Work out the correct shift.  */
-      float shift = sign_x ? -2.0f : 0.0f;
-      shift = pred_aygtax ? shift + 1.0f : shift;
-      shift *= PiOver2;
-
-      ret = eval_poly (z, z, shift);
-    }
-
-  /* Account for the sign of x and y.  */
-  return asfloat (asuint (ret) ^ sign_xy);
+    /* compute y/x */
+	k = (iy-ix)>>23;
+	if(k > 26) {			/* |y/x| >  2**26 */
+	    z=pi_o_2+(float)0.5*pi_lo;
+	    m&=1;
+	}
+	else if(k<-26&&hx<0) z=0.0; 	/* 0 > |y|/x > -2**-26 */
+	else z=atanf(fabsf(y/x));	/* safe to do y/x */
+	switch (m) {
+	    case 0: return       z  ;	/* atan(+,+) */
+	    case 1: return      -z  ;	/* atan(-,+) */
+	    case 2: return  pi-(z-pi_lo);/* atan(+,-) */
+	    default: /* case 3 */
+	    	    return  (z-pi_lo)-pi;/* atan(-,-) */
+	}
 }

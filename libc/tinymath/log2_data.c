@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,20 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/log2_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-/*
- * Data for log2.
- *
- * Copyright (c) 2018, Arm Limited.
- * SPDX-License-Identifier: MIT
- */
+#include "libc/tinymath/arm.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
 #define N (1 << LOG2_TABLE_BITS)
 
@@ -47,6 +35,7 @@ const struct log2_data __log2_data = {
 .invln2hi = 0x1.7154765200000p+0,
 .invln2lo = 0x1.705fc2eefa200p-33,
 .poly1 = {
+#if LOG2_POLY1_ORDER == 11
 // relative error: 0x1.2fad8188p-63
 // in -0x1.5b51p-5 0x1.6ab2p-5
 -0x1.71547652b82fep-1,
@@ -59,8 +48,10 @@ const struct log2_data __log2_data = {
 0x1.484d154f01b4ap-3,
 -0x1.289e4a72c383cp-3,
 0x1.0b32f285aee66p-3,
+#endif
 },
 .poly = {
+#if N == 64 && LOG2_POLY_ORDER == 7
 // relative error: 0x1.a72c2bf8p-58
 // abs error: 0x1.67a552c8p-66
 // in -0x1.f45p-8 0x1.f45p-8
@@ -70,6 +61,7 @@ const struct log2_data __log2_data = {
 0x1.2776c50034c48p-2,
 -0x1.ec7b328ea92bcp-3,
 0x1.a6225e117f92ep-3,
+#endif
 },
 /* Algorithm:
 
@@ -98,6 +90,7 @@ single rounding error when there is no fast fma for z*invc - 1, 3) ensures
 that logc + poly(z/c - 1) has small error, however near x == 1 when
 |log2(x)| < 0x1p-4, this is not enough so that is special cased.  */
 .tab = {
+#if N == 64
 {0x1.724286bb1acf8p+0, -0x1.1095feecdb000p-1},
 {0x1.6e1f766d2cca1p+0, -0x1.08494bd76d000p-1},
 {0x1.6a13d0e30d48ap+0, -0x1.00143aee8f800p-1},
@@ -162,9 +155,11 @@ that logc + poly(z/c - 1) has small error, however near x == 1 when
 {0x1.7f405ffc61022p-1, 0x1.abe186ed3d000p-2},
 {0x1.7ad22181415cap-1, 0x1.bd0f2aea0e000p-2},
 {0x1.767dcf99eff8cp-1, 0x1.ce0a43dbf4000p-2},
+#endif
 },
-#if !__FP_FAST_FMA
+#if !HAVE_FAST_FMA
 .tab2 = {
+# if N == 64
 {0x1.6200012b90a8ep-1, 0x1.904ab0644b605p-55},
 {0x1.66000045734a6p-1, 0x1.1ff9bea62f7a9p-57},
 {0x1.69fffc325f2c5p-1, 0x1.27ecfcb3c90bap-55},
@@ -229,6 +224,7 @@ that logc + poly(z/c - 1) has small error, however near x == 1 when
 {0x1.55ffffd87b36fp+0, -0x1.709e731d02807p-55},
 {0x1.59ffff21df7bap+0, 0x1.7f79f68727b02p-55},
 {0x1.5dfffebfc3481p+0, -0x1.180902e30e93ep-54},
+# endif
 },
-#endif
+#endif /* !HAVE_FAST_FMA */
 };

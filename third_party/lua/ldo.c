@@ -51,11 +51,7 @@
 #include "third_party/lua/lundump.h"
 #include "third_party/lua/lvm.h"
 #include "third_party/lua/lzio.h"
-
-asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("lua_notice");
 
 
 #define errorstatus(s)	((s) > LUA_YIELD)

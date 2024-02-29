@@ -25,33 +25,33 @@ forceinline char *__stpcpy(char *d, const char *s) {
 }
 
 forceinline void *__repstosb(void *di, char al, size_t cx) {
-#if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
-  asm("rep stosb"
-      : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
-      : "0"(di), "1"(cx), "a"(al));
+#if defined(__x86__) && defined(__GNUC__)
+  __asm__("rep stosb"
+          : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
+          : "0"(di), "1"(cx), "a"(al));
   return di;
 #else
   char *d = di;
   while (cx--) {
     *d++ = al;
-    asm volatile("" ::: "memory");
+    __asm__ volatile("" ::: "memory");
   }
   return (void *)d;
 #endif
 }
 
 forceinline void *__repmovsb(void *di, const void *si, size_t cx) {
-#if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
-  asm("rep movsb"
-      : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
-      : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
+#if defined(__x86__) && defined(__GNUC__)
+  __asm__("rep movsb"
+          : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
+          : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
   return di;
 #else
   char *d = di;
   const char *s = si;
   while (cx--) {
     *d++ = *s++;
-    asm volatile("" ::: "memory");
+    __asm__ volatile("" ::: "memory");
   }
   return (void *)d;
 #endif
@@ -61,7 +61,7 @@ forceinline void *__mempcpy(void *d, const void *s, size_t n) {
   size_t i;
   for (i = 0; i < n; ++i) {
     ((char *)d)[i] = ((const char *)s)[i];
-    asm volatile("" ::: "memory");
+    __asm__ volatile("" ::: "memory");
   }
   return (char *)d + n;
 }

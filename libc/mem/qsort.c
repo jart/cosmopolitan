@@ -31,12 +31,8 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
+__static_yoink("openbsd_sorting_notice");
 // clang-format off
-
-asm(".ident\t\"\\n\\n\
-OpenBSD Sorting (BSD-3)\\n\
-Copyright 1993 The Regents of the University of California\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 #define SWAPTYPE_BYTEV	1
 #define SWAPTYPE_INTV	2

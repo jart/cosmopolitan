@@ -157,7 +157,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/ape.S			\
 		ape/ape.h			\
 		ape/macros.internal.h		\
-		ape/notice.inc			\
 		ape/relocations.h		\
 		ape/ape.internal.h		\
 		libc/dce.h			\
@@ -185,7 +184,6 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		ape/ape.S			\
 		ape/ape.h			\
 		ape/macros.internal.h		\
-		ape/notice.inc			\
 		ape/relocations.h		\
 		ape/ape.internal.h		\
 		libc/dce.h			\

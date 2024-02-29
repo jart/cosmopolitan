@@ -33,12 +33,6 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
 // -----------------------------------------------------------------------------
 // plm_audio implementation

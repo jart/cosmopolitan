@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/stdckdint.h"
@@ -38,7 +37,7 @@ static inline const wchar_t *wmemrchr_pure(const wchar_t *s, wchar_t c,
 
 #if defined(__x86_64__) && !defined(__chibicc__)
 static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
-                                                   size_t n) {
+                                          size_t n) {
   size_t i;
   unsigned m;
   xmm_t v, t = {c, c, c, c};
@@ -68,16 +67,9 @@ static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *wmemrchr(const wchar_t *s, wchar_t c, size_t n) {
+__vex void *wmemrchr(const wchar_t *s, wchar_t c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
-  size_t bytes;
-  const void *r;
-  if (IsAsan()) {
-    if (ckd_mul(&bytes, n, sizeof(wchar_t))) bytes = -1;
-    __asan_verify(s, bytes);
-  }
-  r = wmemrchr_sse(s, c, n);
-  return (void *)r;
+  return (void *)wmemrchr_sse(s, c, n);
 #else
   return (void *)wmemrchr_pure(s, c, n);
 #endif

@@ -302,7 +302,7 @@ int __zipos_open(struct ZiposUri *name, int flags) {
   return rc;
 }
 
-__attribute__((__constructor__)) static void __zipos_ctor(void) {
+__attribute__((__constructor__(60))) static textstartup void zipos_ctor(void) {
   __zipos_wipe();
   pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_wipe);
 }

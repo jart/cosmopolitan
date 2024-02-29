@@ -147,6 +147,7 @@ $(THIRD_PARTY_ZSTD_A_CHECKS): private				\
 $(THIRD_PARTY_ZSTD_A_OBJS): private				\
 		CFLAGS +=					\
 			-Wframe-larger-than=262144		\
+			-Wno-array-bounds			\
 			-Wno-comment
 
 $(THIRD_PARTY_ZSTD_A_OBJS): private				\

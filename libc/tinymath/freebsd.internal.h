@@ -5,7 +5,6 @@
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
 COSMOPOLITAN_C_START_
-// clang-format off
 
 #define	__CONCAT1(x,y)	x ## y
 #define	__CONCAT(x,y)	__CONCAT1(x,y)

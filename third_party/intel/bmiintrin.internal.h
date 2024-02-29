@@ -14,10 +14,20 @@ __tzcnt_u16 (unsigned short __X)
 {
   return __builtin_ia32_tzcnt_u16 (__X);
 }
+extern __inline unsigned short __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_tzcnt_u16 (unsigned short __X)
+{
+  return __builtin_ia32_tzcnt_u16 (__X);
+}
 extern __inline unsigned int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 __andn_u32 (unsigned int __X, unsigned int __Y)
 {
   return ~__X & __Y;
+}
+extern __inline unsigned int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_andn_u32 (unsigned int __X, unsigned int __Y)
+{
+  return __andn_u32 (__X, __Y);
 }
 extern __inline unsigned int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 __bextr_u32 (unsigned int __X, unsigned int __Y)
@@ -74,6 +84,11 @@ extern __inline unsigned long long __attribute__((__gnu_inline__, __always_inlin
 __andn_u64 (unsigned long long __X, unsigned long long __Y)
 {
   return ~__X & __Y;
+}
+extern __inline unsigned long long __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_andn_u64 (unsigned long long __X, unsigned long long __Y)
+{
+  return __andn_u64 (__X, __Y);
 }
 extern __inline unsigned long long __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 __bextr_u64 (unsigned long long __X, unsigned long long __Y)

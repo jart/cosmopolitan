@@ -43,7 +43,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -53,6 +52,7 @@
 #include "libc/mem/mem.h"
 #include "libc/mem/reverse.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/str/tab.internal.h"
@@ -800,7 +800,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
 
   x = 0;
   lasterr = errno;
-  out = fn ? fn : __fmt_noop;
+  out = fn ? fn : (void *)__fmt_noop;
 
   while (*format) {
     if (*format != '%') {

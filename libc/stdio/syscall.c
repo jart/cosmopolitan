@@ -43,8 +43,15 @@ long syscall(long number, ...) {
       size_t buflen = va_arg(va, size_t);
       unsigned flags = va_arg(va, unsigned);
       va_end(va);
-      ssize_t rc = getrandom(buf, buflen, flags);
-      return rc;
+      return getrandom(buf, buflen, flags);
+    }
+    case SYS_getcpu: {
+      va_list va;
+      va_start(va, number);
+      unsigned *cpu = va_arg(va, unsigned *);
+      unsigned *node = va_arg(va, unsigned *);
+      va_end(va);
+      return getcpu(cpu, node);
     }
   }
 }

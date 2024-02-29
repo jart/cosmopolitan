@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/str/str.h"
 
@@ -32,16 +31,14 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @param needlelen is its character count
  * @return pointer to first result or NULL if not found
  */
-void *memmem(const void *haystack, size_t haystacklen,
-                      const void *needle, size_t needlelen) {
+__vex void *memmem(const void *haystack, size_t haystacklen, const void *needle,
+                   size_t needlelen) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   char c;
   xmm_t n;
   const xmm_t *v;
   unsigned i, k, m;
   const char *p, *q, *e;
-  if (IsAsan()) __asan_verify(needle, needlelen);
-  if (IsAsan()) __asan_verify(haystack, haystacklen);
   if (!needlelen) return (void *)haystack;
   if (UNLIKELY(needlelen > haystacklen)) return 0;
   q = needle;

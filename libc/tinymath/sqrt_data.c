@@ -26,12 +26,8 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/internal.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 const uint16_t __rsqrt_tab[128] = {
 0xb451,0xb2f0,0xb196,0xb044,0xaef9,0xadb6,0xac79,0xab43,

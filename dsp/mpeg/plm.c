@@ -32,12 +32,7 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("pl_mpeg_notice");
 
 /* clang-format off */
 // -----------------------------------------------------------------------------

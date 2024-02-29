@@ -28,7 +28,7 @@ Macros:
 #pragma GCC system_header
 #endif
 
-#include "libc/errno.h"
+#include "libc/isystem/errno.h"
 
 #ifdef __cplusplus
 

@@ -29,13 +29,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
-#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
+__static_yoink("freebsd_libm_notice");
 
-asm(".ident\t\"\\n\\n\
-FreeBSD libm (BSD-2 License)\\n\
-Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 /**
  * Splits number normalized fraction and exponent.

@@ -33,11 +33,10 @@
 │  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-asm(".ident \"\n\
+__notice(kilo_notice, "\
 Kilo ─ A very simple editor (BSD-2)\n\
 Copyright 2016 Salvatore Sanfilippo\n\
-Contact: antirez@gmail.com\"\n\
-.include \"libc/disclaimer.inc\"");
+Contact: antirez@gmail.com");
 
 /*
  * This software has been modified by Justine Tunney to:

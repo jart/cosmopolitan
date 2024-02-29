@@ -26,11 +26,8 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/ftw.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 /**
@@ -50,5 +47,5 @@ int ftw(const char *dirpath,
 	/* The following cast assumes that calling a function with one
 	 * argument more than it needs behaves as expected. This is
 	 * actually undefined, but works on all real-world machines. */
-	return nftw(dirpath, (int (*)())fn, fd_limit, FTW_PHYS);
+	return nftw(dirpath, (void *)fn, fd_limit, FTW_PHYS);
 }

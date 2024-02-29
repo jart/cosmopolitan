@@ -26,12 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
 
 #if FLT_EVAL_METHOD > 1U && LDBL_MANT_DIG == 64
 #define SPLIT (0x1p32 + 1)

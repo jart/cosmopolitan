@@ -59,7 +59,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
   return rc;
 }
 
-static textstartup void sys_getloadavg_nt_init(void) {
+__attribute__((__constructor__(40))) static textstartup void ntinitload(void) {
   if (IsWindows()) {
     load = 1;
     cpus = __get_cpu_count() / 2;
@@ -67,7 +67,3 @@ static textstartup void sys_getloadavg_nt_init(void) {
     GetSystemTimes(&idle1, &kern1, &user1);
   }
 }
-
-const void *const sys_getloadavg_nt_ctor[] initarray = {
-    sys_getloadavg_nt_init,
-};

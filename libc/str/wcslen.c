@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 
 typedef wchar_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
@@ -29,17 +28,15 @@ typedef wchar_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @return number of wide characters (excluding NUL)
  * @asyncsignalsafe
  */
-size_t wcslen(const wchar_t *s) {
+__vex size_t wcslen(const wchar_t *s) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   size_t n;
   xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;
   const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
-  if (IsAsan()) __asan_verify(s, 4);
   m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   n = (const wchar_t *)p + (__builtin_ctzl(m) >> 2) - s;
-  if (IsAsan()) __asan_verify(s, n);
   return n;
 #else
   size_t n = 0;

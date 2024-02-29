@@ -96,6 +96,10 @@ TEST(gc, torture) {
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, pthread_join(t[i], 0));
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 12
+#pragma GCC diagnostic ignored "-Winfinite-recursion"
+#endif
+
 void crawl2(jmp_buf jb, const char *path) {
   if (!strcmp(path, "/") || !strcmp(path, ".")) gclongjmp(jb, 1);
   crawl2(jb, gc(xdirname(path)));

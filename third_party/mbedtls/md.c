@@ -27,12 +27,7 @@
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /**
  * \file md.c

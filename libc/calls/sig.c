@@ -32,6 +32,7 @@
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
@@ -441,8 +442,7 @@ textwindows void __sig_generate(int sig, int sic) {
     // to unblock our sig once the wait operation is completed; when
     // that's the case we can cancel the thread's i/o to deliver sig
     if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
-        !(atomic_load_explicit(&pt->pt_blkmask, memory_order_relaxed) &
-          (1ull << (sig - 1)))) {
+        !(pt->pt_blkmask & (1ull << (sig - 1)))) {
       _pthread_ref(pt);
       mark = pt;
       break;
@@ -518,6 +518,15 @@ static int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
   }
 }
 
+static char *__sig_stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
+
 static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
                              struct CosmoTib *tib) {
 
@@ -541,9 +550,10 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
     intptr_t hStderr;
     char sigbuf[21], s[128], *p;
     hStderr = GetStdHandle(kNtStdErrorHandle);
-    p = stpcpy(s, "Terminating on uncaught ");
-    p = stpcpy(p, strsignal_r(sig, sigbuf));
-    p = stpcpy(p, ". Pass --strace and/or ShowCrashReports() for details.\n");
+    p = __sig_stpcpy(s, "Terminating on uncaught ");
+    p = __sig_stpcpy(p, strsignal_r(sig, sigbuf));
+    p = __sig_stpcpy(
+        p, ". Pass --strace and/or ShowCrashReports() for details.\n");
     WriteFile(hStderr, s, p - s, 0, 0);
 #endif
     __sig_terminate(sig);
@@ -657,12 +667,10 @@ textwindows int __sig_check(void) {
   }
 }
 
-textstartup void __sig_init(void) {
+__attribute__((__constructor__(10))) textstartup void __sig_init(void) {
   if (!IsWindows()) return;
   AddVectoredExceptionHandler(true, (void *)__sig_crash);
   SetConsoleCtrlHandler((void *)__sig_console, true);
 }
-
-const void *const __sig_ctor[] initarray = {__sig_init};
 
 #endif /* __x86_64__ */

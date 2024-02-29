@@ -22,12 +22,7 @@
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pkcs5.h"
 #include "third_party/mbedtls/platform.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /**
  * @fileoverview PKCS#5 functions, e.g. PBKDF2

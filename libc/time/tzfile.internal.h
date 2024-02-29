@@ -29,7 +29,7 @@
 #endif /* !defined TZDEFAULT */
 
 #ifndef TZDEFRULES
-#define TZDEFRULES	"New_York"
+#define TZDEFRULES	"US/Pacific"
 #endif /* !defined TZDEFRULES */
 
 

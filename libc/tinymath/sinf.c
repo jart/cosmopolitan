@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,95 +25,68 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/tinymath/complex.internal.h"
-#include "libc/tinymath/feval.internal.h"
-#include "libc/tinymath/kernel.internal.h"
-
-asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
-/* origin: FreeBSD /usr/src/lib/msun/src/s_sinf.c */
-/*
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- * Optimized by Bruce D. Evans.
- */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
- */
-
-/* Small multiples of pi/2 rounded to double precision. */
-static const double
-s1pio2 = 1*M_PI_2, /* 0x3FF921FB, 0x54442D18 */
-s2pio2 = 2*M_PI_2, /* 0x400921FB, 0x54442D18 */
-s3pio2 = 3*M_PI_2, /* 0x4012D97C, 0x7F3321D2 */
-s4pio2 = 4*M_PI_2; /* 0x401921FB, 0x54442D18 */
+#include "libc/tinymath/sincosf.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
 /**
- * Returns sine of 𝑥.
- * @note should take about 5ns
+ * Returns sine of y.
+ *
+ * This is a fast sinf implementation. The worst-case ULP is 0.5607 and
+ * the maximum relative error is 0.5303 * 2^-23. A single-step range
+ * reduction is used for small values. Large inputs have their range
+ * reduced using fast integer arithmetic.
+ *
+ * @raise EDOM and FE_INVALID if y is an infinity
  */
-float sinf(float x)
+float
+sinf (float y)
 {
-	double y;
-	uint32_t ix;
-	int n, sign;
+  double x = y;
+  double s;
+  int n;
+  const sincos_t *p = &__sincosf_table[0];
 
-	GET_FLOAT_WORD(ix, x);
-	sign = ix >> 31;
-	ix &= 0x7fffffff;
+  if (abstop12 (y) < abstop12 (pio4f))
+    {
+      s = x * x;
 
-	if (ix <= 0x3f490fda) {  /* |x| ~<= pi/4 */
-		if (ix < 0x39800000) {  /* |x| < 2**-12 */
-			/* raise inexact if x!=0 and underflow if subnormal */
-			FORCE_EVAL(ix < 0x00800000 ? x/0x1p120f : x+0x1p120f);
-			return x;
-		}
-		return __sindf(x);
-	}
-	if (ix <= 0x407b53d1) {  /* |x| ~<= 5*pi/4 */
-		if (ix <= 0x4016cbe3) {  /* |x| ~<= 3pi/4 */
-			if (sign)
-				return -__cosdf(x + s1pio2);
-			else
-				return __cosdf(x - s1pio2);
-		}
-		return __sindf(sign ? -(x + s2pio2) : -(x - s2pio2));
-	}
-	if (ix <= 0x40e231d5) {  /* |x| ~<= 9*pi/4 */
-		if (ix <= 0x40afeddf) {  /* |x| ~<= 7*pi/4 */
-			if (sign)
-				return __cosdf(x + s3pio2);
-			else
-				return -__cosdf(x - s3pio2);
-		}
-		return __sindf(sign ? x + s4pio2 : x - s4pio2);
+      if (unlikely (abstop12 (y) < abstop12 (0x1p-12f)))
+	{
+	  if (unlikely (abstop12 (y) < abstop12 (0x1p-126f)))
+	    /* Force underflow for tiny y.  */
+	    force_eval_float (s);
+	  return y;
 	}
 
-	/* sin(Inf or NaN) is NaN */
-	if (ix >= 0x7f800000)
-		return x - x;
+      return sinf_poly (x, s, p, 0);
+    }
+  else if (likely (abstop12 (y) < abstop12 (120.0f)))
+    {
+      x = reduce_fast (x, p, &n);
 
-	/* general argument reduction needed */
-	n = __rem_pio2f(x, &y);
-	switch (n&3) {
-	case 0: return  __sindf(y);
-	case 1: return  __cosdf(y);
-	case 2: return  __sindf(-y);
-	default:
-		return -__cosdf(y);
-	}
+      /* Setup the signs for sin and cos.  */
+      s = p->sign[n & 3];
+
+      if (n & 2)
+	p = &__sincosf_table[1];
+
+      return sinf_poly (x * s, x * x, p, n);
+    }
+  else if (abstop12 (y) < abstop12 (INFINITY))
+    {
+      uint32_t xi = asuint (y);
+      int sign = xi >> 31;
+
+      x = reduce_large (xi, &n);
+
+      /* Setup signs for sin and cos - include original sign.  */
+      s = p->sign[(n + sign) & 3];
+
+      if ((n + sign) & 2)
+	p = &__sincosf_table[1];
+
+      return sinf_poly (x * s, x * x, p, n);
+    }
+  else
+    return __math_invalidf (y);
 }

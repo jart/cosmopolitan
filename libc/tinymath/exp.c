@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,23 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/math.h"
-#include "libc/tinymath/exp_data.internal.h"
-#include "libc/tinymath/internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
-/*
- * Double-precision e^x function.
- *
- * Copyright (c) 2018, Arm Limited.
- * SPDX-License-Identifier: MIT
- */
+#include "libc/tinymath/arm.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
 #define N (1 << EXP_TABLE_BITS)
 #define InvLn2N __exp_data.invln2N
@@ -53,6 +38,7 @@ asm(".include \"libc/disclaimer.inc\"");
 #define C3 __exp_data.poly[6 - EXP_POLY_ORDER]
 #define C4 __exp_data.poly[7 - EXP_POLY_ORDER]
 #define C5 __exp_data.poly[8 - EXP_POLY_ORDER]
+#define C6 __exp_data.poly[9 - EXP_POLY_ORDER]
 
 /* Handle cases that may overflow or underflow when computing the result that
    is scale*(1+TMP) without intermediate rounding.  The bit representation of
@@ -61,114 +47,154 @@ asm(".include \"libc/disclaimer.inc\"");
    a double.  (int32_t)KI is the k used in the argument reduction and exponent
    adjustment of scale, positive k here means the result may overflow and
    negative k means the result may underflow.  */
-static inline double specialcase(double_t tmp, uint64_t sbits, uint64_t ki)
+static inline double
+specialcase (double_t tmp, uint64_t sbits, uint64_t ki)
 {
-	double_t scale, y;
+  double_t scale, y;
 
-	if ((ki & 0x80000000) == 0) {
-		/* k > 0, the exponent of scale might have overflowed by <= 460.  */
-		sbits -= 1009ull << 52;
-		scale = asdouble(sbits);
-		y = 0x1p1009 * (scale + scale * tmp);
-		return eval_as_double(y);
-	}
-	/* k < 0, need special care in the subnormal range.  */
-	sbits += 1022ull << 52;
-	scale = asdouble(sbits);
-	y = scale + scale * tmp;
-	if (y < 1.0) {
-		/* Round y to the right precision before scaling it into the subnormal
-		 range to avoid double rounding that can cause 0.5+E/2 ulp error where
-		 E is the worst-case ulp error outside the subnormal range.  So this
-		 is only useful if the goal is better than 1 ulp worst-case error.  */
-		double_t hi, lo;
-		lo = scale - y + scale * tmp;
-		hi = 1.0 + y;
-		lo = 1.0 - hi + y + lo;
-		y = eval_as_double(hi + lo) - 1.0;
-		/* Avoid -0.0 with downward rounding.  */
-		if (WANT_ROUNDING && y == 0.0)
-			y = 0.0;
-		/* The underflow exception needs to be signaled explicitly.  */
-		fp_force_eval(fp_barrier(0x1p-1022) * 0x1p-1022);
-	}
-	y = 0x1p-1022 * y;
-	return eval_as_double(y);
+  if ((ki & 0x80000000) == 0)
+    {
+      /* k > 0, the exponent of scale might have overflowed by <= 460.  */
+      sbits -= 1009ull << 52;
+      scale = asdouble (sbits);
+      y = 0x1p1009 * (scale + scale * tmp);
+      return check_oflow (eval_as_double (y));
+    }
+  /* k < 0, need special care in the subnormal range.  */
+  sbits += 1022ull << 52;
+  scale = asdouble (sbits);
+  y = scale + scale * tmp;
+  if (y < 1.0)
+    {
+      /* Round y to the right precision before scaling it into the subnormal
+	 range to avoid double rounding that can cause 0.5+E/2 ulp error where
+	 E is the worst-case ulp error outside the subnormal range.  So this
+	 is only useful if the goal is better than 1 ulp worst-case error.  */
+      double_t hi, lo;
+      lo = scale - y + scale * tmp;
+      hi = 1.0 + y;
+      lo = 1.0 - hi + y + lo;
+      y = eval_as_double (hi + lo) - 1.0;
+      /* Avoid -0.0 with downward rounding.  */
+      if (WANT_ROUNDING && y == 0.0)
+	y = 0.0;
+      /* The underflow exception needs to be signaled explicitly.  */
+      force_eval_double (opt_barrier_double (0x1p-1022) * 0x1p-1022);
+    }
+  y = 0x1p-1022 * y;
+  return check_uflow (eval_as_double (y));
 }
 
 /* Top 12 bits of a double (sign and exponent bits).  */
-static inline uint32_t top12(double x)
+static inline uint32_t
+top12 (double x)
 {
-	return asuint64(x) >> 52;
+  return asuint64 (x) >> 52;
+}
+
+/* Computes exp(x+xtail) where |xtail| < 2^-8/N and |xtail| <= |x|.
+   If hastail is 0 then xtail is assumed to be 0 too.  */
+static inline double
+exp_inline (double x, double xtail, int hastail)
+{
+  uint32_t abstop;
+  uint64_t ki, idx, top, sbits;
+  /* double_t for better performance on targets with FLT_EVAL_METHOD==2.  */
+  double_t kd, z, r, r2, scale, tail, tmp;
+
+  abstop = top12 (x) & 0x7ff;
+  if (unlikely (abstop - top12 (0x1p-54) >= top12 (512.0) - top12 (0x1p-54)))
+    {
+      if (abstop - top12 (0x1p-54) >= 0x80000000)
+	/* Avoid spurious underflow for tiny x.  */
+	/* Note: 0 is common input.  */
+	return WANT_ROUNDING ? 1.0 + x : 1.0;
+      if (abstop >= top12 (1024.0))
+	{
+	  if (asuint64 (x) == asuint64 (-INFINITY))
+	    return 0.0;
+	  if (abstop >= top12 (INFINITY))
+	    return 1.0 + x;
+	  if (asuint64 (x) >> 63)
+	    return __math_uflow (0);
+	  else
+	    return __math_oflow (0);
+	}
+      /* Large x is special cased below.  */
+      abstop = 0;
+    }
+
+  /* exp(x) = 2^(k/N) * exp(r), with exp(r) in [2^(-1/2N),2^(1/2N)].  */
+  /* x = ln2/N*k + r, with int k and r in [-ln2/2N, ln2/2N].  */
+  z = InvLn2N * x;
+#if TOINT_INTRINSICS
+  kd = roundtoint (z);
+  ki = converttoint (z);
+#elif EXP_USE_TOINT_NARROW
+  /* z - kd is in [-0.5-2^-16, 0.5] in all rounding modes.  */
+  kd = eval_as_double (z + Shift);
+  ki = asuint64 (kd) >> 16;
+  kd = (double_t) (int32_t) ki;
+#else
+  /* z - kd is in [-1, 1] in non-nearest rounding modes.  */
+  kd = eval_as_double (z + Shift);
+  ki = asuint64 (kd);
+  kd -= Shift;
+#endif
+  r = x + kd * NegLn2hiN + kd * NegLn2loN;
+  /* The code assumes 2^-200 < |xtail| < 2^-8/N.  */
+  if (hastail)
+    r += xtail;
+  /* 2^(k/N) ~= scale * (1 + tail).  */
+  idx = 2 * (ki % N);
+  top = ki << (52 - EXP_TABLE_BITS);
+  tail = asdouble (T[idx]);
+  /* This is only a valid scale when -1023*N < k < 1024*N.  */
+  sbits = T[idx + 1] + top;
+  /* exp(x) = 2^(k/N) * exp(r) ~= scale + scale * (tail + exp(r) - 1).  */
+  /* Evaluation is optimized assuming superscalar pipelined execution.  */
+  r2 = r * r;
+  /* Without fma the worst case error is 0.25/N ulp larger.  */
+  /* Worst case error is less than 0.5+1.11/N+(abs poly error * 2^53) ulp.  */
+#if EXP_POLY_ORDER == 4
+  tmp = tail + r + r2 * C2 + r * r2 * (C3 + r * C4);
+#elif EXP_POLY_ORDER == 5
+  tmp = tail + r + r2 * (C2 + r * C3) + r2 * r2 * (C4 + r * C5);
+#elif EXP_POLY_ORDER == 6
+  tmp = tail + r + r2 * (0.5 + r * C3) + r2 * r2 * (C4 + r * C5 + r2 * C6);
+#endif
+  if (unlikely (abstop == 0))
+    return specialcase (tmp, sbits, ki);
+  scale = asdouble (sbits);
+  /* Note: tmp == 0 or |tmp| > 2^-200 and scale > 2^-739, so there
+     is no spurious underflow here even without fma.  */
+  return eval_as_double (scale + scale * tmp);
 }
 
 /**
  * Returns 𝑒^x.
+ *
+ * @raise ERANGE on overflow or underflow
  */
-double exp(double x)
+double
+exp (double x)
 {
-	uint32_t abstop;
-	uint64_t ki, idx, top, sbits;
-	double_t kd, z, r, r2, scale, tail, tmp;
-
-	abstop = top12(x) & 0x7ff;
-	if (UNLIKELY(abstop - top12(0x1p-54) >= top12(512.0) - top12(0x1p-54))) {
-		if (abstop - top12(0x1p-54) >= 0x80000000)
-			/* Avoid spurious underflow for tiny x.  */
-			/* Note: 0 is common input.  */
-			return WANT_ROUNDING ? 1.0 + x : 1.0;
-		if (abstop >= top12(1024.0)) {
-			if (asuint64(x) == asuint64(-INFINITY))
-				return 0.0;
-			if (abstop >= top12(INFINITY))
-				return 1.0 + x;
-			if (asuint64(x) >> 63)
-				return __math_uflow(0);
-			else
-				return __math_oflow(0);
-		}
-		/* Large x is special cased below.  */
-		abstop = 0;
-	}
-
-	/* exp(x) = 2^(k/N) * exp(r), with exp(r) in [2^(-1/2N),2^(1/2N)].  */
-	/* x = ln2/N*k + r, with int k and r in [-ln2/2N, ln2/2N].  */
-	z = InvLn2N * x;
-#if TOINT_INTRINSICS
-	kd = roundtoint(z);
-	ki = converttoint(z);
-#elif EXP_USE_TOINT_NARROW
-	/* z - kd is in [-0.5-2^-16, 0.5] in all rounding modes.  */
-	kd = eval_as_double(z + Shift);
-	ki = asuint64(kd) >> 16;
-	kd = (double_t)(int32_t)ki;
-#else
-	/* z - kd is in [-1, 1] in non-nearest rounding modes.  */
-	kd = eval_as_double(z + Shift);
-	ki = asuint64(kd);
-	kd -= Shift;
-#endif
-	r = x + kd * NegLn2hiN + kd * NegLn2loN;
-	/* 2^(k/N) ~= scale * (1 + tail).  */
-	idx = 2 * (ki % N);
-	top = ki << (52 - EXP_TABLE_BITS);
-	tail = asdouble(T[idx]);
-	/* This is only a valid scale when -1023*N < k < 1024*N.  */
-	sbits = T[idx + 1] + top;
-	/* exp(x) = 2^(k/N) * exp(r) ~= scale + scale * (tail + exp(r) - 1).  */
-	/* Evaluation is optimized assuming superscalar pipelined execution.  */
-	r2 = r * r;
-	/* Without fma the worst case error is 0.25/N ulp larger.  */
-	/* Worst case error is less than 0.5+1.11/N+(abs poly error * 2^53) ulp.  */
-	tmp = tail + r + r2 * (C2 + r * C3) + r2 * r2 * (C4 + r * C5);
-	if (UNLIKELY(abstop == 0))
-		return specialcase(tmp, sbits, ki);
-	scale = asdouble(sbits);
-	/* Note: tmp == 0 or |tmp| > 2^-200 and scale > 2^-739, so there
-	   is no spurious underflow here even without fma.  */
-	return eval_as_double(scale + scale * tmp);
+  return exp_inline (x, 0, 0);
 }
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__weak_reference(exp, expl);
+/* May be useful for implementing pow where more than double
+   precision input is needed.  */
+double
+__exp_dd (double x, double xtail)
+{
+  return exp_inline (x, xtail, 1);
+}
+
+#if USE_GLIBC_ABI
+strong_alias (exp, __exp_finite)
+hidden_alias (exp, __ieee754_exp)
+hidden_alias (__exp_dd, __exp1)
+# if LDBL_MANT_DIG == 53
+long double expl (long double x) { return exp (x); }
+# endif
 #endif

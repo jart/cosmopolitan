@@ -65,9 +65,11 @@
            "pltoff"
            "gotpcrel"
            "progbits"
+           "note"
            "nobits"
            "init_array"
-           "fini_array")])
+           "fini_array"
+           "gnu_indirect_function")])
     "\\>"])
   "GNU Assembler section, relocation, macro param qualifiers.")
 

@@ -69,7 +69,7 @@ static void __stdio_fork_child(void) {
   pthread_mutex_init(&__fflush_lock_obj, 0);
 }
 
-__attribute__((__constructor__)) static void __stdio_init(void) {
+__attribute__((__constructor__(60))) static textstartup void stdioinit(void) {
   pthread_atfork(__stdio_fork_prepare, __stdio_fork_parent, __stdio_fork_child);
 }
 

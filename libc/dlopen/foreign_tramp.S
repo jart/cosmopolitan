@@ -55,7 +55,7 @@ foreign_tramp:
 	mov	%rax,-0xc0(%rbp)
 
 //	switch to foreign tls
-	mov	%fs:0,%rax
+	mov	%gs:0x30,%rax
 	mov	%rax,-0xc8(%rbp)
 	mov	__foreign+8(%rip),%rdi
 	call	__set_tls

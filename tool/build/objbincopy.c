@@ -201,7 +201,7 @@ static void ValidateMachoSection(const char *inpath,         //
         Die(inpath, "don't bother with mach-o sections");
       }
       namelen = strnlen(loadseg->name, sizeof(loadseg->name));
-      if (!loadseg->name) {
+      if (!loadseg->name[0]) {
         Die(inpath, "mach-o load segment missing name");
       }
       if (filesize || (loadseg->vaddr && loadseg->memsz)) {

@@ -29,12 +29,8 @@
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /**
  * Rounds to integer, towards zero.

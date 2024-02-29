@@ -20,10 +20,10 @@
 #include "third_party/argon2/blake2.h"
 #include "third_party/argon2/core.h"
 
-asm(".ident\t\"\\n\\n\
-argon2 (CC0 or Apache2)\\n\
-Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
-Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
+__notice(argon2_notice, "\
+argon2 (CC0 or Apache2)\n\
+Copyright 2016 Daniel Dinu, Dmitry Khovratovich\n\
+Copyright 2016 Jean-Philippe Aumasson, Samuel Neves");
 
 int FLAG_clear_internal_memory = 1;
 

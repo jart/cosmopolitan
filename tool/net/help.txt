@@ -576,6 +576,12 @@ HOOKS
           *). See functions like Route which asks redbean to do its default
           thing from the handler.
 
+  OnError(status:int, message:string)
+          If this function is defined and if any errors occurs in
+          OnHttpRequest() then this method will be called instead of displaying
+          the default error page. Useful if you need to display the error page
+          using your specific code or send it to any tier service.
+
   OnClientConnection(ip:int, port:int, serverip:int, serverport:int) → bool
           If this function is defined it'll be called from the main process
           each time redbean accepts a new client connection. If it returns

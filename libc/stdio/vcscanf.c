@@ -50,6 +50,12 @@
     }                                         \
     c;                                        \
   })
+#define UNBUFFER                \
+  ({                            \
+    if (c != -1) {              \
+      fpbuf[--fpbufcur] = '\0'; \
+    }                           \
+  })
 
 /**
  * String / file / stream decoder.
@@ -369,10 +375,11 @@ int __vcscanf(int callback(void *),    //
                   }
                 } while ((c = BUFFER) != -1 && c != ')');
                 if (c == ')') {
-                  c = BUFFER;
+                  c = READ;
                 }
                 goto GotFloatingPointNumber;
               } else {
+                UNBUFFER;
                 goto GotFloatingPointNumber;
               }
             } else {
@@ -410,9 +417,7 @@ int __vcscanf(int callback(void *),    //
                   goto Done;
                 }
               } else {
-                if (c != -1 && unget) {
-                  unget(c, arg);
-                }
+                UNBUFFER;
                 goto GotFloatingPointNumber;
               }
             } else {
@@ -465,13 +470,24 @@ int __vcscanf(int callback(void *),    //
         Continue:
           continue;
         Break:
-          if (c != -1 && unget) {
-            unget(c, arg);
-          }
+          UNBUFFER;
           break;
         } while ((c = BUFFER) != -1);
       GotFloatingPointNumber:
-        fp = strtod((char *)fpbuf, NULL);
+        /* An empty buffer can't be a valid float; don't even bother parsing. */
+        bool valid = fpbufcur > 0;
+        if (valid) {
+          char *ep;
+          fp = strtod((char *)fpbuf, &ep);
+          /* We should have parsed the whole buffer. */
+          valid = ep == (char *)fpbuf + fpbufcur;
+        }
+        free(fpbuf);
+        fpbuf = NULL;
+        fpbufcur = fpbufsize = 0;
+        if (!valid) {
+          goto Done;
+        }
         if (!discard) {
           ++items;
           void *out = va_arg(va, void *);
@@ -481,9 +497,6 @@ int __vcscanf(int callback(void *),    //
             *(double *)out = (double)fp;
           }
         }
-        free(fpbuf);
-        fpbuf = NULL;
-        fpbufcur = fpbufsize = 0;
         continue;
       ReportConsumed:
         n_ptr = va_arg(va, int *);
@@ -536,6 +549,11 @@ int __vcscanf(int callback(void *),    //
             } else {
               if (!j && c == -1 && !items) {
                 items = -1;
+                goto Done;
+              } else if (rawmode && j != width) {
+                /* The C standard says that %c "matches a sequence of characters of
+                 * **exactly** the number specified by the field width". If we have
+                 * fewer characters, what we've just read is invalid. */
                 goto Done;
               } else if (!rawmode && j < bufsize) {
                 if (charbytes == sizeof(char)) {

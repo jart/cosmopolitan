@@ -1,9 +1,5 @@
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-PCRE2 (PCRE2 License)\\n\
-Copyright (c) 1997-2022 University of Cambridge\"");
-
 /*************************************************
 *      Perl-Compatible Regular Expressions       *
 *************************************************/

@@ -534,6 +534,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/_csv.c				\
 	third_party/python/Modules/_datetimemodule.c			\
 	third_party/python/Modules/_decimal/_decimal.c			\
+	third_party/python/Modules/_decimal/libmpdec/notice.c		\
 	third_party/python/Modules/_decimal/libmpdec/basearith.c	\
 	third_party/python/Modules/_decimal/libmpdec/constants.c	\
 	third_party/python/Modules/_decimal/libmpdec/context.c		\

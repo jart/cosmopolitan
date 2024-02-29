@@ -36,7 +36,7 @@ static struct {
   char buf[PATH_MAX];
 } g_addr2line;
 
-const void GetAddr2linePathInit(void) {
+void GetAddr2linePathInit(void) {
   int e = errno;
   const char *path;
   if (!(path = getenv("ADDR2LINE"))) {

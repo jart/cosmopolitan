@@ -27,17 +27,12 @@
 │  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE            │
 │  SOFTWARE.                                                                   │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/mpeg/buffer.h"
 #include "dsp/mpeg/demux.h"
+#include "dsp/mpeg/buffer.h"
 #include "dsp/mpeg/mpeg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("pl_mpeg_notice");
 
 /* clang-format off */
 // ----------------------------------------------------------------------------

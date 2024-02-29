@@ -1,6 +1,11 @@
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef _X86GPRINTRIN_H_INCLUDED
 #define _X86GPRINTRIN_H_INCLUDED
+#if !defined _SOFT_FLOAT || defined __MMX__ || defined __SSE__
+#pragma GCC push_options
+#pragma GCC target("general-regs-only")
+#define __DISABLE_GENERAL_REGS_ONLY__
+#endif
 #include "third_party/intel/ia32intrin.internal.h"
 #ifndef __iamcu__
 #include "third_party/intel/adxintrin.internal.h"
@@ -16,6 +21,7 @@
 #include "third_party/intel/lzcntintrin.internal.h"
 #include "third_party/intel/lwpintrin.internal.h"
 #include "third_party/intel/movdirintrin.internal.h"
+#include "third_party/intel/mwaitintrin.internal.h"
 #include "third_party/intel/mwaitxintrin.internal.h"
 #include "third_party/intel/pconfigintrin.internal.h"
 #include "third_party/intel/popcntintrin.internal.h"
@@ -174,6 +180,10 @@ _ptwrite32 (unsigned __B)
 #undef __DISABLE_PTWRITE__
 #pragma GCC pop_options
 #endif
+#endif
+#ifdef __DISABLE_GENERAL_REGS_ONLY__
+#undef __DISABLE_GENERAL_REGS_ONLY__
+#pragma GCC pop_options
 #endif
 #endif
 #endif

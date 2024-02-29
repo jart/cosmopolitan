@@ -18,10 +18,11 @@
 #include "libc/serialize.h"
 #include "third_party/mbedtls/endian.h"
 
-asm(".ident\t\"\\n\\n\
-Everest (Apache 2.0)\\n\
-Copyright 2016-2018 INRIA and Microsoft Corporation\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(cosmo_everest_notice, "\
+Cosmopolitan Everest (Apache 2.0)\n\
+Copyright 2024 Justine Alexndra Roberts Tunney\n\
+Copyright 2016-2018 INRIA and Microsoft Corporation\n\
+Changes: Made C code look nice and not have pointers");
 
 #define DW(x)     (uint128_t)(x)
 #define EQ(x, y)  ((((x ^ y) | (~(x ^ y) + 1)) >> 63) - 1)

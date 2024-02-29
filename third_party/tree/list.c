@@ -145,7 +145,7 @@ struct totals listdir(char *dirname, struct _info **dir, int lev, dev_t dev, boo
   int namemax = 257, namelen;
   int descend, htmldescend = 0, found, n, dirlen = strlen(dirname), pathlen = dirlen + 257;
   int needsclosed;
-  char *path, *newpath, *filename, *err = NULL;
+  char *path, *newpath = NULL, *filename, *err = NULL;
 
   int es = (dirname[strlen(dirname) - 1] == '/');
 

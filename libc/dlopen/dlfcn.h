@@ -16,13 +16,11 @@ void *dlopen(const char *, int) libcesque;
 void *dlsym(void *, const char *) libcesque;
 int dlclose(void *) libcesque;
 
-#ifdef _COSMO_SOURCE
 char *cosmo_dlerror(void) libcesque;
 void *cosmo_dlopen(const char *, int) libcesque;
 void *cosmo_dlsym(void *, const char *) libcesque;
 void *cosmo_dltramp(void *) libcesque;
 int cosmo_dlclose(void *) libcesque;
-#endif
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_DLFCN_H_ */

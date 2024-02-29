@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 
@@ -28,6 +30,9 @@ dontinstrument const char *(DescribeBacktrace)(char buf[N],
   char *pe = p + N;
   bool gotsome = false;
   while (fr) {
+    if (_weaken(kisdangerous) && _weaken(kisdangerous)(fr)) {
+      break;
+    }
     if (p + 16 + 1 + 1 <= pe) {
       if (gotsome) {
         *p++ = ' ';

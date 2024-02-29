@@ -20,6 +20,7 @@
 #include "libc/log/check.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -38,6 +39,20 @@ static char *slice(const char *m, struct HttpSlice s) {
 
 void TearDown(void) {
   DestroyHttpMessage(req);
+}
+
+char *method(void) {
+  static char s[9];
+  WRITE64LE(s, req->method);
+  return s;
+}
+
+TEST(ParseHttpMethod, test) {
+  ASSERT_EQ(0, ParseHttpMethod(" ", -1));
+  ASSERT_EQ(0, ParseHttpMethod("aaaaaaaaa", -1));
+  ASSERT_EQ(kHttpGet, ParseHttpMethod("get", -1));
+  ASSERT_EQ(kHttpGet, ParseHttpMethod("GET", -1));
+  ASSERT_EQ(kHttpDelete, ParseHttpMethod("DELETE", -1));
 }
 
 TEST(ParseHttpMessage, soLittleState) {
@@ -59,7 +74,7 @@ TEST(ParseHttpMessage, testNoHeaders) {
   static const char m[] = "GET /foo HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("GET", method());
   EXPECT_STREQ("/foo", gc(slice(m, req->uri)));
   EXPECT_EQ(10, req->version);
 }
@@ -72,7 +87,7 @@ Content-Length: 0\r\n\
 \r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpPost, req->method);
+  EXPECT_STREQ("POST", method());
   EXPECT_STREQ("/foo?bar%20hi", gc(slice(m, req->uri)));
   EXPECT_EQ(10, req->version);
   EXPECT_STREQ("foo.example", gc(slice(m, req->headers[kHttpHost])));
@@ -84,7 +99,7 @@ TEST(ParseHttpMessage, testHttp101) {
   static const char m[] = "GET / HTTP/1.1\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("GET", method());
   EXPECT_STREQ("/", gc(slice(m, req->uri)));
   EXPECT_EQ(11, req->version);
 }
@@ -93,7 +108,7 @@ TEST(ParseHttpMessage, testHttp100) {
   static const char m[] = "GET / HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("GET", method());
   EXPECT_STREQ("/", gc(slice(m, req->uri)));
   EXPECT_EQ(10, req->version);
 }
@@ -102,45 +117,40 @@ TEST(ParseHttpMessage, testUnknownMethod_canBeUsedIfYouWant) {
   static const char m[] = "#%*+_^ / HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_FALSE(req->method);
-  EXPECT_STREQ("WUT", kHttpMethod[req->method]);
-  EXPECT_STREQ("#%*+_^", gc(slice(m, req->xmethod)));
+  EXPECT_STREQ("#%*+_^", method());
 }
 
 TEST(ParseHttpMessage, testIllegalMethod) {
   static const char m[] = "ehd@oruc / HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(-1, ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_STREQ("WUT", kHttpMethod[req->method]);
 }
 
-TEST(ParseHttpMessage, testIllegalMethodCasing_weAllowItAndPreserveIt) {
+TEST(ParseHttpMessage, testIllegalMethodCasing_weUpperCaseIt) {
   static const char m[] = "get / HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_STREQ("GET", kHttpMethod[req->method]);
-  EXPECT_STREQ("get", gc(slice(m, req->xmethod)));
+  EXPECT_STREQ("GET", method());
 }
 
 TEST(ParseHttpMessage, testEmptyMethod_isntAllowed) {
   static const char m[] = " / HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(-1, ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_STREQ("WUT", kHttpMethod[req->method]);
 }
 
 TEST(ParseHttpMessage, testEmptyUri_isntAllowed) {
   static const char m[] = "GET  HTTP/1.0\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(-1, ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_STREQ("GET", kHttpMethod[req->method]);
+  EXPECT_STREQ("GET", method());
 }
 
 TEST(ParseHttpMessage, testHttp09) {
   static const char m[] = "GET /\r\n\r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("GET", method());
   EXPECT_STREQ("/", gc(slice(m, req->uri)));
   EXPECT_EQ(9, req->version);
 }
@@ -195,7 +205,7 @@ Content-Length: 0\n\
 \n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m) - 1, ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpPost, req->method);
+  EXPECT_STREQ("POST", method());
   EXPECT_STREQ("/foo?bar%20hi", gc(slice(m, req->uri)));
   EXPECT_EQ(10, req->version);
   EXPECT_STREQ("foo.example", gc(slice(m, req->headers[kHttpHost])));
@@ -217,7 +227,7 @@ Accept-Language: en-US,en;q=0.9\r\n\
 \r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EXPECT_EQ(kHttpGet, req->method);
+  EXPECT_STREQ("GET", method());
   EXPECT_STREQ("/tool/net/redbean.png", gc(slice(m, req->uri)));
   EXPECT_EQ(11, req->version);
   EXPECT_STREQ("10.10.10.124:8080", gc(slice(m, req->headers[kHttpHost])));
@@ -541,14 +551,14 @@ transfer-encoding: chunked\r\n\
 }
 
 BENCH(ParseHttpMessage, bench) {
-  EZBENCH2("DoTiniestHttpRequest", donothing, DoTiniestHttpRequest());
+  EZBENCH2("DoTiniestHttpReque", donothing, DoTiniestHttpRequest());
   EZBENCH2("DoTinyHttpRequest", donothing, DoTinyHttpRequest());
-  EZBENCH2("DoStandardChromeRequest", donothing, DoStandardChromeRequest());
-  EZBENCH2("DoUnstandardChromeRequest", donothing, DoUnstandardChromeRequest());
-  EZBENCH2("DoTiniestHttpResponse", donothing, DoTiniestHttpResponse());
+  EZBENCH2("DoStandardChromeRe", donothing, DoStandardChromeRequest());
+  EZBENCH2("DoUnstandardChrome", donothing, DoUnstandardChromeRequest());
+  EZBENCH2("DoTiniestHttpRespo", donothing, DoTiniestHttpResponse());
   EZBENCH2("DoTinyHttpResponse", donothing, DoTinyHttpResponse());
-  EZBENCH2("DoStandardHttpResponse", donothing, DoStandardHttpResponse());
-  EZBENCH2("DoUnstandardHttpResponse", donothing, DoUnstandardHttpResponse());
+  EZBENCH2("DoStandardHttpResp", donothing, DoStandardHttpResponse());
+  EZBENCH2("DoUnstandardHttpRe", donothing, DoUnstandardHttpResponse());
 }
 
 BENCH(HeaderHas, bench) {
@@ -563,7 +573,7 @@ ACCEPT-encoding: bzip2\r\n\
 \r\n";
   InitHttpMessage(req, kHttpRequest);
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
-  EZBENCH2("HeaderHas text/plain", donothing,
+  EZBENCH2("HeaderHas txt/pln", donothing,
            HeaderHas(req, m, kHttpAccept, "text/plain", 7));
   EZBENCH2("HeaderHas deflate", donothing,
            HeaderHas(req, m, kHttpAcceptEncoding, "deflate", 7));

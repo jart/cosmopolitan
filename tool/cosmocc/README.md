@@ -9,12 +9,13 @@ reach a broader audience from the platform(s) of your choosing.
 
 ## What's Included
 
-This toolchain bundles GCC 11.2.0, Cosmopolitan Libc, LLVM LIBCXX, and
-LLVM compiler-rt. Additional libraries were provided by Musl Libc, and
-the venerable BSDs OSes. This lets you benefit from the awesome modern
-GCC compiler with the strongest GPL barrier possible. The preprocessor
-advertises cross compilers as both `__COSMOCC__` and `__COSMOPOLITAN__`
-whereas `cosmocc` additionally defines `__FATCOSMOCC__`.
+This toolchain bundles GCC 12.3.0, Cosmopolitan Libc, LLVM LIBCXX, LLVM
+compiler-rt, and LLVM OpenMP. Additional libraries were provided by Musl
+Libc, and the venerable BSDs OSes. This lets you benefit from the
+awesome modern GCC compiler with the strongest GPL barrier possible. The
+preprocessor advertises cross compilers as both `__COSMOCC__` and
+`__COSMOPOLITAN__` whereas `cosmocc` additionally defines
+`__FATCOSMOCC__`.
 
 ## Getting Started
 
@@ -296,9 +297,9 @@ EINVAL: ... }` in cases where constants like `EINVAL` are linkable
 symbols. Your code will be rewritten in such cases to use a series of if
 statements instead, so that Cosmopolitan Libc's system constants will
 work as expected. Our modifications to GNU GCC are published under the
-ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-11.2>. The
+ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-12.3>. The
 binaries you see here were first published at
-<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.30> which
+<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.32> which
 is regularly updated.
 
 ## Legal

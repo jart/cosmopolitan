@@ -28,12 +28,7 @@
 │  SOFTWARE.                                                                   │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/half.h"
-
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("pl_mpeg_notice");
 
 /**
  * Computes Fixed-Point 8x8 Inverse Discrete Cosine Transform.

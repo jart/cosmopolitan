@@ -16,112 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/cp.internal.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
-#include "libc/runtime/clktck.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
-
-static int sys_clock_nanosleep(int clock, int flags,  //
-                               const struct timespec *req,
-                               struct timespec *rem) {
-  int rc;
-  BEGIN_CANCELATION_POINT;
-  if (IsLinux() || IsFreebsd() || IsNetbsd()) {
-    rc = __sys_clock_nanosleep(clock, flags, req, rem);
-  } else if (IsXnu()) {
-    rc = sys_clock_nanosleep_xnu(clock, flags, req, rem);
-  } else if (IsOpenbsd()) {
-    rc = sys_clock_nanosleep_openbsd(clock, flags, req, rem);
-  } else if (IsWindows()) {
-    rc = sys_clock_nanosleep_nt(clock, flags, req, rem);
-  } else {
-    rc = enosys();
-  }
-  if (rc > 0) {
-    errno = rc;
-    rc = -1;
-  }
-  // system call support might not detect cancelation on bsds
-  if (rc == -1 && errno == EINTR &&      //
-      _weaken(pthread_testcancel_np) &&  //
-      _weaken(pthread_testcancel_np)()) {
-    rc = ecanceled();
-  }
-  END_CANCELATION_POINT;
-  STRACE("sys_clock_nanosleep(%s, %s, %s, [%s]) → %d% m",
-         DescribeClockName(clock), DescribeSleepFlags(flags),
-         DescribeTimespec(0, req), DescribeTimespec(rc, rem), rc);
-  return rc;
-}
-
-static int cosmo_clock_nanosleep(int clock, int flags,
-                                 const struct timespec *req,
-                                 struct timespec *rem) {
-
-  // pick clocks
-  int time_clock;
-  int sleep_clock;
-  if (clock == CLOCK_REALTIME ||  //
-      clock == CLOCK_REALTIME_PRECISE) {
-    time_clock = clock;
-    sleep_clock = CLOCK_REALTIME;
-  } else if (clock == CLOCK_MONOTONIC ||  //
-             clock == CLOCK_MONOTONIC_PRECISE) {
-    time_clock = clock;
-    sleep_clock = CLOCK_MONOTONIC;
-  } else if (clock == CLOCK_REALTIME_COARSE ||  //
-             clock == CLOCK_REALTIME_FAST) {
-    return sys_clock_nanosleep(CLOCK_REALTIME, flags, req, rem);
-  } else if (clock == CLOCK_MONOTONIC_COARSE ||  //
-             clock == CLOCK_MONOTONIC_FAST) {
-    return sys_clock_nanosleep(CLOCK_MONOTONIC, flags, req, rem);
-  } else {
-    return sys_clock_nanosleep(clock, flags, req, rem);
-  }
-
-  // sleep bulk of time in kernel
-  struct timespec start, deadline, remain, waitfor, now;
-  struct timespec quantum = timespec_fromnanos(1000000000 / CLK_TCK);
-  unassert(!clock_gettime(time_clock, &start));
-  deadline = flags & TIMER_ABSTIME ? *req : timespec_add(start, *req);
-  if (timespec_cmp(start, deadline) >= 0) return 0;
-  remain = timespec_sub(deadline, start);
-  if (timespec_cmp(remain, quantum) > 0) {
-    waitfor = timespec_sub(remain, quantum);
-    if (sys_clock_nanosleep(sleep_clock, 0, &waitfor, rem) == -1) {
-      if (!flags && rem && errno == EINTR) {
-        *rem = timespec_add(*rem, quantum);
-      }
-      return -1;
-    }
-  }
-
-  // spin through final scheduling quantum
-  int rc = 0;
-  ftrace_enabled(-1);
-  do {
-    if (_check_cancel()) {
-      rc = -1;
-      break;
-    }
-    unassert(!clock_gettime(time_clock, &now));
-  } while (timespec_cmp(now, deadline) < 0);
-  ftrace_enabled(+1);
-  return rc;
-}
 
 /**
  * Sleeps for particular amount of time.
@@ -157,10 +55,8 @@ static int cosmo_clock_nanosleep(int clock, int flags,
  * on OpenBSD it's good; on XNU it's bad; and on Windows it's ugly.
  *
  * @param clock may be
- *     - `CLOCK_REALTIME` to have nanosecond-accurate wall time sleeps
- *     - `CLOCK_REALTIME_COARSE` to not spin through scheduler quantum
- *     - `CLOCK_MONOTONIC` to base the sleep off the monotinic clock
- *     - `CLOCK_MONOTONIC_COARSE` to once again not do userspace spin
+ *     - `CLOCK_REALTIME`
+ *     - `CLOCK_MONOTONIC`
  * @param flags can be 0 for relative and `TIMER_ABSTIME` for absolute
  * @param req can be a relative or absolute time, depending on `flags`
  * @param rem shall be updated with the remainder of unslept time when
@@ -193,7 +89,7 @@ errno_t clock_nanosleep(int clock, int flags,        //
     return EINVAL;
   }
   errno_t old = errno;
-  int rc = cosmo_clock_nanosleep(clock, flags, req, rem);
+  int rc = sys_clock_nanosleep(clock, flags, req, rem);
   errno_t err = !rc ? 0 : errno;
   errno = old;
   return err;

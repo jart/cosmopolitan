@@ -54,6 +54,7 @@ o/$(MODE)/libc/tinymath/loglq.o: private		\
 
 $(LIBC_TINYMATH_A_OBJS): private			\
 		CFLAGS +=				\
+			-fmath-errno			\
 			-fsigned-zeros			\
 			-ftrapping-math			\
 			-frounding-math			\

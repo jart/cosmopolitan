@@ -95,5 +95,7 @@ int LuaVisualizeControlCodes(lua_State *);
 void LuaPushUrlView(lua_State *, struct UrlView *);
 char *FormatUnixHttpDateTime(char *, int64_t);
 
+void launch_browser(const char *);
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_TOOL_NET_LFUNCS_H_ */

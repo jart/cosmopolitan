@@ -29,16 +29,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
 #include "libc/tinymath/internal.h"
-#include "libc/tinymath/log2_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
+__static_yoink("fdlibm_notice");
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log10.c */
 /*

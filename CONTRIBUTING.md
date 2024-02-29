@@ -16,10 +16,25 @@ contributors who prefer to remain anonymous to the public.
 
 The first time you send a pull request, you need to send an email to
 Justine Tunney <jtunney@gmail.com> stating that you intend to assign her
-the copyright to the changes you contribute to Cosmopolitan. This only
-applies to the code you *choose* to contribute. It only has to happen
-once. The email should be sent from an email address associated with
-your identity. Your email should link to your pull request.
+the copyright to the changes you contribute to Cosmopolitan. It only
+needs to happen once. This only applies to the code you *choose* to
+contribute. The email should be sent from an email address associated
+with your identity. Your email should link to your pull request.
+
+To make things easy, here's an example of a good email you can use:
+
+> **From**: YOUR NAME (yname@gmail.com)  
+> **To**: Justine Tunney (jtunney@gmail.com)  
+> **Subject**: Cosmopolitan Copyright Assignment for YOUR NAME
+>
+> Hi Justine,
+>
+> I made my first contribution to Cosmopolitan in
+> https://github.com/jart/cosmopolitan/pull/XXXX could you please take a
+> look? I intend to assign you the copyright to the changes I contribute
+> to Cosmopolitan.
+>
+> Thanks!
 
 Please note that in order to give Justine the copyright, it has to be
 yours to give in the first place. If you're employed, then you should
@@ -38,6 +53,27 @@ owners and the code should go in the `third_party/` folder. Every third
 party project should have a `README.cosmo` file that documents its
 provenance as well as any local changes you've made.
 
+## Copyright Policy Exceptions
+
+### Tests
+
+You're encoraged to claim ownership of your test code. If you add a new
+file under the `test/` directory, then you should put your name in the
+ISC license header at the top of the file. If you add new test cases to
+an existing unit test file, then you're encouraged to append a line with
+your name to the existing copyright header of that file.
+
+### Exceptional Features
+
+Let's say you discovered a faster better way to implement `log10()` and
+you want to give it to Cosmopolitan. In cases like this, it really isn't
+appropriate for Justine to own your code. What you could do instead, is
+write your own new and improved `log10.c` from scratch, put your name on
+the top with the ISC license, and then add a `__notice()` directive so
+that your name will be embedded inside every executable that links the
+`log10()` function. This will help you get your name out there. Please
+note you need get approval from Justine each time you want to do this.
+
 ## Style Guide
 
 You can use clang-format to automatically format your files:
@@ -47,34 +83,4 @@ clang-format -i -style=file tool/net/redbean.c
 ```
 
 If you use Emacs this can be automated on save for Cosmopolitan using
-[tool/emacs/cosmo-format.el]([tool/emacs/cosmo-format.el]).
-
-### Source Files
-
-- Must use include paths relative to the root of the repository
-- Must have comment at top of file documenting copyright and license
-- Must have notice embedding if not owned by Justine (exception: tests)
-- May use language extensions that are supported by both GCC and Clang
-- Should use Google indentation (otherwise use `/* clang-format off */`)
-- Should use asm() instead of compiler APIs (exception: ctz, clz, memcpy)
-
-### Header Files
-
-- Must not have copyright or license comments
-- Must have once guards (otherwise change `.h` to `.inc`)
-- Must be ANSI C89 compatible to be included in the amalgamation header
-- Must include its dependencies (exception: libc/integral/normalize.inc)
-- Must not define objects (i.e. `cc -c -xc foo.h` will produce empty `.o`)
-- Should not use typedefs
-- Should not use forward declarations
-- Should not include documentation comments
-- Should not include parameter names in prototypes
-- Should not pose problems if included by C++ or Assembly sources
-- Should not declare non-ANSI code, at all, when the user requests ANSI
-
-### Build Config
-
-- Must not write files outside `o/`
-- Must not communicate with Internet
-- Must not depend on system libraries
-- Must not depend on system commands (exception: sh, make, gzip, zip)
+[tool/emacs/cosmo-format.el](tool/emacs/cosmo-format.el).

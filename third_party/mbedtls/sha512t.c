@@ -19,12 +19,7 @@
 #include "libc/str/str.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/sha512.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /*
  * FIPS-180-2 test vectors

@@ -789,11 +789,12 @@ static Token *preprocess2(Token *tok) {
           char *path = xasprintf("%s/%s", dirname(tmp), filename);
           free(tmp);
           bool exists = fileexists(path);
-          free(path);
           if (exists) {
             tok = include_file(tok, path, start->next->next);
+            free(path);
             continue;
           }
+          free(path);
         }
         char *path = search_include_paths(filename);
         tok = include_file(tok, path ? path : filename, start->next->next);

@@ -36,8 +36,8 @@ static inline const unsigned char *memchr_pure(const unsigned char *s,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-static inline const unsigned char *memchr_sse(const unsigned char *s,
-                                              unsigned char c, size_t n) {
+static __vex const unsigned char *memchr_sse(const unsigned char *s,
+                                             unsigned char c, size_t n) {
   size_t i;
   unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
@@ -69,10 +69,7 @@ static inline const unsigned char *memchr_sse(const unsigned char *s,
  */
 void *memchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
-  const void *r;
-  if (IsAsan()) __asan_verify(s, n);
-  r = memchr_sse(s, c, n);
-  return (void *)r;
+  return (void *)memchr_sse(s, c, n);
 #else
   return (void *)memchr_pure(s, c, n);
 #endif

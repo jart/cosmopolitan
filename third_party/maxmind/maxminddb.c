@@ -37,10 +37,9 @@
 #include "libc/sysv/consts/sock.h"
 #include "tool/build/lib/case.h"
 
-asm(".ident\t\"\\n\\n\
-libmaxminddb (Apache 2.0)\\n\
-Copyright 2013-2021 MaxMind Incorporated\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(libmaxminddb_notice, "\
+libmaxminddb (Apache 2.0)\n\
+Copyright 2013-2021 MaxMind Incorporated");
 
 #define METADATA_MARKER              "\xab\xcd\xefMaxMind.com"
 #define METADATA_BLOCK_MAX_SIZE      131072 /* This is 128kb */

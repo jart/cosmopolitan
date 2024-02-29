@@ -4,12 +4,7 @@
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-asm(".ident\t\"\\n\\n\
-gdtoa (MIT License)\\n\
-The author of this software is David M. Gay\\n\
-Kudos go to Guy L. Steele, Jr. and Jon L. White\\n\
-Copyright (C) 1997, 1998, 2000 by Lucent Technologies\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("gdtoa_notice");
 
 #define IEEE_Arith          1
 #define IEEE_8087           1

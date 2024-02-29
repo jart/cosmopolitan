@@ -26,18 +26,15 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
-#include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
 
 /* pow(z, c) = exp(c log(z)), See C99 G.6.4.1 */
-
 double complex cpow(double complex z, double complex c)
 {
 	return cexp(c * clog(z));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(cpow, cpowl);
+#endif

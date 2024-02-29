@@ -27,12 +27,7 @@
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /**
  * @fileoverview FIPS-180-2 compliant SHA-256 implementation

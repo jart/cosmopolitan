@@ -5,18 +5,18 @@
 
 BIN=${0%/*}
 PROG=${0##*/}
-GCC_VERSION=11.2.0
+GCC_VERSION=12.3.0
 
 if [ "$1" = "--version" ]; then
 cat <<EOF
 $PROG (GCC) $GCC_VERSION
-Copyright (c) 2023 Justine Alexandra Roberts Tunney
+Copyright (c) 2024 Justine Alexandra Roberts Tunney
 Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
 notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
 our copyright notices. This toolchain is configured to do so default.
 Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
-Copyright (C) 2019 Free Software Foundation, Inc.
+Copyright (C) 2022 Free Software Foundation, Inc.
 This launches GNU GCC/Binutils subprocesses, which is free software; see
 cosmocc's LICENSE files for source code and copying conditions. There is
 NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -48,8 +48,8 @@ ORIGINAL="$0 $*"
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
-CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -isystem $BIN/../include"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd"
+CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-z,noexecstack"
 APEFLAGS="-Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
@@ -193,9 +193,9 @@ fi
 if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
    [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   if [ x"$ARCH" = x"x86_64" ]; then
-    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"
+    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
   elif [ x"$ARCH" = x"aarch64" ]; then
-    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6"
+    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6 -fno-inline-functions-called-once"
   fi
 fi
 

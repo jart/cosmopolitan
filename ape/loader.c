@@ -166,13 +166,6 @@
    (unsigned long)(255 & (S)[1]) << 010 | \
    (unsigned long)(255 & (S)[0]) << 000)
 
-#define DEBUG(VAR)                          \
-  {                                         \
-    char ibuf[19] = {0};                    \
-    Utox(ibuf, VAR);                        \
-    Print(os, 2, ibuf, " " #VAR, "\n", 0l); \
-  }
-
 struct ElfEhdr {
   unsigned char e_ident[16];
   unsigned short e_type;
@@ -338,23 +331,6 @@ static char *GetEnv(char **p, const char *s) {
     }
   }
   return 0;
-}
-
-static char *Utox(char p[19], unsigned long x) {
-  int i;
-  if (x) {
-    *p++ = '0';
-    *p++ = 'x';
-    i = (__builtin_clzl(x) ^ (sizeof(long) * 8 - 1)) + 1;
-    i = (i + 3) & -4;
-    do {
-      *p++ = "0123456789abcdef"[(x >> (i -= 4)) & 15];
-    } while (i);
-  } else {
-    *p++ = '0';
-  }
-  *p = 0;
-  return p;
 }
 
 static char *Utoa(char p[20], unsigned long x) {
@@ -532,6 +508,53 @@ static long Print(int os, int fd, const char *s, ...) {
   }
   __builtin_va_end(va);
   return Write(fd, b, n, os);
+}
+
+static long Printf(int os, int fd, const char *fmt, ...) {
+  int i;
+  char c;
+  int k = 0;
+  unsigned u;
+  char b[512];
+  const char *s;
+  unsigned long d;
+  __builtin_va_list va;
+  __builtin_va_start(va, fmt);
+  for (;;) {
+    switch ((c = *fmt++)) {
+      case '\0':
+        __builtin_va_end(va);
+        return Write(fd, b, k, os);
+      case '%':
+        switch ((c = *fmt++)) {
+          case 's':
+            for (s = __builtin_va_arg(va, const char *); s && *s; ++s) {
+              if (k < 512) b[k++] = *s;
+            }
+            break;
+          case 'd':
+            d = __builtin_va_arg(va, unsigned long);
+            for (i = 16; i--;) {
+              u = (d >> (i * 4)) & 15;
+              if (u < 10) {
+                c = '0' + u;
+              } else {
+                u -= 10;
+                c = 'a' + u;
+              }
+              if (k < 512) b[k++] = c;
+            }
+            break;
+          default:
+            if (k < 512) b[k++] = c;
+            break;
+        }
+        break;
+      default:
+        if (k < 512) b[k++] = c;
+        break;
+    }
+  }
 }
 
 static void Perror(int os, const char *thing, long rc, const char *reason) {
@@ -901,7 +924,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   long *auxv, *ap, *endp, *sp2;
   char *p, *pe, *exe, *prog, **argv, **envp;
 
-  (void)Utox;
+  (void)Printf;
 
   /* detect freebsd */
   if (SupportsXnu() && dl == XNU) {

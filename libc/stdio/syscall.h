@@ -2,8 +2,9 @@
 #define COSMOPOLITAN_LIBC_STDIO_SYSCALL_H_
 COSMOPOLITAN_C_START_
 
-#define SYS_gettid    186
-#define SYS_getrandom 318
+#define SYS_gettid    1
+#define SYS_getrandom 2
+#define SYS_getcpu    3
 
 long syscall(long, ...) libcesque;
 

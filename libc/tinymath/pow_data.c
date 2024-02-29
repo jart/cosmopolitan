@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,20 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/pow_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-/*
- * Data for the log part of pow.
- *
- * Copyright (c) 2018, Arm Limited.
- * SPDX-License-Identifier: MIT
- */
+#include "libc/tinymath/arm.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
 #define N (1 << POW_LOG_TABLE_BITS)
 
@@ -46,6 +34,7 @@ const struct pow_log_data __pow_log_data = {
 .ln2hi = 0x1.62e42fefa3800p-1,
 .ln2lo = 0x1.ef35793c76730p-45,
 .poly = {
+#if N == 128 && POW_LOG_POLY_ORDER == 8
 // relative error: 0x1.11922ap-70
 // in -0x1.6bp-8 0x1.6bp-8
 // Coefficients are scaled to match the scaling during evaluation.
@@ -56,6 +45,7 @@ const struct pow_log_data __pow_log_data = {
 -0x1.555555529a47ap-3 * 4,
 0x1.2495b9b4845e9p-3 * -8,
 -0x1.0002b8b263fc3p-3 * -8,
+#endif
 },
 /* Algorithm:
 
@@ -80,6 +70,7 @@ the last few bits of logc are rounded away so k*ln2hi + logc has no rounding
 error and the interval for z is selected such that near x == 1, where log(x)
 is tiny, large cancellation error is avoided in logc + poly(z/c - 1).  */
 .tab = {
+#if N == 128
 #define A(a, b, c) {a, 0, b, c},
 A(0x1.6a00000000000p+0, -0x1.62c82f2b9c800p-2, 0x1.ab42428375680p-48)
 A(0x1.6800000000000p+0, -0x1.5d1bdbf580800p-2, -0x1.ca508d8e0f720p-46)
@@ -209,5 +200,6 @@ A(0x1.7200000000000p-1, 0x1.4c9e09e173000p-2, -0x1.e20891b0ad8a4p-45)
 A(0x1.7000000000000p-1, 0x1.522ae0738a000p-2, 0x1.ebe708164c759p-45)
 A(0x1.6e00000000000p-1, 0x1.57bf753c8d000p-2, 0x1.fadedee5d40efp-46)
 A(0x1.6c00000000000p-1, 0x1.5d5bddf596000p-2, -0x1.a0b2a08a465dcp-47)
+#endif
 },
 };

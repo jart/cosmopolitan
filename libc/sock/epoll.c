@@ -91,11 +91,10 @@
  * TODO(jart): Polyfill kqueue for XNU/FreeBSD/OpenBSD.
  */
 
-asm(".ident\t\"\\n\\n\
-wepoll (BSD-2)\\n\
-Copyright 2012-2020 Bert Belder\\n\
-https://github.com/piscisaureus/wepoll\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(wepoll_notice, "\
+wepoll (BSD-2)\n\
+Copyright 2012-2020 Bert Belder\n\
+https://github.com/piscisaureus/wepoll");
 
 #define MAX_GROUP_SIZE 32
 
@@ -128,7 +127,7 @@ asm(".include \"libc/disclaimer.inc\"");
   } while (0)
 
 #define CONTAINOF(ptr, type, member) \
-  ((type *)((uintptr_t)(ptr)-offsetof(type, member)))
+  ((type *)((uintptr_t)(ptr) - offsetof(type, member)))
 
 #define TREE__ROTATE(cis, trans)       \
   struct TreeNode *p = node;           \

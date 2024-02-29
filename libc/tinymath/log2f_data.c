@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,20 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/log2f_data.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Double-precision math functions (MIT License)\\n\
-Copyright 2018 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-/*
- * Data definition for log2f.
- *
- * Copyright (c) 2017-2018, Arm Limited.
- * SPDX-License-Identifier: MIT
- */
+#include "libc/tinymath/arm.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
 const struct log2f_data __log2f_data = {
   .tab = {

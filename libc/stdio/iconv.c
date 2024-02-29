@@ -32,11 +32,8 @@
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
 // clang-format off
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 #define UTF_32BE    0300
 #define UTF_16LE    0301

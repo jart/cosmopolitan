@@ -19,7 +19,6 @@
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
 
-// clang-format off
 
 /**
  * Returns remainder of dividing 𝑥 by 𝑦.

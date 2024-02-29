@@ -31,11 +31,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/mpalloc.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 /* Guaranteed minimum allocation for a coefficient. May be changed once
    at program start using mpd_setminalloc(). */

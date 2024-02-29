@@ -29,11 +29,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 size_t mbrtoc32(char32_t *pc32, const char *s, size_t n, mbstate_t *ps) {
   static unsigned internal_state;

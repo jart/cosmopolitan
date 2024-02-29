@@ -433,7 +433,8 @@ static void LoadSymbols(struct Package *pkg, uint32_t object) {
     symbol.type = ELF64_ST_TYPE(obj->syms[i].st_info);
     if (symbol.bind_ != STB_LOCAL &&
         (symbol.type == STT_OBJECT || symbol.type == STT_FUNC ||
-         symbol.type == STT_COMMON || symbol.type == STT_NOTYPE)) {
+         symbol.type == STT_COMMON || symbol.type == STT_NOTYPE ||
+         symbol.type == STT_GNU_IFUNC)) {
       if (!(name = GetElfString(obj->elf, obj->size, obj->strs,
                                 obj->syms[i].st_name))) {
         Die("error", "elf overflow");

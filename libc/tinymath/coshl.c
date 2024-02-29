@@ -38,16 +38,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
-#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
-asm(".ident\t\"\\n\\n\
-FreeBSD libm (BSD-2 License)\\n\
-Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
-asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("fdlibm_notice");
+__static_yoink("freebsd_libm_notice");
+
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 #if LDBL_MAX_EXP != 0x4000
 /* We also require the usual expsign encoding. */

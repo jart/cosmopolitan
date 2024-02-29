@@ -97,7 +97,7 @@ static int uncube(int x) {
   return x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40;
 }
 
-static textstartup void rgb2ansi_init(void) {
+__attribute__((__constructor__)) static textstartup void rgb2ansi_init(void) {
   uint8_t c;
   uint32_t i;
   memcpy(g_ansi2rgb_, &kCgaPalette, sizeof(kCgaPalette));
@@ -114,5 +114,3 @@ static textstartup void rgb2ansi_init(void) {
     g_ansi2rgb_[i].xt = i;
   }
 }
-
-const void *const rgb2ansi_init_ctor[] initarray = {rgb2ansi_init};

@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -63,7 +64,9 @@ TEST(madvise, subPages) {
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(0, 0, madvise(p + 4096, FRAMESIZE - 4096, MADV_WILLNEED));
+  ASSERT_SYS(0, 0,
+             madvise(p + getauxval(AT_PAGESZ), FRAMESIZE - getauxval(AT_PAGESZ),
+                     MADV_WILLNEED));
   ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
 }
 

@@ -101,7 +101,6 @@ XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
 CLANG = clang
 TMPDIR = o/tmp
-
 AR = build/bootstrap/ar.com
 CP = build/bootstrap/cp.com
 RM = build/bootstrap/rm.com -f
@@ -137,7 +136,7 @@ ARCH = aarch64
 HOSTS ?= pi studio freebsdarm
 else
 ARCH = x86_64
-HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
+HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10
 endif
 
 ZIPOBJ_FLAGS += -a$(ARCH)
@@ -150,9 +149,9 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.2
+COSMOCC = .cosmocc/3.3.2
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.2 28b48682595f0f46b45ab381118cdffdabc8fcfa29aa54e301fe6ffe35269f5e)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.2 a695012ffbeac5e26e3c4a740debc15273f47e9a8bdc55e8b76a623154d5914b)
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc
@@ -207,9 +206,8 @@ endif
 .UNVEIL +=					\
 	libc/integral				\
 	libc/stdbool.h				\
-	libc/disclaimer.inc			\
 	rwc:/dev/shm				\
-	rx:cosmocc				\
+	rx:.cosmocc				\
 	rx:build/bootstrap			\
 	r:build/portcosmo.h			\
 	/proc/stat				\
@@ -299,6 +297,7 @@ include third_party/nsync/testing/BUILD.mk
 include libc/testlib/BUILD.mk
 include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
+include test/math/BUILD.mk
 include test/posix/BUILD.mk
 include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk
@@ -481,6 +480,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_STR			\
 	LIBC_SYSV			\
 	LIBC_INTRIN			\
+	LIBC_NT_BCRYPTPRIMITIVES	\
 	LIBC_NT_KERNEL32		\
 	LIBC_NEXGEN32E
 
@@ -556,9 +556,9 @@ o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
-		$(filter-out %.cc,$(SRCS))				\
+		$(filter-out %.cpp,$(filter-out %.cc,$(SRCS)))				\
 		$(HDRS)
-	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))))
+	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cpp,$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)

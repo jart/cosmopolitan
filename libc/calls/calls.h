@@ -208,6 +208,7 @@ int execvpe(const char *, char *const[], char *const[]) libcesque;
 int euidaccess(const char *, int) libcesque;
 int eaccess(const char *, int) libcesque;
 int madvise(void *, uint64_t, int) libcesque;
+int getcpu(unsigned *, unsigned *) libcesque;
 #endif
 
 #ifdef _COSMO_SOURCE
@@ -246,6 +247,8 @@ ssize_t readansi(int, char *, size_t) libcesque;
 ssize_t tinyprint(int, const char *, ...) libcesque nullterminated();
 void shm_path_np(const char *, char[hasatleast 78]) libcesque;
 #endif /* _COSMO_SOURCE */
+
+int system(const char *) libcesque;
 
 int __wifstopped(int) libcesque pureconst;
 int __wifcontinued(int) libcesque pureconst;

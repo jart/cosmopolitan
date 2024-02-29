@@ -118,6 +118,9 @@ bool32 GetSystemTimeAdjustment(uint32_t *lpTimeAdjustment,
 
 void GetCurrentProcessorNumberEx(struct NtProcessorNumber *out_ProcNumber);
 
+bool32 GetNumaProcessorNodeEx(const struct NtProcessorNumber *Processor,
+                              unsigned short *out_NodeNumber);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/synchronization.inc"
 #endif /* ShouldUseMsabiAttribute() */

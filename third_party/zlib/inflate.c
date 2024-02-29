@@ -6,10 +6,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-asm(".ident\t\"\\n\\n\
-zlib 1.2.13 (zlib License)\\n\
-Copyright 1995-2022 Jean-loup Gailly and Mark Adler\\n\
-Invented 1990 Phillip Walter Katz\"");
+__static_yoink("zlib_notice");
 
 /*
  * Change history:

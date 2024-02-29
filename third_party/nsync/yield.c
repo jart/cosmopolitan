@@ -22,6 +22,6 @@
 #include "third_party/nsync/common.internal.h"
 
 void nsync_yield_ (void) {
-	pthread_yield ();
+	pthread_yield_np ();
 	STRACE ("nsync_yield_()");
 }

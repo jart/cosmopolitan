@@ -30,13 +30,9 @@
 #include "libc/literal.h"
 #include "libc/str/str.h"
 #include "third_party/musl/crypt.internal.h"
+__static_yoink("musl_libc_notice");
 
 #pragma GCC diagnostic ignored "-Wmissing-braces"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 /*
  * md5 crypt implementation

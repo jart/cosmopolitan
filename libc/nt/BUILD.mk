@@ -297,6 +297,24 @@ $(LIBC_NT_PSAPI_A).pkg:					\
 
 #───────────────────────────────────────────────────────────────────────────────
 
+LIBC_NT_ARTIFACTS += LIBC_NT_BCRYPTPRIMITIVES_A
+LIBC_NT_BCRYPTPRIMITIVES = $(LIBC_NT_BCRYPTPRIMITIVES_A_DEPS) $(LIBC_NT_BCRYPTPRIMITIVES_A)
+LIBC_NT_BCRYPTPRIMITIVES_A = o/$(MODE)/libc/nt/BCryptPrimitives.a
+LIBC_NT_BCRYPTPRIMITIVES_A_SRCS := $(wildcard libc/nt/BCryptPrimitives/*.S)
+LIBC_NT_BCRYPTPRIMITIVES_A_OBJS = $(LIBC_NT_BCRYPTPRIMITIVES_A_SRCS:%.S=o/$(MODE)/%.o)
+LIBC_NT_BCRYPTPRIMITIVES_A_CHECKS = $(LIBC_NT_BCRYPTPRIMITIVES_A).pkg
+LIBC_NT_BCRYPTPRIMITIVES_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_BCRYPTPRIMITIVES_A_DEPS := $(call uniq,$(foreach x,$(LIBC_NT_BCRYPTPRIMITIVES_A_DIRECTDEPS),$($(x))))
+$(LIBC_NT_BCRYPTPRIMITIVES_A):				\
+		libc/nt/BCryptPrimitives/		\
+		$(LIBC_NT_BCRYPTPRIMITIVES_A).pkg	\
+		$(LIBC_NT_BCRYPTPRIMITIVES_A_OBJS)
+$(LIBC_NT_BCRYPTPRIMITIVES_A).pkg:			\
+		$(LIBC_NT_BCRYPTPRIMITIVES_A_OBJS)	\
+		$(foreach x,$(LIBC_NT_BCRYPTPRIMITIVES_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
 # let aarch64 compile these
 o/$(MODE)/libc/nt/%.o: libc/nt/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<

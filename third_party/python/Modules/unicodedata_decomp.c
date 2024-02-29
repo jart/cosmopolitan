@@ -1446,12 +1446,10 @@ static const unsigned char _PyUnicode_DecompIndex1_rodata[159+1][2] = { /* 3.653
     { 39, 0x00},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_DecompIndex1_init(void) {
     rldecode2(_PyUnicode_DecompIndex1, (void *)_PyUnicode_DecompIndex1_rodata);
 }
-const void *const _PyUnicode_DecompIndex1_ctor[] initarray = {
-    _PyUnicode_DecompIndex1_init,
-};
 
 const unsigned short _PyUnicode_DecompIndex2[13312] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 

@@ -40,12 +40,13 @@ PYTHON_PROVIDE("parser.st2tuple");
 PYTHON_PROVIDE("parser.suite");
 PYTHON_PROVIDE("parser.tuple2st");
 
-asm(".ident\t\"\\n\\n\
-parsermodule (Python license)\\n\
-Copyright 1995-1996 by Virginia Polytechnic Institute & State\\n\
-University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\\n\
-Virginia, USA.  Portions copyright 1991-1995 by Stichting Mathematisch\\n\
-Centrum, Amsterdam, The Netherlands.\"");
+__notice(parsermodule_notice, "\
+parsermodule (Python license)\n\
+Copyright 1995-1996 by Virginia Polytechnic Institute & State\n\
+University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\n\
+Virginia, USA.  Portions copyright 1991-1995 by Stichting Mathematisch\n\
+Centrum, Amsterdam, The Netherlands.");
+
 static const char parser_copyright_string[] =
 "Copyright 1995-1996 by Virginia Polytechnic Institute & State\n\
 University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\n\

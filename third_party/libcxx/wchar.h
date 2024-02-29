@@ -9,8 +9,7 @@
 
 #ifndef _LIBCPP_WCHAR_H
 #define _LIBCPP_WCHAR_H
-#include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/isystem/wchar.h"
 #include "third_party/libcxx/__config"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

@@ -26,11 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/musl/netdb.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 static const char msgs[] =
 	"Invalid flags\0"

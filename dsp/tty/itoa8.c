@@ -21,7 +21,7 @@
 
 struct Itoa8 kItoa8;
 
-static textstartup void itoa8_init(void) {
+__attribute__((__constructor__)) static textstartup void itoa8_init(void) {
   int i;
   uint8_t z;
   uint32_t w;
@@ -41,5 +41,3 @@ static textstartup void itoa8_init(void) {
     kItoa8.data[i] = w;
   }
 }
-
-const void *const itoa8_init_ctor[] initarray = {itoa8_init};

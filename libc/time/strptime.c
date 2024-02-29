@@ -30,11 +30,7 @@
 #include "libc/str/str.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2019 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 char *strptime(const char *s, const char *f, struct tm *tm) {
   int i, w, neg, adj, min, range, itemsize, *dest, dummy;
@@ -44,8 +40,7 @@ char *strptime(const char *s, const char *f, struct tm *tm) {
   while (*f) {
     if (*f != '%') {
       if (isspace(*f)) {
-        for (; *s && isspace(*s); s++)
-          ;
+        for (; *s && isspace(*s); s++);
       } else if (*s != *f) {
         return 0;
       } else {
@@ -138,8 +133,7 @@ char *strptime(const char *s, const char *f, struct tm *tm) {
         goto numeric_range;
       case 'n':
       case 't':
-        for (; *s && isspace(*s); s++)
-          ;
+        for (; *s && isspace(*s); s++);
         break;
       case 'p':
         ex = "AM";

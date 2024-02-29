@@ -936,8 +936,9 @@ void *HttpWorker(void *arg) {
       }
 
       // access log
-      LOG("%6P %16s %.*s %.*s %.*s %.*s %#.*s\n", ipbuf,
-          msg->xmethod.b - msg->xmethod.a, inbuf + msg->xmethod.a,
+      char method[9] = {0};
+      WRITE64LE(method, msg->method);
+      LOG("%6P %16s %s %.*s %.*s %.*s %#.*s\n", ipbuf, method,
           msg->uri.b - msg->uri.a, inbuf + msg->uri.a,
           HeaderLength(kHttpCfIpcountry), HeaderData(kHttpCfIpcountry),
           HeaderLength(kHttpSecChUaPlatform), HeaderData(kHttpSecChUaPlatform),

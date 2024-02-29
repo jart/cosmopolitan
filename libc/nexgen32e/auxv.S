@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-#include "libc/notice.inc"
 
 	.initbss 300,_init_auxv
 //	Global variable holding _start(auxv) parameter.

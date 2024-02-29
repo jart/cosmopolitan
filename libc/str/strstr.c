@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 
@@ -35,14 +34,12 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @see strcasestr()
  * @see memmem()
  */
-char *strstr(const char *haystack, const char *needle) {
+__vex char *strstr(const char *haystack, const char *needle) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   size_t i;
   unsigned k, m;
   const xmm_t *p;
   xmm_t v, n, z = {0};
-  if (IsAsan()) __asan_verify(needle, 1);
-  if (IsAsan()) __asan_verify(haystack, 1);
   if (haystack == needle || !*needle) return (char *)haystack;
   n = (xmm_t){*needle, *needle, *needle, *needle, *needle, *needle,
               *needle, *needle, *needle, *needle, *needle, *needle,

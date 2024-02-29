@@ -66,7 +66,7 @@ static struct Memlog {
     struct Alloc {
       void *addr;
       long size;
-    } * p;
+    } *p;
   } allocs;
   atomic_long usage;
 } __memlog;
@@ -270,7 +270,9 @@ static textexit void __memlog_destroy(void) {
   __memlog_unlock();
 }
 
-static textstartup void __memlog_init(void) {
+__attribute__((__constructor__(90)))  //
+static textstartup void
+__memlog_init(void) {
   GetSymbolTable();
   __memlog_lock();
   __memlog.free = hook_free;
@@ -290,7 +292,3 @@ static textstartup void __memlog_init(void) {
   atexit(__memlog_destroy);
   __memlog_unlock();
 }
-
-const void *const enable_memory_log[] initarray = {
-    __memlog_init,
-};

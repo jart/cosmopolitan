@@ -22,16 +22,15 @@ COSMOPOLITAN_C_START_
  * @see libc/sysv/dos2errno.sh for multimapped numbers
  */
 
-#if defined(__GNUC__) && defined(__aarch64__) && !defined(__STRICT_ANSI__) && \
-    !defined(__cplusplus)
+#if defined(__GNUC__) && defined(__aarch64__) && !defined(__cplusplus)
 /* this header is included by 700+ files; therefore we */
 /* hand-roll &__get_tls()->tib_errno to avoid #include */
 /* cosmopolitan uses x28 as the tls register b/c apple */
-#define errno                                  \
-  (*({                                         \
-    errno_t *__ep;                             \
-    asm("sub\t%0,x28,#192-0x3c" : "=r"(__ep)); \
-    __ep;                                      \
+#define errno                                      \
+  (*__extension__({                                \
+    errno_t *__ep;                                 \
+    __asm__("sub\t%0,x28,#192-0x3c" : "=r"(__ep)); \
+    __ep;                                          \
   }))
 #else
 #define errno (*__errno_location())

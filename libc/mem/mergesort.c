@@ -33,12 +33,8 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
+__static_yoink("openbsd_sorting_notice");
 // clang-format off
-
-asm(".ident\t\"\\n\\n\
-OpenBSD Sorting (BSD-3)\\n\
-Copyright 1993 The Regents of the University of California\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 /*
  * Hybrid exponential search/linear search merge sort with hybrid
@@ -54,8 +50,8 @@ asm(".include \"libc/disclaimer.inc\"");
  * (The default is pairwise merging.)
  */
 
-static void setup(uint8_t *, uint8_t *, size_t, size_t, int (*)(), void *);
-static void insertionsort(uint8_t *, size_t, size_t, int (*)(), void *);
+static void setup(uint8_t *, uint8_t *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
+static void insertionsort(uint8_t *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
 
 #define ISIZE sizeof(int)
 #define PSIZE sizeof(uint8_t *)

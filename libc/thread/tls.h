@@ -39,7 +39,7 @@ struct CosmoTib {
   void **tib_keys;
   void *tib_nsync;
   void *tib_todo[7];
-};
+} __attribute__((__aligned__(64)));
 
 extern int __threaded;
 extern char __tls_morphed;
@@ -70,7 +70,7 @@ forceinline pureconst struct CosmoTib *__get_tls(void) {
   return 0;
 #elif __x86_64__
   struct CosmoTib *__tib;
-  __asm__("mov\t%%fs:0,%0" : "=r"(__tib));
+  __asm__("mov\t%%gs:0x30,%0" : "=r"(__tib));
   return __tib;
 #elif defined(__aarch64__)
   register struct CosmoTib *__tls __asm__("x28");

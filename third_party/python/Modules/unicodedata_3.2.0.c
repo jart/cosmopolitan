@@ -432,12 +432,10 @@ static const unsigned char _PyUnicode_ChangeIndex_3_2_0_rodata[365+1][2] = { /* 
     {  2, 0x02},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_ChangeIndex_3_2_0_init(void) {
     rldecode2(_PyUnicode_ChangeIndex_3_2_0, (void *)_PyUnicode_ChangeIndex_3_2_0_rodata);
 }
-const void *const _PyUnicode_ChangeIndex_3_2_0_ctor[] initarray = {
-    _PyUnicode_ChangeIndex_3_2_0_init,
-};
 
 unsigned char _PyUnicode_ChangeData_3_2_0[31360];
 static const unsigned char _PyUnicode_ChangeData_3_2_0_rodata[1390+1][2] = { /* 8.8648% profit */
@@ -1833,12 +1831,10 @@ static const unsigned char _PyUnicode_ChangeData_3_2_0_rodata[1390+1][2] = { /* 
     { 16, 0x00},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_ChangeData_3_2_0_init(void) {
     rldecode2(_PyUnicode_ChangeData_3_2_0, (void *)_PyUnicode_ChangeData_3_2_0_rodata);
 }
-const void *const _PyUnicode_ChangeData_3_2_0_ctor[] initarray = {
-    _PyUnicode_ChangeData_3_2_0_init,
-};
 
 const _PyUnicode_ChangeRecord *_PyUnicode_GetChange_3_2_0(Py_UCS4 n)
 {

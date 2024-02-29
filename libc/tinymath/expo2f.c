@@ -26,12 +26,8 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 #define asfloat(i) ((union{uint32_t _i; float _f;}){i})._f
 #define SET_FLOAT_WORD(d,w)                       \

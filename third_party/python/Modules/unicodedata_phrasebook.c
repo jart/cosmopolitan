@@ -11647,12 +11647,10 @@ static const unsigned char _PyUnicode_PhrasebookOffset1_rodata[206+1][2] = { /* 
     {253, 0x34},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_PhrasebookOffset1_init(void) {
     rldecode2(_PyUnicode_PhrasebookOffset1, (void *)_PyUnicode_PhrasebookOffset1_rodata);
 }
-const void *const _PyUnicode_PhrasebookOffset1_ctor[] initarray = {
-    _PyUnicode_PhrasebookOffset1_init,
-};
 
 const unsigned int _PyUnicode_PhrasebookOffset2[25056] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 786433, 37748832, 

@@ -85,6 +85,7 @@ EXAMPLES_DIRECTDEPS =								\
 	THIRD_PARTY_MUSL							\
 	THIRD_PARTY_NSYNC							\
 	THIRD_PARTY_NSYNC_MEM							\
+	THIRD_PARTY_OPENMP							\
 	THIRD_PARTY_SED								\
 	THIRD_PARTY_STB								\
 	THIRD_PARTY_TR								\
@@ -153,6 +154,7 @@ o/$(MODE)/examples/picol.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
+o/$(MODE)/examples/wut.o: private COPTS += -fopenmp
 
 $(EXAMPLES_OBJS): examples/BUILD.mk
 

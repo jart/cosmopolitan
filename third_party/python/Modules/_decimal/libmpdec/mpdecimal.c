@@ -36,11 +36,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/mpalloc.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
 #include "third_party/python/Modules/_decimal/libmpdec/umodarith.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 #define MPD_NEWTONDIV_CUTOFF 1024L
 

@@ -36,6 +36,10 @@
 #include "third_party/intel/avx512bitalgintrin.internal.h"
 #include "third_party/intel/avx512vp2intersectintrin.internal.h"
 #include "third_party/intel/avx512vp2intersectvlintrin.internal.h"
+#ifdef __SSE2__
+#include "third_party/intel/avx512fp16intrin.internal.h"
+#include "third_party/intel/avx512fp16vlintrin.internal.h"
+#endif
 #include "third_party/intel/shaintrin.internal.h"
 #include "third_party/intel/fmaintrin.internal.h"
 #include "third_party/intel/f16cintrin.internal.h"

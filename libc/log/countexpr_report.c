@@ -76,12 +76,8 @@ void countexpr_report(void) {
   }
 }
 
-static textstartup void countexpr_init() {
+__attribute__((__constructor__(90))) static textstartup void countexpr_init() {
   atexit(countexpr_report);
 }
-
-const void *const countexpr_ctor[] initarray = {
-    countexpr_init,
-};
 
 #endif /* __x86_64__ */

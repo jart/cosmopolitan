@@ -48,10 +48,10 @@ void __cxa_printexits(FILE *f, void *pred) {
           if (symbol) {
             snprintf(name, sizeof(name), "%s", symbol);
           } else {
-            snprintf(name, sizeof(name), "0x%016lx", b->p[i].fp);
+            snprintf(name, sizeof(name), "0x%016lx", (unsigned long)b->p[i].fp);
           }
-          fprintf(f, "%-22s 0x%016lx 0x%016lx\n", name, b->p[i].arg,
-                  b->p[i].pred);
+          fprintf(f, "%-22s 0x%016lx 0x%016lx\n", name,
+                  (unsigned long)b->p[i].arg, (unsigned long)b->p[i].pred);
         }
       }
     } while ((b = b->next));

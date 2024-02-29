@@ -1,15 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_
-#include "libc/tinymath/internal.h"
+#include "libc/tinymath/arm.internal.h"
 COSMOPOLITAN_C_START_
-// clang-format off
-
-/*
- * Header for sinf, cosf and sincosf.
- *
- * Copyright (c) 2018-2021, Arm Limited.
- * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
- */
 
 /* 2PI * 2^-64.  */
 static const double pi63 = 0x1.921FB54442D18p-62;
@@ -27,10 +19,10 @@ typedef struct
 } sincos_t;
 
 /* Polynomial data (the cosine polynomial is negated in the 2nd entry).  */
-extern const sincos_t __sincosf_table[2] ;
+extern const sincos_t __sincosf_table[2] HIDDEN;
 
 /* Table with 4/PI to 192 bit precision.  */
-extern const uint32_t __inv_pio4[] ;
+extern const uint32_t __inv_pio4[] HIDDEN;
 
 /* Top 12 bits of the float representation with the sign bit cleared.  */
 static inline uint32_t

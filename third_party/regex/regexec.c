@@ -60,6 +60,11 @@
 #include "libc/limits.h"
 #include "third_party/regex/tre.inc"
 
+__notice(tre_regex, "\
+TRE regex (BSD-2 License)\n\
+Copyright 2001-2009 Ville Laurikari <vl@iki.fi>\n\
+Copyright 2016 Szabolcs Nagy");
+
 static void tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
                             const tre_tnfa_t *tnfa, regoff_t *tags,
                             regoff_t match_eo);

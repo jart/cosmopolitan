@@ -21,11 +21,6 @@
 #include "third_party/argon2/blake2.h"
 #include "third_party/argon2/core.h"
 
-asm(".ident\t\"\\n\\n\
-argon2 (CC0 or Apache2)\\n\
-Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
-Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
-
 /* Ensure param structs have not been wrongly padded */
 /* Poor man's static_assert */
 enum {

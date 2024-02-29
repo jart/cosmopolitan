@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/dce.h"
-#include "libc/notice.inc"
 
 	nop
 
@@ -37,7 +36,7 @@ __gc:	.ftrace2
 
 #ifdef __x86_64__
 
-	mov	%fs:0,%rcx			// __get_tls()
+	mov	%gs:0x30,%rcx			// __get_tls()
 	mov	0x18(%rcx),%rcx			// tls::garbages
 	decl	(%rcx)				// --g->i
 	mov	(%rcx),%r8d			// r8 = g->i

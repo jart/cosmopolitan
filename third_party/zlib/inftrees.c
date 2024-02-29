@@ -5,13 +5,9 @@
  * Copyright (C) 1995-2022 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
+__static_yoink("zlib_notice");
 #include "third_party/zlib/inftrees.internal.h"
 #include "third_party/zlib/zutil.internal.h"
-
-asm(".ident\t\"\\n\\n\
-zlib 1.2.13 (zlib License)\\n\
-Copyright 1995-2022 Jean-loup Gailly and Mark Adler\\n\
-Invented 1990 Phillip Walter Katz\"");
 
 #define MAXBITS 15
 

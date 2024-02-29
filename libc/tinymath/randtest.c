@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
 
 	 Apply various randomness tests to a stream of bytes

@@ -13,6 +13,7 @@
 #include "third_party/libcxx/__config"
 #include "libc/str/str.h"
 #include "third_party/libcxx/stdlib.h"
+#include "libc/isystem/stdlib.h"
 
 /*
     cstdlib synopsis

@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -51,5 +52,6 @@ relegated wontreturn void __die(void) {
           __nocolor ? "" : "\e[1;31m", program_invocation_short_name, host,
           getpid(), gettid(), __nocolor ? "" : "\e[0m", FindDebugBinary(),
           DescribeBacktrace(__builtin_frame_address(0)));
+  ShowBacktrace(2, __builtin_frame_address(0));
   _Exit(77);
 }

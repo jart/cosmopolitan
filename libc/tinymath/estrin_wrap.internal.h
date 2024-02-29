@@ -8,7 +8,6 @@
  * SPDX-License-Identifier: MIT OR Apache-2.0 WITH LLVM-exception
  */
 
-// clang-format off
 #define  ESTRIN_1_(x,                  c, i) FMA(x,   c(1 + i),                        c(i))
 #define  ESTRIN_2_(x, x2,              c, i) FMA(x2,  c(2 + i),                        ESTRIN_1_(x,              c, i))
 #define  ESTRIN_3_(x, x2,              c, i) FMA(x2,  ESTRIN_1_(x,         c,  2 + i), ESTRIN_1_(x,              c, i))

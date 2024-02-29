@@ -108,7 +108,7 @@ systemfive_cp:
 systemfive_cancellable:			// our pthread_cancel() miracle code
 	cmpb	$0,__tls_enabled(%rip)	// inspired by the musl libc design!
 	je	1f			// we handle linux and bsd together!
-	mov	%fs:0,%r10		// CosmoTib::tib_self
+	mov	%gs:0x30,%r10		// CosmoTib::tib_self
 	mov	0x28(%r10),%r10		// CosmoTib::tib_pthread
 	test	%r10,%r10		// is it a posix thread?
 	jz	1f			// it's spawn() probably
@@ -135,7 +135,7 @@ systemfive_cancellable_end:		// i/o calls park here for long time
 	jne	systemfive_errno	// werent interrupted by OnSigCancel
 	cmpb	$0,__tls_enabled(%rip)	// make sure it's safe to grab %fs:0
 	je	systemfive_errno	// tls is disabled we can't continue
-	mov	%fs:0,%rcx		// CosmoTib::tib_self
+	mov	%gs:0x30,%rcx		// CosmoTib::tib_self
 	mov	0x28(%rcx),%rcx		// CosmoTib::tib_pthread
 	test	%rcx,%rcx		// is it a posix thread?
 	jz	systemfive_errno	// it's spawn() probably

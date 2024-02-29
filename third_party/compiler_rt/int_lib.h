@@ -46,10 +46,12 @@
 
 #ifdef _MSC_VER
 #define ALWAYS_INLINE __forceinline
+#define NOINLINE __declspec(noinline)
 #define NORETURN __declspec(noreturn)
 #define UNUSED
 #else
 #define ALWAYS_INLINE __attribute__((__always_inline__))
+#define NOINLINE __attribute__((__noinline__))
 #define NORETURN __attribute__((__noreturn__))
 #define UNUSED __attribute__((__unused__))
 #endif

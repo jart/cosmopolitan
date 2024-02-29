@@ -21,10 +21,10 @@ __bswapd (int __X)
   return __builtin_bswap32 (__X);
 }
 #ifndef __iamcu__
-#ifndef __SSE4_2__
+#ifndef __CRC32__
 #pragma GCC push_options
-#pragma GCC target("sse4.2")
-#define __DISABLE_SSE4_2__
+#pragma GCC target("crc32")
+#define __DISABLE_CRC32__
 #endif
 extern __inline unsigned int
 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
@@ -44,8 +44,8 @@ __crc32d (unsigned int __C, unsigned int __V)
 {
   return __builtin_ia32_crc32si (__C, __V);
 }
-#ifdef __DISABLE_SSE4_2__
-#undef __DISABLE_SSE4_2__
+#ifdef __DISABLE_CRC32__
+#undef __DISABLE_CRC32__
 #pragma GCC pop_options
 #endif
 #endif
@@ -63,9 +63,19 @@ __rdpmc (int __S)
   return __builtin_ia32_rdpmc (__S);
 }
 #endif
-#define __rdtsc() __builtin_ia32_rdtsc ()
+extern __inline unsigned long long
+__attribute__((__gnu_inline__, __always_inline__, __artificial__))
+__rdtsc (void)
+{
+  return __builtin_ia32_rdtsc ();
+}
 #ifndef __iamcu__
-#define __rdtscp(a) __builtin_ia32_rdtscp (a)
+extern __inline unsigned long long
+__attribute__((__gnu_inline__, __always_inline__, __artificial__))
+__rdtscp (unsigned int *__A)
+{
+  return __builtin_ia32_rdtscp (__A);
+}
 #endif
 extern __inline unsigned char
 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
@@ -130,10 +140,10 @@ __bswapq (long long __X)
 {
   return __builtin_bswap64 (__X);
 }
-#ifndef __SSE4_2__
+#ifndef __CRC32__
 #pragma GCC push_options
-#pragma GCC target("sse4.2")
-#define __DISABLE_SSE4_2__
+#pragma GCC target("crc32")
+#define __DISABLE_CRC32__
 #endif
 extern __inline unsigned long long
 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
@@ -141,8 +151,8 @@ __crc32q (unsigned long long __C, unsigned long long __V)
 {
   return __builtin_ia32_crc32di (__C, __V);
 }
-#ifdef __DISABLE_SSE4_2__
-#undef __DISABLE_SSE4_2__
+#ifdef __DISABLE_CRC32__
+#undef __DISABLE_CRC32__
 #pragma GCC pop_options
 #endif
 extern __inline long long

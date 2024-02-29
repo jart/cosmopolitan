@@ -920,17 +920,3 @@ char *cosmo_dlerror(void) {
   STRACE("dlerror() → %#s", res);
   return res;
 }
-
-#ifdef __x86_64__
-static textstartup void dlopen_init() {
-  if (IsLinux() || IsFreebsd()) {
-    // switch from %fs to %gs for tls
-    struct CosmoTib *tib = __get_tls();
-    __morph_tls();
-    __set_tls(tib);
-  }
-}
-const void *const dlopen_ctor[] initarray = {
-    dlopen_init,
-};
-#endif

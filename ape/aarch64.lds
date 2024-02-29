@@ -89,10 +89,12 @@ SECTIONS {
     *(.ubsan.data)
   }
 
-  .comment : {
-    __comment_start = .;
-    KEEP(*(.comment))
+  .notice : {
+    __notices = .;
+    KEEP(*(.notice))
     BYTE(0);
+    BYTE(10);
+    BYTE(10);
   }
 
   .eh_frame_hdr : {
@@ -157,8 +159,11 @@ SECTIONS {
 
   .init_array : {
     __init_array_start = .;
-    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(.init_array EXCLUDE_FILE(*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
+    KEEP(*(.preinit_array))
+    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
+           SORT_BY_INIT_PRIORITY(.ctors.*)))
+    KEEP(*(.init_array))
+    KEEP(*(.ctors))
     __init_array_end = .;
   }
 

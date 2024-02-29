@@ -167,7 +167,7 @@ wint_t towctrans(wint_t, wctrans_t) libcesque;
 
 int getsubopt(char **, char *const *, char **) libcesque paramsnonnull();
 char *strsignal(int) returnsnonnull libcesque;
-char *strerror(int) returnsnonnull dontthrow nocallback;
+char *strerror(int) returnsnonnull dontthrow dontcallback;
 errno_t strerror_r(int, char *, size_t) libcesque;
 char *__xpg_strerror_r(int, char *, size_t) libcesque;
 

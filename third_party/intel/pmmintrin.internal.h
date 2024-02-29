@@ -2,6 +2,7 @@
 #ifndef _PMMINTRIN_H_INCLUDED
 #define _PMMINTRIN_H_INCLUDED
 #include "third_party/intel/emmintrin.internal.h"
+#include "third_party/intel/mwaitintrin.internal.h"
 #ifndef __SSE3__
 #pragma GCC push_options
 #pragma GCC target("sse3")
@@ -66,16 +67,6 @@ extern __inline __m128i __attribute__((__gnu_inline__, __always_inline__, __arti
 _mm_lddqu_si128 (__m128i const *__P)
 {
   return (__m128i) __builtin_ia32_lddqu ((char const *)__P);
-}
-extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-_mm_monitor (void const * __P, unsigned int __E, unsigned int __H)
-{
-  __builtin_ia32_monitor (__P, __E, __H);
-}
-extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-_mm_mwait (unsigned int __E, unsigned int __H)
-{
-  __builtin_ia32_mwait (__E, __H);
 }
 #ifdef __DISABLE_SSE3__
 #undef __DISABLE_SSE3__

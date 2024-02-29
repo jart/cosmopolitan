@@ -23,10 +23,9 @@
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
-textstartup static void strftime_test_init(void) {
+__attribute__((__constructor__)) void init(void) {
   setenv("TZ", "GST", true);
 }
-const void *const strftime_test_ctor[] initarray = {strftime_test_init};
 
 char *FormatTime(const char *fmt, struct tm *tm) {
   static char buf[64];

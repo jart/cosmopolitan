@@ -101,7 +101,7 @@ static void testlib_showerror_(int line,              //
       _weaken(kvprintf)(fmt, va);
       tinyprint(2, "\n", NULL);
     } else {
-      tinyprint(2, "\t[missing kvprintf]\n");
+      tinyprint(2, "\t[missing kvprintf]\n", NULL);
     }
   }
   tinyprint(2, "\t", SUBTLE, strerror(e), RESET, "\n\t", SUBTLE,

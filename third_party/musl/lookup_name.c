@@ -40,11 +40,7 @@
 #include "third_party/musl/lookup.internal.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/musl/resolv.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 static int is_valid_hostname(const char *host)
 {

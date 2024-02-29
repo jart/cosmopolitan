@@ -28,12 +28,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/feval.internal.h"
 #include "libc/tinymath/kernel.internal.h"
+__static_yoink("musl_libc_notice");
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /*
 "A Precision Approximation of the Gamma Function" - Cornelius Lanczos (1964)

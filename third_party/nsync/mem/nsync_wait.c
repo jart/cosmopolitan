@@ -25,11 +25,7 @@
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 #include "third_party/nsync/waiter.h"
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
+__static_yoink("nsync_notice");
 
 int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 		  nsync_time abs_deadline,

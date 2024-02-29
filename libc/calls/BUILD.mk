@@ -41,6 +41,7 @@ LIBC_CALLS_A_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_ADVAPI32				\
+	LIBC_NT_BCRYPTPRIMITIVES			\
 	LIBC_NT_IPHLPAPI				\
 	LIBC_NT_KERNEL32				\
 	LIBC_NT_NTDLL					\
@@ -72,12 +73,10 @@ $(LIBC_CALLS_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
-ifneq ($(ARCH), aarch64)
 # we always want -O3 because:
 #   it makes the code size smaller too
-# we need -mstringop-strategy=loop because:
-#   privileged code might generate memcpy call
 o/$(MODE)/libc/calls/termios2host.o			\
+o/$(MODE)/libc/calls/siginfo2cosmo.o			\
 o/$(MODE)/libc/calls/sigenter-freebsd.o			\
 o/$(MODE)/libc/calls/sigenter-netbsd.o			\
 o/$(MODE)/libc/calls/sigenter-openbsd.o			\
@@ -85,6 +84,19 @@ o/$(MODE)/libc/calls/sigenter-xnu.o			\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
 			-O3				\
+			-ffreestanding
+
+ifeq ($(ARCH), x86_64)
+# we need -mstringop-strategy=loop because:
+#   privileged code might generate memcpy call
+o/$(MODE)/libc/calls/termios2host.o			\
+o/$(MODE)/libc/calls/siginfo2cosmo.o			\
+o/$(MODE)/libc/calls/sigenter-freebsd.o			\
+o/$(MODE)/libc/calls/sigenter-netbsd.o			\
+o/$(MODE)/libc/calls/sigenter-openbsd.o			\
+o/$(MODE)/libc/calls/sigenter-xnu.o			\
+o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
+		COPTS +=				\
 			-mstringop-strategy=loop
 endif
 
@@ -132,7 +144,8 @@ endif
 o/$(MODE)/libc/calls/pledge-linux.o: private		\
 		CFLAGS +=				\
 			-Os				\
-			-fPIC
+			-fPIC				\
+			-ffreestanding
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S

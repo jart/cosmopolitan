@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -26,12 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/sincosf.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+__static_yoink("arm_optimized_routines_notice");
 
 /* The constants and polynomials for sine and cosine.  The 2nd entry
    computes -cos (x) rather than cos (x) to get negation for free.  */

@@ -50,8 +50,7 @@ wctrans_t wctrans(const char* property);
 #pragma GCC system_header
 #endif
 
-#include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/isystem/wctype.h"
 
 #ifdef __cplusplus
 

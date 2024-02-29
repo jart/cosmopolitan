@@ -20,14 +20,7 @@
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
-/**
- * Returns length of NUL-terminated string.
- *
- * @param s is non-null NUL-terminated string pointer
- * @return number of bytes (excluding NUL)
- * @asyncsignalsafe
- */
-size_t strlen(const char *s) {
+static __vex size_t __strlen(const char *s) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
   xmm_t z = {0};
@@ -37,7 +30,7 @@ size_t strlen(const char *s) {
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   return (const char *)p + __builtin_ctzl(m) - s;
 #else
-#define ONES ((word)-1 / 255)
+#define ONES ((word) - 1 / 255)
 #define BANE (ONES * (255 / 2 + 1))
   typedef unsigned long mayalias word;
   word w;
@@ -55,6 +48,17 @@ size_t strlen(const char *s) {
   }
   return (const char *)p + (__builtin_ctzl(w) >> 3) - s;
 #endif
+}
+
+/**
+ * Returns length of NUL-terminated string.
+ *
+ * @param s is non-null NUL-terminated string pointer
+ * @return number of bytes (excluding NUL)
+ * @asyncsignalsafe
+ */
+size_t strlen(const char *s) {
+  return __strlen(s);
 }
 
 #endif /* __aarch64__ */

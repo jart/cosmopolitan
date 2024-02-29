@@ -674,6 +674,7 @@ static const unsigned short _PyUnicode_RecordsIndex1_rodata[323+1][2] = { /* 7.4
     {  1, 0x10a},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_RecordsIndex1_init(void) {
     int i, j, k;
     for (k = i = 0; i < 323; ++i) {
@@ -682,9 +683,6 @@ static textstartup void _PyUnicode_RecordsIndex1_init(void) {
         }
     }
 }
-const void *const _PyUnicode_RecordsIndex1_ctor[] initarray = {
-    _PyUnicode_RecordsIndex1_init,
-};
 
 unsigned short _PyUnicode_RecordsIndex2[34176];
 static const unsigned short _PyUnicode_RecordsIndex2_rodata[4990+1][2] = { /* 29.2018% profit */
@@ -5680,6 +5678,7 @@ static const unsigned short _PyUnicode_RecordsIndex2_rodata[4990+1][2] = { /* 29
     {  2, 0x00},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_RecordsIndex2_init(void) {
     int i, j, k;
     for (k = i = 0; i < 4990; ++i) {
@@ -5688,7 +5687,3 @@ static textstartup void _PyUnicode_RecordsIndex2_init(void) {
         }
     }
 }
-const void *const _PyUnicode_RecordsIndex2_ctor[] initarray = {
-    _PyUnicode_RecordsIndex2_init,
-};
-

@@ -1,6 +1,6 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_
 #define COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_
-#ifdef _COSMO_SOURCE
 
 #define klog         __klog
 #define kprintf      __kprintf
@@ -54,5 +54,5 @@ void uvprintf(const char *, va_list) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_ */
+#endif /* _COSMO_SOURCE */

@@ -21,12 +21,17 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
+#include "libc/nt/accounting.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 
-#define _CLOCK_REALTIME        0
-#define _CLOCK_MONOTONIC       1
-#define _CLOCK_REALTIME_COARSE 2
-#define _CLOCK_BOOTTIME        3
+#define _CLOCK_REALTIME           0
+#define _CLOCK_MONOTONIC          1
+#define _CLOCK_REALTIME_COARSE    2
+#define _CLOCK_BOOTTIME           3
+#define _CLOCK_PROCESS_CPUTIME_ID 4
+#define _CLOCK_THREAD_CPUTIME_ID  5
 
 static struct {
   uint64_t base;
@@ -35,7 +40,7 @@ static struct {
 
 textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
   uint64_t t;
-  struct NtFileTime ft;
+  struct NtFileTime ft, ftExit, ftUser, ftKernel, ftCreation;
   switch (clock) {
     case _CLOCK_REALTIME:
       if (ts) {
@@ -61,18 +66,30 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
         *ts = timespec_frommillis(GetTickCount64());
       }
       return 0;
+    case _CLOCK_PROCESS_CPUTIME_ID:
+      if (ts) {
+        GetProcessTimes(GetCurrentProcess(), &ftCreation, &ftExit, &ftKernel,
+                        &ftUser);
+        *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
+                                        ReadFileTime(ftKernel));
+      }
+      return 0;
+    case _CLOCK_THREAD_CPUTIME_ID:
+      if (ts) {
+        GetThreadTimes(GetCurrentThread(), &ftCreation, &ftExit, &ftKernel,
+                       &ftUser);
+        *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
+                                        ReadFileTime(ftKernel));
+      }
+      return 0;
     default:
       return -EINVAL;
   }
 }
 
-static textstartup void winclock_init() {
+__attribute__((__constructor__(40))) static textstartup void winclock_init() {
   if (IsWindows()) {
     QueryPerformanceCounter(&g_winclock.base);
     QueryPerformanceFrequency(&g_winclock.freq);
   }
 }
-
-const void *const winclock_ctor[] initarray = {
-    winclock_init,
-};

@@ -37,13 +37,9 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
+__static_yoink("musl_libc_notice");
 
 #define MAXTRIES 100
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
 
 static char *
 __randname(char *template)

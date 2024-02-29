@@ -10,11 +10,7 @@
 #ifndef _LIBCPP_CSTDINT
 #define _LIBCPP_CSTDINT
 
-#include "libc/inttypes.h"
-#include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/literal.h"
-#include "libc/calls/weirdtypes.h"
+#include "libc/isystem/stdint.h"
 #include "third_party/libcxx/__config"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

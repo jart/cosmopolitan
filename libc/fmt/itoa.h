@@ -1,6 +1,6 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_FMT_ITOA_H_
 #define COSMOPOLITAN_LIBC_FMT_ITOA_H_
-#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
 
 #define LengthInt64           __LengthInt64
@@ -42,5 +42,5 @@ libcesque size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
 libcesque size_t uint64toarray_radix8(uint64_t, char[hasatleast 24]);
 
 COSMOPOLITAN_C_END_
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_FMT_ITOA_H_ */
+#endif /* _COSMO_SOURCE */

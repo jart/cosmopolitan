@@ -9,7 +9,7 @@
 #pragma GCC target("amx-bf16")
 #define __DISABLE_AMX_BF16__
 #endif
-#if defined(__x86_64__) && defined(__AMX_BF16__)
+#if defined(__x86_64__)
 #define _tile_dpbf16ps_internal(dst,src1,src2) __asm__ volatile ("{tdpbf16ps\t%%tmm"#src2", %%tmm"#src1", %%tmm"#dst"|tdpbf16ps\t%%tmm"#dst", %%tmm"#src1", %%tmm"#src2"}" ::)
 #define _tile_dpbf16ps(dst,src1,src2) _tile_dpbf16ps_internal (dst, src1, src2)
 #endif

@@ -23,11 +23,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/wait_s.internal.h"
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
+__static_yoink("nsync_notice");
 
 /* Wait until one of:
      w->sem is non-zero----decrement it and return 0.

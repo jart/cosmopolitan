@@ -18,10 +18,9 @@
 #include "libc/str/highwayhash64.h"
 #include "libc/serialize.h"
 
-asm(".ident\t\"\\n\\n\
-HighwayHash (Apache 2.0)\\n\
-Copyright 2017 Google LLC\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(highwayhash_notice, "\
+HighwayHash (Apache 2.0)\n\
+Copyright 2017 Google LLC");
 
 typedef struct {
   uint64_t v0[4];

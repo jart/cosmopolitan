@@ -54,7 +54,7 @@
 #
 
 ifeq ($(LANDLOCKMAKE_VERSION),)
-TMPSAFE = $(join $(TMPDIR),$(subst /,_,$@)).tmp
+TMPSAFE = $(join $(TMPDIR)/,$(subst /,_,$@)).tmp
 else
 TMPSAFE = $(TMPDIR)/
 endif
@@ -93,7 +93,6 @@ DEFAULT_CCFLAGS +=							\
 	-frecord-gcc-switches
 
 DEFAULT_COPTS ?=							\
-	-fno-math-errno							\
 	-fno-ident							\
 	-fno-common							\
 	-fno-gnu-unique							\
@@ -138,6 +137,8 @@ MATHEMATICAL =								\
 DEFAULT_CPPFLAGS +=							\
 	-D_COSMO_SOURCE							\
 	-DMODE='"$(MODE)"'						\
+	-Wno-prio-ctor-dtor						\
+	-Wno-unknown-pragmas						\
 	-nostdinc							\
 	-iquote.							\
 	-isystem libc/isystem
@@ -163,6 +164,7 @@ DEFAULT_LDFLAGS =							\
 	-nostdlib							\
 	-znorelro							\
 	--gc-sections							\
+	-z noexecstack							\
 	--build-id=none							\
 	--no-dynamic-linker
 

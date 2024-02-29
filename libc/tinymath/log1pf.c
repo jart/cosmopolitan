@@ -1,180 +1,133 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│ Copyright (c) 1992-2024 The FreeBSD Project                                  │
+│ Copyright (c) 1993 Sun Microsystems, Inc.                                    │
+│ All rights reserved.                                                         │
 │                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions           │
+│ are met:                                                                     │
+│ 1. Redistributions of source code must retain the above copyright            │
+│    notice, this list of conditions and the following disclaimer.             │
+│ 2. Redistributions in binary form must reproduce the above copyright         │
+│    notice, this list of conditions and the following disclaimer in the       │
+│    documentation and/or other materials provided with the distribution.      │
 │                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
-│                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND       │
+│ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE        │
+│ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE   │
+│ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE      │
+│ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL   │
+│ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS      │
+│ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)        │
+│ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   │
+│ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY    │
+│ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF       │
+│ SUCH DAMAGE.                                                                 │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/math.h"
-#include "libc/tinymath/internal.h"
-#include "libc/tinymath/log1pf_data.internal.h"
+#include "libc/tinymath/freebsd.internal.h"
+__static_yoink("freebsd_libm_notice");
+__static_yoink("fdlibm_notice");
 
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+/* s_log1pf.c -- float version of s_log1p.c.
+ * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
+ */
 
-#define Ln2 (0x1.62e43p-1f)
-#define SignMask (0x80000000)
+static const float
+ln2_hi =   6.9313812256e-01,	/* 0x3f317180 */
+ln2_lo =   9.0580006145e-06,	/* 0x3717f7d1 */
+two25 =    3.355443200e+07,	/* 0x4c000000 */
+Lp1 = 6.6666668653e-01,	/* 3F2AAAAB */
+Lp2 = 4.0000000596e-01,	/* 3ECCCCCD */
+Lp3 = 2.8571429849e-01, /* 3E924925 */
+Lp4 = 2.2222198546e-01, /* 3E638E29 */
+Lp5 = 1.8183572590e-01, /* 3E3A3325 */
+Lp6 = 1.5313838422e-01, /* 3E1CD04F */
+Lp7 = 1.4798198640e-01; /* 3E178897 */
 
-/* Biased exponent of the largest float m for which m^8 underflows.  */
-#define M8UFLOW_BOUND_BEXP 112
-/* Biased exponent of the largest float for which we just return x.  */
-#define TINY_BOUND_BEXP 103
+static const float zero = 0.0;
+static volatile float vzero = 0.0;
 
-#define C(i) __log1pf_data.coeffs[i]
-
-static inline float
-eval_poly (float m, uint32_t e)
-{
-#ifdef LOG1PF_2U5
-
-  /* 2.5 ulp variant. Approximate log(1+m) on [-0.25, 0.5] using
-     slightly modified Estrin scheme (no x^0 term, and x term is just x).  */
-  float p_12 = fmaf (m, C (1), C (0));
-  float p_34 = fmaf (m, C (3), C (2));
-  float p_56 = fmaf (m, C (5), C (4));
-  float p_78 = fmaf (m, C (7), C (6));
-
-  float m2 = m * m;
-  float p_02 = fmaf (m2, p_12, m);
-  float p_36 = fmaf (m2, p_56, p_34);
-  float p_79 = fmaf (m2, C (8), p_78);
-
-  float m4 = m2 * m2;
-  float p_06 = fmaf (m4, p_36, p_02);
-
-  if (UNLIKELY (e < M8UFLOW_BOUND_BEXP))
-    return p_06;
-
-  float m8 = m4 * m4;
-  return fmaf (m8, p_79, p_06);
-
-#elif defined(LOG1PF_1U3)
-
-  /* 1.3 ulp variant. Approximate log(1+m) on [-0.25, 0.5] using Horner
-     scheme. Our polynomial approximation for log1p has the form
-     x + C1 * x^2 + C2 * x^3 + C3 * x^4 + ...
-     Hence approximation has the form m + m^2 * P(m)
-       where P(x) = C1 + C2 * x + C3 * x^2 + ... .  */
-  return fmaf (m, m * HORNER_8 (m, C), m);
-
-#else
-#error No log1pf approximation exists with the requested precision. Options are 13 or 25.
-#endif
-}
-
-static inline uint32_t
-biased_exponent (uint32_t ix)
-{
-  return (ix & 0x7f800000) >> 23;
-}
-
-/* log1pf approximation using polynomial on reduced interval. Worst-case error
-   when using Estrin is roughly 2.02 ULP:
-   log1pf(0x1.21e13ap-2) got 0x1.fe8028p-3 want 0x1.fe802cp-3.  */
+/**
+ * Returns log(1 + x).
+ */
 float
-log1pf (float x)
+log1pf(float x)
 {
-  uint32_t ix = asuint (x);
-  uint32_t ia = ix & ~SignMask;
-  uint32_t ia12 = ia >> 20;
-  uint32_t e = biased_exponent (ix);
+	float hfsq,f,c,s,z,R,u;
+	int32_t k,hx,hu,ax;
 
-  /* Handle special cases first.  */
-  if (UNLIKELY (ia12 >= 0x7f8 || ix >= 0xbf800000 || ix == 0x80000000
-		|| e <= TINY_BOUND_BEXP))
-    {
-      if (ix == 0xff800000)
-	{
-	  /* x == -Inf => log1pf(x) =  NaN.  */
-	  return NAN;
+	GET_FLOAT_WORD(hx,x);
+	ax = hx&0x7fffffff;
+
+	k = 1;
+	if (hx < 0x3ed413d0) {			/* 1+x < sqrt(2)+  */
+	    if(ax>=0x3f800000) {		/* x <= -1.0 */
+		if(x==(float)-1.0) return -two25/vzero; /* log1p(-1)=+inf */
+		else return (x-x)/(x-x);	/* log1p(x<-1)=NaN */
+	    }
+	    if(ax<0x38000000) {			/* |x| < 2**-15 */
+		if(two25+x>zero			/* raise inexact */
+	            &&ax<0x33800000) 		/* |x| < 2**-24 */
+		    return x;
+		else
+		    return x - x*x*(float)0.5;
+	    }
+	    if(hx>0||hx<=((int32_t)0xbe95f619)) {
+		k=0;f=x;hu=1;}		/* sqrt(2)/2- <= 1+x < sqrt(2)+ */
 	}
-      if ((ix == 0x7f800000 || e <= TINY_BOUND_BEXP) && ia12 <= 0x7f8)
-	{
-	  /* |x| < TinyBound => log1p(x)  =  x.
-	      x ==       Inf => log1pf(x) = Inf.  */
-	  return x;
+	if (hx >= 0x7f800000) return x+x;
+	if(k!=0) {
+	    if(hx<0x5a000000) {
+		STRICT_ASSIGN(float,u,(float)1.0+x);
+		GET_FLOAT_WORD(hu,u);
+	        k  = (hu>>23)-127;
+		/* correction term */
+	        c  = (k>0)? (float)1.0-(u-x):x-(u-(float)1.0);
+		c /= u;
+	    } else {
+		u  = x;
+		GET_FLOAT_WORD(hu,u);
+	        k  = (hu>>23)-127;
+		c  = 0;
+	    }
+	    hu &= 0x007fffff;
+	    /*
+	     * The approximation to sqrt(2) used in thresholds is not
+	     * critical.  However, the ones used above must give less
+	     * strict bounds than the one here so that the k==0 case is
+	     * never reached from here, since here we have committed to
+	     * using the correction term but don't use it if k==0.
+	     */
+	    if(hu<0x3504f4) {			/* u < sqrt(2) */
+	        SET_FLOAT_WORD(u,hu|0x3f800000);/* normalize u */
+	    } else {
+	        k += 1;
+		SET_FLOAT_WORD(u,hu|0x3f000000);	/* normalize u/2 */
+	        hu = (0x00800000-hu)>>2;
+	    }
+	    f = u-(float)1.0;
 	}
-      if (ix == 0xbf800000)
-	{
-	  /* x == -1.0 => log1pf(x) = -Inf.  */
-	  return __math_divzerof (-1);
+	hfsq=(float)0.5*f*f;
+	if(hu==0) {	/* |f| < 2**-20 */
+	    if(f==zero) {
+		if(k==0) {
+		    return zero;
+		} else {
+		    c += k*ln2_lo;
+		    return k*ln2_hi+c;
+		}
+	    }
+	    R = hfsq*((float)1.0-(float)0.66666666666666666*f);
+	    if(k==0) return f-R; else
+	    	     return k*ln2_hi-((R-(k*ln2_lo+c))-f);
 	}
-      if (ia12 >= 0x7f8)
-	{
-	  /* x == +/-NaN => log1pf(x) = NaN.  */
-	  return __math_invalidf (asfloat (ia));
-	}
-      /* x <    -1.0 => log1pf(x) = NaN.  */
-      return __math_invalidf (x);
-    }
-
-  /* With x + 1 = t * 2^k (where t = m + 1 and k is chosen such that m
-			   is in [-0.25, 0.5]):
-     log1p(x) = log(t) + log(2^k) = log1p(m) + k*log(2).
-
-     We approximate log1p(m) with a polynomial, then scale by
-     k*log(2). Instead of doing this directly, we use an intermediate
-     scale factor s = 4*k*log(2) to ensure the scale is representable
-     as a normalised fp32 number.  */
-
-  if (ix <= 0x3f000000 || ia <= 0x3e800000)
-    {
-      /* If x is in [-0.25, 0.5] then we can shortcut all the logic
-	 below, as k = 0 and m = x.  All we need is to return the
-	 polynomial.  */
-      return eval_poly (x, e);
-    }
-
-  float m = x + 1.0f;
-
-  /* k is used scale the input. 0x3f400000 is chosen as we are trying to
-     reduce x to the range [-0.25, 0.5]. Inside this range, k is 0.
-     Outside this range, if k is reinterpreted as (NOT CONVERTED TO) float:
-	 let k = sign * 2^p      where sign = -1 if x < 0
-					       1 otherwise
-	 and p is a negative integer whose magnitude increases with the
-	 magnitude of x.  */
-  int k = (asuint (m) - 0x3f400000) & 0xff800000;
-
-  /* By using integer arithmetic, we obtain the necessary scaling by
-     subtracting the unbiased exponent of k from the exponent of x.  */
-  float m_scale = asfloat (asuint (x) - k);
-
-  /* Scale up to ensure that the scale factor is representable as normalised
-     fp32 number (s in [2**-126,2**26]), and scale m down accordingly.  */
-  float s = asfloat (asuint (4.0f) - k);
-  m_scale = m_scale + fmaf (0.25f, s, -1.0f);
-
-  float p = eval_poly (m_scale, biased_exponent (asuint (m_scale)));
-
-  /* The scale factor to be applied back at the end - by multiplying float(k)
-     by 2^-23 we get the unbiased exponent of k.  */
-  float scale_back = (float) k * 0x1.0p-23f;
-
-  /* Apply the scaling back.  */
-  return fmaf (scale_back, Ln2, p);
+ 	s = f/((float)2.0+f);
+	z = s*s;
+	R = z*(Lp1+z*(Lp2+z*(Lp3+z*(Lp4+z*(Lp5+z*(Lp6+z*Lp7))))));
+	if(k==0) return f-(hfsq-s*(hfsq+R)); else
+		 return k*ln2_hi-((hfsq-(s*(hfsq+R)+(k*ln2_lo+c)))-f);
 }

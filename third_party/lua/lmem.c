@@ -36,11 +36,7 @@
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
-
-asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("lua_notice");
 
 
 #if defined(EMERGENCYGCTESTS)

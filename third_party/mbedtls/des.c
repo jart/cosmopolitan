@@ -22,12 +22,7 @@
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/platform.h"
-
-asm(".ident\t\"\\n\\n\
-Mbed TLS (Apache 2.0)\\n\
-Copyright ARM Limited\\n\
-Copyright Mbed TLS Contributors\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("mbedtls_notice");
 
 /**
  * @fileoverview FIPS-46-3 compliant Triple-DES implementation

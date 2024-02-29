@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -26,13 +26,9 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/aarch64/asmdefs.internal.h"
+.yoink arm_optimized_routines_notice
 
 #define __memset_aarch64 memset
-
-.ident "\n\n\
-Optimized Routines (MIT License)\n\
-Copyright 2022 ARM Limited\n"
-.include "libc/disclaimer.inc"
 
 /* Assumptions:
  *

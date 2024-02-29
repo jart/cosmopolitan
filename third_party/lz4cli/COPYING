@@ -1,4 +1,3 @@
-.ident	"\n
 LZ4cli - LZ4 Command Line Interface (GPL v2)
 Copyright (C) Yann Collet 2011-2016
 
@@ -18,4 +17,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 You can contact the author at :
 - LZ4 source repository : https://github.com/lz4/lz4
-- LZ4 public forum : https://groups.google.com/forum/#!forum/lz4c"
+- LZ4 public forum : https://groups.google.com/forum/#!forum/lz4c

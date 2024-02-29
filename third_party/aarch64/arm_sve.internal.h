@@ -5,6 +5,6 @@
 typedef __fp16 float16_t;
 typedef float float32_t;
 typedef double float64_t;
-#pragma GCC aarch64 "third_party/aarch64/arm_sve.internal.h"
+#pragma GCC aarch64 "arm_sve.h"
 #endif
 #endif

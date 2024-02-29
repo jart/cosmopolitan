@@ -35,6 +35,10 @@ TEST(xstrcat, pointerAbuse) {
   EXPECT_STREQ("hi there\n", gc(xstrcat("hi", ' ', "there", '\n')));
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 12
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
+
 int hard_static(void) {
   char *b, *p;
   p = b = malloc(16);

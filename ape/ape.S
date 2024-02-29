@@ -33,7 +33,6 @@
 │ αcτµαlly pδrταblε εxεcµταblε § program header                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.internal.h"
-#include "ape/notice.inc"
 #include "ape/relocations.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/dce.h"
@@ -1772,49 +1771,31 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.type	ape_text_nops,@object
 	.type	__test_end,@object
 
-	.section .commentprologue,"a",@progbits
-	.globl	__comment_start
-	.type	__comment_start,@object
-	.hidden	__comment_start
-__comment_start:/*
-	...
-	decentralized content
-	...
-	*/.previous
-	.section .commentepilogue,"a",@progbits
-	.byte	0
-	.previous
-
 	.section .ape.pad.head,"a",@progbits
 	.type	ape_pad_head,@object
 	.hidden	ape_pad_head
 ape_pad_head:
-	.previous
 
 	.section .ape.pad.text,"a",@progbits
 	.type	ape_pad_text,@object
 	.hidden	ape_pad_text
 ape_pad_text:
-	.previous
 
 	.section .ape.pad.privileged,"a",@progbits
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
-	.previous
 
 	.section .ape.pad.data,"a",@progbits
 	.type	ape_pad_data,@object
 	.hidden	ape_pad_data
 ape_pad_data:
-	.previous
 
 #if SupportsWindows()
 	.section .idata.ro,"a",@progbits
 	.type	ape_idata_ro,@object
 	.hidden	ape_idata_ro
 ape_idata_ro:
-	.previous
 #endif /* SupportsWindows() */
 
 	.section .dataprologue,"aw",@progbits
@@ -1822,32 +1803,45 @@ ape_idata_ro:
 	.globl	__data_start
 	.hidden	__data_start
 __data_start:
-	.previous
 
 	.section .dataepilogue,"aw",@progbits
 	.type	__data_end,@object
 	.globl	__data_end
 	.hidden	__data_end
 __data_end:
-	.previous
 
 	.section .bssprologue,"aw",@nobits
 	.type	__bss_start,@object
 	.globl	__bss_start
 	.hidden	__bss_start
 __bss_start:
-	.previous
 
 	.section .bssepilogue,"aw",@nobits
 	.type	__bss_end,@object
 	.globl	__bss_end
 	.hidden	__bss_end
 __bss_end:
-	.previous
 
 	.section .fstls,"awT",@nobits
 	.align	TLS_ALIGNMENT
-	.previous
+
+	.section .notice,"aR",@progbits
+	.asciz	"\n\n\
+Cosmopolitan\n\
+Copyright 2024 Justine Alexandra Roberts Tunney\n\
+\n\
+Permission to use, copy, modify, and/or distribute this software for\n\
+any purpose with or without fee is hereby granted, provided that the\n\
+above copyright notice and this permission notice appear in all copies.\n\
+\n\
+THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL\n\
+WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED\n\
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE\n\
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL\n\
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR\n\
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER\n\
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR\n\
+PERFORMANCE OF THIS SOFTWARE."
 
 .end
 

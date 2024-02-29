@@ -29,11 +29,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 /* number-theory.c */
 const mpd_uint_t mpd_moduli[3] = {

@@ -24,6 +24,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nt/accounting.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filemapflags.h"
@@ -59,6 +60,7 @@ __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
+__msabi extern typeof(GetUserName) *const __imp_GetUserNameW;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
 __msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
 __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
@@ -142,6 +144,11 @@ static abi void DeduplicateStdioHandles(void) {
   }
 }
 
+static bool32 HasEnvironmentVariable(const char16_t *name) {
+  char16_t buf[4];
+  return __imp_GetEnvironmentVariableW(name, buf, ARRAYLEN(buf));
+}
+
 // main function of windows init process
 // i.e. first process spawned that isn't forked
 static abi wontreturn void WinInit(const char16_t *cmdline) {
@@ -166,12 +173,6 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
         __imp_SetConsoleMode(h, m);
       }
     }
-  }
-
-  // avoid programs like emacs nagging the user to define this
-  char16_t var[8];
-  if (!__imp_GetEnvironmentVariableW(u"TERM", var, 8)) {
-    __imp_SetEnvironmentVariableW(u"TERM", u"xterm-256color");
   }
 
   // allocate memory for stack and argument block
@@ -199,6 +200,34 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   _mmi.i = 1;
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
+
+  // define $TERM if it's not already present
+  // programs like emacs will stop the world and nag if it's not set
+  if (!HasEnvironmentVariable(u"TERM")) {
+    __imp_SetEnvironmentVariableW(u"TERM", u"xterm-256color");
+  }
+
+  // define $USER as GetUserName() if not set
+  // Windows doesn't define this environment variable by default
+  uint32_t vsize = ARRAYLEN(wa->tmp16);
+  if (!HasEnvironmentVariable(u"USER") &&
+      __imp_GetUserNameW(&wa->tmp16, &vsize)) {
+    __imp_SetEnvironmentVariableW(u"USER", wa->tmp16);
+  }
+
+  // define $HOME as $HOMEDRIVE$HOMEPATH if not set
+  // Windows doesn't define this environment variable by default
+  uint32_t vlen;
+  if (!HasEnvironmentVariable(u"HOME") &&
+      (vlen = __imp_GetEnvironmentVariableW(u"HOMEDRIVE", wa->tmp16,
+                                            ARRAYLEN(wa->tmp16))) <
+          ARRAYLEN(wa->tmp16) &&
+      (vlen += __imp_GetEnvironmentVariableW(u"HOMEPATH", wa->tmp16 + vlen,
+                                             ARRAYLEN(wa->tmp16) - vlen)) <
+          ARRAYLEN(wa->tmp16) &&
+      vlen) {
+    __imp_SetEnvironmentVariableW(u"HOME", wa->tmp16);
+  }
 
   // parse utf-16 command into utf-8 argv array in argument block
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),

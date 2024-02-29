@@ -8,10 +8,9 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Modules/hashtable.h"
 
-asm(".ident\t\"\\n\\n\
-cfuhash (bsd-3)\\n\
-Copyright (c) 2005 Don Owens\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(cfuhash_notice, "\
+cfuhash (bsd-3)\n\
+Copyright (c) 2005 Don Owens");
 
 /* The implementation of the hash table (_Py_hashtable_t) is based on the
    cfuhash project:

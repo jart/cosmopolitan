@@ -26,16 +26,10 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/fenv.h"
-
-asm(".ident\t\"\\n\\n\
-Fused Multiply Add (MIT License)\\n\
-Copyright (c) 2005-2011 David Schultz <das@FreeBSD.ORG>\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
+__static_yoink("freebsd_libm_notice");
 
 /* origin: FreeBSD /usr/src/lib/msun/src/s_fmaf.c */
 /*-
@@ -110,7 +104,7 @@ float fmaf(float x, float y, float z)
 	   so direct double-precision arithmetic suffices, except where
 	   double rounding occurs. */
 
-	/* #pragma STDC FENV_ACCESS ON */
+/* #pragma STDC FENV_ACCESS ON */
 	double xy, result;
 	union {double f; uint64_t i;} u;
 	int e;

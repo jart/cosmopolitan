@@ -23,10 +23,9 @@
 
 #define ROR(v, n) (((v) >> (n)) | ((v) << (64 - (n))))
 
-asm(".ident\t\"\\n\\n\
-boringssl blake2b (ISC License)\\n\
-Copyright 2021 Google LLC\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(blake2b_notice, "\
+boringssl blake2b (ISC License)\n\
+Copyright 2021 Google LLC");
 
 // https://tools.ietf.org/html/rfc7693#section-2.6
 static const uint64_t kIV[8] = {

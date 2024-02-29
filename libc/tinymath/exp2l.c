@@ -28,16 +28,11 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
-#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
-asm(".ident\t\"\\n\\n\
-FreeBSD libm (BSD-2 License)\\n\
-Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
+__static_yoink("freebsd_libm_notice");
+
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 /* origin: FreeBSD /usr/src/lib/msun/ld80/s_exp2l.c and /usr/src/lib/msun/ld128/s_exp2l.c */
 /*-

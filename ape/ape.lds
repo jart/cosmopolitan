@@ -282,12 +282,9 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.init.*)))
     KEEP(*(.init))
     KEEP(*(.initepilogue))
-    KEEP(*(.pltprologue))
     *(.plt)
-    KEEP(*(.pltepilogue))
-    KEEP(*(.pltgotprologue))
     *(.plt.got)
-    KEEP(*(.pltgotepilogue))
+    *(.iplt)
     *(.text.startup .text.startup.*)
     *(.text.exit .text.exit.*)
     *(.text.unlikely .text.*_unlikely .text.unlikely.*)
@@ -323,7 +320,7 @@ SECTIONS {
 
 /*BEGIN: Read Only Data */
 
-  .rodata . : {
+  .rodata ALIGN(CONSTANT(COMMONPAGESIZE)) : {
     KEEP(*(.rodata.pytab.0));
     KEEP(*(.rodata.pytab.1));
     KEEP(*(.rodata.pytab.2));
@@ -333,11 +330,11 @@ SECTIONS {
     *(.ubsan.data)
 
     /* Legal Notices */
-#if !defined(IM_FEELING_NAUGHTY) || defined(EMBED_NOTICES)
-    KEEP(*(.commentprologue))
-    KEEP(*(.comment))
-    KEEP(*(.commentepilogue))
-#endif
+    __notices = .;
+    KEEP(*(.notice))
+    BYTE(0);
+    BYTE(10);
+    BYTE(10);
 
 /*BEGIN: read-only data that's only needed for initialization */
 
@@ -393,26 +390,28 @@ SECTIONS {
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
+    *(.gnu_extab)
+    *(.gcc_except_table .gcc_except_table.*)
+    *(.exception_ranges*)
     *(.PyRuntime) /* for python */
     *(.subrs) /* for emacs */
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     . += . > 0 ? CODE_GRANULE : 0;
 
-    KEEP(*(.gotprologue))
+    . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
+    __got_start = .;
     *(.got)
-    KEEP(*(.gotepilogue))
+    __got_end = .;
 
-    KEEP(*(.gotpltprologue))
     *(.got.plt)
-    KEEP(*(.gotpltepilogue))
 
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     __init_array_start = .;
+    KEEP(*(.preinit_array))
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
            SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(.ctors))
     KEEP(*(.init_array))
-    KEEP(*(.preinit_array))
+    KEEP(*(.ctors))
     __init_array_end = .;
 
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
@@ -429,7 +428,9 @@ SECTIONS {
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
+    *(.igot.plt)
     KEEP(*(.dataepilogue))
+
     . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: NT FORK COPYING */
     _edata = .;
@@ -527,7 +528,9 @@ SECTIONS {
     *(.piro.data.sort.iat.*)
 #endif
     *(__patchable_function_entries)
+    *(.note.gnu.property)
     *(__mcount_loc)
+    *(.rela.dyn)
     *(.discard)
     *(.yoink)
   }

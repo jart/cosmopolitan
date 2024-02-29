@@ -22,11 +22,7 @@
 #include "third_party/nsync/once.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
+__static_yoink("nsync_notice");
 
 /* An once_sync_s struct contains a lock, and a condition variable on which
    threads may wait for an nsync_once to be initialized by another thread.

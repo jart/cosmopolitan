@@ -28,11 +28,7 @@
 #include "third_party/musl/resolv.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/musl/resolv.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 int res_query(const char *name, int class, int type, unsigned char *dest, int len)
 {

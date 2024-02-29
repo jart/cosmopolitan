@@ -28,12 +28,11 @@
 #include "third_party/xed/private.h"
 #include "third_party/xed/x86.h"
 
-asm(".ident\t\"\\n\\n\
-Xed (Apache 2.0)\\n\
-Copyright 2018 Intel Corporation\\n\
-Copyright 2019 Justine Alexandra Roberts Tunney\\n\
-Modifications: Trimmed down to 3kb [2019-03-22 jart]\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(xed_notice, "\
+Xed (Apache 2.0)\n\
+Copyright 2018 Intel Corporation\n\
+Copyright 2019 Justine Alexandra Roberts Tunney\n\
+Changes: Trimmed Intel's assembler down to 3kb [2019-03-22 jart]");
 
 #define XED_ILD_HASMODRM_IGNORE_MOD 2
 

@@ -29,12 +29,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/mpeg/mpeg.h"
 #include "libc/macros.internal.h"
-
-asm(".ident\t\"\\n\\n\
-PL_MPEG (MIT License)\\n\
-Copyright(c) 2019 Dominic Szablewski\\n\
-https://phoboslab.org\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("pl_mpeg_notice");
 
 /**
  * @see YCbCr2RGB() in tool/viz/lib/ycbcr2rgb.c

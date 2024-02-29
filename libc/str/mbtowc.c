@@ -29,11 +29,7 @@
 #include "libc/limits.h"
 #include "libc/str/mb.internal.h"
 #include "libc/str/str.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 int mbtowc(wchar_t *restrict wc, const char *restrict src, size_t n) {
   unsigned c;

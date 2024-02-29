@@ -151,17 +151,11 @@ void Connect(void) {
   struct timespec deadline;
   if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
-    FATALF("%s:%hu: EAI_%s %m", g_hostname, g_runitdport, gai_strerror(rc));
+    FATALF("%s:%hu: DNS lookup failed: %s", g_hostname, g_runitdport,
+           gai_strerror(rc));
     __builtin_unreachable();
   }
   ip4 = (const char *)&((struct sockaddr_in *)ai->ai_addr)->sin_addr;
-  if (ispublicip(ai->ai_family,
-                 &((struct sockaddr_in *)ai->ai_addr)->sin_addr)) {
-    FATALF("%s points to %hhu.%hhu.%hhu.%hhu"
-           " which isn't part of a local/private/testing subnet",
-           g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
-    __builtin_unreachable();
-  }
   DEBUGF("connecting to %d.%d.%d.%d port %d", ip4[0], ip4[1], ip4[2], ip4[3],
          ntohs(((struct sockaddr_in *)ai->ai_addr)->sin_port));
   CHECK_NE(-1,

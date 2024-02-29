@@ -172,11 +172,11 @@
 #include "net/http/escape.h"
 #include "tool/build/lib/case.h"
 
-asm(".ident\t\"\\n\\n\
-Cosmopolitan Linenoise (BSD-2)\\n\
-Copyright 2018-2020 Justine Tunney <jtunney@gmail.com>\\n\
-Copyright 2010-2016 Salvatore Sanfilippo <antirez@gmail.com>\\n\
-Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
+__notice(linenoise_notice, "\
+Cosmopolitan Linenoise (BSD-2)\n\
+Copyright 2018-2020 Justine Tunney <jtunney@gmail.com>\n\
+Copyright 2010-2016 Salvatore Sanfilippo <antirez@gmail.com>\n\
+Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>");
 
 #define LINENOISE_POLL_MS 50
 
@@ -2644,10 +2644,7 @@ static void linenoiseAtExit(void) {
   linenoiseRingFree();
 }
 
+__attribute__((__constructor__(99)))
 static textstartup void linenoiseInit() {
   atexit(linenoiseAtExit);
 }
-
-const void *const linenoiseCtor[] initarray = {
-    linenoiseInit,
-};

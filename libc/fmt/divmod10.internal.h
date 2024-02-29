@@ -2,8 +2,7 @@
 #define COSMOPOLITAN_LIBC_FMT_DIVMOD10_H_
 
 forceinline uint64_t __divmod10(uint64_t __x, unsigned *__r) {
-#if defined(__STRICT_ANSI__) || !defined(__GNUC__) || \
-    (defined(__OPTIMIZE__) && !defined(__OPTIMIZE_SIZE__))
+#if !defined(__GNUC__) || (defined(__OPTIMIZE__) && !defined(__OPTIMIZE_SIZE__))
   *__r = __x % 10;
   return __x / 10;
 #else

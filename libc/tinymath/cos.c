@@ -28,15 +28,8 @@
 #include "libc/math.h"
 #include "libc/tinymath/feval.internal.h"
 #include "libc/tinymath/kernel.internal.h"
-
-asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
+__static_yoink("musl_libc_notice");
+__static_yoink("fdlibm_notice");
 
 /* origin: FreeBSD /usr/src/lib/msun/src/s_cos.c */
 /*
@@ -85,7 +78,6 @@ asm(".include \"libc/disclaimer.inc\"");
 
 /**
  * Returns cosine of 𝑥.
- * @note should take ~5ns
  */
 double cos(double x)
 {

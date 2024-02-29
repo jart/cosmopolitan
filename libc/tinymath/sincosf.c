@@ -1,9 +1,9 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,20 +25,19 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/math.h"
 #include "libc/tinymath/sincosf.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
-asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
-/* Fast sincosf implementation.  Worst-case ULP is 0.5607, maximum relative
-   error is 0.5303 * 2^-23.  A single-step range reduction is used for
-   small values.  Large inputs have their range reduced using fast integer
-   arithmetic.  */
+/**
+ * Returns sine and cosine of y.
+ *
+ * This is a fast sincosf implementation. Worst-case ULP is 0.5607,
+ * maximum relative error is 0.5303 * 2^-23. A single-step range
+ * reduction is used for small values. Large inputs have their range
+ * reduced using fast integer arithmetic.
+ *
+ * @raise EDOM if y is an infinity
+ */
 void
 sincosf (float y, float *sinp, float *cosp)
 {
@@ -51,11 +50,11 @@ sincosf (float y, float *sinp, float *cosp)
     {
       double x2 = x * x;
 
-      if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-12f)))
+      if (unlikely (abstop12 (y) < abstop12 (0x1p-12f)))
 	{
-	  if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-126f)))
+	  if (unlikely (abstop12 (y) < abstop12 (0x1p-126f)))
 	    /* Force underflow for tiny y.  */
-	    FORCE_EVAL (x2);
+	    force_eval_float (x2);
 	  *sinp = y;
 	  *cosp = 1.0f;
 	  return;
@@ -75,7 +74,7 @@ sincosf (float y, float *sinp, float *cosp)
 
       sincosf_poly (x * s, x * x, p, n, sinp, cosp);
     }
-  else if (LIKELY (abstop12 (y) < abstop12 (INFINITY)))
+  else if (likely (abstop12 (y) < abstop12 (INFINITY)))
     {
       uint32_t xi = asuint (y);
       int sign = xi >> 31;

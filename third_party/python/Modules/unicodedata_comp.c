@@ -1152,6 +1152,7 @@ static const unsigned short _PyUnicode_CompIndex_rodata[1146+1][2] = { /* 38.598
     {  1, 0x2a9},
     {0},
 };
+__attribute__((__constructor__(99)))
 static textstartup void _PyUnicode_CompIndex_init(void) {
     int i, j, k;
     for (k = i = 0; i < 1146; ++i) {
@@ -1160,9 +1161,6 @@ static textstartup void _PyUnicode_CompIndex_init(void) {
         }
     }
 }
-const void *const _PyUnicode_CompIndex_ctor[] initarray = {
-    _PyUnicode_CompIndex_init,
-};
 
 const unsigned int _PyUnicode_CompData[1449] = {
     0, 0, 0, 922746880, 17, 9011200, 3758096384, 1101, 0, 50594176, 

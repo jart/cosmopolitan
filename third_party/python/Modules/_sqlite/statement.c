@@ -30,11 +30,6 @@
 #include "third_party/python/Modules/_sqlite/statement.h"
 #include "third_party/python/Modules/_sqlite/util.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /* prototypes */
 static int pysqlite_check_remaining_sql(const char* tail);
 

@@ -16,34 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
 /**
- * Decodes decimal integer from ASCII string.
+ * Turns string into long.
  *
- * @param s is a non-null nul-terminated string
+ * Decimal is the only radix supported. Leading whitespace (as specified
+ * by the isspace() function) is skipped over. Unlike strtol(), the atoi
+ * function has undefined behavior on error and it never changes `errno`
+ *
+ * @param nptr is a non-null nul-terminated string
  * @return the decoded signed saturated integer
  */
-long atol(const char *s) {
+long atol(const char *nptr) {
   long x;
   int c, d;
-  do c = *s++;
-  while (c == ' ' || c == '\t');
+  do c = *nptr++;
+  while (isspace(c));
   d = c == '-' ? -1 : 1;
-  if (c == '-' || c == '+') c = *s++;
-  for (x = 0; isdigit(c); c = *s++) {
-    if (ckd_mul(&x, x, 10) || ckd_add(&x, x, (c - '0') * d)) {
-      errno = ERANGE;
-      if (d > 0) {
-        return LONG_MAX;
-      } else {
-        return LONG_MIN;
-      }
-    }
+  if (c == '-' || c == '+') c = *nptr++;
+  for (x = 0; isdigit(c); c = *nptr++) {
+    x *= 10;
+    x += (c - '0') * d;
   }
   return x;
 }

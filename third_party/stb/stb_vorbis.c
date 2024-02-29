@@ -46,10 +46,10 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-stb_vorbis (Public Domain)\\n\
-Credit: Sean Barrett, et al.\\n\
-http://nothings.org/stb\"");
+__notice(stb_vorbis_notice, "\
+stb_vorbis (Public Domain)\n\
+Credit: Sean Barrett, et al.\n\
+http://nothings.org/stb");
 
 // STB_VORBIS_NO_PUSHDATA_API
 //     does not compile the code for the various stb_vorbis_*_pushdata()

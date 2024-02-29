@@ -34,11 +34,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lzio.h"
-
-asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("lua_notice");
 
 
 int luaZ_fill (ZIO *z) {

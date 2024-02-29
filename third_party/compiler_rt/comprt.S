@@ -7,12 +7,8 @@ huge_compiler_rt_license:
 	.endobj	huge_compiler_rt_license,globl,hidden
 	.previous
 
-.ident "\n
-compiler_rt (Licensed MIT)
-Copyright (c) 2009-2015 by the contributors listed in:
-github.com/llvm-mirror/compiler-rt/blob/master/CREDITS.TXT"
-
-.ident "\n
+	.section .notice,"aR",@progbits
+	.asciz	"\n\n\
 compiler_rt (Licensed \"University of Illinois/NCSA Open Source License\")
 Copyright (c) 2009-2018 by the contributors listed in:
 github.com/llvm-mirror/compiler-rt/blob/master/CREDITS.TXT

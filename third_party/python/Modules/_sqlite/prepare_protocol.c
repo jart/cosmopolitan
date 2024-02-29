@@ -25,11 +25,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_sqlite/prepare_protocol.h"
 
-asm(".ident\t\"\\n\\n\
-pysqlite (zlib license)\\n\
-Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 int pysqlite_prepare_protocol_init(pysqlite_PrepareProtocol* self, PyObject* args, PyObject* kwargs)
 {
     return 0;

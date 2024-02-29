@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-#include "libc/notice.inc"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/intrin/strace.internal.h"
@@ -85,19 +84,18 @@ cosmo:	push	%rbp
 	call	_init
 
 //	call constructors
-	ezlea	__init_array_end,ax		// static ctors in forward order
-	.weak	__init_array_end		// could be called multiple times
-	ezlea	__init_array_start,cx		// idempotency recommended
-	.weak	__init_array_start		// @see ape/ape.lds
-1:	cmp	%rax,%rcx
+	.weak	__init_array_end
+	.weak	__init_array_start
+	mov	$__init_array_start,%eax
+1:	cmp	$__init_array_end,%eax
 	je	2f
-	sub	$8,%rax
 	push	%rax
-	push	%rcx
+	push	%rax
 	call	.Largs
 	call	*(%rax)
-	pop	%rcx
 	pop	%rax
+	pop	%rax
+	add	$8,%eax
 	jmp	1b
 
 //	call main()

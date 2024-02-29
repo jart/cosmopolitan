@@ -9,11 +9,10 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/xasprintf.h"
 
-asm(".ident\t\"\\n\\n\
-chibicc (MIT/ISC License)\\n\
-Copyright 2019 Rui Ueyama\\n\
-Copyright 2020 Justine Alexandra Roberts Tunney\"");
-asm(".include \"libc/disclaimer.inc\"");
+__notice(chibicc_notice, "\
+chibicc (MIT/ISC License)\n\
+Copyright 2019 Rui Ueyama\n\
+Copyright 2020 Justine Alexandra Roberts Tunney");
 
 typedef enum {
   FILE_NONE,

@@ -38,11 +38,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sock/sock.h"
 #include "third_party/musl/lookup.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("musl_libc_notice");
 
 // TODO(jart): ipv6 nameservers on windows
 // TODO(jart): can we polyfill `search` on windows

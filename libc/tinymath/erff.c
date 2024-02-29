@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2020 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 2018-2024, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,195 +25,99 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
+#include "libc/tinymath/arm.internal.h"
+__static_yoink("arm_optimized_routines_notice");
 
-asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+#define TwoOverSqrtPiMinusOne 0x1.06eba8p-3f
+#define A __erff_data.erff_poly_A
+#define B __erff_data.erff_poly_B
 
-/* origin: FreeBSD /usr/src/lib/msun/src/s_erff.c */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
- */
-
-#define asuint(f) ((union{float _f; uint32_t _i;}){f})._i
-#define asfloat(i) ((union{uint32_t _i; float _f;}){i})._f
-
-static const float
-erx  =  8.4506291151e-01, /* 0x3f58560b */
-/*
- * Coefficients for approximation to  erf on [0,0.84375]
- */
-efx8 =  1.0270333290e+00, /* 0x3f8375d4 */
-pp0  =  1.2837916613e-01, /* 0x3e0375d4 */
-pp1  = -3.2504209876e-01, /* 0xbea66beb */
-pp2  = -2.8481749818e-02, /* 0xbce9528f */
-pp3  = -5.7702702470e-03, /* 0xbbbd1489 */
-pp4  = -2.3763017452e-05, /* 0xb7c756b1 */
-qq1  =  3.9791721106e-01, /* 0x3ecbbbce */
-qq2  =  6.5022252500e-02, /* 0x3d852a63 */
-qq3  =  5.0813062117e-03, /* 0x3ba68116 */
-qq4  =  1.3249473704e-04, /* 0x390aee49 */
-qq5  = -3.9602282413e-06, /* 0xb684e21a */
-/*
- * Coefficients for approximation to  erf  in [0.84375,1.25]
- */
-pa0  = -2.3621185683e-03, /* 0xbb1acdc6 */
-pa1  =  4.1485610604e-01, /* 0x3ed46805 */
-pa2  = -3.7220788002e-01, /* 0xbebe9208 */
-pa3  =  3.1834661961e-01, /* 0x3ea2fe54 */
-pa4  = -1.1089469492e-01, /* 0xbde31cc2 */
-pa5  =  3.5478305072e-02, /* 0x3d1151b3 */
-pa6  = -2.1663755178e-03, /* 0xbb0df9c0 */
-qa1  =  1.0642088205e-01, /* 0x3dd9f331 */
-qa2  =  5.4039794207e-01, /* 0x3f0a5785 */
-qa3  =  7.1828655899e-02, /* 0x3d931ae7 */
-qa4  =  1.2617121637e-01, /* 0x3e013307 */
-qa5  =  1.3637083583e-02, /* 0x3c5f6e13 */
-qa6  =  1.1984500103e-02, /* 0x3c445aa3 */
-/*
- * Coefficients for approximation to  erfc in [1.25,1/0.35]
- */
-ra0  = -9.8649440333e-03, /* 0xbc21a093 */
-ra1  = -6.9385856390e-01, /* 0xbf31a0b7 */
-ra2  = -1.0558626175e+01, /* 0xc128f022 */
-ra3  = -6.2375331879e+01, /* 0xc2798057 */
-ra4  = -1.6239666748e+02, /* 0xc322658c */
-ra5  = -1.8460508728e+02, /* 0xc3389ae7 */
-ra6  = -8.1287437439e+01, /* 0xc2a2932b */
-ra7  = -9.8143291473e+00, /* 0xc11d077e */
-sa1  =  1.9651271820e+01, /* 0x419d35ce */
-sa2  =  1.3765776062e+02, /* 0x4309a863 */
-sa3  =  4.3456588745e+02, /* 0x43d9486f */
-sa4  =  6.4538726807e+02, /* 0x442158c9 */
-sa5  =  4.2900814819e+02, /* 0x43d6810b */
-sa6  =  1.0863500214e+02, /* 0x42d9451f */
-sa7  =  6.5702495575e+00, /* 0x40d23f7c */
-sa8  = -6.0424413532e-02, /* 0xbd777f97 */
-/*
- * Coefficients for approximation to  erfc in [1/.35,28]
- */
-rb0  = -9.8649431020e-03, /* 0xbc21a092 */
-rb1  = -7.9928326607e-01, /* 0xbf4c9dd4 */
-rb2  = -1.7757955551e+01, /* 0xc18e104b */
-rb3  = -1.6063638306e+02, /* 0xc320a2ea */
-rb4  = -6.3756646729e+02, /* 0xc41f6441 */
-rb5  = -1.0250950928e+03, /* 0xc480230b */
-rb6  = -4.8351919556e+02, /* 0xc3f1c275 */
-sb1  =  3.0338060379e+01, /* 0x41f2b459 */
-sb2  =  3.2579251099e+02, /* 0x43a2e571 */
-sb3  =  1.5367296143e+03, /* 0x44c01759 */
-sb4  =  3.1998581543e+03, /* 0x4547fdbb */
-sb5  =  2.5530502930e+03, /* 0x451f90ce */
-sb6  =  4.7452853394e+02, /* 0x43ed43a7 */
-sb7  = -2.2440952301e+01; /* 0xc1b38712 */
-
-static float erfc1(float x)
+/* Top 12 bits of a float.  */
+static inline uint32_t
+top12 (float x)
 {
-	float_t s,P,Q;
-
-	s = fabsf(x) - 1;
-	P = pa0+s*(pa1+s*(pa2+s*(pa3+s*(pa4+s*(pa5+s*pa6)))));
-	Q = 1+s*(qa1+s*(qa2+s*(qa3+s*(qa4+s*(qa5+s*qa6)))));
-	return 1 - erx - P/Q;
+  return asuint (x) >> 20;
 }
 
-static float erfc2(uint32_t ix, float x)
+/* Efficient implementation of erff
+   using either a pure polynomial approximation or
+   the exponential of a polynomial.
+   Worst-case error is 1.09ulps at 0x1.c111acp-1.  */
+float
+erff (float x)
 {
-	float_t s,R,S;
-	float z;
+  float r, x2, u;
 
-	if (ix < 0x3fa00000)  /* |x| < 1.25 */
-		return erfc1(x);
+  /* Get top word.  */
+  uint32_t ix = asuint (x);
+  uint32_t sign = ix >> 31;
+  uint32_t ia12 = top12 (x) & 0x7ff;
 
-	x = fabsf(x);
-	s = 1/(x*x);
-	if (ix < 0x4036db6d) {   /* |x| < 1/0.35 */
-		R = ra0+s*(ra1+s*(ra2+s*(ra3+s*(ra4+s*(
-		     ra5+s*(ra6+s*ra7))))));
-		S = 1.0f+s*(sa1+s*(sa2+s*(sa3+s*(sa4+s*(
-		     sa5+s*(sa6+s*(sa7+s*sa8)))))));
-	} else {                 /* |x| >= 1/0.35 */
-		R = rb0+s*(rb1+s*(rb2+s*(rb3+s*(rb4+s*(
-		     rb5+s*rb6)))));
-		S = 1.0f+s*(sb1+s*(sb2+s*(sb3+s*(sb4+s*(
-		     sb5+s*(sb6+s*sb7))))));
-	}
-	ix = asuint(x);
-	z = asfloat(ix&0xffffe000);
-	return expf(-z*z - 0.5625f) * expf((z-x)*(z+x) + R/S)/x;
-}
+  /* Limit of both intervals is 0.875 for performance reasons but coefficients
+     computed on [0.0, 0.921875] and [0.921875, 4.0], which brought accuracy
+     from 0.94 to 1.1ulps.  */
+  if (ia12 < 0x3f6)
+    { /* a = |x| < 0.875.  */
 
-float erff(float x)
-{
-	float r,s,z,y;
-	uint32_t ix;
-	int sign;
-
-	ix = asuint(x);
-	sign = ix>>31;
-	ix &= 0x7fffffff;
-	if (ix >= 0x7f800000) {
-		/* erf(nan)=nan, erf(+-inf)=+-1 */
-		return 1-2*sign + 1/x;
-	}
-	if (ix < 0x3f580000) {  /* |x| < 0.84375 */
-		if (ix < 0x31800000) {  /* |x| < 2**-28 */
-			/*avoid underflow */
-			return 0.125f*(8*x + efx8*x);
-		}
-		z = x*x;
-		r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)));
-		s = 1+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))));
-		y = r/s;
-		return x + x*y;
-	}
-	if (ix < 0x40c00000)  /* |x| < 6 */
-		y = 1 - erfc2(ix,x);
-	else
-		y = 1 - 0x1p-120f;
-	return sign ? -y : y;
-}
-
-float erfcf(float x)
-{
-	float r,s,z,y;
-	uint32_t ix;
-	int sign;
-
-	ix = asuint(x);
-	sign = ix>>31;
-	ix &= 0x7fffffff;
-	if (ix >= 0x7f800000) {
-		/* erfc(nan)=nan, erfc(+-inf)=0,2 */
-		return 2*sign + 1/x;
+      /* Tiny and subnormal cases.  */
+      if (unlikely (ia12 < 0x318))
+	{ /* |x| < 2^(-28).  */
+	  if (unlikely (ia12 < 0x040))
+	    { /* |x| < 2^(-119).  */
+	      float y = fmaf (TwoOverSqrtPiMinusOne, x, x);
+	      return check_uflowf (y);
+	    }
+	  return x + TwoOverSqrtPiMinusOne * x;
 	}
 
-	if (ix < 0x3f580000) {  /* |x| < 0.84375 */
-		if (ix < 0x23800000)  /* |x| < 2**-56 */
-			return 1.0f - x;
-		z = x*x;
-		r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)));
-		s = 1.0f+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))));
-		y = r/s;
-		if (sign || ix < 0x3e800000)  /* x < 1/4 */
-			return 1.0f - (x+x*y);
-		return 0.5f - (x - 0.5f + x*y);
-	}
-	if (ix < 0x41e00000) {  /* |x| < 28 */
-		return sign ? 2 - erfc2(ix,x) : erfc2(ix,x);
-	}
-	return sign ? 2 - 0x1p-120f : 0x1p-120f*0x1p-120f;
+      x2 = x * x;
+
+      /* Normalized cases (|x| < 0.921875). Use Horner scheme for x+x*P(x^2).  */
+      r = A[5];
+      r = fmaf (r, x2, A[4]);
+      r = fmaf (r, x2, A[3]);
+      r = fmaf (r, x2, A[2]);
+      r = fmaf (r, x2, A[1]);
+      r = fmaf (r, x2, A[0]);
+      r = fmaf (r, x, x);
+    }
+  else if (ia12 < 0x408)
+    { /* |x| < 4.0 - Use a custom Estrin scheme.  */
+
+      float a = fabsf (x);
+      /* Start with Estrin scheme on high order (small magnitude) coefficients.  */
+      r = fmaf (B[6], a, B[5]);
+      u = fmaf (B[4], a, B[3]);
+      x2 = x * x;
+      r = fmaf (r, x2, u);
+      /* Then switch to pure Horner scheme.  */
+      r = fmaf (r, a, B[2]);
+      r = fmaf (r, a, B[1]);
+      r = fmaf (r, a, B[0]);
+      r = fmaf (r, a, a);
+      /* Single precision exponential with ~0.5ulps,
+	 ensures erff has max. rel. error
+	 < 1ulp on [0.921875, 4.0],
+	 < 1.1ulps on [0.875, 4.0].  */
+      r = expf (-r);
+      /* Explicit copysign (calling copysignf increases latency).  */
+      if (sign)
+	r = -1.0f + r;
+      else
+	r = 1.0f - r;
+    }
+  else
+    { /* |x| >= 4.0.  */
+
+      /* Special cases : erff(nan)=nan, erff(+inf)=+1 and erff(-inf)=-1.  */
+      if (unlikely (ia12 >= 0x7f8))
+	return (1.f - (float) ((ix >> 31) << 1)) + 1.f / x;
+
+      /* Explicit copysign (calling copysignf increases latency).  */
+      if (sign)
+	r = -1.0f;
+      else
+	r = 1.0f;
+    }
+  return r;
 }

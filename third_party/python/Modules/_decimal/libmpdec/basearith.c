@@ -31,11 +31,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
-
-asm(".ident\t\"\\n\\n\
-libmpdec (BSD-2)\\n\
-Copyright 2008-2016 Stefan Krah\"");
-asm(".include \"libc/disclaimer.inc\"");
+__static_yoink("libmpdec_notice");
 
 /*********************************************************************/
 /*                   Calculations in base MPD_RADIX                  */
