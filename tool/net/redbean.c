@@ -5159,13 +5159,15 @@ int LuaCryptoTlsConnectionRead(lua_State *L) {
   lua_Integer bufsiz;
   bufsiz = luaL_optinteger(L, 2, BUFSIZ);
   bufsiz = MIN(bufsiz, 0x7ffff00);
-  buf = _gc(malloc(bufsiz));
+  buf = malloc(bufsiz);
   rc = TlsConnectionRead(GetTlsConnection(L), buf, bufsiz);
   if (rc != -1) {
     got = rc;
     lua_pushlstring(L, buf, got);
+    free(buf);
     return 1;
   } else {
+    free(buf);
     return 0;
   }
 }
@@ -5229,7 +5231,7 @@ int LuaCryptoTlsWrap(lua_State *L) {
   } else if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
     lua_pop(L, 1);
     return LuaNilTlsError(
-      L, _gc(DescribeSslVerifyFailure(conn->ctx.session_negotiate->verify_result)), rc
+      L, DescribeSslVerifyFailure(conn->ctx.session_negotiate->verify_result), rc
     );
   } else {
     lua_pop(L, 1);
