@@ -5070,14 +5070,16 @@ typedef struct TlsConnection_s {
 
 /**
  * Set up and perform the handshake for a new TLS Connection.
- * 
+ *
  * If setup fails, the socket will be closed.
- * 
- * @param conn A TLS connection struct. Caller is responsible for managing this memory.
- * @param sock The file descriptor number for an open socket on which to negotiate TLS.
+ *
+ * @param conn A TLS connection struct. Caller is responsible for managing this
+ * memory.
+ * @param sock The file descriptor number for an open socket on which to
+ * negotiate TLS.
  * @param hostname The hostname of the remote server, for certificate checks.
  * @return 1 on success, 0 on failure.
-*/
+ */
 int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
   int ret;
   if (!sslinitialized) TlsInit();
@@ -5107,40 +5109,41 @@ int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
   }
   LockInc(&shared->c.sslhandshakes);
   VERBOSEF("(tlsc) shaken %s %s %s", hostname,
-            mbedtls_ssl_get_ciphersuite(&(conn->ctx)),
-            mbedtls_ssl_get_version(&(conn->ctx)));
+           mbedtls_ssl_get_ciphersuite(&(conn->ctx)),
+           mbedtls_ssl_get_version(&(conn->ctx)));
   return 1;
 }
 
 /**
  * Write data to a TLS connection.
- * 
+ *
  * @param C A TlsConnection that has alreday been setup.
  * @param B Arbitrary data that should be encrypted and sent on the connection.
  * @param L The number of bytes of data in the buffer that should be sent.
  * @return >0 if the write was successful, 0 or less if the write failed.
  *   Values greater than 0 indicate the number of bytes written.
-*/
+ */
 #define TlsConnectionWrite(C, B, L) mbedtls_ssl_write(&(C->ctx), B, L)
 
 /**
  * Read data from a TLS connection.
- * 
+ *
  * @param C A TlsConnection that has alreday been setup.
  * @param B A buffer into which to write the received data.
- * @param L The maximum number of bytes to read. `buf` must be at least this big.
- * @return >0 if the read was successful, 0 or less if the read failed. Values greater
- *   than 0 indicate the number of bytes read.
-*/
+ * @param L The maximum number of bytes to read. `buf` must be at least this
+ * big.
+ * @return >0 if the read was successful, 0 or less if the read failed. Values
+ * greater than 0 indicate the number of bytes read.
+ */
 #define TlsConnectionRead(C, B, L) mbedtls_ssl_read(&(C->ctx), B, L)
 
 /**
  * Close a TLS connection.
- * 
- * @param conn A TlsConnection that should be closed. Note that the caller is responsible
- *   for cleaning up the memory occupied by the TlsConnection.
+ *
+ * @param conn A TlsConnection that should be closed. Note that the caller is
+ * responsible for cleaning up the memory occupied by the TlsConnection.
  * @return 1
-*/
+ */
 int TlsConnectionClose(TlsConnection *conn) {
   mbedtls_ssl_free(&(conn->ctx));
   // TODO(s0ph0s): loop on EINTR
@@ -5231,8 +5234,8 @@ int LuaCryptoTlsWrap(lua_State *L) {
   } else if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
     lua_pop(L, 1);
     return LuaNilTlsError(
-      L, DescribeSslVerifyFailure(conn->ctx.session_negotiate->verify_result), rc
-    );
+        L, DescribeSslVerifyFailure(conn->ctx.session_negotiate->verify_result),
+        rc);
   } else {
     lua_pop(L, 1);
     return LuaNilTlsError(L, "handshake", rc);
@@ -5537,7 +5540,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
 #ifndef UNSECURE
-    {"crypto", LuaCrypto},           //
+    {"crypto", LuaCrypto},  //
 #endif
 };
 
