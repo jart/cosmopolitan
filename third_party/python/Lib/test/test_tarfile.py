@@ -26,7 +26,7 @@ try:
     import lzma
 except ImportError:
     lzma = None
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import gzip
     import bz2
 

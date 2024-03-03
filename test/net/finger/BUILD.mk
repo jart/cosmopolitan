@@ -11,13 +11,13 @@ TEST_NET_FINGER_OBJS =						\
 	$(TEST_NET_FINGER_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_NET_FINGER_COMS =						\
-	$(TEST_NET_FINGER_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_NET_FINGER_SRCS:%.c=o/$(MODE)/%)
 
 TEST_NET_FINGER_TESTS =						\
-	$(TEST_NET_FINGER_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_NET_FINGER_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_NET_FINGER_CHECKS =					\
-	$(TEST_NET_FINGER_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_NET_FINGER_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_NET_FINGER_DIRECTDEPS =					\
 	NET_FINGER						\
@@ -32,7 +32,7 @@ o/$(MODE)/test/net/finger/finger.pkg:				\
 		$(TEST_NET_FINGER_OBJS)				\
 		$(foreach x,$(TEST_NET_FINGER_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/net/finger/%.com.dbg:				\
+o/$(MODE)/test/net/finger/%.dbg:				\
 		$(TEST_NET_FINGER_DEPS)				\
 		o/$(MODE)/test/net/finger/%.o			\
 		$(LIBC_TESTMAIN)				\

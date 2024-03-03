@@ -82,7 +82,7 @@ DESCRIPTION\n\
 \n\
 EXAMPLES\n\
 \n\
-  $ ./derasterize.com samples/wave.png > wave.uaart\n\
+  $ ./derasterize samples/wave.png > wave.uaart\n\
   $ cat wave.uaart\n\
 \n\
 AUTHORS\n\

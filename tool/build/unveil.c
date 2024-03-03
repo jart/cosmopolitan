@@ -29,15 +29,12 @@
 
 #define USAGE \
   "\
-usage: unveil.com [-h] PROG ARGS...\n\
+usage: unveil [-h] PROG ARGS...\n\
   -h           show help\n\
 \n\
-unveil.com v1.o\n\
+unveil v1.o\n\
 copyright 2022 justine alexandra roberts tunney\n\
-https://twitter.com/justinetunney\n\
-https://linkedin.com/in/jtunney\n\
-https://justine.lol/pledge/\n\
-https://github.com/jart\n\
+licensed isc\n\
 \n\
 this program lets you launch linux commands in a filesystem sandbox\n\
 inspired by the design of openbsd's unveil() system call.\n\

@@ -32,8 +32,8 @@ COSMOPOLITAN_C_START_
 /**
  * Declares benchmark function.
  *
- * These only run if (1) the -b flag is passed to the FOO_test.com; and
- * (2) the unit tests passed. It's just an ordinary function, that gets
+ * These only run if (1) the -b flag is passed to the FOO_test; and (2)
+ * the unit tests passed. It's just an ordinary function, that gets
  * registered with the linker. It should print things to stdout.
  *
  * @see EZBENCH()

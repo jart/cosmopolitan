@@ -97,7 +97,7 @@ __excep0_isr:
 	xor	%eax,%eax		# kprintf is variadic, remember to
 					# pass no. of vector regs. used (= 0)
 	.weak	kprintf			# weakly link kprintf() because we
-	ezlea	kprintf,bx		# want to keep life.com tiny
+	ezlea	kprintf,bx		# want to keep examples/life tiny
 	test	%ebx,%ebx
 	jz	8f
 	call	*%rbx			# print error message

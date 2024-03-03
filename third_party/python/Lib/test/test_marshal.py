@@ -12,7 +12,7 @@ try:
 except ImportError:
     _testcapi = None
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _testcapi
 
 class HelperMixin:

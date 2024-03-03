@@ -1,7 +1,7 @@
 from _collections_abc import *
 from _collections_abc import __all__
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     AsyncGenerator = 0
     AsyncIterable = 0
     AsyncIterator = 0

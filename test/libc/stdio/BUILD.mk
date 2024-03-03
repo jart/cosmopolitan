@@ -12,17 +12,17 @@ TEST_LIBC_STDIO_OBJS =						\
 	$(TEST_LIBC_STDIO_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_STDIO_COMS =						\
-	$(TEST_LIBC_STDIO_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_LIBC_STDIO_SRCS:%.c=o/$(MODE)/%)
 
 TEST_LIBC_STDIO_BINS =						\
 	$(TEST_LIBC_STDIO_COMS)					\
 	$(TEST_LIBC_STDIO_COMS:%=%.dbg)
 
 TEST_LIBC_STDIO_TESTS =						\
-	$(TEST_LIBC_STDIO_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_LIBC_STDIO_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_LIBC_STDIO_CHECKS =					\
-	$(TEST_LIBC_STDIO_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_LIBC_STDIO_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_LIBC_STDIO_DIRECTDEPS =					\
 	LIBC_CALLS						\
@@ -55,21 +55,21 @@ o/$(MODE)/test/libc/stdio/stdio.pkg:				\
 		$(TEST_LIBC_STDIO_OBJS)				\
 		$(foreach x,$(TEST_LIBC_STDIO_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/stdio/%.com.dbg:				\
+o/$(MODE)/test/libc/stdio/%.dbg:				\
 		$(TEST_LIBC_STDIO_DEPS)				\
 		o/$(MODE)/test/libc/stdio/%.o			\
 		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.com.zip.o		\
+		o/$(MODE)/tool/build/echo.zip.o			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/stdio/popen_test.com.dbg:			\
+o/$(MODE)/test/libc/stdio/popen_test.dbg:			\
 		$(TEST_LIBC_STDIO_DEPS)				\
 		o/$(MODE)/test/libc/stdio/popen_test.o		\
 		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.com.zip.o		\
+		o/$(MODE)/tool/build/echo.zip.o			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)

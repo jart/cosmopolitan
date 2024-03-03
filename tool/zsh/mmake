@@ -39,7 +39,7 @@ done
   j=-j$(nproc)
 }
 local make=${MAKE:-${COSMOCC:-/opt/cosmocc/current}/bin/make}
-[[ -x $make ]] || make=${COSMO:-$PWD}/build/bootstrap/make.com
+[[ -x $make ]] || make=${COSMO:-$PWD}/build/bootstrap/make
 ( set -x
   exec $make $j $flags MODE=$mode $targs )
 # vim:ft=zsh

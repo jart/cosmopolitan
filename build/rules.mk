@@ -79,17 +79,17 @@ o/$(MODE)/%.pkg:
 	$(file >$(TMPSAFE).args,$(filter %.o,$^))
 	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPSAFE).args
 
-o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
-	@$(COMPILE) -wAPYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
+o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj
+	@$(COMPILE) -wAPYOBJ o/$(MODE)/third_party/python/pyobj $(PYFLAGS) -o $@ $<
 
-o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com
-	@$(COMPILE) -wAPYCOMP o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
+o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp
+	@$(COMPILE) -wAPYCOMP o/$(MODE)/third_party/python/pycomp $(PYCFLAGS) -o $@ $<
 
-o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
-	@$(COMPILE) -wALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac
+	@$(COMPILE) -wALUAC o/$(MODE)/third_party/lua/luac -s -o $@ $<
 
-o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
-	@$(COMPILE) -wALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
+o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean
+	@$(COMPILE) -wALUA -tT$@ o/$(MODE)/tool/net/redbean $(LUAFLAGS) -i $<
 
 ################################################################################
 # LOCAL UNIT TESTS
@@ -108,22 +108,22 @@ o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
 #
 # You could then run a command like:
 #
-#     make -j8 o//test/libc/calls/openbsd_test.com.runs
+#     make -j8 o//test/libc/calls/openbsd_test.runs
 #
 # You need PROT_EXEC permission since ftrace morphs the binary. It's
-# also worth mentioning that the pledge.com command can simulate what
+# also worth mentioning that the pledge command can simulate what
 # Landlock Make does:
 #
-#     o//tool/build/pledge.com \
+#     o//tool/build/pledge \
 #       -v. -p 'stdio rpath wpath cpath tty prot_exec' \
-#       o//test/libc/calls/openbsd_test.com \
+#       o//test/libc/calls/openbsd_test \
 #       ----ftrace
 #
 # This is useful in the event a test binary should run by itself, but
 # fails to run beneath Landlock Make. It's also useful sometimes to
 # override the verbosity when running tests:
 #
-#     make V=5 TESTARGS=-b o//test/libc/calls/openbsd_test.com.runs
+#     make V=5 TESTARGS=-b o//test/libc/calls/openbsd_test.runs
 #
 # This way, if for some reason a test should fail but calls exit(0),
 # then the stdout/stderr output, which would normally be suppressed,
@@ -135,7 +135,7 @@ o/$(MODE)/%.runs: o/$(MODE)/%
 ################################################################################
 # ELF ZIP FILES
 #
-# zipobj.com lets us do fast incremental linking of compressed data.
+# zipobj lets us do fast incremental linking of compressed data.
 # it's nice because if we link a hundred binaries that use the time zone
 # database, then that database only needs to be DEFLATE'd once.
 
@@ -182,23 +182,6 @@ o/%.okk: %
 o/$(MODE)/%.okk: private .UNSANDBOXED = 1
 o/$(MODE)/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
-
-################################################################################
-# EXECUTABLE HELPERS
-
-MAKE_SYMTAB_CREATE =				\
-	$(COMPILE) -wASYMTAB			\
-	o/$(MODE)/tool/build/symtab.com		\
-	-o $(TMPSAFE)/.symtab			\
-	$<
-
-MAKE_SYMTAB_ZIP =				\
-	$(COMPILE) -AZIP -T$@			\
-	o/$(MODE)/third_party/zip/zip.com	\
-	-b$(TMPDIR)				\
-	-9qj					\
-	$@					\
-	$(TMPSAFE)/.symtab
 
 ################################################################################
 # EMACS ASSEMBLY GENERATION

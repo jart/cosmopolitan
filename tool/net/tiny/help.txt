@@ -1,6 +1,6 @@
 SYNOPSIS
 
-  redbean.com [-hvduzmbagf] [-p PORT] [-D DIR]
+  redbean [-hvduzmbagf] [-p PORT] [-D DIR]
 
 DESCRIPTION
 

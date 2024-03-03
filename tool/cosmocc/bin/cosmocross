@@ -163,13 +163,6 @@ for x; do
     # this toolchain is intended for building other people's code
     # elevating warnings into errors, should only be done by devs
     continue
-  elif [ x"$x" = x"-march=native" ]; then
-    if [ $CROSS -eq 0 ]; then
-      set -- "$@" $("$BIN/march-native")
-    else
-      fatal_error "-march=native can't be used when cross compiling"
-    fi
-    continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     exit 0

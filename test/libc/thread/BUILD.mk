@@ -16,17 +16,17 @@ TEST_LIBC_THREAD_OBJS =					\
 	$(TEST_LIBC_THREAD_SRCS_CC:%.cc=o/$(MODE)/%.o)
 
 TEST_LIBC_THREAD_COMS =					\
-	$(TEST_LIBC_THREAD_OBJS:%.o=%.com)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%)
 
 TEST_LIBC_THREAD_BINS =					\
 	$(TEST_LIBC_THREAD_COMS)			\
 	$(TEST_LIBC_THREAD_COMS:%=%.dbg)
 
 TEST_LIBC_THREAD_TESTS =				\
-	$(TEST_LIBC_THREAD_OBJS:%.o=%.com.ok)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%.ok)
 
 TEST_LIBC_THREAD_CHECKS =				\
-	$(TEST_LIBC_THREAD_OBJS:%.o=%.com.runs)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%.runs)
 
 TEST_LIBC_THREAD_DIRECTDEPS =				\
 	LIBC_CALLS					\
@@ -58,7 +58,7 @@ o/$(MODE)/test/libc/thread/thread.pkg:			\
 		$(TEST_LIBC_THREAD_OBJS)		\
 		$(foreach x,$(TEST_LIBC_THREAD_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/thread/%.com.dbg:			\
+o/$(MODE)/test/libc/thread/%.dbg:			\
 		$(TEST_LIBC_THREAD_DEPS)		\
 		o/$(MODE)/test/libc/thread/%.o		\
 		o/$(MODE)/test/libc/thread/thread.pkg	\
@@ -67,7 +67,7 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/thread/pthread_kill_test.com.runs:	\
+o/$(MODE)/test/libc/thread/pthread_kill_test.runs:	\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 .PHONY: o/$(MODE)/test/libc/thread

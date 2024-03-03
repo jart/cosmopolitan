@@ -1722,7 +1722,7 @@ static unsigned char *GetZipEndOfCentralDirectory(struct Input *in) {
     }
   }
   Die(in->path, "zip eocd not found in last 64kb of elf even though a .zip "
-                "section exists; you may need to run fixupobj.com");
+                "section exists; you may need to run fixupobj");
 }
 
 static void IndexZipAssetsFromElf(struct Input *in) {

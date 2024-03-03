@@ -750,7 +750,7 @@ def getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
                          proto, canonname, sa))
     return addrlist
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     AF_APPLETALK = 0
     AF_ASH = 0
     AF_ATMPVC = 0

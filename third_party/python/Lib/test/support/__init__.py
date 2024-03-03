@@ -34,7 +34,7 @@ import unittest
 import urllib.error
 import warnings
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import resource
 
 from .testresult import get_test_runner
@@ -75,7 +75,7 @@ try:
 except ImportError:
     resource = None
 
-# if __name__ == 'PYOBJ.COM':
+# if __name__ == 'PYOBJ':
 #     import bz2
 #     import zlib
 #     import resource

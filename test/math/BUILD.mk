@@ -6,10 +6,10 @@ PKGS += TEST_MATH
 TEST_MATH_SRCS := $(wildcard test/math/*.c)
 TEST_MATH_SRCS_TEST = $(filter %_test.c,$(TEST_MATH_SRCS))
 TEST_MATH_OBJS = $(TEST_MATH_SRCS:%.c=o/$(MODE)/%.o)
-TEST_MATH_COMS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.com)
+TEST_MATH_COMS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%)
 TEST_MATH_BINS = $(TEST_MATH_COMS) $(TEST_MATH_COMS:%=%.dbg)
-TEST_MATH_TESTS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
-TEST_MATH_CHECKS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+TEST_MATH_TESTS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.ok)
+TEST_MATH_CHECKS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_MATH_DIRECTDEPS =				\
 	LIBC_INTRIN				\
@@ -25,9 +25,9 @@ o/$(MODE)/test/math/math.pkg:			\
 		$(TEST_MATH_OBJS)		\
 		$(foreach x,$(TEST_MATH_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/math/%.com.dbg:			\
+o/$(MODE)/test/math/%.dbg:			\
 		$(TEST_MATH_DEPS)		\
-		o/$(MODE)/test/math/%.o	\
+		o/$(MODE)/test/math/%.o		\
 		o/$(MODE)/test/math/math.pkg	\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)

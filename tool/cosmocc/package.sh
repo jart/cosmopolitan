@@ -16,7 +16,7 @@ mode() {
 }
 
 OUTDIR=${1:-cosmocc}
-APELINK=o/$(mode)/tool/build/apelink.com
+APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
 GCCVER=12.3.0
@@ -35,17 +35,17 @@ make -j32 m=$AMD64 \
   o/$AMD64/ape/ape-no-modify-self.o \
   o/$AMD64/cosmopolitan.a \
   o/$AMD64/third_party/libcxx/libcxx.a \
-  o/$AMD64/tool/build/assimilate.com.dbg \
-  o/$AMD64/tool/build/march-native.com.dbg \
-  o/$AMD64/tool/build/mktemper.com.dbg \
-  o/$AMD64/tool/build/fixupobj.com.dbg \
-  o/$AMD64/tool/build/zipcopy.com.dbg \
-  o/$AMD64/tool/build/mkdeps.com.dbg \
-  o/$AMD64/tool/build/zipobj.com.dbg \
-  o/$AMD64/tool/build/apelink.com.dbg \
-  o/$AMD64/tool/build/pecheck.com.dbg \
-  o/$AMD64/third_party/make/make.com.dbg \
-  o/$AMD64/third_party/ctags/ctags.com.dbg
+  o/$AMD64/tool/build/assimilate.dbg \
+  o/$AMD64/tool/build/march-native.dbg \
+  o/$AMD64/tool/build/mktemper.dbg \
+  o/$AMD64/tool/build/fixupobj.dbg \
+  o/$AMD64/tool/build/zipcopy.dbg \
+  o/$AMD64/tool/build/mkdeps.dbg \
+  o/$AMD64/tool/build/zipobj.dbg \
+  o/$AMD64/tool/build/apelink.dbg \
+  o/$AMD64/tool/build/pecheck.dbg \
+  o/$AMD64/third_party/make/make.dbg \
+  o/$AMD64/third_party/ctags/ctags.dbg
 
 make -j32 m=$ARM64 \
   o/$ARM64/ape/ape.elf \
@@ -55,17 +55,17 @@ make -j32 m=$ARM64 \
   o/$ARM64/ape/ape-no-modify-self.o \
   o/$ARM64/cosmopolitan.a \
   o/$ARM64/third_party/libcxx/libcxx.a \
-  o/$ARM64/tool/build/assimilate.com.dbg \
-  o/$ARM64/tool/build/march-native.com.dbg \
-  o/$ARM64/tool/build/mktemper.com.dbg \
-  o/$ARM64/tool/build/fixupobj.com.dbg \
-  o/$ARM64/tool/build/zipcopy.com.dbg \
-  o/$ARM64/tool/build/mkdeps.com.dbg \
-  o/$ARM64/tool/build/zipobj.com.dbg \
-  o/$ARM64/tool/build/apelink.com.dbg \
-  o/$ARM64/tool/build/pecheck.com.dbg \
-  o/$ARM64/third_party/make/make.com.dbg \
-  o/$ARM64/third_party/ctags/ctags.com.dbg
+  o/$ARM64/tool/build/assimilate.dbg \
+  o/$ARM64/tool/build/march-native.dbg \
+  o/$ARM64/tool/build/mktemper.dbg \
+  o/$ARM64/tool/build/fixupobj.dbg \
+  o/$ARM64/tool/build/zipcopy.dbg \
+  o/$ARM64/tool/build/mkdeps.dbg \
+  o/$ARM64/tool/build/zipobj.dbg \
+  o/$ARM64/tool/build/apelink.dbg \
+  o/$ARM64/tool/build/pecheck.dbg \
+  o/$ARM64/third_party/make/make.dbg \
+  o/$ARM64/third_party/ctags/ctags.dbg
 
 mkdir -p "$OUTDIR/bin/"
 cp tool/cosmocc/README.md "$OUTDIR/"
@@ -152,8 +152,8 @@ for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdep
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/$AMD64/tool/build/$x.com.dbg \
-    o/$ARM64/tool/build/$x.com.dbg
+    o/$AMD64/tool/build/$x.dbg \
+    o/$ARM64/tool/build/$x.dbg
 done
 for x in make ctags; do
   ape $APELINK \
@@ -161,6 +161,6 @@ for x in make ctags; do
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/$AMD64/third_party/$x/$x.com.dbg \
-    o/$ARM64/third_party/$x/$x.com.dbg
+    o/$AMD64/third_party/$x/$x.dbg \
+    o/$ARM64/third_party/$x/$x.dbg
 done

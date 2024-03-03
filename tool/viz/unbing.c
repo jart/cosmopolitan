@@ -30,9 +30,9 @@
  * something almost representing a source code file. A hack also exists
  * for comments in such files: 𝘶𝘴𝘦 𝑛𝑜𝑛-𝑎𝑠𝑐𝑖𝑖 𝗹𝗲𝘁𝘁𝗲𝗿𝗶𝗻𝗴 𝔞𝔩𝔱𝔢𝔯𝔫𝔞𝔱𝔦𝔳𝔢𝔰.
  *
- *   bash$ o/tool/viz/bing.com </bin/sh | o/tool/viz/fold.com >sh.txt
+ *   bash$ o/tool/viz/bing </bin/sh | o/tool/viz/fold >sh.txt
  *   bash$ emacs sh.txt
- *   bash$ o/tool/viz/unbing.com <sh.txt >sh
+ *   bash$ o/tool/viz/unbing <sh.txt >sh
  *   bash$ chmod +x sh
  *   bash$ ./sh
  *

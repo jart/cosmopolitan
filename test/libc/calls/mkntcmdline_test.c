@@ -85,9 +85,9 @@ TEST(mkntcmdline, fixit) {
 }
 
 TEST(mkntcmdline, testWut) {
-  char *argv[] = {"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com", "--strace", NULL};
+  char *argv[] = {"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛", "--strace", NULL};
   EXPECT_NE(-1, mkntcmdline(cmdline, argv));
-  EXPECT_STREQ(u"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com --strace", cmdline);
+  EXPECT_STREQ(u"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛 --strace", cmdline);
 }
 
 BENCH(mkntcmdline, lotsOfArgs) {

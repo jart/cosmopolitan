@@ -38,7 +38,7 @@ TEST(regex, testDns) {
   regex_t rx;
   EXPECT_EQ(REG_OK, regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED));
   EXPECT_EQ(REG_OK, regexec(&rx, "", 0, NULL, 0));
-  EXPECT_EQ(REG_OK, regexec(&rx, "foo.com", 0, NULL, 0));
+  EXPECT_EQ(REG_OK, regexec(&rx, "foo", 0, NULL, 0));
   EXPECT_EQ(REG_NOMATCH, regexec(&rx, "bar@example", 0, NULL, 0));
   regfree(&rx);
 }
@@ -96,16 +96,16 @@ TEST(regex, testUnicodeCharacterClass) {
 void A(void) {
   regex_t rx;
   regcomp(&rx, "^[-._0-9A-Za-z]*$", REG_EXTENDED);
-  regexec(&rx, "foo.com", 0, NULL, 0);
+  regexec(&rx, "foo", 0, NULL, 0);
   regfree(&rx);
 }
 void B(regex_t *rx) {
-  regexec(rx, "foo.com", 0, NULL, 0);
+  regexec(rx, "foo", 0, NULL, 0);
 }
 void C(void) {
   regex_t rx;
   regcomp(&rx, "^[-._0-9A-Za-z]*$", 0);
-  regexec(&rx, "foo.com", 0, NULL, 0);
+  regexec(&rx, "foo", 0, NULL, 0);
   regfree(&rx);
 }
 void D(regex_t *rx, regmatch_t *m) {

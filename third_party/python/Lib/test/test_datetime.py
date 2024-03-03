@@ -3,7 +3,7 @@ import sys
 
 from test.support import import_fresh_module, run_unittest
 
-if __name__ == "PYOBJ.COM":
+if __name__ == "PYOBJ":
     import _datetime
     import _strptime
     import datetime

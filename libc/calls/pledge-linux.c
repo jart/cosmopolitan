@@ -950,14 +950,14 @@ static const uint16_t kPledgeUnveil[] = {
 
 // placeholder group
 //
-// pledge.com checks this to do auto-unveiling
+// pledge checks this to do auto-unveiling
 static const uint16_t kPledgeVminfo[] = {
     __NR_linux_sched_yield,  //
 };
 
 // placeholder group
 //
-// pledge.com uses this to auto-unveil /tmp and $TMPPATH with rwc
+// pledge uses this to auto-unveil /tmp and $TMPPATH with rwc
 // permissions. pledge() alone (without unveil() too) offers very
 // little security here. consider using them together.
 static const uint16_t kPledgeTmppath[] = {

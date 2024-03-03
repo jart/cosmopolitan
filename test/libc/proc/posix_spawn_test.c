@@ -118,10 +118,10 @@ TEST(posix_spawn, self) {
 
 TEST(posix_spawn, ape) {
   int ws, pid;
-  char *prog = "./life.com";
+  char *prog = "./life";
   char *args[] = {prog, 0};
   char *envs[] = {0};
-  testlib_extract("/zip/life.com", prog, 0755);
+  testlib_extract("/zip/life", prog, 0755);
   ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
   ASSERT_TRUE(WIFEXITED(ws));
@@ -145,9 +145,9 @@ TEST(posix_spawn, elf) {
 TEST(posix_spawn, pipe) {
   char buf[10];
   int p[2], pid, status;
-  const char *pn = "./echo.com";
+  const char *pn = "./echo";
   posix_spawn_file_actions_t fa;
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  testlib_extract("/zip/echo", "echo", 0755);
   ASSERT_SYS(0, 0, pipe(p));
   ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
   ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, p[0]));
@@ -165,17 +165,17 @@ TEST(posix_spawn, pipe) {
 TEST(posix_spawn, chdir) {
   int ws, pid, p[2];
   char buf[16] = {0};
-  char *args[] = {"cocmd.com", "-c", "cat hello.txt", 0};
+  char *args[] = {"cocmd", "-c", "cat hello.txt", 0};
   char *envs[] = {0};
   posix_spawn_file_actions_t fa;
-  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
+  testlib_extract("/zip/cocmd", "cocmd", 0755);
   ASSERT_SYS(0, 0, mkdir("subdir", 0777));
   ASSERT_SYS(0, 0, xbarf("subdir/hello.txt", "hello\n", -1));
   ASSERT_SYS(0, 0, pipe2(p, O_CLOEXEC));
   ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
   ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, p[1], 1));
   ASSERT_EQ(0, posix_spawn_file_actions_addchdir_np(&fa, "subdir"));
-  ASSERT_EQ(0, posix_spawn(&pid, "../cocmd.com", &fa, 0, args, envs));
+  ASSERT_EQ(0, posix_spawn(&pid, "../cocmd", &fa, 0, args, envs));
   ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
   ASSERT_SYS(0, 0, close(p[1]));
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
@@ -201,8 +201,8 @@ TEST(posix_spawn, torture) {
   posix_spawn_file_actions_t fa;
   signal(SIGUSR2, OhMyGoth);
   sigfillset(&allsig);
-  if (!fileexists("echo.com")) {
-    testlib_extract("/zip/echo.com", "echo.com", 0755);
+  if (!fileexists("echo")) {
+    testlib_extract("/zip/echo", "echo", 0755);
   }
   // XXX: NetBSD doesn't seem to let us set the scheduler to itself ;_;
   ASSERT_EQ(0, posix_spawnattr_init(&attr));
@@ -220,10 +220,10 @@ TEST(posix_spawn, torture) {
   for (int i = 0; i < n; ++i) {
     char *volatile zzz = malloc(13);
     volatile int fd = open("/dev/null", O_WRONLY);
-    char *args[] = {"./echo.com", NULL};
+    char *args[] = {"./echo", NULL};
     char *envs[] = {NULL};
     raise(SIGUSR2);
-    ASSERT_EQ(0, posix_spawn(&pid, "./echo.com", &fa, &attr, args, envs));
+    ASSERT_EQ(0, posix_spawn(&pid, "./echo", &fa, &attr, args, envs));
     ASSERT_FALSE(__vforked);
     ASSERT_NE(-1, waitpid(pid, &ws, 0));
     EXPECT_FALSE(WIFSIGNALED(ws));
@@ -246,7 +246,7 @@ void *Torturer(void *arg) {
 TEST(posix_spawn, agony) {
   int i, n = 4;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  testlib_extract("/zip/echo", "echo", 0755);
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Torturer, 0));
   }
@@ -264,11 +264,11 @@ TEST(posix_spawn, etxtbsy) {
   if (IsNetbsd()) return;   // they don't appear impacted by this race condition
   if (IsOpenbsd()) return;  // they don't appear impacted by this race condition
   int ws, me, pid, thief;
-  char *prog = "./life.com";
+  char *prog = "./life";
   char *args[] = {prog, 0};
   char *envs[] = {0};
   sigset_t ss, old;
-  testlib_extract("/zip/life.com", prog, 0755);
+  testlib_extract("/zip/life", prog, 0755);
   for (int i = 0; i < 2; ++i) {
     sigemptyset(&ss);
     sigaddset(&ss, SIGUSR1);
@@ -382,22 +382,21 @@ BENCH(posix_spawn, bench) {
   creat("tiny64", 0755);
   write(3, kTinyLinuxExit, 128);
   close(3);
-  testlib_extract("/zip/life.com", "life.com", 0755);
+  testlib_extract("/zip/life", "life", 0755);
   testlib_extract("/zip/life.elf", "life.elf", 0755);
-  testlib_extract("/zip/life-pe.com", "life-pe.com", 0755);
+  testlib_extract("/zip/life-pe", "life-pe", 0755);
   kprintf("%s %s (MODE=" MODE
-          " rss=%'zu tiny64=%'zu life.com=%'zu life.elf=%'zu)\n",
+          " rss=%'zu tiny64=%'zu life=%'zu life.elf=%'zu)\n",
           __describe_os(), GetHost(), GetRss(), GetSize("tiny64"),
-          GetSize("life.com"), GetSize("life.elf"));
-  ForkExecveWait("./life.com");
-  EZBENCH2("posix_spawn life.com", donothing, PosixSpawnWait("./life.com"));
-  EZBENCH2("vfork life.com", donothing, VforkExecveWait("./life.com"));
-  EZBENCH2("fork life.com", donothing, ForkExecveWait("./life.com"));
+          GetSize("life"), GetSize("life.elf"));
+  ForkExecveWait("./life");
+  EZBENCH2("posix_spawn life", donothing, PosixSpawnWait("./life"));
+  EZBENCH2("vfork life", donothing, VforkExecveWait("./life"));
+  EZBENCH2("fork life", donothing, ForkExecveWait("./life"));
   if (IsWindows()) {
-    EZBENCH2("posix_spawn life-pe.com", donothing,
-             PosixSpawnWait("./life-pe.com"));
-    EZBENCH2("vfork life-pe.com", donothing, VforkExecveWait("./life-pe.com"));
-    EZBENCH2("fork life-pe.com", donothing, ForkExecveWait("./life-pe.com"));
+    EZBENCH2("posix_spawn life-pe", donothing, PosixSpawnWait("./life-pe"));
+    EZBENCH2("vfork life-pe", donothing, VforkExecveWait("./life-pe"));
+    EZBENCH2("fork life-pe", donothing, ForkExecveWait("./life-pe"));
   }
   if (IsXnu() || IsWindows() || IsMetal()) return;
   EZBENCH2("posix_spawn life.elf", donothing, PosixSpawnWait("./life.elf"));

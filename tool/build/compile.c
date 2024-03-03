@@ -73,7 +73,7 @@ __static_yoink("zipos");
   "\
 SYNOPSIS\n\
 \n\
-  compile.com [FLAGS] COMMAND [ARGS...]\n\
+  compile [FLAGS] COMMAND [ARGS...]\n\
 \n\
 OVERVIEW\n\
 \n\
@@ -83,7 +83,7 @@ DESCRIPTION\n\
 \n\
   This is a generic command wrapper, e.g.\n\
 \n\
-    compile.com gcc -o program program.c\n\
+    compile gcc -o program program.c\n\
 \n\
   This wrapper provides the following services:\n\
 \n\
@@ -681,7 +681,7 @@ int Launch(void) {
     } else {
       /* this should never happen */
       PrintRed();
-      appends(&output, "error: compile.com read() failed w/ ");
+      appends(&output, "error: compile read() failed w/ ");
       appendd(&output, buf, FormatInt64(buf, errno) - buf);
       PrintReset();
       appendw(&output, READ16LE(": "));
@@ -704,7 +704,7 @@ int Launch(void) {
     } else {
       /* this should never happen */
       PrintRed();
-      appends(&output, "error: compile.com wait4() failed w/ ");
+      appends(&output, "error: compile wait4() failed w/ ");
       appendd(&output, buf, FormatInt64(buf, errno) - buf);
       PrintReset();
       appendw(&output, READ16LE(": "));
@@ -716,13 +716,13 @@ int Launch(void) {
   if (gotchld) {
     us = GetTimespecMicros(finish) - GetTimespecMicros(signalled);
     if (us > 1000000) {
-      appends(&output, "wut: compile.com needed ");
+      appends(&output, "wut: compile needed ");
       appendd(&output, buf, FormatUint64Thousands(buf, us) - buf);
       appends(&output, "µs to wait() for zombie ");
       rc = -1;
     }
     if (gotchld > 1) {
-      appends(&output, "wut: compile.com got multiple sigchld?! ");
+      appends(&output, "wut: compile got multiple sigchld?! ");
       rc = -1;
     }
   }
@@ -909,9 +909,9 @@ int main(int argc, char *argv[]) {
     isgcc = true;
   } else if (strstr(s, "ld.bfd")) {
     isbfd = true;
-  } else if (strstr(s, "ar.com")) {
+  } else if (strstr(s, "ar")) {
     isar = true;
-  } else if (strstr(s, "package.com")) {
+  } else if (strstr(s, "package")) {
     ispkg = true;
   }
 
@@ -921,7 +921,7 @@ int main(int argc, char *argv[]) {
     // replace output filename argument
     //
     // some commands (e.g. ar) don't use the `-o PATH` notation. in that
-    // case we assume the output path was passed to compile.com -TTARGET
+    // case we assume the output path was passed to compile -TTARGET
     // which means we can replace the appropriate command line argument.
     if (!noworkaround &&  //
         !movepath &&      //
@@ -1180,7 +1180,7 @@ int main(int argc, char *argv[]) {
   } else if (target) {
     outpath = target;
   } else {
-    fputs("error: compile.com needs -TTARGET or -oOUTPATH\n", stderr);
+    fputs("error: compile needs -TTARGET or -oOUTPATH\n", stderr);
     exit(7);
   }
 
@@ -1514,10 +1514,10 @@ int main(int argc, char *argv[]) {
   // flush output
   if (WriteAllUntilSignalledOrError(2, output, appendz(output).i) == -1) {
     if (errno == EINTR) {
-      s = "notice: compile.com output truncated\n";
+      s = "notice: compile output truncated\n";
     } else {
       if (!exitcode) exitcode = 55;
-      s = "error: compile.com failed to write result\n";
+      s = "error: compile failed to write result\n";
     }
     write(2, s, strlen(s));
   }

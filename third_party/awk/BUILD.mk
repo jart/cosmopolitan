@@ -40,10 +40,10 @@ $(THIRD_PARTY_AWK_A):					\
 		$(THIRD_PARTY_AWK_OBJS)
 
 $(THIRD_PARTY_AWK_A).pkg:				\
-		$(THIRD_PARTY_AWK_OBJS)		\
+		$(THIRD_PARTY_AWK_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/awk/awk.com.dbg:			\
+o/$(MODE)/third_party/awk/awk.dbg:			\
 		$(THIRD_PARTY_AWK)			\
 		o/$(MODE)/third_party/awk/cmd.o		\
 		o/$(MODE)/third_party/awk/README.zip.o	\
@@ -56,7 +56,7 @@ o/$(MODE)/third_party/awk/README.zip.o:			\
 			-B
 
 THIRD_PARTY_AWK_BINS = $(THIRD_PARTY_AWK_COMS) $(THIRD_PARTY_AWK_COMS:%=%.dbg)
-THIRD_PARTY_AWK_COMS = o/$(MODE)/third_party/awk/awk.com
+THIRD_PARTY_AWK_COMS = o/$(MODE)/third_party/awk/awk
 THIRD_PARTY_AWK_LIBS = $(THIRD_PARTY_AWK_A)
 $(THIRD_PARTY_AWK_OBJS): $(BUILD_FILES) third_party/awk/BUILD.mk
 

@@ -80,7 +80,7 @@ THIRD_PARTY_LIBCXXABI_TEST_COMS_SRCS =					\
 	$(filter-out %.pass.cc,$(THIRD_PARTY_LIBCXXABI_TEST_SRCS))
 
 THIRD_PARTY_LIBCXXABI_TEST_COMS =					\
-	$(THIRD_PARTY_LIBCXXABI_TEST_COMS_SRCS:%.cc=o/$(MODE)/%.com)
+	$(THIRD_PARTY_LIBCXXABI_TEST_COMS_SRCS:%.cc=o/$(MODE)/%)
 
 THIRD_PARTY_LIBCXXABI_TEST_TESTS =					\
 	$(THIRD_PARTY_LIBCXXABI_TEST_COMS:%=%.ok)
@@ -118,7 +118,7 @@ $(THIRD_PARTY_LIBCXXABI_TEST_A).pkg:					\
 		$(foreach x,$(THIRD_PARTY_LIBCXXABI_TEST_DIRECTDEPS),$($(x)_A).pkg) \
 		$(THIRD_PARTY_LIBCXXABI_TEST_OBJS)
 
-o/$(MODE)/third_party/libcxxabi/test/%.com.dbg:				\
+o/$(MODE)/third_party/libcxxabi/test/%.dbg:				\
 		$(THIRD_PARTY_LIBCXXABI_TEST_DEPS)			\
 		$(THIRD_PARTY_LIBCXXABI_TEST_A)				\
 		o/$(MODE)/third_party/libcxxabi/test/%.o		\

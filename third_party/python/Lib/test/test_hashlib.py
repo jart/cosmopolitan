@@ -24,7 +24,7 @@ from test import support
 from test.support import _4G, bigmemtest, import_fresh_module
 from http.client import HTTPException
 
-# if __name__ == 'PYOBJ.COM':
+# if __name__ == 'PYOBJ':
 #     import _sha3 # what a horror show
 
 # Were we compiled --with-pydebug or with #define Py_DEBUG?

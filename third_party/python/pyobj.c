@@ -71,7 +71,7 @@ __static_yoink("_PyUnicode_GetCode");
 #define MANUAL "\
 SYNOPSIS\n\
 \n\
-  pyobj.com [FLAGS] SOURCE\n\
+  pyobj [FLAGS] SOURCE\n\
 \n\
 OVERVIEW\n\
 \n\

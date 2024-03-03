@@ -29,7 +29,7 @@
 
 void SetUp(void) {
   if (getpriority(PRIO_PROCESS, getpid()) != 0) {
-    kprintf("getpriority_test.com must be launched at priority zero\n");
+    kprintf("getpriority_test must be launched at priority zero\n");
     exit(0);
   }
 }

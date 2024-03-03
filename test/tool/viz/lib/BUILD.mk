@@ -10,17 +10,17 @@ TEST_TOOL_VIZ_LIB_OBJS =				\
 	$(TEST_TOOL_VIZ_LIB_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_TOOL_VIZ_LIB_COMS =				\
-	$(TEST_TOOL_VIZ_LIB_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_TOOL_VIZ_LIB_SRCS:%.c=o/$(MODE)/%)
 
 TEST_TOOL_VIZ_LIB_BINS =				\
 	$(TEST_TOOL_VIZ_LIB_COMS)			\
 	$(TEST_TOOL_VIZ_LIB_COMS:%=%.dbg)
 
 TEST_TOOL_VIZ_LIB_TESTS =				\
-	$(TEST_TOOL_VIZ_LIB_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_TOOL_VIZ_LIB_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_TOOL_VIZ_LIB_CHECKS =				\
-	$(TEST_TOOL_VIZ_LIB_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_TOOL_VIZ_LIB_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_TOOL_VIZ_LIB_DIRECTDEPS =				\
 	DSP_MPEG					\
@@ -45,7 +45,7 @@ o/$(MODE)/test/tool/viz/lib/vizlib.pkg:			\
 		$(TEST_TOOL_VIZ_LIB_OBJS)		\
 		$(foreach x,$(TEST_TOOL_VIZ_LIB_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/tool/viz/lib/%.com.dbg:			\
+o/$(MODE)/test/tool/viz/lib/%.dbg:			\
 		$(TEST_TOOL_VIZ_LIB_DEPS)		\
 		o/$(MODE)/test/tool/viz/lib/%.o		\
 		o/$(MODE)/test/tool/viz/lib/vizlib.pkg	\

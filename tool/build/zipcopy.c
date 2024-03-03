@@ -23,9 +23,9 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
@@ -85,8 +85,8 @@ FLAGS\n\
 \n\
 EXAMPLE\n\
 \n\
-  objcopy -SO binary foo.com.dbg foo.com\n\
-  zipcopy foo.com.dbg foo.com\n\
+  objcopy -SO binary foo.dbg foo\n\
+  zipcopy foo.dbg foo\n\
 \n\
 \n\
 ",
@@ -122,7 +122,7 @@ static void CopyZip(void) {
   //
   // if input is an elf file with sections, then the zip artifacts need
   // to have been linked into a .zip section and then later copied into
-  // the file end by fixupobj.com.
+  // the file end by fixupobj.
   //
   if (IsElf64Binary((ehdr = (Elf64_Ehdr *)inmap), insize) && ehdr->e_shnum &&
       (secstrs = GetElfSectionNameStringTable(ehdr, insize)) &&

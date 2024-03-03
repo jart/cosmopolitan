@@ -10,22 +10,22 @@ TEST_TOOL_NET_SRCS = $(filter %.c,$(TEST_TOOL_NET_FILES))
 TEST_TOOL_NET_SRCS_TEST = $(filter %_test.c,$(TEST_TOOL_NET_SRCS))
 TEST_TOOL_NET_LUAS_TEST = $(filter %_test.lua,$(TEST_TOOL_NET_FILES))
 TEST_TOOL_NET_HDRS = $(filter %.h,$(TEST_TOOL_NET_FILES))
-TEST_TOOL_NET_COMS = $(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%.com)
+TEST_TOOL_NET_COMS = $(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%)
 
 TEST_TOOL_NET_OBJS =						\
 	$(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%.o)			\
-	o/$(MODE)/test/tool/net/redbean-tester.com.zip.o
+	o/$(MODE)/test/tool/net/redbean-tester.zip.o
 
 TEST_TOOL_NET_BINS =						\
 	$(TEST_TOOL_NET_COMS)					\
 	$(TEST_TOOL_NET_COMS:%=%.dbg)
 
 TEST_TOOL_NET_TESTS =						\
-	$(TEST_TOOL_NET_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_TOOL_NET_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_TOOL_NET_CHECKS =						\
 	$(TEST_TOOL_NET_HDRS:%=o/$(MODE)/%.ok)			\
-	$(TEST_TOOL_NET_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)	\
+	$(TEST_TOOL_NET_SRCS_TEST:%.c=o/$(MODE)/%.runs)		\
 	$(TEST_TOOL_NET_LUAS_TEST:%.lua=o/$(MODE)/%.lua.runs)
 
 TEST_TOOL_NET_DIRECTDEPS =					\
@@ -60,7 +60,7 @@ $(TEST_TOOL_NET_A).pkg:						\
 		$(TEST_TOOL_NET_OBJS)				\
 		$(foreach x,$(TEST_TOOL_NET_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/tool/net/%.com.dbg:				\
+o/$(MODE)/test/tool/net/%.dbg:					\
 		$(TEST_TOOL_NET_DEPS)				\
 		$(TEST_TOOL_NET_A)				\
 		o/$(MODE)/test/tool/net/%.o			\
@@ -70,7 +70,8 @@ o/$(MODE)/test/tool/net/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/tool/net/redbean-tester.com.dbg:			\
+.PRECIOUS: o/$(MODE)/test/tool/net/redbean-tester
+o/$(MODE)/test/tool/net/redbean-tester.dbg:			\
 		$(TOOL_NET_DEPS)				\
 		o/$(MODE)/tool/net/redbean.o			\
 		$(TOOL_NET_REDBEAN_LUA_MODULES)			\
@@ -80,20 +81,10 @@ o/$(MODE)/test/tool/net/redbean-tester.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/tool/net/redbean-tester.com:			\
-		o/$(MODE)/test/tool/net/redbean-tester.com.dbg	\
-		o/$(MODE)/third_party/zip/zip.com		\
-		o/$(MODE)/tool/build/symtab.com			\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
-	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
-
-o/$(MODE)/test/tool/net/redbean_test.com.runs:			\
+o/$(MODE)/test/tool/net/redbean_test.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
-o/$(MODE)/test/tool/net/sqlite_test.com.runs:			\
+o/$(MODE)/test/tool/net/sqlite_test.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 
 .PHONY: o/$(MODE)/test/tool/net

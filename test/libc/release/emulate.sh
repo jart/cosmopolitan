@@ -9,7 +9,7 @@ if [ "$MODE" = opt ] || [ "$MODE" = optlinux ]; then
 fi
 
 # smoke test userspace binary emulation
-CMD="o/$MODE/tool/build/blinkenlights.com.dbg o/$MODE/examples/hello.com"
+CMD="o/$MODE/tool/build/blinkenlights.dbg o/$MODE/examples/hello"
 if OUTPUT="$($CMD)"; then
   if [ x"$OUTPUT" = x"hello world" ]; then
     exit 0

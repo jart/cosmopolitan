@@ -43,7 +43,7 @@ $(THIRD_PARTY_CTAGS_A).pkg:				\
 		$(THIRD_PARTY_CTAGS_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_CTAGS_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/ctags/ctags.com.dbg:		\
+o/$(MODE)/third_party/ctags/ctags.dbg:			\
 		$(THIRD_PARTY_CTAGS)			\
 		o/$(MODE)/third_party/ctags/main.o	\
 		$(CRT)					\
@@ -52,7 +52,7 @@ o/$(MODE)/third_party/ctags/ctags.com.dbg:		\
 
 THIRD_PARTY_CTAGS_LIBS = $(THIRD_PARTY_CTAGS_A)
 THIRD_PARTY_CTAGS_BINS = $(THIRD_PARTY_CTAGS_COMS) $(THIRD_PARTY_CTAGS_COMS:%=%.dbg)
-THIRD_PARTY_CTAGS_COMS = o/$(MODE)/third_party/ctags/ctags.com
+THIRD_PARTY_CTAGS_COMS = o/$(MODE)/third_party/ctags/ctags
 $(THIRD_PARTY_CTAGS_OBJS): $(BUILD_FILES) third_party/ctags/BUILD.mk
 
 .PHONY: o/$(MODE)/third_party/ctags

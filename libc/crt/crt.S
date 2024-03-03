@@ -116,7 +116,6 @@ _start:
 9:	.unreachable
 
 //	strongly link main() function (discarded by linker)
-//	libc_runtime had to weakly link, due to package.com
 	.section .yoink
 	call	main
 	.previous
@@ -154,7 +153,6 @@ _start:
 	.unreachable
 
 //	strongly link main() function (discarded by linker)
-//	libc_runtime had to weakly link, due to package.com
 	.section .yoink
 	bl	main
 	.previous

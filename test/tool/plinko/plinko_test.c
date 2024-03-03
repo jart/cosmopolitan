@@ -30,7 +30,7 @@
 #include "libc/testlib/testlib.h"
 
 __static_yoink("zipos");
-__static_yoink("plinko.com");
+__static_yoink("plinko");
 __static_yoink("library.lisp");
 __static_yoink("library_test.lisp");
 __static_yoink("binarytrees.lisp");
@@ -54,8 +54,8 @@ void SetUpOnce(void) {
   int fdin, fdout;
   testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
-  ASSERT_NE(-1, (fdin = open("/zip/plinko.com", O_RDONLY)));
-  ASSERT_NE(-1, (fdout = creat("bin/plinko.com", 0755)));
+  ASSERT_NE(-1, (fdin = open("/zip/plinko", O_RDONLY)));
+  ASSERT_NE(-1, (fdout = creat("bin/plinko", 0755)));
   ASSERT_NE(-1, copyfd(fdin, fdout, -1));
   EXPECT_EQ(0, close(fdout));
   EXPECT_EQ(0, close(fdin));
@@ -89,8 +89,7 @@ TEST(plinko, worksOrPrintsNiceError) {
     sigaction(SIGQUIT, &savequit, 0);
     sigaction(SIGPIPE, &savepipe, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    execve("bin/plinko.com", (char *const[]){"bin/plinko.com", 0},
-           (char *const[]){0});
+    execve("bin/plinko", (char *const[]){"bin/plinko", 0}, (char *const[]){0});
     _exit(127);
   }
   close(pfds[0][0]);

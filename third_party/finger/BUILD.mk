@@ -42,14 +42,14 @@ $(THIRD_PARTY_FINGER_A).pkg:				\
 		$(THIRD_PARTY_FINGER_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_FINGER_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/finger/finger.com.dbg:		\
+o/$(MODE)/third_party/finger/finger.dbg:		\
 		$(THIRD_PARTY_FINGER)			\
 		o/$(MODE)/third_party/finger/finger.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-THIRD_PARTY_FINGER_COMS = o/$(MODE)/third_party/finger/finger.com
+THIRD_PARTY_FINGER_COMS = o/$(MODE)/third_party/finger/finger
 THIRD_PARTY_FINGER_BINS = $(THIRD_PARTY_FINGER_COMS) $(THIRD_PARTY_FINGER_COMS:%=%.dbg)
 THIRD_PARTY_FINGER_LIBS = $(foreach x,$(THIRD_PARTY_FINGER_ARTIFACTS),$($(x)))
 THIRD_PARTY_FINGER_SRCS = $(foreach x,$(THIRD_PARTY_FINGER_ARTIFACTS),$($(x)_SRCS))

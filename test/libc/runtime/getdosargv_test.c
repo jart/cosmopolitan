@@ -95,9 +95,9 @@ TEST(GetDosArgv, realWorldUsage) {
   size_t size = ARG_MAX / 2;
   char *buf = malloc(size * sizeof(char));
   char **argv = malloc(max * sizeof(char *));
-  EXPECT_EQ(5, GetDosArgv(u"C:\\Users\\jtunn\\printargs.com oh yes yes yes",
-                          buf, size, argv, max));
-  EXPECT_STREQ("C:\\Users\\jtunn\\printargs.com", argv[0]);
+  EXPECT_EQ(5, GetDosArgv(u"C:\\Users\\jtunn\\printargs oh yes yes yes", buf,
+                          size, argv, max));
+  EXPECT_STREQ("C:\\Users\\jtunn\\printargs", argv[0]);
   EXPECT_STREQ("oh", argv[1]);
   EXPECT_STREQ("yes", argv[2]);
   EXPECT_STREQ("yes", argv[3]);

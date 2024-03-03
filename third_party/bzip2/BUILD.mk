@@ -14,8 +14,8 @@ THIRD_PARTY_BZIP2_A_OBJS = $(THIRD_PARTY_BZIP2_A_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_BZIP2_BINS = $(THIRD_PARTY_BZIP2_COMS) $(THIRD_PARTY_BZIP2_COMS:%=%.dbg)
 
 THIRD_PARTY_BZIP2_COMS =					\
-	o/$(MODE)/third_party/bzip2/bzip2.com			\
-	o/$(MODE)/third_party/bzip2/bzip2recover.com
+	o/$(MODE)/third_party/bzip2/bzip2			\
+	o/$(MODE)/third_party/bzip2/bzip2recover
 
 THIRD_PARTY_BZIP2_A_CHECKS =					\
 	$(THIRD_PARTY_BZIP2_A).pkg				\
@@ -45,7 +45,7 @@ $(THIRD_PARTY_BZIP2_A).pkg:					\
 		$(THIRD_PARTY_BZIP2_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_BZIP2_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/bzip2/bzip2.com.dbg:			\
+o/$(MODE)/third_party/bzip2/bzip2.dbg:				\
 		$(THIRD_PARTY_BZIP2)				\
 		o/$(MODE)/third_party/bzip2/bzip2.o		\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
@@ -53,7 +53,7 @@ o/$(MODE)/third_party/bzip2/bzip2.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
+o/$(MODE)/third_party/bzip2/bzip2recover.dbg:			\
 		$(THIRD_PARTY_BZIP2)				\
 		o/$(MODE)/third_party/bzip2/bzip2recover.o	\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
@@ -82,5 +82,5 @@ o/$(MODE)/third_party/bzip2:					\
 		$(THIRD_PARTY_BZIP2_CHECKS)
 
 # TODO(jart): write regression test
-# master jart@nightmare:~/cosmo$ o//third_party/bzip2/bzip2.com -1 <third_party/bzip2/sample1.ref >a
+# master jart@nightmare:~/cosmo$ o//third_party/bzip2/bzip2 -1 <third_party/bzip2/sample1.ref >a
 # master jart@nightmare:~/cosmo$ cmp -s third_party/bzip2/sample1.bz2 a

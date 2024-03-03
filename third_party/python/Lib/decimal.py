@@ -15,7 +15,7 @@ except ImportError:
     except ImportError:
         pass
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _decimal
     BasicContext = 0
     Clamped = 0

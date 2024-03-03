@@ -7,7 +7,7 @@ import sys
 import sysconfig
 import unittest
 
-if __name__ == "PYOBJ.COM":
+if __name__ == "PYOBJ":
     import asdl
 
 

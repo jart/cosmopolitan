@@ -52,11 +52,11 @@ __static_yoink("realloc");
  *
  * This script verifies the well-formedness of dependencies, e.g.
  *
- *     o/tool/build/package.com \
+ *     o/tool/build/package \
  *       -o o/libc/stubs/stubs.pkg \
  *       o/libc/stubs/{a,b,...}.o
  *
- *     o/tool/build/package.com \
+ *     o/tool/build/package \
  *       -o o/libc/nexgen32e/nexgen32e.pkg \
  *       -d o/libc/stubs/stubs.pkg \
  *       o/libc/nexgen32e/{a,b,...}.o
@@ -358,15 +358,14 @@ static void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
     }
   }
   if (pkg->path == -1) {
-    tinyprint(2, "error: no packages passed to package.com\n", NULL);
+    tinyprint(2, "error: no packages passed to package\n", NULL);
     exit(1);
   }
   if (optind == argc) {
-    tinyprint(
-        2,
-        "no objects passed to package.com; is your foo.mk $(FOO_OBJS) glob "
-        "broken?\n",
-        NULL);
+    tinyprint(2,
+              "no objects passed to package; is your foo.mk $(FOO_OBJS) glob "
+              "broken?\n",
+              NULL);
     exit(1);
   }
   getargs_init(&ga, argv + optind);

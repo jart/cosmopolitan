@@ -39,7 +39,7 @@ $(THIRD_PARTY_XXHASH_A).pkg:					\
 		$(THIRD_PARTY_XXHASH_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_XXHASH_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/xxhash/xxhsum.com.dbg:			\
+o/$(MODE)/third_party/xxhash/xxhsum.dbg:			\
 		$(THIRD_PARTY_XXHASH)				\
 		o/$(MODE)/third_party/xxhash/cli/xxhsum.o	\
 		$(CRT)						\
@@ -47,7 +47,7 @@ o/$(MODE)/third_party/xxhash/xxhsum.com.dbg:			\
 	@$(APELINK)
 
 THIRD_PARTY_XXHASH_BINS = $(THIRD_PARTY_XXHASH_COMS) $(THIRD_PARTY_XXHASH_COMS:%=%.dbg)
-THIRD_PARTY_XXHASH_COMS = o/$(MODE)/third_party/xxhash/xxhsum.com
+THIRD_PARTY_XXHASH_COMS = o/$(MODE)/third_party/xxhash/xxhsum
 THIRD_PARTY_XXHASH_LIBS = $(THIRD_PARTY_XXHASH_A)
 
 .PHONY: o/$(MODE)/third_party/xxhash

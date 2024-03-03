@@ -102,11 +102,11 @@
  * Here's how you can compile this program on Linux:
  *
  *     git clone https://github.com/jart/cosmopolitan && cd cosmopolitan
- *     make -j12 o//tool/viz/life.com
+ *     make -j12 o//tool/viz/life
  *
  * The output binary works on Linux, Windows, Mac, and FreeBSD:
  *
- *     o//tool/viz/life.com
+ *     o//tool/viz/life
  *
  * @see https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
  * @see https://www.conwaylife.com/wiki/Run_Length_Encoded
@@ -225,10 +225,10 @@ static char16_t statusline16[256];
 #define GODOWN(x)    ((x) << 8)
 #define GORIGHT(x)   (((x) & ~RIGHT) << 1)
 #define GOLEFT(x)    (((x) & ~LEFT) >> 1)
-#define LEFTMOST(x)  ((x)&LEFT)
-#define RIGHTMOST(x) ((x)&RIGHT)
-#define TOPMOST(x)   ((x)&TOP)
-#define BOTMOST(x)   ((x)&BOTTOM)
+#define LEFTMOST(x)  ((x) & LEFT)
+#define RIGHTMOST(x) ((x) & RIGHT)
+#define TOPMOST(x)   ((x) & TOP)
+#define BOTMOST(x)   ((x) & BOTTOM)
 
 #define ADD(X)       \
   do {               \

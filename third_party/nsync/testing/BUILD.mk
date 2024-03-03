@@ -10,10 +10,10 @@ THIRD_PARTY_NSYNC_TESTING_SRCS = $(filter %.c,$(THIRD_PARTY_NSYNC_TESTING_FILES)
 THIRD_PARTY_NSYNC_TESTING_HDRS = $(filter %.h,$(THIRD_PARTY_NSYNC_TESTING_FILES))
 THIRD_PARTY_NSYNC_TESTING_SRCS_TEST = $(filter %_test.c,$(THIRD_PARTY_NSYNC_TESTING_SRCS))
 THIRD_PARTY_NSYNC_TESTING_OBJS = $(THIRD_PARTY_NSYNC_TESTING_SRCS:%.c=o/$(MODE)/%.o)
-THIRD_PARTY_NSYNC_TESTING_COMS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.com)
+THIRD_PARTY_NSYNC_TESTING_COMS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%)
 THIRD_PARTY_NSYNC_TESTING_BINS = $(THIRD_PARTY_NSYNC_TESTING_COMS) $(THIRD_PARTY_NSYNC_TESTING_COMS:%=%.dbg)
-THIRD_PARTY_NSYNC_TESTING_TESTS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
-THIRD_PARTY_NSYNC_TESTING_CHECKS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+THIRD_PARTY_NSYNC_TESTING_TESTS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.ok)
+THIRD_PARTY_NSYNC_TESTING_CHECKS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 THIRD_PARTY_NSYNC_TESTING_DIRECTDEPS =				\
 	LIBC_CALLS						\
@@ -42,7 +42,7 @@ $(THIRD_PARTY_NSYNC_TESTING_A).pkg:				\
 		$(THIRD_PARTY_NSYNC_TESTING_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_NSYNC_TESTING_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/nsync/testing/%_test.com.dbg:		\
+o/$(MODE)/third_party/nsync/testing/%_test.dbg:			\
 		$(THIRD_PARTY_NSYNC_TESTING_DEPS)		\
 		$(THIRD_PARTY_NSYNC_TESTING_A)			\
 		o/$(MODE)/third_party/nsync/testing/%_test.o	\
@@ -52,7 +52,7 @@ o/$(MODE)/third_party/nsync/testing/%_test.com.dbg:		\
 	@$(APELINK)
 
 $(THIRD_PARTY_NSYNC_TESTING_OBJS): third_party/nsync/testing/BUILD.mk
-o/$(MODE)/third_party/nsync/testing/mu_test.com.runs: private QUOTA = -C64
+o/$(MODE)/third_party/nsync/testing/mu_test.runs: private QUOTA = -C64
 
 .PHONY: o/$(MODE)/third_party/nsync/testing
 o/$(MODE)/third_party/nsync/testing:				\

@@ -40,7 +40,7 @@ $(THIRD_PARTY_TREE_A).pkg:				\
 		$(THIRD_PARTY_TREE_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_TREE_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/tree/tree.com.dbg:		\
+o/$(MODE)/third_party/tree/tree.dbg:			\
 		$(THIRD_PARTY_TREE)			\
 		o/$(MODE)/third_party/tree/tree.o	\
 		$(CRT)					\
@@ -48,7 +48,7 @@ o/$(MODE)/third_party/tree/tree.com.dbg:		\
 	@$(APELINK)
 
 THIRD_PARTY_TREE_BINS = $(THIRD_PARTY_TREE_COMS) $(THIRD_PARTY_TREE_COMS:%=%.dbg)
-THIRD_PARTY_TREE_COMS = o/$(MODE)/third_party/tree/tree.com
+THIRD_PARTY_TREE_COMS = o/$(MODE)/third_party/tree/tree
 THIRD_PARTY_TREE_LIBS = $(THIRD_PARTY_TREE_A)
 $(THIRD_PARTY_TREE_OBJS): $(BUILD_FILES) third_party/tree/BUILD.mk
 

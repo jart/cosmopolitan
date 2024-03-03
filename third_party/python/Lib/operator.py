@@ -418,7 +418,7 @@ else:
     except ImportError:
         pass
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _operator
 
 # All of these "__func__ = func" assignments have to happen after importing

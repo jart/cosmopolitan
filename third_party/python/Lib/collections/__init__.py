@@ -19,7 +19,7 @@ __all__ = ['deque', 'defaultdict', 'namedtuple', 'UserDict', 'UserList',
 
 # For backwards compatibility, continue to make the collections ABCs
 # available through the collections module. But don't mandate it, in
-# cases where we're compiling with PYOBJ.COM.
+# cases where we're compiling with PYOBJ.
 try:
     from _collections_abc import *
     import _collections_abc
@@ -513,8 +513,8 @@ class Counter(dict):
     # References:
     #   http://en.wikipedia.org/wiki/Multiset
     #   http://www.gnu.org/software/smalltalk/manual-base/html_node/Bag.html
-    #   http://www.demo2s.com/Tutorial/Cpp/0380__set-multiset/Catalog0380__set-multiset.htm
-    #   http://code.activestate.com/recipes/259174/
+    #   http://www.demo2s/Tutorial/Cpp/0380__set-multiset/Catalog0380__set-multiset.htm
+    #   http://code.activestate/recipes/259174/
     #   Knuth, TAOCP Vol. II section 4.6.3
 
     def __init__(*args, **kwds):
@@ -1246,5 +1246,5 @@ class UserString(Sequence):
     def upper(self): return self.__class__(self.data.upper())
     def zfill(self, width): return self.__class__(self.data.zfill(width))
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _collections

@@ -2,7 +2,7 @@
 
 from xml.etree.ElementTree import *
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     Comment = 0
     Element = 0
     ElementTree = 0

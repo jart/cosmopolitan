@@ -10,7 +10,7 @@ import weakref
 
 # Skip test if we can't import mmap.
 mmap = import_module('mmap')
-if __name__ == 'PYOBJ.COM': import mmap
+if __name__ == 'PYOBJ': import mmap
 
 PAGESIZE = mmap.PAGESIZE
 

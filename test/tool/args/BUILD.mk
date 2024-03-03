@@ -9,24 +9,24 @@ TEST_TOOL_ARGS_FILES := $(wildcard test/tool/args/*)
 TEST_TOOL_ARGS_SRCS = $(filter %.c,$(TEST_TOOL_ARGS_FILES))
 TEST_TOOL_ARGS_SRCS_TEST = $(filter %_test.c,$(TEST_TOOL_ARGS_SRCS))
 TEST_TOOL_ARGS_HDRS = $(filter %.h,$(TEST_TOOL_ARGS_FILES))
-TEST_TOOL_ARGS_COMS = $(TEST_TOOL_ARGS_OBJS:%.o=%.com)
+TEST_TOOL_ARGS_COMS = $(TEST_TOOL_ARGS_OBJS:%.o=%)
 
 TEST_TOOL_ARGS_OBJS =				\
 	$(TEST_TOOL_ARGS_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_TOOL_ARGS_COMS =				\
-	$(TEST_TOOL_ARGS_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_TOOL_ARGS_SRCS:%.c=o/$(MODE)/%)
 
 TEST_TOOL_ARGS_BINS =				\
 	$(TEST_TOOL_ARGS_COMS)			\
 	$(TEST_TOOL_ARGS_COMS:%=%.dbg)
 
 TEST_TOOL_ARGS_TESTS =				\
-	$(TEST_TOOL_ARGS_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_TOOL_ARGS_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_TOOL_ARGS_CHECKS =				\
 	$(TEST_TOOL_ARGS_HDRS:%=o/$(MODE)/%.ok)	\
-	$(TEST_TOOL_ARGS_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_TOOL_ARGS_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_TOOL_ARGS_DIRECTDEPS =			\
 	LIBC_CALLS				\
@@ -56,7 +56,7 @@ $(TEST_TOOL_ARGS_A).pkg:			\
 		$(TEST_TOOL_ARGS_OBJS)		\
 		$(foreach x,$(TEST_TOOL_ARGS_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/tool/args/%.com.dbg:		\
+o/$(MODE)/test/tool/args/%.dbg:			\
 		$(TEST_TOOL_ARGS_DEPS)		\
 		$(TEST_TOOL_ARGS_A)		\
 		o/$(MODE)/test/tool/args/%.o	\

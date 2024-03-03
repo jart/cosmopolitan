@@ -72,9 +72,9 @@
  * of certificates. It's how long it takes to connect, copy the binary,
  * and run it. The remote daemon is deployed via SSH if it's not there.
  *
- *     o/default/tool/build/runit.com             \
- *         o/default/tool/build/runitd.com        \
- *         o/default/test/libc/mem/qsort_test.com \
+ *     o/default/tool/build/runit             \
+ *         o/default/tool/build/runitd        \
+ *         o/default/test/libc/mem/qsort_test \
  *         freebsd.test.:31337:22
  *
  * APE binaries are hermetic and embed dependent files within their zip
@@ -412,10 +412,10 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   // fork off 𝑛 subprocesses for each host on which we run binary.
   // what's important here is htop in tree mode will report like:
   //
-  //     runit.com xnu freebsd netbsd
-  //     ├─runit.com xnu
-  //     ├─runit.com freebsd
-  //     └─runit.com netbsd
+  //     runit xnu freebsd netbsd
+  //     ├─runit xnu
+  //     ├─runit freebsd
+  //     └─runit netbsd
   //
   // That way when one hangs, it's easy to know what o/s it is.
   argc -= 3;

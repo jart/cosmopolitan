@@ -73,12 +73,23 @@
            "__gnu__"
            "_OPENMP"))
 
+        (cuda
+         '("__NVCC__"))
+
+        (hip
+         '("__HIP__"
+           "__HIPCC__"
+           "__HIP_DEVICE_COMPILE__"
+           "__AMD__"
+           "__AMDGCN__"
+           "__AMDGPU__"))
+
         (cosmo
          '("__LINKER__"))
 
         )
     (concat "\\_<"
-            (regexp-opt (append cpp92 gcc412 cosmo))
+            (regexp-opt (append cpp92 gcc412 cuda hip cosmo))
             "\\_>")))
 
 (provide 'cosmo-platform-constants)

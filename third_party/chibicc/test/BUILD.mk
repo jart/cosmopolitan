@@ -22,7 +22,7 @@ THIRD_PARTY_CHIBICC_TEST_HDRS = $(filter %.h,$(THIRD_PARTY_CHIBICC_TEST_FILES))
 THIRD_PARTY_CHIBICC_TEST_TESTS = $(THIRD_PARTY_CHIBICC_TEST_COMS:%=%.ok)
 
 THIRD_PARTY_CHIBICC_TEST_COMS =							\
-	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%_test.c=o/$(MODE)/%_test.com)
+	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%_test.c=o/$(MODE)/%_test)
 
 THIRD_PARTY_CHIBICC_TEST_OBJS =							\
 	$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.o)
@@ -60,7 +60,7 @@ $(THIRD_PARTY_CHIBICC_TEST_A).pkg:						\
 		o/$(MODE)/third_party/chibicc/test/common.o			\
 		$(foreach x,$(THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\
+o/$(MODE)/third_party/chibicc/test/%.dbg:					\
 		$(THIRD_PARTY_CHIBICC_TEST_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_TEST_A)					\
 		o/$(MODE)/third_party/chibicc/test/%.o				\

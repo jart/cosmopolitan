@@ -38,7 +38,7 @@
 
 #define USAGE \
   "\
-Usage: unbuffer.com [FLAGS] PROG ARGS...\n\
+Usage: unbuffer [FLAGS] PROG ARGS...\n\
   -o PATH     output file\n\
 "
 

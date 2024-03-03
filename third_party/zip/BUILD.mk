@@ -9,10 +9,10 @@ THIRD_PARTY_ZIP_HDRS = $(filter %.h,$(THIRD_PARTY_ZIP_FILES))
 THIRD_PARTY_ZIP_INCS = $(filter %.inc,$(THIRD_PARTY_ZIP_FILES))
 
 THIRD_PARTY_ZIP_COMS =				\
-	o/$(MODE)/third_party/zip/zip.com	\
-	o/$(MODE)/third_party/zip/zipsplit.com	\
-	o/$(MODE)/third_party/zip/zipnote.com	\
-	o/$(MODE)/third_party/zip/zipcloak.com
+	o/$(MODE)/third_party/zip/zip		\
+	o/$(MODE)/third_party/zip/zipsplit	\
+	o/$(MODE)/third_party/zip/zipnote	\
+	o/$(MODE)/third_party/zip/zipcloak
 
 THIRD_PARTY_ZIP_BINS =				\
 	$(THIRD_PARTY_ZIP_COMS)			\
@@ -102,28 +102,28 @@ o/$(MODE)/third_party/zip/zip.pkg:		\
 		$(THIRD_PARTY_ZIP_ZIP_OBJS)	\
 		$(foreach x,$(THIRD_PARTY_ZIP_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/zip/zip.com.dbg:		\
+o/$(MODE)/third_party/zip/zip.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)		\
 		$(THIRD_PARTY_ZIP_ZIP_OBJS)	\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/zip/zipsplit.com.dbg:	\
+o/$(MODE)/third_party/zip/zipsplit.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)		\
 		$(THIRD_PARTY_ZIPSPLIT_OBJS)	\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/zip/zipnote.com.dbg:	\
+o/$(MODE)/third_party/zip/zipnote.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)		\
 		$(THIRD_PARTY_ZIPNOTE_OBJS)	\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/zip/zipcloak.com.dbg:	\
+o/$(MODE)/third_party/zip/zipcloak.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)		\
 		$(THIRD_PARTY_ZIPCLOAK_OBJS)	\
 		$(CRT)				\

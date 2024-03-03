@@ -24,7 +24,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/directmap.internal.h"
@@ -45,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
@@ -767,7 +767,7 @@ static void __asan_report_memory_origin_image(intptr_t a, int z) {
         }
       }
     } else {
-      kprintf("\tunknown please supply .com.dbg symbols or set COMDBG\n");
+      kprintf("\tunknown please supply .dbg symbols or set COMDBG\n");
     }
   } else {
     kprintf("\tunknown please __static_yoink(\"GetSymbolTable\");\n");

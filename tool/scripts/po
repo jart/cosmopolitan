@@ -1,5 +1,5 @@
 #!/bin/sh
-exec python.com -c "
+exec python -c "
 import sys
 from math import *
 s = str(oct($*).replace('o',''))

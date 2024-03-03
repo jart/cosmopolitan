@@ -11,7 +11,7 @@ from test.support import (verbose, TESTFN, unlink, run_unittest, import_module,
 # Skip test if no fcntl module.
 fcntl = import_module('fcntl')
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import fcntl
     import termios
 

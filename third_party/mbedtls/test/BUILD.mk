@@ -12,76 +12,76 @@ THIRD_PARTY_MBEDTLS_TEST_OBJS =											\
 	$(THIRD_PARTY_MBEDTLS_TEST_SRCS:%.c=o/$(MODE)/%.o)
 
 # TOOD(jart): Re-enable me once we can mock out time.
-# o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com
+# o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse
 
 THIRD_PARTY_MBEDTLS_TEST_COMS =											\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_base64.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_des.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_error.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_md.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com					\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_net.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_oid.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pem.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pk.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_random.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_shax.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_version.com						\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com						\
-	o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com							\
-	o/$(MODE)/third_party/mbedtls/test/everest_test.com
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_base64							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_des							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_dhm							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_ecp							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_entropy							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_error							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed					\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr						\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_md							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_mdx							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc					\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_mpi							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_net							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_oid							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pem							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pk							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_random							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_rsa							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_shax							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_ssl							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_timing							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_version							\
+	o/$(MODE)/third_party/mbedtls/test/test_suite_x509write							\
+	o/$(MODE)/third_party/mbedtls/test/secp384r1_test							\
+	o/$(MODE)/third_party/mbedtls/test/everest_test
 
 THIRD_PARTY_MBEDTLS_TEST_TESTS =										\
 	$(THIRD_PARTY_MBEDTLS_TEST_COMS:%=%.ok)
@@ -123,7 +123,7 @@ o/$(MODE)/third_party/mbedtls/test/test.pkg:									\
 
 o/$(MODE)/third_party/mbedtls/test/lib.o: third_party/mbedtls/test/lib.c
 
-o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
+o/$(MODE)/third_party/mbedtls/test/%.dbg:									\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/%.o								\
@@ -132,7 +132,7 @@ o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
+o/$(MODE)/third_party/mbedtls/test/%.runs: o/$(MODE)/third_party/mbedtls/test/%
 	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 
 o/$(MODE)/third_party/mbedtls/test/lib.o: private								\
@@ -149,8 +149,8 @@ o/$(MODE)/third_party/mbedtls/test:										\
 o/$(MODE)/third_party/mbedtls/test/TESTS:									\
 		$(THIRD_PARTY_MBEDTLS_TEST_TESTS)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.o						\
@@ -160,8 +160,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.o						\
@@ -171,8 +171,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cfb.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.o						\
@@ -182,8 +182,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ecb.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.o						\
@@ -193,8 +193,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.ofb.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.o					\
@@ -204,8 +204,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.rest.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.o						\
@@ -215,8 +215,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_aes.xts.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com: o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse: o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.o					\
@@ -226,8 +226,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.com: o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write: o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.o					\
@@ -237,8 +237,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_asn1write.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_base64.com: o/$(MODE)/third_party/mbedtls/test/test_suite_base64.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_base64.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_base64: o/$(MODE)/third_party/mbedtls/test/test_suite_base64.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_base64.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_base64.o						\
@@ -248,8 +248,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_base64.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.com: o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish: o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.o					\
@@ -259,8 +259,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_blowfish.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.com: o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20: o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.o					\
@@ -270,8 +270,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_chacha20.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.com: o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly: o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.o					\
@@ -281,8 +281,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_chachapoly.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.o					\
@@ -292,8 +292,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.aes.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.o					\
@@ -303,8 +303,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.blowfish.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.o					\
@@ -314,8 +314,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.ccm.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.o					\
@@ -325,8 +325,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chacha20.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.com.dbg:					\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.o				\
@@ -336,8 +336,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.chachapoly.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.o					\
@@ -347,8 +347,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.des.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.o					\
@@ -358,8 +358,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.gcm.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.o					\
@@ -369,8 +369,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.misc.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.o					\
@@ -380,8 +380,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.nist_kw.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.o					\
@@ -391,8 +391,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.null.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding: o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.o					\
@@ -402,9 +402,9 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.runs: private .UNVEIL += rwc:o/tmp
-o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.runs: private .UNVEIL += rwc:o/tmp
+o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg: o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.o					\
@@ -414,8 +414,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_des.com: o/$(MODE)/third_party/mbedtls/test/test_suite_des.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_des.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_des: o/$(MODE)/third_party/mbedtls/test/test_suite_des.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_des.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_des.o						\
@@ -425,8 +425,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_des.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com: o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_dhm: o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.o						\
@@ -438,8 +438,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh: o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.o						\
@@ -449,8 +449,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa: o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.o						\
@@ -460,8 +460,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecp: o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.o						\
@@ -471,8 +471,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com: o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_entropy: o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.o						\
@@ -482,8 +482,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_error.com: o/$(MODE)/third_party/mbedtls/test/test_suite_error.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_error.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_error: o/$(MODE)/third_party/mbedtls/test/test_suite_error.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_error.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_error.o						\
@@ -493,8 +493,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_error.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.o					\
@@ -504,8 +504,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_de.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.o					\
@@ -515,8 +515,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes128_en.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.o					\
@@ -526,8 +526,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_de.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.o					\
@@ -537,8 +537,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes192_en.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.o					\
@@ -548,8 +548,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_de.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.o					\
@@ -559,8 +559,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.aes256_en.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc: o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.o					\
@@ -570,8 +570,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_gcm.misc.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf: o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.o						\
@@ -581,9 +581,9 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.runs: private .UNVEIL += rwc:o/tmp
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.runs: private .UNVEIL += rwc:o/tmp
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.o					\
@@ -593,8 +593,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.com.dbg:					\
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.o				\
@@ -604,8 +604,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.no_reseed.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.o					\
@@ -615,8 +615,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.nopr.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.o					\
@@ -626,8 +626,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.pr.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_md.com: o/$(MODE)/third_party/mbedtls/test/test_suite_md.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_md.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_md: o/$(MODE)/third_party/mbedtls/test/test_suite_md.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_md.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_md.o						\
@@ -642,8 +642,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_md.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.com: o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_mdx: o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.o						\
@@ -653,8 +653,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_mdx.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com.dbg:					\
+o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc: o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.o				\
@@ -664,9 +664,9 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.runs: private .UNVEIL += rwc:o/tmp
-o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com: o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.runs: private .UNVEIL += rwc:o/tmp
+o/$(MODE)/third_party/mbedtls/test/test_suite_mpi: o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.o						\
@@ -681,8 +681,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_net.com: o/$(MODE)/third_party/mbedtls/test/test_suite_net.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_net.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_net: o/$(MODE)/third_party/mbedtls/test/test_suite_net.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_net.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_net.o						\
@@ -692,8 +692,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_net.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.com: o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw: o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.o						\
@@ -703,8 +703,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_nist_kw.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_oid.com: o/$(MODE)/third_party/mbedtls/test/test_suite_oid.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_oid.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_oid: o/$(MODE)/third_party/mbedtls/test/test_suite_oid.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_oid.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_oid.o						\
@@ -714,8 +714,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_oid.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pem.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pem.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pem.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pem: o/$(MODE)/third_party/mbedtls/test/test_suite_pem.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pem.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pem.o						\
@@ -725,8 +725,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pem.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pk.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pk.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pk.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pk: o/$(MODE)/third_party/mbedtls/test/test_suite_pk.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pk.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pk.o						\
@@ -742,8 +742,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pk.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.o					\
@@ -753,8 +753,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v15.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.o					\
@@ -764,8 +764,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs1_v21.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5: o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.o						\
@@ -775,8 +775,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pkcs5.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse: o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.o						\
@@ -915,8 +915,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pkparse.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.com: o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite: o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.o						\
@@ -938,8 +938,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_pkwrite.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.com: o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305: o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.o					\
@@ -949,8 +949,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_poly1305.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_random.com: o/$(MODE)/third_party/mbedtls/test/test_suite_random.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_random.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_random: o/$(MODE)/third_party/mbedtls/test/test_suite_random.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_random.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_random.o						\
@@ -960,8 +960,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_random.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.com: o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_rsa: o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.o						\
@@ -971,8 +971,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_rsa.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_shax.com: o/$(MODE)/third_party/mbedtls/test/test_suite_shax.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_shax.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_shax: o/$(MODE)/third_party/mbedtls/test/test_suite_shax.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_shax.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_shax.o						\
@@ -982,8 +982,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_shax.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_ssl: o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.o						\
@@ -994,8 +994,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ssl.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com: o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_timing: o/$(MODE)/third_party/mbedtls/test/test_suite_timing.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_timing.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_timing.o						\
@@ -1005,8 +1005,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_timing.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_version.com: o/$(MODE)/third_party/mbedtls/test/test_suite_version.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_version.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/test_suite_version: o/$(MODE)/third_party/mbedtls/test/test_suite_version.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_version.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_version.o						\
@@ -1016,8 +1016,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_version.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com: o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse: o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.o					\
@@ -1301,8 +1301,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com: o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com.dbg:						\
+o/$(MODE)/third_party/mbedtls/test/test_suite_x509write: o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.dbg
+o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.o					\
@@ -1337,8 +1337,8 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509write.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/everest_test.com: o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg
-o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/everest_test: o/$(MODE)/third_party/mbedtls/test/everest_test.dbg
+o/$(MODE)/third_party/mbedtls/test/everest_test.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/everest_test.o						\
 		o/$(MODE)/third_party/mbedtls/test/everest_unravaged.o						\
@@ -1348,8 +1348,8 @@ o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com: o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg
-o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
+o/$(MODE)/third_party/mbedtls/test/secp384r1_test: o/$(MODE)/third_party/mbedtls/test/secp384r1_test.dbg
+o/$(MODE)/third_party/mbedtls/test/secp384r1_test.dbg:								\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/secp384r1_test.o						\
 		o/$(MODE)/third_party/mbedtls/test/test.pkg							\

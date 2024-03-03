@@ -368,7 +368,7 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
 // To use the tty mouse events feature:
 //   - write(1, "\e[?1000;1002;1015;1006h") to enable
 //   - write(1, "\e[?1000;1002;1015;1006l") to disable
-// See o//examples/ttyinfo.com and o//tool/viz/life.com
+// See o//examples/ttyinfo and o//tool/viz/life
 static textwindows int ProcessMouseEvent(const struct NtInputRecord *r,
                                          char *b) {
   char *p = b;

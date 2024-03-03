@@ -30,12 +30,10 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
@@ -43,6 +41,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -489,7 +488,7 @@ void *ClientWorker(void *arg) {
   // condition can happen, where etxtbsy is raised by our execve
   // we're using o_cloexec so it's guaranteed to fix itself fast
   // thus we use an optimistic approach to avoid expensive locks
-  sprintf(client->tmpexepath, "o/%s.XXXXXX.com",
+  sprintf(client->tmpexepath, "o/%s.XXXXXX",
           basename(stripext(gc(strdup(origname)))));
   int exefd = openatemp(AT_FDCWD, client->tmpexepath, 4, O_CLOEXEC, 0700);
   if (exefd == -1) {

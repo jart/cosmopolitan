@@ -26,10 +26,10 @@
 /**
  * Removes file system caches from RAM.
  *
- * make o//tool/build/dropcache.com
- * sudo mv o//tool/build/dropcache.com /usr/local/bin/
- * sudo chown root /usr/local/bin/dropcache.com
- * sudo chmod u+s /usr/local/bin/dropcache.com
+ * make o//tool/build/dropcache
+ * sudo mv o//tool/build/dropcache /usr/local/bin/
+ * sudo chown root /usr/local/bin/dropcache
+ * sudo chmod u+s /usr/local/bin/dropcache
  */
 
 static void Write(int fd, const char *s) {

@@ -28,7 +28,7 @@ import unittest
 import uuid
 import warnings
 from test import support
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import resource
 try:
     import _thread

@@ -11,7 +11,7 @@ TOOL_PLINKO_OBJS =						\
 	$(TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_PLINKO_COMS =						\
-	$(TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%.com)
+	$(TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%)
 
 TOOL_PLINKO_BINS =						\
 	$(TOOL_PLINKO_COMS)					\
@@ -36,7 +36,7 @@ o/$(MODE)/tool/plinko/plinko.pkg:				\
 		$(TOOL_PLINKO_OBJS)				\
 		$(foreach x,$(TOOL_PLINKO_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/tool/plinko/%.com.dbg:				\
+o/$(MODE)/tool/plinko/%.dbg:					\
 		$(TOOL_PLINKO_DEPS)				\
 		o/$(MODE)/tool/plinko/%.o			\
 		o/$(MODE)/tool/plinko/plinko.pkg		\
@@ -45,18 +45,10 @@ o/$(MODE)/tool/plinko/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/plinko/plinko.com:				\
-		o/$(MODE)/tool/plinko/plinko.com.dbg		\
-		o/$(MODE)/third_party/zip/zip.com		\
-		o/$(MODE)/tool/build/symtab.com
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
+o/$(MODE)/tool/plinko/plinko.zip.o:				\
+		o/$(MODE)/tool/plinko/plinko
 
-o/$(MODE)/tool/plinko/plinko.com.zip.o:				\
-		o/$(MODE)/tool/plinko/plinko.com
-
-o/$(MODE)/tool/plinko/plinko.com.zip.o				\
+o/$(MODE)/tool/plinko/plinko.zip.o				\
 o/$(MODE)/tool/plinko/lib/library.lisp.zip.o			\
 o/$(MODE)/tool/plinko/lib/binarytrees.lisp.zip.o		\
 o/$(MODE)/tool/plinko/lib/algebra.lisp.zip.o			\

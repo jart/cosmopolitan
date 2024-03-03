@@ -1,6 +1,6 @@
 #!/bin/sh
 m=zero
-make -j16 m=$m o/$m/tool/curl/curl.com || exit
+make -j16 m=$m o/$m/tool/curl/curl || exit
 for t in expired \
          wrong.host \
          self-signed \
@@ -19,5 +19,5 @@ for t in expired \
   u=https://$t.badssl.com/
   echo
   echo $u
-  o/$m/tool/curl/curl.com $u
+  o/$m/tool/curl/curl $u
 done

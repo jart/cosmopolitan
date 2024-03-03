@@ -6,7 +6,7 @@ error("Tried to evaluate definition file.")
 
 SYNOPSIS
 
-  redbean.com [-?BVabdfghjkmsuvz] [-p PORT] [-D DIR] [-- SCRIPTARGS...]
+  redbean [-?BVabdfghjkmsuvz] [-p PORT] [-D DIR] [-- SCRIPTARGS...]
 
 DESCRIPTION
 
@@ -16,9 +16,7 @@ OVERVIEW
 
   redbean makes it possible to share web applications that run offline
   as a single-file Actually Portable Executable PKZIP archive which
-  contains your assets. All you need to do is download the redbean.com
-  program below, change the filename to .zip, add your content in a zip
-  editing tool, and then change the extension back to .com.
+  contains your assets.
 
   redbean can serve 1 million+ gzip encoded responses per second on a
   cheap personal computer. That performance is thanks to zip and gzip
@@ -145,15 +143,15 @@ USAGE
   This executable is also a ZIP file that contains static assets.
   You can run redbean interactively in your terminal as follows:
 
-    ./redbean.com -vvvmbag        # starts server verbosely
+    ./redbean -vvvmbag        # starts server verbosely
     open http://127.0.0.1:8080/   # shows zip listing page
     CTRL-C                        # 1x: graceful shutdown
     CTRL-C                        # 2x: forceful shutdown
 
   You can override the default listing page by adding:
 
-    zip redbean.com index.lua     # lua server pages take priority
-    zip redbean.com index.html    # default page for directory
+    zip redbean index.lua     # lua server pages take priority
+    zip redbean index.html    # default page for directory
 
   The listing page only applies to the root directory. However the
   default index page applies to subdirectories too. In order for it
@@ -168,7 +166,7 @@ USAGE
       --no-parent            \
       --no-if-modified-since \
       http://a.example/index.html
-    zip -r redbean.com a.example/  # default page for directory
+    zip -r redbean a.example/  # default page for directory
 
   redbean normalizes the trailing slash for you automatically:
 
@@ -206,18 +204,18 @@ USAGE
   by default, embedded as a bas64 data uri. You can override the
   custom page for various errors by adding files to the zip root.
 
-    zip redbean.com 404.html      # custom not found page
+    zip redbean 404.html      # custom not found page
 
   Audio video content should not be compressed in your ZIP files.
   Uncompressed assets enable browsers to send Range HTTP request.
   On the other hand compressed assets are best for gzip encoding.
 
-    zip redbean.com index.html    # adds file
-    zip -0 redbean.com video.mp4  # adds without compression
+    zip redbean index.html    # adds file
+    zip -0 redbean video.mp4  # adds without compression
 
   You can have redbean run as a daemon by doing the following:
 
-    sudo ./redbean.com -vvdp80 -p443 -L redbean.log -P redbean.pid
+    sudo ./redbean -vvdp80 -p443 -L redbean.log -P redbean.pid
     kill -TERM $(cat redbean.pid) # 1x: graceful shutdown
     kill -TERM $(cat redbean.pid) # 2x: forceful shutdown
 
@@ -241,11 +239,11 @@ USAGE
   is on the system path beforehand. You can also "assimilate" any
   redbean into the platform-local executable format by running:
 
-      $ file redbean.com
-      redbean.com: DOS/MBR boot sector
-      $ ./redbean.com --assimilate
-      $ file redbean.com
-      redbean.com: ELF 64-bit LSB executable
+      $ file redbean
+      redbean: DOS/MBR boot sector
+      $ ./redbean --assimilate
+      $ file redbean
+      redbean: ELF 64-bit LSB executable
 
 ────────────────────────────────────────────────────────────────────────────────
 SECURITY
@@ -352,7 +350,7 @@ REPL
   interpreter then you can pass the `-i` flag to put redbean into
   interpreter mode.
 
-      redbean.com -i binarytrees.lua 15
+      redbean -i binarytrees.lua 15
 
   When the `-i` flag is passed (for interpreter mode), redbean won't
   start a web server and instead functions like the `lua` command. The
@@ -369,12 +367,12 @@ REPL
   encoded in its preferred executable format. You can assimilate your
   redbean into the local format using the following commands:
 
-      $ file redbean.com
-      redbean.com: DOS/MBR boot sector
-      $ ./redbean.com --assimilate
-      $ file redbean.com
-      redbean.com: ELF 64-bit LSB executable
-      $ sudo cp redbean.com /usr/bin/redbean
+      $ file redbean
+      redbean: DOS/MBR boot sector
+      $ ./redbean --assimilate
+      $ file redbean
+      redbean: ELF 64-bit LSB executable
+      $ sudo cp redbean /usr/bin/redbean
 
   By following the above steps, redbean can be installed systemwide for
   multiple user accounts. It's also possible to chmod the binary to have
@@ -423,11 +421,11 @@ LUA ENHANCEMENTS
 ---
 --- For example, if you launch your redbean as follows:
 ---
----     redbean.com -v arg1 arg2
+---     redbean -v arg1 arg2
 ---
 --- Then your `/.init.lua` file will have the `arg` array like:
 ---
----     arg[-1] = '/usr/bin/redbean.com'
+---     arg[-1] = '/usr/bin/redbean'
 ---     arg[ 0] = '/zip/.init.lua'
 ---     arg[ 1] = 'arg1'
 ---     arg[ 2] = 'arg2'
@@ -435,11 +433,11 @@ LUA ENHANCEMENTS
 --- If you launch redbean in interpreter mode (rather than web
 --- server) mode, then an invocation like this:
 ---
----     ./redbean.com -i script.lua arg1 arg2
+---     ./redbean -i script.lua arg1 arg2
 ---
 --- Would have an `arg` array like this:
 ---
----     arg[-1] = './redbean.com'
+---     arg[-1] = './redbean'
 ---     arg[ 0] = 'script.lua'
 ---     arg[ 1] = 'arg1'
 ---     arg[ 2] = 'arg2'
@@ -511,7 +509,7 @@ SPECIAL PATHS
         If the special argument `...` *is* encountered, then it'll be
         replaced with whatever CLI args were specified by the user.
 
-        For example, you might want to use redbean.com in interpreter
+        For example, you might want to use redbean in interpreter
         mode, where your script file is inside the zip. Then, if your
         redbean is run, what you want is to have the default behavior
         be running your script. In that case, you might:
@@ -525,13 +523,13 @@ SPECIAL PATHS
             print("hello world")
             EOF
 
-            $ zip redbean.com .args hello.lua
-            $ ./redbean.com
+            $ zip redbean .args hello.lua
+            $ ./redbean
             hello world
 
         Please note that if you ran:
 
-            $ ./redbean.com -vv
+            $ ./redbean -vv
 
         Then the default mode of redbean will kick back in. To prevent
         that from happening, simply add the magic arg `...` to the end
@@ -3855,7 +3853,7 @@ function path.islink(path) end
 --- The database file is distributed by MaxMind. You need to sign up on their
 --- website to get a free copy. The database has a generalized structure. For a
 --- concrete example of how this module may be used, please see `maxmind.lua`
---- in `redbean-demo.com`.
+--- in `redbean-demo`.
 maxmind = {}
 
 ---@param filepath string the location of the MaxMind database
@@ -7004,7 +7002,7 @@ function unix.getrusage(who) end
 --- If the executable in question needs a loader, then you will need
 --- "rpath prot_exec" too. With APE, security is strongest when you
 --- assimilate your binaries beforehand, using the --assimilate flag,
---- or the o//tool/build/assimilate.com program. On OpenBSD this is
+--- or the o//tool/build/assimilate program. On OpenBSD this is
 --- mandatory.
 ---
 --- ### prot_exec

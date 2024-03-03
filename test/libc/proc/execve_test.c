@@ -51,8 +51,8 @@ void GenBuf(char buf[8], int x) {
 TEST(execve, testArgPassing) {
   int i;
   char ibuf[12], buf[8];
-  const char *prog = "./execve_test_prog1.com";
-  testlib_extract("/zip/execve_test_prog1.com", prog, 0755);
+  const char *prog = "./execve_test_prog1";
+  testlib_extract("/zip/execve_test_prog1", prog, 0755);
   for (i = 0; i < N; ++i) {
     FormatInt32(ibuf, i);
     GenBuf(buf, i);
@@ -84,12 +84,12 @@ TEST(execve, ziposAPE) {
   if (IsFreebsd()) return;                        // TODO: fixme on freebsd
   if (IsLinux() && !__is_linux_2_6_23()) return;  // TODO: fixme on old linux
   if (!IsLinux() && !IsFreebsd()) {
-    EXPECT_EQ(-1, execve("/zip/life-nomod.com", (char *const[]){0},
-                         (char *const[]){0}));
+    EXPECT_EQ(
+        -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
     return;
   }
   SPAWN(fork);
-  execve("/zip/life-nomod.com", (char *const[]){0}, (char *const[]){0});
+  execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }

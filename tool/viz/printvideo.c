@@ -1572,7 +1572,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "please install either the "
                     "`play` (sox) or "
                     "`ffplay` (ffmpeg) "
-                    "commands, so printvideo.com can play audio\n");
+                    "commands, so printvideo can play audio\n");
     usleep(10000);
   }
   infd_ = STDIN_FILENO;

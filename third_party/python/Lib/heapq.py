@@ -590,7 +590,7 @@ try:
 except ImportError:
   pass
 
-if __name__ == "PYOBJ.COM":
+if __name__ == "PYOBJ":
     import _heapq
 
 if __name__ == "__main__":

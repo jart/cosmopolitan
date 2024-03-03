@@ -332,7 +332,7 @@ Enables logging of C function calls to stderr, e.g.\n\
         WeirdFunction()\n\
 \n\
 Please be warned this prints massive amount of text. In order for it\n\
-to work, the concomitant .com.dbg binary needs to be present.");
+to work, the concomitant .dbg binary needs to be present.");
 #endif
 
 static PyObject *

@@ -152,9 +152,7 @@ __static_yoink("blink_xnu_aarch64");    // is apple silicon
  *
  * redbean makes it possible to share web applications that run offline
  * as a single-file αcτµαlly pδrταblε εxεcµταblε zip archive which
- * contains your assets. All you need to do is download the redbean.com
- * program below, change the filename to .zip, add your content in a zip
- * editing tool, and then change the extension back to .com.
+ * contains your assets.
  *
  * redbean can serve 1 million+ gzip encoded responses per second on a
  * cheap personal computer. That performance is thanks to zip and gzip
@@ -6936,7 +6934,7 @@ static void MakeExecutableModifiable(void) {
   if (IsWindows()) return;  // TODO
   if (IsOpenbsd()) return;  // TODO
   if (IsNetbsd()) return;   // TODO
-  if (endswith(zpath, ".com.dbg")) return;
+  if (endswith(zpath, ".dbg")) return;
   close(zfd);
   ft = ftrace_enabled(0);
   if ((zfd = __open_executable()) == -1) {

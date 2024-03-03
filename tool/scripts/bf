@@ -1,4 +1,4 @@
 #!/bin/sh
-bing.com <"$1" |
-  fold.com |
+bing <"$1" |
+  fold |
   exec less

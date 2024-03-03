@@ -25,7 +25,6 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/limits.h"
@@ -39,6 +38,7 @@
 #include "libc/nt/struct/imageoptionalheader.internal.h"
 #include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -48,7 +48,7 @@
 #include "third_party/getopt/getopt.internal.h"
 
 // see tool/hello/hello-pe.c for an example program this can link
-// make -j8 m=tiny o/tiny/tool/hello/hello-pe.com
+// make -j8 m=tiny o/tiny/tool/hello/hello-pe
 
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 

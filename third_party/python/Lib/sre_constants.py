@@ -225,7 +225,7 @@ if __name__ == "__main__":
         f.write("#define SRE_INFO_CHARSET %d\n" % SRE_INFO_CHARSET)
     print("done")
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     ANY = 0
     ANY_ALL = 0
     ASSERT = 0

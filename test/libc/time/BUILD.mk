@@ -11,11 +11,11 @@ TEST_LIBC_TIME_OBJS =					\
 	$(TEST_LIBC_TIME_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_TIME_COMS =					\
-	$(TEST_LIBC_TIME_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_LIBC_TIME_SRCS:%.c=o/$(MODE)/%)
 
-TEST_LIBC_TIME_TESTS = $(TEST_LIBC_TIME_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+TEST_LIBC_TIME_TESTS = $(TEST_LIBC_TIME_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 TEST_LIBC_TIME_CHECKS =					\
-	$(TEST_LIBC_TIME_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_LIBC_TIME_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_LIBC_TIME_DIRECTDEPS =				\
 	LIBC_CALLS					\
@@ -36,7 +36,7 @@ o/$(MODE)/test/libc/time/time.pkg:			\
 		$(TEST_LIBC_TIME_OBJS)			\
 		$(foreach x,$(TEST_LIBC_TIME_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/time/%.com.dbg:			\
+o/$(MODE)/test/libc/time/%.dbg:				\
 		$(TEST_LIBC_TIME_DEPS)			\
 		o/$(MODE)/test/libc/time/%.o		\
 		o/$(MODE)/test/libc/time/time.pkg	\

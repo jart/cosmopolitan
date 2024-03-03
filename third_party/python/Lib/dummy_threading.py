@@ -77,7 +77,7 @@ finally:
     del _dummy_thread
     del sys_modules
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     Barrier = 0
     BoundedSemaphore = 0
     BrokenBarrierError = 0

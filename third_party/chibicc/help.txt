@@ -1,6 +1,6 @@
 SYNOPSIS
 
-  chibicc.com [FLAGS] INPUTS
+  chibicc [FLAGS] INPUTS
 
 DESCRIPTION
 

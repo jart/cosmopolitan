@@ -25,7 +25,7 @@
 
 from sqlite3.dbapi2 import *
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     Binary = 0
     Cache = 0
     Connection = 0

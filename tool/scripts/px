@@ -1,5 +1,5 @@
 #!/bin/sh
-exec python.com -c "
+exec python -c "
 # -*- coding: utf-8 -*-
 import sys
 from math import *

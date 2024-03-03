@@ -6,4 +6,4 @@ from math import *
 s = str($*)
 sys.stdout.write(s)
 " >/tmp/pe
-exec python.com /tmp/pe
+exec python /tmp/pe

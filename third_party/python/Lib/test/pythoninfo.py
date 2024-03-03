@@ -7,7 +7,7 @@ import re
 import sys
 import traceback
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import resource
 
 

@@ -13,7 +13,7 @@ fi
 $MKDIR o/$MODE/test/libc/release/
 
 # smoke test booting on bare metal and printing data to serial uart
-CMD="o/$MODE/tool/build/blinkenlights.com.dbg -r o/$MODE/examples/hello.com"
+CMD="o/$MODE/tool/build/blinkenlights.dbg -r o/$MODE/examples/hello"
 if OUTPUT="$($CMD)"; then
   if [ x"$OUTPUT" = x"hello world" ]; then
     exit 0

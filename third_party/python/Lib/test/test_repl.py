@@ -9,7 +9,7 @@ from textwrap import dedent
 from test.support import cpython_only, SuppressCrashReport
 from test.support.script_helper import kill_python
 
-if __name__ == "PYOBJ.COM":
+if __name__ == "PYOBJ":
     import _testcapi
 
 def spawn_repl(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kw):

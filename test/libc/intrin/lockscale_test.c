@@ -31,7 +31,7 @@
  *
  * This test can be run as follows:
  *
- *     make o//test/libc/intrin/lockscale_test.com.runs V=5 TESTARGS=-b
+ *     make o//test/libc/intrin/lockscale_test.runs V=5 TESTARGS=-b
  *
  * It's intended to demonstrate the importance of futexes. On systems
  * that don't have them, this test consumes orders of a magnitude more

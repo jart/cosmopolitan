@@ -118,6 +118,8 @@ static char *CopyWithCwd(const char *q, char *p, char *e) {
 
 // if q exists then turn it into an absolute path. we also try adding
 // a .com suffix since the ape auto-appends it when resolving
+//
+// TODO(jart): is this still relevant?
 static int TryPath(const char *q, int com) {
   char *p;
   if (!(p = CopyWithCwd(q, g_prog.u.buf,

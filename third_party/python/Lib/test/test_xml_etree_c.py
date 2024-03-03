@@ -128,7 +128,7 @@ from encodings import (
     zlib_codec,
 )
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _elementtree
     import xml.etree
     import xml.etree.cElementTree

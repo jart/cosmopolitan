@@ -62,6 +62,7 @@
 (defcustom cosmo-format-exts '("c" "cc" "h" "inc"  ;; c/c++
                                "hh" "cpp" "hpp"    ;; ms c/c++
                                "rl"                ;; ragel
+                               "cu"                ;; cuda
                                "proto")            ;; protobuf
   "List of pathname extensions that need clang-format."
   :type '(repeat string)

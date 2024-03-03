@@ -22,7 +22,7 @@
 #include "libc/macros.internal.h"
 
 //	Apple Mach-O Executable Headers
-//	Fixups are applied by objbincopy.com
+//	Fixups are applied by objbincopy
 //	There must exist a MAC_LC_SEGMENT_64 for every PT_LOAD
 
 	.section .macho,"a",@progbits

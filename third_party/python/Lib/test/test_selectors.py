@@ -15,7 +15,7 @@ try:
     import resource
 except ImportError:
     resource = None
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import resource
 
 

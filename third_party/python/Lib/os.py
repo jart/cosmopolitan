@@ -1038,7 +1038,7 @@ class PathLike(abc.ABC):
         return hasattr(subclass, '__fspath__')
 
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     CLD_CONTINUED = 0
     CLD_DUMPED = 0
     CLD_EXITED = 0

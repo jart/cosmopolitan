@@ -5,7 +5,7 @@
 /**
  * Displays bytes as word, e.g.
  *
- *     o//tool/word.com 6e c7 ff ff
+ *     o//tool/word 6e c7 ff ff
  *     %d   = -14482
  *     %ld  = 4294952814
  *     %#x  = 0xffffc76e

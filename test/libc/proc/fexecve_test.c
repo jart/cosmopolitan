@@ -102,9 +102,9 @@ TEST(fexecve, memfd_create) {
 
 TEST(fexecve, APE) {
   if (!IsLinux() && !IsFreebsd()) return;
-  testlib_extract("/zip/life-nomod.com", "life-nomod.com", 0555);
+  testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
-  int fd = open("life-nomod.com", O_RDONLY);
+  int fd = open("life-nomod", O_RDONLY);
   ASSERT_NE(-1, fd);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
@@ -112,9 +112,9 @@ TEST(fexecve, APE) {
 
 TEST(fexecve, APE_cloexec) {
   if (!IsLinux() && !IsFreebsd()) return;
-  testlib_extract("/zip/life-nomod.com", "life-nomod.com", 0555);
+  testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
-  int fd = open("life-nomod.com", O_RDONLY | O_CLOEXEC);
+  int fd = open("life-nomod", O_RDONLY | O_CLOEXEC);
   ASSERT_NE(-1, fd);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
@@ -132,7 +132,7 @@ TEST(fexecve, zipos) {
 
 TEST(fexecve, ziposAPE) {
   if (!IsLinux() && !IsFreebsd()) return;
-  int fd = open("/zip/life-nomod.com", O_RDONLY);
+  int fd = open("/zip/life-nomod", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
@@ -143,7 +143,7 @@ TEST(fexecve, ziposAPE) {
 TEST(fexecve, ziposAPEHasZipos) {
   if (1) return; // TODO: fixme
   if (!IsLinux() && !IsFreebsd()) return;
-  int fd = open("/zip/zipread.com", O_RDONLY);
+  int fd = open("/zip/zipread", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   ASSERT_NE(-1, fd);

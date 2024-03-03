@@ -16,7 +16,7 @@ from test.support import _4G, bigmemtest
 from test.support.script_helper import assert_python_ok
 
 gzip = support.import_module('gzip')
-if __name__ == 'PYOBJ.COM': import gzip
+if __name__ == 'PYOBJ': import gzip
 
 data1 = b"""  int length=DEFAULTALLOC, err = Z_OK;
   PyObject *RetVal;

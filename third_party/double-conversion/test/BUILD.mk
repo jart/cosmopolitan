@@ -4,7 +4,7 @@
 PKGS += THIRD_PARTY_DOUBLECONVERSION_TEST
 
 THIRD_PARTY_DOUBLECONVERSION_TEST_COMS =					\
-	o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+	o/$(MODE)/third_party/double-conversion/double-conversion-tester
 
 THIRD_PARTY_DOUBLECONVERSION_TEST_BINS =					\
 	$(THIRD_PARTY_DOUBLECONVERSION_TEST_COMS)				\
@@ -51,7 +51,7 @@ THIRD_PARTY_DOUBLECONVERSION_TEST_DIRECTDEPS =					\
 THIRD_PARTY_DOUBLECONVERSION_TEST_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_TEST_DIRECTDEPS),$($(x))))
 
-o/$(MODE)/third_party/double-conversion/double-conversion-tester.com.dbg:	\
+o/$(MODE)/third_party/double-conversion/double-conversion-tester.dbg:		\
 		$(THIRD_PARTY_DOUBLECONVERSION_TEST_DEPS)			\
 		$(THIRD_PARTY_DOUBLECONVERSION_TEST_OBJS)			\
 		$(CRT)								\
@@ -75,39 +75,39 @@ THIRD_PARTY_DOUBLECONVERSION_TEST_CHECKS =					\
 # TODO(jart): find some way to run these under runitd
 
 o/$(MODE)/third_party/double-conversion/test-strtod.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-strtod
 
 o/$(MODE)/third_party/double-conversion/test-ieee.runs:				\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-ieee
 
 o/$(MODE)/third_party/double-conversion/test-fixed-dtoa.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-fixed-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-fast-dtoa.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-fast-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-dtoa.runs:				\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-diy-fp.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-diy-fp
 
 o/$(MODE)/third_party/double-conversion/test-conversions.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-conversions
 
 o/$(MODE)/third_party/double-conversion/test-bignum-dtoa.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-bignum-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-bignum.runs:			\
-		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
+		o/$(MODE)/third_party/double-conversion/double-conversion-tester
 	@$(COMPILE) -ACHECK -wtT$@ $< test-bignum
 
 .PHONY: o/$(MODE)/third_party/double-conversion/test

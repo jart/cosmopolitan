@@ -93,8 +93,9 @@ FLAGS\n\
 \n\
 EXAMPLES\n\
 \n\
-  printimage.com -sxd lemurs.jpg  # 256-color dither unsharp\n\
-\n", NULL);
+  printimage -sxd lemurs.jpg  # 256-color dither unsharp\n\
+\n",
+            NULL);
   exit(rc);
 }
 

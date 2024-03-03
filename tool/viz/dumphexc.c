@@ -25,7 +25,7 @@
 /**
  * @fileoverview Hex String Literal Converter, e.g.
  *
- *     $ echo hello | o/tool/viz/dumphexc.com
+ *     $ echo hello | o/tool/viz/dumphexc
  *     "\
  *     \x68\x65\x6c\x6c\x6f\x0a"
  */

@@ -25,12 +25,12 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/serialize.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/lock.h"
@@ -986,7 +986,7 @@ int _cocmd(int argc, char **argv, char **envp) {
   size_t globCount = 0;
   int globFlags = 0;
   glob_t globTheBuilder;
-  prog = argc > 0 ? argv[0] : "cocmd.com";
+  prog = argc > 0 ? argv[0] : "cocmd";
 
   for (i = 1; i < 32; ++i) {
     unsupported[i] = true;

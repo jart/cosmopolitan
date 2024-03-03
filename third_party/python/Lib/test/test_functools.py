@@ -19,7 +19,7 @@ except ImportError:
     threading = None
 
 import functools
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import decimal
 
 py_functools = support.import_fresh_module('functools', blocked=['_functools'])

@@ -44,12 +44,12 @@
  *
  * delimited by spaces. For example, to see peak malloc usage:
  *
- *     ./myprog.com 2>log
+ *     ./myprog 2>log
  *     grep ^MEM log | sort -nk4 | tail -n10
  *
  * To see the largest allocations:
  *
- *     ./myprog.com 2>log
+ *     ./myprog 2>log
  *     grep ^MEM log | grep -v free | sort -nk7 | tail -n10
  */
 

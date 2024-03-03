@@ -12,17 +12,17 @@ TEST_LIBC_NEXGEN32E_OBJS =					\
 	$(TEST_LIBC_NEXGEN32E_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_NEXGEN32E_COMS =					\
-	$(TEST_LIBC_NEXGEN32E_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_LIBC_NEXGEN32E_SRCS:%.c=o/$(MODE)/%)
 
 TEST_LIBC_NEXGEN32E_BINS =					\
 	$(TEST_LIBC_NEXGEN32E_COMS)				\
 	$(TEST_LIBC_NEXGEN32E_COMS:%=%.dbg)
 
 TEST_LIBC_NEXGEN32E_TESTS =					\
-	$(TEST_LIBC_NEXGEN32E_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_LIBC_NEXGEN32E_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_LIBC_NEXGEN32E_CHECKS =					\
-	$(TEST_LIBC_NEXGEN32E_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_LIBC_NEXGEN32E_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_LIBC_NEXGEN32E_DIRECTDEPS =				\
 	LIBC_CALLS						\
@@ -48,7 +48,7 @@ o/$(MODE)/test/libc/nexgen32e/nexgen32e.pkg:			\
 		$(TEST_LIBC_NEXGEN32E_OBJS)			\
 		$(foreach x,$(TEST_LIBC_NEXGEN32E_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/nexgen32e/%.com.dbg:			\
+o/$(MODE)/test/libc/nexgen32e/%.dbg:				\
 		$(TEST_LIBC_NEXGEN32E_DEPS)			\
 		o/$(MODE)/test/libc/nexgen32e/%.o		\
 		o/$(MODE)/test/libc/nexgen32e/nexgen32e.pkg	\
@@ -58,10 +58,10 @@ o/$(MODE)/test/libc/nexgen32e/%.com.dbg:			\
 	@$(APELINK)
 
 # we can't run this test on openbsd because rwx memory isn't allowed
-o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com.ok:		\
-		o/$(MODE)/tool/build/runit.com			\
-		o/$(MODE)/tool/build/runitd.com			\
-		o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com
+o/$(MODE)/test/libc/nexgen32e/stackrwx_test.ok:			\
+		o/$(MODE)/tool/build/runit			\
+		o/$(MODE)/tool/build/runitd			\
+		o/$(MODE)/test/libc/nexgen32e/stackrwx_test
 	@$(COMPILE) -wATEST -tT$@ $^ $(filter-out openbsd,$(HOSTS))
 
 $(TEST_LIBC_NEXGEN32E_OBJS): private				\

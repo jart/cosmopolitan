@@ -54,14 +54,14 @@ $(THIRD_PARTY_SMALLZ4_A).pkg:					\
 		$(THIRD_PARTY_SMALLZ4_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_SMALLZ4_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/smallz4/smallz4.com.dbg:			\
+o/$(MODE)/third_party/smallz4/smallz4.dbg:			\
 		$(THIRD_PARTY_SMALLZ4)				\
 		o/$(MODE)/third_party/smallz4/smallz4.o		\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/smallz4/smallz4cat.com.dbg:		\
+o/$(MODE)/third_party/smallz4/smallz4cat.dbg:			\
 		$(THIRD_PARTY_SMALLZ4)				\
 		o/$(MODE)/third_party/smallz4/smallz4cat.o	\
 		$(CRT)						\
@@ -69,8 +69,8 @@ o/$(MODE)/third_party/smallz4/smallz4cat.com.dbg:		\
 	@$(APELINK)
 
 THIRD_PARTY_SMALLZ4_COMS =					\
-	o/$(MODE)/third_party/smallz4/smallz4.com		\
-	o/$(MODE)/third_party/smallz4/smallz4cat.com
+	o/$(MODE)/third_party/smallz4/smallz4			\
+	o/$(MODE)/third_party/smallz4/smallz4cat
 
 THIRD_PARTY_SMALLZ4_LIBS = $(foreach x,$(THIRD_PARTY_SMALLZ4_ARTIFACTS),$($(x)))
 THIRD_PARTY_SMALLZ4_SRCS = $(foreach x,$(THIRD_PARTY_SMALLZ4_ARTIFACTS),$($(x)_SRCS))

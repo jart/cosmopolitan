@@ -11,11 +11,11 @@ TEST_TOOL_PLINKO_FILES := $(wildcard test/tool/plinko/*)
 TEST_TOOL_PLINKO_SRCS = $(filter %.c,$(TEST_TOOL_PLINKO_FILES))
 TEST_TOOL_PLINKO_SRCS_TEST = $(filter %_test.c,$(TEST_TOOL_PLINKO_SRCS))
 TEST_TOOL_PLINKO_HDRS = $(filter %.h,$(TEST_TOOL_PLINKO_FILES))
-TEST_TOOL_PLINKO_COMS = $(TEST_TOOL_PLINKO_OBJS:%.o=%.com)
+TEST_TOOL_PLINKO_COMS = $(TEST_TOOL_PLINKO_OBJS:%.o=%)
 
 TEST_TOOL_PLINKO_OBJS =						\
 	$(TEST_TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%.o)		\
-	o/$(MODE)/tool/plinko/plinko.com.zip.o			\
+	o/$(MODE)/tool/plinko/plinko.zip.o			\
 	o/$(MODE)/tool/plinko/lib/library.lisp.zip.o		\
 	o/$(MODE)/tool/plinko/lib/binarytrees.lisp.zip.o	\
 	o/$(MODE)/tool/plinko/lib/algebra.lisp.zip.o		\
@@ -25,18 +25,18 @@ TEST_TOOL_PLINKO_OBJS =						\
 	o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o
 
 TEST_TOOL_PLINKO_COMS =						\
-	$(TEST_TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%)
 
 TEST_TOOL_PLINKO_BINS =						\
 	$(TEST_TOOL_PLINKO_COMS)				\
 	$(TEST_TOOL_PLINKO_COMS:%=%.dbg)
 
 TEST_TOOL_PLINKO_TESTS =					\
-	$(TEST_TOOL_PLINKO_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_TOOL_PLINKO_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_TOOL_PLINKO_CHECKS =					\
 	$(TEST_TOOL_PLINKO_HDRS:%=o/$(MODE)/%.ok)		\
-	$(TEST_TOOL_PLINKO_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_TOOL_PLINKO_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_TOOL_PLINKO_DIRECTDEPS =					\
 	LIBC_CALLS						\
@@ -67,7 +67,7 @@ $(TEST_TOOL_PLINKO_A).pkg:					\
 		$(TEST_TOOL_PLINKO_OBJS)			\
 		$(foreach x,$(TEST_TOOL_PLINKO_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/tool/plinko/%.com.dbg:				\
+o/$(MODE)/test/tool/plinko/%.dbg:				\
 		$(TEST_TOOL_PLINKO_DEPS)			\
 		$(TEST_TOOL_PLINKO_A)				\
 		o/$(MODE)/test/tool/plinko/%.o			\
@@ -77,7 +77,7 @@ o/$(MODE)/test/tool/plinko/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/tool/plinko/plinko_test.com.runs: private	\
+o/$(MODE)/test/tool/plinko/plinko_test.runs: private		\
 		QUOTA =	-M100g
 
 o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B

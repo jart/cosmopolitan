@@ -9,8 +9,8 @@ class SubprocessTest(unittest.TestCase):
     def test_execve(self):
         tmp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp_dir)
-        exe = os.path.join(tmp_dir, 'hello.com')
-        shutil.copyfile('/zip/.python/test/hello.com', exe)
+        exe = os.path.join(tmp_dir, 'hello')
+        shutil.copyfile('/zip/.python/test/hello', exe)
         os.chmod(exe, 0755)
         proc = subprocess.Popen([exe], stdout=subprocess.PIPE)
         stdout, stderr = proc.communicate()

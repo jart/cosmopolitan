@@ -8,7 +8,7 @@ THIRD_PARTY_MAKE_FILES := $(wildcard third_party/make/*)
 THIRD_PARTY_MAKE_HDRS = $(filter %.h,$(THIRD_PARTY_MAKE_FILES))
 THIRD_PARTY_MAKE_SRCS = $(filter %.c,$(THIRD_PARTY_MAKE_FILES))
 THIRD_PARTY_MAKE_OBJS = $(THIRD_PARTY_MAKE_SRCS:%.c=o/$(MODE)/%.o)
-THIRD_PARTY_MAKE_COMS = o/$(MODE)/third_party/make/make.com
+THIRD_PARTY_MAKE_COMS = o/$(MODE)/third_party/make/make
 THIRD_PARTY_MAKE_CHECKS = $(THIRD_PARTY_MAKE_A).pkg
 
 THIRD_PARTY_MAKE_BINS =					\
@@ -43,7 +43,7 @@ $(THIRD_PARTY_MAKE_A):					\
 	$(THIRD_PARTY_MAKE_A).pkg			\
 	$(filter-out %main.o,$(THIRD_PARTY_MAKE_OBJS))
 
-o/$(MODE)/third_party/make/make.com.dbg:		\
+o/$(MODE)/third_party/make/make.dbg:			\
 		$(THIRD_PARTY_MAKE_DEPS)		\
 		$(THIRD_PARTY_MAKE_A)			\
 		$(THIRD_PARTY_MAKE_A).pkg		\

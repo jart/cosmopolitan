@@ -37,7 +37,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -48,6 +47,7 @@
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
@@ -854,10 +854,10 @@ int main(int argc, char *argv[]) {
   // perform unveiling
   ApplyFilesystemPolicy(ipromises);
 
-  // pledge.com uses the return eperm instead of killing the process
-  // model. we do this becasue it's only possible to have sigsys print
-  // crash messages if we're not pledging exec, which is what this tool
-  // always has to do currently.
+  // pledge uses the return eperm instead of killing the process model.
+  // we do this becasue it's only possible to have sigsys print crash
+  // messages if we're not pledging exec, which is what this tool always
+  // has to do currently.
   if (g_kflag) {
     __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
   } else {

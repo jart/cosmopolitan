@@ -1,4 +1,4 @@
-#!/usr/bin/env python.com
+#!/usr/bin/env python
 #
 # OVERVIEW
 #

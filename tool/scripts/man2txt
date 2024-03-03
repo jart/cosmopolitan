@@ -1,7 +1,7 @@
 #!/bin/sh
 
-ASCII2UTF8=$(command -v ascii2utf8.com 2>/dev/null) || {
-  ASCII2UTF8=$(ls -1 o/*/tool/viz/ascii2utf8.com | head -n1)
+ASCII2UTF8=$(command -v ascii2utf8 2>/dev/null) || {
+  ASCII2UTF8=$(ls -1 o/*/tool/viz/ascii2utf8 | head -n1)
 }
 
 for x; do

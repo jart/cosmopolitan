@@ -12,7 +12,7 @@
 
 ifeq ($(ARCH), x86_64)
 
-CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com
+CHIBICC = o/$(MODE)/third_party/chibicc/chibicc
 CHIBICC_FLAGS =								\
 	-fno-common							\
 	-include libc/integral/normalize.inc				\
@@ -37,8 +37,8 @@ THIRD_PARTY_CHIBICC_DEFINES =						\
 	-DLDS=\"o/$(MODE)/ape/ape.lds\"
 
 THIRD_PARTY_CHIBICC_BINS =						\
-	o/$(MODE)/third_party/chibicc/chibicc.com.dbg			\
-	o/$(MODE)/third_party/chibicc/chibicc.com
+	o/$(MODE)/third_party/chibicc/chibicc.dbg			\
+	o/$(MODE)/third_party/chibicc/chibicc
 
 THIRD_PARTY_CHIBICC_A_OBJS =						\
 	$(THIRD_PARTY_CHIBICC_A_SRCS:%.c=o/$(MODE)/%.o)
@@ -77,7 +77,7 @@ $(THIRD_PARTY_CHIBICC_A).pkg:						\
 		$(THIRD_PARTY_CHIBICC_A_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_CHIBICC_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
+o/$(MODE)/third_party/chibicc/chibicc.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
 		$(APE_NO_MODIFY_SELF)					\
@@ -87,15 +87,7 @@ o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 
-o/$(MODE)/third_party/chibicc/chibicc.com:				\
-		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
-		o/$(MODE)/third_party/zip/zip.com			\
-		o/$(MODE)/tool/build/symtab.com
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
-
-o/$(MODE)/third_party/chibicc/as.com.dbg:				\
+o/$(MODE)/third_party/chibicc/as.dbg:					\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
 		$(APE_NO_MODIFY_SELF)					\

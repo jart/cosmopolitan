@@ -220,10 +220,10 @@ o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
 	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=8 -S -g0 $(APE_LOADER_FLAGS)
 
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
-	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy.com -f -o $@ $<
+	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy -f -o $@ $<
 
 o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.elf.dbg
-	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy.com -fm -o $@ $<
+	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy -fm -o $@ $<
 
 APE_LOADER_LDFLAGS =				\
 	-static					\

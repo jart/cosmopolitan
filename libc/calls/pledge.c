@@ -163,7 +163,7 @@
  *   interpreted, and ape binaries, you'll usually want `rpath` and
  *   `prot_exec` too. With APE it's possible to work around this
  *   requirement, by "assimilating" your binaries beforehand. See the
- *   assimilate.com program and `--assimilate` flag which can be used to
+ *   assimilate program and `--assimilate` flag which can be used to
  *   turn APE binaries into static native binaries.
  *
  * - "prot_exec" allows mmap(PROT_EXEC) and mprotect(PROT_EXEC). This is
@@ -176,13 +176,13 @@
  *   calls on Linux.
  *
  * - "vminfo" OpenBSD defines this for programs like `top`. On Linux,
- *   this is a placeholder group that lets tools like pledge.com check
+ *   this is a placeholder group that lets tools like pledge check
  *   `__promises` and automatically unveil() a subset of files top would
  *   need, e.g. /proc/stat, /proc/meminfo.
  *
  * - "tmppath" allows unlink, unlinkat, and lstat. This is mostly a
- *   placeholder group for pledge.com, which reads the `__promises`
- *   global to determine if /tmp and $TMPPATH should be unveiled.
+ *   placeholder group for pledge, which reads the `__promises` global
+ *   to determine if /tmp and $TMPPATH should be unveiled.
  *
  * `execpromises` only matters if "exec" is specified in `promises`. In
  * that case, this specifies the promises that'll apply once execve()

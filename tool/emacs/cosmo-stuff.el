@@ -212,9 +212,9 @@
          (file (file-relative-name this root))  ;; e.g. "libc/crc32c.c"
          (name (file-name-sans-extension file)) ;; e.g. "libc/crc32c"
          (buddy (format "test/%s_test.c" name))
-         (runs (format "o/$m/%s.com%s V=5 TESTARGS=-b" name runsuffix))
-         (buns (format "o/$m/test/%s_test.com%s V=5 TESTARGS=-b" name runsuffix)))
-    (cond ((not (member ext '("c" "cc" "cpp" "s" "S" "rl" "f")))
+         (runs (format "o/$m/%s%s V=5 TESTARGS=-b" name runsuffix))
+         (buns (format "o/$m/test/%s_test%s V=5 TESTARGS=-b" name runsuffix)))
+    (cond ((not (member ext '("c" "cc" "cpp" "s" "S" "rl" "f" "cu")))
            (format "m=%s; make -j32 MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
@@ -225,18 +225,18 @@
            (format
             (cosmo-join
              " && "
-             `("m=%s; f=o/$m/%s.com"
+             `("m=%s; f=o/$m/%s"
                ,(concat "make -j32 $f MODE=$m")
-               "scp $f $f.dbg win10:; ssh win10 ./%s.com"))
+               "scp $f $f.dbg win10:; ssh win10 ./%s"))
             mode name (file-name-nondirectory name)))
           ((eq kind 'run-xnu)
            (format
             (cosmo-join
              " && "
-             `("m=%s; f=o/$m/%s.com"
+             `("m=%s; f=o/$m/%s"
                ,(concat "make -j32 $f MODE=$m")
                "scp $f $f.dbg xnu:"
-               "ssh xnu ./%s.com"))
+               "ssh xnu ./%s"))
             mode name (file-name-nondirectory name)))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
@@ -257,12 +257,12 @@
            (format
             (cosmo-join
              " && "
-             `("m=%s; f=o/$m/%s.com"
+             `("m=%s; f=o/$m/%s"
                ,(concat "make -j32 $f MODE=$m")
                "build/run ./$f"))
             mode name))
           ((eq kind 'test)
-           (format `"m=%s; f=o/$m/%s.com.ok && make -j32 $f MODE=$m" mode name))
+           (format `"m=%s; f=o/$m/%s.ok && make -j32 $f MODE=$m" mode name))
           ((and (file-regular-p this)
                 (file-executable-p this))
            (format "build/run ./%s" file))
@@ -641,14 +641,14 @@
                (compile (format "sh -c %s" file)))
               ((eq major-mode 'lua-mode)
                (let* ((mode (cosmo--make-mode arg)))
-                 (compile (format "make -j32 MODE=%s o/%s/tool/net/redbean.com && build/run o/%s/tool/net/redbean.com -i %s" mode mode mode file))))
+                 (compile (format "make -j32 MODE=%s o/%s/tool/net/redbean && build/run o/%s/tool/net/redbean -i %s" mode mode mode file))))
               ((and (eq major-mode 'python-mode)
                     (cosmo-startswith "third_party/python/Lib/test/" file))
                (let ((mode (cosmo--make-mode arg)))
                  (compile (format "make -j32 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
                                   mode mode (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
-               (compile (format "python.com %s" file)))
+               (compile (format "python %s" file)))
               ('t
                (error "cosmo-run: unknown major mode")))))))
 
@@ -715,7 +715,7 @@
       (let* ((mode (cosmo--make-mode arg cosmo-dbg-mode))
              (name (file-relative-name this root))
              (next (file-name-sans-extension name))
-             (exec (format "o/%s/%s.com.dbg" mode next))
+             (exec (format "o/%s/%s.dbg" mode next))
              (default-directory root)
              (compile-command (cosmo--compile-command this root nil mode "" "" ".runs")))
         (compile compile-command)

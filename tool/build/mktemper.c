@@ -28,7 +28,7 @@
 /**
  * @fileoverview stronger mktemp for shell scripts, e.g.
  *
- *     o//tool/build/mktemper.com ${TMPDIR:-/tmp}/fooXXXXXXXXXXXXX.o
+ *     o//tool/build/mktemper ${TMPDIR:-/tmp}/fooXXXXXXXXXXXXX.o
  *
  * Is a good way to name an intermediate object file.
  */

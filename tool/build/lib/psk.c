@@ -37,7 +37,7 @@ void *GetRunitPsk(void) {
   struct stat st;
   p = gc(xasprintf("%s/.runit.psk", gc(xhomedir())));
   if (stat(p, &st) == -1 || st.st_size != 32) {
-    fprintf(stderr, "need o//examples/getrandom.com -bn32 >~/.runit.psk\n");
+    fprintf(stderr, "need o//examples/getrandom -bn32 >~/.runit.psk\n");
     exit(1);
   }
   CHECK_NOTNULL((r = malloc(32)));

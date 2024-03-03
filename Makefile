@@ -21,23 +21,23 @@
 #   make -j8 -O MODE=tiny
 #
 #   # build individual target
-#   make -j8 -O o//examples/hello.com
-#   o//examples/hello.com
+#   make -j8 -O o//examples/hello
+#   o//examples/hello
 #
 #   # view source
 #   less examples/hello.c
 #
 #   # view binary
-#   o//tool/viz/bing.com o//examples/hello.com |
-#     o//tool/viz/fold.com
+#   o//tool/viz/bing o//examples/hello |
+#     o//tool/viz/fold
 #
 #   # view transitive closure of legalese
-#   o//tool/viz/bing.com -n o//examples/hello.com |
-#     o//tool/viz/fold.com
+#   o//tool/viz/bing -n o//examples/hello |
+#     o//tool/viz/fold
 #
 #   # basic debugging
-#   make -j8 -O MODE=dbg o/dbg/examples/crashreport.com
-#   o/examples/crashreport.com
+#   make -j8 -O MODE=dbg o/dbg/examples/crashreport
+#   o/examples/crashreport
 #   less examples/crashreport.c
 #
 #   # extremely tiny binaries
@@ -51,7 +51,7 @@
 #
 # TROUBLESHOOTING
 #
-#   make -j8 -O V=1 o//examples/hello.com
+#   make -j8 -O V=1 o//examples/hello
 #   make o//examples/life.elf -pn |& less
 #   etc.
 #
@@ -59,7 +59,7 @@
 #
 #   build/config.mk
 
-SHELL      = build/bootstrap/cocmd.com
+SHELL      = build/bootstrap/cocmd
 MAKEFLAGS += --no-builtin-rules
 
 .SUFFIXES:
@@ -77,8 +77,8 @@ COMMA := ,
 PWD := $(shell pwd)
 
 # detect wsl2 running cosmopolitan binaries on the host by checking whether:
-# - user ran build/bootstrap/make.com, in which case make's working directory is in wsl
-# - user ran make, in which case cocmd.com's working directory is in wsl
+# - user ran build/bootstrap/make, in which case make's working directory is in wsl
+# - user ran make, in which case cocmd's working directory is in wsl
 ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(PWD)),)
 $(warning wsl2 interop is enabled)
 $(error you need to run sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop')
@@ -89,7 +89,7 @@ UNAME_S := $(shell uname -s)
 
 # apple still distributes a 17 year old version of gnu make
 ifeq ($(MAKE_VERSION), 3.81)
-$(error please use build/bootstrap/make.com)
+$(error please use build/bootstrap/make)
 endif
 
 LC_ALL = C
@@ -101,21 +101,21 @@ XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
 CLANG = clang
 TMPDIR = o/tmp
-AR = build/bootstrap/ar.com
-CP = build/bootstrap/cp.com
-RM = build/bootstrap/rm.com -f
-GZIP = build/bootstrap/gzip.com
-ECHO = build/bootstrap/echo.com
-CHMOD = build/bootstrap/chmod.com
-TOUCH = build/bootstrap/touch.com
-PKG = build/bootstrap/package.com
-MKDEPS = build/bootstrap/mkdeps.com
-ZIPOBJ = build/bootstrap/zipobj.com
-ZIPCOPY = build/bootstrap/zipcopy.com
-PECHECK = build/bootstrap/pecheck.com
-FIXUPOBJ = build/bootstrap/fixupobj.com
-MKDIR = build/bootstrap/mkdir.com -p
-COMPILE = build/bootstrap/compile.com -V9 -M2048m -P8192 $(QUOTA)
+AR = build/bootstrap/ar
+CP = build/bootstrap/cp
+RM = build/bootstrap/rm -f
+GZIP = build/bootstrap/gzip
+ECHO = build/bootstrap/echo
+CHMOD = build/bootstrap/chmod
+TOUCH = build/bootstrap/touch
+PKG = build/bootstrap/package
+MKDEPS = build/bootstrap/mkdeps
+ZIPOBJ = build/bootstrap/zipobj
+ZIPCOPY = build/bootstrap/zipcopy
+PECHECK = build/bootstrap/pecheck
+FIXUPOBJ = build/bootstrap/fixupobj
+MKDIR = build/bootstrap/mkdir -p
+COMPILE = build/bootstrap/compile -V9 -M2048m -P8192 $(QUOTA)
 
 IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
@@ -187,7 +187,7 @@ o/$(MODE):			\
 o/$(MODE)/: o/$(MODE)
 o/$(MODE)/.: o/$(MODE)
 
-# check if we're using o//third_party/make/make.com
+# check if we're using o//third_party/make/make
 # we added sandboxing to guarantee cosmo's makefile is hermetic
 # it also shaves away 200ms of startup latency with native $(uniq)
 ifneq ($(LANDLOCKMAKE_VERSION),)
@@ -415,17 +415,17 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
 TAGS: private .UNSANDBOXED = 1
-TAGS:	o/$(MODE)/srcs-old.txt $(SRCS) #o/$(MODE)/third_party/ctags/ctags.com
+TAGS:	o/$(MODE)/srcs-old.txt $(SRCS) #o/$(MODE)/third_party/ctags/ctags
 	@$(RM) $@
-	@o/$(MODE)/third_party/ctags/ctags.com $(TAGSFLAGS) -L $< -o $@
+	@o/$(MODE)/third_party/ctags/ctags $(TAGSFLAGS) -L $< -o $@
 
 HTAGS: private .UNSANDBOXED = 1
-HTAGS:	o/$(MODE)/hdrs-old.txt $(filter-out third_party/libcxx/%,$(HDRS)) #o/$(MODE)/third_party/ctags/ctags.com
+HTAGS:	o/$(MODE)/hdrs-old.txt $(filter-out third_party/libcxx/%,$(HDRS)) #o/$(MODE)/third_party/ctags/ctags
 	@$(RM) $@
-	@build/htags o/$(MODE)/third_party/ctags/ctags.com -L $< -o $@
+	@build/htags o/$(MODE)/third_party/ctags/ctags -L $< -o $@
 
 loc: private .UNSANDBOXED = 1
-loc: o/$(MODE)/tool/build/summy.com
+loc: o/$(MODE)/tool/build/summy
 	find -name \*.h -or -name \*.c -or -name \*.S | \
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
@@ -550,16 +550,16 @@ o/cosmopolitan.h: o/cosmopolitan.h.txt					\
 		$(wildcard libc/integral/*)				\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
-	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup.com @$< >>$@
+	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup @$< >>$@
 
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
-		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
+		o/$(MODE)/third_party/chibicc/chibicc.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
 		$(filter-out %.cpp,$(filter-out %.cc,$(SRCS)))				\
 		$(HDRS)
 	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cpp,$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))))
-	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
+	o/$(MODE)/third_party/chibicc/chibicc.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)
 
@@ -582,13 +582,13 @@ TOOLCHAIN_ARTIFACTS =				\
 	o/$(MODE)/ape/ape-no-modify-self.o	\
 	o/$(MODE)/cosmopolitan.a		\
 	o/$(MODE)/third_party/libcxx/libcxx.a	\
-	o/$(MODE)/tool/build/march-native.com	\
-	o/$(MODE)/tool/build/ar.com		\
-	o/$(MODE)/tool/build/mktemper.com	\
-	o/$(MODE)/tool/build/fixupobj.com	\
-	o/$(MODE)/tool/build/zipcopy.com	\
-	o/$(MODE)/tool/build/apelink.com	\
-	o/$(MODE)/tool/build/pecheck.com
+	o/$(MODE)/tool/build/march-native	\
+	o/$(MODE)/tool/build/ar			\
+	o/$(MODE)/tool/build/mktemper		\
+	o/$(MODE)/tool/build/fixupobj		\
+	o/$(MODE)/tool/build/zipcopy		\
+	o/$(MODE)/tool/build/apelink		\
+	o/$(MODE)/tool/build/pecheck
 else
 TOOLCHAIN_ARTIFACTS =				\
 	o/$(MODE)/ape/ape.elf			\
@@ -596,9 +596,9 @@ TOOLCHAIN_ARTIFACTS =				\
 	o/$(MODE)/libc/crt/crt.o		\
 	o/$(MODE)/cosmopolitan.a		\
 	o/$(MODE)/third_party/libcxx/libcxx.a	\
-	o/$(MODE)/tool/build/march-native.com	\
-	o/$(MODE)/tool/build/fixupobj.com	\
-	o/$(MODE)/tool/build/zipcopy.com
+	o/$(MODE)/tool/build/march-native	\
+	o/$(MODE)/tool/build/fixupobj		\
+	o/$(MODE)/tool/build/zipcopy
 endif
 
 .PHONY: toolchain

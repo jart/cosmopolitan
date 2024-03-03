@@ -40,7 +40,7 @@ $(THIRD_PARTY_TR_A).pkg:			\
 		$(THIRD_PARTY_TR_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_TR_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/tr/tr.com.dbg:		\
+o/$(MODE)/third_party/tr/tr.dbg:		\
 		$(THIRD_PARTY_TR)		\
 		o/$(MODE)/third_party/tr/cmd.o	\
 		$(CRT)				\
@@ -49,7 +49,7 @@ o/$(MODE)/third_party/tr/tr.com.dbg:		\
 
 THIRD_PARTY_TR_LIBS = $(THIRD_PARTY_TR_A)
 THIRD_PARTY_TR_BINS = $(THIRD_PARTY_TR_COMS) $(THIRD_PARTY_TR_COMS:%=%.dbg)
-THIRD_PARTY_TR_COMS = o/$(MODE)/third_party/tr/tr.com
+THIRD_PARTY_TR_COMS = o/$(MODE)/third_party/tr/tr
 $(THIRD_PARTY_TR_OBJS): $(BUILD_FILES) third_party/tr/BUILD.mk
 
 .PHONY: o/$(MODE)/third_party/tr

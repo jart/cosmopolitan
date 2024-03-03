@@ -160,7 +160,7 @@ static void EfiInitAcpi(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
  *       -net none        \
  *       -drive format=raw,file=fat:rw:o/tool/viz
  *     FS0:
- *     deathstar.com
+ *     deathstar
  *
  * @see libc/dce.h
  */

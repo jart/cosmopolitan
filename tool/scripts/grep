@@ -2,7 +2,7 @@
 exec grep                       \
      --exclude=TAGS             \
      --exclude=HTAGS            \
-     --exclude=*.com            \
+     --exclude=*.dbg            \
      --exclude-dir=o            \
      --exclude-dir=gcc          \
      --exclude-dir=.git         \

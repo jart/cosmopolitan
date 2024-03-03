@@ -11,13 +11,13 @@ TEST_DSP_CORE_OBJS =						\
 	$(TEST_DSP_CORE_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_DSP_CORE_COMS =						\
-	$(TEST_DSP_CORE_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_DSP_CORE_SRCS:%.c=o/$(MODE)/%)
 
 TEST_DSP_CORE_TESTS =						\
-	$(TEST_DSP_CORE_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_DSP_CORE_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_DSP_CORE_CHECKS =						\
-	$(TEST_DSP_CORE_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_DSP_CORE_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_DSP_CORE_DIRECTDEPS =					\
 	DSP_CORE						\
@@ -37,7 +37,7 @@ o/$(MODE)/test/dsp/core/core.pkg:				\
 		$(TEST_DSP_CORE_OBJS)				\
 		$(foreach x,$(TEST_DSP_CORE_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/dsp/core/%.com.dbg:				\
+o/$(MODE)/test/dsp/core/%.dbg:					\
 		$(TEST_DSP_CORE_DEPS)				\
 		o/$(MODE)/test/dsp/core/%.o			\
 		$(LIBC_TESTMAIN)				\

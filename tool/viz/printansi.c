@@ -84,9 +84,10 @@ FLAGS\n\
 \n\
 EXAMPLES\n\
 \n\
-  printansi.com -w80 -h40 logo.png\n\
+  printansi -w80 -h40 logo.png\n\
 \n\
-\n", NULL);
+\n",
+            NULL);
   exit(rc);
 }
 

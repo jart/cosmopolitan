@@ -41,14 +41,14 @@
 #ifdef __x86_64__
 
 #if 0
-__static_yoink("backtrace.com");
-__static_yoink("backtrace.com.dbg");
+__static_yoink("backtrace");
+__static_yoink("backtrace.dbg");
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
-  testlib_extract("/zip/backtrace.com", "bin/backtrace.com", 0755);
-  testlib_extract("/zip/backtrace.com.dbg", "bin/backtrace.com.dbg", 0755);
+  testlib_extract("/zip/backtrace", "bin/backtrace", 0755);
+  testlib_extract("/zip/backtrace.dbg", "bin/backtrace.dbg", 0755);
 }
 
 static bool OutputHasSymbol(const char *output, const char *s) {
@@ -56,7 +56,7 @@ static bool OutputHasSymbol(const char *output, const char *s) {
 }
 
 // UNFREED MEMORY
-// o/dbg/test/libc/log/backtrace_test.com
+// o/dbg/test/libc/log/backtrace_test
 // max allocated space            655,360
 // total allocated space               80
 // total free space               327,600
@@ -95,7 +95,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "6", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "6", 0});
     _Exit(127);
   }
   close(fds[1]);
@@ -126,7 +126,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
 }
 
 // error: Uncaught SIGFPE (FPE_INTDIV) on nightmare pid 11724
-//   /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.com.tmp.11721
+//   /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.tmp.11721
 //   ENOTTY[25]
 //   Linux nightmare SMP Thu, 12 Aug 2021 06:16:45 UTC
 //
@@ -164,9 +164,9 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
 // /* 22 frames mapped w/ 1,879,015,395 frames gapped */
 //
 // 00400000-0045b000 r-xp 00000000 08:03 4587526
-// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.com.tmp.11721
+// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.tmp.11721
 // 0045b000-00461000 rw-p 0005b000 08:03 4587526
-// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.com.tmp.11721
+// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.tmp.11721
 // 00461000-004a0000 rw-p 00000000 00:00 0
 // 80070000-80090000 rw-p 00000000 00:00 0
 // e007ffd0000-e0080000000 rw-p 00000000 00:00 0
@@ -176,7 +176,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
 // 7ffe075a8000-7ffe075ab000 r--p 00000000 00:00 0 [vvar]
 // 7ffe075ab000-7ffe075ac000 r-xp 00000000 00:00 0 [vdso]
 //
-// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.com.tmp.11721 1
+// /home/jart/cosmo/o/dbg/test/libc/log/backtrace_test.tmp.11721 1
 TEST(ShowCrashReports, testDivideByZero) {
   size_t got;
   ssize_t rc;
@@ -187,7 +187,7 @@ TEST(ShowCrashReports, testDivideByZero) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "1", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "1", 0});
     _Exit(127);
   }
   close(fds[1]);
@@ -312,7 +312,7 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "2", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "2", 0});
     _Exit(127);
   }
   close(fds[1]);
@@ -387,7 +387,7 @@ TEST(ShowCrashReports, testNpeCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "7", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "7", 0});
     _Exit(127);
   }
   close(fds[1]);
@@ -431,7 +431,7 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "4", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "4", 0});
     _Exit(127);
   }
   close(fds[1]);
@@ -479,7 +479,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "8", 0});
+    execv("bin/backtrace", (char *const[]){"bin/backtrace", "8", 0});
     _Exit(127);
   }
   close(fds[1]);

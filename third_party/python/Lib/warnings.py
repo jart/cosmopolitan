@@ -498,7 +498,7 @@ except ImportError:
         global _filters_version
         _filters_version += 1
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _warnings
 
 # Module initialization

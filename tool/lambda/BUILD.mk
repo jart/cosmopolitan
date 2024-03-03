@@ -9,7 +9,7 @@ TOOL_LAMBDA_OBJS =						\
 	$(TOOL_LAMBDA_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_LAMBDA_COMS :=						\
-	$(TOOL_LAMBDA_SRCS:%.c=o/$(MODE)/%.com)
+	$(TOOL_LAMBDA_SRCS:%.c=o/$(MODE)/%)
 
 TOOL_LAMBDA_BINS =						\
 	$(TOOL_LAMBDA_COMS)					\
@@ -37,7 +37,7 @@ o/$(MODE)/tool/lambda/lambda.pkg:				\
 		$(TOOL_LAMBDA_OBJS)				\
 		$(foreach x,$(TOOL_LAMBDA_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/tool/lambda/%.com.dbg:				\
+o/$(MODE)/tool/lambda/%.dbg:					\
 		$(TOOL_LAMBDA_DEPS)				\
 		o/$(MODE)/tool/lambda/%.o			\
 		o/$(MODE)/tool/lambda/lambda.pkg		\

@@ -41,7 +41,7 @@ $(THIRD_PARTY_UNZIP_A).pkg:							\
 		$(THIRD_PARTY_UNZIP_A_OBJS)					\
 		$(foreach x,$(THIRD_PARTY_UNZIP_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/unzip/unzip.com.dbg:					\
+o/$(MODE)/third_party/unzip/unzip.dbg:						\
 		$(THIRD_PARTY_UNZIP)						\
 		o/$(MODE)/third_party/unzip/unzip.o				\
 		$(CRT)								\
@@ -62,7 +62,7 @@ $(THIRD_PARTY_UNZIP_A_OBJS): private						\
 		CFLAGS +=							\
 			$(OLD_CODE)
 
-THIRD_PARTY_UNZIP_COMS = o/$(MODE)/third_party/unzip/unzip.com
+THIRD_PARTY_UNZIP_COMS = o/$(MODE)/third_party/unzip/unzip
 THIRD_PARTY_UNZIP_BINS = $(THIRD_PARTY_UNZIP_COMS) $(THIRD_PARTY_UNZIP_COMS:%=%.dbg)
 THIRD_PARTY_UNZIP_LIBS = $(foreach x,$(THIRD_PARTY_UNZIP_ARTIFACTS),$($(x)))
 THIRD_PARTY_UNZIP_SRCS = $(foreach x,$(THIRD_PARTY_UNZIP_ARTIFACTS),$($(x)_SRCS))

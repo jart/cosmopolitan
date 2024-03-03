@@ -26,5 +26,5 @@ FILE_ATTRIBUTE_SYSTEM = 4
 FILE_ATTRIBUTE_TEMPORARY = 256
 FILE_ATTRIBUTE_VIRTUAL = 65536
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
   import _stat

@@ -14,7 +14,7 @@ THIRD_PARTY_PCRE_A_OBJS = $(THIRD_PARTY_PCRE_A_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_PCRE_A_CHECKS =				\
 	$(THIRD_PARTY_PCRE_A).pkg			\
-	o/$(MODE)/third_party/pcre/pcre2posix_test.com.runs
+	o/$(MODE)/third_party/pcre/pcre2posix_test.runs
 
 THIRD_PARTY_PCRE_A_DIRECTDEPS =				\
 	LIBC_CALLS					\
@@ -42,7 +42,7 @@ $(THIRD_PARTY_PCRE_A).pkg:				\
 
 $(THIRD_PARTY_PCRE_A_OBJS): private CPPFLAGS += -DHAVE_CONFIG_H -DNDEBUG
 
-o/$(MODE)/third_party/pcre/%.com.dbg:			\
+o/$(MODE)/third_party/pcre/%.dbg:			\
 		$(THIRD_PARTY_PCRE)			\
 		o/$(MODE)/third_party/pcre/%.o		\
 		$(CRT)					\
@@ -50,8 +50,8 @@ o/$(MODE)/third_party/pcre/%.com.dbg:			\
 	@$(APELINK)
 
 THIRD_PARTY_PCRE_COMS =					\
-	o/$(MODE)/third_party/pcre/pcre2grep.com	\
-	o/$(MODE)/third_party/pcre/pcre2posix_test.com
+	o/$(MODE)/third_party/pcre/pcre2grep		\
+	o/$(MODE)/third_party/pcre/pcre2posix_test
 
 THIRD_PARTY_PCRE_BINS = $(THIRD_PARTY_PCRE_COMS) $(THIRD_PARTY_PCRE_COMS:%=%.dbg)
 THIRD_PARTY_PCRE_LIBS = $(foreach x,$(THIRD_PARTY_PCRE_ARTIFACTS),$($(x)))

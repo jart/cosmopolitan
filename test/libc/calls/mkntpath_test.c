@@ -37,8 +37,8 @@ TEST(mkntpath, testSlashes) {
    * all it takes to make the feature entirely useless to us, similar to
    * the law of noncontradiction. We address the issue as follows:
    */
-  EXPECT_EQ(9, __mkntpath("o/foo.com", p));
-  EXPECT_STREQ(u"o\\foo.com", p);
+  EXPECT_EQ(5, __mkntpath("o/foo", p));
+  EXPECT_STREQ(u"o\\foo", p);
 }
 
 TEST(mkntpath, testUnicode) {

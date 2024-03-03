@@ -36,7 +36,7 @@ int sys_fchmodat2(int, const char *, unsigned, int);
  * Changes permissions on file, e.g.:
  *
  *     CHECK_NE(-1, fchmodat(AT_FDCWD, "foo/bar.txt", 0644));
- *     CHECK_NE(-1, fchmodat(AT_FDCWD, "o/default/program.com", 0755));
+ *     CHECK_NE(-1, fchmodat(AT_FDCWD, "o/default/program", 0755));
  *     CHECK_NE(-1, fchmodat(AT_FDCWD, "privatefolder/", 0700));
  *
  * @param path must exist

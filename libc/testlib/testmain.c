@@ -162,7 +162,7 @@ dontasan int main(int argc, char *argv[]) {
   // we're done!
   int status = MIN(255, g_testlib_failed);
   if (!status && IsRunningUnderMake()) {
-    return 254;  // compile.com considers this 0 and propagates output
+    return 254;  // compile considers this 0 and propagates output
   } else if (!status && _weaken(pthread_exit)) {
     _weaken(pthread_exit)(0);
   } else {

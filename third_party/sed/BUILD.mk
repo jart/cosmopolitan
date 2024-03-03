@@ -41,7 +41,7 @@ $(THIRD_PARTY_SED_A).pkg:				\
 		$(THIRD_PARTY_SED_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_SED_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/sed/sed.com.dbg:			\
+o/$(MODE)/third_party/sed/sed.dbg:			\
 		$(THIRD_PARTY_SED)			\
 		o/$(MODE)/third_party/sed/cmd.o		\
 		$(CRT)					\
@@ -49,7 +49,7 @@ o/$(MODE)/third_party/sed/sed.com.dbg:			\
 	@$(APELINK)
 
 THIRD_PARTY_SED_BINS = $(THIRD_PARTY_SED_COMS) $(THIRD_PARTY_SED_COMS:%=%.dbg)
-THIRD_PARTY_SED_COMS = o/$(MODE)/third_party/sed/sed.com
+THIRD_PARTY_SED_COMS = o/$(MODE)/third_party/sed/sed
 THIRD_PARTY_SED_LIBS = $(THIRD_PARTY_SED_A)
 $(THIRD_PARTY_SED_OBJS): $(BUILD_FILES) third_party/sed/BUILD.mk
 

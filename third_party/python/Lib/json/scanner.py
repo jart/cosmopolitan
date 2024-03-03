@@ -5,7 +5,7 @@ try:
     from _json import make_scanner as c_make_scanner
 except ImportError:
     c_make_scanner = None
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _json
 
 __all__ = ['make_scanner']

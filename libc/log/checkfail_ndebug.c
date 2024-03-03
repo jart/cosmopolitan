@@ -28,8 +28,8 @@
  *
  * This handler (1) makes binaries smaller by not embedding source code;
  * and therefore (2) less likely to leak sensitive information. This can
- * still print backtraces with function names if the .com.dbg file is in
- * the same folder.
+ * still print backtraces with function names if the .dbg file is in the
+ * same folder.
  *
  * @see libc/log/thunks/__check_fail_ndebug.S
  */

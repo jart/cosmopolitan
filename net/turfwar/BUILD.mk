@@ -68,14 +68,6 @@ o/$(MODE)/net/turfwar/turfbean.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/net/turfwar/turfbean.com:			\
-		o/$(MODE)/net/turfwar/turfbean.com.dbg	\
-		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
-
 o/$(MODE)/net/turfwar/.init.lua.zip.o: private		\
 		ZIPOBJ_FLAGS +=				\
 			-B

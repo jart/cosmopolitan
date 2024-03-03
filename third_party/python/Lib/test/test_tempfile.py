@@ -33,7 +33,7 @@ if sys.platform.startswith('openbsd'):
 else:
     TEST_FILES = 100
 
-if __name__ == "PYOBJ.COM":
+if __name__ == "PYOBJ":
     from test import tf_inherit_check
 
 # This is organized as one test for each chunk of code in tempfile.py,

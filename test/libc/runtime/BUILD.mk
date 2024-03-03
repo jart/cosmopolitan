@@ -10,17 +10,17 @@ TEST_LIBC_RUNTIME_OBJS =						\
 	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_LIBC_RUNTIME_COMS =						\
-	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_LIBC_RUNTIME_SRCS:%.c=o/$(MODE)/%)
 
 TEST_LIBC_RUNTIME_BINS =						\
 	$(TEST_LIBC_RUNTIME_COMS)					\
 	$(TEST_LIBC_RUNTIME_COMS:%=%.dbg)
 
 TEST_LIBC_RUNTIME_TESTS =						\
-	$(TEST_LIBC_RUNTIME_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_LIBC_RUNTIME_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_LIBC_RUNTIME_CHECKS =						\
-	$(TEST_LIBC_RUNTIME_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_LIBC_RUNTIME_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_LIBC_RUNTIME_DIRECTDEPS =						\
 	LIBC_CALLS							\
@@ -49,7 +49,7 @@ o/$(MODE)/test/libc/runtime/runtime.pkg:				\
 		$(TEST_LIBC_RUNTIME_OBJS)				\
 		$(foreach x,$(TEST_LIBC_RUNTIME_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/runtime/%.com.dbg:					\
+o/$(MODE)/test/libc/runtime/%.dbg:					\
 		$(TEST_LIBC_RUNTIME_DEPS)				\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.txt.zip.o	\
@@ -61,7 +61,7 @@ o/$(MODE)/test/libc/runtime/%.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/runtime/ape_test.com.dbg:				\
+o/$(MODE)/test/libc/runtime/ape_test.dbg:				\
 		$(TEST_LIBC_RUNTIME_DEPS)				\
 		o/$(MODE)/test/libc/runtime/ape_test.o			\
 		o/$(MODE)/test/libc/runtime/runtime.pkg			\
@@ -74,8 +74,8 @@ $(TEST_LIBC_RUNTIME_OBJS): private					\
 	DEFAULT_CCFLAGS +=						\
 		-fno-builtin
 
-o/$(MODE)/test/libc/runtime/getenv_test.com.runs:			\
-		o/$(MODE)/test/libc/runtime/getenv_test.com
+o/$(MODE)/test/libc/runtime/getenv_test.runs:				\
+		o/$(MODE)/test/libc/runtime/getenv_test
 	@HELLO=THERE build/runit $@ $<
 
 o/$(MODE)/test/libc/runtime/itsatrap_test.o: private			\

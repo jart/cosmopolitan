@@ -15,7 +15,7 @@ TOOL_BUILD_OBJS =							\
 	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.o)
 
 TOOL_BUILD_COMS =							\
-	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.com)
+	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%)
 
 TOOL_BUILD_CHECKS =							\
 	$(TOOL_BUILD).pkg						\
@@ -69,7 +69,7 @@ o/$(MODE)/tool/build/build.pkg:						\
 		$(TOOL_BUILD_OBJS)					\
 		$(foreach x,$(TOOL_BUILD_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/tool/build/%.com.dbg:						\
+o/$(MODE)/tool/build/%.dbg:						\
 		$(TOOL_BUILD_DEPS)					\
 		o/$(MODE)/tool/build/build.pkg				\
 		o/$(MODE)/tool/build/%.o				\
@@ -78,9 +78,9 @@ o/$(MODE)/tool/build/%.com.dbg:						\
 	@$(APELINK)
 
 o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so.zip.o			\
-o/$(MODE)/tool/build/false.com.zip.o					\
-o/$(MODE)/tool/build/echo.com.zip.o					\
-o/$(MODE)/tool/build/cocmd.com.zip.o: private				\
+o/$(MODE)/tool/build/false.zip.o					\
+o/$(MODE)/tool/build/echo.zip.o						\
+o/$(MODE)/tool/build/cocmd.zip.o: private				\
 		ZIPOBJ_FLAGS +=						\
 			-B
 
@@ -115,7 +115,7 @@ o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so:				\
 		o/$(MODE)/libc/sysv/restorert.o				\
 		$(OUTPUT_OPTION)
 
-o/$(MODE)/tool/build/pledge.com.dbg:					\
+o/$(MODE)/tool/build/pledge.dbg:					\
 		$(TOOL_BUILD_DEPS)					\
 		o/$(MODE)/tool/build/build.pkg				\
 		o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so.zip.o	\
@@ -135,8 +135,8 @@ o/$(MODE)/tool/build/dso/dlopen_helper.so:				\
 		o/$(MODE)/tool/build/dso/dlopen_helper.o		\
 		$(OUTPUT_OPTION)
 
-o/$(MODE)/tool/build/dlopen_test.com.runs:				\
-		o/$(MODE)/tool/build/dlopen_test.com			\
+o/$(MODE)/tool/build/dlopen_test.runs:					\
+		o/$(MODE)/tool/build/dlopen_test			\
 		o/$(MODE)/tool/build/dso/dlopen_helper.so
 	$< o/$(MODE)/tool/build/dso/dlopen_helper.so
 

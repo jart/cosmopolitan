@@ -36,7 +36,7 @@ from __future__ import print_function
 
 import time, sys
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import resource
 
 #

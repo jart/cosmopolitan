@@ -5,21 +5,21 @@ t=/tmp/pledge-test
 if [ $# = 0 ]; then
   if ! [ $(id -u) = 0 ]; then
     make -j16 MODE=fastbuild \
-         o/fastbuild/examples/ls.com \
-         o/fastbuild/tool/curl/curl.com \
-         o/fastbuild/examples/life.com \
-         o/fastbuild/examples/hello.com \
-         o/fastbuild/examples/printargs.com \
-         o/fastbuild/tool/build/assimilate.com \
-         o/fastbuild/tool/build/pledge.com || exit
+         o/fastbuild/examples/ls \
+         o/fastbuild/tool/curl/curl \
+         o/fastbuild/examples/life \
+         o/fastbuild/examples/hello \
+         o/fastbuild/examples/printargs \
+         o/fastbuild/tool/build/assimilate \
+         o/fastbuild/tool/build/pledge || exit
     make -j16 MODE=$m \
-         o/$m/examples/ls.com \
-         o/$m/tool/curl/curl.com \
-         o/$m/examples/life.com \
-         o/$m/examples/hello.com \
-         o/$m/examples/printargs.com \
-         o/$m/tool/build/assimilate.com \
-         o/$m/tool/build/pledge.com || exit
+         o/$m/examples/ls \
+         o/$m/tool/curl/curl \
+         o/$m/examples/life \
+         o/$m/examples/hello \
+         o/$m/examples/printargs \
+         o/$m/tool/build/assimilate \
+         o/$m/tool/build/pledge || exit
     test/tool/build/pledge_test.sh ape_binfmt_test_suite || exit
     test/tool/build/pledge_test.sh ape_loader_test_suite || exit
     test/tool/build/pledge_test.sh ape_assimilated_test_suite || exit
@@ -59,41 +59,41 @@ if [ "$1" = setuid_setup ]; then
   rm -rf $t || exit
   mkdir -p $t || exit
   chmod 01777 $t || exit
-  cp o/$m/tool/build/pledge.com $t || exit
-  chmod 06755 $t/pledge.com || exit
+  cp o/$m/tool/build/pledge $t || exit
+  chmod 06755 $t/pledge || exit
 
 elif [ "$1" = ape_binfmt_test_suite ]; then
 
   ape/apeinstall.sh >/dev/null 2>&1
 
-  startit ape binfmt life.com
-  o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/life.com
+  startit ape binfmt life
+  o/fastbuild/tool/build/pledge -p 'stdio rpath prot_exec' o/fastbuild/examples/life
   [ $? = 42 ]
   checkem
 
-  startit ape binfmt hello.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/hello.com)" = "hello world" ]
+  startit ape binfmt hello
+  [ "$(o/fastbuild/tool/build/pledge -p 'stdio rpath prot_exec' o/fastbuild/examples/hello)" = "hello world" ]
   checkem
 
-  startit ape binfmt curl.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  startit ape binfmt curl
+  [ "$(o/fastbuild/tool/build/pledge -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = ape_loader_test_suite ]; then
 
   ape/apeuninstall.sh >/dev/null 2>&1
 
-  startit ape loader life.com
-  o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/life.com
+  startit ape loader life
+  o/fastbuild/tool/build/pledge -p 'stdio rpath prot_exec' o/fastbuild/examples/life
   [ $? = 42 ]
   checkem
 
-  startit ape loader hello.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/hello.com)" = "hello world" ]
+  startit ape loader hello
+  [ "$(o/fastbuild/tool/build/pledge -p 'stdio rpath prot_exec' o/fastbuild/examples/hello)" = "hello world" ]
   checkem
 
-  startit ape loader curl.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  startit ape loader curl
+  [ "$(o/fastbuild/tool/build/pledge -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   ape/apeinstall.sh >/dev/null 2>&1
@@ -102,76 +102,76 @@ elif [ "$1" = ape_assimilated_test_suite ]; then
 
   mkdir -p $t/assimilated
 
-  startit ape assimilated life.com
-  cp o/fastbuild/examples/life.com $t/assimilated
-  o/fastbuild/tool/build/assimilate.com $t/assimilated/life.com
-  o/$m/tool/build/pledge.com -p 'stdio' $t/assimilated/life.com
+  startit ape assimilated life
+  cp o/fastbuild/examples/life $t/assimilated
+  o/fastbuild/tool/build/assimilate $t/assimilated/life
+  o/$m/tool/build/pledge -p 'stdio' $t/assimilated/life
   [ $? = 42 ]
   checkem
 
-  startit ape assimilated hello.com
-  cp o/fastbuild/examples/hello.com $t/assimilated
-  o/fastbuild/tool/build/assimilate.com $t/assimilated/hello.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio' $t/assimilated/hello.com)" = "hello world" ]
+  startit ape assimilated hello
+  cp o/fastbuild/examples/hello $t/assimilated
+  o/fastbuild/tool/build/assimilate $t/assimilated/hello
+  [ "$(o/$m/tool/build/pledge -p 'stdio' $t/assimilated/hello)" = "hello world" ]
   checkem
 
-  startit ape assimilated curl.com
-  cp o/fastbuild/tool/curl/curl.com $t/assimilated
-  o/fastbuild/tool/build/assimilate.com $t/assimilated/curl.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' $t/assimilated/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  startit ape assimilated curl
+  cp o/fastbuild/tool/curl/curl $t/assimilated
+  o/fastbuild/tool/build/assimilate $t/assimilated/curl
+  [ "$(o/$m/tool/build/pledge -p 'stdio rpath inet dns' $t/assimilated/curl https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = ape_native_test_suite ]; then
 
-  startit ape native life.com
-  o/$m/tool/build/pledge.com -p 'stdio' o/$m/examples/life.com
+  startit ape native life
+  o/$m/tool/build/pledge -p 'stdio' o/$m/examples/life
   [ $? = 42 ]
   checkem
 
-  startit ape native hello.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio' o/$m/examples/hello.com)" = "hello world" ]
+  startit ape native hello
+  [ "$(o/$m/tool/build/pledge -p 'stdio' o/$m/examples/hello)" = "hello world" ]
   checkem
 
-  startit ape native curl.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' o/$m/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  startit ape native curl
+  [ "$(o/$m/tool/build/pledge -p 'stdio rpath inet dns' o/$m/tool/curl/curl https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = setuid_test_suite ]; then
 
-  startit setuid life.com
-  $t/pledge.com -p 'stdio' o/$m/examples/life.com
+  startit setuid life
+  $t/pledge -p 'stdio' o/$m/examples/life
   [ $? = 42 ]
   checkem
 
-  startit setuid hello.com
-  [ "$($t/pledge.com -p 'stdio' o/$m/examples/hello.com)" = "hello world" ]
+  startit setuid hello
+  [ "$($t/pledge -p 'stdio' o/$m/examples/hello)" = "hello world" ]
   checkem
 
-  startit setuid curl.com
-  [ "$($t/pledge.com -p 'stdio rpath inet dns' o/$m/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  startit setuid curl
+  [ "$($t/pledge -p 'stdio rpath inet dns' o/$m/tool/curl/curl https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   startit setuid getuid
-  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep getuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
+  [ "$($t/pledge -p 'stdio rpath proc tty' o/$m/examples/printargs 2>&1 | grep getuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
   checkem
 
   startit setuid geteuid
-  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep geteuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
+  [ "$($t/pledge -p 'stdio rpath proc tty' o/$m/examples/printargs 2>&1 | grep geteuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
   checkem
 
   startit setuid no capabilities
-  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep CAP_ | wc -l)" = 0 ]
+  [ "$($t/pledge -p 'stdio rpath proc tty' o/$m/examples/printargs 2>&1 | grep CAP_ | wc -l)" = 0 ]
   checkem
 
   startit setuid maximum nice
-  $t/pledge.com -np 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep SCHED_IDLE >/dev/null
+  $t/pledge -np 'stdio rpath proc tty' o/$m/examples/printargs 2>&1 | grep SCHED_IDLE >/dev/null
   checkem
 
   startit setuid chroot
   mkdir $t/jail &&
   touch $t/jail/hi &&
-  cp o/$m/examples/ls.com $t/jail &&
-  $t/pledge.com -v / -c $t/jail -p 'stdio rpath' /ls.com / | grep 'DT_REG     /hi' >/dev/null
+  cp o/$m/examples/ls $t/jail &&
+  $t/pledge -v / -c $t/jail -p 'stdio rpath' /ls / | grep 'DT_REG     /hi' >/dev/null
   checkem
 
 fi

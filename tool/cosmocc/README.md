@@ -29,7 +29,7 @@ You now have an [actually portable
 executable](https://justine.lol/ape.html) that'll run on your host
 system. If anything goes wrong, see the Gotchas and Troubleshoot
 sections below. It should have also outputted two ELF executables as
-well, named `hello.com.dbg` (x86-64 Linux ELF) and `hello.aarch64.elf`
+well, named `hello.dbg` (x86-64 Linux ELF) and `hello.aarch64.elf`
 (AARCH64 Linux ELF). On Linux systems, those files are also runnable,
 which is useful for easily running programs in GDB. On other OSes GDB
 can still debug APE programs if the ELF is loaded in a second step using
@@ -163,10 +163,10 @@ being passed to the freestanding Linux compiler.
 (cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.w48k03qgw8692.o -D__COSMOPO...
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.i5lugr6bc0gu0.o)
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.w48k03qgw8692.o)
-(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg c...
+(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.ovdo2nqvkjjg3.dbg c...
 (cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf /...
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf)
-(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg)
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.ovdo2nqvkjjg3.dbg)
 (cd /home/jart/cosmocc; bin/apelink -l bin/ape.elf -l bin/ape.aarch64 -...
 (cd /home/jart/cosmocc; bin/pecheck hello)
 ```
@@ -269,7 +269,7 @@ The `cosmoaddr2line` program may be used to print backtraces, based on
 DWARF data, whenever one of your programs reports a crash. It accepts as
 an argument the ELF executable produced by `cosmocc`, which is different
 from the APE executable. For example, if `cosmocc` compiles a program
-named `hello` then you'll need to pass either `hello.com.dbg` (x86-64)
+named `hello` then you'll need to pass either `hello.dbg` (x86-64)
 or `hello.aarch64.elf` to cosmoaddr2line to get the backtrace. After the
 ELf executable comes the program counter (instruction pointer) addresses
 which are easily obtained using `__builtin_frame_address(0)`. Cosmo can

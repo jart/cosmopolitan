@@ -23,7 +23,7 @@
  * Changes permissions on file, e.g.:
  *
  *     CHECK_NE(-1, chmod("foo/bar.txt", 0644));
- *     CHECK_NE(-1, chmod("o/default/program.com", 0755));
+ *     CHECK_NE(-1, chmod("o/default/program", 0755));
  *     CHECK_NE(-1, chmod("privatefolder/", 0700));
  *
  * The esoteric bits generally available on System Five are:

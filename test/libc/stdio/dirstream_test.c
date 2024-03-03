@@ -27,7 +27,6 @@
 #include "libc/limits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
@@ -424,7 +423,7 @@ static int walk(const char *fpath,      //
 
 TEST(dirstream, walk) {
   ASSERT_SYS(0, 0, nftw("/zip", walk, 128, FTW_PHYS | FTW_DEPTH));
-  ASSERT_STREQ("FTW_F  /zip/echo.com\n"
+  ASSERT_STREQ("FTW_F  /zip/echo\n"
                "FTW_F  /zip/libc/testlib/hyperion.txt\n"
                "FTW_F  /zip/libc/testlib/moby.txt\n"
                "FTW_DP /zip/libc/testlib\n"

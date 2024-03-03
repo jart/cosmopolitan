@@ -23,19 +23,19 @@
 #include "libc/x/x.h"
 
 TEST(stripexts, test) {
-  char s[] = "foo/bar.com.dbg";
+  char s[] = "foo/bar.dbg";
   EXPECT_STREQ("foo/bar", stripexts(s));
 }
 
 TEST(stripexts, test2) {
-  char s[] = "foo/bar.com.dbg";
+  char s[] = "foo/bar.dbg";
   EXPECT_STREQ("bar", stripexts(basename(s)));
 }
 
 TEST(xstripexts, test) {
-  EXPECT_STREQ("foo/bar", gc(xstripexts("foo/bar.com.dbg")));
+  EXPECT_STREQ("foo/bar", gc(xstripexts("foo/bar.dbg")));
 }
 
 TEST(xstripexts, test2) {
-  EXPECT_STREQ("bar", gc(xstripexts(basename("foo/bar.com.dbg"))));
+  EXPECT_STREQ("bar", gc(xstripexts(basename("foo/bar.dbg"))));
 }

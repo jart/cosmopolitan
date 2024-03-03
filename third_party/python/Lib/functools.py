@@ -816,5 +816,5 @@ def singledispatch(func):
     return wrapper
 
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import _functools

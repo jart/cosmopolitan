@@ -229,6 +229,6 @@ class TestFilemodeCStat(TestFilemode, unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
   import stat
   import _stat

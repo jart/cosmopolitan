@@ -42,7 +42,7 @@
 #ifdef __x86_64__
 
 __static_yoink("zipos");
-__static_yoink("o/" MODE "/test/tool/net/redbean-tester.com");
+__static_yoink("o/" MODE "/test/tool/net/redbean-tester");
 
 int port;
 
@@ -53,9 +53,9 @@ void SetUpOnce(void) {
   if (IsWindows()) return;
   testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
-  ASSERT_NE(-1, (fdin = open("/zip/o/" MODE "/test/tool/net/redbean-tester.com",
+  ASSERT_NE(-1, (fdin = open("/zip/o/" MODE "/test/tool/net/redbean-tester",
                              O_RDONLY)));
-  ASSERT_NE(-1, (fdout = creat("bin/redbean-tester.com", 0755)));
+  ASSERT_NE(-1, (fdout = creat("bin/redbean-tester", 0755)));
   for (;;) {
     ASSERT_NE(-1, (n = read(fdin, buf, sizeof(buf))));
     if (!n) break;
@@ -118,8 +118,8 @@ TEST(redbean, testOptions) {
     close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    execv("bin/redbean-tester.com",
-          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l127.0.0.1",
                           __strace > 0 ? "--strace" : 0, 0});
     _exit(127);
   }
@@ -157,8 +157,8 @@ TEST(redbean, testPipeline) {
     close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    execv("bin/redbean-tester.com",
-          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l127.0.0.1",
                           __strace > 0 ? "--strace" : 0, 0});
     _exit(127);
   }
@@ -205,8 +205,8 @@ TEST(redbean, testContentRange) {
     close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    execv("bin/redbean-tester.com",
-          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l127.0.0.1",
                           __strace > 0 ? "--strace" : 0, 0});
     _exit(127);
   }

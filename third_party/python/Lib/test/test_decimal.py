@@ -47,7 +47,7 @@ try:
 except ImportError:
     threading = None
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import decimal
     import fractions
 

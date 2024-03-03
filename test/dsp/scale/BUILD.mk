@@ -11,13 +11,13 @@ TEST_DSP_SCALE_OBJS =					\
 	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_DSP_SCALE_COMS =					\
-	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_DSP_SCALE_SRCS:%.c=o/$(MODE)/%)
 
 TEST_DSP_SCALE_TESTS =					\
-	$(TEST_DSP_SCALE_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_DSP_SCALE_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_DSP_SCALE_CHECKS =					\
-	$(TEST_DSP_SCALE_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_DSP_SCALE_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_DSP_SCALE_DIRECTDEPS =				\
 	DSP_CORE					\
@@ -42,7 +42,7 @@ o/$(MODE)/test/dsp/scale/scale.pkg:			\
 		$(TEST_DSP_SCALE_OBJS)			\
 		$(foreach x,$(TEST_DSP_SCALE_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/dsp/scale/%.com.dbg:			\
+o/$(MODE)/test/dsp/scale/%.dbg:				\
 		$(TEST_DSP_SCALE_DEPS)			\
 		o/$(MODE)/test/dsp/scale/%.o		\
 		o/$(MODE)/test/dsp/scale/scale.pkg	\

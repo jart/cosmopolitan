@@ -223,7 +223,7 @@ PyDoc_STRVAR(blackhole_doc,
 --\n\n\
 Blackholes token for IP address.\n\
 \n\
-Bans IP address by sending it to blackholed.com. Returns 0 on success\n\
+Bans IP address by sending it to blackholed. Returns 0 on success\n\
 or errno on error. To test if blackholed is running, ban 0.0.0.0.");
 
 static PyObject *

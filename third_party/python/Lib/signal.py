@@ -78,7 +78,7 @@ if 'sigwait' in _globals:
 
 del _globals, _wraps
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     ITIMER_PROF = 0
     ITIMER_REAL = 0
     ITIMER_VIRTUAL = 0

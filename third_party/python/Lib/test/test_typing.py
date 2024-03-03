@@ -29,7 +29,7 @@ try:
 except ImportError:
     import collections as collections_abc  # Fallback for PY3.2.
 
-if __name__ == 'PYOBJ.COM':
+if __name__ == 'PYOBJ':
     import test.ann_module
     import test.ann_module2
     import test.ann_module3

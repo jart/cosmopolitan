@@ -81,10 +81,10 @@ void testlib_runtestcases(const testfn_t *start, const testfn_t *end,
   // getpid() calls are inserted to help visually see tests in traces
   // which can be performed on Linux, FreeBSD, OpenBSD, and XNU:
   //
-  //     strace -f o/default/test.com |& less
-  //     truss o/default/test.com |& less
-  //     ktrace -f trace o/default/test.com </dev/null; kdump -f trace | less
-  //     dtruss o/default/test.com |& less
+  //     strace -f o/default/test |& less
+  //     truss o/default/test |& less
+  //     ktrace -f trace o/default/test </dev/null; kdump -f trace | less
+  //     dtruss o/default/test |& less
   //
   // Test cases are iterable via a decentralized section. Your TEST()
   // macro inserts .testcase.SUITENAME sections into the binary which

@@ -40,10 +40,10 @@
   "-march=native flag printer v0.1\n" \
   "copyright 2023 justine alexandra roberts tunney\n"
 
-#define USAGE                        \
-  "usage: march-native.com [-hvc]\n" \
-  "  -h          show help\n"        \
-  "  -v          show version\n"     \
+#define USAGE                    \
+  "usage: march-native [-hvc]\n" \
+  "  -h          show help\n"    \
+  "  -v          show version\n" \
   "  -c          assume we're using clang (not gcc)\n"
 
 static bool isclang;

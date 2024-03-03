@@ -1,11 +1,11 @@
 #!/bin/sh
 [ -d libc/str ] || exit
-[ -x o//examples/curl.com ] || make -j8 o//examples/curl.com || exit
+[ -x o//tool/curl/curl ] || make -j8 o//tool/curl/curl || exit
 mkdir -p o/tmp/ || exit
 
 shineget() {
   echo $2
-  o//examples/curl.com $2 >o/tmp/$$ || exit
+  o//tool/curl/curl $2 >o/tmp/$$ || exit
   mv o/tmp/$$ $1 || exit
 }
 

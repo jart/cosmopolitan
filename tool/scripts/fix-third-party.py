@@ -1,4 +1,4 @@
-#!/usr/bin/env python.com
+#!/usr/bin/env python
 #
 # fix-third-party.py
 # normalizes third party codebases to cosmopolitan style

@@ -48,7 +48,7 @@ __static_yoink("_PyUnicode_GetCode");
 #define MANUAL "\
 SYNOPSIS\n\
 \n\
-  pycomp.com [FLAGS] SOURCE\n\
+  pycomp [FLAGS] SOURCE\n\
 \n\
 OVERVIEW\n\
 \n\
@@ -65,7 +65,7 @@ FLAGS\n\
 \n\
 EXAMPLE\n\
 \n\
-  pycomp.com -o foo/__pycache__/__init__.cpython-3.6.pyc foo/__init__.py\n\
+  pycomp -o foo/__pycache__/__init__.cpython-3.6.pyc foo/__init__.py\n\
 \n"
 
 int optimize;

@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -81,14 +80,14 @@ TEST(system, exit) {
 }
 
 TEST(system, testStdoutRedirect) {
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, system("./echo.com hello >hello.txt"));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, system("./echo hello >hello.txt"));
   EXPECT_STREQ("hello\n", gc(xslurp("hello.txt", 0)));
 }
 
 TEST(system, testStdoutRedirect_withSpacesInFilename) {
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, system("./echo.com hello >\"hello there.txt\""));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, system("./echo hello >\"hello there.txt\""));
   EXPECT_STREQ("hello\n", gc(xslurp("hello there.txt", 0)));
 }
 
@@ -109,10 +108,10 @@ TEST(system, testStderrRedirect_toStdout) {
   buf[1] = 0;
   buf[2] = 0;
   buf[3] = 0;
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  testlib_extract("/zip/echo", "echo", 0755);
   ASSERT_NE(-1, dup2(1, 2));
   success = false;
-  if (GETEXITSTATUS(system("./echo.com aaa 2>&1")) == 0) {
+  if (GETEXITSTATUS(system("./echo aaa 2>&1")) == 0) {
     success = read(pipefd[0], buf, 4) == (4);
   }
   ASSERT_NE(-1, dup2(stderrBack, 2));
@@ -176,17 +175,17 @@ TEST(system, kill) {
 }
 
 TEST(system, exitStatusPreservedAfterSemiColon) {
-  testlib_extract("/zip/false.com", "false.com", 0755);
+  testlib_extract("/zip/false", "false", 0755);
   ASSERT_EQ(1, GETEXITSTATUS(system("false;")));
   ASSERT_EQ(1, GETEXITSTATUS(system("false; ")));
-  ASSERT_EQ(1, GETEXITSTATUS(system("./false.com;")));
-  ASSERT_EQ(1, GETEXITSTATUS(system("./false.com;")));
+  ASSERT_EQ(1, GETEXITSTATUS(system("./false;")));
+  ASSERT_EQ(1, GETEXITSTATUS(system("./false;")));
   CaptureStdout();
   ASSERT_EQ(0, GETEXITSTATUS(system("false; echo $?")));
   char buf[9] = {0};
   ASSERT_EQ(2, read(pipefd[0], buf, 8));
   ASSERT_STREQ("1\n", buf);
-  ASSERT_EQ(0, GETEXITSTATUS(system("./false.com; echo $?")));
+  ASSERT_EQ(0, GETEXITSTATUS(system("./false; echo $?")));
   ASSERT_EQ(2, read(pipefd[0], buf, 8));
   ASSERT_STREQ("1\n", buf);
   ASSERT_EQ(0, GETEXITSTATUS(system("echo -n hi")));
@@ -222,17 +221,17 @@ TEST(system, allowsLoneCloseCurlyBrace) {
   ASSERT_EQ(5, read(pipefd[0], buf, 5));
   ASSERT_STREQ("aaa}\n", buf);
   bzero(buf, 6);
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, GETEXITSTATUS(system("./echo.com \"aaa\"}")));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, GETEXITSTATUS(system("./echo \"aaa\"}")));
   ASSERT_EQ(5, read(pipefd[0], buf, 5));
   ASSERT_STREQ("aaa}\n", buf);
   RestoreStdout();
 }
 
 TEST(system, glob) {
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, system("./ec*.com aaa"));
-  ASSERT_EQ(0, system("./ec?o.com aaa"));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, system("./ec* aaa"));
+  ASSERT_EQ(0, system("./ec?o aaa"));
 }
 
 TEST(system, env) {
@@ -253,8 +252,8 @@ TEST(system, env) {
 TEST(system, pipelineCanOutputToFile) {
   ASSERT_EQ(0, GETEXITSTATUS(system("echo hello | tr a-z A-Z >res")));
   ASSERT_STREQ("HELLO\n", gc(xslurp("res", 0)));
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, GETEXITSTATUS(system("./echo.com hello | tr a-z A-Z >res")));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, GETEXITSTATUS(system("./echo hello | tr a-z A-Z >res")));
   ASSERT_STREQ("HELLO\n", gc(xslurp("res", 0)));
 }
 
@@ -267,11 +266,11 @@ TEST(system, pipelineCanOutputBackToSelf) {
   ASSERT_EQ(0, GETEXITSTATUS(system("echo hello | exec tr a-z A-Z")));
   ASSERT_SYS(0, 6, read(pipefd[0], buf, 16));
   ASSERT_STREQ("HELLO\n", buf);
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, GETEXITSTATUS(system("./echo.com hello | tr a-z A-Z")));
+  testlib_extract("/zip/echo", "echo", 0755);
+  ASSERT_EQ(0, GETEXITSTATUS(system("./echo hello | tr a-z A-Z")));
   ASSERT_SYS(0, 6, read(pipefd[0], buf, 16));
   ASSERT_STREQ("HELLO\n", buf);
-  ASSERT_EQ(0, GETEXITSTATUS(system("./echo.com hello | exec tr a-z A-Z")));
+  ASSERT_EQ(0, GETEXITSTATUS(system("./echo hello | exec tr a-z A-Z")));
   ASSERT_SYS(0, 6, read(pipefd[0], buf, 16));
   ASSERT_STREQ("HELLO\n", buf);
   RestoreStdout();
@@ -280,10 +279,10 @@ TEST(system, pipelineCanOutputBackToSelf) {
 int system2(const char *);
 
 BENCH(system, bench) {
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
-  EZBENCH2("system cmd", donothing, system("./echo.com hi >/dev/null"));
+  testlib_extract("/zip/echo", "echo", 0755);
+  EZBENCH2("system cmd", donothing, system("./echo hi >/dev/null"));
   EZBENCH2("systemvpe cmd", donothing,
-           systemvpe("./echo.com", (char *[]){"./echo.com", "hi", 0}, 0));
+           systemvpe("./echo", (char *[]){"./echo", "hi", 0}, 0));
   EZBENCH2("cocmd echo", donothing, system("echo hi >/dev/null"));
   EZBENCH2("cocmd exit", donothing, system("exit"));
 }
