@@ -13,6 +13,11 @@ libcesque int bsrll(long long) pureconst;
 #define bsrll(x) (__builtin_clzll(x) ^ (sizeof(long long) * 8 - 1))
 #endif
 
+/* deprecated */
+#define _bsr(x)   bsr(x)
+#define _bsrl(x)  bsrl(x)
+#define _bsrll(x) bsrll(x)
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_BSR_H_ */
 #endif /* _COSMO_SOURCE */

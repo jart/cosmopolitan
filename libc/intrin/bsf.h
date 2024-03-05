@@ -13,6 +13,11 @@ libcesque int bsfll(long long) pureconst;
 #define bsfll(x) __builtin_ctzll(x)
 #endif
 
+/* deprecated */
+#define _bsf(x)   bsf(x)
+#define _bsfl(x)  bsfl(x)
+#define _bsfll(x) bsfll(x)
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_BSF_H_ */
 #endif /* _COSMO_SOURCE */
