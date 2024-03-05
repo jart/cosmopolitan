@@ -31,7 +31,7 @@ int PrintChar(int fd, int s) {
     if (c == L'\n') Flush(fd);
   } else {
     d = c;
-    e = kTpEnc[_bsrl(d) - 7];
+    e = kTpEnc[bsrl(d) - 7];
     i = n = e & 255;
     do g_buffer[fd][bp[fd] + i--] = 0200 | (d & 077);
     while (d >>= 6, i);

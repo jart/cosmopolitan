@@ -41,7 +41,7 @@ void __cxa_printexits(FILE *f, void *pred) {
     do {
       mask = b->mask;
       while (mask) {
-        i = _bsf(mask);
+        i = bsf(mask);
         mask &= ~(1u << i);
         if (!pred || pred == b->p[i].pred) {
           symbol = GetSymbolByAddr((intptr_t)b->p[i].fp);

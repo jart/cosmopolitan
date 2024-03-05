@@ -93,7 +93,7 @@ int Census(struct Gc *G) {
     if (!~G->M[j]) {
       l += DWBITS;
     } else {
-      l += _bsfl(~G->M[j]);
+      l += bsfl(~G->M[j]);
       break;
     }
   }
@@ -124,7 +124,7 @@ void Sweep(struct Gc *G) {
   for (; i < G->n; ++i) {
     m = G->M[i];
     if (~m) {
-      j = _bsfl(~m);
+      j = bsfl(~m);
       m >>= j;
       m <<= j;
       d -= j;
@@ -136,7 +136,7 @@ void Sweep(struct Gc *G) {
   }
   for (; i < G->n; b -= DWBITS, m = G->M[++i]) {
     for (; m; m &= ~((dword)1 << j)) {
-      a = b + ~(j = _bsfl(m));
+      a = b + ~(j = bsfl(m));
       Set(--d, MAKE(Relocate(G, LO(Get(a))), Relocate(G, HI(Get(a)))));
       SetShadow(d, MAKE(LO(GetShadow(a)), Relocate(G, HI(GetShadow(a)))));
     }

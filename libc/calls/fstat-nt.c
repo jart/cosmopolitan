@@ -71,7 +71,7 @@ static textwindows long GetSizeOfReparsePoint(int64_t fh) {
       }
     }
     if (x >= 0200) {
-      z += _bsrl(tpenc(x)) >> 3;
+      z += bsrl(tpenc(x)) >> 3;
     }
     ++z;
   }

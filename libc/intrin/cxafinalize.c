@@ -43,7 +43,7 @@ StartOverLocked:
     for (;;) {
       mask = b->mask;
       while (mask) {
-        i = _bsf(mask);
+        i = bsf(mask);
         mask &= ~(1u << i);
         if (!pred || pred == b->p[i].pred) {
           b->mask &= ~(1u << i);

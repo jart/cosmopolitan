@@ -2028,7 +2028,7 @@ static int ParseModrm(struct As *a, int *disp) {
         if (((reg & 070) >> 3) == 2) modrm |= HASASZ;  // asz
         if (IsComma(a)) {
           ++a->i;
-          modrm |= (_bsr(GetInt(a)) & 3) << 6;
+          modrm |= (bsr(GetInt(a)) & 3) << 6;
         }
       }
       ConsumePunct(a, ')');

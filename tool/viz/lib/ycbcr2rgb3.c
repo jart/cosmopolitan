@@ -84,11 +84,11 @@ struct YCbCr {
 };
 
 static unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+  return x > 1 ? 2ul << bsrl(x - 1) : x ? 1 : 0;
 }
 
 static unsigned long rounddown2pow(unsigned long x) {
-  return x ? 1ul << _bsrl(x) : 0;
+  return x ? 1ul << bsrl(x) : 0;
 }
 
 /**

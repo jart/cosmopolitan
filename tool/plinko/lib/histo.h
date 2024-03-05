@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 #define HISTO(H, X)                \
   do {                             \
     uint64_t x_ = X;               \
-    x_ = x_ ? _bsrl(x_) + 1 : x_;  \
+    x_ = x_ ? bsrl(x_) + 1 : x_;   \
     ++H[MIN(x_, ARRAYLEN(H) - 1)]; \
   } while (0)
 

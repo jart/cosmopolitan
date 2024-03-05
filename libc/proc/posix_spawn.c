@@ -587,7 +587,7 @@ errno_t posix_spawn(int *pid, const char *path,
     if (flags & POSIX_SPAWN_SETRLIMIT) {
       int rlimset = (*attrp)->rlimset;
       while (rlimset) {
-        int resource = _bsf(rlimset);
+        int resource = bsf(rlimset);
         rlimset &= ~(1u << resource);
         if (setrlimit(resource, (*attrp)->rlim + resource)) {
           // MacOS ARM64 RLIMIT_STACK always returns EINVAL

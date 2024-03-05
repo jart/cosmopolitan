@@ -74,11 +74,13 @@
            "_OPENMP"))
 
         (cuda
-         '("__NVCC__"))
+         '("__NVCC__"
+           "__CUDA_ARCH__"))
 
         (hip
          '("__HIP__"
            "__HIPCC__"
+           "__HIP_PLATFORM_AMD__"
            "__HIP_DEVICE_COMPILE__"
            "__AMD__"
            "__AMDGCN__"

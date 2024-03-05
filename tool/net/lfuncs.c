@@ -342,7 +342,7 @@ int LuaPopcnt(lua_State *L) {
 int LuaBsr(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, _bsrl(x));
+    lua_pushinteger(L, bsrl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");
@@ -353,7 +353,7 @@ int LuaBsr(lua_State *L) {
 int LuaBsf(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, _bsfl(x));
+    lua_pushinteger(L, bsfl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");

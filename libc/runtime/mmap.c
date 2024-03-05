@@ -73,7 +73,7 @@
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
 static inline pureconst unsigned long __rounddown2pow(unsigned long x) {
-  return x ? 1ul << _bsrl(x) : 0;
+  return x ? 1ul << bsrl(x) : 0;
 }
 
 static wontreturn void __mmap_die(const char *s) {

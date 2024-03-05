@@ -9,7 +9,7 @@ implicit_functions_are_long() {
 }
 
 external_functions_are_long() {
-  if (_bsrl(0x0001000000000000) != 48) {
+  if (bsrl(0x0001000000000000) != 48) {
     __builtin_trap();
   }
 }

@@ -21,7 +21,7 @@
 
 const char *GetOsName(int os) {
   if (os) {
-    switch (_bsr(os)) {
+    switch (bsr(os)) {
       case 0:
         return "LINUX";
       case 1:

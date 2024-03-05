@@ -1040,7 +1040,7 @@ static privileged char *FixCpy(char p[17], uint64_t x, int k) {
 }
 
 static privileged char *HexCpy(char p[17], uint64_t x) {
-  return FixCpy(p, x, ROUNDUP(x ? _bsrl(x) + 1 : 1, 4));
+  return FixCpy(p, x, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
 }
 
 static privileged int GetPid(void) {

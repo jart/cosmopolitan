@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/stdio/append.h"
 
 #define W sizeof(size_t)
@@ -59,7 +59,7 @@ ssize_t appendw(char **b, uint64_t w) {
   char *p, *q;
   struct appendz z;
   z = appendz((p = *b));
-  l = w ? (_bsrl(w) >> 3) + 1 : 1;
+  l = w ? (bsrl(w) >> 3) + 1 : 1;
   n = ROUNDUP(z.i + 8 + 1, 8) + W;
   if (n > z.n) {
     if (!z.n) z.n = W * 2;

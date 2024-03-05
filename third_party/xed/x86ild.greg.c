@@ -878,7 +878,7 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
 }
 
 privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
-  switch (s << 2 | _bsr(n)) {
+  switch (s << 2 | bsr(n)) {
     case 0b000:
       return *p;
     case 0b100:

@@ -82,8 +82,8 @@ void *BilinearScale(long dcw, long dyw, long dxw,
       DCHECK_LE(sxn, sxw);
       DCHECK_LE(dyn, dyw);
       DCHECK_LE(dxn, dxw);
-      DCHECK_LT(_bsrl(cn) + _bsrl(syn) + _bsrl(sxn), 32);
-      DCHECK_LT(_bsrl(cn) + _bsrl(dyn) + _bsrl(dxn), 32);
+      DCHECK_LT(bsrl(cn) + bsrl(syn) + bsrl(sxn), 32);
+      DCHECK_LT(bsrl(cn) + bsrl(dyn) + bsrl(dxn), 32);
       BilinearScaler(dcw, dyw, dxw, dst, scw, syw, sxw, src, c0, cn, dyn, dxn,
                      syn, sxn, ry, rx, oy, ox,
                      gc(xmemalign(64, ROUNDUP(sizeof(int) * (dyn + 1), 64))),

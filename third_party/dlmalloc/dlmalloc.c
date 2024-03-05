@@ -935,7 +935,7 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
   if (alignment <  MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
     alignment = MIN_CHUNK_SIZE;
   /* alignment is 32+ bytes rounded up to nearest two power */
-  alignment = 2ul << _bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
+  alignment = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0)  { /* Test isn't needed but avoids compiler warning */
       MALLOC_FAILURE_ACTION;

@@ -32,7 +32,7 @@ static int tpdecode(const char *s, wint_t *out) {
     if ((wc = s[i++] & 255) == -1) return -1;
   }
   if (!(0 <= wc && wc <= 0x7F)) {
-    msb = wc < 252 ? _bsr(~wc & 0xff) : 1;
+    msb = wc < 252 ? bsr(~wc & 0xff) : 1;
     need = 7 - msb;
     wc &= ((1u << msb) - 1) | 0003;
     for (j = 1; j < need; ++j) {

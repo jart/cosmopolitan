@@ -202,8 +202,8 @@ void *Gyarados(long dyw, long dxw, int dst[dyw][dxw], long syw, long sxw,
       CHECK_LE(sxn, sxw);
       CHECK_LE(dyn, dyw);
       CHECK_LE(dxn, dxw);
-      CHECK_LT(_bsrl(syn) + _bsrl(sxn), 32);
-      CHECK_LT(_bsrl(dyn) + _bsrl(dxn), 32);
+      CHECK_LT(bsrl(syn) + bsrl(sxn), 32);
+      CHECK_LT(bsrl(dyn) + bsrl(dxn), 32);
       CHECK_LE(dyw, 0x7fff);
       CHECK_LE(dxw, 0x7fff);
       CHECK_LE(syw, 0x7fff);

@@ -45,7 +45,7 @@ char *FormatBinary64(char p[hasatleast 67], uint64_t x, char z) {
       *p++ = '0';
       *p++ = 'b';
     }
-    i = PickGoodWidth(_bsrl(x));
+    i = PickGoodWidth(bsrl(x));
     do {
       b = 1;
       b <<= i;

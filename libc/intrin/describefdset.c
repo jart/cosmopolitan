@@ -43,7 +43,7 @@ const char *(DescribeFdSet)(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
   for (int fd = 0; fd < nfds; fd += 64) {
     uint64_t w = fds->fds_bits[fd >> 6];
     while (w) {
-      unsigned m = _bsr(w);
+      unsigned m = bsr(w);
       w &= ~((uint64_t)1 << m);
       if (fd + m < nfds) {
         if (!gotsome) {

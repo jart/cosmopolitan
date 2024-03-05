@@ -680,7 +680,7 @@ static void convert_universal_chars(char *p) {
           p += 16;
           q += 16;
         } else {
-          m = _bsf(m);
+          m = bsf(m);
           memmove(q, p, m);
           p += m;
           q += m;

@@ -67,7 +67,7 @@ void canonicalize_newline(char *p) {
           p += 16;
           q += 16;
         } else {
-          m = _bsf(m);
+          m = bsf(m);
           memmove(q, p, m);
           p += m;
           q += m;
@@ -126,7 +126,7 @@ void remove_backslash_newline(char *p) {
           i += 16;
           j += 16;
         } else {
-          m = _bsf(m);
+          m = bsf(m);
           memmove(p + j, p + i, m);
           i += m;
           j += m;

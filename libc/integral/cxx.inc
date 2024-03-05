@@ -18,12 +18,14 @@
 #if 1
 template <bool _P, typename _T, typename _U>
 struct __cxx_choose_expr {
-  __cxx_choose_expr(_T _a, _U _b) : _value(_a) {}
+  __cxx_choose_expr(_T _a, _U _b) : _value(_a) {
+  }
   const _T _value;
 };
 template <typename _T, typename _U>
 struct __cxx_choose_expr<false, _T, _U> {
-  __cxx_choose_expr(_T _a, _U _b) : _value(_b) {}
+  __cxx_choose_expr(_T _a, _U _b) : _value(_b) {
+  }
   const _U _value;
 };
 #define __builtin_choose_expr(X, A, B) \
@@ -31,4 +33,9 @@ struct __cxx_choose_expr<false, _T, _U> {
 #else
 #define __builtin_choose_expr(X, A, B) ((X) ? (A) : (B))
 #endif
+#endif
+
+#ifdef __aarch64__
+/* todo jart whyyyy */
+#define _Float16 __fp16
 #endif

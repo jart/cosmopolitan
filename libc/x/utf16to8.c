@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/packsswb.h"
 #include "libc/intrin/pandn.h"
@@ -26,6 +25,7 @@
 #include "libc/intrin/punpckhbw.h"
 #include "libc/intrin/punpcklbw.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
@@ -78,7 +78,7 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
       } else {
         w = tpenc(x);
         WRITE64LE(q, w);
-        q += _bsr(w) >> 3;
+        q += bsr(w) >> 3;
         q += 1;
       }
     }

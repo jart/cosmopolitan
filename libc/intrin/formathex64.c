@@ -48,7 +48,7 @@ char *FormatHex64(char p[hasatleast 19], uint64_t x, char z) {
       *p++ = '0';
       *p++ = 'x';
     }
-    i = PickGoodWidth(_bsrl(x), z);
+    i = PickGoodWidth(bsrl(x), z);
     do {
       *p++ = "0123456789abcdef"[(x >> (i -= 4)) & 15];
     } while (i);

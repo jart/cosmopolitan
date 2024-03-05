@@ -58,7 +58,7 @@ int __cxa_atexit(void *fp, void *arg, void *pred) {
       return enomem();
     }
   }
-  i = _bsr(~b->mask);
+  i = bsr(~b->mask);
   b->mask |= 1u << i;
   b->p[i].fp = fp;
   b->p[i].arg = arg;

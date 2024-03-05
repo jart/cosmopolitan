@@ -34,7 +34,7 @@ uint64_t tpenc(uint32_t c) {
   int e, n;
   uint64_t w;
   if (0 <= c && c <= 127) return c;
-  e = kTpEnc[_bsr(c) - 7];
+  e = kTpEnc[bsr(c) - 7];
   n = e & 0xff;
   w = 0;
   do {

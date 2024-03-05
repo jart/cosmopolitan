@@ -2147,7 +2147,7 @@ static void FreeStrings(struct Strings *l) {
 }
 
 static unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+  return x > 1 ? 2ul << bsrl(x - 1) : x ? 1 : 0;
 }
 
 static void IndexAssets(void) {
@@ -2943,7 +2943,7 @@ static int GetDecimalWidth(long x) {
 }
 
 static int GetOctalWidth(int x) {
-  return !x ? 1 : x < 8 ? 2 : 1 + _bsr(x) / 3;
+  return !x ? 1 : x < 8 ? 2 : 1 + bsr(x) / 3;
 }
 
 static const char *DescribeCompressionRatio(char rb[8], uint8_t *zcf) {

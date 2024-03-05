@@ -281,7 +281,7 @@ static int CompareDoxIndexEntry(const void *p1, const void *p2, void *arg) {
 }
 
 static unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+  return x > 1 ? 2ul << bsrl(x - 1) : x ? 1 : 0;
 }
 
 static void IndexDox(struct Dox *dox) {

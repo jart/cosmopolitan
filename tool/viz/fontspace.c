@@ -51,7 +51,7 @@ void PrintBar(unsigned char *p, size_t n) {
   }
   for (i = 0; i < j; ++i) {
     if (p[i]) {
-      fputwc(u"░░▒▒▓▓██"[_bsr(p[i])], stdout);
+      fputwc(u"░░▒▒▓▓██"[bsr(p[i])], stdout);
     } else {
       fputc(' ', stdout);
     }

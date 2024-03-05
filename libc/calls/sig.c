@@ -97,7 +97,7 @@ static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
   for (;;) {
     pending = atomic_load_explicit(sigs, memory_order_acquire);
     if ((deliverable = pending & ~masked)) {
-      sig = _bsfl(deliverable) + 1;
+      sig = bsfl(deliverable) + 1;
       bit = 1ull << (sig - 1);
       if (atomic_fetch_and_explicit(sigs, ~bit, memory_order_acq_rel) & bit) {
         return sig;

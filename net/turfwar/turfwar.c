@@ -1538,7 +1538,7 @@ bool GeneratePlot(struct Asset *out, long block, long cash) {
   CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
   area = XN * YN;
   mask = area - 1;
-  clump = 32 - _bsr(area) - 8;
+  clump = 32 - bsr(area) - 8;
   while ((rc = DbStep(stmt)) != SQLITE_DONE) {
     if (rc != SQLITE_ROW) CHECK_DB(rc);
     ip = sqlite3_column_int64(stmt, 0);

@@ -55,7 +55,7 @@ ssize_t appendr(char **b, size_t i) {
   z = appendz((p = *b));
   if (i != z.i || !p) {
     n = ROUNDUP(i + 1, 8) + W;
-    if (n > z.n || _bsrl(n) < _bsrl(z.n)) {
+    if (n > z.n || bsrl(n) < bsrl(z.n)) {
       if ((p = realloc(p, n))) {
         z.n = malloc_usable_size(p);
         unassert(!(z.n & (W - 1)));

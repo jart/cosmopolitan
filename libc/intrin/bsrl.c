@@ -29,7 +29,7 @@ static const char kDebruijn[64] = {
  * Returns binary logarithm of 𝑥.
  *
  *                           ctz(𝑥)         31^clz(𝑥)   clz(𝑥)
- *       uint32 𝑥  _bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)  _bsr(𝑥) lzcnt(𝑥)
+ *       uint32 𝑥   bsf(𝑥) tzcnt(𝑥)   ffs(𝑥)   bsr(𝑥) lzcnt(𝑥)
  *     0x00000000      wut       32        0      wut       32
  *     0x00000001        0        0        1        0       31
  *     0x80000001        0        0        1       31        0
@@ -42,7 +42,7 @@ static const char kDebruijn[64] = {
  * @param x is a 64-bit integer
  * @return number in range 0..63 or undefined if 𝑥 is 0
  */
-int(_bsrl)(long x) {
+int(bsrl)(long x) {
   x |= x >> 1;
   x |= x >> 2;
   x |= x >> 4;
@@ -52,4 +52,4 @@ int(_bsrl)(long x) {
   return kDebruijn[(x * 0x03f79d71b4cb0a89ull) >> 58];
 }
 
-__weak_reference(_bsrl, _bsrll);
+__weak_reference(bsrl, bsrll);

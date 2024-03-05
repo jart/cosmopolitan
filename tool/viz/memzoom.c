@@ -190,7 +190,7 @@ static void LeaveScreen(void) {
 }
 
 static unsigned long rounddown2pow(unsigned long x) {
-  return x ? 1ul << _bsrl(x) : 0;
+  return x ? 1ul << bsrl(x) : 0;
 }
 
 static void GetTtySize(void) {
