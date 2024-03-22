@@ -180,6 +180,10 @@ for x; do
     # no support for building dynamic shared objects yet. reports
     # indicate that ignoring these flags, helps let autoconf know
     continue
+  elif [ x"$x" = x"-fpie" ] || [ x"$x" = x"-pie" ]; then
+    # no support for position independent executables
+    # https://github.com/jart/cosmopolitan/issues/1126
+    continue
   elif [ x"$x" = x"-Werror" ] || \
        [ x"$x" = x"-pedantic-errors" ]; then
     # this toolchain is intended for building other people's code

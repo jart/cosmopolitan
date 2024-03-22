@@ -142,6 +142,10 @@ for x; do
     continue
   elif [ x"$x" = x"-fPIC" ]; then
     continue
+  elif [ x"$x" = x"-fpie" ] || [ x"$x" = x"-pie" ]; then
+    # no support for position independent executables
+    # https://github.com/jart/cosmopolitan/issues/1126
+    continue
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-pie" ] ||
        [ x"$x" = x"-shared" ] ||
