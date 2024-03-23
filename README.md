@@ -248,7 +248,7 @@ server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 | Intel           | Core        | 2006  |
 | Linux           | 2.6.18      | 2007  |
 | Windows         | 8 [1]       | 2012  |
-| Mac OS X        | 15.6        | 2018  |
+| Mac OS X        | 10.15.6     | 2018  |
 | OpenBSD         | 7           | 2021  |
 | FreeBSD         | 13          | 2020  |
 | NetBSD          | 9.2         | 2021  |
