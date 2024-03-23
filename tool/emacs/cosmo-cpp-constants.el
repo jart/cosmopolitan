@@ -16,6 +16,7 @@
     "__GNUC_PATCHLEVEL__"
     "__GNUC__"
     "__APPLE__"
+    "__linux__"
     "__HAIKU__"
     "__CYGWIN__"
     "__EMSCRIPTEN__"
@@ -187,7 +188,23 @@
     "_GNU_SOURCE"
     "_BSD_SOURCE"
     "_COSMO_SOURCE"
-    "_XOPEN_SOURCE"))
+    "_XOPEN_SOURCE"
+    "__FLT16_HAS_QUIET_NAN__"
+    "__FLT16_DIG__"
+    "__FLT16_MIN_EXP__"
+    "__FLT16_MAX_10_EXP__"
+    "__FLT16_DECIMAL_DIG__"
+    "__FLT16_DENORM_MIN__"
+    "__FLT16_MIN_10_EXP__"
+    "__FLT16_IS_IEC_60559__"
+    "__FLT16_MAX_EXP__"
+    "__FLT16_EPSILON__"
+    "__FLT16_NORM_MAX__"
+    "__FLT16_MAX__"
+    "__FLT16_HAS_INFINITY__"
+    "__FLT16_MANT_DIG__"
+    "__FLT16_MIN__"
+    "__FLT16_HAS_DENORM__"))
 
 (defconst cosmo-cpp-constants-cosmopolitan
  '("__SAUCE__"
