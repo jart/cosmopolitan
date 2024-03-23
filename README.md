@@ -242,16 +242,16 @@ server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 
 ## Support Vector
 
-| Platform        | Min Version | Circa |
-| :---            | ---:        | ---:  |
-| AMD             | K8 Venus    | 2005  |
-| Intel           | Core        | 2006  |
-| Linux           | 2.6.18      | 2007  |
-| Windows         | 8 [1]       | 2012  |
-| Mac OS X        | 15.6        | 2018  |
-| OpenBSD         | 7           | 2021  |
-| FreeBSD         | 13          | 2020  |
-| NetBSD          | 9.2         | 2021  |
+| Platform       | Min Version | Circa |
+| :---           | ---:        | ---:  |
+| AMD            | K8 Venus    | 2005  |
+| Intel          | Core        | 2006  |
+| Linux          | 2.6.18      | 2007  |
+| Windows        | 8 [1]       | 2012  |
+| Darwin (macOS) | 23.1.0+     | 2023  |
+| OpenBSD        | 7           | 2021  |
+| FreeBSD        | 13          | 2020  |
+| NetBSD         | 9.2         | 2021  |
 
 [1] See our [vista branch](https://github.com/jart/cosmopolitan/tree/vista)
     for a community supported version of Cosmopolitan that works on Windows
