@@ -100,6 +100,16 @@ float fmaf(float x, float y, float z)
 
 #else
 
+#ifdef __x86_64__
+	if (X86_HAVE(FMA)) {
+		asm("vfmadd132ss\t%1,%2,%0" : "+x"(x) : "x"(y), "x"(z));
+		return x;
+	} else if (X86_HAVE(FMA4)) {
+		asm("vfmaddss\t%3,%2,%1,%0" : "=x"(x) : "x"(x), "x"(y), "x"(z));
+		return x;
+	}
+#endif
+
 	/* A double has more than twice as much precision than a float,
 	   so direct double-precision arithmetic suffices, except where
 	   double rounding occurs. */
