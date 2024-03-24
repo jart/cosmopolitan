@@ -122,6 +122,8 @@ for x; do
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
     INTENT=cc
+  elif [ x"$x" = x"-S" ]; then
+    INTENT=s
   elif [ x"$x" = x"-s" ]; then
     SFLAG=1
     continue
@@ -204,7 +206,7 @@ fi
 
 if [ $INTENT = cpp ]; then
   set -- "$CC" $PLATFORM $CPPFLAGS "$@"
-elif [ $INTENT = cc ]; then
+elif [ $INTENT = cc ] || [ $INTENT = s ]; then
   set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
 else
   set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS $CRT "$@" $LDFLAGS $LDLIBS $PRECIOUS
