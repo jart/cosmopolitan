@@ -20,6 +20,7 @@
 #include "libc/atomic.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
@@ -34,6 +35,7 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sock/wsaid.internal.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -140,6 +142,14 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
 
 textwindows int sys_connect_nt(struct Fd *f, const void *addr,
                                uint32_t addrsize) {
+  struct sockaddr_un *sun, nt_sun;
+  if (f->family == AF_UNIX && ((struct sockaddr *)addr)->sa_family == AF_UNIX &&
+      addrsize >= sizeof(struct sockaddr_un)) {
+    sun = (struct sockaddr_un *)addr;
+    nt_sun.sun_family = AF_UNIX;
+    if (__mkwin32_sun_path(sun->sun_path, nt_sun.sun_path) == -1) return -1;
+    addr = &nt_sun;
+  }
   sigset_t mask = __sig_block();
   int rc = sys_connect_nt_impl(f, addr, addrsize, mask);
   __sig_unblock(mask);

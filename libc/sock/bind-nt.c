@@ -16,14 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/af.h"
 #ifdef __x86_64__
 
 __msabi extern typeof(__sys_bind_nt) *const __imp_bind;
 
 textwindows int sys_bind_nt(struct Fd *f, const void *addr, uint32_t addrsize) {
+  struct sockaddr_un *sun, nt_sun;
+  if (f->family == AF_UNIX && ((struct sockaddr *)addr)->sa_family == AF_UNIX &&
+      addrsize >= sizeof(struct sockaddr_un)) {
+    sun = (struct sockaddr_un *)addr;
+    nt_sun.sun_family = AF_UNIX;
+    if (__mkwin32_sun_path(sun->sun_path, nt_sun.sun_path) == -1) return -1;
+    addr = &nt_sun;
+  }
   if (__imp_bind(f->handle, addr, addrsize) != -1) {
     f->isbound = true;
     return 0;
