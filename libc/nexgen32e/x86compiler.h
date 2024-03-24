@@ -61,6 +61,12 @@
 #define _X86_CC_AVX512BF16 0
 #endif
 
+#ifdef __AVX512FP16__
+#define _X86_CC_AVX512FP16 1
+#else
+#define _X86_CC_AVX512FP16 0
+#endif
+
 #ifdef __AVX512VBMI__
 #define _X86_CC_AVX512VBMI 1
 #else

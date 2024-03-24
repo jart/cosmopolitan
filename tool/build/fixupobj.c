@@ -33,6 +33,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/stdalign.internal.h"
@@ -69,6 +70,21 @@ static Elf64_Xword symcount;
 static wontreturn void Die(const char *reason) {
   tinyprint(2, epath, ": ", reason, "\n", NULL);
   exit(1);
+}
+
+static wontreturn void DieOom(void) {
+  Die("out of memory");
+}
+
+static void *Malloc(size_t n) {
+  void *p;
+  if (!(p = malloc(n))) DieOom();
+  return p;
+}
+
+static void *Realloc(void *p, size_t n) {
+  if (!(p = realloc(p, n))) DieOom();
+  return p;
 }
 
 static wontreturn void SysExit(const char *func) {
@@ -515,10 +531,7 @@ static void GenerateIfuncInit(void) {
   // remap file so it has more space
   if (elf->e_shnum + 2 > 65535) Die("too many sections");
   size_t reserve_size = esize + 32 * 1024 * 1024;
-  if (ftruncate(fildes, reserve_size)) SysExit("ifunc ftruncate #1");
-  elf = mmap((char *)elf, reserve_size, PROT_READ | PROT_WRITE,
-             MAP_FIXED | MAP_SHARED, fildes, 0);
-  if (elf == MAP_FAILED) SysExit("ifunc mmap");
+  elf = Realloc(elf, reserve_size);
 
   // duplicate section name strings table to end of file
   Elf64_Shdr *shdrstr_shdr = (Elf64_Shdr *)((char *)elf + elf->e_shoff +
@@ -591,8 +604,6 @@ static void GenerateIfuncInit(void) {
   memcpy((char *)elf + esize, code, code_i);
   esize += code_i;
   unassert(esize == code_shdr->sh_offset + code_shdr->sh_size);
-
-  if (ftruncate(fildes, esize)) SysExit("ifunc ftruncate #1");
 }
 
 // when __attribute__((__target_clones__(...))) is used, static binaries
@@ -622,9 +633,9 @@ static void FixupObject(void) {
     SysExit("lseek");
   }
   if (esize) {
-    if ((elf = mmap((void *)0x032100000000, esize, PROT_READ | PROT_WRITE,
-                    MAP_FIXED | MAP_SHARED, fildes, 0)) == MAP_FAILED) {
-      SysExit("mmap");
+    elf = Malloc(esize);
+    if (pread(fildes, elf, esize, 0) != esize) {
+      SysExit("pread");
     }
     if (!IsElf64Binary(elf, esize)) {
       Die("not an elf64 binary");
@@ -654,12 +665,9 @@ static void FixupObject(void) {
         PurgeIfuncSections();
         RelinkZipFiles();
       }
-      if (msync(elf, esize, MS_ASYNC | MS_INVALIDATE)) {
-        SysExit("msync");
+      if (pwrite(fildes, elf, esize, 0) != esize) {
+        SysExit("pwrite");
       }
-    }
-    if (munmap(elf, esize)) {
-      SysExit("munmap");
     }
   }
   if (close(fildes)) {

@@ -55,6 +55,7 @@
     "__AVX512CD__"
     "__AVX512DQ__"
     "__AVX512BF16__"
+    "__AVX512FP16__"
     "__AVX512IFMA__"
     "__AVX5124VNNIW__"
     "__AVX512VBMI__"
