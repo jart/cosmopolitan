@@ -40,13 +40,13 @@ TEST(FormatBinary64, test2) {
 }
 
 TEST(FormatBinary64, test3) {
-  EXPECT_EQ(3, FormatBinary64(buf, 1, 2) - buf);
-  EXPECT_STREQ("0b1", buf);
+  EXPECT_EQ(4, FormatBinary64(buf, 1, 2) - buf);
+  EXPECT_STREQ("0b01", buf);
 }
 
 TEST(FormatBinary64, test4) {
-  EXPECT_EQ(1, FormatBinary64(buf, 1, 0) - buf);
-  EXPECT_STREQ("1", buf);
+  EXPECT_EQ(2, FormatBinary64(buf, 1, 0) - buf);
+  EXPECT_STREQ("01", buf);
 }
 
 TEST(FormatBinary64, test5) {
