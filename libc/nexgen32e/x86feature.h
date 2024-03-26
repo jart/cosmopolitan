@@ -43,7 +43,7 @@
 #define X86_AVX512_4FMAPS        7H,        EDX,  3, 0
 #define X86_AVX512_4VNNIW        7H,        EDX,  2, _X86_CC_AVX5124VNNIW
 #define X86_AVX512_FP16          7H,        EDX, 23, _X86_CC_AVX512FP16
-#define X86_AVX512_BF16          7H,        EAX,  5, _X86_CC_AVX512BF16
+#define X86_AVX512_BF16          7H_1H,     EAX,  5, _X86_CC_AVX512BF16
 #define X86_AVX512_BITALG        7H,        ECX, 12, 0
 #define X86_AVX512_VBMI2         7H,        ECX,  6, 0
 #define X86_AVX512_VNNI          7H,        ECX, 11, _X86_CC_AVX512VNNI
