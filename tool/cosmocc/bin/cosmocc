@@ -265,7 +265,7 @@ LDFLAGS_X86_64="$LDFLAGS -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$BIN/../x86_64-
 LDLIBS_X86_64="-lcosmo"
 
 CRT_AARCH64="$BIN/../aarch64-linux-cosmo/lib/crt.o"
-CPPFLAGS_AARCH64="$CPPFLAGS"
+CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
 CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
 LDFLAGS_AARCH64="$LDFLAGS -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$BIN/../aarch64-linux-cosmo/lib/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"

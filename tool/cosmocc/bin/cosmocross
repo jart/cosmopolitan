@@ -84,6 +84,7 @@ if [ x"$ARCH" = x"x86_64" ]; then
 elif [ x"$ARCH" = x"aarch64" ]; then
   OBJCOPYFLAGS="-S"
   PAGESZ=16384
+  CPPFLAGS="$CPPFLAGS -fsigned-char"
   CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
   LDFLAGS="$LDFLAGS -Wl,-T,$BIN/../$ARCH-linux-cosmo/lib/aarch64.lds"
 else

@@ -127,6 +127,7 @@ ifeq ($(ARCH), aarch64)
 DEFAULT_COPTS +=							\
 	-ffixed-x18							\
 	-ffixed-x28							\
+	-fsigned-char							\
 	-mno-outline-atomics
 endif
 
