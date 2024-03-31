@@ -490,7 +490,7 @@ void *ClientWorker(void *arg) {
   // thus we use an optimistic approach to avoid expensive locks
   sprintf(client->tmpexepath, "o/%s.XXXXXX",
           basename(stripext(gc(strdup(origname)))));
-  int exefd = openatemp(AT_FDCWD, client->tmpexepath, 4, O_CLOEXEC, 0700);
+  int exefd = openatemp(AT_FDCWD, client->tmpexepath, 0, O_CLOEXEC, 0700);
   if (exefd == -1) {
     WARNF("%s failed to open temporary file %#s due to %m", addrstr,
           client->tmpexepath);
