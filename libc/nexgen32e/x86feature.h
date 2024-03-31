@@ -154,6 +154,7 @@
 #define X86_XTPR                 1H,        ECX, 14, 0
 #define X86_ZERO_FCS_FDS         7H,        EBX, 13, 0
 #define X86_JIT                  80000001H, ECX, 31, 0                        /* IsGenuineBlink() */
+#define X86_HYBRID_CPU           7H,        EDX, 15, 0                        /* Has performance and efficiency cores */
 /* clang-format on */
 
 /* AMD specific features */
