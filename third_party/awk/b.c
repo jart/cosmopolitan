@@ -1,38 +1,38 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#define DEBUG
-#include "libc/calls/calls.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "third_party/awk/awk.h"
-#include "third_party/awk/awkgram.tab.h"
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
 
 /* lasciate ogne speranza, voi ch'intrate. */
+
+#define	DEBUG
+
+#include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "awk.h"
+#include "awkgram.tab.h"
 
 #define MAXLIN 22
 
@@ -80,6 +80,44 @@ int	patlen;
 fa	*fatab[NFA];
 int	nfatab	= 0;	/* entries in fatab */
 
+extern int u8_nextlen(const char *s);
+
+
+/* utf-8 mechanism:
+
+   For most of Awk, utf-8 strings just "work", since they look like
+   null-terminated sequences of 8-bit bytes.
+
+   Functions like length(), index(), and substr() have to operate
+   in units of utf-8 characters.  The u8_* functions in run.c
+   handle this.
+
+   Regular expressions are more complicated, since the basic
+   mechanism of the goto table used 8-bit byte indices into the
+   gototab entries to compute the next state.  Unicode is a lot
+   bigger, so the gototab entries are now structs with a character
+   and a next state. These are sorted by code point and binary
+   searched.
+
+   Throughout the RE mechanism in b.c, utf-8 characters are
+   converted to their utf-32 value.  This mostly shows up in
+   cclenter, which expands character class ranges like a-z and now
+   alpha-omega.  The size of a gototab array is still about 256.
+   This should be dynamic, but for now things work ok for a single
+   code page of Unicode, which is the most likely case.
+
+   The code changes are localized in run.c and b.c.  I have added a
+   handful of functions to somewhat better hide the implementation,
+   but a lot more could be done.
+
+ */
+
+static int entry_cmp(const void *l, const void *r);
+static int get_gototab(fa*, int, int);
+static int set_gototab(fa*, int, int, int);
+static void clear_gototab(fa*, int);
+extern int u8_rune(int *, const char *);
+
 static int *
 intalloc(size_t n, const char *f)
 {
@@ -105,7 +143,7 @@ resizesetvec(const char *f)
 static void
 resize_state(fa *f, int state)
 {
-	unsigned int **p;
+	gtt *p;
 	uschar *p2;
 	int **p3;
 	int i, new_count;
@@ -115,7 +153,7 @@ resize_state(fa *f, int state)
 
 	new_count = state + 10; /* needs to be tuned */
 
-	p = (unsigned int **) realloc(f->gototab, new_count * sizeof(f->gototab[0]));
+	p = (gtt *) realloc(f->gototab, new_count * sizeof(gtt));
 	if (p == NULL)
 		goto out;
 	f->gototab = p;
@@ -131,10 +169,12 @@ resize_state(fa *f, int state)
 	f->posns = p3;
 
 	for (i = f->state_count; i < new_count; ++i) {
-		f->gototab[i] = (unsigned int *) calloc(NCHARS, sizeof(**f->gototab));
-		if (f->gototab[i] == NULL)
+		f->gototab[i].entries = (gtte *) calloc(NCHARS, sizeof(gtte));
+		if (f->gototab[i].entries == NULL)
 			goto out;
-		f->out[i]  = 0;
+		f->gototab[i].allocated = NCHARS;
+		f->gototab[i].inuse = 0;
+		f->out[i] = 0;
 		f->posns[i] = NULL;
 	}
 	f->state_count = new_count;
@@ -230,8 +270,7 @@ int makeinit(fa *f, bool anchor)
 	}
 	if ((f->posns[2])[1] == f->accept)
 		f->out[2] = 1;
-	for (i = 0; i < NCHARS; i++)
-		f->gototab[2][i] = 0;
+	clear_gototab(f, 2);
 	f->curstat = cgoto(f, 2, HAT);
 	if (anchor) {
 		*f->posns[2] = k-1;	/* leave out position 0 */
@@ -300,14 +339,14 @@ void freetr(Node *p)	/* free parse tree */
 /* in the parsing of regular expressions, metacharacters like . have */
 /* to be seen literally;  \056 is not a metacharacter. */
 
-int hexstr(const uschar **pp)	/* find and eval hex string at pp, return new p */
+int hexstr(const uschar **pp, int max)	/* find and eval hex string at pp, return new p */
 {			/* only pick up one 8-bit byte (2 chars) */
 	const uschar *p;
 	int n = 0;
 	int i;
 
-	for (i = 0, p = *pp; i < 2 && isxdigit(*p); i++, p++) {
-		if (isdigit(*p))
+	for (i = 0, p = *pp; i < max && isxdigit(*p); i++, p++) {
+		if (isdigit((int) *p))
 			n = 16 * n + *p - '0';
 		else if (*p >= 'a' && *p <= 'f')
 			n = 16 * n + *p - 'a' + 10;
@@ -318,6 +357,8 @@ int hexstr(const uschar **pp)	/* find and eval hex string at pp, return new p */
 	return n;
 }
 
+
+
 #define isoctdigit(c) ((c) >= '0' && (c) <= '7')	/* multiple use of arg */
 
 int quoted(const uschar **pp)	/* pick up next thing after a \\ */
@@ -326,24 +367,28 @@ int quoted(const uschar **pp)	/* pick up next thing after a \\ */
 	const uschar *p = *pp;
 	int c;
 
-	if ((c = *p++) == 't')
+/* BUG: should advance by utf-8 char even if makes no sense */
+
+	if ((c = *p++) == 't') {
 		c = '\t';
-	else if (c == 'n')
+	} else if (c == 'n') {
 		c = '\n';
-	else if (c == 'f')
+	} else if (c == 'f') {
 		c = '\f';
-	else if (c == 'r')
+	} else if (c == 'r') {
 		c = '\r';
-	else if (c == 'b')
+	} else if (c == 'b') {
 		c = '\b';
-	else if (c == 'v')
+	} else if (c == 'v') {
 		c = '\v';
-	else if (c == 'a')
+	} else if (c == 'a') {
 		c = '\a';
-	else if (c == '\\')
+	} else if (c == '\\') {
 		c = '\\';
-	else if (c == 'x') {	/* hexadecimal goo follows */
-		c = hexstr(&p);	/* this adds a null if number is invalid */
+	} else if (c == 'x') {	/* 2 hex digits follow */
+		c = hexstr(&p, 2);	/* this adds a null if number is invalid */
+	} else if (c == 'u') {	/* unicode char number up to 8 hex digits */
+		c = hexstr(&p, 8);
 	} else if (isoctdigit(c)) {	/* \d \dd \ddd */
 		int n = c - '0';
 		if (isoctdigit(*p)) {
@@ -358,50 +403,67 @@ int quoted(const uschar **pp)	/* pick up next thing after a \\ */
 	return c;
 }
 
-char *cclenter(const char *argp)	/* add a character class */
+int *cclenter(const char *argp)	/* add a character class */
 {
 	int i, c, c2;
-	const uschar *op, *p = (const uschar *) argp;
-	uschar *bp;
-	static uschar *buf = NULL;
+	int n;
+	const uschar *p = (const uschar *) argp;
+	int *bp, *retp;
+	static int *buf = NULL;
 	static int bufsz = 100;
 
-	op = p;
-	if (buf == NULL && (buf = (uschar *) malloc(bufsz)) == NULL)
+	if (buf == NULL && (buf = (int *) calloc(bufsz, sizeof(int))) == NULL)
 		FATAL("out of space for character class [%.10s...] 1", p);
 	bp = buf;
-	for (i = 0; (c = *p++) != 0; ) {
+	for (i = 0; *p != 0; ) {
+		n = u8_rune(&c, (const char *) p);
+		p += n;
 		if (c == '\\') {
 			c = quoted(&p);
 		} else if (c == '-' && i > 0 && bp[-1] != 0) {
 			if (*p != 0) {
 				c = bp[-1];
-				c2 = *p++;
+				/* c2 = *p++; */
+				n = u8_rune(&c2, (const char *) p);
+				p += n;
 				if (c2 == '\\')
-					c2 = quoted(&p);
+					c2 = quoted(&p); /* BUG: sets p, has to be u8 size */
 				if (c > c2) {	/* empty; ignore */
 					bp--;
 					i--;
 					continue;
 				}
 				while (c < c2) {
-					if (!adjbuf((char **) &buf, &bufsz, bp-buf+2, 100, (char **) &bp, "cclenter1"))
-						FATAL("out of space for character class [%.10s...] 2", p);
+					if (i >= bufsz) {
+						bufsz *= 2;
+						buf = (int *) realloc(buf, bufsz * sizeof(int));
+						if (buf == NULL)
+							FATAL("out of space for character class [%.10s...] 2", p);
+						bp = buf + i;
+					}
 					*bp++ = ++c;
 					i++;
 				}
 				continue;
 			}
 		}
-		if (!adjbuf((char **) &buf, &bufsz, bp-buf+2, 100, (char **) &bp, "cclenter2"))
-			FATAL("out of space for character class [%.10s...] 3", p);
+		if (i >= bufsz) {
+			bufsz *= 2;
+			buf = (int *) realloc(buf, bufsz * sizeof(int));
+			if (buf == NULL)
+				FATAL("out of space for character class [%.10s...] 2", p);
+			bp = buf + i;
+		}
 		*bp++ = c;
 		i++;
 	}
 	*bp = 0;
-	DPRINTF("cclenter: in = |%s|, out = |%s|\n", op, buf);
-	xfree(op);
-	return (char *) tostring((char *) buf);
+	/* DPRINTF("cclenter: in = |%s|, out = |%s|\n", op, buf); BUG: can't print array of int */
+	/* xfree(op);  BUG: what are we freeing here? */
+	retp = (int *) calloc(bp-buf+1, sizeof(int));
+	for (i = 0; i < bp-buf+1; i++)
+		retp[i] = buf[i];
+	return retp;
 }
 
 void overflo(const char *s)
@@ -468,7 +530,7 @@ int first(Node *p)	/* collects initially active leaves of p into setvec */
 			setvec[lp] = 1;
 			setcnt++;
 		}
-		if (type(p) == CCL && (*(char *) right(p)) == '\0')
+		if (type(p) == CCL && (*(int *) right(p)) == 0)
 			return(0);		/* empty CCL */
 		return(1);
 	case PLUS:
@@ -524,9 +586,9 @@ void follow(Node *v)	/* collects leaves that can follow v into setvec */
 	}
 }
 
-int member(int c, const char *sarg)	/* is c in s? */
+int member(int c, int *sarg)	/* is c in s? */
 {
-	const uschar *s = (const uschar *) sarg;
+	int *s = (int *) sarg;
 
 	while (*s)
 		if (c == *s++)
@@ -534,10 +596,112 @@ int member(int c, const char *sarg)	/* is c in s? */
 	return(0);
 }
 
+static void resize_gototab(fa *f, int state)
+{
+	size_t new_size = f->gototab[state].allocated * 2;
+	gtte *p = (gtte *) realloc(f->gototab[state].entries, new_size * sizeof(gtte));
+	if (p == NULL)
+		overflo(__func__);
+
+	// need to initialized the new memory to zero
+	size_t orig_size = f->gototab[state].allocated;		// 2nd half of new mem is this size
+	memset(p + orig_size, 0, orig_size * sizeof(gtte));	// clean it out
+
+	f->gototab[state].allocated = new_size;			// update gototab info
+	f->gototab[state].entries = p;
+}
+
+static int get_gototab(fa *f, int state, int ch) /* hide gototab implementation */
+{
+	gtte key;
+	gtte *item;
+
+	key.ch = ch;
+	key.state = 0;	/* irrelevant */
+	item = (gtte *) bsearch(& key, f->gototab[state].entries,
+			f->gototab[state].inuse, sizeof(gtte),
+			entry_cmp);
+
+	if (item == NULL)
+		return 0;
+	else
+		return item->state;
+}
+
+static int entry_cmp(const void *l, const void *r)
+{
+	const gtte *left, *right;
+
+	left = (const gtte *) l;
+	right = (const gtte *) r;
+
+	return left->ch - right->ch;
+}
+
+static int set_gototab(fa *f, int state, int ch, int val) /* hide gototab implementation */
+{
+	if (f->gototab[state].inuse == 0) {
+		f->gototab[state].entries[0].ch = ch;
+		f->gototab[state].entries[0].state = val;
+		f->gototab[state].inuse++;
+		return val;
+	} else if (ch > f->gototab[state].entries[f->gototab[state].inuse-1].ch) {
+		// not seen yet, insert and return
+		gtt *tab = & f->gototab[state];
+		if (tab->inuse + 1 >= tab->allocated)
+			resize_gototab(f, state);
+
+		f->gototab[state].entries[f->gototab[state].inuse-1].ch = ch;
+		f->gototab[state].entries[f->gototab[state].inuse-1].state = val;
+		f->gototab[state].inuse++;
+		return val;
+	} else {
+		// maybe we have it, maybe we don't
+		gtte key;
+		gtte *item;
+
+		key.ch = ch;
+		key.state = 0;	/* irrelevant */
+		item = (gtte *) bsearch(& key, f->gototab[state].entries,
+				f->gototab[state].inuse, sizeof(gtte),
+				entry_cmp);
+
+		if (item != NULL) {
+			// we have it, update state and return
+			item->state = val;
+			return item->state;
+		}
+		// otherwise, fall through to insert and reallocate.
+	}
+
+	gtt *tab = & f->gototab[state];
+	if (tab->inuse + 1 >= tab->allocated)
+		resize_gototab(f, state);
+	++tab->inuse;
+	f->gototab[state].entries[tab->inuse].ch = ch;
+	f->gototab[state].entries[tab->inuse].state = val;
+
+	qsort(f->gototab[state].entries,
+		f->gototab[state].inuse, sizeof(gtte), entry_cmp);
+
+	return val; /* not used anywhere at the moment */
+}
+
+static void clear_gototab(fa *f, int state)
+{
+	memset(f->gototab[state].entries, 0,
+		f->gototab[state].allocated * sizeof(gtte));
+	f->gototab[state].inuse = 0;
+}
+
 int match(fa *f, const char *p0)	/* shortest match ? */
 {
 	int s, ns;
+	int n;
+	int rune;
 	const uschar *p = (const uschar *) p0;
+
+	/* return pmatch(f, p0); does it matter whether longest or shortest? */
 
 	s = f->initstat;
 	assert (s < f->state_count);
@@ -546,19 +710,25 @@ int match(fa *f, const char *p0)	/* shortest match ? */
 		return(1);
 	do {
 		/* assert(*p < NCHARS); */
-		if ((ns = f->gototab[s][*p]) != 0)
+		n = u8_rune(&rune, (const char *) p);
+		if ((ns = get_gototab(f, s, rune)) != 0)
 			s = ns;
 		else
-			s = cgoto(f, s, *p);
+			s = cgoto(f, s, rune);
 		if (f->out[s])
 			return(1);
-	} while (*p++ != 0);
+		if (*p == 0)
+			break;
+		p += n;
+	} while (1);  /* was *p++ != 0 */
 	return(0);
 }
 
 int pmatch(fa *f, const char *p0)	/* longest match, for sub */
 {
 	int s, ns;
+	int n;
+	int rune;
 	const uschar *p = (const uschar *) p0;
 	const uschar *q;
 
@@ -573,10 +743,11 @@ int pmatch(fa *f, const char *p0)	/* longest match, for sub */
 			if (f->out[s])		/* final state */
 				patlen = q-p;
 			/* assert(*q < NCHARS); */
-			if ((ns = f->gototab[s][*q]) != 0)
+			n = u8_rune(&rune, (const char *) q);
+			if ((ns = get_gototab(f, s, rune)) != 0)
 				s = ns;
 			else
-				s = cgoto(f, s, *q);
+				s = cgoto(f, s, rune);
 
 			assert(s < f->state_count);
 
@@ -588,7 +759,11 @@ int pmatch(fa *f, const char *p0)	/* longest match, for sub */
 				else
 					goto nextin;	/* no match */
 			}
-		} while (*q++ != 0);
+			if (*q == 0)
+				break;
+			q += n;
+		} while (1);
+		q++;  /* was *q++ */
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
 		if (patlen >= 0) {
@@ -597,13 +772,19 @@ int pmatch(fa *f, const char *p0)	/* longest match, for sub */
 		}
 	nextin:
 		s = 2;
-	} while (*p++);
+		if (*p == 0)
+			break;
+		n = u8_rune(&rune, (const char *) p);
+		p += n;
+	} while (1); /* was *p++ */
 	return (0);
 }
 
 int nematch(fa *f, const char *p0)	/* non-empty match, for sub */
 {
 	int s, ns;
+        int n;
+        int rune;
 	const uschar *p = (const uschar *) p0;
 	const uschar *q;
 
@@ -618,10 +799,11 @@ int nematch(fa *f, const char *p0)	/* non-empty match, for sub */
 			if (f->out[s])		/* final state */
 				patlen = q-p;
 			/* assert(*q < NCHARS); */
-			if ((ns = f->gototab[s][*q]) != 0)
+			n = u8_rune(&rune, (const char *) q);
+			if ((ns = get_gototab(f, s, rune)) != 0)
 				s = ns;
 			else
-				s = cgoto(f, s, *q);
+				s = cgoto(f, s, rune);
 			if (s == 1) {	/* no transition */
 				if (patlen > 0) {
 					patbeg = (const char *) p;
@@ -629,7 +811,11 @@ int nematch(fa *f, const char *p0)	/* non-empty match, for sub */
 				} else
 					goto nnextin;	/* no nonempty match */
 			}
-		} while (*q++ != 0);
+			if (*q == 0)
+				break;
+			q += n;
+		} while (1);
+		q++;
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
 		if (patlen > 0 ) {
@@ -661,54 +847,84 @@ int nematch(fa *f, const char *p0)	/* non-empty match, for sub */
 
 bool fnematch(fa *pfa, FILE *f, char **pbuf, int *pbufsize, int quantum)
 {
-	char *buf = *pbuf;
+	char *i, *j, *k, *buf = *pbuf;
 	int bufsize = *pbufsize;
-	int c, i, j, k, ns, s;
+	int c, n, ns, s;
 
 	s = pfa->initstat;
 	patlen = 0;
 
 	/*
-	 * All indices relative to buf.
-	 * i <= j <= k <= bufsize
+	 * buf <= i <= j <= k <= buf+bufsize
 	 *
 	 * i: origin of active substring
 	 * j: current character
-	 * k: destination of next getc()
+	 * k: destination of the next getc
 	 */
-	i = -1, k = 0;
-        do {
-		j = i++;
-		do {
-			if (++j == k) {
-				if (k == bufsize)
-					if (!adjbuf((char **) &buf, &bufsize, bufsize+1, quantum, 0, "fnematch"))
-						FATAL("stream '%.30s...' too long", buf);
-				buf[k++] = (c = getc(f)) != EOF ? c : 0;
-			}
-			c = (uschar)buf[j];
-			/* assert(c < NCHARS); */
 
-			if ((ns = pfa->gototab[s][c]) != 0)
-				s = ns;
-			else
-				s = cgoto(pfa, s, c);
+	i = j = k = buf;
 
-			if (pfa->out[s]) {	/* final state */
-				patlen = j - i + 1;
-				if (c == 0)	/* don't count $ */
-					patlen--;
+	do {
+		/*
+		 * Call u8_rune with at least awk_mb_cur_max ahead in
+		 * the buffer until EOF interferes.
+		 */
+		if (k - j < awk_mb_cur_max) {
+			if (k + awk_mb_cur_max > buf + bufsize) {
+				char *obuf = buf;
+				adjbuf((char **) &buf, &bufsize,
+				    bufsize + awk_mb_cur_max,
+				    quantum, 0, "fnematch");
+
+				/* buf resized, maybe moved. update pointers */
+				*pbufsize = bufsize;
+				if (obuf != buf) {
+					i = buf + (i - obuf);
+					j = buf + (j - obuf);
+					k = buf + (k - obuf);
+					*pbuf = buf;
+					if (patlen)
+						patbeg = buf + (patbeg - obuf);
+				}
 			}
-		} while (buf[j] && s != 1);
+			for (n = awk_mb_cur_max ; n > 0; n--) {
+				*k++ = (c = getc(f)) != EOF ? c : 0;
+				if (c == EOF) {
+					if (ferror(f))
+						FATAL("fnematch: getc error");
+					break;
+				}
+			}
+		}
+
+		j += u8_rune(&c, j);
+
+		if ((ns = get_gototab(pfa, s, c)) != 0)
+			s = ns;
+		else
+			s = cgoto(pfa, s, c);
+
+		if (pfa->out[s]) {	/* final state */
+			patbeg = i;
+			patlen = j - i;
+			if (c == 0)	/* don't count $ */
+				patlen--;
+		}
+
+		if (c && s != 1)
+			continue;  /* origin i still viable, next j */
+		if (patlen)
+			break;     /* best match found */
+
+		/* no match at origin i, next i and start over */
+		i += u8_rune(&c, i);
+		if (c == 0)
+			break;    /* no match */
+		j = i;
 		s = 2;
-	} while (buf[i] && !patlen);
-
-	/* adjbuf() may have relocated a resized buffer. Inform the world. */
-	*pbuf = buf;
-	*pbufsize = bufsize;
+	} while (1);
 
 	if (patlen) {
-		patbeg = (char *) buf + i;
 		/*
 		 * Under no circumstances is the last character fed to
 		 * the automaton part of the match. It is EOF's nullbyte,
@@ -721,10 +937,10 @@ bool fnematch(fa *pfa, FILE *f, char **pbuf, int *pbufsize, int quantum)
 		 * terminate the buffer.
 		 */
 		do
-			if (buf[--k] && ungetc(buf[k], f) == EOF)
-				FATAL("unable to ungetc '%c'", buf[k]);
-		while (k > i + patlen);
-		buf[k] = '\0';
+			if (*--k && ungetc(*k, f) == EOF)
+				FATAL("unable to ungetc '%c'", *k);
+		while (k > patbeg + patlen);
+		*k = '\0';
 		return true;
 	}
 	else
@@ -797,7 +1013,7 @@ Node *primary(void)
 		rtok = relex();
 		if (rtok == ')') {	/* special pleading for () */
 			rtok = relex();
-			return unary(op2(CCL, NIL, (Node *) tostring("")));
+			return unary(op2(CCL, NIL, (Node *) cclenter("")));
 		}
 		np = regexp();
 		if (rtok == ')') {
@@ -820,7 +1036,7 @@ Node *concat(Node *np)
 		return (concat(op2(CAT, np, primary())));
 	case EMPTYRE:
 		rtok = relex();
-		return (concat(op2(CAT, op2(CCL, NIL, (Node *) tostring("")),
+		return (concat(op2(CAT, op2(CCL, NIL, (Node *) cclenter("")),
 				primary())));
 	}
 	return (np);
@@ -866,6 +1082,25 @@ Node *unary(Node *np)
  * must be less than twice the size of their full name.
  */
 
+/* Because isblank doesn't show up in any of the header files on any
+ * system i use, it's defined here.  if some other locale has a richer
+ * definition of "blank", define HAS_ISBLANK and provide your own
+ * version.
+ * the parentheses here are an attempt to find a path through the maze
+ * of macro definition and/or function and/or version provided.  thanks
+ * to nelson beebe for the suggestion; let's see if it works everywhere.
+ */
+
+/* #define HAS_ISBLANK */
+#ifndef HAS_ISBLANK
+
+int (xisblank)(int c)
+{
+	return c==' ' || c=='\t';
+}
+
+#endif
+
 static const struct charclass {
 	const char *cc_name;
 	int cc_namelen;
@@ -873,7 +1108,11 @@ static const struct charclass {
 } charclasses[] = {
 	{ "alnum",	5,	isalnum },
 	{ "alpha",	5,	isalpha },
+#ifndef HAS_ISBLANK
+	{ "blank",	5,	xisblank },
+#else
 	{ "blank",	5,	isblank },
+#endif
 	{ "cntrl",	5,	iscntrl },
 	{ "digit",	5,	isdigit },
 	{ "graph",	5,	isgraph },
@@ -1013,6 +1252,12 @@ int relex(void)		/* lexical analyzer for reparse */
 rescan:
 	starttok = prestr;
 
+	if ((n = u8_rune(&rlxval, (const char *) prestr)) > 1) {
+		prestr += n;
+		starttok = prestr;
+		return CHAR;
+	}
+
 	switch (c = *prestr++) {
 	case '|': return OR;
 	case '*': return STAR;
@@ -1050,10 +1295,15 @@ rescan:
 		}
 		else
 			cflag = 0;
-		n = 2 * strlen((const char *) prestr)+1;
+		n = 5 * strlen((const char *) prestr)+1; /* BUG: was 2.  what value? */
 		if (!adjbuf((char **) &buf, &bufsz, n, n, (char **) &bp, "relex1"))
 			FATAL("out of space for reg expr %.10s...", lastre);
 		for (; ; ) {
+			if ((n = u8_rune(&rlxval, (const char *) prestr)) > 1) {
+				for (i = 0; i < n; i++)
+					*bp++ = *prestr++;
+				continue;
+			}
 			if ((c = *prestr++) == '\\') {
 				*bp++ = '\\';
 				if ((c = *prestr++) == '\0')
@@ -1143,7 +1393,7 @@ rescan:
 		}
 		break;
 	case '{':
-		if (isdigit(*(prestr))) {
+		if (isdigit((int) *(prestr))) {
 			num = 0;	/* Process as a repetition */
 			n = -1; m = -1;
 			commafound = false;
@@ -1213,7 +1463,6 @@ rescan:
 		}
 		break;
 	}
-	return 0; /* [jart] why wasn't this here? */
 }
 
 int cgoto(fa *f, int s, int c)
@@ -1221,7 +1470,7 @@ int cgoto(fa *f, int s, int c)
 	int *p, *q;
 	int i, j, k;
 
-	assert(c == HAT || c < NCHARS);
+	/* assert(c == HAT || c < NCHARS);  BUG: seg fault if disable test */
 	while (f->accept >= maxsetvec) {	/* guessing here! */
 		resizesetvec(__func__);
 	}
@@ -1237,8 +1486,8 @@ int cgoto(fa *f, int s, int c)
 			 || (k == DOT && c != 0 && c != HAT)
 			 || (k == ALL && c != 0)
 			 || (k == EMPTYRE && c != 0)
-			 || (k == CCL && member(c, (char *) f->re[p[i]].lval.up))
-			 || (k == NCCL && !member(c, (char *) f->re[p[i]].lval.up) && c != 0 && c != HAT)) {
+			 || (k == CCL && member(c, (int *) f->re[p[i]].lval.rp))
+			 || (k == NCCL && !member(c, (int *) f->re[p[i]].lval.rp) && c != 0 && c != HAT)) {
 				q = f->re[p[i]].lfollow;
 				for (j = 1; j <= *q; j++) {
 					if (q[j] >= maxsetvec) {
@@ -1270,7 +1519,7 @@ int cgoto(fa *f, int s, int c)
 				goto different;
 		/* setvec is state i */
 		if (c != HAT)
-			f->gototab[s][c] = i;
+			set_gototab(f, s, c, i);
 		return i;
 	  different:;
 	}
@@ -1278,14 +1527,13 @@ int cgoto(fa *f, int s, int c)
 	/* add tmpset to current set of states */
 	++(f->curstat);
 	resize_state(f, f->curstat);
-	for (i = 0; i < NCHARS; i++)
-		f->gototab[f->curstat][i] = 0;
+	clear_gototab(f, f->curstat);
 	xfree(f->posns[f->curstat]);
 	p = intalloc(setcnt + 1, __func__);
 
 	f->posns[f->curstat] = p;
 	if (c != HAT)
-		f->gototab[s][c] = f->curstat;
+		set_gototab(f, s, c, f->curstat);
 	for (i = 0; i <= setcnt; i++)
 		p[i] = tmpset[i];
 	if (setvec[f->accept])
@@ -1303,7 +1551,8 @@ void freefa(fa *f)	/* free a finite automaton */
 	if (f == NULL)
 		return;
 	for (i = 0; i < f->state_count; i++)
-		xfree(f->gototab[i])
+		xfree(f->gototab[i].entries);
+	xfree(f->gototab);
 	for (i = 0; i <= f->curstat; i++)
 		xfree(f->posns[i]);
 	for (i = 0; i <= f->accept; i++) {

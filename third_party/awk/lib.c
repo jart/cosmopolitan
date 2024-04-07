@@ -1,43 +1,43 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
 #define DEBUG
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/math.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "third_party/awk/awk.h"
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <ctype.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <math.h>
+#include "awk.h"
+
+extern int u8_nextlen(const char *s);
 
 char	EMPTY[] = { '\0' };
-static FILE	*infile	= NULL;
+FILE	*infile	= NULL;
 bool	innew;		/* true = infile has not been read by readrec */
 char	*file	= EMPTY;
 char	*record;
@@ -152,11 +152,6 @@ int getrec(char **pbuf, int *pbufsize, bool isrecord)	/* get next input record *
 	}
 	DPRINTF("RS=<%s>, FS=<%s>, ARGC=%g, FILENAME=%s\n",
 		*RS, *FS, *ARGC, *FILENAME);
-	if (isrecord) {
-		donefld = false;
-		donerec = true;
-		savefs();
-	}
 	saveb0 = buf[0];
 	buf[0] = 0;
 	while (argno < *ARGC || infile == stdin) {
@@ -196,6 +191,9 @@ int getrec(char **pbuf, int *pbufsize, bool isrecord)	/* get next input record *
 					fldtab[0]->fval = result;
 					fldtab[0]->tval |= NUM;
 				}
+				donefld = false;
+				donerec = true;
+				savefs();
 			}
 			setfval(nrloc, nrloc->fval+1);
 			setfval(fnrloc, fnrloc->fval+1);
@@ -223,16 +221,22 @@ void nextfile(void)
 	argno++;
 }
 
+extern int readcsvrec(char **pbuf, int *pbufsize, FILE *inf, bool newflag);
+
 int readrec(char **pbuf, int *pbufsize, FILE *inf, bool newflag)	/* read one record into buf */
 {
-	int sep, c, isrec;
-	char *rr, *buf = *pbuf;
+	int sep, c, isrec; // POTENTIAL BUG? isrec is a macro in awk.h
+	char *rr = *pbuf, *buf = *pbuf;
 	int bufsize = *pbufsize;
 	char *rs = getsval(rsloc);
 
-	if (*rs && rs[1]) {
+	if (CSV) {
+		c = readcsvrec(pbuf, pbufsize, inf, newflag);
+		isrec = (c == EOF && rr == buf) ? false : true;
+	} else if (*rs && rs[1]) {
 		bool found;
 
+		memset(buf, 0, bufsize);
 		fa *pfa = makedfa(rs, 1);
 		if (newflag)
 			found = fnematch(pfa, inf, &buf, &bufsize, recsize);
@@ -245,6 +249,7 @@ int readrec(char **pbuf, int *pbufsize, FILE *inf, bool newflag)	/* read one rec
 		if (found)
 			setptr(patbeg, '\0');
 		isrec = (found == 0 && *buf == '\0') ? false : true;
+
 	} else {
 		if ((sep = *rs) == 0) {
 			sep = '\n';
@@ -282,6 +287,52 @@ int readrec(char **pbuf, int *pbufsize, FILE *inf, bool newflag)	/* read one rec
 	return isrec;
 }
 
+
+/*******************
+ * loose ends here:
+ *   \r\n should become \n
+ *   what about bare \r?  Excel uses that for embedded newlines
+ *   can't have "" in unquoted fields, according to RFC 4180
+*/
+
+
+int readcsvrec(char **pbuf, int *pbufsize, FILE *inf, bool newflag) /* csv can have \n's */
+{			/* so read a complete record that might be multiple lines */
+	int sep, c;
+	char *rr = *pbuf, *buf = *pbuf;
+	int bufsize = *pbufsize;
+	bool in_quote = false;
+
+	sep = '\n'; /* the only separator; have to skip over \n embedded in "..." */
+	rr = buf;
+	while ((c = getc(inf)) != EOF) {
+		if (c == sep) {
+			if (! in_quote)
+				break;
+			if (rr > buf && rr[-1] == '\r')	// remove \r if was \r\n
+				rr--;
+		}
+
+		if (rr-buf+1 > bufsize)
+			if (!adjbuf(&buf, &bufsize, 1+rr-buf,
+			    recsize, &rr, "readcsvrec 1"))
+				FATAL("input record `%.30s...' too long", buf);
+		*rr++ = c;
+		if (c == '"')
+			in_quote = ! in_quote;
+ 	}
+	if (c == '\n' && rr > buf && rr[-1] == '\r') 	// remove \r if was \r\n
+		rr--;
+
+	if (!adjbuf(&buf, &bufsize, 1+rr-buf, recsize, &rr, "readcsvrec 4"))
+		FATAL("input record `%.30s...' too long", buf);
+	*rr = 0;
+	*pbuf = buf;
+	*pbufsize = bufsize;
+	DPRINTF("readcsvrec saw <%s>, returns %d\n", buf, c);
+	return c;
+}
+
 char *getargv(int n)	/* get ARGV[n] */
 {
 	Cell *x;
@@ -303,6 +354,9 @@ void setclvar(char *s)	/* set var=value from s */
 	Cell *q;
 	double result;
 
+/* commit f3d9187d4e0f02294fb1b0e31152070506314e67 broke T.argv test */
+/* I don't understand why it was changed. */
+
 	for (p=s; *p != '='; p++)
 		;
 	e = p;
@@ -315,6 +369,7 @@ void setclvar(char *s)	/* set var=value from s */
 		q->tval |= NUM;
 	}
 	DPRINTF("command line set %s to |%s|\n", s, p);
+	free(p);
 	*e = '=';
 }
 
@@ -344,9 +399,9 @@ void fldbld(void)	/* create fields from current record */
 	i = 0;	/* number of fields accumulated here */
 	if (inputFS == NULL)	/* make sure we have a copy of FS */
 		savefs();
-	if (strlen(inputFS) > 1) {	/* it's a regular expression */
+	if (!CSV && strlen(inputFS) > 1) {	/* it's a regular expression */
 		i = refldbld(r, inputFS);
-	} else if ((sep = *inputFS) == ' ') {	/* default whitespace */
+	} else if (!CSV && (sep = *inputFS) == ' ') {	/* default whitespace */
 		for (i = 0; ; ) {
 			while (*r == ' ' || *r == '\t' || *r == '\n')
 				r++;
@@ -365,26 +420,58 @@ void fldbld(void)	/* create fields from current record */
 			*fr++ = 0;
 		}
 		*fr = 0;
-	} else if ((sep = *inputFS) == 0) {		/* new: FS="" => 1 char/field */
-		for (i = 0; *r != '\0'; r += n) {
-			char buf[MB_LEN_MAX + 1];
-
+	} else if (CSV) {	/* CSV processing.  no error handling */
+		if (*r != 0) {
+			for (;;) {
+				i++;
+				if (i > nfields)
+					growfldtab(i);
+				if (freeable(fldtab[i]))
+					xfree(fldtab[i]->sval);
+				fldtab[i]->sval = fr;
+				fldtab[i]->tval = FLD | STR | DONTFREE;
+				if (*r == '"' ) { /* start of "..." */
+					for (r++ ; *r != '\0'; ) {
+						if (*r == '"' && r[1] != '\0' && r[1] == '"') {
+							r += 2; /* doubled quote */
+							*fr++ = '"';
+						} else if (*r == '"' && (r[1] == '\0' || r[1] == ',')) {
+							r++; /* skip over closing quote */
+							break;
+						} else {
+							*fr++ = *r++;
+						}
+					}
+					*fr++ = 0;
+				} else {	/* unquoted field */
+					while (*r != ',' && *r != '\0')
+						*fr++ = *r++;
+					*fr++ = 0;
+				}
+				if (*r++ == 0)
+					break;
+	
+			}
+		}
+		*fr = 0;
+	} else if ((sep = *inputFS) == 0) {	/* new: FS="" => 1 char/field */
+		for (i = 0; *r != '\0'; ) {
+			char buf[10];
 			i++;
 			if (i > nfields)
 				growfldtab(i);
 			if (freeable(fldtab[i]))
 				xfree(fldtab[i]->sval);
-			n = mblen(r, MB_LEN_MAX);
-			if (n < 0)
-				n = 1;
-			memcpy(buf, r, n);
-			buf[n] = '\0';
+			n = u8_nextlen(r);
+			for (j = 0; j < n; j++)
+				buf[j] = *r++;
+			buf[j] = '\0';
 			fldtab[i]->sval = tostring(buf);
 			fldtab[i]->tval = FLD | STR;
 		}
 		*fr = 0;
 	} else if (*r != 0) {	/* if 0, it's a null field */
-		/* subtlecase : if length(FS) == 1 && length(RS > 0)
+		/* subtle case: if length(FS) == 1 && length(RS > 0)
 		 * \n is NOT a field separator (cf awk book 61,84).
 		 * this variable is tested in the inner while loop.
 		 */
@@ -587,11 +674,9 @@ void yyerror(const char *s)
 	SYNTAX("%s", s);
 }
 
-extern char *cmdname;
-
 void SYNTAX(const char *fmt, ...)
 {
-	extern char *curfname;
+	extern char *cmdname, *curfname;
 	static int been_here = 0;
 	va_list varg;
 
@@ -641,6 +726,7 @@ void bcheck2(int n, int c1, int c2)
 
 void FATAL(const char *fmt, ...)
 {
+	extern char *cmdname;
 	va_list varg;
 
 	fflush(stdout);
@@ -656,6 +742,7 @@ void FATAL(const char *fmt, ...)
 
 void WARNING(const char *fmt, ...)
 {
+	extern char *cmdname;
 	va_list varg;
 
 	fflush(stdout);
@@ -758,10 +845,10 @@ int isclvar(const char *s)	/* is s of form var=something ? */
 {
 	const char *os = s;
 
-	if (!isalpha((uschar) *s) && *s != '_')
+	if (!isalpha((int) *s) && *s != '_')
 		return 0;
 	for ( ; *s; s++)
-		if (!(isalnum((uschar) *s) || *s == '_'))
+		if (!(isalnum((int) *s) || *s == '_'))
 			break;
 	return *s == '=' && s > os;
 }
@@ -796,19 +883,19 @@ bool is_valid_number(const char *s, bool trailing_stuff_ok,
 	if (no_trailing)
 		*no_trailing = false;
 
-	while (isspace(*s))
+	while (isspace((int) *s))
 		s++;
 
-	// no hex floating point, sorry
+	/* no hex floating point, sorry */
 	if (s[0] == '0' && tolower(s[1]) == 'x')
 		return false;
 
-	// allow +nan, -nan, +inf, -inf, any other letter, no
+	/* allow +nan, -nan, +inf, -inf, any other letter, no */
 	if (s[0] == '+' || s[0] == '-') {
 		is_nan = (strncasecmp(s+1, "nan", 3) == 0);
 		is_inf = (strncasecmp(s+1, "inf", 3) == 0);
 		if ((is_nan || is_inf)
-		    && (isspace(s[4]) || s[4] == '\0'))
+		    && (isspace((int) s[4]) || s[4] == '\0'))
 			goto convert;
 		else if (! isdigit(s[1]) && s[1] != '.')
 			return false;
@@ -831,13 +918,13 @@ convert:
 	/*
 	 * check for trailing stuff
 	 */
-	while (isspace(*ep))
+	while (isspace((int) *ep))
 		ep++;
 
 	if (no_trailing != NULL)
 		*no_trailing = (*ep == '\0');
 
-        // return true if found the end, or trailing stuff is allowed
+        /* return true if found the end, or trailing stuff is allowed */
 	retval = *ep == '\0' || trailing_stuff_ok;
 
 	return retval;

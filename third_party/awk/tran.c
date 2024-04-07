@@ -1,36 +1,34 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#define DEBUG
-#include "libc/fmt/conv.h"
-#include "libc/math.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "third_party/awk/awk.h"
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
+#define	DEBUG
+#include <stdio.h>
+#include <math.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include "awk.h"
 
 #define	FULLTAB	2	/* rehash when table gets this x full */
 #define	GROWTAB 4	/* grow table by this factor */
@@ -310,7 +308,7 @@ Awkfloat setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 	} else if (&vp->fval == NF) {
 		donerec = false;	/* mark $0 invalid */
 		setlastfld(f);
-		DPRINTF("setting NF to %g\n", f);
+		DPRINTF("setfval: setting NF to %g\n", f);
 	} else if (isrec(vp)) {
 		donefld = false;	/* mark $1... invalid */
 		donerec = true;
@@ -350,6 +348,10 @@ char *setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 		(void*)vp, NN(vp->nval), s, vp->tval, donerec, donefld);
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "assign to");
+	if (CSV && (vp == rsloc))
+		WARNING("danger: don't set RS when --csv is in effect");
+	if (CSV && (vp == fsloc))
+		WARNING("danger: don't set FS when --csv is in effect");
 	if (isfld(vp)) {
 		donerec = false;	/* mark $0 invalid */
 		fldno = atoi(vp->nval);
@@ -377,7 +379,7 @@ char *setsval(Cell *vp, const char *s)	/* set string val of a Cell */
 		donerec = false;	/* mark $0 invalid */
 		f = getfval(vp);
 		setlastfld(f);
-		DPRINTF("setting NF to %g\n", f);
+		DPRINTF("setsval: setting NF to %g\n", f);
 	}
 
 	return(vp->sval);
@@ -565,7 +567,6 @@ Cell *catstr(Cell *a, Cell *b) /* concatenate a and b */
 
 char *qstring(const char *is, int delim)	/* collect string up to next delim */
 {
-	const char *os = is;
 	int c, n;
 	const uschar *s = (const uschar *) is;
 	uschar *buf, *bp;
@@ -574,7 +575,7 @@ char *qstring(const char *is, int delim)	/* collect string up to next delim */
 		FATAL( "out of space in qstring(%s)", s);
 	for (bp = buf; (c = *s) != delim; s++) {
 		if (c == '\n')
-			SYNTAX( "newline in string %.20s...", os );
+			SYNTAX( "newline in string %.20s...", is );
 		else if (c != '\\')
 			*bp++ = c;
 		else {	/* \something */

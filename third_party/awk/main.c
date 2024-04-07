@@ -1,46 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#define DEBUG
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/rand.h"
-#include "libc/str/locale.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
-#include "third_party/awk/awk.h"
-
-__notice(awk_notice, "\
-The One True Awk\n\
+__notice(awk_license, "\
+/****************************************************************\n\
 Copyright (C) Lucent Technologies 1997\n\
 All Rights Reserved\n\
 \n\
@@ -61,9 +20,21 @@ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n\
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER\n\
 IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,\n\
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF\n\
-THIS SOFTWARE.");
+THIS SOFTWARE.\n\
+****************************************************************/");
 
-const char	*version = "version 20220530";
+const char	*version = "version 20240311";
+
+#define DEBUG
+#include <stdio.h>
+#include <ctype.h>
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include "awk.h"
+
+extern	char	**environ;
 extern	int	nfields;
 
 int	dbg	= 0;
@@ -71,6 +42,7 @@ Awkfloat	srand_seed = 1;
 char	*cmdname;	/* gets argv[0] for error messages */
 extern	FILE	*yyin;	/* lex input file */
 char	*lexprog;	/* points to program argument if it exists */
+extern	int errorflag;	/* non-zero if any syntax errors; set by yyerror */
 enum compile_states	compile_time = ERROR_PRINTING;
 
 static char	**pfile;	/* program filenames from -f's */
@@ -78,23 +50,37 @@ static size_t	maxpfile;	/* max program filename */
 static size_t	npfile;		/* number of filenames */
 static size_t	curpfile;	/* current filename */
 
+bool	CSV = false;	/* true for csv input */
+
 bool	safe = false;	/* true => "safe" mode */
 
-static wontreturn void fpecatch(int n, siginfo_t *si, void *uc)
+size_t	awk_mb_cur_max = 1;
+
+static noreturn void fpecatch(int n
+#ifdef SA_SIGINFO
+	, siginfo_t *si, void *uc
+#endif
+)
 {
-	const char *emsg[10];
-        emsg[0] = "Unknown error";
-        emsg[FPE_INTDIV] = "Integer divide by zero";
-        emsg[FPE_INTOVF] = "Integer overflow";
-        emsg[FPE_FLTDIV] = "Floating point divide by zero";
-        emsg[FPE_FLTOVF] = "Floating point overflow";
-        emsg[FPE_FLTUND] = "Floating point underflow";
-        emsg[FPE_FLTRES] = "Floating point inexact result";
-        emsg[FPE_FLTINV] = "Invalid Floating point operation";
-        emsg[FPE_FLTSUB] = "Subscript out of range";
-	FATAL("floating point exception: %s",
-              (size_t)si->si_code < sizeof(emsg) / sizeof(emsg[0]) &&
-              emsg[si->si_code] ? emsg[si->si_code] : emsg[0]);
+#ifdef SA_SIGINFOz
+	static const char *emsg[] = {
+		[0] = "Unknown error",
+		[FPE_INTDIV] = "Integer divide by zero",
+		[FPE_INTOVF] = "Integer overflow",
+		[FPE_FLTDIV] = "Floating point divide by zero",
+		[FPE_FLTOVF] = "Floating point overflow",
+		[FPE_FLTUND] = "Floating point underflow",
+		[FPE_FLTRES] = "Floating point inexact result",
+		[FPE_FLTINV] = "Invalid Floating point operation",
+		[FPE_FLTSUB] = "Subscript out of range",
+	};
+#endif
+	FATAL("floating point exception"
+#ifdef SA_SIGINFOz
+		": %s", (size_t)si->si_code < sizeof(emsg) / sizeof(emsg[0]) &&
+		emsg[si->si_code] ? emsg[si->si_code] : emsg[0]
+#endif
+	    );
 }
 
 /* Can this work with recursive calls?  I don't think so.
@@ -129,30 +115,30 @@ getarg(int *argc, char ***argv, const char *msg)
 int _awk(int argc, char *argv[])
 {
 	const char *fs = NULL;
-	struct sigaction sa;
 	char *fn, *vn;
 
 	setlocale(LC_CTYPE, "");
 	setlocale(LC_NUMERIC, "C"); /* for parsing cmdline & prog */
+	awk_mb_cur_max = MB_CUR_MAX;
 	cmdname = argv[0];
-
-	if (pledge("stdio rpath wpath cpath proc exec", NULL) == -1) {
-		fprintf(stderr, "%s: pledge: incorrect arguments\n",
-		    cmdname);
-		exit(1);
-	}
-
 	if (argc == 1) {
 		fprintf(stderr,
-		  "usage: %s [-F fs] [-v var=value] [-f progfile | 'prog'] [file ...]\n",
+		  "usage: %s [-F fs | --csv] [-v var=value] [-f progfile | 'prog'] [file ...]\n",
 		  cmdname);
 		exit(1);
 	}
-
-	sa.sa_sigaction = fpecatch;
-	sa.sa_flags = SA_SIGINFO;
-	sigemptyset(&sa.sa_mask);
-	(void)sigaction(SIGFPE, &sa, NULL);
+#ifdef SA_SIGINFO
+	{
+		struct sigaction sa;
+		sa.sa_sigaction = fpecatch;
+		sa.sa_flags = SA_SIGINFO;
+		sigemptyset(&sa.sa_mask);
+		(void)sigaction(SIGFPE, &sa, NULL);
+	}
+#else
+	(void)signal(SIGFPE, fpecatch);
+#endif
+	/*signal(SIGSEGV, segvcatch); experiment */
 
 	/* Set and keep track of the random seed */
 	srand_seed = 1;
@@ -169,6 +155,12 @@ int _awk(int argc, char *argv[])
 			argc--;
 			argv++;
 			break;
+		}
+		if (strcmp(argv[1], "--csv") == 0) {	/* turn on csv input processing */
+			CSV = true;
+			argc--;
+			argv++;
+			continue;
 		}
 		switch (argv[1][1]) {
 		case 's':
@@ -208,6 +200,10 @@ int _awk(int argc, char *argv[])
 		argc--;
 		argv++;
 	}
+
+	if (CSV && (fs != NULL || lookup("FS", symtab) != NULL))
+		WARNING("danger: don't set FS when --csv is in effect");
+
 	/* argv[1] is now the first argument */
 	if (npfile == 0) {	/* no -f; first argument is program */
 		if (argc <= 1) {
@@ -229,6 +225,11 @@ int _awk(int argc, char *argv[])
 	if (!safe)
 		envinit(environ);
 	yyparse();
+#if 0
+	// Doing this would comply with POSIX, but is not compatible with
+	// other awks and with what most users expect. So comment it out.
+	setlocale(LC_NUMERIC, ""); /* back to whatever it is locally */
+#endif
 	if (fs)
 		*FS = qstring(fs, '\0');
 	DPRINTF("errorflag=%d\n", errorflag);

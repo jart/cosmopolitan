@@ -31,8 +31,7 @@ THIRD_PARTY_AWK_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x))))
 
 THIRD_PARTY_AWK_CHECKS =				\
-	$(THIRD_PARTY_AWK_A).pkg			\
-	$(THIRD_PARTY_AWK_HDRS:%=o/$(MODE)/%.ok)
+	$(THIRD_PARTY_AWK_A).pkg
 
 $(THIRD_PARTY_AWK_A):					\
 		third_party/awk/			\
