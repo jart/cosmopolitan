@@ -1977,6 +1977,10 @@ function VisualizeControlCodes(str) end
 ---@nodiscard
 function Underlong(str) end
 
+--- Generate a uuid_v4
+--- @return string
+function UuidV4() end
+
 ---@param x integer
 ---@return integer # position of first bit set.
 --- Passing `0` will raise an error. Same as the Intel x86 instruction BSF.

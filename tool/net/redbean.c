@@ -5287,6 +5287,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"StoreAsset", LuaStoreAsset},                              //
     {"Uncompress", LuaUncompress},                              //
     {"Underlong", LuaUnderlong},                                //
+    {"UuidV4", LuaUuidV4},                                      //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
     {"Write", LuaWrite},                                        //
     {"bin", LuaBin},                                            //

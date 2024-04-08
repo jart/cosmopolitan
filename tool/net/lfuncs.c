@@ -72,6 +72,7 @@
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
+#include <time.h>
 
 static int Rdpid(void) {
 #ifdef __x86_64__
@@ -827,6 +828,30 @@ int LuaEscapeLiteral(lua_State *L) {
 
 int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
+}
+
+int LuaUuidV4(lua_State *L) {
+  char *template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+  char *uuid = (char *)malloc(strlen(template) + 1);
+  if (uuid == NULL) {
+      return NULL; // Memory allocation failed
+  }
+
+  srand(time(NULL));
+
+  for (int i = 0; i < strlen(template); i++) {
+      char c = template[i];
+      if (c == 'x') {
+          uuid[i] = (rand() % 16 < 10) ? (rand() % 10 + '0') : (rand() % 6 + 'a');
+      } else if (c == 'y') {
+          uuid[i] = (rand() % 4 + '8');
+      } else {
+          uuid[i] = c;
+      }
+  }
+  uuid[strlen(template)] = '\0';
+  lua_pushfstring(L, uuid);
+  return 1;
 }
 
 static dontinline int LuaHasherImpl(lua_State *L, size_t k,
