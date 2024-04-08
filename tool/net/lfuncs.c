@@ -834,7 +834,7 @@ int LuaUuidV4(lua_State *L) {
   char *template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
   char *uuid = (char *)malloc(strlen(template) + 1);
   if (uuid == NULL) {
-      return NULL; // Memory allocation failed
+      return 0; // Memory allocation failed
   }
 
   srand(time(NULL));
