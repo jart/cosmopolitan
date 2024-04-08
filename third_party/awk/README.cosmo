@@ -10,8 +10,7 @@ SOURCE
 
   https://github.com/onetrueawk/awk
 
-  commit b92d8cecd132ce8e02a373e28dd42e6be34d3d59
-  Author: ozan yigit <ozan.yigit@gmail.com>
-  Date:   Mon May 30 11:34:52 2022 -0400
+  commit 2bab10b60b3f4d3bbefdcb60410655f317d1a452
+  date   Thu Mar 14 14:25:30 2024 +0200
 
     added YACC definition for byacc.

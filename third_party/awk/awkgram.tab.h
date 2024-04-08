@@ -1,113 +1,145 @@
-#ifndef COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_
-#define COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_
-#include "third_party/awk/awk.h"
-COSMOPOLITAN_C_START_
+#ifndef YY_YY_AWKGRAM_TAB_H_INCLUDED
+# define YY_YY_AWKGRAM_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
 
-#define FIRSTTOKEN 257
-#define PROGRAM    258
-#define PASTAT     259
-#define PASTAT2    260
-#define XBEGIN     261
-#define XEND       262
-#define NL         263
-#define ARRAY      264
-#define MATCH      265
-#define NOTMATCH   266
-#define MATCHOP    267
-#define FINAL      268
-#define DOT        269
-#define ALL        270
-#define CCL        271
-#define NCCL       272
-#define CHAR       273
-#define OR         274
-#define STAR       275
-#define QUEST      276
-#define PLUS       277
-#define EMPTYRE    278
-#define ZERO       279
-#define AND        280
-#define BOR        281
-#define APPEND     282
-#define EQ         283
-#define GE         284
-#define GT         285
-#define LE         286
-#define LT         287
-#define NE         288
-#define IN         289
-#define ARG        290
-#define BLTIN      291
-#define BREAK      292
-#define CLOSE      293
-#define CONTINUE   294
-#define DELETE     295
-#define DO         296
-#define EXIT       297
-#define FOR        298
-#define FUNC       299
-#define SUB        300
-#define GSUB       301
-#define IF         302
-#define INDEX      303
-#define LSUBSTR    304
-#define MATCHFCN   305
-#define NEXT       306
-#define NEXTFILE   307
-#define ADD        308
-#define MINUS      309
-#define MULT       310
-#define DIVIDE     311
-#define MOD        312
-#define ASSIGN     313
-#define ASGNOP     314
-#define ADDEQ      315
-#define SUBEQ      316
-#define MULTEQ     317
-#define DIVEQ      318
-#define MODEQ      319
-#define POWEQ      320
-#define PRINT      321
-#define PRINTF     322
-#define SPRINTF    323
-#define ELSE       324
-#define INTEST     325
-#define CONDEXPR   326
-#define POSTINCR   327
-#define PREINCR    328
-#define POSTDECR   329
-#define PREDECR    330
-#define VAR        331
-#define IVAR       332
-#define VARNF      333
-#define CALL       334
-#define NUMBER     335
-#define STRING     336
-#define REGEXPR    337
-#define GETLINE    338
-#define RETURN     339
-#define SPLIT      340
-#define SUBSTR     341
-#define WHILE      342
-#define CAT        343
-#define NOT        344
-#define UMINUS     345
-#define UPLUS      346
-#define POWER      347
-#define DECR       348
-#define INCR       349
-#define INDIRECT   350
-#define LASTTOKEN  351
-#ifndef YYSTYPE_DEFINED
-#define YYSTYPE_DEFINED
-typedef union {
-  Node *p;
-  Cell *cp;
-  int i;
-  char *s;
-} YYSTYPE;
-#endif /* YYSTYPE_DEFINED */
+/* Token kinds.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    FIRSTTOKEN = 258,              /* FIRSTTOKEN  */
+    PROGRAM = 259,                 /* PROGRAM  */
+    PASTAT = 260,                  /* PASTAT  */
+    PASTAT2 = 261,                 /* PASTAT2  */
+    XBEGIN = 262,                  /* XBEGIN  */
+    XEND = 263,                    /* XEND  */
+    NL = 264,                      /* NL  */
+    ARRAY = 265,                   /* ARRAY  */
+    MATCH = 266,                   /* MATCH  */
+    NOTMATCH = 267,                /* NOTMATCH  */
+    MATCHOP = 268,                 /* MATCHOP  */
+    FINAL = 269,                   /* FINAL  */
+    DOT = 270,                     /* DOT  */
+    ALL = 271,                     /* ALL  */
+    CCL = 272,                     /* CCL  */
+    NCCL = 273,                    /* NCCL  */
+    CHAR = 274,                    /* CHAR  */
+    OR = 275,                      /* OR  */
+    STAR = 276,                    /* STAR  */
+    QUEST = 277,                   /* QUEST  */
+    PLUS = 278,                    /* PLUS  */
+    EMPTYRE = 279,                 /* EMPTYRE  */
+    ZERO = 280,                    /* ZERO  */
+    AND = 281,                     /* AND  */
+    BOR = 282,                     /* BOR  */
+    APPEND = 283,                  /* APPEND  */
+    EQ = 284,                      /* EQ  */
+    GE = 285,                      /* GE  */
+    GT = 286,                      /* GT  */
+    LE = 287,                      /* LE  */
+    LT = 288,                      /* LT  */
+    NE = 289,                      /* NE  */
+    IN = 290,                      /* IN  */
+    ARG = 291,                     /* ARG  */
+    BLTIN = 292,                   /* BLTIN  */
+    BREAK = 293,                   /* BREAK  */
+    CLOSE = 294,                   /* CLOSE  */
+    CONTINUE = 295,                /* CONTINUE  */
+    DELETE = 296,                  /* DELETE  */
+    DO = 297,                      /* DO  */
+    EXIT = 298,                    /* EXIT  */
+    FOR = 299,                     /* FOR  */
+    FUNC = 300,                    /* FUNC  */
+    SUB = 301,                     /* SUB  */
+    GSUB = 302,                    /* GSUB  */
+    IF = 303,                      /* IF  */
+    INDEX = 304,                   /* INDEX  */
+    LSUBSTR = 305,                 /* LSUBSTR  */
+    MATCHFCN = 306,                /* MATCHFCN  */
+    NEXT = 307,                    /* NEXT  */
+    NEXTFILE = 308,                /* NEXTFILE  */
+    ADD = 309,                     /* ADD  */
+    MINUS = 310,                   /* MINUS  */
+    MULT = 311,                    /* MULT  */
+    DIVIDE = 312,                  /* DIVIDE  */
+    MOD = 313,                     /* MOD  */
+    ASSIGN = 314,                  /* ASSIGN  */
+    ASGNOP = 315,                  /* ASGNOP  */
+    ADDEQ = 316,                   /* ADDEQ  */
+    SUBEQ = 317,                   /* SUBEQ  */
+    MULTEQ = 318,                  /* MULTEQ  */
+    DIVEQ = 319,                   /* DIVEQ  */
+    MODEQ = 320,                   /* MODEQ  */
+    POWEQ = 321,                   /* POWEQ  */
+    PRINT = 322,                   /* PRINT  */
+    PRINTF = 323,                  /* PRINTF  */
+    SPRINTF = 324,                 /* SPRINTF  */
+    ELSE = 325,                    /* ELSE  */
+    INTEST = 326,                  /* INTEST  */
+    CONDEXPR = 327,                /* CONDEXPR  */
+    POSTINCR = 328,                /* POSTINCR  */
+    PREINCR = 329,                 /* PREINCR  */
+    POSTDECR = 330,                /* POSTDECR  */
+    PREDECR = 331,                 /* PREDECR  */
+    VAR = 332,                     /* VAR  */
+    IVAR = 333,                    /* IVAR  */
+    VARNF = 334,                   /* VARNF  */
+    CALL = 335,                    /* CALL  */
+    NUMBER = 336,                  /* NUMBER  */
+    STRING = 337,                  /* STRING  */
+    REGEXPR = 338,                 /* REGEXPR  */
+    GETLINE = 339,                 /* GETLINE  */
+    RETURN = 340,                  /* RETURN  */
+    SPLIT = 341,                   /* SPLIT  */
+    SUBSTR = 342,                  /* SUBSTR  */
+    WHILE = 343,                   /* WHILE  */
+    CAT = 344,                     /* CAT  */
+    NOT = 345,                     /* NOT  */
+    UMINUS = 346,                  /* UMINUS  */
+    UPLUS = 347,                   /* UPLUS  */
+    POWER = 348,                   /* POWER  */
+    DECR = 349,                    /* DECR  */
+    INCR = 350,                    /* INCR  */
+    INDIRECT = 351,                /* INDIRECT  */
+    LASTTOKEN = 352                /* LASTTOKEN  */
+  };
+  typedef enum yytokentype yytoken_kind_t;
+#endif
+
+/* Value type.  */
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+union YYSTYPE
+{
+#line 41 "awkgram.y"
+
+	Node	*p;
+	Cell	*cp;
+	int	i;
+	char	*s;
+
+#line 168 "awkgram.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
+#endif
+
+
 extern YYSTYPE yylval;
 
-COSMOPOLITAN_C_END_
-#endif /* COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_ */
+
+int yyparse (void);
+
+
+#endif /* !YY_YY_AWKGRAM_TAB_H_INCLUDED  */

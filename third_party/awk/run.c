@@ -1,47 +1,48 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
 #define DEBUG
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/time/time.h"
-#include "third_party/awk/awk.h"
-#include "third_party/awk/awkgram.tab.h"
-#include "third_party/libcxx/math.h"
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
+#include <wctype.h>
+#include <fcntl.h>
+#include <setjmp.h>
+#include <limits.h>
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include "awk.h"
+#include "awkgram.tab.h"
+
 
 static void stdinit(void);
 static void flush_all(void);
+static char *wide_char_to_byte_str(int rune, size_t *outlen);
 
 #if 1
 #define tempfree(x)	do { if (istemp(x)) tfree(x); } while (/*CONSTCOND*/0)
@@ -56,7 +57,23 @@ void tempfree(Cell *p) {
 }
 #endif
 
+/* do we really need these? */
+/* #ifdef _NFILE */
+/* #ifndef FOPEN_MAX */
+/* #define FOPEN_MAX _NFILE */
+/* #endif */
+/* #endif */
+/*  */
+/* #ifndef	FOPEN_MAX */
+/* #define	FOPEN_MAX	40 */	/* max number of open files */
+/* #endif */
+/*  */
+/* #ifndef RAND_MAX */
+/* #define RAND_MAX	32767 */	/* all that ansi guarantees */
+/* #endif */
+
 jmp_buf env;
+extern	int	pairstack[];
 extern	Awkfloat	srand_seed;
 
 Node	*winner = NULL;	/* root of parse tree */
@@ -103,8 +120,7 @@ int adjbuf(char **pbuf, int *psiz, int minlen, int quantum, char **pbptr,
 		if (rminlen)
 			minlen += quantum - rminlen;
 		tbuf = (char *) realloc(*pbuf, minlen);
-		// [jart] use after free error
-		// DPRINTF("adjbuf %s: %d %d (pbuf=%p, tbuf=%p)\n", whatrtn, *psiz, minlen, (void*)*pbuf, (void*)tbuf);
+		DPRINTF("adjbuf %s: %d %d (pbuf=%p, tbuf=%p)\n", whatrtn, *psiz, minlen, (void*)*pbuf, (void*)tbuf);
 		if (tbuf == NULL) {
 			if (whatrtn)
 				FATAL("out of memory in %s", whatrtn);
@@ -564,11 +580,225 @@ Cell *intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 }
 
 
+/* ======== utf-8 code ========== */
+
+/*
+ * Awk strings can contain ascii, random 8-bit items (eg Latin-1),
+ * or utf-8.  u8_isutf tests whether a string starts with a valid
+ * utf-8 sequence, and returns 0 if not (e.g., high bit set).
+ * u8_nextlen returns length of next valid sequence, which is
+ * 1 for ascii, 2..4 for utf-8, or 1 for high bit non-utf.
+ * u8_strlen returns length of string in valid utf-8 sequences
+ * and/or high-bit bytes.  Conversion functions go between byte
+ * number and character number.
+ *
+ * In theory, this behaves the same as before for non-utf8 bytes.
+ *
+ * Limited checking! This is a potential security hole.
+ */
+
+/* is s the beginning of a valid utf-8 string? */
+/* return length 1..4 if yes, 0 if no */
+int u8_isutf(const char *s)
+{
+	int n, ret;
+	unsigned char c;
+
+	c = s[0];
+	if (c < 128 || awk_mb_cur_max == 1)
+		return 1; /* what if it's 0? */
+
+	n = strlen(s);
+	if (n >= 2 && ((c>>5) & 0x7) == 0x6 && (s[1] & 0xC0) == 0x80) {
+		ret = 2; /* 110xxxxx 10xxxxxx */
+	} else if (n >= 3 && ((c>>4) & 0xF) == 0xE && (s[1] & 0xC0) == 0x80
+			 && (s[2] & 0xC0) == 0x80) {
+		ret = 3; /* 1110xxxx 10xxxxxx 10xxxxxx */
+	} else if (n >= 4 && ((c>>3) & 0x1F) == 0x1E && (s[1] & 0xC0) == 0x80
+			 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) {
+		ret = 4; /* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+	} else {
+		ret = 0;
+	}
+	return ret;
+}
+
+/* Convert (prefix of) utf8 string to utf-32 rune. */
+/* Sets *rune to the value, returns the length. */
+/* No error checking: watch out. */
+int u8_rune(int *rune, const char *s)
+{
+	int n, ret;
+	unsigned char c;
+
+	c = s[0];
+	if (c < 128 || awk_mb_cur_max == 1) {
+		*rune = c;
+		return 1;
+	}
+
+	n = strlen(s);
+	if (n >= 2 && ((c>>5) & 0x7) == 0x6 && (s[1] & 0xC0) == 0x80) {
+		*rune = ((c & 0x1F) << 6) | (s[1] & 0x3F); /* 110xxxxx 10xxxxxx */
+		ret = 2;
+	} else if (n >= 3 && ((c>>4) & 0xF) == 0xE && (s[1] & 0xC0) == 0x80
+			  && (s[2] & 0xC0) == 0x80) {
+		*rune = ((c & 0xF) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F);
+			/* 1110xxxx 10xxxxxx 10xxxxxx */
+		ret = 3;
+	} else if (n >= 4 && ((c>>3) & 0x1F) == 0x1E && (s[1] & 0xC0) == 0x80
+			  && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) {
+		*rune = ((c & 0x7) << 18) | ((s[1] & 0x3F) << 12) | ((s[2] & 0x3F) << 6) | (s[3] & 0x3F);
+			/* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+		ret = 4;
+	} else {
+		*rune = c;
+		ret = 1;
+	}
+	return ret; /* returns one byte if sequence doesn't look like utf */
+}
+
+/* return length of next sequence: 1 for ascii or random, 2..4 for valid utf8 */
+int u8_nextlen(const char *s)
+{
+	int len;
+
+	len = u8_isutf(s);
+	if (len == 0)
+		len = 1;
+	return len;
+}
+
+/* return number of utf characters or single non-utf bytes */
+int u8_strlen(const char *s)
+{
+	int i, len, n, totlen;
+	unsigned char c;
+
+	n = strlen(s);
+	totlen = 0;
+	for (i = 0; i < n; i += len) {
+		c = s[i];
+		if (c < 128 || awk_mb_cur_max == 1) {
+			len = 1;
+		} else {
+			len = u8_nextlen(&s[i]);
+		}
+		totlen++;
+		if (i > n)
+			FATAL("bad utf count [%s] n=%d i=%d\n", s, n, i);
+	}
+	return totlen;
+}
+
+/* convert utf-8 char number in a string to its byte offset */
+int u8_char2byte(const char *s, int charnum)
+{
+	int n;
+	int bytenum = 0;
+
+	while (charnum > 0) {
+		n = u8_nextlen(s);
+		s += n;
+		bytenum += n;
+		charnum--;
+	}
+	return bytenum;
+}
+
+/* convert byte offset in s to utf-8 char number that starts there */
+int u8_byte2char(const char *s, int bytenum)
+{
+	int i, len, b;
+	int charnum = 0; /* BUG: what origin? */
+	/* should be 0 to match start==0 which means no match */	
+
+	b = strlen(s);
+	if (bytenum > b) {
+		return -1; /* ??? */
+	}
+	for (i = 0; i <= bytenum; i += len) {
+		len = u8_nextlen(s+i);
+		charnum++;
+	}
+	return charnum;
+}
+
+/* runetochar() adapted from rune.c in the Plan 9 distributione */
+
+enum
+{
+	Runeerror = 128, /* from somewhere else */
+	Runemax = 0x10FFFF,
+
+	Bit1    = 7,
+	Bitx    = 6,
+	Bit2    = 5,
+	Bit3    = 4,
+	Bit4    = 3,
+	Bit5    = 2,
+
+	T1      = ((1<<(Bit1+1))-1) ^ 0xFF,     /* 0000 0000 */
+	Tx      = ((1<<(Bitx+1))-1) ^ 0xFF,     /* 1000 0000 */
+	T2      = ((1<<(Bit2+1))-1) ^ 0xFF,     /* 1100 0000 */
+	T3      = ((1<<(Bit3+1))-1) ^ 0xFF,     /* 1110 0000 */
+	T4      = ((1<<(Bit4+1))-1) ^ 0xFF,     /* 1111 0000 */
+	T5      = ((1<<(Bit5+1))-1) ^ 0xFF,     /* 1111 1000 */
+
+	Rune1   = (1<<(Bit1+0*Bitx))-1,	 	/* 0000 0000 0000 0000 0111 1111 */
+	Rune2   = (1<<(Bit2+1*Bitx))-1,	 	/* 0000 0000 0000 0111 1111 1111 */
+	Rune3   = (1<<(Bit3+2*Bitx))-1,	 	/* 0000 0000 1111 1111 1111 1111 */
+	Rune4   = (1<<(Bit4+3*Bitx))-1,	 	/* 0011 1111 1111 1111 1111 1111 */
+
+	Maskx   = (1<<Bitx)-1,		  	/* 0011 1111 */
+	Testx   = Maskx ^ 0xFF,		 	/* 1100 0000 */
+
+};
+
+int runetochar(char *str, int c)
+{	
+	/* one character sequence 00000-0007F => 00-7F */     
+	if (c <= Rune1) {
+		str[0] = c;
+		return 1;
+	}
+	
+	/* two character sequence 00080-007FF => T2 Tx */
+	if (c <= Rune2) {
+		str[0] = T2 | (c >> 1*Bitx);
+		str[1] = Tx | (c & Maskx);
+		return 2;
+	}
+
+	/* three character sequence 00800-0FFFF => T3 Tx Tx */
+	if (c > Runemax)
+		c = Runeerror;
+	if (c <= Rune3) {
+		str[0] = T3 |  (c >> 2*Bitx);
+		str[1] = Tx | ((c >> 1*Bitx) & Maskx);
+		str[2] = Tx |  (c & Maskx);
+		return 3;
+	}
+	
+	/* four character sequence 010000-1FFFFF => T4 Tx Tx Tx */
+	str[0] = T4 |  (c >> 3*Bitx);
+	str[1] = Tx | ((c >> 2*Bitx) & Maskx);
+	str[2] = Tx | ((c >> 1*Bitx) & Maskx);
+	str[3] = Tx |  (c & Maskx);
+	return 4;
+}               
+
+
+/* ========== end of utf8 code =========== */
+
+
+
 Cell *matchop(Node **a, int n)	/* ~ and match() */
 {
-	Cell *x, *y;
+	Cell *x, *y, *z;
 	char *s, *t;
 	int i;
+	int cstart, cpatlen, len;
 	fa *pfa;
 	int (*mf)(fa *, const char *) = match, mode = 0;
 
@@ -587,21 +817,35 @@ Cell *matchop(Node **a, int n)	/* ~ and match() */
 		i = (*mf)(pfa, s);
 		tempfree(y);
 	}
-	tempfree(x);
+	z = x;
 	if (n == MATCHFCN) {
-		int start = patbeg - s + 1;
-		if (patlen < 0)
-			start = 0;
+		int start = patbeg - s + 1; /* origin 1 */
+		if (patlen < 0) {
+			start = 0; /* not found */
+		} else {
+			cstart = u8_byte2char(s, start-1);
+			cpatlen = 0;
+			for (i = 0; i < patlen; i += len) {
+				len = u8_nextlen(patbeg+i);
+				cpatlen++;
+			}
+
+			start = cstart;
+			patlen = cpatlen;
+		}
+
 		setfval(rstartloc, (Awkfloat) start);
 		setfval(rlengthloc, (Awkfloat) patlen);
 		x = gettemp();
 		x->tval = NUM;
 		x->fval = start;
-		return x;
 	} else if ((n == MATCH && i == 1) || (n == NOTMATCH && i == 0))
-		return(True);
+		x = True;
 	else
-		return(False);
+		x = False;
+
+	tempfree(z);
+	return x;
 }
 
 
@@ -642,10 +886,15 @@ Cell *relop(Node **a, int n)	/* a[0 < a[1], etc. */
 	int i;
 	Cell *x, *y;
 	Awkfloat j;
+	bool x_is_nan, y_is_nan;
 
 	x = execute(a[0]);
 	y = execute(a[1]);
+	x_is_nan = isnan(x->fval);
+	y_is_nan = isnan(y->fval);
 	if (x->tval&NUM && y->tval&NUM) {
+		if ((x_is_nan || y_is_nan) && n != NE)
+			return(False);
 		j = x->fval - y->fval;
 		i = j<0? -1: (j>0? 1: 0);
 	} else {
@@ -658,7 +907,8 @@ Cell *relop(Node **a, int n)	/* a[0 < a[1], etc. */
 			else return(False);
 	case LE:	if (i<=0) return(True);
 			else return(False);
-	case NE:	if (i!=0) return(True);
+	case NE:	if (x_is_nan && y_is_nan) return(True);
+			else if (i!=0) return(True);
 			else return(False);
 	case EQ:	if (i == 0) return(True);
 			else return(False);
@@ -727,6 +977,7 @@ Cell *indirect(Node **a, int n)	/* $( a[0] ) */
 Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 {
 	int k, m, n;
+	int mb, nb;
 	char *s;
 	int temp;
 	Cell *x, *y, *z = NULL;
@@ -736,7 +987,7 @@ Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 	if (a[2] != NULL)
 		z = execute(a[2]);
 	s = getsval(x);
-	k = strlen(s) + 1;
+	k = u8_strlen(s) + 1;
 	if (k <= 1) {
 		tempfree(x);
 		tempfree(y);
@@ -762,12 +1013,16 @@ Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 		n = 0;
 	else if (n > k - m)
 		n = k - m;
+	/* m is start, n is length from there */
 	DPRINTF("substr: m=%d, n=%d, s=%s\n", m, n, s);
 	y = gettemp();
-	temp = s[n+m-1];	/* with thanks to John Linderman */
-	s[n+m-1] = '\0';
-	setsval(y, s + m - 1);
-	s[n+m-1] = temp;
+	mb = u8_char2byte(s, m-1); /* byte offset of start char in s */
+	nb = u8_char2byte(s, m-1+n);  /* byte offset of end+1 char in s */
+
+	temp = s[nb];	/* with thanks to John Linderman */
+	s[nb] = '\0';
+	setsval(y, s + mb);
+	s[nb] = temp;
 	tempfree(x);
 	return(y);
 }
@@ -788,7 +1043,15 @@ Cell *sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 		for (q = p1, p2 = s2; *p2 != '\0' && *q == *p2; q++, p2++)
 			continue;
 		if (*p2 == '\0') {
-			v = (Awkfloat) (p1 - s1 + 1);	/* origin 1 */
+			/* v = (Awkfloat) (p1 - s1 + 1);	 origin 1 */
+
+		   /* should be a function: used in match() as well */
+			int i, len;
+			v = 0;
+			for (i = 0; i < p1-s1+1; i += len) {
+				len = u8_nextlen(s1+i);
+				v++;
+			}
 			break;
 		}
 	}
@@ -796,6 +1059,18 @@ Cell *sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 	tempfree(y);
 	setfval(z, v);
 	return(z);
+}
+
+int has_utf8(char *s)	/* return 1 if s contains any utf-8 (2 bytes or more) character */
+{
+	int n;
+
+	for (n = 0; *s != 0; s += n) {
+		n = u8_nextlen(s);
+		if (n > 1)
+			return 1;
+	}
+	return 0;
 }
 
 #define	MAXNUMSIZE	50
@@ -840,7 +1115,6 @@ int format(char **pbuf, int *pbufsize, const char *s, Node *a)	/* printf-like co
 			s += 2;
 			continue;
 		}
-		/* have to be real careful in case this is a huge number, eg, %100000d */
 		fmtwd = atoi(s+1);
 		if (fmtwd < 0)
 			fmtwd = -fmtwd;
@@ -913,7 +1187,8 @@ int format(char **pbuf, int *pbufsize, const char *s, Node *a)	/* printf-like co
 			n = fmtwd;
 		adjbuf(&buf, &bufsize, 1+n+p-buf, recsize, &p, "format5");
 		switch (flag) {
-		case '?':	snprintf(p, BUFSZ(p), "%s", fmt);	/* unknown, so dump it too */
+		case '?':
+			snprintf(p, BUFSZ(p), "%s", fmt);	/* unknown, so dump it too */
 			t = getsval(x);
 			n = strlen(t);
 			if (fmtwd > n)
@@ -927,37 +1202,187 @@ int format(char **pbuf, int *pbufsize, const char *s, Node *a)	/* printf-like co
 		case 'f':	snprintf(p, BUFSZ(p), fmt, getfval(x)); break;
 		case 'd':	snprintf(p, BUFSZ(p), fmt, (intmax_t) getfval(x)); break;
 		case 'u':	snprintf(p, BUFSZ(p), fmt, (uintmax_t) getfval(x)); break;
-		case 's':
+
+		case 's': {
 			t = getsval(x);
 			n = strlen(t);
-			if (fmtwd > n)
-				n = fmtwd;
-			if (!adjbuf(&buf, &bufsize, 1+n+p-buf, recsize, &p, "format7"))
-				FATAL("huge string/format (%d chars) in printf %.30s... ran format() out of memory", n, t);
-			snprintf(p, BUFSZ(p), fmt, t);
+			/* if simple format or no utf-8 in the string, sprintf works */
+			if (!has_utf8(t) || strcmp(fmt,"%s") == 0) {
+				if (fmtwd > n)
+					n = fmtwd;
+				if (!adjbuf(&buf, &bufsize, 1+n+p-buf, recsize, &p, "format7"))
+					FATAL("huge string/format (%d chars) in printf %.30s..." \
+						" ran format() out of memory", n, t);
+				snprintf(p, BUFSZ(p), fmt, t);
+				break;
+			}
+
+			/* get here if string has utf-8 chars and fmt is not plain %s */
+			/* "%-w.ps", where -, w and .p are all optional */
+			/* '0' before the w is a flag character */
+			/* fmt points at % */
+			int ljust = 0, wid = 0, prec = n, pad = 0;
+			char *f = fmt+1;
+			if (f[0] == '-') {
+				ljust = 1;
+				f++;
+			}
+			// flags '0' and '+' are recognized but skipped
+			if (f[0] == '0') {
+				f++;
+				if (f[0] == '+')
+					f++;
+			}
+			if (f[0] == '+') {
+				f++;
+				if (f[0] == '0')
+					f++;
+			}
+			if (isdigit(f[0])) { /* there is a wid */
+				wid = strtol(f, &f, 10);
+			}
+			if (f[0] == '.') { /* there is a .prec */
+				prec = strtol(++f, &f, 10);
+			}
+			if (prec > u8_strlen(t))
+				prec = u8_strlen(t);
+			pad = wid>prec ? wid - prec : 0;  // has to be >= 0
+			int i, k, n;
+			
+			if (ljust) { // print prec chars from t, then pad blanks
+				n = u8_char2byte(t, prec);
+				for (k = 0; k < n; k++) {
+					//putchar(t[k]);
+					*p++ = t[k];
+				}
+				for (i = 0; i < pad; i++) {
+					//printf(" ");
+					*p++ = ' ';
+				}
+			} else { // print pad blanks, then prec chars from t
+				for (i = 0; i < pad; i++) {
+					//printf(" ");
+					*p++ = ' ';
+				}
+				n = u8_char2byte(t, prec);
+				for (k = 0; k < n; k++) {
+					//putchar(t[k]);
+					*p++ = t[k];
+				}
+			}
+			*p = 0;
 			break;
-		case 'c':
+		}
+
+               case 'c': {
+			/*
+			 * If a numeric value is given, awk should just turn
+			 * it into a character and print it:
+			 *      BEGIN { printf("%c\n", 65) }
+			 * prints "A".
+			 *
+			 * But what if the numeric value is > 128 and
+			 * represents a valid Unicode code point?!? We do
+			 * our best to convert it back into UTF-8. If we
+			 * can't, we output the encoding of the Unicode
+			 * "invalid character", 0xFFFD.
+			 */
 			if (isnum(x)) {
-				if ((int)getfval(x))
-					snprintf(p, BUFSZ(p), fmt, (int) getfval(x));
-				else {
+				int charval = (int) getfval(x);
+
+				if (charval != 0) {
+					if (charval < 128 || awk_mb_cur_max == 1)
+						snprintf(p, BUFSZ(p), fmt, charval);
+					else {
+						// possible unicode character
+						size_t count;
+						char *bs = wide_char_to_byte_str(charval, &count);
+
+						if (bs == NULL)	{ // invalid character
+							// use unicode invalid character, 0xFFFD
+							static char invalid_char[] = "\357\277\275";
+							bs = invalid_char;
+							count = 3;
+						}
+						t = bs;
+						n = count;
+						goto format_percent_c;
+					}
+				} else {
 					*p++ = '\0'; /* explicit null byte */
 					*p = '\0';   /* next output will start here */
 				}
-			} else
+				break;
+			}
+			t = getsval(x);
+			n = u8_nextlen(t);
+		format_percent_c:
+			if (n < 2) { /* not utf8 */
 				snprintf(p, BUFSZ(p), fmt, getsval(x)[0]);
+				break;
+			}
+
+			// utf8 character, almost same song and dance as for %s
+			int ljust = 0, wid = 0, prec = n, pad = 0;
+			char *f = fmt+1;
+			if (f[0] == '-') {
+				ljust = 1;
+				f++;
+			}
+			// flags '0' and '+' are recognized but skipped
+			if (f[0] == '0') {
+				f++;
+				if (f[0] == '+')
+					f++;
+			}
+			if (f[0] == '+') {
+				f++;
+				if (f[0] == '0')
+					f++;
+			}
+			if (isdigit(f[0])) { /* there is a wid */
+				wid = strtol(f, &f, 10);
+			}
+			if (f[0] == '.') { /* there is a .prec */
+				prec = strtol(++f, &f, 10);
+			}
+			if (prec > 1)           // %c --> only one character
+				prec = 1;
+			pad = wid>prec ? wid - prec : 0;  // has to be >= 0
+			int i;
+
+			if (ljust) { // print one char from t, then pad blanks
+				for (i = 0; i < n; i++)
+					*p++ = t[i];
+				for (i = 0; i < pad; i++) {
+					//printf(" ");
+					*p++ = ' ';
+				}
+			} else { // print pad blanks, then prec chars from t
+				for (i = 0; i < pad; i++) {
+					//printf(" ");
+					*p++ = ' ';
+				}
+				for (i = 0; i < n; i++)
+					*p++ = t[i];
+			}
+			*p = 0;
 			break;
+		}
 		default:
 			FATAL("can't happen: bad conversion %c in format()", flag);
 		}
+
 		tempfree(x);
 		p += strlen(p);
 		s++;
 	}
 	*p = '\0';
 	free(fmt);
-	for ( ; a; a = a->nnext)		/* evaluate any remaining args */
-		execute(a);
+	for ( ; a; a = a->nnext) {		/* evaluate any remaining args */
+		x = execute(a);
+		tempfree(x);
+	}
 	*pbuf = buf;
 	*pbufsize = bufsize;
 	return p - buf;
@@ -1118,8 +1543,9 @@ Cell *assign(Node **a, int n)	/* a[0] = a[1], a[0] += a[1], etc. */
 		if (x == y && !(x->tval & (FLD|REC)) && x != nfloc)
 			;	/* self-assignment: leave alone unless it's a field or NF */
 		else if ((y->tval & (STR|NUM)) == (STR|NUM)) {
+			yf = getfval(y);
 			setsval(x, getsval(y));
-			x->fval = getfval(y);
+			x->fval = yf;
 			x->tval |= NUM;
 		}
 		else if (isstr(y))
@@ -1180,8 +1606,10 @@ Cell *cat(Node **a, int q)	/* a[0] cat a[1] */
 
 	x = execute(a[0]);
 	n1 = strlen(getsval(x));
-	adjbuf(&s, &ssz, n1, recsize, 0, "cat1");
+	adjbuf(&s, &ssz, n1 + 1, recsize, 0, "cat1");
 	memcpy(s, x->sval, n1);
+
+	tempfree(x);
 
 	y = execute(a[1]);
 	n2 = strlen(getsval(y));
@@ -1189,7 +1617,6 @@ Cell *cat(Node **a, int q)	/* a[0] cat a[1] */
 	memcpy(s + n1, y->sval, n2);
 	s[n1 + n2] = '\0';
 
-	tempfree(x);
 	tempfree(y);
 
 	z = gettemp();
@@ -1247,23 +1674,27 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	int sep;
 	char temp, num[50];
 	int n, tempstat, arg3type;
+	int j;
 	double result;
 
 	y = execute(a[0]);	/* source string */
 	origs = s = strdup(getsval(y));
+	tempfree(y);
 	arg3type = ptoi(a[3]);
-	if (a[2] == NULL)		/* fs string */
+	if (a[2] == NULL) {		/* BUG: CSV should override implicit fs but not explicit */
 		fs = getsval(fsloc);
-	else if (arg3type == STRING) {	/* split(str,arr,"string") */
+	} else if (arg3type == STRING) {	/* split(str,arr,"string") */
 		x = execute(a[2]);
 		fs = origfs = strdup(getsval(x));
 		tempfree(x);
-	} else if (arg3type == REGEXPR)
+	} else if (arg3type == REGEXPR) {
 		fs = "(regexpr)";	/* split(str,arr,/regexpr/) */
-	else
+	} else {
 		FATAL("illegal type of split");
+	}
 	sep = *fs;
 	ap = execute(a[1]);	/* array name */
+/* BUG 7/26/22: this appears not to reset array: see C1/asplit */
 	freesymtab(ap);
 	DPRINTF("split: s=|%s|, a=%s, sep=|%s|\n", s, NN(ap->nval), fs);
 	ap->tval &= ~STR;
@@ -1317,7 +1748,41 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			setsymtab(num, s, 0.0, STR, (Array *) ap->sval);
   spdone:
 		pfa = NULL;
-	} else if (sep == ' ') {
+
+	} else if (a[2] == NULL && CSV) {	/* CSV only if no explicit separator */
+		char *newt = (char *) malloc(strlen(s)); /* for building new string; reuse for each field */
+		for (;;) {
+			char *fr = newt;
+			n++;
+			if (*s == '"' ) { /* start of "..." */
+				for (s++ ; *s != '\0'; ) {
+					if (*s == '"' && s[1] != '\0' && s[1] == '"') {
+						s += 2; /* doubled quote */
+						*fr++ = '"';
+					} else if (*s == '"' && (s[1] == '\0' || s[1] == ',')) {
+						s++; /* skip over closing quote */
+						break;
+					} else {
+						*fr++ = *s++;
+					}
+				}
+				*fr++ = 0;
+			} else {	/* unquoted field */
+				while (*s != ',' && *s != '\0')
+					*fr++ = *s++;
+				*fr++ = 0;
+			}
+			snprintf(num, sizeof(num), "%d", n);
+			if (is_number(newt, &result))
+				setsymtab(num, newt, result, STR|NUM, (Array *) ap->sval);
+			else
+				setsymtab(num, newt, 0.0, STR, (Array *) ap->sval);
+			if (*s++ == '\0')
+				break;
+		}
+		free(newt);
+
+	} else if (!CSV && sep == ' ') { /* usual case: split on white space */
 		for (n = 0; ; ) {
 #define ISWS(c)	((c) == ' ' || (c) == '\t' || (c) == '\n')
 			while (ISWS(*s))
@@ -1340,19 +1805,25 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			if (*s != '\0')
 				s++;
 		}
+
 	} else if (sep == 0) {	/* new: split(s, a, "") => 1 char/elem */
-		for (n = 0; *s != '\0'; s++) {
-			char buf[2];
+		for (n = 0; *s != '\0'; s += u8_nextlen(s)) {
+			char buf[10];
 			n++;
 			snprintf(num, sizeof(num), "%d", n);
-			buf[0] = *s;
-			buf[1] = '\0';
+
+			for (j = 0; j < u8_nextlen(s); j++) {
+				buf[j] = s[j];
+			}
+			buf[j] = '\0';
+
 			if (isdigit((uschar)buf[0]))
 				setsymtab(num, buf, atof(buf), STR|NUM, (Array *) ap->sval);
 			else
 				setsymtab(num, buf, 0.0, STR, (Array *) ap->sval);
 		}
-	} else if (*s != '\0') {
+
+	} else if (*s != '\0') {  /* some random single character */
 		for (;;) {
 			n++;
 			t = s;
@@ -1371,7 +1842,6 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 		}
 	}
 	tempfree(ap);
-	tempfree(y);
 	xfree(origs);
 	xfree(origfs);
 	x = gettemp();
@@ -1511,7 +1981,8 @@ static char *nawk_convert(const char *s, int (*fun_c)(int),
 	const char *ps = NULL;
 	size_t n       = 0;
 	wchar_t wc;
-	size_t sz = MB_CUR_MAX;
+	const size_t sz = awk_mb_cur_max;
+	int unused;
 
 	if (sz == 1) {
 		buf = tostring(s);
@@ -1531,7 +2002,7 @@ static char *nawk_convert(const char *s, int (*fun_c)(int),
 		 * doesn't work.)
 		 * Increment said variable to avoid a different warning.
 		 */
-		int unused = wctomb(NULL, L'\0');
+		unused = wctomb(NULL, L'\0');
 		unused++;
 
 		ps   = s;
@@ -1585,6 +2056,8 @@ static char *nawk_tolower(const char *s)
 	return nawk_convert(s, tolower, towlower);
 }
 
+
+
 Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 {
 	Cell *x, *y;
@@ -1595,6 +2068,7 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 	Node *nextarg;
 	FILE *fp;
 	int status = 0;
+	int estatus = 0;
 
 	t = ptoi(a[0]);
 	x = execute(a[1]);
@@ -1604,7 +2078,7 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 		if (isarr(x))
 			u = ((Array *) x->sval)->nelem;	/* GROT.  should be function*/
 		else
-			u = strlen(getsval(x));
+			u = u8_strlen(getsval(x));
 		break;
 	case FLOG:
 		errno = 0;
@@ -1637,18 +2111,21 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 		break;
 	case FSYSTEM:
 		fflush(stdout);		/* in case something is buffered already */
-		status = system(getsval(x));
-		u = status;
+		estatus = status = system(getsval(x));
 		if (status != -1) {
 			if (WIFEXITED(status)) {
-				u = WEXITSTATUS(status);
+				estatus = WEXITSTATUS(status);
 			} else if (WIFSIGNALED(status)) {
-				u = WTERMSIG(status) + 256;
+				estatus = WTERMSIG(status) + 256;
+#ifdef WCOREDUMP
 				if (WCOREDUMP(status))
-					u += 256;
+					estatus += 256;
+#endif
 			} else	/* something else?!? */
-				u = 0;
+				estatus = 0;
 		}
+		/* else estatus was set to -1 */
+		u = estatus;
 		break;
 	case FRAND:
 		/* random() returns numbers in [0..2^31-1]
@@ -1695,8 +2172,10 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 	setfval(x, u);
 	if (nextarg != NULL) {
 		WARNING("warning: function has too many arguments");
-		for ( ; nextarg; nextarg = nextarg->nnext)
-			execute(nextarg);
+		for ( ; nextarg; nextarg = nextarg->nnext) {
+			y = execute(nextarg);
+			tempfree(y);
+		}
 	}
 	return(x);
 }
@@ -1924,166 +2403,143 @@ static void flush_all(void)
 
 void backsub(char **pb_ptr, const char **sptr_ptr);
 
-Cell *sub(Node **a, int nnn)	/* substitute command */
+Cell *dosub(Node **a, int subop)        /* sub and gsub */
 {
-	const char *sptr, *q;
-	Cell *x, *y, *result;
-	char *t, *buf, *pb;
 	fa *pfa;
+	int tempstat = 0;
+	char *repl;
+	Cell *x;
+
+	char *buf = NULL;
+	char *pb = NULL;
 	int bufsz = recsize;
 
-	if ((buf = (char *) malloc(bufsz)) == NULL)
-		FATAL("out of memory in sub");
-	x = execute(a[3]);	/* target string */
-	t = getsval(x);
-	if (a[0] == NULL)	/* 0 => a[1] is already-compiled regexpr */
-		pfa = (fa *) a[1];	/* regular expression */
-	else {
-		y = execute(a[1]);
-		pfa = makedfa(getsval(y), 1);
-		tempfree(y);
+	const char *r, *s;
+	const char *start;
+	const char *noempty = NULL;      /* empty match disallowed here */
+	size_t m = 0;                    /* match count */
+	size_t whichm;                   /* which match to select, 0 = global */
+	int mtype;                       /* match type */
+
+	if (a[0] == NULL) {	/* 0 => a[1] is already-compiled regexpr */
+		pfa = (fa *) a[1];
+	} else {
+		x = execute(a[1]);
+		pfa = makedfa(getsval(x), 1);
+		tempfree(x);
 	}
-	y = execute(a[2]);	/* replacement string */
-	result = False;
-	if (pmatch(pfa, t)) {
-		sptr = t;
-		adjbuf(&buf, &bufsz, 1+patbeg-sptr, recsize, 0, "sub");
-		pb = buf;
-		while (sptr < patbeg)
-			*pb++ = *sptr++;
-		sptr = getsval(y);
-		while (*sptr != '\0') {
-			adjbuf(&buf, &bufsz, 5+pb-buf, recsize, &pb, "sub");
-			if (*sptr == '\\') {
-				backsub(&pb, &sptr);
-			} else if (*sptr == '&') {
-				sptr++;
-				adjbuf(&buf, &bufsz, 1+patlen+pb-buf, recsize, &pb, "sub");
-				for (q = patbeg; q < patbeg+patlen; )
-					*pb++ = *q++;
-			} else
-				*pb++ = *sptr++;
-		}
-		*pb = '\0';
-		if (pb > buf + bufsz)
-			FATAL("sub result1 %.30s too big; can't happen", buf);
-		sptr = patbeg + patlen;
-		if ((patlen == 0 && *patbeg) || (patlen && *(sptr-1))) {
-			adjbuf(&buf, &bufsz, 1+strlen(sptr)+pb-buf, 0, &pb, "sub");
-			while ((*pb++ = *sptr++) != '\0')
-				continue;
-		}
-		if (pb > buf + bufsz)
-			FATAL("sub result2 %.30s too big; can't happen", buf);
-		setsval(x, buf);	/* BUG: should be able to avoid copy */
-		result = True;
-	}
+
+	x = execute(a[2]);	/* replacement string */
+	repl = tostring(getsval(x));
 	tempfree(x);
-	tempfree(y);
-	free(buf);
-	return result;
-}
 
-Cell *gsub(Node **a, int nnn)	/* global substitute */
-{
-	Cell *x, *y;
-	char *rptr, *pb;
-	const char *q, *t, *sptr;
-	char *buf;
-	fa *pfa;
-	int mflag, tempstat, num;
-	int bufsz = recsize;
-
-	if ((buf = (char *) malloc(bufsz)) == NULL)
-		FATAL("out of memory in gsub");
-	mflag = 0;	/* if mflag == 0, can replace empty string */
-	num = 0;
-	x = execute(a[3]);	/* target string */
-	t = getsval(x);
-	if (a[0] == NULL)	/* 0 => a[1] is already-compiled regexpr */
-		pfa = (fa *) a[1];	/* regular expression */
-	else {
-		y = execute(a[1]);
-		pfa = makedfa(getsval(y), 1);
-		tempfree(y);
+	switch (subop) {
+	case SUB:
+		whichm = 1;
+		x = execute(a[3]);    /* source string */
+		break;
+	case GSUB:
+		whichm = 0;
+		x = execute(a[3]);    /* source string */
+		break;
+	default:
+		FATAL("dosub: unrecognized subop: %d", subop);
 	}
-	y = execute(a[2]);	/* replacement string */
-	if (pmatch(pfa, t)) {
-		tempstat = pfa->initstat;
-		pfa->initstat = 2;
-		pb = buf;
-		rptr = getsval(y);
-		do {
-			if (patlen == 0 && *patbeg != '\0') {	/* matched empty string */
-				if (mflag == 0) {	/* can replace empty */
-					num++;
-					sptr = rptr;
-					while (*sptr != '\0') {
-						adjbuf(&buf, &bufsz, 5+pb-buf, recsize, &pb, "gsub");
-						if (*sptr == '\\') {
-							backsub(&pb, &sptr);
-						} else if (*sptr == '&') {
-							sptr++;
-							adjbuf(&buf, &bufsz, 1+patlen+pb-buf, recsize, &pb, "gsub");
-							for (q = patbeg; q < patbeg+patlen; )
-								*pb++ = *q++;
-						} else
-							*pb++ = *sptr++;
-					}
-				}
-				if (*t == '\0')	/* at end */
-					goto done;
-				adjbuf(&buf, &bufsz, 2+pb-buf, recsize, &pb, "gsub");
-				*pb++ = *t++;
-				if (pb > buf + bufsz)	/* BUG: not sure of this test */
-					FATAL("gsub result0 %.30s too big; can't happen", buf);
-				mflag = 0;
+
+	start = getsval(x);
+	while (pmatch(pfa, start)) {
+		if (buf == NULL) {
+			if ((pb = buf = (char *) malloc(bufsz)) == NULL)
+				FATAL("out of memory in dosub");
+			tempstat = pfa->initstat;
+			pfa->initstat = 2;
+		}
+
+		/* match types */
+		#define	MT_IGNORE  0  /* unselected or invalid */
+		#define MT_INSERT  1  /* selected, empty */
+		#define MT_REPLACE 2  /* selected, not empty */
+
+		/* an empty match just after replacement is invalid */
+
+		if (patbeg == noempty && patlen == 0) {
+			mtype = MT_IGNORE;    /* invalid, not counted */
+		} else if (whichm == ++m || whichm == 0) {
+			mtype = patlen ? MT_REPLACE : MT_INSERT;
+		} else {
+			mtype = MT_IGNORE;    /* unselected, but counted */
+		}
+
+		/* leading text: */
+		if (patbeg > start) {
+			adjbuf(&buf, &bufsz, (pb - buf) + (patbeg - start),
+				recsize, &pb, "dosub");
+			s = start;
+			while (s < patbeg)
+				*pb++ = *s++;
+		}
+
+		if (mtype == MT_IGNORE)
+			goto matching_text;  /* skip replacement text */
+
+		r = repl;
+		while (*r != 0) {
+			adjbuf(&buf, &bufsz, 5+pb-buf, recsize, &pb, "dosub");
+			if (*r == '\\') {
+				backsub(&pb, &r);
+			} else if (*r == '&') {
+				r++;
+				adjbuf(&buf, &bufsz, 1+patlen+pb-buf, recsize,
+					&pb, "dosub");
+				for (s = patbeg; s < patbeg+patlen; )
+					*pb++ = *s++;
+			} else {
+				*pb++ = *r++;
 			}
-			else {	/* matched nonempty string */
-				num++;
-				sptr = t;
-				adjbuf(&buf, &bufsz, 1+(patbeg-sptr)+pb-buf, recsize, &pb, "gsub");
-				while (sptr < patbeg)
-					*pb++ = *sptr++;
-				sptr = rptr;
-				while (*sptr != '\0') {
-					adjbuf(&buf, &bufsz, 5+pb-buf, recsize, &pb, "gsub");
-					if (*sptr == '\\') {
-						backsub(&pb, &sptr);
-					} else if (*sptr == '&') {
-						sptr++;
-						adjbuf(&buf, &bufsz, 1+patlen+pb-buf, recsize, &pb, "gsub");
-						for (q = patbeg; q < patbeg+patlen; )
-							*pb++ = *q++;
-					} else
-						*pb++ = *sptr++;
-				}
-				t = patbeg + patlen;
-				if (patlen == 0 || *t == '\0' || *(t-1) == '\0')
-					goto done;
-				if (pb > buf + bufsz)
-					FATAL("gsub result1 %.30s too big; can't happen", buf);
-				mflag = 1;
-			}
-		} while (pmatch(pfa,t));
-		sptr = t;
-		adjbuf(&buf, &bufsz, 1+strlen(sptr)+pb-buf, 0, &pb, "gsub");
-		while ((*pb++ = *sptr++) != '\0')
-			continue;
-	done:	if (pb < buf + bufsz)
-			*pb = '\0';
-		else if (*(pb-1) != '\0')
-			FATAL("gsub result2 %.30s truncated; can't happen", buf);
-		setsval(x, buf);	/* BUG: should be able to avoid copy + free */
+		}
+
+matching_text:
+		if (mtype == MT_REPLACE || *patbeg == '\0')
+			goto next_search;  /* skip matching text */
+		
+		if (patlen == 0)
+			patlen = u8_nextlen(patbeg);
+		adjbuf(&buf, &bufsz, (pb-buf) + patlen, recsize, &pb, "dosub");
+		s = patbeg;
+		while (s < patbeg + patlen)
+			*pb++ = *s++;
+
+next_search:
+		start = patbeg + patlen;
+		if (m == whichm || *patbeg == '\0')
+			break;
+		if (mtype == MT_REPLACE)
+			noempty = start;
+
+		#undef MT_IGNORE
+		#undef MT_INSERT
+		#undef MT_REPLACE
+	}
+
+	xfree(repl);
+
+	if (buf != NULL) {
 		pfa->initstat = tempstat;
+
+		/* trailing text */
+		adjbuf(&buf, &bufsz, 1+strlen(start)+pb-buf, 0, &pb, "dosub");
+		while ((*pb++ = *start++) != '\0')
+			;
+
+		setsval(x, buf);
+		free(buf);
 	}
+
 	tempfree(x);
-	tempfree(y);
 	x = gettemp();
 	x->tval = NUM;
-	x->fval = num;
-	free(buf);
-	return(x);
+	x->fval = m;
+	return x;
 }
 
 void backsub(char **pb_ptr, const char **sptr_ptr)	/* handle \\& variations */
@@ -2121,4 +2577,42 @@ void backsub(char **pb_ptr, const char **sptr_ptr)	/* handle \\& variations */
 
 	*pb_ptr = pb;
 	*sptr_ptr = sptr;
+}
+
+static char *wide_char_to_byte_str(int rune, size_t *outlen)
+{
+	static char buf[5];
+	int len;
+
+	if (rune < 0 || rune > 0x10FFFF)
+		return NULL;
+
+	memset(buf, 0, sizeof(buf));
+
+	len = 0;
+	if (rune <= 0x0000007F) {
+		buf[len++] = rune;
+	} else if (rune <= 0x000007FF) {
+		// 110xxxxx 10xxxxxx
+		buf[len++] = 0xC0 | (rune >> 6);
+		buf[len++] = 0x80 | (rune & 0x3F);
+	} else if (rune <= 0x0000FFFF) {
+		// 1110xxxx 10xxxxxx 10xxxxxx
+		buf[len++] = 0xE0 | (rune >> 12);
+		buf[len++] = 0x80 | ((rune >> 6) & 0x3F);
+		buf[len++] = 0x80 | (rune & 0x3F);
+
+	} else {
+		// 0x00010000 - 0x10FFFF
+		// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+		buf[len++] = 0xF0 | (rune >> 18);
+		buf[len++] = 0x80 | ((rune >> 12) & 0x3F);
+		buf[len++] = 0x80 | ((rune >> 6) & 0x3F);
+		buf[len++] = 0x80 | (rune & 0x3F);
+	}
+
+	*outlen = len;
+	buf[len++] = '\0';
+
+	return buf;
 }

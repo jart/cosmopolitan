@@ -1,40 +1,35 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│ Copyright (C) Lucent Technologies 1997                                       │
-│ All Rights Reserved                                                          │
-│                                                                              │
-│ Permission to use, copy, modify, and distribute this software and            │
-│ its documentation for any purpose and without fee is hereby                  │
-│ granted, provided that the above copyright notice appear in all              │
-│ copies and that both that the copyright notice and this                      │
-│ permission notice and warranty disclaimer appear in supporting               │
-│ documentation, and that the name Lucent Technologies or any of               │
-│ its entities not be used in advertising or publicity pertaining              │
-│ to distribution of the software without specific, written prior              │
-│ permission.                                                                  │
-│                                                                              │
-│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
-│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
-│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
-│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
-│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
-│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
-│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
-│ THIS SOFTWARE.                                                               │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "third_party/awk/awk.h"
-#include "third_party/awk/awkgram.tab.h"
-#include "third_party/gdtoa/gdtoa.h"
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
 
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "awk.h"
+#include "awkgram.tab.h"
+
+extern YYSTYPE	yylval;
 extern bool	infunc;
 
 int	lineno	= 1;
@@ -373,6 +368,8 @@ int yylex(void)
 	}
 }
 
+extern int runetochar(char *str, int c);
+
 int string(void)
 {
 	int c, n;
@@ -420,20 +417,54 @@ int string(void)
 				*bp++ = n;
 				break;
 
-			case 'x':	/* hex  \x0-9a-fA-F + */
-			    {	char xbuf[100], *px;
-				for (px = xbuf; (c = input()) != 0 && px-xbuf < 100-2; ) {
-					if (isdigit(c)
-					 || (c >= 'a' && c <= 'f')
-					 || (c >= 'A' && c <= 'F'))
-						*px++ = c;
-					else
-						break;
+			case 'x':	/* hex  \x0-9a-fA-F (exactly two) */
+			    {
+				int i;
+
+				if (!isxdigit(peek())) {
+					unput(c);
+					break;
 				}
-				*px = 0;
+				n = 0;
+				for (i = 0; i < 2; i++) {
+					c = input();
+					if (c == 0)
+						break;
+					if (isxdigit(c)) {
+						c = tolower(c);
+						n *= 16;
+						if (isdigit(c))
+							n += (c - '0');
+						else
+							n += 10 + (c - 'a');
+					} else {
+						unput(c);
+						break;
+					}
+				}
+				if (i)
+					*bp++ = n;
+				break;
+			    }
+
+			case 'u':	/* utf  \u0-9a-fA-F (1..8) */
+			    {
+				int i;
+
+				n = 0;
+				for (i = 0; i < 8; i++) {
+					c = input();
+					if (!isxdigit(c) || c == 0)
+						break;
+					c = tolower(c);
+					n *= 16;
+					if (isdigit(c))
+						n += (c - '0');
+					else
+						n += 10 + (c - 'a');
+				}
 				unput(c);
-	  			sscanf(xbuf, "%x", (unsigned int *) &n);
-				*bp++ = n;
+				bp += runetochar(bp, n);
 				break;
 			    }
 
@@ -530,7 +561,7 @@ int regexpr(void)
 	char *bp;
 
 	if (buf == NULL && (buf = (char *) malloc(bufsz)) == NULL)
-		FATAL("out of space for rex expr");
+		FATAL("out of space for reg expr");
 	bp = buf;
 	for ( ; (c = input()) != '/' && c != 0; ) {
 		if (!adjbuf(&buf, &bufsz, bp-buf+3, 500, &bp, "regexpr"))
