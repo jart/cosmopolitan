@@ -72,7 +72,6 @@
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
-#include <time.h>
 
 static int Rdpid(void) {
 #ifdef __x86_64__
@@ -830,47 +829,47 @@ int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
 }
 
-
 int LuaUuidV4(lua_State *L) {
-  char v[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+              '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   static char uuid_str[37] = {0};
 
-  uuid_str[0] = v[rand()%16];
-  uuid_str[1] = v[rand()%16];
-  uuid_str[2] = v[rand()%16];
-  uuid_str[3] = v[rand()%16];
-  uuid_str[4] = v[rand()%16];
-  uuid_str[5] = v[rand()%16];
-  uuid_str[6] = v[rand()%16];
-  uuid_str[7] = v[rand()%16];
+  uuid_str[0] = v[rand() % 16];
+  uuid_str[1] = v[rand() % 16];
+  uuid_str[2] = v[rand() % 16];
+  uuid_str[3] = v[rand() % 16];
+  uuid_str[4] = v[rand() % 16];
+  uuid_str[5] = v[rand() % 16];
+  uuid_str[6] = v[rand() % 16];
+  uuid_str[7] = v[rand() % 16];
   uuid_str[8] = '-';
-  uuid_str[9] = v[rand()%16];
-  uuid_str[10] = v[rand()%16];
-  uuid_str[11] = v[rand()%16];
-  uuid_str[12] = v[rand()%16];
+  uuid_str[9] = v[rand() % 16];
+  uuid_str[10] = v[rand() % 16];
+  uuid_str[11] = v[rand() % 16];
+  uuid_str[12] = v[rand() % 16];
   uuid_str[13] = '-';
   uuid_str[14] = '4';
-  uuid_str[15] = v[rand()%16];
-  uuid_str[16] = v[rand()%16];
-  uuid_str[17] = v[rand()%16];
+  uuid_str[15] = v[rand() % 16];
+  uuid_str[16] = v[rand() % 16];
+  uuid_str[17] = v[rand() % 16];
   uuid_str[18] = '-';
-  uuid_str[19] = v[8 + rand()%4];
-  uuid_str[20] = v[rand()%16];
-  uuid_str[21] = v[rand()%16];
-  uuid_str[22] = v[rand()%16];
+  uuid_str[19] = v[8 + rand() % 4];
+  uuid_str[20] = v[rand() % 16];
+  uuid_str[21] = v[rand() % 16];
+  uuid_str[22] = v[rand() % 16];
   uuid_str[23] = '-';
-  uuid_str[24] = v[rand()%16];
-  uuid_str[25] = v[rand()%16];
-  uuid_str[26] = v[rand()%16];
-  uuid_str[27] = v[rand()%16];
-  uuid_str[28] = v[rand()%16];
-  uuid_str[29] = v[rand()%16];
-  uuid_str[30] = v[rand()%16];
-  uuid_str[31] = v[rand()%16];
-  uuid_str[32] = v[rand()%16];
-  uuid_str[33] = v[rand()%16];
-  uuid_str[34] = v[rand()%16];
-  uuid_str[35] = v[rand()%16];
+  uuid_str[24] = v[rand() % 16];
+  uuid_str[25] = v[rand() % 16];
+  uuid_str[26] = v[rand() % 16];
+  uuid_str[27] = v[rand() % 16];
+  uuid_str[28] = v[rand() % 16];
+  uuid_str[29] = v[rand() % 16];
+  uuid_str[30] = v[rand() % 16];
+  uuid_str[31] = v[rand() % 16];
+  uuid_str[32] = v[rand() % 16];
+  uuid_str[33] = v[rand() % 16];
+  uuid_str[34] = v[rand() % 16];
+  uuid_str[35] = v[rand() % 16];
   uuid_str[36] = '\0';
   lua_pushfstring(L, uuid_str);
   return 1;
