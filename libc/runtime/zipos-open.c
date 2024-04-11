@@ -114,7 +114,6 @@ StartOver:
   while ((h = *ph)) {
     if (h->mapsize >= mapsize) {
       if (!_cmpxchg(ph, h, h->next)) goto StartOver;
-      atomic_store_explicit(&h->refs, 0, memory_order_relaxed);
       break;
     }
     ph = &h->next;
@@ -130,6 +129,7 @@ StartOver:
                   kAsanHeapOverrun);
   }
   if (h) {
+    atomic_store_explicit(&h->refs, 0, memory_order_relaxed);
     h->size = size;
     h->zipos = zipos;
     h->mapsize = mapsize;
