@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -34,11 +35,28 @@
 #include "libc/nt/thread.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
+
+static void _onfork_prepare(void) {
+  if (_weaken(_pthread_onfork_prepare)) {
+    _weaken(_pthread_onfork_prepare)();
+  }
+  __fds_lock();
+  __mmi_lock();
+}
+
+static void _onfork_parent(void) {
+  __mmi_unlock();
+  __fds_unlock();
+  if (_weaken(_pthread_onfork_parent)) {
+    _weaken(_pthread_onfork_parent)();
+  }
+}
 
 int _fork(uint32_t dwCreationFlags) {
   struct Dll *e;
@@ -47,8 +65,8 @@ int _fork(uint32_t dwCreationFlags) {
   BLOCK_SIGNALS;
   if (IsWindows())
     __proc_lock();
-  if (__threaded && _weaken(_pthread_onfork_prepare)) {
-    _weaken(_pthread_onfork_prepare)();
+  if (__threaded) {
+    _onfork_prepare();
   }
   if (!IsWindows()) {
     ax = sys_fork();
@@ -105,8 +123,8 @@ int _fork(uint32_t dwCreationFlags) {
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
     // this is the parent process
-    if (__threaded && _weaken(_pthread_onfork_parent)) {
-      _weaken(_pthread_onfork_parent)();
+    if (__threaded) {
+      _onfork_parent();
     }
     if (IsWindows())
       __proc_unlock();

@@ -60,6 +60,9 @@ __static_yoink("nsync_mu_trylock");
 __static_yoink("nsync_mu_rlock");
 __static_yoink("nsync_mu_runlock");
 __static_yoink("_pthread_atfork");
+__static_yoink("_pthread_onfork_prepare");
+__static_yoink("_pthread_onfork_parent");
+__static_yoink("_pthread_onfork_child");
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
