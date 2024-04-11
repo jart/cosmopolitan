@@ -1089,7 +1089,7 @@ FUNCTIONS
             - keepalive (default = false): configures each request to keep the
               connection open (unless closed by the server) and reuse for the
               next request to the same host. This option is disabled when SSL
-              connection is used.
+              connection is used.
               The mapping of hosts and their sockets is stored in a table
               assigned to the `keepalive` field itself, so it can be passed to
               the next call.
