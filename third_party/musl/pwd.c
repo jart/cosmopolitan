@@ -45,9 +45,9 @@ __static_yoink("musl_libc_notice");
 // something as substantive as this library, then we shall assume the
 // application is meaty enough to benefit from the performance of the
 // chromium zlib library (costs ~40kb binary) versus just having puff
-__static_yoink("_Cz_inflateInit2");
-__static_yoink("_Cz_inflate");
-__static_yoink("_Cz_inflateEnd");
+__static_yoink("inflateInit2");
+__static_yoink("inflate");
+__static_yoink("inflateEnd");
 #endif
 
 static char *
