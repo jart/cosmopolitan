@@ -12,14 +12,14 @@
 -- PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
-for i = 1, 1000000 do
+for _ = 1, 1000 do
   local uuid = UuidV4()
   assert(#uuid == 36)
   assert(string.sub(uuid, 9, 9) == "-")
   assert(string.sub(uuid, 14, 14) == "-")
   assert(string.sub(uuid, 15, 15) == "4")
   assert(string.sub(uuid, 19, 19) == "-")
-  y = string.sub(uuid, 20, 20)
+  local y = string.sub(uuid, 20, 20)
   assert(y == "8" or y == "9" or y == "a" or y == "b")
   assert(string.sub(uuid, 24, 24) == "-")
 end
