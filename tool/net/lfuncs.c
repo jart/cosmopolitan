@@ -829,6 +829,31 @@ int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
 }
 
+int LuaUuidV4(lua_State *L) {
+  static const char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  char uuid_str[37] = {0};
+  uint64_t r = _rand64();
+  int j = 0;
+  for (int i = 0; i < 36; ++i, ++j) {
+    if (j == 16) {
+      r = _rand64();
+      j = 0;
+    }
+    uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
+  }
+
+  uuid_str[8] = '-';
+  uuid_str[13] = '-';
+  uuid_str[14] = '4';
+  uuid_str[18] = '-';
+  uuid_str[19] = v[8 | (r & (0x3ull << (j * 4ull))) >> (j * 4ull)];
+  uuid_str[23] = '-';
+  uuid_str[36] = '\0';
+  lua_pushfstring(L, uuid_str);
+  return 1;
+}
+
 static dontinline int LuaHasherImpl(lua_State *L, size_t k,
                                     int H(const void *, size_t, uint8_t *)) {
   size_t n;
