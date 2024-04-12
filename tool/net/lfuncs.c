@@ -832,7 +832,7 @@ int LuaVisualizeControlCodes(lua_State *L) {
 int LuaUuidV4(lua_State *L) {
   char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-  static char uuid_str[37] = {0};
+  char uuid_str[37] = {0};
 
   uuid_str[0] = v[_rand64() % 16];
   uuid_str[1] = v[_rand64() % 16];
