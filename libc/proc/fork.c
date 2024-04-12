@@ -46,6 +46,7 @@ static void _onfork_prepare(void) {
   if (_weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();
   }
+  _pthread_lock();
   __fds_lock();
   __mmi_lock();
 }
@@ -53,8 +54,23 @@ static void _onfork_prepare(void) {
 static void _onfork_parent(void) {
   __mmi_unlock();
   __fds_unlock();
+  _pthread_unlock();
   if (_weaken(_pthread_onfork_parent)) {
     _weaken(_pthread_onfork_parent)();
+  }
+}
+
+static void _onfork_child(void) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  extern pthread_mutex_t __mmi_lock_obj;
+  pthread_mutex_init(&__mmi_lock_obj, &attr);
+  pthread_mutex_init(&__fds_lock_obj, &attr);
+  pthread_mutexattr_destroy(&attr);
+  _pthread_init();
+  if (_weaken(_pthread_onfork_child)) {
+    _weaken(_pthread_onfork_child)();
   }
 }
 
@@ -117,8 +133,8 @@ int _fork(uint32_t dwCreationFlags) {
     atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
 
     // run user fork callbacks
-    if (__threaded && _weaken(_pthread_onfork_child)) {
-      _weaken(_pthread_onfork_child)();
+    if (__threaded) {
+      _onfork_child();
     }
     STRACE("fork() → 0 (child of %d)", parent);
   } else {

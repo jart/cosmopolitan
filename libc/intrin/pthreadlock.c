@@ -20,6 +20,10 @@
 
 pthread_spinlock_t _pthread_lock_obj;
 
+void _pthread_init(void) {
+  (void)pthread_spin_init(&_pthread_lock_obj, 0);
+}
+
 void _pthread_lock(void) {
   pthread_spin_lock(&_pthread_lock_obj);
 }
