@@ -833,43 +833,22 @@ int LuaUuidV4(lua_State *L) {
   char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   char uuid_str[37] = {0};
+  uint64_t r = 0;
+  for (int i = 0, j = 16; i < 36; ++i, ++j) {
 
-  uuid_str[0] = v[_rand64() % 16];
-  uuid_str[1] = v[_rand64() % 16];
-  uuid_str[2] = v[_rand64() % 16];
-  uuid_str[3] = v[_rand64() % 16];
-  uuid_str[4] = v[_rand64() % 16];
-  uuid_str[5] = v[_rand64() % 16];
-  uuid_str[6] = v[_rand64() % 16];
-  uuid_str[7] = v[_rand64() % 16];
+    if (j == 16) {
+      r = _rand64();
+      j = 0;
+    }
+    uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
+  }
+
   uuid_str[8] = '-';
-  uuid_str[9] = v[_rand64() % 16];
-  uuid_str[10] = v[_rand64() % 16];
-  uuid_str[11] = v[_rand64() % 16];
-  uuid_str[12] = v[_rand64() % 16];
   uuid_str[13] = '-';
   uuid_str[14] = '4';
-  uuid_str[15] = v[_rand64() % 16];
-  uuid_str[16] = v[_rand64() % 16];
-  uuid_str[17] = v[_rand64() % 16];
   uuid_str[18] = '-';
   uuid_str[19] = v[8 + _rand64() % 4];
-  uuid_str[20] = v[_rand64() % 16];
-  uuid_str[21] = v[_rand64() % 16];
-  uuid_str[22] = v[_rand64() % 16];
   uuid_str[23] = '-';
-  uuid_str[24] = v[_rand64() % 16];
-  uuid_str[25] = v[_rand64() % 16];
-  uuid_str[26] = v[_rand64() % 16];
-  uuid_str[27] = v[_rand64() % 16];
-  uuid_str[28] = v[_rand64() % 16];
-  uuid_str[29] = v[_rand64() % 16];
-  uuid_str[30] = v[_rand64() % 16];
-  uuid_str[31] = v[_rand64() % 16];
-  uuid_str[32] = v[_rand64() % 16];
-  uuid_str[33] = v[_rand64() % 16];
-  uuid_str[34] = v[_rand64() % 16];
-  uuid_str[35] = v[_rand64() % 16];
   uuid_str[36] = '\0';
   lua_pushfstring(L, uuid_str);
   return 1;
