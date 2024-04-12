@@ -834,22 +834,20 @@ int LuaUuidV4(lua_State *L) {
                            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   char uuid_str[37] = {0};
   uint64_t r = _rand64();
-  for (int i = 0, j = 0; i < 36; ++i, ++j) {
+  int j = 0;
+  for (int i = 0; i < 36; ++i, ++j) {
     if (j == 16) {
       r = _rand64();
       j = 0;
     }
-    if (i == 19) {
-      uuid_str[i] = v[8 + r % 4];
-    } else {
-      uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
-    }
+    uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
   }
 
   uuid_str[8] = '-';
   uuid_str[13] = '-';
   uuid_str[14] = '4';
   uuid_str[18] = '-';
+  uuid_str[19] = v[8 | (r & (0x3ull << (j * 4ull))) >> (j * 4ull)];
   uuid_str[23] = '-';
   uuid_str[36] = '\0';
   lua_pushfstring(L, uuid_str);
