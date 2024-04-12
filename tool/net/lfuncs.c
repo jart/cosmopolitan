@@ -830,12 +830,11 @@ int LuaVisualizeControlCodes(lua_State *L) {
 }
 
 int LuaUuidV4(lua_State *L) {
-  char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
-              '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  static const char v[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   char uuid_str[37] = {0};
-  uint64_t r = _rand();
+  uint64_t r = _rand64();
   for (int i = 0, j = 0; i < 36; ++i, ++j) {
-
     if (j == 16) {
       r = _rand64();
       j = 0;
