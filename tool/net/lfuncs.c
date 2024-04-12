@@ -839,14 +839,17 @@ int LuaUuidV4(lua_State *L) {
       r = _rand64();
       j = 0;
     }
-    uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
+    if (i == 19) {
+      uuid_str[i] = v[8 + r % 4];
+    } else {
+      uuid_str[i] = v[(r & (0xfull << (j * 4ull))) >> (j * 4ull)];
+    }
   }
 
   uuid_str[8] = '-';
   uuid_str[13] = '-';
   uuid_str[14] = '4';
   uuid_str[18] = '-';
-  uuid_str[19] = v[8 + _rand64() % 4];
   uuid_str[23] = '-';
   uuid_str[36] = '\0';
   lua_pushfstring(L, uuid_str);
