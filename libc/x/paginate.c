@@ -16,14 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/temp.h"
+#include "libc/x/x.h"
 
 /**
  * Displays wall of text in terminal with pagination.
@@ -31,8 +33,10 @@
 void __paginate(int fd, const char *s) {
   int tfd, pid;
   char *args[3] = {0};
-  char tmppath[PATH_MAX-32] = "/tmp/paginate.XXXXXX";
+  char tmppath[] = "/tmp/paginate.XXXXXX";
   char progpath[PATH_MAX];
+  char16_t widepath[PATH_MAX];
+  int n;
   if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
       ((args[0] = commandv("less", progpath, sizeof(progpath))) ||
        (args[0] = commandv("more", progpath, sizeof(progpath))) ||
@@ -42,22 +46,21 @@ void __paginate(int fd, const char *s) {
       write(tfd, s, strlen(s));
       close(tfd);
       args[1] = tmppath;
-      if (IsWindows() && strcmp(args[0], "/C/Windows/System32/more.com") == 0) {
-        char16_t widepath[PATH_MAX];
-        __mkntpath(tmppath, widepath);
-        tprecode16to8(tmppath, sizeof(tmppath), widepath);
-      }
-      if ((pid = fork()) != -1) {
-        putenv("LC_ALL=C.UTF-8");
-        putenv("LESSCHARSET=utf-8");
-        putenv("LESS=-RS");
-        if (!pid) {
-          execv(args[0], args);
-          _Exit(127);
+      if (!IsWindows() || strcasecmp(args[0], "/C/Windows/System32/more.com") ||
+          (((n = __mkntpath(tmppath, widepath)) != -1) &&
+           (args[1] = gc(utf16to8(widepath, n, 0))))) {
+        if ((pid = fork()) != -1) {
+          putenv("LC_ALL=C.UTF-8");
+          putenv("LESSCHARSET=utf-8");
+          putenv("LESS=-RS");
+          if (!pid) {
+            execv(args[0], args);
+            _Exit(127);
+          }
+          waitpid(pid, 0, 0);
+          unlink(tmppath);
+          return;
         }
-        waitpid(pid, 0, 0);
-        unlink(tmppath);
-        return;
       }
       unlink(tmppath);
     }
