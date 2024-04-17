@@ -70,17 +70,17 @@ void __paginate(int fd, const char *s) {
   char *args[3] = {0};
   char tmppath[] = "/tmp/paginate.XXXXXX";
   char progpath[PATH_MAX];
+  bool done;
   if ((args[0] = get_pagerpath(progpath, sizeof(progpath)))) {
     if ((tfd = mkstemp(tmppath)) != -1) {
-      // defer((void*)unlink, tmppath);
       write(tfd, s, strlen(s));
       close(tfd);
       args[1] = tmppath;
-      if (run_pager(args)) {
-        unlink(tmppath);
+      done = run_pager(args);
+      unlink(tmppath);
+      if (done) {
         return;
       }
-      unlink(tmppath);
     }
   }
   write(fd, s, strlen(s));
