@@ -1160,12 +1160,17 @@ FUNCTIONS
             >: shared_key1 == shared_key2
             true
 
-  GetRemoteAddr() → ip:uint32,port:uint16
+  GetRemoteAddr()
+      ├─→ ip:uint32,port:uint16
+      └─→ nil
           Returns client ip4 address and port, e.g. 0x01020304,31337 would
           represent 1.2.3.4:31337. This is the same as GetClientAddr except
-          it will use the ip:port from the X-Forwarded-For header, only if
-          IsPrivateIp or IsLoopbackIp return true. When multiple addresses
-          are present in the header, the last/right-most address is used.
+          it will use the ip:port from the X-Forwarded-For header when the
+          IP returned by GetClientAddr is a trusted IP (returns true when
+          checked against IsTrustedIp). When multiple addresses are present
+          in the header, the last/right-most address is used.
+          Returns `nil` if the address doesn't parse as IPv4 value (e.g.
+          because it is misformatted or an IPv6 address).
 
   GetResponseBody()
       ├─→ body:str
