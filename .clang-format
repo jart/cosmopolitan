@@ -6,6 +6,8 @@ AlignConsecutiveMacros: true
 AlignConsecutiveDeclarations: false
 AlwaysBreakBeforeMultilineStrings: false
 AllowShortFunctionsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
 KeepEmptyLinesAtTheStartOfBlocks: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 IncludeBlocks: Merge
