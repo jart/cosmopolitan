@@ -40,7 +40,6 @@ int __dns_parse(const unsigned char *r, int rlen,
 	p = r+12;
 	qdcount = r[4]*256 + r[5];
 	ancount = r[6]*256 + r[7];
-	if (qdcount+ancount > 64) return -1;
 	while (qdcount--) {
 		while (p-r < rlen && *p-1U < 127) p++;
 		if (p>r+rlen-6)
