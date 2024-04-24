@@ -68,9 +68,8 @@ bool IsAcceptablePath(const char *data, size_t size) {
     }
     if (y == '/') {
       if (x == '.' &&  // allow /.well-known/ in the first position
-         (p - data > 2 ||
-          size < 13 ||
-          memcmp(data, "/.well-known/", 13) != 0)) return false;
+          (p - data > 2 || size < 13 || memcmp(data, "/.well-known/", 13) != 0))
+        return false;
       if (x == '/' && t) return false;
     }
     y = x;

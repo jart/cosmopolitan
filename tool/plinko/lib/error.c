@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/plinko/lib/error.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
-#include "tool/plinko/lib/error.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/printf.h"
 #include "tool/plinko/lib/stack.h"

@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/rand.h"
-#include "libc/serialize.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

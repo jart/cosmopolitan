@@ -24,9 +24,13 @@
  * The alternate buffer trick lets one restore the console exactly as it
  * was, once the program is done running.
  */
-int ttyenablealtbuf(int ttyfd) { return ttysend(ttyfd, "\e[?1049h"); }
+int ttyenablealtbuf(int ttyfd) {
+  return ttysend(ttyfd, "\e[?1049h");
+}
 
 /**
  * Asks teletypewriter to restore blinking box thing.
  */
-int ttydisablealtbuf(int ttyfd) { return ttysend(ttyfd, "\e[?1049l"); }
+int ttydisablealtbuf(int ttyfd) {
+  return ttysend(ttyfd, "\e[?1049l");
+}

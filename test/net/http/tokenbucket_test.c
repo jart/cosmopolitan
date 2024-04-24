@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "net/http/tokenbucket.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/struct/timespec.h"
@@ -28,7 +29,6 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/http.h"
-#include "net/http/tokenbucket.h"
 
 #define TB_CIDR  22
 #define TB_BYTES (1u << TB_CIDR)

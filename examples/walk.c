@@ -9,11 +9,11 @@
 #endif
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/ftw.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/stdio/ftw.h"
 
 /**
  * @fileoverview Directory walker example.

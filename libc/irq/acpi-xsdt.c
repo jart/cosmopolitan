@@ -26,7 +26,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/irq/acpi.internal.h"
@@ -34,6 +33,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/efi.h"
 #include "libc/runtime/pc.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

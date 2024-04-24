@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "tool/viz/lib/formatstringtable.h"
 
 void *FormatStringTableAsCode(long yn, long xn, const char *const T[yn][xn],

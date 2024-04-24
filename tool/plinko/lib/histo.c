@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "tool/plinko/lib/histo.h"
+#include "libc/assert.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/printf.h"
 

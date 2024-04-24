@@ -26,7 +26,6 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"

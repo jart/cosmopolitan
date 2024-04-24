@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "net/http/http.h"

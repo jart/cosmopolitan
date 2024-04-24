@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/serialize.h"
 #include "libc/macros.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 
 static const char kWcTypeNames[][8] = {

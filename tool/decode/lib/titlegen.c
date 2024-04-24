@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/decode/lib/titlegen.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "tool/decode/lib/titlegen.h"
 
 const struct Modeline kModelineAsm = {
     " mode:asm; indent-tabs-mode:t; tab-width:8; coding:utf-8 ",

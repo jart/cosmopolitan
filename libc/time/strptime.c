@@ -40,7 +40,8 @@ char *strptime(const char *s, const char *f, struct tm *tm) {
   while (*f) {
     if (*f != '%') {
       if (isspace(*f)) {
-        for (; *s && isspace(*s); s++);
+        for (; *s && isspace(*s); s++)
+          ;
       } else if (*s != *f) {
         return 0;
       } else {
@@ -133,7 +134,8 @@ char *strptime(const char *s, const char *f, struct tm *tm) {
         goto numeric_range;
       case 'n':
       case 't':
-        for (; *s && isspace(*s); s++);
+        for (; *s && isspace(*s); s++)
+          ;
         break;
       case 'p':
         ex = "AM";

@@ -23,8 +23,8 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Duplicates file descriptor.

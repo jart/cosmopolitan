@@ -27,7 +27,7 @@ struct Lines {
   struct Line {
     char *p;
     size_t n;
-  } * p;
+  } *p;
 };
 
 static char *SkipEmptyFirstLine(char *p) {

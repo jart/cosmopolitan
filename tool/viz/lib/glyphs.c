@@ -53,7 +53,8 @@
 // from the space left below, seen by overimposing an underline  ⠿_
 // along the 3 dots, the Y axis is least 1,0,1,0,1,0,0,1 so 8 steps
 //
-// Problem: fonts are taller than wider, and terminals are traditionally 80x24, so
+// Problem: fonts are taller than wider, and terminals are traditionally 80x24,
+// so
 // - we shouldn't use square glyphs, 8x16 seems to be the minimal size
 // - we should adapt the conversion to BMP to avoid accidental Y downsampling
 

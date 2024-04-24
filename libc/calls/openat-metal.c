@@ -27,13 +27,13 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 #ifdef __x86_64__
 

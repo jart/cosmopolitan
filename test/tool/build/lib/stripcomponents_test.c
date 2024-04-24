@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/testlib/testlib.h"
 #include "tool/build/lib/stripcomponents.h"
+#include "libc/testlib/testlib.h"
 
 TEST(StripComponents, test) {
   EXPECT_STREQ("", StripComponents("", 0));
