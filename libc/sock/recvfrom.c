@@ -70,6 +70,9 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
     if (__isfdkind(fd, kFdSocket)) {
       rc = sys_recvfrom_nt(fd, (struct iovec[]){{buf, size}}, 1, flags, &addr,
                            &addrsize);
+      if (rc != -1 && addrsize == sizeof(addr)) {
+        addrsize = 0;
+      }
     } else if (__isfdkind(fd, kFdFile) && !opt_out_srcaddr) { /* socketpair */
       if (!flags) {
         rc = sys_read_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
