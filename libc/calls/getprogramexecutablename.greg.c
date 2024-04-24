@@ -93,7 +93,7 @@ static int OldApeLoader(char *s) {
          (!strncmp((b = basename(s)), ".ape-", 5) && AllNumDot(b + 5));
 }
 
-static char *CopyWithCwd(const char *q, char *p, char *e) {
+static int CopyWithCwd(const char *q, char *p, char *e) {
   char c;
   if (*q != '/') {
     if (q[0] == '.' && q[1] == '/') {
@@ -109,29 +109,19 @@ static char *CopyWithCwd(const char *q, char *p, char *e) {
     if (p + 1 /* nul */ < e) {
       *p++ = c;
     } else {
-      return NULL;
+      return 0;
     }
   }
   *p = 0;
-  return p;
+  return 1;
 }
 
-// if q exists then turn it into an absolute path. we also try adding
-// a .com suffix since the ape auto-appends it when resolving
-//
-// TODO(jart): is this still relevant?
-static int TryPath(const char *q, int com) {
-  char *p;
-  if (!(p = CopyWithCwd(q, g_prog.u.buf,
-                        g_prog.u.buf + sizeof(g_prog.u.buf) - com * 4))) {
+// if q exists then turn it into an absolute path.
+static int TryPath(const char *q) {
+  if (!CopyWithCwd(q, g_prog.u.buf, g_prog.u.buf + sizeof(g_prog.u.buf))) {
     return 0;
   }
-  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
-  if (!com) return 0;
-  p = WRITE32LE(p, READ32LE(".com"));
-  *p = 0;
-  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
-  return 0;
+  return !sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0);
 }
 
 // if the loader passed a relative path, prepend cwd to it.
@@ -221,13 +211,13 @@ static inline void InitProgramExecutableNameImpl(void) {
     }
   }
 
-  // don't trust argument parsing if set-id.
+  // don't trust argv or envp if set-id.
   if (issetugid()) {
     goto UseEmpty;
   }
 
-  // try argv[0], then argv[0].com, then $_, then $_.com.
-  if (TryPath(__argv[0], 1) || TryPath(__getenv(__envp, "_").s, 1)) {
+  // try argv[0], then then $_.
+  if (TryPath(__argv[0]) || TryPath(__getenv(__envp, "_").s)) {
     goto UseBuf;
   }
 
