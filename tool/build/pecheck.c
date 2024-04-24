@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/nt/struct/imageimportbyname.internal.h"
 #include "libc/nt/struct/imageimportdescriptor.internal.h"
@@ -24,7 +25,6 @@
 #include "libc/nt/struct/imageoptionalheader.internal.h"
 #include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

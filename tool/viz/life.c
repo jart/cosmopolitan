@@ -225,10 +225,10 @@ static char16_t statusline16[256];
 #define GODOWN(x)    ((x) << 8)
 #define GORIGHT(x)   (((x) & ~RIGHT) << 1)
 #define GOLEFT(x)    (((x) & ~LEFT) >> 1)
-#define LEFTMOST(x)  ((x)&LEFT)
-#define RIGHTMOST(x) ((x)&RIGHT)
-#define TOPMOST(x)   ((x)&TOP)
-#define BOTMOST(x)   ((x)&BOTTOM)
+#define LEFTMOST(x)  ((x) & LEFT)
+#define RIGHTMOST(x) ((x) & RIGHT)
+#define TOPMOST(x)   ((x) & TOP)
+#define BOTMOST(x)   ((x) & BOTTOM)
 
 #define ADD(X)       \
   do {               \

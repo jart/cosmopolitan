@@ -127,7 +127,7 @@ https://github.com/piscisaureus/wepoll");
   } while (0)
 
 #define CONTAINOF(ptr, type, member) \
-  ((type *)((uintptr_t)(ptr)-offsetof(type, member)))
+  ((type *)((uintptr_t)(ptr) - offsetof(type, member)))
 
 #define TREE__ROTATE(cis, trans)       \
   struct TreeNode *p = node;           \
