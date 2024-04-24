@@ -28,7 +28,8 @@ char *xstrmul(const char *s, size_t n) {
   size_t i, m;
   m = strlen(s);
   p = xcalloc(n + 1, m);
-  for (i = 0; i < n; ++i) memcpy(p + i * m, s, m);
+  for (i = 0; i < n; ++i)
+    memcpy(p + i * m, s, m);
   p[i * m] = '\0';
   return p;
 }

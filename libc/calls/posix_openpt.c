@@ -43,7 +43,8 @@ int posix_openpt(int flags) {
     rc = sys_openat(AT_FDCWD, "/dev/ptm", flags, 0);
   } else if (IsFreebsd()) {
     rc = sys_posix_openpt(flags);
-    if (rc == -1 && errno == ENOSPC) errno = EAGAIN;
+    if (rc == -1 && errno == ENOSPC)
+      errno = EAGAIN;
   } else {
     rc = enosys();
   }

@@ -33,9 +33,12 @@ const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
   const char *d;
   int i, j, o = 0;
 
-  if (!iov) return "NULL";
-  if (rc == -1) return "n/a";
-  if (rc == -2) rc = SSIZE_MAX;
+  if (!iov)
+    return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (rc == -2)
+    rc = SSIZE_MAX;
   if ((!IsAsan() && kisdangerous(iov)) ||
       (IsAsan() && !__asan_is_valid(iov, sizeof(*iov) * iovlen))) {
     ksnprintf(buf, N, "%p", iov);

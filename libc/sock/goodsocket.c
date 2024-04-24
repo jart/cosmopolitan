@@ -25,7 +25,8 @@
 #include "libc/sysv/consts/tcp.h"
 
 static bool Tune(int fd, int a, int b, int x) {
-  if (!b) return false;
+  if (!b)
+    return false;
   return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
 }
 

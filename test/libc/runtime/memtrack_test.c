@@ -72,15 +72,18 @@ bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
 
 static bool AreMemoryIntervalsEqual(const struct MemoryIntervals *mm1,
                                     const struct MemoryIntervals *mm2) {
-  if (mm1->i != mm2->i) return false;
-  if (memcmp(mm1->p, mm2->p, mm1->i * sizeof(*mm2->p)) != 0) return false;
+  if (mm1->i != mm2->i)
+    return false;
+  if (memcmp(mm1->p, mm2->p, mm1->i * sizeof(*mm2->p)) != 0)
+    return false;
   return true;
 }
 
 static void PrintMemoryInterval(const struct MemoryIntervals *mm) {
   int i;
   for (i = 0; i < mm->i; ++i) {
-    if (i) fprintf(stderr, ",");
+    if (i)
+      fprintf(stderr, ",");
     fprintf(stderr, "{%d,%d}", mm->p[i].x, mm->p[i].y);
   }
   fprintf(stderr, "\n");
@@ -294,7 +297,8 @@ TEST(__untrack_memory, TestPunchHole) {
 }
 
 TEST(__untrack_memory, TestShortenLeft) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   static struct MemoryIntervals mm[2] = {
       {1, OPEN_MAX, 0, {I(0, 9)}},
       {1, OPEN_MAX, 0, {I(0, 7)}},
@@ -305,7 +309,8 @@ TEST(__untrack_memory, TestShortenLeft) {
 }
 
 TEST(__untrack_memory, TestShortenRight) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   static struct MemoryIntervals mm[2] = {
       {1, OPEN_MAX, 0, {I(0, 9)}},
       {1, OPEN_MAX, 0, {I(3, 9)}},
@@ -316,7 +321,8 @@ TEST(__untrack_memory, TestShortenRight) {
 }
 
 TEST(__untrack_memory, TestShortenLeft2) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   static struct MemoryIntervals mm[2] = {
       {1, OPEN_MAX, 0, {I(0, 9)}},
       {1, OPEN_MAX, 0, {I(0, 7)}},
@@ -327,7 +333,8 @@ TEST(__untrack_memory, TestShortenLeft2) {
 }
 
 TEST(__untrack_memory, TestShortenRight2) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   static struct MemoryIntervals mm[2] = {
       {1, OPEN_MAX, 0, {I(0, 9)}},
       {1, OPEN_MAX, 0, {I(3, 9)}},

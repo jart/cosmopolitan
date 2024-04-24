@@ -42,7 +42,8 @@ textwindows char16_t *__create_pipe_name(char16_t *a) {
   char16_t *p = a;
   const char *q = "\\\\?\\pipe\\cosmo\\";
   static atomic_uint x;
-  while (*q) *p++ = *q++;
+  while (*q)
+    *p++ = *q++;
   p = itoa16(p, __pid);
   *p++ = '-';
   p = itoa16(p, atomic_fetch_add(&x, 1));

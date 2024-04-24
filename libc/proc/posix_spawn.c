@@ -110,17 +110,21 @@ struct SpawnFds {
 static atomic_bool has_vfork;  // i.e. not qemu/wsl/xnu/openbsd
 
 static textwindows int64_t spawnfds_handle(struct SpawnFds *fds, int fd) {
-  if (__is_cloexec(fds->p + fd)) return -1;
+  if (__is_cloexec(fds->p + fd))
+    return -1;
   return fds->p[fd].handle;
 }
 
 static textwindows errno_t spawnfds_ensure(struct SpawnFds *fds, int fd) {
   int n2;
   struct Fd *p2;
-  if (fd < 0) return EBADF;
-  if (fd < fds->n) return 0;
+  if (fd < 0)
+    return EBADF;
+  if (fd < fds->n)
+    return 0;
   n2 = fd + 1;
-  if (!(p2 = realloc(fds->p, n2 * sizeof(*fds->p)))) return ENOMEM;
+  if (!(p2 = realloc(fds->p, n2 * sizeof(*fds->p))))
+    return ENOMEM;
   bzero(p2 + fds->n, (n2 - fds->n) * sizeof(*fds->p));
   fds->p = p2;
   fds->n = n2;
@@ -141,7 +145,8 @@ static textwindows void spawnfds_destroy(struct SpawnFds *fds) {
 static textwindows int spawnfds_closelater(struct SpawnFds *fds,
                                            int64_t handle) {
   struct Closer *closer;
-  if (!(closer = malloc(sizeof(struct Closer)))) return ENOMEM;
+  if (!(closer = malloc(sizeof(struct Closer))))
+    return ENOMEM;
   closer->handle = handle;
   dll_init(&closer->elem);
   dll_make_last(&fds->closers, &closer->elem);
@@ -170,7 +175,8 @@ static textwindows errno_t spawnfds_dup2(struct SpawnFds *fds, int fildes,
   } else {
     return EBADF;
   }
-  if ((err = spawnfds_ensure(fds, newfildes))) return err;
+  if ((err = spawnfds_ensure(fds, newfildes)))
+    return err;
   struct Fd *neu = fds->p + newfildes;
   memcpy(neu, old, sizeof(struct Fd));
   neu->flags &= ~O_CLOEXEC;
@@ -189,7 +195,8 @@ static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int64_t dirhand,
   errno_t err;
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
-  if ((err = spawnfds_ensure(fds, fildes))) return err;
+  if ((err = spawnfds_ensure(fds, fildes)))
+    return err;
   if (__mkntpathath(dirhand, path, 0, path16) != -1 &&
       GetNtOpenFlags(oflag, mode, &perm, &share, &disp, &attr) != -1 &&
       (h = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0))) {
@@ -277,8 +284,10 @@ static textwindows errno_t posix_spawn_nt_impl(
 
   // fork file descriptor table
   for (int fd = g_fds.n; fd--;) {
-    if (__is_cloexec(g_fds.p + fd)) continue;
-    if ((err = spawnfds_ensure(&fds, fd))) goto ReturnErr;
+    if (__is_cloexec(g_fds.p + fd))
+      continue;
+    if ((err = spawnfds_ensure(&fds, fd)))
+      goto ReturnErr;
     fds.p[fd] = g_fds.p[fd];
   }
 
@@ -369,7 +378,8 @@ static textwindows errno_t posix_spawn_nt_impl(
   // launch process
   int rc = -1;
   struct NtProcessInformation procinfo;
-  if (!envp) envp = environ;
+  if (!envp)
+    envp = environ;
   if ((fdspec = __describe_fds(fds.p, fds.n, &startinfo, hCreatorProcess,
                                &lpExplicitHandles, &dwExplicitHandleCount))) {
     rc = ntspawn(dirhand, path, argv, envp, (char *[]){fdspec, maskvar, 0},
@@ -385,7 +395,8 @@ static textwindows errno_t posix_spawn_nt_impl(
   CloseHandle(procinfo.hThread);
   proc->pid = procinfo.dwProcessId;
   proc->handle = procinfo.hProcess;
-  if (pid) *pid = proc->pid;
+  if (pid)
+    *pid = proc->pid;
   __proc_lock();
   __proc_add(proc);
   __proc_unlock();
@@ -395,8 +406,10 @@ static textwindows errno_t posix_spawn_nt_impl(
 }
 
 static const char *DescribePid(char buf[12], int err, int *pid) {
-  if (err) return "n/a";
-  if (!pid) return "NULL";
+  if (err)
+    return "n/a";
+  if (!pid)
+    return "NULL";
   FormatInt32(buf, *pid);
   return buf;
 }
@@ -496,7 +509,8 @@ errno_t posix_spawn(int *pid, const char *path,
     bool lost_cloexec = 0;
     struct sigaction dfl = {0};
     short flags = attrp && *attrp ? (*attrp)->flags : 0;
-    if (use_pipe) close(pfds[0]);
+    if (use_pipe)
+      close(pfds[0]);
     for (int sig = 1; sig < _NSIG; sig++) {
       if (__sighandrvas[sig] != (long)SIG_DFL &&
           (__sighandrvas[sig] != (long)SIG_IGN ||
@@ -606,7 +620,8 @@ errno_t posix_spawn(int *pid, const char *path,
       childmask = oldmask;
     }
     sigprocmask(SIG_SETMASK, &childmask, 0);
-    if (!envp) envp = environ;
+    if (!envp)
+      envp = environ;
     execve(path, argv, envp);
   ChildFailed:
     res = errno;
@@ -631,7 +646,8 @@ errno_t posix_spawn(int *pid, const char *path,
       read(pfds[0], &res, sizeof(res));
     }
     if (!res) {
-      if (pid) *pid = child;
+      if (pid)
+        *pid = child;
     } else {
       wait4(child, 0, 0, 0);
     }

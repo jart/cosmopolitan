@@ -164,7 +164,8 @@ int main(int argc, char *argv[]) {
     }
     /* TODO(jart): Fix Emacs */
     glyphs[col] = kCp437[ch == '"' || ch == '#' ? '.' : ch];
-    if (col) fputc(',', fout);
+    if (col)
+      fputc(',', fout);
     fprintf(fout, "0x%02x", ch);
     if (++col == COLS) {
       col = 0;

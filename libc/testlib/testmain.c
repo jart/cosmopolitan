@@ -110,7 +110,8 @@ dontasan int main(int argc, char *argv[]) {
   errno = 0;
   STRACE("");
   STRACE("# setting up once");
-  if (!IsWindows()) sys_getpid();
+  if (!IsWindows())
+    sys_getpid();
   testlib_clearxmmregisters();
   if (_weaken(SetUpOnce)) {
     _weaken(SetUpOnce)();

@@ -21,11 +21,16 @@
 #include "libc/thread/thread.h"
 
 const char *(DescribeCancelState)(char buf[12], int err, int *state) {
-  if (err) return "n/a";
-  if (!state) return "NULL";
-  if (*state == PTHREAD_CANCEL_ENABLE) return "PTHREAD_CANCEL_ENABLE";
-  if (*state == PTHREAD_CANCEL_DISABLE) return "PTHREAD_CANCEL_DISABLE";
-  if (*state == PTHREAD_CANCEL_MASKED) return "PTHREAD_CANCEL_MASKED";
+  if (err)
+    return "n/a";
+  if (!state)
+    return "NULL";
+  if (*state == PTHREAD_CANCEL_ENABLE)
+    return "PTHREAD_CANCEL_ENABLE";
+  if (*state == PTHREAD_CANCEL_DISABLE)
+    return "PTHREAD_CANCEL_DISABLE";
+  if (*state == PTHREAD_CANCEL_MASKED)
+    return "PTHREAD_CANCEL_MASKED";
   FormatInt32(buf, *state);
   return buf;
 }

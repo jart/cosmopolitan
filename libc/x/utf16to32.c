@@ -32,8 +32,10 @@ wchar_t *utf16to32(const char16_t *p, size_t n, size_t *z) {
   wint_t x, y;
   wchar_t *r, *q;
   const char16_t *e;
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen16(p) : 0;
+  if (z)
+    *z = 0;
+  if (n == -1)
+    n = p ? strlen16(p) : 0;
   if ((q = r = malloc(n * 4 + 8 + 1))) {
     for (e = p + n; p < e;) {
       x = *p++ & 0xffff;
@@ -47,9 +49,11 @@ wchar_t *utf16to32(const char16_t *p, size_t n, size_t *z) {
       }
       *q++ = x;
     }
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, (q - r) * sizeof(*r)))) r = q;
+    if ((q = realloc(r, (q - r) * sizeof(*r))))
+      r = q;
   }
   return r;
 }

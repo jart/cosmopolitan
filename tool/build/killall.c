@@ -69,7 +69,8 @@ static wontreturn void OutOfMemory(void) {
 
 static void *Calloc(size_t n, size_t z) {
   void *p;
-  if (!(p = calloc(n, z))) OutOfMemory();
+  if (!(p = calloc(n, z)))
+    OutOfMemory();
   return p;
 }
 
@@ -186,7 +187,8 @@ int main(int argc, char *argv[]) {
     int64_t hProcess;
     char16_t name[PATH_MAX];
     for (subcount = i = 0; i < n; i++) {
-      if (!pids[i]) continue;
+      if (!pids[i])
+        continue;
       if ((hProcess = MyOpenProcess(pids[i]))) {
         if (GetProcessName(hProcess, name)) {
           ConvertStringToLowercase16(name);

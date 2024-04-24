@@ -109,7 +109,8 @@ wontreturn void _Exit(int exitcode) {
       "push\t$0\n\t"
       "cli\n\t"
       "lidt\t(%rsp)");
-  for (;;) asm("ud2");
+  for (;;)
+    asm("ud2");
 #else
   __builtin_unreachable();
 #endif

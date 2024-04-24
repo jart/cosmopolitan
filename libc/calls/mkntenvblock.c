@@ -44,9 +44,12 @@ static textwindows int Compare(const char *l, const char *r) {
   for (;;) {
     a = l[i] & 255;
     b = r[i] & 255;
-    if (a == '=') a = 0;
-    if (b == '=') b = 0;
-    if (a != b || !b) break;
+    if (a == '=')
+      a = 0;
+    if (b == '=')
+      b = 0;
+    if (a != b || !b)
+      break;
     ++i;
   }
   return a - b;
@@ -56,13 +59,15 @@ static textwindows int InsertString(struct EnvBuilder *env, const char *str) {
   int c, i, cmp;
   char *var, *path = 0;
 
-  if (!str) return 0;
+  if (!str)
+    return 0;
 
   // copy key=val to buf
   var = env->buf + env->bufi;
   do {
     c = *str++;
-    if (env->bufi + 2 > 32767) return e2big();
+    if (env->bufi + 2 > 32767)
+      return e2big();
     env->buf[env->bufi++] = c;
     if (c == '=' && str[0] == '/' && IsAlpha(str[1]) && str[2] == '/') {
       path = env->buf + env->bufi;
@@ -70,7 +75,8 @@ static textwindows int InsertString(struct EnvBuilder *env, const char *str) {
   } while (c);
 
   // fixup key=/c/... → key=c:\...
-  if (path) mungentpath(path);
+  if (path)
+    mungentpath(path);
 
   // append key=val to sorted list using insertion sort technique
   for (i = env->vari;; --i) {
@@ -143,8 +149,10 @@ textwindows int mkntenvblock(char16_t envblock[32767], char *const envp[],
 #pragma GCC pop_options
 
   // load new environment into string pointer array and fix file paths
-  if (InsertStrings(&env, envp) == -1) return -1;
-  if (InsertStrings(&env, extravars) == -1) return -1;
+  if (InsertStrings(&env, envp) == -1)
+    return -1;
+  if (InsertStrings(&env, extravars) == -1)
+    return -1;
   if (environ) {
     // https://jpassing.com/2009/12/28/the-hidden-danger-of-forgetting-to-specify-systemroot-in-a-custom-environment-block/
     e = __getenv(environ, "SYSTEMROOT");

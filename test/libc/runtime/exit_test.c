@@ -73,7 +73,8 @@ TEST(exit, narrowing) {
 }
 
 TEST(exit, exitCode259_wontCauseParentProcessToHangForever) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   SPAWN(vfork);
   _Exit(259);
   EXITS(259);
@@ -88,7 +89,8 @@ TEST(exit, sigkill) {
       pause();
     }
   }
-  while (!*ready) donothing;
+  while (!*ready)
+    donothing;
   ASSERT_EQ(0, kill(pid, SIGKILL));
   ASSERT_SYS(0, pid, wait(&ws));
   ASSERT_EQ(SIGKILL, ws);
@@ -107,7 +109,8 @@ TEST(exit, sigalrm) {
       pause();
     }
   }
-  while (!*ready) donothing;
+  while (!*ready)
+    donothing;
   ASSERT_EQ(0, kill(pid, SIGALRM));
   ASSERT_SYS(0, pid, wait(&ws));
   ASSERT_EQ(SIGALRM, ws);

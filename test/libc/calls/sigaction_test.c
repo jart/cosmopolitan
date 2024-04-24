@@ -124,7 +124,8 @@ TEST(sigaction, raise) {
 // test kill()
 
 TEST(sigaction, testPingPongParentChildWithSigint) {
-  if (IsNetbsd()) return;  // TODO: what's up with runitd on netbsd?
+  if (IsNetbsd())
+    return;  // TODO: what's up with runitd on netbsd?
   int pid, status;
   sigset_t blockint, oldmask;
   struct sigaction oldint;
@@ -244,8 +245,10 @@ TEST(sigaction, ignoringSignalDiscardsSignal) {
 }
 
 TEST(sigaction, autoZombieSlayer) {
-  if (IsWindows()) return;
-  if (IsCygwin()) return;
+  if (IsWindows())
+    return;
+  if (IsCygwin())
+    return;
   int pid;
   struct sigaction sa;
   // make sure we're starting in expected state
@@ -253,7 +256,8 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_EQ(SIG_DFL, sa.sa_handler);
   // verify child becomes zombie
   ASSERT_NE(-1, (pid = fork()));
-  if (!pid) _Exit(0);
+  if (!pid)
+    _Exit(0);
   ASSERT_SYS(0, pid, wait(0));
   // enable automatic zombie slayer
   sa.sa_handler = SIG_IGN;
@@ -262,17 +266,21 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, &sa));
   // verify it works
   ASSERT_NE(-1, (pid = fork()));
-  if (!pid) _Exit(0);
+  if (!pid)
+    _Exit(0);
   // XXX: WSL does the wrong thing here.
-  if (__iswsl1()) usleep(10);
+  if (__iswsl1())
+    usleep(10);
   ASSERT_SYS(ECHILD, -1, wait(0));
   // clean up
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));
 }
 
 TEST(sigaction, enosys_returnsErrnoRatherThanSigsysByDefault) {
-  if (IsTiny()) return;     // systemfive.S disables the fix w/ tiny
-  if (IsOpenbsd()) return;  // TODO: Why does OpenBSD raise SIGABRT?
+  if (IsTiny())
+    return;  // systemfive.S disables the fix w/ tiny
+  if (IsOpenbsd())
+    return;  // TODO: Why does OpenBSD raise SIGABRT?
   ASSERT_SYS(ENOSYS, -1, sys_bogus());
 }
 
@@ -373,7 +381,8 @@ dontubsan dontasan int Segfault(char *p) {
 int (*pSegfault)(char *) = Segfault;
 
 TEST(sigaction, returnFromSegvHandler_loopsForever) {
-  if (IsXnu()) return;  // seems busted
+  if (IsXnu())
+    return;  // seems busted
   segfaults = _mapshared(sizeof(*segfaults));
   SPAWN(fork);
   signal(SIGSEGV, OnSegfault);

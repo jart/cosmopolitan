@@ -34,7 +34,8 @@ const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
   char b64[64];
   int i, o = 0;
 
-  if (!fds) return "NULL";
+  if (!fds)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(fds)) ||
       (IsAsan() && !__asan_is_valid(fds, sizeof(*fds) * nfds))) {
     ksnprintf(buf, N, "%p", fds);
@@ -44,7 +45,8 @@ const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
   append("{");
 
   for (i = 0; i < nfds; ++i) {
-    if (i) append(", ");
+    if (i)
+      append(", ");
     append("{%d, %s", fds[i].fd, (DescribePollFlags)(b64, fds[i].events));
     if (rc >= 0) {
       append(", [%s]", (DescribePollFlags)(b64, fds[i].revents));

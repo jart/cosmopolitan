@@ -52,8 +52,10 @@ void Encode(void) {
     b = getchar();
     c = getchar();
     w = a << 020;
-    if (b != -1) w |= b << 010;
-    if (c != -1) w |= c;
+    if (b != -1)
+      w |= b << 010;
+    if (c != -1)
+      w |= c;
     putchar(CHARS[(w >> 18) & 077]);
     putchar(CHARS[(w >> 12) & 077]);
     putchar(b != -1 ? CHARS[(w >> 6) & 077] : '=');
@@ -65,7 +67,8 @@ void Encode(void) {
 int Get(void) {
   int c;
   while ((c = getchar()) != -1) {
-    if ((c = kBase64[c]) != -1) break;
+    if ((c = kBase64[c]) != -1)
+      break;
   }
   return c;
 }
@@ -76,11 +79,15 @@ void Decode(void) {
     c = Get();
     d = Get();
     w = a << 18 | b << 12;
-    if (c != -1) w |= c << 6;
-    if (d != -1) w |= d;
+    if (c != -1)
+      w |= c << 6;
+    if (d != -1)
+      w |= d;
     putchar((w & 0xFF0000) >> 020);
-    if (c != -1) putchar((w & 0x00FF00) >> 010);
-    if (d != -1) putchar((w & 0x0000FF) >> 000);
+    if (c != -1)
+      putchar((w & 0x00FF00) >> 010);
+    if (d != -1)
+      putchar((w & 0x0000FF) >> 000);
   }
 }
 

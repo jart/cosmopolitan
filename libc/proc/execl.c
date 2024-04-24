@@ -40,19 +40,22 @@ int execl(const char *exe, const char *arg, ... /*, NULL*/) {
   va_list va, vb;
   va_copy(vb, va);
   va_start(va, arg);
-  for (i = 0; va_arg(va, const char *); ++i) donothing;
+  for (i = 0; va_arg(va, const char *); ++i)
+    donothing;
   va_end(va);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   int nbytes = (i + 2) * sizeof(char *);
-  if (__get_safe_size(nbytes, 4096) < nbytes) return enomem();
+  if (__get_safe_size(nbytes, 4096) < nbytes)
+    return enomem();
   char **argv = alloca(nbytes);
   CheckLargeStackAllocation(argv, nbytes);
 #pragma GCC pop_options
   va_start(vb, arg);
   argv[0] = (char *)arg;
   for (i = 1;; ++i) {
-    if (!(argv[i] = va_arg(vb, char *))) break;
+    if (!(argv[i] = va_arg(vb, char *)))
+      break;
   }
   va_end(vb);
   return execv(exe, argv);

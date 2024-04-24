@@ -143,8 +143,10 @@ int memcmp(const void *a, const void *b, size_t n) {
   uint64_t w, x, y;
 #endif
   const unsigned char *p, *q;
-  if ((p = a) == (q = b) || !n) return 0;
-  if ((c = *p - *q)) return c;
+  if ((p = a) == (q = b) || !n)
+    return 0;
+  if ((c = *p - *q))
+    return c;
 #if defined(__x86_64__) && !defined(__chibicc__)
   if (!IsTiny()) {
     if (n <= 16) {

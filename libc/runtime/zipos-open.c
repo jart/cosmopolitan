@@ -76,7 +76,8 @@ static void *__zipos_mmap_space(size_t mapsize) {
   offset = __zipos_maptotal;
   __zipos_maptotal += mapsize;
   start = (char *)kMemtrackZiposStart;
-  if (!__zipos_mapend) __zipos_mapend = start;
+  if (!__zipos_mapend)
+    __zipos_mapend = start;
   __zipos_mapend = _extend(start, __zipos_maptotal, __zipos_mapend, MAP_PRIVATE,
                            kMemtrackZiposStart + kMemtrackZiposSize);
   return start + offset;
@@ -98,7 +99,8 @@ void __zipos_drop(struct ZiposHandle *h) {
                   h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
   }
   __zipos_lock();
-  do h->next = h->zipos->freelist;
+  do
+    h->next = h->zipos->freelist;
   while (!_cmpxchg(&h->zipos->freelist, h->next, h));
   __zipos_unlock();
 }
@@ -113,7 +115,8 @@ StartOver:
   ph = &zipos->freelist;
   while ((h = *ph)) {
     if (h->mapsize >= mapsize) {
-      if (!_cmpxchg(ph, h, h->next)) goto StartOver;
+      if (!_cmpxchg(ph, h, h->next))
+        goto StartOver;
       break;
     }
     ph = &h->next;
@@ -168,8 +171,10 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
   struct ZiposHandle *h;
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
     size = name->len;
-    if (!(h = __zipos_alloc(zipos, size + 1))) return -1;
-    if (size) memcpy(h->data, name->path, size);
+    if (!(h = __zipos_alloc(zipos, size + 1)))
+      return -1;
+    if (size)
+      memcpy(h->data, name->path, size);
     h->data[size] = 0;
     h->mem = h->data;
   } else {
@@ -178,11 +183,13 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
     size = GetZipLfileUncompressedSize(zipos->map + lf);
     switch (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
       case kZipCompressionNone:
-        if (!(h = __zipos_alloc(zipos, 0))) return -1;
+        if (!(h = __zipos_alloc(zipos, 0)))
+          return -1;
         h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
         break;
       case kZipCompressionDeflate:
-        if (!(h = __zipos_alloc(zipos, size))) return -1;
+        if (!(h = __zipos_alloc(zipos, size)))
+          return -1;
         if (!__inflate(h->data, size, ZIP_LFILE_CONTENT(zipos->map + lf),
                        GetZipLfileCompressedSize(zipos->map + lf))) {
           h->mem = h->data;

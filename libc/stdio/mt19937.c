@@ -100,13 +100,16 @@ void _Smt19937(uint64_t K[], size_t n) {
   for (i = 1, j = 0, k = MAX(NN, n); k; k--) {
     mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * 0x369dea0f31a53f85)) +
             K[j] + j;
-    if (++i >= NN) mt[0] = mt[NN - 1], i = 1;
-    if (++j >= n) j = 0;
+    if (++i >= NN)
+      mt[0] = mt[NN - 1], i = 1;
+    if (++j >= n)
+      j = 0;
   }
   for (k = NN - 1; k; k--) {
     mt[i] =
         (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * 0x27bb2ee687b0b0fd)) - i;
-    if (++i >= NN) mt[0] = mt[NN - 1], i = 1;
+    if (++i >= NN)
+      mt[0] = mt[NN - 1], i = 1;
   }
   mt[0] = 0x8000000000000000; /* assures non-zero initial array */
 }
@@ -122,7 +125,8 @@ uint64_t _mt19937(void) {
   int i;
   uint64_t x;
   if (mti >= NN) {
-    if (mti == NN + 1) _smt19937(5489);
+    if (mti == NN + 1)
+      _smt19937(5489);
     for (i = 0; i < NN - MM; i++) {
       x = (mt[i] & UM) | (mt[i + 1] & LM);
       mt[i] = mt[i + MM] ^ (x >> 1) ^ mag01[x & 1];

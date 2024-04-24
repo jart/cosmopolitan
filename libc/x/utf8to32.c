@@ -42,8 +42,10 @@ wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
   wint_t x, a, b;
   wchar_t *r, *q;
   uint8_t v1[16], v2[16], v3[16], v4[16], vz[16];
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (z)
+    *z = 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   if ((q = r = malloc(n * sizeof(wchar_t) + sizeof(wchar_t)))) {
     for (i = 0; i < n;) {
       if (!((uintptr_t)(p + i) & 15) && i + 16 < n) {
@@ -52,7 +54,8 @@ wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
         do {
           memcpy(v1, p + i, 16);
           pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-          if (pmovmskb(v2) != 0xFFFF) break;
+          if (pmovmskb(v2) != 0xFFFF)
+            break;
           punpcklbw(v3, v1, vz);
           punpckhbw(v1, v1, vz);
           punpcklwd((void *)v4, (void *)v3, (void *)vz);
@@ -74,7 +77,8 @@ wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
         if (i + m <= n) {
           for (j = 0;;) {
             b = p[i + j] & 0xff;
-            if (!ThomPikeCont(b)) break;
+            if (!ThomPikeCont(b))
+              break;
             a = ThomPikeMerge(a, b);
             if (++j == m) {
               x = a;
@@ -86,9 +90,11 @@ wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
       }
       *q++ = x;
     }
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, (q - r) * sizeof(wchar_t)))) r = q;
+    if ((q = realloc(r, (q - r) * sizeof(wchar_t))))
+      r = q;
   }
   return r;
 }

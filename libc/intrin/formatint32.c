@@ -50,6 +50,7 @@ dontinline char *FormatUint32(char p[hasatleast 12], uint32_t x) {
  * @return pointer to nul byte
  */
 char *FormatInt32(char p[hasatleast 12], int32_t x) {
-  if (x < 0) *p++ = '-', x = -(uint32_t)x;
+  if (x < 0)
+    *p++ = '-', x = -(uint32_t)x;
   return FormatUint32(p, x);
 }

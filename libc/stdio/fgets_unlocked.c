@@ -48,11 +48,13 @@ char *fgets_unlocked(char *s, int size, FILE *f) {
         if ((t = memchr(b, '\n', n))) {
           n = t + 1 - b;
         }
-        if (n) memcpy(p, b, n);
+        if (n)
+          memcpy(p, b, n);
         f->beg += n;
         size -= n - 1;
         p += n;
-        if (t) break;
+        if (t)
+          break;
       } else {
         if ((c = fgetc_unlocked(f)) == -1) {
           if (ferror_unlocked(f) == EINTR) {
@@ -62,7 +64,8 @@ char *fgets_unlocked(char *s, int size, FILE *f) {
           }
         }
         *p++ = c & 255;
-        if (c == '\n') break;
+        if (c == '\n')
+          break;
       }
     }
     if (p > s || f->state != -1) {

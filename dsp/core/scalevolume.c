@@ -29,7 +29,8 @@ void scalevolume(size_t n, int16_t pcm[n][8], int p) {
   /* TODO(jart): This isn't acceptable. */
   size_t i, j;
   if (p > 0) {
-    if (p > 15) p = 15;
+    if (p > 15)
+      p = 15;
     for (i = 0; i < n; ++i) {
       for (j = 0; j < 8; ++j) {
         pcm[i][j] =
@@ -38,7 +39,8 @@ void scalevolume(size_t n, int16_t pcm[n][8], int p) {
     }
   } else if (p < 0) {
     p = -p;
-    if (p > 15) p = 15;
+    if (p > 15)
+      p = 15;
     for (i = 0; i < n; ++i) {
       for (j = 0; j < 8; ++j) {
         pcm[i][j] = pcm[i][j] >> p;

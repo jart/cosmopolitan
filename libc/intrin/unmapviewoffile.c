@@ -29,7 +29,8 @@ __msabi extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile;
 textwindows bool32 UnmapViewOfFile(const void *lpBaseAddress) {
   bool32 ok;
   ok = __imp_UnmapViewOfFile(lpBaseAddress);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("UnmapViewOfFile(%p) → %hhhd% m", lpBaseAddress, ok);
   return ok;
 }

@@ -57,11 +57,13 @@ static wontreturn void DieOom(void) {
 }
 
 static void Appends(char **b, const char *s) {
-  if (appends(b, s) == -1) DieOom();
+  if (appends(b, s) == -1)
+    DieOom();
 }
 
 static void Appendd(char **b, const void *p, size_t n) {
-  if (appendd(b, p, n) == -1) DieOom();
+  if (appendd(b, p, n) == -1)
+    DieOom();
 }
 
 size_t GetFdSize(int fd) {
@@ -84,10 +86,12 @@ void Process(const char *p, const char *pe, const char *path, bool isheader) {
     p2 = memchr(p, '\n', pe - p);
     p2 = p2 ? p2 + 1 : pe;
     if (LOOKINGAT(p, pe, "#if")) {
-      if (isheader && !level++) continue;
+      if (isheader && !level++)
+        continue;
     }
     if (LOOKINGAT(p, pe, "#endif")) {
-      if (isheader && !--level) continue;
+      if (isheader && !--level)
+        continue;
     }
     if (LOOKINGAT(p, pe, "/* clang-format off */")) {
       noformat = true;
@@ -114,26 +118,37 @@ void Visit(const char *path) {
   char *map;
   size_t size;
   bool isheader;
-  if (!endswith(path, ".h") && !endswith(path, ".inc")) return;
-  if (endswith(path, ".internal.h")) return;
-  if (endswith(path, "/internal.h")) return;
-  if (endswith(path, ".internal.inc")) return;
-  if (endswith(path, "/internal.inc")) return;
-  if (startswith(path, "libc/isystem/")) return;
+  if (!endswith(path, ".h") && !endswith(path, ".inc"))
+    return;
+  if (endswith(path, ".internal.h"))
+    return;
+  if (endswith(path, "/internal.h"))
+    return;
+  if (endswith(path, ".internal.inc"))
+    return;
+  if (endswith(path, "/internal.inc"))
+    return;
+  if (startswith(path, "libc/isystem/"))
+    return;
   isheader = endswith(path, ".h");
-  if (isheader && isinterned(visited, path)) return;
+  if (isheader && isinterned(visited, path))
+    return;
   Appends(&output, "\n\f\n/*!BEGIN ");
   Appends(&output, path);
   Appends(&output, " */\n\n");
   intern(visited, path);
-  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
+  if ((fd = open(path, O_RDONLY)) == -1)
+    DieSys(path);
   if ((size = GetFdSize(fd))) {
     map = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) DieSys(path);
+    if (map == MAP_FAILED)
+      DieSys(path);
     Process(map, map + size, path, isheader);
-    if (munmap(map, size)) DieSys(path);
+    if (munmap(map, size))
+      DieSys(path);
   }
-  if (close(fd)) DieSys(path);
+  if (close(fd))
+    DieSys(path);
 }
 
 int main(int argc, char *argv[]) {
@@ -141,7 +156,8 @@ int main(int argc, char *argv[]) {
   const char *src;
   struct GetArgs ga;
   prog = argv[0];
-  if (!prog) prog = "rollup";
+  if (!prog)
+    prog = "rollup";
   visited = newinterner();
   Appends(&output, "#ifndef COSMOPOLITAN_H_\n");
   Appends(&output, "#define COSMOPOLITAN_H_\n");

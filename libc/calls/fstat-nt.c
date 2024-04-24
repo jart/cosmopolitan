@@ -97,7 +97,8 @@ textwindows int sys_fstat_nt_special(int kind, struct stat *st) {
 }
 
 textwindows int sys_fstat_nt(int fd, struct stat *st) {
-  if (fd + 0u >= g_fds.n) return ebadf();
+  if (fd + 0u >= g_fds.n)
+    return ebadf();
   switch (g_fds.p[fd].kind) {
     case kFdEmpty:
       return ebadf();
@@ -174,7 +175,8 @@ textwindows int sys_fstat_nt_handle(int64_t handle, const char16_t *path,
       if (S_ISLNK(st.st_mode)) {
         if (!st.st_size) {
           long size = GetSizeOfReparsePoint(handle);
-          if (size == -1) return -1;
+          if (size == -1)
+            return -1;
           st.st_size = size;
         }
       } else {

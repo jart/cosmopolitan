@@ -39,10 +39,12 @@ int nice(int delta) {
     p = delta;
   } else {
     delta = clamp(delta);
-    if ((p = getpriority(PRIO_PROCESS, 0)) == -1) return -1;
+    if ((p = getpriority(PRIO_PROCESS, 0)) == -1)
+      return -1;
     p += delta;
   }
   p = clamp(p);
-  if (setpriority(PRIO_PROCESS, 0, p) == -1) return -1;
+  if (setpriority(PRIO_PROCESS, 0, p) == -1)
+    return -1;
   return p;
 }

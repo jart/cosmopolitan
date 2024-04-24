@@ -37,7 +37,8 @@ int xbarf(const char *path, const void *data, size_t size) {
   size_t i, wrote;
   res = 0;
   p = data;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (size == -1)
+    size = data ? strlen(data) : 0;
   if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) != -1) {
     if (ftruncate(fd, size) != -1) {
       if (size > 2 * 1024 * 1024) {

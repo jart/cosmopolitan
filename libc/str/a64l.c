@@ -46,7 +46,8 @@ long a64l(const char *s) {
   uint32_t i, v, x;
   for (x = i = 0; i < 6; ++i) {
     v = kBase64i[s[i] & 0xff];
-    if (v == -1) break;
+    if (v == -1)
+      break;
     x |= v << (i * 6);
   }
   return (int32_t)x;

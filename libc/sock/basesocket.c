@@ -37,8 +37,10 @@ textwindows int64_t GetNtBaseSocket(int64_t socket) {
   int64_t base_socket;
   for (;;) {
     base_socket = GetNtBspSocket(socket, kNtSioBaseHandle);
-    if (base_socket != -1) return base_socket;
-    if (WSAGetLastError() == WSAENOTSOCK) return __winsockerr();
+    if (base_socket != -1)
+      return base_socket;
+    if (WSAGetLastError() == WSAENOTSOCK)
+      return __winsockerr();
     /*
      * Even though Microsoft documentation clearly states that Layered
      * Spyware Providers must never ever intercept the SIO_BASE_HANDLE

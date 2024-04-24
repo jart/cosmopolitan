@@ -24,7 +24,9 @@
  * Sends signal to process group.
  */
 int killpg(int pgrp, int sig) {
-  if (!(0 < sig && sig < NSIG)) return einval();
-  if (pgrp == 1 || pgrp < 0) return esrch();
+  if (!(0 < sig && sig < NSIG))
+    return einval();
+  if (pgrp == 1 || pgrp < 0)
+    return esrch();
   return kill(IsWindows() ? pgrp : -pgrp, sig);
 }

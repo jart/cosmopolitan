@@ -129,7 +129,8 @@ textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
 
 static textwindows int64_t GetfileSize(int64_t handle) {
   struct NtByHandleFileInformation wst;
-  if (!GetFileInformationByHandle(handle, &wst)) return __winerr();
+  if (!GetFileInformationByHandle(handle, &wst))
+    return __winerr();
   return (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
 }
 
@@ -156,7 +157,8 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
       break;
     case SEEK_END: {
       int64_t size;
-      if ((size = GetfileSize(f->handle)) == -1) return -1;
+      if ((size = GetfileSize(f->handle)) == -1)
+        return -1;
       off = size - off;
       break;
     }
@@ -254,7 +256,8 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
   }
 
   if (l->l_type == F_UNLCK) {
-    if (cmd == F_GETLK) return einval();
+    if (cmd == F_GETLK)
+      return einval();
 
     // allow a big range to unlock many small ranges
     for (flp = &g_locks.list, fl = *flp; fl;) {
@@ -318,7 +321,8 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
 }
 
 static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
-  if (start < 0) return einval();
+  if (start < 0)
+    return einval();
   return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? _O_CLOEXEC : 0), start);
 }
 

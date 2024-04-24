@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
       bzero(glyphs, sizeof(glyphs));
     }
     glyphs[col] = kCp437[c];
-    if (col) putchar(',');
+    if (col)
+      putchar(',');
     printf("0x%02x", c);
     if (++col == COLS) {
       col = 0;

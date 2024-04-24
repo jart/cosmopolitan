@@ -23,8 +23,10 @@
 #include "libc/intrin/kprintf.h"
 
 const char *(DescribeTimeval)(char buf[45], int rc, const struct timeval *tv) {
-  if (!tv) return "NULL";
-  if (rc == -1) return "n/a";
+  if (!tv)
+    return "NULL";
+  if (rc == -1)
+    return "n/a";
   if ((!IsAsan() && kisdangerous(tv)) ||
       (IsAsan() && !__asan_is_valid(tv, sizeof(*tv)))) {
     ksnprintf(buf, 45, "%p", tv);

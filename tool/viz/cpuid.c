@@ -102,9 +102,12 @@ int main(int argc, char *argv[]) {
 
   if (KCPUIDS(16H, EAX)) {
     printf("\n");
-    if ((x = KCPUIDS(16H, EAX) & 0x7fff)) decimal("frequency", x, "mhz");
-    if ((x = KCPUIDS(16H, EBX) & 0x7fff)) decimal("turbo", x, "mhz");
-    if ((x = KCPUIDS(16H, ECX) & 0x7fff)) decimal("bus", x, "mhz");
+    if ((x = KCPUIDS(16H, EAX) & 0x7fff))
+      decimal("frequency", x, "mhz");
+    if ((x = KCPUIDS(16H, EBX) & 0x7fff))
+      decimal("turbo", x, "mhz");
+    if ((x = KCPUIDS(16H, ECX) & 0x7fff))
+      decimal("bus", x, "mhz");
   }
 
   if (X86_HAVE(HYPERVISOR)) {

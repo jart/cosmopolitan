@@ -54,7 +54,8 @@ char *DescribeSslVerifyFailure(int flags) {
   p = malloc(1024);
   q = stpcpy(p, "verify failed");
   for (i = 0; i < ARRAYLEN(kSslVerifyStrings); ++i) {
-    if (!(flags & kSslVerifyStrings[i].code)) continue;
+    if (!(flags & kSslVerifyStrings[i].code))
+      continue;
     q = stpcpy(stpcpy(q, " "), kSslVerifyStrings[i].str);
   }
   return p;

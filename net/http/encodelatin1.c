@@ -41,11 +41,15 @@ char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
   char t[256];
   char *r, *q;
   bzero(t, sizeof(t));
-  if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
-  if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
+  if (f & kControlC0)
+    memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
+  if (f & kControlC1)
+    memset(t + 0x80, 1, 0xA0 - 0x80);
   t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (z)
+    *z = 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   if ((q = r = malloc(n + 1))) {
     for (i = 0; i < n;) {
       c = p[i++] & 0xff;
@@ -61,9 +65,11 @@ char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
       }
       *q++ = c;
     }
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
+    if ((q = realloc(r, q - r)))
+      r = q;
   }
   return r;
 Invalid:

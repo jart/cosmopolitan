@@ -45,7 +45,8 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   }
 
   oflags = 0;
-  if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
+  if (type & SOCK_CLOEXEC)
+    oflags |= O_CLOEXEC;
   type &= ~SOCK_CLOEXEC;
 
   if (type == SOCK_STREAM) {
@@ -62,8 +63,10 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   writer = __reservefd_unlocked(-1);
   __fds_unlock();
   if (reader == -1 || writer == -1) {
-    if (reader != -1) __releasefd(reader);
-    if (writer != -1) __releasefd(writer);
+    if (reader != -1)
+      __releasefd(reader);
+    if (writer != -1)
+      __releasefd(writer);
     return -1;
   }
   if ((hpipe = CreateNamedPipe(

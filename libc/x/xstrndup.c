@@ -29,6 +29,7 @@
  */
 char *xstrndup(const char *s, size_t n) {
   void *res = strndup(s, n);
-  if (!res) xdie();
+  if (!res)
+    xdie();
   return res;
 }

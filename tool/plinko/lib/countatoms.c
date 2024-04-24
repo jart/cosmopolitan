@@ -19,7 +19,9 @@
 #include "tool/plinko/lib/plinko.h"
 
 nosideeffect int CountAtoms(int x, int max, int res) {
-  if (!x || res >= max) return res;
-  if (x > 0) return res + 1;
+  if (!x || res >= max)
+    return res;
+  if (x > 0)
+    return res + 1;
   return CountAtoms(Cdr(x), max, CountAtoms(Car(x), max, res));
 }

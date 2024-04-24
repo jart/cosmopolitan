@@ -70,7 +70,8 @@ TEST(ftruncate, pipeFd_einval) {
 
 TEST(ftruncate, efbig) {
   // FreeBSD and RHEL7 return 0 (why??)
-  if (IsLinux() || IsFreebsd()) return;
+  if (IsLinux() || IsFreebsd())
+    return;
   sighandler_t old = signal(SIGXFSZ, SIG_IGN);
   ASSERT_SYS(0, 3, creat("foo", 0755));
   ASSERT_SYS(IsWindows() ? EINVAL : EFBIG, -1, ftruncate(3, INT64_MAX));

@@ -21,14 +21,18 @@
 bool MakesClosures(int x) {
   int h;
   if (x < 0 && (h = Car(x)) != kQuote && h != kClosure) {
-    if (h == kMacro) return true;
-    if (h == kLambda) return true;
+    if (h == kMacro)
+      return true;
+    if (h == kLambda)
+      return true;
     if (h == kCond) {
       while ((x = Cdr(x)) < 0) {
         if ((h = Car(x)) < 0) {
-          if (MakesClosures(Car(h))) return true;
+          if (MakesClosures(Car(h)))
+            return true;
           if ((h = Cdr(h)) < 0) {
-            if (MakesClosures(Car(h))) return true;
+            if (MakesClosures(Car(h)))
+              return true;
           }
         }
       }

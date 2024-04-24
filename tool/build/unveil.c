@@ -91,10 +91,12 @@ int main(int argc, char *argv[]) {
         p++;
         continue;
       }
-      if (i > 1) errx(1, "<stdin>:%zu - too many fields", count);
+      if (i > 1)
+        errx(1, "<stdin>:%zu - too many fields", count);
       fields[i++] = p;
     }
-    if (i != 2) errx(1, "<stdin>:%zu - malformed line", count);
+    if (i != 2)
+      errx(1, "<stdin>:%zu - malformed line", count);
 
     if (unveil(fields[0], fields[1]) == -1)
       err(1, "unveil(%s, %s)", fields[0], fields[1]);
@@ -104,7 +106,8 @@ int main(int argc, char *argv[]) {
     err(1, "getline");
   }
 
-  if (unveil(NULL, NULL) == -1) err(1, "unveil(NULL, NULL)");
+  if (unveil(NULL, NULL) == -1)
+    err(1, "unveil(NULL, NULL)");
 
   __sys_execve(prog, argv + optind, environ);
   err(127, "execve");

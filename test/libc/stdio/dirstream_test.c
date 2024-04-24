@@ -61,7 +61,8 @@ void SetUp(void) {
 
 TEST(opendir, efault) {
   ASSERT_SYS(EFAULT, NULL, opendir(0));
-  if (!IsAsan()) return;  // not possible
+  if (!IsAsan())
+    return;  // not possible
   ASSERT_SYS(EFAULT, NULL, opendir((void *)77));
 }
 
@@ -180,8 +181,10 @@ TEST(rewinddir, test) {
   readdir(dir);
   rewinddir(dir);
   while ((ent = readdir(dir))) {
-    if (strcmp(ent->d_name, "foo")) hasfoo = true;
-    if (strcmp(ent->d_name, "bar")) hasbar = true;
+    if (strcmp(ent->d_name, "foo"))
+      hasfoo = true;
+    if (strcmp(ent->d_name, "bar"))
+      hasbar = true;
   }
   EXPECT_TRUE(hasfoo);
   EXPECT_TRUE(hasbar);

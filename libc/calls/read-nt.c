@@ -276,7 +276,8 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
     } else {
       v = -v;
     }
-    do p[n++] = v;
+    do
+      p[n++] = v;
     while ((v >>= 8));
     return n;
   }
@@ -360,7 +361,8 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
 
   // finally apply thompson-pike varint encoding
   uint64_t w = tpenc(c);
-  do p[n++] = w;
+  do
+    p[n++] = w;
   while ((w >>= 8));
   return n;
 }
@@ -482,7 +484,8 @@ static textwindows bool EraseKeystroke(void) {
     struct Keystroke *k = KEYSTROKE_CONTAINER(e);
     FreeKeystroke(&__keystroke.line, e);
     for (int i = k->buflen; i--;) {
-      if ((k->buf[i] & 0300) == 0200) continue;  // utf-8 cont
+      if ((k->buf[i] & 0300) == 0200)
+        continue;  // utf-8 cont
       EraseCharacter();
       if (!(__ttyconf.magic & kTtyEchoRaw) && IsCtl(k->buf[i])) {
         EraseCharacter();
@@ -552,12 +555,15 @@ static textwindows void IngestConsoleInput(void) {
   uint32_t i, n;
   struct NtInputRecord records[16];
   for (;;) {
-    if (!__keystroke.freekeys) return;
-    if (__keystroke.end_of_file) return;
+    if (!__keystroke.freekeys)
+      return;
+    if (__keystroke.end_of_file)
+      return;
     if (!GetNumberOfConsoleInputEvents(__keystroke.cin, &n)) {
       goto UnexpectedEof;
     }
-    if (!n) return;
+    if (!n)
+      return;
     n = MIN(__keystroke.freekeys, MIN(ARRAYLEN(records), n));
     if (!ReadConsoleInput(__keystroke.cin, records, n, &n)) {
       goto UnexpectedEof;
@@ -722,8 +728,10 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
       ms = __ttyconf.vtime * 100;
     }
   }
-  if (_check_cancel() == -1) return -1;
-  if (f->flags & _O_NONBLOCK) return eagain();
+  if (_check_cancel() == -1)
+    return -1;
+  if (f->flags & _O_NONBLOCK)
+    return eagain();
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     goto DeliverSignal;
   }
@@ -734,15 +742,21 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   wi = WaitForMultipleObjects(2, (int64_t[2]){__keystroke.cin, sem}, 0, ms);
   atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
   CloseHandle(sem);
-  if (wi == kNtWaitTimeout) return 0;  // vtime elapsed
-  if (wi == 0) return -2;              // console data
-  if (wi != 1) return __winerr();      // wait failed
+  if (wi == kNtWaitTimeout)
+    return 0;  // vtime elapsed
+  if (wi == 0)
+    return -2;  // console data
+  if (wi != 1)
+    return __winerr();  // wait failed
   if (_weaken(__sig_get)) {
-    if (!(sig = _weaken(__sig_get)(waitmask))) return eintr();
+    if (!(sig = _weaken(__sig_get)(waitmask)))
+      return eintr();
   DeliverSignal:
     int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-    if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) return -2;
+    if (_check_cancel() == -1)
+      return -1;
+    if (!(handler_was_called & SIG_HANDLED_NO_RESTART))
+      return -2;
   }
   return eintr();
 }
@@ -756,7 +770,8 @@ static textwindows ssize_t ReadFromConsole(struct Fd *f, void *data,
     IngestConsoleInput();
     bool done = DigestConsoleInput(data, size, &rc);
     UnlockKeystrokes();
-    if (done) return rc;
+    if (done)
+      return rc;
   } while ((rc = WaitForConsole(f, waitmask)) == -2);
   return rc;
 }
@@ -778,7 +793,8 @@ textwindows ssize_t ReadBuffer(int fd, void *data, size_t size, int64_t offset,
   // perform heavy lifting
   ssize_t rc;
   rc = sys_readwrite_nt(fd, data, size, offset, f->handle, waitmask, ReadFile);
-  if (rc != -2) return rc;
+  if (rc != -2)
+    return rc;
 
   // mops up win32 errors
   switch (GetLastError()) {
@@ -798,11 +814,14 @@ static textwindows ssize_t ReadIovecs(int fd, const struct iovec *iov,
                                       sigset_t waitmask) {
   ssize_t rc;
   size_t i, total;
-  if (opt_offset < -1) return einval();
-  while (iovlen && !iov[0].iov_len) iov++, iovlen--;
+  if (opt_offset < -1)
+    return einval();
+  while (iovlen && !iov[0].iov_len)
+    iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {
-      if (!iov[i].iov_len) continue;
+      if (!iov[i].iov_len)
+        continue;
       rc =
           ReadBuffer(fd, iov[i].iov_base, iov[i].iov_len, opt_offset, waitmask);
       if (rc == -1) {
@@ -813,8 +832,10 @@ static textwindows ssize_t ReadIovecs(int fd, const struct iovec *iov,
         }
       }
       total += rc;
-      if (opt_offset != -1) opt_offset += rc;
-      if (rc < iov[i].iov_len) break;
+      if (opt_offset != -1)
+        opt_offset += rc;
+      if (rc < iov[i].iov_len)
+        break;
     }
     return total;
   } else {

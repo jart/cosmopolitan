@@ -24,7 +24,8 @@
 
 textwindows int tcsetwinsize_nt(int fd, const struct winsize *ws) {
   struct NtCoord coord;
-  if (!sys_isatty(fd)) return -1;  // ebadf, enotty
+  if (!sys_isatty(fd))
+    return -1;  // ebadf, enotty
   coord.X = ws->ws_col;
   coord.Y = ws->ws_row;
   if (SetConsoleScreenBufferSize(fd, coord)) {

@@ -50,6 +50,7 @@ dontinline char *FormatUint64(char p[static 21], uint64_t x) {
  * @return pointer to nul byte
  */
 char *FormatInt64(char p[static 21], int64_t x) {
-  if (x < 0) *p++ = '-', x = -(uint64_t)x;
+  if (x < 0)
+    *p++ = '-', x = -(uint64_t)x;
   return FormatUint64(p, x);
 }

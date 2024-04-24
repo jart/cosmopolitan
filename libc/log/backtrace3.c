@@ -51,7 +51,8 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
   struct Garbages *garbage;
   const struct StackFrame *frame;
   (void)gi;
-  if (!bp) bp = __builtin_frame_address(0);
+  if (!bp)
+    bp = __builtin_frame_address(0);
   garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {

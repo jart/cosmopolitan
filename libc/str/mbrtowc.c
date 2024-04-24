@@ -39,26 +39,33 @@ size_t mbrtowc(wchar_t *wc, const char *src, size_t n, mbstate_t *st) {
   const unsigned char *s = (const void *)src;
   const unsigned N = n;
   wchar_t dummy;
-  if (!st) st = (void *)&internal_state;
+  if (!st)
+    st = (void *)&internal_state;
   c = *(unsigned *)st;
   if (!s) {
-    if (c) goto ilseq;
+    if (c)
+      goto ilseq;
     return 0;
   } else if (!wc) {
     wc = &dummy;
   }
-  if (!n) return -2;
+  if (!n)
+    return -2;
   if (!c) {
-    if (*s < 0x80) return !!(*wc = *s);
-    if (MB_CUR_MAX == 1) return (*wc = CODEUNIT(*s)), 1;
-    if (*s - SA > SB - SA) goto ilseq;
+    if (*s < 0x80)
+      return !!(*wc = *s);
+    if (MB_CUR_MAX == 1)
+      return (*wc = CODEUNIT(*s)), 1;
+    if (*s - SA > SB - SA)
+      goto ilseq;
     wut = *s++ - SA;
     wut = MAX(0, MIN(ARRAYLEN(kMbBittab) - 1, wut));
     c = kMbBittab[wut];
     n--;
   }
   if (n) {
-    if (OOB(c, *s)) goto ilseq;
+    if (OOB(c, *s))
+      goto ilseq;
   loop:
     c = c << 6 | (*s++ - 0x80);
     n--;
@@ -68,7 +75,8 @@ size_t mbrtowc(wchar_t *wc, const char *src, size_t n, mbstate_t *st) {
       return N - n;
     }
     if (n) {
-      if (*s - 0x80u >= 0x40) goto ilseq;
+      if (*s - 0x80u >= 0x40)
+        goto ilseq;
       goto loop;
     }
   }

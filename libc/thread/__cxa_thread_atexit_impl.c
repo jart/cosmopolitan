@@ -38,7 +38,8 @@ void __cxa_thread_finalize(void) {
 
 int __cxa_thread_atexit_impl(void *fun, void *arg, void *dso_symbol) {
   struct Dtor *dtor;
-  if (!(dtor = malloc(sizeof(struct Dtor)))) return -1;
+  if (!(dtor = malloc(sizeof(struct Dtor))))
+    return -1;
   dtor->fun = fun;
   dtor->arg = arg;
   dtor->next = __cxa_thread_atexit_list;

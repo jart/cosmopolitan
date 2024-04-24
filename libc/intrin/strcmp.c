@@ -32,8 +32,10 @@ int strcmp(const char *a, const char *b) {
   int c;
   size_t i = 0;
   uint64_t v, w;
-  if (a == b) return 0;
-  if ((c = (*a & 255) - (*b & 255))) return c;
+  if (a == b)
+    return 0;
+  if ((c = (*a & 255) - (*b & 255)))
+    return c;
   if (!IsTiny() && ((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
       if (a[i] != b[i] || !b[i]) {
@@ -50,7 +52,8 @@ int strcmp(const char *a, const char *b) {
       }
     }
   } else {
-    while (a[i] == b[i] && b[i]) ++i;
+    while (a[i] == b[i] && b[i])
+      ++i;
   }
   return (a[i] & 255) - (b[i] & 255);
 }

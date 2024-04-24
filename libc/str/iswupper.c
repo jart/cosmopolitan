@@ -25,7 +25,8 @@ int iswupper(wint_t c) {
   if (c < 0200) {
     return 'A' <= c && c <= 'Z';
   } else {
-    if (towlower(c) != c) return 1;
+    if (towlower(c) != c)
+      return 1;
     switch (c) {
       case 0x03d2:  /* ϒ Greek */
       case 0x03d3:  /* ϓ Greek */

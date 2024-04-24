@@ -23,7 +23,9 @@
  */
 char16_t *strchr16(const char16_t *s, int c) {
   for (;; ++s) {
-    if ((*s & 65535) == (c & 65535)) return (char16_t *)s;
-    if (!*s) return (char16_t *)0;
+    if ((*s & 65535) == (c & 65535))
+      return (char16_t *)s;
+    if (!*s)
+      return (char16_t *)0;
   }
 }

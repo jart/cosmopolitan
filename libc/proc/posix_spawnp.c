@@ -33,6 +33,7 @@ int posix_spawnp(int *pid, const char *path,
                  const posix_spawnattr_t *attrp, char *const argv[],
                  char *const envp[]) {
   char pathbuf[PATH_MAX];
-  if (!(path = commandv(path, pathbuf, sizeof(pathbuf)))) return errno;
+  if (!(path = commandv(path, pathbuf, sizeof(pathbuf))))
+    return errno;
   return posix_spawn(pid, path, file_actions, attrp, argv, envp);
 }

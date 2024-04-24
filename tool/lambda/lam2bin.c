@@ -107,7 +107,8 @@ static int Greed(void) {
     } else {
       c = fgetwc(stdin);
     }
-    if (c == EOF) return c;
+    if (c == EOF)
+      return c;
     if (!t) {
       if (c == '#' || c == ';') {
         t = 1;
@@ -119,7 +120,8 @@ static int Greed(void) {
       }
       continue;
     }
-    if (iswspace(c)) continue;
+    if (iswspace(c))
+      continue;
     if (!str) {
       switch (c) {
         case L'⊥':
@@ -211,7 +213,8 @@ static int Greed(void) {
 
 static int Need(void) {
   int c;
-  if ((c = Greed()) != EOF) return c;
+  if ((c = Greed()) != EOF)
+    return c;
   Error(1, "unfinished expression");
 }
 
@@ -219,20 +222,24 @@ static struct Node *Parse1(void) {
   wint_t c;
   int i, oldsp;
   struct Node *r, *p, *q;
-  if ((c = Greed()) == EOF) return 0;
+  if ((c = Greed()) == EOF)
+    return 0;
   if (c == L'λ' || c == '\\') {
     oldsp = sp;
     c = Need();
-    if (!(isalnum(c) || c == '_')) Error(2, "lambda needs argument");
+    if (!(isalnum(c) || c == '_'))
+      Error(2, "lambda needs argument");
     p = r = NewNode(0, 0, 0, 0);
     args[sp++] = c;
     while ((c = Need()) != '.') {
-      if (!(isalnum(c) || c == '_')) Error(3, "lambda needs argument");
+      if (!(isalnum(c) || c == '_'))
+        Error(3, "lambda needs argument");
       p = p->l = NewNode(0, 0, 0, 0);
       args[sp++] = c;
     }
     q = Parse1();
-    if (!q) Error(4, "lambda needs body");
+    if (!q)
+      Error(4, "lambda needs body");
     p->l = q;
     while ((q = Parse1())) {
       p->l = NewNode(2, 0, p->l, q);
@@ -249,16 +256,19 @@ static struct Node *Parse1(void) {
         break;
       }
     }
-    if (i < 0) Error(5, "undefined variable: %d %lc", c, c);
+    if (i < 0)
+      Error(5, "undefined variable: %d %lc", c, c);
     return NewNode(1, i, 0, 0);
   } else if (c == '(') {
     p = r = Parse1();
-    if (!p) Error(6, "empty parenthesis");
+    if (!p)
+      Error(6, "empty parenthesis");
     while ((q = Parse1())) {
       r = NewNode(2, 0, r, q);
     }
     c = Need();
-    if (c != ')') Error(7, "expected closing parenthesis");
+    if (c != ')')
+      Error(7, "expected closing parenthesis");
     return r;
   } else if (c == ')') {
     unget = c;
@@ -271,7 +281,8 @@ static struct Node *Parse1(void) {
 static struct Node *Parse(void) {
   struct Node *r, *p, *q;
   p = r = Parse1();
-  if (!p) Error(6, "empty expression");
+  if (!p)
+    Error(6, "empty expression");
   while ((q = Parse1())) {
     r = NewNode(2, 0, r, q);
   }

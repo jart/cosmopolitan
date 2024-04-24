@@ -40,9 +40,12 @@ static uint32_t GetFileExtension(const char16_t *s) {
   n = s ? strlen16(s) : 0;
   for (i = w = 0; n--;) {
     wint_t c = s[n];
-    if (!IsGraph(c)) return 0;
-    if (c == '.') break;
-    if (++i > 4) return 0;
+    if (!IsGraph(c))
+      return 0;
+    if (c == '.')
+      break;
+    if (++i > 4)
+      return 0;
     w <<= 8;
     w |= kToLower[c];
   }

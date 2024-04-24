@@ -52,12 +52,15 @@ extern pthread_spinlock_t _pthread_lock_obj;
 static void _pthread_onfork(int i) {
   struct AtFork *a;
   unassert(0 <= i && i <= 2);
-  if (!i) pthread_spin_lock(&_atforks.lock);
+  if (!i)
+    pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
-    if (a->f[i]) a->f[i]();
+    if (a->f[i])
+      a->f[i]();
     _atforks.list = a;
   }
-  if (i) pthread_spin_unlock(&_atforks.lock);
+  if (i)
+    pthread_spin_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_prepare(void) {
@@ -99,14 +102,16 @@ static struct AtFork *_pthread_atfork_alloc(void) {
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   int rc;
   struct AtFork *a;
-  if (!(a = _pthread_atfork_alloc())) return ENOMEM;
+  if (!(a = _pthread_atfork_alloc()))
+    return ENOMEM;
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;
   pthread_spin_lock(&_atforks.lock);
   a->p[0] = 0;
   a->p[1] = _atforks.list;
-  if (_atforks.list) _atforks.list->p[0] = a;
+  if (_atforks.list)
+    _atforks.list->p[0] = a;
   _atforks.list = a;
   pthread_spin_unlock(&_atforks.lock);
   rc = 0;

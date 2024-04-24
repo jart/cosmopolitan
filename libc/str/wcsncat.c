@@ -33,7 +33,8 @@ wchar_t *wcsncat(wchar_t *d, const wchar_t *s, size_t n) {
   size_t i;
   wchar_t *r = d;
   d += wcslen(d);
-  for (i = 0; i < n && s[i]; ++i) d[i] = s[i];
+  for (i = 0; i < n && s[i]; ++i)
+    d[i] = s[i];
   d[i] = 0;
   return r;
 }

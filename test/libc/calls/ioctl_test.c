@@ -49,7 +49,8 @@ TEST(siocgifconf, test) {
   conf.ifc_len = n;
   ASSERT_NE(-1, ioctl(socketfd, SIOCGIFCONF, &conf));
   for (ifr = (struct ifreq *)data; (char *)ifr < data + conf.ifc_len; ++ifr) {
-    if (ifr->ifr_addr.sa_family != AF_INET) continue;
+    if (ifr->ifr_addr.sa_family != AF_INET)
+      continue;
     ip = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
     EXPECT_NE(-1, ioctl(socketfd, SIOCGIFNETMASK, ifr));
     netmask = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
@@ -72,7 +73,8 @@ TEST(siocgifconf, test) {
 }
 
 TEST(siocgifconf, mkntenvblock_systemroot) {
-  if (__argc != 1) return;
+  if (__argc != 1)
+    return;
   SPAWN(fork);
   execve(GetProgramExecutableName(),
          (char *[]){GetProgramExecutableName(), "hi", NULL}, (char *[]){NULL});

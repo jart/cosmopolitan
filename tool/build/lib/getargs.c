@@ -77,7 +77,8 @@
 
 static wontreturn void getargs_fail(const char *path, const char *reason) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "Unknown error";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "Unknown error";
   tinyprint(2, path, ": ", reason, ": ", errstr, "\n", NULL);
   exit(1);
 }
@@ -97,7 +98,8 @@ void getargs_init(struct GetArgs *ga, char **args) {
  */
 void getargs_destroy(struct GetArgs *ga) {
   if (ga->map) {
-    if (munmap(ga->map, ga->mapsize)) notpossible;
+    if (munmap(ga->map, ga->mapsize))
+      notpossible;
   }
   bzero(ga, sizeof(*ga));
 }
@@ -152,7 +154,8 @@ const char *getargs_next(struct GetArgs *ga) {
         ga->j += ++k;
         return p;
       }
-      if (munmap(ga->map, ga->mapsize)) notpossible;
+      if (munmap(ga->map, ga->mapsize))
+        notpossible;
       ga->map = 0;
       ga->mapsize = 0;
       ga->j = 0;

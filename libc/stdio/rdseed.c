@@ -48,7 +48,8 @@ uint64_t rdseed(void) {
                    : CFLAG_CONSTRAINT(cf), "=r"(x)
                    : /* no inputs */
                    : "cc");
-      if (cf) return x;
+      if (cf)
+        return x;
       asm volatile("pause");
     }
   }

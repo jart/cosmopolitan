@@ -30,11 +30,15 @@
 bool testlib_binequals(const char16_t *want, const void *got, size_t n) {
   size_t i;
   const unsigned char *p = (const unsigned char *)got;
-  if (!got) return false;
+  if (!got)
+    return false;
   for (i = 0; i < n; ++i) {
-    if (!want[i]) break;
-    if (i == n) break;
-    if (want[i] != kCp437[p[i]]) return false;
+    if (!want[i])
+      break;
+    if (i == n)
+      break;
+    if (want[i] != kCp437[p[i]])
+      return false;
   }
   return true;
 }

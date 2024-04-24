@@ -20,9 +20,13 @@
 
 pureconst bool IsConstant(int e) {
   unsigned f = LO(GetShadow(e));
-  if (f == EncodeDispatchFn(DispatchNil)) return true;
-  if (f == EncodeDispatchFn(DispatchTrue)) return true;
-  if (f == EncodeDispatchFn(DispatchPrecious)) return true;
-  if (f == EncodeDispatchFn(DispatchQuote)) return true;
+  if (f == EncodeDispatchFn(DispatchNil))
+    return true;
+  if (f == EncodeDispatchFn(DispatchTrue))
+    return true;
+  if (f == EncodeDispatchFn(DispatchPrecious))
+    return true;
+  if (f == EncodeDispatchFn(DispatchQuote))
+    return true;
   return false;
 }

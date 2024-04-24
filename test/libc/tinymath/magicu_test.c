@@ -38,7 +38,8 @@ T V[] = {5,           4,        77,       4,         7,        0,
 TEST(magicu, test) {
   int i, j;
   for (i = 0; i < ARRAYLEN(V); ++i) {
-    if (!V[i]) continue;
+    if (!V[i])
+      continue;
     struct magicu d = __magicu_get(V[i]);
     for (j = 0; j < ARRAYLEN(V); ++j) {
       EXPECT_EQ(V[j] / V[i], __magicu_div(V[j], d));

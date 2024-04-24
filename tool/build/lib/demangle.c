@@ -65,17 +65,21 @@ char *CopySymbol(char *p, size_t pn, const char *s, size_t sn) {
   assert(pn >= 1 + 3 + 1 + 1);
   iscomplicated = memchr(s, ' ', sn) || memchr(s, '(', sn);
   extra = 1;
-  if (iscomplicated) extra += 2;
+  if (iscomplicated)
+    extra += 2;
   if (sn + extra > pn) {
     sn = pn - extra - 3;
     showdots = true;
   } else {
     showdots = false;
   }
-  if (iscomplicated) *p++ = '"';
+  if (iscomplicated)
+    *p++ = '"';
   p = mempcpy(p, s, sn);
-  if (showdots) p = stpcpy(p, "...");
-  if (iscomplicated) *p++ = '"';
+  if (showdots)
+    p = stpcpy(p, "...");
+  if (iscomplicated)
+    *p++ = '"';
   *p = '\0';
   return p;
 }
@@ -85,8 +89,10 @@ char *DemangleCxxFilt(char *p, size_t pn, const char *s, size_t sn) {
   size_t got;
   struct iovec iov[2];
   static char buf[4096];
-  if (!g_cxxfilt.pid) SpawnCxxFilt();
-  if (g_cxxfilt.pid == -1) return NULL;
+  if (!g_cxxfilt.pid)
+    SpawnCxxFilt();
+  if (g_cxxfilt.pid == -1)
+    return NULL;
   buf[0] = '\n';
   iov[0].iov_base = (void *)s;
   iov[0].iov_len = sn;
@@ -96,7 +102,8 @@ char *DemangleCxxFilt(char *p, size_t pn, const char *s, size_t sn) {
   if ((rc = read(g_cxxfilt.reader, buf, sizeof(buf))) != -1) {
     got = rc;
     if (got >= 2 && buf[got - 1] == '\n') {
-      if (buf[got - 2] == '\r') --got;
+      if (buf[got - 2] == '\r')
+        --got;
       --got;
       return CopySymbol(p, pn, buf, got);
     }
@@ -117,7 +124,8 @@ char *Demangle(char *p, const char *symbol, size_t n) {
   size_t sn;
   sn = strlen(symbol);
   if (startswith(symbol, "_Z")) {
-    if ((r = DemangleCxxFilt(p, n, symbol, sn))) return r;
+    if ((r = DemangleCxxFilt(p, n, symbol, sn)))
+      return r;
   }
   return CopySymbol(p, n, symbol, sn);
 }

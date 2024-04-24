@@ -37,14 +37,16 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
     c = p[u->i++] & 255;
     switch (u->t) {
       case kHttpStateChunkStart:
-        if ((u->m = kHexToInt[c]) == -1) return ebadmsg();
+        if ((u->m = kHexToInt[c]) == -1)
+          return ebadmsg();
         u->t = kHttpStateChunkSize;
         break;
       case kHttpStateChunkSize:
         if ((h = kHexToInt[c]) != -1) {
           u->m *= 16;
           u->m += h;
-          if (u->m >= 0x0000010000000000) return ebadmsg();
+          if (u->m >= 0x0000010000000000)
+            return ebadmsg();
           break;
         }
         u->t = kHttpStateChunkExt;
@@ -58,7 +60,8 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         }
         /* fallthrough */
       case kHttpStateChunkLf1:
-        if (c != '\n') return ebadmsg();
+        if (c != '\n')
+          return ebadmsg();
         u->t = u->m ? kHttpStateChunk : kHttpStateTrailerStart;
         break;
       case kHttpStateChunk:
@@ -68,7 +71,8 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         u->i += s;
         u->j += s;
         u->m -= s;
-        if (!u->m) u->t = kHttpStateChunkCr2;
+        if (!u->m)
+          u->t = kHttpStateChunkCr2;
         break;
       case kHttpStateChunkCr2:
         if (c == '\r') {
@@ -77,7 +81,8 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         }
         /* fallthrough */
       case kHttpStateChunkLf2:
-        if (c != '\n') return ebadmsg();
+        if (c != '\n')
+          return ebadmsg();
         u->t = kHttpStateChunkStart;
         break;
       case kHttpStateTrailerStart:
@@ -98,14 +103,18 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         }
         /* fallthrough */
       case kHttpStateTrailerLf1:
-        if (c != '\n') return ebadmsg();
+        if (c != '\n')
+          return ebadmsg();
         u->t = kHttpStateTrailerStart;
         break;
       case kHttpStateTrailerLf2:
-        if (c != '\n') return ebadmsg();
+        if (c != '\n')
+          return ebadmsg();
       Finished:
-        if (l) *l = u->j;
-        if (u->j < n) p[u->j] = 0;
+        if (l)
+          *l = u->j;
+        if (u->j < n)
+          p[u->j] = 0;
         return u->i;
         break;
       default:

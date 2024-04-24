@@ -44,11 +44,13 @@ static size_t strnlen_x64(const char *s, size_t n, size_t i) {
 size_t strnlen(const char *s, size_t n) {
   size_t i;
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
-    if (i == n || !s[i]) return i;
+    if (i == n || !s[i])
+      return i;
   }
   i = strnlen_x64(s, n, i);
   for (;; ++i) {
-    if (i == n || !s[i]) break;
+    if (i == n || !s[i])
+      break;
   }
   unassert(i == n || (i < n && !s[i]));
   return i;

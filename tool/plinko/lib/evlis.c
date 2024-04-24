@@ -20,8 +20,10 @@
 #include "tool/plinko/lib/plinko.h"
 
 int Evlis(int x, int a, dword p1, dword p2) {
-  if (!x) return x;
-  if (x > 0) return FasterRecurse(x, a, p1, p2);
+  if (!x)
+    return x;
+  if (x > 0)
+    return FasterRecurse(x, a, p1, p2);
   int y = FasterRecurse(Car(x), a, p1, p2);
   return Cons(y, Evlis(Cdr(x), a, p1, p2));
 }

@@ -64,7 +64,8 @@ int faccessat(int dirfd, const char *path, int amode, int flags) {
     rc = _weaken(__zipos_access)(&zipname, amode);
   } else if (!IsWindows()) {
     e = errno;
-    if (!flags) goto NoFlags;
+    if (!flags)
+      goto NoFlags;
     if ((rc = sys_faccessat2(dirfd, path, amode, flags)) == -1) {
       if (errno == ENOSYS) {
         errno = e;

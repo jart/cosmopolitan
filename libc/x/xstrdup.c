@@ -27,6 +27,7 @@
 char *xstrdup(const char *s) {
   size_t len = strlen(s);
   char *s2 = malloc(len + 1);
-  if (UNLIKELY(!s2)) xdie();
+  if (UNLIKELY(!s2))
+    xdie();
   return memcpy(s2, s, len + 1);
 }

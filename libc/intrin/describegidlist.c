@@ -28,9 +28,12 @@
 
 const char *(DescribeGidList)(char buf[N], int rc, int size,
                               const uint32_t list[]) {
-  if ((rc == -1) || (size < 0)) return "n/a";
-  if (!size) return "{}";
-  if (!list) return "NULL";
+  if ((rc == -1) || (size < 0))
+    return "n/a";
+  if (!size)
+    return "{}";
+  if (!list)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(list)) ||
       (IsAsan() && !__asan_is_valid(list, size * sizeof(list[0])))) {
     ksnprintf(buf, N, "%p", list);
@@ -43,8 +46,10 @@ const char *(DescribeGidList)(char buf[N], int rc, int size,
     i += ksnprintf(buf + i, MAX(0, n - i), "%u, ", list[c]);
   }
   if (c == size) {
-    if (buf[i - 1] == ' ') i--;
-    if (buf[i - 1] == ',') i--;
+    if (buf[i - 1] == ' ')
+      i--;
+    if (buf[i - 1] == ',')
+      i--;
     i += ksnprintf(buf + i, MAX(0, n - i), "}");
   }
   return buf;

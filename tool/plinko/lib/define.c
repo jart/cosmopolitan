@@ -36,8 +36,10 @@ int Define(int e, int a) {
   struct Gc *G;
   int k, v, x, r, o;
   DCHECK_EQ(kDefine, Car(e));
-  if (Cdr(e) >= 0) Error("bad define: %S", e);
-  if (Cadr(e) <= 0) Error("scheme define: %S", e);
+  if (Cdr(e) >= 0)
+    Error("bad define: %S", e);
+  if (Cadr(e) <= 0)
+    Error("scheme define: %S", e);
   if (Cddr(e) >= 0 || Caddr(e) == kLambda) {
     /*
      * compatibility with sectorlisp friendly branch, e.g.

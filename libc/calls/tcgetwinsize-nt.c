@@ -28,7 +28,8 @@
 textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
 
   // The Linux man page doesn't list EBADF as an errno for this.
-  if (!sys_isatty(fd)) return enotty();
+  if (!sys_isatty(fd))
+    return enotty();
 
   // Query the console which might fail if fd is a serial device.
   struct NtConsoleScreenBufferInfoEx sr = {.cbSize = sizeof(sr)};

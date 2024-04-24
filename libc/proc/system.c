@@ -64,7 +64,8 @@
 int system(const char *cmdline) {
   int pid, wstatus;
   sigset_t chldmask, savemask;
-  if (!cmdline) return 1;
+  if (!cmdline)
+    return 1;
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGINT);
   sigaddset(&chldmask, SIGQUIT);

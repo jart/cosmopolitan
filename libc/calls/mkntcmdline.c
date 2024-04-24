@@ -86,7 +86,8 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
   size_t i, j, k, s;
   char argbuf[PATH_MAX];
   for (k = i = 0; argv[i]; ++i) {
-    if (i) APPEND(u' ');
+    if (i)
+      APPEND(u' ');
     if (LooksLikeCosmoDrivePath(argv[i]) &&
         strlcpy(argbuf, argv[i], PATH_MAX) < PATH_MAX) {
       mungentpath(argbuf);
@@ -112,7 +113,8 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
           }
         }
       }
-      if (!x) break;
+      if (!x)
+        break;
       if (x == '\\') {
         ++slashes;
       } else if (x == '"') {
@@ -125,7 +127,8 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
         }
         slashes = 0;
         uint32_t w = EncodeUtf16(x);
-        do APPEND(w);
+        do
+          APPEND(w);
         while ((w >>= 16));
       }
     }

@@ -23,7 +23,8 @@
 const char *(DescribeNtOverlapped)(char b[128], const struct NtOverlapped *o) {
   int i = 0, n = 128;
   bool gotsome = false;
-  if (!o) return "NULL";
+  if (!o)
+    return "NULL";
   i += ksnprintf(b + i, MAX(0, n - i), "{");
 
   if (o->hEvent) {

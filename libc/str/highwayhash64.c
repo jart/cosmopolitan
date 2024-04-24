@@ -137,7 +137,8 @@ static void PermuteAndUpdate(HighwayHashState *state) {
 
 static uint64_t HighwayHashFinalize64(HighwayHashState *state) {
   int i;
-  for (i = 0; i < 4; i++) PermuteAndUpdate(state);
+  for (i = 0; i < 4; i++)
+    PermuteAndUpdate(state);
   return state->v0[0] + state->v1[0] + state->mul0[0] + state->mul1[0];
 }
 
@@ -148,7 +149,8 @@ static void ProcessAll(const uint8_t *data, size_t size, const uint64_t key[4],
   for (i = 0; i + 32 <= size; i += 32) {
     HighwayHashUpdatePacket(data + i, state);
   }
-  if ((size & 31) != 0) HighwayHashUpdateRemainder(data + i, size & 31, state);
+  if ((size & 31) != 0)
+    HighwayHashUpdateRemainder(data + i, size & 31, state);
 }
 
 /**

@@ -41,11 +41,13 @@ struct loadavg {
 };
 
 static int64_t GetUptime(void) {
-  if (IsNetbsd()) return 0;  // TODO(jart): Why?
+  if (IsNetbsd())
+    return 0;  // TODO(jart): Why?
   struct timeval x;
   size_t n = sizeof(x);
   int mib[] = {CTL_KERN, KERN_BOOTTIME};
-  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1)
+    return 0;
   return timespec_real().tv_sec - x.tv_sec;
 }
 
@@ -53,7 +55,8 @@ static int64_t GetPhysmem(void) {
   uint64_t x = 0;
   size_t n = sizeof(x);
   int mib[] = {CTL_HW, HW_PHYSMEM};
-  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1)
+    return 0;
   return x;
 }
 

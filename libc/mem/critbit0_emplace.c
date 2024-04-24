@@ -53,7 +53,8 @@ int critbit0_emplace(struct critbit0 *t, const void *u, size_t ulen) {
   while (1 & (intptr_t)p) {
     struct CritbitNode *q = (void *)(p - 1);
     unsigned char c = 0;
-    if (q->byte < ulen) c = ubytes[q->byte];
+    if (q->byte < ulen)
+      c = ubytes[q->byte];
     const int direction = (1 + (q->otherbits | c)) >> 8;
     p = q->child[direction];
   }
@@ -86,12 +87,16 @@ DifferentByteFound:
     void **wherep = &t->root;
     for (;;) {
       unsigned char *wp = *wherep;
-      if (!(1 & (intptr_t)wp)) break;
+      if (!(1 & (intptr_t)wp))
+        break;
       struct CritbitNode *q = (void *)(wp - 1);
-      if (q->byte > newbyte) break;
-      if (q->byte == newbyte && q->otherbits > newotherbits) break;
+      if (q->byte > newbyte)
+        break;
+      if (q->byte == newbyte && q->otherbits > newotherbits)
+        break;
       unsigned char c2 = 0;
-      if (q->byte < ulen) c2 = ubytes[q->byte];
+      if (q->byte < ulen)
+        c2 = ubytes[q->byte];
       const int direction = (1 + (q->otherbits | c2)) >> 8;
       wherep = q->child + direction;
     }

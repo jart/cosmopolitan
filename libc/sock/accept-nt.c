@@ -126,8 +126,10 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
   // create file descriptor for new socket
   // don't inherit the file open mode bits
   int oflags = 0;
-  if (accept4_flags & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
-  if (accept4_flags & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
+  if (accept4_flags & SOCK_CLOEXEC)
+    oflags |= O_CLOEXEC;
+  if (accept4_flags & SOCK_NONBLOCK)
+    oflags |= O_NONBLOCK;
   client = __reservefd(-1);
   g_fds.p[client].flags = oflags;
   g_fds.p[client].mode = 0140666;

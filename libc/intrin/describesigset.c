@@ -39,8 +39,10 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
   int sig, o = 0;
   sigset_t sigset;
 
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!ss)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(ss)) ||
       (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
     ksnprintf(buf, N, "%p", ss);

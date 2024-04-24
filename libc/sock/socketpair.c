@@ -37,7 +37,8 @@
  * @asyncsignalsafe
  */
 int socketpair(int family, int type, int protocol, int sv[2]) {
-  if (family == AF_UNSPEC) family = AF_UNIX;
+  if (family == AF_UNSPEC)
+    family = AF_UNIX;
   if (!IsWindows()) {
     return sys_socketpair(family, type, protocol, sv);
   } else {

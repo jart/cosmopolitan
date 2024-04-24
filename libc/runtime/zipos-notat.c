@@ -22,7 +22,8 @@
 
 int __zipos_notat(int dirfd, const char *path) {
   struct ZiposUri zipname;
-  if (!path) return efault();
+  if (!path)
+    return efault();
   if (__isfdkind(dirfd, kFdZip) || __zipos_parseuri(path, &zipname) != -1) {
     return einval();
   }

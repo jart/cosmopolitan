@@ -529,8 +529,10 @@ static bool OpenSpeaker(void) {
   if (!once) {
     once = true;
     i = 0;
-    if (ffplay_) tryspeakerfns_[i++] = TryFfplay;
-    if (sox_) tryspeakerfns_[i++] = TrySox;
+    if (ffplay_)
+      tryspeakerfns_[i++] = TryFfplay;
+    if (sox_)
+      tryspeakerfns_[i++] = TrySox;
   }
   snprintf(fifopath_, sizeof(fifopath_), "%s%s.%d.%d.wav", __get_tmpdir(),
            firstnonnull(program_invocation_short_name, "unknown"), getpid(),
@@ -589,7 +591,8 @@ static void DescribeAlgorithms(char *p) {
       break;
     case kTtyQuantAnsi:
       p = stpcpy(p, " aixterm ansi");
-      if (istango_) p = stpcpy(p, " tango");
+      if (istango_)
+        p = stpcpy(p, " tango");
       break;
     default:
       break;
@@ -609,7 +612,8 @@ static void DescribeAlgorithms(char *p) {
 }
 
 static char *StartRender(char *vt) {
-  if (!ttymode_) vt += sprintf(vt, "\r\n\r\n");
+  if (!ttymode_)
+    vt += sprintf(vt, "\r\n\r\n");
   if (fullclear_) {
     vt += sprintf(vt, "\e[0m\e[H\e[J");
     fullclear_ = false;
@@ -640,8 +644,10 @@ static bool HasAdjustments(void) {
 }
 
 static char *DescribeAdjustments(char *p) {
-  if (emboss_) p = stpcpy(p, " emboss");
-  if (sobel_) p = stpcpy(p, " sobel");
+  if (emboss_)
+    p = stpcpy(p, " emboss");
+  if (sobel_)
+    p = stpcpy(p, " sobel");
   switch (sharp_) {
     case kSharpSharp:
       p = stpcpy(p, " sharp");
@@ -662,21 +668,36 @@ static char *DescribeAdjustments(char *p) {
     default:
       break;
   }
-  if (IsNonZeroFloat(hue_)) p += sprintf(p, " hue%+.2f", hue_);
-  if (IsNonZeroFloat(sat_)) p += sprintf(p, " sat%+.2f", sat_);
-  if (IsNonZeroFloat(lit_)) p += sprintf(p, " lit%+.2f", lit_);
-  if (pf1_) p = stpcpy(p, " PF1");
-  if (pf2_) p = stpcpy(p, " PF2");
-  if (pf3_) p = stpcpy(p, " PF3");
-  if (pf4_) p = stpcpy(p, " PF4");
-  if (pf5_) p = stpcpy(p, " PF5");
-  if (pf6_) p = stpcpy(p, " PF6");
-  if (pf7_) p = stpcpy(p, " PF7");
-  if (pf8_) p = stpcpy(p, " PF8");
-  if (pf9_) p = stpcpy(p, " PF9");
-  if (pf10_) p = stpcpy(p, " PF10");
-  if (pf11_) p = stpcpy(p, " PF11");
-  if (pf12_) p = stpcpy(p, " PF12");
+  if (IsNonZeroFloat(hue_))
+    p += sprintf(p, " hue%+.2f", hue_);
+  if (IsNonZeroFloat(sat_))
+    p += sprintf(p, " sat%+.2f", sat_);
+  if (IsNonZeroFloat(lit_))
+    p += sprintf(p, " lit%+.2f", lit_);
+  if (pf1_)
+    p = stpcpy(p, " PF1");
+  if (pf2_)
+    p = stpcpy(p, " PF2");
+  if (pf3_)
+    p = stpcpy(p, " PF3");
+  if (pf4_)
+    p = stpcpy(p, " PF4");
+  if (pf5_)
+    p = stpcpy(p, " PF5");
+  if (pf6_)
+    p = stpcpy(p, " PF6");
+  if (pf7_)
+    p = stpcpy(p, " PF7");
+  if (pf8_)
+    p = stpcpy(p, " PF8");
+  if (pf9_)
+    p = stpcpy(p, " PF9");
+  if (pf10_)
+    p = stpcpy(p, " PF10");
+  if (pf11_)
+    p = stpcpy(p, " PF11");
+  if (pf12_)
+    p = stpcpy(p, " PF12");
   *p++ = ' ';
   *p++ = '\0';
   return p;
@@ -782,8 +803,10 @@ static void TranscodeVideo(plm_frame_t *pf) {
 
   TIMEIT(t1, {
     pary_ = 2;
-    if (pf1_) pary_ = 1.;
-    if (pf2_) pary_ = (266 / 64.) * (900 / 1600.);
+    if (pf1_)
+      pary_ = 1.;
+    if (pf2_)
+      pary_ = (266 / 64.) * (900 / 1600.);
     pary_ *= plm_get_pixel_aspect_ratio(plm_);
     YCbCr2RgbScale(g2_->yn, g2_->xn, g2_->b, pf->y.height, pf->y.width,
                    (void *)pf->y.data, pf->cr.height, pf->cr.width,
@@ -805,8 +828,10 @@ static void TranscodeVideo(plm_frame_t *pf) {
       default:
         break;
     }
-    if (sobel_) sobel(g2_);
-    if (emboss_) emboss(g2_);
+    if (sobel_)
+      sobel(g2_);
+    if (emboss_)
+      emboss(g2_);
     switch (sharp_) {
       case kSharpSharp:
         sharpen(3, g2_->yn, g2_->xn, g2_->b, g2_->yn, g2_->xn);
@@ -932,7 +957,8 @@ static void WriteVideo(void) {
 }
 
 static void RefreshDisplay(void) {
-  if (f1_ && f1_->n) f1_->i = 0;
+  if (f1_ && f1_->n)
+    f1_->i = 0;
   DimensionDisplay();
   resized_ = false;
   historyclear_ = true;
@@ -1287,8 +1313,10 @@ static void PerformBestEffortIo(void) {
     DEBUGF("poll() toto=%d [grace=%,ldns]", toto,
            timespec_tonanos(GetGraceTime()));
     if (toto) {
-      if (fds[0].revents & (POLLIN | POLLERR)) ReadKeyboard();
-      if (fds[1].revents & (POLLOUT | POLLERR)) WriteVideo();
+      if (fds[0].revents & (POLLIN | POLLERR))
+        ReadKeyboard();
+      if (fds[1].revents & (POLLOUT | POLLERR))
+        WriteVideo();
     }
   } else if (errno == EINTR) {
     DEBUGF("poll() → EINTR");
@@ -1300,7 +1328,8 @@ static void PerformBestEffortIo(void) {
 
 static void RestoreTty(void) {
   DrainVideo();
-  if (ttymode_) ttysend(outfd_, "\r\n\e[J");
+  if (ttymode_)
+    ttysend(outfd_, "\r\n\e[J");
   ttymode_ = false;
   ttyraw(-1);
 }
@@ -1352,7 +1381,8 @@ static void PrintVideo(void) {
 
 static bool AskUserYesOrNoQuestion(const char *prompt) {
   char c;
-  if (yes_ || !ttymode_) return true;
+  if (yes_ || !ttymode_)
+    return true;
   ttysend(outfd_, "\r\e[K");
   ttysend(outfd_, prompt);
   ttysend(outfd_, " [yn] ");
@@ -1411,8 +1441,10 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 static void OnExit(void) {
-  if (playpid_) kill(playpid_, SIGTERM), sched_yield();
-  if (plm_) plm_destroy(plm_), plm_ = NULL;
+  if (playpid_)
+    kill(playpid_, SIGTERM), sched_yield();
+  if (plm_)
+    plm_destroy(plm_), plm_ = NULL;
   YCbCrFree(&ycbcr_);
   RestoreTty();
   ttyidentclear(&ti_);
@@ -1561,8 +1593,10 @@ int main(int argc, char *argv[]) {
   ShowCrashReports();
   fullclear_ = true;
   GetOpts(argc, argv);
-  if (!tuned_) PickDefaults();
-  if (optind == argc) PrintUsage(EX_USAGE, STDERR_FILENO);
+  if (!tuned_)
+    PickDefaults();
+  if (optind == argc)
+    PrintUsage(EX_USAGE, STDERR_FILENO);
   patharg_ = argv[optind];
   s = commandvenv("SOX", "sox");
   sox_ = s ? strdup(s) : 0;
@@ -1584,7 +1618,8 @@ int main(int argc, char *argv[]) {
     xsigaction(SIGWINCH, OnResize, 0, 0, NULL);
     xsigaction(SIGCHLD, OnSigChld, 0, 0, NULL);
     xsigaction(SIGPIPE, OnSigPipe, 0, 0, NULL);
-    if (ttyraw(kTtyLfToCrLf) != -1) ttymode_ = true;
+    if (ttyraw(kTtyLfToCrLf) != -1)
+      ttymode_ = true;
     __cxa_atexit((void *)OnExit, NULL, NULL);
     __log_file = fopen(logpath_, "a");
     if (ischardev(infd_) && ischardev(outfd_)) {
@@ -1593,10 +1628,12 @@ int main(int argc, char *argv[]) {
       infd_ = -1;
     }
     /* CHECK_NE(-1, fcntl(outfd_, F_SETFL, O_NONBLOCK)); */
-    if (CanPlayAudio()) MakeLatencyLittleLessBad();
+    if (CanPlayAudio())
+      MakeLatencyLittleLessBad();
     TryToOpenFrameBuffer();
     RenounceSpecialPrivileges();
-    if (t2 > t1) longjmp(jb_, 1);
+    if (t2 > t1)
+      longjmp(jb_, 1);
     OpenVideo();
     DimensionDisplay();
     starttime_ = timespec_real();

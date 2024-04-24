@@ -36,7 +36,8 @@
 static int Atoi(const char *str) {
   int c;
   unsigned x = 0;
-  if (!*str) return -1;
+  if (!*str)
+    return -1;
   while ((c = *str++)) {
     if ('0' <= c && c <= '9') {
       x *= 10;

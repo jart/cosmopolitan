@@ -47,7 +47,8 @@ size_t mbsnrtowcs(wchar_t *wcs, const char **src, size_t n, size_t wn,
    * that mbsrtowcs never reads more than n input bytes. thus
    * we can use mbsrtowcs as long as it's practical.. */
   while (s && wn && ((n2 = n / 4) >= wn || n2 > 32)) {
-    if (n2 >= wn) n2 = wn;
+    if (n2 >= wn)
+      n2 = wn;
     tmp_s = s;
     l = mbsrtowcs(ws, &s, n2, st);
     if (!(l + 1)) {
@@ -85,6 +86,7 @@ size_t mbsnrtowcs(wchar_t *wcs, const char **src, size_t n, size_t wn,
       wn--;
       cnt++;
     }
-  if (wcs) *src = s;
+  if (wcs)
+    *src = s;
   return cnt;
 }

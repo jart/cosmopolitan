@@ -99,12 +99,14 @@ struct Gemmlin {
   }
 
   void gemm(long m, long n, long k) {
-    if (!m || !n) return;
+    if (!m || !n)
+      return;
     for (long i = 0; i < m; ++i)
       for (long j = 0; j < n; ++j) {
         C[ldc * i + j] *= β;
       }
-    if (!k) return;
+    if (!k)
+      return;
     cub = sqrt(LV1DCACHE) / sqrt(sizeof(T) * 3);
     mnpack(0, m, 0, n, 0, k);
   }
@@ -120,9 +122,12 @@ struct Gemmlin {
     long kc = rounddown(std::min(k - k0, cub), 4);
     long kp = k0 + (k - k0) / kc * kc;
     kpack(m0, mc, mp, n0, nc, np, k0, kc, k, kp);
-    if (m - mp) mnpack(mp, m, n0, np, k0, k);
-    if (n - np) mnpack(m0, mp, np, n, k0, k);
-    if (m - mp && n - np) mnpack(mp, m, np, n, k0, k);
+    if (m - mp)
+      mnpack(mp, m, n0, np, k0, k);
+    if (n - np)
+      mnpack(m0, mp, np, n, k0, k);
+    if (m - mp && n - np)
+      mnpack(mp, m, np, n, k0, k);
   }
 
   void kpack(long m0, long mc, long m,  //
@@ -130,7 +135,8 @@ struct Gemmlin {
              long k0, long kc, long k,  //
              long kp) {
     rpack(m0, mc, m, n0, nc, n, k0, kc, kp);
-    if (k - kp) rpack(m0, mc, m, n0, nc, n, kp, k - kp, k);
+    if (k - kp)
+      rpack(m0, mc, m, n0, nc, n, kp, k - kp, k);
   }
 
   void rpack(long m0, long mc, long m,  //
@@ -267,9 +273,11 @@ void show(FILE *f, long max, long m, long n, const TA *A, long lda, const TB *B,
       sprintf(ba, "%13.7f", static_cast<double>(A[lda * i + j]));
       sprintf(bb, "%13.7f", static_cast<double>(B[ldb * i + j]));
       for (long k = 0; ba[k] && bb[k]; ++k) {
-        if (ba[k] != bb[k]) fputs_unlocked("\33[31m", f);
+        if (ba[k] != bb[k])
+          fputs_unlocked("\33[31m", f);
         fputc_unlocked(ba[k], f);
-        if (ba[k] != bb[k]) fputs_unlocked("\33[0m", f);
+        if (ba[k] != bb[k])
+          fputs_unlocked("\33[0m", f);
       }
     }
     fprintf(f, "\n");
@@ -303,8 +311,10 @@ double diff(long m, long n, const TA *Want, long lda, const TB *Got, long ldb) {
         ++got_nans;
       else
         s += std::fabs(Want[lda * i + j] - Got[ldb * i + j]);
-  if (got_nans) printf("WARNING: got %d NaNs!\n", got_nans);
-  if (want_nans) printf("WARNING: want array has %d NaNs!\n", want_nans);
+  if (got_nans)
+    printf("WARNING: got %d NaNs!\n", got_nans);
+  if (want_nans)
+    printf("WARNING: want array has %d NaNs!\n", want_nans);
   return s / (m * n);
 }
 

@@ -28,7 +28,8 @@
 const char *(DescribeStringList)(char buf[N], char *const list[]) {
   int i, o = 0;
 
-  if (!list) return "NULL";
+  if (!list)
+    return "NULL";
   if (IsAsan() && !__asan_is_valid_strlist(list)) {
     ksnprintf(buf, N, "%p", list);
     return buf;
@@ -37,7 +38,8 @@ const char *(DescribeStringList)(char buf[N], char *const list[]) {
   append("{");
   i = 0;
   do {
-    if (i++) append(", ");
+    if (i++)
+      append(", ");
     append("%#s", *list);
   } while (*list++);
   append("}");

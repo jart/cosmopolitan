@@ -46,7 +46,8 @@ int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
   } else {
     int rc;
     struct timespec beg;
-    if (rem) sys_clock_gettime_xnu(CLOCK_REALTIME, &beg);
+    if (rem)
+      sys_clock_gettime_xnu(CLOCK_REALTIME, &beg);
     struct timeval rel = timespec_totimeval(*req);  // rounds up
     rc = sys_select(0, 0, 0, 0, &rel);
     if (rc == -1 && rem && errno == EINTR) {

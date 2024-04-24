@@ -113,7 +113,8 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
         kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
       if (msg->msg_controllen)
         kprintf(".control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
-      if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
+      if (msg->msg_flags)
+        kprintf(".flags=%#x, ", msg->msg_flags);
       kprintf(".iov=%s", DescribeIovec(rc, msg->msg_iov, msg->msg_iovlen));
       kprintf("], %#x) → %'ld% m\n", flags, rc);
     }

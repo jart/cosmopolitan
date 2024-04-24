@@ -37,7 +37,8 @@ int setenv(const char *name, const char *value, int overwrite) {
   int rc;
   char *s;
   size_t n, m;
-  if (!name || !*name || !value || strchr(name, '=')) return einval();
+  if (!name || !*name || !value || strchr(name, '='))
+    return einval();
   if ((s = malloc((n = strlen(name)) + 1 + (m = strlen(value)) + 1))) {
     memcpy(mempcpy(mempcpy(s, name, n), "=", 1), value, m + 1);
     rc = __putenv(s, overwrite);

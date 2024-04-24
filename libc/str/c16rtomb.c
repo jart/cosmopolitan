@@ -34,11 +34,13 @@ __static_yoink("musl_libc_notice");
 
 size_t c16rtomb(char *restrict s, char16_t c16, mbstate_t *restrict ps) {
   static unsigned internal_state;
-  if (!ps) ps = (void *)&internal_state;
+  if (!ps)
+    ps = (void *)&internal_state;
   unsigned *x = (unsigned *)ps;
   wchar_t wc;
   if (!s) {
-    if (*x) goto ilseq;
+    if (*x)
+      goto ilseq;
     return 1;
   }
   if (!*x && c16 - 0xd800u < 0x400) {

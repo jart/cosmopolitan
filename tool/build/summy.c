@@ -26,9 +26,11 @@
 int main(int argc, char *argv[]) {
   long x, sum = 0;
   if (argc == 2 && !strcmp(argv[1], "-x")) {
-    while (scanf("%lx", &x) > 0) sum += x;
+    while (scanf("%lx", &x) > 0)
+      sum += x;
   } else {
-    while (scanf("%ld", &x) > 0) sum += x;
+    while (scanf("%ld", &x) > 0)
+      sum += x;
   }
   printf("%,ld\n", sum);
   return 0;

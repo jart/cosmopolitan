@@ -29,7 +29,8 @@ int PrintInt(int fd, long x, int cols, char quot, char zero, int base,
   i = j = 0;
   y = x < 0 && issigned ? -x : x;
   do {
-    if (quot && j == 3) z[i++ & 31] = quot, j = 0;
+    if (quot && j == 3)
+      z[i++ & 31] = quot, j = 0;
     z[i++ & 31] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[y % base];
   } while (++j, (y /= base));
   k = i + (x < 0 && issigned);
@@ -38,8 +39,10 @@ int PrintInt(int fd, long x, int cols, char quot, char zero, int base,
   } else {
     n = PrintIndent(fd, +cols - k);
   }
-  if (x < 0 && issigned) n += PrintChar(fd, L'-');
-  while (i) n += PrintChar(fd, z[--i & 31]);
+  if (x < 0 && issigned)
+    n += PrintChar(fd, L'-');
+  while (i)
+    n += PrintChar(fd, z[--i & 31]);
   PrintIndent(fd, -cols - n);
   return n;
 }

@@ -313,7 +313,8 @@ static void AppendData(char *data, unsigned len) {
   unsigned n;
   if (buffer.i + len + 1 > buffer.n) {
     n = MAX(buffer.i + len + 1, MAX(16, buffer.n + (buffer.n >> 1)));
-    if (!(p = realloc(buffer.p, n))) return;
+    if (!(p = realloc(buffer.p, n)))
+      return;
     buffer.p = p;
     buffer.n = n;
   }
@@ -393,7 +394,8 @@ static void OnTurbo(void) {
 
 static void OnSlowmo(void) {
   --speed;
-  if (speed < 1) speed = 1;
+  if (speed < 1)
+    speed = 1;
 }
 
 static void SetZoom(long y, long x, int d) {
@@ -417,15 +419,18 @@ static void OnUnzoom(long y, long x) {
 
 static void OnMouseLeftDrag(long y, long x) {
   int i;
-  if (y == save_y && x == save_x) return;
+  if (y == save_y && x == save_x)
+    return;
   save_y = y;
   save_x = x;
   y = top + (y << (zoom + !!zoom));
   x = left + (x << zoom);
   y += _rand64() & ((1ul << (zoom + !!zoom)) - 1);
   x += _rand64() & ((1ul << zoom) - 1);
-  if (y < 0 || y >= byn) return;
-  if (x < 0 || x >= bxn) return;
+  if (y < 0 || y >= byn)
+    return;
+  if (x < 0 || x >= bxn)
+    return;
   if (erase) {
     Unset(y, x);
   } else {
@@ -447,8 +452,10 @@ static void OnMouseLeftDown(long y, long x) {
   y = top + (y << (zoom + !!zoom));
   x = left + (x << zoom);
   erase = false;
-  if (y < 0 || y >= byn) return;
-  if (x < 0 || x >= bxn) return;
+  if (y < 0 || y >= byn)
+    return;
+  if (x < 0 || x >= bxn)
+    return;
   if ((erase = Test(y, x))) {
     Unset(y, x);
   } else {
@@ -472,7 +479,8 @@ static void OnMouseRightDrag(long y, long x) {
   long dy, dx, h, w;
   dy = (save_y - y) << zoom;
   dx = (save_x - x) << zoom;
-  if (zoom) dy <<= 1;
+  if (zoom)
+    dy <<= 1;
   if (natural) {
     dy = -dy;
     dx = -dx;
@@ -494,7 +502,8 @@ static void *NewBoard(size_t *out_size) {
   p = _mapanon(n);
   mprotect(p, getauxval(AT_PAGESZ), 0);
   mprotect(p + k, n - k, 0);
-  if (out_size) *out_size = n;
+  if (out_size)
+    *out_size = n;
   return p + getauxval(AT_PAGESZ);
 }
 
@@ -524,7 +533,8 @@ static void GenerateStatusLine(void) {
 
 static void OnHeader(void) {
   size_t n;
-  if (!buffer.i) return;
+  if (!buffer.i)
+    return;
   switch (buffer.p[0]) {
     case 'N':
       if (buffer.i > 2) {
@@ -541,7 +551,8 @@ static void OnHeader(void) {
 static int ReadChar(FILE *f) {
   int c;
   ++column;
-  if ((c = fgetc(f)) == -1) return -1;
+  if ((c = fgetc(f)) == -1)
+    return -1;
   if (c == '\n') {
     ++line;
     column = 0;
@@ -552,10 +563,12 @@ static int ReadChar(FILE *f) {
 static int GetChar(FILE *f) {
   int c;
   for (;;) {
-    if ((c = ReadChar(f)) == -1) return -1;
+    if ((c = ReadChar(f)) == -1)
+      return -1;
     if (c == '#' && column == 1) {
       for (;;) {
-        if ((c = ReadChar(f)) == -1) return -1;
+        if ((c = ReadChar(f)) == -1)
+          return -1;
         if (c == '\r') {
           continue;
         } else if (c == '\n') {
@@ -575,30 +588,40 @@ static int LoadFile(const char *path) {
   long c, y, x, i, n, yn, xn, yo, xo;
   line = 0;
   f = fopen(path, "r");
-  if (GetChar(f) != 'x') goto ReadError;
-  if (GetChar(f) != ' ') goto ReadError;
-  if (GetChar(f) != '=') goto ReadError;
-  if (GetChar(f) != ' ') goto ReadError;
+  if (GetChar(f) != 'x')
+    goto ReadError;
+  if (GetChar(f) != ' ')
+    goto ReadError;
+  if (GetChar(f) != '=')
+    goto ReadError;
+  if (GetChar(f) != ' ')
+    goto ReadError;
   xn = 0;
   for (;;) {
-    if ((c = GetChar(f)) == -1) goto ReadError;
-    if (!isdigit(c)) break;
+    if ((c = GetChar(f)) == -1)
+      goto ReadError;
+    if (!isdigit(c))
+      break;
     xn *= 10;
     xn += c - '0';
   }
   do {
-    if ((c = GetChar(f)) == -1) goto ReadError;
+    if ((c = GetChar(f)) == -1)
+      goto ReadError;
   } while (!isdigit(c));
   yn = 0;
   do {
     yn *= 10;
     yn += c - '0';
-    if ((c = GetChar(f)) == -1) goto ReadError;
+    if ((c = GetChar(f)) == -1)
+      goto ReadError;
   } while (isdigit(c));
   while (c != '\n') {
-    if ((c = ReadChar(f)) == -1) goto ReadError;
+    if ((c = ReadChar(f)) == -1)
+      goto ReadError;
   }
-  if (yn > byn || xn > bxn) goto ReadError;
+  if (yn > byn || xn > bxn)
+    goto ReadError;
   SwapBoards();
   bzero(board, (byn * bxn) >> 3);
   yo = byn / 2 - yn / 2;
@@ -606,7 +629,8 @@ static int LoadFile(const char *path) {
   y = 0;
   x = 0;
   for (;;) {
-    if ((c = GetChar(f)) == -1) goto ReadError;
+    if ((c = GetChar(f)) == -1)
+      goto ReadError;
     if (c == '!') {
       break;
     } else if (isspace(c)) {
@@ -615,8 +639,10 @@ static int LoadFile(const char *path) {
     if (isdigit(c)) {
       n = c - '0';
       for (;;) {
-        if ((c = GetChar(f)) == -1) goto ReadError;
-        if (!isdigit(c)) break;
+        if ((c = GetChar(f)) == -1)
+          goto ReadError;
+        if (!isdigit(c))
+          break;
         n *= 10;
         n += c - '0';
       }
@@ -624,12 +650,14 @@ static int LoadFile(const char *path) {
       n = 1;
     }
     if (c == '$') {
-      if (++y == yn) y = 0;
+      if (++y == yn)
+        y = 0;
       x = 0;
     } else if (c == 'b' || c == 'o') {
       for (i = 0; i < n; ++i) {
         if (x >= xn) {
-          if (++y == yn) y = 0;
+          if (++y == yn)
+            y = 0;
           x = 0;
         }
         if (c == 'o') {
@@ -758,9 +786,11 @@ static void OnSigWinch(int sig) {
 static void OnMouse(char *p) {
   int e, x, y;
   e = strtol(p, &p, 10);
-  if (*p == ';') ++p;
+  if (*p == ';')
+    ++p;
   x = min(txn, max(1, strtol(p, &p, 10))) - 1;
-  if (*p == ';') ++p;
+  if (*p == ';')
+    ++p;
   y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
   e |= (*p == 'm') << 2;
   switch (e) {
@@ -847,7 +877,8 @@ static void ReadKeyboard(void) {
   char buf[32], *p = buf;
   bzero(buf, sizeof(buf));
   if (readansi(0, buf, sizeof(buf)) == -1) {
-    if (errno == EINTR) return;
+    if (errno == EINTR)
+      return;
     exit(errno);
   }
   switch (*p++) {
@@ -951,7 +982,8 @@ static int InvertXtermGreyscale(int x) {
 static int ByteToColor(int x) {
   uint8_t c;
   c = x / 256. * 24 + 232;
-  if (white) c = InvertXtermGreyscale(c);
+  if (white)
+    c = InvertXtermGreyscale(c);
   return c;
 }
 
@@ -1095,7 +1127,8 @@ static bool HasPendingInput(void) {
 static bool ShouldDraw(void) {
   struct timespec now;
   static struct timespec next;
-  if (!isdragging) return true;
+  if (!isdragging)
+    return true;
   now = timespec_real();
   if (timespec_cmp(now, next) > 0 && !HasPendingInput()) {
     next = timespec_add(now, timespec_frommicros(1. / 24 * 1e6));
@@ -1384,7 +1417,8 @@ static void Gui(void) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) ShowCrashReports();
+  if (!NoDebug())
+    ShowCrashReports();
   out = 1;
   speed = 1;
   tyn = right = 80;

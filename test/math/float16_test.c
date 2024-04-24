@@ -19,16 +19,19 @@
 #include "libc/math.h"
 
 #define CHECK(x) \
-  if (!(x)) return __LINE__
-#define FALSE(x)             \
-  {                          \
-    volatile bool x_ = x;    \
-    if (x_) return __LINE__; \
+  if (!(x))      \
+  return __LINE__
+#define FALSE(x)          \
+  {                       \
+    volatile bool x_ = x; \
+    if (x_)               \
+      return __LINE__;    \
   }
-#define TRUE(x)               \
-  {                           \
-    volatile bool x_ = x;     \
-    if (!x_) return __LINE__; \
+#define TRUE(x)           \
+  {                       \
+    volatile bool x_ = x; \
+    if (!x_)              \
+      return __LINE__;    \
   }
 
 _Float16 identity(_Float16 x) {

@@ -49,11 +49,16 @@ bool32 IsDebuggerPresent(bool32 force) {
   ssize_t got;
   int e, fd, res;
   char *p, buf[1024];
-  if (!force && IsGenuineBlink()) return 0;
-  if (!force && environ && __getenv(environ, "HEISENDEBUG").s) return 0;
-  if (IsWindows()) return IsBeingDebugged();
-  if (__isworker) return false;
-  if (!PLEDGED(RPATH)) return false;
+  if (!force && IsGenuineBlink())
+    return 0;
+  if (!force && environ && __getenv(environ, "HEISENDEBUG").s)
+    return 0;
+  if (IsWindows())
+    return IsBeingDebugged();
+  if (__isworker)
+    return false;
+  if (!PLEDGED(RPATH))
+    return false;
   res = 0;
   e = errno;
   BLOCK_CANCELATION;

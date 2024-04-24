@@ -34,7 +34,8 @@ char *FormatOctal32(char p[hasatleast 13], uint32_t x, bool32 z) {
     p[i++] = x % 8 + '0';
     x = x / 8;
   } while (x > 0);
-  if (z) p[i++] = '0';
+  if (z)
+    p[i++] = '0';
   p[i] = '\0';
   if (i) {
     for (a = 0, b = i - 1; a < b; ++a, --b) {

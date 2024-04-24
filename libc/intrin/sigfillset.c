@@ -29,11 +29,13 @@
  */
 int sigfillset(sigset_t *set) {
   *set = -1;
-  *set &= ~(1ull << (SIGTHR - 1));      // only libc should mask
-  *set &= ~(1ull << (SIGABRT - 1));     // it's annoying to mask
-  *set &= ~(1ull << (SIGKILL - 1));     // it's impossible to mask
-  *set &= ~(1ull << (SIGSTOP - 1));     // it's impossible to mask
-  if (IsOpenbsd()) *set &= 0xffffffff;  // it doesn't really exist
-  if (IsXnu()) *set &= 0xffffffff;      // it doesn't really exist
+  *set &= ~(1ull << (SIGTHR - 1));   // only libc should mask
+  *set &= ~(1ull << (SIGABRT - 1));  // it's annoying to mask
+  *set &= ~(1ull << (SIGKILL - 1));  // it's impossible to mask
+  *set &= ~(1ull << (SIGSTOP - 1));  // it's impossible to mask
+  if (IsOpenbsd())
+    *set &= 0xffffffff;  // it doesn't really exist
+  if (IsXnu())
+    *set &= 0xffffffff;  // it doesn't really exist
   return 0;
 }

@@ -51,7 +51,8 @@ static wontreturn void Die(const char *path, const char *reason) {
 
 static wontreturn void SysDie(const char *path, const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "EUNKNOWN";
   tinyprint(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
@@ -133,7 +134,8 @@ static void CopyZip(void) {
   eocd = ineof - kZipCdirHdrMinSize;
   stop = MAX(eocd - 65536, inmap);
   for (;; --eocd) {
-    if (eocd < stop) return;
+    if (eocd < stop)
+      return;
     if (READ32LE(eocd) == kZipCdirHdrMagic) {
       if (IsZipEocd32(inmap, insize, eocd - inmap) != kZipOk) {
         Die(inpath, "found bad eocd record");
@@ -217,7 +219,8 @@ int main(int argc, char *argv[]) {
   ShowCrashReports();
 #endif
   prog = argv[0];
-  if (!prog) prog = "apelink";
+  if (!prog)
+    prog = "apelink";
   GetOpts(argc, argv);
   if ((infd = open(inpath, O_RDONLY)) == -1) {
     SysDie(inpath, "open");

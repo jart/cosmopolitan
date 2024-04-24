@@ -78,18 +78,21 @@ static wontreturn void DieOom(void) {
 
 static void *Malloc(size_t n) {
   void *p;
-  if (!(p = malloc(n))) DieOom();
+  if (!(p = malloc(n)))
+    DieOom();
   return p;
 }
 
 static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n))) DieOom();
+  if (!(p = realloc(p, n)))
+    DieOom();
   return p;
 }
 
 static wontreturn void SysExit(const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "EUNKNOWN";
   tinyprint(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
@@ -201,11 +204,15 @@ static const unsigned char kNops[10][10] = {
 static unsigned char *CoalesceNops(unsigned char *p, const unsigned char *e) {
   long n;
   for (; p + 1 < e; p += n) {
-    if (p[0] != 0x90) break;
-    if (p[1] != 0x90) break;
+    if (p[0] != 0x90)
+      break;
+    if (p[1] != 0x90)
+      break;
     for (n = 2; p + n < e; ++n) {
-      if (p[n] != 0x90) break;
-      if (n == ARRAYLEN(kNops) - 1) break;
+      if (p[n] != 0x90)
+        break;
+      if (n == ARRAYLEN(kNops) - 1)
+        break;
     }
     memcpy(p, kNops[n], n);
   }
@@ -218,16 +225,23 @@ static void CheckPrivilegedCrossReferences(void) {
   const Elf64_Shdr *shdr;
   const Elf64_Rela *rela, *erela;
   shdr = FindElfSectionByName(elf, esize, secstrs, ".rela.privileged");
-  if (!shdr || !(rela = GetElfSectionAddress(elf, esize, shdr))) return;
+  if (!shdr || !(rela = GetElfSectionAddress(elf, esize, shdr)))
+    return;
   erela = rela + shdr->sh_size / sizeof(*rela);
   for (; rela < erela; ++rela) {
-    if (!ELF64_R_TYPE(rela->r_info)) continue;
-    if (!(x = ELF64_R_SYM(rela->r_info))) continue;
-    if (x >= symcount) continue;
-    if (syms[x].st_shndx == SHN_ABS) continue;
-    if (!syms[x].st_shndx) continue;
+    if (!ELF64_R_TYPE(rela->r_info))
+      continue;
+    if (!(x = ELF64_R_SYM(rela->r_info)))
+      continue;
+    if (x >= symcount)
+      continue;
+    if (syms[x].st_shndx == SHN_ABS)
+      continue;
+    if (!syms[x].st_shndx)
+      continue;
     if ((shdr = GetElfSectionHeaderAddress(elf, esize, syms[x].st_shndx))) {
-      if (~shdr->sh_flags & SHF_EXECINSTR) continue;  // data reference
+      if (~shdr->sh_flags & SHF_EXECINSTR)
+        continue;  // data reference
       if ((secname = GetElfString(elf, esize, secstrs, shdr->sh_name)) &&
           strcmp(".privileged", secname)) {
         tinyprint(2, epath,
@@ -334,12 +348,15 @@ static void OptimizePatchableFunctionEntries(void) {
   Elf64_Addr sym_rva;
   if (elf->e_machine == EM_NEXGEN32E) {
     for (i = 0; i < symcount; ++i) {
-      if (!syms[i].st_size) continue;
-      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
+      if (!syms[i].st_size)
+        continue;
+      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC)
+        continue;
       if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx))) {
         Die("elf header overflow #3");
       }
-      if (shdr->sh_type != SHT_PROGBITS) continue;
+      if (shdr->sh_type != SHT_PROGBITS)
+        continue;
       if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
         Die("elf section overflow");
       }
@@ -371,7 +388,8 @@ static void RelinkZipFiles(void) {
   // scan backwards for zip eocd todo record
   // that was created by libc/nexgen32e/zip.S
   for (;;) {
-    if (eocd < stop) return;
+    if (eocd < stop)
+      return;
     if (READ32LE(eocd) == kZipCdirHdrMagicTodo &&  //
         ZIP_CDIR_SIZE(eocd) &&                     //
         !ZIP_CDIR_OFFSET(eocd) &&                  //
@@ -446,13 +464,17 @@ static void GenerateIfuncInit(void) {
   static char code[16384];
   static Elf64_Rela relas[1024];
   Elf64_Shdr *symtab_shdr = GetElfSymbolTable(elf, esize, SHT_SYMTAB, 0);
-  if (!symtab_shdr) Die("symbol table section header not found");
+  if (!symtab_shdr)
+    Die("symbol table section header not found");
   Elf64_Word symtab_shdr_index =
       ((char *)symtab_shdr - ((char *)elf + elf->e_shoff)) / elf->e_shentsize;
   for (Elf64_Xword i = 0; i < symcount; ++i) {
-    if (syms[i].st_shndx == SHN_UNDEF) continue;
-    if (syms[i].st_shndx >= SHN_LORESERVE) continue;
-    if (ELF64_ST_TYPE(syms[i].st_info) != STT_GNU_IFUNC) continue;
+    if (syms[i].st_shndx == SHN_UNDEF)
+      continue;
+    if (syms[i].st_shndx >= SHN_LORESERVE)
+      continue;
+    if (ELF64_ST_TYPE(syms[i].st_info) != STT_GNU_IFUNC)
+      continue;
     if (!(name = GetElfString(elf, esize, symstrs, syms[i].st_name)))
       Die("could not get symbol name of ifunc");
     static char resolver_name[65536];
@@ -463,11 +485,16 @@ static void GenerateIfuncInit(void) {
     Elf64_Xword function_sym_index = i;
     Elf64_Xword resolver_sym_index = -1;
     for (Elf64_Xword i = 0; i < symcount; ++i) {
-      if (syms[i].st_shndx == SHN_UNDEF) continue;
-      if (syms[i].st_shndx >= SHN_LORESERVE) continue;
-      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
-      if (!(s = GetElfString(elf, esize, symstrs, syms[i].st_name))) continue;
-      if (strcmp(s, resolver_name)) continue;
+      if (syms[i].st_shndx == SHN_UNDEF)
+        continue;
+      if (syms[i].st_shndx >= SHN_LORESERVE)
+        continue;
+      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC)
+        continue;
+      if (!(s = GetElfString(elf, esize, symstrs, syms[i].st_name)))
+        continue;
+      if (strcmp(s, resolver_name))
+        continue;
       resolver_sym_index = i;
       break;
     }
@@ -521,15 +548,18 @@ static void GenerateIfuncInit(void) {
         0x5e,  // pop %rsi
         0x5f,  // pop %rdi
     };
-    if (code_i + sizeof(chunk3) > sizeof(code)) Die("too many ifuncs");
+    if (code_i + sizeof(chunk3) > sizeof(code))
+      Die("too many ifuncs");
     memcpy(code + code_i, chunk3, sizeof(chunk3));
     code_i += sizeof(chunk3);
   }
-  if (!code_i) return;
+  if (!code_i)
+    return;
 
   // prepare to mutate elf
   // remap file so it has more space
-  if (elf->e_shnum + 2 > 65535) Die("too many sections");
+  if (elf->e_shnum + 2 > 65535)
+    Die("too many sections");
   size_t reserve_size = esize + 32 * 1024 * 1024;
   elf = Realloc(elf, reserve_size);
 

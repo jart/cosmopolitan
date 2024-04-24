@@ -300,7 +300,8 @@ static void CheckPe(const char *path, char *map, size_t size) {
           Die(exe->path, "PE ImportLookupTable and ImportAddressTable should "
                          "have identical content");
         }
-        if (!*ilt) break;
+        if (!*ilt)
+          break;
         CheckPeImportByName(exe, *ilt);
       }
     }
@@ -317,12 +318,17 @@ int main(int argc, char *argv[]) {
 #endif
   for (i = 1; i < argc; ++i) {
     path = argv[i];
-    if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
-    if ((size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
+    if ((fd = open(path, O_RDONLY)) == -1)
+      DieSys(path);
+    if ((size = lseek(fd, 0, SEEK_END)) == -1)
+      DieSys(path);
     map = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) DieSys(path);
+    if (map == MAP_FAILED)
+      DieSys(path);
     CheckPe(path, map, size);
-    if (munmap(map, size)) DieSys(path);
-    if (close(fd)) DieSys(path);
+    if (munmap(map, size))
+      DieSys(path);
+    if (close(fd))
+      DieSys(path);
   }
 }

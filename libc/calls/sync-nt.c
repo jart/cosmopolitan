@@ -41,7 +41,8 @@ textwindows int sys_sync_nt(void) {
     }
   }
   for (drives = GetLogicalDrives(), i = 0; i <= 'Z' - 'A'; ++i) {
-    if (!(drives & (1 << i))) continue;
+    if (!(drives & (1 << i)))
+      continue;
     path[4] = 'A' + i;
     if (ntaccesscheck(path, R_OK | W_OK) != -1) {
       BLOCK_SIGNALS;

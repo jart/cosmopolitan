@@ -214,7 +214,8 @@ TryAgain:
       // e.g. \\?\C:\ stays the same
     } else {
       --i;  // foo\bar\ -> foo\ (parent)
-      while (i && jp[i - 1] != '\\') --i;
+      while (i && jp[i - 1] != '\\')
+        --i;
     }
   } else {
     while (*p) {
@@ -259,7 +260,8 @@ GiveUpOnGettingInode:
                 dir->windata.cFileName);
   dir->ent.d_type = GetNtDirentType(&dir->windata);
   dir->isdone = !FindNextFile(dir->hand, &dir->windata);
-  if (pretend_this_file_doesnt_exist) goto TryAgain;
+  if (pretend_this_file_doesnt_exist)
+    goto TryAgain;
   return &dir->ent;
 }
 
@@ -332,7 +334,8 @@ DIR *fdopendir(int fd) {
     enametoolong();
     return 0;
   }
-  if (len) memcpy(dir->zip.prefix.path, name, len);
+  if (len)
+    memcpy(dir->zip.prefix.path, name, len);
   if (len && dir->zip.prefix.path[len - 1] != '/') {
     dir->zip.prefix.path[len++] = '/';
   }
@@ -379,7 +382,8 @@ DIR *opendir(const char *name) {
     return 0;
   }
   DIR *res = fdopendir(fd);
-  if (!res) close(fd);
+  if (!res)
+    close(fd);
   return res;
 }
 
@@ -402,10 +406,14 @@ static struct dirent *readdir_zipos(DIR *dir) {
       ent->d_name[2] = 0;
       struct ZiposUri p;
       p.len = dir->zip.prefix.len;
-      if (p.len) memcpy(p.path, dir->zip.prefix.path, p.len);
-      while (p.len && p.path[p.len - 1] == '/') --p.len;
-      while (p.len && p.path[p.len - 1] != '/') --p.len;
-      while (p.len && p.path[p.len - 1] == '/') --p.len;
+      if (p.len)
+        memcpy(p.path, dir->zip.prefix.path, p.len);
+      while (p.len && p.path[p.len - 1] == '/')
+        --p.len;
+      while (p.len && p.path[p.len - 1] != '/')
+        --p.len;
+      while (p.len && p.path[p.len - 1] == '/')
+        --p.len;
       p.path[p.len] = 0;
       ent->d_ino = __zipos_inode(
           dir->zip.zipos, __zipos_scan(dir->zip.zipos, &p), p.path, p.len);

@@ -27,17 +27,23 @@
 
 textwindows int sys_fdatasync_nt(int fd, bool fake) {
   struct NtByHandleFileInformation wst;
-  if (!__isfdopen(fd)) return ebadf();
-  if (!__isfdkind(fd, kFdFile)) return einval();
-  if (GetFileType(g_fds.p[fd].handle) != kNtFileTypeDisk) return einval();
-  if (!GetFileInformationByHandle(g_fds.p[fd].handle, &wst)) return __winerr();
+  if (!__isfdopen(fd))
+    return ebadf();
+  if (!__isfdkind(fd, kFdFile))
+    return einval();
+  if (GetFileType(g_fds.p[fd].handle) != kNtFileTypeDisk)
+    return einval();
+  if (!GetFileInformationByHandle(g_fds.p[fd].handle, &wst))
+    return __winerr();
   if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
     // Flushing a directory handle is possible, but it needs
     // kNtGenericWrite access, and MSDN doesn't document it.
     return 0;
   }
-  if (fake) return 0;
-  if (_check_signal(false) == -1) return -1;
+  if (fake)
+    return 0;
+  if (_check_signal(false) == -1)
+    return -1;
   return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : __winerr();
 }
 

@@ -26,14 +26,16 @@ char GetBit(FILE* f) {
   if (!binary) {
     for (comment = 0;;) {
       c = fgetwc(f);
-      if (c == -1) break;
+      if (c == -1)
+        break;
       if (!comment) {
         fflush(stdout);
         if (c == ';') {
           comment = 1;
         } else if (!iswspace(c) && c != '(' && c != ')' && c != '[' &&
                    c != ']') {
-          if (c != -1) c &= 1;
+          if (c != -1)
+            c &= 1;
           break;
         }
       } else if (c == '\n') {

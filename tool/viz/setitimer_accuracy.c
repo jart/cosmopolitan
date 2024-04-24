@@ -57,5 +57,6 @@ int main(int argc, char *argv[]) {
   expect = timeval_add(start, interval);
   signal(SIGALRM, OnTick);
   setitimer(ITIMER_REAL, &(struct itimerval){interval, interval}, 0);
-  for (;;) pause();
+  for (;;)
+    pause();
 }

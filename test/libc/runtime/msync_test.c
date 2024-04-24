@@ -62,7 +62,8 @@ TEST(msync, changeFileMappingAndWakeSpinLockWaiter) {
             (map = mmap(0, 1, PROT_READ | PROT_WRITE, MAP_SHARED, 3, 0)));
   if (!fork()) {
     // wait for other process to enter spin sem
-    while (*sem == 0) donothing;
+    while (*sem == 0)
+      donothing;
     // change the file mapping
     map[0] = 1;
     // openbsd fails with this line commented out
@@ -72,7 +73,8 @@ TEST(msync, changeFileMappingAndWakeSpinLockWaiter) {
     _Exit(123);
   }
   *sem = 1;
-  while (*sem == 1) donothing;
+  while (*sem == 1)
+    donothing;
   ASSERT_EQ(1, map[0]);
   ASSERT_SYS(0, 1, pread(3, &byte, 1, 0));
   ASSERT_EQ(1, byte);

@@ -28,9 +28,12 @@
 #include "libc/sysv/consts/sa.h"
 
 static const char *DescribeSigHandler(char buf[64], void f(int)) {
-  if (f == SIG_ERR) return "SIG_ERR";
-  if (f == SIG_DFL) return "SIG_DFL";
-  if (f == SIG_IGN) return "SIG_IGN";
+  if (f == SIG_ERR)
+    return "SIG_ERR";
+  if (f == SIG_DFL)
+    return "SIG_DFL";
+  if (f == SIG_IGN)
+    return "SIG_IGN";
   ksnprintf(buf, 64, "%t", f);
   return buf;
 }
@@ -60,8 +63,10 @@ const char *(DescribeSigaction)(char buf[N], int rc,
   int o = 0;
   char b64[64];
 
-  if (rc == -1) return "n/a";
-  if (!sa) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!sa)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(sa)) ||
       (IsAsan() && !__asan_is_valid(sa, sizeof(*sa)))) {
     ksnprintf(buf, N, "%p", sa);

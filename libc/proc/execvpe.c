@@ -64,11 +64,13 @@ int execvpe(const char *prog, char *const argv[], char *const *envp) {
   // change argv[0] to resolved path if it's ambiguous
   // otherwise the program won't have much luck finding itself
   if (argv[0] && *prog != '/' && *exe == '/' && !strcmp(prog, argv[0])) {
-    for (i = 0; argv[i++];) (void)0;
+    for (i = 0; argv[i++];)
+      (void)0;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
     int nbytes = i * sizeof(*argv);
-    if (__get_safe_size(nbytes, 4096) < nbytes) return enomem();
+    if (__get_safe_size(nbytes, 4096) < nbytes)
+      return enomem();
     argv2 = alloca(nbytes);
     CheckLargeStackAllocation(argv2, nbytes);
 #pragma GCC pop_options

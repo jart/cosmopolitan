@@ -43,7 +43,8 @@ void Free(char *p) {
 
 void C(void) {
   x = GC(strdup("abcd"));
-  if (0) PrintGarbage();
+  if (0)
+    PrintGarbage();
   gclongjmp(jb, 1);
   abort();
 }
@@ -65,12 +66,14 @@ void (*Bp)(void(void)) = B;
 void (*Cp)(void) = C;
 
 TEST(gclongjmp, test) {
-  if (0) PrintGarbage();
+  if (0)
+    PrintGarbage();
   if (!setjmp(jb)) {
     Ap(Cp, Bp);
     abort();
   }
-  if (0) PrintGarbage();
+  if (0)
+    PrintGarbage();
   EXPECT_STREQ("FREE", x);
   EXPECT_STREQ("FREE", y);
   EXPECT_STREQ("FREE", z);
@@ -80,7 +83,8 @@ TEST(gclongjmp, test) {
 }
 
 void crawl(const char *path) {
-  if (!strcmp(path, "/") || !strcmp(path, ".")) return;
+  if (!strcmp(path, "/") || !strcmp(path, "."))
+    return;
   crawl(gc(xdirname(path)));
 }
 
@@ -92,8 +96,10 @@ void *Worker(void *arg) {
 TEST(gc, torture) {
   int i, n = 32;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, pthread_create(t + i, 0, Worker, 0));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, pthread_join(t[i], 0));
+  for (i = 0; i < n; ++i)
+    ASSERT_SYS(0, 0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i)
+    EXPECT_SYS(0, 0, pthread_join(t[i], 0));
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 12
@@ -101,7 +107,8 @@ TEST(gc, torture) {
 #endif
 
 void crawl2(jmp_buf jb, const char *path) {
-  if (!strcmp(path, "/") || !strcmp(path, ".")) gclongjmp(jb, 1);
+  if (!strcmp(path, "/") || !strcmp(path, "."))
+    gclongjmp(jb, 1);
   crawl2(jb, gc(xdirname(path)));
 }
 

@@ -25,8 +25,10 @@
 
 const char *(DescribeTimespec)(char buf[45], int rc,
                                const struct timespec *ts) {
-  if (rc == -1) return "n/a";
-  if (!ts) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!ts)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(ts)) ||
       (IsAsan() && !__asan_is_valid(ts, sizeof(*ts)))) {
     ksnprintf(buf, 45, "%p", ts);

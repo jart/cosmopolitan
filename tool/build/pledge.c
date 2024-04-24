@@ -202,8 +202,10 @@ long ParseSiSize(const char *s, long b) {
 }
 
 void AddPromise(const char *s) {
-  while (isspace(*s)) ++s;
-  if (!*s) return;
+  while (isspace(*s))
+    ++s;
+  if (!*s)
+    return;
   if (*g_promises) {
     strlcat(g_promises, " ", sizeof(g_promises));
   }
@@ -358,9 +360,12 @@ void NormalizeFileDescriptors(void) {
 int SetLimit(int r, long lo, long hi) {
   struct rlimit old;
   struct rlimit lim = {lo, hi};
-  if (r < 0 || r >= RLIM_NLIMITS) return 0;
-  if (!setrlimit(r, &lim)) return 0;
-  if (getrlimit(r, &old)) return -1;
+  if (r < 0 || r >= RLIM_NLIMITS)
+    return 0;
+  if (!setrlimit(r, &lim))
+    return 0;
+  if (getrlimit(r, &old))
+    return -1;
   lim.rlim_cur = MIN(lim.rlim_cur, old.rlim_max);
   lim.rlim_max = MIN(lim.rlim_max, old.rlim_max);
   return setrlimit(r, &lim);
@@ -373,8 +378,10 @@ static int GetBaseCpuFreqMhz(void) {
 int SetCpuLimit(int secs) {
 #ifdef __x86_64__
   int mhz, lim;
-  if (secs <= 0) return 0;
-  if (!(mhz = GetBaseCpuFreqMhz())) return eopnotsupp();
+  if (secs <= 0)
+    return 0;
+  if (!(mhz = GetBaseCpuFreqMhz()))
+    return eopnotsupp();
   lim = ceil(3100. / mhz * secs);
   return SetLimit(RLIMIT_CPU, lim, lim);
 #else
@@ -464,8 +471,10 @@ enum Strategy GetStrategy(void) {
 void ApplyFilesystemPolicy(unsigned long ipromises) {
   const char *p;
 
-  if (g_dontunveil) return;
-  if (!SupportsLandlock()) return;
+  if (g_dontunveil)
+    return;
+  if (!SupportsLandlock())
+    return;
 
   Unveil(g_prog, "rx");
 
@@ -587,7 +596,8 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
 
 void DropCapabilities(void) {
   int e, i;
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   for (e = errno, i = 0;; ++i) {
     if (prctl(PR_CAPBSET_DROP, i) == -1) {
       if (errno == EINVAL || errno == EPERM) {
@@ -603,16 +613,21 @@ void DropCapabilities(void) {
 
 bool FileExistsAndIsNewerThan(const char *filepath, const char *thanpath) {
   struct stat st1, st2;
-  if (stat(filepath, &st1) == -1) return false;
-  if (stat(thanpath, &st2) == -1) return false;
-  if (st1.st_mtim.tv_sec < st2.st_mtim.tv_sec) return false;
-  if (st1.st_mtim.tv_sec > st2.st_mtim.tv_sec) return true;
+  if (stat(filepath, &st1) == -1)
+    return false;
+  if (stat(thanpath, &st2) == -1)
+    return false;
+  if (st1.st_mtim.tv_sec < st2.st_mtim.tv_sec)
+    return false;
+  if (st1.st_mtim.tv_sec > st2.st_mtim.tv_sec)
+    return true;
   return st1.st_mtim.tv_nsec >= st2.st_mtim.tv_nsec;
 }
 
 int Extract(const char *from, const char *to, int mode) {
   int fdin, fdout;
-  if ((fdin = open(from, O_RDONLY)) == -1) return -1;
+  if ((fdin = open(from, O_RDONLY)) == -1)
+    return -1;
   if ((fdout = creat(to, mode)) == -1) {
     close(fdin);
     return -1;
@@ -627,7 +642,8 @@ int Extract(const char *from, const char *to, int mode) {
 
 int CountEnviron(char **ep) {
   int res = 0;
-  while (*ep++) ++res;
+  while (*ep++)
+    ++res;
   return res;
 }
 

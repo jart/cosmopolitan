@@ -24,8 +24,11 @@
  */
 bool32 startswithi(const char *s, const char *prefix) {
   for (;;) {
-    if (!*prefix) return true;
-    if (!*s) return false;
-    if (kToLower[*s++ & 255] != kToLower[*prefix++ & 255]) return false;
+    if (!*prefix)
+      return true;
+    if (!*s)
+      return false;
+    if (kToLower[*s++ & 255] != kToLower[*prefix++ & 255])
+      return false;
   }
 }

@@ -515,8 +515,10 @@ void *ClientWorker(void *arg) {
   int i = 0;
   char *args[8] = {0};
   args[i++] = client->tmpexepath;
-  if (use_strace) args[i++] = "--strace";
-  if (use_ftrace) args[i++] = "--ftrace";
+  if (use_strace)
+    args[i++] = "--strace";
+  if (use_ftrace)
+    args[i++] = "--ftrace";
 
   // run program, tee'ing stderr to both log and client
   DEBUF("spawning %s", client->tmpexepath);
@@ -776,11 +778,14 @@ int Serve(void) {
 }
 
 void Daemonize(void) {
-  if (fork() > 0) _exit(0);
+  if (fork() > 0)
+    _exit(0);
   setsid();
-  if (fork() > 0) _exit(0);
+  if (fork() > 0)
+    _exit(0);
   dup2(g_bogusfd, 0);
-  if (!g_sendready) dup2(g_bogusfd, 1);
+  if (!g_sendready)
+    dup2(g_bogusfd, 1);
   close(2);
   open(kLogFile, O_CREAT | O_WRONLY | O_APPEND | O_CLOEXEC, 0644);
   extern long __klog_handle;
@@ -796,7 +801,8 @@ int main(int argc, char *argv[]) {
   signal(SIGPIPE, SIG_IGN);
   setenv("TZ", "PST", true);
   gethostname(g_hostname, sizeof(g_hostname));
-  for (int i = 3; i < 16; ++i) close(i);
+  for (int i = 3; i < 16; ++i)
+    close(i);
   errno = 0;
   // poll()'ing /dev/null stdin file descriptor on xnu returns POLLNVAL?!
   if (IsWindows()) {
@@ -805,7 +811,8 @@ int main(int argc, char *argv[]) {
     g_bogusfd = open("/dev/zero", O_RDONLY | O_CLOEXEC);
   }
   mkdir("o", 0700);
-  if (g_daemonize) Daemonize();
+  if (g_daemonize)
+    Daemonize();
   Serve();
   free(g_psk);
 #ifdef MODE_DBG

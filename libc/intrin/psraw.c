@@ -27,7 +27,8 @@
  */
 void(psraw)(int16_t a[8], const int16_t b[8], unsigned char k) {
   unsigned i;
-  if (k > 15) k = 15;
+  if (k > 15)
+    k = 15;
   for (i = 0; i < 8; ++i) {
     a[i] = b[i] >> k;
   }

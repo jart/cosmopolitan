@@ -83,7 +83,8 @@ long sizetol(const char *s, long b) {
     c = *s++;
   } while (c == ' ' || c == '\t');
   d = c == '-' ? -1 : 1;
-  if (c == '-' || c == '+') c = *s++;
+  if (c == '-' || c == '+')
+    c = *s++;
   if (!isdigit(c)) {
     return einval();
   }

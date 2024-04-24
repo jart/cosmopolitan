@@ -197,7 +197,8 @@ static void GetElfHeader(Elf64_Ehdr *ehdr, const char *image, size_t n) {
   const char *p, *e;
   for (p = image, e = p + MIN(n, 8192); p < e; ++p) {
   TryAgain:
-    if (READ64LE(p) != READ64LE("printf '")) continue;
+    if (READ64LE(p) != READ64LE("printf '"))
+      continue;
     for (i = 0, p += 8; p + 3 < e && (c = *p++) != '\'';) {
       if (c == '\\') {
         if ('0' <= *p && *p <= '7') {
@@ -378,18 +379,24 @@ static ssize_t Pwrite(int fd, const void *data, size_t size, uint64_t offset) {
 
 static int GetMode(int fd) {
   struct stat st;
-  if (fstat(fd, &st)) DieSys(path);
+  if (fstat(fd, &st))
+    DieSys(path);
   return st.st_mode & 0777;
 }
 
 static void CopyFile(int infd, const char *map, size_t size,  //
                      const void *hdr, size_t hdrsize) {
   int outfd;
-  if (!outpath) return;
-  if ((outfd = creat(outpath, GetMode(infd))) == -1) DieSys(outpath);
-  if (hdrsize && Write(outfd, hdr, hdrsize) == -1) DieSys(outpath);
-  if (Write(outfd, map + hdrsize, size - hdrsize) == -1) DieSys(outpath);
-  if (close(outfd)) DieSys(outpath);
+  if (!outpath)
+    return;
+  if ((outfd = creat(outpath, GetMode(infd))) == -1)
+    DieSys(outpath);
+  if (hdrsize && Write(outfd, hdr, hdrsize) == -1)
+    DieSys(outpath);
+  if (Write(outfd, map + hdrsize, size - hdrsize) == -1)
+    DieSys(outpath);
+  if (close(outfd))
+    DieSys(outpath);
 }
 
 static void WriteOutput(int infd, const char *map, size_t size,  //
@@ -398,7 +405,8 @@ static void WriteOutput(int infd, const char *map, size_t size,  //
   if (outpath) {
     CopyFile(infd, map, size, hdr, hdrsize);
   } else if (g_clobber) {
-    if (Pwrite(infd, hdr, hdrsize, 0) == -1) DieSys(path);
+    if (Pwrite(infd, hdr, hdrsize, 0) == -1)
+      DieSys(path);
   } else {
     omode = GetMode(infd);
     oflags = O_WRONLY | O_CREAT | (g_force ? O_TRUNC : O_EXCL);
@@ -406,10 +414,14 @@ static void WriteOutput(int infd, const char *map, size_t size,  //
     if (strlcat(bakpath, ".bak", sizeof(bakpath)) >= sizeof(bakpath)) {
       Die(path, "filename too long");
     }
-    if ((outfd = open(bakpath, oflags, omode)) == -1) DieSys(bakpath);
-    if (Write(outfd, map, size) == -1) DieSys(bakpath);
-    if (close(outfd)) DieSys(bakpath);
-    if (Pwrite(infd, hdr, hdrsize, 0) == -1) DieSys(path);
+    if ((outfd = open(bakpath, oflags, omode)) == -1)
+      DieSys(bakpath);
+    if (Write(outfd, map, size) == -1)
+      DieSys(bakpath);
+    if (close(outfd))
+      DieSys(bakpath);
+    if (Pwrite(infd, hdr, hdrsize, 0) == -1)
+      DieSys(path);
   }
 }
 
@@ -438,11 +450,15 @@ static void Assimilate(void) {
   int oflags;
   ssize_t size;
   oflags = outpath ? O_RDONLY : O_RDWR;
-  if ((fd = open(path, oflags)) == -1) DieSys(path);
-  if ((size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
-  if (size < 64) Die(path, "ape executables must be at least 64 bytes");
+  if ((fd = open(path, oflags)) == -1)
+    DieSys(path);
+  if ((size = lseek(fd, 0, SEEK_END)) == -1)
+    DieSys(path);
+  if (size < 64)
+    Die(path, "ape executables must be at least 64 bytes");
   p = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (p == MAP_FAILED) DieSys(path);
+  if (p == MAP_FAILED)
+    DieSys(path);
 
   if (READ32LE(p) == READ32LE("\177ELF")) {
     Elf64_Ehdr *ehdr;
@@ -604,8 +620,10 @@ static void Assimilate(void) {
     AssimilateMacho(fd, p, size);
   }
 
-  if (munmap(p, size)) DieSys(path);
-  if (close(fd)) DieSys(path);
+  if (munmap(p, size))
+    DieSys(path);
+  if (close(fd))
+    DieSys(path);
 }
 
 int main(int argc, char *argv[]) {

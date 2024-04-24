@@ -280,12 +280,14 @@ static wontreturn void DieOom(void) {
 
 static void *Malloc(size_t n) {
   void *p;
-  if (!(p = malloc(n))) DieOom();
+  if (!(p = malloc(n)))
+    DieOom();
   return p;
 }
 
 static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n))) DieOom();
+  if (!(p = realloc(p, n)))
+    DieOom();
   return p;
 }
 
@@ -369,8 +371,10 @@ static char *LoadSourceCode(const char *path) {
   size_t i;
   char *text;
   ssize_t rc, size;
-  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
-  if ((size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
+  if ((fd = open(path, O_RDONLY)) == -1)
+    DieSys(path);
+  if ((size = lseek(fd, 0, SEEK_END)) == -1)
+    DieSys(path);
   text = Malloc(size + 1);
   text[size] = 0;
   for (i = 0; i < size; i += rc) {
@@ -381,7 +385,8 @@ static char *LoadSourceCode(const char *path) {
       Die(path, "source code contains binary data");
     }
   }
-  if (close(fd)) DieSys(path);
+  if (close(fd))
+    DieSys(path);
   HashInput(text, size);
   return text;
 }
@@ -488,7 +493,8 @@ static void ValidateElfImage(Elf64_Ehdr *e, Elf64_Off esize,  //
   int found_load = 0;
   Elf64_Addr last_vaddr = 0;
   for (i = 0; i < e->e_phnum; ++i) {
-    if (p[i].p_type != PT_LOAD) continue;
+    if (p[i].p_type != PT_LOAD)
+      continue;
     if (found_load && p[i].p_vaddr <= last_vaddr) {
       Die(epath, "ELF PT_LOAD segments must be ordered by p_vaddr");
     }
@@ -566,7 +572,8 @@ static void ValidateElfImage(Elf64_Ehdr *e, Elf64_Off esize,  //
     Elf64_Off a = p[i].p_vaddr & -pagesz;
     Elf64_Off b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
     for (j = i + 1; j < e->e_phnum; ++j) {
-      if (p[j].p_type != PT_LOAD) continue;
+      if (p[j].p_type != PT_LOAD)
+        continue;
       Elf64_Off c = p[j].p_vaddr & -pagesz;
       Elf64_Off d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
       if (MAX(a, c) < MIN(b, d)) {
@@ -627,7 +634,8 @@ static bool IsSymbolWorthyOfSymtab(Elf64_Sym *sym) {
 }
 
 static void AppendZipAsset(unsigned char *lfile, unsigned char *cfile) {
-  if (assets.n == 65534) Die(outpath, "fat binary has >65534 zip assets");
+  if (assets.n == 65534)
+    Die(outpath, "fat binary has >65534 zip assets");
   assets.p = Realloc(assets.p, (assets.n + 1) * sizeof(*assets.p));
   assets.p[assets.n].cfile = cfile;
   assets.p[assets.n].lfile = lfile;
@@ -666,7 +674,8 @@ static void LoadSymbols(Elf64_Ehdr *e, Elf64_Off size, const char *path) {
   const char *name = ConvertElfMachineToSymtabName(e);
   size_t name_size = strlen(name);
   struct SymbolTable *st = OpenSymbolTable(path);
-  if (!st) Die(path, "could not load elf symbol table");
+  if (!st)
+    Die(path, "could not load elf symbol table");
   size_t data_size;
   void *data = Deflate(st, st->size, &data_size);
   uint32_t crc = crc32_z(0, st, st->size);
@@ -1086,9 +1095,12 @@ static void OpenLoader(struct Loader *ldr) {
 
 static int PhdrFlagsToProt(Elf64_Word flags) {
   int prot = PROT_NONE;
-  if (flags & PF_R) prot |= PROT_READ;
-  if (flags & PF_W) prot |= PROT_WRITE;
-  if (flags & PF_X) prot |= PROT_EXEC;
+  if (flags & PF_R)
+    prot |= PROT_READ;
+  if (flags & PF_W)
+    prot |= PROT_WRITE;
+  if (flags & PF_X)
+    prot |= PROT_EXEC;
   return prot;
 }
 
@@ -1101,8 +1113,10 @@ static char *EncodeWordAsPrintf(char *p, uint64_t w, int bytes) {
       *p++ = c;
     } else {
       *p++ = '\\';
-      if ((c & 0700)) *p++ = '0' + ((c & 0700) >> 6);
-      if ((c & 0770)) *p++ = '0' + ((c & 070) >> 3);
+      if ((c & 0700))
+        *p++ = '0' + ((c & 0700) >> 6);
+      if ((c & 0770))
+        *p++ = '0' + ((c & 070) >> 3);
       *p++ = '0' + (c & 7);
     }
   }
@@ -1203,7 +1217,8 @@ static char *GenerateElf(char *p, struct Input *in) {
 static bool IsPhdrAllocated(struct Input *in, Elf64_Phdr *phdr) {
   int i;
   Elf64_Shdr *shdr;
-  if (1) return true;
+  if (1)
+    return true;
   for (i = 0; i < in->elf->e_shnum; ++i) {
     if (!(shdr = GetElfSectionHeaderAddress(in->elf, in->size, i))) {
       Die(in->path, "elf section header overflow");
@@ -1226,7 +1241,8 @@ static struct Elf64_Sym *GetElfSymbol(struct Input *in, const char *name) {
   ss = GetElfStringTable(in->elf, in->size, ".strtab");
   sh = GetElfSymbolTable(in->elf, in->size, SHT_SYMTAB, &n);
   st = GetElfSectionAddress(in->elf, in->size, sh);
-  if (!st || !ss) Die(in->path, "missing elf symbol table");
+  if (!st || !ss)
+    Die(in->path, "missing elf symbol table");
   for (i = sh->sh_info; i < n; ++i) {
     if (st[i].st_name && !strcmp(ss + st[i].st_name, name)) {
       return st + i;
@@ -1252,7 +1268,8 @@ static char *DefineMachoUuid(char *p) {
   ++macholoadcount;
   load->command = MAC_LC_UUID;
   load->size = sizeof(*load);
-  if (!hashes) Die(outpath, "won't generate macho uuid");
+  if (!hashes)
+    Die(outpath, "won't generate macho uuid");
   memcpy(load->uuid, hashpool, sizeof(load->uuid));
   return p + sizeof(*load);
 }
@@ -1411,7 +1428,8 @@ static char *SecondPass(char *p, struct Input *in) {
   FixupPrintf(in->printf_phoff, p - prologue);
   for (i = 0; i < in->elf->e_phnum; ++i) {
     phdr = GetElfProgramHeaderAddress(in->elf, in->size, i);
-    if (phdr->p_type == PT_LOAD && !IsPhdrAllocated(in, phdr)) continue;
+    if (phdr->p_type == PT_LOAD && !IsPhdrAllocated(in, phdr))
+      continue;
     *(phdr2 = (Elf64_Phdr *)p) = *phdr;
     p += sizeof(Elf64_Phdr);
     if (phdr->p_filesz) {
@@ -1580,14 +1598,19 @@ static Elf64_Off ThirdPass(Elf64_Off offset, struct Input *in) {
 static void OpenInput(const char *path) {
   int fd;
   struct Input *in;
-  if (inputs.n == ARRAYLEN(inputs.p)) Die(prog, "too many input files");
+  if (inputs.n == ARRAYLEN(inputs.p))
+    Die(prog, "too many input files");
   in = inputs.p + inputs.n++;
   in->path = path;
-  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
-  if ((in->size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
+  if ((fd = open(path, O_RDONLY)) == -1)
+    DieSys(path);
+  if ((in->size = lseek(fd, 0, SEEK_END)) == -1)
+    DieSys(path);
   in->map = mmap(0, in->size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-  if (in->map == MAP_FAILED) DieSys(path);
-  if (!IsElf64Binary(in->elf, in->size)) Die(path, "not an elf64 binary");
+  if (in->map == MAP_FAILED)
+    DieSys(path);
+  if (!IsElf64Binary(in->elf, in->size))
+    Die(path, "not an elf64 binary");
   HashInput(in->map, in->size);
   close(fd);
 }
@@ -1820,7 +1843,8 @@ int main(int argc, char *argv[]) {
 #endif
 
   prog = argv[0];
-  if (!prog) prog = "apelink";
+  if (!prog)
+    prog = "apelink";
 
   // process flags
   GetOpts(argc, argv);
@@ -2042,7 +2066,8 @@ int main(int argc, char *argv[]) {
       // output native mach-o morph
       for (i = 0; i < inputs.n; ++i) {
         struct Input *in = inputs.p + i;
-        if (in->elf->e_machine != EM_NEXGEN32E) continue;
+        if (in->elf->e_machine != EM_NEXGEN32E)
+          continue;
         if (GetLoader(in->elf->e_machine, _HOSTXNU)) {
           p = stpcpy(p, "if [ x\"$1\" = x--assimilate ]; then\n");
         }
@@ -2197,7 +2222,8 @@ int main(int argc, char *argv[]) {
     size_t compressed_size;
     struct Loader *loader;
     loader = loaders.p + i;
-    if (!loader->used) continue;
+    if (!loader->used)
+      continue;
     compressed_data = Gzip(loader->map, loader->size, &compressed_size);
     if (loader->ddarg_skip1) {
       FixupWordAsDecimal(loader->ddarg_skip1, offset);

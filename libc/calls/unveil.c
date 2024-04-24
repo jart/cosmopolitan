@@ -176,7 +176,8 @@ static int unveil_init(void) {
   };
   // [undocumented] landlock_create_ruleset() always returns O_CLOEXEC
   //                assert(__sys_fcntl(rc, F_GETFD) == FD_CLOEXEC);
-  if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0) return -1;
+  if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0)
+    return -1;
   // grant file descriptor a higher number that's less likely to interfere
   if ((fd = __sys_fcntl(rc, F_DUPFD_CLOEXEC, 100)) == -1) {
     return err_close(-1, rc);
@@ -205,9 +206,12 @@ int sys_unveil_linux(const char *path, const char *permissions) {
   const char *last;
   const char *next;
 
-  if (!State.fd && (rc = unveil_init()) == -1) return rc;
-  if ((path && !permissions) || (!path && permissions)) return einval();
-  if (!path && !permissions) return unveil_final();
+  if (!State.fd && (rc = unveil_init()) == -1)
+    return rc;
+  if ((path && !permissions) || (!path && permissions))
+    return einval();
+  if (!path && !permissions)
+    return unveil_final();
   struct landlock_path_beneath_attr pb = {0};
   for (const char *c = permissions; *c != '\0'; c++) {
     switch (*c) {
@@ -233,7 +237,8 @@ int sys_unveil_linux(const char *path, const char *permissions) {
   // realpath(path) to the ruleset. however a corner case exists where
   // it isn't valid, e.g. /dev/stdin -> /proc/2834/fd/pipe:[51032], so
   // we'll need to work around this, by adding the path which is valid
-  if (strlen(path) + 1 > PATH_MAX) return enametoolong();
+  if (strlen(path) + 1 > PATH_MAX)
+    return enametoolong();
   last = path;
   next = path;
   for (int i = 0;; ++i) {
@@ -283,7 +288,8 @@ int sys_unveil_linux(const char *path, const char *permissions) {
   BLOCK_CANCELATION;
   rc = sys_openat(AT_FDCWD, path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
   ALLOW_CANCELATION;
-  if (rc == -1) return rc;
+  if (rc == -1)
+    return rc;
 
   pb.parent_fd = rc;
   struct stat st;
@@ -421,8 +427,10 @@ int unveil(const char *path, const char *permissions) {
     // if the host environment enables unveil() to impose true security
     // restrictions because the default behavior is to silently succeed
     // so that programs will err on the side of working if distributed.
-    if (permissions) return einval();
-    if (IsOpenbsd()) return 0;
+    if (permissions)
+      return einval();
+    if (IsOpenbsd())
+      return 0;
     if (landlock_abi_version != -1) {
       unassert(landlock_abi_version >= 1);
       return landlock_abi_version;

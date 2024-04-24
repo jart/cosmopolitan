@@ -51,13 +51,15 @@ void Multiply%dx%d(uint64_t C[%d], const uint64_t A[%d], const uint64_t B[%d]) {
   Rs = gc(calloc(sizeof(*Rs), n + m + 1));
   Ra = gc(calloc(sizeof(*Ra), n + m + 1));
   for (j = 0; j < n; ++j) {
-    if (j) printf(", ");
+    if (j)
+      printf(", ");
     printf("H%d", j);
   }
   printf(";\n");
   printf("  uint64_t ");
   for (j = 0; j < n + m; ++j) {
-    if (j) printf(", ");
+    if (j)
+      printf(", ");
     printf("R%d", j);
   }
   printf(";\n");

@@ -29,7 +29,9 @@
  * @return true if elf header looks legit
  */
 bool32 IsElf64Binary(const Elf64_Ehdr *elf, size_t mapsize) {
-  if (mapsize < sizeof(Elf64_Ehdr)) return false;
-  if (READ32LE(elf->e_ident) != READ32LE(ELFMAG)) return false;
+  if (mapsize < sizeof(Elf64_Ehdr))
+    return false;
+  if (READ32LE(elf->e_ident) != READ32LE(ELFMAG))
+    return false;
   return elf->e_ident[EI_CLASS] != ELFCLASS32;
 }

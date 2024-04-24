@@ -77,7 +77,8 @@ static struct SamplingSolution *NewSamplingSolution(long n, long s) {
 static bool IsNormalized(int n, double A[n]) {
   int i;
   double x;
-  for (x = i = 0; i < n; ++i) x += A[i];
+  for (x = i = 0; i < n; ++i)
+    x += A[i];
   return fabs(x - 1) < 1e-4;
 }
 
@@ -96,8 +97,10 @@ struct SamplingSolution *ComputeSamplingSolution(long dn, long sn, double dar,
   short *weights, *indices;
   struct SamplingSolution *res;
   long j, i, k, n, min, max, s, N[6];
-  if (!dar) dar = sn, dar /= dn;
-  if (!off) off = (dar - 1) / 2;
+  if (!dar)
+    dar = sn, dar /= dn;
+  if (!off)
+    off = (dar - 1) / 2;
   f = dar < 1 ? 1 / dar : dar;
   s = 3 * f + 4;
   fweights = gc(xcalloc(s + /*xxx*/ 2, sizeof(double)));
@@ -114,8 +117,10 @@ struct SamplingSolution *ComputeSamplingSolution(long dn, long sn, double dar,
     for (k = 0, j = min; j <= max; ++j) {
       fweights[k++] = ComputeWeight((j - x) / (f / par));
     }
-    for (sum = k = 0; k < n; ++k) sum += fweights[k];
-    for (j = 0; j < n; ++j) fweights[j] *= 1 / sum;
+    for (sum = k = 0; k < n; ++k)
+      sum += fweights[k];
+    for (j = 0; j < n; ++j)
+      fweights[j] *= 1 / sum;
     DCHECK(IsNormalized(n, fweights));
     for (j = 0; j < n; ++j) {
       indices[i * s + j] = MIN(sn - 1, MAX(0, min + j));

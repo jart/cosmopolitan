@@ -60,7 +60,8 @@ TEST(getpriority, higherPriorityOfSelf) {
 }
 
 TEST(getpriority, lowerAndRaiseItAgain_notAllowed) {
-  if (1) return;  // this behavior seems limited to modern linux
+  if (1)
+    return;  // this behavior seems limited to modern linux
   SPAWN(fork);
   ASSERT_SYS(0, 0, setpriority(PRIO_PROCESS, 0, 5));
   ASSERT_SYS(EACCES, -1, setpriority(PRIO_PROCESS, 0, 4));

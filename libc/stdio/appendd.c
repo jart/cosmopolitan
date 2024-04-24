@@ -48,8 +48,10 @@ ssize_t appendd(char **b, const void *s, size_t l) {
   z = appendz((p = *b));
   n = ROUNDUP(z.i + l + 1, 8) + W;
   if (n > z.n) {
-    if (!z.n) z.n = W * 2;
-    while (n > z.n) z.n += z.n >> 1;
+    if (!z.n)
+      z.n = W * 2;
+    while (n > z.n)
+      z.n += z.n >> 1;
     z.n = ROUNDUP(z.n, W);
     if ((p = realloc(p, z.n))) {
       z.n = malloc_usable_size(p);
@@ -65,7 +67,8 @@ ssize_t appendd(char **b, const void *s, size_t l) {
     p[z.i] = 0;
   }
   z.i += l;
-  if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
+  if (!IsTiny() && W == 8)
+    z.i |= (size_t)APPEND_COOKIE << 48;
   *(size_t *)(p + z.n - W) = z.i;
   return l;
 }

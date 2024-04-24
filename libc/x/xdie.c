@@ -22,6 +22,7 @@
 #include "libc/x/x.h"
 
 void xdie(void) {
-  if (_weaken(__die)) __die();
+  if (_weaken(__die))
+    __die();
   abort();
 }

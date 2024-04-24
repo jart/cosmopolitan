@@ -140,7 +140,8 @@ TEST(munmap, memoryGone) {
 }
 
 TEST(munmap, testTooSmallToUnmapAsan) {
-  if (!IsAsan()) return;
+  if (!IsAsan())
+    return;
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
@@ -150,7 +151,8 @@ TEST(munmap, testTooSmallToUnmapAsan) {
 }
 
 TEST(munmap, testLargeEnoughToUnmapAsan) {
-  if (!IsAsan()) return;
+  if (!IsAsan())
+    return;
   if (IsWindows()) {
     // we're unfortunately never able to unmap asan pages on windows
     // because the memtrack array items always have to be 64kb so we

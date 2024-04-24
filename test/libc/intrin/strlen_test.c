@@ -30,7 +30,8 @@ wchar_t u32[] = L"utf32 ☻";
 
 size_t strlen_pure(const char *s) {
   size_t n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
@@ -64,7 +65,8 @@ TEST(strlen, test_const) {
 TEST(strlen, test_nonconst) {
   char buf[256];
   unsigned i;
-  for (i = 0; i < 255; ++i) buf[i] = i + 1;
+  for (i = 0; i < 255; ++i)
+    buf[i] = i + 1;
   buf[i] = '\0';
   ASSERT_EQ(255, strlen(buf));
 }
@@ -85,7 +87,8 @@ TEST(strlen, testnonconst) {
        "m"(*StR) */
   char buf[256];
   unsigned i;
-  for (i = 0; i < 250; ++i) buf[i] = i + 1;
+  for (i = 0; i < 250; ++i)
+    buf[i] = i + 1;
   buf[i] = '\0';
   ASSERT_EQ(250, strlen(buf));
 }

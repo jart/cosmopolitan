@@ -30,7 +30,8 @@ __msabi extern typeof(DeleteFile) *const __imp_DeleteFileW;
 textwindows bool32 DeleteFile(const char16_t *lpPathName) {
   bool32 ok;
   ok = __imp_DeleteFileW(lpPathName);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("DeleteFile(%#hs) → %hhhd% m", lpPathName, ok);
   return ok;
 }

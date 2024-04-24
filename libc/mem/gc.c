@@ -65,10 +65,12 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   t = __get_tls();
   g = t->tib_garbages;
   if (UNLIKELY(!g)) {
-    if (!(g = malloc(sizeof(struct Garbages)))) notpossible;
+    if (!(g = malloc(sizeof(struct Garbages))))
+      notpossible;
     g->i = 0;
     g->n = 4;
-    if (!(g->p = malloc(g->n * sizeof(struct Garbage)))) notpossible;
+    if (!(g->p = malloc(g->n * sizeof(struct Garbage))))
+      notpossible;
     t->tib_garbages = g;
   } else if (UNLIKELY(g->i == g->n)) {
     p2 = g->p;

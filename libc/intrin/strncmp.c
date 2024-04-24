@@ -29,8 +29,10 @@
  */
 int strncmp(const char *a, const char *b, size_t n) {
   size_t i = 0;
-  if (!n-- || a == b) return 0;
-  while (i < n && a[i] == b[i] && b[i]) ++i;
+  if (!n-- || a == b)
+    return 0;
+  while (i < n && a[i] == b[i] && b[i])
+    ++i;
   return (a[i] & 0xff) - (b[i] & 0xff);
 }
 

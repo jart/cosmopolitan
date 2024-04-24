@@ -38,8 +38,10 @@ TEST(pipe, einval) {
 }
 
 TEST(pipe, ebadf) {
-  if (IsFreebsd()) return;  // somehow succeeds
-  if (IsOpenbsd()) return;  // somehow succeeds
+  if (IsFreebsd())
+    return;  // somehow succeeds
+  if (IsOpenbsd())
+    return;  // somehow succeeds
   EXPECT_SYS(0, 0, pipe(f));
   EXPECT_SYS(EBADF, -1, write(f[0], "h", 1));
   EXPECT_SYS(EBADF, -1, read(f[1], buf, 1));
@@ -48,8 +50,10 @@ TEST(pipe, ebadf) {
 }
 
 TEST(pipe, emfile) {
-  if (IsWindows()) return;  // TODO
-  if (IsCygwin()) return;
+  if (IsWindows())
+    return;  // TODO
+  if (IsCygwin())
+    return;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_EQ(0, setrlimit(RLIMIT_NOFILE, &rlim));

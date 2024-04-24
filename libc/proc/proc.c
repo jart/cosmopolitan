@@ -84,7 +84,8 @@ textwindows int __proc_harvest(struct Proc *pr, bool iswait4) {
   uint32_t status;
   struct rusage ru;
   GetExitCodeProcess(pr->handle, &status);
-  if (status == kNtStillActive) return 0;
+  if (status == kNtStillActive)
+    return 0;
   __proc_stats(pr->handle, &ru);
   rusage_add(&pr->ru, &ru);
   rusage_add(&__proc.ruchlds, &ru);
@@ -176,8 +177,10 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
 
     // release our waiter status
     for (int j = 0; j < n; ++j) {
-      if (handles[j] == __proc.onbirth) continue;
-      if (j == i) continue;
+      if (handles[j] == __proc.onbirth)
+        continue;
+      if (j == i)
+        continue;
       if (!--objects[j]->waiters && objects[j]->status == PROC_UNDEAD) {
         __proc_free(objects[j]);
       }

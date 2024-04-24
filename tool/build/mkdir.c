@@ -35,7 +35,8 @@ int main(int argc, char *argv[]) {
   int (*mkdirp)(const char *, unsigned) = mkdir;
 
   prog = argv[0];
-  if (!prog) prog = "mkdir";
+  if (!prog)
+    prog = "mkdir";
 
   while ((i = getopt(argc, argv, "hpm:")) != -1) {
     switch (i) {

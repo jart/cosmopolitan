@@ -22,7 +22,8 @@
 
 textwindows int sys_pause_nt(void) {
   int rc;
-  while (!(rc = _park_norestart(-1u, 0))) donothing;
+  while (!(rc = _park_norestart(-1u, 0)))
+    donothing;
   return rc;
 }
 

@@ -32,7 +32,8 @@ void SetUpOnce(void) {
 TEST(devfd, test) {
   // TODO: What is up with this mysterious ENOENT error?
   //       The code appears like it should support this.
-  if (IsFreebsd()) return;
+  if (IsFreebsd())
+    return;
   char buf[8] = {0};
   struct stat st[2] = {0};
   ASSERT_SYS(0, 0, xbarf("hello.txt", "bone", -1));
@@ -50,7 +51,8 @@ TEST(devfd, test) {
 TEST(devfd, not_DEV_FD_STAT_BROKEN) {
   // fstat() and stat() are inconsistent on bsd systems
   // with xnu it only appears to be st_dev that differs
-  if (IsBsd()) return;
+  if (IsBsd())
+    return;
   char buf[8] = {0};
   struct stat st[2] = {0};
   ASSERT_SYS(0, 0, xbarf("hello.txt", "bone", -1));

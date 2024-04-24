@@ -36,17 +36,20 @@ bool critbit0_delete(struct critbit0 *t, const char *u) {
   void **whereq = 0;
   struct CritbitNode *q = 0;
   int direction = 0;
-  if (!p) return false;
+  if (!p)
+    return false;
   while (1 & (intptr_t)p) {
     whereq = wherep;
     q = (void *)(p - 1);
     unsigned char c = 0;
-    if (q->byte < ulen) c = ubytes[q->byte];
+    if (q->byte < ulen)
+      c = ubytes[q->byte];
     direction = (1 + (q->otherbits | c)) >> 8;
     wherep = q->child + direction;
     p = *wherep;
   }
-  if (0 != strcmp(u, (const char *)p)) return false;
+  if (0 != strcmp(u, (const char *)p))
+    return false;
   free(p), p = NULL;
   if (!whereq) {
     t->root = NULL;

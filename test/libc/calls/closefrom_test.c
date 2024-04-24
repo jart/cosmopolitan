@@ -70,6 +70,7 @@ TEST(close_range, test) {
 }
 
 TEST(close_range, ignoresNonexistantRanges) {
-  if (!IsLinux() && !IsFreebsd()) return;
+  if (!IsLinux() && !IsFreebsd())
+    return;
   EXPECT_SYS(0, 0, close_range(-2, -1, 0));
 }

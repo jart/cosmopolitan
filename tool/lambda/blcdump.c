@@ -95,7 +95,8 @@ void LoadFlags(int argc, char *argv[]) {
 }
 
 void Expand(int c) {
-  if (end >= TERMS) Error(5, "OUT OF TERMS");
+  if (end >= TERMS)
+    Error(5, "OUT OF TERMS");
   mem[end++] = c;
 }
 

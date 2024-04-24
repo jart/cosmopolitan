@@ -94,7 +94,8 @@ TEST(timeval_toseconds, test) {
 }
 
 static long mod(long x, long y) {
-  if (y == -1) return 0;
+  if (y == -1)
+    return 0;
   return x - y * (x / y - (x % y && (x ^ y) < 0));
 }
 

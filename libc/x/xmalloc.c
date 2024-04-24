@@ -24,6 +24,7 @@
  */
 void *xmalloc(size_t bytes) {
   void *res = malloc(bytes);
-  if (!res) xdie();
+  if (!res)
+    xdie();
   return res;
 }

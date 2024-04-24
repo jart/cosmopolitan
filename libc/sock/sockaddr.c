@@ -64,12 +64,16 @@ void __convert_sockaddr_to_bsd(struct sockaddr_storage *addr) {
 // copies sockaddr from internal memory to user's buffer
 void __write_sockaddr(const struct sockaddr_storage *addr, void *out_addr,
                       uint32_t *inout_addrsize) {
-  if (!out_addr) return;
-  if (!inout_addrsize) return;
+  if (!out_addr)
+    return;
+  if (!inout_addrsize)
+    return;
   uint32_t insize = *inout_addrsize;
-  if (insize) bzero(out_addr, insize);
+  if (insize)
+    bzero(out_addr, insize);
   uint32_t outsize = __get_sockaddr_len(addr);
   uint32_t copysize = MIN(insize, outsize);
-  if (copysize) memcpy(out_addr, addr, copysize);
+  if (copysize)
+    memcpy(out_addr, addr, copysize);
   *inout_addrsize = outsize;
 }

@@ -53,7 +53,8 @@ void Benchmark(void) {
   f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
   for (;;) {
     line = fgets(buf, sizeof(buf), f);
-    if (!line) break;
+    if (!line)
+      break;
   }
   fclose(f);
 }

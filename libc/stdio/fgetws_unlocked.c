@@ -38,11 +38,13 @@ wchar_t *fgetws_unlocked(wchar_t *s, int size, FILE *f) {
   if (size > 0) {
     while (--size > 0) {
       if ((c = fgetwc_unlocked(f)) == -1) {
-        if (ferror_unlocked(f) == EINTR) continue;
+        if (ferror_unlocked(f) == EINTR)
+          continue;
         break;
       }
       *p++ = c;
-      if (c == '\n') break;
+      if (c == '\n')
+        break;
     }
     *p = '\0';
   }

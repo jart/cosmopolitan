@@ -36,7 +36,8 @@ void xfixpath(void) {
 
     // turn backslash into slash
     for (p = path; *p; ++p) {
-      if (*p == '\\') *p = '/';
+      if (*p == '\\')
+        *p = '/';
     }
 
     // turn c:/... into /c/...
@@ -54,7 +55,8 @@ void xfixpath(void) {
 
     // turn semicolon into colon
     for (p = path; *p; ++p) {
-      if (*p == ';') *p = ':';
+      if (*p == ';')
+        *p = ':';
     }
 
     setenv("PATH", path, true);

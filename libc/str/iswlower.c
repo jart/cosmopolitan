@@ -25,7 +25,8 @@ int iswlower(wint_t c) {
   if (c < 0200) {
     return 'a' <= c && c <= 'z';
   } else {
-    if (towupper(c) != c) return 1;
+    if (towupper(c) != c)
+      return 1;
     switch (c) {
       case 0x00df:  /* ß Watin */
       case 0x0138:  /* ĸ Watin-A */

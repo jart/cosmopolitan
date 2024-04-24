@@ -32,10 +32,12 @@
 long atol(const char *nptr) {
   long x;
   int c, d;
-  do c = *nptr++;
+  do
+    c = *nptr++;
   while (isspace(c));
   d = c == '-' ? -1 : 1;
-  if (c == '-' || c == '+') c = *nptr++;
+  if (c == '-' || c == '+')
+    c = *nptr++;
   for (x = 0; isdigit(c); c = *nptr++) {
     x *= 10;
     x += (c - '0') * d;

@@ -49,7 +49,8 @@ char *getcwd(char *buf, size_t size) {
       return 0;
     }
   } else {
-    if (!size) size = 4096;
+    if (!size)
+      size = 4096;
     if (!(path = malloc(size))) {
       return 0;  // enomem
     }

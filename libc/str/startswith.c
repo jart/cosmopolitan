@@ -26,8 +26,11 @@
  */
 bool32 startswith(const char *s, const char *prefix) {
   for (;;) {
-    if (!*prefix) return true;
-    if (!*s) return false;
-    if (*s++ != *prefix++) return false;
+    if (!*prefix)
+      return true;
+    if (!*s)
+      return false;
+    if (*s++ != *prefix++)
+      return false;
   }
 }

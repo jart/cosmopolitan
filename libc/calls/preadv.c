@@ -84,7 +84,8 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
 
   e = errno;
   rc = sys_preadv(fd, iov, iovlen, off, off);
-  if (rc != -1 || errno != ENOSYS) return rc;
+  if (rc != -1 || errno != ENOSYS)
+    return rc;
   errno = e;
 
   for (toto = i = 0; i < iovlen; ++i) {

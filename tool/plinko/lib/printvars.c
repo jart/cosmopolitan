@@ -20,7 +20,8 @@
 #include "tool/plinko/lib/print.h"
 
 int PrintArgs(int fd, int keys, int vals, int n) {
-  if (!keys) return n;
+  if (!keys)
+    return n;
   if (keys > 0) {
     if (!(vals < 0 && Car(vals) == kClosure)) {
       if (n) {
@@ -46,6 +47,7 @@ int PrintArgs(int fd, int keys, int vals, int n) {
   } else {
     n += PrintArgs(fd, Car(keys), Car(vals), n);
   }
-  if (!Cdr(keys)) return n;
+  if (!Cdr(keys))
+    return n;
   return PrintArgs(fd, Cdr(keys), Cdr(vals), n);
 }

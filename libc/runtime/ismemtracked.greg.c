@@ -21,12 +21,17 @@
 static inline bool IsMemtrackedImpl(int x, int y) {
   unsigned i;
   i = __find_memory(&_mmi, x);
-  if (i == _mmi.i) return false;
-  if (x < _mmi.p[i].x) return false;
+  if (i == _mmi.i)
+    return false;
+  if (x < _mmi.p[i].x)
+    return false;
   for (;;) {
-    if (y <= _mmi.p[i].y) return true;
-    if (++i == _mmi.i) return false;
-    if (_mmi.p[i].x != _mmi.p[i - 1].y + 1) return false;
+    if (y <= _mmi.p[i].y)
+      return true;
+    if (++i == _mmi.i)
+      return false;
+    if (_mmi.p[i].x != _mmi.p[i - 1].y + 1)
+      return false;
   }
 }
 

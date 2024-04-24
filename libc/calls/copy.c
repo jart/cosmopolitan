@@ -37,10 +37,13 @@ ssize_t copyfd(int in, int out, size_t n) {
   ssize_t dr, dw;
   for (i = 0; i < n; i += dr) {
     dr = read(in, buf, MIN(n - i, sizeof(buf)));
-    if (dr == -1) return -1;
-    if (!dr) break;
+    if (dr == -1)
+      return -1;
+    if (!dr)
+      break;
     dw = write(out, buf, dr);
-    if (dw == -1) return -1;
+    if (dw == -1)
+      return -1;
     if (dw != dr) {
       // POSIX requires atomic IO up to PIPE_BUF
       // The minimum permissible PIPE_BUF is 512

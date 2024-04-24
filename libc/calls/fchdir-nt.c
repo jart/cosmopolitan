@@ -27,7 +27,8 @@ int sys_chdir_nt_impl(char16_t[hasatleast PATH_MAX], uint32_t);
 
 textwindows int sys_fchdir_nt(int dirfd) {
   char16_t dir[PATH_MAX];
-  if (!__isfdkind(dirfd, kFdFile)) return ebadf();
+  if (!__isfdkind(dirfd, kFdFile))
+    return ebadf();
   return sys_chdir_nt_impl(
       dir, GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
                                     kNtFileNameNormalized | kNtVolumeNameDos));

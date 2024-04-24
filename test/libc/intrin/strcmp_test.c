@@ -491,7 +491,8 @@ TEST(wcsncmp, testTwosComplementBane) {
 
 dontinline int strcmp_pure(const char *a, const char *b) {
   for (; *a == *b; a++, b++) {
-    if (!*a) break;
+    if (!*a)
+      break;
   }
   return (*a & 0xff) - (*b & 0xff);
 }

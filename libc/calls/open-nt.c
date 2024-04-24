@@ -184,7 +184,8 @@ static textwindows int sys_open_nt_dup(int fd, int flags, int mode, int oldfd) {
 static int Atoi(const char *str) {
   int c;
   unsigned x = 0;
-  if (!*str) return -1;
+  if (!*str)
+    return -1;
   while ((c = *str++)) {
     if ('0' <= c && c <= '9') {
       x *= 10;
@@ -202,7 +203,8 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
   int fd, oldfd;
   BLOCK_SIGNALS;
   __fds_lock();
-  if (!(flags & _O_CREAT)) mode = 0;
+  if (!(flags & _O_CREAT))
+    mode = 0;
   if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
     if (startswith(file, "/dev/")) {
       if (!strcmp(file + 5, "tty")) {

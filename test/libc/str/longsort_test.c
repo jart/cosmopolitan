@@ -42,8 +42,10 @@ void InsertionSort(int *A, int n) {
 int CompareLong(const void *a, const void *b) {
   const long *x = a;
   const long *y = b;
-  if (*x < *y) return -1;
-  if (*x > *y) return +1;
+  if (*x < *y)
+    return -1;
+  if (*x > *y)
+    return +1;
   return 0;
 }
 
@@ -61,7 +63,8 @@ TEST(_longsort, test) {
 #ifdef __x86_64__
 
 TEST(vqsort_int64_avx2, test) {
-  if (!X86_HAVE(AVX2)) return;
+  if (!X86_HAVE(AVX2))
+    return;
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
@@ -73,7 +76,8 @@ TEST(vqsort_int64_avx2, test) {
 }
 
 TEST(vqsort_int64_sse4, test) {
-  if (!X86_HAVE(SSE4_2)) return;
+  if (!X86_HAVE(SSE4_2))
+    return;
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
@@ -85,7 +89,8 @@ TEST(vqsort_int64_sse4, test) {
 }
 
 TEST(vqsort_int64_ssse3, test) {
-  if (!X86_HAVE(SSSE3)) return;
+  if (!X86_HAVE(SSSE3))
+    return;
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
@@ -152,8 +157,10 @@ BENCH(_longsort, bench) {
 int CompareInt(const void *a, const void *b) {
   const int *x = a;
   const int *y = b;
-  if (*x < *y) return -1;
-  if (*x > *y) return +1;
+  if (*x < *y)
+    return -1;
+  if (*x > *y)
+    return +1;
   return 0;
 }
 
@@ -171,7 +178,8 @@ TEST(InsertionSort, test) {
 #ifdef __x86_64__
 
 TEST(vqsort_int32_avx2, test) {
-  if (!X86_HAVE(AVX2)) return;
+  if (!X86_HAVE(AVX2))
+    return;
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
@@ -183,7 +191,8 @@ TEST(vqsort_int32_avx2, test) {
 }
 
 TEST(vqsort_int32_sse4, test) {
-  if (!X86_HAVE(SSE4_2)) return;
+  if (!X86_HAVE(SSE4_2))
+    return;
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
@@ -195,7 +204,8 @@ TEST(vqsort_int32_sse4, test) {
 }
 
 TEST(vqsort_int32_ssse3, test) {
-  if (!X86_HAVE(SSSE3)) return;
+  if (!X86_HAVE(SSSE3))
+    return;
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));

@@ -70,8 +70,10 @@ TEST(grow, testGrowth_clearsNewMemory) {
   memset(p, 'a', capacity);
   EXPECT_TRUE(__grow(&p, &capacity, 1, 0));
   EXPECT_GT(capacity, 123);
-  for (i = 0; i < 123; ++i) ASSERT_EQ('a', p[i]);
-  for (i = 123; i < capacity; ++i) ASSERT_EQ(0, p[i]);
+  for (i = 0; i < 123; ++i)
+    ASSERT_EQ('a', p[i]);
+  for (i = 123; i < capacity; ++i)
+    ASSERT_EQ(0, p[i]);
   free(p);
 }
 

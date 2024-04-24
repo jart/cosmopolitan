@@ -97,8 +97,10 @@ TEST(djbsort, test64) {
 }
 
 static int CompareInt(const void *a, const void *b) {
-  if (*(const int *)a < *(const int *)b) return -1;
-  if (*(const int *)a > *(const int *)b) return +1;
+  if (*(const int *)a < *(const int *)b)
+    return -1;
+  if (*(const int *)a > *(const int *)b)
+    return +1;
   return 0;
 }
 

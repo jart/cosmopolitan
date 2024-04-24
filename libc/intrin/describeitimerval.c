@@ -28,8 +28,10 @@
 
 const char *(DescribeItimerval)(char buf[N], int rc,
                                 const struct itimerval *it) {
-  if (!it) return "NULL";
-  if (rc == -1) return "n/a";
+  if (!it)
+    return "NULL";
+  if (rc == -1)
+    return "n/a";
   if ((!IsAsan() && kisdangerous(it)) ||
       (IsAsan() && !__asan_is_valid(it, sizeof(*it)))) {
     ksnprintf(buf, N, "%p", it);

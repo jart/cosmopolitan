@@ -65,8 +65,10 @@ static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
   total = 0;
   do {
     if (i) {
-      while (i < iovlen && !iov[i].iov_len) ++i;
-      if (i == iovlen) break;
+      while (i < iovlen && !iov[i].iov_len)
+        ++i;
+      if (i == iovlen)
+        break;
     }
     if ((rc = writev(fd, iov + i, iovlen - i)) != -1) {
       wrote = rc;
@@ -99,7 +101,8 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
     v[1].iov_base = (void *)buf;
     v[1].iov_len = len;
     if (EzWritevAll(bio->fd, v, 2) != -1) {
-      if (bio->c > 0) bio->c = 0;
+      if (bio->c > 0)
+        bio->c = 0;
     } else if (errno == EAGAIN) {
       return MBEDTLS_ERR_SSL_TIMEOUT;
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
@@ -121,7 +124,8 @@ static int EzTlsSend(void *ctx, const unsigned char *buf, size_t len) {
     bio->c += len;
     return len;
   }
-  if ((rc = EzTlsFlush(bio, buf, len)) < 0) return rc;
+  if ((rc = EzTlsFlush(bio, buf, len)) < 0)
+    return rc;
   return len;
 }
 
@@ -130,11 +134,13 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   int r;
   struct iovec v[2];
   struct EzTlsBio *bio = ctx;
-  if ((r = EzTlsFlush(bio, 0, 0)) < 0) return r;
+  if ((r = EzTlsFlush(bio, 0, 0)) < 0)
+    return r;
   if (bio->a < bio->b) {
     r = MIN(n, bio->b - bio->a);
     memcpy(p, bio->t + bio->a, r);
-    if ((bio->a += r) == bio->b) bio->a = bio->b = 0;
+    if ((bio->a += r) == bio->b)
+      bio->a = bio->b = 0;
     return r;
   }
   v[0].iov_base = p;
@@ -153,7 +159,8 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
       return MBEDTLS_ERR_NET_RECV_FAILED;
     }
   }
-  if (r > n) bio->b = r - n;
+  if (r > n)
+    bio->b = r - n;
   return MIN(n, r);
 }
 
@@ -237,7 +244,8 @@ void EzSetup(char psk[32]) {
 }
 
 void EzDestroy(void) {
-  if (!mytid) return;
+  if (!mytid)
+    return;
   EzSanity();
   mbedtls_ssl_free(&ezssl);
   mbedtls_ctr_drbg_free(&ezrng);

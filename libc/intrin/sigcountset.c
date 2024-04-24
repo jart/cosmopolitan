@@ -30,6 +30,7 @@
  */
 int sigcountset(const sigset_t *set) {
   uint64_t x = *set;
-  if (IsOpenbsd() || IsXnu()) x &= 0xffffffff;
+  if (IsOpenbsd() || IsXnu())
+    x &= 0xffffffff;
   return popcnt(x);
 }

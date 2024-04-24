@@ -61,9 +61,11 @@ const wint_t kCombiningLowLine = L'\u0332';
 const wint_t kCombiningDoubleMacronBelow = L'\u035f';
 
 forceinline int PutChar(wint_t (*buf)[3], size_t *i, wint_t *cc, FILE *out) {
-  if (fputwc((*buf)[0], out) == -1) return -1;
+  if (fputwc((*buf)[0], out) == -1)
+    return -1;
   if (*cc != -1) {
-    if (fputwc(*cc, out) == -1) return -1;
+    if (fputwc(*cc, out) == -1)
+      return -1;
     *cc = -1;
   }
   (*buf)[0] = (*buf)[1];
@@ -77,7 +79,8 @@ int CombineAsciiMarks(FILE *in, FILE *out) {
   size_t i = 0;
   for (;;) {
     while (i < 3) {
-      if ((wc = fgetwc(in)) == -1) goto InputBreak;
+      if ((wc = fgetwc(in)) == -1)
+        goto InputBreak;
       buf[i++] = wc;
     }
     if (buf[1] == '\b' && cc == -1) {
@@ -104,12 +107,14 @@ int CombineAsciiMarks(FILE *in, FILE *out) {
       }
     }
     if (i == 3) {
-      if (PutChar(&buf, &i, &cc, out) == -1) goto OutputBreak;
+      if (PutChar(&buf, &i, &cc, out) == -1)
+        goto OutputBreak;
     }
   }
 InputBreak:
   while (i) {
-    if (PutChar(&buf, &i, &cc, out) == -1) goto OutputBreak;
+    if (PutChar(&buf, &i, &cc, out) == -1)
+      goto OutputBreak;
   }
 OutputBreak:
   return (fclose(in) | fclose(out)) != -1 ? 0 : -1;

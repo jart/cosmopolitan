@@ -88,7 +88,8 @@ char *GenerateBranchyUtf8Text(size_t *out_n) {
   wchar_t *q = gc(utf8to32(kViewables, kViewablesSize, &n));
   shuffle(lemur64, q, n);
   p = utf32to8(q, n, &n);
-  if (out_n) *out_n = n;
+  if (out_n)
+    *out_n = n;
   return p;
 }
 

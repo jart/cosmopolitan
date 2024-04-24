@@ -30,6 +30,7 @@ int128_t __mulvti3(int128_t x, int128_t y) {
   int o;
   int128_t z;
   z = __muloti4(x, y, &o);
-  if (o) __on_arithmetic_overflow();
+  if (o)
+    __on_arithmetic_overflow();
   return z;
 }

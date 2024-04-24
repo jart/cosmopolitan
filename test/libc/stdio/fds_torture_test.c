@@ -35,7 +35,8 @@ void *Torturer(void *arg) {
   }
   for (i = 0; i < FDS; ++i) {
     ASSERT_EQ(2, write(fd[i], "hi", 2));
-    if (!vfork()) _Exit(0);
+    if (!vfork())
+      _Exit(0);
     wait(0);
   }
   for (i = 0; i < FDS; ++i) {

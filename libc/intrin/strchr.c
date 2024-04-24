@@ -24,8 +24,10 @@
 
 static inline const char *strchr_pure(const char *s, int c) {
   for (;; ++s) {
-    if ((*s & 255) == (c & 255)) return s;
-    if (!*s) return 0;
+    if ((*s & 255) == (c & 255))
+      return s;
+    if (!*s)
+      return 0;
   }
 }
 
@@ -50,7 +52,8 @@ static __vex const char *strchr_sse(const char *s, unsigned char c) {
   }
   m = __builtin_ctzl(m);
   s = (const char *)p + m;
-  if (c && !*s) s = 0;
+  if (c && !*s)
+    s = 0;
   return s;
 }
 #endif
@@ -106,8 +109,10 @@ char *strchr(const char *s, int c) {
 #else
   const char *r;
   for (c &= 255; (uintptr_t)s & 7; ++s) {
-    if ((*s & 255) == c) return (char *)s;
-    if (!*s) return NULL;
+    if ((*s & 255) == c)
+      return (char *)s;
+    if (!*s)
+      return NULL;
   }
   return (char *)strchr_x64(s, c);
 #endif

@@ -28,8 +28,10 @@
  */
 int remove(const char *name) {
   int e = errno;
-  if (!unlinkat(AT_FDCWD, name, 0)) return 0;
-  if (errno != EISDIR) return -1;
+  if (!unlinkat(AT_FDCWD, name, 0))
+    return 0;
+  if (errno != EISDIR)
+    return -1;
   errno = e;
   return unlinkat(AT_FDCWD, name, AT_REMOVEDIR);
 }

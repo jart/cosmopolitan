@@ -54,7 +54,8 @@ void testlib_benchwarmup(void) {
 
 void EnableCruiseControlForCool(void) {
   int fd, micros = 10;
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   BLOCK_CANCELATION;
   if ((fd = __sys_openat(AT_FDCWD, "/dev/cpu_dma_latency", O_WRONLY, 0)) !=
       -1) {

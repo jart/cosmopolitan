@@ -25,7 +25,8 @@ textwindows char *GetSystemDirectoryPath(char *buf, const char *path,
   uint32_t syslen = GetSystemDirectoryA(buf, size);
   size_t pathlen = strlen(path);
   if (syslen && syslen + pathlen + 1 < size) {
-    if (buf[syslen] == '\\') --syslen;
+    if (buf[syslen] == '\\')
+      --syslen;
     memcpy(buf + syslen, path, pathlen + 1);
     return buf;
   } else {

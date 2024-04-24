@@ -73,7 +73,8 @@ uint64_t rdrand(void) {
                    : CFLAG_CONSTRAINT(cf), "=r"(x)
                    : /* no inputs */
                    : "cc");
-      if (cf) return x;
+      if (cf)
+        return x;
       asm volatile("pause");
     }
   }

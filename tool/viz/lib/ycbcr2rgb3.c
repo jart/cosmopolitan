@@ -163,7 +163,8 @@ void YCbCrComputeCoefficients(int swing, double gamma,
 void YCbCrInit(struct YCbCr **ycbcr, bool yonly, int swing, double gamma,
                const double gamut[3], const double illuminant[3]) {
   int i;
-  if (!*ycbcr) *ycbcr = xcalloc(1, sizeof(struct YCbCr));
+  if (!*ycbcr)
+    *ycbcr = xcalloc(1, sizeof(struct YCbCr));
   (*ycbcr)->yonly = yonly;
   bzero((*ycbcr)->magnums, sizeof((*ycbcr)->magnums));
   bzero((*ycbcr)->lighting, sizeof((*ycbcr)->lighting));
@@ -318,8 +319,10 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                                  yox, pry, prx);
     YCbCrComputeSamplingSolution(&me->chroma, dyn, dxn, scyn, scxn, cry, crx,
                                  coy, cox, pry, prx);
-    if (pf8_) sharpen(1, yys, yxs, (void *)Y, yyn, yxn);
-    if (pf9_) unsharp(1, yys, yxs, (void *)Y, yyn, yxn);
+    if (pf8_)
+      sharpen(1, yys, yxs, (void *)Y, yyn, yxn);
+    if (pf9_)
+      unsharp(1, yys, yxs, (void *)Y, yyn, yxn);
     GyaradosUint8(yys, yxs, Y, yys, yxs, Y, dyn, dxn, syn, sxn, 0, 255,
                   me->luma.cy, me->luma.cx, true);
     GyaradosUint8(cys, cxs, Cb, cys, cxs, Cb, dyn, dxn, scyn, scxn, 0, 255,

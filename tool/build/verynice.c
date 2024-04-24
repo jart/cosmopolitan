@@ -38,7 +38,8 @@ static wontreturn void PrintUsage(int rc, int fd) {
 int main(int argc, char *argv[]) {
 
   prog = argv[0];
-  if (!prog) prog = "verynice";
+  if (!prog)
+    prog = "verynice";
 
   int opt;
   while ((opt = getopt(argc, argv, "h")) != -1) {

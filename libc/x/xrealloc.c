@@ -37,6 +37,7 @@
 void *xrealloc(void *p, size_t n) {
   void *q;
   q = realloc(p, n);
-  if (!q && !(p && !n)) xdie();
+  if (!q && !(p && !n))
+    xdie();
   return q;
 }

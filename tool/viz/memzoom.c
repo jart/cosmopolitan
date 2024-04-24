@@ -343,7 +343,8 @@ static void PreventBufferbloat(void) {
 
 static bool HasPendingInput(void) {
   struct pollfd fds[1];
-  if (IsWindows()) return true; /* XXX */
+  if (IsWindows())
+    return true; /* XXX */
   fds[0].fd = 0;
   fds[0].events = POLLIN;
   fds[0].revents = 0;
@@ -355,8 +356,10 @@ static int GetCurrentRange(void) {
   int i;
   if (ranges.i) {
     for (i = 0; i < ranges.i; ++i) {
-      if (offset < ranges.p[i].a) return MAX(0, i - 1);
-      if (offset < ranges.p[i].b) return i;
+      if (offset < ranges.p[i].a)
+        return MAX(0, i - 1);
+      if (offset < ranges.p[i].b)
+        return i;
     }
     return ranges.i - 1;
   } else {
@@ -472,9 +475,11 @@ static void OnPrevEnd(void) {
 static void OnMouse(char *p) {
   int e, x, y;
   e = strtol(p, &p, 10);
-  if (*p == ';') ++p;
+  if (*p == ';')
+    ++p;
   x = min(txn, max(1, strtol(p, &p, 10))) - 1;
-  if (*p == ';') ++p;
+  if (*p == ';')
+    ++p;
   y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
   e |= (*p == 'm') << 2;
   switch (e) {
@@ -523,7 +528,8 @@ static void ReadKeyboard(void) {
   char buf[32], *p = buf;
   bzero(buf, sizeof(buf));
   if (readansi(0, buf, sizeof(buf)) == -1) {
-    if (errno == EINTR) return;
+    if (errno == EINTR)
+      return;
     exit(errno);
   }
   switch (*p++) {
@@ -698,8 +704,10 @@ static void LoadRanges(void) {
   range.b = 0;
   ranges.i = 0;
   for (;;) {
-    if ((n = read(fd, b, sizeof(b))) == -1) exit(1);
-    if (!n) break;
+    if ((n = read(fd, b, sizeof(b))) == -1)
+      exit(1);
+    if (!n)
+      break;
     for (i = 0; i < n; ++i) {
       switch (t) {
         case 0:
@@ -807,7 +815,8 @@ static void Render(void) {
   for (i = 0, n = p - buffer; i < n; i += got) {
     got = 0;
     if ((rc = write(out, buffer + i, n - i)) == -1) {
-      if (errno == EINTR) continue;
+      if (errno == EINTR)
+        continue;
       exit(errno);
     }
     got = rc;
@@ -828,7 +837,8 @@ static void Zoom(long have) {
     n = have >> zoom;
     i = n / txn;
     r = n % txn;
-    if (r) ++i;
+    if (r)
+      ++i;
     if (order == LINEAR) {
       for (; i < tyn; ++i) {
         canvas[txn * i] = '~';
@@ -877,7 +887,8 @@ static void MemZoom(void) {
     }
     if (ok && HasPendingInput()) {
       ReadKeyboard();
-      if (!IsWindows()) continue; /* XXX */
+      if (!IsWindows())
+        continue; /* XXX */
     }
     ok = true;
     if (pid) {
@@ -953,7 +964,8 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) ShowCrashReports();
+  if (!NoDebug())
+    ShowCrashReports();
   out = 1;
   GetOpts(argc, argv);
   Open();

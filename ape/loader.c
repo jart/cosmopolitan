@@ -228,13 +228,15 @@ extern char _end[];
 
 static unsigned long StrLen(const char *s) {
   unsigned long n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
 static int StrCmp(const char *l, const char *r) {
   unsigned long i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return (l[i] & 255) - (r[i] & 255);
 }
 
@@ -353,7 +355,8 @@ static char *Utoa(char p[20], unsigned long x) {
 }
 
 static char *Itoa(char p[21], long x) {
-  if (x < 0) *p++ = '-', x = -(unsigned long)x;
+  if (x < 0)
+    *p++ = '-', x = -(unsigned long)x;
   return Utoa(p, x);
 }
 
@@ -362,7 +365,8 @@ __attribute__((__noinline__)) static long CallSystem(long arg1, long arg2,
                                                      long arg5, long arg6,
                                                      long arg7, int numba,
                                                      char os) {
-  if (IsXnu()) numba |= 0x2000000;
+  if (IsXnu())
+    numba |= 0x2000000;
   return SystemCall(arg1, arg2, arg3, arg4, arg5, arg6, arg7, numba);
 }
 
@@ -529,7 +533,8 @@ static long Printf(int os, int fd, const char *fmt, ...) {
         switch ((c = *fmt++)) {
           case 's':
             for (s = __builtin_va_arg(va, const char *); s && *s; ++s) {
-              if (k < 512) b[k++] = *s;
+              if (k < 512)
+                b[k++] = *s;
             }
             break;
           case 'd':
@@ -542,16 +547,19 @@ static long Printf(int os, int fd, const char *fmt, ...) {
                 u -= 10;
                 c = 'a' + u;
               }
-              if (k < 512) b[k++] = c;
+              if (k < 512)
+                b[k++] = c;
             }
             break;
           default:
-            if (k < 512) b[k++] = c;
+            if (k < 512)
+              b[k++] = c;
             break;
         }
         break;
       default:
-        if (k < 512) b[k++] = c;
+        if (k < 512)
+          b[k++] = c;
         break;
     }
   }
@@ -560,7 +568,8 @@ static long Printf(int os, int fd, const char *fmt, ...) {
 static void Perror(int os, const char *thing, long rc, const char *reason) {
   char ibuf[21];
   ibuf[0] = 0;
-  if (rc) Itoa(ibuf, -rc);
+  if (rc)
+    Itoa(ibuf, -rc);
   Print(os, 2, "ape error: ", thing, ": ", reason,
         rc ? " failed w/ errno " : "", ibuf, "\n", 0l);
 }
@@ -572,8 +581,10 @@ __attribute__((__noreturn__)) static void Pexit(int os, const char *c, int rc,
 }
 
 static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
-  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
-  if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
+  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path))
+    return 0;
+  if (pathlen && ps->path[pathlen - 1] != '/')
+    ps->path[pathlen++] = '/';
   MemMove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
   return !Access(ps->path, X_OK, ps->os);
@@ -600,11 +611,14 @@ static char SearchPath(struct PathSearcher *ps) {
 
 static char *Commandv(struct PathSearcher *ps, int os, char *name,
                       const char *syspath) {
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
-  if (ps->literally || MemChr(ps->name, '/', ps->namelen)) return name;
+  if (!(ps->namelen = StrLen((ps->name = name))))
+    return 0;
+  if (ps->literally || MemChr(ps->name, '/', ps->namelen))
+    return name;
   ps->os = os;
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (ps->namelen + 1 > sizeof(ps->path)) return 0;
+  if (ps->namelen + 1 > sizeof(ps->path))
+    return 0;
   ps->path[0] = 0;
   if (SearchPath(ps)) {
     return ps->path;
@@ -661,7 +675,8 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
       Pexit(os, exe, 0, "ELF segments overlap your APE loader");
     }
     for (j = i + 1; j < e->e_phnum; ++j) {
-      if (p[j].p_type != PT_LOAD) continue;
+      if (p[j].p_type != PT_LOAD)
+        continue;
       c = p[j].p_vaddr & -pagesz;
       d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
       if (MAX(a, c) < MIN(b, d)) {
@@ -694,7 +709,8 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
   if (e->e_type == ET_DYN) {
     rc = Mmap(0, virtmax - virtmin, PROT_NONE,
               MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0, os);
-    if (rc < 0) Pexit(os, exe, rc, "pie mmap");
+    if (rc < 0)
+      Pexit(os, exe, rc, "pie mmap");
     dynbase = rc;
     if (dynbase & (pagesz - 1)) {
       Pexit(os, exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
@@ -710,14 +726,18 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
   for (i = 0; i < e->e_phnum; ++i) {
     void *addr;
     unsigned long size;
-    if (p[i].p_type != PT_LOAD) continue;
+    if (p[i].p_type != PT_LOAD)
+      continue;
 
     /* configure mapping */
     prot = 0;
     flags = MAP_FIXED | MAP_PRIVATE;
-    if (p[i].p_flags & PF_R) prot |= PROT_READ;
-    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
-    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
+    if (p[i].p_flags & PF_R)
+      prot |= PROT_READ;
+    if (p[i].p_flags & PF_W)
+      prot |= PROT_WRITE;
+    if (p[i].p_flags & PF_X)
+      prot |= PROT_EXEC;
 
     if (p[i].p_filesz) {
       /* load from file */
@@ -744,17 +764,21 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
       addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
       rc = Mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz, os);
-      if (rc < 0) Pexit(os, exe, rc, "prog mmap");
-      if (wipe) Bzero((void *)(dynbase + a), wipe);
+      if (rc < 0)
+        Pexit(os, exe, rc, "prog mmap");
+      if (wipe)
+        Bzero((void *)(dynbase + a), wipe);
       if (prot2 != prot1) {
         rc = Mprotect(addr, size, prot2, os);
-        if (rc < 0) Pexit(os, exe, rc, "prog mprotect");
+        if (rc < 0)
+          Pexit(os, exe, rc, "prog mprotect");
       }
       /* allocate extra bss */
       if (c > b) {
         flags |= MAP_ANONYMOUS;
         rc = Mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0, os);
-        if (rc < 0) Pexit(os, exe, rc, "extra bss mmap");
+        if (rc < 0)
+          Pexit(os, exe, rc, "extra bss mmap");
       }
     } else {
       /* allocate pure bss */
@@ -762,7 +786,8 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
       flags |= MAP_ANONYMOUS;
       rc = Mmap(addr, size, prot, flags, -1, 0, os);
-      if (rc < 0) Pexit(os, exe, rc, "bss mmap");
+      if (rc < 0)
+        Pexit(os, exe, rc, "bss mmap");
     }
   }
 
@@ -783,7 +808,8 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   struct ElfPhdr *p;
 
   /* validate page size */
-  if (!pagesz) pagesz = 4096;
+  if (!pagesz)
+    pagesz = 4096;
   if (pagesz & (pagesz - 1)) {
     Pexit(os, exe, 0, "AT_PAGESZ isn't two power");
   }
@@ -818,8 +844,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 
   /* read program headers */
   rc = Pread(fd, M->phdr.buf, size, e->e_phoff, os);
-  if (rc < 0) return "failed to read ELF program headers";
-  if (rc != size) return "truncated read of ELF program headers";
+  if (rc < 0)
+    return "failed to read ELF program headers";
+  if (rc != size)
+    return "truncated read of ELF program headers";
 
   /* bail on recoverable program header errors */
   p = &M->phdr.phdr;
@@ -949,7 +977,8 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
 
   /* determine ape loader program name */
   ape = argv[0];
-  if (!ape) ape = "ape";
+  if (!ape)
+    ape = "ape";
 
   /* detect openbsd */
   if (SupportsOpenbsd() && !os && !auxv[0]) {
@@ -1021,7 +1050,8 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
      grows down the alloc by poking the guard pages */
   n = (endp - sp + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
-  if ((long)sp2 & 15) ++sp2;
+  if ((long)sp2 & 15)
+    ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
   }

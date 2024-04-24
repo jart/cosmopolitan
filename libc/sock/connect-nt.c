@@ -63,7 +63,8 @@ void sys_connect_nt_cleanup(struct Fd *f, bool cancel) {
   struct NtOverlapped *overlap;
   if ((overlap = f->connect_op)) {
     uint32_t got, flags;
-    if (cancel) CancelIoEx(f->handle, overlap);
+    if (cancel)
+      CancelIoEx(f->handle, overlap);
     if (WSAGetOverlappedResult(f->handle, overlap, &got, cancel, &flags) ||
         WSAGetLastError() != kNtErrorIoIncomplete) {
       WSACloseEvent(overlap->hEvent);
@@ -92,13 +93,15 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
   cosmo_once(&g_connectex.once, connectex_init);
 
   // fail if previous connect() is still in progress
-  if (f->connect_op) return ealready();
+  if (f->connect_op)
+    return ealready();
 
   // ConnectEx() requires bind() be called beforehand
   if (!f->isbound) {
     struct sockaddr_storage ss = {0};
     ss.ss_family = ((struct sockaddr *)addr)->sa_family;
-    if (sys_bind_nt(f, &ss, sizeof(ss)) == -1) return -1;
+    if (sys_bind_nt(f, &ss, sizeof(ss)) == -1)
+      return -1;
   }
 
   // perform normal connect
@@ -119,7 +122,8 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
   // 2. poll(POLLOUT)
   bool32 ok;
   struct NtOverlapped *overlap = calloc(1, sizeof(struct NtOverlapped));
-  if (!overlap) return -1;
+  if (!overlap)
+    return -1;
   overlap->hEvent = WSACreateEvent();
   ok = g_connectex.lpConnectEx(f->handle, addr, addrsize, 0, 0, 0, overlap);
   if (ok) {

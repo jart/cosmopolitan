@@ -27,7 +27,8 @@
  */
 int alaw(int x) {
   int a, b, i;
-  if ((a = x) < 0) a = ~a;
+  if ((a = x) < 0)
+    a = ~a;
   a >>= 4;
   if (a > 15) {
     if ((i = a >> 5)) {
@@ -40,6 +41,7 @@ int alaw(int x) {
       a += 16;
     }
   }
-  if (x >= 0) a |= 128;
+  if (x >= 0)
+    a |= 128;
   return a ^ 85;
 }

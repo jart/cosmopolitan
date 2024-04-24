@@ -216,7 +216,8 @@ static const int kCp437i[] = {
  */
 int unbing(int c) {
   int m, l, r;
-  if (32 <= c && c < 127) return c;
+  if (32 <= c && c < 127)
+    return c;
   l = 0;
   r = ARRAYLEN(kCp437i) - 1;
   while (l <= r) {

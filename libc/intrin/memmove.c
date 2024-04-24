@@ -153,7 +153,8 @@ static __vex void *__memmove(void *dst, const void *src, size_t n) {
       *(xmm_t *)(d + n - 16) = Y;
       return d;
     default:
-      if (d == s) return d;
+      if (d == s)
+        return d;
 
 #if defined(__x86_64__) && !defined(__chibicc__)
       if (n < kHalfCache3 || !kHalfCache3) {

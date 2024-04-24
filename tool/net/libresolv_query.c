@@ -74,25 +74,30 @@ static void dump_dns_rr(ns_msg *msg, ns_rr *rr, ns_sect sect, FILE *trace) {
   class = ns_rr_class(*rr);
   type = ns_rr_type(*rr);
   fprintf(trace, "%s,%d,%d", ns_rr_name(*rr), class, type);
-  if (sect == ns_s_qd) return;
+  if (sect == ns_s_qd)
+    return;
   fprintf(trace, ",%lu", (u_long)ns_rr_ttl(*rr));
   rd = ns_rr_rdata(*rr);
   switch (type) {
     case ns_t_soa:
       n = ns_name_uncompress(ns_msg_base(*msg), ns_msg_end(*msg), rd, buf,
                              sizeof buf);
-      if (n < 0) goto error;
+      if (n < 0)
+        goto error;
       putc(',', trace);
       fputs(buf, trace);
       rd += n;
       n = ns_name_uncompress(ns_msg_base(*msg), ns_msg_end(*msg), rd, buf,
                              sizeof buf);
-      if (n < 0) goto error;
+      if (n < 0)
+        goto error;
       putc(',', trace);
       fputs(buf, trace);
       rd += n;
-      if (ns_msg_end(*msg) - rd < 5 * NS_INT32SZ) goto error;
-      for (n = 0; n < 5; n++) MY_GET32(soa[n], rd);
+      if (ns_msg_end(*msg) - rd < 5 * NS_INT32SZ)
+        goto error;
+      for (n = 0; n < 5; n++)
+        MY_GET32(soa[n], rd);
       sprintf(buf, "%u,%u,%u,%u,%u", soa[0], soa[1], soa[2], soa[3], soa[4]);
       break;
     case ns_t_a:
@@ -110,7 +115,8 @@ static void dump_dns_rr(ns_msg *msg, ns_rr *rr, ns_sect sect, FILE *trace) {
     case ns_t_cname:
       n = ns_name_uncompress(ns_msg_base(*msg), ns_msg_end(*msg), rd, buf,
                              sizeof buf);
-      if (n < 0) goto error;
+      if (n < 0)
+        goto error;
       break;
     case ns_t_txt:
       snprintf(buf, (size_t)rd[0] + 1, "%s", rd + 1);

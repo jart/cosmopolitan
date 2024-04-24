@@ -630,22 +630,37 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
 #define hasFeature(F) ((Features[F / 32] >> (F % 32)) & 1)
 #define setFeature(F) Features[F / 32] |= 1U << (F % 32)
 
-  if ((EDX >> 15) & 1) setFeature(FEATURE_CMOV);
-  if ((EDX >> 23) & 1) setFeature(FEATURE_MMX);
-  if ((EDX >> 25) & 1) setFeature(FEATURE_SSE);
-  if ((EDX >> 26) & 1) setFeature(FEATURE_SSE2);
+  if ((EDX >> 15) & 1)
+    setFeature(FEATURE_CMOV);
+  if ((EDX >> 23) & 1)
+    setFeature(FEATURE_MMX);
+  if ((EDX >> 25) & 1)
+    setFeature(FEATURE_SSE);
+  if ((EDX >> 26) & 1)
+    setFeature(FEATURE_SSE2);
 
-  if ((ECX >> 0) & 1) setFeature(FEATURE_SSE3);
-  if ((ECX >> 1) & 1) setFeature(FEATURE_PCLMUL);
-  if ((ECX >> 9) & 1) setFeature(FEATURE_SSSE3);
-  if ((ECX >> 12) & 1) setFeature(FEATURE_FMA);
-  if ((ECX >> 13) & 1) setFeature(FEATURE_CMPXCHG16B);
-  if ((ECX >> 19) & 1) setFeature(FEATURE_SSE4_1);
-  if ((ECX >> 20) & 1) setFeature(FEATURE_SSE4_2);
-  if ((ECX >> 22) & 1) setFeature(FEATURE_MOVBE);
-  if ((ECX >> 23) & 1) setFeature(FEATURE_POPCNT);
-  if ((ECX >> 25) & 1) setFeature(FEATURE_AES);
-  if ((ECX >> 29) & 1) setFeature(FEATURE_F16C);
+  if ((ECX >> 0) & 1)
+    setFeature(FEATURE_SSE3);
+  if ((ECX >> 1) & 1)
+    setFeature(FEATURE_PCLMUL);
+  if ((ECX >> 9) & 1)
+    setFeature(FEATURE_SSSE3);
+  if ((ECX >> 12) & 1)
+    setFeature(FEATURE_FMA);
+  if ((ECX >> 13) & 1)
+    setFeature(FEATURE_CMPXCHG16B);
+  if ((ECX >> 19) & 1)
+    setFeature(FEATURE_SSE4_1);
+  if ((ECX >> 20) & 1)
+    setFeature(FEATURE_SSE4_2);
+  if ((ECX >> 22) & 1)
+    setFeature(FEATURE_MOVBE);
+  if ((ECX >> 23) & 1)
+    setFeature(FEATURE_POPCNT);
+  if ((ECX >> 25) & 1)
+    setFeature(FEATURE_AES);
+  if ((ECX >> 29) & 1)
+    setFeature(FEATURE_F16C);
 
   // If CPUID indicates support for XSAVE, XRESTORE and AVX, and XGETBV
   // indicates that the AVX registers will be saved and restored on context
@@ -663,36 +678,59 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
   bool HasAVX512Save = HasAVX && ((EAX & 0xe0) == 0xe0);
 #endif
 
-  if (HasAVX) setFeature(FEATURE_AVX);
+  if (HasAVX)
+    setFeature(FEATURE_AVX);
 
   bool HasLeaf7 =
       MaxLeaf >= 0x7 && !getX86CpuIDAndInfoEx(0x7, 0x0, &EAX, &EBX, &ECX, &EDX);
 
   if (HasLeaf7) {
-    if ((EBX >> 3) & 1) setFeature(FEATURE_BMI);
-    if (((EBX >> 5) & 1) && HasAVX) setFeature(FEATURE_AVX2);
-    if ((EBX >> 8) & 1) setFeature(FEATURE_BMI2);
+    if ((EBX >> 3) & 1)
+      setFeature(FEATURE_BMI);
+    if (((EBX >> 5) & 1) && HasAVX)
+      setFeature(FEATURE_AVX2);
+    if ((EBX >> 8) & 1)
+      setFeature(FEATURE_BMI2);
     if (HasAVX512Save) {
-      if ((EBX >> 16) & 1) setFeature(FEATURE_AVX512F);
-      if ((EBX >> 17) & 1) setFeature(FEATURE_AVX512DQ);
-      if ((EBX >> 21) & 1) setFeature(FEATURE_AVX512IFMA);
-      if ((EBX >> 26) & 1) setFeature(FEATURE_AVX512PF);
-      if ((EBX >> 27) & 1) setFeature(FEATURE_AVX512ER);
-      if ((EBX >> 28) & 1) setFeature(FEATURE_AVX512CD);
-      if ((EBX >> 30) & 1) setFeature(FEATURE_AVX512BW);
-      if ((EBX >> 31) & 1) setFeature(FEATURE_AVX512VL);
-      if ((ECX >> 1) & 1) setFeature(FEATURE_AVX512VBMI);
-      if ((ECX >> 6) & 1) setFeature(FEATURE_AVX512VBMI2);
-      if ((ECX >> 11) & 1) setFeature(FEATURE_AVX512VNNI);
-      if ((ECX >> 12) & 1) setFeature(FEATURE_AVX512BITALG);
-      if ((ECX >> 14) & 1) setFeature(FEATURE_AVX512VPOPCNTDQ);
-      if ((EDX >> 2) & 1) setFeature(FEATURE_AVX5124VNNIW);
-      if ((EDX >> 3) & 1) setFeature(FEATURE_AVX5124FMAPS);
-      if ((EDX >> 8) & 1) setFeature(FEATURE_AVX512VP2INTERSECT);
-      if ((EDX >> 23) & 1) setFeature(FEATURE_AVX512FP16);
+      if ((EBX >> 16) & 1)
+        setFeature(FEATURE_AVX512F);
+      if ((EBX >> 17) & 1)
+        setFeature(FEATURE_AVX512DQ);
+      if ((EBX >> 21) & 1)
+        setFeature(FEATURE_AVX512IFMA);
+      if ((EBX >> 26) & 1)
+        setFeature(FEATURE_AVX512PF);
+      if ((EBX >> 27) & 1)
+        setFeature(FEATURE_AVX512ER);
+      if ((EBX >> 28) & 1)
+        setFeature(FEATURE_AVX512CD);
+      if ((EBX >> 30) & 1)
+        setFeature(FEATURE_AVX512BW);
+      if ((EBX >> 31) & 1)
+        setFeature(FEATURE_AVX512VL);
+      if ((ECX >> 1) & 1)
+        setFeature(FEATURE_AVX512VBMI);
+      if ((ECX >> 6) & 1)
+        setFeature(FEATURE_AVX512VBMI2);
+      if ((ECX >> 11) & 1)
+        setFeature(FEATURE_AVX512VNNI);
+      if ((ECX >> 12) & 1)
+        setFeature(FEATURE_AVX512BITALG);
+      if ((ECX >> 14) & 1)
+        setFeature(FEATURE_AVX512VPOPCNTDQ);
+      if ((EDX >> 2) & 1)
+        setFeature(FEATURE_AVX5124VNNIW);
+      if ((EDX >> 3) & 1)
+        setFeature(FEATURE_AVX5124FMAPS);
+      if ((EDX >> 8) & 1)
+        setFeature(FEATURE_AVX512VP2INTERSECT);
+      if ((EDX >> 23) & 1)
+        setFeature(FEATURE_AVX512FP16);
     }
-    if ((ECX >> 8) & 1) setFeature(FEATURE_GFNI);
-    if (((ECX >> 10) & 1) && HasAVX) setFeature(FEATURE_VPCLMULQDQ);
+    if ((ECX >> 8) & 1)
+      setFeature(FEATURE_GFNI);
+    if (((ECX >> 10) & 1) && HasAVX)
+      setFeature(FEATURE_VPCLMULQDQ);
   }
 
   // EAX from subleaf 0 is the maximum subleaf supported. Some CPUs don't
@@ -709,12 +747,18 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
   bool HasExtLeaf1 = MaxExtLevel >= 0x80000001 &&
                      !getX86CpuIDAndInfo(0x80000001, &EAX, &EBX, &ECX, &EDX);
   if (HasExtLeaf1) {
-    if (ECX & 1) setFeature(FEATURE_LAHF_LM);
-    if ((ECX >> 5) & 1) setFeature(FEATURE_LZCNT);
-    if (((ECX >> 6) & 1)) setFeature(FEATURE_SSE4_A);
-    if (((ECX >> 11) & 1)) setFeature(FEATURE_XOP);
-    if (((ECX >> 16) & 1)) setFeature(FEATURE_FMA4);
-    if (((EDX >> 29) & 1)) setFeature(FEATURE_LM);
+    if (ECX & 1)
+      setFeature(FEATURE_LAHF_LM);
+    if ((ECX >> 5) & 1)
+      setFeature(FEATURE_LZCNT);
+    if (((ECX >> 6) & 1))
+      setFeature(FEATURE_SSE4_A);
+    if (((ECX >> 11) & 1))
+      setFeature(FEATURE_XOP);
+    if (((ECX >> 16) & 1))
+      setFeature(FEATURE_FMA4);
+    if (((EDX >> 29) & 1))
+      setFeature(FEATURE_LM);
   }
 
   if (hasFeature(FEATURE_LM) && hasFeature(FEATURE_SSE2)) {
@@ -763,7 +807,8 @@ __attribute__((__constructor__(1))) textstartup int __cpu_indicator_init(void) {
   _Static_assert(sizeof(__cpu_features2) / sizeof(__cpu_features2[0]) == 3, "");
 
   // This function needs to run just once.
-  if (__cpu_model.__cpu_vendor) return 0;
+  if (__cpu_model.__cpu_vendor)
+    return 0;
 
   if (!isCpuIdSupported() ||
       getX86CpuIDAndInfo(0, &MaxLeaf, &Vendor, &ECX, &EDX) || MaxLeaf < 1) {

@@ -28,13 +28,15 @@
 int mulaw(int x) {
   int b, i, a, s, l, h;
   a = x < 0 ? (~x >> 2) + 33 : (x >> 2) + 33;
-  if (a > 8191) a = 8191;
+  if (a > 8191)
+    a = 8191;
   i = a >> 6;
   s = i ? (__builtin_clz(i) ^ 31) + 2 : 1;
   h = 8 - s;
   l = (a >> s) & 15;
   l = 15 - l;
   b = (h << 4) | l;
-  if (x >= 0) b |= 128;
+  if (x >= 0)
+    b |= 128;
   return b;
 }

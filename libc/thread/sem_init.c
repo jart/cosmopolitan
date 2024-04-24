@@ -37,7 +37,8 @@
  * @raise EINVAL if `value` exceeds `SEM_VALUE_MAX`
  */
 int sem_init(sem_t *sem, int pshared, unsigned value) {
-  if (value > SEM_VALUE_MAX) return einval();
+  if (value > SEM_VALUE_MAX)
+    return einval();
   sem->sem_magic = SEM_MAGIC_UNNAMED;
   atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
   sem->sem_pshared = !!pshared;

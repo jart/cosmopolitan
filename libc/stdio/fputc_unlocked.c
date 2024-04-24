@@ -33,7 +33,8 @@ int fputc_unlocked(int c, FILE *f) {
     return c & 255;
   } else {
     b = c;
-    if (!fwrite_unlocked(&b, 1, 1, f)) return -1;
+    if (!fwrite_unlocked(&b, 1, 1, f))
+      return -1;
     return b;
   }
 }

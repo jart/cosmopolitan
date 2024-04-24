@@ -58,7 +58,8 @@ int sched_getcpu(void) {
   } else {
     unsigned cpu = 0;
     int rc = sys_getcpu(&cpu, 0, 0);
-    if (rc == -1) return -1;
+    if (rc == -1)
+      return -1;
     return cpu;
   }
 }

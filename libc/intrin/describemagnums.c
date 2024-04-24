@@ -23,7 +23,8 @@
 const char *DescribeMagnum(char *b, const struct MagnumStr *m, const char *p,
                            int x) {
   const char *s;
-  if (x == 127) return "CLOCK_INVALID";
+  if (x == 127)
+    return "CLOCK_INVALID";
   if ((s = GetMagnumStr(m, x))) {
     stpcpy(stpcpy(b, p), s);
     return b;

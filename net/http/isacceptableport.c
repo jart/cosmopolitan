@@ -39,7 +39,8 @@
 bool IsAcceptablePort(const char *s, size_t n) {
   int p, c;
   size_t i;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   for (p = i = 0; i < n; ++i) {
     c = s[i] & 255;
     if ('0' <= c && c <= '9') {

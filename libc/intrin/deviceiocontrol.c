@@ -40,7 +40,8 @@ textwindows bool32 DeviceIoControl(int64_t hDevice, uint32_t dwIoControlCode,
   ok = __imp_DeviceIoControl(hDevice, dwIoControlCode, lpInBuffer,
                              nInBufferSize, lpOutBuffer, nOutBufferSize,
                              lpBytesReturned, lpOverlapped);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("DeviceIoControl(%ld, %#x, %p, %'zu, %p, %'zu, %p, %s) → %hhhd% m",
           hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer,
           nOutBufferSize, lpBytesReturned, DescribeNtOverlapped(lpOverlapped),

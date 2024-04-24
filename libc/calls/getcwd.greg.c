@@ -82,14 +82,17 @@ static dontinline textwindows int sys_getcwd_nt(char *buf, size_t size) {
   // get current directory from the system
   char16_t p16[PATH_MAX];
   uint32_t n = GetCurrentDirectory(PATH_MAX, p16);
-  if (!n) return eacces();             // system call failed
-  if (n >= PATH_MAX) return erange();  // not enough room?!?
+  if (!n)
+    return eacces();  // system call failed
+  if (n >= PATH_MAX)
+    return erange();  // not enough room?!?
 
   // convert utf-16 to utf-8
   // we can't modify `buf` until we're certain of success
   char p8[PATH_MAX], *p = p8;
   n = tprecode16to8(p, PATH_MAX, p16).ax;
-  if (n >= PATH_MAX) return erange();  // utf-8 explosion
+  if (n >= PATH_MAX)
+    return erange();  // utf-8 explosion
 
   // turn \\?\c:\... into c:\...
   if (p[0] == '\\' &&   //

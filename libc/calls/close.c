@@ -97,12 +97,14 @@ int close(int fd) {
     BLOCK_SIGNALS;
     __fds_lock();
     rc = close_impl(fd);
-    if (!__vforked) __releasefd(fd);
+    if (!__vforked)
+      __releasefd(fd);
     __fds_unlock();
     ALLOW_SIGNALS;
   } else {
     rc = close_impl(fd);
-    if (!__vforked) __releasefd(fd);
+    if (!__vforked)
+      __releasefd(fd);
   }
   STRACE("close(%d) → %d% m", fd, rc);
   return rc;

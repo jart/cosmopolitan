@@ -104,7 +104,8 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   char **argv = (char **)(sp + 1);
   char **envp = (char **)(sp + 1 + argc + 1);
   unsigned long *auxv = (unsigned long *)(sp + 1 + argc + 1);
-  while (*auxv++) donothing;
+  while (*auxv++)
+    donothing;
 
   // set helpful globals
   __argc = argc;

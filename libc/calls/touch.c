@@ -38,7 +38,8 @@ int touch(const char *file, uint32_t mode) {
     BLOCK_CANCELATION;
     fd = open(file, O_CREAT | O_WRONLY, mode);
     ALLOW_CANCELATION;
-    if (fd == -1) return -1;
+    if (fd == -1)
+      return -1;
     return close(fd);
   }
   return rc;

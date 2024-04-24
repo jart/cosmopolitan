@@ -54,7 +54,8 @@ unsigned sleep(unsigned seconds) {
   if (cs != -1) {
     _pthread_allow_cancelation(cs);
   }
-  if (!err) return 0;
+  if (!err)
+    return 0;
   unassert(err == EINTR);
   unslept = tv.tv_sec;
   if (tv.tv_nsec && unslept < UINT_MAX) {

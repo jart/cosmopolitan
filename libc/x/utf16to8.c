@@ -46,8 +46,10 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
   wint_t x, y;
   const char16_t *e;
   int16_t v1[8], v2[8], v3[8], vz[8];
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen16(p) : 0;
+  if (z)
+    *z = 0;
+  if (n == -1)
+    n = p ? strlen16(p) : 0;
   if ((q = r = malloc(n * 4 + 8 + 1))) {
     for (e = p + n; p < e;) {
       if (p + 8 < e) { /* 17x ascii */
@@ -57,7 +59,8 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
           pcmpgtw(v2, v1, vz);
           pcmpgtw(v3, v1, kDel16);
           pandn((void *)v2, (void *)v3, (void *)v2);
-          if (pmovmskb((void *)v2) != 0xFFFF) break;
+          if (pmovmskb((void *)v2) != 0xFFFF)
+            break;
           packsswb((void *)v1, v1, v1);
           memcpy(q, v1, 8);
           p += 8;
@@ -82,9 +85,11 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
         q += 1;
       }
     }
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, (q - r) * 1))) r = q;
+    if ((q = realloc(r, (q - r) * 1)))
+      r = q;
   }
   return r;
 }

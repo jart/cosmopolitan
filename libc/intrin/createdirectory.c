@@ -34,7 +34,8 @@ textwindows bool32 CreateDirectory(const char16_t *lpPathName,
                                    const struct NtSecurityAttributes *lpSec) {
   bool32 ok;
   ok = __imp_CreateDirectoryW(lpPathName, lpSec);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
           DescribeNtSecurityAttributes(lpSec), ok);
   return ok;

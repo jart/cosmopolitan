@@ -85,19 +85,24 @@ static void *_mapframe(void *p, int f) {
 void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
 #ifndef NDEBUG
-  if ((uintptr_t)SHADOW(p) & (G - 1)) notpossible;
-  if ((uintptr_t)p + (G << kAsanScale) > h) notpossible;
+  if ((uintptr_t)SHADOW(p) & (G - 1))
+    notpossible;
+  if ((uintptr_t)p + (G << kAsanScale) > h)
+    notpossible;
 #endif
   // TODO(jart): Make this spin less in non-ASAN mode.
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
 #ifndef NDEBUG
-      if (q + G > (char *)h) notpossible;
+      if (q + G > (char *)h)
+        notpossible;
 #endif
-      if (!_mapframe(q, f)) return 0;
+      if (!_mapframe(q, f))
+        return 0;
       if (IsAsan()) {
         if (!((uintptr_t)SHADOW(q) & (G - 1))) {
-          if (!_mapframe(SHADOW(q), f)) return 0;
+          if (!_mapframe(SHADOW(q), f))
+            return 0;
           __asan_poison(q, G << kAsanScale, kAsanProtected);
         }
       }

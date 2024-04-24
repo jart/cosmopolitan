@@ -44,7 +44,8 @@ bool32 LockFileEx(int64_t hFile, uint32_t dwFlags, uint32_t dwReserved,
   }
   ok = __imp_LockFileEx(hFile, dwFlags, dwReserved, nNumberOfBytesToLockLow,
                         nNumberOfBytesToLockHigh, lpOverlapped);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("LockFileEx(%ld, %s, %#x, %'zu, [%s]) → %hhhd% m", hFile,
           DescribeNtLockFileFlags(dwFlags), dwReserved,
           (uint64_t)nNumberOfBytesToLockHigh << 32 | nNumberOfBytesToLockLow,

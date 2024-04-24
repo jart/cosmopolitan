@@ -62,7 +62,8 @@ void PrintWindowsMemory(const char *high, size_t size) {
   for (p = 0;; p = (char *)mi.BaseAddress + mi.RegionSize) {
     const char *start, *stop;
     bzero(&mi, sizeof(mi));
-    if (!VirtualQuery(p, &mi, sizeof(mi))) break;
+    if (!VirtualQuery(p, &mi, sizeof(mi)))
+      break;
     sizefmt(b[0], mi.RegionSize, 1024);
     if (MAX(high, (char *)mi.BaseAddress) <
         MIN(high + size, (char *)mi.BaseAddress + mi.RegionSize)) {

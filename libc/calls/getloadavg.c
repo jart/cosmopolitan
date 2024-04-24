@@ -43,7 +43,8 @@ struct loadavg {
 int getloadavg(double *a, int n) {
   // cat /proc/loadavg
   int i, rc;
-  if (n > 3) n = 3;
+  if (n > 3)
+    n = 3;
   if (!n) {
     rc = 0;
   } else if (n < 0) {

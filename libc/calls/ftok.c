@@ -26,6 +26,7 @@
  */
 int ftok(const char *path, int id) {
   struct stat st;
-  if (stat(path, &st) == -1) return -1;
+  if (stat(path, &st) == -1)
+    return -1;
   return (uint32_t)id << 24 | (st.st_dev & 0xff) << 16 | (st.st_ino & 0xffff);
 }

@@ -26,8 +26,10 @@
 
 int Exlis(int x, int a) {
   int y;
-  if (!x) return x;
-  if (x > 0) return expand(x, a);
+  if (!x)
+    return x;
+  if (x > 0)
+    return expand(x, a);
   y = expand(Car(x), a);
   return Keep(x, Cons(y, Exlis(Cdr(x), a)));
 }
@@ -37,10 +39,13 @@ static int Expander(int e, int a) {
   for (s = 0;;) {
     DCHECK_LT(e, TERM);
     DCHECK_LE(a, 0);
-    if (e >= 0) return e;
+    if (e >= 0)
+      return e;
     if ((f = Car(e)) > 0) {
-      if (f == kQuote) return e;
-      if (f == kClosure) return e;
+      if (f == kQuote)
+        return e;
+      if (f == kClosure)
+        return e;
       if (f == kTrace) {
         START_TRACE;
         x = Cadr(e);
@@ -49,14 +54,17 @@ static int Expander(int e, int a) {
         END_TRACE;
         return e;
       }
-      if (HasAtom(f, s)) return e;
+      if (HasAtom(f, s))
+        return e;
       s = Cons(f, s);
     }
     e = Exlis(e, a);
     if (f >= 0) {
-      if (!(f = Assoc(f, a))) return e;
+      if (!(f = Assoc(f, a)))
+        return e;
       f = Cdr(f);
-      if (f >= 0) return e;
+      if (f >= 0)
+        return e;
     }
     if (Car(f) == kClosure) {
       u = Cddr(f);
@@ -64,7 +72,8 @@ static int Expander(int e, int a) {
     } else {
       u = a;
     }
-    if (Head(f) != kMacro) return e;
+    if (Head(f) != kMacro)
+      return e;
     e = eval(Caddr(f), pairlis(Cadr(f), Cdr(e), u));
   }
 }

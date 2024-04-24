@@ -31,7 +31,8 @@ struct DosArgv {
 textwindows void DecodeDosArgv(int ignore, struct DosArgv *st) {
   wint_t x, y;
   for (;;) {
-    if (!(x = *st->s++)) break;
+    if (!(x = *st->s++))
+      break;
     if (!IsUcs2(x)) {
       if ((y = *st->s++)) {
         x = MergeUtf16(x, y);
@@ -48,7 +49,8 @@ static textwindows void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   uint64_t w;
   w = tpenc(wc);
   do {
-    if (st->p >= st->pe) break;
+    if (st->p >= st->pe)
+      break;
     *st->p++ = w & 0xff;
   } while (w >>= 8);
 }
@@ -97,13 +99,15 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
     while (st->wc && (st->wc == ' ' || st->wc == '\t')) {
       DecodeDosArgv(ignore, st);
     }
-    if (!st->wc) break;
+    if (!st->wc)
+      break;
     if (++argc < max) {
       argv[argc - 1] = st->p < st->pe ? st->p : NULL;
     }
     inquote = false;
     while (st->wc) {
-      if (!inquote && (st->wc == ' ' || st->wc == '\t')) break;
+      if (!inquote && (st->wc == ' ' || st->wc == '\t'))
+        break;
       if (st->wc == '"' || st->wc == '\\') {
         slashes = Count('\\', st);
         quotes = Count('"', st);
@@ -121,7 +125,8 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
             quotes--;
           }
           if (quotes > 0) {
-            if (!inquote) quotes--;
+            if (!inquote)
+              quotes--;
             for (i = 3; i <= quotes + 1; i += 3) {
               AppendDosArgv('"', st);
             }
@@ -136,7 +141,9 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
     AppendDosArgv('\0', st);
   }
   AppendDosArgv('\0', st);
-  if (size) buf[MIN(st->p - buf, size - 1)] = '\0';
-  if (max) argv[MIN(argc, max - 1)] = NULL;
+  if (size)
+    buf[MIN(st->p - buf, size - 1)] = '\0';
+  if (max)
+    argv[MIN(argc, max - 1)] = NULL;
   return argc;
 }

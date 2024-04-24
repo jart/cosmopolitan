@@ -38,7 +38,8 @@ textwindows int64_t OpenProcess(uint32_t dwDesiredAccess, bool32 bInheritHandle,
                                 uint32_t dwProcessId) {
   int64_t hHandle;
   hHandle = __imp_OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
-  if (!hHandle) __winerr();
+  if (!hHandle)
+    __winerr();
   NTTRACE("OpenProcess(%s, %hhhd, %u) → %ld% m",
           DescribeNtProcAccessFlags(dwDesiredAccess), bInheritHandle,
           dwProcessId, hHandle);

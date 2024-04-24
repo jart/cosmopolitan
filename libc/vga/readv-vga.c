@@ -47,11 +47,14 @@ ssize_t sys_readv_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
     void *input = iov[i].iov_base;
     size_t len = iov[i].iov_len;
     res = _TtyRead(&_vga_tty, input, len);
-    if (res < 0) break;
+    if (res < 0)
+      break;
     redd += res;
-    if (redd != len) return redd;
+    if (redd != len)
+      return redd;
   }
-  if (!redd) return res;
+  if (!redd)
+    return res;
   return redd;
 }
 

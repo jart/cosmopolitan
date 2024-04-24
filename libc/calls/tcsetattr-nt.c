@@ -37,15 +37,18 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   uint32_t inmode, outmode;
 
   // validate file descriptor
-  if (!__isfdopen(fd)) return ebadf();
-  if (!__isfdkind(fd, kFdConsole)) return enotty();
+  if (!__isfdopen(fd))
+    return ebadf();
+  if (!__isfdkind(fd, kFdConsole))
+    return enotty();
 
   // then completely ignore it
   hInput = GetConsoleInputHandle();
   hOutput = GetConsoleOutputHandle();
   unassert(GetConsoleMode(hInput, &inmode));
   unassert(GetConsoleMode(hOutput, &outmode));
-  if (opt == TCSAFLUSH) FlushConsoleInputBytes();
+  if (opt == TCSAFLUSH)
+    FlushConsoleInputBytes();
 
   // now work on the configuration
   inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |

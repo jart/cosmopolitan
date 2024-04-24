@@ -25,7 +25,8 @@ const char base32def[] = "0123456789abcdefghjkmnpqrstvwxyz";
 
 int tobits(int b) {
   int bits = 0;
-  while (b && (b >>= 1)) bits++;
+  while (b && (b >>= 1))
+    bits++;
   return bits;
 }
 
@@ -48,7 +49,8 @@ char *EncodeBase32(const char *s, size_t sl, const char *a, size_t al,
                    size_t *ol) {
   size_t count = 0;
   char *r = NULL;
-  if (sl == -1) sl = s ? strlen(s) : 0;
+  if (sl == -1)
+    sl = s ? strlen(s) : 0;
   if (al == 0) {
     a = base32def;
     al = sizeof(base32def) / sizeof(a[0]);
@@ -78,7 +80,8 @@ char *EncodeBase32(const char *s, size_t sl, const char *a, size_t al,
     }
     r[count] = '\0';
   }
-  if (ol) *ol = r ? count : 0;
+  if (ol)
+    *ol = r ? count : 0;
   return r;
 }
 
@@ -119,7 +122,8 @@ char *DecodeBase32(const char *s, size_t sl, const char *a, size_t al,
                    size_t *ol) {
   size_t count = 0;
   char *r = NULL;
-  if (sl == -1) sl = s ? strlen(s) : 0;
+  if (sl == -1)
+    sl = s ? strlen(s) : 0;
   if (al == 0) {
     a = base32def;
     al = sizeof(base32def) / sizeof(a[0]);
@@ -138,12 +142,15 @@ char *DecodeBase32(const char *s, size_t sl, const char *a, size_t al,
       map = kBase32cust;
       memset(map, -1, 256);
       // populate the map based on alphabet
-      for (int i = 0; i < al; i++) map[a[i] & 0xff] = i;
+      for (int i = 0; i < al; i++)
+        map[a[i] & 0xff] = i;
     }
     while (count < n && *s) {
       signed char m = map[*s++ & 0xff];
-      if (m == -2) continue;
-      if (m == -1) break;
+      if (m == -2)
+        continue;
+      if (m == -1)
+        break;
       buffer <<= bl;
       buffer |= m;
       bitsLeft += bl;
@@ -154,6 +161,7 @@ char *DecodeBase32(const char *s, size_t sl, const char *a, size_t al,
     }
     r[count] = '\0';
   }
-  if (ol) *ol = r ? count : 0;
+  if (ol)
+    *ol = r ? count : 0;
   return r;
 }
