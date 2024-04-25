@@ -25,7 +25,8 @@
 
 int32_t sys_pipe2(int pipefd[hasatleast 2], unsigned flags) {
   int e, rc;
-  if (!flags) goto OldSkool;
+  if (!flags)
+    goto OldSkool;
   e = errno;
   rc = __sys_pipe2(pipefd, flags);
   if (rc == -1 && errno == ENOSYS) {

@@ -81,7 +81,8 @@ __vex void *rawmemchr(const void *s, int c) {
   c &= 255;
   v = 0x0101010101010101ul * c;
   for (; (uintptr_t)p & 7; ++p) {
-    if (*p == c) return (void *)p;
+    if (*p == c)
+      return (void *)p;
   }
   for (;; p += 8) {
     w = UncheckedAlignedRead64(p);

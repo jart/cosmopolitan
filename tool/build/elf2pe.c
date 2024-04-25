@@ -179,12 +179,14 @@ static wontreturn void DieOom(void) {
 
 static void *Calloc(size_t n) {
   void *p;
-  if (!(p = calloc(1, n))) DieOom();
+  if (!(p = calloc(1, n)))
+    DieOom();
   return p;
 }
 
 static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n))) DieOom();
+  if (!(p = realloc(p, n)))
+    DieOom();
   return p;
 }
 
@@ -629,10 +631,12 @@ static bool ParseDllImportSymbol(const char *symbol_name,
   size_t n;
   char *dll_name;
   const char *dolla;
-  if (!startswith(symbol_name, "dll$")) return false;
+  if (!startswith(symbol_name, "dll$"))
+    return false;
   symbol_name += 4;
   dolla = strchr(symbol_name, '$');
-  if (!dolla) return false;
+  if (!dolla)
+    return false;
   n = dolla - symbol_name;
   dll_name = memcpy(Calloc(n + 1), symbol_name, n);
   *out_dll_name = dll_name;
@@ -682,19 +686,26 @@ static struct Elf *OpenElf(const char *path) {
   struct Elf *elf;
   elf = Calloc(sizeof(*elf));
   elf->path = path;
-  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
-  if ((elf->size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
+  if ((fd = open(path, O_RDONLY)) == -1)
+    DieSys(path);
+  if ((elf->size = lseek(fd, 0, SEEK_END)) == -1)
+    DieSys(path);
   elf->map = mmap(0, elf->size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-  if (elf->map == MAP_FAILED) DieSys(path);
-  if (!IsElf64Binary(elf->ehdr, elf->size)) Die(path, "not an elf64 binary");
+  if (elf->map == MAP_FAILED)
+    DieSys(path);
+  if (!IsElf64Binary(elf->ehdr, elf->size))
+    Die(path, "not an elf64 binary");
   elf->symhdr =
       GetElfSymbolTable(elf->ehdr, elf->size, SHT_SYMTAB, &elf->symcount);
   elf->symtab = GetElfSectionAddress(elf->ehdr, elf->size, elf->symhdr);
-  if (!elf->symtab) Die(path, "elf doesn't have symbol table");
+  if (!elf->symtab)
+    Die(path, "elf doesn't have symbol table");
   elf->strtab = GetElfStringTable(elf->ehdr, elf->size, ".strtab");
-  if (!elf->strtab) Die(path, "elf doesn't have string table");
+  if (!elf->strtab)
+    Die(path, "elf doesn't have string table");
   elf->secstrs = GetElfSectionNameStringTable(elf->ehdr, elf->size);
-  if (!elf->strtab) Die(path, "elf doesn't have section string table");
+  if (!elf->strtab)
+    Die(path, "elf doesn't have section string table");
   LoadDllImports(elf);
   LoadSectionsIntoSegments(elf);
   close(fd);
@@ -810,14 +821,18 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
   // embed the ms-dos stub and/or bios bootloader
   if (stubpath) {
     int fd = open(stubpath, O_RDONLY);
-    if (fd == -1) DieSys(stubpath);
+    if (fd == -1)
+      DieSys(stubpath);
     for (;;) {
       ssize_t got = read(fd, fp, 512);
-      if (got == -1) DieSys(stubpath);
-      if (!got) break;
+      if (got == -1)
+        DieSys(stubpath);
+      if (!got)
+        break;
       fp += got;
     }
-    if (close(fd)) DieSys(stubpath);
+    if (close(fd))
+      DieSys(stubpath);
   }
 
   // output portable executable magic
@@ -1083,15 +1098,18 @@ int main(int argc, char *argv[]) {
 #endif
   // get program name
   prog = argv[0];
-  if (!prog) prog = "elf2pe";
+  if (!prog)
+    prog = "elf2pe";
   // process flags
   GetOpts(argc, argv);
   // translate executable
   struct Elf *elf = OpenElf(argv[optind]);
   char *buf = memalign(MAX_ALIGN, 134217728);
   struct ImagePointer ip = GeneratePe(elf, buf, 0x00400000);
-  if (creat(outpath, 0755) == -1) DieSys(elf->path);
+  if (creat(outpath, 0755) == -1)
+    DieSys(elf->path);
   Pwrite(3, buf, ip.fp - buf, 0);
-  if (close(3)) DieSys(elf->path);
+  if (close(3))
+    DieSys(elf->path);
   // PrintElf(elf);
 }

@@ -66,7 +66,8 @@ TEST(write, readOnlyFd_ebadf) {
 
 TEST(write, badMemory_efault) {
   ASSERT_SYS(EFAULT, -1, write(1, 0, 1));
-  if (!IsAsan()) return;
+  if (!IsAsan())
+    return;
   ASSERT_SYS(EFAULT, -1, write(1, (void *)1, 1));
 }
 
@@ -109,7 +110,8 @@ TEST(write, brokenPipe_sigpipeBlocked_returnsEpipe) {
 }
 
 TEST(write, rlimitFsizeExceeded_raisesEfbig) {
-  if (IsWindows()) return;  // not supported
+  if (IsWindows())
+    return;  // not supported
   struct rlimit rl = {1, 10};
   SPAWN(fork);
   signal(SIGXFSZ, SIG_IGN);

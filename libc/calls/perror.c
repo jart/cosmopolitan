@@ -26,6 +26,7 @@
  */
 void perror(const char *thing) {
   const char *reason;
-  if (!(reason = _strerdoc(errno))) reason = "Unknown error";
+  if (!(reason = _strerdoc(errno)))
+    reason = "Unknown error";
   tinyprint(2, thing ? thing : "", thing ? ": " : "", reason, "\n", NULL);
 }

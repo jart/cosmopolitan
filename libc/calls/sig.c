@@ -194,7 +194,8 @@ textwindows int __sig_raise(volatile int sig, int sic) {
 
     // update the signal mask in preparation for signal handller
     sigset_t blocksigs = __sighandmask[sig];
-    if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+    if (!(flags & SA_NODEFER))
+      blocksigs |= 1ull << (sig - 1);
     ctx.uc_sigmask = atomic_fetch_or_explicit(&pt->tib->tib_sigmask, blocksigs,
                                               memory_order_acquire);
 
@@ -265,7 +266,8 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
 
     // update the signal mask in preparation for signal handller
     sigset_t blocksigs = __sighandmask[sig];
-    if (!(sf->flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+    if (!(sf->flags & SA_NODEFER))
+      blocksigs |= 1ull << (sig - 1);
     sf->ctx.uc_sigmask = atomic_fetch_or_explicit(&tib->tib_sigmask, blocksigs,
                                                   memory_order_acquire);
 
@@ -425,7 +427,8 @@ textwindows void __sig_generate(int sig, int sic) {
   for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
     // we don't want to signal ourself
-    if (pt == _pthread_self()) continue;
+    if (pt == _pthread_self())
+      continue;
     // we don't want to signal a thread that isn't running
     if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
         kPosixThreadTerminated) {
@@ -584,7 +587,8 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
   siginfo_t si = {.si_signo = sig, .si_code = code, .si_addr = si_addr};
   _ntcontext2linux(&ctx, ep->ContextRecord);
   sigset_t blocksigs = __sighandmask[sig];
-  if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+  if (!(flags & SA_NODEFER))
+    blocksigs |= 1ull << (sig - 1);
   ctx.uc_sigmask = atomic_fetch_or_explicit(&tib->tib_sigmask, blocksigs,
                                             memory_order_acquire);
   __sig_handler(rva)(sig, &si, &ctx);
@@ -668,7 +672,8 @@ textwindows int __sig_check(void) {
 }
 
 __attribute__((__constructor__(10))) textstartup void __sig_init(void) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   AddVectoredExceptionHandler(true, (void *)__sig_crash);
   SetConsoleCtrlHandler((void *)__sig_console, true);
 }

@@ -52,31 +52,42 @@ int makedirs(const char *path, unsigned mode) {
 
   e = errno;
   n = strlen(path);
-  if (n >= PATH_MAX) return enametoolong();
+  if (n >= PATH_MAX)
+    return enametoolong();
   memcpy(buf, path, n + 1);
   i = n;
 
   // descend
   while (i) {
-    if (!mkdir(buf, mode)) break;
+    if (!mkdir(buf, mode))
+      break;
     if (errno == EEXIST) {
-      if (i == n) goto CheckTop;
+      if (i == n)
+        goto CheckTop;
       break;
     }
-    if (errno != ENOENT) return -1;
-    while (i && buf[i - 1] == '/') buf[--i] = 0;
-    while (i && buf[i - 1] != '/') buf[--i] = 0;
+    if (errno != ENOENT)
+      return -1;
+    while (i && buf[i - 1] == '/')
+      buf[--i] = 0;
+    while (i && buf[i - 1] != '/')
+      buf[--i] = 0;
   }
 
   // ascend
   for (;;) {
     if (mkdir(buf, mode)) {
-      if (errno != EEXIST) return -1;
-      if (i == n) goto CheckTop;
+      if (errno != EEXIST)
+        return -1;
+      if (i == n)
+        goto CheckTop;
     }
-    if (i == n) break;
-    while (i < n && (c = path[i]) != '/') buf[i++] = c;
-    while (i < n && (c = path[i]) == '/') buf[i++] = c;
+    if (i == n)
+      break;
+    while (i < n && (c = path[i]) != '/')
+      buf[i++] = c;
+    while (i < n && (c = path[i]) == '/')
+      buf[i++] = c;
   }
 
 Finish:
@@ -84,7 +95,9 @@ Finish:
   return 0;
 
 CheckTop:
-  if (stat(path, &st)) return -1;
-  if (S_ISDIR(st.st_mode)) goto Finish;
+  if (stat(path, &st))
+    return -1;
+  if (S_ISDIR(st.st_mode))
+    goto Finish;
   return eexist();
 }

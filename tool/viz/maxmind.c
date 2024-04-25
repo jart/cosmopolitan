@@ -123,7 +123,8 @@ int main(int argc, char *argv[]) {
            MMDB_open("/usr/local/share/maxmind/GeoLite2-ASN.mmdb", 0, asdb));
   for (rc = 0, i = 1; i < argc; ++i) {
     if (PrintIpInfo(argv[i]) != -1) {
-      if (i + 1 < argc) printf("\n");
+      if (i + 1 < argc)
+        printf("\n");
     } else {
       fprintf(stderr, "NOT FOUND: %s\n", argv[i]);
       rc = 1;

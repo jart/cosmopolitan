@@ -94,19 +94,23 @@ bool HasCopyFileRange(void) {
 }
 
 TEST(copy_file_range, badFd) {
-  if (!HasCopyFileRange()) return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(EBADF, -1, copy_file_range(-1, 0, -1, 0, -1u, 0));
 }
 
 TEST(copy_file_range, badFlags) {
-  if (!HasCopyFileRange()) return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(EINVAL, -1, copy_file_range(0, 0, 1, 0, -1u, -1));
 }
 
 TEST(copy_file_range, differentFileSystems) {
   return;  // TODO(jart): Why does this flake on GitHub Actions?
-  if (!IsLinux()) return;
-  if (!HasCopyFileRange()) return;
+  if (!IsLinux())
+    return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(0, 3, open("/proc/stat", 0));
   ASSERT_SYS(0, 4, creat("foo", 0644));
   ASSERT_SYS(EXDEV, -1, copy_file_range(3, 0, 4, 0, -1u, 0));
@@ -117,7 +121,8 @@ TEST(copy_file_range, differentFileSystems) {
 TEST(copy_file_range, twoDifferentFiles) {
   char buf[16] = {0};
   int64_t i = 1, o = 0;
-  if (!HasCopyFileRange()) return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS(0, 4, open("bar", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS(0, 5, pwrite(3, "hello", 5, 0));
@@ -134,7 +139,8 @@ TEST(copy_file_range, twoDifferentFiles) {
 TEST(copy_file_range, sameFile_doesntChangeFilePointer) {
   char buf[16] = {0};
   int64_t i = 1, o = 5;
-  if (!HasCopyFileRange()) return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS(0, 5, pwrite(3, "hello", 5, 0));
   ASSERT_SYS(0, 4, copy_file_range(3, &i, 3, &o, 4, 0));
@@ -148,7 +154,8 @@ TEST(copy_file_range, sameFile_doesntChangeFilePointer) {
 TEST(copy_file_range, overlappingRange) {
   int rc;
   int64_t i = 1, o = 2;
-  if (!HasCopyFileRange()) return;
+  if (!HasCopyFileRange())
+    return;
   ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS(0, 5, pwrite(3, "hello", 5, 0));
   rc = copy_file_range(3, &i, 3, &o, 4, 0);

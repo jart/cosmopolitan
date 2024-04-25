@@ -34,7 +34,8 @@
 textwindows int sys_flock_nt(int fd, int op) {
   int64_t h;
   struct NtByHandleFileInformation info;
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
+  if (!__isfdkind(fd, kFdFile))
+    return ebadf();
   h = g_fds.p[fd].handle;
   struct NtOverlapped ov = {.hEvent = h};
 

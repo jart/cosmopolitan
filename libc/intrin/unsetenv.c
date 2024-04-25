@@ -33,7 +33,8 @@
 int unsetenv(const char *s) {
   char **p;
   struct Env e;
-  if (!s || !*s || strchr(s, '=')) return einval();
+  if (!s || !*s || strchr(s, '='))
+    return einval();
   if ((p = environ)) {
     e = __getenv(p, s);
     while (p[e.i]) {

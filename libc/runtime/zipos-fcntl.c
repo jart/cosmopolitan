@@ -28,7 +28,8 @@
 
 static int __zipos_dupfd(int fd, int cmd, int start) {
   int rc;
-  if (start < 0) return einval();
+  if (start < 0)
+    return einval();
   if (IsWindows()) {
     return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? _O_CLOEXEC : 0),
                       start);

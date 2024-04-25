@@ -24,9 +24,11 @@
 int __posix_spawn_add_file_action(posix_spawn_file_actions_t *l,
                                   struct _posix_faction a) {
   struct _posix_faction *ap;
-  if (!(ap = malloc(sizeof(*ap)))) return ENOMEM;
+  if (!(ap = malloc(sizeof(*ap))))
+    return ENOMEM;
   *ap = a;
-  while (*l) l = &(*l)->next;
+  while (*l)
+    l = &(*l)->next;
   *l = ap;
   return 0;
 }

@@ -159,7 +159,8 @@ static void SmoothSort(struct SmoothSort *s, void *base, size_t nel,
   size_t p[2] = {1, 0};
   int pshift = 1;
   int trail;
-  if (!size) return;
+  if (!size)
+    return;
   head = base;
   high = head + size - width;
   // precompute Leonardo numbers, scaled by element width

@@ -36,7 +36,8 @@ static errno_t pthread_getname_impl(struct PosixThread *pt, char *name,
   int e, fd, rc, tid, len;
 
   tid = _pthread_tid(pt);
-  if (!size) return 0;
+  if (!size)
+    return 0;
   bzero(name, size);
   e = errno;
 

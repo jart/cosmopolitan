@@ -136,7 +136,8 @@ extern const char16_t kRunes[];
  */
 static char *tptoa(char *p, wchar_t x) {
   unsigned long w;
-  for (w = tpenc(x); w; w >>= 010) *p++ = w & 0xff;
+  for (w = tpenc(x); w; w >>= 010)
+    *p++ = w & 0xff;
   return p;
 }
 
@@ -163,8 +164,10 @@ static float frgb2std(float x) {
  */
 static void rgb2float(unsigned n, float *f, const unsigned char *u) {
   unsigned i;
-  for (i = 0; i < n; ++i) f[i] = u[i];
-  for (i = 0; i < n; ++i) f[i] /= 255;
+  for (i = 0; i < n; ++i)
+    f[i] = u[i];
+  for (i = 0; i < n; ++i)
+    f[i] /= 255;
 }
 
 /**
@@ -172,9 +175,12 @@ static void rgb2float(unsigned n, float *f, const unsigned char *u) {
  */
 static void float2rgb(unsigned n, unsigned char *u, float *f) {
   unsigned i;
-  for (i = 0; i < n; ++i) f[i] *= 256;
-  for (i = 0; i < n; ++i) f[i] = roundf(f[i]);
-  for (i = 0; i < n; ++i) u[i] = MAX(0, MIN(255, f[i]));
+  for (i = 0; i < n; ++i)
+    f[i] *= 256;
+  for (i = 0; i < n; ++i)
+    f[i] = roundf(f[i]);
+  for (i = 0; i < n; ++i)
+    u[i] = MAX(0, MIN(255, f[i]));
 }
 
 /**
@@ -186,7 +192,8 @@ static void float2rgb(unsigned n, unsigned char *u, float *f) {
 static dontinline void rgb2lin(unsigned n, float *f, const unsigned char *u) {
   unsigned i;
   rgb2float(n, f, u);
-  for (i = 0; i < n; ++i) f[i] = frgb2lin(f[i]);
+  for (i = 0; i < n; ++i)
+    f[i] = frgb2lin(f[i]);
 }
 
 /**
@@ -194,7 +201,8 @@ static dontinline void rgb2lin(unsigned n, float *f, const unsigned char *u) {
  */
 static dontinline void rgb2std(unsigned n, unsigned char *u, float *f) {
   unsigned i;
-  for (i = 0; i < n; ++i) f[i] = frgb2std(f[i]);
+  for (i = 0; i < n; ++i)
+    f[i] = frgb2std(f[i]);
   float2rgb(n, u, f);
 }
 
@@ -288,25 +296,31 @@ static unsigned combinecolors(unsigned char bf[1u << MC][2],
 /**
  * Computes distance between synthetic block and actual.
  */
-#define ADJUDICATE(SYMBOL, ARCH)                                  \
-  ARCH static float SYMBOL(unsigned b, unsigned f, unsigned g,    \
-                           const float lb[CN][YS * XS]) {         \
-    unsigned i, k, gu;                                            \
-    float p[BN], q[BN], fu, bu, r;                                \
-    bzero(q, sizeof(q));                                          \
-    for (k = 0; k < CN; ++k) {                                    \
-      gu = kGlyphs[g];                                            \
-      bu = lb[k][b];                                              \
-      fu = lb[k][f];                                              \
-      for (i = 0; i < BN; ++i) p[i] = (gu & (1u << i)) ? fu : bu; \
-      for (i = 0; i < BN; ++i) p[i] -= lb[k][i];                  \
-      for (i = 0; i < BN; ++i) p[i] *= p[i];                      \
-      for (i = 0; i < BN; ++i) q[i] += p[i];                      \
-    }                                                             \
-    r = 0;                                                        \
-    for (i = 0; i < BN; ++i) q[i] = sqrtf(q[i]);                  \
-    for (i = 0; i < BN; ++i) r += q[i];                           \
-    return r;                                                     \
+#define ADJUDICATE(SYMBOL, ARCH)                               \
+  ARCH static float SYMBOL(unsigned b, unsigned f, unsigned g, \
+                           const float lb[CN][YS * XS]) {      \
+    unsigned i, k, gu;                                         \
+    float p[BN], q[BN], fu, bu, r;                             \
+    bzero(q, sizeof(q));                                       \
+    for (k = 0; k < CN; ++k) {                                 \
+      gu = kGlyphs[g];                                         \
+      bu = lb[k][b];                                           \
+      fu = lb[k][f];                                           \
+      for (i = 0; i < BN; ++i)                                 \
+        p[i] = (gu & (1u << i)) ? fu : bu;                     \
+      for (i = 0; i < BN; ++i)                                 \
+        p[i] -= lb[k][i];                                      \
+      for (i = 0; i < BN; ++i)                                 \
+        p[i] *= p[i];                                          \
+      for (i = 0; i < BN; ++i)                                 \
+        q[i] += p[i];                                          \
+    }                                                          \
+    r = 0;                                                     \
+    for (i = 0; i < BN; ++i)                                   \
+      q[i] = sqrtf(q[i]);                                      \
+    for (i = 0; i < BN; ++i)                                   \
+      r += q[i];                                               \
+    return r;                                                  \
   }
 
 ADJUDICATE(adjudicate_avx2, _Microarchitecture("avx2,fma"))
@@ -339,14 +353,20 @@ static float adjudicate(unsigned b, unsigned f, unsigned g,
     gu = kGlyphs[g];
     bu = lb[k][b];
     fu = lb[k][f];
-    for (i = 0; i < BN; ++i) p[i] = (gu & (1u << i)) ? fu : bu;
-    for (i = 0; i < BN; ++i) p[i] -= lb[k][i];
-    for (i = 0; i < BN; ++i) p[i] *= p[i];
-    for (i = 0; i < BN; ++i) q[i] += p[i];
+    for (i = 0; i < BN; ++i)
+      p[i] = (gu & (1u << i)) ? fu : bu;
+    for (i = 0; i < BN; ++i)
+      p[i] -= lb[k][i];
+    for (i = 0; i < BN; ++i)
+      p[i] *= p[i];
+    for (i = 0; i < BN; ++i)
+      q[i] += p[i];
   }
   r = 0;
-  for (i = 0; i < BN; ++i) q[i] = sqrtf(q[i]);
-  for (i = 0; i < BN; ++i) r += q[i];
+  for (i = 0; i < BN; ++i)
+    q[i] = sqrtf(q[i]);
+  for (i = 0; i < BN; ++i)
+    r += q[i];
   return r;
 }
 
@@ -376,7 +396,8 @@ static struct Cell derasterize(unsigned char block[CN][YS * XS]) {
         cell.fg[0] = block[0][f];
         cell.fg[1] = block[1][f];
         cell.fg[2] = block[2][f];
-        if (!r) return cell;
+        if (!r)
+          return cell;
       }
     }
   }
@@ -464,7 +485,8 @@ static int ReadAll(int fd, void *data, size_t size) {
   p = data;
   n = size;
   do {
-    if ((rc = read(fd, p, n)) == -1) return -1;
+    if ((rc = read(fd, p, n)) == -1)
+      return -1;
     got = rc;
     assert(got || !n);
     p += got;
@@ -605,7 +627,8 @@ int main(int argc, char *argv[]) {
   size = y_ * YS * x_ * XS * CN;
   CHECK_NOTNULL((rgb = _mapanon(ROUNDUP(size, FRAMESIZE))));
   for (i = optind; i < argc; ++i) {
-    if (!argv[i]) continue;
+    if (!argv[i])
+      continue;
     if (m_) {
       LoadFileViaImageMagick(argv[i], y_, x_, rgb);
     } else {

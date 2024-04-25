@@ -96,7 +96,8 @@ int main(int argc, char *argv[]) {
   appends(&msg, "\e[1m");  // bold text
   appendf(&msg, "Broadcast message from %s@%s", getpwuid(getuid())->pw_name,
           GetHost());
-  if (isatty(0) && (s = ttyname(0))) appendf(&msg, " (%s)", s);
+  if (isatty(0) && (s = ttyname(0)))
+    appendf(&msg, " (%s)", s);
   appendf(&msg, " (%s):\r\n", GetTime());
   appends(&msg, "\e[K");
 
@@ -104,7 +105,8 @@ int main(int argc, char *argv[]) {
   if (optind < argc) {
     // use cli arguments as message if they exist
     for (int i = 0; optind + i < argc; ++i) {
-      if (i) appends(&msg, " ");
+      if (i)
+        appends(&msg, " ");
       for (s = argv[optind + i]; *s; ++s) {
         if (*s == '\n') {
           appends(&msg, "\r\n\e[K");
@@ -135,8 +137,10 @@ int main(int argc, char *argv[]) {
     char pts[32];
     snprintf(pts, sizeof(pts), "/dev/pts/%d", i);
     if ((fd = open(pts, O_WRONLY | O_NOCTTY)) == -1) {
-      if (errno == ENOENT) continue;
-      if (g_verbose) perror(pts);
+      if (errno == ENOENT)
+        continue;
+      if (g_verbose)
+        perror(pts);
     }
     write(fd, msg, appendz(msg).i);
     close(fd);

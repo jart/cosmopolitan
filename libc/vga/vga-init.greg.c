@@ -91,7 +91,8 @@ void uvprintf(const char *fmt, va_list v) {
     char *buf = alloca(size);
     CheckLargeStackAllocation(buf, size);
     size_t count = kvsnprintf(buf, size, fmt, v);
-    if (count >= size) count = size - 1;
+    if (count >= size)
+      count = size - 1;
     _TtyWrite(&_vga_tty, buf, count);
     _klog_serial(buf, count);
   }

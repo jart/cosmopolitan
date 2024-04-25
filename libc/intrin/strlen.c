@@ -27,7 +27,8 @@ static __vex size_t __strlen(const char *s) {
   unsigned m, k = (uintptr_t)s & 15;
   const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
   m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
-  while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
+  while (!m)
+    m = __builtin_ia32_pmovmskb128(*++p == z);
   return (const char *)p + __builtin_ctzl(m) - s;
 #else
 #define ONES ((word) - 1 / 255)

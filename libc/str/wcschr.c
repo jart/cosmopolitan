@@ -23,7 +23,9 @@
  */
 wchar_t *wcschr(const wchar_t *s, wchar_t c) {
   for (;; ++s) {
-    if (*s == c) return (wchar_t *)s;
-    if (!*s) return 0;
+    if (*s == c)
+      return (wchar_t *)s;
+    if (!*s)
+      return 0;
   }
 }

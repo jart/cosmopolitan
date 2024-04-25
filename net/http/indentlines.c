@@ -34,7 +34,8 @@ char *IndentLines(const char *p, size_t n, size_t *z, size_t j) {
   char *r, *q;
   const char *l;
   size_t t, m, a;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   r = 0;
   t = 0;
   do {
@@ -49,7 +50,8 @@ char *IndentLines(const char *p, size_t n, size_t *z, size_t j) {
       r = q;
     } else {
       free(r);
-      if (z) *z = 0;
+      if (z)
+        *z = 0;
       return 0;
     }
     memset(r + t, ' ', a);
@@ -58,7 +60,8 @@ char *IndentLines(const char *p, size_t n, size_t *z, size_t j) {
     p += m;
     n -= m;
   } while (l);
-  if (z) *z = t;
+  if (z)
+    *z = t;
   r[t] = '\0';
   return r;
 }

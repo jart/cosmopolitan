@@ -116,7 +116,8 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
       for (struct Dll *e = dll_first(__proc.list); e;
            e = dll_next(__proc.list, e)) {
         pr = PROC_CONTAINER(e);
-        if (pid == pr->pid) break;
+        if (pid == pr->pid)
+          break;
       }
       if (pr) {
         // by making the waiter count non-zero, the proc daemon stops
@@ -211,12 +212,15 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
 textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
                              struct rusage *opt_out_rusage) {
   // no support for WCONTINUED and WUNTRACED yet
-  if (options & ~WNOHANG) return einval();
+  if (options & ~WNOHANG)
+    return einval();
   // XXX: NT doesn't really have process groups. For instance the
   //      CreateProcess() flag for starting a process group actually
   //      just does an "ignore ctrl-c" internally.
-  if (pid == 0) pid = -1;
-  if (pid < -1) pid = -pid;
+  if (pid == 0)
+    pid = -1;
+  if (pid < -1)
+    pid = -pid;
   sigset_t m = __sig_block();
   int rc = __proc_wait(pid, opt_out_wstatus, options, opt_out_rusage,
                        m | 1ull << (SIGCHLD - 1));

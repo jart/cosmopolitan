@@ -46,8 +46,10 @@ void PrintImg(const char *path) {
   size_t n;
   int yn, xn, cn, w, h;
   void *img, *pix, *src;
-  if (!(img = gc(xslurp(path, &n)))) exit(2);
-  if (!(pix = gc(stbi_load_from_memory(img, n, &xn, &yn, &cn, 0)))) exit(3);
+  if (!(img = gc(xslurp(path, &n))))
+    exit(2);
+  if (!(pix = gc(stbi_load_from_memory(img, n, &xn, &yn, &cn, 0))))
+    exit(3);
   if (linktag) {
     printf("<a href=\"%s\"\n  >", path);
   }
@@ -71,7 +73,8 @@ void PrintImg(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) ShowCrashReports();
+  if (!NoDebug())
+    ShowCrashReports();
   int i;
   while ((i = getopt(argc, argv, "?huas01234")) != -1) {
     switch (i) {

@@ -129,8 +129,10 @@ TEST(posix_spawn, ape) {
 }
 
 TEST(posix_spawn, elf) {
-  if (IsOpenbsd()) return;  // mimmutable() ugh
-  if (IsXnu() || IsWindows() || IsMetal()) return;
+  if (IsOpenbsd())
+    return;  // mimmutable() ugh
+  if (IsXnu() || IsWindows() || IsMetal())
+    return;
   int ws, pid;
   char *prog = "./life.elf";  // assimilate -bcef
   char *args[] = {prog, 0};
@@ -193,7 +195,8 @@ void OhMyGoth(int sig) {
 
 // time for a vfork() clone() signal bloodbath
 TEST(posix_spawn, torture) {
-  if (1) return;
+  if (1)
+    return;
   int n = 10;
   int ws, pid;
   sigset_t allsig;
@@ -259,10 +262,14 @@ void EmptySigHandler(int sig) {
 }
 
 TEST(posix_spawn, etxtbsy) {
-  if (IsWindows()) return;  // can't deliver signals between processes
-  if (IsXnu()) return;      // they don't appear impacted by this race condition
-  if (IsNetbsd()) return;   // they don't appear impacted by this race condition
-  if (IsOpenbsd()) return;  // they don't appear impacted by this race condition
+  if (IsWindows())
+    return;  // can't deliver signals between processes
+  if (IsXnu())
+    return;  // they don't appear impacted by this race condition
+  if (IsNetbsd())
+    return;  // they don't appear impacted by this race condition
+  if (IsOpenbsd())
+    return;  // they don't appear impacted by this race condition
   int ws, me, pid, thief;
   char *prog = "./life";
   char *args[] = {prog, 0};
@@ -398,12 +405,14 @@ BENCH(posix_spawn, bench) {
     EZBENCH2("vfork life-pe", donothing, VforkExecveWait("./life-pe"));
     EZBENCH2("fork life-pe", donothing, ForkExecveWait("./life-pe"));
   }
-  if (IsXnu() || IsWindows() || IsMetal()) return;
+  if (IsXnu() || IsWindows() || IsMetal())
+    return;
   EZBENCH2("posix_spawn life.elf", donothing, PosixSpawnWait("./life.elf"));
   EZBENCH2("vfork life.elf", donothing, VforkExecveWait("./life.elf"));
   EZBENCH2("fork life.elf", donothing, ForkExecveWait("./life.elf"));
 #ifdef __x86_64__
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   EZBENCH2("posix_spawn tiny64", donothing, PosixSpawnWait("tiny64"));
   EZBENCH2("vfork tiny64", donothing, VforkExecveWait("tiny64"));
   EZBENCH2("fork tiny64", donothing, ForkExecveWait("tiny64"));

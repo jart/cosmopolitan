@@ -24,7 +24,8 @@
 
 TEST(fprintf, testWriteError) {
   // Only Linux, NetBSD and FreeBSD are known to have /dev/full
-  if (!IsLinux() && !IsNetbsd() && !IsFreebsd()) return;
+  if (!IsLinux() && !IsNetbsd() && !IsFreebsd())
+    return;
 
   FILE *fp = fopen("/dev/full", "w");
   ASSERT_NE(fp, NULL);

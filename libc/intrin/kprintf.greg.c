@@ -121,7 +121,8 @@ extern struct SymbolTable *__symtab;
 
 __funline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
-  if (ckd_add(&t, t, n)) t = (intptr_t)e;
+  if (ckd_add(&t, t, n))
+    t = (intptr_t)e;
   return (char *)t;
 }
 
@@ -154,8 +155,10 @@ __funline bool kisimagepointer(const void *p) {
 }
 
 __funline bool kischarmisaligned(const char *p, signed char t) {
-  if (t == -1) return (intptr_t)p & 1;
-  if (t >= 1) return !!((intptr_t)p & 3);
+  if (t == -1)
+    return (intptr_t)p & 1;
+  if (t >= 1)
+    return !!((intptr_t)p & 3);
   return false;
 }
 
@@ -168,8 +171,10 @@ __funline bool kismemtrackhosed(void) {
 privileged static bool kismapped(int x) {
   // xxx: we can't lock because no reentrant locks yet
   size_t m, r, l = 0;
-  if (!_weaken(_mmi)) return true;
-  if (kismemtrackhosed()) return false;
+  if (!_weaken(_mmi))
+    return true;
+  if (kismemtrackhosed())
+    return false;
   r = _weaken(_mmi)->i;
   while (l < r) {
     m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
@@ -188,13 +193,18 @@ privileged static bool kismapped(int x) {
 
 privileged bool32 kisdangerous(const void *p) {
   int frame;
-  if (kisimagepointer(p)) return false;
-  if (kiskernelpointer(p)) return false;
-  if (IsOldStack(p)) return false;
+  if (kisimagepointer(p))
+    return false;
+  if (kiskernelpointer(p))
+    return false;
+  if (IsOldStack(p))
+    return false;
   if (IsLegalPointer(p)) {
     frame = (uintptr_t)p >> 16;
-    if (IsStackFrame(frame)) return false;
-    if (kismapped(frame)) return false;
+    if (IsStackFrame(frame))
+      return false;
+    if (kismapped(frame))
+      return false;
   }
   if (GetStackAddr() + GetGuardSize() <= (uintptr_t)p &&
       (uintptr_t)p < GetStackAddr() + GetStackSize()) {
@@ -228,7 +238,8 @@ privileged static long klogfcntl(long fd, long cmd, long arg) {
                : CFLAG_CONSTRAINT(cf), "+a"(ax), "+D"(fd), "+S"(cmd), "+d"(arg)
                : /* inputs already specified */
                : "rcx", "r8", "r9", "r10", "r11", "memory");
-  if (cf) ax = -ax;
+  if (cf)
+    ax = -ax;
   return ax;
 #elif defined(__aarch64__)
   register long x0 asm("x0") = fd;
@@ -264,7 +275,8 @@ privileged static long klogopen(const char *path) {
                  "+d"(flags), "+r"(r10)
                : /* inputs already specified */
                : "rcx", "r8", "r9", "r11", "memory");
-  if (cf) ax = -ax;
+  if (cf)
+    ax = -ax;
   return ax;
 #elif defined(__aarch64__)
   register long x0 asm("x0") = dirfd;
@@ -376,7 +388,8 @@ privileged void _klog_serial(const char *b, size_t n) {
     for (;;) {
       dx = 0x3F8 + UART_LSR;
       asm("inb\t%1,%0" : "=a"(al) : "dN"(dx));
-      if (al & UART_TTYTXR) break;
+      if (al & UART_TTYTXR)
+        break;
       asm("pause");
     }
     dx = 0x3F8;
@@ -448,19 +461,24 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
   char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, ansi, z[128];
-  if (kistextpointer(b) || kisdangerous(b)) n = 0;
-  if (!kistextpointer(fmt)) fmt = "!!WONTFMT";
+  if (kistextpointer(b) || kisdangerous(b))
+    n = 0;
+  if (!kistextpointer(fmt))
+    fmt = "!!WONTFMT";
   p = b;
   f = fmt;
   e = p + n;  // assume if n was negative e < p will be the case
   for (;;) {
     for (;;) {
-      if (!(c = *f++) || c == '%') break;
+      if (!(c = *f++) || c == '%')
+        break;
     EmitFormatByte:
-      if (p < e) *p = c;
+      if (p < e)
+        *p = c;
       ++p;
     }
-    if (!c) break;
+    if (!c)
+      break;
     pdot = 0;
     flip = 0;
     dang = 0;
@@ -632,21 +650,26 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             sign = '-';
           }
         FormatUnsigned:
-          if (x && hash) sign = hash;
+          if (x && hash)
+            sign = hash;
           for (i = j = 0;;) {
             x = __divmod10(x, &rem);
             z[i++ & 127] = '0' + rem;
-            if (pdot ? i >= prec : !x) break;
+            if (pdot ? i >= prec : !x)
+              break;
             if (quot && ++j == 3) {
               z[i++ & 127] = quot;
               j = 0;
             }
           }
         EmitNumber:
-          if (flip || pdot) zero = 0;
+          if (flip || pdot)
+            zero = 0;
           while (zero && sign) {
-            if (p < e) *p = sign;
-            if (cols) --cols;
+            if (p < e)
+              *p = sign;
+            if (cols)
+              --cols;
             sign >>= 8;
             ++p;
           }
@@ -662,7 +685,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             }
           }
           while (sign) {
-            if (p < e) *p = sign;
+            if (p < e)
+              *p = sign;
             sign >>= 8;
             ++p;
           }
@@ -686,14 +710,17 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'b':
           base = 1;
-          if (hash) hash = '0' | 'b' << 8;
+          if (hash)
+            hash = '0' | 'b' << 8;
         BinaryNumber:
           KGETINT(x, va, type, false);
         FormatNumber:
           i = 0;
           m = (1 << base) - 1;
-          if (hash && x) sign = hash;
-          do z[i++ & 127] = abet[x & m];
+          if (hash && x)
+            sign = hash;
+          do
+            z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
@@ -702,7 +729,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           /* fallthrough */
         case 'x':
           base = 4;
-          if (hash) hash = '0' | 'x' << 8;
+          if (hash)
+            hash = '0' | 'x' << 8;
           goto BinaryNumber;
 
         case 'o':
@@ -711,7 +739,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'p':
           x = va_arg(va, intptr_t);
-          if (!x && pdot) pdot = 0;
+          if (!x && pdot)
+            pdot = 0;
           if ((long)x == -1) {
             pdot = 0;
             goto FormatDecimal;
@@ -730,14 +759,18 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           x = 0;
           s = (const char *)&x;
           t = va_arg(va, int);
-          if (!type) t &= 255;
+          if (!type)
+            t &= 255;
           if (hash) {
             quot = 1;
             hash = '\'';
             p = kemitquote(p, e, type, hash);
-            if (cols && type) --cols;  // u/L
-            if (cols) --cols;          // start quote
-            if (cols) --cols;          // end quote
+            if (cols && type)
+              --cols;  // u/L
+            if (cols)
+              --cols;  // start quote
+            if (cols)
+              --cols;  // end quote
           }
           goto EmitChar;
 
@@ -771,7 +804,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           x = va_arg(va, intptr_t);
           if (_weaken(__symtab) && *_weaken(__symtab) &&
               (idx = _weaken(__get_symbol)(0, x)) != -1) {
-            if (p + 1 <= e) *p++ = '&';
+            if (p + 1 <= e)
+              *p++ = '&';
             s = (*_weaken(__symtab))->name_base +
                 (*_weaken(__symtab))->names[idx];
             goto FormatString;
@@ -783,7 +817,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'n':
           // nonstandard %n specifier
-          if (p < e) *p = '\n';
+          if (p < e)
+            *p = '\n';
           ++p;
           break;
 
@@ -806,7 +841,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             type = 0;
           } else if (!dang && (kisdangerous(s) || kischarmisaligned(s, type))) {
             if (sign == ' ') {
-              if (p < e) *p = ' ';
+              if (p < e)
+                *p = ' ';
               ++p;
             }
             x = (intptr_t)s;
@@ -816,22 +852,29 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           } else if (hash) {
             quot = 1;
             hash = '"';
-            if (cols && type) --cols;  // u/L
-            if (cols) --cols;          // start quote
-            if (cols) --cols;          // end quote
+            if (cols && type)
+              --cols;  // u/L
+            if (cols)
+              --cols;  // start quote
+            if (cols)
+              --cols;  // end quote
             p = kemitquote(p, e, type, hash);
           }
           if (sign == ' ' && (!pdot || prec) && s && *s) {
-            if (p < e) *p = ' ';
+            if (p < e)
+              *p = ' ';
             ++p;
           }
           for (i = j = 0; !pdot || j < prec; ++j) {
             if (UNLIKELY(!((intptr_t)s & 4095))) {
-              if (!dang && kisdangerous(s)) break;
+              if (!dang && kisdangerous(s))
+                break;
             }
             if (!type) {
-              if (!(t = *s++ & 255)) break;
-              if ((t & 0300) == 0200) goto ActuallyEmitByte;
+              if (!(t = *s++ & 255))
+                break;
+              if ((t & 0300) == 0200)
+                goto ActuallyEmitByte;
               ++i;
             EmitByte:
               if (uppr && 'a' <= t && t <= 'z') {
@@ -851,7 +894,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
                   (t != 0x7F && (t >= 0x20 || (t == '\n' || t == '\t' ||
                                                t == '\r' || t == '\e')))) {
               ActuallyEmitByte:
-                if (p < e) *p = t;
+                if (p < e)
+                  *p = t;
                 p += 1;
                 continue;
               } else if (quot) {
@@ -889,7 +933,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               if (IsHighSurrogate(t)) {
                 if (!pdot || j + 1 < prec) {
                   if (UNLIKELY(!((intptr_t)s & 4095))) {
-                    if (!dang && kisdangerous(s)) break;
+                    if (!dang && kisdangerous(s))
+                      break;
                   }
                   u = *(const char16_t *)s;
                   if (IsLowSurrogate(u)) {
@@ -907,10 +952,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               t = *(const wchar_t *)s;
               s += sizeof(wchar_t);
             }
-            if (!t) break;
+            if (!t)
+              break;
             ++i;
           EmitChar:
-            if (t <= 0x7f) goto EmitByte;
+            if (t <= 0x7f)
+              goto EmitByte;
             if (uppr) {
               if (_weaken(towupper)) {
                 t = _weaken(towupper)(t);
@@ -948,7 +995,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             }
           }
           if (hash) {
-            if (p < e) *p = hash;
+            if (p < e)
+              *p = hash;
             ++p;
           }
           while (cols > i) {

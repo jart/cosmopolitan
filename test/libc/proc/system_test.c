@@ -171,7 +171,8 @@ TEST(system, usleep) {
 
 TEST(system, kill) {
   int ws = system("kill -TERM $$; usleep");
-  if (!IsWindows()) ASSERT_EQ(SIGTERM, WTERMSIG(ws));
+  if (!IsWindows())
+    ASSERT_EQ(SIGTERM, WTERMSIG(ws));
 }
 
 TEST(system, exitStatusPreservedAfterSemiColon) {

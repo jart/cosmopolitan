@@ -20,7 +20,8 @@
 #include "libc/stdio/stdio_ext.h"
 
 const char *__freadptr(FILE *f, size_t *sizep) {
-  if (f->beg == f->end) return 0;
+  if (f->beg == f->end)
+    return 0;
   *sizep = f->end - f->beg;
   return (const char *)f->buf + f->beg;
 }

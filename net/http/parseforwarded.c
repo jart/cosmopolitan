@@ -40,12 +40,14 @@ int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
   size_t i;
   char *r;
   uint32_t x;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   if (n) {
     t = x = i = 0;
     if ((r = memrchr(s, ',', n))) {
       i = r - s;
-      if ((s[++i] & 255) == ' ') ++i;  // skip optional space
+      if ((s[++i] & 255) == ' ')
+        ++i;  // skip optional space
     }
     do {
       c = s[i++] & 255;
@@ -82,8 +84,10 @@ int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
         }
       }
     }
-    if (ip) *ip = x;
-    if (port) *port = t;
+    if (ip)
+      *ip = x;
+    if (port)
+      *port = t;
     return 0;
   } else {
     return -1;

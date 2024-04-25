@@ -29,7 +29,8 @@ void SetUpOnce(void) {
 
 TEST(chdir, efault) {
   ASSERT_SYS(EFAULT, -1, chdir(0));
-  if (IsWindows() || !IsAsan()) return;  // not possible
+  if (IsWindows() || !IsAsan())
+    return;  // not possible
   ASSERT_SYS(EFAULT, -1, chdir((void *)77));
 }
 

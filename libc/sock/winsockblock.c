@@ -42,7 +42,8 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
 RestartOperation:
   int rc, sig, reason = 0;
   uint32_t status, exchanged;
-  if (_check_cancel() == -1) return -1;  // ECANCELED
+  if (_check_cancel() == -1)
+    return -1;  // ECANCELED
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     goto HandleInterrupt;
   }
@@ -93,8 +94,10 @@ RestartOperation:
     if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
       int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-      if (_check_cancel() == -1) return -1;
-      if (handler_was_called != 1) goto RestartOperation;
+      if (_check_cancel() == -1)
+        return -1;
+      if (handler_was_called != 1)
+        goto RestartOperation;
     }
     return eintr();
   }

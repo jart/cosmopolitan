@@ -31,7 +31,8 @@ __msabi extern typeof(SetCurrentDirectory) *const __imp_SetCurrentDirectoryW;
 textwindows bool32 SetCurrentDirectory(const char16_t *lpPathName) {
   bool32 ok;
   ok = __imp_SetCurrentDirectoryW(lpPathName);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("SetCurrentDirectory(%#hs) → %hhhd% m", lpPathName, ok);
   return ok;
 }

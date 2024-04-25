@@ -71,7 +71,8 @@ static char *__get_last(char **list) {
 
 static int __get_length(const char *s) {
   int n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
@@ -82,7 +83,8 @@ static uintptr_t __get_main_top(int pagesz) {
     top = (uintptr_t)s + __get_length(s);
   } else {
     unsigned long *xp = __auxv;
-    while (*xp) xp += 2;
+    while (*xp)
+      xp += 2;
     top = (uintptr_t)xp;
   }
   return ROUNDUP(top, pagesz);
@@ -92,7 +94,8 @@ static size_t __get_stack_size(int pagesz, uintptr_t start, uintptr_t top) {
   size_t size, max = 8 * 1024 * 1024;
   struct rlimit rlim = {RLIM_INFINITY};
   sys_getrlimit(RLIMIT_STACK, &rlim);
-  if ((size = rlim.rlim_cur) > max) size = max;
+  if ((size = rlim.rlim_cur) > max)
+    size = max;
   return MAX(ROUNDUP(size, pagesz), ROUNDUP(top - start, pagesz));
 }
 

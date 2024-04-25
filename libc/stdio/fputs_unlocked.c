@@ -34,6 +34,7 @@ int fputs_unlocked(const char *s, FILE *f) {
   size_t n, r;
   n = strlen(s);
   r = fwrite_unlocked(s, 1, n, f);
-  if (!r && n) return -1;
+  if (!r && n)
+    return -1;
   return r;
 }

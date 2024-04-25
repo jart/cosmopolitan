@@ -76,13 +76,20 @@ int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
 #ifdef __x86_64__
   struct X86ProcessorModel *model;
-  if (X86_HAVE(XOP)) Puts("-mxop");
-  if (X86_HAVE(SSE4A)) Puts("-msse4a");
-  if (X86_HAVE(SSE3)) Puts("-msse3");
-  if (X86_HAVE(SSSE3)) Puts("-mssse3");
-  if (X86_HAVE(SSE4_1)) Puts("-msse4.1");
-  if (X86_HAVE(SSE4_2)) Puts("-msse4.2");
-  if (X86_HAVE(AVX)) Puts("-mavx");
+  if (X86_HAVE(XOP))
+    Puts("-mxop");
+  if (X86_HAVE(SSE4A))
+    Puts("-msse4a");
+  if (X86_HAVE(SSE3))
+    Puts("-msse3");
+  if (X86_HAVE(SSSE3))
+    Puts("-mssse3");
+  if (X86_HAVE(SSE4_1))
+    Puts("-msse4.1");
+  if (X86_HAVE(SSE4_2))
+    Puts("-msse4.2");
+  if (X86_HAVE(AVX))
+    Puts("-mavx");
   if (X86_HAVE(AVX2)) {
     Puts("-mavx2");
     if (!isclang) {
@@ -90,27 +97,48 @@ int main(int argc, char *argv[]) {
       Puts("-Wa,-msse2avx");
     }
   }
-  if (X86_HAVE(AVX512F)) Puts("-mavx512f");
-  if (X86_HAVE(AVX512PF)) Puts("-mavx512pf");
-  if (X86_HAVE(AVX512ER)) Puts("-mavx512er");
-  if (X86_HAVE(AVX512CD)) Puts("-mavx512cd");
-  if (X86_HAVE(AVX512VL)) Puts("-mavx512vl");
-  if (X86_HAVE(AVX512BW)) Puts("-mavx512bw");
-  if (X86_HAVE(AVX512DQ)) Puts("-mavx512dq");
-  if (X86_HAVE(AVX512IFMA)) Puts("-mavx512ifma");
-  if (X86_HAVE(AVX512VBMI)) Puts("-mavx512vbmi");
-  if (X86_HAVE(SHA)) Puts("-msha");
-  if (X86_HAVE(AES)) Puts("-maes");
-  if (X86_HAVE(VAES)) Puts("-mvaes");
-  if (X86_HAVE(PCLMUL)) Puts("-mpclmul");
-  if (X86_HAVE(FSGSBASE)) Puts("-mfsgsbase");
-  if (X86_HAVE(F16C)) Puts("-mf16c");
-  if (X86_HAVE(FMA)) Puts("-mfma");
-  if (X86_HAVE(POPCNT)) Puts("-mpopcnt");
-  if (X86_HAVE(BMI)) Puts("-mbmi");
-  if (X86_HAVE(BMI2)) Puts("-mbmi2");
-  if (X86_HAVE(ADX)) Puts("-madx");
-  if (X86_HAVE(FXSR)) Puts("-mfxsr");
+  if (X86_HAVE(AVX512F))
+    Puts("-mavx512f");
+  if (X86_HAVE(AVX512PF))
+    Puts("-mavx512pf");
+  if (X86_HAVE(AVX512ER))
+    Puts("-mavx512er");
+  if (X86_HAVE(AVX512CD))
+    Puts("-mavx512cd");
+  if (X86_HAVE(AVX512VL))
+    Puts("-mavx512vl");
+  if (X86_HAVE(AVX512BW))
+    Puts("-mavx512bw");
+  if (X86_HAVE(AVX512DQ))
+    Puts("-mavx512dq");
+  if (X86_HAVE(AVX512IFMA))
+    Puts("-mavx512ifma");
+  if (X86_HAVE(AVX512VBMI))
+    Puts("-mavx512vbmi");
+  if (X86_HAVE(SHA))
+    Puts("-msha");
+  if (X86_HAVE(AES))
+    Puts("-maes");
+  if (X86_HAVE(VAES))
+    Puts("-mvaes");
+  if (X86_HAVE(PCLMUL))
+    Puts("-mpclmul");
+  if (X86_HAVE(FSGSBASE))
+    Puts("-mfsgsbase");
+  if (X86_HAVE(F16C))
+    Puts("-mf16c");
+  if (X86_HAVE(FMA))
+    Puts("-mfma");
+  if (X86_HAVE(POPCNT))
+    Puts("-mpopcnt");
+  if (X86_HAVE(BMI))
+    Puts("-mbmi");
+  if (X86_HAVE(BMI2))
+    Puts("-mbmi2");
+  if (X86_HAVE(ADX))
+    Puts("-madx");
+  if (X86_HAVE(FXSR))
+    Puts("-mfxsr");
   if ((model = (void *)getx86processormodel(kX86ProcessorModelKey))) {
     switch (model->march) {
       case X86_MARCH_CORE2:

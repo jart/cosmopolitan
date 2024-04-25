@@ -84,8 +84,10 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // perform actual kill
   // process will report WIFSIGNALED with WTERMSIG(sig)
   bool32 ok = TerminateProcess(handle, sig);
-  if (closeme) CloseHandle(closeme);
-  if (ok) return 0;
+  if (closeme)
+    CloseHandle(closeme);
+  if (ok)
+    return 0;
 
   // handle error
 OnError:

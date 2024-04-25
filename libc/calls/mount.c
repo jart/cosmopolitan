@@ -84,7 +84,8 @@ int mount(const char *source, const char *target, const char *type,
     if (!IsBsd()) {
       return sys_mount_linux(source, target, type, flags, data);
     } else {
-      if (!strcmp(type, "iso9660")) type = "cd9660";
+      if (!strcmp(type, "iso9660"))
+        type = "cd9660";
       if (!strcmp(type, "vfat")) {
         if (IsOpenbsd() || IsNetbsd()) {
           type = "msdos";

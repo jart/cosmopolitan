@@ -27,25 +27,30 @@
 
 static int tpdecode(const char *s, wint_t *out) {
   uint32_t wc, cb, need, msb, j, i = 0;
-  if ((wc = s[i++] & 255) == -1) return -1;
+  if ((wc = s[i++] & 255) == -1)
+    return -1;
   while ((wc & 0300) == 0200) {
-    if ((wc = s[i++] & 255) == -1) return -1;
+    if ((wc = s[i++] & 255) == -1)
+      return -1;
   }
   if (!(0 <= wc && wc <= 0x7F)) {
     msb = wc < 252 ? bsr(~wc & 0xff) : 1;
     need = 7 - msb;
     wc &= ((1u << msb) - 1) | 0003;
     for (j = 1; j < need; ++j) {
-      if ((cb = s[i++] & 255) == -1) return -1;
+      if ((cb = s[i++] & 255) == -1)
+        return -1;
       if ((cb & 0300) == 0200) {
         wc = wc << 6 | (cb & 077);
       } else {
-        if (out) *out = 0xFFFD;
+        if (out)
+          *out = 0xFFFD;
         return -1;
       }
     }
   }
-  if (out) *out = wc;
+  if (out)
+    *out = wc;
   return i;
 }
 
@@ -71,7 +76,8 @@ ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
   bzero(&b, sizeof(b));
   AppendStr(&b, "\e[H");
   for (y = 0; y < tyn; ++y) {
-    if (y) AppendFmt(&b, "\e[%dH", y + 1);
+    if (y)
+      AppendFmt(&b, "\e[%dH", y + 1);
     for (x = i = 0; i < pn; ++i) {
       if (p[i].top <= y && y < p[i].bottom) {
         j = state = 0;

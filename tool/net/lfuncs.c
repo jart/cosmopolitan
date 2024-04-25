@@ -475,7 +475,8 @@ int LuaSlurp(lua_State *L) {
     }
     if (rc != -1) {
       got = rc;
-      if (!got) break;
+      if (!got)
+        break;
       luaL_addlstring(&b, tb, got);
     } else if (errno == EINTR) {
       errno = olderr;
@@ -617,7 +618,8 @@ dontinline int LuaBase32Impl(lua_State *L,
   const char *a = luaL_optlstring(L, 2, "", &al);
   if (!IS2POW(al) || al > 128 || al == 1)
     return luaL_error(L, "alphabet length is not a power of 2 in range 2..128");
-  if (!(p = B32(s, sl, a, al, &sl))) return luaL_error(L, "out of memory");
+  if (!(p = B32(s, sl, a, al, &sl)))
+    return luaL_error(L, "out of memory");
   lua_pushlstring(L, p, sl);
   free(p);
   return 1;
@@ -693,10 +695,12 @@ int LuaGetCryptoHash(lua_State *L) {
   const void *p = luaL_checklstring(L, 2, &pl);
   const void *k = luaL_optlstring(L, 3, "", &kl);
   const mbedtls_md_info_t *digest = mbedtls_md_info_from_string(h);
-  if (!digest) return luaL_argerror(L, 1, "unknown hash type");
+  if (!digest)
+    return luaL_argerror(L, 1, "unknown hash type");
   if (kl == 0) {
     // no key provided, run generic hash function
-    if ((digest->f_md)(p, pl, d)) return luaL_error(L, "bad input data");
+    if ((digest->f_md)(p, pl, d))
+      return luaL_error(L, "bad input data");
   } else if (mbedtls_md_hmac(digest, k, kl, p, pl, d)) {
     return luaL_error(L, "bad input data");
   }

@@ -35,10 +35,13 @@ ssize_t HasControlCodes(const char *p, size_t n, int f) {
   wint_t x, a, b;
   size_t i, j, m, g;
   bzero(t, sizeof(t));
-  if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
-  if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
+  if (f & kControlC0)
+    memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
+  if (f & kControlC1)
+    memset(t + 0x80, 1, 0xA0 - 0x80);
   t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   for (i = 0; i < n;) {
     g = i;
     x = p[i++] & 0xff;
@@ -48,7 +51,8 @@ ssize_t HasControlCodes(const char *p, size_t n, int f) {
       if (i + m <= n) {
         for (j = 0;;) {
           b = p[i + j] & 0xff;
-          if (!ThomPikeCont(b)) break;
+          if (!ThomPikeCont(b))
+            break;
           a = ThomPikeMerge(a, b);
           if (++j == m) {
             x = a;

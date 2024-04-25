@@ -118,7 +118,8 @@ WinThreadEntry(int rdi,                            // rcx
                int rdx,                            // r8
                struct CloneArgs *wt) {             // r9
   int rc;
-  if (wt->tls) __set_tls_win32(wt->tls);
+  if (wt->tls)
+    __set_tls_win32(wt->tls);
   *wt->ctid = wt->tid;
   rc = __stack_call(wt->arg, wt->tid, 0, 0, wt->func, wt);
   // we can now clear ctid directly since we're no longer using our own
@@ -465,17 +466,20 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
                : CFLAG_CONSTRAINT(failed), "=a"(ax)
                : "1"(__NR_thr_new), "D"(&params), "S"(sizeof(params))
                : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-  if (failed) return ax;
+  if (failed)
+    return ax;
 #elif defined(__aarch64__)
   register long x0 asm("x0") = (long)&params;
   register long x1 asm("x1") = sizeof(params);
   register int x8 asm("x8") = 0x1c7;  // thr_new
   asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
-  if (x0) return x0;
+  if (x0)
+    return x0;
 #else
 #error "unsupported architecture"
 #endif
-  if (flags & CLONE_PARENT_SETTID) *ptid = tid;
+  if (flags & CLONE_PARENT_SETTID)
+    *ptid = tid;
   return 0;
 }
 

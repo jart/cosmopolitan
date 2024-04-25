@@ -38,12 +38,16 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
   // socket read/write timeouts
   if (level == SOL_SOCKET &&
       (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
-    if (!(optval && optlen == sizeof(struct timeval))) return einval();
+    if (!(optval && optlen == sizeof(struct timeval)))
+      return einval();
     const struct timeval *tv = optval;
     int64_t ms = timeval_tomillis(*tv);
-    if (ms >= 0xffffffffu) ms = 0;  // wait forever (default)
-    if (optname == SO_RCVTIMEO) fd->rcvtimeo = ms;
-    if (optname == SO_SNDTIMEO) fd->sndtimeo = ms;
+    if (ms >= 0xffffffffu)
+      ms = 0;  // wait forever (default)
+    if (optname == SO_RCVTIMEO)
+      fd->rcvtimeo = ms;
+    if (optname == SO_SNDTIMEO)
+      fd->sndtimeo = ms;
     return 0;  // we want to handle this on our own
   }
 

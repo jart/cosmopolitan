@@ -232,7 +232,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         break;
       }
       size_t numenvs;
-      for (numenvs = 0; envp[numenvs];) ++numenvs;
+      for (numenvs = 0; envp[numenvs];)
+        ++numenvs;
       // const size_t desenvs = min(500, max(numenvs + 1, 2));
       static _Thread_local char *envs[500];
       memcpy(envs, envp, numenvs * sizeof(char *));

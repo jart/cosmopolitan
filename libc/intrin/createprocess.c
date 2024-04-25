@@ -44,7 +44,8 @@ CreateProcess(const char16_t *opt_lpApplicationName, char16_t *lpCommandLine,
                             bInheritHandles, dwCreationFlags, opt_lpEnvironment,
                             opt_lpCurrentDirectory, lpStartupInfo,
                             opt_out_lpProcessInformation);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("CreateProcess(%#!hs, %#!hs, %s, %s, %hhhd, %u, %p, %#!hs, %p, %p) → "
           "%hhhd% m",
           opt_lpApplicationName, lpCommandLine,

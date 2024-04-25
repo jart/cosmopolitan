@@ -66,7 +66,8 @@ int main(int argc, char *argv[]) {
          "RegionSize", "State", "Type", "AllocationProtect", "Protect");
   for (p = 0;; p = (char *)mi.BaseAddress + mi.RegionSize) {
     bzero(&mi, sizeof(mi));
-    if (!VirtualQuery(p, &mi, sizeof(mi))) break;
+    if (!VirtualQuery(p, &mi, sizeof(mi)))
+      break;
     sizefmt(b[0], mi.RegionSize, 1024);
     printf("%.12lx %.12lx %10s %16s %16s %32s %32s\n", mi.AllocationBase,
            mi.BaseAddress, b[0], DescribeNtMemState(b[1], mi.State),

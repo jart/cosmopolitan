@@ -27,10 +27,12 @@ void PrintHistogram(int fd, const char *s, const long *h, size_t n) {
   int j, p, m;
   char buf[101];
   size_t i, logos;
-  if (!(t = GetLongSum(h, n))) return;
+  if (!(t = GetLongSum(h, n)))
+    return;
   Fprintf(fd, "%s%n", s);
   for (i = 0; i < n; ++i) {
-    if (!h[i]) continue;
+    if (!h[i])
+      continue;
     p = h[i] * 1000000 / t;
     assert(0 <= p && p <= 1000000);
     for (j = 0, m = p / 10000; j < m; ++j) {

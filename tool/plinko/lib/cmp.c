@@ -50,20 +50,29 @@
 int Cmp(int x, int y) {
   int c;
   dword t, u;
-  if (x == y) return 0;
+  if (x == y)
+    return 0;
   if (x > 1 && y > 1) {
-    if (LO(Get(x)) < LO(Get(x))) return -1;
-    if (LO(Get(x)) > LO(Get(x))) return +1;
+    if (LO(Get(x)) < LO(Get(x)))
+      return -1;
+    if (LO(Get(x)) > LO(Get(x)))
+      return +1;
   }
   for (;; x = Cdr(x), y = Cdr(y)) {
-    if (x == y) return 0;
-    if (!x) return -1;
-    if (!y) return +1;
+    if (x == y)
+      return 0;
+    if (!x)
+      return -1;
+    if (!y)
+      return +1;
     if (x < 0) {
-      if (y >= 0) return +1;
-      if ((c = Cmp(Car(x), Car(y)))) return c;
+      if (y >= 0)
+        return +1;
+      if ((c = Cmp(Car(x), Car(y))))
+        return c;
     } else {
-      if (y < 0) return -1;
+      if (y < 0)
+        return -1;
       for (;;) {
         t = x != 1 ? Get(x) : MAKE(L'T', TERM);
         u = y != 1 ? Get(y) : MAKE(L'T', TERM);
@@ -72,9 +81,12 @@ int Cmp(int x, int y) {
         }
         x = HI(t);
         y = HI(u);
-        if (x == y) return 0;
-        if (x == TERM) return -1;
-        if (y == TERM) return +1;
+        if (x == y)
+          return 0;
+        if (x == TERM)
+          return -1;
+        if (y == TERM)
+          return +1;
       }
       if (Car(x) != Car(y)) {
         return Car(x) < Car(y) ? -1 : +1;

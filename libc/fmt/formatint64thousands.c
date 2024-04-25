@@ -34,8 +34,10 @@ dontinline char *FormatUint64Thousands(char p[static 27], uint64_t x) {
   } while (x);
   for (;;) {
     *p++ = m[--i];
-    if (!i) break;
-    if (!(i % 3)) *p++ = ',';
+    if (!i)
+      break;
+    if (!(i % 3))
+      *p++ = ',';
   }
   *p = '\0';
   return p;
@@ -48,6 +50,7 @@ dontinline char *FormatUint64Thousands(char p[static 27], uint64_t x) {
  * @return pointer to nul byte
  */
 char *FormatInt64Thousands(char p[static 27], int64_t x) {
-  if (x < 0) *p++ = '-', x = -(uint64_t)x;
+  if (x < 0)
+    *p++ = '-', x = -(uint64_t)x;
   return FormatUint64Thousands(p, x);
 }

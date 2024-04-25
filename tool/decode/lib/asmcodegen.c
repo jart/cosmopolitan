@@ -40,7 +40,8 @@ char *tabpad(const char *s, unsigned width) {
   l = strlen(s);
   need = width > l ? (roundup(width, 8) - l - 1) / 8 + 1 : 0;
   p = memcpy(malloc(l + need + 2), s, l);
-  for (i = 0; i < need; ++i) p[l + i] = '\t';
+  for (i = 0; i < need; ++i)
+    p[l + i] = '\t';
   if (!need) {
     p[l] = ' ';
     ++need;

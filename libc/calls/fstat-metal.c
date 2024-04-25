@@ -23,7 +23,8 @@
 #include "libc/sysv/errfuns.h"
 
 int sys_fstat_metal(int fd, struct stat *st) {
-  if (fd < 0) return einval();
+  if (fd < 0)
+    return einval();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
     bzero(st, sizeof(*st));
     st->st_dev = g_fds.p[fd].handle;

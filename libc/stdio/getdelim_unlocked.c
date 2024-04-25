@@ -40,7 +40,8 @@ ssize_t getdelim_unlocked(char **s, size_t *n, int delim, FILE *f) {
     f->state = errno = EINVAL;
     return -1;
   }
-  if (!*s) *n = 0;
+  if (!*s)
+    *n = 0;
   for (i = 0;; i += m) {
     m = f->end - f->beg;
     if ((p = memchr(f->buf + f->beg, delim, m))) {
@@ -67,7 +68,8 @@ ssize_t getdelim_unlocked(char **s, size_t *n, int delim, FILE *f) {
     } else if (f->fd == -1) {
       break;
     } else if ((rc = read(f->fd, f->buf, f->size)) != -1) {
-      if (!rc) break;
+      if (!rc)
+        break;
       f->end = rc;
     } else if (errno != EINTR) {
       f->state = errno;

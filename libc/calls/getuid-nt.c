@@ -29,7 +29,8 @@ textwindows uint32_t sys_getuid_nt(void) {
   if (!(tmp = atomic_load_explicit(&uid, memory_order_acquire))) {
     GetUserName(&buf, &size);
     tmp = __fnv(buf, size >> 1) & 32767;
-    if (!tmp) ++tmp;
+    if (!tmp)
+      ++tmp;
     atomic_store_explicit(&uid, tmp, memory_order_release);
   }
   return tmp;

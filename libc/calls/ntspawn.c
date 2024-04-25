@@ -157,7 +157,8 @@ textwindows int ntspawn(
       }
     }
   }
-  if (sb) ntspawn_free(sb);
+  if (sb)
+    ntspawn_free(sb);
   ALLOW_SIGNALS;
   return rc;
 }

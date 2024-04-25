@@ -31,9 +31,12 @@ int Nod(int E, int L, int R, int C) {
 
 static void CheckTreeImpl(int N) {
   int p, L, R;
-  if (N >= 0) Error("N is atom: %S", N);
-  if (Car(N) >= 0) Error("Car(N) is an atom: %S", N);
-  if (Cdr(N) & ~1) Error("Cdr(N) is non-bool: %S", N);
+  if (N >= 0)
+    Error("N is atom: %S", N);
+  if (Car(N) >= 0)
+    Error("Car(N) is an atom: %S", N);
+  if (Cdr(N) & ~1)
+    Error("Cdr(N) is non-bool: %S", N);
   if ((L = Lit(N))) {
     if ((p = Cmp(Key(Ent(L)), Key(Ent(N)))) != -1) {
       Error("Cmp(Key(L), Key(N)) != -1%n"
@@ -65,7 +68,8 @@ static void CheckTreeImpl(int N) {
 static int CheckTree(int N) {
 #if DEBUG_TREE
   if (N) {
-    if (Red(N)) Error("tree root is red%n%T", N);
+    if (Red(N))
+      Error("tree root is red%n%T", N);
     CheckTreeImpl(N);
   }
 #endif
@@ -163,11 +167,15 @@ static int InsTree(int E, int N, int KEEP) {
   if (N) {
     P = Cmp(Key(E), Key(Ent(N)));
     if (P < 0) {
-      if ((L = InsTree(E, Lit(N), KEEP)) > 0) return L;  // rethrow
-      if (L != Lit(N)) N = BalTree(Ent(N), L, Rit(N), Tail(N));
+      if ((L = InsTree(E, Lit(N), KEEP)) > 0)
+        return L;  // rethrow
+      if (L != Lit(N))
+        N = BalTree(Ent(N), L, Rit(N), Tail(N));
     } else if (P > 0) {
-      if ((R = InsTree(E, Rit(N), KEEP)) > 0) return R;  // rethrow
-      if (R != Rit(N)) N = BalTree(Ent(N), Lit(N), R, Tail(N));
+      if ((R = InsTree(E, Rit(N), KEEP)) > 0)
+        return R;  // rethrow
+      if (R != Rit(N))
+        N = BalTree(Ent(N), Lit(N), R, Tail(N));
     } else if (KEEP < 0 || (!KEEP && !Equal(Val(E), Val(Ent(N))))) {
       N = Cons(Cons(E, Chl(N)), Red(N));
     } else if (KEEP > 1) {

@@ -30,10 +30,14 @@
 #include "libc/testlib/testlib.h"
 
 void SetUp(void) {
-  if (IsXnu()) exit(0);
-  if (IsMetal()) exit(0);
-  if (IsWindows()) exit(0);
-  if (IsOpenbsd()) exit(0);
+  if (IsXnu())
+    exit(0);
+  if (IsMetal())
+    exit(0);
+  if (IsWindows())
+    exit(0);
+  if (IsOpenbsd())
+    exit(0);
 }
 
 TEST(sigtimedwait, nullSet_efault) {

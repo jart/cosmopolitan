@@ -31,7 +31,8 @@
 char *getenv(const char *s) {
   char **p;
   struct Env e;
-  if (!(p = environ)) return 0;
+  if (!(p = environ))
+    return 0;
   e = __getenv(p, s);
 #if SYSDEBUG
   // if (!(s[0] == 'T' && s[1] == 'Z' && !s[2])) {

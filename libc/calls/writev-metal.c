@@ -28,7 +28,8 @@
 ssize_t sys_writev_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
   switch (fd->kind) {
     case kFdConsole:
-      if (_weaken(sys_writev_vga)) _weaken(sys_writev_vga)(fd, iov, iovlen);
+      if (_weaken(sys_writev_vga))
+        _weaken(sys_writev_vga)(fd, iov, iovlen);
       /* fallthrough */
     case kFdSerial:
       return sys_writev_serial(fd, iov, iovlen);

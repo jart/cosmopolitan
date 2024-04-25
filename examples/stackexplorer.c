@@ -36,8 +36,10 @@ void Append(intptr_t i, char *s) {
 int Compare(const void *a, const void *b) {
   struct Thing *x = (struct Thing *)a;
   struct Thing *y = (struct Thing *)b;
-  if (x->i < y->i) return +1;
-  if (x->i > y->i) return -1;
+  if (x->i < y->i)
+    return +1;
+  if (x->i > y->i)
+    return -1;
   return 0;
 }
 
@@ -46,19 +48,22 @@ int main(int argc, char *argv[]) {
   Append((uintptr_t)__oldstack, "__oldstack");
   for (int i = 0;; ++i) {
     Append((uintptr_t)&argv[i], xasprintf("&argv[%d] = %`'s", i, argv[i]));
-    if (!argv[i]) break;
+    if (!argv[i])
+      break;
     Append((uintptr_t)argv[i], xasprintf("argv[%d] = %`'s", i, argv[i]));
   }
   for (int i = 0;; ++i) {
     Append((uintptr_t)&environ[i],
            xasprintf("&environ[%d] = %`'s", i, environ[i]));
-    if (!environ[i]) break;
+    if (!environ[i])
+      break;
     Append((uintptr_t)environ[i],
            xasprintf("environ[%d] = %`'s", i, environ[i]));
   }
   for (int i = 0;; i += 2) {
     Append((uintptr_t)&__auxv[i], xasprintf("&auxv[%d] = %ld", i, __auxv[i]));
-    if (!__auxv[i]) break;
+    if (!__auxv[i])
+      break;
     Append((uintptr_t)&__auxv[i + 1],
            xasprintf("&auxv[%d] = %#lx", i + 1, __auxv[i + 1]));
   }

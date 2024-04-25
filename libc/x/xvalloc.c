@@ -24,6 +24,7 @@
  */
 void *xvalloc(size_t size) {
   void *res = valloc(size);
-  if (!res) xdie();
+  if (!res)
+    xdie();
   return res;
 }

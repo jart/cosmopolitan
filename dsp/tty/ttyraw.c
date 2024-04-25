@@ -69,13 +69,16 @@ static textstartup int ttyraw_enable(void) {
 }
 
 static textstartup void ttyraw_hidecursor(void) {
-  if (!g_ttyraw.setup) return;
-  if (g_ttyraw.flags & kTtyCursor) return;
+  if (!g_ttyraw.setup)
+    return;
+  if (g_ttyraw.flags & kTtyCursor)
+    return;
   ttyhidecursor(FD);
 }
 
 static textexit int ttyraw_disable(void) {
-  if (!g_ttyraw.setup) return 0;
+  if (!g_ttyraw.setup)
+    return 0;
   ttyshowcursor(FD);
   return ttyrestore(FD, &g_ttyraw.old);
 }
@@ -87,7 +90,8 @@ static textexit void ttyraw_onexit(void) {
 static relegated void ttyraw_onsig(int sig, struct siginfo *info,
                                    struct ucontext *ctx) {
   size_t i;
-  if (g_ttyraw.noreentry) _Exit(128 + sig);
+  if (g_ttyraw.noreentry)
+    _Exit(128 + sig);
   g_ttyraw.noreentry = true;
   if (g_ttyraw.flags != -1) {
     if (sig == SIGCONT) {

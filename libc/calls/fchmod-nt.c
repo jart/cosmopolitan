@@ -29,8 +29,10 @@
 textwindows int sys_fchmod_nt(int fd, uint32_t mode) {
 
   // validate file descriptor
-  if (fd + 0u >= g_fds.n) return ebadf();
-  if (g_fds.p[fd].kind == kFdEmpty) return ebadf();
+  if (fd + 0u >= g_fds.n)
+    return ebadf();
+  if (g_fds.p[fd].kind == kFdEmpty)
+    return ebadf();
 
   // get current information
   struct NtFileBasicInfo fbi;

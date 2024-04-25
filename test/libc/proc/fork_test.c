@@ -103,7 +103,8 @@ static void OnSigusr2(int sig) {
 }
 
 TEST(fork, childToChild) {
-  if (IsWindows()) return;  // :'(
+  if (IsWindows())
+    return;  // :'(
   sigset_t mask, oldmask;
   int ws, parent, child1, child2;
   gotsigusr1 = false;
@@ -144,7 +145,8 @@ TEST(fork, preservesTlsMemory) {
 void ForkInSerial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = fork()));
-  if (!pid) _Exit(0);
+  if (!pid)
+    _Exit(0);
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));

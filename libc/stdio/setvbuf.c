@@ -36,7 +36,8 @@
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
   flockfile(f);
   if (buf) {
-    if (!size) size = BUFSIZ;
+    if (!size)
+      size = BUFSIZ;
     if (!f->nofree &&        //
         f->buf != buf &&     //
         f->buf != f->mem &&  //

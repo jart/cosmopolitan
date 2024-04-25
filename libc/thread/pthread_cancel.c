@@ -66,10 +66,14 @@ static void _pthread_cancel_sig(int sig, siginfo_t *si, void *arg) {
 
   // check thread runtime state is initialized and cancelled
   struct PosixThread *pt;
-  if (!__tls_enabled) return;
-  if (!(pt = _pthread_self())) return;
-  if (pt->pt_flags & PT_NOCANCEL) return;
-  if (!atomic_load_explicit(&pt->pt_canceled, memory_order_acquire)) return;
+  if (!__tls_enabled)
+    return;
+  if (!(pt = _pthread_self()))
+    return;
+  if (pt->pt_flags & PT_NOCANCEL)
+    return;
+  if (!atomic_load_explicit(&pt->pt_canceled, memory_order_acquire))
+    return;
 
   // in asynchronous mode the asynchronous signal calls exit
   if (pt->pt_flags & PT_ASYNC) {
@@ -137,7 +141,8 @@ static errno_t _pthread_cancel_single(struct PosixThread *pt) {
   // send the cancelation signal
   errno_t err;
   err = pthread_kill((pthread_t)pt, SIGTHR);
-  if (err == ESRCH) err = 0;
+  if (err == ESRCH)
+    err = 0;
   return err;
 }
 
@@ -369,9 +374,12 @@ errno_t pthread_cancel(pthread_t thread) {
  */
 void pthread_testcancel(void) {
   struct PosixThread *pt;
-  if (!__tls_enabled) return;
-  if (!(pt = _pthread_self())) return;
-  if (pt->pt_flags & PT_NOCANCEL) return;
+  if (!__tls_enabled)
+    return;
+  if (!(pt = _pthread_self()))
+    return;
+  if (pt->pt_flags & PT_NOCANCEL)
+    return;
   if ((!(pt->pt_flags & PT_MASKED) || (pt->pt_flags & PT_ASYNC)) &&
       atomic_load_explicit(&pt->pt_canceled, memory_order_acquire)) {
     pthread_exit(PTHREAD_CANCELED);
@@ -396,10 +404,14 @@ void pthread_testcancel(void) {
  */
 errno_t pthread_testcancel_np(void) {
   struct PosixThread *pt;
-  if (!__tls_enabled) return 0;
-  if (!(pt = _pthread_self())) return 0;
-  if (pt->pt_flags & PT_NOCANCEL) return 0;
-  if (!atomic_load_explicit(&pt->pt_canceled, memory_order_acquire)) return 0;
+  if (!__tls_enabled)
+    return 0;
+  if (!(pt = _pthread_self()))
+    return 0;
+  if (pt->pt_flags & PT_NOCANCEL)
+    return 0;
+  if (!atomic_load_explicit(&pt->pt_canceled, memory_order_acquire))
+    return 0;
   if (!(pt->pt_flags & PT_MASKED) || (pt->pt_flags & PT_ASYNC)) {
     pthread_exit(PTHREAD_CANCELED);
   } else {

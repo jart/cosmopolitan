@@ -42,13 +42,20 @@ struct StringBuilder {
 
 // returns true if fd can't be inherited by anything
 textwindows bool __is_cloexec(const struct Fd *f) {
-  if (f->kind == kFdEmpty) return true;
-  if (f->kind == kFdReserved) return true;
-  if (f->kind == kFdZip) return true;
-  if (f->kind == kFdEpoll) return true;
-  if (f->flags & O_CLOEXEC) return true;
-  if (f->handle == -1) return true;
-  if (!f->handle) return true;
+  if (f->kind == kFdEmpty)
+    return true;
+  if (f->kind == kFdReserved)
+    return true;
+  if (f->kind == kFdZip)
+    return true;
+  if (f->kind == kFdEpoll)
+    return true;
+  if (f->flags & O_CLOEXEC)
+    return true;
+  if (f->handle == -1)
+    return true;
+  if (!f->handle)
+    return true;
   return false;
 }
 
@@ -81,14 +88,16 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
   uint32_t handlecount = 0;
 
   // setup memory for environment variable
-  if (!(sb.p = strdup(FDS_VAR))) return 0;
+  if (!(sb.p = strdup(FDS_VAR)))
+    return 0;
   sb.i = sizeof(FDS_VAR) - 1;
   sb.n = sizeof(FDS_VAR);
 
   // setup memory for explicitly inherited handle list
   for (int fd = 0; fd < fdslen; ++fd) {
     const struct Fd *f = fds + fd;
-    if (__is_cloexec(f)) continue;
+    if (__is_cloexec(f))
+      continue;
     ++handlecount;
   }
   if (!(handles = calloc(handlecount, sizeof(*handles)))) {
@@ -101,7 +110,8 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
   // serialize file descriptors
   for (int fd = 0; fd < fdslen; ++fd) {
     const struct Fd *f = fds + fd;
-    if (__is_cloexec(f)) continue;
+    if (__is_cloexec(f))
+      continue;
 
     // make inheritable version of handle exist in creator process
     if (!DuplicateHandle(GetCurrentProcess(), f->handle, hCreatorProcess,

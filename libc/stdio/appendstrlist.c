@@ -25,7 +25,8 @@ int AppendStrList(struct StrList *sl) {
   char **p2;
   if (sl->i == sl->n) {
     n2 = sl->n;
-    if (!n2) n2 = 2;
+    if (!n2)
+      n2 = 2;
     n2 += n2 >> 1;
     if ((p2 = realloc(sl->p, n2 * sizeof(*p2)))) {
       sl->p = p2;

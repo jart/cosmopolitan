@@ -58,12 +58,15 @@ static bool BisectNoCompressExts(uint64_t ext) {
 bool IsNoCompressExt(const char *p, size_t n) {
   int c, i;
   uint64_t w;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   if (n) {
     for (i = w = 0; n--;) {
       c = p[n] & 255;
-      if (c == '.') break;
-      if (++i > 8) return false;
+      if (c == '.')
+        break;
+      if (++i > 8)
+        return false;
       w <<= 8;
       w |= kToLower[c];
     }

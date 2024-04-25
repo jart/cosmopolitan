@@ -57,8 +57,10 @@ privileged const char *strsignal_r(int sig, char buf[21]) {
   } else {
     p = buf;
   }
-  if (sig >= 100) *p++ = '0' + (unsigned char)sig / 100 % 10;
-  if (sig >= 10) *p++ = '0' + (unsigned char)sig / 10 % 10;
+  if (sig >= 100)
+    *p++ = '0' + (unsigned char)sig / 100 % 10;
+  if (sig >= 10)
+    *p++ = '0' + (unsigned char)sig / 10 % 10;
   *p++ = '0' + (unsigned char)sig % 10;
   *p = 0;
   return buf;

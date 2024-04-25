@@ -50,36 +50,46 @@
 TEST(malloc, zero) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(0)));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p, 1));
   free(p);
 }
 
 TEST(realloc, bothAreZero_createsMinimalAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = realloc(0, 0)));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p, 1));
   free(p);
 }
 
 TEST(realloc, ptrIsZero_createsAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = realloc(0, 1)));
-  if (IsAsan()) ASSERT_TRUE(__asan_is_valid(p, 1));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  if (IsAsan())
+    ASSERT_TRUE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   ASSERT_EQ(p, realloc(p, 0));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   free(p);
 }
 
 TEST(realloc, sizeIsZero_shrinksAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(1)));
-  if (IsAsan()) ASSERT_TRUE(__asan_is_valid(p, 1));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  if (IsAsan())
+    ASSERT_TRUE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   ASSERT_EQ(p, realloc(p, 0));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
-  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan())
+    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   free(p);
 }
 
@@ -154,9 +164,12 @@ TEST(malloc, test) {
     }
   }
   free(big);
-  for (i = 0; i < ARRAYLEN(A); ++i) free(A[i]);
-  for (i = 0; i < ARRAYLEN(maps); ++i) munmap(maps[i], mapsizes[i]);
-  for (i = 0; i < ARRAYLEN(fds); ++i) close(fds[i]);
+  for (i = 0; i < ARRAYLEN(A); ++i)
+    free(A[i]);
+  for (i = 0; i < ARRAYLEN(maps); ++i)
+    munmap(maps[i], mapsizes[i]);
+  for (i = 0; i < ARRAYLEN(fds); ++i)
+    close(fds[i]);
 }
 
 TEST(memalign, roundsUpAlignmentToTwoPower) {
@@ -211,7 +224,8 @@ void *Worker(void *arg) {
 BENCH(malloc, torture) {
   int i, n = __get_cpu_count() * 2;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
-  if (!n) return;
+  if (!n)
+    return;
   printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,
          ITERATIONS);
   SPAWN(fork);

@@ -35,7 +35,8 @@ const char *(DescribeTermios)(char buf[N], ssize_t rc,
   int o = 0;
   char b128[128];
 
-  if (!tio) return "NULL";
+  if (!tio)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(tio)) ||
       (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
     ksnprintf(buf, N, "%p", tio);

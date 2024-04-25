@@ -34,7 +34,8 @@ void SetUpOnce(void) {
 }
 
 TEST(access, efault) {
-  if (IsWindows() || !IsAsan()) return;  // not possible
+  if (IsWindows() || !IsAsan())
+    return;  // not possible
   ASSERT_SYS(EFAULT, -1, access((void *)77, F_OK));
 }
 
@@ -61,7 +62,8 @@ TEST(access, test) {
 }
 
 TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
-  if (1) return;  // TODO(jart): maybe we need root to help?
+  if (1)
+    return;  // TODO(jart): maybe we need root to help?
   ASSERT_SYS(ENOENT, -1, access("file", F_OK));
   ASSERT_SYS(0, 0, close(creat("file", 0444)));
   ASSERT_SYS(0, 0, access("file", F_OK));

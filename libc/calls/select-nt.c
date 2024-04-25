@@ -40,9 +40,12 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   struct pollfd fds[64];
   for (pfds = i = 0; i < nfds; ++i) {
     events = 0;
-    if (readfds && FD_ISSET(i, readfds)) events |= POLLIN;
-    if (writefds && FD_ISSET(i, writefds)) events |= POLLOUT;
-    if (exceptfds && FD_ISSET(i, exceptfds)) events |= POLLERR;
+    if (readfds && FD_ISSET(i, readfds))
+      events |= POLLIN;
+    if (writefds && FD_ISSET(i, writefds))
+      events |= POLLOUT;
+    if (exceptfds && FD_ISSET(i, exceptfds))
+      events |= POLLERR;
     if (events) {
       if (pfds < ARRAYLEN(fds)) {
         fds[pfds].fd = i;
@@ -71,12 +74,16 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   // call our nt poll implementation
   fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
   unassert(fdcount < 64);
-  if (fdcount < 0) return -1;
+  if (fdcount < 0)
+    return -1;
 
   // convert pollfd back to bitsets
-  if (readfds) FD_ZERO(readfds);
-  if (writefds) FD_ZERO(writefds);
-  if (exceptfds) FD_ZERO(exceptfds);
+  if (readfds)
+    FD_ZERO(readfds);
+  if (writefds)
+    FD_ZERO(writefds);
+  if (exceptfds)
+    FD_ZERO(exceptfds);
   int bits = 0;
   for (i = 0; i < pfds; ++i) {
     if (fds[i].revents & POLLIN) {

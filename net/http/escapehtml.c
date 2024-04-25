@@ -33,8 +33,10 @@ char *EscapeHtml(const char *p, size_t n, size_t *z) {
   int c;
   size_t i;
   char *q, *r;
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (z)
+    *z = 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   if ((q = r = malloc(n * 6 + 1))) {
     for (i = 0; i < n; ++i) {
       switch ((c = p[i])) {
@@ -82,9 +84,11 @@ char *EscapeHtml(const char *p, size_t n, size_t *z) {
           break;
       }
     }
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
+    if ((q = realloc(r, q - r)))
+      r = q;
   }
   return r;
 }

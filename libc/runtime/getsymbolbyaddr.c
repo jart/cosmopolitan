@@ -29,6 +29,7 @@ char *GetSymbolByAddr(int64_t addr) {
   struct SymbolTable *st;
   st = GetSymbolTable();
   i = __get_symbol(st, addr);
-  if (i == -1) i = __get_symbol(st, addr - 1);
+  if (i == -1)
+    i = __get_symbol(st, addr - 1);
   return __get_symbol_name(st, i);
 }

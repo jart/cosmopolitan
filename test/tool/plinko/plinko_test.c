@@ -97,14 +97,16 @@ TEST(plinko, worksOrPrintsNiceError) {
   for (i = 0; i < ARRAYLEN(kSauces); ++i) {
     EXPECT_NE(-1, (fdin = open(kSauces[i], O_RDONLY)));
     rc = copyfd(fdin, pfds[0][1], -1);
-    if (rc == -1) EXPECT_EQ(EPIPE, errno);
+    if (rc == -1)
+      EXPECT_EQ(EPIPE, errno);
     EXPECT_NE(-1, close(fdin));
   }
   EXPECT_NE(-1, close(pfds[0][1]));
   bzero(buf, sizeof(buf));
   ASSERT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
   EXPECT_NE(0, got);
-  while (read(pfds[1][0], drain, sizeof(drain)) > 0) donothing;
+  while (read(pfds[1][0], drain, sizeof(drain)) > 0)
+    donothing;
   EXPECT_NE(-1, close(pfds[1][0]));
   EXPECT_NE(-1, waitpid(pid, &wstatus, 0));
   EXPECT_TRUE(WIFEXITED(wstatus));

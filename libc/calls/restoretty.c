@@ -43,7 +43,8 @@ static struct termios __oldtermios;
 
 static size_t __strlen(const char *s) {
   size_t i = 0;
-  while (s[i]) ++i;
+  while (s[i])
+    ++i;
   return i;
 }
 

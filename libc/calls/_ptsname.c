@@ -59,7 +59,8 @@ int _ptsname(int fd, char *buf, size_t size) {
   t.sn[5] = 0;
 
   if (IsLinux()) {
-    if (sys_ioctl(fd, TIOCGPTN, &pty)) return -1;
+    if (sys_ioctl(fd, TIOCGPTN, &pty))
+      return -1;
     t.sn[5] = 'p';
     t.sn[6] = 't';
     t.sn[7] = 's';

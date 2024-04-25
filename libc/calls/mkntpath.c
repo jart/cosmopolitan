@@ -54,8 +54,10 @@ textwindows size_t __normntpath(char16_t *p, size_t n) {
                (i + 1 < n && p[i + 1] == '.') &&  //
                (i + 2 == n || IsSlash(p[i + 2]))) {
       // matched "/../" or "/..$"
-      while (j && p[j - 1] == '\\') --j;
-      while (j && p[j - 1] != '\\') --j;
+      while (j && p[j - 1] == '\\')
+        --j;
+      while (j && p[j - 1] != '\\')
+        --j;
     } else {
       p[j++] = c;
     }
@@ -156,7 +158,8 @@ textwindows int __mkntpath2(const char *path,
   if (!x && IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
       (IsSlash(q[4]) || !q[4])) {
     m = GetTempPath(z, p);
-    if (!q[4]) return m;
+    if (!q[4])
+      return m;
     q += 5;
     p += m;
     z -= m;

@@ -58,22 +58,27 @@ char *DecodeBase64(const char *data, size_t size, size_t *out_size) {
   char *r, *q;
   int a, b, c, d, w;
   const char *p, *pe;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (size == -1)
+    size = data ? strlen(data) : 0;
   if ((r = malloc(ROUNDUP(size, 4) / 4 * 3 + 1))) {
     q = r;
     p = data;
     pe = p + size;
     for (;;) {
       do {
-        if (p == pe) goto Done;
+        if (p == pe)
+          goto Done;
         a = kBase64[*p++ & 0xff];
       } while (a == -1);
-      if (a == -2) continue;
+      if (a == -2)
+        continue;
       do {
-        if (p == pe) goto Done;
+        if (p == pe)
+          goto Done;
         b = kBase64[*p++ & 0xff];
       } while (b == -1);
-      if (b == -2) continue;
+      if (b == -2)
+        continue;
       do {
         c = p < pe ? kBase64[*p++ & 0xff] : -2;
       } while (c == -1);
@@ -81,16 +86,21 @@ char *DecodeBase64(const char *data, size_t size, size_t *out_size) {
         d = p < pe ? kBase64[*p++ & 0xff] : -2;
       } while (d == -1);
       w = a << 18 | b << 12;
-      if (c != -2) w |= c << 6;
-      if (d != -2) w |= d;
+      if (c != -2)
+        w |= c << 6;
+      if (d != -2)
+        w |= d;
       *q++ = (w & 0xFF0000) >> 020;
-      if (c != -2) *q++ = (w & 0x00FF00) >> 010;
-      if (d != -2) *q++ = (w & 0x0000FF) >> 000;
+      if (c != -2)
+        *q++ = (w & 0x00FF00) >> 010;
+      if (d != -2)
+        *q++ = (w & 0x0000FF) >> 000;
     }
   Done:
     n = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
+    if ((q = realloc(r, q - r)))
+      r = q;
   } else {
     n = 0;
   }

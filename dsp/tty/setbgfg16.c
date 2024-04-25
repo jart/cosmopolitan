@@ -21,16 +21,20 @@
 #include "libc/limits.h"
 
 static char *ansitoa(char *p, unsigned xt, unsigned base) {
-  if (xt >= 8) xt -= 8, base += 60;
+  if (xt >= 8)
+    xt -= 8, base += 60;
   return itoa8(p, xt + base);
 }
 
 static char *setansibgfg(char *p, unsigned bg, unsigned fg) {
   *p++ = '\e';
   *p++ = '[';
-  if (bg != -1u) p = ansitoa(p, bg, 40);
-  if (bg != -1u && fg != -1u) *p++ = ';';
-  if (fg != -1u) p = ansitoa(p, fg, 30);
+  if (bg != -1u)
+    p = ansitoa(p, bg, 40);
+  if (bg != -1u && fg != -1u)
+    *p++ = ';';
+  if (fg != -1u)
+    p = ansitoa(p, fg, 30);
   *p++ = 'm';
   return p;
 }

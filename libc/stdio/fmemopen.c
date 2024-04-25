@@ -50,7 +50,8 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   if (buf) {
     f->nofree = true;
   } else {
-    if (!size) size = BUFSIZ;
+    if (!size)
+      size = BUFSIZ;
     // TODO(jart): Why do we need calloc()?
     if (!_weaken(calloc) || !(buf = _weaken(calloc)(1, size))) {
       __stdio_free(f);

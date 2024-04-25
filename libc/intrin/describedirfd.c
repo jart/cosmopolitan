@@ -21,7 +21,8 @@
 #include "libc/sysv/consts/at.h"
 
 const char *(DescribeDirfd)(char buf[12], int dirfd) {
-  if (dirfd == AT_FDCWD) return "AT_FDCWD";
+  if (dirfd == AT_FDCWD)
+    return "AT_FDCWD";
   FormatInt32(buf, dirfd);
   return buf;
 }

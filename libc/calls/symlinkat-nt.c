@@ -44,12 +44,15 @@ static textwindows void InitializeWinlink(void) {
   int64_t tok;
   struct NtLuid id;
   struct NtTokenPrivileges tp;
-  if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAllAccess, &tok)) return;
-  if (!LookupPrivilegeValue(0, u"SeCreateSymbolicLinkPrivilege", &id)) return;
+  if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAllAccess, &tok))
+    return;
+  if (!LookupPrivilegeValue(0, u"SeCreateSymbolicLinkPrivilege", &id))
+    return;
   tp.PrivilegeCount = 1;
   tp.Privileges[0].Luid = id;
   tp.Privileges[0].Attributes = kNtSePrivilegeEnabled;
-  if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0)) return;
+  if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0))
+    return;
   g_winlink.allowed = GetLastError() != kNtErrorNotAllAssigned;
 }
 
@@ -67,8 +70,10 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
   uint32_t attrs, flags;
 
   // convert the paths
-  if (__mkntpathat(newdirfd, linkpath, 0, M.linkpath16) == -1) return -1;
-  if ((targetlen = __mkntpath(target, M.target16)) == -1) return -1;
+  if (__mkntpathat(newdirfd, linkpath, 0, M.linkpath16) == -1)
+    return -1;
+  if ((targetlen = __mkntpath(target, M.target16)) == -1)
+    return -1;
 
   // determine if we need directory flag
   if ((attrs = GetFileAttributes(M.target16)) != -1u) {

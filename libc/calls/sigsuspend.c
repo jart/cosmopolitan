@@ -56,7 +56,8 @@ int sigsuspend(const sigset_t *ignore) {
   } else {
     sigset_t waitmask = ignore ? *ignore : 0;
     if (IsWindows() || IsMetal()) {
-      while (!(rc = _park_norestart(-1u, waitmask))) donothing;
+      while (!(rc = _park_norestart(-1u, waitmask)))
+        donothing;
     } else {
       rc = sys_sigsuspend((uint64_t[2]){waitmask}, 8);
     }

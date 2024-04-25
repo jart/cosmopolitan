@@ -38,11 +38,17 @@ Elf64_Shdr *GetElfSectionHeaderAddress(const Elf64_Ehdr *elf,  //
                                        size_t mapsize,         //
                                        Elf64_Half i) {         //
   Elf64_Off off;
-  if (i >= SHN_LORESERVE) return 0;
-  if (i >= elf->e_shnum) return 0;
-  if (elf->e_shoff <= 0) return 0;
-  if (elf->e_shoff >= mapsize) return 0;
-  if (elf->e_shentsize < sizeof(Elf64_Shdr)) return 0;
-  if ((off = elf->e_shoff + (unsigned)i * elf->e_shentsize) > mapsize) return 0;
+  if (i >= SHN_LORESERVE)
+    return 0;
+  if (i >= elf->e_shnum)
+    return 0;
+  if (elf->e_shoff <= 0)
+    return 0;
+  if (elf->e_shoff >= mapsize)
+    return 0;
+  if (elf->e_shentsize < sizeof(Elf64_Shdr))
+    return 0;
+  if ((off = elf->e_shoff + (unsigned)i * elf->e_shentsize) > mapsize)
+    return 0;
   return (Elf64_Shdr *)((char *)elf + off);
 }

@@ -43,7 +43,8 @@ static abi axdx_t Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
   uint64_t w;
   wint_t x, y;
   for (v = false, r.ax = 0, r.dx = 0;;) {
-    if (!(x = src[r.dx++])) break;
+    if (!(x = src[r.dx++]))
+      break;
     if (!IsUcs2(x)) {
       y = src[r.dx++];
       x = MergeUtf16(x, y);
@@ -117,7 +118,8 @@ abi int GetDosEnviron(const char16_t *env, char *buf, size_t size, char **envp,
   i = 0;
   --size;
   while (*env) {
-    if (i + 1 < max) envp[i++] = buf;
+    if (i + 1 < max)
+      envp[i++] = buf;
     r = Recode16to8(buf, size, env);
     if ((p = MemChr(buf, '=', r.ax)) && IsAlpha(p[1]) && p[2] == ':' &&
         (p[3] == '\\' || p[3] == '/')) {

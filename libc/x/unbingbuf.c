@@ -45,6 +45,7 @@ void *unbingbuf(void *buf, size_t size, const char16_t *glyphs, int fill) {
     *p = (b = unbing(*glyphs)) & 0xff;
     /* DCHECK_NE(-1, b, "%`'hc ∉ IBMCP437\n", *glyphs); */
   }
-  if (fill != -1) memset(p, fill, pe - p);
+  if (fill != -1)
+    memset(p, fill, pe - p);
   return buf;
 }

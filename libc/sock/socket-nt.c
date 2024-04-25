@@ -34,13 +34,16 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
   int fd, oflags, truetype;
   fd = __reservefd(-1);
-  if (fd == -1) return -1;
+  if (fd == -1)
+    return -1;
   truetype = type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK);
   if ((h = WSASocket(family, truetype, protocol, NULL, 0,
                      kNtWsaFlagOverlapped)) != -1) {
     oflags = O_RDWR;
-    if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
-    if (type & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
+    if (type & SOCK_CLOEXEC)
+      oflags |= O_CLOEXEC;
+    if (type & SOCK_NONBLOCK)
+      oflags |= O_NONBLOCK;
     g_fds.p[fd].family = family;
     g_fds.p[fd].type = truetype;
     g_fds.p[fd].protocol = protocol;

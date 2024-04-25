@@ -97,7 +97,8 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
     return count;
   } else {
     n = (m + n) / stride;
-    if (n < count) f->state = -1;
+    if (n < count)
+      f->state = -1;
     return n;
   }
 }

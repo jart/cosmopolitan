@@ -54,14 +54,17 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   n = GetZipCdirRecords(cdir);
   for (lo = c, hi = i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(map + c)) {
     lf = GetZipCfileOffset(map + c);
-    if (lf < lo) lo = lf;
+    if (lf < lo)
+      lo = lf;
     ef = lf + ZIP_LFILE_HDRSIZE(map + lf) + GetZipLfileCompressedSize(map + lf);
-    if (ef > hi) hi = ef;
+    if (ef > hi)
+      hi = ef;
   }
 
   // unmap the executable portion beneath the local files
   mo = ROUNDDOWN(lo, FRAMESIZE);
-  if (mo) munmap(map, mo);
+  if (mo)
+    munmap(map, mo);
 
   // this is supposed to reduce our rss usage but does it really?
   lo = ROUNDDOWN(lo, pg);
@@ -81,7 +84,8 @@ static int __zipos_compare_names(const void *a, const void *b, void *c) {
   if (n) {
     int res =
         memcmp(ZIP_CFILE_NAME(z->map + *x), ZIP_CFILE_NAME(z->map + *y), n);
-    if (res) return res;
+    if (res)
+      return res;
   }
   return xn - yn;  // xn and yn are 16-bit
 }

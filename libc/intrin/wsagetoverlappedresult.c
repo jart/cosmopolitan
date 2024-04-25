@@ -50,7 +50,8 @@ bool32 WSAGetOverlappedResult(uint64_t s,
   bool32 ok;
   ok = __imp_WSAGetOverlappedResult(s, lpOverlapped, out_lpcbTransfer, fWait,
                                     out_lpdwFlags);
-  if (!ok) __winsockerr();
+  if (!ok)
+    __winsockerr();
   NTTRACE("WSAGetOverlappedResult(%ld, %s, [%s], %hhhd, [%#x]) → %hhhd% lm", s,
           DescribeNtOverlapped(lpOverlapped),
           DescribeTransfer(alloca(16), ok, out_lpcbTransfer), fWait,

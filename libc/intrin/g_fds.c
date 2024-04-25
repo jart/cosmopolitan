@@ -71,7 +71,8 @@ static textwindows void SetupWinStd(struct Fds *fds, int i, uint32_t x) {
   int64_t h;
   uint32_t cm;
   h = GetStdHandle(x);
-  if (!h || h == -1) return;
+  if (!h || h == -1)
+    return;
   fds->p[i].kind = GetConsoleMode(h, &cm) ? kFdConsole : kFdFile;
   fds->p[i].handle = h;
   atomic_store_explicit(&fds->f, i + 1, memory_order_relaxed);
@@ -124,15 +125,24 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
       unsetenv("_COSMO_FDS");
       for (;;) {
         long fd, kind, flags, mode, handle, pointer, type, family, protocol;
-        if (!TokAtoi(&fdspec, &fd)) break;
-        if (!TokAtoi(&fdspec, &handle)) break;
-        if (!TokAtoi(&fdspec, &kind)) break;
-        if (!TokAtoi(&fdspec, &flags)) break;
-        if (!TokAtoi(&fdspec, &mode)) break;
-        if (!TokAtoi(&fdspec, &pointer)) break;
-        if (!TokAtoi(&fdspec, &type)) break;
-        if (!TokAtoi(&fdspec, &family)) break;
-        if (!TokAtoi(&fdspec, &protocol)) break;
+        if (!TokAtoi(&fdspec, &fd))
+          break;
+        if (!TokAtoi(&fdspec, &handle))
+          break;
+        if (!TokAtoi(&fdspec, &kind))
+          break;
+        if (!TokAtoi(&fdspec, &flags))
+          break;
+        if (!TokAtoi(&fdspec, &mode))
+          break;
+        if (!TokAtoi(&fdspec, &pointer))
+          break;
+        if (!TokAtoi(&fdspec, &type))
+          break;
+        if (!TokAtoi(&fdspec, &family))
+          break;
+        if (!TokAtoi(&fdspec, &protocol))
+          break;
         __ensurefds_unlocked(fd);
         struct Fd *f = fds->p + fd;
         if (f->handle && f->handle != -1 && f->handle != handle) {

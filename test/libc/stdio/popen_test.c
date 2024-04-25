@@ -120,7 +120,8 @@ void OnSig(int sig) {
 }
 
 TEST(popen, complicated) {
-  if (IsWindows()) return;  // windows treats sigusr1 as terminate
+  if (IsWindows())
+    return;  // windows treats sigusr1 as terminate
   char cmd[64];
   signal(SIGUSR1, OnSig);
   sprintf(cmd, "read a ; test \"x$a\" = xhello && kill -USR1 %d", getpid());
@@ -164,8 +165,10 @@ TEST(popen, torture) {
   int i, n = 4;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo", "echo", 0755);
-  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
-  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
+  for (i = 0; i < n; ++i)
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i)
+    ASSERT_EQ(0, pthread_join(t[i], 0));
   CheckForFdLeaks();
 }
 

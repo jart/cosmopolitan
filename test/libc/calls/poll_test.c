@@ -66,8 +66,10 @@ TEST(poll, allZero_doesNothingPrettyMuch) {
 }
 
 TEST(ppoll, weCanProveItChecksForSignals) {
-  if (IsXnu()) return;
-  if (IsNetbsd()) return;
+  if (IsXnu())
+    return;
+  if (IsNetbsd())
+    return;
   int pipefds[2];
   sigset_t set, old;
   struct sigaction oldss;

@@ -27,6 +27,7 @@
  * @asyncsignalsafe
  */
 size_t wcsnlen_s(const wchar_t *s, size_t n) {
-  if (!s) return 0;
+  if (!s)
+    return 0;
   return wcsnlen(s, n);
 }

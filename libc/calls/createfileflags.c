@@ -156,9 +156,12 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   }
 
   // Not certain yet what benefit these flags offer.
-  if (flags & _O_SEQUENTIAL) attr |= kNtFileFlagSequentialScan;
-  if (flags & _O_RANDOM) attr |= kNtFileFlagRandomAccess;
-  if (flags & _O_DIRECT) attr |= kNtFileFlagNoBuffering;
+  if (flags & _O_SEQUENTIAL)
+    attr |= kNtFileFlagSequentialScan;
+  if (flags & _O_RANDOM)
+    attr |= kNtFileFlagRandomAccess;
+  if (flags & _O_DIRECT)
+    attr |= kNtFileFlagNoBuffering;
 
   // TODO(jart): Should we *always* open with write permission if the
   //             kernel will give it to us? We'd then deny write access
@@ -172,9 +175,13 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   //  writing to a file across a network can occasionally return
   //  kNtErrorAccessDenied." -Quoth MSDN
 
-  if (out_perm) *out_perm = perm;
-  if (out_share) *out_share = share;
-  if (out_disp) *out_disp = disp;
-  if (out_attr) *out_attr = attr;
+  if (out_perm)
+    *out_perm = perm;
+  if (out_share)
+    *out_share = share;
+  if (out_disp)
+    *out_disp = disp;
+  if (out_attr)
+    *out_attr = attr;
   return 0;
 }

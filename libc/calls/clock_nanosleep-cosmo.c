@@ -57,7 +57,8 @@ int cosmo_clock_nanosleep(int clock, int flags, const struct timespec *req,
   struct timespec quantum = timespec_fromnanos(1000000000 / CLK_TCK);
   clock_gettime(time_clock, &start);
   deadline = flags & TIMER_ABSTIME ? *req : timespec_add(start, *req);
-  if (timespec_cmp(start, deadline) >= 0) return 0;
+  if (timespec_cmp(start, deadline) >= 0)
+    return 0;
   remain = timespec_sub(deadline, start);
   if (timespec_cmp(remain, quantum) > 0) {
     waitfor = timespec_sub(remain, quantum);

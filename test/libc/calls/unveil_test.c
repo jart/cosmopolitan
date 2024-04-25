@@ -94,7 +94,8 @@ TEST(unveil, api_differences) {
 }
 
 TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
-  if (IsOpenbsd()) return;  // TOOD(jart): why pledge violation?
+  if (IsOpenbsd())
+    return;  // TOOD(jart): why pledge violation?
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
@@ -151,7 +152,8 @@ TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
 }
 
 TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
-  if (IsOpenbsd()) return;  // TOOD(jart): why pledge violation?
+  if (IsOpenbsd())
+    return;  // TOOD(jart): why pledge violation?
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwcx"));
@@ -179,7 +181,8 @@ TEST(unveil, dirfdHacking_doesntWork) {
 }
 
 TEST(unveil, mostRestrictivePolicy) {
-  if (IsOpenbsd()) return;  // openbsd behaves oddly; see docs
+  if (IsOpenbsd())
+    return;  // openbsd behaves oddly; see docs
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
@@ -221,7 +224,8 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
 }
 
 TEST(unveil, usedTwice_allowedOnLinux) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, xbarf("jail/ok.txt", "hello", 5));
@@ -259,7 +263,8 @@ TEST(unveil, truncate_isForbiddenBySeccomp) {
 }
 
 TEST(unveil, ftruncate_isForbidden) {
-  if (IsOpenbsd()) return;  // b/c O_PATH is a Linux thing
+  if (IsOpenbsd())
+    return;  // b/c O_PATH is a Linux thing
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
@@ -275,7 +280,8 @@ TEST(unveil, ftruncate_isForbidden) {
 }
 
 TEST(unveil, procfs_isForbiddenByDefault) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));

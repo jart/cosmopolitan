@@ -53,8 +53,10 @@ void testlib_error_enter(const char *file, const char *func) {
   ftrace_enabled(-1);
   strace_enabled(-1);
   pthread_mutex_lock(&testlib_error_lock);
-  if (!IsWindows()) sys_getpid(); /* make strace easier to read */
-  if (!IsWindows()) sys_getpid();
+  if (!IsWindows())
+    sys_getpid(); /* make strace easier to read */
+  if (!IsWindows())
+    sys_getpid();
   if (g_testlib_shoulddebugbreak) {
     DebugBreak();
   }
@@ -106,18 +108,23 @@ void testlib_runtestcases(const testfn_t *start, const testfn_t *end,
         a->setup(fn);
       }
     }
-    if (_weaken(SetUp)) _weaken(SetUp)();
+    if (_weaken(SetUp))
+      _weaken(SetUp)();
     errno = 0;
-    if (IsWindows()) SetLastError(0);
-    if (!IsWindows()) sys_getpid();
-    if (warmup) warmup();
+    if (IsWindows())
+      SetLastError(0);
+    if (!IsWindows())
+      sys_getpid();
+    if (warmup)
+      warmup();
     testlib_clearxmmregisters();
     STRACE("");
     STRACE("# running test %t on %s@%s", fn, user, host);
     (*fn)();
     STRACE("");
     STRACE("# tearing down %t", fn);
-    if (!IsWindows()) sys_getpid();
+    if (!IsWindows())
+      sys_getpid();
     if (_weaken(TearDown)) {
       _weaken(TearDown)();
     }

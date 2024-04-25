@@ -160,7 +160,8 @@ static wontreturn void Die(const char *path, const char *reason) {
 
 static wontreturn void SysExit(const char *path, const char *func) {
   const char *errstr;
-  if (!(errstr = _strerrno(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerrno(errno)))
+    errstr = "EUNKNOWN";
   tinyprint(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
@@ -414,8 +415,10 @@ static void IndexSections(struct Package *pkg, struct Object *obj) {
 
 static enum SectionKind ClassifySection(struct Package *pkg, struct Object *obj,
                                         uint8_t type, Elf64_Section shndx) {
-  if (shndx == SHN_ABS) return kOther;
-  if (type == STT_COMMON) return kBss;
+  if (shndx == SHN_ABS)
+    return kOther;
+  if (type == STT_COMMON)
+    return kBss;
   return pkg->sections.p[obj->section_offset + shndx].kind;
 }
 
@@ -476,10 +479,14 @@ static void LoadPriviligedRefsToUndefs(struct Package *pkg,
     }
     erela = rela + shdr->sh_size / sizeof(*rela);
     for (; rela < erela; ++rela) {
-      if (!ELF64_R_TYPE(rela->r_info)) continue;
-      if (!(x = ELF64_R_SYM(rela->r_info))) continue;
-      if (x > obj->symcount) Die("error", "elf overflow");
-      if (obj->syms[x].st_shndx) continue;  // symbol is defined
+      if (!ELF64_R_TYPE(rela->r_info))
+        continue;
+      if (!(x = ELF64_R_SYM(rela->r_info)))
+        continue;
+      if (x > obj->symcount)
+        Die("error", "elf overflow");
+      if (obj->syms[x].st_shndx)
+        continue;  // symbol is defined
       if (ELF64_ST_BIND(obj->syms[x].st_info) != STB_WEAK &&
           ELF64_ST_BIND(obj->syms[x].st_info) != STB_GLOBAL) {
         tinyprint(2, "warning: undefined symbol not global\n", NULL);
@@ -526,7 +533,8 @@ static void OpenObject(struct Package *pkg, struct Object *obj, int oid) {
 }
 
 static void CloseObject(struct Object *obj) {
-  if (munmap(obj->elf, obj->size)) notpossible;
+  if (munmap(obj->elf, obj->size))
+    notpossible;
 }
 
 static void LoadObjects(struct Package *pkg) {
@@ -567,14 +575,18 @@ static bool FindSymbol(const char *name, struct Package *pkg,
   size_t i;
   struct Symbol *sym;
   if ((sym = BisectSymbol(pkg, name))) {
-    if (out_sym) *out_sym = sym;
-    if (out_pkg) *out_pkg = pkg;
+    if (out_sym)
+      *out_sym = sym;
+    if (out_pkg)
+      *out_pkg = pkg;
     return true;
   }
   for (i = 0; i < directdeps->i; ++i) {
     if ((sym = BisectSymbol(directdeps->p[i], name))) {
-      if (out_sym) *out_sym = sym;
-      if (out_pkg) *out_pkg = directdeps->p[i];
+      if (out_sym)
+        *out_sym = sym;
+      if (out_pkg)
+        *out_pkg = directdeps->p[i];
       return true;
     }
   }
@@ -587,7 +599,8 @@ static void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
   struct Symbol *undef;
   for (i = 0; i < pkg->undefs.i; ++i) {
     undef = &pkg->undefs.p[i];
-    if (undef->bind_ == STB_WEAK) continue;
+    if (undef->bind_ == STB_WEAK)
+      continue;
     if (!FindSymbol(pkg->strings.p + undef->name, pkg, deps, NULL, NULL)) {
       tinyprint(2, pkg->strings.p + pkg->path, ": undefined symbol '",
                 pkg->strings.p + undef->name, "' (",
@@ -621,7 +634,8 @@ static void CheckYourPrivilege(struct Package *pkg, struct Packages *deps) {
       ++f;
     }
   }
-  if (f) exit(1);
+  if (f)
+    exit(1);
 }
 
 static bool IsSymbolDirectlyReachable(struct Package *pkg,
@@ -639,7 +653,8 @@ static void Package(int argc, char *argv[], struct Package *pkg,
   CheckYourPrivilege(pkg, deps);
   WritePackage(pkg);
   for (i = 0; i < deps->i; ++i) {
-    if (munmap(deps->p[i]->addr, deps->p[i]->size)) notpossible;
+    if (munmap(deps->p[i]->addr, deps->p[i]->size))
+      notpossible;
   }
 }
 

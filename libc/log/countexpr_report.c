@@ -42,7 +42,8 @@ static long GetLongSum(const long *h, size_t n) {
 }
 
 static size_t GetRowCount(const long *h, size_t n) {
-  while (n && !h[n - 1]) --n;
+  while (n && !h[n - 1])
+    --n;
   return n;
 }
 
@@ -55,7 +56,8 @@ static void PrintHistogram(const long *h, size_t n, long t) {
     p = (h[i] * 10000 + (t >> 1)) / t;
     unassert(0 <= p && p <= 10000);
     if (p) {
-      for (j = 0; j < p / 100; ++j) s[j] = '#';
+      for (j = 0; j < p / 100; ++j)
+        s[j] = '#';
       s[j] = 0;
       logos = i ? 1ul << (i - 1) : 0;
       kprintf("%'12lu %'16ld %3d.%02d%% %s\n", logos, h[i], p / 100, p % 100,

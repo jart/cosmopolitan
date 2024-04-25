@@ -19,7 +19,9 @@
 #include "libc/str/str.h"
 
 wint_t towctrans(wint_t c, wctrans_t t) {
-  if (t == (wctrans_t)1) return towupper(c);
-  if (t == (wctrans_t)2) return towlower(c);
+  if (t == (wctrans_t)1)
+    return towupper(c);
+  if (t == (wctrans_t)2)
+    return towlower(c);
   return c;
 }

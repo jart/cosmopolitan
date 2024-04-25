@@ -63,14 +63,16 @@ TEST(tokenbucket, test) {
   ASSERT_EQ(1, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
   ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000002, TB_CIDR));
   ASSERT_EQ(3, AcquireToken(tok.b, 0x08080808, TB_CIDR));
-  for (int i = 0; i < 130; ++i) ReplenishTokens(tok.w, TB_WORDS);
+  for (int i = 0; i < 130; ++i)
+    ReplenishTokens(tok.w, TB_WORDS);
   ASSERT_EQ(127, AcquireToken(tok.b, 0x08080808, TB_CIDR));
 }
 
 void NaiveReplenishTokens(atomic_schar *b, size_t n) {
   for (size_t i = 0; i < n; ++i) {
     int x = atomic_load_explicit(b + i, memory_order_relaxed);
-    if (x == 127) continue;
+    if (x == 127)
+      continue;
     atomic_fetch_add_explicit(b + i, 1, memory_order_acq_rel);
   }
 }

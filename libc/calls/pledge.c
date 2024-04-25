@@ -249,12 +249,17 @@ int pledge(const char *promises, const char *execpromises) {
     // may use pledge(0,0) to perform a support check, to determine if
     // pledge() will be able to impose the restrictions it advertises
     // within the host environment.
-    if (execpromises) return einval();
-    if (IsGenuineBlink()) return enosys();
-    if (IsOpenbsd()) return sys_pledge(0, 0);
-    if (!IsLinux()) return enosys();
+    if (execpromises)
+      return einval();
+    if (IsGenuineBlink())
+      return enosys();
+    if (IsOpenbsd())
+      return sys_pledge(0, 0);
+    if (!IsLinux())
+      return enosys();
     rc = sys_prctl(PR_GET_SECCOMP, 0, 0, 0, 0);
-    if (rc == 0 || rc == 2) return 0;  // 2 means we're already filtered
+    if (rc == 0 || rc == 2)
+      return 0;  // 2 means we're already filtered
     unassert(rc < 0);
     errno = -rc;
     return -1;
@@ -274,9 +279,11 @@ int pledge(const char *promises, const char *execpromises) {
         STRACE("execpromises must be a subset of promises");
         rc = einval();
       } else {
-        if (notsubset) iexecpromises = ipromises;
+        if (notsubset)
+          iexecpromises = ipromises;
         rc = sys_pledge_linux(ipromises, __pledge_mode);
-        if (rc > -4096u) errno = -rc, rc = -1;
+        if (rc > -4096u)
+          errno = -rc, rc = -1;
       }
     } else {
       e = errno;

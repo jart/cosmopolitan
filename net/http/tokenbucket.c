@@ -37,7 +37,8 @@
 void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
   for (size_t i = 0; i < n; ++i) {
     uint64_t a = atomic_load_explicit(w + i, memory_order_relaxed);
-    if (a == 0x7f7f7f7f7f7f7f7f) continue;
+    if (a == 0x7f7f7f7f7f7f7f7f)
+      continue;
     uint64_t b = 0x8080808080808080;
     uint64_t c = 0x7f7f7f7f7f7f7f7f ^ a;
     uint64_t d = ((((c >> 1 | b) - c) & b) ^ b) >> 7;
@@ -75,7 +76,8 @@ void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
 int AcquireToken(atomic_schar *b, uint32_t x, int c) {
   uint32_t i = x >> (32 - c);
   int t = atomic_load_explicit(b + i, memory_order_relaxed);
-  if (t <= 0) return t;
+  if (t <= 0)
+    return t;
   return atomic_fetch_add_explicit(b + i, -1, memory_order_relaxed);
 }
 

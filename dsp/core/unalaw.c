@@ -31,8 +31,10 @@ int unalaw(int x) {
   i = (x ^ 85) & 127;
   e = i >> 4;
   m = i & 15;
-  if (e > 0) m += 16;
+  if (e > 0)
+    m += 16;
   m = (m << 4) + 8;
-  if (e > 1) m = m << (e - 1);
+  if (e > 1)
+    m = m << (e - 1);
   return x & 128 ? m : -m;
 }

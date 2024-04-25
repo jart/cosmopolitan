@@ -61,7 +61,8 @@ __funline int GetNestingLevelImpl(struct StackFrame *frame) {
 __funline int GetNestingLevel(struct CosmoFtrace *ft, struct StackFrame *sf) {
   int nesting;
   nesting = GetNestingLevelImpl(sf);
-  if (nesting < ft->ft_skew) ft->ft_skew = nesting;
+  if (nesting < ft->ft_skew)
+    ft->ft_skew = nesting;
   nesting -= ft->ft_skew;
   return MIN(MAX_NESTING, nesting);
 }
@@ -84,10 +85,12 @@ privileged void ftracer(void) {
   struct PosixThread *pt;
   sf = __builtin_frame_address(0);
   st = (uintptr_t)__argv - sizeof(uintptr_t);
-  if (__ftrace <= 0) return;
+  if (__ftrace <= 0)
+    return;
   if (__tls_enabled) {
     tib = __get_tls_privileged();
-    if (tib->tib_ftrace <= 0) return;
+    if (tib->tib_ftrace <= 0)
+      return;
     ft = &tib->tib_ftracer;
     if ((char *)sf >= tib->tib_sigstack_addr &&
         (char *)sf <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {

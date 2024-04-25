@@ -21,11 +21,14 @@
 
 static inline int PickGoodWidth(unsigned x) {
   if (x < 16) {
-    if (x < 2) return 1;
-    if (x < 8) return 7;
+    if (x < 2)
+      return 1;
+    if (x < 8)
+      return 7;
     return 15;
   } else {
-    if (x < 32) return 31;
+    if (x < 32)
+      return 31;
     return 63;
   }
 }

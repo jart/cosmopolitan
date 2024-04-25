@@ -32,7 +32,8 @@
 __static_yoink("musl_libc_notice");
 
 size_t wcrtomb(char *s, wchar_t wc, mbstate_t *st) {
-  if (!s) return 1;
+  if (!s)
+    return 1;
   if ((unsigned)wc < 0x80) {
     *s = wc;
     return 1;

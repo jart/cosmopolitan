@@ -40,14 +40,17 @@ void showtitle(const char *brand, const char *tool, const char *title,
   printf("/*");
   if (modeline) {
     printf("-*-%-71s-*-│\n│ vi:%-70s:vi │\n╞", modeline->emacs, modeline->vim);
-    for (unsigned i = 0; i < 78; ++i) printf("═");
+    for (unsigned i = 0; i < 78; ++i)
+      printf("═");
     printf("╡\n│ %-76s ", buf);
   } else {
-    for (unsigned i = 0; i < 75; ++i) printf("─");
+    for (unsigned i = 0; i < 75; ++i)
+      printf("─");
     printf("│─╗\n│ %-73s ─╬─", buf);
   }
   printf("│\n╚─");
-  for (unsigned i = 0; i < 75; ++i) printf("─");
+  for (unsigned i = 0; i < 75; ++i)
+    printf("─");
   printf("%s", modeline ? "─" : "│");
   if (description) {
     /* TODO(jart): paragraph fill */

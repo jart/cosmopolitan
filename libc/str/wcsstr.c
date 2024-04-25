@@ -31,12 +31,16 @@ wchar_t *wcsstr(const wchar_t *haystack, const wchar_t *needle) {
   size_t i;
   for (;;) {
     for (i = 0;;) {
-      if (!needle[i]) return (/*unconst*/ wchar_t *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ wchar_t *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
       ++i;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return NULL;
 }

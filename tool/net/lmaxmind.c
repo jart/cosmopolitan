@@ -203,7 +203,8 @@ static int LuaMaxmindResultGet(lua_State *L) {
     ep = &(*ur)->mmlr.entry;
   } else {
     path = xcalloc(n + 1, sizeof(const char *));
-    for (i = 0; i < n; ++i) path[i] = lua_tostring(L, 2 + i);
+    for (i = 0; i < n; ++i)
+      path[i] = lua_tostring(L, 2 + i);
     err = MMDB_aget_value(&(*ur)->mmlr.entry, &edata, path);
     free(path);
     if (err) {
@@ -223,7 +224,8 @@ static int LuaMaxmindResultGet(lua_State *L) {
     ep = &entry;
   }
   err = MMDB_get_entry_data_list(ep, &dl);
-  if (err) LuaThrowMaxmindIpError(L, "getlist", (*ur)->ip, err);
+  if (err)
+    LuaThrowMaxmindIpError(L, "getlist", (*ur)->ip, err);
   LuaMaxmindDump(L, dl);
   MMDB_free_entry_data_list(dl);
   return 1;

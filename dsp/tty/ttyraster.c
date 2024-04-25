@@ -666,7 +666,8 @@ static char *CopyBlock(char *v, const struct TtyRgb chunk[hasatleast 4],
                        struct Glyph *glyph) {
   unsigned i;
   CHECK_LT(pick.bg, 4);
-  if (pick.fg != 0xff) CHECK_LT(pick.fg, 4);
+  if (pick.fg != 0xff)
+    CHECK_LT(pick.fg, 4);
   i = 0;
   if (pick.fg == 0xff) {
     if (!ttyeq(*bg, chunk[pick.bg])) {
@@ -744,7 +745,8 @@ static dontinline char *CopyRun(char *v, size_t n,
     v = CopyGlyph(v, *glyph);
     *x += 2;
     *c += 2;
-    if (*x >= n) break;
+    if (*x >= n)
+      break;
     CopyChunk(chunk, *c, n);
   } while (ChunkEq(chunk, lastchunk));
   *x -= 2;

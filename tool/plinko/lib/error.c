@@ -51,7 +51,8 @@ relegated wontreturn void StackOverflow(void) {
 }
 
 relegated wontreturn void React(int e, int x, int k) {
-  if (!sp || e != LO(GetCurrentFrame())) Push(e);
+  if (!sp || e != LO(GetCurrentFrame()))
+    Push(e);
   Push(x);
   Raise(k);
 }

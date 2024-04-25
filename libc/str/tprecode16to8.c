@@ -37,7 +37,8 @@ static axdx_t tprecode16to8_sse2(char *dst, size_t dstsize, const char16_t *src,
     pcmpgtw(v2, v1, vz);
     pcmpgtw(v3, v1, kDel16);
     pandn((void *)v2, (void *)v3, (void *)v2);
-    if (pmovmskb((void *)v2) != 0xFFFF) break;
+    if (pmovmskb((void *)v2) != 0xFFFF)
+      break;
     packsswb((void *)v1, v1, v1);
     memcpy(dst + r.ax, v1, 8);
     r.ax += 8;
@@ -70,10 +71,13 @@ axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
       r = tprecode16to8_sse2(dst, dstsize, src, r);
     }
 #endif
-    if (!(x = src[r.dx++])) break;
-    if (IsUtf16Cont(x)) continue;
+    if (!(x = src[r.dx++]))
+      break;
+    if (IsUtf16Cont(x))
+      continue;
     if (!IsUcs2(x)) {
-      if (!(y = src[r.dx++])) break;
+      if (!(y = src[r.dx++]))
+        break;
       x = MergeUtf16(x, y);
     }
     w = tpenc(x);

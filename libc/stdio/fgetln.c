@@ -46,7 +46,8 @@ char *fgetln(FILE *stream, size_t *len) {
   size_t n = 0;
   flockfile(stream);
   if ((rc = getdelim_unlocked(&stream->getln, &n, '\n', stream)) > 0) {
-    if (len) *len = rc;
+    if (len)
+      *len = rc;
     res = stream->getln;
   } else {
     res = 0;

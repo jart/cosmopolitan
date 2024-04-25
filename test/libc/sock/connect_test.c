@@ -35,8 +35,10 @@
 #include "libc/thread/thread.h"
 
 TEST(connect, nonblocking) {
-  if (IsFreebsd()) return;  // TODO(jart): why did this start flaking?
-  if (IsOpenbsd()) return;  // TODO(jart): why did this start freezing?
+  if (IsFreebsd())
+    return;  // TODO(jart): why did this start flaking?
+  if (IsOpenbsd())
+    return;  // TODO(jart): why did this start freezing?
   char buf[16] = {0};
   atomic_uint *sem = _mapshared(sizeof(unsigned));
   uint32_t addrsize = sizeof(struct sockaddr_in);
@@ -49,7 +51,8 @@ TEST(connect, nonblocking) {
   ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
   SPAWN(fork);
-  while (!*sem) pthread_yield();
+  while (!*sem)
+    pthread_yield();
   ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 2, read(4, buf, 16));  // hi
   ASSERT_SYS(0, 5, write(4, "hello", 5));

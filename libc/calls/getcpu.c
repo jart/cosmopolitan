@@ -64,7 +64,8 @@ int getcpu(unsigned *out_opt_cpu, unsigned *out_opt_node) {
     }
   } else {
     int rc = sys_getcpu(&cpu, &node, 0);
-    if (rc == -1) return -1;
+    if (rc == -1)
+      return -1;
   }
   if (out_opt_cpu) {
     *out_opt_cpu = cpu;

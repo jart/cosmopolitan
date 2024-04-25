@@ -25,7 +25,8 @@
  */
 int CloseSymbolTable(struct SymbolTable **table) {
   struct SymbolTable *t;
-  if (!*table) return 0;
+  if (!*table)
+    return 0;
   t = *table;
   *table = 0;
   return munmap(t, t->mapsize);

@@ -61,8 +61,10 @@ long sharpen(long cn, long yw, long xw, unsigned char p[cn][yw][xw], long yn,
       rc = enomem();
     }
     free(ta);
-    if (ix) free(ix - 1);
-    if (iy) free(iy - 1);
+    if (ix)
+      free(ix - 1);
+    if (iy)
+      free(iy - 1);
   } else {
     rc = einval();
   }

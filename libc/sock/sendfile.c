@@ -65,8 +65,10 @@ static dontinline textwindows ssize_t sys_sendfile_nt(
   uint32_t flags = 0;
   int64_t ih, oh, eof, offset;
   struct NtByHandleFileInformation wst;
-  if (!__isfdkind(infd, kFdFile)) return ebadf();
-  if (!__isfdkind(outfd, kFdSocket)) return ebadf();
+  if (!__isfdkind(infd, kFdFile))
+    return ebadf();
+  if (!__isfdkind(outfd, kFdSocket))
+    return ebadf();
   ih = g_fds.p[infd].handle;
   oh = g_fds.p[outfd].handle;
   if (opt_in_out_inoffset) {
@@ -119,12 +121,14 @@ static ssize_t sys_sendfile_bsd(int outfd, int infd,
   }
   if (IsFreebsd()) {
     rc = sys_sendfile_freebsd(infd, outfd, offset, uptobytes, 0, &sbytes, 0);
-    if (rc == -1 && errno == ENOBUFS) errno = ENOMEM;
+    if (rc == -1 && errno == ENOBUFS)
+      errno = ENOMEM;
   } else {
     sbytes = uptobytes;
     rc = sys_sendfile_xnu(infd, outfd, offset, &sbytes, 0, 0);
   }
-  if (rc == -1 && errno == ENOTSOCK) errno = EBADF;
+  if (rc == -1 && errno == ENOTSOCK)
+    errno = EBADF;
   if (rc != -1) {
     if (opt_in_out_inoffset) {
       *opt_in_out_inoffset += sbytes;

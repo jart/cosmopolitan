@@ -364,8 +364,10 @@ char *Slurp(const char *path) {
 bool HasFlag(const char *flags, const char *s) {
   char buf[256];
   size_t n = strlen(s);
-  if (!flags) return false;
-  if (n + 2 > sizeof(buf)) return false;
+  if (!flags)
+    return false;
+  if (n + 2 > sizeof(buf))
+    return false;
   memcpy(buf, s, n);
   buf[n] = '\n';
   buf[n + 1] = 0;
@@ -375,18 +377,29 @@ bool HasFlag(const char *flags, const char *s) {
 bool IsGccOnlyFlag(const char *s) {
   if (s[0] == '-') {
     if (s[1] == 'f') {
-      if (startswith(s, "-ffixed-")) return true;
-      if (startswith(s, "-fcall-saved")) return true;
-      if (startswith(s, "-fcall-used")) return true;
-      if (startswith(s, "-fgcse-")) return true;
-      if (startswith(s, "-fvect-cost-model=")) return true;
-      if (startswith(s, "-fsimd-cost-model=")) return true;
-      if (startswith(s, "-fopt-info")) return true;
+      if (startswith(s, "-ffixed-"))
+        return true;
+      if (startswith(s, "-fcall-saved"))
+        return true;
+      if (startswith(s, "-fcall-used"))
+        return true;
+      if (startswith(s, "-fgcse-"))
+        return true;
+      if (startswith(s, "-fvect-cost-model="))
+        return true;
+      if (startswith(s, "-fsimd-cost-model="))
+        return true;
+      if (startswith(s, "-fopt-info"))
+        return true;
     }
-    if (startswith(s, "-mstringop-strategy=")) return true;
-    if (startswith(s, "-mpreferred-stack-boundary=")) return true;
-    if (startswith(s, "-Wframe-larger-than=")) return true;
-    if (startswith(s, "-Walloca-larger-than=")) return true;
+    if (startswith(s, "-mstringop-strategy="))
+      return true;
+    if (startswith(s, "-mpreferred-stack-boundary="))
+      return true;
+    if (startswith(s, "-Wframe-larger-than="))
+      return true;
+    if (startswith(s, "-Walloca-larger-than="))
+      return true;
   }
   static bool once;
   static char *gcc_only_flags;
@@ -409,10 +422,14 @@ bool IsClangOnlyFlag(const char *s) {
 
 bool FileExistsAndIsNewerThan(const char *filepath, const char *thanpath) {
   struct stat st1, st2;
-  if (stat(filepath, &st1) == -1) return false;
-  if (stat(thanpath, &st2) == -1) return false;
-  if (st1.st_mtim.tv_sec < st2.st_mtim.tv_sec) return false;
-  if (st1.st_mtim.tv_sec > st2.st_mtim.tv_sec) return true;
+  if (stat(filepath, &st1) == -1)
+    return false;
+  if (stat(thanpath, &st2) == -1)
+    return false;
+  if (st1.st_mtim.tv_sec < st2.st_mtim.tv_sec)
+    return false;
+  if (st1.st_mtim.tv_sec > st2.st_mtim.tv_sec)
+    return true;
   return st1.st_mtim.tv_nsec >= st2.st_mtim.tv_nsec;
 }
 
@@ -499,44 +516,55 @@ static int GetBaseCpuFreqMhz(void) {
 
 void PlanResource(int resource, struct rlimit rlim) {
   struct rlimit prior;
-  if (getrlimit(resource, &prior)) return;
+  if (getrlimit(resource, &prior))
+    return;
   rlim.rlim_cur = MIN(rlim.rlim_cur, prior.rlim_max);
   rlim.rlim_max = MIN(rlim.rlim_max, prior.rlim_max);
   posix_spawnattr_setrlimit(&spawnattr, resource, &rlim);
 }
 
 void SetCpuLimit(int secs) {
-  if (secs <= 0) return;
-  if (IsWindows()) return;
+  if (secs <= 0)
+    return;
+  if (IsWindows())
+    return;
 #ifdef __x86_64__
   int mhz, lim;
-  if (!(mhz = GetBaseCpuFreqMhz())) return;
+  if (!(mhz = GetBaseCpuFreqMhz()))
+    return;
   lim = ceil(3100. / mhz * secs);
   PlanResource(RLIMIT_CPU, (struct rlimit){lim, lim + 1});
 #endif
 }
 
 void SetFszLimit(long n) {
-  if (n <= 0) return;
-  if (IsWindows()) return;
+  if (n <= 0)
+    return;
+  if (IsWindows())
+    return;
   PlanResource(RLIMIT_FSIZE, (struct rlimit){n, n + (n >> 1)});
 }
 
 void SetMemLimit(long n) {
-  if (n <= 0) return;
-  if (IsWindows() || IsXnu()) return;
+  if (n <= 0)
+    return;
+  if (IsWindows() || IsXnu())
+    return;
   PlanResource(RLIMIT_AS, (struct rlimit){n, n});
 }
 
 void SetStkLimit(long n) {
-  if (IsWindows()) return;
-  if (n <= 0) return;
+  if (IsWindows())
+    return;
+  if (n <= 0)
+    return;
   n = MAX(n, PTHREAD_STACK_MIN * 2);
   PlanResource(RLIMIT_STACK, (struct rlimit){n, n});
 }
 
 void SetProLimit(long n) {
-  if (n <= 0) return;
+  if (n <= 0)
+    return;
   PlanResource(RLIMIT_NPROC, (struct rlimit){n, n});
 }
 
@@ -586,7 +614,8 @@ char *AddShellQuotes(const char *s) {
   }
   p[j++] = '\'';
   p[j] = 0;
-  if ((q = realloc(p, j + 1))) p = q;
+  if ((q = realloc(p, j + 1)))
+    p = q;
   return p;
 }
 
@@ -659,7 +688,8 @@ int Launch(void) {
       break;
     }
     if ((rc = read(pipefds[0], buf, sizeof(buf))) != -1) {
-      if (!(got = rc)) break;
+      if (!(got = rc))
+        break;
       appendd(&output, buf, got);
       if (outquota > 0 && appendz(output).i > outquota) {
         kill(pid, SIGXFSZ);
@@ -789,7 +819,8 @@ char *MakeTmpOut(const char *path) {
   g_tmpout_original = path;
   p = stpcpy(p, __get_tmpdir());
   while ((c = *path++)) {
-    if (c == '/') c = '_';
+    if (c == '/')
+      c = '_';
     if (p == e) {
       tinyprint(2, program_invocation_short_name,
                 ": fatal error: MakeTmpOut() generated temporary filename "
@@ -826,7 +857,8 @@ int main(int argc, char *argv[]) {
   stkquota = 8 * 1024 * 1024;      // bytes
   fszquota = 256 * 1000 * 1000;    // bytes
   memquota = 2048L * 1024 * 1024;  // bytes
-  if ((s = getenv("V"))) verbose = atoi(s);
+  if ((s = getenv("V")))
+    verbose = atoi(s);
   while ((opt = getopt(argc, argv, "hnstvwA:C:F:L:M:O:P:T:V:S:")) != -1) {
     switch (opt) {
       case 'n':
@@ -897,7 +929,8 @@ int main(int argc, char *argv[]) {
 
   cmd = argv[optind];
   if (!strchr(cmd, '/')) {
-    if (!(cmd = commandv(cmd, ccpath, sizeof(ccpath)))) exit(127);
+    if (!(cmd = commandv(cmd, ccpath, sizeof(ccpath))))
+      exit(127);
   }
 
   s = basename(strdup(cmd));
@@ -1020,13 +1053,20 @@ int main(int argc, char *argv[]) {
 #ifdef __x86_64__
     } else if (!strcmp(argv[i], "-march=native")) {
       const struct X86ProcessorModel *model;
-      if (X86_HAVE(XOP)) AddArg("-mxop");
-      if (X86_HAVE(SSE4A)) AddArg("-msse4a");
-      if (X86_HAVE(SSE3)) AddArg("-msse3");
-      if (X86_HAVE(SSSE3)) AddArg("-mssse3");
-      if (X86_HAVE(SSE4_1)) AddArg("-msse4.1");
-      if (X86_HAVE(SSE4_2)) AddArg("-msse4.2");
-      if (X86_HAVE(AVX)) AddArg("-mavx");
+      if (X86_HAVE(XOP))
+        AddArg("-mxop");
+      if (X86_HAVE(SSE4A))
+        AddArg("-msse4a");
+      if (X86_HAVE(SSE3))
+        AddArg("-msse3");
+      if (X86_HAVE(SSSE3))
+        AddArg("-mssse3");
+      if (X86_HAVE(SSE4_1))
+        AddArg("-msse4.1");
+      if (X86_HAVE(SSE4_2))
+        AddArg("-msse4.2");
+      if (X86_HAVE(AVX))
+        AddArg("-mavx");
       if (X86_HAVE(AVX2)) {
         AddArg("-mavx2");
         if (isgcc) {
@@ -1034,27 +1074,48 @@ int main(int argc, char *argv[]) {
           AddArg("-Wa,-msse2avx");
         }
       }
-      if (X86_HAVE(AVX512F)) AddArg("-mavx512f");
-      if (X86_HAVE(AVX512PF)) AddArg("-mavx512pf");
-      if (X86_HAVE(AVX512ER)) AddArg("-mavx512er");
-      if (X86_HAVE(AVX512CD)) AddArg("-mavx512cd");
-      if (X86_HAVE(AVX512VL)) AddArg("-mavx512vl");
-      if (X86_HAVE(AVX512BW)) AddArg("-mavx512bw");
-      if (X86_HAVE(AVX512DQ)) AddArg("-mavx512dq");
-      if (X86_HAVE(AVX512IFMA)) AddArg("-mavx512ifma");
-      if (X86_HAVE(AVX512VBMI)) AddArg("-mavx512vbmi");
-      if (X86_HAVE(SHA)) AddArg("-msha");
-      if (X86_HAVE(AES)) AddArg("-maes");
-      if (X86_HAVE(VAES)) AddArg("-mvaes");
-      if (X86_HAVE(PCLMUL)) AddArg("-mpclmul");
-      if (X86_HAVE(FSGSBASE)) AddArg("-mfsgsbase");
-      if (X86_HAVE(F16C)) AddArg("-mf16c");
-      if (X86_HAVE(FMA)) AddArg("-mfma");
-      if (X86_HAVE(POPCNT)) AddArg("-mpopcnt");
-      if (X86_HAVE(BMI)) AddArg("-mbmi");
-      if (X86_HAVE(BMI2)) AddArg("-mbmi2");
-      if (X86_HAVE(ADX)) AddArg("-madx");
-      if (X86_HAVE(FXSR)) AddArg("-mfxsr");
+      if (X86_HAVE(AVX512F))
+        AddArg("-mavx512f");
+      if (X86_HAVE(AVX512PF))
+        AddArg("-mavx512pf");
+      if (X86_HAVE(AVX512ER))
+        AddArg("-mavx512er");
+      if (X86_HAVE(AVX512CD))
+        AddArg("-mavx512cd");
+      if (X86_HAVE(AVX512VL))
+        AddArg("-mavx512vl");
+      if (X86_HAVE(AVX512BW))
+        AddArg("-mavx512bw");
+      if (X86_HAVE(AVX512DQ))
+        AddArg("-mavx512dq");
+      if (X86_HAVE(AVX512IFMA))
+        AddArg("-mavx512ifma");
+      if (X86_HAVE(AVX512VBMI))
+        AddArg("-mavx512vbmi");
+      if (X86_HAVE(SHA))
+        AddArg("-msha");
+      if (X86_HAVE(AES))
+        AddArg("-maes");
+      if (X86_HAVE(VAES))
+        AddArg("-mvaes");
+      if (X86_HAVE(PCLMUL))
+        AddArg("-mpclmul");
+      if (X86_HAVE(FSGSBASE))
+        AddArg("-mfsgsbase");
+      if (X86_HAVE(F16C))
+        AddArg("-mf16c");
+      if (X86_HAVE(FMA))
+        AddArg("-mfma");
+      if (X86_HAVE(POPCNT))
+        AddArg("-mpopcnt");
+      if (X86_HAVE(BMI))
+        AddArg("-mbmi");
+      if (X86_HAVE(BMI2))
+        AddArg("-mbmi2");
+      if (X86_HAVE(ADX))
+        AddArg("-madx");
+      if (X86_HAVE(FXSR))
+        AddArg("-mfxsr");
       if ((model = getx86processormodel(kX86ProcessorModelKey))) {
         switch (model->march) {
           case X86_MARCH_CORE2:
@@ -1123,9 +1184,11 @@ int main(int argc, char *argv[]) {
 #endif /* __x86_64__ */
 
     } else if (!strcmp(argv[i], "-fsanitize=address")) {
-      if (isgcc && ccversion >= 6) wantasan = true;
+      if (isgcc && ccversion >= 6)
+        wantasan = true;
     } else if (!strcmp(argv[i], "-fsanitize=undefined")) {
-      if (isgcc && ccversion >= 6) wantubsan = true;
+      if (isgcc && ccversion >= 6)
+        wantubsan = true;
     } else if (!strcmp(argv[i], "-fno-sanitize=address")) {
       wantasan = false;
     } else if (!strcmp(argv[i], "-fno-sanitize=undefined")) {
@@ -1134,14 +1197,18 @@ int main(int argc, char *argv[]) {
       wantasan = false;
       wantubsan = false;
     } else if (!strcmp(argv[i], "-fno-sanitize=null")) {
-      if (isgcc && ccversion >= 6) no_sanitize_null = true;
+      if (isgcc && ccversion >= 6)
+        no_sanitize_null = true;
     } else if (!strcmp(argv[i], "-fno-sanitize=alignment")) {
-      if (isgcc && ccversion >= 6) no_sanitize_alignment = true;
+      if (isgcc && ccversion >= 6)
+        no_sanitize_alignment = true;
     } else if (!strcmp(argv[i], "-fno-sanitize=pointer-overflow")) {
-      if (isgcc && ccversion >= 6) no_sanitize_pointer_overflow = true;
+      if (isgcc && ccversion >= 6)
+        no_sanitize_pointer_overflow = true;
     } else if (startswith(argv[i], "-fsanitize=implicit") &&
                strstr(argv[i], "integer")) {
-      if (isgcc) AddArg(argv[i]);
+      if (isgcc)
+        AddArg(argv[i]);
     } else if (strstr(argv[i], "stack-protector")) {
       if (isclang || (isgcc && ccversion >= 6)) {
         AddArg(argv[i]);
@@ -1158,7 +1225,8 @@ int main(int argc, char *argv[]) {
       colorflag = argv[i];
     } else if (startswith(argv[i], "-R") ||
                !strcmp(argv[i], "-fsave-optimization-record")) {
-      if (isclang) AddArg(argv[i]);
+      if (isclang)
+        AddArg(argv[i]);
     } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
       /* llvm doesn't provide a gas interface so simulate w/ clang */
       AddArg(xstrcat("-f", argv[i] + 2));
@@ -1381,11 +1449,14 @@ int main(int argc, char *argv[]) {
     if (verbose < 1) {
       /* make silent mode, i.e. `V=0 make o//target` */
       appendr(&command, 0);
-      if (!action) action = "BUILD";
-      if (!outpath) outpath = shortened;
+      if (!action)
+        action = "BUILD";
+      if (!outpath)
+        outpath = shortened;
       n = strlen(action);
       appends(&command, action);
-      do appendw(&command, ' '), ++n;
+      do
+        appendw(&command, ' '), ++n;
       while (n < 15);
       appends(&command, outpath);
       n += strlen(outpath);
@@ -1395,7 +1466,8 @@ int main(int argc, char *argv[]) {
         appendw(&output, READ32LE("..."));
       } else {
         if (n < m && (__nocolor || !ischardev(2))) {
-          while (n < m) appendw(&command, ' '), ++n;
+          while (n < m)
+            appendw(&command, ' '), ++n;
         }
         appendd(&output, command, n);
       }
@@ -1411,7 +1483,8 @@ int main(int argc, char *argv[]) {
           j += (j - 1) / 3;
           j += 1 + 3;
           j += 1 + 3;
-          while (i < j) appendw(&output, ' '), ++i;
+          while (i < j)
+            appendw(&output, ' '), ++i;
           if (us > timeout * 1000000ull / 2) {
             if (us > timeout * 1000000ull) {
               PrintRed();
@@ -1436,7 +1509,8 @@ int main(int argc, char *argv[]) {
           j += (j - 1) / 3;
           j += 1 + 3;
           j += 1 + 3;
-          while (i < j) appendw(&output, ' '), ++i;
+          while (i < j)
+            appendw(&output, ' '), ++i;
           if ((isproblematic = us > cpuquota * 1000000ull / 2)) {
             if (us > cpuquota * 1000000ull - (cpuquota * 1000000ull) / 5) {
               PrintRed();
@@ -1455,7 +1529,8 @@ int main(int argc, char *argv[]) {
           i = FormatUint64Thousands(buf, usage.ru_maxrss) - buf;
           j = ceil(log10(memquota / 1024));
           j += (j - 1) / 3;
-          while (i < j) appendw(&output, ' '), ++i;
+          while (i < j)
+            appendw(&output, ' '), ++i;
           if ((isproblematic = usage.ru_maxrss * 1024 > memquota / 2)) {
             if (usage.ru_maxrss * 1024 > memquota - memquota / 5) {
               PrintRed();
@@ -1473,7 +1548,8 @@ int main(int argc, char *argv[]) {
         if (fszquota > 0) {
           us = usage.ru_inblock + usage.ru_oublock;
           i = FormatUint64Thousands(buf, us) - buf;
-          while (i < 7) appendw(&output, ' '), ++i;
+          while (i < 7)
+            appendw(&output, ' '), ++i;
           appends(&output, buf);
           appendw(&output, READ32LE("iop "));
           n += i + 4;
@@ -1516,7 +1592,8 @@ int main(int argc, char *argv[]) {
     if (errno == EINTR) {
       s = "notice: compile output truncated\n";
     } else {
-      if (!exitcode) exitcode = 55;
+      if (!exitcode)
+        exitcode = 55;
       s = "error: compile failed to write result\n";
     }
     write(2, s, strlen(s));

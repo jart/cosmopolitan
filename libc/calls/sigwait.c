@@ -20,7 +20,8 @@
 
 int sigwait(const sigset_t *mask, int *sig) {
   siginfo_t si;
-  if (sigtimedwait(mask, &si, 0) < 0) return -1;
+  if (sigtimedwait(mask, &si, 0) < 0)
+    return -1;
   *sig = si.si_signo;
   return 0;
 }

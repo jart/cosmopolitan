@@ -48,7 +48,8 @@ struct Gc *NewGc(int A) {
   struct Gc *G;
   DCHECK_LE(B, A);
   DCHECK_LE(A, 0);
-  if (B < cHeap) cHeap = B;
+  if (B < cHeap)
+    cHeap = B;
   n = ROUNDUP(A - B, DWBITS) / DWBITS;
   G = Addr(BANE);
   bzero(G->M, n * sizeof(G->M[0]));
@@ -65,7 +66,8 @@ void Marker(const dword M[], int A, int x) {
   dword t;
   do {
     i = ~(x - A);
-    if (HasBit(M, i)) return;
+    if (HasBit(M, i))
+      return;
     SetBit((void *)M, i);
     if (HI(GetShadow(x)) < A) {
       Marker(M, A, HI(GetShadow(x)));
@@ -118,7 +120,8 @@ int Relocater(const dword M[], const unsigned P[], int A, int x) {
 void Sweep(struct Gc *G) {
   dword m;
   int a, b, d, i, j;
-  if (G->noop) return;
+  if (G->noop)
+    return;
   i = 0;
   b = d = G->A;
   for (; i < G->n; ++i) {
@@ -146,7 +149,8 @@ void Sweep(struct Gc *G) {
 
 int MarkSweep(int A, int x) {
   struct Gc *G;
-  if (x >= A) return cx = A, x;
+  if (x >= A)
+    return cx = A, x;
   G = NewGc(A);
   Mark(G, x);
   Census(G);

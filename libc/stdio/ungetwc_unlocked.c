@@ -27,7 +27,8 @@ wint_t ungetwc_unlocked(wint_t c, FILE *f) {
   char b[6];
   unsigned n;
   uint64_t w;
-  if (c == -1) return -1;
+  if (c == -1)
+    return -1;
   n = 0;
   w = tpenc(c);
   do {

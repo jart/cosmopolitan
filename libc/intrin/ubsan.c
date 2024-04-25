@@ -177,7 +177,8 @@ static char *__ubsan_itpcpy(char *p, struct UbsanTypeDescriptor *t,
 
 static size_t __ubsan_strlen(const char *s) {
   size_t i = 0;
-  while (s[i]) ++i;
+  while (s[i])
+    ++i;
   return i;
 }
 
@@ -208,7 +209,8 @@ static uintptr_t __ubsan_extend(struct UbsanTypeDescriptor *t, uintptr_t x) {
 }
 
 static wontreturn void __ubsan_unreachable(void) {
-  for (;;) abort();
+  for (;;)
+    abort();
 }
 
 static void __ubsan_exit(void) {
@@ -314,7 +316,8 @@ static __ubsan_die_f *__ubsan_type_mismatch_handler(
     struct UbsanTypeMismatchInfo *info, uintptr_t pointer) {
   const char *kind;
   char buf[512], *p = buf;
-  if (!pointer) return __ubsan_abort(&info->location, "null pointer access");
+  if (!pointer)
+    return __ubsan_abort(&info->location, "null pointer access");
   kind = __ubsan_dubnul(kUbsanTypeCheckKinds, info->type_check_kind);
   if (info->alignment && (pointer & (info->alignment - 1))) {
     p = __ubsan_stpcpy(p, "unaligned ");

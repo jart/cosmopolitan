@@ -132,7 +132,8 @@ void TestContendedLock(const char *name, int kind) {
     kprintf("clone failed: %s\n", strerror(rc));
     _Exit(1);
   }
-  while (!atomic_load(&ready)) donothing;
+  while (!atomic_load(&ready))
+    donothing;
   t1 = timespec_real();
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_mutex_lock(&mu));
@@ -142,7 +143,8 @@ void TestContendedLock(const char *name, int kind) {
     ASSERT_EQ(0, pthread_mutex_unlock(&mu));
   }
   t2 = timespec_real();
-  while (tib.tib_tid) donothing;
+  while (tib.tib_tid)
+    donothing;
   ASSERT_EQ(1, atomic_load(&success));
   ASSERT_EQ(0, atomic_load(&counter));
   FreeCosmoStack(stk);
@@ -178,7 +180,8 @@ int main(int argc, char *argv[]) {
 #ifdef __aarch64__
   // our usage of raw clone() is probably broken in aarch64
   // we should just get rid of clone()
-  if (1) return 0;
+  if (1)
+    return 0;
 #endif
 
   if (_weaken(nsync_mu_lock)) {

@@ -101,14 +101,16 @@ int Backref(int x) {
 }
 
 static inline void Expand(int c) {
-  if (end >= TERMS) Error(5, "OUT OF TERMS");
+  if (end >= TERMS)
+    Error(5, "OUT OF TERMS");
   mem[end++] = c;
 }
 
 void Gc(struct Closure *p) {
   struct Closure *t;
   while (p && p != &root) {
-    if (--p->refs) break;
+    if (--p->refs)
+      break;
     Gc(p->next);
     t = p->envp;
     p->envp = 0;
@@ -123,8 +125,10 @@ void Var(void) {
   struct Closure *t, *e;
   e = t = envp;
   x = mem[ip + 1];
-  for (i = 0; i < x && e != &root; ++i) e = e->next;
-  if (e == &root) Error(10 + x, "UNDEFINED VARIABLE %d", x);
+  for (i = 0; i < x && e != &root; ++i)
+    e = e->next;
+  if (e == &root)
+    Error(10 + x, "UNDEFINED VARIABLE %d", x);
   ip = e->term;
   envp = REF(e->envp);
   Gc(t);
@@ -171,14 +175,17 @@ void Put(void) {
 
 void Bye(void) {
   int rc = mem[ip + 2];  // (λ 0) [exitcode]
-  if (rc) Error(rc, "CONTINUATIONS EXHAUSTED");
-  if (postdump && !rc) Dump(0, end, stderr);
+  if (rc)
+    Error(rc, "CONTINUATIONS EXHAUSTED");
+  if (postdump && !rc)
+    Dump(0, end, stderr);
   exit(0);
 }
 
 // pops continuation and pushes it to environment
 void Abs(void) {
-  if (!contp) Bye();
+  if (!contp)
+    Bye();
   struct Closure *t = contp;
   contp = t->next;
   t->next = envp;
@@ -249,7 +256,8 @@ void Iop(void) {
 }
 
 static void Rex(void) {
-  if (slog) PrintMachineState(stderr);
+  if (slog)
+    PrintMachineState(stderr);
   if (rlog && (alog || mem[ip] != APP)) {
     PrintExpressions(stderr, alog, vlog);
   }
@@ -288,7 +296,8 @@ void Krivine(void) {
       fputs("]\n", stderr);
     }
   }
-  for (;;) Rex();
+  for (;;)
+    Rex();
 }
 
 void LoadFlags(int argc, char *argv[]) {

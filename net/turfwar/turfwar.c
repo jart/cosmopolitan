@@ -388,22 +388,26 @@ struct timespec WaitFor(int millis) {
 
 // helper functions for check macro implementation
 bool CheckMem(const char *file, int line, void *ptr) {
-  if (ptr) return true;
+  if (ptr)
+    return true;
   kprintf("%s:%d: %P: out of memory: %s\n", file, line, strerror(errno));
   return false;
 }
 bool CheckSys(const char *file, int line, long rc) {
-  if (rc != -1) return true;
+  if (rc != -1)
+    return true;
   kprintf("%s:%d: %P: %s\n", file, line, strerror(errno));
   return false;
 }
 bool CheckSql(const char *file, int line, int rc) {
-  if (rc == SQLITE_OK) return true;
+  if (rc == SQLITE_OK)
+    return true;
   kprintf("%s:%d: %P: %s\n", file, line, sqlite3_errstr(rc));
   return false;
 }
 bool CheckDb(const char *file, int line, int rc, sqlite3 *db) {
-  if (rc == SQLITE_OK) return true;
+  if (rc == SQLITE_OK)
+    return true;
   kprintf("%s:%d: %P: %s: %s\n", file, line, sqlite3_errstr(rc),
           sqlite3_errmsg(db));
   return false;
@@ -417,16 +421,20 @@ int DbOpen(const char *path, sqlite3 **db) {
   int i, rc;
   char sql[128];
   rc = sqlite3_open(path, db);
-  if (rc != SQLITE_OK) return rc;
+  if (rc != SQLITE_OK)
+    return rc;
   if (!IsWindows() && !IsOpenbsd()) {
     ksnprintf(sql, sizeof(sql), "PRAGMA mmap_size=%ld", GetTotalRam());
     rc = sqlite3_exec(*db, sql, 0, 0, 0);
-    if (rc != SQLITE_OK) return rc;
+    if (rc != SQLITE_OK)
+      return rc;
   }
   for (i = 0; i < 7; ++i) {
     rc = sqlite3_exec(*db, "PRAGMA journal_mode=WAL", 0, 0, 0);
-    if (rc == SQLITE_OK) break;
-    if (rc != SQLITE_BUSY) return rc;
+    if (rc == SQLITE_OK)
+      break;
+    if (rc != SQLITE_BUSY)
+      return rc;
     usleep(1000L << i);
   }
   return sqlite3_exec(*db, "PRAGMA synchronous=NORMAL", 0, 0, 0);
@@ -436,9 +444,12 @@ int DbStep(sqlite3_stmt *stmt) {
   int i, rc;
   for (i = 0; i < 12; ++i) {
     rc = sqlite3_step(stmt);
-    if (rc == SQLITE_ROW) break;
-    if (rc == SQLITE_DONE) break;
-    if (rc != SQLITE_BUSY) return rc;
+    if (rc == SQLITE_ROW)
+      break;
+    if (rc == SQLITE_DONE)
+      break;
+    if (rc != SQLITE_BUSY)
+      return rc;
     usleep(1000L << i);
   }
   return rc;
@@ -465,9 +476,12 @@ bool Blackhole(uint32_t ip) {
 // validates name registration validity
 bool IsValidNick(const char *s, size_t n) {
   size_t i;
-  if (n == -1) n = strlen(s);
-  if (!n) return false;
-  if (n > NICK_MAX) return false;
+  if (n == -1)
+    n = strlen(s);
+  if (!n)
+    return false;
+  if (n > NICK_MAX)
+    return false;
   for (i = 0; i < n; ++i) {
     if (!(isalnum(s[i]) ||  //
           s[i] == '@' ||    //
@@ -533,9 +547,11 @@ bool AddClient(struct Clients *q, const struct Client *v, nsync_time dead) {
   }
   if (q->count != ARRAYLEN(q->data)) {
     int i = q->pos + q->count;
-    if (ARRAYLEN(q->data) <= i) i -= ARRAYLEN(q->data);
+    if (ARRAYLEN(q->data) <= i)
+      i -= ARRAYLEN(q->data);
     memcpy(q->data + i, v, sizeof(*v));
-    if (!q->count) wake = true;
+    if (!q->count)
+      wake = true;
     q->count++;
     added = true;
   }
@@ -587,9 +603,11 @@ bool AddClaim(struct Claims *q, const struct Claim *v, nsync_time dead) {
   }
   if (q->count != ARRAYLEN(q->data)) {
     int i = q->pos + q->count;
-    if (ARRAYLEN(q->data) <= i) i -= ARRAYLEN(q->data);
+    if (ARRAYLEN(q->data) <= i)
+      i -= ARRAYLEN(q->data);
     memcpy(q->data + i, v, sizeof(*v));
-    if (!q->count) wake = true;
+    if (!q->count)
+      wake = true;
     q->count++;
     added = true;
   }
@@ -1025,7 +1043,8 @@ void *HttpWorker(void *arg) {
           ksnprintf(cashbuf, sizeof(cashbuf), "max-age=%d, must-revalidate",
                     a->cash);
           p = stpcpy(p, cashbuf);
-          if (comp) p = stpcpy(p, "\r\nContent-Encoding: gzip");
+          if (comp)
+            p = stpcpy(p, "\r\nContent-Encoding: gzip");
           p = stpcpy(p, "\r\nContent-Length: ");
           d = comp ? a->gzip : a->data;
           p = FormatInt32(p, d.n);
@@ -1082,7 +1101,8 @@ void *HttpWorker(void *arg) {
       } else if (UrlStartsWith("/claim")) {
         // ip:name registration endpoint
         ++g_claimrequests;
-        if (ipv6) goto Ipv6Warning;
+        if (ipv6)
+          goto Ipv6Warning;
         struct Claim v = {.ip = ip, .created = g_nowish.ts.tv_sec};
         if (GetNick(inbuf, msg, &v)) {
           if (AddClaim(&g_claims, &v,
@@ -1308,7 +1328,8 @@ bool ReloadAsset(struct Asset *a) {
     CHECK_MEM((data.p = malloc(st.st_size)));
     CHECK_SYS((rc = read(fd, data.p, st.st_size)));
     data.n = st.st_size;
-    if (rc != st.st_size) goto OnError;
+    if (rc != st.st_size)
+      goto OnError;
     CHECK_MEM((gzip = Gzip(data)).p);
     //!//!//!//!//!//!//!//!//!//!//!//!//!/
     nsync_mu_lock(&a->lock);
@@ -1469,12 +1490,15 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
   // otherwise.. you can use --strace to see the fcntl bloodbath
   CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
   while ((rc = DbStep(stmt)) != SQLITE_DONE) {
-    if (rc != SQLITE_ROW) CHECK_DB(rc);
+    if (rc != SQLITE_ROW)
+      CHECK_DB(rc);
     strlcpy(name2, (void *)sqlite3_column_text(stmt, 0), sizeof(name2));
-    if (!IsValidNick(name2, -1)) continue;
+    if (!IsValidNick(name2, -1))
+      continue;
     if (strcmp(name1, name2)) {
       // name changed
-      if (namestate) CHECK_SYS(appends(&a.data.p, "],\n"));
+      if (namestate)
+        CHECK_SYS(appends(&a.data.p, "],\n"));
       namestate = true;
       CHECK_SYS(appendf(
           &a.data.p, "\"%s\":[\n",
@@ -1487,7 +1511,8 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
                       sqlite3_column_int64(stmt, 2)));
   }
   CHECK_SQL(sqlite3_exec(db, "END TRANSACTION", 0, 0, 0));
-  if (namestate) CHECK_SYS(appends(&a.data.p, "]\n"));
+  if (namestate)
+    CHECK_SYS(appends(&a.data.p, "]\n"));
   CHECK_SYS(appends(&a.data.p, "}}\n"));
   CHECK_DB(sqlite3_finalize(stmt));
   CHECK_SQL(sqlite3_close(db));
@@ -1540,7 +1565,8 @@ bool GeneratePlot(struct Asset *out, long block, long cash) {
   mask = area - 1;
   clump = 32 - bsr(area) - 8;
   while ((rc = DbStep(stmt)) != SQLITE_DONE) {
-    if (rc != SQLITE_ROW) CHECK_DB(rc);
+    if (rc != SQLITE_ROW)
+      CHECK_DB(rc);
     ip = sqlite3_column_int64(stmt, 0);
     i = (ip >> clump) & mask;
     y = g_hilbert[i][0];
@@ -1700,8 +1726,10 @@ StartOver:
     CHECK_SYS(appends(&t.data.p, "\"recent\":[\n"));
     CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
     for (once = false; (rc = DbStep(stmt)) != SQLITE_DONE; once = true) {
-      if (rc != SQLITE_ROW) CHECK_SQL(rc);
-      if (once) CHECK_SYS(appends(&t.data.p, ",\n"));
+      if (rc != SQLITE_ROW)
+        CHECK_SQL(rc);
+      if (once)
+        CHECK_SYS(appends(&t.data.p, ",\n"));
       CHECK_SYS(
           appendf(&t.data.p, "[%ld,\"%s\",%ld]", sqlite3_column_int64(stmt, 0),
                   EscapeJsStringLiteral(
@@ -1939,9 +1967,11 @@ int main(int argc, char *argv[]) {
 
   // the power to serve
   if (g_daemonize) {
-    if (fork() > 0) _Exit(0);
+    if (fork() > 0)
+      _Exit(0);
     setsid();
-    if (fork() > 0) _Exit(0);
+    if (fork() > 0)
+      _Exit(0);
     umask(0);
     if (closefrom(0))
       for (int i = 0; i < 256; ++i)  //

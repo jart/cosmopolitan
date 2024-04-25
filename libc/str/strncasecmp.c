@@ -30,7 +30,8 @@
 int strncasecmp(const char *a, const char *b, size_t n) {
   int x, y;
   size_t i = 0;
-  if (!n-- || a == b) return 0;
+  if (!n-- || a == b)
+    return 0;
   while ((x = kToLower[a[i] & 0xff]) == (y = kToLower[b[i] & 0xff]) && b[i] &&
          i < n) {
     ++i;

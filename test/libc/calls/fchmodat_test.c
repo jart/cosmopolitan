@@ -34,7 +34,8 @@ void SetUpOnce(void) {
 }
 
 TEST(fchmodat, testFchmodat) {
-  if (IsWindows()) return;  // not advanced enough yet
+  if (IsWindows())
+    return;  // not advanced enough yet
   struct stat st;
   umask(022);
   ASSERT_SYS(0, 3,

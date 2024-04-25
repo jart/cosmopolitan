@@ -30,14 +30,19 @@
 int64_t ParseContentLength(const char *s, size_t n) {
   size_t i;
   int64_t r;
-  if (n == -1) n = s ? strlen(s) : 0;
-  if (!n) return -1;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
+  if (!n)
+    return -1;
   for (r = i = 0; i < n; ++i) {
-    if (s[i] == ',' && i > 0) break;
-    if (!isdigit(s[i])) return -1;
+    if (s[i] == ',' && i > 0)
+      break;
+    if (!isdigit(s[i]))
+      return -1;
     r *= 10;
     r += s[i] - '0';
-    if (r >= MAXIMUM) return -1;
+    if (r >= MAXIMUM)
+      return -1;
   }
   return r;
 }

@@ -59,7 +59,9 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
   int rc = __fmt(vsnprintfputchar, &str, fmt, va);
-  if (rc < 0) return rc;
-  if (str.n) str.p[MIN(str.i, str.n - 1)] = '\0';
+  if (rc < 0)
+    return rc;
+  if (str.n)
+    str.p[MIN(str.i, str.n - 1)] = '\0';
   return str.i;
 }

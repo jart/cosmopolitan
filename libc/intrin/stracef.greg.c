@@ -24,7 +24,8 @@
 
 dontinstrument void __stracef(const char *fmt, ...) {
   va_list v;
-  if (strace_enabled(0) <= 0) return;
+  if (strace_enabled(0) <= 0)
+    return;
   va_start(v, fmt);
   kvprintf(fmt, v);
   va_end(v);

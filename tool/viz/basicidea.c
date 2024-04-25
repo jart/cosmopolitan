@@ -37,9 +37,10 @@
 
 #define SQR(X)    ((X) * (X))
 #define UNCUBE(x) x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40
-#define ORDIE(X)                   \
-  do {                             \
-    if (!(X)) perror(#X), exit(1); \
+#define ORDIE(X)           \
+  do {                     \
+    if (!(X))              \
+      perror(#X), exit(1); \
   } while (0)
 
 int want24bit_;

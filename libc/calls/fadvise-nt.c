@@ -37,8 +37,10 @@ static textwindows int sys_fadvise_nt_impl(int fd, uint64_t offset,
   int rc, flags, mode;
   uint32_t perm, share, attr;
 
-  if ((int64_t)len < 0) return einval();
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
+  if ((int64_t)len < 0)
+    return einval();
+  if (!__isfdkind(fd, kFdFile))
+    return ebadf();
   h1 = g_fds.p[fd].handle;
   mode = g_fds.p[fd].mode;
   flags = g_fds.p[fd].flags;

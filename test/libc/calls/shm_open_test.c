@@ -90,7 +90,8 @@ wontreturn void Bouncer(void) {
 wontreturn void Sender(void) {
 
   /* Wait for file to exist. */
-  while (!*ready) donothing;
+  while (!*ready)
+    donothing;
 
   /* Open the existing shared memory object and map it
      into the caller's address space. */

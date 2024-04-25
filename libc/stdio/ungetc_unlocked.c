@@ -24,7 +24,8 @@
  * Pushes byte back to stream.
  */
 int ungetc_unlocked(int c, FILE *f) {
-  if (c == -1) return -1;
+  if (c == -1)
+    return -1;
   if (f->beg) {
     if (c != f->buf[--f->beg]) {
       f->buf[f->beg] = c;

@@ -53,8 +53,10 @@ int main(int argc, char *argv[]) {
     if (!l1 && !l2) {
       exit(0);
     }
-    if (l1) chomp(l1);
-    if (l2) chomp(l2);
+    if (l1)
+      chomp(l1);
+    if (l2)
+      chomp(l2);
     if (!l1 || !l2) {
       printf("> %s\n", l1 ? l1 : "EOF");
       printf("< %s\n", l2 ? l2 : "EOF");

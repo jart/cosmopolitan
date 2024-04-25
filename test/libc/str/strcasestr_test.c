@@ -32,14 +32,19 @@
 
 char *strcasestr_naive(const char *haystack, const char *needle) {
   size_t i;
-  if (haystack == needle || !*needle) return (void *)haystack;
+  if (haystack == needle || !*needle)
+    return (void *)haystack;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char *)haystack;
-      if (!haystack[i]) break;
-      if (kToLower[needle[i] & 255] != kToLower[haystack[i] & 255]) break;
+      if (!needle[i])
+        return (/*unconst*/ char *)haystack;
+      if (!haystack[i])
+        break;
+      if (kToLower[needle[i] & 255] != kToLower[haystack[i] & 255])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 }

@@ -36,7 +36,8 @@ ti_int __divmodti4(ti_int a, ti_int b, tu_int *opt_out_rem) {
   q = __udivmodti4(x, y, &r);  // unsigned divide
   q = (tu_int)(q ^ sq) - sq;   // fix quotient sign
   r = (tu_int)(r ^ sr) - sr;   // fix remainder sign
-  if (opt_out_rem) *opt_out_rem = r;
+  if (opt_out_rem)
+    *opt_out_rem = r;
   return q;
 }
 

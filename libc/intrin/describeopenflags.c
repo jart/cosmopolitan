@@ -35,7 +35,8 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
   int i, n;
   const char *pipe;
   struct DescribeFlags d[N];
-  if (x == -1) return "-1";
+  if (x == -1)
+    return "-1";
   p = buf;
   switch (x & O_ACCMODE) {
     case O_RDONLY:
@@ -60,7 +61,8 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
   if (x) {
     p = stpcpy(p, pipe);
     for (n = 0; kOpenFlags[n].x != MAGNUM_TERMINATOR; ++n) {
-      if (n == N) notpossible;
+      if (n == N)
+        notpossible;
     }
     for (i = 0; i < n; ++i) {
       d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);

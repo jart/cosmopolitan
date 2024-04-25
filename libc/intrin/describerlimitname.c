@@ -23,6 +23,7 @@
  * Describes setrlimit() / getrlimit() argument.
  */
 const char *(DescribeRlimitName)(char buf[20], int x) {
-  if (x == 127) return "n/a";
+  if (x == 127)
+    return "n/a";
   return DescribeMagnum(buf, kRlimitNames, "RLIMIT_", x);
 }

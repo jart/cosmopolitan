@@ -24,6 +24,7 @@
  */
 void *xmemalign(size_t alignment, size_t bytes) {
   void *res = memalign(alignment, bytes);
-  if (!res) xdie();
+  if (!res)
+    xdie();
   return res;
 }

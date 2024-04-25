@@ -50,8 +50,10 @@ static char *Ithoa(char p[27], unsigned long x) {
   } while (x);
   for (;;) {
     *p++ = m[--i];
-    if (!i) break;
-    if (!(i % 3)) *p++ = ',';
+    if (!i)
+      break;
+    if (!(i % 3))
+      *p++ = ',';
   }
   *p = '\0';
   return p;

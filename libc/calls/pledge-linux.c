@@ -1023,18 +1023,21 @@ static const struct sock_filter kFilterIgnoreExitGroup[] = {
 
 static privileged unsigned long StrLen(const char *s) {
   unsigned long n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
 static privileged void *MemCpy(void *d, const void *s, unsigned long n) {
   unsigned long i = 0;
-  for (; i < n; ++i) ((char *)d)[i] = ((char *)s)[i];
+  for (; i < n; ++i)
+    ((char *)d)[i] = ((char *)s)[i];
   return (char *)d + n;
 }
 
 static privileged char *FixCpy(char p[17], uint64_t x, int k) {
-  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
 }
@@ -1305,7 +1308,8 @@ static privileged void MonitorSigSys(void) {
 
 static privileged void AppendFilter(struct Filter *f,
                                     const struct sock_filter *p, size_t n) {
-  if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) notpossible;
+  if (UNLIKELY(f->n + n > ARRAYLEN(f->p)))
+    notpossible;
   MemCpy(f->p + f->n, p, n * sizeof(*f->p));
   f->n += n;
 }
@@ -2170,7 +2174,8 @@ static privileged void AppendPledge(struct Filter *f,   //
   if ((count = CountUnspecial(p, len))) {
     if (count < 256) {
       for (j = i = 0; i < len; ++i) {
-        if (p[i] & SPECIAL) continue;
+        if (p[i] & SPECIAL)
+          continue;
         // jump to ALLOW rule below if accumulator equals ordinal
         struct sock_filter fragment[] = {
             BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K,  // instruction
@@ -2192,7 +2197,8 @@ static privileged void AppendPledge(struct Filter *f,   //
 
   // handle "special" ordinals which use hand-crafted bpf
   for (i = 0; i < len; ++i) {
-    if (!(p[i] & SPECIAL)) continue;
+    if (!(p[i] & SPECIAL))
+      continue;
     switch (p[i]) {
       case __NR_linux_mmap | EXEC:
         AllowMmapExec(f);

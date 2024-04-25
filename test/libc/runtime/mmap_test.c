@@ -104,7 +104,8 @@ TEST(mmap, smallerThanPage_mapsRemainder) {
 }
 
 TEST(mmap, smallerThanPage_remainderIsPoisoned) {
-  if (!IsAsan()) return;
+  if (!IsAsan())
+    return;
   char *map;
   ASSERT_NE(MAP_FAILED, (map = mmap(0, 1, PROT_READ | PROT_WRITE,
                                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
@@ -474,7 +475,8 @@ void BenchMmapPrivate(void) {
   void *p;
   p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
            -1, 0);
-  if (p == MAP_FAILED) abort();
+  if (p == MAP_FAILED)
+    abort();
   ptrs[count++] = p;
 }
 

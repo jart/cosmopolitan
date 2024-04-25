@@ -94,11 +94,15 @@ static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
   size_t i;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 }
@@ -124,7 +128,8 @@ static abi bool32 WinFileExists(const char *path) {
   uint16_t path16[PATH_MAX];
   size_t z = ARRAYLEN(path16);
   size_t n = tprecode8to16(path16, z, path).ax;
-  if (n >= z - 1) return false;
+  if (n >= z - 1)
+    return false;
   return __imp_GetFileAttributesW(path16) != -1u;
 }
 
@@ -236,7 +241,8 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   // normalize executable path
   if (wa->argv[0] && !WinFileExists(wa->argv[0])) {
     unsigned i, n = 0;
-    while (wa->argv[0][n]) ++n;
+    while (wa->argv[0][n])
+      ++n;
     if (n + 4 < sizeof(wa->argv0buf)) {
       for (i = 0; i < n; ++i) {
         wa->argv0buf[i] = wa->argv[0][i];
@@ -302,7 +308,8 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   cmdline = MyCommandLine();
 #if SYSDEBUG
   // sloppy flag-only check for early initialization
-  if (StrStr(cmdline, u"--strace")) ++__strace;
+  if (StrStr(cmdline, u"--strace"))
+    ++__strace;
 #endif
   if (_weaken(WinSockInit)) {
     _weaken(WinSockInit)();

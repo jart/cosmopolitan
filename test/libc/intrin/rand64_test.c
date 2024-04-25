@@ -64,7 +64,8 @@ TEST(_rand64, testLcg_doesntProduceIdenticalValues) {
   for (i = 0; i < ARRAYLEN(A); ++i) {
     EXPECT_NE(0, A[i], "i=%d", i);
     for (j = 0; j < ARRAYLEN(A); ++j) {
-      if (i == j) continue;
+      if (i == j)
+        continue;
       EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
     }
   }
@@ -93,7 +94,8 @@ TEST(_rand64, testThreadSafety_doesntProduceIdenticalValues) {
   for (i = 0; i < ARRAYLEN(A); ++i) {
     EXPECT_NE(0, A[i], "i=%d", i);
     for (j = 0; j < ARRAYLEN(A); ++j) {
-      if (i == j) continue;
+      if (i == j)
+        continue;
       EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
     }
   }

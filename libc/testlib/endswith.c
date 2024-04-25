@@ -20,8 +20,10 @@
 #include "libc/testlib/testlib.h"
 
 bool testlib_endswith(size_t cw, const void *s, const void *suffix) {
-  if (s == suffix) return true;
-  if (!s || !suffix) return false;
+  if (s == suffix)
+    return true;
+  if (!s || !suffix)
+    return false;
   return cw == sizeof(wchar_t)    ? wcsendswith(s, suffix)
          : cw == sizeof(char16_t) ? endswith16(s, suffix)
                                   : endswith(s, suffix);

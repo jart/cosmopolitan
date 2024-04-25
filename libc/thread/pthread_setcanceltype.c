@@ -27,10 +27,14 @@
 #include "libc/thread/tls.h"
 
 static const char *DescribeCancelType(char buf[12], int err, int *t) {
-  if (err) return "n/a";
-  if (!t) return "NULL";
-  if (*t == PTHREAD_CANCEL_DEFERRED) return "PTHREAD_CANCEL_DEFERRED";
-  if (*t == PTHREAD_CANCEL_ASYNCHRONOUS) return "PTHREAD_CANCEL_ASYNCHRONOUS";
+  if (err)
+    return "n/a";
+  if (!t)
+    return "NULL";
+  if (*t == PTHREAD_CANCEL_DEFERRED)
+    return "PTHREAD_CANCEL_DEFERRED";
+  if (*t == PTHREAD_CANCEL_ASYNCHRONOUS)
+    return "PTHREAD_CANCEL_ASYNCHRONOUS";
   FormatInt32(buf, *t);
   return buf;
 }

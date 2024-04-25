@@ -204,7 +204,8 @@ static void ParsePath(struct UrlParser *u, struct UrlView *h) {
 
 static void ParseQuery(struct UrlParser *u, struct UrlParams *h) {
   bool t = false;
-  if (!h->p) h->p = malloc(0);
+  if (!h->p)
+    h->p = malloc(0);
   while (u->i < u->n) {
     u->c = u->s[u->i++] & 255;
     if (u->c == '#') {
@@ -285,7 +286,8 @@ static void ParseFragment(struct UrlParser *u, struct UrlView *h) {
 char *ParseUrl(const char *s, size_t n, struct Url *h, int f) {
   char *m;
   struct UrlParser u;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   u.i = 0;
   u.c = 0;
   u.s = s;
@@ -294,10 +296,14 @@ char *ParseUrl(const char *s, size_t n, struct Url *h, int f) {
   bzero(h, sizeof(*h));
   if ((m = malloc((f & kUrlLatin1) ? u.n * 2 : u.n))) {
     u.q = u.p = m;
-    if (ParseScheme(&u, h)) ParseAuthority(&u, h);
-    if (u.c != '#' && u.c != '?') ParsePath(&u, &h->path);
-    if (u.c == '?') ParseQuery(&u, &h->params);
-    if (u.c == '#') ParseFragment(&u, &h->fragment);
+    if (ParseScheme(&u, h))
+      ParseAuthority(&u, h);
+    if (u.c != '#' && u.c != '?')
+      ParsePath(&u, &h->path);
+    if (u.c == '?')
+      ParseQuery(&u, &h->params);
+    if (u.c == '#')
+      ParseFragment(&u, &h->fragment);
   }
   return m;
 }
@@ -325,7 +331,8 @@ char *ParseUrl(const char *s, size_t n, struct Url *h, int f) {
 char *ParseParams(const char *s, size_t n, struct UrlParams *h) {
   char *m;
   struct UrlParser u;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   u.i = 0;
   u.s = s;
   u.n = n;
@@ -365,7 +372,8 @@ char *ParseParams(const char *s, size_t n, struct UrlParams *h) {
 char *ParseHost(const char *s, size_t n, struct Url *h) {
   char *m;
   struct UrlParser u;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   u.i = 0;
   u.c = 0;
   u.s = s;

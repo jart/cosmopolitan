@@ -64,7 +64,8 @@ int strnwidth(const char *s, size_t n, size_t o) {
         case kUtf8:
           if (ThomPikeCont(c)) {
             w = ThomPikeMerge(w, c);
-            if (--r) break;
+            if (--r)
+              break;
           }
           l += MAX(0, wcwidth(w));
           t = kAscii;

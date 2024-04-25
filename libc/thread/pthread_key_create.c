@@ -45,7 +45,8 @@
 int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
   int i;
   pthread_key_dtor expect;
-  if (!dtor) dtor = (pthread_key_dtor)-1;
+  if (!dtor)
+    dtor = (pthread_key_dtor)-1;
   for (i = 0; i < PTHREAD_KEYS_MAX; ++i) {
     if (!(expect = atomic_load_explicit(_pthread_key_dtor + i,
                                         memory_order_acquire)) &&

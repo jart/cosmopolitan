@@ -23,12 +23,15 @@ static struct Parse ParseImpl(int tail, int need, FILE *f) {
   struct Parse p, q;
   int b, i, j, t, start;
   for (start = end;;) {
-    if (end + 2 > TERMS) Error(5, "OUT OF TERMS");
+    if (end + 2 > TERMS)
+      Error(5, "OUT OF TERMS");
     if ((b = GetBit(f)) == -1) {
-      if (need) Error(9, "UNFINISHED EXPRESSION");
+      if (need)
+        Error(9, "UNFINISHED EXPRESSION");
       break;
     } else if (b) {
-      for (t = 0; NeedBit(f);) ++t;
+      for (t = 0; NeedBit(f);)
+        ++t;
       mem[end++] = VAR;
       mem[end++] = t;
       break;

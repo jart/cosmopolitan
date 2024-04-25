@@ -35,7 +35,8 @@
 
 static void sem_delay(int n) {
   volatile int i;
-  for (i = 0; i != 1 << n; i++) donothing;
+  for (i = 0; i != 1 << n; i++)
+    donothing;
 }
 
 static void sem_timedwait_cleanup(void *arg) {

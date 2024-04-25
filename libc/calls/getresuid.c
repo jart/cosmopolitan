@@ -34,15 +34,20 @@ int getresuid(uint32_t *real, uint32_t *effective, uint32_t *saved) {
   int rc, uid;
   if (IsWindows()) {
     uid = getuid();
-    if (real) *real = uid;
-    if (effective) *effective = uid;
-    if (saved) *saved = uid;
+    if (real)
+      *real = uid;
+    if (effective)
+      *effective = uid;
+    if (saved)
+      *saved = uid;
     rc = 0;
   } else if (saved) {
     rc = sys_getresuid(real, effective, saved);
   } else {
-    if (real) *real = sys_getuid();
-    if (effective) *effective = sys_geteuid();
+    if (real)
+      *real = sys_getuid();
+    if (effective)
+      *effective = sys_geteuid();
     rc = 0;
   }
   STRACE("getresuid([%d], [%d], [%d]) → %d% m", real ? *real : 0,

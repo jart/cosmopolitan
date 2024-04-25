@@ -60,7 +60,8 @@ static void Open(void) {
     exit(1);
   }
   CHECK_NE(-1, fstat(fd, &st));
-  if (!(size = st.st_size)) exit(0);
+  if (!(size = st.st_size))
+    exit(0);
   CHECK_NE(MAP_FAILED,
            (data = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0)));
   LOGIFNEG1(close(fd));
@@ -136,7 +137,8 @@ static void Print(void) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) return 1;
+  if (argc < 2)
+    return 1;
   path = argv[1];
   Open();
   Check();

@@ -32,9 +32,11 @@ static int LuaPathBasename(lua_State *L) {
   size_t i, n;
   const char *p;
   if ((p = luaL_optlstring(L, 1, 0, &n)) && n) {
-    while (n > 1 && p[n - 1] == '/') --n;
+    while (n > 1 && p[n - 1] == '/')
+      --n;
     i = n - 1;
-    while (i && p[i - 1] != '/') --i;
+    while (i && p[i - 1] != '/')
+      --i;
     lua_pushlstring(L, p + i, n - i);
   } else {
     lua_pushlstring(L, ".", 1);
@@ -49,13 +51,16 @@ static int LuaPathDirname(lua_State *L) {
   const char *p;
   if ((p = luaL_optlstring(L, 1, 0, &n)) && n--) {
     for (; p[n] == '/'; n--) {
-      if (!n) goto ReturnSlash;
+      if (!n)
+        goto ReturnSlash;
     }
     for (; p[n] != '/'; n--) {
-      if (!n) goto ReturnDot;
+      if (!n)
+        goto ReturnDot;
     }
     for (; p[n] == '/'; n--) {
-      if (!n) goto ReturnSlash;
+      if (!n)
+        goto ReturnSlash;
     }
     lua_pushlstring(L, p, n + 1);
     return 1;
@@ -82,7 +87,8 @@ static int LuaPathJoin(lua_State *L) {
     gotstr = false;
     needslash = false;
     for (i = 1; i <= n; ++i) {
-      if (lua_isnoneornil(L, i)) continue;
+      if (lua_isnoneornil(L, i))
+        continue;
       gotstr = true;
       c = luaL_checklstring(L, i, &z);
       if (z) {

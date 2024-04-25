@@ -60,7 +60,8 @@ int main(int argc, char *argv[]) {
   int i, mode;
   char *endptr;
   prog = argv[0];
-  if (!prog) prog = "chmod";
+  if (!prog)
+    prog = "chmod";
   GetOpts(argc, argv);
   if (argc - optind < 2) {
     tinyprint(2, prog, ": missing operand\n", NULL);

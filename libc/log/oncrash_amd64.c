@@ -120,7 +120,8 @@ relegated static dontinline char *DescribeCpuFlags(char *p, int flags,
 }
 
 static char *HexCpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
-  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
 }
@@ -130,8 +131,10 @@ relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
   const char *s;
   *p++ = '\n';
   for (i = 0, j = 0; i < ARRAYLEN(kGregNames); ++i) {
-    if (j > 0) *p++ = ' ';
-    if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
+    if (j > 0)
+      *p++ = ' ';
+    if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2])
+      *p++ = ' ';
     p = stpcpy(p, s), *p++ = ' ';
     p = HexCpy(p, ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]], 64);
     if (++j == 3) {

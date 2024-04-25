@@ -26,8 +26,11 @@
  */
 bool32 wcsstartswith(const wchar_t *s, const wchar_t *prefix) {
   for (;;) {
-    if (!*prefix) return true;
-    if (!*s) return false;
-    if (*s++ != *prefix++) return false;
+    if (!*prefix)
+      return true;
+    if (!*s)
+      return false;
+    if (*s++ != *prefix++)
+      return false;
   }
 }

@@ -41,7 +41,8 @@ void SetUp(void) {
 }
 
 TEST(pledge, testSoftError) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   SPAWN(fork);
   __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
@@ -67,7 +68,8 @@ TEST(pledge, testKillProcessMode) {
 }
 
 TEST(pledge, testLogMessage_inSoftyMode) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   int fds[2];
   char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));

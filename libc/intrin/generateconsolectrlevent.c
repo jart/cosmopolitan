@@ -34,7 +34,8 @@ textwindows bool32 GenerateConsoleCtrlEvent(uint32_t dwCtrlEvent,
                                             uint32_t dwProcessGroupId) {
   bool32 ok;
   ok = __imp_GenerateConsoleCtrlEvent(dwCtrlEvent, dwProcessGroupId);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("GenerateConsoleCtrlEvent(%x, %d) → %hhhd% m", dwCtrlEvent,
           dwProcessGroupId, ok);
   return ok;

@@ -92,7 +92,8 @@ static char *_mktls_above(struct CosmoTib **out_tib) {
   hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
   siz = hiz + I(_tls_size);
   mem = memalign(TLS_ALIGNMENT, siz);
-  if (!mem) return 0;
+  if (!mem)
+    return 0;
 
   // poison memory between tdata and tbss
   if (IsAsan()) {

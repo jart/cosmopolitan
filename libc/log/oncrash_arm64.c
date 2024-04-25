@@ -80,7 +80,8 @@ static relegated void Append(struct Buffer *b, const char *fmt, ...) {
 }
 
 static relegated const char *ColorRegister(int r) {
-  if (__nocolor) return "";
+  if (__nocolor)
+    return "";
   switch (r) {
     case 0:  // arg / res
     case 1:  // arg / res
@@ -125,9 +126,12 @@ static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
   ssize_t rc;
   char *p, *q, buf[128];
   int j, k, ws, pid, pfd[2];
-  if (!debugbin || !*debugbin) return false;
-  if (!addr2line || !*addr2line) return false;
-  if (sys_pipe(pfd)) return false;
+  if (!debugbin || !*debugbin)
+    return false;
+  if (!addr2line || !*addr2line)
+    return false;
+  if (sys_pipe(pfd))
+    return false;
   ksnprintf(buf, sizeof(buf), "%lx", addr);
   if ((pid = vfork()) == -1) {
     sys_close(pfd[1]);
@@ -261,7 +265,8 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       Append(b, " ");
       for (j = 0; j < 4; ++j) {
         int r = 8 * j + i;
-        if (j) Append(b, " ");
+        if (j)
+          Append(b, " ");
         Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
                ctx->uc_mcontext.regs[r], reset, r, r == 8 || r == 9 ? " " : "");
       }
@@ -272,12 +277,14 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
     vc = (struct fpsimd_context *)ctx->uc_mcontext.__reserved;
     if (vc->head.magic == FPSIMD_MAGIC) {
       int n = 16;
-      while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2]) n -= 2;
+      while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2])
+        n -= 2;
       for (i = 0; i * 2 < n; ++i) {
         Append(b, " ");
         for (j = 0; j < 2; ++j) {
           int r = j + 2 * i;
-          if (j) Append(b, " ");
+          if (j)
+            Append(b, " ");
           Append(b, "%016lx ..%s %016lx v%d%s", (long)(vc->vregs[r] >> 64),
                  !j ? "" : ".", (long)vc->vregs[r], r, r < 10 ? " " : "");
         }
@@ -297,7 +304,8 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       Append(b, " ");
       if (!AppendFileLine(b, addr2line, debugbin, pc)) {
         Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-        if (addend) Append(b, "%+d", addend);
+        if (addend)
+          Append(b, "%+d", addend);
       }
     }
     Append(b, "\n");
@@ -318,7 +326,8 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
         Append(b, " ");
         if (!AppendFileLine(b, addr2line, debugbin, pc)) {
           Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-          if (addend) Append(b, "%+d", addend);
+          if (addend)
+            Append(b, "%+d", addend);
         }
       }
       Append(b, "\n");
@@ -357,7 +366,8 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       Append(b, " %016lx fp %lx lr ", fp, pc);
       if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
         Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-        if (addend) Append(b, "%+d", addend);
+        if (addend)
+          Append(b, "%+d", addend);
       }
       Append(b, "\n");
     }

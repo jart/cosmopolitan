@@ -58,7 +58,8 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
   void *restorer;
   uint32_t masklo;
   uint32_t maskhi;
-  if (!sa) return;
+  if (!sa)
+    return;
   flags = sa->cosmo.sa_flags;
   handler = sa->cosmo.sa_handler;
   restorer = sa->cosmo.sa_restorer;
@@ -106,7 +107,8 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
   void *restorer = 0;
   uint32_t masklo;
   uint32_t maskhi = 0;
-  if (!sa) return;
+  if (!sa)
+    return;
   if (IsLinux()) {
     flags = sa->linux.sa_flags;
     handler = sa->linux.sa_handler;
@@ -159,9 +161,12 @@ static int __sigaction(int sig, const struct sigaction *act,
   int rc, rva, oldrva;
   sigaction_f sigenter;
   struct sigaction *ap, copy;
-  if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
-  if (!(1 <= sig && sig <= _NSIG)) return einval();
-  if (sig == SIGKILL || sig == SIGSTOP) return einval();
+  if (IsMetal())
+    return enosys(); /* TODO: Signals on Metal */
+  if (!(1 <= sig && sig <= _NSIG))
+    return einval();
+  if (sig == SIGKILL || sig == SIGSTOP)
+    return einval();
   if (IsAsan() && ((act && !__asan_is_valid(act, sizeof(*act))) ||
                    (oldact && !__asan_is_valid(oldact, sizeof(*oldact))))) {
     return efault();

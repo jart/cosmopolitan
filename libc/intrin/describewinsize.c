@@ -31,8 +31,10 @@
 
 const char *(DescribeWinsize)(char buf[N], int rc, const struct winsize *ws) {
   int o = 0;
-  if (!ws) return "NULL";
-  if (rc == -1) return "n/a";
+  if (!ws)
+    return "NULL";
+  if (rc == -1)
+    return "n/a";
   if ((!IsAsan() && kisdangerous(ws)) ||
       (IsAsan() && !__asan_is_valid(ws, sizeof(*ws)))) {
     ksnprintf(buf, N, "%p", ws);

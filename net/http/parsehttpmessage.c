@@ -91,8 +91,10 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
     c = p[r->i] & 0xff;
     switch (r->t) {
       case kHttpStateStart:
-        if (c == '\r' || c == '\n') break;  // RFC7230 § 3.5
-        if (!kHttpToken[c]) return ebadmsg();
+        if (c == '\r' || c == '\n')
+          break;  // RFC7230 § 3.5
+        if (!kHttpToken[c])
+          return ebadmsg();
         if (r->type == kHttpRequest) {
           r->t = kHttpStateMethod;
           r->method = kToUpper[c];
@@ -114,14 +116,16 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           c = kToUpper[c];
           r->method |= (uint64_t)c << r->a;
           r->a += 8;
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;
       case kHttpStateUri:
         for (;;) {
           if (c == ' ' || c == '\r' || c == '\n') {
-            if (r->i == r->a) return ebadmsg();
+            if (r->i == r->a)
+              return ebadmsg();
             r->uri.a = r->a;
             r->uri.b = r->i;
             if (c == ' ') {
@@ -135,7 +139,8 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;
@@ -158,7 +163,8 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
       case kHttpStateStatus:
         for (;;) {
           if (c == ' ' || c == '\r' || c == '\n') {
-            if (r->status < 100) return ebadmsg();
+            if (r->status < 100)
+              return ebadmsg();
             if (c == ' ') {
               r->a = r->i + 1;
               r->t = kHttpStateMessage;
@@ -169,11 +175,13 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           } else if ('0' <= c && c <= '9') {
             r->status *= 10;
             r->status += c - '0';
-            if (r->status > 999) return ebadmsg();
+            if (r->status > 999)
+              return ebadmsg();
           } else {
             return ebadmsg();
           }
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;
@@ -187,12 +195,14 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           } else if (c < 0x20 || (0x7F <= c && c < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;
       case kHttpStateCr:
-        if (c != '\n') return ebadmsg();
+        if (c != '\n')
+          return ebadmsg();
         r->t = kHttpStateLf1;
         break;
       case kHttpStateLf1:
@@ -218,12 +228,14 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           } else if (!kHttpToken[c]) {
             return ebadmsg();
           }
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;
       case kHttpStateColon:
-        if (c == ' ' || c == '\t') break;
+        if (c == ' ' || c == '\t')
+          break;
         r->a = r->i;
         r->t = kHttpStateValue;
         // fallthrough
@@ -231,7 +243,8 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
         for (;;) {
           if (c == '\r' || c == '\n') {
             i = r->i;
-            while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t')) --i;
+            while (i > r->a && (p[i - 1] == ' ' || p[i - 1] == '\t'))
+              --i;
             if ((h = GetHttpHeader(p + r->k.a, r->k.b - r->k.a)) != -1 &&
                 (!r->headers[h].a || !kHttpRepeatable[h])) {
               r->headers[h].a = r->a;
@@ -265,7 +278,8 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
           } else if ((c < 0x20 && c != '\t') || (0x7F <= c && c < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n) break;
+          if (++r->i == n)
+            break;
           c = p[r->i] & 0xff;
         }
         break;

@@ -28,7 +28,8 @@
 bool isregularfile_nt(const char *path) {
   uint32_t x;
   char16_t path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1)
+    return -1;
   if ((x = GetFileAttributes(path16)) != -1u) {
     return !(x & (kNtFileAttributeDirectory | kNtFileAttributeReparsePoint));
   } else {

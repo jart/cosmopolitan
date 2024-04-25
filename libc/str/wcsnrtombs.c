@@ -35,7 +35,8 @@ size_t wcsnrtombs(char *dst, const wchar_t **wcs, size_t wn, size_t n,
                   mbstate_t *st) {
   const wchar_t *ws = *wcs;
   size_t cnt = 0;
-  if (!dst) n = 0;
+  if (!dst)
+    n = 0;
   while (ws && wn) {
     char tmp[MB_LEN_MAX];
     size_t l = wcrtomb(n < MB_LEN_MAX ? tmp : dst, *ws, 0);
@@ -45,7 +46,8 @@ size_t wcsnrtombs(char *dst, const wchar_t **wcs, size_t wn, size_t n,
     }
     if (dst) {
       if (n < MB_LEN_MAX) {
-        if (l > n) break;
+        if (l > n)
+          break;
         memcpy(dst, tmp, l);
       }
       dst += l;
@@ -59,6 +61,7 @@ size_t wcsnrtombs(char *dst, const wchar_t **wcs, size_t wn, size_t n,
     wn--;
     cnt += l;
   }
-  if (dst) *wcs = ws;
+  if (dst)
+    *wcs = ws;
   return cnt;
 }

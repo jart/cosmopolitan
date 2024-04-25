@@ -23,7 +23,8 @@ static int CompareStrings(const void *p1, const void *p2) {
   const char *a = *(const char **)p1;
   const char *b = *(const char **)p2;
   for (; *a == *b; a++, b++) {
-    if (!*a) break;
+    if (!*a)
+      break;
   }
   return (*a & 0xff) - (*b & 0xff);
 }

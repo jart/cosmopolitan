@@ -23,8 +23,10 @@
 #include "libc/intrin/strace.internal.h"
 
 const char *DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
-  if (rc == -1) return "n/a";
-  if (!rlim) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!rlim)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(rlim)) ||
       (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
     ksnprintf(buf, 64, "%p", rlim);

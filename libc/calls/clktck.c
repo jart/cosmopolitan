@@ -61,7 +61,8 @@ static dontinline int __clk_tck_init(void) {
   } else {
     x = __getauxval(AT_CLKTCK).value;
   }
-  if (x < 1) x = 100;
+  if (x < 1)
+    x = 100;
   clk_tck = x;
   return x;
 }

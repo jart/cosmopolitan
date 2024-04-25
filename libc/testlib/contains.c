@@ -20,8 +20,10 @@
 #include "libc/testlib/testlib.h"
 
 bool testlib_contains(size_t cw, const void *s, const void *needle) {
-  if (s == needle) return true;
-  if (!s || !needle) return false;
+  if (s == needle)
+    return true;
+  if (!s || !needle)
+    return false;
   return sizeof(cw) == sizeof(char16_t) ? !!strstr16(s, needle)
                                         : !!strstr(s, needle);
 }

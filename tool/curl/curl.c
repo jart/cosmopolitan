@@ -64,7 +64,8 @@ static wontreturn void PrintUsage(int fd, int rc) {
 
 static const char *DescribeErrno(void) {
   const char *reason;
-  if (!(reason = _strerdoc(errno))) reason = "Unknown error";
+  if (!(reason = _strerdoc(errno)))
+    reason = "Unknown error";
   return reason;
 }
 
@@ -499,7 +500,8 @@ int _curl(int argc, char *argv[]) {
         break;
       case kHttpClientStateBody:
         WriteOutput(p + i - g, g);
-        if (!g) goto Finished;
+        if (!g)
+          goto Finished;
         break;
       case kHttpClientStateBodyLengthed:
         unassert(g);

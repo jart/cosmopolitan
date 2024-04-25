@@ -24,9 +24,12 @@ pureconst bool IsHex(int c) {
 }
 
 pureconst int GetDiglet(int c) {
-  if (IsDigit(c)) return c - L'0';
-  if (IsUpper(c)) return c - L'A' + 10;
-  if (IsLower(c)) return c - L'a' + 10;
+  if (IsDigit(c))
+    return c - L'0';
+  if (IsUpper(c))
+    return c - L'A' + 10;
+  if (IsLower(c))
+    return c - L'a' + 10;
   return -1;
 }
 

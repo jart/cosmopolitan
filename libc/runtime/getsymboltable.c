@@ -122,7 +122,8 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  */
 struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
-  if (pthread_spin_trylock(&g_lock)) return 0;
+  if (pthread_spin_trylock(&g_lock))
+    return 0;
   if (!__symtab && !__isworker) {
     if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
       if ((__symtab = GetSymbolTableFromZip(z))) {

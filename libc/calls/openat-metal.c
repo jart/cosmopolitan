@@ -40,20 +40,26 @@
 int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
-  if (dirfd != AT_FDCWD || strcmp(file, APE_COM_NAME)) return enoent();
-  if (flags != O_RDONLY) return eacces();
-  if (!_weaken(__ape_com_base) || !_weaken(__ape_com_size)) return eopnotsupp();
-  if ((fd = __reservefd(-1)) == -1) return -1;
+  if (dirfd != AT_FDCWD || strcmp(file, APE_COM_NAME))
+    return enoent();
+  if (flags != O_RDONLY)
+    return eacces();
+  if (!_weaken(__ape_com_base) || !_weaken(__ape_com_size))
+    return eopnotsupp();
+  if ((fd = __reservefd(-1)) == -1)
+    return -1;
   if (!_weaken(calloc) || !_weaken(free)) {
     struct DirectMap dm;
     dm = sys_mmap_metal(NULL, ROUNDUP(sizeof(struct MetalFile), 4096),
                         PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1,
                         0);
     state = dm.addr;
-    if (state == (void *)-1) return -1;
+    if (state == (void *)-1)
+      return -1;
   } else {
     state = _weaken(calloc)(1, sizeof(struct MetalFile));
-    if (!state) return -1;
+    if (!state)
+      return -1;
   }
   state->base = (char *)__ape_com_base;
   state->size = __ape_com_size;

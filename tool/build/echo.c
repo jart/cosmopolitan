@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
   }
 
   for (j = 0; i + j < argc; ++j) {
-    if (j) fputc(' ', stream);
+    if (j)
+      fputc(' ', stream);
     fputs(argv[i + j], stream);
   }
   if (wantnewline) {

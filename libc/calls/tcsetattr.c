@@ -35,9 +35,12 @@ void __on_tcsetattr(int);
 int tcsetattr_nt(int, int, const struct termios *);
 
 static const char *DescribeTcsa(char buf[12], int opt) {
-  if (opt == TCSANOW) return "TCSANOW";
-  if (opt == TCSADRAIN) return "TCSADRAIN";
-  if (opt == TCSAFLUSH) return "TCSAFLUSH";
+  if (opt == TCSANOW)
+    return "TCSANOW";
+  if (opt == TCSADRAIN)
+    return "TCSADRAIN";
+  if (opt == TCSAFLUSH)
+    return "TCSAFLUSH";
   FormatInt32(buf, opt);
   return buf;
 }

@@ -29,8 +29,10 @@
 const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
   int o = 0;
 
-  if (rc == -1) return "n/a";
-  if (!st) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!st)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(st)) ||
       (IsAsan() && !__asan_is_valid(st, sizeof(*st)))) {
     ksnprintf(buf, N, "%p", st);

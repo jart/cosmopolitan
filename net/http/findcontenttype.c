@@ -138,7 +138,8 @@ static const char *BisectContentType(uint64_t ext) {
 const char *FindContentType(const char *p, size_t n) {
   int c;
   uint64_t w;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   for (w = 0; n--;) {
     c = p[n] & 255;
     if (c == '.') {

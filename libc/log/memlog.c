@@ -88,13 +88,17 @@ static long __memlog_size(void *p) {
 static void __memlog_backtrace(struct StackFrame *frame, intptr_t *a,
                                intptr_t *b, intptr_t *c, intptr_t *d) {
   *a = *b = *c = *d = 0;
-  if (!frame) return;
+  if (!frame)
+    return;
   *a = frame->addr;
-  if (!(frame = frame->next)) return;
+  if (!(frame = frame->next))
+    return;
   *b = frame->addr;
-  if (!(frame = frame->next)) return;
+  if (!(frame = frame->next))
+    return;
   *c = frame->addr;
-  if (!(frame = frame->next)) return;
+  if (!(frame = frame->next))
+    return;
   *d = frame->addr;
 }
 
@@ -163,7 +167,8 @@ static void __memlog_log(struct StackFrame *frame, const char *op, void *res,
 
 static void __memlog_free(void *p) {
   long i, n;
-  if (!p) return;
+  if (!p)
+    return;
   __memlog_lock();
   if ((i = __memlog_find(p)) != -1) {
     n = __memlog.allocs.p[i].size;

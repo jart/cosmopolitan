@@ -58,7 +58,8 @@ int NextBestThing(void) {
   posix_fadvise(fd, 0, 0, MADV_SEQUENTIAL);
   ssize_t wrote;
   while ((wrote = copyfd(fd, 1, -1)) != -1) {
-    if (wrote == 0) break;
+    if (wrote == 0)
+      break;
   }
   close(fd);
   return 0;
@@ -139,11 +140,16 @@ void PrintSystemInfo(void) {
 }
 
 const char *ft2str(int ft) {
-  if (ft == kNtFileTypeUnknown) return "kNtFileTypeUnknown";
-  if (ft == kNtFileTypeDisk) return "kNtFileTypeDisk";
-  if (ft == kNtFileTypeChar) return "kNtFileTypeChar";
-  if (ft == kNtFileTypePipe) return "kNtFileTypePipe";
-  if (ft == kNtFileTypeRemote) return "kNtFileTypeRemote";
+  if (ft == kNtFileTypeUnknown)
+    return "kNtFileTypeUnknown";
+  if (ft == kNtFileTypeDisk)
+    return "kNtFileTypeDisk";
+  if (ft == kNtFileTypeChar)
+    return "kNtFileTypeChar";
+  if (ft == kNtFileTypePipe)
+    return "kNtFileTypePipe";
+  if (ft == kNtFileTypeRemote)
+    return "kNtFileTypeRemote";
   return "wut?";
 }
 

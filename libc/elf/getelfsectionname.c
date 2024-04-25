@@ -20,7 +20,8 @@
 
 char *GetElfSectionName(const Elf64_Ehdr *elf, size_t mapsize,
                         const Elf64_Shdr *shdr) {
-  if (!shdr) return 0;
+  if (!shdr)
+    return 0;
   return GetElfString(elf, mapsize, GetElfSectionNameStringTable(elf, mapsize),
                       shdr->sh_name);
 }

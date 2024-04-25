@@ -27,7 +27,8 @@ static intptr_t allprefixed_traverse(unsigned char *top,
     struct CritbitNode *q = (void *)(top - 1);
     for (int direction = 0; direction < 2; ++direction) {
       intptr_t rc = allprefixed_traverse(q->child[direction], callback, arg);
-      if (rc) return rc;
+      if (rc)
+        return rc;
     }
     return 0;
   }
@@ -48,14 +49,17 @@ intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
   const size_t ulen = strlen(prefix);
   unsigned char *p = t->root;
   unsigned char *top = p;
-  if (!p) return 0;
+  if (!p)
+    return 0;
   while (1 & (intptr_t)p) {
     struct CritbitNode *q = (void *)(p - 1);
     unsigned char c = 0;
-    if (q->byte < ulen) c = ubytes[q->byte];
+    if (q->byte < ulen)
+      c = ubytes[q->byte];
     const int direction = (1 + (q->otherbits | c)) >> 8;
     p = q->child[direction];
-    if (q->byte < ulen) top = p;
+    if (q->byte < ulen)
+      top = p;
   }
   for (size_t i = 0; i < ulen; ++i) {
     if (p[i] != ubytes[i]) {

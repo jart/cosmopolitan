@@ -45,7 +45,8 @@ int _fork(uint32_t dwCreationFlags) {
   int ax, dx, tid, parent;
   parent = __pid;
   BLOCK_SIGNALS;
-  if (IsWindows()) __proc_lock();
+  if (IsWindows())
+    __proc_lock();
   if (__threaded && _weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();
   }
@@ -107,7 +108,8 @@ int _fork(uint32_t dwCreationFlags) {
     if (__threaded && _weaken(_pthread_onfork_parent)) {
       _weaken(_pthread_onfork_parent)();
     }
-    if (IsWindows()) __proc_unlock();
+    if (IsWindows())
+      __proc_unlock();
     STRACE("fork() → %d% m", ax);
   }
   ALLOW_SIGNALS;

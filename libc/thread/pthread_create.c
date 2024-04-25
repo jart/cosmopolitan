@@ -66,7 +66,8 @@ __static_yoink("_pthread_atfork");
 
 void _pthread_free(struct PosixThread *pt, bool isfork) {
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
-  if (pt->pt_flags & PT_STATIC) return;
+  if (pt->pt_flags & PT_STATIC)
+    return;
   if (pt->pt_flags & PT_OWNSTACK) {
     unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
   }
@@ -94,7 +95,8 @@ StartOver:
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
     status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
-    if (status != kPosixThreadZombie) break;
+    if (status != kPosixThreadZombie)
+      break;
     if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
       dll_remove(&_pthread_list, e);
       _pthread_unlock();
@@ -316,8 +318,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
 }
 
 static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
-  if (err) return "n/a";
-  if (!th) return "NULL";
+  if (err)
+    return "n/a";
+  if (!th)
+    return "NULL";
   FormatInt32(buf, _pthread_tid((struct PosixThread *)*th));
   return buf;
 }

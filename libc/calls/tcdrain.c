@@ -33,7 +33,8 @@
 #define TIOCDRAIN 0x2000745e  // xnu, freebsd, openbsd, netbsd
 
 static dontinline textwindows int sys_tcdrain_nt(int fd) {
-  if (!sys_isatty(fd)) return -1;  // ebadf, enotty
+  if (!sys_isatty(fd))
+    return -1;  // ebadf, enotty
   // Tried FlushFileBuffers but it made Emacs hang when run in cmd.exe
   // "Console output is not buffered." -Quoth MSDN on FlushFileBuffers
   return 0;

@@ -59,9 +59,11 @@ void *TortureWorker(void *arg) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &ss, 0));
   ready = true;
   while (!done) {
-    if (!IsWindows()) pthread_kill(parent, SIGUSR1);
+    if (!IsWindows())
+      pthread_kill(parent, SIGUSR1);
     usleep(1);
-    if (!IsWindows()) pthread_kill(parent, SIGUSR2);
+    if (!IsWindows())
+      pthread_kill(parent, SIGUSR2);
     usleep(1);
   }
   return 0;
@@ -78,9 +80,11 @@ TEST(getrandom, test) {
   if ((e = MeasureEntropy(buf, n)) < w) {
     fprintf(stderr, "error: entropy is suspect! got %g but want >=%g\n", e, w);
     for (i = 0; i < n;) {
-      if (!(i % 16)) fprintf(stderr, "%6x ", i);
+      if (!(i % 16))
+        fprintf(stderr, "%6x ", i);
       fprintf(stderr, "%lc", kCp437[buf[i] & 255]);
-      if (!(++i % 16)) fprintf(stderr, "\n");
+      if (!(++i % 16))
+        fprintf(stderr, "\n");
     }
     fprintf(stderr, "\n");
     exit(1);
@@ -100,7 +104,8 @@ TEST(getrandom, test2) {
   ASSERT_SYS(0, 0, sigaction(SIGUSR2, &sa, 0));
   parent = pthread_self();
   ASSERT_EQ(0, pthread_create(&child, 0, TortureWorker, 0));
-  while (!ready) pthread_yield();
+  while (!ready)
+    pthread_yield();
   for (k = 0; k < 10; ++k) {
     ASSERT_SYS(0, 0, getrandom(0, 0, 0));
     for (i = 0; i < n; i += m) {
@@ -111,9 +116,11 @@ TEST(getrandom, test2) {
     if ((e = MeasureEntropy(buf, n)) < w) {
       fprintf(stderr, "error: entropy suspect! got %g but want >=%g\n", e, w);
       for (i = 0; i < n;) {
-        if (!(i % 16)) fprintf(stderr, "%6x ", i);
+        if (!(i % 16))
+          fprintf(stderr, "%6x ", i);
         fprintf(stderr, "%lc", kCp437[buf[i] & 255]);
-        if (!(++i % 16)) fprintf(stderr, "\n");
+        if (!(++i % 16))
+          fprintf(stderr, "\n");
       }
       fprintf(stderr, "\n");
       done = true;
@@ -123,7 +130,8 @@ TEST(getrandom, test2) {
   }
   done = true;
   ASSERT_EQ(0, pthread_join(child, 0));
-  if (!IsWindows()) ASSERT_GT(gotsome, 0);
+  if (!IsWindows())
+    ASSERT_GT(gotsome, 0);
 }
 
 /* JustReturnZero                   */
@@ -237,13 +245,15 @@ uint64_t SixthEditionLowByte(void) {
 
 uint64_t MobyDick(void) {
   static int i;
-  if ((i += 8) > kMobySize) i = 8;
+  if ((i += 8) > kMobySize)
+    i = 8;
   return READ64LE(kMoby + i);
 }
 
 uint64_t ExecutableImage(void) {
   static int i;
-  if ((i += 8) > _end - __executable_start) i = 8;
+  if ((i += 8) > _end - __executable_start)
+    i = 8;
   return READ64LE(__executable_start + i);
 }
 

@@ -64,7 +64,8 @@ void sockaddr2linux(const union sockaddr_storage_bsd *addr, uint32_t addrsize,
                                         sizeof(addr->sun.sun_family)),
                             size - sizeof(out_addr->sun.sun_family)));
           out_addr->sun.sun_family = AF_UNIX;
-          if (len) memcpy(out_addr->sun.sun_path, addr->sun.sun_path, len);
+          if (len)
+            memcpy(out_addr->sun.sun_path, addr->sun.sun_path, len);
           *inout_addrsize = sizeof(out_addr->sun.sun_family) + len + 1;
         }
       }

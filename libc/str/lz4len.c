@@ -41,7 +41,8 @@ size_t lz4len(const void *blockdata, size_t blocksize) {
     }
     ip += length;
     unpacklen += length;
-    if (ip >= ipe) break;
+    if (ip >= ipe)
+      break;
     matchlen = token & fifteen;
     ip += 2;
     if (matchlen == fifteen) {

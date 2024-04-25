@@ -38,8 +38,10 @@ char *strncpy(char *dst, const char *src, size_t dstlen) {
   size_t srclen, cpylen, zerlen;
   srclen = strlen(src);
   cpylen = MIN(srclen, dstlen);
-  if (cpylen) memcpy(dst, src, cpylen);
+  if (cpylen)
+    memcpy(dst, src, cpylen);
   zerlen = dstlen - cpylen;
-  if (zerlen) bzero(dst + cpylen, zerlen);
+  if (zerlen)
+    bzero(dst + cpylen, zerlen);
   return dst;
 }

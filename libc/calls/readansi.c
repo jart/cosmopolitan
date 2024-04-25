@@ -68,7 +68,8 @@ ssize_t readansi(int fd, char *p, size_t n) {
   e = errno;
   t = kAscii;
   x = i = j = 0;
-  if (n) p[0] = 0;
+  if (n)
+    p[0] = 0;
   do {
     for (;;) {
       if (n) {
@@ -102,7 +103,8 @@ ssize_t readansi(int fd, char *p, size_t n) {
     ++i;
     switch (t) {
     Whoopsie:
-      if (n) p[0] = c;
+      if (n)
+        p[0] = c;
       t = kAscii;
       i = 1;
         /* fallthrough */

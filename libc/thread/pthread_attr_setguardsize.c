@@ -36,7 +36,8 @@
  * @raise EINVAL if `guardsize` is zero
  */
 errno_t pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
-  if (!guardsize) return EINVAL;
+  if (!guardsize)
+    return EINVAL;
   attr->__guardsize = guardsize;
   return 0;
 }

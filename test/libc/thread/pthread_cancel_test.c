@@ -97,10 +97,12 @@ TEST(pthread_cancel, synchronous) {
 TEST(pthread_cancel, synchronous_deferred) {
   void *rc;
   pthread_t th;
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
-  while (!ready) pthread_yield();
+  while (!ready)
+    pthread_yield();
   ASSERT_SYS(0, 0, usleep(10));
   EXPECT_EQ(0, pthread_cancel(th));
   EXPECT_EQ(0, pthread_join(th, &rc));
@@ -257,7 +259,8 @@ TEST(pthread_cancel, async) {
   is_in_infinite_loop = false;
   key_destructor_was_run = false;
   ASSERT_EQ(0, pthread_create(&th, 0, CpuBoundWorker, 0));
-  while (!is_in_infinite_loop) pthread_yield();
+  while (!is_in_infinite_loop)
+    pthread_yield();
   ASSERT_EQ(0, pthread_cancel(th));
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
@@ -289,7 +292,8 @@ TEST(pthread_cancel, self_asynchronous_takesImmediateEffect) {
 atomic_bool was_completed;
 
 void WaitUntilReady(void) {
-  while (!ready) pthread_yield();
+  while (!ready)
+    pthread_yield();
   ASSERT_EQ(0, errno);
   ASSERT_SYS(0, 0, usleep(1000));
 }

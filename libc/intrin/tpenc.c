@@ -33,7 +33,8 @@ static const uint16_t kTpEnc[32 - 7] = {
 uint64_t tpenc(uint32_t c) {
   int e, n;
   uint64_t w;
-  if (0 <= c && c <= 127) return c;
+  if (0 <= c && c <= 127)
+    return c;
   e = kTpEnc[bsr(c) - 7];
   n = e & 0xff;
   w = 0;

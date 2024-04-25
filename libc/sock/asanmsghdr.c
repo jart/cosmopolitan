@@ -22,12 +22,15 @@
 #if IsAsan()
 
 bool __asan_is_valid_msghdr(const struct msghdr *msg) {
-  if (!__asan_is_valid(msg, sizeof(struct msghdr))) return false;
+  if (!__asan_is_valid(msg, sizeof(struct msghdr)))
+    return false;
   if (msg->msg_name) {
-    if (!__asan_is_valid(msg->msg_name, msg->msg_namelen)) return false;
+    if (!__asan_is_valid(msg->msg_name, msg->msg_namelen))
+      return false;
   }
   if (msg->msg_control) {
-    if (!__asan_is_valid(msg->msg_control, msg->msg_controllen)) return false;
+    if (!__asan_is_valid(msg->msg_control, msg->msg_controllen))
+      return false;
   }
   return __asan_is_valid_iov(msg->msg_iov, msg->msg_iovlen);
 }

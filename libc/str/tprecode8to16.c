@@ -32,7 +32,8 @@ static inline axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
   while (r.ax + 16 < dstsize) {
     memcpy(v1, src + r.dx, 16);
     pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-    if (pmovmskb(v2) != 0xFFFF) break;
+    if (pmovmskb(v2) != 0xFFFF)
+      break;
     punpcklbw(v2, v1, vz);
     punpckhbw(v1, v1, vz);
     memcpy(dst + r.ax + 0, v2, 16);
@@ -73,8 +74,10 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
       a = ThomPikeByte(x);
       n = ThomPikeLen(x) - 1;
       for (i = 0;;) {
-        if (!(b = src[r.dx + i] & 0377)) break;
-        if (!ThomPikeCont(b)) break;
+        if (!(b = src[r.dx + i] & 0377))
+          break;
+        if (!ThomPikeCont(b))
+          break;
         a = ThomPikeMerge(a, b);
         if (++i == n) {
           r.dx += i;
@@ -83,7 +86,8 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
         }
       }
     }
-    if (!x) break;
+    if (!x)
+      break;
     w = EncodeUtf16(x);
     while (w && r.ax + 1 < dstsize) {
       dst[r.ax++] = w;

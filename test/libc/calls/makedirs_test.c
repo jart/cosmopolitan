@@ -71,7 +71,9 @@ TEST(makedirs, test) {
   int i, n = 8;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
-  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
-  for (i = 0; i < n; ++i) EXPECT_EQ(0, pthread_join(t[i], 0));
+  for (i = 0; i < n; ++i)
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i)
+    EXPECT_EQ(0, pthread_join(t[i], 0));
   ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

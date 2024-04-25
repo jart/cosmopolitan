@@ -21,8 +21,10 @@
 #include "tool/plinko/lib/plinko.h"
 
 int Pairlis(int x, int y, int a) {
-  if (!x) return a;
-  if (x > 0) return Alist(x, y, a);
+  if (!x)
+    return a;
+  if (x > 0)
+    return Alist(x, y, a);
   if (y <= 0) {
     a = pairlis(Cdr(x), Cdr(y), a);
     return Car(x) ? pairlis(Car(x), Car(y), a) : a;

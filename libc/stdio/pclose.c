@@ -42,7 +42,8 @@ int pclose(FILE *f) {
   bool iscancelled, wasinterrupted;
   pid = f->pid;
   fclose(f);
-  if (!pid) return 0;
+  if (!pid)
+    return 0;
   iscancelled = false;
   wasinterrupted = false;
   for (e = errno;;) {

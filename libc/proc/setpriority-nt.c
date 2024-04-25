@@ -53,7 +53,8 @@ textwindows int sys_setpriority_nt(int which, unsigned pid, int nice) {
     tier = kNtIdlePriorityClass;
   }
 
-  if (SetPriorityClass(handle, tier)) return 0;
+  if (SetPriorityClass(handle, tier))
+    return 0;
   STRACE("SetPriorityClass() failed with %d", GetLastError());
   switch (GetLastError()) {
     case kNtErrorInvalidHandle:

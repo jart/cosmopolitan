@@ -36,8 +36,10 @@ int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *file_actions,
                                      int fildes, const char *path, int oflag,
                                      unsigned mode) {
   char *path2;
-  if (fildes < 0) return EBADF;
-  if (!(path2 = strdup(path))) return ENOMEM;
+  if (fildes < 0)
+    return EBADF;
+  if (!(path2 = strdup(path)))
+    return ENOMEM;
   return __posix_spawn_add_file_action(file_actions,
                                        (struct _posix_faction){
                                            .action = _POSIX_SPAWN_OPEN,

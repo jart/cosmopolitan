@@ -99,7 +99,8 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
       kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
       if (msg->msg_controllen)
         kprintf(", .control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
-      if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
+      if (msg->msg_flags)
+        kprintf(".flags=%#x, ", msg->msg_flags);
       kprintf(", .iov=%s",
               DescribeIovec(rc != -1 ? rc : -2, msg->msg_iov, msg->msg_iovlen));
     }

@@ -36,9 +36,12 @@ void GetZipCfileTimestamps(const uint8_t *cf, struct timespec *mtim,
                            struct timespec *atim, struct timespec *ctim,
                            int gmtoff) {
   const uint8_t *p, *pe;
-  if (mtim) *mtim = (struct timespec){0};
-  if (atim) *atim = (struct timespec){0};
-  if (ctim) *ctim = (struct timespec){0};
+  if (mtim)
+    *mtim = (struct timespec){0};
+  if (atim)
+    *atim = (struct timespec){0};
+  if (ctim)
+    *ctim = (struct timespec){0};
   for (p = ZIP_CFILE_EXTRA(cf), pe = p + ZIP_CFILE_EXTRASIZE(cf); p + 4 <= pe;
        p += ZIP_EXTRA_SIZE(p)) {
     if (ZIP_EXTRA_HEADERID(p) == kZipExtraNtfs &&
@@ -88,8 +91,10 @@ void GetZipCfileTimestamps(const uint8_t *cf, struct timespec *mtim,
        p += ZIP_EXTRA_SIZE(p)) {
     if (ZIP_EXTRA_HEADERID(p) == kZipExtraUnix &&
         ZIP_EXTRA_CONTENTSIZE(p) >= 4 + 4) {
-      if (atim) atim->tv_sec = (int32_t)ZIP_READ32(ZIP_EXTRA_CONTENT(p) + 0);
-      if (mtim) mtim->tv_sec = (int32_t)ZIP_READ32(ZIP_EXTRA_CONTENT(p) + 4);
+      if (atim)
+        atim->tv_sec = (int32_t)ZIP_READ32(ZIP_EXTRA_CONTENT(p) + 0);
+      if (mtim)
+        mtim->tv_sec = (int32_t)ZIP_READ32(ZIP_EXTRA_CONTENT(p) + 4);
       return;
     }
   }

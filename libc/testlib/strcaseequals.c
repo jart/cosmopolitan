@@ -26,8 +26,10 @@ bool testlib_strcaseequals(size_t cw, const void *s1, const void *s2) {
 
 bool testlib_strncaseequals(size_t cw, const void *s1, const void *s2,
                             size_t n) {
-  if (s1 == s2) return true;
-  if (!s1 || !s2) return false;
+  if (s1 == s2)
+    return true;
+  if (!s1 || !s2)
+    return false;
   return (cw == sizeof(wchar_t)    ? wcsncasecmp(s1, s2, n)
           : cw == sizeof(char16_t) ? strncasecmp16(s1, s2, n)
                                    : strncasecmp(s1, s2, n)) == 0;

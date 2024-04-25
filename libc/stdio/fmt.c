@@ -140,7 +140,8 @@ static int __fmt_atoi(const char **str) {
 static int __fmt_pad(int out(const char *, void *, size_t), void *arg,
                      unsigned long n) {
   int i, rc;
-  for (rc = i = 0; i < n; ++i) rc |= out(" ", arg, 1);
+  for (rc = i = 0; i < n; ++i)
+    rc |= out(" ", arg, 1);
   return rc;
 }
 
@@ -212,24 +213,30 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
   /* pad spaces up to given width */
   if (!(flags & FLAGS_LEFT) && !(flags & FLAGS_ZEROPAD)) {
     if (len < width) {
-      if (__fmt_pad(out, arg, width - len) == -1) return -1;
+      if (__fmt_pad(out, arg, width - len) == -1)
+        return -1;
     }
   }
-  if (sign_character != '\0' && out(&sign_character, arg, 1) == -1) return -1;
+  if (sign_character != '\0' && out(&sign_character, arg, 1) == -1)
+    return -1;
   if (flags & FLAGS_HASH) {
-    if (out("0", arg, 1) == -1) return -1;
+    if (out("0", arg, 1) == -1)
+      return -1;
     if (alternate_form_middle_char != '\0' &&
         out(&alternate_form_middle_char, arg, 1) == -1)
       return -1;
   }
   for (i = 0; i < prec_width_zeros; ++i)
-    if (out("0", arg, 1) == -1) return -1;
+    if (out("0", arg, 1) == -1)
+      return -1;
   reverse(buf, actual_buf_len);
-  if (out(buf, arg, actual_buf_len) == -1) return -1;
+  if (out(buf, arg, actual_buf_len) == -1)
+    return -1;
   /* append pad spaces up to given width */
   if (flags & FLAGS_LEFT) {
     if (len < width) {
-      if (__fmt_pad(out, arg, width - len) == -1) return -1;
+      if (__fmt_pad(out, arg, width - len) == -1)
+        return -1;
     }
   }
   return 0;
@@ -245,7 +252,8 @@ static int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
   len = 0;
   // we check for log2base!=3, since otherwise we'll print nothing for
   // a value of 0 with precision 0 when # mandates that one be printed
-  if (!value && log2base != 3) flags &= ~FLAGS_HASH;
+  if (!value && log2base != 3)
+    flags &= ~FLAGS_HASH;
   if (value || !(flags & FLAGS_PRECISION)) {
     count = 0;
     do {
@@ -357,7 +365,8 @@ static int __fmt_stoa_byte(out_f out, void *a, uint64_t c) {
 
 static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
   char buf[8];
-  if (!isascii(w)) w = tpenc(w);
+  if (!isascii(w))
+    w = tpenc(w);
   WRITE64LE(buf, w);
   return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
 }
@@ -431,7 +440,8 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
     emit = __fmt_stoa_byte;
   }
 
-  if (!(flags & FLAGS_PRECISION)) precision = -1;
+  if (!(flags & FLAGS_PRECISION))
+    precision = -1;
   if (!(flags & FLAGS_PRECISION) || !ignorenul) {
     if (signbit == 63) {
       precision = wcsnlen((const wchar_t *)p, precision);
@@ -461,30 +471,37 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
   }
 
   if (pad && !(flags & FLAGS_LEFT)) {
-    if (__fmt_pad(out, arg, pad) == -1) return -1;
+    if (__fmt_pad(out, arg, pad) == -1)
+      return -1;
   }
 
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
     if (signbit == 63) {
-      if (out("L", arg, 1) == -1) return -1;
+      if (out("L", arg, 1) == -1)
+        return -1;
     } else if (signbit == 15) {
-      if (out("u", arg, 1) == -1) return -1;
+      if (out("u", arg, 1) == -1)
+        return -1;
     }
     buf[0] = qchar;
-    if (out(buf, arg, 1) == -1) return -1;
+    if (out(buf, arg, 1) == -1)
+      return -1;
   }
 
   if (justdobytes) {
     while (precision--) {
       wc = *p++ & 0xff;
-      if (!wc && !ignorenul) break;
-      if (emit(out, arg, wc) == -1) return -1;
+      if (!wc && !ignorenul)
+        break;
+      if (emit(out, arg, wc) == -1)
+        return -1;
     }
   } else {
     while (precision--) {
       if (signbit == 15) {
         wc = *(const char16_t *)p;
-        if (!wc && !ignorenul) break;
+        if (!wc && !ignorenul)
+          break;
         if (IsUcs2(wc)) {
           p += sizeof(char16_t);
         } else if (IsUtf16Cont(wc)) {
@@ -498,34 +515,42 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
         }
       } else if (signbit == 63) {
         wc = *(const wint_t *)p;
-        if (!wc && !ignorenul) break;
+        if (!wc && !ignorenul)
+          break;
         p += sizeof(wint_t);
-        if (!wc) break;
+        if (!wc)
+          break;
       } else {
         wc = *p++ & 0xff;
-        if (!wc && !ignorenul) break;
+        if (!wc && !ignorenul)
+          break;
         if (!isascii(wc)) {
-          if (ThomPikeCont(wc)) continue;
+          if (ThomPikeCont(wc))
+            continue;
           n = ThomPikeLen(wc) - 1;
           wc = ThomPikeByte(wc);
-          if (n > precision) break;
+          if (n > precision)
+            break;
           precision -= n;
           while (n--) {
             wc = ThomPikeMerge(wc, *p++);
           }
         }
       }
-      if (emit(out, arg, wc) == -1) return -1;
+      if (emit(out, arg, wc) == -1)
+        return -1;
     }
   }
 
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
     buf[0] = qchar;
-    if (out(buf, arg, 1) == -1) return -1;
+    if (out(buf, arg, 1) == -1)
+      return -1;
   }
 
   if (pad && (flags & FLAGS_LEFT)) {
-    if (__fmt_pad(out, arg, pad) == -1) return -1;
+    if (__fmt_pad(out, arg, pad) == -1)
+      return -1;
   }
 
   return 0;
@@ -606,7 +631,8 @@ static int __fmt_fpiprec(struct FPBits *b) {
   const FPI *fpi;
   int i, j, k, m;
   uint32_t *bits;
-  if (b->kind == STRTOG_Zero) return (b->ex = 0);
+  if (b->kind == STRTOG_Zero)
+    return (b->ex = 0);
   fpi = b->fpi;
   bits = b->bits;
   for (k = (fpi->nbits - 1) >> 2; k > 0; --k) {
@@ -623,14 +649,16 @@ static int __fmt_fpiprec(struct FPBits *b) {
           }
           break;
         }
-      for (i = 0; i < 28 && !((bits[0] >> i) & 0xf); i += 4) donothing;
+      for (i = 0; i < 28 && !((bits[0] >> i) & 0xf); i += 4)
+        donothing;
       if (i) {
         b->ex += i;
         m = k >> 3;
         k -= (i >> 2);
         for (j = 0;; ++j) {
           bits[j] >>= i;
-          if (j == m) break;
+          if (j == m)
+            break;
           bits[j] |= bits[j + 1] << (32 - i);
         }
       }
@@ -650,8 +678,10 @@ static int __fmt_bround(struct FPBits *b, int prec, int prec1) {
   inc = 0;
   k = m - 1;
   if ((t = bits[k >> 3] >> (j = (k & 7) * 4)) & 8) {
-    if (t & 7) goto inc1;
-    if (j && bits[k >> 3] << (32 - j)) goto inc1;
+    if (t & 7)
+      goto inc1;
+    if (j && bits[k >> 3] << (32 - j))
+      goto inc1;
     while (k >= 8) {
       k -= 8;
       if (bits[k >> 3]) {
@@ -669,26 +699,31 @@ haveinc:
   if ((n = 4 * (m & 7)))
     for (;; ++j) {
       bits[j - i] = bits[j] >> n;
-      if (j == k) break;
+      if (j == k)
+        break;
       bits[j - i] |= bits[j + 1] << (32 - n);
     }
   else
     for (;; ++j) {
       bits[j - i] = bits[j];
-      if (j == k) break;
+      if (j == k)
+        break;
     }
   k = prec >> 3;
   if (inc) {
-    for (j = 0; !(++bits[j] & 0xffffffff); ++j) donothing;
+    for (j = 0; !(++bits[j] & 0xffffffff); ++j)
+      donothing;
     if (j > k) {
     onebit:
       bits[0] = 1;
       b->ex += 4 * prec;
       return 1;
     }
-    if ((j = prec & 7) < 7 && bits[k] >> (j + 1) * 4) goto onebit;
+    if ((j = prec & 7) < 7 && bits[k] >> (j + 1) * 4)
+      goto onebit;
   }
-  for (i = 0; !(bits[i >> 3] & (0xf << 4 * (i & 7))); ++i) donothing;
+  for (i = 0; !(bits[i >> 3] & (0xf << 4 * (i & 7))); ++i)
+    donothing;
   if (i) {
     b->ex += 4 * i;
     prec -= i;
@@ -697,7 +732,8 @@ haveinc:
     i *= 4;
     for (m = j;; ++m) {
       bits[m - j] = bits[m] >> i;
-      if (m == k) break;
+      if (m == k)
+        break;
       bits[m - j] |= bits[m + 1] << (32 - i);
     }
   }
@@ -805,9 +841,11 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
   while (*format) {
     if (*format != '%') {
       for (n = 1; format[n]; ++n) {
-        if (format[n] == '%') break;
+        if (format[n] == '%')
+          break;
       }
-      if (out(format, arg, n) == -1) return -1;
+      if (out(format, arg, n) == -1)
+        return -1;
       format += n;
       continue;
     }
@@ -815,38 +853,46 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
     if (!IsTiny()) {
       if (format[1] == 's') {  // FAST PATH: PLAIN STRING
         s = va_arg(va, char *);
-        if (!s) s = "(null)";
-        if (out(s, arg, strlen(s)) == -1) return -1;
+        if (!s)
+          s = "(null)";
+        if (out(s, arg, strlen(s)) == -1)
+          return -1;
         format += 2;
         continue;
       } else if (format[1] == 'd') {  // FAST PATH: PLAIN INTEGER
         d = va_arg(va, int);
-        if (out(ibuf, arg, FormatInt32(ibuf, d) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatInt32(ibuf, d) - ibuf) == -1)
+          return -1;
         format += 2;
         continue;
       } else if (format[1] == 'u') {  // FAST PATH: PLAIN UNSIGNED
         u = va_arg(va, unsigned);
-        if (out(ibuf, arg, FormatUint32(ibuf, u) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatUint32(ibuf, u) - ibuf) == -1)
+          return -1;
         format += 2;
         continue;
       } else if (format[1] == 'x') {  // FAST PATH: PLAIN HEX
         u = va_arg(va, unsigned);
-        if (out(ibuf, arg, uint64toarray_radix16(u, ibuf)) == -1) return -1;
+        if (out(ibuf, arg, uint64toarray_radix16(u, ibuf)) == -1)
+          return -1;
         format += 2;
         continue;
       } else if (format[1] == 'l' && format[2] == 'x') {
         lu = va_arg(va, unsigned long);  // FAST PATH: PLAIN LONG HEX
-        if (out(ibuf, arg, uint64toarray_radix16(lu, ibuf)) == -1) return -1;
+        if (out(ibuf, arg, uint64toarray_radix16(lu, ibuf)) == -1)
+          return -1;
         format += 3;
         continue;
       } else if (format[1] == 'l' && format[2] == 'd') {
         ld = va_arg(va, long);  // FAST PATH: PLAIN LONG
-        if (out(ibuf, arg, FormatInt64(ibuf, ld) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatInt64(ibuf, ld) - ibuf) == -1)
+          return -1;
         format += 3;
         continue;
       } else if (format[1] == 'l' && format[2] == 'u') {
         lu = va_arg(va, unsigned long);  // FAST PATH: PLAIN UNSIGNED LONG
-        if (out(ibuf, arg, FormatUint64(ibuf, lu) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatUint64(ibuf, lu) - ibuf) == -1)
+          return -1;
         format += 3;
         continue;
       } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {
@@ -858,7 +904,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           s = "(null)";
           n = MIN(6, n);
         }
-        if (out(s, arg, n) == -1) return -1;
+        if (out(s, arg, n) == -1)
+          return -1;
         format += 4;
         continue;
       }
@@ -951,7 +998,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           format++;
           break;
         }
-        if (format[1] == 'l') format++;
+        if (format[1] == 'l')
+          format++;
         // fallthrough
       case 't':  // ptrdiff_t
       case 'z':  // size_t
@@ -1074,7 +1122,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
 
       case 'F':
       case 'f':
-        if (!(flags & FLAGS_PRECISION)) prec = 6;
+        if (!(flags & FLAGS_PRECISION))
+          prec = 6;
         if (!longdouble) {
           x = va_arg(va, double);
           s = s0 = dtoa(x, 3, prec, &decpt, &fpb.sign, &se);
@@ -1093,7 +1142,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (decpt == 9999) {
         Format9999:
-          if (s0) freedtoa(s0);
+          if (s0)
+            freedtoa(s0);
           bzero(special, sizeof(special));
           s = q = special;
           if (fpb.sign) {
@@ -1107,37 +1157,49 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_HASH | FLAGS_SPACE);
           prec = 0;
           rc = __fmt_stoa(out, arg, s, flags, prec, width, signbit, qchar);
-          if (rc == -1) return -1;
+          if (rc == -1)
+            return -1;
           break;
         }
       FormatReal:
-        if (fpb.sign /* && (x || sign) */) sign = '-';
-        if (prec > 0) width -= prec;
+        if (fpb.sign /* && (x || sign) */)
+          sign = '-';
+        if (prec > 0)
+          width -= prec;
         if (width > 0) {
-          if (sign) --width;
+          if (sign)
+            --width;
           if (decpt <= 0) {
             --width;
-            if (prec > 0) --width;
+            if (prec > 0)
+              --width;
           } else {
-            if (s == se) decpt = 1;
+            if (s == se)
+              decpt = 1;
             width -= decpt;
-            if (prec > 0 || (flags & FLAGS_HASH)) --width;
+            if (prec > 0 || (flags & FLAGS_HASH))
+              --width;
           }
         }
         if (width > 0 && !(flags & FLAGS_LEFT)) {
           if ((flags & FLAGS_ZEROPAD)) {
-            if (sign) __FMT_PUT(sign);
+            if (sign)
+              __FMT_PUT(sign);
             sign = 0;
-            do __FMT_PUT('0');
+            do
+              __FMT_PUT('0');
             while (--width > 0);
           } else
-            do __FMT_PUT(' ');
+            do
+              __FMT_PUT(' ');
             while (--width > 0);
         }
-        if (sign) __FMT_PUT(sign);
+        if (sign)
+          __FMT_PUT(sign);
         if (decpt <= 0) {
           __FMT_PUT('0');
-          if (prec > 0 || (flags & FLAGS_HASH)) __FMT_PUT('.');
+          if (prec > 0 || (flags & FLAGS_HASH))
+            __FMT_PUT('.');
           while (decpt < 0) {
             __FMT_PUT('0');
             prec--;
@@ -1152,7 +1214,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
             }
             __FMT_PUT(c);
           } while (--decpt > 0);
-          if (prec > 0 || (flags & FLAGS_HASH)) __FMT_PUT('.');
+          if (prec > 0 || (flags & FLAGS_HASH))
+            __FMT_PUT('.');
         }
         while (--prec >= 0) {
           if ((c = *s)) {
@@ -1162,14 +1225,18 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           }
           __FMT_PUT(c);
         }
-        while (--width >= 0) __FMT_PUT(' ');
-        if (s0) freedtoa(s0);
+        while (--width >= 0)
+          __FMT_PUT(' ');
+        if (s0)
+          freedtoa(s0);
         break;
 
       case 'G':
       case 'g':
-        if (!(flags & FLAGS_PRECISION)) prec = 6;
-        if (prec < 1) prec = 1;
+        if (!(flags & FLAGS_PRECISION))
+          prec = 6;
+        if (prec < 1)
+          prec = 1;
         if (!longdouble) {
           x = va_arg(va, double);
           s = s0 = dtoa(x, 2, prec, &decpt, &fpb.sign, &se);
@@ -1186,7 +1253,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
-        if (decpt == 9999) goto Format9999;
+        if (decpt == 9999)
+          goto Format9999;
         c = se - s;
         prec1 = prec;
         if (!prec) {
@@ -1199,18 +1267,22 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
             prec -= decpt;
           else
             prec = c - decpt;
-          if (prec < 0) prec = 0;
+          if (prec < 0)
+            prec = 0;
           goto FormatReal;
         }
         d -= 2;
-        if (!(flags & FLAGS_HASH) && prec > c) prec = c;
+        if (!(flags & FLAGS_HASH) && prec > c)
+          prec = c;
         --prec;
         goto FormatExpo;
 
       case 'e':
       case 'E':
-        if (!(flags & FLAGS_PRECISION)) prec = 6;
-        if (prec < 0) prec = 0;
+        if (!(flags & FLAGS_PRECISION))
+          prec = 6;
+        if (prec < 0)
+          prec = 0;
         if (!longdouble) {
           x = va_arg(va, double);
           s = s0 = dtoa(x, 2, prec + 1, &decpt, &fpb.sign, &se);
@@ -1227,31 +1299,41 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
-        if (decpt == 9999) goto Format9999;
+        if (decpt == 9999)
+          goto Format9999;
       FormatExpo:
-        if (fpb.sign /* && (x || sign) */) sign = '-';
+        if (fpb.sign /* && (x || sign) */)
+          sign = '-';
         if ((width -= prec + 5) > 0) {
-          if (sign) --width;
-          if (prec || (flags & FLAGS_HASH)) --width;
+          if (sign)
+            --width;
+          if (prec || (flags & FLAGS_HASH))
+            --width;
         }
-        if ((c = --decpt) < 0) c = -c;
+        if ((c = --decpt) < 0)
+          c = -c;
         while (c >= 100) {
           --width;
           c /= 10;
         }
         if (width > 0 && !(flags & FLAGS_LEFT)) {
           if ((flags & FLAGS_ZEROPAD)) {
-            if (sign) __FMT_PUT(sign);
+            if (sign)
+              __FMT_PUT(sign);
             sign = 0;
-            do __FMT_PUT('0');
+            do
+              __FMT_PUT('0');
             while (--width > 0);
           } else
-            do __FMT_PUT(' ');
+            do
+              __FMT_PUT(' ');
             while (--width > 0);
         }
-        if (sign) __FMT_PUT(sign);
+        if (sign)
+          __FMT_PUT(sign);
         __FMT_PUT(*s++);
-        if (prec || (flags & FLAGS_HASH)) __FMT_PUT('.');
+        if (prec || (flags & FLAGS_HASH))
+          __FMT_PUT('.');
         while (--prec >= 0) {
           if ((c = *s)) {
             s++;
@@ -1273,7 +1355,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         for (;;) {
           i1 = decpt / k;
           __FMT_PUT(i1 + '0');
-          if (--c <= 0) break;
+          if (--c <= 0)
+            break;
           decpt -= i1 * k;
           decpt *= 10;
         }
@@ -1307,7 +1390,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         bw = 1;
         bex = fpb.ex + 4 * prec1;
         if (bex) {
-          if ((i1 = bex) < 0) i1 = -i1;
+          if ((i1 = bex) < 0)
+            i1 = -i1;
           while (i1 >= 10) {
             ++bw;
             i1 /= 10;
@@ -1317,19 +1401,24 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           sign = '-';
         }
         if ((width -= bw + 5) > 0) {
-          if (sign) --width;
-          if (prec1 || (flags & FLAGS_HASH)) --width;
+          if (sign)
+            --width;
+          if (prec1 || (flags & FLAGS_HASH))
+            --width;
         }
         if ((width -= MAX(prec, prec1)) > 0 && !(flags & FLAGS_LEFT) &&
             !(flags & FLAGS_ZEROPAD)) {
-          do __FMT_PUT(' ');
+          do
+            __FMT_PUT(' ');
           while (--width > 0);
         }
-        if (sign) __FMT_PUT(sign);
+        if (sign)
+          __FMT_PUT(sign);
         __FMT_PUT('0');
         __FMT_PUT(alphabet[17]);  // x or X
         if ((flags & FLAGS_ZEROPAD) && width > 0 && !(flags & FLAGS_LEFT)) {
-          do __FMT_PUT('0');
+          do
+            __FMT_PUT('0');
           while (--width > 0);
         }
         i1 = prec1 & 7;
@@ -1340,7 +1429,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         while (prec1 > 0) {
           if (--i1 < 0) {
-            if (--k < 0) break;
+            if (--k < 0)
+              break;
             i1 = 7;
           }
           __FMT_PUT(alphabet[(fpb.bits[k] >> 4 * i1) & 0xf]);
@@ -1363,7 +1453,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         for (;;) {
           i1 = bex / c;
           __FMT_PUT('0' + i1);
-          if (!--bw) break;
+          if (!--bw)
+            break;
           bex -= i1 * c;
           bex *= 10;
         }

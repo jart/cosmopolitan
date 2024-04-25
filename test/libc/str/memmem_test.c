@@ -30,13 +30,18 @@
 void *memmem_naive(const void *haystk, size_t haystklen,  //
                    const void *needle, size_t needlelen) {
   size_t i, j;
-  if (!needlelen) return (void *)haystk;
-  if (needlelen > haystklen) return 0;
+  if (!needlelen)
+    return (void *)haystk;
+  if (needlelen > haystklen)
+    return 0;
   for (i = 0; i < haystklen; ++i) {
     for (j = 0;; ++j) {
-      if (j == needlelen) return (/*unconst*/ char *)haystk + i;
-      if (i + j == haystklen) break;
-      if (((char *)haystk)[i + j] != ((char *)needle)[j]) break;
+      if (j == needlelen)
+        return (/*unconst*/ char *)haystk + i;
+      if (i + j == haystklen)
+        break;
+      if (((char *)haystk)[i + j] != ((char *)needle)[j])
+        break;
     }
   }
   return 0;

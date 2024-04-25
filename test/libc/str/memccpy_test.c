@@ -28,7 +28,8 @@ void *memccpy_pure(void *d, const void *s, int c, size_t n) {
   unsigned char *x;
   const unsigned char *y;
   for (c &= 0xff, x = d, y = s, i = 0; i < n; ++i) {
-    if ((x[i] = y[i]) == c) return x + i + 1;
+    if ((x[i] = y[i]) == c)
+      return x + i + 1;
   }
   return NULL;
 }

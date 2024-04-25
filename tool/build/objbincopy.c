@@ -130,9 +130,12 @@ static void GetOpts(int argc, char *argv[]) {
 
 static int PhdrFlagsToProt(Elf64_Word flags) {
   int prot = PROT_NONE;
-  if (flags & PF_R) prot |= PROT_READ;
-  if (flags & PF_W) prot |= PROT_WRITE;
-  if (flags & PF_X) prot |= PROT_EXEC;
+  if (flags & PF_R)
+    prot |= PROT_READ;
+  if (flags & PF_W)
+    prot |= PROT_WRITE;
+  if (flags & PF_X)
+    prot |= PROT_EXEC;
   return prot;
 }
 
@@ -163,11 +166,13 @@ static void ValidateMachoSection(const char *inpath,         //
   bool found_pagezero;
   bool found_unixthread;
   struct MachoLoadCommand *cmd;
-  if (!shdr) return;
+  if (!shdr)
+    return;
   if (elf->e_machine != EM_NEXGEN32E) {
     Die(inpath, ".macho section only supported for ELF x86_64");
   }
-  if (!macho) Die(inpath, "corrupted .macho section content");
+  if (!macho)
+    Die(inpath, "corrupted .macho section content");
   if (shdr->sh_size < sizeof(struct MachoHeader)) {
     Die(inpath, ".macho section too small for mach-o header");
   }
@@ -349,10 +354,14 @@ static void HandleElf(const char *inpath, Elf64_Ehdr *elf, size_t esize) {
   elf->e_shentsize = 0;
   for (maxoff = i = 0; i < elf->e_phnum; ++i) {
     phdr = GetElfProgramHeaderAddress(elf, esize, i);
-    if (!phdr) Die(inpath, "corrupted elf header");
-    if (phdr->p_type == PT_INTERP) Die(inpath, "PT_INTERP isn't supported");
-    if (phdr->p_type == PT_DYNAMIC) Die(inpath, "PT_DYNAMIC isn't supported");
-    if (!phdr->p_filesz) continue;
+    if (!phdr)
+      Die(inpath, "corrupted elf header");
+    if (phdr->p_type == PT_INTERP)
+      Die(inpath, "PT_INTERP isn't supported");
+    if (phdr->p_type == PT_DYNAMIC)
+      Die(inpath, "PT_DYNAMIC isn't supported");
+    if (!phdr->p_filesz)
+      continue;
     maxoff = MAX(maxoff, phdr->p_offset + phdr->p_filesz);
     if (macho && phdr->p_type == PT_LOAD) {
       if (!(loadsegment = GetNextMachoLoadSegment(&loadcommand, &loadcount))) {
@@ -417,7 +426,8 @@ static void HandleInput(const char *inpath) {
 int main(int argc, char *argv[]) {
   int i;
   prog = argv[0];
-  if (!prog) prog = "objbincopy";
+  if (!prog)
+    prog = "objbincopy";
   GetOpts(argc, argv);
   if ((outfd = creat(outpath, 0755)) == -1) {
     DieSys(outpath);

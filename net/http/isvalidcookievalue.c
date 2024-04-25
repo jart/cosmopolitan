@@ -33,7 +33,8 @@ static inline bool IsCookieOctet(unsigned char i) {
  */
 bool IsValidCookieValue(const char *s, size_t n) {
   size_t i;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   for (i = 0; i < n; ++i) {
     if (!IsCookieOctet(s[i])) {
       return false;

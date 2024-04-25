@@ -249,7 +249,8 @@ void elfwriter_commit(struct ElfWriter *elf, size_t size) {
 
 void elfwriter_finishsection(struct ElfWriter *elf) {
   size_t section = FinishSection(elf);
-  if (elf->relas->j < elf->relas->i) MakeRelaSection(elf, section);
+  if (elf->relas->j < elf->relas->i)
+    MakeRelaSection(elf, section);
 }
 
 /**

@@ -39,8 +39,10 @@ __vex void *memmem(const void *haystack, size_t haystacklen, const void *needle,
   const xmm_t *v;
   unsigned i, k, m;
   const char *p, *q, *e;
-  if (!needlelen) return (void *)haystack;
-  if (UNLIKELY(needlelen > haystacklen)) return 0;
+  if (!needlelen)
+    return (void *)haystack;
+  if (UNLIKELY(needlelen > haystacklen))
+    return 0;
   q = needle;
   c = *q;
   n = (xmm_t){c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
@@ -54,29 +56,38 @@ __vex void *memmem(const void *haystack, size_t haystacklen, const void *needle,
   for (;;) {
     while (!m) {
       ++v;
-      if ((const char *)v >= e) return 0;
+      if ((const char *)v >= e)
+        return 0;
       m = __builtin_ia32_pmovmskb128(*v == n);
     }
     do {
       k = __builtin_ctzl(m);
       p = (const char *)v + k;
-      if (UNLIKELY(p + needlelen > e)) return 0;
+      if (UNLIKELY(p + needlelen > e))
+        return 0;
       for (i = 1;; ++i) {
-        if (i == needlelen) return (/*unconst*/ char *)p;
-        if (p[i] != q[i]) break;
+        if (i == needlelen)
+          return (/*unconst*/ char *)p;
+        if (p[i] != q[i])
+          break;
       }
       m &= ~(1 << k);
     } while (m);
   }
 #else
   size_t i, j;
-  if (!needlelen) return (void *)haystack;
-  if (needlelen > haystacklen) return 0;
+  if (!needlelen)
+    return (void *)haystack;
+  if (needlelen > haystacklen)
+    return 0;
   for (i = 0; i < haystacklen; ++i) {
     for (j = 0;; ++j) {
-      if (j == needlelen) return (/*unconst*/ char *)haystack + i;
-      if (i + j == haystacklen) break;
-      if (((char *)haystack)[i + j] != ((char *)needle)[j]) break;
+      if (j == needlelen)
+        return (/*unconst*/ char *)haystack + i;
+      if (i + j == haystacklen)
+        break;
+      if (((char *)haystack)[i + j] != ((char *)needle)[j])
+        break;
     }
   }
   return 0;

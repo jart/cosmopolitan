@@ -41,10 +41,14 @@
 #define TIOCIXOFF 0x20007480  // xnu
 
 static const char *DescribeFlow(char buf[12], int action) {
-  if (action == TCOOFF) return "TCOOFF";
-  if (action == TCOON) return "TCOON";
-  if (action == TCIOFF) return "TCIOFF";
-  if (action == TCION) return "TCION";
+  if (action == TCOOFF)
+    return "TCOOFF";
+  if (action == TCOON)
+    return "TCOON";
+  if (action == TCIOFF)
+    return "TCIOFF";
+  if (action == TCION)
+    return "TCION";
   FormatInt32(buf, action);
   return buf;
 }
@@ -89,7 +93,8 @@ static int sys_tcflow_bsd(int fd, int action) {
 static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
   bool32 ok;
   int64_t h;
-  if (!__isfdopen(fd)) return ebadf();
+  if (!__isfdopen(fd))
+    return ebadf();
   h = g_fds.p[fd].handle;
   switch (action) {
     case TCOON:

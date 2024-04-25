@@ -26,8 +26,10 @@
  */
 int fflush(FILE *f) {
   int rc;
-  if (f) flockfile(f);
+  if (f)
+    flockfile(f);
   rc = fflush_unlocked(f);
-  if (f) funlockfile(f);
+  if (f)
+    funlockfile(f);
   return rc;
 }

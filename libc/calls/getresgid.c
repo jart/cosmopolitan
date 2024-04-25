@@ -34,15 +34,20 @@ int getresgid(uint32_t *real, uint32_t *effective, uint32_t *saved) {
   int rc, gid;
   if (IsWindows()) {
     gid = getgid();
-    if (real) *real = gid;
-    if (effective) *effective = gid;
-    if (saved) *saved = gid;
+    if (real)
+      *real = gid;
+    if (effective)
+      *effective = gid;
+    if (saved)
+      *saved = gid;
     rc = 0;
   } else if (saved) {
     rc = sys_getresgid(real, effective, saved);
   } else {
-    if (real) *real = sys_getgid();
-    if (effective) *effective = sys_getegid();
+    if (real)
+      *real = sys_getgid();
+    if (effective)
+      *effective = sys_getegid();
     rc = 0;
   }
   STRACE("getresgid([%d], [%d], [%d]) → %d% m", real ? *real : 0,

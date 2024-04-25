@@ -31,7 +31,8 @@ void SetUpOnce(void) {
 }
 
 void SetUp(void) {
-  if (IsOpenbsd() || IsXnu()) exit(0);
+  if (IsOpenbsd() || IsXnu())
+    exit(0);
 }
 
 TEST(fadvise, ebadf) {

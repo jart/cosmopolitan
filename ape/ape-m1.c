@@ -221,13 +221,15 @@ struct ApeLoader {
 
 static unsigned long StrLen(const char *s) {
   unsigned long n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
 static int StrCmp(const char *l, const char *r) {
   unsigned long i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return (l[i] & 255) - (r[i] & 255);
 }
 
@@ -276,7 +278,8 @@ static char *Utoa(char p[21], unsigned long x) {
 }
 
 static char *Itoa(char p[21], long x) {
-  if (x < 0) *p++ = '-', x = -(unsigned long)x;
+  if (x < 0)
+    *p++ = '-', x = -(unsigned long)x;
   return Utoa(p, x);
 }
 
@@ -312,7 +315,8 @@ static int GetIndirectOffset(const char *arg0) {
 static void Perror(const char *thing, long rc, const char *reason) {
   char ibuf[21];
   ibuf[0] = 0;
-  if (rc) Itoa(ibuf, -rc);
+  if (rc)
+    Itoa(ibuf, -rc);
   Print(2, "ape error: ", thing, ": ", reason, rc ? " failed w/ errno " : "",
         ibuf, "\n", 0l);
 }
@@ -327,7 +331,8 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) {
     return 0;
   }
-  if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
+  if (pathlen && ps->path[pathlen - 1] != '/')
+    ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
   return !access(ps->path, X_OK);
@@ -377,8 +382,10 @@ static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
   ps->name = name;
-  if (!(ps->namelen = ps->indirect ? ps->indirect : StrLen(ps->name))) return 0;
-  if (ps->namelen + 1 > sizeof(ps->path)) return 0;
+  if (!(ps->namelen = ps->indirect ? ps->indirect : StrLen(ps->name)))
+    return 0;
+  if (ps->namelen + 1 > sizeof(ps->path))
+    return 0;
   if (FindCommand(ps)) {
     return ps->path;
   } else {
@@ -585,7 +592,8 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
     a = p[i].p_vaddr & -pagesz;
     b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
     for (j = i + 1; j < e->e_phnum; ++j) {
-      if (p[j].p_type != PT_LOAD) continue;
+      if (p[j].p_type != PT_LOAD)
+        continue;
       c = p[j].p_vaddr & -pagesz;
       d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
       if (MAX(a, c) < MIN(b, d)) {
@@ -614,7 +622,8 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   if (e->e_type == ET_DYN) {
     rc = sys_mmap(0, virtmax - virtmin, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
                   -1, 0);
-    if (rc < 0) Pexit(exe, rc, "pie mmap");
+    if (rc < 0)
+      Pexit(exe, rc, "pie mmap");
     dynbase = rc;
     if (dynbase & (pagesz - 1)) {
       Pexit(exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
@@ -630,14 +639,18 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   for (i = 0; i < e->e_phnum; ++i) {
     void *addr;
     unsigned long size;
-    if (p[i].p_type != PT_LOAD) continue;
+    if (p[i].p_type != PT_LOAD)
+      continue;
 
     /* configure mapping */
     prot = 0;
     flags = MAP_FIXED | MAP_PRIVATE;
-    if (p[i].p_flags & PF_R) prot |= PROT_READ;
-    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
-    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
+    if (p[i].p_flags & PF_R)
+      prot |= PROT_READ;
+    if (p[i].p_flags & PF_W)
+      prot |= PROT_WRITE;
+    if (p[i].p_flags & PF_X)
+      prot |= PROT_EXEC;
 
     /* load from file */
     if (p[i].p_filesz) {
@@ -687,24 +700,30 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
            as the default strategy which is slow but it works for both */
         rc = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
                       MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
-        if (rc < 0) Pexit(exe, rc, "prog mmap anon");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mmap anon");
         rc = pread(fd, addr, p[i].p_filesz, p[i].p_offset & -pagesz);
-        if (rc != p[i].p_filesz) Pexit(exe, -errno, "prog pread");
+        if (rc != p[i].p_filesz)
+          Pexit(exe, -errno, "prog pread");
 #endif
       } else {
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
-        if (rc < 0) Pexit(exe, rc, "prog mmap");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mmap");
       }
-      if (wipe) memset((void *)(dynbase + a), 0, wipe);
+      if (wipe)
+        memset((void *)(dynbase + a), 0, wipe);
       if (prot2 != prot1) {
         rc = sys_mprotect(addr, size, prot2);
-        if (rc < 0) Pexit(exe, rc, "prog mprotect");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mprotect");
       }
       /* allocate extra bss */
       if (c > b) {
         flags |= MAP_ANONYMOUS;
         rc = sys_mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0);
-        if (rc < 0) Pexit(exe, rc, "extra bss mmap");
+        if (rc < 0)
+          Pexit(exe, rc, "extra bss mmap");
       }
     } else {
       /* allocate pure bss */
@@ -712,7 +731,8 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
       flags |= MAP_ANONYMOUS;
       rc = sys_mmap(addr, size, prot, flags, -1, 0);
-      if (rc < 0) Pexit(exe, rc, "bss mmap");
+      if (rc < 0)
+        Pexit(exe, rc, "bss mmap");
     }
   }
 
@@ -790,8 +810,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 
   /* read program headers */
   rc = pread(fd, M->phdr.buf, size, ebuf->ehdr.e_phoff);
-  if (rc < 0) return "failed to read ELF program headers";
-  if (rc != size) return "truncated read of ELF program headers";
+  if (rc < 0)
+    return "failed to read ELF program headers";
+  if (rc != size)
+    return "truncated read of ELF program headers";
 
   /* bail on recoverable program header errors */
   p = &M->phdr.phdr;
@@ -970,7 +992,8 @@ int main(int argc, char **argv, char **envp) {
      grows down the alloc by poking the guard pages */
   n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
-  if ((long)sp2 & 15) ++sp2;
+  if ((long)sp2 & 15)
+    ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
   }

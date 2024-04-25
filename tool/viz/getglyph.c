@@ -59,7 +59,8 @@ static char *Raster(int yn, int xn, unsigned char Y[yn][xn], int *dw) {
   int y, x, i, j, k, s, w, bi, bs;
   *dw = 0;
   for (y = 0; y < yn; y += 4) {
-    if (y) appendw(&r, '\n');
+    if (y)
+      appendw(&r, '\n');
     for (w = x = 0; x < xn; x += 4) {
       for (i = 0; i < 4; ++i) {
         for (j = 0; j < 4; ++j) {
@@ -87,7 +88,8 @@ static char *Raster(int yn, int xn, unsigned char Y[yn][xn], int *dw) {
       appendw(&r, tpenc(kBlocks[bi].c));
       ++w;
     }
-    if (w > *dw) *dw = w;
+    if (w > *dw)
+      *dw = w;
   }
   return r;
 }
@@ -171,7 +173,8 @@ int main(int argc, char *argv[]) {
                 strcmp(rasters[j], rasters[j - 1])) {
               isdifferent = true;
             }
-            if (dw > maxw) maxw = dw;
+            if (dw > maxw)
+              maxw = dw;
           }
         }
         free(bmap);
@@ -189,7 +192,8 @@ int main(int argc, char *argv[]) {
               continue;
             }
             p = strchrnul(rasters[j], '\n');
-            if (p - rasters[j]) gotsome = true;
+            if (p - rasters[j])
+              gotsome = true;
             printf("%-*.*s    ", maxw, p - rasters[j], rasters[j]);
             rasters[j] = *p ? p + 1 : p;
           }
