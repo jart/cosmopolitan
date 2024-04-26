@@ -19,7 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
@@ -27,6 +29,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/temp.h"
 #include "libc/x/x.h"
+
+__static_yoink("__utf16to8");
 
 static char *get_pagerpath(char *pathbuf, size_t pathbufsz) {
   char *pagerpath;
@@ -43,9 +47,10 @@ static char *get_pagerpath(char *pathbuf, size_t pathbufsz) {
 static bool run_pager(char *args[hasatleast 3]) {
   char16_t widepath[PATH_MAX];
   int n, pid;
+  kprintf("utf16to8 %p\n", _weaken(__utf16to8));
   if (IsWindows() && !strcasecmp(args[0], "/C/Windows/System32/more.com") &&
-      (((n = __mkntpath(args[1], widepath)) == -1) ||
-       !(args[1] = gc(utf16to8(widepath, n, 0))))) {
+      (!_weaken(__utf16to8) || ((n = __mkntpath(args[1], widepath)) == -1) ||
+       !(args[1] = gc(_weaken(__utf16to8)(widepath, n, 0))))) {
     return false;
   }
   if ((pid = fork()) != -1) {
