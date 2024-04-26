@@ -28,7 +28,6 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/proc/proc.internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
@@ -47,8 +46,6 @@ static struct AtForks {
   atomic_int allocated;
 } _atforks;
 
-extern pthread_spinlock_t _pthread_lock_obj;
-
 static void _pthread_onfork(int i) {
   struct AtFork *a;
   unassert(0 <= i && i <= 2);
@@ -65,27 +62,13 @@ static void _pthread_onfork(int i) {
 
 void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
-  _pthread_lock();
-  __fds_lock();
-  __mmi_lock();
 }
 
 void _pthread_onfork_parent(void) {
-  __mmi_unlock();
-  __fds_unlock();
-  _pthread_unlock();
   _pthread_onfork(1);
 }
 
 void _pthread_onfork_child(void) {
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-  extern pthread_mutex_t __mmi_lock_obj;
-  pthread_mutex_init(&__mmi_lock_obj, &attr);
-  pthread_mutex_init(&__fds_lock_obj, &attr);
-  pthread_mutexattr_destroy(&attr);
-  (void)pthread_spin_init(&_pthread_lock_obj, 0);
   _pthread_onfork(2);
 }
 
