@@ -291,7 +291,7 @@ extern const errno_t ENOTSOCK;
 extern const errno_t EDESTADDRREQ;
 
 /**
- * Message too errno_t.
+ * Message too big.
  */
 extern const errno_t EMSGSIZE;
 
