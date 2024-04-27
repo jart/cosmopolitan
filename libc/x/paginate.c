@@ -17,42 +17,93 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/temp.h"
+#include "libc/x/x.h"
+
+static char *get_pagerpath(char *pathbuf, size_t pathbufsz) {
+  char *pagerpath;
+  if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
+      ((pagerpath = commandv("less", pathbuf, pathbufsz)) ||
+       (pagerpath = commandv("more", pathbuf, pathbufsz)) ||
+       (pagerpath = commandv("more.exe", pathbuf, pathbufsz)) ||
+       (pagerpath = commandv("more.com", pathbuf, pathbufsz)))) {
+    return pagerpath;
+  }
+  return 0;
+}
+
+static bool run_pager(char *args[hasatleast 3]) {
+  char16_t widepath[PATH_MAX];
+  int n, pid;
+  if (IsWindows() && !strcasecmp(args[0], "/C/Windows/System32/more.com") &&
+      (((n = __mkntpath(args[1], widepath)) == -1) ||
+       !(args[1] = gc(utf16to8(widepath, n, 0))))) {
+    return false;
+  }
+  if ((pid = fork()) != -1) {
+    putenv("LC_ALL=C.UTF-8");
+    putenv("LESSCHARSET=utf-8");
+    putenv("LESS=-RS");
+    if (!pid) {
+      execv(args[0], args);
+      _Exit(127);
+    }
+    waitpid(pid, 0, 0);
+    return true;
+  }
+  return false;
+}
 
 /**
  * Displays wall of text in terminal with pagination.
  */
 void __paginate(int fd, const char *s) {
-  int tfd, pid;
+  int tfd;
   char *args[3] = {0};
   char tmppath[] = "/tmp/paginate.XXXXXX";
   char progpath[PATH_MAX];
-  if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
-      ((args[0] = commandv("less", progpath, sizeof(progpath))) ||
-       (args[0] = commandv("more", progpath, sizeof(progpath))) ||
-       (args[0] = commandv("more.exe", progpath, sizeof(progpath))))) {
+  bool done;
+  if ((args[0] = get_pagerpath(progpath, sizeof(progpath)))) {
     if ((tfd = mkstemp(tmppath)) != -1) {
       write(tfd, s, strlen(s));
       close(tfd);
       args[1] = tmppath;
-      if ((pid = fork()) != -1) {
-        putenv("LC_ALL=C.UTF-8");
-        putenv("LESSCHARSET=utf-8");
-        putenv("LESS=-RS");
-        if (!pid) {
-          execv(args[0], args);
-          _Exit(127);
-        }
-        waitpid(pid, 0, 0);
-        unlink(tmppath);
+      done = run_pager(args);
+      unlink(tmppath);
+      if (done) {
         return;
       }
-      unlink(tmppath);
     }
   }
   write(fd, s, strlen(s));
+}
+
+/**
+ * Displays a file in terminal with pagination
+ */
+void __paginate_file(int fd, const char *path) {
+  char *args[3] = {0};
+  char progpath[PATH_MAX];
+  if ((args[0] = get_pagerpath(progpath, sizeof(progpath)))) {
+    args[1] = (char *)path;
+    if (run_pager(args)) {
+      return;
+    }
+  }
+  int sfd = open(path, O_RDONLY);
+  if (sfd != -1) {
+    ssize_t n;
+    while ((n = read(sfd, progpath, sizeof(progpath)) > 0)) {
+      write(fd, progpath, n);
+    }
+  }
+  close(sfd);
 }

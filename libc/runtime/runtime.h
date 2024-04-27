@@ -103,6 +103,7 @@ int verynice(void);
 void __warn_if_powersave(void);
 void _Exit1(int) libcesque wontreturn;
 void __paginate(int, const char *);
+void __paginate_file(int, const char *);
 /* memory management */
 void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
