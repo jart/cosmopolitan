@@ -74,7 +74,7 @@ extern const errno_t EIO;
 extern const errno_t ENXIO;
 
 /**
- * Argument list too errno_t.
+ * Argument list too big.
  */
 extern const errno_t E2BIG;
 
@@ -226,7 +226,7 @@ extern const errno_t ERANGE;
 extern const errno_t EDEADLK;
 
 /**
- * Filename too errno_t.
+ * Filename too long.
  */
 extern const errno_t ENAMETOOLONG;
 
