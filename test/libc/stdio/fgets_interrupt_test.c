@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/isystem/errno.h"
+#include "libc/isystem/sched.h"
 #include "libc/isystem/signal.h"
 #include "libc/isystem/stddef.h"
 #include "libc/isystem/unistd.h"
@@ -30,6 +31,8 @@ char buf[20] = {0};
 int pipes[2];
 int pid;
 int got_sigusr1 = 0;
+
+// -=- these get called for each test ------------------------------------------
 
 void sigusr1_handler(int) {
   got_sigusr1 = 1;
@@ -50,7 +53,6 @@ void write_pipe(int send_signal_before_end) {
 
   // Send rest of stream
   fputs(MY_TEST_STRING_2, stream);
-
   // Close stream - this will cause the parent's fgets to end
   fclose(stream);
 }
@@ -67,6 +69,19 @@ void read_pipe() {
   fclose(stream);
 }
 
+// -=- these set up the tests --------------------------------------------------
+
+void SetUpOnce(void) {
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(1, &set);
+  if (sched_setaffinity(0, sizeof set, &set) == -1) {
+    perror("sched_setaffinity");
+    fprintf(stderr, "single core affinity is needed for test reliability\n");
+    _exit(1);
+  }
+}
+
 void setup_signal_and_pipe(uint64_t sa_flags) {
   // Set up SIGUSR1 handler
   struct sigaction sa = {.sa_handler = sigusr1_handler, .sa_flags = sa_flags};
@@ -74,6 +89,7 @@ void setup_signal_and_pipe(uint64_t sa_flags) {
     perror("sigaction");
     _exit(1);
   }
+  got_sigusr1 = 0;
 
   // Set up pipe between parent and child
   if (pipe(pipes) == -1) {
@@ -81,6 +97,8 @@ void setup_signal_and_pipe(uint64_t sa_flags) {
     _exit(1);
   }
 }
+
+// -=- these are the tests -----------------------------------------------------
 
 TEST(fgets_eintr, testThatFgetsReadsFromPipeNormally) {
   setup_signal_and_pipe(0);  // 0 = no SA_RESTART
@@ -103,6 +121,7 @@ TEST(fgets_eintr, testThatTheSignalInterruptsFgets) {
   read_pipe();
   EXPECT_STRNE(MY_TEST_STRING_1 MY_TEST_STRING_2, buf);
   EXPECT_EQ(EINTR, errno);
+  EXPECT_EQ(1, got_sigusr1);
 }
 
 TEST(fgets_eintr, testThatFgetsRestartsWhenSaRestartIsSet) {
