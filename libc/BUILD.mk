@@ -242,6 +242,7 @@ libc/isystem/system_error \
 libc/isystem/termios.h \
 libc/isystem/tgmath.h \
 libc/isystem/thread \
+libc/isystem/threads.h \
 libc/isystem/time.h \
 libc/isystem/tmmintrin.h \
 libc/isystem/tuple \

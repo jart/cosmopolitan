@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/threads.h"
 
-/**
- * Compares thread ids;
- *
- * @return nonzero if equal, otherwise zero
- */
-int pthread_equal(pthread_t t1, pthread_t t2) {
-  return t1 == t2;
+int thrd_create(thrd_t *th, thrd_start_t func, void *arg) {
+  errno_t err;
+  err = pthread_create(th, 0, (void *(*)(void *))func, arg);
+  if (!err)
+    return thrd_success;
+  if (err == ENOMEM)
+    return thrd_nomem;
+  if (err == EAGAIN)
+    return thrd_busy;
+  if (err == EAGAIN)
+    return thrd_busy;
+  return thrd_error;
 }
-
-__weak_reference(pthread_equal, thrd_equal);

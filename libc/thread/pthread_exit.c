@@ -171,3 +171,5 @@ wontreturn void pthread_exit(void *rc) {
   // this is a child thread
   longjmp(pt->pt_exiter, 1);
 }
+
+__weak_reference(pthread_exit, thr_exit);

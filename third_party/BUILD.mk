@@ -20,6 +20,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/libcxxabi		\
 	o/$(MODE)/third_party/libunwind		\
 	o/$(MODE)/third_party/linenoise		\
+	o/$(MODE)/third_party/llm		\
 	o/$(MODE)/third_party/lua		\
 	o/$(MODE)/third_party/lz4cli		\
 	o/$(MODE)/third_party/make		\

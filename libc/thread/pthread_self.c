@@ -27,3 +27,5 @@
 pthread_t pthread_self(void) {
   return __get_tls()->tib_pthread;
 }
+
+__weak_reference(pthread_self, thrd_current);
