@@ -1612,7 +1612,7 @@ FUNCTIONS
           called from `.init.lua`. This function is not available in
           unsecure mode.
 
-  ProgramSslRequired(mandatory:str)
+  ProgramSslRequired(mandatory:bool)
           Enables the blocking of HTTP so that all inbound clients and
           must use the TLS transport layer. This has the same effect as
           the `-J` flag. Fetch() is still allowed to make outbound HTTP
