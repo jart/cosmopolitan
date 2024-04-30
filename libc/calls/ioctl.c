@@ -24,7 +24,6 @@
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/serialize.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -42,6 +41,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/serialize.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/ifreq.h"
@@ -66,7 +66,7 @@ static struct HostAdapterInfoNode {
   struct sockaddr netmask;
   struct sockaddr broadcast;
   short flags;
-} *__hostInfo;
+} * __hostInfo;
 
 static int ioctl_default(int fd, unsigned long request, void *arg) {
   int rc;
@@ -106,7 +106,8 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
       int bytes = CountConsoleInputBytes();
       *arg = MAX(0, bytes);
       return 0;
-    } else if (g_fds.p[fd].kind == kFdDevNull) {
+    } else if (g_fds.p[fd].kind == kFdDevNull ||
+               g_fds.p[fd].kind == kFdDevRandom) {
       *arg = 1;
       return 0;
     } else if (GetFileType(handle) == kNtFileTypePipe) {

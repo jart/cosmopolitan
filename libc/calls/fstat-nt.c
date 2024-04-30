@@ -104,6 +104,7 @@ textwindows int sys_fstat_nt(int fd, struct stat *st) {
       return ebadf();
     case kFdConsole:
     case kFdDevNull:
+    case kFdDevRandom:
       return sys_fstat_nt_special(g_fds.p[fd].kind, st);
     case kFdSocket:
       return sys_fstat_nt_socket(g_fds.p[fd].kind, st);

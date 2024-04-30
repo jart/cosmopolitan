@@ -28,6 +28,7 @@ textwindows ssize_t sys_writev_nt(int fd, const struct iovec *iov, int iovlen) {
     case kFdFile:
     case kFdConsole:
     case kFdDevNull:
+    case kFdDevRandom:
       return sys_write_nt(fd, iov, iovlen, -1);
     case kFdSocket:
       return _weaken(sys_send_nt)(fd, iov, iovlen, 0);

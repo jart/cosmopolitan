@@ -61,7 +61,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   bool pwriting = offset != -1;
   bool seekable =
       (f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk) ||
-      f->kind == kFdDevNull;
+      f->kind == kFdDevNull || f->kind == kFdDevRandom;
   if (pwriting && !seekable) {
     return espipe();
   }

@@ -332,7 +332,8 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   if (__isfdkind(fd, kFdFile) ||     //
       __isfdkind(fd, kFdSocket) ||   //
       __isfdkind(fd, kFdConsole) ||  //
-      __isfdkind(fd, kFdDevNull)) {
+      __isfdkind(fd, kFdDevNull) ||  //
+      __isfdkind(fd, kFdDevRandom)) {
     if (cmd == F_GETFL) {
       rc = g_fds.p[fd].flags & (O_ACCMODE | _O_APPEND | _O_DIRECT |
                                 _O_NONBLOCK | _O_RANDOM | _O_SEQUENTIAL);

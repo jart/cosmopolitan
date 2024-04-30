@@ -786,6 +786,10 @@ textwindows ssize_t ReadBuffer(int fd, void *data, size_t size, int64_t offset,
     return 0;
   }
 
+  if (f->kind == kFdDevRandom) {
+    return ProcessPrng(data, size) ? size : __winerr();
+  }
+
   if (f->kind == kFdConsole) {
     return ReadFromConsole(f, data, size, waitmask);
   }
