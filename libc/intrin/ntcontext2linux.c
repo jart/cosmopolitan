@@ -48,6 +48,7 @@ textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   ctx->uc_mcontext.fs = cr->SegFs;
   ctx->uc_mcontext.fpregs = &ctx->__fpustate;
   __repmovsb(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
+  ctx->__fpustate.mxcsr = cr->MxCsr;
 }
 
 textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
@@ -74,6 +75,7 @@ textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   cr->SegCs = ctx->uc_mcontext.cs;
   cr->SegGs = ctx->uc_mcontext.gs;
   cr->SegFs = ctx->uc_mcontext.fs;
+  cr->MxCsr = ctx->__fpustate.mxcsr;
   __repmovsb(&cr->FltSave, &ctx->__fpustate, sizeof(ctx->__fpustate));
 }
 
