@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/cosmo.h"
 #include "libc/tinymath/arm.internal.h"
 
 #if WANT_ERRNO
@@ -45,6 +46,7 @@ with_errnof (float y, int e)
 dontinline static float
 xflowf (uint32_t sign, float y)
 {
+  unleaf();
   y = eval_as_float (opt_barrier_float (sign ? -y : y) * y);
   return with_errnof (y, ERANGE);
 }
@@ -74,6 +76,7 @@ __math_oflowf (uint32_t sign)
 float
 __math_divzerof (uint32_t sign)
 {
+  unleaf();
   float y = opt_barrier_float (sign ? -1.0f : 1.0f) / 0.0f;
   return with_errnof (y, ERANGE);
 }
@@ -81,6 +84,7 @@ __math_divzerof (uint32_t sign)
 dontinstrument float
 __math_invalidf (float x)
 {
+  unleaf();
   float y = (x - x) / (x - x);
   return isnan (x) ? y : with_errnof (y, EDOM);
 }

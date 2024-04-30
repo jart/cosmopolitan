@@ -2,6 +2,12 @@
 #define COSMOPOLITAN_LIBC_THREAD_THREADS_H_
 COSMOPOLITAN_C_START_
 
+#if !defined(__cplusplus) &&                   \
+    (!(defined(__GNUC__) && __GNUC__ >= 13) || \
+     !(defined(__STDC_VERSION__) && __STDC_VERSION__ > 201710L))
+#define thread_local _Thread_local
+#endif
+
 #define TSS_DTOR_ITERATIONS 4
 
 enum {

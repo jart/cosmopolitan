@@ -81,6 +81,8 @@ int fesetenv(const fenv_t *);
 int fesetexceptflag(const fexcept_t *, int);
 int fesetround(int);
 int fetestexcept(int);
+int feenableexcept(int);
+int fedisableexcept(int);
 int feupdateenv(const fenv_t *);
 int __flt_rounds(void);
 int __fesetround(int);
