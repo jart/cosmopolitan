@@ -152,8 +152,6 @@ __attribute__((__constructor__)) static void StdioPro(int argc, char *argv[]) {
 }
 
 TEST(socket, canBeUsedAsExecutedStdio) {
-  if (IsWindows())
-    return;  // TODO(jart): What broke this?
   char buf[16] = {0};
   const char *prog;
   uint32_t addrsize = sizeof(struct sockaddr_in);
