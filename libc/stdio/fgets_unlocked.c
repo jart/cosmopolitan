@@ -57,11 +57,7 @@ char *fgets_unlocked(char *s, int size, FILE *f) {
           break;
       } else {
         if ((c = fgetc_unlocked(f)) == -1) {
-          if (ferror_unlocked(f) == EINTR) {
-            continue;
-          } else {
-            break;
-          }
+          break;
         }
         *p++ = c & 255;
         if (c == '\n')
