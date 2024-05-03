@@ -40,6 +40,8 @@ static const char *__fdkind2str(int x) {
       return "kFdZip";
     case kFdEpoll:
       return "kFdEpoll";
+    case kFdDevRandom:
+      return "kFdRandom";
     default:
       return "kFdWut";
   }

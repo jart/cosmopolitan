@@ -2,15 +2,16 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FD_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
-#define kFdEmpty    0
-#define kFdFile     1
-#define kFdSocket   2
-#define kFdConsole  4
-#define kFdSerial   5
-#define kFdZip      6
-#define kFdEpoll    7
-#define kFdReserved 8
-#define kFdDevNull  9
+#define kFdEmpty     0
+#define kFdFile      1
+#define kFdSocket    2
+#define kFdConsole   4
+#define kFdSerial    5
+#define kFdZip       6
+#define kFdEpoll     7
+#define kFdReserved  8
+#define kFdDevNull   9
+#define kFdDevRandom 10
 
 struct Fd {
   char kind;

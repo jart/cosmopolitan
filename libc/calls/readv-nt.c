@@ -29,6 +29,7 @@ textwindows ssize_t sys_readv_nt(int fd, const struct iovec *iov, int iovlen) {
     case kFdFile:
     case kFdConsole:
     case kFdDevNull:
+    case kFdDevRandom:
       return sys_read_nt(fd, iov, iovlen, -1);
     case kFdSocket:
       return _weaken(sys_recv_nt)(fd, iov, iovlen, 0);
