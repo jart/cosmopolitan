@@ -51,7 +51,7 @@ static int __get_cpu_count_bsd(void) {
   } else {
     cmd[1] = HW_NCPU;
   }
-  if (!sys_sysctl(cmd, 2, &c, &n, 0, 0)) {
+  if (!sysctl(cmd, 2, &c, &n, 0, 0)) {
     return c;
   } else {
     return -1;

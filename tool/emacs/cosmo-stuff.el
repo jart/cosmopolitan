@@ -215,7 +215,7 @@
          (runs (format "o/$m/%s%s V=5 TESTARGS=-b" name runsuffix))
          (buns (format "o/$m/test/%s_test%s V=5 TESTARGS=-b" name runsuffix)))
     (cond ((not (member ext '("c" "cc" "cpp" "s" "S" "rl" "f" "cu")))
-           (format "m=%s; make -j32 MODE=$m o/$m/%s"
+           (format "m=%s; make -j96 MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
                     (or (file-name-directory
@@ -226,7 +226,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s"
-               ,(concat "make -j32 $f MODE=$m")
+               ,(concat "make -j96 $f MODE=$m")
                "scp $f $f.dbg win10:; ssh win10 ./%s"))
             mode name (file-name-nondirectory name)))
           ((eq kind 'run-xnu)
@@ -234,19 +234,19 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s"
-               ,(concat "make -j32 $f MODE=$m")
+               ,(concat "make -j96 $f MODE=$m")
                "scp $f $f.dbg xnu:"
                "ssh xnu ./%s"))
             mode name (file-name-nondirectory name)))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
-           (format "m=%s; make -j32 MODE=$m %s"
+           (format "m=%s; make -j96 MODE=$m %s"
                    mode runs))
           ((and (equal suffix "")
                 (file-exists-p (format "%s" buddy)))
            (format (cosmo-join
                     " && "
-                    '("m=%s; n=%s; make -j32 o/$m/$n%s.o MODE=$m"
+                    '("m=%s; n=%s; make -j96 o/$m/$n%s.o MODE=$m"
                       ;; "bloat o/$m/%s.o | head"
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
@@ -258,11 +258,11 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s"
-               ,(concat "make -j32 $f MODE=$m")
+               ,(concat "make -j96 $f MODE=$m")
                "build/run ./$f"))
             mode name))
           ((eq kind 'test)
-           (format `"m=%s; f=o/$m/%s.ok && make -j32 $f MODE=$m" mode name))
+           (format `"m=%s; f=o/$m/%s.ok && make -j96 $f MODE=$m" mode name))
           ((and (file-regular-p this)
                 (file-executable-p this))
            (format "build/run ./%s" file))
@@ -271,7 +271,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s%s.o"
-               ,(concat "make -j32 $f MODE=$m")
+               ,(concat "make -j96 $f MODE=$m")
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
@@ -481,7 +481,7 @@
           (error "don't know how to show assembly for non c/c++ source file"))
         (let* ((default-directory root)
                (compile-command
-                (format "make %s -j32 MODE=%s %s %s"
+                (format "make %s -j96 MODE=%s %s %s"
                         (or extra-make-flags "") mode asm-gcc asm-clang)))
           (save-buffer)
           (set-visited-file-modtime (current-time))
@@ -641,11 +641,11 @@
                (compile (format "sh -c %s" file)))
               ((eq major-mode 'lua-mode)
                (let* ((mode (cosmo--make-mode arg)))
-                 (compile (format "make -j32 MODE=%s o/%s/tool/net/redbean && build/run o/%s/tool/net/redbean -i %s" mode mode mode file))))
+                 (compile (format "make -j96 MODE=%s o/%s/tool/net/redbean && build/run o/%s/tool/net/redbean -i %s" mode mode mode file))))
               ((and (eq major-mode 'python-mode)
                     (cosmo-startswith "third_party/python/Lib/test/" file))
                (let ((mode (cosmo--make-mode arg)))
-                 (compile (format "make -j32 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
+                 (compile (format "make -j96 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
                                   mode mode (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
                (compile (format "python %s" file)))

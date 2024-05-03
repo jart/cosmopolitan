@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/aarch64.internal.h"
@@ -32,6 +33,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/cxxabi.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -377,10 +379,25 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
   klog(b->p, MIN(b->i, b->n));
 }
 
+static inline void SpinLock(atomic_uint *lock) {
+  int x;
+  for (;;) {
+    x = atomic_exchange_explicit(lock, 1, memory_order_acquire);
+    if (!x)
+      break;
+  }
+}
+
+static inline void SpinUnlock(atomic_uint *lock) {
+  atomic_store_explicit(lock, 0, memory_order_release);
+}
+
 relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
-  ucontext_t *ctx = arg;
+  static atomic_uint lock;
   BLOCK_CANCELATION;
-  __oncrash_impl(sig, si, ctx);
+  SpinLock(&lock);
+  __oncrash_impl(sig, si, arg);
+  SpinUnlock(&lock);
   ALLOW_CANCELATION;
 }
 

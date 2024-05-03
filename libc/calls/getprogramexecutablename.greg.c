@@ -195,7 +195,7 @@ static inline void InitProgramExecutableNameImpl(void) {
       cmd[2] = KERN_PROC_PATHNAME_NETBSD;
     }
     cmd[3] = -1;  // current process
-    if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
+    if (sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
       if (!OldApeLoader(b)) {
         goto UseBuf;
       }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,19 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/errno.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/errfuns.h"
 
-#define CTL_KERN 1
-
-int gethostname_bsd(char *name, size_t len, int kind) {
-  int cmd[2] = {CTL_KERN, kind};
-  if (sysctl(cmd, 2, name, &len, 0, 0) != -1) {
-    return 0;
+int sysctlnametomib(const char *name, int *mibp, size_t *sizep) {
+  if (__syslib && __syslib->__version >= 10) {
+    return _sysret(__syslib->__sysctlnametomib(name, mibp, sizep));
   } else {
-    if (errno == ENOMEM) {
-      errno = ENAMETOOLONG;
-    }
-    return -1;
+    return enosys();
   }
 }

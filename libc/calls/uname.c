@@ -62,7 +62,7 @@ static void GetBsdStr(int c0, int c1, char *s) {
   size_t n = SYS_NMLN;
   int cmd[2] = {c0, c1};
   bzero(s, n), --n;
-  sys_sysctl(cmd, 2, s, &n, NULL, 0);
+  sysctl(cmd, 2, s, &n, NULL, 0);
   errno = e;
   // sysctl kern.version is too verbose for uname
   if ((p = strchr(s, '\n'))) {

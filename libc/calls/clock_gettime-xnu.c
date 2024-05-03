@@ -67,7 +67,7 @@ int sys_clock_gettime_xnu(int clock, struct timespec *ts) {
     struct timeval x;
     size_t n = sizeof(x);
     int mib[] = {CTL_KERN, KERN_BOOTTIME};
-    if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1)
+    if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1)
       return -1;
     if (ts)
       *ts = timeval_totimespec(timeval_sub(timeval_real(), x));

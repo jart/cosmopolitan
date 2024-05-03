@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
 
 #define SYSLIB_MAGIC ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
 
-#define SYSLIB_VERSION 9 /* sync with ape/ape-m1.c */
+#define SYSLIB_VERSION 10 /* sync with ape/ape-m1.c */
 
 /* if this number increases, then everyone on macos arm will need to
    reinstall ape loader in order to run newer ape binaries so please
@@ -82,6 +82,9 @@ struct Syslib {
   char *(*__dlerror)(void);
   /* v9 (2024-01-31) */
   int (*__pthread_cpu_number_np)(size_t *);
+  long (*__sysctl)(int *, unsigned, void *, size_t *, void *, size_t);
+  long (*__sysctlbyname)(const char *, void *, size_t *, void *, size_t);
+  long (*__sysctlnametomib)(const char *, int *, size_t *);
 };
 
 extern struct Syslib *__syslib;

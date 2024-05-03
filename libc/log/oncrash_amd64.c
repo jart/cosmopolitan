@@ -254,10 +254,28 @@ static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   kprintf("\n");
 }
 
+static inline void SpinLock(atomic_uint *lock) {
+  int x;
+  for (;;) {
+    x = atomic_exchange_explicit(lock, 1, memory_order_acquire);
+    if (!x)
+      break;
+  }
+}
+
+static inline void SpinUnlock(atomic_uint *lock) {
+  atomic_store_explicit(lock, 0, memory_order_release);
+}
+
 relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
+  static atomic_uint lock;
+  BLOCK_CANCELATION;
+  SpinLock(&lock);
   int err = errno;
   __restore_tty();
   ShowCrashReport(err, sig, si, arg);
+  SpinUnlock(&lock);
+  ALLOW_CANCELATION;
 }
 
 #endif /* __x86_64__ */

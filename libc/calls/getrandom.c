@@ -70,7 +70,7 @@ static void GetRandomArnd(char *p, size_t n) {
   cmd[0] = 1;                      // CTL_KERN
   cmd[1] = IsFreebsd() ? 37 : 81;  // KERN_ARND
   unassert((m = n) <= 256);
-  if (sys_sysctl(cmd, 2, p, &n, 0, 0) == -1)
+  if (sysctl(cmd, 2, p, &n, 0, 0) == -1)
     notpossible;
   if (m != n)
     notpossible;

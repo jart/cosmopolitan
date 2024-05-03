@@ -1463,6 +1463,7 @@ rescan:
 		}
 		break;
 	}
+        __builtin_unreachable();
 }
 
 int cgoto(fa *f, int s, int c)

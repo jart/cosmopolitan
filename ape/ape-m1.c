@@ -31,6 +31,8 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/random.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
@@ -39,7 +41,7 @@
 /* maximum path size that cosmo can take */
 #define PATHSIZE       (PATH_MAX < 1024 ? PATH_MAX : 1024)
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 9 /* sync with libc/runtime/syslib.internal.h */
+#define SYSLIB_VERSION 10 /* sync with libc/runtime/syslib.internal.h */
 
 struct Syslib {
   int magic;
@@ -106,6 +108,10 @@ struct Syslib {
      OPTIONAL (cosmo lib should check __syslib->version) */
   /* v9 (2024-01-31) */
   int (*pthread_cpu_number_np)(size_t *);
+  /* v10 (2024-05-02) */
+  long (*sysctl)(int *, u_int, void *, size_t *, void *, size_t);
+  long (*sysctlbyname)(const char *, void *, size_t *, void *, size_t);
+  long (*sysctlnametomib)(const char *, int *, size_t *);
 };
 
 #define ELFCLASS32                  1
@@ -148,8 +154,8 @@ struct Syslib {
 #define _COMM_PAGE_APRR_WRITE_ENABLE  (_COMM_PAGE_START_ADDRESS + 0x110)
 #define _COMM_PAGE_APRR_WRITE_DISABLE (_COMM_PAGE_START_ADDRESS + 0x118)
 
-#define MIN(X, Y) ((Y) > (X) ? (X) : (Y))
-#define MAX(X, Y) ((Y) < (X) ? (X) : (Y))
+#define Min(X, Y) ((Y) > (X) ? (X) : (Y))
+#define Max(X, Y) ((Y) < (X) ? (X) : (Y))
 
 #define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -552,6 +558,20 @@ static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds,
   return sysret(pselect(nfds, readfds, writefds, errorfds, timeout, sigmask));
 }
 
+static long sys_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
+                       void *newp, size_t newlen) {
+  return sysret(sysctl(name, namelen, oldp, oldlenp, newp, newlen));
+}
+
+static long sys_sysctlbyname(const char *name, void *oldp, size_t *oldlenp,
+                             void *newp, size_t newlen) {
+  return sysret(sysctlbyname(name, oldp, oldlenp, newp, newlen));
+}
+
+static long sys_sysctlnametomib(const char *name, int *mibp, size_t *sizep) {
+  return sysret(sysctlnametomib(name, mibp, sizep));
+}
+
 __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
                                                 long *sp, struct ElfEhdr *e,
                                                 struct ElfPhdr *p,
@@ -596,7 +616,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
         continue;
       c = p[j].p_vaddr & -pagesz;
       d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
-      if (MAX(a, c) < MIN(b, d)) {
+      if (Max(a, c) < Min(b, d)) {
         Pexit(exe, 0, "ELF segments overlap each others virtual memory");
       }
     }
@@ -670,7 +690,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
       b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
       c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
-      wipe = MIN(b - a, c - a);
+      wipe = Min(b - a, c - a);
       if (wipe && (~prot1 & PROT_WRITE)) {
         prot1 = PROT_READ | PROT_WRITE;
       }
@@ -970,6 +990,9 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
   M->lib.pthread_cpu_number_np = pthread_cpu_number_np;
+  M->lib.sysctl = sys_sysctl;
+  M->lib.sysctlbyname = sys_sysctlbyname;
+  M->lib.sysctlnametomib = sys_sysctlnametomib;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = 0;

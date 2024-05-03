@@ -23,7 +23,7 @@ long __get_sysctl(int x, int y) {
   int value;
   int mib[2] = {x, y};
   size_t len = sizeof(value);
-  if (sys_sysctl(mib, 2, &value, &len, 0, 0) != -1) {
+  if (sysctl(mib, 2, &value, &len, 0, 0) != -1) {
     return value;
   } else {
     return -1;
