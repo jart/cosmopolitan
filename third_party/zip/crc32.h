@@ -31,7 +31,7 @@
 #ifndef USE_ZLIB
    ZCONST ulg near *get_crc_table  OF((void));
 #endif
-#if (defined(USE_ZLIB) || defined(CRC_TABLE_ONLY))
+#if (1 || defined(USE_ZLIB) || defined(CRC_TABLE_ONLY))
 #  ifdef IZ_CRC_BE_OPTIMIZ
 #    undef IZ_CRC_BE_OPTIMIZ
 #  endif
