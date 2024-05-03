@@ -52,9 +52,9 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   struct Fd *f = g_fds.p + fd;
   bool isconsole = f->kind == kFdConsole;
 
-  // not implemented
+  // not implemented, XNU returns eperm();
   if (f->kind == kFdDevRandom) {
-    return enosys();
+    return eperm();
   }
 
   // determine win32 handle for writing
