@@ -21,10 +21,10 @@ AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
 GCCVER=12.3.0
 
-make -j32 m= \
+make -j64 m= \
   $APELINK
 
-make -j32 m=$AMD64 \
+make -j64 m=$AMD64 \
   o/cosmocc.h.txt \
   o/$AMD64/ape/ape.lds \
   o/$AMD64/libc/crt/crt.o \
@@ -47,7 +47,7 @@ make -j32 m=$AMD64 \
   o/$AMD64/third_party/make/make.dbg \
   o/$AMD64/third_party/ctags/ctags.dbg
 
-make -j32 m=$ARM64 \
+make -j64 m=$ARM64 \
   o/$ARM64/ape/ape.elf \
   o/$ARM64/ape/aarch64.lds \
   o/$ARM64/libc/crt/crt.o \
@@ -90,10 +90,10 @@ fetch() {
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.35/aarch64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.39/aarch64-gcc.zip
   unzip aarch64-gcc.zip
   rm -f aarch64-gcc.zip
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.35/x86_64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.39/x86_64-gcc.zip
   unzip x86_64-gcc.zip
   rm -f x86_64-gcc.zip
 fi
