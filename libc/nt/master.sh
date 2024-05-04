@@ -203,6 +203,7 @@ imp	'LoadResource'						LoadResource						kernel32	2
 imp	'LocalFree'						LocalFree						kernel32	1
 imp	'LockFile'						LockFile						kernel32	5
 imp	'LockResource'						LockResource						kernel32	1
+imp	'MapViewOfFile3'					MapViewOfFile3						kernel32	9
 imp	'MoveFile'						MoveFileW						kernel32	2
 imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	6
 imp	'OfferVirtualMemory'					OfferVirtualMemory					kernel32	3
