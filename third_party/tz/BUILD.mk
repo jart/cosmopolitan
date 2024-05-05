@@ -17,7 +17,6 @@ LIBC_TIME_ZONEINFOS :=						\
 	usr/share/zoneinfo/EET					\
 	usr/share/zoneinfo/EST					\
 	usr/share/zoneinfo/EST5EDT				\
-	usr/share/zoneinfo/Factory				\
 	usr/share/zoneinfo/GMT					\
 	usr/share/zoneinfo/HST					\
 	usr/share/zoneinfo/MET					\
