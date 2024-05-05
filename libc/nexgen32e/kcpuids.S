@@ -93,18 +93,37 @@ kCpuids:.long	0,0,0,0				// EAX=0 (Basic Processor Info)
 	add	$4*4,%rdi
 	jmp	2b
 3:	nop
-#if !X86_NEED(AVX2)
+
+//	test if cpu supports avx
 	testb	X86_HAVE(AVX)(%r8)
-	jz	5f
+	jz	7f
 	testb	X86_HAVE(OSXSAVE)(%r8)
-	jz	4f
+	jz	5f
 	xor	%ecx,%ecx
 	xgetbv
+	mov	%eax,%ecx
+
+//	test if operating system saves avx registers
 	and	$XCR0_SSE|XCR0_AVX,%eax
 	cmp	$XCR0_SSE|XCR0_AVX,%eax
-	je	5f
-4:	btr	$X86_BIT(AVX),X86_WORD(AVX)(%r8)
+	jne	5f
+
+//	test if operating system saves avx512 registers
+	and	$XCR0_OPMASK|XCR0_ZMM_HI256|XCR0_HI16_ZMM,%ecx
+	cmp	$XCR0_OPMASK|XCR0_ZMM_HI256|XCR0_HI16_ZMM,%ecx
+	jne	6f
+	je	7f
+
+//	operating system doesn't support avx
+5:	btr	$X86_BIT(AVX),X86_WORD(AVX)(%r8)
 	btr	$X86_BIT(AVX2),X86_WORD(AVX2)(%r8)
-#endif
-5:	pop	%rbx
+
+//	operating system supports avx but not avx512
+6:	andl	$~(1<<30|1<<28|1<<17|1<<27|1<<16|1<<21|1<<26|1<<31),KCPUIDS(7H, EBX)(%r8)
+	andl	$~(1<<1|1<<12|1<<6|1<<11|1<<14),KCPUIDS(7H, ECX)(%r8)
+	andl	$~(1<<2|1<<3|1<<8),KCPUIDS(7H, EDX)(%r8)
+	andl	$~(1<<5),KCPUIDS(7H_1H, EAX)(%r8)
+
+//	we're done
+7:	pop	%rbx
 	.init.end 201,_init_kCpuids

@@ -154,7 +154,8 @@ o/$(MODE)/examples/picol.dbg:					\
 	@$(APELINK)
 
 o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
-o/$(MODE)/examples/wut.o: private COPTS += -fopenmp
+
+o/$(MODE)/examples/blas.o: private COPTS += -O3 -fopenmp
 
 $(EXAMPLES_OBJS): examples/BUILD.mk
 
