@@ -214,26 +214,25 @@ __static_yoink("usr/share/zoneinfo/America/Yakuatt");
 #endif
 
 __static_yoink("usr/share/zoneinfo/Europe/");
-__static_yoink("usr/share/zoneinfo/Europe/Zurich"); // Switzerland
-__static_yoink("usr/share/zoneinfo/Europe/Dublin"); // Ireland
-__static_yoink("usr/share/zoneinfo/Europe/London"); // UK
-__static_yoink("usr/share/zoneinfo/Europe/Paris"); // France
 __static_yoink("usr/share/zoneinfo/Europe/Berlin"); // Germany
-__static_yoink("usr/share/zoneinfo/Europe/Rome"); // Italy
-__static_yoink("usr/share/zoneinfo/Europe/Moscow"); // Moscow
-__static_yoink("usr/share/zoneinfo/Europe/Madrid"); // Spain
-__static_yoink("usr/share/zoneinfo/Europe/Warsaw"); // Poland
 __static_yoink("usr/share/zoneinfo/Europe/Brussels"); // Belgium
 __static_yoink("usr/share/zoneinfo/Europe/Budapest"); // Hungary
-__static_yoink("usr/share/zoneinfo/Europe/Vienna"); // Austria
-__static_yoink("usr/share/zoneinfo/Europe/Prague"); // Czech Republic
-__static_yoink("usr/share/zoneinfo/Europe/Kyiv"); // Ukraine
+__static_yoink("usr/share/zoneinfo/Europe/Dublin"); // Ireland
 __static_yoink("usr/share/zoneinfo/Europe/Istanbul"); // Turkey
+__static_yoink("usr/share/zoneinfo/Europe/Kyiv"); // Ukraine
+__static_yoink("usr/share/zoneinfo/Europe/London"); // UK
+__static_yoink("usr/share/zoneinfo/Europe/Madrid"); // Spain
+__static_yoink("usr/share/zoneinfo/Europe/Moscow"); // Moscow
+__static_yoink("usr/share/zoneinfo/Europe/Paris"); // France
+__static_yoink("usr/share/zoneinfo/Europe/Prague"); // Czech Republic
+__static_yoink("usr/share/zoneinfo/Europe/Rome"); // Italy
+__static_yoink("usr/share/zoneinfo/Europe/Vienna"); // Austria
+__static_yoink("usr/share/zoneinfo/Europe/Warsaw"); // Poland
+__static_yoink("usr/share/zoneinfo/Europe/Zurich"); // Switzerland
 #ifdef EMBED_EVERY_TIME_ZONE
-__static_yoink("usr/share/zoneinfo/Europe/Lisbon");
-__static_yoink("usr/share/zoneinfo/Europe/Athens");
 __static_yoink("usr/share/zoneinfo/Europe/Andorra");
 __static_yoink("usr/share/zoneinfo/Europe/Astrakhan");
+__static_yoink("usr/share/zoneinfo/Europe/Athens");
 __static_yoink("usr/share/zoneinfo/Europe/Belgrade");
 __static_yoink("usr/share/zoneinfo/Europe/Bucharest");
 __static_yoink("usr/share/zoneinfo/Europe/Chisinau");
@@ -241,6 +240,7 @@ __static_yoink("usr/share/zoneinfo/Europe/Gibraltar");
 __static_yoink("usr/share/zoneinfo/Europe/Helsinki");
 __static_yoink("usr/share/zoneinfo/Europe/Kaliningrad");
 __static_yoink("usr/share/zoneinfo/Europe/Kirov");
+__static_yoink("usr/share/zoneinfo/Europe/Lisbon");
 __static_yoink("usr/share/zoneinfo/Europe/Malta");
 __static_yoink("usr/share/zoneinfo/Europe/Minsk");
 __static_yoink("usr/share/zoneinfo/Europe/Riga");
