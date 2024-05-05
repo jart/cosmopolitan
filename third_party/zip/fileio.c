@@ -30,8 +30,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #ifdef NO_MKTIME
 time_t mktime OF((struct tm *));

@@ -29,6 +29,7 @@
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/ubsan.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -93,6 +94,7 @@ dontasan int main(int argc, char *argv[]) {
   struct Dll *e;
   struct TestAspect *a;
 
+  __ubsan_strict = true;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
 

@@ -23,7 +23,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Schedules delivery of one-shot or intermittent interrupt signal, e.g.

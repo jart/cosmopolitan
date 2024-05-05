@@ -47,7 +47,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/mem/gc.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #include "libc/str/str.h"
 #include "libc/log/bsd.h"
@@ -74,7 +74,7 @@
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"

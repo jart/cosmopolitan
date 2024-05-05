@@ -71,7 +71,7 @@ Contact: antirez@gmail.com");
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /* Syntax highlight types */
 #define HL_NORMAL    0

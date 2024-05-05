@@ -1985,7 +1985,7 @@ class TestStdev(VarianceStdevMixin, NumericTestCase):
 
 # === Run tests ===
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore=None):
     """Used for doctest/unittest integration."""
     tests.addTests(doctest.DocTestSuite())
     return tests

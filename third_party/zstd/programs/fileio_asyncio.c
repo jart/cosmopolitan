@@ -41,7 +41,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 // MISSING #include <io.h>
 #endif
 

@@ -42,7 +42,7 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #define N 1024
 #define M 20

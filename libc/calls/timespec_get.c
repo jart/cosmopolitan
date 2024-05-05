@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Returns high-precision timestamp, the C11 way.

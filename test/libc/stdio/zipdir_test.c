@@ -38,7 +38,7 @@ __static_yoink("libc/testlib/hyperion.txt");
 __static_yoink("libc/testlib/moby.txt");
 __static_yoink("libc/testlib-test.txt");
 __static_yoink("usr/share/zoneinfo/");
-__static_yoink("usr/share/zoneinfo/New_York");
+__static_yoink("usr/share/zoneinfo/America/New_York");
 
 DIR *dir;
 struct dirent *ent;

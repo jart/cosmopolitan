@@ -38,7 +38,6 @@ DSP_TTY_A_DIRECTDEPS =				\
 	LIBC_SOCK				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\
-	LIBC_TIME				\
 	LIBC_X
 
 DSP_TTY_A_DEPS :=				\

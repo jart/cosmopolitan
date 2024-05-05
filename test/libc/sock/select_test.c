@@ -28,7 +28,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 bool gotsig;
 

@@ -25,7 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xsigaction.h"
 
 /**

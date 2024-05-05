@@ -29,7 +29,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #define PATH "hog"
 

@@ -80,8 +80,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"     /* time() function supplies first part of crypt seed */
+#include "libc/time.h"     /* time() function supplies first part of crypt seed */
    /* "last resort" source for second part of crypt seed pattern */
 #  ifndef ZCR_SEED2
 #    define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */

@@ -28,7 +28,7 @@
 #define lstate_c
 #define LUA_CORE
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"

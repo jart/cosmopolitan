@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();

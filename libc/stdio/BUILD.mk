@@ -53,6 +53,12 @@ $(LIBC_STDIO_A).pkg:					\
 # offer assurances about the stack safety of cosmo libc
 $(LIBC_STDIO_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096
 
+$(LIBC_STDIO_A_OBJS): private				\
+		CFLAGS +=				\
+			-fno-sanitize=all		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
+
 o/$(MODE)/libc/stdio/fputc.o: private			\
 		CFLAGS +=				\
 			-O3

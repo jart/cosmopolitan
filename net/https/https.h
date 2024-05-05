@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_NET_HTTPS_HTTPS_H_
 #define COSMOPOLITAN_NET_HTTPS_HTTPS_H_
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/md.h"

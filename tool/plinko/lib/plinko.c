@@ -38,7 +38,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/clockstonanos.internal.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/case.h"
 #include "tool/plinko/lib/char.h"
@@ -58,6 +57,13 @@ STATIC_STACK_SIZE(0x100000);
 
 #define DISPATCH(ea, tm, r, p1, p2) \
   GetDispatchFn(LO(ea))(ea, tm, r, p1, p2, GetShadow(LO(ea)))
+
+static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
+  // approximation of round(x*.323018) which is usually
+  // the ratio between inva rdtsc ticks and nanoseconds
+  uint128_t difference = x - y;
+  return (difference * 338709) >> 20;
+}
 
 static void Unwind(int S) {
   int s;

@@ -52,7 +52,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \

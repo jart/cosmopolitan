@@ -19,7 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/time/struct/timezone.h"
+#include "libc/time.h"
 
 /**
  * Returns system wall time in microseconds, e.g.

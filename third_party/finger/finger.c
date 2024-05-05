@@ -47,7 +47,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
 

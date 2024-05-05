@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 TEST(clock_gettime, nullResult_validatesClockParam) {
   ASSERT_SYS(EINVAL, -1, clock_gettime(666, 0));

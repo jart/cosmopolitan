@@ -22,8 +22,7 @@ NET_HTTP_A_DIRECTDEPS =				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_STR				\
-	LIBC_SYSV				\
-	LIBC_TIME
+	LIBC_SYSV
 
 NET_HTTP_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(NET_HTTP_A_DIRECTDEPS),$($(x))))

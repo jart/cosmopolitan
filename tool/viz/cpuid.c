@@ -26,7 +26,7 @@
 #include "libc/nexgen32e/x86info.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xasprintf.h"
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"

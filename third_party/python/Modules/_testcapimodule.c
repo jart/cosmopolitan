@@ -13,7 +13,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytearrayobject.h"

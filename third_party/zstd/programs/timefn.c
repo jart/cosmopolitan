@@ -20,8 +20,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"     /* CLOCK_MONOTONIC, TIME_UTC */
+#include "libc/time.h"     /* CLOCK_MONOTONIC, TIME_UTC */
 
 /*-****************************************
 *  Time functions

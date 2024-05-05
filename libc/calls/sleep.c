@@ -24,7 +24,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Sleeps for particular number of seconds.

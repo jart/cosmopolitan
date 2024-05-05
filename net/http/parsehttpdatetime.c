@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/serialize.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "net/http/http.h"
 
 static unsigned ParseMonth(const char *p) {

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_H_
 #include "libc/calls/struct/timespec.h"
-#include "libc/time/struct/timezone.h"
+#include "libc/time.h"
 COSMOPOLITAN_C_START_
 
 struct timeval {

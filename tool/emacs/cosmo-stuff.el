@@ -719,7 +719,7 @@
              (default-directory root)
              (compile-command (cosmo--compile-command this root nil mode "" "" ".runs")))
         (compile compile-command)
-        (gdb (format "gdb -q -nh -i=mi %s -ex run" exec))))))
+        (gdb (format "gdb -q -i=mi %s -ex run" exec))))))
 
 (progn
   (define-key asm-mode-map (kbd "C-c C-d") 'cosmo-debug)

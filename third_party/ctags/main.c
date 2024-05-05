@@ -24,7 +24,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/ctags/debug.h"
 #include "third_party/ctags/keyword.h"
 #include "third_party/ctags/main.h"

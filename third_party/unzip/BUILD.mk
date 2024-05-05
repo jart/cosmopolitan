@@ -23,8 +23,8 @@ THIRD_PARTY_UNZIP_A_DIRECTDEPS =						\
 	LIBC_STDIO								\
 	LIBC_STR								\
 	LIBC_SYSV								\
-	LIBC_TIME								\
-	THIRD_PARTY_BZIP2
+	THIRD_PARTY_BZIP2							\
+	THIRD_PARTY_TZ
 
 THIRD_PARTY_UNZIP_A_DEPS :=							\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_UNZIP_A_DIRECTDEPS),$($(x))))

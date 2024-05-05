@@ -19,8 +19,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #if defined(MINIX) || defined(__mpexl)
 #  ifdef S_IWRITE
@@ -60,8 +59,7 @@
 /* Library functions not in (most) header files */
 
 #ifdef _POSIX_VERSION
-#include "libc/time/struct/utimbuf.h"
-#include "libc/time/time.h"
+#include "libc/utime.h"
 #else
    int utime OF((char *, time_t *));
 #endif

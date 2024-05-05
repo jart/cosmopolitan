@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "net/https/https.h"
 
 void ChooseCertificateLifetime(char notbefore[16], char notafter[16]) {

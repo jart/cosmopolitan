@@ -41,6 +41,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/tidy		\
 	o/$(MODE)/third_party/tr		\
 	o/$(MODE)/third_party/tree		\
+	o/$(MODE)/third_party/tz		\
 	o/$(MODE)/third_party/unzip		\
 	o/$(MODE)/third_party/vqsort		\
 	o/$(MODE)/third_party/xed		\

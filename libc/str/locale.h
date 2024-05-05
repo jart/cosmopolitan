@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STR_LOCALE_H_
 #define COSMOPOLITAN_LIBC_STR_LOCALE_H_
 #include "libc/fmt/conv.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 
 #define LC_CTYPE         0
 #define LC_NUMERIC       1
@@ -21,7 +21,7 @@
 
 COSMOPOLITAN_C_START_
 
-#define LC_GLOBAL_LOCALE ((locale_t)-1)
+#define LC_GLOBAL_LOCALE ((locale_t) - 1)
 
 struct __locale_map {
   const void *map;

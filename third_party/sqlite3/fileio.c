@@ -85,7 +85,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/sqlite3/sqlite3ext.h"
 
 SQLITE_EXTENSION_INIT1

@@ -33,10 +33,10 @@ TEST_TOOL_VIZ_LIB_DIRECTDEPS =				\
 	LIBC_STDIO					\
 	LIBC_TESTLIB					\
 	LIBC_STR					\
-	LIBC_TIME					\
 	LIBC_TINYMATH					\
 	LIBC_X						\
-	TOOL_VIZ_LIB
+	TOOL_VIZ_LIB					\
+	THIRD_PARTY_TZ
 
 TEST_TOOL_VIZ_LIB_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_TOOL_VIZ_LIB_DIRECTDEPS),$($(x))))

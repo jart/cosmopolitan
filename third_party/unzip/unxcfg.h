@@ -15,7 +15,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/calls/weirdtypes.h"
 
 

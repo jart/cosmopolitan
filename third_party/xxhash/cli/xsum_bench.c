@@ -61,8 +61,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"   /* clock_t, clock, CLOCKS_PER_SEC */
+#include "libc/time.h"   /* clock_t, clock, CLOCKS_PER_SEC */
 #include "libc/errno.h"  /* errno */
 
 #define TIMELOOP_S 1

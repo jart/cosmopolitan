@@ -9,7 +9,7 @@
 #include "third_party/libcxx/chrono"
 #include "third_party/libcxx/cerrno"        // errn"
 #include "libc/sysv/consts/clock.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/sysv/consts/clock.h"
 #include "third_party/libcxx/system_error"  // __throw_system_erro"
 

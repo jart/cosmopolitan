@@ -21,7 +21,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Sleeps for particular number of microseconds.

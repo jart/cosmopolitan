@@ -47,7 +47,6 @@ TOOL_NET_DIRECTDEPS =							\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
-	LIBC_TIME							\
 	LIBC_THREAD							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
@@ -66,6 +65,7 @@ TOOL_NET_DIRECTDEPS =							\
 	THIRD_PARTY_MBEDTLS						\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_SQLITE3						\
+	THIRD_PARTY_TZ							\
 	THIRD_PARTY_ZLIB						\
 	TOOL_ARGS							\
 	TOOL_BUILD_LIB							\

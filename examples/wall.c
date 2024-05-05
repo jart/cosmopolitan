@@ -16,7 +16,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
 

@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xsigaction.h"
 #include "libc/x/xspawn.h"
 

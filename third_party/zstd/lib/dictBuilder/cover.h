@@ -43,8 +43,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"   /* clock */
+#include "libc/time.h"   /* clock */
 #include "third_party/zstd/lib/common/mem.h" /* read */
 #include "third_party/zstd/lib/common/pool.h"
 #include "third_party/zstd/lib/common/threading.h"

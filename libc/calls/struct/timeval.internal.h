@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_INTERNAL_H_
 #include "libc/calls/struct/timeval.h"
 #include "libc/mem/alloca.h"
-#include "libc/time/struct/timezone.h"
+#include "libc/time.h"
 COSMOPOLITAN_C_START_
 
 int sys_settimeofday(const struct timeval *, const struct timezone *);

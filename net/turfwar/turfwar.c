@@ -70,7 +70,7 @@
 #include "libc/sysv/consts/tcp.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "libc/zip.internal.h"

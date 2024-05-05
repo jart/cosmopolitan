@@ -38,7 +38,7 @@
 #include "libc/sysv/consts/log.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 
 /* Note: log_facility should be initialized with LOG_USER by default,
  * but since LOG_USER is not a constant value, we cannot initialize it

@@ -92,7 +92,7 @@ extern "C" {
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h" whenever target OS is not unix-like
  * otherwise it will block preprocessing stage.
@@ -105,7 +105,7 @@ extern "C" {
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
@@ -128,7 +128,7 @@ extern "C" {
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"  /* declares _POSIX_VERSION */
@@ -179,7 +179,7 @@ extern "C" {
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"   /* isatty */

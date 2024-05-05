@@ -258,7 +258,7 @@ include libc/thread/BUILD.mk			# │  You can finally call malloc()
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
 include tool/hello/BUILD.mk			# │
-include libc/time/BUILD.mk			# │
+include third_party/tz/BUILD.mk			# │
 include net/BUILD.mk				# │
 include third_party/vqsort/BUILD.mk		# │
 include libc/log/BUILD.mk			# │
@@ -440,7 +440,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_X				\
 	THIRD_PARTY_GETOPT		\
 	LIBC_LOG			\
-	LIBC_TIME			\
+	THIRD_PARTY_TZ			\
 	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB_GZ		\
@@ -505,7 +505,6 @@ COSMOPOLITAN_H_PKGS =			\
 	LIBC_STR			\
 	LIBC_SYSV			\
 	LIBC_THREAD			\
-	LIBC_TIME			\
 	LIBC_TINYMATH			\
 	LIBC_X				\
 	LIBC_VGA			\

@@ -21,10 +21,16 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/time/clockstonanos.internal.h"
 #include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/print.h"
+
+static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
+  // approximation of round(x*.323018) which is usually
+  // the ratio between inva rdtsc ticks and nanoseconds
+  uint128_t difference = x - y;
+  return (difference * 338709) >> 20;
+}
 
 static inline long GetVarInt(va_list va, signed char t) {
   if (t <= 0)

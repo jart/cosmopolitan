@@ -56,8 +56,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"       /* clock_t, to measure process time */
+#include "libc/time.h"       /* clock_t, to measure process time */
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/weirdtypes.h"
@@ -94,7 +93,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 // MISSING #include <io.h>
 #endif
 

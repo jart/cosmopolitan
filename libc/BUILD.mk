@@ -300,7 +300,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/sysv		\
 		o/$(MODE)/libc/testlib		\
 		o/$(MODE)/libc/thread		\
-		o/$(MODE)/libc/time		\
 		o/$(MODE)/libc/tinymath		\
 		o/$(MODE)/libc/vga		\
 		o/$(MODE)/libc/x		\

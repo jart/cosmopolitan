@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/ubsan.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.internal.h"
@@ -241,6 +242,8 @@ static void __ubsan_warning(const struct UbsanSourceLocation *loc,
                             const char *description) {
   kprintf("%s:%d: %subsan warning: %s is undefined behavior%s\n", loc->file,
           loc->line, SUBTLE, description, RESET);
+  if (__ubsan_strict)
+    __ubsan_die()();
 }
 
 __wur __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,

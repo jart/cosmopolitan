@@ -21,7 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "tool/viz/lib/convolution.h"
 #include "tool/viz/lib/graphic.h"

@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 TEST(getitimer, testBadParam_returnsEinval) {
   struct itimerval it;

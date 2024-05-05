@@ -36,7 +36,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 __static_yoink("musl_libc_notice");
 
 #define MAXTRIES 100

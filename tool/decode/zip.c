@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/libgen.h"
@@ -36,8 +37,8 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/time.h"
 #include "libc/x/xasprintf.h"
-#include "libc/x/xiso8601.h"
 #include "libc/zip.internal.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/disassemblehex.h"
@@ -61,6 +62,24 @@ static __wur char *FormatDosDate(uint16_t dosdate) {
 static __wur char *FormatDosTime(uint16_t dostime) {
   return xasprintf("%02u:%02u:%02u", (dostime >> 11) & 0b11111,
                    (dostime >> 5) & 0b111111, (dostime << 1) & 0b111110);
+}
+
+char *xiso8601(struct timespec ts) {
+  struct tm tm;
+  if (!localtime_r(&ts.tv_sec, &tm))
+    return 0;
+  int len = 128;
+  char *res = malloc(len);
+  char *ptr = res;
+  char *end = res + len;
+  if (!res)
+    return 0;
+  ptr += strftime(ptr, end - ptr, "%Y-%m-%dT%H:%M:%S", &tm);
+  ptr += snprintf(ptr, end - ptr, "%09ld", ts.tv_nsec);
+  ptr += strftime(ptr, end - ptr, "%z", &tm);
+  unassert(ptr + 1 <= end);
+  unassert(realloc_in_place(res, ptr - end) == res);
+  return res;
 }
 
 void AdvancePosition(uint8_t *map, size_t *pos, size_t off) {
@@ -108,13 +127,13 @@ void ShowNtfs(uint8_t *ntfs, size_t n) {
        "ntfs attribute tag value #1");
   show(".short", gc(xasprintf("%hu", READ16LE(ntfs + 6))),
        "ntfs attribute tag size");
-  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 8))),
-       gc(xasprintf("%s (%s)", "ntfs last modified time",
-                    gc(xiso8601(&mtime)))));
+  show(
+      ".quad", gc(xasprintf("%lu", READ64LE(ntfs + 8))),
+      gc(xasprintf("%s (%s)", "ntfs last modified time", gc(xiso8601(mtime)))));
   show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 16))),
-       gc(xasprintf("%s (%s)", "ntfs last access time", gc(xiso8601(&atime)))));
+       gc(xasprintf("%s (%s)", "ntfs last access time", gc(xiso8601(atime)))));
   show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 24))),
-       gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(&ctime)))));
+       gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(ctime)))));
 }
 
 void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
@@ -126,7 +145,7 @@ void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
     if ((flag & 1) && n >= 4) {
       show(".long", gc(xasprintf("%u", READ32LE(p))),
            gc(xasprintf("%s (%s)", "last modified",
-                        gc(xiso8601(&(struct timespec){READ32LE(p)})))));
+                        gc(xiso8601((struct timespec){READ32LE(p)})))));
       p += 4;
       n -= 4;
     }
@@ -135,7 +154,7 @@ void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
       if ((flag & 1) && n >= 4) {
         show(".long", gc(xasprintf("%u", READ32LE(p))),
              gc(xasprintf("%s (%s)", "access time",
-                          gc(xiso8601(&(struct timespec){READ32LE(p)})))));
+                          gc(xiso8601((struct timespec){READ32LE(p)})))));
         p += 4;
         n -= 4;
       }
@@ -143,7 +162,7 @@ void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
       if ((flag & 1) && n >= 4) {
         show(".long", gc(xasprintf("%u", READ32LE(p))),
              gc(xasprintf("%s (%s)", "creation time",
-                          gc(xiso8601(&(struct timespec){READ32LE(p)})))));
+                          gc(xiso8601((struct timespec){READ32LE(p)})))));
         p += 4;
         n -= 4;
       }

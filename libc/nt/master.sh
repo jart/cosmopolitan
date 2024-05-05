@@ -168,6 +168,8 @@ imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel3
 imp	'GetSystemTimes'					GetSystemTimes						kernel32	3
 imp	'GetTempPath'						GetTempPathW						kernel32	2
 imp	'GetTempPathA'						GetTempPathA						kernel32	2
+imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				kernel32	1
+imp	'GetTimeZoneInformation'				GetTimeZoneInformation					kernel32	1
 imp	'GetThreadContext'					GetThreadContext					kernel32	2
 imp	'GetThreadDescription'					GetThreadDescription					kernel32	2
 imp	'GetThreadIOPendingFlag'				GetThreadIOPendingFlag					kernel32	2

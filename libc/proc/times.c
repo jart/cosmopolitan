@@ -28,7 +28,7 @@
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 static dontinline long ConvertMicros(struct timeval tv) {
   return tv.tv_sec * CLK_TCK + tv.tv_usec / (1000000 / CLK_TCK);

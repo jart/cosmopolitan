@@ -33,7 +33,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
                                              const struct timespec ts[2],

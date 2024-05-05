@@ -44,7 +44,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xsigaction.h"
 #include "libc/zip.internal.h"

@@ -36,7 +36,7 @@
 
 
 #include "third_party/unzip/zip.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "third_party/unzip/timezone.h"
 
 #ifdef IZTZ_DEFINESTDGLOBALS

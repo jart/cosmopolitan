@@ -44,7 +44,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/knobs.h"

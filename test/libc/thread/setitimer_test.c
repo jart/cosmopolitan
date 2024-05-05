@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 atomic_int gotsig;
 atomic_int gottid;

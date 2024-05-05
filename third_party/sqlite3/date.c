@@ -46,8 +46,7 @@
 #include "libc/assert.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_OMIT_DATETIME_FUNCS

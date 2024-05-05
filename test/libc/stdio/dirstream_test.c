@@ -39,11 +39,10 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
-#include "libc/x/xiso8601.h"
 
 __static_yoink("zipos");
 __static_yoink("usr/share/zoneinfo/");
-__static_yoink("usr/share/zoneinfo/New_York");
+__static_yoink("usr/share/zoneinfo/GMT");
 __static_yoink("libc/testlib/hyperion.txt");
 __static_yoink("libc/testlib/moby.txt");
 
@@ -159,7 +158,7 @@ TEST(dirstream, zipTest) {
   const char *path = "/zip/usr/share/zoneinfo/";
   ASSERT_NE(NULL, (dir = opendir(path)));
   while ((ent = readdir(dir))) {
-    foundNewYork |= !strcmp(ent->d_name, "New_York");
+    foundNewYork |= !strcmp(ent->d_name, "GMT");
   }
   EXPECT_SYS(0, 0, closedir(dir));
   EXPECT_TRUE(foundNewYork);
@@ -195,7 +194,7 @@ TEST(rewinddir, test) {
 }
 
 TEST(dirstream, zipTest_notDir) {
-  ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/New_York"));
+  ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/GMT"));
   ASSERT_EQ(ENOTDIR, errno);
 }
 
@@ -431,7 +430,7 @@ TEST(dirstream, walk) {
                "FTW_F  /zip/libc/testlib/moby.txt\n"
                "FTW_DP /zip/libc/testlib\n"
                "FTW_DP /zip/libc\n"
-               "FTW_F  /zip/usr/share/zoneinfo/New_York\n"
+               "FTW_F  /zip/usr/share/zoneinfo/GMT\n"
                "FTW_DP /zip/usr/share/zoneinfo\n"
                "FTW_DP /zip/usr/share\n"
                "FTW_DP /zip/usr\n"

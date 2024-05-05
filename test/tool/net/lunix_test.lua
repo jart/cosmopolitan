@@ -42,7 +42,7 @@ function UnixTest()
    assert(wday == 5)
    assert(yday == 188)
    assert(dst == 0)
-   assert(zone == "GMT")
+   assert(zone == "UTC")
 
    -- dup
    -- 1. duplicate stderr as lowest available fd

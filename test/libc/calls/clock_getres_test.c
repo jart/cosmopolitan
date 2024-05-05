@@ -21,7 +21,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 struct timespec ts;
 

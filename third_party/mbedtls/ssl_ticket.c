@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"

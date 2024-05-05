@@ -23,7 +23,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 static int sys_clock_getres_poly(int clock, struct timespec *ts, int64_t real,
                                  int64_t real_coarse, int64_t boot) {

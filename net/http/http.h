@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #define COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #include "libc/serialize.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 
 #define kHttpRequest  0
 #define kHttpResponse 1

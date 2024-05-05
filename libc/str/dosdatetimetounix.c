@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Converts MS-DOS timestamp to UNIX.

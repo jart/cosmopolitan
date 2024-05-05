@@ -52,7 +52,7 @@
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"

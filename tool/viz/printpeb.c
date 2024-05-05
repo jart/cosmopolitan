@@ -38,7 +38,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
 #if defined(__x86_64__) && SupportsWindows()

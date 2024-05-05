@@ -18,8 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 TEST(iso8601, test) {
   char p[20];
