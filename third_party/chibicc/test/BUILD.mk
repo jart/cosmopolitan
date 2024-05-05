@@ -11,6 +11,7 @@
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
 ifeq ($(ARCH), x86_64)
+ifneq ($(MODE), dbg)
 
 PKGS += THIRD_PARTY_CHIBICC_TEST
 
@@ -74,6 +75,7 @@ o/$(MODE)/third_party/chibicc/test/%.o:						\
 		$(CHIBICC)
 	@$(COMPILE) -wAOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
 
+endif
 endif
 
 .PHONY: o/$(MODE)/third_party/chibicc/test
