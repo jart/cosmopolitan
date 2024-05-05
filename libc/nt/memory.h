@@ -96,6 +96,12 @@ void *MapViewOfFile3(
     struct NtMemExtendedParameter *in_out_opt_ExtendedParameters,
     unsigned ParameterCount);
 
+void *VirtualAlloc2(
+    intptr_t opt_Process, void *opt_BaseAddress, size_t Size,
+    unsigned AllocationType, unsigned PageProtection,
+    struct NtMemExtendedParameter *in_out_opt_ExtendedParameters,
+    unsigned ParameterCount);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/memory.inc"
 #endif /* ShouldUseMsabiAttribute() */
