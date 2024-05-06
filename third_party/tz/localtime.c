@@ -335,8 +335,8 @@ __static_yoink("usr/share/zoneinfo/Asia/Yerevan");
 #endif
 
 __static_yoink("usr/share/zoneinfo/Pacific/");
-__static_yoink("usr/share/zoneinfo/Pacific/Honolulu"); // U.S.
 __static_yoink("usr/share/zoneinfo/Pacific/Guam"); // U.S.
+__static_yoink("usr/share/zoneinfo/Pacific/Honolulu"); // U.S.
 __static_yoink("usr/share/zoneinfo/Pacific/Auckland"); // New Zealand
 __static_yoink("usr/share/zoneinfo/Pacific/Fiji"); // Fiji
 __static_yoink("usr/share/zoneinfo/Pacific/Port_Moresby"); // Papua New Guinea
