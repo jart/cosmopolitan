@@ -949,7 +949,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   char arg0, literally;
   unsigned long pagesz;
   union ElfEhdrBuf *ebuf;
-  long *auxv, *ap, *endp, *sp2;
+  long *auxv, *flags, *ap, *endp, *sp2;
   char *p, *pe, *exe, *prog, **argv, **envp;
 
   (void)Printf;
@@ -993,13 +993,15 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   /* detect netbsd and find end of words */
   pagesz = 0;
   arg0 = 0;
+  flags = 0;
   for (ap = auxv; ap[0]; ap += 2) {
     if (ap[0] == AT_PAGESZ) {
       pagesz = ap[1];
     } else if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
       os = NETBSD;
-    } else if (SupportsLinux() && ap[0] == AT_FLAGS) {
-      // TODO(mrdomino): maybe set/insert this when we are called as "ape -".
+    } else if (ap[0] == AT_FLAGS) {
+      // TODO(mrdomino): does anyone use auxv 8 for anything else?
+      flags = ap + 1;
       arg0 = !!(ap[1] & AT_FLAGS_PRESERVE_ARGV0);
     }
   }
@@ -1047,8 +1049,9 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
 
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
-     grows down the alloc by poking the guard pages */
-  n = (endp - sp + 1) * sizeof(long);
+     grows down the alloc by poking the guard pages
+     uses AT_FLAGS to say that argv[0] is preserved */
+  n = (endp - sp + 2 * !flags + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15)
     ++sp2;
@@ -1059,6 +1062,15 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
   auxv = sp2 + (auxv - sp);
+  if (flags) {
+    flags = flags - sp + sp2;
+    flags[1] |= literally * AT_FLAGS_PRESERVE_ARGV0;
+  } else {
+    flags = (endp - 1) - sp + sp2;
+    flags[0] = AT_FLAGS;
+    flags[1] = literally * AT_FLAGS_PRESERVE_ARGV0;
+    /* end-of-auxv sentinel is zeroed by loop above */
+  }
   sp = sp2;
 
   /* allocate ephemeral memory for reading file */
