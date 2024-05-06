@@ -196,7 +196,7 @@ ape_mz:
 	.quad	ape_elf_entry			//  18: e_entry
 	.quad	ape_elf_phoff			//  20: e_phoff
 	.quad	ape_elf_shoff			//  28: e_shoff
-	.long	0				//  30: e_flags
+	.long	1				//  30: e_flags
 	.short	64				//  34: e_ehsize
 	.short	56				//  36: e_phentsize
 	.short	ape_elf_phnum			//  38: e_phnum
@@ -669,7 +669,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.shstub	    ape_elf_entry,8		//  18: e_entry
 	.shstub	    ape_elf_phoff,8		//  20: e_phoff
 	.shstub	    ape_elf_shoff,8		//  28: e_shoff
-	.ascii	    "\\0\\0\\0\\0"		//  30: e_flags
+	.ascii	    "\\1\\0\\0\\0"		//  30: e_flags
 	.ascii	    "\\100\\0"			//  34: e_ehsize
 	.ascii	    "\\070\\0"			//  36: e_phentsize
 	.shstub	    ape_elf_phnum,2		//  38: e_phnum

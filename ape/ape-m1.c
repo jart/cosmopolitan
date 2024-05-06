@@ -124,6 +124,7 @@ struct Syslib {
 #define PT_INTERP                   3
 #define EI_CLASS                    4
 #define EI_DATA                     5
+#define EF_APE_MODERN               1
 #define PF_X                        1
 #define PF_W                        2
 #define PF_R                        4
@@ -799,7 +800,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
+                          char *exe, int fd, long *sp, long *auxv,
                           char *execfn) {
   long i, rc;
   unsigned size;
@@ -819,6 +820,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   }
   if (e->e_machine != EM_AARCH64) {
     return "couldn't find ELF header with ARM64 machine type";
+  }
+  if (!(e->e_flags & EF_APE_MODERN)) {
+    /* change argv[0] to resolved path for older binaries */
+    ((char **)(sp + 1))[0] = exe;
   }
   if (e->e_phentsize != sizeof(struct ElfPhdr)) {
     Pexit(exe, 0, "e_phentsize is wrong");
