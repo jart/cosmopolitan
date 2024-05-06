@@ -1001,7 +1001,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
       os = NETBSD;
     } else if (ap[0] == AT_FLAGS) {
       // TODO(mrdomino): does anyone use auxv 8 for anything else?
-      flags = ap + 1;
+      flags = ap;
       arg0 = !!(ap[1] & AT_FLAGS_PRESERVE_ARGV0);
     }
   }
