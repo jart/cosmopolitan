@@ -58,6 +58,7 @@ void SetUpOnce(void) {
       skiptests = IsOpenbsd() || (IsXnu() && !IsXnuSilicon());
     }
   } else {
+    // TODO(mrdomino): test skiparg0 in child
     skiparg0 = !(getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0);
   }
   fprintf(stderr, loaded ? "loaded\n" : "not loaded\n");
