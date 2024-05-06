@@ -447,14 +447,11 @@ static const struct {
 	{"Afghanistan Standard Time", "Asia/Kabul"}, // +0430 +0430
 	{"Alaskan Standard Time", "America/Anchorage"}, // -0800 AKDT
 	{"Arabian Standard Time", "Asia/Dubai"}, // +0400 +04
-	{"Arabic Standard Time", "Asia/Baghdad"}, // +0300 +03
 	{"Argentina Standard Time", "America/Argentina/Buenos_Aires"}, // -0300 -03
 	{"Bangladesh Standard Time", "Asia/Dhaka"}, // +0600 +06
 	{"Cen. Australia Standard Time", "Australia/Adelaide"}, // +0930 ACST
-	{"Central Europe Standard Time", "Europe/Budapest"}, // +0200 CEST
-	{"Central European Standard Time", "Europe/Warsaw"}, // +0200 CEST
-	{"Central Standard Time (Mexico)", "America/Mexico_City"}, // -0600 CST
 	{"Central Standard Time", "America/Chicago"}, // -0500 CDT
+	{"Central Standard Time (Mexico)", "America/Mexico_City"}, // -0600 CST
 	{"China Standard Time", "Asia/Shanghai"}, // +0800 CST
 	{"Dateline Standard Time", "Etc/GMT+12"}, // -1200 -12
 	{"E. Africa Standard Time", "Africa/Nairobi"}, // +0300 EAT
@@ -463,7 +460,7 @@ static const struct {
 	{"Eastern Standard Time", "America/New_York"}, // -0400 EDT
 	{"Egypt Standard Time", "Africa/Cairo"}, // +0300 EEST
 	{"Fiji Standard Time", "Pacific/Fiji"}, // +1200 +12
-	{"GMT Standard Time", "Europe/London"}, // +0100 BST
+	{"GTB Standard Time", "Europe/Bucharest"}, // +0300 EEST
 	{"Hawaiian Standard Time", "Pacific/Honolulu"}, // -1000 HST
 	{"India Standard Time", "Asia/Kolkata"}, // +0530 IST
 	{"Iran Standard Time", "Asia/Tehran"}, // +0330 +0330
@@ -475,8 +472,6 @@ static const struct {
 	{"Pacific SA Standard Time", "America/Santiago"}, // -0400 -04
 	{"Pacific Standard Time", "America/Los_Angeles"}, // -0700 PDT
 	{"Pakistan Standard Time", "Asia/Karachi"}, // +0500 PKT
-	{"Romance Standard Time", "Europe/Paris"}, // +0200 CEST
-	{"Russian Standard Time", "Europe/Moscow"}, // +0300 MSK
 	{"SA Pacific Standard Time", "America/Bogota"}, // -0500 -05
 	{"SE Asia Standard Time", "Asia/Bangkok"}, // +0700 +07
 	{"Singapore Standard Time", "Asia/Singapore"}, // +0800 +08
@@ -493,13 +488,13 @@ static const struct {
 	{"UTC-11", "Etc/GMT+11"}, // -1100 -11
 	{"W. Australia Standard Time", "Australia/Perth"}, // +0800 AWST
 	{"W. Central Africa Standard Time", "Africa/Lagos"}, // +0100 WAT
-	{"W. Europe Standard Time", "Europe/Berlin"}, // +0200 CEST
 	{"West Pacific Standard Time", "Pacific/Port_Moresby"}, // +1000 +10
 #ifdef EMBED_EVERY_TIME_ZONE
 	{"AUS Central Standard Time", "Australia/Darwin"}, // +0930 ACST
 	{"Aleutian Standard Time", "America/Adak"}, // -0900 HDT
 	{"Altai Standard Time", "Asia/Barnaul"}, // +0700 +07
 	{"Arab Standard Time", "Asia/Riyadh"}, // +0300 +03
+	{"Arabic Standard Time", "Asia/Baghdad"}, // +0300 +03
 	{"Astrakhan Standard Time", "Europe/Astrakhan"}, // +0400 +04
 	{"Atlantic Standard Time", "America/Halifax"}, // -0300 ADT
 	{"Aus Central W. Standard Time", "Australia/Eucla"}, // +0845 +0845
@@ -514,6 +509,8 @@ static const struct {
 	{"Central America Standard Time", "America/Guatemala"}, // -0600 CST
 	{"Central Asia Standard Time", "Asia/Almaty"}, // +0500 +05
 	{"Central Brazilian Standard Time", "America/Cuiaba"}, // -0400 -04
+	{"Central Europe Standard Time", "Europe/Budapest"}, // +0200 CEST
+	{"Central European Standard Time", "Europe/Warsaw"}, // +0200 CEST
 	{"Central Pacific Standard Time", "Pacific/Guadalcanal"}, // +1100 +11
 	{"Chatham Islands Standard Time", "Pacific/Chatham"}, // +1245 +1245
 	{"Cuba Standard Time", "America/Havana"}, // -0400 CDT
@@ -521,10 +518,11 @@ static const struct {
 	{"Easter Island Standard Time", "Pacific/Easter"}, // -0600 -06
 	{"Eastern Standard Time (Mexico)", "America/Cancun"}, // -0500 EST
 	{"Ekaterinburg Standard Time", "Asia/Yekaterinburg"}, // +0500 +05
-	{"FLE Standard Time", "Europe/Helsinki"}, // +0300 EEST
-	{"GTB Standard Time", "Europe/Bucharest"}, // +0300 EEST
+	{"FLE Standard Time", "Europe/Kiev"}, // +0300 EEST
+	{"GMT Standard Time", "Europe/London"}, // +0100 BST
 	{"Georgian Standard Time", "Asia/Tbilisi"}, // +0400 +04
-	{"Greenwich Standard Time", "Atlantic/St_Helena"}, // +0000 GMT
+	{"Greenland Standard Time", "America/Godthab"}, // -0100 -01
+	{"Greenwich Standard Time", "Atlantic/Reykjavik"}, // +0000 GMT
 	{"Haiti Standard Time", "America/Port-au-Prince"}, // -0400 EDT
 	{"Jordan Standard Time", "Asia/Amman"}, // +0300 +03
 	{"Kaliningrad Standard Time", "Europe/Kaliningrad"}, // +0200 EET
@@ -551,9 +549,11 @@ static const struct {
 	{"Omsk Standard Time", "Asia/Omsk"}, // +0600 +06
 	{"Pacific Standard Time (Mexico)", "America/Tijuana"}, // -0700 PDT
 	{"Paraguay Standard Time", "America/Asuncion"}, // -0400 -04
+	{"Romance Standard Time", "Europe/Paris"}, // +0200 CEST
 	{"Russia Time Zone 10", "Asia/Srednekolymsk"}, // +1100 +11
 	{"Russia Time Zone 11", "Asia/Kamchatka"}, // +1200 +12
 	{"Russia Time Zone 3", "Europe/Samara"}, // +0400 +04
+	{"Russian Standard Time", "Europe/Moscow"}, // +0300 MSK
 	{"SA Eastern Standard Time", "America/Cayenne"}, // -0300 -03
 	{"SA Western Standard Time", "America/La_Paz"}, // -0400 -04
 	{"Saint Pierre Standard Time", "America/Miquelon"}, // -0200 -02
@@ -571,6 +571,7 @@ static const struct {
 	{"Ulaanbaatar Standard Time", "Asia/Ulaanbaatar"}, // +0800 +08
 	{"Venezuela Standard Time", "America/Caracas"}, // -0400 -04
 	{"Vladivostok Standard Time", "Asia/Vladivostok"}, // +1000 +10
+	{"W. Europe Standard Time", "Europe/Berlin"}, // +0200 CEST
 	{"W. Mongolia Standard Time", "Asia/Hovd"}, // +0700 +07
 	{"West Asia Standard Time", "Asia/Tashkent"}, // +0500 +05
 	{"West Bank Standard Time", "Asia/Hebron"}, // +0300 EEST
