@@ -1069,7 +1069,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     flags = (endp - 1) - sp + sp2;
     flags[0] = AT_FLAGS;
     flags[1] = literally * AT_FLAGS_PRESERVE_ARGV0;
-    /* end-of-auxv sentinel is zeroed by loop above */
+    flags[2] = 0;       /* end-of-auxv sentinel */
   }
   sp = sp2;
 
