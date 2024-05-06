@@ -86,19 +86,19 @@ __static_yoink("usr/share/zoneinfo/Etc/GMT+11");
 __static_yoink("usr/share/zoneinfo/Etc/GMT+12");
 
 __static_yoink("usr/share/zoneinfo/America/");
-__static_yoink("usr/share/zoneinfo/America/Los_Angeles"); // U.S.
-__static_yoink("usr/share/zoneinfo/America/New_York"); // U.S.
+__static_yoink("usr/share/zoneinfo/America/Anchorage"); // U.S.
 __static_yoink("usr/share/zoneinfo/America/Chicago"); // U.S.
 __static_yoink("usr/share/zoneinfo/America/Denver"); // U.S.
-__static_yoink("usr/share/zoneinfo/America/Anchorage"); // U.S.
+__static_yoink("usr/share/zoneinfo/America/Los_Angeles"); // U.S.
+__static_yoink("usr/share/zoneinfo/America/New_York"); // U.S.
 __static_yoink("usr/share/zoneinfo/America/Phoenix"); // U.S.
-__static_yoink("usr/share/zoneinfo/America/Mexico_City"); // Mexico
-__static_yoink("usr/share/zoneinfo/America/Sao_Paulo"); // Brazil
-__static_yoink("usr/share/zoneinfo/America/Bogota"); // Columbia
-__static_yoink("usr/share/zoneinfo/America/Lima"); // Peru
-__static_yoink("usr/share/zoneinfo/America/Santiago"); // Chile
 __static_yoink("usr/share/zoneinfo/America/Argentina/");
 __static_yoink("usr/share/zoneinfo/America/Argentina/Buenos_Aires");
+__static_yoink("usr/share/zoneinfo/America/Bogota"); // Columbia
+__static_yoink("usr/share/zoneinfo/America/Lima"); // Peru
+__static_yoink("usr/share/zoneinfo/America/Mexico_City"); // Mexico
+__static_yoink("usr/share/zoneinfo/America/Santiago"); // Chile
+__static_yoink("usr/share/zoneinfo/America/Sao_Paulo"); // Brazil
 #ifdef EMBED_EVERY_TIME_ZONE
 __static_yoink("usr/share/zoneinfo/America/Adak");
 __static_yoink("usr/share/zoneinfo/America/Araguaina");
