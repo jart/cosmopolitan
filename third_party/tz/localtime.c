@@ -95,6 +95,8 @@ __static_yoink("usr/share/zoneinfo/America/Phoenix"); // U.S.
 __static_yoink("usr/share/zoneinfo/America/Argentina/");
 __static_yoink("usr/share/zoneinfo/America/Argentina/Buenos_Aires");
 __static_yoink("usr/share/zoneinfo/America/Bogota"); // Columbia
+__static_yoink("usr/share/zoneinfo/America/Halifax"); // Canada
+__static_yoink("usr/share/zoneinfo/America/St_Johns"); // Canada
 __static_yoink("usr/share/zoneinfo/America/Lima"); // Peru
 __static_yoink("usr/share/zoneinfo/America/Mexico_City"); // Mexico
 __static_yoink("usr/share/zoneinfo/America/Santiago"); // Chile
@@ -145,7 +147,6 @@ __static_yoink("usr/share/zoneinfo/America/Grand_Turk");
 __static_yoink("usr/share/zoneinfo/America/Guatemala");
 __static_yoink("usr/share/zoneinfo/America/Guayaquil");
 __static_yoink("usr/share/zoneinfo/America/Guyana");
-__static_yoink("usr/share/zoneinfo/America/Halifax");
 __static_yoink("usr/share/zoneinfo/America/Havana");
 __static_yoink("usr/share/zoneinfo/America/Hermosillo");
 __static_yoink("usr/share/zoneinfo/America/Indiana/");
@@ -201,7 +202,6 @@ __static_yoink("usr/share/zoneinfo/America/Santarem");
 __static_yoink("usr/share/zoneinfo/America/Santo_Domingo");
 __static_yoink("usr/share/zoneinfo/America/Scoresbysund");
 __static_yoink("usr/share/zoneinfo/America/Sitka");
-__static_yoink("usr/share/zoneinfo/America/St_Johns");
 __static_yoink("usr/share/zoneinfo/America/Swift_Current");
 __static_yoink("usr/share/zoneinfo/America/Tegucigalpa");
 __static_yoink("usr/share/zoneinfo/America/Thule");
