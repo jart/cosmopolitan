@@ -86,7 +86,8 @@
 #define EM_BPF       247
 
 /* the ape flag, "lol cat 5" */
-#define EF_APE_MODERN 0x101ca75
+#define EF_APE_MODERN      0x101ca75
+#define EF_APE_MODERN_MASK 0x1ffffff
 
 #define GRP_COMDAT 1
 #define STN_UNDEF  0

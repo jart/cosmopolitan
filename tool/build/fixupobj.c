@@ -332,7 +332,8 @@ static void UseFreebsdOsAbi(void) {
 }
 
 static void WriteApeFlags(void) {
-  elf->e_flags |= EF_APE_MODERN;
+  /* try to be forward-compatible */
+  elf->e_flags = (elf->e_flags & ~EF_APE_MODERN_MASK) | EF_APE_MODERN;
 }
 
 /**
