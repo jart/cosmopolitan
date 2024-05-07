@@ -124,7 +124,6 @@ struct Syslib {
 #define PT_INTERP                   3
 #define EI_CLASS                    4
 #define EI_DATA                     5
-#define EF_APE_MODERN               1
 #define PF_X                        1
 #define PF_W                        2
 #define PF_R                        4
@@ -146,6 +145,9 @@ struct Syslib {
 #define AT_SECURE                   23
 #define AT_RANDOM                   25
 #define AT_EXECFN                   31
+
+#define EF_APE_MODERN      0x101ca75
+#define EF_APE_MODERN_MASK 0x1ffffff
 
 #define AUXV_WORDS 31
 
@@ -821,7 +823,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   if (e->e_machine != EM_AARCH64) {
     return "couldn't find ELF header with ARM64 machine type";
   }
-  if (!(e->e_flags & EF_APE_MODERN) && sp[0]) {
+  if ((e->e_flags & EF_APE_MODERN_MASK) != EF_APE_MODERN && sp[0] > 0) {
     /* change argv[0] to resolved path for older binaries */
     ((char **)(sp + 1))[0] = exe;
   }

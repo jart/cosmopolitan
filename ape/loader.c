@@ -134,7 +134,6 @@
 #define PT_INTERP                   3
 #define EI_CLASS                    4
 #define EI_DATA                     5
-#define EF_APE_MODERN               1
 #define PF_X                        1
 #define PF_W                        2
 #define PF_R                        4
@@ -152,6 +151,9 @@
 #define XCR0_AVX                    4
 #define PR_SET_MM                   35
 #define PR_SET_MM_EXE_FILE          13
+
+#define EF_APE_MODERN      0x101ca75
+#define EF_APE_MODERN_MASK 0x1ffffff
 
 #define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -835,7 +837,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
     return "couldn't find ELF header with x86-64 machine type";
   }
 #endif
-  if (!(e->e_flags & EF_APE_MODERN) && sp[0]) {
+  if ((e->e_flags & EF_APE_MODERN_MASK) != EF_APE_MODERN && sp[0] > 0) {
     /* change argv[0] to resolved path for older binaries */
     ((char **)(sp + 1))[0] = exe;
   }
