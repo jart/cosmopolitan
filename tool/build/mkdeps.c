@@ -146,6 +146,8 @@ static const char *buildroot;
 static const char *genroot;
 static const char *outpath;
 
+#include "libc/mem/tinymalloc.inc"
+
 static inline bool IsBlank(int c) {
   return c == ' ' || c == '\t';
 }

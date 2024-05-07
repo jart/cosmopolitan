@@ -43,8 +43,6 @@
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/getargs.h"
 
-__static_yoink("realloc");
-
 /**
  * @fileoverview Build Package Script.
  *
@@ -152,6 +150,8 @@ struct Relas {
     const char *object_path;
   } *p;
 } prtu;
+
+#include "libc/mem/tinymalloc.inc"
 
 static wontreturn void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);

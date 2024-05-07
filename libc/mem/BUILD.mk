@@ -8,6 +8,7 @@ LIBC_MEM = $(LIBC_MEM_A_DEPS) $(LIBC_MEM_A)
 LIBC_MEM_A = o/$(MODE)/libc/mem/mem.a
 LIBC_MEM_A_FILES := $(wildcard libc/mem/*)
 LIBC_MEM_A_HDRS = $(filter %.h,$(LIBC_MEM_A_FILES))
+LIBC_MEM_A_INCS = $(filter %.inc,$(LIBC_MEM_A_FILES))
 LIBC_MEM_A_SRCS = $(filter %.c,$(LIBC_MEM_A_FILES))
 LIBC_MEM_A_OBJS = $(LIBC_MEM_A_SRCS:%.c=o/$(MODE)/%.o)
 
@@ -46,6 +47,7 @@ $(LIBC_MEM_A_OBJS): private				\
 LIBC_MEM_LIBS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)))
 LIBC_MEM_SRCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_SRCS))
 LIBC_MEM_HDRS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_HDRS))
+LIBC_MEM_INCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_INCS))
 LIBC_MEM_BINS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_BINS))
 LIBC_MEM_CHECKS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_CHECKS))
 LIBC_MEM_OBJS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_OBJS))

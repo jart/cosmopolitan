@@ -20,6 +20,7 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/stdio/sysparam.h"
@@ -31,6 +32,8 @@ bool FLAG_quiet;
 const char *FLAG_prefix;
 const char *FLAG_suffix;
 const char *path;
+
+#include "libc/mem/tinymalloc.inc"
 
 wontreturn void PrintUsage(int fd, int exitcode) {
   tinyprint(fd, "\n\
@@ -74,42 +77,17 @@ wontreturn void DieOom(void) {
   Die("out of memory");
 }
 
-struct {
-  char *last;
-  size_t used;
-  union {
-    char memory[1024 * 1024 * 1024];
-    size_t align;
-  };
-} heap;
-
-void *Malloc(size_t need) {
-  if (need <= sizeof(heap.memory)) {
-    int align = sizeof(size_t);
-    size_t base = heap.used;
-    base += align - 1;
-    base &= -align;
-    size_t toto = base + sizeof(size_t) + need;
-    if (toto >= heap.used && toto <= sizeof(heap.memory)) {
-      char *res = heap.memory + base;
-      *(size_t *)res = need;
-      heap.used = toto;
-      return res + sizeof(size_t);
-    }
-  }
-  DieOom();
+static void *Malloc(size_t n) {
+  void *p;
+  if (!(p = malloc(n)))
+    DieOom();
+  return p;
 }
 
-void *Realloc(void *ptr, size_t need) {
-  if (ptr == heap.last) {
-    heap.used = (char *)ptr - heap.memory;
-    return Malloc(need);
-  } else {
-    void *res = Malloc(need);
-    size_t size = *(size_t *)((char *)ptr - sizeof(size_t));
-    memcpy(res, ptr, MIN(need, size));
-    return res;
-  }
+static void *Realloc(void *p, size_t n) {
+  if (!(p = realloc(p, n)))
+    DieOom();
+  return p;
 }
 
 void ProcessFile(void) {

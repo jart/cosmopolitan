@@ -226,6 +226,8 @@ const char *const kSafeEnv[] = {
     "SYSTEMROOT",  // needed by socket()
 };
 
+#include "libc/mem/tinymalloc.inc"
+
 void OnAlrm(int sig) {
   ++gotalrm;
 }

@@ -30,6 +30,8 @@
  * @fileoverview elf to symbol table file dump tool
  */
 
+#include "libc/mem/tinymalloc.inc"
+
 void PrintUsage(FILE *f) {
   fprintf(f, "%s%s%s\n", "usage: ", program_invocation_name,
           " [-?h] -o PATH COMDBG");

@@ -62,6 +62,8 @@ char linkbuf[PATH_MAX];
 
 void Mv(char *, char *);
 
+#include "libc/mem/tinymalloc.inc"
+
 wontreturn void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
