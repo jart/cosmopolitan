@@ -121,7 +121,8 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
 
   // inherit properties of listening socket
   // errors ignored as if f->handle was created before forking
-  // this fails with WSAENOTSOCK
+  // this fails with WSAENOTSOCK, see
+  // https://github.com/jart/cosmopolitan/issues/1174
   __imp_setsockopt(resources.handle, SOL_SOCKET, kNtSoUpdateAcceptContext,
                    &f->handle, sizeof(f->handle));
 
