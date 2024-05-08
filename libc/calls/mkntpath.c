@@ -79,12 +79,12 @@ textwindows size_t __normntpath(char16_t *p, size_t n) {
  * @error ENAMETOOLONG
  */
 textwindows int __mkwin32_sun_path(
-    const char *path, char sun_path[hasatleast UNIX_SOCKET_NAME_MAX]) {
+    const char *path, char sun_path[hasatleast kNtUnixSocketNameMax]) {
   // 1. Need +1 for NUL-terminator
   if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     return efault();
   }
-  char16_t tmp_path[UNIX_SOCKET_NAME_MAX];
+  char16_t tmp_path[kNtUnixSocketNameMax];
   char *p = sun_path;
   const char *q = path;
   size_t n = 0;
@@ -98,15 +98,15 @@ textwindows int __mkwin32_sun_path(
   } else if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
              (IsSlash(q[4]) || !q[4])) {
     if (!q[4] || !q[5]) return efault();
-    GetTempPath(UNIX_SOCKET_NAME_MAX, tmp_path);
-    n = tprecode16to8(p, UNIX_SOCKET_NAME_MAX, tmp_path).ax;
+    GetTempPath(kNtUnixSocketNameMax, tmp_path);
+    n = tprecode16to8(p, kNtUnixSocketNameMax, tmp_path).ax;
     p += n;
     q += 5;
   }
-  for (; n < UNIX_SOCKET_NAME_MAX; n++) {
+  for (; n < kNtUnixSocketNameMax; n++) {
     if (!(*p++ = *q++)) break;
   }
-  if (n == UNIX_SOCKET_NAME_MAX) {
+  if (n == kNtUnixSocketNameMax) {
     return efault();
   }
   return n;
