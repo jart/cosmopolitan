@@ -123,7 +123,6 @@ TEST(unix, stream_absolute) {
   int ws;
   if (IsWindows() && !IsAtLeastWindows10()) return;
   atomic_bool *ready = _mapshared(1);
-  // TODO(jart): move this line down when kFdProcess is gone
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
   if (!fork()) {
     close(3);
