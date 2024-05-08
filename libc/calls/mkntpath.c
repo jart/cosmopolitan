@@ -94,6 +94,7 @@ textwindows int __mkntsunpath(
     p[1] = ':';
     p[2] = '\\';
     p += 3;
+    q += 3;
     n = 3;
   } else if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
              (IsSlash(q[4]) || !q[4])) {
