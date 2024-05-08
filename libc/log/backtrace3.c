@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
@@ -29,6 +30,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 #define LIMIT 100
@@ -47,8 +49,11 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
     int fd, const struct StackFrame *bp, struct SymbolTable *st) {
   size_t gi;
   intptr_t addr;
+  const char *name;
   int i, symbol, addend;
+  static char cxxbuf[8192];
   struct Garbages *garbage;
+  static pthread_spinlock_t lock;
   const struct StackFrame *frame;
   (void)gi;
   if (!bp)
@@ -83,8 +88,15 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
       symbol = 0;
       addend = 0;
     }
-    kprintf("%012lx %lx %s%+d\n", frame, addr, __get_symbol_name(st, symbol),
-            addend);
+    if ((name = __get_symbol_name(st, symbol)) && __is_mangled(name)) {
+      pthread_spin_lock(&lock);
+      __demangle(cxxbuf, name, sizeof(cxxbuf));
+      kprintf("%012lx %lx %s%+d\n", frame, addr, cxxbuf, addend);
+      pthread_spin_unlock(&lock);
+      name = cxxbuf;
+    } else {
+      kprintf("%012lx %lx %s%+d\n", frame, addr, name, addend);
+    }
   }
   return 0;
 }

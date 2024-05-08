@@ -31,6 +31,7 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cosmo.h"
 #include "libc/cxxabi.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -40,7 +41,6 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -178,15 +178,15 @@ static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
   }
 }
 
-static relegated char *GetSymbolName(struct SymbolTable *st, int symbol,
-                                     char **mem, size_t *memsz) {
-  char *s, *t;
-  if ((s = __get_symbol_name(st, symbol)) &&  //
-      s[0] == '_' && s[1] == 'Z' &&           //
-      (t = __cxa_demangle(s, *mem, memsz, 0))) {
-    *mem = s = t;
-  }
-  return s;
+static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
+  char *str;
+  static char buf[8192];
+  if (!(str = __get_symbol_name(st, symbol)))
+    return str;
+  if (!__is_mangled(str))
+    return str;
+  __demangle(buf, str, sizeof(buf));
+  return buf;
 }
 
 static relegated void __oncrash_impl(int sig, struct siginfo *si,
@@ -241,8 +241,6 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
                             : (struct StackFrame *)__builtin_frame_address(0)));
   if (ctx) {
     long pc;
-    char *mem = 0;
-    size_t memsz = 0;
     int addend, symbol;
     const char *debugbin;
     const char *addr2line;
@@ -305,7 +303,7 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       addend -= st->symbols[symbol].x;
       Append(b, " ");
       if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+        Append(b, "%s", GetSymbolName(st, symbol));
         if (addend)
           Append(b, "%+d", addend);
       }
@@ -327,7 +325,7 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
         addend -= st->symbols[symbol].x;
         Append(b, " ");
         if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-          Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+          Append(b, "%s", GetSymbolName(st, symbol));
           if (addend)
             Append(b, "%+d", addend);
         }
@@ -367,13 +365,12 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       }
       Append(b, " %016lx fp %lx lr ", fp, pc);
       if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
-        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+        Append(b, "%s", GetSymbolName(st, symbol));
         if (addend)
           Append(b, "%+d", addend);
       }
       Append(b, "\n");
     }
-    free(mem);
   }
   b->p[b->n - 1] = '\n';
   klog(b->p, MIN(b->i, b->n));

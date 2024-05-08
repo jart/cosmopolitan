@@ -66,7 +66,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
 
   if (!PLEDGED(STDIO) || !PLEDGED(EXEC) || !PLEDGED(EXEC)) {
-    ShowHint("won't print addr2line backtrace because pledge");
+    ShowHint("pledge() sandboxing makes backtraces not as good");
     return -1;
   }
 
