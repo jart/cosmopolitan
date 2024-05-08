@@ -553,7 +553,9 @@ _tdata_size = _tdata_end - _tdata_start;
 _tbss_size = _tbss_end - _tbss_start;
 _tbss_offset = _tbss_start - _tdata_start;
 _tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start);
-_tls_align = 1;
+_tdata_align = ALIGNOF(.tdata);
+_tbss_align = ALIGNOF(.tbss);
+_tls_align = MAX(TLS_ALIGNMENT, MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));
 
 ape_cod_offset = 0;
 ape_cod_vaddr = ADDR(.head);

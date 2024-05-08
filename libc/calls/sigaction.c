@@ -255,7 +255,7 @@ static int __sigaction(int sig, const struct sigaction *act,
       // xnu silicon claims to support sa_resethand but it does nothing
       // this can be tested, since it clears the bit from flags as well
       if (!rc && oldact &&
-          (((struct sigaction_silicon *)ap)->sa_flags & SA_RESETHAND)) {
+          (((struct sigaction_silicon *)oldact)->sa_flags & SA_RESETHAND)) {
         ((struct sigaction_silicon *)oldact)->sa_flags |= SA_RESETHAND;
       }
     }
