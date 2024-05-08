@@ -149,9 +149,9 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.3.3
+COSMOCC = .cosmocc/3.3.5
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.3 e4d0fa63cd79cc3bfff6c2d015f1776db081409907625aea8ad40cefc1996d08)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.5 db78fd8d3f8706e9dff4be72bf71d37a3f12062f212f407e1c33bc4af3780dd0)
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc
