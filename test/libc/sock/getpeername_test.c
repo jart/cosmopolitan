@@ -90,3 +90,65 @@ TEST(getpeername, worksAfterAcceptingOnParent) {
   ASSERT_SYS(0, 0, close(3));
   WAIT(exit, 0);
 }
+
+TEST(getpeername, worksAfterConnectingOnFork) {
+  char buf[16] = {0};
+  uint32_t addrsize = sizeof(struct sockaddr_in);
+  struct sockaddr_in addr = {
+      .sin_family = AF_INET,
+      .sin_addr.s_addr = htonl(0x7f000001),
+  };
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
+  ASSERT_SYS(0, 4, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, connect(4, (struct sockaddr *)&addr, sizeof(addr)));
+  struct sockaddr_storage out = {0};
+  uint32_t out_size = sizeof(out);
+  ASSERT_SYS(0, 0, getpeername(4, (struct sockaddr *)&out, &out_size));
+  EXPECT_GE(sizeof(struct sockaddr_in), out_size);
+  EXPECT_EQ(AF_INET, ((struct sockaddr_in *)&out)->sin_family);
+  EXPECT_EQ(htonl(0x7f000001), ((struct sockaddr_in *)&out)->sin_addr.s_addr);
+  ASSERT_SYS(0, 5, send(4, "hello", 5, 0));
+  PARENT();
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_SYS(0, 5, read(4, buf, 16));
+  ASSERT_STREQ("hello", buf);
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+  WAIT(exit, 0);
+}
+
+TEST(getpeername, worksAfterConnectingOnParent) {
+  char buf[16] = {0};
+  uint32_t addrsize = sizeof(struct sockaddr_in);
+  struct sockaddr_in addr = {
+      .sin_family = AF_INET,
+      .sin_addr.s_addr = htonl(0x7f000001),
+  };
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
+  SPAWN(fork);
+  ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_SYS(0, 5, read(4, buf, 16));
+  ASSERT_STREQ("hello", buf);
+  PARENT();
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
+  struct sockaddr_storage out = {0};
+  uint32_t out_size = sizeof(out);
+  ASSERT_SYS(0, 0, getpeername(3, (struct sockaddr *)&out, &out_size));
+  EXPECT_GE(sizeof(struct sockaddr_in), out_size);
+  EXPECT_EQ(AF_INET, ((struct sockaddr_in *)&out)->sin_family);
+  EXPECT_EQ(htonl(0x7f000001), ((struct sockaddr_in *)&out)->sin_addr.s_addr);
+  ASSERT_SYS(0, 5, send(3, "hello", 5, 0));
+  ASSERT_SYS(0, 0, close(3));
+  WAIT(exit, 0);
+}
