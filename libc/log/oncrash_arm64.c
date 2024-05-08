@@ -394,6 +394,8 @@ relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
   BLOCK_CANCELATION;
   SpinLock(&lock);
   __oncrash_impl(sig, si, arg);
+  if (sig != SIGQUIT && sig != SIGTRAP)
+    _exit(1);
   SpinUnlock(&lock);
   ALLOW_CANCELATION;
 }

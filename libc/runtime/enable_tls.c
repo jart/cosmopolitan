@@ -68,13 +68,13 @@ static unsigned long ParseMask(const char *str) {
  *
  *                           __get_tls()
  *                               │
- *                              %fs Linux/BSDs
+ *                              %fs OpenBSD/NetBSD
  *            _Thread_local      │
  *     ┌───┬──────────┬──────────┼───┐
  *     │pad│  .tdata  │  .tbss   │tib│
  *     └───┴──────────┴──────────┼───┘
  *                               │
- *                  Windows/Mac %gs
+ *    Linux/FreeBSD/Windows/Mac %gs
  *
  * Here's the TLS memory layout on aarch64:
  *

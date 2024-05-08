@@ -78,17 +78,14 @@ int feenableexcept(int excepts) {
 
 #elif defined(__aarch64__)
 
-  unsigned fpcr;
-  unsigned fpcr2;
-  unsigned updated_fpcr;
-  fpcr = __builtin_aarch64_get_fpcr();
-  fpcr2 = fpcr | (excepts << 8);
+  unsigned fpcr = __builtin_aarch64_get_fpcr();
+  unsigned want = excepts << 8;
+  unsigned fpcr2 = fpcr | want;
   if (fpcr != fpcr2) {
     __builtin_aarch64_set_fpcr(fpcr2);
-    // floating point exception trapping is optional in aarch64
-    updated_fpcr = __builtin_aarch64_get_fpsr();
-    if (fpcr2 & ~updated_fpcr)
-      return -1;
+    fpcr2 = __builtin_aarch64_get_fpsr();
+    if ((fpcr2 & want) != want)
+      return -1;  // not supported by cpu
   }
   return (fpcr >> 8) & FE_ALL_EXCEPT;
 
