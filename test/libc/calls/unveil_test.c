@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
+#include "libc/calls/pledge.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -337,6 +338,7 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   ASSERT_NE(-1, (gotsome = _mapshared(FRAMESIZE)));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
     // install our first seccomp filter
     ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath unveil", 0));
     ASSERT_SYS(0, 0, mkdir("jail", 0755));

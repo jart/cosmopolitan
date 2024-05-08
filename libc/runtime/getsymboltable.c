@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/errno.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -124,6 +125,7 @@ struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
   if (pthread_spin_trylock(&g_lock))
     return 0;
+  int e = errno;
   if (!__symtab && !__isworker) {
     if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
       if ((__symtab = GetSymbolTableFromZip(z))) {
@@ -137,6 +139,7 @@ struct SymbolTable *GetSymbolTable(void) {
       __symtab = GetSymbolTableFromElf();
     }
   }
+  errno = e;
   pthread_spin_unlock(&g_lock);
   return __symtab;
 }

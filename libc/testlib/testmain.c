@@ -94,6 +94,12 @@ dontasan int main(int argc, char *argv[]) {
   struct Dll *e;
   struct TestAspect *a;
 
+  if (errno) {
+    tinyprint(2, "error: the errno variable was contaminated by constructors\n",
+              NULL);
+    return 1;
+  }
+
   __ubsan_strict = true;
   __log_level = kLogInfo;
   GetOpts(argc, argv);

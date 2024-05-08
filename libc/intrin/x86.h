@@ -3,8 +3,8 @@
 COSMOPOLITAN_C_START_
 
 enum VendorSignatures {
-  SIG_INTEL = 0x756e6547,  // Genu
-  SIG_AMD = 0x68747541,    // Auth
+  SIG_INTEL = 0x756e6547, /* Genu */
+  SIG_AMD = 0x68747541,   /* Auth */
 };
 
 enum ProcessorVendors {
@@ -139,7 +139,7 @@ struct __processor_model {
   const char *__cpu_march;
 };
 
-struct __processor_model __cpu_model;
+extern struct __processor_model __cpu_model;
 
 const char *__cpu_march(unsigned);
 

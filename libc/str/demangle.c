@@ -43,7 +43,7 @@ Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>\n\
 Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>\n\
 Copyright (c) 2024 Justine Tunney <jtunney@gmail.com>");
 // https://github.com/freebsd/freebsd-src/blob/2176c9ab71c85efd90a6c7af4a9e04fe8e3d49ca/contrib/libcxxrt/libelftc_dem_gnu3.c
-// clang -format off
+// clang-format off
 
 /**
  * @file demangle.c
@@ -321,9 +321,9 @@ static char *
 vector_str_get_flat(struct cpp_demangle_data *ddata, const struct vector_str *v,
     size_t *l)
 {
-	ssize_t elem_pos, elem_size, rtn_size;
 	size_t i;
-	char *rtn;
+	char *rtn, *p;
+	ssize_t rtn_size;
 
 	if (!v || !v->size)
 		return 0;
@@ -334,14 +334,9 @@ vector_str_get_flat(struct cpp_demangle_data *ddata, const struct vector_str *v,
 	if (!(rtn = (char *)alloc(ddata, 1, rtn_size + 1)))
 		return 0;
 
-	elem_pos = 0;
-	for (i = 0; i < v->size; ++i) {
-		elem_size = strlen(v->container[i]);
-		memcpy(rtn + elem_pos, v->container[i], elem_size);
-		elem_pos += elem_size;
-	}
-
-	rtn[rtn_size] = '\0';
+	p = rtn;
+	for (i = 0; i < v->size; ++i)
+		p = stpcpy(p, v->container[i]);
 
 	if (l)
 		*l = rtn_size;
@@ -2878,7 +2873,7 @@ static int
 cpp_demangle_read_tmpl_args(struct cpp_demangle_data *ddata)
 {
 	struct vector_str *v;
-	size_t arg_len, idx, limit, size;
+	size_t arg_len, idx, limit;
 	char *arg;
 
 	if (!ddata || *ddata->cur == '\0')
@@ -2907,12 +2902,7 @@ cpp_demangle_read_tmpl_args(struct cpp_demangle_data *ddata)
 
 		if (*ddata->cur == 'E') {
 			++ddata->cur;
-			size = v->size;
-			ASSERT(size > 0);
-			if (!strncmp(v->container[size - 1], ">", 1)) {
-				if (!DEM_PUSH_STR(ddata, ">"))
-					return 0;
-			} else if (!DEM_PUSH_STR(ddata, ">"))
+			if (!DEM_PUSH_STR(ddata, ">"))
 				return 0;
 			ddata->is_tmpl = true;
 			break;
@@ -4070,6 +4060,7 @@ failure(char *buf, const char *org, size_t buflen)
  * be a partially copied result. In both cases, -1 is returned. The size
  * of the output is only returned if this routine is fully succesful. To
  * successfully cover nearly all the test cases from libcxxabi use 65536
+ * and to be able to print 99% of the symbols LLVM's libcxx.a, use 5632.
  *
  * It's important to call ismangled() before this, since non-c++ symbols
  * have a special meaning; for example, "g" will return "__float128". It

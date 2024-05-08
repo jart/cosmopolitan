@@ -19,10 +19,18 @@
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
+#ifndef TINYMALLOC_MAX_BYTES
+#define TINYMALLOC_MAX_BYTES 1073741824
+#endif
+
+#ifndef TINYMALLOC_MAX_ALIGN
+#define TINYMALLOC_MAX_ALIGN 4096
+#endif
+
 #ifndef MODE_DBG /* don't interfere with asan dlmalloc hooking */
 
-_Alignas(65536) static struct {
-  char memory[1024 * 1024 * 1024];
+_Alignas(TINYMALLOC_MAX_ALIGN) static struct {
+  char memory[TINYMALLOC_MAX_BYTES];
   unsigned used, last, free;
 } heap;
 
@@ -59,7 +67,7 @@ void *memalign(size_t align, size_t need) {
     need = sizeof(unsigned);
   if (align < sizeof(unsigned))
     align = sizeof(unsigned);
-  if (align > 65536)
+  if (align > TINYMALLOC_MAX_ALIGN)
     goto InvalidArgument;
   if (ckd_add(&need, need, sizeof(unsigned) - 1))
     goto OutOfMemory;
@@ -86,7 +94,7 @@ void *memalign(size_t align, size_t need) {
   base &= -align;
   if (ckd_add(&toto, base, need))
     goto OutOfMemory;
-  if (toto > sizeof(heap.memory))
+  if (toto > TINYMALLOC_MAX_BYTES)
     goto OutOfMemory;
   res = heap.memory + base;
   ((unsigned *)res)[-1] = need;
@@ -139,7 +147,7 @@ void *realloc(void *ptr, size_t need) {
       need &= -sizeof(unsigned);
       if (ckd_add(&toto, base, need))
         goto OutOfMemory;
-      if (toto > sizeof(heap.memory))
+      if (toto > TINYMALLOC_MAX_BYTES)
         goto OutOfMemory;
       ((unsigned *)mem)[-1] = need;
       heap.used = toto;
