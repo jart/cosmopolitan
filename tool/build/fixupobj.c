@@ -327,6 +327,11 @@ static void UseFreebsdOsAbi(void) {
   elf->e_ident[EI_OSABI] = ELFOSABI_FREEBSD;
 }
 
+static void WriteApeFlags(void) {
+  /* try to be forward-compatible */
+  elf->e_flags = (elf->e_flags & ~EF_APE_MODERN_MASK) | EF_APE_MODERN;
+}
+
 /**
  * Improve GCC11 `-fpatchable-function-entry` codegen.
  *
@@ -668,6 +673,7 @@ static void FixupObject(void) {
           UseFreebsdOsAbi();
       }
       if (elf->e_type != ET_REL) {
+        WriteApeFlags();
         PurgeIfuncSections();
         RelinkZipFiles();
       }

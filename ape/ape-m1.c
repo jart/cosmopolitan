@@ -146,6 +146,9 @@ struct Syslib {
 #define AT_RANDOM                   25
 #define AT_EXECFN                   31
 
+#define EF_APE_MODERN      0x101ca75
+#define EF_APE_MODERN_MASK 0x1ffffff
+
 #define AUXV_WORDS 31
 
 /* from the xnu codebase */
@@ -799,7 +802,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
+                          char *exe, int fd, long *sp, long *auxv,
                           char *execfn) {
   long i, rc;
   unsigned size;
@@ -819,6 +822,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   }
   if (e->e_machine != EM_AARCH64) {
     return "couldn't find ELF header with ARM64 machine type";
+  }
+  if ((e->e_flags & EF_APE_MODERN_MASK) != EF_APE_MODERN && sp[0] > 0) {
+    /* change argv[0] to resolved path for older binaries */
+    ((char **)(sp + 1))[0] = exe;
   }
   if (e->e_phentsize != sizeof(struct ElfPhdr)) {
     Pexit(exe, 0, "e_phentsize is wrong");
