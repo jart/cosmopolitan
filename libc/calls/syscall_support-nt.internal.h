@@ -12,7 +12,7 @@ bool issymlink_nt(const char *);
 bool32 ntsetprivilege(int64_t, const char16_t *, uint32_t);
 char16_t *__create_pipe_name(char16_t *);
 size_t __normntpath(char16_t *, size_t);
-int __mkwin32_sun_path(const char *, char[hasatleast kNtUnixSocketNameMax]);
+int __mkntsunpath(const char *, char[hasatleast kNtUnixSocketNameMax]);
 int __mkntpath(const char *, char16_t[hasatleast PATH_MAX]);
 int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX], int);
 int __mkntpathath(int64_t, const char *, int, char16_t[hasatleast PATH_MAX]);

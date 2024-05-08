@@ -32,7 +32,7 @@ textwindows int sys_bind_nt(struct Fd *f, const void *addr, uint32_t addrsize) {
       addrsize >= sizeof(struct sockaddr_un)) {
     sun = (struct sockaddr_un *)addr;
     nt_sun.sun_family = AF_UNIX;
-    if (__mkwin32_sun_path(sun->sun_path, nt_sun.sun_path) == -1) return -1;
+    if (__mkntsunpath(sun->sun_path, nt_sun.sun_path) == -1) return -1;
     addr = &nt_sun;
   }
   if (__imp_bind(f->handle, addr, addrsize) != -1) {

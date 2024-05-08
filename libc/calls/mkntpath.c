@@ -78,7 +78,7 @@ textwindows size_t __normntpath(char16_t *p, size_t n) {
  * @return short count excluding NUL on success, or -1 w/ errno
  * @error ENAMETOOLONG
  */
-textwindows int __mkwin32_sun_path(
+textwindows int __mkntsunpath(
     const char *path, char sun_path[hasatleast kNtUnixSocketNameMax]) {
   // 1. Need +1 for NUL-terminator
   if (!path || (IsAsan() && !__asan_is_valid_str(path))) {

@@ -147,7 +147,7 @@ textwindows int sys_connect_nt(struct Fd *f, const void *addr,
       addrsize >= sizeof(struct sockaddr_un)) {
     sun = (struct sockaddr_un *)addr;
     nt_sun.sun_family = AF_UNIX;
-    if (__mkwin32_sun_path(sun->sun_path, nt_sun.sun_path) == -1) return -1;
+    if (__mkntsunpath(sun->sun_path, nt_sun.sun_path) == -1) return -1;
     addr = &nt_sun;
   }
   sigset_t mask = __sig_block();
