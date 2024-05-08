@@ -142,12 +142,9 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
 
 textwindows int sys_connect_nt(struct Fd *f, const void *addr,
                                uint32_t addrsize) {
-  struct sockaddr_un *sun, nt_sun;
-  if (f->family == AF_UNIX && ((struct sockaddr *)addr)->sa_family == AF_UNIX &&
-      addrsize >= sizeof(struct sockaddr_un)) {
-    sun = (struct sockaddr_un *)addr;
-    nt_sun.sun_family = AF_UNIX;
-    if (__mkntsunpath(sun->sun_path, nt_sun.sun_path) == -1) return -1;
+  struct sockaddr_un nt_sun;
+  if (f->family == AF_UNIX) {
+    if (__convert_sockaddr_un_to_nt(&nt_sun, addr, addrsize) == -1) return -1;
     addr = &nt_sun;
   }
   sigset_t mask = __sig_block();

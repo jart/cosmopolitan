@@ -45,6 +45,7 @@ const char *DescribeSockaddr(char[128], const struct sockaddr *, size_t);
 
 void __convert_bsd_to_sockaddr(struct sockaddr_storage *);
 void __convert_sockaddr_to_bsd(struct sockaddr_storage *);
+int __convert_sockaddr_un_to_nt(struct sockaddr_un *, const void *, uint32_t);
 uint8_t __get_sockaddr_len(const struct sockaddr_storage *);
 void __write_sockaddr(const struct sockaddr_storage *, void *, uint32_t *);
 

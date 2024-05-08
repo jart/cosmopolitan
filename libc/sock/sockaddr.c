@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -59,6 +60,17 @@ void __convert_sockaddr_to_bsd(struct sockaddr_storage *addr) {
   len = __get_sockaddr_len(addr);
   pun->bsd.sa_family = pun->cosmo.sa_family;
   pun->bsd.sa_len = len;
+}
+
+// converts cosmo sockaddr_un abi to nt
+int __convert_sockaddr_un_to_nt(struct sockaddr_un *out_addr, const void *addr,
+                                uint32_t addrsize) {
+  const struct sockaddr_un *sun = addr;
+  if (sun->sun_family == AF_UNIX && addrsize >= sizeof(struct sockaddr_un)) {
+    out_addr->sun_family = AF_UNIX;
+    if (__mkntsunpath(sun->sun_path, out_addr->sun_path) == -1) return -1;
+  }
+  return 0;
 }
 
 // copies sockaddr from internal memory to user's buffer
