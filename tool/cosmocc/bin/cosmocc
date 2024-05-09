@@ -184,11 +184,6 @@ for x; do
     # no support for position independent executables
     # https://github.com/jart/cosmopolitan/issues/1126
     continue
-  elif [ x"$x" = x"-Werror" ] || \
-       [ x"$x" = x"-pedantic-errors" ]; then
-    # this toolchain is intended for building other people's code
-    # elevating warnings into errors, should only be done by devs
-    continue
   elif [ x"$x" = x"-static-libgcc" ] || \
        [ x"$x" = x"-shared-libgcc" ]; then
     # cosmopolitan.a always has llvm compiler runtime static code
