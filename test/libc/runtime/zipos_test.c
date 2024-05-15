@@ -33,9 +33,9 @@
 
 __static_yoink("zipos");
 __static_yoink("libc/testlib/hyperion.txt");
-__static_yoink("inflate");
-__static_yoink("inflateInit2");
-__static_yoink("inflateEnd");
+__static_yoink("_Cz_inflate");
+__static_yoink("_Cz_inflateInit2");
+__static_yoink("_Cz_inflateEnd");
 
 void *Worker(void *arg) {
   int i, fd;

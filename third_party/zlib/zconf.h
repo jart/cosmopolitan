@@ -13,7 +13,6 @@
 
 #define z_const const
 
-#if 0
 #define Z_COSMO_PREFIX_SET
 
 #define Bytef                    _Cz_Bytef
@@ -163,9 +162,6 @@
 #define zlibCompileFlags         _Cz_zlibCompileFlags
 #define zlibVersion              _Cz_zlibVersion
 
-#pragma message "zconf is included, so zlibVersion should be renamed"
-
-#endif
 
 typedef unsigned char Byte;
 typedef unsigned int uInt;   /* 16 bits or more */
