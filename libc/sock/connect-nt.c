@@ -35,10 +35,13 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sock/wsaid.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 #ifdef __x86_64__
 #include "libc/sock/yoink.inc"
+
+__msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 
 struct ConnectArgs {
   const void *addr;
@@ -113,6 +116,8 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
       // return ETIMEDOUT if SO_SNDTIMEO elapsed
       // note that Linux will return EINPROGRESS
       errno = etimedout();
+    } else if (!rc) {
+      __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
     }
     return rc;
   }
@@ -131,7 +136,11 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
     ok = WSAGetOverlappedResult(f->handle, overlap, &dwBytes, false, &dwFlags);
     WSACloseEvent(overlap->hEvent);
     free(overlap);
-    return ok ? 0 : __winsockerr();
+    if (!ok) {
+      return __winsockerr();
+    }
+    __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
+    return 0;
   } else if (WSAGetLastError() == kNtErrorIoPending) {
     f->connect_op = overlap;
     return einprogress();
