@@ -133,12 +133,12 @@ __static_yoink("lua_notice");
 
 #if defined(LUA_USE_POSIX)	/* { */
 
-#define LUA_TMPNAMBUFSIZE	32
+#define LUA_TMPNAMBUFSIZE	128
 
 #define lua_tmpnam(b,e) { \
-        strcpy(b, __get_tmpdir()); \
-        strcat(b, "lua_XXXXXX"); \
-        e = mkstemp(b); \
+        strlcpy(b, __get_tmpdir(), LUA_TMPNAMBUFSIZE); \
+        e = strlcat(b, "lua_XXXXXX", LUA_TMPNAMBUFSIZE) >= LUA_TMPNAMBUFSIZE; \
+        e = e ? -1 : mkstemp(b); \
         if (e != -1) close(e); \
         e = (e == -1); }
 
