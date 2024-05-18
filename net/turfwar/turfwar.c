@@ -1817,7 +1817,6 @@ StartOver:
       CHECK_DB(sqlite3_bind_int64(stmt, 1, v[i].ip));
       CHECK_DB(sqlite3_bind_text(stmt, 2, v[i].name, -1, SQLITE_TRANSIENT));
       CHECK_DB(sqlite3_bind_int64(stmt, 3, v[i].created));
-      CHECK_DB(sqlite3_bind_int64(stmt, 3, v[i].created));
       CHECK_DB((rc = DbStep(stmt)) == SQLITE_DONE ? SQLITE_OK : rc);
       CHECK_DB(sqlite3_reset(stmt));
       ++processed;
