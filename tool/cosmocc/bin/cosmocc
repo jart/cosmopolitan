@@ -15,7 +15,7 @@ $PROG (GCC) $GCC_VERSION
 Copyright (c) 2024 Justine Alexandra Roberts Tunney
 Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
 notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
-our copyright notices. This toolchain is configured to do so default.
+our copyright notices. This toolchain is configured to do so by default.
 Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
 Copyright (C) 2022 Free Software Foundation, Inc.
