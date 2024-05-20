@@ -1,8 +1,10 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:2;tab-width:8;coding:utf-8   -*-│
 │ vi: set noet ft=c ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
+│ $OpenBSD: readpassphrase.c,v 1.26 2016/10/18 12:47:18 millert Exp $          │
+│                                                                              │
 │ Copyright (c) 2000-2002, 2007, 2010                                          │
-│  Todd C. Miller <Todd.Miller@courtesan.com>                                  │
+│   Todd C. Miller <Todd.Miller@courtesan.com>                                 │
 │                                                                              │
 │ Permission to use, copy, modify, and distribute this software for any        │
 │ purpose with or without fee is hereby granted, provided that the above       │
@@ -32,6 +34,11 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/unistd.h"
+
+__notice(readpassphrase_notice, "\
+libbsd readpassphrase (ISC)\n\
+Copyright (c) 2000-2002, 2007, 2010 Todd C. Miller <Todd.Miller@courtesan.com>");
+// clang-format off
 
 #ifndef TCSASOFT
 #define TCSASOFT 0
