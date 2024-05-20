@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/stdio.h"
 #include "libc/str/blake2.h"
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
@@ -25,6 +26,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+
+__static_yoink("libc/testlib/blake2b256_tests.txt");
+__static_yoink("zipos");
 
 uint8_t *EZBLAKE2B256(const char *s, size_t n) {
   static uint8_t digest[BLAKE2B256_DIGEST_LENGTH];
@@ -63,7 +67,27 @@ TEST(BLAKE2B256Test, ABC) {
   EXPECT_BINEQ(
       "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
       HEXBLAKE2B256("00"));
-  /* TODO(jart): do rest */
+}
+
+TEST(BLAKE2B256Test, vectors) {
+  char *line = NULL;
+  size_t cap = 0;
+  ssize_t n;
+  FILE *f = fopen("/zip/libc/testlib/blake2b256_tests.txt", "r");
+  uint8_t *digest = 0;
+  while ((n = getline(&line, &cap, f)) != -1) {
+    if (n < 2 || line[0] == '#')
+      continue;
+    line[n - 1] = 0;
+    if (!strncmp(line, "IN:", 3)) {
+      digest = HEXBLAKE2B256(line + 4);
+    }
+    if (!strncmp(line, "HASH: ", 6)) {
+      EXPECT_BINEQ(line + 6, digest);
+    }
+  }
+  fclose(f);
+  free(line);
 }
 
 BENCH(blake2, bench) {
