@@ -254,7 +254,24 @@ o/$(MODE)/ape:	$(APE_CHECKS)			\
 endif
 
 # these assembly files are safe to build on aarch64
-o/$(MODE)/ape/ape.o: ape/ape.S
+o/$(MODE)/ape/ape.o:				\
+		ape/ape.S			\
+		ape/ape.h			\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		ape/relocations.h		\
+		libc/thread/tls.h		\
+		ape/ape.internal.h		\
+		ape/macros.internal.h		\
+		libc/macho.internal.h		\
+		libc/macros.internal.h		\
+		libc/sysv/consts/prot.h		\
+		libc/nt/pedef.internal.h	\
+		libc/runtime/pc.internal.h	\
+		libc/runtime/e820.internal.h	\
+		libc/runtime/mman.internal.h	\
+		libc/nexgen32e/uart.internal.h	\
+		libc/calls/metalfile.internal.h
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/ape/ape.lds:				\
