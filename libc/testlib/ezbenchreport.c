@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 
@@ -32,7 +33,7 @@ void __testlib_ezbenchreport_n(const char *form, char z, size_t n, double c) {
   char msg[128];
   __warn_if_powersave();
   ksnprintf(msg, sizeof(msg), "%s %c=%d", form, z, n);
-  cn = lrint(c / 3);
+  cn = max(lrint(c / 3), 1);
   if (!n) {
     kprintf("\n");
     kprintf(" *     %-28s", msg);

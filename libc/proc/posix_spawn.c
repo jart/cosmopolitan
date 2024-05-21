@@ -382,9 +382,10 @@ static textwindows errno_t posix_spawn_nt_impl(
     envp = environ;
   if ((fdspec = __describe_fds(fds.p, fds.n, &startinfo, hCreatorProcess,
                                &lpExplicitHandles, &dwExplicitHandleCount))) {
-    rc = ntspawn(dirhand, path, argv, envp, (char *[]){fdspec, maskvar, 0},
-                 dwCreationFlags, lpCurrentDirectory, 0, lpExplicitHandles,
-                 dwExplicitHandleCount, &startinfo, &procinfo);
+    rc = ntspawn(&(struct NtSpawnArgs){
+        dirhand, path, argv, envp, (char *[]){fdspec, maskvar, 0},
+        dwCreationFlags, lpCurrentDirectory, 0, lpExplicitHandles,
+        dwExplicitHandleCount, &startinfo, &procinfo});
   }
   if (rc == -1) {
     err = errno;

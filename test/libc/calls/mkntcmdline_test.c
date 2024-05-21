@@ -27,39 +27,53 @@
 
 char16_t cmdline[32767];
 
+TEST(mkntcmdline, empty) {
+  char16_t buf2[2];
+  EXPECT_EQ(0, mkntcmdline(buf2, (char *[]){0}, 2));
+  EXPECT_STREQ(u"", buf2);
+}
+
+TEST(mkntcmdline, truncation) {
+  char *argv[] = {"foo", NULL};
+  EXPECT_EQ(3, mkntcmdline(0, argv, 0));
+  char16_t buf2[2];
+  EXPECT_EQ(3, mkntcmdline(buf2, argv, 2));
+  EXPECT_STREQ(u"f", buf2);
+}
+
 TEST(mkntcmdline, emptyArgvList_cantBeEmptyOnWindows) {
   char *argv[] = {"foo", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"foo", cmdline);
 }
 
 TEST(mkntcmdline, emptyArgvListWithProg_isEmpty) {
   char *argv[] = {NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"", cmdline);
 }
 
 TEST(mkntcmdline, emptyArg_getsQuoted) {
   char *argv[] = {"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"\"\"", cmdline);
 }
 
 TEST(mkntcmdline, ignoranceIsBliss) {
   char *argv[] = {"echo", "hello", "world", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"echo hello world", cmdline);
 }
 
 TEST(mkntcmdline, spaceInArgument_getQuotesWrappedAround) {
   char *argv[] = {"echo", "hello there", "world", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"echo \"hello there\" world", cmdline);
 }
 
 TEST(mkntcmdline, justSlash) {
   char *argv[] = {"\\", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"\\", cmdline);
 }
 
@@ -69,7 +83,7 @@ TEST(mkntcmdline, testUnicode) {
       gc(strdup("要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非")),
       NULL,
   };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv1, 32767));
   EXPECT_STREQ(u"(╯°□°)╯ \"要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非\"",
                cmdline);
 }
@@ -80,13 +94,13 @@ TEST(mkntcmdline, fixit) {
       "--version",
       NULL,
   };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv1, 32767));
   EXPECT_STREQ(u"\"C:\\Program Files\\doom\\doom.exe\" --version", cmdline);
 }
 
 TEST(mkntcmdline, testWut) {
   char *argv[] = {"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛", "--strace", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv, 32767));
   EXPECT_STREQ(u"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛 --strace", cmdline);
 }
 
@@ -95,5 +109,5 @@ BENCH(mkntcmdline, lotsOfArgs) {
   for (int i = 0; i < 999; ++i) {
     argv[i] = "hello there hello there";
   }
-  EZBENCH2("mkntcmdline", donothing, unassert(!mkntcmdline(cmdline, argv)));
+  EZBENCH2("mkntcmdline", donothing, mkntcmdline(cmdline, argv, 32767));
 }

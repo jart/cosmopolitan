@@ -344,9 +344,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       }
 #endif
       NTTRACE("STARTING SPAWN");
-      int spawnrc = ntspawn(AT_FDCWD, GetProgramExecutableName(), args, environ,
-                            (char *[]){forkvar, 0}, dwCreationFlags, 0, 0, 0, 0,
-                            &startinfo, &procinfo);
+      int spawnrc = ntspawn(&(struct NtSpawnArgs){
+          AT_FDCWD, GetProgramExecutableName(), args, environ,
+          (char *[]){forkvar, 0}, dwCreationFlags, 0, 0, 0, 0, &startinfo,
+          &procinfo});
       if (spawnrc != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
