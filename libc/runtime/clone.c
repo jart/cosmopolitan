@@ -78,7 +78,7 @@
 #define LWP_SUSPENDED                     0x00000080
 
 struct CloneArgs {
-  _Alignas(16) union {
+  alignas(16) union {
     struct {
       int tid;
       int this;

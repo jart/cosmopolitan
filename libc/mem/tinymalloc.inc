@@ -16,6 +16,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/stdalign.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
@@ -29,7 +30,7 @@
 
 #ifndef MODE_DBG /* don't interfere with asan dlmalloc hooking */
 
-_Alignas(TINYMALLOC_MAX_ALIGN) static struct {
+alignas(TINYMALLOC_MAX_ALIGN) static struct {
   char memory[TINYMALLOC_MAX_BYTES];
   unsigned used, last, free;
 } heap;

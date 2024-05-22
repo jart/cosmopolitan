@@ -35,6 +35,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
@@ -47,7 +48,7 @@
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
-_Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
+alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 
 static unsigned long ParseMask(const char *str) {
   int c;

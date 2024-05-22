@@ -39,6 +39,7 @@
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/startupinfoex.h"
 #include "libc/proc/ntspawn.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
@@ -149,7 +150,7 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
   // this code won't call malloc in practice
   bool32 ok;
   void *freeme = 0;
-  _Alignas(16) char memory[128];
+  alignas(16) char memory[128];
   size_t size = sizeof(memory);
   struct NtProcThreadAttributeList *alist = (void *)memory;
   uint32_t items = !!a->opt_hParentProcess + !!a->opt_lpExplicitHandleList;
