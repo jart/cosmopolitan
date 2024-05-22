@@ -30,6 +30,7 @@ const char *(DescribeMapFlags)(char buf[64], int x) {
       {MAP_SHARED, "SHARED"},                    //
       {MAP_FIXED, "FIXED"},                      //
       {MAP_FIXED_NOREPLACE, "FIXED_NOREPLACE"},  //
+      {MAP_HUGETLB, "HUGETLB"},                  //
       {MAP_CONCEAL, "CONCEAL"},                  //
       {MAP_LOCKED, "LOCKED"},                    //
       {MAP_NORESERVE, "NORESERVE"},              //

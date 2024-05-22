@@ -13,6 +13,7 @@ extern const int MAP_FILE;
 extern const int MAP_FIXED;
 extern const int MAP_FIXED_NOREPLACE;
 extern const int MAP_HASSEMAPHORE;
+extern const int MAP_HUGETLB;
 extern const int MAP_INHERIT;
 extern const int MAP_JIT;
 extern const int MAP_LOCKED;

@@ -1641,7 +1641,6 @@ static privileged void AllowMmapExec(struct Filter *f) {
 //
 //   - MAP_LOCKED   (0x02000)
 //   - MAP_NONBLOCK (0x10000)
-//   - MAP_HUGETLB  (0x40000)
 //
 static privileged void AllowMmapNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
@@ -1650,7 +1649,7 @@ static privileged void AllowMmapNoexec(struct Filter *f) {
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~(PROT_READ | PROT_WRITE)),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 4),
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
-      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x52000),
+      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x12000),
       /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),

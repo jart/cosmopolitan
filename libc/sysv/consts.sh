@@ -230,6 +230,7 @@ syscon	mmap	MAP_NORESERVE				0x00004000		0x00004000		0x00000040		0x00000040		0		
 syscon	mmap	MAP_POPULATE				0x00008000		0x00008000		0			0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0x00010000		0			0			0			0			0			0
 syscon	mmap	MAP_SYNC				0x00080000		0x00080000		0			0			0			0			0			0			# perform synchronous page faults for mapping (Linux 4.15+)
+syscon	mmap	MAP_HUGETLB				0x00040000		-1			-1			-1			-1			-1			-1			-1			# make it inherit across execve()
 syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
 syscon	mmap	MAP_HASSEMAPHORE			0			0			0x00000200		0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
 syscon	mmap	MAP_NOSYNC				0			0			0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
