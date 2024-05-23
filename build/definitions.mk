@@ -63,10 +63,6 @@ BACKTRACES =								\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
 
-ifneq ($(ARCH), aarch64)
-BACKTRACES += -fno-schedule-insns2
-endif
-
 SANITIZER =								\
 	-fsanitize=address
 
