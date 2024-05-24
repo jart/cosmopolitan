@@ -85,13 +85,13 @@ void ShowCrashReports(void) {
 #ifdef __x86_64__
   InstallCrashHandler(SIGTRAP, 0);
 #else
-  InstallCrashHandler(SIGTRAP, SA_RESETHAND);
+  InstallCrashHandler(SIGTRAP, 0);
 #endif
-  InstallCrashHandler(SIGFPE, SA_RESETHAND);
-  InstallCrashHandler(SIGILL, SA_RESETHAND);
-  InstallCrashHandler(SIGBUS, SA_RESETHAND);
-  InstallCrashHandler(SIGABRT, SA_RESETHAND);
-  InstallCrashHandler(SIGSEGV, SA_RESETHAND | SA_ONSTACK);
+  InstallCrashHandler(SIGFPE, 0);
+  InstallCrashHandler(SIGILL, 0);
+  InstallCrashHandler(SIGBUS, 0);
+  InstallCrashHandler(SIGABRT, 0);
+  InstallCrashHandler(SIGSEGV, SA_ONSTACK);
 }
 
 IGNORE_LEAKS(ShowCrashReports)

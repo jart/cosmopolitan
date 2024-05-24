@@ -192,6 +192,8 @@ void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
 
 static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                                       ucontext_t *ctx) {
+  if (sig != SIGTRAP && sig != SIGQUIT)
+    sigaddset(&ctx->uc_sigmask, sig);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(8192, 4096);

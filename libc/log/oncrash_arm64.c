@@ -191,6 +191,8 @@ static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
 
 static relegated void __oncrash_impl(int sig, struct siginfo *si,
                                      ucontext_t *ctx) {
+  if (sig != SIGTRAP && sig != SIGQUIT)
+    sigaddset(&ctx->uc_sigmask, sig);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(10000, 4096);
