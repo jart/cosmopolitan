@@ -7,7 +7,7 @@ THIRD_PARTY_PYTHON_ARTIFACTS =						\
 	THIRD_PARTY_PYTHON_STAGE1_A					\
 	THIRD_PARTY_PYTHON_STAGE2_A					\
 	THIRD_PARTY_PYTHON_PYTEST_A					\
-	THIRD_PARTY_PYTHON_PYTHON					\
+	THIRD_PARTY_PYTHON_PYTHON3					\
 	THIRD_PARTY_PYTHON_FREEZE
 
 THIRD_PARTY_PYTHON_BINS =						\
@@ -17,7 +17,7 @@ THIRD_PARTY_PYTHON_BINS =						\
 THIRD_PARTY_PYTHON_COMS =						\
 	o/$(MODE)/third_party/python/Parser/asdl_c			\
 	o/$(MODE)/third_party/python/pystone				\
-	o/$(MODE)/third_party/python/python				\
+	o/$(MODE)/third_party/python/python3				\
 	o/$(MODE)/third_party/python/freeze				\
 	o/$(MODE)/third_party/python/pycomp				\
 	o/$(MODE)/third_party/python/pyobj				\
@@ -29,7 +29,7 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 	$(THIRD_PARTY_PYTHON_STAGE2_A).pkg				\
 	$(THIRD_PARTY_PYTHON_PYTEST_A).pkg				\
 	$(THIRD_PARTY_PYTHON_HDRS:%=o/$(MODE)/%.ok)			\
-	o/$(MODE)/third_party/python/python.pkg				\
+	o/$(MODE)/third_party/python/python3.pkg			\
 	o/$(MODE)/third_party/python/freeze.pkg
 
 # TODO: Deal with aarch64 under qemu not making execve() easy.
@@ -3980,12 +3980,12 @@ THIRD_PARTY_PYTHON_SRCS =						\
 ################################################################################
 # PYTHON
 
-THIRD_PARTY_PYTHON_PYTHON_SRCS = third_party/python/python.c
-THIRD_PARTY_PYTHON_PYTHON_OBJS = o/$(MODE)/third_party/python/python.o
-THIRD_PARTY_PYTHON_PYTHON_COMS = o/$(MODE)/third_party/python/python
-THIRD_PARTY_PYTHON_PYTHON_BINS = $(THIRD_PARTY_PYTHON_PYTHON_COMS) $(THIRD_PARTY_PYTHON_PYTHON_COMS:%=%.dbg)
-THIRD_PARTY_PYTHON_PYTHON_DEPS = $(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS),$($(x))))
-THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS =					\
+THIRD_PARTY_PYTHON_PYTHON3_SRCS = third_party/python/python3.c
+THIRD_PARTY_PYTHON_PYTHON3_OBJS = o/$(MODE)/third_party/python/python3.o
+THIRD_PARTY_PYTHON_PYTHON3_COMS = o/$(MODE)/third_party/python/python3
+THIRD_PARTY_PYTHON_PYTHON3_BINS = $(THIRD_PARTY_PYTHON_PYTHON3_COMS) $(THIRD_PARTY_PYTHON_PYTHON3_COMS:%=%.dbg)
+THIRD_PARTY_PYTHON_PYTHON3_DEPS = $(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_PYTHON3_DIRECTDEPS),$($(x))))
+THIRD_PARTY_PYTHON_PYTHON3_DIRECTDEPS =					\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
@@ -4005,14 +4005,14 @@ THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS =					\
 	THIRD_PARTY_XED							\
 	TOOL_ARGS
 
-o/$(MODE)/third_party/python/python.pkg:				\
-		$(THIRD_PARTY_PYTHON_PYTHON_OBJS)			\
-		$(foreach x,$(THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS),$($(x)_A).pkg)
+o/$(MODE)/third_party/python/python3.pkg:				\
+		$(THIRD_PARTY_PYTHON_PYTHON3_OBJS)			\
+		$(foreach x,$(THIRD_PARTY_PYTHON_PYTHON3_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/python/python.dbg:				\
-		o/$(MODE)/third_party/python/python.pkg			\
-		$(THIRD_PARTY_PYTHON_PYTHON_DEPS)			\
-		$(THIRD_PARTY_PYTHON_PYTHON_OBJS)			\
+o/$(MODE)/third_party/python/python3.dbg:				\
+		o/$(MODE)/third_party/python/python3.pkg		\
+		$(THIRD_PARTY_PYTHON_PYTHON3_DEPS)			\
+		$(THIRD_PARTY_PYTHON_PYTHON3_OBJS)			\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
