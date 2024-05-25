@@ -45,12 +45,8 @@ int test(void) {
     return 6;
   if (!(buf = malloc(SIZE)))
     return 7;
-  if ((rc = fread(buf, SIZE, 1, f)) != 1) {
-    fprintf(stderr, "tell = %zu\n", ftello(f));
-    fprintf(stderr, "rc = %zu\n", rc);
-    perror("fread");
+  if ((rc = fread(buf, SIZE, 1, f)) != 1)
     return 8;
-  }
   if (buf[0] != 'a')
     return 9;
   if (buf[SIZE - 1] != 'z')
