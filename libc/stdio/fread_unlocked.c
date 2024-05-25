@@ -29,16 +29,15 @@
 #include "libc/sysv/errfuns.h"
 
 static ssize_t readvall(int fd, struct iovec *iov, int iovlen) {
-  int olde;
   ssize_t rc;
   size_t got, toto;
   toto = 0;
-  olde = errno;
   do {
     if ((rc = readv(fd, iov, iovlen)) == -1) {
-      if (toto && errno == EINTR) {
-        errno = olde;
-        continue;
+      if (toto) {
+        if (errno == EINTR)
+          continue;
+        return toto;
       }
       return -1;
     }
@@ -135,7 +134,12 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
     iov[1].iov_base = NULL;
     iov[1].iov_len = 0;
   }
-  if ((rc = readvall(f->fd, iov, 2)) == -1) {
+  if (f->bufmode == _IONBF) {
+    rc = readv(f->fd, iov, 2);
+  } else {
+    rc = readvall(f->fd, iov, 2);
+  }
+  if (rc == -1) {
     f->state = errno;
     return 0;
   }
