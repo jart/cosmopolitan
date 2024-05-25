@@ -27,6 +27,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "getopt.h"
 #include "libc/runtime/runtime.h"
 #include "shuffle.h"
+#include "timelog.h"
 
 #include <assert.h>
 #ifdef HAVE_FCNTL_H
@@ -374,6 +375,8 @@ static const char *const usage[] =
     N_("\
   --trace                     Print tracing information.\n"),
     N_("\
+  -T FILE, --time-log=FILE    Log command invocation microseconds to FILE.\n"),
+    N_("\
   -v, --version               Print the version number of make and exit.\n"),
     N_("\
   -w, --print-directory       Print the current directory.\n"),
@@ -471,6 +474,7 @@ static struct command_switch switches[] =
     { 'o', filename, &old_files, 0, 0, 0, 0, 0, 0, "old-file", 0 },
     { 'O', string, &output_sync_option, 1, 1, 0, 0, "target", 0, "output-sync", 0 },
     { 'W', filename, &new_files, 0, 0, 0, 0, 0, 0, "what-if", 0 },
+    { 'T', string, &timelog_path, 0, 0, 0, 0, 0, 0, "timelog", 0 }, // [jart]
 
     /* These are long-style options.  */
     { CHAR_MAX+1, strlist, &db_flags, 1, 1, 0, 0, "basic", 0, "debug", 0 },
@@ -2257,6 +2261,10 @@ main (int argc, char **argv, char **envp)
       check_symlink_flag = 0;
     }
 #endif
+
+  /* [jart] Setup command latency log.  */
+
+  timelog_init ();
 
   /* Set up MAKEFLAGS and MFLAGS again, so they will be right.  */
 

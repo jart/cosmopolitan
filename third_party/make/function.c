@@ -1949,6 +1949,7 @@ func_shell_base (char *o, char **argv, int trim_newlines)
   child.output.out = pipedes[1];
   child.output.err = errfd;
 
+  child.timelog = timelog_begin (command_argv);
   pid = child_execute_job (&child, 1, command_argv);
 
   if (pid < 0)

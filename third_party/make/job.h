@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "output.h"
+#include "timelog.h"
 
 /* Structure describing a running or dead child process.  */
 
@@ -31,6 +32,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.  */
 #define CHILDBASE                                               \
     char *cmd_name;       /* Allocated copy of command run.  */ \
     char **environment;   /* Environment for commands. */       \
+    struct timelog *timelog; /* [jart] the lorde of all time.  */ \
     VMSCHILD                                                    \
     struct output output  /* Output for this child.  */
 
