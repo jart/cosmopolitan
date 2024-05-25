@@ -52,6 +52,9 @@ o/$(MODE)/test/posix/%.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/posix/fread3gb_test.runs:	\
+		private QUOTA += -F5gb -M5gb
+
 .PHONY: o/$(MODE)/test/posix
 o/$(MODE)/test/posix:				\
 		$(TEST_POSIX_BINS)		\

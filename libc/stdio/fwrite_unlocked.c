@@ -27,6 +27,40 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
+static ssize_t writevall(int fd, struct iovec *iov, int iovlen) {
+  int olde;
+  ssize_t rc;
+  size_t got, toto;
+  toto = 0;
+  olde = errno;
+  do {
+    if ((rc = writev(fd, iov, iovlen)) == -1) {
+      if (toto && errno == EINTR) {
+        errno = olde;
+        continue;
+      }
+      return -1;
+    }
+    got = rc;
+    toto += got;
+    for (;;) {
+      if (!iov->iov_len) {
+        --iovlen;
+        ++iov;
+      } else if (got >= iov->iov_len) {
+        got -= iov->iov_len;
+        --iovlen;
+        ++iov;
+      } else {
+        iov->iov_base += got;
+        iov->iov_len -= got;
+        break;
+      }
+    }
+  } while (got && iovlen);
+  return toto;
+}
+
 /**
  * Writes data to stream.
  *
@@ -104,7 +138,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   iov[1].iov_base = (void *)data;
   iov[1].iov_len = n;
   n += f->beg;
-  if (__robust_writev(f->fd, iov, 2) == -1) {
+  if ((rc = writevall(f->fd, iov, 2)) == -1) {
     f->state = errno;
     return 0;
   }
