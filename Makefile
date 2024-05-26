@@ -133,7 +133,7 @@ endif
 
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
-HOSTS ?= pi pi5 studio freebsdarm
+HOSTS ?= pi studio freebsdarm
 else
 ARCH = x86_64
 HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10

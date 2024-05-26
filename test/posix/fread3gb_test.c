@@ -30,10 +30,14 @@ int setup(void) {
     return 2;
   if (pwrite(fd, "a", 1, 0) != 1)
     return 3;
-  if (pwrite(fd, "z", 1, SIZE - 1) != 1)
+  if (pwrite(fd, "b", 1, 0x7fffefff) != 1)
     return 4;
-  if (close(fd))
+  if (pwrite(fd, "c", 1, 0x7ffff000) != 1)
     return 5;
+  if (pwrite(fd, "z", 1, SIZE - 1) != 1)
+    return 6;
+  if (close(fd))
+    return 7;
   return 0;
 }
 
@@ -42,17 +46,21 @@ int test(void) {
   char *buf;
   size_t rc;
   if (!(f = fopen(path, "r")))
-    return 6;
-  if (!(buf = malloc(SIZE)))
-    return 7;
-  if ((rc = fread(buf, SIZE, 1, f)) != 1)
     return 8;
-  if (buf[0] != 'a')
+  if (!(buf = malloc(SIZE)))
     return 9;
-  if (buf[SIZE - 1] != 'z')
+  if ((rc = fread(buf, SIZE, 1, f)) != 1)
     return 10;
-  if (fclose(f))
+  if (buf[0] != 'a')
     return 11;
+  if (buf[0x7fffefff] != 'b')
+    return 12;
+  if (buf[0x7ffff000] != 'c')
+    return 13;
+  if (buf[SIZE - 1] != 'z')
+    return 14;
+  if (fclose(f))
+    return 15;
   return 0;
 }
 

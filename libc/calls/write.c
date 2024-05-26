@@ -27,6 +27,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -39,6 +40,7 @@
  *
  * @param fd is open file descriptor
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
+ * @param size is always saturated to 0x7ffff000 automatically
  * @return [1..size] bytes on success, or -1 w/ errno; noting zero is
  *     impossible unless size was passed as zero to do an error check
  * @raise EBADF if `fd` is negative or not an open file descriptor
@@ -67,6 +69,10 @@
 ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;
   BEGIN_CANCELATION_POINT;
+
+  // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
+  // this is inconsistent with Linux which ignores huge requests
+  size = MIN(size, 0x7ffff000);
 
   if (fd < 0) {
     rc = ebadf();

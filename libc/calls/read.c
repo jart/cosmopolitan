@@ -29,6 +29,7 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -41,7 +42,7 @@
  *
  * @param fd is something open()'d earlier
  * @param buf is copied into, cf. copy_file_range(), sendfile(), etc.
- * @param size in range [1..0x7ffff000] is reasonable
+ * @param size is always saturated to 0x7ffff000 automatically
  * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
  *     exception of size==0, in which case return zero means no error
  * @raise EBADF if `fd` is negative or not an open file descriptor
@@ -66,6 +67,10 @@
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;
   BEGIN_CANCELATION_POINT;
+
+  // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
+  // this is inconsistent with Linux which ignores huge requests
+  size = MIN(size, 0x7ffff000);
 
   if (fd < 0) {
     rc = ebadf();
