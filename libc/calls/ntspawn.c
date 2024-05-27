@@ -177,9 +177,9 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
   if (ok) {
     struct NtStartupInfoEx info = {
         .StartupInfo = *a->lpStartupInfo,
-        .StartupInfo.cb = sizeof(info),
         .lpAttributeList = alist,
     };
+    info.StartupInfo.cb = sizeof(info);
     if (ok) {
       if (CreateProcess(sb->path, sb->cmdline, 0, 0, true,
                         a->dwCreationFlags | kNtCreateUnicodeEnvironment |
