@@ -191,8 +191,6 @@ static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
 
 static relegated void __oncrash_impl(int sig, struct siginfo *si,
                                      ucontext_t *ctx) {
-  if (sig != SIGTRAP && sig != SIGQUIT)
-    sigaddset(&ctx->uc_sigmask, sig);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(10000, 4096);
@@ -396,6 +394,27 @@ relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
   BLOCK_CANCELATION;
   SpinLock(&lock);
   __oncrash_impl(sig, si, arg);
+
+  // unlike amd64, the instruction pointer on arm64 isn't advanced past
+  // the debugger breakpoint instruction automatically. we need this so
+  // execution can resume after __builtin_trap().
+  if (arg && sig == SIGTRAP)
+    ((ucontext_t *)arg)->uc_mcontext.PC += 4;
+
+  // ensure execution doesn't resume for anything but SIGTRAP / SIGQUIT
+  if (arg && sig != SIGTRAP && sig != SIGQUIT) {
+    if (!IsXnu()) {
+      sigaddset(&((ucontext_t *)arg)->uc_sigmask, sig);
+    } else {
+      sigdelset(&((ucontext_t *)arg)->uc_sigmask, sig);
+      struct sigaction sa;
+      sigemptyset(&sa.sa_mask);
+      sa.sa_handler = SIG_DFL;
+      sa.sa_flags = 0;
+      sigaction(sig, &sa, 0);
+    }
+  }
+
   SpinUnlock(&lock);
   ALLOW_CANCELATION;
 }

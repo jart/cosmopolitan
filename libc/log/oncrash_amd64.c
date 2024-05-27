@@ -192,8 +192,6 @@ void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
 
 static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                                       ucontext_t *ctx) {
-  if (sig != SIGTRAP && sig != SIGQUIT)
-    sigaddset(&ctx->uc_sigmask, sig);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(8192, 4096);
@@ -276,6 +274,21 @@ relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
   int err = errno;
   __restore_tty();
   ShowCrashReport(err, sig, si, arg);
+
+  // ensure execution doesn't resume for anything but SIGTRAP / SIGQUIT
+  if (arg && sig != SIGTRAP && sig != SIGQUIT) {
+    if (!IsXnu()) {
+      sigaddset(&((ucontext_t *)arg)->uc_sigmask, sig);
+    } else {
+      sigdelset(&((ucontext_t *)arg)->uc_sigmask, sig);
+      struct sigaction sa;
+      sigemptyset(&sa.sa_mask);
+      sa.sa_handler = SIG_DFL;
+      sa.sa_flags = 0;
+      sigaction(sig, &sa, 0);
+    }
+  }
+
   SpinUnlock(&lock);
   ALLOW_CANCELATION;
 }

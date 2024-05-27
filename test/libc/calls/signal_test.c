@@ -53,7 +53,7 @@ void OnSigTrap(int sig, struct siginfo *si, void *ctx) {
 
 void TrapBench(int n) {
   for (int i = 0; i < n; ++i) {
-    __builtin_trap();
+    DebugBreak();
   }
 }
 
