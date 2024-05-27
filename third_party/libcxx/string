@@ -10,6 +10,9 @@
 #ifndef _LIBCPP_STRING
 #define _LIBCPP_STRING
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized" // [jart]
+
 /*
     string synopsis
 
@@ -4395,5 +4398,7 @@ _LIBCPP_POP_MACROS
 #  include <typeinfo>
 #  include <utility>
 #endif
+
+#pragma GCC diagnostic pop // [jart]
 
 #endif // _LIBCPP_STRING
