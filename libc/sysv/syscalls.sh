@@ -86,7 +86,7 @@ scall	sys_shutdown		0x0860860862086030	0x0d2	globl hidden
 scall	__sys_bind		0x0680680682068031	0x0c8	globl hidden
 scall	sys_listen		0x06a06a06a206a032	0x0c9	globl hidden
 scall	__sys_getsockname	0x0200200202020033	0x0cc	globl hidden
-scall	__sys_getpeername	0x01f01f08d201f034	0x0cd	globl hidden
+scall	__sys_getpeername	0x01f01f01f201f034	0x0cd	globl hidden
 scall	__sys_socketpair	0x0870870872087035	0x0c7	globl hidden
 scall	sys_setsockopt		0x0690690692069036	0x0d0	globl hidden
 scall	sys_getsockopt		0x0760760762076037	0x0d1	globl hidden
