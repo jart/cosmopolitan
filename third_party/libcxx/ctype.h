@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===---------------------------- ctype.h ---------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -29,13 +29,15 @@ int tolower(int c);
 int toupper(int c);
 */
 
-#include "third_party/libcxx/__config"
+#include <__config>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
-#include "libc/isystem/ctype.h"
+#if __has_include_next(<ctype.h>)
+#  include_next <ctype.h>
+#endif
 
 #ifdef __cplusplus
 

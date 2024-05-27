@@ -251,6 +251,7 @@ if [ x"$PROG" != x"${PROG%++}" ]; then
   CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
   CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 fi
 
 CRT_X86_64="$BIN/../x86_64-linux-cosmo/lib/ape.o $BIN/../x86_64-linux-cosmo/lib/crt.o"

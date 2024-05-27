@@ -74,7 +74,7 @@
 #endif
 
 #if __STDC_VERSION__ + 0 < 201112
-#define _Atomic(TYPE) TYPE volatile
+#define _Atomic(t) volatile t *
 #endif
 
 #ifdef __llvm__
@@ -106,8 +106,6 @@ typedef __CHAR32_TYPE__ char32_t;
 #ifndef __COSMOCC__
 #include "libc/stdbool.h"
 #endif
-
-#define _LIBCPP_STDINT_H
 
 typedef int errno_t;
 typedef __SIZE_TYPE__ size_t;

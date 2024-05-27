@@ -362,7 +362,6 @@ include test/libc/fmt/BUILD.mk
 include test/libc/time/BUILD.mk
 include test/libc/proc/BUILD.mk
 include test/libc/stdio/BUILD.mk
-include test/libc/release/BUILD.mk
 include test/libc/BUILD.mk
 include test/net/http/BUILD.mk
 include test/net/https/BUILD.mk
@@ -542,15 +541,6 @@ COSMOPOLITAN_H_ROOT_HDRS =						\
 	libc/integral/normalize.inc					\
 	$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))
 
-o/cosmopolitan.h.txt: Makefile
-	$(file >$@, $(call uniq,$(COSMOPOLITAN_H_ROOT_HDRS)))
-
-o/cosmopolitan.h: o/cosmopolitan.h.txt					\
-		$(wildcard libc/integral/*)				\
-		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
-		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
-	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup @$< >>$@
-
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.dbg		\
@@ -572,7 +562,6 @@ $(SRCS):					\
 
 ifeq ($(ARCH), x86_64)
 TOOLCHAIN_ARTIFACTS =				\
-	o/cosmopolitan.h			\
 	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/libc/crt/crt.o		\
 	o/$(MODE)/ape/ape.elf			\

@@ -144,12 +144,14 @@ DEFAULT_CFLAGS =							\
 	-std=gnu2x
 
 DEFAULT_CXXFLAGS =							\
+	-std=gnu++20							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\
 	-Wno-int-in-bool-context					\
 	-Wno-narrowing							\
-	-Wno-literal-suffix
+	-Wno-literal-suffix						\
+	-isystem third_party/libcxx
 
 DEFAULT_ASFLAGS =							\
 	-W								\
@@ -256,12 +258,12 @@ LD.libs =								\
 	$(LIBS)
 
 COMPILE.c.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(c.flags)
-COMPILE.cxx.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(cxx.flags)
+COMPILE.cxx.flags = $(cc.flags) $(copt.flags) $(cxx.flags) $(cpp.flags)
 COMPILE.i.flags = $(cc.flags) $(copt.flags) $(c.flags)
 COMPILE.ii.flags = $(cc.flags) $(copt.flags) $(cxx.flags)
 LINK.flags = $(DEFAULT_LDFLAGS) $(CONFIG_LDFLAGS) $(LDFLAGS)
 OBJECTIFY.c.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(c.flags)
-OBJECTIFY.cxx.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(cxx.flags)
+OBJECTIFY.cxx.flags = $(cc.flags) $(o.flags) $(S.flags) $(cxx.flags) $(cpp.flags) $(copt.flags)
 OBJECTIFY.s.flags = $(ASONLYFLAGS) $(s.flags)
 OBJECTIFY.S.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags)
 PREPROCESS.flags = -E $(copt.flags) $(cc.flags) $(cpp.flags)

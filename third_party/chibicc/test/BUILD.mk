@@ -26,7 +26,7 @@ THIRD_PARTY_CHIBICC_TEST_COMS =							\
 	$(THIRD_PARTY_CHIBICC_TEST_SRCS_TEST:%_test.c=o/$(MODE)/%_test)
 
 THIRD_PARTY_CHIBICC_TEST_OBJS =							\
-	$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.o)
+	$(THIRD_PARTY_CHIBICC_TEST_SRCS:%.c=o/$(MODE)/%.chibicc.o)
 
 THIRD_PARTY_CHIBICC_TEST_BINS =							\
 	$(THIRD_PARTY_CHIBICC_TEST_COMS)					\
@@ -55,22 +55,24 @@ THIRD_PARTY_CHIBICC_TEST_DEPS :=						\
 
 $(THIRD_PARTY_CHIBICC_TEST_A):							\
 		$(THIRD_PARTY_CHIBICC_TEST_A).pkg				\
-		o/$(MODE)/third_party/chibicc/test/common.o
+		o/$(MODE)/third_party/chibicc/test/common.chibicc.o
 
 $(THIRD_PARTY_CHIBICC_TEST_A).pkg:						\
-		o/$(MODE)/third_party/chibicc/test/common.o			\
+		o/$(MODE)/third_party/chibicc/test/common.chibicc.o		\
 		$(foreach x,$(THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/chibicc/test/%.dbg:					\
 		$(THIRD_PARTY_CHIBICC_TEST_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_TEST_A)					\
-		o/$(MODE)/third_party/chibicc/test/%.o				\
+		o/$(MODE)/third_party/chibicc/test/%.chibicc.o			\
 		$(THIRD_PARTY_CHIBICC_TEST_A).pkg				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/chibicc/test/%.o:						\
+.PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST_OBJS)
+
+o/$(MODE)/third_party/chibicc/test/%.chibicc.o:					\
 		third_party/chibicc/test/%.c					\
 		$(CHIBICC)
 	@$(COMPILE) -wAOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<

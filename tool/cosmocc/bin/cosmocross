@@ -71,6 +71,7 @@ fi
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
   LDLIBS="-lcxx $LDLIBS"
 fi
 

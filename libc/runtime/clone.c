@@ -147,7 +147,7 @@ static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
                         kNtStackSizeParamIsAReservation, &wt->utid))) {
     if (flags & CLONE_SETTLS) {
       struct CosmoTib *tib = tls;
-      tib->tib_syshand = h;
+      atomic_store_explicit(&tib->tib_syshand, h, memory_order_release);
     }
     if (flags & CLONE_PARENT_SETTID) {
       *ptid = wt->tid;
@@ -529,7 +529,7 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
     *ptid = tid;
     if (flags & CLONE_SETTLS) {
       struct CosmoTib *tib = tls;
-      tib[-1].tib_syshand = th;
+      atomic_store_explicit(&tib[-1].tib_syshand, th, memory_order_release);
     }
   }
   unassert(!__syslib->__pthread_attr_destroy(attr));

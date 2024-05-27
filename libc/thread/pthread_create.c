@@ -75,14 +75,13 @@ void _pthread_free(struct PosixThread *pt, bool isfork) {
     unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
   }
   if (!isfork) {
-    if (IsWindows()) {
-      if (pt->tib->tib_syshand) {
-        unassert(CloseHandle(pt->tib->tib_syshand));
-      }
-    } else if (IsXnuSilicon()) {
-      if (pt->tib->tib_syshand) {
-        __syslib->__pthread_join(pt->tib->tib_syshand, 0);
-      }
+    uint64_t syshand =
+        atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
+    if (syshand) {
+      if (IsWindows())
+        unassert(CloseHandle(syshand));
+      else if (IsXnuSilicon())
+        __syslib->__pthread_join(syshand, 0);
     }
   }
   free(pt->pt_tls);

@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===---------------------------- set -------------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -9,18 +9,6 @@
 
 #ifndef _LIBCPP_SET
 #define _LIBCPP_SET
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__tree"
-#include "third_party/libcxx/__node_handle"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 /*
 
@@ -166,10 +154,14 @@ public:
         iterator find(const K& x);
     template<typename K>
         const_iterator find(const K& x) const;  // C++14
+
     template<typename K>
         size_type count(const K& x) const;        // C++14
     size_type      count(const key_type& k) const;
-        bool contains(const key_type& x) const; // C++20
+
+    bool           contains(const key_type& x) const;  // C++20
+    template<class K> bool contains(const K& x) const; // C++20
+
           iterator lower_bound(const key_type& k);
     const_iterator lower_bound(const key_type& k) const;
     template<typename K>
@@ -191,6 +183,25 @@ public:
         pair<const_iterator,const_iterator> equal_range(const K& x) const;  // C++14
 };
 
+template <class InputIterator,
+      class Compare = less<typename iterator_traits<InputIterator>::value_type>,
+      class Allocator = allocator<typename iterator_traits<InputIterator>::value_type>>
+set(InputIterator, InputIterator,
+    Compare = Compare(), Allocator = Allocator())
+  -> set<typename iterator_traits<InputIterator>::value_type, Compare, Allocator>; // C++17
+
+template<class Key, class Compare = less<Key>, class Allocator = allocator<Key>>
+set(initializer_list<Key>, Compare = Compare(), Allocator = Allocator())
+  -> set<Key, Compare, Allocator>; // C++17
+
+template<class InputIterator, class Allocator>
+set(InputIterator, InputIterator, Allocator)
+  -> set<typename iterator_traits<InputIterator>::value_type,
+          less<typename iterator_traits<InputIterator>::value_type>, Allocator>; // C++17
+
+template<class Key, class Allocator>
+set(initializer_list<Key>, Allocator) -> set<Key, less<Key>, Allocator>; // C++17
+
 template <class Key, class Compare, class Allocator>
 bool
 operator==(const set<Key, Compare, Allocator>& x,
@@ -199,27 +210,31 @@ operator==(const set<Key, Compare, Allocator>& x,
 template <class Key, class Compare, class Allocator>
 bool
 operator< (const set<Key, Compare, Allocator>& x,
-           const set<Key, Compare, Allocator>& y);
+           const set<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator!=(const set<Key, Compare, Allocator>& x,
-           const set<Key, Compare, Allocator>& y);
+           const set<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator> (const set<Key, Compare, Allocator>& x,
-           const set<Key, Compare, Allocator>& y);
+           const set<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator>=(const set<Key, Compare, Allocator>& x,
-           const set<Key, Compare, Allocator>& y);
+           const set<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator<=(const set<Key, Compare, Allocator>& x,
-           const set<Key, Compare, Allocator>& y);
+           const set<Key, Compare, Allocator>& y);                                // removed in C++20
+
+template<class Key, class Compare, class Allocator>
+  synth-three-way-result<Key> operator<=>(const set<Key, Compare, Allocator>& x,
+                                          const set<Key, Compare, Allocator>& y); // since C++20
 
 // specialized algorithms:
 template <class Key, class Compare, class Allocator>
@@ -228,7 +243,8 @@ swap(set<Key, Compare, Allocator>& x, set<Key, Compare, Allocator>& y)
     noexcept(noexcept(x.swap(y)));
 
 template <class Key, class Compare, class Allocator, class Predicate>
-  void erase_if(set<Key, Compare, Allocator>& c, Predicate pred);  // C++20
+typename set<Key, Compare, Allocator>::size_type
+erase_if(set<Key, Compare, Allocator>& c, Predicate pred);  // C++20
 
 template <class Key, class Compare = less<Key>,
           class Allocator = allocator<Key>>
@@ -366,10 +382,14 @@ public:
         iterator find(const K& x);
     template<typename K>
         const_iterator find(const K& x) const;  // C++14
+
     template<typename K>
         size_type count(const K& x) const;      // C++14
     size_type      count(const key_type& k) const;
-        bool contains(const key_type& x) const; // C++20
+
+    bool           contains(const key_type& x) const;  // C++20
+    template<class K> bool contains(const K& x) const; // C++20
+
           iterator lower_bound(const key_type& k);
     const_iterator lower_bound(const key_type& k) const;
     template<typename K>
@@ -392,6 +412,25 @@ public:
         pair<const_iterator,const_iterator> equal_range(const K& x) const;  // C++14
 };
 
+template <class InputIterator,
+      class Compare = less<typename iterator_traits<InputIterator>::value_type>,
+      class Allocator = allocator<typename iterator_traits<InputIterator>::value_type>>
+multiset(InputIterator, InputIterator,
+    Compare = Compare(), Allocator = Allocator())
+  -> multiset<typename iterator_traits<InputIterator>::value_type, Compare, Allocator>; // C++17
+
+template<class Key, class Compare = less<Key>, class Allocator = allocator<Key>>
+multiset(initializer_list<Key>, Compare = Compare(), Allocator = Allocator())
+  -> multiset<Key, Compare, Allocator>; // C++17
+
+template<class InputIterator, class Allocator>
+multiset(InputIterator, InputIterator, Allocator)
+  -> multiset<typename iterator_traits<InputIterator>::value_type,
+          less<typename iterator_traits<InputIterator>::value_type>, Allocator>; // C++17
+
+template<class Key, class Allocator>
+multiset(initializer_list<Key>, Allocator) -> multiset<Key, less<Key>, Allocator>; // C++17
+
 template <class Key, class Compare, class Allocator>
 bool
 operator==(const multiset<Key, Compare, Allocator>& x,
@@ -400,27 +439,31 @@ operator==(const multiset<Key, Compare, Allocator>& x,
 template <class Key, class Compare, class Allocator>
 bool
 operator< (const multiset<Key, Compare, Allocator>& x,
-           const multiset<Key, Compare, Allocator>& y);
+           const multiset<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator!=(const multiset<Key, Compare, Allocator>& x,
-           const multiset<Key, Compare, Allocator>& y);
+           const multiset<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator> (const multiset<Key, Compare, Allocator>& x,
-           const multiset<Key, Compare, Allocator>& y);
+           const multiset<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator>=(const multiset<Key, Compare, Allocator>& x,
-           const multiset<Key, Compare, Allocator>& y);
+           const multiset<Key, Compare, Allocator>& y);                                // removed in C++20
 
 template <class Key, class Compare, class Allocator>
 bool
 operator<=(const multiset<Key, Compare, Allocator>& x,
-           const multiset<Key, Compare, Allocator>& y);
+           const multiset<Key, Compare, Allocator>& y);                                // removed in C++20
+
+template<class Key, class Compare, class Allocator>
+  synth-three-way-result<Key> operator<=>(const multiset<Key, Compare, Allocator>& x,
+                                          const multiset<Key, Compare, Allocator>& y); // since C++20
 
 // specialized algorithms:
 template <class Key, class Compare, class Allocator>
@@ -429,11 +472,49 @@ swap(multiset<Key, Compare, Allocator>& x, multiset<Key, Compare, Allocator>& y)
     noexcept(noexcept(x.swap(y)));
 
 template <class Key, class Compare, class Allocator, class Predicate>
-  void erase_if(multiset<Key, Compare, Allocator>& c, Predicate pred);  // C++20
+typename multiset<Key, Compare, Allocator>::size_type
+erase_if(multiset<Key, Compare, Allocator>& c, Predicate pred);  // C++20
 
 }  // std
 
 */
+
+#include <__algorithm/equal.h>
+#include <__algorithm/lexicographical_compare.h>
+#include <__algorithm/lexicographical_compare_three_way.h>
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+#include <__functional/is_transparent.h>
+#include <__functional/operations.h>
+#include <__iterator/erase_if_container.h>
+#include <__iterator/iterator_traits.h>
+#include <__iterator/reverse_iterator.h>
+#include <__memory/allocator.h>
+#include <__memory_resource/polymorphic_allocator.h>
+#include <__node_handle>
+#include <__tree>
+#include <__type_traits/is_allocator.h>
+#include <__utility/forward.h>
+#include <version>
+
+// standard-mandated includes
+
+// [iterator.range]
+#include <__iterator/access.h>
+#include <__iterator/data.h>
+#include <__iterator/empty.h>
+#include <__iterator/reverse_access.h>
+#include <__iterator/size.h>
+
+// [associative.set.syn]
+#include <compare>
+#include <initializer_list>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Key, class _Compare, class _Allocator>
 class multiset;
@@ -446,9 +527,9 @@ public:
     // types:
     typedef _Key                                     key_type;
     typedef key_type                                 value_type;
-    typedef _Compare                                 key_compare;
+    typedef __type_identity_t<_Compare>              key_compare;
     typedef key_compare                              value_compare;
-    typedef typename __identity<_Allocator>::type    allocator_type;
+    typedef __type_identity_t<_Allocator>            allocator_type;
     typedef value_type&                              reference;
     typedef const value_type&                        const_reference;
 
@@ -458,7 +539,10 @@ public:
 private:
     typedef __tree<value_type, value_compare, allocator_type> __base;
     typedef allocator_traits<allocator_type>                  __alloc_traits;
-    typedef typename __base::__node_holder                    __node_holder;
+
+    static_assert(is_same<allocator_type, __rebind_alloc<__alloc_traits, value_type> >::value,
+                  "[allocator.requirements] states that rebinding an allocator to the same type should result in the "
+                  "original allocator");
 
     __base __tree_;
 
@@ -472,7 +556,7 @@ public:
     typedef _VSTD::reverse_iterator<iterator>       reverse_iterator;
     typedef _VSTD::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
     typedef __set_node_handle<typename __base::__node, allocator_type> node_type;
     typedef __insert_return_type<iterator, node_type> insert_return_type;
 #endif
@@ -518,7 +602,7 @@ public:
             insert(__f, __l);
         }
 
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
         template <class _InputIterator>
         _LIBCPP_INLINE_VISIBILITY
         set(_InputIterator __f, _InputIterator __l, const allocator_type& __a)
@@ -544,7 +628,7 @@ public:
     set(set&& __s)
         _NOEXCEPT_(is_nothrow_move_constructible<__base>::value)
         : __tree_(_VSTD::move(__s.__tree_)) {}
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     explicit set(const allocator_type& __a)
@@ -558,7 +642,7 @@ public:
         }
 
 #ifndef _LIBCPP_CXX03_LANG
-    set(set&& __s, const allocator_type& __a);
+    _LIBCPP_HIDE_FROM_ABI set(set&& __s, const allocator_type& __a);
 
     _LIBCPP_INLINE_VISIBILITY
     set(initializer_list<value_type> __il, const value_compare& __comp = value_compare())
@@ -575,7 +659,7 @@ public:
             insert(__il.begin(), __il.end());
         }
 
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     _LIBCPP_INLINE_VISIBILITY
     set(initializer_list<value_type> __il, const allocator_type& __a)
         : set(__il, key_compare(), __a) {}
@@ -595,7 +679,7 @@ public:
             __tree_ = _VSTD::move(__s.__tree_);
             return *this;
         }
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     ~set() {
@@ -650,7 +734,7 @@ public:
         _LIBCPP_INLINE_VISIBILITY
         iterator emplace_hint(const_iterator __p, _Args&&... __args)
             {return __tree_.__emplace_hint_unique(__p, _VSTD::forward<_Args>(__args)...);}
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     pair<iterator,bool> insert(const value_type& __v)
@@ -679,7 +763,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     void insert(initializer_list<value_type> __il)
         {insert(__il.begin(), __il.end());}
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     iterator  erase(const_iterator __p) {return __tree_.erase(__p);}
@@ -692,7 +776,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     void clear() _NOEXCEPT {__tree_.clear();}
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
     _LIBCPP_INLINE_VISIBILITY
     insert_return_type insert(node_type&& __nh)
     {
@@ -769,7 +853,7 @@ public:
     iterator find(const key_type& __k)             {return __tree_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __tree_.find(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
@@ -783,17 +867,21 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     size_type      count(const key_type& __k) const
         {return __tree_.__count_unique(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,size_type>::type
     count(const _K2& __k) const                    {return __tree_.__count_multi(__k);}
 #endif
 
-#if _LIBCPP_STD_VER > 17
+#if _LIBCPP_STD_VER >= 20
     _LIBCPP_INLINE_VISIBILITY
     bool contains(const key_type& __k) const {return find(__k) != end();}
-#endif // _LIBCPP_STD_VER > 17
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Compare, _K2>::value, bool>::type
+    contains(const _K2& __k) const { return find(__k) != end(); }
+#endif // _LIBCPP_STD_VER >= 20
 
     _LIBCPP_INLINE_VISIBILITY
     iterator lower_bound(const key_type& __k)
@@ -801,7 +889,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     const_iterator lower_bound(const key_type& __k) const
         {return __tree_.lower_bound(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
@@ -819,7 +907,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     const_iterator upper_bound(const key_type& __k) const
         {return __tree_.upper_bound(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
@@ -836,7 +924,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator,const_iterator> equal_range(const key_type& __k) const
         {return __tree_.__equal_range_unique(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,pair<iterator,iterator>>::type
@@ -848,30 +936,32 @@ public:
 #endif
 };
 
-#ifndef _LIBCPP_HAS_NO_DEDUCTION_GUIDES
+#if _LIBCPP_STD_VER >= 17
 template<class _InputIterator,
-         class _Compare = less<typename iterator_traits<_InputIterator>::value_type>,
-         class _Allocator = allocator<typename iterator_traits<_InputIterator>::value_type>,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>,
-         class = _EnableIf<!__is_allocator<_Compare>::value, void>>
+         class _Compare = less<__iter_value_type<_InputIterator>>,
+         class _Allocator = allocator<__iter_value_type<_InputIterator>>,
+         class = enable_if_t<__has_input_iterator_category<_InputIterator>::value, void>,
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>,
+         class = enable_if_t<!__is_allocator<_Compare>::value, void>>
 set(_InputIterator, _InputIterator, _Compare = _Compare(), _Allocator = _Allocator())
-  -> set<typename iterator_traits<_InputIterator>::value_type, _Compare, _Allocator>;
+  -> set<__iter_value_type<_InputIterator>, _Compare, _Allocator>;
 
 template<class _Key, class _Compare = less<_Key>,
          class _Allocator = allocator<_Key>,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>,
-         class = _EnableIf<!__is_allocator<_Compare>::value, void>>
+         class = enable_if_t<!__is_allocator<_Compare>::value, void>,
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>>
 set(initializer_list<_Key>, _Compare = _Compare(), _Allocator = _Allocator())
   -> set<_Key, _Compare, _Allocator>;
 
 template<class _InputIterator, class _Allocator,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>>
+         class = enable_if_t<__has_input_iterator_category<_InputIterator>::value, void>,
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>>
 set(_InputIterator, _InputIterator, _Allocator)
-  -> set<typename iterator_traits<_InputIterator>::value_type,
-         less<typename iterator_traits<_InputIterator>::value_type>, _Allocator>;
+  -> set<__iter_value_type<_InputIterator>,
+         less<__iter_value_type<_InputIterator>>, _Allocator>;
 
 template<class _Key, class _Allocator,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>>
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>>
 set(initializer_list<_Key>, _Allocator)
   -> set<_Key, less<_Key>, _Allocator>;
 #endif
@@ -890,7 +980,7 @@ set<_Key, _Compare, _Allocator>::set(set&& __s, const allocator_type& __a)
     }
 }
 
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -900,6 +990,8 @@ operator==(const set<_Key, _Compare, _Allocator>& __x,
 {
     return __x.size() == __y.size() && _VSTD::equal(__x.begin(), __x.end(), __y.begin());
 }
+
+#if _LIBCPP_STD_VER <= 17
 
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -946,6 +1038,17 @@ operator<=(const set<_Key, _Compare, _Allocator>& __x,
     return !(__y < __x);
 }
 
+#else // _LIBCPP_STD_VER <= 17
+
+template <class _Key, class _Allocator>
+_LIBCPP_HIDE_FROM_ABI __synth_three_way_result<_Key>
+operator<=>(const set<_Key, _Allocator>& __x, const set<_Key, _Allocator>& __y) {
+    return std::lexicographical_compare_three_way(
+        __x.begin(), __x.end(), __y.begin(), __y.end(), std::__synth_three_way<_Key, _Key>);
+}
+
+#endif // _LIBCPP_STD_VER <= 17
+
 // specialized algorithms:
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -957,11 +1060,13 @@ swap(set<_Key, _Compare, _Allocator>& __x,
     __x.swap(__y);
 }
 
-#if _LIBCPP_STD_VER > 17
+#if _LIBCPP_STD_VER >= 20
 template <class _Key, class _Compare, class _Allocator, class _Predicate>
 inline _LIBCPP_INLINE_VISIBILITY
-void erase_if(set<_Key, _Compare, _Allocator>& __c, _Predicate __pred)
-{ __libcpp_erase_if_container(__c, __pred); }
+    typename set<_Key, _Compare, _Allocator>::size_type
+    erase_if(set<_Key, _Compare, _Allocator>& __c, _Predicate __pred) {
+  return _VSTD::__libcpp_erase_if_container(__c, __pred);
+}
 #endif
 
 template <class _Key, class _Compare = less<_Key>,
@@ -970,11 +1075,11 @@ class _LIBCPP_TEMPLATE_VIS multiset
 {
 public:
     // types:
-    typedef _Key                                      key_type;
+    typedef _Key                                     key_type;
     typedef key_type                                 value_type;
-    typedef _Compare                                  key_compare;
+    typedef __type_identity_t<_Compare>              key_compare;
     typedef key_compare                              value_compare;
-    typedef typename __identity<_Allocator>::type    allocator_type;
+    typedef __type_identity_t<_Allocator>            allocator_type;
     typedef value_type&                              reference;
     typedef const value_type&                        const_reference;
 
@@ -984,7 +1089,10 @@ public:
 private:
     typedef __tree<value_type, value_compare, allocator_type> __base;
     typedef allocator_traits<allocator_type>                  __alloc_traits;
-    typedef typename __base::__node_holder                    __node_holder;
+
+    static_assert(is_same<allocator_type, __rebind_alloc<__alloc_traits, value_type> >::value,
+                  "[allocator.requirements] states that rebinding an allocator to the same type should result in the "
+                  "original allocator");
 
     __base __tree_;
 
@@ -998,7 +1106,7 @@ public:
     typedef _VSTD::reverse_iterator<iterator>       reverse_iterator;
     typedef _VSTD::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
     typedef __set_node_handle<typename __base::__node, allocator_type> node_type;
 #endif
 
@@ -1035,7 +1143,7 @@ public:
             insert(__f, __l);
         }
 
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
         template <class _InputIterator>
         _LIBCPP_INLINE_VISIBILITY
         multiset(_InputIterator __f, _InputIterator __l, const allocator_type& __a)
@@ -1072,8 +1180,8 @@ public:
         _NOEXCEPT_(is_nothrow_move_constructible<__base>::value)
         : __tree_(_VSTD::move(__s.__tree_)) {}
 
-    multiset(multiset&& __s, const allocator_type& __a);
-#endif  // _LIBCPP_CXX03_LANG
+    _LIBCPP_HIDE_FROM_ABI multiset(multiset&& __s, const allocator_type& __a);
+#endif // _LIBCPP_CXX03_LANG
     _LIBCPP_INLINE_VISIBILITY
     explicit multiset(const allocator_type& __a)
         : __tree_(__a) {}
@@ -1100,7 +1208,7 @@ public:
             insert(__il.begin(), __il.end());
         }
 
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     _LIBCPP_INLINE_VISIBILITY
     multiset(initializer_list<value_type> __il, const allocator_type& __a)
         : multiset(__il, key_compare(), __a) {}
@@ -1120,7 +1228,7 @@ public:
             __tree_ = _VSTD::move(__s.__tree_);
             return *this;
         }
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     ~multiset() {
@@ -1175,7 +1283,7 @@ public:
         _LIBCPP_INLINE_VISIBILITY
         iterator emplace_hint(const_iterator __p, _Args&&... __args)
             {return __tree_.__emplace_hint_multi(__p, _VSTD::forward<_Args>(__args)...);}
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     iterator insert(const value_type& __v)
@@ -1204,7 +1312,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     void insert(initializer_list<value_type> __il)
         {insert(__il.begin(), __il.end());}
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
     _LIBCPP_INLINE_VISIBILITY
     iterator  erase(const_iterator __p) {return __tree_.erase(__p);}
@@ -1216,7 +1324,7 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     void clear() _NOEXCEPT {__tree_.clear();}
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
     _LIBCPP_INLINE_VISIBILITY
     iterator insert(node_type&& __nh)
     {
@@ -1294,31 +1402,35 @@ public:
     iterator find(const key_type& __k)             {return __tree_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __tree_.find(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
     find(const _K2& __k)                           {return __tree_.find(__k);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,const_iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,const_iterator>::type
     find(const _K2& __k) const                     {return __tree_.find(__k);}
 #endif
 
     _LIBCPP_INLINE_VISIBILITY
     size_type      count(const key_type& __k) const
         {return __tree_.__count_multi(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Compare, _K2>::value,size_type>::type
     count(const _K2& __k) const            {return __tree_.__count_multi(__k);}
 #endif
 
-#if _LIBCPP_STD_VER > 17
+#if _LIBCPP_STD_VER >= 20
     _LIBCPP_INLINE_VISIBILITY
     bool contains(const key_type& __k) const {return find(__k) != end();}
-#endif // _LIBCPP_STD_VER > 17
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Compare, _K2>::value, bool>::type
+    contains(const _K2& __k) const { return find(__k) != end(); }
+#endif // _LIBCPP_STD_VER >= 20
 
     _LIBCPP_INLINE_VISIBILITY
     iterator lower_bound(const key_type& __k)
@@ -1326,15 +1438,15 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     const_iterator lower_bound(const key_type& __k) const
             {return __tree_.lower_bound(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
     lower_bound(const _K2& __k)       {return __tree_.lower_bound(__k);}
 
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,const_iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,const_iterator>::type
     lower_bound(const _K2& __k) const {return __tree_.lower_bound(__k);}
 #endif
 
@@ -1344,14 +1456,14 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     const_iterator upper_bound(const key_type& __k) const
             {return __tree_.upper_bound(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,iterator>::type
     upper_bound(const _K2& __k)       {return __tree_.upper_bound(__k);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,const_iterator>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,const_iterator>::type
     upper_bound(const _K2& __k) const {return __tree_.upper_bound(__k);}
 #endif
 
@@ -1361,42 +1473,44 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator,const_iterator> equal_range(const key_type& __k) const
             {return __tree_.__equal_range_multi(__k);}
-#if _LIBCPP_STD_VER > 11
+#if _LIBCPP_STD_VER >= 14
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,pair<iterator,iterator>>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,pair<iterator,iterator>>::type
     equal_range(const _K2& __k)       {return __tree_.__equal_range_multi(__k);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
-    typename _VSTD::enable_if<_VSTD::__is_transparent<_Compare, _K2>::value,pair<const_iterator,const_iterator>>::type
+    typename enable_if<__is_transparent<_Compare, _K2>::value,pair<const_iterator,const_iterator>>::type
     equal_range(const _K2& __k) const {return __tree_.__equal_range_multi(__k);}
 #endif
 };
 
-#ifndef _LIBCPP_HAS_NO_DEDUCTION_GUIDES
+#if _LIBCPP_STD_VER >= 17
 template<class _InputIterator,
-         class _Compare = less<typename iterator_traits<_InputIterator>::value_type>,
-         class _Allocator = allocator<typename iterator_traits<_InputIterator>::value_type>,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>,
-         class = _EnableIf<!__is_allocator<_Compare>::value, void>>
+         class _Compare = less<__iter_value_type<_InputIterator>>,
+         class _Allocator = allocator<__iter_value_type<_InputIterator>>,
+         class = enable_if_t<__has_input_iterator_category<_InputIterator>::value, void>,
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>,
+         class = enable_if_t<!__is_allocator<_Compare>::value, void>>
 multiset(_InputIterator, _InputIterator, _Compare = _Compare(), _Allocator = _Allocator())
-  -> multiset<typename iterator_traits<_InputIterator>::value_type, _Compare, _Allocator>;
+  -> multiset<__iter_value_type<_InputIterator>, _Compare, _Allocator>;
 
 template<class _Key, class _Compare = less<_Key>,
          class _Allocator = allocator<_Key>,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>,
-         class = _EnableIf<!__is_allocator<_Compare>::value, void>>
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>,
+         class = enable_if_t<!__is_allocator<_Compare>::value, void>>
 multiset(initializer_list<_Key>, _Compare = _Compare(), _Allocator = _Allocator())
   -> multiset<_Key, _Compare, _Allocator>;
 
 template<class _InputIterator, class _Allocator,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>>
+         class = enable_if_t<__has_input_iterator_category<_InputIterator>::value, void>,
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>>
 multiset(_InputIterator, _InputIterator, _Allocator)
-  -> multiset<typename iterator_traits<_InputIterator>::value_type,
-         less<typename iterator_traits<_InputIterator>::value_type>, _Allocator>;
+  -> multiset<__iter_value_type<_InputIterator>,
+         less<__iter_value_type<_InputIterator>>, _Allocator>;
 
 template<class _Key, class _Allocator,
-         class = _EnableIf<__is_allocator<_Allocator>::value, void>>
+         class = enable_if_t<__is_allocator<_Allocator>::value, void>>
 multiset(initializer_list<_Key>, _Allocator)
   -> multiset<_Key, less<_Key>, _Allocator>;
 #endif
@@ -1415,7 +1529,7 @@ multiset<_Key, _Compare, _Allocator>::multiset(multiset&& __s, const allocator_t
     }
 }
 
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -1425,6 +1539,8 @@ operator==(const multiset<_Key, _Compare, _Allocator>& __x,
 {
     return __x.size() == __y.size() && _VSTD::equal(__x.begin(), __x.end(), __y.begin());
 }
+
+#if _LIBCPP_STD_VER <= 17
 
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -1471,6 +1587,17 @@ operator<=(const multiset<_Key, _Compare, _Allocator>& __x,
     return !(__y < __x);
 }
 
+#else // _LIBCPP_STD_VER <= 17
+
+template <class _Key, class _Allocator>
+_LIBCPP_HIDE_FROM_ABI __synth_three_way_result<_Key>
+operator<=>(const multiset<_Key, _Allocator>& __x, const multiset<_Key, _Allocator>& __y) {
+    return std::lexicographical_compare_three_way(
+        __x.begin(), __x.end(), __y.begin(), __y.end(), std::__synth_three_way<_Key, _Key>);
+}
+
+#endif // _LIBCPP_STD_VER <= 17
+
 template <class _Key, class _Compare, class _Allocator>
 inline _LIBCPP_INLINE_VISIBILITY
 void
@@ -1481,13 +1608,35 @@ swap(multiset<_Key, _Compare, _Allocator>& __x,
     __x.swap(__y);
 }
 
-#if _LIBCPP_STD_VER > 17
+#if _LIBCPP_STD_VER >= 20
 template <class _Key, class _Compare, class _Allocator, class _Predicate>
 inline _LIBCPP_INLINE_VISIBILITY
-void erase_if(multiset<_Key, _Compare, _Allocator>& __c, _Predicate __pred)
-{ __libcpp_erase_if_container(__c, __pred); }
+    typename multiset<_Key, _Compare, _Allocator>::size_type
+    erase_if(multiset<_Key, _Compare, _Allocator>& __c, _Predicate __pred) {
+  return _VSTD::__libcpp_erase_if_container(__c, __pred);
+}
 #endif
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_SET
+#if _LIBCPP_STD_VER >= 17
+_LIBCPP_BEGIN_NAMESPACE_STD
+namespace pmr {
+template <class _KeyT, class _CompareT = std::less<_KeyT>>
+using set = std::set<_KeyT, _CompareT, polymorphic_allocator<_KeyT>>;
+
+template <class _KeyT, class _CompareT = std::less<_KeyT>>
+using multiset = std::multiset<_KeyT, _CompareT, polymorphic_allocator<_KeyT>>;
+} // namespace pmr
+_LIBCPP_END_NAMESPACE_STD
+#endif
+
+#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 20
+#  include <concepts>
+#  include <cstdlib>
+#  include <functional>
+#  include <iterator>
+#  include <type_traits>
+#endif
+
+#endif // _LIBCPP_SET

@@ -11,5 +11,8 @@ char *gcvt(double, int, char *) libcesque;
 void setkey(const char *) libcesque;
 #endif
 
+void quick_exit(int) wontreturn;
+int at_quick_exit(void (*)(void));
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STDLIB_H_ */

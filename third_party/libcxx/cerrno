@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===-------------------------- cerrno ------------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -9,9 +9,6 @@
 
 #ifndef _LIBCPP_CERRNO
 #define _LIBCPP_CERRNO
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/errno.h"
 
 /*
     cerrno synopsis
@@ -25,8 +22,21 @@ Macros:
 
 */
 
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+
+#include <errno.h>
+
+#ifndef _LIBCPP_ERRNO_H
+#   error <cerrno> tried including <errno.h> but didn't find libc++'s <errno.h> header. \
+          This usually means that your header search paths are not configured properly. \
+          The header search paths should contain the C++ Standard Library headers before \
+          any C Standard Library, and you are probably using compiler flags that make that \
+          not be the case.
 #endif
 
-#endif  // _LIBCPP_CERRNO
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+#endif // _LIBCPP_CERRNO

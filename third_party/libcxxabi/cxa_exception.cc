@@ -17,7 +17,7 @@
 #include "third_party/libcxxabi/cxa_exception.h"
 #include "third_party/libcxxabi/cxa_handlers.h"
 #include "third_party/libcxxabi/fallback_malloc.h"
-#include "third_party/libcxx/include/atomic_support.hh" // from libc++
+#include "third_party/libcxx/src/include/atomic_support.h" // from libc++
 
 #if __has_feature(address_sanitizer)
 #include <sanitizer/asan_interface.h>

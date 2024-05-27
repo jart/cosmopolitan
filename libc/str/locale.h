@@ -75,7 +75,7 @@ size_t strftime_l(char *, size_t, char const *, struct tm const *, locale_t);
 size_t strxfrm_l(char *, const char *, size_t, locale_t) libcesque;
 size_t wcsxfrm_l(wchar_t *, const wchar_t *, size_t, locale_t) libcesque;
 unsigned long long strtoull_l(const char *, char **, int, locale_t) libcesque;
-unsigned long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
+long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
 void freelocale(locale_t) libcesque;
 wint_t towlower_l(wint_t, locale_t) libcesque;
 wint_t towupper_l(wint_t, locale_t) libcesque;

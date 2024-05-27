@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#pragma GCC diagnostic ignored "-Wvolatile" // wut
+
 #include "kmp.h"
 #include "kmp_affinity.h"
 #include "kmp_atomic.h"
