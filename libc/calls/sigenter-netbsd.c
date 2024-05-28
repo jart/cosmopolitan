@@ -43,7 +43,7 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
   CheckLargeStackAllocation(&uc, sizeof(uc));
 #pragma GCC pop_options
   int rva, flags;
-  struct siginfo si2;
+  siginfo_t si2;
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
     flags = __sighandflags[sig];

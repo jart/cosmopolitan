@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 typedef void (*sighandler_t)(int);
-typedef void (*sigaction_f)(int, struct siginfo *, void *);
+typedef void (*sigaction_f)(int, siginfo_t *, void *);
 
 struct sigaction {
   union {

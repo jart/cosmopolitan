@@ -225,11 +225,11 @@ static void OnExit(void) {
   tcsetattr(out, TCSANOW, &oldterm);
 }
 
-static void OnSigInt(int sig, struct siginfo *sa, void *uc) {
+static void OnSigInt(int sig, siginfo_t *sa, void *uc) {
   action |= INTERRUPTED;
 }
 
-static void OnSigWinch(int sig, struct siginfo *sa, void *uc) {
+static void OnSigWinch(int sig, siginfo_t *sa, void *uc) {
   action |= RESIZED;
 }
 

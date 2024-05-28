@@ -81,7 +81,7 @@ void PromisedLand(void *arg) {
   pthread_exit(arg);
 }
 
-void Teleporter(int sig, struct siginfo *si, void *ctx) {
+void Teleporter(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
   sigaddset(&uc->uc_sigmask, SIGUSR1);
   uc->uc_mcontext.PC = (uintptr_t)PromisedLand;
@@ -177,7 +177,7 @@ TEST(sigaction, testPingPongParentChildWithSigint) {
 
 volatile int trapeax;
 
-void OnTrap(int sig, struct siginfo *si, void *vctx) {
+void OnTrap(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   trapeax = ctx->uc_mcontext.rax;
@@ -203,7 +203,7 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
   ctx->uc_mcontext.rip += xedd.length;
 }
 
-void OnFpe(int sig, struct siginfo *si, void *vctx) {
+void OnFpe(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   SkipOverFaultingInstruction(ctx);
@@ -286,7 +286,7 @@ TEST(sigaction, enosys_returnsErrnoRatherThanSigsysByDefault) {
 
 sig_atomic_t gotusr1;
 
-void OnSigMask(int sig, struct siginfo *si, void *ctx) {
+void OnSigMask(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
   sigaddset(&uc->uc_sigmask, sig);
   gotusr1 = true;
@@ -329,7 +329,7 @@ TEST(sig_ign, discardsPendingSignalsEvenIfBlocked) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldmask, 0));
 }
 
-void AutoMask(int sig, struct siginfo *si, void *ctx) {
+void AutoMask(int sig, siginfo_t *si, void *ctx) {
   sigset_t ss;
   ucontext_t *uc = ctx;
   sigprocmask(SIG_SETMASK, 0, &ss);
@@ -347,7 +347,7 @@ TEST(sigaction, signalBeingDeliveredGetsAutoMasked) {
   EXPECT_FALSE(sigismember(&ss, SIGUSR2));  // original mask
 }
 
-void NoDefer(int sig, struct siginfo *si, void *ctx) {
+void NoDefer(int sig, siginfo_t *si, void *ctx) {
   sigset_t ss;
   ucontext_t *uc = ctx;
   sigprocmask(SIG_SETMASK, 0, &ss);

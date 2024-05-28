@@ -189,8 +189,7 @@ static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
   return buf;
 }
 
-static relegated void __oncrash_impl(int sig, struct siginfo *si,
-                                     ucontext_t *ctx) {
+static relegated void __oncrash_impl(int sig, siginfo_t *si, ucontext_t *ctx) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(10000, 4096);
@@ -389,7 +388,7 @@ static inline void SpinUnlock(atomic_uint *lock) {
   atomic_store_explicit(lock, 0, memory_order_release);
 }
 
-relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
+relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
   static atomic_uint lock;
   BLOCK_CANCELATION;
   SpinLock(&lock);

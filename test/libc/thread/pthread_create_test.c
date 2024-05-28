@@ -29,7 +29,6 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -48,7 +47,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
-void OnUsr1(int sig, struct siginfo *si, void *vctx) {
+void OnUsr1(int sig, siginfo_t *si, void *vctx) {
 }
 
 void SetUp(void) {

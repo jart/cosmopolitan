@@ -421,7 +421,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  *       ctx->uc_mcontext.rip += xedd.length;
  *     }
  *
- *     void OnCrash(int sig, struct siginfo *si, void *vctx) {
+ *     void OnCrash(int sig, siginfo_t *si, void *vctx) {
  *       struct ucontext *ctx = vctx;
  *       SkipOverFaultingInstruction(ctx);
  *       ContinueOnCrash();  // reinstall here in case *rip faults

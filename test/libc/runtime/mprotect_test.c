@@ -73,13 +73,13 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
 #endif
 }
 
-void OnSigSegv(int sig, struct siginfo *si, void *vctx) {
+void OnSigSegv(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   gotsegv = true;
   SkipOverFaultingInstruction(ctx);
 }
 
-void OnSigBus(int sig, struct siginfo *si, void *vctx) {
+void OnSigBus(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   gotbusted = true;
   SkipOverFaultingInstruction(ctx);

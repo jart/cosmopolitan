@@ -96,7 +96,7 @@ LaunchPythonModule(const char *name)
 #if USE_COSMO_CRASH
 void
 ShowCrashReportHook(int err, int fd, int sig,
-                    struct siginfo *si, ucontext_t *ctx)
+                    siginfo_t *si, ucontext_t *ctx)
 {
     PyObject *str;
     PyFrameObject *frame;

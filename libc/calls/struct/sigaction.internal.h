@@ -60,11 +60,11 @@ union metasigaction {
   struct sigaction_xnu_out xnu_out;
 };
 
-void __sigenter_xnu(int, struct siginfo *, void *);
-void __sigenter_wsl(int, struct siginfo *, void *);
-void __sigenter_netbsd(int, struct siginfo *, void *);
-void __sigenter_freebsd(int, struct siginfo *, void *);
-void __sigenter_openbsd(int, struct siginfo *, void *);
+void __sigenter_xnu(int, siginfo_t *, void *);
+void __sigenter_wsl(int, siginfo_t *, void *);
+void __sigenter_netbsd(int, siginfo_t *, void *);
+void __sigenter_freebsd(int, siginfo_t *, void *);
+void __sigenter_openbsd(int, siginfo_t *, void *);
 
 const char *DescribeSigaction(char[256], int, const struct sigaction *);
 #define DescribeSigaction(rc, sa) DescribeSigaction(alloca(256), rc, sa)

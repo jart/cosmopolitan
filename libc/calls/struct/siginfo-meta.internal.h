@@ -8,14 +8,14 @@
 COSMOPOLITAN_C_START_
 
 union siginfo_meta {
-  struct siginfo linux;
+  siginfo_t linux;
   struct siginfo_xnu xnu;
   struct siginfo_freebsd freebsd;
   struct siginfo_openbsd openbsd;
   struct siginfo_netbsd netbsd;
 };
 
-void __siginfo2cosmo(struct siginfo *, const union siginfo_meta *);
+void __siginfo2cosmo(siginfo_t *, const union siginfo_meta *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGINFO_META_INTERNAL_H_ */

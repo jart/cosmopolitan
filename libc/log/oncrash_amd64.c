@@ -188,9 +188,9 @@ relegated static char *ShowSseRegisters(char *p, ucontext_t *ctx) {
   return p;
 }
 
-void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
+void ShowCrashReportHook(int, int, int, siginfo_t *, ucontext_t *);
 
-static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
+static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
                                       ucontext_t *ctx) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
@@ -267,7 +267,7 @@ static inline void SpinUnlock(atomic_uint *lock) {
   atomic_store_explicit(lock, 0, memory_order_release);
 }
 
-relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
+relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
   static atomic_uint lock;
   BLOCK_CANCELATION;
   SpinLock(&lock);
