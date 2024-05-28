@@ -29,6 +29,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -129,6 +130,23 @@ wontreturn void pthread_exit(void *rc) {
       _weaken(__cxa_finalize)(NULL);
     }
   }
+
+#ifndef MODE_DBG
+  // free tls freelist
+  //
+  //   1. set lengths to -1 so free() thinks it's full
+  //   2. free globally by giving mallocs back to free
+  //
+  short freelen[32];
+  static_assert(sizeof(freelen) == sizeof(tib->tib_freelen), "");
+  memcpy(freelen, tib->tib_freelen, sizeof(freelen));
+  memset(tib->tib_freelen, -1, sizeof(freelen));
+  for (int i = 0; i < 32; ++i) {
+    if (freelen[i] > 0) {
+      free(tib->tib_freemem[i]);
+    }
+  }
+#endif
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);

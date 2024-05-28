@@ -23,6 +23,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
+#include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
 
 #define FOOTERS 0
@@ -584,7 +585,30 @@ static void* tmalloc_small(mstate m, size_t nb) {
 
 #if !ONLY_MSPACES
 
+#define FREEBIE_COUNT 32
+#define FREEBIE_MAXSIZE 2048
+
 void* dlmalloc(size_t bytes) {
+
+#if FREEBIE_COUNT && !defined(MODE_DBG)
+  /* Allocate from thread-local freelist. */
+  if (__threaded && bytes && bytes <= FREEBIE_MAXSIZE) {
+    unsigned need = bytes;
+    unsigned best_index = FREEBIE_COUNT;
+    unsigned best_delta = FREEBIE_MAXSIZE + 1;
+    struct CosmoTib *tib = __get_tls();
+    for (int i = 0; i < FREEBIE_COUNT; ++i) {
+      unsigned d = tib->tib_freelen[i] - need;
+      best_index = d < best_delta ? i : best_index;
+      best_delta = d < best_delta ? d : best_delta;
+    }
+    if (best_index < FREEBIE_COUNT) {
+      tib->tib_freelen[best_index] = 0;
+      return tib->tib_freemem[best_index];
+    }
+  }
+#endif
+
   /*
      Basic algorithm:
      If a small request (< 256 bytes minus per-chunk overhead):
@@ -733,7 +757,6 @@ void dlfree(void* mem) {
      free chunks, if they exist, and then place in a bin.  Intermixed
      with special cases for top, dv, mmapped chunks, and usage errors.
   */
-
   if (mem != 0) {
     mchunkptr p  = mem2chunk(mem);
 #if FOOTERS
@@ -745,6 +768,28 @@ void dlfree(void* mem) {
 #else /* FOOTERS */
 #define fm gm
 #endif /* FOOTERS */
+
+#if FREEBIE_COUNT && !defined(MODE_DBG)
+    /* Free small allocations locally. */
+    if (__threaded) {
+      struct CosmoTib *tib = __get_tls();
+      for (int i = 0; i < FREEBIE_COUNT; ++i) {
+        if (!tib->tib_freelen[i]) {
+          if (is_inuse(p)) {
+            size_t len = chunksize(p) - overhead_for(p);
+            if (len && len < FREEBIE_MAXSIZE) {
+              tib->tib_freelen[i] = len;
+              tib->tib_freemem[i] = mem;
+              return;
+            }
+          }
+          break;
+        }
+      }
+    }
+#endif
+
+    /* Otherwise free memory globally. */
     if (!PREACTION(fm)) {
       check_inuse_chunk(fm, p);
       if (RTCHECK(ok_address(fm, p) && ok_inuse(p))) {

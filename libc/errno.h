@@ -29,7 +29,7 @@ COSMOPOLITAN_C_START_
 #define errno                                      \
   (*__extension__({                                \
     errno_t *__ep;                                 \
-    __asm__("sub\t%0,x28,#192-0x3c" : "=r"(__ep)); \
+    __asm__("sub\t%0,x28,#512-0x3c" : "=r"(__ep)); \
     __ep;                                          \
   }))
 #else
