@@ -33,6 +33,7 @@
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/x86.h"
 #include "libc/limits.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/color.internal.h"
@@ -1054,134 +1055,11 @@ int main(int argc, char *argv[]) {
 
 #ifdef __x86_64__
     } else if (!strcmp(argv[i], "-march=native")) {
-      const struct X86ProcessorModel *model;
-      if (X86_HAVE(XOP))
-        AddArg("-mxop");
-      if (X86_HAVE(SSE4A))
-        AddArg("-msse4a");
-      if (X86_HAVE(SSE3))
-        AddArg("-msse3");
-      if (X86_HAVE(SSSE3))
-        AddArg("-mssse3");
-      if (X86_HAVE(SSE4_1))
-        AddArg("-msse4.1");
-      if (X86_HAVE(SSE4_2))
-        AddArg("-msse4.2");
-      if (X86_HAVE(AVX))
-        AddArg("-mavx");
-      if (X86_HAVE(AVX2)) {
-        AddArg("-mavx2");
-        if (isgcc) {
-          AddArg("-msse2avx");
-          AddArg("-Wa,-msse2avx");
-        }
-      }
-      if (X86_HAVE(AVX512F))
-        AddArg("-mavx512f");
-      if (X86_HAVE(AVX512PF))
-        AddArg("-mavx512pf");
-      if (X86_HAVE(AVX512ER))
-        AddArg("-mavx512er");
-      if (X86_HAVE(AVX512CD))
-        AddArg("-mavx512cd");
-      if (X86_HAVE(AVX512VL))
-        AddArg("-mavx512vl");
-      if (X86_HAVE(AVX512BW))
-        AddArg("-mavx512bw");
-      if (X86_HAVE(AVX512DQ))
-        AddArg("-mavx512dq");
-      if (X86_HAVE(AVX512IFMA))
-        AddArg("-mavx512ifma");
-      if (X86_HAVE(AVX512VBMI))
-        AddArg("-mavx512vbmi");
-      if (X86_HAVE(SHA))
-        AddArg("-msha");
-      if (X86_HAVE(AES))
-        AddArg("-maes");
-      if (X86_HAVE(VAES))
-        AddArg("-mvaes");
-      if (X86_HAVE(PCLMUL))
-        AddArg("-mpclmul");
-      if (X86_HAVE(FSGSBASE))
-        AddArg("-mfsgsbase");
-      if (X86_HAVE(F16C))
-        AddArg("-mf16c");
-      if (X86_HAVE(FMA))
-        AddArg("-mfma");
-      if (X86_HAVE(POPCNT))
-        AddArg("-mpopcnt");
-      if (X86_HAVE(BMI))
-        AddArg("-mbmi");
-      if (X86_HAVE(BMI2))
-        AddArg("-mbmi2");
-      if (X86_HAVE(ADX))
-        AddArg("-madx");
-      if (X86_HAVE(FXSR))
-        AddArg("-mfxsr");
-      if ((model = getx86processormodel(kX86ProcessorModelKey))) {
-        switch (model->march) {
-          case X86_MARCH_CORE2:
-            AddArg("-march=core2");
-            break;
-          case X86_MARCH_NEHALEM:
-            AddArg("-march=nehalem");
-            break;
-          case X86_MARCH_WESTMERE:
-            AddArg("-march=westmere");
-            break;
-          case X86_MARCH_SANDYBRIDGE:
-            AddArg("-march=sandybridge");
-            break;
-          case X86_MARCH_IVYBRIDGE:
-            AddArg("-march=ivybridge");
-            break;
-          case X86_MARCH_HASWELL:
-            AddArg("-march=haswell");
-            break;
-          case X86_MARCH_BROADWELL:
-            AddArg("-march=broadwell");
-            break;
-          case X86_MARCH_SKYLAKE:
-          case X86_MARCH_KABYLAKE:
-            AddArg("-march=skylake");
-            break;
-          case X86_MARCH_CANNONLAKE:
-            AddArg("-march=cannonlake");
-            break;
-          case X86_MARCH_ICELAKE:
-            if (model->grade >= X86_GRADE_SERVER) {
-              AddArg("-march=icelake-server");
-            } else {
-              AddArg("-march=icelake-client");
-            }
-            break;
-          case X86_MARCH_TIGERLAKE:
-            AddArg("-march=tigerlake");
-            break;
-          case X86_MARCH_BONNELL:
-          case X86_MARCH_SALTWELL:
-            AddArg("-march=bonnell");
-            break;
-          case X86_MARCH_SILVERMONT:
-          case X86_MARCH_AIRMONT:
-            AddArg("-march=silvermont");
-            break;
-          case X86_MARCH_GOLDMONT:
-            AddArg("-march=goldmont");
-            break;
-          case X86_MARCH_GOLDMONTPLUS:
-            AddArg("-march=goldmont-plus");
-            break;
-          case X86_MARCH_TREMONT:
-            AddArg("-march=tremont");
-            break;
-          case X86_MARCH_KNIGHTSLANDING:
-            AddArg("-march=knl");
-            break;
-          case X86_MARCH_KNIGHTSMILL:
-            AddArg("-march=knm");
-            break;
-        }
+      const char *march;
+      if ((march = __cpu_march(__cpu_model.__cpu_subtype))) {
+        char *buf = malloc(7 + strlen(march) + 1);
+        stpcpy(stpcpy(buf, "-march="), march);
+        AddArg(buf);
       }
 #endif /* __x86_64__ */
 

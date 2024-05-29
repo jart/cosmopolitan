@@ -17,8 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/nexgen32e/x86info.h"
+#include "libc/intrin/x86.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/getopt/getopt.internal.h"
 
@@ -37,8 +36,8 @@
  */
 
 #define VERSION                       \
-  "-march=native flag printer v0.1\n" \
-  "copyright 2023 justine alexandra roberts tunney\n"
+  "-march=native flag printer v0.2\n" \
+  "copyright 2024 justine alexandra roberts tunney\n"
 
 #define USAGE                    \
   "usage: march-native [-hvc]\n" \
@@ -75,135 +74,9 @@ static void Puts(const char *s) {
 int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
 #ifdef __x86_64__
-  struct X86ProcessorModel *model;
-  if (X86_HAVE(XOP))
-    Puts("-mxop");
-  if (X86_HAVE(SSE4A))
-    Puts("-msse4a");
-  if (X86_HAVE(SSE3))
-    Puts("-msse3");
-  if (X86_HAVE(SSSE3))
-    Puts("-mssse3");
-  if (X86_HAVE(SSE4_1))
-    Puts("-msse4.1");
-  if (X86_HAVE(SSE4_2))
-    Puts("-msse4.2");
-  if (X86_HAVE(AVX))
-    Puts("-mavx");
-  if (X86_HAVE(AVX2)) {
-    Puts("-mavx2");
-    if (!isclang) {
-      Puts("-msse2avx");
-      Puts("-Wa,-msse2avx");
-    }
-  }
-  if (X86_HAVE(AVX512F))
-    Puts("-mavx512f");
-  if (X86_HAVE(AVX512PF))
-    Puts("-mavx512pf");
-  if (X86_HAVE(AVX512ER))
-    Puts("-mavx512er");
-  if (X86_HAVE(AVX512CD))
-    Puts("-mavx512cd");
-  if (X86_HAVE(AVX512VL))
-    Puts("-mavx512vl");
-  if (X86_HAVE(AVX512BW))
-    Puts("-mavx512bw");
-  if (X86_HAVE(AVX512DQ))
-    Puts("-mavx512dq");
-  if (X86_HAVE(AVX512IFMA))
-    Puts("-mavx512ifma");
-  if (X86_HAVE(AVX512VBMI))
-    Puts("-mavx512vbmi");
-  if (X86_HAVE(SHA))
-    Puts("-msha");
-  if (X86_HAVE(AES))
-    Puts("-maes");
-  if (X86_HAVE(VAES))
-    Puts("-mvaes");
-  if (X86_HAVE(PCLMUL))
-    Puts("-mpclmul");
-  if (X86_HAVE(FSGSBASE))
-    Puts("-mfsgsbase");
-  if (X86_HAVE(F16C))
-    Puts("-mf16c");
-  if (X86_HAVE(FMA))
-    Puts("-mfma");
-  if (X86_HAVE(POPCNT))
-    Puts("-mpopcnt");
-  if (X86_HAVE(BMI))
-    Puts("-mbmi");
-  if (X86_HAVE(BMI2))
-    Puts("-mbmi2");
-  if (X86_HAVE(ADX))
-    Puts("-madx");
-  if (X86_HAVE(FXSR))
-    Puts("-mfxsr");
-  if ((model = (void *)getx86processormodel(kX86ProcessorModelKey))) {
-    switch (model->march) {
-      case X86_MARCH_CORE2:
-        Puts("-march=core2");
-        break;
-      case X86_MARCH_NEHALEM:
-        Puts("-march=nehalem");
-        break;
-      case X86_MARCH_WESTMERE:
-        Puts("-march=westmere");
-        break;
-      case X86_MARCH_SANDYBRIDGE:
-        Puts("-march=sandybridge");
-        break;
-      case X86_MARCH_IVYBRIDGE:
-        Puts("-march=ivybridge");
-        break;
-      case X86_MARCH_HASWELL:
-        Puts("-march=haswell");
-        break;
-      case X86_MARCH_BROADWELL:
-        Puts("-march=broadwell");
-        break;
-      case X86_MARCH_SKYLAKE:
-      case X86_MARCH_KABYLAKE:
-        Puts("-march=skylake");
-        break;
-      case X86_MARCH_CANNONLAKE:
-        Puts("-march=cannonlake");
-        break;
-      case X86_MARCH_ICELAKE:
-        if (model->grade >= X86_GRADE_SERVER) {
-          Puts("-march=icelake-server");
-        } else {
-          Puts("-march=icelake-client");
-        }
-        break;
-      case X86_MARCH_TIGERLAKE:
-        Puts("-march=tigerlake");
-        break;
-      case X86_MARCH_BONNELL:
-      case X86_MARCH_SALTWELL:
-        Puts("-march=bonnell");
-        break;
-      case X86_MARCH_SILVERMONT:
-      case X86_MARCH_AIRMONT:
-        Puts("-march=silvermont");
-        break;
-      case X86_MARCH_GOLDMONT:
-        Puts("-march=goldmont");
-        break;
-      case X86_MARCH_GOLDMONTPLUS:
-        Puts("-march=goldmont-plus");
-        break;
-      case X86_MARCH_TREMONT:
-        Puts("-march=tremont");
-        break;
-      case X86_MARCH_KNIGHTSLANDING:
-        Puts("-march=knl");
-        break;
-      case X86_MARCH_KNIGHTSMILL:
-        Puts("-march=knm");
-        break;
-    }
-  }
+  const char *march;
+  if ((march = __cpu_march(__cpu_model.__cpu_subtype)))
+    tinyprint(1, "-march=", march, "\n", NULL);
 #elif defined(__aarch64__)
   // TODO(jart): How can we determine CPU features on AARCH64?
 #else
