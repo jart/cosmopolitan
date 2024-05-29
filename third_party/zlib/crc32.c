@@ -780,6 +780,7 @@ uint32_t ZEXPORT crc32_z(crc, buf_, len)
     }
 
 #endif
+#if defined(__x86_64__)
 #if defined(CRC32_SIMD_AVX512_PCLMUL)
     if (x86_cpu_enable_avx512 && len >= Z_CRC32_AVX512_MINIMUM_LENGTH) {
         /* crc32 64-byte chunks */
@@ -792,7 +793,8 @@ uint32_t ZEXPORT crc32_z(crc, buf_, len)
         /* Fall into the default crc32 for the remaining data. */
         buf += chunk_size;
     }
-#elif defined(CRC32_SIMD_SSE42_PCLMUL)
+#endif
+#if defined(CRC32_SIMD_SSE42_PCLMUL)
     if (x86_cpu_enable_simd && len >= Z_CRC32_SSE42_MINIMUM_LENGTH) {
         /* crc32 16-byte chunks */
         z_size_t chunk_size = len & ~Z_CRC32_SSE42_CHUNKSIZE_MASK;
@@ -804,6 +806,7 @@ uint32_t ZEXPORT crc32_z(crc, buf_, len)
         /* Fall into the default crc32 for the remaining data. */
         buf += chunk_size;
     }
+#endif
 #elif defined(CRC32_ARMV8_CRC32)
     if (arm_cpu_enable_crc32) {
 #if defined(__aarch64__)
