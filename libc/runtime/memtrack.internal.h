@@ -3,7 +3,6 @@
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"

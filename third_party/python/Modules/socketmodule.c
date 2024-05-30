@@ -9,8 +9,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nt/enum/version.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -7129,9 +7127,9 @@ PyInit__socket(void)
     if (TCP_USER_TIMEOUT) PyModule_AddIntMacro(m, TCP_USER_TIMEOUT);
     if (TCP_SAVE_SYN) PyModule_AddIntMacro(m, TCP_SAVE_SYN);
     if (TCP_SAVED_SYN) PyModule_AddIntMacro(m, TCP_SAVED_SYN);
-    if (TCP_KEEPCNT && (!IsWindows() || IsAtLeastWindows10()))
+    if (TCP_KEEPCNT)
         PyModule_AddIntMacro(m, TCP_KEEPCNT);
-    if (TCP_FASTOPEN && (!IsWindows() || IsAtLeastWindows10()))
+    if (TCP_FASTOPEN)
         PyModule_AddIntMacro(m, TCP_FASTOPEN);
     if (TCP_FASTOPEN_CONNECT)
         PyModule_AddIntMacro(m, TCP_FASTOPEN_CONNECT);

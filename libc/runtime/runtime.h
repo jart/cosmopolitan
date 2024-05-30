@@ -120,7 +120,6 @@ void __jit_begin(void);
 void __jit_end(void);
 void __clear_cache(void *, void *);
 /* portability */
-int NtGetVersion(void) pureconst;
 bool32 IsGenuineBlink(void);
 bool32 IsCygwin(void);
 const char *GetCpuidOs(void);

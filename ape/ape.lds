@@ -715,7 +715,6 @@ ape_idataz = LINK_WINDOWS ? RVA(ape_idata_iat) : 0;
 ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0;
 ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0;
 ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0;
-v_ntversion = LINK_WINDOWS ? 6 : 1;
 v_ntdllchar = LINK_WINDOWS ? 288 : 0;
 v_ntsubversion = LINK_WINDOWS ? 6 : 5;
 v_ntsubsystem = (LINK_WINDOWS

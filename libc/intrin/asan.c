@@ -39,7 +39,6 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nt/enum/version.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -1500,10 +1499,6 @@ void __asan_init(int argc, char **argv, char **envp, unsigned long *auxv) {
   static bool once;
   if (!_cmpxchg(&once, false, true))
     return;
-  if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
-    __write_str("error: asan binaries require windows10\r\n");
-    _Exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
-  }
   if (_weaken(hook_malloc) || _weaken(hook_calloc) || _weaken(hook_realloc) ||
       _weaken(hook_realloc_in_place) || _weaken(hook_free) ||
       _weaken(hook_malloc_usable_size)) {

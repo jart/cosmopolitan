@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/framebuffervirtualscreeninfo.h"
 #include "libc/dce.h"
-#include "libc/nt/enum/version.h"
 #include "libc/nt/system.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
@@ -72,9 +71,7 @@ int reboot(int howto) {
       } else {
         howto |= kNtShutdownForceSelf;
         howto |= kNtShutdownForceOthers;
-        if (NtGetVersion() >= kNtVersionWindows8) {
-          howto |= kNtShutdownHybrid;
-        }
+        howto |= kNtShutdownHybrid;
         if (immediately) {
           ok = !!InitiateShutdown(0, 0, 0, howto | kNtShutdownGraceOverride, 0);
         } else {

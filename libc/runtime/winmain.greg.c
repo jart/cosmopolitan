@@ -34,7 +34,6 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -159,9 +158,10 @@ static bool32 HasEnvironmentVariable(const char16_t *name) {
 static abi wontreturn void WinInit(const char16_t *cmdline) {
   __oldstack = (intptr_t)__builtin_frame_address(0);
 
+  __imp_SetConsoleOutputCP(kNtCpUtf8);
+
   // make console into utf-8 ansi/xterm style tty
-  if (NtGetPeb()->OSMajorVersion >= 10 &&
-      (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
+  if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
     __imp_SetConsoleCP(kNtCpUtf8);
     __imp_SetConsoleOutputCP(kNtCpUtf8);
     for (int i = 0; i <= 2; ++i) {

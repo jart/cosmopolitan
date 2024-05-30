@@ -1036,7 +1036,7 @@ ape_pe:	.ascin	"PE",4
 	.quad	ape_pe_base		// ImageBase
 	.long	ape_pe_sectionalignment	// SectionAlignment
 	.long	ape_pe_filealignment	// FileAlignment
-	.short	v_ntversion		// MajorOperatingSystemVersion
+	.short	10			// MajorOperatingSystemVersion
 	.short	0			// MinorOperatingSystemVersion
 	.short	0			// MajorImageVersion
 	.short	0			// MinorImageVersion

@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -97,8 +96,6 @@ void StreamServer(atomic_bool *ready) {
 
 TEST(unix, stream) {
   int ws;
-  if (IsWindows() && !IsAtLeastWindows10())
-    return;
   atomic_bool *ready = _mapshared(1);
   // TODO(jart): move this line down when kFdProcess is gone
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
