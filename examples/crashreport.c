@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
@@ -26,6 +27,13 @@
  *     o//examples/crashreport.com
  */
 
+int Divide(int x, int y) {
+  volatile int z = 0;  // force creation of stack frame
+  return x / y + z;
+}
+
+int (*pDivide)(int, int) = Divide;
+
 dontubsan int main(int argc, char *argv[]) {
   kprintf("----------------\n");
   kprintf(" THIS IS A TEST \n");
@@ -34,12 +42,7 @@ dontubsan int main(int argc, char *argv[]) {
 
   ShowCrashReports();
 
-  volatile double a = 0;
-  volatile double b = 23;
-  volatile double c = exp(b) / a;
-  (void)c;
-
-  volatile int x = 0;
-  volatile int y = 1 / x;
-  return y;
+  pDivide(1, 0);
+  pDivide(2, 0);
+  pDivide(3, 0);
 }

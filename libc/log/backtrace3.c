@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/iscall.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
@@ -76,6 +77,8 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
         --gi;
       } while ((addr = garbage->p[gi].ret) == (intptr_t)_weaken(__gc));
     }
+    if (!kisdangerous((const unsigned char *)addr))
+      addr -= __is_call((const unsigned char *)addr);
 #endif
     if (addr) {
       if ((symbol = __get_symbol(st, addr)) != -1) {

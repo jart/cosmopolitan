@@ -162,7 +162,7 @@ for x; do
     # tail calls — may opt not to create an entry in this list. As a
     # result, stack traces are always meaningful, even without debug
     # information."
-    x="-momit-leaf-frame-pointer -foptimize-sibling-calls"
+    x="-momit-leaf-frame-pointer -foptimize-sibling-calls -fschedule-insns2"
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-S" ] ||
        [ x"$x" = x"-pie" ] ||
@@ -241,8 +241,12 @@ CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unw
 LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
+# these features screw with backtraces so avoid them
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+if [ x"$OPT" != x"-O3" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
 CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"

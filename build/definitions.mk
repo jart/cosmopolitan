@@ -60,6 +60,7 @@ TMPSAFE = $(TMPDIR)/
 endif
 
 BACKTRACES =								\
+	-fno-schedule-insns2						\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
 

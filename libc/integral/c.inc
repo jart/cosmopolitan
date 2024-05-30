@@ -539,16 +539,13 @@ typedef struct {
 #ifdef __x86_64__
 #define notpossible          \
   do {                       \
-    __asm__("nop\n\t"        \
-            "ud2\n\t"        \
-            "nop");          \
+    __asm__("ud2");          \
     __builtin_unreachable(); \
   } while (0)
 #elif defined(__aarch64__)
 #define notpossible          \
   do {                       \
-    __asm__("udf\t#0\n\t"    \
-            "nop");          \
+    __asm__("udf\t#0");      \
     __builtin_unreachable(); \
   } while (0)
 #else

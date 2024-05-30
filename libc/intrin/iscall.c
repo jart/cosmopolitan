@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,67 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/iscall.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nexgen32e/stackframe.h"
 
-#define N 160
-
-static bool IsDangerous(const void *ptr) {
-  if (_weaken(kisdangerous))
-    return _weaken(kisdangerous)(ptr);
-  return false;
-}
-
-static char *FormatHex(char *p, unsigned long x) {
-  int k = x ? (__builtin_clzl(x) ^ 63) + 1 : 1;
-  k = (k + 3) & -4;
-  while (k > 0)
-    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
-  *p = '\0';
-  return p;
-}
-
-dontinstrument const char *(DescribeBacktrace)(char buf[N],
-                                               const struct StackFrame *fr) {
-  char *p = buf;
-  char *pe = p + N;
-  bool gotsome = false;
-  while (fr) {
-    if (IsDangerous(fr)) {
-      if (p + 1 + 1 + 1 < pe) {
-        if (gotsome)
-          *p++ = ' ';
-        *p = '!';
-        if (p + 16 + 1 < pe) {
-          *p++ = ' ';
-          p = FormatHex(p, (long)fr);
-        }
-      }
-      break;
-    }
-    if (p + 16 + 1 < pe) {
-      unsigned char *ip = (unsigned char *)fr->addr;
-#ifdef __x86_64__
-      // x86 advances the progrem counter before an instruction
-      // begins executing. return addresses in backtraces shall
-      // point to code after the call, which means addr2line is
-      // going to print unrelated code unless we fixup the addr
-      if (!IsDangerous(ip))
-        ip -= __is_call(ip);
-#endif
-      if (gotsome)
-        *p++ = ' ';
-      else
-        gotsome = true;
-      p = FormatHex(p, (long)ip);
-    } else {
-      break;
-    }
-    fr = fr->next;
-  }
-  *p = '\0';
-  return buf;
+// returns true if `p` is preceded by x86 call instruction
+// this is actually impossible to do but we'll do our best
+dontinstrument int __is_call(const unsigned char *p) {
+  if (p[-5] == 0xe8)
+    return 5;  // call Jvds
+  if (p[-2] == 0xff && (p[-1] & 070) == 020)
+    return 2;  // call %reg
+  if (p[-4] == 0xff && (p[-3] & 070) == 020)
+    return 4;  // call disp8(%reg,%reg)
+  if (p[-3] == 0xff && (p[-2] & 070) == 020)
+    return 3;  // call disp8(%reg)
+  if (p[-7] == 0xff && (p[-6] & 070) == 020)
+    return 7;  // call disp32(%reg,%reg)
+  if (p[-6] == 0xff && (p[-5] & 070) == 020)
+    return 6;  // call disp32(%reg)
+  return 0;
 }

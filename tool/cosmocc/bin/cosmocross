@@ -200,6 +200,9 @@ if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
    [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
+if [ x"$OPT" != x"-O3" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
+fi
 
 if [ $INTENT = cpp ]; then
   set -- "$CC" $PLATFORM $CPPFLAGS "$@"
