@@ -15,7 +15,7 @@
 #define _LIBCPP_SRC_INCLUDE_TO_CHARS_FLOATING_POINT_H
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wattributes"
+#pragma GCC diagnostic ignored "-Wattributes"
 
 // Avoid formatting to keep the changes with the original code minimal.
 // clang-format off

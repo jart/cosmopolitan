@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
@@ -40,6 +41,11 @@ __static_yoink("musl_libc_notice");
 #define SYMLOOP_MAX 40
 
 // clang-format off
+
+static inline int IsAlpha(int c)
+{
+	return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
 
 static size_t GetSlashLen(const char *s)
 {
@@ -93,6 +99,33 @@ char *realpath(const char *filename, char *resolved)
 		einval();
 		return 0;
 	}
+
+	/* Normalize windows paths before proceeding. */
+	if (IsWindows()) {
+		int c, i = 0;
+
+		/* Turn backslash into slash. */
+		while ((c = *filename++)) {
+			if (i == PATH_MAX - 1)
+				goto toolong;
+			if (c == '\\')
+				c = '/';
+			output[i++] = c;
+		}
+		output[i] = 0;
+
+		/* Turn paths like "C:" into "/C"
+		 * Turn paths like "C:/..." into "/C/..." */
+		if (IsAlpha(output[0]) && output[1] == ':' &&
+		    (!output[2] || output[2] == '/')) {
+			output[1] = output[0];
+			output[0] = '/';
+		}
+
+		filename = output;
+	}
+
+	/* Copy the path and handle ZipOS. */
 	l = strnlen(filename, sizeof stack);
 	if (!l) {
 		enoent();
@@ -124,8 +157,7 @@ restart:
 			continue;
 		}
 
-		z = (char *)min((intptr_t)strchrnul(stack+p, '/'),
-				(intptr_t)strchrnul(stack+p, '\\'));
+		z = strchrnul(stack+p, '/');
 		l0 = l = z-(stack+p);
 
 		if (!l && !check_dir) break;
