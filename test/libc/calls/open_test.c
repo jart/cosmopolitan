@@ -356,18 +356,18 @@ TEST(open, readOnlyCreatMode) {
   ASSERT_EQ(0100500, st.st_mode);
   if (getuid()) {
     ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
-    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT, 0666));
   } else {
     // root is invulnerable to eacces
     ASSERT_SYS(0, 3, open("x", O_RDWR));
     ASSERT_SYS(0, 0, close(3));
-    ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT, 0666));
     ASSERT_SYS(0, 0, close(3));
     SPAWN(fork);
     setuid(1000);
     setgid(1000);
     ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
-    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT, 0666));
     EXITS(0);
   }
 }
