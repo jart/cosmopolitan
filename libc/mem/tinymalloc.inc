@@ -32,7 +32,7 @@
 
 alignas(TINYMALLOC_MAX_ALIGN) static struct {
   char memory[TINYMALLOC_MAX_BYTES];
-  unsigned used, last, free;
+  size_t used, last, free;
 } heap;
 
 static inline bool isheap(char *mem) {
@@ -41,12 +41,12 @@ static inline bool isheap(char *mem) {
 
 void free(void *ptr) {
   char *mem;
-  unsigned base;
+  size_t base;
   if (ptr) {
     mem = (char *)ptr;
     unassert(isheap(mem));
     base = mem - heap.memory;
-    *(unsigned *)mem = heap.free;
+    *(size_t *)mem = heap.free;
     heap.free = base;
   }
 }
@@ -54,33 +54,34 @@ void free(void *ptr) {
 size_t malloc_usable_size(void *ptr) {
   char *mem = (char *)ptr;
   unassert(isheap(mem));
-  return ((unsigned *)mem)[-1];
+  return ((size_t *)mem)[-1];
 }
 
 void *memalign(size_t align, size_t need) {
   char *res;
-  unsigned next, next2, base, toto, *link, *link2;
+  size_t next, next2, base, toto, *link, *link2;
 
   // normalize arguments
   while (align & (align - 1))
     ++align;
-  if (need < sizeof(unsigned))
-    need = sizeof(unsigned);
-  if (align < sizeof(unsigned))
-    align = sizeof(unsigned);
+  if (need < sizeof(size_t))
+    need = sizeof(size_t);
+  if (align < sizeof(size_t))
+    align = sizeof(size_t);
   if (align > TINYMALLOC_MAX_ALIGN)
     goto InvalidArgument;
-  if (ckd_add(&need, need, sizeof(unsigned) - 1))
+  // TODO(jart): refactor append*() to not need size_t*2 granularity
+  if (ckd_add(&need, need, sizeof(size_t) * 2 - 1))
     goto OutOfMemory;
-  need &= -sizeof(unsigned);
+  need &= -sizeof(size_t);
 
   // allocate from free list
   next = heap.free;
   link = &heap.free;
   while (next) {
-    next2 = *(unsigned *)(heap.memory + next);
-    link2 = (unsigned *)(heap.memory + next);
-    if (need <= ((unsigned *)(heap.memory + next))[-1]) {
+    next2 = *(size_t *)(heap.memory + next);
+    link2 = (size_t *)(heap.memory + next);
+    if (need <= ((size_t *)(heap.memory + next))[-1]) {
       *link = next2;
       return (void *)(heap.memory + next);
     }
@@ -90,7 +91,7 @@ void *memalign(size_t align, size_t need) {
 
   // allocate new static memory
   base = heap.used;
-  base += sizeof(unsigned);
+  base += sizeof(size_t);
   base += align - 1;
   base &= -align;
   if (ckd_add(&toto, base, need))
@@ -98,7 +99,7 @@ void *memalign(size_t align, size_t need) {
   if (toto > TINYMALLOC_MAX_BYTES)
     goto OutOfMemory;
   res = heap.memory + base;
-  ((unsigned *)res)[-1] = need;
+  ((size_t *)res)[-1] = need;
   heap.used = toto;
   heap.last = base;
   return res;
@@ -118,7 +119,7 @@ void *malloc(size_t need) {
 
 void *calloc(size_t count, size_t size) {
   char *res;
-  unsigned need, used;
+  size_t need, used;
   if (ckd_mul(&need, count, size))
     need = -1;
   used = heap.used;
@@ -130,27 +131,27 @@ void *calloc(size_t count, size_t size) {
 
 void *realloc(void *ptr, size_t need) {
   char *res, *mem;
-  unsigned base, have, toto;
+  size_t base, have, toto;
   if (!ptr) {
     res = (char *)malloc(need);
   } else {
     mem = (char *)ptr;
     unassert(isheap(mem));
-    have = ((unsigned *)mem)[-1];
+    have = ((size_t *)mem)[-1];
     base = mem - heap.memory;
     if (need < have) {
       res = mem;
     } else if (base == heap.last) {
-      if (need < sizeof(unsigned))
-        need = sizeof(unsigned);
-      if (ckd_add(&need, need, sizeof(unsigned) - 1))
+      if (need < sizeof(size_t))
+        need = sizeof(size_t);
+      if (ckd_add(&need, need, sizeof(size_t) - 1))
         goto OutOfMemory;
-      need &= -sizeof(unsigned);
+      need &= -sizeof(size_t);
       if (ckd_add(&toto, base, need))
         goto OutOfMemory;
       if (toto > TINYMALLOC_MAX_BYTES)
         goto OutOfMemory;
-      ((unsigned *)mem)[-1] = need;
+      ((size_t *)mem)[-1] = need;
       heap.used = toto;
       res = mem;
     } else if ((res = (char *)malloc(need))) {

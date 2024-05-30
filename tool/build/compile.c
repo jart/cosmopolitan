@@ -213,18 +213,20 @@ char *g_tmpout;
 const char *g_tmpout_original;
 
 const char *const kSafeEnv[] = {
-    "ADDR2LINE",   // needed by GetAddr2linePath
-    "HOME",        // needed by ~/.runit.psk
-    "HOMEDRIVE",   // needed by ~/.runit.psk
-    "HOMEPATH",    // needed by ~/.runit.psk
-    "MAKEFLAGS",   // needed by IsRunningUnderMake
-    "MODE",        // needed by test scripts
-    "PATH",        // needed by clang
-    "PWD",         // just seems plain needed
-    "STRACE",      // useful for troubleshooting
-    "TERM",        // needed to detect colors
-    "TMPDIR",      // needed by compiler
-    "SYSTEMROOT",  // needed by socket()
+    "ADDR2LINE",    // needed by GetAddr2linePath
+    "BUILDLOG",     // used by cosmocc
+    "HOME",         // needed by ~/.runit.psk
+    "HOMEDRIVE",    // needed by ~/.runit.psk
+    "HOMEPATH",     // needed by ~/.runit.psk
+    "KPRINTF_LOG",  // used by internals
+    "MAKEFLAGS",    // needed by IsRunningUnderMake
+    "MODE",         // needed by test scripts
+    "PATH",         // needed by clang
+    "PWD",          // just seems plain needed
+    "STRACE",       // useful for troubleshooting
+    "SYSTEMROOT",   // needed by socket()
+    "TERM",         // needed to detect colors
+    "TMPDIR",       // needed by compiler
 };
 
 #include "libc/mem/tinymalloc.inc"
