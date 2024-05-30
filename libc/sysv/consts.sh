@@ -512,6 +512,8 @@ syscon	compat	SA_ONESHOT				0x80000000		0x80000000		4			4			4			4			4			0x800000
 #	The New Technology NT is polyfilled as Linux.
 #	Unsupported values are encoded as 0x80000000.
 #
+#	NOTE: Some of these Windows constants are duplicated in sigcrashsig.c
+#
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	sicode	SI_USER					0			0			0x010001		0x010001		0x010001		0			0			0			# sent by kill(2); openbsd defines si_code<=0 as originating from user
 syscon	sicode	SI_QUEUE				-1			-1			0x010002		0x010002		0x010002		-2			-1			-1			# sent by sigqueue(2)

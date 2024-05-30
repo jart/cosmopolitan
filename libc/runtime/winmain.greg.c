@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
@@ -34,6 +35,7 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/signals.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -49,6 +51,7 @@
 #define abi __msabi textwindows dontinstrument
 
 // clang-format off
+__msabi extern typeof(AddVectoredExceptionHandler) *const __imp_AddVectoredExceptionHandler;
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
@@ -153,6 +156,11 @@ static bool32 HasEnvironmentVariable(const char16_t *name) {
   return __imp_GetEnvironmentVariableW(name, buf, ARRAYLEN(buf));
 }
 
+static abi unsigned OnWinCrash(struct NtExceptionPointers *ep) {
+  int code, sig = __sig_crash_sig(ep, &code);
+  TerminateThisProcess(sig);
+}
+
 // main function of windows init process
 // i.e. first process spawned that isn't forked
 static abi wontreturn void WinInit(const char16_t *cmdline) {
@@ -179,6 +187,9 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
       }
     }
   }
+
+  // so crash signals can be reported to cosmopolitan bash
+  __imp_AddVectoredExceptionHandler(true, (void *)OnWinCrash);
 
   // allocate memory for stack and argument block
   _mmi.p = _mmi.s;
