@@ -31,7 +31,8 @@ int AttachDebugger(intptr_t);
       while ((Rc = __inline_wait4(Pid, NULL, WNOHANG, NULL)) == 0) { \
         if (g_gdbsync) {                                             \
           g_gdbsync = 0;                                             \
-          if (Rc > 0) Pid = 0;                                       \
+          if (Rc > 0)                                                \
+            Pid = 0;                                                 \
           break;                                                     \
         } else {                                                     \
           sched_yield();                                             \

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/core.h"
 #include "dsp/core/illumination.h"
+#include "dsp/core/core.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
 #include "libc/testlib/ezbench.h"

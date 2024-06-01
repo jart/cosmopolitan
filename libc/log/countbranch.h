@@ -36,7 +36,8 @@ COSMOPOLITAN_C_START_
         : "=r"(Info));                                          \
     Cond = (x);                                                 \
     ++Info->total;                                              \
-    if (Cond) ++Info->taken;                                    \
+    if (Cond)                                                   \
+      ++Info->taken;                                            \
     Cond;                                                       \
   })
 

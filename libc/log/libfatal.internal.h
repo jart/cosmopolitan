@@ -5,13 +5,15 @@ COSMOPOLITAN_C_START_
 
 forceinline unsigned long __strlen(const char *s) {
   unsigned long n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
 forceinline int __strcmp(const char *l, const char *r) {
   size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return (l[i] & 255) - (r[i] & 255);
 }
 
@@ -86,12 +88,14 @@ forceinline char *__uintcpy(char p[hasatleast 21], uint64_t x) {
 }
 
 forceinline char *__intcpy(char p[hasatleast 21], int64_t x) {
-  if (x < 0) *p++ = '-', x = -(uint64_t)x;
+  if (x < 0)
+    *p++ = '-', x = -(uint64_t)x;
   return __uintcpy(p, x);
 }
 
 forceinline char *__fixcpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
-  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
 }
@@ -114,11 +118,15 @@ forceinline char *__strstr(const char *haystack, const char *needle) {
   size_t i;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 }
@@ -128,35 +136,44 @@ forceinline char16_t *__strstr16(const char16_t *haystack,
   size_t i;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 }
 
 forceinline const char *__strchr(const char *s, unsigned char c) {
   for (;; ++s) {
-    if ((*s & 255) == c) return s;
-    if (!*s) return 0;
+    if ((*s & 255) == c)
+      return s;
+    if (!*s)
+      return 0;
   }
 }
 
 forceinline unsigned long __atoul(const char *p) {
   int c;
   unsigned long x = 0;
-  while ('0' <= (c = *p++) && c <= '9') x *= 10, x += c - '0';
+  while ('0' <= (c = *p++) && c <= '9')
+    x *= 10, x += c - '0';
   return x;
 }
 
 forceinline long __atol(const char *p) {
   int s = *p;
   unsigned long x;
-  if (s == '-' || s == '+') ++p;
+  if (s == '-' || s == '+')
+    ++p;
   x = __atoul(p);
-  if (s == '-') x = -x;
+  if (s == '-')
+    x = -x;
   return x;
 }
 

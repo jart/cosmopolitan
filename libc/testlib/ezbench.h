@@ -35,7 +35,8 @@ COSMOPOLITAN_C_START_
     } while (++Tries < EZBENCH_TRIES &&                                   \
              (__testlib_getcore() != Core &&                              \
               __testlib_getinterrupts() > Interrupts));                   \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" speculative");    \
+    if (Tries == EZBENCH_TRIES)                                           \
+      __testlib_ezbenchwarn(" speculative");                              \
     Tries = 0;                                                            \
     do {                                                                  \
       __testlib_yield();                                                  \
@@ -51,94 +52,100 @@ COSMOPOLITAN_C_START_
     } while (++Tries < EZBENCH_TRIES &&                                   \
              (__testlib_getcore() != Core &&                              \
               __testlib_getinterrupts() > Interrupts));                   \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" memory strict");  \
+    if (Tries == EZBENCH_TRIES)                                           \
+      __testlib_ezbenchwarn(" memory strict");                            \
     __testlib_ezbenchreport(                                              \
         NAME, MAX(.001, Speculative - __testlib_ezbenchcontrol()),        \
         MAX(.001, MemoryStrict - __testlib_ezbenchcontrol()));            \
   } while (0)
 
-#define EZBENCH3(NAME, NUM, INIT, EXPR)                                  \
-  do {                                                                   \
-    int Core, Tries, Interrupts;                                         \
-    double Speculative, MemoryStrict;                                    \
-    Tries = 0;                                                           \
-    do {                                                                 \
-      __testlib_yield();                                                 \
-      Core = __testlib_getcore();                                        \
-      Interrupts = __testlib_getinterrupts();                            \
-      INIT;                                                              \
-      EXPR;                                                              \
-      Speculative = BENCHLOOP(__startbench, __endbench, NUM, ({          \
-                                INIT;                                    \
-                                __polluteregisters();                    \
-                              }),                                        \
-                              (EXPR));                                   \
-    } while (++Tries < EZBENCH_TRIES &&                                  \
-             (__testlib_getcore() != Core &&                             \
-              __testlib_getinterrupts() > Interrupts));                  \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" speculative");   \
-    Tries = 0;                                                           \
-    do {                                                                 \
-      __testlib_yield();                                                 \
-      Core = __testlib_getcore();                                        \
-      Interrupts = __testlib_getinterrupts();                            \
-      INIT;                                                              \
-      EXPR;                                                              \
-      MemoryStrict = BENCHLOOP(__startbench_m, __endbench_m, NUM, ({     \
-                                 INIT;                                   \
-                                 __polluteregisters();                   \
-                               }),                                       \
-                               (EXPR));                                  \
-    } while (++Tries < EZBENCH_TRIES &&                                  \
-             (__testlib_getcore() != Core &&                             \
-              __testlib_getinterrupts() > Interrupts));                  \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" memory strict"); \
-    __testlib_ezbenchreport(                                             \
-        NAME, MAX(.001, Speculative - __testlib_ezbenchcontrol()),       \
-        MAX(.001, MemoryStrict - __testlib_ezbenchcontrol()));           \
+#define EZBENCH3(NAME, NUM, INIT, EXPR)                              \
+  do {                                                               \
+    int Core, Tries, Interrupts;                                     \
+    double Speculative, MemoryStrict;                                \
+    Tries = 0;                                                       \
+    do {                                                             \
+      __testlib_yield();                                             \
+      Core = __testlib_getcore();                                    \
+      Interrupts = __testlib_getinterrupts();                        \
+      INIT;                                                          \
+      EXPR;                                                          \
+      Speculative = BENCHLOOP(__startbench, __endbench, NUM, ({      \
+                                INIT;                                \
+                                __polluteregisters();                \
+                              }),                                    \
+                              (EXPR));                               \
+    } while (++Tries < EZBENCH_TRIES &&                              \
+             (__testlib_getcore() != Core &&                         \
+              __testlib_getinterrupts() > Interrupts));              \
+    if (Tries == EZBENCH_TRIES)                                      \
+      __testlib_ezbenchwarn(" speculative");                         \
+    Tries = 0;                                                       \
+    do {                                                             \
+      __testlib_yield();                                             \
+      Core = __testlib_getcore();                                    \
+      Interrupts = __testlib_getinterrupts();                        \
+      INIT;                                                          \
+      EXPR;                                                          \
+      MemoryStrict = BENCHLOOP(__startbench_m, __endbench_m, NUM, ({ \
+                                 INIT;                               \
+                                 __polluteregisters();               \
+                               }),                                   \
+                               (EXPR));                              \
+    } while (++Tries < EZBENCH_TRIES &&                              \
+             (__testlib_getcore() != Core &&                         \
+              __testlib_getinterrupts() > Interrupts));              \
+    if (Tries == EZBENCH_TRIES)                                      \
+      __testlib_ezbenchwarn(" memory strict");                       \
+    __testlib_ezbenchreport(                                         \
+        NAME, MAX(.001, Speculative - __testlib_ezbenchcontrol()),   \
+        MAX(.001, MemoryStrict - __testlib_ezbenchcontrol()));       \
   } while (0)
 
-#define EZBENCH_C(NAME, CONTROL, EXPR)                                   \
-  do {                                                                   \
-    int Core, Tries, Interrupts;                                         \
-    double Control, Speculative, MemoryStrict;                           \
-    Tries = 0;                                                           \
-    do {                                                                 \
-      __testlib_yield();                                                 \
-      Core = __testlib_getcore();                                        \
-      Interrupts = __testlib_getinterrupts();                            \
-      Control = BENCHLOOP(__startbench_m, __endbench_m, EZBENCH_COUNT,   \
-                          ({ __polluteregisters(); }), (CONTROL));       \
-    } while (++Tries < EZBENCH_TRIES &&                                  \
-             (__testlib_getcore() != Core &&                             \
-              __testlib_getinterrupts() > Interrupts));                  \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" control");       \
-    Tries = 0;                                                           \
-    do {                                                                 \
-      __testlib_yield();                                                 \
-      Core = __testlib_getcore();                                        \
-      Interrupts = __testlib_getinterrupts();                            \
-      EXPR;                                                              \
-      Speculative = BENCHLOOP(__startbench, __endbench, EZBENCH_COUNT,   \
-                              __polluteregisters(), (EXPR));             \
-    } while (++Tries < EZBENCH_TRIES &&                                  \
-             (__testlib_getcore() != Core &&                             \
-              __testlib_getinterrupts() > Interrupts));                  \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" speculative");   \
-    Tries = 0;                                                           \
-    do {                                                                 \
-      __testlib_yield();                                                 \
-      Core = __testlib_getcore();                                        \
-      Interrupts = __testlib_getinterrupts();                            \
-      EXPR;                                                              \
-      MemoryStrict = BENCHLOOP(__startbench_m, __endbench_m, 8,          \
-                               ({ __polluteregisters(); }), (EXPR));     \
-    } while (++Tries < EZBENCH_TRIES &&                                  \
-             (__testlib_getcore() != Core &&                             \
-              __testlib_getinterrupts() > Interrupts));                  \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn(" memory strict"); \
-    __testlib_ezbenchreport(NAME, MAX(.001, Speculative - Control),      \
-                            MAX(.001, MemoryStrict - Control));          \
+#define EZBENCH_C(NAME, CONTROL, EXPR)                                 \
+  do {                                                                 \
+    int Core, Tries, Interrupts;                                       \
+    double Control, Speculative, MemoryStrict;                         \
+    Tries = 0;                                                         \
+    do {                                                               \
+      __testlib_yield();                                               \
+      Core = __testlib_getcore();                                      \
+      Interrupts = __testlib_getinterrupts();                          \
+      Control = BENCHLOOP(__startbench_m, __endbench_m, EZBENCH_COUNT, \
+                          ({ __polluteregisters(); }), (CONTROL));     \
+    } while (++Tries < EZBENCH_TRIES &&                                \
+             (__testlib_getcore() != Core &&                           \
+              __testlib_getinterrupts() > Interrupts));                \
+    if (Tries == EZBENCH_TRIES)                                        \
+      __testlib_ezbenchwarn(" control");                               \
+    Tries = 0;                                                         \
+    do {                                                               \
+      __testlib_yield();                                               \
+      Core = __testlib_getcore();                                      \
+      Interrupts = __testlib_getinterrupts();                          \
+      EXPR;                                                            \
+      Speculative = BENCHLOOP(__startbench, __endbench, EZBENCH_COUNT, \
+                              __polluteregisters(), (EXPR));           \
+    } while (++Tries < EZBENCH_TRIES &&                                \
+             (__testlib_getcore() != Core &&                           \
+              __testlib_getinterrupts() > Interrupts));                \
+    if (Tries == EZBENCH_TRIES)                                        \
+      __testlib_ezbenchwarn(" speculative");                           \
+    Tries = 0;                                                         \
+    do {                                                               \
+      __testlib_yield();                                               \
+      Core = __testlib_getcore();                                      \
+      Interrupts = __testlib_getinterrupts();                          \
+      EXPR;                                                            \
+      MemoryStrict = BENCHLOOP(__startbench_m, __endbench_m, 8,        \
+                               ({ __polluteregisters(); }), (EXPR));   \
+    } while (++Tries < EZBENCH_TRIES &&                                \
+             (__testlib_getcore() != Core &&                           \
+              __testlib_getinterrupts() > Interrupts));                \
+    if (Tries == EZBENCH_TRIES)                                        \
+      __testlib_ezbenchwarn(" memory strict");                         \
+    __testlib_ezbenchreport(NAME, MAX(.001, Speculative - Control),    \
+                            MAX(.001, MemoryStrict - Control));        \
   } while (0)
 
 #define EZBENCH_N(NAME, N, EXPR)                                       \
@@ -156,7 +163,8 @@ COSMOPOLITAN_C_START_
       EXPR;                                                            \
       Speculative = BENCHLOOPER(__startbench, __endbench, 32, (EXPR)); \
     } while (++Tries < EZBENCH_TRIES && !Speculative);                 \
-    if (Tries == EZBENCH_TRIES) __testlib_ezbenchwarn("");             \
+    if (Tries == EZBENCH_TRIES)                                        \
+      __testlib_ezbenchwarn("");                                       \
     __testlib_ezbenchreport_n(NAME, 'n', N, Speculative);              \
   } while (0)
 

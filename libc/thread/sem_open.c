@@ -48,7 +48,7 @@ static struct Semaphores {
     char *path;
     bool dead;
     int refs;
-  } * list;
+  } *list;
 } g_semaphores;
 
 static void sem_open_lock(void) {

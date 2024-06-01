@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
-#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 
 __attribute__((__weak__)) void __stack_chk_fail(void) {

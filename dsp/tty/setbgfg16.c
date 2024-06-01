@@ -39,8 +39,12 @@ static char *setansibgfg(char *p, unsigned bg, unsigned fg) {
   return p;
 }
 
-char *setbg16_(char *p, struct TtyRgb bg) { return setansibgfg(p, bg.xt, -1u); }
-char *setfg16_(char *p, struct TtyRgb fg) { return setansibgfg(p, -1u, fg.xt); }
+char *setbg16_(char *p, struct TtyRgb bg) {
+  return setansibgfg(p, bg.xt, -1u);
+}
+char *setfg16_(char *p, struct TtyRgb fg) {
+  return setansibgfg(p, -1u, fg.xt);
+}
 char *setbgfg16_(char *p, struct TtyRgb bg, struct TtyRgb fg) {
   return setansibgfg(p, bg.xt, fg.xt);
 }

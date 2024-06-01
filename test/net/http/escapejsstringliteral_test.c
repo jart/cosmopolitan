@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
-#include "libc/temp.h"
 #include "libc/str/str.h"
+#include "libc/temp.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

@@ -2601,7 +2601,8 @@ static int shlex() {
       case 'y':
       case 'z':
         p = buf;
-        while (buf++, is_in_name(*buf));
+        while (buf++, is_in_name(*buf))
+          ;
         yylval.name = stalloc(buf - p + 1);
         *(char *)mempcpy(yylval.name, p, buf - p) = 0;
         value = ARITH_VAR;
@@ -7757,7 +7758,8 @@ static int ulimitcmd(int argc, char **argv) {
         what = optc;
     }
   }
-  for (l = limits; l->option != what; l++);
+  for (l = limits; l->option != what; l++)
+    ;
   set = *argptr ? 1 : 0;
   if (set) {
     char *p = *argptr;
@@ -7986,7 +7988,8 @@ static void setparam(char **argv) {
   char **newparam;
   char **ap;
   int nparam;
-  for (nparam = 0; argv[nparam]; nparam++);
+  for (nparam = 0; argv[nparam]; nparam++)
+    ;
   ap = newparam = ckmalloc((nparam + 1) * sizeof *ap);
   while (*argv) {
     *ap++ = savestr(*argv++);
@@ -8664,7 +8667,8 @@ static void parsefname(void) {
     if (heredoclist == NULL)
       heredoclist = here;
     else {
-      for (p = heredoclist; p->next; p = p->next);
+      for (p = heredoclist; p->next; p = p->next)
+        ;
       p->next = here;
     }
   } else if (n->type == NTOFD || n->type == NFROMFD) {
@@ -8788,7 +8792,8 @@ static int xxreadtoken(void) {
       case '\t':
         continue;
       case '#':
-        while ((c = pgetc()) != '\n' && c != PEOF);
+        while ((c = pgetc()) != '\n' && c != PEOF)
+          ;
         pungetc();
         continue;
       case '\n':
@@ -8912,7 +8917,7 @@ static int readtoken1(int firstc, char const *syntax, char *eofmark,
   quotef = 0;
   bqlist = NULL;
   STARTSTACKSTR(out);
-loop: {                    /* for each line, until end of word */
+loop : {                   /* for each line, until end of word */
   CHECKEND();              /* set c to PEOF if at end of here document */
   for (;;) {               /* until end of line or end of word */
     CHECKSTRSPACE(4, out); /* permit 4 calls to USTPUTC */
@@ -9064,7 +9069,7 @@ endword:
    * is called, c is set to the first character of the next input line.  If
    * we are at the end of the here document, this routine sets the c to PEOF.
    */
-checkend: {
+checkend : {
   if (realeofmark(eofmark)) {
     int markloc;
     char *p;
@@ -9107,7 +9112,7 @@ checkend: {
    * specifying the fd to be redirected.  The variable "c" contains the
    * first character of the redirection operator.
    */
-parseredir: {
+parseredir : {
   char fd = *out;
   union node *np;
   np = (union node *)stalloc(sizeof(struct nfile));
@@ -9164,7 +9169,7 @@ parseredir: {
    * Parse a substitution.  At this point, we have read the dollar sign
    * and nothing else.
    */
-parsesub: {
+parsesub : {
   int subtype;
   int typeloc;
   char *p;
@@ -9282,7 +9287,7 @@ parsesub: {
    * list of commands (passed by reference), and savelen is the number of
    * characters on the top of the stack which must be preserved.
    */
-parsebackq: {
+parsebackq : {
   struct nodelist **nlpp;
   union node *n;
   char *str;
@@ -9377,7 +9382,7 @@ parsebackq: {
 /*
  * Parse an arithmetic expansion (indicate start of one and set state)
  */
-parsearith: {
+parsearith : {
   synstack_push(&synstack, synstack->prev ?: alloca(sizeof(*synstack)),
                 ARISYNTAX);
   synstack->dblquote = 1;

@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/plinko/lib/print.h"
 #include "tool/build/lib/case.h"
 #include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/plinko.h"
-#include "tool/plinko/lib/print.h"
 #include "tool/plinko/lib/tree.h"
 
 int PrintDot(int fd) {

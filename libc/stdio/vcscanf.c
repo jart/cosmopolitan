@@ -553,9 +553,10 @@ int __vcscanf(int callback(void *),    //
                 items = -1;
                 goto Done;
               } else if (rawmode && j != width) {
-                /* The C standard says that %c "matches a sequence of characters of
-                 * **exactly** the number specified by the field width". If we have
-                 * fewer characters, what we've just read is invalid. */
+                /* The C standard says that %c "matches a sequence of characters
+                 * of
+                 * **exactly** the number specified by the field width". If we
+                 * have fewer characters, what we've just read is invalid. */
                 goto Done;
               } else if (!rawmode && j < bufsize) {
                 if (charbytes == sizeof(char)) {

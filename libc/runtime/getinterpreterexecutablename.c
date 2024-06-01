@@ -74,8 +74,8 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
       cmd[2] = 12;      // KERN_PROC_PATHNAME
     } else {            //
       cmd[2] = 5;       // KERN_PROC_PATHNAME
-    }  //
-    cmd[3] = -1;  // current process
+    }                   //
+    cmd[3] = -1;        // current process
     if (sysctl(cmd, ARRAYLEN(cmd), p, &n, 0, 0) != -1) {
       errno = e;
       return p;

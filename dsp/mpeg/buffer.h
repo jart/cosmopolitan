@@ -64,7 +64,8 @@ forceinline bool plm_buffer_has(plm_buffer_t *b, size_t bits) {
 }
 
 forceinline int plm_buffer_read(plm_buffer_t *self, int count) {
-  if (!plm_buffer_has(self, count)) return 0;
+  if (!plm_buffer_has(self, count))
+    return 0;
   int value = 0;
   while (count) {
     int current_byte = self->bytes[self->bit_index >> 3];

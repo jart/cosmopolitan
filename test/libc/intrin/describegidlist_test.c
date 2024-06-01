@@ -23,8 +23,8 @@
 TEST(DescribeGidList, test) {
   uint32_t list[] = {8, 67, 530, 9};
   uint32_t biglist[] = {8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9,
-                     8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9,
-                     8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9};
+                        8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9,
+                        8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9};
   EXPECT_STREQ("n/a",
                DescribeGidList(-1, sizeof(list) / sizeof(list[0]), list));
   EXPECT_STREQ("n/a", DescribeGidList(0, -1, list));

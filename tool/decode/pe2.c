@@ -22,7 +22,6 @@
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"

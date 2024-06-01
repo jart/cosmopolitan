@@ -94,6 +94,5 @@ extern const int PF_X25;
 #define PF_WANPIPE    PF_WANPIPE
 #define PF_X25        PF_X25
 
-
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_PF_H_ */

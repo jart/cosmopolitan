@@ -33,7 +33,7 @@ struct InternerObject {
   struct InternerHash {
     unsigned hash; /* 0 means empty */
     unsigned index;
-  } * p;
+  } *p;
 };
 
 static void rehash(struct InternerObject *it) {

@@ -4,7 +4,6 @@
 #define kNtExceptionMaximumParameters 15
 #define kNtExceptionNoncontinuable    1
 
-
 struct NtExceptionRecord {
   uint32_t ExceptionCode;                    /* kNtException... */
   uint32_t ExceptionFlags;                   /* kNtExceptionNoncontinuable */

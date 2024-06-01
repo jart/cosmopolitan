@@ -132,7 +132,7 @@
 #define SHSTUB2(SYM, X)             \
   HIDDEN(SYM##_bcs0 = BCD_LEFT(X)); \
   HIDDEN(SYM##_bcs1 = BCD_RIGHT(X))
-#define BCD_SMEAR(X) ((X) + (X) * 10000)
+#define BCD_SMEAR(X) ((X) + (X)*10000)
 #define BCD_LEFT(X)                                      \
   (((X)) < 10000     ? BCD_RIGHT(BCD_SMEAR(X)) | 0x10    \
    : (X) < 100000    ? BCD_RIGHT(BCD_SMEAR((X) / 10))    \
@@ -140,23 +140,16 @@
    : (X) < 10000000  ? BCD_RIGHT(BCD_SMEAR((X) / 1000))  \
    : (X) < 100000000 ? BCD_RIGHT(BCD_SMEAR((X) / 10000)) \
                      : 0xffffffffffffffff)
-#define BCD_RIGHT(X) \
-  (((X)) < 10000     ? 0x20202020                  \
-   : (X) < 100000    ? 0x20202030 +                \
-                       (X) % 10                    \
-   : (X) < 1000000   ? 0x20203030 +                \
-                       ((X) / 10) % 10 +           \
-                       (X) % 10 * 0x100            \
-   : (X) < 10000000  ? 0x20303030 +                \
-                       ((X) / 100) % 10 +          \
-                       ((X) / 10) % 10 * 0x100 +   \
-                       (X) % 10 * 0x10000          \
-   : (X) < 100000000 ? 0x30303030 +                \
-                       ((X) / 1000) % 10 +         \
-                       ((X) / 100) % 10 * 0x100 +  \
-                       ((X) / 10) % 10 * 0x10000 + \
-                       (X) % 10 * 0x1000000        \
-                     : 0xffffffffffffffff)
+#define BCD_RIGHT(X)                                                   \
+  (((X)) < 10000    ? 0x20202020                                       \
+   : (X) < 100000   ? 0x20202030 + (X) % 10                            \
+   : (X) < 1000000  ? 0x20203030 + ((X) / 10) % 10 + (X) % 10 * 0x100  \
+   : (X) < 10000000 ? 0x20303030 + ((X) / 100) % 10 +                  \
+                          ((X) / 10) % 10 * 0x100 + (X) % 10 * 0x10000 \
+   : (X) < 100000000                                                   \
+       ? 0x30303030 + ((X) / 1000) % 10 + ((X) / 100) % 10 * 0x100 +   \
+             ((X) / 10) % 10 * 0x10000 + (X) % 10 * 0x1000000          \
+       : 0xffffffffffffffff)
 
 /**
  * Laying out the GDT entries for a TSS for bare metal operation.
@@ -165,15 +158,11 @@
   HIDDEN(SYM##_desc_ent0 = TSSDESC_ENT0(BASE, LIM)); \
   HIDDEN(SYM##_desc_ent1 = TSSDESC_ENT1(BASE));      \
   ASSERT((LIM) >= 0 && (LIM) <= 0xffff, "bare metal TSS is suspiciously fat")
-#define TSSDESC_ENT0(BASE, LIM)                \
-  (((LIM)        <<  0 & 0x000000000000ffff) | \
-   ((BASE)       << 16 & 0x000000ffffff0000) | \
-    0x89         << 40                       | \
-   ((LIM)  >> 16 << 48 & 0x000f000000000000) | \
-    0x2          << 52                       | \
+#define TSSDESC_ENT0(BASE, LIM)                                              \
+  (((LIM) << 0 & 0x000000000000ffff) | ((BASE) << 16 & 0x000000ffffff0000) | \
+   0x89 << 40 | ((LIM) >> 16 << 48 & 0x000f000000000000) | 0x2 << 52 |       \
    ((BASE) >> 24 << 56 & 0xff00000000000000))
-#define TSSDESC_ENT1(BASE)                     \
-   ((BASE) >> 32 <<  0 & 0x00000000ffffffff)
+#define TSSDESC_ENT1(BASE) ((BASE) >> 32 << 0 & 0x00000000ffffffff)
 
 #endif /* __ASSEMBLER__ */
 #endif /* APE_MACROS_H_ */

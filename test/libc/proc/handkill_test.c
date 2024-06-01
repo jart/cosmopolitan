@@ -41,7 +41,7 @@ struct SharedMemory {
   atomic_bool ready;
   atomic_bool got_signal;
   atomic_bool handler_returned;
-} * shm;
+} *shm;
 
 void OnSig(int sig) {
   signal(SIGUSR1, SIG_DFL);
