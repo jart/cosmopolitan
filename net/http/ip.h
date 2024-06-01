@@ -29,23 +29,23 @@ struct Cidr {
   int cidr;
 };
 
-int64_t ParseIp(const char *, size_t);
-struct Cidr ParseCidr(const char *, size_t);
-bool IsDodIp(uint32_t);
-bool IsArinIp(uint32_t);
-bool IsRipeIp(uint32_t);
-bool IsApnicIp(uint32_t);
-bool IsLacnicIp(uint32_t);
-bool IsPublicIp(uint32_t);
-bool IsPrivateIp(uint32_t);
-bool IsAfrinicIp(uint32_t);
-bool IsTestnetIp(uint32_t);
-bool IsLoopbackIp(uint32_t);
-bool IsMulticastIp(uint32_t);
-bool IsAnonymousIp(uint32_t);
-int CategorizeIp(uint32_t);
-const char *GetIpCategoryName(int);
-bool IsCloudflareIp(uint32_t);
+int64_t ParseIp(const char *, size_t) libcesque;
+struct Cidr ParseCidr(const char *, size_t) libcesque;
+bool IsDodIp(uint32_t) libcesque;
+bool IsArinIp(uint32_t) libcesque;
+bool IsRipeIp(uint32_t) libcesque;
+bool IsApnicIp(uint32_t) libcesque;
+bool IsLacnicIp(uint32_t) libcesque;
+bool IsPublicIp(uint32_t) libcesque;
+bool IsPrivateIp(uint32_t) libcesque;
+bool IsAfrinicIp(uint32_t) libcesque;
+bool IsTestnetIp(uint32_t) libcesque;
+bool IsLoopbackIp(uint32_t) libcesque;
+bool IsMulticastIp(uint32_t) libcesque;
+bool IsAnonymousIp(uint32_t) libcesque;
+int CategorizeIp(uint32_t) libcesque;
+const char *GetIpCategoryName(int) libcesque;
+bool IsCloudflareIp(uint32_t) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_NET_HTTP_IP_H_ */
