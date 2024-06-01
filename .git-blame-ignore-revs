@@ -1,0 +1,23 @@
+# Run this command to always ignore formatting commits in git blame
+# git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Ran clang-format
+f032b5570b4cd87c6bb4abb54c0b98e69c939955
+# Applied clang-format update to repo
+6e6fc38935054db0534d5af4fb99c6193305b946
+# revert retabbing
+2b315626f3af765cdfbc61114647412cdb798b3a
+# more modeline errata
+3a8e01a77a7c97af0b16fb1651b230cee7f7d4c6
+# fix more vi modelines
+2fc507c98f53a76718f61f9a36602f86b5ac0cc9
+# flip et/noet in modelines
+e16a7d8f3b8f906c3ef76e79f57f3adfc7f25186
+# fix vi modelines
+394d998315f613a888cc6b6c051d4163bdf5cd6f
+# clang-format
+c0eacf2eb1e1c0b3bd4f71f12fef258f5b249c3f
+# ape-m1 formatting cleanup
+da8baf2aa5ce93b958aca90a0ae69f537806324b
+# Run clang-format on most sources
+369f9740de4534c28d0e81ab2afc99decbb9a3e6
