@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/check.h"
 #include "tool/viz/lib/halfblit.h"
+#include "libc/log/check.h"
 
 void *halfblit(size_t n, void *block) {
   unsigned y, x;

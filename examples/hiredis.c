@@ -7,11 +7,11 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/runtime/runtime.h"
+#include "third_party/hiredis/hiredis.h"
 #include "libc/fmt/conv.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/hiredis/hiredis.h"
 
 /**
  * @fileoverview Demo of using hiredis to connect to a Redis server

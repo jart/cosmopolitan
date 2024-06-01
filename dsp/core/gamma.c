@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/core.h"
 #include "dsp/core/gamma.h"
+#include "dsp/core/core.h"
 #include "libc/math.h"
 
 double rgb2stdpc(double x, double g) {

@@ -2,6 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_ENUM_PROCTHREADATTRIBUTES_H_
 
 #define kNtProcThreadAttributeReplaceValue 1
-#define kNtProcThreadAttributeHandleList 0x00020002
+#define kNtProcThreadAttributeHandleList   0x00020002
 
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_PROCTHREADATTRIBUTES_H_ */

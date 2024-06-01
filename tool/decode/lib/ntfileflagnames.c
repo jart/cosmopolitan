@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nt/enum/fileflagandattributes.h"
 #include "tool/decode/lib/ntfileflagnames.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 
 const struct IdName kNtFileFlagNames[] = {
     {kNtFileAttributeReadonly, "kNtFileAttributeReadonly"},

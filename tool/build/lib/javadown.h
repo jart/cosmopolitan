@@ -9,7 +9,7 @@ struct JavadownTag {
 
 struct JavadownTags {
   size_t n;
-  struct JavadownTag * p;
+  struct JavadownTag *p;
 };
 
 struct Javadown {

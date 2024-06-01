@@ -17,6 +17,5 @@ extern const int SF_SYNC;
 #define SF_NODISKIO SF_NODISKIO
 #define SF_SYNC     SF_SYNC
 
-
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SF_H_ */

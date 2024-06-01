@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 

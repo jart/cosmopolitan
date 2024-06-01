@@ -30,7 +30,7 @@
 struct SharedMemory {
   pthread_mutex_t mutex;
   volatile long x;
-} * shm;
+}* shm;
 
 void Worker(void) {
   long t;

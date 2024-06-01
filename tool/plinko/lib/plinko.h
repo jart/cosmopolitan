@@ -311,8 +311,10 @@ forceinline struct T Ret(dword ea, dword tm, dword r) {
 }
 
 static inline int FasterRecurse(int v, int a, dword p1, dword p2) {
-  if (v == LO(p1)) return HI(p1);
-  if (v == LO(p2)) return HI(p2);
+  if (v == LO(p1))
+    return HI(p1);
+  if (v == LO(p2))
+    return HI(p2);
   /* if (IsPrecious(v)) return v; */
   /* if (v < 0 && Car(v) == kQuote) return Car(Cdr(v)); */
   return recurse(MAKE(v, a), p1, p2);

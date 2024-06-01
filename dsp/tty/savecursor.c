@@ -21,9 +21,13 @@
 /**
  * Asks teletypewriter to push current position.
  */
-int ttysavecursor(int ttyfd) { return ttysend(ttyfd, "\e[s"); }
+int ttysavecursor(int ttyfd) {
+  return ttysend(ttyfd, "\e[s");
+}
 
 /**
  * Asks teletypewriter to pop previous position.
  */
-int ttyrestorecursor(int ttyfd) { return ttysend(ttyfd, "\e[u"); }
+int ttyrestorecursor(int ttyfd) {
+  return ttysend(ttyfd, "\e[u");
+}

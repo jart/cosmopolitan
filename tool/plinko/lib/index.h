@@ -6,13 +6,15 @@
 COSMOPOLITAN_C_START_
 
 forceinline nosideeffect int Head(int x) {
-  if (x <= 0) return LO(Get(x));
+  if (x <= 0)
+    return LO(Get(x));
   Push(x);
   Raise(kCar);
 }
 
 forceinline nosideeffect int Tail(int x) {
-  if (x <= 0) return HI(Get(x));
+  if (x <= 0)
+    return HI(Get(x));
   Push(x);
   Raise(kCdr);
 }

@@ -102,6 +102,5 @@ extern const int IP_XFRM_POLICY;
 #define IP_UNICAST_IF             IP_UNICAST_IF
 #define IP_XFRM_POLICY            IP_XFRM_POLICY
 
-
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IP_H_ */

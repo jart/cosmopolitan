@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/stdio/sysparam.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/paths.h"
+#include "libc/stdio/sysparam.h"
 
 /**
  * Returns name of terminal.

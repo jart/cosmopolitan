@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
 #include "libc/runtime/clktck.h"
+#include "libc/serialize.h"
 #include "libc/stdio/append.h"
 
 struct State {

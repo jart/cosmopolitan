@@ -33,19 +33,22 @@ static inline struct Dll *dll_last(struct Dll *list) {
 
 static inline struct Dll *dll_first(struct Dll *list) {
   struct Dll *first = 0;
-  if (list) first = list->next;
+  if (list)
+    first = list->next;
   return first;
 }
 
 static inline struct Dll *dll_next(struct Dll *list, struct Dll *e) {
   struct Dll *next = 0;
-  if (e != list) next = e->next;
+  if (e != list)
+    next = e->next;
   return next;
 }
 
 static inline struct Dll *dll_prev(struct Dll *list, struct Dll *e) {
   struct Dll *prev = 0;
-  if (e != list->next) prev = e->prev;
+  if (e != list->next)
+    prev = e->prev;
   return prev;
 }
 

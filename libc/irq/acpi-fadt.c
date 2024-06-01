@@ -62,8 +62,8 @@ textstartup void _AcpiFadtInit(void) {
     _Static_assert(offsetof(AcpiTableFadt, Dsdt) == 40);
     _Static_assert(offsetof(AcpiTableFadt, BootFlags) == 109);
     _Static_assert(offsetof(AcpiTableFadt, XDsdt) == 140);
-    if (length >= offsetof(AcpiTableFadt, BootFlags) + sizeof(fadt->BootFlags))
-    {
+    if (length >=
+        offsetof(AcpiTableFadt, BootFlags) + sizeof(fadt->BootFlags)) {
       _AcpiBootFlags = flags = fadt->BootFlags;
       KINFOF("FADT: boot flags %#x", (unsigned)flags);
     }

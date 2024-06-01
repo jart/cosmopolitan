@@ -76,7 +76,7 @@ int dup2(int oldfd, int newfd) {
       rc = oldfd;
   } else
 #endif
-  if (!IsWindows()) {
+      if (!IsWindows()) {
     if (__isfdkind(oldfd, kFdZip) || __isfdkind(newfd, kFdZip)) {
       if (__vforked) {
         return enotsup();

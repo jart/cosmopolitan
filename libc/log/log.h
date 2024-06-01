@@ -61,22 +61,26 @@ extern unsigned __log_level; /* log level for runtime check */
 // log a message with the specified log level (not checking if LOGGABLE)
 #define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
-    if (!_LOG_TINY) _log_untrace();                             \
+    if (!_LOG_TINY)                                             \
+      _log_untrace();                                           \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    if (!_LOG_TINY) _log_retrace();                             \
+    if (!_LOG_TINY)                                             \
+      _log_retrace();                                           \
   } while (0)
 
 // report an error without backtrace and debugger invocation
 #define FATALF(FMT, ...)                                            \
   do {                                                              \
-    if (!_LOG_TINY) _log_untrace();                                 \
+    if (!_LOG_TINY)                                                 \
+      _log_untrace();                                               \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     _log_exit(1);                                                   \
   } while (0)
 
 #define DIEF(FMT, ...)                                                \
   do {                                                                \
-    if (!_LOG_TINY) _log_untrace();                                   \
+    if (!_LOG_TINY)                                                   \
+      _log_untrace();                                                 \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     __builtin_unreachable();                                          \
   } while (0)
@@ -105,51 +109,62 @@ extern unsigned __log_level; /* log level for runtime check */
 #define VERBOSEF(FMT, ...)                                                  \
   do {                                                                      \
     if (LOGGABLE(kLogVerbose)) {                                            \
-      if (!_LOG_TINY) _log_untrace();                                       \
+      if (!_LOG_TINY)                                                       \
+        _log_untrace();                                                     \
       fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                                       \
+      if (!_LOG_TINY)                                                       \
+        _log_retrace();                                                     \
     }                                                                       \
   } while (0)
 
 #define DEBUGF(FMT, ...)                                                \
   do {                                                                  \
     if (_LOG_UNLIKELY(LOGGABLE(kLogDebug))) {                           \
-      if (!_LOG_TINY) _log_untrace();                                   \
+      if (!_LOG_TINY)                                                   \
+        _log_untrace();                                                 \
       fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                                   \
+      if (!_LOG_TINY)                                                   \
+        _log_retrace();                                                 \
     }                                                                   \
   } while (0)
 
 #define NOISEF(FMT, ...)                                                \
   do {                                                                  \
     if (_LOG_UNLIKELY(LOGGABLE(kLogNoise))) {                           \
-      if (!_LOG_TINY) _log_untrace();                                   \
+      if (!_LOG_TINY)                                                   \
+        _log_untrace();                                                 \
       fnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                                   \
+      if (!_LOG_TINY)                                                   \
+        _log_retrace();                                                 \
     }                                                                   \
   } while (0)
 
 #define FLOGF(F, FMT, ...)                                        \
   do {                                                            \
     if (LOGGABLE(kLogInfo)) {                                     \
-      if (!_LOG_TINY) _log_untrace();                             \
+      if (!_LOG_TINY)                                             \
+        _log_untrace();                                           \
       flogf(kLogInfo, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                             \
+      if (!_LOG_TINY)                                             \
+        _log_retrace();                                           \
     }                                                             \
   } while (0)
 
 #define FWARNF(F, FMT, ...)                                       \
   do {                                                            \
     if (LOGGABLE(kLogWarn)) {                                     \
-      if (!_LOG_TINY) _log_untrace();                             \
+      if (!_LOG_TINY)                                             \
+        _log_untrace();                                           \
       flogf(kLogWarn, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                             \
+      if (!_LOG_TINY)                                             \
+        _log_retrace();                                           \
     }                                                             \
   } while (0)
 
 #define FFATALF(F, FMT, ...)                                     \
   do {                                                           \
-    if (!_LOG_TINY) _log_untrace();                              \
+    if (!_LOG_TINY)                                              \
+      _log_untrace();                                            \
     flogf(kLogError, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
     _log_exit(1);                                                \
   } while (0)
@@ -157,18 +172,22 @@ extern unsigned __log_level; /* log level for runtime check */
 #define FDEBUGF(F, FMT, ...)                                         \
   do {                                                               \
     if (_LOG_UNLIKELY(LOGGABLE(kLogDebug))) {                        \
-      if (!_LOG_TINY) _log_untrace();                                \
+      if (!_LOG_TINY)                                                \
+        _log_untrace();                                              \
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                                \
+      if (!_LOG_TINY)                                                \
+        _log_retrace();                                              \
     }                                                                \
   } while (0)
 
 #define FNOISEF(F, FMT, ...)                                         \
   do {                                                               \
     if (_LOG_UNLIKELY(LOGGABLE(kLogNoise))) {                        \
-      if (!_LOG_TINY) _log_untrace();                                \
+      if (!_LOG_TINY)                                                \
+        _log_untrace();                                              \
       fnoisef(kLogNoise, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      if (!_LOG_TINY) _log_retrace();                                \
+      if (!_LOG_TINY)                                                \
+        _log_retrace();                                              \
     }                                                                \
   } while (0)
 
@@ -177,9 +196,11 @@ extern unsigned __log_level; /* log level for runtime check */
     int e = _log_get_errno();                                          \
     autotype(FORM) Ax = (FORM);                                        \
     if (_LOG_UNLIKELY(Ax == (typeof(Ax))(-1)) && LOGGABLE(kLogWarn)) { \
-      if (!_LOG_TINY) _log_untrace();                                  \
+      if (!_LOG_TINY)                                                  \
+        _log_untrace();                                                \
       _log_errno(__FILE__, __LINE__, #FORM);                           \
-      if (!_LOG_TINY) _log_retrace();                                  \
+      if (!_LOG_TINY)                                                  \
+        _log_retrace();                                                \
       _log_set_errno(e);                                               \
     }                                                                  \
     Ax;                                                                \
@@ -190,9 +211,11 @@ extern unsigned __log_level; /* log level for runtime check */
     int e = _log_get_errno();                \
     autotype(FORM) Ax = (FORM);              \
     if (Ax == NULL && LOGGABLE(kLogWarn)) {  \
-      if (!_LOG_TINY) _log_untrace();        \
+      if (!_LOG_TINY)                        \
+        _log_untrace();                      \
       _log_errno(__FILE__, __LINE__, #FORM); \
-      if (!_LOG_TINY) _log_retrace();        \
+      if (!_LOG_TINY)                        \
+        _log_retrace();                      \
       _log_set_errno(e);                     \
     }                                        \
     Ax;                                      \

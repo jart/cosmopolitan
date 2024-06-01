@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_TOOL_DECODE_LIB_DISASSEMBLEHEX_H_
 #define COSMOPOLITAN_TOOL_DECODE_LIB_DISASSEMBLEHEX_H_
 
+#include "libc/stdio/stdio.h"
+
 #define kDisassembleHexColumns 8
 
 COSMOPOLITAN_C_START_

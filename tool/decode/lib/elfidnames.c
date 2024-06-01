@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/decode/lib/elfidnames.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
-#include "tool/decode/lib/elfidnames.h"
 
 const struct IdName kElfTypeNames[] = {
     {ET_NONE, "ET_NONE"},

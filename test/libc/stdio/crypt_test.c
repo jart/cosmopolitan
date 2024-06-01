@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/testlib/testlib.h"
 #include "third_party/musl/crypt.h"
+#include "libc/testlib/testlib.h"
 
 TEST(crypt, test) {
   // consistent with python crypt.crypt()

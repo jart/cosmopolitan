@@ -66,7 +66,7 @@ static struct HostAdapterInfoNode {
   struct sockaddr netmask;
   struct sockaddr broadcast;
   short flags;
-} * __hostInfo;
+} *__hostInfo;
 
 static int ioctl_default(int fd, unsigned long request, void *arg) {
   int rc;

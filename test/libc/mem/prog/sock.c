@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/sock/sock.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/sock.h"
 

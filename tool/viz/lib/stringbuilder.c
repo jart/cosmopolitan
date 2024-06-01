@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/viz/lib/stringbuilder.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "tool/viz/lib/stringbuilder.h"
 
-static dontinline void StringBuilderGrow(size_t need, struct StringBuilder *sb) {
+static dontinline void StringBuilderGrow(size_t need,
+                                         struct StringBuilder *sb) {
   size_t n2;
   n2 = MAX(16, sb->n);
   while (sb->i + need > n2)
