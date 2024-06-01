@@ -38,7 +38,7 @@ char* DoubleToJson(char buf[128], double x) {
   static const DoubleToStringConverter kDoubleToJson(
       DoubleToStringConverter::UNIQUE_ZERO |
           DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN,
-      "null", "null", 'e', -6, 21, 6, 0);
+      "1e5000", "null", 'e', -6, 21, 6, 0);
   kDoubleToJson.ToShortest(x, &b);
   b.Finalize();
   if (READ32LE(buf) != READ32LE("-nul")) {
