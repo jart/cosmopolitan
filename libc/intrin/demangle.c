@@ -184,11 +184,13 @@ struct demangle_data {
 	bool is_tmpl;				/* template args */
 	bool is_functype;			/* function type */
 	bool ref_qualifier;			/* ref qualifier */
+	bool is_guard_variable;			/* guarden varis */
 	enum type_qualifier ref_qualifier_type; /* ref qualifier type */
 	enum push_qualifier push_qualifier;	/* which qualifiers to push */
 	int func_type;
 	const char *cur;	/* current mangled name ptr */
 	const char *last_sname; /* last source name */
+	intptr_t jmpbuf[5];
 };
 
 struct type_delimit {
@@ -377,18 +379,19 @@ demangle_free(struct demangle_data *h, void *ptr)
 	}
 }
 
-static privileged void *
+static privileged returnspointerwithnoaliases returnsnonnull void *
 demangle_malloc(struct demangle_data *h, int a, int n)
 {
 	uintptr_t ptr;
 	int next, next2;
 	index_t *link, *link2;
+	int b = sizeof(index_t);
 
 	/* Roundup size. */
-	n += sizeof(index_t) - 1;
-	n &= -sizeof(index_t);
 	n += a - 1;
 	n &= -a;
+	n += b - 1;
+	n &= -b;
 
 	/* Try free list. */
 	next = h->free;
@@ -408,13 +411,15 @@ demangle_malloc(struct demangle_data *h, int a, int n)
 	/* Allocate new memory. */
 	h->hoff -= n;
 	h->hoff &= -a;
-	h->hoff &= -sizeof(index_t);
-	if (h->hoff < sizeof(index_t))
-		return 0;
-	ptr = h->heap + h->hoff;
-	h->hoff -= sizeof(index_t);
-	((index_t *)ptr)[-1] = n;
-	return (void *)ptr;
+	h->hoff &= -b;
+	if (h->hoff > b) {
+		ptr = h->heap + h->hoff;
+		h->hoff -= b;
+		((index_t *)ptr)[-1] = n;
+		return (void *)ptr;
+	} else {
+		__builtin_longjmp(h->jmpbuf, 1);
+	}
 }
 
 static privileged char *
@@ -423,8 +428,8 @@ demangle_strdup(struct demangle_data *h, const char *s)
 	char *d = 0;
 	if (s) {
 		size_t n = demangle_strlen(s) + 1;
-		if ((d = (char *)demangle_malloc(h, 1, n)))
-			demangle_memcpy(d, s, n);
+		d = (char *)demangle_malloc(h, 1, n);
+		demangle_memcpy(d, s, n);
 	}
 	return d;
 }
@@ -455,7 +460,7 @@ demangle_stack_str_init(struct stack_str *ss)
 	ss->cap = sizeof(ss->buf);
 }
 
-static privileged bool
+static privileged void
 demangle_stack_str_append(struct demangle_data *h, struct stack_str *ss,
     const char *str, size_t len)
 {
@@ -465,8 +470,7 @@ demangle_stack_str_append(struct demangle_data *h, struct stack_str *ss,
 		int cap2;
 		char *str2;
 		cap2 = need + (ss->cap >> 1);
-		if (!(str2 = (char *)demangle_malloc(h, 1, cap2)))
-			return false;
+		str2 = (char *)demangle_malloc(h, 1, cap2);
 		demangle_memcpy(str2, ss->str, ss->len);
 		ss->str = str2;
 		ss->cap = cap2;
@@ -474,7 +478,6 @@ demangle_stack_str_append(struct demangle_data *h, struct stack_str *ss,
 	demangle_memcpy(ss->str + ss->len, str, len);
 	ss->str[len2] = 0;
 	ss->len = len2;
-	return true;
 }
 
 #define demangle_stack_str_append_str(h, ss, s) \
@@ -538,7 +541,7 @@ demangle_vector_str_get_flat(struct demangle_data *ddata,
 {
 	size_t i;
 	char *rtn, *p;
-	ssize_t rtn_size;
+	size_t rtn_size;
 
 	if (!v->size)
 		return 0;
@@ -546,8 +549,7 @@ demangle_vector_str_get_flat(struct demangle_data *ddata,
 	if (!(rtn_size = demangle_get_strlen_sum(ddata, v)))
 		return 0;
 
-	if (!(rtn = (char *)demangle_malloc(ddata, 1, rtn_size + 1)))
-		return 0;
+	rtn = (char *)demangle_malloc(ddata, 1, rtn_size + 1);
 
 	p = rtn;
 	for (i = 0; i < v->size; ++i)
@@ -559,7 +561,7 @@ demangle_vector_str_get_flat(struct demangle_data *ddata,
 	return rtn;
 }
 
-static privileged bool
+static privileged void
 demangle_vector_str_grow(struct demangle_data *ddata, struct vector_str *v)
 {
 	size_t i, tmp_cap;
@@ -571,9 +573,8 @@ demangle_vector_str_grow(struct demangle_data *ddata, struct vector_str *v)
 
 	ASSERT(tmp_cap > v->capacity);
 
-	if (!(tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
-		  sizeof(index_t) * tmp_cap)))
-		return false;
+	tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
+	    sizeof(index_t) * tmp_cap);
 
 	for (i = 0; i < v->size; ++i)
 		tmp_ctn[i] = v->container[i];
@@ -582,15 +583,13 @@ demangle_vector_str_grow(struct demangle_data *ddata, struct vector_str *v)
 
 	v->container = tmp_ctn;
 	v->capacity = tmp_cap;
-
-	return true;
 }
 
 /**
  * @brief Initialize vector_str.
  * @return false at failed, true at success.
  */
-static privileged bool
+static privileged void
 demangle_vector_str_init(struct demangle_data *ddata, struct vector_str *v)
 {
 	v->size = 0;
@@ -598,13 +597,8 @@ demangle_vector_str_init(struct demangle_data *ddata, struct vector_str *v)
 
 	ASSERT(v->capacity > 0);
 
-	if (!(v->container = (index_t *)demangle_malloc(ddata, alignof(index_t),
-		  sizeof(index_t) * v->capacity)))
-		return false;
-
-	ASSERT(v->container);
-
-	return true;
+	v->container = (index_t *)demangle_malloc(ddata, alignof(index_t),
+	    sizeof(index_t) * v->capacity);
 }
 
 /**
@@ -638,13 +632,11 @@ demangle_vector_str_push(struct demangle_data *ddata, struct vector_str *v,
 	if (!v || !str)
 		return false;
 
-	if (v->size == v->capacity && !demangle_vector_str_grow(ddata, v))
-		return false;
+	if (v->size == v->capacity)
+		demangle_vector_str_grow(ddata, v);
 
-	if (!(v->container[v->size] = (uintptr_t)demangle_malloc(ddata, 1,
-					  len + 1) -
-		    ddata->heap))
-		return false;
+	v->container[v->size] = (uintptr_t)demangle_malloc(ddata, 1, len + 1) -
+	    ddata->heap;
 
 	demangle_strlcpy(VEC_STR(ddata, v, v->size), str, len + 1);
 
@@ -666,15 +658,13 @@ demangle_vector_str_push_vector_head(struct demangle_data *ddata,
 
 	tmp_cap = BUFFER_GROW(dst->size + org->size);
 
-	if (!(tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
-		  sizeof(index_t) * tmp_cap)))
-		return false;
+	tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
+	    sizeof(index_t) * tmp_cap);
 
 	for (i = 0; i < org->size; ++i)
-		if (!(tmp_ctn[i] = (uintptr_t)demangle_strdup(ddata,
-				       VEC_STR(ddata, org, i)) -
-			    ddata->heap))
-			return false;
+		tmp_ctn[i] = (uintptr_t)demangle_strdup(ddata,
+				 VEC_STR(ddata, org, i)) -
+		    ddata->heap;
 
 	for (i = 0; i < dst->size; ++i)
 		tmp_ctn[i + org->size] = dst->container[i];
@@ -704,18 +694,16 @@ demangle_vector_str_push_vector(struct demangle_data *ddata,
 
 	tmp_cap = BUFFER_GROW(dst->size + org->size);
 
-	if (!(tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
-		  sizeof(index_t) * tmp_cap)))
-		return false;
+	tmp_ctn = (index_t *)demangle_malloc(ddata, alignof(index_t),
+	    sizeof(index_t) * tmp_cap);
 
 	for (i = 0; i < dst->size; ++i)
 		tmp_ctn[i] = dst->container[i];
 
 	for (i = 0; i < org->size; ++i)
-		if (!(tmp_ctn[i + dst->size] = (uintptr_t)demangle_strdup(ddata,
-						   VEC_STR(ddata, org, i)) -
-			    ddata->heap))
-			return false;
+		tmp_ctn[i + dst->size] = (uintptr_t)demangle_strdup(ddata,
+					     VEC_STR(ddata, org, i)) -
+		    ddata->heap;
 
 	demangle_free(ddata, dst->container);
 
@@ -746,8 +734,7 @@ demangle_vector_str_substr(struct demangle_data *ddata,
 	for (i = begin; i < end + 1; ++i)
 		len += demangle_strlen(VEC_STR(ddata, v, i));
 
-	if (!(rtn = (char *)demangle_malloc(ddata, 1, len + 1)))
-		return 0;
+	rtn = (char *)demangle_malloc(ddata, 1, len + 1);
 
 	if (r_len)
 		*r_len = len;
@@ -772,34 +759,25 @@ demangle_vector_read_cmd_pop(struct vector_read_cmd *v)
 	return 1;
 }
 
-static privileged int
+static privileged void
 demangle_vector_read_cmd_init(struct demangle_data *ddata,
     struct vector_read_cmd *v)
 {
 	v->size = 0;
 	v->capacity = VECTOR_DEF_CAPACITY;
 
-	if (!(v->r_container = (struct read_cmd_item *)demangle_malloc(ddata,
-		  alignof(*v->r_container),
-		  sizeof(*v->r_container) * v->capacity)))
-		return 0;
-
-	return 1;
+	v->r_container = (struct read_cmd_item *)demangle_malloc(ddata,
+	    alignof(*v->r_container), sizeof(*v->r_container) * v->capacity);
 }
 
-static privileged int
+static privileged void
 demangle_data_init(struct demangle_data *d, const char *cur)
 {
-	if (!demangle_vector_str_init(d, &d->output))
-		return 0;
-	if (!demangle_vector_str_init(d, &d->subst))
-		return 0;
-	if (!demangle_vector_str_init(d, &d->tmpl))
-		return 0;
-	if (!demangle_vector_str_init(d, &d->class_type))
-		return 0;
-	if (!demangle_vector_read_cmd_init(d, &d->cmd))
-		return 0;
+	demangle_vector_str_init(d, &d->output);
+	demangle_vector_str_init(d, &d->subst);
+	demangle_vector_str_init(d, &d->tmpl);
+	demangle_vector_str_init(d, &d->class_type);
+	demangle_vector_read_cmd_init(d, &d->cmd);
 
 	ASSERT(d->output.container);
 	ASSERT(d->subst.container);
@@ -814,13 +792,12 @@ demangle_data_init(struct demangle_data *d, const char *cur)
 	d->is_tmpl = false;
 	d->is_functype = false;
 	d->ref_qualifier = false;
+	d->is_guard_variable = false;
 	d->push_qualifier = PUSH_ALL_QUALIFIER;
 	d->func_type = 0;
 	d->cur = cur;
 	d->cur_output = &d->output;
 	d->last_sname = NULL;
-
-	return 1;
 }
 
 static privileged int
@@ -925,8 +902,7 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 
 	if (type_str) {
 		demangle_stack_str_init(&subst_v);
-		if (!demangle_stack_str_append_str(ddata, &subst_v, type_str))
-			return 0;
+		demangle_stack_str_append_str(ddata, &subst_v, type_str);
 	}
 
 	cv = true;
@@ -940,9 +916,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, "*"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, "*"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    "*");
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -956,9 +931,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, "&"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, "&"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    "&");
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -972,9 +946,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, "&&"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, "&&"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    "&&");
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -988,9 +961,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, " complex"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, " complex"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    " complex");
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -1004,9 +976,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, " imaginary"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, " imaginary"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    " imaginary");
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -1022,9 +993,7 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!(e_len = demangle_strlen(
 				  VEC_STR(ddata, (&v->ext_name), e_idx))))
 				return 0;
-			if (!(buf = (char *)demangle_malloc(ddata, 1,
-				  e_len + 2)))
-				return 0;
+			buf = (char *)demangle_malloc(ddata, 1, e_len + 2);
 			buf[0] = ' ';
 			demangle_memcpy(buf + 1,
 			    VEC_STR(ddata, &v->ext_name, e_idx), e_len + 1);
@@ -1033,9 +1002,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 				return 0;
 
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, buf))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    buf);
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -1052,9 +1020,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, " restrict"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, " restrict"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    " restrict");
 				if (idx - 1 > 0) {
 					t = v->q_container[idx - 2];
 					if (t == TYPE_RST || t == TYPE_VAT ||
@@ -1076,9 +1043,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, " volatile"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, " volatile"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    " volatile");
 				if (idx - 1 > 0) {
 					t = v->q_container[idx - 2];
 					if (t == TYPE_RST || t == TYPE_VAT ||
@@ -1102,9 +1068,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, " const"))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, " const"))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    " const");
 				if (idx - 1 > 0) {
 					t = v->q_container[idx - 2];
 					if (t == TYPE_RST || t == TYPE_VAT ||
@@ -1127,9 +1092,7 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!(e_len = demangle_strlen(
 				  VEC_STR(ddata, &v->ext_name, e_idx))))
 				return 0;
-			if (!(buf = (char *)demangle_malloc(ddata, 1,
-				  e_len + 12)))
-				return 0;
+			buf = (char *)demangle_malloc(ddata, 1, e_len + 12);
 			p = buf;
 			p = demangle_stpcpy(p, " __vector(");
 			p = (char *)demangle_mempcpy(p,
@@ -1138,9 +1101,8 @@ demangle_push_type_qualifier(struct demangle_data *ddata,
 			if (!DEM_PUSH_STR(ddata, buf))
 				return 0;
 			if (type_str) {
-				if (!demangle_stack_str_append_str(ddata,
-					&subst_v, buf))
-					return 0;
+				demangle_stack_str_append_str(ddata, &subst_v,
+				    buf);
 				if (!demangle_push_subst(ddata, subst_v.str,
 					subst_v.len))
 					return 0;
@@ -1341,9 +1303,8 @@ decode_fp_to_double(struct demangle_data *ddata, const char *p, size_t len)
 	rtn_len = 64;
 	limit = 0;
 again:
-	if (!(rtn = (char *)demangle_malloc(ddata, alignof(char),
-		  sizeof(char) * rtn_len)))
-		return 0;
+	rtn = (char *)demangle_malloc(ddata, alignof(char),
+	    sizeof(char) * rtn_len);
 
 	if (snprintf(rtn, rtn_len, "%fld", f) >= (int)rtn_len) {
 		if (limit++ > FLOAT_SPRINTF_TRY_LIMIT)
@@ -1384,9 +1345,8 @@ decode_fp_to_float(struct demangle_data *ddata, const char *p, size_t len)
 	rtn_len = 64;
 	limit = 0;
 again:
-	if (!(rtn = (char *)demangle_malloc(ddata, alignof(char),
-		  sizeof(char) * rtn_len)))
-		return 0;
+	rtn = (char *)demangle_malloc(ddata, alignof(char),
+	    sizeof(char) * rtn_len);
 
 	if (snprintf(rtn, rtn_len, "%ff", f) >= (int)rtn_len) {
 		if (limit++ > FLOAT_SPRINTF_TRY_LIMIT)
@@ -1429,9 +1389,8 @@ decode_fp_to_long_double(struct demangle_data *ddata, const char *p, size_t len)
 	rtn_len = 256;
 	limit = 0;
 again:
-	if (!(rtn = (char *)demangle_malloc(ddata, alignof(char),
-		  sizeof(char) * rtn_len)))
-		return 0;
+	rtn = (char *)demangle_malloc(ddata, alignof(char),
+	    sizeof(char) * rtn_len);
 
 	if (snprintf(rtn, rtn_len, "%Lfd", f) >= (int)rtn_len) {
 		if (limit++ > FLOAT_SPRINTF_TRY_LIMIT)
@@ -1484,9 +1443,8 @@ decode_fp_to_float128(struct demangle_data *ddata, const char *p, size_t len)
 		rtn_len = 256;
 		limit = 0;
 	again:
-		if (!(rtn = (char *)demangle_malloc(ddata, alignof(char),
-			  sizeof(char) * rtn_len)))
-			return 0;
+		rtn = (char *)demangle_malloc(ddata, alignof(char),
+		    sizeof(char) * rtn_len);
 
 		if (snprintf(rtn, rtn_len, "%Lfd", f) >= (int)rtn_len) {
 			if (limit++ > FLOAT_SPRINTF_TRY_LIMIT)
@@ -1544,9 +1502,8 @@ decode_fp_to_float80(struct demangle_data *ddata, const char *p, size_t len)
 		rtn_len = 256;
 		limit = 0;
 	again:
-		if (!(rtn = (char *)demangle_malloc(ddata, alignof(char),
-			  sizeof(char) * rtn_len)))
-			return 0;
+		rtn = (char *)demangle_malloc(ddata, alignof(char),
+		    sizeof(char) * rtn_len);
 
 		if (snprintf(rtn, rtn_len, "%Lfd", f) >= (int)rtn_len) {
 			if (limit++ > FLOAT_SPRINTF_TRY_LIMIT)
@@ -2066,6 +2023,8 @@ demangle_read_uqname(struct demangle_data *ddata)
 	case SIMPLE_HASH('C', '1'):
 	case SIMPLE_HASH('C', '2'):
 	case SIMPLE_HASH('C', '3'):
+	case SIMPLE_HASH('C', '4'):
+	case SIMPLE_HASH('C', '5'):
 		if (!ddata->last_sname)
 			return 0;
 		if (!(len = demangle_strlen(ddata->last_sname)))
@@ -2080,6 +2039,9 @@ demangle_read_uqname(struct demangle_data *ddata)
 	case SIMPLE_HASH('D', '0'):
 	case SIMPLE_HASH('D', '1'):
 	case SIMPLE_HASH('D', '2'):
+	case SIMPLE_HASH('D', '3'):
+	case SIMPLE_HASH('D', '4'):
+	case SIMPLE_HASH('D', '5'):
 		if (!ddata->last_sname)
 			return 0;
 		if (!(len = demangle_strlen(ddata->last_sname)))
@@ -2150,9 +2112,8 @@ demangle_vector_read_cmd_push(struct demangle_data *ddata,
 
 	if (v->size == v->capacity) {
 		tmp_cap = BUFFER_GROW(v->capacity);
-		if (!(tmp_r_ctn = (struct read_cmd_item *)demangle_malloc(ddata,
-			  alignof(*tmp_r_ctn), sizeof(*tmp_r_ctn) * tmp_cap)))
-			return 0;
+		tmp_r_ctn = (struct read_cmd_item *)demangle_malloc(ddata,
+		    alignof(*tmp_r_ctn), sizeof(*tmp_r_ctn) * tmp_cap);
 		for (i = 0; i < v->size; ++i)
 			tmp_r_ctn[i] = v->r_container[i];
 		demangle_free(ddata, v->r_container);
@@ -2595,26 +2556,20 @@ demangle_read_expression_flat(struct demangle_data *ddata, char **str)
 }
 
 /* size, capacity, ext_name */
-static privileged int
+static privileged void
 demangle_vector_type_qualifier_init(struct demangle_data *ddata,
     struct vector_type_qualifier *v)
 {
 	v->size = 0;
 	v->capacity = VECTOR_DEF_CAPACITY;
 
-	if (!(v->q_container = (enum type_qualifier *)demangle_malloc(ddata,
-		  alignof(enum type_qualifier),
-		  sizeof(enum type_qualifier) * v->capacity)))
-		return 0;
+	v->q_container = (enum type_qualifier *)demangle_malloc(ddata,
+	    alignof(enum type_qualifier),
+	    sizeof(enum type_qualifier) * v->capacity);
 
 	ASSERT(v->q_container);
 
-	if (!demangle_vector_str_init(ddata, &v->ext_name)) {
-		demangle_free(ddata, v->q_container);
-		return 0;
-	}
-
-	return 1;
+	demangle_vector_str_init(ddata, &v->ext_name);
 }
 
 static privileged struct read_cmd_item *
@@ -2743,8 +2698,7 @@ demangle_read_function(struct demangle_data *ddata, int *ext_c,
 		ddata->push_qualifier = PUSH_ALL_QUALIFIER;
 
 		/* Release type qualifier vector. */
-		if (!demangle_vector_type_qualifier_init(ddata, v))
-			return 0;
+		demangle_vector_type_qualifier_init(ddata, v);
 
 		/* Push ref-qualifiers. */
 		if (ddata->ref_qualifier) {
@@ -2918,8 +2872,7 @@ demangle_read_number_as_string(struct demangle_data *ddata, char **str)
 	}
 
 	demangle_itoa(buf, n);
-	if (!(*str = demangle_strdup(ddata, buf)))
-		return 0;
+	*str = demangle_strdup(ddata, buf);
 
 	return 1;
 }
@@ -2991,6 +2944,7 @@ demangle_read_encoding(struct demangle_data *ddata)
 		/* sentry object for 1 time init */
 		if (!DEM_PUSH_STR(ddata, "guard variable for "))
 			return 0;
+		ddata->is_guard_variable = true;
 		ddata->cur += 2;
 		break;
 
@@ -3143,8 +3097,7 @@ demangle_read_local_name(struct demangle_data *ddata)
 	if (*(++ddata->cur) == '\0')
 		return 0;
 
-	if (!demangle_vector_str_init(ddata, &local_name))
-		return 0;
+	demangle_vector_str_init(ddata, &local_name);
 	ddata->cur_output = &local_name;
 
 	if (!demangle_read_encoding(ddata))
@@ -3279,11 +3232,7 @@ next:
 		if (!(subst_str = demangle_vector_str_substr(ddata, output,
 			  p_idx, output->size - 1, &subst_str_len)))
 			return 0;
-		if (!demangle_stack_str_append(ddata, &v, subst_str,
-			subst_str_len)) {
-			demangle_free(ddata, subst_str);
-			return 0;
-		}
+		demangle_stack_str_append(ddata, &v, subst_str, subst_str_len);
 		demangle_free(ddata, subst_str);
 
 		if (!demangle_push_subst(ddata, v.str, v.len))
@@ -3296,8 +3245,7 @@ next:
 		    *ddata->cur != 'D' && p_idx != output->size) {
 			if (!DEM_PUSH_STR(ddata, "::"))
 				return 0;
-			if (!demangle_stack_str_append_str(ddata, &v, "::"))
-				return 0;
+			demangle_stack_str_append_str(ddata, &v, "::");
 		}
 		if (limit++ > DEMANGLE_TRY_LIMIT)
 			return 0;
@@ -3345,8 +3293,7 @@ demangle_read_name(struct demangle_data *ddata)
 		rtn = 1;
 		goto clean;
 	}
-	if (!demangle_stack_str_append(ddata, &v, subst_str, subst_str_len))
-		goto clean;
+	demangle_stack_str_append(ddata, &v, subst_str, subst_str_len);
 	if (!demangle_push_subst(ddata, v.str, v.len))
 		goto clean;
 
@@ -3357,9 +3304,7 @@ demangle_read_name(struct demangle_data *ddata)
 		if (!(subst_str = demangle_vector_str_substr(ddata, output,
 			  p_idx, output->size - 1, &subst_str_len)))
 			goto clean;
-		if (!demangle_stack_str_append(ddata, &v, subst_str,
-			subst_str_len))
-			goto clean;
+		demangle_stack_str_append(ddata, &v, subst_str, subst_str_len);
 		if (!demangle_push_subst(ddata, v.str, v.len))
 			goto clean;
 	}
@@ -3454,8 +3399,7 @@ clean2:
 		rtn = 0;
 clean1:
 
-	if (!demangle_vector_type_qualifier_init(ddata, v))
-		return 0;
+	demangle_vector_type_qualifier_init(ddata, v);
 
 	return rtn;
 }
@@ -3513,9 +3457,8 @@ demangle_read_subst_stdtmpl(struct demangle_data *ddata, const char *str)
 		  output->size - 1, &substr_len)))
 		return 0;
 
-	if (!(subst_str = (char *)demangle_malloc(ddata, alignof(char),
-		  sizeof(char) * (substr_len + len + 1))))
-		return 0;
+	subst_str = (char *)demangle_malloc(ddata, alignof(char),
+	    sizeof(char) * (substr_len + len + 1));
 
 	demangle_memcpy(subst_str, str, len);
 	demangle_memcpy(subst_str + len, substr, substr_len);
@@ -3534,8 +3477,7 @@ demangle_read_subst_std(struct demangle_data *ddata)
 	size_t p_idx, subst_str_len;
 	char *subst_str;
 
-	if (!demangle_vector_str_init(ddata, &v))
-		return 0;
+	demangle_vector_str_init(ddata, &v);
 
 	subst_str = NULL;
 	if (!DEM_PUSH_STR(ddata, "std::"))
@@ -3719,10 +3661,9 @@ demangle_vector_type_qualifier_push(struct demangle_data *ddata,
 
 	if (v->size == v->capacity) {
 		tmp_cap = BUFFER_GROW(v->capacity);
-		if (!(tmp_ctn = (enum type_qualifier *)demangle_malloc(ddata,
-			  alignof(enum type_qualifier),
-			  sizeof(enum type_qualifier) * tmp_cap)))
-			return 0;
+		tmp_ctn = (enum type_qualifier *)demangle_malloc(ddata,
+		    alignof(enum type_qualifier),
+		    sizeof(enum type_qualifier) * tmp_cap);
 		for (i = 0; i < v->size; ++i)
 			tmp_ctn[i] = v->q_container[i];
 		demangle_free(ddata, v->q_container);
@@ -3772,8 +3713,7 @@ demangle_read_type(struct demangle_data *ddata, struct type_delimit *td)
 	 * pointer-to-member, template-param, template-template-param, subst
 	 */
 
-	if (!demangle_vector_type_qualifier_init(ddata, &v))
-		return 0;
+	demangle_vector_type_qualifier_init(ddata, &v);
 
 	extern_c = 0;
 	is_builtin = 1;
@@ -3929,8 +3869,11 @@ again:
 		goto rtn;
 
 	case 'E':
-		/* unexpected end except ref-qualifiers */
-		if (ddata->ref_qualifier && ddata->is_functype) {
+		/* unexpected end (except some things) */
+		if (ddata->is_guard_variable)
+			td->paren = false;
+		if (ddata->is_guard_variable ||
+		    (ddata->ref_qualifier && ddata->is_functype)) {
 			skip_ref_qualifier = true;
 			/* Pop the delimiter. */
 			demangle_pop_str(ddata);
@@ -3991,10 +3934,7 @@ again:
 		if (!(subst_str = demangle_vector_str_substr(ddata, output,
 			  p_idx, output->size - 1, &subst_str_len)))
 			goto clean;
-		if (!demangle_vector_str_init(ddata, &sv)) {
-			demangle_free(ddata, subst_str);
-			goto clean;
-		}
+		demangle_vector_str_init(ddata, &sv);
 		if (!demangle_vector_str_push(ddata, &sv, subst_str,
 			subst_str_len)) {
 			demangle_free(ddata, subst_str);
@@ -4288,42 +4228,12 @@ demangle_failure(char *buf, const char *org, size_t buflen)
 	return -1;
 }
 
-/**
- * Decodes IA-64 C++ ABI style symbol.
- *
- * This function is designed to be safe to call from asynchronous signal
- * handlers, since dynamic memory is allocated from the end of `buf`. As
- * such it's important to provide a very generous amount of memory here.
- *
- * If you expect your symbols to be 100 characters long, you should pass
- * at least 2000 bytes of buffer. If this function runs out of memory it
- * will still create a NUL-terminated string in buf. On complete failure
- * this will simply be the original string copied. On truncation it will
- * be a partially copied result. In both cases, -1 is returned. The size
- * of the output is only returned if this routine is fully succesful. To
- * successfully cover nearly all the test cases from libcxxabi use 65536
- * and to be able to print 99% of the symbols LLVM's libcxx.a, use 5632.
- *
- * It's important to call ismangled() before this, since non-c++ symbols
- * have a special meaning; for example, "g" will return "__float128". It
- * should be noted that this routine won't decode c++ symbols containing
- * floating point numbers.
- *
- * **WARNING**: This implementation isn't as mature as __cxa_demangle().
- *              It passes 27,124 out of the 29,798 libcxxabi test cases.
- *
- * @param buf is where nul-terminated output string is stored
- * @param buflen should have at least 8192 bytes of memory
- * @return bytes of output name or -1 upon error or truncation
- * @asyncsignalsafe
- */
-privileged int
-__demangle(char *buf, const char *org, size_t buflen)
+static privileged int
+demangle(struct demangle_data *ddata, char *buf, const char *org, size_t buflen)
 {
-	struct demangle_data ddata[1];
 	struct vector_str ret_type;
 	struct type_delimit td;
-	ssize_t org_len;
+	size_t org_len;
 	unsigned int limit;
 	bool has_ret = false, more_type = false;
 
@@ -4337,15 +4247,13 @@ __demangle(char *buf, const char *org, size_t buflen)
 	/* Try demangling as a type for short encodings. */
 	org_len = demangle_strlen(org);
 	if ((org_len < 2) || (org[0] != '_' || org[1] != 'Z')) {
-		if (!demangle_data_init(ddata, org))
-			return demangle_failure(buf, org, buflen);
+		demangle_data_init(ddata, org);
 		if (!demangle_read_type(ddata, 0))
 			return demangle_failure(buf, org, buflen);
 		return demangle_copy_output(ddata, buf, &ddata->output, buflen);
 	}
 	if (org_len > 11 && !demangle_strncmp(org, "_GLOBAL__I_", 11)) {
-		if (!demangle_vector_str_init(ddata, &ret_type))
-			return demangle_failure(buf, org, buflen);
+		demangle_vector_str_init(ddata, &ret_type);
 		if (!VEC_PUSH_STR(&ret_type, "global constructors keyed to "))
 			return demangle_failure(buf, org, buflen);
 		if (!VEC_PUSH_STR(&ret_type, org + 11))
@@ -4353,8 +4261,7 @@ __demangle(char *buf, const char *org, size_t buflen)
 		return demangle_copy_output(ddata, buf, &ddata->output, buflen);
 	}
 
-	if (!demangle_data_init(ddata, org + 2))
-		return demangle_failure(buf, org, buflen);
+	demangle_data_init(ddata, org + 2);
 
 	if (!demangle_read_encoding(ddata))
 		return demangle_failure(buf, org, buflen);
@@ -4378,13 +4285,18 @@ __demangle(char *buf, const char *org, size_t buflen)
 	 */
 	if (ddata->is_tmpl) {
 		ddata->is_tmpl = false;
-		if (!demangle_vector_str_init(ddata, &ret_type))
-			return demangle_failure(buf, org, buflen);
+		demangle_vector_str_init(ddata, &ret_type);
 		ddata->cur_output = &ret_type;
 		has_ret = true;
 	}
 
-	while (*ddata->cur != '\0') {
+	while (*ddata->cur) {
+		/*
+		 * GCC optimizations make symbols like foobu.constprop.1
+		 */
+		if (*ddata->cur == '.')
+			break;
+
 		/*
 		 * Breaking at some gcc info at tail. e.g) @@GLIBCXX_3.4
 		 */
@@ -4440,6 +4352,44 @@ __demangle(char *buf, const char *org, size_t buflen)
 }
 
 /**
+ * Decodes IA-64 C++ ABI style symbol.
+ *
+ * This function is designed to be safe to call from asynchronous signal
+ * handlers, since dynamic memory is allocated from the end of `buf`. As
+ * such it's important to provide a very generous amount of memory here.
+ *
+ * If you expect your symbols to be 100 characters long, you should pass
+ * at least 2000 bytes of buffer. If this function runs out of memory it
+ * will still create a NUL-terminated string in buf. On complete failure
+ * this will simply be the original string copied. On truncation it will
+ * be a partially copied result. In both cases, -1 is returned. The size
+ * of the output is only returned if this routine is fully succesful. To
+ * successfully cover nearly all the test cases from libcxxabi use 65536
+ * and to be able to print 99% of the symbols LLVM's libcxx.a, use 5632.
+ *
+ * It's important to call __is_mangled() before this, since some symbols
+ * have a special meaning; for example, "g" will return "__float128". It
+ * should be noted that this routine won't decode c++ symbols containing
+ * floating point numbers.
+ *
+ * **WARNING**: This implementation isn't as mature as __cxa_demangle().
+ *              It passes 27,124 out of the 29,798 libcxxabi test cases.
+ *
+ * @param buf is where nul-terminated output string is stored
+ * @param buflen should have at least 8192 bytes of memory
+ * @return bytes of output name or -1 upon error or truncation
+ * @asyncsignalsafe
+ */
+privileged int
+__demangle(char *buf, const char *org, size_t buflen)
+{
+	struct demangle_data ddata[1];
+	if (!__builtin_setjmp(ddata->jmpbuf))
+		return demangle(ddata, buf, org, buflen);
+	return demangle_failure(buf, org, buflen);
+}
+
+/**
  * Returns true if string is mangled by IA-64 C++ ABI style.
  *
  * This means it starts with either "_Z" or "_GLOBAL__I_".
@@ -4447,9 +4397,11 @@ __demangle(char *buf, const char *org, size_t buflen)
 privileged int
 __is_mangled(const char *org)
 {
+	if (!org)
+		return false;
 	if (org[0] != '_')
 		return false;
 	if (org[1] == 'Z')
 		return true;
-	return demangle_strncmp(org, "_GLOBAL__I_", 11);
+	return !demangle_strncmp(org, "_GLOBAL__I_", 11);
 }

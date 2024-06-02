@@ -46,7 +46,7 @@ static void regenerate_cases(void) {
   fclose(f);
 }
 
-int main() {
+static int test_cases_success(void) {
   for (int i = 0; i < ARRAYLEN(demangle_cases); ++i) {
     const char *input = demangle_cases[i][0];
     const char *want = demangle_cases[i][1];
@@ -64,4 +64,75 @@ int main() {
       return 2;
     }
   }
+  return 0;
+}
+
+static int test_is_mangled(void) {
+  if (__is_mangled(0))
+    return 3;
+  if (__is_mangled(""))
+    return 4;
+  if (__is_mangled("__dlmalloc"))
+    return 5;
+  if (!__is_mangled("_ZN4dyld18getCoalescedImagesEPP11ImageLoader"))
+    return 6;
+  if (!__is_mangled("_GLOBAL__I_lol"))
+    return 7;
+  return 0;
+}
+
+static int test_oom(void) {
+  char got[2048];
+  const char *sym = "_ZN10__cxxabiv112_GLOBAL__N_119InitByteGlobalMutexINS0_"
+                    "11LibcppMutexENS0_13LibcppCondVarEL_ZNS0_"
+                    "12GlobalStaticIS2_E8instanceEEL_ZNS4_IS3_E8instanceEEXadL_"
+                    "ZNS0_16PlatformThreadIDEvEEE9LockGuardC2EPKc";
+  if (__demangle(got, sym, sizeof(got)) != -1)
+    return 8;
+  return 0;
+}
+
+static int test_compiler_suffixes(void) {
+  char got[1400];
+  const char *sym = "_ZN12_GLOBAL__N_18tinyBLASILi6ELi8EDv8_fS1_"
+                    "fffE4gemmILi1ELi1ELi0EEEvllll.constprop.0";
+  if (__demangle(got, sym, sizeof(got)) == -1)
+    return 9;
+  return 0;
+}
+
+static int test_weird_destructors(void) {
+  char got[200];
+  const char *sym = "_ZN13AutoEncoderKLD5Ev";
+  if (__demangle(got, sym, sizeof(got)) == -1)
+    return 10;
+  if (strcmp(got, "AutoEncoderKL::~AutoEncoderKL()"))
+    return 11;
+  return 0;
+}
+
+static int test_guard_variable(void) {
+  char got[250];
+  const char *sym = "_ZGVZ23llama_print_system_infoE1s";
+  if (__demangle(got, sym, sizeof(got)) == -1)
+    return 10;
+  if (strcmp(got, "guard variable for llama_print_system_info::s"))
+    return 11;
+  return 0;
+}
+
+int main() {
+  int rc;
+  if ((rc = test_guard_variable()))
+    return rc;
+  if ((rc = test_weird_destructors()))
+    return rc;
+  if ((rc = test_compiler_suffixes()))
+    return rc;
+  if ((rc = test_cases_success()))
+    return rc;
+  if ((rc = test_is_mangled()))
+    return rc;
+  if ((rc = test_oom()))
+    return rc;
 }
