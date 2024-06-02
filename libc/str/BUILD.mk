@@ -100,10 +100,6 @@ $(LIBC_STR_A_OBJS): private					\
 			-Wframe-larger-than=4096		\
 			-Walloca-larger-than=4096
 
-o/$(MODE)/libc/str/demangle.o: private				\
-		OVERRIDE_CFLAGS +=				\
-			-ffreestanding
-
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))
