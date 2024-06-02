@@ -51,10 +51,9 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
   size_t gi;
   intptr_t addr;
   const char *name;
+  char cxxbuf[3000];
   int i, symbol, addend;
-  static char cxxbuf[8192];
   struct Garbages *garbage;
-  static pthread_spinlock_t lock;
   const struct StackFrame *frame;
   (void)gi;
   if (!bp)
@@ -92,10 +91,8 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
       addend = 0;
     }
     if ((name = __get_symbol_name(st, symbol)) && __is_mangled(name)) {
-      pthread_spin_lock(&lock);
       __demangle(cxxbuf, name, sizeof(cxxbuf));
       kprintf("%012lx %lx %s%+d\n", frame, addr, cxxbuf, addend);
-      pthread_spin_unlock(&lock);
       name = cxxbuf;
     } else {
       kprintf("%012lx %lx %s%+d\n", frame, addr, name, addend);

@@ -21,6 +21,12 @@
 
 void __funcs_on_quick_exit(void);
 
+/**
+ * Exits process faster.
+ *
+ * @param exitcode is masked with 255
+ * @noreturn
+ */
 wontreturn void quick_exit(int code) {
   if (_weaken(__funcs_on_quick_exit))
     _weaken(__funcs_on_quick_exit)();

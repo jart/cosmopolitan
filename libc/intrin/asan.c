@@ -1136,10 +1136,7 @@ int __asan_print_trace(void *p) {
     kprintf(" (shadow not mapped?!)");
   }
   for (i = 0; i < ARRAYLEN(e->bt.p) && e->bt.p[i]; ++i) {
-    kprintf("\n%*lx %s", 12, e->bt.p[i],
-            _weaken(GetSymbolByAddr)
-                ? _weaken(GetSymbolByAddr)(e->bt.p[i])
-                : "please __static_yoink(\"GetSymbolByAddr\")");
+    kprintf("\n%*lx %t", 12, e->bt.p[i], e->bt.p[i]);
   }
   return 0;
 }

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8-*-│
+│ vi: set et ft=c++ ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,65 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
-#include "libc/runtime/internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 
-/**
- * Exits process faster.
- *
- * @param exitcode is masked with 255
- * @noreturn
- */
-wontreturn void quick_exit(int exitcode) {
-  const uintptr_t *p;
-  STRACE("quick_exit(%d)", exitcode);
-  if (_weaken(fflush)) {
-    _weaken(fflush)(0);
+// this dontthrow keyword SHOULD break this test. it's probably passing
+// because we're currently using SjLj exceptions. the day we can change
+// things, remove `dontthrow` and this test will still be a useful help
+extern "C" dontthrow void qsort_(void *, size_t, size_t,
+                                 int (*)(const void *,
+                                         const void *)) asm("qsort");
+
+struct Resource {
+  char *p;
+  Resource() {
+    p = new char;
   }
-  for (p = __fini_array_end; p > __fini_array_start;) {
-    ((void (*)(void))(*--p))();
+  ~Resource() {
+    delete p;
   }
-  _Exit(exitcode);
+};
+
+void Poke(char *p) {
+  *p = 1;
+}
+void (*pPoke)(char *) = Poke;
+
+void Throw(void) {
+  throw 42;
+}
+void (*pThrow)(void) = Throw;
+
+int cmp(const void *x, const void *y) {
+  Resource r;
+  pPoke(r.p);
+  if (*r.p)
+    pThrow();
+  exit(5);
+}
+
+int A[3] = {3, 2, 1};
+int Work(void) {
+  Resource r;
+  pPoke(r.p);
+  qsort_(A, 3, sizeof(int), cmp);
+  return A[0];
+}
+int (*pWork)(void) = Work;
+
+int main(int argc, char *argv[]) {
+  try {
+    Resource r;
+    if (pWork() != 1)
+      return 1;
+    pPoke(r.p);
+    if (r.p)
+      return 2;
+  } catch (int e) {
+    if (e != 42)
+      return 3;
+  }
+  CheckForMemoryLeaks();
 }

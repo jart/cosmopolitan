@@ -8,10 +8,10 @@ void *bsearch_r(const void *, const void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) nosideeffect;
 void djbsort(int32_t *, size_t) libcesque;
-void qsort3(void *, size_t, size_t, int (*)(const void *, const void *))
-    paramsnonnull();
-void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
-    paramsnonnull();
+void qsort3(void *, size_t, size_t,
+            int (*)(const void *, const void *)) libcesque paramsnonnull();
+void qsort(void *, size_t, size_t,
+           int (*)(const void *, const void *)) libcesque paramsnonnull();
 void qsort_r(void *, size_t, size_t,
              int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 4));

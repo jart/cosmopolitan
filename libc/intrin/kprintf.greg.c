@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "ape/sections.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
@@ -457,6 +458,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
   const char *abet;
   signed char type;
   const char *s, *f;
+  char cxxbuf[2048];
   struct CosmoTib *tib;
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
@@ -804,10 +806,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           x = va_arg(va, intptr_t);
           if (_weaken(__symtab) && *_weaken(__symtab) &&
               (idx = _weaken(__get_symbol)(0, x)) != -1) {
-            if (p + 1 <= e)
-              *p++ = '&';
+            /* if (p + 1 <= e) */
+            /*   *p++ = '&'; */
             s = (*_weaken(__symtab))->name_base +
                 (*_weaken(__symtab))->names[idx];
+            if (__is_mangled(s) && __demangle(cxxbuf, s, sizeof(cxxbuf)) != -1)
+              s = cxxbuf;
             goto FormatString;
           }
           base = 4;
