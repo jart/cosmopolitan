@@ -9,6 +9,13 @@
 #ifndef _LIBCPP___CONFIG_SITE
 #define _LIBCPP___CONFIG_SITE
 
+// every c++ program is bound to include *something* from the stl
+// therefore we schlep in 28k of code needed to print c++ symbols
+// however c programs should never include *any* stl headers ever
+#ifndef TINY
+__static_yoink("__demangle");
+#endif
+
 // We get a million `error: ‘always_inline’ function might not be
 // inlinable` because we're using LLVM LIBCXX with GCC, which has
 // no exclude_from_explicit_instantiation attribute, which libcxx

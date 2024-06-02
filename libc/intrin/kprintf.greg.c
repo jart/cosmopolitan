@@ -810,7 +810,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             /*   *p++ = '&'; */
             s = (*_weaken(__symtab))->name_base +
                 (*_weaken(__symtab))->names[idx];
-            if (__is_mangled(s) && __demangle(cxxbuf, s, sizeof(cxxbuf)) != -1)
+            if (_weaken(__is_mangled) && _weaken(__is_mangled)(s) &&
+                _weaken(__demangle)(cxxbuf, s, sizeof(cxxbuf)) != -1)
               s = cxxbuf;
             goto FormatString;
           }

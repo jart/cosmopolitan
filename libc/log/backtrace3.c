@@ -90,8 +90,9 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
       symbol = 0;
       addend = 0;
     }
-    if ((name = __get_symbol_name(st, symbol)) && __is_mangled(name)) {
-      __demangle(cxxbuf, name, sizeof(cxxbuf));
+    if ((name = __get_symbol_name(st, symbol)) &&
+        (_weaken(__is_mangled) && _weaken(__is_mangled)(name))) {
+      _weaken(__demangle)(cxxbuf, name, sizeof(cxxbuf));
       kprintf("%012lx %lx %s%+d\n", frame, addr, cxxbuf, addend);
       name = cxxbuf;
     } else {
