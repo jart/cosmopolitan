@@ -68,11 +68,11 @@ Copyright (c) 2024 Justine Tunney <jtunney@gmail.com>");
  *   and 100% lockless, and uses absolutely no writable static memory.
  *   That makes it also great for kernel and embedded development.
  *
- * - We made it go 3x faster. It's almost as fast as libcxxabi now. The
+ * - We made it go 2x faster. It's almost as fast as libcxxabi now. The
  *   lightweight Dennis Ritchie style demangle_malloc() implementation
  *   helped. What also helped is introducing stack_str and strlcpy().
  *
- * - We made it use 4x less memory. This came with the tradeoff of
+ * - We made it use 3x less memory. This came with the tradeoff of
  *   imposing limitations similar to embedded software. Rather than
  *   using pointers, we use 16-bit indexes into a heap that can grow no
  *   larger than 64kb. Please note that a buffer size of 20kb is more
@@ -383,7 +383,7 @@ static privileged returnspointerwithnoaliases returnsnonnull void *
 demangle_malloc(struct demangle_data *h, int a, int n)
 {
 	uintptr_t ptr;
-	int next, next2;
+	int rem, next, next2;
 	index_t *link, *link2;
 	int b = sizeof(index_t);
 
@@ -397,12 +397,20 @@ demangle_malloc(struct demangle_data *h, int a, int n)
 	next = h->free;
 	link = &h->free;
 	while (next) {
-		next2 = *(index_t *)(h->heap + next);
 		link2 = (index_t *)(h->heap + next);
-		if (!(next & (a - 1)) &&
-		    n <= ((index_t *)(h->heap + next))[-1]) {
-			*link = next2;
-			return (void *)(h->heap + next);
+		next2 = *link2;
+		if (!(next & (a - 1)) && (rem = link2[-1] - n) >= 0) {
+			if (rem < (b << 1)) {
+				*link = next2;
+			} else {
+				/* Split chunk. */
+				link2[-1] = n;
+				*link = next + n + b;
+				link = (index_t *)(h->heap + next + n + b);
+				link[-1] = rem - b;
+				link[0] = next2;
+			}
+			return link2;
 		}
 		next = next2;
 		link = link2;
