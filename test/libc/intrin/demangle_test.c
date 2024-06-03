@@ -102,7 +102,7 @@ static int test_compiler_suffixes(void) {
 }
 
 static int test_weird_destructors(void) {
-  char got[200];
+  char got[216];
   const char *sym = "_ZN13AutoEncoderKLD5Ev";
   if (__demangle(got, sym, sizeof(got)) == -1)
     return 10;
