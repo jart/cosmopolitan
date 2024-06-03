@@ -174,6 +174,7 @@ all:	o
 o:	o/$(MODE)
 o/$(MODE):			\
 	o/$(MODE)/ape		\
+	o/$(MODE)/ctl		\
 	o/$(MODE)/dsp		\
 	o/$(MODE)/net		\
 	o/$(MODE)/libc		\
@@ -255,6 +256,7 @@ include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
 include libc/proc/BUILD.mk			# │  You can now use threads
 include libc/dlopen/BUILD.mk			# │  You can now use processes
 include libc/thread/BUILD.mk			# │  You can finally call malloc()
+include ctl/BUILD.mk				# │
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
 include tool/hello/BUILD.mk			# │
@@ -299,6 +301,7 @@ include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
 include test/math/BUILD.mk
 include test/posix/BUILD.mk
+include test/ctl/BUILD.mk
 include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk
 include third_party/linenoise/BUILD.mk
@@ -451,6 +454,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_THREAD			\
 	LIBC_PROC			\
 	THIRD_PARTY_NSYNC_MEM		\
+	CTL				\
 	LIBC_MEM			\
 	THIRD_PARTY_DLMALLOC		\
 	LIBC_DLOPEN			\
@@ -519,6 +523,7 @@ COSMOPOLITAN_H_PKGS =			\
 
 COSMOCC_PKGS =				\
 	$(COSMOPOLITAN_H_PKGS)		\
+	CTL				\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
 	THIRD_PARTY_LIBCXXABI		\

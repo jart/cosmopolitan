@@ -211,7 +211,11 @@
          (dots (file-relative-name root dir))   ;; e.g. "../"
          (file (file-relative-name this root))  ;; e.g. "libc/crc32c.c"
          (name (file-name-sans-extension file)) ;; e.g. "libc/crc32c"
-         (buddy (format "test/%s_test.c" name))
+         (buddy (let ((c-version (format "test/%s_test.c" name))
+                      (cc-version (format "test/%s_test.cc" name)))
+                  (if (file-exists-p cc-version)
+                      cc-version
+                    c-version)))
          (runs (format "o/$m/%s%s V=5 TESTARGS=-b" name runsuffix))
          (buns (format "o/$m/test/%s_test%s V=5 TESTARGS=-b" name runsuffix)))
     (cond ((not (member ext '("c" "cc" "cpp" "s" "S" "rl" "f" "cu")))
@@ -761,8 +765,14 @@
                             (concat dots notest ".hookabi.c")
                             (concat dots notest ".h"))))
                     (t
-                     (format "%stest/%s_test.c"
-                             dots (cosmo-file-name-sans-extensions name))))))
+                     (let ((c-version (format "%stest/%s_test.c"
+                                              dots (cosmo-file-name-sans-extensions name)))
+                           (cc-version (format "%stest/%s_test.cc"
+                                               dots (cosmo-file-name-sans-extensions name))))
+                       (if (file-exists-p cc-version)
+                           cc-version
+                         c-version))
+                     ))))
         (when buddy
           (find-file buddy))))))
 

@@ -2,7 +2,8 @@
 #── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 .PHONY:		o/$(MODE)/test
-o/$(MODE)/test:	o/$(MODE)/test/dsp	\
+o/$(MODE)/test:	o/$(MODE)/test/ctl	\
+		o/$(MODE)/test/dsp	\
 		o/$(MODE)/test/libc	\
 		o/$(MODE)/test/libcxx	\
 		o/$(MODE)/test/math	\
