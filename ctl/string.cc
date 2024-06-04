@@ -21,7 +21,9 @@
 #include <__atomic/fence.h>
 #include <stdckdint.h>
 
-String::~String() noexcept
+namespace ctl {
+
+string::~string() noexcept
 {
     if (n) {
         if (n >= c)
@@ -34,33 +36,33 @@ String::~String() noexcept
     free(p);
 }
 
-String::String(const char* s) noexcept
+string::string(const char* s) noexcept
 {
     append(s, strlen(s));
 }
 
-String::String(const String& s) noexcept
+string::string(const string& s) noexcept
 {
     append(s.p, s.n);
 }
 
-String::String(const StringView s) noexcept
+string::string(const string_view s) noexcept
 {
     append(s.p, s.n);
 }
 
-String::String(size_t size, char ch) noexcept
+string::string(size_t size, char ch) noexcept
 {
     resize(size, ch);
 }
 
-String::String(const char* s, size_t size) noexcept
+string::string(const char* s, size_t size) noexcept
 {
     append(s, size);
 }
 
 const char*
-String::c_str() const noexcept
+string::c_str() const noexcept
 {
     if (!n)
         return "";
@@ -72,7 +74,7 @@ String::c_str() const noexcept
 }
 
 void
-String::reserve(size_t c2) noexcept
+string::reserve(size_t c2) noexcept
 {
     char* p2;
     if (c2 < n)
@@ -88,7 +90,7 @@ String::reserve(size_t c2) noexcept
 }
 
 void
-String::resize(size_t n2, char ch) noexcept
+string::resize(size_t n2, char ch) noexcept
 {
     size_t c2;
     if (ckd_add(&c2, n2, 1))
@@ -100,7 +102,7 @@ String::resize(size_t n2, char ch) noexcept
 }
 
 void
-String::append(char ch) noexcept
+string::append(char ch) noexcept
 {
     if (n + 2 > c) {
         size_t c2 = c + 2;
@@ -112,7 +114,7 @@ String::append(char ch) noexcept
 }
 
 void
-String::grow(size_t size) noexcept
+string::grow(size_t size) noexcept
 {
     size_t need;
     if (ckd_add(&need, n, size))
@@ -133,7 +135,7 @@ String::grow(size_t size) noexcept
 }
 
 void
-String::append(char ch, size_t size) noexcept
+string::append(char ch, size_t size) noexcept
 {
     grow(size);
     if (size)
@@ -142,7 +144,7 @@ String::append(char ch, size_t size) noexcept
 }
 
 void
-String::append(const void* data, size_t size) noexcept
+string::append(const void* data, size_t size) noexcept
 {
     grow(size);
     if (size)
@@ -151,76 +153,54 @@ String::append(const void* data, size_t size) noexcept
 }
 
 void
-String::pop_back() noexcept
+string::pop_back() noexcept
 {
     if (!n)
         __builtin_trap();
     p[--n] = 0;
 }
 
-String&
-String::operator=(String&& s) noexcept
+string&
+string::operator=(string&& s) noexcept
 {
     if (p != s.p) {
-        free(p);
-        p = s.p;
-        n = s.n;
-        c = s.c;
-        s.p = nullptr;
-        s.n = 0;
-        s.c = 0;
+        if (p) {
+            clear();
+            append(s.p, s.n);
+        } else {
+            p = s.p;
+            n = s.n;
+            c = s.c;
+            s.p = nullptr;
+            s.n = 0;
+            s.c = 0;
+        }
     }
     return *this;
 }
 
-static String
-StrCat(const StringView lhs, const StringView rhs) noexcept
-{
-    String res;
-    size_t need;
-    if (ckd_add(&need, lhs.n, rhs.n))
-        __builtin_trap();
-    if (ckd_add(&need, need, 1))
-        __builtin_trap();
-    res.reserve(need);
-    if (lhs.n)
-        memcpy(res.p, lhs.p, lhs.n);
-    if (rhs.n)
-        memcpy(res.p + lhs.n, rhs.p, rhs.n);
-    res.p[res.n = lhs.n + rhs.n] = 0;
-    return res;
-}
-
-String
-StringView::operator+(const StringView s) const noexcept
-{
-    return StrCat(*this, s);
-}
-
-String
-String::operator+(const StringView s) const noexcept
-{
-    return StrCat(*this, s);
-}
-
 bool
-String::operator==(const StringView s) const noexcept
+string::operator==(const string_view s) const noexcept
 {
     if (n != s.n)
         return false;
+    if (!n)
+        return true;
     return !memcmp(p, s.p, n);
 }
 
 bool
-String::operator!=(const StringView s) const noexcept
+string::operator!=(const string_view s) const noexcept
 {
     if (n != s.n)
         return true;
+    if (!n)
+        return false;
     return !!memcmp(p, s.p, n);
 }
 
 bool
-String::contains(const StringView s) const noexcept
+string::contains(const string_view s) const noexcept
 {
     if (!s.n)
         return true;
@@ -228,44 +208,27 @@ String::contains(const StringView s) const noexcept
 }
 
 bool
-String::ends_with(const StringView s) const noexcept
+string::ends_with(const string_view s) const noexcept
 {
     if (n < s.n)
         return false;
+    if (!s.n)
+        return true;
     return !memcmp(p + n - s.n, s.p, s.n);
 }
 
 bool
-String::starts_with(const StringView s) const noexcept
+string::starts_with(const string_view s) const noexcept
 {
     if (n < s.n)
         return false;
+    if (!s.n)
+        return true;
     return !memcmp(p, s.p, s.n);
 }
 
-static int
-StrCmp(const StringView lhs, const StringView rhs) noexcept
-{
-    int r;
-    size_t m = lhs.n;
-    if ((m = rhs.n < m ? rhs.n : m))
-        if ((r = memcmp(lhs.p, rhs.p, m)))
-            return r;
-    if (lhs.n == rhs.n)
-        return 0;
-    if (m < lhs.n)
-        return +1;
-    return -1;
-}
-
-int
-String::compare(const StringView s) const noexcept
-{
-    return StrCmp(*this, s);
-}
-
 size_t
-String::find(char ch, size_t pos) const noexcept
+string::find(char ch, size_t pos) const noexcept
 {
     char* q;
     if ((q = (char*)memchr(p, ch, n)))
@@ -274,7 +237,7 @@ String::find(char ch, size_t pos) const noexcept
 }
 
 size_t
-String::find(const StringView s, size_t pos) const noexcept
+string::find(const string_view s, size_t pos) const noexcept
 {
     char* q;
     if (pos > n)
@@ -284,8 +247,8 @@ String::find(const StringView s, size_t pos) const noexcept
     return npos;
 }
 
-String
-String::substr(size_t pos, size_t count) const noexcept
+string
+string::substr(size_t pos, size_t count) const noexcept
 {
     size_t last;
     if (pos > n)
@@ -296,11 +259,11 @@ String::substr(size_t pos, size_t count) const noexcept
         last = n;
     if (last > n)
         __builtin_trap();
-    return String(p + pos, count);
+    return string(p + pos, count);
 }
 
-String&
-String::replace(size_t pos, size_t count, const StringView& s) noexcept
+string&
+string::replace(size_t pos, size_t count, const string_view& s) noexcept
 {
     size_t last;
     if (ckd_add(&last, pos, count))
@@ -324,49 +287,8 @@ String::replace(size_t pos, size_t count, const StringView& s) noexcept
     return *this;
 }
 
-int
-StringView::compare(const StringView s) const noexcept
-{
-    return StrCmp(*this, s);
-}
-
-size_t
-StringView::find(char ch, size_t pos) const noexcept
-{
-    char* q;
-    if (n && (q = (char*)memchr(p, ch, n)))
-        return q - p;
-    return npos;
-}
-
-size_t
-StringView::find(const StringView s, size_t pos) const noexcept
-{
-    char* q;
-    if (pos > n)
-        __builtin_trap();
-    if ((q = (char*)memmem(p + pos, n - pos, s.p, s.n)))
-        return q - p;
-    return npos;
-}
-
-StringView
-StringView::substr(size_t pos, size_t count) const noexcept
-{
-    size_t last;
-    if (pos > n)
-        __builtin_trap();
-    if (count > n - pos)
-        count = n - pos;
-    if (ckd_add(&last, pos, count))
-        last = n;
-    if (last > n)
-        __builtin_trap();
-    return StringView(p + pos, count);
-}
-
-String&
-String::insert(size_t i, const StringView s) noexcept
+string&
+string::insert(size_t i, const string_view s) noexcept
 {
     if (i > n)
         __builtin_trap();
@@ -384,8 +306,8 @@ String::insert(size_t i, const StringView s) noexcept
     return *this;
 }
 
-String&
-String::erase(size_t pos, size_t count) noexcept
+string&
+string::erase(size_t pos, size_t count) noexcept
 {
     if (pos > n)
         __builtin_trap();
@@ -398,42 +320,4 @@ String::erase(size_t pos, size_t count) noexcept
     return *this;
 }
 
-bool
-StringView::operator==(const StringView s) const noexcept
-{
-    if (n == s.n)
-        return true;
-    return !memcmp(p, s.p, n);
-}
-
-bool
-StringView::operator!=(const StringView s) const noexcept
-{
-    if (n != s.n)
-        return true;
-    return !!memcmp(p, s.p, n);
-}
-
-bool
-StringView::contains(const StringView s) const noexcept
-{
-    if (!s.n)
-        return true;
-    return !!memmem(p, n, s.p, s.n);
-}
-
-bool
-StringView::ends_with(const StringView s) const noexcept
-{
-    if (n < s.n)
-        return false;
-    return !memcmp(p + n - s.n, s.p, s.n);
-}
-
-bool
-StringView::starts_with(const StringView s) const noexcept
-{
-    if (n < s.n)
-        return false;
-    return !memcmp(p, s.p, s.n);
-}
+} // namespace ctl

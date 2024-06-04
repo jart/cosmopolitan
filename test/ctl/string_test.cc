@@ -24,14 +24,14 @@
 #include "libc/str/str.h"
 
 // #include <string>
-// #define String std::string
+// #define ctl std
 
 int
-main(int argc, char* argv[])
+main()
 {
 
     {
-        String s;
+        ctl::string s;
         s += 'h';
         s += 'i';
         if (s != "hi")
@@ -39,7 +39,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String s;
+        ctl::string s;
         if (!s.empty())
             return 6;
         s.reserve(32);
@@ -55,7 +55,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String s;
+        ctl::string s;
         s += "hello world how are you";
         s.reserve(3);
         if (s != "hello world how are you")
@@ -63,7 +63,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String s(4, 'x');
+        ctl::string s(4, 'x');
         if (s != "xxxx")
             return 12;
         s.resize(3);
@@ -75,42 +75,42 @@ main(int argc, char* argv[])
     }
 
     {
-        String a = "a";
-        String b = "a";
+        ctl::string a = "a";
+        ctl::string b = "a";
         if (a.compare(b) != 0)
             return 17;
     }
 
     {
-        String a = "a";
-        String b = "b";
+        ctl::string a = "a";
+        ctl::string b = "b";
         if (a.compare(b) >= 0)
             return 18;
     }
 
     {
-        String a = "a";
-        String b = "ab";
+        ctl::string a = "a";
+        ctl::string b = "ab";
         if (a.compare(b) >= 0)
             return 19;
     }
 
     {
-        String a = "ab";
-        String b = "a";
+        ctl::string a = "ab";
+        ctl::string b = "a";
         if (a.compare(b) <= 0)
             return 20;
     }
 
     {
-        String a = "";
-        String b = "";
+        ctl::string a = "";
+        ctl::string b = "";
         if (a.compare(b) != 0)
             return 21;
     }
 
     {
-        String a = "fooBARbaz";
+        ctl::string a = "fooBARbaz";
         if (a.substr(3, 3) != "BAR")
             return 22;
         if (a.replace(3, 3, "MOO") != "fooMOObaz")
@@ -118,7 +118,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String a = "fooBAR";
+        ctl::string a = "fooBAR";
         if (a.substr(3, 3) != "BAR")
             return 24;
         if (a.replace(3, 3, "MOO") != "fooMOO")
@@ -126,7 +126,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String a = "fooBAR";
+        ctl::string a = "fooBAR";
         if (a.substr(1, 0) != "")
             return 26;
         if (a.replace(1, 0, "MOO") != "fMOOooBAR")
@@ -142,15 +142,15 @@ main(int argc, char* argv[])
     }
 
     {
-        String s1 = "hello";
-        String s2 = "world";
-        String s3 = s1 + " " + s2;
+        ctl::string s1 = "hello";
+        ctl::string s2 = "world";
+        ctl::string s3 = s1 + " " + s2;
         if (s3 != "hello world")
             return 32;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s.size() != 5)
             return 33;
         if (s.length() != 5)
@@ -160,7 +160,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s[0] != 'h' || s[1] != 'e' || s[2] != 'l' || s[3] != 'l' ||
             s[4] != 'o')
             return 36;
@@ -170,17 +170,17 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s.find('e') != 1)
             return 38;
         if (s.find('l') != 2)
             return 39;
-        if (s.find('x') != String::npos)
+        if (s.find('x') != ctl::string::npos)
             return 40;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (!s.ends_with("lo"))
             return 41;
         if (s.ends_with("el"))
@@ -188,8 +188,8 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
-        String sub = s.substr(1, 3);
+        ctl::string s = "hello";
+        ctl::string sub = s.substr(1, 3);
         if (sub != "ell")
             return 43;
         sub = s.substr(2);
@@ -198,8 +198,8 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
-        String s2 = s;
+        ctl::string s = "hello";
+        ctl::string s2 = s;
         if (s != s2)
             return 45;
         s2[0] = 'H';
@@ -208,8 +208,8 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
-        String s2 = std::move(s);
+        ctl::string s = "hello";
+        ctl::string s2 = std::move(s);
         if (s2 != "hello")
             return 47;
         if (!s.empty())
@@ -217,14 +217,14 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         const char* cstr = s.c_str();
         if (strcmp(cstr, "hello") != 0)
             return 49;
     }
 
     // {
-    //     String s = "hello";
+    //     ctl::string s = "hello";
     //     char buffer[10];
     //     s.copy(buffer, sizeof(buffer));
     //     if (strcmp(buffer, "hello") != 0)
@@ -232,7 +232,7 @@ main(int argc, char* argv[])
     // }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.resize(3);
         if (s != "hel")
             return 51;
@@ -242,14 +242,14 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.clear();
         if (!s.empty())
             return 53;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         auto it = s.begin();
         if (*it != 'h')
             return 54;
@@ -259,21 +259,21 @@ main(int argc, char* argv[])
     }
 
     // {
-    //     String s = "hello";
-    //     String s2 = "world";
+    //     ctl::string s = "hello";
+    //     ctl::string s2 = "world";
     //     s.swap(s2);
     //     if (s != "world" || s2 != "hello")
     //         return 56;
     // }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s.front() != 'h' || s.back() != 'o')
             return 57;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.push_back('!');
         if (s != "hello!")
             return 58;
@@ -283,42 +283,42 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.insert(2, "XYZ");
         if (s != "heXYZllo")
             return 60;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.erase(1, 2);
         if (s != "hlo")
             return 61;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.replace(1, 2, "XYZ");
         if (s != "hXYZlo")
             return 62;
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         s.append(" world");
         if (s != "hello world")
             return 63;
     }
 
     // {
-    //     String s = "hello";
+    //     ctl::string s = "hello";
     //     s.assign("world");
     //     if (s != "world")
     //         return 64;
     // }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s.compare("world") >= 0)
             return 65;
         if (s.compare("hello") != 0)
@@ -328,7 +328,7 @@ main(int argc, char* argv[])
     }
 
     {
-        String s = "hello";
+        ctl::string s = "hello";
         if (s == "world")
             return 68;
         if (s != "hello")
@@ -337,26 +337,6 @@ main(int argc, char* argv[])
             return 70;
         if (s > "world")
             return 71;
-    }
-
-    {
-        StringView s = "hello";
-        if (s.find('e') != 1)
-            return 72;
-        if (s.find('l') != 2)
-            return 73;
-        if (s.find('x') != String::npos)
-            return 74;
-    }
-
-    {
-        StringView s = "hello there";
-        s.remove_prefix(6);
-        if (s != "there")
-            return 75;
-        s.remove_suffix(1);
-        if (s != "ther")
-            return 76;
     }
 
     {

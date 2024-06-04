@@ -185,7 +185,9 @@ const char *GetHttpHeaderName(int) libcesque;
 int GetHttpHeader(const char *, size_t) libcesque;
 void InitHttpMessage(struct HttpMessage *, int) libcesque;
 void DestroyHttpMessage(struct HttpMessage *) libcesque;
-int ParseHttpMessage(struct HttpMessage *, const char *, size_t) libcesque;
+void ResetHttpMessage(struct HttpMessage *, int) libcesque;
+int ParseHttpMessage(struct HttpMessage *, const char *, size_t,
+                     size_t) libcesque;
 bool HeaderHas(struct HttpMessage *, const char *, int, const char *,
                size_t) libcesque;
 int64_t ParseContentLength(const char *, size_t) libcesque;

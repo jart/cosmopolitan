@@ -9,4 +9,5 @@ AlignTrailingComments: false
 AlignEscapedNewlines: DontAlign
 AlwaysBreakTemplateDeclarations: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
+FixNamespaceComments: true
 ---

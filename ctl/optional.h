@@ -6,39 +6,41 @@
 #include <__utility/move.h>
 #include <__utility/swap.h>
 
+namespace ctl {
+
 template<typename T>
-class Optional
+class optional
 {
   public:
     using value_type = T;
 
-    ~Optional() = default;
+    ~optional() = default;
 
-    Optional() noexcept : present_(false)
+    optional() noexcept : present_(false)
     {
     }
 
-    Optional(const T& value) : present_(true), value_(value)
+    optional(const T& value) : present_(true), value_(value)
     {
     }
 
-    Optional(T&& value) : present_(true), value_(std::move(value))
+    optional(T&& value) : present_(true), value_(std::move(value))
     {
     }
 
-    Optional(const Optional& other) : present_(other.present_)
+    optional(const optional& other) : present_(other.present_)
     {
         if (present_)
             new (&value_) T(other.value_);
     }
 
-    Optional(Optional&& other) noexcept : present_(other.present_)
+    optional(optional&& other) noexcept : present_(other.present_)
     {
         if (present_)
             value_ = std::move(other.value_);
     }
 
-    Optional& operator=(const Optional& other)
+    optional& operator=(const optional& other)
     {
         if (this != &other) {
             present_ = other.present_;
@@ -48,7 +50,7 @@ class Optional
         return *this;
     }
 
-    Optional& operator=(Optional&& other) noexcept
+    optional& operator=(optional&& other) noexcept
     {
         if (this != &other) {
             present_ = other.present_;
@@ -104,7 +106,7 @@ class Optional
         value_ = T(std::forward<Args>(args)...);
     }
 
-    void swap(Optional& other) noexcept
+    void swap(optional& other) noexcept
     {
         if (present_ && other.present_) {
             std::swap(value_, other.value_);
@@ -121,5 +123,7 @@ class Optional
     bool present_;
     T value_;
 };
+
+} // namespace ctl
 
 #endif // COSMOPOLITAN_CTL_OPTIONAL_H_

@@ -64,7 +64,8 @@ static int LuaFetch(lua_State *L) {
       return LuaNilError(L, "bad method");
     }
     lua_getfield(L, 2, "followredirect");
-    if (lua_isboolean(L, -1)) followredirect = lua_toboolean(L, -1);
+    if (lua_isboolean(L, -1))
+      followredirect = lua_toboolean(L, -1);
     lua_getfield(L, 2, "maxredirects");
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
@@ -162,8 +163,10 @@ static int LuaFetch(lua_State *L) {
   }
 
 #ifndef UNSECURE
-  if (usingssl) keepalive = kaNONE;
-  if (usingssl && !sslinitialized) TlsInit();
+  if (usingssl)
+    keepalive = kaNONE;
+  if (usingssl && !sslinitialized)
+    TlsInit();
 #endif
 
   if (url.host.n) {
@@ -189,7 +192,8 @@ static int LuaFetch(lua_State *L) {
   if (!IsAcceptablePort(port, -1)) {
     return LuaNilError(L, "invalid port");
   }
-  if (!hosthdr) hosthdr = gc(xasprintf("%s:%s", host, port));
+  if (!hosthdr)
+    hosthdr = gc(xasprintf("%s:%s", host, port));
 
   // check if hosthdr is in keepalive table
   if (keepalive && lua_istable(L, 2)) {
@@ -317,7 +321,8 @@ static int LuaFetch(lua_State *L) {
     if (usingssl) {
       rc = mbedtls_ssl_write(&sslcli, request + i, requestlen - i);
       if (rc <= 0) {
-        if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
+        if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED)
+          goto VerifyFailed;
         close(sock);
         return LuaNilTlsError(L, "write", rc);
       }
@@ -373,7 +378,7 @@ static int LuaFetch(lua_State *L) {
           WARNF("(ftch) HTTP client %s error", "EOF headers");
           goto TransportError;
         }
-        rc = ParseHttpMessage(&msg, inbuf.p, inbuf.n);
+        rc = ParseHttpMessage(&msg, inbuf.p, inbuf.n, inbuf.c);
         if (rc == -1) {
           WARNF("(ftch) HTTP client %s error", "ParseHttpMessage");
           goto TransportError;
@@ -454,7 +459,8 @@ static int LuaFetch(lua_State *L) {
           WARNF("(ftch) HTTP client %s error", "Unchunk");
           goto TransportError;
         }
-        if (rc) goto Finished;
+        if (rc)
+          goto Finished;
         break;
       default:
         __builtin_unreachable();
@@ -462,7 +468,8 @@ static int LuaFetch(lua_State *L) {
   }
 
 Finished:
-  if (paylen && logbodies) LogBody("received", inbuf.p + hdrsize, paylen);
+  if (paylen && logbodies)
+    LogBody("received", inbuf.p + hdrsize, paylen);
   VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version,
            msg.status, urlarg, FetchHeaderLength(kHttpServer),
            FetchHeaderData(kHttpServer));
@@ -551,7 +558,8 @@ Finished:
 
     DestroyHttpMessage(&msg);
     free(inbuf.p);
-    if (!keepalive || keepalive == kaCLOSE) close(sock);
+    if (!keepalive || keepalive == kaCLOSE)
+      close(sock);
     return LuaFetch(L);
   } else {
     lua_pushinteger(L, msg.status);
@@ -559,7 +567,8 @@ Finished:
     lua_pushlstring(L, inbuf.p + hdrsize, paylen);
     DestroyHttpMessage(&msg);
     free(inbuf.p);
-    if (!keepalive || keepalive == kaCLOSE) close(sock);
+    if (!keepalive || keepalive == kaCLOSE)
+      close(sock);
     return 3;
   }
 TransportError:

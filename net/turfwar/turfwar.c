@@ -879,7 +879,7 @@ void *HttpWorker(void *arg) {
 
       // parse http message
       // we're only doing one-shot parsing right now
-      if ((inmsglen = ParseHttpMessage(msg, inbuf, got)) <= 0) {
+      if ((inmsglen = ParseHttpMessage(msg, inbuf, got, INBUF_SIZE)) <= 0) {
         ++g_parsefails;
         break;
       }

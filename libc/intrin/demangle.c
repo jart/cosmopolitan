@@ -382,8 +382,9 @@ demangle_free(struct demangle_data *h, void *ptr)
 static privileged returnspointerwithnoaliases returnsnonnull void *
 demangle_malloc(struct demangle_data *h, int a, int n)
 {
+	int rem;
 	uintptr_t ptr;
-	int rem, next, next2;
+	index_t next, next2;
 	index_t *link, *link2;
 	int b = sizeof(index_t);
 
@@ -417,10 +418,12 @@ demangle_malloc(struct demangle_data *h, int a, int n)
 	}
 
 	/* Allocate new memory. */
+	rem = h->hoff;
 	h->hoff -= n;
 	h->hoff &= -a;
 	h->hoff &= -b;
-	if (h->hoff > b) {
+	if (h->hoff >= (b << 1)) {
+		n = rem - h->hoff;
 		ptr = h->heap + h->hoff;
 		h->hoff -= b;
 		((index_t *)ptr)[-1] = n;
@@ -430,7 +433,7 @@ demangle_malloc(struct demangle_data *h, int a, int n)
 	}
 }
 
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 demangle_strdup(struct demangle_data *h, const char *s)
 {
 	char *d = 0;
@@ -728,7 +731,7 @@ demangle_vector_str_push_vector(struct demangle_data *ddata,
  * If r_len is not NULL, string length will be returned.
  * @return NULL at failed or NUL terminated new allocated string.
  */
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 demangle_vector_str_substr(struct demangle_data *ddata,
     const struct vector_str *v, size_t begin, size_t end, size_t *r_len)
 {
@@ -1280,7 +1283,7 @@ hex_to_dec(char c)
  * Todo
  * Replace these functions to macro.
  */
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 decode_fp_to_double(struct demangle_data *ddata, const char *p, size_t len)
 {
 	double f;
@@ -1324,7 +1327,7 @@ again:
 	return rtn;
 }
 
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 decode_fp_to_float(struct demangle_data *ddata, const char *p, size_t len)
 {
 	size_t i, rtn_len, limit;
@@ -1366,7 +1369,7 @@ again:
 	return rtn;
 }
 
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 decode_fp_to_long_double(struct demangle_data *ddata, const char *p, size_t len)
 {
 	long double f;
@@ -1410,7 +1413,7 @@ again:
 	return rtn;
 }
 
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 decode_fp_to_float128(struct demangle_data *ddata, const char *p, size_t len)
 {
 	long double f;
@@ -1467,7 +1470,7 @@ decode_fp_to_float128(struct demangle_data *ddata, const char *p, size_t len)
 	}
 }
 
-static privileged char *
+static privileged returnspointerwithnoaliases char *
 decode_fp_to_float80(struct demangle_data *ddata, const char *p, size_t len)
 {
 	long double f;

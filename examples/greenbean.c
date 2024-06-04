@@ -151,7 +151,7 @@ void *Worker(void *id) {
 
       // check that client message wasn't fragmented into more reads
       InitHttpMessage(&msg, kHttpRequest);
-      if ((inmsglen = ParseHttpMessage(&msg, buf, got)) <= 0) {
+      if ((inmsglen = ParseHttpMessage(&msg, buf, got, sizeof(buf))) <= 0) {
         if (!inmsglen) {
           LOG("%6H client sent fragmented message");
         } else {

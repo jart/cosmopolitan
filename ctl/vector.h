@@ -6,8 +6,10 @@
 #include <__utility/move.h>
 #include <__utility/swap.h>
 
+namespace ctl {
+
 template<typename T>
-struct Vector
+struct vector
 {
     size_t n = 0;
     size_t c = 0;
@@ -16,14 +18,14 @@ struct Vector
     using iterator = T*;
     using const_iterator = const T*;
 
-    Vector() = default;
+    vector() = default;
 
-    ~Vector()
+    ~vector()
     {
         delete[] p;
     }
 
-    Vector(const Vector& other)
+    vector(const vector& other)
     {
         n = other.n;
         c = other.c;
@@ -32,7 +34,7 @@ struct Vector
             new (&p[i]) T(other.p[i]);
     }
 
-    Vector(Vector&& other) noexcept
+    vector(vector&& other) noexcept
     {
         n = other.n;
         c = other.c;
@@ -42,7 +44,7 @@ struct Vector
         other.p = nullptr;
     }
 
-    explicit Vector(size_t count, const T& value = T())
+    explicit vector(size_t count, const T& value = T())
     {
         n = count;
         c = count;
@@ -51,7 +53,7 @@ struct Vector
             new (&p[i]) T(value);
     }
 
-    Vector& operator=(const Vector& other)
+    vector& operator=(const vector& other)
     {
         if (this != &other) {
             T* newData = new T[other.c];
@@ -66,7 +68,7 @@ struct Vector
         return *this;
     }
 
-    Vector& operator=(Vector&& other) noexcept
+    vector& operator=(vector&& other) noexcept
     {
         if (this != &other) {
             delete[] p;
@@ -231,12 +233,14 @@ struct Vector
         n = n2;
     }
 
-    void swap(Vector& other) noexcept
+    void swap(vector& other) noexcept
     {
         std::swap(n, other.n);
         std::swap(c, other.c);
         std::swap(p, other.p);
     }
 };
+
+} // namespace ctl
 
 #endif // COSMOPOLITAN_CTL_OPTIONAL_H_

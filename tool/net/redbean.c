@@ -6458,7 +6458,7 @@ static bool HandleMessageActual(void) {
   long reqtime, contime;
   char *p;
   struct timespec now;
-  if ((rc = ParseHttpMessage(&cpm.msg, inbuf.p, amtread)) != -1) {
+  if ((rc = ParseHttpMessage(&cpm.msg, inbuf.p, amtread, inbuf.n)) != -1) {
     if (!rc)
       return false;
     hdrsize = rc;

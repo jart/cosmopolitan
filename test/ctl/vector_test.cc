@@ -1,19 +1,20 @@
-// -*- mode:c++;indent-tabs-mode:nil;c-basic-offset:4;coding:utf-8 -*-
-// vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:4; coding:utf-8 -*-
+// vi: set et ft=c++ ts=4 sts=4 sw=4 fenc=utf-8
 //
-// Copyright 2024 Mozilla Foundation
+// Copyright 2024 Justine Alexandra Roberts Tunney
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that the
+// above copyright notice and this permission notice appear in all copies.
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+// DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+// PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+// TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/vector.h"
 
@@ -24,16 +25,15 @@
 
 // #include <string>
 // #include <vector>
-// #define String std::string
-// #define Vector std::vector
+// #define ctl std
 
 int
-main(int argc, char* argv[])
+main()
 {
 
     {
         int x = 3;
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(x);
@@ -48,8 +48,8 @@ main(int argc, char* argv[])
     }
 
     {
-        String yo = "foo";
-        Vector<String> A;
+        ctl::string yo = "foo";
+        ctl::vector<ctl::string> A;
         A.push_back("fun");
         A.push_back(std::move(yo));
         if (yo != "")
@@ -66,7 +66,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         if (!A.empty())
             return 11;
         A.push_back(5);
@@ -79,11 +79,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B(A);
+        ctl::vector<int> B(A);
         if (B.size() != 3)
             return 15;
         if (B[0] != 1 || B[1] != 2 || B[2] != 3)
@@ -91,11 +91,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B(std::move(A));
+        ctl::vector<int> B(std::move(A));
         if (A.size() != 0)
             return 17;
         if (B.size() != 3)
@@ -105,11 +105,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B = A;
         if (B.size() != 3)
             return 20;
@@ -118,11 +118,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B = std::move(A);
         if (A.size() != 0)
             return 22;
@@ -133,7 +133,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
@@ -145,7 +145,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.resize(5);
         if (A.size() != 5)
             return 27;
@@ -155,11 +155,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B.push_back(4);
         B.push_back(5);
         A.swap(B);
@@ -174,7 +174,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
@@ -186,11 +186,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int>::iterator it = A.begin();
+        ctl::vector<int>::iterator it = A.begin();
         if (*it != 1)
             return 35;
         ++it;
@@ -205,11 +205,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int>::const_iterator cit = A.cbegin();
+        ctl::vector<int>::const_iterator cit = A.cbegin();
         if (*cit != 1)
             return 39;
         ++cit;
@@ -224,7 +224,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         for (int i = 0; i < 100; ++i) {
             A.push_back(i);
         }
@@ -237,11 +237,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B(A);
+        ctl::vector<int> B(A);
         if (B.size() != 3)
             return 53;
         B.push_back(4);
@@ -252,7 +252,7 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.reserve(100);
         if (A.size() != 0)
             return 56;
@@ -266,11 +266,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B = A;
         if (B.size() != 3)
             return 60;
@@ -282,11 +282,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B = std::move(A);
         if (A.size() != 0)
             return 63;
@@ -297,11 +297,11 @@ main(int argc, char* argv[])
     }
 
     {
-        Vector<int> A;
+        ctl::vector<int> A;
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        Vector<int> B;
+        ctl::vector<int> B;
         B.push_back(4);
         B.push_back(5);
         A.swap(B);
