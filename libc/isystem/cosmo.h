@@ -43,7 +43,6 @@
 #include "libc/intrin/weaken.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/hook.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"

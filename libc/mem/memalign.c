@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-void *(*hook_memalign)(size_t, size_t) = dlmemalign;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Allocates aligned memory.
@@ -36,5 +34,7 @@ void *(*hook_memalign)(size_t, size_t) = dlmemalign;
  * @see valloc(), pvalloc()
  */
 void *memalign(size_t align, size_t bytes) {
-  return hook_memalign(align, bytes);
+  return dlmemalign(align, bytes);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

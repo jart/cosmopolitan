@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-void *(*hook_realloc)(void *, size_t) = dlrealloc;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Allocates / resizes / frees memory, e.g.
@@ -61,5 +59,7 @@ void *(*hook_realloc)(void *, size_t) = dlrealloc;
  * @see dlrealloc()
  */
 void *realloc(void *p, size_t n) {
-  return hook_realloc(p, n);
+  return dlrealloc(p, n);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

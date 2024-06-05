@@ -816,7 +816,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             goto FormatString;
           }
           base = 4;
-          hash = '&';
+          /* hash = '&'; */
           goto FormatNumber;
         }
 

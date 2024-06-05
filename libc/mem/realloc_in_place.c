@@ -16,53 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/magicu.h"
-#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
+#ifndef __SANITIZE_ADDRESS__
 
 /**
- * Precomputes magic numbers for unsigned division by constant.
+ * Resizes the space allocated for p to size n, only if this can be
+ * done without moving p (i.e., only if there is adjacent space
+ * available if n is greater than p's current allocated size, or n
+ * is less than or equal to p's size). This may be used instead of
+ * plain realloc if an alternative allocation strategy is needed
+ * upon failure to expand space, for example, reallocation of a
+ * buffer that must be memory-aligned or cleared. You can use
+ * realloc_in_place to trigger these alternatives only when needed.
  *
- * The returned divisor may be passed to __magic_div() to perform
- * unsigned integer division way faster than normal division e.g.
- *
- *     assert(77 / 7 == __magicu_div(77, __magicu_get(7)));
- *
- * @param d is intended divisor, which must not be zero
- * @return magic divisor (never zero)
+ * @param p is address of current allocation
+ * @param n is number of bytes needed
+ * @return rax is result, or NULL w/ errno
+ * @see dlrealloc_in_place()
  */
-struct magicu __magicu_get(uint32_t d) {
-  // From Hacker's Delight by Henry S. Warren Jr., 9780321842688
-  // Figure 10–3. Simplified algorithm for magic number unsigned
-  int a, p;
-  struct magicu magu;
-  uint32_t p32, q, r, delta;
-  npassert(d);             // Can't divide by zero.
-  p32 = 0;                 // Avoid compiler warning.
-  a = 0;                   // Initialize "add" indicator.
-  p = 31;                  // Initialize p.
-  q = 0x7FFFFFFF / d;      // Initialize q = (2**p - 1)/d.
-  r = 0x7FFFFFFF - q * d;  // Init. r = rem(2**p - 1, d).
-  do {
-    p = p + 1;
-    if (p == 32) {
-      p32 = 1;  // Set p32 = 2**(p-32).
-    } else {
-      p32 = 2 * p32;
-    }
-    if (r + 1 >= d - r) {
-      if (q >= 0x7FFFFFFF) a = 1;
-      q = 2 * q + 1;      // Update q.
-      r = 2 * r + 1 - d;  // Update r.
-    } else {
-      if (q >= 0x80000000) a = 1;
-      q = 2 * q;
-      r = 2 * r + 1;
-    }
-    delta = d - 1 - r;
-  } while (p < 64 && p32 < delta);
-  magu.M = q + 1;              // Magic number and
-  magu.s = p - 32;             // Shift amount to return
-  if (a) magu.s |= 64;         // Sets "add" indicator
-  npassert(magu.M || magu.s);  // Never returns zero.
-  return magu;
+void *realloc_in_place(void *p, size_t n) {
+  return dlrealloc_in_place(p, n);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

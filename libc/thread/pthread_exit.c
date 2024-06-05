@@ -45,26 +45,23 @@ void _pthread_unwind(struct PosixThread *pt) {
 }
 
 void _pthread_unkey(struct CosmoTib *tib) {
+  void *val;
   int i, j, gotsome;
-  void *val, **keys;
   pthread_key_dtor dtor;
-  if ((keys = tib->tib_keys)) {
-    for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
-      for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-        if ((val = keys[i]) &&
-            (dtor = atomic_load_explicit(_pthread_key_dtor + i,
-                                         memory_order_relaxed)) &&
-            dtor != (pthread_key_dtor)-1) {
-          gotsome = 1;
-          keys[i] = 0;
-          dtor(val);
-        }
-      }
-      if (!gotsome) {
-        break;
+  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
+    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+      if ((val = tib->tib_keys[i]) &&
+          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
+                                       memory_order_relaxed)) &&
+          dtor != (pthread_key_dtor)-1) {
+        gotsome = 1;
+        tib->tib_keys[i] = 0;
+        dtor(val);
       }
     }
-    free(keys);
+    if (!gotsome) {
+      break;
+    }
   }
 }
 
@@ -130,23 +127,6 @@ wontreturn void pthread_exit(void *rc) {
       _weaken(__cxa_finalize)(NULL);
     }
   }
-
-#ifndef MODE_DBG
-  // free tls freelist
-  //
-  //   1. set lengths to -1 so free() thinks it's full
-  //   2. free globally by giving mallocs back to free
-  //
-  short freelen[32];
-  static_assert(sizeof(freelen) == sizeof(tib->tib_freelen), "");
-  memcpy(freelen, tib->tib_freelen, sizeof(freelen));
-  memset(tib->tib_freelen, -1, sizeof(freelen));
-  for (int i = 0; i < 32; ++i) {
-    if (freelen[i] > 0) {
-      free(tib->tib_freemem[i]);
-    }
-  }
-#endif
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);

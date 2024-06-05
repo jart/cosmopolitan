@@ -25,6 +25,28 @@
 #define dlrealloc_in_place           __dlrealloc_in_place
 #define dlrealloc_in_place           __dlrealloc_in_place
 
+#define create_mspace_with_base      __create_mspace_with_base
+#define mspace_bulk_free             __mspace_bulk_free
+#define mspace_calloc                __mspace_calloc
+#define mspace_footprint             __mspace_footprint
+#define mspace_footprint_limit       __mspace_footprint_limit
+#define mspace_free                  __mspace_free
+#define mspace_independent_calloc    __mspace_independent_calloc
+#define mspace_independent_comalloc  __mspace_independent_comalloc
+#define mspace_inspect_all           __mspace_inspect_all
+#define mspace_mallinfo              __mspace_mallinfo
+#define mspace_malloc                __mspace_malloc
+#define mspace_malloc_stats          __mspace_malloc_stats
+#define mspace_mallopt               __mspace_mallopt
+#define mspace_max_footprint         __mspace_max_footprint
+#define mspace_memalign              __mspace_memalign
+#define mspace_realloc               __mspace_realloc
+#define mspace_realloc_in_place      __mspace_realloc_in_place
+#define mspace_set_footprint_limit   __mspace_set_footprint_limit
+#define mspace_track_large_chunks    __mspace_track_large_chunks
+#define mspace_trim                  __mspace_trim
+#define mspace_usable_size           __mspace_usable_size
+
 COSMOPOLITAN_C_START_
 
 /*
@@ -41,7 +63,7 @@ COSMOPOLITAN_C_START_
   maximum supported value of n differs across systems, but is in all
   cases less than the maximum representable value of a size_t.
 */
-void* dlmalloc(size_t);
+extern void* (*dlmalloc)(size_t);
 
 /*
   free(void* p)
@@ -57,7 +79,7 @@ void dlfree(void*);
   Returns a pointer to n_elements * element_size bytes, with all locations
   set to zero.
 */
-void* dlcalloc(size_t, size_t);
+extern void* (*dlcalloc)(size_t, size_t);
 
 /*
   realloc(void* p, size_t n)
@@ -81,7 +103,7 @@ void* dlcalloc(size_t, size_t);
   The old unix realloc convention of allowing the last-free'd chunk
   to be used as an argument to realloc is not supported.
 */
-void* dlrealloc(void*, size_t);
+extern void* (*dlrealloc)(void*, size_t);
 
 /*
   realloc_in_place(void* p, size_t n)
@@ -110,7 +132,7 @@ void* dlrealloc_in_place(void*, size_t);
 
   Overreliance on memalign is a sure way to fragment space.
 */
-void* dlmemalign(size_t, size_t);
+extern void* (*dlmemalign)(size_t, size_t);
 
 /*
   mallopt(int parameter_number, int parameter_value)
@@ -233,7 +255,7 @@ void dlmalloc_inspect_all(void (*handler)(void*, void*, size_t, void*),
   thus be inaccurate.
 */
 
-struct mallinfo dlmallinfo(void);
+extern struct mallinfo (*dlmallinfo)(void);
 
 /*
   independent_calloc(size_t n_elements, size_t element_size, void* chunks[]);

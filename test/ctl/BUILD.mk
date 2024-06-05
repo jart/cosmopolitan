@@ -15,6 +15,7 @@ TEST_CTL_DIRECTDEPS =				\
 	CTL					\
 	LIBC_INTRIN				\
 	LIBC_LOG				\
+	LIBC_MEM				\
 	THIRD_PARTY_LIBCXX			\
 
 TEST_CTL_DEPS :=				\

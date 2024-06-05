@@ -86,13 +86,6 @@ o//libc/intrin/memmove.o: private			\
 			-finline			\
 			-foptimize-sibling-calls
 
-# make asan stack traces shorter
-o/$(MODE)/libc/intrin/asanthunk.o: private		\
-		CFLAGS +=				\
-			-Os				\
-			$(NO_MAGIC)			\
-			-foptimize-sibling-calls
-
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
 o/$(MODE)/libc/intrin/memmove.o: private		\

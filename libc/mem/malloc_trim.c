@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-int (*hook_malloc_trim)(size_t) = dlmalloc_trim;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Releases freed memory back to system.
@@ -29,5 +27,7 @@ int (*hook_malloc_trim)(size_t) = dlmalloc_trim;
  * @return 1 if it actually released any memory, else 0
  */
 int malloc_trim(size_t n) {
-  return hook_malloc_trim(n);
+  return dlmalloc_trim(n);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

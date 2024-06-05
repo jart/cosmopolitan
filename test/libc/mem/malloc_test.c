@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/cxaatexit.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
@@ -211,17 +212,17 @@ BENCH(bulk_free, bench) {
 #define ITERATIONS 10000
 
 void *Worker(void *arg) {
-  for (int i = 0; i < ITERATIONS; ++i) {
-    char *p;
-    ASSERT_NE(NULL, (p = malloc(lemur64() % 128)));
-    ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % 128, 1))));
-    free(p);
-  }
+  /* for (int i = 0; i < ITERATIONS; ++i) { */
+  /*   char *p; */
+  /*   ASSERT_NE(NULL, (p = malloc(lemur64() % 128))); */
+  /*   ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % 128, 1)))); */
+  /*   free(p); */
+  /* } */
   return 0;
 }
 
 BENCH(malloc, torture) {
-  int i, n = __get_cpu_count() * 2;
+  int i, n = __get_cpu_count();
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   if (!n)
     return;

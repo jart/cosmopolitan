@@ -26,6 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CCTEST_H_
 #define CCTEST_H_
+#include "libc/stdio/stdio.h"
 #include "third_party/double-conversion/utils.h"
 
 #ifndef TEST

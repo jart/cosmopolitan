@@ -64,6 +64,10 @@ __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
 
+/* #ifndef MODE_DBG */
+/* __static_yoink("threaded_dlmalloc"); */
+/* #endif */
+
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 

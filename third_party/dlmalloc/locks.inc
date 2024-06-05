@@ -78,7 +78,7 @@ static int malloc_unlock(MLOCK_T *lk) {
 #define ACQUIRE_LOCK(lk) malloc_lock(lk)
 #define RELEASE_LOCK(lk) malloc_unlock(lk)
 #define INITIAL_LOCK(lk) malloc_wipe(lk)
-#define DESTROY_LOCK(lk)
+#define DESTROY_LOCK(lk) malloc_wipe(lk)
 #define ACQUIRE_MALLOC_GLOBAL_LOCK() ACQUIRE_LOCK(&malloc_global_mutex);
 #define RELEASE_MALLOC_GLOBAL_LOCK() RELEASE_LOCK(&malloc_global_mutex);
 

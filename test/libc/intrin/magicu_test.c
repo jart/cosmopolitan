@@ -16,27 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
-#include "libc/mem/mem.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "libc/intrin/magicu.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "libc/intrin/magicu.h"
 
-void *(*hook_realloc_in_place)(void *, size_t) = dlrealloc_in_place;
+#define T    uint32_t
+#define TBIT (sizeof(T) * CHAR_BIT - 1)
+#define TMIN (((T) ~(T)0) > 1 ? (T)0 : (T)((uintmax_t)1 << TBIT))
+#define TMAX (((T) ~(T)0) > 1 ? (T) ~(T)0 : (T)(((uintmax_t)1 << TBIT) - 1))
+T V[] = {5,           4,        77,       4,         7,        0,
+         1,           2,        3,        4,         -1,       -2,
+         -3,          -4,       TMIN,     TMIN + 1,  TMIN + 2, TMIN + 3,
+         TMIN + 5,    TMIN + 7, TMAX,     TMAX - 1,  TMAX - 2, TMAX - 77,
+         TMAX - 3,    TMAX - 5, TMAX - 7, TMAX - 50, TMIN / 2, TMAX / 2,
+         TMAX / 2 - 3};
 
-/**
- * Resizes the space allocated for p to size n, only if this can be
- * done without moving p (i.e., only if there is adjacent space
- * available if n is greater than p's current allocated size, or n
- * is less than or equal to p's size). This may be used instead of
- * plain realloc if an alternative allocation strategy is needed
- * upon failure to expand space, for example, reallocation of a
- * buffer that must be memory-aligned or cleared. You can use
- * realloc_in_place to trigger these alternatives only when needed.
- *
- * @param p is address of current allocation
- * @param n is number of bytes needed
- * @return rax is result, or NULL w/ errno
- * @see dlrealloc_in_place()
- */
-void *realloc_in_place(void *p, size_t n) {
-  return hook_realloc_in_place(p, n);
+TEST(magicu, test) {
+  int i, j;
+  for (i = 0; i < ARRAYLEN(V); ++i) {
+    if (!V[i])
+      continue;
+    struct magicu d = __magicu_get(V[i]);
+    for (j = 0; j < ARRAYLEN(V); ++j) {
+      EXPECT_EQ(V[j] / V[i], __magicu_div(V[j], d));
+    }
+  }
+}
+
+TEST(magicu, max) {
+  ASSERT_EQ(0, __magicu_div(0, __magicu_get(-1)));
+  ASSERT_EQ(0, __magicu_div(1, __magicu_get(-1)));
+  ASSERT_EQ(0, __magicu_div(100, __magicu_get(-1)));
+  ASSERT_EQ(0, __magicu_div(-2, __magicu_get(-1)));
+}
+
+BENCH(magicu, bench) {
+  struct magicu d = __magicu_get(UINT32_MAX);
+  EZBENCH2("__magicu_get", donothing, __magicu_get(__veil("r", UINT32_MAX)));
+  EZBENCH2("__magicu_div", donothing,
+           __expropriate(__magicu_div(__veil("r", 77u), d)));
+  EZBENCH2("/", donothing,
+           __expropriate(__veil("r", 77u) / __veil("r", UINT32_MAX)));
 }

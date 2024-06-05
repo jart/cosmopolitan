@@ -44,6 +44,26 @@ $(LIBC_MEM_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
+o/$(MODE)/libc/intrin/asan.o: private			\
+		CFLAGS +=				\
+			-O2				\
+			-finline			\
+			-finline-functions		\
+			-x-no-pg			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096	\
+			-fpatchable-function-entry=0,0
+
+# make asan stack traces shorter
+o/$(MODE)/libc/intrin/asanthunk.o: private		\
+		CFLAGS +=				\
+			-Os				\
+			$(NO_MAGIC)			\
+			-foptimize-sibling-calls
+
 LIBC_MEM_LIBS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)))
 LIBC_MEM_SRCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_SRCS))
 LIBC_MEM_HDRS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_HDRS))

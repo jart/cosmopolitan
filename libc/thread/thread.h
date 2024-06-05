@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 #define COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 
-#define PTHREAD_KEYS_MAX              128
+#define PTHREAD_KEYS_MAX              48
 #define PTHREAD_STACK_MIN             65536
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
@@ -44,8 +44,7 @@ COSMOPOLITAN_C_START_
 #define PTHREAD_COND_INITIALIZER   _PTHREAD_INIT
 #define PTHREAD_RWLOCK_INITIALIZER _PTHREAD_INIT
 #define PTHREAD_MUTEX_INITIALIZER  _PTHREAD_INIT
-#define _PTHREAD_INIT \
-  { 0 }
+#define _PTHREAD_INIT              {0}
 
 typedef uintptr_t pthread_t;
 typedef int pthread_id_np_t;

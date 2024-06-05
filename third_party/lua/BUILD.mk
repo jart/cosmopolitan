@@ -230,6 +230,7 @@ THIRD_PARTY_LUA_LUA_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_STDIO						\
 	LIBC_LOG						\
+	LIBC_MEM						\
 	LIBC_STR						\
 	LIBC_SYSV						\
 	LIBC_THREAD						\
@@ -262,6 +263,7 @@ THIRD_PARTY_LUA_LUAC_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
+	LIBC_MEM						\
 	LIBC_STR						\
 	LIBC_SYSV						\
 	THIRD_PARTY_LUA						\

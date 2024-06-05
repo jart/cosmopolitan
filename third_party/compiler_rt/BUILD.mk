@@ -46,7 +46,8 @@ $(THIRD_PARTY_COMPILER_RT_A).pkg:				\
 $(THIRD_PARTY_COMPILER_RT_A_OBJS): private			\
 		DEFAULT_CFLAGS +=				\
 			$(OLD_CODE)				\
-			-DCRT_HAS_128BIT
+			-DCRT_HAS_128BIT			\
+			-fno-sanitize=address
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/third_party/compiler_rt/comprt.o: third_party/compiler_rt/comprt.S

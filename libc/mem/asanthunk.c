@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifdef __x86_64__
+#ifdef __SANITIZE_ADDRESS__
 
 void __asan_report_load(void *, int);
 void __asan_report_store(void *, int);
@@ -173,4 +174,5 @@ void __asan_store32() {
   __builtin_trap();
 }
 
+#endif /* __SANITIZE_ADDRESS__ */
 #endif /* __x86_64__ */

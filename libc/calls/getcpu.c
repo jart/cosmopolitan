@@ -48,20 +48,11 @@ int getcpu(unsigned *out_opt_cpu, unsigned *out_opt_node) {
     } else {
       return __winerr();
     }
-  } else if (IsXnuSilicon()) {
-    if (__syslib->__version >= 9) {
-      size_t cpu64;
-      errno_t err = __syslib->__pthread_cpu_number_np(&cpu64);
-      if (!err) {
-        cpu = cpu64;
-        node = 0;
-      } else {
-        errno = err;
-        return -1;
-      }
-    } else {
-      return enosys();
-    }
+  } else if (IsAarch64()) {
+    long tpidr_el0;
+    asm("mrs\t%0,tpidr_el0" : "=r"(tpidr_el0));
+    cpu = tpidr_el0 & 255;
+    node = 0;
   } else {
     int rc = sys_getcpu(&cpu, &node, 0);
     if (rc == -1)

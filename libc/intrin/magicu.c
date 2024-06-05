@@ -16,42 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/magicu.h"
-#include "libc/limits.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "libc/tinymath/magicu.h"
+#include "libc/intrin/magicu.h"
+#include "libc/assert.h"
 
-#define T    uint32_t
-#define TBIT (sizeof(T) * CHAR_BIT - 1)
-#define TMIN (((T) ~(T)0) > 1 ? (T)0 : (T)((uintmax_t)1 << TBIT))
-#define TMAX (((T) ~(T)0) > 1 ? (T) ~(T)0 : (T)(((uintmax_t)1 << TBIT) - 1))
-T V[] = {5,           4,        77,       4,         7,        0,
-         1,           2,        3,        4,         -1,       -2,
-         -3,          -4,       TMIN,     TMIN + 1,  TMIN + 2, TMIN + 3,
-         TMIN + 5,    TMIN + 7, TMAX,     TMAX - 1,  TMAX - 2, TMAX - 77,
-         TMAX - 3,    TMAX - 5, TMAX - 7, TMAX - 50, TMIN / 2, TMAX / 2,
-         TMAX / 2 - 3};
-
-TEST(magicu, test) {
-  int i, j;
-  for (i = 0; i < ARRAYLEN(V); ++i) {
-    if (!V[i])
-      continue;
-    struct magicu d = __magicu_get(V[i]);
-    for (j = 0; j < ARRAYLEN(V); ++j) {
-      EXPECT_EQ(V[j] / V[i], __magicu_div(V[j], d));
+/**
+ * Precomputes magic numbers for unsigned division by constant.
+ *
+ * The returned divisor may be passed to __magic_div() to perform
+ * unsigned integer division way faster than normal division e.g.
+ *
+ *     assert(77 / 7 == __magicu_div(77, __magicu_get(7)));
+ *
+ * @param d is intended divisor, which must not be zero
+ * @return magic divisor (never zero)
+ */
+struct magicu __magicu_get(uint32_t d) {
+  // From Hacker's Delight by Henry S. Warren Jr., 9780321842688
+  // Figure 10–3. Simplified algorithm for magic number unsigned
+  int a, p;
+  struct magicu magu;
+  uint32_t p32, q, r, delta;
+  npassert(d);             // Can't divide by zero.
+  p32 = 0;                 // Avoid compiler warning.
+  a = 0;                   // Initialize "add" indicator.
+  p = 31;                  // Initialize p.
+  q = 0x7FFFFFFF / d;      // Initialize q = (2**p - 1)/d.
+  r = 0x7FFFFFFF - q * d;  // Init. r = rem(2**p - 1, d).
+  do {
+    p = p + 1;
+    if (p == 32) {
+      p32 = 1;  // Set p32 = 2**(p-32).
+    } else {
+      p32 = 2 * p32;
     }
-  }
-}
-
-BENCH(magicu, bench) {
-  struct magicu d = __magicu_get(UINT32_MAX);
-  EZBENCH2("__magicu_get", donothing, __magicu_get(__veil("r", UINT32_MAX)));
-  EZBENCH2("__magicu_div", donothing,
-           __expropriate(__magicu_div(__veil("r", 77u), d)));
-  EZBENCH2("/", donothing,
-           __expropriate(__veil("r", 77u) / __veil("r", UINT32_MAX)));
+    if (r + 1 >= d - r) {
+      if (q >= 0x7FFFFFFF) a = 1;
+      q = 2 * q + 1;      // Update q.
+      r = 2 * r + 1 - d;  // Update r.
+    } else {
+      if (q >= 0x80000000) a = 1;
+      q = 2 * q;
+      r = 2 * r + 1;
+    }
+    delta = d - 1 - r;
+  } while (p < 64 && p32 < delta);
+  magu.M = q + 1;              // Magic number and
+  magu.s = p - 32;             // Shift amount to return
+  if (a) magu.s |= 64;         // Sets "add" indicator
+  npassert(magu.M || magu.s);  // Never returns zero.
+  return magu;
 }
