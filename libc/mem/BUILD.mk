@@ -44,7 +44,7 @@ $(LIBC_MEM_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
-o/$(MODE)/libc/intrin/asan.o: private			\
+o/$(MODE)/libc/mem/asan.o: private			\
 		CFLAGS +=				\
 			-O2				\
 			-finline			\
@@ -58,7 +58,7 @@ o/$(MODE)/libc/intrin/asan.o: private			\
 			-fpatchable-function-entry=0,0
 
 # make asan stack traces shorter
-o/$(MODE)/libc/intrin/asanthunk.o: private		\
+o/$(MODE)/libc/mem/asanthunk.o: private			\
 		CFLAGS +=				\
 			-Os				\
 			$(NO_MAGIC)			\

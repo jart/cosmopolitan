@@ -54,8 +54,7 @@ int dlmallopt(int param_number, int value) {
 int dlmalloc_trim(size_t pad) {
   int got_some = 0;
   for (unsigned i = 0; i < g_heapslen; ++i)
-    if (g_heaps[i])
-      got_some |= mspace_trim(g_heaps[i], pad);
+    got_some |= mspace_trim(g_heaps[i], pad);
   return got_some;
 }
 
@@ -69,8 +68,7 @@ void dlmalloc_inspect_all(void handler(void *start, void *end,
                                        size_t used_bytes, void *callback_arg),
                           void *arg) {
   for (unsigned i = 0; i < g_heapslen; ++i)
-    if (g_heaps[i])
-      mspace_inspect_all(g_heaps[i], handler, arg);
+    mspace_inspect_all(g_heaps[i], handler, arg);
 }
 
 forceinline mstate get_arena(void) {
@@ -165,8 +163,6 @@ static void threaded_dlmalloc(void) {
   // this code makes the c++ stl go 164x faster on my ryzen
   cpus = __get_cpu_count();
   if (cpus == -1)
-    heaps = 1;
-  else if (!IsAarch64() && !X86_HAVE(RDTSCP))
     heaps = 1;
   else if ((var = getenv("COSMOPOLITAN_HEAP_COUNT")))
     heaps = dlmalloc_atoi(var);
