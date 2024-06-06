@@ -308,6 +308,12 @@ main()
         s.append(" world");
         if (s != "hello world")
             return 63;
+        for (int i = 0; i < 4; ++i) {
+            s.append(" world");
+        }
+        if (s != "hello world world world world world") {
+            return 64;
+        }
     }
 
     // {

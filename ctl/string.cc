@@ -47,27 +47,27 @@ string::~string() /* noexcept */
     }
 }
 
-string::string(const char* s) noexcept
+string::string(const char* s) noexcept : string()
 {
     append(s, strlen(s));
 }
 
-string::string(const string& s) noexcept
+string::string(const string& s) noexcept : string()
 {
     append(s.data(), s.size());
 }
 
-string::string(const string_view s) noexcept
+string::string(const string_view s) noexcept : string()
 {
     append(s.p, s.n);
 }
 
-string::string(size_t size, char ch) noexcept
+string::string(size_t size, char ch) noexcept : string()
 {
     resize(size, ch);
 }
 
-string::string(const char* s, size_t size) noexcept
+string::string(const char* s, size_t size) noexcept : string()
 {
     append(s, size);
 }
@@ -75,6 +75,8 @@ string::string(const char* s, size_t size) noexcept
 const char*
 string::c_str() const noexcept
 {
+    if (!size())
+        return "";
     if (size() >= capacity())
         __builtin_trap();
     if (data()[size()])
@@ -86,8 +88,9 @@ void
 string::reserve(size_t c2) noexcept
 {
     char* p2;
-    if (c2 < size())
-        c2 = size();
+    size_t n = size();
+    if (c2 < n)
+        c2 = n;
     if (ckd_add(&c2, c2, 15))
         __builtin_trap();
     c2 &= -16;
@@ -101,7 +104,6 @@ string::reserve(size_t c2) noexcept
         if (!(p2 = (char *)realloc(big()->p, c2)))
             __builtin_trap();
     }
-    size_t n = size();
     std::atomic_signal_fence(std::memory_order_seq_cst);
     set_big_capacity(c2);
     big()->n = n;

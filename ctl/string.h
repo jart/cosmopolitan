@@ -84,7 +84,9 @@ class string
     string() noexcept
     {
         set_small_size(0);
-        small()->buf[0] = 0;
+#if 0
+        s.small()->buf[0] = 0;
+#endif
     }
 
     void swap(string& s) noexcept
@@ -100,9 +102,9 @@ class string
     {
         __builtin_memcpy(blob, __builtin_launder(s.blob), sizeof(blob));
         s.set_small_size(0);
-        /* shouldn't be necessary, but the spec says s should be left in a valid
-           state and our c_str() depends on this */
+#if 0
         s.small()->buf[0] = 0;
+#endif
     }
 
     void clear() noexcept
@@ -304,6 +306,7 @@ class string
         if (c2 > __::big_mask)
             __builtin_trap();
         *(__builtin_launder(blob) + __::sso_max) = 0x80;
+        big()->c &= ~__::big_mask;
         big()->c |= c2;
     }
 
