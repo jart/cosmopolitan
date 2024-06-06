@@ -38,7 +38,7 @@ big_string::~big_string() /* noexcept */
     free(p);
 }
 
-}   // namespace __
+} // namespace __
 
 string::~string() /* noexcept */
 {
@@ -97,11 +97,11 @@ string::reserve(size_t c2) noexcept
     if (c2 <= __::sso_max)
         return;
     if (!isbig()) {
-        if (!(p2 = (char *)malloc(c2)))
+        if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
         __builtin_memcpy(p2, data(), size() + 1);
     } else {
-        if (!(p2 = (char *)realloc(big()->p, c2)))
+        if (!(p2 = (char*)realloc(big()->p, c2)))
             __builtin_trap();
     }
     std::atomic_signal_fence(std::memory_order_seq_cst);
