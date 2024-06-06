@@ -1,0 +1,53 @@
+# https://github.com/actions/labeler
+
+documentation:
+    - changed-files:
+        - any-glob-to-any-file:
+            - README.md
+            - LICENSE
+            - CONTRIBUTING.md
+            - libc/README.md
+            - tool/cosmocc/README.md
+            - third_party/getopt/README.txt
+testing:
+    - changed-files:
+        - any-glob-to-any-file:
+            - test/**
+build:
+    - changed-files:
+        - any-glob-to-any-file:
+            - build/**
+            - Makefile
+            - '*/*.mk'
+examples:
+    - changed-files:
+        - any-glob-to-any-file: examples/**
+devops:
+    - changed-files:
+        - any-glob-to-any-file:
+            - .github/**
+            - .clang-format
+dsp:
+    - changed-files:
+        - any-glob-to-any-file:
+            - dsp/**
+ape:
+    - changed-files:
+        - any-glob-to-any-file:
+            - ape/**
+libc:
+    - changed-files:
+        - any-glob-to-any-file:
+            - libc/**
+net:
+    - changed-files:
+        - any-glob-to-any-file:
+            - net/**
+third_party:
+    - changed-files:
+        - any-glob-to-any-file:
+            - third_party/**
+tool:
+    - changed-files:
+        - any-glob-to-any-file:
+            - tool/**
