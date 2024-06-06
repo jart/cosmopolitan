@@ -303,7 +303,8 @@ class string
     {
         if (c2 > __::big_mask)
             __builtin_trap();
-        *((size_t *)__builtin_launder(blob) + 2) = ~__::big_mask | c2;
+        *(__builtin_launder(blob) + __::sso_max) = 0x80;
+        big()->c |= c2;
     }
 
     inline __::small_string* small() noexcept
