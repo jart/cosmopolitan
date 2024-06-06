@@ -85,7 +85,7 @@ class string
     {
         set_small_size(0);
 #if 0
-        s.small()->buf[0] = 0;
+        small()->buf[0] = 0;
 #endif
     }
 
