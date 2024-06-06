@@ -89,13 +89,13 @@ string::reserve(size_t c2) noexcept
 {
     char* p2;
     size_t n = size();
-    if (c2 < n)
-        c2 = n;
+    if (c2 < n + 1)
+        c2 = n + 1;
+    if (c2 <= __::string_size)
+        return;
     if (ckd_add(&c2, c2, 15))
         __builtin_trap();
     c2 &= -16;
-    if (c2 <= __::sso_max)
-        return;
     if (!isbig()) {
         if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
