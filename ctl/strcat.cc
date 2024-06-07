@@ -34,10 +34,15 @@ strcat(const string_view lhs, const string_view rhs) noexcept
         __builtin_trap();
     res.reserve(need);
     if (lhs.n)
-        memcpy(res.p, lhs.p, lhs.n);
+        memcpy(res.data(), lhs.p, lhs.n);
     if (rhs.n)
-        memcpy(res.p + lhs.n, rhs.p, rhs.n);
-    res.p[res.n = lhs.n + rhs.n] = 0;
+        memcpy(res.data() + lhs.n, rhs.p, rhs.n);
+    if (res.isbig()) {
+        res.big()->n = lhs.n + rhs.n;
+    } else {
+        res.small()->rem = __::sso_max - lhs.n - rhs.n;
+    }
+    res.data()[res.size()] = 0;
     return res;
 }
 
