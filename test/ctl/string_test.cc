@@ -23,7 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-// #include <string>
+#include <string>
 // #define ctl std
 
 int
@@ -351,6 +351,22 @@ main()
             return 77;
         if ("hell"s + "o" != "hello")
             return 78;
+    }
+
+    if constexpr (!std::is_same_v<ctl::string, std::string>) {
+        // tests the small-string optimization on ctl::string
+        ctl::string s;
+        char *d = s.data();
+        for (int i = 0; i < 23; ++i) {
+            s.append('a');
+            if (s.data() != d) {
+                return 79 + i;
+            }
+        }
+        s.append('a');
+        if (s.data() == d) {
+            return 103;
+        }
     }
 
     CheckForMemoryLeaks();

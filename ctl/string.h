@@ -151,7 +151,7 @@ class string
         if (isbig() && big()->c <= __::sso_max)
             __builtin_trap();
 #endif
-        return isbig() ? __::big_mask & big()->c : __::sso_max;
+        return isbig() ? __::big_mask & big()->c : __::string_size;
     }
 
     iterator begin() noexcept
