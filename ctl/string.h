@@ -226,7 +226,6 @@ class string
         append(s.p, s.n);
     }
 
-    // TODO(mrdomino): explicit?
     inline operator string_view() const noexcept
     {
         return string_view(data(), size());
