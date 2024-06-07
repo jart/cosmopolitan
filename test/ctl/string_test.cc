@@ -18,12 +18,13 @@
 
 #include "ctl/string.h"
 
+#include <__type_traits/is_same.h>
 #include <__utility/move.h>
 
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-#include <string>
+// #include <string>
 // #define ctl std
 
 int
@@ -312,7 +313,7 @@ main()
             s.append(" world");
         }
         if (s != "hello world world world world world world world world world "
-            "world world") {
+                 "world world") {
             return 64;
         }
     }
@@ -355,9 +356,10 @@ main()
 
     {
         ctl::string s;
-        if constexpr (!std::is_same_v<ctl::string, std::string>) {
+#undef ctl
+        if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
             // tests the small-string optimization on ctl::string
-            char *d = s.data();
+            char* d = s.data();
             for (int i = 0; i < 23; ++i) {
                 s.append('a');
                 if (s.data() != d) {
