@@ -26,6 +26,8 @@
 // #include <string>
 // #define ctl std
 
+static int g = 0;
+
 int
 main()
 {
@@ -112,6 +114,13 @@ main()
             return 23;
         if (x.value() != "hello")
             return 24;
+    }
+
+    {
+        struct A { int* p = &g; A() {++*p; } };
+        ctl::optional<A> x;
+        if (g != 0)
+            return 25;
     }
 
     CheckForMemoryLeaks();
