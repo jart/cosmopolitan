@@ -361,19 +361,19 @@ main()
             // tests the small-string optimization on ctl::string
             char* d = s.data();
             for (int i = 0; i < 23; ++i) {
-                s.append('a');
+                s.append("a");
                 if (s.data() != d) {
                     return 79 + i;
                 }
             }
-            s.append('a');
+            s.append("a");
             if (s.data() == d) {
                 return 103;
             }
         } else {
             // just check that append in a loop works
             for (int i = 0; i < 24; ++i) {
-                s.append('a');
+                s.append("a");
             }
         }
         if (s != "aaaaaaaaaaaaaaaaaaaaaaaa") {
