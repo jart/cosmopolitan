@@ -99,7 +99,7 @@ string::reserve(size_t c2) noexcept
     if (!isbig()) {
         if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
-        __builtin_memcpy(p2, data(), size() + 1);
+        memcpy(p2, data(), size() + 1);
     } else {
         if (!(p2 = (char*)realloc(big()->p, c2)))
             __builtin_trap();
@@ -139,7 +139,6 @@ string::append(char ch) noexcept
             __builtin_trap();
         reserve(c2);
     }
-    // XXX do we care to fence this?
     data()[size()] = ch;
     data()[size() + 1] = 0;
     if (isbig()) {
@@ -174,7 +173,6 @@ string::append(char ch, size_t size) noexcept
     grow(size);
     if (size)
         memset(data() + this->size(), ch, size);
-    // XXX fence?
     if (isbig()) {
         big()->n += size;
     } else {
