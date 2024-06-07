@@ -14,38 +14,45 @@ class optional
   public:
     using value_type = T;
 
-    ~optional() = default;
+    ~optional()
+    {
+        if (present_)
+            value_.~T();
+    }
 
     optional() noexcept : present_(false)
     {
     }
 
-    optional(const T& value) : present_(true), value_(value)
+    optional(const T& value) : present_(true)
     {
+        new (&value_) T(value);
     }
 
-    optional(T&& value) : present_(true), value_(std::move(value))
+    optional(T&& value) : present_(true)
     {
+        new (&value_) T(std::move(value));
     }
 
     optional(const optional& other) : present_(other.present_)
     {
-        if (present_)
+        if (other.present_)
             new (&value_) T(other.value_);
     }
 
     optional(optional&& other) noexcept : present_(other.present_)
     {
-        if (present_)
-            value_ = std::move(other.value_);
+        if (other.present_)
+            new (&value_) T(std::move(other.value_));
     }
 
     optional& operator=(const optional& other)
     {
         if (this != &other) {
+            reset();
+            if (other.present_)
+                new (&value_) T(other.value_);
             present_ = other.present_;
-            if (present_)
-                value_ = other.value_;
         }
         return *this;
     }
@@ -53,9 +60,10 @@ class optional
     optional& operator=(optional&& other) noexcept
     {
         if (this != &other) {
+            reset();
+            if (other.present_)
+                new (&value_) T(std::move(other.value_));
             present_ = other.present_;
-            if (present_)
-                value_ = std::move(other.value_);
         }
         return *this;
     }
@@ -102,8 +110,9 @@ class optional
     template<typename... Args>
     void emplace(Args&&... args)
     {
+        reset();
         present_ = true;
-        value_ = T(std::forward<Args>(args)...);
+        new (&value_) T(std::forward<Args>(args)...);
     }
 
     void swap(optional& other) noexcept
@@ -120,8 +129,10 @@ class optional
     }
 
   private:
+    union {
+        T value_;
+    };
     bool present_;
-    T value_;
 };
 
 } // namespace ctl
