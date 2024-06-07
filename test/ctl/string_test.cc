@@ -353,19 +353,29 @@ main()
             return 78;
     }
 
-    if constexpr (!std::is_same_v<ctl::string, std::string>) {
-        // tests the small-string optimization on ctl::string
+    {
         ctl::string s;
-        char *d = s.data();
-        for (int i = 0; i < 23; ++i) {
+        if constexpr (!std::is_same_v<ctl::string, std::string>) {
+            // tests the small-string optimization on ctl::string
+            char *d = s.data();
+            for (int i = 0; i < 23; ++i) {
+                s.append('a');
+                if (s.data() != d) {
+                    return 79 + i;
+                }
+            }
             s.append('a');
-            if (s.data() != d) {
-                return 79 + i;
+            if (s.data() == d) {
+                return 103;
+            }
+        } else {
+            // just check that append in a loop works
+            for (int i = 0; i < 24; ++i) {
+                s.append('a');
             }
         }
-        s.append('a');
-        if (s.data() == d) {
-            return 103;
+        if (s != "aaaaaaaaaaaaaaaaaaaaaaaa") {
+            return 104;
         }
     }
 
