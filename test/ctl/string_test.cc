@@ -18,6 +18,7 @@
 
 #include "ctl/string.h"
 
+#include <__type_traits/is_same.h>
 #include <__utility/move.h>
 
 #include "libc/runtime/runtime.h"
@@ -312,7 +313,7 @@ main()
             s.append(" world");
         }
         if (s != "hello world world world world world world world world world "
-            "world world") {
+                 "world world") {
             return 64;
         }
     }
@@ -351,6 +352,33 @@ main()
             return 77;
         if ("hell"s + "o" != "hello")
             return 78;
+    }
+
+    {
+        ctl::string s;
+#undef ctl
+        if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
+            // tests the small-string optimization on ctl::string
+            char* d = s.data();
+            for (int i = 0; i < 23; ++i) {
+                s.append("a");
+                if (s.data() != d) {
+                    return 79 + i;
+                }
+            }
+            s.append("a");
+            if (s.data() == d) {
+                return 103;
+            }
+        } else {
+            // just check that append in a loop works
+            for (int i = 0; i < 24; ++i) {
+                s.append("a");
+            }
+        }
+        if (s != "aaaaaaaaaaaaaaaaaaaaaaaa") {
+            return 104;
+        }
     }
 
     CheckForMemoryLeaks();

@@ -99,7 +99,8 @@ string::reserve(size_t c2) noexcept
     if (!isbig()) {
         if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
-        memcpy(p2, data(), size() + 1);
+        memcpy(p2, data(), size());
+        p2[size()] = 0;
     } else {
         if (!(p2 = (char*)realloc(big()->p, c2)))
             __builtin_trap();
@@ -134,18 +135,18 @@ string::append(char ch) noexcept
     if (ckd_add(&n2, size(), 2))
         __builtin_trap();
     if (n2 > capacity()) {
-        size_t c2 = capacity() + 2;
+        size_t c2 = capacity();
         if (ckd_add(&c2, c2, c2 >> 1))
             __builtin_trap();
         reserve(c2);
     }
     data()[size()] = ch;
-    data()[size() + 1] = 0;
     if (isbig()) {
         ++big()->n;
     } else {
         --small()->rem;
     }
+    data()[size()] = 0;
 }
 
 void
