@@ -23,27 +23,19 @@
 
 namespace ctl {
 
-namespace __ {
-
-big_string::~big_string() /* noexcept */
-{
-    if (n) {
-        if (n >= c)
-            __builtin_trap();
-        if (p[n])
-            __builtin_trap();
-    }
-    if (c && !p)
-        __builtin_trap();
-    free(p);
-}
-
-} // namespace __
-
-string::~string() /* noexcept */
+string::~string() noexcept
 {
     if (isbig()) {
-        big()->~big_string();
+        auto* b = big();
+        if (b->n) {
+            if (b->n >= b->c)
+                __builtin_trap();
+            if (b->p[b->n])
+                __builtin_trap();
+        }
+        if (b->c && !b->p)
+            __builtin_trap();
+        free(b->p);
     }
 }
 

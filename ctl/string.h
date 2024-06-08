@@ -38,8 +38,6 @@ struct big_string
     size_t c : sizeof(size_t) * 8 - 1;
     size_t big : 1 /* = 1 */;
 #endif
-
-    ~big_string() /* noexcept */;
 };
 
 } // namespace __
