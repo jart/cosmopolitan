@@ -39,7 +39,7 @@ operator new(size_t n, align_val_t a)
 }
 
 void*
-operator new[](size_t n, ctl::align_val_t a)
+operator new[](size_t n, align_val_t a)
 {
     return operator new(n, a);
 }
@@ -76,12 +76,12 @@ operator delete[](void* p) noexcept
     free(p);
 }
 void
-operator delete(void* p, ctl::align_val_t) noexcept
+operator delete(void* p, align_val_t) noexcept
 {
     free(p);
 }
 void
-operator delete[](void* p, ctl::align_val_t) noexcept
+operator delete[](void* p, align_val_t) noexcept
 {
     free(p);
 }
@@ -96,12 +96,12 @@ operator delete[](void* p, size_t) noexcept
     free(p);
 }
 void
-operator delete(void* p, size_t, ctl::align_val_t) noexcept
+operator delete(void* p, size_t, align_val_t) noexcept
 {
     free(p);
 }
 void
-operator delete[](void* p, size_t, ctl::align_val_t) noexcept
+operator delete[](void* p, size_t, align_val_t) noexcept
 {
     free(p);
 }
