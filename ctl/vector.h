@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_OPTIONAL_H_
 #define COSMOPOLITAN_CTL_OPTIONAL_H_
+#include "new.h"
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <__utility/swap.h>

@@ -19,7 +19,6 @@
 #include "ctl/vector.h"
 
 #include <cosmo.h>
-#include <new>
 
 #include "ctl/string.h"
 
