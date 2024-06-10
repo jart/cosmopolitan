@@ -259,13 +259,13 @@ main()
             return 55;
     }
 
-    // {
-    //     ctl::string s = "hello";
-    //     ctl::string s2 = "world";
-    //     s.swap(s2);
-    //     if (s != "world" || s2 != "hello")
-    //         return 56;
-    // }
+    {
+        ctl::string s = "hello";
+        ctl::string s2 = "world";
+        s.swap(s2);
+        if (s != "world" || s2 != "hello")
+            return 56;
+    }
 
     {
         ctl::string s = "hello";
