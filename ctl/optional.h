@@ -118,8 +118,9 @@ class optional
 
     void swap(optional& other) noexcept
     {
+        using std::swap;
         if (present_ && other.present_) {
-            std::swap(value_, other.value_);
+            swap(value_, other.value_);
         } else if (present_) {
             other.emplace(std::move(value_));
             reset();
