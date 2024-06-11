@@ -52,7 +52,7 @@
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
@@ -475,7 +475,8 @@ int LuaSlurp(lua_State *L) {
     }
     if (rc != -1) {
       got = rc;
-      if (!got) break;
+      if (!got)
+        break;
       luaL_addlstring(&b, tb, got);
     } else if (errno == EINTR) {
       errno = olderr;
@@ -617,7 +618,8 @@ dontinline int LuaBase32Impl(lua_State *L,
   const char *a = luaL_optlstring(L, 2, "", &al);
   if (!IS2POW(al) || al > 128 || al == 1)
     return luaL_error(L, "alphabet length is not a power of 2 in range 2..128");
-  if (!(p = B32(s, sl, a, al, &sl))) return luaL_error(L, "out of memory");
+  if (!(p = B32(s, sl, a, al, &sl)))
+    return luaL_error(L, "out of memory");
   lua_pushlstring(L, p, sl);
   free(p);
   return 1;
@@ -693,10 +695,12 @@ int LuaGetCryptoHash(lua_State *L) {
   const void *p = luaL_checklstring(L, 2, &pl);
   const void *k = luaL_optlstring(L, 3, "", &kl);
   const mbedtls_md_info_t *digest = mbedtls_md_info_from_string(h);
-  if (!digest) return luaL_argerror(L, 1, "unknown hash type");
+  if (!digest)
+    return luaL_argerror(L, 1, "unknown hash type");
   if (kl == 0) {
     // no key provided, run generic hash function
-    if ((digest->f_md)(p, pl, d)) return luaL_error(L, "bad input data");
+    if ((digest->f_md)(p, pl, d))
+      return luaL_error(L, "bad input data");
   } else if (mbedtls_md_hmac(digest, k, kl, p, pl, d)) {
     return luaL_error(L, "bad input data");
   }
@@ -850,6 +854,22 @@ int LuaUuidV4(lua_State *L) {
   uuid_str[19] = v[8 | (r & (0x3ull << (j * 4ull))) >> (j * 4ull)];
   uuid_str[23] = '-';
   uuid_str[36] = '\0';
+  lua_pushfstring(L, uuid_str);
+  return 1;
+}
+
+int LuaUuidV7(lua_State *L) {
+  char uuid_str[37] = {0};
+  struct timespec now = timespec_real();
+  uint64_t time_now = timespec_tonanos(now);
+  uint64_t random_data = _rand64();
+  snprintf(uuid_str, sizeof(uuid_str), "%08x-%04x-%04x-%04x-%012llx",
+            (uint32_t)(time_now >> 32), //8
+            (uint16_t)(time_now >> 16), //4
+            (uint16_t)((0x7 << 12) | (time_now >> 4 & 0x0fff)), //4
+            (uint16_t)((0b10 << 14 | ((time_now & 0x000f) << 10)) | (random_data & 0x03FF)), //4
+            (uint64_t)(random_data >> 4 & 0xFFFFFFFFFFFF) //12
+            );
   lua_pushfstring(L, uuid_str);
   return 1;
 }

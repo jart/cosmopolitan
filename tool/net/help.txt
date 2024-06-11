@@ -1065,6 +1065,9 @@ FUNCTIONS
   UuidV4() -> str
           Returns an uuid v4 string.
 
+  UuidV7() -> str
+          Returns an uuid v7 string.
+
   Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
       ├─→ status:int, {header:str=value:str,...}, body:str
       └─→ nil, error:str
@@ -1612,7 +1615,7 @@ FUNCTIONS
           called from `.init.lua`. This function is not available in
           unsecure mode.
 
-  ProgramSslRequired(mandatory:str)
+  ProgramSslRequired(mandatory:bool)
           Enables the blocking of HTTP so that all inbound clients and
           must use the TLS transport layer. This has the same effect as
           the `-J` flag. Fetch() is still allowed to make outbound HTTP
