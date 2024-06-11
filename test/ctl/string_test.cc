@@ -24,15 +24,16 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
+using String = ctl::string;
 // #include <string>
-// #define ctl std
+// using String = std::string;
 
 int
 main()
 {
 
     {
-        ctl::string s;
+        String s;
         s += 'h';
         s += 'i';
         if (s != "hi")
@@ -40,7 +41,7 @@ main()
     }
 
     {
-        ctl::string s;
+        String s;
         if (!s.empty())
             return 6;
         s.reserve(32);
@@ -56,7 +57,7 @@ main()
     }
 
     {
-        ctl::string s;
+        String s;
         s += "hello world how are you";
         s.reserve(3);
         if (s != "hello world how are you")
@@ -64,7 +65,7 @@ main()
     }
 
     {
-        ctl::string s(4, 'x');
+        String s(4, 'x');
         if (s != "xxxx")
             return 12;
         s.resize(3);
@@ -76,42 +77,42 @@ main()
     }
 
     {
-        ctl::string a = "a";
-        ctl::string b = "a";
+        String a = "a";
+        String b = "a";
         if (a.compare(b) != 0)
             return 17;
     }
 
     {
-        ctl::string a = "a";
-        ctl::string b = "b";
+        String a = "a";
+        String b = "b";
         if (a.compare(b) >= 0)
             return 18;
     }
 
     {
-        ctl::string a = "a";
-        ctl::string b = "ab";
+        String a = "a";
+        String b = "ab";
         if (a.compare(b) >= 0)
             return 19;
     }
 
     {
-        ctl::string a = "ab";
-        ctl::string b = "a";
+        String a = "ab";
+        String b = "a";
         if (a.compare(b) <= 0)
             return 20;
     }
 
     {
-        ctl::string a = "";
-        ctl::string b = "";
+        String a = "";
+        String b = "";
         if (a.compare(b) != 0)
             return 21;
     }
 
     {
-        ctl::string a = "fooBARbaz";
+        String a = "fooBARbaz";
         if (a.substr(3, 3) != "BAR")
             return 22;
         if (a.replace(3, 3, "MOO") != "fooMOObaz")
@@ -119,7 +120,7 @@ main()
     }
 
     {
-        ctl::string a = "fooBAR";
+        String a = "fooBAR";
         if (a.substr(3, 3) != "BAR")
             return 24;
         if (a.replace(3, 3, "MOO") != "fooMOO")
@@ -127,7 +128,7 @@ main()
     }
 
     {
-        ctl::string a = "fooBAR";
+        String a = "fooBAR";
         if (a.substr(1, 0) != "")
             return 26;
         if (a.replace(1, 0, "MOO") != "fMOOooBAR")
@@ -143,15 +144,15 @@ main()
     }
 
     {
-        ctl::string s1 = "hello";
-        ctl::string s2 = "world";
-        ctl::string s3 = s1 + " " + s2;
+        String s1 = "hello";
+        String s2 = "world";
+        String s3 = s1 + " " + s2;
         if (s3 != "hello world")
             return 32;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s.size() != 5)
             return 33;
         if (s.length() != 5)
@@ -161,7 +162,7 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s[0] != 'h' || s[1] != 'e' || s[2] != 'l' || s[3] != 'l' ||
             s[4] != 'o')
             return 36;
@@ -171,17 +172,17 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s.find('e') != 1)
             return 38;
         if (s.find('l') != 2)
             return 39;
-        if (s.find('x') != ctl::string::npos)
+        if (s.find('x') != s.npos)
             return 40;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (!s.ends_with("lo"))
             return 41;
         if (s.ends_with("el"))
@@ -189,8 +190,8 @@ main()
     }
 
     {
-        ctl::string s = "hello";
-        ctl::string sub = s.substr(1, 3);
+        String s = "hello";
+        String sub = s.substr(1, 3);
         if (sub != "ell")
             return 43;
         sub = s.substr(2);
@@ -199,8 +200,8 @@ main()
     }
 
     {
-        ctl::string s = "hello";
-        ctl::string s2 = s;
+        String s = "hello";
+        String s2 = s;
         if (s != s2)
             return 45;
         s2[0] = 'H';
@@ -209,8 +210,8 @@ main()
     }
 
     {
-        ctl::string s = "hello";
-        ctl::string s2 = std::move(s);
+        String s = "hello";
+        String s2 = std::move(s);
         if (s2 != "hello")
             return 47;
         if (!s.empty())
@@ -218,14 +219,14 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         const char* cstr = s.c_str();
         if (strcmp(cstr, "hello") != 0)
             return 49;
     }
 
     // {
-    //     ctl::string s = "hello";
+    //     String s = "hello";
     //     char buffer[10];
     //     s.copy(buffer, sizeof(buffer));
     //     if (strcmp(buffer, "hello") != 0)
@@ -233,7 +234,7 @@ main()
     // }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.resize(3);
         if (s != "hel")
             return 51;
@@ -243,14 +244,14 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.clear();
         if (!s.empty())
             return 53;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         auto it = s.begin();
         if (*it != 'h')
             return 54;
@@ -260,21 +261,21 @@ main()
     }
 
     {
-        ctl::string s = "hello";
-        ctl::string s2 = "world";
+        String s = "hello";
+        String s2 = "world";
         s.swap(s2);
         if (s != "world" || s2 != "hello")
             return 56;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s.front() != 'h' || s.back() != 'o')
             return 57;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.push_back('!');
         if (s != "hello!")
             return 58;
@@ -284,28 +285,28 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.insert(2, "XYZ");
         if (s != "heXYZllo")
             return 60;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.erase(1, 2);
         if (s != "hlo")
             return 61;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.replace(1, 2, "XYZ");
         if (s != "hXYZlo")
             return 62;
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         s.append(" world");
         if (s != "hello world")
             return 63;
@@ -319,14 +320,14 @@ main()
     }
 
     // {
-    //     ctl::string s = "hello";
+    //     String s = "hello";
     //     s.assign("world");
     //     if (s != "world")
     //         return 64;
     // }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s.compare("world") >= 0)
             return 65;
         if (s.compare("hello") != 0)
@@ -336,7 +337,7 @@ main()
     }
 
     {
-        ctl::string s = "hello";
+        String s = "hello";
         if (s == "world")
             return 68;
         if (s != "hello")
@@ -355,8 +356,7 @@ main()
     }
 
     {
-        ctl::string s;
-#undef ctl
+        String s;
         if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
             // tests the small-string optimization on ctl::string
             char* d = s.data();
