@@ -260,13 +260,13 @@ main()
             return 55;
     }
 
-    // {
-    //     String s = "hello";
-    //     String s2 = "world";
-    //     s.swap(s2);
-    //     if (s != "world" || s2 != "hello")
-    //         return 56;
-    // }
+    {
+        String s = "hello";
+        String s2 = "world";
+        s.swap(s2);
+        if (s != "world" || s2 != "hello")
+            return 56;
+    }
 
     {
         String s = "hello";
