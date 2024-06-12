@@ -860,15 +860,15 @@ int LuaUuidV4(lua_State *L) {
 
 int LuaUuidV7(lua_State *L) {
   char uuid_str[37] = {0};
-  struct timespec now = timespec_real();
-  uint64_t time_now = timespec_tonanos(now);
+  struct timespec ts = timespec_real();
+  uint64_t time_now = ts.tv_sec * 1000000000 + ts.tv_nsec;
   uint64_t random_data = _rand64();
-  snprintf(uuid_str, sizeof(uuid_str), "%08x-%04x-%04x-%04x-%012llx",
-            (uint32_t)(time_now >> 32), //8
-            (uint16_t)(time_now >> 16), //4
-            (uint16_t)((0x7 << 12) | (time_now >> 4 & 0x0fff)), //4
-            (uint16_t)((0b10 << 14 | ((time_now & 0x000f) << 10)) | (random_data & 0x03FF)), //4
-            (uint64_t)(random_data >> 4 & 0xFFFFFFFFFFFF) //12
+  snprintf(uuid_str, 37, "%08x-%04x-%04x-%04x-%012llx",
+            (uint32_t)(time_now >> 32),
+            (uint16_t)(time_now >> 16),
+            (uint16_t)((0x7 << 12) | (time_now >> 4 & 0x0fff)),
+            (uint16_t)((0b10 << 14 | ((time_now & 0x000f) << 10)) | (random_data & 0x03FF)),
+            (uint64_t)(random_data >> 4 & 0xFFFFFFFFFFFF)
             );
   lua_pushfstring(L, uuid_str);
   return 1;
