@@ -31,10 +31,32 @@ LOCAL MODIFICATIONS
   character. It may be used for teletypewriter control like having
   bold text, which can be encoded elegantly as `\e[1mHELLO\e[0m`.
 
+  Added Python-like printf modulus operator for strings, e.g.:
+  `"Hello, %s!" % {"world"}`.
+
+  Added Python-like printf multiply operator for strings, e.g.:
+  `"Hello, world! " * 3`.
+
+  Added `unix` module that exposes the low-level System Five system
+  call interface, e.g.: `require("unix"); print(unix.getcwd())`.
+
   Added luaL_traceback2() for function parameters in traceback.
 
-  Added Python-like printf modulus operator for strings.
-
-  Added Python-like printf multiply operator for strings.
-
   Fixed a buffer overflow in os.tmpname
+
+NOTES
+
+  Five test files intentionally contain ISO-8859-1 (rather than 
+  UTF-8) characters:
+
+  * test/db.lua
+  * test/files.lua
+  * test/pm.lua
+  * test/sort.lua
+  * test/strings.lua
+
+  If you edit those files as if they were UTF-8-encoded you'll
+  corrupt the ISO-8859-1 characters and cause certain tests to fail.
+  (Some of the tests count bytes, so you can't just fix the problem
+  by converting the files — you'd also have to change various
+  expected results.)
