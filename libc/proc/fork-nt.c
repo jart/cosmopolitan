@@ -69,7 +69,8 @@ static textwindows wontreturn void AbortFork(const char *func) {
 
 static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
-  while (*p == ' ') p++;
+  while (*p == ' ')
+    p++;
   while ('0' <= *p && *p <= '9') {
     *x *= 10;
     *x += *p++ - '0';
@@ -97,7 +98,8 @@ static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                                         struct NtOverlapped *),
                                            const char *sf, bool ischild) {
   ssize_t rc = ForkIo(h, buf, n, fn);
-  if (ischild) __tls_enabled_set(false);  // prevent tls crash in kprintf
+  if (ischild)
+    __tls_enabled_set(false);  // prevent tls crash in kprintf
   NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
   return rc != -1;
 }
@@ -106,7 +108,8 @@ static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   bool ok;
   ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false);
 #ifndef NDEBUG
-  if (ok) ok = ForkIo2(h, &n, sizeof(n), (void *)WriteFile, "WriteFile", false);
+  if (ok)
+    ok = ForkIo2(h, &n, sizeof(n), (void *)WriteFile, "WriteFile", false);
 #endif
 #if SYSDEBUG
   if (!ok) {
@@ -195,7 +198,8 @@ textwindows void WinMainForked(void) {
   // check to see if the process was actually forked
   // this variable should have the pipe handle numba
   varlen = GetEnvironmentVariable(u"_FORK", fvar, ARRAYLEN(fvar));
-  if (!varlen || varlen >= ARRAYLEN(fvar)) return;
+  if (!varlen || varlen >= ARRAYLEN(fvar))
+    return;
   NTTRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
 #if SYSDEBUG
@@ -302,7 +306,8 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   tib = __get_tls();
   ftrace_enabled(-1);
   strace_enabled(-1);
-  if (!(proc = __proc_new())) return -1;
+  if (!(proc = __proc_new()))
+    return -1;
   if (!setjmp(jb)) {
     reader = CreateNamedPipe(__create_pipe_name(pipename), kNtPipeAccessInbound,
                              kNtPipeTypeByte | kNtPipeReadmodeByte, 1, PIPE_BUF,
@@ -323,23 +328,26 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       // forked process since the flag was removed by __intercept_flag
       if (strace_enabled(0) > 0) {
         int n;
-        for (n = 0; args[n];) ++n;
+        for (n = 0; args[n];)
+          ++n;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
         int nbytes = (n + 2) * sizeof(char *);
         char **args2 = alloca(nbytes);
         CheckLargeStackAllocation(args2, nbytes);
 #pragma GCC pop_options
-        for (i = 0; i < n; ++i) args2[i] = args[i];
+        for (i = 0; i < n; ++i)
+          args2[i] = args[i];
         args2[i++] = "--strace";
         args2[i] = 0;
         args = args2;
       }
 #endif
       NTTRACE("STARTING SPAWN");
-      int spawnrc = ntspawn(AT_FDCWD, GetProgramExecutableName(), args, environ,
-                            (char *[]){forkvar, 0}, dwCreationFlags, 0, 0, 0, 0,
-                            &startinfo, &procinfo);
+      int spawnrc = ntspawn(&(struct NtSpawnArgs){
+          AT_FDCWD, GetProgramExecutableName(), args, environ,
+          (char *[]){forkvar, 0}, dwCreationFlags, 0, 0, 0, 0, &startinfo,
+          &procinfo});
       if (spawnrc != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
@@ -360,10 +368,13 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
             ok = WriteAll(writer, p, _mmi.p[i].size);
           }
         }
-        if (ok) ok = WriteAll(writer, __data_start, __data_end - __data_start);
-        if (ok) ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
+        if (ok)
+          ok = WriteAll(writer, __data_start, __data_end - __data_start);
+        if (ok)
+          ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
         if (ok) {
-          if (!CloseHandle(writer)) ok = false;
+          if (!CloseHandle(writer))
+            ok = false;
           writer = -1;
         }
         if (ok) {
@@ -377,8 +388,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
         }
       }
     }
-    if (reader != -1) CloseHandle(reader);
-    if (writer != -1) CloseHandle(writer);
+    if (reader != -1)
+      CloseHandle(reader);
+    if (writer != -1)
+      CloseHandle(writer);
     if (rc == -1 && errno != ENOMEM) {
       eagain();  // posix fork() only specifies two errors
     }

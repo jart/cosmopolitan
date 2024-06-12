@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/net/ljson.h"
-#include "libc/serialize.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
@@ -132,7 +132,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 'n':  // null
-        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
+        if (context & (KEY | COLON | COMMA))
+          goto OnColonCommaKey;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("null")) {
           lua_pushnil(L);
           return (struct DecodeJson){1, p + 3};
@@ -141,7 +142,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 'f':  // false
-        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
+        if (context & (KEY | COLON | COMMA))
+          goto OnColonCommaKey;
         if (p + 4 <= e && READ32LE(p) == READ32LE("alse")) {
           lua_pushboolean(L, false);
           return (struct DecodeJson){1, p + 4};
@@ -150,7 +152,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 't':  // true
-        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
+        if (context & (KEY | COLON | COMMA))
+          goto OnColonCommaKey;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("true")) {
           lua_pushboolean(L, true);
           return (struct DecodeJson){1, p + 3};
@@ -162,9 +165,11 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
       IllegalCharacter:
         return (struct DecodeJson){-1, "illegal character"};
       OnColonCommaKey:
-        if (context & KEY) goto BadObjectKey;
+        if (context & KEY)
+          goto BadObjectKey;
       OnColonComma:
-        if (context & COLON) goto MissingColon;
+        if (context & COLON)
+          goto MissingColon;
         return (struct DecodeJson){-1, "missing ','"};
       MissingColon:
         return (struct DecodeJson){-1, "missing ':'"};
@@ -172,7 +177,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         return (struct DecodeJson){-1, "object key must be string"};
 
       case '-':  // negative
-        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        if (context & (COLON | COMMA | KEY))
+          goto OnColonCommaKey;
         if (p < e && isdigit(*p)) {
           d = -1;
           break;
@@ -181,7 +187,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case '0':  // zero or number
-        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        if (context & (COLON | COMMA | KEY))
+          goto OnColonCommaKey;
         if (p < e) {
           if (*p == '.') {
             if (p + 1 == e || !isdigit(p[1])) {
@@ -198,7 +205,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         return (struct DecodeJson){1, p};
 
       case '1' ... '9':  // integer
-        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        if (context & (COLON | COMMA | KEY))
+          goto OnColonCommaKey;
         for (x = (c - '0') * d; p < e; ++p) {
           c = *p & 255;
           if (isdigit(c)) {
@@ -228,7 +236,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         return (struct DecodeJson){1, a + c};
 
       case '[':  // Array
-        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        if (context & (COLON | COMMA | KEY))
+          goto OnColonCommaKey;
         lua_newtable(L);  // +1
         for (context = ARRAY, i = 0;;) {
           r = Parse(L, p, e, context, depth - 1);  // +2
@@ -265,7 +274,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case '{':  // Object
-        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        if (context & (COLON | COMMA | KEY))
+          goto OnColonCommaKey;
         lua_newtable(L);  // +1
         context = KEY | OBJECT;
         for (;;) {
@@ -293,7 +303,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case '"':  // string
-        if (context & (COLON | COMMA)) goto OnColonComma;
+        if (context & (COLON | COMMA))
+          goto OnColonComma;
         luaL_buffinit(L, &b);
         for (;;) {
           if (UNLIKELY(p >= e)) {
@@ -586,7 +597,8 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
  * @return r.p is string describing error if `rc < 0`
  */
 struct DecodeJson DecodeJson(struct lua_State *L, const char *p, size_t n) {
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   if (lua_checkstack(L, DEPTH * 3 + LUA_MINSTACK)) {
     return Parse(L, p, p + n, 0, DEPTH);
   } else {

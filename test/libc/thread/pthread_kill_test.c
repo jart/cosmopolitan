@@ -61,7 +61,8 @@ void OnSig(int sig) {
 }
 
 void WaitUntilReady(void) {
-  while (!ready) pthread_yield();
+  while (!ready)
+    pthread_yield();
   ASSERT_EQ(0, errno);
   ASSERT_SYS(0, 0, usleep(100000));
 }
@@ -192,7 +193,8 @@ void *SocketAcceptWorker(void *arg) {
 }
 
 TEST(pthread_kill, canInterruptSocketAcceptOperation) {
-  if (IsWindows()) return;  // TODO(jart): BAH
+  if (IsWindows())
+    return;  // TODO(jart): BAH
   pthread_t t;
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnSig};
@@ -265,7 +267,8 @@ TEST(pthread_kill, canAsynchronouslyRunHandlerInsideTargetThread) {
   struct sigaction sa = {.sa_handler = OnSigAsync};
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
   ASSERT_EQ(0, pthread_create(&t, 0, CpuWorker, 0));
-  while (!is_wasting_cpu) donothing;
+  while (!is_wasting_cpu)
+    donothing;
   EXPECT_EQ(0, pthread_kill(t, SIGUSR1));
   ASSERT_EQ(0, pthread_join(t, 0));
   ASSERT_TRUE(got_sig_async);
@@ -290,9 +293,11 @@ TEST(pthread_kill, defaultThreadSignalHandlerWillKillWholeProcess) {
   SPAWN(fork);
   pthread_t t;
   ASSERT_EQ(0, pthread_create(&t, 0, FunWorker, 0));
-  while (!is_having_fun) sched_yield();
+  while (!is_having_fun)
+    sched_yield();
   ASSERT_SYS(0, 0, pthread_kill(t, SIGKILL));
-  for (;;) sched_yield();
+  for (;;)
+    sched_yield();
   TERMS(SIGKILL);
   ASSERT_NE(0, __get_tls()->tib_tid);
 }

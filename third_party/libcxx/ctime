@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===---------------------------- ctime -----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -10,15 +10,6 @@
 #ifndef _LIBCPP_CTIME
 #define _LIBCPP_CTIME
 
-#include "third_party/libcxx/__config"
-#include "libc/isystem/time.h"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
-
 /*
     ctime synopsis
 
@@ -27,7 +18,7 @@ Macros:
     NULL
     CLOCKS_PER_SEC
     TIME_UTC // C++17
-    
+
 namespace std
 {
 
@@ -38,7 +29,7 @@ Types:
     time_t
     tm
     timespec // C++17
-    
+
 clock_t clock();
 double difftime(time_t time1, time_t time0);
 time_t mktime(tm* timeptr);
@@ -54,28 +45,43 @@ int timespec_get( struct timespec *ts, int base); // C++17
 
 */
 
-using ::clock_t;
-using ::size_t;
-using ::time_t;
-using ::tm;
-#if _LIBCPP_STD_VER > 14 && defined(_LIBCPP_HAS_C11_FEATURES)
-using ::timespec;
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+
+// <time.h> is not provided by libc++
+#if __has_include(<time.h>)
+#  include <time.h>
+#  ifdef _LIBCPP_TIME_H
+#    error "If libc++ starts defining <time.h>, the __has_include check should move to libc++'s <time.h>"
+#  endif
 #endif
-using ::clock;
-using ::difftime;
-using ::mktime;
-using ::time;
-#ifndef _LIBCPP_HAS_NO_THREAD_UNSAFE_C_FUNCTIONS
-using ::asctime;
-using ::ctime;
-using ::gmtime;
-using ::localtime;
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
 #endif
-using ::strftime;
-#if _LIBCPP_STD_VER > 14 && defined(_LIBCPP_HAS_TIMESPEC_GET)
-using ::timespec_get;
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::clock_t _LIBCPP_USING_IF_EXISTS;
+using ::size_t _LIBCPP_USING_IF_EXISTS;
+using ::time_t _LIBCPP_USING_IF_EXISTS;
+using ::tm _LIBCPP_USING_IF_EXISTS;
+#if _LIBCPP_STD_VER >= 17
+using ::timespec _LIBCPP_USING_IF_EXISTS;
+#endif
+using ::clock _LIBCPP_USING_IF_EXISTS;
+using ::difftime _LIBCPP_USING_IF_EXISTS;
+using ::mktime _LIBCPP_USING_IF_EXISTS;
+using ::time _LIBCPP_USING_IF_EXISTS;
+using ::asctime _LIBCPP_USING_IF_EXISTS;
+using ::ctime _LIBCPP_USING_IF_EXISTS;
+using ::gmtime _LIBCPP_USING_IF_EXISTS;
+using ::localtime _LIBCPP_USING_IF_EXISTS;
+using ::strftime _LIBCPP_USING_IF_EXISTS;
+#if _LIBCPP_STD_VER >= 17
+using ::timespec_get _LIBCPP_USING_IF_EXISTS;
 #endif
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_CTIME
+#endif // _LIBCPP_CTIME

@@ -6,6 +6,5 @@
 #include "libc/sock/select.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
-#include "libc/time/struct/timezone.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #endif

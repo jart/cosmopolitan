@@ -268,7 +268,8 @@ void RelayRequest(void) {
     rc = read(13, buf, PIPE_BUF);
     CHECK_NE(-1, rc);
     have = rc;
-    if (!rc) break;
+    if (!rc)
+      break;
     transferred += have;
     for (i = 0; i < have; i += rc) {
       rc = mbedtls_ssl_write(&ezssl, buf + i, have - i);
@@ -288,9 +289,11 @@ void RelayRequest(void) {
 bool Recv(char *p, int n) {
   int i, rc;
   for (i = 0; i < n; i += rc) {
-    do rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
+    do
+      rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
     while (rc == MBEDTLS_ERR_SSL_WANT_READ);
-    if (!rc) return false;
+    if (!rc)
+      return false;
     if (rc < 0) {
       if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
         EzTlsDie("connection reset", rc);
@@ -334,10 +337,12 @@ int ReadResponse(void) {
       mbedtls_ssl_close_notify(&ezssl);
       break;
     } else if (msg[4] == kRunitStdout || msg[4] == kRunitStderr) {
-      if (!Recv(msg, 4)) goto TruncatedMessage;
+      if (!Recv(msg, 4))
+        goto TruncatedMessage;
       int n = READ32BE(msg);
       char *s = malloc(n);
-      if (!Recv(s, n)) goto TruncatedMessage;
+      if (!Recv(s, n))
+        goto TruncatedMessage;
       write(2, s, n);
       free(s);
     } else {
@@ -356,7 +361,8 @@ int RunOnHost(char *spec) {
   int err;
   char *p;
   for (p = spec; *p; ++p) {
-    if (*p == ':') *p = ' ';
+    if (*p == ':')
+      *p = ' ';
   }
   int got =
       sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport);
@@ -365,7 +371,8 @@ int RunOnHost(char *spec) {
     fprintf(stderr, "what on earth %#s -> %d\n", spec, got);
     exit(1);
   }
-  if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
+  if (!strchr(g_hostname, '.'))
+    strcat(g_hostname, ".test.");
   DEBUGF("connecting to %s port %d", g_hostname, g_runitdport);
   for (;;) {
     Connect();
@@ -373,7 +380,8 @@ int RunOnHost(char *spec) {
     struct timespec start = timespec_real();
     err = EzHandshake2();
     handshake_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
-    if (!err) break;
+    if (!err)
+      break;
     WARNF("handshake with %s:%d failed -0x%04x (%s)",  //
           g_hostname, g_runitdport, err, GetTlsError(err));
     close(g_sock);
@@ -446,22 +454,27 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   // wait for children to terminate
   for (;;) {
     if ((pid = wait(&ws)) == -1) {
-      if (errno == EINTR) continue;
-      if (errno == ECHILD) break;
+      if (errno == EINTR)
+        continue;
+      if (errno == ECHILD)
+        break;
       FATALF("wait failed");
     }
     for (i = 0; i < argc; ++i) {
-      if (pids[i] != pid) continue;
+      if (pids[i] != pid)
+        continue;
       if (WIFEXITED(ws)) {
         if (WEXITSTATUS(ws)) {
           INFOF("%s exited with %d", argv[i], WEXITSTATUS(ws));
         } else {
           DEBUGF("%s exited with %d", argv[i], WEXITSTATUS(ws));
         }
-        if (!exitcode) exitcode = WEXITSTATUS(ws);
+        if (!exitcode)
+          exitcode = WEXITSTATUS(ws);
       } else {
         INFOF("%s terminated with %s", argv[i], strsignal(WTERMSIG(ws)));
-        if (!exitcode) exitcode = 128 + WTERMSIG(ws);
+        if (!exitcode)
+          exitcode = 128 + WTERMSIG(ws);
       }
       break;
     }

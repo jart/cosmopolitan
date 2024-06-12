@@ -40,7 +40,7 @@
 #include "libc/mem/mem.h"      /* malloc, free */
 #include "libc/str/str.h"      /* memset */
 #include "libc/stdio/stdio.h"       /* fprintf, fopen, ftello */
-#include "libc/time/time.h"        /* clock_t, clock, CLOCKS_PER_SEC */
+#include "libc/time.h"        /* clock_t, clock, CLOCKS_PER_SEC */
 #include "libc/assert.h"
 #include "libc/runtime/runtime.h"      /* assert */
 

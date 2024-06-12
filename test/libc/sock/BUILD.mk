@@ -68,7 +68,8 @@ o/$(MODE)/test/libc/sock/shutdown_test.runs		\
 o/$(MODE)/test/libc/sock/setsockopt_test.runs		\
 o/$(MODE)/test/libc/sock/sendfile_test.runs		\
 o/$(MODE)/test/libc/sock/poll_test.runs			\
-o/$(MODE)/test/libc/sock/pollfd_test.runs:		\
+o/$(MODE)/test/libc/sock/pollfd_test.runs		\
+o/$(MODE)/test/libc/sock/getpeername_test.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 o/$(MODE)/test/libc/sock/sendrecvmsg_test.runs:		\

@@ -15,6 +15,7 @@ struct CosmoFtrace {   /* 16 */
   int64_t ft_lastaddr; /*  8 */
 };
 
+/* cosmopolitan thread information block (512 bytes) */
 /* NOTE: update aarch64 libc/errno.h if sizeof changes */
 /* NOTE: update aarch64 libc/proc/vfork.S if sizeof changes */
 /* NOTE: update aarch64 libc/nexgen32e/gc.S if sizeof changes */
@@ -36,9 +37,8 @@ struct CosmoTib {
   char *tib_sigstack_addr;
   uint32_t tib_sigstack_size;
   uint32_t tib_sigstack_flags;
-  void **tib_keys;
   void *tib_nsync;
-  void *tib_todo[7];
+  void *tib_keys[48];
 } __attribute__((__aligned__(64)));
 
 extern int __threaded;

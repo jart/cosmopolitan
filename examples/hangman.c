@@ -42,7 +42,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/zlib/zlib.h"
 // clang-format off
 

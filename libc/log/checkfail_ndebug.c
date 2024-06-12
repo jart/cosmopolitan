@@ -48,7 +48,8 @@ static relegated wontreturn void __check_fail_ndebug(uint64_t want,       //
     kvprintf(fmt, va);
   }
   kprintf("\n");
-  if (_weaken(__die)) _weaken(__die)();
+  if (_weaken(__die))
+    _weaken(__die)();
   _Exit(68);
 }
 

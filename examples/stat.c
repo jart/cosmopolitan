@@ -8,16 +8,18 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/struct/stat.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/x/xiso8601.h"
+#include "libc/time.h"
 
 /**
  * @fileoverview File metadata viewer.
@@ -26,6 +28,23 @@
  */
 
 bool numeric;
+
+char *xiso8601(struct timespec ts) {
+  struct tm tm;
+  if (!localtime_r(&ts.tv_sec, &tm))
+    return 0;
+  int len = 128;
+  char *res = malloc(len);
+  char *ptr = res;
+  char *end = res + len;
+  if (!res)
+    return 0;
+  ptr += strftime(ptr, end - ptr, "%Y-%m-%d %H:%M:%S", &tm);
+  ptr += snprintf(ptr, end - ptr, ".%09ld", ts.tv_nsec);
+  ptr += strftime(ptr, end - ptr, "%z %Z", &tm);
+  unassert(ptr + 1 <= end);
+  return res;
+}
 
 const char *DescribeFileType(unsigned mode) {
   switch (mode & S_IFMT) {
@@ -74,16 +93,16 @@ void PrintFileMetadata(const char *pathname, struct stat *st) {
          "%-32s%s\n"
          "%-32s%s\n"
          "%-32s%s\n",
-         "bytes in file", st->st_size, "physical bytes", st->st_blocks * 512,
-         "device id w/ file", st->st_dev, "inode", st->st_ino,
-         "hard link count", st->st_nlink, "mode / permissions", st->st_mode,
-         DescribeFileType(st->st_mode), "owner id", st->st_uid, "group id",
-         st->st_gid, "flags", st->st_flags, "gen", st->st_gen,
-         "device id (if special)", st->st_rdev, "block size", st->st_blksize,
-         "access time", gc(xiso8601(&st->st_atim)), "modified time",
-         gc(xiso8601(&st->st_mtim)), "c[omplicated]time",
-         gc(xiso8601(&st->st_ctim)), "birthtime",
-         gc(xiso8601(&st->st_birthtim)));
+         "bytes in file:", st->st_size, "physical bytes:", st->st_blocks * 512,
+         "device id w/ file:", st->st_dev, "inode:", st->st_ino,
+         "hard link count:", st->st_nlink, "mode / permissions:", st->st_mode,
+         DescribeFileType(st->st_mode), "owner id:", st->st_uid,
+         "group id:", st->st_gid, "flags:", st->st_flags, "gen:", st->st_gen,
+         "device id (if special):", st->st_rdev, "block size:", st->st_blksize,
+         "access time:", gc(xiso8601(st->st_atim)),
+         "modified time:", gc(xiso8601(st->st_mtim)),
+         "c[omplicated]time:", gc(xiso8601(st->st_ctim)),
+         "[birthtime]:", gc(xiso8601(st->st_birthtim)));
 }
 
 int main(int argc, char *argv[]) {

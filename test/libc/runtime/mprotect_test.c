@@ -73,13 +73,13 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
 #endif
 }
 
-void OnSigSegv(int sig, struct siginfo *si, void *vctx) {
+void OnSigSegv(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   gotsegv = true;
   SkipOverFaultingInstruction(ctx);
 }
 
-void OnSigBus(int sig, struct siginfo *si, void *vctx) {
+void OnSigBus(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   gotbusted = true;
   SkipOverFaultingInstruction(ctx);
@@ -183,8 +183,10 @@ TEST(mprotect, testExecJit_actuallyWorks) {
 }
 
 TEST(mprotect, testRwxMap_vonNeumannRules) {
-  if (IsOpenbsd()) return;     // boo
-  if (IsXnuSilicon()) return;  // boo
+  if (IsOpenbsd())
+    return;  // boo
+  if (IsXnuSilicon())
+    return;  // boo
   int (*p)(void) = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   memcpy(p, kRet31337, sizeof(kRet31337));
   EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ),
@@ -196,7 +198,8 @@ TEST(mprotect, testRwxMap_vonNeumannRules) {
 }
 
 TEST(mprotect, testExecuteFlatFileMapOpenedAsReadonly) {
-  if (IsXnuSilicon()) return;  // TODO(jart): Use APE Loader SIP workaround?
+  if (IsXnuSilicon())
+    return;  // TODO(jart): Use APE Loader SIP workaround?
   int (*p)(void);
   size_t n = sizeof(kRet31337);
   ASSERT_SYS(0, 3, creat("return31337", 0755));

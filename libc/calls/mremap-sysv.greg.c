@@ -47,7 +47,8 @@ void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
         : "=a"(res)
         : "0"(0x019), "D"(p), "S"(n), "d"(m), "r"(r10), "r"(r8)
         : "rcx", "r11", "memory", "cc");
-    if (res > -4096ul) errno = -res, res = -1;
+    if (res > -4096ul)
+      errno = -res, res = -1;
   } else if (IsNetbsd()) {
     if (f & MREMAP_MAYMOVE) {
       res = 0x19B;
@@ -57,7 +58,8 @@ void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
           : CFLAG_CONSTRAINT(cf), "+a"(res), "=d"(rdx)
           : "D"(p), "S"(n), "2"(q), "r"(r10), "r"(r8)
           : "rcx", "r9", "r11", "memory", "cc");
-      if (cf) errno = res, res = -1;
+      if (cf)
+        errno = res, res = -1;
     } else {
       res = einval();
     }

@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- strstream --------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -17,14 +17,17 @@ class strstreambuf
     : public basic_streambuf<char>
 {
 public:
-    explicit strstreambuf(streamsize alsize_arg = 0);
+    explicit strstreambuf(streamsize alsize_arg = 0); // before C++20
+    strstreambuf() : strstreambuf(0) {}               // C++20
+    explicit strstreambuf(streamsize alsize_arg);     // C++20
+
     strstreambuf(void* (*palloc_arg)(size_t), void (*pfree_arg)(void*));
-    strstreambuf(char* gnext_arg, streamsize n, char* pbeg_arg = 0);
+    strstreambuf(char* gnext_arg, streamsize n, char* pbeg_arg = nullptr);
     strstreambuf(const char* gnext_arg, streamsize n);
 
-    strstreambuf(signed char* gnext_arg, streamsize n, signed char* pbeg_arg = 0);
+    strstreambuf(signed char* gnext_arg, streamsize n, signed char* pbeg_arg = nullptr);
     strstreambuf(const signed char* gnext_arg, streamsize n);
-    strstreambuf(unsigned char* gnext_arg, streamsize n, unsigned char* pbeg_arg = 0);
+    strstreambuf(unsigned char* gnext_arg, streamsize n, unsigned char* pbeg_arg = nullptr);
     strstreambuf(const unsigned char* gnext_arg, streamsize n);
 
     strstreambuf(strstreambuf&& rhs);
@@ -126,28 +129,35 @@ private:
 
 */
 
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/ostream"
-#include "third_party/libcxx/istream"
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+#include <istream>
+#include <ostream>
+#include <version>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-class _LIBCPP_TYPE_VIS strstreambuf
+class _LIBCPP_DEPRECATED _LIBCPP_TYPE_VIS strstreambuf
     : public streambuf
 {
 public:
+#ifndef _LIBCPP_CXX03_LANG
+    _LIBCPP_HIDE_FROM_ABI strstreambuf() : strstreambuf(0) {}
+    explicit strstreambuf(streamsize __alsize);
+#else
     explicit strstreambuf(streamsize __alsize = 0);
+#endif
     strstreambuf(void* (*__palloc)(size_t), void (*__pfree)(void*));
-    strstreambuf(char* __gnext, streamsize __n, char* __pbeg = 0);
+    strstreambuf(char* __gnext, streamsize __n, char* __pbeg = nullptr);
     strstreambuf(const char* __gnext, streamsize __n);
 
-    strstreambuf(signed char* __gnext, streamsize __n, signed char* __pbeg = 0);
+    strstreambuf(signed char* __gnext, streamsize __n, signed char* __pbeg = nullptr);
     strstreambuf(const signed char* __gnext, streamsize __n);
-    strstreambuf(unsigned char* __gnext, streamsize __n, unsigned char* __pbeg = 0);
+    strstreambuf(unsigned char* __gnext, streamsize __n, unsigned char* __pbeg = nullptr);
     strstreambuf(const unsigned char* __gnext, streamsize __n);
 
 #ifndef _LIBCPP_CXX03_LANG
@@ -155,9 +165,9 @@ public:
     strstreambuf(strstreambuf&& __rhs);
     _LIBCPP_INLINE_VISIBILITY
     strstreambuf& operator=(strstreambuf&& __rhs);
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
-    virtual ~strstreambuf();
+    ~strstreambuf() override;
 
     void swap(strstreambuf& __rhs);
 
@@ -166,13 +176,13 @@ public:
     int pcount() const;
 
 protected:
-    virtual int_type overflow (int_type __c = EOF);
-    virtual int_type pbackfail(int_type __c = EOF);
-    virtual int_type underflow();
-    virtual pos_type seekoff(off_type __off, ios_base::seekdir __way,
-                             ios_base::openmode __which = ios_base::in | ios_base::out);
-    virtual pos_type seekpos(pos_type __sp,
-                             ios_base::openmode __which = ios_base::in | ios_base::out);
+    int_type overflow (int_type __c = EOF) override;
+    int_type pbackfail(int_type __c = EOF) override;
+    int_type underflow() override;
+    pos_type seekoff(off_type __off, ios_base::seekdir __way,
+                     ios_base::openmode __which = ios_base::in | ios_base::out) override;
+    pos_type seekpos(pos_type __sp,
+                     ios_base::openmode __which = ios_base::in | ios_base::out) override;
 
 private:
     typedef unsigned __mode_type;
@@ -225,9 +235,9 @@ strstreambuf::operator=(strstreambuf&& __rhs)
     return *this;
 }
 
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
-class _LIBCPP_TYPE_VIS istrstream
+class _LIBCPP_DEPRECATED _LIBCPP_TYPE_VIS istrstream
     : public istream
 {
 public:
@@ -246,8 +256,8 @@ public:
 
 #ifndef _LIBCPP_CXX03_LANG
     _LIBCPP_INLINE_VISIBILITY
-    istrstream(istrstream&& __rhs)
-        : istream(_VSTD::move(__rhs)),
+    istrstream(istrstream&& __rhs)  // extension
+        : istream(_VSTD::move(static_cast<istream&>(__rhs))),
           __sb_(_VSTD::move(__rhs.__sb_))
     {
         istream::set_rdbuf(&__sb_);
@@ -256,13 +266,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     istrstream& operator=(istrstream&& __rhs)
     {
-        istream::operator=(_VSTD::move(__rhs));
         __sb_ = _VSTD::move(__rhs.__sb_);
+        istream::operator=(_VSTD::move(__rhs));
         return *this;
     }
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
-    virtual ~istrstream();
+    ~istrstream() override;
 
     _LIBCPP_INLINE_VISIBILITY
     void swap(istrstream& __rhs)
@@ -280,7 +290,7 @@ private:
     strstreambuf __sb_;
 };
 
-class _LIBCPP_TYPE_VIS ostrstream
+class _LIBCPP_DEPRECATED _LIBCPP_TYPE_VIS ostrstream
     : public ostream
 {
 public:
@@ -290,13 +300,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     ostrstream(char* __s, int __n, ios_base::openmode __mode = ios_base::out)
         : ostream(&__sb_),
-          __sb_(__s, __n, __s + (__mode & ios::app ? strlen(__s) : 0))
+          __sb_(__s, __n, __s + (__mode & ios::app ? _VSTD::strlen(__s) : 0))
         {}
 
 #ifndef _LIBCPP_CXX03_LANG
     _LIBCPP_INLINE_VISIBILITY
-    ostrstream(ostrstream&& __rhs)
-        : ostream(_VSTD::move(__rhs)),
+    ostrstream(ostrstream&& __rhs)  // extension
+        : ostream(_VSTD::move(static_cast<ostream&>(__rhs))),
           __sb_(_VSTD::move(__rhs.__sb_))
     {
         ostream::set_rdbuf(&__sb_);
@@ -305,13 +315,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     ostrstream& operator=(ostrstream&& __rhs)
     {
-        ostream::operator=(_VSTD::move(__rhs));
         __sb_ = _VSTD::move(__rhs.__sb_);
+        ostream::operator=(_VSTD::move(__rhs));
         return *this;
     }
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
-    virtual ~ostrstream();
+    ~ostrstream() override;
 
     _LIBCPP_INLINE_VISIBILITY
     void swap(ostrstream& __rhs)
@@ -333,7 +343,7 @@ private:
     strstreambuf __sb_; // exposition only
 };
 
-class _LIBCPP_TYPE_VIS strstream
+class _LIBCPP_DEPRECATED _LIBCPP_TYPE_VIS strstream
     : public iostream
 {
 public:
@@ -350,13 +360,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     strstream(char* __s, int __n, ios_base::openmode __mode = ios_base::in | ios_base::out)
         : iostream(&__sb_),
-          __sb_(__s, __n, __s + (__mode & ios::app ? strlen(__s) : 0))
+          __sb_(__s, __n, __s + (__mode & ios::app ? _VSTD::strlen(__s) : 0))
         {}
 
 #ifndef _LIBCPP_CXX03_LANG
     _LIBCPP_INLINE_VISIBILITY
-    strstream(strstream&& __rhs)
-        : iostream(_VSTD::move(__rhs)),
+    strstream(strstream&& __rhs)  // extension
+        : iostream(_VSTD::move(static_cast<iostream&>(__rhs))),
           __sb_(_VSTD::move(__rhs.__sb_))
     {
         iostream::set_rdbuf(&__sb_);
@@ -365,13 +375,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     strstream& operator=(strstream&& __rhs)
     {
-        iostream::operator=(_VSTD::move(__rhs));
         __sb_ = _VSTD::move(__rhs.__sb_);
+        iostream::operator=(_VSTD::move(__rhs));
         return *this;
     }
-#endif  // _LIBCPP_CXX03_LANG
+#endif // _LIBCPP_CXX03_LANG
 
-    virtual ~strstream();
+    ~strstream() override;
 
     _LIBCPP_INLINE_VISIBILITY
     void swap(strstream& __rhs)
@@ -396,4 +406,4 @@ private:
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_STRSTREAM
+#endif // _LIBCPP_STRSTREAM

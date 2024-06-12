@@ -22,7 +22,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/struct/timezone.h"
+#include "libc/time.h"
 
 /**
  * Changes time.

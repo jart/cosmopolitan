@@ -30,6 +30,7 @@
  */
 bool32 isexecutable(const char *path) {
   struct stat st;
-  if (fstatat(AT_FDCWD, path, &st, 0)) return 0;
+  if (fstatat(AT_FDCWD, path, &st, 0))
+    return 0;
   return !S_ISDIR(st.st_mode) && !!(st.st_mode & 0111);
 }

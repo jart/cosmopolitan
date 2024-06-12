@@ -42,10 +42,14 @@
  */
 int mknod(const char *path, uint32_t mode, uint64_t dev) {
   int e, rc;
-  if (IsAsan() && !__asan_is_valid_str(path)) return efault();
-  if (mode & S_IFREG) return creat(path, mode & ~S_IFREG);
-  if (mode & S_IFDIR) return mkdir(path, mode & ~S_IFDIR);
-  if (mode & S_IFIFO) return enosys();  // no named pipes!
+  if (IsAsan() && !__asan_is_valid_str(path))
+    return efault();
+  if (mode & S_IFREG)
+    return creat(path, mode & ~S_IFREG);
+  if (mode & S_IFDIR)
+    return mkdir(path, mode & ~S_IFDIR);
+  if (mode & S_IFIFO)
+    return enosys();  // no named pipes!
   if (!IsWindows()) {
     // TODO(jart): Whys there code out there w/ S_xxx passed via dev?
     e = errno;

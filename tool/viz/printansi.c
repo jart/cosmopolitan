@@ -172,7 +172,8 @@ static void GetOpts(int *argc, char *argv[]) {
     }
   }
   if (optind == *argc) {
-    if (!g_flags.out) g_flags.out = "-";
+    if (!g_flags.out)
+      g_flags.out = "-";
     argv[(*argc)++] = "-";
   }
   if (!g_flags.full && (!g_flags.width || !g_flags.width)) {
@@ -269,7 +270,8 @@ struct Block {
 static void *Raster(long yn, long xn, unsigned char Y[yn][xn]) {
   long y, x, i, j, k, s, bi, bs;
   for (y = 0; y + 4 <= yn; y += 4) {
-    if (y) fputc('\n', stdout);
+    if (y)
+      fputc('\n', stdout);
     for (x = 0; x + 2 <= xn; x += 2) {
       bi = 0;
       bs = LONG_MAX;

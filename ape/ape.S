@@ -1,5 +1,5 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
+│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8 nofixeol                        :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -196,7 +196,7 @@ ape_mz:
 	.quad	ape_elf_entry			//  18: e_entry
 	.quad	ape_elf_phoff			//  20: e_phoff
 	.quad	ape_elf_shoff			//  28: e_shoff
-	.long	0				//  30: e_flags
+	.long	0x101ca75			//  30: ape e_flags
 	.short	64				//  34: e_ehsize
 	.short	56				//  36: e_phentsize
 	.short	ape_elf_phnum			//  38: e_phnum
@@ -669,7 +669,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.shstub	    ape_elf_entry,8		//  18: e_entry
 	.shstub	    ape_elf_phoff,8		//  20: e_phoff
 	.shstub	    ape_elf_shoff,8		//  28: e_shoff
-	.ascii	    "\\0\\0\\0\\0"		//  30: e_flags
+	.ascii	    "\\165\\312\\1\\1"		//  30: ape e_flags
 	.ascii	    "\\100\\0"			//  34: e_ehsize
 	.ascii	    "\\070\\0"			//  36: e_phentsize
 	.shstub	    ape_elf_phnum,2		//  38: e_phnum
@@ -1036,7 +1036,7 @@ ape_pe:	.ascin	"PE",4
 	.quad	ape_pe_base		// ImageBase
 	.long	ape_pe_sectionalignment	// SectionAlignment
 	.long	ape_pe_filealignment	// FileAlignment
-	.short	v_ntversion		// MajorOperatingSystemVersion
+	.short	10			// MajorOperatingSystemVersion
 	.short	0			// MinorOperatingSystemVersion
 	.short	0			// MajorImageVersion
 	.short	0			// MinorImageVersion

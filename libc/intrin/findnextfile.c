@@ -46,7 +46,8 @@ textwindows bool32 FindNextFile(int64_t hFindFile,
             DescribeNtFileFlagAttr(out_lpFindFileData->dwFileAttributes),
             DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), ok);
   } else {
-    if (GetLastError() != kNtErrorNoMoreFiles) __winerr();
+    if (GetLastError() != kNtErrorNoMoreFiles)
+      __winerr();
     NTTRACE("FindNextFile(%ld) → %hhhd% m", hFindFile, ok);
   }
   return ok;

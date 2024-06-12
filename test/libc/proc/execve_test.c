@@ -65,9 +65,12 @@ TEST(execve, testArgPassing) {
 }
 
 TEST(execve, ziposELF) {
-  if (1) return;                                  // TODO: rewrite
-  if (IsFreebsd()) return;                        // TODO: fixme on freebsd
-  if (IsLinux() && !__is_linux_2_6_23()) return;  // TODO: fixme on old linux
+  if (1)
+    return;  // TODO: rewrite
+  if (IsFreebsd())
+    return;  // TODO: fixme on freebsd
+  if (IsLinux() && !__is_linux_2_6_23())
+    return;  // TODO: fixme on old linux
   if (!IsLinux() && !IsFreebsd()) {
     EXPECT_SYS(ENOSYS, -1,
                execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
@@ -80,9 +83,12 @@ TEST(execve, ziposELF) {
 }
 
 TEST(execve, ziposAPE) {
-  if (1) return;                                  // TODO: rewrite
-  if (IsFreebsd()) return;                        // TODO: fixme on freebsd
-  if (IsLinux() && !__is_linux_2_6_23()) return;  // TODO: fixme on old linux
+  if (1)
+    return;  // TODO: rewrite
+  if (IsFreebsd())
+    return;  // TODO: fixme on freebsd
+  if (IsLinux() && !__is_linux_2_6_23())
+    return;  // TODO: fixme on old linux
   if (!IsLinux() && !IsFreebsd()) {
     EXPECT_EQ(
         -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
@@ -137,7 +143,8 @@ void ExecveTinyElf(const char *path) {
 }
 
 BENCH(execve, bench) {
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   char path[128] = "/tmp/tinyelf.XXXXXX";
   int fd = mkstemp(path);
   fchmod(fd, 0700);

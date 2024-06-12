@@ -28,6 +28,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -37,7 +38,7 @@
  *
  * @param fd is something open()'d earlier, noting pipes might not work
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
- * @param size in range [1..0x7ffff000] is reasonable
+ * @param size is always saturated to 0x7ffff000 automatically
  * @param offset is bytes from start of file at which write begins,
  *     which can exceed or overlap the end of file, in which case your
  *     file will be extended
@@ -53,6 +54,10 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   size_t wrote;
   BEGIN_CANCELATION_POINT;
 
+  // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
+  // this is inconsistent with Linux which ignores huge requests
+  size = MIN(size, 0x7ffff000);
+
   if (offset < 0) {
     rc = einval();
   } else if (fd == -1) {
@@ -65,7 +70,8 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
     rc = sys_pwrite(fd, buf, size, offset, offset);
   } else if (__isfdkind(fd, kFdSocket)) {
     rc = espipe();
-  } else if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdDevNull)) {
+  } else if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdDevNull) ||
+             __isfdkind(fd, kFdDevRandom)) {
     rc = sys_write_nt(fd, (struct iovec[]){{(void *)buf, size}}, 1, offset);
   } else {
     return ebadf();

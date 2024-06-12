@@ -147,6 +147,13 @@ o/$(MODE)/libc/calls/pledge-linux.o: private		\
 			-fPIC				\
 			-ffreestanding
 
+# we want -Os because:
+#   it makes a big difference
+#   it gets called very rarely
+o/$(MODE)/libc/calls/sigcrashsig.o: private		\
+		CFLAGS +=				\
+			-Os
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

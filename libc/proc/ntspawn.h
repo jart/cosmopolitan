@@ -4,12 +4,25 @@
 #include "libc/nt/struct/startupinfo.h"
 COSMOPOLITAN_C_START_
 
-void mungentpath(char *);
-int mkntcmdline(char16_t[32767], char *const[]);
+struct NtSpawnArgs {
+  int64_t dirhand;
+  const char *prog;
+  char *const *argv;
+  char *const *envp;
+  char *const *extravars;
+  uint32_t dwCreationFlags;
+  const char16_t *opt_lpCurrentDirectory;
+  int64_t opt_hParentProcess;
+  int64_t *opt_lpExplicitHandleList;
+  uint32_t dwExplicitHandleCount;
+  const struct NtStartupInfo *lpStartupInfo;
+  struct NtProcessInformation *opt_out_lpProcessInformation;
+};
+
 int mkntenvblock(char16_t[32767], char *const[], char *const[], char[32767]);
-int ntspawn(int64_t, const char *, char *const[], char *const[], char *const[],
-            uint32_t, const char16_t *, int64_t, int64_t *, uint32_t,
-            const struct NtStartupInfo *, struct NtProcessInformation *);
+int ntspawn(struct NtSpawnArgs *);
+size_t mkntcmdline(char16_t *, char *const[], size_t);
+void mungentpath(char *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_NTSPAWN_H_ */

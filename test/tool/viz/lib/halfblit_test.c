@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/viz/lib/halfblit.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#include "tool/viz/lib/halfblit.h"
 
 TEST(halfblit, test_4x4_to_2x2) {
   EXPECT_BINEQ(u" ☺"

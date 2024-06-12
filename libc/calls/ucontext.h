@@ -43,14 +43,55 @@ struct FpuStackEntry {
 };
 
 struct thatispacked FpuState {
+
+  /* 8087 FPU Control Word
+      IM: Invalid Operation ───────────────┐
+      DM: Denormal Operand ───────────────┐│
+      ZM: Zero Divide ───────────────────┐││
+      OM: Overflow ─────────────────────┐│││
+      UM: Underflow ───────────────────┐││││
+      PM: Precision ──────────────────┐│││││
+      PC: Precision Control ───────┐  ││││││
+       {float,∅,double,long double}│  ││││││
+      RC: Rounding Control ──────┐ │  ││││││
+       {even, →-∞, →+∞, →0}      │┌┤  ││││││
+                                ┌┤││  ││││││
+                               d││││rr││││││
+                          0b0000001001111111 */
   uint16_t cwd;
+
+  /* 8087 FPU Status Word */
   uint16_t swd;
+
   uint16_t ftw;
   uint16_t fop;
   uint64_t rip;
   uint64_t rdp;
+
+  /* SSE CONTROL AND STATUS REGISTER
+     IE: Invalid Operation Flag ──────────────┐
+     DE: Denormal Flag ──────────────────────┐│
+     ZE: Divide-by-Zero Flag ───────────────┐││
+     OE: Overflow Flag ────────────────────┐│││
+     UE: Underflow Flag ──────────────────┐││││
+     PE: Precision Flag ─────────────────┐│││││
+     DAZ: Denormals Are Zeros ──────────┐││││││
+     IM: Invalid Operation Mask ───────┐│││││││
+     DM: Denormal Operation Mask ─────┐││││││││
+     ZM: Divide-by-Zero Mask ────────┐│││││││││
+     OM: Overflow Mask ─────────────┐││││││││││
+     UM: Underflow Mask ───────────┐│││││││││││
+     PM: Precision Mask ──────────┐││││││││││││
+     RC: Rounding Control ───────┐│││││││││││││
+       {even, →-∞, →+∞, →0}      ││││││││││││││
+     FTZ: Flush To Zero ───────┐ ││││││││││││││
+                               │┌┤│││││││││││││
+               ┌──────────────┐││││││││││││││││
+               │   reserved   │││││││││││││││││
+             0b00000000000000000001111110000000 */
   uint32_t mxcsr;
   uint32_t mxcr_mask;
+
   struct FpuStackEntry st[8];
   struct XmmRegister xmm[16];
   uint32_t __padding[24];

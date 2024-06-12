@@ -15,6 +15,7 @@ TEST_LIBCXX_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
+	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
@@ -22,6 +23,8 @@ TEST_LIBCXX_DIRECTDEPS =				\
 	LIBC_THREAD					\
 	LIBC_TINYMATH					\
 	THIRD_PARTY_LIBCXX				\
+	THIRD_PARTY_LIBCXXABI				\
+	THIRD_PARTY_LIBUNWIND				\
 	THIRD_PARTY_OPENMP
 
 TEST_LIBCXX_DEPS :=					\
@@ -39,7 +42,7 @@ o/$(MODE)/test/libcxx/%.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_LIBCXX_OBJS): private CCFLAGS += -fexceptions -frtti
+$(TEST_LIBCXX_OBJS): private OVERRIDE_CXXFLAGS += -fexceptions -frtti
 
 o/$(MODE)/test/libcxx/openmp_test.o: private CXXFLAGS += -fopenmp
 o/$(MODE)/test/libcxx/openmp_test.runs: private QUOTA += -C100

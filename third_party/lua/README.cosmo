@@ -36,3 +36,5 @@ LOCAL MODIFICATIONS
   Added Python-like printf modulus operator for strings.
 
   Added Python-like printf multiply operator for strings.
+
+  Fixed a buffer overflow in os.tmpname

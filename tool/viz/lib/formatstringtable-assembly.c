@@ -112,7 +112,8 @@ void *FormatStringTableAsAssembly(long yn, long xn, const char *const T[yn][xn],
   EmitSection(yn, xn, w, GetArrayAlignment(yn, xn, w, align), emit, a);
   emit(name, a);
   emit(":", a);
-  if (strwidth(name, 0) >= 8) emit("\n", a);
+  if (strwidth(name, 0) >= 8)
+    emit("\n", a);
   FormatStringTable(yn, xn, T, emit, a, gc(xstrcat("\t.", storage, "\t")), ",",
                     "\n");
   emit("\t.endobj\t", a);

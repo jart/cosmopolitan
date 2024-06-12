@@ -71,10 +71,12 @@ static bool __extend_memory(struct MemoryIntervals *mm) {
     if (1 || IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
-      if (!dm.addr) return false;
+      if (!dm.addr)
+        return false;
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
-    if (!dm.addr) return false;
+    if (!dm.addr)
+      return false;
     __shove_memory(dm.addr, mm->p, mm->i);
     mm->p = dm.addr;
     mm->n = gran / sizeof(*mm->p);
@@ -84,10 +86,12 @@ static bool __extend_memory(struct MemoryIntervals *mm) {
     if (IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
-      if (!dm.addr) return false;
+      if (!dm.addr)
+        return false;
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
-    if (!dm.addr) return false;
+    if (!dm.addr)
+      return false;
     mm->n = (size + gran) / sizeof(*mm->p);
   }
   return true;
@@ -97,13 +101,15 @@ static int __mint_memory(struct MemoryIntervals *mm, int i) {
   unassert(i >= 0);
   unassert(i <= mm->i);
   unassert(mm->n >= 0);
-  if (mm->i == mm->n && !__extend_memory(mm)) return enomem();
+  if (mm->i == mm->n && !__extend_memory(mm))
+    return enomem();
   __shove_memory(mm->p + i + 1, mm->p + i, mm->i++ - i);
   return 0;
 }
 
 static int __punch_memory(struct MemoryIntervals *mm, int x, int y, int i) {
-  if (__mint_memory(mm, i) == -1) return -1;
+  if (__mint_memory(mm, i) == -1)
+    return -1;
   mm->p[i + 0].size -= (size_t)(mm->p[i + 0].y - (x - 1)) * FRAMESIZE;
   mm->p[i + 0].y = x - 1;
   mm->p[i + 1].size -= (size_t)((y + 1) - mm->p[i + 1].x) * FRAMESIZE;
@@ -115,15 +121,19 @@ int __untrack_memory(struct MemoryIntervals *mm, int x, int y,
                      void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
   unassert(y >= x);
-  if (!mm->i) return 0;
+  if (!mm->i)
+    return 0;
   // binary search for the lefthand side
   l = __find_memory(mm, x);
-  if (l == mm->i) return 0;
-  if (y < mm->p[l].x) return 0;
+  if (l == mm->i)
+    return 0;
+  if (y < mm->p[l].x)
+    return 0;
 
   // binary search for the righthand side
   r = __find_memory(mm, y);
-  if (r == mm->i || (r > l && y < mm->p[r].x)) --r;
+  if (r == mm->i || (r > l && y < mm->p[r].x))
+    --r;
   unassert(r >= l);
   unassert(x <= mm->p[r].y);
 
@@ -147,7 +157,8 @@ int __untrack_memory(struct MemoryIntervals *mm, int x, int y,
   //
   if (x > mm->p[l].x && x <= mm->p[l].y) {
     unassert(y >= mm->p[l].y);
-    if (IsWindows()) return einval();
+    if (IsWindows())
+      return einval();
     mm->p[l].size -= (size_t)(mm->p[l].y - (x - 1)) * FRAMESIZE;
     mm->p[l].y = x - 1;
     unassert(mm->p[l].x <= mm->p[l].y);
@@ -162,7 +173,8 @@ int __untrack_memory(struct MemoryIntervals *mm, int x, int y,
   //
   if (y >= mm->p[r].x && y < mm->p[r].y) {
     unassert(x <= mm->p[r].x);
-    if (IsWindows()) return einval();
+    if (IsWindows())
+      return einval();
     mm->p[r].size -= (size_t)((y + 1) - mm->p[r].x) * FRAMESIZE;
     mm->p[r].x = y + 1;
     unassert(mm->p[r].x <= mm->p[r].y);
@@ -214,7 +226,8 @@ int __track_memory(struct MemoryIntervals *mm, int x, int y, long h, int prot,
 
   // otherwise, create a new entry and memmove the items
   else {
-    if (__mint_memory(mm, i) == -1) return -1;
+    if (__mint_memory(mm, i) == -1)
+      return -1;
     mm->p[i].x = x;
     mm->p[i].y = y;
     mm->p[i].h = h;

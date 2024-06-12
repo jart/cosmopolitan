@@ -29,7 +29,9 @@
 int wcscasecmp(const wchar_t *a, const wchar_t *b) {
   size_t i = 0;
   unsigned x, y;
-  if (a == b) return 0;
-  while ((x = towlower(a[i])) == (y = towlower(b[i])) && b[i]) ++i;
+  if (a == b)
+    return 0;
+  while ((x = towlower(a[i])) == (y = towlower(b[i])) && b[i])
+    ++i;
   return x - y;
 }

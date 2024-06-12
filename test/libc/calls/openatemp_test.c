@@ -50,7 +50,8 @@ TEST(openatemp, unlink) {
 }
 
 TEST(openatemp, mode) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   unsigned omask = umask(0);
   char path[] = "foo.XXXXXX";
   ASSERT_SYS(0, 3, openatemp(AT_FDCWD, path, 0, 0, 0764));

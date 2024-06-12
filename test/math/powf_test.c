@@ -25,7 +25,8 @@
 #define MAX_ERROR_ULP 1
 
 #define CHECK(x) \
-  if (!(x)) return __LINE__
+  if (!(x))      \
+  return __LINE__
 
 #define TEST(e, x) \
   errno = 0;       \
@@ -97,7 +98,8 @@ int main() {
         continue;
       }
       int e = b.i - a.i;
-      if (e < 0) e = -e;
+      if (e < 0)
+        e = -e;
       CHECK(e <= MAX_ERROR_ULP);
     }
   }

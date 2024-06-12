@@ -24,6 +24,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/iscall.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/weaken.h"
@@ -66,7 +68,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
 
   if (!PLEDGED(STDIO) || !PLEDGED(EXEC) || !PLEDGED(EXEC)) {
-    ShowHint("won't print addr2line backtrace because pledge");
+    ShowHint("pledge() sandboxing makes backtraces not as good");
     return -1;
   }
 
@@ -112,6 +114,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
         --gi;
       } while ((addr = garbage->p[gi].ret) == (uintptr_t)_weaken(__gc));
     }
+    if (!kisdangerous((const unsigned char *)addr))
+      addr -= __is_call((const unsigned char *)addr);
 #endif
     argv[i++] = buf + j;
     buf[j++] = '0';
@@ -135,7 +139,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   sys_close(pipefds[1]);
   for (;;) {
     got = sys_read(pipefds[0], buf, kBacktraceBufSize);
-    if (!got) break;
+    if (!got)
+      break;
     if (got == -1 && errno == EINTR) {
       errno = 0;
       continue;
@@ -150,7 +155,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
       if ((p2 = memmem(p1, got, " (discriminator ",
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
-        if (p3 > p2 && p3[-1] == '\r') --p3;
+        if (p3 > p2 && p3[-1] == '\r')
+          --p3;
         klog(p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
@@ -162,7 +168,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
   sys_close(pipefds[0]);
   while (sys_wait4(pid, &ws, 0, 0) == -1) {
-    if (errno == EINTR) continue;
+    if (errno == EINTR)
+      continue;
     return -1;
   }
   if (WIFEXITED(ws) && !WEXITSTATUS(ws)) {
@@ -191,7 +198,8 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
   /* asan runtime depends on this function */
   ftrace_enabled(-1);
   strace_enabled(-1);
-  if (!bp) bp = __builtin_frame_address(0);
+  if (!bp)
+    bp = __builtin_frame_address(0);
   PrintBacktrace(fd, bp);
   strace_enabled(+1);
   ftrace_enabled(+1);

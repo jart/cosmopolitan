@@ -5,7 +5,7 @@ static mstate init_user_mstate(char* tbase, size_t tsize) {
   mchunkptr mn;
   mchunkptr msp = align_as_chunk(tbase);
   mstate m = (mstate)(chunk2mem(msp));
-  bzero(m, msize);
+  // bzero(m, msize);  // [jart] it is not needed
   (void)INITIAL_LOCK(&m->mutex);
   msp->head = (msize|INUSE_BITS);
   m->seg.base = m->least_addr = tbase;
@@ -32,7 +32,7 @@ mspace create_mspace(size_t capacity, int locked) {
     size_t rs = ((capacity == 0)? mparams.granularity :
                  (capacity + TOP_FOOT_SIZE + msize));
     size_t tsize = granularity_align(rs);
-    char* tbase = (char*)(dlmalloc_requires_more_vespene_gas(tsize));
+    char* tbase = (char*)dlmalloc_requires_more_vespene_gas(tsize);
     if (tbase != CMFAIL) {
       m = init_user_mstate(tbase, tsize);
       m->seg.sflags = USE_MMAP_BIT;

@@ -47,7 +47,8 @@ char *sizefmt(char *p, uint64_t x, uint64_t b) {
     }
   }
   p = FormatUint64(p, x);
-  if (suffix) *p++ = suffix;
+  if (suffix)
+    *p++ = suffix;
   *p = 0;
   return p;
 }

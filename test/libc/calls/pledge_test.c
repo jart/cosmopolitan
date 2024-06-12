@@ -58,7 +58,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 
 void SetUpOnce(void) {
@@ -103,7 +103,8 @@ TEST(pledge, default_allowsExit) {
 }
 
 TEST(pledge, execpromises_notok) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -134,7 +135,8 @@ TEST(pledge, tester) {
 }
 
 TEST(pledge, withThreadMemory) {
-  if (IsOpenbsd()) return;  // openbsd doesn't allow it, wisely
+  if (IsOpenbsd())
+    return;  // openbsd doesn't allow it, wisely
   pthread_t worker;
   int job[2] = {2, 2};                                     // create workload
   ASSERT_EQ(0, pthread_create(&worker, 0, Enclave, job));  // create worker
@@ -159,7 +161,8 @@ void *TgkillWorker(void *arg) {
 
 TEST(pledge, tgkill) {
   // https://github.com/jart/cosmopolitan/issues/628
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   sigset_t mask;
   pthread_t worker;
   SPAWN(fork);
@@ -176,7 +179,8 @@ TEST(pledge, tgkill) {
 }
 
 TEST(pledge, stdio_forbidsOpeningPasswd1) {
-  if (!IsLinux()) return;
+  if (!IsLinux())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -204,7 +208,8 @@ TEST(pledge, stdio_forbidsOpeningPasswd2) {
 }
 
 TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive1) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -223,7 +228,8 @@ TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive1) {
 }
 
 TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive2) {
-  if (!IsOpenbsd()) return;
+  if (!IsOpenbsd())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -237,7 +243,8 @@ TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive2) {
 }
 
 TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive3) {
-  if (!IsOpenbsd()) return;
+  if (!IsOpenbsd())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -252,7 +259,8 @@ TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive3) {
 }
 
 TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   struct flock lk;
   ASSERT_NE(-1, (pid = fork()));
@@ -275,7 +283,8 @@ TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
 }
 
 TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid, sv[2];
   ASSERT_SYS(0, 0, socketpair(AF_UNIX, SOCK_STREAM, 0, sv));
   ASSERT_NE(-1, (pid = fork()));
@@ -303,7 +312,8 @@ TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
 }
 
 TEST(pledge, unix_forbidsInetSockets) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -345,7 +355,8 @@ TEST(pledge, wpath_doesNotImplyRpath) {
 }
 
 TEST(pledge, inet_forbidsOtherSockets) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid, yes = 1;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -376,7 +387,8 @@ TEST(pledge, inet_forbidsOtherSockets) {
 }
 
 TEST(pledge, anet_forbidsUdpSocketsAndConnect) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -392,7 +404,8 @@ TEST(pledge, anet_forbidsUdpSocketsAndConnect) {
 }
 
 TEST(pledge, mmap) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   char *p;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
@@ -413,7 +426,8 @@ TEST(pledge, mmap) {
 }
 
 TEST(pledge, mmapProtExec) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   char *p;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
@@ -432,7 +446,8 @@ TEST(pledge, mmapProtExec) {
 }
 
 TEST(pledge, chmod_ignoresDangerBits) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_SYS(0, 3, creat("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
@@ -452,7 +467,8 @@ TEST(pledge, chmod_ignoresDangerBits) {
 }
 
 TEST(pledge, open_rpath) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
@@ -470,7 +486,8 @@ TEST(pledge, open_rpath) {
 }
 
 TEST(pledge, open_wpath) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
@@ -487,7 +504,8 @@ TEST(pledge, open_wpath) {
 }
 
 TEST(pledge, open_cpath) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   struct stat st;
   ASSERT_SYS(0, 0, touch("foo", 0644));
@@ -508,7 +526,8 @@ TEST(pledge, open_cpath) {
 }
 
 TEST(pledge, execpromises_ok) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -522,7 +541,8 @@ TEST(pledge, execpromises_ok) {
 }
 
 TEST(pledge, execpromises_notok1) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -536,7 +556,8 @@ TEST(pledge, execpromises_notok1) {
 }
 
 TEST(pledge, execpromises_reducesAtExecOnLinux) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  if (IsOpenbsd())
+    return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -550,8 +571,10 @@ TEST(pledge, execpromises_reducesAtExecOnLinux) {
 }
 
 TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
-  if (IsOpenbsd()) return;  // mimmutable() ugh
-  if (!IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;  // mimmutable() ugh
+  if (!IsOpenbsd())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -567,8 +590,10 @@ TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
 }
 
 TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
-  if (IsOpenbsd()) return;  // mimmutable() ugh
-  if (!IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;  // mimmutable() ugh
+  if (!IsOpenbsd())
+    return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -582,12 +607,14 @@ TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
 }
 
 TEST(pledge_linux, execpromisesIsSuperset_notPossible) {
-  if (IsOpenbsd()) return;
+  if (IsOpenbsd())
+    return;
   ASSERT_SYS(EINVAL, -1, pledge("stdio exec", "stdio inet exec"));
 }
 
 TEST(pledge_openbsd, execpromises_notok) {
-  if (IsOpenbsd()) return;  // mimmutable() ugh
+  if (IsOpenbsd())
+    return;  // mimmutable() ugh
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -608,7 +635,8 @@ TEST(pledge_openbsd, execpromises_notok) {
 }
 
 TEST(pledge_openbsd, bigSyscalls) {
-  if (IsOpenbsd()) return;  // testing lunix
+  if (IsOpenbsd())
+    return;  // testing lunix
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {

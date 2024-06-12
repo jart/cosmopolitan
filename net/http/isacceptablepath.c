@@ -40,7 +40,8 @@
 bool IsAcceptablePath(const char *data, size_t size) {
   const char *p, *e;
   int x, y, a, b, t, i, n;
-  if (size == -1) size = data ? strlen(data) : 0;
+  if (size == -1)
+    size = data ? strlen(data) : 0;
   t = 0;
   y = '/';
   p = data;
@@ -53,7 +54,8 @@ bool IsAcceptablePath(const char *data, size_t size) {
       if (p + n <= e) {
         for (i = 0;;) {
           b = p[i] & 0xff;
-          if (!ThomPikeCont(b)) break;
+          if (!ThomPikeCont(b))
+            break;
           a = ThomPikeMerge(a, b);
           if (++i == n) {
             x = a;
@@ -68,10 +70,10 @@ bool IsAcceptablePath(const char *data, size_t size) {
     }
     if (y == '/') {
       if (x == '.' &&  // allow /.well-known/ in the first position
-         (p - data > 2 ||
-          size < 13 ||
-          memcmp(data, "/.well-known/", 13) != 0)) return false;
-      if (x == '/' && t) return false;
+          (p - data > 2 || size < 13 || memcmp(data, "/.well-known/", 13) != 0))
+        return false;
+      if (x == '/' && t)
+        return false;
     }
     y = x;
     t = 1;

@@ -20,7 +20,7 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "tool/viz/lib/convolution.h"
 #include "tool/viz/lib/graphic.h"
@@ -66,7 +66,9 @@ long unsharp(long cn, long yw, long xw, unsigned char img[cn][yw][xw], long yn,
     rc = enomem();
   }
   free(t);
-  if (ix) free(ix - 2);
-  if (iy) free(iy - 2);
+  if (ix)
+    free(ix - 2);
+  if (iy)
+    free(iy - 2);
   return rc;
 }

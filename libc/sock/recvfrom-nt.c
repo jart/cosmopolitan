@@ -55,7 +55,8 @@ textwindows ssize_t sys_recvfrom_nt(int fd, const struct iovec *iov,
                                     size_t iovlen, uint32_t flags,
                                     void *opt_out_srcaddr,
                                     uint32_t *opt_inout_srcaddrsize) {
-  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_PEEK)) return einval();
+  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_PEEK))
+    return einval();
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
   sigset_t m = __sig_block();

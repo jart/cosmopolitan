@@ -25,6 +25,7 @@
 	mov	%r13,%rsi
 	mov	%r14,%rdx
 	mov	%r15,%rcx
+	.weak	__asan_init
 	call	__asan_init
 	pop	%rsi
 	pop	%rdi

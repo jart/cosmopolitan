@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/serialize.h"
 #include "libc/sysv/errfuns.h"
 
 #ifdef __x86_64__
@@ -41,8 +41,10 @@ static dontinstrument inline void Copy(char *p, char *q, size_t n) {
 }
 
 static dontinstrument inline int Cmp(char *p, char *q, size_t n) {
-  if (n == 8) return READ64LE(p) != READ64LE(q);
-  if (n == 4) return READ32LE(p) != READ32LE(q);
+  if (n == 8)
+    return READ64LE(p) != READ64LE(q);
+  if (n == 4)
+    return READ32LE(p) != READ32LE(q);
   for (; n; ++p, ++q, --n) {
     if (*p != *q) {
       return 1;
@@ -52,7 +54,8 @@ static dontinstrument inline int Cmp(char *p, char *q, size_t n) {
 }
 
 dontinstrument void __watcher(void) {
-  if (__watch_busy) return;
+  if (__watch_busy)
+    return;
   __watch_busy = true;
   if (Cmp(__watch_last, __watch_addr, __watch_size)) {
     kprintf("watchpoint %p changed:\n"
@@ -74,11 +77,15 @@ dontinstrument void __watcher(void) {
  */
 int __watch(void *addr, size_t size) {
   static bool once;
-  if (__watch_busy) ebusy();
-  if (size > sizeof(__watch_last)) return einval();
+  if (__watch_busy)
+    ebusy();
+  if (size > sizeof(__watch_last))
+    return einval();
   if (!once) {
-    if (!GetSymbolTable()) return -1;
-    if (__hook(__watch_hook, GetSymbolTable()) == -1) return -1;
+    if (!GetSymbolTable())
+      return -1;
+    if (__hook(__watch_hook, GetSymbolTable()) == -1)
+      return -1;
     once = true;
   }
   __watch_addr = addr;

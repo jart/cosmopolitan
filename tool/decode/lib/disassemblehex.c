@@ -16,15 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/decode/lib/disassemblehex.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
-#include "tool/decode/lib/disassemblehex.h"
 
 static size_t countzeroes(const uint8_t *data, size_t size) {
   size_t i;
   for (i = 0; i < size; ++i) {
-    if (data[i] != '\0') break;
+    if (data[i] != '\0')
+      break;
   }
   return i;
 }
@@ -42,19 +43,22 @@ void disassemblehex(uint8_t *data, size_t size, FILE *f) {
       if (z > 2) {
         fprintf(f, "\t.%s\t%zu*%d\n", "zero", z, kDisassembleHexColumns);
         i += z * kDisassembleHexColumns;
-        if (i == size) break;
+        if (i == size)
+          break;
       }
       fprintf(f, "\t.%s\t", "byte");
       bzero(glyphs, sizeof(glyphs));
     }
     /* TODO(jart): Fix Emacs */
     glyphs[col] = kCp437[ch == '"' || ch == '\\' || ch == '#' ? '.' : ch];
-    if (col) fputc(',', f);
+    if (col)
+      fputc(',', f);
     fprintf(f, "0x%02x", ch);
     if (++col == kDisassembleHexColumns) {
       col = 0;
       fprintf(f, "\t#%hs\n", glyphs);
     }
   }
-  if (col) fputc('\n', f);
+  if (col)
+    fputc('\n', f);
 }

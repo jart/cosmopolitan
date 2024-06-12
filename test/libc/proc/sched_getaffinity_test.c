@@ -23,8 +23,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/proc/posix_spawn.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
@@ -51,7 +51,8 @@ TEST(sched_getaffinity, firstOnly) {
 }
 
 TEST(sched_getaffinity, secondOnly) {
-  if (__get_cpu_count() < 2) return;
+  if (__get_cpu_count() < 2)
+    return;
   cpu_set_t x, y;
   CPU_ZERO(&x);
   CPU_SET(1, &x);
@@ -122,7 +123,8 @@ TEST(pthread_getaffinity, getpid) {
   CPU_ZERO(&x);
   CPU_SET(0, &x);
   ASSERT_SYS(0, 0, pthread_setaffinity_np(pthread_self(), sizeof(x), &x));
-  if (IsWindows()) return;  // win32 doesn't define GetThreadAffinityMask ;_;
+  if (IsWindows())
+    return;  // win32 doesn't define GetThreadAffinityMask ;_;
   ASSERT_SYS(0, 0, pthread_getaffinity_np(pthread_self(), sizeof(y), &y));
   EXPECT_EQ(1, CPU_COUNT(&y));
   EXPECT_TRUE(CPU_ISSET(0, &y));

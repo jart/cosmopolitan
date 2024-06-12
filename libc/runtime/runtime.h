@@ -103,15 +103,16 @@ int verynice(void);
 void __warn_if_powersave(void);
 void _Exit1(int) libcesque wontreturn;
 void __paginate(int, const char *);
+void __paginate_file(int, const char *);
 /* memory management */
 void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
 void CheckForMemoryLeaks(void);
 void CheckForFileLeaks(void);
+bool32 _isheap(const void *);
 void __enable_threads(void);
 void __oom_hook(size_t);
-bool32 _isheap(void *);
 /* code morphing */
 void __morph_begin(void);
 void __morph_end(void);
@@ -119,7 +120,6 @@ void __jit_begin(void);
 void __jit_end(void);
 void __clear_cache(void *, void *);
 /* portability */
-int NtGetVersion(void) pureconst;
 bool32 IsGenuineBlink(void);
 bool32 IsCygwin(void);
 const char *GetCpuidOs(void);

@@ -16,7 +16,7 @@ COSMOPOLITAN_C_START_
 #define x86_cpu_enable_sse2   X86_HAVE(SSE2)
 #define x86_cpu_enable_ssse3  X86_HAVE(SSSE3)
 #define x86_cpu_enable_simd   (X86_HAVE(SSE4_2) && X86_HAVE(PCLMUL))
-#define x86_cpu_enable_avx512 X86_HAVE(AVX512F)
+#define x86_cpu_enable_avx512 (X86_HAVE(AVX512F) && X86_HAVE(PCLMUL) && X86_HAVE(VPCLMULQDQ))
 #define cpu_check_features()  ((void)0)
 
 #elif defined(__aarch64__)

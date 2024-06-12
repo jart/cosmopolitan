@@ -17,7 +17,7 @@
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 volatile bool gotalrm;
 

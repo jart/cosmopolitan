@@ -53,15 +53,19 @@ struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot, int flags,
   if (!(flags & MAP_ANONYMOUS_linux)) {
     struct Fd *sfd;
     struct MetalFile *file;
-    if (off < 0 || fd < 0 || fd >= g_fds.n) return bad_mmap();
+    if (off < 0 || fd < 0 || fd >= g_fds.n)
+      return bad_mmap();
     sfd = &g_fds.p[fd];
-    if (sfd->kind != kFdFile) return bad_mmap();
+    if (sfd->kind != kFdFile)
+      return bad_mmap();
     file = (struct MetalFile *)sfd->handle;
     /* TODO: allow mapping partial page at end of file, if file size not
      * multiple of page size */
-    if (off > file->size || size > file->size - off) return bad_mmap();
+    if (off > file->size || size > file->size - off)
+      return bad_mmap();
     faddr = (uint64_t)file->base + off;
-    if (faddr % 4096 != 0) return bad_mmap();
+    if (faddr % 4096 != 0)
+      return bad_mmap();
   }
   if (!(flags & MAP_FIXED_linux)) {
     if (!addr) {
@@ -83,20 +87,24 @@ struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot, int flags,
     if (pte) {
       if ((flags & MAP_ANONYMOUS_linux)) {
         page = __new_page(mm);
-        if (!page) return bad_mmap();
+        if (!page)
+          return bad_mmap();
         __clear_page(BANE + page);
         e = page | PAGE_RSRV | PAGE_U;
         if ((prot & PROT_WRITE))
           e |= PAGE_V | PAGE_RW;
         else if ((prot & (PROT_READ | PROT_EXEC)))
           e |= PAGE_V;
-        if (!(prot & PROT_EXEC)) e |= PAGE_XD;
+        if (!(prot & PROT_EXEC))
+          e |= PAGE_XD;
       } else {
         fdpte = __get_virtual(mm, pml4t, faddr + i, false);
         e = *fdpte | PAGE_RSRV | PAGE_U;
         page = e & PAGE_TA;
-        if (!(prot & PROT_WRITE)) e &= ~PAGE_RW;
-        if (!(prot & PROT_EXEC)) e |= PAGE_XD;
+        if (!(prot & PROT_WRITE))
+          e &= ~PAGE_RW;
+        if (!(prot & PROT_EXEC))
+          e |= PAGE_XD;
       }
       __ref_page(mm, pml4t, page);
       *pte = e;

@@ -11,7 +11,7 @@ struct Asmdown {
       char *name;
       bool is_alias;
       struct Javadown *javadown;
-    } * p;
+    } *p;
   } symbols;
 };
 

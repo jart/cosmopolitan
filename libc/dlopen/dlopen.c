@@ -161,9 +161,12 @@ static int is_file_newer_than(const char *path, const char *other) {
 
 static unsigned elf2prot(unsigned x) {
   unsigned r = 0;
-  if (x & PF_R) r += PROT_READ;
-  if (x & PF_W) r += PROT_WRITE;
-  if (x & PF_X) r += PROT_EXEC;
+  if (x & PF_R)
+    r += PROT_READ;
+  if (x & PF_W)
+    r += PROT_WRITE;
+  if (x & PF_X)
+    r += PROT_EXEC;
   return r;
 }
 
@@ -284,7 +287,8 @@ static dontinline bool elf_load(struct Loaded *l, const char *file, long pagesz,
 
 static long *push_strs(long *sp, char **list, int count) {
   *--sp = 0;
-  while (count) *--sp = (long)list[--count];
+  while (count)
+    *--sp = (long)list[--count];
   return sp;
 }
 
@@ -316,12 +320,14 @@ static dontinline void elf_exec(const char *file, char **envp) {
 
   // count environment variables
   int envc = 0;
-  while (envp[envc]) envc++;
+  while (envp[envc])
+    envc++;
 
   // count auxiliary values
   int auxc = 0;
   Elf64_auxv_t *av;
-  for (av = (Elf64_auxv_t *)__auxv; av->a_type; ++av) auxc++;
+  for (av = (Elf64_auxv_t *)__auxv; av->a_type; ++av)
+    auxc++;
 
   // create environment block for embedded process
   // the platform libc will save its location for getenv(), etc.
@@ -332,10 +338,12 @@ static dontinline void elf_exec(const char *file, char **envp) {
   size_t argsize = (1 + 2 + 1 + envc + 1 + auxc * 2 + 1 + 3) * 8;
   size_t mapsize = (stksize + argsize + (pagesz - 1)) & -pagesz;
   size_t skew = (mapsize - argsize) & (stkalign - 1);
-  if (IsFreebsd()) skew += 8;  // FreeBSD calls _start() like a C function
+  if (IsFreebsd())
+    skew += 8;  // FreeBSD calls _start() like a C function
   map = __sys_mmap(0, mapsize, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
-  if (map == MAP_FAILED) return;
+  if (map == MAP_FAILED)
+    return;
   long *sp = (long *)(map + mapsize - skew);
 
   // push argument string
@@ -348,14 +356,22 @@ static dontinline void elf_exec(const char *file, char **envp) {
   unsigned long key, val;
   for (av = (Elf64_auxv_t *)__auxv; (key = av->a_type); ++av) {
     val = av->a_un.a_val;
-    if (key == AT_PHDR) val = (long)(prog.base + prog.eh.e_phoff);
-    if (key == AT_PHENT) val = prog.eh.e_phentsize;
-    if (key == AT_PHNUM) val = prog.eh.e_phnum;
-    if (key == AT_PAGESZ) val = pagesz;
-    if (key == AT_BASE) val = (long)interp.base;
-    if (key == AT_FLAGS) val = 0;
-    if (key == AT_ENTRY) val = (long)prog.entry;
-    if (key == AT_EXECFN) val = (long)program_invocation_name;
+    if (key == AT_PHDR)
+      val = (long)(prog.base + prog.eh.e_phoff);
+    if (key == AT_PHENT)
+      val = prog.eh.e_phentsize;
+    if (key == AT_PHNUM)
+      val = prog.eh.e_phnum;
+    if (key == AT_PAGESZ)
+      val = pagesz;
+    if (key == AT_BASE)
+      val = (long)interp.base;
+    if (key == AT_FLAGS)
+      val = 0;
+    if (key == AT_ENTRY)
+      val = (long)prog.entry;
+    if (key == AT_EXECFN)
+      val = (long)program_invocation_name;
     *--sp = val;
     *--sp = key;
   }
@@ -497,11 +513,13 @@ static void *foreign_thunk_sysv(void *func) {
   uint8_t *code, *p;
 #ifdef __x86_64__
   // it is no longer needed
-  if (1) return func;
+  if (1)
+    return func;
   // movabs $func,%rax
   // movabs $foreign_tramp,%r10
   // jmp *%r10
-  if (!(p = code = foreign_alloc(23))) return 0;  // 10 + 10 + 3 = 23
+  if (!(p = code = foreign_alloc(23)))
+    return 0;  // 10 + 10 + 3 = 23
   p = movimm(p, 0, (uintptr_t)func);
   p = movimm(p, 10, (uintptr_t)foreign_tramp);
   *p++ = 0x41;
@@ -524,7 +542,8 @@ static void *foreign_thunk_sysv(void *func) {
 
 static void *foreign_thunk_nt(void *func) {
   uint8_t *code;
-  if (!(code = foreign_alloc(27))) return 0;
+  if (!(code = foreign_alloc(27)))
+    return 0;
   // push %rbp
   code[0] = 0x55;
   // mov %rsp,%rbp

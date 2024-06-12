@@ -3,7 +3,9 @@
 
 PKGS += TEST_LIBC_INTRIN
 
-TEST_LIBC_INTRIN_SRCS := $(wildcard test/libc/intrin/*.c)
+TEST_LIBC_INTRIN_FILES := $(wildcard test/libc/intrin/*)
+TEST_LIBC_INTRIN_SRCS = $(filter %.c,$(TEST_LIBC_INTRIN_FILES))
+TEST_LIBC_INTRIN_INCS = $(filter %.inc,$(TEST_LIBC_INTRIN_FILES))
 TEST_LIBC_INTRIN_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_INTRIN_SRCS))
 
 TEST_LIBC_INTRIN_OBJS =					\

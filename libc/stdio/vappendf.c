@@ -39,8 +39,10 @@ ssize_t(vappendf)(char **b, const char *f, va_list v) {
   if ((r = (vsnprintf)(p + z.i, z.n ? z.n - W - z.i : 0, f, v)) >= 0) {
     n = ROUNDUP(z.i + r + 1, 8) + W;
     if (n > z.n) {
-      if (!z.n) z.n = W * 2;
-      while (n > z.n) z.n += z.n >> 1;
+      if (!z.n)
+        z.n = W * 2;
+      while (n > z.n)
+        z.n += z.n >> 1;
       z.n = ROUNDUP(z.n, W);
       if ((p = realloc(p, z.n))) {
         z.n = malloc_usable_size(p);
@@ -54,7 +56,8 @@ ssize_t(vappendf)(char **b, const char *f, va_list v) {
       }
     }
     z.i += r;
-    if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
+    if (!IsTiny() && W == 8)
+      z.i |= (size_t)APPEND_COOKIE << 48;
     *(size_t *)(p + z.n - W) = z.i;
   }
   va_end(w);

@@ -20,6 +20,7 @@
 
 size_t mbrlen(const char *s, size_t n, mbstate_t *t) {
   static mbstate_t ss;
-  if (!t) t = &ss;
+  if (!t)
+    t = &ss;
   return mbrtowc(0, s, n, t);
 }

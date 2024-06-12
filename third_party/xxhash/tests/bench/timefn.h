@@ -30,8 +30,7 @@ extern "C" {
 #if defined(_MSC_VER)
 // MISSING #include <sys/utime.h>  /* utime */
 #else
-#include "libc/time/struct/utimbuf.h"
-#include "libc/time/time.h"      /* utime */
+#include "libc/time.h"      /* utime */
 #endif
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
@@ -40,8 +39,7 @@ extern "C" {
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"         /* clock_t, clock, CLOCKS_PER_SEC */
+#include "libc/time.h"         /* clock_t, clock, CLOCKS_PER_SEC */
 
 
 

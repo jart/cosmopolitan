@@ -21,7 +21,8 @@
 
 void Dumper(int i, int j, FILE *f) {
   char buf[64];
-  if (i) fputc('\n', f);
+  if (i)
+    fputc('\n', f);
   for (; i < j; ++i) {
     switch (mem[i]) {
       case VAR:

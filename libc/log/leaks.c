@@ -85,7 +85,8 @@ static dontasan bool HasLeaks(void) {
  */
 dontasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
-  if (!IsAsan()) return;  // we need traces to exclude leaky
+  if (!IsAsan())
+    return;  // we need traces to exclude leaky
   if (!GetSymbolTable()) {
     kprintf("CheckForMemoryLeaks() needs the symbol table\n");
     return;

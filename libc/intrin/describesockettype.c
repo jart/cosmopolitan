@@ -39,7 +39,9 @@ const char *(DescribeSocketType)(char buf[64], int type) {
   } else {
     p = FormatInt32(p, x);
   }
-  if (type & SOCK_CLOEXEC) p = stpcpy(p, "|SOCK_CLOEXEC");
-  if (type & SOCK_NONBLOCK) p = stpcpy(p, "|SOCK_NONBLOCK");
+  if (type & SOCK_CLOEXEC)
+    p = stpcpy(p, "|SOCK_CLOEXEC");
+  if (type & SOCK_NONBLOCK)
+    p = stpcpy(p, "|SOCK_NONBLOCK");
   return buf;
 }

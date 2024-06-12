@@ -35,7 +35,8 @@
 // needed to avoid asan restrictions on strcmp
 static int StrCmp(const char *l, const char *r) {
   size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return (l[i] & 255) - (r[i] & 255);
 }
 

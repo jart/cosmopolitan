@@ -41,7 +41,7 @@ struct SharedMemory {
   atomic_bool ready;
   atomic_bool got_signal;
   atomic_bool handler_returned;
-} * shm;
+} *shm;
 
 void OnSig(int sig) {
   signal(SIGUSR1, SIG_DFL);
@@ -69,7 +69,8 @@ void *Killer(void *arg) {
 
 void *Killed(void *arg) {
   shm->ready = true;
-  while (!shm->got_signal) donothing;
+  while (!shm->got_signal)
+    donothing;
   shm->handler_returned = true;
   return 0;
 }
@@ -88,7 +89,8 @@ TEST(handkill, main2thread_async) {
   pthread_t th;
   shm->target = pthread_self();
   pthread_create(&th, 0, Killed, 0);
-  while (!shm->ready) donothing;
+  while (!shm->ready)
+    donothing;
   ASSERT_EQ(0, pthread_kill(th, SIGUSR1));
   ASSERT_EQ(0, pthread_join(th, 0));
   TERMS(SIGUSR1);
@@ -101,7 +103,8 @@ TEST(handkill, thread2main_async) {
   pthread_t th;
   shm->target = pthread_self();
   pthread_create(&th, 0, Killer, 0);
-  while (!shm->got_signal) donothing;
+  while (!shm->got_signal)
+    donothing;
   shm->handler_returned = true;
   pthread_join(th, 0);
   TERMS(SIGUSR1);
@@ -122,13 +125,16 @@ TEST(handkill, thread2thread_async) {
 }
 
 TEST(handkill, process_async) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   SPAWN(fork);
   shm->ready = true;
-  while (!shm->got_signal) donothing;
+  while (!shm->got_signal)
+    donothing;
   shm->handler_returned = true;
   PARENT();
-  while (!shm->ready) donothing;
+  while (!shm->ready)
+    donothing;
   ASSERT_SYS(0, 0, kill(child, SIGUSR1));
   WAIT(term, SIGUSR1);
   EXPECT_TRUE(shm->got_signal);
@@ -136,13 +142,15 @@ TEST(handkill, process_async) {
 }
 
 TEST(handkill, process_pause) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   SPAWN(fork);
   shm->ready = true;
   pause();
   shm->handler_returned = true;
   PARENT();
-  while (!shm->ready) donothing;
+  while (!shm->ready)
+    donothing;
   usleep(1e6 / CLK_TCK * 2);
   ASSERT_SYS(0, 0, kill(child, SIGUSR1));
   WAIT(term, SIGUSR1);

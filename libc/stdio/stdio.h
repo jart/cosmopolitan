@@ -79,7 +79,6 @@ int setvbuf(FILE *, char *, int, size_t) libcesque;
 int pclose(FILE *) libcesque;
 char *ctermid(char *) libcesque;
 void perror(const char *) libcesque relegated;
-size_t confstr(int, char *, size_t) libcesque;
 
 typedef uint64_t fpos_t;
 char *gets(char *) libcesque paramsnonnull();

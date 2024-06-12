@@ -39,8 +39,10 @@ size_t __zipos_normpath(char *d, const char *s, size_t n) {
                s[1] == '.' &&               //
                (!s[2] || s[2] == '/')) {
       // matched "/../" or "^..$" or "^../" or "/..$"
-      while (p > d && p[-1] == '/') --p;
-      while (p > d && p[-1] != '/') --p;
+      while (p > d && p[-1] == '/')
+        --p;
+      while (p > d && p[-1] != '/')
+        --p;
     } else {
       *p++ = *s;
     }

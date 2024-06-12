@@ -60,7 +60,8 @@ static bool have_getrandom;
 
 static void GetRandomEntropy(char *p, size_t n) {
   unassert(n <= 256);
-  if (sys_getentropy(p, n)) notpossible;
+  if (sys_getentropy(p, n))
+    notpossible;
 }
 
 static void GetRandomArnd(char *p, size_t n) {
@@ -69,8 +70,10 @@ static void GetRandomArnd(char *p, size_t n) {
   cmd[0] = 1;                      // CTL_KERN
   cmd[1] = IsFreebsd() ? 37 : 81;  // KERN_ARND
   unassert((m = n) <= 256);
-  if (sys_sysctl(cmd, 2, p, &n, 0, 0) == -1) notpossible;
-  if (m != n) notpossible;
+  if (sysctl(cmd, 2, p, &n, 0, 0) == -1)
+    notpossible;
+  if (m != n)
+    notpossible;
 }
 
 static ssize_t GetRandomBsd(char *p, size_t n, void impl(char *, size_t)) {
@@ -193,7 +196,8 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
 __attribute__((__constructor__(30))) static textstartup void getrandom_init(
     void) {
   int e, rc;
-  if (IsWindows() || IsMetal()) return;
+  if (IsWindows() || IsMetal())
+    return;
   BLOCK_CANCELATION;
   e = errno;
   if (!(rc = sys_getrandom(0, 0, 0))) {

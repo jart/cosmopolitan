@@ -26,12 +26,12 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/mem/sortedints.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
@@ -43,7 +43,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -145,8 +145,10 @@ struct SortedInts g_whitelisted;
 
 static wontreturn void ShowUsage(int fd, int rc) {
   write(fd, USAGE, sizeof(USAGE) - 1);
-  if (IsLinux()) write(fd, LINUX_DOCS, sizeof(LINUX_DOCS) - 1);
-  if (IsBsd()) write(fd, BSD_DOCS, sizeof(BSD_DOCS) - 1);
+  if (IsLinux())
+    write(fd, LINUX_DOCS, sizeof(LINUX_DOCS) - 1);
+  if (IsBsd())
+    write(fd, BSD_DOCS, sizeof(BSD_DOCS) - 1);
   _Exit(rc);
 }
 
@@ -288,8 +290,10 @@ void FindFirewall(void) {
 }
 
 void OpenLog(void) {
-  if (!g_logname) return;
-  if (!g_daemonize) return;
+  if (!g_logname)
+    return;
+  if (!g_daemonize)
+    return;
   if ((g_logfd = open(g_logname, O_WRONLY | O_APPEND | O_CREAT, 0644)) == -1) {
     kprintf("error: open(%#s) failed: %s\n", g_logname, strerror(errno));
     ShowUsage(2, 5);
@@ -314,11 +318,13 @@ void UseLog(void) {
 
 void UninterruptibleSleep(int ms) {
   struct timespec ts = timespec_add(timespec_real(), timespec_frommillis(ms));
-  while (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0)) errno = 0;
+  while (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0))
+    errno = 0;
 }
 
 void Unlink(const char *path) {
-  if (!path) return;
+  if (!path)
+    return;
   if (!unlink(path)) {
     LOG("deleted %s", path);
   } else {
@@ -333,7 +339,8 @@ void WritePid(void) {
   ssize_t rc;
   int fd, pid;
   char buf[12] = {0};
-  if (!g_pidname) return;
+  if (!g_pidname)
+    return;
   if ((fd = open(g_pidname, O_RDWR | O_CREAT, 0644)) == -1) {
     LOG("error: open(%#s) failed: %s", g_pidname, strerror(errno));
     _Exit(4);

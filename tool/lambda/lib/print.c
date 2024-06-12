@@ -873,11 +873,13 @@ void PrintDebruijn(int x, int head, int depth, FILE* f) {
         } else {
           fputwc(L'λ', f);
         }
-        if (!(0 <= x && x < TERMS)) goto Overflow;
+        if (!(0 <= x && x < TERMS))
+          goto Overflow;
       } while (mem[x] == ABS);
       fputc(' ', f);
     }
-    if (!(0 <= (x + 1) && (x + 1) < TERMS)) goto Overflow;
+    if (!(0 <= (x + 1) && (x + 1) < TERMS))
+      goto Overflow;
     if (mem[x] == APP) {
       fputc('[', f);
       PrintDebruijn(x + 2, 1, depth, f);
@@ -1162,11 +1164,13 @@ void PrintLambda(int x, int head, int depth, int apps, FILE* f) {
       do {
         ++x;
         fputwc(ALPHABET[depth++], f);
-        if (!(0 <= x && x < TERMS)) goto Overflow;
+        if (!(0 <= x && x < TERMS))
+          goto Overflow;
       } while (mem[x] == ABS);
       fputc('.', f);
     }
-    if (!(0 <= (x + 1) && (x + 1) < TERMS)) goto Overflow;
+    if (!(0 <= (x + 1) && (x + 1) < TERMS))
+      goto Overflow;
     if (mem[x] == VAR) {
       if (0 <= x + 1 && x + 1 < TERMS) {
         PrintVar(depth - 1 - mem[x + 1], f);
@@ -1182,7 +1186,8 @@ void PrintLambda(int x, int head, int depth, int apps, FILE* f) {
       }
       PrintLambda(x + 2, 1, depth, apps + 1, f);
       if (!(x + 2 + mem[x + 1] < TERMS && mem[x + 2 + mem[x + 1]] == APP)) {
-        if (safer || !noname) fputc(' ', f);
+        if (safer || !noname)
+          fputc(' ', f);
       }
       PrintLambda(x + 2 + mem[x + 1], 0, depth, apps + 1, f);
     } else if (mem[x] == IOP) {
@@ -1230,10 +1235,12 @@ void PrintBinary(int x, int head, int depth, FILE* f) {
         ++depth;
         fputc('0', f);
         fputc('0', f);
-        if (!(0 <= x && x < TERMS)) goto Overflow;
+        if (!(0 <= x && x < TERMS))
+          goto Overflow;
       } while (mem[x] == ABS);
     }
-    if (!(0 <= (x + 1) && (x + 1) < TERMS)) goto Overflow;
+    if (!(0 <= (x + 1) && (x + 1) < TERMS))
+      goto Overflow;
     if (mem[x] == VAR) {
       if (0 <= x + 1 && x + 1 < TERMS) {
         PrintVar(mem[x + 1], f);

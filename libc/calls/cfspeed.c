@@ -101,7 +101,9 @@ int cfsetispeed(struct termios *t, uint32_t speed) {
  * @asyncsignalsafe
  */
 int cfsetspeed(struct termios *t, uint32_t speed) {
-  if (cfsetispeed(t, speed) == -1) return -1;
-  if (cfsetospeed(t, speed) == -1) return -1;
+  if (cfsetispeed(t, speed) == -1)
+    return -1;
+  if (cfsetospeed(t, speed) == -1)
+    return -1;
   return 0;
 }

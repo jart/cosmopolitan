@@ -146,6 +146,8 @@ static const char *buildroot;
 static const char *genroot;
 static const char *outpath;
 
+#include "libc/mem/tinymalloc.inc"
+
 static inline bool IsBlank(int c) {
   return c == ' ' || c == '\t';
 }
@@ -176,37 +178,44 @@ static wontreturn void DieOom(void) {
 static unsigned Hash(const void *s, size_t l) {
   unsigned h;
   h = crc32c(0, s, l);
-  if (!h) h = 1;
+  if (!h)
+    h = 1;
   return h;
 }
 
 static void *Malloc(size_t n) {
   void *p;
-  if (!(p = malloc(n))) DieOom();
+  if (!(p = malloc(n)))
+    DieOom();
   return p;
 }
 
 static void *Calloc(size_t n, size_t z) {
   void *p;
-  if (!(p = calloc(n, z))) DieOom();
+  if (!(p = calloc(n, z)))
+    DieOom();
   return p;
 }
 
 static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n))) DieOom();
+  if (!(p = realloc(p, n)))
+    DieOom();
   return p;
 }
 
 static void Appendw(char **b, uint64_t w) {
-  if (appendw(b, w) == -1) DieOom();
+  if (appendw(b, w) == -1)
+    DieOom();
 }
 
 static void Appends(char **b, const char *s) {
-  if (appends(b, s) == -1) DieOom();
+  if (appends(b, s) == -1)
+    DieOom();
 }
 
 static void Appendd(char **b, const void *p, size_t n) {
-  if (appendd(b, p, n) == -1) DieOom();
+  if (appendd(b, p, n) == -1)
+    DieOom();
 }
 
 static unsigned FindFirstFromEdge(unsigned id) {
@@ -259,7 +268,8 @@ static void Rehash(void) {
   sources.n = sources.n ? sources.n << 1 : 16;
   sources.p = Calloc(sources.n, sizeof(struct Source));
   for (i = 0; i < old.n; ++i) {
-    if (!old.p[i].hash) continue;
+    if (!old.p[i].hash)
+      continue;
     step = 0;
     do {
       j = (old.p[i].hash + step * (step + 1) / 2) & (sources.n - 1);
@@ -286,7 +296,8 @@ static int HashSource(const char *name, size_t len, bool create) {
       step++;
     } while (sources.p[i].hash);
   }
-  if (!create) return -1;
+  if (!create)
+    return -1;
   if (++sources.i >= (sources.n >> 1)) {
     Rehash();
     step = 0;
@@ -439,17 +450,21 @@ static void LoadRelationships(int argc, char *argv[]) {
         DieSys(src);
       }
       for (p = map, pe = map + size; p < pe; ++p) {
-        if (!(p = memmem(p, pe - p, "include ", 8))) break;
-        if (!(path = FindIncludePath(map, size, p, is_assembly))) continue;
+        if (!(p = memmem(p, pe - p, "include ", 8)))
+          break;
+        if (!(path = FindIncludePath(map, size, p, is_assembly)))
+          continue;
         // copy the specified include path
         char right;
         if (path[-1] == '<') {
-          if (!systempaths.n) continue;
+          if (!systempaths.n)
+            continue;
           right = '>';
         } else {
           right = '"';
         }
-        if (!(pathend = memchr(path, right, pe - path))) continue;
+        if (!(pathend = memchr(path, right, pe - path)))
+          continue;
         if (pathend - path >= PATH_MAX) {
           tinyprint(2, src, ": uses really long include path\n", NULL);
           exit(1);
@@ -620,7 +635,8 @@ static const char *StripExt(char pathbuf[hasatleast PATH_MAX], const char *s) {
     DiePathTooLong(s);
   }
   dot = strrchr(pathbuf, '.');
-  if (dot) *dot = '\0';
+  if (dot)
+    *dot = '\0';
   return pathbuf;
 }
 
@@ -630,9 +646,12 @@ static uint32_t GetFileExtension(const char *s) {
   n = s ? strlen(s) : 0;
   for (i = w = 0; n--;) {
     wint_t c = s[n];
-    if (!IsGraph(c)) return 0;
-    if (c == '.') break;
-    if (++i > 4) return 0;
+    if (!IsGraph(c))
+      return 0;
+    if (c == '.')
+      break;
+    if (++i > 4)
+      return 0;
     w <<= 8;
     w |= kToLower[c];
   }
@@ -655,7 +674,8 @@ static bool IsObjectSource(const char *name) {
 __funline bool Bts(uint32_t *p, size_t i) {
   uint32_t k;
   k = 1u << (i & 31);
-  if (p[i >> 5] & k) return true;
+  if (p[i >> 5] & k)
+    return true;
   p[i >> 5] |= k;
   return false;
 }
@@ -663,7 +683,8 @@ __funline bool Bts(uint32_t *p, size_t i) {
 static void Dive(char **makefile, uint32_t *visited, unsigned id) {
   int i;
   for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
-    if (Bts(visited, edges.p[i].to)) continue;
+    if (Bts(visited, edges.p[i].to))
+      continue;
     Appendw(makefile, READ32LE(" \\\n\t"));
     Appends(makefile, names + sauces[edges.p[i].to].name);
     Dive(makefile, visited, edges.p[i].to);
@@ -681,8 +702,10 @@ static char *Explore(void) {
   visited = Malloc(visilen * sizeof(*visited));
   for (i = 0; i < sources.i; ++i) {
     path = names + sauces[i].name;
-    if (!IsObjectSource(path)) continue;
-    if (startswith(path, genroot)) continue;
+    if (!IsObjectSource(path))
+      continue;
+    if (startswith(path, genroot))
+      continue;
     Appendw(&makefile, '\n');
     Appends(&makefile, buildroot);
     Appends(&makefile, StripExt(buf, path));
@@ -707,7 +730,8 @@ int main(int argc, char *argv[]) {
   ShowCrashReports();
 #endif
   prog = argv[0];
-  if (!prog) prog = "mkdeps";
+  if (!prog)
+    prog = "mkdeps";
   GetOpts(argc, argv);
   LoadRelationships(argc, argv);
   Crunch();

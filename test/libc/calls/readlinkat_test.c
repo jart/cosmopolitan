@@ -105,8 +105,22 @@ TEST(readlinkat, statReadsNameLength_countsUtf8Bytes) {
 
 TEST(readlinkat, realpathReturnsLongPath) {
   char buf[PATH_MAX];
-  if (!IsWindows()) return;
-  if (!startswith(getcwd(buf, PATH_MAX), "/c/")) return;
+  if (!IsWindows())
+    return;
+  if (!startswith(getcwd(buf, PATH_MAX), "/c/"))
+    return;
   ASSERT_SYS(0, 0, touch("froot", 0644));
   ASSERT_STARTSWITH("/c/", realpath("froot", buf));
+}
+
+TEST(readlinkat, c_drive) {
+  char buf[PATH_MAX];
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "/", buf, PATH_MAX));
+  if (!IsWindows())
+    return;
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "/c/", buf, PATH_MAX));
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "/c", buf, PATH_MAX));
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:", buf, PATH_MAX));
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:/", buf, PATH_MAX));
+  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:\\", buf, PATH_MAX));
 }

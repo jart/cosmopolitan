@@ -33,8 +33,10 @@ const char *(DescribeStatfs)(char buf[N], int rc, const struct statfs *f) {
   char ibuf[21];
   int64_t flags;
 
-  if (rc == -1) return "n/a";
-  if (!f) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!f)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(f)) ||
       (IsAsan() && !__asan_is_valid(f, sizeof(*f)))) {
     ksnprintf(buf, N, "%p", f);

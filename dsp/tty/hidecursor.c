@@ -30,8 +30,10 @@
 static int ttysetcursor(int fd, bool visible) {
   struct NtConsoleCursorInfo ntcursor;
   char code[8] = "\e[?25l";
-  if (__nocolor) return 0;
-  if (visible) code[5] = 'h';
+  if (__nocolor)
+    return 0;
+  if (visible)
+    code[5] = 'h';
   if (IsWindows()) {
     GetConsoleCursorInfo(GetStdHandle(kNtStdOutputHandle), &ntcursor);
     ntcursor.bVisible = visible;

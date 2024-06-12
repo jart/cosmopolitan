@@ -47,7 +47,8 @@ void SetUpOnce(void) {
 
 TEST(open, efault) {
   ASSERT_SYS(EFAULT, -1, open(0, O_RDONLY));
-  if (IsWindows() || !IsAsan()) return;  // not possible
+  if (IsWindows() || !IsAsan())
+    return;  // not possible
   ASSERT_SYS(EFAULT, -1, open((void *)77, O_RDONLY));
 }
 
@@ -231,7 +232,8 @@ TEST(open, norm) {
 }
 
 TEST(open, longNormDot) {
-  if (IsWindows()) return;  // todo: why won't long paths work on windows
+  if (IsWindows())
+    return;  // todo: why won't long paths work on windows
 #define NAME                                                                   \
   "funfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfu" \
   "nfunfunfunfunfunfunnfunfunfunfunfunfunnfunfunfunfunfunfununfunfunfunfunfun"
@@ -243,7 +245,8 @@ TEST(open, longNormDot) {
 }
 
 TEST(open, longNormDotDot) {
-  if (IsWindows()) return;  // todo: why won't long paths work on windows
+  if (IsWindows())
+    return;  // todo: why won't long paths work on windows
 #define NAME                                                                   \
   "funfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfunfu" \
   "nfunfunfunfunfunfunnfunfunfunfunfunfunnfunfunfunfunfunfununfunfunfunfunfun"
@@ -258,7 +261,8 @@ TEST(open, longNormDotDot) {
 TEST(open, creat_directory) {
   ASSERT_SYS(ENOENT, -1, open("fun", O_WRONLY | O_DIRECTORY));
   ASSERT_FALSE(fileexists("fun"));
-  if (1) return;  // linux 5.15.122-0-lts creates file and returns error D:
+  if (1)
+    return;  // linux 5.15.122-0-lts creates file and returns error D:
   ASSERT_SYS(ENOTDIR, -1, open("fun", O_CREAT | O_WRONLY | O_DIRECTORY, 0644));
   ASSERT_TRUE(fileexists("fun"));
 }
@@ -312,7 +316,8 @@ int CountFds(void) {
 }
 
 TEST(open, lotsOfFds) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   int i, n = 200;
   ASSERT_SYS(0, 0, xbarf("hello.txt", "hello", -1));
   for (i = 3; i < n; ++i) {
@@ -331,7 +336,8 @@ static int64_t GetInode(const char *path) {
 }
 
 TEST(open, drive) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   ASSERT_NE(GetInode("/"), GetInode("."));
   ASSERT_EQ(GetInode("/"), GetInode("/c"));  // sorry you have to run on c:/
   ASSERT_EQ(GetInode("/"), GetInode("/c/"));
@@ -350,18 +356,18 @@ TEST(open, readOnlyCreatMode) {
   ASSERT_EQ(0100500, st.st_mode);
   if (getuid()) {
     ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
-    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT, 0666));
   } else {
     // root is invulnerable to eacces
     ASSERT_SYS(0, 3, open("x", O_RDWR));
     ASSERT_SYS(0, 0, close(3));
-    ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT, 0666));
     ASSERT_SYS(0, 0, close(3));
     SPAWN(fork);
     setuid(1000);
     setgid(1000);
     ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
-    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT, 0666));
     EXITS(0);
   }
 }
@@ -430,7 +436,8 @@ TEST(open, creatRdonly) {
 }
 
 TEST(open, sequentialRandom_EINVAL) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   ASSERT_SYS(
       EINVAL, -1,
       open("foo", O_CREAT | O_TRUNC | O_RDWR | O_SEQUENTIAL | O_RANDOM, 0700));
@@ -442,7 +449,8 @@ TEST(open, sequentialRandom_EINVAL) {
 //  timestamps of the file and the last data modification and last
 //  file status change timestamps of the parent directory." -POSIX
 TEST(open, creatFile_touchesDirectory) {
-  if (1) return;  // TODO(jart): explain the rare flakes
+  if (1)
+    return;  // TODO(jart): explain the rare flakes
   struct stat st;
   struct timespec birth;
   ASSERT_SYS(0, 0, mkdir("dir", 0755));

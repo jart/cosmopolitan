@@ -44,7 +44,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xsigaction.h"
 #include "libc/zip.internal.h"
@@ -492,7 +492,8 @@ void TransmitVideo(void) {
   ssize_t rc;
   struct Frame* f;
   f = &vf_[frame_];
-  if (!HasVideo(f)) f = FlipFrameBuffer();
+  if (!HasVideo(f))
+    f = FlipFrameBuffer();
   if ((rc = Write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
     f->w += rc;
   } else if (errno == EAGAIN) {
@@ -504,9 +505,12 @@ void TransmitVideo(void) {
 
 void TransmitAudio(void) {
   ssize_t rc;
-  if (!playpid_) return;
-  if (!audio_.i) return;
-  if (playfd_ == -1) return;
+  if (!playpid_)
+    return;
+  if (!audio_.i)
+    return;
+  if (playfd_ == -1)
+    return;
   if ((rc = Write(playfd_, audio_.p, audio_.i * sizeof(short))) != -1) {
     rc /= sizeof(short);
     memmove(audio_.p, audio_.p + rc, (audio_.i - rc) * sizeof(short));
@@ -561,9 +565,12 @@ void KeyCountdown(struct Action* a) {
 void PollAndSynchronize(void) {
   do {
     if (ReadKeyboard() == -1) {
-      if (errno != EINTR) Exit(1);
-      if (exited_) Exit(0);
-      if (resized_) GetTermSize();
+      if (errno != EINTR)
+        Exit(1);
+      if (exited_)
+        Exit(0);
+      if (resized_)
+        GetTermSize();
     }
   } while (!timeout_);
   TransmitVideo();
@@ -734,7 +741,8 @@ u8 Access(unsigned addr, u8 value, bool write) {
       }
     }
   }
-  if ((addr >> 13) == 3) return PRAM[addr & 0x1FFF];
+  if ((addr >> 13) == 3)
+    return PRAM[addr & 0x1FFF];
   return banks[(addr / RomGranularity) % RomPages][addr % RomGranularity];
 }
 
@@ -828,7 +836,8 @@ bool offset_toggle = false;
 u8& NesMmap(int i) {
   i &= 0x3FFF;
   if (i >= 0x3F00) {
-    if (i % 4 == 0) i &= 0x0F;
+    if (i % 4 == 0)
+      i &= 0x0F;
     return palette[i & 0x1F];
   }
   if (i < 0x2000) {
@@ -844,7 +853,8 @@ u8 PpuAccess(u16 index, u8 v, bool write) {
     return open_bus_decay_timer = 77777, open_bus = v;
   };
   u8 res = open_bus;
-  if (write) RefreshOpenBus(v);
+  if (write)
+    RefreshOpenBus(v);
   switch (index) {  // Which port from $200x?
     case 0:
       if (write) {
@@ -858,7 +868,8 @@ u8 PpuAccess(u16 index, u8 v, bool write) {
       }
       break;
     case 2:
-      if (write) break;
+      if (write)
+        break;
       res = reg.status | (open_bus & 0x1F);
       reg.InVBlank = false;   // Reading $2002 clears the vblank flag.
       offset_toggle = false;  // Also resets the toggle for address updates.
@@ -867,7 +878,8 @@ u8 PpuAccess(u16 index, u8 v, bool write) {
       }
       break;
     case 3:
-      if (write) reg.OAMaddr = v;
+      if (write)
+        reg.OAMaddr = v;
       break;  // Index into Object Attribute Memory
     case 4:
       if (write) {
@@ -878,7 +890,8 @@ u8 PpuAccess(u16 index, u8 v, bool write) {
       }
       break;
     case 5:
-      if (!write) break;  // Set background scrolling offset
+      if (!write)
+        break;  // Set background scrolling offset
       if (offset_toggle) {
         scroll.yfine = v & 7;
         scroll.ycoarse = v >> 3;
@@ -888,7 +901,8 @@ u8 PpuAccess(u16 index, u8 v, bool write) {
       offset_toggle = !offset_toggle;
       break;
     case 6:
-      if (!write) break;  // Set video memory position for reads/writes
+      if (!write)
+        break;  // Set video memory position for reads/writes
       if (offset_toggle) {
         scroll.vaddrlo = v;
         vaddr.raw = (unsigned)scroll.raw;
@@ -926,17 +940,21 @@ void RenderingTick() {
     case 2:  // Point to attribute table
       ioaddr = 0x23C0 + 0x400 * vaddr.basenta + 8 * (vaddr.ycoarse / 4) +
                (vaddr.xcoarse / 4);
-      if (tile_decode_mode) break;  // Or nametable, with sprites.
-    case 0:                         // Point to nametable
+      if (tile_decode_mode)
+        break;  // Or nametable, with sprites.
+    case 0:     // Point to nametable
       ioaddr = 0x2000 + (vaddr.raw & 0xFFF);
       // Reset sprite data
       if (x_ == 0) {
         sprinpos = sproutpos = 0;
-        if (reg.ShowSP) reg.OAMaddr = 0;
+        if (reg.ShowSP)
+          reg.OAMaddr = 0;
       }
-      if (!reg.ShowBG) break;
+      if (!reg.ShowBG)
+        break;
       // Reset scrolling (vertical once, horizontal each scanline)
-      if (x_ == 304 && scanline == -1) vaddr.raw = (unsigned)scroll.raw;
+      if (x_ == 304 && scanline == -1)
+        vaddr.raw = (unsigned)scroll.raw;
       if (x_ == 256) {
         vaddr.xcoarse = (unsigned)scroll.xcoarse;
         vaddr.basenta_h = (unsigned)scroll.basenta_h;
@@ -949,7 +967,8 @@ void RenderingTick() {
       }
       // Name table access
       pat_addr = 0x1000 * reg.BGaddr + 16 * NesMmap(ioaddr) + vaddr.yfine;
-      if (!tile_decode_mode) break;
+      if (!tile_decode_mode)
+        break;
       // Push the current tile into shift registers.
       // The bitmap pattern is 16 bits, while the attribute is 2 bits, repeated
       // 8 times.
@@ -976,7 +995,8 @@ void RenderingTick() {
         auto& o = OAM3[sprrenpos];  // Sprite to render on next scanline
         memcpy(&o, &OAM2[sprrenpos], sizeof(o));
         unsigned y = (scanline)-o.y;
-        if (o.attr & 0x80) y ^= (reg.SPsize ? 15 : 7);
+        if (o.attr & 0x80)
+          y ^= (reg.SPsize ? 15 : 7);
         pat_addr = 0x1000 * (reg.SPsize ? (o.index & 0x01) : reg.SPaddr);
         pat_addr += 0x10 * (reg.SPsize ? (o.index & 0xFE) : (o.index & 0xFF));
         pat_addr += (y & 7) + (y & 8) * 2;
@@ -1011,8 +1031,10 @@ void RenderingTick() {
         break;
       }
       ++sprinpos;  // next sprite
-      if (sproutpos < 8) OAM2[sproutpos].y = sprtmp;
-      if (sproutpos < 8) OAM2[sproutpos].sprindex = reg.OAMindex;
+      if (sproutpos < 8)
+        OAM2[sproutpos].y = sprtmp;
+      if (sproutpos < 8)
+        OAM2[sproutpos].sprindex = reg.OAMindex;
       y1 = sprtmp;
       y2 = sprtmp + (reg.SPsize ? 16 : 8);
       if (!(scanline >= y1 && scanline < y2)) {
@@ -1020,19 +1042,23 @@ void RenderingTick() {
       }
       break;
     case 1:
-      if (sproutpos < 8) OAM2[sproutpos].index = sprtmp;
+      if (sproutpos < 8)
+        OAM2[sproutpos].index = sprtmp;
       break;
     case 2:
-      if (sproutpos < 8) OAM2[sproutpos].attr = sprtmp;
+      if (sproutpos < 8)
+        OAM2[sproutpos].attr = sprtmp;
       break;
     case 3:
-      if (sproutpos < 8) OAM2[sproutpos].x_ = sprtmp;
+      if (sproutpos < 8)
+        OAM2[sproutpos].x_ = sprtmp;
       if (sproutpos < 8) {
         ++sproutpos;
       } else {
         reg.SPoverflow = true;
       }
-      if (sprinpos == 2) reg.OAMaddr = 8;
+      if (sprinpos == 2)
+        reg.OAMaddr = 8;
       break;
   }
 }
@@ -1060,13 +1086,17 @@ void RenderPixel() {
       auto& s = OAM3[sno];
       // Check if this sprite is horizontally in range
       unsigned xdiff = x_ - s.x_;
-      if (xdiff >= 8) continue;  // Also matches negative values
+      if (xdiff >= 8)
+        continue;  // Also matches negative values
       // Determine which pixel to display; skip transparent pixels
-      if (!(s.attr & 0x40)) xdiff = 7 - xdiff;
+      if (!(s.attr & 0x40))
+        xdiff = 7 - xdiff;
       u8 spritepixel = (s.pattern >> (xdiff * 2)) & 3;
-      if (!spritepixel) continue;
+      if (!spritepixel)
+        continue;
       // Register sprite-0 hit if applicable
-      if (x_ < 255 && pixel && s.sprindex == 0) reg.SP0hit = true;
+      if (x_ < 255 && pixel && s.sprindex == 0)
+        reg.SP0hit = true;
       // Render the pixel unless behind-background placement wanted
       if (!(s.attr & 0x20) || !pixel) {
         attr = (s.attr & 3) + 4;
@@ -1095,11 +1125,13 @@ void ReadToolAssistedSpeedrunRobotKeys() {
     }
     if (ctrlmask & 0x80) {
       joy_next_[0] = fgetc(fp);
-      if (feof(fp)) joy_next_[0] = 0;
+      if (feof(fp))
+        joy_next_[0] = 0;
     }
     if (ctrlmask & 0x40) {
       joy_next_[1] = fgetc(fp);
-      if (feof(fp)) joy_next_[1] = 0;
+      if (feof(fp))
+        joy_next_[1] = 0;
     }
   }
 }
@@ -1144,18 +1176,23 @@ void Tick() {
       CPU::nmi = reg.InVBlank && reg.NMIenabled;
       break;
   }
-  if (VBlankState != 0) VBlankState += (VBlankState < 0 ? 1 : -1);
-  if (open_bus_decay_timer && !--open_bus_decay_timer) open_bus = 0;
+  if (VBlankState != 0)
+    VBlankState += (VBlankState < 0 ? 1 : -1);
+  if (open_bus_decay_timer && !--open_bus_decay_timer)
+    open_bus = 0;
 
   // Graphics processing scanline?
   if (scanline < DYN) {
     /* Process graphics for this cycle */
-    if (reg.ShowBGSP) RenderingTick();
-    if (scanline >= 0 && x_ < 256) RenderPixel();
+    if (reg.ShowBGSP)
+      RenderingTick();
+    if (scanline >= 0 && x_ < 256)
+      RenderPixel();
   }
 
   // Done with the cycle. Check for end of scanline.
-  if (++cycle_counter == 3) cycle_counter = 0;  // For NTSC pixel shifting
+  if (++cycle_counter == 3)
+    cycle_counter = 0;  // For NTSC pixel shifting
   if (++x_ >= scanline_end) {
     // Begin new scanline
     FlushScanline(scanline);
@@ -1242,30 +1279,36 @@ struct channel {
   template <unsigned c>
   int Tick() {
     channel& ch = *this;
-    if (!ChannelsEnabled[c]) return c == 4 ? 64 : 8;
+    if (!ChannelsEnabled[c])
+      return c == 4 ? 64 : 8;
     int wl = (ch.reg.WaveLength + 1) * (c >= 2 ? 1 : 2);
-    if (c == 3) wl = NoisePeriods[ch.reg.NoiseFreq];
+    if (c == 3)
+      wl = NoisePeriods[ch.reg.NoiseFreq];
     int volume = ch.length_counter
                      ? ch.reg.EnvDecayDisable ? ch.reg.FixedVolume : ch.envelope
                      : 0;
     // Sample may change at wavelen intervals.
     auto& S = ch.level;
-    if (!count(ch.wave_counter, wl)) return S;
+    if (!count(ch.wave_counter, wl))
+      return S;
     switch (c) {
       default:  // Square wave. With four different 8-step binary waveforms (32
                 // bits of data total).
-        if (wl < 8) return S = 8;
+        if (wl < 8)
+          return S = 8;
         return S = (0xF33C0C04u &
                     (1u << (++ch.phase % 8 + ch.reg.DutyCycle * 8)))
                        ? volume
                        : 0;
 
       case 2:  // Triangle wave
-        if (ch.length_counter && ch.linear_counter && wl >= 3) ++ch.phase;
+        if (ch.length_counter && ch.linear_counter && wl >= 3)
+          ++ch.phase;
         return S = (ch.phase & 15) ^ ((ch.phase & 16) ? 15 : 0);
 
       case 3:  // Noise: Linear feedback shift register
-        if (!ch.hold) ch.hold = 1;
+        if (!ch.hold)
+          ch.hold = 1;
         ch.hold =
             (ch.hold >> 1) |
             (((ch.hold ^ (ch.hold >> (ch.reg.NoiseType ? 6 : 1))) & 1) << 14);
@@ -1302,7 +1345,8 @@ struct channel {
           } else {
             v -= 2;
           }
-          if (v >= 0 && v <= 0x7F) ch.linear_counter = v;
+          if (v >= 0 && v <= 0x7F)
+            ch.linear_counter = v;
         }
         return S = ch.linear_counter;
     }
@@ -1338,7 +1382,8 @@ void Write(u8 index, u8 value) {
       ch.linear_counter = ch.reg.LinearCounterInit;
       ch.env_delay = ch.reg.EnvDecayRate;
       ch.envelope = 15;
-      if (index < 8) ch.phase = 0;
+      if (index < 8)
+        ch.phase = 0;
       break;
     case 0x10:
       ch.reg.reg3 = value;
@@ -1384,9 +1429,11 @@ u8 Read() {
   for (c = 0; c < 5; ++c) {
     res |= channels[c].length_counter ? 1 << c : 0;
   }
-  if (PeriodicIRQ) res |= 0x40;
+  if (PeriodicIRQ)
+    res |= 0x40;
   PeriodicIRQ = false;
-  if (DMC_IRQ) res |= 0x80;
+  if (DMC_IRQ)
+    res |= 0x80;
   DMC_IRQ = false;
   CPU::intr = false;
   return res;
@@ -1396,7 +1443,8 @@ void Tick() {  // Invoked at CPU's rate.
   // Divide CPU clock by 7457.5 to get a 240 Hz, which controls certain events.
   if ((hz240counter.lo += 2) >= 14915) {
     hz240counter.lo -= 14915;
-    if (++hz240counter.hi >= 4 + FiveCycleDivider) hz240counter.hi = 0;
+    if (++hz240counter.hi >= 4 + FiveCycleDivider)
+      hz240counter.hi = 0;
 
     // 60 Hz interval: IRQ. IRQ is not invoked in five-cycle mode (48 Hz).
     if (!IRQdisable && !FiveCycleDivider && hz240counter.hi == 0) {
@@ -1422,7 +1470,8 @@ void Tick() {  // Invoked at CPU's rate.
         if (wl >= 8 && ch.reg.SweepEnable && ch.reg.SweepShift) {
           int s = wl >> ch.reg.SweepShift, d[4] = {s, s, ~s, -s};
           wl += d[ch.reg.SweepDecrease * 2 + c];
-          if (wl < 0x800) ch.reg.WaveLength = wl;
+          if (wl < 0x800)
+            ch.reg.WaveLength = wl;
         }
 
       // Linear tick (triangle wave only)
@@ -1464,20 +1513,24 @@ namespace CPU {
 
 void Tick() {
   // PPU clock: 3 times the CPU rate
-  for (unsigned n = 0; n < 3; ++n) PPU::Tick();
+  for (unsigned n = 0; n < 3; ++n)
+    PPU::Tick();
   // APU clock: 1 times the CPU rate
-  for (unsigned n = 0; n < 1; ++n) APU::Tick();
+  for (unsigned n = 0; n < 1; ++n)
+    APU::Tick();
 }
 
 template <bool write>
 u8 MemAccess(u16 addr, u8 v) {
   // Memory writes are turned into reads while reset is being signalled
-  if (reset && write) return MemAccess<0>(addr);
+  if (reset && write)
+    return MemAccess<0>(addr);
   Tick();
   // Map the memory from CPU's viewpoint.
   /**/ if (addr < 0x2000) {
     u8& r = RAM[addr & 0x7FF];
-    if (!write) return r;
+    if (!write)
+      return r;
     r = v;
   } else if (addr < 0x4000) {
     return PPU::PpuAccess(addr & 7, v, write);
@@ -1489,17 +1542,21 @@ u8 MemAccess(u16 addr, u8 v) {
             WB(0x2004, RB((v & 7) * 0x0100 + b));
         return 0;
       case 0x15:
-        if (!write) return APU::Read();
+        if (!write)
+          return APU::Read();
         APU::Write(0x15, v);
         break;
       case 0x16:
-        if (!write) return JoyRead(0);
+        if (!write)
+          return JoyRead(0);
         JoyStrobe(v);
         break;
       case 0x17:
-        if (!write) return JoyRead(1);  // write:passthru
+        if (!write)
+          return JoyRead(1);  // write:passthru
       default:
-        if (!write) break;
+        if (!write)
+          break;
         APU::Write(addr & 0x1F, v);
     }
   } else {
@@ -1527,7 +1584,8 @@ u16 wrap(u16 oldaddr, u16 newaddr) {
 }
 void Misfire(u16 old, u16 addr) {
   u16 q = wrap(old, addr);
-  if (q != addr) RB(q);
+  if (q != addr)
+    RB(q);
 }
 u8 Pop() {
   return RB(0x100 | u8(++S));
@@ -1655,7 +1713,8 @@ void Op() {
   } else if (intr && !P.I) {
     op = 0x102;
   }
-  if (!nmi_now) nmi_edge_detected = false;
+  if (!nmi_now)
+    nmi_edge_detected = false;
 
     // Define function pointers for each opcode (00..FF) and each interrupt
     // (100,101,102)
@@ -1757,12 +1816,15 @@ Press enter to continue without sound: ",
   fgetc(fp);
   fgetc(fp);
 
-  if (mappernum >= 0x40) mappernum &= 15;
+  if (mappernum >= 0x40)
+    mappernum &= 15;
   GamePak::mappernum = mappernum;
 
   // Read the ROM data
-  if (rom16count) GamePak::ROM.resize(rom16count * 0x4000);
-  if (vrom8count) GamePak::VRAM.resize(vrom8count * 0x2000);
+  if (rom16count)
+    GamePak::ROM.resize(rom16count * 0x4000);
+  if (vrom8count)
+    GamePak::VRAM.resize(vrom8count * 0x2000);
   fread(&GamePak::ROM[0], rom16count, 0x4000, fp);
   fread(&GamePak::VRAM[0], vrom8count, 0x2000, fp);
 
@@ -1776,10 +1838,12 @@ Press enter to continue without sound: ",
   PPU::reg.value = 0;
 
   // Pre-initialize RAM the same way as FCEUX does, to improve TAS sync.
-  for (unsigned a = 0; a < 0x800; ++a) CPU::RAM[a] = (a & 4) ? 0xFF : 0x00;
+  for (unsigned a = 0; a < 0x800; ++a)
+    CPU::RAM[a] = (a & 4) ? 0xFF : 0x00;
 
   // Run the CPU until the program is killed.
-  for (;;) CPU::Op();
+  for (;;)
+    CPU::Op();
 }
 
 wontreturn void PrintUsage(int rc, FILE* f) {

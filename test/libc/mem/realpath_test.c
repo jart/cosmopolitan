@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -78,4 +79,13 @@ TEST(realpath, test6) {
   char *name = gc(realpath("//", NULL));
   ASSERT_NE(NULL, name);
   EXPECT_STREQ("/", name);
+}
+
+TEST(realpath, c_drive) {
+  if (!IsWindows())
+    return;
+  char buf[PATH_MAX];
+  ASSERT_STREQ("/c", realpath("c:", buf));
+  ASSERT_STREQ("/c", realpath("c:", buf));
+  ASSERT_STREQ("/c/Windows", realpath("c:\\Windows", buf));
 }

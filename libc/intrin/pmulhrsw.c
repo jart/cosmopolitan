@@ -30,6 +30,7 @@
 void(pmulhrsw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
   unsigned i;
   int16_t r[8];
-  for (i = 0; i < 8; ++i) r[i] = (((b[i] * c[i]) >> 14) + 1) >> 1;
+  for (i = 0; i < 8; ++i)
+    r[i] = (((b[i] * c[i]) >> 14) + 1) >> 1;
   __builtin_memcpy(a, r, 16);
 }

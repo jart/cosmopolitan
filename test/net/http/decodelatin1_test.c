@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -49,7 +49,8 @@ TEST(DecodeLatin1, testAbleToImposeCharacterRestrictions) {
 TEST(EncodeLatin1, roundTrip) {
   int i;
   char b[256];
-  for (i = 0; i < 256; ++i) b[i] = i;
+  for (i = 0; i < 256; ++i)
+    b[i] = i;
   char *utf8 = gc(DecodeLatin1(b, 256, &n));
   EXPECT_EQ(384, n);
   char *lat1 = gc(EncodeLatin1(utf8, n, &n, 0));

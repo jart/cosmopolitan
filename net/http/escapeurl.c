@@ -42,14 +42,18 @@
 char *EscapeUrl(const char *p, size_t n, size_t *z, const char T[256]) {
   char *r, *q;
   struct UrlView v;
-  if (n == -1) n = p ? strlen(p) : 0;
-  if (z) *z = 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
+  if (z)
+    *z = 0;
   if ((q = r = malloc(n * 6 + 1))) {
     v.p = (char *)p, v.n = n;
     q = EscapeUrlView(r, &v, T);
-    if (z) *z = q - r;
+    if (z)
+      *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
+    if ((q = realloc(r, q - r)))
+      r = q;
   }
   return r;
 }

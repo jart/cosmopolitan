@@ -83,6 +83,7 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
       return (void *)(p + i);
     }
   } while (i > 0 && i-- + 0x10000 + 0x1000 >= n);
-  if (e) *e = err;
+  if (e)
+    *e = err;
   return 0;
 }

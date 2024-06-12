@@ -21,9 +21,12 @@
 #include "libc/sysv/consts/af.h"
 
 const char *(DescribeSocketFamily)(char buf[12], int family) {
-  if (family == AF_UNIX) return "AF_UNIX";
-  if (family == AF_INET) return "AF_INET";
-  if (family == AF_INET6) return "AF_INET6";
+  if (family == AF_UNIX)
+    return "AF_UNIX";
+  if (family == AF_INET)
+    return "AF_INET";
+  if (family == AF_INET6)
+    return "AF_INET6";
   FormatInt32(buf, family);
   return buf;
 }

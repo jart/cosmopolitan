@@ -77,7 +77,8 @@ static inline pureconst unsigned long __rounddown2pow(unsigned long x) {
 }
 
 static wontreturn void __mmap_die(const char *s) {
-  if (_weaken(__die)) _weaken(__die)();
+  if (_weaken(__die))
+    _weaken(__die)();
   STRACE("%s %m", s);
   _Exit(199);
 }
@@ -89,9 +90,12 @@ static inline bool __overlaps_existing_mapping(char *p, size_t n) {
   b = FRAME(p + (n - 1));
   i = __find_memory(&_mmi, a);
   if (i < _mmi.i) {
-    if (a <= _mmi.p[i].x && _mmi.p[i].x <= b) return true;
-    if (a <= _mmi.p[i].y && _mmi.p[i].y <= b) return true;
-    if (_mmi.p[i].x <= a && b <= _mmi.p[i].y) return true;
+    if (a <= _mmi.p[i].x && _mmi.p[i].x <= b)
+      return true;
+    if (a <= _mmi.p[i].y && _mmi.p[i].y <= b)
+      return true;
+    if (_mmi.p[i].x <= a && b <= _mmi.p[i].y)
+      return true;
   }
   return false;
 }
@@ -219,7 +223,8 @@ static textwindows dontinline void *__map_memories(char *addr, size_t size,
   oi = fd == -1 ? 0 : off + m;
   sz = size - m;
   dm = sys_mmap(addr + m, sz, prot, f, fd, oi);
-  if (dm.addr == MAP_FAILED) return MAP_FAILED;
+  if (dm.addr == MAP_FAILED)
+    return MAP_FAILED;
   iscow = (flags & MAP_TYPE) != MAP_SHARED && fd != -1;
   readonlyfile = (flags & MAP_TYPE) == MAP_SHARED && fd != -1 &&
                  (g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY;

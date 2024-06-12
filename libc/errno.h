@@ -29,7 +29,7 @@ COSMOPOLITAN_C_START_
 #define errno                                      \
   (*__extension__({                                \
     errno_t *__ep;                                 \
-    __asm__("sub\t%0,x28,#192-0x3c" : "=r"(__ep)); \
+    __asm__("sub\t%0,x28,#512-0x3c" : "=r"(__ep)); \
     __ep;                                          \
   }))
 #else
@@ -74,7 +74,7 @@ extern const errno_t EIO;
 extern const errno_t ENXIO;
 
 /**
- * Argument list too errno_t.
+ * Argument list too long.
  */
 extern const errno_t E2BIG;
 
@@ -226,7 +226,7 @@ extern const errno_t ERANGE;
 extern const errno_t EDEADLK;
 
 /**
- * Filename too errno_t.
+ * Filename too long.
  */
 extern const errno_t ENAMETOOLONG;
 
@@ -291,7 +291,7 @@ extern const errno_t ENOTSOCK;
 extern const errno_t EDESTADDRREQ;
 
 /**
- * Message too errno_t.
+ * Message too long.
  */
 extern const errno_t EMSGSIZE;
 

@@ -61,7 +61,8 @@ TEST(critbit0, testContains) {
   struct critbit0 tree[1];
   MakeTree(tree);
   for (unsigned i = 0; elems[i]; ++i) {
-    if (!critbit0_contains(tree, elems[i])) abort();
+    if (!critbit0_contains(tree, elems[i]))
+      abort();
   }
   critbit0_clear(tree);
 }
@@ -73,15 +74,19 @@ TEST(critbit0, testDelete) {
   struct critbit0 tree = {0};
   for (unsigned i = 1; elems2[i]; ++i) {
     critbit0_clear(&tree);
-    for (unsigned j = 0; j < i; ++j) critbit0_insert(&tree, elems2[j]);
+    for (unsigned j = 0; j < i; ++j)
+      critbit0_insert(&tree, elems2[j]);
     for (unsigned j = 0; j < i; ++j) {
-      if (!critbit0_contains(&tree, elems2[j])) abort();
+      if (!critbit0_contains(&tree, elems2[j]))
+        abort();
     }
     for (unsigned j = 0; j < i; ++j) {
-      if (1 != critbit0_delete(&tree, elems2[j])) abort();
+      if (1 != critbit0_delete(&tree, elems2[j]))
+        abort();
     }
     for (unsigned j = 0; j < i; ++j) {
-      if (critbit0_contains(&tree, elems2[j])) abort();
+      if (critbit0_contains(&tree, elems2[j]))
+        abort();
     }
   }
   critbit0_clear(&tree);

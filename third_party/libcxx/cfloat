@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- cfloat -----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -69,11 +69,21 @@ Macros:
     LDBL_TRUE_MIN       // C11
 */
 
-#include "third_party/libcxx/__config"
-#include "libc/isystem/float.h"
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
 
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#include <float.h>
+
+#ifndef _LIBCPP_FLOAT_H
+#   error <cfloat> tried including <float.h> but didn't find libc++'s <float.h> header. \
+          This usually means that your header search paths are not configured properly. \
+          The header search paths should contain the C++ Standard Library headers before \
+          any C Standard Library, and you are probably using compiler flags that make that \
+          not be the case.
 #endif
 
-#endif  // _LIBCPP_CFLOAT
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+#endif // _LIBCPP_CFLOAT

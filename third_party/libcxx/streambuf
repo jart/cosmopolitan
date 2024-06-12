@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===------------------------- streambuf ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -7,21 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP_STEAMBUF
-#define _LIBCPP_STEAMBUF
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/iosfwd"
-#include "third_party/libcxx/ios"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-_LIBCPP_BEGIN_NAMESPACE_STD
+#ifndef _LIBCPP_STREAMBUF
+#define _LIBCPP_STREAMBUF
 
 /*
     streambuf synopsis
@@ -119,6 +106,23 @@ protected:
 }  // std
 
 */
+
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+#include <__fwd/streambuf.h>
+#include <cstdint>
+#include <ios>
+#include <iosfwd>
+#include <version>
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include <__undef_macros>
+
+_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _CharT, class _Traits>
 class _LIBCPP_TEMPLATE_VIS basic_streambuf
@@ -308,12 +312,12 @@ basic_streambuf<_CharT, _Traits>::~basic_streambuf()
 
 template <class _CharT, class _Traits>
 basic_streambuf<_CharT, _Traits>::basic_streambuf()
-    : __binp_(0),
-      __ninp_(0),
-      __einp_(0),
-      __bout_(0),
-      __nout_(0),
-      __eout_(0)
+    : __binp_(nullptr),
+      __ninp_(nullptr),
+      __einp_(nullptr),
+      __bout_(nullptr),
+      __nout_(nullptr),
+      __eout_(nullptr)
 {
 }
 
@@ -485,16 +489,14 @@ basic_streambuf<_CharT, _Traits>::overflow(int_type)
     return traits_type::eof();
 }
 
-#ifndef _LIBCPP_DO_NOT_ASSUME_STREAMS_EXPLICIT_INSTANTIATION_IN_DYLIB
-_LIBCPP_EXTERN_TEMPLATE(class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_streambuf<char>)
-_LIBCPP_EXTERN_TEMPLATE(class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_streambuf<wchar_t>)
+extern template class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_streambuf<char>;
 
-_LIBCPP_EXTERN_TEMPLATE(class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_ios<char>)
-_LIBCPP_EXTERN_TEMPLATE(class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_ios<wchar_t>)
+#ifndef _LIBCPP_HAS_NO_WIDE_CHARACTERS
+extern template class _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS basic_streambuf<wchar_t>;
 #endif
 
 _LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
 
-#endif  // _LIBCPP_STEAMBUF
+#endif // _LIBCPP_STREAMBUF

@@ -55,7 +55,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
 #include "libc/calls/calls.h"

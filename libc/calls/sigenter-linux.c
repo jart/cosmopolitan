@@ -31,7 +31,7 @@
 
 #ifdef __x86_64__
 
-privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
+privileged void __sigenter_wsl(int sig, siginfo_t *info, ucontext_t *ctx) {
   int rva, flags;
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {

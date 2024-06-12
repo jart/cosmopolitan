@@ -47,9 +47,11 @@ long ptrace(int request, ...) {
     rc = einval(); /* see consts.sh */
   } else {
     ispeek = IsLinux() && request - 1u < 3;
-    if (ispeek) data = &peek;
+    if (ispeek)
+      data = &peek;
     rc = __sys_ptrace(request, pid, addr, data);
-    if (rc != -1 && ispeek) rc = peek;
+    if (rc != -1 && ispeek)
+      rc = peek;
   }
   STRACE("ptrace(%s, %d, %p, %p) → %p% m", DescribePtrace(request), pid, addr,
          data, rc);

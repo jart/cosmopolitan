@@ -35,9 +35,9 @@ extern "C" {
 #include "libc/str/str.h"     
 #include "libc/stdio/stdio.h"      
 #include "libc/calls/calls.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/errno.h"
-#include "libc/time/struct/utimbuf.h"
+#include "libc/utime.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/sysv/consts/s.h"
@@ -190,7 +190,7 @@ extern "C" {
 
 #elif (PLATFORM_POSIX_VERSION >= 200112L) && (defined __UCLIBC__ || (defined(__GLIBC__) && ((__GLIBC__ == 2 && __GLIBC_MINOR__ >= 17) || __GLIBC__ > 2) ) )
 
-    #include "libc/time/time.h"
+    #include "libc/time.h"
     typedef struct timespec UTIL_time_t;
     UTIL_STATIC UTIL_time_t UTIL_getTime(void)
     {

@@ -85,15 +85,18 @@ static void PrettyPrintList(int fd, int x, int n) {
         if (y >= 0) {
           argwidth += PrintSpace(fd);
           argwidth += PrintAtom(fd, y);
-          if (!once) n += argwidth;
+          if (!once)
+            n += argwidth;
         } else {
           if (once && (y < 0 || mode)) {
             mode = 1;
             PrintNewline(fd);
-            if (depth >= 0) PrintDepth(fd, depth);
+            if (depth >= 0)
+              PrintDepth(fd, depth);
             PrintIndent(fd, n);
           } else {
-            if (y < 0) mode = 1;
+            if (y < 0)
+              mode = 1;
             PrintSpace(fd);
           }
           once = 1;

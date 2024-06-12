@@ -71,6 +71,8 @@ const char *prog;
 char databuf[32768];
 char pathbuf[PATH_MAX];
 
+#include "libc/mem/tinymalloc.inc"
+
 wontreturn void PrintUsage(int rc, FILE *f) {
   fputs("usage: ", f);
   fputs(prog, f);
@@ -157,15 +159,19 @@ void Compress(const char *inpath) {
   p = openflags;
   *p++ = opt_append ? 'a' : 'w';
   *p++ = 'b';
-  if (opt_exclusive) *p++ = 'x';
-  if (opt_level) *p++ = opt_level;
-  if (opt_strategy) *p++ = opt_strategy;
+  if (opt_exclusive)
+    *p++ = 'x';
+  if (opt_level)
+    *p++ = opt_level;
+  if (opt_strategy)
+    *p++ = opt_strategy;
   *p = 0;
   if (opt_usestdout) {
     outpath = "/dev/stdout";
     output = gzdopen(1, openflags);
   } else {
-    if (strlen(inpath) + 3 + 1 > PATH_MAX) _Exit(2);
+    if (strlen(inpath) + 3 + 1 > PATH_MAX)
+      _Exit(2);
     stpcpy(stpcpy(pathbuf, inpath), ".gz");
     outpath = pathbuf;
     output = gzopen(outpath, openflags);
@@ -237,7 +243,8 @@ void Decompress(const char *inpath) {
     outpath = "/dev/stdout";
   } else if (endswith(inpath, ".gz")) {
     n = strlen(inpath);
-    if (n - 3 + 1 > PATH_MAX) _Exit(2);
+    if (n - 3 + 1 > PATH_MAX)
+      _Exit(2);
     memcpy(pathbuf, inpath, n - 3);
     pathbuf[n - 3] = 0;
     outpath = pathbuf;
@@ -291,7 +298,8 @@ void Decompress(const char *inpath) {
 int main(int argc, char *argv[]) {
   int i;
   prog = argv[0];
-  if (!prog) prog = "gzip";
+  if (!prog)
+    prog = "gzip";
   GetOpts(argc, argv);
   if (opt_decompress) {
     if (optind == argc) {

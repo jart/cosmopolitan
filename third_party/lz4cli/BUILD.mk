@@ -41,8 +41,7 @@ o/$(MODE)/third_party/lz4cli/datagen.o: private		\
 THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
-	LIBC_LOG					\
-	LIBC_TIME
+	LIBC_LOG
 
 THIRD_PARTY_LZ4CLI_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LZ4CLI_DIRECTDEPS),$($(x))))

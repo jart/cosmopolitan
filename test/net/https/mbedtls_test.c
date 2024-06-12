@@ -702,7 +702,8 @@ BENCH(inv_mod, bench3) {
 }
 
 TEST(ShiftRightAvx, test1) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[1] = {_rand64()};
@@ -717,7 +718,8 @@ TEST(ShiftRightAvx, test1) {
 }
 
 TEST(ShiftRightAvx, test2) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[2] = {_rand64(), _rand64()};
@@ -733,7 +735,8 @@ TEST(ShiftRightAvx, test2) {
 }
 
 TEST(ShiftRightAvx, test3) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[3] = {_rand64(), _rand64(), _rand64()};
@@ -750,7 +753,8 @@ TEST(ShiftRightAvx, test3) {
 }
 
 TEST(ShiftRightAvx, test4) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[4] = {_rand64(), _rand64(), _rand64(), _rand64()};
@@ -768,7 +772,8 @@ TEST(ShiftRightAvx, test4) {
 }
 
 TEST(ShiftRightAvx, test8) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[8] = {_rand64(), _rand64(), _rand64(), _rand64(),
@@ -791,7 +796,8 @@ TEST(ShiftRightAvx, test8) {
 }
 
 TEST(ShiftRightAvx, test9) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[9] = {_rand64(), _rand64(), _rand64(), _rand64(), _rand64(),
@@ -810,7 +816,8 @@ TEST(ShiftRightAvx, test9) {
 }
 
 BENCH(ShiftRight, bench) {
-  if (!X86_HAVE(AVX)) return;
+  if (!X86_HAVE(AVX))
+    return;
   uint64_t x[64];
   rngset(x, sizeof(x), _rand64, -1);
   EZBENCH2("ShiftRight", donothing, ShiftRight(x, 64, 1));
@@ -895,7 +902,8 @@ TEST(endian, big4) {
 TEST(Mul4x4, test) {
   int N, M;
   mbedtls_mpi A, B, C, D;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 4;
   M = 4;
   mbedtls_mpi_init(&A);
@@ -918,7 +926,8 @@ TEST(Mul4x4, test) {
 BENCH(Mul4x4, bench) {
   int i, N, M;
   mbedtls_mpi A, B, C, D, E;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 4;
   M = 4;
   mbedtls_mpi_init(&A);
@@ -973,7 +982,8 @@ BENCH(Mul4x4, bench) {
 BENCH(Mul6x6, bench) {
   int i, N, M;
   mbedtls_mpi A, B, C, D;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 6;
   M = 6;
   mbedtls_mpi_init(&A);
@@ -1010,7 +1020,8 @@ BENCH(Mul6x6, bench) {
 BENCH(Mul10x10, bench) {
   int N, M;
   mbedtls_mpi A, B, C;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 10;
   M = 10;
   mbedtls_mpi_init(&A);
@@ -1029,7 +1040,8 @@ BENCH(Mul10x10, bench) {
 BENCH(Mul16x16, bench) {
   int N, M;
   mbedtls_mpi A, B, C;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 16;
   M = 16;
   mbedtls_mpi_init(&A);
@@ -1048,7 +1060,8 @@ BENCH(Mul16x16, bench) {
 BENCH(Mul32x32, bench) {
   int i, N, M;
   mbedtls_mpi A, B, C, D, K;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 32;
   M = 32;
   mbedtls_mpi_init(&A);
@@ -1089,7 +1102,8 @@ BENCH(Mul32x32, bench) {
 BENCH(Mul16x1, bench) {
   int N, M;
   mbedtls_mpi A, B, C;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 16;
   M = 1;
   mbedtls_mpi_init(&A);
@@ -1108,7 +1122,8 @@ BENCH(Mul16x1, bench) {
 BENCH(Mul32x1, bench) {
   int N, M;
   mbedtls_mpi A, B, C;
-  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
+  if (!X86_HAVE(BMI2) || !X86_HAVE(ADX))
+    return;
   N = 32;
   M = 1;
   mbedtls_mpi_init(&A);

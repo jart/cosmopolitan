@@ -84,7 +84,8 @@ static int64_t GetCurrentProcessSecurityToken(void) {
 
 bool32 ElevateSeDebugPrivilege(void) {
   int64_t hToken;
-  if (!(hToken = GetCurrentProcessSecurityToken())) return false;
+  if (!(hToken = GetCurrentProcessSecurityToken()))
+    return false;
   SetPrivilegeNt(hToken, u"SeDebugPrivilege", true);
   RevertToSelf();
   CloseHandle(hToken);

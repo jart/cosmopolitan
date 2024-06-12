@@ -5,7 +5,7 @@
 #include "libc/nexgen32e/x86feature.h"
 COSMOPOLITAN_C_START_
 
-#define TSC_AUX_CORE(MSR) ((MSR) & 0xfff)
+#define TSC_AUX_CORE(MSR) ((MSR)&0xfff)
 #define TSC_AUX_NODE(MSR) (((MSR) >> 12) & 0xfff)
 
 /**
@@ -25,7 +25,8 @@ COSMOPOLITAN_C_START_
                  : /* no inputs */                 \
                  : "memory");                      \
     EcxOut = (OPT_OUT_IA32_TSC_AUX);               \
-    if (EcxOut) *EcxOut = Ecx;                     \
+    if (EcxOut)                                    \
+      *EcxOut = Ecx;                               \
     Rdx << 32 | Rax;                               \
   })
 

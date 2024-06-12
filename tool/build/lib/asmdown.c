@@ -33,9 +33,11 @@ static bool IsSymbolChar2(char c) {
 }
 
 static bool IsSymbolString(const char *s) {
-  if (!IsSymbolChar1(*s++)) return false;
+  if (!IsSymbolChar1(*s++))
+    return false;
   while (*s) {
-    if (!IsSymbolChar2(*s++)) return false;
+    if (!IsSymbolChar2(*s++))
+      return false;
   }
   return true;
 }

@@ -130,7 +130,8 @@ static void PutEnv(char **p, char *kv) {
   struct Env e;
   e = __getenv(p, kv);
   p[e.i] = kv;
-  if (!e.s) p[e.i + 1] = 0;
+  if (!e.s)
+    p[e.i + 1] = 0;
 }
 
 static void UnsetEnv(char **p, const char *k) {
@@ -330,7 +331,8 @@ static int CatDump(const char *path, int fd, bool dontclose) {
       }
       return 1;
     }
-    if (!rc) break;
+    if (!rc)
+      break;
     rc = write(1, buf, rc);
     if (rc == -1) {
       perror("write");
@@ -392,18 +394,21 @@ static int Read(void) {
   unsigned char c;
   int i, j, rc = 1;
   for (i = 1; i < n; ++i) {
-    if (args[i][0] != '-') break;
+    if (args[i][0] != '-')
+      break;
     if (args[i][1] == 'p' && !args[i][2] && i + 1 < n) {
       Write(1, args[++i]);
     }
   }
-  if (i >= n) return 1;
+  if (i >= n)
+    return 1;
   for (j = 0; args[i][j]; ++j) {
     Append(args[i][j]);
   }
   Append('=');
   while (read(0, &c, 1) > 0) {
-    if (c == '\n') break;
+    if (c == '\n')
+      break;
     Append(c);
     rc = 0;
   }
@@ -469,7 +474,8 @@ static int Kill(void) {
   int sig, rc = 0, i = 1;
   if (i < n && args[i][0] == '-') {
     sig = GetSignalByName(args[i++] + 1);
-    if (!sig) return -1;  // fallback to system kill command
+    if (!sig)
+      return -1;  // fallback to system kill command
   } else {
     sig = SIGTERM;
   }
@@ -510,20 +516,30 @@ static int Usleep(void) {
 static int Test(void) {
   int w, m = n;
   struct stat st;
-  if (m && READ16LE(args[m - 1]) == READ16LE("]")) --m;
+  if (m && READ16LE(args[m - 1]) == READ16LE("]"))
+    --m;
   if (m == 4) {
     w = READ32LE(args[2]) & 0x00ffffff;
-    if ((w & 65535) == READ16LE("=")) return !!strcmp(args[1], args[3]);
-    if (w == READ24("==")) return !!strcmp(args[1], args[3]);
-    if (w == READ24("!=")) return !strcmp(args[1], args[3]);
+    if ((w & 65535) == READ16LE("="))
+      return !!strcmp(args[1], args[3]);
+    if (w == READ24("=="))
+      return !!strcmp(args[1], args[3]);
+    if (w == READ24("!="))
+      return !strcmp(args[1], args[3]);
   } else if (m == 3) {
     w = READ32LE(args[1]) & 0x00ffffff;
-    if (w == READ24("-n")) return !(strlen(args[2]) > 0);
-    if (w == READ24("-z")) return !(strlen(args[2]) == 0);
-    if (w == READ24("-e")) return !!stat(args[2], &st);
-    if (w == READ24("-f")) return !(!stat(args[2], &st) && S_ISREG(st.st_mode));
-    if (w == READ24("-d")) return !(!stat(args[2], &st) && S_ISDIR(st.st_mode));
-    if (w == READ24("-h")) return !(!stat(args[2], &st) && S_ISLNK(st.st_mode));
+    if (w == READ24("-n"))
+      return !(strlen(args[2]) > 0);
+    if (w == READ24("-z"))
+      return !(strlen(args[2]) == 0);
+    if (w == READ24("-e"))
+      return !!stat(args[2], &st);
+    if (w == READ24("-f"))
+      return !(!stat(args[2], &st) && S_ISREG(st.st_mode));
+    if (w == READ24("-d"))
+      return !(!stat(args[2], &st) && S_ISDIR(st.st_mode));
+    if (w == READ24("-h"))
+      return !(!stat(args[2], &st) && S_ISLNK(st.st_mode));
   }
   return -1;  // fall back to system test command
 }
@@ -558,7 +574,8 @@ static int Rm(void) {
     if ((!force && (lstat(args[i], &st) ||
                     (!S_ISLNK(st.st_mode) && access(args[i], W_OK)))) ||
         unlink(args[i])) {
-      if (force && errno == ENOENT) continue;
+      if (force && errno == ENOENT)
+        continue;
       perror(args[i]);
       return 1;
     }
@@ -675,31 +692,56 @@ static wontreturn void Exec(void) {
 }
 
 static int TryBuiltin(bool wantexec) {
-  if (!n) return exitstatus;
-  if (!strcmp(args[0], "exit")) Exit();
-  if (!strcmp(args[0], "exec")) Exec();
-  if (!strcmp(args[0], "cd")) return Cd();
-  if (!strcmp(args[0], "rm")) return Rm();
-  if (!strcmp(args[0], "[")) return Test();
-  if (!strcmp(args[0], "cat")) return Cat();
-  if (!strcmp(args[0], "env")) return Env();
-  if (!strcmp(args[0], "pwd")) return Pwd();
-  if (!strcmp(args[0], "wait")) return Wait();
-  if (!strcmp(args[0], "echo")) return Echo();
-  if (!strcmp(args[0], "read")) return Read();
-  if (!strcmp(args[0], "true")) return True();
-  if (!strcmp(args[0], "test")) return Test();
-  if (!strcmp(args[0], "kill")) return Kill();
-  if (!strcmp(args[0], "pause")) return Pause();
-  if (!strcmp(args[0], "flock")) return Flock();
-  if (!strcmp(args[0], "chmod")) return Chmod();
-  if (!strcmp(args[0], "touch")) return Touch();
-  if (!strcmp(args[0], "rmdir")) return Rmdir();
-  if (!strcmp(args[0], "mkdir")) return Mkdir();
-  if (!strcmp(args[0], "false")) return False();
-  if (!strcmp(args[0], "mktemp")) return Mktemp();
-  if (!strcmp(args[0], "usleep")) return Usleep();
-  if (!strcmp(args[0], "toupper")) return Toupper();
+  if (!n)
+    return exitstatus;
+  if (!strcmp(args[0], "exit"))
+    Exit();
+  if (!strcmp(args[0], "exec"))
+    Exec();
+  if (!strcmp(args[0], "cd"))
+    return Cd();
+  if (!strcmp(args[0], "rm"))
+    return Rm();
+  if (!strcmp(args[0], "["))
+    return Test();
+  if (!strcmp(args[0], "cat"))
+    return Cat();
+  if (!strcmp(args[0], "env"))
+    return Env();
+  if (!strcmp(args[0], "pwd"))
+    return Pwd();
+  if (!strcmp(args[0], "wait"))
+    return Wait();
+  if (!strcmp(args[0], "echo"))
+    return Echo();
+  if (!strcmp(args[0], "read"))
+    return Read();
+  if (!strcmp(args[0], "true"))
+    return True();
+  if (!strcmp(args[0], "test"))
+    return Test();
+  if (!strcmp(args[0], "kill"))
+    return Kill();
+  if (!strcmp(args[0], "pause"))
+    return Pause();
+  if (!strcmp(args[0], "flock"))
+    return Flock();
+  if (!strcmp(args[0], "chmod"))
+    return Chmod();
+  if (!strcmp(args[0], "touch"))
+    return Touch();
+  if (!strcmp(args[0], "rmdir"))
+    return Rmdir();
+  if (!strcmp(args[0], "mkdir"))
+    return Mkdir();
+  if (!strcmp(args[0], "false"))
+    return False();
+  if (!strcmp(args[0], "mktemp"))
+    return Mktemp();
+  if (!strcmp(args[0], "usleep"))
+    return Usleep();
+  if (!strcmp(args[0], "toupper"))
+    return Toupper();
   if (_weaken(_tr) && !strcmp(args[0], "tr")) {
     return Fake(_weaken(_tr), wantexec);
   }
@@ -736,13 +778,17 @@ static void Pipe(void) {
   if (!pid) {
     unassert(dup2(pfds[1], 1) == 1);
     // we can't rely on cloexec because builtins
-    if (pfds[0] != 1) unassert(!close(pfds[0]));
-    if (pfds[1] != 1) unassert(!close(pfds[1]));
+    if (pfds[0] != 1)
+      unassert(!close(pfds[0]));
+    if (pfds[1] != 1)
+      unassert(!close(pfds[1]));
     _Exit(ShellExec());
   }
   unassert(dup2(pfds[0], 0) == 0);
-  if (pfds[0] != 0) unassert(!close(pfds[0]));
-  if (pfds[1] != 0) unassert(!close(pfds[1]));
+  if (pfds[0] != 0)
+    unassert(!close(pfds[0]));
+  if (pfds[1] != 0)
+    unassert(!close(pfds[1]));
   n = 0;
 }
 
@@ -837,7 +883,8 @@ static char *Tokenize(void) {
     switch (t) {
 
       case STATE_WHITESPACE:
-        if (!*p) return 0;
+        if (!*p)
+          return 0;
         if (*p == ' ' || *p == '\t' || *p == '\n' ||
             (p[0] == '\\' && p[1] == '\n')) {
           continue;
@@ -859,10 +906,12 @@ static char *Tokenize(void) {
           t = STATE_VAR;
           var[(vari = 0)] = 0;
         } else if (*p == '\\') {
-          if (!p[1]) UnsupportedSyntax(*p);
+          if (!p[1])
+            UnsupportedSyntax(*p);
           Append(*++p);
         } else if (*p == '=') {
-          if (!n && q > r) assign = r;
+          if (!n && q > r)
+            assign = r;
           Append(*p);
         } else if (*p == '|') {
           if (q > r) {
@@ -914,11 +963,13 @@ static char *Tokenize(void) {
       case STATE_VAR:
         // XXX: we need to find a simple elegant way to break up
         //      unquoted variable expansions into multiple args.
-        if (CopyVar()) t = STATE_CMD, --p;
+        if (CopyVar())
+          t = STATE_CMD, --p;
         break;
 
       case STATE_SINGLE:
-        if (!*p) goto UnterminatedString;
+        if (!*p)
+          goto UnterminatedString;
         if (*p == '\'') {
           t = STATE_CMD;
         } else {
@@ -931,12 +982,15 @@ static char *Tokenize(void) {
         _Exit(6);
 
       case STATE_QUOTED_VAR:
-        if (!*p) goto UnterminatedString;
-        if (CopyVar()) t = STATE_QUOTED, --p;
+        if (!*p)
+          goto UnterminatedString;
+        if (CopyVar())
+          t = STATE_QUOTED, --p;
         break;
 
       case STATE_QUOTED:
-        if (!*p) goto UnterminatedString;
+        if (!*p)
+          goto UnterminatedString;
         if (*p == '"') {
           t = STATE_CMD;
         } else if (p[0] == '$') {
@@ -1044,7 +1098,8 @@ int _cocmd(int argc, char **argv, char **envp) {
   n = 0;
   r = q = argbuf;
   while ((arg = Tokenize())) {
-    if (arg == TOMBSTONE) continue;
+    if (arg == TOMBSTONE)
+      continue;
     if (n + 1 < ARRAYLEN(args)) {
       if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '&' &&
           isdigit(arg[3])) {

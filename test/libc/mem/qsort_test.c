@@ -19,7 +19,6 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
@@ -31,8 +30,10 @@
 int CompareLow(const void *a, const void *b) {
   const int *x = a;
   const int *y = b;
-  if ((char)*x < (char)*y) return -1;
-  if ((char)*x > (char)*y) return +1;
+  if ((char)*x < (char)*y)
+    return -1;
+  if ((char)*x > (char)*y)
+    return +1;
   return 0;
 }
 
@@ -72,16 +73,20 @@ TEST(sort, stability) {
 int CompareInt(const void *a, const void *b) {
   const int *x = a;
   const int *y = b;
-  if (*x < *y) return -1;
-  if (*x > *y) return +1;
+  if (*x < *y)
+    return -1;
+  if (*x > *y)
+    return +1;
   return 0;
 }
 
 int CompareLong(const void *a, const void *b) {
   const long *x = a;
   const long *y = b;
-  if (*x < *y) return -1;
-  if (*x > *y) return +1;
+  if (*x < *y)
+    return -1;
+  if (*x > *y)
+    return +1;
   return 0;
 }
 
@@ -110,8 +115,10 @@ struct Record {
 int CompareRecord(const void *a, const void *b) {
   const struct Record *x = a;
   const struct Record *y = b;
-  if (x->z > y->z) return -1;
-  if (x->z < y->z) return +1;
+  if (x->z > y->z)
+    return -1;
+  if (x->z < y->z)
+    return +1;
   return 0;
 }
 
@@ -119,7 +126,8 @@ TEST(qsort, records) {
   int i, n = 256;
   struct Record *A = gc(calloc(n, sizeof(struct Record)));
   struct Record *B = gc(calloc(n, sizeof(struct Record)));
-  for (i = 0; i < n; ++i) A[i].z = B[i].z = lemur64();
+  for (i = 0; i < n; ++i)
+    A[i].z = B[i].z = lemur64();
   qsort(A, n, sizeof(struct Record), CompareRecord);
   mergesort(B, n, sizeof(struct Record), CompareRecord);
   ASSERT_EQ(0, memcmp(A, B, n * sizeof(struct Record)));
@@ -131,7 +139,8 @@ TEST(qsort, equivalence_random) {
   long *a = gc(malloc(n * sizeof(long)));
   long *b = gc(malloc(n * sizeof(long)));
   long *c = gc(malloc(n * sizeof(long)));
-  for (i = 0; i < n; ++i) a[i] = lemur64();
+  for (i = 0; i < n; ++i)
+    a[i] = lemur64();
   memcpy(b, a, n * sizeof(long));
   memcpy(c, a, n * sizeof(long));
   qsort(b, n, sizeof(long), CompareLong);
@@ -154,7 +163,8 @@ TEST(qsort, equivalence_reverse) {
   long *a = gc(malloc(n * sizeof(long)));
   long *b = gc(malloc(n * sizeof(long)));
   long *c = gc(malloc(n * sizeof(long)));
-  for (i = 0; i < n; ++i) a[n - i - 1] = i;
+  for (i = 0; i < n; ++i)
+    a[n - i - 1] = i;
   memcpy(b, a, n * sizeof(long));
   memcpy(c, a, n * sizeof(long));
   qsort(b, n, sizeof(long), CompareLong);
@@ -178,7 +188,8 @@ BENCH(qsort, bench) {
   long *p2 = gc(malloc(n * sizeof(long)));
 
   printf("\n");
-  for (i = 0; i < n; ++i) p1[i] = i + ((lemur64() % 3) - 1);
+  for (i = 0; i < n; ++i)
+    p1[i] = i + ((lemur64() % 3) - 1);
   EZBENCH2("qsort nearly", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("qsort_r nearly", memcpy(p2, p1, n * sizeof(long)),
@@ -193,7 +204,8 @@ BENCH(qsort, bench) {
            _longsort(p2, n));
 
   printf("\n");
-  for (i = 0; i < n; ++i) p1[i] = n - i;
+  for (i = 0; i < n; ++i)
+    p1[i] = n - i;
   EZBENCH2("qsort reverse", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("qsort_r reverse", memcpy(p2, p1, n * sizeof(long)),

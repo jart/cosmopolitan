@@ -25,7 +25,6 @@
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
-#include "libc/nt/version.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/baud.internal.h"
 #include "libc/sysv/consts/termios.h"
@@ -37,15 +36,18 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   uint32_t inmode, outmode;
 
   // validate file descriptor
-  if (!__isfdopen(fd)) return ebadf();
-  if (!__isfdkind(fd, kFdConsole)) return enotty();
+  if (!__isfdopen(fd))
+    return ebadf();
+  if (!__isfdkind(fd, kFdConsole))
+    return enotty();
 
   // then completely ignore it
   hInput = GetConsoleInputHandle();
   hOutput = GetConsoleOutputHandle();
   unassert(GetConsoleMode(hInput, &inmode));
   unassert(GetConsoleMode(hOutput, &outmode));
-  if (opt == TCSAFLUSH) FlushConsoleInputBytes();
+  if (opt == TCSAFLUSH)
+    FlushConsoleInputBytes();
 
   // now work on the configuration
   inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
@@ -93,9 +95,7 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   if (!(tio->c_oflag & ONLCR)) {
     outmode |= kNtDisableNewlineAutoReturn;
   }
-  if (IsAtLeastWindows10()) {
-    outmode |= kNtEnableVirtualTerminalProcessing;
-  }
+  outmode |= kNtEnableVirtualTerminalProcessing;
 
   // tune the win32 configuration
   unassert(SetConsoleMode(hInput, inmode));

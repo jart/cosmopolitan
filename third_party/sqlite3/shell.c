@@ -309,7 +309,7 @@ static sqlite3_int64 timeOfDay(void){
 }
 
 #if !defined(_WIN32) && !defined(WIN32) && !defined(__minux)
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /* Saved resource information for the beginning of an operation */
 static struct rusage sBegin;  /* CPU time at start */

@@ -33,7 +33,8 @@ char16_t *strncat16(char16_t *d, const char16_t *s, size_t n) {
   size_t i;
   char16_t *r = d;
   d += strlen16(d);
-  for (i = 0; i < n && s[i]; ++i) d[i] = s[i];
+  for (i = 0; i < n && s[i]; ++i)
+    d[i] = s[i];
   d[i] = 0;
   return r;
 }

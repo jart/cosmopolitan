@@ -38,7 +38,7 @@
 #include "libc/sysv/consts/log.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 
 /* Note: log_facility should be initialized with LOG_USER by default,
  * but since LOG_USER is not a constant value, we cannot initialize it
@@ -62,7 +62,8 @@ static struct sockaddr_un log_addr = {AF_UNIX, "/dev/log"};
 static int64_t Time(int64_t *tp) {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
-  if (tp) *tp = ts.tv_sec;
+  if (tp)
+    *tp = ts.tv_sec;
   return ts.tv_sec;
 }
 
@@ -125,8 +126,10 @@ void vsyslog(int priority, const char *message, va_list ap) {
   int hlen; /* If LOG_CONS is specified, use to store the point in
              * the header message after the timestamp */
   BLOCK_CANCELATION;
-  if (log_fd < 0) __openlog();
-  if (!(priority & LOG_FACMASK)) priority |= log_facility;
+  if (log_fd < 0)
+    __openlog();
+  if (!(priority & LOG_FACMASK))
+    priority |= log_facility;
   /* Build the time string */
   now = Time(NULL);
   gmtime_r(&now, &tm);
@@ -226,9 +229,11 @@ void vsyslog(int priority, const char *message, va_list ap) {
  */
 int setlogmask(int maskpri) {
   int ret;
-  if (log_facility == -1) __initlog();
+  if (log_facility == -1)
+    __initlog();
   ret = log_mask;
-  if (maskpri) log_mask = LOG_PRI(maskpri);
+  if (maskpri)
+    log_mask = LOG_PRI(maskpri);
   return ret;
 }
 
@@ -261,13 +266,16 @@ int setlogmask(int maskpri) {
  */
 void openlog(const char *ident, int opt, int facility) {
   BLOCK_CANCELATION;
-  if (log_facility == -1) __initlog();
-  if (!ident) ident = firstnonnull(program_invocation_short_name, "unknown");
+  if (log_facility == -1)
+    __initlog();
+  if (!ident)
+    ident = firstnonnull(program_invocation_short_name, "unknown");
   tprecode8to16(log_ident, ARRAYLEN(log_ident), ident);
   log_opt = opt;
   log_facility = facility;
   log_id = 0;
-  if ((opt & LOG_NDELAY) && log_fd < 0) __openlog();
+  if ((opt & LOG_NDELAY) && log_fd < 0)
+    __openlog();
   ALLOW_CANCELATION;
 }
 

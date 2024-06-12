@@ -40,7 +40,8 @@ static const char *GetElfSymbol(uintptr_t funcaddr) {
 static const char *GetDispatchName(int x) {
   const char *s;
   s = GetElfSymbol(LO(GetShadow(x)));
-  if (startswith(s, "Dispatch")) s += 8;
+  if (startswith(s, "Dispatch"))
+    s += 8;
   return s;
 }
 

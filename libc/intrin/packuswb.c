@@ -32,7 +32,9 @@
 void(packuswb)(uint8_t a[16], const int16_t b[8], const int16_t c[8]) {
   unsigned i;
   uint8_t r[16];
-  for (i = 0; i < 8; ++i) r[i + 0] = MIN(UINT8_MAX, MAX(UINT8_MIN, b[i]));
-  for (i = 0; i < 8; ++i) r[i + 8] = MIN(UINT8_MAX, MAX(UINT8_MIN, c[i]));
+  for (i = 0; i < 8; ++i)
+    r[i + 0] = MIN(UINT8_MAX, MAX(UINT8_MIN, b[i]));
+  for (i = 0; i < 8; ++i)
+    r[i + 8] = MIN(UINT8_MAX, MAX(UINT8_MIN, c[i]));
   __builtin_memcpy(a, r, 16);
 }

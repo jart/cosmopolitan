@@ -28,7 +28,19 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
+#include "libc/mem/alloca.h"
+#include "libc/runtime/stack.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
+
+static size_t SumIovecBytes(const struct iovec *iov, int iovlen) {
+  size_t count = 0;
+  for (int i = 0; i < iovlen; ++i)
+    if (ckd_add(&count, count, iov[i].iov_len))
+      count = SIZE_MAX;
+  return count;
+}
 
 static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
                        int64_t off) {
@@ -36,20 +48,37 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
   size_t sent;
   ssize_t rc, toto;
 
-  if (fd < 0) {
+  if (fd < 0)
     return ebadf();
-  }
-
-  if (iovlen < 0) {
+  if (iovlen < 0)
     return einval();
-  }
-
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
+  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
     return efault();
-  }
-
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)
     return ebadf();
+
+  // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
+  // this is inconsistent with Linux which ignores huge requests
+  if (!IsLinux()) {
+    size_t sum, remain = 0x7ffff000;
+    if ((sum = SumIovecBytes(iov, iovlen)) > remain) {
+      struct iovec *iov2;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+      iov2 = alloca(iovlen * sizeof(struct iovec));
+      CheckLargeStackAllocation(iov2, iovlen * sizeof(struct iovec));
+#pragma GCC pop_options
+      for (int i = 0; i < iovlen; ++i) {
+        iov2[i] = iov[i];
+        if (remain >= iov2[i].iov_len) {
+          remain -= iov2[i].iov_len;
+        } else {
+          iov2[i].iov_len = remain;
+          remain = 0;
+        }
+      }
+      iov = iov2;
+    }
   }
 
   if (IsWindows()) {
@@ -83,7 +112,8 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
 
   e = errno;
   rc = sys_pwritev(fd, iov, iovlen, off, off);
-  if (rc != -1 || errno != ENOSYS) return rc;
+  if (rc != -1 || errno != ENOSYS)
+    return rc;
   errno = e;
 
   for (toto = i = 0; i < iovlen; ++i) {
@@ -114,6 +144,11 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
  * can happen in the kernel if EINTR happens after some of the write has
  * been committed. It can also happen if we need to polyfill this system
  * call using pwrite().
+ *
+ * It's possible for file write request to be partially completed. For
+ * example, if the sum of `iov` lengths exceeds 0x7ffff000 then bytes
+ * beyond that will be ignored. This is a Linux behavior that Cosmo
+ * polyfills across platforms.
  *
  * @return number of bytes actually sent, or -1 w/ errno
  * @cancelationpoint

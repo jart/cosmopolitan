@@ -71,6 +71,7 @@ fi
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
   LDLIBS="-lcxx $LDLIBS"
 fi
 
@@ -165,11 +166,6 @@ for x; do
     # information."
     set -- "$@" -momit-leaf-frame-pointer -foptimize-sibling-calls
     continue
-  elif [ x"$x" != x"${x#-Werror}" ] || \
-       [ x"$x" = x"-pedantic-errors" ]; then
-    # this toolchain is intended for building other people's code
-    # elevating warnings into errors, should only be done by devs
-    continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     exit 0
@@ -203,6 +199,9 @@ fi
 if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
    [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+if [ x"$OPT" != x"-O3" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
 if [ $INTENT = cpp ]; then

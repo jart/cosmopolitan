@@ -16,17 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/viz/lib/stringbuilder.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "tool/viz/lib/stringbuilder.h"
 
-static dontinline void StringBuilderGrow(size_t need, struct StringBuilder *sb) {
+static dontinline void StringBuilderGrow(size_t need,
+                                         struct StringBuilder *sb) {
   size_t n2;
   n2 = MAX(16, sb->n);
-  while (sb->i + need > n2) n2 += n2 >> 1;
+  while (sb->i + need > n2)
+    n2 += n2 >> 1;
   sb->p = xrealloc(sb->p, n2);
   sb->n = n2;
 }
@@ -39,7 +41,8 @@ int StringBuilderAppend(const char *s, struct StringBuilder *sb) {
   size_t size;
   CHECK_LE(sb->i, sb->n);
   size = strlen(s);
-  if (sb->i + size + 1 > sb->n) StringBuilderGrow(size + 1, sb);
+  if (sb->i + size + 1 > sb->n)
+    StringBuilderGrow(size + 1, sb);
   memcpy(sb->p + sb->i, s, size + 1);
   sb->i += size;
   return 0;

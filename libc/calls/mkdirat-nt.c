@@ -23,7 +23,9 @@
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   char16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  if (CreateDirectory(path16, 0)) return 0;
+  if (__mkntpathat(dirfd, path, 0, path16) == -1)
+    return -1;
+  if (CreateDirectory(path16, 0))
+    return 0;
   return __fix_enotdir(-1, path16);
 }

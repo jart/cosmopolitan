@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/serialize.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/repmovsb.h"
 #include "libc/nexgen32e/kompressor.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 
 /**
@@ -45,7 +45,8 @@ textstartup void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) {
       } while (*ip++ == 255);
     }
     repmovsb((void **)&op, (const void **)&ip, length);
-    if (ip >= ipe) break;
+    if (ip >= ipe)
+      break;
     offset = READ16LE(ip);
     matchlen = token & fifteen;
     ip += 2;

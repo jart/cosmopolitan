@@ -29,11 +29,18 @@ int main() {
   sa.sa_handler = OnSig;
   sa.sa_flags = SA_RESETHAND;
   sigemptyset(&sa.sa_mask);
-  if (sigaction(SIGUSR1, &sa, 0)) return 1;
-  if (sigaction(SIGUSR1, 0, &sa)) return 2;
-  if (sa.sa_handler != OnSig) return 3;
-  if (raise(SIGUSR1)) return 4;
-  if (gotsig != SIGUSR1) return 5;
-  if (sigaction(SIGUSR1, 0, &sa)) return 6;
-  if (sa.sa_handler != SIG_DFL) return 7;
+  if (sigaction(SIGUSR1, &sa, 0))
+    return 1;
+  if (sigaction(SIGUSR1, 0, &sa))
+    return 2;
+  if (sa.sa_handler != OnSig)
+    return 3;
+  if (raise(SIGUSR1))
+    return 4;
+  if (gotsig != SIGUSR1)
+    return 5;
+  if (sigaction(SIGUSR1, 0, &sa))
+    return 6;
+  if (sa.sa_handler != SIG_DFL)
+    return 7;
 }

@@ -104,8 +104,10 @@ void *Worker(void *id) {
     if (client == -1) {
       // accept() errors are generally ephemeral or recoverable
       // it'd potentially be a good idea to exponential backoff here
-      if (errno == ECANCELED) continue;  // pthread_cancel() was called
-      if (errno == EMFILE) ExplainPrlimit();
+      if (errno == ECANCELED)
+        continue;  // pthread_cancel() was called
+      if (errno == EMFILE)
+        ExplainPrlimit();
       LOG("accept() returned %m");
       SomethingHappened();
       continue;
@@ -149,7 +151,7 @@ void *Worker(void *id) {
 
       // check that client message wasn't fragmented into more reads
       InitHttpMessage(&msg, kHttpRequest);
-      if ((inmsglen = ParseHttpMessage(&msg, buf, got)) <= 0) {
+      if ((inmsglen = ParseHttpMessage(&msg, buf, got, sizeof(buf))) <= 0) {
         if (!inmsglen) {
           LOG("%6H client sent fragmented message");
         } else {
@@ -346,8 +348,10 @@ int main(int argc, char *argv[]) {
     if ((rc = pthread_create(th + i, &attr, Worker, (void *)(intptr_t)i))) {
       --a_workers;
       kprintf("pthread_create failed: %s\n", strerror(rc));
-      if (rc == EAGAIN) ExplainPrlimit();
-      if (!i) exit(1);
+      if (rc == EAGAIN)
+        ExplainPrlimit();
+      if (!i)
+        exit(1);
       threads = i;
       break;
     }
@@ -364,7 +368,8 @@ int main(int argc, char *argv[]) {
     PrintEphemeralStatusLine();
     unassert(!pthread_cond_wait(&statuscond, &statuslock));
     // limit status line updates to sixty frames per second
-    do tick = timespec_add(tick, (struct timespec){0, 1e9 / 60});
+    do
+      tick = timespec_add(tick, (struct timespec){0, 1e9 / 60});
     while (timespec_cmp(tick, timespec_real()) < 0);
     clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &tick, 0);
   }
@@ -378,7 +383,8 @@ int main(int argc, char *argv[]) {
   }
 
   // on windows this is the only way accept() can be canceled
-  if (IsWindows()) close(server);
+  if (IsWindows())
+    close(server);
 
   // print status in terminal as the shutdown progresses
   unassert(!pthread_mutex_lock(&statuslock));
@@ -394,7 +400,8 @@ int main(int argc, char *argv[]) {
   }
 
   // close the server socket
-  if (!IsWindows()) close(server);
+  if (!IsWindows())
+    close(server);
 
   // clean up terminal line
   LOG("thank you for choosing \e[32mgreenbean\e[0m");

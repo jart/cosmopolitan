@@ -48,6 +48,8 @@ static bool recursive;
 static bool doemptydirs;
 static const char *prog;
 
+#include "libc/mem/tinymalloc.inc"
+
 static wontreturn void PrintUsage(int rc, int fd) {
   tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
@@ -92,7 +94,8 @@ static int OnFile(const char *fpath, const struct stat *st, int typeflag,
     rc = unlink(fpath);
   }
   if (rc == -1) {
-    if (force && errno == ENOENT) return 0;
+    if (force && errno == ENOENT)
+      return 0;
     perror(fpath);
     exit(1);
   }
@@ -110,7 +113,8 @@ static void Remove(const char *path) {
     rc = nftw(path, OnFile, 128, FTW_PHYS | FTW_DEPTH);
   } else {
     if (lstat(path, &st)) {
-      if (force && errno == ENOENT) return;
+      if (force && errno == ENOENT)
+        return;
       perror(path);
       exit(1);
     }
@@ -125,7 +129,8 @@ static void Remove(const char *path) {
     }
   }
   if (rc == -1) {
-    if (force && errno == ENOENT) return;
+    if (force && errno == ENOENT)
+      return;
     perror(path);
     exit(1);
   }
@@ -134,7 +139,8 @@ static void Remove(const char *path) {
 int main(int argc, char *argv[]) {
   int i;
   prog = argv[0];
-  if (!prog) prog = "rm";
+  if (!prog)
+    prog = "rm";
   GetOpts(argc, argv);
   if (optind == argc) {
     tinyprint(2, prog, ": missing operand\n", NULL);

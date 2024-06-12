@@ -21,6 +21,6 @@
 
 // XXX: should be inherited thread local
 //      see also sys_pledge_linux() which is 100% pure
-int __pledge_mode;
+int __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
 unsigned long __promises;
 unsigned long __execpromises;

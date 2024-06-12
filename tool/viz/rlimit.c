@@ -31,7 +31,8 @@
 static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
   struct rlimit old;
   struct rlimit lim = {soft, hard};
-  if (resource == 127) return;
+  if (resource == 127)
+    return;
   if (setrlimit(resource, &lim) == -1) {
     if (!getrlimit(resource, &old)) {
       lim.rlim_max = MIN(hard, old.rlim_max);

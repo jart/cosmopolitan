@@ -21,7 +21,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Sleeps for particular number of microseconds.
@@ -37,6 +37,7 @@ int usleep(uint64_t micros) {
   errno_t err;
   struct timespec ts = timespec_frommicros(micros);
   err = clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0);
-  if (err) return errno = err, -1;
+  if (err)
+    return errno = err, -1;
   return 0;
 }

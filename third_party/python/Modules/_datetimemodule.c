@@ -7,7 +7,7 @@
 #include "libc/assert.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/math.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/descrobject.h"

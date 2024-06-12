@@ -35,11 +35,13 @@ wint_t fgetwc_unlocked(FILE *f) {
   } else {
     return -1;
   }
-  if (b < 0300) return b;
+  if (b < 0300)
+    return b;
   n = ThomPikeLen(b);
   x = ThomPikeByte(b);
   while (--n) {
-    if ((c = fgetc_unlocked(f)) == -1) return -1;
+    if ((c = fgetc_unlocked(f)) == -1)
+      return -1;
     y = c;
     if (ThomPikeCont(y)) {
       x = ThomPikeMerge(x, y);

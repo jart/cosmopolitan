@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/log/internal.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 
 #define IsDumb(s) \
@@ -51,6 +50,5 @@ bool __nocolor;
 __attribute__((__constructor__(20))) optimizesize textstartup void
 __nocolor_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   char *s;
-  __nocolor = (IsWindows() && !IsAtLeastWindows10()) ||
-              ((s = getenv("TERM")) && IsDumb(s));
+  __nocolor = IsWindows() || ((s = getenv("TERM")) && IsDumb(s));
 }

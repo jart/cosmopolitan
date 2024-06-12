@@ -38,7 +38,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/clockstonanos.internal.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/case.h"
 #include "tool/plinko/lib/char.h"
@@ -58,6 +57,13 @@ STATIC_STACK_SIZE(0x100000);
 
 #define DISPATCH(ea, tm, r, p1, p2) \
   GetDispatchFn(LO(ea))(ea, tm, r, p1, p2, GetShadow(LO(ea)))
+
+static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
+  // approximation of round(x*.323018) which is usually
+  // the ratio between inva rdtsc ticks and nanoseconds
+  uint128_t difference = x - y;
+  return (difference * 338709) >> 20;
+}
 
 static void Unwind(int S) {
   int s;
@@ -83,8 +89,10 @@ static void Backtrace(int S) {
 
 forceinline bool ShouldIgnoreGarbage(int A) {
   static unsigned cadence;
-  if (DEBUG_GARBAGE) return false;
-  if (!(++cadence & AVERSIVENESS)) return false;
+  if (DEBUG_GARBAGE)
+    return false;
+  if (!(++cadence & AVERSIVENESS))
+    return false;
   return true;
 }
 
@@ -101,13 +109,16 @@ static relegated dontinline int ErrorExpr(void) {
 }
 
 static int Order(int x, int y) {
-  if (x < y) return -1;
-  if (x > y) return +1;
+  if (x < y)
+    return -1;
+  if (x > y)
+    return +1;
   return 0;
 }
 
 static int Append(int x, int y) {
-  if (!x) return y;
+  if (!x)
+    return y;
   return Cons(Car(x), Append(Cdr(x), y));
 }
 
@@ -129,21 +140,25 @@ static int ReconstructAlist(int a) {
 static bool AtomEquals(int x, const char *s) {
   dword t;
   do {
-    if (!*s) return false;
+    if (!*s)
+      return false;
     t = Get(x);
-    if (LO(t) != *s++) return false;  // xxx: ascii
+    if (LO(t) != *s++)
+      return false;  // xxx: ascii
   } while ((x = HI(t)) != TERM);
   return !*s;
 }
 
 static pureconst int LastCons(int x) {
-  while (Cdr(x)) x = Cdr(x);
+  while (Cdr(x))
+    x = Cdr(x);
   return x;
 }
 
 static pureconst int LastChar(int x) {
   dword e;
-  do e = Get(x);
+  do
+    e = Get(x);
   while ((x = HI(e)) != TERM);
   return LO(e);
 }
@@ -157,13 +172,16 @@ forceinline pureconst bool IsQuote(int x) {
 }
 
 static int Quote(int x) {
-  if (IsClosure(x)) return x;
-  if (IsPrecious(x)) return x;
+  if (IsClosure(x))
+    return x;
+  if (IsPrecious(x))
+    return x;
   return List(kQuote, x);
 }
 
 static int QuoteList(int x) {
-  if (!x) return x;
+  if (!x)
+    return x;
   return Cons(Quote(Car(x)), QuoteList(Cdr(x)));
 }
 
@@ -171,7 +189,8 @@ static int GetAtom(const char *s) {
   int x, y;
   ax = y = TERM;
   x = *s++ & 255;
-  if (*s) y = GetAtom(s);
+  if (*s)
+    y = GetAtom(s);
   return Intern(x, y);
 }
 
@@ -182,7 +201,8 @@ static int Gensym(void) {
   n = 0;
   x = g++;
   B[n++] = L'G';
-  do B[n++] = L'0' + (x & 7);
+  do
+    B[n++] = L'0' + (x & 7);
   while ((x >>= 3));
   B[n] = 0;
   for (a = 1, b = n - 1; a < b; ++a, --b) {
@@ -195,8 +215,10 @@ static int Gensym(void) {
 
 static nosideeffect bool Member(int v, int x) {
   while (x) {
-    if (x > 0) return v == x;
-    if (v == Car(x)) return true;
+    if (x > 0)
+      return v == x;
+    if (v == Car(x))
+      return true;
     x = Cdr(x);
   }
   return false;
@@ -216,8 +238,10 @@ static int GetBindings(int x, int a) {
 
 static int Lambda(int e, int a, dword p1, dword p2) {
   int u;
-  if (p1) a = Alist(LO(p1), HI(p1), a);
-  if (p2) a = Alist(LO(p2), HI(p2), a);
+  if (p1)
+    a = Alist(LO(p1), HI(p1), a);
+  if (p2)
+    a = Alist(LO(p2), HI(p2), a);
   if (DEBUG_CLOSURE || logc) {
     u = FindFreeVariables(e, 0, 0);
     a = GetBindings(u, a);
@@ -227,8 +251,10 @@ static int Lambda(int e, int a, dword p1, dword p2) {
 
 static int Function(int e, int a, dword p1, dword p2) {
   int u;
-  if (e < 0 && Car(e) == kLambda) e = Lambda(e, a, p1, p2);
-  if (e >= 0 || Car(e) != kClosure) Error("not a closure");
+  if (e < 0 && Car(e) == kLambda)
+    e = Lambda(e, a, p1, p2);
+  if (e >= 0 || Car(e) != kClosure)
+    Error("not a closure");
   a = Cddr(e);
   e = Cadr(e);
   u = FindFreeVariables(e, 0, 0);
@@ -421,8 +447,10 @@ struct T DispatchLookup(dword ea, dword tm, dword r, dword p1, dword p2,
   DCHECK(!IsPrecious(e));
   DCHECK_GT(e, 0);
   DCHECK_LE(a, 0);
-  if (LO(p1) == LO(ea)) return Ret(MAKE(HI(p1), 0), tm, r);
-  if (LO(p2) == LO(ea)) return Ret(MAKE(HI(p2), 0), tm, r);
+  if (LO(p1) == LO(ea))
+    return Ret(MAKE(HI(p1), 0), tm, r);
+  if (LO(p2) == LO(ea))
+    return Ret(MAKE(HI(p2), 0), tm, r);
   if ((kv = Assoc(e, a))) {
     return Ret(MAKE(Cdr(kv), 0), tm, r);  // (eval 𝑘 (…(𝑘 𝑣)…)) ⟹ 𝑣
   } else {
@@ -473,10 +501,12 @@ struct T DispatchOrder(dword ea, dword tm, dword r, dword p1, dword p2,
 struct T DispatchCons(dword ea, dword tm, dword r, dword p1, dword p2,
                       dword d) {
   int x;
-  if (cx < cHeap) cHeap = cx;
+  if (cx < cHeap)
+    cHeap = cx;
   x = Car(Cdr(LO(ea)));
   x = FasterRecurse(x, HI(ea), p1, p2);
-  if (!HI(d)) return Ret(MAKE(Cons(x, 0), 0), tm, r);
+  if (!HI(d))
+    return Ret(MAKE(Cons(x, 0), 0), tm, r);
   if (~r & NEED_POP) {
     r |= NEED_POP;
     Push(LO(ea));
@@ -720,7 +750,8 @@ struct T DispatchExpand(dword ea, dword tm, dword r, dword p1, dword p2,
 }
 
 static int GrabArgs(int x, int a, dword p1, dword p2) {
-  if (x >= 0) return x;
+  if (x >= 0)
+    return x;
   return Cons(recurse(MAKE(Car(x), a), p1, p2), GrabArgs(Cdr(x), a, p1, p2));
 }
 
@@ -991,7 +1022,8 @@ int Plinko(int argc, char *argv[]) {
   kTail[5] = DispatchTailGc;
   kTail[6] = DispatchTailImpossible;
   kTail[7] = DispatchTailTmcGc;
-  if (trace) EnableTracing();
+  if (trace)
+    EnableTracing();
 
   cx = -1;
   cFrost = cx;
@@ -1006,7 +1038,8 @@ int Plinko(int argc, char *argv[]) {
       if (!(x = setjmp(crash))) {
         x = Read(0);
         x = expand(x, globals);
-        if (stats) ResetStats();
+        if (stats)
+          ResetStats();
         if (x < 0 && Car(x) == kDefine) {
           globals = Define(x, globals);
           cFrost = cx;

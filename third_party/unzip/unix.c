@@ -30,9 +30,9 @@
 #define UNZIP_INTERNAL
 #include "libc/calls/struct/dirent.h"
 #include "libc/log/log.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/unzip/unzip.h"
-#include "libc/time/struct/utimbuf.h"
+#include "libc/utime.h"
 #include "third_party/unzip/globals.h"
 
 #ifdef USE_ICONV_MAPPING

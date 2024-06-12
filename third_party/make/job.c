@@ -1104,6 +1104,8 @@ reap_children (int block, int err)
 void
 free_childbase (struct childbase *child)
 {
+  timelog_end (child->timelog);
+
   if (child->environment != 0)
     {
       char **ep = child->environment;
@@ -1463,6 +1465,7 @@ start_job_command (struct child *child)
 
       jobserver_pre_child (ANY_SET (flags, COMMANDS_RECURSE));
 
+      child->timelog = timelog_begin (argv);
       child->pid = child_execute_job ((struct childbase *)child,
                                       child->good_stdin, argv);
 

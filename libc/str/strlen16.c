@@ -35,12 +35,14 @@ __vex size_t strlen16(const char16_t *s) {
   unsigned m, k = (uintptr_t)s & 15;
   const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
   m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
-  while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
+  while (!m)
+    m = __builtin_ia32_pmovmskb128(*++p == z);
   n = (const char16_t *)p + (__builtin_ctzl(m) >> 1) - s;
   return n;
 #else
   size_t n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 #endif
 }

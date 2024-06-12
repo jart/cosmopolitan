@@ -506,8 +506,7 @@ static inline int Filter_check(const Filter* bf, int bflog, uint64_t hash)
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"   /* clock_t, clock, time_t, time, difftime */
+#include "libc/time.h"   /* clock_t, clock, time_t, time, difftime */
 
 void update_indicator(uint64_t v, uint64_t total)
 {

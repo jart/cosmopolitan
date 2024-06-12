@@ -43,7 +43,6 @@
 #include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/ldrdatatableentry.h"
 #include "libc/nt/struct/startupinfo.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -81,19 +80,6 @@ static const char *FindNameById(const struct IdName *names, unsigned long id) {
     }
   }
   return NULL;
-}
-
-static void PrintDependencies(const char *prologue) {
-#ifdef __x86_64__
-  struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
-  struct NtLinkedList *ldr = head->Next;
-  do {
-    const struct NtLdrDataTableEntry *dll =
-        (const struct NtLdrDataTableEntry *)ldr;
-    PRINT(" ☼ %.*!hs (%'zukb @ %p)", dll->FullDllName.Length,
-          dll->FullDllName.Data, dll->SizeOfImage / 1024, dll->DllBase);
-  } while ((ldr = ldr->Next) && ldr != head);
-#endif
 }
 
 static void Print(const char *prologue) {
@@ -187,7 +173,8 @@ textstartup void __printargs(const char *prologue) {
 
   (void)x;
 
-  if (!PLEDGED(STDIO)) return;
+  if (!PLEDGED(STDIO))
+    return;
 
   ftrace_enabled(-1);
   strace_enabled(-1);
@@ -263,25 +250,44 @@ textstartup void __printargs(const char *prologue) {
   });
   kprintf(prologue);
   kprintf(" ");
-  if (X86_HAVE(SSE3)) kprintf(" SSE3");
-  if (X86_HAVE(SSSE3)) kprintf(" SSSE3");
-  if (X86_HAVE(SSE4_2)) kprintf(" SSE4_2");
-  if (X86_HAVE(POPCNT)) kprintf(" POPCNT");
-  if (X86_HAVE(AVX)) kprintf(" AVX");
-  if (X86_HAVE(AVX2)) kprintf(" AVX2");
-  if (X86_HAVE(FMA)) kprintf(" FMA");
-  if (X86_HAVE(BMI)) kprintf(" BMI");
-  if (X86_HAVE(BMI2)) kprintf(" BMI2");
-  if (X86_HAVE(ADX)) kprintf(" ADX");
-  if (X86_HAVE(F16C)) kprintf(" F16C");
-  if (X86_HAVE(SHA)) kprintf(" SHA");
-  if (X86_HAVE(AES)) kprintf(" AES");
-  if (X86_HAVE(RDRND)) kprintf(" RDRND");
-  if (X86_HAVE(RDSEED)) kprintf(" RDSEED");
-  if (X86_HAVE(RDTSCP)) kprintf(" RDTSCP");
-  if (X86_HAVE(RDPID)) kprintf(" RDPID");
-  if (X86_HAVE(LA57)) kprintf(" LA57");
-  if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
+  if (X86_HAVE(SSE3))
+    kprintf(" SSE3");
+  if (X86_HAVE(SSSE3))
+    kprintf(" SSSE3");
+  if (X86_HAVE(SSE4_2))
+    kprintf(" SSE4_2");
+  if (X86_HAVE(POPCNT))
+    kprintf(" POPCNT");
+  if (X86_HAVE(AVX))
+    kprintf(" AVX");
+  if (X86_HAVE(AVX2))
+    kprintf(" AVX2");
+  if (X86_HAVE(FMA))
+    kprintf(" FMA");
+  if (X86_HAVE(BMI))
+    kprintf(" BMI");
+  if (X86_HAVE(BMI2))
+    kprintf(" BMI2");
+  if (X86_HAVE(ADX))
+    kprintf(" ADX");
+  if (X86_HAVE(F16C))
+    kprintf(" F16C");
+  if (X86_HAVE(SHA))
+    kprintf(" SHA");
+  if (X86_HAVE(AES))
+    kprintf(" AES");
+  if (X86_HAVE(RDRND))
+    kprintf(" RDRND");
+  if (X86_HAVE(RDSEED))
+    kprintf(" RDSEED");
+  if (X86_HAVE(RDTSCP))
+    kprintf(" RDTSCP");
+  if (X86_HAVE(RDPID))
+    kprintf(" RDPID");
+  if (X86_HAVE(LA57))
+    kprintf(" LA57");
+  if (X86_HAVE(FSGSBASE))
+    kprintf(" FSGSBASE");
 #elif defined(__aarch64__)
   kprintf("  AARCH64\n");
 #else
@@ -297,7 +303,8 @@ textstartup void __printargs(const char *prologue) {
   if ((n = poll(u.pfds, ARRAYLEN(u.pfds), 0)) != -1) {
     for (i = 0; i < ARRAYLEN(u.pfds); ++i) {
       char oflagbuf[128];
-      if (i && (u.pfds[i].revents & POLLNVAL)) continue;
+      if (i && (u.pfds[i].revents & POLLNVAL))
+        continue;
       PRINT(" ☼ %d (revents=%#hx fcntl(F_GETFL)=%s isatty()=%hhhd)", i,
             u.pfds[i].revents, (DescribeOpenFlags)(oflagbuf, fcntl(i, F_GETFL)),
             isatty(i));
@@ -364,8 +371,10 @@ textstartup void __printargs(const char *prologue) {
   for (gotsome = false, i = 0; i < RLIM_NLIMITS; ++i) {
     if (!getrlimit(i, &rlim)) {
       char buf[20];
-      if (rlim.rlim_cur == RLIM_INFINITY) rlim.rlim_cur = -1;
-      if (rlim.rlim_max == RLIM_INFINITY) rlim.rlim_max = -1;
+      if (rlim.rlim_cur == RLIM_INFINITY)
+        rlim.rlim_cur = -1;
+      if (rlim.rlim_max == RLIM_INFINITY)
+        rlim.rlim_max = -1;
       PRINT(" ☼ %-20s %,16ld %,16ld", (DescribeRlimitName)(buf, i),
             rlim.rlim_cur, rlim.rlim_max);
       gotsome = true;
@@ -488,32 +497,55 @@ textstartup void __printargs(const char *prologue) {
       }
       kprintf(prologue);
       kprintf("    c_iflag =");
-      if (termios.c_iflag & IGNBRK) kprintf(" IGNBRK");
-      if (termios.c_iflag & BRKINT) kprintf(" BRKINT");
-      if (termios.c_iflag & IGNPAR) kprintf(" IGNPAR");
-      if (termios.c_iflag & PARMRK) kprintf(" PARMRK");
-      if (termios.c_iflag & INPCK) kprintf(" INPCK");
-      if (termios.c_iflag & ISTRIP) kprintf(" ISTRIP");
-      if (termios.c_iflag & INLCR) kprintf(" INLCR");
-      if (termios.c_iflag & IGNCR) kprintf(" IGNCR");
-      if (termios.c_iflag & ICRNL) kprintf(" ICRNL");
-      if (termios.c_iflag & IXON) kprintf(" IXON");
-      if (termios.c_iflag & IXANY) kprintf(" IXANY");
-      if (termios.c_iflag & IXOFF) kprintf(" IXOFF");
-      if (termios.c_iflag & IMAXBEL) kprintf(" IMAXBEL");
-      if (termios.c_iflag & IUTF8) kprintf(" IUTF8");
-      if (termios.c_iflag & IUCLC) kprintf(" IUCLC");
+      if (termios.c_iflag & IGNBRK)
+        kprintf(" IGNBRK");
+      if (termios.c_iflag & BRKINT)
+        kprintf(" BRKINT");
+      if (termios.c_iflag & IGNPAR)
+        kprintf(" IGNPAR");
+      if (termios.c_iflag & PARMRK)
+        kprintf(" PARMRK");
+      if (termios.c_iflag & INPCK)
+        kprintf(" INPCK");
+      if (termios.c_iflag & ISTRIP)
+        kprintf(" ISTRIP");
+      if (termios.c_iflag & INLCR)
+        kprintf(" INLCR");
+      if (termios.c_iflag & IGNCR)
+        kprintf(" IGNCR");
+      if (termios.c_iflag & ICRNL)
+        kprintf(" ICRNL");
+      if (termios.c_iflag & IXON)
+        kprintf(" IXON");
+      if (termios.c_iflag & IXANY)
+        kprintf(" IXANY");
+      if (termios.c_iflag & IXOFF)
+        kprintf(" IXOFF");
+      if (termios.c_iflag & IMAXBEL)
+        kprintf(" IMAXBEL");
+      if (termios.c_iflag & IUTF8)
+        kprintf(" IUTF8");
+      if (termios.c_iflag & IUCLC)
+        kprintf(" IUCLC");
       kprintf("\n");
       kprintf(prologue);
       kprintf("    c_oflag =");
-      if (termios.c_oflag & OPOST) kprintf(" OPOST");
-      if (termios.c_oflag & ONLCR) kprintf(" ONLCR");
-      if (termios.c_oflag & OCRNL) kprintf(" OCRNL");
-      if (termios.c_oflag & ONOCR) kprintf(" ONOCR");
-      if (termios.c_oflag & ONLRET) kprintf(" ONLRET");
-      if (termios.c_oflag & OFILL) kprintf(" OFILL");
-      if (termios.c_oflag & OFDEL) kprintf(" OFDEL");
-      if (termios.c_oflag & OLCUC) kprintf(" OLCUC");
+      if (termios.c_oflag & OPOST)
+        kprintf(" OPOST");
+      if (termios.c_oflag & ONLCR)
+        kprintf(" ONLCR");
+      if (termios.c_oflag & OCRNL)
+        kprintf(" OCRNL");
+      if (termios.c_oflag & ONOCR)
+        kprintf(" ONOCR");
+      if (termios.c_oflag & ONLRET)
+        kprintf(" ONLRET");
+      if (termios.c_oflag & OFILL)
+        kprintf(" OFILL");
+      if (termios.c_oflag & OFDEL)
+        kprintf(" OFDEL");
+      if (termios.c_oflag & OLCUC)
+        kprintf(" OLCUC");
       if ((termios.c_oflag & NLDLY) == NL1) {
         kprintf(" NL1");
       } else if ((termios.c_oflag & NLDLY) == NL2) {
@@ -547,13 +579,20 @@ textstartup void __printargs(const char *prologue) {
       kprintf("\n");
       kprintf(prologue);
       kprintf("    c_cflag =");
-      if (termios.c_cflag & PARENB) kprintf(" PARENB");
-      if (termios.c_cflag & PARODD) kprintf(" PARODD");
-      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
-      if (termios.c_cflag & PARODD) kprintf(" PARODD");
-      if (termios.c_cflag & HUPCL) kprintf(" HUPCL");
-      if (termios.c_cflag & CREAD) kprintf(" CREAD");
-      if (termios.c_cflag & CLOCAL) kprintf(" CLOCAL");
+      if (termios.c_cflag & PARENB)
+        kprintf(" PARENB");
+      if (termios.c_cflag & PARODD)
+        kprintf(" PARODD");
+      if (termios.c_cflag & CSTOPB)
+        kprintf(" CSTOPB");
+      if (termios.c_cflag & PARODD)
+        kprintf(" PARODD");
+      if (termios.c_cflag & HUPCL)
+        kprintf(" HUPCL");
+      if (termios.c_cflag & CREAD)
+        kprintf(" CREAD");
+      if (termios.c_cflag & CLOCAL)
+        kprintf(" CLOCAL");
       if ((termios.c_cflag & CSIZE) == CS5) {
         kprintf(" CS5");
       } else if ((termios.c_cflag & CSIZE) == CS6) {
@@ -566,21 +605,36 @@ textstartup void __printargs(const char *prologue) {
       kprintf("\n");
       kprintf(prologue);
       kprintf("    c_lflag =");
-      if (termios.c_lflag & ISIG) kprintf(" ISIG");
-      if (termios.c_lflag & ICANON) kprintf(" ICANON");
-      if (termios.c_lflag & ECHO) kprintf(" ECHO");
-      if (termios.c_lflag & ECHOE) kprintf(" ECHOE");
-      if (termios.c_lflag & ECHOK) kprintf(" ECHOK");
-      if (termios.c_lflag & ECHONL) kprintf(" ECHONL");
-      if (termios.c_lflag & NOFLSH) kprintf(" NOFLSH");
-      if (termios.c_lflag & TOSTOP) kprintf(" TOSTOP");
-      if (termios.c_lflag & IEXTEN) kprintf(" IEXTEN");
-      if (termios.c_lflag & ECHOCTL) kprintf(" ECHOCTL");
-      if (termios.c_lflag & ECHOPRT) kprintf(" ECHOPRT");
-      if (termios.c_lflag & ECHOKE) kprintf(" ECHOKE");
-      if (termios.c_lflag & FLUSHO) kprintf(" FLUSHO");
-      if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
-      if (termios.c_lflag & XCASE) kprintf(" XCASE");
+      if (termios.c_lflag & ISIG)
+        kprintf(" ISIG");
+      if (termios.c_lflag & ICANON)
+        kprintf(" ICANON");
+      if (termios.c_lflag & ECHO)
+        kprintf(" ECHO");
+      if (termios.c_lflag & ECHOE)
+        kprintf(" ECHOE");
+      if (termios.c_lflag & ECHOK)
+        kprintf(" ECHOK");
+      if (termios.c_lflag & ECHONL)
+        kprintf(" ECHONL");
+      if (termios.c_lflag & NOFLSH)
+        kprintf(" NOFLSH");
+      if (termios.c_lflag & TOSTOP)
+        kprintf(" TOSTOP");
+      if (termios.c_lflag & IEXTEN)
+        kprintf(" IEXTEN");
+      if (termios.c_lflag & ECHOCTL)
+        kprintf(" ECHOCTL");
+      if (termios.c_lflag & ECHOPRT)
+        kprintf(" ECHOPRT");
+      if (termios.c_lflag & ECHOKE)
+        kprintf(" ECHOKE");
+      if (termios.c_lflag & FLUSHO)
+        kprintf(" FLUSHO");
+      if (termios.c_lflag & PENDIN)
+        kprintf(" PENDIN");
+      if (termios.c_lflag & XCASE)
+        kprintf(" XCASE");
       kprintf("\n");
       PRINT("    cfgetispeed()  = %u", cfgetispeed(&termios));
       PRINT("    cfgetospeed()  = %u", cfgetospeed(&termios));
@@ -625,29 +679,6 @@ textstartup void __printargs(const char *prologue) {
           GetStdHandle(kNtStdErrorHandle));
     if (GetConsoleMode(GetStdHandle(kNtStdErrorHandle), &cm))
       PRINT("   %s", DescribeNtConsoleOutFlags(cm));
-
-#ifdef __x86_64__
-    PRINT("");
-    PRINT("TEB");
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x00, "NtGetSeh()", _NtGetSeh());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x08, "NtGetStackHigh()", _NtGetStackHigh());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x10, "NtGetStackLow()", _NtGetStackLow());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x18, "_NtGetSubsystemTib()",
-          _NtGetSubsystemTib());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x20, "NtGetFib()", _NtGetFib());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x30, "NtGetTeb()", NtGetTeb());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x38, "NtGetEnv()", _NtGetEnv());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x40, "NtGetPid()", NtGetPid());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x48, "NtGetTid()", NtGetTid());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x50, "NtGetRpc()", _NtGetRpc());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x58, "NtGetTls()", _NtGetTls());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x60, "NtGetPeb()", NtGetPeb());
-    PRINT(" ☼ gs:0x%02x %s = %p", 0x68, "NtGetErr()", NtGetErr());
-#endif
-
-    PRINT("");
-    PRINT("DEPENDENCIES");
-    PrintDependencies(prologue);
   }
 
   PRINT("");

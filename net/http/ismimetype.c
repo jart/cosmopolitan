@@ -25,10 +25,13 @@
  */
 bool IsMimeType(const char *t, size_t n, const char *s) {
   size_t i;
-  if (n == -1) n = t ? strlen(t) : 0;
+  if (n == -1)
+    n = t ? strlen(t) : 0;
   for (i = 0; i < n; ++i) {
-    if (!s[i]) return !kHttpToken[t[i] & 0xFF];
-    if (kToLower[s[i] & 0xFF] != kToLower[t[i] & 0xFF]) return false;
+    if (!s[i])
+      return !kHttpToken[t[i] & 0xFF];
+    if (kToLower[s[i] & 0xFF] != kToLower[t[i] & 0xFF])
+      return false;
   }
   return !s[i];
 }

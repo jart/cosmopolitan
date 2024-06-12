@@ -33,7 +33,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
                                              const struct timespec ts[2],
@@ -44,7 +44,8 @@ static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
   struct NtFileTime ft[2], *ftp[2];
 
   if (path) {
-    if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+    if (__mkntpathat(dirfd, path, 0, path16) == -1)
+      return -1;
     if ((fh = CreateFile(
              path16, kNtFileWriteAttributes,
              kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,

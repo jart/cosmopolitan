@@ -37,7 +37,7 @@
 #include "libc/errno.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/tidy/sprtf.h"
 
 /* Create/Destroy a Tidy "document" object */

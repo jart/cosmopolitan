@@ -67,6 +67,8 @@ static Elf64_Ehdr *elf;
 static const char *epath;
 static Elf64_Xword symcount;
 
+#include "libc/mem/tinymalloc.inc"
+
 static wontreturn void Die(const char *reason) {
   tinyprint(2, epath, ": ", reason, "\n", NULL);
   exit(1);
@@ -78,18 +80,21 @@ static wontreturn void DieOom(void) {
 
 static void *Malloc(size_t n) {
   void *p;
-  if (!(p = malloc(n))) DieOom();
+  if (!(p = malloc(n)))
+    DieOom();
   return p;
 }
 
 static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n))) DieOom();
+  if (!(p = realloc(p, n)))
+    DieOom();
   return p;
 }
 
 static wontreturn void SysExit(const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "EUNKNOWN";
   tinyprint(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
@@ -201,11 +206,15 @@ static const unsigned char kNops[10][10] = {
 static unsigned char *CoalesceNops(unsigned char *p, const unsigned char *e) {
   long n;
   for (; p + 1 < e; p += n) {
-    if (p[0] != 0x90) break;
-    if (p[1] != 0x90) break;
+    if (p[0] != 0x90)
+      break;
+    if (p[1] != 0x90)
+      break;
     for (n = 2; p + n < e; ++n) {
-      if (p[n] != 0x90) break;
-      if (n == ARRAYLEN(kNops) - 1) break;
+      if (p[n] != 0x90)
+        break;
+      if (n == ARRAYLEN(kNops) - 1)
+        break;
     }
     memcpy(p, kNops[n], n);
   }
@@ -218,16 +227,23 @@ static void CheckPrivilegedCrossReferences(void) {
   const Elf64_Shdr *shdr;
   const Elf64_Rela *rela, *erela;
   shdr = FindElfSectionByName(elf, esize, secstrs, ".rela.privileged");
-  if (!shdr || !(rela = GetElfSectionAddress(elf, esize, shdr))) return;
+  if (!shdr || !(rela = GetElfSectionAddress(elf, esize, shdr)))
+    return;
   erela = rela + shdr->sh_size / sizeof(*rela);
   for (; rela < erela; ++rela) {
-    if (!ELF64_R_TYPE(rela->r_info)) continue;
-    if (!(x = ELF64_R_SYM(rela->r_info))) continue;
-    if (x >= symcount) continue;
-    if (syms[x].st_shndx == SHN_ABS) continue;
-    if (!syms[x].st_shndx) continue;
+    if (!ELF64_R_TYPE(rela->r_info))
+      continue;
+    if (!(x = ELF64_R_SYM(rela->r_info)))
+      continue;
+    if (x >= symcount)
+      continue;
+    if (syms[x].st_shndx == SHN_ABS)
+      continue;
+    if (!syms[x].st_shndx)
+      continue;
     if ((shdr = GetElfSectionHeaderAddress(elf, esize, syms[x].st_shndx))) {
-      if (~shdr->sh_flags & SHF_EXECINSTR) continue;  // data reference
+      if (~shdr->sh_flags & SHF_EXECINSTR)
+        continue;  // data reference
       if ((secname = GetElfString(elf, esize, secstrs, shdr->sh_name)) &&
           strcmp(".privileged", secname)) {
         tinyprint(2, epath,
@@ -275,15 +291,13 @@ static void RewriteTlsCodeAmd64(void) {
   uint8_t *p;
   Elf64_Shdr *shdr;
   for (i = 0; i < elf->e_shnum; ++i) {
-    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i))) {
+    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i)))
       Die("elf header overflow #1");
-    }
     if (shdr->sh_type == SHT_PROGBITS &&  //
         (shdr->sh_flags & SHF_ALLOC) &&   //
         (shdr->sh_flags & SHF_EXECINSTR)) {
-      if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
+      if (!(p = GetElfSectionAddress(elf, esize, shdr)))
         Die("elf header overflow #2");
-      }
       ChangeTlsFsToGs(p, shdr->sh_size);
     }
   }
@@ -295,26 +309,27 @@ static void RewriteTlsCodeArm64(void) {
   Elf64_Shdr *shdr;
   uint32_t *p, *pe;
   for (i = 0; i < elf->e_shnum; ++i) {
-    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i))) {
+    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i)))
       Die("elf header overflow #1");
-    }
     if (shdr->sh_type == SHT_PROGBITS &&  //
         (shdr->sh_flags & SHF_ALLOC) &&   //
         (shdr->sh_flags & SHF_EXECINSTR)) {
-      if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
+      if (!(p = GetElfSectionAddress(elf, esize, shdr)))
         Die("elf header overflow #2");
-      }
-      for (pe = p + shdr->sh_size / 4; p <= pe; ++p) {
-        if ((*p & -32) == MRS_TPIDR_EL0) {
+      for (pe = p + shdr->sh_size / 4; p <= pe; ++p)
+        if ((*p & -32) == MRS_TPIDR_EL0)
           *p = MOV_REG(*p & 31, COSMO_TLS_REG);
-        }
-      }
     }
   }
 }
 
 static void UseFreebsdOsAbi(void) {
   elf->e_ident[EI_OSABI] = ELFOSABI_FREEBSD;
+}
+
+static void WriteApeFlags(void) {
+  /* try to be forward-compatible */
+  elf->e_flags = (elf->e_flags & ~EF_APE_MODERN_MASK) | EF_APE_MODERN;
 }
 
 /**
@@ -334,18 +349,18 @@ static void OptimizePatchableFunctionEntries(void) {
   Elf64_Addr sym_rva;
   if (elf->e_machine == EM_NEXGEN32E) {
     for (i = 0; i < symcount; ++i) {
-      if (!syms[i].st_size) continue;
-      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
-      if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx))) {
+      if (!syms[i].st_size)
+        continue;
+      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC)
+        continue;
+      if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx)))
         Die("elf header overflow #3");
-      }
-      if (shdr->sh_type != SHT_PROGBITS) continue;
-      if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
+      if (shdr->sh_type != SHT_PROGBITS)
+        continue;
+      if (!(p = GetElfSectionAddress(elf, esize, shdr)))
         Die("elf section overflow");
-      }
-      if (ckd_sub(&sym_rva, syms[i].st_value, shdr->sh_addr)) {
+      if (ckd_sub(&sym_rva, syms[i].st_value, shdr->sh_addr))
         Die("elf symbol beneath section");
-      }
       if (sym_rva > esize - shdr->sh_offset ||               //
           (p += sym_rva) >= (unsigned char *)elf + esize ||  //
           syms[i].st_size >= esize - sym_rva) {
@@ -371,7 +386,8 @@ static void RelinkZipFiles(void) {
   // scan backwards for zip eocd todo record
   // that was created by libc/nexgen32e/zip.S
   for (;;) {
-    if (eocd < stop) return;
+    if (eocd < stop)
+      return;
     if (READ32LE(eocd) == kZipCdirHdrMagicTodo &&  //
         ZIP_CDIR_SIZE(eocd) &&                     //
         !ZIP_CDIR_OFFSET(eocd) &&                  //
@@ -385,17 +401,14 @@ static void RelinkZipFiles(void) {
   recs = 0;
   cdir = (stop = eocd) - (cdsize = ZIP_CDIR_SIZE(eocd));
   for (cfile = cdir; cfile < stop; cfile += ZIP_CFILE_HDRSIZE(cfile)) {
-    if (++recs >= 65536) {
+    if (++recs >= 65536)
       Die("too many zip central directory records");
-    }
     if (cfile < base ||                        //
         cfile + kZipCfileHdrMinSize > xeof ||  //
-        cfile + ZIP_CFILE_HDRSIZE(cfile) > xeof) {
+        cfile + ZIP_CFILE_HDRSIZE(cfile) > xeof)
       Die("zip central directory entry overflows image");
-    }
-    if (READ32LE(cfile) != kZipCfileHdrMagic) {
+    if (READ32LE(cfile) != kZipCfileHdrMagic)
       Die("bad __zip_cdir_size or zip central directory corrupted");
-    }
     if ((rela = ZIP_CFILE_OFFSET(cfile)) < 0) {
       lfile = cfile + kZipCfileOffsetOffset + rela;
     } else {
@@ -403,33 +416,27 @@ static void RelinkZipFiles(void) {
     }
     if (lfile < base ||                        //
         lfile + kZipLfileHdrMinSize > xeof ||  //
-        lfile + ZIP_LFILE_SIZE(lfile) > xeof) {
+        lfile + ZIP_LFILE_SIZE(lfile) > xeof)
       Die("zip local file overflows image");
-    }
-    if (READ32LE(lfile) != kZipLfileHdrMagic) {
+    if (READ32LE(lfile) != kZipLfileHdrMagic)
       Die("zip central directory offset to local file corrupted");
-    }
-    if (rela < 0) {
+    if (rela < 0)
       WRITE32LE(cfile + kZipCfileOffsetOffset, lfile - base);
-    }
   }
   // append new eocd record to program image
   if (esize > INT_MAX - sizeof(foot) ||
-      (cdoffset = esize) > INT_MAX - sizeof(foot)) {
+      (cdoffset = esize) > INT_MAX - sizeof(foot))
     Die("the time has come to adopt zip64");
-  }
   bzero(foot, sizeof(foot));
   WRITE32LE(foot, kZipCdirHdrMagic);
   WRITE32LE(foot + kZipCdirSizeOffset, cdsize);
   WRITE16LE(foot + kZipCdirRecordsOffset, recs);
   WRITE32LE(foot + kZipCdirOffsetOffset, cdoffset);
   WRITE16LE(foot + kZipCdirRecordsOnDiskOffset, recs);
-  if (pwrite(fildes, cdir, cdsize, esize) != cdsize) {
+  if (pwrite(fildes, cdir, cdsize, esize) != cdsize)
     SysExit("cdir pwrite");
-  }
-  if (pwrite(fildes, foot, sizeof(foot), esize + cdsize) != sizeof(foot)) {
+  if (pwrite(fildes, foot, sizeof(foot), esize + cdsize) != sizeof(foot))
     SysExit("eocd pwrite");
-  }
   eocd = foot;
 }
 
@@ -446,13 +453,17 @@ static void GenerateIfuncInit(void) {
   static char code[16384];
   static Elf64_Rela relas[1024];
   Elf64_Shdr *symtab_shdr = GetElfSymbolTable(elf, esize, SHT_SYMTAB, 0);
-  if (!symtab_shdr) Die("symbol table section header not found");
+  if (!symtab_shdr)
+    Die("symbol table section header not found");
   Elf64_Word symtab_shdr_index =
       ((char *)symtab_shdr - ((char *)elf + elf->e_shoff)) / elf->e_shentsize;
   for (Elf64_Xword i = 0; i < symcount; ++i) {
-    if (syms[i].st_shndx == SHN_UNDEF) continue;
-    if (syms[i].st_shndx >= SHN_LORESERVE) continue;
-    if (ELF64_ST_TYPE(syms[i].st_info) != STT_GNU_IFUNC) continue;
+    if (syms[i].st_shndx == SHN_UNDEF)
+      continue;
+    if (syms[i].st_shndx >= SHN_LORESERVE)
+      continue;
+    if (ELF64_ST_TYPE(syms[i].st_info) != STT_GNU_IFUNC)
+      continue;
     if (!(name = GetElfString(elf, esize, symstrs, syms[i].st_name)))
       Die("could not get symbol name of ifunc");
     static char resolver_name[65536];
@@ -463,11 +474,16 @@ static void GenerateIfuncInit(void) {
     Elf64_Xword function_sym_index = i;
     Elf64_Xword resolver_sym_index = -1;
     for (Elf64_Xword i = 0; i < symcount; ++i) {
-      if (syms[i].st_shndx == SHN_UNDEF) continue;
-      if (syms[i].st_shndx >= SHN_LORESERVE) continue;
-      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
-      if (!(s = GetElfString(elf, esize, symstrs, syms[i].st_name))) continue;
-      if (strcmp(s, resolver_name)) continue;
+      if (syms[i].st_shndx == SHN_UNDEF)
+        continue;
+      if (syms[i].st_shndx >= SHN_LORESERVE)
+        continue;
+      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC)
+        continue;
+      if (!(s = GetElfString(elf, esize, symstrs, syms[i].st_name)))
+        continue;
+      if (strcmp(s, resolver_name))
+        continue;
       resolver_sym_index = i;
       break;
     }
@@ -521,15 +537,18 @@ static void GenerateIfuncInit(void) {
         0x5e,  // pop %rsi
         0x5f,  // pop %rdi
     };
-    if (code_i + sizeof(chunk3) > sizeof(code)) Die("too many ifuncs");
+    if (code_i + sizeof(chunk3) > sizeof(code))
+      Die("too many ifuncs");
     memcpy(code + code_i, chunk3, sizeof(chunk3));
     code_i += sizeof(chunk3);
   }
-  if (!code_i) return;
+  if (!code_i)
+    return;
 
   // prepare to mutate elf
   // remap file so it has more space
-  if (elf->e_shnum + 2 > 65535) Die("too many sections");
+  if (elf->e_shnum + 2 > 65535)
+    Die("too many sections");
   size_t reserve_size = esize + 32 * 1024 * 1024;
   elf = Realloc(elf, reserve_size);
 
@@ -626,29 +645,22 @@ static void PurgeIfuncSections(void) {
 }
 
 static void FixupObject(void) {
-  if ((fildes = open(epath, mode)) == -1) {
+  if ((fildes = open(epath, mode)) == -1)
     SysExit("open");
-  }
-  if ((esize = lseek(fildes, 0, SEEK_END)) == -1) {
+  if ((esize = lseek(fildes, 0, SEEK_END)) == -1)
     SysExit("lseek");
-  }
   if (esize) {
     elf = Malloc(esize);
-    if (pread(fildes, elf, esize, 0) != esize) {
+    if (pread(fildes, elf, esize, 0) != esize)
       SysExit("pread");
-    }
-    if (!IsElf64Binary(elf, esize)) {
+    if (!IsElf64Binary(elf, esize))
       Die("not an elf64 binary");
-    }
-    if (!(syms = GetElfSymbols(elf, esize, SHT_SYMTAB, &symcount))) {
+    if (!(syms = GetElfSymbols(elf, esize, SHT_SYMTAB, &symcount)))
       Die("missing elf symbol table");
-    }
-    if (!(secstrs = GetElfSectionNameStringTable(elf, esize))) {
+    if (!(secstrs = GetElfSectionNameStringTable(elf, esize)))
       Die("missing elf section string table");
-    }
-    if (!(symstrs = GetElfStringTable(elf, esize, ".strtab"))) {
+    if (!(symstrs = GetElfStringTable(elf, esize, ".strtab")))
       Die("missing elf symbol string table");
-    }
     CheckPrivilegedCrossReferences();
     if (mode == O_RDWR) {
       if (elf->e_machine == EM_NEXGEN32E) {
@@ -657,29 +669,26 @@ static void FixupObject(void) {
         GenerateIfuncInit();
       } else if (elf->e_machine == EM_AARCH64) {
         RewriteTlsCodeArm64();
-        if (elf->e_type != ET_REL) {
+        if (elf->e_type != ET_REL)
           UseFreebsdOsAbi();
-        }
       }
       if (elf->e_type != ET_REL) {
+        WriteApeFlags();
         PurgeIfuncSections();
         RelinkZipFiles();
       }
-      if (pwrite(fildes, elf, esize, 0) != esize) {
+      if (pwrite(fildes, elf, esize, 0) != esize)
         SysExit("pwrite");
-      }
     }
   }
-  if (close(fildes)) {
+  if (close(fildes))
     SysExit("close");
-  }
 }
 
 int main(int argc, char *argv[]) {
   int i;
-  if (!IsOptimized()) {
+  if (!IsOptimized())
     ShowCrashReports();
-  }
   GetOpts(argc, argv);
   for (i = optind; i < argc; ++i) {
     epath = argv[i];

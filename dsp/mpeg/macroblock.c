@@ -46,7 +46,8 @@ forceinline void plm_video_process_macroblock(plm_video_t *self,
   si = ((self->mb_row * BW) + vp) * dw + (self->mb_col * BW) + hp;
   di = (self->mb_row * dw + self->mb_col) * BW;
   max_address = (dw * (self->mb_height * BW - BW + 1) - BW);
-  if (si > max_address || di > max_address) return;
+  if (si > max_address || di > max_address)
+    return;
   d += di;
   s += si;
   switch (((interpolate << 2) | (odd_h << 1) | (odd_v)) & 7) {

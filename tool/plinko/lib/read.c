@@ -66,7 +66,8 @@ dontinstrument int ReadSpaces(int fd) {
 
 dontinstrument int ReadByte(int fd) {
   int c;
-  if ((c = g_buffer[fd][bp[fd]++] & 255)) return c;
+  if ((c = g_buffer[fd][bp[fd]++] & 255))
+    return c;
   return ReadSpaces(fd);
 }
 
@@ -77,7 +78,8 @@ dontinstrument int ReadChar(int fd) {
     if (dx != ';') {
       break;
     } else {
-      do b = ReadByte(fd);
+      do
+        b = ReadByte(fd);
       while ((b != '\n'));
     }
   }
@@ -100,7 +102,8 @@ dontinstrument int ReadChar(int fd) {
 static int ReadListItem(int fd, int closer, int f(int)) {
   int x, y;
   if ((x = f(fd)) > 0) {
-    if (Get(x) == MAKE(closer, TERM)) return -0;
+    if (Get(x) == MAKE(closer, TERM))
+      return -0;
     if (Get(x) == MAKE(L'.', TERM)) {
       x = f(fd);
       if ((y = ReadListItem(fd, closer, Read1))) {
@@ -138,16 +141,20 @@ static void ConsumeComment(int fd) {
   int c, t = 1;
   for (;;) {
     c = ReadChar(fd);
-    if (c == '#' && dx == '|') ++t;
-    if (!t) return;
-    if (c == '|' && dx == '#') --t;
+    if (c == '#' && dx == '|')
+      ++t;
+    if (!t)
+      return;
+    if (c == '|' && dx == '#')
+      --t;
   }
 }
 
 static int ReadAtomRest(int fd, int x) {
   int y;
   ax = y = TERM;
-  if (x == L'\\') x = ReadChar(fd);
+  if (x == L'\\')
+    x = ReadChar(fd);
   if (!IsSpace(dx) && !IsParen(dx) && !IsMathAlnum(x) && !IsMathAlnum(dx)) {
     y = ReadAtomRest(fd, ReadChar(fd));
   }
@@ -157,7 +164,8 @@ static int ReadAtomRest(int fd, int x) {
 static int ReadAtom(int fd) {
   int a, s, x;
   x = ReadChar(fd);
-  if ((s = Desymbolize(x)) != -1) return s;
+  if ((s = Desymbolize(x)) != -1)
+    return s;
   a = ReadAtomRest(fd, x);
   if (LO(Get(a)) == L'T' && HI(Get(a)) == TERM) {
     a = 1;
@@ -194,7 +202,8 @@ static int TokenizeComplicated(int fd) {
 
 static int Read2(int fd) {
   int r, l;
-  while (IsSpace((l = dx))) ReadChar(fd);
+  while (IsSpace((l = dx)))
+    ReadChar(fd);
   switch (dx) {
     case L'#':
       r = TokenizeComplicated(fd);
@@ -263,13 +272,15 @@ static int ReadLambda(int fd, int n) {
     } else {
       q = List(q, r);
     }
-    if (!n && dx == L')') break;
+    if (!n && dx == L')')
+      break;
   } while (!IsSpace(dx));
   return q;
 }
 
 static int Read1(int fd) {
-  while (IsSpace(dx)) ReadChar(fd);
+  while (IsSpace(dx))
+    ReadChar(fd);
   // todo: fix horrible i/o
   if (dx == 0xCE && (g_buffer[fd][bp[fd]] & 255) == 0xbb) {
     return ReadLambda(fd, 0);

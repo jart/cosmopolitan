@@ -127,7 +127,7 @@ https://github.com/piscisaureus/wepoll");
   } while (0)
 
 #define CONTAINOF(ptr, type, member) \
-  ((type *)((uintptr_t)(ptr) - offsetof(type, member)))
+  ((type *)((uintptr_t)(ptr)-offsetof(type, member)))
 
 #define TREE__ROTATE(cis, trans)       \
   struct TreeNode *p = node;           \
@@ -144,7 +144,8 @@ https://github.com/piscisaureus/wepoll");
   q->parent = parent;                  \
   p->parent = q;                       \
   p->trans = q->cis;                   \
-  if (p->trans) p->trans->parent = p;  \
+  if (p->trans)                        \
+    p->trans->parent = p;              \
   q->cis = p;
 
 #define TREE__INSERT_OR_DESCEND(side) \
@@ -402,7 +403,8 @@ static textwindows int afd_cancel_poll(
   struct NtIoStatusBlock cancel_iosb;
   /* If the poll operation has already completed or has been cancelled
      earlier, there's nothing left for us to do. */
-  if (io_status_block->Status != kNtStatusPending) return 0;
+  if (io_status_block->Status != kNtStatusPending)
+    return 0;
   cancel_status =
       NtCancelIoFileEx(afd_device_handle, io_status_block, &cancel_iosb);
   /* NtCancelIoFileEx() may return STATUS_NOT_FOUND if the operation completed
@@ -479,20 +481,23 @@ static textwindows void queue_remove(struct QueueNode *node) {
 
 static textwindows struct PortState *port__alloc(void) {
   struct PortState *port_state = malloc(sizeof *port_state);
-  if (!port_state) RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
+  if (!port_state)
+    RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
   return port_state;
 }
 
 static textwindows int64_t port__create_iocp(void) {
   int64_t iocp_handle = CreateIoCompletionPort(kNtInvalidHandleValue, 0, 0, 0);
-  if (!iocp_handle) RETURN_MAP_ERROR(0);
+  if (!iocp_handle)
+    RETURN_MAP_ERROR(0);
   return iocp_handle;
 }
 
 static textwindows int port__close_iocp(struct PortState *port_state) {
   int64_t iocp_handle = port_state->iocp_handle;
   port_state->iocp_handle = 0;
-  if (!CloseHandle(iocp_handle)) RETURN_MAP_ERROR(-1);
+  if (!CloseHandle(iocp_handle))
+    RETURN_MAP_ERROR(-1);
   return 0;
 }
 
@@ -569,9 +574,11 @@ static textwindows struct PortState *port_new(int64_t *iocp_handle_out) {
   struct PortState *port_state;
   int64_t iocp_handle;
   port_state = port__alloc();
-  if (!port_state) goto err1;
+  if (!port_state)
+    goto err1;
   iocp_handle = port__create_iocp();
-  if (!iocp_handle) goto err2;
+  if (!iocp_handle)
+    goto err2;
   bzero(port_state, sizeof *port_state);
   port_state->iocp_handle = iocp_handle;
   tree_init(&port_state->sock_tree);
@@ -601,7 +608,8 @@ static textwindows int sock__cancel_poll(struct SockState *sock_state) {
 
 static textwindows void port_cancel_socket_update(
     struct PortState *port_state, struct SockState *sock_state) {
-  if (!queue_is_enqueued(sock_state_to_queue_node(sock_state))) return;
+  if (!queue_is_enqueued(sock_state_to_queue_node(sock_state)))
+    return;
   queue_remove(sock_state_to_queue_node(sock_state));
 }
 
@@ -623,7 +631,8 @@ static textwindows struct TreeNode *tree_find(const struct Tree *tree,
 static textwindows struct TsTreeNode *ts_tree__find_node(struct TsTree *ts_tree,
                                                          uintptr_t key) {
   struct TreeNode *tree_node = tree_find(&ts_tree->tree, key);
-  if (!tree_node) return NULL;
+  if (!tree_node)
+    return NULL;
   return CONTAINOF(tree_node, struct TsTreeNode, tree_node);
 }
 
@@ -639,7 +648,8 @@ static textwindows void tree_del(struct Tree *tree, struct TreeNode *node) {
     next = left;
   } else {
     next = right;
-    while (next->left) next = next->left;
+    while (next->left)
+      next = next->left;
   }
   if (parent) {
     if (parent->left == node) {
@@ -671,14 +681,17 @@ static textwindows void tree_del(struct Tree *tree, struct TreeNode *node) {
     red = node->red;
     node = next;
   }
-  if (node) node->parent = parent;
-  if (red) return;
+  if (node)
+    node->parent = parent;
+  if (red)
+    return;
   if (node && node->red) {
     node->red = false;
     return;
   }
   do {
-    if (node == tree->root) break;
+    if (node == tree->root)
+      break;
     if (node == parent->left) {
       TREE__REBALANCE_AFTER_REMOVE(left, right)
     } else {
@@ -687,19 +700,22 @@ static textwindows void tree_del(struct Tree *tree, struct TreeNode *node) {
     node = parent;
     parent = parent->parent;
   } while (!node->red);
-  if (node) node->red = false;
+  if (node)
+    node->red = false;
 }
 
 static textwindows void reflock__signal_event(void *address) {
   NtStatus status =
       NtReleaseKeyedEvent(reflock__keyed_event, address, false, NULL);
-  if (status != kNtStatusSuccess) abort();
+  if (status != kNtStatusSuccess)
+    abort();
 }
 
 static textwindows void reflock__await_event(void *address) {
   NtStatus status =
       NtWaitForKeyedEvent(reflock__keyed_event, address, false, NULL);
-  if (status != kNtStatusSuccess) abort();
+  if (status != kNtStatusSuccess)
+    abort();
 }
 
 static textwindows void reflock_ref(struct RefLock *reflock) {
@@ -712,7 +728,8 @@ static textwindows void reflock_unref(struct RefLock *reflock) {
   long state = InterlockedAdd(&reflock->state, -REFLOCK__REF);
   /* Verify that the lock was referenced and not already destroyed.*/
   npassert((state & REFLOCK__DESTROY_MASK & ~REFLOCK__DESTROY) == 0);
-  if (state == REFLOCK__DESTROY) reflock__signal_event(reflock);
+  if (state == REFLOCK__DESTROY)
+    reflock__signal_event(reflock);
 }
 
 static textwindows struct TsTreeNode *ts_tree_del_and_ref(
@@ -733,7 +750,8 @@ static textwindows struct TsTreeNode *ts_tree_find_and_ref(
   struct TsTreeNode *ts_tree_node;
   AcquireSRWLockShared(&ts_tree->lock);
   ts_tree_node = ts_tree__find_node(ts_tree, key);
-  if (ts_tree_node != NULL) reflock_ref(&ts_tree_node->reflock);
+  if (ts_tree_node != NULL)
+    reflock_ref(&ts_tree_node->reflock);
   ReleaseSRWLockShared(&ts_tree->lock);
   return ts_tree_node;
 }
@@ -748,7 +766,8 @@ static textwindows void reflock_unref_and_destroy(struct RefLock *reflock) {
   ref_count = state & REFLOCK__REF_MASK;
   /* Verify that the lock was referenced and not already destroyed. */
   npassert((state & REFLOCK__DESTROY_MASK) == REFLOCK__DESTROY);
-  if (ref_count != 0) reflock__await_event(reflock);
+  if (ref_count != 0)
+    reflock__await_event(reflock);
   state = InterlockedExchange(&reflock->state, REFLOCK__POISON);
   npassert(state == REFLOCK__DESTROY);
 }
@@ -765,7 +784,8 @@ static textwindows void port_unregister_socket(struct PortState *port_state,
 
 static textwindows void port_remove_deleted_socket(
     struct PortState *port_state, struct SockState *sock_state) {
-  if (!queue_is_enqueued(sock_state_to_queue_node(sock_state))) return;
+  if (!queue_is_enqueued(sock_state_to_queue_node(sock_state)))
+    return;
   queue_remove(sock_state_to_queue_node(sock_state));
 }
 
@@ -790,7 +810,8 @@ static textwindows void sock__free(struct SockState *sock_state) {
 
 static textwindows void port_add_deleted_socket(struct PortState *port_state,
                                                 struct SockState *sock_state) {
-  if (queue_is_enqueued(sock_state_to_queue_node(sock_state))) return;
+  if (queue_is_enqueued(sock_state_to_queue_node(sock_state)))
+    return;
   queue_append(&port_state->sock_deleted_queue,
                sock_state_to_queue_node(sock_state));
 }
@@ -871,7 +892,8 @@ static textwindows struct PollGroup *poll_group__new(
   int64_t iocp_handle = port_get_iocp_handle(port_state);
   struct Queue *poll_group_queue = port_get_poll_group_queue(port_state);
   struct PollGroup *poll_group = malloc(sizeof *poll_group);
-  if (!poll_group) RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
+  if (!poll_group)
+    RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
   bzero(poll_group, sizeof *poll_group);
   queue_node_init(&poll_group->queue_node);
   poll_group->port_state = port_state;
@@ -893,7 +915,8 @@ static textwindows struct PollGroup *poll_group_acquire(
                                      : NULL;
   if (!poll_group || poll_group->group_size >= MAX_GROUP_SIZE)
     poll_group = poll_group__new(port_state);
-  if (!poll_group) return NULL;
+  if (!poll_group)
+    return NULL;
   if (++poll_group->group_size == MAX_GROUP_SIZE)
     queue_move_to_start(poll_group_queue, &poll_group->queue_node);
   return poll_group;
@@ -911,22 +934,33 @@ static textwindows uint32_t sock__epoll_events_to_afd_events(uint32_t e) {
   /* Always monitor for kNtAfdPollLocalClose, which is triggered when
      the socket is closed with closesocket() or CloseHandle(). */
   uint32_t a = kNtAfdPollLocalClose;
-  if (e & (EPOLLIN | EPOLLRDNORM)) a |= kNtAfdPollReceive | kNtAfdPollAccept;
-  if (e & (EPOLLPRI | EPOLLRDBAND)) a |= kNtAfdPollReceiveExpedited;
-  if (e & (EPOLLOUT | EPOLLWRNORM | EPOLLWRBAND)) a |= kNtAfdPollSend;
-  if (e & (EPOLLIN | EPOLLRDNORM | EPOLLRDHUP)) a |= kNtAfdPollDisconnect;
-  if (e & EPOLLHUP) a |= kNtAfdPollAbort;
-  if (e & EPOLLERR) a |= kNtAfdPollConnectFail;
+  if (e & (EPOLLIN | EPOLLRDNORM))
+    a |= kNtAfdPollReceive | kNtAfdPollAccept;
+  if (e & (EPOLLPRI | EPOLLRDBAND))
+    a |= kNtAfdPollReceiveExpedited;
+  if (e & (EPOLLOUT | EPOLLWRNORM | EPOLLWRBAND))
+    a |= kNtAfdPollSend;
+  if (e & (EPOLLIN | EPOLLRDNORM | EPOLLRDHUP))
+    a |= kNtAfdPollDisconnect;
+  if (e & EPOLLHUP)
+    a |= kNtAfdPollAbort;
+  if (e & EPOLLERR)
+    a |= kNtAfdPollConnectFail;
   return a;
 }
 
 static textwindows uint32_t sock__afd_events_to_epoll_events(uint32_t a) {
   uint32_t e = 0;
-  if (a & (kNtAfdPollReceive | kNtAfdPollAccept)) e |= EPOLLIN | EPOLLRDNORM;
-  if (a & kNtAfdPollReceiveExpedited) e |= EPOLLPRI | EPOLLRDBAND;
-  if (a & kNtAfdPollSend) e |= EPOLLOUT | EPOLLWRNORM | EPOLLWRBAND;
-  if (a & kNtAfdPollDisconnect) e |= EPOLLIN | EPOLLRDNORM | EPOLLRDHUP;
-  if (a & kNtAfdPollAbort) e |= EPOLLHUP;
+  if (a & (kNtAfdPollReceive | kNtAfdPollAccept))
+    e |= EPOLLIN | EPOLLRDNORM;
+  if (a & kNtAfdPollReceiveExpedited)
+    e |= EPOLLPRI | EPOLLRDBAND;
+  if (a & kNtAfdPollSend)
+    e |= EPOLLOUT | EPOLLWRNORM | EPOLLWRBAND;
+  if (a & kNtAfdPollDisconnect)
+    e |= EPOLLIN | EPOLLRDNORM | EPOLLRDHUP;
+  if (a & kNtAfdPollAbort)
+    e |= EPOLLHUP;
   if (a & kNtAfdPollConnectFail) {
     /* Linux reports all these events after connect() has failed. */
     e |= EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLRDNORM | EPOLLWRNORM | EPOLLRDHUP;
@@ -950,7 +984,8 @@ static textwindows int sock_update(struct PortState *port_state,
        the pending *poll operation; when we receive it's completion
        package, a new poll *operation will be submitted with the correct
        event mask. */
-    if (sock__cancel_poll(sock_state) < 0) return -1;
+    if (sock__cancel_poll(sock_state) < 0)
+      return -1;
   } else if (sock_state->poll_status == kPollCancelled) {
     /* The poll operation has already been cancelled, we're still waiting for
        it to return.For now, there' s nothing that needs to be done. */
@@ -995,7 +1030,8 @@ static textwindows int port__update_events(struct PortState *port_state) {
   while (!queue_is_empty(sock_update_queue)) {
     queue_node = queue_first(sock_update_queue);
     sock_state = sock_state_from_queue_node(queue_node);
-    if (sock_update(port_state, sock_state) < 0) return -1;
+    if (sock_update(port_state, sock_state) < 0)
+      return -1;
     /* sock_update() removes the socket from the update queue.*/
   }
   return 0;
@@ -1003,12 +1039,14 @@ static textwindows int port__update_events(struct PortState *port_state) {
 
 static textwindows void port__update_events_if_polling(
     struct PortState *port_state) {
-  if (port_state->active_poll_count > 0) port__update_events(port_state);
+  if (port_state->active_poll_count > 0)
+    port__update_events(port_state);
 }
 
 static textwindows void port_request_socket_update(
     struct PortState *port_state, struct SockState *sock_state) {
-  if (queue_is_enqueued(sock_state_to_queue_node(sock_state))) return;
+  if (queue_is_enqueued(sock_state_to_queue_node(sock_state)))
+    return;
   queue_append(&port_state->sock_update_queue,
                sock_state_to_queue_node(sock_state));
 }
@@ -1047,7 +1085,8 @@ static textwindows int sock_feed_event(struct PortState *port_state,
   /* Filter out events that the user didn't ask for. */
   epoll_events &= sock_state->user_events;
   /* Return if there are no epoll events to report.*/
-  if (epoll_events == 0) return 0;
+  if (epoll_events == 0)
+    return 0;
   /* If the the socket has the EPOLLONESHOT flag set, unmonitor all
      events, even EPOLLERR and EPOLLHUP. But always keep looking for
      closed sockets. */
@@ -1082,14 +1121,16 @@ static textwindows int port__poll(struct PortState *port_state,
                                   uint32_t maxevents, uint32_t timeout) {
   bool32 r;
   uint32_t completion_count;
-  if (port__update_events(port_state) < 0) return -1;
+  if (port__update_events(port_state) < 0)
+    return -1;
   port_state->active_poll_count++;
   LeaveCriticalSection(&port_state->lock);
   r = GetQueuedCompletionStatusEx(port_state->iocp_handle, iocp_events,
                                   maxevents, &completion_count, timeout, false);
   EnterCriticalSection(&port_state->lock);
   port_state->active_poll_count--;
-  if (!r) RETURN_MAP_ERROR(-1);
+  if (!r)
+    RETURN_MAP_ERROR(-1);
   return port__feed_events(port_state, epoll_events, iocp_events,
                            completion_count);
 }
@@ -1103,7 +1144,8 @@ static textwindows int port_wait(struct PortState *port_state,
   struct NtOverlappedEntry *iocp_events;
   struct NtOverlappedEntry stack_iocp_events[64];
   /* Check whether `maxevents` is in range.*/
-  if (maxevents <= 0) RETURN_SET_ERROR(-1, kNtErrorInvalidParameter);
+  if (maxevents <= 0)
+    RETURN_SET_ERROR(-1, kNtErrorInvalidParameter);
   /* Decide whether the IOCP completion list can live on the stack, or
      allocate memory for it on the heap. */
   if ((size_t)maxevents <= ARRAYLEN(stack_iocp_events)) {
@@ -1129,9 +1171,11 @@ static textwindows int port_wait(struct PortState *port_state,
   for (;;) {
     result = port__poll(port_state, events, iocp_events, (uint32_t)maxevents,
                         gqcs_timeout);
-    if (result < 0 || result > 0) break;
+    if (result < 0 || result > 0)
+      break;
     /* Result, error, or time - out. */
-    if (timeout < 0) continue;
+    if (timeout < 0)
+      continue;
     /* When timeout is negative, never time out. */
     /* Update time. */
     now = GetTickCount64();
@@ -1204,7 +1248,8 @@ static textwindows int64_t ws_get_base_socket(int64_t socket) {
 
 static textwindows struct SockState *sock__alloc(void) {
   struct SockState *sock_state = malloc(sizeof *sock_state);
-  if (!sock_state) RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
+  if (!sock_state)
+    RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
   return sock_state;
 }
 
@@ -1223,19 +1268,24 @@ static textwindows struct SockState *sock_new(struct PortState *port_state,
   int64_t base_socket;
   struct PollGroup *poll_group;
   struct SockState *sock_state;
-  if (socket == 0 || socket == -1) RETURN_SET_ERROR(0, kNtErrorInvalidHandle);
+  if (socket == 0 || socket == -1)
+    RETURN_SET_ERROR(0, kNtErrorInvalidHandle);
   base_socket = ws_get_base_socket(socket);
-  if (base_socket == -1) return NULL;
+  if (base_socket == -1)
+    return NULL;
   poll_group = poll_group_acquire(port_state);
-  if (!poll_group) return NULL;
+  if (!poll_group)
+    return NULL;
   sock_state = sock__alloc();
-  if (!sock_state) goto err1;
+  if (!sock_state)
+    goto err1;
   bzero(sock_state, sizeof *sock_state);
   sock_state->base_socket = base_socket;
   sock_state->poll_group = poll_group;
   tree_node_init(&sock_state->tree_node);
   queue_node_init(&sock_state->queue_node);
-  if (port_register_socket(port_state, sock_state, socket) < 0) goto err2;
+  if (port_register_socket(port_state, sock_state, socket) < 0)
+    goto err2;
   return sock_state;
 err2:
   sock__free(sock_state);
@@ -1262,7 +1312,8 @@ static textwindows int sock_set_event(struct PortState *port_state,
 static textwindows int port__ctl_add(struct PortState *port_state, int64_t sock,
                                      struct epoll_event *ev) {
   struct SockState *sock_state = sock_new(port_state, sock);
-  if (!sock_state) return -1;
+  if (!sock_state)
+    return -1;
   if (sock_set_event(port_state, sock_state, ev) < 0) {
     sock_delete(port_state, sock_state);
     return -1;
@@ -1274,15 +1325,18 @@ static textwindows int port__ctl_add(struct PortState *port_state, int64_t sock,
 static textwindows struct SockState *port_find_socket(
     struct PortState *port_state, int64_t socket) {
   struct TreeNode *tree_node = tree_find(&port_state->sock_tree, socket);
-  if (!tree_node) RETURN_SET_ERROR(NULL, kNtErrorNotFound);
+  if (!tree_node)
+    RETURN_SET_ERROR(NULL, kNtErrorNotFound);
   return sock_state_from_tree_node(tree_node);
 }
 
 static textwindows int port__ctl_mod(struct PortState *port_state, int64_t sock,
                                      struct epoll_event *ev) {
   struct SockState *sock_state = port_find_socket(port_state, sock);
-  if (!sock_state) return -1;
-  if (sock_set_event(port_state, sock_state, ev) < 0) return -1;
+  if (!sock_state)
+    return -1;
+  if (sock_set_event(port_state, sock_state, ev) < 0)
+    return -1;
   port__update_events_if_polling(port_state);
   return 0;
 }
@@ -1290,7 +1344,8 @@ static textwindows int port__ctl_mod(struct PortState *port_state, int64_t sock,
 static textwindows int port__ctl_del(struct PortState *port_state,
                                      int64_t sock) {
   struct SockState *sock_state = port_find_socket(port_state, sock);
-  if (!sock_state) return -1;
+  if (!sock_state)
+    return -1;
   sock_delete(port_state, sock_state);
   return 0;
 }
@@ -1328,9 +1383,11 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
   int64_t ephnd;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
-  if (wepoll_init() < 0) return -1;
+  if (wepoll_init() < 0)
+    return -1;
   fd = __reservefd(-1);
-  if (fd == -1) return -1;
+  if (fd == -1)
+    return -1;
   port_state = port_new(&ephnd);
   if (!port_state) {
     __releasefd(fd);
@@ -1361,9 +1418,12 @@ static textwindows dontinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
   if (!IsWindows()) {
     return sys_epoll_ctl(epfd, op, fd, ev);
   } else {
-    if (wepoll_init() < 0) return -1;
-    if (!__isfdopen(fd)) return ebadf();
-    if (!__isfdkind(epfd, kFdEpoll)) return ebadf();
+    if (wepoll_init() < 0)
+      return -1;
+    if (!__isfdopen(fd))
+      return ebadf();
+    if (!__isfdkind(epfd, kFdEpoll))
+      return ebadf();
     tree_node = ts_tree_find_and_ref(&epoll__handle_tree, g_fds.p[epfd].handle);
     if (!tree_node) {
       err_set_win_error(kNtErrorInvalidParameter);
@@ -1372,7 +1432,8 @@ static textwindows dontinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
     port_state = port_state_from_handle_tree_node(tree_node);
     r = port_ctl(port_state, op, g_fds.p[fd].handle, ev);
     ts_tree_node_unref(tree_node);
-    if (r < 0) goto err;
+    if (r < 0)
+      goto err;
     return 0;
   err:
     /* On Linux, in the case of epoll_ctl(), EBADF takes priority over
@@ -1390,9 +1451,12 @@ static textwindows dontinline int sys_epoll_wait_nt(int epfd,
   int num_events;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
-  if (!__isfdkind(epfd, kFdEpoll)) return ebadf();
-  if (maxevents <= 0) return einval();
-  if (wepoll_init() < 0) return -1;
+  if (!__isfdkind(epfd, kFdEpoll))
+    return ebadf();
+  if (maxevents <= 0)
+    return einval();
+  if (wepoll_init() < 0)
+    return -1;
   tree_node = ts_tree_find_and_ref(&epoll__handle_tree, g_fds.p[epfd].handle);
   if (!tree_node) {
     err_set_win_error(kNtErrorInvalidParameter);
@@ -1401,7 +1465,8 @@ static textwindows dontinline int sys_epoll_wait_nt(int epfd,
   port_state = port_state_from_handle_tree_node(tree_node);
   num_events = port_wait(port_state, events, maxevents, timeoutms);
   ts_tree_node_unref(tree_node);
-  if (num_events < 0) goto err;
+  if (num_events < 0)
+    goto err;
   return num_events;
 err:
   err_check_handle(g_fds.p[epfd].handle);
@@ -1412,7 +1477,8 @@ err:
 textwindows int sys_close_epoll_nt(int fd) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
-  if (wepoll_init() < 0) return -1;
+  if (wepoll_init() < 0)
+    return -1;
   tree_node = ts_tree_del_and_ref(&epoll__handle_tree, g_fds.p[fd].handle);
   if (!tree_node) {
     err_set_win_error(kNtErrorInvalidParameter);
@@ -1570,9 +1636,11 @@ int epoll_pwait(int epfd, struct epoll_event *events, int maxevents,
                          sizeof(*sigmask));
     if (rc == -1 && errno == ENOSYS) {
       errno = e;
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      if (sigmask)
+        sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
       rc = sys_epoll_wait(epfd, events, maxevents, timeoutms);
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
+      if (sigmask)
+        sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
     BLOCK_SIGNALS;

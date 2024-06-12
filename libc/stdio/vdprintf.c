@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/iovec.internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/fmt/internal.h"
 #include "libc/limits.h"
@@ -42,7 +42,7 @@ static int vdprintf_putc(const char *s, struct VdprintfState *t, size_t n) {
       iov[0].iov_len = t->n;
       iov[1].iov_base = (void *)s;
       iov[1].iov_len = n;
-      if (__robust_writev(t->fd, iov, 2) == -1) {
+      if (writev(t->fd, iov, 2) == -1) {
         return -1;
       }
       t->t += t->n;
@@ -63,11 +63,12 @@ int vdprintf(int fd, const char *fmt, va_list va) {
   t.n = 0;
   t.t = 0;
   t.fd = fd;
-  if (__fmt(vdprintf_putc, &t, fmt, va) == -1) return -1;
+  if (__fmt(vdprintf_putc, &t, fmt, va) == -1)
+    return -1;
   if (t.n) {
     iov[0].iov_base = t.b;
     iov[0].iov_len = t.n;
-    if (__robust_writev(t.fd, iov, 1) == -1) {
+    if (writev(t.fd, iov, 1) == -1) {
       return -1;
     }
     t.t += t.n;

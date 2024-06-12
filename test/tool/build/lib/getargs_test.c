@@ -55,7 +55,8 @@ void GetAllArgs(char **args) {
   size_t i = 0;
   struct GetArgs ga;
   getargs_init(&ga, args);
-  while (getargs_next(&ga)) ++i;
+  while (getargs_next(&ga))
+    ++i;
   getargs_destroy(&ga);
   ASSERT_EQ(2 + 13790, i);
 }

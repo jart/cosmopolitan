@@ -194,7 +194,8 @@ textwindows int __sig_raise(volatile int sig, int sic) {
 
     // update the signal mask in preparation for signal handller
     sigset_t blocksigs = __sighandmask[sig];
-    if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+    if (!(flags & SA_NODEFER))
+      blocksigs |= 1ull << (sig - 1);
     ctx.uc_sigmask = atomic_fetch_or_explicit(&pt->tib->tib_sigmask, blocksigs,
                                               memory_order_acquire);
 
@@ -265,7 +266,8 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
 
     // update the signal mask in preparation for signal handller
     sigset_t blocksigs = __sighandmask[sig];
-    if (!(sf->flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+    if (!(sf->flags & SA_NODEFER))
+      blocksigs |= 1ull << (sig - 1);
     sf->ctx.uc_sigmask = atomic_fetch_or_explicit(&tib->tib_sigmask, blocksigs,
                                                   memory_order_acquire);
 
@@ -299,7 +301,7 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
 }
 
 // sends signal to another specific thread which is ref'd
-static int __sig_killer(struct PosixThread *pt, int sig, int sic) {
+static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   unsigned rva = __sighandrvas[sig];
   unsigned flags = __sighandflags[sig];
 
@@ -425,7 +427,8 @@ textwindows void __sig_generate(int sig, int sic) {
   for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
     // we don't want to signal ourself
-    if (pt == _pthread_self()) continue;
+    if (pt == _pthread_self())
+      continue;
     // we don't want to signal a thread that isn't running
     if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
         kPosixThreadTerminated) {
@@ -459,66 +462,7 @@ textwindows void __sig_generate(int sig, int sic) {
   ALLOW_SIGNALS;
 }
 
-static int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
-  switch (ep->ExceptionRecord->ExceptionCode) {
-    case kNtSignalBreakpoint:
-      *code = TRAP_BRKPT;
-      return SIGTRAP;
-    case kNtSignalIllegalInstruction:
-      *code = ILL_ILLOPC;
-      return SIGILL;
-    case kNtSignalPrivInstruction:
-      *code = ILL_PRVOPC;
-      return SIGILL;
-    case kNtSignalInPageError:
-    case kNtStatusStackOverflow:
-      *code = SEGV_MAPERR;
-      return SIGSEGV;
-    case kNtSignalGuardPage:
-    case kNtSignalAccessViolation:
-      *code = SEGV_ACCERR;
-      return SIGSEGV;
-    case kNtSignalInvalidHandle:
-    case kNtSignalInvalidParameter:
-    case kNtSignalAssertionFailure:
-      *code = SI_USER;
-      return SIGABRT;
-    case kNtStatusIntegerOverflow:
-      *code = FPE_INTOVF;
-      return SIGFPE;
-    case kNtSignalFltDivideByZero:
-      *code = FPE_FLTDIV;
-      return SIGFPE;
-    case kNtSignalFltOverflow:
-      *code = FPE_FLTOVF;
-      return SIGFPE;
-    case kNtSignalFltUnderflow:
-      *code = FPE_FLTUND;
-      return SIGFPE;
-    case kNtSignalFltInexactResult:
-      *code = FPE_FLTRES;
-      return SIGFPE;
-    case kNtSignalFltDenormalOperand:
-    case kNtSignalFltInvalidOperation:
-    case kNtSignalFltStackCheck:
-    case kNtSignalIntegerDivideByZero:
-    case kNtSignalFloatMultipleFaults:
-    case kNtSignalFloatMultipleTraps:
-      *code = FPE_FLTINV;
-      return SIGFPE;
-    case kNtSignalDllNotFound:
-    case kNtSignalOrdinalNotFound:
-    case kNtSignalEntrypointNotFound:
-    case kNtSignalDllInitFailed:
-      *code = SI_KERNEL;
-      return SIGSYS;
-    default:
-      *code = ep->ExceptionRecord->ExceptionCode;
-      return SIGSEGV;
-  }
-}
-
-static char *__sig_stpcpy(char *d, const char *s) {
+static textwindows char *__sig_stpcpy(char *d, const char *s) {
   size_t i;
   for (i = 0;; ++i) {
     if (!(d[i] = s[i])) {
@@ -527,8 +471,24 @@ static char *__sig_stpcpy(char *d, const char *s) {
   }
 }
 
-static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
-                             struct CosmoTib *tib) {
+static textwindows wontreturn void __sig_death(int sig, const char *thing) {
+#ifndef TINY
+  intptr_t hStderr;
+  char sigbuf[21], s[128], *p;
+  hStderr = GetStdHandle(kNtStdErrorHandle);
+  p = __sig_stpcpy(s, "Terminating on ");
+  p = __sig_stpcpy(p, thing);
+  p = __sig_stpcpy(p, strsignal_r(sig, sigbuf));
+  p = __sig_stpcpy(p,
+                   ". Pass --strace and/or ShowCrashReports() for details.\n");
+  WriteFile(hStderr, s, p - s, 0, 0);
+#endif
+  __sig_terminate(sig);
+}
+
+static textwindows void __sig_unmaskable(struct NtExceptionPointers *ep,
+                                         int code, int sig,
+                                         struct CosmoTib *tib) {
 
   // log vital crash information reliably for --strace before doing much
   // we don't print this without the flag since raw numbers scare people
@@ -546,17 +506,7 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
   // exception, then print a friendly helpful hint message to stderr
   unsigned rva = __sighandrvas[sig];
   if (rva == (intptr_t)SIG_DFL || rva == (intptr_t)SIG_IGN) {
-#ifndef TINY
-    intptr_t hStderr;
-    char sigbuf[21], s[128], *p;
-    hStderr = GetStdHandle(kNtStdErrorHandle);
-    p = __sig_stpcpy(s, "Terminating on uncaught ");
-    p = __sig_stpcpy(p, strsignal_r(sig, sigbuf));
-    p = __sig_stpcpy(
-        p, ". Pass --strace and/or ShowCrashReports() for details.\n");
-    WriteFile(hStderr, s, p - s, 0, 0);
-#endif
-    __sig_terminate(sig);
+    __sig_death(sig, "uncaught ");
   }
 
   // if this signal handler is configured to auto-reset to the default
@@ -577,16 +527,22 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
   }
 
   // call the user signal handler
-  // with a temporarily replaced signal mask
   // and a modifiable view of the faulting code's cpu state
+  // temporarily replace signal mask while calling crash handler
+  // abort process if sig is already blocked to avoid crash loop
   // note ucontext_t is a hefty data structures on top of NtContext
   ucontext_t ctx = {0};
   siginfo_t si = {.si_signo = sig, .si_code = code, .si_addr = si_addr};
   _ntcontext2linux(&ctx, ep->ContextRecord);
   sigset_t blocksigs = __sighandmask[sig];
-  if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+  if (!(flags & SA_NODEFER))
+    blocksigs |= 1ull << (sig - 1);
   ctx.uc_sigmask = atomic_fetch_or_explicit(&tib->tib_sigmask, blocksigs,
                                             memory_order_acquire);
+  if (ctx.uc_sigmask & (1ull << (sig - 1))) {
+    __sig_death(sig, "masked ");
+    __sig_terminate(sig);
+  }
   __sig_handler(rva)(sig, &si, &ctx);
   atomic_store_explicit(&tib->tib_sigmask, ctx.uc_sigmask,
                         memory_order_release);
@@ -668,7 +624,8 @@ textwindows int __sig_check(void) {
 }
 
 __attribute__((__constructor__(10))) textstartup void __sig_init(void) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   AddVectoredExceptionHandler(true, (void *)__sig_crash);
   SetConsoleCtrlHandler((void *)__sig_console, true);
 }

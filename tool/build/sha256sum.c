@@ -102,7 +102,8 @@ static bool IsSupportedPath(const char *path) {
   for (i = 0;; ++i) {
     switch (path[i]) {
       case 0:
-        if (i) return true;
+        if (i)
+          return true;
         // fallthrough
       case '\r':
       case '\n':
@@ -137,8 +138,10 @@ static bool ProduceDigest(const char *path, FILE *f) {
   char hexdigest[65];
   char mode[2] = {g_mode};
   unsigned char digest[32];
-  if (!IsSupportedPath(path)) return false;
-  if (!GetDigest(path, f, digest)) return false;
+  if (!IsSupportedPath(path))
+    return false;
+  if (!GetDigest(path, f, digest))
+    return false;
   hexpcpy(hexdigest, digest, 32);
   tinyprint(1, hexdigest, " ", mode, path, "\n", NULL);
   return true;
@@ -152,17 +155,24 @@ static bool CheckDigests(const char *path, FILE *f) {
   unsigned char wantdigest[32], gotdigest[32];
   char buf[64 + 2 + PATH_MAX + 1 + 1], *p;
   for (line = 0; fgets(buf, sizeof(buf), f); ++line) {
-    if (!*chomp(buf)) continue;
+    if (!*chomp(buf))
+      continue;
     for (p = buf, i = 0; i < 32; ++i) {
-      if ((a = kHexToInt[*p++ & 255]) == -1) goto InvalidLine;
-      if ((b = kHexToInt[*p++ & 255]) == -1) goto InvalidLine;
+      if ((a = kHexToInt[*p++ & 255]) == -1)
+        goto InvalidLine;
+      if ((b = kHexToInt[*p++ & 255]) == -1)
+        goto InvalidLine;
       wantdigest[i] = a << 4 | b;
     }
-    if (*p++ != ' ') goto InvalidLine;
-    if (!IsModeCharacter(*p++)) goto InvalidLine;
+    if (*p++ != ' ')
+      goto InvalidLine;
+    if (!IsModeCharacter(*p++))
+      goto InvalidLine;
     path2 = p;
-    if (!*path2) goto InvalidLine;
-    if (!IsSupportedPath(path2)) continue;
+    if (!*path2)
+      goto InvalidLine;
+    if (!IsSupportedPath(path2))
+      continue;
     if ((f2 = fopen(path2, "rb"))) {
       if (GetDigest(path2, f2, gotdigest)) {
         if (!memcmp(wantdigest, gotdigest, 32)) {
@@ -210,7 +220,8 @@ int main(int argc, char *argv[]) {
   FILE *f;
   bool k = true;
   prog = argv[0];
-  if (!prog) prog = "sha256sum";
+  if (!prog)
+    prog = "sha256sum";
   GetOpts(argc, argv);
   if (optind == argc) {
     f = stdin;

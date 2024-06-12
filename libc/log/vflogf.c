@@ -37,8 +37,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #define kNontrivialSize (8 * 1000 * 1000)
 
@@ -50,7 +49,8 @@ static struct timespec vflogf_ts;
 static void vflogf_onfail(FILE *f) {
   errno_t err;
   struct stat st;
-  if (IsTiny()) return;
+  if (IsTiny())
+    return;
   err = ferror_unlocked(f);
   if (fileno_unlocked(f) != -1 &&
       (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
@@ -90,8 +90,10 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   const char *prog;
   const char *sign;
   struct timespec t2;
-  if (!f) f = __log_file;
-  if (!f) return;
+  if (!f)
+    f = __log_file;
+  if (!f)
+    return;
   flockfile(f);
   strace_enabled(-1);
   BLOCK_SIGNALS;
@@ -113,7 +115,8 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   strcpy(iso8601(buf32, &tm), sign);
   prog = basename(firstnonnull(program_invocation_name, "unknown"));
   bufmode = f->bufmode;
-  if (bufmode == _IOLBF) f->bufmode = _IOFBF;
+  if (bufmode == _IOLBF)
+    f->bufmode = _IOFBF;
 
   if ((fprintf_unlocked)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ",
                          "FEWIVDNT"[level & 7], buf32, dots / 1000, file, line,

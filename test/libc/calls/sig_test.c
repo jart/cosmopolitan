@@ -64,9 +64,11 @@ void *Worker(void *arg) {
 
 TEST(SetThreadContext, test) {
   pthread_t th;
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
-  while (!ready) donothing;
+  while (!ready)
+    donothing;
   usleep(1000);
   int64_t hand = _pthread_syshand((struct PosixThread *)th);
   ASSERT_EQ(0, SuspendThread(hand));

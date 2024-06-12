@@ -42,7 +42,7 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/temp.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/mbedtls/config.h"

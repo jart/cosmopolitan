@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/aarch64.internal.h"
@@ -30,15 +31,16 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cosmo.h"
 #include "libc/cxxabi.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -80,7 +82,8 @@ static relegated void Append(struct Buffer *b, const char *fmt, ...) {
 }
 
 static relegated const char *ColorRegister(int r) {
-  if (__nocolor) return "";
+  if (__nocolor)
+    return "";
   switch (r) {
     case 0:  // arg / res
     case 1:  // arg / res
@@ -125,9 +128,12 @@ static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
   ssize_t rc;
   char *p, *q, buf[128];
   int j, k, ws, pid, pfd[2];
-  if (!debugbin || !*debugbin) return false;
-  if (!addr2line || !*addr2line) return false;
-  if (sys_pipe(pfd)) return false;
+  if (!debugbin || !*debugbin)
+    return false;
+  if (!addr2line || !*addr2line)
+    return false;
+  if (sys_pipe(pfd))
+    return false;
   ksnprintf(buf, sizeof(buf), "%lx", addr);
   if ((pid = vfork()) == -1) {
     sys_close(pfd[1]);
@@ -172,19 +178,18 @@ static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
   }
 }
 
-static relegated char *GetSymbolName(struct SymbolTable *st, int symbol,
-                                     char **mem, size_t *memsz) {
-  char *s, *t;
-  if ((s = __get_symbol_name(st, symbol)) &&  //
-      s[0] == '_' && s[1] == 'Z' &&           //
-      (t = __cxa_demangle(s, *mem, memsz, 0))) {
-    *mem = s = t;
-  }
-  return s;
+static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
+  char *str;
+  static char buf[8192];
+  if (!(str = __get_symbol_name(st, symbol)))
+    return str;
+  if (!__is_mangled(str))
+    return str;
+  __demangle(buf, str, sizeof(buf));
+  return buf;
 }
 
-static relegated void __oncrash_impl(int sig, struct siginfo *si,
-                                     ucontext_t *ctx) {
+static relegated void __oncrash_impl(int sig, siginfo_t *si, ucontext_t *ctx) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(10000, 4096);
@@ -235,8 +240,6 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
                             : (struct StackFrame *)__builtin_frame_address(0)));
   if (ctx) {
     long pc;
-    char *mem = 0;
-    size_t memsz = 0;
     int addend, symbol;
     const char *debugbin;
     const char *addr2line;
@@ -261,7 +264,8 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       Append(b, " ");
       for (j = 0; j < 4; ++j) {
         int r = 8 * j + i;
-        if (j) Append(b, " ");
+        if (j)
+          Append(b, " ");
         Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
                ctx->uc_mcontext.regs[r], reset, r, r == 8 || r == 9 ? " " : "");
       }
@@ -272,12 +276,14 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
     vc = (struct fpsimd_context *)ctx->uc_mcontext.__reserved;
     if (vc->head.magic == FPSIMD_MAGIC) {
       int n = 16;
-      while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2]) n -= 2;
+      while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2])
+        n -= 2;
       for (i = 0; i * 2 < n; ++i) {
         Append(b, " ");
         for (j = 0; j < 2; ++j) {
           int r = j + 2 * i;
-          if (j) Append(b, " ");
+          if (j)
+            Append(b, " ");
           Append(b, "%016lx ..%s %016lx v%d%s", (long)(vc->vregs[r] >> 64),
                  !j ? "" : ".", (long)vc->vregs[r], r, r < 10 ? " " : "");
         }
@@ -296,8 +302,9 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       addend -= st->symbols[symbol].x;
       Append(b, " ");
       if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-        if (addend) Append(b, "%+d", addend);
+        Append(b, "%s", GetSymbolName(st, symbol));
+        if (addend)
+          Append(b, "%+d", addend);
       }
     }
     Append(b, "\n");
@@ -317,8 +324,9 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
         addend -= st->symbols[symbol].x;
         Append(b, " ");
         if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-          Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-          if (addend) Append(b, "%+d", addend);
+          Append(b, "%s", GetSymbolName(st, symbol));
+          if (addend)
+            Append(b, "%+d", addend);
         }
       }
       Append(b, "\n");
@@ -356,21 +364,57 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
       }
       Append(b, " %016lx fp %lx lr ", fp, pc);
       if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
-        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-        if (addend) Append(b, "%+d", addend);
+        Append(b, "%s", GetSymbolName(st, symbol));
+        if (addend)
+          Append(b, "%+d", addend);
       }
       Append(b, "\n");
     }
-    free(mem);
   }
   b->p[b->n - 1] = '\n';
   klog(b->p, MIN(b->i, b->n));
 }
 
-relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
-  ucontext_t *ctx = arg;
+static inline void SpinLock(atomic_uint *lock) {
+  int x;
+  for (;;) {
+    x = atomic_exchange_explicit(lock, 1, memory_order_acquire);
+    if (!x)
+      break;
+  }
+}
+
+static inline void SpinUnlock(atomic_uint *lock) {
+  atomic_store_explicit(lock, 0, memory_order_release);
+}
+
+relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
+  static atomic_uint lock;
   BLOCK_CANCELATION;
-  __oncrash_impl(sig, si, ctx);
+  SpinLock(&lock);
+  __oncrash_impl(sig, si, arg);
+
+  // unlike amd64, the instruction pointer on arm64 isn't advanced past
+  // the debugger breakpoint instruction automatically. we need this so
+  // execution can resume after __builtin_trap().
+  if (arg && sig == SIGTRAP)
+    ((ucontext_t *)arg)->uc_mcontext.PC += 4;
+
+  // ensure execution doesn't resume for anything but SIGTRAP / SIGQUIT
+  if (arg && sig != SIGTRAP && sig != SIGQUIT) {
+    if (!IsXnu()) {
+      sigaddset(&((ucontext_t *)arg)->uc_sigmask, sig);
+    } else {
+      sigdelset(&((ucontext_t *)arg)->uc_sigmask, sig);
+      struct sigaction sa;
+      sigemptyset(&sa.sa_mask);
+      sa.sa_handler = SIG_DFL;
+      sa.sa_flags = 0;
+      sigaction(sig, &sa, 0);
+    }
+  }
+
+  SpinUnlock(&lock);
   ALLOW_CANCELATION;
 }
 

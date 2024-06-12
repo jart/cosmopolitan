@@ -25,7 +25,8 @@
 
 static int CopyTree(int x) {
   int a, b;
-  if (x >= 0) return x;
+  if (x >= 0)
+    return x;
   b = CopyTree(Cdr(x));
   a = CopyTree(Car(x));
   return Cons(a, b);
@@ -33,7 +34,8 @@ static int CopyTree(int x) {
 
 static int PreplanCond(int e, int a, int s) {
   int f, g;
-  if (!(e = Cdr(e))) return 0;
+  if (!(e = Cdr(e)))
+    return 0;
   if ((f = Car(e)) < 0) {
     if ((g = Cdr(f)) < 0) {
       f = List(Preplan(Car(f), a, s), Preplan(Car(g), a, s));
@@ -45,14 +47,16 @@ static int PreplanCond(int e, int a, int s) {
 }
 
 static int PreplanList(int e, int a, int s) {
-  if (e >= 0) return e;
+  if (e >= 0)
+    return e;
   return Cons(Preplan(Car(e), a, s), PreplanList(Cdr(e), a, s));
 }
 
 int Preplan(int e, int a, int s) {
   int f, x;
   struct qword q;
-  if (e >= 0) return e;
+  if (e >= 0)
+    return e;
   f = Car(e);
   if (f != kQuote) {
     if (f == kClosure) {

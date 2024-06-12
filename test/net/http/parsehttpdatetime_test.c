@@ -18,8 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "net/http/http.h"
 
 #define PARSE(s) ParseHttpDateTime(s, sizeof(s) - 1)

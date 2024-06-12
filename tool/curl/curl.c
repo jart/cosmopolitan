@@ -64,7 +64,8 @@ static wontreturn void PrintUsage(int fd, int rc) {
 
 static const char *DescribeErrno(void) {
   const char *reason;
-  if (!(reason = _strerdoc(errno))) reason = "Unknown error";
+  if (!(reason = _strerdoc(errno)))
+    reason = "Unknown error";
   return reason;
 }
 
@@ -446,7 +447,7 @@ int _curl(int argc, char *argv[]) {
     switch (t) {
       case kHttpClientStateHeaders:
         unassert(g);
-        if ((rc = ParseHttpMessage(&msg, p, i)) == -1) {
+        if ((rc = ParseHttpMessage(&msg, p, i, n)) == -1) {
           tinyprint(2, prog, ": ", host, " sent bad http message\n", NULL);
           exit(1);
         }
@@ -499,7 +500,8 @@ int _curl(int argc, char *argv[]) {
         break;
       case kHttpClientStateBody:
         WriteOutput(p + i - g, g);
-        if (!g) goto Finished;
+        if (!g)
+          goto Finished;
         break;
       case kHttpClientStateBodyLengthed:
         unassert(g);

@@ -22,7 +22,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Returns sum of CPU time consumed by current process since birth.

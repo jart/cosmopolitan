@@ -64,8 +64,10 @@ char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
   uint64_t w;
   size_t i, j, m;
   wint_t x, a, b;
-  if (z) *z = 0;  // TODO(jart): why is this here?
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (z)
+    *z = 0;  // TODO(jart): why is this here?
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   q = *r;
   i = n * 8 + 6 + 1;  // only need *6 but *8 is faster
   if (i > *y) {
@@ -83,7 +85,8 @@ char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
         if (i + m <= n) {
           for (j = 0;;) {
             b = p[i + j] & 0xff;
-            if (!ThomPikeCont(b)) break;
+            if (!ThomPikeCont(b))
+              break;
             a = ThomPikeMerge(a, b);
             if (++j == m) {
               x = a;
@@ -148,7 +151,8 @@ char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
           __builtin_unreachable();
       }
     }
-    if (z) *z = q - *r;
+    if (z)
+      *z = q - *r;
     *q++ = '\0';
   }
   return *r;

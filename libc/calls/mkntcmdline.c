@@ -23,6 +23,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/proc/ntspawn.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
@@ -31,16 +32,14 @@
 
 #define APPEND(c)     \
   do {                \
-    if (k == 32766) { \
-      return e2big(); \
-    }                 \
-    cmdline[k++] = c; \
+    if (k < size)     \
+      cmdline[k] = c; \
+    ++k;              \
   } while (0)
 
-static bool NeedsQuotes(const char *s) {
-  if (!*s) {
+static textwindows bool NeedsQuotes(const char *s) {
+  if (!*s)
     return true;
-  }
   do {
     switch (*s) {
       case '"':
@@ -60,7 +59,7 @@ static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
-static bool LooksLikeCosmoDrivePath(const char *s) {
+static textwindows bool LooksLikeCosmoDrivePath(const char *s) {
   return s[0] == '/' &&    //
          IsAlpha(s[1]) &&  //
          s[2] == '/';
@@ -74,19 +73,21 @@ static bool LooksLikeCosmoDrivePath(const char *s) {
 //
 // @param cmdline is output buffer
 // @param argv is an a NULL-terminated array of UTF-8 strings
-// @return 0 on success, or -1 w/ errno
-// @raise E2BIG if everything is too huge
+// @param size is number of characters in cmdline buffer
+// @return length on success, which is >=size on truncation
 // @see "Everyone quotes command line arguments the wrong way" MSDN
 // @see libc/runtime/getdosargv.c
 // @asyncsignalsafe
-textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
+textwindows size_t mkntcmdline(char16_t *cmdline, char *const argv[],
+                               size_t size) {
   char *arg;
   int slashes, n;
   bool needsquote;
   size_t i, j, k, s;
   char argbuf[PATH_MAX];
   for (k = i = 0; argv[i]; ++i) {
-    if (i) APPEND(u' ');
+    if (i)
+      APPEND(u' ');
     if (LooksLikeCosmoDrivePath(argv[i]) &&
         strlcpy(argbuf, argv[i], PATH_MAX) < PATH_MAX) {
       mungentpath(argbuf);
@@ -94,9 +95,8 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
     } else {
       arg = argv[i];
     }
-    if ((needsquote = NeedsQuotes(arg))) {
+    if ((needsquote = NeedsQuotes(arg)))
       APPEND(u'"');
-    }
     for (slashes = j = 0;;) {
       wint_t x = arg[j++] & 255;
       if (x >= 0300) {
@@ -112,7 +112,8 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
           }
         }
       }
-      if (!x) break;
+      if (!x)
+        break;
       if (x == '\\') {
         ++slashes;
       } else if (x == '"') {
@@ -120,22 +121,21 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
         APPEND(u'"');
         APPEND(u'"');
       } else {
-        for (s = 0; s < slashes; ++s) {
+        for (s = 0; s < slashes; ++s)
           APPEND(u'\\');
-        }
         slashes = 0;
         uint32_t w = EncodeUtf16(x);
-        do APPEND(w);
+        do
+          APPEND(w);
         while ((w >>= 16));
       }
     }
-    for (s = 0; s < (slashes << needsquote); ++s) {
+    for (s = 0; s < (slashes << needsquote); ++s)
       APPEND(u'\\');
-    }
-    if (needsquote) {
+    if (needsquote)
       APPEND(u'"');
-    }
   }
-  cmdline[k] = 0;
-  return 0;
+  if (size)
+    cmdline[MIN(k, size - 1)] = 0;
+  return k;
 }

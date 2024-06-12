@@ -21,8 +21,11 @@
 
 int CompareSlices(const char *a, size_t n, const char *b, size_t m) {
   int c;
-  if ((c = memcmp(a, b, MIN(n, m)))) return c;
-  if (n < m) return -1;
-  if (n > m) return +1;
+  if ((c = memcmp(a, b, MIN(n, m))))
+    return c;
+  if (n < m)
+    return -1;
+  if (n > m)
+    return +1;
   return 0;
 }

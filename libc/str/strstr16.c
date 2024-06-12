@@ -31,12 +31,16 @@ char16_t *strstr16(const char16_t *haystack, const char16_t *needle) {
   size_t i;
   for (;;) {
     for (i = 0;;) {
-      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
       ++i;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return NULL;
 }

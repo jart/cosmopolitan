@@ -33,7 +33,8 @@
  *     allocation would likely cause a stack overflow
  */
 privileged long __get_safe_size(long want, long extraspace) {
-  if (!__tls_enabled) return want;
+  if (!__tls_enabled)
+    return want;
   struct PosixThread *pt;
   struct CosmoTib *tib = __get_tls_privileged();
   if (!IsAutoFrame((uintptr_t)tib >> 16) &&
@@ -52,6 +53,7 @@ privileged long __get_safe_size(long want, long extraspace) {
     return want;
   }
   long size = sp - bottom - extraspace;
-  if (size > want) size = want;
+  if (size > want)
+    size = want;
   return size;
 }

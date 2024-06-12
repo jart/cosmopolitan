@@ -8,7 +8,7 @@ extern bool32 g_isrunningundermake;
 
 void __start_fatal(const char *, int);
 void __restore_tty(void);
-void __oncrash(int, struct siginfo *, void *);
+void __oncrash(int, siginfo_t *, void *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_LOG_INTERNAL_H_ */

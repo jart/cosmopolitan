@@ -24,6 +24,7 @@
  */
 void *xcalloc(size_t count, size_t size) {
   void *res = calloc(count, size);
-  if (!res) xdie();
+  if (!res)
+    xdie();
   return res;
 }

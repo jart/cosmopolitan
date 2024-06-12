@@ -29,11 +29,12 @@
 #include "libc/sysv/errfuns.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-#define READ                 \
-  ({                         \
-    int c = callback(arg);   \
-    if (c != -1) ++consumed; \
-    c;                       \
+#define READ               \
+  ({                       \
+    int c = callback(arg); \
+    if (c != -1)           \
+      ++consumed;          \
+    c;                     \
   })
 
 #define FP_BUFFER_GROW 48
@@ -150,7 +151,8 @@ int __vcscanf(int callback(void *),    //
               break;
             case 'c':
               rawmode = true;
-              if (!width) width = 1;
+              if (!width)
+                width = 1;
               // fallthrough
             case 's':
               while (isspace(c)) {
@@ -551,9 +553,10 @@ int __vcscanf(int callback(void *),    //
                 items = -1;
                 goto Done;
               } else if (rawmode && j != width) {
-                /* The C standard says that %c "matches a sequence of characters of
-                 * **exactly** the number specified by the field width". If we have
-                 * fewer characters, what we've just read is invalid. */
+                /* The C standard says that %c "matches a sequence of characters
+                 * of
+                 * **exactly** the number specified by the field width". If we
+                 * have fewer characters, what we've just read is invalid. */
                 goto Done;
               } else if (!rawmode && j < bufsize) {
                 if (charbytes == sizeof(char)) {
@@ -574,7 +577,8 @@ int __vcscanf(int callback(void *),    //
           buf = NULL;
         } else {
           do {
-            if (isspace(c)) break;
+            if (isspace(c))
+              break;
           } while ((c = READ) != -1);
         }
         break;
@@ -589,9 +593,11 @@ Done:
   while (freeme) {
     struct FreeMe *entry = freeme;
     freeme = entry->next;
-    if (items == -1) free(entry->ptr);
+    if (items == -1)
+      free(entry->ptr);
     free(entry);
   }
-  if (fpbuf) free(fpbuf);
+  if (fpbuf)
+    free(fpbuf);
   return items;
 }

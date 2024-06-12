@@ -23,10 +23,12 @@
 static inline int PickGoodWidth(unsigned x, char z) {
   if (z) {
     if (x < 16) {
-      if (x < 8) return 8;
+      if (x < 8)
+        return 8;
       return 16;
     } else {
-      if (x < 32) return 32;
+      if (x < 32)
+        return 32;
       return 64;
     }
   } else {

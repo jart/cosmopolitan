@@ -29,7 +29,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 #define PATH "hog"
 
@@ -162,7 +162,8 @@ void OnSigInt(int sig) {
 }
 
 TEST(fwrite, signalStorm) {
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   int pid;
   struct sigaction oldchld, oldint;
   struct sigaction sachld = {.sa_handler = SIG_IGN};
@@ -180,7 +181,8 @@ TEST(fwrite, signalStorm) {
   pause();
   MeatyReadWriteTest();
   EXPECT_NE(-1, kill(pid, SIGINT));
-  while (wait(0) == -1 && errno == EINTR) donothing;
+  while (wait(0) == -1 && errno == EINTR)
+    donothing;
   EXPECT_NE(-1, sigaction(SIGCHLD, &oldchld, NULL));
   EXPECT_NE(-1, sigaction(SIGINT, &oldint, NULL));
 }

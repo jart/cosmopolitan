@@ -5,7 +5,8 @@
 forceinline void repmovsb(void **dest, const void **src, size_t cx) {
   char *di = (char *)*dest;
   const char *si = (const char *)*src;
-  while (cx) *di++ = *si++, cx--;
+  while (cx)
+    *di++ = *si++, cx--;
   *dest = di, *src = si;
 }
 

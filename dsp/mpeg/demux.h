@@ -3,8 +3,8 @@
 #include "dsp/mpeg/mpeg.h"
 COSMOPOLITAN_C_START_
 
-#define START_PACK 0xBA
-#define START_END 0xB9
+#define START_PACK   0xBA
+#define START_END    0xB9
 #define START_SYSTEM 0xBB
 
 typedef struct plm_demux_t {

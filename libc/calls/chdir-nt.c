@@ -33,7 +33,8 @@ textwindows int sys_chdir_nt_impl(char16_t path[hasatleast PATH_MAX],
   char16_t var[4];
 
   if (len && path[len - 1] != u'\\') {
-    if (len + 2 > PATH_MAX) return enametoolong();
+    if (len + 2 > PATH_MAX)
+      return enametoolong();
     path[len + 0] = u'\\';
     path[len + 1] = u'\0';
   }
@@ -84,7 +85,9 @@ textwindows int sys_chdir_nt_impl(char16_t path[hasatleast PATH_MAX],
 textwindows int sys_chdir_nt(const char *path) {
   int len;
   char16_t path16[PATH_MAX];
-  if ((len = __mkntpath(path, path16)) == -1) return -1;
-  if (!len) return enoent();
+  if ((len = __mkntpath(path, path16)) == -1)
+    return -1;
+  if (!len)
+    return enoent();
   return sys_chdir_nt_impl(path16, len);
 }

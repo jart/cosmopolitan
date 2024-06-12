@@ -1,9 +1,0 @@
-#ifndef COSMOPOLITAN_LIBC_TIME_STRUCT_UTIMBUF_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_TIME_STRUCT_UTIMBUF_INTERNAL_H_
-#include "libc/time/struct/utimbuf.h"
-COSMOPOLITAN_C_START_
-
-int sys_utime(const char *, const struct utimbuf *);
-
-COSMOPOLITAN_C_END_
-#endif /* COSMOPOLITAN_LIBC_TIME_STRUCT_UTIMBUF_INTERNAL_H_ */

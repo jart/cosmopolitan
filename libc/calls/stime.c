@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * Changes time, the old fashioned way.

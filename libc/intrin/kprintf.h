@@ -49,7 +49,8 @@ void uvprintf(const char *, va_list) libcesque;
   do {                                                                      \
     kprintf("\r\e[30;101mfatal: %s:%d: " FMT "\e[0m\n", __FILE__, __LINE__, \
             ##__VA_ARGS__);                                                 \
-    for (;;) asm volatile("cli\n\thlt");                                    \
+    for (;;)                                                                \
+      asm volatile("cli\n\thlt");                                           \
   } while (0)
 
 COSMOPOLITAN_C_END_

@@ -205,9 +205,9 @@ void __unref_page(struct mman *, uint64_t *, uint64_t);
  * I/O devices.
  */
 forceinline void __invert_and_perm_ref_memory_area(struct mman *mm,
-                                                  uint64_t *pml4t, uint64_t ps,
-                                                  uint64_t size,
-                                                  uint64_t pte_flags) {
+                                                   uint64_t *pml4t, uint64_t ps,
+                                                   uint64_t size,
+                                                   uint64_t pte_flags) {
   __invert_memory_area(mm, pml4t, ps, size, pte_flags | PAGE_REFC);
 }
 

@@ -45,7 +45,6 @@ TOOL_BUILD_DIRECTDEPS =							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_THREAD							\
-	LIBC_TIME							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
 	NET_HTTP							\
@@ -57,6 +56,7 @@ TOOL_BUILD_DIRECTDEPS =							\
 	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_STB							\
+	THIRD_PARTY_TZ							\
 	THIRD_PARTY_XED							\
 	THIRD_PARTY_ZLIB						\
 	THIRD_PARTY_ZLIB_GZ						\

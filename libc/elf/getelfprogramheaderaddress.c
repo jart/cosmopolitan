@@ -32,10 +32,15 @@ Elf64_Phdr *GetElfProgramHeaderAddress(const Elf64_Ehdr *elf,  //
                                        size_t mapsize,         //
                                        Elf64_Half i) {         //
   Elf64_Off off;
-  if (i >= elf->e_phnum) return 0;
-  if (elf->e_phoff <= 0) return 0;
-  if (elf->e_phoff >= mapsize) return 0;
-  if (elf->e_phentsize < sizeof(Elf64_Phdr)) return 0;
-  if ((off = elf->e_phoff + (unsigned)i * elf->e_phentsize) > mapsize) return 0;
+  if (i >= elf->e_phnum)
+    return 0;
+  if (elf->e_phoff <= 0)
+    return 0;
+  if (elf->e_phoff >= mapsize)
+    return 0;
+  if (elf->e_phentsize < sizeof(Elf64_Phdr))
+    return 0;
+  if ((off = elf->e_phoff + (unsigned)i * elf->e_phentsize) > mapsize)
+    return 0;
   return (Elf64_Phdr *)((char *)elf + off);
 }

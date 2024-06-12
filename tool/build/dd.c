@@ -48,7 +48,8 @@ int main(int argc, char *argv[]) {
   const char *oufile = "/dev/stdout";
 
   prog = argv[0];
-  if (!prog) prog = "dd";
+  if (!prog)
+    prog = "dd";
 
   for (i = 1; i < argc; ++i) {
 
@@ -65,14 +66,16 @@ int main(int argc, char *argv[]) {
                argv[i][2] == '=') {
       infile = argv[i] + 3 + (argv[i][3] == '"');
       p = strchr(infile, '"');
-      if (p) *p = 0;
+      if (p)
+        *p = 0;
 
     } else if (argv[i][0] == 'o' &&  //
                argv[i][1] == 'f' &&  //
                argv[i][2] == '=') {
       oufile = argv[i] + 3 + (argv[i][3] == '"');
       p = strchr(infile, '"');
-      if (p) *p = 0;
+      if (p)
+        *p = 0;
 
     } else if (argv[i][0] == 's' &&  //
                argv[i][1] == 'k' &&  //

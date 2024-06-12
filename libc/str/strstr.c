@@ -40,7 +40,8 @@ __vex char *strstr(const char *haystack, const char *needle) {
   unsigned k, m;
   const xmm_t *p;
   xmm_t v, n, z = {0};
-  if (haystack == needle || !*needle) return (char *)haystack;
+  if (haystack == needle || !*needle)
+    return (char *)haystack;
   n = (xmm_t){*needle, *needle, *needle, *needle, *needle, *needle,
               *needle, *needle, *needle, *needle, *needle, *needle,
               *needle, *needle, *needle, *needle};
@@ -57,23 +58,32 @@ __vex char *strstr(const char *haystack, const char *needle) {
     }
     haystack = (const char *)p + __builtin_ctzl(m);
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 #else
   size_t i;
-  if (haystack == needle || !*needle) return (void *)haystack;
+  if (haystack == needle || !*needle)
+    return (void *)haystack;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 #endif

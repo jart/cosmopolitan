@@ -20,11 +20,11 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/serialize.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/iphlpapi.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -37,7 +37,8 @@ static uint32_t *GetUnixIps(void) {
   uint64_t z;
   uint32_t *a;
   char *b, *p, *e, c[16];
-  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) return 0;
+  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1)
+    return 0;
   a = 0;
   n = 0;
   z = 15000;
@@ -47,7 +48,8 @@ static uint32_t *GetUnixIps(void) {
   if (sys_ioctl(fd, SIOCGIFCONF, &c) != -1) {
     for (p = b, e = p + MIN(z, READ32LE(c)); p + 16 + 16 <= e;
          p += IsBsd() ? 16 + MAX(16, p[16] & 255) : 40) {
-      if ((p[IsBsd() ? 17 : 16] & 255) != AF_INET) continue;
+      if ((p[IsBsd() ? 17 : 16] & 255) != AF_INET)
+        continue;
       a = realloc(a, ++n * sizeof(*a));
       a[n - 1] = READ32BE(p + 20);
     }
@@ -66,13 +68,15 @@ static textwindows uint32_t *GetWindowsIps(void) {
   i = 0;
   z = 15000;
   do {
-    if (!(ifaces = malloc(z))) return 0;
+    if (!(ifaces = malloc(z)))
+      return 0;
     rc = GetAdaptersAddresses(AF_INET,
                               kNtGaaFlagSkipAnycast | kNtGaaFlagSkipMulticast |
                                   kNtGaaFlagSkipDnsServer |
                                   kNtGaaFlagSkipFriendlyName,
                               0, ifaces, &z);
-    if (rc != kNtErrorBufferOverflow) break;
+    if (rc != kNtErrorBufferOverflow)
+      break;
     free(ifaces);
     ifaces = 0;
   } while (++i < 3);
@@ -80,9 +84,11 @@ static textwindows uint32_t *GetWindowsIps(void) {
     a = calloc(1, sizeof(*a));
   } else if (rc == kNtNoError) {
     for (a = 0, n = 0, p = ifaces; p; p = p->Next) {
-      if (p->OperStatus != kNtIfOperStatusUp) continue;
+      if (p->OperStatus != kNtIfOperStatusUp)
+        continue;
       for (u = p->FirstUnicastAddress; u; u = u->Next) {
-        if (u->Address.lpSockaddr->sa_family != AF_INET) continue;
+        if (u->Address.lpSockaddr->sa_family != AF_INET)
+          continue;
         a = realloc(a, ++n * sizeof(*a));
         a[n - 1] = ntohl(
             ((struct sockaddr_in *)u->Address.lpSockaddr)->sin_addr.s_addr);

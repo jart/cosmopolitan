@@ -35,7 +35,8 @@
 #include "libc/sysv/errfuns.h"
 
 static inline const char *__strace_fstatat_flags(char buf[12], int flags) {
-  if (flags == AT_SYMLINK_NOFOLLOW) return "AT_SYMLINK_NOFOLLOW";
+  if (flags == AT_SYMLINK_NOFOLLOW)
+    return "AT_SYMLINK_NOFOLLOW";
   FormatInt32(buf, flags);
   return buf;
 }

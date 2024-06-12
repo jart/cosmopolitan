@@ -9,7 +9,7 @@
 #include "libc/math.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/object.h"

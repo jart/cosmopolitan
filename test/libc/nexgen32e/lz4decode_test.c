@@ -72,7 +72,8 @@ TEST(lz4, decompress_runLengthDecode) {
 }
 
 TEST(lz4, zoneFileGmt) {
-  if (!fileexists("usr/share/zoneinfo.dict.lz4")) return;
+  if (!fileexists("usr/share/zoneinfo.dict.lz4"))
+    return;
   char *dict = gc(xslurp("usr/share/zoneinfo.dict.lz4", 0));
   char *gmt = gc(xslurp("usr/share/zoneinfo/GMT.lz4", 0));
   size_t mapsize, gmtsize;

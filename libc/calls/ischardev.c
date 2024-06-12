@@ -55,6 +55,7 @@ bool32 ischardev(int fd) {
     }
   } else {
     return __isfdkind(fd, kFdConsole) || __isfdkind(fd, kFdDevNull) ||
+           __isfdkind(fd, kFdDevRandom) ||
            (__isfdkind(fd, kFdFile) &&
             GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar);
   }

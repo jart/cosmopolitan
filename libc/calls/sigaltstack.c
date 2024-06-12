@@ -77,10 +77,12 @@ static textwindows int sigaltstack_cosmo(const struct sigaltstack *neu,
   sigaltstack_setnew(neu);
   if (tib->tib_sigstack_addr <= bp &&
       bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
-    if (old) old->ss_flags |= SS_ONSTACK;
+    if (old)
+      old->ss_flags |= SS_ONSTACK;
     tib->tib_sigstack_flags = SS_ONSTACK;  // can't disable if on it
   } else if (!tib->tib_sigstack_size) {
-    if (old) old->ss_flags = SS_DISABLE;
+    if (old)
+      old->ss_flags = SS_DISABLE;
     tib->tib_sigstack_flags = SS_DISABLE;
   }
   return 0;
@@ -90,7 +92,8 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
                            struct sigaltstack *old) {
   int rc;
   struct sigaltstack_bsd oldbsd, neubsd, *neup = 0;
-  if (neu) sigaltstack2bsd(&neubsd, neu), neup = &neubsd;
+  if (neu)
+    sigaltstack2bsd(&neubsd, neu), neup = &neubsd;
   if (IsXnuSilicon()) {
     rc = _sysret(__syslib->__sigaltstack(neup, &oldbsd));
   } else {
@@ -99,7 +102,8 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
   if (rc == -1) {
     return -1;
   }
-  if (old) sigaltstack2linux(old, &oldbsd);
+  if (old)
+    sigaltstack2linux(old, &oldbsd);
   return 0;
 }
 
@@ -135,10 +139,12 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
     rc = enomem();
   } else if (IsLinux()) {
     rc = sys_sigaltstack(neu, old);
-    if (!rc) sigaltstack_setnew(neu);
+    if (!rc)
+      sigaltstack_setnew(neu);
   } else if (IsBsd()) {
     rc = sigaltstack_bsd(neu, old);
-    if (!rc) sigaltstack_setnew(neu);
+    if (!rc)
+      sigaltstack_setnew(neu);
   } else {
     rc = sigaltstack_cosmo(neu, old);
   }

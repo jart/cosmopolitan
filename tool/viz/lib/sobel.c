@@ -40,8 +40,10 @@ forceinline void ConvolveGradient(unsigned yn, unsigned xn,
   tmp = _mapanon((size = ROUNDUP(sizeof(float) * 4 * xn * yn, FRAMESIZE)));
   for (y = 0; y < yn - KW + 1; ++y) {
     for (x = 0; x < xn - KW + 1; ++x) {
-      for (k = 0; k < 4; ++k) py[k] = 0;
-      for (k = 0; k < 4; ++k) px[k] = 0;
+      for (k = 0; k < 4; ++k)
+        py[k] = 0;
+      for (k = 0; k < 4; ++k)
+        px[k] = 0;
       for (i = 0; i < KW; ++i) {
         for (j = 0; j < KW; ++j) {
           for (k = 0; k < 4; ++k) {

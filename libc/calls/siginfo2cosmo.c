@@ -21,8 +21,7 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/sig.h"
 
-privileged void __siginfo2cosmo(struct siginfo *si,
-                                const union siginfo_meta *m) {
+privileged void __siginfo2cosmo(siginfo_t *si, const union siginfo_meta *m) {
   void *si_addr;
   int32_t si_signo;
   int32_t si_errno;
@@ -93,7 +92,7 @@ privileged void __siginfo2cosmo(struct siginfo *si,
     }
   }
 
-  *si = (struct siginfo){0};
+  *si = (siginfo_t){0};
   si->si_signo = si_signo;
   si->si_errno = si_errno;
   si->si_code = si_code;

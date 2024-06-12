@@ -24,7 +24,8 @@ char *program_invocation_short_name;
 __attribute__((__constructor__(10))) static textstartup void
 program_invocation_short_name_init(void) {
   char *p, *r;
-  if (!__argc) return;
+  if (!__argc)
+    return;
   if ((p = strrchr(__argv[0], '/'))) {
     r = p + 1;
   } else {

@@ -40,8 +40,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/tls.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 __static_yoink("zipos");
 __static_yoink("libc/testlib/hyperion.txt");
@@ -70,7 +69,7 @@ TEST(reservefd, testGrowthOfFdsDataStructure) {
     errno = 0;
   }
   for (i = 0; i < n; ++i) {
-    ASSERT_SYS(0, i + 3, open("/zip/usr/share/zoneinfo/UTC", O_RDONLY));
+    ASSERT_SYS(0, i + 3, open("/zip/usr/share/zoneinfo/GMT", O_RDONLY));
   }
   ASSERT_GT(g_fds.n, 16);
   for (i = 0; i < n; ++i) {

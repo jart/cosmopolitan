@@ -31,7 +31,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
-#include "libc/time/time.h"   /* stat() / _stat64() */
+#include "libc/time.h"   /* stat() / _stat64() */
 
 /*
  * This file contains all of the ugly boilerplate to make xxhsum work across
@@ -60,7 +60,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"   /* isatty */
 #  define XSUM_IS_CONSOLE(stdStream) isatty(fileno(stdStream))
@@ -207,7 +207,7 @@ int main(int argc, const char* argv[])
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /*****************************************************************************
  *                       Unicode conversion tools

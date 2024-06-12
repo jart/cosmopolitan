@@ -33,7 +33,8 @@ void SetUpOnce(void) {
 }
 
 TEST(__getcwd, zero) {
-  if (IsQemuUser()) return;
+  if (IsQemuUser())
+    return;
   ASSERT_SYS(ERANGE, -1, __getcwd(0, 0));
 }
 
@@ -83,7 +84,8 @@ TEST(getcwd, testNullBuf_allocatesResult) {
 }
 
 TEST(getcwd, testWindows_addsFunnyPrefix) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   char path[PATH_MAX];
   ASSERT_NE(0, getcwd(path, sizeof(path)));
   path[1] = tolower(path[1]);

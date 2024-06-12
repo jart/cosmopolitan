@@ -10,12 +10,12 @@ void end_cancelation_point(int);
 #define END_CANCELATION_POINT   (void)0
 #else
 #define BEGIN_CANCELATION_POINT \
-  do {                           \
-    int _Cp;                     \
+  do {                          \
+    int _Cp;                    \
   _Cp = begin_cancelation_point()
 #define END_CANCELATION_POINT \
   end_cancelation_point(_Cp); \
-  }                            \
+  }                           \
   while (0)
 #endif
 

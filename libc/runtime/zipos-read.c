@@ -53,7 +53,8 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
   }
   for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
     b = MIN(iov[i].iov_len, h->size - y);
-    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
+    if (b)
+      memcpy(iov[i].iov_base, h->mem + y, b);
   }
   if (opt_offset == -1) {
     unassert(y != SIZE_MAX);

@@ -18,32 +18,39 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/scale.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/locale.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/stb/stb_image.h"
 
 #define SQR(X)    ((X) * (X))
 #define UNCUBE(x) x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40
-#define ORDIE(X)                   \
-  do {                             \
-    if (!(X)) perror(#X), exit(1); \
-  } while (0)
 
-int want24bit_;
-int wantfullsize_;
+#define USAGE \
+  " IMAGE...\n\
+\n\
+SYNOPSIS\n\
+\n\
+  Prints Image\n\
+\n\
+FLAGS\n\
+\n\
+  -?      help\n\
+  -t      true color mode\n\
+  -f      print image at full size\n\
+  -w INT  specify printed width in pixels (or cols)\n\
+  -h INT  specify printed height in pixels (or rows*2)\n\
+\n"
+
+int FLAG_width;
+int FLAG_height;
+bool FLAG_true;
+bool FLAG_full;
+const char *prog;
 
 /**
  * Quantizes 24-bit RGB to xterm256 code range [16,256).
@@ -57,11 +64,9 @@ int rgb2xterm256(int r, int g, int b) {
   qg = cube[(ig = UNCUBE(g))];
   qb = cube[(ib = UNCUBE(b))];
   if (SQR(qr - r) + SQR(qg - g) + SQR(qb - b) <=
-      SQR(ql - r) + SQR(ql - g) + SQR(ql - b)) {
+      SQR(ql - r) + SQR(ql - g) + SQR(ql - b))
     return ir * 36 + ig * 6 + ib + 020;
-  } else {
-    return il + 0350;
-  }
+  return il + 0350;
 }
 
 /**
@@ -71,7 +76,7 @@ void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
   unsigned y, x;
   for (y = 0; y < yn; y += 2) {
     for (x = 0; x < xn; ++x) {
-      if (want24bit_) {
+      if (FLAG_true) {
         printf("\033[48;2;%hhu;%hhu;%hhu;38;2;%hhu;%hhu;%hhum▄",
                rgb[y + 0][x][0], rgb[y + 0][x][1], rgb[y + 0][x][2],
                rgb[MIN(y + 1, yn - 1)][x][0], rgb[MIN(y + 1, yn - 1)][x][1],
@@ -89,102 +94,117 @@ void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
   }
 }
 
-/**
- * Determines dimensions of teletypewriter.
- */
-void GetTermSize(int *out_rows, int *out_cols) {
-  struct winsize ws;
-  ws.ws_row = 20;
-  ws.ws_col = 80;
-  tcgetwinsize(STDOUT_FILENO, &ws);
-  tcgetwinsize(STDIN_FILENO, &ws);
-  *out_rows = ws.ws_row;
-  *out_cols = ws.ws_col;
-}
-
-void ReadAll(int fd, char *p, size_t n) {
-  ssize_t rc;
-  size_t got;
-  do {
-    ORDIE((rc = read(fd, p, n)) != -1);
-    got = rc;
-    if (!got && n) {
-      fprintf(stderr, "error: expected eof\n");
-      exit(EXIT_FAILURE);
-    }
-    p += got;
-    n -= got;
-  } while (n);
-}
-
-static void Deblinterlace(long zn, long yn, long xn,
-                          unsigned char dst[zn][yn][xn],
-                          const unsigned char src[yn][xn][zn]) {
-  long y, x, z;
-  for (y = 0; y < yn; ++y) {
-    for (x = 0; x < xn; ++x) {
-      for (z = 0; z < zn; ++z) {
+void Deblinterlace(int zn, int yn, int xn, unsigned char dst[zn][yn][xn],
+                   const unsigned char src[yn][xn][zn]) {
+  int y, x, z;
+  for (y = 0; y < yn; ++y)
+    for (x = 0; x < xn; ++x)
+      for (z = 0; z < zn; ++z)
         dst[z][y][x] = src[y][x][z];
-      }
-    }
-  }
 }
 
-static void Reblinterlace(long zn, long yn, long xn,
-                          unsigned char dst[yn][xn][zn],
-                          const unsigned char src[zn][yn][xn]) {
-  long y, x, z;
-  for (y = 0; y < yn; ++y) {
-    for (x = 0; x < xn; ++x) {
-      for (z = 0; z < zn; ++z) {
+void Reblinterlace(int zn, int yn, int xn, unsigned char dst[yn][xn][zn],
+                   const unsigned char src[zn][yn][xn]) {
+  int y, x, z;
+  for (y = 0; y < yn; ++y)
+    for (x = 0; x < xn; ++x)
+      for (z = 0; z < zn; ++z)
         dst[y][x][z] = src[z][y][x];
-      }
-    }
-  }
+}
+
+wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "usage: ", prog, USAGE, NULL);
+  exit(rc);
 }
 
 int main(int argc, char *argv[]) {
-  struct stat st;
-  void *map, *data, *data2;
-  int i, fd, tyn, txn, yn, xn, cn;
-  setlocale(LC_ALL, "C.UTF-8");
-  for (i = 1; i < argc; ++i) {
-    if (strcmp(argv[i], "-t") == 0) {
-      want24bit_ = 1;
-    } else if (strcmp(argv[i], "-f") == 0) {
-      wantfullsize_ = 1;
-    } else {
-      fd = open(argv[i], O_RDONLY);
-      if (fd == -1) {
-        perror(argv[i]);
-        exit(1);
-      }
-      fstat(fd, &st);
-      map = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-      data = stbi_load_from_memory(map, st.st_size, &xn, &yn, &cn, 3);
-      munmap(map, st.st_size);
-      close(fd);
-      if (!wantfullsize_) {
-        GetTermSize(&tyn, &txn);
-        --tyn;
-        tyn *= 2;
-        data2 = memalign(32, 3 * yn * xn);
-        Deblinterlace(3, yn, xn, data2, data);
-        free(data);
-        data = memalign(32, 3 * tyn * txn);
-        EzGyarados(3, tyn, txn, data, 3, yn, xn, data2, 0, 3, tyn, txn, yn, xn,
-                   0, 0, 0, 0);
-        free(data2);
-        data2 = memalign(32, 3 * yn * xn);
-        Reblinterlace(3, tyn, txn, data2, data);
-        free(data);
-        data = data2;
-        yn = tyn;
-        xn = txn;
-      }
-      PrintImage(yn, xn, data);
-      free(data);
+
+  // get program name
+  prog = argv[0];
+  if (!prog)
+    prog = "basicidea";
+
+  // get flags
+  int opt;
+  while ((opt = getopt(argc, argv, "?tfw:h:")) != -1) {
+    switch (opt) {
+      case 't':
+        FLAG_true = true;
+        break;
+      case 'f':
+        FLAG_full = true;
+        break;
+      case 'w':
+        FLAG_width = atoi(optarg);
+        break;
+      case 'h':
+        FLAG_height = atoi(optarg);
+        break;
+      case '?':
+        PrintUsage(0, 1);
+      default:
+        PrintUsage(1, 2);
     }
   }
-  return 0;
+  if (argc == optind) {
+    tinyprint(2, prog, ": missing image path (pass -? for help)\n", NULL);
+    exit(1);
+  }
+
+  // process arguments
+  for (int i = optind; i < argc; ++i) {
+    const char *path = argv[i];
+
+    // open image
+    void *data;
+    int cn, iyn, ixn;
+    if (!(data = stbi_load(path, &ixn, &iyn, &cn, 3))) {
+      perror(path);
+      exit(1);
+    }
+
+    // determine size
+    int yn, xn;
+    struct winsize ws;
+    if (FLAG_full) {
+      yn = iyn;
+      xn = ixn;
+    } else if (FLAG_width > 0 || FLAG_height > 0) {
+      if (FLAG_width <= 0) {
+        yn = FLAG_height;
+        xn = (double)ixn / iyn * FLAG_height + .5;
+      } else if (FLAG_height <= 0) {
+        yn = (double)iyn / ixn * FLAG_width + .5;
+        xn = FLAG_width;
+      } else {
+        yn = FLAG_height;
+        xn = FLAG_width;
+      }
+    } else if (!tcgetwinsize(1, &ws)) {
+      yn = (ws.ws_row - 1) * 2;
+      xn = ws.ws_col;
+    } else {
+      yn = iyn;
+      xn = ixn;
+    }
+
+    // scale image
+    if (yn != iyn || xn != ixn) {
+      void *data2 = memalign(32, 3l * iyn * ixn);
+      Deblinterlace(3, iyn, ixn, data2, data);
+      free(data);
+      data = memalign(32, 3l * yn * xn);
+      EzGyarados(3, yn, xn, data, 3, iyn, ixn, data2, 0, 3, yn, xn, iyn, ixn, 0,
+                 0, 0, 0);
+      free(data2);
+      data2 = memalign(32, 3l * yn * xn);
+      Reblinterlace(3, yn, xn, data2, data);
+      free(data);
+      data = data2;
+    }
+
+    // print image
+    PrintImage(yn, xn, data);
+    free(data);
+  }
 }

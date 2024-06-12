@@ -13,7 +13,8 @@
 
 int main(int argc, char *argv[]) {
   struct utsname names;
-  if (uname(&names)) return 1;
+  if (uname(&names))
+    return 1;
   printf("%-10s %`'s\n", "sysname", names.sysname);
   printf("%-10s %`'s\n", "release", names.release);
   printf("%-10s %`'s\n", "version", names.version);

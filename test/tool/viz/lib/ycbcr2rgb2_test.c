@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/ycbcr.h"
 

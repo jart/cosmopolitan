@@ -1,6 +1,6 @@
 #ifndef _CONDVAR_H_
 #define _CONDVAR_H_
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /*
  * Portable condition variable support for windows and pthreads.

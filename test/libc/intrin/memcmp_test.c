@@ -68,8 +68,10 @@ TEST(memcmp, hug) {
 static int coerce(int result) {
 #ifdef __aarch64__
   // arm's strcmp assembly is nuts and unpredictable, but it's legal
-  if (result < 0) return -1;
-  if (result > 0) return +1;
+  if (result < 0)
+    return -1;
+  if (result > 0)
+    return +1;
   return 0;
 #else
   return result;

@@ -24,10 +24,11 @@ TEST_LIBC_TIME_DIRECTDEPS =				\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
+	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
-	LIBC_TIME					\
-	LIBC_X
+	LIBC_X						\
+	THIRD_PARTY_TZ
 
 TEST_LIBC_TIME_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_TIME_DIRECTDEPS),$($(x))))

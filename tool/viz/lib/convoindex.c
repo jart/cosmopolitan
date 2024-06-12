@@ -31,9 +31,12 @@ unsigned *convoindex(unsigned leftpad, unsigned n, unsigned rightpad) {
   unsigned i, j, *p;
   if ((p = malloc(sizeof(unsigned) * (leftpad + n + rightpad)))) {
     i = 0;
-    for (j = 0; j < leftpad; ++j) p[i++] = 0;
-    for (j = 0; j < n; ++j) p[i++] = j;
-    for (j = 0; j < rightpad; ++j) p[i++] = n - 1;
+    for (j = 0; j < leftpad; ++j)
+      p[i++] = 0;
+    for (j = 0; j < n; ++j)
+      p[i++] = j;
+    for (j = 0; j < rightpad; ++j)
+      p[i++] = n - 1;
   }
   return p;
 }

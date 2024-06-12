@@ -34,8 +34,10 @@ errno_t pthread_barrier_init(pthread_barrier_t *barrier,
                              const pthread_barrierattr_t *attr,
                              unsigned count) {
   nsync_counter c;
-  if (!count) return EINVAL;
-  if (!(c = nsync_counter_new(count))) return ENOMEM;
+  if (!count)
+    return EINVAL;
+  if (!(c = nsync_counter_new(count)))
+    return ENOMEM;
   *barrier = (pthread_barrier_t){._nsync = c};
   return 0;
 }

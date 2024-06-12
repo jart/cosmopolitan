@@ -39,8 +39,10 @@ bool IsDirectoryEmpty(const char *path) {
   struct dirent *e;
   ASSERT_NE(NULL, (d = opendir(path)));
   while ((e = readdir(d))) {
-    if (!strcmp(e->d_name, ".")) continue;
-    if (!strcmp(e->d_name, "..")) continue;
+    if (!strcmp(e->d_name, "."))
+      continue;
+    if (!strcmp(e->d_name, ".."))
+      continue;
     res = false;
   }
   closedir(d);
@@ -83,7 +85,8 @@ TEST(tmpfile, test) {
 #ifndef __aarch64__
 // TODO(jart): Why does this apply to pi and qemu-aarch64?
 TEST(tmpfile, renameToRealFile) {
-  if (!(IsLinux() && __is_linux_2_6_23())) return;  // need non-ancient linux
+  if (!(IsLinux() && __is_linux_2_6_23()))
+    return;  // need non-ancient linux
   FILE *f;
   f = tmpfile();
   ASSERT_EQ(2, fputs("hi", f));

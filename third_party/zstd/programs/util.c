@@ -45,8 +45,7 @@ extern "C" {
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
+#include "libc/time.h"       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
 #include "libc/errno.h"
 #include "libc/assert.h"
 
@@ -63,13 +62,13 @@ extern "C" {
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"     /* chown, stat */
 #  if PLATFORM_POSIX_VERSION < 200809L || !defined(st_mtime)
-#include "libc/time/struct/utimbuf.h"
-#include "libc/time/time.h"    /* utime */
+#include "libc/utime.h"
+#include "libc/time.h"    /* utime */
 #  else
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
@@ -88,7 +87,7 @@ extern "C" {
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
-#include "libc/time/time.h" /* utimensat */
+#include "libc/time.h" /* utimensat */
 #  endif
 #endif
 

@@ -21,7 +21,8 @@
 #include <stdlib.h>
 
 #define TEST(x) \
-  if (!(x)) return __LINE__
+  if (!(x))     \
+  return __LINE__
 
 int main() {
   char *end;

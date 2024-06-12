@@ -120,7 +120,8 @@ relegated static dontinline char *DescribeCpuFlags(char *p, int flags,
 }
 
 static char *HexCpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
-  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
 }
@@ -130,8 +131,10 @@ relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
   const char *s;
   *p++ = '\n';
   for (i = 0, j = 0; i < ARRAYLEN(kGregNames); ++i) {
-    if (j > 0) *p++ = ' ';
-    if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
+    if (j > 0)
+      *p++ = ' ';
+    if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2])
+      *p++ = ' ';
     p = stpcpy(p, s), *p++ = ' ';
     p = HexCpy(p, ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]], 64);
     if (++j == 3) {
@@ -185,9 +188,9 @@ relegated static char *ShowSseRegisters(char *p, ucontext_t *ctx) {
   return p;
 }
 
-void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
+void ShowCrashReportHook(int, int, int, siginfo_t *, ucontext_t *);
 
-static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
+static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
                                       ucontext_t *ctx) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
@@ -251,10 +254,43 @@ static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   kprintf("\n");
 }
 
-relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
+static inline void SpinLock(atomic_uint *lock) {
+  int x;
+  for (;;) {
+    x = atomic_exchange_explicit(lock, 1, memory_order_acquire);
+    if (!x)
+      break;
+  }
+}
+
+static inline void SpinUnlock(atomic_uint *lock) {
+  atomic_store_explicit(lock, 0, memory_order_release);
+}
+
+relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
+  static atomic_uint lock;
+  BLOCK_CANCELATION;
+  SpinLock(&lock);
   int err = errno;
   __restore_tty();
   ShowCrashReport(err, sig, si, arg);
+
+  // ensure execution doesn't resume for anything but SIGTRAP / SIGQUIT
+  if (arg && sig != SIGTRAP && sig != SIGQUIT) {
+    if (!IsXnu()) {
+      sigaddset(&((ucontext_t *)arg)->uc_sigmask, sig);
+    } else {
+      sigdelset(&((ucontext_t *)arg)->uc_sigmask, sig);
+      struct sigaction sa;
+      sigemptyset(&sa.sa_mask);
+      sa.sa_handler = SIG_DFL;
+      sa.sa_flags = 0;
+      sigaction(sig, &sa, 0);
+    }
+  }
+
+  SpinUnlock(&lock);
+  ALLOW_CANCELATION;
 }
 
 #endif /* __x86_64__ */

@@ -7,180 +7,1060 @@ THIRD_PARTY_LIBCXX_ARTIFACTS += THIRD_PARTY_LIBCXX_A
 THIRD_PARTY_LIBCXX = $(THIRD_PARTY_LIBCXX_A_DEPS) $(THIRD_PARTY_LIBCXX_A)
 THIRD_PARTY_LIBCXX_A = o/$(MODE)/third_party/libcxx/libcxx.a
 
-THIRD_PARTY_LIBCXX_A_HDRS =					\
-	third_party/libcxx/__bit_reference			\
-	third_party/libcxx/__bsd_locale_fallbacks.h		\
-	third_party/libcxx/__config				\
-	third_party/libcxx/__debug				\
-	third_party/libcxx/__errc				\
-	third_party/libcxx/__functional_base			\
-	third_party/libcxx/__hash_table				\
-	third_party/libcxx/__locale				\
-	third_party/libcxx/__mutex_base				\
-	third_party/libcxx/__node_handle			\
-	third_party/libcxx/__nullptr				\
-	third_party/libcxx/__split_buffer			\
-	third_party/libcxx/__sso_allocator			\
-	third_party/libcxx/__std_stream				\
-	third_party/libcxx/__string				\
-	third_party/libcxx/__threading_support			\
-	third_party/libcxx/__tree				\
-	third_party/libcxx/__tuple				\
-	third_party/libcxx/__undef_macros			\
-	third_party/libcxx/algorithm				\
-	third_party/libcxx/any					\
-	third_party/libcxx/array				\
-	third_party/libcxx/atomic				\
-	third_party/libcxx/atomic_support.hh			\
-	third_party/libcxx/bit					\
-	third_party/libcxx/bitset				\
-	third_party/libcxx/cassert				\
-	third_party/libcxx/ccomplex				\
-	third_party/libcxx/cctype				\
-	third_party/libcxx/cerrno				\
-	third_party/libcxx/cfenv				\
-	third_party/libcxx/cfloat				\
-	third_party/libcxx/charconv				\
-	third_party/libcxx/chrono				\
-	third_party/libcxx/cinttypes				\
-	third_party/libcxx/ciso646				\
-	third_party/libcxx/climits				\
-	third_party/libcxx/clocale				\
-	third_party/libcxx/cmath				\
-	third_party/libcxx/codecvt				\
-	third_party/libcxx/compare				\
-	third_party/libcxx/complex				\
-	third_party/libcxx/condition_variable			\
-	third_party/libcxx/config_elast.h			\
-	third_party/libcxx/countof.internal.hh			\
-	third_party/libcxx/csetjmp				\
-	third_party/libcxx/csignal				\
-	third_party/libcxx/cstdarg				\
-	third_party/libcxx/cstdbool				\
-	third_party/libcxx/cstddef				\
-	third_party/libcxx/cstdint				\
-	third_party/libcxx/cstdio				\
-	third_party/libcxx/cstdlib				\
-	third_party/libcxx/cstring				\
-	third_party/libcxx/ctgmath				\
-	third_party/libcxx/ctime				\
-	third_party/libcxx/ctype.h				\
-	third_party/libcxx/cwchar				\
-	third_party/libcxx/cwctype				\
-	third_party/libcxx/deque				\
-	third_party/libcxx/errno.h				\
-	third_party/libcxx/exception				\
-	third_party/libcxx/exception_libcxxabi.hh		\
-	third_party/libcxx/exception_pointer_cxxabi.hh		\
-	third_party/libcxx/execution				\
-	third_party/libcxx/experimental/__config		\
-	third_party/libcxx/filesystem				\
-	third_party/libcxx/filesystem_common.hh			\
-	third_party/libcxx/forward_list				\
-	third_party/libcxx/fstream				\
-	third_party/libcxx/functional				\
-	third_party/libcxx/future				\
-	third_party/libcxx/include/atomic_support.hh		\
-	third_party/libcxx/include/config_elast.hh		\
-	third_party/libcxx/initializer_list			\
-	third_party/libcxx/iomanip				\
-	third_party/libcxx/ios					\
-	third_party/libcxx/iosfwd				\
-	third_party/libcxx/iostream				\
-	third_party/libcxx/istream				\
-	third_party/libcxx/iterator				\
-	third_party/libcxx/limits				\
-	third_party/libcxx/limits.h				\
-	third_party/libcxx/list					\
-	third_party/libcxx/locale				\
-	third_party/libcxx/locale.h				\
-	third_party/libcxx/map					\
-	third_party/libcxx/math.h				\
-	third_party/libcxx/memory				\
-	third_party/libcxx/mutex				\
-	third_party/libcxx/new					\
-	third_party/libcxx/numeric				\
-	third_party/libcxx/optional				\
-	third_party/libcxx/ostream				\
-	third_party/libcxx/queue				\
-	third_party/libcxx/queue				\
-	third_party/libcxx/random				\
-	third_party/libcxx/ratio				\
-	third_party/libcxx/refstring.hh				\
-	third_party/libcxx/regex				\
-	third_party/libcxx/scoped_allocator			\
-	third_party/libcxx/set					\
-	third_party/libcxx/shared_mutex				\
-	third_party/libcxx/span					\
-	third_party/libcxx/sstream				\
-	third_party/libcxx/stack				\
-	third_party/libcxx/stdexcept				\
-	third_party/libcxx/stdexcept_default.hh			\
-	third_party/libcxx/stdio.h				\
-	third_party/libcxx/stdlib.h				\
-	third_party/libcxx/streambuf				\
-	third_party/libcxx/string				\
-	third_party/libcxx/string.h				\
-	third_party/libcxx/string_view				\
-	third_party/libcxx/strstream				\
-	third_party/libcxx/system_error				\
-	third_party/libcxx/thread				\
-	third_party/libcxx/tuple				\
-	third_party/libcxx/type_traits				\
-	third_party/libcxx/typeindex				\
-	third_party/libcxx/typeinfo				\
-	third_party/libcxx/unordered_map			\
-	third_party/libcxx/unordered_set			\
-	third_party/libcxx/utility				\
-	third_party/libcxx/valarray				\
-	third_party/libcxx/variant				\
-	third_party/libcxx/vector				\
-	third_party/libcxx/version				\
-	third_party/libcxx/wchar.h				\
-	third_party/libcxx/wctype.h
+THIRD_PARTY_LIBCXX_A_HDRS = \
+third_party/libcxx/__algorithm/adjacent_find.h \
+third_party/libcxx/__algorithm/all_of.h \
+third_party/libcxx/__algorithm/any_of.h \
+third_party/libcxx/__algorithm/binary_search.h \
+third_party/libcxx/__algorithm/clamp.h \
+third_party/libcxx/__algorithm/comp.h \
+third_party/libcxx/__algorithm/comp_ref_type.h \
+third_party/libcxx/__algorithm/copy.h \
+third_party/libcxx/__algorithm/copy_backward.h \
+third_party/libcxx/__algorithm/copy_if.h \
+third_party/libcxx/__algorithm/copy_move_common.h \
+third_party/libcxx/__algorithm/copy_n.h \
+third_party/libcxx/__algorithm/count.h \
+third_party/libcxx/__algorithm/count_if.h \
+third_party/libcxx/__algorithm/equal.h \
+third_party/libcxx/__algorithm/equal_range.h \
+third_party/libcxx/__algorithm/fill.h \
+third_party/libcxx/__algorithm/fill_n.h \
+third_party/libcxx/__algorithm/find.h \
+third_party/libcxx/__algorithm/find_end.h \
+third_party/libcxx/__algorithm/find_first_of.h \
+third_party/libcxx/__algorithm/find_if.h \
+third_party/libcxx/__algorithm/find_if_not.h \
+third_party/libcxx/__algorithm/for_each.h \
+third_party/libcxx/__algorithm/for_each_n.h \
+third_party/libcxx/__algorithm/for_each_segment.h \
+third_party/libcxx/__algorithm/generate.h \
+third_party/libcxx/__algorithm/generate_n.h \
+third_party/libcxx/__algorithm/half_positive.h \
+third_party/libcxx/__algorithm/in_found_result.h \
+third_party/libcxx/__algorithm/in_fun_result.h \
+third_party/libcxx/__algorithm/in_in_out_result.h \
+third_party/libcxx/__algorithm/in_in_result.h \
+third_party/libcxx/__algorithm/in_out_out_result.h \
+third_party/libcxx/__algorithm/in_out_result.h \
+third_party/libcxx/__algorithm/includes.h \
+third_party/libcxx/__algorithm/inplace_merge.h \
+third_party/libcxx/__algorithm/is_heap.h \
+third_party/libcxx/__algorithm/is_heap_until.h \
+third_party/libcxx/__algorithm/is_partitioned.h \
+third_party/libcxx/__algorithm/is_permutation.h \
+third_party/libcxx/__algorithm/is_sorted.h \
+third_party/libcxx/__algorithm/is_sorted_until.h \
+third_party/libcxx/__algorithm/iter_swap.h \
+third_party/libcxx/__algorithm/iterator_operations.h \
+third_party/libcxx/__algorithm/lexicographical_compare.h \
+third_party/libcxx/__algorithm/lexicographical_compare_three_way.h \
+third_party/libcxx/__algorithm/lower_bound.h \
+third_party/libcxx/__algorithm/make_heap.h \
+third_party/libcxx/__algorithm/make_projected.h \
+third_party/libcxx/__algorithm/max.h \
+third_party/libcxx/__algorithm/max_element.h \
+third_party/libcxx/__algorithm/merge.h \
+third_party/libcxx/__algorithm/min.h \
+third_party/libcxx/__algorithm/min_element.h \
+third_party/libcxx/__algorithm/min_max_result.h \
+third_party/libcxx/__algorithm/minmax.h \
+third_party/libcxx/__algorithm/minmax_element.h \
+third_party/libcxx/__algorithm/mismatch.h \
+third_party/libcxx/__algorithm/move.h \
+third_party/libcxx/__algorithm/move_backward.h \
+third_party/libcxx/__algorithm/next_permutation.h \
+third_party/libcxx/__algorithm/none_of.h \
+third_party/libcxx/__algorithm/nth_element.h \
+third_party/libcxx/__algorithm/partial_sort.h \
+third_party/libcxx/__algorithm/partial_sort_copy.h \
+third_party/libcxx/__algorithm/partition.h \
+third_party/libcxx/__algorithm/partition_copy.h \
+third_party/libcxx/__algorithm/partition_point.h \
+third_party/libcxx/__algorithm/pop_heap.h \
+third_party/libcxx/__algorithm/prev_permutation.h \
+third_party/libcxx/__algorithm/push_heap.h \
+third_party/libcxx/__algorithm/ranges_adjacent_find.h \
+third_party/libcxx/__algorithm/ranges_all_of.h \
+third_party/libcxx/__algorithm/ranges_any_of.h \
+third_party/libcxx/__algorithm/ranges_binary_search.h \
+third_party/libcxx/__algorithm/ranges_clamp.h \
+third_party/libcxx/__algorithm/ranges_copy.h \
+third_party/libcxx/__algorithm/ranges_copy_backward.h \
+third_party/libcxx/__algorithm/ranges_copy_if.h \
+third_party/libcxx/__algorithm/ranges_copy_n.h \
+third_party/libcxx/__algorithm/ranges_count.h \
+third_party/libcxx/__algorithm/ranges_count_if.h \
+third_party/libcxx/__algorithm/ranges_equal.h \
+third_party/libcxx/__algorithm/ranges_equal_range.h \
+third_party/libcxx/__algorithm/ranges_fill.h \
+third_party/libcxx/__algorithm/ranges_fill_n.h \
+third_party/libcxx/__algorithm/ranges_find.h \
+third_party/libcxx/__algorithm/ranges_find_end.h \
+third_party/libcxx/__algorithm/ranges_find_first_of.h \
+third_party/libcxx/__algorithm/ranges_find_if.h \
+third_party/libcxx/__algorithm/ranges_find_if_not.h \
+third_party/libcxx/__algorithm/ranges_for_each.h \
+third_party/libcxx/__algorithm/ranges_for_each_n.h \
+third_party/libcxx/__algorithm/ranges_generate.h \
+third_party/libcxx/__algorithm/ranges_generate_n.h \
+third_party/libcxx/__algorithm/ranges_includes.h \
+third_party/libcxx/__algorithm/ranges_inplace_merge.h \
+third_party/libcxx/__algorithm/ranges_is_heap.h \
+third_party/libcxx/__algorithm/ranges_is_heap_until.h \
+third_party/libcxx/__algorithm/ranges_is_partitioned.h \
+third_party/libcxx/__algorithm/ranges_is_permutation.h \
+third_party/libcxx/__algorithm/ranges_is_sorted.h \
+third_party/libcxx/__algorithm/ranges_is_sorted_until.h \
+third_party/libcxx/__algorithm/ranges_iterator_concept.h \
+third_party/libcxx/__algorithm/ranges_lexicographical_compare.h \
+third_party/libcxx/__algorithm/ranges_lower_bound.h \
+third_party/libcxx/__algorithm/ranges_make_heap.h \
+third_party/libcxx/__algorithm/ranges_max.h \
+third_party/libcxx/__algorithm/ranges_max_element.h \
+third_party/libcxx/__algorithm/ranges_merge.h \
+third_party/libcxx/__algorithm/ranges_min.h \
+third_party/libcxx/__algorithm/ranges_min_element.h \
+third_party/libcxx/__algorithm/ranges_minmax.h \
+third_party/libcxx/__algorithm/ranges_minmax_element.h \
+third_party/libcxx/__algorithm/ranges_mismatch.h \
+third_party/libcxx/__algorithm/ranges_move.h \
+third_party/libcxx/__algorithm/ranges_move_backward.h \
+third_party/libcxx/__algorithm/ranges_next_permutation.h \
+third_party/libcxx/__algorithm/ranges_none_of.h \
+third_party/libcxx/__algorithm/ranges_nth_element.h \
+third_party/libcxx/__algorithm/ranges_partial_sort.h \
+third_party/libcxx/__algorithm/ranges_partial_sort_copy.h \
+third_party/libcxx/__algorithm/ranges_partition.h \
+third_party/libcxx/__algorithm/ranges_partition_copy.h \
+third_party/libcxx/__algorithm/ranges_partition_point.h \
+third_party/libcxx/__algorithm/ranges_pop_heap.h \
+third_party/libcxx/__algorithm/ranges_prev_permutation.h \
+third_party/libcxx/__algorithm/ranges_push_heap.h \
+third_party/libcxx/__algorithm/ranges_remove.h \
+third_party/libcxx/__algorithm/ranges_remove_copy.h \
+third_party/libcxx/__algorithm/ranges_remove_copy_if.h \
+third_party/libcxx/__algorithm/ranges_remove_if.h \
+third_party/libcxx/__algorithm/ranges_replace.h \
+third_party/libcxx/__algorithm/ranges_replace_copy.h \
+third_party/libcxx/__algorithm/ranges_replace_copy_if.h \
+third_party/libcxx/__algorithm/ranges_replace_if.h \
+third_party/libcxx/__algorithm/ranges_reverse.h \
+third_party/libcxx/__algorithm/ranges_reverse_copy.h \
+third_party/libcxx/__algorithm/ranges_rotate.h \
+third_party/libcxx/__algorithm/ranges_rotate_copy.h \
+third_party/libcxx/__algorithm/ranges_sample.h \
+third_party/libcxx/__algorithm/ranges_search.h \
+third_party/libcxx/__algorithm/ranges_search_n.h \
+third_party/libcxx/__algorithm/ranges_set_difference.h \
+third_party/libcxx/__algorithm/ranges_set_intersection.h \
+third_party/libcxx/__algorithm/ranges_set_symmetric_difference.h \
+third_party/libcxx/__algorithm/ranges_set_union.h \
+third_party/libcxx/__algorithm/ranges_shuffle.h \
+third_party/libcxx/__algorithm/ranges_sort.h \
+third_party/libcxx/__algorithm/ranges_sort_heap.h \
+third_party/libcxx/__algorithm/ranges_stable_partition.h \
+third_party/libcxx/__algorithm/ranges_stable_sort.h \
+third_party/libcxx/__algorithm/ranges_starts_with.h \
+third_party/libcxx/__algorithm/ranges_swap_ranges.h \
+third_party/libcxx/__algorithm/ranges_transform.h \
+third_party/libcxx/__algorithm/ranges_unique.h \
+third_party/libcxx/__algorithm/ranges_unique_copy.h \
+third_party/libcxx/__algorithm/ranges_upper_bound.h \
+third_party/libcxx/__algorithm/remove.h \
+third_party/libcxx/__algorithm/remove_copy.h \
+third_party/libcxx/__algorithm/remove_copy_if.h \
+third_party/libcxx/__algorithm/remove_if.h \
+third_party/libcxx/__algorithm/replace.h \
+third_party/libcxx/__algorithm/replace_copy.h \
+third_party/libcxx/__algorithm/replace_copy_if.h \
+third_party/libcxx/__algorithm/replace_if.h \
+third_party/libcxx/__algorithm/reverse.h \
+third_party/libcxx/__algorithm/reverse_copy.h \
+third_party/libcxx/__algorithm/rotate.h \
+third_party/libcxx/__algorithm/rotate_copy.h \
+third_party/libcxx/__algorithm/sample.h \
+third_party/libcxx/__algorithm/search.h \
+third_party/libcxx/__algorithm/search_n.h \
+third_party/libcxx/__algorithm/set_difference.h \
+third_party/libcxx/__algorithm/set_intersection.h \
+third_party/libcxx/__algorithm/set_symmetric_difference.h \
+third_party/libcxx/__algorithm/set_union.h \
+third_party/libcxx/__algorithm/shift_left.h \
+third_party/libcxx/__algorithm/shift_right.h \
+third_party/libcxx/__algorithm/shuffle.h \
+third_party/libcxx/__algorithm/sift_down.h \
+third_party/libcxx/__algorithm/sort.h \
+third_party/libcxx/__algorithm/sort_heap.h \
+third_party/libcxx/__algorithm/stable_partition.h \
+third_party/libcxx/__algorithm/stable_sort.h \
+third_party/libcxx/__algorithm/swap_ranges.h \
+third_party/libcxx/__algorithm/three_way_comp_ref_type.h \
+third_party/libcxx/__algorithm/transform.h \
+third_party/libcxx/__algorithm/uniform_random_bit_generator_adaptor.h \
+third_party/libcxx/__algorithm/unique.h \
+third_party/libcxx/__algorithm/unique_copy.h \
+third_party/libcxx/__algorithm/unwrap_iter.h \
+third_party/libcxx/__algorithm/unwrap_range.h \
+third_party/libcxx/__algorithm/upper_bound.h \
+third_party/libcxx/__assert \
+third_party/libcxx/__atomic/aliases.h \
+third_party/libcxx/__atomic/atomic.h \
+third_party/libcxx/__atomic/atomic_base.h \
+third_party/libcxx/__atomic/atomic_flag.h \
+third_party/libcxx/__atomic/atomic_init.h \
+third_party/libcxx/__atomic/atomic_lock_free.h \
+third_party/libcxx/__atomic/atomic_sync.h \
+third_party/libcxx/__atomic/check_memory_order.h \
+third_party/libcxx/__atomic/contention_t.h \
+third_party/libcxx/__atomic/cxx_atomic_impl.h \
+third_party/libcxx/__atomic/fence.h \
+third_party/libcxx/__atomic/is_always_lock_free.h \
+third_party/libcxx/__atomic/kill_dependency.h \
+third_party/libcxx/__atomic/memory_order.h \
+third_party/libcxx/__availability \
+third_party/libcxx/__bit/bit_cast.h \
+third_party/libcxx/__bit/bit_ceil.h \
+third_party/libcxx/__bit/bit_floor.h \
+third_party/libcxx/__bit/bit_log2.h \
+third_party/libcxx/__bit/bit_width.h \
+third_party/libcxx/__bit/blsr.h \
+third_party/libcxx/__bit/byteswap.h \
+third_party/libcxx/__bit/countl.h \
+third_party/libcxx/__bit/countr.h \
+third_party/libcxx/__bit/endian.h \
+third_party/libcxx/__bit/has_single_bit.h \
+third_party/libcxx/__bit/popcount.h \
+third_party/libcxx/__bit/rotate.h \
+third_party/libcxx/__bit_reference \
+third_party/libcxx/__charconv/chars_format.h \
+third_party/libcxx/__charconv/from_chars_integral.h \
+third_party/libcxx/__charconv/from_chars_result.h \
+third_party/libcxx/__charconv/tables.h \
+third_party/libcxx/__charconv/to_chars.h \
+third_party/libcxx/__charconv/to_chars_base_10.h \
+third_party/libcxx/__charconv/to_chars_floating_point.h \
+third_party/libcxx/__charconv/to_chars_integral.h \
+third_party/libcxx/__charconv/to_chars_result.h \
+third_party/libcxx/__charconv/traits.h \
+third_party/libcxx/__chrono/calendar.h \
+third_party/libcxx/__chrono/concepts.h \
+third_party/libcxx/__chrono/convert_to_timespec.h \
+third_party/libcxx/__chrono/convert_to_tm.h \
+third_party/libcxx/__chrono/day.h \
+third_party/libcxx/__chrono/duration.h \
+third_party/libcxx/__chrono/file_clock.h \
+third_party/libcxx/__chrono/formatter.h \
+third_party/libcxx/__chrono/hh_mm_ss.h \
+third_party/libcxx/__chrono/high_resolution_clock.h \
+third_party/libcxx/__chrono/literals.h \
+third_party/libcxx/__chrono/month.h \
+third_party/libcxx/__chrono/month_weekday.h \
+third_party/libcxx/__chrono/monthday.h \
+third_party/libcxx/__chrono/ostream.h \
+third_party/libcxx/__chrono/parser_std_format_spec.h \
+third_party/libcxx/__chrono/statically_widen.h \
+third_party/libcxx/__chrono/steady_clock.h \
+third_party/libcxx/__chrono/system_clock.h \
+third_party/libcxx/__chrono/time_point.h \
+third_party/libcxx/__chrono/weekday.h \
+third_party/libcxx/__chrono/year.h \
+third_party/libcxx/__chrono/year_month.h \
+third_party/libcxx/__chrono/year_month_day.h \
+third_party/libcxx/__chrono/year_month_weekday.h \
+third_party/libcxx/__compare/common_comparison_category.h \
+third_party/libcxx/__compare/compare_partial_order_fallback.h \
+third_party/libcxx/__compare/compare_strong_order_fallback.h \
+third_party/libcxx/__compare/compare_three_way.h \
+third_party/libcxx/__compare/compare_three_way_result.h \
+third_party/libcxx/__compare/compare_weak_order_fallback.h \
+third_party/libcxx/__compare/is_eq.h \
+third_party/libcxx/__compare/ordering.h \
+third_party/libcxx/__compare/partial_order.h \
+third_party/libcxx/__compare/strong_order.h \
+third_party/libcxx/__compare/synth_three_way.h \
+third_party/libcxx/__compare/three_way_comparable.h \
+third_party/libcxx/__compare/weak_order.h \
+third_party/libcxx/__concepts/arithmetic.h \
+third_party/libcxx/__concepts/assignable.h \
+third_party/libcxx/__concepts/boolean_testable.h \
+third_party/libcxx/__concepts/class_or_enum.h \
+third_party/libcxx/__concepts/common_reference_with.h \
+third_party/libcxx/__concepts/common_with.h \
+third_party/libcxx/__concepts/constructible.h \
+third_party/libcxx/__concepts/convertible_to.h \
+third_party/libcxx/__concepts/copyable.h \
+third_party/libcxx/__concepts/derived_from.h \
+third_party/libcxx/__concepts/destructible.h \
+third_party/libcxx/__concepts/different_from.h \
+third_party/libcxx/__concepts/equality_comparable.h \
+third_party/libcxx/__concepts/invocable.h \
+third_party/libcxx/__concepts/movable.h \
+third_party/libcxx/__concepts/predicate.h \
+third_party/libcxx/__concepts/regular.h \
+third_party/libcxx/__concepts/relation.h \
+third_party/libcxx/__concepts/same_as.h \
+third_party/libcxx/__concepts/semiregular.h \
+third_party/libcxx/__concepts/swappable.h \
+third_party/libcxx/__concepts/totally_ordered.h \
+third_party/libcxx/__condition_variable/condition_variable.h \
+third_party/libcxx/__config \
+third_party/libcxx/__config_site \
+third_party/libcxx/__coroutine/coroutine_handle.h \
+third_party/libcxx/__coroutine/coroutine_traits.h \
+third_party/libcxx/__coroutine/noop_coroutine_handle.h \
+third_party/libcxx/__coroutine/trivial_awaitables.h \
+third_party/libcxx/__debug \
+third_party/libcxx/__debug_utils/randomize_range.h \
+third_party/libcxx/__exception/exception.h \
+third_party/libcxx/__exception/exception_ptr.h \
+third_party/libcxx/__exception/nested_exception.h \
+third_party/libcxx/__exception/operations.h \
+third_party/libcxx/__exception/terminate.h \
+third_party/libcxx/__expected/bad_expected_access.h \
+third_party/libcxx/__expected/expected.h \
+third_party/libcxx/__expected/unexpect.h \
+third_party/libcxx/__expected/unexpected.h \
+third_party/libcxx/__filesystem/copy_options.h \
+third_party/libcxx/__filesystem/directory_entry.h \
+third_party/libcxx/__filesystem/directory_iterator.h \
+third_party/libcxx/__filesystem/directory_options.h \
+third_party/libcxx/__filesystem/file_status.h \
+third_party/libcxx/__filesystem/file_time_type.h \
+third_party/libcxx/__filesystem/file_type.h \
+third_party/libcxx/__filesystem/filesystem_error.h \
+third_party/libcxx/__filesystem/operations.h \
+third_party/libcxx/__filesystem/path.h \
+third_party/libcxx/__filesystem/path_iterator.h \
+third_party/libcxx/__filesystem/perm_options.h \
+third_party/libcxx/__filesystem/perms.h \
+third_party/libcxx/__filesystem/recursive_directory_iterator.h \
+third_party/libcxx/__filesystem/space_info.h \
+third_party/libcxx/__filesystem/u8path.h \
+third_party/libcxx/__format/buffer.h \
+third_party/libcxx/__format/concepts.h \
+third_party/libcxx/__format/container_adaptor.h \
+third_party/libcxx/__format/enable_insertable.h \
+third_party/libcxx/__format/escaped_output_table.h \
+third_party/libcxx/__format/extended_grapheme_cluster_table.h \
+third_party/libcxx/__format/format_arg.h \
+third_party/libcxx/__format/format_arg_store.h \
+third_party/libcxx/__format/format_args.h \
+third_party/libcxx/__format/format_context.h \
+third_party/libcxx/__format/format_error.h \
+third_party/libcxx/__format/format_functions.h \
+third_party/libcxx/__format/format_fwd.h \
+third_party/libcxx/__format/format_parse_context.h \
+third_party/libcxx/__format/format_string.h \
+third_party/libcxx/__format/format_to_n_result.h \
+third_party/libcxx/__format/formatter.h \
+third_party/libcxx/__format/formatter_bool.h \
+third_party/libcxx/__format/formatter_char.h \
+third_party/libcxx/__format/formatter_floating_point.h \
+third_party/libcxx/__format/formatter_integer.h \
+third_party/libcxx/__format/formatter_integral.h \
+third_party/libcxx/__format/formatter_output.h \
+third_party/libcxx/__format/formatter_pointer.h \
+third_party/libcxx/__format/formatter_string.h \
+third_party/libcxx/__format/formatter_tuple.h \
+third_party/libcxx/__format/parser_std_format_spec.h \
+third_party/libcxx/__format/range_default_formatter.h \
+third_party/libcxx/__format/range_formatter.h \
+third_party/libcxx/__format/unicode.h \
+third_party/libcxx/__format/width_estimation_table.h \
+third_party/libcxx/__functional/binary_function.h \
+third_party/libcxx/__functional/binary_negate.h \
+third_party/libcxx/__functional/bind.h \
+third_party/libcxx/__functional/bind_back.h \
+third_party/libcxx/__functional/bind_front.h \
+third_party/libcxx/__functional/binder1st.h \
+third_party/libcxx/__functional/binder2nd.h \
+third_party/libcxx/__functional/boyer_moore_searcher.h \
+third_party/libcxx/__functional/compose.h \
+third_party/libcxx/__functional/default_searcher.h \
+third_party/libcxx/__functional/function.h \
+third_party/libcxx/__functional/hash.h \
+third_party/libcxx/__functional/identity.h \
+third_party/libcxx/__functional/invoke.h \
+third_party/libcxx/__functional/is_transparent.h \
+third_party/libcxx/__functional/mem_fn.h \
+third_party/libcxx/__functional/mem_fun_ref.h \
+third_party/libcxx/__functional/not_fn.h \
+third_party/libcxx/__functional/operations.h \
+third_party/libcxx/__functional/perfect_forward.h \
+third_party/libcxx/__functional/pointer_to_binary_function.h \
+third_party/libcxx/__functional/pointer_to_unary_function.h \
+third_party/libcxx/__functional/ranges_operations.h \
+third_party/libcxx/__functional/reference_wrapper.h \
+third_party/libcxx/__functional/unary_function.h \
+third_party/libcxx/__functional/unary_negate.h \
+third_party/libcxx/__functional/weak_result_type.h \
+third_party/libcxx/__fwd/array.h \
+third_party/libcxx/__fwd/fstream.h \
+third_party/libcxx/__fwd/get.h \
+third_party/libcxx/__fwd/hash.h \
+third_party/libcxx/__fwd/ios.h \
+third_party/libcxx/__fwd/istream.h \
+third_party/libcxx/__fwd/memory_resource.h \
+third_party/libcxx/__fwd/ostream.h \
+third_party/libcxx/__fwd/pair.h \
+third_party/libcxx/__fwd/span.h \
+third_party/libcxx/__fwd/sstream.h \
+third_party/libcxx/__fwd/streambuf.h \
+third_party/libcxx/__fwd/string.h \
+third_party/libcxx/__fwd/string_view.h \
+third_party/libcxx/__fwd/subrange.h \
+third_party/libcxx/__fwd/tuple.h \
+third_party/libcxx/__hash_table \
+third_party/libcxx/__ios/fpos.h \
+third_party/libcxx/__iterator/access.h \
+third_party/libcxx/__iterator/advance.h \
+third_party/libcxx/__iterator/back_insert_iterator.h \
+third_party/libcxx/__iterator/bounded_iter.h \
+third_party/libcxx/__iterator/common_iterator.h \
+third_party/libcxx/__iterator/concepts.h \
+third_party/libcxx/__iterator/counted_iterator.h \
+third_party/libcxx/__iterator/data.h \
+third_party/libcxx/__iterator/default_sentinel.h \
+third_party/libcxx/__iterator/distance.h \
+third_party/libcxx/__iterator/empty.h \
+third_party/libcxx/__iterator/erase_if_container.h \
+third_party/libcxx/__iterator/front_insert_iterator.h \
+third_party/libcxx/__iterator/incrementable_traits.h \
+third_party/libcxx/__iterator/indirectly_comparable.h \
+third_party/libcxx/__iterator/insert_iterator.h \
+third_party/libcxx/__iterator/istream_iterator.h \
+third_party/libcxx/__iterator/istreambuf_iterator.h \
+third_party/libcxx/__iterator/iter_move.h \
+third_party/libcxx/__iterator/iter_swap.h \
+third_party/libcxx/__iterator/iterator.h \
+third_party/libcxx/__iterator/iterator_traits.h \
+third_party/libcxx/__iterator/iterator_with_data.h \
+third_party/libcxx/__iterator/mergeable.h \
+third_party/libcxx/__iterator/move_iterator.h \
+third_party/libcxx/__iterator/move_sentinel.h \
+third_party/libcxx/__iterator/next.h \
+third_party/libcxx/__iterator/ostream_iterator.h \
+third_party/libcxx/__iterator/ostreambuf_iterator.h \
+third_party/libcxx/__iterator/permutable.h \
+third_party/libcxx/__iterator/prev.h \
+third_party/libcxx/__iterator/projected.h \
+third_party/libcxx/__iterator/readable_traits.h \
+third_party/libcxx/__iterator/reverse_access.h \
+third_party/libcxx/__iterator/reverse_iterator.h \
+third_party/libcxx/__iterator/segmented_iterator.h \
+third_party/libcxx/__iterator/size.h \
+third_party/libcxx/__iterator/sortable.h \
+third_party/libcxx/__iterator/unreachable_sentinel.h \
+third_party/libcxx/__iterator/wrap_iter.h \
+third_party/libcxx/__locale \
+third_party/libcxx/__mdspan/extents.h \
+third_party/libcxx/__memory/addressof.h \
+third_party/libcxx/__memory/align.h \
+third_party/libcxx/__memory/aligned_alloc.h \
+third_party/libcxx/__memory/allocate_at_least.h \
+third_party/libcxx/__memory/allocation_guard.h \
+third_party/libcxx/__memory/allocator.h \
+third_party/libcxx/__memory/allocator_arg_t.h \
+third_party/libcxx/__memory/allocator_destructor.h \
+third_party/libcxx/__memory/allocator_traits.h \
+third_party/libcxx/__memory/assume_aligned.h \
+third_party/libcxx/__memory/auto_ptr.h \
+third_party/libcxx/__memory/builtin_new_allocator.h \
+third_party/libcxx/__memory/compressed_pair.h \
+third_party/libcxx/__memory/concepts.h \
+third_party/libcxx/__memory/construct_at.h \
+third_party/libcxx/__memory/destruct_n.h \
+third_party/libcxx/__memory/pointer_traits.h \
+third_party/libcxx/__memory/ranges_construct_at.h \
+third_party/libcxx/__memory/ranges_uninitialized_algorithms.h \
+third_party/libcxx/__memory/raw_storage_iterator.h \
+third_party/libcxx/__memory/shared_ptr.h \
+third_party/libcxx/__memory/swap_allocator.h \
+third_party/libcxx/__memory/temp_value.h \
+third_party/libcxx/__memory/temporary_buffer.h \
+third_party/libcxx/__memory/uninitialized_algorithms.h \
+third_party/libcxx/__memory/unique_ptr.h \
+third_party/libcxx/__memory/uses_allocator.h \
+third_party/libcxx/__memory/uses_allocator_construction.h \
+third_party/libcxx/__memory/voidify.h \
+third_party/libcxx/__memory_resource/memory_resource.h \
+third_party/libcxx/__memory_resource/monotonic_buffer_resource.h \
+third_party/libcxx/__memory_resource/polymorphic_allocator.h \
+third_party/libcxx/__memory_resource/pool_options.h \
+third_party/libcxx/__memory_resource/synchronized_pool_resource.h \
+third_party/libcxx/__memory_resource/unsynchronized_pool_resource.h \
+third_party/libcxx/__mutex/lock_guard.h \
+third_party/libcxx/__mutex/mutex.h \
+third_party/libcxx/__mutex/tag_types.h \
+third_party/libcxx/__mutex/unique_lock.h \
+third_party/libcxx/__node_handle \
+third_party/libcxx/__numeric/accumulate.h \
+third_party/libcxx/__numeric/adjacent_difference.h \
+third_party/libcxx/__numeric/exclusive_scan.h \
+third_party/libcxx/__numeric/gcd_lcm.h \
+third_party/libcxx/__numeric/inclusive_scan.h \
+third_party/libcxx/__numeric/inner_product.h \
+third_party/libcxx/__numeric/iota.h \
+third_party/libcxx/__numeric/midpoint.h \
+third_party/libcxx/__numeric/partial_sum.h \
+third_party/libcxx/__numeric/reduce.h \
+third_party/libcxx/__numeric/transform_exclusive_scan.h \
+third_party/libcxx/__numeric/transform_inclusive_scan.h \
+third_party/libcxx/__numeric/transform_reduce.h \
+third_party/libcxx/__random/bernoulli_distribution.h \
+third_party/libcxx/__random/binomial_distribution.h \
+third_party/libcxx/__random/cauchy_distribution.h \
+third_party/libcxx/__random/chi_squared_distribution.h \
+third_party/libcxx/__random/clamp_to_integral.h \
+third_party/libcxx/__random/default_random_engine.h \
+third_party/libcxx/__random/discard_block_engine.h \
+third_party/libcxx/__random/discrete_distribution.h \
+third_party/libcxx/__random/exponential_distribution.h \
+third_party/libcxx/__random/extreme_value_distribution.h \
+third_party/libcxx/__random/fisher_f_distribution.h \
+third_party/libcxx/__random/gamma_distribution.h \
+third_party/libcxx/__random/generate_canonical.h \
+third_party/libcxx/__random/geometric_distribution.h \
+third_party/libcxx/__random/independent_bits_engine.h \
+third_party/libcxx/__random/is_seed_sequence.h \
+third_party/libcxx/__random/is_valid.h \
+third_party/libcxx/__random/knuth_b.h \
+third_party/libcxx/__random/linear_congruential_engine.h \
+third_party/libcxx/__random/log2.h \
+third_party/libcxx/__random/lognormal_distribution.h \
+third_party/libcxx/__random/mersenne_twister_engine.h \
+third_party/libcxx/__random/negative_binomial_distribution.h \
+third_party/libcxx/__random/normal_distribution.h \
+third_party/libcxx/__random/piecewise_constant_distribution.h \
+third_party/libcxx/__random/piecewise_linear_distribution.h \
+third_party/libcxx/__random/poisson_distribution.h \
+third_party/libcxx/__random/random_device.h \
+third_party/libcxx/__random/ranlux.h \
+third_party/libcxx/__random/seed_seq.h \
+third_party/libcxx/__random/shuffle_order_engine.h \
+third_party/libcxx/__random/student_t_distribution.h \
+third_party/libcxx/__random/subtract_with_carry_engine.h \
+third_party/libcxx/__random/uniform_int_distribution.h \
+third_party/libcxx/__random/uniform_random_bit_generator.h \
+third_party/libcxx/__random/uniform_real_distribution.h \
+third_party/libcxx/__random/weibull_distribution.h \
+third_party/libcxx/__ranges/access.h \
+third_party/libcxx/__ranges/all.h \
+third_party/libcxx/__ranges/as_rvalue_view.h \
+third_party/libcxx/__ranges/common_view.h \
+third_party/libcxx/__ranges/concepts.h \
+third_party/libcxx/__ranges/container_compatible_range.h \
+third_party/libcxx/__ranges/copyable_box.h \
+third_party/libcxx/__ranges/counted.h \
+third_party/libcxx/__ranges/dangling.h \
+third_party/libcxx/__ranges/data.h \
+third_party/libcxx/__ranges/drop_view.h \
+third_party/libcxx/__ranges/drop_while_view.h \
+third_party/libcxx/__ranges/elements_view.h \
+third_party/libcxx/__ranges/empty.h \
+third_party/libcxx/__ranges/empty_view.h \
+third_party/libcxx/__ranges/enable_borrowed_range.h \
+third_party/libcxx/__ranges/enable_view.h \
+third_party/libcxx/__ranges/filter_view.h \
+third_party/libcxx/__ranges/from_range.h \
+third_party/libcxx/__ranges/iota_view.h \
+third_party/libcxx/__ranges/istream_view.h \
+third_party/libcxx/__ranges/join_view.h \
+third_party/libcxx/__ranges/lazy_split_view.h \
+third_party/libcxx/__ranges/non_propagating_cache.h \
+third_party/libcxx/__ranges/owning_view.h \
+third_party/libcxx/__ranges/range_adaptor.h \
+third_party/libcxx/__ranges/rbegin.h \
+third_party/libcxx/__ranges/ref_view.h \
+third_party/libcxx/__ranges/rend.h \
+third_party/libcxx/__ranges/reverse_view.h \
+third_party/libcxx/__ranges/single_view.h \
+third_party/libcxx/__ranges/size.h \
+third_party/libcxx/__ranges/split_view.h \
+third_party/libcxx/__ranges/subrange.h \
+third_party/libcxx/__ranges/take_view.h \
+third_party/libcxx/__ranges/take_while_view.h \
+third_party/libcxx/__ranges/transform_view.h \
+third_party/libcxx/__ranges/view_interface.h \
+third_party/libcxx/__ranges/views.h \
+third_party/libcxx/__ranges/zip_view.h \
+third_party/libcxx/__split_buffer \
+third_party/libcxx/__std_mbstate_t.h \
+third_party/libcxx/__stop_token/atomic_unique_lock.h \
+third_party/libcxx/__stop_token/intrusive_list_view.h \
+third_party/libcxx/__stop_token/intrusive_shared_ptr.h \
+third_party/libcxx/__string/char_traits.h \
+third_party/libcxx/__string/constexpr_c_functions.h \
+third_party/libcxx/__string/extern_template_lists.h \
+third_party/libcxx/__system_error/errc.h \
+third_party/libcxx/__system_error/error_category.h \
+third_party/libcxx/__system_error/error_code.h \
+third_party/libcxx/__system_error/error_condition.h \
+third_party/libcxx/__system_error/system_error.h \
+third_party/libcxx/__thread/poll_with_backoff.h \
+third_party/libcxx/__thread/timed_backoff_policy.h \
+third_party/libcxx/__threading_support \
+third_party/libcxx/__tree \
+third_party/libcxx/__tuple/make_tuple_types.h \
+third_party/libcxx/__tuple/pair_like.h \
+third_party/libcxx/__tuple/sfinae_helpers.h \
+third_party/libcxx/__tuple/tuple_element.h \
+third_party/libcxx/__tuple/tuple_indices.h \
+third_party/libcxx/__tuple/tuple_like.h \
+third_party/libcxx/__tuple/tuple_like_ext.h \
+third_party/libcxx/__tuple/tuple_size.h \
+third_party/libcxx/__tuple/tuple_types.h \
+third_party/libcxx/__type_traits/add_const.h \
+third_party/libcxx/__type_traits/add_cv.h \
+third_party/libcxx/__type_traits/add_lvalue_reference.h \
+third_party/libcxx/__type_traits/add_pointer.h \
+third_party/libcxx/__type_traits/add_rvalue_reference.h \
+third_party/libcxx/__type_traits/add_volatile.h \
+third_party/libcxx/__type_traits/aligned_storage.h \
+third_party/libcxx/__type_traits/aligned_union.h \
+third_party/libcxx/__type_traits/alignment_of.h \
+third_party/libcxx/__type_traits/apply_cv.h \
+third_party/libcxx/__type_traits/can_extract_key.h \
+third_party/libcxx/__type_traits/common_reference.h \
+third_party/libcxx/__type_traits/common_type.h \
+third_party/libcxx/__type_traits/conditional.h \
+third_party/libcxx/__type_traits/conjunction.h \
+third_party/libcxx/__type_traits/copy_cv.h \
+third_party/libcxx/__type_traits/copy_cvref.h \
+third_party/libcxx/__type_traits/decay.h \
+third_party/libcxx/__type_traits/dependent_type.h \
+third_party/libcxx/__type_traits/disjunction.h \
+third_party/libcxx/__type_traits/enable_if.h \
+third_party/libcxx/__type_traits/extent.h \
+third_party/libcxx/__type_traits/has_unique_object_representation.h \
+third_party/libcxx/__type_traits/has_virtual_destructor.h \
+third_party/libcxx/__type_traits/integral_constant.h \
+third_party/libcxx/__type_traits/invoke.h \
+third_party/libcxx/__type_traits/is_abstract.h \
+third_party/libcxx/__type_traits/is_aggregate.h \
+third_party/libcxx/__type_traits/is_allocator.h \
+third_party/libcxx/__type_traits/is_always_bitcastable.h \
+third_party/libcxx/__type_traits/is_arithmetic.h \
+third_party/libcxx/__type_traits/is_array.h \
+third_party/libcxx/__type_traits/is_assignable.h \
+third_party/libcxx/__type_traits/is_base_of.h \
+third_party/libcxx/__type_traits/is_bounded_array.h \
+third_party/libcxx/__type_traits/is_callable.h \
+third_party/libcxx/__type_traits/is_char_like_type.h \
+third_party/libcxx/__type_traits/is_class.h \
+third_party/libcxx/__type_traits/is_compound.h \
+third_party/libcxx/__type_traits/is_const.h \
+third_party/libcxx/__type_traits/is_constant_evaluated.h \
+third_party/libcxx/__type_traits/is_constructible.h \
+third_party/libcxx/__type_traits/is_convertible.h \
+third_party/libcxx/__type_traits/is_copy_assignable.h \
+third_party/libcxx/__type_traits/is_copy_constructible.h \
+third_party/libcxx/__type_traits/is_core_convertible.h \
+third_party/libcxx/__type_traits/is_default_constructible.h \
+third_party/libcxx/__type_traits/is_destructible.h \
+third_party/libcxx/__type_traits/is_empty.h \
+third_party/libcxx/__type_traits/is_enum.h \
+third_party/libcxx/__type_traits/is_equality_comparable.h \
+third_party/libcxx/__type_traits/is_execution_policy.h \
+third_party/libcxx/__type_traits/is_final.h \
+third_party/libcxx/__type_traits/is_floating_point.h \
+third_party/libcxx/__type_traits/is_function.h \
+third_party/libcxx/__type_traits/is_fundamental.h \
+third_party/libcxx/__type_traits/is_implicitly_default_constructible.h \
+third_party/libcxx/__type_traits/is_integral.h \
+third_party/libcxx/__type_traits/is_literal_type.h \
+third_party/libcxx/__type_traits/is_member_function_pointer.h \
+third_party/libcxx/__type_traits/is_member_object_pointer.h \
+third_party/libcxx/__type_traits/is_member_pointer.h \
+third_party/libcxx/__type_traits/is_move_assignable.h \
+third_party/libcxx/__type_traits/is_move_constructible.h \
+third_party/libcxx/__type_traits/is_nothrow_assignable.h \
+third_party/libcxx/__type_traits/is_nothrow_constructible.h \
+third_party/libcxx/__type_traits/is_nothrow_convertible.h \
+third_party/libcxx/__type_traits/is_nothrow_copy_assignable.h \
+third_party/libcxx/__type_traits/is_nothrow_copy_constructible.h \
+third_party/libcxx/__type_traits/is_nothrow_default_constructible.h \
+third_party/libcxx/__type_traits/is_nothrow_destructible.h \
+third_party/libcxx/__type_traits/is_nothrow_move_assignable.h \
+third_party/libcxx/__type_traits/is_nothrow_move_constructible.h \
+third_party/libcxx/__type_traits/is_null_pointer.h \
+third_party/libcxx/__type_traits/is_object.h \
+third_party/libcxx/__type_traits/is_pod.h \
+third_party/libcxx/__type_traits/is_pointer.h \
+third_party/libcxx/__type_traits/is_polymorphic.h \
+third_party/libcxx/__type_traits/is_primary_template.h \
+third_party/libcxx/__type_traits/is_reference.h \
+third_party/libcxx/__type_traits/is_reference_wrapper.h \
+third_party/libcxx/__type_traits/is_referenceable.h \
+third_party/libcxx/__type_traits/is_same.h \
+third_party/libcxx/__type_traits/is_scalar.h \
+third_party/libcxx/__type_traits/is_scoped_enum.h \
+third_party/libcxx/__type_traits/is_signed.h \
+third_party/libcxx/__type_traits/is_signed_integer.h \
+third_party/libcxx/__type_traits/is_specialization.h \
+third_party/libcxx/__type_traits/is_standard_layout.h \
+third_party/libcxx/__type_traits/is_swappable.h \
+third_party/libcxx/__type_traits/is_trivial.h \
+third_party/libcxx/__type_traits/is_trivially_assignable.h \
+third_party/libcxx/__type_traits/is_trivially_constructible.h \
+third_party/libcxx/__type_traits/is_trivially_copy_assignable.h \
+third_party/libcxx/__type_traits/is_trivially_copy_constructible.h \
+third_party/libcxx/__type_traits/is_trivially_copyable.h \
+third_party/libcxx/__type_traits/is_trivially_default_constructible.h \
+third_party/libcxx/__type_traits/is_trivially_destructible.h \
+third_party/libcxx/__type_traits/is_trivially_lexicographically_comparable.h \
+third_party/libcxx/__type_traits/is_trivially_move_assignable.h \
+third_party/libcxx/__type_traits/is_trivially_move_constructible.h \
+third_party/libcxx/__type_traits/is_unbounded_array.h \
+third_party/libcxx/__type_traits/is_union.h \
+third_party/libcxx/__type_traits/is_unsigned.h \
+third_party/libcxx/__type_traits/is_unsigned_integer.h \
+third_party/libcxx/__type_traits/is_valid_expansion.h \
+third_party/libcxx/__type_traits/is_void.h \
+third_party/libcxx/__type_traits/is_volatile.h \
+third_party/libcxx/__type_traits/lazy.h \
+third_party/libcxx/__type_traits/make_32_64_or_128_bit.h \
+third_party/libcxx/__type_traits/make_const_lvalue_ref.h \
+third_party/libcxx/__type_traits/make_signed.h \
+third_party/libcxx/__type_traits/make_unsigned.h \
+third_party/libcxx/__type_traits/maybe_const.h \
+third_party/libcxx/__type_traits/nat.h \
+third_party/libcxx/__type_traits/negation.h \
+third_party/libcxx/__type_traits/noexcept_move_assign_container.h \
+third_party/libcxx/__type_traits/predicate_traits.h \
+third_party/libcxx/__type_traits/promote.h \
+third_party/libcxx/__type_traits/rank.h \
+third_party/libcxx/__type_traits/remove_all_extents.h \
+third_party/libcxx/__type_traits/remove_const.h \
+third_party/libcxx/__type_traits/remove_const_ref.h \
+third_party/libcxx/__type_traits/remove_cv.h \
+third_party/libcxx/__type_traits/remove_cvref.h \
+third_party/libcxx/__type_traits/remove_extent.h \
+third_party/libcxx/__type_traits/remove_pointer.h \
+third_party/libcxx/__type_traits/remove_reference.h \
+third_party/libcxx/__type_traits/remove_volatile.h \
+third_party/libcxx/__type_traits/result_of.h \
+third_party/libcxx/__type_traits/strip_signature.h \
+third_party/libcxx/__type_traits/type_identity.h \
+third_party/libcxx/__type_traits/type_list.h \
+third_party/libcxx/__type_traits/underlying_type.h \
+third_party/libcxx/__type_traits/unwrap_ref.h \
+third_party/libcxx/__type_traits/void_t.h \
+third_party/libcxx/__undef_macros \
+third_party/libcxx/__utility/as_const.h \
+third_party/libcxx/__utility/auto_cast.h \
+third_party/libcxx/__utility/cmp.h \
+third_party/libcxx/__utility/convert_to_integral.h \
+third_party/libcxx/__utility/declval.h \
+third_party/libcxx/__utility/exception_guard.h \
+third_party/libcxx/__utility/exchange.h \
+third_party/libcxx/__utility/forward.h \
+third_party/libcxx/__utility/forward_like.h \
+third_party/libcxx/__utility/in_place.h \
+third_party/libcxx/__utility/integer_sequence.h \
+third_party/libcxx/__utility/move.h \
+third_party/libcxx/__utility/pair.h \
+third_party/libcxx/__utility/piecewise_construct.h \
+third_party/libcxx/__utility/priority_tag.h \
+third_party/libcxx/__utility/rel_ops.h \
+third_party/libcxx/__utility/swap.h \
+third_party/libcxx/__utility/terminate_on_exception.h \
+third_party/libcxx/__utility/to_underlying.h \
+third_party/libcxx/__utility/unreachable.h \
+third_party/libcxx/__variant/monostate.h \
+third_party/libcxx/__verbose_abort \
+third_party/libcxx/algorithm \
+third_party/libcxx/any \
+third_party/libcxx/array \
+third_party/libcxx/atomic \
+third_party/libcxx/barrier \
+third_party/libcxx/bit \
+third_party/libcxx/bitset \
+third_party/libcxx/cassert \
+third_party/libcxx/ccomplex \
+third_party/libcxx/cctype \
+third_party/libcxx/cerrno \
+third_party/libcxx/cfenv \
+third_party/libcxx/cfloat \
+third_party/libcxx/charconv \
+third_party/libcxx/chrono \
+third_party/libcxx/cinttypes \
+third_party/libcxx/ciso646 \
+third_party/libcxx/climits \
+third_party/libcxx/clocale \
+third_party/libcxx/cmath \
+third_party/libcxx/codecvt \
+third_party/libcxx/compare \
+third_party/libcxx/complex \
+third_party/libcxx/concepts \
+third_party/libcxx/condition_variable \
+third_party/libcxx/coroutine \
+third_party/libcxx/csetjmp \
+third_party/libcxx/csignal \
+third_party/libcxx/cstdarg \
+third_party/libcxx/cstdbool \
+third_party/libcxx/cstddef \
+third_party/libcxx/cstdint \
+third_party/libcxx/cstdio \
+third_party/libcxx/cstdlib \
+third_party/libcxx/cstring \
+third_party/libcxx/ctgmath \
+third_party/libcxx/ctime \
+third_party/libcxx/cuchar \
+third_party/libcxx/cwchar \
+third_party/libcxx/cwctype \
+third_party/libcxx/deque \
+third_party/libcxx/exception \
+third_party/libcxx/execution \
+third_party/libcxx/expected \
+third_party/libcxx/experimental/__config \
+third_party/libcxx/experimental/__memory \
+third_party/libcxx/experimental/deque \
+third_party/libcxx/experimental/forward_list \
+third_party/libcxx/experimental/iterator \
+third_party/libcxx/experimental/list \
+third_party/libcxx/experimental/map \
+third_party/libcxx/experimental/memory_resource \
+third_party/libcxx/experimental/propagate_const \
+third_party/libcxx/experimental/regex \
+third_party/libcxx/experimental/set \
+third_party/libcxx/experimental/simd \
+third_party/libcxx/experimental/string \
+third_party/libcxx/experimental/type_traits \
+third_party/libcxx/experimental/unordered_map \
+third_party/libcxx/experimental/unordered_set \
+third_party/libcxx/experimental/utility \
+third_party/libcxx/experimental/vector \
+third_party/libcxx/ext/__hash \
+third_party/libcxx/filesystem \
+third_party/libcxx/format \
+third_party/libcxx/forward_list \
+third_party/libcxx/fstream \
+third_party/libcxx/functional \
+third_party/libcxx/future \
+third_party/libcxx/initializer_list \
+third_party/libcxx/iomanip \
+third_party/libcxx/ios \
+third_party/libcxx/iosfwd \
+third_party/libcxx/iostream \
+third_party/libcxx/istream \
+third_party/libcxx/iterator \
+third_party/libcxx/latch \
+third_party/libcxx/limits \
+third_party/libcxx/list \
+third_party/libcxx/locale \
+third_party/libcxx/map \
+third_party/libcxx/mdspan \
+third_party/libcxx/memory \
+third_party/libcxx/memory_resource \
+third_party/libcxx/mutex \
+third_party/libcxx/new \
+third_party/libcxx/numbers \
+third_party/libcxx/numeric \
+third_party/libcxx/optional \
+third_party/libcxx/ostream \
+third_party/libcxx/queue \
+third_party/libcxx/random \
+third_party/libcxx/ranges \
+third_party/libcxx/ratio \
+third_party/libcxx/regex \
+third_party/libcxx/scoped_allocator \
+third_party/libcxx/semaphore \
+third_party/libcxx/set \
+third_party/libcxx/shared_mutex \
+third_party/libcxx/source_location \
+third_party/libcxx/span \
+third_party/libcxx/sstream \
+third_party/libcxx/stack \
+third_party/libcxx/stdexcept \
+third_party/libcxx/streambuf \
+third_party/libcxx/string \
+third_party/libcxx/string_view \
+third_party/libcxx/strstream \
+third_party/libcxx/system_error \
+third_party/libcxx/thread \
+third_party/libcxx/tuple \
+third_party/libcxx/type_traits \
+third_party/libcxx/typeindex \
+third_party/libcxx/typeinfo \
+third_party/libcxx/unordered_map \
+third_party/libcxx/unordered_set \
+third_party/libcxx/utility \
+third_party/libcxx/valarray \
+third_party/libcxx/variant \
+third_party/libcxx/vector \
+third_party/libcxx/version \
 
-THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
-	third_party/libcxx/algorithm.cc				\
-	third_party/libcxx/any.cc				\
-	third_party/libcxx/charconv.cc				\
-	third_party/libcxx/chrono.cc				\
-	third_party/libcxx/condition_variable.cc		\
-	third_party/libcxx/condition_variable_destructor.cc	\
-	third_party/libcxx/directory_iterator.cc		\
-	third_party/libcxx/exception.cc				\
-	third_party/libcxx/functional.cc			\
-	third_party/libcxx/future.cc				\
-	third_party/libcxx/hash.cc				\
-	third_party/libcxx/ios.cc				\
-	third_party/libcxx/iostream.cc				\
-	third_party/libcxx/locale1.cc				\
-	third_party/libcxx/locale2.cc				\
-	third_party/libcxx/locale3.cc				\
-	third_party/libcxx/locale4.cc				\
-	third_party/libcxx/memory.cc				\
-	third_party/libcxx/mutex.cc				\
-	third_party/libcxx/new.cc				\
-	third_party/libcxx/operations.cc			\
-	third_party/libcxx/optional.cc				\
-	third_party/libcxx/random.cc				\
-	third_party/libcxx/regex.cc				\
-	third_party/libcxx/shared_mutex.cc			\
-	third_party/libcxx/stdexcept.cc				\
-	third_party/libcxx/string.cc				\
-	third_party/libcxx/strstream.cc				\
-	third_party/libcxx/system_error.cc			\
-	third_party/libcxx/thread.cc				\
-	third_party/libcxx/valarray.cc				\
-	third_party/libcxx/variant.cc				\
-	third_party/libcxx/vector.cc
+THIRD_PARTY_LIBCXX_A_INCS = \
+third_party/libcxx/__algorithm/pstl_any_all_none_of.h \
+third_party/libcxx/__algorithm/pstl_backend.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backend.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/any_of.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/backend.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/fill.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/find_if.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/for_each.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/merge.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/serial.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/thread.h \
+third_party/libcxx/__algorithm/pstl_backends/cpu_backends/transform.h \
+third_party/libcxx/__algorithm/pstl_copy.h \
+third_party/libcxx/__algorithm/pstl_fill.h \
+third_party/libcxx/__algorithm/pstl_find.h \
+third_party/libcxx/__algorithm/pstl_for_each.h \
+third_party/libcxx/__algorithm/pstl_frontend_dispatch.h \
+third_party/libcxx/__algorithm/pstl_merge.h \
+third_party/libcxx/__algorithm/pstl_transform.h \
+third_party/libcxx/__locale_dir/locale_base_api/bsd_locale_defaults.h \
+third_party/libcxx/__locale_dir/locale_base_api/bsd_locale_fallbacks.h \
+third_party/libcxx/__locale_dir/locale_base_api/locale_guard.h \
+third_party/libcxx/__mbstate_t.h \
+third_party/libcxx/__pstl/internal/algorithm_fwd.h \
+third_party/libcxx/__pstl/internal/algorithm_impl.h \
+third_party/libcxx/__pstl/internal/execution_defs.h \
+third_party/libcxx/__pstl/internal/execution_impl.h \
+third_party/libcxx/__pstl/internal/glue_algorithm_defs.h \
+third_party/libcxx/__pstl/internal/glue_algorithm_impl.h \
+third_party/libcxx/__pstl/internal/glue_memory_defs.h \
+third_party/libcxx/__pstl/internal/glue_memory_impl.h \
+third_party/libcxx/__pstl/internal/glue_numeric_defs.h \
+third_party/libcxx/__pstl/internal/glue_numeric_impl.h \
+third_party/libcxx/__pstl/internal/memory_impl.h \
+third_party/libcxx/__pstl/internal/numeric_fwd.h \
+third_party/libcxx/__pstl/internal/numeric_impl.h \
+third_party/libcxx/__pstl/internal/omp/parallel_for.h \
+third_party/libcxx/__pstl/internal/omp/parallel_for_each.h \
+third_party/libcxx/__pstl/internal/omp/parallel_invoke.h \
+third_party/libcxx/__pstl/internal/omp/parallel_merge.h \
+third_party/libcxx/__pstl/internal/omp/parallel_reduce.h \
+third_party/libcxx/__pstl/internal/omp/parallel_scan.h \
+third_party/libcxx/__pstl/internal/omp/parallel_stable_partial_sort.h \
+third_party/libcxx/__pstl/internal/omp/parallel_stable_sort.h \
+third_party/libcxx/__pstl/internal/omp/parallel_transform_reduce.h \
+third_party/libcxx/__pstl/internal/omp/parallel_transform_scan.h \
+third_party/libcxx/__pstl/internal/omp/util.h \
+third_party/libcxx/__pstl/internal/parallel_backend.h \
+third_party/libcxx/__pstl/internal/parallel_backend_omp.h \
+third_party/libcxx/__pstl/internal/parallel_backend_serial.h \
+third_party/libcxx/__pstl/internal/parallel_backend_tbb.h \
+third_party/libcxx/__pstl/internal/parallel_backend_utils.h \
+third_party/libcxx/__pstl/internal/unseq_backend_simd.h \
+third_party/libcxx/__pstl/internal/utils.h \
+third_party/libcxx/__pstl_algorithm \
+third_party/libcxx/__pstl_config_site \
+third_party/libcxx/__pstl_memory \
+third_party/libcxx/__pstl_numeric \
+third_party/libcxx/__support/android/locale_bionic.h \
+third_party/libcxx/__support/musl/xlocale.h \
+third_party/libcxx/complex.h \
+third_party/libcxx/ctype.h \
+third_party/libcxx/errno.h \
+third_party/libcxx/fenv.h \
+third_party/libcxx/float.h \
+third_party/libcxx/inttypes.h \
+third_party/libcxx/limits.h \
+third_party/libcxx/locale.h \
+third_party/libcxx/math.h \
+third_party/libcxx/setjmp.h \
+third_party/libcxx/src/chrono_system_time_init.h \
+third_party/libcxx/src/experimental/memory_resource_init_helper.h \
+third_party/libcxx/src/filesystem/filesystem_common.h \
+third_party/libcxx/src/filesystem/posix_compat.h \
+third_party/libcxx/src/include/apple_availability.h \
+third_party/libcxx/src/include/atomic_support.h \
+third_party/libcxx/src/include/config_elast.h \
+third_party/libcxx/src/include/refstring.h \
+third_party/libcxx/src/include/ryu/common.h \
+third_party/libcxx/src/include/ryu/d2fixed.h \
+third_party/libcxx/src/include/ryu/d2fixed_full_table.h \
+third_party/libcxx/src/include/ryu/d2s.h \
+third_party/libcxx/src/include/ryu/d2s_full_table.h \
+third_party/libcxx/src/include/ryu/d2s_intrinsics.h \
+third_party/libcxx/src/include/ryu/digit_table.h \
+third_party/libcxx/src/include/ryu/f2s.h \
+third_party/libcxx/src/include/ryu/ryu.h \
+third_party/libcxx/src/include/sso_allocator.h \
+third_party/libcxx/src/include/to_chars_floating_point.h \
+third_party/libcxx/src/iostream_init.h \
+third_party/libcxx/src/memory_resource_init_helper.h \
+third_party/libcxx/src/std_stream.h \
+third_party/libcxx/src/support/runtime/exception_fallback.ipp \
+third_party/libcxx/src/support/runtime/exception_glibcxx.ipp \
+third_party/libcxx/src/support/runtime/exception_libcxxabi.ipp \
+third_party/libcxx/src/support/runtime/exception_libcxxrt.ipp \
+third_party/libcxx/src/support/runtime/exception_msvc.ipp \
+third_party/libcxx/src/support/runtime/exception_pointer_cxxabi.ipp \
+third_party/libcxx/src/support/runtime/exception_pointer_glibcxx.ipp \
+third_party/libcxx/src/support/runtime/exception_pointer_msvc.ipp \
+third_party/libcxx/src/support/runtime/exception_pointer_unimplemented.ipp \
+third_party/libcxx/src/support/runtime/new_handler_fallback.ipp \
+third_party/libcxx/src/support/runtime/stdexcept_default.ipp \
+third_party/libcxx/src/support/runtime/stdexcept_vcruntime.ipp \
+third_party/libcxx/stdatomic.h \
+third_party/libcxx/stdbool.h \
+third_party/libcxx/stddef.h \
+third_party/libcxx/stdint.h \
+third_party/libcxx/stdio.h \
+third_party/libcxx/stdlib.h \
+third_party/libcxx/string.h \
+third_party/libcxx/tgmath.h \
+third_party/libcxx/uchar.h \
+third_party/libcxx/wchar.h \
+third_party/libcxx/wctype.h \
+third_party/libcxx/libcxx.imp \
+third_party/libcxx/module.modulemap \
 
-THIRD_PARTY_LIBCXX_A_SRCS =					\
-	$(THIRD_PARTY_LIBCXX_A_SRCS_S)				\
-	$(THIRD_PARTY_LIBCXX_A_SRCS_CC)
+THIRD_PARTY_LIBCXX_A_SRCS = \
+third_party/libcxx/src/algorithm.cpp \
+third_party/libcxx/src/any.cpp \
+third_party/libcxx/src/atomic.cpp \
+third_party/libcxx/src/barrier.cpp \
+third_party/libcxx/src/bind.cpp \
+third_party/libcxx/src/charconv.cpp \
+third_party/libcxx/src/chrono.cpp \
+third_party/libcxx/src/condition_variable.cpp \
+third_party/libcxx/src/condition_variable_destructor.cpp \
+third_party/libcxx/src/debug.cpp \
+third_party/libcxx/src/exception.cpp \
+third_party/libcxx/src/experimental/memory_resource.cpp \
+third_party/libcxx/src/filesystem/directory_iterator.cpp \
+third_party/libcxx/src/filesystem/int128_builtins.cpp \
+third_party/libcxx/src/filesystem/operations.cpp \
+third_party/libcxx/src/functional.cpp \
+third_party/libcxx/src/future.cpp \
+third_party/libcxx/src/hash.cpp \
+third_party/libcxx/src/ios.cpp \
+third_party/libcxx/src/ios.instantiations.cpp \
+third_party/libcxx/src/iostream.cpp \
+third_party/libcxx/src/legacy_debug_handler.cpp \
+third_party/libcxx/src/legacy_pointer_safety.cpp \
+third_party/libcxx/src/locale.cpp \
+third_party/libcxx/src/memory.cpp \
+third_party/libcxx/src/memory_resource.cpp \
+third_party/libcxx/src/mutex.cpp \
+third_party/libcxx/src/mutex_destructor.cpp \
+third_party/libcxx/src/new.cpp \
+third_party/libcxx/src/optional.cpp \
+third_party/libcxx/src/random.cpp \
+third_party/libcxx/src/regex.cpp \
+third_party/libcxx/src/ryu/d2fixed.cpp \
+third_party/libcxx/src/ryu/d2s.cpp \
+third_party/libcxx/src/ryu/f2s.cpp \
+third_party/libcxx/src/shared_mutex.cpp \
+third_party/libcxx/src/stdexcept.cpp \
+third_party/libcxx/src/string.cpp \
+third_party/libcxx/src/strstream.cpp \
+third_party/libcxx/src/system_error.cpp \
+third_party/libcxx/src/thread.cpp \
+third_party/libcxx/src/typeinfo.cpp \
+third_party/libcxx/src/valarray.cpp \
+third_party/libcxx/src/variant.cpp \
+third_party/libcxx/src/vector.cpp \
+third_party/libcxx/src/verbose_abort.cpp
 
 THIRD_PARTY_LIBCXX_A_OBJS =					\
-	$(THIRD_PARTY_LIBCXX_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(THIRD_PARTY_LIBCXX_A_SRCS_CC:%.cc=o/$(MODE)/%.o)
+	$(THIRD_PARTY_LIBCXX_A_SRCS:%.cpp=o/$(MODE)/%.o)
 
 THIRD_PARTY_LIBCXX_A_CHECKS =					\
 	$(THIRD_PARTY_LIBCXX_A).pkg				\
@@ -197,13 +1077,14 @@ THIRD_PARTY_LIBCXX_A_DIRECTDEPS =				\
 	LIBC_SOCK						\
 	LIBC_STR						\
 	LIBC_SYSV						\
-	LIBC_TIME						\
 	LIBC_THREAD						\
 	LIBC_TINYMATH						\
 	THIRD_PARTY_COMPILER_RT					\
 	THIRD_PARTY_GDTOA					\
 	THIRD_PARTY_LIBCXXABI					\
-	THIRD_PARTY_LIBUNWIND
+	THIRD_PARTY_LIBUNWIND					\
+	THIRD_PARTY_MUSL					\
+	THIRD_PARTY_TZ
 
 THIRD_PARTY_LIBCXX_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LIBCXX_A_DIRECTDEPS),$($(x))))
@@ -224,7 +1105,8 @@ $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
 			-fexceptions				\
 			-frtti					\
 			-Wno-alloc-size-larger-than		\
-			-DLIBCXX_BUILDING_LIBCXXABI
+			-DLIBCXX_BUILDING_LIBCXXABI		\
+			-D_LIBCPP_BUILDING_LIBRARY
 
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))
 THIRD_PARTY_LIBCXX_SRCS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_SRCS))

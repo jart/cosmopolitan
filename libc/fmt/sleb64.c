@@ -45,7 +45,7 @@ char *sleb64(char *p, int64_t x) {
       *p++ = c;
       return p;
     } else {
-      *p++ = c | 64;
+      *p++ = c | 128;
     }
   }
 }

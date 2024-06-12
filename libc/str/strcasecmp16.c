@@ -29,6 +29,7 @@
 int strcasecmp16(const char16_t *l, const char16_t *r) {
   int x, y;
   size_t i = 0;
-  while ((x = towlower(l[i])) == (y = towlower(r[i])) && r[i]) ++i;
+  while ((x = towlower(l[i])) == (y = towlower(r[i])) && r[i])
+    ++i;
   return x - y;
 }

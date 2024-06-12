@@ -21,9 +21,12 @@
 #include "libc/sysv/consts/itimer.h"
 
 const char *(DescribeItimer)(char buf[12], int which) {
-  if (which == ITIMER_REAL) return "ITIMER_REAL";
-  if (which == ITIMER_VIRTUAL) return "ITIMER_VIRTUAL";
-  if (which == ITIMER_PROF) return "ITIMER_PROF";
+  if (which == ITIMER_REAL)
+    return "ITIMER_REAL";
+  if (which == ITIMER_VIRTUAL)
+    return "ITIMER_VIRTUAL";
+  if (which == ITIMER_PROF)
+    return "ITIMER_PROF";
   FormatInt32(buf, which);
   return buf;
 }

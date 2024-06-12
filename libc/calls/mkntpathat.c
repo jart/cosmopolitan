@@ -33,14 +33,19 @@ static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
   size_t n;
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
-  if (!isutf8(path, -1)) return eilseq();  // thwart overlong nul in conversion
-  if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
-  if (!filelen) return enoent();
+  if (!isutf8(path, -1))
+    return eilseq();  // thwart overlong nul in conversion
+  if ((filelen = __mkntpath2(path, file, flags)) == -1)
+    return -1;
+  if (!filelen)
+    return enoent();
   if (file[0] != u'\\' && dirhand != AT_FDCWD) {  // ProTip: \\?\C:\foo
     dirlen = GetFinalPathNameByHandle(dirhand, dir, ARRAYLEN(dir),
                                       kNtFileNameNormalized | kNtVolumeNameDos);
-    if (!dirlen) return __winerr();
-    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) return enametoolong();
+    if (!dirlen)
+      return __winerr();
+    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir))
+      return enametoolong();
     dir[dirlen] = u'\\';
     memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
     memcpy(file, dir, ((n = dirlen + 1 + filelen) + 1) * sizeof(char16_t));

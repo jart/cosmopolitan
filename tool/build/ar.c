@@ -29,11 +29,11 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -102,7 +102,8 @@ static wontreturn void Die(const char *path, const char *reason) {
 
 static wontreturn void SysDie(const char *path, const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "Unknown error";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "Unknown error";
   tinyprint(2, path, ": ", func, ": ", errstr, "\n", NULL);
   exit(1);
 }
@@ -180,11 +181,14 @@ static void *reballoc(void *p, size_t n, size_t z) {
   size_t c;
   assert(n >= 0);
   assert(z >= 1 && !(z & (z - 1)));
-  if (ckd_mul(&n, n, z)) n = HEAP_SIZE;
-  if (!p) return balloc(~n, z);
+  if (ckd_mul(&n, n, z))
+    n = HEAP_SIZE;
+  if (!p)
+    return balloc(~n, z);
   memcpy(&c, (char *)p - sizeof(c), sizeof(c));
   assert(c >= z && c < HEAP_SIZE && !(c & (c - 1)));
-  if (n <= c) return p;
+  if (n <= c)
+    return p;
   return memcpy(balloc(~n, z), p, c);
 }
 
@@ -264,7 +268,8 @@ static int64_t CopyFileOrDie(const char *inpath, int infd,  //
   for (mode = CFR, toto = 0;; toto += exchanged) {
     if (mode == CFR) {
       got = copy_file_range(infd, 0, outfd, 0, 4194304, 0);
-      if (!got) break;
+      if (!got)
+        break;
       if (got != -1) {
         exchanged = got;
       } else if (errno == EXDEV ||       // different partitions
@@ -278,11 +283,15 @@ static int64_t CopyFileOrDie(const char *inpath, int infd,  //
       }
     } else {
       got = read(infd, buf, sizeof(buf));
-      if (!got) break;
-      if (got == -1) SysDie(inpath, "read");
+      if (!got)
+        break;
+      if (got == -1)
+        SysDie(inpath, "read");
       wrote = write(outfd, buf, got);
-      if (wrote == -1) SysDie(outpath, "write");
-      if (wrote != got) Die(outpath, "posix violated");
+      if (wrote == -1)
+        SysDie(outpath, "write");
+      if (wrote != got)
+        Die(outpath, "posix violated");
       exchanged = wrote;
     }
   }
@@ -326,7 +335,8 @@ int main(int argc, char *argv[]) {
   // on modern systems that it isn't worth supporting the byzantine
   // standard posix ar flags intended to improve cassette tape perf
   SortChars(flags, strlen(flags));
-  if (*flags == 'D') ++flags;
+  if (*flags == 'D')
+    ++flags;
   if (!IsEqual(flags, "cr") &&    //
       !IsEqual(flags, "cru") &&   //
       !IsEqual(flags, "crsu") &&  //
@@ -349,14 +359,22 @@ int main(int argc, char *argv[]) {
   for (objectid = 0;;) {
     struct stat st;
     const char *arg;
-    if (!(arg = getargs_next(&ga))) break;
-    if (endswith(arg, "/")) continue;
-    if (endswith(arg, ".pkg")) continue;
-    if (stat(arg, &st)) SysDie(arg, "stat");
-    if (S_ISDIR(st.st_mode)) continue;
-    if (!st.st_size) Die(arg, "file is empty");
-    if (st.st_size > 0x7ffff000) Die(arg, "file too large");
-    if ((fd = open(arg, O_RDONLY)) == -1) SysDie(arg, "open");
+    if (!(arg = getargs_next(&ga)))
+      break;
+    if (endswith(arg, "/"))
+      continue;
+    if (endswith(arg, ".pkg"))
+      continue;
+    if (stat(arg, &st))
+      SysDie(arg, "stat");
+    if (S_ISDIR(st.st_mode))
+      continue;
+    if (!st.st_size)
+      Die(arg, "file is empty");
+    if (st.st_size > 0x7ffff000)
+      Die(arg, "file too large");
+    if ((fd = open(arg, O_RDONLY)) == -1)
+      SysDie(arg, "open");
     AppendArg(&args, StrDup(arg));
     AppendInt(&sizes, st.st_size);
     AppendInt(&modes, st.st_mode);
@@ -374,25 +392,35 @@ int main(int argc, char *argv[]) {
     }
     size_t mapsize = st.st_size;
     void *elf = mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (elf == MAP_FAILED) SysDie(arg, "mmap");
-    if (!IsElf64Binary(elf, mapsize)) Die(arg, "not an elf64 binary");
+    if (elf == MAP_FAILED)
+      SysDie(arg, "mmap");
+    if (!IsElf64Binary(elf, mapsize))
+      Die(arg, "not an elf64 binary");
     char *strs = GetElfStringTable(elf, mapsize, ".strtab");
-    if (!strs) Die(arg, "elf .strtab not found");
+    if (!strs)
+      Die(arg, "elf .strtab not found");
     Elf64_Xword symcount;
     Elf64_Shdr *symsec = GetElfSymbolTable(elf, mapsize, SHT_SYMTAB, &symcount);
     Elf64_Sym *syms = GetElfSectionAddress(elf, mapsize, symsec);
-    if (!syms) Die(arg, "elf symbol table not found");
+    if (!syms)
+      Die(arg, "elf symbol table not found");
     for (Elf64_Xword j = symsec->sh_info; j < symcount; ++j) {
-      if (!syms[j].st_name) continue;
-      if (syms[j].st_shndx == SHN_UNDEF) continue;
-      if (syms[j].st_shndx == SHN_COMMON) continue;
+      if (!syms[j].st_name)
+        continue;
+      if (syms[j].st_shndx == SHN_UNDEF)
+        continue;
+      if (syms[j].st_shndx == SHN_COMMON)
+        continue;
       const char *symname = GetElfString(elf, mapsize, strs, syms[j].st_name);
-      if (!symname) Die(arg, "elf symbol name corrupted");
+      if (!symname)
+        Die(arg, "elf symbol name corrupted");
       AppendBytes(&symbols, symname, strlen(symname) + 1);
       AppendInt(&symnames, objectid);
     }
-    if (munmap(elf, mapsize)) SysDie(arg, "munmap");
-    if (close(fd)) SysDie(arg, "close");
+    if (munmap(elf, mapsize))
+      SysDie(arg, "munmap");
+    if (close(fd))
+      SysDie(arg, "close");
     ++objectid;
   }
   getargs_destroy(&ga);

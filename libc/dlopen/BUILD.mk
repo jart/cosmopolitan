@@ -54,6 +54,8 @@ $(LIBC_DLOPEN_A_OBJS): private						\
 o/$(MODE)/libc/dlopen/foreign_tramp.o: libc/dlopen/foreign_tramp.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
+$(LIBC_DLOPEN_A_OBJS): private COPTS += -fno-sanitize=address
+
 LIBC_DLOPEN_LIBS = $(foreach x,$(LIBC_DLOPEN_ARTIFACTS),$($(x)))
 LIBC_DLOPEN_SRCS = $(foreach x,$(LIBC_DLOPEN_ARTIFACTS),$($(x)_SRCS))
 LIBC_DLOPEN_HDRS = $(foreach x,$(LIBC_DLOPEN_ARTIFACTS),$($(x)_HDRS))

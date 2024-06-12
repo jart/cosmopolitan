@@ -27,18 +27,21 @@ struct Lines {
   struct Line {
     char *p;
     size_t n;
-  } * p;
+  } *p;
 };
 
 static char *SkipEmptyFirstLine(char *p) {
   int i = 0;
-  while (p[i] == ' ' || p[i] == '\t') ++i;
+  while (p[i] == ' ' || p[i] == '\t')
+    ++i;
   return p[i] == '\n' ? p + i + 1 : p;
 }
 
 static void DeleteLastEmptyLine(char *p, size_t n) {
-  while (n && (p[n - 1] == ' ' || p[n - 1] == '\t')) --n;
-  if (n && p[n - 1] == '\n') p[n - 1] = '\0';
+  while (n && (p[n - 1] == ' ' || p[n - 1] == '\t'))
+    --n;
+  if (n && p[n - 1] == '\n')
+    p[n - 1] = '\0';
 }
 
 static void AppendLine(struct Lines *lines) {
@@ -88,7 +91,8 @@ static unsigned GetMinPrefixLen(struct Lines *lines,
   for (m = -1, i = 0; i < lines->n; ++i) {
     if (lines->p[i].n) {
       n = GetPrefixLen(lines->p[i].p, lines->p[i].n);
-      if (n < m) m = n;
+      if (n < m)
+        m = n;
     }
   }
   return m == -1 ? 0 : m;
@@ -112,7 +116,8 @@ static void SplitLines(struct Lines *lines, char *p) {
     AppendLine(lines);
     lines->p[lines->n - 1].p = p;
     lines->p[lines->n - 1].n = (q = strchr(p, '\n')) ? q - p : strlen(p);
-    if (!q) break;
+    if (!q)
+      break;
     p = q + 1;
   }
   RemovePrefixes(lines, GetMinPrefixLen(lines, GetSpaceStarPrefixLen));
@@ -175,7 +180,8 @@ static int ExtractText(struct Javadown *jd, struct Lines *lines, int i) {
   char *p;
   size_t n;
   for (p = NULL, n = j = 0; i + j < lines->n; ++j) {
-    if (lines->p[i + j].n && lines->p[i + j].p[0] == '@') break;
+    if (lines->p[i + j].n && lines->p[i + j].p[0] == '@')
+      break;
     if (j) {
       p = realloc(p, ++n);
       p[n - 1] = '\n';
@@ -194,11 +200,14 @@ static void ExtractTags(struct Javadown *jd, struct Lines *lines, int i) {
   char *tag, *text, *p2;
   unsigned taglen, textlen, n2;
   for (; i < lines->n; ++i) {
-    if (!lines->p[i].n) continue;
-    if (lines->p[i].p[0] != '@') continue;
+    if (!lines->p[i].n)
+      continue;
+    if (lines->p[i].p[0] != '@')
+      continue;
     tag = lines->p[i].p + 1;
     taglen = GetTagLen(tag, lines->p[i].n - 1);
-    if (!taglen) continue;
+    if (!taglen)
+      continue;
     text = tag + taglen;
     tag = strndup(tag, taglen);
     textlen = lines->p[i].n - 1 - taglen;

@@ -1,0 +1,25 @@
+DESCRIPTION
+
+  tz is a library for handling time zones
+
+LICENSE
+
+  See LICENSE file
+
+ORIGIN
+
+  git@github.com:eggert/tz.git
+  a75a6251d30b28a7badc1763296205adf67a5081
+  Paul Eggert <eggert@cs.ucla.edu>
+
+BUILD PROCESS
+
+  make -j8 install BACKWARD= DESTDIR=stage REDO=posix_only
+
+LOCAL CHANGES
+
+  - Add aliases for legacy Cosmo timezone names.
+  - Add yoinks for embedding time zones in binary.
+  - Make localtime() posix thread cancelation safe.
+  - Improve readabiilty with "localtime_" prefixes.
+  - Automate the TZ environment variable on Windows.

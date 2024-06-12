@@ -35,10 +35,13 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sock/wsaid.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 #ifdef __x86_64__
 #include "libc/sock/yoink.inc"
+
+__msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 
 struct ConnectArgs {
   const void *addr;
@@ -63,7 +66,8 @@ void sys_connect_nt_cleanup(struct Fd *f, bool cancel) {
   struct NtOverlapped *overlap;
   if ((overlap = f->connect_op)) {
     uint32_t got, flags;
-    if (cancel) CancelIoEx(f->handle, overlap);
+    if (cancel)
+      CancelIoEx(f->handle, overlap);
     if (WSAGetOverlappedResult(f->handle, overlap, &got, cancel, &flags) ||
         WSAGetLastError() != kNtErrorIoIncomplete) {
       WSACloseEvent(overlap->hEvent);
@@ -92,13 +96,15 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
   cosmo_once(&g_connectex.once, connectex_init);
 
   // fail if previous connect() is still in progress
-  if (f->connect_op) return ealready();
+  if (f->connect_op)
+    return ealready();
 
   // ConnectEx() requires bind() be called beforehand
   if (!f->isbound) {
     struct sockaddr_storage ss = {0};
     ss.ss_family = ((struct sockaddr *)addr)->sa_family;
-    if (sys_bind_nt(f, &ss, sizeof(ss)) == -1) return -1;
+    if (sys_bind_nt(f, &ss, sizeof(ss)) == -1)
+      return -1;
   }
 
   // perform normal connect
@@ -110,6 +116,8 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
       // return ETIMEDOUT if SO_SNDTIMEO elapsed
       // note that Linux will return EINPROGRESS
       errno = etimedout();
+    } else if (!rc) {
+      __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
     }
     return rc;
   }
@@ -119,7 +127,8 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
   // 2. poll(POLLOUT)
   bool32 ok;
   struct NtOverlapped *overlap = calloc(1, sizeof(struct NtOverlapped));
-  if (!overlap) return -1;
+  if (!overlap)
+    return -1;
   overlap->hEvent = WSACreateEvent();
   ok = g_connectex.lpConnectEx(f->handle, addr, addrsize, 0, 0, 0, overlap);
   if (ok) {
@@ -127,7 +136,11 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
     ok = WSAGetOverlappedResult(f->handle, overlap, &dwBytes, false, &dwFlags);
     WSACloseEvent(overlap->hEvent);
     free(overlap);
-    return ok ? 0 : __winsockerr();
+    if (!ok) {
+      return __winsockerr();
+    }
+    __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
+    return 0;
   } else if (WSAGetLastError() == kNtErrorIoPending) {
     f->connect_op = overlap;
     return einprogress();

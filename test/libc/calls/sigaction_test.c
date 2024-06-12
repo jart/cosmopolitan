@@ -81,7 +81,7 @@ void PromisedLand(void *arg) {
   pthread_exit(arg);
 }
 
-void Teleporter(int sig, struct siginfo *si, void *ctx) {
+void Teleporter(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
   sigaddset(&uc->uc_sigmask, SIGUSR1);
   uc->uc_mcontext.PC = (uintptr_t)PromisedLand;
@@ -124,7 +124,8 @@ TEST(sigaction, raise) {
 // test kill()
 
 TEST(sigaction, testPingPongParentChildWithSigint) {
-  if (IsNetbsd()) return;  // TODO: what's up with runitd on netbsd?
+  if (IsNetbsd())
+    return;  // TODO: what's up with runitd on netbsd?
   int pid, status;
   sigset_t blockint, oldmask;
   struct sigaction oldint;
@@ -176,7 +177,7 @@ TEST(sigaction, testPingPongParentChildWithSigint) {
 
 volatile int trapeax;
 
-void OnTrap(int sig, struct siginfo *si, void *vctx) {
+void OnTrap(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   trapeax = ctx->uc_mcontext.rax;
@@ -202,7 +203,7 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
   ctx->uc_mcontext.rip += xedd.length;
 }
 
-void OnFpe(int sig, struct siginfo *si, void *vctx) {
+void OnFpe(int sig, siginfo_t *si, void *vctx) {
   struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   SkipOverFaultingInstruction(ctx);
@@ -244,8 +245,10 @@ TEST(sigaction, ignoringSignalDiscardsSignal) {
 }
 
 TEST(sigaction, autoZombieSlayer) {
-  if (IsWindows()) return;
-  if (IsCygwin()) return;
+  if (IsWindows())
+    return;
+  if (IsCygwin())
+    return;
   int pid;
   struct sigaction sa;
   // make sure we're starting in expected state
@@ -253,7 +256,8 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_EQ(SIG_DFL, sa.sa_handler);
   // verify child becomes zombie
   ASSERT_NE(-1, (pid = fork()));
-  if (!pid) _Exit(0);
+  if (!pid)
+    _Exit(0);
   ASSERT_SYS(0, pid, wait(0));
   // enable automatic zombie slayer
   sa.sa_handler = SIG_IGN;
@@ -262,23 +266,27 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, &sa));
   // verify it works
   ASSERT_NE(-1, (pid = fork()));
-  if (!pid) _Exit(0);
+  if (!pid)
+    _Exit(0);
   // XXX: WSL does the wrong thing here.
-  if (__iswsl1()) usleep(10);
+  if (__iswsl1())
+    usleep(10);
   ASSERT_SYS(ECHILD, -1, wait(0));
   // clean up
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));
 }
 
 TEST(sigaction, enosys_returnsErrnoRatherThanSigsysByDefault) {
-  if (IsTiny()) return;     // systemfive.S disables the fix w/ tiny
-  if (IsOpenbsd()) return;  // TODO: Why does OpenBSD raise SIGABRT?
+  if (IsTiny())
+    return;  // systemfive.S disables the fix w/ tiny
+  if (IsOpenbsd())
+    return;  // TODO: Why does OpenBSD raise SIGABRT?
   ASSERT_SYS(ENOSYS, -1, sys_bogus());
 }
 
 sig_atomic_t gotusr1;
 
-void OnSigMask(int sig, struct siginfo *si, void *ctx) {
+void OnSigMask(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
   sigaddset(&uc->uc_sigmask, sig);
   gotusr1 = true;
@@ -321,7 +329,7 @@ TEST(sig_ign, discardsPendingSignalsEvenIfBlocked) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldmask, 0));
 }
 
-void AutoMask(int sig, struct siginfo *si, void *ctx) {
+void AutoMask(int sig, siginfo_t *si, void *ctx) {
   sigset_t ss;
   ucontext_t *uc = ctx;
   sigprocmask(SIG_SETMASK, 0, &ss);
@@ -339,7 +347,7 @@ TEST(sigaction, signalBeingDeliveredGetsAutoMasked) {
   EXPECT_FALSE(sigismember(&ss, SIGUSR2));  // original mask
 }
 
-void NoDefer(int sig, struct siginfo *si, void *ctx) {
+void NoDefer(int sig, siginfo_t *si, void *ctx) {
   sigset_t ss;
   ucontext_t *uc = ctx;
   sigprocmask(SIG_SETMASK, 0, &ss);
@@ -373,7 +381,8 @@ dontubsan dontasan int Segfault(char *p) {
 int (*pSegfault)(char *) = Segfault;
 
 TEST(sigaction, returnFromSegvHandler_loopsForever) {
-  if (IsXnu()) return;  // seems busted
+  if (IsXnu())
+    return;  // seems busted
   segfaults = _mapshared(sizeof(*segfaults));
   SPAWN(fork);
   signal(SIGSEGV, OnSegfault);

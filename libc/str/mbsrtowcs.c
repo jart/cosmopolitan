@@ -45,13 +45,15 @@ size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
     }
   }
   if (MB_CUR_MAX == 1) {
-    if (!ws) return strlen((const char *)s);
+    if (!ws)
+      return strlen((const char *)s);
     for (;;) {
       if (!wn) {
         *src = (const void *)s;
         return wn0;
       }
-      if (!*s) break;
+      if (!*s)
+        break;
       c = *s++;
       *ws++ = CODEUNIT(c);
       wn--;
@@ -67,7 +69,8 @@ size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
         wn--;
         continue;
       }
-      if (*s - SA > SB - SA) break;
+      if (*s - SA > SB - SA)
+        break;
       c = kMbBittab[*s++ - SA];
     resume0:
       if (OOB(c, *s)) {
@@ -103,7 +106,8 @@ size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
         wn--;
         continue;
       }
-      if (*s - SA > SB - SA) break;
+      if (*s - SA > SB - SA)
+        break;
       c = kMbBittab[*s++ - SA];
     resume:
       if (OOB(c, *s)) {
@@ -137,6 +141,7 @@ size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
     return wn0 - wn;
   }
   errno = EILSEQ;
-  if (ws) *src = (const void *)s;
+  if (ws)
+    *src = (const void *)s;
   return -1;
 }

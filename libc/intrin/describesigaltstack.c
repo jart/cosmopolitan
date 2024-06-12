@@ -24,8 +24,10 @@
 
 const char *(DescribeSigaltstk)(char buf[128], int rc,
                                 const struct sigaltstack *ss) {
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!ss)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(ss)) ||
       (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
     ksnprintf(buf, 128, "%p", ss);

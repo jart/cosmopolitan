@@ -70,6 +70,9 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
     if (__isfdkind(fd, kFdSocket)) {
       rc = sys_recvfrom_nt(fd, (struct iovec[]){{buf, size}}, 1, flags, &addr,
                            &addrsize);
+      if (rc != -1 && addrsize == sizeof(addr)) {
+        addrsize = 0;
+      }
     } else if (__isfdkind(fd, kFdFile) && !opt_out_srcaddr) { /* socketpair */
       if (!flags) {
         rc = sys_read_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
@@ -84,10 +87,14 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   }
 
   if (rc != -1) {
-    if (IsBsd()) {
-      __convert_bsd_to_sockaddr(&addr);
+    if (addrsize) {
+      if (IsBsd()) {
+        __convert_bsd_to_sockaddr(&addr);
+      }
+      __write_sockaddr(&addr, opt_out_srcaddr, opt_inout_srcaddrsize);
+    } else {
+      *opt_inout_srcaddrsize = 0;
     }
-    __write_sockaddr(&addr, opt_out_srcaddr, opt_inout_srcaddrsize);
   }
 
   END_CANCELATION_POINT;

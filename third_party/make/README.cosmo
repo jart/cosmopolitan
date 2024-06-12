@@ -15,6 +15,7 @@ LICENSE
 
 LOCAL CHANGES
 
+  - Introduce -T FILE, --time-log=FILE flag
   - Introduce $(uniq token...) native function
   - Remove code that forces slow path if not using /bin/sh
 

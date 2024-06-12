@@ -44,11 +44,16 @@ char *GetElfString(const Elf64_Ehdr *elf,  // validated
                    const char *strtab,     // validated
                    Elf64_Word i) {         // foreign
   const char *e;
-  if (!i) return "";
+  if (!i)
+    return "";
   e = (const char *)elf;
-  if (!strtab) return 0;
-  if (i >= mapsize) return 0;
-  if (strtab + i >= e + mapsize) return 0;
-  if (!memchr(strtab + i, 0, (e + mapsize) - (strtab + i))) return 0;
+  if (!strtab)
+    return 0;
+  if (i >= mapsize)
+    return 0;
+  if (strtab + i >= e + mapsize)
+    return 0;
+  if (!memchr(strtab + i, 0, (e + mapsize) - (strtab + i)))
+    return 0;
   return (char *)strtab + i;
 }

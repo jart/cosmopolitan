@@ -41,9 +41,12 @@
 #define kNtPurgeRxclear 8
 
 static const char *DescribeFlush(char buf[12], int action) {
-  if (action == TCIFLUSH) return "TCIFLUSH";
-  if (action == TCOFLUSH) return "TCOFLUSH";
-  if (action == TCIOFLUSH) return "TCIOFLUSH";
+  if (action == TCIFLUSH)
+    return "TCIFLUSH";
+  if (action == TCOFLUSH)
+    return "TCOFLUSH";
+  if (action == TCIOFLUSH)
+    return "TCIOFLUSH";
   FormatInt32(buf, action);
   return buf;
 }

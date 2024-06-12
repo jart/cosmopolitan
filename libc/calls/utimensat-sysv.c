@@ -24,7 +24,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {

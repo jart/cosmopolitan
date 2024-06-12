@@ -20,6 +20,7 @@
 
 char NeedBit(FILE* f) {
   char b = GetBit(f);
-  if (b == -1) Error(9, "UNEXPECTED EOF");
+  if (b == -1)
+    Error(9, "UNEXPECTED EOF");
   return b;
 }

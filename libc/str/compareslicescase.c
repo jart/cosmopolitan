@@ -21,8 +21,11 @@
 
 int CompareSlicesCase(const char *a, size_t n, const char *b, size_t m) {
   int c;
-  if ((c = memcasecmp(a, b, MIN(n, m)))) return c;
-  if (n < m) return -1;
-  if (n > m) return +1;
+  if ((c = memcasecmp(a, b, MIN(n, m))))
+    return c;
+  if (n < m)
+    return -1;
+  if (n > m)
+    return +1;
   return 0;
 }

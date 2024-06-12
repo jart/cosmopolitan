@@ -91,7 +91,8 @@ int StackOverflow(int f(), int n) {
 int (*pStackOverflow)(int (*)(), int) = StackOverflow;
 
 TEST(stackoverflow, standardStack_altStack_process_longjmp) {
-  if (IsTiny()) return;  // TODO(jart): why?
+  if (IsTiny())
+    return;  // TODO(jart): why?
 
   int jumpcode;
   if (!(jumpcode = setjmp(recover))) {

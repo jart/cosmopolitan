@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/iscall.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
@@ -29,6 +31,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 #define LIMIT 100
@@ -47,11 +50,14 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
     int fd, const struct StackFrame *bp, struct SymbolTable *st) {
   size_t gi;
   intptr_t addr;
+  const char *name;
+  char cxxbuf[3000];
   int i, symbol, addend;
   struct Garbages *garbage;
   const struct StackFrame *frame;
   (void)gi;
-  if (!bp) bp = __builtin_frame_address(0);
+  if (!bp)
+    bp = __builtin_frame_address(0);
   garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
@@ -70,6 +76,8 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
         --gi;
       } while ((addr = garbage->p[gi].ret) == (intptr_t)_weaken(__gc));
     }
+    if (!kisdangerous((const unsigned char *)addr))
+      addr -= __is_call((const unsigned char *)addr);
 #endif
     if (addr) {
       if ((symbol = __get_symbol(st, addr)) != -1) {
@@ -82,8 +90,14 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
       symbol = 0;
       addend = 0;
     }
-    kprintf("%012lx %lx %s%+d\n", frame, addr, __get_symbol_name(st, symbol),
-            addend);
+    if ((name = __get_symbol_name(st, symbol)) &&
+        (_weaken(__is_mangled) && _weaken(__is_mangled)(name))) {
+      _weaken(__demangle)(cxxbuf, name, sizeof(cxxbuf));
+      kprintf("%012lx %lx %s%+d\n", frame, addr, cxxbuf, addend);
+      name = cxxbuf;
+    } else {
+      kprintf("%012lx %lx %s%+d\n", frame, addr, name, addend);
+    }
   }
   return 0;
 }

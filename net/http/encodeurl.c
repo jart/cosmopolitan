@@ -55,8 +55,10 @@ static size_t DimensionUrl(struct Url *h) {
 static bool NeedsSquareBrackets(struct Url *h) {
   int c;
   size_t i;
-  if (!memchr(h->host.p, ':', h->host.n)) return false;
-  if (h->pass.p) return true;
+  if (!memchr(h->host.p, ':', h->host.n))
+    return false;
+  if (h->pass.p)
+    return true;
   if (h->host.n >= 4 && h->host.p[0] == 'v' && h->host.p[2] == '.' &&
       kHexToInt[h->host.p[1] & 0xFF] != -1) {
     for (i = 3; i < h->host.n; ++i) {
@@ -122,7 +124,8 @@ char *EncodeUrl(struct Url *h, size_t *z) {
     if (h->params.p) {
       *p++ = '?';
       for (i = 0; i < h->params.n; ++i) {
-        if (i) *p++ = '&';
+        if (i)
+          *p++ = '&';
         p = EscapeUrlView(p, &h->params.p[i].key, kEscapeParam);
         if (h->params.p[i].val.p) {
           *p++ = '=';
@@ -136,10 +139,12 @@ char *EncodeUrl(struct Url *h, size_t *z) {
     }
     n = p - m;
     *p++ = '\0';
-    if ((p = realloc(m, p - m))) m = p;
+    if ((p = realloc(m, p - m)))
+      m = p;
   } else {
     n = 0;
   }
-  if (z) *z = n;
+  if (z)
+    *z = n;
   return m;
 }

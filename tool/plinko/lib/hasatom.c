@@ -19,7 +19,9 @@
 #include "tool/plinko/lib/plinko.h"
 
 nosideeffect bool HasAtom(int v, int x) {
-  if (!x) return false;
-  if (x > 0) return v == x;
+  if (!x)
+    return false;
+  if (x > 0)
+    return v == x;
   return HasAtom(v, Car(x)) || HasAtom(v, Cdr(x));
 }

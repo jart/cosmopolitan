@@ -39,7 +39,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 __static_yoink("pl_mpeg_notice");
 

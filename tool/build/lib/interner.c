@@ -33,7 +33,7 @@ struct InternerObject {
   struct InternerHash {
     unsigned hash; /* 0 means empty */
     unsigned index;
-  } * p;
+  } *p;
 };
 
 static void rehash(struct InternerObject *it) {
@@ -43,7 +43,8 @@ static void rehash(struct InternerObject *it) {
   p = it->p;
   it->p = xcalloc((it->n <<= 1), sizeof(struct InternerHash));
   for (i = 0; i < n; ++i) {
-    if (!p[i].hash) continue;
+    if (!p[i].hash)
+      continue;
     step = 0;
     do {
       j = (p[i].hash + step * ((step + 1) >> 1)) & (it->n - 1);
@@ -120,15 +121,21 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
     } while (it->p[i].hash);
   }
   off = it->pool.i;
-  if (ckd_add(&need, off, size)) abort();
-  if (ckd_add(&need, need, 1)) abort();
+  if (ckd_add(&need, off, size))
+    abort();
+  if (ckd_add(&need, need, 1))
+    abort();
   if (need > it->pool.n) {
-    if (ckd_add(&n2, it->pool.n, 1)) abort();
+    if (ckd_add(&n2, it->pool.n, 1))
+      abort();
     do {
-      if (ckd_add(&n2, n2, n2 >> 1)) abort();
+      if (ckd_add(&n2, n2, n2 >> 1))
+        abort();
     } while (need > n2);
-    if (ckd_mul(&bytes, n2, sizeof(*it->pool.p))) abort();
-    if (!(p2 = realloc(it->pool.p, bytes))) abort();
+    if (ckd_mul(&bytes, n2, sizeof(*it->pool.p)))
+      abort();
+    if (!(p2 = realloc(it->pool.p, bytes)))
+      abort();
     it->pool.p = p2;
     it->pool.n = n2;
   }

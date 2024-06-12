@@ -175,9 +175,11 @@ struct MutexContentionArgs {
 void *MutexContentionWorker(void *arg) {
   struct MutexContentionArgs *a = arg;
   while (!atomic_load_explicit(&a->done, memory_order_relaxed)) {
-    if (pthread_mutex_lock(a->mutex)) notpossible;
+    if (pthread_mutex_lock(a->mutex))
+      notpossible;
     atomic_store_explicit(&a->ready, 1, memory_order_relaxed);
-    if (pthread_mutex_unlock(a->mutex)) notpossible;
+    if (pthread_mutex_unlock(a->mutex))
+      notpossible;
   }
   return 0;
 }
@@ -204,7 +206,8 @@ BENCH(pthread_mutex_lock, bench_contended) {
     pthread_spinlock_t s = {0};
     struct SpinContentionArgs a = {&s};
     pthread_create(&t, 0, SpinContentionWorker, &a);
-    while (!a.ready) sched_yield();
+    while (!a.ready)
+      sched_yield();
     EZBENCH2("spin 2x", donothing, BenchSpinUnspin(&s));
     a.done = true;
     pthread_join(t, 0);
@@ -213,7 +216,8 @@ BENCH(pthread_mutex_lock, bench_contended) {
     nsync_mu m = {0};
     struct NsyncContentionArgs a = {&m};
     pthread_create(&t, 0, NsyncContentionWorker, &a);
-    while (!a.ready) sched_yield();
+    while (!a.ready)
+      sched_yield();
     EZBENCH2("nsync 2x", donothing, BenchLockUnlockNsync(&m));
     a.done = true;
     pthread_join(t, 0);
@@ -226,7 +230,8 @@ BENCH(pthread_mutex_lock, bench_contended) {
     pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     pthread_create(&t, 0, MutexContentionWorker, &a);
-    while (!a.ready) sched_yield();
+    while (!a.ready)
+      sched_yield();
     EZBENCH2("normal 2x", donothing, BenchLockUnlock(&m));
     a.done = true;
     pthread_join(t, 0);
@@ -239,7 +244,8 @@ BENCH(pthread_mutex_lock, bench_contended) {
     pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     pthread_create(&t, 0, MutexContentionWorker, &a);
-    while (!a.ready) sched_yield();
+    while (!a.ready)
+      sched_yield();
     EZBENCH2("recursive 2x", donothing, BenchLockUnlock(&m));
     a.done = true;
     pthread_join(t, 0);
@@ -252,7 +258,8 @@ BENCH(pthread_mutex_lock, bench_contended) {
     pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     pthread_create(&t, 0, MutexContentionWorker, &a);
-    while (!a.ready) sched_yield();
+    while (!a.ready)
+      sched_yield();
     EZBENCH2("errorcheck 2x", donothing, BenchLockUnlock(&m));
     a.done = true;
     pthread_join(t, 0);

@@ -28,16 +28,20 @@
  */
 int IsCdr(int x_) {
   dword w_;
-  if (x_ >= 0) return 0;
+  if (x_ >= 0)
+    return 0;
   w_ = Get(x_);  // (⍆ X)
   int ax_ = LO(w_);
   int dx_ = HI(w_);
-  if (ax_ != kCdr) return 0;
-  if (dx_ >= 0) return 0;
+  if (ax_ != kCdr)
+    return 0;
+  if (dx_ >= 0)
+    return 0;
   w_ = Get(dx_);  // (X)
   int adx_ = LO(w_);
   int ddx_ = HI(w_);
   int X = adx_;
-  if (ddx_) return 0;
+  if (ddx_)
+    return 0;
   return X;
 }

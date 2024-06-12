@@ -60,25 +60,32 @@ __static_yoink("nsync_mu_trylock");
 __static_yoink("nsync_mu_rlock");
 __static_yoink("nsync_mu_runlock");
 __static_yoink("_pthread_atfork");
+__static_yoink("_pthread_onfork_prepare");
+__static_yoink("_pthread_onfork_parent");
+__static_yoink("_pthread_onfork_child");
+
+/* #ifndef MODE_DBG */
+/* __static_yoink("threaded_dlmalloc"); */
+/* #endif */
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
 void _pthread_free(struct PosixThread *pt, bool isfork) {
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
-  if (pt->pt_flags & PT_STATIC) return;
+  if (pt->pt_flags & PT_STATIC)
+    return;
   if (pt->pt_flags & PT_OWNSTACK) {
     unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
   }
   if (!isfork) {
-    if (IsWindows()) {
-      if (pt->tib->tib_syshand) {
-        unassert(CloseHandle(pt->tib->tib_syshand));
-      }
-    } else if (IsXnuSilicon()) {
-      if (pt->tib->tib_syshand) {
-        __syslib->__pthread_join(pt->tib->tib_syshand, 0);
-      }
+    uint64_t syshand =
+        atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
+    if (syshand) {
+      if (IsWindows())
+        unassert(CloseHandle(syshand));
+      else if (IsXnuSilicon())
+        __syslib->__pthread_join(syshand, 0);
     }
   }
   free(pt->pt_tls);
@@ -94,7 +101,8 @@ StartOver:
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
     status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
-    if (status != kPosixThreadZombie) break;
+    if (status != kPosixThreadZombie)
+      break;
     if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
       dll_remove(&_pthread_list, e);
       _pthread_unlock();
@@ -316,8 +324,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
 }
 
 static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
-  if (err) return "n/a";
-  if (!th) return "NULL";
+  if (err)
+    return "n/a";
+  if (!th)
+    return "NULL";
   FormatInt32(buf, _pthread_tid((struct PosixThread *)*th));
   return buf;
 }

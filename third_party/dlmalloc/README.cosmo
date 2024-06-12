@@ -9,6 +9,7 @@ LICENSE
 
 LOCAL CHANGES
 
+  - Use thread-local freelist from cosmo tib
   - Use faster two power roundup for memalign()
   - Poison maps to integrate with Address Sanitizer
   - Introduce __oom_hook() by using _mapanon() vs. mmap()

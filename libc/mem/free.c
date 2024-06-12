@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-void (*hook_free)(void *) = dlfree;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Free memory returned by malloc() & co.
@@ -33,5 +31,7 @@ void (*hook_free)(void *) = dlfree;
  * @see dlfree()
  */
 void free(void *p) {
-  hook_free(p);
+  dlfree(p);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

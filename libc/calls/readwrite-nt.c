@@ -61,7 +61,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   bool pwriting = offset != -1;
   bool seekable =
       (f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk) ||
-      f->kind == kFdDevNull;
+      f->kind == kFdDevNull || f->kind == kFdDevRandom;
   if (pwriting && !seekable) {
     return espipe();
   }
@@ -82,7 +82,8 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
 RestartOperation:
   bool eagained = false;
   // check for signals and cancelation
-  if (_check_cancel() == -1) return -1;  // ECANCELED
+  if (_check_cancel() == -1)
+    return -1;  // ECANCELED
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     goto HandleInterrupt;
   }
@@ -136,7 +137,8 @@ RestartOperation:
     if (_weaken(__sig_relay) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
       int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-      if (_check_cancel() == -1) return -1;  // possible if we SIGTHR'd
+      if (_check_cancel() == -1)
+        return -1;  // possible if we SIGTHR'd
       // read() is @restartable unless non-SA_RESTART hands were called
       if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) {
         goto RestartOperation;

@@ -20,11 +20,10 @@
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 __attribute__((__constructor__)) void init(void) {
-  setenv("TZ", "GST", true);
+  setenv("TZ", "America/Los_Angeles", true);
 }
 
 char *FormatTime(const char *fmt, struct tm *tm) {
@@ -39,7 +38,7 @@ TEST(strftime_100, iso8601_ShakaZuluTime) {
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
 }
 
-TEST(xiso8601, testUnixYearZero) {
+TEST(iso8601, testUnixYearZero) {
   int64_t t = 0;
   ASSERT_STREQ("1970-01-01T00:00:00Z",
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
@@ -59,7 +58,7 @@ TEST(strftime_100, rfc822_ShakaZuluTime) {
 
 TEST(strftime_201, iso8601_GoogleStandardTime) {
   int64_t t = 0x5cd04d0e;
-  ASSERT_STREQ("GST", getenv("TZ"));
+  ASSERT_STREQ("America/Los_Angeles", getenv("TZ"));
   ASSERT_STREQ("2019-05-06T08:04:46PDT",
                FormatTime("%Y-%m-%dT%H:%M:%S%Z", localtime(&t)));
 }
@@ -76,25 +75,25 @@ TEST(strftime_201, rfc822_GoogleStandardTime) {
                FormatTime("%a, %d %b %y %T %z", localtime(&t)));
 }
 
-/* TEST(xiso8601, testModernity_TODO) { */
+/* TEST(iso8601, testModernity_TODO) { */
 /*   int64_t t = (1600 - 1970) * 31536000; */
 /*   ASSERT_STREQ("1600-01-01T00:00:00Z", */
 /*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */
 /* } */
 
-TEST(xiso8601, testAtLeastBetterThanTraditionalUnixLimit) {
+TEST(iso8601, testAtLeastBetterThanTraditionalUnixLimit) {
   int64_t t = 10737418235;
   ASSERT_STREQ("2310-04-04T16:10:35Z",
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
 }
 
-TEST(xiso8601, testSomethingHuge) {
+TEST(iso8601, testSomethingHuge) {
   int64_t t = 7707318812667;
   ASSERT_STREQ("246205-03-18T20:24:27Z",
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
 }
 
-/* TEST(xiso8601, testMostOfStelliferousEra_TODO) { */
+/* TEST(iso8601, testMostOfStelliferousEra_TODO) { */
 /*   int64_t t = INT64_MAX; */
 /*   ASSERT_STREQ("somethinghuge-01-01T00:00:00Z", */
 /*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */

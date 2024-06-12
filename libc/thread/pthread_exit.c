@@ -29,6 +29,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -44,26 +45,23 @@ void _pthread_unwind(struct PosixThread *pt) {
 }
 
 void _pthread_unkey(struct CosmoTib *tib) {
+  void *val;
   int i, j, gotsome;
-  void *val, **keys;
   pthread_key_dtor dtor;
-  if ((keys = tib->tib_keys)) {
-    for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
-      for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-        if ((val = keys[i]) &&
-            (dtor = atomic_load_explicit(_pthread_key_dtor + i,
-                                         memory_order_relaxed)) &&
-            dtor != (pthread_key_dtor)-1) {
-          gotsome = 1;
-          keys[i] = 0;
-          dtor(val);
-        }
-      }
-      if (!gotsome) {
-        break;
+  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
+    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+      if ((val = tib->tib_keys[i]) &&
+          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
+                                       memory_order_relaxed)) &&
+          dtor != (pthread_key_dtor)-1) {
+        gotsome = 1;
+        tib->tib_keys[i] = 0;
+        dtor(val);
       }
     }
-    free(keys);
+    if (!gotsome) {
+      break;
+    }
   }
 }
 
@@ -164,10 +162,13 @@ wontreturn void pthread_exit(void *rc) {
   // note that the main thread is joinable by child threads
   if (pt->pt_flags & PT_STATIC) {
     atomic_store_explicit(&tib->tib_tid, 0, memory_order_release);
-    nsync_futex_wake_(&tib->tib_tid, INT_MAX, !IsWindows() && !IsXnu());
+    nsync_futex_wake_((atomic_int *)&tib->tib_tid, INT_MAX,
+                      !IsWindows() && !IsXnu());
     _Exit1(0);
   }
 
   // this is a child thread
   longjmp(pt->pt_exiter, 1);
 }
+
+__weak_reference(pthread_exit, thr_exit);

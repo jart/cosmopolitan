@@ -87,7 +87,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"  /* declares _POSIX_VERSION */
 #    if defined(_POSIX_VERSION)  /* POSIX compliant */
@@ -138,7 +138,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #    if WCHAR_MAX == 0xFFFFU /* UTF-16 wchar_t */
 #       define XSUM_WIN32_USE_WCHAR 1
 #    else

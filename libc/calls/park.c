@@ -32,7 +32,8 @@
 static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
                                     bool restartable) {
   int sig, handler_was_called;
-  if (_check_cancel() == -1) return -1;
+  if (_check_cancel() == -1)
+    return -1;
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     goto HandleSignal;
   }
@@ -46,7 +47,8 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   if (ok && _weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
   HandleSignal:
     handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
+    if (_check_cancel() == -1)
+      return -1;
     if (!restartable || (handler_was_called & SIG_HANDLED_NO_RESTART)) {
       return eintr();
     }

@@ -16,10 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
-
-#define MAXIMUM (1024L * 1024L * 1024L * 1024L)
 
 /**
  * Parses Content-Length header.
@@ -30,14 +29,19 @@
 int64_t ParseContentLength(const char *s, size_t n) {
   size_t i;
   int64_t r;
-  if (n == -1) n = s ? strlen(s) : 0;
-  if (!n) return -1;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
+  if (!n)
+    return -1;
   for (r = i = 0; i < n; ++i) {
-    if (s[i] == ',' && i > 0) break;
-    if (!isdigit(s[i])) return -1;
+    if (s[i] == ',' && i > 0)
+      break;
+    if (!isdigit(s[i]))
+      return -1;
     r *= 10;
     r += s[i] - '0';
-    if (r >= MAXIMUM) return -1;
+    if (r > 0x000000ffffffffff)
+      return -1;
   }
   return r;
 }

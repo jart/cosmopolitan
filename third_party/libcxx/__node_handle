@@ -10,20 +10,67 @@
 #ifndef _LIBCPP___NODE_HANDLE
 #define _LIBCPP___NODE_HANDLE
 
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/optional"
+/*
+
+template<unspecified>
+class node-handle {
+public:
+  using value_type     = see below;     // not present for map containers
+  using key_type       = see below;     // not present for set containers
+  using mapped_type    = see below;     // not present for set containers
+  using allocator_type = see below;
+
+private:
+  using container_node_type = unspecified;                  // exposition only
+  using ator_traits = allocator_traits<allocator_type>;     // exposition only
+
+  typename ator_traits::template
+    rebind_traits<container_node_type>::pointer ptr_;       // exposition only
+  optional<allocator_type> alloc_;                          // exposition only
+
+public:
+  // [container.node.cons], constructors, copy, and assignment
+  constexpr node-handle() noexcept : ptr_(), alloc_() {}
+  node-handle(node-handle&&) noexcept;
+  node-handle& operator=(node-handle&&);
+
+  // [container.node.dtor], destructor
+  ~node-handle();
+
+  // [container.node.observers], observers
+  value_type& value() const;            // not present for map containers
+  key_type& key() const;                // not present for set containers
+  mapped_type& mapped() const;          // not present for set containers
+
+  allocator_type get_allocator() const;
+  explicit operator bool() const noexcept;
+  [[nodiscard]] bool empty() const noexcept; // nodiscard since C++20
+
+  // [container.node.modifiers], modifiers
+  void swap(node-handle&)
+    noexcept(ator_traits::propagate_on_container_swap::value ||
+             ator_traits::is_always_equal::value);
+
+  friend void swap(node-handle& x, node-handle& y) noexcept(noexcept(x.swap(y))) {
+    x.swap(y);
+  }
+};
+
+*/
+
+#include <__assert>
+#include <__config>
+#include <__memory/allocator_traits.h>
+#include <__memory/pointer_traits.h>
+#include <optional>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#if _LIBCPP_STD_VER > 14
+#if _LIBCPP_STD_VER >= 17
 
 // Specialized in __tree & __hash_table for their _NodeType.
 template <class _NodeType, class _Alloc>
@@ -44,8 +91,8 @@ class _LIBCPP_TEMPLATE_VIS __basic_node_handle
         _NodeType, __basic_node_handle<_NodeType, _Alloc, _MapOrSetSpecifics>>;
 
     typedef allocator_traits<_Alloc> __alloc_traits;
-    typedef typename __rebind_pointer<typename __alloc_traits::void_pointer,
-                                      _NodeType>::type
+    typedef __rebind_pointer_t<typename __alloc_traits::void_pointer,
+                                      _NodeType>
         __node_pointer_type;
 
 public:
@@ -200,9 +247,8 @@ struct _LIBCPP_TEMPLATE_VIS __insert_return_type
     _NodeType node;
 };
 
-#endif // _LIBCPP_STD_VER > 14
+#endif // _LIBCPP_STD_VER >= 17
 
 _LIBCPP_END_NAMESPACE_STD
-_LIBCPP_POP_MACROS
 
-#endif
+#endif  // _LIBCPP___NODE_HANDLE

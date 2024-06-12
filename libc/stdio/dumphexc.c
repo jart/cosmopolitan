@@ -29,7 +29,8 @@ char *DumpHexc(const char *p, size_t n, size_t *z) {
   long o;
   int i, m;
   char A[128], *q, *s = 0;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   appendw(&s, '"' | '\\' << 8 | '\n' << 16);
   for (o = 0; (m = MIN(16, n)); p += m, n -= m) {
     q = A;
@@ -39,12 +40,14 @@ char *DumpHexc(const char *p, size_t n, size_t *z) {
       *q++ = "0123456789abcdef"[(p[i] & 0xF0) >> 4];
       *q++ = "0123456789abcdef"[(p[i] & 0x0F) >> 0];
     }
-    if (o) appendw(&s, '\\' | '\n' << 8);
+    if (o)
+      appendw(&s, '\\' | '\n' << 8);
     appendd(&s, A, q - A);
     o += m;
   }
   if (appendw(&s, '"') != -1) {
-    if (z) *z = appendz(s).i;
+    if (z)
+      *z = appendz(s).i;
     return s;
   } else {
     free(s);

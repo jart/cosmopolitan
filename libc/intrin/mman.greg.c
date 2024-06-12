@@ -45,7 +45,7 @@
 #ifdef __x86_64__
 
 #define INVERT(x) (BANE + PHYSICAL((uintptr_t)(x)))
-#define NOPAGE    ((uint64_t) - 1)
+#define NOPAGE    ((uint64_t)-1)
 
 #define APE_STACK_VADDR                   \
   ({                                      \
@@ -79,7 +79,8 @@ texthead uint64_t __new_page(struct mman *mm) {
     return 0;
   }
   while (mm->pdp >= mm->e820[mm->pdpi].addr + mm->e820[mm->pdpi].size) {
-    if (++mm->pdpi == mm->e820n) return 0;
+    if (++mm->pdpi == mm->e820n)
+      return 0;
     mm->pdp = MAX(mm->pdp, mm->e820[mm->pdpi].addr);
   }
   p = mm->pdp;
@@ -98,10 +99,13 @@ textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t, int64_t vaddr,
   unsigned char h;
   for (h = 39;; h -= 9) {
     e = t + ((vaddr >> h) & 511);
-    if (h == 12) return e;
+    if (h == 12)
+      return e;
     if (!(*e & (PAGE_V | PAGE_RSRV))) {
-      if (!maketables) return NULL;
-      if (!(p = __new_page(mm))) return NULL;
+      if (!maketables)
+        return NULL;
+      if (!(p = __new_page(mm)))
+        return NULL;
       __clear_page(BANE + p);
       *e = p | PAGE_V | PAGE_RW;
     }
@@ -215,7 +219,8 @@ void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
     if ((e & PAGE_REFC) != PAGE_REFC) {
       e -= PAGE_1REF;
       *m = e;
-      if ((e & PAGE_REFC) == 0) __reclaim_page(mm, p);
+      if ((e & PAGE_REFC) == 0)
+        __reclaim_page(mm, p);
     }
   }
 }
@@ -229,7 +234,8 @@ static textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   for (i = 0; i < mm->e820n; ++i) {
     uint64_t ps = mm->e820[i].addr, size = mm->e820[i].size;
     /* ape/ape.S has already mapped the first 2 MiB of physical memory. */
-    if (ps < 0x200000 && ps + size <= 0x200000) continue;
+    if (ps < 0x200000 && ps + size <= 0x200000)
+      continue;
     __invert_memory_area(mm, pml4t, ps, size, PAGE_RW | PAGE_XD);
   }
 }
@@ -275,13 +281,15 @@ static textreal uint64_t __map_phdr(struct mman *mm, uint64_t *pml4t,
                                     uint64_t b, uint64_t m,
                                     struct Elf64_Phdr *p) {
   uint64_t i, f, v;
-  if (p->p_type != PT_LOAD) return m;
+  if (p->p_type != PT_LOAD)
+    return m;
   f = PAGE_RSRV | PAGE_U;
   if (p->p_flags & PF_W)
     f |= PAGE_V | PAGE_RW;
   else if (p->p_flags & (PF_R | PF_X))
     f |= PAGE_V;
-  if (!(p->p_flags & PF_X)) f |= PAGE_XD;
+  if (!(p->p_flags & PF_X))
+    f |= PAGE_XD;
   for (i = 0; i < p->p_memsz; i += 4096) {
     if (i < p->p_filesz) {
       v = b + p->p_offset + i;
@@ -336,14 +344,16 @@ textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
   uint64_t p = mm->frp, q = IMAGE_BASE_REAL, i, n = mm->e820n, b, e;
   for (i = 0; i < n; ++i) {
     b = mm->e820[i].addr;
-    if (b >= IMAGE_BASE_PHYSICAL) break;
+    if (b >= IMAGE_BASE_PHYSICAL)
+      break;
     e = MIN(IMAGE_BASE_PHYSICAL, b + mm->e820[i].size);
     q = MAX(IMAGE_BASE_REAL, b);
     while (q < e) {
       struct ReclaimedPage *rp;
       if (q == skip_start) {
         q = skip_end;
-        if (q >= e) break;
+        if (q >= e)
+          break;
       }
       rp = (struct ReclaimedPage *)(BANE + q);
       rp->next = p;

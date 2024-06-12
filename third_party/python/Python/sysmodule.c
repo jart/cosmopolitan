@@ -9,7 +9,6 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/dll.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"
@@ -1019,44 +1018,6 @@ static PyStructSequence_Desc windows_version_desc = {
                                  via indexing, the rest are name only */
 };
 
-static PyObject *
-sys_getwindowsversion(PyObject *self)
-{
-    int pos = 0;
-    PyObject *version;
-    struct NtOsVersionInfo ver;
-
-    if (!IsWindows()) {
-        PyErr_SetString(PyExc_SystemError, "this is not windows");
-        return 0;
-    }
-
-    ver.dwOSVersionInfoSize = sizeof(ver);
-    if (!GetVersionEx(&ver))
-        return PyErr_SetFromWindowsErr(0);
-
-    version = PyStructSequence_New(&WindowsVersionType);
-    if (version == NULL)
-        return NULL;
-
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwMajorVersion));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwMinorVersion));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwBuildNumber));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwPlatformId));
-    PyStructSequence_SET_ITEM(version, pos++, PyUnicode_FromString(gc(utf16to8(ver.szCSDVersion,-1,0))));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wServicePackMajor));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wServicePackMinor));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wSuiteMask));
-    PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wProductType));
-
-    if (PyErr_Occurred()) {
-        Py_DECREF(version);
-        return NULL;
-    }
-
-    return version;
-}
-
 #ifdef MS_WINDOWS
 
 #pragma warning(pop)
@@ -1457,8 +1418,6 @@ static PyMethodDef sys_methods[] = {
     {"getsizeof",   (PyCFunction)sys_getsizeof,
      METH_VARARGS | METH_KEYWORDS, getsizeof_doc},
     {"_getframe", sys_getframe, METH_VARARGS, getframe_doc},
-    {"getwindowsversion", (PyCFunction)sys_getwindowsversion, METH_NOARGS,
-     getwindowsversion_doc},
 #ifdef MS_WINDOWS
     {"_enablelegacywindowsfsencoding", (PyCFunction)sys_enablelegacywindowsfsencoding,
      METH_NOARGS, enablelegacywindowsfsencoding_doc },

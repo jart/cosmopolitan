@@ -174,43 +174,53 @@ const char *DescribeIpAdapterFlags(int x) {
   static char buf[256];
   p = buf;
   if (x & kNtIpAdapterDdnsEnabled) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "DDNS");
   }
   if (x & kNtIpAdapterDhcpv4Enabled) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "DHCPv4");
   }
   if (x & kNtIpAdapterReceiveOnly) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "RECV_ONLY");
   }
   if (x & kNtIpAdapterNoMulticast) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "NO_MULTICAST");
   }
   if (x & kNtIpAdapterIpv4Enabled) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "IPv4");
   }
   if (x & kNtIpAdapterIpv6Enabled) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "IPv6");
   }
   if (x & kNtIpAdapterIpv6Managed) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "IPv6_MANAGED");
   }
   if (x & kNtIpAdapterIpv6OtherStatefulConfig) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "IPv6_OTHER_STATEFUL_CONFIG");
   }
   if (x & kNtIpAdapterNetbiosOverTcpipEnabled) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "NETBIOS_OVER_TCP");
   }
   if (x & kNtIpAdapterRegisterAdapterSuffix) {
-    if (p > buf) *p++ = ' ';
+    if (p > buf)
+      *p++ = ' ';
     p = stpcpy(p, "REGISTER_ADAPTER_SUFFIX");
   }
   return buf;
@@ -252,9 +262,12 @@ char *ConvertIpv6ToStr(const struct in6_addr *addr) {
     b = (addr->s6_addr[i + 0] & 0x0F) >> 0;
     c = (addr->s6_addr[i + 1] & 0xF0) >> 4;
     d = (addr->s6_addr[i + 1] & 0x0F) >> 0;
-    if (a) *p++ = "0123456789abcdef"[a];
-    if (a || b) *p++ = "0123456789abcdef"[b];
-    if (a || b || c) *p++ = "0123456789abcdef"[c];
+    if (a)
+      *p++ = "0123456789abcdef"[a];
+    if (a || b)
+      *p++ = "0123456789abcdef"[b];
+    if (a || b || c)
+      *p++ = "0123456789abcdef"[c];
     *p++ = "0123456789abcdef"[d];
   }
   *p = '\0';
@@ -406,7 +419,8 @@ void ShowWinNicCidrs(void) {
               (char16_t *)&lpMsgBuf, 0, NULL)) {
         printf("\tError: %s", lpMsgBuf);
         LocalFree(lpMsgBuf);
-        if (pAddresses) free(pAddresses);
+        if (pAddresses)
+          free(pAddresses);
         exit(1);
       }
     }

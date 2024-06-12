@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===---------------------------- cctype ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -34,11 +34,20 @@ int toupper(int c);
 }  // std
 */
 
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/ctype.h"
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+
+#include <ctype.h>
+
+#ifndef _LIBCPP_CTYPE_H
+#   error <cctype> tried including <ctype.h> but didn't find libc++'s <ctype.h> header. \
+          This usually means that your header search paths are not configured properly.  \
+          The header search paths should contain the C++ Standard Library headers before \
+          any C Standard Library.
+#endif
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
 
 _LIBCPP_BEGIN_NAMESPACE_STD
@@ -100,21 +109,21 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 #endif
 
 
-using ::isalnum;
-using ::isalpha;
-using ::isblank;
-using ::iscntrl;
-using ::isdigit;
-using ::isgraph;
-using ::islower;
-using ::isprint;
-using ::ispunct;
-using ::isspace;
-using ::isupper;
-using ::isxdigit;
-using ::tolower;
-using ::toupper;
+using ::isalnum _LIBCPP_USING_IF_EXISTS;
+using ::isalpha _LIBCPP_USING_IF_EXISTS;
+using ::isblank _LIBCPP_USING_IF_EXISTS;
+using ::iscntrl _LIBCPP_USING_IF_EXISTS;
+using ::isdigit _LIBCPP_USING_IF_EXISTS;
+using ::isgraph _LIBCPP_USING_IF_EXISTS;
+using ::islower _LIBCPP_USING_IF_EXISTS;
+using ::isprint _LIBCPP_USING_IF_EXISTS;
+using ::ispunct _LIBCPP_USING_IF_EXISTS;
+using ::isspace _LIBCPP_USING_IF_EXISTS;
+using ::isupper _LIBCPP_USING_IF_EXISTS;
+using ::isxdigit _LIBCPP_USING_IF_EXISTS;
+using ::tolower _LIBCPP_USING_IF_EXISTS;
+using ::toupper _LIBCPP_USING_IF_EXISTS;
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_CCTYPE
+#endif // _LIBCPP_CCTYPE

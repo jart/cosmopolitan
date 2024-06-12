@@ -103,7 +103,8 @@ TEST(GetProgramExecutableName, ofThisFile) {
 }
 
 TEST(GetProgramExecutableName, nullEnv) {
-  if (skiptests) return;
+  if (skiptests)
+    return;
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, skiparg0 ? 0 : self, 0},
          (char *[]){0});
@@ -112,7 +113,8 @@ TEST(GetProgramExecutableName, nullEnv) {
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
-  if (skiptests) return;
+  if (skiptests)
+    return;
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, skiparg0 ? 0 : "hello", 0},
          (char *[]){0});
@@ -121,7 +123,8 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
 }
 
 TEST(GetProgramExecutableName, movedSelf) {
-  if (skiptests) return;
+  if (skiptests)
+    return;
   if (IsAarch64() && IsQemuUser()) {
     // clang-format off
     // TODO(mrdomino): fix: make -j8 m=aarch64 o/aarch64/test/libc/calls/getprogramexecutablename_test.ok

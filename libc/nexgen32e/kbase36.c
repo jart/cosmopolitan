@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdalign.internal.h"
 #include "libc/str/tab.internal.h"
 
-_Alignas(uint8_t) const uint8_t kBase36[256] = {
+alignas(uint8_t) const uint8_t kBase36[256] = {
     ['0'] = 1,   //
     ['1'] = 2,   //
     ['2'] = 3,   //

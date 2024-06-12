@@ -51,17 +51,22 @@ static int CompareCounters(const void *a, const void *b) {
   double x, y;
   x = RankCounter(a);
   y = RankCounter(b);
-  if (x > y) return +1;
-  if (x < y) return -1;
-  if (GetTotal(a) < GetTotal(b)) return +1;
-  if (GetTotal(a) > GetTotal(b)) return -1;
+  if (x > y)
+    return +1;
+  if (x < y)
+    return -1;
+  if (GetTotal(a) < GetTotal(b))
+    return +1;
+  if (GetTotal(a) > GetTotal(b))
+    return -1;
   return 0;
 }
 
 static size_t CountCounters(void) {
   size_t n;
   struct countbranch *p;
-  for (n = 0, p = countbranch_data; p->total >= 0; ++p) ++n;
+  for (n = 0, p = countbranch_data; p->total >= 0; ++p)
+    ++n;
   return n;
 }
 

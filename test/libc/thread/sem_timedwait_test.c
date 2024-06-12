@@ -44,7 +44,8 @@ TEST(sem_init, einval) {
 }
 
 TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg()) return;
+  if (!IsModeDbg())
+    return;
   sem_t sem;
   SPAWN(fork);
   signal(SIGILL, SIG_DFL);
@@ -56,7 +57,8 @@ TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
 }
 
 TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg()) return;
+  if (!IsModeDbg())
+    return;
   sem_t sem;
   SPAWN(fork);
   signal(SIGILL, SIG_DFL);
@@ -68,7 +70,8 @@ TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
 }
 
 TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg()) return;
+  if (!IsModeDbg())
+    return;
   sem_t sem;
   SPAWN(fork);
   signal(SIGILL, SIG_DFL);
@@ -80,7 +83,8 @@ TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
 }
 
 TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg()) return;
+  if (!IsModeDbg())
+    return;
   sem_t sem;
   SPAWN(fork);
   signal(SIGILL, SIG_DFL);
@@ -107,12 +111,16 @@ TEST(sem_timedwait, threads) {
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   ASSERT_SYS(0, 0, sem_init(s[0], 0, 0));
   ASSERT_SYS(0, 0, sem_init(s[1], 0, 0));
-  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, s));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_wait(s[0]));
+  for (i = 0; i < n; ++i)
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, s));
+  for (i = 0; i < n; ++i)
+    ASSERT_SYS(0, 0, sem_wait(s[0]));
   ASSERT_SYS(0, 0, sem_getvalue(s[0], &r));
   ASSERT_EQ(0, r);
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_post(s[1]));
-  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
+  for (i = 0; i < n; ++i)
+    ASSERT_SYS(0, 0, sem_post(s[1]));
+  for (i = 0; i < n; ++i)
+    ASSERT_EQ(0, pthread_join(t[i], 0));
   ASSERT_SYS(0, 0, sem_getvalue(s[1], &r));
   ASSERT_EQ(0, r);
   ASSERT_SYS(0, 0, sem_destroy(s[1]));
@@ -126,12 +134,15 @@ TEST(sem_timedwait, processes) {
   ASSERT_SYS(0, 0, sem_init(s[1], pshared, 0));
   for (i = 0; i < n; ++i) {
     ASSERT_NE(-1, (rc = fork()));
-    if (!rc) Worker(s), _Exit(0);
+    if (!rc)
+      Worker(s), _Exit(0);
   }
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_wait(s[0]));
+  for (i = 0; i < n; ++i)
+    ASSERT_SYS(0, 0, sem_wait(s[0]));
   ASSERT_SYS(0, 0, sem_getvalue(s[0], &r));
   ASSERT_EQ(0, r);
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_post(s[1]));
+  for (i = 0; i < n; ++i)
+    ASSERT_SYS(0, 0, sem_post(s[1]));
   for (;;) {
     int ws, pid, e = errno;
     if ((pid = waitpid(0, &ws, 0)) != -1) {

@@ -27,7 +27,8 @@
  * @raise EINVAL if `stacksize` is less than `PTHREAD_STACK_MIN`
  */
 errno_t pthread_attr_setstacksize(pthread_attr_t *a, size_t stacksize) {
-  if (stacksize < PTHREAD_STACK_MIN) return EINVAL;
+  if (stacksize < PTHREAD_STACK_MIN)
+    return EINVAL;
   a->__stacksize = stacksize;
   return 0;
 }

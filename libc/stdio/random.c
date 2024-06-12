@@ -87,7 +87,8 @@ void srandom(unsigned seed) {
 
 char *initstate(unsigned seed, char *state, size_t size) {
   void *old;
-  if (size < 8) return 0;
+  if (size < 8)
+    return 0;
   old = savestate();
   if (size < 32) {
     n = 0;
@@ -115,10 +116,13 @@ char *setstate(char *state) {
 
 long random(void) {
   long k;
-  if (!n) return (x[0] = lcg31(x[0]));
+  if (!n)
+    return (x[0] = lcg31(x[0]));
   x[i] += x[j];
   k = x[i] >> 1;
-  if (++i == n) i = 0;
-  if (++j == n) j = 0;
+  if (++i == n)
+    i = 0;
+  if (++j == n)
+    j = 0;
   return k;
 }

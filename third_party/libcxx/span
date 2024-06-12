@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===------------------------------ span ---------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -22,6 +22,12 @@ inline constexpr size_t dynamic_extent = numeric_limits<size_t>::max();
 template <class ElementType, size_t Extent = dynamic_extent>
     class span;
 
+template<class ElementType, size_t Extent>
+  inline constexpr bool ranges::enable_view<span<ElementType, Extent>> = true;
+
+template<class ElementType, size_t Extent>
+    inline constexpr bool ranges::enable_borrowed_range<span<ElementType, Extent>> = true;
+
 // [span.objectrep], views of object representation
 template <class ElementType, size_t Extent>
     span<const byte, ((Extent == dynamic_extent) ? dynamic_extent :
@@ -32,42 +38,39 @@ template <class ElementType, size_t Extent>
         (sizeof(ElementType) * Extent))> as_writable_bytes(span<ElementType, Extent> s) noexcept;
 
 
-namespace std {
 template <class ElementType, size_t Extent = dynamic_extent>
 class span {
 public:
     // constants and types
     using element_type = ElementType;
     using value_type = remove_cv_t<ElementType>;
-    using index_type = size_t;
+    using size_type = size_t;
     using difference_type = ptrdiff_t;
     using pointer = element_type*;
     using const_pointer = const element_type*;
     using reference = element_type&;
     using const_reference = const element_type&;
     using iterator = implementation-defined;
-    using const_iterator = implementation-defined;
     using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    static constexpr index_type extent = Extent;
+    static constexpr size_type extent = Extent;
 
     // [span.cons], span constructors, copy, assignment, and destructor
     constexpr span() noexcept;
-    constexpr span(pointer ptr, index_type count);
-    constexpr span(pointer firstElem, pointer lastElem);
+    template <class It>
+    constexpr explicit(Extent != dynamic_extent) span(It first, size_type count);
+    template <class It, class End>
+    constexpr explicit(Extent != dynamic_extent) span(It first, End last);
     template <size_t N>
-        constexpr span(element_type (&arr)[N]) noexcept;
+        constexpr span(type_identity_t<element_type> (&arr)[N]) noexcept;
     template <size_t N>
         constexpr span(array<value_type, N>& arr) noexcept;
     template <size_t N>
         constexpr span(const array<value_type, N>& arr) noexcept;
-    template <class Container>
-        constexpr span(Container& cont);
-    template <class Container>
-        constexpr span(const Container& cont);
+    template<class R>
+      constexpr explicit(Extent != dynamic_extent) span(R&& r);
     constexpr span(const span& other) noexcept = default;
     template <class OtherElementType, size_t OtherExtent>
-        constexpr span(const span<OtherElementType, OtherExtent>& s) noexcept;
+        constexpr explicit(Extent != dynamic_extent) span(const span<OtherElementType, OtherExtent>& s) noexcept;
     ~span() noexcept = default;
     constexpr span& operator=(const span& other) noexcept = default;
 
@@ -79,17 +82,17 @@ public:
     template <size_t Offset, size_t Count = dynamic_extent>
         constexpr span<element_type, see below> subspan() const;
 
-    constexpr span<element_type, dynamic_extent> first(index_type count) const;
-    constexpr span<element_type, dynamic_extent> last(index_type count) const;
-    constexpr span<element_type, dynamic_extent> subspan(index_type offset, index_type count = dynamic_extent) const;
+    constexpr span<element_type, dynamic_extent> first(size_type count) const;
+    constexpr span<element_type, dynamic_extent> last(size_type count) const;
+    constexpr span<element_type, dynamic_extent> subspan(size_type offset, size_type count = dynamic_extent) const;
 
     // [span.obs], span observers
-    constexpr index_type size() const noexcept;
-    constexpr index_type size_bytes() const noexcept;
-    constexpr bool empty() const noexcept;
+    constexpr size_type size() const noexcept;
+    constexpr size_type size_bytes() const noexcept;
+    [[nodiscard]] constexpr bool empty() const noexcept;
 
     // [span.elem], span element access
-    constexpr reference operator[](index_type idx) const;
+    constexpr reference operator[](size_type idx) const;
     constexpr reference front() const;
     constexpr reference back() const;
     constexpr pointer data() const noexcept;
@@ -97,17 +100,16 @@ public:
     // [span.iterators], span iterator support
     constexpr iterator begin() const noexcept;
     constexpr iterator end() const noexcept;
-    constexpr const_iterator cbegin() const noexcept;
-    constexpr const_iterator cend() const noexcept;
     constexpr reverse_iterator rbegin() const noexcept;
     constexpr reverse_iterator rend() const noexcept;
-    constexpr const_reverse_iterator crbegin() const noexcept;
-    constexpr const_reverse_iterator crend() const noexcept;
 
 private:
-    pointer data_;     // exposition only
-    index_type size_;  // exposition only
+    pointer data_;    // exposition only
+    size_type size_;  // exposition only
 };
+
+template<class It, class EndOrSize>
+    span(It, EndOrSize) -> span<remove_reference_t<iter_reference_t<_It>>>;
 
 template<class T, size_t N>
     span(T (&)[N]) -> span<T, N>;
@@ -118,75 +120,87 @@ template<class T, size_t N>
 template<class T, size_t N>
     span(const array<T, N>&) -> span<const T, N>;
 
-template<class Container>
-    span(Container&) -> span<typename Container::value_type>;
-
-template<class Container>
-    span(const Container&) -> span<const typename Container::value_type>;
+template<class R>
+    span(R&&) -> span<remove_reference_t<ranges::range_reference_t<R>>>;
 
 } // namespace std
 
 */
 
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/iterator"     // for iterators
-#include "third_party/libcxx/array"        // for array
-#include "third_party/libcxx/type_traits"  // for remove_cv, etc
-#include "third_party/libcxx/cstddef"      // for byte
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+#include <__debug>
+#include <__fwd/span.h>
+#include <__iterator/bounded_iter.h>
+#include <__iterator/concepts.h>
+#include <__iterator/iterator_traits.h>
+#include <__iterator/wrap_iter.h>
+#include <__memory/pointer_traits.h>
+#include <__ranges/concepts.h>
+#include <__ranges/data.h>
+#include <__ranges/enable_borrowed_range.h>
+#include <__ranges/enable_view.h>
+#include <__ranges/size.h>
+#include <__type_traits/is_convertible.h>
+#include <__type_traits/remove_cvref.h>
+#include <__type_traits/remove_reference.h>
+#include <__type_traits/type_identity.h>
+#include <__utility/forward.h>
+#include <array>        // for array
+#include <cstddef>      // for byte
+#include <limits>
+#include <version>
+
+// standard-mandated includes
+
+// [iterator.range]
+#include <__iterator/access.h>
+#include <__iterator/data.h>
+#include <__iterator/empty.h>
+#include <__iterator/reverse_access.h>
+#include <__iterator/size.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
+#  pragma GCC system_header
 #endif
+
+_LIBCPP_PUSH_MACROS
+#include <__undef_macros>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#if _LIBCPP_STD_VER > 17
-
-inline constexpr size_t dynamic_extent = numeric_limits<size_t>::max();
-template <typename _Tp, size_t _Extent = dynamic_extent> class span;
-
+#if _LIBCPP_STD_VER >= 20
 
 template <class _Tp>
-struct __is_span_impl : public false_type {};
-
-template <class _Tp, size_t _Extent>
-struct __is_span_impl<span<_Tp, _Extent>> : public true_type {};
-
-template <class _Tp>
-struct __is_span : public __is_span_impl<remove_cv_t<_Tp>> {};
-
-template <class _Tp>
-struct __is_std_array_impl : public false_type {};
+struct __is_std_array : false_type {};
 
 template <class _Tp, size_t _Sz>
-struct __is_std_array_impl<array<_Tp, _Sz>> : public true_type {};
+struct __is_std_array<array<_Tp, _Sz>> : true_type {};
 
 template <class _Tp>
-struct __is_std_array : public __is_std_array_impl<remove_cv_t<_Tp>> {};
+struct __is_std_span : false_type {};
 
-template <class _Tp, class _ElementType, class = void>
-struct __is_span_compatible_container : public false_type {};
+template <class _Tp, size_t _Sz>
+struct __is_std_span<span<_Tp, _Sz>> : true_type {};
 
-template <class _Tp, class _ElementType>
-struct __is_span_compatible_container<_Tp, _ElementType,
-        void_t<
-        // is not a specialization of span
-            typename enable_if<!__is_span<_Tp>::value, nullptr_t>::type,
-        // is not a specialization of array
-            typename enable_if<!__is_std_array<_Tp>::value, nullptr_t>::type,
-        // is_array_v<Container> is false,
-            typename enable_if<!is_array_v<_Tp>, nullptr_t>::type,
-        // data(cont) and size(cont) are well formed
-            decltype(data(declval<_Tp>())),
-            decltype(size(declval<_Tp>())),
-        // remove_pointer_t<decltype(data(cont))>(*)[] is convertible to ElementType(*)[]
-            typename enable_if<
-                is_convertible_v<remove_pointer_t<decltype(data(declval<_Tp &>()))>(*)[],
-                                 _ElementType(*)[]>,
-                nullptr_t>::type
-        >>
-    : public true_type {};
+template <class _Range, class _ElementType>
+concept __span_compatible_range =
+  ranges::contiguous_range<_Range> &&
+  ranges::sized_range<_Range> &&
+  (ranges::borrowed_range<_Range> || is_const_v<_ElementType>) &&
+  !__is_std_span<remove_cvref_t<_Range>>::value  &&
+  !__is_std_array<remove_cvref_t<_Range>>::value &&
+  !is_array_v<remove_cvref_t<_Range>> &&
+  is_convertible_v<remove_reference_t<ranges::range_reference_t<_Range>>(*)[], _ElementType(*)[]>;
 
+template <class _From, class _To>
+concept __span_array_convertible = is_convertible_v<_From(*)[], _To(*)[]>;
+
+template <class _It, class _Tp>
+concept __span_compatible_iterator = contiguous_iterator<_It> && __span_array_convertible<remove_reference_t<iter_reference_t<_It>>, _Tp>;
+
+template <class _Sentinel, class _It>
+concept __span_compatible_sentinel_for = sized_sentinel_for<_Sentinel, _It> && !is_convertible_v<_Sentinel, size_t>;
 
 template <typename _Tp, size_t _Extent>
 class _LIBCPP_TEMPLATE_VIS span {
@@ -194,50 +208,73 @@ public:
 //  constants and types
     using element_type           = _Tp;
     using value_type             = remove_cv_t<_Tp>;
-    using index_type             = size_t;
+    using size_type              = size_t;
     using difference_type        = ptrdiff_t;
     using pointer                = _Tp *;
     using const_pointer          = const _Tp *;
     using reference              = _Tp &;
     using const_reference        = const _Tp &;
-    using iterator               =  __wrap_iter<pointer>;
-    using const_iterator         =  __wrap_iter<const_pointer>;
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+    using iterator               = __bounded_iter<pointer>;
+#else
+    using iterator               = __wrap_iter<pointer>;
+#endif
     using reverse_iterator       = _VSTD::reverse_iterator<iterator>;
-    using const_reverse_iterator = _VSTD::reverse_iterator<const_iterator>;
 
-    static constexpr index_type extent = _Extent;
+    static constexpr size_type extent = _Extent;
 
 // [span.cons], span constructors, copy, assignment, and destructor
-    _LIBCPP_INLINE_VISIBILITY constexpr span() noexcept : __data{nullptr}
-    { static_assert(_Extent == 0, "Can't default construct a statically sized span with size > 0"); }
+    template <size_t _Sz = _Extent> requires(_Sz == 0)
+    _LIBCPP_INLINE_VISIBILITY constexpr span() noexcept : __data_{nullptr} {}
 
     constexpr span           (const span&) noexcept = default;
     constexpr span& operator=(const span&) noexcept = default;
 
-    _LIBCPP_INLINE_VISIBILITY constexpr span(pointer __ptr, index_type __count) : __data{__ptr}
-        { (void)__count; _LIBCPP_ASSERT(_Extent == __count, "size mismatch in span's constructor (ptr, len)"); }
-    _LIBCPP_INLINE_VISIBILITY constexpr span(pointer __f, pointer __l) : __data{__f}
-        { (void)__l;     _LIBCPP_ASSERT(_Extent == distance(__f, __l), "size mismatch in span's constructor (ptr, ptr)"); }
+    template <__span_compatible_iterator<element_type> _It>
+    _LIBCPP_INLINE_VISIBILITY
+    constexpr explicit span(_It __first, size_type __count)
+        : __data_{_VSTD::to_address(__first)} {
+      (void)__count;
+      _LIBCPP_ASSERT(_Extent == __count, "size mismatch in span's constructor (iterator, len)");
+    }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr span(element_type (&__arr)[_Extent])          noexcept : __data{__arr} {}
-    _LIBCPP_INLINE_VISIBILITY constexpr span(      array<value_type, _Extent>& __arr) noexcept : __data{__arr.data()} {}
-    _LIBCPP_INLINE_VISIBILITY constexpr span(const array<value_type, _Extent>& __arr) noexcept : __data{__arr.data()} {}
+    template <__span_compatible_iterator<element_type> _It, __span_compatible_sentinel_for<_It> _End>
+    _LIBCPP_INLINE_VISIBILITY
+    constexpr explicit span(_It __first, _End __last) : __data_{_VSTD::to_address(__first)} {
+      // [span.cons]/10
+      // Throws: When and what last - first throws.
+      [[maybe_unused]] auto __dist = __last - __first;
+      _LIBCPP_ASSERT(__dist >= 0, "invalid range in span's constructor (iterator, sentinel)");
+      _LIBCPP_ASSERT(
+          __dist == _Extent, "invalid range in span's constructor (iterator, sentinel): last - first != extent");
+    }
+
+    _LIBCPP_INLINE_VISIBILITY constexpr span(type_identity_t<element_type> (&__arr)[_Extent]) noexcept : __data_{__arr} {}
+
+    template <__span_array_convertible<element_type> _OtherElementType>
+    _LIBCPP_INLINE_VISIBILITY
+    constexpr span(array<_OtherElementType, _Extent>& __arr) noexcept : __data_{__arr.data()} {}
 
     template <class _OtherElementType>
+        requires __span_array_convertible<const _OtherElementType, element_type>
     _LIBCPP_INLINE_VISIBILITY
-        constexpr span(const span<_OtherElementType, _Extent>& __other,
-                       enable_if_t<
-                          is_convertible_v<_OtherElementType(*)[], element_type (*)[]>,
-                          nullptr_t> = nullptr)
-        : __data{__other.data()} {}
+    constexpr span(const array<_OtherElementType, _Extent>& __arr) noexcept : __data_{__arr.data()} {}
 
-    template <class _OtherElementType>
+    template <__span_compatible_range<element_type> _Range>
     _LIBCPP_INLINE_VISIBILITY
-        constexpr span(const span<_OtherElementType, dynamic_extent>& __other,
-                       enable_if_t<
-                          is_convertible_v<_OtherElementType(*)[], element_type (*)[]>,
-                          nullptr_t> = nullptr) noexcept
-        : __data{__other.data()} { _LIBCPP_ASSERT(_Extent == __other.size(), "size mismatch in span's constructor (other span)"); }
+    constexpr explicit span(_Range&& __r) : __data_{ranges::data(__r)} {
+      _LIBCPP_ASSERT(ranges::size(__r) == _Extent, "size mismatch in span's constructor (range)");
+    }
+
+    template <__span_array_convertible<element_type> _OtherElementType>
+    _LIBCPP_INLINE_VISIBILITY
+        constexpr span(const span<_OtherElementType, _Extent>& __other)
+        : __data_{__other.data()} {}
+
+    template <__span_array_convertible<element_type> _OtherElementType>
+    _LIBCPP_INLINE_VISIBILITY
+        constexpr explicit span(const span<_OtherElementType, dynamic_extent>& __other) noexcept
+        : __data_{__other.data()} { _LIBCPP_ASSERT(_Extent == __other.size(), "size mismatch in span's constructor (other span)"); }
 
 
 //  ~span() noexcept = default;
@@ -246,29 +283,29 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     constexpr span<element_type, _Count> first() const noexcept
     {
-        static_assert(_Count <= _Extent, "Count out of range in span::first()");
-        return {data(), _Count};
+        static_assert(_Count <= _Extent, "span<T, N>::first<Count>(): Count out of range");
+        return span<element_type, _Count>{data(), _Count};
     }
 
     template <size_t _Count>
     _LIBCPP_INLINE_VISIBILITY
     constexpr span<element_type, _Count> last() const noexcept
     {
-        static_assert(_Count <= _Extent, "Count out of range in span::last()");
-        return {data() + size() - _Count, _Count};
+        static_assert(_Count <= _Extent, "span<T, N>::last<Count>(): Count out of range");
+        return span<element_type, _Count>{data() + size() - _Count, _Count};
     }
 
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span<element_type, dynamic_extent> first(index_type __count) const noexcept
+    constexpr span<element_type, dynamic_extent> first(size_type __count) const noexcept
     {
-        _LIBCPP_ASSERT(__count <= size(), "Count out of range in span::first(count)");
+        _LIBCPP_ASSERT(__count <= size(), "span<T, N>::first(count): count out of range");
         return {data(), __count};
     }
 
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span<element_type, dynamic_extent> last(index_type __count) const noexcept
+    constexpr span<element_type, dynamic_extent> last(size_type __count) const noexcept
     {
-        _LIBCPP_ASSERT(__count <= size(), "Count out of range in span::last(count)");
+        _LIBCPP_ASSERT(__count <= size(), "span<T, N>::last(count): count out of range");
         return {data() + size() - __count, __count};
     }
 
@@ -277,138 +314,137 @@ public:
     constexpr auto subspan() const noexcept
         -> span<element_type, _Count != dynamic_extent ? _Count : _Extent - _Offset>
     {
-        static_assert(_Offset <= _Extent, "Offset out of range in span::subspan()");
-        return {data() + _Offset, _Count == dynamic_extent ? size() - _Offset : _Count};
+        static_assert(_Offset <= _Extent, "span<T, N>::subspan<Offset, Count>(): Offset out of range");
+        static_assert(_Count == dynamic_extent || _Count <= _Extent - _Offset, "span<T, N>::subspan<Offset, Count>(): Offset + Count out of range");
+
+        using _ReturnType = span<element_type, _Count != dynamic_extent ? _Count : _Extent - _Offset>;
+        return _ReturnType{data() + _Offset, _Count == dynamic_extent ? size() - _Offset : _Count};
     }
 
 
     _LIBCPP_INLINE_VISIBILITY
     constexpr span<element_type, dynamic_extent>
-       subspan(index_type __offset, index_type __count = dynamic_extent) const noexcept
+       subspan(size_type __offset, size_type __count = dynamic_extent) const noexcept
     {
-        _LIBCPP_ASSERT(__offset <= size(), "Offset out of range in span::subspan(offset, count)");
-        _LIBCPP_ASSERT(__count  <= size() || __count == dynamic_extent, "Count out of range in span::subspan(offset, count)");
+        _LIBCPP_ASSERT(__offset <= size(), "span<T, N>::subspan(offset, count): offset out of range");
         if (__count == dynamic_extent)
             return {data() + __offset, size() - __offset};
-        _LIBCPP_ASSERT(__offset <= size() - __count, "count + offset out of range in span::subspan(offset, count)");
+        _LIBCPP_ASSERT(__count <= size() - __offset, "span<T, N>::subspan(offset, count): offset + count out of range");
         return {data() + __offset, __count};
     }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr index_type size()       const noexcept { return _Extent; }
-    _LIBCPP_INLINE_VISIBILITY constexpr index_type size_bytes() const noexcept { return _Extent * sizeof(element_type); }
-    _LIBCPP_INLINE_VISIBILITY constexpr bool empty()            const noexcept { return _Extent == 0; }
+    _LIBCPP_INLINE_VISIBILITY constexpr size_type size()           const noexcept { return _Extent; }
+    _LIBCPP_INLINE_VISIBILITY constexpr size_type size_bytes()     const noexcept { return _Extent * sizeof(element_type); }
+    [[nodiscard]] _LIBCPP_INLINE_VISIBILITY constexpr bool empty() const noexcept { return _Extent == 0; }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr reference operator[](index_type __idx) const noexcept
+    _LIBCPP_INLINE_VISIBILITY constexpr reference operator[](size_type __idx) const noexcept
     {
-        _LIBCPP_ASSERT(__idx >= 0 && __idx < size(), "span<T,N>[] index out of bounds");
-        return __data[__idx];
+        _LIBCPP_ASSERT(__idx < size(), "span<T, N>::operator[](index): index out of range");
+        return __data_[__idx];
     }
 
     _LIBCPP_INLINE_VISIBILITY constexpr reference front() const noexcept
     {
-        static_assert(_Extent > 0, "span<T,N>[].front() on empty span");
-        return __data[0];
+        _LIBCPP_ASSERT(!empty(), "span<T, N>::front() on empty span");
+        return __data_[0];
     }
 
     _LIBCPP_INLINE_VISIBILITY constexpr reference back() const noexcept
     {
-        static_assert(_Extent > 0, "span<T,N>[].back() on empty span");
-        return __data[size()-1];
+        _LIBCPP_ASSERT(!empty(), "span<T, N>::back() on empty span");
+        return __data_[size()-1];
     }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr pointer data()                         const noexcept { return __data; }
+    _LIBCPP_INLINE_VISIBILITY constexpr pointer data()                         const noexcept { return __data_; }
 
 // [span.iter], span iterator support
-    _LIBCPP_INLINE_VISIBILITY constexpr iterator                 begin() const noexcept { return iterator(data()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr iterator                   end() const noexcept { return iterator(data() + size()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_iterator          cbegin() const noexcept { return const_iterator(data()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_iterator            cend() const noexcept { return const_iterator(data() + size()); }
+    _LIBCPP_INLINE_VISIBILITY constexpr iterator begin() const noexcept {
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+        return std::__make_bounded_iter(data(), data(), data() + size());
+#else
+        return iterator(this, data());
+#endif
+    }
+    _LIBCPP_INLINE_VISIBILITY constexpr iterator end() const noexcept {
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+        return std::__make_bounded_iter(data() + size(), data(), data() + size());
+#else
+        return iterator(this, data() + size());
+#endif
+    }
     _LIBCPP_INLINE_VISIBILITY constexpr reverse_iterator        rbegin() const noexcept { return reverse_iterator(end()); }
     _LIBCPP_INLINE_VISIBILITY constexpr reverse_iterator          rend() const noexcept { return reverse_iterator(begin()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_reverse_iterator   crend() const noexcept { return const_reverse_iterator(cbegin()); }
-
-    _LIBCPP_INLINE_VISIBILITY constexpr void swap(span &__other) noexcept
-    {
-        pointer __p = __data;
-        __data = __other.__data;
-        __other.__data = __p;
-    }
 
     _LIBCPP_INLINE_VISIBILITY span<const byte, _Extent * sizeof(element_type)> __as_bytes() const noexcept
-    { return {reinterpret_cast<const byte *>(data()), size_bytes()}; }
+    { return span<const byte, _Extent * sizeof(element_type)>{reinterpret_cast<const byte *>(data()), size_bytes()}; }
 
     _LIBCPP_INLINE_VISIBILITY span<byte, _Extent * sizeof(element_type)> __as_writable_bytes() const noexcept
-    { return {reinterpret_cast<byte *>(data()), size_bytes()}; }
+    { return span<byte, _Extent * sizeof(element_type)>{reinterpret_cast<byte *>(data()), size_bytes()}; }
 
 private:
-    pointer    __data;
-
+    pointer    __data_;
 };
 
 
 template <typename _Tp>
 class _LIBCPP_TEMPLATE_VIS span<_Tp, dynamic_extent> {
-private:
-
 public:
 //  constants and types
     using element_type           = _Tp;
     using value_type             = remove_cv_t<_Tp>;
-    using index_type             = size_t;
+    using size_type              = size_t;
     using difference_type        = ptrdiff_t;
     using pointer                = _Tp *;
     using const_pointer          = const _Tp *;
     using reference              = _Tp &;
     using const_reference        = const _Tp &;
-    using iterator               =  __wrap_iter<pointer>;
-    using const_iterator         =  __wrap_iter<const_pointer>;
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+    using iterator               = __bounded_iter<pointer>;
+#else
+    using iterator               = __wrap_iter<pointer>;
+#endif
     using reverse_iterator       = _VSTD::reverse_iterator<iterator>;
-    using const_reverse_iterator = _VSTD::reverse_iterator<const_iterator>;
 
-    static constexpr index_type extent = dynamic_extent;
+    static constexpr size_type extent = dynamic_extent;
 
 // [span.cons], span constructors, copy, assignment, and destructor
-    _LIBCPP_INLINE_VISIBILITY constexpr span() noexcept : __data{nullptr}, __size{0} {}
+    _LIBCPP_INLINE_VISIBILITY constexpr span() noexcept : __data_{nullptr}, __size_{0} {}
 
     constexpr span           (const span&) noexcept = default;
     constexpr span& operator=(const span&) noexcept = default;
 
-    _LIBCPP_INLINE_VISIBILITY constexpr span(pointer __ptr, index_type __count) : __data{__ptr}, __size{__count} {}
-    _LIBCPP_INLINE_VISIBILITY constexpr span(pointer __f, pointer __l) : __data{__f}, __size{static_cast<size_t>(distance(__f, __l))} {}
+    template <__span_compatible_iterator<element_type> _It>
+    _LIBCPP_INLINE_VISIBILITY
+    constexpr span(_It __first, size_type __count)
+        : __data_{_VSTD::to_address(__first)}, __size_{__count} {}
+
+    template <__span_compatible_iterator<element_type> _It, __span_compatible_sentinel_for<_It> _End>
+    _LIBCPP_INLINE_VISIBILITY constexpr span(_It __first, _End __last)
+        : __data_(_VSTD::to_address(__first)), __size_(__last - __first) {
+      _LIBCPP_ASSERT(__last - __first >= 0, "invalid range in span's constructor (iterator, sentinel)");
+    }
 
     template <size_t _Sz>
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span(element_type (&__arr)[_Sz])          noexcept : __data{__arr}, __size{_Sz} {}
+    constexpr span(type_identity_t<element_type> (&__arr)[_Sz]) noexcept : __data_{__arr}, __size_{_Sz} {}
 
-    template <size_t _Sz>
+    template <__span_array_convertible<element_type> _OtherElementType, size_t _Sz>
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span(array<value_type, _Sz>& __arr)       noexcept : __data{__arr.data()}, __size{_Sz} {}
+    constexpr span(array<_OtherElementType, _Sz>& __arr) noexcept : __data_{__arr.data()}, __size_{_Sz} {}
 
-    template <size_t _Sz>
+    template <class _OtherElementType, size_t _Sz>
+        requires __span_array_convertible<const _OtherElementType, element_type>
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span(const array<value_type, _Sz>& __arr) noexcept : __data{__arr.data()}, __size{_Sz} {}
+    constexpr span(const array<_OtherElementType, _Sz>& __arr) noexcept : __data_{__arr.data()}, __size_{_Sz} {}
 
-    template <class _Container>
+    template <__span_compatible_range<element_type> _Range>
     _LIBCPP_INLINE_VISIBILITY
-        constexpr span(      _Container& __c,
-            enable_if_t<__is_span_compatible_container<_Container, _Tp>::value, nullptr_t> = nullptr)
-        : __data{_VSTD::data(__c)}, __size{(index_type) _VSTD::size(__c)} {}
+    constexpr span(_Range&& __r) : __data_(ranges::data(__r)), __size_{ranges::size(__r)} {}
 
-    template <class _Container>
+    template <__span_array_convertible<element_type> _OtherElementType, size_t _OtherExtent>
     _LIBCPP_INLINE_VISIBILITY
-        constexpr span(const _Container& __c,
-            enable_if_t<__is_span_compatible_container<const _Container, _Tp>::value, nullptr_t> = nullptr)
-        : __data{_VSTD::data(__c)}, __size{(index_type) _VSTD::size(__c)} {}
-
-
-    template <class _OtherElementType, size_t _OtherExtent>
-    _LIBCPP_INLINE_VISIBILITY
-        constexpr span(const span<_OtherElementType, _OtherExtent>& __other,
-                       enable_if_t<
-                          is_convertible_v<_OtherElementType(*)[], element_type (*)[]>,
-                          nullptr_t> = nullptr) noexcept
-        : __data{__other.data()}, __size{__other.size()} {}
+        constexpr span(const span<_OtherElementType, _OtherExtent>& __other)  noexcept
+        : __data_{__other.data()}, __size_{__other.size()} {}
 
 //    ~span() noexcept = default;
 
@@ -416,98 +452,94 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     constexpr span<element_type, _Count> first() const noexcept
     {
-        _LIBCPP_ASSERT(_Count <= size(), "Count out of range in span::first()");
-        return {data(), _Count};
+        _LIBCPP_ASSERT(_Count <= size(), "span<T>::first<Count>(): Count out of range");
+        return span<element_type, _Count>{data(), _Count};
     }
 
     template <size_t _Count>
     _LIBCPP_INLINE_VISIBILITY
     constexpr span<element_type, _Count> last() const noexcept
     {
-        _LIBCPP_ASSERT(_Count <= size(), "Count out of range in span::last()");
-        return {data() + size() - _Count, _Count};
+        _LIBCPP_ASSERT(_Count <= size(), "span<T>::last<Count>(): Count out of range");
+        return span<element_type, _Count>{data() + size() - _Count, _Count};
     }
 
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span<element_type, dynamic_extent> first(index_type __count) const noexcept
+    constexpr span<element_type, dynamic_extent> first(size_type __count) const noexcept
     {
-        _LIBCPP_ASSERT(__count <= size(), "Count out of range in span::first(count)");
+        _LIBCPP_ASSERT(__count <= size(), "span<T>::first(count): count out of range");
         return {data(), __count};
     }
 
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span<element_type, dynamic_extent> last (index_type __count) const noexcept
+    constexpr span<element_type, dynamic_extent> last (size_type __count) const noexcept
     {
-        _LIBCPP_ASSERT(__count <= size(), "Count out of range in span::last(count)");
+        _LIBCPP_ASSERT(__count <= size(), "span<T>::last(count): count out of range");
         return {data() + size() - __count, __count};
     }
 
     template <size_t _Offset, size_t _Count = dynamic_extent>
     _LIBCPP_INLINE_VISIBILITY
-    constexpr span<_Tp, dynamic_extent> subspan() const noexcept
+    constexpr span<element_type, _Count> subspan() const noexcept
     {
-        _LIBCPP_ASSERT(_Offset <= size(), "Offset out of range in span::subspan()");
-        _LIBCPP_ASSERT(_Count == dynamic_extent || _Offset + _Count <= size(), "Count out of range in span::subspan()");
-        return {data() + _Offset, _Count == dynamic_extent ? size() - _Offset : _Count};
+        _LIBCPP_ASSERT(_Offset <= size(), "span<T>::subspan<Offset, Count>(): Offset out of range");
+        _LIBCPP_ASSERT(_Count == dynamic_extent || _Count <= size() - _Offset, "span<T>::subspan<Offset, Count>(): Offset + Count out of range");
+        return span<element_type, _Count>{data() + _Offset, _Count == dynamic_extent ? size() - _Offset : _Count};
     }
 
     constexpr span<element_type, dynamic_extent>
     _LIBCPP_INLINE_VISIBILITY
-    subspan(index_type __offset, index_type __count = dynamic_extent) const noexcept
+    subspan(size_type __offset, size_type __count = dynamic_extent) const noexcept
     {
-        _LIBCPP_ASSERT(__offset <= size(), "Offset out of range in span::subspan(offset, count)");
-        _LIBCPP_ASSERT(__count  <= size() || __count == dynamic_extent, "count out of range in span::subspan(offset, count)");
+        _LIBCPP_ASSERT(__offset <= size(), "span<T>::subspan(offset, count): offset out of range");
         if (__count == dynamic_extent)
             return {data() + __offset, size() - __offset};
-        _LIBCPP_ASSERT(__offset <= size() - __count, "Offset + count out of range in span::subspan(offset, count)");
+        _LIBCPP_ASSERT(__count <= size() - __offset, "span<T>::subspan(offset, count): offset + count out of range");
         return {data() + __offset, __count};
     }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr index_type size()       const noexcept { return __size; }
-    _LIBCPP_INLINE_VISIBILITY constexpr index_type size_bytes() const noexcept { return __size * sizeof(element_type); }
-    _LIBCPP_INLINE_VISIBILITY constexpr bool empty()            const noexcept { return __size == 0; }
+    _LIBCPP_INLINE_VISIBILITY constexpr size_type size()           const noexcept { return __size_; }
+    _LIBCPP_INLINE_VISIBILITY constexpr size_type size_bytes()     const noexcept { return __size_ * sizeof(element_type); }
+    [[nodiscard]] _LIBCPP_INLINE_VISIBILITY constexpr bool empty() const noexcept { return __size_ == 0; }
 
-    _LIBCPP_INLINE_VISIBILITY constexpr reference operator[](index_type __idx) const noexcept
+    _LIBCPP_INLINE_VISIBILITY constexpr reference operator[](size_type __idx) const noexcept
     {
-        _LIBCPP_ASSERT(__idx >= 0 && __idx < size(), "span<T>[] index out of bounds");
-        return __data[__idx];
+        _LIBCPP_ASSERT(__idx < size(), "span<T>::operator[](index): index out of range");
+        return __data_[__idx];
     }
 
     _LIBCPP_INLINE_VISIBILITY constexpr reference front() const noexcept
     {
-        _LIBCPP_ASSERT(!empty(), "span<T>[].front() on empty span");
-        return __data[0];
+        _LIBCPP_ASSERT(!empty(), "span<T>::front() on empty span");
+        return __data_[0];
     }
 
     _LIBCPP_INLINE_VISIBILITY constexpr reference back() const noexcept
     {
-        _LIBCPP_ASSERT(!empty(), "span<T>[].back() on empty span");
-        return __data[size()-1];
+        _LIBCPP_ASSERT(!empty(), "span<T>::back() on empty span");
+        return __data_[size()-1];
     }
 
 
-    _LIBCPP_INLINE_VISIBILITY constexpr pointer data()                         const noexcept { return __data; }
+    _LIBCPP_INLINE_VISIBILITY constexpr pointer data()                         const noexcept { return __data_; }
 
 // [span.iter], span iterator support
-    _LIBCPP_INLINE_VISIBILITY constexpr iterator                 begin() const noexcept { return iterator(data()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr iterator                   end() const noexcept { return iterator(data() + size()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_iterator          cbegin() const noexcept { return const_iterator(data()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_iterator            cend() const noexcept { return const_iterator(data() + size()); }
+    _LIBCPP_INLINE_VISIBILITY constexpr iterator begin() const noexcept {
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+        return std::__make_bounded_iter(data(), data(), data() + size());
+#else
+        return iterator(this, data());
+#endif
+    }
+    _LIBCPP_INLINE_VISIBILITY constexpr iterator end() const noexcept {
+#ifdef _LIBCPP_DEBUG_ITERATOR_BOUNDS_CHECKING
+        return std::__make_bounded_iter(data() + size(), data(), data() + size());
+#else
+        return iterator(this, data() + size());
+#endif
+    }
     _LIBCPP_INLINE_VISIBILITY constexpr reverse_iterator        rbegin() const noexcept { return reverse_iterator(end()); }
     _LIBCPP_INLINE_VISIBILITY constexpr reverse_iterator          rend() const noexcept { return reverse_iterator(begin()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
-    _LIBCPP_INLINE_VISIBILITY constexpr const_reverse_iterator   crend() const noexcept { return const_reverse_iterator(cbegin()); }
-
-    _LIBCPP_INLINE_VISIBILITY constexpr void swap(span &__other) noexcept
-    {
-        pointer __p = __data;
-        __data = __other.__data;
-        __other.__data = __p;
-
-        index_type __sz = __size;
-        __size = __other.__size;
-        __other.__size = __sz;
-    }
 
     _LIBCPP_INLINE_VISIBILITY span<const byte, dynamic_extent> __as_bytes() const noexcept
     { return {reinterpret_cast<const byte *>(data()), size_bytes()}; }
@@ -516,58 +548,32 @@ public:
     { return {reinterpret_cast<byte *>(data()), size_bytes()}; }
 
 private:
-    pointer    __data;
-    index_type __size;
+    pointer   __data_;
+    size_type __size_;
 };
 
-//  tuple interface
-template <class _Tp, size_t _Size>
-struct _LIBCPP_TEMPLATE_VIS tuple_size<span<_Tp, _Size>>
-    : public integral_constant<size_t, _Size> {};
+template <class _Tp, size_t _Extent>
+inline constexpr bool ranges::enable_borrowed_range<span<_Tp, _Extent> > = true;
 
-template <class _Tp>
-struct _LIBCPP_TEMPLATE_VIS tuple_size<span<_Tp, dynamic_extent>>; // declared but not defined
-
-
-template <size_t _Ip, class _Tp, size_t _Size>
-struct _LIBCPP_TEMPLATE_VIS tuple_element<_Ip, span<_Tp, _Size>>
-{
-    static_assert( dynamic_extent != _Size, "std::tuple_element<> not supported for std::span<T, dynamic_extent>");
-    static_assert(_Ip < _Size, "Index out of bounds in std::tuple_element<> (std::span)");
-    typedef _Tp type;
-};
-
-template <size_t _Ip, class _Tp, size_t _Size>
-_LIBCPP_INLINE_VISIBILITY constexpr
-_Tp&
-get(span<_Tp, _Size> __s) noexcept
-{
-    static_assert( dynamic_extent != _Size, "std::get<> not supported for std::span<T, dynamic_extent>");
-    static_assert(_Ip < _Size, "Index out of bounds in std::get<> (std::span)");
-    return __s[_Ip];
-}
-
+template <class _ElementType, size_t _Extent>
+inline constexpr bool ranges::enable_view<span<_ElementType, _Extent>> = true;
 
 //  as_bytes & as_writable_bytes
 template <class _Tp, size_t _Extent>
 _LIBCPP_INLINE_VISIBILITY
 auto as_bytes(span<_Tp, _Extent> __s) noexcept
--> decltype(__s.__as_bytes())
-{ return    __s.__as_bytes(); }
+{ return __s.__as_bytes(); }
 
-template <class _Tp, size_t _Extent>
+template <class _Tp, size_t _Extent> requires(!is_const_v<_Tp>)
 _LIBCPP_INLINE_VISIBILITY
 auto as_writable_bytes(span<_Tp, _Extent> __s) noexcept
--> enable_if_t<!is_const_v<_Tp>, decltype(__s.__as_writable_bytes())>
 { return __s.__as_writable_bytes(); }
 
-template <class _Tp, size_t _Extent>
-_LIBCPP_INLINE_VISIBILITY
-constexpr void swap(span<_Tp, _Extent> &__lhs, span<_Tp, _Extent> &__rhs) noexcept
-{ __lhs.swap(__rhs); }
+#if _LIBCPP_STD_VER >= 20
+template<contiguous_iterator _It, class _EndOrSize>
+    span(_It, _EndOrSize) -> span<remove_reference_t<iter_reference_t<_It>>>;
+#endif // _LIBCPP_STD_VER >= 20
 
-
-//  Deduction guides
 template<class _Tp, size_t _Sz>
     span(_Tp (&)[_Sz]) -> span<_Tp, _Sz>;
 
@@ -577,14 +583,20 @@ template<class _Tp, size_t _Sz>
 template<class _Tp, size_t _Sz>
     span(const array<_Tp, _Sz>&) -> span<const _Tp, _Sz>;
 
-template<class _Container>
-    span(_Container&) -> span<typename _Container::value_type>;
+template<ranges::contiguous_range _Range>
+    span(_Range&&) -> span<remove_reference_t<ranges::range_reference_t<_Range>>>;
 
-template<class _Container>
-    span(const _Container&) -> span<const typename _Container::value_type>;
-
-#endif // _LIBCPP_STD_VER > 17
+#endif // _LIBCPP_STD_VER >= 20
 
 _LIBCPP_END_NAMESPACE_STD
+
+_LIBCPP_POP_MACROS
+
+#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 20
+#  include <concepts>
+#  include <functional>
+#  include <iterator>
+#  include <type_traits>
+#endif
 
 #endif // _LIBCPP_SPAN

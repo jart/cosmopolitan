@@ -228,7 +228,8 @@ static void PrintImageImpl(long syn, long sxn, unsigned char RGB[3][syn][sxn],
   unsigned char a[3], b[3];
   didhalfy = false;
   for (y = y0; y < yn; y += dy) {
-    if (y) printf("\e[0m\n");
+    if (y)
+      printf("\e[0m\n");
     for (x = x0; x < xn; x += dx) {
       a[0] = RGB[0][y][x];
       a[1] = RGB[1][y][x];
@@ -328,8 +329,10 @@ static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
   long y, x;
   struct TtyRgb bg = {0x12, 0x34, 0x56, 0};
   struct TtyRgb fg = {0x12, 0x34, 0x56, 0};
-  if (g_flags.unsharp) unsharp(3, yn, xn, RGB, yn, xn);
-  if (g_flags.dither) dither(yn, xn, RGB, yn, xn);
+  if (g_flags.unsharp)
+    unsharp(3, yn, xn, RGB, yn, xn);
+  if (g_flags.dither)
+    dither(yn, xn, RGB, yn, xn);
   if (yn && xn) {
     for (y = 0; y < tyn; ++y) {
       for (x = 0; x < txn; ++x) {
@@ -396,8 +399,10 @@ void WithImageFile(const char *path,
     wyn = g_winsize.ws_row * 2;
     wxn = g_winsize.ws_col;
     if (g_flags.ignoreaspect) {
-      if (!dyn) dyn = wyn;
-      if (!dxn) dxn = wxn * (1 + !g_flags.half);
+      if (!dyn)
+        dyn = wyn;
+      if (!dxn)
+        dxn = wxn * (1 + !g_flags.half);
     }
     if (!dyn && !dxn) {
       if (sxn * wyn > syn * wxn) {
@@ -439,7 +444,8 @@ int main(int argc, char *argv[]) {
   int i;
   ShowCrashReports();
   GetOpts(&argc, argv);
-  if (optind == argc) PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+  if (optind == argc)
+    PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {
     WithImageFile(argv[i], ProcessImage);

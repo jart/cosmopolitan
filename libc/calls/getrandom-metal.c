@@ -64,7 +64,8 @@ static ssize_t GetRandomCpu(char *p, size_t n, int f, bool impl(uint64_t *)) {
   for (i = 0; i < n; i += j) {
   TryAgain:
     if (!impl(&x)) {
-      if (f || i >= 256) break;
+      if (f || i >= 256)
+        break;
       goto TryAgain;
     }
     for (j = 0; j < 8 && i + j < n; ++j) {

@@ -30,7 +30,8 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_close_nt(int fd, int fildes) {
-  if (fd + 0u >= g_fds.n) return ebadf();
+  if (fd + 0u >= g_fds.n)
+    return ebadf();
   struct Fd *f = g_fds.p + fd;
   switch (f->kind) {
     case kFdZip:

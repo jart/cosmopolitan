@@ -109,7 +109,8 @@ static void printelfehdr(void) {
 
 static void printelfsegmentheader(int i) {
   Elf64_Phdr *phdr = GetElfProgramHeaderAddress(elf, st->st_size, i);
-  if (!phdr) return;
+  if (!phdr)
+    return;
   printf("/\tElf64_Phdr *phdr = GetElfProgramHeaderAddress(elf, st->st_size, "
          "%d)\n",
          i);
@@ -132,13 +133,15 @@ static void printelfsegmentheader(int i) {
 static void printelfsegmentheaders(void) {
   printf("\n");
   printf("\t.org\t%#x\n", elf->e_phoff);
-  for (unsigned i = 0; i < elf->e_phnum; ++i) printelfsegmentheader(i);
+  for (unsigned i = 0; i < elf->e_phnum; ++i)
+    printelfsegmentheader(i);
 }
 
 static void printelfsectionheader(int i, char *shstrtab) {
   Elf64_Shdr *shdr;
   shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
-  if (!shdr) return;
+  if (!shdr)
+    return;
   printf("/\tElf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, "
          "%d)\n",
          i);
@@ -170,7 +173,8 @@ static void printelfsectionheaders(void) {
   Elf64_Shdr *shdr, *shshdr;
   shshdr = GetElfSectionHeaderAddress(elf, st->st_size, elf->e_shstrndx);
   shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
-  if (!shshdr || !shstrtab) return;
+  if (!shshdr || !shstrtab)
+    return;
   if (shstrtab) {
     printf("\n");
     printf("\t.org\t%#x\n", elf->e_shoff);
@@ -181,7 +185,8 @@ static void printelfsectionheaders(void) {
     printf("\t.org\t%#x\n", shshdr->sh_offset);
     for (i = 0; i < elf->e_shnum; ++i) {
       shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
-      if (!shdr) break;
+      if (!shdr)
+        break;
       str = GetElfString(elf, st->st_size, shstrtab, shdr->sh_name);
       show(".asciz", format(b1, "%`'s", str), NULL);
     }
@@ -191,18 +196,23 @@ static void printelfsectionheaders(void) {
 static void printelfgroups(void) {
   for (int i = 0; i < elf->e_shnum; ++i) {
     Elf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
-    if (!shdr) break;
+    if (!shdr)
+      break;
     if (shdr->sh_type == SHT_GROUP) {
       const Elf64_Shdr *symhdr =
           GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
-      if (!symhdr) break;
+      if (!symhdr)
+        break;
       const Elf64_Shdr *strhdr =
           GetElfSectionHeaderAddress(elf, st->st_size, symhdr->sh_link);
-      if (!strhdr) break;
+      if (!strhdr)
+        break;
       Elf64_Sym *syms = GetElfSectionAddress(elf, st->st_size, symhdr);
-      if (!syms) break;
+      if (!syms)
+        break;
       char *strs = GetElfSectionAddress(elf, st->st_size, strhdr);
-      if (!strs) break;
+      if (!strs)
+        break;
       printf("\n");
       printf("//\t%s group\n",
              GetElfString(elf, st->st_size, strs, syms[shdr->sh_info].st_name));
@@ -276,7 +286,8 @@ static void printelfsymbol(Elf64_Sym *sym, char *strtab, char *shstrtab) {
 static void printelfsymboltable(void) {
   size_t i, symcount = 0;
   Elf64_Sym *symtab = GetElfSymbols(elf, st->st_size, SHT_SYMTAB, &symcount);
-  if (!symtab) return;
+  if (!symtab)
+    return;
   char *strtab = GetElfStringTable(elf, st->st_size, ".strtab");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   printf("\n\n");
@@ -292,7 +303,8 @@ static void printelfsymboltable(void) {
 static void printelfdynsymboltable(void) {
   size_t i, symcount = 0;
   Elf64_Sym *symtab = GetElfSymbols(elf, st->st_size, SHT_DYNSYM, &symcount);
-  if (!symtab) return;
+  if (!symtab)
+    return;
   char *strtab = GetElfStringTable(elf, st->st_size, ".dynstr");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   printf("\n\n");
@@ -342,7 +354,8 @@ static void printelfrelocations(void) {
                        (uintptr_t)elf + shdr->sh_offset + shdr->sh_size));
            ++rela, ++j) {
         symtab = GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
-        if (!symtab) continue;
+        if (!symtab)
+          continue;
         count = symtab->sh_size / symtab->sh_entsize;
         syms = GetElfSectionAddress(elf, st->st_size, symtab);
         sym = ELF64_R_SYM(rela->r_info);

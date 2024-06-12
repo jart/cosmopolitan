@@ -32,10 +32,13 @@ static textwindows int sys_clock_nanosleep_nt_impl(int clock,
   uint32_t msdelay;
   struct timespec now;
   for (;;) {
-    if (sys_clock_gettime_nt(clock, &now)) return -1;
-    if (timespec_cmp(now, abs) >= 0) return 0;
+    if (sys_clock_gettime_nt(clock, &now))
+      return -1;
+    if (timespec_cmp(now, abs) >= 0)
+      return 0;
     msdelay = timespec_tomillis(timespec_sub(abs, now));
-    if (_park_norestart(msdelay, waitmask)) return -1;
+    if (_park_norestart(msdelay, waitmask))
+      return -1;
   }
 }
 
@@ -48,7 +51,8 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
   if (flags & TIMER_ABSTIME) {
     abs = *req;
   } else {
-    if ((rc = sys_clock_gettime_nt(clock, &now))) goto BailOut;
+    if ((rc = sys_clock_gettime_nt(clock, &now)))
+      goto BailOut;
     abs = timespec_add(now, *req);
   }
   rc = sys_clock_nanosleep_nt_impl(clock, abs, m);

@@ -26,25 +26,44 @@
  */
 int CategorizeIp(uint32_t x) {
   int a;
-  if (IsLoopbackIp(x)) return kIpLoopback;
-  if (IsPrivateIp(x)) return kIpPrivate;
-  if (IsMulticastIp(x)) return kIpMulticast;
-  if (IsAnonymousIp(x)) return kIpAnonymous; /* order matters */
-  if (IsTestnetIp(x)) return kIpTestnet;     /* order matters */
-  if (IsAfrinicIp(x)) return kIpAfrinic;
-  if (IsLacnicIp(x)) return kIpLacnic;
-  if (IsApnicIp(x)) return kIpApnic;
-  if (IsArinIp(x)) return kIpArin;
-  if (IsRipeIp(x)) return kIpRipe;
-  if (IsDodIp(x)) return kIpDod;
+  if (IsLoopbackIp(x))
+    return kIpLoopback;
+  if (IsPrivateIp(x))
+    return kIpPrivate;
+  if (IsMulticastIp(x))
+    return kIpMulticast;
+  if (IsAnonymousIp(x))
+    return kIpAnonymous; /* order matters */
+  if (IsTestnetIp(x))
+    return kIpTestnet; /* order matters */
+  if (IsAfrinicIp(x))
+    return kIpAfrinic;
+  if (IsLacnicIp(x))
+    return kIpLacnic;
+  if (IsApnicIp(x))
+    return kIpApnic;
+  if (IsArinIp(x))
+    return kIpArin;
+  if (IsRipeIp(x))
+    return kIpRipe;
+  if (IsDodIp(x))
+    return kIpDod;
   a = (x & 0xff000000) >> 24;
-  if (a == 12) return kIpAtt;
-  if (a == 17) return kIpApple;
-  if (a == 19) return kIpFord;
-  if (a == 38) return kIpCogent;
-  if (a == 48) return kIpPrudential;
-  if (a == 56) return kIpUsps;
-  if (a == 73) return kIpComcast;
-  if (a >= 240) return kIpFuture;
+  if (a == 12)
+    return kIpAtt;
+  if (a == 17)
+    return kIpApple;
+  if (a == 19)
+    return kIpFord;
+  if (a == 38)
+    return kIpCogent;
+  if (a == 48)
+    return kIpPrudential;
+  if (a == 56)
+    return kIpUsps;
+  if (a == 73)
+    return kIpComcast;
+  if (a >= 240)
+    return kIpFuture;
   return kIpUnknown;
 }

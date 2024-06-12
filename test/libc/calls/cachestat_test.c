@@ -93,7 +93,8 @@ TEST(cachestat, testCachestatSyncNoDirty) {
             "total number of evicted pages is off.");
   struct statfs statfs;
   ASSERT_SYS(0, 0, fstatfs(3, &statfs));
-  if (statfs.f_type == TMPFS_MAGIC) goto done;
+  if (statfs.f_type == TMPFS_MAGIC)
+    goto done;
   ASSERT_SYS(0, 0, fsync(3));
   ASSERT_SYS(0, 0, cachestat(3, &range, &cs, 0));
   EXPECT_EQ(0, cs.nr_dirty,

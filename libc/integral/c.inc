@@ -66,14 +66,15 @@
 #endif
 
 #if (!defined(__llvm__) && !__has_builtin(__builtin_assume))
-#define __builtin_assume(x)            \
-  do {                                 \
-    if (!(x)) __builtin_unreachable(); \
+#define __builtin_assume(x)    \
+  do {                         \
+    if (!(x))                  \
+      __builtin_unreachable(); \
   } while (0)
 #endif
 
 #if __STDC_VERSION__ + 0 < 201112
-#define _Atomic(TYPE) TYPE volatile
+#define _Atomic(t) volatile t *
 #endif
 
 #ifdef __llvm__
@@ -105,8 +106,6 @@ typedef __CHAR32_TYPE__ char32_t;
 #ifndef __COSMOCC__
 #include "libc/stdbool.h"
 #endif
-
-#define _LIBCPP_STDINT_H
 
 typedef int errno_t;
 typedef __SIZE_TYPE__ size_t;
@@ -540,16 +539,13 @@ typedef struct {
 #ifdef __x86_64__
 #define notpossible          \
   do {                       \
-    __asm__("nop\n\t"        \
-            "ud2\n\t"        \
-            "nop");          \
+    __asm__("ud2");          \
     __builtin_unreachable(); \
   } while (0)
 #elif defined(__aarch64__)
 #define notpossible          \
   do {                       \
-    __asm__("udf\t#0\n\t"    \
-            "nop");          \
+    __asm__("udf\t#0");      \
     __builtin_unreachable(); \
   } while (0)
 #else
@@ -598,8 +594,19 @@ typedef struct {
 
 #ifdef __x86_64__
 #define DebugBreak() __asm__("int3")
+#elif defined(__aarch64__)
+#define DebugBreak() __asm__("brk\t#0x666")
 #else
 #define DebugBreak() __builtin_trap()
+#endif
+
+#ifdef __aarch64__
+/* raise sigill (not sigtrap) like x86 does */
+#define __builtin_trap()     \
+  do {                       \
+    __asm__("udf\t#0x666");  \
+    __builtin_unreachable(); \
+  } while (0)
 #endif
 
 #endif /* _COSMO_SOURCE */

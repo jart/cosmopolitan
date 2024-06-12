@@ -17,8 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/certs.h"
 #include "third_party/mbedtls/common.h"

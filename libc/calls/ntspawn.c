@@ -20,9 +20,15 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/processaccess.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
@@ -33,6 +39,7 @@
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/startupinfoex.h"
 #include "libc/proc/ntspawn.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
@@ -44,12 +51,165 @@ struct SpawnBlock {
   char envbuf[32767];
 };
 
-static void *ntspawn_malloc(size_t size) {
+static textwindows void *ntspawn_malloc(size_t size) {
   return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static void ntspawn_free(void *ptr) {
+static textwindows void ntspawn_free(void *ptr) {
   HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+static textwindows ssize_t ntspawn_read(intptr_t fh, char *buf, size_t len) {
+  bool ok;
+  uint32_t got;
+  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
+  ok = (ReadFile(fh, buf, len, 0, &overlap) ||
+        GetLastError() == kNtErrorIoPending) &&
+       GetOverlappedResult(fh, &overlap, &got, true);
+  CloseHandle(overlap.hEvent);
+  return ok ? got : -1;
+}
+
+static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
+
+  // make executable path
+  if (__mkntpathath(a->dirhand, a->prog, 0, sb->path) == -1)
+    return -1;
+
+  // open executable
+  char *p = sb->envbuf;
+  char *pe = p + sizeof(sb->envbuf);
+  intptr_t fh = CreateFile(
+      sb->path, kNtFileGenericRead,
+      kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+      kNtOpenExisting, kNtFileAttributeNormal | kNtFileFlagBackupSemantics, 0);
+  if (fh == -1)
+    return -1;
+  ssize_t got = ntspawn_read(fh, p, pe - p);
+  CloseHandle(fh);
+  if (got < 3)
+    return enoexec();
+  pe = p + got;
+
+  // handle shebang
+  size_t i = 0;  // represents space of sb->cmdline consumed
+  if (p[0] == 'M' && p[1] == 'Z') {
+    // it's a windows executable
+  } else if (p[0] == '#' && p[1] == '!') {
+    p += 2;
+    // make sure we got a complete first line
+    pe = memchr(p, '\n', pe - p);
+    if (!pe)
+      return enoexec();
+    *pe = 0;
+    int argc = 0;
+    char *argv[4];
+    // it's legal to say "#! /bin/sh"
+    while (p < pe && (*p == ' ' || *p == '\t'))
+      ++p;
+    if (p == pe)
+      return enoexec();
+    argv[argc++] = p;
+    // find the optional argument
+    while (p < pe && !(*p == ' ' || *p == '\t'))
+      ++p;
+    if (p < pe) {
+      *p++ = 0;
+      while (p < pe && (*p == ' ' || *p == '\t'))
+        ++p;
+      if (p < pe) {
+        argv[argc++] = p;
+      }
+    }
+    // now add the prog
+    argv[argc++] = (char *)a->prog;
+    argv[argc] = 0;
+    // ignore argv[0]
+    if (*a->argv)
+      ++a->argv;
+    // prepend arguments
+    if ((i += mkntcmdline(sb->cmdline + i, argv, 32767 - i)) >= 32767 - 1)
+      return e2big();
+    sb->cmdline[i++] = ' ';
+    sb->cmdline[i] = 0;
+    // setup the true executable path
+    if (__mkntpathath(a->dirhand, argv[0], 0, sb->path) == -1)
+      return -1;
+  } else {
+    // it's something else
+    return enoexec();
+  }
+
+  // setup arguments and environment
+  if ((i += mkntcmdline(sb->cmdline + i, a->argv, 32767 - i)) >= 32767)
+    return e2big();
+  if (mkntenvblock(sb->envblock, a->envp, a->extravars, sb->envbuf) == -1)
+    return -1;
+
+  // create attribute list
+  // this code won't call malloc in practice
+  bool32 ok;
+  void *freeme = 0;
+  alignas(16) char memory[128];
+  size_t size = sizeof(memory);
+  struct NtProcThreadAttributeList *alist = (void *)memory;
+  uint32_t items = !!a->opt_hParentProcess + !!a->opt_lpExplicitHandleList;
+  ok = InitializeProcThreadAttributeList(alist, items, 0, &size);
+  if (!ok && GetLastError() == kNtErrorInsufficientBuffer) {
+    ok = !!(alist = freeme = ntspawn_malloc(size));
+    if (ok) {
+      ok = InitializeProcThreadAttributeList(alist, items, 0, &size);
+    }
+  }
+  if (ok && a->opt_hParentProcess) {
+    ok = UpdateProcThreadAttribute(
+        alist, 0, kNtProcThreadAttributeParentProcess, &a->opt_hParentProcess,
+        sizeof(a->opt_hParentProcess), 0, 0);
+  }
+  if (ok && a->opt_lpExplicitHandleList) {
+    ok = UpdateProcThreadAttribute(
+        alist, 0, kNtProcThreadAttributeHandleList, a->opt_lpExplicitHandleList,
+        a->dwExplicitHandleCount * sizeof(*a->opt_lpExplicitHandleList), 0, 0);
+  }
+
+  // create the process
+  int rc;
+  if (ok) {
+    struct NtStartupInfoEx info = {
+        .StartupInfo = *a->lpStartupInfo,
+        .lpAttributeList = alist,
+    };
+    info.StartupInfo.cb = sizeof(info);
+    if (ok) {
+      if (CreateProcess(sb->path, sb->cmdline, 0, 0, true,
+                        a->dwCreationFlags | kNtCreateUnicodeEnvironment |
+                            kNtExtendedStartupinfoPresent |
+                            kNtInheritParentAffinity |
+                            GetPriorityClass(GetCurrentProcess()),
+                        sb->envblock, a->opt_lpCurrentDirectory,
+                        &info.StartupInfo, a->opt_out_lpProcessInformation)) {
+        rc = 0;
+      } else {
+        rc = -1;
+        STRACE("CreateProcess() failed w/ %d", GetLastError());
+        if (GetLastError() == kNtErrorSharingViolation) {
+          etxtbsy();
+        } else if (GetLastError() == kNtErrorInvalidName) {
+          enoent();
+        }
+      }
+      rc = __fix_enotdir(rc, sb->path);
+    }
+  } else {
+    rc = __winerr();
+  }
+
+  // clean up resources
+  if (alist)
+    DeleteProcThreadAttributeList(alist);
+  if (freeme)
+    ntspawn_free(freeme);
+  return rc;
 }
 
 /**
@@ -72,92 +232,15 @@ static void ntspawn_free(void *ptr) {
  * @see spawnve() which abstracts this function
  * @asyncsignalsafe
  */
-textwindows int ntspawn(
-    int64_t dirhand, const char *prog, char *const argv[], char *const envp[],
-    char *const extravars[], uint32_t dwCreationFlags,
-    const char16_t *opt_lpCurrentDirectory, int64_t opt_hParentProcess,
-    int64_t *opt_lpExplicitHandleList, uint32_t dwExplicitHandleCount,
-    const struct NtStartupInfo *lpStartupInfo,
-    struct NtProcessInformation *opt_out_lpProcessInformation) {
-  int rc = -1;
+textwindows int ntspawn(struct NtSpawnArgs *args) {
+  int rc;
   struct SpawnBlock *sb;
   BLOCK_SIGNALS;
-  if ((sb = ntspawn_malloc(sizeof(*sb))) &&
-      __mkntpathath(dirhand, prog, 0, sb->path) != -1) {
-    if (!mkntcmdline(sb->cmdline, argv) &&
-        !mkntenvblock(sb->envblock, envp, extravars, sb->envbuf)) {
-      bool32 ok;
-      int64_t dp = GetCurrentProcess();
-
-      // create attribute list
-      // this code won't call malloc in practice
-      void *freeme = 0;
-      _Alignas(16) char memory[128];
-      size_t size = sizeof(memory);
-      struct NtProcThreadAttributeList *alist = (void *)memory;
-      uint32_t items = !!opt_hParentProcess + !!opt_lpExplicitHandleList;
-      ok = InitializeProcThreadAttributeList(alist, items, 0, &size);
-      if (!ok && GetLastError() == kNtErrorInsufficientBuffer) {
-        ok = !!(alist = freeme = ntspawn_malloc(size));
-        if (ok) {
-          ok = InitializeProcThreadAttributeList(alist, items, 0, &size);
-        }
-      }
-      if (ok && opt_hParentProcess) {
-        ok = UpdateProcThreadAttribute(
-            alist, 0, kNtProcThreadAttributeParentProcess, &opt_hParentProcess,
-            sizeof(opt_hParentProcess), 0, 0);
-      }
-      if (ok && opt_lpExplicitHandleList) {
-        ok = UpdateProcThreadAttribute(
-            alist, 0, kNtProcThreadAttributeHandleList,
-            opt_lpExplicitHandleList,
-            dwExplicitHandleCount * sizeof(*opt_lpExplicitHandleList), 0, 0);
-      }
-
-      // create the process
-      if (ok) {
-        struct NtStartupInfoEx info;
-        bzero(&info, sizeof(info));
-        info.StartupInfo = *lpStartupInfo;
-        info.StartupInfo.cb = sizeof(info);
-        info.lpAttributeList = alist;
-        if (ok) {
-          if (CreateProcess(sb->path, sb->cmdline, 0, 0, true,
-                            dwCreationFlags | kNtCreateUnicodeEnvironment |
-                                kNtExtendedStartupinfoPresent |
-                                kNtInheritParentAffinity |
-                                GetPriorityClass(GetCurrentProcess()),
-                            sb->envblock, opt_lpCurrentDirectory,
-                            &info.StartupInfo, opt_out_lpProcessInformation)) {
-            rc = 0;
-          } else {
-            STRACE("CreateProcess() failed w/ %d", GetLastError());
-            if (GetLastError() == kNtErrorSharingViolation) {
-              etxtbsy();
-            } else if (GetLastError() == kNtErrorInvalidName) {
-              enoent();
-            }
-          }
-          rc = __fix_enotdir(rc, sb->path);
-        }
-      } else {
-        rc = __winerr();
-      }
-
-      // clean up resources
-      if (alist) {
-        DeleteProcThreadAttributeList(alist);
-      }
-      if (freeme) {
-        ntspawn_free(freeme);
-      }
-      if (dp && dp != GetCurrentProcess()) {
-        CloseHandle(dp);
-      }
-    }
+  if ((sb = ntspawn_malloc(sizeof(*sb)))) {
+    rc = ntspawn2(args, sb);
+  } else {
+    rc = -1;
   }
-  if (sb) ntspawn_free(sb);
   ALLOW_SIGNALS;
   return rc;
 }

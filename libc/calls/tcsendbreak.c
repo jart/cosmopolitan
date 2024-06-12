@@ -30,15 +30,19 @@
 #define TIOCCBRK 0x2000747a  // bsd
 
 static int sys_tcsendbreak_bsd(int fd) {
-  if (sys_ioctl(fd, TIOCSBRK, 0) == -1) return -1;
+  if (sys_ioctl(fd, TIOCSBRK, 0) == -1)
+    return -1;
   usleep(400000);
-  if (sys_ioctl(fd, TIOCCBRK, 0) == -1) return -1;
+  if (sys_ioctl(fd, TIOCCBRK, 0) == -1)
+    return -1;
   return 0;
 }
 
 static textwindows int sys_tcsendbreak_nt(int fd) {
-  if (!__isfdopen(fd)) return ebadf();
-  if (!TransmitCommChar(g_fds.p[fd].handle, '\0')) return __winerr();
+  if (!__isfdopen(fd))
+    return ebadf();
+  if (!TransmitCommChar(g_fds.p[fd].handle, '\0'))
+    return __winerr();
   return 0;
 }
 

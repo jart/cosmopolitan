@@ -40,6 +40,8 @@ static const char *__fdkind2str(int x) {
       return "kFdZip";
     case kFdEpoll:
       return "kFdEpoll";
+    case kFdDevRandom:
+      return "kFdRandom";
     default:
       return "kFdWut";
   }
@@ -49,13 +51,16 @@ void __printfds(struct Fd *fds, size_t fdslen) {
   int i;
   char buf[128];
   for (i = 0; i < fdslen; ++i) {
-    if (!fds[i].kind) continue;
+    if (!fds[i].kind)
+      continue;
     kprintf("%3d %s", i, __fdkind2str(fds[i].kind));
     if (fds[i].flags) {
       kprintf(" flags=%s", (DescribeOpenFlags)(buf, fds[i].flags));
     }
-    if (fds[i].mode) kprintf(" mode=%#o", fds[i].mode);
-    if (fds[i].handle) kprintf(" handle=%ld", fds[i].handle);
+    if (fds[i].mode)
+      kprintf(" mode=%#o", fds[i].mode);
+    if (fds[i].handle)
+      kprintf(" handle=%ld", fds[i].handle);
     kprintf("\n");
   }
 }

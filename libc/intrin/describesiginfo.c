@@ -33,8 +33,10 @@
 const char *(DescribeSiginfo)(char buf[N], int rc, const siginfo_t *si) {
   int i = 0;
 
-  if (rc == -1) return "n/a";
-  if (!si) return "NULL";
+  if (rc == -1)
+    return "n/a";
+  if (!si)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(si)) ||
       (IsAsan() && !__asan_is_valid(si, sizeof(*si)))) {
     ksnprintf(buf, N, "%p", si);

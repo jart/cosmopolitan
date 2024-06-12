@@ -42,10 +42,12 @@
 int sem_destroy(sem_t *sem) {
   int waiters;
   npassert(sem->sem_magic != SEM_MAGIC_NAMED);
-  if (sem->sem_magic != SEM_MAGIC_UNNAMED) return einval();
+  if (sem->sem_magic != SEM_MAGIC_UNNAMED)
+    return einval();
   waiters = atomic_load_explicit(&sem->sem_waiters, memory_order_relaxed);
   unassert(waiters >= 0);
-  if (waiters) return ebusy();
+  if (waiters)
+    return ebusy();
   atomic_store_explicit(&sem->sem_value, INT_MIN, memory_order_relaxed);
   return 0;
 }

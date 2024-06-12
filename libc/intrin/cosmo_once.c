@@ -61,3 +61,5 @@ errno_t cosmo_once(atomic_uint *once, void init(void)) {
       return EINVAL;
   }
 }
+
+__weak_reference(cosmo_once, call_once);

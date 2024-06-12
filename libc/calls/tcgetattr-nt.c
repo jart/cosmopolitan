@@ -35,8 +35,10 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   uint32_t inmode, outmode;
 
   // validate file descriptor
-  if (!__isfdopen(fd)) return ebadf();
-  if (!__isfdkind(fd, kFdConsole)) return enotty();
+  if (!__isfdopen(fd))
+    return ebadf();
+  if (!__isfdkind(fd, kFdConsole))
+    return enotty();
 
   // then completely ignore it
   hInput = GetConsoleInputHandle();

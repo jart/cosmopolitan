@@ -31,7 +31,8 @@
  */
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
                                       int fildes) {
-  if (fildes < 0) return EBADF;
+  if (fildes < 0)
+    return EBADF;
   return __posix_spawn_add_file_action(file_actions,
                                        (struct _posix_faction){
                                            .action = _POSIX_SPAWN_CLOSE,

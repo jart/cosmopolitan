@@ -18,9 +18,24 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "net/http/http.h"
+
+TEST(gmtime, test) {
+  struct tm *tm;
+  int64_t t = 0x62820bcd;
+  tm = gmtime(&t);
+  ASSERT_EQ(9, tm->tm_sec);
+  ASSERT_EQ(31, tm->tm_min);
+  ASSERT_EQ(8, tm->tm_hour);
+  ASSERT_EQ(16, tm->tm_mday);
+  ASSERT_EQ(4, tm->tm_mon);
+  ASSERT_EQ(122, tm->tm_year);
+  ASSERT_EQ(1, tm->tm_wday);
+  ASSERT_EQ(0, tm->tm_isdst);
+  ASSERT_EQ(0, tm->tm_gmtoff);
+  ASSERT_STREQ("UTC", tm->tm_zone);
+}
 
 TEST(FormatHttpDateTime, test) {
   char p[30];
@@ -37,7 +52,7 @@ TEST(FormatHttpDateTime, testStrftime) {
   int64_t t = 0x62820bcd;
   tm = gmtime(&t);
   strftime(p, sizeof(p), "%a, %d %b %Y %H:%M:%S %Z", tm);
-  ASSERT_STREQ("Mon, 16 May 2022 08:31:09 GMT", p);
+  ASSERT_STREQ("Mon, 16 May 2022 08:31:09 UTC", p);  // GMT -> UTC says POSIX
 }
 
 BENCH(FormatHttpDateTime, bench) {

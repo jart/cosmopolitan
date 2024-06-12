@@ -43,8 +43,10 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
     kprintf("%08x-%08x %s %'*ldx %s", mm->p[i].x, mm->p[i].y,
             (DescribeMapping)(mappingbuf, mm->p[i].prot, mm->p[i].flags), w,
             frames, (DescribeFrame)(framebuf, mm->p[i].x));
-    if (mm->p[i].iscow) kprintf(" cow");
-    if (mm->p[i].readonlyfile) kprintf(" readonlyfile");
+    if (mm->p[i].iscow)
+      kprintf(" cow");
+    if (mm->p[i].readonlyfile)
+      kprintf(" readonlyfile");
     sizefmt(sb, mm->p[i].size, 1024);
     kprintf(" %sB", sb);
     if (i + 1 < mm->i) {

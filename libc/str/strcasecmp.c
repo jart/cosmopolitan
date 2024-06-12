@@ -32,7 +32,8 @@ int strcasecmp(const char *a, const char *b) {
   int x, y;
   size_t i = 0;
   uint64_t v, w;
-  if (a == b) return 0;
+  if (a == b)
+    return 0;
   if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
     CheckEm:
@@ -50,7 +51,8 @@ int strcasecmp(const char *a, const char *b) {
       }
     }
   } else {
-    while ((x = kToLower[a[i] & 255]) == (y = kToLower[b[i] & 255]) && y) ++i;
+    while ((x = kToLower[a[i] & 255]) == (y = kToLower[b[i] & 255]) && y)
+      ++i;
     return x - y;
   }
 }

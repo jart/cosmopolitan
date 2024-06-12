@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-size_t (*hook_malloc_usable_size)(void *) = dlmalloc_usable_size;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Returns the number of bytes you can actually use in
@@ -41,5 +39,7 @@ size_t (*hook_malloc_usable_size)(void *) = dlmalloc_usable_size;
  * @see dlmalloc_usable_size()
  */
 size_t malloc_usable_size(void *p) {
-  return hook_malloc_usable_size(p);
+  return dlmalloc_usable_size(p);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

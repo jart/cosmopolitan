@@ -43,7 +43,8 @@ struct loadavg {
 int getloadavg(double *a, int n) {
   // cat /proc/loadavg
   int i, rc;
-  if (n > 3) n = 3;
+  if (n > 3)
+    n = 3;
   if (!n) {
     rc = 0;
   } else if (n < 0) {
@@ -63,7 +64,7 @@ int getloadavg(double *a, int n) {
     struct loadavg loadinfo;
     int mib[2] = {CTL_VM, VM_LOADAVG};
     size = sizeof(loadinfo);
-    if ((rc = sys_sysctl(mib, 2, &loadinfo, &size, 0, 0)) != -1) {
+    if ((rc = sysctl(mib, 2, &loadinfo, &size, 0, 0)) != -1) {
       for (i = 0; i < n; i++) {
         a[i] = (double)loadinfo.ldavg[i] / loadinfo.fscale;
       }

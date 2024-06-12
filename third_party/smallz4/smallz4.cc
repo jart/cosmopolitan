@@ -30,7 +30,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/smallz4/smallz4.hh"
 
 /// error handler

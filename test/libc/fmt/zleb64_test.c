@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/leb128.h"
 #include "libc/limits.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 
 TEST(zleb64, testZero) {

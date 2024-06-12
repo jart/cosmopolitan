@@ -52,7 +52,8 @@ TEST(writev, negative_einvalOrEfault) {
 }
 
 TEST(writev, exceedsIovMax_einval) {
-  if (IsWindows()) return;  // it's complicated
+  if (IsWindows())
+    return;  // it's complicated
   int i, n = IOV_MAX + 1;
   struct iovec *v = gc(malloc(sizeof(struct iovec) * n));
   for (i = 0; i < n; ++i) {
@@ -96,7 +97,8 @@ TEST(writev, big_fullCompletion) {
 }
 
 TEST(writev, asanError_efaults) {
-  if (!IsAsan()) return;
+  if (!IsAsan())
+    return;
   void *malloc_(size_t) asm("malloc");
   void free_(void *) asm("free");
   void *p;

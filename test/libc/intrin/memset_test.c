@@ -27,8 +27,10 @@
 
 static dontasan void *golden(void *p, int c, size_t n) {
   size_t i;
-  if (IsAsan()) __asan_verify(p, n);
-  for (i = 0; i < n; ++i) ((char *)p)[i] = c;
+  if (IsAsan())
+    __asan_verify(p, n);
+  for (i = 0; i < n; ++i)
+    ((char *)p)[i] = c;
   return p;
 }
 

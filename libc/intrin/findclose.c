@@ -30,7 +30,8 @@ __msabi extern typeof(FindClose) *const __imp_FindClose;
 textwindows bool32 FindClose(int64_t hFindFile) {
   bool32 ok;
   ok = __imp_FindClose(hFindFile);
-  if (!ok) __winerr();
+  if (!ok)
+    __winerr();
   NTTRACE("FindClose(%ld) → %hhhd% m", hFindFile, ok);
   return ok;
 }

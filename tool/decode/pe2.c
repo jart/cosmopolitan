@@ -22,7 +22,6 @@
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
@@ -56,7 +55,8 @@ static struct NtImageSectionHeader *sections;
 static size_t section_count;
 
 static void *GetOff(uint32_t off) {
-  if (off < mzsize) return (char *)mz + off;
+  if (off < mzsize)
+    return (char *)mz + off;
   fprintf(stderr, "%s: off %#x not defined within image\n", path, off);
   exit(1);
 }
@@ -377,7 +377,8 @@ int main(int argc, char *argv[]) {
   int64_t fd;
   struct stat st[1];
   ShowCrashReports();
-  if (argc != 2) fprintf(stderr, "usage: %s FILE\n", argv[0]), exit(1);
+  if (argc != 2)
+    fprintf(stderr, "usage: %s FILE\n", argv[0]), exit(1);
   if ((fd = open((path = argv[1]), O_RDONLY)) == -1 || fstat(fd, st) == -1 ||
       (mz = mmap(NULL, (mzsize = st->st_size), PROT_READ, MAP_SHARED, fd, 0)) ==
           MAP_FAILED) {

@@ -80,6 +80,7 @@
     "__VSX__"
     "__ADX__"
     "__PCLMUL__"
+    "__VPCLMULQDQ__"
     "__POPCNT__"
     "__RDRND__"
     "__RDSEED__"

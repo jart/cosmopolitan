@@ -66,15 +66,17 @@
 int dup2(int oldfd, int newfd) {
   int rc;
   // helps guarantee stderr log gets duplicated before user closes
-  if (_weaken(kloghandle)) _weaken(kloghandle)();
+  if (_weaken(kloghandle))
+    _weaken(kloghandle)();
 #ifdef __aarch64__
   if (oldfd == newfd) {
     // linux aarch64 defines dup3() but not dup2(), which wasn't such a
     // great decision, since the two syscalls don't behave the same way
-    if (!(rc = read(oldfd, 0, 0))) rc = oldfd;
+    if (!(rc = read(oldfd, 0, 0)))
+      rc = oldfd;
   } else
 #endif
-  if (!IsWindows()) {
+      if (!IsWindows()) {
     if (__isfdkind(oldfd, kFdZip) || __isfdkind(newfd, kFdZip)) {
       if (__vforked) {
         return enotsup();

@@ -87,9 +87,11 @@ int tmpfd(void) {
   }
   path[0] = 0;
   strlcat(path, __get_tmpdir(), sizeof(path));
-  if (!(prog = program_invocation_short_name)) prog = "tmp";
+  if (!(prog = program_invocation_short_name))
+    prog = "tmp";
   strlcat(path, prog, sizeof(path));
   strlcat(path, ".XXXXXX", sizeof(path));
-  if ((fd = openatemp(AT_FDCWD, path, 0, O_UNLINK, 0)) == -1) return -1;
+  if ((fd = openatemp(AT_FDCWD, path, 0, O_UNLINK, 0)) == -1)
+    return -1;
   return fd;
 }

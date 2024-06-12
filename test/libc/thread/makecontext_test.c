@@ -92,7 +92,8 @@ TEST(makecontext, crash) {
 }
 
 TEST(makecontext, backtrace) {
-  if (IsTiny()) return;  // doesn't print full crash report
+  if (IsTiny())
+    return;  // doesn't print full crash report
   SPAWN(fork);
   if (IsWindows()) {
     __klog_handle =
@@ -109,7 +110,8 @@ TEST(makecontext, backtrace) {
   makecontext(&uc, itsatrap, 2, 123, 456);
   setcontext(&uc);
   TERMS(SIGSEGV);
-  if (!GetSymbolTable()) return;
+  if (!GetSymbolTable())
+    return;
   char *log = gc(xslurp("log", 0));
   EXPECT_NE(0, strstr(log, "itsatrap"));
   EXPECT_NE(0, strstr(log, "runcontext"));

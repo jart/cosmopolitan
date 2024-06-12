@@ -32,7 +32,8 @@ textwindows int sys_statfs_nt(const char *path, struct statfs *sf) {
   int rc;
   int64_t h;
   char16_t path16[PATH_MAX];
-  if (__mkntpath(path, path16) == -1) return -1;
+  if (__mkntpath(path, path16) == -1)
+    return -1;
   BLOCK_SIGNALS;
   h = __fix_enotdir(
       CreateFile(path16, kNtFileGenericRead,

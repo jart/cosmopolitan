@@ -41,14 +41,17 @@ int Put(long v, struct timespec *abs_deadline) {
   }
   if (count != limit) {
     int i = pos + count;
-    if (limit <= i) i -= limit;
+    if (limit <= i)
+      i -= limit;
     data[i] = v;
-    if (count == 0) wake = 1;
+    if (count == 0)
+      wake = 1;
     count++;
     added = 1;
   }
   pthread_mutex_unlock(&mu);
-  if (wake) pthread_cond_broadcast(&non_empty);
+  if (wake)
+    pthread_cond_broadcast(&non_empty);
   return added;
 }
 

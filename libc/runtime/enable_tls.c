@@ -35,6 +35,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
@@ -47,7 +48,7 @@
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
-_Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
+alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 
 static unsigned long ParseMask(const char *str) {
   int c;
@@ -68,13 +69,13 @@ static unsigned long ParseMask(const char *str) {
  *
  *                           __get_tls()
  *                               │
- *                              %fs Linux/BSDs
+ *                              %fs OpenBSD/NetBSD
  *            _Thread_local      │
  *     ┌───┬──────────┬──────────┼───┐
  *     │pad│  .tdata  │  .tbss   │tib│
  *     └───┴──────────┴──────────┼───┘
  *                               │
- *                  Windows/Mac %gs
+ *    Linux/FreeBSD/Windows/Mac %gs
  *
  * Here's the TLS memory layout on aarch64:
  *
@@ -112,10 +113,6 @@ static unsigned long ParseMask(const char *str) {
  * and your `errno` variable also won't be thread safe anymore.
  */
 textstartup void __enable_tls(void) {
-  int tid;
-  size_t siz;
-  char *mem, *tls;
-  struct CosmoTib *tib;
 
   // Here's the layout we're currently using:
   //
@@ -138,7 +135,8 @@ textstartup void __enable_tls(void) {
 
 #ifdef __x86_64__
 
-  siz = ROUNDUP(I(_tls_size) + sizeof(*tib), TLS_ALIGNMENT);
+  char *mem;
+  size_t siz = ROUNDUP(I(_tls_size) + sizeof(struct CosmoTib), TLS_ALIGNMENT);
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
     // which helps avoid a system call for appes with little tls
@@ -158,28 +156,44 @@ textstartup void __enable_tls(void) {
                   kAsanProtected);
   }
 
-  tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
-  tls = mem + siz - sizeof(*tib) - I(_tls_size);
+  struct CosmoTib *tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
+  char *tls = mem + siz - sizeof(*tib) - I(_tls_size);
+
+  // copy in initialized data section
+  if (I(_tdata_size)) {
+    if (IsAsan()) {
+      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
+    } else {
+      memcpy(tls, _tdata_start, I(_tdata_size));
+    }
+  }
 
 #elif defined(__aarch64__)
 
-  size_t hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
-  siz = hiz + I(_tls_size);
-  if (siz <= sizeof(__static_tls)) {
+  uintptr_t size = ROUNDUP(sizeof(struct CosmoTib), I(_tls_align)) +  //
+                   ROUNDUP(sizeof(uintptr_t) * 2, I(_tdata_align)) +  //
+                   ROUNDUP(I(_tdata_size), I(_tbss_align)) +          //
+                   I(_tbss_size);
+
+  char *mem;
+  if (I(_tls_align) <= TLS_ALIGNMENT && size <= sizeof(__static_tls)) {
     mem = __static_tls;
   } else {
-    mem = _weaken(_mapanon)(siz);
+    mem = _weaken(_mapanon)(size);
   }
 
-  if (IsAsan()) {
-    // there's a roundup(pagesize) gap between .tdata and .tbss
-    // poison that empty space
-    __asan_poison(mem + hiz + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
-                  kAsanProtected);
-  }
+  struct CosmoTib *tib =
+      (struct CosmoTib *)(mem +
+                          ROUNDUP(sizeof(struct CosmoTib), I(_tls_align)) -
+                          sizeof(struct CosmoTib));
 
-  tib = (struct CosmoTib *)mem;
-  tls = mem + hiz;
+  uintptr_t *dtv = (uintptr_t *)(tib + 1);
+  size_t dtv_size = sizeof(uintptr_t) * 2;
+
+  char *tdata = (char *)dtv + ROUNDUP(dtv_size, I(_tdata_align));
+  if (I(_tdata_size)) {
+    memmove(tdata, _tdata_start, I(_tdata_size));
+  }
 
   // Set the DTV.
   //
@@ -189,8 +203,8 @@ textstartup void __enable_tls(void) {
   //
   // @see musl/src/env/__init_tls.c
   // @see https://chao-tic.github.io/blog/2018/12/25/tls
-  ((uintptr_t *)tls)[-2] = 1;
-  ((void **)tls)[-1] = tls;
+  dtv[0] = 1;
+  dtv[1] = (uintptr_t)tdata;
 
 #else
 #error "unsupported architecture"
@@ -213,6 +227,8 @@ textstartup void __enable_tls(void) {
   } else if (IsXnuSilicon()) {
     tib->tib_syshand = __syslib->__pthread_self();
   }
+
+  int tid;
   if (IsLinux() || IsXnuSilicon()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
@@ -236,15 +252,6 @@ textstartup void __enable_tls(void) {
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
   atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
-
-  // copy in initialized data section
-  if (I(_tdata_size)) {
-    if (IsAsan()) {
-      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
-    } else {
-      memcpy(tls, _tdata_start, I(_tdata_size));
-    }
-  }
 
   // ask the operating system to change the x86 segment register
   __set_tls(tib);

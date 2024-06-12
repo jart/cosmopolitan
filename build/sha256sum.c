@@ -197,7 +197,8 @@ static char *FormatUint32(char *p, uint32_t x) {
 }
 
 static char *FormatInt32(char *p, int32_t x) {
-  if (x < 0) *p++ = '-', x = -(uint32_t)x;
+  if (x < 0)
+    *p++ = '-', x = -(uint32_t)x;
   return FormatUint32(p, x);
 }
 
@@ -205,7 +206,8 @@ static size_t StrCat(char *dst, const char *src, size_t dsize) {
   size_t m, n = dsize;
   const char *p = dst;
   const char *q = src;
-  while (n-- != 0 && *dst != '\0') dst++;
+  while (n-- != 0 && *dst != '\0')
+    dst++;
   m = dst - p;
   n = dsize - m;
   if (n-- == 0) {
@@ -277,7 +279,8 @@ static bool IsSupportedPath(const char *path) {
   for (i = 0;; ++i) {
     switch (path[i]) {
       case 0:
-        if (i) return true;
+        if (i)
+          return true;
         // fallthrough
       case '\r':
       case '\n':
@@ -320,8 +323,10 @@ static bool ProduceDigest(const char *path, FILE *f) {
   char hexdigest[65];
   char mode[2] = {g_mode};
   unsigned char digest[32];
-  if (!IsSupportedPath(path)) return false;
-  if (!GetDigest(path, f, digest)) return false;
+  if (!IsSupportedPath(path))
+    return false;
+  if (!GetDigest(path, f, digest))
+    return false;
   CopyHex(hexdigest, digest, 32);
   Write(1, hexdigest, " ", mode, path, "\n", NULL);
   return true;
@@ -361,17 +366,24 @@ static bool CheckDigests(const char *path, FILE *f) {
   uint8_t wantdigest[32], gotdigest[32];
   char buf[64 + 2 + PATH_MAX + 1 + 1], *p;
   for (line = 0; fgets(buf, sizeof(buf), f); ++line) {
-    if (!*Chomp(buf)) continue;
+    if (!*Chomp(buf))
+      continue;
     for (p = buf, i = 0; i < 32; ++i) {
-      if ((a = HexToInt(*p++ & 255)) == -1) goto InvalidLine;
-      if ((b = HexToInt(*p++ & 255)) == -1) goto InvalidLine;
+      if ((a = HexToInt(*p++ & 255)) == -1)
+        goto InvalidLine;
+      if ((b = HexToInt(*p++ & 255)) == -1)
+        goto InvalidLine;
       wantdigest[i] = a << 4 | b;
     }
-    if (*p++ != ' ') goto InvalidLine;
-    if (!IsModeCharacter(*p++)) goto InvalidLine;
+    if (*p++ != ' ')
+      goto InvalidLine;
+    if (!IsModeCharacter(*p++))
+      goto InvalidLine;
     path2 = p;
-    if (!*path2) goto InvalidLine;
-    if (!IsSupportedPath(path2)) continue;
+    if (!*path2)
+      goto InvalidLine;
+    if (!IsSupportedPath(path2))
+      continue;
     if ((f2 = fopen(path2, "rb"))) {
       if (GetDigest(path2, f2, gotdigest)) {
         if (!memcmp(wantdigest, gotdigest, 32)) {

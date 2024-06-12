@@ -133,7 +133,7 @@ endif
 
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
-HOSTS ?= pi pi5 studio freebsdarm
+HOSTS ?= pi studio freebsdarm
 else
 ARCH = x86_64
 HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10
@@ -149,9 +149,9 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.3.3
+COSMOCC = .cosmocc/3.3.5
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.3 e4d0fa63cd79cc3bfff6c2d015f1776db081409907625aea8ad40cefc1996d08)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.5 db78fd8d3f8706e9dff4be72bf71d37a3f12062f212f407e1c33bc4af3780dd0)
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc
@@ -174,6 +174,7 @@ all:	o
 o:	o/$(MODE)
 o/$(MODE):			\
 	o/$(MODE)/ape		\
+	o/$(MODE)/ctl		\
 	o/$(MODE)/dsp		\
 	o/$(MODE)/net		\
 	o/$(MODE)/libc		\
@@ -255,10 +256,11 @@ include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
 include libc/proc/BUILD.mk			# │  You can now use threads
 include libc/dlopen/BUILD.mk			# │  You can now use processes
 include libc/thread/BUILD.mk			# │  You can finally call malloc()
+include ctl/BUILD.mk				# │
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
 include tool/hello/BUILD.mk			# │
-include libc/time/BUILD.mk			# │
+include third_party/tz/BUILD.mk			# │
 include net/BUILD.mk				# │
 include third_party/vqsort/BUILD.mk		# │
 include libc/log/BUILD.mk			# │
@@ -299,6 +301,7 @@ include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
 include test/math/BUILD.mk
 include test/posix/BUILD.mk
+include test/ctl/BUILD.mk
 include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk
 include third_party/linenoise/BUILD.mk
@@ -362,7 +365,6 @@ include test/libc/fmt/BUILD.mk
 include test/libc/time/BUILD.mk
 include test/libc/proc/BUILD.mk
 include test/libc/stdio/BUILD.mk
-include test/libc/release/BUILD.mk
 include test/libc/BUILD.mk
 include test/net/http/BUILD.mk
 include test/net/https/BUILD.mk
@@ -440,7 +442,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_X				\
 	THIRD_PARTY_GETOPT		\
 	LIBC_LOG			\
-	LIBC_TIME			\
+	THIRD_PARTY_TZ			\
 	THIRD_PARTY_OPENMP		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB_GZ		\
@@ -452,6 +454,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_THREAD			\
 	LIBC_PROC			\
 	THIRD_PARTY_NSYNC_MEM		\
+	CTL				\
 	LIBC_MEM			\
 	THIRD_PARTY_DLMALLOC		\
 	LIBC_DLOPEN			\
@@ -505,7 +508,6 @@ COSMOPOLITAN_H_PKGS =			\
 	LIBC_STR			\
 	LIBC_SYSV			\
 	LIBC_THREAD			\
-	LIBC_TIME			\
 	LIBC_TINYMATH			\
 	LIBC_X				\
 	LIBC_VGA			\
@@ -521,6 +523,7 @@ COSMOPOLITAN_H_PKGS =			\
 
 COSMOCC_PKGS =				\
 	$(COSMOPOLITAN_H_PKGS)		\
+	CTL				\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
 	THIRD_PARTY_LIBCXXABI		\
@@ -543,15 +546,6 @@ COSMOPOLITAN_H_ROOT_HDRS =						\
 	libc/integral/normalize.inc					\
 	$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))
 
-o/cosmopolitan.h.txt: Makefile
-	$(file >$@, $(call uniq,$(COSMOPOLITAN_H_ROOT_HDRS)))
-
-o/cosmopolitan.h: o/cosmopolitan.h.txt					\
-		$(wildcard libc/integral/*)				\
-		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
-		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
-	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup @$< >>$@
-
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.dbg		\
@@ -573,7 +567,6 @@ $(SRCS):					\
 
 ifeq ($(ARCH), x86_64)
 TOOLCHAIN_ARTIFACTS =				\
-	o/cosmopolitan.h			\
 	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/libc/crt/crt.o		\
 	o/$(MODE)/ape/ape.elf			\

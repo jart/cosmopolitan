@@ -43,7 +43,8 @@ textwindows int64_t CreateFileMappingNuma(
   hHandle = __imp_CreateFileMappingNumaW(
       opt_hFile, opt_lpFileMappingAttributes, flProtect, dwMaximumSizeHigh,
       dwMaximumSizeLow, opt_lpName, nndDesiredNumaNode);
-  if (!hHandle) __winerr();
+  if (!hHandle)
+    __winerr();
   NTTRACE("CreateFileMappingNuma(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
           DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
           DescribeNtPageFlags(flProtect),

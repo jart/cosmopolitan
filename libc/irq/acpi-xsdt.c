@@ -26,7 +26,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/irq/acpi.internal.h"
@@ -34,6 +33,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/efi.h"
 #include "libc/runtime/pc.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -61,7 +61,8 @@ textstartup static void *_AcpiOsAllocatePages(size_t n) {
   struct DirectMap dm = sys_mmap_metal(NULL, n, PROT_READ | PROT_WRITE,
                                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   void *addr = dm.addr;
-  if (addr == (void *)-1) addr = NULL;
+  if (addr == (void *)-1)
+    addr = NULL;
   return addr;
 }
 
@@ -69,17 +70,20 @@ textstartup void *_AcpiOsAllocate(size_t n) {
   static _Atomic(char *) slack = NULL;
   char *addr = NULL;
   size_t align = __BIGGEST_ALIGNMENT__, use;
-  if (n >= 4096) return _AcpiOsAllocatePages(n);
+  if (n >= 4096)
+    return _AcpiOsAllocatePages(n);
   n = ROUNDUP(n, align);
   for (;;) {
     addr = atomic_exchange(&slack, NULL);
     if (!addr) {
       addr = _AcpiOsAllocatePages(4096);
-      if (!addr) return NULL;
+      if (!addr)
+        return NULL;
     }
     use = (uintptr_t)addr % 4096 + n;
     if (use <= 4096) {
-      if (use < 4096) atomic_store(&slack, addr + n);
+      if (use < 4096)
+        atomic_store(&slack, addr + n);
       return addr;
     }
   }
@@ -87,14 +91,16 @@ textstartup void *_AcpiOsAllocate(size_t n) {
 
 textstartup static uint8_t _AcpiTbChecksum(const uint8_t *p, size_t n) {
   uint8_t c = 0;
-  while (n-- != 0) c += *p++;
+  while (n-- != 0)
+    c += *p++;
   return c;
 }
 
 textstartup static AcpiStatus _AcpiTbVerifyChecksum(const uint8_t *p,
                                                     size_t n) {
   uint8_t sum = _AcpiTbChecksum(p, n);
-  if (!sum) return kAcpiOk;
+  if (!sum)
+    return kAcpiOk;
   KWARNF("bad ACPI table cksum %#x != 0 @ %p,+%#zx", (unsigned)sum, p, n);
   return kAcpiExBadChecksum;
 }
@@ -103,8 +109,10 @@ textstartup static AcpiStatus _AcpiRsdpVerifyChecksums(const uint8_t *p) {
   const AcpiTableRsdp *q = (const AcpiTableRsdp *)p;
   size_t length = offsetof(AcpiTableRsdp, Length);
   AcpiStatus sta = _AcpiTbVerifyChecksum(p, length);
-  if (!_AcpiSuccess(sta)) return sta;
-  if (q->Revision <= 1) return kAcpiOk;
+  if (!_AcpiSuccess(sta))
+    return sta;
+  if (q->Revision <= 1)
+    return kAcpiOk;
   length = q->Length;
   if (length < offsetof(AcpiTableRsdp, Reserved)) {
     KWARNF("malformed ACPI 2+ RSDP, length %#zx < %#zx", length,
@@ -120,9 +128,11 @@ textstartup static AcpiStatus _AcpiRsdpVerifyChecksums(const uint8_t *p) {
 
 textstartup static bool _AcpiTbIsValidRsdp(const uint8_t *p) {
   const AcpiTableRsdp *q = (const AcpiTableRsdp *)p;
-  if (READ64LE(q->Signature) != READ64LE("RSD PTR ")) return false;
+  if (READ64LE(q->Signature) != READ64LE("RSD PTR "))
+    return false;
   KINFOF("\"RSD PTR \" @ %p, ACPI rev %u", q, (unsigned)q->Revision);
-  if (!_AcpiSuccess(_AcpiRsdpVerifyChecksums(p))) return false;
+  if (!_AcpiSuccess(_AcpiRsdpVerifyChecksums(p)))
+    return false;
   return true;
 }
 
@@ -133,7 +143,8 @@ textstartup static const AcpiTableRsdp *_AcpiFindRsdp(void) {
   uint64_t rsdp_phy = mm->pc_acpi_rsdp;
   uint16_t ebda_para;
   const uint8_t *area;
-  if (rsdp_phy) return _AcpiOsMapRoMemory(rsdp_phy, sizeof(AcpiTableRsdp));
+  if (rsdp_phy)
+    return _AcpiOsMapRoMemory(rsdp_phy, sizeof(AcpiTableRsdp));
   /*
    * "OSPM finds the Root System Description Pointer (RSDP) structure by
    *  searching physical memory ranges on 16-byte boundaries for a valid
@@ -231,8 +242,10 @@ textstartup AcpiStatus _AcpiGetTableImpl(uint32_t sig, uint32_t inst,
   size_t n = _AcpiXsdtNumEntries;
   while (n-- != 0) {
     AcpiTableHeader *h = *p++;
-    if (READ32LE(h->Signature) != sig) continue;
-    if (inst-- != 0) continue;
+    if (READ32LE(h->Signature) != sig)
+      continue;
+    if (inst-- != 0)
+      continue;
     *phdr = h;
     return kAcpiOk;
   }

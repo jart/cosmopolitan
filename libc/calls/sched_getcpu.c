@@ -17,14 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/cpuset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/struct/processornumber.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/errfuns.h"
 
 int sys_getcpu(unsigned *opt_cpu, unsigned *opt_node, void *tcache);
@@ -38,27 +36,19 @@ int sched_getcpu(void) {
     unsigned tsc_aux;
     rdtscp(&tsc_aux);
     return TSC_AUX_CORE(tsc_aux);
+  } else if (IsAarch64()) {
+    long tpidr_el0;
+    asm("mrs\t%0,tpidr_el0" : "=r"(tpidr_el0));
+    return tpidr_el0 & 255;
   } else if (IsWindows()) {
     struct NtProcessorNumber pn;
     GetCurrentProcessorNumberEx(&pn);
     return 64 * pn.Group + pn.Number;
-  } else if (IsXnuSilicon()) {
-    if (__syslib->__version >= 9) {
-      size_t cpu;
-      errno_t err = __syslib->__pthread_cpu_number_np(&cpu);
-      if (!err) {
-        return cpu;
-      } else {
-        errno = err;
-        return -1;
-      }
-    } else {
-      return enosys();
-    }
   } else {
     unsigned cpu = 0;
     int rc = sys_getcpu(&cpu, 0, 0);
-    if (rc == -1) return -1;
+    if (rc == -1)
+      return -1;
     return cpu;
   }
 }

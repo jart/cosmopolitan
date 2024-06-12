@@ -11,6 +11,9 @@
 #ifndef KMP_CONFIG_H
 #define KMP_CONFIG_H
 
+#pragma GCC diagnostic ignored "-Wvolatile" // wut
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion" // wut
+
 #include "libc/dce.h"
 #include "kmp_platform.h"
 

@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#pragma GCC diagnostic ignored "-Wvolatile" // wut
+
 #include "kmp.h"
 #include "kmp_affinity.h"
 #include "kmp_atomic.h"
@@ -7054,8 +7056,8 @@ static void __kmp_user_level_mwait_init() {
 // getauxval() function is available in RHEL7 and SLES12. If a system with an
 // earlier OS is used to build the RTL, we'll use the following internal
 // function when the entry is not found.
-unsigned long getauxval(unsigned long) KMP_WEAK_ATTRIBUTE_EXTERNAL;
-unsigned long getauxval(unsigned long) { return 0; }
+// unsigned long getauxval(unsigned long) KMP_WEAK_ATTRIBUTE_EXTERNAL;
+// unsigned long getauxval(unsigned long) { return 0; }
 
 static void __kmp_user_level_mwait_init() {
   // When getauxval() and correct value of AT_INTELPHIUSERMWAIT are available

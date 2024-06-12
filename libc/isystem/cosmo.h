@@ -43,7 +43,6 @@
 #include "libc/intrin/weaken.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/hook.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -60,6 +59,7 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 #include "net/http/http.h"
+#include "tool/args/args.h"
 
 #ifdef COSMO_ALREADY_DEFINED
 #undef COSMO_ALREADY_DEFINED

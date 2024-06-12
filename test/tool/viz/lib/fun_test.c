@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/stdio/rand.h"
 #include "libc/mem/gc.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -195,12 +195,18 @@ void ExpandLuminosityRange(unsigned n, unsigned char *Y) {
   CHECK_ALIGNED(16, Y);
   for (i = 0; i < n; i += 16) {
     memcpy(b, Y + i, 16);
-    for (j = 0; j < 16; ++j) b[j] = MAX(0, b[j] - 16);
-    for (j = 0; j < 16; ++j) s[j] = b[j];
-    for (j = 0; j < 16; ++j) s[j] *= 150;
-    for (j = 0; j < 16; ++j) s[j] /= 128;
-    for (j = 0; j < 16; ++j) s[j] = MIN(255, s[j]);
-    for (j = 0; j < 16; ++j) b[j] = s[j];
+    for (j = 0; j < 16; ++j)
+      b[j] = MAX(0, b[j] - 16);
+    for (j = 0; j < 16; ++j)
+      s[j] = b[j];
+    for (j = 0; j < 16; ++j)
+      s[j] *= 150;
+    for (j = 0; j < 16; ++j)
+      s[j] /= 128;
+    for (j = 0; j < 16; ++j)
+      s[j] = MIN(255, s[j]);
+    for (j = 0; j < 16; ++j)
+      b[j] = s[j];
     memcpy(Y + i, b, 16);
   }
 }

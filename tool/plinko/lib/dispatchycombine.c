@@ -55,7 +55,8 @@ struct T DispatchYcombine(dword ea, dword tm, dword r, dword p1, dword p2,
   lambda = recurse(MAKE(Cadr(ea), HI(ea)), p1, p2);
   closure =
       recurse(MAKE(Caddr(ycomb), Alist(Car(Cadr(ycomb)), lambda, 0)), 0, 0);
-  if (Car(lambda) == kClosure) lambda = Car(Cdr(lambda));
+  if (Car(lambda) == kClosure)
+    lambda = Car(Cdr(lambda));
   DCHECK_EQ(kClosure, Car(closure));
   DCHECK_EQ(kLambda, Car(lambda));
   DCHECK_EQ(kLambda, Car(Car(Cdr(closure))));

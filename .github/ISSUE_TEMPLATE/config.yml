@@ -1,0 +1,15 @@
+blank_issues_enabled: true
+contact_links:
+  - name: FAQ
+    url: https://github.com/jart/cosmopolitan/wiki/FAQ
+    about: Is your question a common one? You may want to check here first.
+  - name: Got an idea?
+    url: https://github.com/jart/cosmopolitan/discussions/categories/ideas
+    about: Pop it there. It may then become an enhancement ticket.
+  - name: Got a question?
+    url: https://github.com/jart/cosmopolitan/discussions/categories/q-a
+    about: Ask a question there!
+  - name: Want to contribute?
+    url: https://github.com/jart/cosmopolitan/wiki/contribute
+    about: Head to the contribution guide page of the wiki for areas you can help with
+

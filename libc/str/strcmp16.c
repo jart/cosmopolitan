@@ -28,6 +28,7 @@
  */
 int strcmp16(const char16_t *l, const char16_t *r) {
   size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return l[i] - r[i];
 }

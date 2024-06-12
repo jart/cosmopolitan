@@ -5,9 +5,9 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/serialize.h"
 COSMOPOLITAN_C_START_
 
 #define GetStr(tab, rva)     ((char *)(tab) + (rva))
@@ -30,7 +30,8 @@ static inline char *GetStrtab(const Elf64_Ehdr *e, size_t *n) {
     if (shdr->sh_type == SHT_STRTAB) {
       name = GetSectionName(e, GetShdr(e, i));
       if (name && READ64LE(name) == READ64LE(".strtab")) {
-        if (n) *n = shdr->sh_size;
+        if (n)
+          *n = shdr->sh_size;
         return GetSection(e, shdr);
       }
     }
@@ -44,7 +45,8 @@ static inline Elf64_Sym *GetSymtab(const Elf64_Ehdr *e, Elf64_Xword *n) {
   for (i = e->e_shnum; i-- > 0;) {
     shdr = GetShdr(e, i);
     if (shdr->sh_type == SHT_SYMTAB) {
-      if (n) *n = shdr->sh_size / sizeof(Elf64_Sym);
+      if (n)
+        *n = shdr->sh_size / sizeof(Elf64_Sym);
       return GetSection(e, shdr);
     }
   }
@@ -60,14 +62,19 @@ static inline void GetImageRange(const Elf64_Ehdr *elf, intptr_t *x,
   end = 0;
   for (i = 0; i < elf->e_phnum; ++i) {
     phdr = GetPhdr(elf, i);
-    if (phdr->p_type != PT_LOAD) continue;
+    if (phdr->p_type != PT_LOAD)
+      continue;
     pstart = phdr->p_vaddr;
     pend = phdr->p_vaddr + phdr->p_memsz;
-    if (pstart < start) start = pstart;
-    if (pend > end) end = pend;
+    if (pstart < start)
+      start = pstart;
+    if (pend > end)
+      end = pend;
   }
-  if (x) *x = start;
-  if (y) *y = end;
+  if (x)
+    *x = start;
+  if (y)
+    *y = end;
 }
 
 static inline bool GetElfSymbolValue(const Elf64_Ehdr *ehdr, const char *name,
@@ -75,8 +82,10 @@ static inline bool GetElfSymbolValue(const Elf64_Ehdr *ehdr, const char *name,
   Elf64_Xword i, n;
   const char *stab;
   const Elf64_Sym *st;
-  if (!(stab = GetStrtab(ehdr, 0))) return false;
-  if (!(st = GetSymtab(ehdr, &n))) return false;
+  if (!(stab = GetStrtab(ehdr, 0)))
+    return false;
+  if (!(st = GetSymtab(ehdr, &n)))
+    return false;
   for (i = 0; i < n; ++i) {
     if (!__strcmp(GetStr(stab, st[i].st_name), name)) {
       *res = st[i].st_value;

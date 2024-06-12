@@ -44,7 +44,8 @@ int sys_clock_gettime_mono(struct timespec *time) {
 #ifdef __x86_64__
   // intel architecture guarantees that a mapping exists between rdtsc &
   // nanoseconds only if the cpu advertises invariant timestamps support
-  if (!X86_HAVE(INVTSC)) return -EINVAL;
+  if (!X86_HAVE(INVTSC))
+    return -EINVAL;
 #endif
   cosmo_once(&g_mono.once, sys_clock_gettime_mono_init);
   cycles = rdtsc() - g_mono.base_tick;

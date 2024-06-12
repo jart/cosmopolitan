@@ -62,6 +62,8 @@ char linkbuf[PATH_MAX];
 
 void Mv(char *, char *);
 
+#include "libc/mem/tinymalloc.inc"
+
 wontreturn void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
@@ -69,7 +71,8 @@ wontreturn void Die(const char *path, const char *reason) {
 
 wontreturn void SysDie(const char *path, const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerdoc(errno)))
+    errstr = "EUNKNOWN";
   tinyprint(2, path, ": ", func, ": ", errstr, "\n", NULL);
   exit(1);
 }
@@ -159,8 +162,10 @@ char *Join(const char *a, const char *b) {
 void Mv(char *src, char *dst) {
   ssize_t rc;
   const char *d;
-  if (strlen(src) + 1 > PATH_MAX) _Exit(2);
-  if (strlen(dst) + 1 > PATH_MAX) _Exit(2);
+  if (strlen(src) + 1 > PATH_MAX)
+    _Exit(2);
+  if (strlen(dst) + 1 > PATH_MAX)
+    _Exit(2);
   basename(src);
   basename(dst);
   if (IsDirectory(src)) {
@@ -212,9 +217,11 @@ void Mv(char *src, char *dst) {
 int main(int argc, char *argv[]) {
   int i;
   prog = argv[0];
-  if (!prog) prog = "mv";
+  if (!prog)
+    prog = "mv";
   GetOpts(argc, argv);
-  if (argc - optind < 2) PrintUsage(1, 2);
+  if (argc - optind < 2)
+    PrintUsage(1, 2);
   for (i = optind; i < argc - 1; ++i) {
     Mv(argv[i], argv[argc - 1]);
   }

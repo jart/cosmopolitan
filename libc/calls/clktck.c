@@ -53,7 +53,7 @@ static dontinline int __clk_tck_init(void) {
     cmd[0] = 1;   // CTL_KERN
     cmd[1] = 12;  // KERN_CLOCKRATE
     len = sizeof(clock);
-    if (sys_sysctl(cmd, 2, &clock, &len, NULL, 0) != -1) {
+    if (sysctl(cmd, 2, &clock, &len, NULL, 0) != -1) {
       x = clock.hz;
     } else {
       x = -1;
@@ -61,7 +61,8 @@ static dontinline int __clk_tck_init(void) {
   } else {
     x = __getauxval(AT_CLKTCK).value;
   }
-  if (x < 1) x = 100;
+  if (x < 1)
+    x = 100;
   clk_tck = x;
   return x;
 }

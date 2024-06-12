@@ -26,7 +26,8 @@ void testlib_formatbinaryashex(const char *want, const void *got, size_t n,
   size_t i;
   uint8_t b;
   char *gothex;
-  if (n == -1ul) n = strlen(want) / 2;
+  if (n == -1ul)
+    n = strlen(want) / 2;
   gothex = xmalloc(n * 2 + 1);
   gothex[n * 2] = '\0';
   for (i = 0; i < n; ++i) {

@@ -41,7 +41,7 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Goodies {
     ucontext_t uc;
-    struct siginfo si;
+    siginfo_t si;
   } g;
   CheckLargeStackAllocation(&g, sizeof(g));
 #pragma GCC pop_options

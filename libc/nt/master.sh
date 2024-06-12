@@ -168,6 +168,8 @@ imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel3
 imp	'GetSystemTimes'					GetSystemTimes						kernel32	3
 imp	'GetTempPath'						GetTempPathW						kernel32	2
 imp	'GetTempPathA'						GetTempPathA						kernel32	2
+imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				kernel32	1
+imp	'GetTimeZoneInformation'				GetTimeZoneInformation					kernel32	1
 imp	'GetThreadContext'					GetThreadContext					kernel32	2
 imp	'GetThreadDescription'					GetThreadDescription					kernel32	2
 imp	'GetThreadIOPendingFlag'				GetThreadIOPendingFlag					kernel32	2
@@ -203,6 +205,7 @@ imp	'LoadResource'						LoadResource						kernel32	2
 imp	'LocalFree'						LocalFree						kernel32	1
 imp	'LockFile'						LockFile						kernel32	5
 imp	'LockResource'						LockResource						kernel32	1
+imp	'MapViewOfFile3'					MapViewOfFile3						kernel32	9
 imp	'MoveFile'						MoveFileW						kernel32	2
 imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	6
 imp	'OfferVirtualMemory'					OfferVirtualMemory					kernel32	3
@@ -293,6 +296,7 @@ imp	'UnmapViewOfFile2'					UnmapViewOfFile2					kernel32	2
 imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					kernel32	3
 imp	'UpdateProcThreadAttribute'				UpdateProcThreadAttribute				kernel32	7
 imp	'VirtualAlloc'						VirtualAlloc						kernel32	4
+imp	'VirtualAlloc2'						VirtualAlloc2						kernel32	7
 imp	'VirtualAllocEx'					VirtualAllocEx						kernel32	5
 imp	'VirtualFree'						VirtualFree						kernel32	3
 imp	'VirtualLock'						VirtualLock						kernel32	2

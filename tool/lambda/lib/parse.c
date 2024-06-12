@@ -26,15 +26,18 @@ struct Parse Parse(int ignored, FILE* f) {
   char bit, need;
   struct Parse p;
   for (need = 0, start = end;;) {
-    if (end + 2 > TERMS) Error(5, "OUT OF TERMS");
+    if (end + 2 > TERMS)
+      Error(5, "OUT OF TERMS");
     if ((bit = GetBit(f)) == -1) {
-      if (!need) break;
+      if (!need)
+        break;
       fflush(stdout);
       fputs("---\n", stderr);
       Print(start, 0, 0, stderr);
       Error(9, "UNFINISHED EXPRESSION");
     } else if (bit) {
-      for (t = 0; NeedBit(f);) ++t;
+      for (t = 0; NeedBit(f);)
+        ++t;
       mem[end++] = VAR;
       mem[end++] = t;
       break;

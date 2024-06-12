@@ -24,7 +24,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 /**
  * @fileoverview Lock Waiter Scalability Test

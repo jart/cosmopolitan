@@ -11,7 +11,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/grnd.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/python/Modules/expat/expat.h"
 #include "third_party/python/Modules/expat/expat_config.h"
 /* f2d0ab6d1d4422a08cf1cf3bbdfba96b49dea42fb5ff4615e03a2a25c306e769 (2.2.8+)

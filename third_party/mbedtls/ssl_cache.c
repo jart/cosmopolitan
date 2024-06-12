@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/ssl_cache.h"

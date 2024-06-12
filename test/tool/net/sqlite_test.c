@@ -39,11 +39,14 @@ void SetUpOnce(void) {
 int DbOpen(const char *path, sqlite3 **db) {
   int i, rc;
   rc = sqlite3_open(path, db);
-  if (rc != SQLITE_OK) return rc;
+  if (rc != SQLITE_OK)
+    return rc;
   for (i = 0; i < 16; ++i) {
     rc = sqlite3_exec(*db, "PRAGMA journal_mode=WAL", 0, 0, 0);
-    if (rc == SQLITE_OK) break;
-    if (rc != SQLITE_BUSY) return rc;
+    if (rc == SQLITE_OK)
+      break;
+    if (rc != SQLITE_BUSY)
+      return rc;
     usleep(1000L << i);
   }
   return sqlite3_exec(*db, "PRAGMA synchronous=NORMAL", 0, 0, 0);
@@ -53,9 +56,12 @@ int DbStep(sqlite3_stmt *stmt) {
   int i, rc;
   for (i = 0; i < 16; ++i) {
     rc = sqlite3_step(stmt);
-    if (rc == SQLITE_ROW) break;
-    if (rc == SQLITE_DONE) break;
-    if (rc != SQLITE_BUSY) return rc;
+    if (rc == SQLITE_ROW)
+      break;
+    if (rc == SQLITE_DONE)
+      break;
+    if (rc != SQLITE_BUSY)
+      return rc;
     usleep(1000L << i);
   }
   return rc;
@@ -65,8 +71,10 @@ int DbExec(sqlite3 *db, const char *sql) {
   int i, rc;
   for (i = 0; i < 16; ++i) {
     rc = sqlite3_exec(db, sql, 0, 0, 0);
-    if (rc == SQLITE_OK) break;
-    if (rc != SQLITE_BUSY) return rc;
+    if (rc == SQLITE_OK)
+      break;
+    if (rc != SQLITE_BUSY)
+      return rc;
     usleep(1000L << i);
   }
   return rc;
@@ -100,7 +108,8 @@ void *Worker(void *arg) {
     ASSERT_EQ(SQLITE_OK, DbExec(db, "BEGIN TRANSACTION"));
     for (;;) {
       rc = DbStep(stmt[1]);
-      if (rc == SQLITE_DONE) break;
+      if (rc == SQLITE_DONE)
+        break;
       ASSERT_EQ(SQLITE_ROW, rc);
     }
     ASSERT_EQ(SQLITE_OK, sqlite3_reset(stmt[1]));

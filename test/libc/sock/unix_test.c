@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/version.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -35,7 +34,7 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
@@ -43,7 +42,8 @@ void SetUpOnce(void) {
 }
 
 TEST(unix, datagram) {
-  if (IsWindows()) return;  // no unix datagram on windows :'(
+  if (IsWindows())
+    return;  // no unix datagram on windows :'(
   atomic_bool *ready = _mapshared(1);
   SPAWN(fork);
   char buf[256] = {0};
@@ -60,7 +60,8 @@ TEST(unix, datagram) {
   EXPECT_STREQ("hello", buf);
   ASSERT_SYS(0, 0, close(3));
   PARENT();
-  while (!*ready) sched_yield();
+  while (!*ready)
+    sched_yield();
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
@@ -95,7 +96,6 @@ void StreamServer(atomic_bool *ready) {
 
 TEST(unix, stream) {
   int ws;
-  if (IsWindows() && !IsAtLeastWindows10()) return;
   atomic_bool *ready = _mapshared(1);
   // TODO(jart): move this line down when kFdProcess is gone
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
@@ -104,7 +104,8 @@ TEST(unix, stream) {
     StreamServer(ready);
     _Exit(0);
   }
-  while (!*ready) sched_yield();
+  while (!*ready)
+    sched_yield();
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
   ASSERT_SYS(0, 0, connect(3, (void *)&addr, len));
@@ -117,8 +118,10 @@ TEST(unix, stream) {
 }
 
 TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
-  if (IsWindows()) return;
-  if (IsCygwin()) return;
+  if (IsWindows())
+    return;
+  if (IsCygwin())
+    return;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
@@ -152,8 +155,10 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
 }
 
 TEST(unix, serverGoesDown_usingSendTo_unlink) {  // much easier
-  if (IsWindows()) return;
-  if (IsCygwin()) return;
+  if (IsWindows())
+    return;
+  if (IsCygwin())
+    return;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};

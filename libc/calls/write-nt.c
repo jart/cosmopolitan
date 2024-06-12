@@ -52,6 +52,11 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   struct Fd *f = g_fds.p + fd;
   bool isconsole = f->kind == kFdConsole;
 
+  // not implemented, XNU returns eperm();
+  if (f->kind == kFdDevRandom) {
+    return eperm();
+  }
+
   // determine win32 handle for writing
   int64_t handle = f->handle;
   if (isconsole && _weaken(GetConsoleOutputHandle)) {
@@ -67,7 +72,8 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   ssize_t rc;
   rc = sys_readwrite_nt(fd, data, size, offset, handle, waitmask,
                         (void *)WriteFile);
-  if (rc != -2) return rc;
+  if (rc != -2)
+    return rc;
 
   // mops up win32 errors
   switch (GetLastError()) {
@@ -91,11 +97,14 @@ static textwindows ssize_t sys_write_nt2(int fd, const struct iovec *iov,
                                          uint64_t waitmask) {
   ssize_t rc;
   size_t i, total;
-  if (opt_offset < -1) return einval();
-  while (iovlen && !iov[0].iov_len) iov++, iovlen--;
+  if (opt_offset < -1)
+    return einval();
+  while (iovlen && !iov[0].iov_len)
+    iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {
-      if (!iov[i].iov_len) continue;
+      if (!iov[i].iov_len)
+        continue;
       rc = sys_write_nt_impl(fd, iov[i].iov_base, iov[i].iov_len, opt_offset,
                              waitmask);
       if (rc == -1) {
@@ -106,8 +115,10 @@ static textwindows ssize_t sys_write_nt2(int fd, const struct iovec *iov,
         }
       }
       total += rc;
-      if (opt_offset != -1) opt_offset += rc;
-      if (rc < iov[i].iov_len) break;
+      if (opt_offset != -1)
+        opt_offset += rc;
+      if (rc < iov[i].iov_len)
+        break;
     }
     return total;
   } else {

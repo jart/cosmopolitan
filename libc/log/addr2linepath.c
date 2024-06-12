@@ -37,9 +37,14 @@ static struct {
 } g_addr2line;
 
 void GetAddr2linePathInit(void) {
+  char *res;
   int e = errno;
-  const char *path;
-  if (!(path = getenv("ADDR2LINE"))) {
+  const char *env, *cmd, *path;
+  if ((env = getenv("ADDR2LINE"))) {
+    cmd = env;
+    path = env;
+  } else {
+    cmd = "addr2line";
     path = ADDR2LINE;
   }
   char *buf = g_addr2line.buf;
@@ -48,12 +53,11 @@ void GetAddr2linePathInit(void) {
       strlcat(buf, "/", PATH_MAX);
     }
     strlcat(buf, path, PATH_MAX);
-  }
-  if (*buf) {
-    g_addr2line.res = buf;
+    res = buf;
   } else {
-    g_addr2line.res = commandv("addr2line", buf, PATH_MAX);
+    res = commandv(cmd, buf, PATH_MAX);
   }
+  g_addr2line.res = res;
   errno = e;
 }
 

@@ -28,9 +28,73 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
+#include "libc/mem/alloca.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
+
+static size_t SumIovecBytes(const struct iovec *iov, int iovlen) {
+  size_t count = 0;
+  for (int i = 0; i < iovlen; ++i)
+    if (ckd_add(&count, count, iov[i].iov_len))
+      count = SIZE_MAX;
+  return count;
+}
+
+static ssize_t readv_impl(int fd, const struct iovec *iov, int iovlen) {
+  if (fd < 0)
+    return ebadf();
+  if (iovlen < 0)
+    return einval();
+  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
+    return efault();
+
+  // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
+  // this is inconsistent with Linux which ignores huge requests
+  if (!IsLinux()) {
+    size_t sum, remain = 0x7ffff000;
+    if ((sum = SumIovecBytes(iov, iovlen)) > remain) {
+      struct iovec *iov2;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+      iov2 = alloca(iovlen * sizeof(struct iovec));
+      CheckLargeStackAllocation(iov2, iovlen * sizeof(struct iovec));
+#pragma GCC pop_options
+      for (int i = 0; i < iovlen; ++i) {
+        iov2[i] = iov[i];
+        if (remain >= iov2[i].iov_len) {
+          remain -= iov2[i].iov_len;
+        } else {
+          iov2[i].iov_len = remain;
+          remain = 0;
+        }
+      }
+      iov = iov2;
+    }
+  }
+
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    return _weaken(__zipos_read)(
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+    if (iovlen == 1) {
+      return sys_read(fd, iov[0].iov_base, iov[0].iov_len);
+    } else {
+      return sys_readv(fd, iov, iovlen);
+    }
+  } else if (fd >= g_fds.n) {
+    return ebadf();
+  } else if (IsMetal()) {
+    return sys_readv_metal(fd, iov, iovlen);
+  } else if (IsWindows()) {
+    return sys_readv_nt(fd, iov, iovlen);
+  } else {
+    return enosys();
+  }
+}
 
 /**
  * Reads data to multiple buffers.
@@ -42,6 +106,11 @@
  * be passed to the kernel as read() instead. This yields a 100 cycle
  * performance boost in the case of a single small iovec.
  *
+ * It's possible for file write request to be partially completed. For
+ * example, if the sum of `iov` lengths exceeds 0x7ffff000 then bytes
+ * beyond that will be ignored. This is a Linux behavior that Cosmo
+ * polyfills across platforms.
+ *
  * @return number of bytes actually read, or -1 w/ errno
  * @cancelationpoint
  * @restartable
@@ -49,32 +118,7 @@
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   ssize_t rc;
   BEGIN_CANCELATION_POINT;
-
-  if (fd < 0) {
-    rc = ebadf();
-  } else if (iovlen < 0) {
-    rc = einval();
-  } else if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
-    rc = efault();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    rc = _weaken(__zipos_read)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
-  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
-    if (iovlen == 1) {
-      rc = sys_read(fd, iov[0].iov_base, iov[0].iov_len);
-    } else {
-      rc = sys_readv(fd, iov, iovlen);
-    }
-  } else if (fd >= g_fds.n) {
-    rc = ebadf();
-  } else if (IsMetal()) {
-    rc = sys_readv_metal(fd, iov, iovlen);
-  } else if (IsWindows()) {
-    rc = sys_readv_nt(fd, iov, iovlen);
-  } else {
-    rc = enosys();
-  }
-
+  rc = readv_impl(fd, iov, iovlen);
   END_CANCELATION_POINT;
   STRACE("readv(%d, [%s], %d) → %'ld% m", fd, DescribeIovec(rc, iov, iovlen),
          iovlen, rc);

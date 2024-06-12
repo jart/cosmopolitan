@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -189,9 +189,11 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     name = name_;
   } else {
     name = path;
-    if (basenamify_) name = basename(gc(xstrdup(name)));
+    if (basenamify_)
+      name = basename(gc(xstrdup(name)));
     name = StripComponents(name, strip_components_);
-    if (path_prefix_) name = gc(xjoinpaths(path_prefix_, name));
+    if (path_prefix_)
+      name = gc(xjoinpaths(path_prefix_, name));
   }
   if (S_ISDIR(st.st_mode)) {
     st.st_size = 0;
@@ -225,10 +227,12 @@ void zipobj(int argc, char **argv) {
   struct ElfWriter *elf;
   unassert(argc < UINT16_MAX / 3 - 64); /* ELF 64k section limit */
   GetOpts(&argc, &argv);
-  for (i = 0; i < argc; ++i) CheckFilenameKosher(argv[i]);
+  for (i = 0; i < argc; ++i)
+    CheckFilenameKosher(argv[i]);
   elf = elfwriter_open(outpath_, 0644, arch_);
   elfwriter_cargoculting(elf);
-  for (i = 0; i < argc; ++i) ProcessFile(elf, argv[i]);
+  for (i = 0; i < argc; ++i)
+    ProcessFile(elf, argv[i]);
   PullEndOfCentralDirectoryIntoLinkage(elf);
   elfwriter_close(elf);
 }

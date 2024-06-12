@@ -106,8 +106,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/mem/mem.h"
 
 #if !defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE>0
@@ -164,7 +163,7 @@
 #endif /* OS_VXWORKS */
 
 #ifdef HAVE_UTIME
-# include "libc/time/time.h"
+# include "libc/time.h"
 #endif
 
 /*

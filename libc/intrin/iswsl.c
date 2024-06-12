@@ -35,8 +35,10 @@
  */
 bool __iswsl1(void) {
   static char res;
-  if (res) return res & 1;
-  if (!IsLinux()) return res = 2, false;
+  if (res)
+    return res & 1;
+  if (!IsLinux())
+    return res = 2, false;
   int e = errno;
   unassert(__sys_mmap((void *)1, 4096, PROT_READ | PROT_WRITE,
                       MAP_FIXED | MAP_PRIVATE | ANONYMOUS | GROWSDOWN, -1, 0,

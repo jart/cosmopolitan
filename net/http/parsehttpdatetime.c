@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/serialize.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "net/http/http.h"
 
 static unsigned ParseMonth(const char *p) {
@@ -42,8 +42,10 @@ static unsigned ParseMonth(const char *p) {
  */
 int64_t ParseHttpDateTime(const char *p, size_t n) {
   unsigned year, month, day, hour, minute, second, yday, leap;
-  if (n == -1) n = p ? strlen(p) : 0;
-  if (n != 29) return 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
+  if (n != 29)
+    return 0;
   day = (p[5] - '0') * 10 + (p[6] - '0') - 1;
   month = ParseMonth(p + 8);
   year = (p[12] - '0') * 1000 + (p[13] - '0') * 100 + (p[14] - '0') * 10 +

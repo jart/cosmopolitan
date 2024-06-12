@@ -87,9 +87,11 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
                               (timeout->tv_nsec + 999999) / 1000000)) {
         ms = -1;
       }
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      if (sigmask)
+        sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
       rc = poll(fds, nfds, ms);
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
+      if (sigmask)
+        sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
     uint32_t ms;

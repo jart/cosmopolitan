@@ -81,7 +81,8 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
   // we might need to spawn threads and open pipes
   __fds_lock();
   for (gotinvals = rc = sn = pn = i = 0; i < nfds; ++i) {
-    if (fds[i].fd < 0) continue;
+    if (fds[i].fd < 0)
+      continue;
     if (__isfdopen(fds[i].fd)) {
       if (__isfdkind(fds[i].fd, kFdSocket)) {
         if (sn < ARRAYLEN(sockfds)) {

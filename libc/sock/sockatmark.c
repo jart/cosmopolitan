@@ -30,8 +30,10 @@ static textwindows int sockatmark_nt(int fd, unsigned long magnum) {
   bool32 res;
   int64_t hand;
   uint32_t bytes;
-  if (fd >= g_fds.n) return ebadf();
-  if (g_fds.p[fd].kind != kFdSocket) return einval();
+  if (fd >= g_fds.n)
+    return ebadf();
+  if (g_fds.p[fd].kind != kFdSocket)
+    return einval();
   hand = g_fds.p[fd].handle;
   if (WSAIoctl(hand, magnum, 0, 0, &res, sizeof(res), &bytes, 0, 0) == -1) {
     return __winsockerr();

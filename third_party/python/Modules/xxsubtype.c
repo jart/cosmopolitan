@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/floatobject.h"

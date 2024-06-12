@@ -87,10 +87,6 @@ static int sys_accept_nt_start(int64_t handle, struct NtOverlapped *overlap,
   if (g_acceptex.lpAcceptEx(args->listensock, handle, args->buffer, 0,
                             sizeof(args->buffer->local),
                             sizeof(args->buffer->remote), 0, overlap)) {
-    // inherit properties of listening socket
-    unassert(!__imp_setsockopt(args->listensock, SOL_SOCKET,
-                               kNtSoUpdateAcceptContext, &handle,
-                               sizeof(handle)));
     return 0;
   } else {
     return -1;
@@ -123,11 +119,20 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
     goto Finish;
   }
 
+  // inherit properties of listening socket
+  // errors ignored as if f->handle was created before forking
+  // this fails with WSAENOTSOCK, see
+  // https://github.com/jart/cosmopolitan/issues/1174
+  __imp_setsockopt(resources.handle, SOL_SOCKET, kNtSoUpdateAcceptContext,
+                   &f->handle, sizeof(f->handle));
+
   // create file descriptor for new socket
   // don't inherit the file open mode bits
   int oflags = 0;
-  if (accept4_flags & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
-  if (accept4_flags & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
+  if (accept4_flags & SOCK_CLOEXEC)
+    oflags |= O_CLOEXEC;
+  if (accept4_flags & SOCK_NONBLOCK)
+    oflags |= O_NONBLOCK;
   client = __reservefd(-1);
   g_fds.p[client].flags = oflags;
   g_fds.p[client].mode = 0140666;

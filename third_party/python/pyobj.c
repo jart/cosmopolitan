@@ -33,7 +33,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.internal.h"

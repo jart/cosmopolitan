@@ -117,7 +117,8 @@ int BLAKE2B256_Update(struct Blake2b *b2b, const void *in_data, size_t len) {
   if (todo > len) {
     todo = len;
   }
-  if (todo) memcpy(&b2b->block.bytes[b2b->block_used], data, todo);
+  if (todo)
+    memcpy(&b2b->block.bytes[b2b->block_used], data, todo);
   b2b->block_used += todo;
   data += todo;
   len -= todo;
@@ -136,7 +137,8 @@ int BLAKE2B256_Update(struct Blake2b *b2b, const void *in_data, size_t len) {
     data += BLAKE2B_CBLOCK;
     len -= BLAKE2B_CBLOCK;
   }
-  if (len) memcpy(b2b->block.bytes, data, len);
+  if (len)
+    memcpy(b2b->block.bytes, data, len);
   b2b->block_used = len;
   return 0;
 }

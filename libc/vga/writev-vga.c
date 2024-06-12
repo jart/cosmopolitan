@@ -39,11 +39,14 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
     void *output = iov[i].iov_base;
     size_t len = iov[i].iov_len;
     res = _TtyWrite(&_vga_tty, output, len);
-    if (res < 0) break;
+    if (res < 0)
+      break;
     wrote += res;
-    if (res != len) return wrote;
+    if (res != len)
+      return wrote;
   }
-  if (!wrote) return res;
+  if (!wrote)
+    return res;
   return wrote;
 }
 

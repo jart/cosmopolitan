@@ -16,7 +16,7 @@ COSMOPOLITAN_C_START_
 extern char *optarg;
 extern int optind, opterr, optopt, optreset;
 
-int getopt(int, char *const[], const char *) paramsnonnull();
+int getopt(int, char *const[], const char *) paramsnonnull() libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_GETOPT_H_ */

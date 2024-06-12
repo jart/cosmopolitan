@@ -30,25 +30,32 @@
  */
 int IsDelegate(int x_) {
   dword w_;
-  if (x_ >= 0) return 0;
+  if (x_ >= 0)
+    return 0;
   w_ = Get(x_);  // (λ V (F . V) . Q)
   int ax_ = LO(w_);
   int dx_ = HI(w_);
-  if (ax_ != kLambda) return 0;
-  if (dx_ >= 0) return 0;
+  if (ax_ != kLambda)
+    return 0;
+  if (dx_ >= 0)
+    return 0;
   w_ = Get(dx_);  // (V (F . V) . Q)
   int adx_ = LO(w_);
   int ddx_ = HI(w_);
   int V = adx_;
-  if (V <= 0) return 0;
-  if (ddx_ >= 0) return 0;
+  if (V <= 0)
+    return 0;
+  if (ddx_ >= 0)
+    return 0;
   w_ = Get(ddx_);  // ((F . V) . Q)
   int addx_ = LO(w_);
-  if (addx_ >= 0) return 0;
+  if (addx_ >= 0)
+    return 0;
   w_ = Get(addx_);  // (F . V)
   int aaddx_ = LO(w_);
   int daddx_ = HI(w_);
   int F = aaddx_;
-  if (daddx_ != V) return 0;
+  if (daddx_ != V)
+    return 0;
   return F;
 }

@@ -64,12 +64,16 @@ static int openpty_impl(int *mfd, int *sfd, char *name,
   }
   *mfd = m;
   *sfd = s;
-  if (name) strcpy(name, t.sname);
-  if (tio) npassert(!tcsetattr(s, TCSAFLUSH, tio));
-  if (wsz) npassert(!tcsetwinsize(s, wsz));
+  if (name)
+    strcpy(name, t.sname);
+  if (tio)
+    npassert(!tcsetattr(s, TCSAFLUSH, tio));
+  if (wsz)
+    npassert(!tcsetwinsize(s, wsz));
   return 0;
 OnError:
-  if (m != -1) sys_close(m);
+  if (m != -1)
+    sys_close(m);
   return -1;
 }
 

@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/xsigaction.h"
 #include "libc/x/xspawn.h"
 
@@ -61,9 +61,12 @@ TEST(setrlimit, testCpuLimit) {
   struct rlimit rlim;
   struct timespec start;
   double matrices[3][3][3];
-  if (IsWindows()) return;  // of course it doesn't work on windows
-  if (IsXnu()) return;      // TODO(jart): it worked before
-  if (IsOpenbsd()) return;  // TODO(jart): fix flake
+  if (IsWindows())
+    return;  // of course it doesn't work on windows
+  if (IsXnu())
+    return;  // TODO(jart): it worked before
+  if (IsOpenbsd())
+    return;  // TODO(jart): fix flake
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, xsigaction(SIGXCPU, OnSigxcpu, 0, 0, 0));
@@ -89,7 +92,8 @@ TEST(setrlimit, testFileSizeLimit) {
   char junkdata[512];
   int i, fd, wstatus;
   struct rlimit rlim;
-  if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsWindows())
+    return; /* of course it doesn't work on windows */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, xsigaction(SIGXFSZ, OnSigxfsz, 0, 0, 0));
@@ -125,8 +129,10 @@ TEST(setrlimit, testMemoryLimit) {
   char *p;
   bool gotsome;
   int i, wstatus;
-  if (IsXnu()) return;
-  if (IsAsan()) return; /* b/c we use sys_mmap */
+  if (IsXnu())
+    return;
+  if (IsAsan())
+    return; /* b/c we use sys_mmap */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
@@ -156,10 +162,14 @@ TEST(setrlimit, testMemoryLimit) {
 TEST(setrlimit, testVirtualMemoryLimit) {
   char *p;
   int i, wstatus;
-  if (IsAsan()) return;
-  if (IsXnu()) return;     /* doesn't work on darwin */
-  if (IsOpenbsd()) return; /* unavailable on openbsd */
-  if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsAsan())
+    return;
+  if (IsXnu())
+    return; /* doesn't work on darwin */
+  if (IsOpenbsd())
+    return; /* unavailable on openbsd */
+  if (IsWindows())
+    return; /* of course it doesn't work on windows */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
@@ -184,12 +194,18 @@ TEST(setrlimit, testVirtualMemoryLimit) {
 TEST(setrlimit, testDataMemoryLimit) {
   char *p;
   int i, wstatus;
-  if (IsAsan()) return;
-  if (IsXnu()) return;     /* doesn't work on darwin */
-  if (IsNetbsd()) return;  /* doesn't work on netbsd */
-  if (IsFreebsd()) return; /* doesn't work on freebsd */
-  if (IsLinux()) return;   /* doesn't work on gnu/systemd */
-  if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsAsan())
+    return;
+  if (IsXnu())
+    return; /* doesn't work on darwin */
+  if (IsNetbsd())
+    return; /* doesn't work on netbsd */
+  if (IsFreebsd())
+    return; /* doesn't work on freebsd */
+  if (IsLinux())
+    return; /* doesn't work on gnu/systemd */
+  if (IsWindows())
+    return; /* of course it doesn't work on windows */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_DATA, &(struct rlimit){MEM, MEM}));
@@ -231,7 +247,8 @@ wontreturn void OnVfork(void *ctx) {
 TEST(setrlimit, isVforkSafe) {
   int ws;
   struct rlimit rlim[2];
-  if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsWindows())
+    return; /* of course it doesn't work on windows */
   ASSERT_EQ(0, getrlimit(RLIMIT_CPU, rlim));
   ASSERT_NE(-1, (ws = xvspawn(OnVfork, rlim, 0)));
   EXPECT_TRUE(WIFEXITED(ws));

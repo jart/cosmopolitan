@@ -13,10 +13,12 @@ TEST_MATH_CHECKS = $(TEST_MATH_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_MATH_DIRECTDEPS =				\
 	LIBC_INTRIN				\
+	LIBC_MEM				\
 	LIBC_RUNTIME				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\
-	THIRD_PARTY_COMPILER_RT
+	THIRD_PARTY_COMPILER_RT			\
+	THIRD_PARTY_OPENMP
 
 TEST_MATH_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_MATH_DIRECTDEPS),$($(x))))
@@ -33,7 +35,7 @@ o/$(MODE)/test/math/%.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_MATH_OBJS): private CFLAGS += -fno-builtin
+$(TEST_MATH_OBJS): private CFLAGS += -fno-builtin -fopenmp
 
 .PHONY: o/$(MODE)/test/math
 o/$(MODE)/test/math:				\

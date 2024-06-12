@@ -4,7 +4,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/pyconfig.h"
 COSMOPOLITAN_C_START_

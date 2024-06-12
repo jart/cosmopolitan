@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-
-size_t (*hook_bulk_free)(void *[], size_t) = dlbulk_free;
+#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Frees and clears (sets to NULL) each non-null pointer in given array.
@@ -32,5 +30,7 @@ size_t (*hook_bulk_free)(void *[], size_t) = dlbulk_free;
  * to sort this array before calling bulk_free.
  */
 size_t bulk_free(void **p, size_t n) {
-  return hook_bulk_free(p, n);
+  return dlbulk_free(p, n);
 }
+
+#endif /* __SANITIZE_ADDRESS__ */

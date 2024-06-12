@@ -23,7 +23,8 @@
 int main(int argc, char *argv[]) {
 
   const char *prog = argv[0];
-  if (!prog) prog = "rusage";
+  if (!prog)
+    prog = "rusage";
 
   if (argc < 2) {
     tinyprint(2, prog, ": missing command\n", NULL);

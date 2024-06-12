@@ -1,5 +1,5 @@
 /*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8-*-│
-│ vi: set et ft=c++ ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
+│ vi: set et ft=cpp ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -38,7 +38,7 @@ char* DoubleToJson(char buf[128], double x) {
   static const DoubleToStringConverter kDoubleToJson(
       DoubleToStringConverter::UNIQUE_ZERO |
           DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN,
-      "null", "null", 'e', -6, 21, 6, 0);
+      "1e5000", "null", 'e', -6, 21, 6, 0);
   kDoubleToJson.ToShortest(x, &b);
   b.Finalize();
   if (READ32LE(buf) != READ32LE("-nul")) {

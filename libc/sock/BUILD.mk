@@ -42,7 +42,7 @@ LIBC_SOCK_A_DIRECTDEPS =			\
 	LIBC_STR  				\
 	LIBC_SYSV				\
 	LIBC_SYSV_CALLS				\
-	LIBC_TIME
+	THIRD_PARTY_TZ
 
 LIBC_SOCK_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_SOCK_A_DIRECTDEPS),$($(x))))

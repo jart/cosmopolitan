@@ -11,13 +11,13 @@ TEST_NET_HTTPS_OBJS =						\
 	$(TEST_NET_HTTPS_SRCS:%.c=o/$(MODE)/%.o)
 
 TEST_NET_HTTPS_COMS =						\
-	$(TEST_NET_HTTPS_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_NET_HTTPS_SRCS:%.c=o/$(MODE)/%)
 
 TEST_NET_HTTPS_TESTS =						\
-	$(TEST_NET_HTTPS_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_NET_HTTPS_SRCS_TEST:%.c=o/$(MODE)/%.ok)
 
 TEST_NET_HTTPS_CHECKS =						\
-	$(TEST_NET_HTTPS_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_NET_HTTPS_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_NET_HTTPS_DIRECTDEPS =					\
 	NET_HTTPS						\
@@ -33,7 +33,7 @@ o/$(MODE)/test/net/https/https.pkg:				\
 		$(TEST_NET_HTTPS_OBJS)				\
 		$(foreach x,$(TEST_NET_HTTPS_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/net/https/%.com.dbg:				\
+o/$(MODE)/test/net/https/%.dbg:					\
 		$(TEST_NET_HTTPS_DEPS)				\
 		o/$(MODE)/test/net/https/%.o			\
 		$(LIBC_TESTMAIN)				\

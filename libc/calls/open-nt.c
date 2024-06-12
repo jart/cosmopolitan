@@ -159,6 +159,15 @@ static textwindows int sys_open_nt_special(int fd, int flags, int mode,
   return fd;
 }
 
+static textwindows int sys_open_nt_no_handle(int fd, int flags, int mode,
+                                             int kind) {
+  g_fds.p[fd].kind = kind;
+  g_fds.p[fd].mode = mode;
+  g_fds.p[fd].flags = flags;
+  g_fds.p[fd].handle = -1;
+  return fd;
+}
+
 static textwindows int sys_open_nt_dup(int fd, int flags, int mode, int oldfd) {
   int64_t handle;
   if (!__isfdopen(oldfd)) {
@@ -184,7 +193,8 @@ static textwindows int sys_open_nt_dup(int fd, int flags, int mode, int oldfd) {
 static int Atoi(const char *str) {
   int c;
   unsigned x = 0;
-  if (!*str) return -1;
+  if (!*str)
+    return -1;
   while ((c = *str++)) {
     if ('0' <= c && c <= '9') {
       x *= 10;
@@ -202,13 +212,16 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
   int fd, oldfd;
   BLOCK_SIGNALS;
   __fds_lock();
-  if (!(flags & _O_CREAT)) mode = 0;
+  if (!(flags & _O_CREAT))
+    mode = 0;
   if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
     if (startswith(file, "/dev/")) {
       if (!strcmp(file + 5, "tty")) {
         rc = sys_open_nt_special(fd, flags, mode, kFdConsole, u"CONIN$");
       } else if (!strcmp(file + 5, "null")) {
         rc = sys_open_nt_special(fd, flags, mode, kFdDevNull, u"NUL");
+      } else if (!strcmp(file + 5, "urandom") || !strcmp(file + 5, "random")) {
+        rc = sys_open_nt_no_handle(fd, flags, mode, kFdDevRandom);
       } else if (!strcmp(file + 5, "stdin")) {
         rc = sys_open_nt_dup(fd, flags, mode, STDIN_FILENO);
       } else if (!strcmp(file + 5, "stdout")) {

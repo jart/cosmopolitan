@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/ubsan.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.internal.h"
@@ -177,7 +178,8 @@ static char *__ubsan_itpcpy(char *p, struct UbsanTypeDescriptor *t,
 
 static size_t __ubsan_strlen(const char *s) {
   size_t i = 0;
-  while (s[i]) ++i;
+  while (s[i])
+    ++i;
   return i;
 }
 
@@ -208,7 +210,8 @@ static uintptr_t __ubsan_extend(struct UbsanTypeDescriptor *t, uintptr_t x) {
 }
 
 static wontreturn void __ubsan_unreachable(void) {
-  for (;;) abort();
+  for (;;)
+    abort();
 }
 
 static void __ubsan_exit(void) {
@@ -239,6 +242,8 @@ static void __ubsan_warning(const struct UbsanSourceLocation *loc,
                             const char *description) {
   kprintf("%s:%d: %subsan warning: %s is undefined behavior%s\n", loc->file,
           loc->line, SUBTLE, description, RESET);
+  if (__ubsan_strict)
+    __ubsan_die()();
 }
 
 __wur __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
@@ -314,7 +319,8 @@ static __ubsan_die_f *__ubsan_type_mismatch_handler(
     struct UbsanTypeMismatchInfo *info, uintptr_t pointer) {
   const char *kind;
   char buf[512], *p = buf;
-  if (!pointer) return __ubsan_abort(&info->location, "null pointer access");
+  if (!pointer)
+    return __ubsan_abort(&info->location, "null pointer access");
   kind = __ubsan_dubnul(kUbsanTypeCheckKinds, info->type_check_kind);
   if (info->alignment && (pointer & (info->alignment - 1))) {
     p = __ubsan_stpcpy(p, "unaligned ");

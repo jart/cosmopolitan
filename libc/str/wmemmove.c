@@ -21,6 +21,7 @@
 
 wchar_t *wmemmove(wchar_t *dest, const wchar_t *src, size_t count) {
   size_t bytes;
-  if (ckd_mul(&bytes, count, sizeof(wchar_t))) bytes = -1;
+  if (ckd_mul(&bytes, count, sizeof(wchar_t)))
+    bytes = -1;
   return memmove(dest, src, bytes);
 }

@@ -30,7 +30,8 @@
 const char *(DescribeFdSet)(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
   int o = 0;
 
-  if (!fds) return "NULL";
+  if (!fds)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(fds)) ||
       (IsAsan() && !__asan_is_valid(fds, sizeof(*fds) * nfds))) {
     ksnprintf(buf, N, "%p", fds);

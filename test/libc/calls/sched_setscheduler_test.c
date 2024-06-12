@@ -65,7 +65,8 @@ TEST(sched_setscheduler, test) {
 }
 
 TEST(sched_setscheduler, testMidpoint) {
-  if (!CanTuneRealtimeSchedulers()) return;
+  if (!CanTuneRealtimeSchedulers())
+    return;
   struct sched_param p = {(sched_get_priority_min(SCHED_FIFO) +
                            sched_get_priority_max(SCHED_FIFO)) /
                           2};

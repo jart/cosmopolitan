@@ -28,6 +28,7 @@ bool32 endswith16(const char16_t *s, const char16_t *suffix) {
   size_t n, m;
   n = strlen16(s);
   m = strlen16(suffix);
-  if (m > n) return false;
+  if (m > n)
+    return false;
   return memcmp(s + n - m, suffix, m * sizeof(char16_t)) == 0;
 }

@@ -198,7 +198,8 @@ int main(int argc, char *argv[]) {
     dprintf(outfd, "%`'.*s (got %d) ", n, code, n);
     if (iscntrl(code[0]) && !code[1]) {
       dprintf(outfd, "is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
-      if (code[0] == CTRL('C') || code[0] == CTRL('D')) break;
+      if (code[0] == CTRL('C') || code[0] == CTRL('D'))
+        break;
     } else if (startswith(code, "\e[") && endswith(code, "R")) {
       yn = 1, xn = 1;
       sscanf(code, "\e[%d;%dR", &yn, &xn);

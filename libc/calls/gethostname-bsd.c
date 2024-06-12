@@ -24,7 +24,7 @@
 
 int gethostname_bsd(char *name, size_t len, int kind) {
   int cmd[2] = {CTL_KERN, kind};
-  if (sys_sysctl(cmd, 2, name, &len, 0, 0) != -1) {
+  if (sysctl(cmd, 2, name, &len, 0, 0) != -1) {
     return 0;
   } else {
     if (errno == ENOMEM) {

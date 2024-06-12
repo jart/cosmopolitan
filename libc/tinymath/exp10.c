@@ -128,7 +128,7 @@ exp10 (double x)
      Approximate the two components separately.  */
 
   /* s = 2^(k/N), using lookup table.  */
-  uint64_t e = ki << (52 - EXP_TABLE_BITS);
+  uint64_t e = (uint64_t)ki << (52 - EXP_TABLE_BITS);
   uint64_t i = (ki & IndexMask) * 2;
   uint64_t u = __exp_data.tab[i + 1];
   uint64_t sbits = u + e;

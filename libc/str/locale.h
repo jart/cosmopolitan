@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STR_LOCALE_H_
 #define COSMOPOLITAN_LIBC_STR_LOCALE_H_
 #include "libc/fmt/conv.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 
 #define LC_CTYPE         0
 #define LC_NUMERIC       1
@@ -75,7 +75,7 @@ size_t strftime_l(char *, size_t, char const *, struct tm const *, locale_t);
 size_t strxfrm_l(char *, const char *, size_t, locale_t) libcesque;
 size_t wcsxfrm_l(wchar_t *, const wchar_t *, size_t, locale_t) libcesque;
 unsigned long long strtoull_l(const char *, char **, int, locale_t) libcesque;
-unsigned long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
+long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
 void freelocale(locale_t) libcesque;
 wint_t towlower_l(wint_t, locale_t) libcesque;
 wint_t towupper_l(wint_t, locale_t) libcesque;

@@ -95,13 +95,6 @@ static void* _PyObject_Realloc(void *ctx, void *ptr, size_t size);
 static inline void *
 _PyMem_RawMalloc(void *ctx, size_t size)
 {
-#ifdef __COSMOPOLITAN__
-#ifdef __SANITIZE_ADDRESS__
-    return __asan_memalign(16, size);
-#else
-    return dlmalloc(size);
-#endif
-#else
     /* PyMem_RawMalloc(0) means malloc(1). Some systems would return NULL
        for malloc(0), which would be treated as an error. Some platforms would
        return a pointer with no memory behind it, which would break pymalloc.
@@ -109,19 +102,11 @@ _PyMem_RawMalloc(void *ctx, size_t size)
     if (size == 0)
         size = 1;
     return malloc(size);
-#endif
 }
 
 static inline void *
 _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
 {
-#ifdef __COSMOPOLITAN__
-#ifdef __SANITIZE_ADDRESS__
-    return __asan_calloc(nelem, elsize);
-#else
-    return dlcalloc(nelem, elsize);
-#endif
-#else
     /* PyMem_RawCalloc(0, 0) means calloc(1, 1). Some systems would return NULL
        for calloc(0, 0), which would be treated as an error. Some platforms
        would return a pointer with no memory behind it, which would break
@@ -131,7 +116,6 @@ _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
         elsize = 1;
     }
     return calloc(nelem, elsize);
-#endif
 }
 
 static inline void *
@@ -139,29 +123,13 @@ _PyMem_RawRealloc(void *ctx, void *ptr, size_t size)
 {
     if (size == 0)
         size = 1;
-#ifdef __COSMOPOLITAN__
-#ifdef __SANITIZE_ADDRESS__
-    return __asan_realloc(ptr, size);
-#else
-    return dlrealloc(ptr, size);
-#endif
-#else
     return realloc(ptr, size);
-#endif
 }
 
 static inline void
 _PyMem_RawFree(void *ctx, void *ptr)
 {
-#ifdef __COSMOPOLITAN__
-#ifdef __SANITIZE_ADDRESS__
-    __asan_free(ptr);
-#else
-    dlfree(ptr);
-#endif
-#else
     free(ptr);
-#endif
 }
 
 #ifdef MS_WINDOWS

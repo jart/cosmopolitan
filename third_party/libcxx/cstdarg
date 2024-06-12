@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- cstdarg ----------------------------------===//
+//===----------------------------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -9,15 +9,6 @@
 
 #ifndef _LIBCPP_CSTDARG
 #define _LIBCPP_CSTDARG
-
-#include "third_party/libcxx/__config"
-#include "libc/isystem/stdarg.h"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 /*
     cstdarg synopsis
@@ -40,8 +31,25 @@ Types:
 
 */
 
-using ::va_list;
+#include <__assert> // all public C++ headers provide the assertion handler
+#include <__config>
+
+// <stdarg.h> is not provided by libc++
+#if __has_include(<stdarg.h>)
+#  include <stdarg.h>
+#  ifdef _LIBCPP_STDARG_H
+#    error "If libc++ starts defining <stdarg.h>, the __has_include check should move to libc++'s <stdarg.h>"
+#  endif
+#endif
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#  pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
+using ::va_list _LIBCPP_USING_IF_EXISTS;
 
 _LIBCPP_END_NAMESPACE_STD
 
-#endif  // _LIBCPP_CSTDARG
+#endif // _LIBCPP_CSTDARG

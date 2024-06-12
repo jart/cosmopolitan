@@ -26,7 +26,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
-void OnUsr1(int sig, struct siginfo *si, void *vctx) {
+void OnUsr1(int sig, siginfo_t *si, void *vctx) {
 }
 
 void SetUp(void) {

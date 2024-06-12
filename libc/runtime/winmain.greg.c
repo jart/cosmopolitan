@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
@@ -34,7 +35,7 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/teb.h"
+#include "libc/nt/signals.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -50,6 +51,7 @@
 #define abi __msabi textwindows dontinstrument
 
 // clang-format off
+__msabi extern typeof(AddVectoredExceptionHandler) *const __imp_AddVectoredExceptionHandler;
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
@@ -94,11 +96,15 @@ static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
   size_t i;
   for (;;) {
     for (i = 0;; ++i) {
-      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
-      if (!haystack[i]) break;
-      if (needle[i] != haystack[i]) break;
+      if (!needle[i])
+        return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i])
+        break;
+      if (needle[i] != haystack[i])
+        break;
     }
-    if (!*haystack++) break;
+    if (!*haystack++)
+      break;
   }
   return 0;
 }
@@ -124,7 +130,8 @@ static abi bool32 WinFileExists(const char *path) {
   uint16_t path16[PATH_MAX];
   size_t z = ARRAYLEN(path16);
   size_t n = tprecode8to16(path16, z, path).ax;
-  if (n >= z - 1) return false;
+  if (n >= z - 1)
+    return false;
   return __imp_GetFileAttributesW(path16) != -1u;
 }
 
@@ -149,14 +156,20 @@ static bool32 HasEnvironmentVariable(const char16_t *name) {
   return __imp_GetEnvironmentVariableW(name, buf, ARRAYLEN(buf));
 }
 
+static abi unsigned OnWinCrash(struct NtExceptionPointers *ep) {
+  int code, sig = __sig_crash_sig(ep, &code);
+  TerminateThisProcess(sig);
+}
+
 // main function of windows init process
 // i.e. first process spawned that isn't forked
 static abi wontreturn void WinInit(const char16_t *cmdline) {
   __oldstack = (intptr_t)__builtin_frame_address(0);
 
+  __imp_SetConsoleOutputCP(kNtCpUtf8);
+
   // make console into utf-8 ansi/xterm style tty
-  if (NtGetPeb()->OSMajorVersion >= 10 &&
-      (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
+  if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
     __imp_SetConsoleCP(kNtCpUtf8);
     __imp_SetConsoleOutputCP(kNtCpUtf8);
     for (int i = 0; i <= 2; ++i) {
@@ -174,6 +187,9 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
       }
     }
   }
+
+  // so crash signals can be reported to cosmopolitan bash
+  __imp_AddVectoredExceptionHandler(true, (void *)OnWinCrash);
 
   // allocate memory for stack and argument block
   _mmi.p = _mmi.s;
@@ -236,7 +252,8 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   // normalize executable path
   if (wa->argv[0] && !WinFileExists(wa->argv[0])) {
     unsigned i, n = 0;
-    while (wa->argv[0][n]) ++n;
+    while (wa->argv[0][n])
+      ++n;
     if (n + 4 < sizeof(wa->argv0buf)) {
       for (i = 0; i < n; ++i) {
         wa->argv0buf[i] = wa->argv[0][i];
@@ -302,7 +319,8 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   cmdline = MyCommandLine();
 #if SYSDEBUG
   // sloppy flag-only check for early initialization
-  if (StrStr(cmdline, u"--strace")) ++__strace;
+  if (StrStr(cmdline, u"--strace"))
+    ++__strace;
 #endif
   if (_weaken(WinSockInit)) {
     _weaken(WinSockInit)();

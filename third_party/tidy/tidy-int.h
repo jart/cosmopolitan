@@ -16,7 +16,7 @@
 #include "third_party/tidy/pprint.h"
 #include "third_party/tidy/access.h"
 #include "third_party/tidy/message.h"
-#include "libc/time/struct/utimbuf.h"
+#include "libc/utime.h"
 #include "third_party/tidy/parser.h"
 
 #ifndef MAX

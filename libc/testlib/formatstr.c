@@ -60,12 +60,14 @@ static int AppendWide(wint_t x, int i, int j) {
  */
 char *testlib_formatstr(size_t cw, const void *p, int n) {
   int i, j = 0;
-  if (!p) return "NULL";
+  if (!p)
+    return "NULL";
   i = atomic_fetch_add(&bufi, 1) % STRS;
   switch (cw) {
     case 1: {
       const char *s = p;
-      if (n < 0) n = s ? strlen(s) : 0;
+      if (n < 0)
+        n = s ? strlen(s) : 0;
       const char *se = s + n;
       APPEND('"');
       while (s < se) {
@@ -75,13 +77,15 @@ char *testlib_formatstr(size_t cw, const void *p, int n) {
     }
     case 2: {
       const char16_t *s = p;
-      if (n < 0) n = s ? strlen16(s) : 0;
+      if (n < 0)
+        n = s ? strlen16(s) : 0;
       const char16_t *se = s + n;
       APPEND('u');
       APPEND('"');
       while (s < se) {
         wint_t x = *s++ & 0xffff;
-        if (IsUtf16Cont(x)) continue;
+        if (IsUtf16Cont(x))
+          continue;
         if (!IsUcs2(x) && s < se) {
           wint_t y = *s++ & 0xffff;
           x = MergeUtf16(x, y);
@@ -92,7 +96,8 @@ char *testlib_formatstr(size_t cw, const void *p, int n) {
     }
     case 4: {
       const wchar_t *s = p;
-      if (n < 0) n = s ? wcslen(s) : 0;
+      if (n < 0)
+        n = s ? wcslen(s) : 0;
       const wchar_t *se = s + n;
       APPEND('L');
       APPEND('"');

@@ -47,12 +47,12 @@ TEST_LIBC_CALLS_DIRECTDEPS =						\
 	LIBC_SYSV_CALLS							\
 	LIBC_TESTLIB							\
 	LIBC_THREAD							\
-	LIBC_TIME							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
 	THIRD_PARTY_COMPILER_RT						\
 	TOOL_DECODE_LIB							\
-	THIRD_PARTY_XED
+	THIRD_PARTY_XED							\
+	THIRD_PARTY_TZ
 
 TEST_LIBC_CALLS_DEPS :=							\
 	$(call uniq,$(foreach x,$(TEST_LIBC_CALLS_DIRECTDEPS),$($(x))))

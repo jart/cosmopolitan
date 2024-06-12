@@ -28,6 +28,7 @@ bool32 wcsendswith(const wchar_t *s, const wchar_t *suffix) {
   size_t n, m;
   n = wcslen(s);
   m = wcslen(suffix);
-  if (m > n) return false;
+  if (m > n)
+    return false;
   return memcmp(s + n - m, suffix, m * sizeof(wchar_t)) == 0;
 }

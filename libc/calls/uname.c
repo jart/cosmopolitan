@@ -30,7 +30,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"
-#include "libc/nt/struct/teb.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -62,7 +61,7 @@ static void GetBsdStr(int c0, int c1, char *s) {
   size_t n = SYS_NMLN;
   int cmd[2] = {c0, c1};
   bzero(s, n), --n;
-  sys_sysctl(cmd, 2, s, &n, NULL, 0);
+  sysctl(cmd, 2, s, &n, NULL, 0);
   errno = e;
   // sysctl kern.version is too verbose for uname
   if ((p = strchr(s, '\n'))) {
@@ -81,34 +80,13 @@ static textwindows void GetNtName(char *name, int kind) {
   }
 }
 
-static inline textwindows int GetNtMajorVersion(void) {
-#ifdef __x86_64__
-  return NtGetPeb()->OSMajorVersion;
-#else
-  return 0;
-#endif
-}
-
-static inline textwindows int GetNtMinorVersion(void) {
-#ifdef __x86_64__
-  return NtGetPeb()->OSMinorVersion;
-#else
-  return 0;
-#endif
-}
-
-static inline textwindows int GetNtBuildNumber(void) {
-#ifdef __x86_64__
-  return NtGetPeb()->OSBuildNumber;
-#else
-  return 0;
-#endif
-}
-
 static textwindows void GetNtVersion(char *p) {
-  p = FormatUint32(p, GetNtMajorVersion()), *p++ = '.';
-  p = FormatUint32(p, GetNtMinorVersion()), *p++ = '-';
-  p = FormatUint32(p, GetNtBuildNumber());
+  // We could ask GetVersionExW() for this information, but it'll simply
+  // report what we put in the MajorOperatingSystemVersion of the PE ape
+  // header fields. Windows doesn't want us detecting versions it seems.
+  // Chances are they bake all old versions of Windows into Windows, and
+  // run us on the intended one, like some kind of Docker container. Heh
+  strcpy(p, "10.0");
 }
 
 static const char *Str(int rc, const char *s) {

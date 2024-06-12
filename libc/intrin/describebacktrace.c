@@ -17,34 +17,66 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/iscall.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 
 #define N 160
 
+static bool IsDangerous(const void *ptr) {
+  if (_weaken(kisdangerous))
+    return _weaken(kisdangerous)(ptr);
+  return false;
+}
+
+static char *FormatHex(char *p, unsigned long x) {
+  int k = x ? (__builtin_clzl(x) ^ 63) + 1 : 1;
+  k = (k + 3) & -4;
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p;
+}
+
 dontinstrument const char *(DescribeBacktrace)(char buf[N],
-                                               struct StackFrame *fr) {
+                                               const struct StackFrame *fr) {
   char *p = buf;
   char *pe = p + N;
   bool gotsome = false;
   while (fr) {
-    if (_weaken(kisdangerous) && _weaken(kisdangerous)(fr)) {
+    if (IsDangerous(fr)) {
+      if (p + 1 + 1 + 1 < pe) {
+        if (gotsome)
+          *p++ = ' ';
+        *p = '!';
+        if (p + 16 + 1 < pe) {
+          *p++ = ' ';
+          p = FormatHex(p, (long)fr);
+        }
+      }
       break;
     }
-    if (p + 16 + 1 + 1 <= pe) {
-      if (gotsome) {
+    if (p + 16 + 1 < pe) {
+      unsigned char *ip = (unsigned char *)fr->addr;
+#ifdef __x86_64__
+      // x86 advances the progrem counter before an instruction
+      // begins executing. return addresses in backtraces shall
+      // point to code after the call, which means addr2line is
+      // going to print unrelated code unless we fixup the addr
+      if (!IsDangerous(ip))
+        ip -= __is_call(ip);
+#endif
+      if (gotsome)
         *p++ = ' ';
-      } else {
+      else
         gotsome = true;
-      }
-      p = __hexcpy(p, fr->addr);
+      p = FormatHex(p, (long)ip);
     } else {
       break;
     }
     fr = fr->next;
   }
-  *p = 0;
+  *p = '\0';
   return buf;
 }

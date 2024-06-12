@@ -43,7 +43,8 @@ __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
                  : "1"(__NR_mprotect), "D"(addr), "S"(size), "2"(prot)
                  : "rcx", "r8", "r9", "r10", "r11", "memory");
 #ifndef NDEBUG
-    if (cf) ax = -ax;
+    if (cf)
+      ax = -ax;
     if (ax == -EPERM) {
       kprintf("error: need pledge(prot_exec) permission to code morph\n");
     }

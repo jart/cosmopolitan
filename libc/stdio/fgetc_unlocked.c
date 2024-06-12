@@ -31,7 +31,8 @@ int fgetc_unlocked(FILE *f) {
   if (f->beg < f->end) {
     return f->buf[f->beg++] & 255;
   } else {
-    if (!fread_unlocked(b, 1, 1, f)) return -1;
+    if (!fread_unlocked(b, 1, 1, f))
+      return -1;
     return b[0];
   }
 }

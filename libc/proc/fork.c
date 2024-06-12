@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -34,20 +35,54 @@
 #include "libc/nt/thread.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
+static void _onfork_prepare(void) {
+  if (_weaken(_pthread_onfork_prepare)) {
+    _weaken(_pthread_onfork_prepare)();
+  }
+  _pthread_lock();
+  __fds_lock();
+  __mmi_lock();
+}
+
+static void _onfork_parent(void) {
+  __mmi_unlock();
+  __fds_unlock();
+  _pthread_unlock();
+  if (_weaken(_pthread_onfork_parent)) {
+    _weaken(_pthread_onfork_parent)();
+  }
+}
+
+static void _onfork_child(void) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  extern pthread_mutex_t __mmi_lock_obj;
+  pthread_mutex_init(&__mmi_lock_obj, &attr);
+  pthread_mutex_init(&__fds_lock_obj, &attr);
+  pthread_mutexattr_destroy(&attr);
+  _pthread_init();
+  if (_weaken(_pthread_onfork_child)) {
+    _weaken(_pthread_onfork_child)();
+  }
+}
+
 int _fork(uint32_t dwCreationFlags) {
   struct Dll *e;
   int ax, dx, tid, parent;
   parent = __pid;
   BLOCK_SIGNALS;
-  if (IsWindows()) __proc_lock();
-  if (__threaded && _weaken(_pthread_onfork_prepare)) {
-    _weaken(_pthread_onfork_prepare)();
+  if (IsWindows())
+    __proc_lock();
+  if (__threaded) {
+    _onfork_prepare();
   }
   if (!IsWindows()) {
     ax = sys_fork();
@@ -98,16 +133,17 @@ int _fork(uint32_t dwCreationFlags) {
     atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
 
     // run user fork callbacks
-    if (__threaded && _weaken(_pthread_onfork_child)) {
-      _weaken(_pthread_onfork_child)();
+    if (__threaded) {
+      _onfork_child();
     }
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
     // this is the parent process
-    if (__threaded && _weaken(_pthread_onfork_parent)) {
-      _weaken(_pthread_onfork_parent)();
+    if (__threaded) {
+      _onfork_parent();
     }
-    if (IsWindows()) __proc_unlock();
+    if (IsWindows())
+      __proc_unlock();
     STRACE("fork() → %d% m", ax);
   }
   ALLOW_SIGNALS;

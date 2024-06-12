@@ -45,7 +45,7 @@
  */
 
 #include "third_party/libcxxabi/include/__cxxabi_config.h"
-#include "third_party/libcxx/include/atomic_support.hh" // from libc++
+#include "third_party/libcxx/src/include/atomic_support.h" // from libc++
 #if defined(__has_include)
 #  if __has_include(<sys/syscall.h>)
 #    include <sys/syscall.h>

@@ -49,15 +49,23 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   const Elf64_Sym *symtab, *sym;
   ptrdiff_t names_offset, name_base_offset, stp_offset;
   map = MAP_FAILED;
-  if ((fd = open(filename, O_RDONLY | O_CLOEXEC)) == -1) return 0;
-  if ((filesize = lseek(fd, 0, SEEK_END)) == -1) goto SystemError;
-  if (filesize > INT_MAX) goto RaiseE2big;
-  if (filesize < 64) goto RaiseEnoexec;
+  if ((fd = open(filename, O_RDONLY | O_CLOEXEC)) == -1)
+    return 0;
+  if ((filesize = lseek(fd, 0, SEEK_END)) == -1)
+    goto SystemError;
+  if (filesize > INT_MAX)
+    goto RaiseE2big;
+  if (filesize < 64)
+    goto RaiseEnoexec;
   elf = map = mmap(0, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (map == MAP_FAILED) goto SystemError;
-  if (READ32LE((char *)map) != READ32LE("\177ELF")) goto RaiseEnoexec;
-  if (!(name_base = GetStrtab(map, &m))) goto RaiseEnobufs;
-  if (!(symtab = GetSymtab(map, &n))) goto RaiseEnobufs;
+  if (map == MAP_FAILED)
+    goto SystemError;
+  if (READ32LE((char *)map) != READ32LE("\177ELF"))
+    goto RaiseEnoexec;
+  if (!(name_base = GetStrtab(map, &m)))
+    goto RaiseEnobufs;
+  if (!(symtab = GetSymtab(map, &n)))
+    goto RaiseEnobufs;
   tsz = 0;
   tsz += sizeof(struct SymbolTable);
   tsz += sizeof(struct Symbol) * n;
@@ -71,7 +79,8 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   tsz += sizeof(const Elf64_Sym *) * n;
   tsz = ROUNDUP(tsz, FRAMESIZE);
   t = mmap(0, tsz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (t == MAP_FAILED) goto SystemError;
+  if (t == MAP_FAILED)
+    goto SystemError;
   t->magic = SYMBOLS_MAGIC;
   t->abi = SYMBOLS_ABI;
   t->size = size;
@@ -90,8 +99,10 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
                                ELF64_ST_TYPE(sym->st_info) == STT_OBJECT))) {
       continue;
     }
-    if (sym->st_value > t->addr_end) continue;
-    if (sym->st_value < t->addr_base) continue;
+    if (sym->st_value > t->addr_end)
+      continue;
+    if (sym->st_value < t->addr_base)
+      continue;
     x = sym->st_value - t->addr_base;
     stp[m++] = (unsigned long)x << 32 | i;
   }

@@ -19,12 +19,14 @@ void Marker(const dword[], int, int);
 int Relocater(const dword[], const unsigned[], int, int);
 
 forceinline int Relocate(const struct Gc *G, int x) {
-  if (x >= G->C) return x;
+  if (x >= G->C)
+    return x;
   return Relocater(G->M, G->P, G->A, x);
 }
 
 forceinline void Mark(struct Gc *G, int x) {
-  if (x >= G->A) return;
+  if (x >= G->A)
+    return;
   Marker(G->M, G->A, x);
 }
 

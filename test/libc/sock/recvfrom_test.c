@@ -33,7 +33,8 @@
 // two clients send a udp packet containing their local address
 // server verifies content of packet matches the peer's address
 TEST(recvfrom, test) {
-  if (!IsWindows()) return;
+  if (!IsWindows())
+    return;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in server = {
       .sin_family = AF_INET,
@@ -91,4 +92,45 @@ TEST(recvfrom, test) {
   EXPECT_SYS(0, 0, close(client2));
   EXPECT_SYS(0, 0, close(client1));
   WAIT(exit, 0);
+}
+
+// server listens for connections, accepts a connection, and sends data
+// client connects to server recieves with recvfrom and verifies addrsize
+// is 0 as the sender info isn't available on connection sockets.
+TEST(recvfrom, tcp) {
+  uint32_t addrsize = sizeof(struct sockaddr_in);
+  struct sockaddr_in server = {
+      .sin_family = AF_INET,
+      .sin_addr.s_addr = htonl(0x7f000001),
+  };
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&server, sizeof(server)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&server, &addrsize));
+  ASSERT_SYS(0, 0, listen(3, 5));
+
+  ////////////////////////////////////////////////////////////////////////////////
+  SPAWN(fork);
+  struct sockaddr_in data, addr;
+  uint32_t addrsize = sizeof(struct sockaddr_in);
+  EXPECT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&server, sizeof(server)));
+  ASSERT_SYS(
+      0, sizeof(data),
+      recvfrom(3, &data, sizeof(data), 0, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_EQ(0, addrsize);
+  EXPECT_SYS(0, 0, close(3));
+
+  ////////////////////////////////////////////////////////////////////////////////
+  PARENT();
+  int client;
+  struct sockaddr client_sockaddr;
+  uint32_t sockaddr_size = sizeof(client_sockaddr);
+  ASSERT_NE(-1, (client = accept(3, &client_sockaddr, &sockaddr_size)));
+  ASSERT_SYS(0, sizeof(client_sockaddr),
+             sendto(client, &client_sockaddr, sizeof(client_sockaddr), 0,
+                    (struct sockaddr *)&server, sizeof(server)));
+  EXPECT_SYS(0, 0, close(client));
+  WAIT(exit, 0);
+  EXPECT_SYS(0, 0, close(3));
 }

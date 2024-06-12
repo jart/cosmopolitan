@@ -23,6 +23,7 @@
 
 bool testlib_almostequallongdouble(long double x, long double y) {
   /* TODO(jart): This algorithm has to be binary. */
-  if (isnan(x) || isnan(y)) return false;
+  if (isnan(x) || isnan(y))
+    return false;
   return fabsl(x - y) <= EPSILON;
 }

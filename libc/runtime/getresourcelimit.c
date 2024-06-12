@@ -23,7 +23,9 @@
 
 long __get_rlimit(int resource) {
   struct rlimit rl;
-  if (getrlimit(resource, &rl) == -1) return -1;
-  if (rl.rlim_cur == RLIM_INFINITY) return -1;
+  if (getrlimit(resource, &rl) == -1)
+    return -1;
+  if (rl.rlim_cur == RLIM_INFINITY)
+    return -1;
   return MIN(rl.rlim_cur, LONG_MAX);
 }

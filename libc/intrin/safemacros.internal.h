@@ -48,7 +48,8 @@ COSMOPOLITAN_C_START_
   ({                                               \
     autotype(a) FirstNonNullA = (a);               \
     autotype(a) FirstNonNullB = (b);               \
-    if (!FirstNonNullA && !FirstNonNullB) abort(); \
+    if (!FirstNonNullA && !FirstNonNullB)          \
+      abort();                                     \
     FirstNonNullA ? FirstNonNullA : FirstNonNullB; \
   })
 

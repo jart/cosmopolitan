@@ -54,8 +54,10 @@ extern const char kHostChars[256];  // -_0-9A-Za-z
 bool IsAcceptableHost(const char *s, size_t n) {
   size_t i;
   int c, b, j;
-  if (n == -1) n = s ? strlen(s) : 0;
-  if (!n) return true;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
+  if (!n)
+    return true;
   if (n > DNS_NAME_MAX) {
     return false;
   }

@@ -50,7 +50,8 @@ char *RecreateFlags(const struct IdName *names, unsigned long id) {
     }
   }
   if (id) {
-    if (bufi) APPEND(&bufp, &bufi, &bufn, "|");
+    if (bufi)
+      APPEND(&bufp, &bufi, &bufn, "|");
     CONCAT(&bufp, &bufi, &bufn, extrabuf,
            snprintf(extrabuf, sizeof(extrabuf), "%#x", id));
   } else if (!bufi) {

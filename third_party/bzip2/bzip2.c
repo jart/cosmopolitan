@@ -12,8 +12,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/struct/utimbuf.h"
-#include "libc/time/time.h"
+#include "libc/utime.h"
+#include "libc/time.h"
 #include "third_party/bzip2/bzlib.h"
 
 /*-----------------------------------------------------------*/

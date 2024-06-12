@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
   const char *prog;
 
   prog = argv[0];
-  if (!prog) prog = "touch";
+  if (!prog)
+    prog = "touch";
 
   if (argc < 2) {
     tinyprint(2, prog, ": missing operand\n", NULL);

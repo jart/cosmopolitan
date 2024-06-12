@@ -50,7 +50,7 @@
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
 void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
-                            struct ZiposHandle *h, int64_t off) {
+                   struct ZiposHandle *h, int64_t off) {
 
   if (off < 0) {
     STRACE("negative zipos mmap offset");

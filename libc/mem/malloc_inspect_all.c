@@ -19,8 +19,8 @@
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
-void malloc_inspect_all(void (*handler)(void* start, void* end,
-                                        size_t used_bytes, void* callback_arg),
+void malloc_inspect_all(void handler(void* start, void* end, size_t used_bytes,
+                                     void* callback_arg),
                         void* arg) {
   dlmalloc_inspect_all(handler, arg);
 }

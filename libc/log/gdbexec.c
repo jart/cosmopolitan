@@ -32,7 +32,8 @@ relegated int(gdbexec)(const char *cmd) {
   struct StackFrame *bp;
   const char *se, *elf, *gdb;
   char pidstr[11], breakcmd[40];
-  if (!(gdb = GetGdbPath())) return -1;
+  if (!(gdb = GetGdbPath()))
+    return -1;
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());
   if ((elf = FindDebugBinary())) {
     se = "-se";

@@ -20,15 +20,19 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/files.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
 int pipefd[2];
 int stdoutBack;
+int allowMask;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
+  // qemu-aarch64 defines o_largefile wrong
+  allowMask = ~(O_LARGEFILE | 0x00008000);
 }
 
 void CaptureStdout(void) {
@@ -46,8 +50,7 @@ void RestoreStdout(void) {
 
 TEST(specialfile, devNull) {
   ASSERT_SYS(0, 3, creat("/dev/null", 0644));
-  // qemu-aarch64 defines o_largefile wrong
-  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & ~(O_LARGEFILE | 0x00008000));
+  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & allowMask);
   ASSERT_SYS(0, 2, write(3, "hi", 2));
   ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 0));
   ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 2));
@@ -64,9 +67,48 @@ TEST(specialfile, devNull) {
 TEST(specialfile, devNullRead) {
   char buf[8] = {0};
   ASSERT_SYS(0, 3, open("/dev/null", O_RDONLY));
-  // qemu-aarch64 defines o_largefile wrong
-  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & ~(O_LARGEFILE | 0x00008000));
+  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & allowMask);
   ASSERT_SYS(0, 0, read(3, buf, 8));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(specialfile, devRandomRead) {
+  char buf[8] = {0};
+  ASSERT_SYS(0, 3, open("/dev/random", O_RDONLY));
+  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & allowMask);
+  ASSERT_SYS(0, 8, read(3, buf, 8));
+  ASSERT_NE(0, memcmp(buf, "       ", 8));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(specialfile, devUrandomRead) {
+  char buf[8] = {0};
+  ASSERT_SYS(0, 3, open("/dev/urandom", O_RDONLY));
+  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & allowMask);
+  ASSERT_SYS(0, 8, read(3, buf, 8));
+  ASSERT_NE(0, memcmp(buf, "       ", 8));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(specialfile, devRandomWrite_fails_on_nt) {
+  if (!IsWindows()) {
+    return;
+  }
+  char buf[8] = {0};
+  ASSERT_SYS(0, 3, creat("/dev/random", 0644));
+  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & allowMask);
+  ASSERT_SYS(EPERM, -1, write(3, buf, 8));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(specialfile, devUrandomWrite_fails_on_nt) {
+  if (!IsWindows()) {
+    return;
+  }
+  char buf[8] = {0};
+  ASSERT_SYS(0, 3, creat("/dev/urandom", 0644));
+  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & allowMask);
+  ASSERT_SYS(EPERM, -1, write(3, buf, 8));
   ASSERT_SYS(0, 0, close(3));
 }
 

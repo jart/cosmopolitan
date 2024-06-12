@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/utime.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/time/struct/utimbuf.h"
 
 /**
  * Changes last accessed/modified times on file.

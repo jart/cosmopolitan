@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "net/http/http.h"
@@ -138,7 +138,8 @@ static const char *BisectContentType(uint64_t ext) {
 const char *FindContentType(const char *p, size_t n) {
   int c;
   uint64_t w;
-  if (n == -1) n = p ? strlen(p) : 0;
+  if (n == -1)
+    n = p ? strlen(p) : 0;
   for (w = 0; n--;) {
     c = p[n] & 255;
     if (c == '.') {

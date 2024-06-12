@@ -176,30 +176,25 @@ assert(DecodeJson(' [123e-10000000] '))
 assert(EncodeJson(DecodeJson(' [123e-10000000] ')) == '[0]')
 assert(EncodeLua(DecodeJson(' [123e-10000000] ')) == '{0.}')
 
--- [jart] consistent with v8 we encode Infinity as null (wut?)
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_real_pos_overflow.json
 assert(DecodeJson(' [123123e100000] '))
-assert(EncodeJson(DecodeJson(' [123123e100000] ')) == '[null]')
+assert(EncodeJson(DecodeJson(' [123123e100000] ')) == '[1e5000]')
 
--- [jart] consistent with v8 we encode -Infinity as null (wut?)
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_real_neg_overflow.json
 assert(DecodeJson(' [-123123e100000] '))
-assert(EncodeJson(DecodeJson(' [-123123e100000] ')) == '[null]')
+assert(EncodeJson(DecodeJson(' [-123123e100000] ')) == '[-1e5000]')
 
--- [jart] consistent with v8 we encode Infinity as null (wut?)
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_pos_double_huge_exp.json
 assert(DecodeJson(' [1.5e+9999] '))
-assert(EncodeJson(DecodeJson(' [1.5e+9999] ')) == '[null]')
+assert(EncodeJson(DecodeJson(' [1.5e+9999] ')) == '[1e5000]')
 
--- [jart] consistent with v8 we encode -Infinity as null (wut?)
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_neg_int_huge_exp.json
 assert(DecodeJson(' [-1e+9999] '))
-assert(EncodeJson(DecodeJson(' [-1e+9999] ')) == '[null]')
+assert(EncodeJson(DecodeJson(' [-1e+9999] ')) == '[-1e5000]')
 
--- [jart] consistent with v8 we encode Infinity as null (wut?)
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_huge_exp.json
 assert(DecodeJson(' [0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006] '))
-assert(EncodeJson(DecodeJson(' [0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006] ')) == '[null]')
+assert(EncodeJson(DecodeJson(' [0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006] ')) == '[1e5000]')
 
 -- [jart] consistent with v8 we encode underflow as 0
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/i_number_double_huge_neg_exp.json

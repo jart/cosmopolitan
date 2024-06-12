@@ -47,8 +47,10 @@ int sem_trywait(sem_t *sem) {
   v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
   do {
     unassert(v > INT_MIN);
-    if (!v) return eagain();
-    if (v < 0) return einval();
+    if (!v)
+      return eagain();
+    if (v < 0)
+      return einval();
   } while (!atomic_compare_exchange_weak_explicit(
       &sem->sem_value, &v, v - 1, memory_order_acquire, memory_order_relaxed));
   return 0;

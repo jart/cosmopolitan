@@ -31,7 +31,8 @@
 const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
   int o = 0;
 
-  if (!l) return "NULL";
+  if (!l)
+    return "NULL";
   if ((!IsAsan() && kisdangerous(l)) ||
       (IsAsan() && !__asan_is_valid(l, sizeof(*l)))) {
     ksnprintf(buf, N, "%p", l);

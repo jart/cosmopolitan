@@ -40,8 +40,10 @@
 #include "libc/x/x.h"
 
 void SetUpOnce(void) {
-  if (IsNetbsd()) exit(0);
-  if (IsOpenbsd()) exit(0);
+  if (IsNetbsd())
+    exit(0);
+  if (IsOpenbsd())
+    exit(0);
   testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc inet", 0));
 }
@@ -101,7 +103,8 @@ TEST(sendfile, testSeeking) {
 
 TEST(sendfile, testPositioning) {
   // TODO(jart): fix test regression on windows
-  if (IsWindows()) return;
+  if (IsWindows())
+    return;
   char buf[1024];
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {

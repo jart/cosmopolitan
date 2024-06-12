@@ -8,6 +8,7 @@ LIBC_MEM = $(LIBC_MEM_A_DEPS) $(LIBC_MEM_A)
 LIBC_MEM_A = o/$(MODE)/libc/mem/mem.a
 LIBC_MEM_A_FILES := $(wildcard libc/mem/*)
 LIBC_MEM_A_HDRS = $(filter %.h,$(LIBC_MEM_A_FILES))
+LIBC_MEM_A_INCS = $(filter %.inc,$(LIBC_MEM_A_FILES))
 LIBC_MEM_A_SRCS = $(filter %.c,$(LIBC_MEM_A_FILES))
 LIBC_MEM_A_OBJS = $(LIBC_MEM_A_SRCS:%.c=o/$(MODE)/%.o)
 
@@ -43,9 +44,30 @@ $(LIBC_MEM_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
+o/$(MODE)/libc/mem/asan.o: private			\
+		CFLAGS +=				\
+			-O2				\
+			-finline			\
+			-finline-functions		\
+			-x-no-pg			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096	\
+			-fpatchable-function-entry=0,0
+
+# make asan stack traces shorter
+o/$(MODE)/libc/mem/asanthunk.o: private			\
+		CFLAGS +=				\
+			-Os				\
+			$(NO_MAGIC)			\
+			-foptimize-sibling-calls
+
 LIBC_MEM_LIBS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)))
 LIBC_MEM_SRCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_SRCS))
 LIBC_MEM_HDRS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_HDRS))
+LIBC_MEM_INCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_INCS))
 LIBC_MEM_BINS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_BINS))
 LIBC_MEM_CHECKS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_CHECKS))
 LIBC_MEM_OBJS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_OBJS))

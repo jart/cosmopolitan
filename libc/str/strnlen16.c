@@ -30,7 +30,8 @@
 size_t strnlen16(const char16_t *s, size_t n) {
   size_t i;
   for (i = 0;; ++i) {
-    if (i == n || !s[i]) break;
+    if (i == n || !s[i])
+      break;
   }
   unassert(i == n || (i < n && !s[i]));
   return i;

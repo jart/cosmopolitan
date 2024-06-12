@@ -52,7 +52,8 @@ dontasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
     reseed = 8;
   }
   while (n) {
-    if (seed) t = seed();
+    if (seed)
+      t = seed();
     if (!seed || reseed > 8) {
       n -= (m = reseed < n ? reseed : n);
       while (m >= 8) {

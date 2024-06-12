@@ -36,17 +36,21 @@ static privileged bool IsVirginFunction(const code_t *func) {
   long i;
   // function must be preceeded by 9 nops
   for (i = -9; i < 0; ++i) {
-    if (func[i] != 0x90) return false;
+    if (func[i] != 0x90)
+      return false;
   }
   // function must start with `nop nop` or `xchg %ax,%ax`
-  if (func[0] == 0x90 && func[1] == 0x90) return true;
-  if (func[0] == 0x66 && func[1] == 0x90) return true;
+  if (func[0] == 0x90 && func[1] == 0x90)
+    return true;
+  if (func[0] == 0x66 && func[1] == 0x90)
+    return true;
   return false;
 #elif defined(__aarch64__)
   long i;
   // function must be preceeded by 6 nops
   for (i = -6; i < 0; ++i) {
-    if (func[i] != 0xd503201f) return false;
+    if (func[i] != 0xd503201f)
+      return false;
   }
   // function must start with one nop
   return func[0] == 0xd503201f;
@@ -57,7 +61,8 @@ static privileged void HookFunction(code_t *func, void *dest) {
   long dp;
 #ifdef __x86_64__
   dp = (intptr_t)dest - (intptr_t)(func - 7 + 5);
-  if (!(INT32_MIN <= dp && dp <= INT32_MAX)) return;
+  if (!(INT32_MIN <= dp && dp <= INT32_MAX))
+    return;
   // emit `ud2` signature for safety and checkability
   func[-9] = 0x0f;
   func[-8] = 0x0b;
@@ -75,7 +80,8 @@ static privileged void HookFunction(code_t *func, void *dest) {
   func[+1] = -7 - 2;
 #elif defined(__aarch64__)
   dp = (code_t *)dest - (func - 3);
-  if (!(-33554432 <= dp && dp <= +33554431)) return;
+  if (!(-33554432 <= dp && dp <= +33554431))
+    return;
   func[-6] = 0xd4200000 | (31337 << 5);       // brk #31337
   func[-5] = 0xa9bf7bfd;                      // stp x29,x30,[sp, #-16]!
   func[-4] = 0x910003fd;                      // mov x29,sp
@@ -110,16 +116,21 @@ privileged int __hook(void *dest, struct SymbolTable *st) {
   long i;
   code_t *p, *pe;
   intptr_t lowest;
-  if (!st) return -1;
+  if (!st)
+    return -1;
   __morph_begin();
   lowest = MAX((intptr_t)__executable_start, (intptr_t)_ereal);
   for (i = 0; i < st->count; ++i) {
-    if (st->symbols[i].x < 9) continue;
-    if (st->addr_base + st->symbols[i].x < lowest) continue;
-    if (st->addr_base + st->symbols[i].y >= (intptr_t)__privileged_start) break;
+    if (st->symbols[i].x < 9)
+      continue;
+    if (st->addr_base + st->symbols[i].x < lowest)
+      continue;
+    if (st->addr_base + st->symbols[i].y >= (intptr_t)__privileged_start)
+      break;
     p = (code_t *)((char *)st->addr_base + st->symbols[i].x);
     pe = (code_t *)((char *)st->addr_base + st->symbols[i].y);
-    if (pe - p < 2) continue;
+    if (pe - p < 2)
+      continue;
     if (IsVirginFunction(p)) {
       // kprintf("hooking %t\n", p);
       HookFunction(p, dest);

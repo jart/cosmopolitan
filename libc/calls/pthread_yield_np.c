@@ -38,4 +38,5 @@ int pthread_yield_np(void) {
   return 0;
 }
 
+__weak_reference(pthread_yield_np, thrd_yield);
 __weak_reference(pthread_yield_np, pthread_yield);

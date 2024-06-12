@@ -12,135 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#include "libc/intrin/x86.h"
 
-enum VendorSignatures {
-  SIG_INTEL = 0x756e6547,  // Genu
-  SIG_AMD = 0x68747541,    // Auth
-};
-
-enum ProcessorVendors {
-  VENDOR_INTEL = 1,
-  VENDOR_AMD,
-  VENDOR_OTHER,
-  VENDOR_MAX
-};
-
-enum ProcessorTypes {
-  INTEL_BONNELL = 1,
-  INTEL_CORE2,
-  INTEL_COREI7,
-  AMDFAM10H,
-  AMDFAM15H,
-  INTEL_SILVERMONT,
-  INTEL_KNL,
-  AMD_BTVER1,
-  AMD_BTVER2,
-  AMDFAM17H,
-  INTEL_KNM,
-  INTEL_GOLDMONT,
-  INTEL_GOLDMONT_PLUS,
-  INTEL_TREMONT,
-  AMDFAM19H,
-  ZHAOXIN_FAM7H,
-  INTEL_SIERRAFOREST,
-  INTEL_GRANDRIDGE,
-  INTEL_CLEARWATERFOREST,
-  CPU_TYPE_MAX
-};
-
-enum ProcessorSubtypes {
-  INTEL_COREI7_NEHALEM = 1,
-  INTEL_COREI7_WESTMERE,
-  INTEL_COREI7_SANDYBRIDGE,
-  AMDFAM10H_BARCELONA,
-  AMDFAM10H_SHANGHAI,
-  AMDFAM10H_ISTANBUL,
-  AMDFAM15H_BDVER1,
-  AMDFAM15H_BDVER2,
-  AMDFAM15H_BDVER3,
-  AMDFAM15H_BDVER4,
-  AMDFAM17H_ZNVER1,
-  INTEL_COREI7_IVYBRIDGE,
-  INTEL_COREI7_HASWELL,
-  INTEL_COREI7_BROADWELL,
-  INTEL_COREI7_SKYLAKE,
-  INTEL_COREI7_SKYLAKE_AVX512,
-  INTEL_COREI7_CANNONLAKE,
-  INTEL_COREI7_ICELAKE_CLIENT,
-  INTEL_COREI7_ICELAKE_SERVER,
-  AMDFAM17H_ZNVER2,
-  INTEL_COREI7_CASCADELAKE,
-  INTEL_COREI7_TIGERLAKE,
-  INTEL_COREI7_COOPERLAKE,
-  INTEL_COREI7_SAPPHIRERAPIDS,
-  INTEL_COREI7_ALDERLAKE,
-  AMDFAM19H_ZNVER3,
-  INTEL_COREI7_ROCKETLAKE,
-  ZHAOXIN_FAM7H_LUJIAZUI,
-  AMDFAM19H_ZNVER4,
-  INTEL_COREI7_GRANITERAPIDS,
-  INTEL_COREI7_GRANITERAPIDS_D,
-  INTEL_COREI7_ARROWLAKE,
-  INTEL_COREI7_ARROWLAKE_S,
-  INTEL_COREI7_PANTHERLAKE,
-  CPU_SUBTYPE_MAX
-};
-
-enum ProcessorFeatures {
-  FEATURE_CMOV = 0,
-  FEATURE_MMX,
-  FEATURE_POPCNT,
-  FEATURE_SSE,
-  FEATURE_SSE2,
-  FEATURE_SSE3,
-  FEATURE_SSSE3,
-  FEATURE_SSE4_1,
-  FEATURE_SSE4_2,
-  FEATURE_AVX,
-  FEATURE_AVX2,
-  FEATURE_SSE4_A,
-  FEATURE_FMA4,
-  FEATURE_XOP,
-  FEATURE_FMA,
-  FEATURE_AVX512F,
-  FEATURE_BMI,
-  FEATURE_BMI2,
-  FEATURE_AES,
-  FEATURE_PCLMUL,
-  FEATURE_AVX512VL,
-  FEATURE_AVX512BW,
-  FEATURE_AVX512DQ,
-  FEATURE_AVX512CD,
-  FEATURE_AVX512ER,
-  FEATURE_AVX512PF,
-  FEATURE_AVX512VBMI,
-  FEATURE_AVX512IFMA,
-  FEATURE_AVX5124VNNIW,
-  FEATURE_AVX5124FMAPS,
-  FEATURE_AVX512VPOPCNTDQ,
-  FEATURE_AVX512VBMI2,
-  FEATURE_GFNI,
-  FEATURE_VPCLMULQDQ,
-  FEATURE_AVX512VNNI,
-  FEATURE_AVX512BITALG,
-  FEATURE_AVX512BF16,
-  FEATURE_AVX512VP2INTERSECT,
-
-  FEATURE_CMPXCHG16B = 46,
-  FEATURE_F16C = 49,
-  FEATURE_LAHF_LM = 54,
-  FEATURE_LM,
-  FEATURE_WP,
-  FEATURE_LZCNT,
-  FEATURE_MOVBE,
-
-  FEATURE_AVX512FP16 = 94,
-  FEATURE_X86_64_BASELINE,
-  FEATURE_X86_64_V2,
-  FEATURE_X86_64_V3,
-  FEATURE_X86_64_V4,
-  CPU_FEATURE_MAX
-};
+struct __processor_model __cpu_model;
 
 // The check below for i386 was copied from clang's cpuid.h (__get_cpuid_max).
 // Check motivated by bug reports for OpenSSL crashing on CPUs without CPUID
@@ -630,22 +504,37 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
 #define hasFeature(F) ((Features[F / 32] >> (F % 32)) & 1)
 #define setFeature(F) Features[F / 32] |= 1U << (F % 32)
 
-  if ((EDX >> 15) & 1) setFeature(FEATURE_CMOV);
-  if ((EDX >> 23) & 1) setFeature(FEATURE_MMX);
-  if ((EDX >> 25) & 1) setFeature(FEATURE_SSE);
-  if ((EDX >> 26) & 1) setFeature(FEATURE_SSE2);
+  if ((EDX >> 15) & 1)
+    setFeature(FEATURE_CMOV);
+  if ((EDX >> 23) & 1)
+    setFeature(FEATURE_MMX);
+  if ((EDX >> 25) & 1)
+    setFeature(FEATURE_SSE);
+  if ((EDX >> 26) & 1)
+    setFeature(FEATURE_SSE2);
 
-  if ((ECX >> 0) & 1) setFeature(FEATURE_SSE3);
-  if ((ECX >> 1) & 1) setFeature(FEATURE_PCLMUL);
-  if ((ECX >> 9) & 1) setFeature(FEATURE_SSSE3);
-  if ((ECX >> 12) & 1) setFeature(FEATURE_FMA);
-  if ((ECX >> 13) & 1) setFeature(FEATURE_CMPXCHG16B);
-  if ((ECX >> 19) & 1) setFeature(FEATURE_SSE4_1);
-  if ((ECX >> 20) & 1) setFeature(FEATURE_SSE4_2);
-  if ((ECX >> 22) & 1) setFeature(FEATURE_MOVBE);
-  if ((ECX >> 23) & 1) setFeature(FEATURE_POPCNT);
-  if ((ECX >> 25) & 1) setFeature(FEATURE_AES);
-  if ((ECX >> 29) & 1) setFeature(FEATURE_F16C);
+  if ((ECX >> 0) & 1)
+    setFeature(FEATURE_SSE3);
+  if ((ECX >> 1) & 1)
+    setFeature(FEATURE_PCLMUL);
+  if ((ECX >> 9) & 1)
+    setFeature(FEATURE_SSSE3);
+  if ((ECX >> 12) & 1)
+    setFeature(FEATURE_FMA);
+  if ((ECX >> 13) & 1)
+    setFeature(FEATURE_CMPXCHG16B);
+  if ((ECX >> 19) & 1)
+    setFeature(FEATURE_SSE4_1);
+  if ((ECX >> 20) & 1)
+    setFeature(FEATURE_SSE4_2);
+  if ((ECX >> 22) & 1)
+    setFeature(FEATURE_MOVBE);
+  if ((ECX >> 23) & 1)
+    setFeature(FEATURE_POPCNT);
+  if ((ECX >> 25) & 1)
+    setFeature(FEATURE_AES);
+  if ((ECX >> 29) & 1)
+    setFeature(FEATURE_F16C);
 
   // If CPUID indicates support for XSAVE, XRESTORE and AVX, and XGETBV
   // indicates that the AVX registers will be saved and restored on context
@@ -663,36 +552,59 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
   bool HasAVX512Save = HasAVX && ((EAX & 0xe0) == 0xe0);
 #endif
 
-  if (HasAVX) setFeature(FEATURE_AVX);
+  if (HasAVX)
+    setFeature(FEATURE_AVX);
 
   bool HasLeaf7 =
       MaxLeaf >= 0x7 && !getX86CpuIDAndInfoEx(0x7, 0x0, &EAX, &EBX, &ECX, &EDX);
 
   if (HasLeaf7) {
-    if ((EBX >> 3) & 1) setFeature(FEATURE_BMI);
-    if (((EBX >> 5) & 1) && HasAVX) setFeature(FEATURE_AVX2);
-    if ((EBX >> 8) & 1) setFeature(FEATURE_BMI2);
+    if ((EBX >> 3) & 1)
+      setFeature(FEATURE_BMI);
+    if (((EBX >> 5) & 1) && HasAVX)
+      setFeature(FEATURE_AVX2);
+    if ((EBX >> 8) & 1)
+      setFeature(FEATURE_BMI2);
     if (HasAVX512Save) {
-      if ((EBX >> 16) & 1) setFeature(FEATURE_AVX512F);
-      if ((EBX >> 17) & 1) setFeature(FEATURE_AVX512DQ);
-      if ((EBX >> 21) & 1) setFeature(FEATURE_AVX512IFMA);
-      if ((EBX >> 26) & 1) setFeature(FEATURE_AVX512PF);
-      if ((EBX >> 27) & 1) setFeature(FEATURE_AVX512ER);
-      if ((EBX >> 28) & 1) setFeature(FEATURE_AVX512CD);
-      if ((EBX >> 30) & 1) setFeature(FEATURE_AVX512BW);
-      if ((EBX >> 31) & 1) setFeature(FEATURE_AVX512VL);
-      if ((ECX >> 1) & 1) setFeature(FEATURE_AVX512VBMI);
-      if ((ECX >> 6) & 1) setFeature(FEATURE_AVX512VBMI2);
-      if ((ECX >> 11) & 1) setFeature(FEATURE_AVX512VNNI);
-      if ((ECX >> 12) & 1) setFeature(FEATURE_AVX512BITALG);
-      if ((ECX >> 14) & 1) setFeature(FEATURE_AVX512VPOPCNTDQ);
-      if ((EDX >> 2) & 1) setFeature(FEATURE_AVX5124VNNIW);
-      if ((EDX >> 3) & 1) setFeature(FEATURE_AVX5124FMAPS);
-      if ((EDX >> 8) & 1) setFeature(FEATURE_AVX512VP2INTERSECT);
-      if ((EDX >> 23) & 1) setFeature(FEATURE_AVX512FP16);
+      if ((EBX >> 16) & 1)
+        setFeature(FEATURE_AVX512F);
+      if ((EBX >> 17) & 1)
+        setFeature(FEATURE_AVX512DQ);
+      if ((EBX >> 21) & 1)
+        setFeature(FEATURE_AVX512IFMA);
+      if ((EBX >> 26) & 1)
+        setFeature(FEATURE_AVX512PF);
+      if ((EBX >> 27) & 1)
+        setFeature(FEATURE_AVX512ER);
+      if ((EBX >> 28) & 1)
+        setFeature(FEATURE_AVX512CD);
+      if ((EBX >> 30) & 1)
+        setFeature(FEATURE_AVX512BW);
+      if ((EBX >> 31) & 1)
+        setFeature(FEATURE_AVX512VL);
+      if ((ECX >> 1) & 1)
+        setFeature(FEATURE_AVX512VBMI);
+      if ((ECX >> 6) & 1)
+        setFeature(FEATURE_AVX512VBMI2);
+      if ((ECX >> 11) & 1)
+        setFeature(FEATURE_AVX512VNNI);
+      if ((ECX >> 12) & 1)
+        setFeature(FEATURE_AVX512BITALG);
+      if ((ECX >> 14) & 1)
+        setFeature(FEATURE_AVX512VPOPCNTDQ);
+      if ((EDX >> 2) & 1)
+        setFeature(FEATURE_AVX5124VNNIW);
+      if ((EDX >> 3) & 1)
+        setFeature(FEATURE_AVX5124FMAPS);
+      if ((EDX >> 8) & 1)
+        setFeature(FEATURE_AVX512VP2INTERSECT);
+      if ((EDX >> 23) & 1)
+        setFeature(FEATURE_AVX512FP16);
     }
-    if ((ECX >> 8) & 1) setFeature(FEATURE_GFNI);
-    if (((ECX >> 10) & 1) && HasAVX) setFeature(FEATURE_VPCLMULQDQ);
+    if ((ECX >> 8) & 1)
+      setFeature(FEATURE_GFNI);
+    if (((ECX >> 10) & 1) && HasAVX)
+      setFeature(FEATURE_VPCLMULQDQ);
   }
 
   // EAX from subleaf 0 is the maximum subleaf supported. Some CPUs don't
@@ -709,12 +621,18 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
   bool HasExtLeaf1 = MaxExtLevel >= 0x80000001 &&
                      !getX86CpuIDAndInfo(0x80000001, &EAX, &EBX, &ECX, &EDX);
   if (HasExtLeaf1) {
-    if (ECX & 1) setFeature(FEATURE_LAHF_LM);
-    if ((ECX >> 5) & 1) setFeature(FEATURE_LZCNT);
-    if (((ECX >> 6) & 1)) setFeature(FEATURE_SSE4_A);
-    if (((ECX >> 11) & 1)) setFeature(FEATURE_XOP);
-    if (((ECX >> 16) & 1)) setFeature(FEATURE_FMA4);
-    if (((EDX >> 29) & 1)) setFeature(FEATURE_LM);
+    if (ECX & 1)
+      setFeature(FEATURE_LAHF_LM);
+    if ((ECX >> 5) & 1)
+      setFeature(FEATURE_LZCNT);
+    if (((ECX >> 6) & 1))
+      setFeature(FEATURE_SSE4_A);
+    if (((ECX >> 11) & 1))
+      setFeature(FEATURE_XOP);
+    if (((ECX >> 16) & 1))
+      setFeature(FEATURE_FMA4);
+    if (((EDX >> 29) & 1))
+      setFeature(FEATURE_LM);
   }
 
   if (hasFeature(FEATURE_LM) && hasFeature(FEATURE_SSE2)) {
@@ -738,13 +656,6 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
 #undef setFeature
 }
 
-struct __processor_model {
-  unsigned int __cpu_vendor;
-  unsigned int __cpu_type;
-  unsigned int __cpu_subtype;
-  unsigned int __cpu_features[1];
-} __cpu_model = {0, 0, 0, {0}};
-
 unsigned __cpu_features2[(CPU_FEATURE_MAX - 1) / 32];
 
 // A constructor function that is sets __cpu_model and __cpu_features2 with
@@ -763,7 +674,8 @@ __attribute__((__constructor__(1))) textstartup int __cpu_indicator_init(void) {
   _Static_assert(sizeof(__cpu_features2) / sizeof(__cpu_features2[0]) == 3, "");
 
   // This function needs to run just once.
-  if (__cpu_model.__cpu_vendor) return 0;
+  if (__cpu_model.__cpu_vendor)
+    return 0;
 
   if (!isCpuIdSupported() ||
       getX86CpuIDAndInfo(0, &MaxLeaf, &Vendor, &ECX, &EDX) || MaxLeaf < 1) {

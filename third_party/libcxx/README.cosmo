@@ -4,11 +4,15 @@ DESCRIPTION
 
 ORIGIN
 
-  git@github.com:llvm-mirror/libcxx.git
-  commit 78d6a7767ed57b50122a161b91f59f19c9bd0d19
-  Author: Zoe Carver <z.zoelec2@gmail.com>
-  Date:   Tue Oct 22 15:16:49 2019 +0000
+  git@github.com:llvm/llvm-project.git
+  commit ad0543f4ea82ec41c5e854af65758fa8d92d5553
+  Author: Haojian Wu <hokein.wu@gmail.com>
+  Date:   Thu Jun 1 15:31:43 2023 +0200
 
 LOCAL CHANGES
 
+  - Wrote __config_site
+  - Add __COSMOPOLITAN__ when appropriate
+  - Kludged (and probably broke) awful `cerr` feature
   - Break apart locale.cpp due to its outrageous build times
+  - Suppress -Wattribute sometimes due to __always_inline__ hack

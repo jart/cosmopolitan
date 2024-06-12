@@ -21,7 +21,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 
 struct timespec ts;
 
@@ -40,14 +40,16 @@ TEST(clock_getres, realtimeFastHasMillisecondPrecisionOrBetter) {
 }
 
 TEST(clock_getres, realtimeCoarseHasMillisecondPrecisionOrBetter) {
-  if (clock_getres(CLOCK_REALTIME_COARSE, &ts)) return;
+  if (clock_getres(CLOCK_REALTIME_COARSE, &ts))
+    return;
   EXPECT_EQ(0, ts.tv_sec);
   EXPECT_LT(ts.tv_nsec, 100000000);
   EXPECT_GT(ts.tv_nsec, 0);
 }
 
 TEST(clock_getres, realtimePreciseHasMillisecondPrecisionOrBetter) {
-  if (clock_getres(CLOCK_REALTIME_PRECISE, &ts)) return;
+  if (clock_getres(CLOCK_REALTIME_PRECISE, &ts))
+    return;
   EXPECT_EQ(0, ts.tv_sec);
   EXPECT_LT(ts.tv_nsec, 100000000);
   EXPECT_GT(ts.tv_nsec, 0);
@@ -68,14 +70,16 @@ TEST(clock_getres, monotonicFastHasMillisecondPrecisionOrBetter) {
 }
 
 TEST(clock_getres, monotonicCoarseHasMillisecondPrecisionOrBetter) {
-  if (clock_getres(CLOCK_MONOTONIC_COARSE, &ts)) return;
+  if (clock_getres(CLOCK_MONOTONIC_COARSE, &ts))
+    return;
   EXPECT_EQ(0, ts.tv_sec);
   EXPECT_LT(ts.tv_nsec, 100000000);
   EXPECT_GT(ts.tv_nsec, 0);
 }
 
 TEST(clock_getres, monotonicPreciseHasMillisecondPrecisionOrBetter) {
-  if (clock_getres(CLOCK_MONOTONIC_PRECISE, &ts)) return;
+  if (clock_getres(CLOCK_MONOTONIC_PRECISE, &ts))
+    return;
   EXPECT_EQ(0, ts.tv_sec);
   EXPECT_LT(ts.tv_nsec, 100000000);
   EXPECT_GT(ts.tv_nsec, 0);

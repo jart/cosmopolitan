@@ -47,7 +47,8 @@ int __cxa_atexit(void *fp, void *arg, void *pred) {
   struct CxaAtexitBlock *b, *b2;
   __cxa_lock();
   b = __cxa_blocks.p;
-  if (!b) b = __cxa_blocks.p = &__cxa_blocks.root;
+  if (!b)
+    b = __cxa_blocks.p = &__cxa_blocks.root;
   if (!~b->mask) {
     if (_weaken(calloc) &&
         (b2 = _weaken(calloc)(1, sizeof(struct CxaAtexitBlock)))) {

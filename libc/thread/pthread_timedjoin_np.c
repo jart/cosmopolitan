@@ -33,8 +33,10 @@
 
 static const char *DescribeReturnValue(char buf[30], int err, void **value) {
   char *p = buf;
-  if (!value) return "NULL";
-  if (err) return "[n/a]";
+  if (!value)
+    return "NULL";
+  if (err)
+    return "[n/a]";
   *p++ = '[';
   p = FormatHex64(p, (uintptr_t)*value, 1);
   *p++ = ']';

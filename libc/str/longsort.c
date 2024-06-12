@@ -38,9 +38,12 @@ static void LongSort(long *A, long n) {
     InsertionSort(A, n);
   } else {
     for (p = A[n >> 1], i = 0, j = n - 1;; i++, j--) {
-      while (A[i] < p) i++;
-      while (A[j] > p) j--;
-      if (i >= j) break;
+      while (A[i] < p)
+        i++;
+      while (A[j] > p)
+        j--;
+      if (i >= j)
+        break;
       t = A[i];
       A[i] = A[j];
       A[j] = t;

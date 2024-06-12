@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/linenoise/linenoise.h"

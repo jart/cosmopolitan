@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nt/pedef.internal.h"
 #include "tool/decode/lib/peidnames.h"
+#include "libc/nt/pedef.internal.h"
 
 const struct IdName kNtImageFileMachineNames[] = {
     {kNtImageFileMachineUnknown, "kNtImageFileMachineUnknown"},

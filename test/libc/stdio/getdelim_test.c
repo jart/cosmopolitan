@@ -99,7 +99,8 @@ void ReadHyperionLines(void) {
   ASSERT_NE(NULL, (f = fopen("hyperion.txt", "r")));
   for (;;) {
     rc = getline(&line, &linesize, f);
-    if (rc == -1) break;
+    if (rc == -1)
+      break;
     data = xrealloc(data, size + rc);
     memcpy(data + size, line, rc);
     size += rc;

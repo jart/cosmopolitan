@@ -26,8 +26,10 @@
  */
 bool IsValidHttpToken(const char *s, size_t n) {
   size_t i;
-  if (!n) return false;
-  if (n == -1) n = s ? strlen(s) : 0;
+  if (!n)
+    return false;
+  if (n == -1)
+    n = s ? strlen(s) : 0;
   for (i = 0; i < n; ++i) {
     if (!kHttpToken[s[i] & 0xff]) {
       return false;

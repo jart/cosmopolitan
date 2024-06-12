@@ -92,12 +92,11 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
       start = 0;
     }
 
-    if (!founddots)
-    {
-        founddots = true;
-        for (i = 1; i < *argc; ++i) {
-          AddZipArg(&n, &args, (*argv)[i]);
-        }
+    if (!founddots) {
+      founddots = true;
+      for (i = 1; i < *argc; ++i) {
+        AddZipArg(&n, &args, (*argv)[i]);
+      }
     }
 
     if (founddots || *argc <= 1) {

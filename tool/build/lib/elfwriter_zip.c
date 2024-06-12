@@ -22,7 +22,6 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -31,7 +30,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/time/struct/tm.h"
+#include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "libc/zip.internal.h"
@@ -164,7 +163,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   lfilehdrsize = kZipLfileHdrMinSize + namesize;
   crc = crc32_z(0, data, uncompsize);
   GetDosLocalTime(mtim.tv_sec, &mtime, &mdate);
-  if (isutf8(name, namesize)) gflags |= kZipGflagUtf8;
+  if (isutf8(name, namesize))
+    gflags |= kZipGflagUtf8;
   if (S_ISREG(mode) && istext(data, size)) {
     iattrs |= kZipIattrText;
   }

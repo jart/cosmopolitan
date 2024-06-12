@@ -69,6 +69,8 @@ char linkbuf[PATH_MAX];
 
 void Cp(char *, char *);
 
+#include "libc/mem/tinymalloc.inc"
+
 bool IsDirectory(const char *path) {
   int e;
   bool res;
@@ -182,8 +184,10 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
 void Cp(char *src, char *dst) {
   ssize_t rc;
   const char *s;
-  if (strlen(src) + 1 > PATH_MAX) _Exit(2);
-  if (strlen(dst) + 1 > PATH_MAX) _Exit(2);
+  if (strlen(src) + 1 > PATH_MAX)
+    _Exit(2);
+  if (strlen(dst) + 1 > PATH_MAX)
+    _Exit(2);
   basename(src);
   basename(dst);
   if (IsDirectory(src)) {
@@ -243,7 +247,8 @@ int main(int argc, char *argv[]) {
   int i;
 
   prog = argv[0];
-  if (!prog) prog = "cp";
+  if (!prog)
+    prog = "cp";
 
   GetOpts(argc, argv);
 

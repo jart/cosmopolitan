@@ -15,7 +15,7 @@ $PROG (GCC) $GCC_VERSION
 Copyright (c) 2024 Justine Alexandra Roberts Tunney
 Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
 notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
-our copyright notices. This toolchain is configured to do so default.
+our copyright notices. This toolchain is configured to do so by default.
 Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
 Copyright (C) 2022 Free Software Foundation, Inc.
@@ -162,7 +162,7 @@ for x; do
     # tail calls — may opt not to create an entry in this list. As a
     # result, stack traces are always meaningful, even without debug
     # information."
-    x="-momit-leaf-frame-pointer -foptimize-sibling-calls"
+    x="-momit-leaf-frame-pointer -foptimize-sibling-calls -fschedule-insns2"
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-S" ] ||
        [ x"$x" = x"-pie" ] ||
@@ -183,11 +183,6 @@ for x; do
   elif [ x"$x" = x"-fpie" ] || [ x"$x" = x"-pie" ]; then
     # no support for position independent executables
     # https://github.com/jart/cosmopolitan/issues/1126
-    continue
-  elif [ x"$x" = x"-Werror" ] || \
-       [ x"$x" = x"-pedantic-errors" ]; then
-    # this toolchain is intended for building other people's code
-    # elevating warnings into errors, should only be done by devs
     continue
   elif [ x"$x" = x"-static-libgcc" ] || \
        [ x"$x" = x"-shared-libgcc" ]; then
@@ -246,8 +241,12 @@ CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unw
 LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
+# these features screw with backtraces so avoid them
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+if [ x"$OPT" != x"-O3" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
 CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
@@ -256,6 +255,7 @@ if [ x"$PROG" != x"${PROG%++}" ]; then
   CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
   CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 fi
 
 CRT_X86_64="$BIN/../x86_64-linux-cosmo/lib/ape.o $BIN/../x86_64-linux-cosmo/lib/crt.o"

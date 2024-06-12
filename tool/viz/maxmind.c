@@ -17,18 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/serialize.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
 #include "third_party/maxmind/maxminddb.h"
 
-#define PATH(...) \
-  (const char *const[]) { __VA_ARGS__, 0 }
+#define PATH(...)         \
+  (const char *const[]) { \
+    __VA_ARGS__, 0        \
+  }
 
 MMDB_s *ipdb, *asdb;
 
@@ -123,7 +125,8 @@ int main(int argc, char *argv[]) {
            MMDB_open("/usr/local/share/maxmind/GeoLite2-ASN.mmdb", 0, asdb));
   for (rc = 0, i = 1; i < argc; ++i) {
     if (PrintIpInfo(argv[i]) != -1) {
-      if (i + 1 < argc) printf("\n");
+      if (i + 1 < argc)
+        printf("\n");
     } else {
       fprintf(stderr, "NOT FOUND: %s\n", argv[i]);
       rc = 1;

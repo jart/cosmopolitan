@@ -5,7 +5,6 @@
 #include "libc/mem/alloca.h"
 COSMOPOLITAN_C_START_
 
-ssize_t __robust_writev(int, struct iovec *, int);
 int64_t sys_preadv(int, struct iovec *, int, int64_t, int64_t);
 int64_t sys_pwritev(int, const struct iovec *, int, int64_t, int64_t);
 int64_t sys_readv(int32_t, const struct iovec *, int32_t);

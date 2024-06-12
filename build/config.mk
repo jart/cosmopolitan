@@ -11,20 +11,20 @@
 #
 ifeq ($(MODE),)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 ifeq ($(MODE), x86_64)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 ifeq ($(MODE), aarch64)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
@@ -38,13 +38,13 @@ endif
 #
 ifeq ($(MODE), zero)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 OVERRIDE_CFLAGS += -O0
 OVERRIDE_CXXFLAGS += -O0
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 ifeq ($(MODE), aarch64-zero)
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 OVERRIDE_CFLAGS += -O0 -fdce
 OVERRIDE_CXXFLAGS += -O0 -fdce
 CONFIG_CPPFLAGS += -DSYSDEBUG
@@ -81,7 +81,7 @@ endif
 #
 ifeq ($(MODE), opt)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
 CONFIG_CCFLAGS += $(BACKTRACES) -O3 -fmerge-all-constants
 TARGET_ARCH ?= -march=native
@@ -98,7 +98,7 @@ endif
 #   - Turns off support for other operating systems
 #
 ifeq ($(MODE), optlinux)
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
@@ -140,7 +140,7 @@ endif
 #
 ifeq ($(MODE), asan)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -D__SANITIZE_ADDRESS__
 CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=address
@@ -160,7 +160,7 @@ endif
 #
 ifeq ($(MODE), dbg)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_ADDRESS__ -D__SANITIZE_UNDEFINED__
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
@@ -170,7 +170,7 @@ QUOTA ?= -C64 -L300
 endif
 ifeq ($(MODE), aarch64-dbg)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline -fdce
 CONFIG_COPTS += -fsanitize=undefined
@@ -189,7 +189,7 @@ endif
 #
 ifeq ($(MODE), sysv)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
+CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG -DSUPPORT_VECTOR=121
 TARGET_ARCH ?= -msse3
