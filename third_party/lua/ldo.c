@@ -89,7 +89,7 @@ __static_yoink("lua_notice");
 #else							/* }{ */
 
 /* ISO C handling with long jumps */
-#define LUAI_THROW(L,c)		_gclongjmp((c)->b, 1)  // [jart]
+#define LUAI_THROW(L,c)		gclongjmp((c)->b, 1)  // [jart]
 #define LUAI_TRY(L,c,a)		if (setjmp((c)->b) == 0) { a }
 #define luai_jmpbuf		jmp_buf
 
