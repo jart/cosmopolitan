@@ -9,14 +9,14 @@ PROVENANCE
 
   https://github.com/lua/lua/
 
-  commit e7803f7dbcdc966ab1f9db143424ee811ab1a398
+  commit 6443185167c77adcc8552a3fee7edab7895db1a9
   Author: Roberto Ierusalimschy <roberto@inf.puc-rio.br>
-  Date:   Wed Mar 3 09:44:20 2021 -0300
+  Date:   May 2, 2023 at 3:44 PM EDT
 
-      New release number (5.4.3)
+      New release number (5.4.6)
 
   luac.c needed to be sourced from:
-  https://www.lua.org/ftp/lua-5.4.3.tar.gz
+  https://www.lua.org/ftp/lua-5.4.6.tar.gz
 
 LOCAL MODIFICATIONS
 

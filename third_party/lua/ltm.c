@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ltm_c
 #define LUA_CORE
+
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lgc.h"
@@ -118,12 +119,12 @@ const char *luaT_objtypename (lua_State *L, const TValue *o) {
 
 void luaT_callTM (lua_State *L, const TValue *f, const TValue *p1,
                   const TValue *p2, const TValue *p3) {
-  StkId func = L->top;
+  StkId func = L->top.p;
   setobj2s(L, func, f);  /* push function (assume EXTRA_STACK) */
   setobj2s(L, func + 1, p1);  /* 1st argument */
   setobj2s(L, func + 2, p2);  /* 2nd argument */
   setobj2s(L, func + 3, p3);  /* 3rd argument */
-  L->top = func + 4;
+  L->top.p = func + 4;
   /* metamethod may yield only when called from Lua code */
   if (isLuacode(L->ci))
     luaD_call(L, func, 0);
@@ -135,18 +136,18 @@ void luaT_callTM (lua_State *L, const TValue *f, const TValue *p1,
 void luaT_callTMres (lua_State *L, const TValue *f, const TValue *p1,
                      const TValue *p2, StkId res) {
   ptrdiff_t result = savestack(L, res);
-  StkId func = L->top;
+  StkId func = L->top.p;
   setobj2s(L, func, f);  /* push function (assume EXTRA_STACK) */
   setobj2s(L, func + 1, p1);  /* 1st argument */
   setobj2s(L, func + 2, p2);  /* 2nd argument */
-  L->top += 3;
+  L->top.p += 3;
   /* metamethod may yield only when called from Lua code */
   if (isLuacode(L->ci))
     luaD_call(L, func, 1);
   else
     luaD_callnoyield(L, func, 1);
   res = restorestack(L, result);
-  setobjs2s(L, res, --L->top);  /* move result to its place */
+  setobjs2s(L, res, --L->top.p);  /* move result to its place */
 }
 
 
@@ -181,7 +182,7 @@ void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
 
 
 void luaT_tryconcatTM (lua_State *L) {
-  StkId top = L->top;
+  StkId top = L->top.p;
   if (l_unlikely(!callbinTM(L, s2v(top - 2), s2v(top - 1), top - 2,
                                TM_CONCAT)))
     luaG_concaterror(L, s2v(top - 2), s2v(top - 1));
@@ -216,15 +217,15 @@ void luaT_trybiniTM (lua_State *L, const TValue *p1, lua_Integer i2,
 */
 int luaT_callorderTM (lua_State *L, const TValue *p1, const TValue *p2,
                       TMS event) {
-  if (callbinTM(L, p1, p2, L->top, event))  /* try original event */
-    return !l_isfalse(s2v(L->top));
+  if (callbinTM(L, p1, p2, L->top.p, event))  /* try original event */
+    return !l_isfalse(s2v(L->top.p));
 #if defined(LUA_COMPAT_LT_LE)
   else if (event == TM_LE) {
       /* try '!(p2 < p1)' for '(p1 <= p2)' */
       L->ci->callstatus |= CIST_LEQ;  /* mark it is doing 'lt' for 'le' */
-      if (callbinTM(L, p2, p1, L->top, TM_LT)) {
+      if (callbinTM(L, p2, p1, L->top.p, TM_LT)) {
         L->ci->callstatus ^= CIST_LEQ;  /* clear mark */
-        return l_isfalse(s2v(L->top));
+        return l_isfalse(s2v(L->top.p));
       }
       /* else error will remove this 'ci'; no need to clear mark */
   }
@@ -254,20 +255,20 @@ int luaT_callorderiTM (lua_State *L, const TValue *p1, int v2,
 void luaT_adjustvarargs (lua_State *L, int nfixparams, CallInfo *ci,
                          const Proto *p) {
   int i;
-  int actual = cast_int(L->top - ci->func) - 1;  /* number of arguments */
+  int actual = cast_int(L->top.p - ci->func.p) - 1;  /* number of arguments */
   int nextra = actual - nfixparams;  /* number of extra arguments */
   ci->u.l.nextraargs = nextra;
   luaD_checkstack(L, p->maxstacksize + 1);
   /* copy function to the top of the stack */
-  setobjs2s(L, L->top++, ci->func);
+  setobjs2s(L, L->top.p++, ci->func.p);
   /* move fixed parameters to the top of the stack */
   for (i = 1; i <= nfixparams; i++) {
-    setobjs2s(L, L->top++, ci->func + i);
-    setnilvalue(s2v(ci->func + i));  /* erase original parameter (for GC) */
+    setobjs2s(L, L->top.p++, ci->func.p + i);
+    setnilvalue(s2v(ci->func.p + i));  /* erase original parameter (for GC) */
   }
-  ci->func += actual + 1;
-  ci->top += actual + 1;
-  lua_assert(L->top <= ci->top && ci->top <= L->stack_last);
+  ci->func.p += actual + 1;
+  ci->top.p += actual + 1;
+  lua_assert(L->top.p <= ci->top.p && ci->top.p <= L->stack_last.p);
 }
 
 
@@ -277,10 +278,10 @@ void luaT_getvarargs (lua_State *L, CallInfo *ci, StkId where, int wanted) {
   if (wanted < 0) {
     wanted = nextra;  /* get all extra arguments available */
     checkstackGCp(L, nextra, where);  /* ensure stack space */
-    L->top = where + nextra;  /* next instruction will need top */
+    L->top.p = where + nextra;  /* next instruction will need top */
   }
   for (i = 0; i < wanted && i < nextra; i++)
-    setobjs2s(L, where + i, ci->func - nextra + i);
+    setobjs2s(L, where + i, ci->func.p - nextra + i);
   for (; i < wanted; i++)   /* complete required results with nil */
     setnilvalue(s2v(where + i));
 }

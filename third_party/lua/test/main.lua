@@ -94,6 +94,33 @@ RUN('echo "print(10)\nprint(2)\n" | lua > %s', out)
 checkout("10\n2\n")
 
 
+-- testing BOM
+prepfile("\xEF\xBB\xBF")
+RUN('lua %s > %s', prog, out)
+checkout("")
+
+prepfile("\xEF\xBB\xBFprint(3)")
+RUN('lua %s > %s', prog, out)
+checkout("3\n")
+
+prepfile("\xEF\xBB\xBF# comment!!\nprint(3)")
+RUN('lua %s > %s', prog, out)
+checkout("3\n")
+
+-- bad BOMs
+prepfile("\xEF")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEF\xBB")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEFprint(3)")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEF\xBBprint(3)")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+
 -- test option '-'
 RUN('echo "print(arg[1])" | lua - -h > %s', out)
 checkout("-h\n")
@@ -190,6 +217,11 @@ prepfile(("print(a); print(_G['%s'].x)"):format(prog), otherprog)
 RUN('env LUA_PATH="?;;" lua -l %s -l%s -lstring -l io %s > %s', prog, otherprog, otherprog, out)
 checkout("1\n2\n15\n2\n15\n")
 
+-- test explicit global names in -l
+prepfile("print(str.upper'alo alo', m.max(10, 20))")
+RUN("lua -l 'str=string' '-lm=math' -e 'print(m.sin(0))' %s > %s", prog, out)
+checkout("0.0\nALO ALO\t20\n")
+
 -- test 'arg' table
 local a = [[
   assert(#arg == 3 and arg[1] == 'a' and
@@ -256,6 +288,34 @@ u2 = setmetatable({}, {__gc = function () error("ZYX") end})
 RUN('lua -W %s 2> %s', prog, out)
 checkprogout("ZYX)\nXYZ)\n")
 
+-- bug since 5.2: finalizer called when closing a state could
+-- subvert finalization order
+prepfile[[
+-- should be called last
+print("creating 1")
+setmetatable({}, {__gc = function () print(1) end})
+
+print("creating 2")
+setmetatable({}, {__gc = function ()
+  print("2")
+  print("creating 3")
+  -- this finalizer should not be called, as object will be
+  -- created after 'lua_close' has been called
+  setmetatable({}, {__gc = function () print(3) end})
+  print(collectgarbage())    -- cannot call collector here
+  os.exit(0, true)
+end})
+]]
+RUN('lua -W %s > %s', prog, out)
+checkout[[
+creating 1
+creating 2
+2
+creating 3
+nil
+1
+]]
+
 
 -- test many arguments
 prepfile[[print(({...})[30])]]
@@ -279,7 +339,7 @@ prepfile("a = [[b\nc\nd\ne]]\n=a")
 RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
 checkprogout("b\nc\nd\ne\n\n")
 
-prompt = "alo"
+local prompt = "alo"
 prepfile[[ --
 a = 2
 ]]
@@ -339,7 +399,7 @@ NoRun("error object is a table value", [[lua %s]], prog)
 
 
 -- chunk broken in many lines
-s = [=[ --
+local s = [=[ --
 function f ( x )
   local a = [[
 xuxu
@@ -361,12 +421,10 @@ checkprogout("101\n13\t22\n\n")
 prepfile[[#comment in 1st line without \n at the end]]
 RUN('lua %s', prog)
 
-prepfile[[#test line number when file starts with comment line
-debug = require"debug"
-print(debug.getinfo(1).currentline)
-]]
+-- first-line comment with binary file
+prepfile("#comment\n" .. string.dump(load("print(3)")))
 RUN('lua %s > %s', prog, out)
-checkprogout('3\n')
+checkout('3\n')
 
 -- close Lua with an open file
 prepfile(string.format([[io.output(%q); io.write('alo')]], out))

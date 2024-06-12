@@ -1,6 +1,8 @@
 #ifndef lctype_h
 #define lctype_h
+
 #include "third_party/lua/lua.h"
+
 
 /*
 ** In ASCII, this 'ltolower' is correct for alphabetic characters and

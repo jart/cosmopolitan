@@ -1,8 +1,17 @@
 #ifndef ltm_h
 #define ltm_h
+
 #include "third_party/lua/lobject.h"
+#include "third_party/lua/lstate.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/tms.h"
+
+
+/*
+* WARNING: if you change the order of this enumeration,
+* grep "ORDER TM" and "ORDER OP"
+*/
+// [jart] moved to tms.h
 
 /*
 ** Mask with 1 in all fast-access methods. A 1 in any of these bits
@@ -54,8 +63,8 @@ LUAI_FUNC int luaT_callorderiTM (lua_State *L, const TValue *p1, int v2,
                                  int inv, int isfloat, TMS event);
 
 LUAI_FUNC void luaT_adjustvarargs (lua_State *L, int nfixparams,
-                                   struct CallInfo *ci, const Proto *p);
-LUAI_FUNC void luaT_getvarargs (lua_State *L, struct CallInfo *ci,
+                                   CallInfo *ci, const Proto *p);
+LUAI_FUNC void luaT_getvarargs (lua_State *L, CallInfo *ci,
                                               StkId where, int wanted);
 
 

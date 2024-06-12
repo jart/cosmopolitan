@@ -16,7 +16,7 @@
 ** at every check.
 */
 #define luaD_checkstackaux(L,n,pre,pos)  \
-	if (l_unlikely(L->stack_last - L->top <= (n))) \
+	if (l_unlikely(L->stack_last.p - L->top.p <= (n))) \
 	  { pre; luaD_growstack(L, n, 1); pos; } \
         else { condmovestack(L,pre,pos); }
 
@@ -25,11 +25,18 @@
 
 
 
-#define savestack(L,p)		((char *)(p) - (char *)L->stack)
-#define restorestack(L,n)	((StkId)((char *)L->stack + (n)))
+#define savestack(L,pt)		(cast_charp(pt) - cast_charp(L->stack.p))
+#define restorestack(L,n)	cast(StkId, cast_charp(L->stack.p) + (n))
 
 
 /* macro to check stack size, preserving 'p' */
+#define checkstackp(L,n,p)  \
+  luaD_checkstackaux(L, n, \
+    ptrdiff_t t__ = savestack(L, p),  /* save 'p' */ \
+    p = restorestack(L, t__))  /* 'pos' part: restore 'p' */
+
+
+/* macro to check stack size and GC, preserving 'p' */
 #define checkstackGCp(L,n,p)  \
   luaD_checkstackaux(L, n, \
     ptrdiff_t t__ = savestack(L, p);  /* save 'p' */ \
@@ -51,11 +58,12 @@ LUAI_FUNC int luaD_protectedparser (lua_State *L, ZIO *z, const char *name,
 LUAI_FUNC void luaD_hook (lua_State *L, int event, int line,
                                         int fTransfer, int nTransfer);
 LUAI_FUNC void luaD_hookcall (lua_State *L, CallInfo *ci);
-LUAI_FUNC void luaD_pretailcall (lua_State *L, CallInfo *ci, StkId func, int n);
+LUAI_FUNC int luaD_pretailcall (lua_State *L, CallInfo *ci, StkId func,
+                                              int narg1, int delta);
 LUAI_FUNC CallInfo *luaD_precall (lua_State *L, StkId func, int nResults);
 LUAI_FUNC void luaD_call (lua_State *L, StkId func, int nResults);
 LUAI_FUNC void luaD_callnoyield (lua_State *L, StkId func, int nResults);
-LUAI_FUNC void luaD_tryfuncTM (lua_State *L, StkId func);
+LUAI_FUNC StkId luaD_tryfuncTM (lua_State *L, StkId func);
 LUAI_FUNC int luaD_closeprotected (lua_State *L, ptrdiff_t level, int status);
 LUAI_FUNC int luaD_pcall (lua_State *L, Pfunc func, void *u,
                                         ptrdiff_t oldtop, ptrdiff_t ef);

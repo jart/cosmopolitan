@@ -1,15 +1,15 @@
 #ifndef ldebug_h
 #define ldebug_h
 
-#include "third_party/lua/lstate.h"
 
+#include "third_party/lua/lstate.h"
 
 
 #define pcRel(pc, p)	(cast_int((pc) - (p)->code) - 1)
 
 
 /* Active Lua function (given call info) */
-#define ci_func(ci)		(clLvalue(s2v((ci)->func)))
+#define ci_func(ci)		(clLvalue(s2v((ci)->func.p)))
 
 
 #define resethookcount(L)	(L->hookcount = L->basehookcount)

@@ -142,6 +142,16 @@
 */
 #define isdecGCmodegen(g)	(g->gckind == KGC_GEN || g->lastatomic != 0)
 
+
+/*
+** Control when GC is running:
+*/
+#define GCSTPUSR	1  /* bit true when GC stopped by user */
+#define GCSTPGC		2  /* bit true when GC stopped by itself */
+#define GCSTPCLS	4  /* bit true when closing Lua state */
+#define gcrunning(g)	((g)->gcstp == 0)
+
+
 /*
 ** Does one step of collection when debt becomes positive. 'pre'/'pos'
 ** allows some adjustments to be done only when needed. macro
@@ -156,17 +166,18 @@
 #define luaC_checkGC(L)		luaC_condGC(L,(void)0,(void)0)
 
 
-#define luaC_barrier(L,p,v) (  \
-	(iscollectable(v) && isblack(p) && iswhite(gcvalue(v))) ?  \
-	luaC_barrier_(L,obj2gco(p),gcvalue(v)) : cast_void(0))
-
-#define luaC_barrierback(L,p,v) (  \
-	(iscollectable(v) && isblack(p) && iswhite(gcvalue(v))) ? \
-	luaC_barrierback_(L,p) : cast_void(0))
-
 #define luaC_objbarrier(L,p,o) (  \
 	(isblack(p) && iswhite(o)) ? \
 	luaC_barrier_(L,obj2gco(p),obj2gco(o)) : cast_void(0))
+
+#define luaC_barrier(L,p,v) (  \
+	iscollectable(v) ? luaC_objbarrier(L,p,gcvalue(v)) : cast_void(0))
+
+#define luaC_objbarrierback(L,p,o) (  \
+	(isblack(p) && iswhite(o)) ? luaC_barrierback_(L,p) : cast_void(0))
+
+#define luaC_barrierback(L,p,v) (  \
+	iscollectable(v) ? luaC_objbarrierback(L, p, gcvalue(v)) : cast_void(0))
 
 LUAI_FUNC void luaC_fix (lua_State *L, GCObject *o);
 LUAI_FUNC void luaC_freeallobjects (lua_State *L);
@@ -174,6 +185,8 @@ LUAI_FUNC void luaC_step (lua_State *L);
 LUAI_FUNC void luaC_runtilstate (lua_State *L, int statesmask);
 LUAI_FUNC void luaC_fullgc (lua_State *L, int isemergency);
 LUAI_FUNC GCObject *luaC_newobj (lua_State *L, int tt, size_t sz);
+LUAI_FUNC GCObject *luaC_newobjdt (lua_State *L, int tt, size_t sz,
+                                                 size_t offset);
 LUAI_FUNC void luaC_barrier_ (lua_State *L, GCObject *o, GCObject *v);
 LUAI_FUNC void luaC_barrierback_ (lua_State *L, GCObject *o);
 LUAI_FUNC void luaC_checkfinalizer (lua_State *L, GCObject *o, Table *mt);

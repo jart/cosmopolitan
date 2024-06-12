@@ -1,6 +1,9 @@
 #ifndef lstate_h
 #define lstate_h
 
+/* Some header files included here need this definition */
+typedef struct CallInfo CallInfo;
+
 #include "libc/calls/calls.h"
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lua.h"
@@ -132,7 +135,7 @@ struct lua_longjmp;  /* defined in ldo.c */
 
 #define BASIC_STACK_SIZE        (2*LUA_MINSTACK)
 
-#define stacksize(th)	cast_int((th)->stack_last - (th)->stack)
+#define stacksize(th)	cast_int((th)->stack_last.p - (th)->stack.p)
 
 
 /* kinds of Garbage Collection */
@@ -158,13 +161,13 @@ typedef struct stringtable {
 ** - field 'nyield' is used only while a function is "doing" an
 ** yield (from the yield until the next resume);
 ** - field 'nres' is used only while closing tbc variables when
-** returning from a C function;
+** returning from a function;
 ** - field 'transferinfo' is used only during call/returnhooks,
 ** before the function starts or after it ends.
 */
-typedef struct CallInfo {
-  StkId func;  /* function index in the stack */
-  StkId	top;  /* top for this function */
+struct CallInfo {
+  StkIdRel func;  /* function index in the stack */
+  StkIdRel	top;  /* top for this function */
   struct CallInfo *previous, *next;  /* dynamic call link */
   union {
     struct {  /* only for Lua functions */
@@ -189,7 +192,7 @@ typedef struct CallInfo {
   } u2;
   short nresults;  /* expected number of results from this function */
   unsigned short callstatus;
-} CallInfo;
+};
 
 
 /*
@@ -202,7 +205,7 @@ typedef struct CallInfo {
 #define CIST_YPCALL	(1<<4)	/* doing a yieldable protected call */
 #define CIST_TAIL	(1<<5)	/* call was tail called */
 #define CIST_HOOKYIELD	(1<<6)	/* last hook called yielded */
-#define CIST_FIN	(1<<7)	/* call is running a finalizer */
+#define CIST_FIN	(1<<7)	/* function "called" a finalizer */
 #define CIST_TRAN	(1<<8)	/* 'ci' has transfer information */
 #define CIST_CLSRET	(1<<9)  /* function is closing tbc variables */
 /* Bits 10-12 are used for CIST_RECST (see below) */
@@ -256,7 +259,7 @@ typedef struct global_State {
   lu_byte gcstopem;  /* stops emergency collections */
   lu_byte genminormul;  /* control for minor generational collections */
   lu_byte genmajormul;  /* control for major generational collections */
-  lu_byte gcrunning;  /* true if GC is running */
+  lu_byte gcstp;  /* control whether GC is running */
   lu_byte gcemergency;  /* true if this is an emergency collection */
   lu_byte gcpause;  /* size of pause between successive GCs */
   lu_byte gcstepmul;  /* GC "speed" */
@@ -284,7 +287,7 @@ typedef struct global_State {
   struct lua_State *mainthread;
   TString *memerrmsg;  /* message for memory-allocation errors */
   TString *tmname[TM_N];  /* array with tag-method names */
-  struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
+  struct Table *mt[LUA_NUMTYPES];  /* metatables for basic types */
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
   lua_WarnFunction warnf;  /* warning function */
   void *ud_warn;         /* auxiliary data to 'warnf' */
@@ -299,13 +302,13 @@ struct lua_State {
   lu_byte status;
   lu_byte allowhook;
   unsigned short nci;  /* number of items in 'ci' list */
-  StkId top;  /* first free slot in the stack */
+  StkIdRel top;  /* first free slot in the stack */
   global_State *l_G;
   CallInfo *ci;  /* call info for current function */
-  StkId stack_last;  /* end of stack (last element + 1) */
-  StkId stack;  /* stack base */
+  StkIdRel stack_last;  /* end of stack (last element + 1) */
+  StkIdRel stack;  /* stack base */
   UpVal *openupval;  /* list of open upvalues in this stack */
-  StkId tbclist;  /* list of to-be-closed variables */
+  StkIdRel tbclist;  /* list of to-be-closed variables */
   GCObject *gclist;
   struct lua_State *twups;  /* list of threads with open upvalues */
   struct lua_longjmp *errorJmp;  /* current error recover point */

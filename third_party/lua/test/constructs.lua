@@ -11,6 +11,7 @@ local function checkload (s, msg)
 end
 
 -- testing semicollons
+local a
 do ;;; end
 ; do ; a = 3; assert(a == 3) end;
 ;
@@ -49,10 +50,10 @@ assert((((nil and true) or false) and true) == false)
 
 local a,b = 1,nil;
 assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75);
-x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
+local x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
 
-x,y=1,2;
+local x, y = 1, 2;
 assert((x>y) and x or y == 2);
 x,y=2,1;
 assert((x>y) and x or y == 2);
@@ -77,13 +78,13 @@ do   -- testing operators with diffent kinds of constants
         local gab = f(o1, o2)
 
         _ENV.XX = o1
-        code = string.format("return XX %s %s", op, o2)
-        res = assert(load(code))()
+        local code = string.format("return XX %s %s", op, o2)
+        local res = assert(load(code))()
         assert(res == gab)
 
         _ENV.XX = o2
-        local code = string.format("return (%s) %s XX", o1, op)
-        local res = assert(load(code))()
+        code = string.format("return (%s) %s XX", o1, op)
+        res = assert(load(code))()
         assert(res == gab)
 
         code = string.format("return (%s) %s %s", o1, op, o2)
@@ -92,6 +93,7 @@ do   -- testing operators with diffent kinds of constants
       end
     end
   end
+  _ENV.XX = nil
 end
 
 
@@ -100,10 +102,35 @@ repeat until 1; repeat until true;
 while false do end; while nil do end;
 
 do  -- test old bug (first name could not be an `upvalue')
- local a; function f(x) x={a=1}; x={x=1}; x={G=1} end
+ local a; local function f(x) x={a=1}; x={x=1}; x={G=1} end
 end
 
-function f (i)
+
+do   -- bug since 5.4.0
+  -- create code with a table using more than 256 constants
+  local code = {"local x = {"}
+  for i = 1, 257 do
+    code[#code + 1] = i .. ".1,"
+  end
+  code[#code + 1] = "};"
+  code = table.concat(code)
+
+  -- add "ret" to the end of that code and checks that
+  -- it produces the expected value "val"
+  local function check (ret, val)
+    local code = code .. ret
+    code = load(code)
+    assert(code() == val)
+  end
+
+  check("return (1 ~ (2 or 3))", 1 ~ 2)
+  check("return (1 | (2 or 3))", 1 | 2)
+  check("return (1 + (2 or 3))", 1 + 2)
+  check("return (1 << (2 or 3))", 1 << 2)
+end
+
+
+local function f (i)
   if type(i) ~= 'number' then return i,'jojo'; end;
   if i > 0 then return i, f(i-1); end;
 end
@@ -129,10 +156,10 @@ end
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == nil)
 
 for i=1,1000 do break; end;
-n=100;
-i=3;
-t = {};
-a=nil
+local n=100;
+local i=3;
+local t = {};
+local a=nil
 while not a do
   a=0; for i=1,n do for i=i,1,-1 do a=a+1; t[i]=1; end; end;
 end
@@ -175,14 +202,14 @@ a={y=1}
 x = {a.y}
 assert(x[1] == 1)
 
-function f(i)
+local function f (i)
   while 1 do
     if i>0 then i=i-1;
     else return; end;
   end;
 end;
 
-function g(i)
+local function g(i)
   while 1 do
     if i>0 then i=i-1
     else return end
@@ -247,7 +274,7 @@ function g (a,b,c,d,e)
   if not (a>=b or c or d and e or nil) then return 0; else return 1; end;
 end
 
-function h (a,b,c,d,e)
+local function h (a,b,c,d,e)
   while (a>=b or c or (d and e) or nil) do return 1; end;
   return 0;
 end;
@@ -275,7 +302,7 @@ do
   assert(a==2)
 end
 
-function F(a)
+local function F (a)
   assert(debug.getinfo(1, "n").name == 'F')
   return a,2,3
 end
@@ -368,6 +395,8 @@ for n = 1, level do
     if i % 60000 == 0 then print('+') end
   end
 end
+IX = nil
+_G.GLOB1 = nil
 ------------------------------------------------------------------
 
 -- testing some syntax errors (chosen through 'gcov')

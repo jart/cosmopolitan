@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lstrlib_c
 #define LUA_LIB
+
 #include "libc/math.h"
 #include "libc/str/str.h"
 #include "third_party/lua/cosmo.h"
@@ -62,7 +63,7 @@ __static_yoink("lua_notice");
 
 
 
-static int str_format(lua_State *);
+static int str_format(lua_State *);  // [jart]
 
 
 static int str_len (lua_State *L) {
@@ -607,7 +608,7 @@ static const char *match_capture (MatchState *ms, const char *s, int l) {
 static const char *match (MatchState *ms, const char *s, const char *p) {
   if (l_unlikely(ms->matchdepth-- == 0))
     luaL_error(ms->L, "pattern too complex");
-  init: /* using goto's to optimize tail recursion */
+  init: /* using goto to optimize tail recursion */
   if (p != ms->p_end) {  /* end of pattern? */
     switch (*p) {
       case '(': {  /* start capture */
@@ -1127,13 +1128,31 @@ static int lua_number2strx (lua_State *L, char *buff, int sz,
 
 
 /* valid flags in a format specification */
-#if !defined(L_FMTFLAGS)
-#define L_FMTFLAGS	"-+ #0"
+#if !defined(L_FMTFLAGSF)
+
+/* valid flags for a, A, e, E, f, F, g, and G conversions */
+#define L_FMTFLAGSF	"-+#0 "
+
+/* valid flags for o, x, and X conversions */
+#define L_FMTFLAGSX	"-#0"
+
+/* valid flags for d and i conversions */
+#define L_FMTFLAGSI	"-+0 "
+
+/* valid flags for u conversions */
+#define L_FMTFLAGSU	"-0"
+
+/* valid flags for c, p, and s conversions */
+#define L_FMTFLAGSC	"-"
+
 #endif
 
 
 /*
-** maximum size of each format specification (such as "%-099.99d")
+** Maximum size of each format specification (such as "%-099.99d"):
+** Initial '%', flags (up to 5), width (2), period, precision (2),
+** length modifier (8), conversion specifier, and final '\0', plus some
+** extra.
 */
 #define MAX_FORMAT	32
 
@@ -1226,25 +1245,53 @@ static void addliteral (lua_State *L, luaL_Buffer *b, int arg) {
 }
 
 
-static const char *scanformat (lua_State *L, const char *strfrmt, char *form) {
-  const char *p = strfrmt;
-  while (*p != '\0' && strchr(L_FMTFLAGS, *p) != NULL) p++;  /* skip flags */
-  if ((size_t)(p - strfrmt) >= sizeof(L_FMTFLAGS)/sizeof(char))
-    luaL_error(L, "invalid format (repeated flags)");
-  if (isdigit(uchar(*p))) p++;  /* skip width */
-  if (isdigit(uchar(*p))) p++;  /* (2 digits at most) */
-  if (*p == '.') {
-    p++;
-    if (isdigit(uchar(*p))) p++;  /* skip precision */
-    if (isdigit(uchar(*p))) p++;  /* (2 digits at most) */
+static const char *get2digits (const char *s) {
+  if (isdigit(uchar(*s))) {
+    s++;
+    if (isdigit(uchar(*s))) s++;  /* (2 digits at most) */
   }
-  if (isdigit(uchar(*p)))
-    luaL_error(L, "invalid format (width or precision too long)");
+  return s;
+}
+
+
+/*
+** Check whether a conversion specification is valid. When called,
+** first character in 'form' must be '%' and last character must
+** be a valid conversion specifier. 'flags' are the accepted flags;
+** 'precision' signals whether to accept a precision.
+*/
+static void checkformat (lua_State *L, const char *form, const char *flags,
+                                       int precision) {
+  const char *spec = form + 1;  /* skip '%' */
+  spec += strspn(spec, flags);  /* skip flags */
+  if (*spec != '0') {  /* a width cannot start with '0' */
+    spec = get2digits(spec);  /* skip width */
+    if (*spec == '.' && precision) {
+      spec++;
+      spec = get2digits(spec);  /* skip precision */
+    }
+  }
+  if (!isalpha(uchar(*spec)))  /* did not go to the end? */
+    luaL_error(L, "invalid conversion specification: '%s'", form);
+  }
+
+
+/*
+** Get a conversion specification and copy it to 'form'.
+** Return the address of its last character.
+*/
+static const char *getformat (lua_State *L, const char *strfrmt,
+                                            char *form) {
+  /* spans flags, width, and precision ('0' is included as a flag) */
+  size_t len = strspn(strfrmt, L_FMTFLAGSF "123456789.");
+  len++;  /* adds following character (should be the specifier) */
+  /* still needs space for '%', '\0', plus a length modifier */
+  if (len >= MAX_FORMAT - 10)
+    luaL_error(L, "invalid format (too long)");
   *(form++) = '%';
-  memcpy(form, strfrmt, ((p - strfrmt) + 1) * sizeof(char));
-  form += (p - strfrmt) + 1;
-  *form = '\0';
-  return p;
+  memcpy(form, strfrmt, len * sizeof(char));
+  *(form + len) = '\0';
+  return strfrmt + len - 1;
 }
 
 
@@ -1267,6 +1314,7 @@ static int str_format (lua_State *L) {
   size_t sfl;
   const char *strfrmt = luaL_checklstring(L, arg, &sfl);
   const char *strfrmt_end = strfrmt+sfl;
+  const char *flags;
   luaL_Buffer b;
   luaL_buffinit(L, &b);
   while (strfrmt < strfrmt_end) {
@@ -1276,25 +1324,35 @@ static int str_format (lua_State *L) {
       luaL_addchar(&b, *strfrmt++);  /* %% */
     else { /* format item */
       char form[MAX_FORMAT];  /* to store the format ('%...') */
-      int maxitem = MAX_ITEM;
-      char *buff = luaL_prepbuffsize(&b, maxitem);  /* to put formatted item */
-      int nb = 0;  /* number of bytes in added item */
+      int maxitem = MAX_ITEM;  /* maximum length for the result */
+      char *buff = luaL_prepbuffsize(&b, maxitem);  /* to put result */
+      int nb = 0;  /* number of bytes in result */
       if (++arg > top)
         return luaL_argerror(L, arg, "no value");
-      strfrmt = scanformat(L, strfrmt, form);
+      strfrmt = getformat(L, strfrmt, form);
       switch (*strfrmt++) {
         case 'c': {
+          checkformat(L, form, L_FMTFLAGSC, 0);
           nb = l_sprintf(buff, maxitem, form, (int)luaL_checkinteger(L, arg));
           break;
         }
         case 'd': case 'i':
-        case 'o': case 'u': case 'x': case 'X': {
+          flags = L_FMTFLAGSI;
+          goto intcase;
+        case 'u':
+          flags = L_FMTFLAGSU;
+          goto intcase;
+        case 'o': case 'x': case 'X':
+          flags = L_FMTFLAGSX;
+         intcase: {
           lua_Integer n = luaL_checkinteger(L, arg);
+          checkformat(L, form, flags, 1);
           addlenmod(form, LUA_INTEGER_FRMLEN);
           nb = l_sprintf(buff, maxitem, form, (LUAI_UACINT)n);
           break;
         }
         case 'a': case 'A':
+          checkformat(L, form, L_FMTFLAGSF, 1);
           addlenmod(form, LUA_NUMBER_FRMLEN);
           nb = lua_number2strx(L, buff, maxitem, form,
                                   luaL_checknumber(L, arg));
@@ -1305,12 +1363,14 @@ static int str_format (lua_State *L) {
           /* FALLTHROUGH */
         case 'e': case 'E': case 'g': case 'G': {
           lua_Number n = luaL_checknumber(L, arg);
+          checkformat(L, form, L_FMTFLAGSF, 1);
           addlenmod(form, LUA_NUMBER_FRMLEN);
           nb = l_sprintf(buff, maxitem, form, (LUAI_UACNUMBER)n);
           break;
         }
         case 'p': {
           const void *p = lua_topointer(L, arg);
+          checkformat(L, form, L_FMTFLAGSC, 0);
           if (p == NULL) {  /* avoid calling 'printf' with argument NULL */
             p = "(null)";  /* result */
             form[strlen(form) - 1] = 's';  /* format it as a string */
@@ -1331,7 +1391,8 @@ static int str_format (lua_State *L) {
             luaL_addvalue(&b);  /* keep entire string */
           else {
             luaL_argcheck(L, l == strlen(s), arg, "string contains zeros");
-            if (!strchr(form, '.') && l >= 100) {
+            checkformat(L, form, L_FMTFLAGSC, 1);
+            if (strchr(form, '.') == NULL && l >= 100) {
               /* no precision and string is too long to be formatted */
               luaL_addvalue(&b);  /* keep entire string */
             }
@@ -1387,15 +1448,6 @@ static const union {
   int dummy;
   char little;  /* true iff machine is little endian */
 } nativeendian = {1};
-
-
-/* dummy structure to get native alignment requirements */
-struct cD {
-  char c;
-  union { double d; void *p; lua_Integer i; lua_Number n; } u;
-};
-
-#define MAXALIGN	(offsetof(struct cD, u))
 
 
 /*
@@ -1472,6 +1524,8 @@ static void initheader (lua_State *L, Header *h) {
 ** Read and classify next option. 'size' is filled with option's size.
 */
 static KOption getoption (Header *h, const char **fmt, int *size) {
+  /* dummy structure to get native alignment requirements */
+  struct cD { char c; union { LUAI_MAXALIGN; } u; };
   int opt = *((*fmt)++);
   *size = 0;  /* default */
   switch (opt) {
@@ -1502,7 +1556,11 @@ static KOption getoption (Header *h, const char **fmt, int *size) {
     case '<': h->islittle = 1; break;
     case '>': h->islittle = 0; break;
     case '=': h->islittle = nativeendian.little; break;
-    case '!': h->maxalign = getnumlimit(h, fmt, MAXALIGN); break;
+    case '!': {
+      const int maxalign = offsetof(struct cD, u);
+      h->maxalign = getnumlimit(h, fmt, maxalign);
+      break;
+    }
     default: luaL_error(h->L, "invalid format option '%c'", opt);
   }
   return Knop;

@@ -1,12 +1,5 @@
-/*
-** $Id: lopnames.h $
-** Opcode names
-** See Copyright Notice in lua.h
-*/
-
-#if !defined(lopnames_h)
+#ifndef lopnames_h
 #define lopnames_h
-
 
 
 /* ORDER OP */

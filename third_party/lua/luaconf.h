@@ -1,5 +1,6 @@
 #ifndef luaconf_h
 #define luaconf_h
+
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -7,8 +8,9 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/unicode.h"
 
-#define LUA_USE_POSIX
+
 #define LUA_USE_LINENOISE
+#define LUA_USE_POSIX
 
 
 /*
@@ -66,6 +68,12 @@
 #if defined(LUA_USE_MACOSX)
 #define LUA_USE_POSIX
 #define LUA_USE_DLOPEN		/* MacOS does not need -ldl */
+#endif
+
+
+#if defined(LUA_USE_IOS)
+#define LUA_USE_POSIX
+#define LUA_USE_DLOPEN
 #endif
 
 
@@ -422,7 +430,6 @@
 @@ LUA_MAXINTEGER is the maximum value for a LUA_INTEGER.
 @@ LUA_MININTEGER is the minimum value for a LUA_INTEGER.
 @@ LUA_MAXUNSIGNED is the maximum value for a LUA_UNSIGNED.
-@@ LUA_UNSIGNEDBITS is the number of bits in a LUA_UNSIGNED.
 @@ lua_integer2str converts an integer to a string.
 */
 
@@ -441,9 +448,6 @@
 ** can turn a comparison between unsigneds into a signed comparison)
 */
 #define LUA_UNSIGNED		unsigned LUAI_UACINT
-
-
-#define LUA_UNSIGNEDBITS	(sizeof(LUA_UNSIGNED) * CHAR_BIT)
 
 
 /* now the variable definitions */
@@ -667,7 +671,7 @@
 ** CHANGE it if you need a different limit. This limit is arbitrary;
 ** its only purpose is to stop Lua from consuming unlimited stack
 ** space (and to reserve some numbers for pseudo-indices).
-** (It must fit into max(size_t)/32.)
+** (It must fit into max(size_t)/32 and max(int)/2.)
 */
 #if LUAI_IS32INT
 #define LUAI_MAXSTACK		1000000
@@ -686,14 +690,15 @@
 
 /*
 @@ LUA_IDSIZE gives the maximum size for the description of the source
-@@ of a function in debug information.
+** of a function in debug information.
 ** CHANGE it if you want a different size.
 */
 #define LUA_IDSIZE	60
 
 
 /*
-@@ LUAL_BUFFERSIZE is the buffer size used by the lauxlib buffer system.
+@@ LUAL_BUFFERSIZE is the initial buffer size used by the lauxlib
+** buffer system.
 */
 #define LUAL_BUFFERSIZE   ((int)(16 * sizeof(void*) * sizeof(lua_Number)))
 

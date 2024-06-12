@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldblib_c
 #define LUA_LIB
+
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
@@ -495,3 +496,4 @@ LUAMOD_API int luaopen_debug (lua_State *L) {
   luaL_newlib(L, dblib);
   return 1;
 }
+

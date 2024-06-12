@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define linit_c
 #define LUA_LIB
+
 /*
 ** If you embed Lua in your program and need to open the standard
 ** libraries, call luaL_openlibs in your program. If you need a
@@ -42,6 +43,7 @@
 **  lua_setfield(L, -2, modname);
 **  lua_pop(L, 1);  // remove PRELOAD table
 */
+
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
