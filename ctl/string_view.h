@@ -36,16 +36,16 @@ struct string_view
     {
     }
 
-    bool operator==(const string_view) const noexcept;
-    bool operator!=(const string_view) const noexcept;
-    bool contains(const string_view) const noexcept;
-    bool ends_with(const string_view) const noexcept;
-    bool starts_with(const string_view) const noexcept;
+    bool operator==(string_view) const noexcept;
+    bool operator!=(string_view) const noexcept;
+    bool contains(string_view) const noexcept;
+    bool ends_with(string_view) const noexcept;
+    bool starts_with(string_view) const noexcept;
     string_view substr(size_t = 0, size_t = npos) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
-    size_t find(const string_view, size_t = 0) const noexcept;
+    size_t find(string_view, size_t = 0) const noexcept;
 
-    constexpr string_view& operator=(const string_view& s) noexcept
+    constexpr string_view& operator=(const string_view s) noexcept
     {
         p = s.p;
         n = s.n;

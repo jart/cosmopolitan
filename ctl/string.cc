@@ -289,7 +289,7 @@ string::substr(size_t pos, size_t count) const noexcept
 }
 
 string&
-string::replace(size_t pos, size_t count, const string_view& s) noexcept
+string::replace(size_t pos, size_t count, const string_view s) noexcept
 {
     size_t last;
     if (ckd_add(&last, pos, count))
