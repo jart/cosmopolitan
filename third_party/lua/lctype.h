@@ -14,6 +14,7 @@
   check_exp(('A' <= (c) && (c) <= 'Z') || (c) == ((c) | ('A' ^ 'a')), \
             (c) | ('A' ^ 'a'))
 
+// [jart]
 #define lisdigit(C)         \
   ({                        \
     unsigned char c_ = (C); \
