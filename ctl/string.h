@@ -201,14 +201,14 @@ class string
         return data()[i];
     }
 
-    const char& operator[](size_t i) const noexcept
+    const char& operator[](const size_t i) const noexcept
     {
         if (i >= size())
             __builtin_trap();
         return data()[i];
     }
 
-    void push_back(char ch) noexcept
+    void push_back(const char ch) noexcept
     {
         append(ch);
     }
@@ -237,7 +237,7 @@ class string
         return *this;
     }
 
-    string& operator+=(char x) noexcept
+    string& operator+=(const char x) noexcept
     {
         append(x);
         return *this;
@@ -285,14 +285,16 @@ class string
         return *(blob + __::sso_max) & 0x80;
     }
 
-    inline void set_small_size(size_t size) noexcept
+    inline void set_small_size(const size_t size) noexcept
     {
         if (size > __::sso_max)
             __builtin_trap();
         *(blob + __::sso_max) = (__::sso_max - size);
     }
 
-    inline void set_big_string(char* p, size_t n, size_t c2) noexcept
+    inline void set_big_string(char* const p,
+                               const size_t n,
+                               const size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();

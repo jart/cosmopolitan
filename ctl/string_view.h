@@ -28,7 +28,7 @@ struct string_view
     {
     }
 
-    constexpr string_view(const char* s, size_t n) noexcept : p(s), n(n)
+    constexpr string_view(const char* s, const size_t n) noexcept : p(s), n(n)
     {
     }
 
@@ -72,14 +72,14 @@ struct string_view
         return n;
     }
 
-    constexpr const char& operator[](size_t i) const noexcept
+    constexpr const char& operator[](const size_t i) const noexcept
     {
         if (i >= n)
             __builtin_trap();
         return p[i];
     }
 
-    constexpr void remove_prefix(size_t count)
+    constexpr void remove_prefix(const size_t count)
     {
         if (count > n)
             __builtin_trap();
@@ -87,7 +87,7 @@ struct string_view
         n -= count;
     }
 
-    constexpr void remove_suffix(size_t count)
+    constexpr void remove_suffix(const size_t count)
     {
         if (count > n)
             __builtin_trap();
@@ -133,22 +133,22 @@ struct string_view
         return strcmp(*this, s);
     }
 
-    bool operator<(const string_view& s) const noexcept
+    bool operator<(const string_view s) const noexcept
     {
         return compare(s) < 0;
     }
 
-    bool operator<=(const string_view& s) const noexcept
+    bool operator<=(const string_view s) const noexcept
     {
         return compare(s) <= 0;
     }
 
-    bool operator>(const string_view& s) const noexcept
+    bool operator>(const string_view s) const noexcept
     {
         return compare(s) > 0;
     }
 
-    bool operator>=(const string_view& s) const noexcept
+    bool operator>=(const string_view s) const noexcept
     {
         return compare(s) >= 0;
     }

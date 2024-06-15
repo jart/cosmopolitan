@@ -54,12 +54,12 @@ string::string(const string_view s) noexcept : string()
     append(s.p, s.n);
 }
 
-string::string(size_t size, char ch) noexcept : string()
+string::string(const size_t size, const char ch) noexcept : string()
 {
     resize(size, ch);
 }
 
-string::string(const char* s, size_t size) noexcept : string()
+string::string(const char* s, const size_t size) noexcept : string()
 {
     append(s, size);
 }
@@ -101,7 +101,7 @@ string::reserve(size_t c2) noexcept
 }
 
 void
-string::resize(size_t n2, char ch) noexcept
+string::resize(const size_t n2, const char ch) noexcept
 {
     size_t c2;
     if (ckd_add(&c2, n2, 1))
@@ -118,7 +118,7 @@ string::resize(size_t n2, char ch) noexcept
 }
 
 void
-string::append(char ch) noexcept
+string::append(const char ch) noexcept
 {
     size_t n2;
     if (ckd_add(&n2, size(), 2))
@@ -139,7 +139,7 @@ string::append(char ch) noexcept
 }
 
 void
-string::grow(size_t size) noexcept
+string::grow(const size_t size) noexcept
 {
     size_t need;
     if (ckd_add(&need, this->size(), size))
@@ -158,7 +158,7 @@ string::grow(size_t size) noexcept
 }
 
 void
-string::append(char ch, size_t size) noexcept
+string::append(const char ch, const size_t size) noexcept
 {
     grow(size);
     if (size)
@@ -172,7 +172,7 @@ string::append(char ch, size_t size) noexcept
 }
 
 void
-string::append(const void* data, size_t size) noexcept
+string::append(const void* data, const size_t size) noexcept
 {
     grow(size);
     if (size)
@@ -254,7 +254,7 @@ string::starts_with(const string_view s) const noexcept
 }
 
 size_t
-string::find(char ch, size_t pos) const noexcept
+string::find(const char ch, const size_t pos) const noexcept
 {
     char* q;
     if ((q = (char*)memchr(data(), ch, size())))
@@ -263,7 +263,7 @@ string::find(char ch, size_t pos) const noexcept
 }
 
 size_t
-string::find(const string_view s, size_t pos) const noexcept
+string::find(const string_view s, const size_t pos) const noexcept
 {
     char* q;
     if (pos > size())
@@ -274,7 +274,7 @@ string::find(const string_view s, size_t pos) const noexcept
 }
 
 string
-string::substr(size_t pos, size_t count) const noexcept
+string::substr(const size_t pos, size_t count) const noexcept
 {
     size_t last;
     if (pos > size())
@@ -289,7 +289,9 @@ string::substr(size_t pos, size_t count) const noexcept
 }
 
 string&
-string::replace(size_t pos, size_t count, const string_view s) noexcept
+string::replace(const size_t pos,
+                const size_t count,
+                const string_view s) noexcept
 {
     size_t last;
     if (ckd_add(&last, pos, count))
@@ -319,7 +321,7 @@ string::replace(size_t pos, size_t count, const string_view s) noexcept
 }
 
 string&
-string::insert(size_t i, const string_view s) noexcept
+string::insert(const size_t i, const string_view s) noexcept
 {
     if (i > size())
         __builtin_trap();
@@ -343,7 +345,7 @@ string::insert(size_t i, const string_view s) noexcept
 }
 
 string&
-string::erase(size_t pos, size_t count) noexcept
+string::erase(const size_t pos, size_t count) noexcept
 {
     if (pos > size())
         __builtin_trap();
