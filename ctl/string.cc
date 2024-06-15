@@ -91,16 +91,13 @@ string::reserve(size_t c2) noexcept
     if (!isbig()) {
         if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
-        memcpy(p2, data(), size());
-        p2[size()] = 0;
+        memcpy(p2, data(), size() + 1);
     } else {
         if (!(p2 = (char*)realloc(big()->p, c2)))
             __builtin_trap();
     }
     std::atomic_signal_fence(std::memory_order_seq_cst);
-    set_big_capacity(c2);
-    big()->n = n;
-    big()->p = p2;
+    set_big_string(p2, n, c2);
 }
 
 void
