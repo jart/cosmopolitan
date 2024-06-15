@@ -108,10 +108,11 @@ https://github.com/piscisaureus/wepoll");
   (EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLERR | EPOLLHUP | EPOLLRDNORM | \
    EPOLLRDBAND | EPOLLWRNORM | EPOLLWRBAND | EPOLLMSG | EPOLLRDHUP)
 
-#define RTL_CONSTANT_STRING(s) {sizeof(s) - sizeof((s)[0]), sizeof(s), s}
+#define RTL_CONSTANT_STRING(s) \
+  { sizeof(s) - sizeof((s)[0]), sizeof(s), s }
 
 #define RTL_CONSTANT_OBJECT_ATTRIBUTES(ObjectName, Attributes) \
-  {sizeof(struct NtObjectAttributes), 0, ObjectName, Attributes, NULL, NULL}
+  { sizeof(struct NtObjectAttributes), 0, ObjectName, Attributes, NULL, NULL }
 
 #define RETURN_MAP_ERROR(value) \
   do {                          \

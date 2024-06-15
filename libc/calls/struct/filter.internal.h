@@ -23,9 +23,10 @@ struct sock_fprog {
 #define BPF_TAX          0x00
 #define BPF_TXA          0x80
 
-#define BPF_STMT(code, k) {(unsigned short)(code), 0, 0, k}
+#define BPF_STMT(code, k) \
+  { (unsigned short)(code), 0, 0, k }
 #define BPF_JUMP(code, k, jumptrue, jumpfalse) \
-  {(unsigned short)(code), jumptrue, jumpfalse, k}
+  { (unsigned short)(code), jumptrue, jumpfalse, k }
 
 #define BPF_MEMWORDS 16
 
