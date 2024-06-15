@@ -81,28 +81,23 @@ class string
 
     string() noexcept
     {
-        set_small_size(0);
-#if 0
-        small()->buf[0] = 0;
-#endif
+        __builtin_memset(blob, 0, sizeof(size_t) * 2);
+        // equivalent to set_small_size(0) but also zeroes memory
+        *(((size_t *)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
     }
 
     void swap(string& s) noexcept
     {
         char tmp[__::string_size];
-        __builtin_memcpy(tmp, __builtin_launder(blob), sizeof(tmp));
-        __builtin_memcpy(
-          __builtin_launder(blob), __builtin_launder(s.blob), sizeof(tmp));
-        __builtin_memcpy(__builtin_launder(s.blob), tmp, sizeof(tmp));
+        __builtin_memcpy(tmp, blob, __::string_size);
+        __builtin_memcpy(blob, s.blob, __::string_size);
+        __builtin_memcpy(s.blob, tmp, __::string_size);
     }
 
     string(string&& s) noexcept
     {
-        __builtin_memcpy(blob, __builtin_launder(s.blob), sizeof(blob));
+        __builtin_memcpy(blob, s.blob, __::string_size);
         s.set_small_size(0);
-#if 0
-        s.small()->buf[0] = 0;
-#endif
     }
 
     void clear() noexcept
@@ -288,52 +283,51 @@ class string
   private:
     inline bool isbig() const noexcept
     {
-        return *(__builtin_launder(blob) + __::sso_max) & 0x80;
+        return *(blob + __::sso_max) & 0x80;
     }
 
     inline void set_small_size(size_t size) noexcept
     {
         if (size > __::sso_max)
             __builtin_trap();
-        *(__builtin_launder(blob) + __::sso_max) = (__::sso_max - size);
+        *(blob + __::sso_max) = (__::sso_max - size);
     }
 
-    inline void set_big_capacity(size_t c2) noexcept
+    inline void set_big_string(char *p, size_t n, size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
-        *(__builtin_launder(blob) + __::sso_max) = 0x80;
-        big()->c &= ~__::big_mask;
-        big()->c |= c2;
+        *(char **)blob = p;
+        *(((size_t *)blob) + 1) = n;
+        *(((size_t *)blob) + 2) = c2 | ~__::big_mask;
     }
 
     inline __::small_string* small() noexcept
     {
         if (isbig())
             __builtin_trap();
-        return __builtin_launder(reinterpret_cast<__::small_string*>(blob));
+        return reinterpret_cast<__::small_string*>(blob);
     }
 
     inline const __::small_string* small() const noexcept
     {
         if (isbig())
             __builtin_trap();
-        return __builtin_launder(
-          reinterpret_cast<const __::small_string*>(blob));
+        return reinterpret_cast<const __::small_string*>(blob);
     }
 
     inline __::big_string* big() noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return __builtin_launder(reinterpret_cast<__::big_string*>(blob));
+        return reinterpret_cast<__::big_string*>(blob);
     }
 
     inline const __::big_string* big() const noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return __builtin_launder(reinterpret_cast<const __::big_string*>(blob));
+        return reinterpret_cast<const __::big_string*>(blob);
     }
 
     friend string strcat(const string_view, const string_view);
