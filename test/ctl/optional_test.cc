@@ -117,7 +117,14 @@ main()
     }
 
     {
-        struct A { int* p = &g; A() {++*p; } };
+        struct A
+        {
+            int* p = &g;
+            A()
+            {
+                ++*p;
+            }
+        };
         ctl::optional<A> x;
         if (g != 0)
             return 25;

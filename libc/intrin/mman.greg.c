@@ -45,7 +45,7 @@
 #ifdef __x86_64__
 
 #define INVERT(x) (BANE + PHYSICAL((uintptr_t)(x)))
-#define NOPAGE    ((uint64_t)-1)
+#define NOPAGE    ((uint64_t) - 1)
 
 #define APE_STACK_VADDR                   \
   ({                                      \

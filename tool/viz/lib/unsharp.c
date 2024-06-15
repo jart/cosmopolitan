@@ -49,14 +49,15 @@ long unsharp(long cn, long yw, long xw, unsigned char img[cn][yw][xw], long yn,
         }
         if (y < yn) {
           for (x = 0; x < xn; ++x) {
-            (*t)[y % 3][x] = CONVOLVE5X5(/* clang-format off */
+            (*t)[y % 3][x] =
+                CONVOLVE5X5(/* clang-format off */
                     7, (-1 / 256.), img[c],
                           1,  4,   6,  4, 1,
                           4, 16,  24, 16, 4,
                           6, 24,-476, 24, 6,
                           4, 16,  24, 16, 4,
                           1,  4,   6,  4, 1
-                                         /* clang-format on */);
+                            /* clang-format on */);
           }
         }
       }

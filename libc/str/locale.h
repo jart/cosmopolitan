@@ -21,7 +21,7 @@
 
 COSMOPOLITAN_C_START_
 
-#define LC_GLOBAL_LOCALE ((locale_t)-1)
+#define LC_GLOBAL_LOCALE ((locale_t) - 1)
 
 struct __locale_map {
   const void *map;

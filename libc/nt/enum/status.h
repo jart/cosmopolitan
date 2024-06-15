@@ -74,10 +74,10 @@ typedef uint32_t NtStatus;
 #define NtInformation(s)  (NtSeverity(s) == 1)
 #define NtWarning(s)      (NtSeverity(s) == 2)
 #define NtError(s)        (NtSeverity(s) == 3)
-#define NtCode(s)         ((NtStatus)(s)&0xffff)
+#define NtCode(s)         ((NtStatus)(s) & 0xffff)
 #define NtSeverity(s)     ((NtStatus)(s) >> 30)
 #define NtFacility(s)     (((NtStatus)(s) >> 16) & 0xfff)
-#define NtFacilityCode(s) ((NtStatus)(s)&0x0FFFFFFF)
+#define NtFacilityCode(s) ((NtStatus)(s) & 0x0FFFFFFF)
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STATUS_H_ */

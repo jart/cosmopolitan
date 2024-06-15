@@ -68,6 +68,7 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
     p[rc] = 0;
     return p;
   } else if (IsFreebsd() || IsNetbsd()) {
+    // clang-format off
     cmd[0] = 1;         // CTL_KERN
     cmd[1] = 14;        // KERN_PROC
     if (IsFreebsd()) {  //
@@ -76,6 +77,7 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
       cmd[2] = 5;       // KERN_PROC_PATHNAME
     }                   //
     cmd[3] = -1;        // current process
+    // clang-format on
     if (sysctl(cmd, ARRAYLEN(cmd), p, &n, 0, 0) != -1) {
       errno = e;
       return p;

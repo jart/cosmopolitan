@@ -5,7 +5,7 @@
 #include "libc/nexgen32e/x86feature.h"
 COSMOPOLITAN_C_START_
 
-#define TSC_AUX_CORE(MSR) ((MSR)&0xfff)
+#define TSC_AUX_CORE(MSR) ((MSR) & 0xfff)
 #define TSC_AUX_NODE(MSR) (((MSR) >> 12) & 0xfff)
 
 /**

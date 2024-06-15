@@ -22,7 +22,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/intrin/magicu.h"
 
 #define T    uint32_t
 #define TBIT (sizeof(T) * CHAR_BIT - 1)

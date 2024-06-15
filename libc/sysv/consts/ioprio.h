@@ -12,10 +12,10 @@
 
 #define IOPRIO_PRIO_CLASS(ioprio) \
   (((ioprio) >> IOPRIO_CLASS_SHIFT) & IOPRIO_CLASS_MASK)
-#define IOPRIO_PRIO_DATA(ioprio) ((ioprio)&IOPRIO_PRIO_MASK)
+#define IOPRIO_PRIO_DATA(ioprio) ((ioprio) & IOPRIO_PRIO_MASK)
 #define IOPRIO_PRIO_VALUE(class, data)                     \
   ((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
-   ((data)&IOPRIO_PRIO_MASK))
+   ((data) & IOPRIO_PRIO_MASK))
 
 #define IOPRIO_CLASS_NONE 0
 #define IOPRIO_CLASS_RT   1
