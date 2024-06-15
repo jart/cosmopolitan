@@ -91,7 +91,7 @@ string::reserve(size_t c2) noexcept
     if (!isbig()) {
         if (!(p2 = (char*)malloc(c2)))
             __builtin_trap();
-        memcpy(p2, data(), size() + 1);
+        memcpy(p2, data(), __::string_size);
     } else {
         if (!(p2 = (char*)realloc(big()->p, c2)))
             __builtin_trap();
