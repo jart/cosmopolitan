@@ -1,6 +1,8 @@
 # Run this command to always ignore formatting commits in git blame
 # git config blame.ignoreRevsFile .git-blame-ignore-revs
 
+# Upgraded clang-format to 19.0.0git
+89fc95fefd40413706ff1bdaac2e8d98b328dbf1
 # vim c++ filetype in modelines
 04c6bc478e082263d67c41bedbd033dde2d429eb
 # Ran clang-format
