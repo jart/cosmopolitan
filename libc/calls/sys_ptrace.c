@@ -24,7 +24,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
-#define IsPeek(request) (IsLinux() && (request)-1u < 3)
+#define IsPeek(request) (IsLinux() && (request) - 1u < 3)
 
 /**
  * Traces process.

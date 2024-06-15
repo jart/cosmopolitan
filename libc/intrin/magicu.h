@@ -24,8 +24,10 @@ forceinline uint32_t __magicu_div(uint32_t x, struct magicu d) {
  * Checks if 𝑑 contains a valid initialized divisor.
  */
 static inline bool32 __magicu_valid(struct magicu d) {
-  if (!d.M && !d.s) return false;     /* uninitialized */
-  if (d.s & ~(64 | 63)) return false; /* corrupted */
+  if (!d.M && !d.s)
+    return false; /* uninitialized */
+  if (d.s & ~(64 | 63))
+    return false; /* corrupted */
   return true;
 }
 

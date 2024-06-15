@@ -23,8 +23,8 @@ COSMOPOLITAN_C_START_
 
 #undef roundup
 #define roundup(n, d) (howmany(n, d) * (d))
-#define powerof2(n)   !(((n)-1) & (n))
-#define howmany(n, d) (((n) + ((d)-1)) / (d))
+#define powerof2(n)   !(((n) - 1) & (n))
+#define howmany(n, d) (((n) + ((d) - 1)) / (d))
 
 #ifdef MIN
 #undef MIN

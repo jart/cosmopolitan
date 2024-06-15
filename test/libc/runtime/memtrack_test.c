@@ -30,8 +30,7 @@
 
 #define OPEN_MAX 16
 
-#define I(x, y) \
-  { x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE }
+#define I(x, y) {x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE}
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));

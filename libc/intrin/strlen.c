@@ -31,7 +31,7 @@ static __vex size_t __strlen(const char *s) {
     m = __builtin_ia32_pmovmskb128(*++p == z);
   return (const char *)p + __builtin_ctzl(m) - s;
 #else
-#define ONES ((word)-1 / 255)
+#define ONES ((word) - 1 / 255)
 #define BANE (ONES * (255 / 2 + 1))
   typedef unsigned long mayalias word;
   word w;

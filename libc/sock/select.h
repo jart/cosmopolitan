@@ -13,9 +13,9 @@ typedef struct fd_set {
   unsigned long fds_bits[FD_SETSIZE / (sizeof(long) * 8)];
 } fd_set;
 
-#define FD_ISSET(FD, SET) (((SET)->fds_bits[(FD) >> 6] >> ((FD)&63)) & 1)
-#define FD_SET(FD, SET)   ((SET)->fds_bits[(FD) >> 6] |= 1ull << ((FD)&63))
-#define FD_CLR(FD, SET)   ((SET)->fds_bits[(FD) >> 6] &= ~(1ull << ((FD)&63)))
+#define FD_ISSET(FD, SET) (((SET)->fds_bits[(FD) >> 6] >> ((FD) & 63)) & 1)
+#define FD_SET(FD, SET)   ((SET)->fds_bits[(FD) >> 6] |= 1ull << ((FD) & 63))
+#define FD_CLR(FD, SET)   ((SET)->fds_bits[(FD) >> 6] &= ~(1ull << ((FD) & 63)))
 #define FD_ZERO(SET)      bzero((SET)->fds_bits, sizeof((SET)->fds_bits))
 #define FD_SIZE(bits)     (((bits) + (sizeof(long) * 8) - 1) / sizeof(long))
 

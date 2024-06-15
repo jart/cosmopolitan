@@ -13,7 +13,7 @@
 #define shuffle(R, A, n)                      \
   do {                                        \
     autotype(A) Array = (A);                  \
-    for (size_t i = (n)-1; i >= 1; --i) {     \
+    for (size_t i = (n) - 1; i >= 1; --i) {   \
       xchg(&Array[i], &Array[R() % (i + 1)]); \
     }                                         \
   } while (0)

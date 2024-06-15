@@ -17,16 +17,15 @@ struct sock_fprog {
   const struct sock_filter *filter;
 };
 
-#define BPF_RVAL(code)   ((code)&0x18)
+#define BPF_RVAL(code)   ((code) & 0x18)
 #define BPF_A            0x10
-#define BPF_MISCOP(code) ((code)&0xf8)
+#define BPF_MISCOP(code) ((code) & 0xf8)
 #define BPF_TAX          0x00
 #define BPF_TXA          0x80
 
-#define BPF_STMT(code, k) \
-  { (unsigned short)(code), 0, 0, k }
+#define BPF_STMT(code, k) {(unsigned short)(code), 0, 0, k}
 #define BPF_JUMP(code, k, jumptrue, jumpfalse) \
-  { (unsigned short)(code), jumptrue, jumpfalse, k }
+  {(unsigned short)(code), jumptrue, jumpfalse, k}
 
 #define BPF_MEMWORDS 16
 

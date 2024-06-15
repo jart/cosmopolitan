@@ -83,7 +83,7 @@ class string
     {
         __builtin_memset(blob, 0, sizeof(size_t) * 2);
         // equivalent to set_small_size(0) but also zeroes memory
-        *(((size_t *)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
+        *(((size_t*)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
     }
 
     void swap(string& s) noexcept
@@ -293,13 +293,13 @@ class string
         *(blob + __::sso_max) = (__::sso_max - size);
     }
 
-    inline void set_big_string(char *p, size_t n, size_t c2) noexcept
+    inline void set_big_string(char* p, size_t n, size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
-        *(char **)blob = p;
-        *(((size_t *)blob) + 1) = n;
-        *(((size_t *)blob) + 2) = c2 | ~__::big_mask;
+        *(char**)blob = p;
+        *(((size_t*)blob) + 1) = n;
+        *(((size_t*)blob) + 2) = c2 | ~__::big_mask;
     }
 
     inline __::small_string* small() noexcept

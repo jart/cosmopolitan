@@ -50,19 +50,22 @@ struct magicu __magicu_get(uint32_t d) {
       p32 = 2 * p32;
     }
     if (r + 1 >= d - r) {
-      if (q >= 0x7FFFFFFF) a = 1;
+      if (q >= 0x7FFFFFFF)
+        a = 1;
       q = 2 * q + 1;      // Update q.
       r = 2 * r + 1 - d;  // Update r.
     } else {
-      if (q >= 0x80000000) a = 1;
+      if (q >= 0x80000000)
+        a = 1;
       q = 2 * q;
       r = 2 * r + 1;
     }
     delta = d - 1 - r;
   } while (p < 64 && p32 < delta);
-  magu.M = q + 1;              // Magic number and
-  magu.s = p - 32;             // Shift amount to return
-  if (a) magu.s |= 64;         // Sets "add" indicator
+  magu.M = q + 1;   // Magic number and
+  magu.s = p - 32;  // Shift amount to return
+  if (a)
+    magu.s |= 64;              // Sets "add" indicator
   npassert(magu.M || magu.s);  // Never returns zero.
   return magu;
 }

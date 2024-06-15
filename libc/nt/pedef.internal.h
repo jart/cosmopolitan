@@ -198,8 +198,8 @@
 #define kNtImageScnScaleIndex     0x00000001
 
 #define kNtImageSymUndefined            ((uint16_t)0)
-#define kNtImageSymAbsolute             ((uint16_t)-1)
-#define kNtImageSymDebug                ((uint16_t)-2)
+#define kNtImageSymAbsolute             ((uint16_t) - 1)
+#define kNtImageSymDebug                ((uint16_t) - 2)
 #define kNtImageSymSectionMax           0xFEFF
 #define kNtImageSymSectionMaxEx         __LONG_MAX__
 #define kNtImageSymTypeNull             0x0000

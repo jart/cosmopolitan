@@ -25,7 +25,7 @@
 //         Sort for double-precision floating points. (2009).
 
 #define HIST_SIZE               (size_t)2048
-#define get_byte_0(v)           ((v)&0x7FF)
+#define get_byte_0(v)           ((v) & 0x7FF)
 #define get_byte_1(v)           (((v) >> 11) & 0x7FF)
 #define get_byte_2(v)           (((v) >> 22) & 0x7FF)
 #define get_byte_3(v)           (((v) >> 33) & 0x7FF)

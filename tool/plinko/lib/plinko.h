@@ -9,7 +9,7 @@ COSMOPOLITAN_C_START_
 
 #define LO(x)      (int)(x)
 #define HI(x)      (int)((x) >> 32)
-#define MASK(x)    ((x)-1u)
+#define MASK(x)    ((x) - 1u)
 #define ROR(x, k)  ((unsigned)(x) >> k | ((unsigned)(x) << (32 - k)))
 #define MAKE(l, h) (((unsigned)(l)) | (dword)(h) << 32)
 #define SHAD(i)    g_dispatch[(i) & (BANE | MASK(BANE))]

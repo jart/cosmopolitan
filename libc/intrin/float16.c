@@ -22,7 +22,7 @@
  */
 
 #define asint(x) ((union pun){x}).i
-#define isnan(x) (((x)&0x7fff) > 0x7c00)
+#define isnan(x) (((x) & 0x7fff) > 0x7c00)
 
 union pun {
   _Float16 f;
