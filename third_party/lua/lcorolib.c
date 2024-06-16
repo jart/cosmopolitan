@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lcorolib_c
 #define LUA_LIB
+
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
@@ -92,9 +93,9 @@ static int luaB_auxwrap (lua_State *L) {
   if (l_unlikely(r < 0)) {  /* error? */
     int stat = lua_status(co);
     if (stat != LUA_OK && stat != LUA_YIELD) {  /* error in the coroutine? */
-      stat = lua_resetthread(co);  /* close its tbc variables */
+      stat = lua_closethread(co, L);  /* close its tbc variables */
       lua_assert(stat != LUA_OK);
-      lua_xmove(co, L, 1);  /* copy error message */
+      lua_xmove(co, L, 1);  /* move error message to the caller */
     }
     if (stat != LUA_ERRMEM &&  /* not a memory error and ... */
         lua_type(L, -1) == LUA_TSTRING) {  /* ... error object is a string? */
@@ -188,14 +189,14 @@ static int luaB_close (lua_State *L) {
   int status = auxstatus(L, co);
   switch (status) {
     case COS_DEAD: case COS_YIELD: {
-      status = lua_resetthread(co);
+      status = lua_closethread(co, L);
       if (status == LUA_OK) {
         lua_pushboolean(L, 1);
         return 1;
       }
       else {
         lua_pushboolean(L, 0);
-        lua_xmove(co, L, 1);  /* copy error message */
+        lua_xmove(co, L, 1);  /* move error message */
         return 2;
       }
     }

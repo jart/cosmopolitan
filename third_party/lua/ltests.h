@@ -1,5 +1,6 @@
 #ifndef ltests_h
 #define ltests_h
+
 #include "third_party/lua/lua.h"
 
 
@@ -115,6 +116,13 @@ LUA_API void *debug_realloc (void *ud, void *block,
 
 #undef LUAI_USER_ALIGNMENT_T
 #define LUAI_USER_ALIGNMENT_T   union { char b[sizeof(void*) * 8]; }
+
+
+/*
+** This one is not compatible with tests for opcode optimizations,
+** as it blocks some optimizations
+#define MAXINDEXRK	0
+*/
 
 
 /* make stack-overflow tests run faster */

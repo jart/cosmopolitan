@@ -9,12 +9,12 @@ local function checkerror (msg, f, ...)
 end
 
 
-function f(s, p)
+local function f (s, p)
   local i,e = string.find(s, p)
   if i then return string.sub(s, i, e) end
 end
 
-a,b = string.find('', '')    -- empty patterns are tricky
+local a,b = string.find('', '')    -- empty patterns are tricky
 assert(a == 1 and b == 0);
 a,b = string.find('alo', '')
 assert(a == 1 and b == 0)
@@ -88,7 +88,7 @@ assert(f("alo alo", "%C+") == "alo alo")
 print('+')
 
 
-function f1(s, p)
+local function f1 (s, p)
   p = string.gsub(p, "%%([0-9])", function (s)
         return "%" .. (tonumber(s)+1)
        end)
@@ -113,7 +113,7 @@ local abc = string.char(range(0, 127)) .. string.char(range(128, 255));
 
 assert(string.len(abc) == 256)
 
-function strset (p)
+local function strset (p)
   local res = {s=''}
   string.gsub(abc, p, function (c) res.s = res.s .. c end)
   return res.s
@@ -147,7 +147,7 @@ assert(string.gsub('ülo ülo', 'ü', 'x') == 'xlo xlo')
 assert(string.gsub('alo úlo  ', ' +$', '') == 'alo úlo')  -- trim
 assert(string.gsub('  alo alo  ', '^%s*(.-)%s*$', '%1') == 'alo alo')  -- double trim
 assert(string.gsub('alo  alo  \n 123\n ', '%s+', ' ') == 'alo alo 123 ')
-t = "abç d"
+local t = "abç d"
 a, b = string.gsub(t, '(.)', '%1@')
 assert('@'..a == string.gsub(t, '', '@') and b == 5)
 a, b = string.gsub('abçd', '(.)', '%0@', 2)
@@ -184,6 +184,7 @@ do
   local function setglobal (n,v) rawset(_G, n, v) end
   string.gsub("a=roberto,roberto=a", "(%w+)=(%w%w*)", setglobal)
   assert(_G.a=="roberto" and _G.roberto=="a")
+  _G.a = nil; _G.roberto = nil
 end
 
 function f(a,b) return string.gsub(a,'.',b) end
@@ -195,20 +196,21 @@ assert(string.gsub("alo $a='x'$ novamente $return a$",
                    "$([^$]*)%$",
                    dostring) == "alo  novamente x")
 
-x = string.gsub("$x=string.gsub('alo', '.', string.upper)$ assim vai para $return x$",
+local x = string.gsub("$x=string.gsub('alo', '.', string.upper)$ assim vai para $return x$",
          "$([^$]*)%$", dostring)
 assert(x == ' assim vai para ALO')
+_G.a, _G.x = nil
 
-t = {}
-s = 'a alo jose  joao'
-r = string.gsub(s, '()(%w+)()', function (a,w,b)
-      assert(string.len(w) == b-a);
-      t[a] = b-a;
-    end)
+local t = {}
+local s = 'a alo jose  joao'
+local r = string.gsub(s, '()(%w+)()', function (a,w,b)
+             assert(string.len(w) == b-a);
+             t[a] = b-a;
+           end)
 assert(s == r and t[1] == 1 and t[3] == 3 and t[7] == 4 and t[13] == 4)
 
 
-function isbalanced (s)
+local function isbalanced (s)
   return not string.find(string.gsub(s, "%b()", ""), "[()]")
 end
 
@@ -251,7 +253,7 @@ if not _soft then
 end
 
 -- recursive nest of gsubs
-function rev (s)
+local function rev (s)
   return string.gsub(s, "(.)(.+)", function (c,s1) return rev(s1)..c end)
 end
 

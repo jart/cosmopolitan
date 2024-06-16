@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define loadlib_c
 #define LUA_LIB
+
 #include "libc/dlopen/dlfcn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -36,14 +37,16 @@
 #include "third_party/lua/lualib.h"
 __static_yoink("lua_notice");
 
+
 /*
-** This module contains an implementation of loadlib for Unix systems
+**
+** [jart] This module contains an implementation of loadlib for Unix systems
 ** that have dlfcn, an implementation for Windows, and a stub for other
 ** systems.
 */
 
 
-const char *g_lua_path_default = LUA_PATH_DEFAULT;
+const char *g_lua_path_default = LUA_PATH_DEFAULT;  // [jart]
 
 
 /*
@@ -728,8 +731,13 @@ static const luaL_Reg ll_funcs[] = {
 
 
 static void createsearcherstable (lua_State *L) {
-  static const lua_CFunction searchers[] =
-    {searcher_preload, searcher_Lua, searcher_C, searcher_Croot, NULL};
+  static const lua_CFunction searchers[] = {
+    searcher_preload,
+    searcher_Lua,
+    searcher_C,
+    searcher_Croot,
+    NULL
+  };
   int i;
   /* create 'searchers' table */
   lua_createtable(L, sizeof(searchers)/sizeof(searchers[0]) - 1, 0);
@@ -757,7 +765,7 @@ static void createclibstable (lua_State *L) {
 
 
 static const char *GetLuaPathDefault(void) {
-  return g_lua_path_default;
+  return g_lua_path_default;  // [jart]
 }
 
 

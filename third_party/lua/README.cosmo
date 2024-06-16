@@ -9,14 +9,14 @@ PROVENANCE
 
   https://github.com/lua/lua/
 
-  commit e7803f7dbcdc966ab1f9db143424ee811ab1a398
+  commit 6443185167c77adcc8552a3fee7edab7895db1a9
   Author: Roberto Ierusalimschy <roberto@inf.puc-rio.br>
-  Date:   Wed Mar 3 09:44:20 2021 -0300
+  Date:   May 2, 2023 at 3:44 PM EDT
 
-      New release number (5.4.3)
+      New release number (5.4.6)
 
   luac.c needed to be sourced from:
-  https://www.lua.org/ftp/lua-5.4.3.tar.gz
+  https://www.lua.org/ftp/lua-5.4.6.tar.gz
 
 LOCAL MODIFICATIONS
 
@@ -31,10 +31,130 @@ LOCAL MODIFICATIONS
   character. It may be used for teletypewriter control like having
   bold text, which can be encoded elegantly as `\e[1mHELLO\e[0m`.
 
+  Added Python-like printf modulus operator for strings, e.g.:
+  `"Hello, %s!" % {"world"}`.
+
+  Added Python-like printf multiply operator for strings, e.g.:
+  `"Hello, world! " * 3`.
+
+  Added `unix` module that exposes the low-level System Five system
+  call interface, e.g.: `require("unix"); print(unix.getcwd())`.
+
   Added luaL_traceback2() for function parameters in traceback.
 
-  Added Python-like printf modulus operator for strings.
-
-  Added Python-like printf multiply operator for strings.
-
   Fixed a buffer overflow in os.tmpname
+
+NOTES
+
+  If you'd like to update Cosmo's Lua to the latest version, here
+  are some things that might be helpful to know.
+
+  Cosmo's Lua adds ~20 or so files (e.g., `luacallwithtrace.c`, 
+  `luaencodejsondata.c`, `luaencodeluadata.c`, etc.) to the 
+  directory. In other words, a bunch of Cosmo's files don't
+  have any Lua counterpart.
+
+  Some of those files (e.g., `lunix.c`, `lunix.h`) implement 
+  functionality that's available within the `lua` that Cosmo builds;
+  most, though, implement functionality that's (currently?) only 
+  available within `redbean`. In other words, not everything can be
+  tested using `lua`; some things need to be tested using `redbean`.
+
+  Some of Lua's files were renamed. For example, `lua.c` was renamed
+  to `lua.main.c`, and `luac.c` (which is only available in Lua's
+  distributions, and not in Lua's Github repo) was renamed to 
+  `luac.main.c`. `ljumptab.h` was renamed to `ljumptab.inc`, and 
+  `lopnames.h` was renamed to `lopnames.inc`. In other words, you'll
+  need to take some kind of action in order to properly diff all of 
+  Lua's files.
+
+  Lua's `.h` files had the comment headers that look like this 
+  removed:
+
+    /*
+    ** $Id: lua.h $
+    ** Lua - A Scripting Language
+    ** Lua.org, PUC-Rio, Brazil (http://www.lua.org)
+    ** See Copyright Notice at the end of this file
+    */
+
+  Lua's `.c` files *replaced* those comment headers with a Cosmo
+  emacs/vim header followed by a Lua copyright declaration.
+
+  The `.c` files also added a `__static_yoink("lua_notice");`
+  right after the `#include`s.
+
+  Some of Lua's tests have been modified to accommodate Cosmo's
+  changes. (And some of Lua's tests have been commented out
+  due to Cosmo's changes.)
+
+  Five of Lua's test files intentionally contain ISO-8859-1 (rather
+  than  UTF-8) characters:
+
+  * test/db.lua
+  * test/files.lua
+  * test/pm.lua
+  * test/sort.lua
+  * test/strings.lua
+
+  If you edit those files as if they were UTF-8-encoded you'll
+  corrupt the ISO-8859-1 characters and cause certain tests to fail.
+  (Some of the tests count bytes, so you can't just fix the problem
+  by converting the files — you also have to change various expected 
+  results.)
+
+  The modifications listed way up above are really only the 
+  *user-visible* modifications. There are many that aren't 
+  user-visible. For example, `_longjmp` was replaced with 
+  `gclongjmp`, and `abort` was replaced, ultimately, with a 
+  call to `_Exit`.
+
+  To update Cosmo's Lua, you'll need to diff the latest Lua against
+  the previous Lua, and Cosmo's Lua against the latest Lua. As you
+  do that, you'll be trying to figure out both what Lua changed 
+  *and* what Cosmo changed; you'll be trying to add Lua's changes 
+  without accidentally removing Cosmo's changes. 
+  
+  It's tricky!
+
+  We've started to try to make that process a bit easier by tagging
+  Cosmo's changes with `[jart]`. For example, one side of the diff
+  might (now) show:
+
+    #define LUAI_THROW(L,c)		_longjmp((c)->b, 1)
+
+  while the other side might (now) show:
+
+    #define LUAI_THROW(L,c)		gclongjmp((c)->b, 1)  // [jart]
+
+  The presence of the `[jart]` tag makes it easy to see that the
+  Cosmo change was intentional.
+
+  Be aware that not all changes have been tagged!
+
+  There are *other* things we've done that are *also* meant to make
+  diffing easier — though the intention is less obvious.
+
+  For example, Cosmo moved the `enum` of opcodes from `ltm.h` to
+  `tms.h`. Originally nothing at all was left behind in `ltm.h`.
+  Because of that, you'd see an `enum` in Lua that seemed to be
+  missing in Cosmo's Lua — as though the `enum` had recently been 
+  added to Lua, and now needed to be added to Cosmo! To make the
+  intention of Cosmo's change more obvious, we added a tombstone 
+  of sorts to `ltm.h`:
+
+    /*
+    * WARNING: if you change the order of this enumeration,
+    * grep "ORDER TM" and "ORDER OP"
+    */
+    // [jart] moved to tms.h
+
+  The comment just above the tag comes from Lua; it's the comment
+  above Lua's original `enum`.  *The presence of the comment in both
+  Lua and Cosmo helps diff tools "resync" at that point.* That in
+  turn makes it easier to see Cosmo's change, and to see that it was 
+  intentional.
+
+  The more things like that we do — the easier we can make it to
+  quickly and correctly read diffs — the easier we'll make it to 
+  keep Cosmo's Lua in sync with the latest Lua.

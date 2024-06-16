@@ -1,9 +1,11 @@
 #ifndef lauxlib_h
 #define lauxlib_h
+
 #include "libc/assert.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+
 
 /* global table */
 #define LUA_GNAME	"_G"
@@ -91,7 +93,7 @@ LUALIB_API lua_State *(luaL_newstate) (void);
 
 LUALIB_API lua_Integer (luaL_len) (lua_State *L, int idx);
 
-LUALIB_API void luaL_addgsub (luaL_Buffer *b, const char *s,
+LUALIB_API void (luaL_addgsub) (luaL_Buffer *b, const char *s,
                                      const char *p, const char *r);
 LUALIB_API const char *(luaL_gsub) (lua_State *L, const char *s,
                                     const char *p, const char *r);
@@ -146,6 +148,14 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 #define luaL_loadbuffer(L,s,sz,n)	luaL_loadbufferx(L,s,sz,n,NULL)
 
 
+/*
+** Perform arithmetic operations on lua_Integer values with wrap-around
+** semantics, as the Lua core does.
+*/
+#define luaL_intop(op,v1,v2)  \
+	((lua_Integer)((lua_Unsigned)(v1) op (lua_Unsigned)(v2)))
+
+
 /* push the value used to represent failure/error */
 #define luaL_pushfail(L)	lua_pushnil(L)
 
@@ -158,6 +168,7 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 #if defined LUAI_ASSERT
   #define lua_assert(c)		assert(c)
 #else
+  // [jart]
   #define lua_assert(c)		unassert(c)
 #endif
 

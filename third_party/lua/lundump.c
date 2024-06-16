@@ -1,9 +1,30 @@
-/*
-** $Id: lundump.c $
-** load precompiled Lua chunks
-** See Copyright Notice in lua.h
-*/
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  Lua                                                                         │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define lundump_c
 #define LUA_CORE
 
@@ -18,6 +39,7 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lundump.h"
 #include "third_party/lua/lzio.h"
+__static_yoink("lua_notice");
 
 
 #if !defined(luai_verifycode)
@@ -115,10 +137,10 @@ static TString *loadStringN (LoadState *S, Proto *p) {
   }
   else {  /* long string */
     ts = luaS_createlngstrobj(L, size);  /* create string */
-    setsvalue2s(L, L->top, ts);  /* anchor it ('loadVector' can GC) */
+    setsvalue2s(L, L->top.p, ts);  /* anchor it ('loadVector' can GC) */
     luaD_inctop(L);
     loadVector(S, getstr(ts), size);  /* load directly in final place */
-    L->top--;  /* pop string */
+    L->top.p--;  /* pop string */
   }
   luaC_objbarrier(L, p, ts);
   return ts;
@@ -243,6 +265,8 @@ static void loadDebug (LoadState *S, Proto *f) {
     f->locvars[i].endpc = loadInt(S);
   }
   n = loadInt(S);
+  if (n != 0)  /* does it have debug information? */
+    n = f->sizeupvalues;  /* must be this many */
   for (i = 0; i < n; i++)
     f->upvalues[i].name = loadStringN(S, f);
 }
@@ -316,7 +340,7 @@ LClosure *luaU_undump(lua_State *L, ZIO *Z, const char *name) {
   S.Z = Z;
   checkHeader(&S);
   cl = luaF_newLclosure(L, loadByte(&S));
-  setclLvalue2s(L, L->top, cl);
+  setclLvalue2s(L, L->top.p, cl);
   luaD_inctop(L);
   cl->p = luaF_newproto(L);
   luaC_objbarrier(L, cl, cl->p);

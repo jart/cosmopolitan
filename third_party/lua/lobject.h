@@ -13,10 +13,13 @@
 #define LUA_TPROTO   (LUA_NUMTYPES + 1) /* function prototypes */
 #define LUA_TDEADKEY (LUA_NUMTYPES + 2) /* removed keys in tables */
 
+
+
 /*
 ** number of all possible types (including LUA_TNONE but excluding DEADKEY)
 */
 #define LUA_TOTALTYPES (LUA_TPROTO + 2)
+
 
 /*
 ** tags for Tagged Values have the following use of bits:
@@ -39,6 +42,8 @@ typedef union Value {
   lua_CFunction f; /* light C functions */
   lua_Integer i;   /* integer numbers */
   lua_Number n;    /* float numbers */
+  /* not used, but may avoid warnings for uninitialized value */
+  lu_byte ub;
 } Value;
 
 
@@ -55,7 +60,7 @@ typedef struct TValue {
 
 
 #define val_(o)		((o)->value_)
-#define valraw(o)	(&val_(o))
+#define valraw(o)	(val_(o))
 
 
 /* raw type tag of a TValue */
@@ -99,7 +104,7 @@ typedef struct TValue {
 #define settt_(o,t)	((o)->tt_=(t))
 
 
-/* main macro to copy values (from 'obj1' to 'obj2') */
+/* main macro to copy values (from 'obj2' to 'obj1') */
 #define setobj(L,obj1,obj2) \
 	{ TValue *io1=(obj1); const TValue *io2=(obj2); \
           io1->value_ = io2->value_; settt_(io1, io2->tt_); \
@@ -141,6 +146,17 @@ typedef union StackValue {
 
 /* index to stack elements */
 typedef StackValue *StkId;
+
+
+/*
+** When reallocating the stack, change all pointers to the stack into
+** proper offsets.
+*/
+typedef union {
+  StkId p;  /* actual pointer */
+  ptrdiff_t offset;  /* used while the stack is being reallocated */
+} StkIdRel;
+
 
 /* convert a 'StackValue' to a 'TValue' */
 #define s2v(o)	(&(o)->val)
@@ -602,8 +618,10 @@ typedef struct Proto {
 */
 typedef struct UpVal {
   CommonHeader;
-  lu_byte tbc;  /* true if it represents a to-be-closed variable */
-  TValue *v;  /* points to stack or to its own value */
+  union {
+    TValue *p;  /* points to stack or to its own value */
+    ptrdiff_t offset;  /* used while the stack is being reallocated */
+  } v;
   union {
     struct {  /* (when open) */
       struct UpVal *next;  /* linked list */
@@ -785,7 +803,7 @@ LUAI_FUNC void luaO_chunkid (char *out, const char *source, size_t srclen);
 ** Computes ceil(log2(x))
 */
 static inline int luaO_ceillog2 (unsigned int x) {
-  return --x ? bsr(x) + 1 : 0;
+  return --x ? _bsr(x) + 1 : 0;  // [jart]
 }
 
 #endif

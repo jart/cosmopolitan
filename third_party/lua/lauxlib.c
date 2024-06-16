@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lauxlib_c
 #define LUA_LIB
+
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
@@ -38,34 +39,34 @@ __static_yoink("lua_notice");
 
 
 /**
- * @fileoverview The Auxiliary Library
- *
- * The auxiliary library provides several convenient functions to interface C
- * with Lua. While the basic API provides the primitive functions for all
- * interactions between C and Lua, the auxiliary library provides
- * higher-level functions for some common tasks.
- *
- * All functions and types from the auxiliary library are defined in header
- * file lauxlib.h and have a prefix luaL_.
- *
- * All functions in the auxiliary library are built on top of the basic API,
- * and so they provide nothing that cannot be done with that API.
- * Nevertheless, the use of the auxiliary library ensures more consistency to
- * your code.
- *
- * Several functions in the auxiliary library use internally some extra stack
- * slots. When a function in the auxiliary library uses less than five slots,
- * it does not check the stack size; it simply assumes that there are enough
- * slots.
- *
- * Several functions in the auxiliary library are used to check C function
- * arguments. Because the error message is formatted for arguments (e.g.,
- * "bad argument #1"), you should not use these functions for other stack
- * values.
- *
- * Functions called luaL_check* always raise an error if the check is not
- * satisfied.
- */
+  * @fileoverview The Auxiliary Library
+  *
+  * The auxiliary library provides several convenient functions to interface C
+  * with Lua. While the basic API provides the primitive functions for all
+  * interactions between C and Lua, the auxiliary library provides
+  * higher-level functions for some common tasks.
+  *
+  * All functions and types from the auxiliary library are defined in header
+  * file lauxlib.h and have a prefix luaL_.
+  *
+  * All functions in the auxiliary library are built on top of the basic API,
+  * and so they provide nothing that cannot be done with that API.
+  * Nevertheless, the use of the auxiliary library ensures more consistency to
+  * your code.
+  *
+  * Several functions in the auxiliary library use internally some extra stack
+  * slots. When a function in the auxiliary library uses less than five slots,
+  * it does not check the stack size; it simply assumes that there are enough
+  * slots.
+  *
+  * Several functions in the auxiliary library are used to check C function
+  * arguments. Because the error message is formatted for arguments (e.g.,
+  * "bad argument #1"), you should not use these functions for other stack
+  * values.
+  *
+  * Functions called luaL_check* always raise an error if the check is not
+  * satisfied.
+  */
 
 
 #if !defined(MAX_SIZET)
@@ -191,21 +192,21 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
   while (lua_getstack(L1, level++, &ar)) {
     if (limit2show-- == 0) {  /* too many levels? */
       int n = last - level - LEVELS2 + 1;  /* number of levels to skip */
-      lua_pushfstring(L, "\n...(skipping %d levels)", n);
+      lua_pushfstring(L, "\n\t...\t(skipping %d levels)", n);
       luaL_addvalue(&b);  /* add warning about skip */
       level += n;  /* and skip to last levels */
     }
     else {
       lua_getinfo(L1, "Slnt", &ar);
       if (ar.currentline <= 0)
-        lua_pushfstring(L, "\n%s: in ", ar.short_src);
+        lua_pushfstring(L, "\n\t%s: in ", ar.short_src);
       else
-        lua_pushfstring(L, "\n%s:%d: in ", ar.short_src, ar.currentline);
+        lua_pushfstring(L, "\n\t%s:%d: in ", ar.short_src, ar.currentline);
       luaL_addvalue(&b);
       pushfuncname(L, &ar);
       luaL_addvalue(&b);
       if (ar.istailcall)
-        luaL_addstring(&b, "\n(...tail calls...)");
+        luaL_addstring(&b, "\n\t(...tail calls...)");
     }
   }
   luaL_pushresult(&b);
@@ -764,13 +765,14 @@ static void newbox (lua_State *L) {
 
 /*
 ** Compute new size for buffer 'B', enough to accommodate extra 'sz'
-** bytes.
+** bytes. (The test for "not big enough" also gets the case when the
+** computation of 'newsize' overflows.)
 */
 static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
-  size_t newsize = B->size * 2;  /* double buffer size */
+  size_t newsize = (B->size / 2) * 3;  /* buffer size * 1.5 */
   if (l_unlikely(MAX_SIZET - sz < B->n))  /* overflow in (B->n + sz)? */
     return luaL_error(B->L, "buffer too large");
-  if (newsize < B->n + sz)  /* double is not big enough? */
+  if (newsize < B->n + sz)  /* not big enough? */
     newsize = B->n + sz;
   return newsize;
 }
@@ -872,7 +874,7 @@ LUALIB_API void luaL_pushresultsize (luaL_Buffer *B, size_t sz) {
 ** box (if existent) is not on the top of the stack. So, instead of
 ** calling 'luaL_addlstring', it replicates the code using -2 as the
 ** last argument to 'prepbuffsize', signaling that the box is (or will
-** be) bellow the string being added to the buffer. (Box creation can
+** be) below the string being added to the buffer. (Box creation can
 ** trigger an emergency GC, so we should not remove the string from the
 ** stack before we have the space guaranteed.)
 */
@@ -1020,17 +1022,18 @@ static int errfile (lua_State *L, const char *what, int fnameindex) {
 }
 
 
-static int skipBOM (LoadF *lf) {
-  const char *p = "\xEF\xBB\xBF";  /* UTF-8 BOM mark */
-  int c;
-  lf->n = 0;
-  do {
-    c = getc(lf->f);
-    if (c == EOF || c != *(const unsigned char *)p++) return c;
-    lf->buff[lf->n++] = c;  /* to be read by the parser */
-  } while (*p != '\0');
-  lf->n = 0;  /* prefix matched; discard it */
-  return getc(lf->f);  /* return next character */
+/*
+** Skip an optional BOM at the start of a stream. If there is an
+** incomplete BOM (the first character is correct but the rest is
+** not), returns the first character anyway to force an error
+** (as no chunk can start with 0xEF).
+*/
+static int skipBOM (FILE *f) {
+  int c = getc(f);  /* read first character */
+  if (c == 0xEF && getc(f) == 0xBB && getc(f) == 0xBF)  /* correct BOM? */
+    return getc(f);  /* ignore BOM and return next char */
+  else  /* no (valid) BOM */
+    return c;  /* return first character */
 }
 
 
@@ -1041,13 +1044,13 @@ static int skipBOM (LoadF *lf) {
 ** first "valid" character of the file (after the optional BOM and
 ** a first-line comment).
 */
-static int skipcomment (LoadF *lf, int *cp) {
-  int c = *cp = skipBOM(lf);
+static int skipcomment (FILE *f, int *cp) {
+  int c = *cp = skipBOM(f);
   if (c == '#') {  /* first line is a comment (Unix exec. file)? */
     do {  /* skip first line */
-      c = getc(lf->f);
+      c = getc(f);
     } while (c != EOF && c != '\n');
-    *cp = getc(lf->f);  /* skip end-of-line, if present */
+    *cp = getc(f);  /* next character after comment, if present */
     return 1;  /* there was a comment */
   }
   else return 0;  /* no comment */
@@ -1084,12 +1087,16 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
     lf.f = fopen(filename, "r");
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
   }
-  if (skipcomment(&lf, &c))  /* read initial portion */
-    lf.buff[lf.n++] = '\n';  /* add line to correct line numbers */
-  if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
+  lf.n = 0;
+  if (skipcomment(lf.f, &c))  /* read initial portion */
+    lf.buff[lf.n++] = '\n';  /* add newline to correct line numbers */
+  if (c == LUA_SIGNATURE[0]) {  /* binary file? */
+    lf.n = 0;  /* remove possible newline */
+    if (filename) {  /* "real" file? */
     lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
     if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
-    skipcomment(&lf, &c);  /* re-read initial portion */
+      skipcomment(lf.f, &c);  /* re-read initial portion */
+    }
   }
   if (c != EOF)
     lf.buff[lf.n++] = c;  /* 'c' is the first character of the stream */
@@ -1236,6 +1243,7 @@ LUALIB_API lua_Integer luaL_len (lua_State *L, int idx) {
  * the result of the call as its result.
  */
 LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
+  idx = lua_absindex(L,idx);
   if (luaL_callmeta(L, idx, "__tostring")) {  /* metafield? */
     if (!lua_isstring(L, -1))
       luaL_error(L, "'__tostring' must return a string");

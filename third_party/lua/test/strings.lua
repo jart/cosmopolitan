@@ -52,7 +52,7 @@ assert(("\000123456789"):sub(8) == "789")
 
 -- testing string.find
 assert(string.find("123456789", "345") == 3)
-a,b = string.find("123456789", "345")
+local a,b = string.find("123456789", "345")
 assert(string.sub("123456789", a, b) == "345")
 assert(string.find("1234567890123456789", "345", 3) == 3)
 assert(string.find("1234567890123456789", "345", 4) == 13)
@@ -192,7 +192,7 @@ do  -- tests for '%p' format
   end
 end
 
-x = '"ílo"\n\\'
+local x = '"ílo"\n\\'
 assert(string.format('%q%s', x, x) == '"\\"ílo\\"\\\n\\\\""ílo"\n\\')
 assert(string.format('%q', "\0") == [["\0"]])
 assert(load(string.format('return %q', x))() == x)
@@ -202,13 +202,11 @@ assert(string.format("\0%c\0%c%x\0", string.byte("\xe4"), string.byte("b"), 140)
               "\0\xe4\0b8c\0")
 assert(string.format('') == "")
 assert(string.format("%c",34)..string.format("%c",48)..string.format("%c",90)..string.format("%c",100) ==
-       string.format("%c%c%c%c", 34, 48, 90, 100))
+       string.format("%1c%-c%-1c%c", 34, 48, 90, 100))
 assert(string.format("%s\0 is not \0%s", 'not be', 'be') == 'not be\0 is not \0be')
 assert(string.format("%%%d %010d", 10, 23) == "%10 0000000023")
 assert(tonumber(string.format("%f", 10.3)) == 10.3)
-x = string.format('"%-50s"', 'a')
-assert(#x == 52)
-assert(string.sub(x, 1, 4) == '"a  ')
+assert(string.format('"%-50s"', 'a') == '"a' .. string.rep(' ', 49) .. '"')
 
 assert(string.format("-%.20s.20s", string.rep("%", 2000)) ==
                      "-"..string.rep("%", 20)..".20s")
@@ -237,7 +235,6 @@ end
 
 assert(string.format("\0%s\0", "\0\0\1") == "\0\0\0\1\0")
 checkerror("contains zeros", string.format, "%10s", "\0")
-checkerror("cannot have modifiers", string.format, "%10q", "1")
 
 -- format x tostring
 assert(string.format("%s %s", nil, true) == "nil true")
@@ -341,6 +338,26 @@ do print("testing 'format %a %A'")
 end
 
 
+-- testing some flags  (all these results are required by ISO C)
+assert(string.format("%#12o", 10) == "         012")
+assert(string.format("%#10x", 100) == "      0x64")
+assert(string.format("%#-17X", 100) == "0X64             ")
+assert(string.format("%013i", -100) == "-000000000100")
+assert(string.format("%2.5d", -100) == "-00100")
+assert(string.format("%.u", 0) == "")
+assert(string.format("%+#014.0f", 100) == "+000000000100.")
+assert(string.format("%-16c", 97) == "a               ")
+assert(string.format("%+.3G", 1.5) == "+1.5")
+assert(string.format("%.0s", "alo")  == "")
+assert(string.format("%.s", "alo")  == "")
+
+-- ISO C89 says that "The exponent always contains at least two digits",
+-- but unlike ISO C99 it does not ensure that it contains "only as many
+-- more digits as necessary".
+assert(string.match(string.format("% 1.0E", 100), "^ 1E%+0+2$"))
+assert(string.match(string.format("% .1g", 2^10), "^ 1e%+0+3$"))
+
+
 -- errors in format
 
 local function check (fmt, msg)
@@ -348,13 +365,21 @@ local function check (fmt, msg)
 end
 
 local aux = string.rep('0', 600)
-check("%100.3d", "too long")
+check("%100.3d", "invalid conversion")
 check("%1"..aux..".3d", "too long")
-check("%1.100d", "too long")
+check("%1.100d", "invalid conversion")
 check("%10.1"..aux.."004d", "too long")
 check("%t", "invalid conversion")
-check("%"..aux.."d", "repeated flags")
+check("%"..aux.."d", "too long")
 check("%d %d", "no value")
+check("%010c", "invalid conversion")
+check("%.10c", "invalid conversion")
+check("%0.34s", "invalid conversion")
+check("%#i", "invalid conversion")
+check("%3.1p", "invalid conversion")
+check("%0.s", "invalid conversion")
+check("%10q", "cannot have modifiers")
+check("%F", "invalid conversion")   -- useless and not in C89
 
 
 assert(load("return 1\n--comment without ending EOL")() == 1)
@@ -427,7 +452,7 @@ end
 do
   local f = string.gmatch("1 2 3 4 5", "%d+")
   assert(f() == "1")
-  co = coroutine.wrap(f)
+  local co = coroutine.wrap(f)
   assert(co() == "2")
 end
 

@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define llex_c
 #define LUA_CORE
+
 #include "third_party/lua/llex.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
@@ -142,7 +143,7 @@ l_noret luaX_syntaxerror (LexState *ls, const char *msg) {
 ** ensuring there is only one copy of each unique string.  The table
 ** here is used as a set: the string enters as the key, while its value
 ** is irrelevant. We use the string itself as the value only because it
-** is a TValue readly available. Later, the code generation can change
+** is a TValue readily available. Later, the code generation can change
 ** this value.
 */
 TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
@@ -152,12 +153,12 @@ TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
   if (!ttisnil(o))  /* string already present? */
     ts = keystrval(nodefromval(o));  /* get saved copy */
   else {  /* not in use yet */
-    TValue *stv = s2v(L->top++);  /* reserve stack space for string */
+    TValue *stv = s2v(L->top.p++);  /* reserve stack space for string */
     setsvalue(L, stv, ts);  /* temporarily anchor the string */
     luaH_finishset(L, ls->h, stv, o, stv);  /* t[string] = string */
     /* table is not a metatable, so it does not need to invalidate cache */
     luaC_checkGC(L);
-    L->top--;  /* remove string from stack */
+    L->top.p--;  /* remove string from stack */
   }
   return ts;
 }
@@ -408,9 +409,9 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
         int c;  /* final character to be saved */
         save_and_next(ls);  /* keep '\\' for error messages */
         switch (ls->current) {
-          case 'e': c = '\e'; goto read_save;
           case 'a': c = '\a'; goto read_save;
           case 'b': c = '\b'; goto read_save;
+          case 'e': c = '\e'; goto read_save;  // [jart]
           case 'f': c = '\f'; goto read_save;
           case 'n': c = '\n'; goto read_save;
           case 'r': c = '\r'; goto read_save;

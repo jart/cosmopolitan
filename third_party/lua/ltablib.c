@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Lua                                                                         │
-│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│  Copyright © 2004-2023 Lua.org, PUC-Rio.                                     │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ltablib_c
 #define LUA_LIB
+
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/str/str.h"
@@ -76,8 +77,9 @@ static void checktab (lua_State *L, int arg, int what) {
 
 
 static int tinsert (lua_State *L) {
-  lua_Integer e = aux_getn(L, 1, TAB_RW) + 1;  /* first empty element */
   lua_Integer pos;  /* where to insert new element */
+  lua_Integer e = aux_getn(L, 1, TAB_RW);
+  e = luaL_intop(+, e, 1);  /* first empty element */
   switch (lua_gettop(L)) {
     case 2: {  /* called with only 2 arguments */
       pos = e;  /* insert new element at the end */
@@ -109,7 +111,7 @@ static int tremove (lua_State *L) {
   lua_Integer pos = luaL_optinteger(L, 2, size);
   if (pos != size)  /* validate 'pos' if given */
     /* check whether 'pos' is in [1, size + 1] */
-    luaL_argcheck(L, (lua_Unsigned)pos - 1u <= (lua_Unsigned)size, 1,
+    luaL_argcheck(L, (lua_Unsigned)pos - 1u <= (lua_Unsigned)size, 2,
                      "position out of bounds");
   lua_geti(L, 1, pos);  /* result = t[pos] */
   for ( ; pos < size; pos++) {
@@ -164,7 +166,7 @@ static void addfield (lua_State *L, luaL_Buffer *b, lua_Integer i) {
   lua_geti(L, 1, i);
   if (l_unlikely(!lua_isstring(L, -1)))
     luaL_error(L, "invalid value (%s) at index %I in table for 'concat'",
-                  luaL_typename(L, -1), i);
+                  luaL_typename(L, -1), (LUAI_UACINT)i);
   luaL_addvalue(b);
 }
 

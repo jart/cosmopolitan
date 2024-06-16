@@ -1,6 +1,7 @@
 #ifndef lprefix_h
 #define lprefix_h
 
+
 /*
 ** Allows POSIX/XSI stuff
 */
@@ -21,6 +22,7 @@
 #endif
 
 #endif /* } */
+
 
 /*
 ** Windows stuff

@@ -1,6 +1,8 @@
 #ifndef lctype_h
 #define lctype_h
+
 #include "third_party/lua/lua.h"
+
 
 /*
 ** In ASCII, this 'ltolower' is correct for alphabetic characters and
@@ -12,6 +14,7 @@
   check_exp(('A' <= (c) && (c) <= 'Z') || (c) == ((c) | ('A' ^ 'a')), \
             (c) | ('A' ^ 'a'))
 
+// [jart]
 #define lisdigit(C)         \
   ({                        \
     unsigned char c_ = (C); \

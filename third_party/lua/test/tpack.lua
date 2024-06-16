@@ -35,7 +35,7 @@ print("\talignment: " .. align)
 
 
 -- check errors in arguments
-function checkerror (msg, f, ...)
+local function checkerror (msg, f, ...)
   local status, err = pcall(f, ...)
   -- print(status, err, msg)
   assert(not status and string.find(err, msg))
