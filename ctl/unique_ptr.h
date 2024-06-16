@@ -71,7 +71,7 @@ struct unique_ptr
 
     inline void reset(nullptr_t = nullptr) noexcept
     {
-        if (*this)
+        if (p)
             d(p);
         p = nullptr;
     }
@@ -81,7 +81,7 @@ struct unique_ptr
     /* requires is_convertible_v<U, T> */
     inline void reset(U* p2)
     {
-        if (*this) {
+        if (p) {
             d(p);
         }
         p = static_cast<pointer>(p2);
@@ -117,14 +117,14 @@ struct unique_ptr
     inline element_type& operator*() const
       noexcept(noexcept(*std::declval<pointer>()))
     {
-        if (!*this)
+        if (!p)
             __builtin_trap();
         return *p;
     }
 
     inline pointer operator->() const noexcept
     {
-        if (!*this)
+        if (!p)
             __builtin_trap();
         return p;
     }
