@@ -8,8 +8,7 @@ namespace ctl {
 
 class string;
 
-string
-strcat(const string_view, const string_view) noexcept __wur;
+string strcat(string_view, string_view) noexcept __wur;
 
 namespace __ {
 
@@ -50,7 +49,7 @@ class string
     static constexpr size_t npos = -1;
 
     ~string() /* noexcept */;
-    string(const string_view) noexcept;
+    string(string_view) noexcept;
     string(const char*) noexcept;
     string(const string&) noexcept;
     string(const char*, size_t) noexcept;
@@ -67,17 +66,17 @@ class string
     void append(char, size_t) noexcept;
     void append(unsigned long) noexcept;
     void append(const void*, size_t) noexcept;
-    string& insert(size_t, const string_view) noexcept;
+    string& insert(size_t, string_view) noexcept;
     string& erase(size_t = 0, size_t = npos) noexcept;
     string substr(size_t = 0, size_t = npos) const noexcept;
-    string& replace(size_t, size_t, const string_view&) noexcept;
-    bool operator==(const string_view) const noexcept;
-    bool operator!=(const string_view) const noexcept;
-    bool contains(const string_view) const noexcept;
-    bool ends_with(const string_view) const noexcept;
-    bool starts_with(const string_view) const noexcept;
+    string& replace(size_t, size_t, string_view) noexcept;
+    bool operator==(string_view) const noexcept;
+    bool operator!=(string_view) const noexcept;
+    bool contains(string_view) const noexcept;
+    bool ends_with(string_view) const noexcept;
+    bool starts_with(string_view) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
-    size_t find(const string_view, size_t = 0) const noexcept;
+    size_t find(string_view, size_t = 0) const noexcept;
 
     string() noexcept
     {
@@ -202,14 +201,14 @@ class string
         return data()[i];
     }
 
-    const char& operator[](size_t i) const noexcept
+    const char& operator[](const size_t i) const noexcept
     {
         if (i >= size())
             __builtin_trap();
         return data()[i];
     }
 
-    void push_back(char ch) noexcept
+    void push_back(const char ch) noexcept
     {
         append(ch);
     }
@@ -238,7 +237,7 @@ class string
         return *this;
     }
 
-    string& operator+=(char x) noexcept
+    string& operator+=(const char x) noexcept
     {
         append(x);
         return *this;
@@ -286,14 +285,16 @@ class string
         return *(blob + __::sso_max) & 0x80;
     }
 
-    inline void set_small_size(size_t size) noexcept
+    inline void set_small_size(const size_t size) noexcept
     {
         if (size > __::sso_max)
             __builtin_trap();
         *(blob + __::sso_max) = (__::sso_max - size);
     }
 
-    inline void set_big_string(char* p, size_t n, size_t c2) noexcept
+    inline void set_big_string(char* const p,
+                               const size_t n,
+                               const size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
@@ -330,7 +331,7 @@ class string
         return reinterpret_cast<const __::big_string*>(blob);
     }
 
-    friend string strcat(const string_view, const string_view);
+    friend string strcat(string_view, string_view);
 
     alignas(union {
         __::big_string a;
