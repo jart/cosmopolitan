@@ -2,7 +2,9 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_UNIQUE_PTR_H_
 #define COSMOPOLITAN_CTL_UNIQUE_PTR_H_
-#include "compressed_pair.h"
+#include <__utility/forward.h>
+#include <__utility/move.h>
+#include <__utility/swap.h>
 
 namespace ctl {
 
@@ -22,25 +24,25 @@ struct unique_ptr
     using element_type = T;
     using deleter_type = D;
 
-    compressed_pair<pointer, D> d;
+    pointer p;
+    [[no_unique_address]] deleter_type d;
 
-    constexpr unique_ptr(nullptr_t = nullptr) noexcept : d(nullptr, D{})
+    constexpr unique_ptr(nullptr_t = nullptr) noexcept : p(nullptr)
     {
     }
 
-    constexpr unique_ptr(pointer p) noexcept : d(p, D{})
+    constexpr unique_ptr(pointer p) noexcept : p(p)
     {
     }
 
     constexpr unique_ptr(pointer p, auto&& d) noexcept
-      : d(p, std::forward<decltype(d)>(d))
+      : p(p), d(std::forward<decltype(d)>(d))
     {
     }
 
-    constexpr unique_ptr(unique_ptr&& u) noexcept
-      : d(u.d.first(), std::move(u.d.second()))
+    constexpr unique_ptr(unique_ptr&& u) noexcept : p(u.p), d(std::move(u.d))
     {
-        u.d.first() = nullptr;
+        u.p = nullptr;
     }
 
     // TODO(mrdomino):
@@ -62,16 +64,16 @@ struct unique_ptr
 
     inline pointer release() noexcept
     {
-        pointer r = d.first();
-        d.first() = nullptr;
+        pointer r = p;
+        p = nullptr;
         return r;
     }
 
     inline void reset(nullptr_t = nullptr) noexcept
     {
         if (*this)
-            d.second()(d.first());
-        d.first() = nullptr;
+            d(p);
+        p = nullptr;
     }
 
     template<typename U>
@@ -80,35 +82,36 @@ struct unique_ptr
     inline void reset(U* p2)
     {
         if (*this) {
-            d.second()(d.first());
+            d(p);
         }
-        d.first() = static_cast<pointer>(p2);
+        p = static_cast<pointer>(p2);
     }
 
     inline void swap(unique_ptr& r) noexcept
     {
         using std::swap;
+        swap(p, r.p);
         swap(d, r.d);
     }
 
     inline pointer get() const noexcept
     {
-        return d.first();
+        return p;
     }
 
     inline deleter_type& get_deleter() noexcept
     {
-        return d.second();
+        return d;
     }
 
     inline const deleter_type& get_deleter() const noexcept
     {
-        return d.second();
+        return d;
     }
 
     inline explicit operator bool() const noexcept
     {
-        return d.first();
+        return p;
     }
 
     inline element_type& operator*() const
@@ -116,14 +119,14 @@ struct unique_ptr
     {
         if (!*this)
             __builtin_trap();
-        return *d.first();
+        return *p;
     }
 
     inline pointer operator->() const noexcept
     {
         if (!*this)
             __builtin_trap();
-        return d.first();
+        return p;
     }
 };
 
