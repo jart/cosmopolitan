@@ -3,6 +3,7 @@
 #ifndef COSMOPOLITAN_CTL_COMPRESSED_PAIR_H_
 #define COSMOPOLITAN_CTL_COMPRESSED_PAIR_H_
 #include <__type_traits/is_empty.h>
+#include <__type_traits/is_final.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <__utility/swap.h>
@@ -12,7 +13,7 @@ namespace ctl {
 namespace __ {
 
 template<typename T>
-concept Empty = std::is_empty_v<T>;
+concept EmptyBase = std::is_empty_v<T> && !std::is_final_v<T>;
 
 template<typename T, int I>
 struct pair_elem
@@ -37,7 +38,7 @@ struct pair_elem
     T t;
 };
 
-template<Empty T, int I>
+template<EmptyBase T, int I>
 struct pair_elem<T, I> : private T
 {
     using value_type = T;

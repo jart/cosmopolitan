@@ -54,6 +54,21 @@ struct SetsGDeleter
     }
 };
 
+struct FinalDeleter final
+{
+    void operator()(auto*) const noexcept
+    {
+    }
+};
+
+struct StatefulDeleter
+{
+    char state;
+    void operator()(auto*) const noexcept
+    {
+    }
+};
+
 static_assert(sizeof(Ptr<int, SetsGDeleter>) == sizeof(int*));
 
 struct SetsGCtor
@@ -184,6 +199,13 @@ main()
             return 16;
     }
 #endif
+
+    {
+        int a;
+        // Should compile.
+        Ptr<int, FinalDeleter> x(&a);
+        Ptr<int, StatefulDeleter> y(&a);
+    }
 
     // next is 18
 
