@@ -87,7 +87,7 @@ class string
 
     void swap(string& s) noexcept
     {
-        std::swap(blob, s.blob);
+        ctl::swap(blob, s.blob);
     }
 
     string(string&& s) noexcept

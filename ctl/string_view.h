@@ -2,7 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_STRINGVIEW_H_
 #define COSMOPOLITAN_CTL_STRINGVIEW_H_
-#include <__utility/swap.h>
+#include "utility.h"
 
 namespace ctl {
 
