@@ -9,10 +9,6 @@ documentation:
             - libc/README.md
             - tool/cosmocc/README.md
             - third_party/getopt/README.txt
-testing:
-    - changed-files:
-        - any-glob-to-any-file:
-            - test/**
 build:
     - changed-files:
         - any-glob-to-any-file:
