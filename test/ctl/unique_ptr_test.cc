@@ -54,13 +54,6 @@ struct SetsGDeleter
     }
 };
 
-struct FinalDeleter final
-{
-    void operator()(auto*) const noexcept
-    {
-    }
-};
-
 struct StatefulDeleter
 {
     char state;
@@ -69,7 +62,18 @@ struct StatefulDeleter
     }
 };
 
+struct FinalDeleter final
+{
+    void operator()(auto*) const noexcept
+    {
+    }
+};
+
 static_assert(sizeof(Ptr<int, SetsGDeleter>) == sizeof(int*));
+
+// not everyone uses [[no_unique_address]]...
+static_assert(!std::is_same_v<Ptr<int>, ctl::unique_ptr<int>> ||
+              sizeof(Ptr<int, FinalDeleter>) == sizeof(int*));
 
 struct SetsGCtor
 {
