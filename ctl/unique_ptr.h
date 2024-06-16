@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_UNIQUE_PTR_H_
 #define COSMOPOLITAN_CTL_UNIQUE_PTR_H_
+#include <__type_traits/is_convertible.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <__utility/swap.h>
@@ -11,9 +12,28 @@ namespace ctl {
 template<typename T>
 struct default_delete
 {
-    constexpr void operator()(T* p) const noexcept
+    constexpr default_delete() noexcept = default;
+    template<typename U>
+    constexpr default_delete(default_delete<U>&&) noexcept
+    {
+    }
+    constexpr void operator()(T* const p) const noexcept
     {
         delete p;
+    }
+};
+
+template<typename T>
+struct default_delete<T[]>
+{
+    constexpr default_delete() noexcept = default;
+    template<typename U>
+    constexpr default_delete(default_delete<U>&&) noexcept
+    {
+    }
+    constexpr void operator()(T* const p) const noexcept
+    {
+        delete[] p;
     }
 };
 
@@ -27,102 +47,97 @@ struct unique_ptr
     pointer p;
     [[no_unique_address]] deleter_type d;
 
-    constexpr unique_ptr(nullptr_t = nullptr) noexcept : p(nullptr)
+    constexpr unique_ptr(const nullptr_t = nullptr) noexcept : p(nullptr), d()
     {
     }
 
-    constexpr unique_ptr(pointer p) noexcept : p(p)
+    constexpr unique_ptr(const pointer p) noexcept : p(p), d()
     {
     }
 
-    constexpr unique_ptr(pointer p, auto&& d) noexcept
+    constexpr unique_ptr(auto* const p, auto&& d) noexcept
       : p(p), d(std::forward<decltype(d)>(d))
     {
     }
 
-    constexpr unique_ptr(unique_ptr&& u) noexcept : p(u.p), d(std::move(u.d))
+    template<typename U, typename E>
+        requires std::is_convertible_v<U, T> && std::is_convertible_v<E, D>
+    constexpr unique_ptr(unique_ptr<U, E>&& u) noexcept
+      : p(u.p), d(std::move(u.d))
     {
         u.p = nullptr;
     }
 
-    // TODO(mrdomino):
-    // template <typename U, typename E>
-    // unique_ptr(unique_ptr<U, E>&& u) noexcept;
-
     unique_ptr(const unique_ptr&) = delete;
 
-    inline ~unique_ptr() /* noexcept */
+    ~unique_ptr() /* noexcept */
     {
         reset();
     }
 
-    inline unique_ptr& operator=(unique_ptr r) noexcept
+    unique_ptr& operator=(unique_ptr r) noexcept
     {
         swap(r);
         return *this;
     }
 
-    inline pointer release() noexcept
+    pointer release() noexcept
     {
         pointer r = p;
         p = nullptr;
         return r;
     }
 
-    inline void reset(nullptr_t = nullptr) noexcept
+    void reset(const nullptr_t = nullptr) noexcept
     {
         if (p)
             d(p);
         p = nullptr;
     }
 
-    template<typename U>
-    // TODO(mrdomino):
-    /* requires is_convertible_v<U, T> */
-    inline void reset(U* p2)
+    void reset(auto* const p2)
     {
         if (p) {
             d(p);
         }
-        p = static_cast<pointer>(p2);
+        p = p2;
     }
 
-    inline void swap(unique_ptr& r) noexcept
+    void swap(unique_ptr& r) noexcept
     {
         using std::swap;
         swap(p, r.p);
         swap(d, r.d);
     }
 
-    inline pointer get() const noexcept
+    pointer get() const noexcept
     {
         return p;
     }
 
-    inline deleter_type& get_deleter() noexcept
+    deleter_type& get_deleter() noexcept
     {
         return d;
     }
 
-    inline const deleter_type& get_deleter() const noexcept
+    const deleter_type& get_deleter() const noexcept
     {
         return d;
     }
 
-    inline explicit operator bool() const noexcept
+    explicit operator bool() const noexcept
     {
         return p;
     }
 
-    inline element_type& operator*() const
-      noexcept(noexcept(*std::declval<pointer>()))
+    element_type& operator*() const noexcept(noexcept(*std::declval<pointer>()))
     {
         if (!p)
             __builtin_trap();
         return *p;
     }
 
-    inline pointer operator->() const noexcept
+    pointer operator->() const noexcept
     {
         if (!p)
             __builtin_trap();
@@ -131,14 +146,14 @@ struct unique_ptr
 };
 
 template<typename T, typename... Args>
-inline unique_ptr<T>
+unique_ptr<T>
 make_unique(Args&&... args)
 {
     return unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 template<typename T>
-inline unique_ptr<T>
+unique_ptr<T>
 make_unique_for_overwrite()
 {
 #if 0
