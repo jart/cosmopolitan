@@ -3,6 +3,7 @@
 #ifndef COSMOPOLITAN_CTL_NEW_H_
 #define COSMOPOLITAN_CTL_NEW_H_
 
+// XXX clang-format currently mutilates these for some reason.
 // clang-format off
 
 namespace ctl {
