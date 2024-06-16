@@ -87,10 +87,7 @@ class string
 
     void swap(string& s) noexcept
     {
-        char tmp[__::string_size];
-        __builtin_memcpy(tmp, blob, __::string_size);
-        __builtin_memcpy(blob, s.blob, __::string_size);
-        __builtin_memcpy(s.blob, tmp, __::string_size);
+        std::swap(blob, s.blob);
     }
 
     string(string&& s) noexcept
