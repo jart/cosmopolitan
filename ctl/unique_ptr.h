@@ -69,7 +69,7 @@ struct unique_ptr
 
     inline void reset(nullptr_t = nullptr) noexcept
     {
-        if (d.first())
+        if (*this)
             d.second()(d.first());
         d.first() = nullptr;
     }
@@ -79,7 +79,7 @@ struct unique_ptr
     /* requires is_convertible_v<U, T> */
     inline void reset(U* p2)
     {
-        if (d.first()) {
+        if (*this) {
             d.second()(d.first());
         }
         d.first() = static_cast<pointer>(p2);
