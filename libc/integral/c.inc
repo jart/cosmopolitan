@@ -74,7 +74,7 @@
 #endif
 
 #if __STDC_VERSION__ + 0 < 201112
-#define _Atomic(t) volatile t *
+#define _Atomic(t) volatile t
 #endif
 
 #ifdef __llvm__
