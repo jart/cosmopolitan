@@ -25,6 +25,7 @@ struct shared_control
     constexpr shared_control() noexcept : shared(0), weak(0)
     {
     }
+    shared_control(const shared_control&) = delete;
     virtual ~shared_control()
     {
     }
