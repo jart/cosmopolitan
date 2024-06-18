@@ -48,7 +48,7 @@ struct shared_pointer : shared_control
 
     static shared_pointer* make(T* p)
     {
-        auto p2 = unique_ptr<T>(p);
+        auto p2 = unique_ptr(p);
         auto r = new shared_pointer(p2.release());
         return r;
     }
