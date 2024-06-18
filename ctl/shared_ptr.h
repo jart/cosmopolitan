@@ -48,7 +48,9 @@ struct shared_pointer : shared_control
 
     static shared_pointer* make(T* p)
     {
-        return new shared_pointer(p);
+        auto p2 = unique_ptr<T>(p);
+        auto r = new shared_pointer(p2.release());
+        return r;
     }
 
   private:
@@ -85,11 +87,8 @@ class shared_ptr
       : p(nullptr), ctl(nullptr)
     {
     }
-    shared_ptr(T* const p2)
+    shared_ptr(T* const p) : p(p), ctl(__::shared_pointer<T>::make(p))
     {
-        auto hold = ctl::unique_ptr(p2);
-        ctl = __::shared_pointer<T>::make(p2);
-        p = hold.release();
     }
 
     ~shared_ptr()
