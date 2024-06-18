@@ -18,8 +18,13 @@
 
 #include "ctl/shared_ptr.h"
 
+// #include <memory>
+// #define ctl std
+
 template<typename T>
 using Ptr = ctl::shared_ptr<T>;
+
+#undef ctl
 
 int
 main()
@@ -30,6 +35,35 @@ main()
 
     {
         Ptr<int> x(new int());
+        if (x.use_count() != 1)
+            return 1;
+        Ptr<int> y(x);
+        if (x.use_count() != 2 || y.use_count() != 2)
+            return 2;
+        x.reset();
+        if (x.use_count() || y.use_count() != 1)
+            return 3;
     }
+
+    {
+        Ptr<int> x(new int());
+        x.reset(new int(2));
+        if (x.use_count() != 1)
+            return 5;
+    }
+
+    // TODO(mrdomino):
+#if 0
+    {
+        Ptr<int> x(new int);
+        Ptr<void> y(x, nullptr);
+        if (x.use_count() != 2)
+            return 7;
+    }
+#endif
+
+    // TODO(mrdomino): exercise more of API
+    // TODO(mrdomino): threading stress-test
+
     return 0;
 }
