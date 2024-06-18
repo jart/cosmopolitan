@@ -48,7 +48,12 @@ class string
     using const_iterator = const char*;
     static constexpr size_t npos = -1;
 
-    ~string() /* noexcept */;
+    ~string() /* noexcept */
+    {
+        if (isbig())
+            destroy_big();
+    }
+
     string(string_view) noexcept;
     string(const char*) noexcept;
     string(const string&) noexcept;
@@ -277,6 +282,8 @@ class string
     }
 
   private:
+    void destroy_big() noexcept;
+
     inline bool isbig() const noexcept
     {
         return *(blob + __::sso_max) & 0x80;

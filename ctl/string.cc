@@ -23,20 +23,19 @@
 
 namespace ctl {
 
-string::~string() noexcept
+void
+string::destroy_big() noexcept
 {
-    if (isbig()) {
-        auto* b = big();
-        if (b->n) {
-            if (b->n >= b->c)
-                __builtin_trap();
-            if (b->p[b->n])
-                __builtin_trap();
-        }
-        if (b->c && !b->p)
+    auto* b = big();
+    if (b->n) {
+        if (b->n >= b->c)
             __builtin_trap();
-        free(b->p);
+        if (b->p[b->n])
+            __builtin_trap();
     }
+    if (b->c && !b->p)
+        __builtin_trap();
+    free(b->p);
 }
 
 string::string(const char* s) noexcept : string()
