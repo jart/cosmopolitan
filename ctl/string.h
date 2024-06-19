@@ -372,7 +372,7 @@ class string
         return &__b;
     }
 
-    friend string strcat(string_view, string_view);
+    friend string strcat(string_view, string_view) noexcept;
 
     union
     {
