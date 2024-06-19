@@ -28,7 +28,9 @@ constexpr auto a1 = align_val_t(1);
 
 } // namespace
 
-void*
+#define WEAK __attribute__((weak))
+
+WEAK void*
 operator new(size_t n, align_val_t a)
 {
     void* p;
@@ -38,79 +40,79 @@ operator new(size_t n, align_val_t a)
     return p;
 }
 
-void*
+WEAK void*
 operator new[](size_t n, align_val_t a)
 {
     return operator new(n, a);
 }
-void*
+WEAK void*
 operator new(size_t n)
 {
     return operator new(n, a1);
 }
-void*
+WEAK void*
 operator new[](size_t n)
 {
     return operator new(n, a1);
 }
 
-void*
+WEAK void*
 operator new(size_t, void* p)
 {
     return p;
 }
-void*
+WEAK void*
 operator new[](size_t, void* p)
 {
     return p;
 }
 
-void
+WEAK void
 operator delete(void* p) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete[](void* p) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete(void* p, align_val_t) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete[](void* p, align_val_t) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete(void* p, size_t) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete[](void* p, size_t) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete(void* p, size_t, align_val_t) noexcept
 {
     free(p);
 }
-void
+WEAK void
 operator delete[](void* p, size_t, align_val_t) noexcept
 {
     free(p);
 }
 
-void
+WEAK void
 operator delete(void*, void*) noexcept
 {
 }
-void
+WEAK void
 operator delete[](void*, void*) noexcept
 {
 }
