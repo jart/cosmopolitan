@@ -151,17 +151,17 @@ class string
         return isbig() ? !big()->n : small()->rem >= __::sso_max;
     }
 
-    inline char* data() noexcept
+    char* data() noexcept
     {
         return isbig() ? big()->p : small()->buf;
     }
 
-    inline const char* data() const noexcept
+    const char* data() const noexcept
     {
         return isbig() ? big()->p : small()->buf;
     }
 
-    inline size_t size() const noexcept
+    size_t size() const noexcept
     {
 #if 0
         if (!isbig() && small()->rem > __::sso_max)
@@ -256,7 +256,7 @@ class string
         append(s.p, s.n);
     }
 
-    inline operator string_view() const noexcept
+    operator string_view() const noexcept
     {
         return string_view(data(), size());
     }
@@ -323,21 +323,19 @@ class string
     void init_big(string_view) noexcept;
     void init_big(size_t, char) noexcept;
 
-    inline bool isbig() const noexcept
+    bool isbig() const noexcept
     {
         return *(blob + __::sso_max) & 0x80;
     }
 
-    inline void set_small_size(const size_t size) noexcept
+    void set_small_size(const size_t size) noexcept
     {
         if (size > __::sso_max)
             __builtin_trap();
         *(blob + __::sso_max) = (__::sso_max - size);
     }
 
-    inline void set_big_string(char* const p,
-                               const size_t n,
-                               const size_t c2) noexcept
+    void set_big_string(char* const p, const size_t n, const size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
@@ -346,28 +344,28 @@ class string
         *(((size_t*)blob) + 2) = c2 | ~__::big_mask;
     }
 
-    inline __::small_string* small() noexcept
+    __::small_string* small() noexcept
     {
         if (isbig())
             __builtin_trap();
         return &__s;
     }
 
-    inline const __::small_string* small() const noexcept
+    const __::small_string* small() const noexcept
     {
         if (isbig())
             __builtin_trap();
         return &__s;
     }
 
-    inline __::big_string* big() noexcept
+    __::big_string* big() noexcept
     {
         if (!isbig())
             __builtin_trap();
         return &__b;
     }
 
-    inline const __::big_string* big() const noexcept
+    const __::big_string* big() const noexcept
     {
         if (!isbig())
             __builtin_trap();
