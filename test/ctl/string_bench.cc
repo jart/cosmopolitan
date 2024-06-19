@@ -136,5 +136,11 @@ main()
         BENCH(1000000, 1, { ctl::string_view s2(s); });
     }
 
+    {
+        ctl::string big_trunc(48, 'a');
+        big_trunc.resize(4);
+        BENCH(1000000, 1, { ctl::string s(big_trunc); });
+    }
+
     return 0;
 }
