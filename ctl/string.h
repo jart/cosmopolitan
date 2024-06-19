@@ -350,36 +350,38 @@ class string
     {
         if (isbig())
             __builtin_trap();
-        return reinterpret_cast<__::small_string*>(blob);
+        return &__s;
     }
 
     inline const __::small_string* small() const noexcept
     {
         if (isbig())
             __builtin_trap();
-        return reinterpret_cast<const __::small_string*>(blob);
+        return &__s;
     }
 
     inline __::big_string* big() noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return reinterpret_cast<__::big_string*>(blob);
+        return &__b;
     }
 
     inline const __::big_string* big() const noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return reinterpret_cast<const __::big_string*>(blob);
+        return &__b;
     }
 
     friend string strcat(string_view, string_view);
 
-    alignas(union {
-        __::big_string a;
-        __::small_string b;
-    }) char blob[__::string_size];
+    union
+    {
+        __::big_string __b;
+        __::small_string __s;
+        char blob[__::string_size];
+    };
 };
 
 static_assert(sizeof(string) == __::string_size);
