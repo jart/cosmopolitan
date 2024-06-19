@@ -53,7 +53,7 @@ struct unique_ptr
     {
     }
 
-    constexpr unique_ptr(auto* const p, auto&& d) noexcept
+    constexpr unique_ptr(const pointer p, auto&& d) noexcept
       : p(p), d(ctl::forward<decltype(d)>(d))
     {
     }
