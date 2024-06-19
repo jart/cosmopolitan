@@ -332,16 +332,16 @@ class string
     {
         if (size > __::sso_max)
             __builtin_trap();
-        *(blob + __::sso_max) = (__::sso_max - size);
+        __s.rem = __::sso_max - size;
     }
 
     void set_big_string(char* const p, const size_t n, const size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
-        *(char**)blob = p;
-        *(((size_t*)blob) + 1) = n;
-        *(((size_t*)blob) + 2) = c2 | ~__::big_mask;
+        __b.p = p;
+        __b.n = n;
+        __b.c = c2 | ~__::big_mask;
     }
 
     __::small_string* small() noexcept
