@@ -40,8 +40,8 @@
         printf("%10g ns %2dx %s\n", nanos, (ITERATIONS), #CODE); \
     } while (0)
 
-constexpr auto big_c = "aaaaaaaaaaaaaaaaaaaaaaaa";
-constexpr auto small_c = "aaaaaaaaaaaaaaaaaaaaaaa";
+const char* big_c = "aaaaaaaaaaaaaaaaaaaaaaaa";
+const char* small_c = "aaaaaaaaaaaaaaaaaaaaaaa";
 
 int
 main()
