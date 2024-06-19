@@ -39,3 +39,5 @@ struct __cxx_choose_expr<false, _T, _U> {
 /* todo jart whyyyy */
 #define _Float16 __fp16
 #endif
+
+using nullptr_t = decltype(nullptr);
