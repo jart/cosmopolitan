@@ -42,6 +42,10 @@ void
 string::init_big(const string& s) noexcept
 {
     char* p2;
+#ifndef NDEBUG
+    if (!s.isbig())
+        __builtin_trap();
+#endif
     if (s.size() >= s.capacity() >> 1) {
         if (!(p2 = (char*)malloc(s.capacity())))
             __builtin_trap();

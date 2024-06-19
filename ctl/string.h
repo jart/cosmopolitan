@@ -84,10 +84,12 @@ class string
 
     string(const string& r) noexcept
     {
-        if (r.isbig())
+        if (r.size() <= __::sso_max) {
+            __builtin_memcpy(blob, r.data(), __::string_size);
+            set_small_size(r.size());
+        } else {
             init_big(r);
-        else
-            __builtin_memcpy(blob, r.blob, __::string_size);
+        }
     }
 
     string(const char* const p, const size_t n) noexcept
