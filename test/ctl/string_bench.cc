@@ -40,9 +40,14 @@
         printf("%10g ns %2dx %s\n", nanos, (ITERATIONS), #CODE); \
     } while (0)
 
+constexpr auto big_c = "aaaaaaaaaaaaaaaaaaaaaaaa";
+constexpr auto small_c = "aaaaaaaaaaaaaaaaaaaaaaa";
+
 int
 main()
 {
+    const ctl::string_view big(big_c), small(small_c);
+
     BENCH(10000000, 1, {
         ctl::string s;
         s.append("hello ");
@@ -70,6 +75,13 @@ main()
         }
     });
 
+    BENCH(1000000, 24, {
+        ctl::string s;
+        for (int i = 0; i < 24; ++i) {
+            s.append('a');
+        }
+    });
+
     BENCH(1000000, 32, {
         ctl::string s;
         for (int i = 0; i < 32; ++i) {
@@ -77,20 +89,41 @@ main()
         }
     });
 
-    BENCH(1000000, 1, { ctl::string s("hello world"); });
+    BENCH(1000000, 1, { ctl::string s(small_c); });
+
+    BENCH(1000000, 1, { ctl::string s(small); });
 
     {
-        ctl::string s("hello world");
-        BENCH(1000000, 1, { ctl::string s2(s); });
+        ctl::string small_copy("hello world");
+        BENCH(1000000, 1, { ctl::string s2(small_copy); });
     }
 
     BENCH(1000000, 1, {
-        ctl::string s("hello world");
+        ctl::string s(small);
         ctl::string s2(std::move(s));
     });
 
     BENCH(1000000, 1, {
-        ctl::string s("hello world");
+        ctl::string s(small);
+        ctl::string s2(s);
+    });
+
+    BENCH(1000000, 1, { ctl::string s(big_c); });
+
+    BENCH(1000000, 1, { ctl::string s(big); });
+
+    {
+        ctl::string big_copy(big);
+        BENCH(1000000, 1, { ctl::string s2(big_copy); });
+    }
+
+    BENCH(1000000, 1, {
+        ctl::string s(big);
+        ctl::string s2(std::move(s));
+    });
+
+    BENCH(1000000, 1, {
+        ctl::string s(big);
         ctl::string s2(s);
     });
 
