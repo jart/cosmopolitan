@@ -18,7 +18,7 @@
 
 #include "ctl/unique_ptr.h"
 
-#include <type_traits>
+#include <__type_traits/is_same.h>
 
 #include "libc/runtime/runtime.h"
 
@@ -32,7 +32,7 @@ template<typename T, typename... Args>
 Ptr<T>
 Mk(Args&&... args)
 {
-    return ctl::make_unique<T, Args...>(std::forward<Args>(args)...);
+    return ctl::make_unique<T, Args...>(ctl::forward<Args>(args)...);
 }
 
 template<typename T>
@@ -167,7 +167,7 @@ main()
         // shouldn't compile
         x = y;
 #endif
-        x = std::move(y);
+        x = ctl::move(y);
         if (g != 1)
             return 10;
         if (y)
@@ -222,7 +222,7 @@ main()
         x.reset(new Derived);
 
         Ptr<Derived> y(new Derived);
-        Ptr<Base> z(std::move(y));
+        Ptr<Base> z(ctl::move(y));
     }
 
     // next is 18

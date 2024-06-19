@@ -3,9 +3,7 @@
 #ifndef COSMOPOLITAN_CTL_OPTIONAL_H_
 #define COSMOPOLITAN_CTL_OPTIONAL_H_
 #include "new.h"
-#include <__utility/forward.h>
-#include <__utility/move.h>
-#include <__utility/swap.h>
+#include "utility.h"
 
 namespace ctl {
 
@@ -32,7 +30,7 @@ class optional
 
     optional(T&& value) : present_(true)
     {
-        new (&value_) T(std::move(value));
+        new (&value_) T(ctl::move(value));
     }
 
     optional(const optional& other) : present_(other.present_)
@@ -44,7 +42,7 @@ class optional
     optional(optional&& other) noexcept : present_(other.present_)
     {
         if (other.present_)
-            new (&value_) T(std::move(other.value_));
+            new (&value_) T(ctl::move(other.value_));
     }
 
     optional& operator=(const optional& other)
@@ -63,7 +61,7 @@ class optional
         if (this != &other) {
             reset();
             if (other.present_)
-                new (&value_) T(std::move(other.value_));
+                new (&value_) T(ctl::move(other.value_));
             present_ = other.present_;
         }
         return *this;
@@ -87,7 +85,7 @@ class optional
     {
         if (!present_)
             __builtin_trap();
-        return std::move(value_);
+        return ctl::move(value_);
     }
 
     explicit operator bool() const noexcept
@@ -113,19 +111,19 @@ class optional
     {
         reset();
         present_ = true;
-        new (&value_) T(std::forward<Args>(args)...);
+        new (&value_) T(ctl::forward<Args>(args)...);
     }
 
     void swap(optional& other) noexcept
     {
-        using std::swap;
+        using ctl::swap;
         if (present_ && other.present_) {
             swap(value_, other.value_);
         } else if (present_) {
-            other.emplace(std::move(value_));
+            other.emplace(ctl::move(value_));
             reset();
         } else if (other.present_) {
-            emplace(std::move(other.value_));
+            emplace(ctl::move(other.value_));
             other.reset();
         }
     }

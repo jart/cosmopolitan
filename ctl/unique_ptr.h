@@ -2,10 +2,8 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_UNIQUE_PTR_H_
 #define COSMOPOLITAN_CTL_UNIQUE_PTR_H_
+#include "utility.h"
 #include <__type_traits/is_convertible.h>
-#include <__utility/forward.h>
-#include <__utility/move.h>
-#include <__utility/swap.h>
 
 namespace ctl {
 
@@ -56,14 +54,14 @@ struct unique_ptr
     }
 
     constexpr unique_ptr(auto* const p, auto&& d) noexcept
-      : p(p), d(std::forward<decltype(d)>(d))
+      : p(p), d(ctl::forward<decltype(d)>(d))
     {
     }
 
     template<typename U, typename E>
         requires std::is_convertible_v<U, T> && std::is_convertible_v<E, D>
     constexpr unique_ptr(unique_ptr<U, E>&& u) noexcept
-      : p(u.p), d(std::move(u.d))
+      : p(u.p), d(ctl::move(u.d))
     {
         u.p = nullptr;
     }
@@ -105,7 +103,7 @@ struct unique_ptr
 
     void swap(unique_ptr& r) noexcept
     {
-        using std::swap;
+        using ctl::swap;
         swap(p, r.p);
         swap(d, r.d);
     }
@@ -130,7 +128,7 @@ struct unique_ptr
         return p;
     }
 
-    element_type& operator*() const noexcept(noexcept(*std::declval<pointer>()))
+    element_type& operator*() const noexcept(noexcept(*ctl::declval<pointer>()))
     {
         if (!p)
             __builtin_trap();
@@ -149,7 +147,7 @@ template<typename T, typename... Args>
 unique_ptr<T>
 make_unique(Args&&... args)
 {
-    return unique_ptr<T>(new T(std::forward<Args>(args)...));
+    return unique_ptr<T>(new T(ctl::forward<Args>(args)...));
 }
 
 template<typename T>
