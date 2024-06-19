@@ -144,14 +144,14 @@ struct unique_ptr
 };
 
 template<typename T, typename... Args>
-unique_ptr<T>
+constexpr unique_ptr<T>
 make_unique(Args&&... args)
 {
     return unique_ptr<T>(new T(ctl::forward<Args>(args)...));
 }
 
 template<typename T>
-unique_ptr<T>
+constexpr unique_ptr<T>
 make_unique_for_overwrite()
 {
 #if 0
