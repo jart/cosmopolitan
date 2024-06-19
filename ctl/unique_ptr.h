@@ -70,7 +70,8 @@ struct unique_ptr
 
     ~unique_ptr() /* noexcept */
     {
-        reset();
+        if (p)
+            d(p);
     }
 
     unique_ptr& operator=(unique_ptr r) noexcept
@@ -86,19 +87,12 @@ struct unique_ptr
         return r;
     }
 
-    void reset(const nullptr_t = nullptr) noexcept
+    void reset(const pointer p2 = pointer()) noexcept
     {
-        if (p)
-            d(p);
-        p = nullptr;
-    }
-
-    void reset(auto* const p2)
-    {
-        if (p) {
-            d(p);
-        }
+        const pointer r = p;
         p = p2;
+        if (r)
+            d(r);
     }
 
     void swap(unique_ptr& r) noexcept
