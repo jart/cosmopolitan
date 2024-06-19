@@ -48,17 +48,58 @@ class string
     using const_iterator = const char*;
     static constexpr size_t npos = -1;
 
+    string() noexcept
+    {
+        __builtin_memset(blob, 0, sizeof(size_t) * 2);
+        // equivalent to set_small_size(0) but also zeroes memory
+        *(((size_t*)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
+    }
+
+    string(const string_view s) noexcept
+    {
+        if (s.n <= __::sso_max) {
+            __builtin_memcpy(blob, s.p, s.n);
+            __builtin_memset(blob + s.n, 0, __::sso_max - s.n);
+            set_small_size(s.n);
+        } else {
+            init_big(s);
+        }
+    }
+
+    explicit string(const size_t n, const char ch = 0) noexcept
+    {
+        if (n <= __::sso_max) {
+            __builtin_memset(blob, ch, n);
+            __builtin_memset(blob + n, 0, __::sso_max - n);
+            set_small_size(n);
+        } else {
+            init_big(n, ch);
+        }
+    }
+
+    string(const char* const p) noexcept
+      : string(string_view(p, __builtin_strlen(p)))
+    {
+    }
+
+    string(const string& r) noexcept
+    {
+        if (r.isbig())
+            init_big(r);
+        else
+            __builtin_memcpy(blob, r.blob, __::string_size);
+    }
+
+    string(const char* const p, const size_t n) noexcept
+      : string(string_view(p, n))
+    {
+    }
+
     ~string() /* noexcept */
     {
         if (isbig())
             destroy_big();
     }
-
-    string(string_view) noexcept;
-    string(const char*) noexcept;
-    string(const string&) noexcept;
-    string(const char*, size_t) noexcept;
-    explicit string(size_t, char = 0) noexcept;
 
     string& operator=(string) noexcept;
     const char* c_str() const noexcept;
@@ -82,13 +123,6 @@ class string
     bool starts_with(string_view) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
     size_t find(string_view, size_t = 0) const noexcept;
-
-    string() noexcept
-    {
-        __builtin_memset(blob, 0, sizeof(size_t) * 2);
-        // equivalent to set_small_size(0) but also zeroes memory
-        *(((size_t*)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
-    }
 
     void swap(string& s) noexcept
     {
@@ -283,6 +317,9 @@ class string
 
   private:
     void destroy_big() noexcept;
+    void init_big(const string&) noexcept;
+    void init_big(string_view) noexcept;
+    void init_big(size_t, char) noexcept;
 
     inline bool isbig() const noexcept
     {

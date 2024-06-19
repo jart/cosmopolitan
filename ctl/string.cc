@@ -38,29 +38,47 @@ string::destroy_big() noexcept
     free(b->p);
 }
 
-string::string(const char* s) noexcept : string()
+void
+string::init_big(const string& s) noexcept
 {
-    append(s, strlen(s));
+    char* p2;
+    if (s.size() >= s.capacity() >> 1) {
+        if (!(p2 = (char*)malloc(s.capacity())))
+            __builtin_trap();
+        set_big_string(p2, s.size(), s.capacity());
+    } else {
+        init_big(string_view(s));
+    }
 }
 
-string::string(const string& s) noexcept : string()
+void
+string::init_big(const string_view s) noexcept
 {
-    append(s.data(), s.size());
+    size_t need;
+    char* p2;
+    if (ckd_add(&need, s.n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memcpy(p2, s.p, s.n);
+    p2[s.n] = 0;
+    set_big_string(p2, s.n, need);
 }
 
-string::string(const string_view s) noexcept : string()
+void
+string::init_big(const size_t n, const char ch) noexcept
 {
-    append(s.p, s.n);
-}
-
-string::string(const size_t size, const char ch) noexcept : string()
-{
-    resize(size, ch);
-}
-
-string::string(const char* s, const size_t size) noexcept : string()
-{
-    append(s, size);
+    size_t need;
+    char* p2;
+    if (ckd_add(&need, n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memset(p2, ch, n);
+    p2[n] = 0;
+    set_big_string(p2, n, need);
 }
 
 const char*
