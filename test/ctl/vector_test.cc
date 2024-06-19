@@ -50,7 +50,7 @@ main()
         ctl::string yo = "foo";
         ctl::vector<ctl::string> A;
         A.push_back("fun");
-        A.push_back(std::move(yo));
+        A.push_back(ctl::move(yo));
         if (yo != "")
             return 5;
         A.emplace_back("bar");
@@ -94,7 +94,7 @@ main()
         A.push_back(1);
         A.push_back(2);
         A.push_back(3);
-        ctl::vector<int> B(std::move(A));
+        ctl::vector<int> B(ctl::move(A));
         if (A.size() != 0)
             return 17;
         if (B.size() != 3)
@@ -122,7 +122,7 @@ main()
         A.push_back(2);
         A.push_back(3);
         ctl::vector<int> B;
-        B = std::move(A);
+        B = ctl::move(A);
         if (A.size() != 0)
             return 22;
         if (B.size() != 3)
@@ -286,7 +286,7 @@ main()
         A.push_back(2);
         A.push_back(3);
         ctl::vector<int> B;
-        B = std::move(A);
+        B = ctl::move(A);
         if (A.size() != 0)
             return 63;
         if (B.size() != 3)

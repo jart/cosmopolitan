@@ -153,7 +153,7 @@ class shared_ptr
 
     void swap(shared_ptr& r) noexcept
     {
-        using std::swap;
+        using ctl::swap;
         swap(p, r.p);
         swap(ctl, r.ctl);
     }

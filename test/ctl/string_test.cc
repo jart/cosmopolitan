@@ -19,7 +19,6 @@
 #include "ctl/string.h"
 
 #include <__type_traits/is_same.h>
-#include <__utility/move.h>
 
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -211,7 +210,7 @@ main()
 
     {
         String s = "hello";
-        String s2 = std::move(s);
+        String s2 = ctl::move(s);
         if (s2 != "hello")
             return 47;
         if (!s.empty())
