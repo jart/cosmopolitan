@@ -68,26 +68,26 @@ struct unique_ptr
 
     unique_ptr(const unique_ptr&) = delete;
 
-    ~unique_ptr() /* noexcept */
+    constexpr ~unique_ptr() /* noexcept */
     {
         if (p)
             d(p);
     }
 
-    unique_ptr& operator=(unique_ptr r) noexcept
+    constexpr unique_ptr& operator=(unique_ptr r) noexcept
     {
         swap(r);
         return *this;
     }
 
-    pointer release() noexcept
+    constexpr pointer release() noexcept
     {
         pointer r = p;
         p = nullptr;
         return r;
     }
 
-    void reset(const pointer p2 = pointer()) noexcept
+    constexpr void reset(const pointer p2 = pointer()) noexcept
     {
         const pointer r = p;
         p = p2;
@@ -95,29 +95,29 @@ struct unique_ptr
             d(r);
     }
 
-    void swap(unique_ptr& r) noexcept
+    constexpr void swap(unique_ptr& r) noexcept
     {
         using ctl::swap;
         swap(p, r.p);
         swap(d, r.d);
     }
 
-    pointer get() const noexcept
+    constexpr pointer get() const noexcept
     {
         return p;
     }
 
-    deleter_type& get_deleter() noexcept
+    constexpr deleter_type& get_deleter() noexcept
     {
         return d;
     }
 
-    const deleter_type& get_deleter() const noexcept
+    constexpr const deleter_type& get_deleter() const noexcept
     {
         return d;
     }
 
-    explicit operator bool() const noexcept
+    constexpr explicit operator bool() const noexcept
     {
         return p;
     }
