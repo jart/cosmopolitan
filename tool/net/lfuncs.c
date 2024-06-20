@@ -859,6 +859,7 @@ int LuaUuidV4(lua_State *L) {
 }
 
 int LuaUuidV7(lua_State *L) {
+  //See https://www.rfc-editor.org/rfc/rfc9562.html
   char bin[16], uuid_str[37];
   struct timespec ts = timespec_real();
   uint64_t unix_ts_ms = (uint64_t)((ts.tv_sec * 1000) + (ts.tv_nsec / 1000000));
@@ -903,7 +904,7 @@ int LuaUuidV7(lua_State *L) {
   uuid_str[17] = "0123456789abcdef"[(bin[7] & 0xf0) >>4];
   uuid_str[18] = '-';
   uuid_str[19] = "0123456789abcdef"[(0x8 | ((bin[7] & 0x0f) >>2))];
-  uuid_str[20] = "0123456789abcdef"[(bin[7] & 0x03) | (bin[8] & 0xf0) >>6];
+  uuid_str[20] = "0123456789abcdef"[(bin[7] & 0x03) | (bin[8] & 0xf0) >>6]; //See https://www.rfc-editor.org/rfc/rfc9562.html#version_field
   uuid_str[21] = "0123456789abcdef"[(bin[8] & 0x0f)];
   uuid_str[22] = "0123456789abcdef"[(bin[9] & 0xf0) >>4];
   uuid_str[23] = '-';
