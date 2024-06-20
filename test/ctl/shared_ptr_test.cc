@@ -24,6 +24,11 @@
 template<typename T>
 using Ptr = ctl::shared_ptr<T>;
 
+template <typename T, typename... Args>
+Ptr<T> Mk(Args&&... args) {
+    return ctl::make_shared<T>(ctl::forward<Args>(args)...);
+}
+
 #undef ctl
 
 int
@@ -61,6 +66,12 @@ main()
             return 7;
     }
 #endif
+
+    {
+        auto x = Mk<int>(5);
+        if (x.use_count() != 1)
+            return 8;
+    }
 
     // TODO(mrdomino): exercise more of API
     // TODO(mrdomino): threading stress-test

@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_SHARED_PTR_H_
 #define COSMOPOLITAN_CTL_SHARED_PTR_H_
+#include "new.h"
 #include "unique_ptr.h"
 
 namespace ctl {
@@ -64,6 +65,39 @@ struct shared_pointer : shared_control
     void on_zero_shared() noexcept override
     {
         delete p;
+    }
+
+    void on_zero_weak() noexcept override
+    {
+        delete this;
+    }
+};
+
+template <typename T>
+struct shared_emplace : shared_control
+{
+    union {
+        T t;
+    };
+
+    template <typename... Args>
+    void construct(Args&&... args) {
+        ::new (&t) T(ctl::forward<Args>(args)...);
+    }
+
+    static unique_ptr<shared_emplace> make_unique()
+    {
+        return new shared_emplace();
+    }
+
+private:
+    explicit constexpr shared_emplace() noexcept
+    {
+    }
+
+    void on_zero_shared() noexcept override
+    {
+        t.~T();
     }
 
     void on_zero_weak() noexcept override
@@ -203,9 +237,27 @@ class shared_ptr
     // TODO(mrdomino): owner_before(weak_ptr const&)
 
   private:
+    constexpr shared_ptr(T* const p, __::shared_control* rc) noexcept
+      : p(p), rc(rc)
+    {
+    }
+
+    template <typename U, typename... Args>
+    friend shared_ptr<U> make_shared(Args&&... args);
+
     T* p;
     __::shared_control* rc;
 };
+
+template <typename T, typename... Args>
+shared_ptr<T> make_shared(Args&&... args)
+{
+    auto rc = __::shared_emplace<T>::make_unique();
+    rc->construct(ctl::forward<Args>(args)...);
+    auto r = shared_ptr<T>(&rc->t, rc.get());
+    rc.release();
+    return r;
+}
 
 // TODO(mrdomino): non-member functions (make_shared et al)
 // TODO(mrdomino): weak_ptr
