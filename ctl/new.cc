@@ -23,7 +23,7 @@
 COSMOPOLITAN_C_START_
 
 void*
-ctl_alloc(size_t n, size_t a)
+_ctl_alloc(size_t n, size_t a)
 {
     void* p;
     if (!(p = memalign(a, n)))
@@ -32,25 +32,25 @@ ctl_alloc(size_t n, size_t a)
 }
 
 void*
-ctl_alloc1(size_t n)
+_ctl_alloc1(size_t n)
 {
-    return ctl_alloc(n, 1);
+    return _ctl_alloc(n, 1);
 }
 
 void*
-ctl_ret(size_t, void* p)
+_ctl_ret(size_t, void* p)
 {
     return p;
 }
 
 void
-ctl_free(void* p)
+_ctl_free(void* p)
 {
     free(p);
 }
 
 void
-ctl_nop(void*, void*)
+_ctl_nop(void*, void*)
 {
 }
 
@@ -68,32 +68,32 @@ COSMOPOLITAN_C_END_
    now. If you have any brain cells left after reading this comment then go
    look at the eight operator delete weak references to free in the below. */
 
-__weak_reference(void* operator new(size_t, ctl::align_val_t), ctl_alloc);
-__weak_reference(void* operator new[](size_t, ctl::align_val_t), ctl_alloc);
-__weak_reference(void* operator new(size_t), ctl_alloc1);
-__weak_reference(void* operator new[](size_t), ctl_alloc1);
+__weak_reference(void* operator new(size_t, ctl::align_val_t), _ctl_alloc);
+__weak_reference(void* operator new[](size_t, ctl::align_val_t), _ctl_alloc);
+__weak_reference(void* operator new(size_t), _ctl_alloc1);
+__weak_reference(void* operator new[](size_t), _ctl_alloc1);
 
 // XXX clang-format currently mutilates these for some reason.
 // clang-format off
 
-__weak_reference(void* operator new(size_t, void*), ctl_ret);
-__weak_reference(void* operator new[](size_t, void*), ctl_ret);
+__weak_reference(void* operator new(size_t, void*), _ctl_ret);
+__weak_reference(void* operator new[](size_t, void*), _ctl_ret);
 
-__weak_reference(void operator delete(void*) noexcept, ctl_free);
-__weak_reference(void operator delete[](void*) noexcept, ctl_free);
+__weak_reference(void operator delete(void*) noexcept, _ctl_free);
+__weak_reference(void operator delete[](void*) noexcept, _ctl_free);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattribute-alias="
 __weak_reference(void operator delete(void*, ctl::align_val_t) noexcept,
-                 ctl_free);
+                 _ctl_free);
 __weak_reference(void operator delete[](void*, ctl::align_val_t) noexcept,
-                 ctl_free);
-__weak_reference(void operator delete(void*, size_t) noexcept, ctl_free);
-__weak_reference(void operator delete[](void*, size_t) noexcept, ctl_free);
+                 _ctl_free);
+__weak_reference(void operator delete(void*, size_t) noexcept, _ctl_free);
+__weak_reference(void operator delete[](void*, size_t) noexcept, _ctl_free);
 __weak_reference(void operator delete(void*, size_t, ctl::align_val_t) noexcept,
-                 ctl_free);
+                 _ctl_free);
 __weak_reference(void operator delete[](void*, size_t, ctl::align_val_t)
-                 noexcept, ctl_free);
+                 noexcept, _ctl_free);
 #pragma GCC diagnostic pop
 
-__weak_reference(void operator delete(void*, void*) noexcept, ctl_nop);
-__weak_reference(void operator delete[](void*, void*) noexcept, ctl_nop);
+__weak_reference(void operator delete(void*, void*) noexcept, _ctl_nop);
+__weak_reference(void operator delete[](void*, void*) noexcept, _ctl_nop);
