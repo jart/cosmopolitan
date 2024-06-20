@@ -16,10 +16,6 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-/* We do not actually use anything defined in new.h, but it is included here
-   to follow the usual pattern that the source file for a header file is the
-   place that makes sure that the header can be included without an implicit
-   dependency picked up out of a prior include. */
 #include "new.h"
 
 #include "libc/mem/mem.h"
@@ -47,6 +43,22 @@ ctl_ret(size_t, void* p)
     return p;
 }
 
+void
+ctl_free(void* p)
+{
+    free(p);
+}
+
+void
+ctl_nop(void*, void*)
+{
+}
+
+COSMOPOLITAN_C_END_
+
+#undef __weak_reference
+#define __weak_reference(P, A) P __attribute__((weak, alias(#A)))
+
 /* The ISO says that these should be replaceable by user code. It also says
    that the declarations for the first four (i.e. non placement-) operators
    new are implicitly available in each translation unit, including the std
@@ -54,55 +66,36 @@ ctl_ret(size_t, void* p)
    type so you can’t just write your own. Our way through this morass is to
    supply ours as ctl::align_val_t and not implicitly declare anything, for
    now. If you have any brain cells left after reading this comment then go
-   look at the ten operator delete weak references to free in the following.
-*/
+   look at the eight operator delete weak references to free in the below. */
 
-// operator new(size_t, align_val_t)
-__weak_reference(ctl_alloc, _ZnwmN3ctl11align_val_tE);
+__weak_reference(void* operator new(size_t, ctl::align_val_t), ctl_alloc);
+__weak_reference(void* operator new[](size_t, ctl::align_val_t), ctl_alloc);
+__weak_reference(void* operator new(size_t), ctl_alloc1);
+__weak_reference(void* operator new[](size_t), ctl_alloc1);
 
-// operator new[](size_t, align_val_t)
-__weak_reference(ctl_alloc, _ZnamN3ctl11align_val_tE);
+// XXX clang-format currently mutilates these for some reason.
+// clang-format off
 
-// operator new(size_t)
-__weak_reference(ctl_alloc1, _Znwm);
+__weak_reference(void* operator new(size_t, void*), ctl_ret);
+__weak_reference(void* operator new[](size_t, void*), ctl_ret);
 
-// operator new[](size_t)
-__weak_reference(ctl_alloc1, _Znam);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattribute-alias="
 
-// operator new(size_t, void*)
-__weak_reference(ctl_ret, _ZnwmPv);
+__weak_reference(void operator delete(void*) noexcept, ctl_free);
+__weak_reference(void operator delete[](void*) noexcept, ctl_free);
+__weak_reference(void operator delete(void*, ctl::align_val_t) noexcept,
+                 ctl_free);
+__weak_reference(void operator delete[](void*, ctl::align_val_t) noexcept,
+                 ctl_free);
+__weak_reference(void operator delete(void*, size_t) noexcept, ctl_free);
+__weak_reference(void operator delete[](void*, size_t) noexcept, ctl_free);
+__weak_reference(void operator delete(void*, size_t, ctl::align_val_t) noexcept,
+                 ctl_free);
+__weak_reference(void operator delete[](void*, size_t, ctl::align_val_t)
+                 noexcept, ctl_free);
 
-// operator new[](size_t, void*)
-__weak_reference(ctl_ret, _ZnamPv);
+#pragma GCC diagnostic pop
 
-// operator delete(void*)
-__weak_reference(free, _ZdlPv);
-
-// operator delete[](void*)
-__weak_reference(free, _ZdaPv);
-
-// operator delete(void*, align_val_t)
-__weak_reference(free, _ZdlPvN3ctl11align_val_tE);
-
-// operator delete[](void*, align_val_t)
-__weak_reference(free, _ZdaPvN3ctl11align_val_tE);
-
-// operator delete(void*, size_t)
-__weak_reference(free, _ZdlPvm);
-
-// operator delete[](void*, size_t)
-__weak_reference(free, _ZdaPvm);
-
-// operator delete(void*, size_t, align_val_t)
-__weak_reference(free, _ZdlPvmN3ctl11align_val_tE);
-
-// operator delete[](void*, size_t, align_val_t)
-__weak_reference(free, _ZdaPvmN3ctl11align_val_tE);
-
-// operator delete(void*, void*) noexcept
-__weak_reference(free, _ZdlPvS_);
-
-// operator delete[](void*, void*)
-__weak_reference(free, _ZdaPvS_);
-
-COSMOPOLITAN_C_END_
+__weak_reference(void operator delete(void*, void*) noexcept, ctl_nop);
+__weak_reference(void operator delete[](void*, void*) noexcept, ctl_nop);
