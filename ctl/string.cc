@@ -23,45 +23,66 @@
 
 namespace ctl {
 
-string::~string() noexcept
+void
+string::destroy_big() noexcept
 {
-    if (isbig()) {
-        auto* b = big();
-        if (b->n) {
-            if (b->n >= b->c)
-                __builtin_trap();
-            if (b->p[b->n])
-                __builtin_trap();
-        }
-        if (b->c && !b->p)
+    auto* b = big();
+    if (b->n) {
+        if (b->n >= b->c)
             __builtin_trap();
-        free(b->p);
+        if (b->p[b->n])
+            __builtin_trap();
+    }
+    if (b->c && !b->p)
+        __builtin_trap();
+    free(b->p);
+}
+
+void
+string::init_big(const string& s) noexcept
+{
+    char* p2;
+#ifndef NDEBUG
+    if (!s.isbig())
+        __builtin_trap();
+#endif
+    if (s.size() >= s.capacity() >> 1) {
+        if (!(p2 = (char*)malloc(s.capacity())))
+            __builtin_trap();
+        set_big_string(p2, s.size(), s.capacity());
+    } else {
+        init_big(string_view(s));
     }
 }
 
-string::string(const char* s) noexcept : string()
+void
+string::init_big(const string_view s) noexcept
 {
-    append(s, strlen(s));
+    size_t need;
+    char* p2;
+    if (ckd_add(&need, s.n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memcpy(p2, s.p, s.n);
+    p2[s.n] = 0;
+    set_big_string(p2, s.n, need);
 }
 
-string::string(const string& s) noexcept : string()
+void
+string::init_big(const size_t n, const char ch) noexcept
 {
-    append(s.data(), s.size());
-}
-
-string::string(const string_view s) noexcept : string()
-{
-    append(s.p, s.n);
-}
-
-string::string(const size_t size, const char ch) noexcept : string()
-{
-    resize(size, ch);
-}
-
-string::string(const char* s, const size_t size) noexcept : string()
-{
-    append(s, size);
+    size_t need;
+    char* p2;
+    if (ckd_add(&need, n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memset(p2, ch, n);
+    p2[n] = 0;
+    set_big_string(p2, n, need);
 }
 
 const char*

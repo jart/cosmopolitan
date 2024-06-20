@@ -48,12 +48,60 @@ class string
     using const_iterator = const char*;
     static constexpr size_t npos = -1;
 
-    ~string() /* noexcept */;
-    string(string_view) noexcept;
-    string(const char*) noexcept;
-    string(const string&) noexcept;
-    string(const char*, size_t) noexcept;
-    explicit string(size_t, char = 0) noexcept;
+    string() noexcept
+    {
+        __builtin_memset(blob, 0, sizeof(size_t) * 2);
+        // equivalent to set_small_size(0) but also zeroes memory
+        *(((size_t*)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
+    }
+
+    string(const string_view s) noexcept
+    {
+        if (s.n <= __::sso_max) {
+            __builtin_memcpy(blob, s.p, s.n);
+            __builtin_memset(blob + s.n, 0, __::sso_max - s.n);
+            set_small_size(s.n);
+        } else {
+            init_big(s);
+        }
+    }
+
+    explicit string(const size_t n, const char ch = 0) noexcept
+    {
+        if (n <= __::sso_max) {
+            __builtin_memset(blob, ch, n);
+            __builtin_memset(blob + n, 0, __::sso_max - n);
+            set_small_size(n);
+        } else {
+            init_big(n, ch);
+        }
+    }
+
+    string(const char* const p) noexcept
+      : string(string_view(p, __builtin_strlen(p)))
+    {
+    }
+
+    string(const string& r) noexcept
+    {
+        if (r.size() <= __::sso_max) {
+            __builtin_memcpy(blob, r.data(), __::string_size);
+            set_small_size(r.size());
+        } else {
+            init_big(r);
+        }
+    }
+
+    string(const char* const p, const size_t n) noexcept
+      : string(string_view(p, n))
+    {
+    }
+
+    ~string() /* noexcept */
+    {
+        if (isbig())
+            destroy_big();
+    }
 
     string& operator=(string) noexcept;
     const char* c_str() const noexcept;
@@ -77,13 +125,6 @@ class string
     bool starts_with(string_view) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
     size_t find(string_view, size_t = 0) const noexcept;
-
-    string() noexcept
-    {
-        __builtin_memset(blob, 0, sizeof(size_t) * 2);
-        // equivalent to set_small_size(0) but also zeroes memory
-        *(((size_t*)blob) + 2) = __::sso_max << (sizeof(size_t) - 1) * 8;
-    }
 
     void swap(string& s) noexcept
     {
@@ -110,17 +151,17 @@ class string
         return isbig() ? !big()->n : small()->rem >= __::sso_max;
     }
 
-    inline char* data() noexcept
+    char* data() noexcept
     {
         return isbig() ? big()->p : small()->buf;
     }
 
-    inline const char* data() const noexcept
+    const char* data() const noexcept
     {
         return isbig() ? big()->p : small()->buf;
     }
 
-    inline size_t size() const noexcept
+    size_t size() const noexcept
     {
 #if 0
         if (!isbig() && small()->rem > __::sso_max)
@@ -215,7 +256,7 @@ class string
         append(s.p, s.n);
     }
 
-    inline operator string_view() const noexcept
+    operator string_view() const noexcept
     {
         return string_view(data(), size());
     }
@@ -277,63 +318,68 @@ class string
     }
 
   private:
-    inline bool isbig() const noexcept
+    void destroy_big() noexcept;
+    void init_big(const string&) noexcept;
+    void init_big(string_view) noexcept;
+    void init_big(size_t, char) noexcept;
+
+    bool isbig() const noexcept
     {
         return *(blob + __::sso_max) & 0x80;
     }
 
-    inline void set_small_size(const size_t size) noexcept
+    void set_small_size(const size_t size) noexcept
     {
         if (size > __::sso_max)
             __builtin_trap();
-        *(blob + __::sso_max) = (__::sso_max - size);
+        __s.rem = __::sso_max - size;
     }
 
-    inline void set_big_string(char* const p,
-                               const size_t n,
-                               const size_t c2) noexcept
+    void set_big_string(char* const p, const size_t n, const size_t c2) noexcept
     {
         if (c2 > __::big_mask)
             __builtin_trap();
-        *(char**)blob = p;
-        *(((size_t*)blob) + 1) = n;
-        *(((size_t*)blob) + 2) = c2 | ~__::big_mask;
+        __b.p = p;
+        __b.n = n;
+        __b.c = c2 | ~__::big_mask;
     }
 
-    inline __::small_string* small() noexcept
+    __::small_string* small() noexcept
     {
         if (isbig())
             __builtin_trap();
-        return reinterpret_cast<__::small_string*>(blob);
+        return &__s;
     }
 
-    inline const __::small_string* small() const noexcept
+    const __::small_string* small() const noexcept
     {
         if (isbig())
             __builtin_trap();
-        return reinterpret_cast<const __::small_string*>(blob);
+        return &__s;
     }
 
-    inline __::big_string* big() noexcept
+    __::big_string* big() noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return reinterpret_cast<__::big_string*>(blob);
+        return &__b;
     }
 
-    inline const __::big_string* big() const noexcept
+    const __::big_string* big() const noexcept
     {
         if (!isbig())
             __builtin_trap();
-        return reinterpret_cast<const __::big_string*>(blob);
+        return &__b;
     }
 
-    friend string strcat(string_view, string_view);
+    friend string strcat(string_view, string_view) noexcept;
 
-    alignas(union {
-        __::big_string a;
-        __::small_string b;
-    }) char blob[__::string_size];
+    union
+    {
+        __::big_string __b;
+        __::small_string __s;
+        char blob[__::string_size];
+    };
 };
 
 static_assert(sizeof(string) == __::string_size);
