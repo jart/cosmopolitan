@@ -32,10 +32,10 @@ struct shared_control
     {
     }
 
-    void add_shared() noexcept;
-    void release_shared() noexcept;
-    void add_weak() noexcept;
-    void release_weak() noexcept;
+    void keep_shared() noexcept;
+    void drop_shared() noexcept;
+    void keep_weak() noexcept;
+    void drop_weak() noexcept;
     size_t use_count() const noexcept;
     size_t weak_count() const noexcept;
 
@@ -101,7 +101,7 @@ class shared_ptr
     shared_ptr(const shared_ptr& r) noexcept : p(r.p), ctl(r.ctl)
     {
         if (ctl)
-            ctl->add_shared();
+            ctl->keep_shared();
     }
 
     shared_ptr(shared_ptr&& r) noexcept : p(r.p), ctl(r.ctl)
@@ -114,7 +114,7 @@ class shared_ptr
     shared_ptr(const shared_ptr<U>& r, T* const p) noexcept : p(p), ctl(r.ctl)
     {
         if (ctl)
-            ctl->add_shared();
+            ctl->keep_shared();
     }
 
     template <typename U>
@@ -129,7 +129,7 @@ class shared_ptr
     ~shared_ptr()
     {
         if (ctl)
-            ctl->release_shared();
+            ctl->drop_shared();
     }
 
     shared_ptr& operator=(shared_ptr r) noexcept
@@ -141,7 +141,7 @@ class shared_ptr
     void reset() noexcept
     {
         if (ctl)
-            ctl->release_shared();
+            ctl->drop_shared();
         p = nullptr;
         ctl = nullptr;
     }

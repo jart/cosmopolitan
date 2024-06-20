@@ -53,28 +53,28 @@ namespace ctl {
 namespace __ {
 
 void
-shared_control::add_shared() noexcept
+shared_control::keep_shared() noexcept
 {
     incref(&shared);
 }
 
 void
-shared_control::release_shared() noexcept
+shared_control::drop_shared() noexcept
 {
     if (decref(&shared)) {
         on_zero_shared();
-        release_weak();
+        drop_weak();
     }
 }
 
 void
-shared_control::add_weak() noexcept
+shared_control::keep_weak() noexcept
 {
     incref(&weak);
 }
 
 void
-shared_control::release_weak() noexcept
+shared_control::drop_weak() noexcept
 {
     if (decref(&weak))
         on_zero_weak();
