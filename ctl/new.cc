@@ -79,11 +79,10 @@ __weak_reference(void* operator new[](size_t), ctl_alloc1);
 __weak_reference(void* operator new(size_t, void*), ctl_ret);
 __weak_reference(void* operator new[](size_t, void*), ctl_ret);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattribute-alias="
-
 __weak_reference(void operator delete(void*) noexcept, ctl_free);
 __weak_reference(void operator delete[](void*) noexcept, ctl_free);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattribute-alias="
 __weak_reference(void operator delete(void*, ctl::align_val_t) noexcept,
                  ctl_free);
 __weak_reference(void operator delete[](void*, ctl::align_val_t) noexcept,
@@ -94,7 +93,6 @@ __weak_reference(void operator delete(void*, size_t, ctl::align_val_t) noexcept,
                  ctl_free);
 __weak_reference(void operator delete[](void*, size_t, ctl::align_val_t)
                  noexcept, ctl_free);
-
 #pragma GCC diagnostic pop
 
 __weak_reference(void operator delete(void*, void*) noexcept, ctl_nop);
