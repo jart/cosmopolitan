@@ -16,23 +16,18 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+/* We do not actually use anything defined in new.h, but it is included here
+   to follow the usual pattern that the source file for a header file is the
+   place that makes sure that the header can be included without an implicit
+   dependency picked up out of a prior include. */
 #include "new.h"
 
 #include "libc/mem/mem.h"
 
-using ctl::align_val_t;
+COSMOPOLITAN_C_START_
 
-namespace {
-
-constexpr auto a1 = align_val_t(1);
-
-} // namespace
-
-// clang-format off
-
-extern "C" {
-
-void* ctl_alloc(size_t n, size_t a)
+void*
+ctl_alloc(size_t n, size_t a)
 {
     void* p;
     if (!(p = memalign(a, n)))
@@ -40,12 +35,14 @@ void* ctl_alloc(size_t n, size_t a)
     return p;
 }
 
-void* ctl_alloc1(size_t n)
+void*
+ctl_alloc1(size_t n)
 {
     return ctl_alloc(n, 1);
 }
 
-void* ctl_ret(size_t, void* p)
+void*
+ctl_ret(size_t, void* p)
 {
     return p;
 }
@@ -108,4 +105,4 @@ __weak_reference(free, _ZdlPvS_);
 // operator delete[](void*, void*)
 __weak_reference(free, _ZdaPvS_);
 
-} // extern "C"
+COSMOPOLITAN_C_END_
