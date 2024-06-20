@@ -18,6 +18,8 @@
 
 #include "ctl/shared_ptr.h"
 
+#include "libc/runtime/runtime.h"
+
 // #include <memory>
 // #define ctl std
 
@@ -76,5 +78,6 @@ main()
     // TODO(mrdomino): exercise more of API
     // TODO(mrdomino): threading stress-test
 
+    CheckForMemoryLeaks();
     return 0;
 }
