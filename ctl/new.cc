@@ -28,91 +28,74 @@ constexpr auto a1 = align_val_t(1);
 
 } // namespace
 
-#define WEAK __attribute__((weak))
+// clang-format off
 
-WEAK void*
-operator new(size_t n, align_val_t a)
+extern "C" {
+
+void* ctl_alloc(size_t n, size_t a)
 {
     void* p;
-    if (!(p = memalign(static_cast<size_t>(a), n))) {
+    if (!(p = memalign(a, n)))
         __builtin_trap();
-    }
     return p;
 }
 
-WEAK void*
-operator new[](size_t n, align_val_t a)
+void* ctl_alloc1(size_t n)
 {
-    return operator new(n, a);
-}
-WEAK void*
-operator new(size_t n)
-{
-    return operator new(n, a1);
-}
-WEAK void*
-operator new[](size_t n)
-{
-    return operator new(n, a1);
+    return ctl_alloc(n, 1);
 }
 
-WEAK void*
-operator new(size_t, void* p)
-{
-    return p;
-}
-WEAK void*
-operator new[](size_t, void* p)
+void* ctl_ret(size_t, void* p)
 {
     return p;
 }
 
-WEAK void
-operator delete(void* p) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete[](void* p) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete(void* p, align_val_t) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete[](void* p, align_val_t) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete(void* p, size_t) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete[](void* p, size_t) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete(void* p, size_t, align_val_t) noexcept
-{
-    free(p);
-}
-WEAK void
-operator delete[](void* p, size_t, align_val_t) noexcept
-{
-    free(p);
-}
+// operator new(size_t, align_val_t)
+__weak_reference(ctl_alloc, _ZnwmN3ctl11align_val_tE);
 
-WEAK void
-operator delete(void*, void*) noexcept
-{
-}
-WEAK void
-operator delete[](void*, void*) noexcept
-{
-}
+// operator new[](size_t, align_val_t)
+__weak_reference(ctl_alloc, _ZnamN3ctl11align_val_tE);
+
+// operator new(size_t)
+__weak_reference(ctl_alloc1, _Znwm);
+
+// operator new[](size_t)
+__weak_reference(ctl_alloc1, _Znam);
+
+// operator new(size_t, void*)
+__weak_reference(ctl_ret, _ZnwmPv);
+
+// operator new[](size_t, void*)
+__weak_reference(ctl_ret, _ZnamPv);
+
+// operator delete(void*)
+__weak_reference(free, _ZdlPv);
+
+// operator delete[](void*)
+__weak_reference(free, _ZdaPv);
+
+// operator delete(void*, align_val_t)
+__weak_reference(free, _ZdlPvN3ctl11align_val_tE);
+
+// operator delete[](void*, align_val_t)
+__weak_reference(free, _ZdaPvN3ctl11align_val_tE);
+
+// operator delete(void*, size_t)
+__weak_reference(free, _ZdlPvm);
+
+// operator delete[](void*, size_t)
+__weak_reference(free, _ZdaPvm);
+
+// operator delete(void*, size_t, align_val_t)
+__weak_reference(free, _ZdlPvmN3ctl11align_val_tE);
+
+// operator delete[](void*, size_t, align_val_t)
+__weak_reference(free, _ZdaPvmN3ctl11align_val_tE);
+
+// operator delete(void*, void*) noexcept
+__weak_reference(free, _ZdlPvS_);
+
+// operator delete[](void*, void*)
+__weak_reference(free, _ZdaPvS_);
+
+} // extern "C"
