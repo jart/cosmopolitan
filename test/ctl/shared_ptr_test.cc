@@ -26,8 +26,10 @@
 template<typename T>
 using Ptr = ctl::shared_ptr<T>;
 
-template <typename T, typename... Args>
-Ptr<T> Mk(Args&&... args) {
+template<typename T, typename... Args>
+Ptr<T>
+Mk(Args&&... args)
+{
     return ctl::make_shared<T>(ctl::forward<Args>(args)...);
 }
 

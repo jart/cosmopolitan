@@ -73,15 +73,17 @@ struct shared_pointer : shared_control
     }
 };
 
-template <typename T>
+template<typename T>
 struct shared_emplace : shared_control
 {
-    union {
+    union
+    {
         T t;
     };
 
-    template <typename... Args>
-    void construct(Args&&... args) {
+    template<typename... Args>
+    void construct(Args&&... args)
+    {
         ::new (&t) T(ctl::forward<Args>(args)...);
     }
 
@@ -90,7 +92,7 @@ struct shared_emplace : shared_control
         return new shared_emplace();
     }
 
-private:
+  private:
     explicit constexpr shared_emplace() noexcept
     {
     }
@@ -123,12 +125,12 @@ class shared_ptr
   public:
     using element_type = T; // TODO(mrdomino): remove extent?
 
-    constexpr shared_ptr(nullptr_t = nullptr) noexcept
-      : p(nullptr), rc(nullptr)
+    constexpr shared_ptr(nullptr_t = nullptr) noexcept : p(nullptr), rc(nullptr)
     {
     }
 
-    explicit shared_ptr(auto* const p) : p(p), rc(__::shared_pointer<T>::make(p))
+    explicit shared_ptr(auto* const p)
+      : p(p), rc(__::shared_pointer<T>::make(p))
     {
     }
 
@@ -144,14 +146,14 @@ class shared_ptr
         r.rc = nullptr;
     }
 
-    template <typename U>
+    template<typename U>
     shared_ptr(const shared_ptr<U>& r, T* const p) noexcept : p(p), rc(r.rc)
     {
         if (rc)
             rc->keep_shared();
     }
 
-    template <typename U>
+    template<typename U>
     shared_ptr(shared_ptr<U>&& r, T* const p) noexcept : p(p), rc(r.rc)
     {
         r.p = nullptr;
@@ -228,7 +230,7 @@ class shared_ptr
         return p;
     }
 
-    template <typename U>
+    template<typename U>
     bool owner_before(const shared_ptr<U>& r) const noexcept
     {
         return p < r.p;
@@ -242,15 +244,16 @@ class shared_ptr
     {
     }
 
-    template <typename U, typename... Args>
+    template<typename U, typename... Args>
     friend shared_ptr<U> make_shared(Args&&... args);
 
     T* p;
     __::shared_control* rc;
 };
 
-template <typename T, typename... Args>
-shared_ptr<T> make_shared(Args&&... args)
+template<typename T, typename... Args>
+shared_ptr<T>
+make_shared(Args&&... args)
 {
     auto rc = __::shared_emplace<T>::make_unique();
     rc->construct(ctl::forward<Args>(args)...);
