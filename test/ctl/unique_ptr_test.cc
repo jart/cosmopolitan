@@ -91,6 +91,12 @@ struct SetsGDtor
     }
 };
 
+struct Base
+{};
+
+struct Derived : Base
+{};
+
 int
 main()
 {
@@ -211,7 +217,16 @@ main()
         Ptr<int, StatefulDeleter> y(&a);
     }
 
+    {
+        Ptr<Base> x(new Base);
+        x.reset(new Derived);
+
+        Ptr<Derived> y(new Derived);
+        Ptr<Base> z(ctl::move(y));
+    }
+
     // next is 18
 
+    CheckForMemoryLeaks();
     return 0;
 }
