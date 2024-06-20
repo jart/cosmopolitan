@@ -3,12 +3,11 @@
 #ifndef COSMOPOLITAN_CTL_NEW_H_
 #define COSMOPOLITAN_CTL_NEW_H_
 
-// XXX clang-format currently mutilates these for some reason.
-// clang-format off
-
 namespace ctl {
 
-enum class align_val_t : size_t {};
+enum class align_val_t : size_t
+{
+};
 
 } // namespace ctl
 
@@ -16,6 +15,10 @@ void* operator new(size_t);
 void* operator new[](size_t);
 void* operator new(size_t, ctl::align_val_t);
 void* operator new[](size_t, ctl::align_val_t);
+
+// XXX clang-format currently mutilates these for some reason.
+// clang-format off
+
 void* operator new(size_t, void*);
 void* operator new[](size_t, void*);
 
