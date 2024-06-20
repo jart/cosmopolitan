@@ -45,26 +45,28 @@ struct shared_control
     virtual void on_zero_weak() noexcept = 0;
 };
 
-template<typename T>
+template<typename T, typename D>
 struct shared_pointer : shared_control
 {
     T* p;
+    [[no_unique_address]] D d;
 
-    static shared_pointer* make(T* const p)
+    static shared_pointer* make(T* const p, auto&& d)
     {
         auto p2 = unique_ptr(p);
-        auto r = new shared_pointer(p2.release());
+        auto r = new shared_pointer(p2.release(), ctl::forward<decltype(d)>(d));
         return r;
     }
 
   private:
-    explicit constexpr shared_pointer(T* const p) noexcept : p(p)
+    explicit constexpr shared_pointer(T* const p, auto&& d) noexcept
+      : p(p), d(ctl::forward<decltype(d)>(d))
     {
     }
 
     void on_zero_shared() noexcept override
     {
-        delete p;
+        ctl::move(d)(p);
     }
 
     void on_zero_weak() noexcept override
@@ -118,19 +120,19 @@ struct bad_weak_ptr : ctl::exception
     }
 };
 
-// TODO(mrdomino): typename D = default_delete<T>
-template<typename T>
+template<typename T, typename D = default_delete<T>>
 class shared_ptr
 {
   public:
     using element_type = T; // TODO(mrdomino): remove extent?
+    using deleter_type = D;
 
     constexpr shared_ptr(nullptr_t = nullptr) noexcept : p(nullptr), rc(nullptr)
     {
     }
 
     explicit shared_ptr(auto* const p)
-      : p(p), rc(__::shared_pointer<T>::make(p))
+      : p(p), rc(__::shared_pointer<T, D>::make(p, D()))
     {
     }
 
