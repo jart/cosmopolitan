@@ -22,7 +22,7 @@
 
 COSMOPOLITAN_C_START_
 
-void*
+static void*
 _ctl_alloc(size_t n, size_t a)
 {
     void* p;
@@ -31,25 +31,25 @@ _ctl_alloc(size_t n, size_t a)
     return p;
 }
 
-void*
+static void*
 _ctl_alloc1(size_t n)
 {
     return _ctl_alloc(n, 1);
 }
 
-void*
+static void*
 _ctl_ret(size_t, void* p)
 {
     return p;
 }
 
-void
+static void
 _ctl_free(void* p)
 {
     free(p);
 }
 
-void
+static void
 _ctl_nop(void*, void*)
 {
 }
