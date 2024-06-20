@@ -227,5 +227,6 @@ main()
 
     // next is 18
 
+    CheckForMemoryLeaks();
     return 0;
 }
