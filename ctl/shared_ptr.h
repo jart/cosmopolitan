@@ -90,46 +90,46 @@ class shared_ptr
     using element_type = T; // TODO(mrdomino): remove extent?
 
     constexpr shared_ptr(nullptr_t = nullptr) noexcept
-      : p(nullptr), ctl(nullptr)
+      : p(nullptr), rc(nullptr)
     {
     }
 
-    explicit shared_ptr(auto* const p) : p(p), ctl(__::shared_pointer<T>::make(p))
+    explicit shared_ptr(auto* const p) : p(p), rc(__::shared_pointer<T>::make(p))
     {
     }
 
-    shared_ptr(const shared_ptr& r) noexcept : p(r.p), ctl(r.ctl)
+    shared_ptr(const shared_ptr& r) noexcept : p(r.p), rc(r.rc)
     {
-        if (ctl)
-            ctl->keep_shared();
+        if (rc)
+            rc->keep_shared();
     }
 
-    shared_ptr(shared_ptr&& r) noexcept : p(r.p), ctl(r.ctl)
+    shared_ptr(shared_ptr&& r) noexcept : p(r.p), rc(r.rc)
     {
         r.p = nullptr;
-        r.ctl = nullptr;
+        r.rc = nullptr;
     }
 
     template <typename U>
-    shared_ptr(const shared_ptr<U>& r, T* const p) noexcept : p(p), ctl(r.ctl)
+    shared_ptr(const shared_ptr<U>& r, T* const p) noexcept : p(p), rc(r.rc)
     {
-        if (ctl)
-            ctl->keep_shared();
+        if (rc)
+            rc->keep_shared();
     }
 
     template <typename U>
-    shared_ptr(shared_ptr<U>&& r, T* const p) noexcept : p(p), ctl(r.ctl)
+    shared_ptr(shared_ptr<U>&& r, T* const p) noexcept : p(p), rc(r.rc)
     {
         r.p = nullptr;
-        r.ctl = nullptr;
+        r.rc = nullptr;
     }
 
     // TODO(mrdomino): moar ctors
 
     ~shared_ptr()
     {
-        if (ctl)
-            ctl->drop_shared();
+        if (rc)
+            rc->drop_shared();
     }
 
     shared_ptr& operator=(shared_ptr r) noexcept
@@ -140,10 +140,10 @@ class shared_ptr
 
     void reset() noexcept
     {
-        if (ctl)
-            ctl->drop_shared();
+        if (rc)
+            rc->drop_shared();
         p = nullptr;
-        ctl = nullptr;
+        rc = nullptr;
     }
 
     void reset(auto* const p2)
@@ -155,7 +155,7 @@ class shared_ptr
     {
         using ctl::swap;
         swap(p, r.p);
-        swap(ctl, r.ctl);
+        swap(rc, r.rc);
     }
 
     element_type* get() const noexcept
@@ -186,7 +186,7 @@ class shared_ptr
 
     size_t use_count() const noexcept
     {
-        return ctl ? ctl->use_count() : 0;
+        return rc ? rc->use_count() : 0;
     }
 
     explicit operator bool() const noexcept
@@ -204,7 +204,7 @@ class shared_ptr
 
   private:
     T* p;
-    __::shared_control* ctl;
+    __::shared_control* rc;
 };
 
 // TODO(mrdomino): non-member functions (make_shared et al)
