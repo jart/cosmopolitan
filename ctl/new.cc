@@ -51,13 +51,14 @@ void* ctl_ret(size_t, void* p)
 }
 
 /* The ISO says that these should be replaceable by user code. It also says
-   that the declarations for the first four (i.e. non–placement-) operators
+   that the declarations for the first four (i.e. non placement-) operators
    new are implicitly available in each translation unit, including the std
    align_val_t parameter. (?) However, <new> also _defines_ the align_val_t
    type so you can’t just write your own. Our way through this morass is to
    supply ours as ctl::align_val_t and not implicitly declare anything, for
    now. If you have any brain cells left after reading this comment then go
-   look at the ten operator delete weak references to free in the below. */
+   look at the ten operator delete weak references to free in the following.
+*/
 
 // operator new(size_t, align_val_t)
 __weak_reference(ctl_alloc, _ZnwmN3ctl11align_val_tE);
