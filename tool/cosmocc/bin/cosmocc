@@ -201,7 +201,8 @@ for x; do
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
-  elif [ x"$x" = x"-e" ] ||
+  elif [ x"$x" = x"-x" ] ||
+       [ x"$x" = x"-e" ] ||
        [ x"$x" = x"-z" ] ||
        [ x"$x" = x"-T" ] ||
        [ x"$x" = x"-L" ] ||
