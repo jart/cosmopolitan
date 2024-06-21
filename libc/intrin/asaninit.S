@@ -19,14 +19,13 @@
 #include "libc/macros.internal.h"
 
 	.init.start 303,_init_asan
+#ifdef __x86_64__
+#ifdef __SANITIZE_ADDRESS__
 	push	%rdi
 	push	%rsi
-	mov	%r12,%rdi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
-	.weak	__asan_init
 	call	__asan_init
 	pop	%rsi
 	pop	%rdi
+#endif /* __SANITIZE_ADDRESS__ */
+#endif /* __x86_64__ */
 	.init.end 303,_init_asan

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,17 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
-// nsync depends on this non-nsync lock
-
-extern pthread_mutex_t __mmi_lock_obj;
-
-void __mmi_lock(void) {
-  pthread_mutex_lock(&__mmi_lock_obj);
-}
-
-void __mmi_unlock(void) {
-  pthread_mutex_unlock(&__mmi_lock_obj);
+int __granularity(void) {
+  if (IsWindows())
+    return 65536;
+  static int res;
+  if (!res)
+    res = getauxval(AT_PAGESZ);
+  return res;
 }

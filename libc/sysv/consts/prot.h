@@ -7,8 +7,6 @@ extern const int PROT_NONE;
 extern const int PROT_READ;
 extern const int PROT_WRITE;
 extern const int PROT_EXEC;
-extern const int PROT_GROWSDOWN;
-extern const int PROT_GROWSUP;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

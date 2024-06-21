@@ -33,41 +33,41 @@ void SetUpOnce(void) {
 
 TEST(madvise, anon) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(0, 0, madvise(p, FRAMESIZE, MADV_WILLNEED));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+  ASSERT_SYS(0, 0, madvise(p, __granularity(), MADV_WILLNEED));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 
 TEST(madvise, file) {
   char *p;
   ASSERT_SYS(0, 3, creat("foo.dat", 0644));
-  ASSERT_SYS(0, 0, ftruncate(3, FRAMESIZE));
+  ASSERT_SYS(0, 0, ftruncate(3, __granularity()));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, open("foo.dat", O_RDWR));
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE, 3, 0)));
-  ASSERT_SYS(0, 0, madvise(p, FRAMESIZE, MADV_WILLNEED));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+  ASSERT_SYS(0, 0, madvise(p, __granularity(), MADV_WILLNEED));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
   ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(madvise, short) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(0, 0, madvise(p, FRAMESIZE - 1, MADV_WILLNEED));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+  ASSERT_SYS(0, 0, madvise(p, __granularity() - 1, MADV_WILLNEED));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 
 TEST(madvise, subPages) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   ASSERT_SYS(0, 0,
-             madvise(p + getauxval(AT_PAGESZ), FRAMESIZE - getauxval(AT_PAGESZ),
-                     MADV_WILLNEED));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+             madvise(p + getauxval(AT_PAGESZ),
+                     __granularity() - getauxval(AT_PAGESZ), MADV_WILLNEED));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 
 TEST(madvise, misalign) {
@@ -76,20 +76,20 @@ TEST(madvise, misalign) {
     return;  // most platforms don't care
   if (IsQemuUser())
     return;  // qemu claims to be linux but doesn't care
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(EINVAL, -1, madvise(p + 1, FRAMESIZE - 1, MADV_WILLNEED));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+  ASSERT_SYS(EINVAL, -1, madvise(p + 1, __granularity() - 1, MADV_WILLNEED));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 
 TEST(madvise, badAdvice) {
   char *p;
   if (IsAarch64() && IsQemuUser())
     return;  // qemu doesn't validate advice
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(EINVAL, -1, madvise(p, FRAMESIZE, 127));
-  ASSERT_SYS(0, 0, munmap(p, FRAMESIZE));
+  ASSERT_SYS(EINVAL, -1, madvise(p, __granularity(), 127));
+  ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 
 TEST(madvise, missingMemory) {
@@ -98,5 +98,5 @@ TEST(madvise, missingMemory) {
   if (IsQemuUser())
     return;  // qemu claims to be linux but doesn't care
   ASSERT_SYS(ENOMEM, -1,
-             madvise((char *)0x83483838000, FRAMESIZE, MADV_WILLNEED));
+             madvise((char *)0x83483838000, __granularity(), MADV_WILLNEED));
 }

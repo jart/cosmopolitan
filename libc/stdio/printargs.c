@@ -464,11 +464,6 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
   PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
         GetInterpreterExecutableName(u.path, sizeof(u.path)));
-  PRINT(" ☼ %s = %p", "GetStackSize()", GetStackSize());
-  PRINT(" ☼ %s = %p", "GetGuardSize()", GetGuardSize());
-  PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr());
-  PRINT(" ☼ %s = %p", "GetStaticStackSize()", GetStaticStackSize());
-  PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
   PRINT(" ☼ %s = %p", "__builtin_frame_address(0)", __builtin_frame_address(0));
 
   PRINT("");

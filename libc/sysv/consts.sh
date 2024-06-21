@@ -219,10 +219,9 @@ syscon	mmap	MAP_FILE				0			0			0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_SHARED_VALIDATE			3			3			1			1			1			1			1			1			# weird linux thing
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			2			2			# forced consensus & faked nt
-syscon	mmap	MAP_STACK				6			6			6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			15			15			# mask for type of mapping
 syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x00004010		0x00004010		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x00004000		0x00004000		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
 syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
 syscon	mmap	MAP_GROWSDOWN				0x00000100		0x00000100		0			0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
 syscon	mmap	MAP_LOCKED				0x00002000		0x00002000		0			0			0			0			0			0
@@ -293,8 +292,6 @@ syscon	mprot	PROT_NONE				0			0			0			0			0			0			0			0			# mmap, mprotect, unix
 syscon	mprot	PROT_READ				1			1			1			1			1			1			1			1			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_WRITE				2			2			2			2			2			2			2			2			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_EXEC				4			4			4			4			4			4			4			4			# mmap, mprotect, unix consensus
-syscon	mprot	PROT_GROWSDOWN				0x01000000		0x01000000		0			0			0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap() (todo: what was 0x01000000 on nt)
-syscon	mprot	PROT_GROWSUP				0x02000000		0x02000000		0			0			0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap()
 
 #	mremap() flags
 #	the revolutionary praxis of realloc()

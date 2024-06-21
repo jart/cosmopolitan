@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│ vi: set noet ft=asm ts=8 sw=8 fenc=utf-8                                 :vi │
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,10 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
-#include "libc/macros.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/intrin/maps.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/errfuns.h"
 
-	.init.start 200,_init__mmi
-	movb	$16,_mmi+8
-	movl	$_mmi+24,_mmi+16
-	.init.end 200,_init__mmi
+textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
+
+  int pagesz = getauxval(AT_PAGESZ);
+  size = (size + pagesz - 1) & -pagesz;
+
+  if ((uintptr_t)addr & (pagesz - 1))
+    return einval();
+
+  int rc = 0;
+  for (struct Map *map = __maps.maps; map; map = map->next) {
+    char *beg = MAX(addr, map->addr);
+    char *end = MIN(addr + size, map->addr + map->size);
+    if (beg < end)
+      if (!FlushViewOfFile(beg, end - beg))
+        rc = -1;
+    // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
+  }
+
+  return rc;
+}

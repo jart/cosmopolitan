@@ -28,6 +28,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
@@ -64,10 +65,6 @@ __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
 
-/* #ifndef MODE_DBG */
-/* __static_yoink("threaded_dlmalloc"); */
-/* #endif */
-
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
@@ -76,7 +73,8 @@ void _pthread_free(struct PosixThread *pt, bool isfork) {
   if (pt->pt_flags & PT_STATIC)
     return;
   if (pt->pt_flags & PT_OWNSTACK) {
-    unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
+    unassert(!munmap(pt->pt_attr.__stackaddr,
+                     pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align));
   }
   if (!isfork) {
     uint64_t syshand =
@@ -149,7 +147,7 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   uintptr_t x, y;
   int e, rc, pagesz;
   pagesz = getauxval(AT_PAGESZ);
-  n = attr->__stacksize;
+  n = attr->__stacksize + (uintptr_t)ape_stack_align;
   x = (uintptr_t)attr->__stackaddr;
   y = ROUNDUP(x, pagesz);
   n -= y - x;
@@ -159,7 +157,7 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
                  -1, 0, 0) == (void *)y) {
     attr->__stackaddr = (void *)y;
-    attr->__stacksize = n;
+    attr->__stacksize = n - (uintptr_t)ape_stack_align;
     return 0;
   } else {
     rc = errno;
@@ -214,48 +212,37 @@ static errno_t pthread_create_impl(pthread_t *thread,
     }
   } else {
     // cosmo is managing the stack
-    // 1. in mono repo optimize for tiniest stack possible
-    // 2. in public world optimize to *work* regardless of memory
-    int granularity = FRAMESIZE;
     int pagesize = getauxval(AT_PAGESZ);
     pt->pt_attr.__guardsize = ROUNDUP(pt->pt_attr.__guardsize, pagesize);
-    pt->pt_attr.__stacksize = ROUNDUP(pt->pt_attr.__stacksize, granularity);
+    pt->pt_attr.__stacksize = pt->pt_attr.__stacksize;
     if (pt->pt_attr.__guardsize + pagesize > pt->pt_attr.__stacksize) {
       _pthread_free(pt, false);
       return EINVAL;
     }
-    if (pt->pt_attr.__guardsize == pagesize &&
-        !(IsAarch64() && IsLinux() && IsQemuUser())) {
-      // MAP_GROWSDOWN doesn't work very well on qemu-aarch64
-      pt->pt_attr.__stackaddr =
-          mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
-               MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    } else {
-      pt->pt_attr.__stackaddr =
-          mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if (pt->pt_attr.__stackaddr != MAP_FAILED) {
-        if (IsOpenbsd() &&
-            __sys_mmap(
-                pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
-                PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
-                -1, 0, 0) != pt->pt_attr.__stackaddr) {
-          notpossible;
-        }
-        if (pt->pt_attr.__guardsize) {
-          if (!IsWindows()) {
-            if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                         PROT_NONE)) {
-              notpossible;
-            }
-          } else {
-            uint32_t oldattr;
-            if (!VirtualProtect(pt->pt_attr.__stackaddr,
-                                pt->pt_attr.__guardsize,
-                                kNtPageReadwrite | kNtPageGuard, &oldattr)) {
-              notpossible;
-            }
+    pt->pt_attr.__stackaddr =
+        mmap(0, pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align,
+             PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (pt->pt_attr.__stackaddr != MAP_FAILED) {
+      if (IsOpenbsd() &&
+          __sys_mmap(
+              pt->pt_attr.__stackaddr,
+              pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align,
+              PROT_READ | PROT_WRITE,
+              MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
+              -1, 0, 0) != pt->pt_attr.__stackaddr) {
+        notpossible;
+      }
+      if (pt->pt_attr.__guardsize) {
+        if (!IsWindows()) {
+          if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
+                       PROT_NONE)) {
+            notpossible;
+          }
+        } else {
+          uint32_t oldattr;
+          if (!VirtualProtect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
+                              kNtPageReadwrite | kNtPageGuard, &oldattr)) {
+            notpossible;
           }
         }
       }
@@ -305,8 +292,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
   _pthread_unlock();
 
   // launch PosixThread(pt) in new thread
-  if ((rc = clone(PosixThread, pt->pt_attr.__stackaddr,
-                  pt->pt_attr.__stacksize - (IsOpenbsd() ? 16 : 0),
+  if ((rc = clone(PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
                   CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
                       CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_SETTLS |
                       CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |

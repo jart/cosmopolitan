@@ -66,8 +66,7 @@ o/$(MODE)/libc/intrin/asan.o: private			\
 		CFLAGS +=				\
 			-O2				\
 			-finline			\
-			-finline-functions		\
-			-fpatchable-function-entry=0,0
+			-finline-functions
 
 o//libc/intrin/memmove.o: private			\
 		CFLAGS +=				\

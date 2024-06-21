@@ -21,7 +21,6 @@ const char *DescribeDnotifyFlags(char[80], int) libcesque;
 const char *DescribeErrno(char[30], int) libcesque;
 const char *DescribeFcntlCmd(char[20], int) libcesque;
 const char *DescribeFlockType(char[12], int) libcesque;
-const char *DescribeFrame(char[32], int) libcesque;
 const char *DescribeFutexOp(char[64], int) libcesque;
 const char *DescribeHow(char[12], int) libcesque;
 const char *DescribeInOutInt64(char[23], ssize_t, int64_t *) libcesque;
@@ -80,7 +79,6 @@ const char *DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeErrno(x)             DescribeErrno(alloca(30), x)
 #define DescribeFcntlCmd(x)          DescribeFcntlCmd(alloca(20), x)
 #define DescribeFlockType(x)         DescribeFlockType(alloca(12), x)
-#define DescribeFrame(x)             DescribeFrame(alloca(32), x)
 #define DescribeFutexOp(x)           DescribeFutexOp(alloca(64), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
 #define DescribeInOutInt64(rc, x)    DescribeInOutInt64(alloca(23), rc, x)

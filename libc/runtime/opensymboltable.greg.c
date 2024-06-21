@@ -31,6 +31,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -48,6 +49,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   size_t n, m, tsz, size;
   const Elf64_Sym *symtab, *sym;
   ptrdiff_t names_offset, name_base_offset, stp_offset;
+  long pagesz = getauxval(AT_PAGESZ);
   map = MAP_FAILED;
   if ((fd = open(filename, O_RDONLY | O_CLOEXEC)) == -1)
     return 0;
@@ -73,11 +75,11 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   tsz += sizeof(unsigned) * n;
   name_base_offset = tsz;
   tsz += m;
-  tsz = ROUNDUP(tsz, FRAMESIZE);
+  tsz = ROUNDUP(tsz, pagesz);
   stp_offset = tsz;
   size = tsz;
   tsz += sizeof(const Elf64_Sym *) * n;
-  tsz = ROUNDUP(tsz, FRAMESIZE);
+  tsz = ROUNDUP(tsz, pagesz);
   t = mmap(0, tsz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (t == MAP_FAILED)
     goto SystemError;
@@ -128,7 +130,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
     ++j;
   }
   t->count = j;
-  munmap(stp, ROUNDUP(sizeof(const Elf64_Sym *) * n, FRAMESIZE));
+  munmap(stp, sizeof(const Elf64_Sym *) * n);
   munmap(map, filesize);
   close(fd);
   return t;

@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 int _pthread_tid(struct PosixThread *pt) {
+  if (IsWindows())  // xxx: fixme
+    return pt->ptid;
   int tid = 0;
   while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire))) {
     pthread_pause_np();

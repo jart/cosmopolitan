@@ -970,7 +970,7 @@ int Plinko(int argc, char *argv[]) {
   }
 
   if (mmap((void *)0x200000000000,
-           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), FRAMESIZE),
+           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), __granularity()),
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)(0x200000000000 +
@@ -979,7 +979,7 @@ int Plinko(int argc, char *argv[]) {
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)0x400000000000,
-           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), FRAMESIZE),
+           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), __granularity()),
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)(0x400000000000 +

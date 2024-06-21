@@ -37,11 +37,6 @@ privileged long __get_safe_size(long want, long extraspace) {
     return want;
   struct PosixThread *pt;
   struct CosmoTib *tib = __get_tls_privileged();
-  if (!IsAutoFrame((uintptr_t)tib >> 16) &&
-      !(__executable_start <= (const unsigned char *)tib &&
-        (const unsigned char *)tib < _end)) {
-    return want;
-  }
   long bottom, sp = GetStackPointer();
   if ((char *)sp >= tib->tib_sigstack_addr &&
       (char *)sp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {

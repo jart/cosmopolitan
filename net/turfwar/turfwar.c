@@ -122,7 +122,7 @@
 #define SOCK_MAX           100     // max length of socket queue
 #define MSG_BUF            512     // small response lookaside
 
-#define INBUF_SIZE  FRAMESIZE
+#define INBUF_SIZE  65536
 #define OUTBUF_SIZE 8192
 
 #define TB_BYTES (1u << TB_CIDR)

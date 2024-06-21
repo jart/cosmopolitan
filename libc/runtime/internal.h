@@ -6,7 +6,7 @@
 #include "libc/runtime/runtime.h"
 
 #define STACK_CEIL 0x700000000000ul
-#define STACK_SIZE FRAMESIZE
+#define STACK_SIZE 65536
 
 #define RUNLEVEL_MALLOC 1
 
@@ -41,7 +41,6 @@ long _setstack(void *, void *, ...);
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
-int sys_mprotect_nt(void *, size_t, int);
 int __inflate(void *, size_t, const void *, size_t);
 void *__mmap_unlocked(void *, size_t, int, int, int, int64_t);
 int __munmap_unlocked(char *, size_t);

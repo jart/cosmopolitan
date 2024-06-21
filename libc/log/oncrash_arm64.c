@@ -33,6 +33,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/cosmo.h"
 #include "libc/cxxabi.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
@@ -211,8 +212,6 @@ static relegated void __oncrash_impl(int sig, siginfo_t *si, ucontext_t *ctx) {
   struct utsname names = {0};
   struct Buffer b[1] = {{buf, size}};
   b->p[b->i++] = '\n';
-  ftrace_enabled(-1);
-  strace_enabled(-1);
   __restore_tty();
   uname(&names);
   gethostname(host, sizeof(host));
@@ -390,6 +389,8 @@ static inline void SpinUnlock(atomic_uint *lock) {
 
 relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
   static atomic_uint lock;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   BLOCK_CANCELATION;
   SpinLock(&lock);
   __oncrash_impl(sig, si, arg);
@@ -416,6 +417,8 @@ relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
 
   SpinUnlock(&lock);
   ALLOW_CANCELATION;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
 }
 
 #endif /* __aarch64__ */

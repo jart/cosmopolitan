@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rlimit.internal.h"
@@ -30,6 +31,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
@@ -94,13 +96,6 @@ __static_yoink("_init_asan");
 
 #define ASAN_LOG(...) (void)0  // kprintf(__VA_ARGS__)
 
-#define REQUIRE(FUNC)               \
-  do {                              \
-    if (!_weaken(FUNC)) {           \
-      __asan_require_failed(#FUNC); \
-    }                               \
-  } while (0)
-
 struct AsanSourceLocation {
   char *filename;
   int line;
@@ -161,7 +156,7 @@ static char *__asan_stpcpy(char *d, const char *s) {
   }
 }
 
-void __asan_memset(void *p, char c, size_t n) {
+dontinstrument void __asan_memset(void *p, char c, size_t n) {
   char *b;
   size_t i;
   uint64_t x;
@@ -313,20 +308,16 @@ static wontreturn void __asan_require_failed(const char *func) {
   __asan_unreachable();
 }
 
-void __asan_poison(void *p, long n, signed char t) {
-  signed char k, *s;
-  s = (signed char *)(((intptr_t)p >> 3) + 0x7fff8000);
-  if ((k = (intptr_t)p & 7)) {
-    if ((!*s && n >= 8 - k) || *s > k)
-      *s = k;
-    n -= MIN(8 - k, n);
-    s += 1;
-  }
-  __asan_memset(s, t, n >> 3);
-  if ((k = n & 7)) {
-    s += n >> 3;
-    if (*s < 0 || (*s > 0 && *s <= k))
-      *s = t;
+static bool __asan_overlaps_shadow_space(const void *p, size_t n) {
+  intptr_t BegA, EndA, BegB, EndB;
+  if (n) {
+    BegA = (intptr_t)p;
+    EndA = BegA + n;
+    BegB = 0x7fff0000;
+    EndB = 0x100080000000;
+    return MAX(BegA, BegB) < MIN(EndA, EndB);
+  } else {
+    return 0;
   }
 }
 
@@ -353,15 +344,90 @@ void __asan_unpoison(void *p, long n) {
   }
 }
 
-bool __asan_is_mapped(int x) {
-  // xxx: we can't lock because no reentrant locks yet
-  int i;
-  bool res;
-  __mmi_lock();
-  i = __find_memory(&_mmi, x);
-  res = i < _mmi.i && x >= _mmi.p[i].x;
-  __mmi_unlock();
+dontinstrument void __asan_poison(void *p, long n, signed char t) {
+  signed char k, *s;
+  s = (signed char *)(((intptr_t)p >> 3) + 0x7fff8000);
+  if ((k = (intptr_t)p & 7)) {
+    if ((!*s && n >= 8 - k) || *s > k)
+      *s = k;
+    n -= MIN(8 - k, n);
+    s += 1;
+  }
+  __asan_memset(s, t, n >> 3);
+  if ((k = n & 7)) {
+    s += n >> 3;
+    if (*s < 0 || (*s > 0 && *s <= k))
+      *s = t;
+  }
+}
+
+static void __asan_poison_safe(char *p, long n, signed char t) {
+  int granularity = __granularity();
+  int chunk = granularity << 3;
+  while (n > 0) {
+    char *block = (char *)((uintptr_t)p & -chunk);
+    signed char *shadow = (signed char *)(((uintptr_t)block >> 3) + 0x7fff8000);
+    if (__asan_is_mapped(shadow)) {
+      char *start = MAX(p, block);
+      size_t bytes = MIN(n, chunk);
+      __asan_poison(start, bytes, t);
+    }
+    p += chunk;
+    n -= chunk;
+  }
+}
+
+privileged static bool __asan_is_mapped_unlocked(const char *addr) {
+  struct Dll *e, *e2;
+  for (e = dll_first(__maps.used); e; e = e2) {
+    e2 = dll_next(__maps.used, e);
+    struct Map *map = MAP_CONTAINER(e);
+    if (map->addr <= addr && addr < map->addr + map->size) {
+      dll_remove(&__maps.used, e);
+      dll_make_first(&__maps.used, e);
+      return true;
+    }
+  }
+  return false;
+}
+
+privileged bool __asan_is_mapped(const void *addr) {
+  bool32 res;
+  __maps_lock();
+  res = __asan_is_mapped_unlocked(addr);
+  __maps_unlock();
   return res;
+}
+
+static void __asan_ensure_shadow_is_mapped(void *addr, size_t size) {
+  int m = 0x7fff8000;
+  int g = __granularity();
+  size_t n = (size + 7) & -8;
+  char *p = (char *)((((uintptr_t)addr >> 3) + m) & -g);
+  char *pe = (char *)(((((uintptr_t)(addr + n) >> 3) + m) + g - 1) & -g);
+  for (char *pm = p; p < pe; p = pm) {
+    pm += g;
+    if (!__asan_is_mapped(p)) {
+      while (pm < pe && !__asan_is_mapped(pm))
+        pm += g;
+      if (__mmap(p, pm - p, PROT_READ | PROT_WRITE,
+                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) != MAP_FAILED)
+        __asan_memset(p, kAsanUnmapped, pm - p);
+    }
+  }
+}
+
+void __asan_shadow(void *addr, size_t size) {
+  if (!__asan_overlaps_shadow_space(addr, size)) {
+    __asan_ensure_shadow_is_mapped(addr, size);
+    __asan_unpoison(addr, size);
+  }
+}
+
+void __asan_unshadow(void *addr, size_t size) {
+  if (!__asan_overlaps_shadow_space(addr, size)) {
+    __asan_poison_safe(addr, size, kAsanUnmapped);
+  }
 }
 
 static bool __asan_is_image(const unsigned char *p) {
@@ -387,13 +453,15 @@ static struct AsanFault __asan_fault(const signed char *s, signed char dflt) {
 
 static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
   uint64_t w;
+  int g = __granularity();
+  const signed char *o = s;
   const signed char *e = s + ndiv8;
   for (; ((intptr_t)s & 7) && s < e; ++s) {
     if (*s)
       return __asan_fault(s - 1, kAsanHeapOverrun);
   }
   for (; s + 8 <= e; s += 8) {
-    if (UNLIKELY(!((intptr_t)s & (FRAMESIZE - 1))) && kisdangerous(s)) {
+    if (UNLIKELY(!((intptr_t)s & (g - 1))) && kisdangerous(s)) {
       return (struct AsanFault){kAsanUnmapped, s};
     }
     if ((w = READ64LE(s))) {
@@ -403,7 +471,7 @@ static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
   }
   for (; s < e; ++s) {
     if (*s)
-      return __asan_fault(s - 1, kAsanHeapOverrun);
+      return __asan_fault(s > o ? s - 1 : s, kAsanHeapOverrun);
   }
   return (struct AsanFault){0};
 }
@@ -429,7 +497,7 @@ struct AsanFault __asan_check(const void *p, long n) {
   if (n > 0) {
     k = (intptr_t)p & 7;
     s = SHADOW(p);
-    if (OverlapsShadowSpace(p, n)) {
+    if (__asan_overlaps_shadow_space(p, n)) {
       return (struct AsanFault){kAsanProtected, s};
     } else if (kisdangerous(s)) {
       return (struct AsanFault){kAsanUnmapped, s};
@@ -475,8 +543,9 @@ struct AsanFault __asan_check(const void *p, long n) {
 struct AsanFault __asan_check_str(const char *p) {
   uint64_t w;
   signed char c, k, *s;
+  int g = __granularity();
   s = SHADOW(p);
-  if (OverlapsShadowSpace(p, 1)) {
+  if (__asan_overlaps_shadow_space(p, 1)) {
     return (struct AsanFault){kAsanProtected, s};
   }
   if (kisdangerous(s)) {
@@ -494,7 +563,7 @@ struct AsanFault __asan_check_str(const char *p) {
     ++s;
   }
   for (;; ++s, p += 8) {
-    if (UNLIKELY(!((intptr_t)s & (FRAMESIZE - 1))) && kisdangerous(s)) {
+    if (UNLIKELY(!((intptr_t)s & (g - 1))) && kisdangerous(s)) {
       return (struct AsanFault){kAsanUnmapped, s};
     }
     if ((c = *s) < 0) {
@@ -749,9 +818,9 @@ void __asan_report_memory_origin(const unsigned char *addr, int size,
   }
   if (__executable_start <= addr && addr < _end) {
     __asan_report_memory_origin_image((intptr_t)addr, size);
-  } else if (IsAutoFrame((intptr_t)addr >> 16)) {
-    if (_weaken(__asan_report_memory_origin_heap))
-      _weaken(__asan_report_memory_origin_heap)(addr, size);
+    /* } else if (IsAutoFrame((intptr_t)addr >> 16)) { */
+    /*   if (_weaken(__asan_report_memory_origin_heap)) */
+    /*     _weaken(__asan_report_memory_origin_heap)(addr, size); */
   }
 }
 
@@ -766,9 +835,8 @@ static __wur __asan_die_f *__asan_report(const void *addr, int size,
   int i;
   wint_t c;
   signed char t;
-  uint64_t x, y, z;
+  uint64_t z;
   char *base, *q, *p = buf;
-  struct MemoryIntervals *m;
   ftrace_enabled(-1);
   kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n",
           __asan_describe_access_poison(kind), size, message, addr,
@@ -832,20 +900,20 @@ static __wur __asan_die_f *__asan_report(const void *addr, int size,
   p = __asan_format_section(p, __executable_start, _etext, ".text", addr);
   p = __asan_format_section(p, _etext, _edata, ".data", addr);
   p = __asan_format_section(p, _end, _edata, ".bss", addr);
-  __mmi_lock();
-  for (m = &_mmi, i = 0; i < m->i; ++i) {
-    x = m->p[i].x;
-    y = m->p[i].y;
-    p = __asan_format_interval(p, x << 16, (y << 16) + (FRAMESIZE - 1));
-    z = (intptr_t)addr >> 16;
-    if (x <= z && z <= y)
+  __maps_lock();
+  struct Dll *e, *e2;
+  for (e = dll_first(__maps.used); e; e = e2) {
+    e2 = dll_next(__maps.used, e);
+    struct Map *map = MAP_CONTAINER(e);
+    p = __asan_format_interval(p, (uintptr_t)map->addr,
+                               (uintptr_t)map->addr + map->size);
+    if (!__asan_overlaps_shadow_space(map->addr, map->size))
       p = __asan_stpcpy(p, " ←address");
-    z = (((intptr_t)addr >> 3) + 0x7fff8000) >> 16;
-    if (x <= z && z <= y)
+    else
       p = __asan_stpcpy(p, " ←shadow");
     *p++ = '\n';
   }
-  __mmi_unlock();
+  __maps_unlock();
   *p = 0;
   kprintf("%s", buf);
   __asan_report_memory_origin(addr, size, kind);
@@ -1033,95 +1101,16 @@ void __asan_after_dynamic_init(void) {
   ASAN_LOG("__asan_after_dynamic_init()\n");
 }
 
-void __asan_map_shadow(uintptr_t p, size_t n) {
-  // assume _mmi.lock is held
-  void *addr;
-  int i, a, b;
-  size_t size;
-  int prot, flag;
-  struct DirectMap sm;
-  struct MemoryIntervals *m;
-  if (OverlapsShadowSpace((void *)p, n)) {
-    kprintf("error: %p size %'zu overlaps shadow space: %s\n", p, n,
-            DescribeBacktrace(__builtin_frame_address(0)));
-    _Exit(1);
-  }
-  m = &_mmi;
-  a = (0x7fff8000 + (p >> 3)) >> 16;
-  b = (0x7fff8000 + (p >> 3) + (n >> 3) + 0xffff) >> 16;
-  for (; a <= b; a += i) {
-    i = 1;
-    if (__asan_is_mapped(a)) {
-      continue;
-    }
-    for (; a + i <= b; ++i) {
-      if (__asan_is_mapped(a + i)) {
-        break;
-      }
-    }
-    size = (size_t)i << 16;
-    addr = (void *)ADDR_32_TO_48(a);
-    prot = PROT_READ | PROT_WRITE;
-    flag = MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS;
-    sm = sys_mmap(addr, size, prot, flag, -1, 0);
-    if (sm.addr == MAP_FAILED ||
-        __track_memory(m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
-                       MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, false, false, 0,
-                       size) == -1) {
-      kprintf("error: could not map asan shadow memory\n");
-      __asan_die()();
-      __asan_unreachable();
-    }
-    __repstosb(addr, kAsanUnmapped, size);
-  }
-  __asan_unpoison((char *)p, n);
-}
-
-static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
-                                              size_t i) {
-  uintptr_t x, y;
-  if (i < m->i) {
-    x = m->p[i].x;
-    y = m->p[i].y;
-    __asan_shadow_mapping(m, i + 1);
-    __asan_map_shadow(x << 16, (y - x + 1) << 16);
-  }
-}
-
-static textstartup void __asan_shadow_existing_mappings(void) {
-  __asan_shadow_mapping(&_mmi, 0);
-  if (!IsWindows()) {
-    int guard;
-    void *addr;
-    size_t size;
-    __get_main_stack(&addr, &size, &guard);
-    __asan_map_shadow((uintptr_t)addr, size);
-    __asan_poison(addr, guard, kAsanStackOverflow);
-  }
-}
-
-static size_t __asan_strlen(const char *s) {
-  size_t i = 0;
-  while (s[i])
-    ++i;
-  return i;
-}
-
-forceinline ssize_t __write_str(const char *s) {
-  return sys_write(2, s, __asan_strlen(s));
-}
-
-void __asan_init(int argc, char **argv, char **envp, unsigned long *auxv) {
+void __asan_init(void) {
   static bool once;
-  if (!_cmpxchg(&once, false, true))
+  if (once)
     return;
-  __asan_shadow_existing_mappings();
-  __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
-  __asan_map_shadow(0, 4096);
+  once = true;
+
+  __asan_shadow(0, 4096);
+  __asan_shadow(__maps.stack.addr, __maps.stack.size);
+  __asan_shadow(__executable_start, _end - __executable_start);
   __asan_poison((void *)__veil("r", 0L), getauxval(AT_PAGESZ), kAsanNullPage);
-  if (!IsWindows()) {
-    sys_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
-  }
   STRACE("    _    ____    _    _   _ ");
   STRACE("   / \\  / ___|  / \\  | \\ | |");
   STRACE("  / _ \\ \\___ \\ / _ \\ |  \\| |");

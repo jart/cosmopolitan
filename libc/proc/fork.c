@@ -26,6 +26,8 @@
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
@@ -43,32 +45,29 @@
 #include "libc/thread/tls.h"
 
 static void _onfork_prepare(void) {
-  if (_weaken(_pthread_onfork_prepare)) {
+  if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
-  }
   _pthread_lock();
+  __maps_lock();
   __fds_lock();
-  __mmi_lock();
 }
 
 static void _onfork_parent(void) {
-  __mmi_unlock();
   __fds_unlock();
+  __maps_unlock();
   _pthread_unlock();
-  if (_weaken(_pthread_onfork_parent)) {
+  if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
-  }
 }
 
 static void _onfork_child(void) {
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-  extern pthread_mutex_t __mmi_lock_obj;
-  pthread_mutex_init(&__mmi_lock_obj, &attr);
   pthread_mutex_init(&__fds_lock_obj, &attr);
   pthread_mutexattr_destroy(&attr);
   _pthread_init();
+  __maps_unlock();
   if (_weaken(_pthread_onfork_child)) {
     _weaken(_pthread_onfork_child)();
   }
@@ -81,9 +80,8 @@ int _fork(uint32_t dwCreationFlags) {
   BLOCK_SIGNALS;
   if (IsWindows())
     __proc_lock();
-  if (__threaded) {
+  if (__threaded)
     _onfork_prepare();
-  }
   if (!IsWindows()) {
     ax = sys_fork();
   } else {

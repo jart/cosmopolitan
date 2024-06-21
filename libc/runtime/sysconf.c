@@ -25,9 +25,11 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/clktck.h"
+#include "libc/intrin/maps.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/ss.h"
@@ -58,7 +60,7 @@ long sysconf(int name) {
     case _SC_CLK_TCK:
       return CLK_TCK;
     case _SC_PAGESIZE:
-      return FRAMESIZE;
+      return __granularity();
     case _SC_ARG_MAX:
       return __get_arg_max();
     case _SC_SIGSTKSZ:

@@ -24,7 +24,6 @@
 
 const char *(DescribeMapFlags)(char buf[64], int x) {
   const struct DescribeFlags kMapFlags[] = {
-      {MAP_STACK, "STACK"},                      // order matters
       {MAP_PRIVATE, "PRIVATE"},                  //
       {MAP_ANONYMOUS, "ANONYMOUS"},              //
       {MAP_SHARED, "SHARED"},                    //

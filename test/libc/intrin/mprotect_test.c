@@ -148,18 +148,18 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
 }
 
 TEST(mprotect, testExecOnly_canExecute) {
-  char *p = _mapanon(FRAMESIZE);
+  char *p = _mapanon(__granularity());
   void (*f)(void) = (void *)p;
   memcpy(p, kRet31337, sizeof(kRet31337));
-  ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC | PROT_READ));
+  ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_EXEC | PROT_READ));
   f();
   // On all supported platforms, PROT_EXEC implies PROT_READ. There is
   // one exception to this rule: Chromebook's fork of the Linux kernel
   // which has been reported, to have the ability to prevent a program
   // from reading its own code.
-  ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC));
+  ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_EXEC));
   f();
-  munmap(p, FRAMESIZE);
+  munmap(p, __granularity());
 }
 
 TEST(mprotect, testProtNone_cantEvenRead) {
@@ -242,4 +242,13 @@ TEST(mprotect, testZeroSize_doesNothing) {
   p[0] = 1;
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
+}
+
+TEST(mprotect, image) {
+  _Alignas(16384) static const char lol[16384] = {1, 2, 3};
+  intptr_t i = (intptr_t)lol;
+  asm("" : "+r"(i));
+  char *p = (char *)i;
+  EXPECT_SYS(0, 0, mprotect(p, 16384, PROT_READ | PROT_WRITE));
+  EXPECT_EQ(2, ++p[0]);
 }

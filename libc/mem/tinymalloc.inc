@@ -14,6 +14,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "libc/assert.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/stdalign.internal.h"
@@ -28,7 +29,7 @@
 #define TINYMALLOC_MAX_ALIGN 4096
 #endif
 
-#ifndef MODE_DBG /* don't interfere with asan malloc */
+#if !IsAsan()
 
 alignas(TINYMALLOC_MAX_ALIGN) static struct {
   char memory[TINYMALLOC_MAX_BYTES];
@@ -167,4 +168,4 @@ OutOfMemory:
   return 0;
 }
 
-#endif /* MODE_DBG */
+#endif /* IsAsan() */

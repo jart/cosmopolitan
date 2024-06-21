@@ -29,8 +29,6 @@ static char DescribeMapType(int flags) {
       return 'p';
     case MAP_SHARED:
       return 's';
-    case MAP_STACK:
-      return 'S';
     default:
       return '?';
   }

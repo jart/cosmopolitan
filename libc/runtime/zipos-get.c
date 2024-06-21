@@ -62,7 +62,7 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   }
 
   // unmap the executable portion beneath the local files
-  mo = ROUNDDOWN(lo, FRAMESIZE);
+  mo = ROUNDDOWN(lo, __granularity());
   if (mo)
     munmap(map, mo);
 

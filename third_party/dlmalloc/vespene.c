@@ -28,10 +28,8 @@
  */
 void *dlmalloc_requires_more_vespene_gas(size_t size) {
   char *p;
-  if ((p = _mapanon(size))) {
-    if (IsAsan()) {
+  if ((p = _mapanon(size)))
+    if (IsAsan())
       __asan_poison(p, size, kAsanHeapFree);
-    }
-  }
   return p;
 }

@@ -23,5 +23,5 @@
  * @see sysconf(_SC_PAGE_SIZE) which is portable
  */
 int getpagesize(void) {
-  return FRAMESIZE;
+  return __granularity();
 }

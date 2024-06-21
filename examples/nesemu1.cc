@@ -137,7 +137,7 @@ struct Action {
 
 struct Audio {
   size_t i;
-  int16_t p[FRAMESIZE];
+  int16_t p[65536];
 };
 
 struct Status {

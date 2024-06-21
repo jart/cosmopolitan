@@ -235,7 +235,6 @@
 
 (defconst cosmo-cpp-constants-cosmopolitan
  '("__SAUCE__"
-   "FRAMESIZE"
    "ARG_MAX"
    "PATH_MAX"
    "BUFSIZ"

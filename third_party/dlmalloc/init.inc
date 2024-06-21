@@ -1,3 +1,5 @@
+#include "libc/sysv/consts/auxv.h"
+#include "libc/runtime/runtime.h"
 
 /* ---------------------------- setting mparams -------------------------- */
 
@@ -5,24 +7,18 @@
 #if ONLY_MSPACES
 
 static void dlmalloc_pre_fork(void) {
-  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      ACQUIRE_LOCK(&h->mutex);
+    ACQUIRE_LOCK(&g_heaps[i].m.mutex);
 }
 
 static void dlmalloc_post_fork_parent(void) {
-  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      RELEASE_LOCK(&h->mutex);
+    RELEASE_LOCK(&g_heaps[i].m.mutex);
 }
 
 static void dlmalloc_post_fork_child(void) {
-  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      (void)INITIAL_LOCK(&h->mutex);
+    (void)INITIAL_LOCK(&g_heaps[i].m.mutex);
 }
 
 #else
@@ -46,8 +42,8 @@ __attribute__((__constructor__(49))) int init_mparams(void) {
     size_t gsize;
 
 #if defined(__COSMOPOLITAN__)
-    psize = FRAMESIZE;
-    gsize = FRAMESIZE;
+    psize = getauxval(AT_PAGESZ);
+    gsize = DEFAULT_GRANULARITY ? DEFAULT_GRANULARITY : psize;
 #elif !defined(WIN32)
     psize = malloc_getpagesize;
     gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);

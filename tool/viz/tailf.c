@@ -36,7 +36,7 @@
 int fd;
 bool exited;
 struct stat st;
-char buf[FRAMESIZE];
+char buf[65536];
 
 int WriteString(const char *s) {
   return write(1, s, strlen(s));

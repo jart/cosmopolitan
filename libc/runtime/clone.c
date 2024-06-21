@@ -47,6 +47,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/stdalign.internal.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/arch.h"
 #include "libc/sysv/consts/clone.h"
@@ -80,27 +81,25 @@
 struct CloneArgs {
   alignas(16) union {
     struct {
-      int tid;
+      atomic_int tid;
       int this;
     };
-    uint32_t utid;
     int64_t tid64;
   };
-  int *ptid;
-  int *ctid;
-  int *ztid;
+  atomic_int *ptid;
+  atomic_int *ctid;
+  atomic_int *ztid;
   char *tls;
   int (*func)(void *, int);
   void *arg;
+  long sp;
 };
 
 int sys_set_tls(uintptr_t, void *);
-int __stack_call(void *, int, long, long, int (*)(void *, int), void *);
+int __stack_call(void *, int, long, long, int (*)(void *, int), long);
 
-static struct CloneArgs *AllocateCloneArgs(char *stk, size_t stksz) {
-  return (struct CloneArgs *)(((uintptr_t)(stk + stksz) -
-                               sizeof(struct CloneArgs)) &
-                              -16);
+static long AlignStack(long sp, char *stk, long stksz, int mal) {
+  return sp & -mal;
 }
 
 #ifdef __x86_64__
@@ -120,8 +119,8 @@ WinThreadEntry(int rdi,                            // rcx
   int rc;
   if (wt->tls)
     __set_tls_win32(wt->tls);
-  *wt->ctid = wt->tid;
-  rc = __stack_call(wt->arg, wt->tid, 0, 0, wt->func, wt);
+  *wt->ctid = GetCurrentThreadId();
+  rc = __stack_call(wt->arg, wt->tid, 0, 0, wt->func, wt->sp);
   // we can now clear ctid directly since we're no longer using our own
   // stack memory, which can now be safely free'd by the parent thread.
   *wt->ztid = 0;
@@ -134,23 +133,30 @@ WinThreadEntry(int rdi,                            // rcx
 
 static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
                                         size_t stksz, int flags, void *arg,
-                                        void *tls, int *ptid, int *ctid) {
+                                        void *tls, atomic_int *ptid,
+                                        atomic_int *ctid) {
+  long sp;
   int64_t h;
+  uint32_t utid;
   struct CloneArgs *wt;
-  wt = AllocateCloneArgs(stk, stksz);
+  sp = (intptr_t)stk + stksz;
+  sp = AlignStack(sp, stk, stksz, 16);
+  sp -= sizeof(struct CloneArgs);
+  sp &= -alignof(struct CloneArgs);
+  wt = (struct CloneArgs *)sp;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->func = func;
   wt->arg = arg;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
+  wt->sp = sp;
   if ((h = CreateThread(&kNtIsInheritable, 65536, (void *)WinThreadEntry, wt,
-                        kNtStackSizeParamIsAReservation, &wt->utid))) {
+                        kNtStackSizeParamIsAReservation, &utid))) {
+    if (flags & CLONE_PARENT_SETTID)
+      *ptid = utid;
     if (flags & CLONE_SETTLS) {
       struct CosmoTib *tib = tls;
       atomic_store_explicit(&tib->tib_syshand, h, memory_order_release);
-    }
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = wt->tid;
     }
     return 0;
   } else {
@@ -222,14 +228,26 @@ XnuThreadMain(void *pthread,                    // rdi
 }
 
 static errno_t CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
-                        void *arg, void *tls, int *ptid, int *ctid) {
+                        void *arg, void *tls, atomic_int *ptid,
+                        atomic_int *ctid) {
+
+  // perform this weird mandatory system call once
   static bool once;
-  struct CloneArgs *wt;
   if (!once) {
     npassert(sys_bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) != -1);
     once = true;
   }
-  wt = AllocateCloneArgs(stk, stksz);
+
+  // setup stack for thread
+  long sp;
+  struct CloneArgs *wt;
+  sp = (intptr_t)stk + stksz;
+  sp = AlignStack(sp, stk, stksz, 16);
+  sp -= sizeof(struct CloneArgs);
+  sp &= -alignof(struct CloneArgs);
+  wt = (struct CloneArgs *)sp;
+
+  // pass parameters to new thread via xnu
   wt->ptid = flags & CLONE_PARENT_SETTID ? ptid : &wt->tid;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
@@ -260,8 +278,8 @@ static wontreturn void OpenbsdThreadMain(void *p) {
 }
 
 static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
-                            int flags, void *arg, void *tls, int *ptid,
-                            int *ctid) {
+                            int flags, void *arg, void *tls, atomic_int *ptid,
+                            atomic_int *ctid) {
   int rc;
   intptr_t sp;
   struct __tfork *tf;
@@ -273,11 +291,12 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
   sp -= sizeof(struct CloneArgs);
   sp &= -alignof(struct CloneArgs);
   wt = (struct CloneArgs *)sp;
+  sp = AlignStack(sp, stk, stksz, 16);
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->arg = arg;
   wt->func = func;
-  tf->tf_stack = (char *)wt - 8;
+  tf->tf_stack = (char *)sp - 8;
   tf->tf_tcb = flags & CLONE_SETTLS ? tls : 0;
   tf->tf_tid = &wt->tid;
   if ((rc = __tfork_thread(tf, sizeof(*tf), OpenbsdThreadMain, wt)) >= 0) {
@@ -297,7 +316,7 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
 static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
                                         int (*func)(void *, int),  // rsi
                                         int *tid,                  // rdx
-                                        int *ctid,                 // rcx
+                                        atomic_int *ctid,          // rcx
                                         int *ztid) {               // r9
   int ax, dx;
   // TODO(jart): Why are we seeing flakes where *tid is zero?
@@ -316,11 +335,13 @@ static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
 }
 
 static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
-                       int flags, void *arg, void *tls, int *ptid, int *ctid) {
+                       int flags, void *arg, void *tls, atomic_int *ptid,
+                       atomic_int *ctid) {
   // NetBSD has its own clone() and it works, but it's technically a
   // second-class API, intended to help Linux folks migrate to this.
+  int ax;
   bool failed;
-  int ax, *tid;
+  atomic_int *tid;
   intptr_t dx, sp;
   static bool once;
   struct ucontext_netbsd *ctx;
@@ -335,16 +356,16 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
     npassert(!failed);
     once = true;
   }
-  sp = (intptr_t)(stk + stksz);
+  sp = (intptr_t)stk + stksz;
 
   // allocate memory for tid
-  sp -= sizeof(int);
-  sp = sp & -alignof(int);
-  tid = (int *)sp;
+  sp -= sizeof(atomic_int);
+  sp = sp & -alignof(atomic_int);
+  tid = (atomic_int *)sp;
   *tid = 0;
 
   // align the stack
-  sp = sp & -16;
+  sp = AlignStack(sp, stk, stksz, 16);
 
   // simulate call to misalign stack and ensure backtrace looks good
   sp -= 8;
@@ -439,11 +460,16 @@ static wontreturn void FreebsdThreadMain(void *p) {
 }
 
 static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
-                            int flags, void *arg, void *tls, int *ptid,
-                            int *ctid) {
+                            int flags, void *arg, void *tls, atomic_int *ptid,
+                            atomic_int *ctid) {
+  long sp;
   int64_t tid;
   struct CloneArgs *wt;
-  wt = AllocateCloneArgs(stk, stksz);
+  sp = (intptr_t)stk + stksz;
+  sp -= sizeof(struct CloneArgs);
+  sp &= -alignof(struct CloneArgs);
+  wt = (struct CloneArgs *)sp;
+  sp = AlignStack(sp, stk, stksz, 16);
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = tls;
@@ -453,7 +479,7 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
       .start_func = FreebsdThreadMain,
       .arg = wt,
       .stack_base = stk,
-      .stack_size = (uintptr_t)wt - (uintptr_t)stk,
+      .stack_size = sp - (long)stk,
       .tls_base = flags & CLONE_SETTLS ? tls : 0,
       .tls_size = 64,
       .child_tid = &wt->tid64,
@@ -492,15 +518,16 @@ static void *SiliconThreadMain(void *arg) {
   struct CloneArgs *wt = arg;
   asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(wt->tls));
   *wt->ctid = wt->this;
-  __stack_call(wt->arg, wt->this, 0, 0, wt->func, wt);
+  __stack_call(wt->arg, wt->this, 0, 0, wt->func, wt->sp);
   *wt->ztid = 0;
   ulock_wake(UL_COMPARE_AND_WAIT | ULF_WAKE_ALL, wt->ztid, 0);
   return 0;
 }
 
 static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
-                            int flags, void *arg, void *tls, int *ptid,
-                            int *ctid) {
+                            int flags, void *arg, void *tls, atomic_int *ptid,
+                            atomic_int *ctid) {
+  long sp;
   void *attr;
   errno_t res;
   unsigned tid;
@@ -508,7 +535,11 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
   size_t babystack;
   struct CloneArgs *wt;
   static atomic_uint tids;
-  wt = AllocateCloneArgs(stk, stksz);
+  sp = (intptr_t)stk + stksz;
+  sp -= sizeof(struct CloneArgs);
+  sp &= -alignof(struct CloneArgs);
+  wt = (struct CloneArgs *)sp;
+  sp = AlignStack(sp, stk, stksz, 16);
   tid = atomic_fetch_add_explicit(&tids, 1, memory_order_acq_rel);
   wt->this = tid = (tid & (kMaxThreadIds - 1)) + kMinThreadId;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
@@ -516,6 +547,7 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
   wt->func = fn;
   wt->arg = arg;
+  wt->sp = sp;
   babystack = __syslib->__pthread_stack_min;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
@@ -545,16 +577,16 @@ struct LinuxCloneArgs {
   int (*func)(void *, int);
   void *arg;
   char *tls;
-  int ctid;
+  atomic_int ctid;
 };
 
-int sys_clone_linux(int flags,   // rdi
-                    long sp,     // rsi
-                    int *ptid,   // rdx
-                    int *ctid,   // rcx
-                    void *tls,   // r8
-                    void *func,  // r9
-                    void *arg);  // 8(rsp)
+int sys_clone_linux(int flags,         // rdi
+                    long sp,           // rsi
+                    atomic_int *ptid,  // rdx
+                    atomic_int *ctid,  // rcx
+                    void *tls,         // r8
+                    void *func,        // r9
+                    void *arg);        // 8(rsp)
 
 static int LinuxThreadEntry(void *arg, int tid) {
   struct LinuxCloneArgs *wt = arg;
@@ -563,19 +595,21 @@ static int LinuxThreadEntry(void *arg, int tid) {
 }
 
 static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
-                      int flags, void *arg, void *tls, int *ptid, int *ctid) {
+                      int flags, void *arg, void *tls, atomic_int *ptid,
+                      atomic_int *ctid) {
   int rc;
   long sp;
   struct LinuxCloneArgs *wt;
-  sp = (intptr_t)(stk + stksz);
+  sp = (intptr_t)stk + stksz;
   sp -= sizeof(struct LinuxCloneArgs);
+  sp &= -alignof(struct LinuxCloneArgs);
+  wt = (struct LinuxCloneArgs *)sp;
   // align the stack
 #ifdef __aarch64__
-  sp = sp & -128;  // for kernel 4.6 and earlier
+  sp = AlignStack(sp, stk, stksz, 128);  // for kernel <=4.6
 #else
-  sp = sp & -16;
+  sp = AlignStack(sp, stk, stksz, 16);
 #endif
-  wt = (struct LinuxCloneArgs *)sp;
 #ifdef __x86_64__
   if (flags & CLONE_SETTLS) {
     flags &= ~CLONE_SETTLS;

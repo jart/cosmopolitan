@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/runtime/runtime.h"
 
-void PrintSystemMappings(int outfd) {
-  int infd;
-  ssize_t rc;
-  char buf[64];
-  if (!IsWindows()) {
-    if ((infd = __sys_openat(AT_FDCWD, "/proc/self/maps", O_RDONLY, 0)) >= 0) {
-      sys_write(outfd, "\n", 1);
-      while ((rc = sys_read(infd, buf, sizeof(buf))) > 0) {
-        sys_write(outfd, buf, rc);
-      }
+/**
+ * Prints memory mappings.
+ */
+void __print_maps(void) {
+  int limit = 10;
+  long maptally = 0;
+  char mappingbuf[8], sb[16];
+  for (struct Map *map = __maps.maps; map; map = map->next) {
+    maptally += map->size;
+    kprintf("%012lx-%012lx %!s", map->addr, map->addr + map->size,
+            (DescribeMapping)(mappingbuf, map->prot, map->flags));
+    sizefmt(sb, map->size, 1024);
+    kprintf(" %!sb", sb);
+    if (map->h && map->h != -1)
+      kprintf(" h=%ld", map->h);
+    if (map->iscow)
+      kprintf(" cow");
+    if (map->readonlyfile)
+      kprintf(" readonlyfile");
+    kprintf("\n");
+    if (!--limit) {
+      kprintf("...\n");
+      break;
     }
-    sys_close(infd);
   }
+  sizefmt(sb, maptally, 1024);
+  kprintf("# %!sb mapped memory\n", sb);
 }

@@ -28,7 +28,7 @@
  *
  * It's required that `elem` and `succ` aren't part of the same list.
  */
-void dll_splice_after(struct Dll *elem, struct Dll *succ) {
+privileged void dll_splice_after(struct Dll *elem, struct Dll *succ) {
   struct Dll *tmp1, *tmp2;
   tmp1 = elem->next;
   tmp2 = succ->prev;
@@ -43,7 +43,7 @@ void dll_splice_after(struct Dll *elem, struct Dll *succ) {
  *
  * @param list is a doubly-linked list, where `!*list` means empty
  */
-void dll_remove(struct Dll **list, struct Dll *elem) {
+privileged void dll_remove(struct Dll **list, struct Dll *elem) {
   if (*list == elem) {
     if ((*list)->prev == *list) {
       *list = 0;
@@ -66,7 +66,7 @@ void dll_remove(struct Dll **list, struct Dll *elem) {
  * @param list is a doubly-linked list, where `!*list` means empty
  * @param elem must not be a member of `list`, or null for no-op
  */
-void dll_make_first(struct Dll **list, struct Dll *elem) {
+privileged void dll_make_first(struct Dll **list, struct Dll *elem) {
   if (elem) {
     if (!*list) {
       *list = elem->prev;
@@ -85,7 +85,7 @@ void dll_make_first(struct Dll **list, struct Dll *elem) {
  * @param list is a doubly-linked list, where `!*list` means empty
  * @param elem must not be a member of `list`, or null for no-op
  */
-void dll_make_last(struct Dll **list, struct Dll *elem) {
+privileged void dll_make_last(struct Dll **list, struct Dll *elem) {
   if (elem) {
     dll_make_first(list, elem->next);
     *list = elem;

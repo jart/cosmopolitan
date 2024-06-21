@@ -4,7 +4,7 @@ COSMOPOLITAN_C_START_
 
 struct __tfork {
   void *tf_tcb;
-  int32_t *tf_tid;
+  _Atomic(int) *tf_tid;
   void *tf_stack;
 };
 

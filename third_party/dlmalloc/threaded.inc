@@ -31,9 +31,20 @@
 #error "threaded dlmalloc needs footers and mspaces"
 #endif
 
+union Heap {
+  struct malloc_state mstate;
+  struct {
+    size_t top_foot[2];
+    struct malloc_state m;
+  };
+  _Alignas(16) char mspace[DEFAULT_GRANULARITY];
+};
+
+static void init_heap(union Heap *heap, int locked);
+
 static struct magicu magiu;
 static unsigned g_heapslen;
-static mstate g_heaps[128];
+static union Heap g_heaps[128];
 
 void dlfree(void *p) {
   return mspace_free(0, p);
@@ -54,7 +65,7 @@ int dlmallopt(int param_number, int value) {
 int dlmalloc_trim(size_t pad) {
   int got_some = 0;
   for (unsigned i = 0; i < g_heapslen; ++i)
-    got_some |= mspace_trim(g_heaps[i], pad);
+    got_some |= mspace_trim(&g_heaps[i].m, pad);
   return got_some;
 }
 
@@ -68,7 +79,7 @@ void dlmalloc_inspect_all(void handler(void *start, void *end,
                                        size_t used_bytes, void *callback_arg),
                           void *arg) {
   for (unsigned i = 0; i < g_heapslen; ++i)
-    mspace_inspect_all(g_heaps[i], handler, arg);
+    mspace_inspect_all(&g_heaps[i].m, handler, arg);
 }
 
 forceinline mstate get_arena(void) {
@@ -82,11 +93,11 @@ forceinline mstate get_arena(void) {
   asm("mrs\t%0,tpidr_el0" : "=r"(tpidr_el0));
   cpu = tpidr_el0 & 255;
 #endif
-  return g_heaps[__magicu_div(cpu, magiu) % g_heapslen];
+  return &g_heaps[__magicu_div(cpu, magiu) % g_heapslen].m;
 }
 
 static void *dlmalloc_single(size_t n) {
-  return mspace_malloc(g_heaps[0], n);
+  return mspace_malloc(&g_heaps[0].m, n);
 }
 
 static void *dlmalloc_threaded(size_t n) {
@@ -94,7 +105,7 @@ static void *dlmalloc_threaded(size_t n) {
 }
 
 static void *dlcalloc_single(size_t n, size_t z) {
-  return mspace_calloc(g_heaps[0], n, z);
+  return mspace_calloc(&g_heaps[0].m, n, z);
 }
 
 static void *dlcalloc_threaded(size_t n, size_t z) {
@@ -102,7 +113,7 @@ static void *dlcalloc_threaded(size_t n, size_t z) {
 }
 
 static void *dlrealloc_single(void *p, size_t n) {
-  return mspace_realloc(g_heaps[0], p, n);
+  return mspace_realloc(&g_heaps[0].m, p, n);
 }
 
 static void *dlrealloc_threaded(void *p, size_t n) {
@@ -113,7 +124,7 @@ static void *dlrealloc_threaded(void *p, size_t n) {
 }
 
 static void *dlmemalign_single(size_t a, size_t n) {
-  return mspace_memalign(g_heaps[0], a, n);
+  return mspace_memalign(&g_heaps[0].m, a, n);
 }
 
 static void *dlmemalign_threaded(size_t a, size_t n) {
@@ -121,7 +132,7 @@ static void *dlmemalign_threaded(size_t a, size_t n) {
 }
 
 static struct mallinfo dlmallinfo_single(void) {
-  return mspace_mallinfo(g_heaps[0]);
+  return mspace_mallinfo(&g_heaps[0].m);
 }
 
 static struct mallinfo dlmallinfo_threaded(void) {
@@ -144,8 +155,7 @@ static void use_single_heap(bool uses_locks) {
   dlrealloc = dlrealloc_single;
   dlmemalign = dlmemalign_single;
   dlmallinfo = dlmallinfo_single;
-  if (!(g_heaps[0] = create_mspace(0, uses_locks)))
-    __builtin_trap();
+  init_heap(&g_heaps[0], uses_locks);
 }
 
 static void threaded_dlmalloc(void) {
@@ -180,10 +190,9 @@ static void threaded_dlmalloc(void) {
   // we need this too due to linux's cpu count affinity hack
   g_heapslen = heaps;
 
-  // create the arenas
+  // create the heaps
   for (size_t i = 0; i < g_heapslen; ++i)
-    if (!(g_heaps[i] = create_mspace(0, true)))
-      __builtin_trap();
+    init_heap(&g_heaps[i], true);
 
   // install function pointers
   dlmalloc = dlmalloc_threaded;
@@ -192,5 +201,5 @@ static void threaded_dlmalloc(void) {
   dlmemalign = dlmemalign_threaded;
   dlmallinfo = dlmallinfo_threaded;
 
-  STRACE("created %d dlmalloc arenas for %d cpus", heaps, cpus);
+  STRACE("created %d dlmalloc heaps for %d cpus", heaps, cpus);
 }

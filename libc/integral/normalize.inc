@@ -84,7 +84,6 @@
 #endif
 
 #ifdef _COSMO_SOURCE
-#define FRAMESIZE 65536
 #define _PAGESIZE 4096
 #endif
 

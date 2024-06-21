@@ -23,6 +23,13 @@ static mstate init_user_mstate(char* tbase, size_t tsize) {
   return m;
 }
 
+// [jart] rather than calling mmap() 96 times from _start() just use .bss
+static void init_heap(union Heap *heap, int locked) {
+  mstate m = init_user_mstate(heap->mspace, sizeof(*heap));
+  m->seg.sflags = USE_MMAP_BIT;
+  set_lock(m, locked);
+}
+
 mspace create_mspace(size_t capacity, int locked) {
   mstate m = 0;
   size_t msize;

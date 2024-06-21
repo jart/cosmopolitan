@@ -85,7 +85,7 @@ TEST(pledge, default_allowsExit) {
   int *job;
   int ws, pid;
   // create small shared memory region
-  ASSERT_NE(-1, (job = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+  ASSERT_NE(-1, (job = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                             MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
   job[0] = 2;  // create workload
   job[1] = 2;
@@ -99,7 +99,7 @@ TEST(pledge, default_allowsExit) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));
   EXPECT_EQ(4, job[0]);  // check result
-  EXPECT_SYS(0, 0, munmap(job, FRAMESIZE));
+  EXPECT_SYS(0, 0, munmap(job, __granularity()));
 }
 
 TEST(pledge, execpromises_notok) {
@@ -297,7 +297,7 @@ TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
     errno = 0;
     // set lower 32-bit word of pointer to zero lool
     struct sockaddr_in *sin =
-        mmap((void *)0x300000000000, FRAMESIZE, PROT_READ | PROT_WRITE,
+        mmap((void *)0x300000000000, __granularity(), PROT_READ | PROT_WRITE,
              MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     sin->sin_family = AF_INET;
     ASSERT_SYS(
@@ -333,7 +333,7 @@ TEST(pledge, unix_forbidsInetSockets) {
 TEST(pledge, wpath_doesNotImplyRpath) {
   int ws, pid;
   bool *gotsome;
-  ASSERT_NE(-1, (gotsome = _mapshared(FRAMESIZE)));
+  ASSERT_NE(-1, (gotsome = _mapshared(__granularity())));
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -411,13 +411,13 @@ TEST(pledge, mmap) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));
-    ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+    ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-    ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ));
+    ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_READ));
     ASSERT_SYS(EPERM, MAP_FAILED,
-               mprotect(p, FRAMESIZE, PROT_READ | PROT_EXEC));
+               mprotect(p, __granularity(), PROT_READ | PROT_EXEC));
     ASSERT_SYS(EPERM, MAP_FAILED,
-               mmap(0, FRAMESIZE, PROT_EXEC | PROT_READ,
+               mmap(0, __granularity(), PROT_EXEC | PROT_READ,
                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     _Exit(0);
   }
@@ -433,11 +433,11 @@ TEST(pledge, mmapProtExec) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio prot_exec", 0));
-    ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+    ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-    ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ));
-    ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ | PROT_EXEC));
-    ASSERT_NE(MAP_FAILED, mmap(0, FRAMESIZE, PROT_EXEC | PROT_READ,
+    ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_READ));
+    ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_READ | PROT_EXEC));
+    ASSERT_NE(MAP_FAILED, mmap(0, __granularity(), PROT_EXEC | PROT_READ,
                                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     _Exit(0);
   }

@@ -25,6 +25,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
@@ -251,7 +252,7 @@ textstartup void __enable_tls(void) {
   _pthread_static.pt_flags = PT_STATIC;
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
-  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
+  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_release);
 
   // ask the operating system to change the x86 segment register
   __set_tls(tib);

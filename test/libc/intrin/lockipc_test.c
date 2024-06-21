@@ -47,7 +47,7 @@ TEST(lockipc, mutex) {
   int e, rc, ws, pid;
 
   // create shared memory
-  shm = _mapshared(FRAMESIZE);
+  shm = _mapshared(__granularity());
 
   // create shared mutex
   pthread_mutexattr_t mattr;
@@ -86,5 +86,5 @@ TEST(lockipc, mutex) {
 
   EXPECT_EQ(PROCESSES * ITERATIONS, shm->x);
   ASSERT_EQ(0, pthread_mutex_destroy(&shm->mutex));
-  ASSERT_SYS(0, 0, munmap(shm, FRAMESIZE));
+  ASSERT_SYS(0, 0, munmap(shm, __granularity()));
 }

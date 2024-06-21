@@ -23,6 +23,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nexgen32e/lz4.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -84,7 +85,7 @@ TEST(lz4, zoneFileGmt) {
                 (mapsize = roundup(
                      LZ4_FRAME_BLOCKCONTENTSIZE(lz4check(dict)) +
                          (gmtsize = LZ4_FRAME_BLOCKCONTENTSIZE(lz4check(gmt))),
-                     FRAMESIZE)))),
+                     __granularity())))),
            dict)),
       gmt);
   ASSERT_BINEQ(

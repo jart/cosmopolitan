@@ -25,8 +25,11 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
@@ -45,9 +48,11 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/serialize.h"
 #include "libc/stdckdint.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
@@ -117,7 +122,7 @@ __msabi extern typeof(SetLastError) *const __imp_SetLastError;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
-long __klog_handle;
+extern long __klog_handle;
 extern struct SymbolTable *__symtab;
 
 __funline char *kadvance(char *p, char *e, long n) {
@@ -141,20 +146,6 @@ __funline char *kemitquote(char *p, char *e, signed char t, unsigned c) {
   return p;
 }
 
-__funline bool kiskernelpointer(const void *p) {
-  return 0x7f0000000000 <= (intptr_t)p && (intptr_t)p < 0x800000000000;
-}
-
-__funline bool kistextpointer(const void *p) {
-  return __executable_start <= (const unsigned char *)p &&
-         (const unsigned char *)p < _etext;
-}
-
-__funline bool kisimagepointer(const void *p) {
-  return __executable_start <= (const unsigned char *)p &&
-         (const unsigned char *)p < _end;
-}
-
 __funline bool kischarmisaligned(const char *p, signed char t) {
   if (t == -1)
     return (intptr_t)p & 1;
@@ -163,55 +154,26 @@ __funline bool kischarmisaligned(const char *p, signed char t) {
   return false;
 }
 
-__funline bool kismemtrackhosed(void) {
-  return !((_weaken(_mmi)->i <= _weaken(_mmi)->n) &&
-           (_weaken(_mmi)->p == _weaken(_mmi)->s ||
-            _weaken(_mmi)->p == (struct MemoryInterval *)kMemtrackStart));
-}
-
-privileged static bool kismapped(int x) {
-  // xxx: we can't lock because no reentrant locks yet
-  size_t m, r, l = 0;
-  if (!_weaken(_mmi))
-    return true;
-  if (kismemtrackhosed())
-    return false;
-  r = _weaken(_mmi)->i;
-  while (l < r) {
-    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-    if (_weaken(_mmi)->p[m].y < x) {
-      l = m + 1;
-    } else {
-      r = m;
+privileged static bool32 kisdangerous_unlocked(const char *addr) {
+  struct Dll *e, *e2;
+  for (e = dll_first(__maps.used); e; e = e2) {
+    e2 = dll_next(__maps.used, e);
+    struct Map *map = MAP_CONTAINER(e);
+    if (map->addr <= addr && addr < map->addr + map->size) {
+      dll_remove(&__maps.used, e);
+      dll_make_first(&__maps.used, e);
+      return !(map->prot & PROT_READ);
     }
   }
-  if (l < _weaken(_mmi)->i && x >= _weaken(_mmi)->p[l].x) {
-    return !!(_weaken(_mmi)->p[l].prot & PROT_READ);
-  } else {
-    return false;
-  }
+  return true;
 }
 
-privileged bool32 kisdangerous(const void *p) {
-  int frame;
-  if (kisimagepointer(p))
-    return false;
-  if (kiskernelpointer(p))
-    return false;
-  if (IsOldStack(p))
-    return false;
-  if (IsLegalPointer(p)) {
-    frame = (uintptr_t)p >> 16;
-    if (IsStackFrame(frame))
-      return false;
-    if (kismapped(frame))
-      return false;
-  }
-  if (GetStackAddr() + GetGuardSize() <= (uintptr_t)p &&
-      (uintptr_t)p < GetStackAddr() + GetStackSize()) {
-    return false;
-  }
-  return true;
+privileged bool32 kisdangerous(const void *addr) {
+  bool32 res;
+  __maps_lock();
+  res = kisdangerous_unlocked(addr);
+  __maps_unlock();
+  return res;
 }
 
 privileged static void klogclose(long fd) {
@@ -463,10 +425,6 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
   char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, ansi, z[128];
-  if (kistextpointer(b) || kisdangerous(b))
-    n = 0;
-  if (!kistextpointer(fmt))
-    fmt = "!!WONTFMT";
   p = b;
   f = fmt;
   e = p + n;  // assume if n was negative e < p will be the case

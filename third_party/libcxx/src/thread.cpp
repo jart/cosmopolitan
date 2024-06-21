@@ -21,7 +21,7 @@
 #endif
 
 #if defined(__NetBSD__)
-#pragma weak pthread_create // Do not create libpthread dependency
+//#pragma weak pthread_create // Do not create libpthread dependency
 #endif
 
 #if defined(_LIBCPP_WIN32API)

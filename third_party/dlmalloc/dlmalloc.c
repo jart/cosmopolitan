@@ -24,6 +24,7 @@
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 #include "libc/thread/tls.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/nsync/mu.h"
 
 #if !IsTiny()

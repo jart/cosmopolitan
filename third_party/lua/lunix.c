@@ -55,7 +55,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/clktck.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
@@ -127,7 +126,7 @@ static void *LuaRealloc(lua_State *L, void *p, size_t n) {
   if ((p2 = realloc(p, n))) {
     return p2;
   }
-  if (IsLegalSize(n)) {
+  if (n < 0x100000000000) {
     WARNF("reacting to malloc() failure by running lua garbage collector...");
     luaC_fullgc(L, 1);
     p2 = realloc(p, n);
@@ -2934,7 +2933,7 @@ static int LuaUnixMapshared(lua_State *L) {
     luaL_error(L, "size must be multiple of word size");
     __builtin_unreachable();
   }
-  if (!IsLegalSize(n)) {
+  if (n >= 0x100000000000) {
     luaL_error(L, "map size too big");
     __builtin_unreachable();
   }

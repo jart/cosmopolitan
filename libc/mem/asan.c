@@ -123,21 +123,13 @@ static void *__asan_allocate_heap(size_t a, size_t n, struct AsanTrace *bt) {
 }
 
 static struct AsanExtra *__asan_get_extra(const void *p, size_t *c) {
-  int f;
-  long x, n;
-  struct AsanExtra *e;
-  f = (intptr_t)p >> 16;
-  if (!kisdangerous(p) && (n = dlmalloc_usable_size((void *)p)) > sizeof(*e) &&
-      !ckd_add(&x, (intptr_t)p, n) && x <= 0x800000000000 &&
-      (LIKELY(f == (int)((x - 1) >> 16)) || !kisdangerous((void *)(x - 1))) &&
-      (LIKELY(f == (int)((x = x - sizeof(*e)) >> 16)) ||
-       __asan_is_mapped(x >> 16)) &&
-      !(x & (_Alignof(struct AsanExtra) - 1))) {
-    *c = n;
-    return (struct AsanExtra *)x;
-  } else {
+  long n;
+  if (kisdangerous(p))
     return 0;
-  }
+  if ((n = dlmalloc_usable_size((void *)p)) < sizeof(struct AsanExtra))
+    return 0;
+  *c = n;
+  return (struct AsanExtra *)(p + n - sizeof(struct AsanExtra));
 }
 
 // Returns true if `p` was allocated by an IGNORE_LEAKS(function).
@@ -153,7 +145,7 @@ int __asan_is_leaky(void *p) {
     return 0;
   if (!__asan_read48(e->size, &n))
     return 0;
-  if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16))
+  if (!__asan_is_mapped((char *)(((intptr_t)p >> 3) + 0x7fff8000)))
     return 0;
   if (!(st = GetSymbolTable()))
     return 0;
@@ -182,7 +174,7 @@ int __asan_print_trace(void *p) {
     return -1;
   }
   kprintf("\n%p %,lu bytes [asan]", (char *)p, n);
-  if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16))
+  if (!__asan_is_mapped((char *)(((intptr_t)p >> 3) + 0x7fff8000)))
     kprintf(" (shadow not mapped?!)");
   for (i = 0; i < ARRAYLEN(e->bt.p) && e->bt.p[i]; ++i)
     kprintf("\n%*lx %t", 12, e->bt.p[i], e->bt.p[i]);

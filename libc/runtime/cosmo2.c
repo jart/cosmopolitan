@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -162,13 +163,8 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   // needed by kisdangerous()
   __pid = sys_getpid().ax;
 
-  // initialize memory manager
-  _mmi.i = 0;
-  _mmi.p = _mmi.s;
-  _mmi.n = ARRAYLEN(_mmi.s);
-  __virtualmax = -1;
-
   // initialize file system
+  __maps_init();
   __init_fds(argc, argv, envp);
 
   // prepend cwd to executable path

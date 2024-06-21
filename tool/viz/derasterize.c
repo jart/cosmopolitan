@@ -452,7 +452,7 @@ static void PrintImage(unsigned yn, unsigned xn,
   size_t size;
   char *v, *vt;
   size = yn * (xn * (32 + (2 + (1 + 3) * 3) * 2 + 1 + 3)) * 1 + 5 + 1;
-  size = ROUNDUP(size, FRAMESIZE);
+  size = ROUNDUP(size, __granularity());
   CHECK_NOTNULL((vt = _mapanon(size)));
   v = RenderImage(vt, yn, xn, rgb);
   *v++ = '\r';
@@ -550,8 +550,8 @@ static void LoadFile(const char *path, size_t yn, size_t xn, void *rgb) {
   stbir_resize_uint8(data, gotx, goty, 0, rgb, xn * XS, yn * YS, 0, CN);
 #else
   CHECK_EQ(CN, 3);
-  data2size = ROUNDUP(sizeof(float) * goty * gotx * CN, FRAMESIZE);
-  data3size = ROUNDUP(sizeof(float) * yn * YS * xn * XS * CN, FRAMESIZE);
+  data2size = ROUNDUP(sizeof(float) * goty * gotx * CN, __granularity());
+  data3size = ROUNDUP(sizeof(float) * yn * YS * xn * XS * CN, __granularity());
   CHECK_NOTNULL((data2 = _mapanon(data2size)));
   CHECK_NOTNULL((data3 = _mapanon(data3size)));
   rgb2lin(goty * gotx * CN, data2, data);
@@ -625,7 +625,7 @@ int main(int argc, char *argv[]) {
   // FIXME: on the conversion stage should do 2Y because of halfblocks
   // printf( "filename >%s<\tx >%d<\ty >%d<\n\n", filename, x_, y_);
   size = y_ * YS * x_ * XS * CN;
-  CHECK_NOTNULL((rgb = _mapanon(ROUNDUP(size, FRAMESIZE))));
+  CHECK_NOTNULL((rgb = _mapanon(ROUNDUP(size, __granularity()))));
   for (i = optind; i < argc; ++i) {
     if (!argv[i])
       continue;
@@ -636,7 +636,7 @@ int main(int argc, char *argv[]) {
     }
     PrintImage(y_, x_, rgb);
   }
-  munmap(rgb, ROUNDUP(size, FRAMESIZE));
+  munmap(rgb, ROUNDUP(size, __granularity()));
   return 0;
 }
 

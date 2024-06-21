@@ -14,38 +14,38 @@ struct Dll {
   struct Dll *prev;
 };
 
-static inline void dll_init(struct Dll *e) {
+forceinline void dll_init(struct Dll *e) {
   e->next = e;
   e->prev = e;
 }
 
-static inline int dll_is_alone(struct Dll *e) {
+forceinline int dll_is_alone(struct Dll *e) {
   return e->next == e && e->prev == e;
 }
 
-static inline int dll_is_empty(struct Dll *list) {
+forceinline int dll_is_empty(struct Dll *list) {
   return !list;
 }
 
-static inline struct Dll *dll_last(struct Dll *list) {
+forceinline struct Dll *dll_last(struct Dll *list) {
   return list;
 }
 
-static inline struct Dll *dll_first(struct Dll *list) {
+forceinline struct Dll *dll_first(struct Dll *list) {
   struct Dll *first = 0;
   if (list)
     first = list->next;
   return first;
 }
 
-static inline struct Dll *dll_next(struct Dll *list, struct Dll *e) {
+forceinline struct Dll *dll_next(struct Dll *list, struct Dll *e) {
   struct Dll *next = 0;
   if (e != list)
     next = e->next;
   return next;
 }
 
-static inline struct Dll *dll_prev(struct Dll *list, struct Dll *e) {
+forceinline struct Dll *dll_prev(struct Dll *list, struct Dll *e) {
   struct Dll *prev = 0;
   if (e != list->next)
     prev = e->prev;

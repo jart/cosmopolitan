@@ -1,6 +1,7 @@
 /*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
 │ vi: set et sts=2 sw=2 fenc=utf-8                                         :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
 
 ENTRY(_start)
@@ -285,8 +286,12 @@ SECTIONS {
 
 ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000;
 ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : 8 * 1024 * 1024;
-ape_stack_align = DEFINED(ape_stack_align) ? ape_stack_align : 16;
+ape_stack_align = DEFINED(ape_stack_align) ? MAX(ape_stack_align, 16) : 16;
+ape_stack_prot = PROT_READ | PROT_WRITE;
 ape_stack_round = -ape_stack_align;
+
+ASSERT(ape_stack_align < 1048576, "stack align too big");
+ASSERT(!(ape_stack_align & (ape_stack_align - 1)), "stack align must be two power");
 
 _tls_size = _tbss_end - _tdata_start;
 _tdata_size = _tdata_end - _tdata_start;

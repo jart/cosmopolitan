@@ -28,11 +28,11 @@
 int i, *p;
 
 void SetUp(void) {
-  p = _mapshared(FRAMESIZE);
+  p = _mapshared(__granularity());
 }
 
 void TearDown(void) {
-  munmap(p, FRAMESIZE);
+  munmap(p, __granularity());
 }
 
 void AtExit3(void) {

@@ -33,6 +33,9 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/map.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -149,28 +152,14 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
-static struct {
-	nsync_atomic_uint32_ mu;
-	size_t used;
-	char *p, *e;
-} malloc;
-
 static void *nsync_malloc (size_t size) {
-	void *res = 0;
-	nsync_spin_test_and_set_ (&malloc.mu, 1, 1, 0);
-	if (malloc.p + malloc.used + size > malloc.e) {
-		if (!malloc.p) {
-			malloc.p = malloc.e = (char *)kMemtrackNsyncStart;
-		}
-		malloc.e = _extend (malloc.p, malloc.used + size, malloc.e, MAP_PRIVATE,
-				    kMemtrackNsyncStart + kMemtrackNsyncSize);
-		if (!malloc.e) {
-			nsync_panic_ ("out of memory\n");
-		}
-	}
-	res = malloc.p + malloc.used;
-	malloc.used = (malloc.used + size + 15) & -16;
-	ATM_STORE_REL (&malloc.mu, 0);
+	void *res;
+	res = mmap (0, size,
+		    PROT_READ | PROT_WRITE,
+		    MAP_PRIVATE | MAP_ANONYMOUS,
+		    -1, 0);
+	if (res == MAP_FAILED)
+		nsync_panic_ ("out of memory\n");
 	return res;
 }
 

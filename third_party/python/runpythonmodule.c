@@ -48,6 +48,7 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
+#include "libc/runtime/stack.h"
 #include "third_party/xed/x86.h"
 
 STATIC_STACK_SIZE(0x100000);

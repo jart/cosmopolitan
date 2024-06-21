@@ -4,6 +4,7 @@
 #define TLS_ALIGNMENT 64
 
 #define TIB_FLAG_VFORKED 1
+#define TIB_FLAG_MAPLOCK 2
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

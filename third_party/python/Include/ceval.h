@@ -1,8 +1,6 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
 #include "libc/dce.h"
-#include "libc/intrin/likely.h"
-#include "libc/runtime/stack.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
@@ -108,23 +106,9 @@ void Py_LeaveRecursiveCall(void);
 extern int _Py_CheckRecursionLimit;
 int _Py_CheckRecursiveCall(const char *);
 #define Py_LeaveRecursiveCall() PyThreadState_GET()->recursion_depth--
-#define Py_EnterRecursiveCall(where)                                    \
-  ({                                                                    \
-    int rc = 0;                                                         \
-    intptr_t rsp, bot;                                                  \
-    if (IsModeDbg()) {                                                  \
-      PyThreadState_GET()->recursion_depth++;                           \
-      rc = _Py_CheckRecursiveCall(where);                               \
-    } else {                                                            \
-      rsp = (intptr_t)__builtin_frame_address(0);                       \
-      bot = GetStackAddr() + 32768;                                     \
-      if (UNLIKELY(rsp < bot)) {                                        \
-        PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);     \
-        rc = -1;                                                        \
-      }                                                                 \
-    }                                                                   \
-    rc;                                                                 \
-  })
+#define Py_EnterRecursiveCall(where)            \
+  (PyThreadState_GET()->recursion_depth++,      \
+   _Py_CheckRecursiveCall(where))
 #endif
 
 #define Py_ALLOW_RECURSION                          \

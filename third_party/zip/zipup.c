@@ -24,6 +24,7 @@
 #include "third_party/bzip2/bzlib.h"
 #include "libc/calls/typedef/u.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/runtime/runtime.h"
 #include "libc/errno.h"
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
@@ -47,7 +48,7 @@
 #endif
 
 #undef PAGESIZE
-#define PAGESIZE FRAMESIZE
+#define PAGESIZE __granularity()
 
 #if defined(MMAP)
 #include "libc/calls/calls.h"

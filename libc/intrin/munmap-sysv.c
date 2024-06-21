@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
-
-// TODO(jart): DELETE
+#include "libc/runtime/syslib.internal.h"
 
 /**
- * Returns true if address isn't stack and was malloc'd or mmap'd.
+ * Unmaps memory directly with system.
  *
- * @assume stack addresses are always greater than heap addresses
- * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
- * @deprecated
+ * This function bypasses memtrack. Therefore it won't work on Windows,
+ * but it works on everything else including bare metal.
+ *
+ * @asyncsignalsafe
  */
-optimizesize bool32 _isheap(const void *p) {
-  intptr_t x, y;
-  x = kAutomapStart;
-  y = x + kAutomapSize;
-  return x <= (intptr_t)p && (intptr_t)p < y;
+int sys_munmap(void *p, size_t n) {
+  int rc;
+  if (IsXnuSilicon()) {
+    rc = _sysret(__syslib->__munmap(p, n));
+  } else if (IsMetal()) {
+    rc = sys_munmap_metal(p, n);
+  } else {
+    rc = __sys_munmap(p, n);
+  }
+  if (!rc)
+    __virtualsize -= n;
+  KERNTRACE("sys_munmap(%p, %'zu) → %d", p, n, rc);
+  return rc;
 }

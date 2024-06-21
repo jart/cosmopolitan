@@ -351,7 +351,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
                           struct Serializer *z, int depth) {
   int rc;
   bool multi;
-  if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
+  if (UNLIKELY(GetStackPointer() < z->bsp)) {
     z->reason = "out of stack";
     return -1;
   }
@@ -424,7 +424,11 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
 int LuaEncodeLuaData(lua_State *L, char **buf, int idx,
                      struct EncoderConfig conf) {
   int rc;
-  struct Serializer z = {.reason = "out of memory", .conf = conf};
+  struct Serializer z = {
+    .reason = "out of memory",
+    .bsp = GetStackBottom() + 4096,
+    .conf = conf,
+  };
   if (lua_checkstack(L, conf.maxdepth * 3 + LUA_MINSTACK)) {
     rc = Serialize(L, buf, idx, &z, 0);
     free(z.visited.p);

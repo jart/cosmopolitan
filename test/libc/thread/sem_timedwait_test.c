@@ -129,7 +129,7 @@ TEST(sem_timedwait, threads) {
 
 TEST(sem_timedwait, processes) {
   int i, r, rc, n = 4, pshared = 1;
-  sem_t *sm = _mapshared(FRAMESIZE), *s[2] = {sm, sm + 1};
+  sem_t *sm = _mapshared(__granularity()), *s[2] = {sm, sm + 1};
   ASSERT_SYS(0, 0, sem_init(s[0], pshared, 0));
   ASSERT_SYS(0, 0, sem_init(s[1], pshared, 0));
   for (i = 0; i < n; ++i) {
@@ -163,5 +163,5 @@ TEST(sem_timedwait, processes) {
   ASSERT_EQ(0, r);
   ASSERT_SYS(0, 0, sem_destroy(s[1]));
   ASSERT_SYS(0, 0, sem_destroy(s[0]));
-  ASSERT_SYS(0, 0, munmap(sm, FRAMESIZE));
+  ASSERT_SYS(0, 0, munmap(sm, __granularity()));
 }

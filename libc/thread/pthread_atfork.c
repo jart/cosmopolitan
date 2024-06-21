@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/state.internal.h"
 #include "libc/cosmo.h"
@@ -25,8 +24,8 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/leaky.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -42,18 +41,19 @@ struct AtFork {
 static struct AtForks {
   pthread_spinlock_t lock;
   struct AtFork *list;
-  struct AtFork pool[8];
+  struct AtFork pool[64];
   atomic_int allocated;
 } _atforks;
 
-static void _pthread_onfork(int i) {
+static void _pthread_onfork(int i, const char *op) {
   struct AtFork *a;
-  unassert(0 <= i && i <= 2);
   if (!i)
     pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
-    if (a->f[i])
+    if (a->f[i]) {
+      STRACE("pthread_atfork(%s, %t)", op, a->f[i]);
       a->f[i]();
+    }
     _atforks.list = a;
   }
   if (i)
@@ -61,15 +61,15 @@ static void _pthread_onfork(int i) {
 }
 
 void _pthread_onfork_prepare(void) {
-  _pthread_onfork(0);
+  _pthread_onfork(0, "prepare");
 }
 
 void _pthread_onfork_parent(void) {
-  _pthread_onfork(1);
+  _pthread_onfork(1, "parent");
 }
 
 void _pthread_onfork_child(void) {
-  _pthread_onfork(2);
+  _pthread_onfork(2, "child");
 }
 
 static struct AtFork *_pthread_atfork_alloc(void) {
@@ -78,7 +78,7 @@ static struct AtFork *_pthread_atfork_alloc(void) {
       (i = atomic_fetch_add(&_atforks.allocated, 1)) < n) {
     return _atforks.pool + i;
   } else {
-    return malloc(sizeof(struct AtFork));
+    return 0;
   }
 }
 

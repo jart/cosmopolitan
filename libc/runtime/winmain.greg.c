@@ -20,6 +20,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/dll.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -192,28 +194,26 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   __imp_AddVectoredExceptionHandler(true, (void *)OnWinCrash);
 
   // allocate memory for stack and argument block
-  _mmi.p = _mmi.s;
-  _mmi.n = ARRAYLEN(_mmi.s);
-  uintptr_t stackaddr = GetStaticStackAddr(0);
+  char *stackaddr = (char *)GetStaticStackAddr(0);
   size_t stacksize = GetStaticStackSize();
   __imp_MapViewOfFileEx(
-      (_mmi.p[0].h = __imp_CreateFileMappingW(
+      (__maps.stack.h = __imp_CreateFileMappingW(
            -1, 0, kNtPageExecuteReadwrite, stacksize >> 32, stacksize, NULL)),
-      kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize, (void *)stackaddr);
+      kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize, stackaddr);
   int prot = (intptr_t)ape_stack_prot;
   if (~prot & PROT_EXEC) {
     uint32_t old;
-    __imp_VirtualProtect((void *)stackaddr, stacksize, kNtPageReadwrite, &old);
+    __imp_VirtualProtect(stackaddr, stacksize, kNtPageReadwrite, &old);
   }
   uint32_t oldattr;
-  __imp_VirtualProtect((void *)stackaddr, GetGuardSize(),
+  __imp_VirtualProtect(stackaddr, GetGuardSize(),
                        kNtPageReadwrite | kNtPageGuard, &oldattr);
-  _mmi.p[0].x = stackaddr >> 16;
-  _mmi.p[0].y = (stackaddr >> 16) + ((stacksize - 1) >> 16);
-  _mmi.p[0].prot = prot;
-  _mmi.p[0].flags = 0x00000026;  // stack+anonymous
-  _mmi.p[0].size = stacksize;
-  _mmi.i = 1;
+  __maps.stack.addr = stackaddr;
+  __maps.stack.size = stacksize;
+  __maps.stack.prot = prot;
+  __maps.maps = &__maps.stack;
+  dll_init(&__maps.stack.elem);
+  dll_make_first(&__maps.used, &__maps.stack.elem);
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
 
@@ -300,7 +300,7 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
 
   // handover control to cosmopolitan runtime
   __stack_call(count, wa->argv, wa->envp, wa->auxv, cosmo,
-               stackaddr + (stacksize - sizeof(struct WinArgs)));
+               (uintptr_t)(stackaddr + (stacksize - sizeof(struct WinArgs))));
 }
 
 abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,

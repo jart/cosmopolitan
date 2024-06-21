@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/net/ljson.h"
+#include "libc/assert.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -28,6 +29,7 @@
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/thread/thread.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -91,19 +93,18 @@ static const char kJsonStr[256] = {
 };
 
 static struct DecodeJson Parse(struct lua_State *L, const char *p,
-                               const char *e, int context, int depth) {
+                               const char *e, int context, int depth,
+                               uintptr_t bsp) {
   long x;
   char w[4];
   luaL_Buffer b;
   struct DecodeJson r;
   const char *a, *reason;
   int A, B, C, D, c, d, i, u;
-  if (UNLIKELY(!depth)) {
+  if (UNLIKELY(!depth))
     return (struct DecodeJson){-1, "maximum depth exceeded"};
-  }
-  if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
+  if (UNLIKELY(GetStackPointer() < bsp))
     return (struct DecodeJson){-1, "out of stack"};
-  }
   for (a = p, d = +1; p < e;) {
     switch ((c = *p++ & 255)) {
       case ' ':  // spaces
@@ -240,7 +241,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           goto OnColonCommaKey;
         lua_newtable(L);  // +1
         for (context = ARRAY, i = 0;;) {
-          r = Parse(L, p, e, context, depth - 1);  // +2
+          r = Parse(L, p, e, context, depth - 1, bsp);  // +2
           if (UNLIKELY(r.rc == -1)) {
             lua_pop(L, 1);
             return r;
@@ -279,7 +280,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         lua_newtable(L);  // +1
         context = KEY | OBJECT;
         for (;;) {
-          r = Parse(L, p, e, context, depth - 1);  // +2
+          r = Parse(L, p, e, context, depth - 1, bsp);  // +2
           if (r.rc == -1) {
             lua_pop(L, 1);
             return r;
@@ -288,7 +289,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           if (!r.rc) {
             return (struct DecodeJson){1, p};
           }
-          r = Parse(L, p, e, COLON, depth - 1);  // +3
+          r = Parse(L, p, e, COLON, depth - 1, bsp);  // +3
           if (r.rc == -1) {
             lua_pop(L, 2);
             return r;
@@ -599,8 +600,9 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 struct DecodeJson DecodeJson(struct lua_State *L, const char *p, size_t n) {
   if (n == -1)
     n = p ? strlen(p) : 0;
+  uintptr_t bsp = GetStackBottom() + 4096;
   if (lua_checkstack(L, DEPTH * 3 + LUA_MINSTACK)) {
-    return Parse(L, p, p + n, 0, DEPTH);
+    return Parse(L, p, p + n, 0, DEPTH, bsp);
   } else {
     return (struct DecodeJson){-1, "can't set stack depth"};
   }

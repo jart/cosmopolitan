@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
@@ -30,7 +31,7 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   bzero(st, sizeof(*st));
   st->st_nlink = 1;
   st->st_dev = zipos->dev;
-  st->st_blksize = FRAMESIZE;
+  st->st_blksize = __granularity();
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
     st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
                                         &__umask, memory_order_acquire));

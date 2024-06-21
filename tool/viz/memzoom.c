@@ -281,8 +281,8 @@ static void SetupCanvas(void) {
     munmap(buffer, buffersize);
   }
   displaysize = ROUNDUP(ROUNDUP((tyn * txn) << zoom, 16), 1ul << zoom);
-  canvassize = ROUNDUP(displaysize, FRAMESIZE);
-  buffersize = ROUNDUP(tyn * txn * 16 + 4096, FRAMESIZE);
+  canvassize = ROUNDUP(displaysize, __granularity());
+  buffersize = ROUNDUP(tyn * txn * 16 + 4096, __granularity());
   canvas = Allocate(canvassize);
   buffer = Allocate(buffersize);
 }

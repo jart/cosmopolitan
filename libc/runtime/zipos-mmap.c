@@ -20,6 +20,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -37,7 +38,7 @@
  * Map zipos file into memory. See mmap.
  *
  * @param addr should be 0 or a compatible address
- * @param size must be >0 and will be rounded up to FRAMESIZE
+ * @param size must be >0 and will be rounded up to granularity
  *     automatically.
  * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
  * @param flags cannot have `MAP_SHARED` or `MAP_ANONYMOUS`, there is
@@ -76,7 +77,7 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
   flags |= MAP_PRIVATE | MAP_ANONYMOUS;
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
-  void *outAddr = __mmap_unlocked(addr, size, tempProt, flags, -1, 0);
+  void *outAddr = __mmap(addr, size, tempProt, flags, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
@@ -96,7 +97,7 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
   } while (0);
 
   const int e = errno;
-  __munmap_unlocked(outAddr, size);
+  munmap(outAddr, size);
   errno = e;
   strace_enabled(+1);
   return MAP_FAILED;

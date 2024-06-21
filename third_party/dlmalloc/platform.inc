@@ -111,7 +111,7 @@
 #if (MORECORE_CONTIGUOUS || defined(WIN32))
 #define DEFAULT_GRANULARITY (0)  /* 0 means to compute in init_mparams */
 #else   /* MORECORE_CONTIGUOUS */
-#define DEFAULT_GRANULARITY ((size_t)256U * (size_t)1024U)
+#define DEFAULT_GRANULARITY ((size_t)64U * (size_t)1024U)
 #endif  /* MORECORE_CONTIGUOUS */
 #endif  /* DEFAULT_GRANULARITY */
 #ifndef DEFAULT_TRIM_THRESHOLD
