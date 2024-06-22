@@ -7,18 +7,24 @@
 #if ONLY_MSPACES
 
 static void dlmalloc_pre_fork(void) {
+  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    ACQUIRE_LOCK(&g_heaps[i].m.mutex);
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      ACQUIRE_LOCK(&h->mutex);
 }
 
 static void dlmalloc_post_fork_parent(void) {
+  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    RELEASE_LOCK(&g_heaps[i].m.mutex);
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      RELEASE_LOCK(&h->mutex);
 }
 
 static void dlmalloc_post_fork_child(void) {
+  mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
-    (void)INITIAL_LOCK(&g_heaps[i].m.mutex);
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      (void)INITIAL_LOCK(&h->mutex);
 }
 
 #else
