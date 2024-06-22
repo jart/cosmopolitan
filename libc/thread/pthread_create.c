@@ -24,7 +24,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
@@ -258,10 +257,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
       }
     }
     pt->pt_flags |= PT_OWNSTACK;
-    if (IsAsan() && !IsWindows() && pt->pt_attr.__guardsize) {
-      __asan_poison(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                    kAsanStackOverflow);
-    }
   }
 
   // set initial status

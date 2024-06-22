@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Frees and clears (sets to NULL) each non-null pointer in given array.
@@ -33,4 +32,3 @@ size_t bulk_free(void **p, size_t n) {
   return dlbulk_free(p, n);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

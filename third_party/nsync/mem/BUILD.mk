@@ -46,7 +46,6 @@ $(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
 			-ffreestanding			\
 			-fdata-sections			\
 			-ffunction-sections		\
-			-fno-sanitize=address		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 

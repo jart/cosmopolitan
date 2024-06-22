@@ -23,7 +23,6 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
@@ -51,11 +50,8 @@ bool32 issymlink(const char *path) {
   union metastat st;
   struct ZiposUri zipname;
   e = errno;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    efault();
-    res = false;
-  } else if (_weaken(__zipos_open) &&
-             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (_weaken(__zipos_open) &&
+      _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     res = false;
   } else if (IsMetal()) {
     res = false;

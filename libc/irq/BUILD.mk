@@ -43,8 +43,6 @@ $(LIBC_IRQ_A).pkg:					\
 		$(LIBC_IRQ_A_OBJS)			\
 		$(foreach x,$(LIBC_IRQ_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_IRQ_A_OBJS): private COPTS += -fno-sanitize=address
-
 LIBC_IRQ_LIBS = $(foreach x,$(LIBC_IRQ_ARTIFACTS),$($(x)))
 LIBC_IRQ_SRCS = $(foreach x,$(LIBC_IRQ_ARTIFACTS),$($(x)_SRCS))
 LIBC_IRQ_HDRS = $(foreach x,$(LIBC_IRQ_ARTIFACTS),$($(x)_HDRS))

@@ -22,7 +22,6 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
@@ -47,8 +46,6 @@ static ssize_t writev_impl(int fd, const struct iovec *iov, int iovlen) {
     return ebadf();
   if (iovlen < 0)
     return einval();
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
-    return efault();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)
     return ebadf();  // posix specifies this when not open()'d for writing
 

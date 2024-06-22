@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -47,14 +46,6 @@
  */
 void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
-
-#ifdef __SANITIZE_ADDRESS__
-  if ((uintptr_t)SHADOW(p) & (G - 1))
-    __builtin_trap();
-  if ((uintptr_t)p + (G << kAsanScale) > h)
-    __builtin_trap();
-#endif
-
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
       if (q + G > (char *)h)
@@ -64,6 +55,5 @@ void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
         return 0;
     }
   }
-
   return q;
 }

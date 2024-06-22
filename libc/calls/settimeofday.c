@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/asan.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
@@ -29,7 +28,7 @@
  */
 int settimeofday(const struct timeval *tv, const struct timezone *tz) {
   int rc;
-  if (!tv || (IsAsan() && !__asan_is_valid_timeval(tv))) {
+  if (!tv) {
     rc = efault();
   } else {
     rc = sys_settimeofday(tv, 0);

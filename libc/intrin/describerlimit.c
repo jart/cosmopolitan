@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 
@@ -27,8 +26,7 @@ const char *DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
     return "n/a";
   if (!rlim)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(rlim)) ||
-      (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
+  if (kisdangerous(rlim)) {
     ksnprintf(buf, 64, "%p", rlim);
   } else {
     ksnprintf(buf, 64, "{%'ld, %'ld}", rlim->rlim_cur, rlim->rlim_max);

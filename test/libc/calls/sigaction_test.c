@@ -374,7 +374,7 @@ void OnSegfault(int sig) {
   }
 }
 
-dontubsan dontasan int Segfault(char *p) {
+dontubsan int Segfault(char *p) {
   return *p;
 }
 

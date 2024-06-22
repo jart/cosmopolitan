@@ -57,9 +57,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   union sockaddr_storage_bsd bsd;
 
   BEGIN_CANCELATION_POINT;
-  if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
-    rc = efault();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();
   } else if (!IsWindows()) {
     if (IsBsd() && msg->msg_name) {

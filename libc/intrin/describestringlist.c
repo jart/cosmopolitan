@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
@@ -30,10 +29,6 @@ const char *(DescribeStringList)(char buf[N], char *const list[]) {
 
   if (!list)
     return "NULL";
-  if (IsAsan() && !__asan_is_valid_strlist(list)) {
-    ksnprintf(buf, N, "%p", list);
-    return buf;
-  }
 
   append("{");
   i = 0;

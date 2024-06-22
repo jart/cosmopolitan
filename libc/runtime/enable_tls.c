@@ -20,8 +20,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.internal.h"
@@ -151,22 +149,12 @@ textstartup void __enable_tls(void) {
     mem = _weaken(_mapanon)(siz);
   }
 
-  if (IsAsan()) {
-    // poison the space between .tdata and .tbss
-    __asan_poison(mem + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
-                  kAsanProtected);
-  }
-
   struct CosmoTib *tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
   char *tls = mem + siz - sizeof(*tib) - I(_tls_size);
 
   // copy in initialized data section
   if (I(_tdata_size)) {
-    if (IsAsan()) {
-      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
-    } else {
-      memcpy(tls, _tdata_start, I(_tdata_size));
-    }
+    memcpy(tls, _tdata_start, I(_tdata_size));
   }
 
 #elif defined(__aarch64__)

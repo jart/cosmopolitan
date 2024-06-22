@@ -47,9 +47,6 @@ void SetUpOnce(void) {
 
 TEST(open, efault) {
   ASSERT_SYS(EFAULT, -1, open(0, O_RDONLY));
-  if (IsWindows() || !IsAsan())
-    return;  // not possible
-  ASSERT_SYS(EFAULT, -1, open((void *)77, O_RDONLY));
 }
 
 TEST(open, enoent) {

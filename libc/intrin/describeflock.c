@@ -19,7 +19,6 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/flock.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/f.h"
@@ -33,8 +32,7 @@ const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
 
   if (!l)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(l)) ||
-      (IsAsan() && !__asan_is_valid(l, sizeof(*l)))) {
+  if (kisdangerous(l)) {
     ksnprintf(buf, N, "%p", l);
     return buf;
   }

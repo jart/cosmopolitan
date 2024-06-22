@@ -20,7 +20,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
@@ -59,7 +58,7 @@ int chdir(const char *path) {
   if (_weaken(GetProgramExecutableName)) {
     _weaken(GetProgramExecutableName)();
   }
-  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+  if (!path) {
     rc = efault();
   } else if (_weaken(__zipos_parseuri) &&
              _weaken(__zipos_parseuri)(path, &zipname) != -1) {

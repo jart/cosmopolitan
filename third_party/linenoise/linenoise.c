@@ -138,7 +138,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.internal.h"

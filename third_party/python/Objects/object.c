@@ -1897,7 +1897,7 @@ _Py_NewReference(PyObject *op)
     _Py_INC_TPALLOCS(op);
 }
 
-dontasan void
+void
 _Py_ForgetReference(PyObject *op)
 {
 #ifdef SLOW_UNREF_CHECK

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/asan.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -63,7 +62,7 @@ static int sys_clock_getres_xnu(int clock, struct timespec *ts) {
  */
 int clock_getres(int clock, struct timespec *ts) {
   int rc;
-  if (!ts || (IsAsan() && !__asan_is_valid_timespec(ts))) {
+  if (!ts) {
     rc = efault();
   } else if (clock == 127) {
     rc = einval();  // 127 is used by consts.sh to mean unsupported

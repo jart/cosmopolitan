@@ -21,9 +21,9 @@
 #include "libc/calls/struct/sigaltstack.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/ss.h"
@@ -129,11 +129,8 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
  */
 int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;
-  if (IsAsan() && ((old && !__asan_is_valid(old, sizeof(*old))) ||
-                   (neu && !__asan_is_valid(neu, sizeof(*neu))))) {
-    rc = efault();
-  } else if (neu && ((neu->ss_size >> 32) ||  //
-                     (neu->ss_flags & ~(SS_ONSTACK | SS_DISABLE)))) {
+  if (neu && ((neu->ss_size >> 32) ||  //
+              (neu->ss_flags & ~(SS_ONSTACK | SS_DISABLE)))) {
     rc = einval();
   } else if (neu && neu->ss_size < __get_minsigstksz()) {
     rc = enomem();

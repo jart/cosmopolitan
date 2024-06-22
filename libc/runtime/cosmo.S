@@ -134,16 +134,6 @@ cosmo:	push	%rbp
 	pop	%rdi
 	.init.end 304,_init_tls
 
-#if IsAsan()
-	.init.start 305,_init_symbols
-	push	%rdi
-	push	%rsi
-	call	__init_symbols
-	pop	%rsi
-	pop	%rdi
-	.init.end 305,_init_symbols
-#endif
-
 #ifdef FTRACE
 	.init.start 306,_init_ftrace
 	push	%rdi

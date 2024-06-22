@@ -64,9 +64,6 @@ BACKTRACES =								\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
 
-SANITIZER =								\
-	-fsanitize=address
-
 NO_MAGIC =								\
 	-ffreestanding							\
 	-fno-stack-protector						\

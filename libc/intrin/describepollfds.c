@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
@@ -36,8 +35,7 @@ const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
 
   if (!fds)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(fds)) ||
-      (IsAsan() && !__asan_is_valid(fds, sizeof(*fds) * nfds))) {
+  if (kisdangerous(fds)) {
     ksnprintf(buf, N, "%p", fds);
     return buf;
   }

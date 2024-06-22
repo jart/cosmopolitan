@@ -20,7 +20,6 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/winsock.h"
@@ -63,8 +62,7 @@ int setsockopt(int fd, int level, int optname, const void *optval,
 
   if (level == -1 || !optname) {
     rc = enoprotoopt();  // see libc/sysv/consts.sh
-  } else if ((!optval && optlen) ||
-             (IsAsan() && !__asan_is_valid(optval, optlen))) {
+  } else if ((!optval && optlen)) {
     rc = efault();
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();

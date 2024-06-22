@@ -176,8 +176,7 @@ typedef struct {
 #define strftimeesque(n) __attribute__((__format__(__strftime__, n, 0)))
 
 #ifndef privileged
-#define privileged \
-  _Section(".privileged") dontinline dontinstrument dontubsan dontasan
+#define privileged _Section(".privileged") dontinline dontinstrument dontubsan
 #endif
 
 #ifndef wontreturn
@@ -520,13 +519,6 @@ typedef struct {
 #endif
 #else
 #define nocallersavedregisters
-#endif
-
-#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
-     __has_attribute(__no_sanitize_address__))
-#define dontasan __attribute__((__no_sanitize_address__))
-#else
-#define dontasan
 #endif
 
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \

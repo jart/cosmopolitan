@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
@@ -25,10 +24,8 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-static dontasan void *golden(void *p, int c, size_t n) {
+static void *golden(void *p, int c, size_t n) {
   size_t i;
-  if (IsAsan())
-    __asan_verify(p, n);
   for (i = 0; i < n; ++i)
     ((char *)p)[i] = c;
   return p;

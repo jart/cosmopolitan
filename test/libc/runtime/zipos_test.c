@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"

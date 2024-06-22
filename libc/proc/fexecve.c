@@ -27,7 +27,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -186,9 +185,7 @@ static int fd_to_mem_fd(const int infd, char *path) {
  */
 int fexecve(int fd, char *const argv[], char *const envp[]) {
   int rc = 0;
-  if (!argv || !envp ||
-      (IsAsan() &&
-       (!__asan_is_valid_strlist(argv) || !__asan_is_valid_strlist(envp)))) {
+  if (!argv || !envp) {
     rc = efault();
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),

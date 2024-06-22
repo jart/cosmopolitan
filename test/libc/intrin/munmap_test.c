@@ -35,10 +35,6 @@ void SetUpOnce(void) {
 
 TEST(munmap, doesntExist_doesntCare) {
   EXPECT_SYS(0, 0, munmap(0, granularity * 8));
-  if (IsAsan()) {
-    // make sure it didn't unmap the null pointer shadow memory
-    EXPECT_TRUE(testlib_memoryexists((char *)0x7fff8000));
-  }
 }
 
 TEST(munmap, invalidParams) {
@@ -140,38 +136,6 @@ TEST(munmap, memoryGone) {
                                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
   EXPECT_SYS(0, 0, munmap(p, granularity));
   EXPECT_SYS(0, 0, munmap(p, granularity));
-}
-
-TEST(munmap, testTooSmallToUnmapAsan) {
-  if (!IsAsan())
-    return;
-  char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, granularity, PROT_READ | PROT_WRITE,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-  EXPECT_TRUE(testlib_memoryexists((char *)(((intptr_t)p >> 3) + 0x7fff8000)));
-  EXPECT_SYS(0, 0, munmap(p, granularity));
-  EXPECT_TRUE(testlib_memoryexists((char *)(((intptr_t)p >> 3) + 0x7fff8000)));
-}
-
-TEST(munmap, testLargeEnoughToUnmapAsan) {
-  if (!IsAsan())
-    return;
-  if (IsWindows()) {
-    // we're unfortunately never able to unmap asan pages on windows
-    // because the memtrack array items always have to be 64kb so we
-    // we're able to store a handle for each
-    return;
-  }
-  char *p;
-  size_t n;
-  n = granularity * 8 * 2;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, n, PROT_READ | PROT_WRITE,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-  EXPECT_SYS(0, 0, munmap(p, n));
-#if 0
-  EXPECT_FALSE(
-      testlib_memoryexists((char *)(((intptr_t)(p + n / 2) >> 3) + 0x7fff8000)));
-#endif
 }
 
 TEST(munmap, tinyFile_roundupUnmapSize) {

@@ -30,7 +30,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
@@ -167,10 +166,6 @@ static int __sigaction(int sig, const struct sigaction *act,
     return einval();
   if (sig == SIGKILL || sig == SIGSTOP)
     return einval();
-  if (IsAsan() && ((act && !__asan_is_valid(act, sizeof(*act))) ||
-                   (oldact && !__asan_is_valid(oldact, sizeof(*oldact))))) {
-    return efault();
-  }
   if (!act) {
     rva = (int32_t)(intptr_t)SIG_DFL;
   } else if ((intptr_t)act->sa_handler < kSigactionMinRva) {

@@ -55,12 +55,6 @@
 #define IsOptimized() 0
 #endif
 
-#ifdef __SANITIZE_ADDRESS__
-#define IsAsan() 1
-#else
-#define IsAsan() 0
-#endif
-
 #ifdef __aarch64__
 #define IsAarch64()    1
 #define IsXnuSilicon() IsXnu()

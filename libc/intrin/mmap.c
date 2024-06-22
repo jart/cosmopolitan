@@ -24,7 +24,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
@@ -114,10 +113,7 @@ static bool __overlaps_existing_map(const char *addr, size_t size) {
 }
 
 static int __munmap_chunk(void *addr, size_t size) {
-  int rc = sys_munmap(addr, size);
-  if (IsAsan() && !rc)
-    __asan_unshadow(addr, size);
-  return rc;
+  return sys_munmap(addr, size);
 }
 
 static int __munmap(char *addr, size_t size, bool untrack_only) {
@@ -410,12 +406,6 @@ void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
   res = __mmap(addr, size, prot, flags, fd, off);
-  if (IsAsan() && res != MAP_FAILED) {
-    __asan_shadow(res, size);
-    int granularity = __granularity();
-    if (size != PGUP(size))
-      __asan_poison(res + size, PGUP(size) - size, kAsanMmapSizeOverrun);
-  }
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m", addr, size,
          DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res);
   return res;

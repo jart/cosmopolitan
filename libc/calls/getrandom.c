@@ -29,7 +29,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -182,7 +181,7 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
  */
 ssize_t getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;
-  if ((!p && n) || (IsAsan() && !__asan_is_valid(p, n))) {
+  if ((!p && n)) {
     rc = efault();
   } else if (f & ~(GRND_RANDOM | GRND_NONBLOCK)) {
     rc = einval();

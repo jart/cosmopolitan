@@ -50,7 +50,6 @@ $(LIBC_PROC_A).pkg:					\
 
 $(LIBC_PROC_A_OBJS): private				\
 		COPTS +=				\
-			-fno-sanitize=address		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 

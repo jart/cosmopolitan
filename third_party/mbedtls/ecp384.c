@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -411,8 +410,6 @@ int mbedtls_p384_double_jac( const mbedtls_ecp_group *G,
 {
     int ret;
     uint64_t T[4][12];
-    if( IsAsan() ) __asan_verify( P, sizeof( *P ) );
-    if( IsAsan() ) __asan_verify( R, sizeof( *R ) );
     if( ( ret = mbedtls_p384_dim( R ) ) ) return( ret );
     if( ( ret = mbedtls_p384_dim( (void *)P ) ) ) return( ret );
     mbedtls_platform_zeroize( T, sizeof( T ) );
@@ -453,10 +450,6 @@ int mbedtls_p384_add_mixed( const mbedtls_ecp_group *G,
         uint64_t T1[12], T2[12], T3[12], T4[12];
         size_t Xn, Yn, Zn, QXn, QYn;
     } s;
-    if( IsAsan() ) __asan_verify( G, sizeof( *G ) );
-    if( IsAsan() ) __asan_verify( P, sizeof( *P ) );
-    if( IsAsan() ) __asan_verify( Q, sizeof( *Q ) );
-    if( IsAsan() ) __asan_verify( R, sizeof( *R ) );
     if( ( ret = mbedtls_p384_dim( R ) ) ) return( ret );
     mbedtls_platform_zeroize( &s, sizeof( s ) );
     s.Xn  = mbedtls_mpi_limbs( &P->X );

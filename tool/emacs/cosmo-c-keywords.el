@@ -83,8 +83,6 @@
            "hasatleast"
            "nodebuginfo"
            "wontreturn"
-           "dontasan"
-           "nomsan"
            "dontubsan"
            "nostackprotector"
            "mayalias"

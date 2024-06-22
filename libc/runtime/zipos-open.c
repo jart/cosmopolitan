@@ -26,7 +26,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/directmap.internal.h"
@@ -94,10 +93,6 @@ void __zipos_drop(struct ZiposHandle *h) {
     return;
   }
   atomic_thread_fence(memory_order_acquire);
-  if (IsAsan()) {
-    __asan_poison((char *)h + sizeof(struct ZiposHandle),
-                  h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
-  }
   __zipos_lock();
   do
     h->next = h->zipos->freelist;
@@ -125,12 +120,6 @@ StartOver:
     h = __zipos_mmap_space(mapsize);
   }
   __zipos_unlock();
-  if (IsAsan()) {
-    __asan_unpoison((char *)h, sizeof(struct ZiposHandle) + size);
-    __asan_poison((char *)h + sizeof(struct ZiposHandle) + size,
-                  mapsize - (sizeof(struct ZiposHandle) + size),
-                  kAsanHeapOverrun);
-  }
   if (h) {
     atomic_store_explicit(&h->refs, 0, memory_order_relaxed);
     h->size = size;

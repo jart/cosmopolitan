@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -96,7 +95,7 @@ textwindows int __mkntpath2(const char *path,
   // 4. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
   //    which is an "8.3 filename" from the DOS days
 
-  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+  if (!path) {
     return efault();
   }
 

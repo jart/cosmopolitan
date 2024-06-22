@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -159,7 +158,7 @@ static __vex void *__memmove(void *dst, const void *src, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
       if (n < kHalfCache3 || !kHalfCache3) {
         if (d > s) {
-          if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {
+          if (n < 900 || !X86_HAVE(ERMS)) {
             do {
               n -= 32;
               v = *(const xmm_t *)(s + n);
@@ -176,7 +175,7 @@ static __vex void *__memmove(void *dst, const void *src, size_t n) {
             return dst;
           }
         } else {
-          if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {
+          if (n < 900 || !X86_HAVE(ERMS)) {
             i = 0;
             do {
               v = *(const xmm_t *)(s + i);

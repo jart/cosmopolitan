@@ -22,7 +22,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
@@ -94,9 +93,7 @@ static int sys_sysinfo_bsd(struct sysinfo *info) {
 int sysinfo(struct sysinfo *info) {
   int rc;
   struct sysinfo x = {0};
-  if (IsAsan() && info && !__asan_is_valid(info, sizeof(*info))) {
-    rc = efault();
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     if (IsLinux()) {
       rc = sys_sysinfo(&x);
     } else {

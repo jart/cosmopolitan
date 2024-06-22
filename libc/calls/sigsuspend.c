@@ -23,7 +23,6 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/synchronization.h"
@@ -48,9 +47,7 @@ int sigsuspend(const sigset_t *ignore) {
   int rc;
   BEGIN_CANCELATION_POINT;
 
-  if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
-    rc = efault();
-  } else if (IsXnu() || IsOpenbsd()) {
+  if (IsXnu() || IsOpenbsd()) {
     // openbsd and xnu use a 32 signal register convention
     rc = sys_sigsuspend(ignore ? (void *)(intptr_t)(uint32_t)*ignore : 0, 8);
   } else {

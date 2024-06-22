@@ -24,7 +24,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -52,8 +51,6 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
     return ebadf();
   if (iovlen < 0)
     return einval();
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
-    return efault();
 
   // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
   // this is inconsistent with Linux which ignores huge requests

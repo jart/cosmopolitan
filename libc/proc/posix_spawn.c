@@ -35,7 +35,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -419,10 +418,7 @@ static textwindows dontinline errno_t posix_spawn_nt(
     int *pid, const char *path, const posix_spawn_file_actions_t *file_actions,
     const posix_spawnattr_t *attrp, char *const argv[], char *const envp[]) {
   int err;
-  if (!path || !argv ||
-      (IsAsan() && (!__asan_is_valid_str(path) ||      //
-                    !__asan_is_valid_strlist(argv) ||  //
-                    (envp && !__asan_is_valid_strlist(envp))))) {
+  if (!path || !argv) {
     err = EFAULT;
   } else {
     err = posix_spawn_nt_impl(pid, path, file_actions, attrp, argv, envp);

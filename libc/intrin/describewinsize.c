@@ -19,7 +19,6 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/struct/winsize.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
@@ -35,8 +34,7 @@ const char *(DescribeWinsize)(char buf[N], int rc, const struct winsize *ws) {
     return "NULL";
   if (rc == -1)
     return "n/a";
-  if ((!IsAsan() && kisdangerous(ws)) ||
-      (IsAsan() && !__asan_is_valid(ws, sizeof(*ws)))) {
+  if (kisdangerous(ws)) {
     ksnprintf(buf, N, "%p", ws);
     return buf;
   }

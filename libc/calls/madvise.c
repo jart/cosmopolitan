@@ -20,7 +20,6 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -38,9 +37,7 @@
  */
 int madvise(void *addr, size_t length, int advice) {
   int rc;
-  if (IsAsan() && !__asan_is_valid(addr, length)) {
-    rc = enomem();
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_madvise(addr, length, advice);
   } else {
     rc = sys_madvise_nt(addr, length, advice);

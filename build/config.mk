@@ -127,32 +127,10 @@ TARGET_ARCH ?= -msse3
 PYFLAGS += -O1
 endif
 
-# Asan Mode
-#
-# Safer binaries good for backend production serving.
-#
-#   - `make MODE=asan`
-#   - Memory safety
-#   - Production worthy
-#   - Backtraces
-#   - Debuggability
-#   - Larger binaries
-#
-ifeq ($(MODE), asan)
-ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g -ggdb
-CONFIG_CPPFLAGS += -D__SANITIZE_ADDRESS__
-CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
-CONFIG_COPTS += -fsanitize=address
-TARGET_ARCH ?= -msse3
-QUOTA ?= -C64 -L300
-endif
-
 # Debug Mode
 #
 #   - `make MODE=dbg`
 #   - Backtraces
-#   - Enables asan
 #   - Enables ubsan
 #   - Stack canaries
 #   - No optimization
@@ -161,9 +139,9 @@ endif
 ifeq ($(MODE), dbg)
 ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g -ggdb
-CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_ADDRESS__ -D__SANITIZE_UNDEFINED__
+CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
-CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
+CONFIG_COPTS += -fsanitize=undefined
 TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
 QUOTA ?= -C64 -L300

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
@@ -34,8 +33,7 @@ const char *(DescribeGidList)(char buf[N], int rc, int size,
     return "{}";
   if (!list)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(list)) ||
-      (IsAsan() && !__asan_is_valid(list, size * sizeof(list[0])))) {
+  if (kisdangerous(list)) {
     ksnprintf(buf, N, "%p", list);
     return buf;
   }

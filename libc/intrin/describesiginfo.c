@@ -19,7 +19,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
@@ -37,8 +36,7 @@ const char *(DescribeSiginfo)(char buf[N], int rc, const siginfo_t *si) {
     return "n/a";
   if (!si)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(si)) ||
-      (IsAsan() && !__asan_is_valid(si, sizeof(*si)))) {
+  if (kisdangerous(si)) {
     ksnprintf(buf, N, "%p", si);
     return buf;
   }

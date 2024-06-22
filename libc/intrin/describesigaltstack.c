@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
@@ -28,8 +27,7 @@ const char *(DescribeSigaltstk)(char buf[128], int rc,
     return "n/a";
   if (!ss)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(ss)) ||
-      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
+  if (kisdangerous(ss)) {
     ksnprintf(buf, 128, "%p", ss);
   } else {
     ksnprintf(buf, 128, "{.ss_sp=%p, .ss_flags=%#lx, .ss_size=%'zu}", ss->ss_sp,

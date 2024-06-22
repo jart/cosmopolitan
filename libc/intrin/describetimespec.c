@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
@@ -29,8 +28,7 @@ const char *(DescribeTimespec)(char buf[45], int rc,
     return "n/a";
   if (!ts)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(ts)) ||
-      (IsAsan() && !__asan_is_valid(ts, sizeof(*ts)))) {
+  if (kisdangerous(ts)) {
     ksnprintf(buf, 45, "%p", ts);
   } else {
     if (!memcmp(ts, &timespec_max, sizeof(*ts))) {

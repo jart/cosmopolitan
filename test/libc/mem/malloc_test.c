@@ -21,7 +21,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -50,46 +49,26 @@
 TEST(malloc, zero) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(0)));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p, 1));
   free(p);
 }
 
 TEST(realloc, bothAreZero_createsMinimalAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = realloc(0, 0)));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p, 1));
   free(p);
 }
 
 TEST(realloc, ptrIsZero_createsAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = realloc(0, 1)));
-  if (IsAsan())
-    ASSERT_TRUE(__asan_is_valid(p, 1));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   ASSERT_EQ(p, realloc(p, 0));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p, 1));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   free(p);
 }
 
 TEST(realloc, sizeIsZero_shrinksAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(1)));
-  if (IsAsan())
-    ASSERT_TRUE(__asan_is_valid(p, 1));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   ASSERT_EQ(p, realloc(p, 0));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p, 1));
-  if (IsAsan())
-    ASSERT_FALSE(__asan_is_valid(p + 1, 1));
   free(p);
 }
 

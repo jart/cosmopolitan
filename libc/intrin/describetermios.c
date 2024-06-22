@@ -20,7 +20,6 @@
 #include "libc/calls/struct/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
@@ -37,8 +36,7 @@ const char *(DescribeTermios)(char buf[N], ssize_t rc,
 
   if (!tio)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(tio)) ||
-      (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
+  if (kisdangerous(tio)) {
     ksnprintf(buf, N, "%p", tio);
     return buf;
   }

@@ -63,8 +63,7 @@ $(LIBC_TINYMATH_A_OBJS): private			\
 			-fno-associative-math		\
 			-fno-finite-math-only		\
 			-fno-cx-limited-range		\
-			-ffp-int-builtin-inexact	\
-			-fno-sanitize=address
+			-ffp-int-builtin-inexact
 
 LIBC_TINYMATH_LIBS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)))
 LIBC_TINYMATH_HDRS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_HDRS))

@@ -162,7 +162,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\
@@ -189,7 +188,6 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\

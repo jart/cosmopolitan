@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
@@ -27,8 +26,7 @@ const char *(DescribeTimeval)(char buf[45], int rc, const struct timeval *tv) {
     return "NULL";
   if (rc == -1)
     return "n/a";
-  if ((!IsAsan() && kisdangerous(tv)) ||
-      (IsAsan() && !__asan_is_valid(tv, sizeof(*tv)))) {
+  if (kisdangerous(tv)) {
     ksnprintf(buf, 45, "%p", tv);
   } else {
     ksnprintf(buf, 45, "{%ld, %ld}", tv->tv_sec, tv->tv_usec);

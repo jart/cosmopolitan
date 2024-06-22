@@ -17,7 +17,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha256.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/sha.h"
@@ -170,8 +169,6 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
         X86_HAVE( SSE2 ) &&
         X86_HAVE( SSSE3 ) )
     {
-        if( IsAsan() )
-            __asan_verify( data, 64 );
         sha256_transform_ni( ctx->state, data, 1 );
         return( 0 );
     }
@@ -179,8 +176,6 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
         X86_HAVE( AVX  ) &&
         X86_HAVE( AVX2 ) )
     {
-        if( IsAsan() )
-            __asan_verify( data, 64 );
         sha256_transform_rorx( ctx->state, data, 1 );
         return( 0 );
     }
@@ -306,8 +301,6 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
             X86_HAVE( SSE2 ) &&
             X86_HAVE( SSSE3 ) )
         {
-            if( IsAsan() )
-                __asan_verify( input, ilen );
             sha256_transform_ni( ctx->state, input, ilen / 64 );
             input += ROUNDDOWN( ilen, 64 );
             ilen  -= ROUNDDOWN( ilen, 64 );
@@ -316,8 +309,6 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
                  X86_HAVE( BMI2 ) &&
                  X86_HAVE( AVX2 ) )
         {
-            if( IsAsan() )
-                __asan_verify( input, ilen );
             sha256_transform_rorx( ctx->state, input, ilen / 64 );
             input += ROUNDDOWN( ilen, 64 );
             ilen  -= ROUNDDOWN( ilen, 64 );

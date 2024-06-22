@@ -27,7 +27,6 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/log/rop.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -93,13 +92,6 @@ int openpty(int *mfd, int *sfd, char *name,  //
   int rc;
   if (IsWindows() || IsMetal()) {
     return enosys();
-  }
-  if (IsAsan() && (!__asan_is_valid(mfd, sizeof(int)) ||
-                   !__asan_is_valid(sfd, sizeof(int)) ||
-                   (name && !__asan_is_valid(name, 16)) ||
-                   (tio && !__asan_is_valid(tio, sizeof(*tio))) ||
-                   (wsz && !__asan_is_valid(wsz, sizeof(*wsz))))) {
-    return efault();
   }
   BLOCK_CANCELATION;
   rc = openpty_impl(mfd, sfd, name, tio, wsz);

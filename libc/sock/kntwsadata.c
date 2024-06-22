@@ -42,7 +42,7 @@ static textwindows void WinSockCleanup(void) {
   NTTRACE("WSACleanup() → %d% lm", rc);
 }
 
-textwindows dontasan void WinSockInit(void) {
+textwindows void WinSockInit(void) {
   int rc;
   atexit(WinSockCleanup);
   NTTRACE("WSAStartup()");

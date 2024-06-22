@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -76,10 +75,7 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   // execve() depends on this
   int rc;
   struct ZiposUri zipname;
-  if (IsAsan() && (!__asan_is_valid_str(path) ||  //
-                   !__asan_is_valid(st, sizeof(*st)))) {
-    rc = efault();
-  } else if (flags & ~AT_SYMLINK_NOFOLLOW) {
+  if (flags & ~AT_SYMLINK_NOFOLLOW) {
     return einval();
   } else if (__isfdkind(dirfd, kFdZip)) {
     STRACE("zipos dirfd not supported yet");

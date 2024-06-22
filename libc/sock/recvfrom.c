@@ -21,7 +21,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -60,9 +59,7 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   uint32_t addrsize = sizeof(addr);
   BEGIN_CANCELATION_POINT;
 
-  if (IsAsan() && !__asan_is_valid(buf, size)) {
-    rc = efault();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_recvfrom(fd, buf, size, flags, &addr, &addrsize);

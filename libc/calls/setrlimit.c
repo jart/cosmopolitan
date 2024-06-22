@@ -21,7 +21,6 @@
 #include "libc/calls/struct/rlimit.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -80,7 +79,7 @@ int setrlimit(int resource, const struct rlimit *rlim) {
   int rc;
   if (resource == 127) {
     rc = einval();
-  } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
+  } else if (!rlim) {
     rc = efault();
   } else if (IsXnuSilicon()) {
     rc = _sysret(__syslib->__setrlimit(resource, rlim));

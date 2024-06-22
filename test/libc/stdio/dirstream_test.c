@@ -60,9 +60,6 @@ void SetUp(void) {
 
 TEST(opendir, efault) {
   ASSERT_SYS(EFAULT, NULL, opendir(0));
-  if (!IsAsan())
-    return;  // not possible
-  ASSERT_SYS(EFAULT, NULL, opendir((void *)77));
 }
 
 TEST(opendir, enoent) {

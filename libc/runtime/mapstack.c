@@ -19,8 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -54,10 +52,6 @@ void *NewCosmoStack(void) {
                                       MAP_STACK_OPENBSD,
                                   -1, 0, 0) != p) {
       notpossible;
-    }
-    if (IsAsan()) {
-      __asan_poison(p + n - 16, 16, kAsanStackOverflow);
-      __asan_poison(p, getauxval(AT_PAGESZ), kAsanStackOverflow);
     }
     return p;
   } else {

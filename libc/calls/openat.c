@@ -26,7 +26,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -180,7 +179,7 @@ int openat(int dirfd, const char *path, int flags, ...) {
   va_end(va);
   BEGIN_CANCELATION_POINT;
 
-  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+  if (!path) {
     rc = efault();
   } else if ((flags & O_UNLINK) &&
              (flags & (O_CREAT | O_EXCL)) != (O_CREAT | O_EXCL)) {

@@ -22,7 +22,6 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -144,17 +143,6 @@ TEST(mmap, smallerThanPage_mapsRemainder) {
   EXPECT_SYS(0, 0, munmap(map, 1));
   EXPECT_FALSE(testlib_memoryexists(map));
   EXPECT_FALSE(testlib_memoryexists(map + (pagesz - 1)));
-}
-
-TEST(mmap, smallerThanPage_remainderIsPoisoned) {
-  if (!IsAsan())
-    return;
-  char *map;
-  ASSERT_NE(MAP_FAILED, (map = mmap(0, 1, PROT_READ | PROT_WRITE,
-                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_TRUE(__asan_is_valid(map, 1));
-  EXPECT_FALSE(__asan_is_valid(map + 1, 1));
-  EXPECT_SYS(0, 0, munmap(map, 1));
 }
 
 TEST(mmap, testMapFile) {

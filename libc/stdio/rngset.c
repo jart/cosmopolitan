@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 
@@ -41,7 +40,7 @@
  *
  * @return original buf
  */
-dontasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
+void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
   size_t m;
   uint64_t x, t = 0;
   unsigned char *p = b;

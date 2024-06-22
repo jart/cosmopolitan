@@ -23,7 +23,6 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
@@ -74,7 +73,7 @@ ssize_t read(int fd, void *buf, size_t size) {
 
   if (fd < 0) {
     rc = ebadf();
-  } else if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
+  } else if ((!buf && size)) {
     rc = efault();
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = _weaken(__zipos_read)(

@@ -27,7 +27,6 @@
 #include "libc/calls/wincrash.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/ulock.h"
@@ -751,13 +750,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
 
   if (!func) {
     rc = EINVAL;
-  } else if (IsAsan() &&
-             (((flags & CLONE_SETTLS) && !__asan_is_valid(tls, 64)) ||
-              ((flags & CLONE_PARENT_SETTID) &&
-               !__asan_is_valid(ptid, sizeof(int))) ||
-              ((flags & CLONE_CHILD_SETTID) &&
-               !__asan_is_valid(ctid, sizeof(int))))) {
-    rc = EFAULT;
   } else if (IsLinux()) {
     rc = CloneLinux(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (!IsTiny() &&

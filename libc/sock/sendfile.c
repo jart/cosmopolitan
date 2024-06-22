@@ -25,7 +25,6 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wsaid.h"
@@ -182,10 +181,7 @@ ssize_t sendfile(int outfd, int infd, int64_t *opt_in_out_inoffset,
   // less error prone, since Linux may EINVAL if greater than INT64_MAX
   uptobytes = MIN(uptobytes, 0x7ffff000);
 
-  if (IsAsan() && opt_in_out_inoffset &&
-      !__asan_is_valid(opt_in_out_inoffset, 8)) {
-    rc = efault();
-  } else if (IsLinux()) {
+  if (IsLinux()) {
     rc = sys_sendfile(outfd, infd, opt_in_out_inoffset, uptobytes);
   } else if (IsFreebsd() || IsXnu()) {
     rc = sys_sendfile_bsd(outfd, infd, opt_in_out_inoffset, uptobytes);

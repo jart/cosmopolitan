@@ -24,7 +24,6 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/alloca.h"
@@ -60,10 +59,6 @@ static int tcsetattr_impl(int fd, int opt, const struct termios *tio) {
       _weaken(__on_tcsetattr)(fd);
       once = true;
     }
-  }
-
-  if (IsAsan() && !__asan_is_valid(tio, sizeof(*tio))) {
-    return efault();
   }
 
   if (IsMetal()) {

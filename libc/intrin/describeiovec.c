@@ -19,7 +19,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -39,8 +38,7 @@ const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
     return "n/a";
   if (rc == -2)
     rc = SSIZE_MAX;
-  if ((!IsAsan() && kisdangerous(iov)) ||
-      (IsAsan() && !__asan_is_valid(iov, sizeof(*iov) * iovlen))) {
+  if (kisdangerous(iov)) {
     ksnprintf(buf, N, "%p", iov);
     return buf;
   }

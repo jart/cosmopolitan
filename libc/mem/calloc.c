@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Allocates n * itemsize bytes, initialized to zero.
@@ -33,4 +32,3 @@ void *calloc(size_t n, size_t itemsize) {
   return dlcalloc(n, itemsize);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

@@ -29,8 +29,6 @@
 #define TINYMALLOC_MAX_ALIGN 4096
 #endif
 
-#if !IsAsan()
-
 alignas(TINYMALLOC_MAX_ALIGN) static struct {
   char memory[TINYMALLOC_MAX_BYTES];
   size_t used, last, free;
@@ -167,5 +165,3 @@ OutOfMemory:
   errno = ENOMEM;
   return 0;
 }
-
-#endif /* IsAsan() */

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/asan.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -35,7 +34,7 @@ int clock_settime(int clockid, const struct timespec *ts) {
   struct timeval tv;
   if (clockid == 127) {
     rc = einval();  // 127 is used by consts.sh to mean unsupported
-  } else if (!ts || (IsAsan() && !__asan_is_valid_timespec(ts))) {
+  } else if (!ts) {
     rc = efault();
   } else if (IsXnu()) {
     if (clockid == CLOCK_REALTIME) {

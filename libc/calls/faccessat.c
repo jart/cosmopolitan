@@ -22,7 +22,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -52,10 +51,8 @@
 int faccessat(int dirfd, const char *path, int amode, int flags) {
   int e, rc;
   struct ZiposUri zipname;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    rc = efault();
-  } else if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_EACCESS)) ||
-             !(amode == F_OK || !(amode & ~(R_OK | W_OK | X_OK)))) {
+  if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_EACCESS)) ||
+      !(amode == F_OK || !(amode & ~(R_OK | W_OK | X_OK)))) {
     rc = einval();
   } else if (__isfdkind(dirfd, kFdZip)) {
     rc = enotsup();

@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha512.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/literal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -167,8 +166,6 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
 
     if( !IsTiny() && X86_HAVE(AVX2) )
     {
-        if (IsAsan())
-            __asan_verify(data, 128);
         sha512_transform_rorx(ctx, data, 1);
         return 0;
     }
@@ -279,7 +276,6 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
         left = 0;
     }
     if (!IsTiny() && ilen >= 128 && X86_HAVE(AVX2)) {
-        if (IsAsan()) __asan_verify(input, ilen / 128 * 128);
         sha512_transform_rorx(ctx, input, ilen / 128);
         input += ROUNDDOWN(ilen, 128);
         ilen  -= ROUNDDOWN(ilen, 128);
