@@ -22,11 +22,8 @@
 #include "libc/thread/thread.h"
 
 int _pthread_tid(struct PosixThread *pt) {
-  if (IsWindows())  // xxx: fixme
-    return pt->ptid;
   int tid = 0;
-  while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire))) {
+  while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire)))
     pthread_pause_np();
-  }
   return tid;
 }

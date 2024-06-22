@@ -103,10 +103,13 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
  */
 errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
                              struct timespec *abstime) {
+  int tid;
   errno_t err;
   struct PosixThread *pt;
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
+  tid = _pthread_tid(pt);
+  unassert(_pthread_tid(pt));
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."
@@ -121,7 +124,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
     }
     _pthread_unref(pt);
   }
-  STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", _pthread_tid(pt),
+  STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", tid,
          DescribeReturnValue(alloca(30), err, value_ptr),
          DescribeTimespec(err ? -1 : 0, abstime), DescribeErrno(err));
   return err;
