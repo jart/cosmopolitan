@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 for _ = 1, 1000 do
-  local uuid = UuidV4()
+  local uuid = UuidV7()
   assert(#uuid == 36)
   assert(string.sub(uuid, 9, 9) == "-")
   assert(string.sub(uuid, 14, 14) == "-")
