@@ -17,7 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/cxaatexit.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/gc.internal.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
+#include "third_party/nsync/wait_s.internal.h"
 
 struct Dtor {
   void *fun;
@@ -27,18 +32,58 @@ struct Dtor {
 
 static _Thread_local struct Dtor *__cxa_thread_atexit_list;
 
+static void __cxa_thread_unkey(struct CosmoTib *tib) {
+  void *val;
+  int i, j, gotsome;
+  pthread_key_dtor dtor;
+  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
+    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+      if ((val = tib->tib_keys[i]) &&
+          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
+                                       memory_order_relaxed)) &&
+          dtor != (pthread_key_dtor)-1) {
+        gotsome = 1;
+        tib->tib_keys[i] = 0;
+        dtor(val);
+      }
+    }
+    if (!gotsome) {
+      break;
+    }
+  }
+}
+
+static void _pthread_ungarbage(struct CosmoTib *tib) {
+  struct Garbages *g;
+  while ((g = tib->tib_garbages)) {
+    tib->tib_garbages = 0;
+    while (g->i--) {
+      ((void (*)(intptr_t))g->p[g->i].fn)(g->p[g->i].arg);
+    }
+    _weaken(free)(g->p);
+    _weaken(free)(g);
+  }
+}
+
 void __cxa_thread_finalize(void) {
   struct Dtor *dtor;
   while ((dtor = __cxa_thread_atexit_list)) {
     __cxa_thread_atexit_list = dtor->next;
     ((void (*)(void *))dtor->fun)(dtor->arg);
-    free(dtor);
+    _weaken(free)(dtor);
   }
+  struct CosmoTib *tib = __get_tls();
+  __cxa_thread_unkey(tib);
+  if (tib->tib_nsync)
+    _weaken(nsync_waiter_destroy)(tib->tib_nsync);
+  _pthread_ungarbage(tib);
 }
 
 int __cxa_thread_atexit_impl(void *fun, void *arg, void *dso_symbol) {
   struct Dtor *dtor;
-  if (!(dtor = malloc(sizeof(struct Dtor))))
+  if (!_weaken(malloc))
+    return -1;
+  if (!(dtor = _weaken(malloc)(sizeof(struct Dtor))))
     return -1;
   dtor->fun = fun;
   dtor->arg = arg;

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/mem/internal.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -39,7 +39,8 @@ int setenv(const char *name, const char *value, int overwrite) {
   size_t n, m;
   if (!name || !*name || !value || strchr(name, '='))
     return einval();
-  if ((s = malloc((n = strlen(name)) + 1 + (m = strlen(value)) + 1))) {
+  if ((s = may_leak(
+           malloc((n = strlen(name)) + 1 + (m = strlen(value)) + 1)))) {
     memcpy(mempcpy(mempcpy(s, name, n), "=", 1), value, m + 1);
     rc = __putenv(s, overwrite);
   } else {
@@ -48,5 +49,3 @@ int setenv(const char *name, const char *value, int overwrite) {
   STRACE("setenv(%#s, %#s, %hhhd) → %d% m", name, value, overwrite, rc);
   return rc;
 }
-
-IGNORE_LEAKS(setenv)

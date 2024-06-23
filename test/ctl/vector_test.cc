@@ -17,6 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/vector.h"
+#include "libc/mem/leaks.h"
 
 #include <cosmo.h>
 

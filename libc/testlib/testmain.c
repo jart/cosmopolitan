@@ -33,6 +33,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"

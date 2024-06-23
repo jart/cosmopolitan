@@ -1,7 +1,7 @@
 // -*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
-#ifndef COSMOPOLITAN_CTL_STRING_H_
-#define COSMOPOLITAN_CTL_STRING_H_
+#ifndef CTL_STRING_H_
+#define CTL_STRING_H_
 #include "string_view.h"
 
 namespace ctl {
@@ -397,4 +397,4 @@ operator"" s(const char* s, size_t n)
 }
 #pragma GCC diagnostic pop
 
-#endif // COSMOPOLITAN_CTL_STRING_H_
+#endif // CTL_STRING_H_

@@ -23,7 +23,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/proc/proc.internal.h"
@@ -100,5 +99,3 @@ int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   rc = 0;
   return rc;
 }
-
-IGNORE_LEAKS(_pthread_atfork)

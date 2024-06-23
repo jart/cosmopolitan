@@ -27,9 +27,9 @@
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/processaccess.h"
@@ -283,7 +283,7 @@ textwindows struct Proc *__proc_new(void) {
     }
     if (!proc) {
       if (_weaken(malloc)) {
-        proc = _weaken(malloc)(sizeof(struct Proc));
+        proc = may_leak(_weaken(malloc)(sizeof(struct Proc)));
       } else {
         enomem();
         return 0;
@@ -296,8 +296,6 @@ textwindows struct Proc *__proc_new(void) {
   }
   return proc;
 }
-
-IGNORE_LEAKS(__proc_new)
 
 /**
  * Adds process to active list.

@@ -23,6 +23,7 @@
 #include <sys/auxv.h>
 #include <sys/socket.h>
 #include <time.h>
+#include "libc/mem/leaks.h"
 
 /**
  * @fileoverview greenbean lightweight threaded web server
@@ -411,7 +412,5 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_mutex_destroy(&statuslock));
 
   // quality assurance
-  if (IsModeDbg()) {
-    CheckForMemoryLeaks();
-  }
+  CheckForMemoryLeaks();
 }

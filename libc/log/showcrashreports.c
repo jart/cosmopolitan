@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/intrin/leaky.internal.h"
 #include "libc/log/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -93,5 +92,3 @@ void ShowCrashReports(void) {
   InstallCrashHandler(SIGABRT, 0);
   InstallCrashHandler(SIGSEGV, SA_ONSTACK);
 }
-
-IGNORE_LEAKS(ShowCrashReports)

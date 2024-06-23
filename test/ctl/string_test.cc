@@ -17,10 +17,10 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/string.h"
+#include "libc/mem/leaks.h"
 
 #include <__type_traits/is_same.h>
 
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
 // #include <string>

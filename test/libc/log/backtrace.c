@@ -19,6 +19,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/symbols.internal.h"

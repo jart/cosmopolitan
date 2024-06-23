@@ -3,6 +3,10 @@
 #ifndef COSMOPOLITAN_CTL_NEW_H_
 #define COSMOPOLITAN_CTL_NEW_H_
 
+#ifndef TINY
+__static_yoink("__demangle");
+#endif
+
 namespace ctl {
 
 enum class align_val_t : size_t

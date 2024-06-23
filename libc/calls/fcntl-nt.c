@@ -28,11 +28,11 @@
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -75,15 +75,13 @@ static textwindows struct FileLock *NewFileLock(void) {
     fl = g_locks.free;
     g_locks.free = fl->next;
   } else {
-    unassert((fl = _weaken(malloc)(sizeof(*fl))));
+    unassert((fl = may_leak(_weaken(malloc)(sizeof(*fl)))));
   }
   bzero(fl, sizeof(*fl));
   fl->next = g_locks.list;
   g_locks.list = fl;
   return fl;
 }
-
-IGNORE_LEAKS(NewFileLock)
 
 static textwindows void FreeFileLock(struct FileLock *fl) {
   fl->next = g_locks.free;

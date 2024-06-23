@@ -17,10 +17,9 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/optional.h"
+#include "libc/mem/leaks.h"
 
 #include "ctl/string.h"
-
-#include "libc/runtime/runtime.h"
 
 // #include <optional>
 // #include <string>
@@ -131,5 +130,4 @@ main()
     }
 
     CheckForMemoryLeaks();
-    return 0;
 }

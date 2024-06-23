@@ -17,8 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/string_view.h"
-
-#include "libc/runtime/runtime.h"
+#include "libc/mem/leaks.h"
 #include "libc/str/str.h"
 
 // #include <string_view>

@@ -34,7 +34,10 @@ _ctl_alloc(size_t n, size_t a)
 static void*
 _ctl_alloc1(size_t n)
 {
-    return _ctl_alloc(n, 1);
+    void* p;
+    if (!(p = malloc(n)))
+        __builtin_trap();
+    return p;
 }
 
 static void*
@@ -68,10 +71,21 @@ COSMOPOLITAN_C_END_
    now. If you have any brain cells left after reading this comment then go
    look at the eight operator delete weak references to free in the below. */
 
-__weak_reference(void* operator new(size_t, ctl::align_val_t), _ctl_alloc);
-__weak_reference(void* operator new[](size_t, ctl::align_val_t), _ctl_alloc);
-__weak_reference(void* operator new(size_t), _ctl_alloc1);
-__weak_reference(void* operator new[](size_t), _ctl_alloc1);
+__weak_reference(void*
+                 operator new(size_t, ctl::align_val_t),
+                 _ctl_alloc);
+
+__weak_reference(void*
+                 operator new[](size_t, ctl::align_val_t),
+                 _ctl_alloc);
+
+__weak_reference(void*
+                 operator new(size_t),
+                 _ctl_alloc1);
+
+__weak_reference(void*
+                 operator new[](size_t),
+                 _ctl_alloc1);
 
 // XXX clang-format currently mutilates these for some reason.
 // clang-format off
