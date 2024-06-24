@@ -24,15 +24,20 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
 /**
  * Prints memory mappings.
  */
 void __print_maps(void) {
-  int limit = 10;
+  int limit = 13;
   long maptally = 0;
   char mappingbuf[8], sb[16];
-  for (struct Map *map = __maps.maps; map; map = map->next) {
+  __maps_lock();
+  struct Dll *e, *e2;
+  for (e = dll_first(__maps.used); e; e = e2) {
+    e2 = dll_next(__maps.used, e);
+    struct Map *map = MAP_CONTAINER(e);
     maptally += map->size;
     kprintf("%012lx-%012lx %!s", map->addr, map->addr + map->size,
             (DescribeMapping)(mappingbuf, map->prot, map->flags));
@@ -45,11 +50,10 @@ void __print_maps(void) {
     if (map->readonlyfile)
       kprintf(" readonlyfile");
     kprintf("\n");
-    if (!--limit) {
-      kprintf("...\n");
+    if (!--limit)
       break;
-    }
   }
-  sizefmt(sb, maptally, 1024);
-  kprintf("# %!sb mapped memory\n", sb);
+  kprintf("# %'zu bytes in %'zu mappings\n",
+          __maps.pages * getauxval(AT_PAGESZ), __maps.count);
+  __maps_unlock();
 }

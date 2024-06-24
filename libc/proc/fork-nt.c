@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -66,6 +67,7 @@
 #ifdef __x86_64__
 
 extern long __klog_handle;
+extern atomic_uint free_waiters_mu;
 void WipeKeystrokes(void);
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
@@ -262,9 +264,13 @@ textwindows void WinMainForked(void) {
   __maps.free = 0;
   __maps.used = 0;
   __maps.maps = maps;
+  __maps.count = 0;
+  __maps.pages = 0;
   dll_init(&__maps.stack.elem);
   dll_make_first(&__maps.used, &__maps.stack.elem);
   for (struct Map *map = maps; map; map = map->next) {
+    __maps.count += 1;
+    __maps.pages += (map->size + 4095) / 4096;
     dll_make_last(&__maps.used, &map->elem);
     if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
                         &oldprot)) {

@@ -36,6 +36,10 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/nt/runtime.h"
+#include "libc/intrin/directmap.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/dce.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -154,10 +158,19 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 static void *nsync_malloc (size_t size) {
 	void *res;
-	res = mmap (0, size,
-		    PROT_READ | PROT_WRITE,
-		    MAP_PRIVATE | MAP_ANONYMOUS,
-		    -1, 0);
+	if (!IsWindows ()) {
+		// too much of a performance hit to track
+		res = __sys_mmap ((void *)0x7110000000, size,
+				  PROT_READ | PROT_WRITE,
+				  MAP_PRIVATE | MAP_ANONYMOUS,
+				  -1, 0, 0);
+	} else {
+		// must be tracked for fork() resurrection
+		res = mmap (0, size,
+			    PROT_READ | PROT_WRITE,
+			    MAP_PRIVATE | MAP_ANONYMOUS,
+			    -1, 0);
+	}
 	if (res == MAP_FAILED)
 		nsync_panic_ ("out of memory\n");
 	return res;
@@ -168,7 +181,7 @@ static void *nsync_malloc (size_t size) {
 static struct Dll *free_waiters = NULL;
 
 /* free_waiters points to a doubly-linked list of free waiter structs. */
-static nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
+nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
 
 #define waiter_for_thread __get_tls()->tib_nsync
 
@@ -236,6 +249,8 @@ void nsync_waiter_free_ (waiter *w) {
 		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
 		dll_make_first (&free_waiters, &w->nw.q);
 		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+		if (w == waiter_for_thread)
+			waiter_for_thread = 0;
 	}
 }
 

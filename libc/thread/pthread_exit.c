@@ -36,14 +36,6 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 
-void _pthread_unwind(struct PosixThread *pt) {
-  struct _pthread_cleanup_buffer *cb;
-  while ((cb = pt->pt_cleanup)) {
-    pt->pt_cleanup = cb->__prev;
-    cb->__routine(cb->__arg);
-  }
-}
-
 /**
  * Terminates current POSIX thread.
  *
@@ -89,7 +81,6 @@ wontreturn void pthread_exit(void *rc) {
   STRACE("pthread_exit(%p)", rc);
 
   // free resources
-  _pthread_unwind(pt);
   __cxa_thread_finalize();
   _pthread_decimate();
 

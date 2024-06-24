@@ -44,7 +44,7 @@
  */
 void *NewCosmoStack(void) {
   char *p;
-  size_t n = GetStackSize() + (uintptr_t)ape_stack_align;
+  size_t n = GetStackSize();
   if ((p = mmap(0, n, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1,
                 0)) != MAP_FAILED) {
     if (IsOpenbsd() && __sys_mmap(p, n, PROT_READ | PROT_WRITE,

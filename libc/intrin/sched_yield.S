@@ -19,13 +19,12 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.internal.h"
+.privileged
 
 //	Relinquishes scheduled quantum.
 //
 //	@return	0 on success, or -1 w/ errno
-	.ftrace1
 sched_yield:
-	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

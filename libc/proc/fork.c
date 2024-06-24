@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -44,15 +45,20 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
+extern atomic_uint free_waiters_mu;
+
 static void _onfork_prepare(void) {
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
   _pthread_lock();
   __maps_lock();
   __fds_lock();
+  while (atomic_exchange_explicit(&free_waiters_mu, 1, memory_order_acquire)) {
+  }
 }
 
 static void _onfork_parent(void) {
+  atomic_store_explicit(&free_waiters_mu, 0, memory_order_release);
   __fds_unlock();
   __maps_unlock();
   _pthread_unlock();
@@ -65,6 +71,7 @@ static void _onfork_child(void) {
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__fds_lock_obj, &attr);
+  atomic_store_explicit(&free_waiters_mu, 0, memory_order_relaxed);
   pthread_mutexattr_destroy(&attr);
   _pthread_init();
   __maps_unlock();

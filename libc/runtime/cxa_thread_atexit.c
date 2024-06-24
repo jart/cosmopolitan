@@ -32,6 +32,16 @@ struct Dtor {
 
 static _Thread_local struct Dtor *__cxa_thread_atexit_list;
 
+static void _pthread_unwind(struct CosmoTib *tib) {
+  struct PosixThread *pt;
+  struct _pthread_cleanup_buffer *cb;
+  pt = (struct PosixThread *)tib->tib_pthread;
+  while ((cb = pt->pt_cleanup)) {
+    pt->pt_cleanup = cb->__prev;
+    cb->__routine(cb->__arg);
+  }
+}
+
 static void __cxa_thread_unkey(struct CosmoTib *tib) {
   void *val;
   int i, j, gotsome;
@@ -67,16 +77,18 @@ static void _pthread_ungarbage(struct CosmoTib *tib) {
 
 void __cxa_thread_finalize(void) {
   struct Dtor *dtor;
+  struct CosmoTib *tib;
+  tib = __get_tls();
+  _pthread_unwind(tib);
+  if (tib->tib_nsync)
+    _weaken(nsync_waiter_destroy)(tib->tib_nsync);
+  __cxa_thread_unkey(tib);
+  _pthread_ungarbage(tib);
   while ((dtor = __cxa_thread_atexit_list)) {
     __cxa_thread_atexit_list = dtor->next;
     ((void (*)(void *))dtor->fun)(dtor->arg);
     _weaken(free)(dtor);
   }
-  struct CosmoTib *tib = __get_tls();
-  __cxa_thread_unkey(tib);
-  if (tib->tib_nsync)
-    _weaken(nsync_waiter_destroy)(tib->tib_nsync);
-  _pthread_ungarbage(tib);
 }
 
 int __cxa_thread_atexit_impl(void *fun, void *arg, void *dso_symbol) {

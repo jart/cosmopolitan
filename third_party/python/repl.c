@@ -4,12 +4,9 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/stack.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"
 #include "tool/args/args.h"
-
-STATIC_STACK_ALIGN(GetStackSize());
 
 int
 main(int argc, char **argv)

@@ -212,6 +212,8 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   __maps.stack.size = stacksize;
   __maps.stack.prot = prot;
   __maps.maps = &__maps.stack;
+  __maps.pages = (stacksize + 4095) / 4096;
+  __maps.count = 1;
   dll_init(&__maps.stack.elem);
   dll_make_first(&__maps.used, &__maps.stack.elem);
   struct WinArgs *wa =

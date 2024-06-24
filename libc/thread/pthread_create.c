@@ -71,10 +71,8 @@ void _pthread_free(struct PosixThread *pt, bool isfork) {
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
   if (pt->pt_flags & PT_STATIC)
     return;
-  if (pt->pt_flags & PT_OWNSTACK) {
-    unassert(!munmap(pt->pt_attr.__stackaddr,
-                     pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align));
-  }
+  if (pt->pt_flags & PT_OWNSTACK)
+    unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
   if (!isfork) {
     uint64_t syshand =
         atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
@@ -146,7 +144,7 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   uintptr_t x, y;
   int e, rc, pagesz;
   pagesz = getauxval(AT_PAGESZ);
-  n = attr->__stacksize + (uintptr_t)ape_stack_align;
+  n = attr->__stacksize;
   x = (uintptr_t)attr->__stackaddr;
   y = ROUNDUP(x, pagesz);
   n -= y - x;
@@ -156,7 +154,7 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
                  -1, 0, 0) == (void *)y) {
     attr->__stackaddr = (void *)y;
-    attr->__stacksize = n - (uintptr_t)ape_stack_align;
+    attr->__stacksize = n;
     return 0;
   } else {
     rc = errno;
@@ -219,13 +217,12 @@ static errno_t pthread_create_impl(pthread_t *thread,
       return EINVAL;
     }
     pt->pt_attr.__stackaddr =
-        mmap(0, pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align,
-             PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (pt->pt_attr.__stackaddr != MAP_FAILED) {
       if (IsOpenbsd() &&
           __sys_mmap(
-              pt->pt_attr.__stackaddr,
-              pt->pt_attr.__stacksize + (uintptr_t)ape_stack_align,
+              pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
               PROT_READ | PROT_WRITE,
               MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
               -1, 0, 0) != pt->pt_attr.__stackaddr) {

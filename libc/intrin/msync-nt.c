@@ -34,6 +34,7 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
     return einval();
 
   int rc = 0;
+  __maps_lock();
   for (struct Map *map = __maps.maps; map; map = map->next) {
     char *beg = MAX(addr, map->addr);
     char *end = MIN(addr + size, map->addr + map->size);
@@ -42,6 +43,7 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
         rc = -1;
     // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
   }
+  __maps_unlock();
 
   return rc;
 }

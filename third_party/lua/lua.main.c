@@ -54,9 +54,6 @@
 #include "tool/args/args.h"
 __static_yoink("lua_notice");
 
-
-STATIC_STACK_ALIGN(GetStackSize());
-
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
 #endif

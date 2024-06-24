@@ -14,9 +14,6 @@
  */
 #define GetGuardSize() 16384
 
-#define STATIC_STACK_ALIGN(BYTES) \
-  _STACK_SYMBOL("ape_stack_align", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
-
 /**
  * Makes program stack executable if declared, e.g.
  *
@@ -50,8 +47,6 @@ COSMOPOLITAN_C_START_
 
 extern char ape_stack_prot[] __attribute__((__weak__));
 extern char ape_stack_memsz[] __attribute__((__weak__));
-extern char ape_stack_align[] __attribute__((__weak__));
-extern char ape_stack_round[] __attribute__((__weak__));
 
 uintptr_t GetStackBottom(void) pureconst;
 

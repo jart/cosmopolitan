@@ -131,6 +131,8 @@ TEST(setrlimit, testMemoryLimit) {
   int i, wstatus;
   if (IsXnu())
     return;
+  if (IsOpenbsd())
+    return;  // simply too slow until mmap() becomes O(logn)
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));

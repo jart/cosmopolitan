@@ -91,8 +91,8 @@ int __mprotect(char *addr, size_t size, int prot) {
           rc = -1;
       } else if (addr <= map_addr) {
         // cleave lefthand side of mapping
-        size_t left = addr + size - map_addr;
-        size_t right = map_addr + map_size - (addr + size);
+        size_t left = PGUP(addr + size - map_addr);
+        size_t right = map_size - left;
         struct Map *leftmap;
         if ((leftmap = __maps_alloc())) {
           if (!__mprotect_chunk(map_addr, left, prot, false)) {
@@ -108,6 +108,8 @@ int __mprotect(char *addr, size_t size, int prot) {
               map->off += left;
             dll_make_first(&__maps.used, &leftmap->elem);
             *prev = leftmap;
+            __maps.count += 1;
+            __maps_check();
           } else {
             __maps_free(leftmap);
             rc = -1;
@@ -135,6 +137,8 @@ int __mprotect(char *addr, size_t size, int prot) {
               map->off += left;
             dll_make_first(&__maps.used, &leftmap->elem);
             *prev = leftmap;
+            __maps.count += 1;
+            __maps_check();
           } else {
             __maps_free(leftmap);
             rc = -1;
@@ -171,6 +175,8 @@ int __mprotect(char *addr, size_t size, int prot) {
               dll_make_first(&__maps.used, &leftmap->elem);
               dll_make_first(&__maps.used, &midlmap->elem);
               *prev = leftmap;
+              __maps.count += 2;
+              __maps_check();
             } else {
               __maps_free(midlmap);
               __maps_free(leftmap);

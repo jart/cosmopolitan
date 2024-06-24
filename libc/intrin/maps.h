@@ -26,6 +26,8 @@ struct Maps {
   struct Dll *free;
   struct Map stack;
   struct Dll *used;
+  size_t count;
+  size_t pages;
 };
 
 struct AddrSize {
@@ -35,9 +37,9 @@ struct AddrSize {
 
 extern struct Maps __maps;
 
-int maps_check(void);
 void __maps_init(void);
 void __maps_lock(void);
+void __maps_check(void);
 void __maps_unlock(void);
 struct Map *__maps_alloc(void);
 void __maps_free(struct Map *);
