@@ -13,6 +13,8 @@ TEST_CTL_TESTS = $(TEST_CTL_COMS:%=%.ok)
 
 TEST_CTL_DIRECTDEPS =				\
 	CTL					\
+	LIBC_CALLS				\
+	LIBC_STDIO				\
 	LIBC_INTRIN				\
 	LIBC_MEM				\
 
