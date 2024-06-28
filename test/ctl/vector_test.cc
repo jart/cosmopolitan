@@ -16,12 +16,9 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include "ctl/string.h"
 #include "ctl/vector.h"
 #include "libc/mem/leaks.h"
-
-#include <cosmo.h>
-
-#include "ctl/string.h"
 
 // #include <string>
 // #include <vector>
@@ -315,6 +312,45 @@ main()
             return 69;
     }
 
+    {
+        ctl::vector<int> A = { 1, 2, 3 };
+        if (A[1] != 2)
+            return 70;
+        A = { 4, 5, 6 };
+        if (A[1] != 5)
+            return 71;
+    }
+
+    {
+        ctl::vector<int> arr = { 1, 2, 3 };
+        auto rit = arr.rbegin();
+        if (*rit != 3)
+            return 72;
+        ++rit;
+        if (*rit != 2)
+            return 73;
+        ++rit;
+        if (*rit != 1)
+            return 74;
+        ++rit;
+        if (rit != arr.rend())
+            return 75;
+    }
+
+    {
+        ctl::vector<ctl::string> A = { "hi", "theretheretheretherethere" };
+        if (A.size() != 2)
+            return 76;
+        if (A[0] != "hi")
+            return 77;
+        if (A[1] != "theretheretheretherethere")
+            return 78;
+        A = { "theretheretheretherethere", "hi" };
+        if (A[0] != "theretheretheretherethere")
+            return 79;
+        if (A[1] != "hi")
+            return 80;
+    }
+
     CheckForMemoryLeaks();
-    return 0;
 }

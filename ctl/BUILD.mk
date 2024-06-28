@@ -36,6 +36,7 @@ $(CTL_A_OBJS): private					\
 			-Walloca-larger-than=4096	\
 			-ffunction-sections		\
 			-fdata-sections			\
+			-fexceptions			\
 
 CTL_LIBS = $(foreach x,$(CTL_ARTIFACTS),$($(x)))
 CTL_SRCS = $(foreach x,$(CTL_ARTIFACTS),$($(x)_SRCS))

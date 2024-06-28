@@ -1,245 +1,594 @@
 // -*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
-#ifndef COSMOPOLITAN_CTL_OPTIONAL_H_
-#define COSMOPOLITAN_CTL_OPTIONAL_H_
-#include "new.h"
-#include "utility.h"
+#ifndef CTL_VECTOR_H_
+#define CTL_VECTOR_H_
+#include "allocator.h"
+#include "allocator_traits.h"
+#include "copy.h"
+#include "distance.h"
+#include "equal.h"
+#include "fill_n.h"
+#include "initializer_list.h"
+#include "iterator_traits.h"
+#include "lexicographical_compare.h"
+#include "max.h"
+#include "move_backward.h"
+#include "move_iterator.h"
+#include "out_of_range.h"
+#include "reverse_iterator.h"
+#include "uninitialized_fill.h"
+#include "uninitialized_fill_n.h"
+#include "uninitialized_move_n.h"
 
 namespace ctl {
 
-template<typename T>
-struct vector
+template<typename T, typename Allocator = ctl::allocator<T>>
+class vector
 {
-    size_t n = 0;
-    size_t c = 0;
-    T* p = nullptr;
+  public:
+    using value_type = T;
+    using allocator_type = Allocator;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = typename ctl::allocator_traits<Allocator>::pointer;
+    using const_pointer =
+      typename ctl::allocator_traits<Allocator>::const_pointer;
+    using iterator = pointer;
+    using const_iterator = const_pointer;
+    using reverse_iterator = ctl::reverse_iterator<iterator>;
+    using const_reverse_iterator = ctl::reverse_iterator<const_iterator>;
 
-    using iterator = T*;
-    using const_iterator = const T*;
-
-    vector() = default;
-
-    ~vector()
+  public:
+    vector() noexcept(noexcept(Allocator()))
+      : alloc_(), data_(nullptr), size_(0), capacity_(0)
     {
-        delete[] p;
+    }
+
+    explicit vector(const Allocator& alloc) noexcept
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+    }
+
+    vector(size_type count,
+           const T& value,
+           const Allocator& alloc = Allocator())
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+        assign(count, value);
+    }
+
+    explicit vector(size_type count, const Allocator& alloc = Allocator())
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+        resize(count);
+    }
+
+    template<class InputIt>
+    vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+        assign(first, last);
     }
 
     vector(const vector& other)
+      : alloc_(ctl::allocator_traits<
+               Allocator>::select_on_container_copy_construction(other.alloc_))
+      , data_(nullptr)
+      , size_(0)
+      , capacity_(0)
     {
-        n = other.n;
-        c = other.c;
-        p = new T[c];
-        for (size_t i = 0; i < n; ++i)
-            new (&p[i]) T(other.p[i]);
+        assign(other.begin(), other.end());
+    }
+
+    vector(const vector& other, const Allocator& alloc)
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+        assign(other.begin(), other.end());
     }
 
     vector(vector&& other) noexcept
+      : alloc_(ctl::move(other.alloc_))
+      , data_(other.data_)
+      , size_(other.size_)
+      , capacity_(other.capacity_)
     {
-        n = other.n;
-        c = other.c;
-        p = other.p;
-        other.n = 0;
-        other.c = 0;
-        other.p = nullptr;
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
     }
 
-    explicit vector(size_t count, const T& value = T())
+    vector(vector&& other, const Allocator& alloc)
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
     {
-        n = count;
-        c = count;
-        p = new T[c];
-        for (size_t i = 0; i < n; ++i)
-            new (&p[i]) T(value);
+        if (alloc_ == other.alloc_) {
+            data_ = other.data_;
+            size_ = other.size_;
+            capacity_ = other.capacity_;
+            other.data_ = nullptr;
+            other.size_ = 0;
+            other.capacity_ = 0;
+        } else {
+            assign(ctl::make_move_iterator(other.begin()),
+                   ctl::make_move_iterator(other.end()));
+        }
+    }
+
+    vector(std::initializer_list<T> init, const Allocator& alloc = Allocator())
+      : alloc_(alloc), data_(nullptr), size_(0), capacity_(0)
+    {
+        assign(init.begin(), init.end());
+    }
+
+    ~vector()
+    {
+        clear();
+        ctl::allocator_traits<Allocator>::deallocate(alloc_, data_, capacity_);
     }
 
     vector& operator=(const vector& other)
     {
         if (this != &other) {
-            T* newData = new T[other.c];
-            for (size_t i = 0; i < other.n; ++i) {
-                newData[i] = other.p[i];
-            }
-            delete[] p;
-            p = newData;
-            n = other.n;
-            c = other.c;
+            if (ctl::allocator_traits<
+                  Allocator>::propagate_on_container_copy_assignment::value)
+                alloc_ = other.alloc_;
+            assign(other.begin(), other.end());
         }
         return *this;
     }
 
-    vector& operator=(vector&& other) noexcept
+    vector& operator=(vector&& other) noexcept(
+      ctl::allocator_traits<Allocator>::is_always_equal::value)
     {
         if (this != &other) {
-            delete[] p;
-            p = other.p;
-            n = other.n;
-            c = other.c;
-            other.p = nullptr;
-            other.n = 0;
-            other.c = 0;
+            clear();
+            ctl::allocator_traits<Allocator>::deallocate(
+              alloc_, data_, capacity_);
+            if (ctl::allocator_traits<
+                  Allocator>::propagate_on_container_move_assignment::value)
+                alloc_ = ctl::move(other.alloc_);
+            data_ = other.data_;
+            size_ = other.size_;
+            capacity_ = other.capacity_;
+            other.data_ = nullptr;
+            other.size_ = 0;
+            other.capacity_ = 0;
         }
         return *this;
     }
 
-    bool empty() const
+    vector& operator=(std::initializer_list<T> ilist)
     {
-        return !n;
+        assign(ilist.begin(), ilist.end());
+        return *this;
     }
 
-    size_t size() const
+    void assign(size_type count, const T& value)
     {
-        return n;
+        clear();
+        if (count > capacity_)
+            reallocate(count);
+        ctl::uninitialized_fill_n(data_, count, value);
+        size_ = count;
     }
 
-    size_t capacity() const
+    template<class InputIt>
+    void assign(InputIt first, InputIt last)
     {
-        return c;
+        clear();
+        for (; first != last; ++first)
+            push_back(*first);
     }
 
-    T& operator[](size_t i)
+    void assign(std::initializer_list<T> ilist)
     {
-        if (i >= n)
-            __builtin_trap();
-        return p[i];
+        assign(ilist.begin(), ilist.end());
     }
 
-    const T& operator[](size_t i) const
+    reference at(size_type pos)
     {
-        if (i >= n)
-            __builtin_trap();
-        return p[i];
+        if (pos >= size_)
+            throw ctl::out_of_range("out of range");
+        return data_[pos];
     }
 
-    iterator begin()
+    const_reference at(size_type pos) const
     {
-        return p;
+        if (pos >= size_)
+            throw ctl::out_of_range("out of range");
+        return data_[pos];
     }
 
-    iterator end()
+    reference operator[](size_type pos)
     {
-        return p + n;
+        return data_[pos];
     }
 
-    const_iterator cbegin() const
+    const_reference operator[](size_type pos) const
     {
-        return p;
+        return data_[pos];
     }
 
-    const_iterator cend() const
+    reference front()
     {
-        return p + n;
+        return data_[0];
     }
 
-    T& front()
+    const_reference front() const
     {
-        if (!n)
-            __builtin_trap();
-        return p[0];
+        return data_[0];
     }
 
-    const T& front() const
+    reference back()
     {
-        if (!n)
-            __builtin_trap();
-        return p[0];
+        return data_[size_ - 1];
     }
 
-    T& back()
+    const_reference back() const
     {
-        if (!n)
-            __builtin_trap();
-        return p[n - 1];
+        return data_[size_ - 1];
     }
 
-    const T& back() const
+    T* data() noexcept
     {
-        if (!n)
-            __builtin_trap();
-        return p[n - 1];
+        return data_;
     }
 
-    void clear()
+    const T* data() const noexcept
     {
-        for (size_t i = 0; i < n; ++i)
-            p[i].~T();
-        n = 0;
+        return data_;
     }
 
-    void reserve(size_t c2)
+    iterator begin() noexcept
     {
-        if (c2 <= c)
-            return;
-        T* newP = new T[c2];
-        for (size_t i = 0; i < n; ++i)
-            newP[i] = ctl::move(p[i]);
-        delete[] p;
-        p = newP;
-        c = c2;
+        return data_;
     }
 
-    void push_back(const T& e)
+    const_iterator begin() const noexcept
     {
-        if (n == c) {
-            size_t c2 = c + 1;
-            c2 += c2 >> 1;
-            reserve(c2);
-        }
-        new (&p[n]) T(e);
-        ++n;
+        return data_;
     }
 
-    void push_back(T&& e)
+    const_iterator cbegin() const noexcept
     {
-        if (n == c) {
-            size_t c2 = c + 1;
-            c2 += c2 >> 1;
-            reserve(c2);
-        }
-        new (&p[n]) T(ctl::forward<T>(e));
-        ++n;
+        return data_;
     }
 
-    template<typename... Args>
-    void emplace_back(Args&&... args)
+    iterator end() noexcept
     {
-        if (n == c) {
-            size_t c2 = c + 1;
-            c2 += c2 >> 1;
-            reserve(c2);
-        }
-        new (&p[n]) T(ctl::forward<Args>(args)...);
-        ++n;
+        return data_ + size_;
+    }
+
+    const_iterator end() const noexcept
+    {
+        return data_ + size_;
+    }
+
+    const_iterator cend() const noexcept
+    {
+        return data_ + size_;
+    }
+
+    reverse_iterator rbegin() noexcept
+    {
+        return reverse_iterator(end());
+    }
+
+    const_reverse_iterator rbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator crbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
+
+    reverse_iterator rend() noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator rend() const noexcept
+    {
+        return const_reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crend() const noexcept
+    {
+        return const_reverse_iterator(begin());
+    }
+
+    bool empty() const noexcept
+    {
+        return size_ == 0;
+    }
+
+    size_type size() const noexcept
+    {
+        return size_;
+    }
+
+    size_type max_size() const noexcept
+    {
+        return __PTRDIFF_MAX__;
+    }
+
+    size_type capacity() const noexcept
+    {
+        return capacity_;
+    }
+
+    void reserve(size_type new_cap)
+    {
+        if (new_cap > capacity_)
+            reallocate(new_cap);
+    }
+
+    void shrink_to_fit()
+    {
+        if (size_ < capacity_)
+            reallocate(size_);
+    }
+
+    void clear() noexcept
+    {
+        for (size_type i = 0; i < size_; ++i)
+            ctl::allocator_traits<Allocator>::destroy(alloc_, data_ + i);
+        size_ = 0;
+    }
+
+    iterator insert(const_iterator pos, const T& value)
+    {
+        return insert(pos, 1, value);
+    }
+
+    iterator insert(const_iterator pos, T&& value)
+    {
+        difference_type index = pos - begin();
+        if (size_ == capacity_)
+            grow();
+        iterator it = begin() + index;
+        ctl::move_backward(it, end(), end() + 1);
+        *it = ctl::move(value);
+        ++size_;
+        return it;
+    }
+
+    iterator insert(const_iterator pos, size_type count, const T& value)
+    {
+        difference_type index = pos - begin();
+        if (size_ + count > capacity_)
+            reallocate(ctl::max(size_ + count, capacity_ * 2));
+        iterator it = begin() + index;
+        ctl::move_backward(it, end(), end() + count);
+        ctl::fill_n(it, count, value);
+        size_ += count;
+        return it;
+    }
+
+    template<class InputIt>
+    iterator insert(const_iterator pos, InputIt first, InputIt last)
+    {
+        difference_type count = ctl::distance(first, last);
+        difference_type index = pos - begin();
+        if (size_ + count > capacity_)
+            reallocate(ctl::max(size_ + count, capacity_ * 2));
+        iterator it = begin() + index;
+        ctl::move_backward(it, end(), end() + count);
+        ctl::copy(first, last, it);
+        size_ += count;
+        return it;
+    }
+
+    iterator insert(const_iterator pos, std::initializer_list<T> ilist)
+    {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    template<class... Args>
+    iterator emplace(const_iterator pos, Args&&... args)
+    {
+        difference_type index = pos - begin();
+        if (size_ == capacity_)
+            grow();
+        iterator it = begin() + index;
+        ctl::move_backward(it, end(), end() + 1);
+        ctl::allocator_traits<Allocator>::construct(
+          alloc_, it, ctl::forward<Args>(args)...);
+        ++size_;
+        return it;
+    }
+
+    iterator erase(const_iterator pos)
+    {
+        return erase(pos, pos + 1);
+    }
+
+    iterator erase(const_iterator first, const_iterator last)
+    {
+        difference_type index = first - begin();
+        difference_type count = last - first;
+        iterator it = begin() + index;
+        ctl::move(it + count, end(), it);
+        for (difference_type i = 0; i < count; ++i)
+            ctl::allocator_traits<Allocator>::destroy(alloc_, end() - i - 1);
+        size_ -= count;
+        return it;
+    }
+
+    void push_back(const T& value)
+    {
+        if (size_ == capacity_)
+            grow();
+        ctl::allocator_traits<Allocator>::construct(
+          alloc_, data_ + size_, value);
+        ++size_;
+    }
+
+    void push_back(T&& value)
+    {
+        if (size_ == capacity_)
+            grow();
+        ctl::allocator_traits<Allocator>::construct(
+          alloc_, data_ + size_, ctl::move(value));
+        ++size_;
+    }
+
+    template<class... Args>
+    reference emplace_back(Args&&... args)
+    {
+        if (size_ == capacity_)
+            grow();
+        ctl::allocator_traits<Allocator>::construct(
+          alloc_, data_ + size_, ctl::forward<Args>(args)...);
+        return data_[size_++];
     }
 
     void pop_back()
     {
-        if (n > 0) {
-            --n;
-            p[n].~T();
+        if (!empty()) {
+            ctl::allocator_traits<Allocator>::destroy(alloc_,
+                                                      data_ + size_ - 1);
+            --size_;
         }
     }
 
-    void resize(size_t n2)
+    void resize(size_type count)
     {
-        if (n2 > n) {
-            reserve(n2);
-            for (size_t i = n; i < n2; ++i)
-                new (&p[i]) T();
-        } else if (n2 < n) {
-            for (size_t i = n2; i < n; ++i)
-                p[i].~T();
-        }
-        n = n2;
+        resize(count, T());
     }
 
-    void swap(vector& other) noexcept
+    void resize(size_type count, const value_type& value)
     {
-        ctl::swap(n, other.n);
-        ctl::swap(c, other.c);
-        ctl::swap(p, other.p);
+        if (count > size_) {
+            if (count > capacity_)
+                reallocate(count);
+            ctl::uninitialized_fill(data_ + size_, data_ + count, value);
+        } else if (count < size_) {
+            for (size_type i = count; i < size_; ++i)
+                ctl::allocator_traits<Allocator>::destroy(alloc_, data_ + i);
+        }
+        size_ = count;
     }
+
+    void swap(vector& other) noexcept(
+      ctl::allocator_traits<Allocator>::is_always_equal::value)
+    {
+        using ctl::swap;
+        swap(alloc_, other.alloc_);
+        swap(data_, other.data_);
+        swap(size_, other.size_);
+        swap(capacity_, other.capacity_);
+    }
+
+    allocator_type get_allocator() const noexcept
+    {
+        return alloc_;
+    }
+
+  private:
+    void grow()
+    {
+        size_type c2;
+        c2 = capacity_;
+        if (c2 < 4)
+            c2 = 4;
+        c2 += c2 >> 1;
+        reallocate(c2);
+    }
+
+    void reallocate(size_type new_capacity)
+    {
+        pointer new_data =
+          ctl::allocator_traits<Allocator>::allocate(alloc_, new_capacity);
+        size_type new_size = size_ < new_capacity ? size_ : new_capacity;
+        try {
+            ctl::uninitialized_move_n(data_, new_size, new_data);
+        } catch (...) {
+            ctl::allocator_traits<Allocator>::deallocate(
+              alloc_, new_data, new_capacity);
+            throw;
+        }
+        for (size_type i = 0; i < size_; ++i)
+            ctl::allocator_traits<Allocator>::destroy(alloc_, data_ + i);
+        ctl::allocator_traits<Allocator>::deallocate(alloc_, data_, capacity_);
+        data_ = new_data;
+        size_ = new_size;
+        capacity_ = new_capacity;
+    }
+
+    Allocator alloc_;
+    pointer data_;
+    size_type size_;
+    size_type capacity_;
 };
+
+template<class T, class Alloc>
+bool
+operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return lhs.size() == rhs.size() &&
+           ctl::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, class Alloc>
+bool
+operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<class T, class Alloc>
+bool
+operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return ctl::lexicographical_compare(
+      lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template<class T, class Alloc>
+bool
+operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template<class T, class Alloc>
+bool
+operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return rhs < lhs;
+}
+
+template<class T, class Alloc>
+bool
+operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+template<class T, class Alloc>
+void
+swap(vector<T, Alloc>& lhs,
+     vector<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+{
+    lhs.swap(rhs);
+}
+
+template<class InputIt,
+         class Alloc =
+           ctl::allocator<typename ctl::iterator_traits<InputIt>::value_type>>
+vector(InputIt, InputIt, Alloc = Alloc())
+  -> vector<typename ctl::iterator_traits<InputIt>::value_type, Alloc>;
+
+template<class Alloc>
+vector(size_t,
+       const typename ctl::allocator_traits<Alloc>::value_type&,
+       Alloc = Alloc())
+  -> vector<typename ctl::allocator_traits<Alloc>::value_type, Alloc>;
 
 } // namespace ctl
 
-#endif // COSMOPOLITAN_CTL_OPTIONAL_H_
+#endif // CTL_VECTOR_H_

@@ -771,7 +771,9 @@
                                                dots (cosmo-file-name-sans-extensions name))))
                        (if (file-exists-p cc-version)
                            cc-version
-                         c-version))
+                         (if (eq major-mode 'c++-mode)
+                             cc-version
+                           c-version)))
                      ))))
         (when buddy
           (find-file buddy))))))

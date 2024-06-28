@@ -23,7 +23,7 @@
 COSMOPOLITAN_C_START_
 
 static void*
-_ctl_alloc(size_t n, size_t a)
+_ctl_alloc(size_t n, size_t a) noexcept
 {
     void* p;
     if (!(p = memalign(a, n)))
@@ -32,7 +32,16 @@ _ctl_alloc(size_t n, size_t a)
 }
 
 static void*
-_ctl_alloc1(size_t n)
+_ctl_alloc_nothrow(size_t n, size_t a, const ctl::nothrow_t&)
+{
+    void* p;
+    if (!(p = memalign(a, n)))
+        __builtin_trap();
+    return p;
+}
+
+static void*
+_ctl_alloc1(size_t n) noexcept
 {
     void* p;
     if (!(p = malloc(n)))
@@ -41,19 +50,28 @@ _ctl_alloc1(size_t n)
 }
 
 static void*
-_ctl_ret(size_t, void* p)
+_ctl_alloc1_nothrow(size_t n, const ctl::nothrow_t&) noexcept
+{
+    void* p;
+    if (!(p = malloc(n)))
+        __builtin_trap();
+    return p;
+}
+
+static void*
+_ctl_ret(size_t, void* p) noexcept
 {
     return p;
 }
 
 static void
-_ctl_free(void* p)
+_ctl_free(void* p) noexcept
 {
     free(p);
 }
 
 static void
-_ctl_nop(void*, void*)
+_ctl_nop(void*, void*) noexcept
 {
 }
 
@@ -76,22 +94,42 @@ __weak_reference(void*
                  _ctl_alloc);
 
 __weak_reference(void*
+                 operator new(size_t,
+                              ctl::align_val_t,
+                              const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc_nothrow);
+
+__weak_reference(void*
                  operator new[](size_t, ctl::align_val_t),
                  _ctl_alloc);
+
+__weak_reference(void*
+                 operator new[](size_t,
+                                ctl::align_val_t,
+                                const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc_nothrow);
 
 __weak_reference(void*
                  operator new(size_t),
                  _ctl_alloc1);
 
 __weak_reference(void*
+                 operator new(size_t, const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc1_nothrow);
+
+__weak_reference(void*
                  operator new[](size_t),
                  _ctl_alloc1);
+
+__weak_reference(void*
+                 operator new[](size_t, const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc1_nothrow);
 
 // XXX clang-format currently mutilates these for some reason.
 // clang-format off
 
-__weak_reference(void* operator new(size_t, void*), _ctl_ret);
-__weak_reference(void* operator new[](size_t, void*), _ctl_ret);
+__weak_reference(void* operator new(size_t, void*) noexcept, _ctl_ret);
+__weak_reference(void* operator new[](size_t, void*) noexcept, _ctl_ret);
 
 __weak_reference(void operator delete(void*) noexcept, _ctl_free);
 __weak_reference(void operator delete[](void*) noexcept, _ctl_free);

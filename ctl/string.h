@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef CTL_STRING_H_
 #define CTL_STRING_H_
+#include "reverse_iterator.h"
 #include "string_view.h"
 
 namespace ctl {
@@ -44,8 +45,18 @@ struct big_string
 class string
 {
   public:
-    using iterator = char*;
-    using const_iterator = const char*;
+    using value_type = char;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using iterator = pointer;
+    using const_iterator = const_pointer;
+    using reverse_iterator = ctl::reverse_iterator<iterator>;
+    using const_reverse_iterator = ctl::reverse_iterator<const_iterator>;
+
     static constexpr size_t npos = -1;
 
     string() noexcept
@@ -189,9 +200,9 @@ class string
         return data();
     }
 
-    iterator end() noexcept
+    const_iterator begin() const noexcept
     {
-        return data() + size();
+        return data();
     }
 
     const_iterator cbegin() const noexcept
@@ -199,9 +210,49 @@ class string
         return data();
     }
 
+    reverse_iterator rbegin() noexcept
+    {
+        return reverse_iterator(end());
+    }
+
+    const_reverse_iterator rbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator crbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
+
+    iterator end() noexcept
+    {
+        return data() + size();
+    }
+
+    const_iterator end() const noexcept
+    {
+        return data() + size();
+    }
+
     const_iterator cend() const noexcept
     {
         return data() + size();
+    }
+
+    reverse_iterator rend() noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator rend() const noexcept
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
+    const_reverse_iterator crend() const noexcept
+    {
+        return const_reverse_iterator(cbegin());
     }
 
     char& front()

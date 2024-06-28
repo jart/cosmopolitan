@@ -41,25 +41,14 @@ string::destroy_big() noexcept
 void
 string::init_big(const string& s) noexcept
 {
-    char* p2;
-#ifndef NDEBUG
-    if (!s.isbig())
-        __builtin_trap();
-#endif
-    if (s.size() >= s.capacity() >> 1) {
-        if (!(p2 = (char*)malloc(s.capacity())))
-            __builtin_trap();
-        set_big_string(p2, s.size(), s.capacity());
-    } else {
-        init_big(string_view(s));
-    }
+    init_big(string_view(s));
 }
 
 void
 string::init_big(const string_view s) noexcept
 {
-    size_t need;
     char* p2;
+    size_t need;
     if (ckd_add(&need, s.n, 1 /* nul */ + 15))
         __builtin_trap();
     need &= -16;

@@ -144,7 +144,6 @@ static void *pthread_main(void *ptr) {
   struct State *s = ptr;
   struct State children[2];
   int fd, rc;
-
   fd = s->fd;
   if (s->id < 8) {
     for (int i = 0; i < 2; ++i) {

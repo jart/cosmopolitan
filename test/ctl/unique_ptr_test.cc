@@ -16,11 +16,12 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include "ctl/type_traits.h"
 #include "ctl/unique_ptr.h"
-
-#include <__type_traits/is_same.h>
+#include "libc/mem/leaks.h"
 
 // #include <memory>
+// #include <type_traits>
 // #define ctl std
 
 template<typename T, typename D = ctl::default_delete<T>>
@@ -70,7 +71,7 @@ struct FinalDeleter final
 static_assert(sizeof(Ptr<int, SetsGDeleter>) == sizeof(int*));
 
 // not everyone uses [[no_unique_address]]...
-static_assert(!std::is_same_v<Ptr<int>, ctl::unique_ptr<int>> ||
+static_assert(!ctl::is_same_v<Ptr<int>, ctl::unique_ptr<int>> ||
               sizeof(Ptr<int, FinalDeleter>) == sizeof(int*));
 
 struct SetsGCtor
@@ -227,6 +228,4 @@ main()
 
     // TODO(mrdomino): Fix memory leaks reported by MODE=dbg
     // CheckForMemoryLeaks();
-
-    return 0;
 }

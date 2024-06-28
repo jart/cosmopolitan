@@ -17,9 +17,8 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/string.h"
+#include "ctl/type_traits.h"
 #include "libc/mem/leaks.h"
-
-#include <__type_traits/is_same.h>
 
 #include "libc/str/str.h"
 
@@ -366,7 +365,7 @@ main()
 
     {
         String s;
-        if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
+        if constexpr (ctl::is_same_v<ctl::string, decltype(s)>) {
             // tests the small-string optimization on ctl::string
             for (int i = 0; i < 23; ++i) {
                 s.append("a");
@@ -397,7 +396,7 @@ main()
         s.resize(4);
         if (s != "arst")
             return 105;
-        if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
+        if constexpr (ctl::is_same_v<ctl::string, decltype(s)>) {
             String r(s);
             if (issmall(s) || !issmall(r))
                 return 106;
@@ -405,5 +404,4 @@ main()
     }
 
     CheckForMemoryLeaks();
-    return 0;
 }

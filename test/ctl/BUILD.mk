@@ -17,6 +17,10 @@ TEST_CTL_DIRECTDEPS =				\
 	LIBC_STDIO				\
 	LIBC_INTRIN				\
 	LIBC_MEM				\
+	LIBC_STDIO				\
+	THIRD_PARTY_LIBCXX			\
+	THIRD_PARTY_LIBCXXABI			\
+	THIRD_PARTY_LIBUNWIND			\
 
 TEST_CTL_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_CTL_DIRECTDEPS),$($(x))))
@@ -32,6 +36,10 @@ o/$(MODE)/test/ctl/%.dbg:			\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+$(TEST_CTL_OBJS): private			\
+		OVERRIDE_CXXFLAGS +=		\
+			-fexceptions		\
 
 .PHONY: o/$(MODE)/test/ctl
 o/$(MODE)/test/ctl:				\

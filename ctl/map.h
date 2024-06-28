@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef CTL_MAP_H_
 #define CTL_MAP_H_
+#include "out_of_range.h"
 #include "set.h"
 
 namespace ctl {
@@ -164,7 +165,7 @@ class map
     {
         auto it = find(key);
         if (it == end())
-            __builtin_trap();
+            throw ctl::out_of_range("out of range");
         return it->second;
     }
 
@@ -172,7 +173,7 @@ class map
     {
         auto it = find(key);
         if (it == end())
-            __builtin_trap();
+            throw ctl::out_of_range("out of range");
         return it->second;
     }
 
