@@ -256,7 +256,6 @@ include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
 include libc/proc/BUILD.mk			# │  You can now use threads
 include libc/dlopen/BUILD.mk			# │  You can now use processes
 include libc/thread/BUILD.mk			# │  You can finally call malloc()
-include ctl/BUILD.mk				# │
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
 include tool/hello/BUILD.mk			# │
@@ -285,6 +284,7 @@ include third_party/ncurses/BUILD.mk		# │
 include third_party/readline/BUILD.mk		# │
 include third_party/libunwind/BUILD.mk		# |
 include third_party/libcxxabi/BUILD.mk		# |
+include ctl/BUILD.mk				# │
 include third_party/libcxx/BUILD.mk		# │
 include third_party/openmp/BUILD.mk		# │
 include third_party/double-conversion/BUILD.mk	# │

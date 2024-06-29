@@ -2,7 +2,6 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef CTL_IS_CONVERTIBLE_H_
 #define CTL_IS_CONVERTIBLE_H_
-
 #include "ctl/integral_constant.h"
 #include "ctl/void_t.h"
 

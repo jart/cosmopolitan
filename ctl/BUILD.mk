@@ -18,7 +18,11 @@ CTL_A_CHECKS =						\
 CTL_A_DIRECTDEPS =					\
 	LIBC_INTRIN					\
 	LIBC_MEM					\
+	LIBC_STDIO					\
 	LIBC_STR					\
+	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_LIBCXXABI				\
+	THIRD_PARTY_LIBUNWIND				\
 
 CTL_A_DEPS := $(call uniq,$(foreach x,$(CTL_A_DIRECTDEPS),$($(x))))
 
