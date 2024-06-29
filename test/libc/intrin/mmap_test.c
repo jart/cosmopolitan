@@ -98,6 +98,15 @@ TEST(mmap, noreplaceExistingMap) {
   EXPECT_SYS(0, 0, munmap(p, granularity));
 }
 
+TEST(mmap, fixedTaken) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, granularity, PROT_READ,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_NE(MAP_FAILED, mmap(p, granularity, PROT_READ,
+                             MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+  EXPECT_SYS(0, 0, munmap(p, granularity));
+}
+
 TEST(mmap, hint) {
   char *p, *q;
 

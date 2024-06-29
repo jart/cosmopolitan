@@ -37,6 +37,6 @@ __attribute__((__constructor__(60))) static textstartup void errinit(void) {
   stderr->iomode = O_WRONLY;
   stderr->buf = stderr->mem;
   stderr->size = sizeof(stderr->mem);
-  stderr->lock._type = PTHREAD_MUTEX_RECURSIVE;
+  stderr->lock._word = PTHREAD_MUTEX_RECURSIVE;
   __fflush_register(stderr);
 }

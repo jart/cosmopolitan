@@ -38,7 +38,7 @@ __attribute__((__constructor__(60))) static textstartup void outinit(void) {
   stdout->iomode = O_WRONLY;
   stdout->buf = stdout->mem;
   stdout->size = sizeof(stdout->mem);
-  stdout->lock._type = PTHREAD_MUTEX_RECURSIVE;
+  stdout->lock._word = PTHREAD_MUTEX_RECURSIVE;
 
   /*
    * Unlike other C libraries we don't bother calling fstat() to check

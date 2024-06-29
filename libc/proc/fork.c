@@ -74,10 +74,10 @@ static void _onfork_child(void) {
   atomic_store_explicit(&free_waiters_mu, 0, memory_order_relaxed);
   pthread_mutexattr_destroy(&attr);
   _pthread_init();
-  __maps_unlock();
-  if (_weaken(_pthread_onfork_child)) {
+  atomic_store_explicit(&__maps.lock, 0, memory_order_relaxed);
+  atomic_store_explicit(&__get_tls()->tib_relock_maps, 0, memory_order_relaxed);
+  if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
-  }
 }
 
 int _fork(uint32_t dwCreationFlags) {

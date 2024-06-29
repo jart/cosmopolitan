@@ -41,20 +41,16 @@ void(__fflush_unlock)(void) {
 static void __stdio_fork_prepare(void) {
   FILE *f;
   __fflush_lock();
-  for (int i = 0; i < __fflush.handles.i; ++i) {
-    if ((f = __fflush.handles.p[i])) {
+  for (int i = 0; i < __fflush.handles.i; ++i)
+    if ((f = __fflush.handles.p[i]))
       pthread_mutex_lock(&f->lock);
-    }
-  }
 }
 
 static void __stdio_fork_parent(void) {
   FILE *f;
-  for (int i = __fflush.handles.i; i--;) {
-    if ((f = __fflush.handles.p[i])) {
+  for (int i = __fflush.handles.i; i--;)
+    if ((f = __fflush.handles.p[i]))
       pthread_mutex_unlock(&f->lock);
-    }
-  }
   __fflush_unlock();
 }
 
@@ -63,7 +59,7 @@ static void __stdio_fork_child(void) {
   for (int i = __fflush.handles.i; i--;) {
     if ((f = __fflush.handles.p[i])) {
       bzero(&f->lock, sizeof(f->lock));
-      f->lock._type = PTHREAD_MUTEX_RECURSIVE;
+      f->lock._word = PTHREAD_MUTEX_RECURSIVE;
     }
   }
   pthread_mutex_init(&__fflush_lock_obj, 0);

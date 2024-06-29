@@ -4,7 +4,6 @@
 #define TLS_ALIGNMENT 64
 
 #define TIB_FLAG_VFORKED 1
-#define TIB_FLAG_MAPLOCK 2
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -38,8 +37,9 @@ struct CosmoTib {
   char *tib_sigstack_addr;
   uint32_t tib_sigstack_size;
   uint32_t tib_sigstack_flags;
+  _Atomic(int) tib_relock_maps;
   void *tib_nsync;
-  void *tib_keys[48];
+  void *tib_keys[47];
 } __attribute__((__aligned__(64)));
 
 extern int __threaded;

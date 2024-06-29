@@ -56,6 +56,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/time.h"
@@ -652,7 +653,7 @@ TEST(pledge_openbsd, bigSyscalls) {
 
 void *LockWorker(void *arg) {
   flockfile(stdout);
-  ASSERT_EQ(gettid(), stdout->lock._owner);
+  ASSERT_EQ(gettid(), MUTEX_OWNER(stdout->lock._word));
   funlockfile(stdout);
   return 0;
 }

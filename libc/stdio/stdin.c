@@ -39,7 +39,7 @@ __attribute__((__constructor__(60))) static textstartup void initin(void) {
   stdin->iomode = O_RDONLY;
   stdin->buf = stdin->mem;
   stdin->size = sizeof(stdin->mem);
-  stdin->lock._type = PTHREAD_MUTEX_RECURSIVE;
+  stdin->lock._word = PTHREAD_MUTEX_RECURSIVE;
   if (fstat(STDIN_FILENO, &st) || !S_ISREG(st.st_mode))
     stdin->bufmode = _IONBF;
   __fflush_register(stdin);

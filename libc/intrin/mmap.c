@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/atomic.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -86,14 +87,23 @@ void __maps_check(void) {
   size_t maps = 0;
   size_t pages = 0;
   int granularity = getauxval(AT_PAGESZ);
+  unsigned id = __maps.mono++;
   for (struct Map *map = __maps.maps; map; map = map->next) {
     ASSERT(map->addr != MAP_FAILED);
+    ASSERT(map->visited != id);
     ASSERT(map->size);
+    map->visited = id;
     pages += PGUP(map->size) / granularity;
     maps += 1;
   }
   ASSERT(maps = __maps.count);
   ASSERT(pages == __maps.pages);
+  for (struct Dll *e = dll_first(__maps.used); e;
+       e = dll_next(__maps.used, e)) {
+    ASSERT(MAP_CONTAINER(e)->visited == id);
+    --maps;
+  }
+  ASSERT(maps == 0);
   for (struct Map *m1 = __maps.maps; m1; m1 = m1->next)
     for (struct Map *m2 = m1->next; m2; m2 = m2->next)
       ASSERT(MAX(m1->addr, m2->addr) >=
@@ -168,11 +178,7 @@ struct Map *__maps_alloc(void) {
   return map;
 }
 
-static int __munmap_chunk(void *addr, size_t size) {
-  return sys_munmap(addr, size);
-}
-
-static int __munmap(char *addr, size_t size, bool untrack_only) {
+int __munmap(char *addr, size_t size, bool untrack_only) {
 
   // validate arguments
   int pagesz = getauxval(AT_PAGESZ);
@@ -186,7 +192,7 @@ static int __munmap(char *addr, size_t size, bool untrack_only) {
   __maps_lock();
 StartOver:;
   struct Map *map = __maps.maps;
-  _Atomic(struct Map *) *prev = &__maps.maps;
+  struct Map **prev = &__maps.maps;
   while (map) {
     char *map_addr = map->addr;
     size_t map_size = map->size;
@@ -207,7 +213,7 @@ StartOver:;
           if (!IsWindows()) {
             ASSERT(addr <= map_addr);
             ASSERT(map_addr + PGUP(map_size) <= addr + PGUP(size));
-            if (__munmap_chunk(map_addr, map_size))
+            if (sys_munmap(map_addr, map_size))
               rc = -1;
           } else {
             if (!UnmapViewOfFile(map_addr))
@@ -236,7 +242,7 @@ StartOver:;
         ASSERT(left > 0);
         map->addr += left;
         map->size = right;
-        if (map->off != -1)
+        if (!(map->flags & MAP_ANONYMOUS))
           map->off += left;
         __maps.pages -= (left + pagesz - 1) / pagesz;
         __maps_check();
@@ -244,7 +250,7 @@ StartOver:;
           __maps_unlock();
           ASSERT(addr <= map_addr);
           ASSERT(map_addr + PGUP(left) <= addr + PGUP(size));
-          if (__munmap_chunk(map_addr, left) == -1)
+          if (sys_munmap(map_addr, left) == -1)
             rc = -1;
           __maps_lock();
           goto StartOver;
@@ -259,7 +265,7 @@ StartOver:;
         if (!untrack_only) {
           __maps_unlock();
           ASSERT(PGUP(right) <= PGUP(size));
-          if (__munmap_chunk(addr, right) == -1)
+          if (sys_munmap(addr, right) == -1)
             rc = -1;
           __maps_lock();
           goto StartOver;
@@ -279,7 +285,7 @@ StartOver:;
           leftmap->flags = map->flags;
           map->addr += left + middle;
           map->size = right;
-          if (map->off != -1)
+          if (!(map->flags & MAP_ANONYMOUS))
             map->off += left + middle;
           dll_make_first(&__maps.used, &leftmap->elem);
           *prev = leftmap;
@@ -288,7 +294,7 @@ StartOver:;
           __maps_check();
           if (!untrack_only) {
             __maps_unlock();
-            if (__munmap_chunk(addr, size) == -1)
+            if (sys_munmap(addr, size) == -1)
               rc = -1;
             __maps_lock();
             goto StartOver;
@@ -339,6 +345,11 @@ static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
   if (!map)
     return MAP_FAILED;
 
+  // remove mapping we blew away
+  if (IsWindows() && should_untrack)
+    if (__munmap(addr, size, false))
+      return MAP_FAILED;
+
   // obtain mapping from operating system
   int olderr = errno;
   struct DirectMap res;
@@ -349,9 +360,7 @@ TryAgain:
       if (noreplace) {
         errno = EEXIST;
       } else if (should_untrack) {
-        sys_munmap(res.addr, size);
-        errno = olderr;
-        goto TryAgain;
+        errno = ENOMEM;
       } else {
         addr += granularity;
         errno = olderr;
@@ -368,7 +377,12 @@ TryAgain:
   // we assume non-linux gives us addr if it's free
   // that's what linux (e.g. rhel7) did before noreplace
   if (noreplace && res.addr != addr) {
-    sys_munmap(res.addr, size);
+    if (!IsWindows()) {
+      sys_munmap(res.addr, size);
+    } else {
+      UnmapViewOfFile(res.addr);
+      CloseHandle(res.maphandle);
+    }
     __maps_lock();
     __maps_free(map);
     __maps_unlock();
@@ -376,7 +390,7 @@ TryAgain:
   }
 
   // untrack mapping we blew away
-  if (should_untrack)
+  if (!IsWindows() && should_untrack)
     __munmap(res.addr, size, true);
 
   // track Map object
@@ -425,7 +439,7 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   if (size <= granularity || size > 100 * 1024 * 1024)
     return __mmap_chunk(addr, size, prot, flags, fd, off, granularity);
 
-  // so we create an separate map for each granule in the mapping
+  // so we create a separate map for each granule in the mapping
   if (!(flags & MAP_FIXED)) {
     while (overlaps_existing_map(addr, size)) {
       if (flags & MAP_FIXED_NOREPLACE)
@@ -486,7 +500,11 @@ void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
 
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
+  BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
   res = __mmap(addr, size, prot, flags, fd, off);
+  ALLOW_CANCELATION;
+  ALLOW_SIGNALS;
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m", addr, size,
          DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res);
   return res;
@@ -494,7 +512,11 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
 
 int munmap(void *addr, size_t size) {
   int rc;
+  BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
   rc = __munmap(addr, size, false);
+  ALLOW_CANCELATION;
+  ALLOW_SIGNALS;
   STRACE("munmap(%p, %'zu) → %d% m", addr, size, rc);
   return rc;
 }

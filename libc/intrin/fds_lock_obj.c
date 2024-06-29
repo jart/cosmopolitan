@@ -19,4 +19,4 @@
 #include "libc/calls/state.internal.h"
 #include "libc/thread/thread.h"
 
-pthread_mutex_t __fds_lock_obj = {._type = PTHREAD_MUTEX_RECURSIVE};
+pthread_mutex_t __fds_lock_obj = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;

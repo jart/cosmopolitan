@@ -15,7 +15,7 @@
 #define PTHREAD_MUTEX_ROBUST     1
 
 #define PTHREAD_PROCESS_PRIVATE 0
-#define PTHREAD_PROCESS_SHARED  1
+#define PTHREAD_PROCESS_SHARED  4
 
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
@@ -40,13 +40,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define PTHREAD_ONCE_INIT          _PTHREAD_INIT
-#define PTHREAD_COND_INITIALIZER   _PTHREAD_INIT
-#define PTHREAD_RWLOCK_INITIALIZER _PTHREAD_INIT
-#define PTHREAD_MUTEX_INITIALIZER  _PTHREAD_INIT
+#define PTHREAD_ONCE_INIT          {0}
+#define PTHREAD_COND_INITIALIZER   {0}
+#define PTHREAD_RWLOCK_INITIALIZER {0}
+#define PTHREAD_MUTEX_INITIALIZER  {0}
 
-#define _PTHREAD_INIT \
-  { 0 }
+#define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP {0, 0, PTHREAD_MUTEX_RECURSIVE}
 
 typedef uintptr_t pthread_t;
 typedef int pthread_id_np_t;
@@ -65,17 +64,13 @@ typedef struct pthread_spinlock_s {
 } pthread_spinlock_t;
 
 typedef struct pthread_mutex_s {
-  _Atomic(int32_t) _lock;
-  unsigned _type : 2;
-  unsigned _pshared : 1;
-  unsigned _depth : 6;
-  unsigned _owner : 23;
-  long _pid;
+  uint32_t _nsync;
+  int32_t _pid;
+  _Atomic(uint64_t) _word;
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
-  char _type;
-  char _pshared;
+  unsigned _word;
 } pthread_mutexattr_t;
 
 typedef struct pthread_cond_s {

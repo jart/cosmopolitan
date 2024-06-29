@@ -20,14 +20,10 @@
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 #ifdef __x86_64__
 __static_yoink("_init_maps");
@@ -73,7 +69,7 @@ privileged void __maps_lock(void) {
   if (!__tls_enabled)
     return;
   tib = __get_tls_privileged();
-  if (tib->tib_flags & TIB_FLAG_MAPLOCK)
+  if (tib->tib_relock_maps++)
     return;
   while (atomic_exchange_explicit(&__maps.lock, 1, memory_order_acquire)) {
 #if defined(__GNUC__) && defined(__aarch64__)
@@ -82,14 +78,15 @@ privileged void __maps_lock(void) {
     __asm__ volatile("pause");
 #endif
   }
-  tib->tib_flags |= TIB_FLAG_MAPLOCK;
 }
 
 privileged void __maps_unlock(void) {
   struct CosmoTib *tib;
-  atomic_store_explicit(&__maps.lock, 0, memory_order_release);
-  if (__tls_enabled) {
-    tib = __get_tls_privileged();
-    tib->tib_flags &= ~TIB_FLAG_MAPLOCK;
-  }
+  if (!__threaded)
+    return;
+  if (!__tls_enabled)
+    return;
+  tib = __get_tls_privileged();
+  if (!--tib->tib_relock_maps)
+    atomic_store_explicit(&__maps.lock, 0, memory_order_release);
 }

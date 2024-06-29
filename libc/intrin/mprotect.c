@@ -30,6 +30,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
@@ -67,7 +68,7 @@ int __mprotect(char *addr, size_t size, int prot) {
   __maps_lock();
   bool found = false;
   struct Map *map = __maps.maps;
-  _Atomic(struct Map *) *prev = &__maps.maps;
+  struct Map **prev = &__maps.maps;
   while (map) {
     char *map_addr = map->addr;
     size_t map_size = map->size;
@@ -104,7 +105,7 @@ int __mprotect(char *addr, size_t size, int prot) {
             leftmap->flags = map->flags;
             map->addr += left;
             map->size = right;
-            if (map->off != -1)
+            if (!(map->flags & MAP_ANONYMOUS))
               map->off += left;
             dll_make_first(&__maps.used, &leftmap->elem);
             *prev = leftmap;
@@ -133,7 +134,7 @@ int __mprotect(char *addr, size_t size, int prot) {
             map->addr += left;
             map->size = right;
             map->prot = prot;
-            if (map->off != -1)
+            if (!(map->flags & MAP_ANONYMOUS))
               map->off += left;
             dll_make_first(&__maps.used, &leftmap->elem);
             *prev = leftmap;
@@ -165,12 +166,12 @@ int __mprotect(char *addr, size_t size, int prot) {
               midlmap->next = map;
               midlmap->addr = map_addr + left;
               midlmap->size = middle;
-              midlmap->off = map->off == -1 ? -1 : map->off + left;
+              midlmap->off = (map->flags & MAP_ANONYMOUS) ? 0 : map->off + left;
               midlmap->prot = prot;
               midlmap->flags = map->flags;
               map->addr += left + middle;
               map->size = right;
-              if (map->off != -1)
+              if (!(map->flags & MAP_ANONYMOUS))
                 map->off += left + middle;
               dll_make_first(&__maps.used, &leftmap->elem);
               dll_make_first(&__maps.used, &midlmap->elem);

@@ -34,7 +34,6 @@ struct Zipos {
   uint64_t dev;
   size_t *index;
   size_t records;
-  struct ZiposHandle *freelist;
 };
 
 int __zipos_close(int);

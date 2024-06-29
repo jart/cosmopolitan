@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 #include "third_party/nsync/common.internal.h"
@@ -48,12 +49,10 @@
  */
 errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                                const struct timespec *abstime) {
-  if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000)) {
+  if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000))
     return EINVAL;
-  }
-  if (mutex->_type != PTHREAD_MUTEX_NORMAL) {
+  if (MUTEX_TYPE(mutex->_word) != PTHREAD_MUTEX_NORMAL)
     nsync_panic_("pthread cond needs normal mutex\n");
-  }
   return nsync_cv_wait_with_deadline(
       (nsync_cv *)cond, (nsync_mu *)mutex,
       abstime ? *abstime : nsync_time_no_deadline, 0);

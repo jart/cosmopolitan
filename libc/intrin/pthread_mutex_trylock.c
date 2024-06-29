@@ -21,6 +21,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
+#include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 
@@ -38,11 +39,15 @@
  *     current thread already holds this mutex
  */
 errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int t;
+  int me;
+  uint64_t word, lock;
+
+  // get current state of lock
+  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
 
   // delegate to *NSYNC if possible
-  if (mutex->_type == PTHREAD_MUTEX_NORMAL &&
-      mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_trylock)) {
     if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
       return 0;
@@ -52,36 +57,43 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
   }
 
   // handle normal mutexes
-  if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
-    if (!atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
+    word = MUTEX_UNLOCK(word);
+    lock = MUTEX_LOCK(word);
+    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
       return 0;
-    } else {
-      return EBUSY;
-    }
-  }
-
-  // handle recursive and error check mutexes
-  t = gettid();
-  if (mutex->_owner == t) {
-    if (mutex->_type != PTHREAD_MUTEX_ERRORCHECK) {
-      if (mutex->_depth < 63) {
-        ++mutex->_depth;
-        return 0;
-      } else {
-        return EAGAIN;
-      }
-    } else {
-      return EDEADLK;
-    }
-  }
-
-  if (atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
     return EBUSY;
   }
 
-  mutex->_depth = 0;
-  mutex->_owner = t;
-  mutex->_pid = __pid;
-
-  return 0;
+  // handle recursive and error check mutexes
+  me = gettid();
+  for (;;) {
+    if (MUTEX_OWNER(word) == me) {
+      if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
+        if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {
+          if (atomic_compare_exchange_weak_explicit(
+                  &mutex->_word, &word, MUTEX_INC_DEPTH(word),
+                  memory_order_relaxed, memory_order_relaxed))
+            return 0;
+          continue;
+        } else {
+          return EAGAIN;
+        }
+      } else {
+        return EDEADLK;
+      }
+    }
+    word = MUTEX_UNLOCK(word);
+    lock = MUTEX_LOCK(word);
+    lock = MUTEX_SET_OWNER(lock, me);
+    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed)) {
+      mutex->_pid = __pid;
+      return 0;
+    }
+    return EBUSY;
+  }
 }

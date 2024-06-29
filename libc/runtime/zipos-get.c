@@ -69,9 +69,8 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   // this is supposed to reduce our rss usage but does it really?
   lo = ROUNDDOWN(lo, pg);
   hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
-  if (hi > lo) {
+  if (hi > lo)
     posix_madvise(map + lo, hi - lo, POSIX_MADV_DONTNEED);
-  }
 }
 
 static int __zipos_compare_names(const void *a, const void *b, void *c) {
@@ -96,9 +95,8 @@ static void __zipos_generate_index(struct Zipos *zipos) {
   zipos->records = GetZipCdirRecords(zipos->cdir);
   zipos->index = _mapanon(zipos->records * sizeof(size_t));
   for (i = 0, c = GetZipCdirOffset(zipos->cdir); i < zipos->records;
-       ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
+       ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c))
     zipos->index[i] = c;
-  }
   // smoothsort() isn't the fastest algorithm, but it guarantees
   // o(nlogn) won't smash the stack and doesn't depend on malloc
   smoothsort_r(zipos->index, zipos->records, sizeof(size_t),
@@ -122,9 +120,8 @@ static void __zipos_init(void) {
     }
     if (fd != -1 || PLEDGED(RPATH)) {
       if (fd == -1) {
-        if (!progpath) {
+        if (!progpath)
           progpath = GetProgramExecutableName();
-        }
         fd = open(progpath, O_RDONLY);
       }
       if (fd != -1) {

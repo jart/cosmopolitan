@@ -95,11 +95,9 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
                                                      struct NtOverlapped *)) {
   size_t i;
   uint32_t x;
-  for (i = 0; i < n; i += x) {
-    if (!f(h, p + i, n - i, &x, NULL)) {
+  for (i = 0; i < n; i += x)
+    if (!f(h, p + i, n - i, &x, NULL))
       return __winerr();
-    }
-  }
   return i;
 }
 
@@ -153,9 +151,8 @@ static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
 static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
   int64_t h;
   for (;;) {
-    if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0))) {
+    if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0)))
       return h;
-    }
     if (GetLastError() == kNtErrorAccessDenied) {
       switch (prot) {
         case kNtPageExecuteWritecopy:
@@ -273,16 +270,14 @@ textwindows void WinMainForked(void) {
     __maps.pages += (map->size + 4095) / 4096;
     dll_make_last(&__maps.used, &map->elem);
     if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
-                        &oldprot)) {
+                        &oldprot))
       AbortFork("VirtualProtect");
-    }
   }
   __maps_init();
 
   // mitosis complete
-  if (!CloseHandle(reader)) {
+  if (!CloseHandle(reader))
     AbortFork("CloseHandle");
-  }
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
@@ -428,9 +423,8 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     atomic_store_explicit(&_pthread_static.ptid, GetCurrentThreadId(),
                           memory_order_release);
   }
-  if (rc == -1) {
+  if (rc == -1)
     dll_make_first(&__proc.free, &proc->elem);
-  }
   ftrace_enabled(+1);
   strace_enabled(+1);
   return rc;
