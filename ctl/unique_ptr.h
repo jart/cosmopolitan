@@ -1,41 +1,17 @@
 // -*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
-#ifndef COSMOPOLITAN_CTL_UNIQUE_PTR_H_
-#define COSMOPOLITAN_CTL_UNIQUE_PTR_H_
+#ifndef CTL_UNIQUE_PTR_H_
+#define CTL_UNIQUE_PTR_H_
+#include "add_lvalue_reference.h"
+#include "default_delete.h"
+#include "is_convertible.h"
+#include "is_reference.h"
+#include "is_same.h"
 #include "utility.h"
-#include <__type_traits/is_convertible.h>
 
 namespace ctl {
 
-template<typename T>
-struct default_delete
-{
-    constexpr default_delete() noexcept = default;
-    template<typename U>
-    constexpr default_delete(default_delete<U>&&) noexcept
-    {
-    }
-    constexpr void operator()(T* const p) const noexcept
-    {
-        delete p;
-    }
-};
-
-template<typename T>
-struct default_delete<T[]>
-{
-    constexpr default_delete() noexcept = default;
-    template<typename U>
-    constexpr default_delete(default_delete<U>&&) noexcept
-    {
-    }
-    constexpr void operator()(T* const p) const noexcept
-    {
-        delete[] p;
-    }
-};
-
-template<typename T, typename D = default_delete<T>>
+template<typename T, typename D = ctl::default_delete<T>>
 struct unique_ptr
 {
     using pointer = T*;
@@ -49,26 +25,34 @@ struct unique_ptr
     {
     }
 
-    constexpr unique_ptr(const pointer p) noexcept : p(p), d()
+    constexpr explicit unique_ptr(pointer p) noexcept : p(p), d()
     {
     }
 
-    constexpr unique_ptr(const pointer p, auto&& d) noexcept
-      : p(p), d(ctl::forward<decltype(d)>(d))
+    constexpr unique_ptr(pointer p, const D& d) noexcept : p(p), d(d)
+    {
+    }
+
+    constexpr unique_ptr(pointer p, D&& d) noexcept : p(p), d(ctl::move(d))
     {
     }
 
     template<typename U, typename E>
-        requires std::is_convertible_v<U, T> && std::is_convertible_v<E, D>
     constexpr unique_ptr(unique_ptr<U, E>&& u) noexcept
-      : p(u.p), d(ctl::move(u.d))
+      : p(u.release()), d(ctl::forward<E>(u.get_deleter()))
     {
-        u.p = nullptr;
+        static_assert(ctl::is_convertible<typename unique_ptr<U, E>::pointer,
+                                          pointer>::value,
+                      "U* must be implicitly convertible to T*");
+        static_assert(
+          (ctl::is_reference<D>::value && ctl::is_same<D, E>::value) ||
+            (!ctl::is_reference<D>::value && ctl::is_convertible<E, D>::value),
+          "The deleter must be convertible to the target deleter type");
     }
 
     unique_ptr(const unique_ptr&) = delete;
 
-    constexpr ~unique_ptr() /* noexcept */
+    constexpr ~unique_ptr() noexcept
     {
         if (p)
             d(p);
@@ -80,6 +64,20 @@ struct unique_ptr
         return *this;
     }
 
+    template<typename U, typename E>
+    constexpr unique_ptr& operator=(unique_ptr<U, E>&& r) noexcept
+    {
+        reset(r.release());
+        d = ctl::forward<E>(r.get_deleter());
+        return *this;
+    }
+
+    constexpr unique_ptr& operator=(nullptr_t) noexcept
+    {
+        reset();
+        return *this;
+    }
+
     constexpr pointer release() noexcept
     {
         pointer r = p;
@@ -87,12 +85,12 @@ struct unique_ptr
         return r;
     }
 
-    constexpr void reset(const pointer p2 = pointer()) noexcept
+    constexpr void reset(pointer p2 = pointer()) noexcept
     {
-        const pointer r = p;
+        pointer old = p;
         p = p2;
-        if (r)
-            d(r);
+        if (old)
+            d(old);
     }
 
     constexpr void swap(unique_ptr& r) noexcept
@@ -119,20 +117,16 @@ struct unique_ptr
 
     constexpr explicit operator bool() const noexcept
     {
-        return p;
+        return p != nullptr;
     }
 
-    element_type& operator*() const noexcept(noexcept(*ctl::declval<pointer>()))
+    constexpr typename ctl::add_lvalue_reference<T>::type operator*() const
     {
-        if (!p)
-            __builtin_trap();
         return *p;
     }
 
-    pointer operator->() const noexcept
+    constexpr pointer operator->() const noexcept
     {
-        if (!p)
-            __builtin_trap();
         return p;
     }
 };
@@ -148,16 +142,9 @@ template<typename T>
 constexpr unique_ptr<T>
 make_unique_for_overwrite()
 {
-#if 0
-    // You'd think that it'd work like this, but std::unique_ptr does not.
-    return unique_ptr<T>(
-      static_cast<T*>(::operator new(sizeof(T), align_val_t(alignof(T)))));
-#else
     return unique_ptr<T>(new T);
-#endif
 }
 
-// TODO(mrdomino): specializations for T[]
-
 } // namespace ctl
-#endif // COSMOPOLITAN_CTL_UNIQUE_PTR_H_
+
+#endif // CTL_UNIQUE_PTR_H_

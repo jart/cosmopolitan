@@ -9,11 +9,9 @@ template<class InputIt, class UnaryPredicate>
 constexpr bool
 all_of(InputIt first, InputIt last, UnaryPredicate p)
 {
-    for (; first != last; ++first) {
-        if (!p(*first)) {
+    for (; first != last; ++first)
+        if (!p(*first))
             return false;
-        }
-    }
     return true;
 }
 

@@ -17,8 +17,11 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/array.h"
+#include "ctl/string.h"
+#include "libc/mem/leaks.h"
 
 // #include <array>
+// #include <string>
 // #define ctl std
 
 int
@@ -264,4 +267,21 @@ main()
         if (rit != arr.rend())
             return 4;
     }
+
+    {
+        ctl::array<ctl::string, 2> A = { "hi", "theretheretheretherethere" };
+        if (A.size() != 2)
+            return 76;
+        if (A[0] != "hi")
+            return 77;
+        if (A[1] != "theretheretheretherethere")
+            return 78;
+        A = { "theretheretheretherethere", "hi" };
+        if (A[0] != "theretheretheretherethere")
+            return 79;
+        if (A[1] != "hi")
+            return 80;
+    }
+
+    CheckForMemoryLeaks();
 }

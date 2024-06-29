@@ -18,6 +18,7 @@
 
 #include "ctl/advance.h"
 #include "ctl/array.h"
+#include "libc/mem/leaks.h"
 
 // #include <array>
 // #include <iterator>
@@ -53,4 +54,6 @@ main()
     ctl::advance(it, -2);
     if (it != arr.begin())
         return 5;
+
+    CheckForMemoryLeaks();
 }

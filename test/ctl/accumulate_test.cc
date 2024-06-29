@@ -18,6 +18,7 @@
 
 #include "ctl/accumulate.h"
 #include "ctl/array.h"
+#include "libc/mem/leaks.h"
 
 // #include <array>
 // #include <numeric>
@@ -48,4 +49,6 @@ main()
     // Test accumulation with single element
     if (ctl::accumulate(arr.begin(), arr.begin() + 1, 0) != 1)
         return 5;
+
+    CheckForMemoryLeaks();
 }

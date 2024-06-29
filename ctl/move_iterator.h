@@ -1,7 +1,6 @@
 #ifndef CTL_MOVE_ITERATOR_H_
 #define CTL_MOVE_ITERATOR_H_
 #include "iterator_traits.h"
-#include "type_traits.h"
 
 namespace ctl {
 

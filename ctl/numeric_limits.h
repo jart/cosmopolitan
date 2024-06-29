@@ -2,7 +2,8 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef CTL_NUMERIC_LIMITS_H_
 #define CTL_NUMERIC_LIMITS_H_
-#include "type_traits.h"
+#include "is_integral.h"
+#include "is_unsigned.h"
 
 namespace ctl {
 

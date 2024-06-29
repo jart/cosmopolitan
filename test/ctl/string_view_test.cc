@@ -173,5 +173,4 @@ main(int argc, char* argv[])
     }
 
     CheckForMemoryLeaks();
-    return 0;
 }

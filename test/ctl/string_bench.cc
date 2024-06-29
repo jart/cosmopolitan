@@ -17,8 +17,8 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/string.h"
-
-#include <__utility/move.h>
+#include "ctl/utility.h"
+#include "libc/mem/leaks.h"
 
 #include "libc/calls/struct/timespec.h"
 #include "libc/runtime/runtime.h"
@@ -100,7 +100,7 @@ main()
 
     BENCH(1000000, 1, {
         ctl::string s(small);
-        ctl::string s2(std::move(s));
+        ctl::string s2(ctl::move(s));
     });
 
     BENCH(1000000, 1, {
@@ -119,7 +119,7 @@ main()
 
     BENCH(1000000, 1, {
         ctl::string s(big);
-        ctl::string s2(std::move(s));
+        ctl::string s2(ctl::move(s));
     });
 
     BENCH(1000000, 1, {
@@ -142,5 +142,5 @@ main()
         BENCH(1000000, 1, { ctl::string s(big_trunc); });
     }
 
-    return 0;
+    CheckForMemoryLeaks();
 }

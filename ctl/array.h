@@ -3,6 +3,7 @@
 #ifndef CTL_ARRAY_H_
 #define CTL_ARRAY_H_
 #include "initializer_list.h"
+#include "out_of_range.h"
 #include "reverse_iterator.h"
 
 namespace ctl {
@@ -25,25 +26,25 @@ struct array
     T elems[N];
 
     constexpr array() = default;
+
     constexpr array(std::initializer_list<T> init)
     {
         auto it = init.begin();
-        for (size_t i = 0; i < N && it != init.end(); ++i, ++it) {
+        for (size_t i = 0; i < N && it != init.end(); ++i, ++it)
             elems[i] = *it;
-        }
     }
 
     constexpr reference at(size_type pos)
     {
         if (pos >= N)
-            __builtin_trap();
+            throw ctl::out_of_range("out of range");
         return elems[pos];
     }
 
     constexpr const_reference at(size_type pos) const
     {
         if (pos >= N)
-            __builtin_trap();
+            throw ctl::out_of_range("out of range");
         return elems[pos];
     }
 

@@ -3,8 +3,8 @@
 #ifndef CTL_ALLOCATOR_H_
 #define CTL_ALLOCATOR_H_
 #include "bad_alloc.h"
+#include "integral_constant.h"
 #include "new.h"
-#include "type_traits.h"
 #include "utility.h"
 
 namespace ctl {

@@ -18,6 +18,7 @@
 
 #include "ctl/all_of.h"
 #include "ctl/array.h"
+#include "libc/mem/leaks.h"
 
 #include <algorithm>
 #include <array>
@@ -49,4 +50,6 @@ main()
     // Test with no elements satisfying the condition
     if (ctl::all_of(arr1.begin(), arr1.end(), [](int n) { return n > 10; }))
         return 5;
+
+    CheckForMemoryLeaks();
 }

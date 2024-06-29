@@ -2,6 +2,7 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_UTILITY_H_
 #define COSMOPOLITAN_CTL_UTILITY_H_
+#include "remove_reference.h"
 
 namespace ctl {
 
@@ -17,6 +18,14 @@ template<typename T>
 using no_infer = typename no_infer_<T>::type;
 
 } // namespace __
+
+template<typename T>
+constexpr T&&
+move(T&& t) noexcept
+{
+    typedef remove_reference_t<T> U;
+    return static_cast<U&&>(t);
+}
 
 template<typename T>
 constexpr T&&
@@ -47,9 +56,8 @@ template<typename T, size_t N>
 constexpr void
 swap(T (&a)[N], T (&b)[N]) noexcept
 {
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i)
         swap(a[i], b[i]);
-    }
 }
 
 template<typename T>

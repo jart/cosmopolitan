@@ -20,6 +20,7 @@
 #include "ctl/back_inserter.h"
 #include "ctl/copy.h"
 #include "ctl/vector.h"
+#include "libc/mem/leaks.h"
 
 // #include <array>
 // #include <iterator>
@@ -29,33 +30,38 @@
 int
 main()
 {
-    ctl::vector<int> vec = { 1, 2, 3 };
-    ctl::array<int, 3> arr = { 4, 5, 6 };
 
-    // Use back_inserter to append elements from arr to vec
-    ctl::copy(arr.begin(), arr.end(), ctl::back_inserter(vec));
+    {
+        ctl::vector<int> vec = { 1, 2, 3 };
+        ctl::array<int, 3> arr = { 4, 5, 6 };
 
-    // Check if vec now contains all elements
-    if (vec.size() != 6)
-        return 1;
-    if (vec[0] != 1 || vec[1] != 2 || vec[2] != 3 || vec[3] != 4 ||
-        vec[4] != 5 || vec[5] != 6)
-        return 2;
+        // Use back_inserter to append elements from arr to vec
+        ctl::copy(arr.begin(), arr.end(), ctl::back_inserter(vec));
 
-    // Use back_inserter with a single element
-    ctl::back_inserter(vec) = 7;
+        // Check if vec now contains all elements
+        if (vec.size() != 6)
+            return 1;
+        if (vec[0] != 1 || vec[1] != 2 || vec[2] != 3 || vec[3] != 4 ||
+            vec[4] != 5 || vec[5] != 6)
+            return 2;
 
-    // Check if the new element was added
-    if (vec.size() != 7)
-        return 3;
-    if (vec[6] != 7)
-        return 4;
+        // Use back_inserter with a single element
+        ctl::back_inserter(vec) = 7;
 
-    // Test with an empty source range
-    ctl::array<int, 0> empty_arr;
-    ctl::copy(empty_arr.begin(), empty_arr.end(), ctl::back_inserter(vec));
+        // Check if the new element was added
+        if (vec.size() != 7)
+            return 3;
+        if (vec[6] != 7)
+            return 4;
 
-    // Check that no elements were added
-    if (vec.size() != 7)
-        return 5;
+        // Test with an empty source range
+        ctl::array<int, 0> empty_arr;
+        ctl::copy(empty_arr.begin(), empty_arr.end(), ctl::back_inserter(vec));
+
+        // Check that no elements were added
+        if (vec.size() != 7)
+            return 5;
+    }
+
+    CheckForMemoryLeaks();
 }

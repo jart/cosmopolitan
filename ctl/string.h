@@ -151,7 +151,7 @@ class string
     void clear() noexcept
     {
         if (isbig()) {
-            big()->n = 0;
+            __b.n = 0;
         } else {
             set_small_size(0);
         }
@@ -159,26 +159,26 @@ class string
 
     bool empty() const noexcept
     {
-        return isbig() ? !big()->n : small()->rem >= __::sso_max;
+        return isbig() ? !__b.n : __s.rem >= __::sso_max;
     }
 
-    char* data() noexcept
+    __attribute__((__always_inline__)) char* data() noexcept
     {
-        return isbig() ? big()->p : small()->buf;
+        return isbig() ? __b.p : __s.buf;
     }
 
-    const char* data() const noexcept
+    __attribute__((__always_inline__)) const char* data() const noexcept
     {
-        return isbig() ? big()->p : small()->buf;
+        return isbig() ? __b.p : __s.buf;
     }
 
-    size_t size() const noexcept
+    __attribute__((__always_inline__)) size_t size() const noexcept
     {
 #if 0
-        if (!isbig() && small()->rem > __::sso_max)
+        if (!isbig() && __s.rem > __::sso_max)
             __builtin_trap();
 #endif
-        return isbig() ? big()->n : __::sso_max - small()->rem;
+        return isbig() ? __b.n : __::sso_max - __s.rem;
     }
 
     size_t length() const noexcept
@@ -189,10 +189,10 @@ class string
     size_t capacity() const noexcept
     {
 #if 0
-        if (isbig() && big()->c <= __::sso_max)
+        if (isbig() && __b.c <= __::sso_max)
             __builtin_trap();
 #endif
-        return isbig() ? __::big_mask & big()->c : __::string_size;
+        return isbig() ? __::big_mask & __b.c : __::string_size;
     }
 
     iterator begin() noexcept
@@ -374,7 +374,7 @@ class string
     void init_big(string_view) noexcept;
     void init_big(size_t, char) noexcept;
 
-    bool isbig() const noexcept
+    __attribute__((__always_inline__)) bool isbig() const noexcept
     {
         return *(blob + __::sso_max) & 0x80;
     }
@@ -393,34 +393,6 @@ class string
         __b.p = p;
         __b.n = n;
         __b.c = c2 | ~__::big_mask;
-    }
-
-    __::small_string* small() noexcept
-    {
-        if (isbig())
-            __builtin_trap();
-        return &__s;
-    }
-
-    const __::small_string* small() const noexcept
-    {
-        if (isbig())
-            __builtin_trap();
-        return &__s;
-    }
-
-    __::big_string* big() noexcept
-    {
-        if (!isbig())
-            __builtin_trap();
-        return &__b;
-    }
-
-    const __::big_string* big() const noexcept
-    {
-        if (!isbig())
-            __builtin_trap();
-        return &__b;
     }
 
     friend string strcat(string_view, string_view) noexcept;
