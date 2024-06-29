@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/makedev.h"
+#include "libc/calls/mount.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/bpf.internal.h"
 #include "libc/calls/struct/dirent.h"
@@ -78,11 +79,13 @@
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/log.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mount.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
@@ -3185,6 +3188,71 @@ static int LuaUnixFdopendir(lua_State *L) {
   }
 }
 
+
+// unix.mount(source:str, target:str, filesystemtype: str[, mountflags: int[, data: str]])
+//     ├─→ true
+//     ├─→ nil, unix.Errno
+static int LuaUnixMount(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(
+    L, "mount", olderr,
+    mount(luaL_checkstring(L, 1), luaL_checkstring(L, 2), luaL_checkstring(L, 3),
+        luaL_optinteger(L, 4, 0), luaL_optstring(L, 5, NULL)));
+}
+
+// unix.umount(target: str[, flags: int)
+//     ├─→ true
+//     ├─→ nil, unix.Errrno
+static int LuaUnixUnmount(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(
+    L, "unmount", olderr,
+    unmount(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0)));
+}
+
+// unix.prctl(option: int[, arg2: int[, arg3: int[, arg4: int[, arg5: int]]]])
+//     ├─→ result: int
+//     └─→ nil, unix.Errno
+static int LuaUnixPrctl(lua_State *L) {
+  int olderr;
+  int option;
+  int status;
+  unsigned long arg2 = 0, arg3 = 0, arg4 = 0, arg5 = 0;
+
+  olderr = errno;
+  option = luaL_checkinteger(L, 1);
+  if (lua_gettop(L) >= 2) {
+      arg2 = lua_tointegerx(L, 2, &status);
+      if (!status) {
+          arg2 = (unsigned long)lua_tostring(L, 2);
+      }
+  }
+
+  if (lua_gettop(L) >= 3) {
+      arg3 = lua_tointegerx(L, 3, &status);
+      if (!status) {
+          arg3 = (unsigned long)lua_tostring(L, 3);
+      }
+  }
+
+  if (lua_gettop(L) >= 4) {
+      arg4 = lua_tointegerx(L, 4, &status);
+      if (!status) {
+          arg4 = (unsigned long)lua_tostring(L, 4);
+      }
+  }
+
+  if (lua_gettop(L) >= 5) {
+      arg5 = lua_tointegerx(L, 5, &status);
+      if (!status) {
+          arg5 = (unsigned long)lua_tostring(L, 5);
+      }
+  }
+  return SysretInteger(
+    L, "prctl", olderr,
+    prctl(option, arg2, arg3, arg4, arg5));
+}
+
 static const luaL_Reg kLuaUnixDirMeth[] = {
     {"close", LuaUnixDirClose},    //
     {"read", LuaUnixDirRead},      //
@@ -3277,12 +3345,14 @@ static const luaL_Reg kLuaUnix[] = {
     {"mapshared", LuaUnixMapshared},      // mmap(MAP_SHARED) w/ mutex+atomics
     {"minor", LuaUnixMinor},              // extract device info
     {"mkdir", LuaUnixMkdir},              // make directory
+    {"mount", LuaUnixMount},              // mount filesystem
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
     {"open", LuaUnixOpen},                // open file fd at lowest slot
     {"opendir", LuaUnixOpendir},          // read directory entry list
     {"pipe", LuaUnixPipe},                // create two anon fifo fds
     {"pledge", LuaUnixPledge},            // enables syscall sandbox
     {"poll", LuaUnixPoll},                // waits for file descriptor events
+    {"prctl", LuaUnixPrctl},              // operations on a process or thread
     {"raise", LuaUnixRaise},              // signal this process
     {"read", LuaUnixRead},                // read from file or socket
     {"readlink", LuaUnixReadlink},        // reads symbolic link
@@ -3326,6 +3396,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file
+    {"unmount", LuaUnixUnmount},          // unmount filesystem
     {"unveil", LuaUnixUnveil},            // filesystem sandboxing
     {"utimensat", LuaUnixUtimensat},      // change access/modified time
     {"verynice", LuaUnixVerynice},        // lowest priority
@@ -3530,7 +3601,153 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "PLEDGE_PENALTY_RETURN_EPERM", PLEDGE_PENALTY_RETURN_EPERM);
   LuaSetIntField(L, "PLEDGE_STDERR_LOGGING", PLEDGE_STDERR_LOGGING);
 
-  // statfs::f_flags
+  // mount() / unmount() options
+  LuaSetIntField(L, "MS_RDONLY", MS_RDONLY);
+  LuaSetIntField(L, "MNT_RDONLY", MNT_RDONLY);
+  LuaSetIntField(L, "MS_NOSUID", MS_NOSUID);
+  LuaSetIntField(L, "MNT_NOSUID", MNT_NOSUID);
+  LuaSetIntField(L, "MS_NODEV", MS_NODEV);
+  LuaSetIntField(L, "MNT_NODEV", MNT_NODEV);
+  LuaSetIntField(L, "MS_NOEXEC", MS_NOEXEC);
+  LuaSetIntField(L, "MNT_NOEXEC", MNT_NOEXEC);
+  LuaSetIntField(L, "MS_SYNCHRONOUS", MS_SYNCHRONOUS);
+  LuaSetIntField(L, "MNT_SYNCHRONOUS", MNT_SYNCHRONOUS);
+  LuaSetIntField(L, "MS_REMOUNT", MS_REMOUNT);
+  LuaSetIntField(L, "MNT_UPDATE", MNT_UPDATE);
+  LuaSetIntField(L, "MS_MANDLOCK", MS_MANDLOCK);
+  LuaSetIntField(L, "MS_DIRSYNC", MS_DIRSYNC);
+  LuaSetIntField(L, "MS_NOATIME", MS_NOATIME);
+  LuaSetIntField(L, "MNT_NOATIME", MNT_NOATIME);
+  LuaSetIntField(L, "MS_NODIRATIME", MS_NODIRATIME);
+  LuaSetIntField(L, "MS_BIND", MS_BIND);
+  LuaSetIntField(L, "MS_MOVE", MS_MOVE);
+  LuaSetIntField(L, "MS_REC", MS_REC);
+  LuaSetIntField(L, "MS_SILENT", MS_SILENT);
+  LuaSetIntField(L, "MS_POSIXACL", MS_POSIXACL);
+  LuaSetIntField(L, "MS_UNBINDABLE", MS_UNBINDABLE);
+  LuaSetIntField(L, "MS_PRIVATE", MS_PRIVATE);
+  LuaSetIntField(L, "MS_SLAVE", MS_SLAVE);
+  LuaSetIntField(L, "MS_SHARED", MS_SHARED);
+  LuaSetIntField(L, "MS_RELATIME", MS_RELATIME);
+  LuaSetIntField(L, "MNT_RELATIME", MNT_RELATIME);
+  LuaSetIntField(L, "MS_KERNMOUNT", MS_KERNMOUNT);
+  LuaSetIntField(L, "MS_I_VERSION", MS_I_VERSION);
+  LuaSetIntField(L, "MS_STRICTATIME", MS_STRICTATIME);
+  LuaSetIntField(L, "MNT_STRICTATIME", MNT_STRICTATIME);
+  LuaSetIntField(L, "MS_LAZYTIME", MS_LAZYTIME);
+  LuaSetIntField(L, "MS_ACTIVE", MS_ACTIVE);
+  LuaSetIntField(L, "MS_NOUSER", MS_NOUSER);
+  LuaSetIntField(L, "MS_RMT_MASK", MS_RMT_MASK);
+  LuaSetIntField(L, "MS_MGC_VAL", MS_MGC_VAL);
+  LuaSetIntField(L, "MS_MGC_MSK", MS_MGC_MSK);
+  LuaSetIntField(L, "MNT_ASYNC", MNT_ASYNC);
+  LuaSetIntField(L, "MNT_RELOAD", MNT_RELOAD);
+  LuaSetIntField(L, "MNT_SUIDDIR", MNT_SUIDDIR);
+  LuaSetIntField(L, "MNT_NOCLUSTERR", MNT_NOCLUSTERR);
+  LuaSetIntField(L, "MNT_NOCLUSTERW", MNT_NOCLUSTERW);
+  LuaSetIntField(L, "MNT_SNAPSHOT", MNT_SNAPSHOT);
+
+  // prctl() options
+  LuaSetIntField(L, "PR_GET_SECCOMP", PR_GET_SECCOMP);
+  LuaSetIntField(L, "PR_SET_SECCOMP", PR_SET_SECCOMP);
+  LuaSetIntField(L, "SECCOMP_MODE_DISABLED", SECCOMP_MODE_DISABLED);
+  LuaSetIntField(L, "SECCOMP_MODE_STRICT", SECCOMP_MODE_STRICT);
+  LuaSetIntField(L, "SECCOMP_MODE_FILTER", SECCOMP_MODE_FILTER);
+
+  LuaSetIntField(L, "PR_CAPBSET_READ", PR_CAPBSET_READ);
+  LuaSetIntField(L, "PR_CAPBSET_DROP", PR_CAPBSET_DROP);
+
+  LuaSetIntField(L, "PR_SET_NO_NEW_PRIVS", PR_SET_NO_NEW_PRIVS);
+  LuaSetIntField(L, "PR_GET_NO_NEW_PRIVS", PR_GET_NO_NEW_PRIVS);
+
+  LuaSetIntField(L, "PR_SET_NAME", PR_SET_NAME);
+  LuaSetIntField(L, "PR_GET_NAME", PR_GET_NAME);
+
+  LuaSetIntField(L, "PR_GET_TSC", PR_GET_TSC);
+  LuaSetIntField(L, "PR_SET_TSC", PR_SET_TSC);
+  LuaSetIntField(L, "PR_TSC_ENABLE", PR_TSC_ENABLE);
+  LuaSetIntField(L, "PR_TSC_SIGSEGV", PR_TSC_SIGSEGV);
+
+  LuaSetIntField(L, "PR_GET_FPEXC", PR_GET_FPEXC);
+  LuaSetIntField(L, "PR_SET_FPEXC", PR_SET_FPEXC);
+  LuaSetIntField(L, "PR_FP_EXC_SW_ENABLE", PR_FP_EXC_SW_ENABLE);
+  LuaSetIntField(L, "PR_FP_EXC_DIV", PR_FP_EXC_DIV);
+  LuaSetIntField(L, "PR_FP_EXC_OVF", PR_FP_EXC_OVF);
+  LuaSetIntField(L, "PR_FP_EXC_UND", PR_FP_EXC_UND);
+  LuaSetIntField(L, "PR_FP_EXC_RES", PR_FP_EXC_RES);
+  LuaSetIntField(L, "PR_FP_EXC_INV", PR_FP_EXC_INV);
+  LuaSetIntField(L, "PR_FP_EXC_DISABLED", PR_FP_EXC_DISABLED);
+  LuaSetIntField(L, "PR_FP_EXC_NONRECOV", PR_FP_EXC_NONRECOV);
+  LuaSetIntField(L, "PR_FP_EXC_ASYNC", PR_FP_EXC_ASYNC);
+  LuaSetIntField(L, "PR_FP_EXC_PRECISE", PR_FP_EXC_PRECISE);
+
+  LuaSetIntField(L, "PR_MCE_KILL_CLEAR", PR_MCE_KILL_CLEAR);
+  LuaSetIntField(L, "PR_MCE_KILL_LATE", PR_MCE_KILL_LATE);
+  LuaSetIntField(L, "PR_SPEC_NOT_AFFECTED", PR_SPEC_NOT_AFFECTED);
+  LuaSetIntField(L, "PR_SPEC_STORE_BYPASS", PR_SPEC_STORE_BYPASS);
+  LuaSetIntField(L, "PR_CAP_AMBIENT_IS_SET", PR_CAP_AMBIENT_IS_SET);
+  LuaSetIntField(L, "PR_FPEMU_NOPRINT", PR_FPEMU_NOPRINT);
+  LuaSetIntField(L, "PR_MCE_KILL_EARLY", PR_MCE_KILL_EARLY);
+  LuaSetIntField(L, "PR_MCE_KILL_SET", PR_MCE_KILL_SET);
+  LuaSetIntField(L, "PR_SET_MM_START_CODE", PR_SET_MM_START_CODE);
+  LuaSetIntField(L, "PR_SET_PDEATHSIG", PR_SET_PDEATHSIG);
+  LuaSetIntField(L, "PR_SPEC_PRCTL", PR_SPEC_PRCTL);
+  LuaSetIntField(L, "PR_CAP_AMBIENT_RAISE", PR_CAP_AMBIENT_RAISE);
+  LuaSetIntField(L, "PR_FPEMU_SIGFPE", PR_FPEMU_SIGFPE);
+  LuaSetIntField(L, "PR_GET_PDEATHSIG", PR_GET_PDEATHSIG);
+  LuaSetIntField(L, "PR_MCE_KILL_DEFAULT", PR_MCE_KILL_DEFAULT);
+  LuaSetIntField(L, "PR_SET_MM_END_CODE", PR_SET_MM_END_CODE);
+  LuaSetIntField(L, "PR_SPEC_ENABLE", PR_SPEC_ENABLE);
+  LuaSetIntField(L, "PR_CAP_AMBIENT_LOWER", PR_CAP_AMBIENT_LOWER);
+  LuaSetIntField(L, "PR_GET_DUMPABLE", PR_GET_DUMPABLE);
+  LuaSetIntField(L, "PR_SET_MM_START_DATA", PR_SET_MM_START_DATA);
+  LuaSetIntField(L, "PR_CAP_AMBIENT_CLEAR_ALL", PR_CAP_AMBIENT_CLEAR_ALL);
+  LuaSetIntField(L, "PR_SET_DUMPABLE", PR_SET_DUMPABLE);
+  LuaSetIntField(L, "PR_SET_MM_END_DATA", PR_SET_MM_END_DATA);
+  LuaSetIntField(L, "PR_SPEC_DISABLE", PR_SPEC_DISABLE);
+  LuaSetIntField(L, "PR_SET_MM_START_STACK", PR_SET_MM_START_STACK);
+  LuaSetIntField(L, "PR_SET_MM_START_BRK", PR_SET_MM_START_BRK);
+  LuaSetIntField(L, "PR_GET_KEEPCAPS", PR_GET_KEEPCAPS);
+  LuaSetIntField(L, "PR_SET_MM_BRK", PR_SET_MM_BRK);
+  LuaSetIntField(L, "PR_SET_KEEPCAPS", PR_SET_KEEPCAPS);
+  LuaSetIntField(L, "PR_SET_MM_ARG_START", PR_SET_MM_ARG_START);
+  LuaSetIntField(L, "PR_SPEC_FORCE_DISABLE", PR_SPEC_FORCE_DISABLE);
+  LuaSetIntField(L, "PR_GET_FPEMU", PR_GET_FPEMU);
+  LuaSetIntField(L, "PR_SET_MM_ARG_END", PR_SET_MM_ARG_END);
+  LuaSetIntField(L, "PR_SET_FPEMU", PR_SET_FPEMU);
+  LuaSetIntField(L, "PR_SET_MM_ENV_START", PR_SET_MM_ENV_START);
+  LuaSetIntField(L, "PR_GET_FPEXC", PR_GET_FPEXC);
+  LuaSetIntField(L, "PR_SET_MM_ENV_END", PR_SET_MM_ENV_END);
+  LuaSetIntField(L, "PR_SET_FPEXC", PR_SET_FPEXC);
+  LuaSetIntField(L, "PR_SET_MM_AUXV", PR_SET_MM_AUXV);
+  LuaSetIntField(L, "PR_SET_MM_EXE_FILE", PR_SET_MM_EXE_FILE);
+  LuaSetIntField(L, "PR_SET_MM_MAP", PR_SET_MM_MAP);
+  LuaSetIntField(L, "PR_SET_MM_MAP_SIZE", PR_SET_MM_MAP_SIZE);
+  LuaSetIntField(L, "PR_GET_TSC", PR_GET_TSC);
+  LuaSetIntField(L, "PR_SET_TSC", PR_SET_TSC);
+  LuaSetIntField(L, "PR_GET_SECUREBITS", PR_GET_SECUREBITS);
+  LuaSetIntField(L, "PR_SET_SECUREBITS", PR_SET_SECUREBITS);
+  LuaSetIntField(L, "PR_SET_TIMERSLACK", PR_SET_TIMERSLACK);
+  LuaSetIntField(L, "PR_GET_TIMERSLACK", PR_GET_TIMERSLACK);
+  LuaSetIntField(L, "PR_TASK_PERF_EVENTS_DISABLE", PR_TASK_PERF_EVENTS_DISABLE);
+  LuaSetIntField(L, "PR_TASK_PERF_EVENTS_ENABLE", PR_TASK_PERF_EVENTS_ENABLE);
+  LuaSetIntField(L, "PR_MCE_KILL", PR_MCE_KILL);
+  LuaSetIntField(L, "PR_MCE_KILL_GET", PR_MCE_KILL_GET);
+  LuaSetIntField(L, "PR_SET_MM", PR_SET_MM);
+  LuaSetIntField(L, "PR_SET_CHILD_SUBREAPER", PR_SET_CHILD_SUBREAPER);
+  LuaSetIntField(L, "PR_GET_CHILD_SUBREAPER", PR_GET_CHILD_SUBREAPER);
+  LuaSetIntField(L, "PR_GET_TID_ADDRESS", PR_GET_TID_ADDRESS);
+  LuaSetIntField(L, "PR_SET_THP_DISABLE", PR_SET_THP_DISABLE);
+  LuaSetIntField(L, "PR_GET_THP_DISABLE", PR_GET_THP_DISABLE);
+  LuaSetIntField(L, "PR_MPX_ENABLE_MANAGEMENT", PR_MPX_ENABLE_MANAGEMENT);
+  LuaSetIntField(L, "PR_MPX_DISABLE_MANAGEMENT", PR_MPX_DISABLE_MANAGEMENT);
+  LuaSetIntField(L, "PR_CAP_AMBIENT", PR_CAP_AMBIENT);
+  LuaSetIntField(L, "PR_GET_SPECULATION_CTRL", PR_GET_SPECULATION_CTRL);
+  LuaSetIntField(L, "PR_SET_SPECULATION_CTRL", PR_SET_SPECULATION_CTRL);
+  LuaSetIntField(L, "PR_SET_PTRACER", PR_SET_PTRACER);
+  LuaSetIntField(L, "PR_SET_PTRACER_ANY", PR_SET_PTRACER_ANY);
+
+   // statfs::f_flags
   LuaSetIntField(L, "ST_RDONLY", ST_RDONLY);
   LuaSetIntField(L, "ST_NOSUID", ST_NOSUID);
   LuaSetIntField(L, "ST_NODEV", ST_NODEV);
