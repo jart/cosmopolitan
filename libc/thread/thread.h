@@ -166,6 +166,7 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int) libcesque paramsnon
 int pthread_mutexattr_settype(pthread_mutexattr_t *, int) libcesque paramsnonnull();
 int pthread_once(pthread_once_t *, void (*)(void)) paramsnonnull();
 int pthread_orphan_np(void) libcesque;
+int pthread_decimate_np(void) libcesque;
 int pthread_rwlock_destroy(pthread_rwlock_t *) libcesque paramsnonnull();
 int pthread_rwlock_init(pthread_rwlock_t *, const pthread_rwlockattr_t *) libcesque paramsnonnull((1));
 int pthread_rwlock_rdlock(pthread_rwlock_t *) libcesque paramsnonnull();
