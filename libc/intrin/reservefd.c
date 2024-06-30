@@ -64,11 +64,9 @@ int __reservefd_unlocked(int start) {
   int fd, f1, f2;
   for (;;) {
     f1 = atomic_load_explicit(&g_fds.f, memory_order_acquire);
-    for (fd = MAX(start, f1); fd < g_fds.n; ++fd) {
-      if (!g_fds.p[fd].kind) {
+    for (fd = MAX(start, f1); fd < g_fds.n; ++fd)
+      if (!g_fds.p[fd].kind)
         break;
-      }
-    }
     fd = __ensurefds_unlocked(fd);
     bzero(g_fds.p + fd, sizeof(*g_fds.p));
     if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {

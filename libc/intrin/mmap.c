@@ -21,6 +21,7 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -187,10 +188,10 @@ int __munmap(char *addr, size_t size, bool untrack_only) {
       !size || (uintptr_t)addr + size < size)
     return einval();
 
-  // untrack and delete mapping
+  // untrack mappings
   int rc = 0;
+  struct Dll *delete = 0;
   __maps_lock();
-StartOver:;
   struct Map *map = __maps.maps;
   struct Map **prev = &__maps.maps;
   while (map) {
@@ -202,30 +203,10 @@ StartOver:;
       if (addr <= map_addr && addr + PGUP(size) >= map_addr + PGUP(map_size)) {
         // remove mapping completely
         dll_remove(&__maps.used, &map->elem);
+        dll_make_first(&delete, &map->elem);
         *prev = next;
         __maps.pages -= (map_size + pagesz - 1) / pagesz;
         __maps.count -= 1;
-        if (untrack_only) {
-          __maps_free(map);
-          __maps_check();
-        } else {
-          __maps_unlock();
-          if (!IsWindows()) {
-            ASSERT(addr <= map_addr);
-            ASSERT(map_addr + PGUP(map_size) <= addr + PGUP(size));
-            if (sys_munmap(map_addr, map_size))
-              rc = -1;
-          } else {
-            if (!UnmapViewOfFile(map_addr))
-              rc = -1;
-            if (!CloseHandle(map->h))
-              rc = -1;
-          }
-          __maps_lock();
-          __maps_free(map);
-          __maps_check();
-          goto StartOver;
-        }
         map = next;
         continue;
       } else if (IsWindows()) {
@@ -240,35 +221,34 @@ StartOver:;
         size_t right = map_size - left;
         ASSERT(right > 0);
         ASSERT(left > 0);
-        map->addr += left;
-        map->size = right;
-        if (!(map->flags & MAP_ANONYMOUS))
-          map->off += left;
-        __maps.pages -= (left + pagesz - 1) / pagesz;
-        __maps_check();
-        if (!untrack_only) {
-          __maps_unlock();
-          ASSERT(addr <= map_addr);
-          ASSERT(map_addr + PGUP(left) <= addr + PGUP(size));
-          if (sys_munmap(map_addr, left) == -1)
-            rc = -1;
-          __maps_lock();
-          goto StartOver;
+        struct Map *leftmap;
+        if ((leftmap = __maps_alloc())) {
+          map->addr += left;
+          map->size = right;
+          if (!(map->flags & MAP_ANONYMOUS))
+            map->off += left;
+          __maps.pages -= (left + pagesz - 1) / pagesz;
+          __maps_check();
+          leftmap->addr = map_addr;
+          leftmap->size = left;
+          dll_make_first(&delete, &leftmap->elem);
+        } else {
+          rc = -1;
         }
       } else if (addr + PGUP(size) >= map_addr + PGUP(map_size)) {
         // shave off righthand side of mapping
         size_t left = addr - map_addr;
         size_t right = map_addr + map_size - addr;
-        map->size = left;
-        __maps.pages -= (right + pagesz - 1) / pagesz;
-        __maps_check();
-        if (!untrack_only) {
-          __maps_unlock();
-          ASSERT(PGUP(right) <= PGUP(size));
-          if (sys_munmap(addr, right) == -1)
-            rc = -1;
-          __maps_lock();
-          goto StartOver;
+        struct Map *rightmap;
+        if ((rightmap = __maps_alloc())) {
+          map->size = left;
+          __maps.pages -= (right + pagesz - 1) / pagesz;
+          __maps_check();
+          rightmap->addr = addr;
+          rightmap->size = right;
+          dll_make_first(&delete, &rightmap->elem);
+        } else {
+          rc = -1;
         }
       } else {
         // punch hole in mapping
@@ -277,27 +257,28 @@ StartOver:;
         size_t right = map_size - middle - left;
         struct Map *leftmap;
         if ((leftmap = __maps_alloc())) {
-          leftmap->next = map;
-          leftmap->addr = map_addr;
-          leftmap->size = left;
-          leftmap->off = map->off;
-          leftmap->prot = map->prot;
-          leftmap->flags = map->flags;
-          map->addr += left + middle;
-          map->size = right;
-          if (!(map->flags & MAP_ANONYMOUS))
-            map->off += left + middle;
-          dll_make_first(&__maps.used, &leftmap->elem);
-          *prev = leftmap;
-          __maps.pages -= (middle + pagesz - 1) / pagesz;
-          __maps.count += 1;
-          __maps_check();
-          if (!untrack_only) {
-            __maps_unlock();
-            if (sys_munmap(addr, size) == -1)
-              rc = -1;
-            __maps_lock();
-            goto StartOver;
+          struct Map *middlemap;
+          if ((middlemap = __maps_alloc())) {
+            leftmap->next = map;
+            leftmap->addr = map_addr;
+            leftmap->size = left;
+            leftmap->off = map->off;
+            leftmap->prot = map->prot;
+            leftmap->flags = map->flags;
+            map->addr += left + middle;
+            map->size = right;
+            if (!(map->flags & MAP_ANONYMOUS))
+              map->off += left + middle;
+            dll_make_first(&__maps.used, &leftmap->elem);
+            *prev = leftmap;
+            __maps.pages -= (middle + pagesz - 1) / pagesz;
+            __maps.count += 1;
+            __maps_check();
+            middlemap->addr = addr;
+            middlemap->size = size;
+            dll_make_first(&delete, &middlemap->elem);
+          } else {
+            rc = -1;
           }
         } else {
           rc = -1;
@@ -308,6 +289,34 @@ StartOver:;
     map = next;
   }
   __maps_unlock();
+
+  // delete mappings
+  for (struct Dll *e = dll_first(delete); e; e = dll_next(delete, e)) {
+    map = MAP_CONTAINER(e);
+    if (!untrack_only) {
+      if (!IsWindows()) {
+        if (sys_munmap(map->addr, map->size))
+          rc = -1;
+      } else {
+        if (!UnmapViewOfFile(map->addr))
+          rc = -1;
+        if (!CloseHandle(map->h))
+          rc = -1;
+      }
+    }
+  }
+
+  // free mappings
+  if (!dll_is_empty(delete)) {
+    __maps_lock();
+    struct Dll *e;
+    while ((e = dll_first(delete))) {
+      dll_remove(&delete, e);
+      __maps_free(MAP_CONTAINER(e));
+    }
+    __maps_check();
+    __maps_unlock();
+  }
 
   return rc;
 }

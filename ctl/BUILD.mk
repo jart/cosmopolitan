@@ -18,6 +18,7 @@ CTL_A_CHECKS =						\
 CTL_A_DIRECTDEPS =					\
 	LIBC_INTRIN					\
 	LIBC_MEM					\
+	LIBC_NEXGEN32E					\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	THIRD_PARTY_GDTOA				\

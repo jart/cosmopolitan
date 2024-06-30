@@ -39,7 +39,6 @@ struct AddrSize {
 
 extern struct Maps __maps;
 
-void *randaddr(void);
 void __maps_init(void);
 void __maps_lock(void);
 void __maps_check(void);

@@ -58,7 +58,7 @@ static struct ZiposHandle *__zipos_alloc(struct Zipos *zipos, size_t size) {
   granularity = __granularity();
   mapsize = sizeof(struct ZiposHandle) + size;
   mapsize = (mapsize + granularity - 1) & -granularity;
-  if ((h = __mmap(randaddr(), mapsize, PROT_READ | PROT_WRITE,
+  if ((h = __mmap(0, mapsize, PROT_READ | PROT_WRITE,
                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
     h->size = size;
     h->zipos = zipos;
