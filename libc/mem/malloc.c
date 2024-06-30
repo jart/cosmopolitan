@@ -42,4 +42,3 @@
 void *malloc(size_t n) {
   return dlmalloc(n);
 }
-

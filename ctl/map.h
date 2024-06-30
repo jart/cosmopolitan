@@ -165,7 +165,7 @@ class map
     {
         auto it = find(key);
         if (it == end())
-            throw ctl::out_of_range("out of range");
+            throw ctl::out_of_range();
         return it->second;
     }
 
@@ -173,7 +173,7 @@ class map
     {
         auto it = find(key);
         if (it == end())
-            throw ctl::out_of_range("out of range");
+            throw ctl::out_of_range();
         return it->second;
     }
 

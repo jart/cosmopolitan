@@ -37,24 +37,28 @@ struct array
     constexpr reference at(size_type pos)
     {
         if (pos >= N)
-            throw ctl::out_of_range("out of range");
+            throw ctl::out_of_range();
         return elems[pos];
     }
 
     constexpr const_reference at(size_type pos) const
     {
         if (pos >= N)
-            throw ctl::out_of_range("out of range");
+            throw ctl::out_of_range();
         return elems[pos];
     }
 
     constexpr reference operator[](size_type pos)
     {
+        if (pos >= N)
+            __builtin_trap();
         return elems[pos];
     }
 
     constexpr const_reference operator[](size_type pos) const
     {
+        if (pos >= N)
+            __builtin_trap();
         return elems[pos];
     }
 

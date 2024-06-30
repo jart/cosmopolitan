@@ -352,5 +352,13 @@ main()
             return 80;
     }
 
+    {
+        ctl::vector<int> dog(8, 0);
+        if (dog.size() != 8)
+            return 81;
+        if (dog[0] != 0)
+            return 82;
+    }
+
     CheckForMemoryLeaks();
 }
