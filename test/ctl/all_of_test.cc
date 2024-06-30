@@ -20,9 +20,9 @@
 #include "ctl/array.h"
 #include "libc/mem/leaks.h"
 
-#include <algorithm>
-#include <array>
-#define ctl std
+// #include <algorithm>
+// #include <array>
+// #define ctl std
 
 int
 main()

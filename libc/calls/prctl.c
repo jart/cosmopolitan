@@ -53,15 +53,5 @@ int prctl(int operation, ...) {
     rc = enosys();
   }
 
-#if SYSDEBUG
-  if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {
-    STRACE("prctl(%s, %s) → %d% m", DescribePrctlOperation(operation),
-           DescribeCapability(a), rc);
-  } else {
-    STRACE("prctl(%s, %p, %p, %p, %p) → %d% m",
-           DescribePrctlOperation(operation), a, b, c, d, rc);
-  }
-#endif
-
   return rc;
 }

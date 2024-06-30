@@ -117,6 +117,7 @@ static int PosixThread(void *arg, int tid) {
   }
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->pt_exiter)) {
+    sigdelset(&pt->pt_attr.__sigmask, SIGTHR);
     if (IsWindows()) {
       atomic_store_explicit(&__get_tls()->tib_sigmask, pt->pt_attr.__sigmask,
                             memory_order_release);

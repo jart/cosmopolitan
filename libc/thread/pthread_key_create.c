@@ -48,9 +48,9 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
   if (!dtor)
     dtor = (pthread_key_dtor)-1;
   for (i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-    if (!(expect = atomic_load_explicit(_pthread_key_dtor + i,
-                                        memory_order_acquire)) &&
-        atomic_compare_exchange_strong_explicit(_pthread_key_dtor + i, &expect,
+    if (!(expect = atomic_load_explicit(&_pthread_key_dtor[i],
+                                        memory_order_relaxed)) &&
+        atomic_compare_exchange_strong_explicit(&_pthread_key_dtor[i], &expect,
                                                 dtor, memory_order_release,
                                                 memory_order_relaxed)) {
       *key = i;

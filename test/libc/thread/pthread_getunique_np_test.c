@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/sysv/consts/pr.h"
+#include "libc/calls/calls.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-const char *DescribePrctlOperation(int x) {
-  switch (x) {
-    case PR_GET_NAME:
-      return "PR_GET_NAME";
-    case PR_SET_NO_NEW_PRIVS:
-      return "PR_SET_NO_NEW_PRIVS";
-    case PR_SET_SECCOMP:
-      return "PR_SET_SECCOMP";
-    case PR_GET_SECCOMP:
-      return "PR_GET_SECCOMP";
-    case PR_CAPBSET_READ:
-      return "PR_CAPBSET_READ";
-    case PR_CAPBSET_DROP:
-      return "PR_CAPBSET_DROP";
-    default:
-      return "PRCTL_???";
-  }
+void *wut(void *arg) {
+  pthread_id_np_t tid;
+  pthread_getunique_np(pthread_self(), &tid);
+  ASSERT_EQ(gettid(), tid);
+  return 0;
+}
+
+TEST(pthread_getunique_np, test) {
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, wut, (void *)1));
+  ASSERT_EQ(0, pthread_join(id, 0));
 }
