@@ -5364,6 +5364,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Uncompress", LuaUncompress},                              //
     {"Underlong", LuaUnderlong},                                //
     {"UuidV4", LuaUuidV4},                                      //
+    {"UuidV7", LuaUuidV7},                                      //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
     {"Write", LuaWrite},                                        //
     {"bin", LuaBin},                                            //

@@ -91,6 +91,7 @@ int LuaSlurp(lua_State *);
 int LuaUncompress(lua_State *);
 int LuaUnderlong(lua_State *);
 int LuaUuidV4(lua_State *);
+int LuaUuidV7(lua_State *);
 int LuaVisualizeControlCodes(lua_State *);
 
 void LuaPushUrlView(lua_State *, struct UrlView *);

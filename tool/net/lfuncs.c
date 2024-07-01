@@ -858,6 +858,74 @@ int LuaUuidV4(lua_State *L) {
   return 1;
 }
 
+int LuaUuidV7(lua_State *L) {
+  //See https://www.rfc-editor.org/rfc/rfc9562.html
+  char bin[16], uuid_str[37];
+  struct timespec ts = timespec_real();
+  uint64_t unix_ts_ms = (uint64_t)((ts.tv_sec * 1000) + (ts.tv_nsec / 1000000));
+  int fractional_ms = (int)floor((double)((double)(ts.tv_nsec - (ts.tv_nsec / 1000000) * 1000000)/1000000) * 4096) <<4;
+  uint64_t rand_b = _rand64();
+  int rand_a = fractional_ms | (rand_b & 0x000000000000000f); //use the last 4 bits of rand_b
+
+  bin[0]  = unix_ts_ms >> 050;
+  bin[1]  = unix_ts_ms >> 040;
+  bin[2]  = unix_ts_ms >> 030;
+  bin[3]  = unix_ts_ms >> 020;
+  bin[4]  = unix_ts_ms >> 010;
+  bin[5]  = unix_ts_ms >> 000;
+  bin[6]  = rand_a     >> 010;
+  bin[7]  = rand_a     >> 000;
+  bin[8]  = rand_b     >> 070;
+  bin[9]  = rand_b     >> 060;
+  bin[10] = rand_b     >> 050;
+  bin[11] = rand_b     >> 040;
+  bin[12] = rand_b     >> 030;
+  bin[13] = rand_b     >> 020;
+  bin[14] = rand_b     >> 010;
+  bin[15] = rand_b     >> 000;
+
+  uuid_str[0]  = "0123456789abcdef"[(bin[0] & 0xf0) >>4];
+  uuid_str[1]  = "0123456789abcdef"[(bin[0] & 0x0f)];
+  uuid_str[2]  = "0123456789abcdef"[(bin[1] & 0xf0) >>4];
+  uuid_str[3]  = "0123456789abcdef"[(bin[1] & 0x0f)];
+  uuid_str[4]  = "0123456789abcdef"[(bin[2] & 0xf0) >>4];
+  uuid_str[5]  = "0123456789abcdef"[(bin[2] & 0x0f)];
+  uuid_str[6]  = "0123456789abcdef"[(bin[3] & 0xf0) >>4];
+  uuid_str[7]  = "0123456789abcdef"[(bin[3] & 0x0f)];
+  uuid_str[8]  = '-';
+  uuid_str[9]  = "0123456789abcdef"[(bin[4] & 0xf0) >>4];
+  uuid_str[10] = "0123456789abcdef"[(bin[4] & 0x0f)];
+  uuid_str[11] = "0123456789abcdef"[(bin[5] & 0xf0) >>4];
+  uuid_str[12] = "0123456789abcdef"[(bin[5] & 0x0f)];
+  uuid_str[13] = '-';
+  uuid_str[14] = '7';
+  uuid_str[15] = "0123456789abcdef"[(bin[6] & 0xf0) >>4];
+  uuid_str[16] = "0123456789abcdef"[(bin[6] & 0x0f)];
+  uuid_str[17] = "0123456789abcdef"[(bin[7] & 0xf0) >>4];
+  uuid_str[18] = '-';
+  uuid_str[19] = "0123456789abcdef"[(0x8 | ((bin[7] & 0x0f) >>2))];
+  uuid_str[20] = "0123456789abcdef"[(bin[7] & 0x03) | (bin[8] & 0xf0) >>6]; //See https://www.rfc-editor.org/rfc/rfc9562.html#version_field
+  uuid_str[21] = "0123456789abcdef"[(bin[8] & 0x0f)];
+  uuid_str[22] = "0123456789abcdef"[(bin[9] & 0xf0) >>4];
+  uuid_str[23] = '-';
+  uuid_str[24] = "0123456789abcdef"[(bin[9]  & 0x0f)];
+  uuid_str[25] = "0123456789abcdef"[(bin[10] & 0xf0) >>4];
+  uuid_str[26] = "0123456789abcdef"[(bin[10] & 0x0f)];
+  uuid_str[27] = "0123456789abcdef"[(bin[11] & 0xf0) >>4];
+  uuid_str[28] = "0123456789abcdef"[(bin[11] & 0x0f)];
+  uuid_str[29] = "0123456789abcdef"[(bin[12] & 0xf0) >>4];
+  uuid_str[30] = "0123456789abcdef"[(bin[12] & 0x0f)];
+  uuid_str[31] = "0123456789abcdef"[(bin[13] & 0xf0) >>4];
+  uuid_str[32] = "0123456789abcdef"[(bin[13] & 0x0f)];
+  uuid_str[33] = "0123456789abcdef"[(bin[14] & 0xf0) >>4];
+  uuid_str[34] = "0123456789abcdef"[(bin[14] & 0x0f)];
+  uuid_str[35] = "0123456789abcdef"[(bin[15] & 0xf0) >>4];
+  uuid_str[36] = '\0';
+
+  lua_pushfstring(L, uuid_str);
+  return 1;
+}
+
 static dontinline int LuaHasherImpl(lua_State *L, size_t k,
                                     int H(const void *, size_t, uint8_t *)) {
   size_t n;
