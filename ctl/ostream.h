@@ -16,12 +16,15 @@ class ostream : public ios
     virtual ~ostream();
 
     ostream& operator<<(const char*);
+    ostream& operator<<(bool);
     ostream& operator<<(char);
     ostream& operator<<(int);
+    ostream& operator<<(unsigned);
     ostream& operator<<(long);
+    ostream& operator<<(unsigned long);
+    ostream& operator<<(float);
     ostream& operator<<(double);
     ostream& operator<<(const ctl::string_view&);
-    ostream& operator<<(bool);
     ostream& operator<<(ostream& (*)(ostream&));
 
     ostream& put(char);

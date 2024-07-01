@@ -284,10 +284,10 @@ include third_party/ncurses/BUILD.mk		# │
 include third_party/readline/BUILD.mk		# │
 include third_party/libunwind/BUILD.mk		# |
 include third_party/libcxxabi/BUILD.mk		# |
+include third_party/double-conversion/BUILD.mk	# │
 include ctl/BUILD.mk				# │
 include third_party/libcxx/BUILD.mk		# │
 include third_party/openmp/BUILD.mk		# │
-include third_party/double-conversion/BUILD.mk	# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
 include net/https/BUILD.mk			# │

@@ -35,10 +35,9 @@ main()
 
         // Test basic copy
         ctl::copy(src.begin(), src.end(), dest.begin());
-        for (size_t i = 0; i < 5; ++i) {
+        for (size_t i = 0; i < 5; ++i)
             if (dest[i] != src[i])
                 return 1;
-        }
 
         // Test partial copy
         ctl::array<int, 5> dest2 = { 0, 0, 0, 0, 0 };
@@ -57,10 +56,9 @@ main()
         // Test copy with empty range
         ctl::array<int, 5> dest4 = { 0, 0, 0, 0, 0 };
         ctl::copy(src.begin(), src.begin(), dest4.begin());
-        for (size_t i = 0; i < 5; ++i) {
+        for (size_t i = 0; i < 5; ++i)
             if (dest4[i] != 0)
                 return 4;
-        }
 
         // Test copy return value
         ctl::array<int, 5> dest5 = { 0, 0, 0, 0, 0 };

@@ -17,10 +17,14 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ostream.h"
+#include "dubble.h"
+#include "libc/fmt/itoa.h"
 #include "libc/stdio/stdio.h"
 #include "string_view.h"
 
 namespace ctl {
+
+extern const double_conversion::DoubleToStringConverter kDoubleToPrintfG;
 
 ostream cout(stdout);
 ostream cerr(stderr);
@@ -50,7 +54,7 @@ ostream&
 ostream::operator<<(const char* str)
 {
     if (good() && str)
-        if (fprintf(file_, "%s", str) < 0)
+        if (fputs(str, file_) < 0)
             setstate(badbit);
     return *this;
 }
@@ -67,35 +71,84 @@ ostream::operator<<(char c)
 ostream&
 ostream::operator<<(int n)
 {
-    if (good())
-        if (fprintf(file_, "%d", n) < 0)
+    if (good()) {
+        char buf[12];
+        FormatInt32(buf, n);
+        if (fputs(buf, file_) < 0)
             setstate(badbit);
+    }
+    return *this;
+}
+
+ostream&
+ostream::operator<<(unsigned n)
+{
+    if (good()) {
+        char buf[12];
+        FormatUint32(buf, n);
+        if (fputs(buf, file_) < 0)
+            setstate(badbit);
+    }
     return *this;
 }
 
 ostream&
 ostream::operator<<(long n)
 {
-    if (good())
-        if (fprintf(file_, "%ld", n) < 0)
+    if (good()) {
+        char buf[21];
+        FormatInt64(buf, n);
+        if (fputs(buf, file_) < 0)
             setstate(badbit);
+    }
+    return *this;
+}
+
+ostream&
+ostream::operator<<(unsigned long n)
+{
+    if (good()) {
+        char buf[21];
+        FormatUint64(buf, n);
+        if (fputs(buf, file_) < 0)
+            setstate(badbit);
+    }
+    return *this;
+}
+
+ostream&
+ostream::operator<<(float f)
+{
+    if (good()) {
+        char buf[128];
+        double_conversion::StringBuilder b(buf, sizeof(buf));
+        kDoubleToPrintfG.ToShortestSingle(f, &b);
+        b.Finalize();
+        if (fputs(buf, file_) < 0)
+            setstate(badbit);
+    }
     return *this;
 }
 
 ostream&
 ostream::operator<<(double d)
 {
-    if (good())
-        if (fprintf(file_, "%f", d) < 0)
+    if (good()) {
+        char buf[128];
+        double_conversion::StringBuilder b(buf, sizeof(buf));
+        kDoubleToPrintfG.ToShortest(d, &b);
+        b.Finalize();
+        if (fputs(buf, file_) < 0)
             setstate(badbit);
+    }
     return *this;
 }
 
 ostream&
 ostream::operator<<(const string_view& s)
 {
-    if (good())
-        if (fprintf(file_, "%.*s", (int)s.size(), s.data()) < 0)
+    if (good() && s.size())
+        if (!fwrite(s.data(), s.size(), 1, file_))
             setstate(badbit);
     return *this;
 }
@@ -106,7 +159,7 @@ ostream::operator<<(bool b)
     if (good()) {
         const char* value =
           (flags() & boolalpha) ? (b ? "true" : "false") : (b ? "1" : "0");
-        if (fprintf(file_, "%s", value) < 0)
+        if (fputs(value, file_) < 0)
             setstate(badbit);
     }
     return *this;

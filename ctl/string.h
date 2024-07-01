@@ -338,7 +338,23 @@ class string
         return *this;
     }
 
+    string operator+(const char c) const noexcept
+    {
+        char s[2] = { c };
+        return strcat(*this, s);
+    }
+
+    string operator+(const string& s) const noexcept
+    {
+        return strcat(*this, s);
+    }
+
     string operator+(const ctl::string_view s) const noexcept
+    {
+        return strcat(*this, s);
+    }
+
+    string operator+(const char* s) const noexcept
     {
         return strcat(*this, s);
     }
@@ -408,6 +424,33 @@ class string
 static_assert(sizeof(string) == __::string_size);
 static_assert(sizeof(__::small_string) == __::string_size);
 static_assert(sizeof(__::big_string) == __::string_size);
+
+ctl::string
+to_string(int);
+
+ctl::string
+to_string(long);
+
+ctl::string
+to_string(long long);
+
+ctl::string
+to_string(unsigned);
+
+ctl::string
+to_string(unsigned long);
+
+ctl::string
+to_string(unsigned long long);
+
+ctl::string
+to_string(float);
+
+ctl::string
+to_string(double);
+
+ctl::string
+to_string(long double);
 
 } // namespace ctl
 
