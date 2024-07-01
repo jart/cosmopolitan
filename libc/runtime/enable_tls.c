@@ -24,6 +24,7 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
@@ -37,6 +38,8 @@
 #include "libc/stdalign.internal.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -168,7 +171,8 @@ textstartup void __enable_tls(void) {
   if (I(_tls_align) <= TLS_ALIGNMENT && size <= sizeof(__static_tls)) {
     mem = __static_tls;
   } else {
-    mem = _weaken(_mapanon)(size);
+    mem = __mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                 -1, 0);
   }
 
   struct CosmoTib *tib =
