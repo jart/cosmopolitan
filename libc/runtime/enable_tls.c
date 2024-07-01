@@ -141,24 +141,23 @@ textstartup void __enable_tls(void) {
   size_t siz = ROUNDUP(I(_tls_size) + sizeof(struct CosmoTib), TLS_ALIGNMENT);
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
-    // which helps avoid a system call for appes with little tls
+    // which helps avoid a system call for apes with little tls.
     // this is crucial to keeping life.com 16 kilobytes in size!
     mem = __static_tls;
   } else {
-    // if this binary needs a hefty tls block then we'll bank on
-    // malloc() being linked, which links _mapanon().  otherwise
-    // if you exceed this, you need to __static_yoink("_mapanon").
-    // please note that it's probably too early to call calloc()
-    mem = _weaken(_mapanon)(siz);
+    // if a binary needs this much thread_local storage, then it
+    // surely must have linked the mmap() function at some point
+    // we can't call mmap() because it's too early for sig block
+    mem = _weaken(__mmap)(0, siz, PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
   char *tls = mem + siz - sizeof(*tib) - I(_tls_size);
 
   // copy in initialized data section
-  if (I(_tdata_size)) {
+  if (I(_tdata_size))
     memcpy(tls, _tdata_start, I(_tdata_size));
-  }
 
 #elif defined(__aarch64__)
 
@@ -169,10 +168,16 @@ textstartup void __enable_tls(void) {
 
   char *mem;
   if (I(_tls_align) <= TLS_ALIGNMENT && size <= sizeof(__static_tls)) {
+    // if tls requirement is small then use the static tls block
+    // which helps avoid a system call for apes with little tls.
+    // this is crucial to keeping life.com 16 kilobytes in size!
     mem = __static_tls;
   } else {
-    mem = __mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-                 -1, 0);
+    // if a binary needs this much thread_local storage, then it
+    // surely must have linked the mmap() function at some point
+    // we can't call mmap() because it's too early for sig block
+    mem = _weaken(__mmap)(0, size, PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib =
@@ -184,9 +189,8 @@ textstartup void __enable_tls(void) {
   size_t dtv_size = sizeof(uintptr_t) * 2;
 
   char *tdata = (char *)dtv + ROUNDUP(dtv_size, I(_tdata_align));
-  if (I(_tdata_size)) {
+  if (I(_tdata_size))
     memmove(tdata, _tdata_start, I(_tdata_size));
-  }
 
   // Set the DTV.
   //
@@ -251,9 +255,8 @@ textstartup void __enable_tls(void) {
 
 #ifdef __x86_64__
   // rewrite the executable tls opcodes in memory
-  if (IsWindows() || IsOpenbsd() || IsNetbsd()) {
+  if (IsWindows() || IsOpenbsd() || IsNetbsd())
     __morph_tls();
-  }
 #endif
 
   // we are now allowed to use tls
