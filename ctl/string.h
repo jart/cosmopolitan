@@ -426,31 +426,31 @@ static_assert(sizeof(__::small_string) == __::string_size);
 static_assert(sizeof(__::big_string) == __::string_size);
 
 ctl::string
-to_string(int);
+to_string(int) noexcept;
 
 ctl::string
-to_string(long);
+to_string(long) noexcept;
 
 ctl::string
-to_string(long long);
+to_string(long long) noexcept;
 
 ctl::string
-to_string(unsigned);
+to_string(unsigned) noexcept;
 
 ctl::string
-to_string(unsigned long);
+to_string(unsigned long) noexcept;
 
 ctl::string
-to_string(unsigned long long);
+to_string(unsigned long long) noexcept;
 
 ctl::string
-to_string(float);
+to_string(float) noexcept;
 
 ctl::string
-to_string(double);
+to_string(double) noexcept;
 
 ctl::string
-to_string(long double);
+to_string(long double) noexcept;
 
 } // namespace ctl
 

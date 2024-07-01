@@ -17,7 +17,6 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/string.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/leaks.h"

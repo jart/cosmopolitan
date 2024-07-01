@@ -27,49 +27,49 @@ namespace ctl {
 extern const double_conversion::DoubleToStringConverter kDoubleToPrintfG;
 
 string
-to_string(int value)
+to_string(int value) noexcept
 {
     char buf[12];
     return { buf, FormatInt32(buf, value) - buf };
 }
 
 string
-to_string(unsigned value)
+to_string(unsigned value) noexcept
 {
     char buf[12];
     return { buf, FormatUint32(buf, value) - buf };
 }
 
 string
-to_string(long value)
+to_string(long value) noexcept
 {
     char buf[21];
     return { buf, FormatInt64(buf, value) - buf };
 }
 
 string
-to_string(unsigned long value)
+to_string(unsigned long value) noexcept
 {
     char buf[21];
     return { buf, FormatUint64(buf, value) - buf };
 }
 
 string
-to_string(long long value)
+to_string(long long value) noexcept
 {
     char buf[21];
     return { buf, FormatInt64(buf, value) - buf };
 }
 
 string
-to_string(unsigned long long value)
+to_string(unsigned long long value) noexcept
 {
     char buf[21];
     return { buf, FormatUint64(buf, value) - buf };
 }
 
 string
-to_string(float value)
+to_string(float value) noexcept
 {
     char buf[128];
     double_conversion::StringBuilder b(buf, sizeof(buf));
@@ -79,7 +79,7 @@ to_string(float value)
 }
 
 string
-to_string(double value)
+to_string(double value) noexcept
 {
     char buf[128];
     double_conversion::StringBuilder b(buf, sizeof(buf));
@@ -89,7 +89,7 @@ to_string(double value)
 }
 
 string
-to_string(long double value)
+to_string(long double value) noexcept
 {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
     return to_string((double)value);
