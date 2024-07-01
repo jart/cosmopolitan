@@ -11,10 +11,12 @@ struct integral_constant
     static constexpr T value = v;
     typedef T value_type;
     typedef integral_constant type;
+
     constexpr operator value_type() const noexcept
     {
         return value;
     }
+
     constexpr value_type operator()() const noexcept
     {
         return value;
