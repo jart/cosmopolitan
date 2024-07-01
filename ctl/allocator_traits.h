@@ -11,12 +11,12 @@ struct allocator_traits
 {
     using allocator_type = Alloc;
     using value_type = typename Alloc::value_type;
-    using pointer = typename Alloc::pointer;
-    using const_pointer = typename Alloc::const_pointer;
+    using pointer = typename Alloc::value_type*;
+    using const_pointer = const typename Alloc::value_type*;
     using void_pointer = void*;
     using const_void_pointer = const void*;
-    using difference_type = typename Alloc::difference_type;
-    using size_type = typename Alloc::size_type;
+    using difference_type = ptrdiff_t;
+    using size_type = size_t;
 
     using propagate_on_container_copy_assignment = ctl::false_type;
     using propagate_on_container_move_assignment = ctl::true_type;
@@ -24,10 +24,13 @@ struct allocator_traits
     using is_always_equal = ctl::true_type;
 
     template<typename T>
-    using rebind_alloc = typename Alloc::template rebind<T>::other;
+    struct rebind_alloc
+    {
+        using other = typename Alloc::template rebind<T>::other;
+    };
 
     template<typename T>
-    using rebind_traits = allocator_traits<rebind_alloc<T>>;
+    using rebind_traits = allocator_traits<typename rebind_alloc<T>::other>;
 
     static pointer allocate(Alloc& a, size_type n)
     {
@@ -53,7 +56,7 @@ struct allocator_traits
 
     static size_type max_size(const Alloc& a) noexcept
     {
-        return __PTRDIFF_MAX__ / sizeof(value_type);
+        return a.max_size();
     }
 
     static Alloc select_on_container_copy_construction(const Alloc& a)

@@ -332,6 +332,18 @@ class string
         return *this;
     }
 
+    string& operator+=(const char* s) noexcept
+    {
+        append(s);
+        return *this;
+    }
+
+    string& operator+=(const ctl::string s) noexcept
+    {
+        append(s);
+        return *this;
+    }
+
     string& operator+=(const ctl::string_view s) noexcept
     {
         append(s);
@@ -344,17 +356,17 @@ class string
         return strcat(*this, s);
     }
 
+    string operator+(const char* s) const noexcept
+    {
+        return strcat(*this, s);
+    }
+
     string operator+(const string& s) const noexcept
     {
         return strcat(*this, s);
     }
 
     string operator+(const ctl::string_view s) const noexcept
-    {
-        return strcat(*this, s);
-    }
-
-    string operator+(const char* s) const noexcept
     {
         return strcat(*this, s);
     }

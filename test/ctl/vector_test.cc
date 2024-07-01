@@ -24,6 +24,46 @@
 // #include <vector>
 // #define ctl std
 
+static int counter;
+
+// Test with non-trivial type
+struct NonTrivial
+{
+    int value;
+
+    NonTrivial(int v) : value(v)
+    {
+        ++counter;
+    }
+
+    NonTrivial(const NonTrivial& other) : value(other.value)
+    {
+        ++counter;
+    }
+
+    NonTrivial(NonTrivial&& other) noexcept : value(other.value)
+    {
+        ++counter;
+    }
+
+    ~NonTrivial()
+    {
+        --counter;
+    }
+
+    NonTrivial& operator=(const NonTrivial& other)
+    {
+        value = other.value;
+        return *this;
+    }
+
+    NonTrivial& operator=(NonTrivial&& other) noexcept
+    {
+        value = other.value;
+        return *this;
+    }
+};
+
 int
 main()
 {
@@ -358,6 +398,57 @@ main()
             return 81;
         if (dog[0] != 0)
             return 82;
+    }
+
+    // Test erase(const_iterator first, const_iterator last)
+    {
+        ctl::vector<int> v = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+        // Test erasing from the middle
+        auto it = v.erase(v.begin() + 3, v.begin() + 7);
+        if (v.size() != 6 || v != ctl::vector<int>{ 1, 2, 3, 8, 9, 10 } ||
+            it != v.begin() + 3)
+            return 83;
+
+        // Test erasing from the beginning
+        it = v.erase(v.begin(), v.begin() + 2);
+        if (v.size() != 4 || v != ctl::vector<int>{ 3, 8, 9, 10 } ||
+            it != v.begin())
+            return 84;
+
+        // Test erasing to the end
+        it = v.erase(v.begin() + 2, v.end());
+        if (v.size() != 2 || v != ctl::vector<int>{ 3, 8 } || it != v.end())
+            return 85;
+
+        // Test erasing all elements
+        it = v.erase(v.begin(), v.end());
+        if (!v.empty() || it != v.end())
+            return 86;
+
+        // Test erasing empty range
+        v = { 1, 2, 3, 4, 5 };
+        it = v.erase(v.begin() + 2, v.begin() + 2);
+        if (v.size() != 5 || v != ctl::vector<int>{ 1, 2, 3, 4, 5 } ||
+            it != v.begin() + 2)
+            return 87;
+
+        counter = 0;
+
+        {
+            ctl::vector<NonTrivial> v2;
+            for (int i = 0; i < 10; ++i)
+                v2.emplace_back(i);
+            v2.erase(v2.begin() + 3, v2.begin() + 7);
+            if (v2.size() != 6 || counter != 6)
+                return 89;
+            for (int i = 0; i < (int)v2.size(); ++i)
+                if (v2[i].value != (i < 3 ? i : i + 4))
+                    return 90;
+        }
+
+        if (counter != 0)
+            return 91;
     }
 
     CheckForMemoryLeaks();

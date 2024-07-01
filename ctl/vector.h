@@ -411,16 +411,17 @@ class vector
         return erase(pos, pos + 1);
     }
 
-    iterator erase(const_iterator first, const_iterator last)
+    constexpr iterator erase(const_iterator first, const_iterator last)
     {
         difference_type index = first - begin();
         difference_type count = last - first;
         iterator it = begin() + index;
-        ctl::move(it + count, end(), it);
+        for (iterator move_it = it + count; move_it != end(); ++move_it, ++it)
+            *it = ctl::move(*move_it);
         for (difference_type i = 0; i < count; ++i)
             ctl::allocator_traits<Allocator>::destroy(alloc_, end() - i - 1);
         size_ -= count;
-        return it;
+        return begin() + index;
     }
 
     void push_back(const T& value)
