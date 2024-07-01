@@ -26,8 +26,8 @@ static const char kUtf8Dispatch[] = {
     1, 1, 1, 1, 1, 1, 1, 1,  // 0320
     1, 1, 1, 1, 1, 1, 1, 1,  // 0330
     2, 3, 3, 3, 3, 3, 3, 3,  // 0340 utf8-3
-    3, 3, 3, 3, 3, 3, 3, 3,  // 0350
-    4, 5, 5, 5, 5, 0, 0, 0,  // 0360 utf8-4
+    3, 3, 3, 3, 3, 4, 3, 3,  // 0350
+    5, 6, 6, 6, 7, 0, 0, 0,  // 0360 utf8-4
     0, 0, 0, 0, 0, 0, 0, 0,  // 0370
 };
 
@@ -95,6 +95,7 @@ bool32 isutf8(const void *data, size_t size) {
         }
         // fallthrough
       case 3:
+      case3:
         if (p + 2 <= e &&             //
             (p[0] & 0300) == 0200 &&  //
             (p[1] & 0300) == 0200) {  //
@@ -104,11 +105,17 @@ bool32 isutf8(const void *data, size_t size) {
           return false;  // missing cont
         }
       case 4:
+        if (p < e && (*p & 040)) {
+          return false;  // utf-16 surrogate
+        }
+        goto case3;
+      case 5:
         if (p < e && (*p & 0377) < 0220) {
           return false;  // overlong
         }
         // fallthrough
-      case 5:
+      case 6:
+      case6:
         if (p + 3 <= e &&                         //
             (((uint32_t)(p[+2] & 0377) << 030 |   //
               (uint32_t)(p[+1] & 0377) << 020 |   //
@@ -120,6 +127,11 @@ bool32 isutf8(const void *data, size_t size) {
         } else {
           return false;  // missing cont
         }
+      case 7:
+        if (p < e && (*p & 0x3F) > 0xF) {
+          return false;  // over limit
+        }
+        goto case6;
       default:
         __builtin_unreachable();
     }
