@@ -12,7 +12,7 @@ OUTPUT_FORMAT("elf64-littleaarch64",
 
 SECTIONS {
 
-  . = SEGMENT_START("text-segment", 0x010000000000);
+  . = SEGMENT_START("text-segment", 0x000800000000);
   __executable_start = .;
   . += SIZEOF_HEADERS;
 
