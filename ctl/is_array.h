@@ -7,15 +7,15 @@
 namespace ctl {
 
 template<typename T>
-struct is_array : false_type
+struct is_array : ctl::false_type
 {};
 
 template<typename T, size_t N>
-struct is_array<T[N]> : true_type
+struct is_array<T[N]> : ctl::true_type
 {};
 
 template<typename T>
-struct is_array<T[]> : true_type
+struct is_array<T[]> : ctl::true_type
 {};
 
 template<typename T>

@@ -7,7 +7,7 @@
 namespace ctl {
 
 template<typename T>
-struct is_polymorphic : public integral_constant<bool, __is_polymorphic(T)>
+struct is_polymorphic : public ctl::integral_constant<bool, __is_polymorphic(T)>
 {};
 
 template<typename T>

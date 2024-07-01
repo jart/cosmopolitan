@@ -20,7 +20,7 @@ class ostream : public ios
     ostream& operator<<(int);
     ostream& operator<<(long);
     ostream& operator<<(double);
-    ostream& operator<<(const string_view&);
+    ostream& operator<<(const ctl::string_view&);
     ostream& operator<<(bool);
     ostream& operator<<(ostream& (*)(ostream&));
 

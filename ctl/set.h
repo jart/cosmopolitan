@@ -8,7 +8,7 @@
 
 namespace ctl {
 
-template<typename Key, typename Compare = less<Key>>
+template<typename Key, typename Compare = ctl::less<Key>>
 class set
 {
     struct rbtree
@@ -381,12 +381,12 @@ class set
         size_ = 0;
     }
 
-    pair<iterator, bool> insert(value_type&& value)
+    ctl::pair<iterator, bool> insert(value_type&& value)
     {
         return insert_node(new node_type(ctl::move(value)));
     }
 
-    pair<iterator, bool> insert(const value_type& value)
+    ctl::pair<iterator, bool> insert(const value_type& value)
     {
         return insert_node(new node_type(value));
     }
@@ -415,7 +415,7 @@ class set
     }
 
     template<class... Args>
-    pair<iterator, bool> emplace(Args&&... args)
+    ctl::pair<iterator, bool> emplace(Args&&... args)
     {
         value_type value(ctl::forward<Args>(args)...);
         return insert(ctl::move(value));
@@ -451,12 +451,13 @@ class set
         ctl::swap(size_, other.size_);
     }
 
-    pair<iterator, iterator> equal_range(const key_type& key)
+    ctl::pair<iterator, iterator> equal_range(const key_type& key)
     {
         return { iterator(get_floor(key)), iterator(get_ceiling(key)) };
     }
 
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const
+    ctl::pair<const_iterator, const_iterator> equal_range(
+      const key_type& key) const
     {
         return { const_iterator(get_floor(key)),
                  const_iterator(get_ceiling(key)) };
@@ -613,7 +614,7 @@ class set
         return result;
     }
 
-    pair<iterator, bool> insert_node(node_type* node)
+    ctl::pair<iterator, bool> insert_node(node_type* node)
     {
         if (root_ == nullptr) {
             root_ = node;
@@ -878,7 +879,7 @@ class set
     Compare comp_;
 };
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator==(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
@@ -893,7 +894,7 @@ operator==(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
     return true;
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator<(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
@@ -908,35 +909,35 @@ operator<(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
     return i == lhs.end() && j != rhs.end();
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator!=(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
     return !(lhs == rhs);
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator<=(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
     return !(rhs < lhs);
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator>(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
     return rhs < lhs;
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 bool
 operator>=(const set<Key, Compare>& lhs, const set<Key, Compare>& rhs)
 {
     return !(lhs < rhs);
 }
 
-template<class Key, typename Compare = less<Key>>
+template<class Key, typename Compare = ctl::less<Key>>
 void
 swap(set<Key, Compare>& lhs, set<Key, Compare>& rhs) noexcept;
 

@@ -26,19 +26,19 @@ ostringstream::ostringstream() : buffer_(), write_pos_(0)
 {
 }
 
-ostringstream::ostringstream(const string_view& str)
+ostringstream::ostringstream(const ctl::string_view& str)
   : buffer_(str), write_pos_(0)
 {
 }
 
-string
+ctl::string
 ostringstream::str() const
 {
     return buffer_;
 }
 
 void
-ostringstream::str(const string& s)
+ostringstream::str(const ctl::string& s)
 {
     buffer_ = s;
     write_pos_ = 0;
@@ -65,7 +65,7 @@ ostringstream::operator<<(char c)
 }
 
 ostringstream&
-ostringstream::operator<<(const string_view& s)
+ostringstream::operator<<(const ctl::string_view& s)
 {
     if (good()) {
         if (write_pos_ + s.size() <= buffer_.size()) {
@@ -84,7 +84,7 @@ ostringstream::operator<<(int n)
 {
     char temp[12];
     if (good())
-        *this << string_view(temp, FormatInt32(temp, n) - temp);
+        *this << ctl::string_view(temp, FormatInt32(temp, n) - temp);
     return *this;
 }
 
@@ -93,7 +93,7 @@ ostringstream::operator<<(unsigned int n)
 {
     char temp[12];
     if (good())
-        *this << string_view(temp, FormatUint32(temp, n) - temp);
+        *this << ctl::string_view(temp, FormatUint32(temp, n) - temp);
     return *this;
 }
 
@@ -102,7 +102,7 @@ ostringstream::operator<<(long n)
 {
     char temp[21];
     if (good())
-        *this << string_view(temp, FormatInt64(temp, n) - temp);
+        *this << ctl::string_view(temp, FormatInt64(temp, n) - temp);
     return *this;
 }
 
@@ -111,7 +111,7 @@ ostringstream::operator<<(unsigned long n)
 {
     char temp[21];
     if (good())
-        *this << string_view(temp, FormatUint64(temp, n) - temp);
+        *this << ctl::string_view(temp, FormatUint64(temp, n) - temp);
     return *this;
 }
 
@@ -121,7 +121,7 @@ ostringstream::operator<<(float f)
     if (good()) {
         char temp[32];
         int len = snprintf(temp, sizeof(temp), "%g", f);
-        *this << string_view(temp, len);
+        *this << ctl::string_view(temp, len);
     }
     return *this;
 }
@@ -132,7 +132,7 @@ ostringstream::operator<<(double d)
     if (good()) {
         char temp[32];
         int len = snprintf(temp, sizeof(temp), "%g", d);
-        *this << string_view(temp, len);
+        *this << ctl::string_view(temp, len);
     }
     return *this;
 }

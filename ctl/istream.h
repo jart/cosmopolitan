@@ -20,7 +20,7 @@ class istream : public ios
     istream& operator>>(long&);
     istream& operator>>(double&);
     istream& operator>>(bool&);
-    istream& operator>>(string&);
+    istream& operator>>(ctl::string&);
     istream& operator>>(istream& (*)(istream&));
 
     int get();

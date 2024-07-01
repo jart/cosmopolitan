@@ -11,14 +11,14 @@ class istringstream : public ios_base
 {
   public:
     istringstream();
-    explicit istringstream(const string_view&);
+    explicit istringstream(const ctl::string_view&);
 
     string str() const;
     void str(const string&);
 
     istringstream& operator>>(char&);
     istringstream& operator>>(char*);
-    istringstream& operator>>(string&);
+    istringstream& operator>>(ctl::string&);
     istringstream& operator>>(short&);
     istringstream& operator>>(unsigned short&);
     istringstream& operator>>(int&);
@@ -29,7 +29,7 @@ class istringstream : public ios_base
     istringstream& operator>>(double&);
 
   private:
-    string buffer_;
+    ctl::string buffer_;
     size_t read_pos_;
 
     template<typename T>

@@ -8,7 +8,7 @@ namespace ctl {
 
 template<typename T>
 struct is_standard_layout
-  : public integral_constant<bool, __is_standard_layout(T)>
+  : public ctl::integral_constant<bool, __is_standard_layout(T)>
 {};
 
 template<typename T>

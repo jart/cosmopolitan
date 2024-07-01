@@ -8,7 +8,7 @@ namespace ctl {
 
 template<class _Tp, class... _Args>
 struct is_constructible
-  : public integral_constant<bool, __is_constructible(_Tp, _Args...)>
+  : public ctl::integral_constant<bool, __is_constructible(_Tp, _Args...)>
 {};
 
 template<class _Tp, class... _Args>

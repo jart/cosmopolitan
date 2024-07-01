@@ -7,7 +7,7 @@
 namespace ctl {
 
 template<typename T>
-struct is_union : public integral_constant<bool, __is_union(T)>
+struct is_union : public ctl::integral_constant<bool, __is_union(T)>
 {};
 
 template<typename T>

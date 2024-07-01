@@ -6,7 +6,7 @@
 
 namespace ctl {
 
-class out_of_range : public exception
+class out_of_range : public ctl::exception
 {
   public:
     out_of_range() noexcept = default;

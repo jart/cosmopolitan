@@ -11,14 +11,14 @@ class ostringstream : public ios_base
 {
   public:
     ostringstream();
-    explicit ostringstream(const string_view&);
+    explicit ostringstream(const ctl::string_view&);
 
-    string str() const;
-    void str(const string& s);
+    ctl::string str() const;
+    void str(const ctl::string& s);
     void clear();
 
     ostringstream& operator<<(char);
-    ostringstream& operator<<(const string_view&);
+    ostringstream& operator<<(const ctl::string_view&);
     ostringstream& operator<<(int);
     ostringstream& operator<<(unsigned int);
     ostringstream& operator<<(long);
@@ -27,7 +27,7 @@ class ostringstream : public ios_base
     ostringstream& operator<<(double);
 
   private:
-    string buffer_;
+    ctl::string buffer_;
     size_t write_pos_;
 };
 

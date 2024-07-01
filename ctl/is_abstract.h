@@ -7,7 +7,7 @@
 namespace ctl {
 
 template<typename T>
-struct is_abstract : public integral_constant<bool, __is_abstract(T)>
+struct is_abstract : public ctl::integral_constant<bool, __is_abstract(T)>
 {};
 
 template<typename T>

@@ -26,19 +26,19 @@ istringstream::istringstream() : buffer_(), read_pos_(0)
 {
 }
 
-istringstream::istringstream(const string_view& str)
+istringstream::istringstream(const ctl::string_view& str)
   : buffer_(str), read_pos_(0)
 {
 }
 
-string
+ctl::string
 istringstream::str() const
 {
     return buffer_;
 }
 
 void
-istringstream::str(const string& s)
+istringstream::str(const ctl::string& s)
 {
     buffer_ = s;
     read_pos_ = 0;
@@ -82,7 +82,7 @@ istringstream::operator>>(char* s)
 }
 
 istringstream&
-istringstream::operator>>(string& s)
+istringstream::operator>>(ctl::string& s)
 {
     if (!good())
         return *this;

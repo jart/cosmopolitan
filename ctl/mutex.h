@@ -11,17 +11,20 @@ class mutex
   public:
     mutex()
     {
-        pthread_mutex_init(&m_, nullptr);
+        if (pthread_mutex_init(&m_, nullptr))
+            __builtin_trap();
     }
 
     ~mutex()
     {
-        pthread_mutex_destroy(&m_);
+        if (pthread_mutex_destroy(&m_))
+            __builtin_trap();
     }
 
     void lock()
     {
-        pthread_mutex_lock(&m_);
+        if (pthread_mutex_lock(&m_))
+            __builtin_trap();
     }
 
     bool try_lock()
@@ -31,7 +34,8 @@ class mutex
 
     void unlock()
     {
-        pthread_mutex_unlock(&m_);
+        if (pthread_mutex_unlock(&m_))
+            __builtin_trap();
     }
 
     // Delete copy constructor and assignment operator

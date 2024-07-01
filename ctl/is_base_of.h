@@ -7,7 +7,8 @@
 namespace ctl {
 
 template<typename Base, typename Derived>
-struct is_base_of : public integral_constant<bool, __is_base_of(Base, Derived)>
+struct is_base_of
+  : public ctl::integral_constant<bool, __is_base_of(Base, Derived)>
 {};
 
 template<typename Base, typename Derived>

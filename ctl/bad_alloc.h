@@ -6,7 +6,7 @@
 
 namespace ctl {
 
-class bad_alloc : public exception
+class bad_alloc : public ctl::exception
 {
   public:
     bad_alloc() noexcept = default;

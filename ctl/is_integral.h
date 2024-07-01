@@ -7,67 +7,67 @@
 namespace ctl {
 
 template<typename T>
-struct is_integral : false_type
+struct is_integral : ctl::false_type
 {};
 
 template<>
-struct is_integral<bool> : true_type
+struct is_integral<bool> : ctl::true_type
 {};
 
 template<>
-struct is_integral<char> : true_type
+struct is_integral<char> : ctl::true_type
 {};
 
 template<>
-struct is_integral<signed char> : true_type
+struct is_integral<signed char> : ctl::true_type
 {};
 
 template<>
-struct is_integral<unsigned char> : true_type
+struct is_integral<unsigned char> : ctl::true_type
 {};
 
 template<>
-struct is_integral<short> : true_type
+struct is_integral<short> : ctl::true_type
 {};
 
 template<>
-struct is_integral<unsigned short> : true_type
+struct is_integral<unsigned short> : ctl::true_type
 {};
 
 template<>
-struct is_integral<int> : true_type
+struct is_integral<int> : ctl::true_type
 {};
 
 template<>
-struct is_integral<unsigned int> : true_type
+struct is_integral<unsigned int> : ctl::true_type
 {};
 
 template<>
-struct is_integral<long> : true_type
+struct is_integral<long> : ctl::true_type
 {};
 
 template<>
-struct is_integral<unsigned long> : true_type
+struct is_integral<unsigned long> : ctl::true_type
 {};
 
 template<>
-struct is_integral<long long> : true_type
+struct is_integral<long long> : ctl::true_type
 {};
 
 template<>
-struct is_integral<unsigned long long> : true_type
+struct is_integral<unsigned long long> : ctl::true_type
 {};
 
 template<>
-struct is_integral<char16_t> : true_type
+struct is_integral<char16_t> : ctl::true_type
 {};
 
 template<>
-struct is_integral<char32_t> : true_type
+struct is_integral<char32_t> : ctl::true_type
 {};
 
 template<>
-struct is_integral<wchar_t> : true_type
+struct is_integral<wchar_t> : ctl::true_type
 {};
 
 template<typename T>

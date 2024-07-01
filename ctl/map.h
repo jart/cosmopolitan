@@ -152,12 +152,12 @@ class map
 
     Value& operator[](const Key& key)
     {
-        return ((data_.insert(make_pair(key, Value()))).first)->second;
+        return ((data_.insert(ctl::make_pair(key, Value()))).first)->second;
     }
 
     Value& operator[](Key&& key)
     {
-        return ((data_.insert(make_pair(ctl::move(key), Value()))).first)
+        return ((data_.insert(ctl::make_pair(ctl::move(key), Value()))).first)
           ->second;
     }
 
@@ -244,7 +244,7 @@ class map
 
     size_type erase(const Key& key)
     {
-        return data_.erase(make_pair(key, Value()));
+        return data_.erase(ctl::make_pair(key, Value()));
     }
 
     void swap(map& other) noexcept
@@ -259,47 +259,47 @@ class map
 
     iterator find(const Key& key)
     {
-        return data_.find(make_pair(key, Value()));
+        return data_.find(ctl::make_pair(key, Value()));
     }
 
     const_iterator find(const Key& key) const
     {
-        return data_.find(make_pair(key, Value()));
+        return data_.find(ctl::make_pair(key, Value()));
     }
 
     size_type count(const Key& key) const
     {
-        return data_.count(make_pair(key, Value()));
+        return data_.count(ctl::make_pair(key, Value()));
     }
 
     iterator lower_bound(const Key& key)
     {
-        return data_.lower_bound(make_pair(key, Value()));
+        return data_.lower_bound(ctl::make_pair(key, Value()));
     }
 
     const_iterator lower_bound(const Key& key) const
     {
-        return data_.lower_bound(make_pair(key, Value()));
+        return data_.lower_bound(ctl::make_pair(key, Value()));
     }
 
     iterator upper_bound(const Key& key)
     {
-        return data_.upper_bound(make_pair(key, Value()));
+        return data_.upper_bound(ctl::make_pair(key, Value()));
     }
 
     const_iterator upper_bound(const Key& key) const
     {
-        return data_.upper_bound(make_pair(key, Value()));
+        return data_.upper_bound(ctl::make_pair(key, Value()));
     }
 
     ctl::pair<iterator, iterator> equal_range(const Key& key)
     {
-        return data_.equal_range(make_pair(key, Value()));
+        return data_.equal_range(ctl::make_pair(key, Value()));
     }
 
     ctl::pair<const_iterator, const_iterator> equal_range(const Key& key) const
     {
-        return data_.equal_range(make_pair(key, Value()));
+        return data_.equal_range(ctl::make_pair(key, Value()));
     }
 
     key_compare key_comp() const

@@ -7,7 +7,7 @@
 namespace ctl {
 
 template<typename T>
-struct is_class : public integral_constant<bool, __is_class(T)>
+struct is_class : public ctl::integral_constant<bool, __is_class(T)>
 {};
 
 template<typename T>

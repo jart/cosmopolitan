@@ -16,15 +16,16 @@ template<typename T>
 struct decay
 {
   private:
-    typedef typename remove_reference<T>::type U;
+    typedef typename ctl::remove_reference<T>::type U;
 
   public:
-    typedef typename conditional<
-      is_array<U>::value,
-      typename remove_extent<U>::type*,
-      typename conditional<is_function<U>::value,
-                           typename add_pointer<U>::type,
-                           typename remove_cv<U>::type>::type>::type type;
+    typedef typename ctl::conditional<
+      ctl::is_array<U>::value,
+      typename ctl::remove_extent<U>::type*,
+      typename ctl::conditional<ctl::is_function<U>::value,
+                                typename ctl::add_pointer<U>::type,
+                                typename ctl::remove_cv<U>::type>::type>::type
+      type;
 };
 
 template<typename T>

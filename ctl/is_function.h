@@ -8,111 +8,111 @@ namespace ctl {
 
 // Primary template
 template<class>
-struct is_function : false_type
+struct is_function : ctl::false_type
 {};
 
 // Specializations for various function types
 
 // Regular functions
 template<class Ret, class... Args>
-struct is_function<Ret(Args...)> : true_type
+struct is_function<Ret(Args...)> : ctl::true_type
 {};
 
 // Functions with cv-qualifiers
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const> : true_type
+struct is_function<Ret(Args...) const> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) volatile> : true_type
+struct is_function<Ret(Args...) volatile> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const volatile> : true_type
+struct is_function<Ret(Args...) const volatile> : ctl::true_type
 {};
 
 // Functions with ref-qualifiers
 template<class Ret, class... Args>
-struct is_function<Ret(Args...)&> : true_type
+struct is_function<Ret(Args...)&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const&> : true_type
+struct is_function<Ret(Args...) const&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) volatile&> : true_type
+struct is_function<Ret(Args...) volatile&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const volatile&> : true_type
+struct is_function<Ret(Args...) const volatile&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) &&> : true_type
+struct is_function<Ret(Args...) &&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const&&> : true_type
+struct is_function<Ret(Args...) const&&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) volatile&&> : true_type
+struct is_function<Ret(Args...) volatile&&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args...) const volatile&&> : true_type
+struct is_function<Ret(Args...) const volatile&&> : ctl::true_type
 {};
 
 // Variadic functions
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...)> : true_type
+struct is_function<Ret(Args..., ...)> : ctl::true_type
 {};
 
 // Variadic functions with cv-qualifiers
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const> : true_type
+struct is_function<Ret(Args..., ...) const> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) volatile> : true_type
+struct is_function<Ret(Args..., ...) volatile> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const volatile> : true_type
+struct is_function<Ret(Args..., ...) const volatile> : ctl::true_type
 {};
 
 // Variadic functions with ref-qualifiers
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...)&> : true_type
+struct is_function<Ret(Args..., ...)&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const&> : true_type
+struct is_function<Ret(Args..., ...) const&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) volatile&> : true_type
+struct is_function<Ret(Args..., ...) volatile&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const volatile&> : true_type
+struct is_function<Ret(Args..., ...) const volatile&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) &&> : true_type
+struct is_function<Ret(Args..., ...) &&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const&&> : true_type
+struct is_function<Ret(Args..., ...) const&&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) volatile&&> : true_type
+struct is_function<Ret(Args..., ...) volatile&&> : ctl::true_type
 {};
 
 template<class Ret, class... Args>
-struct is_function<Ret(Args..., ...) const volatile&&> : true_type
+struct is_function<Ret(Args..., ...) const volatile&&> : ctl::true_type
 {};
 
 } // namespace ctl

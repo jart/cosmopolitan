@@ -7,7 +7,7 @@
 namespace ctl {
 
 template<typename T>
-struct is_enum : public integral_constant<bool, __is_enum(T)>
+struct is_enum : public ctl::integral_constant<bool, __is_enum(T)>
 {};
 
 template<typename T>

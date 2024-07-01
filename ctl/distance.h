@@ -8,28 +8,30 @@
 namespace ctl {
 
 template<class InputIter>
-constexpr typename iterator_traits<InputIter>::difference_type
+constexpr typename ctl::iterator_traits<InputIter>::difference_type
 distance_impl(InputIter first, InputIter last, input_iterator_tag)
 {
-    typename iterator_traits<InputIter>::difference_type res(0);
+    typename ctl::iterator_traits<InputIter>::difference_type res(0);
     for (; first != last; ++first)
         ++res;
     return res;
 }
 
 template<class RandIter>
-constexpr typename iterator_traits<RandIter>::difference_type
+constexpr typename ctl::iterator_traits<RandIter>::difference_type
 distance_impl(RandIter first, RandIter last, random_access_iterator_tag)
 {
     return last - first;
 }
 
 template<class InputIter>
-constexpr typename iterator_traits<InputIter>::difference_type
+constexpr typename ctl::iterator_traits<InputIter>::difference_type
 distance(InputIter first, InputIter last)
 {
     return distance_impl(
-      first, last, typename iterator_traits<InputIter>::iterator_category());
+      first,
+      last,
+      typename ctl::iterator_traits<InputIter>::iterator_category());
 }
 
 } // namespace ctl
