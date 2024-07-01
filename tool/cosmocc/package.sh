@@ -44,6 +44,19 @@ make -j64 m=$AMD64 \
   o/$AMD64/tool/build/zipobj.dbg \
   o/$AMD64/tool/build/apelink.dbg \
   o/$AMD64/tool/build/pecheck.dbg \
+  o/$AMD64/tool/build/ar.dbg \
+  o/$AMD64/tool/build/chmod.dbg \
+  o/$AMD64/tool/build/cocmd.dbg \
+  o/$AMD64/tool/build/compile.dbg \
+  o/$AMD64/tool/build/cp.dbg \
+  o/$AMD64/tool/build/echo.dbg \
+  o/$AMD64/tool/build/gzip.dbg \
+  o/$AMD64/tool/build/objbincopy.dbg \
+  o/$AMD64/tool/build/package.dbg \
+  o/$AMD64/tool/build/rm.dbg \
+  o/$AMD64/tool/build/touch.dbg \
+  o/$AMD64/tool/build/sha256sum.dbg \
+  o/$AMD64/tool/build/resymbol.dbg \
   o/$AMD64/third_party/make/make.dbg \
   o/$AMD64/third_party/ctags/ctags.dbg
 
@@ -64,6 +77,19 @@ make -j64 m=$ARM64 \
   o/$ARM64/tool/build/zipobj.dbg \
   o/$ARM64/tool/build/apelink.dbg \
   o/$ARM64/tool/build/pecheck.dbg \
+  o/$ARM64/tool/build/ar.dbg \
+  o/$ARM64/tool/build/chmod.dbg \
+  o/$ARM64/tool/build/cocmd.dbg \
+  o/$ARM64/tool/build/compile.dbg \
+  o/$ARM64/tool/build/cp.dbg \
+  o/$ARM64/tool/build/echo.dbg \
+  o/$ARM64/tool/build/gzip.dbg \
+  o/$ARM64/tool/build/objbincopy.dbg \
+  o/$ARM64/tool/build/package.dbg \
+  o/$ARM64/tool/build/rm.dbg \
+  o/$ARM64/tool/build/touch.dbg \
+  o/$ARM64/tool/build/sha256sum.dbg \
+  o/$ARM64/tool/build/resymbol.dbg \
   o/$ARM64/third_party/make/make.dbg \
   o/$ARM64/third_party/ctags/ctags.dbg
 
@@ -146,7 +172,9 @@ cp -af tool/cosmocc/bin/* "$OUTDIR/bin/"
 cp -f o/$AMD64/ape/ape.elf "$OUTDIR/bin/ape-x86_64.elf"
 cp -f o/$AMD64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
 cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
-for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj; do
+
+for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj \
+         ar chmod cocmd cp echo gzip objbincopy package rm touch sha256sum resymbol; do
   ape $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
@@ -155,6 +183,11 @@ for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdep
     o/$AMD64/tool/build/$x.dbg \
     o/$ARM64/tool/build/$x.dbg
 done
+
+for x in ar chmod cp echo gzip package rm touch sha256sum; do
+  mv "$OUTDIR/bin/$x" "$OUTDIR/bin/$x.ape"
+done
+
 for x in make ctags; do
   ape $APELINK \
     -l o/$AMD64/ape/ape.elf \
