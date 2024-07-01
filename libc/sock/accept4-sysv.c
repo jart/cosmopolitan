@@ -40,7 +40,7 @@ int sys_accept4(int server, struct sockaddr_storage *addr, int flags) {
     if (flags & ~(SOCK_CLOEXEC | SOCK_NONBLOCK))
       return einval();
     if ((client = __sys_accept(server, addr, &size, 0)) != -1) {
-      // __sys_accept() has inconsistent flag inheritence across platforms
+      // __sys_accept() has inconsistent flag inheritance across platforms
       // this is one of the issues that accept4() was invented for solving
       unassert((file_mode = __sys_fcntl(client, F_GETFD)) != -1);
       unassert(!__sys_fcntl(client, F_SETFD,
