@@ -25,7 +25,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
 
 /**

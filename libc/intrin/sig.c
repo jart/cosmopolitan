@@ -27,9 +27,12 @@
 struct Signals __sig;
 
 sigset_t __sig_block(void) {
-  if (IsWindows()) {
-    return atomic_exchange_explicit(&__get_tls()->tib_sigmask, -1,
-                                    memory_order_acquire);
+  if (IsWindows() || IsMetal()) {
+    if (__tls_enabled)
+      return atomic_exchange_explicit(&__get_tls()->tib_sigmask, -1,
+                                      memory_order_acquire);
+    else
+      return 0;
   } else {
     sigset_t res, neu = -1;
     sys_sigprocmask(SIG_SETMASK, &neu, &res);
@@ -38,10 +41,12 @@ sigset_t __sig_block(void) {
 }
 
 void __sig_unblock(sigset_t m) {
-  if (IsWindows()) {
-    atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
-    if (_weaken(__sig_check)) {
-      _weaken(__sig_check)();
+  if (IsWindows() || IsMetal()) {
+    if (__tls_enabled) {
+      atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
+      if (_weaken(__sig_check)) {
+        _weaken(__sig_check)();
+      }
     }
   } else {
     sys_sigprocmask(SIG_SETMASK, &m, 0);

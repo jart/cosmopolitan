@@ -57,7 +57,7 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
     uint64_t val = (uint64_t)tib;
     asm volatile("wrmsr"
                  : /* no outputs */
-                 : "c"(MSR_IA32_FS_BASE), "a"((uint32_t)val),
+                 : "c"(MSR_IA32_GS_BASE), "a"((uint32_t)val),
                    "d"((uint32_t)(val >> 32)));
   }
 #elif defined(__aarch64__)

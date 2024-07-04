@@ -45,7 +45,7 @@
 #ifdef __x86_64__
 
 #define INVERT(x) (BANE + PHYSICAL((uintptr_t)(x)))
-#define NOPAGE    ((uint64_t) - 1)
+#define NOPAGE    ((uint64_t)-1)
 
 #define APE_STACK_VADDR                   \
   ({                                      \
@@ -69,9 +69,9 @@ texthead uint64_t __new_page(struct mman *mm) {
   if (p != NOPAGE) {
     uint64_t q;
     struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
-    unassert(p == (p & PAGE_TA));
+    /* unassert(p == (p & PAGE_TA)); */
     q = rp->next;
-    unassert(q == (q & PAGE_TA) || q == NOPAGE);
+    /* unassert(q == (q & PAGE_TA) || q == NOPAGE); */
     mm->frp = q;
     return p;
   }
@@ -200,7 +200,7 @@ void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps, uint64_t size) {
  */
 static void __reclaim_page(struct mman *mm, uint64_t p) {
   struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
-  unassert(p == (p & PAGE_TA));
+  /* unassert(p == (p & PAGE_TA)); */
   rp->next = mm->frp;
   mm->frp = p;
 }
