@@ -16,6 +16,7 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/stdalign.internal.h"
 #include "libc/stdckdint.h"
@@ -26,15 +27,29 @@
 #endif
 
 #ifndef TINYMALLOC_MAX_ALIGN
-#define TINYMALLOC_MAX_ALIGN 4096
+#define TINYMALLOC_MAX_ALIGN sizeof(max_align_t)
 #endif
 
-alignas(TINYMALLOC_MAX_ALIGN) static struct {
-  char memory[TINYMALLOC_MAX_BYTES];
-  size_t used, last, free;
+static struct {
+  alignas(max_align_t) char bits[TINYMALLOC_MAX_BYTES];
+  char *memory;
+  int once;
+  size_t size, used, last, free;
 } heap;
 
-static inline bool isheap(char *mem) {
+static void tinymalloc_init(void) {
+  int align;
+  if (heap.once)
+    return;
+  align = TINYMALLOC_MAX_ALIGN;
+  heap.memory = (char *)(((uintptr_t)heap.bits + align - 1) & -align);
+  heap.size = sizeof(heap.bits) - (heap.memory - heap.bits);
+  kprintf("heap.memory = %p\n", heap.memory);
+  kprintf("heap.size = %p\n", heap.size);
+  heap.once = 1;
+}
+
+static inline int isheap(char *mem) {
   return heap.memory <= mem && mem < heap.memory + heap.used;
 }
 
@@ -59,6 +74,7 @@ size_t malloc_usable_size(void *ptr) {
 void *memalign(size_t align, size_t need) {
   char *res;
   size_t next, next2, base, toto, *link, *link2;
+  tinymalloc_init();
 
   // normalize arguments
   while (align & (align - 1))
@@ -95,7 +111,7 @@ void *memalign(size_t align, size_t need) {
   base &= -align;
   if (ckd_add(&toto, base, need))
     goto OutOfMemory;
-  if (toto > TINYMALLOC_MAX_BYTES)
+  if (toto > heap.size)
     goto OutOfMemory;
   res = heap.memory + base;
   ((size_t *)res)[-1] = need;
@@ -148,7 +164,7 @@ void *realloc(void *ptr, size_t need) {
       need &= -sizeof(size_t);
       if (ckd_add(&toto, base, need))
         goto OutOfMemory;
-      if (toto > TINYMALLOC_MAX_BYTES)
+      if (toto > heap.size)
         goto OutOfMemory;
       ((size_t *)mem)[-1] = need;
       heap.used = toto;
