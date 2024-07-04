@@ -13,18 +13,34 @@ class set
 {
     struct rbtree
     {
-        rbtree* left;
+        uintptr_t left_;
         rbtree* right;
         rbtree* parent;
-        bool is_red;
         Key value;
 
+        rbtree* left() const
+        {
+            return (rbtree*)(left_ & -2);
+        }
+
+        void left(rbtree* val)
+        {
+            left_ = (uintptr_t)val | (left_ & 1);
+        }
+
+        bool is_red() const
+        {
+            return left_ & 1;
+        }
+
+        void is_red(bool val)
+        {
+            left_ &= -2;
+            left_ |= val;
+        }
+
         rbtree(const Key& val)
-          : left(nullptr)
-          , right(nullptr)
-          , parent(nullptr)
-          , is_red(true)
-          , value(val)
+          : left_(1), right(nullptr), parent(nullptr), value(val)
         {
         }
     };
@@ -85,14 +101,14 @@ class set
         {
             if (node_ == nullptr)
                 __builtin_trap();
-            if (node_->left) {
-                node_ = rightmost(node_->left);
+            if (node_->left()) {
+                node_ = rightmost(node_->left());
             } else {
                 node_type* parent = node_->parent;
                 for (;;) {
                     if (parent == nullptr)
                         break;
-                    if (node_ == parent->left) {
+                    if (node_ == parent->left()) {
                         node_ = parent;
                         parent = parent->parent;
                     } else {
@@ -161,11 +177,11 @@ class set
 
         reverse_iterator& operator++()
         {
-            if (node_->left) {
-                node_ = rightmost(node_->left);
+            if (node_->left()) {
+                node_ = rightmost(node_->left());
             } else {
                 node_type* parent = node_->parent;
-                while (parent && node_ == parent->left) {
+                while (parent && node_ == parent->left()) {
                     node_ = parent;
                     parent = parent->parent;
                 }
@@ -508,7 +524,7 @@ class set
     {
         size_type count = 0;
         if (root_ != nullptr) {
-            if (root_->is_red)
+            if (root_->is_red())
                 // ILLEGAL TREE: root node must be black
                 __builtin_trap();
             int black_height = -1;
@@ -523,8 +539,8 @@ class set
   private:
     static node_type* leftmost(node_type* node) noexcept
     {
-        while (node && node->left)
-            node = node->left;
+        while (node && node->left())
+            node = node->left();
         return node;
     }
 
@@ -535,35 +551,35 @@ class set
         return node;
     }
 
-    static void clearer(node_type* node) noexcept
+    static optimizesize void clearer(node_type* node) noexcept
     {
         node_type* right;
         for (; node; node = right) {
             right = node->right;
-            clearer(node->left);
+            clearer(node->left());
             delete node;
         }
     }
 
-    static node_type* copier(const node_type* node)
+    static optimizesize node_type* copier(const node_type* node)
     {
         if (node == nullptr)
             return nullptr;
         node_type* new_node = new node_type(node->value);
-        new_node->left = copier(node->left);
+        new_node->left(copier(node->left()));
         new_node->right = copier(node->right);
-        if (new_node->left)
-            new_node->left->parent = new_node;
+        if (new_node->left())
+            new_node->left()->parent = new_node;
         if (new_node->right)
             new_node->right->parent = new_node;
         return new_node;
     }
 
-    static size_type tally(const node_type* node)
+    static optimizesize size_type tally(const node_type* node)
     {
         if (node == nullptr)
             return 0;
-        return 1 + tally(node->left) + tally(node->right);
+        return 1 + tally(node->left()) + tally(node->right);
     }
 
     template<typename K>
@@ -572,7 +588,7 @@ class set
         node_type* current = root_;
         while (current != nullptr) {
             if (comp_(key, current->value)) {
-                current = current->left;
+                current = current->left();
             } else if (comp_(current->value, key)) {
                 current = current->right;
             } else {
@@ -590,7 +606,7 @@ class set
         while (current != nullptr) {
             if (!comp_(current->value, key)) {
                 result = current;
-                current = current->left;
+                current = current->left();
             } else {
                 current = current->right;
             }
@@ -606,7 +622,7 @@ class set
         while (current != nullptr) {
             if (comp_(key, current->value)) {
                 result = current;
-                current = current->left;
+                current = current->left();
             } else {
                 current = current->right;
             }
@@ -614,11 +630,11 @@ class set
         return result;
     }
 
-    ctl::pair<iterator, bool> insert_node(node_type* node)
+    optimizesize ctl::pair<iterator, bool> insert_node(node_type* node)
     {
         if (root_ == nullptr) {
             root_ = node;
-            root_->is_red = false;
+            root_->is_red(false);
             size_++;
             return { iterator(root_), true };
         }
@@ -627,7 +643,7 @@ class set
         while (current != nullptr) {
             parent = current;
             if (comp_(node->value, current->value)) {
-                current = current->left;
+                current = current->left();
             } else if (comp_(current->value, node->value)) {
                 current = current->right;
             } else {
@@ -636,7 +652,7 @@ class set
             }
         }
         if (comp_(node->value, parent->value)) {
-            parent->left = node;
+            parent->left(node);
         } else {
             parent->right = node;
         }
@@ -646,23 +662,23 @@ class set
         return { iterator(node), true };
     }
 
-    void erase_node(node_type* node)
+    optimizesize void erase_node(node_type* node)
     {
         node_type* y = node;
         node_type* x = nullptr;
         node_type* x_parent = nullptr;
-        bool y_original_color = y->is_red;
-        if (node->left == nullptr) {
+        bool y_original_color = y->is_red();
+        if (node->left() == nullptr) {
             x = node->right;
             transplant(node, node->right);
             x_parent = node->parent;
         } else if (node->right == nullptr) {
-            x = node->left;
-            transplant(node, node->left);
+            x = node->left();
+            transplant(node, node->left());
             x_parent = node->parent;
         } else {
             y = leftmost(node->right);
-            y_original_color = y->is_red;
+            y_original_color = y->is_red();
             x = y->right;
             if (y->parent == node) {
                 if (x)
@@ -675,9 +691,9 @@ class set
                 x_parent = y->parent;
             }
             transplant(node, y);
-            y->left = node->left;
-            y->left->parent = y;
-            y->is_red = node->is_red;
+            y->left(node->left());
+            y->left()->parent = y;
+            y->is_red(node->is_red());
         }
         if (!y_original_color)
             rebalance_after_erase(x, x_parent);
@@ -685,28 +701,28 @@ class set
         --size_;
     }
 
-    void left_rotate(node_type* x)
+    optimizesize void left_rotate(node_type* x)
     {
         node_type* y = x->right;
-        x->right = y->left;
-        if (y->left != nullptr)
-            y->left->parent = x;
+        x->right = y->left();
+        if (y->left() != nullptr)
+            y->left()->parent = x;
         y->parent = x->parent;
         if (x->parent == nullptr) {
             root_ = y;
-        } else if (x == x->parent->left) {
-            x->parent->left = y;
+        } else if (x == x->parent->left()) {
+            x->parent->left(y);
         } else {
             x->parent->right = y;
         }
-        y->left = x;
+        y->left(x);
         x->parent = y;
     }
 
-    void right_rotate(node_type* y)
+    optimizesize void right_rotate(node_type* y)
     {
-        node_type* x = y->left;
-        y->left = x->right;
+        node_type* x = y->left();
+        y->left(x->right);
         if (x->right != nullptr)
             x->right->parent = y;
         x->parent = y->parent;
@@ -715,18 +731,18 @@ class set
         } else if (y == y->parent->right) {
             y->parent->right = x;
         } else {
-            y->parent->left = x;
+            y->parent->left(x);
         }
         x->right = y;
         y->parent = x;
     }
 
-    void transplant(node_type* u, node_type* v)
+    optimizesize void transplant(node_type* u, node_type* v)
     {
         if (u->parent == nullptr) {
             root_ = v;
-        } else if (u == u->parent->left) {
-            u->parent->left = v;
+        } else if (u == u->parent->left()) {
+            u->parent->left(v);
         } else {
             u->parent->right = v;
         }
@@ -734,10 +750,10 @@ class set
             v->parent = u->parent;
     }
 
-    void checker(const node_type* node,
-                 const node_type* parent,
-                 int black_count,
-                 int& black_height) const
+    optimizesize void checker(const node_type* node,
+                              const node_type* parent,
+                              int black_count,
+                              int& black_height) const
     {
         if (node == nullptr) {
             // Leaf nodes are considered black
@@ -753,117 +769,121 @@ class set
             // ILLEGAL TREE: Parent link is incorrect
             __builtin_trap();
         if (parent) {
-            if (parent->left == node && !comp_(node->value, parent->value))
+            if (parent->left() == node && !comp_(node->value, parent->value))
                 // ILLEGAL TREE: Binary search property violated on left child
                 __builtin_trap();
             if (parent->right == node && !comp_(parent->value, node->value))
                 // ILLEGAL TREE: Binary search property violated on right child
                 __builtin_trap();
         }
-        if (!node->is_red) {
+        if (!node->is_red()) {
             black_count++;
-        } else if (parent != nullptr && parent->is_red) {
+        } else if (parent != nullptr && parent->is_red()) {
             // ILLEGAL TREE: Red node has red child
             __builtin_trap();
         }
-        checker(node->left, node, black_count, black_height);
+        checker(node->left(), node, black_count, black_height);
         checker(node->right, node, black_count, black_height);
     }
 
-    void rebalance_after_insert(node_type* node)
+    optimizesize void rebalance_after_insert(node_type* node)
     {
-        node->is_red = true;
-        while (node != root_ && node->parent->is_red) {
-            if (node->parent == node->parent->parent->left) {
+        node->is_red(true);
+        while (node != root_ && node->parent->is_red()) {
+            if (node->parent == node->parent->parent->left()) {
                 node_type* uncle = node->parent->parent->right;
-                if (uncle && uncle->is_red) {
-                    node->parent->is_red = false;
-                    uncle->is_red = false;
-                    node->parent->parent->is_red = true;
+                if (uncle && uncle->is_red()) {
+                    node->parent->is_red(false);
+                    uncle->is_red(false);
+                    node->parent->parent->is_red(true);
                     node = node->parent->parent;
                 } else {
                     if (node == node->parent->right) {
                         node = node->parent;
                         left_rotate(node);
                     }
-                    node->parent->is_red = false;
-                    node->parent->parent->is_red = true;
+                    node->parent->is_red(false);
+                    node->parent->parent->is_red(true);
                     right_rotate(node->parent->parent);
                 }
             } else {
-                node_type* uncle = node->parent->parent->left;
-                if (uncle && uncle->is_red) {
-                    node->parent->is_red = false;
-                    uncle->is_red = false;
-                    node->parent->parent->is_red = true;
+                node_type* uncle = node->parent->parent->left();
+                if (uncle && uncle->is_red()) {
+                    node->parent->is_red(false);
+                    uncle->is_red(false);
+                    node->parent->parent->is_red(true);
                     node = node->parent->parent;
                 } else {
-                    if (node == node->parent->left) {
+                    if (node == node->parent->left()) {
                         node = node->parent;
                         right_rotate(node);
                     }
-                    node->parent->is_red = false;
-                    node->parent->parent->is_red = true;
+                    node->parent->is_red(false);
+                    node->parent->parent->is_red(true);
                     left_rotate(node->parent->parent);
                 }
             }
         }
-        root_->is_red = false;
+        root_->is_red(false);
     }
 
-    void rebalance_after_erase(node_type* node, node_type* parent)
+    optimizesize void rebalance_after_erase(node_type* node, node_type* parent)
     {
-        while (node != root_ && (node == nullptr || !node->is_red)) {
-            if (node == parent->left) {
+        while (node != root_ && (node == nullptr || !node->is_red())) {
+            if (node == parent->left()) {
                 node_type* sibling = parent->right;
-                if (sibling->is_red) {
-                    sibling->is_red = false;
-                    parent->is_red = true;
+                if (sibling->is_red()) {
+                    sibling->is_red(false);
+                    parent->is_red(true);
                     left_rotate(parent);
                     sibling = parent->right;
                 }
-                if ((sibling->left == nullptr || !sibling->left->is_red) &&
-                    (sibling->right == nullptr || !sibling->right->is_red)) {
-                    sibling->is_red = true;
+                if ((sibling->left() == nullptr ||
+                     !sibling->left()->is_red()) &&
+                    (sibling->right == nullptr || !sibling->right->is_red())) {
+                    sibling->is_red(true);
                     node = parent;
                     parent = node->parent;
                 } else {
-                    if (sibling->right == nullptr || !sibling->right->is_red) {
-                        sibling->left->is_red = false;
-                        sibling->is_red = true;
+                    if (sibling->right == nullptr ||
+                        !sibling->right->is_red()) {
+                        sibling->left()->is_red(false);
+                        sibling->is_red(true);
                         right_rotate(sibling);
                         sibling = parent->right;
                     }
-                    sibling->is_red = parent->is_red;
-                    parent->is_red = false;
-                    sibling->right->is_red = false;
+                    sibling->is_red(parent->is_red());
+                    parent->is_red(false);
+                    sibling->right->is_red(false);
                     left_rotate(parent);
                     node = root_;
                     break;
                 }
             } else {
-                node_type* sibling = parent->left;
-                if (sibling->is_red) {
-                    sibling->is_red = false;
-                    parent->is_red = true;
+                node_type* sibling = parent->left();
+                if (sibling->is_red()) {
+                    sibling->is_red(false);
+                    parent->is_red(true);
                     right_rotate(parent);
-                    sibling = parent->left;
+                    sibling = parent->left();
                 }
-                if ((sibling->right == nullptr || !sibling->right->is_red) &&
-                    (sibling->left == nullptr || !sibling->left->is_red)) {
-                    sibling->is_red = true;
+                if ((sibling->right == nullptr || !sibling->right->is_red()) &&
+                    (sibling->left() == nullptr ||
+                     !sibling->left()->is_red())) {
+                    sibling->is_red(true);
                     node = parent;
                     parent = node->parent;
                 } else {
-                    if (sibling->left == nullptr || !sibling->left->is_red) {
-                        sibling->right->is_red = false;
-                        sibling->is_red = true;
+                    if (sibling->left() == nullptr ||
+                        !sibling->left()->is_red()) {
+                        sibling->right->is_red(false);
+                        sibling->is_red(true);
                         left_rotate(sibling);
-                        sibling = parent->left;
+                        sibling = parent->left();
                     }
-                    sibling->is_red = parent->is_red;
-                    parent->is_red = false;
-                    sibling->left->is_red = false;
+                    sibling->is_red(parent->is_red());
+                    parent->is_red(false);
+                    sibling->left()->is_red(false);
                     right_rotate(parent);
                     node = root_;
                     break;
@@ -871,7 +891,7 @@ class set
             }
         }
         if (node != nullptr)
-            node->is_red = false;
+            node->is_red(false);
     }
 
     node_type* root_;
