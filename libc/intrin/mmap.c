@@ -144,10 +144,7 @@ void __maps_insert(struct Map *map) {
     dll_make_first(&__maps.used, &last->elem);
     __maps_free(map);
   } else {
-    dll_make_first(&__maps.used, &map->elem);
-    map->next = __maps.maps;
-    __maps.maps = map;
-    ++__maps.count;
+    __maps_add(map);
   }
   __maps_check();
 }

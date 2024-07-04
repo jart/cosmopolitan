@@ -35,7 +35,7 @@ LIBC_PROC_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
-	THIRD_PARTY_NSYNC
+	THIRD_PARTY_NSYNC				\
 
 LIBC_PROC_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_PROC_A_DIRECTDEPS),$($(x))))

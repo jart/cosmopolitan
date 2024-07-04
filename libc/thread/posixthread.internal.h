@@ -105,7 +105,6 @@ intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
 void _pthread_decimate(void) libcesque;
 void _pthread_free(struct PosixThread *, bool) libcesque;
-void _pthread_init(void) libcesque;
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;
 void _pthread_onfork_parent(void) libcesque;

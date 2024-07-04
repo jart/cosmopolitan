@@ -31,35 +31,51 @@ __static_yoink("_init_maps");
 
 struct Maps __maps;
 
+void __maps_add(struct Map *map) {
+  dll_init(&map->elem);
+  dll_make_first(&__maps.used, &map->elem);
+  map->next = __maps.maps;
+  __maps.maps = map;
+  ++__maps.count;
+}
+
+static void __maps_adder(struct Map *map, int pagesz) {
+  __maps.pages += ((map->size + pagesz - 1) & -pagesz) / pagesz;
+  __maps_add(map);
+}
+
+void __maps_stack(void *stackaddr, int pagesz, size_t stacksize, int stackprot,
+                  intptr_t stackhand) {
+  __maps.stack.addr = stackaddr;
+  __maps.stack.size = stacksize;
+  __maps.stack.prot = stackprot;
+  __maps.stack.h = stackhand;
+  __maps_adder(&__maps.stack, pagesz);
+}
+
 void __maps_init(void) {
+  int pagesz = getauxval(AT_PAGESZ);
 
   // record _start() stack mapping
   if (!IsWindows()) {
     struct AddrSize stack;
     stack = __get_main_stack();
-    dll_init(&__maps.stack.elem);
-    __maps.stack.addr = stack.addr;
-    __maps.stack.size = stack.size;
-    __maps.stack.prot = (uintptr_t)ape_stack_prot;
-    __maps_insert(&__maps.stack);
+    __maps_stack(stack.addr, pagesz, stack.size, (uintptr_t)ape_stack_prot, 0);
   }
 
   // record .text and .data mappings
   static struct Map text, data;
-  dll_init(&text.elem);
   text.addr = (char *)__executable_start;
   text.size = _etext - __executable_start;
   text.prot = PROT_READ | PROT_EXEC;
-  int pagesz = getauxval(AT_PAGESZ);
   uintptr_t ds = ((uintptr_t)_etext + pagesz - 1) & -pagesz;
   if (ds < (uintptr_t)_end) {
-    dll_init(&data.elem);
     data.addr = (char *)ds;
     data.size = (uintptr_t)_end - ds;
     data.prot = PROT_READ | PROT_WRITE;
-    __maps_insert(&data);
+    __maps_adder(&data, pagesz);
   }
-  __maps_insert(&text);
+  __maps_adder(&text, pagesz);
 }
 
 privileged void __maps_lock(void) {

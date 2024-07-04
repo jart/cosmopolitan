@@ -159,7 +159,7 @@ static bool32 HasEnvironmentVariable(const char16_t *name) {
 }
 
 static abi unsigned OnWinCrash(struct NtExceptionPointers *ep) {
-  int code, sig = __sig_crash_sig(ep, &code);
+  int code, sig = __sig_crash_sig(ep->ExceptionRecord->ExceptionCode, &code);
   TerminateThisProcess(sig);
 }
 
@@ -194,28 +194,23 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   __imp_AddVectoredExceptionHandler(true, (void *)OnWinCrash);
 
   // allocate memory for stack and argument block
+  intptr_t stackhand;
   char *stackaddr = (char *)GetStaticStackAddr(0);
   size_t stacksize = GetStaticStackSize();
   __imp_MapViewOfFileEx(
-      (__maps.stack.h = __imp_CreateFileMappingW(
-           -1, 0, kNtPageExecuteReadwrite, stacksize >> 32, stacksize, NULL)),
+      (stackhand = __imp_CreateFileMappingW(-1, 0, kNtPageExecuteReadwrite,
+                                            stacksize >> 32, stacksize, NULL)),
       kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize, stackaddr);
-  int prot = (intptr_t)ape_stack_prot;
-  if (~prot & PROT_EXEC) {
+  int stackprot = (intptr_t)ape_stack_prot;
+  if (~stackprot & PROT_EXEC) {
     uint32_t old;
     __imp_VirtualProtect(stackaddr, stacksize, kNtPageReadwrite, &old);
   }
   uint32_t oldattr;
   __imp_VirtualProtect(stackaddr, GetGuardSize(),
                        kNtPageReadwrite | kNtPageGuard, &oldattr);
-  __maps.stack.addr = stackaddr;
-  __maps.stack.size = stacksize;
-  __maps.stack.prot = prot;
-  __maps.maps = &__maps.stack;
-  __maps.pages = (stacksize + 4095) / 4096;
-  __maps.count = 1;
-  dll_init(&__maps.stack.elem);
-  dll_make_first(&__maps.used, &__maps.stack.elem);
+  if (_weaken(__maps_stack))
+    _weaken(__maps_stack)(stackaddr, 4096, stacksize, stackprot, stackhand);
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
 

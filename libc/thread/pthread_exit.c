@@ -85,39 +85,38 @@ wontreturn void pthread_exit(void *rc) {
   _pthread_decimate();
 
   // run atexit handlers if orphaned thread
-  if (pthread_orphan_np()) {
-    if (_weaken(__cxa_finalize)) {
+  if (pthread_orphan_np())
+    if (_weaken(__cxa_finalize))
       _weaken(__cxa_finalize)(NULL);
-    }
-  }
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
   do {
-    switch (status) {
-      case kPosixThreadJoinable:
-        transition = kPosixThreadTerminated;
-        break;
-      case kPosixThreadDetached:
-        transition = kPosixThreadZombie;
-        break;
-      default:
-        __builtin_unreachable();
+    if (status == kPosixThreadZombie) {
+      transition = kPosixThreadZombie;
+      break;
+    } else if (status == kPosixThreadTerminated) {
+      transition = kPosixThreadTerminated;
+      break;
+    } else if (status == kPosixThreadJoinable) {
+      transition = kPosixThreadTerminated;
+    } else if (status == kPosixThreadDetached) {
+      transition = kPosixThreadZombie;
+    } else {
+      __builtin_trap();
     }
   } while (!atomic_compare_exchange_weak_explicit(
       &pt->pt_status, &status, transition, memory_order_release,
       memory_order_relaxed));
 
   // make this thread a zombie if it was detached
-  if (transition == kPosixThreadZombie) {
+  if (transition == kPosixThreadZombie)
     _pthread_zombify(pt);
-  }
 
   // check if this is the last survivor
   if (pthread_orphan_np()) {
-    for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;) {
+    for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;)
       ((void (*)(void))(*--p))();
-    }
     _Exit(0);
   }
 

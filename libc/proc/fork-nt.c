@@ -67,7 +67,6 @@
 #ifdef __x86_64__
 
 extern long __klog_handle;
-extern atomic_uint free_waiters_mu;
 void WipeKeystrokes(void);
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 

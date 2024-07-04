@@ -40,9 +40,8 @@ int gettid(void) {
   int tid;
   if (VERY_LIKELY(__tls_enabled && !__vforked)) {
     tid = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_acquire);
-    if (VERY_LIKELY(tid > 0)) {
+    if (VERY_LIKELY(tid > 0))
       return tid;
-    }
   }
   if (IsXnuSilicon()) {
     return enosys();  // can only happen if we can't access thread local storage

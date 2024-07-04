@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/intrin/pushpop.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
@@ -26,82 +27,90 @@
 // so, we trade away maintanibility for tininess
 // see libc/sysv/consts.sh for canonical magnums
 
-#define SIGILL_  pushpop(4)
-#define SIGTRAP_ pushpop(5)
-#define SIGABRT_ pushpop(6)
-#define SIGFPE_  pushpop(8)
-#define SIGSEGV_ pushpop(11)
-#define SIGSYS_  pushpop(31)
+#define SIGILL_  4
+#define SIGTRAP_ 5
+#define SIGABRT_ 6
+#define SIGFPE_  8
+#define SIGSEGV_ 11
+#define SIGSYS_  31
 
-#define TRAP_BRKPT_  pushpop(1)
-#define ILL_ILLOPC_  pushpop(1)
-#define ILL_PRVOPC_  pushpop(5)
-#define SEGV_MAPERR_ pushpop(1)
-#define SEGV_ACCERR_ pushpop(2)
-#define SI_USER_     pushpop(0)
-#define FPE_FLTDIV_  pushpop(3)
-#define FPE_FLTOVF_  pushpop(4)
-#define FPE_INTOVF_  pushpop(2)
-#define FPE_FLTUND_  pushpop(5)
-#define FPE_FLTRES_  pushpop(6)
-#define FPE_FLTINV_  pushpop(7)
-#define SI_KERNEL_   0x80
+#define TRAP_BRKPT_  1
+#define ILL_ILLOPC_  1
+#define ILL_PRVOPC_  5
+#define SEGV_MAPERR_ 1
+#define SEGV_ACCERR_ 2
+#define SI_USER_     0
+#define FPE_FLTDIV_  3
+#define FPE_FLTOVF_  4
+#define FPE_INTOVF_  2
+#define FPE_FLTUND_  5
+#define FPE_FLTRES_  6
+#define FPE_FLTINV_  7
+#define SI_KERNEL_   128
 
-textwindows int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
-  switch (ep->ExceptionRecord->ExceptionCode) {
-    case kNtSignalBreakpoint:
-      *code = TRAP_BRKPT_;
-      return SIGTRAP_;
-    case kNtSignalIllegalInstruction:
-      *code = ILL_ILLOPC_;
-      return SIGILL_;
-    case kNtSignalPrivInstruction:
-      *code = ILL_PRVOPC_;
-      return SIGILL_;
-    case kNtSignalInPageError:
-    case kNtStatusStackOverflow:
-      *code = SEGV_MAPERR_;
-      return SIGSEGV_;
-    case kNtSignalGuardPage:
-    case kNtSignalAccessViolation:
-      *code = SEGV_ACCERR_;
-      return SIGSEGV_;
-    case kNtSignalInvalidHandle:
-    case kNtSignalInvalidParameter:
-    case kNtSignalAssertionFailure:
-      *code = SI_USER_;
-      return SIGABRT_;
-    case kNtStatusIntegerOverflow:
-      *code = FPE_INTOVF_;
-      return SIGFPE_;
-    case kNtSignalFltDivideByZero:
-      *code = FPE_FLTDIV_;
-      return SIGFPE_;
-    case kNtSignalFltOverflow:
-      *code = FPE_FLTOVF_;
-      return SIGFPE_;
-    case kNtSignalFltUnderflow:
-      *code = FPE_FLTUND_;
-      return SIGFPE_;
-    case kNtSignalFltInexactResult:
-      *code = FPE_FLTRES_;
-      return SIGFPE_;
-    case kNtSignalFltDenormalOperand:
-    case kNtSignalFltInvalidOperation:
-    case kNtSignalFltStackCheck:
-    case kNtSignalIntegerDivideByZero:
-    case kNtSignalFloatMultipleFaults:
-    case kNtSignalFloatMultipleTraps:
-      *code = FPE_FLTINV_;
-      return SIGFPE_;
-    case kNtSignalDllNotFound:
-    case kNtSignalOrdinalNotFound:
-    case kNtSignalEntrypointNotFound:
-    case kNtSignalDllInitFailed:
-      *code = SI_KERNEL_;
-      return SIGSYS_;
-    default:
-      *code = ep->ExceptionRecord->ExceptionCode;
-      return SIGSEGV_;
+#define LO(x) (x & 255)
+#define HI(x) ((x >> 24) / !(x & 0x00ffff00u))
+#define ROW(x, sic, sig)                                                   \
+  {                                                                        \
+    {                                                                      \
+      {                                                                    \
+        LO(x), HI(x), sic / !(sic & 0xffffff00), sig / !(sig & 0xffffff00) \
+      }                                                                    \
+    }                                                                      \
   }
+
+struct CrashSig {
+  union {
+    struct {
+      unsigned char lo;
+      unsigned char hi;
+      unsigned char sic;
+      unsigned char sig;
+    };
+    unsigned word;
+  };
+};
+
+static const struct CrashSig kNtCrashSigs[] = {
+    ROW(kNtSignalBreakpoint, TRAP_BRKPT_, SIGTRAP_),          //
+    ROW(kNtSignalIllegalInstruction, ILL_ILLOPC_, SIGILL_),   //
+    ROW(kNtSignalPrivInstruction, ILL_PRVOPC_, SIGILL_),      //
+    ROW(kNtSignalInPageError, SEGV_MAPERR_, SIGSEGV_),        //
+    ROW(kNtStatusStackOverflow, SEGV_MAPERR_, SIGSEGV_),      //
+    ROW(kNtSignalGuardPage, SEGV_ACCERR_, SIGSEGV_),          //
+    ROW(kNtSignalAccessViolation, SEGV_ACCERR_, SIGSEGV_),    //
+    ROW(kNtSignalInvalidHandle, SI_USER_, SIGABRT_),          //
+    ROW(kNtSignalInvalidParameter, SI_USER_, SIGABRT_),       //
+    ROW(kNtStatusIntegerOverflow, FPE_INTOVF_, SIGFPE_),      //
+    ROW(kNtSignalFltDivideByZero, FPE_FLTDIV_, SIGFPE_),      //
+    ROW(kNtSignalFltOverflow, FPE_FLTOVF_, SIGFPE_),          //
+    ROW(kNtSignalFltUnderflow, FPE_FLTUND_, SIGFPE_),         //
+    ROW(kNtSignalFltInexactResult, FPE_FLTRES_, SIGFPE_),     //
+    ROW(kNtSignalFltDenormalOperand, FPE_FLTINV_, SIGFPE_),   //
+    ROW(kNtSignalFltInvalidOperation, FPE_FLTINV_, SIGFPE_),  //
+    ROW(kNtSignalFltStackCheck, FPE_FLTINV_, SIGFPE_),        //
+    ROW(kNtSignalIntegerDivideByZero, FPE_FLTINV_, SIGFPE_),  //
+    // ROW(kNtSignalAssertionFailure, SI_USER_, SIGABRT_),
+    // ROW(kNtSignalFloatMultipleTraps, FPE_FLTINV_, SIGFPE_),
+    // ROW(kNtSignalFloatMultipleFaults, FPE_FLTINV_, SIGFPE_),
+    // ROW(kNtSignalDllNotFound, SI_KERNEL_, SIGSYS_),
+    // ROW(kNtSignalOrdinalNotFound, SI_KERNEL_, SIGSYS_),
+    // ROW(kNtSignalEntrypointNotFound, SI_KERNEL_, SIGSYS_),
+    // ROW(kNtSignalDllInitFailed, SI_KERNEL_, SIGSYS_),
+};
+
+textwindows dontinstrument int __sig_crash_sig(unsigned exception, int *code) {
+  for (int i = 0; i < ARRAYLEN(kNtCrashSigs); ++i) {
+    struct CrashSig cs;
+    cs.word = kNtCrashSigs[i].word;
+    unsigned lo = cs.lo;
+    unsigned hi = cs.hi;
+    unsigned ec = lo | hi << 24;
+    if (ec == exception) {
+      *code = cs.sic;
+      return cs.sig;
+    }
+  }
+  *code = exception;
+  return SIGSEGV_;
 }

@@ -18,16 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/posixthread.internal.h"
 
-pthread_spinlock_t _pthread_lock_obj;
-
-void _pthread_init(void) {
-  (void)pthread_spin_init(&_pthread_lock_obj, 0);
-}
+pthread_mutex_t _pthread_lock_obj = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 void _pthread_lock(void) {
-  pthread_spin_lock(&_pthread_lock_obj);
+  pthread_mutex_lock(&_pthread_lock_obj);
 }
 
 void _pthread_unlock(void) {
-  pthread_spin_unlock(&_pthread_lock_obj);
+  pthread_mutex_unlock(&_pthread_lock_obj);
 }

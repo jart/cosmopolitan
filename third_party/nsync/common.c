@@ -181,7 +181,7 @@ static void *nsync_malloc (size_t size) {
 static struct Dll *free_waiters = NULL;
 
 /* free_waiters points to a doubly-linked list of free waiter structs. */
-nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
+pthread_mutex_t nsync_waiters_mu = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #define waiter_for_thread __get_tls()->tib_nsync
 
@@ -196,9 +196,9 @@ void nsync_waiter_destroy (void *v) {
 	IGNORE_RACES_START ();
 	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
 	w->flags &= ~WAITER_RESERVED;
-	nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+	pthread_mutex_lock (&nsync_waiters_mu);
 	dll_make_first (&free_waiters, &w->nw.q);
-	ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+	pthread_mutex_unlock (&nsync_waiters_mu);
 	IGNORE_RACES_END ();
 }
 
@@ -212,13 +212,13 @@ waiter *nsync_waiter_new_ (void) {
 	w = tw;
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
 		w = NULL;
-		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+		pthread_mutex_lock (&nsync_waiters_mu);
 		q = dll_first (free_waiters);
 		if (q != NULL) { /* If free list is non-empty, dequeue an item. */
 			dll_remove (&free_waiters, q);
 			w = DLL_WAITER (q);
 		}
-		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+		pthread_mutex_unlock (&nsync_waiters_mu);
 		if (w == NULL) { /* If free list was empty, allocate an item. */
 			w = (waiter *) nsync_malloc (sizeof (*w));
 			w->tag = WAITER_TAG;
@@ -246,9 +246,9 @@ void nsync_waiter_free_ (waiter *w) {
 	ASSERT ((w->flags & WAITER_IN_USE) != 0);
 	w->flags &= ~WAITER_IN_USE;
 	if ((w->flags & WAITER_RESERVED) == 0) {
-		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+		pthread_mutex_lock (&nsync_waiters_mu);
 		dll_make_first (&free_waiters, &w->nw.q);
-		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+		pthread_mutex_unlock (&nsync_waiters_mu);
 		if (w == waiter_for_thread)
 			waiter_for_thread = 0;
 	}

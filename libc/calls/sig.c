@@ -81,14 +81,11 @@ textwindows void __sig_delete(int sig) {
   struct Dll *e;
   atomic_fetch_and_explicit(&__sig.pending, ~(1ull << (sig - 1)),
                             memory_order_relaxed);
-  BLOCK_SIGNALS;
   _pthread_lock();
-  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
+  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e))
     atomic_fetch_and_explicit(&POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending,
                               ~(1ull << (sig - 1)), memory_order_relaxed);
-  }
   _pthread_unlock();
-  ALLOW_SIGNALS;
 }
 
 static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
@@ -559,7 +556,7 @@ void __stack_call(struct NtExceptionPointers *, int, int, struct CosmoTib *,
 __msabi dontinstrument unsigned __sig_crash(struct NtExceptionPointers *ep) {
 
   // translate win32 to unix si_signo and si_code
-  int code, sig = __sig_crash_sig(ep, &code);
+  int code, sig = __sig_crash_sig(ep->ExceptionRecord->ExceptionCode, &code);
 
   // advance the instruction pointer to skip over debugger breakpoints
   // this behavior is consistent with how unix kernels are implemented

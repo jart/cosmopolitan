@@ -143,7 +143,8 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
           break;
         if (!TokAtoi(&fdspec, &protocol))
           break;
-        __ensurefds_unlocked(fd);
+        if (_weaken(__ensurefds_unlocked))
+          _weaken(__ensurefds_unlocked)(fd);
         struct Fd *f = fds->p + fd;
         if (f->handle && f->handle != -1 && f->handle != handle) {
           CloseHandle(f->handle);
