@@ -72,7 +72,7 @@ __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
 static textwindows wontreturn void AbortFork(const char *func) {
 #if SYSDEBUG
-  kprintf("fork() %s() failed with win32 error %d\n", func, GetLastError());
+  kprintf("fork() %!s() failed with win32 error %u\n", func, GetLastError());
 #endif
   TerminateThisProcess(SIGSTKFLT);
 }
@@ -94,57 +94,45 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
                                                      struct NtOverlapped *)) {
   size_t i;
   uint32_t x;
-  for (i = 0; i < n; i += x)
+  for (i = 0; i < n; i += x) {
     if (!f(h, p + i, n - i, &x, NULL))
       return __winerr();
+    if (!x)
+      break;
+  }
   return i;
 }
 
-static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
-                                           bool32 (*fn)(int64_t, void *,
-                                                        uint32_t, uint32_t *,
-                                                        struct NtOverlapped *),
-                                           const char *sf, bool ischild) {
+static dontinline textwindows ssize_t ForkIo2(
+    int64_t h, void *buf, size_t n,
+    bool32 (*fn)(int64_t, void *, uint32_t, uint32_t *, struct NtOverlapped *),
+    const char *sf, bool ischild) {
   ssize_t rc = ForkIo(h, buf, n, fn);
   if (ischild) {
     __tls_enabled_set(false);  // prevent tls crash in kprintf
     __pid = __imp_GetCurrentProcessId();
     __klog_handle = 0;
+    __maps.used = 0;
   }
   NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
-  return rc != -1;
+  return rc;
 }
 
 static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   bool ok;
-  ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false);
-#ifndef NDEBUG
-  if (ok)
-    ok = ForkIo2(h, &n, sizeof(n), (void *)WriteFile, "WriteFile", false);
-#endif
-#if SYSDEBUG
-  if (!ok) {
-    kprintf("failed to write %zu bytes to forked child: %d\n", n,
-            GetLastError());
-  }
-#endif
+  ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false) != -1;
+  if (!ok)
+    AbortFork("WriteAll");
   // Sleep(10);
   return ok;
 }
 
 static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
-  if (!ForkIo2(h, buf, n, ReadFile, "ReadFile", true)) {
+  ssize_t got;
+  if ((got = ForkIo2(h, buf, n, ReadFile, "ReadFile", true)) == -1)
     AbortFork("ReadFile1");
-  }
-#ifndef NDEBUG
-  size_t got;
-  if (!ForkIo2(h, &got, sizeof(got), ReadFile, "ReadFile", true)) {
+  if (got != n)
     AbortFork("ReadFile2");
-  }
-  if (got != n) {
-    AbortFork("ReadFile_SIZE_CHECK");
-  }
-#endif
 }
 
 static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
@@ -197,12 +185,35 @@ static textwindows void *Malloc(size_t size) {
   return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
+static textwindows void Free(void *addr) {
+  HeapFree(GetProcessHeap(), 0, addr);
+}
+
+static int CountMaps(struct Dll *maps) {
+  int count = 0;
+  for (struct Dll *e = dll_first(maps); e; e = dll_next(maps, e))
+    ++count;
+  return count;
+}
+
+static struct Map **SortMaps(struct Dll *maps, int count) {
+  int j, i = 0;
+  struct Map **sorted = Malloc(count * sizeof(struct Map *));
+  for (struct Dll *e = dll_first(maps); e; e = dll_next(maps, e)) {
+    struct Map *map = MAP_CONTAINER(e);
+    for (j = i; j > 0 && sorted[j - 1]->addr > map->addr; --j)
+      sorted[j] = sorted[j - 1];
+    sorted[j] = map;
+    ++i;
+  }
+  return sorted;
+}
+
 textwindows void WinMainForked(void) {
   jmp_buf jb;
   int64_t reader;
   int64_t savetsc;
-  struct Map *map;
-  uint32_t varlen, oldprot;
+  uint32_t varlen;
   char16_t fvar[21 + 1 + 21 + 1];
   struct Fds *fds = __veil("r", &g_fds);
 
@@ -222,29 +233,55 @@ textwindows void WinMainForked(void) {
   ReadOrDie(reader, jb, sizeof(jb));
 
   // read memory mappings from parent process
-  struct Map *maps = __maps.maps;
+  int n = 0;
+  struct Dll *maps = 0;
   for (;;) {
-    map = Malloc(sizeof(*map));
-    ReadOrDie(reader, map, sizeof(*map));
+    struct Map *map = Malloc(sizeof(struct Map));
+    ReadOrDie(reader, map, sizeof(struct Map));
+    if (map->addr == MAP_FAILED) {
+      Free(map);
+      break;
+    }
+    dll_init(&map->elem);
+    dll_make_first(&maps, &map->elem);
+    ++n;
+  }
+
+  // created sorted array of maps
+  struct Map **sorted = SortMaps(maps, n);
+
+  // map memory into process
+  int granularity = __granularity();
+  for (int i = 0; i < n; ++i) {
+    struct Map *map = sorted[i];
+    if ((uintptr_t)map->addr & (granularity - 1))
+      continue;
+    size_t size = map->size;
+    // get true length in case mprotect() chopped up actual win32 map
+    for (int j = i + 1;
+         j < n && sorted[j]->hand == -1 && map->addr + size == sorted[j]->addr;
+         ++j) {
+      size += sorted[j]->size;
+    }
+    // obtain the most permissive access possible
+    unsigned prot, access;
+    if (map->readonlyfile) {
+      prot = kNtPageExecuteRead;
+      access = kNtFileMapRead | kNtFileMapExecute;
+    } else {
+      prot = kNtPageExecuteReadwrite;
+      access = kNtFileMapWrite | kNtFileMapExecute;
+    }
     if ((map->flags & MAP_TYPE) != MAP_SHARED) {
       // we don't need to close the map handle because sys_mmap_nt
       // doesn't mark it inheritable across fork() for MAP_PRIVATE
-      ViewOrDie((map->h = MapOrDie(kNtPageExecuteReadwrite, map->size)),
-                kNtFileMapWrite | kNtFileMapExecute, 0, map->size, map->addr);
-      ReadOrDie(reader, map->addr, map->size);
+      map->hand = MapOrDie(prot, size);
+      ViewOrDie(map->hand, access, 0, size, map->addr);
+      ReadOrDie(reader, map->addr, size);
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
-      ViewOrDie(map->h,
-                map->readonlyfile ? kNtFileMapRead | kNtFileMapExecute
-                                  : kNtFileMapWrite | kNtFileMapExecute,
-                map->off, map->size, map->addr);
+      ViewOrDie(map->hand, access, map->off, size, map->addr);
     }
-    dll_init(&map->elem);
-    bool isdone = !map->next;
-    map->next = maps;
-    maps = map;
-    if (isdone)
-      break;
   }
 
   // read the .data and .bss program image sections
@@ -259,19 +296,19 @@ textwindows void WinMainForked(void) {
   // fixup memory manager
   __maps.free = 0;
   __maps.used = 0;
-  __maps.maps = maps;
   __maps.count = 0;
   __maps.pages = 0;
-  dll_init(&__maps.stack.elem);
-  dll_make_first(&__maps.used, &__maps.stack.elem);
-  for (struct Map *map = maps; map; map = map->next) {
+  for (int i = 0; i < n; ++i) {
+    struct Map *map = sorted[i];
     __maps.count += 1;
-    __maps.pages += (map->size + 4095) / 4096;
-    dll_make_last(&__maps.used, &map->elem);
+    __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
+    unsigned old_protect;
     if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
-                        &oldprot))
+                        &old_protect))
       AbortFork("VirtualProtect");
   }
+  Free(sorted);
+  __maps.used = maps;
   __maps_init();
 
   // mitosis complete
@@ -288,9 +325,8 @@ textwindows void WinMainForked(void) {
 #if SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
-  if (_weaken(__sig_init)) {
+  if (_weaken(__sig_init))
     _weaken(__sig_init)();
-  }
 
   // jump back into function below
   longjmp(jb, 1);
@@ -299,7 +335,6 @@ textwindows void WinMainForked(void) {
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   char ok;
   jmp_buf jb;
-  uint32_t op;
   char **args;
   int rc = -1;
   struct Proc *proc;
@@ -358,18 +393,62 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       if (spawnrc != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb));
-        for (struct Map *map = __maps.maps; ok && map; map = map->next) {
+        int count = 0;
+        // this list will be populated with the maps we're transferring
+        struct Dll *e2, *maps = 0;
+        for (struct Dll *e = dll_first(__maps.used); ok && e; e = e2) {
+          e2 = dll_next(__maps.used, e);
+          struct Map *map = MAP_CONTAINER(e);
           if (MAX((char *)__executable_start, map->addr) <
               MIN((char *)_end, map->addr + map->size))
             continue;  // executable image is loaded by windows
+          dll_remove(&__maps.used, e);
+          dll_make_last(&maps, e);
           ok = WriteAll(writer, map, sizeof(*map));
-          if (ok && (map->flags & MAP_TYPE) != MAP_SHARED) {
-            // XXX: forking destroys thread guard pages currently
-            VirtualProtect(map->addr, map->size,
-                           __prot2nt(map->prot | PROT_READ, map->iscow), &op);
-            ok = WriteAll(writer, map->addr, map->size);
-          }
+          ++count;
         }
+        // send a terminating Map struct to child
+        if (ok) {
+          struct Map map;
+          map.addr = MAP_FAILED;
+          ok = WriteAll(writer, &map, sizeof(map));
+        }
+        // now write content of each map to child
+        int granularity = __granularity();
+        struct Map **sorted = SortMaps(maps, count);
+        uint32_t *old_protect = Malloc(count * 4);
+        for (int i = 0; ok && i < count; ++i) {
+          struct Map *map = sorted[i];
+          // we only need to worry about the base mapping
+          if ((uintptr_t)map->addr & (granularity - 1))
+            continue;
+          // shared mappings don't need to be copied
+          if ((map->flags & MAP_TYPE) == MAP_SHARED)
+            continue;
+          // get true length in case mprotect() chopped up actual win32 map
+          int j;
+          size_t size = map->size;
+          for (j = i + 1; j < count && sorted[j]->hand == -1 &&
+                          map->addr + size == sorted[j]->addr;
+               ++j) {
+            size += sorted[j]->size;
+          }
+          for (int k = i; ok && k < j; ++k)
+            if (!(sorted[k]->prot & PROT_READ))
+              ok = VirtualProtect(
+                  sorted[k]->addr, sorted[k]->size,
+                  __prot2nt(sorted[k]->prot | PROT_READ, map->iscow),
+                  &old_protect[k]);
+          if (ok)
+            ok = WriteAll(writer, map->addr, size);
+          for (int k = i; ok && k < j; ++k)
+            if (!(sorted[k]->prot & PROT_READ))
+              ok = VirtualProtect(sorted[k]->addr, sorted[k]->size,
+                                  old_protect[k], &old_protect[k]);
+        }
+        Free(old_protect);
+        Free(sorted);
+        dll_make_first(&__maps.used, maps);
         if (ok)
           ok = WriteAll(writer, __data_start, __data_end - __data_start);
         if (ok)

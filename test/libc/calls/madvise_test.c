@@ -65,8 +65,8 @@ TEST(madvise, subPages) {
   ASSERT_NE(MAP_FAILED, (p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   ASSERT_SYS(0, 0,
-             madvise(p + getauxval(AT_PAGESZ),
-                     __granularity() - getauxval(AT_PAGESZ), MADV_WILLNEED));
+             madvise(p + getpagesize(), __granularity() - getpagesize(),
+                     MADV_WILLNEED));
   ASSERT_SYS(0, 0, munmap(p, __granularity()));
 }
 

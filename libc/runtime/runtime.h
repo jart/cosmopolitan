@@ -53,7 +53,7 @@ int sethostid(long) libcesque;
 char *getlogin(void) libcesque;
 int getlogin_r(char *, size_t) libcesque;
 int login_tty(int) libcesque;
-int getpagesize(void) libcesque;
+int getpagesize(void) pureconst libcesque;
 int syncfs(int) dontthrow libcesque;
 int vhangup(void) libcesque;
 int getdtablesize(void) libcesque;

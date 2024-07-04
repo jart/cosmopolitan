@@ -75,7 +75,7 @@ TEST(sigbus, test) {
 
   // map two pages of the file into memory
   char *map;
-  long pagesz = getauxval(AT_PAGESZ);
+  long pagesz = getpagesize();
   ASSERT_NE(MAP_FAILED,
             (map = mmap(0, pagesz * 2, PROT_READ, MAP_PRIVATE, 3, 0)));
 

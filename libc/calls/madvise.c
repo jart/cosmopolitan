@@ -30,7 +30,7 @@
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `advice` isn't valid or supported by system
  * @raise EINVAL on Linux if addr/length isn't page size aligned with
- *     respect to `getauxval(AT_PAGESZ)`
+ *     respect to `getpagesize()`
  * @raise ENOMEM on Linux if addr/length overlaps unmapped regions
  * @see libc/sysv/consts.sh
  * @see fadvise()

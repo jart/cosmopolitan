@@ -155,17 +155,20 @@ __funline bool kischarmisaligned(const char *p, signed char t) {
 }
 
 privileged static bool32 kisdangerous_unlocked(const char *addr) {
-  struct Dll *e, *e2;
-  for (e = dll_first(__maps.used); e; e = e2) {
-    e2 = dll_next(__maps.used, e);
-    struct Map *map = MAP_CONTAINER(e);
-    if (map->addr <= addr && addr < map->addr + map->size) {
-      dll_remove(&__maps.used, e);
-      dll_make_first(&__maps.used, e);
-      return !(map->prot & PROT_READ);
-    }
+  struct Dll *e;
+  if ((e = dll_first(__maps.used))) {
+    do {
+      struct Map *map = MAP_CONTAINER(e);
+      if (map->addr <= addr && addr < map->addr + map->size) {
+        dll_remove(&__maps.used, e);
+        dll_make_first(&__maps.used, e);
+        return !(map->prot & PROT_READ);
+      }
+    } while ((e = dll_next(__maps.used, e)));
+    return true;
+  } else {
+    return false;
   }
-  return true;
 }
 
 privileged bool32 kisdangerous(const void *addr) {

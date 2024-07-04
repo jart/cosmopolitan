@@ -49,7 +49,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   size_t n, m, tsz, size;
   const Elf64_Sym *symtab, *sym;
   ptrdiff_t names_offset, name_base_offset, stp_offset;
-  long pagesz = getauxval(AT_PAGESZ);
+  long pagesz = getpagesize();
   map = MAP_FAILED;
   if ((fd = open(filename, O_RDONLY | O_CLOEXEC)) == -1)
     return 0;

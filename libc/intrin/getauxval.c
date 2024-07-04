@@ -16,8 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/getauxval.internal.h"
+#include "libc/nt/struct/systeminfo.h"
+#include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
@@ -35,11 +38,17 @@ unsigned long getauxval(unsigned long key) {
   x = __getauxval(key);
   if (key == AT_PAGESZ) {
     if (!x.isfound) {
+      if (!IsWindows()) {
 #ifdef __aarch64__
-      x.value = 16384;
+        x.value = 16384;
 #else
-      x.value = 4096;
+        x.value = 4096;
 #endif
+      } else {
+        struct NtSystemInfo si;
+        GetSystemInfo(&si);
+        x.value = si.dwPageSize;
+      }
     }
     x.isfound = true;
   }

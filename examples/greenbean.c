@@ -24,6 +24,7 @@
 #include <sys/socket.h>
 #include <time.h>
 #include "libc/mem/leaks.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview greenbean lightweight threaded web server
@@ -336,10 +337,9 @@ int main(int argc, char *argv[]) {
   sigaddset(&block, SIGHUP);
   sigaddset(&block, SIGQUIT);
   pthread_attr_t attr;
-  int pagesz = getauxval(AT_PAGESZ);
   unassert(!pthread_attr_init(&attr));
   unassert(!pthread_attr_setstacksize(&attr, 65536));
-  unassert(!pthread_attr_setguardsize(&attr, pagesz));
+  unassert(!pthread_attr_setguardsize(&attr, getpagesize()));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
   unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
   pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));

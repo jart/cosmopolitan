@@ -30,7 +30,7 @@
  * Prints memory mappings.
  */
 void __print_maps(void) {
-  int limit = 13;
+  int limit = 15;
   long maptally = 0;
   char mappingbuf[8], sb[16];
   __maps_lock();
@@ -43,8 +43,8 @@ void __print_maps(void) {
             (DescribeMapping)(mappingbuf, map->prot, map->flags));
     sizefmt(sb, map->size, 1024);
     kprintf(" %!sb", sb);
-    if (map->h && map->h != -1)
-      kprintf(" h=%ld", map->h);
+    if (map->hand && map->hand != -1)
+      kprintf(" hand=%ld", map->hand);
     if (map->iscow)
       kprintf(" cow");
     if (map->readonlyfile)
@@ -53,7 +53,7 @@ void __print_maps(void) {
     if (!--limit)
       break;
   }
-  kprintf("# %'zu bytes in %'zu mappings\n",
-          __maps.pages * getauxval(AT_PAGESZ), __maps.count);
+  kprintf("# %'zu bytes in %'zu mappings\n", __maps.pages * getpagesize(),
+          __maps.count);
   __maps_unlock();
 }

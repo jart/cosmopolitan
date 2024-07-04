@@ -525,7 +525,7 @@ class vector
         capacity_ = new_capacity;
     }
 
-    Allocator alloc_;
+    [[no_unique_address]] Allocator alloc_;
     pointer data_;
     size_type size_;
     size_type capacity_;

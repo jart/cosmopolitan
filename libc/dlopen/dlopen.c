@@ -303,7 +303,7 @@ static wontreturn dontinstrument void foreign_helper(void **p) {
 static dontinline void elf_exec(const char *file, char **envp) {
 
   // get microprocessor page size
-  long pagesz = getauxval(AT_PAGESZ);
+  long pagesz = getpagesize();
 
   // load helper executable into address space
   struct Loaded prog;

@@ -60,9 +60,11 @@
 
 __static_yoink("zipos");
 
+int pagesz;
 int granularity;
 
 void SetUpOnce(void) {
+  pagesz = getpagesize();
   granularity = __granularity();
   testlib_enable_tmp_setup_teardown();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
@@ -84,27 +86,41 @@ TEST(mmap, overflow) {
 
 TEST(mmap, noreplaceImage) {
   ASSERT_SYS(EEXIST, MAP_FAILED,
-             mmap(__executable_start, granularity, PROT_READ,
+             mmap(__executable_start, 1, PROT_READ,
                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
 }
 
 TEST(mmap, noreplaceExistingMap) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, granularity, PROT_READ,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
   ASSERT_SYS(EEXIST, MAP_FAILED,
-             mmap(p, granularity, PROT_READ,
+             mmap(p, 1, PROT_READ,
                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
-  EXPECT_SYS(0, 0, munmap(p, granularity));
+  EXPECT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(mmap, pageBeyondGone) {
+  int pagesz = getpagesize();
+  char *p = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                 MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  ASSERT_EQ(0, munmap(p, pagesz * 2));
+  p = mmap(p, 1, PROT_READ | PROT_WRITE,
+           MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  ASSERT_NE(MAP_FAILED, p);
+  EXPECT_TRUE(testlib_memoryexists(p));
+  EXPECT_TRUE(testlib_memoryexists(p + pagesz - 1));
+  EXPECT_FALSE(testlib_memoryexists(p + pagesz));
+  ASSERT_EQ(0, munmap(p, 1));
 }
 
 TEST(mmap, fixedTaken) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, granularity, PROT_READ,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
-  ASSERT_NE(MAP_FAILED, mmap(p, granularity, PROT_READ,
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_NE(MAP_FAILED, mmap(p, 1, PROT_READ,
                              MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
-  EXPECT_SYS(0, 0, munmap(p, granularity));
+  EXPECT_SYS(0, 0, munmap(p, 1));
 }
 
 TEST(mmap, hint) {
@@ -181,7 +197,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   EXPECT_NE(-1, close(fd));
   EXPECT_STREQN("hello", p, 5);
   p[1] = 'a';
-  EXPECT_NE(-1, msync(p, getauxval(AT_PAGESZ), MS_SYNC));
+  EXPECT_NE(-1, msync(p, getpagesize(), MS_SYNC));
   ASSERT_NE(-1, (fd = open(path, O_RDONLY)));
   EXPECT_EQ(5, read(fd, buf, 5));
   EXPECT_STREQN("hallo", buf, 5);
@@ -193,7 +209,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
 TEST(mmap, fileOffset) {
   int fd;
   char *map;
-  int offset_align = IsWindows() ? granularity : getauxval(AT_PAGESZ);
+  int offset_align = IsWindows() ? granularity : getpagesize();
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
   EXPECT_NE(-1, ftruncate(fd, offset_align * 2));
   EXPECT_NE(-1, pwrite(fd, "hello", 5, offset_align * 0));
@@ -433,15 +449,15 @@ void *ptrs[N];
 
 void BenchMmapPrivate(void) {
   void *p;
-  p = mmap(0, granularity, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
-           -1, 0);
+  p = mmap(0, granularity * 10, PROT_READ | PROT_WRITE,
+           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (p == MAP_FAILED)
     __builtin_trap();
   ptrs[count++] = p;
 }
 
 void BenchUnmap(void) {
-  if (munmap(ptrs[--count], granularity))
+  if (munmap(ptrs[--count], granularity * 10))
     __builtin_trap();
 }
 

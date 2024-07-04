@@ -38,6 +38,8 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
+#include "libc/nt/struct/systeminfo.h"
+#include "libc/nt/systeminfo.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -64,6 +66,7 @@ __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
+__msabi extern typeof(GetSystemInfo) *const __imp_GetSystemInfo;
 __msabi extern typeof(GetUserName) *const __imp_GetUserNameW;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
 __msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
@@ -209,8 +212,12 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   uint32_t oldattr;
   __imp_VirtualProtect(stackaddr, GetGuardSize(),
                        kNtPageReadwrite | kNtPageGuard, &oldattr);
-  if (_weaken(__maps_stack))
-    _weaken(__maps_stack)(stackaddr, 4096, stacksize, stackprot, stackhand);
+  if (_weaken(__maps_stack)) {
+    struct NtSystemInfo si;
+    __imp_GetSystemInfo(&si);
+    _weaken(__maps_stack)(stackaddr, si.dwPageSize, GetGuardSize(), stacksize,
+                          stackprot, stackhand);
+  }
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
 

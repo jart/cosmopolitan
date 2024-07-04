@@ -16,7 +16,6 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/stdalign.internal.h"
 #include "libc/stdckdint.h"
@@ -44,8 +43,6 @@ static void tinymalloc_init(void) {
   align = TINYMALLOC_MAX_ALIGN;
   heap.memory = (char *)(((uintptr_t)heap.bits + align - 1) & -align);
   heap.size = sizeof(heap.bits) - (heap.memory - heap.bits);
-  kprintf("heap.memory = %p\n", heap.memory);
-  kprintf("heap.size = %p\n", heap.size);
   heap.once = 1;
 }
 

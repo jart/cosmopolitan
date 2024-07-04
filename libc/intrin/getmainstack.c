@@ -105,7 +105,7 @@ static size_t __get_stack_size(int pagesz, uintptr_t start, uintptr_t top) {
  * This function works on every OS except Windows.
  */
 struct AddrSize __get_main_stack(void) {
-  int pagesz = getauxval(AT_PAGESZ);
+  int pagesz = getpagesize();
   uintptr_t start = (uintptr_t)__argv;
   uintptr_t top = __get_main_top(pagesz);
   uintptr_t bot = top - __get_stack_size(pagesz, start, top);

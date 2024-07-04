@@ -228,7 +228,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
   char *f, b[32];
   _Alignas(65536) static const char weasel[65535];
   f = (void *)__veil("r", weasel);
-  EXPECT_SYS(0, 0, mprotect(f, __granularity(), PROT_READ | PROT_WRITE));
+  EXPECT_SYS(0, 0, mprotect(f, getpagesize(), PROT_READ | PROT_WRITE));
   strcpy(f, "hello %s\n");
   EXPECT_EQ(12, ksnprintf(b, sizeof(b), f, "world"));
   EXPECT_STREQ("hello world\n", b);
@@ -240,7 +240,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
     f[Rando() & 15] = '%';
     ksnprintf(b, sizeof(b), f, lemur64(), lemur64(), lemur64());
   }
-  EXPECT_SYS(0, 0, mprotect(f, __granularity(), PROT_READ));
+  EXPECT_SYS(0, 0, mprotect(f, getpagesize(), PROT_READ));
 }
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {

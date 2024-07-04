@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns granularity of memory manager.
  * @see sysconf(_SC_PAGE_SIZE) which is portable
  */
 int getpagesize(void) {
-  return __granularity();
+  return getauxval(AT_PAGESZ);
 }

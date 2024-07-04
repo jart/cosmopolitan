@@ -27,7 +27,7 @@
 
 textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
 
-  int pagesz = getauxval(AT_PAGESZ);
+  int pagesz = getpagesize();
   size = (size + pagesz - 1) & -pagesz;
 
   if ((uintptr_t)addr & (pagesz - 1))
@@ -35,7 +35,9 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
 
   int rc = 0;
   __maps_lock();
-  for (struct Map *map = __maps.maps; map; map = map->next) {
+  for (struct Dll *e = dll_first(__maps.used); e;
+       e = dll_next(__maps.used, e)) {
+    struct Map *map = MAP_CONTAINER(e);
     char *beg = MAX(addr, map->addr);
     char *end = MIN(addr + size, map->addr + map->size);
     if (beg < end)

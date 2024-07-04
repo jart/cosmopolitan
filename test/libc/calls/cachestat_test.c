@@ -46,7 +46,7 @@ void SetUpOnce(void) {
     exit(0);
   }
   testlib_enable_tmp_setup_teardown();
-  pagesize = (size_t)getauxval(AT_PAGESZ);
+  pagesize = (size_t)getpagesize();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath", 0));
 }
 

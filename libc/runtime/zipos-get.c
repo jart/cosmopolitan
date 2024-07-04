@@ -128,7 +128,7 @@ static void __zipos_init(void) {
         if (!fstat(fd, &st) && (map = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
                                            fd, 0)) != MAP_FAILED) {
           if ((cdir = GetZipEocd(map, st.st_size, &err))) {
-            long pagesz = getauxval(AT_PAGESZ);
+            long pagesz = getpagesize();
             __zipos_dismiss(map, cdir, pagesz);
             __zipos.map = map;
             __zipos.cdir = cdir;

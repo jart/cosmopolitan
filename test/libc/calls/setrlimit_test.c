@@ -136,8 +136,8 @@ TEST(setrlimit, testMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
-    for (gotsome = false, i = 0; i < (MEM * 2) / getauxval(AT_PAGESZ); ++i) {
-      p = mmap(0, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE,
+    for (gotsome = false, i = 0; i < (MEM * 2) / __granularity(); ++i) {
+      p = mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
       if (p != MAP_FAILED) {
         gotsome = true;
@@ -149,7 +149,7 @@ TEST(setrlimit, testMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getauxval(AT_PAGESZ), _rand64, -1);
+      rngset(p, __granularity(), _rand64, -1);
     }
     _Exit(1);
   }
@@ -162,24 +162,18 @@ TEST(setrlimit, testMemoryLimit) {
 TEST(setrlimit, testVirtualMemoryLimit) {
   char *p;
   int i, wstatus;
-  if (IsXnu())
-    return; /* doesn't work on darwin */
-  if (IsOpenbsd())
-    return; /* unavailable on openbsd */
-  if (IsWindows())
-    return; /* of course it doesn't work on windows */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / getauxval(AT_PAGESZ); ++i) {
-      p = sys_mmap(0, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / __granularity(); ++i) {
+      p = sys_mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getauxval(AT_PAGESZ), _rand64, -1);
+      rngset(p, __granularity(), _rand64, -1);
     }
     _Exit(1);
   }
@@ -205,15 +199,15 @@ TEST(setrlimit, testDataMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_DATA, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / getauxval(AT_PAGESZ); ++i) {
-      p = sys_mmap(0, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / __granularity(); ++i) {
+      p = sys_mmap(0, __granularity(), PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getauxval(AT_PAGESZ), _rand64, -1);
+      rngset(p, __granularity(), _rand64, -1);
     }
     _Exit(1);
   }
