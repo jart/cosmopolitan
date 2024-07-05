@@ -176,7 +176,7 @@ struct Map *__maps_alloc(void) {
   return map;
 }
 
-int __munmap(char *addr, size_t size, bool untrack_only) {
+static int __munmap(char *addr, size_t size, bool untrack_only) {
 
   // validate arguments
   int pagesz = getpagesize();
@@ -479,8 +479,8 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   return res;
 }
 
-void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
-             int64_t off) {
+static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
+                    int64_t off) {
   char *res;
   int pagesz = getpagesize();
   int granularity = __granularity();

@@ -48,18 +48,15 @@ void __zipos_drop(struct ZiposHandle *h) {
   if (atomic_fetch_sub_explicit(&h->refs, 1, memory_order_release))
     return;
   atomic_thread_fence(memory_order_acquire);
-  __munmap((char *)h, h->mapsize, false);
+  munmap((char *)h, h->mapsize);
 }
 
 static struct ZiposHandle *__zipos_alloc(struct Zipos *zipos, size_t size) {
   size_t mapsize;
-  int granularity;
   struct ZiposHandle *h;
-  granularity = __granularity();
   mapsize = sizeof(struct ZiposHandle) + size;
-  mapsize = (mapsize + granularity - 1) & -granularity;
-  if ((h = __mmap(0, mapsize, PROT_READ | PROT_WRITE,
-                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+  if ((h = mmap(0, mapsize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                -1, 0)) != MAP_FAILED) {
     h->size = size;
     h->zipos = zipos;
     h->mapsize = mapsize;

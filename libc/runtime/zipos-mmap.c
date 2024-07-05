@@ -77,7 +77,7 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
   flags |= MAP_PRIVATE | MAP_ANONYMOUS;
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
-  void *outAddr = __mmap(addr, size, tempProt, flags, -1, 0);
+  void *outAddr = mmap(addr, size, tempProt, flags, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }

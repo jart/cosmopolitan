@@ -47,8 +47,6 @@ void __maps_unlock(void);
 void __maps_add(struct Map *);
 struct Map *__maps_alloc(void);
 void __maps_free(struct Map *);
-int __munmap(char *, size_t, bool);
-void *__mmap(char *, size_t, int, int, int, int64_t);
 void __maps_stack(char *, int, int, size_t, int, intptr_t);
 struct AddrSize __get_main_stack(void);
 

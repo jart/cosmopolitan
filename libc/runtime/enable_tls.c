@@ -148,8 +148,8 @@ textstartup void __enable_tls(void) {
     // if a binary needs this much thread_local storage, then it
     // surely must have linked the mmap() function at some point
     // we can't call mmap() because it's too early for sig block
-    mem = _weaken(__mmap)(0, siz, PROT_READ | PROT_WRITE,
-                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    mem = _weaken(mmap)(0, siz, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
@@ -176,8 +176,8 @@ textstartup void __enable_tls(void) {
     // if a binary needs this much thread_local storage, then it
     // surely must have linked the mmap() function at some point
     // we can't call mmap() because it's too early for sig block
-    mem = _weaken(__mmap)(0, size, PROT_READ | PROT_WRITE,
-                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    mem = _weaken(mmap)(0, size, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib =
