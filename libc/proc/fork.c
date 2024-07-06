@@ -46,6 +46,8 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
+__static_yoink("_pthread_atfork");
+
 extern pthread_mutex_t _pthread_lock_obj;
 
 static void _onfork_prepare(void) {

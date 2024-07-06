@@ -83,12 +83,8 @@ void mu_wipe(void) {
   pthread_mutex_init(&mu, 0);
 }
 
-static atomic_bool once;
-
 void *Worker(void *arg) {
   for (int i = 0; i < 20; ++i) {
-    if (!atomic_exchange(&once, true))
-      __print_maps(0);
     mu_lock();
     usleep(20);
     mu_unlock();
