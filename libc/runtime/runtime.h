@@ -91,7 +91,7 @@ void ShowCrashReports(void) libcesque;
 int ftrace_install(void) libcesque;
 int ftrace_enabled(int) libcesque;
 int strace_enabled(int) libcesque;
-void __print_maps(void) libcesque;
+void __print_maps(size_t) libcesque;
 void __printargs(const char *) libcesque;
 /* builtin sh-like system/popen dsl */
 int _cocmd(int, char **, char **) libcesque;

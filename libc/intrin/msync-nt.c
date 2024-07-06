@@ -34,16 +34,17 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
     return einval();
 
   int rc = 0;
-  __maps_lock();
-  for (struct Dll *e = dll_first(__maps.used); e;
-       e = dll_next(__maps.used, e)) {
-    struct Map *map = MAP_CONTAINER(e);
-    char *beg = MAX(addr, map->addr);
-    char *end = MIN(addr + size, map->addr + map->size);
-    if (beg < end)
-      if (!FlushViewOfFile(beg, end - beg))
-        rc = -1;
-    // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
+  if (__maps_lock()) {
+    rc = edeadlk();
+  } else {
+    for (struct Map *map = __maps_floor(addr); map; map = __maps_next(map)) {
+      char *beg = MAX(addr, map->addr);
+      char *end = MIN(addr + size, map->addr + map->size);
+      if (beg < end)
+        if (!FlushViewOfFile(beg, end - beg))
+          rc = -1;
+      // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
+    }
   }
   __maps_unlock();
 

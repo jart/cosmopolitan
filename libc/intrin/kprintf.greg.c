@@ -25,7 +25,6 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
@@ -154,27 +153,18 @@ __funline bool kischarmisaligned(const char *p, signed char t) {
   return false;
 }
 
-privileged static bool32 kisdangerous_unlocked(const char *addr) {
-  struct Dll *e;
-  if ((e = dll_first(__maps.used))) {
-    do {
-      struct Map *map = MAP_CONTAINER(e);
-      if (map->addr <= addr && addr < map->addr + map->size) {
-        dll_remove(&__maps.used, e);
-        dll_make_first(&__maps.used, e);
-        return !(map->prot & PROT_READ);
-      }
-    } while ((e = dll_next(__maps.used, e)));
-    return true;
-  } else {
-    return false;
-  }
-}
-
 privileged bool32 kisdangerous(const void *addr) {
-  bool32 res;
+  bool32 res = true;
   __maps_lock();
-  res = kisdangerous_unlocked(addr);
+  if (__maps.maps) {
+    struct Map *map;
+    if ((map = __maps_floor(addr)))
+      if ((const char *)addr >= map->addr &&
+          (const char *)addr < map->addr + map->size)
+        res = false;
+  } else {
+    res = false;
+  }
   __maps_unlock();
   return res;
 }

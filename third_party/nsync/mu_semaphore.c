@@ -27,7 +27,7 @@ __static_yoink("nsync_notice");
 #define PREFER_GCD_OVER_ULOCK 1
 
 /* Initialize *s; the initial value is 0. */
-void nsync_mu_semaphore_init (nsync_semaphore *s) {
+bool nsync_mu_semaphore_init (nsync_semaphore *s) {
 	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
 		return nsync_mu_semaphore_init_gcd (s);
 	} else if (IsNetbsd ()) {

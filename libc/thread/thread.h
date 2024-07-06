@@ -190,6 +190,7 @@ int pthread_spin_trylock(pthread_spinlock_t *) libcesque paramsnonnull();
 int pthread_spin_unlock(pthread_spinlock_t *) libcesque paramsnonnull();
 int pthread_testcancel_np(void) libcesque;
 int pthread_tryjoin_np(pthread_t, void **) libcesque;
+int pthread_delay_np(const void *, int) libcesque;
 int pthread_yield_np(void) libcesque;
 int pthread_yield(void) libcesque;
 pthread_id_np_t pthread_getthreadid_np(void) libcesque;

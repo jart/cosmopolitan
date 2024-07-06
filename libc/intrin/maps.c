@@ -20,6 +20,7 @@
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/maps.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/auxv.h"
@@ -32,8 +33,7 @@ __static_yoink("_init_maps");
 struct Maps __maps;
 
 void __maps_add(struct Map *map) {
-  dll_init(&map->elem);
-  dll_make_first(&__maps.used, &map->elem);
+  tree_insert(&__maps.maps, &map->tree, __maps_compare);
   ++__maps.count;
 }
 

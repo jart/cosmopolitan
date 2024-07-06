@@ -85,7 +85,7 @@ int setrlimit(int resource, const struct rlimit *rlim) {
     rc = efault();
   } else if (IsXnuSilicon()) {
     rc = _sysret(__syslib->__setrlimit(resource, rlim));
-  } else if (!IsWindows()) {
+  } else if (!IsWindows() && !(IsNetbsd() && resource == RLIMIT_AS)) {
     rc = sys_setrlimit(resource, rlim);
   } else if (resource == RLIMIT_STACK) {
     rc = enotsup();

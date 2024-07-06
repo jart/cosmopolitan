@@ -468,7 +468,7 @@ textstartup void __printargs(const char *prologue) {
 
   PRINT("");
   PRINT("MEMTRACK");
-  __print_maps();
+  __print_maps(0);
 
   PRINT("");
   PRINT("TERMIOS");

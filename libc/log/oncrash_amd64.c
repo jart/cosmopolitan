@@ -241,14 +241,10 @@ static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
     klog(buf, p - buf);
   }
   kprintf("\n");
-  if (!IsWindows()) {
-    __print_maps();
-  }
-  if (__argv) {
-    for (i = 0; i < __argc; ++i) {
+  __print_maps(15);
+  if (__argv)
+    for (i = 0; i < __argc; ++i)
       kprintf("%s ", __argv[i]);
-    }
-  }
   kprintf("\n");
 }
 

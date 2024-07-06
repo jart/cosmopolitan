@@ -229,20 +229,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
               -1, 0, 0) != pt->pt_attr.__stackaddr) {
         notpossible;
       }
-      if (pt->pt_attr.__guardsize) {
-        if (!IsWindows()) {
-          if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                       PROT_NONE)) {
-            notpossible;
-          }
-        } else {
-          uint32_t oldattr;
-          if (!VirtualProtect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                              kNtPageReadwrite | kNtPageGuard, &oldattr)) {
-            notpossible;
-          }
-        }
-      }
+      if (pt->pt_attr.__guardsize)
+        if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
+                     PROT_NONE | PROT_GUARD))
+          notpossible;
     }
     if (!pt->pt_attr.__stackaddr || pt->pt_attr.__stackaddr == MAP_FAILED) {
       rc = errno;

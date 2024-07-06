@@ -50,9 +50,10 @@ void *NewCosmoStack(void) {
     if (IsOpenbsd() && __sys_mmap(p, n, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD |
                                       MAP_STACK_OPENBSD,
-                                  -1, 0, 0) != p) {
+                                  -1, 0, 0) != p)
       notpossible;
-    }
+    if (mprotect(p, GetGuardSize(), PROT_NONE | PROT_GUARD))
+      notpossible;
     return p;
   } else {
     return 0;

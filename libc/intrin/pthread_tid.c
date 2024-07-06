@@ -24,6 +24,6 @@
 int _pthread_tid(struct PosixThread *pt) {
   int tid = 0;
   while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire)))
-    pthread_pause_np();
+    pthread_yield_np();
   return tid;
 }

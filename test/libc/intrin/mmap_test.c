@@ -461,7 +461,23 @@ void BenchUnmap(void) {
     __builtin_trap();
 }
 
+void BenchBigMmap(void) {
+  void *p;
+  p = mmap(0, 101 * 1024 * 1024, PROT_READ | PROT_WRITE,
+           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  if (p == MAP_FAILED)
+    __builtin_trap();
+  ptrs[count++] = p;
+}
+
+void BenchBigMunmap(void) {
+  if (munmap(ptrs[--count], 101 * 1024 * 1024))
+    __builtin_trap();
+}
+
 BENCH(mmap, bench) {
   EZBENCH2("mmap", donothing, BenchMmapPrivate());
   EZBENCH2("munmap", donothing, BenchUnmap());
+  // EZBENCH2("big mmap", donothing, BenchBigMmap());
+  // EZBENCH2("big munmap", donothing, BenchBigMunmap());
 }

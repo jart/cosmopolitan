@@ -24,7 +24,7 @@
 static char DescribeMapType(int flags) {
   switch (flags & MAP_TYPE) {
     case MAP_FILE:
-      return 'f';
+      return '-';
     case MAP_PRIVATE:
       return 'p';
     case MAP_SHARED:
@@ -47,7 +47,7 @@ const char *(DescribeMapping)(char p[8], int prot, int flags) {
   DescribeProt(p, prot);
   p[3] = DescribeMapType(flags);
   p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
-  p[5] = (flags & MAP_FIXED) ? 'F' : '-';
+  p[5] = (flags & MAP_FIXED) ? 'f' : '-';
   p[6] = 0;
   return p;
 }

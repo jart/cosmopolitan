@@ -42,6 +42,8 @@ privileged int __prot2nt(int prot, int iscow) {
         return kNtPageExecuteReadwrite;
       }
     default:
+      if (prot & PROT_GUARD)
+        return kNtPageReadwrite | kNtPageGuard;
       return kNtPageNoaccess;
   }
 }

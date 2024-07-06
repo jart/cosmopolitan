@@ -18,8 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/rlim.h"
 
 const char *DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
   if (rc == -1)
@@ -29,7 +32,18 @@ const char *DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
   if (kisdangerous(rlim)) {
     ksnprintf(buf, 64, "%p", rlim);
   } else {
-    ksnprintf(buf, 64, "{%'ld, %'ld}", rlim->rlim_cur, rlim->rlim_max);
+    char str[2][21];
+    if (rlim->rlim_cur == RLIM_INFINITY) {
+      strcpy(str[0], "RLIM_INFINITY");
+    } else {
+      FormatInt64(str[0], rlim->rlim_cur);
+    }
+    if (rlim->rlim_max == RLIM_INFINITY) {
+      strcpy(str[1], "RLIM_INFINITY");
+    } else {
+      FormatInt64(str[1], rlim->rlim_max);
+    }
+    ksnprintf(buf, 64, "{%s, %s}", str[0], str[1]);
   }
   return buf;
 }

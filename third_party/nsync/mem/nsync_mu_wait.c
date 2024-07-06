@@ -21,6 +21,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
+#include "libc/thread/thread.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -84,7 +85,7 @@ static int mu_try_acquire_after_timeout_or_cancel (nsync_mu *mu, lock_type *l_ty
 			ATM_CAS_RELACQ (&mu->word, old_word,
 					old_word|MU_WRITER_WAITING);
 		}
-		spin_attempts = nsync_spin_delay_ (spin_attempts);
+		spin_attempts = pthread_delay_np (mu, spin_attempts);
 		old_word = ATM_LOAD (&mu->word);
 	}
 	/* Check that w wasn't removed from the queue after our caller checked,
@@ -194,7 +195,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 
 		/* Acquire spinlock. */
 		old_word = nsync_spin_test_and_set_ (&mu->word, MU_SPINLOCK,
-			MU_SPINLOCK|MU_WAITING|has_condition, MU_ALL_FALSE);
+			MU_SPINLOCK|MU_WAITING|has_condition, MU_ALL_FALSE, mu);
 		had_waiters = ((old_word & (MU_DESIG_WAKER | MU_WAITING)) == MU_WAITING);
 		/* Queue the waiter. */
 		if (first_wait) {
@@ -244,7 +245,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 			}
 
 			if (ATM_LOAD (&w->nw.waiting) != 0) {
-				attempts = nsync_spin_delay_ (attempts); /* will ultimately yield */
+				attempts = pthread_delay_np (mu, attempts); /* will ultimately yield */
 			}
 		}
 

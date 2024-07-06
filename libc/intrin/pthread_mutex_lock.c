@@ -18,14 +18,76 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
+
+static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
+  int me;
+  int backoff = 0;
+  uint64_t word, lock;
+
+  // get current state of lock
+  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
+
+  // use fancy nsync mutex if possible
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
+      _weaken(nsync_mu_lock)) {
+    _weaken(nsync_mu_lock)((nsync_mu *)mutex);
+    return 0;
+  }
+
+  // implement barebones normal mutexes
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
+    for (;;) {
+      word = MUTEX_UNLOCK(word);
+      lock = MUTEX_LOCK(word);
+      if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                                memory_order_acquire,
+                                                memory_order_relaxed))
+        return 0;
+      backoff = pthread_delay_np(mutex, backoff);
+    }
+  }
+
+  // implement recursive mutexes
+  me = gettid();
+  for (;;) {
+    if (MUTEX_OWNER(word) == me) {
+      if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
+        if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {
+          if (atomic_compare_exchange_weak_explicit(
+                  &mutex->_word, &word, MUTEX_INC_DEPTH(word),
+                  memory_order_relaxed, memory_order_relaxed))
+            return 0;
+          continue;
+        } else {
+          return EAGAIN;
+        }
+      } else {
+        return EDEADLK;
+      }
+    }
+    word = MUTEX_UNLOCK(word);
+    lock = MUTEX_LOCK(word);
+    lock = MUTEX_SET_OWNER(lock, me);
+    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed)) {
+      mutex->_pid = __pid;
+      return 0;
+    }
+    backoff = pthread_delay_np(mutex, backoff);
+  }
+}
 
 /**
  * Locks mutex.
@@ -65,65 +127,10 @@
  * @vforksafe
  */
 errno_t pthread_mutex_lock(pthread_mutex_t *mutex) {
-  int me;
-  uint64_t word, lock;
-
-  LOCKTRACE("pthread_mutex_lock(%t)", mutex);
-
   if (__vforked)
     return 0;
-
-  // get current state of lock
-  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
-
-  // use fancy nsync mutex if possible
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
-      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
-      _weaken(nsync_mu_lock)) {
-    _weaken(nsync_mu_lock)((nsync_mu *)mutex);
-    return 0;
-  }
-
-  // implement barebones normal mutexes
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    for (;;) {
-      word = MUTEX_UNLOCK(word);
-      lock = MUTEX_LOCK(word);
-      if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
-                                                memory_order_acquire,
-                                                memory_order_relaxed))
-        return 0;
-      pthread_pause_np();
-    }
-  }
-
-  // implement recursive mutexes
-  me = gettid();
-  for (;;) {
-    if (MUTEX_OWNER(word) == me) {
-      if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
-        if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {
-          if (atomic_compare_exchange_weak_explicit(
-                  &mutex->_word, &word, MUTEX_INC_DEPTH(word),
-                  memory_order_relaxed, memory_order_relaxed))
-            return 0;
-          continue;
-        } else {
-          return EAGAIN;
-        }
-      } else {
-        return EDEADLK;
-      }
-    }
-    word = MUTEX_UNLOCK(word);
-    lock = MUTEX_LOCK(word);
-    lock = MUTEX_SET_OWNER(lock, me);
-    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
-                                              memory_order_acquire,
-                                              memory_order_relaxed)) {
-      mutex->_pid = __pid;
-      return 0;
-    }
-    pthread_pause_np();
-  }
+  LOCKTRACE("acquiring %t...", mutex);
+  errno_t err = pthread_mutex_lock_impl(mutex);
+  LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
+  return err;
 }

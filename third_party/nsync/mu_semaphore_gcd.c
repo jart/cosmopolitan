@@ -85,8 +85,8 @@ static errno_t nsync_dispatch_semaphore_wait (nsync_semaphore *s,
 }
 
 /* Initialize *s; the initial value is 0.  */
-void nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
-	*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0);
+bool nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
+	return !!(*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0));
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

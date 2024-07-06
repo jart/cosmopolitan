@@ -292,6 +292,7 @@ syscon	mprot	PROT_NONE				0			0			0			0			0			0			0			0			# mmap, mprotect, unix
 syscon	mprot	PROT_READ				1			1			1			1			1			1			1			1			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_WRITE				2			2			2			2			2			2			2			2			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_EXEC				4			4			4			4			4			4			4			4			# mmap, mprotect, unix consensus
+syscon	mprot	PROT_GUARD				0			0			0			0			0			0			0			0x100			# mmap, mprotect, unix consensus
 
 #	mremap() flags
 #	the revolutionary praxis of realloc()

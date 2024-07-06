@@ -67,20 +67,31 @@
       struct StackFrame *bp = __builtin_frame_address(0);                 \
       kprintf("%!s:%d: assertion failed: %!s\n", __FILE__, __LINE__, #x); \
       kprintf("bt %!s\n", (DescribeBacktrace)(bt, bp));                   \
-      __print_maps();                                                     \
-      _Exit(99);                                                          \
+      __print_maps(0);                                                    \
+      __builtin_trap();                                                   \
     }                                                                     \
   } while (0)
 #endif
 
+int __maps_compare(const struct Tree *ra, const struct Tree *rb) {
+  const struct Map *a = (const struct Map *)MAP_TREE_CONTAINER(ra);
+  const struct Map *b = (const struct Map *)MAP_TREE_CONTAINER(rb);
+  return (a->addr > b->addr) - (a->addr < b->addr);
+}
+
+privileged optimizespeed struct Map *__maps_floor(const char *addr) {
+  struct Tree *node;
+  if ((node = tree_floor(__maps.maps, addr, __maps_search)))
+    return MAP_TREE_CONTAINER(node);
+  return 0;
+}
+
 static bool overlaps_existing_map(const char *addr, size_t size, int pagesz) {
-  for (struct Dll *e = dll_first(__maps.used); e;
-       e = dll_next(__maps.used, e)) {
-    struct Map *map = MAP_CONTAINER(e);
+  struct Map *map;
+  if ((map = __maps_floor(addr)))
     if (MAX(addr, map->addr) <
         MIN(addr + PGUP(size), map->addr + PGUP(map->size)))
       return true;
-  }
   return false;
 }
 
@@ -89,66 +100,51 @@ void __maps_check(void) {
   size_t maps = 0;
   size_t pages = 0;
   int pagesz = getpagesize();
-  unsigned id = ++__maps.mono;
-  for (struct Dll *e = dll_first(__maps.used); e;
-       e = dll_next(__maps.used, e)) {
-    struct Map *map = MAP_CONTAINER(e);
+  static unsigned mono;
+  unsigned id = ++mono;
+  for (struct Map *map = __maps_first(); map; map = __maps_next(map)) {
     ASSERT(map->addr != MAP_FAILED);
     ASSERT(map->visited != id);
     ASSERT(map->size);
     map->visited = id;
     pages += (map->size + getpagesize() - 1) / getpagesize();
     maps += 1;
+    struct Map *next;
+    if ((next = __maps_next(map))) {
+      ASSERT(map->addr < next->addr);
+      ASSERT(
+          !(MAX(map->addr, next->addr) <
+            MIN(map->addr + PGUP(map->size), next->addr + PGUP(next->size))));
+    }
   }
   ASSERT(maps = __maps.count);
   ASSERT(pages == __maps.pages);
-  for (struct Dll *e = dll_first(__maps.used); e;
-       e = dll_next(__maps.used, e)) {
-    struct Map *m1 = MAP_CONTAINER(e);
-    for (struct Dll *f = dll_next(__maps.used, e); f;
-         f = dll_next(__maps.used, f)) {
-      struct Map *m2 = MAP_CONTAINER(f);
-      ASSERT(MAX(m1->addr, m2->addr) >=
-             MIN(m1->addr + PGUP(m1->size), m2->addr + PGUP(m2->size)));
-    }
-  }
 #endif
 }
 
 void __maps_free(struct Map *map) {
   map->size = 0;
   map->addr = MAP_FAILED;
-  ASSERT(dll_is_alone(&map->elem));
-  dll_make_last(&__maps.free, &map->elem);
+  dll_init(&map->free);
+  dll_make_first(&__maps.free, &map->free);
 }
 
 static void __maps_insert(struct Map *map) {
-  struct Dll *e = dll_first(__maps.used);
-  struct Map *last = e ? MAP_CONTAINER(e) : 0;
   __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
-  if (last && !IsWindows() &&                  //
-      map->addr == last->addr + last->size &&  //
+  struct Map *floor = __maps_floor(map->addr);
+  if (floor && !IsWindows() &&                 //
+      map->addr + map->size == floor->addr &&  //
       (map->flags & MAP_ANONYMOUS) &&          //
-      map->flags == last->flags &&             //
-      map->prot == last->prot) {
-    last->size += map->size;
-    dll_remove(&__maps.used, &last->elem);
-    dll_make_first(&__maps.used, &last->elem);
+      map->flags == floor->flags &&            //
+      map->prot == floor->prot) {
+    floor->addr -= map->size;
+    floor->size += map->size;
     __maps_free(map);
-  } else if (last && !IsWindows() &&                 //
-             map->addr + map->size == last->addr &&  //
-             (map->flags & MAP_ANONYMOUS) &&         //
-             map->flags == last->flags &&            //
-             map->prot == last->prot) {
-    last->addr -= map->size;
-    last->size += map->size;
-    dll_remove(&__maps.used, &last->elem);
-    dll_make_first(&__maps.used, &last->elem);
-    __maps_free(map);
+    __maps_check();
   } else {
     __maps_add(map);
+    __maps_check();
   }
-  __maps_check();
 }
 
 struct Map *__maps_alloc(void) {
@@ -156,7 +152,7 @@ struct Map *__maps_alloc(void) {
   struct Map *map;
   if ((e = dll_first(__maps.free))) {
     dll_remove(&__maps.free, e);
-    map = MAP_CONTAINER(e);
+    map = MAP_FREE_CONTAINER(e);
     return map;
   }
   int granularity = __granularity();
@@ -168,11 +164,8 @@ struct Map *__maps_alloc(void) {
     CloseHandle(sys.maphandle);
   map = sys.addr;
   map->addr = MAP_FAILED;
-  dll_init(&map->elem);
-  for (int i = 1; i < granularity / sizeof(struct Map); ++i) {
-    dll_init(&map[i].elem);
+  for (int i = 1; i < granularity / sizeof(struct Map); ++i)
     __maps_free(map + i);
-  }
   return map;
 }
 
@@ -190,106 +183,106 @@ static int __munmap(char *addr, size_t size, bool untrack_only) {
 
   // untrack mappings
   int rc = 0;
-  struct Dll *cur;
-  struct Dll *next;
-  struct Dll *delete = 0;
+  struct Map *map;
+  struct Map *next;
+  struct Dll *deleted = 0;
   if (__maps_lock()) {
     __maps_unlock();
     return edeadlk();
   }
-  for (cur = dll_first(__maps.used); cur; cur = next) {
-    next = dll_next(__maps.used, cur);
-    struct Map *map = MAP_CONTAINER(cur);
+  for (map = __maps_floor(addr); map; map = next) {
+    next = __maps_next(map);
     char *map_addr = map->addr;
     size_t map_size = map->size;
-    if (MAX(addr, map_addr) < MIN(addr + size, map_addr + PGUP(map_size))) {
-      if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
-        // remove mapping completely
-        dll_remove(&__maps.used, cur);
-        dll_make_first(&delete, cur);
-        __maps.pages -= (map_size + pagesz - 1) / pagesz;
-        __maps.count -= 1;
-        __maps_check();
-      } else if (IsWindows()) {
-        // you can't carve up memory maps on windows. our mmap() makes
-        // this not a problem (for non-enormous memory maps) by making
-        // independent mappings for each 64 kb granule, under the hood
-        rc = einval();
-      } else if (addr <= map_addr) {
-        // shave off lefthand side of mapping
-        ASSERT(addr + size < map_addr + PGUP(map_size));
-        size_t left = PGUP(addr + size - map_addr);
-        size_t right = map_size - left;
-        ASSERT(right > 0);
-        ASSERT(left > 0);
-        struct Map *leftmap;
-        if ((leftmap = __maps_alloc())) {
-          map->addr += left;
-          map->size = right;
-          if (!(map->flags & MAP_ANONYMOUS))
-            map->off += left;
-          __maps.pages -= (left + pagesz - 1) / pagesz;
+    if (!(MAX(addr, map_addr) < MIN(addr + size, map_addr + PGUP(map_size))))
+      break;
+    if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
+      // remove mapping completely
+      tree_remove(&__maps.maps, &map->tree);
+      dll_init(&map->free);
+      dll_make_first(&deleted, &map->free);
+      __maps.pages -= (map_size + pagesz - 1) / pagesz;
+      __maps.count -= 1;
+    } else if (IsWindows()) {
+      // you can't carve up memory maps on windows. our mmap() makes
+      // this not a problem (for non-enormous memory maps) by making
+      // independent mappings for each 64 kb granule, under the hood
+      rc = einval();
+    } else if (addr <= map_addr) {
+      // shave off lefthand side of mapping
+      ASSERT(addr + size < map_addr + PGUP(map_size));
+      size_t left = PGUP(addr + size - map_addr);
+      size_t right = map_size - left;
+      ASSERT(right > 0);
+      ASSERT(left > 0);
+      struct Map *leftmap;
+      if ((leftmap = __maps_alloc())) {
+        map->addr += left;
+        map->size = right;
+        if (!(map->flags & MAP_ANONYMOUS))
+          map->off += left;
+        __maps.pages -= (left + pagesz - 1) / pagesz;
+        leftmap->addr = map_addr;
+        leftmap->size = left;
+        dll_init(&leftmap->free);
+        dll_make_first(&deleted, &leftmap->free);
+      } else {
+        rc = -1;
+      }
+    } else if (addr + size >= map_addr + PGUP(map_size)) {
+      // shave off righthand side of mapping
+      size_t left = addr - map_addr;
+      size_t right = map_addr + map_size - addr;
+      struct Map *rightmap;
+      if ((rightmap = __maps_alloc())) {
+        map->size = left;
+        __maps.pages -= (right + pagesz - 1) / pagesz;
+        rightmap->addr = addr;
+        rightmap->size = right;
+        dll_init(&rightmap->free);
+        dll_make_first(&deleted, &rightmap->free);
+      } else {
+        rc = -1;
+      }
+    } else {
+      // punch hole in mapping
+      size_t left = addr - map_addr;
+      size_t middle = size;
+      size_t right = map_size - middle - left;
+      struct Map *leftmap;
+      if ((leftmap = __maps_alloc())) {
+        struct Map *middlemap;
+        if ((middlemap = __maps_alloc())) {
           leftmap->addr = map_addr;
           leftmap->size = left;
-          dll_make_first(&delete, &leftmap->elem);
-          __maps_check();
-        } else {
-          rc = -1;
-        }
-      } else if (addr + size >= map_addr + PGUP(map_size)) {
-        // shave off righthand side of mapping
-        size_t left = addr - map_addr;
-        size_t right = map_addr + map_size - addr;
-        struct Map *rightmap;
-        if ((rightmap = __maps_alloc())) {
-          map->size = left;
-          __maps.pages -= (right + pagesz - 1) / pagesz;
-          rightmap->addr = addr;
-          rightmap->size = right;
-          dll_make_first(&delete, &rightmap->elem);
-          __maps_check();
+          leftmap->off = map->off;
+          leftmap->prot = map->prot;
+          leftmap->flags = map->flags;
+          map->addr += left + middle;
+          map->size = right;
+          if (!(map->flags & MAP_ANONYMOUS))
+            map->off += left + middle;
+          tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);
+          __maps.pages -= (middle + pagesz - 1) / pagesz;
+          __maps.count += 1;
+          middlemap->addr = addr;
+          middlemap->size = size;
+          dll_init(&middlemap->free);
+          dll_make_first(&deleted, &middlemap->free);
         } else {
           rc = -1;
         }
       } else {
-        // punch hole in mapping
-        size_t left = addr - map_addr;
-        size_t middle = size;
-        size_t right = map_size - middle - left;
-        struct Map *leftmap;
-        if ((leftmap = __maps_alloc())) {
-          struct Map *middlemap;
-          if ((middlemap = __maps_alloc())) {
-            leftmap->addr = map_addr;
-            leftmap->size = left;
-            leftmap->off = map->off;
-            leftmap->prot = map->prot;
-            leftmap->flags = map->flags;
-            map->addr += left + middle;
-            map->size = right;
-            if (!(map->flags & MAP_ANONYMOUS))
-              map->off += left + middle;
-            dll_make_first(&__maps.used, &leftmap->elem);
-            __maps.pages -= (middle + pagesz - 1) / pagesz;
-            __maps.count += 1;
-            middlemap->addr = addr;
-            middlemap->size = size;
-            dll_make_first(&delete, &middlemap->elem);
-            __maps_check();
-          } else {
-            rc = -1;
-          }
-        } else {
-          rc = -1;
-        }
+        rc = -1;
       }
     }
+    __maps_check();
   }
   __maps_unlock();
 
   // delete mappings
-  for (struct Dll *e = dll_first(delete); e; e = dll_next(delete, e)) {
-    struct Map *map = MAP_CONTAINER(e);
+  for (struct Dll *e = dll_first(deleted); e; e = dll_next(deleted, e)) {
+    struct Map *map = MAP_FREE_CONTAINER(e);
     if (!untrack_only) {
       if (!IsWindows()) {
         if (sys_munmap(map->addr, map->size))
@@ -305,12 +298,12 @@ static int __munmap(char *addr, size_t size, bool untrack_only) {
   }
 
   // free mappings
-  if (!dll_is_empty(delete)) {
+  if (!dll_is_empty(deleted)) {
     __maps_lock();
     struct Dll *e;
-    while ((e = dll_first(delete))) {
-      dll_remove(&delete, e);
-      __maps_free(MAP_CONTAINER(e));
+    while ((e = dll_first(deleted))) {
+      dll_remove(&deleted, e);
+      __maps_free(MAP_FREE_CONTAINER(e));
     }
     __maps_check();
     __maps_unlock();
@@ -350,6 +343,7 @@ static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
     __maps_unlock();
     return (void *)edeadlk();
   }
+  __maps_check();
   map = __maps_alloc();
   __maps_unlock();
   if (!map)

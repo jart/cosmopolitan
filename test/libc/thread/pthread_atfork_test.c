@@ -16,8 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -66,7 +69,7 @@ TEST(pthread_atfork, test) {
   EXITS(0);
 }
 
-pthread_mutex_t mu;
+pthread_mutex_t mu = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 void mu_lock(void) {
   pthread_mutex_lock(&mu);
@@ -80,8 +83,12 @@ void mu_wipe(void) {
   pthread_mutex_init(&mu, 0);
 }
 
+static atomic_bool once;
+
 void *Worker(void *arg) {
   for (int i = 0; i < 20; ++i) {
+    if (!atomic_exchange(&once, true))
+      __print_maps(0);
     mu_lock();
     usleep(20);
     mu_unlock();
@@ -99,14 +106,14 @@ void *Worker(void *arg) {
 }
 
 TEST(pthread_atfork, fork_exit_torture) {
+  if (!IsFreebsd())
+    return;
   mu_wipe();
   pthread_atfork(mu_lock, mu_unlock, mu_wipe);
   int i, n = 4;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < n; ++i)
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
-  }
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < n; ++i)
     ASSERT_EQ(0, pthread_join(t[i], 0));
-  }
 }

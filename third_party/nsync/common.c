@@ -18,6 +18,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/nt/enum/filemapflags.h"
@@ -25,21 +26,17 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdalign.internal.h"
+#include "libc/stdalign.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
-#include "third_party/nsync/races.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/nt/runtime.h"
-#include "libc/intrin/directmap.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/dce.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -97,33 +94,15 @@ __static_yoink("nsync_notice");
    distinct wakeup conditions were high.  So clients are advised to resort to
    condition variables if they have many distinct wakeup conditions. */
 
-/* Used in spinloops to delay resumption of the loop.
-   Usage:
-       unsigned attempts = 0;
-       while (try_something) {
-	  attempts = nsync_spin_delay_ (attempts);
-       } */
-unsigned nsync_spin_delay_ (unsigned attempts) {
-	if (attempts < 7) {
-		volatile int i;
-		for (i = 0; i != 1 << attempts; i++) {
-		}
-		attempts++;
-	} else {
-		nsync_yield_ ();
-	}
-	return (attempts);
-}
-
 /* Spin until (*w & test) == 0, then atomically perform *w = ((*w | set) &
    ~clear), perform an acquire barrier, and return the previous value of *w.
    */
 uint32_t nsync_spin_test_and_set_ (nsync_atomic_uint32_ *w, uint32_t test,
-				   uint32_t set, uint32_t clear) {
+				   uint32_t set, uint32_t clear, void *symbol) {
 	unsigned attempts = 0; /* CV_SPINLOCK retry count */
 	uint32_t old = ATM_LOAD (w);
 	while ((old & test) != 0 || !ATM_CAS_ACQ (w, old, (old | set) & ~clear)) {
-		attempts = nsync_spin_delay_ (attempts);
+		attempts = pthread_delay_np (symbol, attempts);
 		old = ATM_LOAD (w);
 	}
 	return (old);
@@ -156,32 +135,68 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
-static void *nsync_malloc (size_t size) {
-	void *res;
-	if (!IsWindows ()) {
-		// too much of a performance hit to track
-		res = __sys_mmap ((void *)0x7110000000, size,
-				  PROT_READ | PROT_WRITE,
-				  MAP_PRIVATE | MAP_ANONYMOUS,
-				  -1, 0, 0);
+static _Atomic(waiter *) free_waiters;
+
+static void free_waiters_push (waiter *w) {
+	int backoff = 0;
+	w->next_free = atomic_load_explicit (&free_waiters, memory_order_relaxed);
+	while (!atomic_compare_exchange_weak_explicit (&free_waiters, &w->next_free, w,
+						       memory_order_acq_rel, memory_order_relaxed))
+		backoff = pthread_delay_np(free_waiters, backoff);
+}
+
+static void free_waiters_populate (void) {
+	int n;
+	if (IsNetbsd () || IsXnuSilicon ()) {
+		// netbsd needs one file descriptor per semaphore (!!)
+		// tim cook wants us to use his grand central dispatch
+		n = 1;
 	} else {
-		// must be tracked for fork() resurrection
-		res = mmap (0, size,
-			    PROT_READ | PROT_WRITE,
-			    MAP_PRIVATE | MAP_ANONYMOUS,
-			    -1, 0);
+		n = getpagesize() / sizeof(waiter);
 	}
-	if (res == MAP_FAILED)
+	waiter *waiters = mmap (0, n * sizeof(waiter),
+				PROT_READ | PROT_WRITE,
+				MAP_PRIVATE | MAP_ANONYMOUS,
+				-1, 0);
+	if (waiters == MAP_FAILED)
 		nsync_panic_ ("out of memory\n");
-	return res;
+	for (size_t i = 0; i < n; ++i) {
+		waiter *w = &waiters[i];
+		w->tag = WAITER_TAG;
+		w->nw.tag = NSYNC_WAITER_TAG;
+		if (!nsync_mu_semaphore_init (&w->sem)) {
+			if (!i)
+				nsync_panic_ ("out of semaphores\n");
+			break;
+		}
+		w->nw.sem = &w->sem;
+		dll_init (&w->nw.q);
+		NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
+		w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
+		ATM_STORE (&w->remove_count, 0);
+		dll_init (&w->same_condition);
+		w->flags = 0;
+		free_waiters_push (w);
+	}
+}
+
+static waiter *free_waiters_pop (void) {
+	waiter *w;
+	int backoff = 0;
+	for (;;) {
+		if ((w = atomic_load_explicit (&free_waiters, memory_order_relaxed))) {
+			if (atomic_compare_exchange_weak_explicit (&free_waiters, &w, w->next_free,
+								   memory_order_acq_rel, memory_order_relaxed))
+				return w;
+			backoff = pthread_delay_np(free_waiters, backoff);
+		} else {
+			free_waiters_populate ();
+		}
+	}
+	return w;
 }
 
 /* -------------------------------- */
-
-static struct Dll *free_waiters = NULL;
-
-/* free_waiters points to a doubly-linked list of free waiter structs. */
-pthread_mutex_t nsync_waiters_mu = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #define waiter_for_thread __get_tls()->tib_nsync
 
@@ -193,45 +208,20 @@ void nsync_waiter_destroy (void *v) {
 	   of thread-local variables can be arbitrary in some platform e.g.
 	   POSIX. */
 	waiter_for_thread = NULL;
-	IGNORE_RACES_START ();
 	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
 	w->flags &= ~WAITER_RESERVED;
-	pthread_mutex_lock (&nsync_waiters_mu);
-	dll_make_first (&free_waiters, &w->nw.q);
-	pthread_mutex_unlock (&nsync_waiters_mu);
-	IGNORE_RACES_END ();
+	free_waiters_push (w);
 }
 
 /* Return a pointer to an unused waiter struct.
    Ensures that the enclosed timer is stopped and its channel drained. */
 waiter *nsync_waiter_new_ (void) {
-	struct Dll *q;
-	waiter *tw;
 	waiter *w;
+	waiter *tw;
 	tw = waiter_for_thread;
 	w = tw;
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
-		w = NULL;
-		pthread_mutex_lock (&nsync_waiters_mu);
-		q = dll_first (free_waiters);
-		if (q != NULL) { /* If free list is non-empty, dequeue an item. */
-			dll_remove (&free_waiters, q);
-			w = DLL_WAITER (q);
-		}
-		pthread_mutex_unlock (&nsync_waiters_mu);
-		if (w == NULL) { /* If free list was empty, allocate an item. */
-			w = (waiter *) nsync_malloc (sizeof (*w));
-			w->tag = WAITER_TAG;
-			w->nw.tag = NSYNC_WAITER_TAG;
-			nsync_mu_semaphore_init (&w->sem);
-			w->nw.sem = &w->sem;
-			dll_init (&w->nw.q);
-			NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
-			w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
-			ATM_STORE (&w->remove_count, 0);
-			dll_init (&w->same_condition);
-			w->flags = 0;
-		}
+		w = free_waiters_pop ();
 		if (tw == NULL) {
 			w->flags |= WAITER_RESERVED;
 			waiter_for_thread = w;
@@ -246,9 +236,7 @@ void nsync_waiter_free_ (waiter *w) {
 	ASSERT ((w->flags & WAITER_IN_USE) != 0);
 	w->flags &= ~WAITER_IN_USE;
 	if ((w->flags & WAITER_RESERVED) == 0) {
-		pthread_mutex_lock (&nsync_waiters_mu);
-		dll_make_first (&free_waiters, &w->nw.q);
-		pthread_mutex_unlock (&nsync_waiters_mu);
+		free_waiters_push (w);
 		if (w == waiter_for_thread)
 			waiter_for_thread = 0;
 	}

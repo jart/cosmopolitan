@@ -19,9 +19,9 @@
 #include "ctl/set.h"
 #include "libc/mem/leaks.h"
 
-// #include <set>
-// #define ctl std
-// #define check() size()
+#include <set>
+#define ctl std
+#define check() size()
 
 int
 rand32(void)
@@ -144,6 +144,16 @@ main()
         auto lower = s.lower_bound(4);
         auto upper = s.upper_bound(4);
         if (*lower != 5 || *upper != 5)
+            return 18;
+        s.check();
+    }
+
+    {
+        // Test lower_bound and upper_bound
+        ctl::set<int> s{ 1, 3, 4, 5, 7, 9 };
+        auto lower = s.lower_bound(4);
+        auto upper = s.upper_bound(4);
+        if (*lower != 4 || *upper != 5)
             return 18;
         s.check();
     }

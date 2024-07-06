@@ -54,14 +54,22 @@ static struct {
 static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)(1 /
 	(sizeof (struct sem) <= sizeof (*sem_big_enough_for_sem)));
 
-static void nsync_mu_semaphore_sem_create (struct sem *f) {
+static bool nsync_mu_semaphore_sem_create (struct sem *f) {
+	int rc;
 	int lol;
 	f->id = 0;
-	ASSERT (!sys_sem_init (0, &f->id));
-	if ((lol = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 50)) >= 50) {
-		sys_close (f->id);
+	rc = sys_sem_init (0, &f->id);
+	STRACE ("sem_init(0, [%ld]) → %d", f->id, rc);
+	if (rc != 0)
+		return false;
+	lol = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 50);
+	STRACE ("fcntl(%ld, F_DUPFD_CLOEXEC, 50) → %d", f->id, lol);
+	if (lol >= 50) {
+		rc = sys_close (f->id);
+		STRACE ("close(%ld) → %d", f->id, rc);
 		f->id = lol;
 	}
+	return true;
 }
 
 static void nsync_mu_semaphore_sem_fork_child (void) {
@@ -69,8 +77,12 @@ static void nsync_mu_semaphore_sem_fork_child (void) {
 	struct sem *f;
 	for (e = dll_first (g_sems.list); e; e = dll_next (g_sems.list, e)) {
 		f = SEM_CONTAINER (e);
-		sys_close (f->id);
-		nsync_mu_semaphore_sem_create (f);
+		int rc = sys_close (f->id);
+		STRACE ("close(%ld) → %d", f->id, rc);
+	}
+	for (e = dll_first (g_sems.list); e; e = dll_next (g_sems.list, e)) {
+		f = SEM_CONTAINER (e);
+		ASSERT (nsync_mu_semaphore_sem_create (f));
 	}
 	(void) pthread_spin_init (&g_sems.lock, 0);
 }
@@ -80,15 +92,16 @@ static void nsync_mu_semaphore_sem_init (void) {
 }
 
 /* Initialize *s; the initial value is 0. */
-void nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
+bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
 	struct sem *f = (struct sem *) s;
-	nsync_mu_semaphore_sem_create (f);
+	if (!nsync_mu_semaphore_sem_create (f))
+		return false;
 	cosmo_once (&g_sems.once, nsync_mu_semaphore_sem_init);
 	pthread_spin_lock (&g_sems.lock);
 	dll_init (&f->list);
 	dll_make_first (&g_sems.list, &f->list);
 	pthread_spin_unlock (&g_sems.lock);
-	STRACE ("sem_init(0, [%ld]) → 0", f->id);
+	return true;
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

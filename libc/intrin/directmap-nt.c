@@ -86,9 +86,8 @@ TryAgain:
     if ((dm.addr = MapViewOfFileEx(dm.maphandle, fl.flags2, off >> 32, off,
                                    size, addr))) {
       uint32_t oldprot;
-      if (VirtualProtect(dm.addr, size, __prot2nt(prot, iscow), &oldprot)) {
+      if (VirtualProtect(dm.addr, size, __prot2nt(prot, iscow), &oldprot))
         return dm;
-      }
       UnmapViewOfFile(dm.addr);
     }
     CloseHandle(dm.maphandle);
