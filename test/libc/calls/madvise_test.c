@@ -61,6 +61,8 @@ TEST(madvise, short) {
 }
 
 TEST(madvise, zero) {
+  if (IsQemuUser())
+    return;  // doesn't validate flags
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
@@ -86,7 +88,7 @@ TEST(madvise, madvWillNeed_unmappedRegion) {
   ASSERT_SYS(0, 0, munmap(p + getgransize(), getgransize()));
   if (IsXnu())
     ASSERT_SYS(EINVAL, -1, madvise(p, getgransize() * 3, MADV_WILLNEED));
-  else if (IsBsd() || IsWindows())
+  else if (IsBsd() || IsWindows() || IsQemuUser())
     ASSERT_SYS(0, 0, madvise(p, getgransize() * 3, MADV_WILLNEED));
   else
     ASSERT_SYS(ENOMEM, -1, madvise(p, getgransize() * 3, MADV_WILLNEED));
@@ -102,7 +104,7 @@ TEST(madvise, madvFree_unmappedRegion) {
     ASSERT_SYS(EINVAL, -1, madvise(p, getgransize() * 3, MADV_FREE));
   else if (IsNetbsd() || IsOpenbsd())
     ASSERT_SYS(EFAULT, -1, madvise(p, getgransize() * 3, MADV_FREE));
-  else if (IsFreebsd() || IsWindows())
+  else if (IsFreebsd() || IsWindows() || IsQemuUser())
     ASSERT_SYS(0, 0, madvise(p, getgransize() * 3, MADV_FREE));
   else
     ASSERT_SYS(ENOMEM, -1, madvise(p, getgransize() * 3, MADV_FREE));

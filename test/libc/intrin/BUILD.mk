@@ -44,6 +44,7 @@ TEST_LIBC_INTRIN_DIRECTDEPS =					\
 	TOOL_VIZ_LIB						\
 	THIRD_PARTY_COMPILER_RT					\
 	THIRD_PARTY_NSYNC					\
+	THIRD_PARTY_OPENMP					\
 	THIRD_PARTY_XED
 
 TEST_LIBC_INTRIN_DEPS :=					\
@@ -75,6 +76,10 @@ o/$(MODE)/test/libc/intrin/lock_test.dbg:			\
 $(TEST_LIBC_INTRIN_OBJS): private				\
 		CFLAGS +=					\
 			-fno-builtin
+
+$(TEST_LIBC_INTRIN_OBJS): private				\
+		CXXFLAGS +=					\
+			-fopenmp
 
 .PHONY: o/$(MODE)/test/libc/intrin
 o/$(MODE)/test/libc/intrin:					\

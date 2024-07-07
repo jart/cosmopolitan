@@ -142,7 +142,7 @@ static void free_waiters_push (waiter *w) {
 	w->next_free = atomic_load_explicit (&free_waiters, memory_order_relaxed);
 	while (!atomic_compare_exchange_weak_explicit (&free_waiters, &w->next_free, w,
 						       memory_order_acq_rel, memory_order_relaxed))
-		backoff = pthread_delay_np(free_waiters, backoff);
+		backoff = pthread_delay_np (free_waiters, backoff);
 }
 
 static void free_waiters_populate (void) {
@@ -188,12 +188,11 @@ static waiter *free_waiters_pop (void) {
 			if (atomic_compare_exchange_weak_explicit (&free_waiters, &w, w->next_free,
 								   memory_order_acq_rel, memory_order_relaxed))
 				return w;
-			backoff = pthread_delay_np(free_waiters, backoff);
+			backoff = pthread_delay_np (free_waiters, backoff);
 		} else {
 			free_waiters_populate ();
 		}
 	}
-	return w;
 }
 
 /* -------------------------------- */
