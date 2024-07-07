@@ -68,8 +68,10 @@ static void _pthread_ungarbage(struct CosmoTib *tib) {
     tib->tib_garbages = 0;
     while (g->i--)
       ((void (*)(intptr_t))g->p[g->i].fn)(g->p[g->i].arg);
-    _weaken(free)(g->p);
-    _weaken(free)(g);
+    if (_weaken(free)) {
+      _weaken(free)(g->p);
+      _weaken(free)(g);
+    }
   }
 }
 

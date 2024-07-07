@@ -289,10 +289,11 @@ int main(int argc, char *argv[]) {
   // print all the ips that 0.0.0.0 would bind
   // Cosmo's GetHostIps() API is much easier than ioctl(SIOCGIFCONF)
   uint32_t *hostips;
-  for (hostips = gc(GetHostIps()), i = 0; hostips[i]; ++i) {
+  for (hostips = GetHostIps(), i = 0; hostips[i]; ++i) {
     kprintf("listening on http://%hhu.%hhu.%hhu.%hhu:%hu\n", hostips[i] >> 24,
             hostips[i] >> 16, hostips[i] >> 8, hostips[i], PORT);
   }
+  free(hostips);
 
   // secure the server
   //
@@ -342,7 +343,7 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_attr_setguardsize(&attr, getpagesize()));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
   unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
-  pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));
+  pthread_t *th = calloc(threads, sizeof(pthread_t));
   for (i = 0; i < threads; ++i) {
     int rc;
     ++a_workers;
@@ -399,6 +400,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < threads; ++i) {
     unassert(!pthread_join(th[i], 0));
   }
+  free(th);
 
   // close the server socket
   if (!IsWindows())

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -33,11 +32,8 @@
  *
  * @param guardsize contains guard size in bytes
  * @return 0 on success, or errno on error
- * @raise EINVAL if `guardsize` is zero
  */
 errno_t pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
-  if (!guardsize)
-    return EINVAL;
   attr->__guardsize = guardsize;
   return 0;
 }
