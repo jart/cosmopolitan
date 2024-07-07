@@ -19,9 +19,9 @@
 #include "ctl/set.h"
 #include "libc/mem/leaks.h"
 
-#include <set>
-#define ctl std
-#define check() size()
+// #include <set>
+// #define ctl std
+// #define check() size()
 
 int
 rand32(void)
