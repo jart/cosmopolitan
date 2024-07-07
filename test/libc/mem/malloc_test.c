@@ -188,20 +188,22 @@ BENCH(bulk_free, bench) {
   EZBENCH2("free(malloc(16)) MT", donothing, MallocFree());
 }
 
-#define ITERATIONS 10000
+#define ITERATIONS 1000
+#define THREADS    10
+#define SIZE       (256 * 1024)
 
 void *Worker(void *arg) {
-  /* for (int i = 0; i < ITERATIONS; ++i) { */
-  /*   char *p; */
-  /*   ASSERT_NE(NULL, (p = malloc(lemur64() % 128))); */
-  /*   ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % 128, 1)))); */
-  /*   free(p); */
-  /* } */
+  for (int i = 0; i < ITERATIONS; ++i) {
+    char *p;
+    ASSERT_NE(NULL, (p = malloc(lemur64() % SIZE)));
+    ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % SIZE, 1))));
+    free(p);
+  }
   return 0;
 }
 
-BENCH(malloc, torture) {
-  int i, n = __get_cpu_count();
+TEST(malloc, torture) {
+  int i, n = THREADS;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   if (!n)
     return;

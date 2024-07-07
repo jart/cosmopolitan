@@ -31,7 +31,7 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   bzero(st, sizeof(*st));
   st->st_nlink = 1;
   st->st_dev = zipos->dev;
-  st->st_blksize = __granularity();
+  st->st_blksize = getpagesize();
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
     st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
                                         &__umask, memory_order_acquire));

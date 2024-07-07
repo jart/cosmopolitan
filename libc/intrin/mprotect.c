@@ -74,13 +74,16 @@ int __mprotect(char *addr, size_t size, int prot) {
     __maps_unlock();
     return edeadlk();
   }
-  for (struct Map *map = __maps_floor(addr); map; map = __maps_next(map)) {
+  struct Map *map, *ceil, *floor;
+  floor = __maps_floor(addr);
+  ceil = __maps_ceil(addr + size);
+  for (map = floor; map && map != ceil; map = __maps_next(map)) {
     char *map_addr = map->addr;
     size_t map_size = map->size;
     char *beg = MAX(addr, map_addr);
     char *end = MIN(addr + size, map_addr + PGUP(map_size));
     if (beg >= end)
-      break;
+      continue;
     found = true;
     if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
       // change protection of entire mapping

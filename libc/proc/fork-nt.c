@@ -71,9 +71,10 @@ extern long __klog_handle;
 void WipeKeystrokes(void);
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
-static textwindows wontreturn void AbortFork(const char *func) {
+static textwindows wontreturn void AbortFork(const char *func, void *addr) {
 #if SYSDEBUG
-  kprintf("fork() %!s() failed with win32 error %u\n", func, GetLastError());
+  kprintf("fork() %!s(%lx) failed with win32 error %u\n", func, addr,
+          GetLastError());
 #endif
   TerminateThisProcess(SIGSTKFLT);
 }
@@ -134,9 +135,9 @@ static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
 static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
   ssize_t got;
   if ((got = ForkIo2(h, buf, n, ReadFile, "ReadFile", true)) == -1)
-    AbortFork("ReadFile1");
+    AbortFork("ReadFile1", buf);
   if (got != n)
-    AbortFork("ReadFile2");
+    AbortFork("ReadFile2", buf);
 }
 
 static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
@@ -159,7 +160,7 @@ static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
           break;
       }
     }
-    AbortFork("MapOrDie");
+    AbortFork("MapOrDie", (void *)size);
   }
 }
 
@@ -172,7 +173,7 @@ TryAgain:
       access &= ~kNtFileMapExecute;
       goto TryAgain;
     }
-    AbortFork("ViewOrDie");
+    AbortFork("ViewOrDie", base);
   }
 }
 
@@ -223,7 +224,7 @@ textwindows void WinMainForked(void) {
   }
 
   // map memory into process
-  int granularity = __granularity();
+  int granularity = getgransize();
   for (struct Tree *e = tree_first(maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
     if ((uintptr_t)map->addr & (granularity - 1))
@@ -280,14 +281,14 @@ textwindows void WinMainForked(void) {
     unsigned old_protect;
     if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
                         &old_protect))
-      AbortFork("VirtualProtect");
+      AbortFork("VirtualProtect", map->addr);
   }
   __maps.maps = maps;
   __maps_init();
 
   // mitosis complete
   if (!CloseHandle(reader))
-    AbortFork("CloseHandle");
+    AbortFork("CloseHandle", (void *)reader);
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
@@ -370,6 +371,8 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
         // this list will be populated with the maps we're transferring
         for (struct Map *map = __maps_first(); ok && map;
              map = __maps_next(map)) {
+          if (map->flags & MAP_NOFORK)
+            continue;
           if (MAX((char *)__executable_start, map->addr) <
               MIN((char *)_end, map->addr + map->size))
             continue;  // executable image is loaded by windows
@@ -382,9 +385,11 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
           ok = WriteAll(writer, &map, sizeof(map));
         }
         // now write content of each map to child
-        int granularity = __granularity();
+        int granularity = getgransize();
         for (struct Map *map = __maps_first(); ok && map;
              map = __maps_next(map)) {
+          if (map->flags & MAP_NOFORK)
+            continue;
           // we only need to worry about the base mapping
           if ((uintptr_t)map->addr & (granularity - 1))
             continue;
@@ -410,15 +415,15 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
                 ok = VirtualProtect(
                     map2->addr, map2->size,
                     __prot2nt(map2->prot | PROT_READ, map2->iscow),
-                    &map2->oldprot);
+                    &map2->visited);
           }
           if (ok)
             ok = WriteAll(writer, map->addr, size);
           for (struct Map *map2 = map; ok && map2; map2 = __maps_next(map2)) {
             if (!(map2->prot & PROT_READ))
               if (map->addr >= map2->addr && map->addr < map->addr + size)
-                ok = VirtualProtect(map2->addr, map2->size, map2->oldprot,
-                                    &map2->oldprot);
+                ok = VirtualProtect(map2->addr, map2->size, map2->visited,
+                                    &map2->visited);
           }
         }
         if (ok)

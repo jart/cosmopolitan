@@ -24,8 +24,7 @@
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 #include "libc/thread/tls.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/sysv/consts/mremap.h"
 #include "third_party/nsync/mu.h"
 
 #if !IsTiny()
@@ -41,7 +40,7 @@
 #endif
 
 #define HAVE_MMAP 1
-#define HAVE_MREMAP 0
+#define HAVE_MREMAP 1
 #define HAVE_MORECORE 0
 #define USE_LOCKS 2
 #define USE_SPIN_LOCKS 1
@@ -197,7 +196,7 @@ static void* sys_alloc(mstate m, size_t nb) {
   }
 
   if (HAVE_MMAP && tbase == CMFAIL) {  /* Try MMAP */
-    char* mp = (char*)(dlmalloc_requires_more_vespene_gas(asize));
+    char* mp = dlmalloc_requires_more_vespene_gas(asize);
     if (mp != CMFAIL) {
       tbase = mp;
       tsize = asize;
@@ -368,7 +367,7 @@ static int sys_trim(mstate m, size_t pad) {
             size_t newsize = sp->size - extra;
             (void)newsize; /* placate people compiling -Wunused-variable */
             /* Prefer mremap, fall back to munmap */
-            if (CALL_MREMAP(sp->base, sp->size, newsize, 0) != MFAIL ||
+            if (CALL_MREMAP(sp->base, sp->size, newsize, 0) != MAP_FAILED ||
                 (!extra || !CALL_MUNMAP(sp->base + newsize, extra))) {
               released = extra;
             }
@@ -1263,7 +1262,7 @@ void* dlrealloc_single(void* oldmem, size_t bytes) {
     }
 #endif /* FOOTERS */
     if (!PREACTION(m)) {
-      mchunkptr newp = try_realloc_chunk(m, oldp, nb, 1);
+      mchunkptr newp = try_realloc_chunk(m, oldp, nb, MREMAP_MAYMOVE);
       POSTACTION(m);
       if (newp != 0) {
         check_inuse_chunk(m, newp);

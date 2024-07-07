@@ -86,8 +86,6 @@ void __maps_init(void) {
 
 privileged bool __maps_lock(void) {
   struct CosmoTib *tib;
-  if (!__threaded)
-    return false;
   if (!__tls_enabled)
     return false;
   tib = __get_tls_privileged();
@@ -105,8 +103,6 @@ privileged bool __maps_lock(void) {
 
 privileged void __maps_unlock(void) {
   struct CosmoTib *tib;
-  if (!__threaded)
-    return;
   if (!__tls_enabled)
     return;
   tib = __get_tls_privileged();

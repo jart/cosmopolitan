@@ -136,8 +136,7 @@ u32 sys_getuid(void);
 u32 sys_umask(u32);
 unsigned long _sysret(unsigned long);
 void *__sys_mmap(void *, u64, u32, u32, i64, i64, i64);
-void *__sys_mremap(void *, u64, u64, i32, void *);
-void *sys_mremap(void *, u64, u64, i32, void *);
+void *sys_mremap(void *, u64, u64, u64, u64);
 void sys_exit(i32);
 
 #undef i32

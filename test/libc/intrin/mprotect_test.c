@@ -147,18 +147,18 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
 }
 
 TEST(mprotect, testExecOnly_canExecute) {
-  char *p = _mapanon(__granularity());
+  char *p = _mapanon(getpagesize());
   void (*f)(void) = (void *)p;
   memcpy(p, kRet31337, sizeof(kRet31337));
-  ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_EXEC | PROT_READ));
+  ASSERT_SYS(0, 0, mprotect(p, getpagesize(), PROT_EXEC | PROT_READ));
   f();
   // On all supported platforms, PROT_EXEC implies PROT_READ. There is
   // one exception to this rule: Chromebook's fork of the Linux kernel
   // which has been reported, to have the ability to prevent a program
   // from reading its own code.
-  ASSERT_SYS(0, 0, mprotect(p, __granularity(), PROT_EXEC));
+  ASSERT_SYS(0, 0, mprotect(p, getpagesize(), PROT_EXEC));
   f();
-  munmap(p, __granularity());
+  munmap(p, getpagesize());
 }
 
 TEST(mprotect, testProtNone_cantEvenRead) {
@@ -248,4 +248,42 @@ TEST(mprotect, image) {
   char *p = (char *)i;
   EXPECT_SYS(0, 0, mprotect(p, 16384, PROT_READ | PROT_WRITE));
   EXPECT_EQ(2, ++p[0]);
+}
+
+TEST(mprotect, weirdSize) {
+  char *p;
+  EXPECT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_EXEC,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  EXPECT_SYS(0, 0, mprotect(p, 2, PROT_NONE));
+  EXPECT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(mprotect, outerOverlap) {
+  char *p;
+  int gransz = getgransize();
+  EXPECT_NE(MAP_FAILED, (p = mmap(0, gransz * 3, PROT_READ | PROT_EXEC,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p, gransz));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p + gransz * 2, gransz));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, mprotect(p, gransz * 3, PROT_NONE));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, mprotect(p + gransz, gransz, PROT_READ));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p, gransz * 3));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
 }

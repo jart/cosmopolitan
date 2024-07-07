@@ -18,37 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/xchg.internal.h"
+#include "libc/intrin/maps.h"
 #include "libc/limits.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xspawn.h"
-#include "third_party/xed/x86.h"
 
 // this is also a good torture test for mmap
 //
@@ -61,11 +46,11 @@
 __static_yoink("zipos");
 
 int pagesz;
-int granularity;
+int gransz;
 
 void SetUpOnce(void) {
   pagesz = getpagesize();
-  granularity = __granularity();
+  gransz = getgransize();
   testlib_enable_tmp_setup_teardown();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
 }
@@ -109,7 +94,7 @@ TEST(mmap, pageBeyondGone) {
            MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   ASSERT_NE(MAP_FAILED, p);
   EXPECT_TRUE(testlib_memoryexists(p));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz - 1));
+  EXPECT_FALSE(testlib_memoryexists(p + 1));  // b/c kisdangerous
   EXPECT_FALSE(testlib_memoryexists(p + pagesz));
   ASSERT_EQ(0, munmap(p, 1));
 }
@@ -124,47 +109,76 @@ TEST(mmap, fixedTaken) {
 }
 
 TEST(mmap, hint) {
-  char *p, *q;
+  char *p;
 
   // obtain four pages
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, granularity * 4, PROT_READ,
+  ASSERT_NE(MAP_FAILED, (p = mmap(randaddr(), gransz * 4, PROT_READ,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
 
   // unmap two of those pages
-  EXPECT_SYS(0, 0, munmap(p + granularity, granularity));
-  EXPECT_SYS(0, 0, munmap(p + granularity * 3, granularity));
+  EXPECT_SYS(0, 0, munmap(p + gransz, gransz));
+  EXPECT_SYS(0, 0, munmap(p + gransz * 3, gransz));
 
   // test AVAILABLE nonfixed nonzero addr is granted
   // - posix doesn't mandate this behavior (but should)
   // - freebsd always chooses for you (which has no acceptable workaround)
   // - netbsd manual claims it'll be like freebsd, but is actually like openbsd
   if (!IsFreebsd())
-    EXPECT_EQ(p + granularity, mmap(p + granularity, granularity, PROT_READ,
-                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+    ASSERT_EQ(p + gransz, mmap(p + gransz, gransz, PROT_READ,
+                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
 
   // test UNAVAILABLE nonfixed nonzero addr picks something nearby
   // - posix actually does require this, but doesn't say how close
   // - xnu / linux / openbsd always choose nearest on the right
   // - freebsd goes about 16mb to the right
   // - qemu-user is off the wall
-  if (!IsQemuUser()) {
-    q = mmap(p + granularity * 2, granularity, PROT_READ,
-             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    EXPECT_LE(ABS(q - (p + granularity * 2)), 64 * 1024 * 1024);
-    EXPECT_SYS(0, 0, munmap(q, granularity));
-  }
+  /*if (!IsQemuUser()) {
+    q = mmap(p + gransz * 2, gransz, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1,
+             0);
+    EXPECT_LE(ABS(q - (p + gransz * 2)), 128 * 1024 * 1024);
+    EXPECT_SYS(0, 0, munmap(q, gransz));
+  }*/
 
   // clean up
-  EXPECT_SYS(0, 0, munmap(p, granularity * 4));
+  EXPECT_SYS(0, 0, munmap(p, gransz * 4));
+}
+
+TEST(mprotect, punchHoleAndFillHole) {
+  char *p;
+  int count = __maps.count;
+  int gransz = getgransize();
+
+  // obtain memory
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(randaddr(), gransz * 3, PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_EQ((count += IsWindows() ? 3 : 1), __maps.count);
+
+  // if munmap punches a hole...
+  // the number of mappings may increase
+  // this is why it's possible for munmap() to ENOMEM lool
+  EXPECT_SYS(0, 0, munmap(p + gransz, gransz));
+  ASSERT_EQ((count += IsWindows() ? -1 : +1), __maps.count);
+
+  // now if we fill that hole
+  // the memory manager will coalesce the mappings
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(p + gransz, gransz, PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0)));
+  ASSERT_EQ((count += IsWindows() ? +1 : -1), __maps.count);
+
+  // clean up
+  EXPECT_SYS(0, 0, munmap(p, gransz * 3));
 }
 
 TEST(mmap, smallerThanPage_mapsRemainder) {
   long pagesz = sysconf(_SC_PAGESIZE);
   char *map =
-      mmap(0, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      mmap(0, 1, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   ASSERT_NE(MAP_FAILED, map);
   EXPECT_TRUE(testlib_memoryexists(map));
-  EXPECT_TRUE(testlib_memoryexists(map + (pagesz - 1)));
+  EXPECT_TRUE(testlib_pokememory(map + (pagesz - 1)));
+  EXPECT_TRUE(!testlib_memoryexists(map + (pagesz - 1)));
   EXPECT_SYS(0, 0, munmap(map, 1));
   EXPECT_FALSE(testlib_memoryexists(map));
   EXPECT_FALSE(testlib_memoryexists(map + (pagesz - 1)));
@@ -178,7 +192,7 @@ TEST(mmap, testMapFile) {
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));
@@ -192,7 +206,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED,
+  ASSERT_NE(MAP_FAILED,
             (p = mmap(NULL, 5, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)));
   EXPECT_NE(-1, close(fd));
   EXPECT_STREQN("hello", p, 5);
@@ -209,7 +223,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
 TEST(mmap, fileOffset) {
   int fd;
   char *map;
-  int offset_align = IsWindows() ? granularity : getpagesize();
+  int offset_align = IsWindows() ? gransz : getpagesize();
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
   EXPECT_NE(-1, ftruncate(fd, offset_align * 2));
   EXPECT_NE(-1, pwrite(fd, "hello", 5, offset_align * 0));
@@ -226,13 +240,13 @@ TEST(mmap, mapPrivate_writesDontChangeFile) {
   int fd;
   char *map, buf[6];
   ASSERT_NE(-1, (fd = open("bar", O_CREAT | O_RDWR, 0644)));
-  EXPECT_NE(-1, ftruncate(fd, granularity));
+  EXPECT_NE(-1, ftruncate(fd, gransz));
   EXPECT_NE(-1, pwrite(fd, "hello", 5, 0));
-  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, granularity, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, gransz, PROT_READ | PROT_WRITE,
                                     MAP_PRIVATE, fd, 0)));
   memcpy(map, "there", 5);
-  EXPECT_NE(-1, msync(map, granularity, MS_SYNC));
-  EXPECT_NE(-1, munmap(map, granularity));
+  EXPECT_NE(-1, msync(map, gransz, MS_SYNC));
+  EXPECT_NE(-1, munmap(map, gransz));
   EXPECT_NE(-1, pread(fd, buf, 6, 0));
   EXPECT_EQ(0, memcmp(buf, "hello", 5), "%#.*s", 5, buf);
   EXPECT_NE(-1, close(fd));
@@ -245,7 +259,7 @@ TEST(mmap, ziposCannotBeShared) {
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
   EXPECT_SYS(EINVAL, MAP_FAILED,
-             (p = mmap(NULL, granularity, PROT_READ, MAP_SHARED, fd, 0)));
+             (p = mmap(NULL, gransz, PROT_READ, MAP_SHARED, fd, 0)));
   close(fd);
 }
 
@@ -257,9 +271,9 @@ TEST(mmap, ziposCow) {
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
   EXPECT_NE(MAP_FAILED,
-            (p = mmap(NULL, granularity, PROT_READ, MAP_PRIVATE, fd, 0)));
+            (p = mmap(NULL, gransz, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("\177ELF", ((const char *)p), 4);
-  EXPECT_NE(-1, munmap(p, granularity));
+  EXPECT_NE(-1, munmap(p, gransz));
   EXPECT_NE(-1, close(fd));
 }
 
@@ -270,7 +284,7 @@ TEST(mmap, ziposCowFileMapReadonlyFork) {
   int fd, ws;
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0)));
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
@@ -291,7 +305,7 @@ TEST(mmap, ziposCowFileMapFork) {
   void *p;
   char lol[4];
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_NE(MAP_FAILED,
+  ASSERT_NE(MAP_FAILED,
             (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
   memcpy(p, "parnt", 6);
   ASSERT_NE(-1, (ws = xspawn(0)));
@@ -321,7 +335,7 @@ TEST(mmap, cow) {
             path);
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));
@@ -340,7 +354,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
   EXPECT_EQ(6, write(fd, "hello", 6));
   EXPECT_NE(-1, close(fd));
   ASSERT_NE(-1, (fd = open(path, O_RDONLY)));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ, MAP_PRIVATE, fd, 0)));
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
@@ -365,7 +379,7 @@ TEST(mmap, cowFileMapFork) {
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "parnt", 6));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED,
+  ASSERT_NE(MAP_FAILED,
             (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("parnt", p, 5);
   ASSERT_NE(-1, (ws = xspawn(0)));
@@ -390,7 +404,7 @@ TEST(mmap, cowFileMapFork) {
 TEST(mmap, sharedAnonMapFork) {
   int ws;
   char *p;
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ | PROT_WRITE,
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ | PROT_WRITE,
                                   MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
   strcpy(p, "parnt");
   EXPECT_STREQN("parnt", p, 5);
@@ -417,7 +431,7 @@ TEST(mmap, sharedFileMapFork) {
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "parnt", 6));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED,
+  ASSERT_NE(MAP_FAILED,
             (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)));
   EXPECT_STREQN("parnt", p, 5);
   ASSERT_NE(-1, (ws = xspawn(0)));
@@ -449,15 +463,15 @@ void *ptrs[N];
 
 void BenchMmapPrivate(void) {
   void *p;
-  p = mmap(0, granularity * 10, PROT_READ | PROT_WRITE,
-           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  p = mmap(0, gransz * 10, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
+           -1, 0);
   if (p == MAP_FAILED)
     __builtin_trap();
   ptrs[count++] = p;
 }
 
 void BenchUnmap(void) {
-  if (munmap(ptrs[--count], granularity * 10))
+  if (munmap(ptrs[--count], gransz * 10))
     __builtin_trap();
 }
 

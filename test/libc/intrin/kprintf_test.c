@@ -277,7 +277,7 @@ TEST(ksnprintf, testMisalignedPointer_wontFormat) {
 TEST(ksnprintf, testUnterminatedOverrun_truncatesAtPageBoundary) {
   char *m;
   char b[32];
-  int gran = __granularity();
+  int gran = getgransize();
   m = memset(_mapanon(gran * 2), 1, gran);
   EXPECT_SYS(0, 0, munmap(m + gran, gran));
   EXPECT_EQ(12, ksnprintf(b, 32, "%'s", m + gran - 3));

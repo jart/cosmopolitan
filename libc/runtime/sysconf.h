@@ -33,6 +33,8 @@
 #define _SC_VERSION                      29
 #define _SC_PAGE_SIZE                    30
 #define _SC_PAGESIZE                     30 /* !! */
+#define _SC_GRAN_SIZE                    3000
+#define _SC_GRANSIZE                     3000
 #define _SC_RTSIG_MAX                    31
 #define _SC_SEM_NSEMS_MAX                32
 #define _SC_SEM_VALUE_MAX                33

@@ -26,6 +26,7 @@ const char *DescribeInOutInt64(char[23], ssize_t, int64_t *) libcesque;
 const char *DescribeItimer(char[12], int) libcesque;
 const char *DescribeMapFlags(char[64], int) libcesque;
 const char *DescribeMapping(char[8], int, int) libcesque;
+const char *DescribeMremapFlags(char[30], int) libcesque;
 const char *DescribeNtConsoleInFlags(char[256], uint32_t) libcesque;
 const char *DescribeNtConsoleOutFlags(char[128], uint32_t) libcesque;
 const char *DescribeNtCreationDisposition(uint32_t) libcesque;
@@ -49,7 +50,6 @@ const char *DescribePollFlags(char[64], int) libcesque;
 const char *DescribeProtFlags(char[48], int) libcesque;
 const char *DescribePtrace(char[12], int) libcesque;
 const char *DescribePtraceEvent(char[32], int) libcesque;
-const char *DescribeRemapFlags(char[48], int) libcesque;
 const char *DescribeRlimitName(char[20], int) libcesque;
 const char *DescribeSchedPolicy(char[48], int) libcesque;
 const char *DescribeSeccompOperation(int) libcesque;
@@ -81,6 +81,7 @@ const char *DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeItimer(x)            DescribeItimer(alloca(12), x)
 #define DescribeMapFlags(x)          DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        DescribeMapping(alloca(8), x, y)
+#define DescribeMremapFlags(x)       DescribeMremapFlags(alloca(30), x)
 #define DescribeNtConsoleInFlags(x)  DescribeNtConsoleInFlags(alloca(256), x)
 #define DescribeNtConsoleOutFlags(x) DescribeNtConsoleOutFlags(alloca(128), x)
 #define DescribeNtFileAccessFlags(x) DescribeNtFileAccessFlags(alloca(512), x)
@@ -103,7 +104,6 @@ const char *DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeProtFlags(x)         DescribeProtFlags(alloca(48), x)
 #define DescribePtrace(i)            DescribePtrace(alloca(12), i)
 #define DescribePtraceEvent(x)       DescribePtraceEvent(alloca(32), x)
-#define DescribeRemapFlags(x)        DescribeRemapFlags(alloca(48), x)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
 #define DescribeSiCode(x, y)         DescribeSiCode(alloca(20), x, y)

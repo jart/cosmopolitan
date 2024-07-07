@@ -228,6 +228,7 @@ syscon	mmap	MAP_LOCKED				0x00002000		0x00002000		0			0			0			0			0			0
 syscon	mmap	MAP_NORESERVE				0x00004000		0x00004000		0x00000040		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
 syscon	mmap	MAP_POPULATE				0x00008000		0x00008000		0			0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0x00010000		0			0			0			0			0			0
+syscon	mmap	MAP_NOFORK				0			0			0			0			0			0			0			0x10000000		# used on pages internal to our mmap() implemention on windows
 syscon	mmap	MAP_SYNC				0x00080000		0x00080000		0			0			0			0			0			0			# perform synchronous page faults for mapping (Linux 4.15+)
 syscon	mmap	MAP_HUGETLB				0x00040000		-1			-1			-1			-1			-1			-1			-1			# make it inherit across execve()
 syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
@@ -293,13 +294,6 @@ syscon	mprot	PROT_READ				1			1			1			1			1			1			1			1			# mmap, mprotect, unix
 syscon	mprot	PROT_WRITE				2			2			2			2			2			2			2			2			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_EXEC				4			4			4			4			4			4			4			4			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_GUARD				0			0			0			0			0			0			0			0x100			# mmap, mprotect, unix consensus
-
-#	mremap() flags
-#	the revolutionary praxis of realloc()
-#
-#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	mremap	MREMAP_MAYMOVE				1			1			1			1			1			1			1			1			# faked non-linux (b/c linux only)
-syscon	mremap	MREMAP_FIXED				2			2			2			2			2			2			2			2			# faked non-linux (b/c linux only)
 
 #	sigprocmask() flags
 #

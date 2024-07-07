@@ -159,15 +159,15 @@ TEST(setrlimit, testVirtualMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / __granularity(); ++i) {
-      p = sys_mmap(0, __granularity(), PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / getpagesize(); ++i) {
+      p = sys_mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, __granularity(), _rand64, -1);
+      rngset(p, getpagesize(), _rand64, -1);
     }
     _Exit(1);
   }
@@ -193,15 +193,15 @@ TEST(setrlimit, testDataMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_DATA, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / __granularity(); ++i) {
-      p = sys_mmap(0, __granularity(), PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / getpagesize(); ++i) {
+      p = sys_mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, __granularity(), _rand64, -1);
+      rngset(p, getpagesize(), _rand64, -1);
     }
     _Exit(1);
   }

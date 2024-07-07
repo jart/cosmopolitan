@@ -511,7 +511,7 @@ FORCEINLINE int win32munmap(void* ptr, size_t size) {
         #define CALL_MREMAP(addr, osz, nsz, mv) MREMAP_DEFAULT((addr), (osz), (nsz), (mv))
     #endif /* MREMAP */
 #else  /* HAVE_MMAP && HAVE_MREMAP */
-    #define CALL_MREMAP(addr, osz, nsz, mv)     MFAIL
+    #define CALL_MREMAP(addr, osz, nsz, mv)     MAP_FAILED
 #endif /* HAVE_MMAP && HAVE_MREMAP */
 
 /* mstate bit set if continguous morecore disabled or failed */

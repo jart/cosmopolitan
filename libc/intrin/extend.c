@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-#define G __granularity()
+#define G getgransize()
 
 /**
  * Extends static allocation.

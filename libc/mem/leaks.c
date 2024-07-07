@@ -44,7 +44,7 @@ void __may_leak(void *alloc) {
     return;
   pthread_mutex_lock(&lock);
   if (dll_is_empty(freaks)) {
-    int g = __granularity();
+    int g = getgransize();
     struct Leak *p = _mapanon(g);
     int n = g / sizeof(struct Leak);
     for (int i = 0; i < n; ++i) {

@@ -47,9 +47,6 @@
 // MISSING #include "os2/os2zip.h"
 #endif
 
-#undef PAGESIZE
-#define PAGESIZE __granularity()
-
 #if defined(MMAP)
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"

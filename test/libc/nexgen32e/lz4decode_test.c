@@ -85,7 +85,7 @@ TEST(lz4, zoneFileGmt) {
                 (mapsize = roundup(
                      LZ4_FRAME_BLOCKCONTENTSIZE(lz4check(dict)) +
                          (gmtsize = LZ4_FRAME_BLOCKCONTENTSIZE(lz4check(gmt))),
-                     __granularity())))),
+                     getpagesize())))),
            dict)),
       gmt);
   ASSERT_BINEQ(

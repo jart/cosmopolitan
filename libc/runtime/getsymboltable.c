@@ -56,15 +56,14 @@ static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
+  size_t size;
   ssize_t cf, lf;
-  size_t size, size2;
   struct SymbolTable *res = 0;
   if ((cf = GetZipFile(zipos, ".symtab." _ARCH_NAME)) != -1 ||
       (cf = GetZipFile(zipos, ".symtab")) != -1) {
     lf = GetZipCfileOffset(zipos->map + cf);
     size = GetZipLfileUncompressedSize(zipos->map + lf);
-    size2 = ROUNDUP(size, __granularity());
-    if ((res = _mapanon(size2))) {
+    if ((res = _mapanon(size))) {
       switch (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
         case kZipCompressionNone:
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);
@@ -73,12 +72,12 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
           if (__inflate((void *)res, size,
                         (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
                         GetZipLfileCompressedSize(zipos->map + lf))) {
-            munmap(res, size2);
+            munmap(res, size);
             res = 0;
           }
           break;
         default:
-          munmap(res, size2);
+          munmap(res, size);
           res = 0;
           break;
       }

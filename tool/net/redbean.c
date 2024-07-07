@@ -5019,7 +5019,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
       VERBOSEF("(token) please run the blackholed program; see our website!");
     }
   }
-  tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, __granularity()));
+  tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, getgransize()));
   memset(tokenbucket.b, 127, 1ul << cidr);
   tokenbucket.cidr = cidr;
   tokenbucket.reject = reject;
@@ -7339,7 +7339,7 @@ void RedBean(int argc, char *argv[]) {
   heartbeatinterval.tv_sec = 5;
   CHECK_GT(CLK_TCK, 0);
   CHECK_NE(MAP_FAILED,
-           (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), __granularity()),
+           (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), getgransize()),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
   if (daemonize) {

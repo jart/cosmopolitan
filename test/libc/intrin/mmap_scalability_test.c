@@ -20,6 +20,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -37,13 +38,6 @@
         (double)work;                                                         \
     kprintf("%'20ld ns %2dx %s\n", (long)nanos, (ITERATIONS), #CODE);         \
   } while (0)
-
-void *randaddr(void) {
-  static unsigned long lcg = 1;
-  lcg *= 6364136223846793005;
-  lcg += 1442695040888963407;
-  return (void *)(lcg >> 48 << 28);
-}
 
 void map_unmap_one_page(void) {
   void *p;

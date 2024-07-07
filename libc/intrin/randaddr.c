@@ -16,22 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/nt/struct/systeminfo.h"
-#include "libc/nt/systeminfo.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
+#include "libc/intrin/maps.h"
 
-int __granularity(void) {
-  static int res;
-  if (!res) {
-    if (!IsWindows()) {
-      res = getpagesize();
-    } else {
-      struct NtSystemInfo si;
-      GetSystemInfo(&si);
-      res = si.dwAllocationGranularity;
-    }
-  }
-  return res;
+void *randaddr(void) {
+  static unsigned long lcg = 1;
+  lcg *= 6364136223846793005;
+  lcg += 1442695040888963407;
+  return (void *)(lcg >> 48 << 28);
 }

@@ -28,11 +28,11 @@
 int i, *p;
 
 void SetUp(void) {
-  p = _mapshared(__granularity());
+  p = _mapshared(getpagesize());
 }
 
 void TearDown(void) {
-  munmap(p, __granularity());
+  munmap(p, getpagesize());
 }
 
 void AtExit3(void) {

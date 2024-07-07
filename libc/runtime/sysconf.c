@@ -41,11 +41,12 @@
  *
  * The following parameters are supported:
  *
+ * - `_SC_PAGESIZE` returns page size for mmap()
+ * - `_SC_GRANSIZE` returns addr alignment for mmap()
  * - `_SC_CLK_TCK` returns number of clock ticks per second
  * - `_SC_ARG_MAX` will perform expensive rlimit calculations
  * - `_SC_SIGSTKSZ` returns host platform's preferred SIGSTKSZ
  * - `_SC_MINSIGSTKSZ` returns host platform's required MINSIGSTKSZ
- * - `_SC_PAGESIZE` currently always returns 65536 due to Windows
  * - `_SC_AVPHYS_PAGES` returns average physical memory pages
  * - `_SC_PHYS_PAGES` returns physical memory pages available
  * - `_SC_NPROCESSORS_ONLN` returns number of effective CPUs
@@ -61,6 +62,8 @@ long sysconf(int name) {
       return CLK_TCK;
     case _SC_PAGESIZE:
       return getpagesize();
+    case _SC_GRANSIZE:
+      return getgransize();
     case _SC_ARG_MAX:
       return __get_arg_max();
     case _SC_SIGSTKSZ:

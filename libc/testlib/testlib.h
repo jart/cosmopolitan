@@ -372,6 +372,7 @@ void testlib_seterrno(int);
 void testlib_runalltests(void);
 const char *testlib_strerror(void);
 void testlib_runallbenchmarks(void);
+bool testlib_pokememory(const void *);
 bool testlib_memoryexists(const void *);
 void testlib_runtestcases(const testfn_t *, const testfn_t *, testfn_t);
 void testlib_runfixtures(const testfn_t *, const testfn_t *,

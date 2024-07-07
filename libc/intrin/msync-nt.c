@@ -37,7 +37,10 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   if (__maps_lock()) {
     rc = edeadlk();
   } else {
-    for (struct Map *map = __maps_floor(addr); map; map = __maps_next(map)) {
+    struct Map *map, *ceil, *floor;
+    floor = __maps_floor(addr);
+    ceil = __maps_ceil(addr + size);
+    for (map = floor; map && map != ceil; map = __maps_next(map)) {
       char *beg = MAX(addr, map->addr);
       char *end = MIN(addr + size, map->addr + map->size);
       if (beg < end)

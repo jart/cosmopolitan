@@ -163,7 +163,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode, int arch) {
   CHECK_NOTNULL((elf = calloc(1, sizeof(struct ElfWriter))));
   CHECK_NOTNULL((elf->path = strdup(path)));
   CHECK_NE(-1, (elf->fd = open(elf->path, O_CREAT | O_TRUNC | O_RDWR, mode)));
-  CHECK_NE(-1, ftruncate(elf->fd, (elf->mapsize = __granularity())));
+  CHECK_NE(-1, ftruncate(elf->fd, (elf->mapsize = getgransize())));
   CHECK_NE(MAP_FAILED, (elf->map = mmap((void *)(intptr_t)kFixedmapStart,
                                         elf->mapsize, PROT_READ | PROT_WRITE,
                                         MAP_SHARED | MAP_FIXED, elf->fd, 0)));
@@ -234,7 +234,7 @@ void *elfwriter_reserve(struct ElfWriter *elf, size_t size) {
     do {
       greed = greed + (greed >> 1);
     } while (need > greed);
-    greed = ROUNDUP(greed, __granularity());
+    greed = ROUNDUP(greed, getgransize());
     CHECK_NE(-1, ftruncate(elf->fd, greed));
     CHECK_NE(MAP_FAILED, mmap((char *)elf->map + elf->mapsize,
                               greed - elf->mapsize, PROT_READ | PROT_WRITE,

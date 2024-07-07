@@ -18,8 +18,7 @@ struct Map {
   int flags;         /* memory map flag */
   bool iscow;        /* windows nt only */
   bool readonlyfile; /* windows nt only */
-  unsigned visited;  /* used for checks */
-  unsigned oldprot;  /* in windows fork */
+  unsigned visited;  /* checks and fork */
   intptr_t hand;     /* windows nt only */
   union {
     struct Tree tree;
@@ -33,7 +32,7 @@ struct Maps {
   struct Dll *free;
   size_t count;
   size_t pages;
-  atomic_ulong rollo;
+  atomic_size_t rollo;
   struct Map stack;
   struct Map guard;
 };
@@ -45,6 +44,7 @@ struct AddrSize {
 
 extern struct Maps __maps;
 
+void *randaddr(void);
 void __maps_init(void);
 bool __maps_lock(void);
 void __maps_check(void);
@@ -52,6 +52,7 @@ void __maps_unlock(void);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 struct Map *__maps_alloc(void);
+struct Map *__maps_ceil(const char *);
 struct Map *__maps_floor(const char *);
 void __maps_stack(char *, int, int, size_t, int, intptr_t);
 int __maps_compare(const struct Tree *, const struct Tree *);
@@ -61,11 +62,7 @@ forceinline optimizespeed int __maps_search(const void *key,
                                             const struct Tree *node) {
   const char *addr = (const char *)key;
   const struct Map *map = (const struct Map *)MAP_TREE_CONTAINER(node);
-  if (addr < map->addr)
-    return +1;
-  if (addr >= map->addr + map->size)
-    return -1;
-  return 0;
+  return (addr > map->addr) - (addr < map->addr);
 }
 
 static struct Map *__maps_next(struct Map *map) {

@@ -63,10 +63,10 @@ TEST(fork, testSharedMemory) {
   int *sharedvar;
   int *privatevar;
   EXPECT_NE(MAP_FAILED,
-            (sharedvar = mmap(NULL, __granularity(), PROT_READ | PROT_WRITE,
+            (sharedvar = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
                               MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
   EXPECT_NE(MAP_FAILED,
-            (privatevar = mmap(NULL, __granularity(), PROT_READ | PROT_WRITE,
+            (privatevar = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   stackvar = 1;
   *sharedvar = 1;
@@ -77,18 +77,18 @@ TEST(fork, testSharedMemory) {
     ++stackvar;
     ++*sharedvar;
     ++*privatevar;
-    msync((void *)ROUNDDOWN((intptr_t)&stackvar, __granularity()),
-          __granularity(), MS_SYNC);
-    EXPECT_NE(-1, msync(privatevar, __granularity(), MS_SYNC));
-    EXPECT_NE(-1, msync(sharedvar, __granularity(), MS_SYNC));
+    msync((void *)ROUNDDOWN((intptr_t)&stackvar, getpagesize()), getpagesize(),
+          MS_SYNC);
+    EXPECT_NE(-1, msync(privatevar, getpagesize(), MS_SYNC));
+    EXPECT_NE(-1, msync(sharedvar, getpagesize(), MS_SYNC));
     _exit(0);
   }
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_EQ(1, stackvar);
   EXPECT_EQ(2, *sharedvar);
   EXPECT_EQ(1, *privatevar);
-  EXPECT_NE(-1, munmap(sharedvar, __granularity()));
-  EXPECT_NE(-1, munmap(privatevar, __granularity()));
+  EXPECT_NE(-1, munmap(sharedvar, getpagesize()));
+  EXPECT_NE(-1, munmap(privatevar, getpagesize()));
 }
 
 static volatile bool gotsigusr1;

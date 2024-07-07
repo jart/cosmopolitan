@@ -102,6 +102,12 @@ void *VirtualAlloc2(
     struct NtMemExtendedParameter *in_out_opt_ExtendedParameters,
     unsigned ParameterCount);
 
+bool32 PrefetchVirtualMemory(int64_t hProcess, uintptr_t NumberOfEntries,
+                             struct NtMemoryRangeEntry *VirtualAddresses,
+                             uint32_t reserved_Flags);
+bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
+                          int Priority);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/memory.inc"
 #endif /* ShouldUseMsabiAttribute() */

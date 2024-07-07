@@ -169,5 +169,5 @@ BENCH(memcpy, bench) {
   BB(1023);
   BB(1024);
   BB(4096);
-  BB(__granularity());
+  BB(getpagesize());
 }

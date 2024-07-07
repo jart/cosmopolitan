@@ -36,35 +36,12 @@ static inline void tree_set_red(struct Tree *node, int red) {
   node->word |= red;
 }
 
-forceinline optimizespeed struct Tree *tree_floor(const struct Tree *node,
-                                                  const void *key,
-                                                  tree_search_f *cmp) {
-  struct Tree *left = 0;
-  while (node) {
-    if (cmp(key, node) >= 0) {
-      left = (struct Tree *)node;
-      node = tree_get_left(node);
-    } else {
-      node = node->right;
-    }
-  }
-  return left;
-}
-
-static inline struct Tree *tree_ceil(const struct Tree *node, const void *key,
-                                     tree_search_f *cmp) {
-  struct Tree *right = 0;
-  while (node) {
-    if (cmp(key, node) < 0) {
-      right = (struct Tree *)node;
-      node = tree_get_left(node);
-    } else {
-      node = node->right;
-    }
-  }
-  return right;
-}
-
+// Returns node equal to given key.
+//
+//    [1 3 5 7]   [1 3 5 7]   [1 3 5 7]
+//       NULL        ↑               NULL
+//        4          3                8
+//
 static inline struct Tree *tree_get(const struct Tree *node, const void *key,
                                     tree_search_f *cmp) {
   while (node) {
@@ -78,6 +55,72 @@ static inline struct Tree *tree_get(const struct Tree *node, const void *key,
     }
   }
   return 0;
+}
+
+// Returns last node less than or equal to given key.
+//
+//    [1 3 5 7]   [1 3 5 7]   [1 3 5 7]
+//       ↑           ↑               ↑
+//       4           3               8
+//
+forceinline optimizespeed struct Tree *tree_floor(const struct Tree *node,
+                                                  const void *key,
+                                                  tree_search_f *cmp) {
+  struct Tree *left = 0;
+  while (node) {
+    int c = cmp(key, node);
+    if (c < 0) {
+      node = tree_get_left(node);
+    } else if (c > 0) {
+      left = (struct Tree *)node;
+      node = node->right;
+    } else {
+      return (struct Tree *)node;
+    }
+  }
+  return left;
+}
+
+// Returns first node not less than given key.
+//
+//    [1 3 5 7]   [1 3 5 7]   [1 3 5 7]
+//         ↑         ↑               NULL
+//         4         3                8
+//
+static inline struct Tree *tree_lower(const struct Tree *node, const void *key,
+                                      tree_search_f *cmp) {
+  struct Tree *left = 0;
+  while (node) {
+    int c = cmp(key, node);
+    if (c <= 0) {
+      left = (struct Tree *)node;
+      node = tree_get_left(node);
+    } else {
+      node = node->right;
+    }
+  }
+  return left;
+}
+
+// Returns first node greater than than given key.
+//
+//    [1 3 5 7]   [1 3 5 7]   [1 3 5 7]
+//         ↑           ↑             NULL
+//         4           3              8
+//
+static inline struct Tree *tree_ceil(const struct Tree *node, const void *key,
+                                     tree_search_f *cmp) {
+  struct Tree *left = 0;
+  while (node) {
+    int c = cmp(key, node);
+    if (c < 0) {
+      left = (struct Tree *)node;
+      node = tree_get_left(node);
+    } else {
+      node = node->right;
+    }
+  }
+  return left;
 }
 
 struct Tree *tree_next(struct Tree *) libcesque;
