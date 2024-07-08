@@ -52,7 +52,6 @@ void __maps_unlock(void);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 struct Map *__maps_alloc(void);
-struct Map *__maps_ceil(const char *);
 struct Map *__maps_floor(const char *);
 void __maps_stack(char *, int, int, size_t, int, intptr_t);
 int __maps_compare(const struct Tree *, const struct Tree *);

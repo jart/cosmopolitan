@@ -88,19 +88,9 @@ privileged optimizespeed struct Map *__maps_floor(const char *addr) {
   return 0;
 }
 
-struct Map *__maps_ceil(const char *addr) {
-  struct Tree *node;
-  if ((node = tree_ceil(__maps.maps, addr, __maps_search)))
-    return MAP_TREE_CONTAINER(node);
-  return 0;
-}
-
 static bool __maps_overlaps(const char *addr, size_t size, int pagesz) {
-  ASSERT(!((uintptr_t)addr & (getgransize() - 1)) && size);
-  struct Map *map, *ceil, *floor;
-  floor = __maps_floor(addr);
-  ceil = __maps_ceil(addr + size);
-  for (map = floor; map && map != ceil; map = __maps_next(map))
+  struct Map *map, *floor = __maps_floor(addr);
+  for (map = floor; map && map->addr <= addr + size; map = __maps_next(map))
     if (MAX(addr, map->addr) <
         MIN(addr + PGUP(size), map->addr + PGUP(map->size)))
       return true;
@@ -138,11 +128,9 @@ static int __muntrack(char *addr, size_t size, int pagesz,
   int rc = 0;
   struct Map *map;
   struct Map *next;
-  struct Map *ceil;
   struct Map *floor;
   floor = __maps_floor(addr);
-  ceil = __maps_ceil(addr + size);
-  for (map = floor; map && map != ceil; map = next) {
+  for (map = floor; map && map->addr <= addr + size; map = next) {
     next = __maps_next(map);
     char *map_addr = map->addr;
     size_t map_size = map->size;
@@ -252,10 +240,10 @@ static void __maps_insert(struct Map *map) {
     int prot = map->prot & ~(MAP_FIXED | MAP_FIXED_NOREPLACE);
     int flags = map->flags;
     bool coalesced = false;
-    struct Map *floor, *ceil, *other, *last = 0;
-    floor = __maps_floor(map->addr);
-    ceil = __maps_ceil(map->addr + map->size);
-    for (other = floor; other; last = other, other = __maps_next(other)) {
+    struct Map *floor, *other, *last = 0;
+    for (other = floor = __maps_floor(map->addr);
+         other && other->addr <= map->addr + map->size;
+         last = other, other = __maps_next(other)) {
       if (prot == other->prot && flags == other->flags) {
         if (!coalesced) {
           if (map->addr == other->addr + other->size) {
@@ -282,8 +270,6 @@ static void __maps_insert(struct Map *map) {
           __maps_check();
         }
       }
-      if (other == ceil)
-        break;
     }
     if (coalesced)
       return;
@@ -683,9 +669,15 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
   int pagesz = getpagesize();
   int gransz = getgransize();
 
-  // demand kernel support
+  // kernel support
   if (!IsLinux() && !IsNetbsd())
     return (void *)enosys();
+
+  // it is not needed
+  if (new_size <= old_size)
+    if (!(flags & MREMAP_FIXED))
+      if (flags & MREMAP_MAYMOVE)
+        flags &= ~MREMAP_MAYMOVE;
 
   // we support these flags
   if (flags & ~(MREMAP_MAYMOVE | MREMAP_FIXED))

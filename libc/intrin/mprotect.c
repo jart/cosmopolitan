@@ -74,10 +74,9 @@ int __mprotect(char *addr, size_t size, int prot) {
     __maps_unlock();
     return edeadlk();
   }
-  struct Map *map, *ceil, *floor;
+  struct Map *map, *floor;
   floor = __maps_floor(addr);
-  ceil = __maps_ceil(addr + size);
-  for (map = floor; map && map != ceil; map = __maps_next(map)) {
+  for (map = floor; map && map->addr <= addr + size; map = __maps_next(map)) {
     char *map_addr = map->addr;
     size_t map_size = map->size;
     char *beg = MAX(addr, map_addr);
