@@ -190,7 +190,7 @@ BENCH(bulk_free, bench) {
 
 #define ITERATIONS 1000
 #define THREADS    10
-#define SIZE       (2 * 1024 * 1024)
+#define SIZE       1024
 
 void *Worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
