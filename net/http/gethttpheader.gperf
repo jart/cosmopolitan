@@ -104,3 +104,4 @@ CF-Visitor,                       kHttpCfVisitor
 CF-Connecting-IP,                 kHttpCfConnectingIp
 CF-IPCountry,                     kHttpCfIpcountry
 CDN-Loop,                         kHttpCdnLoop
+Sec-WebSocket-Key,                kHttpWebsocketKey
