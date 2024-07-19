@@ -100,7 +100,7 @@ void __maps_check(void) {
 #if MMDEBUG
   size_t maps = 0;
   size_t pages = 0;
-  int pagesz = getpagesize();
+  int pagesz = __pagesize;
   static unsigned mono;
   unsigned id = ++mono;
   for (struct Map *map = __maps_first(); map; map = __maps_next(map)) {
@@ -259,13 +259,13 @@ static void __maps_insert(struct Map *map) {
       if (prot == other->prot && flags == other->flags) {
         if (!coalesced) {
           if (map->addr == other->addr + other->size) {
-            __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
+            __maps.pages += (map->size + __pagesize - 1) / __pagesize;
             other->size += map->size;
             __maps_free(map);
             __maps_check();
             coalesced = true;
           } else if (map->addr + map->size == other->addr) {
-            __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
+            __maps.pages += (map->size + __pagesize - 1) / __pagesize;
             other->addr -= map->size;
             other->size += map->size;
             __maps_free(map);
@@ -288,7 +288,7 @@ static void __maps_insert(struct Map *map) {
   }
 
   // otherwise insert new mapping
-  __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
+  __maps.pages += (map->size + __pagesize - 1) / __pagesize;
   __maps_add(map);
   __maps_check();
 }
@@ -302,7 +302,7 @@ struct Map *__maps_alloc(void) {
                                               memory_order_relaxed))
       return map;
   }
-  int gransz = getgransize();
+  int gransz = __gransize;
   struct DirectMap sys = sys_mmap(0, gransz, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (sys.addr == MAP_FAILED)
@@ -323,8 +323,8 @@ struct Map *__maps_alloc(void) {
 static int __munmap(char *addr, size_t size) {
 
   // validate arguments
-  int pagesz = getpagesize();
-  int gransz = getgransize();
+  int pagesz = __pagesize;
+  int gransz = __gransize;
   if (((uintptr_t)addr & (gransz - 1)) ||  //
       !size || (uintptr_t)addr + size < size)
     return einval();
@@ -540,8 +540,8 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
 static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
                     int64_t off) {
   char *res;
-  int pagesz = getpagesize();
-  int gransz = getgransize();
+  int pagesz = __pagesize;
+  int gransz = __gransize;
 
   // validate arguments
   if (((uintptr_t)addr & (gransz - 1)) ||  //
@@ -656,8 +656,8 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
 static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
                       int flags, char *new_addr) {
 
-  int pagesz = getpagesize();
-  int gransz = getgransize();
+  int pagesz = __pagesize;
+  int gransz = __gransize;
 
   // kernel support
   if (!IsLinux() && !IsNetbsd())

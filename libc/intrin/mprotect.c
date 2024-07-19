@@ -60,7 +60,7 @@ int __mprotect(char *addr, size_t size, int prot) {
     return 0;
 
   // unix checks prot before checking size
-  int pagesz = getpagesize();
+  int pagesz = __pagesize;
   if (((intptr_t)addr & (pagesz - 1)) || (uintptr_t)addr + size < size)
     return einval();
 

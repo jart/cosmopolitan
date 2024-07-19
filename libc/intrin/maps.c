@@ -59,7 +59,7 @@ void __maps_stack(char *stackaddr, int pagesz, int guardsize, size_t stacksize,
 }
 
 void __maps_init(void) {
-  int pagesz = getpagesize();
+  int pagesz = __pagesize;
 
   // record _start() stack mapping
   if (!IsWindows()) {

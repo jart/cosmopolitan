@@ -23,5 +23,5 @@ long __get_avphys_pages(void) {
   struct sysinfo si;
   if (sysinfo(&si) == -1)
     return -1;
-  return (((int64_t)si.freeram + si.bufferram) * si.mem_unit) / getpagesize();
+  return (((int64_t)si.freeram + si.bufferram) * si.mem_unit) / __pagesize;
 }

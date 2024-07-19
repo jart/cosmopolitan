@@ -62,7 +62,7 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   }
 
   // unmap the executable portion beneath the local files
-  mo = ROUNDDOWN(lo, getgransize());
+  mo = ROUNDDOWN(lo, __gransize);
   if (mo)
     munmap(map, mo);
 
@@ -128,7 +128,7 @@ static void __zipos_init(void) {
         if (!fstat(fd, &st) && (map = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
                                            fd, 0)) != MAP_FAILED) {
           if ((cdir = GetZipEocd(map, st.st_size, &err))) {
-            long pagesz = getpagesize();
+            long pagesz = __pagesize;
             __zipos_dismiss(map, cdir, pagesz);
             __zipos.map = map;
             __zipos.cdir = cdir;

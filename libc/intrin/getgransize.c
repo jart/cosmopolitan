@@ -16,22 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/nt/struct/systeminfo.h"
-#include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
 
+/**
+ * Returns granularity of mmap() allocations.
+ */
 int getgransize(void) {
-  static int res;
-  if (!res) {
-    if (!IsWindows()) {
-      res = getpagesize();
-    } else {
-      struct NtSystemInfo si;
-      GetSystemInfo(&si);
-      res = si.dwAllocationGranularity;
-    }
-  }
-  return res;
+  return __gransize;
 }

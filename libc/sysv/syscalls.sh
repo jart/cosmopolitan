@@ -679,7 +679,6 @@ scall	sys_getcontext		0x133fff1a5fffffff	0xfff	globl hidden
 #scall	gethostname		0xffff0057ffffffff	0xfff	globl
 #scall	getkerninfo		0xffffff03ffffffff	0xfff	globl
 #scall	getloginclass		0xffffff20bfffffff	0xfff	globl
-scall	getpagesize_freebsd	0xffffff040fffffff	0xfff	globl hidden
 #scall	gssd_syscall		0xffffff1f9fffffff	0xfff	globl
 #scall	jail			0xffffff152fffffff	0xfff	globl
 #scall	jail_attach		0xffffff1b4fffffff	0xfff	globl

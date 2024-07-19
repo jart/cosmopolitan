@@ -61,9 +61,9 @@ long sysconf(int name) {
     case _SC_CLK_TCK:
       return CLK_TCK;
     case _SC_PAGESIZE:
-      return getpagesize();
+      return __pagesize;
     case _SC_GRANSIZE:
-      return getgransize();
+      return __gransize;
     case _SC_ARG_MAX:
       return __get_arg_max();
     case _SC_SIGSTKSZ:

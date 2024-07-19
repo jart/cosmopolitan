@@ -27,7 +27,7 @@
 
 textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
 
-  int pagesz = getpagesize();
+  int pagesz = __pagesize;
   size = (size + pagesz - 1) & -pagesz;
 
   if ((uintptr_t)addr & (pagesz - 1))

@@ -27,7 +27,7 @@
 static int __madvise(void *addr, size_t length, int advice) {
 
   // simulate linux behavior of validating alignment
-  if ((uintptr_t)addr & (getpagesize() - 1))
+  if ((uintptr_t)addr & (__pagesize - 1))
     return einval();
 
   // simulate linux behavior of checking for negative length

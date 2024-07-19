@@ -29,5 +29,5 @@
  * @see pvalloc()
  */
 void *valloc(size_t n) {
-  return memalign(getpagesize(), n);
+  return memalign(__pagesize, n);
 }

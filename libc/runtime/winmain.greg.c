@@ -59,6 +59,7 @@ __msabi extern typeof(AddVectoredExceptionHandler) *const __imp_AddVectoredExcep
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
+__msabi extern typeof(GetCommandLine) *const __imp_GetCommandLineW;
 __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
 __msabi extern typeof(GetCurrentDirectory) *const __imp_GetCurrentDirectoryW;
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
@@ -66,6 +67,7 @@ __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
+__msabi extern typeof(GetSystemInfo) *const __imp_GetSystemInfo;
 __msabi extern typeof(GetSystemInfo) *const __imp_GetSystemInfo;
 __msabi extern typeof(GetUserName) *const __imp_GetUserNameW;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
@@ -85,16 +87,6 @@ void __stack_call(int, char **, char **, long (*)[2],
 
 __funline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-// https://nullprogram.com/blog/2022/02/18/
-__funline char16_t *MyCommandLine(void) {
-  void *cmd;
-  asm("mov\t%%gs:(0x60),%0\n"
-      "mov\t0x20(%0),%0\n"
-      "mov\t0x78(%0),%0\n"
-      : "=r"(cmd));
-  return cmd;
 }
 
 static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
@@ -318,9 +310,13 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                "sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop'\n");
     return 77 << 8;  // exit(77)
   }
+  struct NtSystemInfo si;
+  __imp_GetSystemInfo(&si);
+  __pagesize = si.dwPageSize;
+  __gransize = si.dwAllocationGranularity;
   __umask = 077;
   __pid = __imp_GetCurrentProcessId();
-  cmdline = MyCommandLine();
+  cmdline = __imp_GetCommandLineW();
 #if SYSDEBUG
   // sloppy flag-only check for early initialization
   if (StrStr(cmdline, u"--strace"))

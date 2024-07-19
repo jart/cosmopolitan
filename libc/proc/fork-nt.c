@@ -224,7 +224,7 @@ textwindows void WinMainForked(void) {
   }
 
   // map memory into process
-  int granularity = getgransize();
+  int granularity = __gransize;
   for (struct Tree *e = tree_first(maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
     if ((uintptr_t)map->addr & (granularity - 1))
@@ -277,7 +277,7 @@ textwindows void WinMainForked(void) {
   for (struct Tree *e = tree_first(maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
     __maps.count += 1;
-    __maps.pages += (map->size + getpagesize() - 1) / getpagesize();
+    __maps.pages += (map->size + __pagesize - 1) / __pagesize;
     unsigned old_protect;
     if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
                         &old_protect))
@@ -385,7 +385,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
           ok = WriteAll(writer, &map, sizeof(map));
         }
         // now write content of each map to child
-        int granularity = getgransize();
+        int granularity = __gransize;
         for (struct Map *map = __maps_first(); ok && map;
              map = __maps_next(map)) {
           if (map->flags & MAP_NOFORK)

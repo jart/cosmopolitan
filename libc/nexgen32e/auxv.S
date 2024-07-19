@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.initbss 300,_init_auxv
+	.initbss 250,_init_auxv
 //	Global variable holding _start(auxv) parameter.
 __auxv:	.quad	0
 	.endobj	__auxv,globl
 	.previous
 
-	.init.start 300,_init_auxv
+	.init.start 250,_init_auxv
 	mov	%r15,%rax
 	stosq
-	.init.end 300,_init_auxv
+	.init.end 250,_init_auxv

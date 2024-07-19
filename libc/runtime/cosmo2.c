@@ -66,6 +66,8 @@ extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
 
+void __pagesize_init(unsigned long *auxv);
+
 static const char *DecodeMagnum(const char *p, long *r) {
   int k = 0;
   unsigned long c, x = 0;
@@ -164,6 +166,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   __pid = sys_getpid().ax;
 
   // initialize file system
+  __pagesize_init(auxv);
   __maps_init();
   __init_fds(argc, argv, envp);
 
@@ -171,13 +174,6 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   __init_program_executable_name();
 
   __enable_tls();
-
-#if 0
-#if IsAsan()
-  // TODO(jart): Figure out ASAN data model on AARCH64.
-  __asan_init(argc, argv, envp, auxv);
-#endif
-#endif
 
   _init();
   // initialize program

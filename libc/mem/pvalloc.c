@@ -32,9 +32,9 @@
  * @see valloc()
  */
 void *pvalloc(size_t n) {
-  if (ckd_add(&n, n, getpagesize() - 1)) {
+  if (ckd_add(&n, n, __pagesize - 1)) {
     errno = ENOMEM;
     return 0;
   }
-  return memalign(getpagesize(), n & -getpagesize());
+  return memalign(__pagesize, n & -__pagesize);
 }

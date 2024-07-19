@@ -71,6 +71,8 @@ char *secure_getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
 extern int __argc;
 extern char **__argv;
 extern char **__envp;
+extern int __pagesize;
+extern int __gransize;
 extern unsigned long *__auxv;
 extern intptr_t __oldstack;
 extern char *__program_executable_name;
