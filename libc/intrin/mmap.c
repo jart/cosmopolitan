@@ -544,8 +544,13 @@ static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
   int gransz = __gransize;
 
   // validate arguments
-  if (((uintptr_t)addr & (gransz - 1)) ||  //
-      !size || (uintptr_t)addr + size < size)
+  if ((uintptr_t)addr & (gransz - 1))
+    addr = NULL;
+  if (!addr && (flags & (MAP_FIXED | MAP_FIXED_NOREPLACE)))
+    return (void *)eperm();
+  if ((intptr_t)addr < 0)
+    return (void *)enomem();
+  if (!size || (uintptr_t)addr + size < size)
     return (void *)einval();
   if (size > WINMAXX)
     return (void *)enomem();
@@ -732,13 +737,100 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
   return res;
 }
 
+/**
+ * Creates memory mapping.
+ *
+ * The mmap() function is used by Cosmopolitan's malloc() implementation
+ * to obtain new memory from the operating system. This function is also
+ * useful for establishing a mapping between a file on disk and a memory
+ * address, which avoids most need to call read() and write(). It is how
+ * executables are loaded into memory, for instance, in which case pages
+ * are loaded lazily from disk by the operating system.
+ *
+ * The `addr` parameter may be zero. This lets the implementation choose
+ * an available address in memory. OSes normally pick something randomly
+ * assigned, for security. Most OSes try to make sure subsequent mapping
+ * requests will be adjacent to one another. More paranoid OSes may have
+ * different mappings be sparse, with unmapped content between them. You
+ * may not use the `MAP_FIXED` parameter to create a memory map at NULL.
+ *
+ * The `addr` parameter may be non-zero, in which case Cosmopolitan will
+ * give you a mapping at that specific address if it's available. When a
+ * mapping already exists at the requested address then another one will
+ * be chosen automatically. On most OSes the newly selected address will
+ * be as close-by as possible, but that's not guaranteed. If `MAP_FIXED`
+ * is also supplied in `flags` then this hint is taken as mandatory, and
+ * existing mappings at the requested interval shall be auto-unmapped.
+ *
+ * The `size` parameter is implicitly rounded up to the system page size
+ * reported by getpagesize() and sysconf(_SC_PAGESIZE). Your extra bytes
+ * will be zero-initialized.
+ *
+ * The returned address will always be aligned, on the system allocation
+ * granularity. This value may be obtained from getgransize() or calling
+ * sysconf(_SC_GRANSIZE). Granularity is always greater than or equal to
+ * the page size. On some platforms, i.e. Windows, it may be larger than
+ * the page size.
+ *
+ * The `prot` value specifies the memory protection of the mapping. This
+ * may be `PROT_NONE` to disallow all access otherwise it's a bitwise or
+ * of the following constants:
+ *
+ * - `PROT_READ` allows read access
+ * - `PROT_WRITE` allows write access
+ * - `PROT_EXEC` allows execute access
+ *
+ * Some OSes (i.e. OpenBSD) will raise an error if both `PROT_WRITE` and
+ * `PROT_EXEC` are requested. You may still modify executable memory but
+ * you must use mprotect() to transition between the two states. On some
+ * OSes like MacOS ARM64, you need to pass the `MAP_JIT` flag to get RWX
+ * memory, which is considered zero on other OSes.
+ *
+ * The lower bits of the `flags` parameter specify the `MAP_TYPE`, which
+ * may be:
+ *
+ * - `MAP_PRIVATE` for non-shared and copy-on-write mappings
+ * - `MAP_SHARED` for memory that may be shared between processes
+ *
+ * Your `fd` argument specifies the file descriptor of the open file you
+ * want to map. This parameter is ignored when `MAP_ANONYMOUS` is passed
+ * via `flags`.
+ *
+ * Your `off` argument specifies the offset into a, file at which mapped
+ * memory shall begin. It must be aligned to the allocation granularity,
+ * which may be obtained from getgransize() or sysconf(_SC_GRANSIZE).
+ *
+ * The `MAP_FIXED_NOREPLACE` flag may be passed in `flags` which has the
+ * same behavior as `MAP_FIXED` except it raises `EEXIST` when a mapping
+ * already exists on the requested interval.
+ *
+ * The `MAP_CONCEAL` flag may be passed to prevent a memory mapping from
+ * appearing in core dumps. This is currently supported on BSD OSes, and
+ * is ignored on everything else.
+ */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res = __mmap(addr, size, prot, flags, fd, off);
-  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m", addr, size,
-         DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res);
+  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m (%'zu bytes total)", addr,
+         size, DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res,
+         __maps.pages * __pagesize);
   return res;
 }
 
+/**
+ * Changes memory mapping.
+ *
+ * This system call lets you move memory without copying it. It can also
+ * be used to shrink memory mappings.
+ *
+ * This system call is supported on Linux and NetBSD. It's used by Cosmo
+ * Libc's realloc() implementation under the hood.
+ *
+ * The `flags` parameter may have:
+ *
+ * - `MREMAP_MAYMOVE` to allow relocation
+ * - `MREMAP_FIXED` in which case an additional parameter is taken
+ *
+ */
 void *mremap(void *old_addr, size_t old_size, size_t new_size, int flags, ...) {
   va_list ap;
   void *new_addr = 0;
@@ -748,11 +840,19 @@ void *mremap(void *old_addr, size_t old_size, size_t new_size, int flags, ...) {
     va_end(ap);
   }
   void *res = __mremap(old_addr, old_size, new_size, flags, new_addr);
-  STRACE("mremap(%p, %'zu, %'zu, %s, %p) → %p% m", old_addr, old_size, new_size,
-         DescribeMremapFlags(flags), new_addr, res);
+  STRACE("mremap(%p, %'zu, %'zu, %s, %p) → %p% m (%'zu bytes total)", old_addr,
+         old_size, new_size, DescribeMremapFlags(flags), new_addr, res,
+         __maps.pages * __pagesize);
   return res;
 }
 
+/**
+ * Removes memory mapping.
+ *
+ * The `size` parameter is implicitly rounded up to the page size.
+ *
+ * @return 0 on success, or -1 w/ errno.
+ */
 int munmap(void *addr, size_t size) {
   int rc = __munmap(addr, size);
   STRACE("munmap(%p, %'zu) → %d% m", addr, size, rc);

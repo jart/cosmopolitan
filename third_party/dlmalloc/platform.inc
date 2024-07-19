@@ -505,11 +505,7 @@ FORCEINLINE int win32munmap(void* ptr, size_t size) {
  * Define CALL_MREMAP
  */
 #if HAVE_MMAP && HAVE_MREMAP
-    #ifdef MREMAP
-        #define CALL_MREMAP(addr, osz, nsz, mv) MREMAP((addr), (osz), (nsz), (mv))
-    #else /* MREMAP */
-        #define CALL_MREMAP(addr, osz, nsz, mv) MREMAP_DEFAULT((addr), (osz), (nsz), (mv))
-    #endif /* MREMAP */
+    #define CALL_MREMAP(addr, osz, nsz, mv) ({ int olderr = errno; void *res = mremap((addr), (osz), (nsz), (mv)); if (res == MAP_FAILED) errno = olderr; res; })
 #else  /* HAVE_MMAP && HAVE_MREMAP */
     #define CALL_MREMAP(addr, osz, nsz, mv)     MAP_FAILED
 #endif /* HAVE_MMAP && HAVE_MREMAP */
