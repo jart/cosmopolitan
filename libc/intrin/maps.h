@@ -1,14 +1,12 @@
 #ifndef COSMOPOLITAN_MAPS_H_
 #define COSMOPOLITAN_MAPS_H_
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/dll.h"
 #include "libc/intrin/tree.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls2.internal.h"
 COSMOPOLITAN_C_START_
 
 #define MAP_TREE_CONTAINER(e) TREE_CONTAINER(struct Map, tree, e)
-#define MAP_FREE_CONTAINER(e) DLL_CONTAINER(struct Map, free, e)
 
 struct Map {
   char *addr;        /* granule aligned */
@@ -22,14 +20,14 @@ struct Map {
   intptr_t hand;     /* windows nt only */
   union {
     struct Tree tree;
-    struct Dll free;
+    struct Map *free;
   };
 };
 
 struct Maps {
   atomic_int lock;
   struct Tree *maps;
-  struct Dll *free;
+  _Atomic(struct Map *) free;
   size_t count;
   size_t pages;
   atomic_size_t rollo;
@@ -64,14 +62,14 @@ forceinline optimizespeed int __maps_search(const void *key,
   return (addr > map->addr) - (addr < map->addr);
 }
 
-static struct Map *__maps_next(struct Map *map) {
+static inline struct Map *__maps_next(struct Map *map) {
   struct Tree *node;
   if ((node = tree_next(&map->tree)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }
 
-static struct Map *__maps_first(void) {
+static inline struct Map *__maps_first(void) {
   struct Tree *node;
   if ((node = tree_first(__maps.maps)))
     return MAP_TREE_CONTAINER(node);

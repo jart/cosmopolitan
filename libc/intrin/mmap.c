@@ -31,7 +31,6 @@
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.internal.h"
@@ -124,7 +123,7 @@ void __maps_check(void) {
 }
 
 static int __muntrack(char *addr, size_t size, int pagesz,
-                      struct Dll **deleted) {
+                      struct Map **deleted) {
   int rc = 0;
   struct Map *map;
   struct Map *next;
@@ -140,8 +139,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
     if (addr <= map_addr && addr + PGUP(size) >= map_addr + PGUP(map_size)) {
       // remove mapping completely
       tree_remove(&__maps.maps, &map->tree);
-      dll_init(&map->free);
-      dll_make_first(deleted, &map->free);
+      map->free = *deleted;
+      *deleted = map;
       __maps.pages -= (map_size + pagesz - 1) / pagesz;
       __maps.count -= 1;
       __maps_check();
@@ -166,8 +165,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
         __maps.pages -= (left + pagesz - 1) / pagesz;
         leftmap->addr = map_addr;
         leftmap->size = left;
-        dll_init(&leftmap->free);
-        dll_make_first(deleted, &leftmap->free);
+        leftmap->free = *deleted;
+        *deleted = leftmap;
         __maps_check();
       } else {
         rc = -1;
@@ -182,8 +181,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
         __maps.pages -= (right + pagesz - 1) / pagesz;
         rightmap->addr = addr;
         rightmap->size = right;
-        dll_init(&rightmap->free);
-        dll_make_first(deleted, &rightmap->free);
+        rightmap->free = *deleted;
+        *deleted = rightmap;
         __maps_check();
       } else {
         rc = -1;
@@ -211,8 +210,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
           __maps.count += 1;
           middlemap->addr = addr;
           middlemap->size = size;
-          dll_init(&middlemap->free);
-          dll_make_first(deleted, &middlemap->free);
+          middlemap->free = *deleted;
+          *deleted = middlemap;
           __maps_check();
         } else {
           rc = -1;
@@ -228,8 +227,21 @@ static int __muntrack(char *addr, size_t size, int pagesz,
 void __maps_free(struct Map *map) {
   map->size = 0;
   map->addr = MAP_FAILED;
-  dll_init(&map->free);
-  dll_make_first(&__maps.free, &map->free);
+  map->free = atomic_load_explicit(&__maps.free, memory_order_relaxed);
+  for (;;) {
+    if (atomic_compare_exchange_weak_explicit(&__maps.free, &map->free, map,
+                                              memory_order_release,
+                                              memory_order_relaxed))
+      break;
+  }
+}
+
+static void __maps_free_all(struct Map *list) {
+  struct Map *next;
+  for (struct Map *map = list; map; map = next) {
+    next = map->free;
+    __maps_free(map);
+  }
 }
 
 static void __maps_insert(struct Map *map) {
@@ -282,12 +294,13 @@ static void __maps_insert(struct Map *map) {
 }
 
 struct Map *__maps_alloc(void) {
-  struct Dll *e;
   struct Map *map;
-  if ((e = dll_first(__maps.free))) {
-    dll_remove(&__maps.free, e);
-    map = MAP_FREE_CONTAINER(e);
-    return map;
+  map = atomic_load_explicit(&__maps.free, memory_order_relaxed);
+  while (map) {
+    if (atomic_compare_exchange_weak_explicit(&__maps.free, &map, map->free,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
+      return map;
   }
   int gransz = getgransize();
   struct DirectMap sys = sys_mmap(0, gransz, PROT_READ | PROT_WRITE,
@@ -335,14 +348,13 @@ static int __munmap(char *addr, size_t size) {
     }
 
   // untrack mappings
-  struct Dll *deleted = 0;
+  struct Map *deleted = 0;
   __muntrack(addr, pgup_size, pagesz, &deleted);
   __maps_unlock();
 
   // delete mappings
   int rc = 0;
-  for (struct Dll *e = dll_first(deleted); e; e = dll_next(deleted, e)) {
-    struct Map *map = MAP_FREE_CONTAINER(e);
+  for (struct Map *map = deleted; map; map = map->free) {
     if (!IsWindows()) {
       if (sys_munmap(map->addr, map->size))
         rc = -1;
@@ -356,11 +368,7 @@ static int __munmap(char *addr, size_t size) {
   }
 
   // free mappings
-  if (!dll_is_empty(deleted)) {
-    __maps_lock();
-    dll_make_first(&__maps.free, deleted);
-    __maps_unlock();
-  }
+  __maps_free_all(deleted);
 
   return rc;
 }
@@ -392,20 +400,12 @@ static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
 
   // allocate Map object
   struct Map *map;
-  if (__maps_lock()) {
-    __maps_unlock();
-    return (void *)edeadlk();
-  }
-  __maps_check();
-  map = __maps_alloc();
-  __maps_unlock();
-  if (!map)
+  if (!(map = __maps_alloc()))
     return MAP_FAILED;
 
   // remove mapping we blew away
   if (IsWindows() && should_untrack)
-    if (__munmap(addr, size))
-      return MAP_FAILED;
+    __munmap(addr, size);
 
   // obtain mapping from operating system
   int olderr = errno;
@@ -424,9 +424,7 @@ TryAgain:
         goto TryAgain;
       }
     }
-    __maps_lock();
     __maps_free(map);
-    __maps_unlock();
     return MAP_FAILED;
   }
 
@@ -440,21 +438,15 @@ TryAgain:
       UnmapViewOfFile(res.addr);
       CloseHandle(res.maphandle);
     }
-    __maps_lock();
     __maps_free(map);
-    __maps_unlock();
     return (void *)eexist();
   }
 
   // untrack mapping we blew away
   if (!IsWindows() && should_untrack) {
-    struct Dll *deleted = 0;
+    struct Map *deleted = 0;
     __muntrack(res.addr, size, pagesz, &deleted);
-    if (!dll_is_empty(deleted)) {
-      __maps_lock();
-      dll_make_first(&__maps.free, deleted);
-      __maps_unlock();
-    }
+    __maps_free_all(deleted);
   }
 
   // track map object
@@ -632,25 +624,23 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
   } else {
     res = sys_mremap(old_addr, old_size, new_size, flags, (uintptr_t)new_addr);
   }
+  if (res == MAP_FAILED)
+    __maps_free(map);
 
   // re-acquire lock if needed
   if (!flags)
     __maps_lock();
 
-  // check result
-  if (res == MAP_FAILED) {
-    __maps_free(map);
+  if (res == MAP_FAILED)
     return MAP_FAILED;
-  }
 
   if (!(flags & MREMAP_MAYMOVE))
     ASSERT(res == old_addr);
 
   // untrack old mapping
-  struct Dll *deleted = 0;
+  struct Map *deleted = 0;
   __muntrack(old_addr, old_size, pagesz, &deleted);
-  dll_make_first(&__maps.free, deleted);
-  deleted = 0;
+  __maps_free_all(deleted);
 
   // track map object
   map->addr = res;

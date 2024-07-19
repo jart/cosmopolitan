@@ -89,7 +89,7 @@ privileged bool __maps_lock(void) {
   if (!__tls_enabled)
     return false;
   tib = __get_tls_privileged();
-  if (tib->tib_relock_maps++)
+  if (atomic_fetch_add_explicit(&tib->tib_relock_maps, 1, memory_order_relaxed))
     return true;
   while (atomic_exchange_explicit(&__maps.lock, 1, memory_order_acquire)) {
 #if defined(__GNUC__) && defined(__aarch64__)
@@ -106,6 +106,7 @@ privileged void __maps_unlock(void) {
   if (!__tls_enabled)
     return;
   tib = __get_tls_privileged();
-  if (!--tib->tib_relock_maps)
+  if (atomic_fetch_sub_explicit(&tib->tib_relock_maps, 1,
+                                memory_order_relaxed) == 1)
     atomic_store_explicit(&__maps.lock, 0, memory_order_release);
 }
