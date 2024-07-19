@@ -1,7 +1,7 @@
 // -*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
-#ifndef COSMOPOLITAN_CTL_STRINGVIEW_H_
-#define COSMOPOLITAN_CTL_STRINGVIEW_H_
+#ifndef CTL_STRINGVIEW_H_
+#define CTL_STRINGVIEW_H_
 #include "utility.h"
 
 namespace ctl {
@@ -157,4 +157,4 @@ struct string_view
 
 } // namespace ctl
 
-#endif // COSMOPOLITAN_CTL_STRINGVIEW_H_
+#endif // CTL_STRINGVIEW_H_

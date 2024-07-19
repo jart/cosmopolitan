@@ -1,18 +1,19 @@
 #ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
+#include "libc/runtime/runtime.h"
 
 /**
  * Returns preferred size and alignment of thread stack.
  */
-#define GetStackSize() 262144
+#define GetStackSize() 81920
 
 /**
  * Returns preferred stack guard size.
  *
  * This is the max cpu page size of supported architectures.
  */
-#define GetGuardSize() 16384
+#define GetGuardSize() __pagesize
 
 /**
  * Makes program stack executable if declared, e.g.
