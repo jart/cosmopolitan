@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_MapViewOfFile3,MapViewOfFile3
+.imp	API-MS-Win-Core-Memory-l1-1-6,__imp_MapViewOfFile3,MapViewOfFile3
 
 	.text.windows
 	.ftrace1

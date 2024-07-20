@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_VirtualAlloc2,VirtualAlloc2
+.imp	API-MS-Win-Core-Memory-l1-1-6,__imp_VirtualAlloc2,VirtualAlloc2
 
 	.text.windows
 	.ftrace1
