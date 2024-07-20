@@ -132,7 +132,8 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   if (neu && ((neu->ss_size >> 32) ||  //
               (neu->ss_flags & ~(SS_ONSTACK | SS_DISABLE)))) {
     rc = einval();
-  } else if (neu && neu->ss_size < __get_minsigstksz()) {
+  } else if (neu && !(neu->ss_flags & SS_DISABLE) &&
+             neu->ss_size < __get_minsigstksz()) {
     rc = enomem();
   } else if (IsLinux()) {
     rc = sys_sigaltstack(neu, old);
