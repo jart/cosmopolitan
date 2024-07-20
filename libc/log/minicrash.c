@@ -73,4 +73,5 @@ relegated dontinstrument void __minicrash(int sig, siginfo_t *si, void *arg) {
       ctx ? ctx->uc_mcontext.PC : 0,
       DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
                             : (struct StackFrame *)__builtin_frame_address(0)));
+  _Exit(1);
 }
