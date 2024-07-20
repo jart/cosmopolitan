@@ -146,9 +146,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
       __maps.count -= 1;
       __maps_check();
     } else if (IsWindows()) {
-      // you can't carve up memory maps on windows. our mmap() makes
-      // this not a problem (for non-enormous memory maps) by making
-      // independent mappings for each 64 kb granule, under the hood
+      // you can't carve up memory maps on windows ;_;
       rc = einval();
     } else if (addr <= map_addr) {
       // shave off lefthand side of mapping

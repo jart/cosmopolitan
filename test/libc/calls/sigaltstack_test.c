@@ -32,9 +32,8 @@ TEST(sigaltstack, badFlag) {
 
 TEST(sigaltstack, disable) {
   struct sigaltstack ss;
+  EXPECT_SYS(0, 0, sigaltstack(0, &ss));
   ss.ss_flags = SS_DISABLE;
-  ss.ss_size = 0;
-  ss.ss_sp = 0;
   EXPECT_SYS(0, 0, sigaltstack(&ss, 0));
   EXPECT_SYS(0, 0, sigaltstack(0, &ss));
   EXPECT_EQ(SS_DISABLE, ss.ss_flags);
