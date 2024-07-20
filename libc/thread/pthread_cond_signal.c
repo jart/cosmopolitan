@@ -26,7 +26,7 @@
  *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
  *     // ...
  *     pthread_mutex_lock(&lock);
- *     pthread_cond_signal(&cond, &lock);
+ *     pthread_cond_signal(&cond);
  *     pthread_mutex_unlock(&lock);
  *
  * This function has no effect if there aren't any threads currently
