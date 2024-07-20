@@ -7,9 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/math.h"
-#include "libc/runtime/runtime.h"
+#include <cosmo.h>
+#include <math.h>
 
 void crash(long x0, long x1, long x2,  //
            double v0, double v1, double v2) {

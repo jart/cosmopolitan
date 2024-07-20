@@ -33,6 +33,7 @@ __static_yoink("__die");                       // for backtracing
 __static_yoink("ShowBacktrace");               // for backtracing
 __static_yoink("GetSymbolTable");              // for backtracing
 __static_yoink("PrintBacktraceUsingSymbols");  // for backtracing
+__static_yoink("__demangle");                  // for pretty c++ symbols
 __static_yoink("malloc_inspect_all");          // for asan memory origin
 __static_yoink("GetSymbolByAddr");             // for asan memory origin
 #endif
