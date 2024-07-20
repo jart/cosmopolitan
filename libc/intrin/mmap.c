@@ -312,7 +312,9 @@ struct Map *__maps_alloc(void) {
   map->prot = PROT_READ | PROT_WRITE;
   map->flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK;
   map->hand = sys.maphandle;
+  __maps_lock();
   __maps_insert(map++);
+  __maps_unlock();
   map->addr = MAP_FAILED;
   for (int i = 1; i < gransz / sizeof(struct Map) - 1; ++i)
     __maps_free(map + i);
