@@ -25,3 +25,5 @@ c0eacf2eb1e1c0b3bd4f71f12fef258f5b249c3f
 da8baf2aa5ce93b958aca90a0ae69f537806324b
 # Run clang-format on most sources
 369f9740de4534c28d0e81ab2afc99decbb9a3e6
+# Get rid of .internal.h convention in LIBC_INTRIN
+86d884cce24d773e298a2714c1e3d91ecab9be45
