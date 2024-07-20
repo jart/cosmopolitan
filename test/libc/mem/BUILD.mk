@@ -85,7 +85,7 @@ o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/tool/build/assimilate			\
 		o/$(MODE)/test/libc/mem/prog/life
 	@$(COMPILE) -wACP -T$@					\
-		build/bootstrap/cp				\
+		$(CP)						\
 		o/$(MODE)/test/libc/mem/prog/life		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\
@@ -116,7 +116,7 @@ o/$(MODE)/test/libc/mem/prog/sock.elf:				\
 		o/$(MODE)/tool/build/assimilate			\
 		o/$(MODE)/test/libc/mem/prog/sock
 	@$(COMPILE) -wACP -T$@					\
-		build/bootstrap/cp				\
+		$(CP)						\
 		o/$(MODE)/test/libc/mem/prog/sock		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\

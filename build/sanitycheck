@@ -31,7 +31,7 @@ if [ ! -f /proc/sys/fs/binfmt_misc/status ]; then
   exit 0
 fi
 
-if ! build/bootstrap/echo.com -n; then
+if ! build/bootstrap/echo -n; then
   cat <<'EOF' >&2
 
 ERROR

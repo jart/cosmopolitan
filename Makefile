@@ -101,19 +101,20 @@ XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
 CLANG = clang
 TMPDIR = o/tmp
-AR = build/bootstrap/ar
-CP = build/bootstrap/cp
-RM = build/bootstrap/rm -f
-GZIP = build/bootstrap/gzip
-ECHO = build/bootstrap/echo
-CHMOD = build/bootstrap/chmod
-TOUCH = build/bootstrap/touch
-PKG = build/bootstrap/package
-MKDEPS = build/bootstrap/mkdeps
-ZIPOBJ = build/bootstrap/zipobj
-ZIPCOPY = build/bootstrap/zipcopy
-PECHECK = build/bootstrap/pecheck
-FIXUPOBJ = build/bootstrap/fixupobj
+AR = $(BOOTSTRAP)/ar.ape
+CP = $(BOOTSTRAP)/cp.ape
+RM = $(BOOTSTRAP)/rm.ape -f
+GZIP = $(BOOTSTRAP)/gzip.ape
+ECHO = $(BOOTSTRAP)/echo.ape
+CHMOD = $(BOOTSTRAP)/chmod.ape
+TOUCH = $(BOOTSTRAP)/touch.ape
+PKG = $(BOOTSTRAP)/package.ape
+MKDEPS = $(BOOTSTRAP)/mkdeps
+ZIPOBJ = $(BOOTSTRAP)/zipobj
+ZIPCOPY = $(BOOTSTRAP)/zipcopy
+PECHECK = $(BOOTSTRAP)/pecheck
+FIXUPOBJ = $(BOOTSTRAP)/fixupobj
+OBJBINCOPY = $(BOOTSTRAP)/objbincopy
 MKDIR = build/bootstrap/mkdir -p
 COMPILE = build/bootstrap/compile -V9 -M2048m -P8192 $(QUOTA)
 
@@ -149,9 +150,10 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.3.5
+COSMOCC = .cosmocc/3.5.7
+BOOTSTRAP = $(COSMOCC)/bin
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.3.5 db78fd8d3f8706e9dff4be72bf71d37a3f12062f212f407e1c33bc4af3780dd0)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.5.7 596876951b62ad2530c63afc40edd805d751fcb2416e544d249af04ad00bb4ed)
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc

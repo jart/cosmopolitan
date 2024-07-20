@@ -88,6 +88,7 @@ make -j64 m=$ARM64 \
   o/$ARM64/tool/build/package.dbg \
   o/$ARM64/tool/build/rm.dbg \
   o/$ARM64/tool/build/touch.dbg \
+  o/$ARM64/tool/build/mkdir.dbg \
   o/$ARM64/tool/build/sha256sum.dbg \
   o/$ARM64/tool/build/resymbol.dbg \
   o/$ARM64/third_party/make/make.dbg \
@@ -174,7 +175,8 @@ cp -f o/$AMD64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
 cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj \
-         ar chmod cocmd cp echo gzip objbincopy package rm touch sha256sum resymbol; do
+         ar chmod cocmd cp echo gzip objbincopy package rm touch mkdir compile sha256sum \
+         resymbol; do
   ape $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
@@ -184,7 +186,7 @@ for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdep
     o/$ARM64/tool/build/$x.dbg
 done
 
-for x in ar chmod cp echo gzip package rm touch sha256sum; do
+for x in ar chmod cp echo gzip package rm touch mkdir compile sha256sum; do
   mv "$OUTDIR/bin/$x" "$OUTDIR/bin/$x.ape"
 done
 
