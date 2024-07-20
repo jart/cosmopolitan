@@ -48,6 +48,7 @@
 
 __static_yoink("_pthread_atfork");
 
+extern pthread_mutex_t _rand64_lock_obj;
 extern pthread_mutex_t _pthread_lock_obj;
 
 static void _onfork_prepare(void) {
@@ -56,10 +57,12 @@ static void _onfork_prepare(void) {
   _pthread_lock();
   __maps_lock();
   __fds_lock();
+  pthread_mutex_lock(&_rand64_lock_obj);
   LOCKTRACE("READY TO ROCK AND ROLL");
 }
 
 static void _onfork_parent(void) {
+  pthread_mutex_unlock(&_rand64_lock_obj);
   __fds_unlock();
   __maps_unlock();
   _pthread_unlock();
@@ -69,6 +72,7 @@ static void _onfork_parent(void) {
 
 static void _onfork_child(void) {
   __fds_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  _rand64_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   _pthread_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   atomic_store_explicit(&__maps.lock, 0, memory_order_relaxed);
   atomic_store_explicit(&__get_tls()->tib_relock_maps, 0, memory_order_relaxed);

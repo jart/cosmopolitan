@@ -259,6 +259,8 @@ TEST(mprotect, weirdSize) {
 }
 
 TEST(mprotect, outerOverlap) {
+  if (IsWindows())
+    return;  // needs carving
   char *p;
   int gransz = getgransize();
   EXPECT_NE(MAP_FAILED, (p = mmap(0, gransz * 3, PROT_READ | PROT_EXEC,

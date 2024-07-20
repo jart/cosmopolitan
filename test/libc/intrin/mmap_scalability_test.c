@@ -41,7 +41,7 @@
 
 void map_unmap_one_page(void) {
   void *p;
-  if ((p = mmap(randaddr(), 1, PROT_READ | PROT_WRITE,
+  if ((p = mmap(__maps_randaddr(), 1, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED)
     __builtin_trap();
   if (munmap(p, 1))
@@ -61,8 +61,8 @@ int main() {
   int n = 10000;
   kprintf("%20s creating %d sparse maps...\n", "", n);
   for (int i = 0; i < n; ++i) {
-    if (mmap(randaddr(), 1, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-             -1, 0) == MAP_FAILED)
+    if (mmap(__maps_randaddr(), 1, PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) == MAP_FAILED)
       __builtin_trap();
   }
 

@@ -42,8 +42,9 @@ TEST(mremap, dontMove_hasRoom_itMoves) {
     return;  // NetBSD requires MREMAP_MAYMOVE
   char *p;
   int pagesz = getpagesize();
-  ASSERT_NE(MAP_FAILED, (p = mmap(randaddr(), pagesz, PROT_READ | PROT_EXEC,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(__maps_randaddr(), pagesz, PROT_READ | PROT_EXEC,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   EXPECT_TRUE(testlib_memoryexists(p));
   EXPECT_FALSE(testlib_memoryexists(p + pagesz));
   ASSERT_SYS(0, p, mremap(p, pagesz, pagesz * 2, 0));
@@ -59,8 +60,9 @@ TEST(mremap, dontMove_noRoom_itFailsWithEnomem) {
     return;  // NetBSD requires MREMAP_MAYMOVE
   char *p;
   int pagesz = getpagesize();
-  ASSERT_NE(MAP_FAILED, (p = mmap(randaddr(), pagesz * 2, PROT_READ | PROT_EXEC,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(__maps_randaddr(), pagesz * 2, PROT_READ | PROT_EXEC,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 0));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
   EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
@@ -77,8 +79,9 @@ TEST(mremap, dontMove_noRoom_itFailsWithEnomem) {
 TEST(mremap, mayMove_noRoom_itRelocates) {
   char *p, *p2;
   int pagesz = getpagesize();
-  ASSERT_NE(MAP_FAILED, (p = mmap(randaddr(), pagesz * 2, PROT_READ | PROT_EXEC,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(__maps_randaddr(), pagesz * 2, PROT_READ | PROT_EXEC,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 0));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
   EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
@@ -112,7 +115,7 @@ TEST(mremap, mayMove_noRoom_itRelocates) {
 TEST(mremap, bench) {
 #define N 10
   long size = 1024 * 1024;
-  char *rollo = randaddr();
+  char *rollo = __maps_randaddr();
   char *addr[N];
 
   // create mappings

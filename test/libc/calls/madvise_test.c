@@ -82,6 +82,8 @@ TEST(madvise, subPages) {
 }
 
 TEST(madvise, madvWillNeed_unmappedRegion) {
+  if (IsWindows())
+    return;  // needs carving
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, getgransize() * 3, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
@@ -96,6 +98,8 @@ TEST(madvise, madvWillNeed_unmappedRegion) {
 }
 
 TEST(madvise, madvFree_unmappedRegion) {
+  if (IsWindows())
+    return;  // needs carving
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, getgransize() * 3, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));

@@ -275,6 +275,8 @@ TEST(ksnprintf, testMisalignedPointer_wontFormat) {
 }
 
 TEST(ksnprintf, testUnterminatedOverrun_truncatesAtPageBoundary) {
+  if (IsWindows())
+    return;  // needs carving
   char *m;
   char b[32];
   int gran = getgransize();

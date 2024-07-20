@@ -30,7 +30,7 @@ struct Maps {
   _Atomic(struct Map *) free;
   size_t count;
   size_t pages;
-  atomic_size_t rollo;
+  _Atomic(char *) pick;
   struct Map stack;
   struct Map guard;
 };
@@ -42,11 +42,12 @@ struct AddrSize {
 
 extern struct Maps __maps;
 
-void *randaddr(void);
 void __maps_init(void);
 bool __maps_lock(void);
 void __maps_check(void);
 void __maps_unlock(void);
+void *__maps_randaddr(void);
+void *__maps_pickaddr(size_t);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 struct Map *__maps_alloc(void);

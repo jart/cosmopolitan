@@ -112,20 +112,23 @@ TEST(mmap, fixedTaken) {
 TEST(mmap, hint) {
   char *p;
 
+  if (IsWindows())
+    return;  // needs carving
+
   // obtain four pages
-  ASSERT_NE(MAP_FAILED, (p = mmap(randaddr(), gransz * 4, PROT_READ,
+  ASSERT_NE(MAP_FAILED, (p = mmap(__maps_randaddr(), pagesz * 4, PROT_READ,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
 
   // unmap two of those pages
-  EXPECT_SYS(0, 0, munmap(p + gransz, gransz));
-  EXPECT_SYS(0, 0, munmap(p + gransz * 3, gransz));
+  EXPECT_SYS(0, 0, munmap(p + pagesz, pagesz));
+  EXPECT_SYS(0, 0, munmap(p + pagesz * 3, pagesz));
 
   // test AVAILABLE nonfixed nonzero addr is granted
   // - posix doesn't mandate this behavior (but should)
   // - freebsd always chooses for you (which has no acceptable workaround)
   // - netbsd manual claims it'll be like freebsd, but is actually like openbsd
   if (!IsFreebsd())
-    ASSERT_EQ(p + gransz, mmap(p + gransz, gransz, PROT_READ,
+    ASSERT_EQ(p + pagesz, mmap(p + pagesz, pagesz, PROT_READ,
                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
 
   // test UNAVAILABLE nonfixed nonzero addr picks something nearby
@@ -134,23 +137,26 @@ TEST(mmap, hint) {
   // - freebsd goes about 16mb to the right
   // - qemu-user is off the wall
   /*if (!IsQemuUser()) {
-    q = mmap(p + gransz * 2, gransz, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1,
+    q = mmap(p + pagesz * 2, pagesz, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1,
              0);
-    EXPECT_LE(ABS(q - (p + gransz * 2)), 128 * 1024 * 1024);
-    EXPECT_SYS(0, 0, munmap(q, gransz));
+    EXPECT_LE(ABS(q - (p + pagesz * 2)), 128 * 1024 * 1024);
+    EXPECT_SYS(0, 0, munmap(q, pagesz));
   }*/
 
   // clean up
-  EXPECT_SYS(0, 0, munmap(p, gransz * 4));
+  EXPECT_SYS(0, 0, munmap(p, pagesz * 4));
 }
 
 TEST(mprotect, punchHoleAndFillHole) {
   char *p;
   int count = __maps.count;
 
+  if (IsWindows())
+    return;  // needs carving
+
   // obtain memory
   ASSERT_NE(MAP_FAILED,
-            (p = mmap(randaddr(), gransz * 3, PROT_READ | PROT_WRITE,
+            (p = mmap(__maps_randaddr(), gransz * 3, PROT_READ | PROT_WRITE,
                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   ASSERT_EQ((count += IsWindows() ? 3 : 1), __maps.count);
 

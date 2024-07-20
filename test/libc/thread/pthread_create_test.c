@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"

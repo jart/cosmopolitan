@@ -40,6 +40,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
@@ -50,9 +51,9 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define MMDEBUG IsModeDbg()
-#define WINBASE (1ul << 35)              // 34 gb
-#define WINMAXX ((1ul << 44) - WINBASE)  // 17 tb
+#define MMDEBUG   IsModeDbg()
+#define MAX_SIZE  0x0ff800000000ul
+#define MAX_TRIES 10
 
 #define MAP_FIXED_NOREPLACE_linux 0x100000
 
@@ -373,6 +374,34 @@ static int __munmap(char *addr, size_t size) {
   return rc;
 }
 
+void *__maps_randaddr(void) {
+  uintptr_t addr;
+  addr = _rand64();
+  addr &= 0x007fffffffff;
+  addr |= 0x004000000000;
+  addr &= -__gransize;
+  return (void *)addr;
+}
+
+void *__maps_pickaddr(size_t size) {
+  char *addr;
+  for (int try = 0; try < MAX_TRIES; ++try) {
+    addr = atomic_exchange_explicit(&__maps.pick, 0, memory_order_acq_rel);
+    if (!addr)
+      addr = __maps_randaddr();
+    __maps_lock();
+    bool overlaps = __maps_overlaps(addr, size, __pagesize);
+    __maps_unlock();
+    if (!overlaps) {
+      atomic_store_explicit(&__maps.pick,
+                            addr + ((size + __gransize - 1) & __gransize),
+                            memory_order_release);
+      return addr;
+    }
+  }
+  return 0;
+}
+
 static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off, int pagesz, int gransz) {
 
@@ -409,6 +438,7 @@ static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
 
   // obtain mapping from operating system
   int olderr = errno;
+  int tries = MAX_TRIES;
   struct DirectMap res;
 TryAgain:
   res = sys_mmap(addr, size, prot, sysflags, fd, off);
@@ -418,10 +448,11 @@ TryAgain:
         errno = EEXIST;
       } else if (should_untrack) {
         errno = ENOMEM;
-      } else {
-        addr += gransz;
+      } else if (--tries && (addr = __maps_pickaddr(size))) {
         errno = olderr;
         goto TryAgain;
+      } else {
+        errno = ENOMEM;
       }
     }
     __maps_free(map);
@@ -483,58 +514,15 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
     }
   }
 
-  // mmap works fine on unix
-  if (!IsWindows())
-    return __mmap_chunk(addr, size, prot, flags, fd, off, pagesz, gransz);
+  // try to pick our own addresses on windows which are higher up in the
+  // vaspace. this is important so that conflicts are less likely, after
+  // forking when resurrecting mappings, because win32 has a strong pref
+  // with lower memory addresses which may get assigned to who knows wut
+  if (IsWindows() && !addr)
+    if (!(addr = __maps_pickaddr(size)))
+      return (void *)enomem();
 
-  // if the concept of pagesz wasn't exciting enough
-  if (!addr && !(flags & (MAP_FIXED | MAP_FIXED_NOREPLACE))) {
-    size_t rollo, rollo2, slab = (size + gransz - 1) & -gransz;
-    rollo = atomic_load_explicit(&__maps.rollo, memory_order_relaxed);
-    for (;;) {
-      if ((rollo2 = rollo + slab) > WINMAXX) {
-        rollo = 0;
-        rollo2 = slab;
-      }
-      if (atomic_compare_exchange_weak_explicit(&__maps.rollo, &rollo, rollo2,
-                                                memory_order_acq_rel,
-                                                memory_order_relaxed)) {
-        addr = (char *)WINBASE + rollo;
-        break;
-      }
-    }
-  }
-
-  // windows forbids unmapping a subset of a map once it's made
-  if (size <= gransz || size > 100 * 1024 * 1024)
-    return __mmap_chunk(addr, size, prot, flags, fd, off, pagesz, gransz);
-
-  // so we create a separate map for each granule in the mapping
-  if (!(flags & MAP_FIXED)) {
-    while (__maps_overlaps(addr, size, pagesz)) {
-      if (flags & MAP_FIXED_NOREPLACE)
-        return (void *)eexist();
-      addr += gransz;
-    }
-  }
-  char *res = addr;
-  while (size) {
-    char *got;
-    size_t amt = MIN(size, gransz);
-    got = __mmap_chunk(addr, amt, prot, flags, fd, off, pagesz, gransz);
-    if (got != addr) {
-      if (got != MAP_FAILED)
-        __munmap(got, amt);
-      if (addr > res)
-        __munmap(res, addr - res);
-      errno = EAGAIN;
-      return MAP_FAILED;
-    }
-    size -= amt;
-    addr += amt;
-    off += amt;
-  }
-  return res;
+  return __mmap_chunk(addr, size, prot, flags, fd, off, pagesz, gransz);
 }
 
 static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
@@ -552,7 +540,7 @@ static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
     return (void *)enomem();
   if (!size || (uintptr_t)addr + size < size)
     return (void *)einval();
-  if (size > WINMAXX)
+  if (size > MAX_SIZE)
     return (void *)enomem();
   if (__maps.count * pagesz + size > __virtualmax)
     return (void *)enomem();
@@ -697,9 +685,9 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
     return (void *)einval();
 
   // check for big size
-  if (old_size > WINMAXX)
+  if (old_size > MAX_SIZE)
     return (void *)enomem();
-  if (new_size > WINMAXX)
+  if (new_size > MAX_SIZE)
     return (void *)enomem();
 
   // check for overflow
