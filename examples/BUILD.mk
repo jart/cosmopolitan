@@ -39,6 +39,7 @@ EXAMPLES_BINS =							\
 	$(EXAMPLES_COMS:%=%.dbg)
 
 EXAMPLES_DIRECTDEPS =						\
+	CTL							\
 	DSP_CORE						\
 	DSP_SCALE						\
 	DSP_TTY							\

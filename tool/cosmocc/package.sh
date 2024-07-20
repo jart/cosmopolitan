@@ -48,6 +48,7 @@ make -j64 m=$AMD64 \
   o/$AMD64/tool/build/chmod.dbg \
   o/$AMD64/tool/build/cocmd.dbg \
   o/$AMD64/tool/build/compile.dbg \
+  o/$AMD64/tool/build/mkdir.dbg \
   o/$AMD64/tool/build/cp.dbg \
   o/$AMD64/tool/build/echo.dbg \
   o/$AMD64/tool/build/gzip.dbg \
