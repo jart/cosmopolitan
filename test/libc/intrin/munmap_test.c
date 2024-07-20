@@ -184,8 +184,8 @@ TEST(munmap, tinyFile_preciseUnmapSize) {
 // clang-format off
 TEST(munmap, tinyFile_mapThriceUnmapOnce) {
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, gransz*4, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)));
-  ASSERT_SYS(0, 0, munmap(p, gransz*4));
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, gransz*5, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)));
+  ASSERT_SYS(0, 0, munmap(p, gransz*5));
   ASSERT_SYS(0, 3, open("doge", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS (0, 5, write(3, "hello", 5));
   ASSERT_EQ(p+gransz*0, mmap(p+gransz*0, gransz, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0));
