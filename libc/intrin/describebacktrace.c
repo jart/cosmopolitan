@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/iscall.internal.h"
+#include "libc/intrin/describebacktrace.h"
+#include "libc/intrin/iscall.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nexgen32e/stackframe.h"

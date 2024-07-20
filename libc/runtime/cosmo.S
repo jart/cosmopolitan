@@ -19,7 +19,7 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 #ifdef __x86_64__

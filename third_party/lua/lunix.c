@@ -46,7 +46,7 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/serialize.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 #include "libc/calls/cachestat.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 
 int sys_cachestat(int, struct cachestat_range *, struct cachestat *, uint32_t);
 

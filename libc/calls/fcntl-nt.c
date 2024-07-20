@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"

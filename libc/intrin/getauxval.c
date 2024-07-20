@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/getauxval.internal.h"
+#include "libc/intrin/getauxval.h"
 #include "libc/runtime/runtime.h"
 
 /**

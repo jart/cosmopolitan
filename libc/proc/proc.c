@@ -27,7 +27,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"

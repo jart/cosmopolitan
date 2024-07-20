@@ -32,7 +32,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/intrin/x86.h"
 #include "libc/limits.h"
 #include "libc/log/appendresourcereport.internal.h"

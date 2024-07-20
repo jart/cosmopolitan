@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.init.start 305,_init_g_fds
+	.init.start 305,_init_fds
 	push	%rdi
 	push	%rsi
 	mov	%r12d,%edi			// argc
@@ -27,4 +27,4 @@
 	call	__init_fds
 	pop	%rsi
 	pop	%rdi
-	.init.end 305,_init_g_fds
+	.init.end 305,_init_fds

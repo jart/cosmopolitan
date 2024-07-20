@@ -35,7 +35,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/hilbert.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

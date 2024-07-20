@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/iscall.internal.h"
+#include "libc/intrin/iscall.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"

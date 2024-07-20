@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/extend.internal.h"
+#include "libc/intrin/extend.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/pushpop.internal.h"
+#include "libc/intrin/nomultics.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
@@ -45,7 +45,7 @@
 #define OPEN_MAX 16
 
 #ifdef __x86_64__
-__static_yoink("_init_g_fds");
+__static_yoink("_init_fds");
 #endif
 
 struct Fds g_fds;

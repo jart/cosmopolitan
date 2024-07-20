@@ -16,7 +16,7 @@ LIBC_INTRIN_A_CHECKS = $(LIBC_INTRIN_A).pkg
 
 ifeq ($(ARCH), aarch64)
 LIBC_INTRIN_A_SRCS_S += $(wildcard libc/intrin/aarch64/*.S)
-LIBC_INTRIN_A_HDRS += libc/intrin/aarch64/asmdefs.internal.h
+LIBC_INTRIN_A_HDRS += libc/intrin/aarch64/asmdefs.h
 endif
 
 LIBC_INTRIN_A_OBJS =					\

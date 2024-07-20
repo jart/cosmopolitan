@@ -20,7 +20,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/stdio/rand.h"
 #include "libc/sysv/errfuns.h"
 

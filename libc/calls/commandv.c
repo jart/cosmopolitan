@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

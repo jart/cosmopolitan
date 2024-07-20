@@ -1,7 +1,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

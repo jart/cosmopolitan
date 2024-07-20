@@ -20,7 +20,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"

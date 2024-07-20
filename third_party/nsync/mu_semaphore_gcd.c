@@ -18,7 +18,7 @@
 #include "libc/assert.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/syslib.internal.h"

@@ -21,7 +21,7 @@
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/errno.h"
-#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"

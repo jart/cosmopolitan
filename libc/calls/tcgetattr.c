@@ -24,7 +24,7 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

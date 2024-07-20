@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/fds.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 
 static const char *__fdkind2str(int x) {

@@ -24,7 +24,7 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/alloca.h"
 #include "libc/sysv/consts/termios.h"

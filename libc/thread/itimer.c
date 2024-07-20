@@ -24,7 +24,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"

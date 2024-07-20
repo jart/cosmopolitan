@@ -30,7 +30,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/nomultics.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"

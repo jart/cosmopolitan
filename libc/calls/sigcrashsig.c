@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/pushpop.internal.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"

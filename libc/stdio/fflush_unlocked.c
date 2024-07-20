@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/cxxabi.h"
-#include "libc/intrin/pushpop.internal.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/mem/arraylist.internal.h"
 #include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/internal.h"

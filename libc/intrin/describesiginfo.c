@@ -19,7 +19,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/str/str.h"

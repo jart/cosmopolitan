@@ -22,7 +22,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/maps.h"
-#include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/nomultics.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"

@@ -23,7 +23,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"

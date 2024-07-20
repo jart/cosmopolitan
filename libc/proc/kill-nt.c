@@ -21,7 +21,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/enum/processaccess.h"

@@ -20,7 +20,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
 
 /**

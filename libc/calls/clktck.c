@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/wintime.internal.h"
-#include "libc/intrin/getauxval.internal.h"
+#include "libc/intrin/getauxval.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 

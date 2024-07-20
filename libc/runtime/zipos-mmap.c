@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/maps.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"

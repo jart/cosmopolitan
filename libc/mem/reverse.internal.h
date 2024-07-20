@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_REVERSE_H_
 #define COSMOPOLITAN_LIBC_ALG_REVERSE_H_
-#include "libc/intrin/xchg.internal.h"
+#include "libc/intrin/xchg.h"
 
 /**
  * Reverses array.

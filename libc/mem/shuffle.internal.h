@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RAND_SHUFFLE_H_
 #define COSMOPOLITAN_LIBC_RAND_SHUFFLE_H_
-#include "libc/intrin/xchg.internal.h"
+#include "libc/intrin/xchg.h"
 
 /**
  * Fisher-Yates shuffle.

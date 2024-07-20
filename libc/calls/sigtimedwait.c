@@ -23,7 +23,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

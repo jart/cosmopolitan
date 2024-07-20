@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/landlock.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 
 int sys_landlock_create_ruleset(const struct landlock_ruleset_attr *, size_t,
                                 uint32_t);

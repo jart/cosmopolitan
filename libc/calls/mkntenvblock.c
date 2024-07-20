@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/getenv.h"
 #include "libc/mem/alloca.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/runtime/runtime.h"

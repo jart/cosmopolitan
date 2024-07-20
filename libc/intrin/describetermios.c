@@ -20,7 +20,7 @@
 #include "libc/calls/struct/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/termios.h"

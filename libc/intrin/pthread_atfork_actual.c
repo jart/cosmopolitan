@@ -23,7 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/runtime.h"

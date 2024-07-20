@@ -22,7 +22,7 @@
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"

@@ -19,7 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"

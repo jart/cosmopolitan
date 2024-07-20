@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/iscall.internal.h"
+#include "libc/intrin/iscall.h"
 
 // returns true if `p` is preceded by x86 call instruction
 // this is actually impossible to do but we'll do our best
