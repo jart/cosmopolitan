@@ -39,6 +39,7 @@
 │ THIS SOFTWARE.                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"

@@ -1,3 +1,4 @@
+#include "libc/ctype.h"
 #include "libc/str/str.h"
 
 /*************************************************

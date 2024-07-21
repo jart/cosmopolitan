@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/net/ljson.h"
 #include "libc/assert.h"
+#include "libc/ctype.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

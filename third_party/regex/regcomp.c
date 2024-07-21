@@ -57,6 +57,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/alg.h"
+#include "libc/ctype.h"
 #include "third_party/regex/tre.inc"
 
 #define CHARCLASS_NAME_MAX 14

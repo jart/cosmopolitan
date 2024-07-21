@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
 

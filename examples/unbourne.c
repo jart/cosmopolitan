@@ -119,6 +119,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/tms.h"
 #include "libc/calls/termios.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -11142,7 +11143,9 @@ static void exitreset() {
     inps4 = 0;
   }
   /* from expand.c: */
-  { ifsfree(); }
+  {
+    ifsfree();
+  }
   /* from redir.c: */
   {
     /*
@@ -11165,9 +11168,13 @@ static void forkreset() {
     }
   }
   /* from main.c: */
-  { handler = &main_handler; }
+  {
+    handler = &main_handler;
+  }
   /* from redir.c: */
-  { redirlist = NULL; }
+  {
+    redirlist = NULL;
+  }
   /* from trap.c: */
   {
     char **tp;
@@ -11198,7 +11205,9 @@ static void reset() {
     popallfiles();
   }
   /* from var.c: */
-  { unwindlocalvars(0); }
+  {
+    unwindlocalvars(0);
+  }
 }
 
 static void calcsize(union node *n) {

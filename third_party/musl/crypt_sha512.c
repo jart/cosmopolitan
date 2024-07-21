@@ -39,6 +39,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/gdtoa/gdtoa.h"
+#include "libc/ctype.h"
 #include "third_party/musl/crypt.internal.h"
 __static_yoink("musl_libc_notice");
 

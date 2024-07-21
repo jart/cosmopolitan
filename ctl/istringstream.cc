@@ -17,6 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "istringstream.h"
+#include "libc/ctype.h"
 #include "libc/fmt/conv.h"
 #include "libc/str/str.h"
 

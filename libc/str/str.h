@@ -3,9 +3,6 @@
 
 #define INVALID_CODEPOINT 0xfffd
 
-#define _tolower(u) (0040 | (u))
-#define _toupper(u) (0137 & (u))
-
 #ifdef _COSMO_SOURCE
 #define chomp         _chomp
 #define chomp16       _chomp16
@@ -20,41 +17,12 @@
 #define wcsstartswith _wcsstartswith
 #endif /* _COSMO_SOURCE */
 
+#ifndef WEOF
+#define WEOF -1u
+#endif
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-int isascii(int) libcesque;
-int isspace(int) libcesque;
-int isalpha(int) libcesque;
-int isdigit(int) libcesque;
-int isalnum(int) libcesque;
-int isxdigit(int) libcesque;
-int isprint(int) libcesque;
-int islower(int) libcesque;
-int isupper(int) libcesque;
-int isblank(int) libcesque;
-int iscntrl(int) libcesque;
-int isgraph(int) libcesque;
-int tolower(int) libcesque;
-int ispunct(int) libcesque;
-int toupper(int) libcesque;
-int toascii(int) libcesque;
-
-int iswalnum(wint_t) libcesque;
-int iswalpha(wint_t) libcesque;
-int iswblank(wint_t) libcesque;
-int iswcntrl(wint_t) libcesque;
-int iswdigit(wint_t) libcesque;
-int iswgraph(wint_t) libcesque;
-int iswlower(wint_t) libcesque;
-int iswspace(wint_t) libcesque;
-int iswupper(wint_t) libcesque;
-int iswxdigit(wint_t) libcesque;
-int iswpunct(wint_t) libcesque;
-int iswprint(wint_t) libcesque;
-int iswseparator(wint_t) libcesque;
-wint_t towlower(wint_t) libcesque;
-wint_t towupper(wint_t) libcesque;
 
 void *memset(void *, int, size_t) memcpyesque;
 void *memmove(void *, const void *, size_t) memcpyesque;
@@ -156,14 +124,6 @@ int mblen(const char *, size_t) libcesque;
 int wctomb(char *, wchar_t) libcesque;
 int wctob(wint_t) libcesque;
 wint_t btowc(int) libcesque;
-
-typedef unsigned wctype_t;
-wctype_t wctype(const char *) strlenesque;
-pureconst int iswctype(wint_t, wctype_t) libcesque;
-
-typedef const int *wctrans_t;
-wctrans_t wctrans(const char *) libcesque;
-wint_t towctrans(wint_t, wctrans_t) libcesque;
 
 int getsubopt(char **, char *const *, char **) libcesque paramsnonnull();
 char *strsignal(int) returnsnonnull libcesque;

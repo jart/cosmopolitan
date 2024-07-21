@@ -168,6 +168,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 #include "net/http/escape.h"
+#include "libc/wctype.h"
 #include "tool/build/lib/case.h"
 
 __notice(linenoise_notice, "\

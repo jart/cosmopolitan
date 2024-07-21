@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/ctype.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/directmap.h"

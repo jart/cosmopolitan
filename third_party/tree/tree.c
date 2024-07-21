@@ -29,6 +29,8 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/mem/alg.h"
+#include "libc/ctype.h"
+#include "libc/wctype.h"
 #include "third_party/tree/tree.h"
 
 char *version = "$Version: $ tree v2.1.1 %s 1996 - 2023 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro $";

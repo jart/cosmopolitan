@@ -14,6 +14,7 @@
 #include "third_party/tidy/tmbstr.h"
 #include "third_party/tidy/utf8.h"
 #include "libc/assert.h"
+#include "libc/ctype.h"
 #include "third_party/tidy/sprtf.h"
 
 

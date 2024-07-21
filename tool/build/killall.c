@@ -30,6 +30,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/wctype.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
 

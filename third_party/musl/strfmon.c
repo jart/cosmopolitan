@@ -29,6 +29,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
+#include "libc/ctype.h"
 #include "libc/thread/tls.h"
 __static_yoink("musl_libc_notice");
 

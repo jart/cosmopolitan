@@ -36,6 +36,7 @@
 #include "libc/sysv/consts/af.h"
 #include "third_party/musl/lookup.internal.h"
 #include "third_party/musl/netdb.h"
+#include "libc/ctype.h"
 #include "third_party/musl/resolv.internal.h"
 __static_yoink("musl_libc_notice");
 

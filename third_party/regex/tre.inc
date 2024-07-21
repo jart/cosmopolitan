@@ -60,6 +60,7 @@
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "libc/wctype.h"
 #include "third_party/regex/regex.h"
 
 #undef TRE_MBSTATE

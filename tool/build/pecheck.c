@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/ctype.h"
 #include "libc/limits.h"
 #include "libc/nt/struct/imageimportbyname.internal.h"
 #include "libc/nt/struct/imageimportdescriptor.internal.h"

@@ -37,6 +37,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sock/sock.h"
+#include "libc/ctype.h"
 #include "third_party/musl/lookup.internal.h"
 __static_yoink("musl_libc_notice");
 

@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/likely.h"
-#include "libc/str/str.h"
 #include "libc/str/unicode.h"
 #include "libc/str/wcwidth_osx.internal.h"
+#include "libc/wctype.h"
 
 /**
  * Returns cell width of monospace character.

@@ -13,6 +13,7 @@
 #include "libc/str/str.h"
 #include "third_party/ctags/args.h"
 #include "third_party/ctags/debug.h"
+#include "libc/ctype.h"
 #include "third_party/ctags/routines.h"
 
 /*

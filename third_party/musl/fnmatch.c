@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/str/str.h"
+#include "libc/wctype.h"
 #include "third_party/musl/fnmatch.h"
 __static_yoink("musl_libc_notice");
 

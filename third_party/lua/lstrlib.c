@@ -34,6 +34,7 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
+#include "libc/ctype.h"
 #include "third_party/lua/lualib.h"
 __static_yoink("lua_notice");
 

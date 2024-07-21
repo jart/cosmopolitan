@@ -31,6 +31,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/sock/sock.h"
+#include "libc/ctype.h"
 #include "third_party/musl/lookup.internal.h"
 __static_yoink("musl_libc_notice");
 

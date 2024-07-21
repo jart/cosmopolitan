@@ -60,6 +60,7 @@ Contact: antirez@gmail.com");
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/mem/alg.h"

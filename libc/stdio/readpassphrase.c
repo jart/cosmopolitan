@@ -26,6 +26,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/termios.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/paths.h"
 #include "libc/str/str.h"

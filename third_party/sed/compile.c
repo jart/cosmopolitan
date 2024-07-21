@@ -47,6 +47,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/mem/gc.h"
+#include "libc/ctype.h"
 #include "libc/time.h"
 
 #include "libc/str/str.h"

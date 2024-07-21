@@ -73,6 +73,7 @@
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/xopen.h"
 #include "libc/thread/thread.h"
+#include "libc/ctype.h"
 #include "libc/math.h"
 
 #include "third_party/hiredis/alloc.h"

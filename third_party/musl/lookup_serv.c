@@ -32,6 +32,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/errno.h"
 #include "libc/calls/sysdir.internal.h"
+#include "libc/ctype.h"
 #include "third_party/musl/lookup.internal.h"
 __static_yoink("musl_libc_notice");
 

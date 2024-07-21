@@ -65,6 +65,7 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.internal.h"
 #include "libc/vga/vga.internal.h"
+#include "libc/wctype.h"
 
 #define STACK_ERROR "kprintf error: stack is about to overflow\n"
 

@@ -5,6 +5,7 @@
 #include "libc/str/tab.internal.h"
 #include "third_party/chibicc/chibicc.h"
 #include "third_party/chibicc/file.h"
+#include "libc/ctype.h"
 #include "third_party/chibicc/kw.h"
 
 // Input file

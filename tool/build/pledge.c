@@ -29,6 +29,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"

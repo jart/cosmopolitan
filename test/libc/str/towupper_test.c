@@ -20,6 +20,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "libc/wctype.h"
 
 TEST(iswupper, test) {
   EXPECT_TRUE(iswupper(L'𝐵'));
