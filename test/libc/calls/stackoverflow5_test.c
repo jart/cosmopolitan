@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,71 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#include <cosmo.h>
+#include <limits.h>
+#include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
 
 /**
- * Garbage collects POSIX threads runtime.
- *
- * Let's say you want to run a memory leak detector. You can say:
- *
- *     while (!pthread_orphan_np())
- *       pthread_decimate_np();
- *
- * To wait until all threads have exited.
- *
- * @return 0 on success, or errno on error
+ * stack overflow recovery technique #5
+ * use the cosmo posix threads extensions
  */
-int pthread_decimate_np(void) {
-  _pthread_decimate(false);
+
+sig_atomic_t smashed_stack;
+
+void CrashHandler(int sig) {
+  smashed_stack = true;
+  pthread_exit(0);
+}
+
+int StackOverflow(int f(), int n) {
+  if (n < INT_MAX) {
+    return f(f, n + 1) - 1;
+  } else {
+    return INT_MAX;
+  }
+}
+
+int (*pStackOverflow)(int (*)(), int) = StackOverflow;
+
+void *MyPosixThread(void *arg) {
+  exit(pStackOverflow(pStackOverflow, 0));
   return 0;
+}
+
+int main() {
+
+  // choose the most dangerously small size possible
+  size_t sigstacksize = sysconf(_SC_MINSIGSTKSZ) + 2048;
+
+  // setup signal handler
+  struct sigaction sa;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_ONSTACK;
+  sa.sa_handler = CrashHandler;
+  if (sigaction(SIGBUS, &sa, 0))
+    return 1;
+  if (sigaction(SIGSEGV, &sa, 0))
+    return 2;
+
+  // create thread with signal stack
+  pthread_t id;
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr))
+    return 3;
+  if (pthread_attr_setguardsize(&attr, getpagesize()))
+    return 4;
+  if (pthread_attr_setsigaltstacksize_np(&attr, sigstacksize))
+    return 5;
+  if (pthread_create(&id, &attr, MyPosixThread, 0))
+    return 6;
+  if (pthread_attr_destroy(&attr))
+    return 7;
+  if (pthread_join(id, 0))
+    return 8;
+  if (!smashed_stack)
+    return 9;
+
+  CheckForMemoryLeaks();
 }

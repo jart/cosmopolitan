@@ -50,12 +50,10 @@ TEST(cosmo_once, test) {
   pthread_t th[N];
   x = y = 0;
   ASSERT_EQ(0, pthread_barrier_init(&b, 0, N));
-  for (i = 0; i < N; ++i) {
+  for (i = 0; i < N; ++i)
     ASSERT_EQ(0, pthread_create(th + i, 0, Worker, 0));
-  }
-  for (i = 0; i < N; ++i) {
+  for (i = 0; i < N; ++i)
     ASSERT_EQ(0, pthread_join(th[i], 0));
-  }
   ASSERT_EQ(N, atomic_load(&x));
   ASSERT_EQ(1, atomic_load(&y));
   ASSERT_EQ(0, pthread_barrier_destroy(&b));

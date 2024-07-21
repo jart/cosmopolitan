@@ -94,9 +94,11 @@ typedef struct pthread_attr_s {
   int __schedpolicy;
   int __contentionscope;
   int __guardsize;
-  size_t __stacksize;
+  int __stacksize;
+  int __sigaltstacksize;
   uint64_t __sigmask;
   void *__stackaddr;
+  void *__sigaltstackaddr;
 } pthread_attr_t;
 
 struct _pthread_cleanup_buffer {
@@ -117,6 +119,8 @@ int pthread_attr_getschedpolicy(const pthread_attr_t *, int *) libcesque paramsn
 int pthread_attr_getscope(const pthread_attr_t *, int *) libcesque paramsnonnull();
 int pthread_attr_getstack(const pthread_attr_t *, void **, size_t *) libcesque paramsnonnull();
 int pthread_attr_getstacksize(const pthread_attr_t *, size_t *) libcesque paramsnonnull();
+int pthread_attr_getsigaltstack_np(const pthread_attr_t *, void **, size_t *) libcesque paramsnonnull();
+int pthread_attr_getsigaltstacksize_np(const pthread_attr_t *, size_t *) libcesque paramsnonnull();
 int pthread_attr_init(pthread_attr_t *) libcesque paramsnonnull();
 int pthread_attr_setdetachstate(pthread_attr_t *, int) libcesque paramsnonnull();
 int pthread_attr_setguardsize(pthread_attr_t *, size_t) libcesque paramsnonnull();
@@ -125,6 +129,8 @@ int pthread_attr_setschedpolicy(pthread_attr_t *, int) libcesque paramsnonnull()
 int pthread_attr_setscope(pthread_attr_t *, int) libcesque paramsnonnull();
 int pthread_attr_setstack(pthread_attr_t *, void *, size_t) libcesque paramsnonnull((1));
 int pthread_attr_setstacksize(pthread_attr_t *, size_t) libcesque paramsnonnull();
+int pthread_attr_setsigaltstack_np(pthread_attr_t *, void *, size_t) libcesque paramsnonnull((1));
+int pthread_attr_setsigaltstacksize_np(pthread_attr_t *, size_t);
 int pthread_barrier_destroy(pthread_barrier_t *) libcesque paramsnonnull();
 int pthread_barrier_init(pthread_barrier_t *, const pthread_barrierattr_t *, unsigned) libcesque paramsnonnull((1));
 int pthread_barrier_wait(pthread_barrier_t *) libcesque paramsnonnull();

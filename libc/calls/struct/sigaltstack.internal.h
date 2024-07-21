@@ -4,8 +4,8 @@
 #include "libc/mem/alloca.h"
 COSMOPOLITAN_C_START_
 
-const char *DescribeSigaltstk(char[128], int, const struct sigaltstack *);
-#define DescribeSigaltstk(rc, ss) DescribeSigaltstk(alloca(128), rc, ss)
+const char *DescribeSigaltstack(char[128], int, const struct sigaltstack *);
+#define DescribeSigaltstack(rc, ss) DescribeSigaltstack(alloca(128), rc, ss)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGALTSTACK_INTERNAL_H_ */

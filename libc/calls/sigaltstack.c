@@ -146,7 +146,7 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   } else {
     rc = sigaltstack_cosmo(neu, old);
   }
-  STRACE("sigaltstack(%s, [%s]) → %d% m", DescribeSigaltstk(0, neu),
-         DescribeSigaltstk(0, old), rc);
+  STRACE("sigaltstack(%s, [%s]) → %d% m", DescribeSigaltstack(0, neu),
+         DescribeSigaltstack(0, old), rc);
   return rc;
 }

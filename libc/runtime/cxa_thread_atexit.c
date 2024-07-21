@@ -79,11 +79,22 @@ void __cxa_thread_finalize(void) {
   struct Dtor *dtor;
   struct CosmoTib *tib;
   tib = __get_tls();
+
+  // "Any cancellation cleanup handlers that have been pushed and not
+  //  yet popped shall be popped in the reverse order that they were
+  //  pushed and then executed." ──Quoth POSIX.1-2017
   _pthread_unwind(tib);
+
+  // "After all cancellation cleanup handlers have been executed, if the
+  //  thread has any thread-specific data, appropriate destructor
+  //  functions shall be called in an unspecified order."
+  //                              ──Quoth POSIX.1-2017
   if (tib->tib_nsync)
     _weaken(nsync_waiter_destroy)(tib->tib_nsync);
   _pthread_unkey(tib);
+
   _pthread_ungarbage(tib);
+
   while ((dtor = tib->tib_atexit)) {
     STRACE("__cxa_finalize(%t, %p)", dtor->fun, dtor->arg);
     tib->tib_atexit = dtor->next;

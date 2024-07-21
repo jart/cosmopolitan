@@ -27,6 +27,7 @@ const char *DescribeItimer(char[12], int) libcesque;
 const char *DescribeMapFlags(char[64], int) libcesque;
 const char *DescribeMapping(char[8], int, int) libcesque;
 const char *DescribeMremapFlags(char[30], int) libcesque;
+const char *DescribeMsyncFlags(char[48], int) libcesque;
 const char *DescribeNtConsoleInFlags(char[256], uint32_t) libcesque;
 const char *DescribeNtConsoleOutFlags(char[128], uint32_t) libcesque;
 const char *DescribeNtCreationDisposition(uint32_t) libcesque;
@@ -54,6 +55,7 @@ const char *DescribeRlimitName(char[20], int) libcesque;
 const char *DescribeSchedPolicy(char[48], int) libcesque;
 const char *DescribeSeccompOperation(int) libcesque;
 const char *DescribeSiCode(char[20], int, int) libcesque;
+const char *DescribeSigaltstackFlags(char[22], int) libcesque;
 const char *DescribeSleepFlags(char[16], int) libcesque;
 const char *DescribeSockLevel(char[12], int) libcesque;
 const char *DescribeSockOptname(char[32], int, int) libcesque;
@@ -82,6 +84,7 @@ const char *DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeMapFlags(x)          DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        DescribeMapping(alloca(8), x, y)
 #define DescribeMremapFlags(x)       DescribeMremapFlags(alloca(30), x)
+#define DescribeMsyncFlags(x)        DescribeMsyncFlags(alloca(48), x)
 #define DescribeNtConsoleInFlags(x)  DescribeNtConsoleInFlags(alloca(256), x)
 #define DescribeNtConsoleOutFlags(x) DescribeNtConsoleOutFlags(alloca(128), x)
 #define DescribeNtFileAccessFlags(x) DescribeNtFileAccessFlags(alloca(512), x)
@@ -107,6 +110,7 @@ const char *DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
 #define DescribeSiCode(x, y)         DescribeSiCode(alloca(20), x, y)
+#define DescribeSigaltstackFlags(x)  DescribeSigaltstackFlags(alloca(22), x)
 #define DescribeSleepFlags(x)        DescribeSleepFlags(alloca(16), x)
 #define DescribeSockLevel(x)         DescribeSockLevel(alloca(12), x)
 #define DescribeSockOptname(x, y)    DescribeSockOptname(alloca(32), x, y)

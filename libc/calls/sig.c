@@ -396,9 +396,7 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
 textwindows int __sig_kill(struct PosixThread *pt, int sig, int sic) {
   int rc;
   BLOCK_SIGNALS;
-  _pthread_ref(pt);
   rc = __sig_killer(pt, sig, sic);
-  _pthread_unref(pt);
   ALLOW_SIGNALS;
   return rc;
 }

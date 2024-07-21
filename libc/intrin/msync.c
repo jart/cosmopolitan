@@ -23,6 +23,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -93,6 +94,7 @@ int msync(void *addr, size_t size, int flags) {
   END_CANCELATION_POINT;
 
 Finished:
-  STRACE("msync(%p, %'zu, %#x) → %d% m", addr, size, flags, rc);
+  STRACE("msync(%p, %'zu, %s) → %d% m", addr, size, DescribeMsyncFlags(flags),
+         rc);
   return rc;
 }

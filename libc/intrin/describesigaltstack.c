@@ -21,8 +21,8 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 
-const char *(DescribeSigaltstk)(char buf[128], int rc,
-                                const struct sigaltstack *ss) {
+const char *(DescribeSigaltstack)(char buf[128], int rc,
+                                  const struct sigaltstack *ss) {
   if (rc == -1)
     return "n/a";
   if (!ss)
@@ -30,8 +30,8 @@ const char *(DescribeSigaltstk)(char buf[128], int rc,
   if (kisdangerous(ss)) {
     ksnprintf(buf, 128, "%p", ss);
   } else {
-    ksnprintf(buf, 128, "{.ss_sp=%p, .ss_flags=%#lx, .ss_size=%'zu}", ss->ss_sp,
-              ss->ss_flags, ss->ss_size);
+    ksnprintf(buf, 128, "{.ss_sp=%p, .ss_flags=%s, .ss_size=%'zu}", ss->ss_sp,
+              DescribeSigaltstackFlags(ss->ss_flags), ss->ss_size);
   }
   return buf;
 }

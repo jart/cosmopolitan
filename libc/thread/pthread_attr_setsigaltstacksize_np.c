@@ -16,67 +16,63 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 
 /**
- * Configures custom allocated stack for thread, e.g.
+ * Defines size of cosmo-owned signal stack for thread.
+ *
+ * The sigaltstack() function is useful for writing robust programs that
+ * can recover from the occasional thread having a stack overflow rather
+ * than having the entire process crash. To use it normally, sigaltstack
+ * needs to be called at the start of each thread with a unique piece of
+ * memory. However this is challenging to do *correctly* without support
+ * from the POSIX threads runtime, since canceled or crashed threads may
+ * need to execute on the signal stack during pthread_exit() which would
+ * prevent a thread-local storage key destructor from free()'ing it.
+ *
+ * By default pthread_create() will not install a sigaltstack() on newly
+ * created threads. If this function is called, on the attributes object
+ * that gets passed to pthread_create(), then it'll use malloc() to make
+ * a stack for the thread using the size you specify here. The threading
+ * runtime will also free that memory safely after complete termination.
  *
  *     pthread_t id;
  *     pthread_attr_t attr;
- *     char *stk = NewCosmoStack();
  *     pthread_attr_init(&attr);
- *     pthread_attr_setstack(&attr, stk, GetStackSize());
+ *     pthread_attr_setguardsize(&attr, getpagesize());
+ *     pthread_attr_setsigaltstacksize_np(&attr, stacksize);
  *     pthread_create(&id, &attr, func, 0);
  *     pthread_attr_destroy(&attr);
  *     pthread_join(id, 0);
- *     FreeCosmoStack(stk);
  *
- * Your stack must have at least `PTHREAD_STACK_MIN` bytes, which
- * Cosmpolitan Libc defines as `GetStackSize()`. It's a link-time
- * constant used by Actually Portable Executable that's 128 kb by
- * default. See libc/runtime/stack.h for docs on your stack limit
- * since the APE ELF phdrs are the one true source of truth here.
+ * Try using a size of `sysconf(_SC_SIGSTKSZ)`. If you want the smallest
+ * size possible, then `sysconf(_SC_MINSIGSTKSZ) + 2048` is probably the
+ * smallest value that can reasonably expected to work with pthread_exit
  *
- * Cosmpolitan Libc runtime magic (e.g. ftrace) and memory safety
- * (e.g. kprintf) assumes that stack sizes are two-powers and are
- * aligned to that two-power. Conformance isn't required since we
- * say caveat emptor to those who don't maintain these invariants
- * please consider using NewCosmoStack(), which is always perfect
- * or use `mmap(0, GetStackSize() << 1, ...)` for a bigger stack.
+ *     struct sigaction sa;
+ *     sigemptyset(&sa.sa_mask);
+ *     sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+ *     sa.sa_sigaction = on_crash_signal;
+ *     sigaction(SIGSEGV, &sa, 0);
  *
- * Unlike pthread_attr_setstacksize(), this function permits just
- * about any parameters and will change the values and allocation
- * as needed to conform to the mandatory requirements of the host
- * operating system even if it doesn't meet the stricter needs of
- * Cosmopolitan Libc userspace libraries. For example with malloc
- * allocations, things like page size alignment, shall be handled
- * automatically for compatibility with existing codebases.
+ * Please note that in order for this to work, your handlers for signals
+ * such as SIGSEGV and SIGBUS need to use SA_ONSTACK in your sa_flags.
  *
- * The same stack shouldn't be used for two separate threads. Use
- * fresh stacks for each thread so that ASAN can be much happier.
- *
- * @param stackaddr is address of stack allocated by caller, and
- *     may be NULL in which case default behavior is restored
- * @param stacksize is size of caller allocated stack
+ * @param stacksize contains stack size in bytes, or 0 to disable
  * @return 0 on success, or errno on error
- * @raise EINVAL if parameters were unacceptable
- * @see pthread_attr_setstacksize()
+ * @raise EINVAL if `stacksize` is less than `sysconf(_SC_MINSIGSTKSZ)`
  */
-errno_t pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-                              size_t stacksize) {
-  if (!stackaddr) {
-    attr->__stackaddr = 0;
-    attr->__stacksize = 0;
-    return 0;
+errno_t pthread_attr_setsigaltstacksize_np(pthread_attr_t *a,
+                                           size_t stacksize) {
+  if (stacksize) {
+    if (stacksize > INT_MAX)
+      return EINVAL;
+    if (stacksize < __get_minsigstksz())
+      return EINVAL;
   }
-  if (stacksize > INT_MAX)
-    return EINVAL;
-  if (stacksize < PTHREAD_STACK_MIN)
-    return EINVAL;
-  attr->__stackaddr = stackaddr;
-  attr->__stacksize = stacksize;
+  a->__sigaltstacksize = stacksize;
   return 0;
 }

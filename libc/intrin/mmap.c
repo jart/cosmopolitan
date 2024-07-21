@@ -834,7 +834,8 @@ void *mremap(void *old_addr, size_t old_size, size_t new_size, int flags, ...) {
  */
 int munmap(void *addr, size_t size) {
   int rc = __munmap(addr, size);
-  STRACE("munmap(%p, %'zu) → %d% m", addr, size, rc);
+  STRACE("munmap(%p, %'zu) → %d% m (%'zu bytes total)", addr, size, rc,
+         __maps.pages * __pagesize);
   return rc;
 }
 

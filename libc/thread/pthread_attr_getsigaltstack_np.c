@@ -16,54 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/thread/posixthread.internal.h"
+#include "libc/runtime/stack.h"
 #include "libc/thread/thread.h"
 
-static errno_t pthread_detach_impl(struct PosixThread *pt) {
-  enum PosixThreadStatus status, transition;
-  for (;;) {
-    status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
-    if (status == kPosixThreadJoinable) {
-      transition = kPosixThreadDetached;
-    } else if (status == kPosixThreadTerminated) {
-      transition = kPosixThreadZombie;
-    } else {
-      return EINVAL;
-    }
-    if (atomic_compare_exchange_weak_explicit(&pt->pt_status, &status,
-                                              transition, memory_order_release,
-                                              memory_order_relaxed)) {
-      if (transition == kPosixThreadZombie)
-        _pthread_zombify(pt);
-      return 0;
-    }
-  }
-}
-
 /**
- * Asks POSIX thread to free itself automatically upon termination.
+ * Returns configuration for thread signal stack.
  *
- * If this function is used, then it's important to use pthread_exit()
- * rather than exit() since otherwise your program isn't guaranteed to
- * gracefully terminate.
- *
- * Detaching a non-joinable thread is undefined behavior. For example,
- * pthread_detach() can't be called twice on the same thread.
- *
- * @return 0 on success, or errno with error
- * @raise EINVAL if `thread` isn't joinable
- * @returnserrno
+ * @param stackaddr will be set to signal stack address
+ * @return 0 on success, or errno on error
+ * @see pthread_attr_setsigaltstacksize_np()
  */
-errno_t pthread_detach(pthread_t thread) {
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  errno_t err = pthread_detach_impl(pt);
-  STRACE("pthread_detach(%d) → %s", _pthread_tid(pt), DescribeErrno(err));
-  return err;
+errno_t pthread_attr_getsigaltstack_np(const pthread_attr_t *attr,
+                                       void **stackaddr, size_t *stacksize) {
+  *stackaddr = attr->__sigaltstackaddr;
+  *stacksize = attr->__sigaltstacksize;
+  return 0;
 }

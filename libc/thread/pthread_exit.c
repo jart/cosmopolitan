@@ -69,23 +69,33 @@
  * @noreturn
  */
 wontreturn void pthread_exit(void *rc) {
+  int orphan;
   struct CosmoTib *tib;
   struct PosixThread *pt;
   enum PosixThreadStatus status, transition;
 
+  STRACE("pthread_exit(%p)", rc);
+
+  // get posix thread object
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
-  pt->pt_flags |= PT_NOCANCEL;
-  pt->pt_rc = rc;
 
-  STRACE("pthread_exit(%p)", rc);
+  // "The behavior of pthread_exit() is undefined if called from a
+  //  cancellation cleanup handler or destructor function that was
+  //  invoked as a result of either an implicit or explicit call to
+  //  pthread_exit()." ──Quoth POSIX.1-2017
+  unassert(!(pt->pt_flags & PT_EXITING));
+
+  // set state
+  pt->pt_flags |= PT_NOCANCEL | PT_EXITING;
+  pt->pt_rc = rc;
 
   // free resources
   __cxa_thread_finalize();
-  _pthread_decimate();
 
   // run atexit handlers if orphaned thread
-  if (pthread_orphan_np())
+  _pthread_decimate(true);
+  if ((orphan = pthread_orphan_np()))
     if (_weaken(__cxa_finalize))
       _weaken(__cxa_finalize)(NULL);
 
@@ -113,8 +123,11 @@ wontreturn void pthread_exit(void *rc) {
   if (transition == kPosixThreadZombie)
     _pthread_zombify(pt);
 
-  // check if this is the last survivor
-  if (pthread_orphan_np()) {
+  // "The process shall exit with an exit status of 0 after the last
+  //  thread has been terminated. The behavior shall be as if the
+  //  implementation called exit() with a zero argument at thread
+  //  termination time." ──Quoth POSIX.1-2017
+  if (orphan) {
     for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;)
       ((void (*)(void))(*--p))();
     _Exit(0);

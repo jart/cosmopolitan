@@ -76,7 +76,7 @@ void CheckForMemoryLeaks(void) {
 
   // validate usage of this api
   if (_weaken(_pthread_decimate))
-    _weaken(_pthread_decimate)();
+    _weaken(_pthread_decimate)(false);
   if (!pthread_orphan_np())
     kprintf("warning: called CheckForMemoryLeaks() from non-orphaned thread\n");
 

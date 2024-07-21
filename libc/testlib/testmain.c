@@ -151,23 +151,20 @@ int main(int argc, char *argv[]) {
       a->teardown(0);
     }
   }
-  if (_weaken(TearDownOnce)) {
+  if (_weaken(TearDownOnce))
     _weaken(TearDownOnce)();
-  }
 
   // make sure threads are in a good state
-  if (_weaken(_pthread_decimate)) {
-    _weaken(_pthread_decimate)();
-  }
+  if (_weaken(_pthread_decimate))
+    _weaken(_pthread_decimate)(false);
   if (_weaken(pthread_orphan_np) && !_weaken(pthread_orphan_np)()) {
     tinyprint(2, "error: tests ended with threads still active\n", NULL);
     _Exit(1);
   }
 
   // check for memory leaks
-  if (!g_testlib_failed) {
+  if (!g_testlib_failed)
     CheckForMemoryLeaks();
-  }
 
   // we're done!
   int status = MIN(255, g_testlib_failed);

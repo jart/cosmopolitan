@@ -528,18 +528,21 @@ TEST(mmap, sharedFileMapFork) {
 
 int count;
 void *ptrs[N];
+size_t sizes[N];
 
 void BenchMmapPrivate(void) {
   void *p;
-  p = mmap(0, gransz * 10, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
-           -1, 0);
+  p = mmap(0, (sizes[count] = rand() % (pagesz * 500)), PROT_READ | PROT_WRITE,
+           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (p == MAP_FAILED)
     __builtin_trap();
-  ptrs[count++] = p;
+  ptrs[count] = p;
+  ++count;
 }
 
 void BenchUnmap(void) {
-  if (munmap(ptrs[--count], gransz * 10))
+  --count;
+  if (munmap(ptrs[count], sizes[count]))
     __builtin_trap();
 }
 
@@ -557,7 +560,7 @@ void BenchBigMunmap(void) {
     __builtin_trap();
 }
 
-BENCH(mmap, bench) {
+TEST(mmap, bench) {
   EZBENCH2("mmap", donothing, BenchMmapPrivate());
   EZBENCH2("munmap", donothing, BenchUnmap());
   // EZBENCH2("big mmap", donothing, BenchBigMmap());
