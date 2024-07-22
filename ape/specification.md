@@ -402,8 +402,8 @@ arises in the fact that our Linux-flavored GCC and Clang toolchains
 producing TLS instructions that use the %fs convention.
 
 To solve these challenges, the `cosmocc` compiler will rewrite binary
-objects after they've been compiled by GCC, so that `%gs` register is
-used, rather than `%fs`. Morphing x86-64 binaries after they've been
+objects after they've been compiled by GCC, so that the `%gs` register
+is used, rather than `%fs`. Morphing x86-64 binaries after they've been
 compiled is normally difficult, due to the complexity of the machine
 instruction language. However GCC provides `-mno-tls-direct-seg-refs`
 which greatly reduces the complexity of this task. This flag forgoes

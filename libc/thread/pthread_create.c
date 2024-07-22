@@ -118,7 +118,7 @@ void _pthread_decimate(bool annihilation_only) {
     if (status != kPosixThreadZombie)
       break;  // zombies only exist at the end of the linked list
     if (atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire))
-      continue;  // undead thread should that'll stop existing soon
+      continue;  // undead thread that should stop existing soon
     dll_remove(&_pthread_list, e);
     dll_make_first(&list, e);
   }
