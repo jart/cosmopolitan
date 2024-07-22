@@ -251,6 +251,8 @@ textstartup void __enable_tls(void) {
   atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_release);
 
   // ask the operating system to change the x86 segment register
+  if (IsWindows())
+    __tls_index = TlsAlloc();
   __set_tls(tib);
 
 #ifdef __x86_64__

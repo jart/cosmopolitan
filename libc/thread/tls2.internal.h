@@ -17,9 +17,8 @@ forceinline struct CosmoTib *__get_tls_privileged(void) {
     __asm__("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   } else {
     __asm__("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
-    if (IsWindows()) {
+    if (IsWindows())
       tib = *(char **)(tib + 0x1480 + __tls_index * 8);
-    }
   }
   return (struct CosmoTib *)tib;
 }

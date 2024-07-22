@@ -65,6 +65,7 @@
 #include "libc/thread/itimer.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
+#include "libc/thread/tls2.internal.h"
 #ifdef __x86_64__
 
 extern long __klog_handle;
@@ -112,7 +113,8 @@ static dontinline textwindows ssize_t ForkIo2(
   ssize_t rc = ForkIo(h, buf, n, fn);
   if (ischild) {
     // prevent crashes
-    __tls_enabled_set(false);
+    __threaded = false;
+    __tls_enabled = false;
     __pid = __imp_GetCurrentProcessId();
     __klog_handle = 0;
     __maps.maps = 0;
@@ -265,9 +267,8 @@ textwindows void WinMainForked(void) {
   ReadOrDie(reader, __data_start, __data_end - __data_start);
   ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
   kStartTsc = savetsc;
+  __tls_enabled = false;
   __threaded = false;
-  __tls_index = 0;
-  __tls_enabled_set(false);
 
   // fixup memory manager
   __maps.free = 0;
@@ -456,9 +457,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   } else {
     rc = 0;
     // re-apply code morphing for thread-local storage
-    __set_tls(tib);
+    __tls_index = TlsAlloc();
+    __set_tls_win32(tib);
     __morph_tls();
-    __tls_enabled_set(true);
+    __tls_enabled = true;
     // the child's pending signals is initially empty
     atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
     atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
