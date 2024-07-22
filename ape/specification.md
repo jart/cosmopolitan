@@ -292,7 +292,7 @@ different OSes define incompatible ABIs.
 
 While it was possible to polyglot PE+ELF+MachO to create multi-OS
 executables, it simply isn't possible to do that same thing for
-DLL+DLIB+SO. Therefore, in order to have DSOs, APE would need to either
+DLL+DYLIB+SO. Therefore, in order to have DSOs, APE would need to either
 choose one of the existing formats or invent one of its own, and then
 develop its own parallel ecosystem of extension software. In the future,
 the APE specification may expand to encompass this. However the focus to
@@ -459,7 +459,7 @@ can't modify itself at the same time. The way Cosmopolitan solves this
 is by defining a special part of the binary called `.text.privileged`.
 This section is aligned to page boundaries. A GNU ld linker script is
 used to ensure that code which morphs code is placed into this section,
-through the use of a header-define cosmo-specific keyword `privileged`.
+through the use of a header-defined cosmo-specific keyword `privileged`.
 Additionally, the `fixupobj` program is used by the Cosmo build system
 to ensure that compiled objects don't contain privileged functions that
 call non-privileged functions. Needless to say, `mprotect()` needs to be
@@ -482,7 +482,7 @@ The Actually Portable Executable Thread Information Block (TIB) is
 defined by this version of the specification as follows:
 
 - The 64-bit TIB self-pointer is stored at offset 0x00.
-- The 64-bit TIB self-pointer is stored at offset 0x30.
+- The 64-bit TIB self-pointer is also stored at offset 0x30.
 - The 32-bit `errno` value is stored at offset 0x3c.
 
 All other parts of the thread information block should be considered
@@ -584,25 +584,30 @@ imposed by the executable formats that APE wraps.
    program segments once the invariant is restored. ELF loaders will
    happily map program headers from arbitrary file intervals (which may
    overlap) onto arbitrarily virtual intervals (which don't need to be
-   contiguous). in order to do that, the loaders will generally use
-   UNIX's mmap() function which needs to have both page aligned
-   addresses and file offsets, even though the ELF programs headers
-   themselves do not. Since program headers start and stop at
-   potentially any byte, ELF loaders tease the intervals specified by
-   program headers into conforming to mmap() requirements by rounding
-   out intervals as necessary in order to ensure that both the mmap()
-   size and offset parameters are page-size aligned. This means with
-   ELF, we never need to insert any empty space into a file when we
-   don't want to; we can simply allow the offset to drift apart from the
-   virtual offset.
+   contiguous). In order to do that, the loaders will generally use
+   UNIX's mmap() function which is more restrictive and only accepts
+   addresses and offsets that are page aligned. To make it possible to
+   map an unaligned ELF program header that could potentially start and
+   stop at any byte, ELF loaders round-out the intervals, which means
+   adjacent unrelated data might also get mapped, which may need to be
+   explicitly zero'd. Thanks to the cleverness of ELF, it's possible to
+   have an executable file be very tiny, without needing any alignment
+   bytes, and it'll be loaded into a properly aligned virtual space
+   where segments can be as sparse as we want them to be.
 
-2. PE doesn't care about congruence and instead specifies a second kind
-   of alignment. The minimum alignment of files is 512 because that's
-   what MS-DOS used. Where things get hairy is with PE's SizeOfHeaders
-   which has complex requirements. When the PE image base needs to be
-   skewed, Windows imposes a separate 64kb alignment requirement on the
-   image base. Therefore an APE executable's `__executable_start` should
-   be aligned on at least a 64kb address.
+2. PE doesn't care about congruence and instead defines two separate
+   kinds of alignment. First, PE requires that the layout of segment
+   memory inside the file be aligned on at minimum the classic 512 byte
+   MS-DOS page size. This means that, unlike ELF, some alignment padding
+   may need to be encoded into the file, making it slightly larger. Next
+   PE imposes an alignment restriction on segments once they've been
+   mapped into the virtual address space, which must be rounded to the
+   system page size. Like ELF, PE segments need to be properly ordered
+   but they're allowed to drift apart once mapped in a non-contiguous
+   sparsely mapped way. When inserting shell script content at the start
+   of a PE file, the most problematic thing is the need to round up to
+   the 64kb system granularity, which results in a lot of needless bytes
+   of padding being inserted by a naive second-pass linker.
 
 3. Apple's Mach-O format is the strictest of them all. While both ELF
    and PE are defined in such a way that invites great creativity, XNU
