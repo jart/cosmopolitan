@@ -19,12 +19,11 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.internal.h"
-.privileged
 
 //	Relinquishes scheduled quantum.
 //
 //	@return	0 on success, or -1 w/ errno
-sched_yield:
+sys_sched_yield:
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
@@ -107,5 +106,5 @@ sched_yield:
 #else
 #error "arch unsupported"
 #endif
-	.endfn	sched_yield,globl
+	.endfn	sys_sched_yield,globl
 	.previous

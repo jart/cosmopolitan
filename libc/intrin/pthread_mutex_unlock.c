@@ -45,6 +45,7 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
   // get current state of lock
   word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
 
+#if PTHREAD_USE_NSYNC
   // use fancy nsync mutex if possible
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
       MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
@@ -52,6 +53,7 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
     _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
     return 0;
   }
+#endif
 
   // implement barebones normal mutexes
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {

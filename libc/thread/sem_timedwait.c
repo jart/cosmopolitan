@@ -81,13 +81,15 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
         return ecanceled();
       }
       rc = _sysret(__syslib->__sem_trywait(sem->sem_kernel));
-      if (!rc) return 0;
+      if (!rc)
+        return 0;
       if (errno == EINTR &&                  //
           _weaken(pthread_testcancel_np) &&  //
           _weaken(pthread_testcancel_np)()) {
         return ecanceled();
       }
-      if (errno != EAGAIN) return -1;
+      if (errno != EAGAIN)
+        return -1;
       errno = e;
       struct timespec now = timespec_real();
       if (timespec_cmp(*abstime, now) >= 0) {

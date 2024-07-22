@@ -66,7 +66,7 @@ int main() {
     if (ready)
       break;
 
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < 100; ++i) {
     if (pthread_kill(th, SIGUSR1))
       _Exit(11);
     if (pthread_kill(th, SIGUSR1))

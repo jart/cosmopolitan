@@ -22,6 +22,8 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/thread/thread.h"
 
+void sys_sched_yield(void);
+
 /**
  * Yields current thread's remaining timeslice to operating system.
  *
@@ -30,13 +32,16 @@
 int pthread_yield_np(void) {
   if (IsXnuSilicon()) {
     __syslib->__pthread_yield_np();
-  } else if (IsOpenbsd()) {
-    pthread_pause_np();  // sched_yield() is punishingly slow on OpenBSD
+  } else if (IsOpenbsd() || IsNetbsd()) {
+    // sched_yield() is punishingly slow on OpenBSD
+    // it's ruinously slow it'll destroy everything
+    pthread_pause_np();
   } else {
-    sched_yield();
+    sys_sched_yield();
   }
   return 0;
 }
 
 __weak_reference(pthread_yield_np, thrd_yield);
+__weak_reference(pthread_yield_np, sched_yield);
 __weak_reference(pthread_yield_np, pthread_yield);

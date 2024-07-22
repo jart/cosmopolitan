@@ -46,6 +46,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
   // get current state of lock
   word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
 
+#if PTHREAD_USE_NSYNC
   // delegate to *NSYNC if possible
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&
       MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
@@ -56,6 +57,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
       return EBUSY;
     }
   }
+#endif
 
   // handle normal mutexes
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
