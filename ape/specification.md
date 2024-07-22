@@ -306,6 +306,19 @@ APE binaries use the System V ABI, as defined by:
 
 There are however a few changes we've had to make.
 
+### No Red Zone
+
+Actually Portable Executables that have Windows and/or bare metal in
+their support vector MUST be compiled using `-mno-red-zone`. This is
+because, on Windows, DLLs and other software lurking in the va-space
+might use tricks like SetThreadContext() to take control of a thread
+whereas on bare metal, it's also generally accepted that kernel-mode
+code cannot assume a red zone either due to hardware interrutps that
+pull the exact same kinds of stunts.
+
+APE software that only has truly System V ABI conformant OSes (e.g.
+Linux) in their support vector MAY use the red zone optimization.
+
 ### Thread Local Storage
 
 #### aarch64
@@ -667,6 +680,11 @@ APE software MUST be page size agnostic. For many years the industry had
 converged on a strong consensus of having a page size that's 4096 bytes.
 However this convention was never guaranteed. New computers have become
 extremely popular, such as Apple Silicon, that use a 16kb page size.
+
+By convention, Cosmopolitan Libc currently generates ELF headers for
+x86-64 that are strictly aligned on a 4096-byte page size. On ARM64
+Cosmopolitan is currently implemented to always generate ELF headers
+aligned on a 16kb page size.
 
 In addition to being page size agnostic, APE software that cares about
 working correctly on Windows needs to be aware of the concept of
