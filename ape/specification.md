@@ -36,8 +36,9 @@ considered an APE program.
 
 This is the canonical magic used by almost all APE programs. It enables
 maximum portability between OSes. When interpreted as a shell script, it
-is assiging a single quoted string to an unused variable. The shell will
-then ignore subsequent binary content that's placed inside the string.
+is assigning a single quoted string to an unused variable. The shell
+will then ignore subsequent binary content that's placed inside the
+string.
 
 It is strongly recommended that this magic value be immediately followed
 by a newline (\n or hex 0a) character. Some shells, e.g. FreeBSD SH and
@@ -167,12 +168,12 @@ printf '\177ELF\2\1\1\011\0\0\0\0\0\0\0\0\2\0\076\0\1\0\0\0\166\105\100\000\000\
 
 This `printf` statement MUST appear in the first 8192 bytes of the APE
 executable, so as to limit how much of the initial portion of a file an
-intepreter must load.
+interpreter must load.
 
-Multiple such `printf` statements MAY appear in hte first 8192 bytes, in
+Multiple such `printf` statements MAY appear in the first 8192 bytes, in
 order to specify multiple architectures. For example, fat binaries built
 by the `apelink` program (provided by Cosmo Libc) will have two encoded
-ELF headers, for amd64 and arm64, each of which point into the proper
+ELF headers, for AMD64 and ARM64, each of which point into the proper
 file offsets for their respective native code. Therefore, kernels and
 interpreters which load the APE format directly MUST check the
 `e_machine` field of the `Elf64_Ehdr` that's decoded from the octal
@@ -313,7 +314,7 @@ their support vector MUST be compiled using `-mno-red-zone`. This is
 because, on Windows, DLLs and other software lurking in the va-space
 might use tricks like SetThreadContext() to take control of a thread
 whereas on bare metal, it's also generally accepted that kernel-mode
-code cannot assume a red zone either due to hardware interrutps that
+code cannot assume a red zone either due to hardware interrupts that
 pull the exact same kinds of stunts.
 
 APE software that only has truly System V ABI conformant OSes (e.g.
@@ -350,7 +351,7 @@ would be friction-free alternative.
 
 It's not possible for an APE runtime that targets the full range of OSes
 to use the `tpidr_el0` register for TLS because Apple won't allow it. On
-MacOS ARM64 systems, this reigster can only be used by a runtime to
+MacOS ARM64 systems, this register can only be used by a runtime to
 implement the `sched_getcpu()` system call. It's reserved by MacOS.
 
 #### x86-64
@@ -441,11 +442,11 @@ static void ChangeTlsFsToGs(unsigned char *p, size_t n) {
 }
 ```
 
-By favoring `%gs` we've now ensured friction-free compatibilty for the
+By favoring `%gs` we've now ensured friction-free compatibility for the
 APE runtime on MacOS, Linux, and FreeBSD which are all able to conform
 easily to this convention. However additional work needs to be done at
 runtime when an APE program is started on Windows, OpenBSD, and NetBSD.
-On these platforms, all executable pages must be faulted and morped to
+On these platforms, all executable pages must be faulted and morphed to
 fixup the TLS instructions.
 
 On OpenBSD and NetBSD, this is as simple as undoing the example
@@ -466,7 +467,7 @@ a privileged function, so that it can be used to disable the execute bit
 on all other parts of the executable except for the privileged section,
 thereby making it writable. Once this has been done, code can change.
 
-On Windows the diplacement bytes of the TLS instruction are changed to
+On Windows the displacement bytes of the TLS instruction are changed to
 use the `%gs:0x1480+i*8` ABI where `i` is a number assigned by the WIN32
 `TlsAlloc()` API. This avoids the need to call `TlsGetValue()` which is
 implemented this exact same way under the hood. Even though 0x1480 isn't
@@ -477,7 +478,7 @@ possible, to ensure an index less than 64 is returned.
 
 ### Thread Information Block (TIB)
 
-The Actually Portable Exccutable Thread Information Block (TIB) is
+The Actually Portable Executable Thread Information Block (TIB) is
 defined by this version of the specification as follows:
 
 - The 64-bit TIB self-pointer is stored at offset 0x00.
@@ -520,7 +521,7 @@ Actually Portable Executable defines `char` as signed.
 
 Therefore conformant APE software MUST use `-fsigned-char` when building
 code for aarch64, as well as any other architecture that (unlike x86-64)
-would otherwise define `char` as being `unsigned char` by deafult.
+would otherwise define `char` as being `unsigned char` by default.
 
 This decision was one of the cases where it made sense to offer a more
 consistent runtime experience for fat multi-arch binaries. However you
@@ -584,7 +585,7 @@ imposed by the executable formats that APE wraps.
    happily map program headers from arbitrary file intervals (which may
    overlap) onto arbitrarily virtual intervals (which don't need to be
    contiguous). in order to do that, the loaders will generally use
-   unix's mmap() function which needs to have both page aligned
+   UNIX's mmap() function which needs to have both page aligned
    addresses and file offsets, even though the ELF programs headers
    themselves do not. Since program headers start and stop at
    potentially any byte, ELF loaders tease the intervals specified by
@@ -595,7 +596,7 @@ imposed by the executable formats that APE wraps.
    don't want to; we can simply allow the offset to drift apart from the
    virtual offset.
 
-2. PE doesn't care about congruency and instead specifies a second kind
+2. PE doesn't care about congruence and instead specifies a second kind
    of alignment. The minimum alignment of files is 512 because that's
    what MS-DOS used. Where things get hairy is with PE's SizeOfHeaders
    which has complex requirements. When the PE image base needs to be
@@ -694,4 +695,4 @@ to the system allocation granularity, which is generally 64kb. If you
 use a function like mmap() with Cosmopolitan Libc, then the `addr` and
 `offset` parameters need to be aligned to `sysconf(_SC_GRANSIZE)` or
 else your software won't work on Windows. Windows has other limitations
-too, such as lacking the abiilty to carve or punch holes in mappings.
+too, such as lacking the ability to carve or punch holes in mappings.
