@@ -80,19 +80,19 @@ void SetUp(void) {
   sigaction(SIGSEGV, &sa, 0);
 }
 
-int StackOverflow(void);
-int (*pStackOverflow)(void) = StackOverflow;
-int StackOverflow(void) {
-  return pStackOverflow();
+int StackOverflow(int d) {
+  char A[8];
+  for (int i = 0; i < sizeof(A); i++)
+    A[i] = d + i;
+  if (__veil("r", d))
+    return StackOverflow(d + 1) + A[d % sizeof(A)];
+  return 0;
 }
 
 TEST(stackoverflow, standardStack_altStack_process_longjmp) {
-  if (IsTiny())
-    return;  // TODO(jart): why?
-
   int jumpcode;
   if (!(jumpcode = setjmp(recover))) {
-    exit(pStackOverflow());
+    exit(StackOverflow(0));
   }
   ASSERT_EQ(123, jumpcode);
   ASSERT_TRUE(smashed_stack);

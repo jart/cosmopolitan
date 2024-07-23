@@ -20,6 +20,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -28,8 +29,15 @@
 #include "libc/str/str.h"
 #ifdef __x86_64__
 
-int StackOverflow(void) {
-  return _weaken(StackOverflow)();
+#include <stdlib.h>
+
+int StackOverflow(int d) {
+  char A[8];
+  for (int i = 0; i < sizeof(A); i++)
+    A[i] = d + i;
+  if (__veil("r", d))
+    return StackOverflow(d + 1) + A[d % sizeof(A)];
+  return 0;
 }
 
 void FpuCrash(void) {
@@ -85,14 +93,21 @@ int NpeCrash(char *p) {
   return *p;
 }
 
+int StackOverflowCrash(int d) {
+  char A[8];
+  for (int i = 0; i < sizeof(A); i++)
+    A[i] = d + i;
+  if (__veil("r", d))
+    return StackOverflowCrash(d + 1) + A[d % sizeof(A)];
+  return 0;
+}
+
 void (*pFpuCrash)(void) = FpuCrash;
 void (*pBssOverrunCrash)(int) = BssOverrunCrash;
 void (*pDataOverrunCrash)(int) = DataOverrunCrash;
 int (*pRodataOverrunCrash)(int) = RodataOverrunCrash;
-char *(*pStackOverrunCrash)(int) = StackOverrunCrash;
 char *(*pMemoryLeakCrash)(void) = MemoryLeakCrash;
 int (*pNpeCrash)(char *) = NpeCrash;
-int (*pStackOverflow)(void) = StackOverflow;
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
@@ -112,7 +127,7 @@ int main(int argc, char *argv[]) {
         pDataOverrunCrash(10 + 1);
         exit(0);
       case 5:
-        exit((intptr_t)pStackOverrunCrash(10 + 10000));
+        exit(StackOverflowCrash(0));
       case 6:
         exit((intptr_t)pMemoryLeakCrash());
       case 7:
@@ -120,7 +135,7 @@ int main(int argc, char *argv[]) {
       case 8:
         exit(pNpeCrash(0));
       case 9:
-        exit(pStackOverflow());
+        exit(StackOverflow(0));
       default:
         fputs("error: unrecognized argument\n", stderr);
         exit(1);

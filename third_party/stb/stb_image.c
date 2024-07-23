@@ -4211,9 +4211,12 @@ static int stbi__parse_png_file(stbi__png *z, int scan, int req_comp) {
               tc16[k] = (uint16_t)stbi__get16be(s);  // copy the values as-is
           } else {
             for (k = 0; k < s->img_n; ++k)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
               tc[k] = (unsigned char)(stbi__get16be(s) & 255) *
                       stbi__depth_scale_table[z->depth];  // non 8-bit images
                                                           // will be larger
+#pragma GCC diagnostic pop
           }
         }
         break;

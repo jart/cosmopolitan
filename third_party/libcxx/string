@@ -1883,7 +1883,10 @@ private:
 #endif
 
     for (; __first != __last; ++__first)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
       traits_type::assign(*__dest++, *__first);
+#pragma GCC diagnostic pop
     return __dest;
   }
 

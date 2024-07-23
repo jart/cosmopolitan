@@ -51,10 +51,13 @@ void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   longjmp(recover, 123);
 }
 
-int StackOverflow(void);
-int (*pStackOverflow)(void) = StackOverflow;
-int StackOverflow(void) {
-  return pStackOverflow();
+int StackOverflow(int d) {
+  char A[8];
+  for (int i = 0; i < sizeof(A); i++)
+    A[i] = d + i;
+  if (__veil("r", d))
+    return StackOverflow(d + 1) + A[d % sizeof(A)];
+  return 0;
 }
 
 void *MyPosixThread(void *arg) {
@@ -71,7 +74,7 @@ void *MyPosixThread(void *arg) {
   sigaction(SIGBUS, &sa, &o1);
   sigaction(SIGSEGV, &sa, &o2);
   if (!(jumpcode = setjmp(recover))) {
-    exit(pStackOverflow());
+    exit(StackOverflow(0));
   }
   ASSERT_EQ(123, jumpcode);
   sigaction(SIGSEGV, &o2, 0);

@@ -85,10 +85,13 @@ void CrashHandler(int sig, siginfo_t *si, void *arg) {
 #endif
 }
 
-int StackOverflow(void);
-int (*pStackOverflow)(void) = StackOverflow;
-int StackOverflow(void) {
-  return pStackOverflow();
+int StackOverflow(int d) {
+  char A[8];
+  for (int i = 0; i < sizeof(A); i++)
+    A[i] = d + i;
+  if (__veil("r", d))
+    return StackOverflow(d + 1) + A[d % sizeof(A)];
+  return 0;
 }
 
 void *MyPosixThread(void *arg) {
@@ -103,7 +106,7 @@ void *MyPosixThread(void *arg) {
   sa.sa_sigaction = CrashHandler;
   sigaction(SIGBUS, &sa, 0);
   sigaction(SIGSEGV, &sa, 0);
-  exit(pStackOverflow());
+  exit(StackOverflow(0));
   return 0;
 }
 

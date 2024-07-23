@@ -653,8 +653,8 @@ int main(int argc, char *argv[]) {
   bool hasfunbits;
   int useruid, usergid;
   int owneruid, ownergid;
-  int oldfsuid, oldfsgid;
   unsigned long ipromises;
+  int oldfsuid = 0, oldfsgid = 0;
 
   // parse flags
   GetOpts(argc, argv);
