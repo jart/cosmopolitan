@@ -21,11 +21,14 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 #if _LIBCPP_STD_VER >= 17
 
-struct _LIBCPP_TYPE_VIS to_chars_result {
+struct _LIBCPP_EXPORTED_FROM_ABI to_chars_result {
   char* ptr;
   errc ec;
 #  if _LIBCPP_STD_VER >= 20
   _LIBCPP_HIDE_FROM_ABI friend bool operator==(const to_chars_result&, const to_chars_result&) = default;
+#  endif
+#  if _LIBCPP_STD_VER >= 26
+  _LIBCPP_HIDE_FROM_ABI constexpr explicit operator bool() const noexcept { return ec == errc{}; }
 #  endif
 };
 

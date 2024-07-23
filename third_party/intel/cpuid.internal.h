@@ -1,9 +1,6 @@
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef _CPUID_H_INCLUDED
 #define _CPUID_H_INCLUDED
-#define bit_AVXVNNI (1 << 4)
-#define bit_AVX512BF16 (1 << 5)
-#define bit_HRESET (1 << 22)
 #define bit_SSE3 (1 << 0)
 #define bit_PCLMUL (1 << 1)
 #define bit_LZCNT (1 << 5)
@@ -70,34 +67,54 @@
 #define bit_SHSTK (1 << 7)
 #define bit_GFNI (1 << 8)
 #define bit_VAES (1 << 9)
-#define bit_AVX512VNNI (1 << 11)
 #define bit_VPCLMULQDQ (1 << 10)
+#define bit_AVX512VNNI (1 << 11)
 #define bit_AVX512BITALG (1 << 12)
 #define bit_AVX512VPOPCNTDQ (1 << 14)
 #define bit_RDPID (1 << 22)
+#define bit_KL (1 << 23)
+#define bit_CLDEMOTE (1 << 25)
 #define bit_MOVDIRI (1 << 27)
 #define bit_MOVDIR64B (1 << 28)
 #define bit_ENQCMD (1 << 29)
-#define bit_CLDEMOTE (1 << 25)
-#define bit_KL (1 << 23)
 #define bit_AVX5124VNNIW (1 << 2)
 #define bit_AVX5124FMAPS (1 << 3)
-#define bit_AVX512VP2INTERSECT (1 << 8)
-#define bit_AVX512FP16 (1 << 23)
-#define bit_IBT (1 << 20)
 #define bit_UINTR (1 << 5)
-#define bit_PCONFIG (1 << 18)
+#define bit_AVX512VP2INTERSECT (1 << 8)
 #define bit_SERIALIZE (1 << 14)
 #define bit_TSXLDTRK (1 << 16)
+#define bit_PCONFIG (1 << 18)
+#define bit_IBT (1 << 20)
 #define bit_AMX_BF16 (1 << 22)
+#define bit_AVX512FP16 (1 << 23)
 #define bit_AMX_TILE (1 << 24)
 #define bit_AMX_INT8 (1 << 25)
+#define bit_SHA512 (1 << 0)
+#define bit_SM3 (1 << 1)
+#define bit_SM4 (1 << 2)
+#define bit_RAOINT (1 << 3)
+#define bit_AVXVNNI (1 << 4)
+#define bit_AVX512BF16 (1 << 5)
+#define bit_CMPCCXADD (1 << 7)
+#define bit_AMX_COMPLEX (1 << 8)
+#define bit_AMX_FP16 (1 << 21)
+#define bit_HRESET (1 << 22)
+#define bit_AVXIFMA (1 << 23)
+#define bit_AVXVNNIINT8 (1 << 4)
+#define bit_AVXNECONVERT (1 << 5)
+#define bit_AVXVNNIINT16 (1 << 10)
+#define bit_PREFETCHI (1 << 14)
+#define bit_USER_MSR (1 << 15)
+#define bit_AVX10 (1 << 19)
+#define bit_APX_F (1 << 21)
 #define bit_XSAVEOPT (1 << 0)
 #define bit_XSAVEC (1 << 1)
 #define bit_XSAVES (1 << 3)
 #define bit_PTWRITE (1 << 4)
 #define bit_AESKLE ( 1<<0 )
 #define bit_WIDEKL ( 1<<2 )
+#define bit_AVX10_256 (1 << 17)
+#define bit_AVX10_512 (1 << 18)
 #define signature_AMD_ebx 0x68747541
 #define signature_AMD_ecx 0x444d4163
 #define signature_AMD_edx 0x69746e65
@@ -137,6 +154,9 @@
 #define signature_VORTEX_ebx 0x74726f56
 #define signature_VORTEX_ecx 0x436f5320
 #define signature_VORTEX_edx 0x36387865
+#define signature_SHANGHAI_ebx 0x68532020
+#define signature_SHANGHAI_ecx 0x20206961
+#define signature_SHANGHAI_edx 0x68676e61
 #ifndef __x86_64__
 #define __cpuid(level, a, b, c, d) do { if (__builtin_constant_p (level) && (level) != 1) __asm__ __volatile__ ("cpuid\n\t" : "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "0" (level)); else __asm__ __volatile__ ("cpuid\n\t" : "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "0" (level), "1" (0), "2" (0)); } while (0)
 #else
@@ -175,7 +195,7 @@ __get_cpuid_max (unsigned int __ext, unsigned int *__sig)
     : "=&r" (__eax), "=&r" (__ebx)
     : "i" (0x00200000));
 #endif
-  if (!((__eax ^ __ebx) & 0x00200000))
+  if (__builtin_expect (!((__eax ^ __ebx) & 0x00200000), 0))
     return 0;
 #endif
   __cpuid (__ext, __eax, __ebx, __ecx, __edx);
@@ -202,7 +222,7 @@ __get_cpuid_count (unsigned int __leaf, unsigned int __subleaf,
 {
   unsigned int __ext = __leaf & 0x80000000;
   unsigned int __maxlevel = __get_cpuid_max (__ext, 0);
-  if (__maxlevel == 0 || __maxlevel < __leaf)
+  if (__builtin_expect (__maxlevel == 0, 0) || __maxlevel < __leaf)
     return 0;
   __cpuid_count (__leaf, __subleaf, *__eax, *__ebx, *__ecx, *__edx);
   return 1;

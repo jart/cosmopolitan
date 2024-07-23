@@ -4,47 +4,15 @@
 #endif
 #ifndef _AVX512IFMAVLINTRIN_H_INCLUDED
 #define _AVX512IFMAVLINTRIN_H_INCLUDED
-#if !defined(__AVX512VL__) || !defined(__AVX512IFMA__)
+#if !defined(__AVX512VL__) || !defined(__AVX512IFMA__) || defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512ifma,avx512vl")
+#pragma GCC target("avx512ifma,avx512vl,no-evex512")
 #define __DISABLE_AVX512IFMAVL__
 #endif
-extern __inline __m128i
-__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
-_mm_madd52lo_epu64 (__m128i __X, __m128i __Y, __m128i __Z)
-{
-  return (__m128i) __builtin_ia32_vpmadd52luq128_mask ((__v2di) __X,
-             (__v2di) __Y,
-             (__v2di) __Z,
-             (__mmask8) -1);
-}
-extern __inline __m128i
-__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
-_mm_madd52hi_epu64 (__m128i __X, __m128i __Y, __m128i __Z)
-{
-  return (__m128i) __builtin_ia32_vpmadd52huq128_mask ((__v2di) __X,
-             (__v2di) __Y,
-             (__v2di) __Z,
-             (__mmask8) -1);
-}
-extern __inline __m256i
-__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
-_mm256_madd52lo_epu64 (__m256i __X, __m256i __Y, __m256i __Z)
-{
-  return (__m256i) __builtin_ia32_vpmadd52luq256_mask ((__v4di) __X,
-             (__v4di) __Y,
-             (__v4di) __Z,
-             (__mmask8) -1);
-}
-extern __inline __m256i
-__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
-_mm256_madd52hi_epu64 (__m256i __X, __m256i __Y, __m256i __Z)
-{
-  return (__m256i) __builtin_ia32_vpmadd52huq256_mask ((__v4di) __X,
-             (__v4di) __Y,
-             (__v4di) __Z,
-             (__mmask8) -1);
-}
+#define _mm_madd52lo_epu64(A, B, C) ((__m128i) __builtin_ia32_vpmadd52luq128 ((__v2di) (A), (__v2di) (B), (__v2di) (C)))
+#define _mm_madd52hi_epu64(A, B, C) ((__m128i) __builtin_ia32_vpmadd52huq128 ((__v2di) (A), (__v2di) (B), (__v2di) (C)))
+#define _mm256_madd52lo_epu64(A, B, C) ((__m256i) __builtin_ia32_vpmadd52luq256 ((__v4di) (A), (__v4di) (B), (__v4di) (C)))
+#define _mm256_madd52hi_epu64(A, B, C) ((__m256i) __builtin_ia32_vpmadd52huq256 ((__v4di) (A), (__v4di) (B), (__v4di) (C)))
 extern __inline __m128i
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_mask_madd52lo_epu64 (__m128i __W, __mmask8 __M, __m128i __X, __m128i __Y)

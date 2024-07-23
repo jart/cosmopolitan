@@ -9,7 +9,7 @@ reach a broader audience from the platform(s) of your choosing.
 
 ## What's Included
 
-This toolchain bundles GCC 12.3.0, Cosmopolitan Libc, LLVM LIBCXX, LLVM
+This toolchain bundles GCC 14.1.0, Cosmopolitan Libc, LLVM LIBCXX, LLVM
 compiler-rt, and LLVM OpenMP. Additional libraries were provided by Musl
 Libc, and the venerable BSDs OSes. This lets you benefit from the
 awesome modern GCC compiler with the strongest GPL barrier possible. The
@@ -297,9 +297,9 @@ EINVAL: ... }` in cases where constants like `EINVAL` are linkable
 symbols. Your code will be rewritten in such cases to use a series of if
 statements instead, so that Cosmopolitan Libc's system constants will
 work as expected. Our modifications to GNU GCC are published under the
-ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-12.3>. The
+ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-14.1>. The
 binaries you see here were first published at
-<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.43> which
+<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.47> which
 is regularly updated.
 
 ## Legal

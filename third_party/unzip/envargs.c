@@ -18,8 +18,6 @@
  |     to make the action of the code less obscure.
  |----------------------------------------------------------------
  | UnZip notes: 24 May 92 ("v1.4"):
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/runtime.h"
  |  1. #include "third_party/unzip/unzip.h" for prototypes (24 May 92)
  |  2. changed ch to type char (24 May 92)
  |  3. added an ifdef to avoid Borland warnings (24 May 92)
@@ -33,6 +31,8 @@
 #define __ENVARGS_C     /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "third_party/unzip/unzip.h"
+#include "libc/runtime/runtime.h"
+#include "libc/ctype.h"
 
 #ifdef __EMX__          /* emx isspace() returns TRUE on extended ASCII !! */
 #  define ISspace(c) ((c) & 0x80 ? 0 : isspace((unsigned)c))

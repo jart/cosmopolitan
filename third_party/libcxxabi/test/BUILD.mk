@@ -133,8 +133,7 @@ $(THIRD_PARTY_LIBCXXABI_TEST_OBJS): private				\
 			-fexceptions					\
 			-frtti						\
 			-D_LIBCXXABI_BUILDING_LIBRARY			\
-			-D_LIBCPP_BUILDING_LIBRARY			\
-			-D_LIBCPP_CONSTINIT=__constinit
+			-D_LIBCPP_BUILDING_LIBRARY
 
 $(THIRD_PARTY_LIBCXXABI_TEST_OBJS): private CONFIG_CPPFLAGS += -UNDEBUG
 o/$(MODE)/third_party/libcxxabi/test/catch_multi_level_pointer.pass.o: private COPTS += -O0

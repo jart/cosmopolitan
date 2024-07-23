@@ -4,6 +4,14 @@
 #include "libc/runtime/runtime.h"
 #include "tool/lambda/lib/blc.h"
 
+#if defined __GNUC__ && __GNUC__ >= 14
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+#pragma GCC diagnostic ignored "-Wreturn-mismatch"
+#pragma GCC diagnostic ignored "-Wint-conversion"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+#endif
+
 #define A   500000
 #define X   8
 #define Int long

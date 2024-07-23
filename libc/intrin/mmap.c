@@ -131,7 +131,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
     if (addr <= map_addr && addr + PGUP(size) >= map_addr + PGUP(map_size)) {
       // remove mapping completely
       tree_remove(&__maps.maps, &map->tree);
-      map->free = *deleted;
+      map->freed = *deleted;
       *deleted = map;
       __maps.pages -= (map_size + pagesz - 1) / pagesz;
       __maps.count -= 1;
@@ -155,7 +155,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
         __maps.pages -= (left + pagesz - 1) / pagesz;
         leftmap->addr = map_addr;
         leftmap->size = left;
-        leftmap->free = *deleted;
+        leftmap->freed = *deleted;
         *deleted = leftmap;
         __maps_check();
       } else {
@@ -171,7 +171,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
         __maps.pages -= (right + pagesz - 1) / pagesz;
         rightmap->addr = addr;
         rightmap->size = right;
-        rightmap->free = *deleted;
+        rightmap->freed = *deleted;
         *deleted = rightmap;
         __maps_check();
       } else {
@@ -200,7 +200,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
           __maps.count += 1;
           middlemap->addr = addr;
           middlemap->size = size;
-          middlemap->free = *deleted;
+          middlemap->freed = *deleted;
           *deleted = middlemap;
           __maps_check();
         } else {
@@ -217,9 +217,9 @@ static int __muntrack(char *addr, size_t size, int pagesz,
 void __maps_free(struct Map *map) {
   map->size = 0;
   map->addr = MAP_FAILED;
-  map->free = atomic_load_explicit(&__maps.free, memory_order_relaxed);
+  map->freed = atomic_load_explicit(&__maps.freed, memory_order_relaxed);
   for (;;) {
-    if (atomic_compare_exchange_weak_explicit(&__maps.free, &map->free, map,
+    if (atomic_compare_exchange_weak_explicit(&__maps.freed, &map->freed, map,
                                               memory_order_release,
                                               memory_order_relaxed))
       break;
@@ -229,7 +229,7 @@ void __maps_free(struct Map *map) {
 static void __maps_free_all(struct Map *list) {
   struct Map *next;
   for (struct Map *map = list; map; map = next) {
-    next = map->free;
+    next = map->freed;
     __maps_free(map);
   }
 }
@@ -285,9 +285,9 @@ static void __maps_insert(struct Map *map) {
 
 struct Map *__maps_alloc(void) {
   struct Map *map;
-  map = atomic_load_explicit(&__maps.free, memory_order_relaxed);
+  map = atomic_load_explicit(&__maps.freed, memory_order_relaxed);
   while (map) {
-    if (atomic_compare_exchange_weak_explicit(&__maps.free, &map, map->free,
+    if (atomic_compare_exchange_weak_explicit(&__maps.freed, &map, map->freed,
                                               memory_order_acquire,
                                               memory_order_relaxed))
       return map;
@@ -346,7 +346,7 @@ static int __munmap(char *addr, size_t size) {
 
   // delete mappings
   int rc = 0;
-  for (struct Map *map = deleted; map; map = map->free) {
+  for (struct Map *map = deleted; map; map = map->freed) {
     if (!IsWindows()) {
       if (sys_munmap(map->addr, map->size))
         rc = -1;
@@ -359,7 +359,7 @@ static int __munmap(char *addr, size_t size) {
     }
   }
 
-  // free mappings
+  // freed mappings
   __maps_free_all(deleted);
 
   return rc;
@@ -451,7 +451,7 @@ TryAgain:
   }
 
   // polyfill map fixed noreplace
-  // we assume non-linux gives us addr if it's free
+  // we assume non-linux gives us addr if it's freed
   // that's what linux (e.g. rhel7) did before noreplace
   if (noreplace && res.addr != addr) {
     if (!IsWindows()) {

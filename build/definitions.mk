@@ -139,10 +139,10 @@ DEFAULT_CPPFLAGS +=							\
 	-isystem libc/isystem
 
 DEFAULT_CFLAGS =							\
-	-std=gnu2x
+	-std=gnu23
 
 DEFAULT_CXXFLAGS =							\
-	-std=gnu++20							\
+	-std=gnu++23							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\

@@ -150,10 +150,10 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.5.7
+COSMOCC = .cosmocc/3.6.0
 BOOTSTRAP = $(COSMOCC)/bin
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.5.7 596876951b62ad2530c63afc40edd805d751fcb2416e544d249af04ad00bb4ed)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.6.0 4918c45ac3e0972ff260e2a249e25716881e39fb679d5e714ae216a2ef6c3f7e)
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc
@@ -293,8 +293,7 @@ include third_party/openmp/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
 include net/https/BUILD.mk			# │
-include third_party/regex/BUILD.mk		# │
-include third_party/bash/BUILD.mk		#─┘
+include third_party/regex/BUILD.mk		#─┘
 include third_party/tidy/BUILD.mk
 include third_party/BUILD.mk
 include third_party/nsync/testing/BUILD.mk

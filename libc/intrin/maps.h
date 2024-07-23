@@ -20,14 +20,14 @@ struct Map {
   intptr_t hand;     /* windows nt only */
   union {
     struct Tree tree;
-    struct Map *free;
+    struct Map *freed;
   };
 };
 
 struct Maps {
   atomic_int lock;
   struct Tree *maps;
-  _Atomic(struct Map *) free;
+  _Atomic(struct Map *) freed;
   size_t count;
   size_t pages;
   _Atomic(char *) pick;

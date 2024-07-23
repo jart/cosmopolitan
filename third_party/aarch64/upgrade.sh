@@ -13,17 +13,15 @@
 # 3. You should fix up the `#pragma GCC aarch64` things.
 #
 
-s=/opt/goodies/include
+s=/opt/include
 d=third_party/aarch64
 
 FILES='
-acc_prof
 arm_acle
 arm_bf16
 arm_fp16
 arm_neon
 arm_sve
-openacc
 '
 
 strip_c_comments() {

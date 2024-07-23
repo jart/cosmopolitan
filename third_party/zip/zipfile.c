@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "third_party/zip/crc32.h"
 #endif
+#include "libc/ctype.h"
 #include "third_party/zip/crc32.h"
 
 /* for realloc 2/6/2005 EG */

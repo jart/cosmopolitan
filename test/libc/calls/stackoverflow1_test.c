@@ -80,15 +80,11 @@ void SetUp(void) {
   sigaction(SIGSEGV, &sa, 0);
 }
 
-int StackOverflow(int f(), int n) {
-  if (n < INT_MAX) {
-    return f(f, n + 1) - 1;
-  } else {
-    return INT_MAX;
-  }
+int StackOverflow(void);
+int (*pStackOverflow)(void) = StackOverflow;
+int StackOverflow(void) {
+  return pStackOverflow();
 }
-
-int (*pStackOverflow)(int (*)(), int) = StackOverflow;
 
 TEST(stackoverflow, standardStack_altStack_process_longjmp) {
   if (IsTiny())
@@ -96,7 +92,7 @@ TEST(stackoverflow, standardStack_altStack_process_longjmp) {
 
   int jumpcode;
   if (!(jumpcode = setjmp(recover))) {
-    exit(pStackOverflow(pStackOverflow, 0));
+    exit(pStackOverflow());
   }
   ASSERT_EQ(123, jumpcode);
   ASSERT_TRUE(smashed_stack);

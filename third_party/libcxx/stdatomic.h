@@ -9,7 +9,6 @@
 
 #ifndef _LIBCPP_STDATOMIC_H
 #define _LIBCPP_STDATOMIC_H
-#ifndef __ASSEMBLER__
 
 /*
     stdatomic.h synopsis
@@ -122,16 +121,16 @@ using std::atomic_signal_fence                         // see below
 #  pragma GCC system_header
 #endif
 
-#if defined(__cplusplus) //&& _LIBCPP_STD_VER >= 23 // [jart]
+#if defined(__cplusplus) && _LIBCPP_STD_VER >= 23
 
-#include <atomic>
-#include <version>
+#  include <atomic>
+#  include <version>
 
-#ifdef _Atomic
-# undef _Atomic
-#endif
+#  ifdef _Atomic
+#    undef _Atomic
+#  endif
 
-#define _Atomic(_Tp) ::std::atomic<_Tp>
+#  define _Atomic(_Tp) ::std::atomic<_Tp>
 
 using std::memory_order _LIBCPP_USING_IF_EXISTS;
 using std::memory_order_relaxed _LIBCPP_USING_IF_EXISTS;
@@ -155,7 +154,7 @@ using std::atomic_long _LIBCPP_USING_IF_EXISTS;
 using std::atomic_ulong _LIBCPP_USING_IF_EXISTS;
 using std::atomic_llong _LIBCPP_USING_IF_EXISTS;
 using std::atomic_ullong _LIBCPP_USING_IF_EXISTS;
-// using std::atomic_char8_t _LIBCPP_USING_IF_EXISTS;
+using std::atomic_char8_t _LIBCPP_USING_IF_EXISTS;
 using std::atomic_char16_t _LIBCPP_USING_IF_EXISTS;
 using std::atomic_char32_t _LIBCPP_USING_IF_EXISTS;
 using std::atomic_wchar_t _LIBCPP_USING_IF_EXISTS;
@@ -227,11 +226,10 @@ using std::atomic_thread_fence _LIBCPP_USING_IF_EXISTS;
 // the header. We do this because Clang has historically shipped a <stdatomic.h>
 // header that would be available in all Standard modes, and we don't want to
 // break that use case.
-# if __has_include_next(<stdatomic.h>)
-#   include_next <stdatomic.h>
-# endif
+#  if __has_include_next(<stdatomic.h>)
+#    include_next <stdatomic.h>
+#  endif
 
 #endif // defined(__cplusplus) && _LIBCPP_STD_VER >= 23
 
-#endif // __ASSEMBLER__
 #endif // _LIBCPP_STDATOMIC_H

@@ -39,7 +39,7 @@
  * @param flags can have O_CLOEXEC or O_DIRECT or O_NONBLOCK
  * @return 0 on success, or -1 w/ errno and pipefd isn't modified
  */
-int pipe2(int pipefd[hasatleast 2], int flags) {
+int pipe2(int pipefd[2], int flags) {
   int rc;
   if (flags & ~(O_CLOEXEC | O_NONBLOCK | (O_DIRECT != -1u ? O_DIRECT : 0))) {
     return einval();

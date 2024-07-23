@@ -33,7 +33,7 @@
  * @asyncsignalsafe
  * @see pipe2()
  */
-int pipe(int pipefd[hasatleast 2]) {
+int pipe(int pipefd[2]) {
   int rc;
   if (!pipefd) {
     // needed for windows which is polyfilled

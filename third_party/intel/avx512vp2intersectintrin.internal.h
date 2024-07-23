@@ -4,9 +4,9 @@
 #endif
 #ifndef _AVX512VP2INTERSECTINTRIN_H_INCLUDED
 #define _AVX512VP2INTERSECTINTRIN_H_INCLUDED
-#if !defined(__AVX512VP2INTERSECT__)
+#if !defined(__AVX512VP2INTERSECT__) || !defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512vp2intersect")
+#pragma GCC target("avx512vp2intersect,evex512")
 #define __DISABLE_AVX512VP2INTERSECT__
 #endif
 extern __inline void

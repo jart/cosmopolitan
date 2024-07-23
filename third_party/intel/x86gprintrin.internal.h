@@ -16,6 +16,7 @@
 #include "third_party/intel/clflushoptintrin.internal.h"
 #include "third_party/intel/clwbintrin.internal.h"
 #include "third_party/intel/clzerointrin.internal.h"
+#include "third_party/intel/cmpccxaddintrin.internal.h"
 #include "third_party/intel/enqcmdintrin.internal.h"
 #include "third_party/intel/fxsrintrin.internal.h"
 #include "third_party/intel/lzcntintrin.internal.h"
@@ -26,6 +27,8 @@
 #include "third_party/intel/pconfigintrin.internal.h"
 #include "third_party/intel/popcntintrin.internal.h"
 #include "third_party/intel/pkuintrin.internal.h"
+#include "third_party/intel/prfchiintrin.internal.h"
+#include "third_party/intel/raointintrin.internal.h"
 #include "third_party/intel/rdseedintrin.internal.h"
 #include "third_party/intel/rtmintrin.internal.h"
 #include "third_party/intel/serializeintrin.internal.h"
@@ -41,6 +44,7 @@
 #include "third_party/intel/xsavesintrin.internal.h"
 #include "third_party/intel/xtestintrin.internal.h"
 #include "third_party/intel/hresetintrin.internal.h"
+#include "third_party/intel/usermsrintrin.internal.h"
 extern __inline void
 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _wbinvd (void)

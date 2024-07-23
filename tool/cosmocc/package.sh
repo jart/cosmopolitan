@@ -19,7 +19,7 @@ OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
-GCCVER=12.3.0
+GCCVER=14.1.0
 
 make -j64 m= \
   $APELINK
@@ -118,10 +118,10 @@ fetch() {
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.46/aarch64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.47/aarch64-gcc.zip
   unzip aarch64-gcc.zip
   rm -f aarch64-gcc.zip
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.46/x86_64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.47/x86_64-gcc.zip
   unzip x86_64-gcc.zip
   rm -f x86_64-gcc.zip
 fi

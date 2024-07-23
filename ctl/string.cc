@@ -21,6 +21,9 @@
 #include <__atomic/fence.h>
 #include <stdckdint.h>
 
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+
 namespace ctl {
 
 void

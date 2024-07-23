@@ -4,9 +4,9 @@
 #endif
 #ifndef _AVX512VNNIVLINTRIN_H_INCLUDED
 #define _AVX512VNNIVLINTRIN_H_INCLUDED
-#if !defined(__AVX512VL__) || !defined(__AVX512VNNI__)
+#if !defined(__AVX512VL__) || !defined(__AVX512VNNI__) || defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512vnni,avx512vl")
+#pragma GCC target("avx512vnni,avx512vl,no-evex512")
 #define __DISABLE_AVX512VNNIVL__
 #endif
 #define _mm256_dpbusd_epi32(A, B, C) ((__m256i) __builtin_ia32_vpdpbusd_v8si ((__v8si) (A), (__v8si) (B), (__v8si) (C)))

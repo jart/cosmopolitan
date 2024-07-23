@@ -6,7 +6,7 @@
 BIN=${0%/*}
 PROG=${0##*/}
 ORIGINAL="$0 $*"
-GCC_VERSION=12.3.0
+GCC_VERSION=14.1.0
 TMPDIR=${TMPDIR:-/tmp}
 
 if [ "$1" = "--version" ]; then

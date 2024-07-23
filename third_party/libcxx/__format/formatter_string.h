@@ -10,14 +10,13 @@
 #ifndef _LIBCPP___FORMAT_FORMATTER_STRING_H
 #define _LIBCPP___FORMAT_FORMATTER_STRING_H
 
-#include <__availability>
 #include <__config>
 #include <__format/concepts.h>
 #include <__format/format_parse_context.h>
 #include <__format/formatter.h>
 #include <__format/formatter_output.h>
 #include <__format/parser_std_format_spec.h>
-#include <__utility/move.h>
+#include <__format/write_escaped.h>
 #include <string>
 #include <string_view>
 
@@ -59,14 +58,12 @@ public:
 
 // Formatter const char*.
 template <__fmt_char_type _CharT>
-struct _LIBCPP_TEMPLATE_VIS formatter<const _CharT*, _CharT>
-    : public __formatter_string<_CharT> {
+struct _LIBCPP_TEMPLATE_VIS formatter<const _CharT*, _CharT> : public __formatter_string<_CharT> {
   using _Base = __formatter_string<_CharT>;
 
   template <class _FormatContext>
   _LIBCPP_HIDE_FROM_ABI typename _FormatContext::iterator format(const _CharT* __str, _FormatContext& __ctx) const {
-    _LIBCPP_ASSERT(__str, "The basic_format_arg constructor should have "
-                          "prevented an invalid pointer.");
+    _LIBCPP_ASSERT_INTERNAL(__str, "The basic_format_arg constructor should have prevented an invalid pointer.");
 
     __format_spec::__parsed_specifications<_CharT> __specs = _Base::__parser_.__get_parsed_std_specifications(__ctx);
 #  if _LIBCPP_STD_VER >= 23
@@ -98,8 +95,7 @@ struct _LIBCPP_TEMPLATE_VIS formatter<const _CharT*, _CharT>
 
 // Formatter char*.
 template <__fmt_char_type _CharT>
-struct _LIBCPP_TEMPLATE_VIS formatter<_CharT*, _CharT>
-    : public formatter<const _CharT*, _CharT> {
+struct _LIBCPP_TEMPLATE_VIS formatter<_CharT*, _CharT> : public formatter<const _CharT*, _CharT> {
   using _Base = formatter<const _CharT*, _CharT>;
 
   template <class _FormatContext>
@@ -110,12 +106,12 @@ struct _LIBCPP_TEMPLATE_VIS formatter<_CharT*, _CharT>
 
 // Formatter char[].
 template <__fmt_char_type _CharT, size_t _Size>
-struct _LIBCPP_TEMPLATE_VIS formatter<_CharT[_Size], _CharT>
-    : public __formatter_string<_CharT> {
+struct _LIBCPP_TEMPLATE_VIS formatter<_CharT[_Size], _CharT> : public __formatter_string<_CharT> {
   using _Base = __formatter_string<_CharT>;
 
   template <class _FormatContext>
-  _LIBCPP_HIDE_FROM_ABI typename _FormatContext::iterator format(_CharT __str[_Size], _FormatContext& __ctx) const {
+  _LIBCPP_HIDE_FROM_ABI typename _FormatContext::iterator
+  format(const _CharT (&__str)[_Size], _FormatContext& __ctx) const {
     return _Base::format(basic_string_view<_CharT>(__str, _Size), __ctx);
   }
 };
@@ -136,8 +132,7 @@ struct _LIBCPP_TEMPLATE_VIS formatter<basic_string<_CharT, _Traits, _Allocator>,
 
 // Formatter std::string_view.
 template <__fmt_char_type _CharT, class _Traits>
-struct _LIBCPP_TEMPLATE_VIS formatter<basic_string_view<_CharT, _Traits>, _CharT>
-    : public __formatter_string<_CharT> {
+struct _LIBCPP_TEMPLATE_VIS formatter<basic_string_view<_CharT, _Traits>, _CharT> : public __formatter_string<_CharT> {
   using _Base = __formatter_string<_CharT>;
 
   template <class _FormatContext>

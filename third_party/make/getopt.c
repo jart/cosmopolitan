@@ -27,6 +27,7 @@ this program.  If not, see <https://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef HAVE_CONFIG_H
+#include "libc/runtime/runtime.h"
 #include "config.h"
 #endif
 
@@ -200,10 +201,6 @@ static char *posixly_correct;
 
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
-
-#ifndef getenv
-extern char *getenv ();
-#endif
 
 static char *
 my_index (const char *str, int chr)

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/mem/leaks.h"
@@ -27,12 +28,8 @@
 #include "libc/str/str.h"
 #ifdef __x86_64__
 
-int StackOverflow(int f(), int n) {
-  if (n < INT_MAX) {
-    return f(f, n + 1) - 1;
-  } else {
-    return INT_MAX;
-  }
+int StackOverflow(void) {
+  return _weaken(StackOverflow)();
 }
 
 void FpuCrash(void) {
@@ -95,7 +92,7 @@ int (*pRodataOverrunCrash)(int) = RodataOverrunCrash;
 char *(*pStackOverrunCrash)(int) = StackOverrunCrash;
 char *(*pMemoryLeakCrash)(void) = MemoryLeakCrash;
 int (*pNpeCrash)(char *) = NpeCrash;
-int (*pStackOverflow)(int (*)(), int) = StackOverflow;
+int (*pStackOverflow)(void) = StackOverflow;
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
@@ -123,7 +120,7 @@ int main(int argc, char *argv[]) {
       case 8:
         exit(pNpeCrash(0));
       case 9:
-        exit(pStackOverflow(pStackOverflow, 0));
+        exit(pStackOverflow());
       default:
         fputs("error: unrecognized argument\n", stderr);
         exit(1);

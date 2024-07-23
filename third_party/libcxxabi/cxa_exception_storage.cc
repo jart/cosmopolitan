@@ -11,8 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "third_party/libcxxabi/cxa_exception.h"
-
-#include "third_party/libcxx/__threading_support"
+#include "third_party/libcxx/__thread/support.h"
 
 #if defined(_LIBCXXABI_HAS_NO_THREADS)
 

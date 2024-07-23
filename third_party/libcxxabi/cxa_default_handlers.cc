@@ -17,7 +17,7 @@
 #include "third_party/libcxxabi/cxa_handlers.h"
 #include "third_party/libcxxabi/cxa_exception.h"
 #include "third_party/libcxxabi/private_typeinfo.h"
-#include "third_party/libcxx/src/include/atomic_support.h" // from libc++
+#include "third_party/libcxx/atomic_support.h" // from libc++
 
 #if !defined(LIBCXXABI_SILENT_TERMINATE)
 

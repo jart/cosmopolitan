@@ -32,6 +32,7 @@
 #include "third_party/zip/crypt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/ctype.h"
 #include "third_party/unzip/unxcfg.h"
 
 /* First thing: Signal all following code that we compile UnZip utilities! */

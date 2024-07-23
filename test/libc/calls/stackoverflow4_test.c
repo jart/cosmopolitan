@@ -45,15 +45,11 @@ void CrashHandler(int sig) {
   pthread_exit((void *)123L);
 }
 
-int StackOverflow(int f(), int n) {
-  if (n < INT_MAX) {
-    return f(f, n + 1) - 1;
-  } else {
-    return INT_MAX;
-  }
+int StackOverflow(void);
+int (*pStackOverflow)(void) = StackOverflow;
+int StackOverflow(void) {
+  return pStackOverflow();
 }
-
-int (*pStackOverflow)(int (*)(), int) = StackOverflow;
 
 void *MyPosixThread(void *arg) {
   struct sigaction sa;
@@ -67,7 +63,7 @@ void *MyPosixThread(void *arg) {
   sa.sa_handler = CrashHandler;
   sigaction(SIGBUS, &sa, 0);
   sigaction(SIGSEGV, &sa, 0);
-  exit(pStackOverflow(pStackOverflow, 0));
+  exit(pStackOverflow());
   return 0;
 }
 

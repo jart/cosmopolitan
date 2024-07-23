@@ -11,8 +11,6 @@
 #include "third_party/libcxx/cassert"
 #include "libc/isystem/inttypes.h"
 
-#include "third_party/libcxx/__threading_support"
-
 // UNSUPPORTED: c++03
 // UNSUPPORTED: modules-build && no-threads
 
