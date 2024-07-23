@@ -1206,7 +1206,11 @@ static void mbedtls_ssl_cf_memcpy_if_eq( unsigned char *dst,
         __builtin_memcpy( &x, dst + i, 8 );
         __builtin_memcpy( &y, src + i, 8 );
         x = ( x & ~-equal ) | ( y & -equal );
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+        // TODO(jart): What is this mysterious confusing GCC warning?
         __builtin_memcpy( dst + i, &x, 8 );
+#pragma GCC diagnostic pop
     }
     for( ; i < len; i++ )
         dst[i] = ( src[i] & mask ) | ( dst[i] & ~mask );
