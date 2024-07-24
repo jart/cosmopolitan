@@ -117,18 +117,21 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
     if (MUTEX_PSHARED(muword) != PTHREAD_PROCESS_SHARED)
       return EINVAL;
 
+  errno_t err;
+  BEGIN_CANCELATION_POINT;
 #if PTHREAD_USE_NSYNC
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
-  if (!cond->_pshared)
-    return nsync_cv_wait_with_deadline(
+  if (!cond->_pshared) {
+    err = nsync_cv_wait_with_deadline(
         (nsync_cv *)cond, (nsync_mu *)mutex,
         abstime ? *abstime : nsync_time_no_deadline, 0);
-#endif
-
-  errno_t err;
-  BEGIN_CANCELATION_POINT;
+  } else {
+    err = pthread_cond_timedwait_impl(cond, mutex, abstime);
+  }
+#else
   err = pthread_cond_timedwait_impl(cond, mutex, abstime);
+#endif
   END_CANCELATION_POINT;
   return err;
 }

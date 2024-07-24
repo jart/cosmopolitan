@@ -36,7 +36,6 @@ struct Procs {
   struct Dll *free;
   struct Dll *undead;
   struct Dll *zombies;
-  struct Proc pool[8];
   unsigned allocated;
   struct rusage ruchlds;
 };

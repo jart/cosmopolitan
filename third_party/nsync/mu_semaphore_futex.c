@@ -28,7 +28,7 @@
  * @fileoverview Semaphores w/ Linux Futexes API.
  */
 
-#define ASSERT(x) npassert(x)
+#define ASSERT(x) unassert(x)
 
 /* Check that atomic operations on nsync_atomic_uint32_ can be applied to int. */
 static const int assert_int_size = 1 /

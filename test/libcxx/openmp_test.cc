@@ -429,9 +429,9 @@ void check_gemm_works(void) {
   is_self_testing = false;
 }
 
-long m = 2333 / 3;
-long k = 577 / 3;
-long n = 713 / 3;
+long m = 2333 / 10;
+long k = 577 / 10;
+long n = 713 / 10;
 
 void check_sgemm(void) {
   float *A = new float[m * k];

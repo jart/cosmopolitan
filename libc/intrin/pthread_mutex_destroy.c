@@ -22,8 +22,10 @@
 /**
  * Destroys mutex.
  *
+ * Destroying a mutex that's currently locked or being waited upon, will
+ * result in undefined behavior.
+ *
  * @return 0 on success, or error number on failure
- * @raise EINVAL if mutex is locked in our implementation
  */
 errno_t pthread_mutex_destroy(pthread_mutex_t *mutex) {
   memset(mutex, -1, sizeof(*mutex));

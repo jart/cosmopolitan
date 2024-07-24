@@ -153,7 +153,7 @@ static void free_waiters_populate (void) {
 		// tim cook wants us to use his lol central dispatch
 		n = 1;
 	} else {
-		n = getpagesize() / sizeof(waiter);
+		n = __pagesize / sizeof(waiter);
 	}
 	waiter *waiters = mmap (0, n * sizeof(waiter),
 				PROT_READ | PROT_WRITE,

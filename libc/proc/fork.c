@@ -54,6 +54,8 @@ extern pthread_mutex_t _pthread_lock_obj;
 static void _onfork_prepare(void) {
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
+  if (IsWindows())
+    __proc_lock();
   _pthread_lock();
   __maps_lock();
   __fds_lock();
@@ -66,11 +68,15 @@ static void _onfork_parent(void) {
   __fds_unlock();
   __maps_unlock();
   _pthread_unlock();
+  if (IsWindows())
+    __proc_unlock();
   if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
 }
 
 static void _onfork_child(void) {
+  if (IsWindows())
+    __proc_wipe();
   __fds_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   _rand64_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   _pthread_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
@@ -87,8 +93,6 @@ int _fork(uint32_t dwCreationFlags) {
   int ax, dx, tid, parent;
   parent = __pid;
   BLOCK_SIGNALS;
-  if (IsWindows())
-    __proc_lock();
   if (__threaded)
     _onfork_prepare();
   started = timespec_real();
@@ -149,8 +153,6 @@ int _fork(uint32_t dwCreationFlags) {
     // this is the parent process
     if (__threaded)
       _onfork_parent();
-    if (IsWindows())
-      __proc_unlock();
     STRACE("fork() → %d% m (took %ld us)", ax, micros);
   }
   ALLOW_SIGNALS;

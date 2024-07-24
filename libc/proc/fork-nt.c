@@ -473,9 +473,8 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     // reset core runtime services
     __proc_wipe();
     WipeKeystrokes();
-    if (_weaken(__itimer_wipe)) {
+    if (_weaken(__itimer_wipe))
       _weaken(__itimer_wipe)();
-    }
     // notify pthread join
     atomic_store_explicit(&_pthread_static.ptid, GetCurrentThreadId(),
                           memory_order_release);

@@ -59,9 +59,8 @@ textwindows int sys_kill_nt(int pid, int sig) {
         struct Dll *e;
         BLOCK_SIGNALS;
         __proc_lock();
-        for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e)) {
+        for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e))
           TerminateProcess(PROC_CONTAINER(e)->handle, sig);
-        }
         __proc_unlock();
         ALLOW_SIGNALS;
       }

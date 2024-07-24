@@ -31,28 +31,33 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu_semaphore.h"
+#include "libc/intrin/atomic.h"
+#include "libc/atomic.h"
 #include "third_party/nsync/time.h"
 
 /**
  * @fileoverview Semaphores w/ POSIX Semaphores API.
  */
 
-#define ASSERT(x) npassert(x)
-#define SEM_CONTAINER(e) DLL_CONTAINER(struct sem, list, e)
+#define ASSERT(x) unassert(x)
 
 struct sem {
 	int64_t id;
-	struct Dll list;
+	struct sem *next;
 };
 
-static struct {
-	atomic_uint once;
-	pthread_spinlock_t lock;
-	struct Dll *list;
-} g_sems;
+static _Atomic(struct sem *) g_sems;
 
 static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)(1 /
 	(sizeof (struct sem) <= sizeof (*sem_big_enough_for_sem)));
+
+static void sems_push (struct sem *f) {
+	int backoff = 0;
+	f->next = atomic_load_explicit (&g_sems, memory_order_relaxed);
+	while (!atomic_compare_exchange_weak_explicit (&g_sems, &f->next, f,
+						       memory_order_acq_rel, memory_order_relaxed))
+		backoff = pthread_delay_np (&g_sems, backoff);
+}
 
 static bool nsync_mu_semaphore_sem_create (struct sem *f) {
 	int rc;
@@ -73,18 +78,12 @@ static bool nsync_mu_semaphore_sem_create (struct sem *f) {
 }
 
 static void nsync_mu_semaphore_sem_fork_child (void) {
-	struct Dll *e;
 	struct sem *f;
-	for (e = dll_first (g_sems.list); e; e = dll_next (g_sems.list, e)) {
-		f = SEM_CONTAINER (e);
+	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next) {
 		int rc = sys_close (f->id);
 		STRACE ("close(%ld) → %d", f->id, rc);
-	}
-	for (e = dll_first (g_sems.list); e; e = dll_next (g_sems.list, e)) {
-		f = SEM_CONTAINER (e);
 		ASSERT (nsync_mu_semaphore_sem_create (f));
 	}
-	(void) pthread_spin_init (&g_sems.lock, 0);
 }
 
 static void nsync_mu_semaphore_sem_init (void) {
@@ -93,14 +92,12 @@ static void nsync_mu_semaphore_sem_init (void) {
 
 /* Initialize *s; the initial value is 0. */
 bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
+	static atomic_uint once;
 	struct sem *f = (struct sem *) s;
 	if (!nsync_mu_semaphore_sem_create (f))
 		return false;
-	cosmo_once (&g_sems.once, nsync_mu_semaphore_sem_init);
-	pthread_spin_lock (&g_sems.lock);
-	dll_init (&f->list);
-	dll_make_first (&g_sems.list, &f->list);
-	pthread_spin_unlock (&g_sems.lock);
+	cosmo_once (&once, nsync_mu_semaphore_sem_init);
+	sems_push(f);
 	return true;
 }
 
