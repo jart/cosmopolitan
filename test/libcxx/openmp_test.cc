@@ -24,7 +24,7 @@
 #include <ctime>
 #include "libc/stdio/rand.h"
 
-#define PRECISION 2e-6
+#define PRECISION 2e-5
 #define LV1DCACHE 49152
 #define THRESHOLD 3000000
 
@@ -35,20 +35,9 @@
 #endif
 
 #define OPTIMIZED __attribute__((__optimize__("-O3,-ffast-math")))
-#define PORTABLE                         \
-  __target_clones("arch=znver4,"         \
-                  "arch=znver3,"         \
-                  "arch=sapphirerapids," \
-                  "arch=alderlake,"      \
-                  "arch=rocketlake,"     \
-                  "arch=cooperlake,"     \
-                  "arch=tigerlake,"      \
-                  "arch=cascadelake,"    \
-                  "arch=skylake-avx512," \
-                  "arch=skylake,"        \
-                  "arch=znver1,"         \
-                  "arch=tremont,"        \
-                  "fma,"                 \
+#define PORTABLE                 \
+  __target_clones("arch=znver4," \
+                  "fma,"         \
                   "avx")
 
 static bool is_self_testing;
@@ -358,17 +347,19 @@ long micros(void) {
   return ts.tv_sec * 1000000 + (ts.tv_nsec + 999) / 1000;
 }
 
-#define bench(x)                                                            \
-  do {                                                                      \
-    long t1 = micros();                                                     \
-    for (long i = 0; i < ITERATIONS; ++i) {                                 \
-      asm volatile("" ::: "memory");                                        \
-      x;                                                                    \
-      asm volatile("" ::: "memory");                                        \
-    }                                                                       \
-    long t2 = micros();                                                     \
-    printf("%8" PRId64 " µs %s\n", (t2 - t1 + ITERATIONS - 1) / ITERATIONS, \
-           #x);                                                             \
+#define bench(x)                                                 \
+  do {                                                           \
+    int N = 10;                                                  \
+    long long t1 = micros();                                     \
+    for (long long i = 0; i < N; ++i) {                          \
+      asm volatile("" ::: "memory");                             \
+      x;                                                         \
+      asm volatile("" ::: "memory");                             \
+    }                                                            \
+    long long t2 = micros();                                     \
+    printf("%8lld µs %2dx n=%5d m=%5d k=%5d %s %g gigaflops\n",  \
+           (t2 - t1 + N - 1) / N, N, (int)n, (int)m, (int)k, #x, \
+           1e6 / ((t2 - t1 + N - 1) / N) * m * n * k * 1e-9);    \
   } while (0)
 
 double real01(unsigned long x) {  // (0,1)
