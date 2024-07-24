@@ -380,9 +380,9 @@ __kmp_acquire_futex_lock_timed_template(kmp_futex_lock_t *lck, kmp_int32 gtid) {
 
     long rc;
 #ifdef __COSMOPOLITAN__
-    if ((rc = nsync_futex_wait_((_Atomic(int) *)&(lck->lk.poll), poll_val, false, NULL)) != 0) {
+    if ((rc = nsync_futex_wait_((int *)&(lck->lk.poll), poll_val, false, NULL)) != 0) {
 #else
-    if ((rc = syscall(__NR_futex, (_Atomic(int) *)&(lck->lk.poll), FUTEX_WAIT, poll_val, NULL,
+    if ((rc = syscall(__NR_futex, (int *)&(lck->lk.poll), FUTEX_WAIT, poll_val, NULL,
                       NULL, 0)) != 0) {
 #endif
       KA_TRACE(1000, ("__kmp_acquire_futex_lock: lck:%p, T#%d futex_wait(0x%x) "
@@ -462,7 +462,7 @@ int __kmp_release_futex_lock(kmp_futex_lock_t *lck, kmp_int32 gtid) {
              ("__kmp_release_futex_lock: lck:%p, T#%d futex_wake 1 thread\n",
               lck, gtid));
 #ifdef __COSMOPOLITAN__
-    nsync_futex_wake_((_Atomic(int) *)&(lck->lk.poll), 1, false);
+    nsync_futex_wake_((int *)&(lck->lk.poll), 1, false);
 #else
     syscall(__NR_futex, &(lck->lk.poll), FUTEX_WAKE, KMP_LOCK_BUSY(1, futex),
             NULL, NULL, 0);

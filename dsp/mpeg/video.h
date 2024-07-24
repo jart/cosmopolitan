@@ -51,10 +51,10 @@ typedef struct plm_video_t {
   int assume_no_b_frames;
 } plm_video_t;
 
-void plm_video_process_macroblock_8(plm_video_t *, uint8_t *restrict,
-                                    uint8_t *restrict, int, int, bool);
-void plm_video_process_macroblock_16(plm_video_t *, uint8_t *restrict,
-                                     uint8_t *restrict, int, int, bool);
+void plm_video_process_macroblock_8(plm_video_t *, uint8_t *, uint8_t *, int,
+                                    int, bool);
+void plm_video_process_macroblock_16(plm_video_t *, uint8_t *, uint8_t *, int,
+                                     int, bool);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_DSP_MPEG_VIDEO_H_ */

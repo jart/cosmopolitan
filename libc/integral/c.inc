@@ -1,7 +1,3 @@
-#if __GNUC__ + 0 < 2
-#define __attribute__(x)
-#endif
-
 #ifndef __cplusplus
 #define COSMOPOLITAN_C_START_
 #define COSMOPOLITAN_C_END_
@@ -10,71 +6,14 @@
 #define COSMOPOLITAN_CXX_USING_
 #endif
 
-#ifndef __ia16__
-#define __far
-#endif
-
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
 #elif !defined(__GNUC__) && __STDC_VERSION__ + 0 < 201112
 #define typeof(x) __typeof(x)
 #endif
 
-#ifdef __cplusplus
-#if __cplusplus >= 201103L
-#define _Alignof(x) alignof(x)
-#endif /* C++11 */
-#else  /* __cplusplus */
-#if __STDC_VERSION__ + 0 < 201112
-#if __GNUC__ + _MSC_VER + 0
-#define _Alignof(x) __alignof(x)
-#else
-#define _Alignof(x) /* basically all it ever did lool */ sizeof(x)
-#endif /* GNU/MSVC/!ANSI */
-#endif /* C11 */
-#endif /* __cplusplus */
-
-#if !defined(__cplusplus) && !defined(inline) && __STDC_VERSION__ + 0 < 199901
-#if defined(__GNUC__) || defined(_MSC_VER)
-#define inline __inline
-#else
-#define inline
-#define __inline
-#endif
-#endif
-
 #ifdef __chibicc__
 #define __extension__
-#endif
-
-#if __STDC_VERSION__ + 0 < 201112
-#ifdef __GNUC__
-#define _Alignas(x) __attribute__((__aligned__(x)))
-#elif defined(_MSC_VER)
-#define _Alignas(x) __declspec(align(x))
-#endif
-#endif
-
-#ifdef _MSC_VER
-#define __builtin_unreachable() __assume(false)
-#elif !((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405 || \
-        defined(__clang__) || defined(__INTEL_COMPILER) ||    \
-        __has_builtin(__builtin_unreachable))
-#define __builtin_unreachable() \
-  for (;;) {                    \
-  }
-#endif
-
-#if (!defined(__llvm__) && !__has_builtin(__builtin_assume))
-#define __builtin_assume(x)    \
-  do {                         \
-    if (!(x))                  \
-      __builtin_unreachable(); \
-  } while (0)
-#endif
-
-#if __STDC_VERSION__ + 0 < 201112
-#define _Atomic(t) volatile t
 #endif
 
 #ifdef __llvm__
@@ -323,16 +262,6 @@ typedef struct {
 #define hasatleast static
 #else
 #define hasatleast
-#endif
-
-#if __STDC_VERSION__ + 0 < 199901L && !defined(restrict)
-#if !defined(__cplusplus) && \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301 || defined(_MSC_VER))
-#define restrict __restrict__
-#else
-#define restrict
-#define __restrict
-#endif
 #endif
 
 #ifndef dontcallback
@@ -594,11 +523,8 @@ typedef struct {
 
 #ifdef __aarch64__
 /* raise sigill (not sigtrap) like x86 does */
-#define __builtin_trap()     \
-  do {                       \
-    __asm__("udf\t#0x666");  \
-    __builtin_unreachable(); \
-  } while (0)
+#define __builtin_trap() \
+  (({ __asm__("udf\t#0x666"); }), __builtin_unreachable())
 #endif
 
 #endif /* _COSMO_SOURCE */

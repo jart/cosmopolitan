@@ -26,10 +26,10 @@ COSMOPOLITAN_C_START_
 
 void *memset(void *, int, size_t) memcpyesque;
 void *memmove(void *, const void *, size_t) memcpyesque;
-void *memcpy(void *restrict, const void *restrict, size_t) memcpyesque;
-void *mempcpy(void *restrict, const void *restrict, size_t) memcpyesque;
-char *hexpcpy(char *restrict, const void *restrict, size_t) memcpyesque;
-void *memccpy(void *restrict, const void *restrict, int, size_t) memcpyesque;
+void *memcpy(void *, const void *, size_t) memcpyesque;
+void *mempcpy(void *, const void *, size_t) memcpyesque;
+char *hexpcpy(char *, const void *, size_t) memcpyesque;
+void *memccpy(void *, const void *, int, size_t) memcpyesque;
 void explicit_bzero(void *, size_t);
 
 int memcmp(const void *, const void *, size_t) strlenesque;

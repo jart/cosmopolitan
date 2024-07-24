@@ -23,7 +23,7 @@
  *
  * @see matvmul3() for noncommutative corollary
  */
-void *vmatmul3(double R[restrict 3], const double V[3], const double M[3][3]) {
+void *vmatmul3(double R[3], const double V[3], const double M[3][3]) {
   R[0] = V[0] * M[0][0] + V[1] * M[1][0] + V[2] * M[2][0];
   R[1] = V[0] * M[0][1] + V[1] * M[1][1] + V[2] * M[2][1];
   R[2] = V[0] * M[0][2] + V[1] * M[1][2] + V[2] * M[2][2];

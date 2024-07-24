@@ -135,7 +135,7 @@ void sgemm(int m, int n, int k,      //
            const float *B, int ldb,  //
            float *C, int ldc) {
   int nth = sysconf(_SC_NPROCESSORS_ONLN);
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
   for (int ith = 0; ith < nth; ++ith) {
     ansiBLAS tb{k, A, lda, B, ldb, C, ldc, ith, nth};
     tb.matmul(m, n);
