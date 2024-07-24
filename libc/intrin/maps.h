@@ -6,6 +6,8 @@
 #include "libc/thread/tls2.internal.h"
 COSMOPOLITAN_C_START_
 
+#define MAPS_RETRY ((void *)-1)
+
 #define MAP_TREE_CONTAINER(e) TREE_CONTAINER(struct Map, tree, e)
 
 struct Map {

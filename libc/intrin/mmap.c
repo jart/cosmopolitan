@@ -120,6 +120,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
   struct Map *map;
   struct Map *next;
   struct Map *floor;
+StartOver:
   floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = next) {
     next = __maps_next(map);
@@ -148,6 +149,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
       ASSERT(left > 0);
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
+        if (leftmap == MAPS_RETRY)
+          goto StartOver;
         map->addr += left;
         map->size = right;
         if (!(map->flags & MAP_ANONYMOUS))
@@ -167,6 +170,8 @@ static int __muntrack(char *addr, size_t size, int pagesz,
       size_t right = map_addr + map_size - addr;
       struct Map *rightmap;
       if ((rightmap = __maps_alloc())) {
+        if (rightmap == MAPS_RETRY)
+          goto StartOver;
         map->size = left;
         __maps.pages -= (right + pagesz - 1) / pagesz;
         rightmap->addr = addr;
@@ -184,8 +189,14 @@ static int __muntrack(char *addr, size_t size, int pagesz,
       size_t right = map_size - middle - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
+        if (leftmap == MAPS_RETRY)
+          goto StartOver;
         struct Map *middlemap;
         if ((middlemap = __maps_alloc())) {
+          if (middlemap == MAPS_RETRY) {
+            __maps_free(leftmap);
+            goto StartOver;
+          }
           leftmap->addr = map_addr;
           leftmap->size = left;
           leftmap->off = map->off;
@@ -204,6 +215,7 @@ static int __muntrack(char *addr, size_t size, int pagesz,
           *deleted = middlemap;
           __maps_check();
         } else {
+          __maps_free(leftmap);
           rc = -1;
         }
       } else {
@@ -304,12 +316,11 @@ struct Map *__maps_alloc(void) {
   map->flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK;
   map->hand = sys.maphandle;
   __maps_lock();
-  __maps_insert(map++);
+  __maps_insert(map);
   __maps_unlock();
-  map->addr = MAP_FAILED;
-  for (int i = 1; i < gransz / sizeof(struct Map) - 1; ++i)
+  for (int i = 1; i < gransz / sizeof(struct Map); ++i)
     __maps_free(map + i);
-  return map;
+  return MAPS_RETRY;
 }
 
 static int __munmap(char *addr, size_t size) {
@@ -396,32 +407,38 @@ void *__maps_pickaddr(size_t size) {
 static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off, int pagesz, int gransz) {
 
+  // allocate Map object
+  struct Map *map;
+  do {
+    if (!(map = __maps_alloc()))
+      return MAP_FAILED;
+  } while (map == MAPS_RETRY);
+
   // polyfill nuances of fixed mappings
   int sysflags = flags;
   bool noreplace = false;
   bool should_untrack = false;
   if (flags & MAP_FIXED_NOREPLACE) {
-    if (flags & MAP_FIXED)
+    if (flags & MAP_FIXED) {
+      __maps_free(map);
       return (void *)einval();
+    }
     sysflags &= ~MAP_FIXED_NOREPLACE;
     if (IsLinux()) {
       noreplace = true;
       sysflags |= MAP_FIXED_NOREPLACE_linux;
     } else if (IsFreebsd() || IsNetbsd()) {
       sysflags |= MAP_FIXED;
-      if (__maps_overlaps(addr, size, pagesz))
+      if (__maps_overlaps(addr, size, pagesz)) {
+        __maps_free(map);
         return (void *)eexist();
+      }
     } else {
       noreplace = true;
     }
   } else if (flags & MAP_FIXED) {
     should_untrack = true;
   }
-
-  // allocate Map object
-  struct Map *map;
-  if (!(map = __maps_alloc()))
-    return MAP_FAILED;
 
   // remove mapping we blew away
   if (IsWindows() && should_untrack)
@@ -572,22 +589,26 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
         return (void *)einval();
   }
 
+  // allocate object for tracking new mapping
+  struct Map *map;
+  do {
+    if (!(map = __maps_alloc()))
+      return (void *)enomem();
+  } while (map == MAPS_RETRY);
+
   // check old interval is fully contained within one mapping
   struct Map *old_map;
   if (!(old_map = __maps_floor(old_addr)) ||
       old_addr + old_size > old_map->addr + PGUP(old_map->size) ||
-      old_addr < old_map->addr)
+      old_addr < old_map->addr) {
+    __maps_free(map);
     return (void *)efault();
+  }
 
   // save old properties
   int old_off = old_map->off;
   int old_prot = old_map->prot;
   int old_flags = old_map->flags;
-
-  // allocate object for tracking new mapping
-  struct Map *map;
-  if (!(map = __maps_alloc()))
-    return (void *)enomem();
 
   // netbsd mremap fixed returns enoent rather than unmapping old pages
   if (IsNetbsd() && (flags & MREMAP_FIXED))

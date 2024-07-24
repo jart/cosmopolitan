@@ -32,7 +32,7 @@ void sys_sched_yield(void);
 int pthread_yield_np(void) {
   if (IsXnuSilicon()) {
     __syslib->__pthread_yield_np();
-  } else if (IsOpenbsd() || IsNetbsd()) {
+  } else if (IsOpenbsd()) {
     // sched_yield() is punishingly slow on OpenBSD
     // it's ruinously slow it'll destroy everything
     pthread_pause_np();

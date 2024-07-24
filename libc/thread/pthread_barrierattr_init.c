@@ -24,6 +24,6 @@
  * @return 0 on success, or error on failure
  */
 errno_t pthread_barrierattr_init(pthread_barrierattr_t *attr) {
-  *attr = 0;
+  *attr = PTHREAD_PROCESS_PRIVATE;
   return 0;
 }

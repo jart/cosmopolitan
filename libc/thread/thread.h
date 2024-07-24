@@ -46,7 +46,7 @@ COSMOPOLITAN_C_START_
 #define PTHREAD_RWLOCK_INITIALIZER {0}
 #define PTHREAD_MUTEX_INITIALIZER  {0}
 
-#define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP {0, 0, PTHREAD_MUTEX_RECURSIVE}
+#define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP {0, {}, PTHREAD_MUTEX_RECURSIVE}
 
 typedef uintptr_t pthread_t;
 typedef int pthread_id_np_t;
@@ -66,7 +66,10 @@ typedef struct pthread_spinlock_s {
 
 typedef struct pthread_mutex_s {
   uint32_t _nsync;
-  int32_t _pid;
+  union {
+    int32_t _pid;
+    _Atomic(int32_t) _futex;
+  };
   _Atomic(uint64_t) _word;
 } pthread_mutex_t;
 
@@ -92,7 +95,10 @@ typedef struct pthread_rwlock_s {
 } pthread_rwlock_t;
 
 typedef struct pthread_barrier_s {
-  void *_nsync;
+  int _count;
+  char _pshared;
+  _Atomic(int) _counter;
+  _Atomic(int) _waiters;
 } pthread_barrier_t;
 
 typedef struct pthread_attr_s {

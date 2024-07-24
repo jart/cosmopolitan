@@ -24,54 +24,33 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
 
-/**
- * Attempts acquiring lock.
- *
- * Unlike pthread_mutex_lock() this function won't block and instead
- * returns an error immediately if the lock couldn't be acquired.
- *
- * @return 0 if lock was acquired, otherwise an errno
- * @raise EAGAIN if maximum number of recursive locks is held
- * @raise EBUSY if lock is currently held in read or write mode
- * @raise EINVAL if `mutex` doesn't refer to an initialized lock
- * @raise EDEADLK if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the
- *     current thread already holds this mutex
- */
-errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int me;
-  uint64_t word, lock;
+static errno_t pthread_mutex_trylock_naive(pthread_mutex_t *mutex,
+                                           uint64_t word) {
+  uint64_t lock;
+  word = MUTEX_UNLOCK(word);
+  lock = MUTEX_LOCK(word);
+  if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                            memory_order_acquire,
+                                            memory_order_relaxed))
+    return 0;
+  return EBUSY;
+}
 
-  // get current state of lock
-  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
+static errno_t pthread_mutex_trylock_drepper(atomic_int *futex) {
+  int word = 0;
+  if (atomic_compare_exchange_strong_explicit(
+          futex, &word, 1, memory_order_acquire, memory_order_acquire))
+    return 0;
+  return EBUSY;
+}
 
-#if PTHREAD_USE_NSYNC
-  // delegate to *NSYNC if possible
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&
-      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
-      _weaken(nsync_mu_trylock)) {
-    if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
-      return 0;
-    } else {
-      return EBUSY;
-    }
-  }
-#endif
-
-  // handle normal mutexes
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    word = MUTEX_UNLOCK(word);
-    lock = MUTEX_LOCK(word);
-    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
-                                              memory_order_acquire,
-                                              memory_order_relaxed))
-      return 0;
-    return EBUSY;
-  }
-
-  // handle recursive and error check mutexes
-  me = gettid();
+static errno_t pthread_mutex_trylock_recursive(pthread_mutex_t *mutex,
+                                               uint64_t word) {
+  uint64_t lock;
+  int me = gettid();
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
       if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
@@ -99,4 +78,48 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
     }
     return EBUSY;
   }
+}
+
+/**
+ * Attempts acquiring lock.
+ *
+ * Unlike pthread_mutex_lock() this function won't block and instead
+ * returns an error immediately if the lock couldn't be acquired.
+ *
+ * @return 0 if lock was acquired, otherwise an errno
+ * @raise EAGAIN if maximum number of recursive locks is held
+ * @raise EBUSY if lock is currently held in read or write mode
+ * @raise EINVAL if `mutex` doesn't refer to an initialized lock
+ * @raise EDEADLK if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the
+ *     current thread already holds this mutex
+ */
+errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
+
+  // get current state of lock
+  uint64_t word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
+
+#if PTHREAD_USE_NSYNC
+  // use superior mutexes if possible
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
+      _weaken(nsync_mu_trylock)) {
+    if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
+      return 0;
+    } else {
+      return EBUSY;
+    }
+  }
+#endif
+
+  // handle normal mutexes
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
+    if (_weaken(nsync_futex_wait_)) {
+      return pthread_mutex_trylock_drepper(&mutex->_futex);
+    } else {
+      return pthread_mutex_trylock_naive(mutex, word);
+    }
+  }
+
+  // handle recursive and error checking mutexes
+  return pthread_mutex_trylock_recursive(mutex, word);
 }

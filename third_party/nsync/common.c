@@ -37,6 +37,7 @@
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
+#include "third_party/nsync/mu_semaphore.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -147,9 +148,9 @@ static void free_waiters_push (waiter *w) {
 
 static void free_waiters_populate (void) {
 	int n;
-	if (IsNetbsd () || IsXnuSilicon ()) {
-		// netbsd needs one file descriptor per semaphore (!!)
-		// tim cook wants us to use his grand central dispatch
+	if (IsNetbsd () || (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ())) {
+		// netbsd needs a real file descriptor per semaphore
+		// tim cook wants us to use his lol central dispatch
 		n = 1;
 	} else {
 		n = getpagesize() / sizeof(waiter);

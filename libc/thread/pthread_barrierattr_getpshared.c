@@ -23,7 +23,7 @@
  *
  * @param pshared is set to one of the following
  *     - `PTHREAD_PROCESS_PRIVATE` (default)
- *     - `PTHREAD_PROCESS_SHARED` (unsupported)
+ *     - `PTHREAD_PROCESS_SHARED`
  * @return 0 on success, or error on failure
  */
 errno_t pthread_barrierattr_getpshared(const pthread_barrierattr_t *attr,

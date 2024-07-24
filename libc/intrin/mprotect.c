@@ -75,6 +75,7 @@ int __mprotect(char *addr, size_t size, int prot) {
     return edeadlk();
   }
   struct Map *map, *floor;
+StartOver:
   floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = __maps_next(map)) {
     char *map_addr = map->addr;
@@ -93,10 +94,12 @@ int __mprotect(char *addr, size_t size, int prot) {
       }
     } else if (addr <= map_addr) {
       // change lefthand side of mapping
-      size_t left = PGUP(addr + size - map_addr);
+      size_t left = addr + size - map_addr;
       size_t right = map_size - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
+        if (leftmap == MAPS_RETRY)
+          goto StartOver;
         if (!__mprotect_chunk(map_addr, left, prot, false)) {
           leftmap->addr = map_addr;
           leftmap->size = left;
@@ -127,6 +130,8 @@ int __mprotect(char *addr, size_t size, int prot) {
       size_t right = map_addr + map_size - addr;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
+        if (leftmap == MAPS_RETRY)
+          goto StartOver;
         if (!__mprotect_chunk(map_addr + left, right, prot, false)) {
           leftmap->addr = map_addr;
           leftmap->size = left;
@@ -159,8 +164,14 @@ int __mprotect(char *addr, size_t size, int prot) {
       size_t right = map_size - middle - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
+        if (leftmap == MAPS_RETRY)
+          goto StartOver;
         struct Map *midlmap;
         if ((midlmap = __maps_alloc())) {
+          if (midlmap == MAPS_RETRY) {
+            __maps_free(leftmap);
+            goto StartOver;
+          }
           if (!__mprotect_chunk(map_addr + left, middle, prot, false)) {
             leftmap->addr = map_addr;
             leftmap->size = left;

@@ -25,45 +25,26 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
 
-/**
- * Releases mutex.
- *
- * This function does nothing in vfork() children.
- *
- * @return 0 on success or error number on failure
- * @raises EPERM if in error check mode and not owned by caller
- * @vforksafe
- */
-errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int me;
-  uint64_t word, lock;
+static void pthread_mutex_unlock_naive(pthread_mutex_t *mutex, uint64_t word) {
+  uint64_t lock = MUTEX_UNLOCK(word);
+  atomic_store_explicit(&mutex->_word, lock, memory_order_release);
+}
 
-  LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
-
-  // get current state of lock
-  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
-
-#if PTHREAD_USE_NSYNC
-  // use fancy nsync mutex if possible
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
-      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
-      _weaken(nsync_mu_unlock)) {
-    _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
-    return 0;
+// see "take 3" algorithm in "futexes are tricky" by ulrich drepper
+static void pthread_mutex_unlock_drepper(atomic_int *futex, char pshare) {
+  int word = atomic_fetch_sub_explicit(futex, 1, memory_order_release);
+  if (word == 2) {
+    atomic_store_explicit(futex, 0, memory_order_release);
+    _weaken(nsync_futex_wake_)(futex, 1, pshare);
   }
-#endif
+}
 
-  // implement barebones normal mutexes
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    lock = MUTEX_UNLOCK(word);
-    atomic_store_explicit(&mutex->_word, lock, memory_order_release);
-    return 0;
-  }
-
-  // implement recursive mutex unlocking
-  me = gettid();
+static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
+                                              uint64_t word) {
+  int me = gettid();
   for (;;) {
 
     // we allow unlocking an initialized lock that wasn't locked, but we
@@ -87,4 +68,45 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
             memory_order_relaxed))
       return 0;
   }
+}
+
+/**
+ * Releases mutex.
+ *
+ * This function does nothing in vfork() children.
+ *
+ * @return 0 on success or error number on failure
+ * @raises EPERM if in error check mode and not owned by caller
+ * @vforksafe
+ */
+errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
+  uint64_t word;
+
+  LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
+
+  // get current state of lock
+  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
+
+#if PTHREAD_USE_NSYNC
+  // use superior mutexes if possible
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
+      _weaken(nsync_mu_unlock)) {
+    _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
+    return 0;
+  }
+#endif
+
+  // implement barebones normal mutexes
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
+    if (_weaken(nsync_futex_wake_)) {
+      pthread_mutex_unlock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
+    } else {
+      pthread_mutex_unlock_naive(mutex, word);
+    }
+    return 0;
+  }
+
+  // handle recursive and error checking mutexes
+  return pthread_mutex_unlock_recursive(mutex, word);
 }

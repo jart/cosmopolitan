@@ -52,6 +52,7 @@
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/nsync/time.h"
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
@@ -138,7 +139,7 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 		}
 		if (_weaken (pthread_testcancel_np) &&
 		    _weaken (pthread_testcancel_np) ()) {
-			return -ETIMEDOUT;
+			return -ECANCELED;
 		}
 		if (abstime && timespec_cmp (timespec_real (), *abstime) >= 0) {
 			return -ETIMEDOUT;
@@ -163,7 +164,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 
 	for (;;) {
 		now = timespec_real ();
-		if (timespec_cmp (now, deadline) > 0) {
+		if (timespec_cmp (now, deadline) >= 0) {
 			return etimedout();
 		}
 		wait = timespec_sub (deadline, now);
