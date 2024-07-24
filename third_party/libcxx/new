@@ -10,6 +10,8 @@
 #ifndef _LIBCPP_NEW
 #define _LIBCPP_NEW
 
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+
 /*
     new synopsis
 
@@ -264,6 +266,7 @@ _LIBCPP_HIDE_FROM_ABI void* __libcpp_operator_new(_Args... __args) {
 #if __has_builtin(__builtin_operator_new) && __has_builtin(__builtin_operator_delete)
   return __builtin_operator_new(__args...);
 #else
+
   return ::operator new(__args...);
 #endif
 }

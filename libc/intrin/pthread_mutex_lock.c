@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/dce.h"
@@ -58,7 +59,9 @@ static void pthread_mutex_lock_drepper(atomic_int *futex, char pshare) {
   if (word == 1)
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   while (word > 0) {
+    BLOCK_CANCELATION;
     _weaken(nsync_futex_wait_)(futex, 2, pshare, 0);
+    ALLOW_CANCELATION;
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   }
 }
