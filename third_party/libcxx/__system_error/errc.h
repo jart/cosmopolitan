@@ -141,7 +141,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // This leads to the odd pushing and popping of the deprecated
 // diagnostic.
 _LIBCPP_DECLARE_STRONG_ENUM(errc){
-    address_family_not_supported, //       = EAFNOSUPPORT,
+    address_family_not_supported = 65536, //       = EAFNOSUPPORT,
           address_in_use, //                     = EADDRINUSE,
           address_not_available, //              = EADDRNOTAVAIL,
           already_connected, //                  = EISCONN,

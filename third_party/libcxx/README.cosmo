@@ -11,5 +11,5 @@ ORIGIN
 LOCAL CHANGES
 
   - Wrote __config_site
+  - Add special handling for cosmo errno
   - Shaped and molded directory structure
-  - Kludged (and probably broke) awful `cerr` feature

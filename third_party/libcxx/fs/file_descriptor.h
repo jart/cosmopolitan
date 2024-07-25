@@ -194,7 +194,12 @@ inline perms posix_get_perms(const StatT& st) noexcept { return static_cast<perm
 inline file_status create_file_status(error_code& m_ec, path const& p, const StatT& path_stat, error_code* ec) {
   if (ec)
     *ec = m_ec;
+#ifdef __COSMOPOLITAN__
+  if (m_ec && (m_ec.value() == (int)errc::no_such_file_or_directory ||
+               m_ec.value() == (int)errc::not_a_directory)) {
+#else
   if (m_ec && (m_ec.value() == ENOENT || m_ec.value() == ENOTDIR)) {
+#endif
     return file_status(file_type::not_found);
   } else if (m_ec) {
     ErrorHandler<void> err("posix_stat", ec, &p);

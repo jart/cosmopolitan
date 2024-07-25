@@ -23,6 +23,10 @@
 #  include <android/api-level.h>
 #endif
 
+#ifdef __COSMOPOLITAN__
+#include <fs/error.h>
+#endif
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace {
@@ -35,6 +39,9 @@ string do_strerror_r(int ev);
 
 #  if defined(_LIBCPP_MSVCRT_LIKE)
 string do_strerror_r(int ev) {
+#ifdef __COSMOPOLITAN__
+  ev = (int)filesystem::detail::__cosmo_errc_to_err(ev);
+#endif
   char buffer[strerror_buff_size];
   if (::strerror_s(buffer, strerror_buff_size, ev) == 0)
     return string(buffer);
@@ -81,6 +88,9 @@ string do_strerror_r(int ev) {
   // Preserve errno around the call. (The C++ standard requires that
   // system_error functions not modify errno).
   const int old_errno       = errno;
+#ifdef __COSMOPOLITAN__
+  ev = filesystem::detail::__cosmo_errc_to_err((errc)ev);
+#endif
   const char* error_message = handle_strerror_r_return(::strerror_r(ev, buffer, strerror_buff_size), buffer);
   // If we didn't get any message, print one now.
   if (!error_message[0]) {
@@ -129,6 +139,9 @@ public:
 const char* __generic_error_category::name() const noexcept { return "generic"; }
 
 string __generic_error_category::message(int ev) const {
+#ifdef __COSMOPOLITAN__
+  ev = filesystem::detail::__cosmo_errc_to_err((errc)ev);
+#endif
 #ifdef _LIBCPP_ELAST
   if (ev > _LIBCPP_ELAST)
     return string("unspecified generic_category error");
@@ -156,6 +169,9 @@ public:
 const char* __system_error_category::name() const noexcept { return "system"; }
 
 string __system_error_category::message(int ev) const {
+#ifdef __COSMOPOLITAN__
+  ev = filesystem::detail::__cosmo_errc_to_err((errc)ev);
+#endif
 #ifdef _LIBCPP_ELAST
   if (ev > _LIBCPP_ELAST)
     return string("unspecified system_category error");
@@ -164,6 +180,9 @@ string __system_error_category::message(int ev) const {
 }
 
 error_condition __system_error_category::default_error_condition(int ev) const noexcept {
+#ifdef __COSMOPOLITAN__
+  ev = filesystem::detail::__cosmo_errc_to_err((errc)ev);
+#endif
 #ifdef _LIBCPP_ELAST
   if (ev > _LIBCPP_ELAST)
     return error_condition(ev, system_category());
@@ -212,7 +231,11 @@ system_error::~system_error() noexcept {}
 
 void __throw_system_error(int ev, const char* what_arg) {
 #ifndef _LIBCPP_HAS_NO_EXCEPTIONS
+#ifdef __COSMOPOLITAN__
+  std::__throw_system_error(error_code((int)filesystem::detail::__cosmo_err_to_errc(ev), system_category()), what_arg);
+#else
   std::__throw_system_error(error_code(ev, system_category()), what_arg);
+#endif
 #else
   // The above could also handle the no-exception case, but for size, avoid referencing system_category() unnecessarily.
   _LIBCPP_VERBOSE_ABORT(

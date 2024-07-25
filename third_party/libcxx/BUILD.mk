@@ -1094,6 +1094,7 @@ third_party/libcxx/fs/filesystem_clock.cpp \
 third_party/libcxx/fs/filesystem_error.cpp \
 third_party/libcxx/fs/int128_builtins.cpp \
 third_party/libcxx/fs/operations.cpp \
+third_party/libcxx/fs/cosmo.cpp \
 third_party/libcxx/fs/path.cpp \
 third_party/libcxx/ryu/d2fixed.cpp \
 third_party/libcxx/ryu/d2s.cpp \
