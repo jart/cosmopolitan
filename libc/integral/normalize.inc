@@ -3,8 +3,8 @@
 #endif
 
 #define __COSMOPOLITAN_MAJOR__ 3
-#define __COSMOPOLITAN_MINOR__ 5
-#define __COSMOPOLITAN_PATCH__ 9
+#define __COSMOPOLITAN_MINOR__ 6
+#define __COSMOPOLITAN_PATCH__ 1
 #define __COSMOPOLITAN__                                                   \
   (100000000 * __COSMOPOLITAN_MAJOR__ + 1000000 * __COSMOPOLITAN_MINOR__ + \
    __COSMOPOLITAN_PATCH__)
