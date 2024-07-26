@@ -16,21 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/calls/state.internal.h"
-#include "libc/cosmo.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/dll.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
-#include "libc/proc/proc.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 struct AtFork {
   struct AtFork *p[2];
@@ -38,16 +28,16 @@ struct AtFork {
 };
 
 static struct AtForks {
-  pthread_spinlock_t lock;
+  pthread_mutex_t lock;
   struct AtFork *list;
-  struct AtFork pool[64];
-  atomic_int allocated;
-} _atforks;
+  struct AtFork pool[256];
+  int allocated;
+} _atforks = {
+    PTHREAD_MUTEX_INITIALIZER,
+};
 
 static void _pthread_onfork(int i, const char *op) {
   struct AtFork *a;
-  if (!i)
-    pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
     if (a->f[i]) {
       STRACE("pthread_atfork(%s, %t)", op, a->f[i]);
@@ -55,47 +45,41 @@ static void _pthread_onfork(int i, const char *op) {
     }
     _atforks.list = a;
   }
-  if (i)
-    pthread_spin_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_prepare(void) {
+  pthread_mutex_lock(&_atforks.lock);
   _pthread_onfork(0, "prepare");
 }
 
 void _pthread_onfork_parent(void) {
   _pthread_onfork(1, "parent");
+  pthread_mutex_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_child(void) {
+  pthread_mutex_init(&_atforks.lock, 0);
   _pthread_onfork(2, "child");
-}
-
-static struct AtFork *_pthread_atfork_alloc(void) {
-  int i, n = ARRAYLEN(_atforks.pool);
-  if (atomic_load_explicit(&_atforks.allocated, memory_order_relaxed) < n &&
-      (i = atomic_fetch_add(&_atforks.allocated, 1)) < n) {
-    return _atforks.pool + i;
-  } else {
-    return 0;
-  }
 }
 
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   int rc;
   struct AtFork *a;
-  if (!(a = _pthread_atfork_alloc()))
-    return ENOMEM;
-  a->f[0] = prepare;
-  a->f[1] = parent;
-  a->f[2] = child;
-  pthread_spin_lock(&_atforks.lock);
-  a->p[0] = 0;
-  a->p[1] = _atforks.list;
-  if (_atforks.list)
-    _atforks.list->p[0] = a;
-  _atforks.list = a;
-  pthread_spin_unlock(&_atforks.lock);
-  rc = 0;
+  pthread_mutex_lock(&_atforks.lock);
+  if (_atforks.allocated < ARRAYLEN(_atforks.pool)) {
+    a = &_atforks.pool[_atforks.allocated++];
+    a->f[0] = prepare;
+    a->f[1] = parent;
+    a->f[2] = child;
+    a->p[0] = 0;
+    a->p[1] = _atforks.list;
+    if (_atforks.list)
+      _atforks.list->p[0] = a;
+    _atforks.list = a;
+    rc = 0;
+  } else {
+    rc = ENOMEM;
+  }
+  pthread_mutex_unlock(&_atforks.lock);
   return rc;
 }

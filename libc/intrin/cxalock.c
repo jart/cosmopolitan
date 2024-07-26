@@ -35,4 +35,5 @@ void __cxa_unlock(void) {
 
 __attribute__((__constructor__(60))) static textstartup void __cxa_init() {
   pthread_atfork(__cxa_lock, __cxa_unlock, __cxa_wipe);
+  __cxa_wipe();
 }

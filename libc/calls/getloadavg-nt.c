@@ -30,15 +30,27 @@
 
 static int cpus;
 static double load;
-static pthread_spinlock_t lock;
 static struct NtFileTime idle1, kern1, user1;
+static pthread_mutex_t getloadavg_lock;
+
+static void __getloadavg_lock(void) {
+  pthread_mutex_lock(&getloadavg_lock);
+}
+
+static void __getloadavg_unlock(void) {
+  pthread_mutex_unlock(&getloadavg_lock);
+}
+
+static void __getloadavg_wipe(void) {
+  pthread_mutex_init(&getloadavg_lock, 0);
+}
 
 textwindows int sys_getloadavg_nt(double *a, int n) {
   int i, rc;
   uint64_t elapsed, used;
   struct NtFileTime idle, kern, user;
   BLOCK_SIGNALS;
-  pthread_spin_lock(&lock);
+  __getloadavg_lock();
   if (GetSystemTimes(&idle, &kern, &user)) {
     elapsed = (FT(kern) - FT(kern1)) + (FT(user) - FT(user1));
     if (elapsed) {
@@ -54,7 +66,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
   } else {
     rc = __winerr();
   }
-  pthread_spin_unlock(&lock);
+  __getloadavg_unlock();
   ALLOW_SIGNALS;
   return rc;
 }
@@ -65,5 +77,7 @@ __attribute__((__constructor__(40))) static textstartup void ntinitload(void) {
     cpus = __get_cpu_count() / 2;
     cpus = MAX(1, cpus);
     GetSystemTimes(&idle1, &kern1, &user1);
+    pthread_atfork(__getloadavg_lock, __getloadavg_unlock, __getloadavg_wipe);
+    __getloadavg_wipe();
   }
 }

@@ -28,9 +28,8 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
 
-static void pthread_mutex_unlock_naive(pthread_mutex_t *mutex, uint64_t word) {
-  uint64_t lock = MUTEX_UNLOCK(word);
-  atomic_store_explicit(&mutex->_word, lock, memory_order_release);
+static void pthread_mutex_unlock_spin(atomic_int *word) {
+  atomic_store_explicit(word, 0, memory_order_release);
 }
 
 // see "take 3" algorithm in "futexes are tricky" by ulrich drepper
@@ -102,7 +101,7 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
     if (_weaken(nsync_futex_wake_)) {
       pthread_mutex_unlock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
     } else {
-      pthread_mutex_unlock_naive(mutex, word);
+      pthread_mutex_unlock_spin(&mutex->_futex);
     }
     return 0;
   }

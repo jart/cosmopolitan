@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
@@ -27,14 +29,12 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
-#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
 #include "third_party/puff/puff.h"
 
 __static_yoink("__get_symbol");
 
-static pthread_spinlock_t g_lock;
 struct SymbolTable *__symtab;  // for kprintf
 
 static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
@@ -100,6 +100,25 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
   }
 }
 
+static void GetSymbolTableInit(void) {
+  struct Zipos *z;
+  int e = errno;
+  if (!__symtab && !__isworker) {
+    if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
+      if ((__symtab = GetSymbolTableFromZip(z))) {
+        __symtab->names =
+            (uint32_t *)((char *)__symtab + __symtab->names_offset);
+        __symtab->name_base =
+            (char *)((char *)__symtab + __symtab->name_base_offset);
+      }
+    }
+    if (!__symtab) {
+      __symtab = GetSymbolTableFromElf();
+    }
+  }
+  errno = e;
+}
+
 /**
  * Returns symbol table singleton.
  *
@@ -121,24 +140,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  * @return symbol table, or NULL if not found
  */
 struct SymbolTable *GetSymbolTable(void) {
-  struct Zipos *z;
-  if (pthread_spin_trylock(&g_lock))
-    return 0;
-  int e = errno;
-  if (!__symtab && !__isworker) {
-    if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
-      if ((__symtab = GetSymbolTableFromZip(z))) {
-        __symtab->names =
-            (uint32_t *)((char *)__symtab + __symtab->names_offset);
-        __symtab->name_base =
-            (char *)((char *)__symtab + __symtab->name_base_offset);
-      }
-    }
-    if (!__symtab) {
-      __symtab = GetSymbolTableFromElf();
-    }
-  }
-  errno = e;
-  pthread_spin_unlock(&g_lock);
+  static atomic_uint once;
+  cosmo_once(&once, GetSymbolTableInit);
   return __symtab;
 }
