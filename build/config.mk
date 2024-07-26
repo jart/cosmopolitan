@@ -82,7 +82,7 @@ ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
 CONFIG_CCFLAGS += $(BACKTRACES) -O3 -fmerge-all-constants
-TARGET_ARCH ?= -march=native
+CONFIG_TARGET_ARCH ?= -march=native
 endif
 
 # Optimized Linux Mode
@@ -100,14 +100,14 @@ CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
-TARGET_ARCH ?= -march=native
+CONFIG_TARGET_ARCH ?= -march=native
 endif
 ifeq ($(MODE), x86_64-optlinux)
 CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
-TARGET_ARCH ?= -march=native
+CONFIG_TARGET_ARCH ?= -march=native
 endif
 ifeq ($(MODE), aarch64-optlinux)
 CONFIG_OFLAGS ?= -g -ggdb
@@ -223,8 +223,6 @@ CONFIG_CCFLAGS +=			\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS
-TARGET_ARCH ?=				\
-	-msse3
 PYFLAGS +=				\
 	-O2				\
 	-B
@@ -244,8 +242,6 @@ CONFIG_CCFLAGS +=			\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS
-TARGET_ARCH ?=				\
-	-msse3
 PYFLAGS +=				\
 	-O2				\
 	-B
@@ -297,8 +293,6 @@ CONFIG_CCFLAGS +=			\
 	-fno-align-jumps		\
 	-fno-align-labels		\
 	-fno-align-loops
-TARGET_ARCH ?=				\
-	-msse3
 endif
 
 # Linux+BSD Tiny Mode
@@ -328,8 +322,6 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-TARGET_ARCH ?=			\
-	-msse3
 endif
 
 # Unix Tiny Mode
@@ -358,8 +350,6 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-TARGET_ARCH ?=			\
-	-msse3
 endif
 
 # Tiny Metallic Unix Mode
@@ -388,8 +378,6 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-TARGET_ARCH ?=			\
-	-msse3
 endif
 
 # no x87 instructions mode
@@ -522,3 +510,5 @@ ifeq ($(ARCH), aarch64)
 CONFIG_CCFLAGS += -fpatchable-function-entry=7,6
 endif
 endif
+
+TARGET_ARCH ?= $(CONFIG_TARGET_ARCH)

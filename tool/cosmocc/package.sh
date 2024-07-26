@@ -85,7 +85,7 @@ make -j64 m=$AMD64-dbg \
   o/$AMD64-dbg/cosmopolitan.a \
   o/$AMD64-dbg/third_party/libcxx/libcxx.a \
 
-make TARGET_ARCH= -j64 m=$AMD64-optlinux \
+make CONFIG_TARGET_ARCH= -j64 m=$AMD64-optlinux \
   o/cosmocc.h.txt \
   o/$AMD64-optlinux/ape/ape.lds \
   o/$AMD64-optlinux/libc/crt/crt.o \
