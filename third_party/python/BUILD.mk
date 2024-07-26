@@ -34,10 +34,12 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 
 # TODO: Deal with aarch64 under qemu not making execve() easy.
 ifneq ($(MODE), dbg)
+ifneq ($(MODE), x86_64-dbg)
 ifeq ($(ARCH), x86_64)
 ifneq ($(UNAME_S), Windows)
 THIRD_PARTY_PYTHON_CHECKS +=						\
 	$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS:%=o/$(MODE)/%.runs)
+endif
 endif
 endif
 endif

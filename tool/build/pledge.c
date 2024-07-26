@@ -373,7 +373,11 @@ int SetLimit(int r, long lo, long hi) {
 }
 
 static int GetBaseCpuFreqMhz(void) {
+#ifdef __x86_64__
   return KCPUIDS(16H, EAX) & 0x7fff;
+#else
+  return 0;
+#endif
 }
 
 int SetCpuLimit(int secs) {

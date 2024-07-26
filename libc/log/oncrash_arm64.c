@@ -266,7 +266,8 @@ static relegated void __oncrash_impl(int sig, siginfo_t *si, ucontext_t *ctx) {
         if (j)
           Append(b, " ");
         Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
-               ctx->uc_mcontext.regs[r], reset, r, r == 8 || r == 9 ? " " : "");
+               ((uint64_t *)ctx->uc_mcontext.regs)[r], reset, r,
+               r == 8 || r == 9 ? " " : "");
       }
       Append(b, "\n");
     }

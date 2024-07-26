@@ -156,6 +156,15 @@ for x; do
   elif [ x"$x" = x"-mcosmo" ]; then
     MCOSMO=1
     continue
+  elif [ x"$x" = x"-mdbg" ]; then
+    MODE=dbg
+    continue
+  elif [ x"$x" = x"-mtiny" ]; then
+    MODE=tiny
+    continue
+  elif [ x"$x" = x"-moptlinux" ]; then
+    MODE=optlinux
+    continue
   elif [ x"$x" = x"-fomit-frame-pointer" ]; then
     # Quoth Apple: "The frame pointer register must always address a
     # valid frame record. Some functions — such as leaf functions or
@@ -243,10 +252,10 @@ LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelr
 PRECIOUS="-fno-omit-frame-pointer"
 
 # these features screw with backtraces so avoid them
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
-if [ x"$OPT" != x"-O3" ]; then
+if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
@@ -261,19 +270,39 @@ else
   CFLAGS="$CFLAGS -Wno-implicit-int"
 fi
 
-CRT_X86_64="$BIN/../x86_64-linux-cosmo/lib/ape.o $BIN/../x86_64-linux-cosmo/lib/crt.o"
-CPPFLAGS_X86_64="$CPPFLAGS -mno-red-zone"
+if [ x"$MODE" = x"dbg" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/dbg"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/dbg"
+elif [ x"$MODE" = x"tiny" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/tiny"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"optlinux" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/optlinux"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/optlinux"
+else
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib"
+fi
+
+CRT_X86_64="$LIB_X86_64/ape.o $LIB_X86_64/crt.o"
+CPPFLAGS_X86_64="$CPPFLAGS"
 CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
-LDFLAGS_X86_64="$LDFLAGS -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$BIN/../x86_64-linux-cosmo/lib/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
+LDFLAGS_X86_64="$LDFLAGS -L$LIB_X86_64 -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$LIB_X86_64/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
 LDLIBS_X86_64="-lcosmo"
 
-CRT_AARCH64="$BIN/../aarch64-linux-cosmo/lib/crt.o"
+CRT_AARCH64="$LIB_AARCH64/crt.o"
 CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
 CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
-LDFLAGS_AARCH64="$LDFLAGS -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$BIN/../aarch64-linux-cosmo/lib/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
+LDFLAGS_AARCH64="$LDFLAGS -L$LIB_AARCH64 -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$LIB_AARCH64/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"
 
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+SUPPORT_VECTOR=-1
+if [ x"$MODE" = x"optlinux" ]; then
+  CPPFLAGS_X86_64="$CPPFLAGS_X86_64 -mno-red-zone"
+  SUPPORT_VECTOR=linux
+fi
+
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
   CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
 fi
@@ -526,6 +555,7 @@ fi
 
 set -- \
 "$BIN/apelink" \
+  -V "$SUPPORT_VECTOR" \
   -l "$BIN/ape-x86_64.elf" \
   -l "$BIN/ape-aarch64.elf" \
   -M "$BIN/ape-m1.c" \
@@ -536,10 +566,12 @@ set -- \
 log_command "$@"
 "$@" || Exit
 
-set -- \
-"$BIN/pecheck" "$OUTPUT"
-log_command "$@"
-"$@" || Exit
+if [ x"$MODE" != "optlinux" ]; then
+  set -- \
+  "$BIN/pecheck" "$OUTPUT"
+  log_command "$@"
+  "$@" || Exit
+fi
 
 if [ $INTENT = ld ] && [ $SAVE_TEMPS -eq 0 ]; then
   mv -f "$OUTPUT_X86_64" "${OUTPUT%.com}.com.dbg" || Exit

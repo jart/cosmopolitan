@@ -18,6 +18,7 @@
 
 #include "ctl/string.h"
 #include "ctl/utility.h"
+#include "libc/dce.h"
 #include "libc/mem/leaks.h"
 
 #include "libc/calls/struct/timespec.h"
@@ -43,103 +44,109 @@
 const char* big_c = "aaaaaaaaaaaaaaaaaaaaaaaa";
 const char* small_c = "aaaaaaaaaaaaaaaaaaaaaaa";
 
+#if IsModeDbg()
+#define ITERATIONS 1000 // because qemu in dbg mode is very slow
+#else
+#define ITERATIONS 1000000
+#endif
+
 int
 main()
 {
     const ctl::string_view big(big_c), small(small_c);
 
-    BENCH(10000000, 1, {
+    BENCH(ITERATIONS * 10, 1, {
         ctl::string s;
         s.append("hello ");
         s.append("world");
     });
 
-    BENCH(1000000, 8, {
+    BENCH(ITERATIONS, 8, {
         ctl::string s;
         for (int i = 0; i < 8; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(1000000, 16, {
+    BENCH(ITERATIONS, 16, {
         ctl::string s;
         for (int i = 0; i < 16; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(1000000, 23, {
+    BENCH(ITERATIONS, 23, {
         ctl::string s;
         for (int i = 0; i < 23; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(1000000, 24, {
+    BENCH(ITERATIONS, 24, {
         ctl::string s;
         for (int i = 0; i < 24; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(1000000, 32, {
+    BENCH(ITERATIONS, 32, {
         ctl::string s;
         for (int i = 0; i < 32; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(1000000, 1, { ctl::string s(small_c); });
+    BENCH(ITERATIONS, 1, { ctl::string s(small_c); });
 
-    BENCH(1000000, 1, { ctl::string s(small); });
+    BENCH(ITERATIONS, 1, { ctl::string s(small); });
 
     {
         ctl::string small_copy("hello world");
-        BENCH(1000000, 1, { ctl::string s2(small_copy); });
+        BENCH(ITERATIONS, 1, { ctl::string s2(small_copy); });
     }
 
-    BENCH(1000000, 1, {
+    BENCH(ITERATIONS, 1, {
         ctl::string s(small);
         ctl::string s2(ctl::move(s));
     });
 
-    BENCH(1000000, 1, {
+    BENCH(ITERATIONS, 1, {
         ctl::string s(small);
         ctl::string s2(s);
     });
 
-    BENCH(1000000, 1, { ctl::string s(big_c); });
+    BENCH(ITERATIONS, 1, { ctl::string s(big_c); });
 
-    BENCH(1000000, 1, { ctl::string s(big); });
+    BENCH(ITERATIONS, 1, { ctl::string s(big); });
 
     {
         ctl::string big_copy(big);
-        BENCH(1000000, 1, { ctl::string s2(big_copy); });
+        BENCH(ITERATIONS, 1, { ctl::string s2(big_copy); });
     }
 
-    BENCH(1000000, 1, {
+    BENCH(ITERATIONS, 1, {
         ctl::string s(big);
         ctl::string s2(ctl::move(s));
     });
 
-    BENCH(1000000, 1, {
+    BENCH(ITERATIONS, 1, {
         ctl::string s(big);
         ctl::string s2(s);
     });
 
-    BENCH(1000000, 1, { ctl::string s(23, 'a'); });
+    BENCH(ITERATIONS, 1, { ctl::string s(23, 'a'); });
 
-    BENCH(1000000, 1, { ctl::string s(24, 'a'); });
+    BENCH(ITERATIONS, 1, { ctl::string s(24, 'a'); });
 
     {
         ctl::string s(5, 'a');
-        BENCH(1000000, 1, { ctl::string_view s2(s); });
+        BENCH(ITERATIONS, 1, { ctl::string_view s2(s); });
     }
 
     {
         ctl::string big_trunc(48, 'a');
         big_trunc.resize(4);
-        BENCH(1000000, 1, { ctl::string s(big_trunc); });
+        BENCH(ITERATIONS, 1, { ctl::string s(big_trunc); });
     }
 
     CheckForMemoryLeaks();

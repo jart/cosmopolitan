@@ -37,7 +37,7 @@ register long freebsd_ordinal asm("x9");
 register long xnu_ordinal asm("x16");
 register long cosmo_tls_register asm("x28");
 
-void report_cancelation_point(void);
+void report_cancelation_point(int, int);
 
 dontinline long systemfive_cancel(void) {
   return _weaken(_pthread_cancel_ack)();
@@ -58,9 +58,9 @@ dontinline long systemfive_cancellable(void) {
       return systemfive_cancel();
     }
 #if IsModeDbg()
-    if (!(pth->pt_flags & PT_INCANCEL)) {
+    if (!(pth->pt_flags & PT_INCANCEL) && !(pth->pt_flags & PT_NOCANCEL)) {
       if (_weaken(report_cancelation_point)) {
-        _weaken(report_cancelation_point)();
+        _weaken(report_cancelation_point)(sysv_ordinal, xnu_ordinal);
       }
       __builtin_trap();
     }

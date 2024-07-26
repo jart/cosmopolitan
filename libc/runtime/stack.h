@@ -6,7 +6,11 @@
 /**
  * Returns preferred size and alignment of thread stack.
  */
+#ifndef MODE_DBG
 #define GetStackSize() 81920
+#else
+#define GetStackSize() 163840
+#endif
 
 /**
  * Returns preferred stack guard size.

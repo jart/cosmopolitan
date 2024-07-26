@@ -102,6 +102,19 @@ CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
 TARGET_ARCH ?= -march=native
 endif
+ifeq ($(MODE), x86_64-optlinux)
+CONFIG_OFLAGS ?= -g -ggdb
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
+CONFIG_CCFLAGS += -O3 -fmerge-all-constants
+CONFIG_COPTS += -mred-zone
+TARGET_ARCH ?= -march=native
+endif
+ifeq ($(MODE), aarch64-optlinux)
+CONFIG_OFLAGS ?= -g -ggdb
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
+CONFIG_CCFLAGS += -O3 -fmerge-all-constants
+CONFIG_COPTS += -mred-zone
+endif
 
 # Release Mode
 #
@@ -136,8 +149,21 @@ endif
 ifeq ($(MODE), dbg)
 ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g -ggdb
-CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__
-CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
+OVERRIDE_CFLAGS += -O0
+OVERRIDE_CXXFLAGS += -O0
+CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__ -Wno-unused-variable -Wno-unused-but-set-variable
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG
+CONFIG_COPTS += -fsanitize=undefined
+OVERRIDE_CCFLAGS += -fno-pie
+QUOTA ?= -C64 -L300
+endif
+ifeq ($(MODE), x86_64-dbg)
+ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g -ggdb
+OVERRIDE_CFLAGS += -O0
+OVERRIDE_CXXFLAGS += -O0
+CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__ -Wno-unused-variable -Wno-unused-but-set-variable
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=undefined
 OVERRIDE_CCFLAGS += -fno-pie
 QUOTA ?= -C64 -L300
@@ -145,8 +171,10 @@ endif
 ifeq ($(MODE), aarch64-dbg)
 ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g -ggdb
-CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__
-CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline -fdce
+OVERRIDE_CFLAGS += -O0 -fdce
+OVERRIDE_CXXFLAGS += -O0 -fdce
+CONFIG_CPPFLAGS += -DMODE_DBG -D__SANITIZE_UNDEFINED__ -Wno-unused-variable -Wno-unused-but-set-variable
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=undefined
 QUOTA ?= -C64 -L300
 endif

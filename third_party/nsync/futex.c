@@ -152,6 +152,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 				    const struct timespec *timeout,
 				    struct PosixThread *pt,
 				    sigset_t waitmask) {
+#ifdef __x86_64__
 	int sig;
 	bool32 ok;
 	struct timespec deadline, wait, now;
@@ -203,6 +204,9 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			ASSERT (GetLastError () == ETIMEDOUT);
 		}
 	}
+#else
+	return 0;
+#endif /* __x86_64__ */
 }
 
 static struct timespec *nsync_futex_timeout_ (struct timespec *memory,

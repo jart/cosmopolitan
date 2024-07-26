@@ -61,6 +61,42 @@ make -j64 m=$AMD64 \
   o/$AMD64/third_party/make/make.dbg \
   o/$AMD64/third_party/ctags/ctags.dbg
 
+make -j64 m=$AMD64-tiny \
+  o/cosmocc.h.txt \
+  o/$AMD64-tiny/ape/ape.lds \
+  o/$AMD64-tiny/libc/crt/crt.o \
+  o/$AMD64-tiny/ape/ape.elf \
+  o/$AMD64-tiny/ape/ape.macho \
+  o/$AMD64-tiny/ape/ape.o \
+  o/$AMD64-tiny/ape/ape-copy-self.o \
+  o/$AMD64-tiny/ape/ape-no-modify-self.o \
+  o/$AMD64-tiny/cosmopolitan.a \
+  o/$AMD64-tiny/third_party/libcxx/libcxx.a \
+
+make -j64 m=$AMD64-dbg \
+  o/cosmocc.h.txt \
+  o/$AMD64-dbg/ape/ape.lds \
+  o/$AMD64-dbg/libc/crt/crt.o \
+  o/$AMD64-dbg/ape/ape.elf \
+  o/$AMD64-dbg/ape/ape.macho \
+  o/$AMD64-dbg/ape/ape.o \
+  o/$AMD64-dbg/ape/ape-copy-self.o \
+  o/$AMD64-dbg/ape/ape-no-modify-self.o \
+  o/$AMD64-dbg/cosmopolitan.a \
+  o/$AMD64-dbg/third_party/libcxx/libcxx.a \
+
+make TARGET_ARCH= -j64 m=$AMD64-optlinux \
+  o/cosmocc.h.txt \
+  o/$AMD64-optlinux/ape/ape.lds \
+  o/$AMD64-optlinux/libc/crt/crt.o \
+  o/$AMD64-optlinux/ape/ape.elf \
+  o/$AMD64-optlinux/ape/ape.macho \
+  o/$AMD64-optlinux/ape/ape.o \
+  o/$AMD64-optlinux/ape/ape-copy-self.o \
+  o/$AMD64-optlinux/ape/ape-no-modify-self.o \
+  o/$AMD64-optlinux/cosmopolitan.a \
+  o/$AMD64-optlinux/third_party/libcxx/libcxx.a \
+
 make -j64 m=$ARM64 \
   o/$ARM64/ape/ape.elf \
   o/$ARM64/ape/aarch64.lds \
@@ -94,6 +130,33 @@ make -j64 m=$ARM64 \
   o/$ARM64/tool/build/resymbol.dbg \
   o/$ARM64/third_party/make/make.dbg \
   o/$ARM64/third_party/ctags/ctags.dbg
+
+make -j64 m=$ARM64-tiny \
+  o/$ARM64-tiny/ape/ape.elf \
+  o/$ARM64-tiny/ape/aarch64.lds \
+  o/$ARM64-tiny/libc/crt/crt.o \
+  o/$ARM64-tiny/ape/ape-copy-self.o \
+  o/$ARM64-tiny/ape/ape-no-modify-self.o \
+  o/$ARM64-tiny/cosmopolitan.a \
+  o/$ARM64-tiny/third_party/libcxx/libcxx.a \
+
+make -j64 m=$ARM64-dbg \
+  o/$ARM64-dbg/ape/ape.elf \
+  o/$ARM64-dbg/ape/aarch64.lds \
+  o/$ARM64-dbg/libc/crt/crt.o \
+  o/$ARM64-dbg/ape/ape-copy-self.o \
+  o/$ARM64-dbg/ape/ape-no-modify-self.o \
+  o/$ARM64-dbg/cosmopolitan.a \
+  o/$ARM64-dbg/third_party/libcxx/libcxx.a \
+
+make -j64 m=$ARM64-optlinux \
+  o/$ARM64-optlinux/ape/ape.elf \
+  o/$ARM64-optlinux/ape/aarch64.lds \
+  o/$ARM64-optlinux/libc/crt/crt.o \
+  o/$ARM64-optlinux/ape/ape-copy-self.o \
+  o/$ARM64-optlinux/ape/ape-no-modify-self.o \
+  o/$ARM64-optlinux/cosmopolitan.a \
+  o/$ARM64-optlinux/third_party/libcxx/libcxx.a \
 
 mkdir -p "$OUTDIR/bin/"
 cp tool/cosmocc/README.md "$OUTDIR/"
@@ -155,19 +218,51 @@ cd "$OLD"
 
 for arch in $AMD64 $ARM64; do
   mkdir -p "$OUTDIR/$arch-linux-cosmo/lib/"
+  mkdir -p "$OUTDIR/$arch-linux-cosmo/lib/dbg"
+  mkdir -p "$OUTDIR/$arch-linux-cosmo/lib/tiny"
+  mkdir -p "$OUTDIR/$arch-linux-cosmo/lib/optlinux"
+
   cp -f o/$arch/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/"
+  cp -f o/$arch-dbg/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/dbg/"
+  cp -f o/$arch-tiny/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/tiny/"
+  cp -f o/$arch-optlinux/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/optlinux/"
+
   cp -f o/$arch/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/libcosmo.a"
+  cp -f o/$arch-dbg/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/dbg/libcosmo.a"
+  cp -f o/$arch-tiny/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/tiny/libcosmo.a"
+  cp -f o/$arch-optlinux/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/optlinux/libcosmo.a"
+
   cp -f o/$arch/third_party/libcxx/libcxx.a "$OUTDIR/$arch-linux-cosmo/lib/"
+  cp -f o/$arch-dbg/third_party/libcxx/libcxx.a "$OUTDIR/$arch-linux-cosmo/lib/dbg/"
+  cp -f o/$arch-tiny/third_party/libcxx/libcxx.a "$OUTDIR/$arch-linux-cosmo/lib/tiny/"
+  cp -f o/$arch-optlinux/third_party/libcxx/libcxx.a "$OUTDIR/$arch-linux-cosmo/lib/optlinux/"
+
   for lib in c dl gcc_s m crypt pthread resolv rt dl unwind gomp stdc++; do
     printf '\041\074\141\162\143\150\076\012' >"$OUTDIR/$arch-linux-cosmo/lib/lib$lib.a"
   done
   mkdir -p "$OUTDIR/lib/gcc/"
   touch "$OUTDIR/lib/gcc/libgomp.spec"  # needed if user passes -fopenmp but not -lgomp
 done
+
 cp -f o/$AMD64/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$AMD64-dbg/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/dbg/"
+cp -f o/$AMD64-tiny/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/tiny/"
+cp -f o/$AMD64-optlinux/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/optlinux/"
+
 cp -f o/$AMD64/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$AMD64-dbg/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/dbg/"
+cp -f o/$AMD64-tiny/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/tiny/"
+cp -f o/$AMD64-optlinux/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/optlinux/"
+
 cp -f o/$ARM64/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/"
+cp -f o/$ARM64-dbg/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/dbg/"
+cp -f o/$ARM64-tiny/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/tiny/"
+cp -f o/$ARM64-optlinux/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/optlinux/"
+
 cp -f o/$AMD64/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$AMD64-dbg/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/dbg/"
+cp -f o/$AMD64-tiny/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/tiny/"
+cp -f o/$AMD64-optlinux/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/optlinux/"
 
 cp -f ape/ape-m1.c "$OUTDIR/bin/"
 cp -af tool/cosmocc/bin/* "$OUTDIR/bin/"

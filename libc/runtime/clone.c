@@ -589,7 +589,9 @@ int sys_clone_linux(int flags,         // rdi
 
 static int LinuxThreadEntry(void *arg, int tid) {
   struct LinuxCloneArgs *wt = arg;
+#if defined(__x86_64__)
   sys_set_tls(ARCH_SET_GS, wt->tls);
+#endif
   return wt->func(wt->arg, tid);
 }
 

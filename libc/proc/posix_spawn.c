@@ -22,7 +22,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rlimit.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
@@ -39,6 +38,7 @@
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/alloca.h"
@@ -95,6 +95,10 @@
 
 #define CLOSER_CONTAINER(e) DLL_CONTAINER(struct Closer, elem, e)
 
+static atomic_bool has_vfork;  // i.e. not qemu/wsl/xnu/openbsd
+
+#ifdef __x86_64__
+
 struct Closer {
   int64_t handle;
   struct Dll elem;
@@ -105,8 +109,6 @@ struct SpawnFds {
   struct Fd *p;
   struct Dll *closers;
 };
-
-static atomic_bool has_vfork;  // i.e. not qemu/wsl/xnu/openbsd
 
 static textwindows int64_t spawnfds_handle(struct SpawnFds *fds, int fd) {
   if (__is_cloexec(fds->p + fd))
@@ -429,6 +431,8 @@ static textwindows dontinline errno_t posix_spawn_nt(
   return err;
 }
 
+#endif  // __x86_64__
+
 /**
  * Spawns process, the POSIX way, e.g.
  *
@@ -482,8 +486,10 @@ errno_t posix_spawn(int *pid, const char *path,
                     const posix_spawn_file_actions_t *file_actions,
                     const posix_spawnattr_t *attrp, char *const argv[],
                     char *const envp[]) {
+#ifdef __x86_64__
   if (IsWindows())
     return posix_spawn_nt(pid, path, file_actions, attrp, argv, envp);
+#endif
   int pfds[2];
   bool use_pipe;
   volatile int status = 0;

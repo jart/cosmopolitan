@@ -59,13 +59,33 @@ if [ x"$ARCH" = x"$PROG" ]; then
   fatal_error "cosmocross must be run via cross compiler"
 fi
 
+for x; do
+  if [ x"$x" = x"-mtiny" ]; then
+    MODE=tiny
+  elif [ x"$x" = x"-mdbg" ]; then
+    MODE=dbg
+  elif [ x"$x" = x"-moptlinux" ]; then
+    MODE=optlinux
+  fi
+done
+
+if [ x"$MODE" = x"dbg" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/dbg"
+elif [ x"$MODE" = x"tiny" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"optlinux" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/optlinux"
+else
+  LIB="$BIN/../$ARCH-linux-cosmo/lib"
+fi
+
 CC="$BIN/$ARCH-linux-cosmo-gcc"
-CRT="$BIN/../$ARCH-linux-cosmo/lib/crt.o"
+CRT="$LIB/crt.o"
 LDLIBS="-lcosmo"
 if [ -z "$COSMOS" ]; then
-    LDFLAGS="$LDFLAGS -L$BIN/../$ARCH-linux-cosmo/lib"
+    LDFLAGS="$LDFLAGS -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
 else
-    LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$BIN/../$ARCH-linux-cosmo/lib"
+    LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
     CPPFLAGS="$CPPFLAGS -I$COSMOS/include"
 fi
 if [ x"$PROG" != x"${PROG%++}" ]; then
@@ -80,16 +100,20 @@ fi
 PAGESZ=4096
 if [ x"$ARCH" = x"x86_64" ]; then
   OBJCOPYFLAGS="-S -O binary"
-  CRT="$BIN/../$ARCH-linux-cosmo/lib/ape-no-modify-self.o $CRT"
-  CPPFLAGS="$CPPFLAGS -mno-red-zone"
+  CRT="$LIB/ape-no-modify-self.o $CRT"
   CFLAGS="$CFLAGS -mno-tls-direct-seg-refs"
-  LDFLAGS="$LDFLAGS -Wl,-T,$BIN/../$ARCH-linux-cosmo/lib/ape.lds"
+  LDFLAGS="$LDFLAGS -Wl,-T,$LIB/ape.lds"
+  if [ x"$MODE" = x"optlinux" ]; then
+    CPPFLAGS="$CPPFLAGS -mred-zone"
+  else
+    CPPFLAGS="$CPPFLAGS -mno-red-zone"
+  fi
 elif [ x"$ARCH" = x"aarch64" ]; then
   OBJCOPYFLAGS="-S"
   PAGESZ=16384
   CPPFLAGS="$CPPFLAGS -fsigned-char"
   CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
-  LDFLAGS="$LDFLAGS -Wl,-T,$BIN/../$ARCH-linux-cosmo/lib/aarch64.lds"
+  LDFLAGS="$LDFLAGS -Wl,-T,$LIB/aarch64.lds"
 else
   fatal_error "$ARCH: unsupported architecture"
 fi
@@ -142,6 +166,12 @@ for x; do
   elif [ x"$x" = x"-mcosmo" ]; then
     CPPFLAGS="$CPPFLAGS -D_COSMO_SOURCE"
     continue
+  elif [ x"$x" = x"-mdbg" ]; then
+    continue
+  elif [ x"$x" = x"-mtiny" ]; then
+    continue
+  elif [ x"$x" = x"-moptlinux" ]; then
+    continue
   elif [ x"$x" != x"${x#-o}" ]; then
     OUTPUT=${x#-o}
   elif [ x"$x" = x"-fpic" ]; then
@@ -189,6 +219,7 @@ fi
 
 # support --ftrace unless optimizing for size
 if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"$MODE" != x"optlinux" ] &&          # $MODE not optlinux
    [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   if [ x"$ARCH" = x"x86_64" ]; then
     CFLAGS="$CFLAGS -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
@@ -199,10 +230,11 @@ fi
 
 # maximize frame pointers unless optimizing for size
 if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
+   [ x"$MODE" != x"optlinux" ] &&         # $MODE not optlinux
    [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
-if [ x"$OPT" != x"-O3" ]; then
+if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
