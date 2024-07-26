@@ -86,7 +86,7 @@ void __maps_init(void) {
 
 privileged bool __maps_lock(void) {
   struct CosmoTib *tib;
-  if (__tls_enabled)
+  if (!__tls_enabled)
     return false;
   tib = __get_tls_privileged();
   if (atomic_fetch_add_explicit(&tib->tib_relock_maps, 1, memory_order_relaxed))
