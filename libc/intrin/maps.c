@@ -18,13 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/maps.h"
 #include "ape/sections.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/lock.h"
 
 #ifdef __x86_64__
 __static_yoink("_init_maps");
@@ -85,37 +89,67 @@ void __maps_init(void) {
 }
 
 privileged bool __maps_lock(void) {
+  int me;
+  uint64_t word, lock;
   struct CosmoTib *tib;
   if (!__tls_enabled)
     return false;
-  tib = __get_tls_privileged();
-  if (atomic_fetch_add_explicit(&tib->tib_relock_maps, 1, memory_order_relaxed))
-    return true;
-  int backoff = 0;
-  while (atomic_exchange_explicit(&__maps.lock, 1, memory_order_acquire)) {
-    if (backoff < 7) {
-      volatile int i;
-      for (i = 0; i != 1 << backoff; i++) {
-      }
-      backoff++;
-    } else {
-      // STRACE("pthread_delay_np(__maps)");
-#if defined(__GNUC__) && defined(__aarch64__)
-      __asm__ volatile("yield");
-#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-      __asm__ volatile("pause");
-#endif
+  if (!(tib = __get_tls_privileged()))
+    return false;
+  if (tib->tib_flags & TIB_FLAG_VFORKED)
+    return false;
+  me = atomic_load_explicit(&tib->tib_tid, memory_order_acquire);
+  if (me <= 0)
+    return false;
+  word = atomic_load_explicit(&__maps.lock, memory_order_relaxed);
+  for (;;) {
+    if (MUTEX_OWNER(word) == me) {
+      if (atomic_compare_exchange_weak_explicit(
+              &__maps.lock, &word, MUTEX_INC_DEPTH(word), memory_order_relaxed,
+              memory_order_relaxed))
+        return true;
+      continue;
+    }
+    word = 0;
+    lock = MUTEX_LOCK(word);
+    lock = MUTEX_SET_OWNER(lock, me);
+    if (atomic_compare_exchange_weak_explicit(&__maps.lock, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
+      return false;
+    for (;;) {
+      word = atomic_load_explicit(&__maps.lock, memory_order_relaxed);
+      if (MUTEX_OWNER(word) == me)
+        break;
+      if (!word)
+        break;
     }
   }
-  return false;
 }
 
 privileged void __maps_unlock(void) {
+  int me;
+  uint64_t word;
   struct CosmoTib *tib;
   if (!__tls_enabled)
     return;
-  tib = __get_tls_privileged();
-  if (atomic_fetch_sub_explicit(&tib->tib_relock_maps, 1,
-                                memory_order_relaxed) == 1)
-    atomic_store_explicit(&__maps.lock, 0, memory_order_release);
+  if (!(tib = __get_tls_privileged()))
+    return;
+  if (tib->tib_flags & TIB_FLAG_VFORKED)
+    return;
+  me = atomic_load_explicit(&tib->tib_tid, memory_order_acquire);
+  if (me <= 0)
+    return;
+  word = atomic_load_explicit(&__maps.lock, memory_order_relaxed);
+  for (;;) {
+    if (MUTEX_DEPTH(word)) {
+      if (atomic_compare_exchange_weak_explicit(
+              &__maps.lock, &word, MUTEX_DEC_DEPTH(word), memory_order_relaxed,
+              memory_order_relaxed))
+        break;
+    }
+    if (atomic_compare_exchange_weak_explicit(
+            &__maps.lock, &word, 0, memory_order_release, memory_order_relaxed))
+      break;
+  }
 }

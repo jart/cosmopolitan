@@ -20,7 +20,7 @@
 
 // returns true if `p` is preceded by x86 call instruction
 // this is actually impossible to do but we'll do our best
-dontinstrument int __is_call(const unsigned char *p) {
+privileged dontinstrument int __is_call(const unsigned char *p) {
   if (p[-5] == 0xe8)
     return 5;  // call Jvds
   if (p[-2] == 0xff && (p[-1] & 070) == 020)

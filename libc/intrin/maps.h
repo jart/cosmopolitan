@@ -27,8 +27,8 @@ struct Map {
 };
 
 struct Maps {
-  atomic_int lock;
   struct Tree *maps;
+  _Atomic(uint64_t) lock;
   _Atomic(struct Map *) freed;
   size_t count;
   size_t pages;

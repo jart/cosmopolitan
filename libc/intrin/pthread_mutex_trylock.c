@@ -27,14 +27,8 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
 
-static errno_t pthread_mutex_trylock_naive(pthread_mutex_t *mutex,
-                                           uint64_t word) {
-  uint64_t lock;
-  word = MUTEX_UNLOCK(word);
-  lock = MUTEX_LOCK(word);
-  if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
-                                            memory_order_acquire,
-                                            memory_order_relaxed))
+static errno_t pthread_mutex_trylock_spin(atomic_int *word) {
+  if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
     return 0;
   return EBUSY;
 }
@@ -116,7 +110,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
     if (_weaken(nsync_futex_wait_)) {
       return pthread_mutex_trylock_drepper(&mutex->_futex);
     } else {
-      return pthread_mutex_trylock_naive(mutex, word);
+      return pthread_mutex_trylock_spin(&mutex->_futex);
     }
   }
 

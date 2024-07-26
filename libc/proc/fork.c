@@ -81,7 +81,6 @@ static void _onfork_child(void) {
   _rand64_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   _pthread_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   atomic_store_explicit(&__maps.lock, 0, memory_order_relaxed);
-  atomic_store_explicit(&__get_tls()->tib_relock_maps, 0, memory_order_relaxed);
   if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
 }

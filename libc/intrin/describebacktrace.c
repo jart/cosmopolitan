@@ -24,13 +24,13 @@
 
 #define N 160
 
-static bool IsDangerous(const void *ptr) {
+privileged static bool IsDangerous(const void *ptr) {
   if (_weaken(kisdangerous))
     return _weaken(kisdangerous)(ptr);
   return false;
 }
 
-static char *FormatHex(char *p, unsigned long x) {
+privileged static char *FormatHex(char *p, unsigned long x) {
   int k = x ? (__builtin_clzl(x) ^ 63) + 1 : 1;
   k = (k + 3) & -4;
   while (k > 0)
@@ -39,8 +39,8 @@ static char *FormatHex(char *p, unsigned long x) {
   return p;
 }
 
-dontinstrument const char *(DescribeBacktrace)(char buf[N],
-                                               const struct StackFrame *fr) {
+privileged dontinstrument const char *(
+    DescribeBacktrace)(char buf[N], const struct StackFrame *fr) {
   char *p = buf;
   char *pe = p + N;
   bool gotsome = false;
