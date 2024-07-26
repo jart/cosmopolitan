@@ -55,14 +55,9 @@ static void __stdio_fork_parent(void) {
 
 static void __stdio_fork_child(void) {
   FILE *f;
-  for (int i = __fflush.handles.i; i--;) {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  for (int i = __fflush.handles.i; i--;)
     if ((f = __fflush.handles.p[i]))
-      pthread_mutex_init(&f->lock, &attr);
-    pthread_mutexattr_destroy(&attr);
-  }
+      f->lock = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   pthread_mutex_init(&__fflush_lock_obj, 0);
 }
 

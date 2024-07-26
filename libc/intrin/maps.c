@@ -91,10 +91,22 @@ privileged bool __maps_lock(void) {
   tib = __get_tls_privileged();
   if (atomic_fetch_add_explicit(&tib->tib_relock_maps, 1, memory_order_relaxed))
     return true;
-  while (atomic_exchange_explicit(&__maps.lock, 1, memory_order_acquire))
-    for (;;)
-      if (!atomic_load_explicit(&__maps.lock, memory_order_relaxed))
-        break;
+  int backoff = 0;
+  while (atomic_exchange_explicit(&__maps.lock, 1, memory_order_acquire)) {
+    if (backoff < 7) {
+      volatile int i;
+      for (i = 0; i != 1 << backoff; i++) {
+      }
+      backoff++;
+    } else {
+      // STRACE("pthread_delay_np(__maps)");
+#if defined(__GNUC__) && defined(__aarch64__)
+      __asm__ volatile("yield");
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+      __asm__ volatile("pause");
+#endif
+    }
+  }
   return false;
 }
 

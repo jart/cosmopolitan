@@ -21,46 +21,30 @@
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 
-static int count;
 static void (*funcs[32])(void);
-static pthread_mutex_t __quick_exit_lock_obj;
-
-static void __quick_exit_wipe(void) {
-  pthread_mutex_init(&__quick_exit_lock_obj, 0);
-}
-
-static void __quick_exit_lock(void) {
-  pthread_mutex_lock(&__quick_exit_lock_obj);
-}
-
-static void __quick_exit_unlock(void) {
-  pthread_mutex_unlock(&__quick_exit_lock_obj);
-}
+static int count;
+static pthread_spinlock_t lock;
+pthread_spinlock_t *const __at_quick_exit_lockptr = &lock;
 
 void __funcs_on_quick_exit(void) {
   void (*func)(void);
-  __quick_exit_lock();
+  pthread_spin_lock(&lock);
   while (count) {
     func = funcs[--count];
-    __quick_exit_unlock();
+    pthread_spin_unlock(&lock);
     func();
-    __quick_exit_lock();
+    pthread_spin_lock(&lock);
   }
 }
 
 int at_quick_exit(void func(void)) {
   int res = 0;
-  __quick_exit_lock();
+  pthread_spin_lock(&lock);
   if (count == ARRAYLEN(funcs)) {
     res = -1;
   } else {
     funcs[count++] = func;
   }
-  __quick_exit_unlock();
+  pthread_spin_unlock(&lock);
   return res;
-}
-
-__attribute__((__constructor__(10))) textstartup void __quick_exit_init(void) {
-  pthread_atfork(__quick_exit_lock, __quick_exit_unlock, __quick_exit_wipe);
-  __quick_exit_wipe();
 }

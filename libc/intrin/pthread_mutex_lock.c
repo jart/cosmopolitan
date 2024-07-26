@@ -31,16 +31,17 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
 
-static void pthread_mutex_lock_spin(atomic_int *word) {
+static void pthread_mutex_lock_naive(pthread_mutex_t *mutex, uint64_t word) {
   int backoff = 0;
+  uint64_t lock;
   for (;;) {
-    if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
-      break;
-    for (;;) {
-      if (!atomic_load_explicit(word, memory_order_relaxed))
-        break;
-      backoff = pthread_delay_np(word, backoff);
-    }
+    word = MUTEX_UNLOCK(word);
+    lock = MUTEX_LOCK(word);
+    if (atomic_compare_exchange_weak_explicit(&mutex->_word, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
+      return;
+    backoff = pthread_delay_np(mutex, backoff);
   }
 }
 
@@ -95,12 +96,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
       mutex->_pid = __pid;
       return 0;
     }
-    for (;;) {
-      word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
-      if (!MUTEX_LOCKED(word))
-        break;
-      backoff = pthread_delay_np(mutex, backoff);
-    }
+    backoff = pthread_delay_np(mutex, backoff);
   }
 }
 
@@ -125,7 +121,7 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
     if (_weaken(nsync_futex_wait_)) {
       pthread_mutex_lock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
     } else {
-      pthread_mutex_lock_spin(&mutex->_futex);
+      pthread_mutex_lock_naive(mutex, word);
     }
     return 0;
   }

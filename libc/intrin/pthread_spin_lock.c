@@ -38,12 +38,8 @@
  * @see pthread_spin_init
  */
 errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
-  for (;;) {
-    if (!atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire))
-      break;
-    for (;;)
-      if (!atomic_load_explicit(&spin->_lock, memory_order_relaxed))
-        break;
+  while (atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire)) {
+    pthread_pause_np();
   }
   return 0;
 }

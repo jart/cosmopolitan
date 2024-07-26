@@ -51,7 +51,6 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 #ifdef __x86_64__
 
 /**
@@ -64,20 +63,6 @@ struct SignalFrame {
   siginfo_t si;
   ucontext_t ctx;
 };
-
-static pthread_mutex_t __sig_lock_obj;
-
-static void __sig_wipe(void) {
-  pthread_mutex_init(&__sig_lock_obj, 0);
-}
-
-static void __sig_lock(void) {
-  pthread_mutex_lock(&__sig_lock_obj);
-}
-
-static void __sig_unlock(void) {
-  pthread_mutex_unlock(&__sig_lock_obj);
-}
 
 static textwindows bool __sig_ignored_by_default(int sig) {
   return sig == SIGURG ||   //
@@ -333,10 +318,11 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   // take control of thread
   // suspending the thread happens asynchronously
   // however getting the context blocks until it's frozen
-  __sig_lock();
+  static pthread_spinlock_t killer_lock;
+  pthread_spin_lock(&killer_lock);
   if (SuspendThread(th) == -1u) {
     STRACE("SuspendThread failed w/ %d", GetLastError());
-    __sig_unlock();
+    pthread_spin_unlock(&killer_lock);
     return ESRCH;
   }
   struct NtContext nc;
@@ -344,10 +330,10 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   if (!GetThreadContext(th, &nc)) {
     STRACE("GetThreadContext failed w/ %d", GetLastError());
     ResumeThread(th);
-    __sig_unlock();
+    pthread_spin_unlock(&killer_lock);
     return ESRCH;
   }
-  __sig_unlock();
+  pthread_spin_unlock(&killer_lock);
 
   // we can't preempt threads that masked sig or are blocked
   // we can't preempt threads that are running in win32 code
@@ -626,8 +612,6 @@ __attribute__((__constructor__(10))) textstartup void __sig_init(void) {
     return;
   AddVectoredExceptionHandler(true, (void *)__sig_crash);
   SetConsoleCtrlHandler((void *)__sig_console, true);
-  pthread_atfork(__sig_lock, __sig_unlock, __sig_wipe);
-  __sig_wipe();
 }
 
 #endif /* __x86_64__ */
