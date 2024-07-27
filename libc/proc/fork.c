@@ -51,6 +51,13 @@ __static_yoink("_pthread_atfork");
 extern pthread_mutex_t _rand64_lock_obj;
 extern pthread_mutex_t _pthread_lock_obj;
 
+// fork needs to lock every lock, which makes it very single-threaded in
+// nature. the outermost lock matters the most because it serializes all
+// threads attempting to spawn processes. the outer lock can't be a spin
+// lock that a pthread_atfork() caller slipped in. to ensure it's a fair
+// lock, we add an additional one of our own, which protects other locks
+static pthread_mutex_t _fork_gil = PTHREAD_MUTEX_INITIALIZER;
+
 static void _onfork_prepare(void) {
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
@@ -85,16 +92,14 @@ static void _onfork_child(void) {
     _weaken(_pthread_onfork_child)();
 }
 
-int _fork(uint32_t dwCreationFlags) {
+static int _forker(uint32_t dwCreationFlags) {
   long micros;
   struct Dll *e;
   struct timespec started;
   int ax, dx, tid, parent;
   parent = __pid;
-  BLOCK_SIGNALS;
-  if (__threaded)
-    _onfork_prepare();
   started = timespec_real();
+  _onfork_prepare();
   if (!IsWindows()) {
     ax = sys_fork();
   } else {
@@ -145,17 +150,28 @@ int _fork(uint32_t dwCreationFlags) {
     atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
 
     // run user fork callbacks
-    if (__threaded)
-      _onfork_child();
+    _onfork_child();
     STRACE("fork() → 0 (child of %d; took %ld us)", parent, micros);
   } else {
     // this is the parent process
-    if (__threaded)
-      _onfork_parent();
+    _onfork_parent();
     STRACE("fork() → %d% m (took %ld us)", ax, micros);
   }
-  ALLOW_SIGNALS;
   return ax;
+}
+
+int _fork(uint32_t dwCreationFlags) {
+  int rc;
+  BLOCK_SIGNALS;
+  pthread_mutex_lock(&_fork_gil);
+  rc = _forker(dwCreationFlags);
+  if (!rc) {
+    pthread_mutex_init(&_fork_gil, 0);
+  } else {
+    pthread_mutex_unlock(&_fork_gil);
+  }
+  ALLOW_SIGNALS;
+  return rc;
 }
 
 /**
