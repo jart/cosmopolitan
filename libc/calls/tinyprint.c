@@ -62,6 +62,7 @@ ssize_t tinyprint(int fd, const char *s, ...) {
       buf[n++] = c;
       if (n == sizeof(buf)) {
         if (tinyflush(fd, buf, n, &toto)) {
+          va_end(va);
           return toto;
         }
         n = 0;

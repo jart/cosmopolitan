@@ -29,6 +29,10 @@
 #define TINYMALLOC_MAX_ALIGN sizeof(max_align_t)
 #endif
 
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+#pragma GCC diagnostic ignored "-Wanalyzer-use-after-free"
+
 static struct {
   alignas(max_align_t) char bits[TINYMALLOC_MAX_BYTES];
   char *memory;
@@ -178,3 +182,5 @@ OutOfMemory:
   errno = ENOMEM;
   return 0;
 }
+
+#pragma GCC pop_options

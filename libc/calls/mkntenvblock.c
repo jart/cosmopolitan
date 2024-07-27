@@ -144,6 +144,7 @@ textwindows int mkntenvblock(char16_t envblock[32767], char *const envp[],
   n = (CountStrings(envp) + CountStrings(extravars) + 1) * sizeof(char *);
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
   env.var = alloca(n);
   CheckLargeStackAllocation(env.var, n);
 #pragma GCC pop_options

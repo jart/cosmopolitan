@@ -168,8 +168,8 @@ struct ucontext {
 
 typedef struct ucontext ucontext_t;
 
-int getcontext(ucontext_t *) dontthrow;
-int setcontext(const ucontext_t *) dontthrow;
+int getcontext(ucontext_t *) dontthrow __read_write(1);
+int setcontext(const ucontext_t *) dontthrow __read_only(1);
 int swapcontext(ucontext_t *, const ucontext_t *) dontthrow returnstwice;
 void makecontext(ucontext_t *, void *, int, ...) dontthrow dontcallback;
 void __sig_restore(const ucontext_t *) wontreturn;

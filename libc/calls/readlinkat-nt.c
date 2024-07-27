@@ -52,6 +52,7 @@ static textwindows ssize_t sys_readlinkat_nt_impl(int dirfd, const char *path,
   ssize_t rc;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
   uint32_t mem = 6000;
   volatile char *memory = alloca(mem);
   CheckLargeStackAllocation((char *)memory, mem);

@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set noet ft=c ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -334,6 +334,8 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 		case UCS2:
 		case UTF_16:
 			l = 0;
+			if (!scd)
+				goto starved;
 			if (!scd->state) {
 				if (*inb < 2) goto starved;
 				c = get_16((void *)*in, 0);
@@ -347,6 +349,8 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 			continue;
 		case UTF_32:
 			l = 0;
+			if (!scd)
+				goto starved;
 			if (!scd->state) {
 				if (*inb < 4) goto starved;
 				c = get_32((void *)*in, 0);
@@ -398,6 +402,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 			if (!c) goto ilseq;
 			break;
 		case ISO2022_JP:
+			if (!scd) goto starved;
 			if (c >= 128) goto ilseq;
 			if (c == '\033') {
 				l = 3;

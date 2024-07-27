@@ -69,7 +69,9 @@ int scandir(const char *path, struct dirent ***res,
 	}
 	errno = old_errno;
 
-	if (cmp) qsort(names, cnt, sizeof *names, (int (*)(const void *, const void *))cmp);
+	if (cmp && names) {
+		qsort(names, cnt, sizeof *names, (int (*)(const void *, const void *))cmp);
+	}
 	*res = names;
 	return cnt;
 }

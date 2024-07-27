@@ -10,6 +10,8 @@
 #ifndef _LIBCPP_STRING
 #define _LIBCPP_STRING
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 // clang-format off
 
 /*

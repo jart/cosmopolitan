@@ -367,6 +367,24 @@ typedef struct {
 
 #define offsetof(type, member) __builtin_offsetof(type, member)
 
+#if defined(__GNUC__) && __GNUC__ >= 10
+#define __read_only(...) __attribute__((__access__(__read_only__, __VA_ARGS__)))
+#define __write_only(...) \
+  __attribute__((__access__(__write_only__, __VA_ARGS__)))
+#define __read_write(...) \
+  __attribute__((__access__(__read_write__, __VA_ARGS__)))
+#else
+#define __read_only(...)
+#define __write_only(...)
+#define __read_write(...)
+#endif
+
+#if defined(__GNUC__) && __GNUC__ >= 13
+#define __fd_arg(N) __attribute__((__fd_arg__(N)))
+#else
+#define __fd_arg(N)
+#endif
+
 #ifdef _COSMO_SOURCE
 
 #ifndef dontinstrument

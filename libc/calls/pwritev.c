@@ -62,6 +62,7 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
       struct iovec *iov2;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
       iov2 = alloca(iovlen * sizeof(struct iovec));
       CheckLargeStackAllocation(iov2, iovlen * sizeof(struct iovec));
 #pragma GCC pop_options

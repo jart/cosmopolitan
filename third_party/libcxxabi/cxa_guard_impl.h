@@ -338,7 +338,10 @@ public:
       return true;
 
     if (has_thread_id_support)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
       *thread_id_address = current_thread_id.get();
+#pragma GCC diagnostic pop
 
     *init_byte_address = PENDING_BIT;
     return false;

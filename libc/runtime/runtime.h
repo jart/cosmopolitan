@@ -4,6 +4,7 @@ COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+/* clang-format off */
 
 #ifdef __x86_64__
 typedef long jmp_buf[8];
@@ -22,11 +23,9 @@ typedef unsigned long jmp_buf[26];
 void mcount(void) libcesque;
 int daemon(int, int) libcesque;
 unsigned long getauxval(unsigned long) libcesque;
-int setjmp(jmp_buf)
-libcesque returnstwice paramsnonnull();
+int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
-int _setjmp(jmp_buf)
-libcesque returnstwice paramsnonnull();
+int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 int sigsetjmp(sigjmp_buf, int) libcesque returnstwice paramsnonnull();
 void siglongjmp(sigjmp_buf, int) libcesque wontreturn paramsnonnull();
 void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
@@ -37,7 +36,7 @@ void quick_exit(int) wontreturn;
 void abort(void) wontreturn;
 int atexit(void (*)(void)) paramsnonnull() libcesque;
 char *getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
-int putenv(char *) libcesque;
+int putenv(char *) libcesque __read_write(1);
 int setenv(const char *, const char *, int) libcesque;
 int unsetenv(const char *) libcesque;
 int clearenv(void) libcesque;
@@ -52,8 +51,8 @@ int munlock(const void *, size_t) libcesque;
 long gethostid(void) libcesque;
 int sethostid(long) libcesque;
 char *getlogin(void) libcesque;
-int getlogin_r(char *, size_t) libcesque;
-int login_tty(int) libcesque;
+int getlogin_r(char *, size_t) libcesque __write_only(1, 2);
+int login_tty(int) libcesque __fd_arg(1);
 int getpagesize(void) pureconst libcesque;
 int getgransize(void) pureconst libcesque;
 int syncfs(int) dontthrow libcesque;
@@ -88,8 +87,8 @@ extern size_t __virtualsize;
 extern size_t __stackmax;
 extern bool32 __isworker;
 /* utilities */
-void _intsort(int *, size_t) libcesque;
-void _longsort(long *, size_t) libcesque;
+void _intsort(int *, size_t) libcesque __read_write(1, 2);
+void _longsort(long *, size_t) libcesque __read_write(1, 2);
 /* diagnostics */
 void ShowCrashReports(void) libcesque;
 int ftrace_install(void) libcesque;
@@ -107,8 +106,8 @@ int __open_executable(void) libcesque;
 int verynice(void) libcesque;
 void __warn_if_powersave(void) libcesque;
 void _Exit1(int) libcesque wontreturn libcesque;
-void __paginate(int, const char *) libcesque;
-void __paginate_file(int, const char *) libcesque;
+void __paginate(int, const char *) libcesque __fd_arg(1);
+void __paginate_file(int, const char *) libcesque __fd_arg(1);
 /* memory management */
 void _weakfree(void *) libcesque;
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque libcesque;

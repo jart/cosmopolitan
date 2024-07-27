@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
@@ -258,7 +258,10 @@ static textwindows struct HostAdapterInfoNode *appendHostInfo(
     node->flags = flags;
   } else {
     /* Copy from previous node */
-    node->flags = parentInfoNode->flags;
+    if (parentInfoNode)
+      node->flags = parentInfoNode->flags;
+    else
+      node->flags = 0;
   }
 
   ip = ntohl(
@@ -508,6 +511,7 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   }
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
   bufMax = 15000; /* conservative guesstimate */
   b = alloca(bufMax);
   CheckLargeStackAllocation(b, bufMax);
