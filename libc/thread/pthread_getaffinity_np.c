@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/dce.h"
@@ -39,6 +40,8 @@
 errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
                                cpu_set_t *bitset) {
   int rc, tid;
+  unassert(thread);
+  unassert(bitset);
   tid = _pthread_tid((struct PosixThread *)thread);
 
   if (size != sizeof(cpu_set_t)) {

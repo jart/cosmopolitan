@@ -354,6 +354,7 @@ static errno_t _pthread_cancel_everyone(void) {
  */
 errno_t pthread_cancel(pthread_t thread) {
   struct PosixThread *arg;
+  unassert(thread);
   if ((arg = (struct PosixThread *)thread)) {
     return _pthread_cancel_single(arg);
   } else {

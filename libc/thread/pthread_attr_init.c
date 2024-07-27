@@ -34,6 +34,8 @@
  * @see pthread_attr_setschedpolicy()
  * @see pthread_attr_setinheritsched()
  * @see pthread_attr_setscope()
+ * @see pthread_attr_setsigaltstack_np()
+ * @see pthread_attr_setsigaltstacksize_np()
  */
 errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){

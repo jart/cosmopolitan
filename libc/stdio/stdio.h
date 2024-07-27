@@ -41,7 +41,7 @@ int fileno(FILE *) libcesque paramsnonnull() nosideeffect;
 int fputc(int, FILE *) libcesque paramsnonnull();
 int fputs(const char *, FILE *) libcesque paramsnonnull();
 int fputws(const wchar_t *, FILE *) libcesque paramsnonnull();
-void flockfile(FILE *) libcesque paramsnonnull();
+void flockfile(FILE *) libcesque;
 void funlockfile(FILE *) libcesque paramsnonnull();
 int ftrylockfile(FILE *) libcesque paramsnonnull();
 char *fgets(char *, int, FILE *) libcesque paramsnonnull();

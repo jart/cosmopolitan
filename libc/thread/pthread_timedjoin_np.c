@@ -118,6 +118,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   struct PosixThread *pt;
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
+  unassert(thread);
 
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."

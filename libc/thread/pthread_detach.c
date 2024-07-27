@@ -62,6 +62,7 @@ static errno_t pthread_detach_impl(struct PosixThread *pt) {
  * @returnserrno
  */
 errno_t pthread_detach(pthread_t thread) {
+  unassert(thread);
   struct PosixThread *pt = (struct PosixThread *)thread;
   errno_t err = pthread_detach_impl(pt);
   STRACE("pthread_detach(%d) → %s", _pthread_tid(pt), DescribeErrno(err));

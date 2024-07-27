@@ -181,11 +181,19 @@ The following supplemental flags are defined by cosmocc:
   to pass `-Os` too. Please note that this mode is granted leeway to
   trade away performance whenever possible. Functions like memmove()
   will stop using fancy vectorization which can dramatically decrease
-  the performance of certain use cases. malloc() will stop using cookies
-  which add bloat but are considered important by some people for both
-  security and reporting errors on corruption. APIs will also begin
-  refraining from detecting usage errors that are the fault of the
-  caller, so this mode isn't recommended for development.
+  the performance of certain use cases. malloc() will no longer be
+  scalable either. Cosmo malloc() will normally perform similarly to
+  things like jemalloc. But in -mtiny mode it's protected by a GIL that
+  may cause a multithreaded C++ HTTP server that makes intense usage of
+  the STL may drop from 3.7 million requests per second to just 17k.
+  We've seen it happen. malloc() will also stop using cookies which add
+  bloat but are considered important by some people for both security
+  and reporting errors on corruption. APIs will also begin refraining
+  from detecting usage errors that are the fault of the caller, so this
+  mode isn't recommended for development. Where -mtiny truly shines is
+  when you're writing tiny programs. Particularly if they're ephemeral
+  and frequent (e.g. build tooling), because the tiny runtime needs to
+  do less work at process startup.
 
 - `-moptlinux` uses the optimized Linux-only version of Cosmopolitan
   Libc runtime libraries. Your program will only be able to run on
