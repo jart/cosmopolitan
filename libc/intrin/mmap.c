@@ -44,7 +44,7 @@
 
 #define MMDEBUG   IsModeDbg()
 #define MAX_SIZE  0x0ff800000000ul
-#define MAX_TRIES 10
+#define MAX_TRIES 50
 
 #define MAP_FIXED_NOREPLACE_linux 0x100000
 
@@ -379,7 +379,7 @@ static int __munmap(char *addr, size_t size) {
 void *__maps_randaddr(void) {
   uintptr_t addr;
   addr = _rand64();
-  addr &= 0x007fffffffff;
+  addr &= 0x3fffffffffff;
   addr |= 0x004000000000;
   addr &= -__gransize;
   return (void *)addr;
