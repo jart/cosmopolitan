@@ -115,10 +115,8 @@ ZIPCOPY = $(BOOTSTRAP)/zipcopy
 PECHECK = $(BOOTSTRAP)/pecheck
 FIXUPOBJ = $(BOOTSTRAP)/fixupobj
 OBJBINCOPY = $(BOOTSTRAP)/objbincopy
-MKDIR = build/bootstrap/mkdir -p
-COMPILE = build/bootstrap/compile -V9 -M2048m -P8192 $(QUOTA)
-
-IGNORE := $(shell $(MKDIR) $(TMPDIR))
+MKDIR = $(BOOTSTRAP)/mkdir.ape -p
+COMPILE = $(BOOTSTRAP)/compile.ape -V9 -M2048m -P8192 $(QUOTA)
 
 # the default build modes is empty string
 # on x86_64 hosts, MODE= is the same as MODE=x86_64
@@ -141,7 +139,6 @@ HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10
 endif
 
 ZIPOBJ_FLAGS += -a$(ARCH)
-IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
 export ADDR2LINE
 export LC_ALL
@@ -150,10 +147,12 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.6.0
+COSMOCC = .cosmocc/3.6.2
 BOOTSTRAP = $(COSMOCC)/bin
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.6.0 4918c45ac3e0972ff260e2a249e25716881e39fb679d5e714ae216a2ef6c3f7e)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.6.2 268aa82d9bfd774f76951b250f87b8edcefd5c754b8b409e1639641e8bd8d5bc)
+
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
 AS = $(TOOLCHAIN)as
 CC = $(TOOLCHAIN)gcc

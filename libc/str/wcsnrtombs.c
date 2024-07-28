@@ -38,7 +38,7 @@ size_t wcsnrtombs(char *dst, const wchar_t **wcs, size_t wn, size_t n,
   if (!dst)
     n = 0;
   while (ws && wn) {
-    char tmp[MB_LEN_MAX];
+    char tmp[MB_LEN_MAX] = {0};
     size_t l = wcrtomb(n < MB_LEN_MAX ? tmp : dst, *ws, 0);
     if (l == -1) {
       cnt = -1;

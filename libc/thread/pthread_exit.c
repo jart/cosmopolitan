@@ -128,8 +128,8 @@ wontreturn void pthread_exit(void *rc) {
   //  implementation called exit() with a zero argument at thread
   //  termination time." ──Quoth POSIX.1-2017
   if (orphan) {
-    for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;)
-      ((void (*)(void))(*--p))();
+    for (int i = __fini_array_end - __fini_array_start; i--;)
+      ((void (*)(void))__fini_array_start[i])();
     _Exit(0);
   }
 
