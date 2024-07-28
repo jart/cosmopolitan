@@ -78,7 +78,7 @@ char *xiso8601(struct timespec ts) {
   ptr += snprintf(ptr, end - ptr, "%09ld", ts.tv_nsec);
   ptr += strftime(ptr, end - ptr, "%z", &tm);
   unassert(ptr + 1 <= end);
-  unassert(realloc_in_place(res, ptr - end) == res);
+  unassert(realloc_in_place(res, ptr + 1 - res) == res);
   return res;
 }
 
