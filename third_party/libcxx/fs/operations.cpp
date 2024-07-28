@@ -37,7 +37,10 @@
 #include <fcntl.h> /* values for fchmodat */
 #include <time.h>
 
-#if __has_include(<sys/sendfile.h>)
+#if defined(__COSMOPOLITAN__)
+#  include <fstream>
+#  define _LIBCPP_FILESYSTEM_USE_FSTREAM
+#elif __has_include(<sys/sendfile.h>)
 #  include <sys/sendfile.h>
 #  define _LIBCPP_FILESYSTEM_USE_SENDFILE
 #elif defined(__APPLE__) || __has_include(<copyfile.h>)
