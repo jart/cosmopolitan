@@ -53,12 +53,13 @@ int unlinkat(int dirfd, const char *path, int flags) {
 
   // POSIX.1 says unlink(directory) raises EPERM but on Linux
   // it always raises EISDIR, which is so much less ambiguous
-  if (!IsLinux() && rc == -1 && !flags && errno == EPERM) {
+  int e = errno;
+  if (!IsLinux() && rc == -1 && !flags && (e == EPERM || e == EACCES)) {
     struct stat st;
     if (!fstatat(dirfd, path, &st, 0) && S_ISDIR(st.st_mode)) {
       errno = EISDIR;
     } else {
-      errno = EPERM;
+      errno = e;
     }
   }
 

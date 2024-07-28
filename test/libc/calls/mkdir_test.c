@@ -55,6 +55,11 @@ TEST(mkdir, testPathIsFile_EEXIST) {
   EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
 }
 
+TEST(mkdir, remove) {
+  EXPECT_SYS(0, 0, mkdir("yo", 0777));
+  EXPECT_SYS(0, 0, remove("yo"));
+}
+
 TEST(mkdir, testPathIsDirectory_EEXIST) {
   EXPECT_SYS(0, 0, mkdir("yo", 0755));
   EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
