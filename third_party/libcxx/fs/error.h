@@ -100,7 +100,7 @@ inline errc __win_err_to_errc(int err) {
 
 inline error_code capture_errno() {
   _LIBCPP_ASSERT_INTERNAL(errno != 0, "Expected errno to be non-zero");
-  return error_code((int)__err_to_errc(errno), generic_category());
+  return error_code(__errc_to_err((errc)errno), generic_category());
 }
 
 #if defined(_LIBCPP_WIN32API)

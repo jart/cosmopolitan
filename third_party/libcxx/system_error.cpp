@@ -218,7 +218,7 @@ system_error::~system_error() noexcept {}
 
 void __throw_system_error(int ev, const char* what_arg) {
 #ifndef _LIBCPP_HAS_NO_EXCEPTIONS
-  std::__throw_system_error(error_code((int)__err_to_errc(ev), system_category()), what_arg);
+  std::__throw_system_error(error_code(__errc_to_err((errc)ev), system_category()), what_arg);
 #else
   // The above could also handle the no-exception case, but for size, avoid referencing system_category() unnecessarily.
   _LIBCPP_VERBOSE_ABORT(
