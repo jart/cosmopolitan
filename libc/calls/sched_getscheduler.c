@@ -31,7 +31,6 @@
  *     special; the kernel treats this as a thread id (noting that
  *     `getpid() == gettid()` is always the case on Linux for the main
  *     thread) and will only take effect for the specified tid.
- *     Therefore this function is POSIX-compliant iif `!__threaded`.
  * @return scheduler policy, or -1 w/ errno
  * @error ESRCH if `pid` not found
  * @error EPERM if not permitted

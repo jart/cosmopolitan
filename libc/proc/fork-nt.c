@@ -113,7 +113,6 @@ static dontinline textwindows ssize_t ForkIo2(
   ssize_t rc = ForkIo(h, buf, n, fn);
   if (ischild) {
     // prevent crashes
-    __threaded = false;
     __tls_enabled = false;
     __pid = __imp_GetCurrentProcessId();
     __klog_handle = 0;
@@ -268,7 +267,6 @@ textwindows void WinMainForked(void) {
   ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
   kStartTsc = savetsc;
   __tls_enabled = false;
-  __threaded = false;
 
   // fixup memory manager
   __maps.maps = 0;
@@ -464,8 +462,6 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     // the child's pending signals is initially empty
     atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
     atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
-    // re-enable threads
-    __enable_threads();
     // re-apply code morphing for function tracing
     if (ftrace_stackdigs) {
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());

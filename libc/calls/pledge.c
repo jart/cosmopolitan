@@ -169,8 +169,7 @@
  *   turn APE binaries into static native binaries.
  *
  * - "prot_exec" allows mmap(PROT_EXEC) and mprotect(PROT_EXEC). This is
- *   needed to (1) code morph mutexes in __enable_threads(), and it's
- *   needed to (2) launch non-static or non-native executables, e.g.
+ *   needed to launch non-static or non-native executables, e.g.
  *   non-assimilated APE binaries, or dynamic-linked executables.
  *
  * - "unveil" allows unveil() to be called, as well as the underlying

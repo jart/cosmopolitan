@@ -746,10 +746,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
               void *ptid, void *tls, void *ctid) {
   int rc;
 
-  if (flags & CLONE_THREAD) {
-    __enable_threads();
-  }
-
   if (!func) {
     rc = EINVAL;
   } else if (IsLinux()) {

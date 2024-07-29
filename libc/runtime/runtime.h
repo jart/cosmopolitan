@@ -113,7 +113,6 @@ void _weakfree(void *) libcesque;
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque libcesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque libcesque;
 void CheckForFileLeaks(void) libcesque;
-void __enable_threads(void) libcesque;
 void __oom_hook(size_t) libcesque;
 /* code morphing */
 void __morph_begin(void) libcesque;

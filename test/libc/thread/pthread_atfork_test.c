@@ -48,7 +48,6 @@ void *ForceThreadingMode(void *arg) {
 }
 
 TEST(pthread_atfork, test) {
-  __enable_threads();
   SPAWN(fork);
   ASSERT_EQ(0, pthread_atfork(prepare1, parent1, child1));
   ASSERT_EQ(0, pthread_atfork(prepare2, parent2, child2));

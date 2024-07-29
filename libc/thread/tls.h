@@ -42,7 +42,6 @@ struct CosmoTib {
   _Atomic(void *) tib_keys[46];
 } __attribute__((__aligned__(64)));
 
-extern int __threaded;
 extern char __tls_morphed;
 extern unsigned __tls_index;
 

@@ -236,7 +236,6 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
  * Lazy initializes process tracker data structures and worker.
  */
 static textwindows void __proc_setup(void) {
-  __enable_threads();
   __proc.onbirth = CreateEvent(0, 0, 0, 0);     // auto reset
   __proc.haszombies = CreateEvent(0, 1, 0, 0);  // manual reset
   __proc.thread = CreateThread(0, 65536, __proc_worker, 0,

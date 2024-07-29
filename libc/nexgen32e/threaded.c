@@ -18,11 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/tls.h"
 
-/**
- * Contains TID of main thread or 0 if threading isn't enabled.
- */
-int __threaded;
-
 #ifdef __x86_64__
 char __tls_enabled;
 #endif
