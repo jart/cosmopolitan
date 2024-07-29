@@ -43,7 +43,7 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
         return;
       }
     }
-    fprintf(stderr, "ERROR: SETRLIMIT(%s, %,ld, %,ld) FAILED %m%n",
+    fprintf(stderr, "ERROR: SETRLIMIT(%s, %,ld, %,ld) FAILED %m\n",
             DescribeRlimitName(resource), soft, hard);
     exit(1);
   }
