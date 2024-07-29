@@ -26,8 +26,8 @@
 
 struct SprintfStr {
   char *p;
-  size_t i;
-  size_t n;
+  int i;
+  int n;
 };
 
 static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
@@ -58,7 +58,7 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
-  int rc = __fmt(vsnprintfputchar, &str, fmt, va);
+  int rc = __fmt(vsnprintfputchar, &str, fmt, va, &str.i);
   if (rc < 0)
     return rc;
   if (str.n)

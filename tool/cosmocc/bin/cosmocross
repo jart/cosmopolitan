@@ -172,6 +172,8 @@ for x; do
     continue
   elif [ x"$x" = x"-moptlinux" ]; then
     continue
+  elif [ x"$x" = x"-m64" ]; then
+    continue
   elif [ x"$x" != x"${x#-o}" ]; then
     OUTPUT=${x#-o}
   elif [ x"$x" = x"-fpic" ]; then

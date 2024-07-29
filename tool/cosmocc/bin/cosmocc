@@ -165,6 +165,8 @@ for x; do
   elif [ x"$x" = x"-moptlinux" ]; then
     MODE=optlinux
     continue
+  elif [ x"$x" = x"-m64" ]; then
+    continue
   elif [ x"$x" = x"-fomit-frame-pointer" ]; then
     # Quoth Apple: "The frame pointer register must always address a
     # valid frame record. Some functions — such as leaf functions or

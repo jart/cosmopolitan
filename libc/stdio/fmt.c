@@ -43,6 +43,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
+#include "libc/fmt/internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.h"
@@ -820,7 +821,7 @@ static int __fmt_noop(const char *, void *, size_t) {
  * @asyncsignalsafe if floating point isn't used
  * @vforksafe if floating point isn't used
  */
-int __fmt(void *fn, void *arg, const char *format, va_list va) {
+int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
   long ld;
   void *p;
   double x;
@@ -1121,7 +1122,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         break;
       case 'n':
-        __FMT_PUT('\n');
+        *va_arg(va, int *) = *wrote;
         break;
 
       case 'F':

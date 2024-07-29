@@ -47,6 +47,6 @@
 
 int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
               va_list);
-int __fmt(void *, void *, const char *, va_list);
+int __fmt(void *, void *, const char *, va_list, int *);
 
 #endif /* COSMOPOLITAN_LIBC_FMT_STRTOL_H_ */
