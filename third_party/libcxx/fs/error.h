@@ -98,16 +98,9 @@ inline errc __win_err_to_errc(int err) {
 
 #endif // _LIBCPP_WIN32API
 
-errc __cosmo_err_to_errc(int);
-int __cosmo_errc_to_err(errc);
-
 inline error_code capture_errno() {
   _LIBCPP_ASSERT_INTERNAL(errno != 0, "Expected errno to be non-zero");
-#ifdef __COSMOPOLITAN__
-  return error_code((int)__cosmo_err_to_errc(errno), generic_category());
-#else
-  return error_code(errno, generic_category());
-#endif
+  return error_code((int)__err_to_errc(errno), generic_category());
 }
 
 #if defined(_LIBCPP_WIN32API)

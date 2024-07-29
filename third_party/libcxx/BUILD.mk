@@ -1094,11 +1094,11 @@ third_party/libcxx/fs/filesystem_clock.cpp \
 third_party/libcxx/fs/filesystem_error.cpp \
 third_party/libcxx/fs/int128_builtins.cpp \
 third_party/libcxx/fs/operations.cpp \
-third_party/libcxx/fs/cosmo.cpp \
 third_party/libcxx/fs/path.cpp \
 third_party/libcxx/ryu/d2fixed.cpp \
 third_party/libcxx/ryu/d2s.cpp \
 third_party/libcxx/ryu/f2s.cpp \
+third_party/libcxx/errc.cpp \
 
 THIRD_PARTY_LIBCXX_A_HDRS_CHECKEM = \
 third_party/libcxx/__assertion_handler \

@@ -11,6 +11,7 @@
 #define _LIBCPP___SYSTEM_ERROR_SYSTEM_ERROR_H
 
 #include <__config>
+#include <__system_error/errc.h>
 #include <__system_error/error_category.h>
 #include <__system_error/error_code.h>
 #include <__verbose_abort>

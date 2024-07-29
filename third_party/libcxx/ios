@@ -13,6 +13,7 @@
 /*
     ios synopsis
 
+#include "third_party/libcxx/__system_error/error_code.h"
 #include <iosfwd>
 
 namespace std

@@ -1,11 +1,8 @@
-#ifdef __COSMOPOLITAN__
-#include <filesystem>
+#include <__system_error/errc.h>
 
-_LIBCPP_BEGIN_NAMESPACE_FILESYSTEM
+_LIBCPP_BEGIN_NAMESPACE_STD
 
-namespace detail {
-
-std::errc __cosmo_err_to_errc_impl(int err) {
+static std::errc __err_to_errc_impl(int err) noexcept {
   if (err == EAFNOSUPPORT) return errc::address_family_not_supported;
   if (err == EADDRINUSE) return errc::address_in_use;
   if (err == EADDRNOTAVAIL) return errc::address_not_available;
@@ -87,7 +84,7 @@ std::errc __cosmo_err_to_errc_impl(int err) {
   return errc::not_supported;
 }
 
-int __cosmo_errc_to_err_impl(std::errc err) {
+static int __errc_to_err_impl(std::errc err) noexcept {
   if (err == errc::address_family_not_supported) return EAFNOSUPPORT;
   if (err == errc::address_in_use) return EADDRINUSE;
   if (err == errc::address_not_available) return EADDRNOTAVAIL;
@@ -169,20 +166,20 @@ int __cosmo_errc_to_err_impl(std::errc err) {
   return ENOTSUP;
 }
 
-std::errc __cosmo_err_to_errc(int err) {
+std::errc __err_to_errc(int err) noexcept {
+  if (!err)
+    return (std::errc)0;
   if (err >= 65536)
     return (std::errc)err;
-  return __cosmo_err_to_errc_impl(err);
+  return __err_to_errc_impl(err);
 }
 
-int __cosmo_errc_to_err(std::errc err) {
+int __errc_to_err(std::errc err) noexcept {
+  if (!(int)err)
+    return 0;
   if ((int)err < 65536)
     return (int)err;
-  return __cosmo_errc_to_err_impl(err);
+  return __errc_to_err_impl(err);
 }
 
-} // end namespace detail
-
-_LIBCPP_END_NAMESPACE_FILESYSTEM
-
-#endif // __COSMOPOLITAN__
+_LIBCPP_END_NAMESPACE_STD

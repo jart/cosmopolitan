@@ -54,8 +54,12 @@ class _LIBCPP_EXPORTED_FROM_ABI error_condition {
 public:
   _LIBCPP_HIDE_FROM_ABI error_condition() _NOEXCEPT : __val_(0), __cat_(&generic_category()) {}
 
+  _LIBCPP_HIDE_FROM_ABI error_condition(errc __val, const error_category& __cat) _NOEXCEPT
+      : __val_(__errc_to_err(__val)),
+        __cat_(&__cat) {}
+
   _LIBCPP_HIDE_FROM_ABI error_condition(int __val, const error_category& __cat) _NOEXCEPT
-      : __val_(__val),
+      : __val_(__errc_to_err((errc)__val)),
         __cat_(&__cat) {}
 
   template <class _Ep, __enable_if_t<is_error_condition_enum<_Ep>::value, int> = 0>
@@ -81,7 +85,7 @@ public:
     __cat_ = &generic_category();
   }
 
-  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __val_; }
+  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __errc_to_err((errc)__val_); }
 
   _LIBCPP_HIDE_FROM_ABI const error_category& category() const _NOEXCEPT { return *__cat_; }
   string message() const;
@@ -90,7 +94,7 @@ public:
 };
 
 inline _LIBCPP_HIDE_FROM_ABI error_condition make_error_condition(errc __e) _NOEXCEPT {
-  return error_condition(static_cast<int>(__e), generic_category());
+  return error_condition(__e, generic_category());
 }
 
 inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_condition& __x, const error_condition& __y) _NOEXCEPT {
