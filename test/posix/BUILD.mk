@@ -35,7 +35,8 @@ TEST_POSIX_DIRECTDEPS =				\
 	LIBC_STDIO				\
 	LIBC_STR				\
 	LIBC_SYSV				\
-	LIBC_THREAD
+	LIBC_THREAD				\
+	THIRD_PARTY_MUSL			\
 
 TEST_POSIX_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_POSIX_DIRECTDEPS),$($(x))))

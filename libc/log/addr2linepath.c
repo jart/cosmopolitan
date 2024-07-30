@@ -40,7 +40,7 @@ void GetAddr2linePathInit(void) {
   char *res;
   int e = errno;
   const char *env, *cmd, *path;
-  if ((env = getenv("ADDR2LINE"))) {
+  if ((env = secure_getenv("ADDR2LINE"))) {
     cmd = env;
     path = env;
   } else {

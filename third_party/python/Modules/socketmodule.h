@@ -3,6 +3,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "third_party/python/Include/object.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "third_party/python/Include/pytime.h"
 COSMOPOLITAN_C_START_
 

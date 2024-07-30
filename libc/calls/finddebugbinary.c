@@ -104,6 +104,8 @@ static bool IsMyDebugBinary(const char *path) {
 
 static void FindDebugBinaryInit(void) {
   const char *comdbg;
+  if (issetugid())
+    return;
   if ((comdbg = getenv("COMDBG")) && IsMyDebugBinary(comdbg)) {
     g_comdbg.res = comdbg;
     return;

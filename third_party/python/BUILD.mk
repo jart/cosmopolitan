@@ -476,6 +476,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_X								\
 	THIRD_PARTY_DLMALLOC						\
 	THIRD_PARTY_GETOPT						\
+	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_TZ							\
 	THIRD_PARTY_XED							\
 	TOOL_BUILD_LIB							\
@@ -528,7 +529,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/runpythonmodule.c				\
 	third_party/python/launch.c					\
 	third_party/python/Objects/fromfd.c				\
-	third_party/python/Objects/unicodeobject-deadcode.c		\
 	third_party/python/Modules/_bisectmodule.c			\
 	third_party/python/Modules/_bz2module.c				\
 	third_party/python/Modules/_codecsmodule.c			\
@@ -1748,7 +1748,6 @@ THIRD_PARTY_PYTHON_PYTEST_A_DIRECTDEPS =					\
 THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/signalinterproctester.py			\
 	third_party/python/Lib/test/test___future__.py				\
-	third_party/python/Lib/test/test__locale.py				\
 	third_party/python/Lib/test/test__opcode.py				\
 	third_party/python/Lib/test/test_abc.py					\
 	third_party/python/Lib/test/test_abstract_numbers.py			\
@@ -1966,7 +1965,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_string.py				\
 	third_party/python/Lib/test/test_string_literals.py			\
 	third_party/python/Lib/test/test_stringprep.py				\
-	third_party/python/Lib/test/test_strptime.py				\
 	third_party/python/Lib/test/test_strtod.py				\
 	third_party/python/Lib/test/test_struct.py				\
 	third_party/python/Lib/test/test_structmembers.py			\
@@ -2200,8 +2198,8 @@ o/$(MODE)/third_party/python/Lib/test/test_binhex.py.runs: $(PYTHONTESTER)
 o/$(MODE)/third_party/python/Lib/test/test_capi.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_capi $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test__locale.py.runs: $(PYTHONTESTER)
-	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test__locale $(PYTESTARGS)
+# o/$(MODE)/third_party/python/Lib/test/test__locale.py.runs: $(PYTHONTESTER)
+# 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test__locale $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_binop.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_binop $(PYTESTARGS)

@@ -69,6 +69,8 @@ enum PosixThreadStatus {
 
 #define POSIXTHREAD_CONTAINER(e) DLL_CONTAINER(struct PosixThread, list, e)
 
+typedef struct __locale_struct *locale_t;
+
 struct PosixThread {
   int pt_flags;            // 0x00: see PT_* constants
   atomic_int pt_canceled;  // 0x04: thread has bad beliefs
@@ -86,6 +88,7 @@ struct PosixThread {
   uint64_t pt_blkmask;
   int64_t pt_semaphore;
   intptr_t pt_iohandle;
+  locale_t pt_locale;
   void *pt_ioverlap;
   jmp_buf pt_exiter;
   pthread_attr_t pt_attr;

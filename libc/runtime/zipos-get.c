@@ -112,7 +112,7 @@ static void __zipos_init(void) {
   const char *progpath;
   if (!(s = getenv("COSMOPOLITAN_DISABLE_ZIPOS"))) {
     // this environment variable may be a filename or file descriptor
-    if ((progpath = getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
+    if ((progpath = secure_getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
         (x = strtol(progpath, &endptr, 10)) >= 0 && !*endptr) {
       fd = x;
     } else {

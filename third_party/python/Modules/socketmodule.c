@@ -52,6 +52,8 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/musl/netdb.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/af.h"
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("_socket");
@@ -1043,16 +1045,15 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
             set_gaierror(error);
             return -1;
         }
-        switch (res->ai_family) {
-        case AF_INET:
+        if (res->ai_family == AF_INET) {
             siz = 4;
-            break;
+        }
 #ifdef ENABLE_IPV6
-        case AF_INET6:
+        else if (res->ai_family == AF_INET6) {
             siz = 16;
-            break;
+        }
 #endif
-        default:
+        else {
             freeaddrinfo(res);
             PyErr_SetString(PyExc_OSError,
                 "unsupported address family");
@@ -1159,17 +1160,14 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
         addr_ret_size = res->ai_addrlen;
     memcpy((char *) addr_ret, res->ai_addr, addr_ret_size);
     freeaddrinfo(res);
-    switch (addr_ret->sa_family) {
-    case AF_INET:
+    if (addr_ret->sa_family == AF_INET)
         return 4;
 #ifdef ENABLE_IPV6
-    case AF_INET6:
+    if (addr_ret->sa_family == AF_INET6)
         return 16;
 #endif
-    default:
-        PyErr_SetString(PyExc_OSError, "unknown address family");
-        return -1;
-    }
+    PyErr_SetString(PyExc_OSError, "unknown address family");
+    return -1;
 }
 
 

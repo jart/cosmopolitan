@@ -37,6 +37,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/locale.h"
+#include "libc/str/locale.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -213,7 +214,6 @@ textstartup void __enable_tls(void) {
   tib->tib_errno = __errno;
   tib->tib_strace = __strace;
   tib->tib_ftrace = __ftrace;
-  tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
   tib->tib_pthread = (pthread_t)&_pthread_static;
   if (IsWindows()) {
     intptr_t hThread;
@@ -246,6 +246,7 @@ textstartup void __enable_tls(void) {
   // initialize posix threads
   _pthread_static.tib = tib;
   _pthread_static.pt_flags = PT_STATIC;
+  _pthread_static.pt_locale = &__global_locale;
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
   atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_release);

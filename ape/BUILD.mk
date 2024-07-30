@@ -246,8 +246,6 @@ o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape.lds		\
 		o/$(MODE)/ape/ape.elf		\
 		o/$(MODE)/ape/ape.macho		\
-		o/$(MODE)/ape/ape-copy-self.o	\
-		o/$(MODE)/ape/ape-no-modify-self.o
 
 endif
 
