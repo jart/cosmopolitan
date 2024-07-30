@@ -36,19 +36,19 @@ float numba(void) {  // (-1,1)
   return float01(rand32()) * 2 - 1;
 }
 
-FASTMATH PORTABLE float fsumf_dubble(const float *p, size_t n) {
+PORTABLE float fdotf_dubble(const float *A, const float *B, size_t n) {
   double s = 0;
   for (size_t i = 0; i < n; ++i)
-    s += p[i];
+    s = fma(A[i], B[i], s);
   return s;
 }
 
-PORTABLE float fsumf_kahan(const float *p, size_t n) {
+float fdotf_kahan(const float *A, const float *B, size_t n) {
   size_t i;
   float err, sum, t, y;
   sum = err = 0;
   for (i = 0; i < n; ++i) {
-    y = p[i] - err;
+    y = A[i] * B[i] - err;
     t = sum + y;
     err = (t - sum) - y;
     sum = t;
@@ -56,16 +56,16 @@ PORTABLE float fsumf_kahan(const float *p, size_t n) {
   return sum;
 }
 
-FASTMATH PORTABLE float fsumf_naive(const float *p, size_t n) {
+float fdotf_naive(const float *A, const float *B, size_t n) {
   float s = 0;
   for (size_t i = 0; i < n; ++i)
-    s += p[i];
+    s = fmaf(A[i], B[i], s);
   return s;
 }
 
-#define fsumf_naive_tester(A, n, tol)                                          \
+#define fdotf_naive_tester(A, B, n, tol)                                       \
   do {                                                                         \
-    float err = fabsf(fsumf_naive(A, n) - fsumf_dubble(A, n));                 \
+    float err = fabsf(fdotf_naive(A, B, n) - fdotf_dubble(A, B, n));           \
     if (err > tol) {                                                           \
       printf("%s:%d: error: n=%zu failed %g\n", __FILE__, __LINE__, (size_t)n, \
              err);                                                             \
@@ -73,58 +73,62 @@ FASTMATH PORTABLE float fsumf_naive(const float *p, size_t n) {
     }                                                                          \
   } while (0)
 
-void test_fsumf_naive(void) {
+void test_fdotf_naive(void) {
   float *A = new float[2 * 1024 * 1024 + 1];
-  for (size_t i = 0; i < 2 * 1024 * 1024 + 1; ++i)
+  float *B = new float[2 * 1024 * 1024 + 1];
+  for (size_t i = 0; i < 2 * 1024 * 1024 + 1; ++i) {
     A[i] = numba();
+    B[i] = numba();
+  }
   for (size_t n = 0; n < 1024; ++n)
-    fsumf_naive_tester(A, n, 1e-4);
+    fdotf_naive_tester(A, B, n, 1e-4);
 #if EXPENSIVE_TESTS
-  fsumf_naive_tester(A, 128 * 1024, 1e-2);
-  fsumf_naive_tester(A, 256 * 1024, 1e-2);
-  fsumf_naive_tester(A, 1024 * 1024, 1e-1);
-  fsumf_naive_tester(A, 1024 * 1024 - 1, 1e-1);
-  fsumf_naive_tester(A, 1024 * 1024 + 1, 1e-1);
-  fsumf_naive_tester(A, 2 * 1024 * 1024, 1e-1);
-  fsumf_naive_tester(A, 2 * 1024 * 1024 - 1, 1e-1);
-  fsumf_naive_tester(A, 2 * 1024 * 1024 + 1, 1e-1);
+  fdotf_naive_tester(A, B, 128 * 1024, 1e-2);
+  fdotf_naive_tester(A, B, 256 * 1024, 1e-2);
+  fdotf_naive_tester(A, B, 1024 * 1024, 1e-1);
+  fdotf_naive_tester(A, B, 1024 * 1024 - 1, 1e-1);
+  fdotf_naive_tester(A, B, 1024 * 1024 + 1, 1e-1);
+  fdotf_naive_tester(A, B, 2 * 1024 * 1024, 1e-1);
+  fdotf_naive_tester(A, B, 2 * 1024 * 1024 - 1, 1e-1);
+  fdotf_naive_tester(A, B, 2 * 1024 * 1024 + 1, 1e-1);
 #endif
+  delete[] B;
   delete[] A;
 }
 
 template <int N>
-forceinline float hsum(const float *p) {
-  return hsum<N / 2>(p) + hsum<N / 2>(p + N / 2);
+forceinline float hdot(const float *A, const float *B) {
+  return hdot<N / 2>(A, B) + hdot<N / 2>(A + N / 2, B + N / 2);
 }
 
 template <>
-forceinline float hsum<1>(const float *p) {
-  return *p;
+forceinline float hdot<1>(const float *A, const float *B) {
+  return A[0] * B[0];
 }
 
-FASTMATH PORTABLE float fsumf_recursive(const float *p, size_t n) {
+float fdotf_recursive(const float *A, const float *B, size_t n) {
   if (n > 32) {
     float x, y;
-    x = fsumf_recursive(p, n / 2);
-    y = fsumf_recursive(p + n / 2, n - n / 2);
+    x = fdotf_recursive(A, B, n / 2);
+    y = fdotf_recursive(A + n / 2, B + n / 2, n - n / 2);
     return x + y;
   } else {
     float s;
     size_t i;
     for (s = i = 0; i < n; ++i)
-      s += p[i];
+      s = fmaf(A[i], B[i], s);
     return s;
   }
 }
 
-FASTMATH PORTABLE float fsumf_ruler(const float *p, size_t n) {
-  size_t i, sp = 0;
+FASTMATH float fdotf_ruler(const float *A, const float *B, size_t n) {
   int rule, step = 2;
+  size_t chunk, sp = 0;
   float stack[bsr(n / CHUNK + 1) + 1];
-  for (i = 0; i + CHUNK * 4 <= n; i += CHUNK * 4, step += 2) {
+  for (chunk = 0; chunk + CHUNK * 4 <= n; chunk += CHUNK * 4, step += 2) {
     float sum = 0;
-    for (size_t j = 0; j < CHUNK * 4; ++j)
-      sum += p[i + j];
+    for (size_t elem = 0; elem < CHUNK * 4; ++elem)
+      sum += A[chunk + elem] * B[chunk + elem];
     for (rule = bsr(step & -step); --rule;)
       sum += stack[--sp];
     stack[sp++] = sum;
@@ -132,14 +136,14 @@ FASTMATH PORTABLE float fsumf_ruler(const float *p, size_t n) {
   float res = 0;
   while (sp)
     res += stack[--sp];
-  while (i < n)
-    res += p[i++];
+  for (; chunk < n; ++chunk)
+    res += A[chunk] * B[chunk];
   return res;
 }
 
-#define fsumf_ruler_tester(A, n, tol)                                          \
+#define fdotf_ruler_tester(A, B, n, tol)                                       \
   do {                                                                         \
-    float err = fabsf(fsumf_ruler(A, n) - fsumf_dubble(A, n));                 \
+    float err = fabsf(fdotf_ruler(A, B, n) - fdotf_dubble(A, B, n));           \
     if (err > tol) {                                                           \
       printf("%s:%d: error: n=%zu failed %g\n", __FILE__, __LINE__, (size_t)n, \
              err);                                                             \
@@ -147,36 +151,40 @@ FASTMATH PORTABLE float fsumf_ruler(const float *p, size_t n) {
     }                                                                          \
   } while (0)
 
-void test_fsumf_ruler(void) {
+void test_fdotf_ruler(void) {
   float *A = new float[10 * 1024 * 1024 + 1];
-  for (size_t i = 0; i < 10 * 1024 * 1024 + 1; ++i)
+  float *B = new float[10 * 1024 * 1024 + 1];
+  for (size_t i = 0; i < 10 * 1024 * 1024 + 1; ++i) {
     A[i] = numba();
-  fsumf_ruler_tester(A, 96, 1e-6);
-  for (size_t n = 0; n < 1024; ++n)
-    fsumf_ruler_tester(A, n, 1e-5);
+    B[i] = numba();
+  }
+  fdotf_ruler_tester(A, B, 96, 1e-6);
+  for (size_t n = 0; n < 4096; ++n)
+    fdotf_ruler_tester(A, B, n, 1e-5);
 #if EXPENSIVE_TESTS
-  fsumf_ruler_tester(A, 128 * 1024, 1e-4);
-  fsumf_ruler_tester(A, 256 * 1024, 1e-4);
-  fsumf_ruler_tester(A, 1024 * 1024, 1e-3);
-  fsumf_ruler_tester(A, 1024 * 1024 - 1, 1e-3);
-  fsumf_ruler_tester(A, 1024 * 1024 + 1, 1e-3);
-  fsumf_ruler_tester(A, 2 * 1024 * 1024, 1e-3);
-  fsumf_ruler_tester(A, 2 * 1024 * 1024 - 1, 1e-3);
-  fsumf_ruler_tester(A, 2 * 1024 * 1024 + 1, 1e-3);
-  fsumf_ruler_tester(A, 8 * 1024 * 1024, 1e-3);
-  fsumf_ruler_tester(A, 10 * 1024 * 1024, 1e-3);
+  fdotf_ruler_tester(A, B, 128 * 1024, 1e-4);
+  fdotf_ruler_tester(A, B, 256 * 1024, 1e-4);
+  fdotf_ruler_tester(A, B, 1024 * 1024, 1e-3);
+  fdotf_ruler_tester(A, B, 1024 * 1024 - 1, 1e-3);
+  fdotf_ruler_tester(A, B, 1024 * 1024 + 1, 1e-3);
+  fdotf_ruler_tester(A, B, 2 * 1024 * 1024, 1e-3);
+  fdotf_ruler_tester(A, B, 2 * 1024 * 1024 - 1, 1e-3);
+  fdotf_ruler_tester(A, B, 2 * 1024 * 1024 + 1, 1e-3);
+  fdotf_ruler_tester(A, B, 8 * 1024 * 1024, 1e-3);
+  fdotf_ruler_tester(A, B, 10 * 1024 * 1024, 1e-3);
 #endif
+  delete[] B;
   delete[] A;
 }
 
-FASTMATH PORTABLE float fsumf_hefty(const float *p, size_t n) {
+PORTABLE float fdotf_hefty(const float *A, const float *B, size_t n) {
   unsigned i, par, len = 0;
   float sum, res[n / CHUNK + 1];
   for (res[0] = i = 0; i + CHUNK <= n; i += CHUNK)
-    res[len++] = hsum<CHUNK>(p + i);
+    res[len++] = hdot<CHUNK>(A + i, B + i);
   if (i < n) {
     for (sum = 0; i < n; i++)
-      sum += p[i];
+      sum = fmaf(A[i], B[i], sum);
     res[len++] = sum;
   }
   for (par = len >> 1; par; par >>= 1, len >>= 1) {
@@ -188,9 +196,9 @@ FASTMATH PORTABLE float fsumf_hefty(const float *p, size_t n) {
   return res[0];
 }
 
-#define fsumf_hefty_tester(A, n, tol)                                          \
+#define fdotf_hefty_tester(A, B, n, tol)                                       \
   do {                                                                         \
-    float err = fabsf(fsumf_hefty(A, n) - fsumf_dubble(A, n));                 \
+    float err = fabsf(fdotf_hefty(A, B, n) - fdotf_dubble(A, B, n));           \
     if (err > tol) {                                                           \
       printf("%s:%d: error: n=%zu failed %g\n", __FILE__, __LINE__, (size_t)n, \
              err);                                                             \
@@ -198,24 +206,28 @@ FASTMATH PORTABLE float fsumf_hefty(const float *p, size_t n) {
     }                                                                          \
   } while (0)
 
-void test_fsumf_hefty(void) {
+void test_fdotf_hefty(void) {
   float *A = new float[10 * 1024 * 1024 + 1];
-  for (size_t i = 0; i < 10 * 1024 * 1024 + 1; ++i)
+  float *B = new float[10 * 1024 * 1024 + 1];
+  for (size_t i = 0; i < 10 * 1024 * 1024 + 1; ++i) {
     A[i] = numba();
+    B[i] = numba();
+  }
   for (size_t n = 0; n < 1024; ++n)
-    fsumf_hefty_tester(A, n, 1e-5);
+    fdotf_hefty_tester(A, B, n, 1e-5);
 #if EXPENSIVE_TESTS
-  fsumf_hefty_tester(A, 128 * 1024, 1e-4);
-  fsumf_hefty_tester(A, 256 * 1024, 1e-4);
-  fsumf_hefty_tester(A, 1024 * 1024, 1e-3);
-  fsumf_hefty_tester(A, 1024 * 1024 - 1, 1e-3);
-  fsumf_hefty_tester(A, 1024 * 1024 + 1, 1e-3);
-  fsumf_hefty_tester(A, 2 * 1024 * 1024, 1e-3);
-  fsumf_hefty_tester(A, 2 * 1024 * 1024 - 1, 1e-3);
-  fsumf_hefty_tester(A, 2 * 1024 * 1024 + 1, 1e-3);
-  fsumf_hefty_tester(A, 8 * 1024 * 1024, 1e-3);
-  fsumf_hefty_tester(A, 10 * 1024 * 1024, 1e-3);
+  fdotf_hefty_tester(A, B, 128 * 1024, 1e-4);
+  fdotf_hefty_tester(A, B, 256 * 1024, 1e-4);
+  fdotf_hefty_tester(A, B, 1024 * 1024, 1e-3);
+  fdotf_hefty_tester(A, B, 1024 * 1024 - 1, 1e-3);
+  fdotf_hefty_tester(A, B, 1024 * 1024 + 1, 1e-3);
+  fdotf_hefty_tester(A, B, 2 * 1024 * 1024, 1e-3);
+  fdotf_hefty_tester(A, B, 2 * 1024 * 1024 - 1, 1e-3);
+  fdotf_hefty_tester(A, B, 2 * 1024 * 1024 + 1, 1e-3);
+  fdotf_hefty_tester(A, B, 8 * 1024 * 1024, 1e-3);
+  fdotf_hefty_tester(A, B, 10 * 1024 * 1024, 1e-3);
 #endif
+  delete[] B;
   delete[] A;
 }
 
@@ -243,31 +255,35 @@ int main() {
   ShowCrashReports();
 
 #if EXPENSIVE_TESTS
-  size_t n = 4 * 1024 * 1024;
+  size_t n = 512 * 1024;
 #else
   size_t n = 1024;
 #endif
 
-  float *p = new float[n];
-  for (size_t i = 0; i < n; ++i)
-    p[i] = numba();
+  float *A = new float[n];
+  float *B = new float[n];
+  for (size_t i = 0; i < n; ++i) {
+    A[i] = numba();
+    B[i] = numba();
+  }
   float kahan, naive, dubble, recursive, hefty, ruler;
-  test_fsumf_naive();
-  test_fsumf_hefty();
-  test_fsumf_ruler();
-  BENCH(20, 1, (kahan = barrier(fsumf_kahan(p, n))));
-  BENCH(20, 1, (dubble = barrier(fsumf_dubble(p, n))));
-  BENCH(20, 1, (naive = barrier(fsumf_naive(p, n))));
-  BENCH(20, 1, (recursive = barrier(fsumf_recursive(p, n))));
-  BENCH(20, 1, (ruler = barrier(fsumf_ruler(p, n))));
-  BENCH(20, 1, (hefty = barrier(fsumf_hefty(p, n))));
+  test_fdotf_naive();
+  test_fdotf_hefty();
+  test_fdotf_ruler();
+  BENCH(20, 1, (kahan = barrier(fdotf_kahan(A, B, n))));
+  BENCH(20, 1, (dubble = barrier(fdotf_dubble(A, B, n))));
+  BENCH(20, 1, (naive = barrier(fdotf_naive(A, B, n))));
+  BENCH(20, 1, (recursive = barrier(fdotf_recursive(A, B, n))));
+  BENCH(20, 1, (ruler = barrier(fdotf_ruler(A, B, n))));
+  BENCH(20, 1, (hefty = barrier(fdotf_hefty(A, B, n))));
   printf("dubble    = %f (%g)\n", dubble, fabs(dubble - dubble));
   printf("kahan     = %f (%g)\n", kahan, fabs(kahan - dubble));
   printf("naive     = %f (%g)\n", naive, fabs(naive - dubble));
   printf("recursive = %f (%g)\n", recursive, fabs(recursive - dubble));
   printf("ruler     = %f (%g)\n", ruler, fabs(ruler - dubble));
   printf("hefty     = %f (%g)\n", hefty, fabs(hefty - dubble));
-  delete[] p;
+  delete[] B;
+  delete[] A;
 
   CheckForMemoryLeaks();
 }
