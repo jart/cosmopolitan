@@ -1,0 +1,2 @@
+#!/bin/sh
+exec x86_64-linux-cosmo-ranlib "$@"
