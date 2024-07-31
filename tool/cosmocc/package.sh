@@ -19,12 +19,13 @@ OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
+NPROC=$(($(nproc)/2))
 GCCVER=14.1.0
 
-make -j64 m= \
+make -j$NPROC m= \
   $APELINK
 
-make -j64 m=$AMD64 \
+make -j$NPROC m=$AMD64 \
   o/cosmocc.h.txt \
   o/$AMD64/ape/ape.lds \
   o/$AMD64/libc/crt/crt.o \
@@ -61,7 +62,7 @@ make -j64 m=$AMD64 \
   o/$AMD64/third_party/make/make.dbg \
   o/$AMD64/third_party/ctags/ctags.dbg
 
-make -j64 m=$AMD64-tiny \
+make -j$NPROC m=$AMD64-tiny \
   o/cosmocc.h.txt \
   o/$AMD64-tiny/ape/ape.lds \
   o/$AMD64-tiny/libc/crt/crt.o \
@@ -73,7 +74,7 @@ make -j64 m=$AMD64-tiny \
   o/$AMD64-tiny/cosmopolitan.a \
   o/$AMD64-tiny/third_party/libcxx/libcxx.a \
 
-make -j64 m=$AMD64-dbg \
+make -j$NPROC m=$AMD64-dbg \
   o/cosmocc.h.txt \
   o/$AMD64-dbg/ape/ape.lds \
   o/$AMD64-dbg/libc/crt/crt.o \
@@ -85,7 +86,7 @@ make -j64 m=$AMD64-dbg \
   o/$AMD64-dbg/cosmopolitan.a \
   o/$AMD64-dbg/third_party/libcxx/libcxx.a \
 
-make CONFIG_TARGET_ARCH= -j64 m=$AMD64-optlinux \
+make CONFIG_TARGET_ARCH= -j$NPROC m=$AMD64-optlinux \
   o/cosmocc.h.txt \
   o/$AMD64-optlinux/ape/ape.lds \
   o/$AMD64-optlinux/libc/crt/crt.o \
@@ -97,7 +98,7 @@ make CONFIG_TARGET_ARCH= -j64 m=$AMD64-optlinux \
   o/$AMD64-optlinux/cosmopolitan.a \
   o/$AMD64-optlinux/third_party/libcxx/libcxx.a \
 
-make -j64 m=$ARM64 \
+make -j$NPROC m=$ARM64 \
   o/$ARM64/ape/ape.elf \
   o/$ARM64/ape/aarch64.lds \
   o/$ARM64/libc/crt/crt.o \
@@ -131,7 +132,7 @@ make -j64 m=$ARM64 \
   o/$ARM64/third_party/make/make.dbg \
   o/$ARM64/third_party/ctags/ctags.dbg
 
-make -j64 m=$ARM64-tiny \
+make -j$NPROC m=$ARM64-tiny \
   o/$ARM64-tiny/ape/ape.elf \
   o/$ARM64-tiny/ape/aarch64.lds \
   o/$ARM64-tiny/libc/crt/crt.o \
@@ -140,7 +141,7 @@ make -j64 m=$ARM64-tiny \
   o/$ARM64-tiny/cosmopolitan.a \
   o/$ARM64-tiny/third_party/libcxx/libcxx.a \
 
-make -j64 m=$ARM64-dbg \
+make -j$NPROC m=$ARM64-dbg \
   o/$ARM64-dbg/ape/ape.elf \
   o/$ARM64-dbg/ape/aarch64.lds \
   o/$ARM64-dbg/libc/crt/crt.o \
@@ -149,7 +150,7 @@ make -j64 m=$ARM64-dbg \
   o/$ARM64-dbg/cosmopolitan.a \
   o/$ARM64-dbg/third_party/libcxx/libcxx.a \
 
-make -j64 m=$ARM64-optlinux \
+make -j$NPROC m=$ARM64-optlinux \
   o/$ARM64-optlinux/ape/ape.elf \
   o/$ARM64-optlinux/ape/aarch64.lds \
   o/$ARM64-optlinux/libc/crt/crt.o \

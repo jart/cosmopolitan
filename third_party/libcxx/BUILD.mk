@@ -1064,6 +1064,9 @@ third_party/libcxx/ios.instantiations.cpp \
 third_party/libcxx/iostream.cpp \
 third_party/libcxx/legacy_pointer_safety.cpp \
 third_party/libcxx/locale.cpp \
+third_party/libcxx/locale2.cpp \
+third_party/libcxx/locale3.cpp \
+third_party/libcxx/locale4.cpp \
 third_party/libcxx/memory.cpp \
 third_party/libcxx/memory_resource.cpp \
 third_party/libcxx/mutex.cpp \
