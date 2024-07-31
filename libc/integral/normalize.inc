@@ -79,6 +79,10 @@
 #undef __linux__
 #endif
 
+#ifdef __gnu_linux__
+#undef __gnu_linux__
+#endif
+
 #ifndef __BIGGEST_ALIGNMENT__
 #define __BIGGEST_ALIGNMENT__ 16
 #endif

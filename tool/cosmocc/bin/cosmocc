@@ -139,7 +139,9 @@ for x; do
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
-    INTENT=cc
+    if [ x"$INTENT" != x"cpp" ]; then
+      INTENT=cc
+    fi
   elif [ x"$x" = x"-E" ] ||
        [ x"$x" = x"-M" ] ||
        [ x"$x" = x"-MM" ]; then
@@ -266,7 +268,9 @@ CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
   CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
-  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  if [ x"$INTENT" != x"cpp" ]; then
+    CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  fi
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 else
   CFLAGS="$CFLAGS -Wno-implicit-int"
@@ -325,6 +329,9 @@ if [ $INTENT = cpp ]; then
   if [ -n "$OUTPUT" ]; then
     ARGS="$ARGS -o$OUTPUT"
   fi
+  # undefine cpu-specific and linux-specific defines
+  # we get rid of long double too to not lead astray
+  # we shall leave behind unix, __unix, and __unix__
   set -- \
       "$CC_X86_64" \
       -U__k8 \
@@ -333,10 +340,21 @@ if [ $INTENT = cpp ]; then
       -U__amd64__ \
       -U__x86_64 \
       -U__x86_64__ \
+      -U__MMX__ \
+      -U__MMX_WITH_SSE__ \
+      -U__SSE_MATH__ \
+      -U__SEG_FS \
+      -U__SEG_GS \
       -U__SSE__ \
+      -U__FXSR__ \
       -U__SSE2__ \
       -U__SSE2_MATH__ \
+      -Ulinux \
+      -U__linux \
+      -U__linux__ \
+      -U__gnu_linux__ \
       -mno-red-zone \
+      -mlong-double-64 \
       $PLATFORM \
       $CPPFLAGS \
       $ARGS

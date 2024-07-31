@@ -155,5 +155,6 @@ exp10 (double x)
 
 __strong_reference(exp10, pow10);
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(exp10, pow10l);
 __weak_reference(exp10, exp10l);
 #endif

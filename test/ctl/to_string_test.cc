@@ -116,10 +116,12 @@ main()
             return 31;
         if (ctl::to_string(3.14L) != "3.14")
             return 32;
+#if LDBL_MANT_DIG > 64
         if (ctl::to_string(LDBL_MAX) != "1.189731495357232e+4932")
             return 33;
         if (ctl::to_string(-LDBL_MAX) != "-1.189731495357232e+4932")
             return 34;
+#endif
     }
 
     CheckForMemoryLeaks();

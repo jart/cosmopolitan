@@ -99,8 +99,10 @@ TEST(hypotll, test) {
   EXPECT_STREQ("1.414213562373095", gc(xdtoal(_hypotl(-1, 1))));
   EXPECT_STREQ("1.414213626012708", gc(xdtoal(_hypotl(1.0000001, .99999999))));
   EXPECT_STREQ("1.414213626012708", gc(xdtoal(_hypotl(.99999999, 1.0000001))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ("1.414213562373095e+4931",
                gc(xdtoal(_hypotl(1e4931L, 1e4931L))));
+#endif
   EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(0, NAN))));
   EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(NAN, 0))));
   EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(NAN, NAN))));

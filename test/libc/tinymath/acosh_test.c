@@ -48,7 +48,9 @@ TEST(acoshf, test) {
 TEST(acoshl, test) {
   volatile long double x = 16;
   EXPECT_STREQ("4", gc(xdtoal(sqrtl(x))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ(".9624236501192069", gc(xdtoal(_acoshl(1.5))));
+#endif
   EXPECT_STREQ("0", gc(xdtoal(_acoshl(1))));
   EXPECT_TRUE(isnan(_acoshl(NAN)));
   EXPECT_TRUE(isnan(_acoshl(.5)));

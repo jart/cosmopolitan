@@ -46,8 +46,10 @@ TEST(asinhf, test) {
 }
 
 TEST(asinhl, test) {
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ(".4812118250596034", gc(xdtoal(_asinhl(+.5))));
   EXPECT_STREQ("-.4812118250596034", gc(xdtoal(_asinhl(-.5))));
+#endif
   EXPECT_STREQ("0", gc(xdtoal(_asinhl(0))));
   EXPECT_STREQ("NAN", gc(xdtoal(_asinhl(NAN))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(_asinhl(INFINITY))));
