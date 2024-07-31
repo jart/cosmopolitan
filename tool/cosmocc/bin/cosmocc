@@ -75,10 +75,12 @@ elif [ ! -d "$TMPDIR" ]; then
   fi
 fi
 
+X=
 OPT=
 ARGS=
 FLAGS=
 OUTPUT=
+NEED_X=
 MDFLAG=0
 MCOSMO=0
 INTENT=ld
@@ -94,8 +96,7 @@ NEED_DEPENDENCY_OUTPUT=
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
-  fi
-  if [ -n "$NEED_OUTPUT" ]; then
+  elif [ -n "$NEED_OUTPUT" ]; then
     NEED_OUTPUT=
     OUTPUT=$x
     continue
@@ -109,6 +110,10 @@ for x; do
   elif [ -n "$NEED_EQUAL" ]; then
     x="${NEED_EQUAL}=${x}"
     NEED_EQUAL=
+  elif [ -n "$NEED_X" ]; then
+    NEED_X=
+    X=$x
+    x="-x${x}"
   elif [ x"$x" = x"-" ] ||           # is alias for stdin
        [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
     if [ x"$x" != x"${x%.s}" ] ||
@@ -142,6 +147,7 @@ for x; do
     if [ x"$INTENT" != x"cpp" ]; then
       INTENT=cc
     fi
+    continue
   elif [ x"$x" = x"-E" ] ||
        [ x"$x" = x"-M" ] ||
        [ x"$x" = x"-MM" ]; then
@@ -214,8 +220,12 @@ for x; do
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
-  elif [ x"$x" = x"-x" ] ||
-       [ x"$x" = x"-e" ] ||
+  elif [ x"$x" = x"-x" ]; then
+    NEED_X=1
+    continue
+  elif [ x"$x" != x"${x#-x}" ]; then
+    X=${x#-x}
+  elif [ x"$x" = x"-e" ] ||
        [ x"$x" = x"-z" ] ||
        [ x"$x" = x"-T" ] ||
        [ x"$x" = x"-L" ] ||
@@ -240,12 +250,37 @@ for x; do
   ARGS="$ARGS $x"
 done
 
+# precompiled header mode
+if [ $INTENT != cpp ]; then
+  if [ -z "$X" ]; then
+    ONLY_HEADER_INPUTS=1
+    for x in $ARGS; do
+      if [ x"$x" = x"${x#-*}" ] &&       # !startswith(x, "-")
+         [ x"$x" = x"${x%.h}" ] &&       # !endswith(x, ".h")
+         [ x"$x" = x"${x%.hpp}" ]; then  # !endswith(x, ".hpp")
+        ONLY_HEADER_INPUTS=0
+        break
+      fi
+    done
+    if [ $ONLY_HEADER_INPUTS -eq 1 ]; then
+      INTENT=gch
+    fi
+  elif [ x"$X" = x"c-header" ] ||
+       [ x"$X" = x"c++-header" ]; then
+    INTENT=gch
+  fi
+fi
+if [ $INTENT = gch ]; then
+  fatal_error "precompiled headers only supported with ARCH-unknown-cosmo-cc compilers"
+fi
+
+# check for incorrect usage
 if [ $INPUT_FILE_COUNT -eq 0 ]; then
   fatal_error "no input files"
-elif [ -z "$INPUT" ] &&
-     [ $INTENT != ld ] &&
-     [ $INPUT_FILE_COUNT -gt 1 ]; then
-  fatal_error "cannot specify '-o' with '-c', or '-E' with multiple files"
+elif [ -n "$OUTPUT" ] && [ $INPUT_FILE_COUNT -gt 1 ]; then
+  if [ $INTENT = cc ] || [ $INTENT = cpp ]; then
+    fatal_error "cannot specify '-o' with '-c' or '-E' with multiple files"
+  fi
 fi
 
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
@@ -263,12 +298,22 @@ if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
+if [ x"$X" = x"c" ] || [ x"$X" = x"c-header" ]; then
+  CPLUSPLUS=0
+elif [ x"$X" = x"c++" ] || [ x"$X" = x"c++-header" ]; then
+  CPLUSPLUS=1
+elif [ x"$PROG" != x"${PROG%++}" ]; then
+  CPLUSPLUS=1
+else
+  CPLUSPLUS=0
+fi
+
 CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
 CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
-if [ x"$PROG" != x"${PROG%++}" ]; then
+if [ $CPLUSPLUS -eq 1 ]; then
   CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
   CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
-  if [ x"$INTENT" != x"cpp" ]; then
+  if [ $INTENT != cpp ]; then
     CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   fi
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
@@ -313,7 +358,7 @@ if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux"
   CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
 fi
 
-if [ x"$PROG" != x"${PROG%++}" ]; then
+if [ $CPLUSPLUS -eq 1 ]; then
   LDLIBS_X86_64="-lcxx ${LDLIBS_X86_64}"
   LDLIBS_AARCH64="-lcxx ${LDLIBS_AARCH64}"
 fi

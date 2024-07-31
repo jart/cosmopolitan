@@ -59,8 +59,17 @@ if [ x"$ARCH" = x"$PROG" ]; then
   fatal_error "cosmocross must be run via cross compiler"
 fi
 
+X=
+NEED_X=
 for x; do
-  if [ x"$x" = x"-mtiny" ]; then
+  if [ -n "$NEED_X" ]; then
+    NEED_X=
+    X=$x
+  elif [ x"$x" = x"-x" ]; then
+    NEED_X=1
+  elif [ x"$x" != x"${x#-x}" ]; then
+    X=${x#-x}
+  elif [ x"$x" = x"-mtiny" ]; then
     MODE=tiny
   elif [ x"$x" = x"-mdbg" ]; then
     MODE=dbg
@@ -79,16 +88,26 @@ else
   LIB="$BIN/../$ARCH-linux-cosmo/lib"
 fi
 
+if [ x"$X" = x"c" ] || [ x"$X" = x"c-header" ]; then
+  CPLUSPLUS=0
+elif [ x"$X" = x"c++" ] || [ x"$X" = x"c++-header" ]; then
+  CPLUSPLUS=1
+elif [ x"$PROG" != x"${PROG%++}" ]; then
+  CPLUSPLUS=1
+else
+  CPLUSPLUS=0
+fi
+
 CC="$BIN/$ARCH-linux-cosmo-gcc"
 CRT="$LIB/crt.o"
 LDLIBS="-lcosmo"
 if [ -z "$COSMOS" ]; then
-    LDFLAGS="$LDFLAGS -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
+  LDFLAGS="$LDFLAGS -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
 else
-    LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
-    CPPFLAGS="$CPPFLAGS -I$COSMOS/include"
+  LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
+  CPPFLAGS="$CPPFLAGS -I$COSMOS/include"
 fi
-if [ x"$PROG" != x"${PROG%++}" ]; then
+if [ $CPLUSPLUS -eq 1 ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
@@ -219,6 +238,27 @@ if [ $RELOCATABLE -eq 1 ]; then
   LDFLAGS="$LDFLAGS -r"
 fi
 
+# precompiled header mode
+if [ $INTENT != cpp ]; then
+  if [ -z "$X" ]; then
+    ONLY_HEADER_INPUTS=1
+    for x; do
+      if [ x"$x" = x"${x#-*}" ] &&       # !startswith(x, "-")
+         [ x"$x" = x"${x%.h}" ] &&       # !endswith(x, ".h")
+         [ x"$x" = x"${x%.hpp}" ]; then  # !endswith(x, ".hpp")
+        ONLY_HEADER_INPUTS=0
+        break
+      fi
+    done
+    if [ $ONLY_HEADER_INPUTS -eq 1 ]; then
+      INTENT=h
+    fi
+  elif [ x"$X" = x"c-header" ] ||
+       [ x"$X" = x"c++-header" ]; then
+    INTENT=h
+  fi
+fi
+
 # support --ftrace unless optimizing for size
 if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
    [ x"$MODE" != x"optlinux" ] &&          # $MODE not optlinux
@@ -242,7 +282,7 @@ fi
 
 if [ $INTENT = cpp ]; then
   set -- "$CC" $PLATFORM $CPPFLAGS "$@"
-elif [ $INTENT = cc ] || [ $INTENT = s ]; then
+elif [ $INTENT = cc ] || [ $INTENT = s ] || [ $INTENT = h ]; then
   set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
 else
   set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS $CRT "$@" $LDFLAGS $LDLIBS $PRECIOUS
