@@ -8,6 +8,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/x/xasprintf.h"
 
 #define EXPENSIVE_TESTS 0
@@ -237,20 +238,6 @@ float nothing(float x) {
 
 float (*barrier)(float) = nothing;
 
-#define BENCH(ITERATIONS, WORK_PER_RUN, CODE)                                 \
-  do {                                                                        \
-    struct timespec start = timespec_real();                                  \
-    for (int __i = 0; __i < ITERATIONS; ++__i) {                              \
-      asm volatile("" ::: "memory");                                          \
-      CODE;                                                                   \
-    }                                                                         \
-    long long work = (WORK_PER_RUN) * (ITERATIONS);                           \
-    long nanos =                                                              \
-        (timespec_tonanos(timespec_sub(timespec_real(), start)) + work - 1) / \
-        (double)work;                                                         \
-    printf("%8ld ns %2dx %s\n", nanos, (ITERATIONS), #CODE);                  \
-  } while (0)
-
 int main() {
   ShowCrashReports();
 
@@ -270,12 +257,12 @@ int main() {
   test_fdotf_naive();
   test_fdotf_hefty();
   test_fdotf_ruler();
-  BENCH(20, 1, (kahan = barrier(fdotf_kahan(A, B, n))));
-  BENCH(20, 1, (dubble = barrier(fdotf_dubble(A, B, n))));
-  BENCH(20, 1, (naive = barrier(fdotf_naive(A, B, n))));
-  BENCH(20, 1, (recursive = barrier(fdotf_recursive(A, B, n))));
-  BENCH(20, 1, (ruler = barrier(fdotf_ruler(A, B, n))));
-  BENCH(20, 1, (hefty = barrier(fdotf_hefty(A, B, n))));
+  BENCHMARK(20, 1, (kahan = barrier(fdotf_kahan(A, B, n))));
+  BENCHMARK(20, 1, (dubble = barrier(fdotf_dubble(A, B, n))));
+  BENCHMARK(20, 1, (naive = barrier(fdotf_naive(A, B, n))));
+  BENCHMARK(20, 1, (recursive = barrier(fdotf_recursive(A, B, n))));
+  BENCHMARK(20, 1, (ruler = barrier(fdotf_ruler(A, B, n))));
+  BENCHMARK(20, 1, (hefty = barrier(fdotf_hefty(A, B, n))));
   printf("dubble    = %f (%g)\n", dubble, fabs(dubble - dubble));
   printf("kahan     = %f (%g)\n", kahan, fabs(kahan - dubble));
   printf("naive     = %f (%g)\n", naive, fabs(naive - dubble));

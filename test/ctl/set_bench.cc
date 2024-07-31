@@ -22,25 +22,11 @@
 #include "libc/mem/leaks.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/testlib/benchmark.h"
 
 // #include <set>
 // #define ctl std
 // #define check() size()
-
-#define BENCH(ITERATIONS, WORK_PER_RUN, CODE) \
-    do { \
-        struct timespec start = timespec_real(); \
-        for (int __i = 0; __i < ITERATIONS; ++__i) { \
-            asm volatile("" ::: "memory"); \
-            CODE; \
-        } \
-        long long work = (WORK_PER_RUN) * (ITERATIONS); \
-        double nanos = \
-          (timespec_tonanos(timespec_sub(timespec_real(), start)) + work - \
-           1) / \
-          (double)work; \
-        printf("%10g ns %2dx %s\n", nanos, (ITERATIONS), #CODE); \
-    } while (0)
 
 int
 rand32(void)
@@ -68,19 +54,19 @@ main()
     {
         long x = 0;
         ctl::set<long> s;
-        BENCH(1000000, 1, s.insert(rand32() % 1000000));
+        BENCHMARK(1000000, 1, s.insert(rand32() % 1000000));
         // s.check();
-        BENCH(1000000, 1, {
+        BENCHMARK(1000000, 1, {
             auto i = s.find(rand32() % 1000000);
             if (i != s.end())
                 x += *i;
         });
-        BENCH(1000000, 1, {
+        BENCHMARK(1000000, 1, {
             auto i = s.lower_bound(rand32() % 1000000);
             if (i != s.end())
                 x += *i;
         });
-        BENCH(1000000, 1, s.erase(rand32() % 1000000));
+        BENCHMARK(1000000, 1, s.erase(rand32() % 1000000));
         eat(x);
     }
 

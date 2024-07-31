@@ -8,6 +8,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/x/xasprintf.h"
 
 #define EXPENSIVE_TESTS 0
@@ -225,20 +226,6 @@ float nothing(float x) {
 
 float (*barrier)(float) = nothing;
 
-#define BENCH(ITERATIONS, WORK_PER_RUN, CODE)                                 \
-  do {                                                                        \
-    struct timespec start = timespec_real();                                  \
-    for (int __i = 0; __i < ITERATIONS; ++__i) {                              \
-      asm volatile("" ::: "memory");                                          \
-      CODE;                                                                   \
-    }                                                                         \
-    long long work = (WORK_PER_RUN) * (ITERATIONS);                           \
-    long nanos =                                                              \
-        (timespec_tonanos(timespec_sub(timespec_real(), start)) + work - 1) / \
-        (double)work;                                                         \
-    printf("%8ld ns %2dx %s\n", nanos, (ITERATIONS), #CODE);                  \
-  } while (0)
-
 int main() {
   ShowCrashReports();
 
@@ -255,12 +242,12 @@ int main() {
   test_fsumf_naive();
   test_fsumf_hefty();
   test_fsumf_ruler();
-  BENCH(20, 1, (kahan = barrier(fsumf_kahan(p, n))));
-  BENCH(20, 1, (dubble = barrier(fsumf_dubble(p, n))));
-  BENCH(20, 1, (naive = barrier(fsumf_naive(p, n))));
-  BENCH(20, 1, (recursive = barrier(fsumf_recursive(p, n))));
-  BENCH(20, 1, (ruler = barrier(fsumf_ruler(p, n))));
-  BENCH(20, 1, (hefty = barrier(fsumf_hefty(p, n))));
+  BENCHMARK(20, 1, (kahan = barrier(fsumf_kahan(p, n))));
+  BENCHMARK(20, 1, (dubble = barrier(fsumf_dubble(p, n))));
+  BENCHMARK(20, 1, (naive = barrier(fsumf_naive(p, n))));
+  BENCHMARK(20, 1, (recursive = barrier(fsumf_recursive(p, n))));
+  BENCHMARK(20, 1, (ruler = barrier(fsumf_ruler(p, n))));
+  BENCHMARK(20, 1, (hefty = barrier(fsumf_hefty(p, n))));
   printf("dubble    = %f (%g)\n", dubble, fabs(dubble - dubble));
   printf("kahan     = %f (%g)\n", kahan, fabs(kahan - dubble));
   printf("naive     = %f (%g)\n", naive, fabs(naive - dubble));

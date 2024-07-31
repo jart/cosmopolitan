@@ -20,26 +20,12 @@
 #include "ctl/utility.h"
 #include "libc/dce.h"
 #include "libc/mem/leaks.h"
+#include "libc/testlib/benchmark.h"
 
 #include "libc/calls/struct/timespec.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-
-#define BENCH(ITERATIONS, WORK_PER_RUN, CODE) \
-    do { \
-        struct timespec start = timespec_real(); \
-        for (int __i = 0; __i < ITERATIONS; ++__i) { \
-            asm volatile("" ::: "memory"); \
-            CODE; \
-        } \
-        long long work = (WORK_PER_RUN) * (ITERATIONS); \
-        double nanos = \
-          (timespec_tonanos(timespec_sub(timespec_real(), start)) + work - \
-           1) / \
-          (double)work; \
-        printf("%10g ns %2dx %s\n", nanos, (ITERATIONS), #CODE); \
-    } while (0)
 
 const char* big_c = "aaaaaaaaaaaaaaaaaaaaaaaa";
 const char* small_c = "aaaaaaaaaaaaaaaaaaaaaaa";
@@ -55,98 +41,98 @@ main()
 {
     const ctl::string_view big(big_c), small(small_c);
 
-    BENCH(ITERATIONS * 10, 1, {
+    BENCHMARK(ITERATIONS * 10, 1, {
         ctl::string s;
         s.append("hello ");
         s.append("world");
     });
 
-    BENCH(ITERATIONS, 8, {
+    BENCHMARK(ITERATIONS, 8, {
         ctl::string s;
         for (int i = 0; i < 8; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(ITERATIONS, 16, {
+    BENCHMARK(ITERATIONS, 16, {
         ctl::string s;
         for (int i = 0; i < 16; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(ITERATIONS, 23, {
+    BENCHMARK(ITERATIONS, 23, {
         ctl::string s;
         for (int i = 0; i < 23; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(ITERATIONS, 24, {
+    BENCHMARK(ITERATIONS, 24, {
         ctl::string s;
         for (int i = 0; i < 24; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(ITERATIONS, 32, {
+    BENCHMARK(ITERATIONS, 32, {
         ctl::string s;
         for (int i = 0; i < 32; ++i) {
             s.append('a');
         }
     });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(small_c); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(small_c); });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(small); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(small); });
 
     {
         ctl::string small_copy("hello world");
-        BENCH(ITERATIONS, 1, { ctl::string s2(small_copy); });
+        BENCHMARK(ITERATIONS, 1, { ctl::string s2(small_copy); });
     }
 
-    BENCH(ITERATIONS, 1, {
+    BENCHMARK(ITERATIONS, 1, {
         ctl::string s(small);
         ctl::string s2(ctl::move(s));
     });
 
-    BENCH(ITERATIONS, 1, {
+    BENCHMARK(ITERATIONS, 1, {
         ctl::string s(small);
         ctl::string s2(s);
     });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(big_c); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(big_c); });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(big); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(big); });
 
     {
         ctl::string big_copy(big);
-        BENCH(ITERATIONS, 1, { ctl::string s2(big_copy); });
+        BENCHMARK(ITERATIONS, 1, { ctl::string s2(big_copy); });
     }
 
-    BENCH(ITERATIONS, 1, {
+    BENCHMARK(ITERATIONS, 1, {
         ctl::string s(big);
         ctl::string s2(ctl::move(s));
     });
 
-    BENCH(ITERATIONS, 1, {
+    BENCHMARK(ITERATIONS, 1, {
         ctl::string s(big);
         ctl::string s2(s);
     });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(23, 'a'); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(23, 'a'); });
 
-    BENCH(ITERATIONS, 1, { ctl::string s(24, 'a'); });
+    BENCHMARK(ITERATIONS, 1, { ctl::string s(24, 'a'); });
 
     {
         ctl::string s(5, 'a');
-        BENCH(ITERATIONS, 1, { ctl::string_view s2(s); });
+        BENCHMARK(ITERATIONS, 1, { ctl::string_view s2(s); });
     }
 
     {
         ctl::string big_trunc(48, 'a');
         big_trunc.resize(4);
-        BENCH(ITERATIONS, 1, { ctl::string s(big_trunc); });
+        BENCHMARK(ITERATIONS, 1, { ctl::string s(big_trunc); });
     }
 
     CheckForMemoryLeaks();

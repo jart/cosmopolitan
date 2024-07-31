@@ -97,6 +97,14 @@ o/$(MODE)/libc/intrin/x86.o: private			\
 			-fpatchable-function-entry=0	\
 			-Os
 
+# avoid the legacy sse decoding penalty on avx systems
+o//libc/intrin/dll.o					\
+o//libc/intrin/fds.o					\
+o//libc/intrin/mmap.o					\
+o//libc/intrin/demangle.o: private			\
+		CFLAGS +=				\
+			-mgeneral-regs-only
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

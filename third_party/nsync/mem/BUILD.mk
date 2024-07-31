@@ -49,6 +49,13 @@ $(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
+# avoid the legacy sse decoding penalty on avx systems
+ifeq ($(MODE),)
+$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
+		COPTS +=				\
+			-mgeneral-regs-only
+endif
+
 THIRD_PARTY_NSYNC_MEM_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)))
 THIRD_PARTY_NSYNC_MEM_SRCS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_NSYNC_MEM_CHECKS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_CHECKS))

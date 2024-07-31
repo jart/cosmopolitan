@@ -540,7 +540,7 @@ COSMOCC_HDRS =								\
 	$(foreach x,$(COSMOCC_PKGS),$($(x)_HDRS))			\
 	$(foreach x,$(COSMOCC_PKGS),$($(x)_INCS))
 
-o/cosmocc.h.txt: Makefile
+o/cosmocc.h.txt: Makefile libc $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x)))) $(HDRS) $(INCS)
 	$(file >$@, $(call uniq,$(COSMOCC_HDRS)))
 
 COSMOPOLITAN_H_ROOT_HDRS =						\
