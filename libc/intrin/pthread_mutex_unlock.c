@@ -17,13 +17,57 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
+#include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
+
+static void pthread_mutex_unlock_spin(atomic_int *word) {
+  atomic_store_explicit(word, 0, memory_order_release);
+}
+
+// see "take 3" algorithm in "futexes are tricky" by ulrich drepper
+static void pthread_mutex_unlock_drepper(atomic_int *futex, char pshare) {
+  int word = atomic_fetch_sub_explicit(futex, 1, memory_order_release);
+  if (word == 2) {
+    atomic_store_explicit(futex, 0, memory_order_release);
+    _weaken(nsync_futex_wake_)(futex, 1, pshare);
+  }
+}
+
+static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
+                                              uint64_t word) {
+  int me = gettid();
+  for (;;) {
+
+    // we allow unlocking an initialized lock that wasn't locked, but we
+    // don't allow unlocking a lock held by another thread, or unlocking
+    // recursive locks from a forked child, since it should be re-init'd
+    if (MUTEX_OWNER(word) && (MUTEX_OWNER(word) != me || mutex->_pid != __pid))
+      return EPERM;
+
+    // check if this is a nested lock with signal safety
+    if (MUTEX_DEPTH(word)) {
+      if (atomic_compare_exchange_weak_explicit(
+              &mutex->_word, &word, MUTEX_DEC_DEPTH(word), memory_order_relaxed,
+              memory_order_relaxed))
+        return 0;
+      continue;
+    }
+
+    // actually unlock the mutex
+    if (atomic_compare_exchange_weak_explicit(
+            &mutex->_word, &word, MUTEX_UNLOCK(word), memory_order_release,
+            memory_order_relaxed))
+      return 0;
+  }
+}
 
 /**
  * Releases mutex.
@@ -35,38 +79,33 @@
  * @vforksafe
  */
 errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int t;
+  uint64_t word;
 
   LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
 
-  if (mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
-      mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
+  // get current state of lock
+  word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
+
+#if PTHREAD_USE_NSYNC
+  // use superior mutexes if possible
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_unlock)) {
     _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
     return 0;
   }
+#endif
 
-  if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
-    atomic_store_explicit(&mutex->_lock, 0, memory_order_release);
+  // implement barebones normal mutexes
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
+    if (_weaken(nsync_futex_wake_)) {
+      pthread_mutex_unlock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
+    } else {
+      pthread_mutex_unlock_spin(&mutex->_futex);
+    }
     return 0;
   }
 
-  t = gettid();
-
-  // we allow unlocking an initialized lock that wasn't locked, but we
-  // don't allow unlocking a lock held by another thread, or unlocking
-  // recursive locks from a forked child, since it should be re-init'd
-  if (mutex->_owner && (mutex->_owner != t || mutex->_pid != __pid)) {
-    return EPERM;
-  }
-
-  if (mutex->_depth) {
-    --mutex->_depth;
-    return 0;
-  }
-
-  mutex->_owner = 0;
-  atomic_store_explicit(&mutex->_lock, 0, memory_order_release);
-
-  return 0;
+  // handle recursive and error checking mutexes
+  return pthread_mutex_unlock_recursive(mutex, word);
 }

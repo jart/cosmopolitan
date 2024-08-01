@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
@@ -42,7 +42,7 @@ static textwindows void WinSockCleanup(void) {
   NTTRACE("WSACleanup() → %d% lm", rc);
 }
 
-textwindows dontasan void WinSockInit(void) {
+textwindows void WinSockInit(void) {
   int rc;
   atexit(WinSockCleanup);
   NTTRACE("WSAStartup()");

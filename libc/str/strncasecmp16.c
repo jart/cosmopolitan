@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/wctype.h"
 
 /**
  * Compares NUL-terminated UCS-2 strings case-insensitively w/ limit.

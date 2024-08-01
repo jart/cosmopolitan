@@ -19,9 +19,8 @@
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time.h"
 
@@ -71,11 +70,7 @@
 int setitimer(int which, const struct itimerval *newvalue,
               struct itimerval *oldvalue) {
   int rc;
-  if (IsAsan() &&
-      ((newvalue && !__asan_is_valid(newvalue, sizeof(*newvalue))) ||
-       (oldvalue && !__asan_is_valid(oldvalue, sizeof(*oldvalue))))) {
-    rc = efault();
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     if (newvalue) {
       rc = sys_setitimer(which, newvalue, oldvalue);
     } else {

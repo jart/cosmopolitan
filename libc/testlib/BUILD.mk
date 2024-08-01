@@ -22,6 +22,7 @@ LIBC_TESTLIB_A_ASSETS =						\
 LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/aspect.internal.h				\
 	libc/testlib/bench.h					\
+	libc/testlib/benchmark.h				\
 	libc/testlib/blocktronics.h				\
 	libc/testlib/ezbench.h					\
 	libc/testlib/fastrandomstring.h				\

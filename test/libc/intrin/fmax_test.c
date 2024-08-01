@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/math.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/libcxx/math.h"
 
 TEST(fmax, test) {
   EXPECT_TRUE(fmax(2., 3.) == 3.);

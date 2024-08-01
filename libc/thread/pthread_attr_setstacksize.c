@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -27,6 +28,8 @@
  * @raise EINVAL if `stacksize` is less than `PTHREAD_STACK_MIN`
  */
 errno_t pthread_attr_setstacksize(pthread_attr_t *a, size_t stacksize) {
+  if (stacksize > INT_MAX)
+    return EINVAL;
   if (stacksize < PTHREAD_STACK_MIN)
     return EINVAL;
   a->__stacksize = stacksize;

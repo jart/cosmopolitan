@@ -17,10 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -48,7 +47,7 @@
  */
 int bind(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   int rc;
-  if (!addr || (IsAsan() && !__asan_is_valid(addr, addrsize))) {
+  if (!addr) {
     rc = efault();
   } else if (addrsize >= sizeof(struct sockaddr_in)) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {

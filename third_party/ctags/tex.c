@@ -18,6 +18,8 @@
 #include "third_party/ctags/general.h"	/* must always come first */
 #include "libc/str/str.h"	/* to define isalpha () */
 #include "libc/runtime/runtime.h"
+#include "libc/ctype.h"
+
 #ifdef DEBUG
 #include "libc/calls/calls.h"
 #include "libc/stdio/dprintf.h"

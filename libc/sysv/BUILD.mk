@@ -88,7 +88,7 @@ o/$(MODE)/libc/sysv/sysret.o: private			\
 
 ifeq ($(ARCH),aarch64)
 o/$(MODE)/libc/sysv/sysv.o: private			\
-		CFLAGS +=				\
+		OVERRIDE_CFLAGS +=			\
 			-ffixed-x0			\
 			-ffixed-x1			\
 			-ffixed-x2			\

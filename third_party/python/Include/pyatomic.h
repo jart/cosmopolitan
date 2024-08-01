@@ -2,6 +2,7 @@
 #define Py_ATOMIC_H
 #include "libc/assert.h"
 #include "third_party/python/Include/dynamic_annotations.h"
+#include "libc/intrin/atomic.h"
 #include "third_party/python/pyconfig.h"
 
 /* This is modeled after the atomics interface from C1x, according to

@@ -2,6 +2,7 @@
 *   INCLUDE FILES
 */
 #include "third_party/ctags/general.h"        /* must always come first */
+#include "libc/ctype.h"
 #include "libc/runtime/runtime.h"
 
 #include "third_party/ctags/debug.h"

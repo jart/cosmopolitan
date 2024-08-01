@@ -16,15 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/directmap.h"
+#include "libc/intrin/strace.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Obtains memory mapping directly from system.
@@ -39,7 +42,10 @@
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {
   struct DirectMap d;
-  if (IsXnuSilicon()) {
+  if ((__virtualsize += size) >= __virtualmax) {
+    d.maphandle = kNtInvalidHandleValue;
+    d.addr = (void *)enomem();
+  } else if (IsXnuSilicon()) {
     long p = _sysret(__syslib->__mmap(addr, size, prot, flags, fd, off));
     d.maphandle = kNtInvalidHandleValue;
     d.addr = (void *)p;
@@ -51,9 +57,10 @@ struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
   } else {
     d = sys_mmap_nt(addr, size, prot, flags, fd, off);
   }
-  KERNTRACE("sys_mmap(%.12p /* %s */, %'zu, %s, %s, %d, %'ld) → {%.12p, %p}% m",
-            addr, DescribeFrame((intptr_t)addr >> 16), size,
-            DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, d.addr,
-            d.maphandle);
+  if (d.addr == MAP_FAILED)
+    __virtualsize -= size;
+  KERNTRACE("sys_mmap(%.12p, %'zu, %s, %s, %d, %'ld) → {%.12p, %p}% m", addr,
+            size, DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off,
+            d.addr, d.maphandle);
   return d;
 }

@@ -23,10 +23,9 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/alloca.h"
@@ -49,8 +48,6 @@ static ssize_t readv_impl(int fd, const struct iovec *iov, int iovlen) {
     return ebadf();
   if (iovlen < 0)
     return einval();
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
-    return efault();
 
   // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
   // this is inconsistent with Linux which ignores huge requests
@@ -60,6 +57,7 @@ static ssize_t readv_impl(int fd, const struct iovec *iov, int iovlen) {
       struct iovec *iov2;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
       iov2 = alloca(iovlen * sizeof(struct iovec));
       CheckLargeStackAllocation(iov2, iovlen * sizeof(struct iovec));
 #pragma GCC pop_options

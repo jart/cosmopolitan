@@ -12,7 +12,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -48,6 +48,8 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
+#include "libc/runtime/stack.h"
+#include "libc/ctype.h"
 #include "third_party/xed/x86.h"
 
 STATIC_STACK_SIZE(0x100000);

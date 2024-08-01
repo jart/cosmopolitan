@@ -22,7 +22,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Helper function for allocating anonymous mapping.
@@ -59,11 +58,9 @@
 void *_mapanon(size_t size) {
   void *m;
   m = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (m != MAP_FAILED) {
+  if (m != MAP_FAILED)
     return m;
-  }
-  if (errno == ENOMEM && _weaken(__oom_hook)) {
+  if (errno == ENOMEM && _weaken(__oom_hook))
     _weaken(__oom_hook)(size);
-  }
   return 0;
 }

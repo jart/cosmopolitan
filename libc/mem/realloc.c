@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Allocates / resizes / frees memory, e.g.
@@ -62,4 +61,3 @@ void *realloc(void *p, size_t n) {
   return dlrealloc(p, n);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

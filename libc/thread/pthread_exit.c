@@ -21,8 +21,8 @@
 #include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/cxaatexit.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/cxaatexit.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
@@ -35,35 +35,6 @@
 #include "libc/thread/tls.h"
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
-
-void _pthread_unwind(struct PosixThread *pt) {
-  struct _pthread_cleanup_buffer *cb;
-  while ((cb = pt->pt_cleanup)) {
-    pt->pt_cleanup = cb->__prev;
-    cb->__routine(cb->__arg);
-  }
-}
-
-void _pthread_unkey(struct CosmoTib *tib) {
-  void *val;
-  int i, j, gotsome;
-  pthread_key_dtor dtor;
-  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
-    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-      if ((val = tib->tib_keys[i]) &&
-          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
-                                       memory_order_relaxed)) &&
-          dtor != (pthread_key_dtor)-1) {
-        gotsome = 1;
-        tib->tib_keys[i] = 0;
-        dtor(val);
-      }
-    }
-    if (!gotsome) {
-      break;
-    }
-  }
-}
 
 /**
  * Terminates current POSIX thread.
@@ -98,63 +69,67 @@ void _pthread_unkey(struct CosmoTib *tib) {
  * @noreturn
  */
 wontreturn void pthread_exit(void *rc) {
+  int orphan;
   struct CosmoTib *tib;
   struct PosixThread *pt;
   enum PosixThreadStatus status, transition;
 
-  tib = __get_tls();
-  pt = (struct PosixThread *)tib->tib_pthread;
-  pt->pt_flags |= PT_NOCANCEL;
-  pt->pt_rc = rc;
-
   STRACE("pthread_exit(%p)", rc);
 
+  // get posix thread object
+  tib = __get_tls();
+  pt = (struct PosixThread *)tib->tib_pthread;
+
+  // "The behavior of pthread_exit() is undefined if called from a
+  //  cancellation cleanup handler or destructor function that was
+  //  invoked as a result of either an implicit or explicit call to
+  //  pthread_exit()." ──Quoth POSIX.1-2017
+  unassert(!(pt->pt_flags & PT_EXITING));
+
+  // set state
+  pt->pt_flags |= PT_NOCANCEL | PT_EXITING;
+  pt->pt_rc = rc;
+
   // free resources
-  _pthread_unwind(pt);
-  if (_weaken(__cxa_thread_finalize)) {
-    _weaken(__cxa_thread_finalize)();
-  }
-  _pthread_unkey(tib);
-  if (tib->tib_nsync) {
-    nsync_waiter_destroy(tib->tib_nsync);
-  }
-  _pthread_ungarbage();
-  _pthread_decimate();
+  __cxa_thread_finalize();
 
   // run atexit handlers if orphaned thread
-  if (pthread_orphan_np()) {
-    if (_weaken(__cxa_finalize)) {
+  _pthread_decimate(true);
+  if ((orphan = pthread_orphan_np()))
+    if (_weaken(__cxa_finalize))
       _weaken(__cxa_finalize)(NULL);
-    }
-  }
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
   do {
-    switch (status) {
-      case kPosixThreadJoinable:
-        transition = kPosixThreadTerminated;
-        break;
-      case kPosixThreadDetached:
-        transition = kPosixThreadZombie;
-        break;
-      default:
-        __builtin_unreachable();
+    if (status == kPosixThreadZombie) {
+      transition = kPosixThreadZombie;
+      break;
+    } else if (status == kPosixThreadTerminated) {
+      transition = kPosixThreadTerminated;
+      break;
+    } else if (status == kPosixThreadJoinable) {
+      transition = kPosixThreadTerminated;
+    } else if (status == kPosixThreadDetached) {
+      transition = kPosixThreadZombie;
+    } else {
+      __builtin_trap();
     }
   } while (!atomic_compare_exchange_weak_explicit(
       &pt->pt_status, &status, transition, memory_order_release,
       memory_order_relaxed));
 
   // make this thread a zombie if it was detached
-  if (transition == kPosixThreadZombie) {
+  if (transition == kPosixThreadZombie)
     _pthread_zombify(pt);
-  }
 
-  // check if this is the last survivor
-  if (pthread_orphan_np()) {
-    for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;) {
-      ((void (*)(void))(*--p))();
-    }
+  // "The process shall exit with an exit status of 0 after the last
+  //  thread has been terminated. The behavior shall be as if the
+  //  implementation called exit() with a zero argument at thread
+  //  termination time." ──Quoth POSIX.1-2017
+  if (orphan) {
+    for (int i = __fini_array_end - __fini_array_start; i--;)
+      ((void (*)(void))__fini_array_start[i])();
     _Exit(0);
   }
 

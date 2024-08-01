@@ -22,8 +22,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -48,11 +47,8 @@ bool32 isregularfile(const char *path) {
   union metastat st;
   struct ZiposUri zipname;
   e = errno;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    efault();
-    res = false;
-  } else if (_weaken(__zipos_open) &&
-             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (_weaken(__zipos_open) &&
+      _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (_weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       res = !!S_ISREG(st.cosmo.st_mode);
     } else {

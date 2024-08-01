@@ -19,6 +19,7 @@
 /*
  *   INCLUDE FILES
  */
+#include "libc/ctype.h"
 #include "third_party/ctags/general.h"  /* must always come first */
 
 #include "libc/mem/alg.h"

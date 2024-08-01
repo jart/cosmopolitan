@@ -18,17 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
@@ -43,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/str/locale.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clone.h"
@@ -64,65 +66,111 @@ __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
 
-/* #ifndef MODE_DBG */
-/* __static_yoink("threaded_dlmalloc"); */
-/* #endif */
-
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
-void _pthread_free(struct PosixThread *pt, bool isfork) {
+void _pthread_free(struct PosixThread *pt) {
+
+  // thread must be removed from _pthread_list before calling
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
+
+  // do nothing for the one and only magical statical posix thread
   if (pt->pt_flags & PT_STATIC)
     return;
-  if (pt->pt_flags & PT_OWNSTACK) {
+
+  // unmap stack if the cosmo runtime was responsible for mapping it
+  if (pt->pt_flags & PT_OWNSTACK)
     unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
+
+  // free any additional upstream system resources
+  // our fork implementation wipes this handle in child automatically
+  uint64_t syshand =
+      atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
+  if (syshand) {
+    if (IsWindows())
+      unassert(CloseHandle(syshand));  // non-inheritable
+    else if (IsXnuSilicon())
+      unassert(!__syslib->__pthread_join(syshand, 0));
   }
-  if (!isfork) {
-    uint64_t syshand =
-        atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
-    if (syshand) {
-      if (IsWindows())
-        unassert(CloseHandle(syshand));
-      else if (IsXnuSilicon())
-        __syslib->__pthread_join(syshand, 0);
-    }
-  }
+
+  // free heap memory associated with thread
+  if (pt->pt_flags & PT_OWNSIGALTSTACK)
+    free(pt->pt_attr.__sigaltstackaddr);
   free(pt->pt_tls);
   free(pt);
 }
 
-void _pthread_decimate(void) {
-  struct Dll *e;
+void _pthread_decimate(bool annihilation_only) {
   struct PosixThread *pt;
+  struct Dll *e, *e2, *list = 0;
   enum PosixThreadStatus status;
-StartOver:
+
+  // acquire posix threads gil
   _pthread_lock();
-  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
+
+  // swiftly remove every single zombie
+  // that isn't being held by a killing thread
+  for (e = dll_last(_pthread_list); e; e = e2) {
+    e2 = dll_prev(_pthread_list, e);
     pt = POSIXTHREAD_CONTAINER(e);
+    if (atomic_load_explicit(&pt->pt_refs, memory_order_acquire) > 0)
+      continue;  // pthread_kill() has a lease on this thread
     status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
     if (status != kPosixThreadZombie)
-      break;
-    if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
-      dll_remove(&_pthread_list, e);
-      _pthread_unlock();
-      _pthread_unref(pt);
-      goto StartOver;
-    }
+      break;  // zombies only exist at the end of the linked list
+    if (atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire))
+      continue;  // undead thread that should stop existing soon
+    dll_remove(&_pthread_list, e);
+    dll_make_first(&list, e);
   }
+
+  // code like pthread_exit() needs to call this in order to know if
+  // it's appropriate to run exit() handlers however we really don't
+  // want to have a thread exiting block on a bunch of __maps locks!
+  // therefore we only take action if we'll destroy all but the self
+  if (annihilation_only)
+    if (!(_pthread_list == _pthread_list->prev &&
+          _pthread_list == _pthread_list->next)) {
+      dll_make_last(&_pthread_list, list);
+      list = 0;
+    }
+
+  // release posix threads gil
   _pthread_unlock();
+
+  // now free our thread local batch of zombies
+  // because death is a release and not a punishment
+  // this is advantaged by not holding locks over munmap
+  while ((e = dll_first(list))) {
+    pt = POSIXTHREAD_CONTAINER(e);
+    dll_remove(&list, e);
+    _pthread_free(pt);
+  }
 }
 
 static int PosixThread(void *arg, int tid) {
   void *rc;
   struct PosixThread *pt = arg;
+
+  // setup scheduling
   if (pt->pt_attr.__inheritsched == PTHREAD_EXPLICIT_SCHED) {
     unassert(_weaken(_pthread_reschedule));
     _weaken(_pthread_reschedule)(pt);  // yoinked by attribute builder
   }
+
+  // setup signal stack
+  if (pt->pt_attr.__sigaltstacksize) {
+    struct sigaltstack ss;
+    ss.ss_sp = pt->pt_attr.__sigaltstackaddr;
+    ss.ss_size = pt->pt_attr.__sigaltstacksize;
+    ss.ss_flags = 0;
+    unassert(!sigaltstack(&ss, 0));
+  }
+
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->pt_exiter)) {
-    if (IsWindows()) {
+    sigdelset(&pt->pt_attr.__sigmask, SIGTHR);
+    if (IsWindows() || IsMetal()) {
       atomic_store_explicit(&__get_tls()->tib_sigmask, pt->pt_attr.__sigmask,
                             memory_order_release);
     } else {
@@ -134,41 +182,45 @@ static int PosixThread(void *arg, int tid) {
     // calling pthread_exit() will either jump back here, or call exit
     pthread_exit(rc);
   }
+
   // avoid signal handler being triggered after we trash our own stack
   __sig_block();
+
   // return to clone polyfill which clears tid, wakes futex, and exits
   return 0;
 }
 
-static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
-  // OpenBSD: Only permits RSP to occupy memory that's been explicitly
-  // defined as stack memory. We need to squeeze the provided interval
-  // in order to successfully call mmap(), which will return EINVAL if
-  // these calculations should overflow.
-  size_t n;
-  uintptr_t x, y;
-  int e, rc, pagesz;
-  pagesz = getauxval(AT_PAGESZ);
-  n = attr->__stacksize;
-  x = (uintptr_t)attr->__stackaddr;
-  y = ROUNDUP(x, pagesz);
-  n -= y - x;
-  n = ROUNDDOWN(n, pagesz);
-  e = errno;
-  if (__sys_mmap((void *)y, n, PROT_READ | PROT_WRITE,
-                 MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
-                 -1, 0, 0) == (void *)y) {
-    attr->__stackaddr = (void *)y;
-    attr->__stacksize = n;
-    return 0;
-  } else {
-    rc = errno;
-    errno = e;
-    if (rc == EOVERFLOW) {
-      rc = EINVAL;
-    }
-    return rc;
+static bool TellOpenbsdThisIsStackMemory(void *addr, size_t size) {
+  return __sys_mmap(
+             addr, size, PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD, -1,
+             0, 0) == addr;
+}
+
+// OpenBSD only permits RSP to occupy memory that's been explicitly
+// defined as stack memory, i.e. `lo <= %rsp < hi` must be the case
+static errno_t FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
+
+  // get interval
+  uintptr_t lo = (uintptr_t)attr->__stackaddr;
+  uintptr_t hi = lo + attr->__stacksize;
+
+  // squeeze interval
+  lo = (lo + __pagesize - 1) & -__pagesize;
+  hi = hi & -__pagesize;
+
+  // tell os it's stack memory
+  errno_t olderr = errno;
+  if (!TellOpenbsdThisIsStackMemory((void *)lo, hi - lo)) {
+    errno_t err = errno;
+    errno = olderr;
+    return err;
   }
+
+  // update attributes with usable stack address
+  attr->__stackaddr = (void *)lo;
+  attr->__stacksize = hi - lo;
+  return 0;
 }
 
 static errno_t pthread_create_impl(pthread_t *thread,
@@ -184,6 +236,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     return EAGAIN;
   }
   dll_init(&pt->list);
+  pt->pt_locale = &__global_locale;
   pt->pt_start = start_routine;
   pt->pt_arg = arg;
 
@@ -208,61 +261,35 @@ static errno_t pthread_create_impl(pthread_t *thread,
     // assume they know what they're doing as much as possible
     if (IsOpenbsd()) {
       if ((rc = FixupCustomStackOnOpenbsd(&pt->pt_attr))) {
-        _pthread_free(pt, false);
+        _pthread_free(pt);
         return rc;
       }
     }
   } else {
     // cosmo is managing the stack
-    // 1. in mono repo optimize for tiniest stack possible
-    // 2. in public world optimize to *work* regardless of memory
-    int granularity = FRAMESIZE;
-    int pagesize = getauxval(AT_PAGESZ);
+    int pagesize = __pagesize;
     pt->pt_attr.__guardsize = ROUNDUP(pt->pt_attr.__guardsize, pagesize);
-    pt->pt_attr.__stacksize = ROUNDUP(pt->pt_attr.__stacksize, granularity);
+    pt->pt_attr.__stacksize = pt->pt_attr.__stacksize;
     if (pt->pt_attr.__guardsize + pagesize > pt->pt_attr.__stacksize) {
-      _pthread_free(pt, false);
+      _pthread_free(pt);
       return EINVAL;
     }
-    if (pt->pt_attr.__guardsize == pagesize &&
-        !(IsAarch64() && IsLinux() && IsQemuUser())) {
-      // MAP_GROWSDOWN doesn't work very well on qemu-aarch64
-      pt->pt_attr.__stackaddr =
-          mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
-               MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    } else {
-      pt->pt_attr.__stackaddr =
-          mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if (pt->pt_attr.__stackaddr != MAP_FAILED) {
-        if (IsOpenbsd() &&
-            __sys_mmap(
-                pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
-                PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
-                -1, 0, 0) != pt->pt_attr.__stackaddr) {
+    pt->pt_attr.__stackaddr =
+        mmap(0, pt->pt_attr.__stacksize, PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (pt->pt_attr.__stackaddr != MAP_FAILED) {
+      if (IsOpenbsd())
+        if (!TellOpenbsdThisIsStackMemory(pt->pt_attr.__stackaddr,
+                                          pt->pt_attr.__stacksize))
           notpossible;
-        }
-        if (pt->pt_attr.__guardsize) {
-          if (!IsWindows()) {
-            if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                         PROT_NONE)) {
-              notpossible;
-            }
-          } else {
-            uint32_t oldattr;
-            if (!VirtualProtect(pt->pt_attr.__stackaddr,
-                                pt->pt_attr.__guardsize,
-                                kNtPageReadwrite | kNtPageGuard, &oldattr)) {
-              notpossible;
-            }
-          }
-        }
-      }
+      if (pt->pt_attr.__guardsize)
+        if (mprotect(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
+                     PROT_NONE | PROT_GUARD))
+          notpossible;
     }
     if (!pt->pt_attr.__stackaddr || pt->pt_attr.__stackaddr == MAP_FAILED) {
       rc = errno;
-      _pthread_free(pt, false);
+      _pthread_free(pt);
       errno = e;
       if (rc == EINVAL || rc == EOVERFLOW) {
         return EINVAL;
@@ -271,9 +298,17 @@ static errno_t pthread_create_impl(pthread_t *thread,
       }
     }
     pt->pt_flags |= PT_OWNSTACK;
-    if (IsAsan() && !IsWindows() && pt->pt_attr.__guardsize) {
-      __asan_poison(pt->pt_attr.__stackaddr, pt->pt_attr.__guardsize,
-                    kAsanStackOverflow);
+  }
+
+  // setup signal stack
+  if (pt->pt_attr.__sigaltstacksize) {
+    if (!pt->pt_attr.__sigaltstackaddr) {
+      if (!(pt->pt_attr.__sigaltstackaddr =
+                malloc(pt->pt_attr.__sigaltstacksize))) {
+        _pthread_free(pt);
+        return errno;
+      }
+      pt->pt_flags |= PT_OWNSIGALTSTACK;
     }
   }
 
@@ -294,7 +329,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
                             memory_order_relaxed);
       break;
     default:
-      _pthread_free(pt, false);
+      _pthread_free(pt);
       return EINVAL;
   }
 
@@ -305,8 +340,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
   _pthread_unlock();
 
   // launch PosixThread(pt) in new thread
-  if ((rc = clone(PosixThread, pt->pt_attr.__stackaddr,
-                  pt->pt_attr.__stacksize - (IsOpenbsd() ? 16 : 0),
+  if ((rc = clone(PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
                   CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
                       CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_SETTLS |
                       CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
@@ -315,7 +349,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     _pthread_lock();
     dll_remove(&_pthread_list, &pt->list);
     _pthread_unlock();
-    _pthread_free(pt, false);
+    _pthread_free(pt);
     return rc;
   }
 
@@ -384,7 +418,7 @@ static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
   errno_t err;
-  _pthread_decimate();
+  _pthread_decimate(false);
   BLOCK_SIGNALS;
   err = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
   ALLOW_SIGNALS;

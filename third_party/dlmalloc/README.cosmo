@@ -9,9 +9,10 @@ LICENSE
 
 LOCAL CHANGES
 
-  - Use thread-local freelist from cosmo tib
+  - Fix bug in dlmalloc_inspect_all()
+  - Define dlmalloc_requires_more_vespene_gas()
+  - Make dlmalloc scalable using sched_getcpu()
   - Use faster two power roundup for memalign()
-  - Poison maps to integrate with Address Sanitizer
-  - Introduce __oom_hook() by using _mapanon() vs. mmap()
-  - Wrap locks with __threaded check to improve perf lots
-  - Use assembly init rather than ensure_initialization()
+  - Implemented the locking functions dlmalloc wants
+  - Use assembly _init() rather than ensure_initialization()
+  - Rather than calling mmap() 96 times from _start() just use .bss

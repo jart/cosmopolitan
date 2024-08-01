@@ -22,11 +22,10 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/promises.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
@@ -63,10 +62,7 @@
 int execve(const char *prog, char *const argv[], char *const envp[]) {
   int rc;
   struct ZiposUri uri;
-  if (!prog || !argv || !envp ||
-      (IsAsan() && (!__asan_is_valid_str(prog) ||      //
-                    !__asan_is_valid_strlist(argv) ||  //
-                    !__asan_is_valid_strlist(envp)))) {
+  if (!prog || !argv || !envp) {
     rc = efault();
   } else {
     STRACE("execve(%#s, %s, %s)", prog, DescribeStringList(argv),

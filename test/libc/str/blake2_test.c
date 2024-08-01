@@ -18,12 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/blake2.h"
 #include "libc/assert.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
@@ -90,17 +91,18 @@ TEST(BLAKE2B256Test, vectors) {
   free(line);
 }
 
-BENCH(blake2, bench) {
+BENCH(blake2, benchmark) {
   char fun[256];
   rngset(fun, 256, _rand64, -1);
-  EZBENCH_N("blake2b256", 0, EZBLAKE2B256(0, 0));
-  EZBENCH_N("blake2b256", 8, EZBLAKE2B256("helloooo", 8));
-  EZBENCH_N("blake2b256", 31, EZBLAKE2B256(fun, 31));
-  EZBENCH_N("blake2b256", 32, EZBLAKE2B256(fun, 32));
-  EZBENCH_N("blake2b256", 63, EZBLAKE2B256(fun, 63));
-  EZBENCH_N("blake2b256", 64, EZBLAKE2B256(fun, 64));
-  EZBENCH_N("blake2b256", 128, EZBLAKE2B256(fun, 128));
-  EZBENCH_N("blake2b256", 256, EZBLAKE2B256(fun, 256));
-  EZBENCH_N("blake2b256", kHyperionSize,
-            EZBLAKE2B256(kHyperion, kHyperionSize));
+  BENCHMARK(100, 0, __expropriate(EZBLAKE2B256(0, 0)));
+  BENCHMARK(100, 1, __expropriate(EZBLAKE2B256("h", 1)));
+  BENCHMARK(100, 8, __expropriate(EZBLAKE2B256("helloooo", 8)));
+  BENCHMARK(100, 31, __expropriate(EZBLAKE2B256(fun, 31)));
+  BENCHMARK(100, 32, __expropriate(EZBLAKE2B256(fun, 32)));
+  BENCHMARK(100, 63, __expropriate(EZBLAKE2B256(fun, 63)));
+  BENCHMARK(100, 64, __expropriate(EZBLAKE2B256(fun, 64)));
+  BENCHMARK(100, 128, __expropriate(EZBLAKE2B256(fun, 128)));
+  BENCHMARK(100, 256, __expropriate(EZBLAKE2B256(fun, 256)));
+  BENCHMARK(100, kHyperionSize,
+            __expropriate(EZBLAKE2B256(kHyperion, kHyperionSize)));
 }

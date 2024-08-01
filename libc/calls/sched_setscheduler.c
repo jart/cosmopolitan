@@ -20,8 +20,8 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sched_param.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
@@ -41,7 +41,6 @@
  *     special; the kernel treats this as a thread id (noting that
  *     `getpid() == gettid()` is always the case on Linux for the main
  *     thread) and will only take effect for the specified tid.
- *     Therefore this function is POSIX-compliant iif `!__threaded`.
  *
  * @param policy specifies the kernel's timesharing strategy.
  *

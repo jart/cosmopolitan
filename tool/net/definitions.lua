@@ -1981,6 +1981,10 @@ function Underlong(str) end
 --- @return string
 function UuidV4() end
 
+--- Generate a uuid_v7
+--- @return string
+function UuidV7() end
+
 ---@param x integer
 ---@return integer # position of first bit set.
 --- Passing `0` will raise an error. Same as the Intel x86 instruction BSF.

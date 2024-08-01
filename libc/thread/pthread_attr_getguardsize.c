@@ -19,7 +19,7 @@
 #include "libc/thread/thread.h"
 
 /**
- * Returns size of unmapped pages at bottom of stack.
+ * Returns size of protected region at bottom of thread stack.
  *
  * @param guardsize will be set to guard size in bytes
  * @return 0 on success, or errno on error

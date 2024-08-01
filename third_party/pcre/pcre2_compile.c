@@ -1,3 +1,4 @@
+#include "libc/ctype.h"
 #include "libc/str/str.h"
 
 /*************************************************
@@ -8168,7 +8169,10 @@ if (*code == OP_CBRA)
   capitem.number = capnumber;
   capitem.next = cb->open_caps;
   capitem.assert_depth = cb->assert_depth;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
   cb->open_caps = &capitem;
+#pragma GCC diagnostic pop
   }
 
 /* Offset is set zero to mark that this bracket is still open */

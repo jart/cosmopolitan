@@ -14,6 +14,8 @@
 #define __FILEIO_C
 
 #include "third_party/zip/zip.h"
+#include "libc/ctype.h"
+#include "libc/wctype.h"
 #include "third_party/zip/crc32.h"
 
 #ifdef MACOS

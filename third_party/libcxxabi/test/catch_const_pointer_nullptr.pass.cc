@@ -17,6 +17,8 @@
 #pragma clang diagnostic ignored "-Wexceptions"
 #endif
 
+#pragma GCC diagnostic ignored "-Wexceptions"
+
 #if __has_feature(cxx_nullptr)
 
 struct A {};

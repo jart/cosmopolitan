@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/pledge.h"
-#include "libc/intrin/promises.internal.h"
+#include "libc/intrin/promises.h"
 
 // XXX: should be inherited thread local
 //      see also sys_pledge_linux() which is 100% pure

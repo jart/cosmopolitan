@@ -47,6 +47,8 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/termios.h"
 #include "third_party/sed/defs.h"
+#include "libc/wctype.h"
+#include "libc/ctype.h"
 #include "third_party/sed/extern.h"
 
 static SPACE HS, PS, SS, YS;

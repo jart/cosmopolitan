@@ -21,8 +21,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/errfuns.h"
 
@@ -52,16 +52,6 @@ int prctl(int operation, ...) {
   } else {
     rc = enosys();
   }
-
-#if SYSDEBUG
-  if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {
-    STRACE("prctl(%s, %s) → %d% m", DescribePrctlOperation(operation),
-           DescribeCapability(a), rc);
-  } else {
-    STRACE("prctl(%s, %p, %p, %p, %p) → %d% m",
-           DescribePrctlOperation(operation), a, b, c, d, rc);
-  }
-#endif
 
   return rc;
 }

@@ -63,7 +63,7 @@ int vdprintf(int fd, const char *fmt, va_list va) {
   t.n = 0;
   t.t = 0;
   t.fd = fd;
-  if (__fmt(vdprintf_putc, &t, fmt, va) == -1)
+  if (__fmt(vdprintf_putc, &t, fmt, va, &t.t) == -1)
     return -1;
   if (t.n) {
     iov[0].iov_base = t.b;

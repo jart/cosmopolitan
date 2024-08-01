@@ -75,7 +75,10 @@ FILE *popen(const char *cmdline, const char *mode) {
   if ((f = fdopen(pipefds[dir], mode))) {
     switch ((pid = fork())) {
       case 0:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-fd-leak"
         unassert(dup2(pipefds[!dir], !dir) == !dir);
+#pragma GCC diagnostic pop
         // we can't rely on cloexec because cocmd builtins don't execve
         if (pipefds[0] != !dir)
           unassert(!close(pipefds[0]));

@@ -45,8 +45,6 @@ $(LIBC_VGA_A).pkg:					\
 		$(LIBC_VGA_A_OBJS)			\
 		$(foreach x,$(LIBC_VGA_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_VGA_A_OBJS): private COPTS += -fno-sanitize=address
-
 LIBC_VGA_LIBS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)))
 LIBC_VGA_SRCS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_SRCS))
 LIBC_VGA_HDRS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_HDRS))

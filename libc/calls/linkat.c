@@ -20,9 +20,8 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -40,12 +39,9 @@
 int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
            int flags) {
   int rc;
-  if (IsAsan() &&
-      (!__asan_is_valid_str(oldpath) || !__asan_is_valid_str(newpath))) {
-    rc = efault();
-  } else if (_weaken(__zipos_notat) &&
-             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
-              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+  if (_weaken(__zipos_notat) &&
+      ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+       (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
     STRACE("zipos fchownat not supported yet");
   } else if (!IsWindows()) {
     rc = sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);

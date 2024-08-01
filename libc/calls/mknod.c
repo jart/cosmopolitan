@@ -20,8 +20,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -42,8 +41,6 @@
  */
 int mknod(const char *path, uint32_t mode, uint64_t dev) {
   int e, rc;
-  if (IsAsan() && !__asan_is_valid_str(path))
-    return efault();
   if (mode & S_IFREG)
     return creat(path, mode & ~S_IFREG);
   if (mode & S_IFDIR)

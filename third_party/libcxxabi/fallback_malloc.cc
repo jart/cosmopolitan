@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "third_party/libcxxabi/fallback_malloc.h"
+#include "third_party/libcxx/__thread/support.h"
 
-#include "third_party/libcxx/__threading_support"
 #ifndef _LIBCXXABI_HAS_NO_THREADS
 #if defined(__ELF__) && defined(_LIBCXXABI_LINK_PTHREAD_LIB)
 #pragma comment(lib, "pthread")

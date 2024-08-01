@@ -16,8 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/cv.h"
 
 /**
  * Destroys condition.
@@ -26,6 +29,22 @@
  * @raise EINVAL if threads are still waiting on condition
  */
 errno_t pthread_cond_destroy(pthread_cond_t *cond) {
+
+  // check if there's active waiters
+#if PTHREAD_USE_NSYNC
+  if (!cond->_pshared) {
+    if (((nsync_cv *)cond)->waiters)
+      return EINVAL;
+  } else {
+    if (atomic_load_explicit(&cond->_waiters, memory_order_relaxed))
+      return EINVAL;
+  }
+#else
+  if (atomic_load_explicit(&cond->_waiters, memory_order_relaxed))
+    return EINVAL;
+#endif
+
+  // destroy object
   memset(cond, -1, sizeof(*cond));
   return 0;
 }

@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"

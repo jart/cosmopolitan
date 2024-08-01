@@ -33,6 +33,8 @@
  *     and: Thomas E. Dickey                        1996-on                 *
  ****************************************************************************/
 
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+
 /*
  *	write_entry.c -- write a terminfo structure onto the file system
  */

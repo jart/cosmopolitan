@@ -22,8 +22,7 @@
 /**
  * Multiplies 3×3 matrices.
  */
-void *matmul3(double R[restrict 3][3], const double A[3][3],
-              const double B[3][3]) {
+void *matmul3(double R[3][3], const double A[3][3], const double B[3][3]) {
   int i, j, k;
   memset(R, 0, sizeof(double) * 3 * 3);
   for (i = 0; i < 3; ++i) {

@@ -23,7 +23,7 @@ struct CosmoTib {
   struct CosmoTib *tib_self;      /* 0x00 */
   struct CosmoFtrace tib_ftracer; /* 0x08 */
   void *tib_garbages;             /* 0x18 */
-  intptr_t tib_locale;            /* 0x20 */
+  intptr_t __unused;              /* 0x20 */
   intptr_t tib_pthread;           /* 0x28 */
   struct CosmoTib *tib_self2;     /* 0x30 */
   _Atomic(int32_t) tib_tid;       /* 0x38 transitions -1 → tid → 0 */
@@ -38,10 +38,10 @@ struct CosmoTib {
   uint32_t tib_sigstack_size;
   uint32_t tib_sigstack_flags;
   void *tib_nsync;
-  void *tib_keys[48];
+  void *tib_atexit;
+  _Atomic(void *) tib_keys[46];
 } __attribute__((__aligned__(64)));
 
-extern int __threaded;
 extern char __tls_morphed;
 extern unsigned __tls_index;
 

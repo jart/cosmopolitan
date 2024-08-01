@@ -36,7 +36,6 @@ $(THIRD_PARTY_PUFF_A).pkg:			\
 $(THIRD_PARTY_PUFF_A_OBJS): private			\
 		COPTS +=				\
 			-ffreestanding			\
-			-fno-sanitize=address		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 

@@ -21,8 +21,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 
 // XNU futexes
 // https://opensource.apple.com/source/xnu/xnu-7195.50.7.100.1/bsd/sys/ulock.h.auto.html

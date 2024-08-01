@@ -8,7 +8,7 @@ typedef struct nsync_semaphore_s_ {
 } nsync_semaphore;
 
 /* Initialize *s; the initial value is 0. */
-void nsync_mu_semaphore_init(nsync_semaphore *s);
+bool nsync_mu_semaphore_init(nsync_semaphore *s);
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
 errno_t nsync_mu_semaphore_p(nsync_semaphore *s);

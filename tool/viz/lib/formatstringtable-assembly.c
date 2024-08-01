@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/mem/gc.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
@@ -77,31 +77,33 @@ static const char *GetStorageSpecifier(const char *type, int *out_width,
 
 static void EmitSection(long yn, long xn, int w, int arrayalign, int emit(),
                         void *a) {
+  void (*Emit)(const char *, void *) = (void (*)(const char *, void *))emit;
   char alignstr[21];
   FormatUint32(alignstr, arrayalign);
   if (arrayalign <= 8 && yn * xn * w == 8) {
-    emit("\t.rodata.cst", a);
-    emit("8\n", a);
+    Emit("\t.rodata.cst", a);
+    Emit("8\n", a);
   } else if (arrayalign <= 16 && yn * xn * w == 16) {
-    emit("\t.rodata.cst", a);
-    emit("16\n", a);
+    Emit("\t.rodata.cst", a);
+    Emit("16\n", a);
   } else if (arrayalign <= 32 && yn * xn * w == 32) {
-    emit("\t.rodata.cst", a);
-    emit("32\n", a);
+    Emit("\t.rodata.cst", a);
+    Emit("32\n", a);
   } else if (arrayalign <= 64 && yn * xn * w == 64) {
-    emit("\t.rodata.cst", a);
-    emit("64\n", a);
+    Emit("\t.rodata.cst", a);
+    Emit("64\n", a);
   } else {
-    emit("\t.rodata\n", a);
-    emit("\t.align\t", a);
-    emit(alignstr, a);
-    emit("\n", a);
+    Emit("\t.rodata\n", a);
+    Emit("\t.align\t", a);
+    Emit(alignstr, a);
+    Emit("\n", a);
   }
 }
 
 void *FormatStringTableAsAssembly(long yn, long xn, const char *const T[yn][xn],
                                   int emit(), void *a, const char *type,
                                   const char *name, const char *scope) {
+  void (*Emit)(const char *, void *) = (void (*)(const char *, void *))emit;
   int w, align;
   const char *storage;
   char ynstr[21], xnstr[21];
@@ -110,16 +112,16 @@ void *FormatStringTableAsAssembly(long yn, long xn, const char *const T[yn][xn],
   FormatUint64(ynstr, yn);
   FormatUint64(xnstr, xn);
   EmitSection(yn, xn, w, GetArrayAlignment(yn, xn, w, align), emit, a);
-  emit(name, a);
-  emit(":", a);
+  Emit(name, a);
+  Emit(":", a);
   if (strwidth(name, 0) >= 8)
-    emit("\n", a);
+    Emit("\n", a);
   FormatStringTable(yn, xn, T, emit, a, gc(xstrcat("\t.", storage, "\t")), ",",
                     "\n");
-  emit("\t.endobj\t", a);
-  emit(name, a);
-  emit(",", a);
-  emit(firstnonnull(scope, "globl"), a);
-  emit("\n\t.previous\n", a);
+  Emit("\t.endobj\t", a);
+  Emit(name, a);
+  Emit(",", a);
+  Emit(firstnonnull(scope, "globl"), a);
+  Emit("\n\t.previous\n", a);
   return (/* unconst */ void *)T;
 }

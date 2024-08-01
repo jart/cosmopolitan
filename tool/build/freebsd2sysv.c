@@ -25,7 +25,7 @@
 #include "libc/sysv/consts/prot.h"
 
 int main(int argc, char *argv[]) {
-  open(argv[1], O_RDWR);
-  Elf64_Ehdr *e = mmap(0, 64, PROT_READ | PROT_WRITE, MAP_SHARED, 3, 0);
+  int fd = open(argv[1], O_RDWR);
+  Elf64_Ehdr *e = mmap(0, 64, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   e->e_ident[EI_OSABI] = ELFOSABI_SYSV;
 }

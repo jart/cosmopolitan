@@ -509,7 +509,7 @@
                           "V=1 OVERRIDE_COPTS='-w -fverbose-asm -fsanitize=undefined -fno-sanitize=null -fno-sanitize=alignment -fno-sanitize=pointer-overflow'"))
         ;; ((not (eq 0 (logand 8 arg)))
         ;;  (cosmo--assembly (setq arg (logand (lognot 8)))
-        ;;                   "V=1 OVERRIDE_COPTS='-w -fverbose-asm -fsanitize=address'"))
+        ;;                   "V=1 OVERRIDE_COPTS='-w -fverbose-asm'"))
         (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='-w ' CPPFLAGS=''"))))
 
 (defun cosmo-assembly-native (arg)
@@ -771,7 +771,9 @@
                                                dots (cosmo-file-name-sans-extensions name))))
                        (if (file-exists-p cc-version)
                            cc-version
-                         c-version))
+                         (if (eq major-mode 'c++-mode)
+                             cc-version
+                           c-version)))
                      ))))
         (when buddy
           (find-file buddy))))))

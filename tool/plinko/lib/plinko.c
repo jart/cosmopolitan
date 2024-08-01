@@ -22,7 +22,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/log/countbranch.h"
 #include "libc/log/countexpr.h"
 #include "libc/log/log.h"
@@ -970,7 +970,7 @@ int Plinko(int argc, char *argv[]) {
   }
 
   if (mmap((void *)0x200000000000,
-           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), FRAMESIZE),
+           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), getgransize()),
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)(0x200000000000 +
@@ -979,7 +979,7 @@ int Plinko(int argc, char *argv[]) {
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)0x400000000000,
-           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), FRAMESIZE),
+           ROUNDUP((TERM + 1) * sizeof(g_mem[0]), getgransize()),
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED ||
       mmap((void *)(0x400000000000 +

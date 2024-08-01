@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
@@ -32,10 +31,12 @@
  *
  * @param key was created by pthread_key_create()
  * @return 0 on success, or errno on error
+ * @raise EINVAL if `key` is invalid
  */
 int pthread_key_delete(pthread_key_t k) {
-  unassert(0 <= k && k < PTHREAD_KEYS_MAX);
-  unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
-  atomic_store_explicit(_pthread_key_dtor + k, 0, memory_order_release);
+  if (!(0 <= k && k < PTHREAD_KEYS_MAX))
+    return EINVAL;  // corrupt key identifier
+  if (!atomic_exchange_explicit(&_pthread_key_dtor[k], 0, memory_order_acq_rel))
+    return EINVAL;  // delete called twice
   return 0;
 }

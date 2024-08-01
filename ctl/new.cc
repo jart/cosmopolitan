@@ -20,97 +20,132 @@
 
 #include "libc/mem/mem.h"
 
-using ctl::align_val_t;
+COSMOPOLITAN_C_START_
 
-namespace {
-
-constexpr auto a1 = align_val_t(1);
-
-} // namespace
-
-void*
-operator new(size_t n, align_val_t a)
+static void*
+_ctl_alloc(size_t n, size_t a) noexcept
 {
     void* p;
-    if (!(p = memalign(static_cast<size_t>(a), n))) {
+    if (!(p = memalign(a, n)))
         __builtin_trap();
-    }
     return p;
 }
 
-void*
-operator new[](size_t n, align_val_t a)
+static void*
+_ctl_alloc_nothrow(size_t n, size_t a, const ctl::nothrow_t&)
 {
-    return operator new(n, a);
-}
-void*
-operator new(size_t n)
-{
-    return operator new(n, a1);
-}
-void*
-operator new[](size_t n)
-{
-    return operator new(n, a1);
-}
-
-void*
-operator new(size_t, void* p)
-{
-    return p;
-}
-void*
-operator new[](size_t, void* p)
-{
+    void* p;
+    if (!(p = memalign(a, n)))
+        __builtin_trap();
     return p;
 }
 
-void
-operator delete(void* p) noexcept
+static void*
+_ctl_alloc1(size_t n) noexcept
 {
-    free(p);
+    void* p;
+    if (!(p = malloc(n)))
+        __builtin_trap();
+    return p;
 }
-void
-operator delete[](void* p) noexcept
+
+static void*
+_ctl_alloc1_nothrow(size_t n, const ctl::nothrow_t&) noexcept
 {
-    free(p);
+    void* p;
+    if (!(p = malloc(n)))
+        __builtin_trap();
+    return p;
 }
-void
-operator delete(void* p, align_val_t) noexcept
+
+static void*
+_ctl_ret(size_t, void* p) noexcept
 {
-    free(p);
+    return p;
 }
-void
-operator delete[](void* p, align_val_t) noexcept
-{
-    free(p);
-}
-void
-operator delete(void* p, size_t) noexcept
-{
-    free(p);
-}
-void
-operator delete[](void* p, size_t) noexcept
-{
-    free(p);
-}
-void
-operator delete(void* p, size_t, align_val_t) noexcept
-{
-    free(p);
-}
-void
-operator delete[](void* p, size_t, align_val_t) noexcept
+
+static void
+_ctl_free(void* p) noexcept
 {
     free(p);
 }
 
-void
-operator delete(void*, void*) noexcept
+static void
+_ctl_nop(void*, void*) noexcept
 {
 }
-void
-operator delete[](void*, void*) noexcept
-{
-}
+
+COSMOPOLITAN_C_END_
+
+#undef __weak_reference
+#define __weak_reference(P, A) P __attribute__((weak, alias(#A)))
+
+/* The ISO says that these should be replaceable by user code. It also says
+   that the declarations for the first four (i.e. non placement-) operators
+   new are implicitly available in each translation unit, including the std
+   align_val_t parameter. (?) However, <new> also _defines_ the align_val_t
+   type so you can’t just write your own. Our way through this morass is to
+   supply ours as ctl::align_val_t and not implicitly declare anything, for
+   now. If you have any brain cells left after reading this comment then go
+   look at the eight operator delete weak references to free in the below. */
+
+__weak_reference(void*
+                 operator new(size_t, ctl::align_val_t),
+                 _ctl_alloc);
+
+__weak_reference(void*
+                 operator new(size_t,
+                              ctl::align_val_t,
+                              const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc_nothrow);
+
+__weak_reference(void*
+                 operator new[](size_t, ctl::align_val_t),
+                 _ctl_alloc);
+
+__weak_reference(void*
+                 operator new[](size_t,
+                                ctl::align_val_t,
+                                const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc_nothrow);
+
+__weak_reference(void*
+                 operator new(size_t),
+                 _ctl_alloc1);
+
+__weak_reference(void*
+                 operator new(size_t, const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc1_nothrow);
+
+__weak_reference(void*
+                 operator new[](size_t),
+                 _ctl_alloc1);
+
+__weak_reference(void*
+                 operator new[](size_t, const ctl::nothrow_t&) noexcept,
+                 _ctl_alloc1_nothrow);
+
+// XXX clang-format currently mutilates these for some reason.
+// clang-format off
+
+__weak_reference(void* operator new(size_t, void*) noexcept, _ctl_ret);
+__weak_reference(void* operator new[](size_t, void*) noexcept, _ctl_ret);
+
+__weak_reference(void operator delete(void*) noexcept, _ctl_free);
+__weak_reference(void operator delete[](void*) noexcept, _ctl_free);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattribute-alias="
+__weak_reference(void operator delete(void*, ctl::align_val_t) noexcept,
+                 _ctl_free);
+__weak_reference(void operator delete[](void*, ctl::align_val_t) noexcept,
+                 _ctl_free);
+__weak_reference(void operator delete(void*, size_t) noexcept, _ctl_free);
+__weak_reference(void operator delete[](void*, size_t) noexcept, _ctl_free);
+__weak_reference(void operator delete(void*, size_t, ctl::align_val_t) noexcept,
+                 _ctl_free);
+__weak_reference(void operator delete[](void*, size_t, ctl::align_val_t)
+                 noexcept, _ctl_free);
+#pragma GCC diagnostic pop
+
+__weak_reference(void operator delete(void*, void*) noexcept, _ctl_nop);
+__weak_reference(void operator delete[](void*, void*) noexcept, _ctl_nop);

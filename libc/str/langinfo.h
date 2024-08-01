@@ -1,5 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STR_LANGINFO_H_
 #define COSMOPOLITAN_LIBC_STR_LANGINFO_H_
+#include "libc/str/locale.h"
+#include "libc/str/nltypes.h"
 COSMOPOLITAN_C_START_
 
 #define ABDAY_1 0x20000
@@ -78,7 +80,8 @@ COSMOPOLITAN_C_START_
 #define NOSTR  0x50003
 #endif
 
-char *nl_langinfo(int);
+char *nl_langinfo(nl_item);
+char *nl_langinfo_l(nl_item, locale_t);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STR_LANGINFO_H_ */

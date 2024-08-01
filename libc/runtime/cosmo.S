@@ -19,7 +19,7 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 #ifdef __x86_64__
@@ -45,7 +45,7 @@ cosmo:	push	%rbp
 #endif /* SYSDEBUG */
 
 #ifndef NOX87
-//	Windows always initializes FPU to douuble precision.
+//	Windows always initializes FPU to double precision.
 //	WSL breaks Linux ABI by initializing FPU to double precision.
 //	This code makes long double long again.
 //
@@ -133,16 +133,6 @@ cosmo:	push	%rbp
 	pop	%rsi
 	pop	%rdi
 	.init.end 304,_init_tls
-
-#if IsAsan()
-	.init.start 305,_init_symbols
-	push	%rdi
-	push	%rsi
-	call	__init_symbols
-	pop	%rsi
-	pop	%rdi
-	.init.end 305,_init_symbols
-#endif
 
 #ifdef FTRACE
 	.init.start 306,_init_ftrace

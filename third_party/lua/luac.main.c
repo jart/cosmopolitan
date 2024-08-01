@@ -43,6 +43,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+#include "libc/ctype.h"
 #include "third_party/lua/lundump.h"
 __static_yoink("lua_notice");
 

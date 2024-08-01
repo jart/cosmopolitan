@@ -36,6 +36,8 @@
   "/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor\n"
 
 void __warn_if_powersave(void) {
+  if (1)
+    return;
   int e, fd;
   char buf[16] = {0};
   if (IsLinux()) {

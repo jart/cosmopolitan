@@ -20,7 +20,8 @@ THIRD_PARTY_REGEX_A_DIRECTDEPS =			\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
-	LIBC_STR
+	LIBC_STR					\
+	THIRD_PARTY_MUSL				\
 
 THIRD_PARTY_REGEX_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_REGEX_A_DIRECTDEPS),$($(x))))

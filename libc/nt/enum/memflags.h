@@ -16,6 +16,7 @@
 #define kNtMemLargePages 0x20000000
 #define kNtMem4mbPages   0x80000000
 
+#define kNtMemReservePlaceholder 0x00040000
 #define kNtMemReplacePlaceholder 0x00004000
 
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_MEMFLAGS_H_ */

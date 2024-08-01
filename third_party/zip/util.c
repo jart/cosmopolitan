@@ -15,6 +15,7 @@
 
 #include "third_party/zip/zip.h"
 // MISSING #include "ebcdic.h"
+#include "libc/ctype.h"
 #include "libc/str/str.h"
 
 #ifdef MSDOS16

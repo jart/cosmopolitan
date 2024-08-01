@@ -27,7 +27,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/console.h"

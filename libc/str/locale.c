@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/locale.h"
+#include "libc/str/locale.internal.h"
 #include "libc/str/str.h"
 
-static const uint32_t empty_mo[] = {0x950412de, 0, -1, -1, -1};
+static const uint32_t empty_mo[] = {
+    0x950412de, 0, -1, -1, -1,
+};
 
 const struct __locale_map __c_dot_utf8 = {
     .map = empty_mo,
@@ -27,8 +29,11 @@ const struct __locale_map __c_dot_utf8 = {
     .name = "C.UTF-8",
 };
 
-const struct __locale_struct __c_locale;
-
+const struct __locale_struct __c_locale = {0};
 const struct __locale_struct __c_dot_utf8_locale = {
     .cat[LC_CTYPE] = &__c_dot_utf8,
 };
+
+struct __locale_struct __global_locale;
+
+pthread_mutex_t __locale_lock = PTHREAD_MUTEX_INITIALIZER;

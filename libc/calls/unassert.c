@@ -21,7 +21,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 

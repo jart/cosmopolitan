@@ -21,7 +21,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/maps.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -64,6 +65,8 @@ extern init_f *__init_array_end[] __attribute__((__weak__));
 extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
+
+void __pagesize_init(unsigned long *auxv);
 
 static const char *DecodeMagnum(const char *p, long *r) {
   int k = 0;
@@ -162,26 +165,15 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   // needed by kisdangerous()
   __pid = sys_getpid().ax;
 
-  // initialize memory manager
-  _mmi.i = 0;
-  _mmi.p = _mmi.s;
-  _mmi.n = ARRAYLEN(_mmi.s);
-  __virtualmax = -1;
-
   // initialize file system
+  __pagesize_init(auxv);
+  __maps_init();
   __init_fds(argc, argv, envp);
 
   // prepend cwd to executable path
   __init_program_executable_name();
 
   __enable_tls();
-
-#if 0
-#if IsAsan()
-  // TODO(jart): Figure out ASAN data model on AARCH64.
-  __asan_init(argc, argv, envp, auxv);
-#endif
-#endif
 
   _init();
   // initialize program

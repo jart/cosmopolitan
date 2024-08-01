@@ -23,6 +23,8 @@
 #include <sys/auxv.h>
 #include <sys/socket.h>
 #include <time.h>
+#include "libc/mem/leaks.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview greenbean lightweight threaded web server
@@ -287,10 +289,11 @@ int main(int argc, char *argv[]) {
   // print all the ips that 0.0.0.0 would bind
   // Cosmo's GetHostIps() API is much easier than ioctl(SIOCGIFCONF)
   uint32_t *hostips;
-  for (hostips = gc(GetHostIps()), i = 0; hostips[i]; ++i) {
+  for (hostips = GetHostIps(), i = 0; hostips[i]; ++i) {
     kprintf("listening on http://%hhu.%hhu.%hhu.%hhu:%hu\n", hostips[i] >> 24,
             hostips[i] >> 16, hostips[i] >> 8, hostips[i], PORT);
   }
+  free(hostips);
 
   // secure the server
   //
@@ -335,13 +338,12 @@ int main(int argc, char *argv[]) {
   sigaddset(&block, SIGHUP);
   sigaddset(&block, SIGQUIT);
   pthread_attr_t attr;
-  int pagesz = getauxval(AT_PAGESZ);
   unassert(!pthread_attr_init(&attr));
   unassert(!pthread_attr_setstacksize(&attr, 65536));
-  unassert(!pthread_attr_setguardsize(&attr, pagesz));
+  unassert(!pthread_attr_setguardsize(&attr, getpagesize()));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
   unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
-  pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));
+  pthread_t *th = calloc(threads, sizeof(pthread_t));
   for (i = 0; i < threads; ++i) {
     int rc;
     ++a_workers;
@@ -398,6 +400,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < threads; ++i) {
     unassert(!pthread_join(th[i], 0));
   }
+  free(th);
 
   // close the server socket
   if (!IsWindows())
@@ -411,7 +414,5 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_mutex_destroy(&statuslock));
 
   // quality assurance
-  if (IsModeDbg()) {
-    CheckForMemoryLeaks();
-  }
+  CheckForMemoryLeaks();
 }

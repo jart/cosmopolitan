@@ -26,7 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -204,7 +204,8 @@ bool Send(int tmpfd, const void *output, size_t outputsize) {
   static bool once;
   static z_stream zs;
   zsize = 32768;
-  zbuf = gc(malloc(zsize));
+  if (!(zbuf = malloc(zsize)))
+    __builtin_trap();
   if (!once) {
     CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
                                 Z_DEFAULT_STRATEGY));
@@ -226,6 +227,7 @@ bool Send(int tmpfd, const void *output, size_t outputsize) {
       break;
     }
   } while (!zs.avail_out);
+  free(zbuf);
   return ok;
 }
 

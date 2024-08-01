@@ -20,6 +20,7 @@
 #include "libc/log/log.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
@@ -430,4 +431,11 @@ TEST(fmt, regress) {
       "Connection: close\r\n"
       "User-Agent: hurl/1.o (https://github.com/jart/cosmopolitan)\r\n",
       buf);
+}
+
+TEST(fmt, n) {
+  int n;
+  char buf[8];
+  snprintf(buf, 8, ".%c%c.%n", 0, 1, &n);
+  ASSERT_EQ(4, n);
 }

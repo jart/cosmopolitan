@@ -12,6 +12,7 @@
 
 #include <__compare/ordering.h>
 #include <__config>
+#include <__functional/hash.h>
 #include <__functional/unary_function.h>
 #include <__system_error/errc.h>
 #include <__system_error/error_category.h>
@@ -46,20 +47,23 @@ namespace __adl_only {
 void make_error_condition() = delete;
 } // namespace __adl_only
 
-class _LIBCPP_TYPE_VIS error_condition {
+class _LIBCPP_EXPORTED_FROM_ABI error_condition {
   int __val_;
   const error_category* __cat_;
 
 public:
   _LIBCPP_HIDE_FROM_ABI error_condition() _NOEXCEPT : __val_(0), __cat_(&generic_category()) {}
 
-  _LIBCPP_HIDE_FROM_ABI error_condition(int __val, const error_category& __cat) _NOEXCEPT
-      : __val_(__val),
+  _LIBCPP_HIDE_FROM_ABI error_condition(errc __val, const error_category& __cat) _NOEXCEPT
+      : __val_(__errc_to_err(__val)),
         __cat_(&__cat) {}
 
-  template <class _Ep>
-  _LIBCPP_HIDE_FROM_ABI
-  error_condition(_Ep __e, typename enable_if<is_error_condition_enum<_Ep>::value>::type* = nullptr) _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI error_condition(int __val, const error_category& __cat) _NOEXCEPT
+      : __val_(__errc_to_err((errc)__val)),
+        __cat_(&__cat) {}
+
+  template <class _Ep, __enable_if_t<is_error_condition_enum<_Ep>::value, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI error_condition(_Ep __e) _NOEXCEPT {
     using __adl_only::make_error_condition;
     *this = make_error_condition(__e);
   }
@@ -69,9 +73,8 @@ public:
     __cat_ = &__cat;
   }
 
-  template <class _Ep>
-  _LIBCPP_HIDE_FROM_ABI typename enable_if< is_error_condition_enum<_Ep>::value, error_condition& >::type
-  operator=(_Ep __e) _NOEXCEPT {
+  template <class _Ep, __enable_if_t<is_error_condition_enum<_Ep>::value, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI error_condition& operator=(_Ep __e) _NOEXCEPT {
     using __adl_only::make_error_condition;
     *this = make_error_condition(__e);
     return *this;
@@ -82,7 +85,7 @@ public:
     __cat_ = &generic_category();
   }
 
-  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __val_; }
+  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __errc_to_err((errc)__val_); }
 
   _LIBCPP_HIDE_FROM_ABI const error_category& category() const _NOEXCEPT { return *__cat_; }
   string message() const;
@@ -91,7 +94,7 @@ public:
 };
 
 inline _LIBCPP_HIDE_FROM_ABI error_condition make_error_condition(errc __e) _NOEXCEPT {
-  return error_condition(static_cast<int>(__e), generic_category());
+  return error_condition(__e, generic_category());
 }
 
 inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_condition& __x, const error_condition& __y) _NOEXCEPT {

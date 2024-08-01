@@ -3,6 +3,12 @@
 #include "libc/calls/struct/timespec.h"
 COSMOPOLITAN_C_START_
 
+#ifndef __cplusplus
+#define _SEM_ATOMIC(x) _Atomic(x)
+#else
+#define _SEM_ATOMIC(x) x
+#endif
+
 #define SEM_FAILED        ((sem_t *)0)
 #define SEM_MAGIC_NAMED   0xDEADBEEFu
 #define SEM_MAGIC_UNNAMED 0xFEEDABEEu
@@ -11,9 +17,9 @@ COSMOPOLITAN_C_START_
 typedef struct {
   union {
     struct {
-      _Atomic(int) sem_value;
-      _Atomic(int) sem_waiters;
-      _Atomic(int) sem_prefs; /* named only */
+      _SEM_ATOMIC(int) sem_value;
+      _SEM_ATOMIC(int) sem_waiters;
+      _SEM_ATOMIC(int) sem_prefs; /* named only */
       unsigned sem_magic;
       int64_t sem_dev;     /* named only */
       int64_t sem_ino;     /* named only */

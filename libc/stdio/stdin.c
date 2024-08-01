@@ -16,30 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/thread/thread.h"
 
+static FILE __stdin = {
+    .fd = STDIN_FILENO,
+    .iomode = O_RDONLY,
+    .bufmode = _IOFBF,
+    .buf = __stdin.mem,
+    .size = sizeof(stdin->mem),
+    .lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP,
+};
+
 /**
  * Pointer to standard input stream.
  */
-FILE *stdin;
-
-static FILE __stdin;
+FILE *stdin = &__stdin;
 
 __attribute__((__constructor__(60))) static textstartup void initin(void) {
   struct stat st;
-  stdin = &__stdin;
-  stdin->fd = STDIN_FILENO;
-  stdin->iomode = O_RDONLY;
-  stdin->buf = stdin->mem;
-  stdin->size = sizeof(stdin->mem);
-  stdin->lock._type = PTHREAD_MUTEX_RECURSIVE;
   if (fstat(STDIN_FILENO, &st) || !S_ISREG(st.st_mode))
     stdin->bufmode = _IONBF;
   __fflush_register(stdin);

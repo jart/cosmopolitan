@@ -17,7 +17,6 @@
 // parser.
 
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"

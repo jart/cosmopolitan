@@ -20,31 +20,50 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
+static int __madvise(void *addr, size_t length, int advice) {
+
+  // simulate linux behavior of validating alignment
+  if ((uintptr_t)addr & (__pagesize - 1))
+    return einval();
+
+  // simulate linux behavior of checking for negative length
+  if ((ssize_t)length < 0)
+    return einval();
+
+  // madvise(0, 0, advice) may be used to validate advice
+  if (!length && (IsFreebsd() || IsNetbsd()))
+    addr = (void *)65536l;
+
+  if (!IsWindows())
+    return sys_madvise(addr, length, advice);
+  return sys_madvise_nt(addr, length, advice);
+}
+
 /**
- * Drops hints to O/S about intended access patterns of mmap()'d memory.
+ * Declares intent to OS on how memory region will be used.
+ *
+ * `madvise(0, 0, advice)` is recommended for validating `advise` and it
+ * will always be the case that a `length` of zero is a no-op otherwise.
+ *
+ * Having the interval overlap unmapped pages has undefined behavior. On
+ * Linux, this can be counted upon to raise ENOMEM. Other OSes vary much
+ * in behavior here; they'll might ignore unmapped regions or they might
+ * raise EINVAL, EFAULT, or ENOMEM.
  *
  * @param advice can be MADV_WILLNEED, MADV_SEQUENTIAL, MADV_FREE, etc.
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `advice` isn't valid or supported by system
- * @raise EINVAL on Linux if addr/length isn't page size aligned with
- *     respect to `getauxval(AT_PAGESZ)`
- * @raise ENOMEM on Linux if addr/length overlaps unmapped regions
+ * @raise EINVAL if `addr` isn't getpagesize() aligned
+ * @raise EINVAL if `length` is negative
  * @see libc/sysv/consts.sh
  * @see fadvise()
  */
 int madvise(void *addr, size_t length, int advice) {
-  int rc;
-  if (IsAsan() && !__asan_is_valid(addr, length)) {
-    rc = enomem();
-  } else if (!IsWindows()) {
-    rc = sys_madvise(addr, length, advice);
-  } else {
-    rc = sys_madvise_nt(addr, length, advice);
-  }
+  int rc = __madvise(addr, length, advice);
   STRACE("madvise(%p, %'zu, %d) → %d% m", addr, length, advice, rc);
   return rc;
 }

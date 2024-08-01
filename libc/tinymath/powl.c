@@ -930,7 +930,7 @@ powl(long double x, long double y)
   z = one - (r - z);
   o.value = z;
   j = o.parts32.mswhi;
-  j += (n << 16);
+  j += (int32_t)((uint32_t)n << 16); // TODO(jart): why ubsan
   if ((j >> 16) <= 0)
     z = scalbnl (z, n);	/* subnormal output */
   else

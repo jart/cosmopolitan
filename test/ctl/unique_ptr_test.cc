@@ -16,13 +16,12 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include "ctl/is_same.h"
 #include "ctl/unique_ptr.h"
-
-#include <__type_traits/is_same.h>
-
-#include "libc/runtime/runtime.h"
+#include "libc/mem/leaks.h"
 
 // #include <memory>
+// #include <type_traits>
 // #define ctl std
 
 template<typename T, typename D = ctl::default_delete<T>>
@@ -42,29 +41,30 @@ MkRaw()
     return ctl::make_unique_for_overwrite<T>();
 }
 
-#undef ctl
+// #undef ctl
 
 static int g = 0;
 
 struct SetsGDeleter
 {
-    void operator()(auto*) const noexcept
+    void operator()(auto* x) const noexcept
     {
         ++g;
+        delete x;
     }
 };
 
 struct StatefulDeleter
 {
     char state;
-    void operator()(auto*) const noexcept
+    void operator()(auto* x) const noexcept
     {
     }
 };
 
 struct FinalDeleter final
 {
-    void operator()(auto*) const noexcept
+    void operator()(auto* x) const noexcept
     {
     }
 };
@@ -72,7 +72,7 @@ struct FinalDeleter final
 static_assert(sizeof(Ptr<int, SetsGDeleter>) == sizeof(int*));
 
 // not everyone uses [[no_unique_address]]...
-static_assert(!std::is_same_v<Ptr<int>, ctl::unique_ptr<int>> ||
+static_assert(!ctl::is_same_v<Ptr<int>, ctl::unique_ptr<int>> ||
               sizeof(Ptr<int, FinalDeleter>) == sizeof(int*));
 
 struct SetsGCtor
@@ -91,9 +91,16 @@ struct SetsGDtor
     }
 };
 
+struct Base
+{};
+
+struct Derived : Base
+{};
+
 int
 main()
 {
+
     {
         Ptr<int> x(new int(5));
     }
@@ -181,9 +188,9 @@ main()
         g = 0;
         {
             auto x = Mk<SetsGDtor>();
-            x.release();
+            delete x.release();
         }
-        if (g)
+        if (g != 1)
             return 13;
     }
 
@@ -211,7 +218,13 @@ main()
         Ptr<int, StatefulDeleter> y(&a);
     }
 
-    // next is 18
+    {
+        Ptr<Base> x(new Base);
+        x.reset(new Derived);
 
-    return 0;
+        Ptr<Derived> y(new Derived);
+        Ptr<Base> z(ctl::move(y));
+    }
+
+    CheckForMemoryLeaks();
 }

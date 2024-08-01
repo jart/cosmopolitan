@@ -26,8 +26,8 @@
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/pushpop.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"

@@ -38,7 +38,7 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register
   if (IsWindows()) {
-    asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
+    __set_tls_win32(tib);
   } else if (IsLinux()) {
     sys_set_tls(ARCH_SET_GS, tib);
   } else if (IsFreebsd()) {
@@ -57,7 +57,7 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
     uint64_t val = (uint64_t)tib;
     asm volatile("wrmsr"
                  : /* no outputs */
-                 : "c"(MSR_IA32_FS_BASE), "a"((uint32_t)val),
+                 : "c"(MSR_IA32_GS_BASE), "a"((uint32_t)val),
                    "d"((uint32_t)(val >> 32)));
   }
 #elif defined(__aarch64__)

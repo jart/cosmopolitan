@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/iscall.internal.h"
+#include "libc/intrin/iscall.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
@@ -46,8 +46,9 @@
  * @param st is open symbol table for current executable
  * @return -1 w/ errno if error happened
  */
-dontinstrument dontasan int PrintBacktraceUsingSymbols(
-    int fd, const struct StackFrame *bp, struct SymbolTable *st) {
+dontinstrument int PrintBacktraceUsingSymbols(int fd,
+                                              const struct StackFrame *bp,
+                                              struct SymbolTable *st) {
   size_t gi;
   intptr_t addr;
   const char *name;

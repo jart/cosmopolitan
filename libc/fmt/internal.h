@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
 
@@ -46,6 +47,6 @@
 
 int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
               va_list);
-int __fmt(void *, void *, const char *, va_list);
+int __fmt(void *, void *, const char *, va_list, int *);
 
 #endif /* COSMOPOLITAN_LIBC_FMT_STRTOL_H_ */

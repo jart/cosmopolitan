@@ -28,11 +28,11 @@
 int i, *p;
 
 void SetUp(void) {
-  p = _mapshared(FRAMESIZE);
+  p = _mapshared(getpagesize());
 }
 
 void TearDown(void) {
-  munmap(p, FRAMESIZE);
+  munmap(p, getpagesize());
 }
 
 void AtExit3(void) {

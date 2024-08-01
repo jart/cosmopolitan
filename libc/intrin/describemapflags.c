@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/sysv/consts/map.h"
@@ -24,7 +24,6 @@
 
 const char *(DescribeMapFlags)(char buf[64], int x) {
   const struct DescribeFlags kMapFlags[] = {
-      {MAP_STACK, "STACK"},                      // order matters
       {MAP_PRIVATE, "PRIVATE"},                  //
       {MAP_ANONYMOUS, "ANONYMOUS"},              //
       {MAP_SHARED, "SHARED"},                    //

@@ -32,7 +32,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/intrin/x86.h"
 #include "libc/limits.h"
 #include "libc/log/appendresourcereport.internal.h"
@@ -516,7 +516,11 @@ void AddArg(char *actual) {
 }
 
 static int GetBaseCpuFreqMhz(void) {
+#ifdef __x86_64__
   return KCPUIDS(16H, EAX) & 0x7fff;
+#else
+  return 0;
+#endif
 }
 
 void PlanResource(int resource, struct rlimit rlim) {

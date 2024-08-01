@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/viz/lib/formatstringtable.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/strwidth.h"
 
@@ -46,18 +46,19 @@ static unsigned GetBiggestCellWidth(long yn, long xn,
 void *FormatStringTable(long yn, long xn, const char *const T[yn][xn],
                         int emit(), void *a, const char *startrow,
                         const char *comma, const char *endrow) {
+  void (*Emit)(const char *, void *) = (void (*)(const char *, void *))emit;
   long w, y, x, i, n;
   w = GetBiggestCellWidth(yn, xn, T);
   for (y = 0; y < yn; ++y) {
-    emit(startrow, a);
+    Emit(startrow, a);
     for (x = 0; x < xn; ++x) {
       if (x)
-        emit(comma, a);
+        Emit(comma, a);
       for (n = w - strwidth(T[y][x], 0), i = 0; i < n; ++i)
-        emit(" ", a);
-      emit(T[y][x], a);
+        Emit(" ", a);
+      Emit(T[y][x], a);
     }
-    emit(endrow, a);
+    Emit(endrow, a);
   }
   return (/* unconst */ void *)T;
 }

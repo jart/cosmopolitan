@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ttydefaults.h"
-#include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/nomultics.h"
 
 struct TtyConf __ttyconf = {
     .vmin = 1,

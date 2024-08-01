@@ -35,5 +35,5 @@ char __is_stack_overflow(siginfo_t *si, void *arg) {
     return false;
   intptr_t sp = uc->uc_mcontext.SP;
   intptr_t fp = (intptr_t)si->si_addr;
-  return ABS(fp - sp) < getauxval(AT_PAGESZ);
+  return ABS(fp - sp) < __pagesize;
 }

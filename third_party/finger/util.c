@@ -43,6 +43,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/ctype.h"
 #include "third_party/finger/finger.h"
 
 #ifndef lint

@@ -50,11 +50,9 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
+#include "libc/mem/leaks.h"
 #include "tool/args/args.h"
 __static_yoink("lua_notice");
-
-
-STATIC_STACK_ALIGN(GetStackSize());
 
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"

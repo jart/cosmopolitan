@@ -28,7 +28,8 @@ TEST_LIBC_TIME_DIRECTDEPS =				\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
 	LIBC_X						\
-	THIRD_PARTY_TZ
+	THIRD_PARTY_MUSL				\
+	THIRD_PARTY_TZ					\
 
 TEST_LIBC_TIME_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_TIME_DIRECTDEPS),$($(x))))

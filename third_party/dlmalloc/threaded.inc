@@ -18,13 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/magicu.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
+#include "libc/runtime/runtime.h"
+#include "libc/intrin/weaken.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 #if !FOOTERS || !MSPACES
@@ -64,11 +66,28 @@ size_t dlbulk_free(void *array[], size_t nelem) {
   return 0;
 }
 
+struct ThreadedMallocVisitor {
+  mstate heap;
+  void (*handler)(void *start, void *end,
+                  size_t used_bytes, void *arg);
+  void *arg;
+};
+
+static void threaded_malloc_visitor(void *start, void *end,
+                                    size_t used_bytes, void *arg) {
+  struct ThreadedMallocVisitor *tmv = arg;
+  if (start == tmv->heap)
+    return;
+  tmv->handler(start, end, used_bytes, tmv->arg);
+}
+
 void dlmalloc_inspect_all(void handler(void *start, void *end,
-                                       size_t used_bytes, void *callback_arg),
+                                       size_t used_bytes, void *arg),
                           void *arg) {
-  for (unsigned i = 0; i < g_heapslen; ++i)
-    mspace_inspect_all(g_heaps[i], handler, arg);
+  for (unsigned i = 0; i < g_heapslen; ++i) {
+    struct ThreadedMallocVisitor tmv = {g_heaps[i], handler, arg};
+    mspace_inspect_all(g_heaps[i], threaded_malloc_visitor, &tmv);
+  }
 }
 
 forceinline mstate get_arena(void) {

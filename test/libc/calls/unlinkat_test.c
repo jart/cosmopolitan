@@ -30,9 +30,6 @@ void SetUpOnce(void) {
 
 TEST(unlink, efault) {
   ASSERT_SYS(EFAULT, -1, unlink(0));
-  if (IsWindows() || !IsAsan())
-    return;  // not possible
-  ASSERT_SYS(EFAULT, -1, unlink((void *)77));
 }
 
 TEST(unlink, enoent) {

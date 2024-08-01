@@ -204,7 +204,7 @@ static double sin_pi(double x)
 double lgamma_r(double x, int *signgamp)
 {
 	union {double f; uint64_t i;} u = {x};
-	double_t t,y,z,nadj,p,p1,p2,p3,q,r,w;
+	double_t t,y,z,nadj=0,p,p1,p2,p3,q,r,w;
 	uint32_t ix;
 	int sign,i;
 

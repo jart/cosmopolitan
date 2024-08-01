@@ -17,16 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/winsock.h"
 
 void DescribeIovNt(const struct NtIovec *iov, uint32_t iovlen, ssize_t rem) {
   int i;
-  if ((!IsAsan() && kisdangerous(iov)) ||
-      (IsAsan() && !__asan_is_valid(iov, iovlen * sizeof(struct NtIovec)))) {
+  if (kisdangerous(iov)) {
     kprintf("%p", iov);
     return;
   }

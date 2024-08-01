@@ -30,7 +30,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/nomultics.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
@@ -335,7 +335,7 @@ void lua_initrepl(lua_State *L) {
     prompt = get_prompt(L, 1);
     if ((g_historypath = linenoiseGetHistoryPath(lua_progname))) {
       if (linenoiseHistoryLoad(g_historypath) == -1) {
-        fprintf(stderr, "%r%s: failed to load history: %m%n", g_historypath);
+        fprintf(stderr, "%r%s: failed to load history: %m\n", g_historypath);
         free(g_historypath);
         g_historypath = 0;
       }

@@ -16,7 +16,7 @@ LIBC_INTRIN_A_CHECKS = $(LIBC_INTRIN_A).pkg
 
 ifeq ($(ARCH), aarch64)
 LIBC_INTRIN_A_SRCS_S += $(wildcard libc/intrin/aarch64/*.S)
-LIBC_INTRIN_A_HDRS += libc/intrin/aarch64/asmdefs.internal.h
+LIBC_INTRIN_A_HDRS += libc/intrin/aarch64/asmdefs.h
 endif
 
 LIBC_INTRIN_A_OBJS =					\
@@ -62,12 +62,10 @@ o/$(MODE)/libc/intrin/kprintf.o: private		\
 			-Wframe-larger-than=128		\
 			-Walloca-larger-than=128
 
-o/$(MODE)/libc/intrin/asan.o: private			\
+o/$(MODE)/libc/intrin/mmap.o				\
+o/$(MODE)/libc/intrin/tree.o: private			\
 		CFLAGS +=				\
-			-O2				\
-			-finline			\
-			-finline-functions		\
-			-fpatchable-function-entry=0,0
+			-ffunction-sections
 
 o//libc/intrin/memmove.o: private			\
 		CFLAGS +=				\
@@ -98,6 +96,14 @@ o/$(MODE)/libc/intrin/x86.o: private			\
 			-fno-jump-tables		\
 			-fpatchable-function-entry=0	\
 			-Os
+
+# avoid the legacy sse decoding penalty on avx systems
+o//libc/intrin/dll.o					\
+o//libc/intrin/fds.o					\
+o//libc/intrin/mmap.o					\
+o//libc/intrin/demangle.o: private			\
+		CFLAGS +=				\
+			-mgeneral-regs-only
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
@@ -141,6 +147,12 @@ o/$(MODE)/libc/intrin/kmonthnameshort.o: libc/intrin/kmonthnameshort.S
 o/$(MODE)/libc/intrin/kweekdayname.o: libc/intrin/kweekdayname.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/kweekdaynameshort.o: libc/intrin/kweekdaynameshort.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/sched_yield.o: libc/intrin/sched_yield.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/dsohandle.o: libc/intrin/dsohandle.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/getpagesize_freebsd.o: libc/intrin/getpagesize_freebsd.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))

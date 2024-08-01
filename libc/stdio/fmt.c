@@ -39,13 +39,15 @@
 │ THIS SOFTWARE.                                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
+#include "libc/fmt/internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/nomultics.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -448,7 +450,10 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
     } else if (signbit == 15) {
       precision = strnlen16((const char16_t *)p, precision);
     } else {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
       precision = strnlen(p, precision);
+#pragma GCC diagnostic pop
     }
   }
 
@@ -816,7 +821,7 @@ static int __fmt_noop(const char *, void *, size_t) {
  * @asyncsignalsafe if floating point isn't used
  * @vforksafe if floating point isn't used
  */
-int __fmt(void *fn, void *arg, const char *format, va_list va) {
+int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
   long ld;
   void *p;
   double x;
@@ -1117,7 +1122,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         break;
       case 'n':
-        __FMT_PUT('\n');
+        *va_arg(va, int *) = *wrote;
         break;
 
       case 'F':

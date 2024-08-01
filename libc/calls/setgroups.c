@@ -19,9 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
 
@@ -40,11 +39,7 @@
  */
 int setgroups(size_t size, const uint32_t list[]) {
   int rc;
-  size_t n;
-  if (IsAsan() &&
-      (ckd_mul(&n, size, sizeof(list[0])) || !__asan_is_valid(list, n))) {
-    rc = efault();
-  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
+  if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
     rc = sys_setgroups(size, list);
   } else {
     rc = enosys();

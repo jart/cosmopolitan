@@ -81,7 +81,7 @@ char *utf32to8(const wchar_t *, size_t, size_t *) __wur;
 char *xhomedir(void) __wur;
 char *xstripext(const char *) __wur;
 char *xstripexts(const char *) __wur;
-void *xload(_Atomic(void *) *, const void *, size_t, size_t);
+void *xload(void *, const void *, size_t, size_t);
 int rmrf(const char *);
 char *xbasename(const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow dontcallback __wur returnsnonnull;

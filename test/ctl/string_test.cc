@@ -16,16 +16,26 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include "ctl/is_same.h"
 #include "ctl/string.h"
+#include "libc/mem/leaks.h"
 
-#include <__type_traits/is_same.h>
-
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-using String = ctl::string;
 // #include <string>
-// using String = std::string;
+// #include <utility>
+// #define ctl std
+
+using String = ctl::string;
+
+#undef ctl
+
+inline bool
+issmall(const String& s)
+{
+    return s.capacity() == sizeof(s) &&
+           s.data() == reinterpret_cast<const char*>(&s);
+}
 
 int
 main()
@@ -356,17 +366,16 @@ main()
 
     {
         String s;
-        if constexpr (std::is_same_v<ctl::string, decltype(s)>) {
+        if constexpr (ctl::is_same_v<ctl::string, decltype(s)>) {
             // tests the small-string optimization on ctl::string
-            char* d = s.data();
             for (int i = 0; i < 23; ++i) {
                 s.append("a");
-                if (s.data() != d) {
+                if (!issmall(s)) {
                     return 79 + i;
                 }
             }
             s.append("a");
-            if (s.data() == d) {
+            if (issmall(s)) {
                 return 103;
             }
         } else {
@@ -380,6 +389,20 @@ main()
         }
     }
 
+    {
+        String s("arst", 4);
+        for (int i = 0; i < 30; ++i) {
+            s.append("a");
+        }
+        s.resize(4);
+        if (s != "arst")
+            return 105;
+        if constexpr (ctl::is_same_v<ctl::string, decltype(s)>) {
+            String r(s);
+            if (issmall(s) || !issmall(r))
+                return 106;
+        }
+    }
+
     CheckForMemoryLeaks();
-    return 0;
 }

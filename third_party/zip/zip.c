@@ -55,6 +55,7 @@
 #include "libc/str/str.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/ctype.h"
 #include "third_party/bzip2/bzlib.h"
 
 #ifdef VMS

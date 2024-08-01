@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Allocates granular aligned memory, i.e.
@@ -28,5 +29,5 @@
  * @see pvalloc()
  */
 void *valloc(size_t n) {
-  return memalign(FRAMESIZE, n);
+  return memalign(__pagesize, n);
 }

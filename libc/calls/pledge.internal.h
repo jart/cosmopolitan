@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_PLEDGE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_PLEDGE_INTERNAL_H_
 #include "libc/calls/pledge.h"
-#include "libc/intrin/promises.internal.h"
+#include "libc/intrin/promises.h"
 COSMOPOLITAN_C_START_
 
 struct Pledges {

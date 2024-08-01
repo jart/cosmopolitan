@@ -2,6 +2,10 @@
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_MACROS_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
+#ifndef STDC
+#define STDC
+#endif
+
 #ifndef OF /* function prototypes */
 #  ifdef STDC
 #    define OF(args)  args

@@ -29,6 +29,6 @@ intptr_t _pthread_syshand(struct PosixThread *pt) {
     syshand = atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
     if (syshand)
       return syshand;
-    pthread_pause_np();
+    pthread_yield_np();
   }
 }

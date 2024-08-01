@@ -19,9 +19,14 @@
 #include "third_party/regex/regex.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+void SetUpOnce(void) {
+  setlocale(LC_ALL, "C.UTF-8");
+}
 
 TEST(regex, test) {
   regex_t rx;

@@ -22,12 +22,13 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/popcnt.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/xchg.internal.h"
+#include "libc/intrin/safemacros.h"
+#include "libc/intrin/xchg.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -497,18 +498,18 @@ static void *NewBoard(size_t *out_size) {
   char *p;
   size_t s, n, k;
   s = (byn * bxn) >> 3;
-  k = getauxval(AT_PAGESZ) + ROUNDUP(s, getauxval(AT_PAGESZ));
-  n = ROUNDUP(k + getauxval(AT_PAGESZ), sysconf(_SC_PAGESIZE));
+  k = getpagesize() + ROUNDUP(s, getpagesize());
+  n = ROUNDUP(k + getpagesize(), sysconf(_SC_PAGESIZE));
   p = _mapanon(n);
-  mprotect(p, getauxval(AT_PAGESZ), 0);
+  mprotect(p, getpagesize(), 0);
   mprotect(p + k, n - k, 0);
   if (out_size)
     *out_size = n;
-  return p + getauxval(AT_PAGESZ);
+  return p + getpagesize();
 }
 
 static void FreeBoard(void *p, size_t n) {
-  munmap((char *)p - getauxval(AT_PAGESZ), n);
+  munmap((char *)p - getpagesize(), n);
 }
 
 static void AllocateBoardsWithHardwareAcceleratedMemorySafety(void) {

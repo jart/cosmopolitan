@@ -8,7 +8,7 @@
 
 #include "third_party/libcxxabi/abort_message.h"
 #include "third_party/libcxxabi/include/cxxabi.h"
-#include "third_party/libcxx/__threading_support"
+#include "third_party/libcxx/__thread/support.h"
 #ifndef _LIBCXXABI_HAS_NO_THREADS
 #if defined(__ELF__) && defined(_LIBCXXABI_LINK_PTHREAD_LIB)
 #pragma comment(lib, "pthread")

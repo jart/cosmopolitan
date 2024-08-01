@@ -5,14 +5,11 @@ DESCRIPTION
 ORIGIN
 
   git@github.com:llvm/llvm-project.git
-  commit ad0543f4ea82ec41c5e854af65758fa8d92d5553
-  Author: Haojian Wu <hokein.wu@gmail.com>
-  Date:   Thu Jun 1 15:31:43 2023 +0200
+  commit 83c2bfdacb0593b3a72e93098a55afdcd93d865f
+  Date:   Mon Jul 22 10:22:23 2024 -0400
 
 LOCAL CHANGES
 
   - Wrote __config_site
-  - Add __COSMOPOLITAN__ when appropriate
-  - Kludged (and probably broke) awful `cerr` feature
-  - Break apart locale.cpp due to its outrageous build times
-  - Suppress -Wattribute sometimes due to __always_inline__ hack
+  - Add special handling for cosmo errno
+  - Shaped and molded directory structure

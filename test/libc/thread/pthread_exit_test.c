@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/cxxabi.h"
-#include "libc/intrin/cxaatexit.internal.h"
+#include "libc/intrin/cxaatexit.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"

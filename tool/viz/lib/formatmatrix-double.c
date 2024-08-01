@@ -61,7 +61,7 @@ char *StringifyMatrixDouble(long yn, long xn, const double M[yn][xn],
                             const char *param2, const char *param3, double digs,
                             double rounder(double)) {
   struct StringBuilder *sb = NewStringBuilder();
-  FormatMatrixDouble(yn, xn, M, StringBuilderAppend, sb, formatter, param1,
-                     param2, param3, digs, rounder);
+  FormatMatrixDouble(yn, xn, M, (void *)StringBuilderAppend, sb, formatter,
+                     param1, param2, param3, digs, rounder);
   return FreeStringBuilder(sb);
 }

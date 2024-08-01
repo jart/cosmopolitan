@@ -33,12 +33,6 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
-TEST(access, efault) {
-  if (IsWindows() || !IsAsan())
-    return;  // not possible
-  ASSERT_SYS(EFAULT, -1, access((void *)77, F_OK));
-}
-
 TEST(access, enoent) {
   ASSERT_SYS(ENOENT, -1, access("", F_OK));
   ASSERT_SYS(ENOENT, -1, access("doesnotexist", F_OK));

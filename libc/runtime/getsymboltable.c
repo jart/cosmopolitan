@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/promises.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
@@ -27,14 +29,12 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
-#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
 #include "third_party/puff/puff.h"
 
 __static_yoink("__get_symbol");
 
-static pthread_spinlock_t g_lock;
 struct SymbolTable *__symtab;  // for kprintf
 
 static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
@@ -56,15 +56,14 @@ static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
+  size_t size;
   ssize_t cf, lf;
-  size_t size, size2;
   struct SymbolTable *res = 0;
   if ((cf = GetZipFile(zipos, ".symtab." _ARCH_NAME)) != -1 ||
       (cf = GetZipFile(zipos, ".symtab")) != -1) {
     lf = GetZipCfileOffset(zipos->map + cf);
     size = GetZipLfileUncompressedSize(zipos->map + lf);
-    size2 = ROUNDUP(size, FRAMESIZE);
-    if ((res = _mapanon(size2))) {
+    if ((res = _mapanon(size))) {
       switch (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
         case kZipCompressionNone:
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);
@@ -73,12 +72,12 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
           if (__inflate((void *)res, size,
                         (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
                         GetZipLfileCompressedSize(zipos->map + lf))) {
-            munmap(res, size2);
+            munmap(res, size);
             res = 0;
           }
           break;
         default:
-          munmap(res, size2);
+          munmap(res, size);
           res = 0;
           break;
       }
@@ -99,6 +98,25 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
   } else {
     return 0;
   }
+}
+
+static void GetSymbolTableInit(void) {
+  struct Zipos *z;
+  int e = errno;
+  if (!__symtab && !__isworker) {
+    if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
+      if ((__symtab = GetSymbolTableFromZip(z))) {
+        __symtab->names =
+            (uint32_t *)((char *)__symtab + __symtab->names_offset);
+        __symtab->name_base =
+            (char *)((char *)__symtab + __symtab->name_base_offset);
+      }
+    }
+    if (!__symtab) {
+      __symtab = GetSymbolTableFromElf();
+    }
+  }
+  errno = e;
 }
 
 /**
@@ -122,24 +140,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  * @return symbol table, or NULL if not found
  */
 struct SymbolTable *GetSymbolTable(void) {
-  struct Zipos *z;
-  if (pthread_spin_trylock(&g_lock))
-    return 0;
-  int e = errno;
-  if (!__symtab && !__isworker) {
-    if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
-      if ((__symtab = GetSymbolTableFromZip(z))) {
-        __symtab->names =
-            (uint32_t *)((char *)__symtab + __symtab->names_offset);
-        __symtab->name_base =
-            (char *)((char *)__symtab + __symtab->name_base_offset);
-      }
-    }
-    if (!__symtab) {
-      __symtab = GetSymbolTableFromElf();
-    }
-  }
-  errno = e;
-  pthread_spin_unlock(&g_lock);
+  static atomic_uint once;
+  cosmo_once(&once, GetSymbolTableInit);
   return __symtab;
 }

@@ -2853,6 +2853,7 @@ __static_yoink("usr/share/terminfo/z/ztx11");
  */
 
 #include "curses.priv.h"
+#include "libc/ctype.h"
 #include "hashed_db.h"
 
 #include "tic.h"

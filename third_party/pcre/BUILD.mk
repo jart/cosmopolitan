@@ -26,7 +26,8 @@ THIRD_PARTY_PCRE_A_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_SYSV
+	LIBC_SYSV					\
+	THIRD_PARTY_MUSL				\
 
 THIRD_PARTY_PCRE_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_PCRE_A_DIRECTDEPS),$($(x))))

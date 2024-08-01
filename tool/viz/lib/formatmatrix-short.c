@@ -53,7 +53,7 @@ char *StringifyMatrixShort(long yn, long xn, const short M[yn][xn],
                            StringTableFormatter formatter, const char *param1,
                            const char *param2, const char *param3) {
   struct StringBuilder *sb = NewStringBuilder();
-  FormatMatrixShort(yn, xn, M, StringBuilderAppend, sb, formatter, param1,
-                    param2, param3);
+  FormatMatrixShort(yn, xn, M, (void *)StringBuilderAppend, sb, formatter,
+                    param1, param2, param3);
   return FreeStringBuilder(sb);
 }

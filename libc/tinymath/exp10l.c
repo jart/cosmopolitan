@@ -52,6 +52,6 @@ long double exp10l(long double x)
 	return powl(10.0, x);
 }
 
-__weak_reference(exp10l, pow10l);
+__strong_reference(exp10l, pow10l);
 
 #endif /* long double is long */

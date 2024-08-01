@@ -27,9 +27,8 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
@@ -109,11 +108,6 @@ ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
 
   if (!g_copy_file_range.ok) {
     rc = enosys();
-  } else if (IsAsan() && ((opt_in_out_inoffset &&
-                           !__asan_is_valid(opt_in_out_inoffset, 8)) ||
-                          (opt_in_out_outoffset &&
-                           !__asan_is_valid(opt_in_out_outoffset, 8)))) {
-    rc = efault();
   } else if (__isfdkind(outfd, kFdZip)) {
     rc = ebadf();
   } else if (__isfdkind(infd, kFdZip)) {

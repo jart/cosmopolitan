@@ -40,18 +40,18 @@ namespace __adl_only {
 void make_error_code() = delete;
 } // namespace __adl_only
 
-class _LIBCPP_TYPE_VIS error_code {
+class _LIBCPP_EXPORTED_FROM_ABI error_code {
   int __val_;
   const error_category* __cat_;
 
 public:
   _LIBCPP_HIDE_FROM_ABI error_code() _NOEXCEPT : __val_(0), __cat_(&system_category()) {}
+  _LIBCPP_HIDE_FROM_ABI error_code(errc __val) _NOEXCEPT : __val_(__errc_to_err(__val)), __cat_(&system_category()) {}
+  _LIBCPP_HIDE_FROM_ABI error_code(int __val, const error_category& __cat) _NOEXCEPT : __val_(__errc_to_err((errc)__val)), __cat_(&__cat) {}
+  _LIBCPP_HIDE_FROM_ABI error_code(errc __val, const error_category& __cat) _NOEXCEPT : __val_(__errc_to_err(__val)), __cat_(&__cat) {}
 
-  _LIBCPP_HIDE_FROM_ABI error_code(int __val, const error_category& __cat) _NOEXCEPT : __val_(__val), __cat_(&__cat) {}
-
-  template <class _Ep>
-  _LIBCPP_HIDE_FROM_ABI
-  error_code(_Ep __e, typename enable_if<is_error_code_enum<_Ep>::value>::type* = nullptr) _NOEXCEPT {
+  template <class _Ep, __enable_if_t<is_error_code_enum<_Ep>::value, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI error_code(_Ep __e) _NOEXCEPT {
     using __adl_only::make_error_code;
     *this = make_error_code(__e);
   }
@@ -61,9 +61,8 @@ public:
     __cat_ = &__cat;
   }
 
-  template <class _Ep>
-  _LIBCPP_HIDE_FROM_ABI typename enable_if< is_error_code_enum<_Ep>::value, error_code& >::type
-  operator=(_Ep __e) _NOEXCEPT {
+  template <class _Ep, __enable_if_t<is_error_code_enum<_Ep>::value, int> = 0>
+  _LIBCPP_HIDE_FROM_ABI error_code& operator=(_Ep __e) _NOEXCEPT {
     using __adl_only::make_error_code;
     *this = make_error_code(__e);
     return *this;
@@ -74,7 +73,7 @@ public:
     __cat_ = &system_category();
   }
 
-  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __val_; }
+  _LIBCPP_HIDE_FROM_ABI int value() const _NOEXCEPT { return __errc_to_err((errc)__val_); }
 
   _LIBCPP_HIDE_FROM_ABI const error_category& category() const _NOEXCEPT { return *__cat_; }
 
@@ -88,11 +87,15 @@ public:
 };
 
 inline _LIBCPP_HIDE_FROM_ABI error_code make_error_code(errc __e) _NOEXCEPT {
-  return error_code(static_cast<int>(__e), generic_category());
+  return error_code(__e, generic_category());
 }
 
 inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, const error_code& __y) _NOEXCEPT {
   return __x.category() == __y.category() && __x.value() == __y.value();
+}
+
+inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, errc __y) _NOEXCEPT {
+  return __x == error_code(__y, __x.category());
 }
 
 inline _LIBCPP_HIDE_FROM_ABI bool operator==(const error_code& __x, const error_condition& __y) _NOEXCEPT {

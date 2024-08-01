@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
@@ -54,6 +55,8 @@ errno_t pthread_setaffinity_np(pthread_t thread, size_t size,
   int e, rc, tid;
   cpu_set_t bs = {0};
   struct PosixThread *pt;
+  unassert(thread);
+  unassert(bitset);
   e = errno;
   if (size < sizeof(cpu_set_t)) {
     memcpy(&bs, bitset, size);

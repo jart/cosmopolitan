@@ -16,13 +16,14 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/highwayhash64.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/inttypes.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/zlib/zlib.h"
@@ -100,33 +101,31 @@ TEST(highwayhash64, test) {
 BENCH(highwayhash64, newbench) {
   char fun[256];
   rngset(fun, 256, _rand64, -1);
-  EZBENCH_N("highwayhash64", 0, HighwayHash64(0, 0, kTestKey1));
-  EZBENCH_N("highwayhash64", 8, HighwayHash64("helloooo", 8, kTestKey1));
-  EZBENCH_N("highwayhash64", 31, HighwayHash64(fun, 31, kTestKey1));
-  EZBENCH_N("highwayhash64", 32, HighwayHash64(fun, 32, kTestKey1));
-  EZBENCH_N("highwayhash64", 63, HighwayHash64(fun, 63, kTestKey1));
-  EZBENCH_N("highwayhash64", 64, HighwayHash64(fun, 64, kTestKey1));
-  EZBENCH_N("highwayhash64", 128, HighwayHash64(fun, 128, kTestKey1));
-  EZBENCH_N("highwayhash64", 256, HighwayHash64(fun, 256, kTestKey1));
-  EZBENCH_N("highwayhash64", kHyperionSize,
+  BENCHMARK(10, 0, HighwayHash64(0, 0, kTestKey1));
+  BENCHMARK(10, 8, HighwayHash64("helloooo", 8, kTestKey1));
+  BENCHMARK(10, 31, HighwayHash64(fun, 31, kTestKey1));
+  BENCHMARK(10, 32, HighwayHash64(fun, 32, kTestKey1));
+  BENCHMARK(10, 63, HighwayHash64(fun, 63, kTestKey1));
+  BENCHMARK(10, 64, HighwayHash64(fun, 64, kTestKey1));
+  BENCHMARK(10, 128, HighwayHash64(fun, 128, kTestKey1));
+  BENCHMARK(10, 256, HighwayHash64(fun, 256, kTestKey1));
+  BENCHMARK(10, kHyperionSize,
             HighwayHash64(kHyperion, kHyperionSize, kTestKey1));
 }
 
 BENCH(highwayhash64, bench) {
-  EZBENCH2("knuth small", donothing,
-           __expropriate(KnuthMultiplicativeHash32(__veil("r", "hello"), 5)));
-  EZBENCH2("crc32c small", donothing, __expropriate(crc32c(0, "hello", 5)));
-  EZBENCH2("crc32 small", donothing,
-           __expropriate(crc32_z(0, __veil("r", "hello"), 5)));
-  EZBENCH2("highwayhash64 small", donothing,
-           HighwayHash64((void *)"hello", 5, kTestKey1));
-  EZBENCH2("crc32 big", donothing,
-           __expropriate(crc32_z(0, kHyperion, kHyperionSize)));
-  EZBENCH2("crc32c big", donothing,
-           __expropriate(crc32c(0, kHyperion, kHyperionSize)));
-  EZBENCH2("highwayhash64 big", donothing,
-           HighwayHash64((void *)kHyperion, kHyperionSize, kTestKey1));
-  EZBENCH2("knuth big", donothing,
-           __expropriate(KnuthMultiplicativeHash32(__veil("r", kHyperion),
-                                                   kHyperionSize)));
+  BENCHMARK(10, 5,
+            __expropriate(KnuthMultiplicativeHash32(__veil("r", "hello"), 5)));
+  BENCHMARK(10, 5, __expropriate(crc32c(0, "hello", 5)));
+  BENCHMARK(10, 5, __expropriate(crc32_z(0, __veil("r", "hello"), 5)));
+  BENCHMARK(10, 5, HighwayHash64((void *)"hello", 5, kTestKey1));
+  BENCHMARK(10, kHyperionSize,
+            __expropriate(crc32_z(0, kHyperion, kHyperionSize)));
+  BENCHMARK(10, kHyperionSize,
+            __expropriate(crc32c(0, kHyperion, kHyperionSize)));
+  BENCHMARK(10, kHyperionSize,
+            HighwayHash64((void *)kHyperion, kHyperionSize, kTestKey1));
+  BENCHMARK(10, kHyperionSize,
+            __expropriate(KnuthMultiplicativeHash32(__veil("r", kHyperion),
+                                                    kHyperionSize)));
 }

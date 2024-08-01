@@ -154,6 +154,66 @@ o/$(MODE)/libc/calls/sigcrashsig.o: private		\
 		CFLAGS +=				\
 			-Os
 
+# avoid legacy sse decoding penalty on avx systems
+o//libc/calls/cfmakeraw.o				\
+o//libc/calls/clock_gettime-xnu.o			\
+o//libc/calls/CPU_AND.o					\
+o//libc/calls/CPU_OR.o					\
+o//libc/calls/CPU_XOR.o					\
+o//libc/calls/dl_iterate_phdr.o				\
+o//libc/calls/dup-nt.o					\
+o//libc/calls/fcntl-nt.o				\
+o//libc/calls/flock-nt.o				\
+o//libc/calls/fstatfs-nt.o				\
+o//libc/calls/fstat-nt.o				\
+o//libc/calls/futimesat.o				\
+o//libc/calls/futimes.o					\
+o//libc/calls/getrlimit.o				\
+o//libc/calls/gettimeofday.o				\
+o//libc/calls/ioctl.o					\
+o//libc/calls/lutimes.o					\
+o//libc/calls/metaflock.o				\
+o//libc/calls/ntaccesscheck.o				\
+o//libc/calls/ntspawn.o					\
+o//libc/calls/open-nt.o					\
+o//libc/calls/pledge-linux.o				\
+o//libc/calls/ppoll.o					\
+o//libc/calls/preadv.o					\
+o//libc/calls/pselect.o					\
+o//libc/calls/pwritev.o					\
+o//libc/calls/read-nt.o					\
+o//libc/calls/readv.o					\
+o//libc/calls/readwrite-nt.o				\
+o//libc/calls/releasefd.o				\
+o//libc/calls/select.o					\
+o//libc/calls/sigaction.o				\
+o//libc/calls/sigenter-freebsd.o			\
+o//libc/calls/sigenter-netbsd.o				\
+o//libc/calls/sigenter-openbsd.o			\
+o//libc/calls/sigenter-xnu.o				\
+o//libc/calls/sigignore.o				\
+o//libc/calls/siginfo2cosmo.o				\
+o//libc/calls/signal.o					\
+o//libc/calls/sig.o					\
+o//libc/calls/sigtimedwait.o				\
+o//libc/calls/stat2cosmo.o				\
+o//libc/calls/statfs2cosmo.o				\
+o//libc/calls/statfs2statvfs.o				\
+o//libc/calls/tcgetattr-nt.o				\
+o//libc/calls/tcgetattr.o				\
+o//libc/calls/tcgetwinsize-nt.o				\
+o//libc/calls/tcsetattr-nt.o				\
+o//libc/calls/tcsetwinsize-nt.o				\
+o//libc/calls/termios2host.o				\
+o//libc/calls/timespec_sleep.o				\
+o//libc/calls/uname.o					\
+o//libc/calls/utimensat-old.o				\
+o//libc/calls/utimes.o					\
+o//libc/calls/winexec.o					\
+o//libc/calls/writev.o: private				\
+		COPTS +=				\
+			-mgeneral-regs-only
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
@@ -162,8 +222,6 @@ o/$(MODE)/libc/calls/swapcontext.o: libc/calls/swapcontext.S
 o/$(MODE)/libc/calls/tailcontext.o: libc/calls/tailcontext.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/calls/stackjump.o: libc/calls/stackjump.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/calls/sched_yield.o: libc/calls/sched_yield.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/libc/calls/uname.o: libc/integral/normalize.inc

@@ -45,7 +45,7 @@ void SetUpOnce(void) {
 
 void CheckForFdLeaks(void) {
   int rc, i, l = 0, e = errno;
-  for (i = 3; i < 16; ++i) {
+  for (i = 3; i < 50; ++i) {
     rc = fcntl(i, F_GETFL);
     if (rc == -1) {
       ASSERT_EQ(EBADF, errno);
@@ -149,7 +149,11 @@ void *Worker(void *arg) {
     ASSERT_NE(NULL, (f = popen(cmd, "r")));
     EXPECT_STREQ(arg1, fgets(buf, sizeof(buf), f));
     EXPECT_STREQ(arg2, fgets(buf, sizeof(buf), f));
-    ASSERT_EQ(0, pclose(f));
+    if (IsWindows())
+      // todo(jart): why does it flake with echild?
+      pclose(f);
+    else
+      ASSERT_EQ(0, pclose(f));
     free(arg2);
     free(arg1);
     free(cmd);
@@ -158,10 +162,6 @@ void *Worker(void *arg) {
 }
 
 TEST(popen, torture) {
-  if (IsWindows()) {
-    // TODO: Why does pclose() return kNtSignalAccessViolationa?!
-    return;
-  }
   int i, n = 4;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo", "echo", 0755);

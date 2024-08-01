@@ -53,7 +53,6 @@ o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
 $(THIRD_PARTY_XED_A_OBJS): private			\
 		COPTS +=				\
 			-ffreestanding			\
-			-fno-sanitize=address		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 

@@ -65,8 +65,8 @@
  *
  * @cost ~100ns
  */
-void *dct(float M[restrict hasatleast 8][8], unsigned stride, float c0,
-          float c1, float c2, float c3, float c4) {
+void *dct(float M[hasatleast 8][8], unsigned stride, float c0, float c1,
+          float c2, float c3, float c4) {
   unsigned y, x;
   for (y = 0; y < stride * 8; y += stride) {
     DCT(M[y][0], M[y][1], M[y][2], M[y][3], M[y][4], M[y][5], M[y][6], M[y][7],
@@ -79,7 +79,7 @@ void *dct(float M[restrict hasatleast 8][8], unsigned stride, float c0,
   return M;
 }
 
-void *dctjpeg(float M[restrict hasatleast 8][8], unsigned stride) {
+void *dctjpeg(float M[hasatleast 8][8], unsigned stride) {
   return dct(M, stride, .707106781f, .382683433f, .541196100f, 1.306562965f,
              .707106781f);
 }

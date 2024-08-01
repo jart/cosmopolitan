@@ -25,8 +25,9 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -158,6 +159,7 @@ static const char *stubpath;
 static long FLAG_SizeOfStackCommit = 64 * 1024;
 static long FLAG_SizeOfStackReserve = 8 * 1024 * 1024;
 
+#define TINYMALLOC_MAX_ALIGN MAX_ALIGN
 #include "libc/mem/tinymalloc.inc"
 
 static wontreturn void Die(const char *thing, const char *reason) {
@@ -182,6 +184,13 @@ static wontreturn void DieOom(void) {
 static void *Calloc(size_t n) {
   void *p;
   if (!(p = calloc(1, n)))
+    DieOom();
+  return p;
+}
+
+static void *Memalign(size_t a, size_t n) {
+  void *p;
+  if (!(p = memalign(a, n)))
     DieOom();
   return p;
 }
@@ -1106,7 +1115,7 @@ int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
   // translate executable
   struct Elf *elf = OpenElf(argv[optind]);
-  char *buf = memalign(MAX_ALIGN, 134217728);
+  char *buf = Memalign(MAX_ALIGN, 134217728);
   struct ImagePointer ip = GeneratePe(elf, buf, 0x00400000);
   if (creat(outpath, 0755) == -1)
     DieSys(elf->path);

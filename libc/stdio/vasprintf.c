@@ -52,6 +52,7 @@ int vasprintf(char **strp, const char *fmt, va_list va) {
     *strp = p;
     return rc;
   } else {
+    free(p);
     return -1;
   }
 }

@@ -19,6 +19,7 @@
 #include "ape/ape.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/dos.internal.h"
 #include "libc/elf/def.h"

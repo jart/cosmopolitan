@@ -83,8 +83,6 @@
            "hasatleast"
            "nodebuginfo"
            "wontreturn"
-           "dontasan"
-           "nomsan"
            "dontubsan"
            "nostackprotector"
            "mayalias"
@@ -220,7 +218,20 @@
            "__sysv_abi__"
            "__mode__"
            "__seg_fs"
-           "__seg_gs"))
+           "__seg_gs"
+           "__access__"
+           "__read_only__"
+           "__write_only__"
+           "__read_write__"
+           "__read_only"
+           "__write_only"
+           "__read_write"
+           "__fd_arg__"
+           "__fd_arg"
+           "__copy__"
+           "__retain__"
+           "__tainted_args__"
+           "__zero_call_used_regs__"))
 
         (clang
          '("__optnone__"

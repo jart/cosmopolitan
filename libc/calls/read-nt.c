@@ -16,21 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/fds.h"
+#include "libc/intrin/nomultics.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
@@ -154,11 +156,11 @@ static textwindows void FreeKeystrokeImpl(struct Dll *key) {
 
 static textwindows struct Keystroke *NewKeystroke(void) {
   struct Dll *e = dll_first(__keystroke.free);
+  if (!e)  // See MIN(freekeys) before ReadConsoleInput()
+    __builtin_trap();
   struct Keystroke *k = KEYSTROKE_CONTAINER(e);
   dll_remove(&__keystroke.free, &k->elem);
   --__keystroke.freekeys;
-  // TODO(jart): What's wrong with GCC 12.3?
-  asm("" : "+r"(k));
   k->buflen = 0;
   return k;
 }
@@ -559,18 +561,15 @@ static textwindows void IngestConsoleInput(void) {
       return;
     if (__keystroke.end_of_file)
       return;
-    if (!GetNumberOfConsoleInputEvents(__keystroke.cin, &n)) {
+    if (!GetNumberOfConsoleInputEvents(__keystroke.cin, &n))
       goto UnexpectedEof;
-    }
     if (!n)
       return;
     n = MIN(__keystroke.freekeys, MIN(ARRAYLEN(records), n));
-    if (!ReadConsoleInput(__keystroke.cin, records, n, &n)) {
+    if (!ReadConsoleInput(__keystroke.cin, records, n, &n))
       goto UnexpectedEof;
-    }
-    for (i = 0; i < n && !__keystroke.end_of_file; ++i) {
+    for (i = 0; i < n && !__keystroke.end_of_file; ++i)
       IngestConsoleInputRecord(records + i);
-    }
   }
 UnexpectedEof:
   STRACE("console read error %d", GetLastError());

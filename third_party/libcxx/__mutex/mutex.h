@@ -10,8 +10,8 @@
 #define _LIBCPP___MUTEX_MUTEX_H
 
 #include <__config>
-#include <__threading_support>
-#include <__type_traits/is_nothrow_default_constructible.h>
+#include <__thread/support.h>
+#include <__type_traits/is_nothrow_constructible.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -21,7 +21,7 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-class _LIBCPP_TYPE_VIS _LIBCPP_THREAD_SAFETY_ANNOTATION(capability("mutex")) mutex {
+class _LIBCPP_EXPORTED_FROM_ABI _LIBCPP_THREAD_SAFETY_ANNOTATION(capability("mutex")) mutex {
   __libcpp_mutex_t __m_ = _LIBCPP_MUTEX_INITIALIZER;
 
 public:

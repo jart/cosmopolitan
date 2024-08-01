@@ -1,3 +1,6 @@
+#include "libc/sysv/consts/auxv.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
 
 /* ---------------------------- setting mparams -------------------------- */
 
@@ -46,8 +49,8 @@ __attribute__((__constructor__(49))) int init_mparams(void) {
     size_t gsize;
 
 #if defined(__COSMOPOLITAN__)
-    psize = FRAMESIZE;
-    gsize = FRAMESIZE;
+    psize = getpagesize();
+    gsize = DEFAULT_GRANULARITY ? DEFAULT_GRANULARITY : psize;
 #elif !defined(WIN32)
     psize = malloc_getpagesize;
     gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);

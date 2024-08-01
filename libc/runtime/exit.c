@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/cxxabi.h"
-#include "libc/intrin/cxaatexit.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/cxaatexit.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
 
@@ -40,14 +40,10 @@ wontreturn void exit(int exitcode) {
   STRACE("exit(%d)", exitcode);
 
   // call thread local c++ object destructors
-  if (_weaken(__cxa_thread_finalize)) {
-    _weaken(__cxa_thread_finalize)();
-  }
+  __cxa_thread_finalize();
 
   // call atexit() and __cxa_atexit() destructors
-  if (_weaken(__cxa_finalize)) {
-    _weaken(__cxa_finalize)(NULL);
-  }
+  __cxa_finalize(NULL);
 
   // call __destructor__ and finiarray destructors
   const uintptr_t *p;

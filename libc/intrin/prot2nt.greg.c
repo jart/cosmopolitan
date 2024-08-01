@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/directmap.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/sysv/consts/prot.h"
 
@@ -42,6 +42,8 @@ privileged int __prot2nt(int prot, int iscow) {
         return kNtPageExecuteReadwrite;
       }
     default:
+      if (prot & PROT_GUARD)
+        return kNtPageReadwrite | kNtPageGuard;
       return kNtPageNoaccess;
   }
 }

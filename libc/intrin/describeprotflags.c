@@ -16,16 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/prot.h"
 
-static const struct DescribeFlags kProtFlags[] = {
-    {PROT_READ, "READ"},    //
-    {PROT_WRITE, "WRITE"},  //
-    {PROT_EXEC, "EXEC"},    //
-};
-
 const char *(DescribeProtFlags)(char buf[48], int x) {
+  const struct DescribeFlags kProtFlags[] = {
+      {PROT_READ, "READ"},    //
+      {PROT_WRITE, "WRITE"},  //
+      {PROT_EXEC, "EXEC"},    //
+      {PROT_GUARD, "GUARD"},  //
+  };
   return DescribeFlags(buf, 48, kProtFlags, ARRAYLEN(kProtFlags), "PROT_", x);
 }

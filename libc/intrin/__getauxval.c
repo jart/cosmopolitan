@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/getauxval.internal.h"
+#include "libc/intrin/getauxval.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -30,10 +30,8 @@
  */
 struct AuxiliaryValue __getauxval(unsigned long at) {
   unsigned long *ap;
-  for (ap = __auxv; ap[0]; ap += 2) {
-    if (at == ap[0]) {
+  for (ap = __auxv; ap && ap[0]; ap += 2)
+    if (at == ap[0])
       return (struct AuxiliaryValue){ap[1], true};
-    }
-  }
   return (struct AuxiliaryValue){0, false};
 }

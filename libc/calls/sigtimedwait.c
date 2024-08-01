@@ -17,15 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigtimedwait.h"
-#include "libc/calls/asan.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/sigtimedwait.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -52,11 +50,7 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
   union siginfo_meta si = {0};
   BEGIN_CANCELATION_POINT;
 
-  if (IsAsan() && (!__asan_is_valid(set, sizeof(*set)) ||
-                   (info && !__asan_is_valid(info, sizeof(*info))) ||
-                   (timeout && !__asan_is_valid_timespec(timeout)))) {
-    rc = efault();
-  } else if (IsLinux() || IsFreebsd() || IsNetbsd()) {
+  if (IsLinux() || IsFreebsd() || IsNetbsd()) {
     if (timeout) {
       // 1. Linux needs its size parameter
       // 2. NetBSD modifies timeout argument

@@ -11,6 +11,7 @@
 #ifndef _GENERAL_H
 #define _GENERAL_H
 #include "third_party/ctags/config.h"
+#include "libc/ctype.h"
 
 /* Define standard error destination
  */

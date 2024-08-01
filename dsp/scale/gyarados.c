@@ -53,11 +53,11 @@ struct SamplingSolution {
 static double ComputeWeight(double x) {
   if (-1.5 < x && x < 1.5) {
     if (-.5 < x && x < .5) {
-      return .75 - SQR(x);
+      return.75 - SQR(x);
     } else if (x < 0) {
-      return .5 * SQR(x + 1.5);
+      return.5 * SQR(x + 1.5);
     } else {
-      return .5 * SQR(x - 1.5);
+      return.5 * SQR(x - 1.5);
     }
   } else {
     return 0;
@@ -149,12 +149,11 @@ static int Sharpen(int ax, int bx, int cx) {
 
 static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
                          long sxw, const int src[syw][sxw], long dyn, long dxn,
-                         long syn, long sxn, int tmp0[restrict dyn][sxn],
-                         int tmp1[restrict dyn][sxn],
-                         int tmp2[restrict dyn][dxn], long yfn, long xfn,
-                         const short fyi[dyn][yfn], const short fyw[dyn][yfn],
-                         const short fxi[dxn][xfn], const short fxw[dxn][xfn],
-                         bool sharpen) {
+                         long syn, long sxn, int tmp0[dyn][sxn],
+                         int tmp1[dyn][sxn], int tmp2[dyn][dxn], long yfn,
+                         long xfn, const short fyi[dyn][yfn],
+                         const short fyw[dyn][yfn], const short fxi[dxn][xfn],
+                         const short fxw[dxn][xfn], bool sharpen) {
   long i;
   int eax, dy, dx, sx;
   for (sx = 0; sx < sxn; ++sx) {

@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/ctype.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/directmap.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"

@@ -7,6 +7,7 @@
 
 #include "third_party/tidy/language.h"
 #include "third_party/tidy/tmbstr.h"
+#include "libc/ctype.h"
 #include "libc/assert.h"
 
 #include "third_party/tidy/language_en.inc"

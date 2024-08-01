@@ -20,8 +20,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 
 #define N 90
@@ -32,8 +31,7 @@ const char *(DescribeItimerval)(char buf[N], int rc,
     return "NULL";
   if (rc == -1)
     return "n/a";
-  if ((!IsAsan() && kisdangerous(it)) ||
-      (IsAsan() && !__asan_is_valid(it, sizeof(*it)))) {
+  if (kisdangerous(it)) {
     ksnprintf(buf, N, "%p", it);
   } else {
     ksnprintf(buf, N, "{%s, %s}", DescribeTimeval(0, &it->it_interval),

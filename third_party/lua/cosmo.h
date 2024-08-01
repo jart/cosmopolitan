@@ -19,6 +19,7 @@ struct Serializer {
   const char *reason;
   char *strbuf;
   size_t strbuflen;
+  uintptr_t bsp;
 };
 
 bool LuaHasMultipleItems(lua_State *);

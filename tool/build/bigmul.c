@@ -48,8 +48,10 @@ void Multiply%dx%d(uint64_t C[%d], const uint64_t A[%d], const uint64_t B[%d]) {
   uint64_t z,h,l;\n\
   uint64_t ",
          (n + m) * 64, n * 64, m * 64, n + m, n, m, n, m, n + m, n, m);
-  Rs = gc(calloc(sizeof(*Rs), n + m + 1));
-  Ra = gc(calloc(sizeof(*Ra), n + m + 1));
+  if (!(Rs = calloc(sizeof(*Rs), n + m + 1)))
+    __builtin_trap();
+  if (!(Ra = calloc(sizeof(*Ra), n + m + 1)))
+    __builtin_trap();
   for (j = 0; j < n; ++j) {
     if (j)
       printf(", ");
@@ -172,6 +174,8 @@ void Multiply%dx%d(uint64_t C[%d], const uint64_t A[%d], const uint64_t B[%d]) {
   }
   printf("}\n");
   fflush(stdout);
+  free(Ra);
+  free(Rs);
 }
 
 int main(int argc, char *argv[]) {

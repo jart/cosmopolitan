@@ -1202,7 +1202,10 @@ static tmbstr cleanup_description( ctmbstr description )
                             name = realloc(name, l_name);
                         }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
                         strncpy(name + i_name, &c, 1);
+#pragma GCC diagnostic pop
                         i_name++;
                         i++;
                         break;

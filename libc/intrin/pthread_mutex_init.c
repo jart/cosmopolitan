@@ -35,9 +35,6 @@
  */
 int pthread_mutex_init(pthread_mutex_t *mutex,
                        const pthread_mutexattr_t *attr) {
-  *mutex = (pthread_mutex_t){
-      ._type = attr ? attr->_type : 0,
-      ._pshared = attr ? attr->_pshared : 0,
-  };
+  *mutex = (pthread_mutex_t){._word = attr ? attr->_word : 0};
   return 0;
 }

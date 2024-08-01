@@ -427,6 +427,7 @@ is_bourne_compatible_shell (const char *path)
     "sh",
     "bash",
     "dash",
+    "cocmd",
     "ksh",
     "rksh",
     "zsh",

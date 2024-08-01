@@ -24,12 +24,14 @@
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 #include "libc/thread/tls.h"
+#include "libc/sysv/consts/mremap.h"
 #include "third_party/nsync/mu.h"
 
 #if !IsTiny()
 #define FOOTERS 1
 #define MSPACES 1
 #define ONLY_MSPACES 1 // enables scalable multi-threaded malloc
+#define USE_SPIN_LOCKS 1 // only profitable using sched_getcpu()
 #else
 #define INSECURE 1
 #define PROCEED_ON_ERROR 1
@@ -39,10 +41,9 @@
 #endif
 
 #define HAVE_MMAP 1
-#define HAVE_MREMAP 0
+#define HAVE_MREMAP 1
 #define HAVE_MORECORE 0
 #define USE_LOCKS 2
-#define USE_SPIN_LOCKS 1
 #define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
 #define ABORT_ON_ASSERT_FAILURE 0
@@ -195,7 +196,7 @@ static void* sys_alloc(mstate m, size_t nb) {
   }
 
   if (HAVE_MMAP && tbase == CMFAIL) {  /* Try MMAP */
-    char* mp = (char*)(dlmalloc_requires_more_vespene_gas(asize));
+    char* mp = dlmalloc_requires_more_vespene_gas(asize);
     if (mp != CMFAIL) {
       tbase = mp;
       tsize = asize;
@@ -366,7 +367,7 @@ static int sys_trim(mstate m, size_t pad) {
             size_t newsize = sp->size - extra;
             (void)newsize; /* placate people compiling -Wunused-variable */
             /* Prefer mremap, fall back to munmap */
-            if (CALL_MREMAP(sp->base, sp->size, newsize, 0) != MFAIL ||
+            if (CALL_MREMAP(sp->base, sp->size, newsize, 0) != MAP_FAILED ||
                 (!extra || !CALL_MUNMAP(sp->base + newsize, extra))) {
               released = extra;
             }
@@ -1220,7 +1221,8 @@ static void internal_inspect_all(mstate m,
           }
         }
         if (start < (void*)next)  /* skip if all space is bookkeeping */
-          handler(start, next, used, arg);
+          if (start != s) /* [jart] fix phantom alloc bug w/ mspace+mmap */
+            handler(start, next, used, arg);
         if (q == top)
           break;
         q = next;
@@ -1260,7 +1262,7 @@ void* dlrealloc_single(void* oldmem, size_t bytes) {
     }
 #endif /* FOOTERS */
     if (!PREACTION(m)) {
-      mchunkptr newp = try_realloc_chunk(m, oldp, nb, 1);
+      mchunkptr newp = try_realloc_chunk(m, oldp, nb, MREMAP_MAYMOVE);
       POSTACTION(m);
       if (newp != 0) {
         check_inuse_chunk(m, newp);

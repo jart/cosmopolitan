@@ -12,7 +12,7 @@ This package provides an STL alternative that's designed to:
 
 This code is experimental and mostly for Justine to save herself from
 the STL trainwreck. That doesn't mean cosmocc users aren't welcome to
-use tihs too. You shouldn't expect the design to not change later on.
+use this too. You shouldn't expect the design to not change later on.
 
 ## Rationale
 

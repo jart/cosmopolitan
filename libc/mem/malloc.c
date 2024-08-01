@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Allocates uninitialized memory.
@@ -43,5 +42,3 @@
 void *malloc(size_t n) {
   return dlmalloc(n);
 }
-
-#endif /* __SANITIZE_ADDRESS__ */

@@ -21,47 +21,67 @@
 #include <__atomic/fence.h>
 #include <stdckdint.h>
 
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+
 namespace ctl {
 
-string::~string() noexcept
+void
+string::destroy_big() noexcept
 {
-    if (isbig()) {
-        auto* b = big();
-        if (b->n) {
-            if (b->n >= b->c)
-                __builtin_trap();
-            if (b->p[b->n])
-                __builtin_trap();
-        }
-        if (b->c && !b->p)
+    auto* b = &__b;
+    if (b->n) {
+        if (b->n >= b->c)
             __builtin_trap();
-        free(b->p);
+        if (b->p[b->n])
+            __builtin_trap();
     }
+    if (b->c && !b->p)
+        __builtin_trap();
+    free(b->p);
 }
 
-string::string(const char* s) noexcept : string()
+void
+string::init_big(const string& s) noexcept
 {
-    append(s, strlen(s));
+    char* p2;
+    size_t size = s.size();
+    size_t need = size + 1;
+    size_t capacity = need;
+    if (!(p2 = (char*)malloc(capacity)))
+        __builtin_trap();
+    memcpy(p2, s.data(), need);
+    set_big_string(p2, size, capacity);
 }
 
-string::string(const string& s) noexcept : string()
+void
+string::init_big(const string_view s) noexcept
 {
-    append(s.data(), s.size());
+    char* p2;
+    size_t need;
+    if (ckd_add(&need, s.n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memcpy(p2, s.p, s.n);
+    p2[s.n] = 0;
+    set_big_string(p2, s.n, need);
 }
 
-string::string(const string_view s) noexcept : string()
+void
+string::init_big(const size_t n, const char ch) noexcept
 {
-    append(s.p, s.n);
-}
-
-string::string(const size_t size, const char ch) noexcept : string()
-{
-    resize(size, ch);
-}
-
-string::string(const char* s, const size_t size) noexcept : string()
-{
-    append(s, size);
+    size_t need;
+    char* p2;
+    if (ckd_add(&need, n, 1 /* nul */ + 15))
+        __builtin_trap();
+    need &= -16;
+    if (!(p2 = (char*)malloc(need)))
+        __builtin_trap();
+    memset(p2, ch, n);
+    p2[n] = 0;
+    set_big_string(p2, n, need);
 }
 
 const char*
@@ -93,7 +113,7 @@ string::reserve(size_t c2) noexcept
             __builtin_trap();
         memcpy(p2, data(), __::string_size);
     } else {
-        if (!(p2 = (char*)realloc(big()->p, c2)))
+        if (!(p2 = (char*)realloc(__b.p, c2)))
             __builtin_trap();
     }
     std::atomic_signal_fence(std::memory_order_seq_cst);
@@ -110,7 +130,7 @@ string::resize(const size_t n2, const char ch) noexcept
     if (n2 > size())
         memset(data() + size(), ch, n2 - size());
     if (isbig()) {
-        big()->p[big()->n = n2] = 0;
+        __b.p[__b.n = n2] = 0;
     } else {
         set_small_size(n2);
         data()[size()] = 0;
@@ -131,9 +151,9 @@ string::append(const char ch) noexcept
     }
     data()[size()] = ch;
     if (isbig()) {
-        ++big()->n;
+        ++__b.n;
     } else {
-        --small()->rem;
+        --__s.rem;
     }
     data()[size()] = 0;
 }
@@ -164,9 +184,9 @@ string::append(const char ch, const size_t size) noexcept
     if (size)
         memset(data() + this->size(), ch, size);
     if (isbig()) {
-        big()->n += size;
+        __b.n += size;
     } else {
-        small()->rem -= size;
+        __s.rem -= size;
     }
     data()[this->size()] = 0;
 }
@@ -178,9 +198,9 @@ string::append(const void* data, const size_t size) noexcept
     if (size)
         memcpy(this->data() + this->size(), data, size);
     if (isbig()) {
-        big()->n += size;
+        __b.n += size;
     } else {
-        small()->rem -= size;
+        __s.rem -= size;
     }
     this->data()[this->size()] = 0;
 }
@@ -191,9 +211,9 @@ string::pop_back() noexcept
     if (!size())
         __builtin_trap();
     if (isbig()) {
-        --big()->n;
+        --__b.n;
     } else {
-        ++small()->rem;
+        ++__s.rem;
     }
     data()[size()] = 0;
 }
@@ -312,7 +332,7 @@ string::replace(const size_t pos,
         memmove(data() + pos + s.n, data() + last, extra);
     memcpy(data() + pos, s.p, s.n);
     if (isbig()) {
-        big()->p[big()->n = need] = 0;
+        __b.p[__b.n = need] = 0;
     } else {
         set_small_size(need);
         data()[size()] = 0;
@@ -336,9 +356,9 @@ string::insert(const size_t i, const string_view s) noexcept
         memmove(data() + i + s.n, data() + i, extra);
     memcpy(data() + i, s.p, s.n);
     if (isbig()) {
-        big()->n += s.n;
+        __b.n += s.n;
     } else {
-        small()->rem -= s.n;
+        __s.rem -= s.n;
     }
     data()[size()] = 0;
     return *this;
@@ -355,7 +375,7 @@ string::erase(const size_t pos, size_t count) noexcept
     if (extra)
         memmove(data() + pos, data() + pos + count, extra);
     if (isbig()) {
-        big()->n = pos + extra;
+        __b.n = pos + extra;
     } else {
         set_small_size(pos + extra);
     }

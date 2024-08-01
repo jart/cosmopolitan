@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/cv.h"
+#include "third_party/nsync/futex.internal.h"
 
 /**
  * Wakes at least one thread waiting on condition, e.g.
@@ -26,7 +28,7 @@
  *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
  *     // ...
  *     pthread_mutex_lock(&lock);
- *     pthread_cond_signal(&cond, &lock);
+ *     pthread_cond_signal(&cond);
  *     pthread_mutex_unlock(&lock);
  *
  * This function has no effect if there aren't any threads currently
@@ -37,6 +39,19 @@
  * @see pthread_cond_wait
  */
 errno_t pthread_cond_signal(pthread_cond_t *cond) {
-  nsync_cv_signal((nsync_cv *)cond);
+
+#if PTHREAD_USE_NSYNC
+  // favor *NSYNC if this is a process private condition variable
+  // if using Mike Burrows' code isn't possible, use a naive impl
+  if (!cond->_pshared) {
+    nsync_cv_signal((nsync_cv *)cond);
+    return 0;
+  }
+#endif
+
+  // roll forward the monotonic sequence
+  atomic_fetch_add_explicit(&cond->_sequence, 1, memory_order_acq_rel);
+  if (atomic_load_explicit(&cond->_waiters, memory_order_acquire))
+    nsync_futex_wake_((atomic_int *)&cond->_sequence, 1, cond->_pshared);
   return 0;
 }

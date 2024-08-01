@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"

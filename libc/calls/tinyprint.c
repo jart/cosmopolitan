@@ -19,7 +19,6 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/runtime/runtime.h"
 
 #define ASAN_ERROR "error: tinyprint() passed invalid memory, or missing NULL\n"
@@ -59,14 +58,11 @@ ssize_t tinyprint(int fd, const char *s, ...) {
   BLOCK_CANCELATION;
   va_start(va, s);
   for (toto = n = 0; s; s = va_arg(va, const char *)) {
-    if (IsAsan() && !__asan_is_valid_str(s)) {
-      write(2, ASAN_ERROR, sizeof(ASAN_ERROR) - 1);
-      abort();
-    }
     while ((c = *s++)) {
       buf[n++] = c;
       if (n == sizeof(buf)) {
         if (tinyflush(fd, buf, n, &toto)) {
+          va_end(va);
           return toto;
         }
         n = 0;

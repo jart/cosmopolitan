@@ -20,7 +20,7 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 

@@ -19,9 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -43,10 +42,7 @@
 int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
              int flags) {
   int rc;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    rc = efault();
-  } else if (_weaken(__zipos_notat) &&
-             (rc = __zipos_notat(dirfd, path)) == -1) {
+  if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
     rc = erofs();
   } else {
     rc = sys_fchownat(dirfd, path, uid, gid, flags);

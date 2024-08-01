@@ -124,6 +124,7 @@ THIRD_PARTY_LUA_A_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
+	LIBC_LOG						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_PROC						\
@@ -131,14 +132,15 @@ THIRD_PARTY_LUA_A_DIRECTDEPS =					\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_SYSV						\
-	LIBC_LOG						\
-	LIBC_X							\
+	LIBC_THREAD						\
 	LIBC_TINYMATH						\
+	LIBC_X							\
 	NET_HTTP						\
-	THIRD_PARTY_LINENOISE					\
 	THIRD_PARTY_DOUBLECONVERSION				\
 	THIRD_PARTY_GDTOA					\
-	THIRD_PARTY_TZ
+	THIRD_PARTY_LINENOISE					\
+	THIRD_PARTY_MUSL					\
+	THIRD_PARTY_TZ						\
 
 THIRD_PARTY_LUA_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LUA_A_DIRECTDEPS),$($(x))))

@@ -4,9 +4,9 @@
 #endif
 #ifndef _AVX512VPOPCNTDQINTRIN_H_INCLUDED
 #define _AVX512VPOPCNTDQINTRIN_H_INCLUDED
-#ifndef __AVX512VPOPCNTDQ__
+#if !defined (__AVX512VPOPCNTDQ__) || !defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512vpopcntdq")
+#pragma GCC target("avx512vpopcntdq,evex512")
 #define __DISABLE_AVX512VPOPCNTDQ__
 #endif
 extern __inline __m512i

@@ -19,14 +19,13 @@
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -56,9 +55,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   union sockaddr_storage_bsd bsd;
 
   BEGIN_CANCELATION_POINT;
-  if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
-    rc = efault();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();
   } else if (!IsWindows()) {
     if (IsBsd() && msg->msg_name) {
@@ -91,8 +88,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   // TODO(jart): Write a DescribeMsg() function.
   if (strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "sendmsg(%d, ", fd);
-    if ((!IsAsan() && kisdangerous(msg)) ||
-        (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {
+    if (kisdangerous(msg)) {
       kprintf("%p", msg);
     } else {
       kprintf("{");

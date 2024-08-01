@@ -26,8 +26,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/directmap.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
@@ -105,6 +104,8 @@ static bool IsMyDebugBinary(const char *path) {
 
 static void FindDebugBinaryInit(void) {
   const char *comdbg;
+  if (issetugid())
+    return;
   if ((comdbg = getenv("COMDBG")) && IsMyDebugBinary(comdbg)) {
     g_comdbg.res = comdbg;
     return;

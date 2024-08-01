@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -168,5 +169,5 @@ BENCH(memcpy, bench) {
   BB(1023);
   BB(1024);
   BB(4096);
-  BB(FRAMESIZE);
+  BB(getpagesize());
 }

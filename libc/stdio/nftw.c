@@ -102,15 +102,24 @@ static int do_nftw(char *path,
 		dfd = open(path, O_RDONLY | O_DIRECTORY);
 		err = errno;
 		if (dfd < 0 && err == EACCES) type = FTW_DNR;
-		if (!fd_limit) close(dfd);
+		if (!fd_limit) {
+			close(dfd);
+			dfd = -1;
+		}
         }
 
-	if (!(flags & FTW_DEPTH) && (r=fn(path, &st, type, &lev)))
+	if (!(flags & FTW_DEPTH) && (r=fn(path, &st, type, &lev))) {
+		if (dfd != -1)
+			close(dfd);
 		return r;
+	}
 
 	for (; h; h = h->chain)
-		if (h->dev == st.st_dev && h->ino == st.st_ino)
+		if (h->dev == st.st_dev && h->ino == st.st_ino) {
+			if (dfd != -1)
+				close(dfd);
 			return 0;
+		}
 
 	if ((type == FTW_D || type == FTW_DP) && fd_limit) {
 		if (dfd < 0) {

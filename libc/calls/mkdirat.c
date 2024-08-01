@@ -20,9 +20,8 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -53,10 +52,7 @@
  */
 int mkdirat(int dirfd, const char *path, unsigned mode) {
   int rc;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    rc = efault();
-  } else if (_weaken(__zipos_notat) &&
-             (rc = __zipos_notat(dirfd, path)) == -1) {
+  if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
     STRACE("zipos mkdirat not supported yet");
   } else if (!IsWindows()) {
     rc = sys_mkdirat(dirfd, path, mode);

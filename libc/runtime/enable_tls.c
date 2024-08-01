@@ -20,11 +20,11 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/getenv.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
@@ -37,7 +37,10 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/locale.h"
+#include "libc/str/locale.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -139,34 +142,23 @@ textstartup void __enable_tls(void) {
   size_t siz = ROUNDUP(I(_tls_size) + sizeof(struct CosmoTib), TLS_ALIGNMENT);
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
-    // which helps avoid a system call for appes with little tls
+    // which helps avoid a system call for apes with little tls.
     // this is crucial to keeping life.com 16 kilobytes in size!
     mem = __static_tls;
   } else {
-    // if this binary needs a hefty tls block then we'll bank on
-    // malloc() being linked, which links _mapanon().  otherwise
-    // if you exceed this, you need to __static_yoink("_mapanon").
-    // please note that it's probably too early to call calloc()
-    mem = _weaken(_mapanon)(siz);
-  }
-
-  if (IsAsan()) {
-    // poison the space between .tdata and .tbss
-    __asan_poison(mem + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
-                  kAsanProtected);
+    // if a binary needs this much thread_local storage, then it
+    // surely must have linked the mmap() function at some point
+    // we can't call mmap() because it's too early for sig block
+    mem = _weaken(mmap)(0, siz, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
   char *tls = mem + siz - sizeof(*tib) - I(_tls_size);
 
   // copy in initialized data section
-  if (I(_tdata_size)) {
-    if (IsAsan()) {
-      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
-    } else {
-      memcpy(tls, _tdata_start, I(_tdata_size));
-    }
-  }
+  if (I(_tdata_size))
+    memcpy(tls, _tdata_start, I(_tdata_size));
 
 #elif defined(__aarch64__)
 
@@ -177,9 +169,16 @@ textstartup void __enable_tls(void) {
 
   char *mem;
   if (I(_tls_align) <= TLS_ALIGNMENT && size <= sizeof(__static_tls)) {
+    // if tls requirement is small then use the static tls block
+    // which helps avoid a system call for apes with little tls.
+    // this is crucial to keeping life.com 16 kilobytes in size!
     mem = __static_tls;
   } else {
-    mem = _weaken(_mapanon)(size);
+    // if a binary needs this much thread_local storage, then it
+    // surely must have linked the mmap() function at some point
+    // we can't call mmap() because it's too early for sig block
+    mem = _weaken(mmap)(0, size, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 
   struct CosmoTib *tib =
@@ -191,9 +190,8 @@ textstartup void __enable_tls(void) {
   size_t dtv_size = sizeof(uintptr_t) * 2;
 
   char *tdata = (char *)dtv + ROUNDUP(dtv_size, I(_tdata_align));
-  if (I(_tdata_size)) {
+  if (I(_tdata_size))
     memmove(tdata, _tdata_start, I(_tdata_size));
-  }
 
   // Set the DTV.
   //
@@ -216,7 +214,6 @@ textstartup void __enable_tls(void) {
   tib->tib_errno = __errno;
   tib->tib_strace = __strace;
   tib->tib_ftrace = __ftrace;
-  tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
   tib->tib_pthread = (pthread_t)&_pthread_static;
   if (IsWindows()) {
     intptr_t hThread;
@@ -249,18 +246,20 @@ textstartup void __enable_tls(void) {
   // initialize posix threads
   _pthread_static.tib = tib;
   _pthread_static.pt_flags = PT_STATIC;
+  _pthread_static.pt_locale = &__global_locale;
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
-  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
+  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_release);
 
   // ask the operating system to change the x86 segment register
+  if (IsWindows())
+    __tls_index = TlsAlloc();
   __set_tls(tib);
 
 #ifdef __x86_64__
   // rewrite the executable tls opcodes in memory
-  if (IsWindows() || IsOpenbsd() || IsNetbsd()) {
+  if (IsWindows() || IsOpenbsd() || IsNetbsd())
     __morph_tls();
-  }
 #endif
 
   // we are now allowed to use tls

@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha1.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/serialize.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/sha.h"
@@ -111,11 +110,6 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
 
     if( X86_HAVE( SHA ) )
     {
-        if( IsAsan() )
-        {
-            __asan_verify( data, 64 );
-            __asan_verify( ctx, sizeof(*ctx) );
-        }
         sha1_transform_ni( ctx->state, data, 1 );
         return( 0 );
     }
@@ -123,11 +117,6 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
         X86_HAVE( BMI2 ) &&
         X86_HAVE( AVX2 ) )
     {
-        if( IsAsan() )
-        {
-            __asan_verify( data, 64 );
-            __asan_verify( ctx, sizeof(*ctx) );
-        }
         sha1_transform_avx2( ctx->state, data, 1 );
         return( 0 );
     }
@@ -406,8 +395,6 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
     {
         if( X86_HAVE( SHA ) )
         {
-            if( IsAsan() )
-                __asan_verify( input, ilen );
             sha1_transform_ni( ctx->state, input, ilen / 64 );
             input += ROUNDDOWN( ilen, 64 );
             ilen  -= ROUNDDOWN( ilen, 64 );
@@ -416,8 +403,6 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
                  X86_HAVE( BMI2 ) &&
                  X86_HAVE( AVX2 ) )
         {
-            if( IsAsan() )
-                __asan_verify( input, ilen );
             sha1_transform_avx2( ctx->state, input, ilen / 64 );
             input += ROUNDDOWN( ilen, 64 );
             ilen  -= ROUNDDOWN( ilen, 64 );

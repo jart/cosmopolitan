@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/dos2errno.internal.h"
+#include "libc/intrin/dos2errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 

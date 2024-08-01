@@ -14,6 +14,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/utime.h"
 #include "libc/time.h"
+#include "libc/ctype.h"
 #include "third_party/bzip2/bzlib.h"
 
 /*-----------------------------------------------------------*/

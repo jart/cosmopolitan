@@ -27,7 +27,7 @@ enum {
 typedef uintptr_t thrd_t;
 typedef void (*tss_dtor_t)(void *);
 typedef int (*thrd_start_t)(void *);
-typedef _Atomic(uint32_t) once_flag;
+typedef uint32_t once_flag;
 
 void call_once(once_flag *, void (*)(void));
 int thrd_create(thrd_t *, thrd_start_t, void *);

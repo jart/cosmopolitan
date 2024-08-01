@@ -16,51 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
-#include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/directmap.internal.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-#define G FRAMESIZE
-
-static void *_mapframe_impl(void *p, int f) {
-  int rc, prot, flags;
-  struct DirectMap dm;
-  prot = PROT_READ | PROT_WRITE;
-  flags = f | MAP_ANONYMOUS | MAP_FIXED;
-  if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p) {
-    rc = __track_memory(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
-                        dm.maphandle, prot, flags, false, false, 0, G);
-    if (!rc) {
-      return p;
-    } else {
-      return 0;
-    }
-  } else {
-    return 0;
-  }
-}
-
-static void *_mapframe(void *p, int f) {
-  void *res;
-  // mmap isn't required to be @asyncsignalsafe but this is
-  BLOCK_SIGNALS;
-  __mmi_lock();
-  res = _mapframe_impl(p, f);
-  __mmi_unlock();
-  ALLOW_SIGNALS;
-  return res;
-}
+#define G __gransize
 
 /**
  * Extends static allocation.
@@ -84,31 +46,13 @@ static void *_mapframe(void *p, int f) {
  */
 void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
-#ifndef NDEBUG
-  if ((uintptr_t)SHADOW(p) & (G - 1))
-    notpossible;
-  if ((uintptr_t)p + (G << kAsanScale) > h)
-    notpossible;
-#endif
-  // TODO(jart): Make this spin less in non-ASAN mode.
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
-#ifndef NDEBUG
       if (q + G > (char *)h)
-        notpossible;
-#endif
-      if (!_mapframe(q, f))
+        __builtin_trap();
+      if (mmap(q, G, PROT_READ | PROT_WRITE, f | MAP_ANONYMOUS | MAP_FIXED, -1,
+               0) == MAP_FAILED)
         return 0;
-      if (IsAsan()) {
-        if (!((uintptr_t)SHADOW(q) & (G - 1))) {
-          if (!_mapframe(SHADOW(q), f))
-            return 0;
-          __asan_poison(q, G << kAsanScale, kAsanProtected);
-        }
-      }
-    }
-    if (IsAsan()) {
-      *SHADOW(q) = 0;
     }
   }
   return q;

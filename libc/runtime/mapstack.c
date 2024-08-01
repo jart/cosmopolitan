@@ -17,15 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+
+#define MAP_ANON_OPENBSD  0x1000
+#define MAP_STACK_OPENBSD 0x4000
 
 /**
  * Allocates stack.
@@ -42,15 +44,16 @@
  */
 void *NewCosmoStack(void) {
   char *p;
-  if ((p = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                MAP_ANONYMOUS |
-                    (IsAarch64() && IsLinux() && IsQemuUser() ? MAP_PRIVATE
-                                                              : MAP_STACK),
-                -1, 0)) != MAP_FAILED) {
-    if (IsAsan()) {
-      __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
-      __asan_poison(p, getauxval(AT_PAGESZ), kAsanStackOverflow);
-    }
+  size_t n = GetStackSize();
+  if ((p = mmap(0, n, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1,
+                0)) != MAP_FAILED) {
+    if (IsOpenbsd() && __sys_mmap(p, n, PROT_READ | PROT_WRITE,
+                                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD |
+                                      MAP_STACK_OPENBSD,
+                                  -1, 0, 0) != p)
+      notpossible;
+    if (mprotect(p, GetGuardSize(), PROT_NONE | PROT_GUARD))
+      notpossible;
     return p;
   } else {
     return 0;

@@ -22,12 +22,14 @@
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/maps.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/ss.h"
@@ -39,11 +41,12 @@
  *
  * The following parameters are supported:
  *
+ * - `_SC_PAGESIZE` returns page size for mmap()
+ * - `_SC_GRANSIZE` returns addr alignment for mmap()
  * - `_SC_CLK_TCK` returns number of clock ticks per second
  * - `_SC_ARG_MAX` will perform expensive rlimit calculations
  * - `_SC_SIGSTKSZ` returns host platform's preferred SIGSTKSZ
  * - `_SC_MINSIGSTKSZ` returns host platform's required MINSIGSTKSZ
- * - `_SC_PAGESIZE` currently always returns 65536 due to Windows
  * - `_SC_AVPHYS_PAGES` returns average physical memory pages
  * - `_SC_PHYS_PAGES` returns physical memory pages available
  * - `_SC_NPROCESSORS_ONLN` returns number of effective CPUs
@@ -58,7 +61,9 @@ long sysconf(int name) {
     case _SC_CLK_TCK:
       return CLK_TCK;
     case _SC_PAGESIZE:
-      return FRAMESIZE;
+      return __pagesize;
+    case _SC_GRANSIZE:
+      return __gransize;
     case _SC_ARG_MAX:
       return __get_arg_max();
     case _SC_SIGSTKSZ:

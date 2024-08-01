@@ -29,9 +29,9 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -54,9 +54,8 @@ long _pthread_cancel_ack(void) {
     pthread_exit(PTHREAD_CANCELED);
   }
   pt->pt_flags |= PT_NOCANCEL;
-  if (IsOpenbsd()) {
+  if (IsOpenbsd())
     pt->pt_flags |= PT_OPENBSD_KLUDGE;
-  }
   return ecanceled();
 }
 
@@ -351,9 +350,11 @@ static errno_t _pthread_cancel_everyone(void) {
  * @param thread may be 0 to cancel all threads except self
  * @return 0 on success, or errno on error
  * @raise ESRCH if system thread wasn't alive or we lost a race
+ * @cancelationpoint
  */
 errno_t pthread_cancel(pthread_t thread) {
   struct PosixThread *arg;
+  unassert(thread);
   if ((arg = (struct PosixThread *)thread)) {
     return _pthread_cancel_single(arg);
   } else {
@@ -401,6 +402,7 @@ void pthread_testcancel(void) {
  *
  * @return 0 if not cancelled or cancelation is blocked or `ECANCELED`
  *     in masked mode when the calling thread has been cancelled
+ * @cancelationpoint
  */
 errno_t pthread_testcancel_np(void) {
   struct PosixThread *pt;

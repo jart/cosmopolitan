@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/aarch64/asmdefs.internal.h"
+#include "libc/intrin/aarch64/asmdefs.h"
 .yoink arm_optimized_routines_notice
 
 #define __memset_aarch64 memset

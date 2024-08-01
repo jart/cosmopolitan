@@ -18,8 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 #include "libc/stdckdint.h"
@@ -65,13 +64,9 @@
  */
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   int rc;
-  size_t n;
   BEGIN_CANCELATION_POINT;
 
-  if (IsAsan() &&
-      (ckd_mul(&n, nfds, sizeof(struct pollfd)) || !__asan_is_valid(fds, n))) {
-    rc = efault();
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     if (!IsMetal()) {
       rc = sys_poll(fds, nfds, timeout_ms);
     } else {

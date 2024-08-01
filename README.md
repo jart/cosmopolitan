@@ -244,7 +244,7 @@ server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 
 | Platform       | Min Version | Circa |
 | :---           | ---:        | ---:  |
-| AMD            | K8 Venus    | 2005  |
+| AMD            | K8          | 2003  |
 | Intel          | Core        | 2006  |
 | Linux          | 2.6.18      | 2007  |
 | Windows        | 8 [1]       | 2012  |

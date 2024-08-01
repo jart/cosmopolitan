@@ -2,6 +2,7 @@
 *      Perl-Compatible Regular Expressions       *
 *************************************************/
 #include "libc/str/str.h"
+#include "libc/ctype.h"
 #include "libc/mem/mem.h"
 
 /* PCRE is a library of functions to support regular expressions whose syntax

@@ -32,6 +32,7 @@
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
+#include "libc/ctype.h"
 #include "third_party/python/Modules/hashlib.h"
 
 PYTHON_PROVIDE("_hashlib");

@@ -335,7 +335,7 @@ TEST(unveil, isThreadSpecificOnLinux_isProcessWideOnOpenbsd) {
 TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   int ws, pid;
   bool *gotsome;
-  ASSERT_NE(-1, (gotsome = _mapshared(FRAMESIZE)));
+  ASSERT_NE(-1, (gotsome = _mapshared(getpagesize())));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
@@ -359,7 +359,7 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   ASSERT_TRUE(*gotsome);
   ASSERT_TRUE(WIFSIGNALED(ws));
   ASSERT_EQ(IsOpenbsd() ? SIGABRT : SIGSYS, WTERMSIG(ws));
-  EXPECT_SYS(0, 0, munmap(gotsome, FRAMESIZE));
+  EXPECT_SYS(0, 0, munmap(gotsome, getpagesize()));
 }
 
 TEST(unveil, lotsOfPaths) {

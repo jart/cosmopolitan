@@ -3,12 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const int PROT_NONE;
-extern const int PROT_READ;
-extern const int PROT_WRITE;
-extern const int PROT_EXEC;
-extern const int PROT_GROWSDOWN;
-extern const int PROT_GROWSUP;
+extern const int PROT_GUARD;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

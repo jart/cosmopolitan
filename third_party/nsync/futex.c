@@ -32,8 +32,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -52,6 +52,7 @@
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/nsync/time.h"
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
@@ -138,7 +139,7 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 		}
 		if (_weaken (pthread_testcancel_np) &&
 		    _weaken (pthread_testcancel_np) ()) {
-			return -ETIMEDOUT;
+			return -ECANCELED;
 		}
 		if (abstime && timespec_cmp (timespec_real (), *abstime) >= 0) {
 			return -ETIMEDOUT;
@@ -151,6 +152,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 				    const struct timespec *timeout,
 				    struct PosixThread *pt,
 				    sigset_t waitmask) {
+#ifdef __x86_64__
 	int sig;
 	bool32 ok;
 	struct timespec deadline, wait, now;
@@ -163,7 +165,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 
 	for (;;) {
 		now = timespec_real ();
-		if (timespec_cmp (now, deadline) > 0) {
+		if (timespec_cmp (now, deadline) >= 0) {
 			return etimedout();
 		}
 		wait = timespec_sub (deadline, now);
@@ -202,6 +204,9 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			ASSERT (GetLastError () == ETIMEDOUT);
 		}
 	}
+#else
+	return 0;
+#endif /* __x86_64__ */
 }
 
 static struct timespec *nsync_futex_timeout_ (struct timespec *memory,

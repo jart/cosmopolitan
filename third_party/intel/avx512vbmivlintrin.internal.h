@@ -4,9 +4,9 @@
 #endif
 #ifndef _AVX512VBMIVLINTRIN_H_INCLUDED
 #define _AVX512VBMIVLINTRIN_H_INCLUDED
-#if !defined(__AVX512VL__) || !defined(__AVX512VBMI__)
+#if !defined(__AVX512VL__) || !defined(__AVX512VBMI__) || defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512vbmi,avx512vl")
+#pragma GCC target("avx512vbmi,avx512vl,no-evex512")
 #define __DISABLE_AVX512VBMIVL__
 #endif
 extern __inline __m256i
@@ -25,7 +25,7 @@ _mm256_maskz_multishift_epi64_epi8 (__mmask32 __M, __m256i __X, __m256i __Y)
   return (__m256i) __builtin_ia32_vpmultishiftqb256_mask ((__v32qi) __X,
          (__v32qi) __Y,
          (__v32qi)
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          (__mmask32) __M);
 }
 extern __inline __m256i
@@ -35,7 +35,7 @@ _mm256_multishift_epi64_epi8 (__m256i __X, __m256i __Y)
   return (__m256i) __builtin_ia32_vpmultishiftqb256_mask ((__v32qi) __X,
          (__v32qi) __Y,
          (__v32qi)
-         _mm256_undefined_si256 (),
+         _mm256_avx512_undefined_si256 (),
          (__mmask32) -1);
 }
 extern __inline __m128i
@@ -54,7 +54,7 @@ _mm_maskz_multishift_epi64_epi8 (__mmask16 __M, __m128i __X, __m128i __Y)
   return (__m128i) __builtin_ia32_vpmultishiftqb128_mask ((__v16qi) __X,
          (__v16qi) __Y,
          (__v16qi)
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          (__mmask16) __M);
 }
 extern __inline __m128i
@@ -64,7 +64,7 @@ _mm_multishift_epi64_epi8 (__m128i __X, __m128i __Y)
   return (__m128i) __builtin_ia32_vpmultishiftqb128_mask ((__v16qi) __X,
          (__v16qi) __Y,
          (__v16qi)
-         _mm_undefined_si128 (),
+         _mm_avx512_undefined_si128 (),
          (__mmask16) -1);
 }
 extern __inline __m256i
@@ -74,7 +74,7 @@ _mm256_permutexvar_epi8 (__m256i __A, __m256i __B)
   return (__m256i) __builtin_ia32_permvarqi256_mask ((__v32qi) __B,
            (__v32qi) __A,
            (__v32qi)
-           _mm256_undefined_si256 (),
+           _mm256_avx512_undefined_si256 (),
            (__mmask32) -1);
 }
 extern __inline __m256i
@@ -85,7 +85,7 @@ _mm256_maskz_permutexvar_epi8 (__mmask32 __M, __m256i __A,
   return (__m256i) __builtin_ia32_permvarqi256_mask ((__v32qi) __B,
            (__v32qi) __A,
            (__v32qi)
-           _mm256_setzero_si256 (),
+           _mm256_avx512_setzero_si256 (),
            (__mmask32) __M);
 }
 extern __inline __m256i
@@ -105,7 +105,7 @@ _mm_permutexvar_epi8 (__m128i __A, __m128i __B)
   return (__m128i) __builtin_ia32_permvarqi128_mask ((__v16qi) __B,
            (__v16qi) __A,
            (__v16qi)
-           _mm_undefined_si128 (),
+           _mm_avx512_undefined_si128 (),
            (__mmask16) -1);
 }
 extern __inline __m128i
@@ -115,7 +115,7 @@ _mm_maskz_permutexvar_epi8 (__mmask16 __M, __m128i __A, __m128i __B)
   return (__m128i) __builtin_ia32_permvarqi128_mask ((__v16qi) __B,
            (__v16qi) __A,
            (__v16qi)
-           _mm_setzero_si128 (),
+           _mm_avx512_setzero_si128 (),
            (__mmask16) __M);
 }
 extern __inline __m128i

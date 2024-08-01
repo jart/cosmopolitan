@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_PROC_DESCRIBEFDS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_PROC_DESCRIBEFDS_INTERNAL_H_
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/struct/startupinfo.h"
 COSMOPOLITAN_C_START_
 

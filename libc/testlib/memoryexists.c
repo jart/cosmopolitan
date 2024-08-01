@@ -22,6 +22,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
@@ -44,14 +45,7 @@ static void ContinueOnError(int sig, siginfo_t *si, void *vctx) {
 #endif /* __x86_64__ */
 }
 
-/**
- * Returns true if byte at address `p` is readable.
- *
- * This function temporarily catches `SIGSEGV` and `SIGBUS` to recover
- * on error. It then attempts a volatile read and if it faults, then
- * this function shall return false. The value at `p` isn't considered.
- */
-dontasan bool testlib_memoryexists(const void *p) {
+bool testlib_pokememory(const void *p) {
   volatile char c;
   const atomic_char *mem = p;
   struct sigaction old[2];
@@ -67,4 +61,17 @@ dontasan bool testlib_memoryexists(const void *p) {
   npassert(!sigaction(SIGBUS, old + 1, 0));
   npassert(!sigaction(SIGSEGV, old + 0, 0));
   return !gotsignal;
+}
+
+/**
+ * Returns true if byte at address `p` is readable.
+ *
+ * This function temporarily catches `SIGSEGV` and `SIGBUS` to recover
+ * on error. It then attempts a volatile read and if it faults, then
+ * this function shall return false. The value at `p` isn't considered.
+ */
+bool testlib_memoryexists(const void *p) {
+  if (kisdangerous(p))
+    return false;
+  return testlib_pokememory(p);
 }

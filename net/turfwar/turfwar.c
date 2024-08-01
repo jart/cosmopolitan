@@ -27,6 +27,7 @@
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -35,7 +36,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/hilbert.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -122,7 +123,7 @@
 #define SOCK_MAX           100     // max length of socket queue
 #define MSG_BUF            512     // small response lookaside
 
-#define INBUF_SIZE  FRAMESIZE
+#define INBUF_SIZE  65536
 #define OUTBUF_SIZE 8192
 
 #define TB_BYTES (1u << TB_CIDR)

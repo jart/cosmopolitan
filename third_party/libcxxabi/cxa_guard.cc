@@ -8,6 +8,7 @@
 
 #include "third_party/libcxxabi/include/__cxxabi_config.h"
 #include "third_party/libcxxabi/include/cxxabi.h"
+#include "third_party/libcxx/__thread/support.h"
 
 // Tell the implementation that we're building the actual implementation
 // (and not testing it)

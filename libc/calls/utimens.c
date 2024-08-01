@@ -17,16 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -38,10 +36,6 @@ int __utimens(int fd, const char *path, const struct timespec ts[2],
   struct ZiposUri zipname;
   if (IsMetal()) {
     rc = enosys();
-  } else if (IsAsan() && ((fd == AT_FDCWD && !__asan_is_valid_str(path)) ||
-                          (ts && (!__asan_is_valid_timespec(ts + 0) ||
-                                  !__asan_is_valid_timespec(ts + 1))))) {
-    rc = efault();  // bad memory
   } else if ((flags & ~AT_SYMLINK_NOFOLLOW)) {
     rc = einval();  // unsupported flag
   } else if (__isfdkind(fd, kFdZip) ||

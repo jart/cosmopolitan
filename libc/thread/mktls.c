@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -42,7 +40,6 @@ static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
   tib->tib_ftrace = old->tib_ftrace;
   tib->tib_strace = old->tib_strace;
   tib->tib_sigmask = old->tib_sigmask;
-  tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
   atomic_store_explicit(&tib->tib_tid, -1, memory_order_relaxed);
   if (out_tib) {
     *out_tib = tib;
@@ -72,22 +69,12 @@ static char *_mktls_below(struct CosmoTib **out_tib) {
   siz = ROUNDUP(siz, _Alignof(struct CosmoTib));
   mem = memalign(_Alignof(struct CosmoTib), siz);
 
-  if (IsAsan()) {
-    // poison the space between .tdata and .tbss
-    __asan_poison(mem + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
-                  kAsanProtected);
-  }
-
   tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
   tls = mem + siz - sizeof(*tib) - I(_tls_size);
 
   // copy in initialized data section
   if (I(_tdata_size)) {
-    if (IsAsan()) {
-      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
-    } else {
-      memcpy(tls, _tdata_start, I(_tdata_size));
-    }
+    memcpy(tls, _tdata_start, I(_tdata_size));
   }
 
   // clear .tbss

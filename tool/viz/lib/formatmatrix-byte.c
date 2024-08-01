@@ -52,7 +52,7 @@ char *StringifyMatrixByte(long yn, long xn, const unsigned char M[yn][xn],
                           StringTableFormatter formatter, const char *param1,
                           const char *param2, const char *param3) {
   struct StringBuilder *sb = NewStringBuilder();
-  FormatMatrixByte(yn, xn, M, StringBuilderAppend, sb, formatter, param1,
-                   param2, param3);
+  FormatMatrixByte(yn, xn, M, (void *)StringBuilderAppend, sb, formatter,
+                   param1, param2, param3);
   return FreeStringBuilder(sb);
 }

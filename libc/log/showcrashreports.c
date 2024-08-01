@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/intrin/leaky.internal.h"
 #include "libc/log/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -34,6 +33,7 @@ __static_yoink("__die");                       // for backtracing
 __static_yoink("ShowBacktrace");               // for backtracing
 __static_yoink("GetSymbolTable");              // for backtracing
 __static_yoink("PrintBacktraceUsingSymbols");  // for backtracing
+__static_yoink("__demangle");                  // for pretty c++ symbols
 __static_yoink("malloc_inspect_all");          // for asan memory origin
 __static_yoink("GetSymbolByAddr");             // for asan memory origin
 #endif
@@ -93,5 +93,3 @@ void ShowCrashReports(void) {
   InstallCrashHandler(SIGABRT, 0);
   InstallCrashHandler(SIGSEGV, SA_ONSTACK);
 }
-
-IGNORE_LEAKS(ShowCrashReports)

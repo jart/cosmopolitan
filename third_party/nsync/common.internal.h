@@ -24,19 +24,11 @@ void nsync_yield_(void);
 /* Retrieve the per-thread cache of the waiter object.  Platform specific. */
 void *nsync_per_thread_waiter_(void (*dest)(void *));
 
-/* Used in spinloops to delay resumption of the loop.
-   Usage:
-       unsigned attempts = 0;
-       while (try_something) {
-          attempts = nsync_spin_delay_ (attempts);
-       } */
-unsigned nsync_spin_delay_(unsigned attempts);
-
 /* Spin until (*w & test) == 0, then atomically perform *w = ((*w | set) &
    ~clear), perform an acquire barrier, and return the previous value of *w.
    */
 uint32_t nsync_spin_test_and_set_(nsync_atomic_uint32_ *w, uint32_t test,
-                                  uint32_t set, uint32_t clear);
+                                  uint32_t set, uint32_t clear, void *symbol);
 
 /* Abort after printing the nul-temrinated string s[]. */
 void nsync_panic_(const char *s) wontreturn;
@@ -210,6 +202,7 @@ typedef struct waiter_s {
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
   struct Dll same_condition;         /* Links neighbours in nw.q with same
                                         non-nil condition. */
+  struct waiter_s * next_free;
 } waiter;
 static const uint32_t WAITER_TAG = 0x0590239f;
 static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
@@ -218,7 +211,7 @@ static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
   0x1 /* waiter reserved by a thread, even when not in use */
 #define WAITER_IN_USE 0x2 /* waiter in use by a thread */
 
-#define ASSERT(x) npassert(x)
+#define ASSERT(x) unassert(x)
 
 /* Return a pointer to the nsync_waiter_s containing struct Dll *e. */
 #define DLL_NSYNC_WAITER(e)                 \

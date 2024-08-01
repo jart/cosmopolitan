@@ -35,6 +35,9 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread.h"
 #include "third_party/python/Include/warnings.h"
 
 /* Execute compiled code */
@@ -654,10 +657,9 @@ int
 _Py_CheckRecursiveCall(const char *where)
 {
     PyThreadState *t;
-    const char *rsp, *bot;
-    rsp = __builtin_frame_address(0);
-    bot = (const char *)GetStackAddr() + 32768;
-    if (rsp > bot) {
+    uintptr_t bottom = GetStackBottom();
+    uintptr_t pointer = GetStackPointer();
+    if (pointer > bottom + 32768) {
         t = PyThreadState_GET();
         _Py_CheckRecursionLimit = recursion_limit;
         if (t->recursion_depth > recursion_limit && !t->recursion_critical) {
@@ -669,7 +671,7 @@ _Py_CheckRecursiveCall(const char *where)
             return -1;
         }
         return 0;
-    } else if (rsp > bot - 20480) {
+    } else if (pointer > bottom + 12288) {
         PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
         return -1;
     } else {

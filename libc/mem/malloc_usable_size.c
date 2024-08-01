@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Returns the number of bytes you can actually use in
@@ -42,4 +41,3 @@ size_t malloc_usable_size(void *p) {
   return dlmalloc_usable_size(p);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

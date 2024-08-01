@@ -1,32 +1,23 @@
 #ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
+#include "libc/runtime/runtime.h"
 
 /**
  * Returns preferred size and alignment of thread stack.
  */
-#define GetStackSize() 262144
+#ifndef MODE_DBG
+#define GetStackSize() 81920
+#else
+#define GetStackSize() 163840
+#endif
 
 /**
  * Returns preferred stack guard size.
  *
  * This is the max cpu page size of supported architectures.
  */
-#define GetGuardSize() 16384
-
-/**
- * Align APE main thread stack at startup.
- *
- * You need this in your main program module:
- *
- *     STATIC_STACK_ALIGN(GetStackSize());
- *
- * If you want to use GetStackAddr() and HaveStackMemory() safely on
- * your main thread in your process. It causes crt.S to waste a tiny
- * amount of memory to ensure those macros go extremely fast.
- */
-#define STATIC_STACK_ALIGN(BYTES) \
-  _STACK_SYMBOL("ape_stack_align", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
+#define GetGuardSize() __pagesize
 
 /**
  * Makes program stack executable if declared, e.g.
@@ -61,29 +52,10 @@ COSMOPOLITAN_C_START_
 
 extern char ape_stack_prot[] __attribute__((__weak__));
 extern char ape_stack_memsz[] __attribute__((__weak__));
-extern char ape_stack_align[] __attribute__((__weak__));
 
-/**
- * Returns address of bottom of current stack.
- *
- * This always works on threads. If you want it to work on the main
- * process too, then you'll need STATIC_STACK_ALIGN(GetStackSize())
- * which will burn O(256kb) of memory to ensure thread invariants.
- */
-#define GetStackAddr() ((GetStackPointer() - 1) & -GetStackSize())
+uintptr_t GetStackBottom(void) pureconst;
 
 #define GetStaticStackSize() ((uintptr_t)ape_stack_memsz)
-
-/**
- * Returns true if at least `n` bytes of stack are available.
- *
- * This always works on threads. If you want it to work on the main
- * process too, then you'll need STATIC_STACK_ALIGN(GetStackSize())
- * which will burn O(256kb) of memory to ensure thread invariants,
- * which make this check exceedingly fast.
- */
-#define HaveStackMemory(n) \
-  (GetStackPointer() >= GetStackAddr() + GetGuardSize() + (n))
 
 /**
  * Extends stack memory by poking large allocations.
@@ -137,8 +109,6 @@ int FreeCosmoStack(void *) libcesque;
             : "i"(ADDEND));                 \
     vAddr;                                  \
   })
-#else
-#define GetStaticStackAddr(ADDEND) (GetStackAddr() + ADDEND)
 #endif
 
 #define GetStackPointer()           \

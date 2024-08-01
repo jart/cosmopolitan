@@ -4,11 +4,33 @@
 #endif
 #ifndef __AVX512FP16VLINTRIN_H_INCLUDED
 #define __AVX512FP16VLINTRIN_H_INCLUDED
-#if !defined(__AVX512VL__) || !defined(__AVX512FP16__)
+#if !defined(__AVX512VL__) || !defined(__AVX512FP16__) || defined (__EVEX512__)
 #pragma GCC push_options
-#pragma GCC target("avx512fp16,avx512vl")
+#pragma GCC target("avx512fp16,avx512vl,no-evex512")
 #define __DISABLE_AVX512FP16VL__
 #endif
+extern __inline __m128 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_avx512_set1_ps (float __F)
+{
+  return __extension__ (__m128)(__v4sf){ __F, __F, __F, __F };
+}
+extern __inline __m256 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm256_avx512_set1_ps (float __A)
+{
+  return __extension__ (__m256){ __A, __A, __A, __A,
+     __A, __A, __A, __A };
+}
+extern __inline __m128i __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_avx512_and_si128 (__m128i __A, __m128i __B)
+{
+  return (__m128i) ((__v2du)__A & (__v2du)__B);
+}
+extern __inline __m256i
+__attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
+_mm256_avx512_and_si256 (__m256i __A, __m256i __B)
+{
+  return (__m256i) ((__v4du)__A & (__v4du)__B);
+}
 extern __inline __m128
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_castph_ps (__m128h __a)
@@ -87,10 +109,10 @@ _mm256_castph256_ph128 (__m256h __A)
 {
   union
   {
-    __m128h a[2];
-    __m256h v;
-  } u = { .v = __A };
-  return u.a[0];
+    __m128h __a[2];
+    __m256h __v;
+  } __u = { .__v = __A };
+  return __u.__a[0];
 }
 extern __inline __m256h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
@@ -98,24 +120,24 @@ _mm256_castph128_ph256 (__m128h __A)
 {
   union
   {
-    __m128h a[2];
-    __m256h v;
-  } u;
-  u.a[0] = __A;
-  return u.v;
+    __m128h __a[2];
+    __m256h __v;
+  } __u;
+  __u.__a[0] = __A;
+  return __u.__v;
 }
 extern __inline __m256h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_zextph128_ph256 (__m128h __A)
 {
-  return (__m256h) _mm256_insertf128_ps (_mm256_setzero_ps (),
+  return (__m256h) _mm256_avx512_insertf128_ps (_mm256_avx512_setzero_ps (),
       (__m128) __A, 0);
 }
 extern __inline __m256h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_conj_pch (__m256h __A)
 {
-  return (__m256h) _mm256_xor_epi32 ((__m256i) __A, _mm256_set1_epi32 (1<<31));
+  return (__m256h) _mm256_xor_epi32 ((__m256i) __A, _mm256_avx512_set1_epi32 (1<<31));
 }
 extern __inline __m256h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
@@ -133,14 +155,14 @@ _mm256_maskz_conj_pch (__mmask8 __U, __m256h __A)
   return (__m256h) __builtin_ia32_movaps256_mask ((__v8sf)
          _mm256_conj_pch (__A),
         (__v8sf)
-         _mm256_setzero_ps (),
+         _mm256_avx512_setzero_ps (),
         (__mmask8) __U);
 }
 extern __inline __m128h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_conj_pch (__m128h __A)
 {
-  return (__m128h) _mm_xor_epi32 ((__m128i) __A, _mm_set1_epi32 (1<<31));
+  return (__m128h) _mm_xor_epi32 ((__m128i) __A, _mm_avx512_set1_epi32 (1<<31));
 }
 extern __inline __m128h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
@@ -155,7 +177,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_conj_pch (__mmask8 __U, __m128h __A)
 {
   return (__m128h) __builtin_ia32_movaps128_mask ((__v4sf) _mm_conj_pch (__A),
-        (__v4sf) _mm_setzero_ps (),
+        (__v4sf) _mm_avx512_setzero_ps (),
         (__mmask8) __U);
 }
 extern __inline __m128h
@@ -398,15 +420,15 @@ extern __inline __m128h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_abs_ph (__m128h __A)
 {
-  return (__m128h) _mm_and_si128 ( _mm_set1_epi32 (0x7FFF7FFF),
-       (__m128i) __A);
+  return (__m128h) _mm_avx512_and_si128 (_mm_avx512_set1_epi32 (0x7FFF7FFF),
+      (__m128i) __A);
 }
 extern __inline __m256h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_abs_ph (__m256h __A)
 {
-  return (__m256h) _mm256_and_si256 ( _mm256_set1_epi32 (0x7FFF7FFF),
-          (__m256i) __A);
+  return (__m256h) _mm256_avx512_and_si256 (_mm256_avx512_set1_epi32 (0x7FFF7FFF),
+         (__m256i) __A);
 }
 #ifdef __OPTIMIZE
 extern __inline __mmask8
@@ -884,7 +906,7 @@ _mm_cvtph_epi32 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvtph2dq128_mask (__A,
           (__v4si)
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           (__mmask8) -1);
 }
 extern __inline __m128i
@@ -900,7 +922,7 @@ _mm_maskz_cvtph_epi32 (__mmask8 __A, __m128h __B)
 {
   return (__m128i)
     __builtin_ia32_vcvtph2dq128_mask (__B,
-          (__v4si) _mm_setzero_si128 (),
+          (__v4si) _mm_avx512_setzero_si128 (),
           __A);
 }
 extern __inline __m256i
@@ -910,7 +932,7 @@ _mm256_cvtph_epi32 (__m128h __A)
   return (__m256i)
     __builtin_ia32_vcvtph2dq256_mask (__A,
           (__v8si)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           (__mmask8) -1);
 }
 extern __inline __m256i
@@ -927,7 +949,7 @@ _mm256_maskz_cvtph_epi32 (__mmask8 __A, __m128h __B)
   return (__m256i)
     __builtin_ia32_vcvtph2dq256_mask (__B,
           (__v8si)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           __A);
 }
 extern __inline __m128i
@@ -937,7 +959,7 @@ _mm_cvtph_epu32 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvtph2udq128_mask (__A,
            (__v4si)
-           _mm_setzero_si128 (),
+           _mm_avx512_setzero_si128 (),
            (__mmask8) -1);
 }
 extern __inline __m128i
@@ -954,7 +976,7 @@ _mm_maskz_cvtph_epu32 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvtph2udq128_mask (__B,
            (__v4si)
-           _mm_setzero_si128 (),
+           _mm_avx512_setzero_si128 (),
            __A);
 }
 extern __inline __m256i
@@ -964,7 +986,7 @@ _mm256_cvtph_epu32 (__m128h __A)
   return (__m256i)
     __builtin_ia32_vcvtph2udq256_mask (__A,
            (__v8si)
-           _mm256_setzero_si256 (),
+           _mm256_avx512_setzero_si256 (),
            (__mmask8) -1);
 }
 extern __inline __m256i
@@ -980,7 +1002,7 @@ _mm256_maskz_cvtph_epu32 (__mmask8 __A, __m128h __B)
 {
   return (__m256i)
     __builtin_ia32_vcvtph2udq256_mask (__B,
-           (__v8si) _mm256_setzero_si256 (),
+           (__v8si) _mm256_avx512_setzero_si256 (),
            __A);
 }
 extern __inline __m128i
@@ -989,7 +1011,7 @@ _mm_cvttph_epi32 (__m128h __A)
 {
   return (__m128i)
     __builtin_ia32_vcvttph2dq128_mask (__A,
-           (__v4si) _mm_setzero_si128 (),
+           (__v4si) _mm_avx512_setzero_si128 (),
            (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1006,7 +1028,7 @@ _mm_maskz_cvttph_epi32 (__mmask8 __A, __m128h __B)
 {
   return (__m128i)
     __builtin_ia32_vcvttph2dq128_mask (__B,
-           (__v4si) _mm_setzero_si128 (),
+           (__v4si) _mm_avx512_setzero_si128 (),
            __A);
 }
 extern __inline __m256i
@@ -1016,7 +1038,7 @@ _mm256_cvttph_epi32 (__m128h __A)
   return (__m256i)
     __builtin_ia32_vcvttph2dq256_mask (__A,
            (__v8si)
-           _mm256_setzero_si256 (),
+           _mm256_avx512_setzero_si256 (),
            (__mmask8) -1);
 }
 extern __inline __m256i
@@ -1035,7 +1057,7 @@ _mm256_maskz_cvttph_epi32 (__mmask8 __A, __m128h __B)
   return (__m256i)
     __builtin_ia32_vcvttph2dq256_mask (__B,
            (__v8si)
-           _mm256_setzero_si256 (),
+           _mm256_avx512_setzero_si256 (),
            __A);
 }
 extern __inline __m128i
@@ -1045,7 +1067,7 @@ _mm_cvttph_epu32 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvttph2udq128_mask (__A,
      (__v4si)
-     _mm_setzero_si128 (),
+     _mm_avx512_setzero_si128 (),
      (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1064,7 +1086,7 @@ _mm_maskz_cvttph_epu32 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvttph2udq128_mask (__B,
      (__v4si)
-     _mm_setzero_si128 (),
+     _mm_avx512_setzero_si128 (),
      __A);
 }
 extern __inline __m256i
@@ -1074,7 +1096,7 @@ _mm256_cvttph_epu32 (__m128h __A)
   return (__m256i)
     __builtin_ia32_vcvttph2udq256_mask (__A,
      (__v8si)
-     _mm256_setzero_si256 (), (__mmask8) -1);
+     _mm256_avx512_setzero_si256 (), (__mmask8) -1);
 }
 extern __inline __m256i
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
@@ -1092,7 +1114,7 @@ _mm256_maskz_cvttph_epu32 (__mmask8 __A, __m128h __B)
   return (__m256i)
     __builtin_ia32_vcvttph2udq256_mask (__B,
      (__v8si)
-     _mm256_setzero_si256 (),
+     _mm256_avx512_setzero_si256 (),
      __A);
 }
 extern __inline __m128h
@@ -1191,7 +1213,7 @@ _mm_cvtph_epi64 (__m128h __A)
 {
   return
     __builtin_ia32_vcvtph2qq128_mask (__A,
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1205,7 +1227,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvtph_epi64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2qq128_mask (__B,
-        _mm_setzero_si128 (),
+        _mm_avx512_setzero_si128 (),
         __A);
 }
 extern __inline __m256i
@@ -1213,7 +1235,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvtph_epi64 (__m128h __A)
 {
   return __builtin_ia32_vcvtph2qq256_mask (__A,
-        _mm256_setzero_si256 (),
+        _mm256_avx512_setzero_si256 (),
         (__mmask8) -1);
 }
 extern __inline __m256i
@@ -1227,7 +1249,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvtph_epi64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2qq256_mask (__B,
-        _mm256_setzero_si256 (),
+        _mm256_avx512_setzero_si256 (),
         __A);
 }
 extern __inline __m128i
@@ -1235,7 +1257,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_cvtph_epu64 (__m128h __A)
 {
   return __builtin_ia32_vcvtph2uqq128_mask (__A,
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1249,7 +1271,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvtph_epu64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2uqq128_mask (__B,
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          __A);
 }
 extern __inline __m256i
@@ -1257,7 +1279,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvtph_epu64 (__m128h __A)
 {
   return __builtin_ia32_vcvtph2uqq256_mask (__A,
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          (__mmask8) -1);
 }
 extern __inline __m256i
@@ -1271,7 +1293,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvtph_epu64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2uqq256_mask (__B,
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          __A);
 }
 extern __inline __m128i
@@ -1279,7 +1301,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_cvttph_epi64 (__m128h __A)
 {
   return __builtin_ia32_vcvttph2qq128_mask (__A,
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1295,7 +1317,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvttph_epi64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvttph2qq128_mask (__B,
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          __A);
 }
 extern __inline __m256i
@@ -1303,7 +1325,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvttph_epi64 (__m128h __A)
 {
   return __builtin_ia32_vcvttph2qq256_mask (__A,
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          (__mmask8) -1);
 }
 extern __inline __m256i
@@ -1319,7 +1341,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvttph_epi64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvttph2qq256_mask (__B,
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          __A);
 }
 extern __inline __m128i
@@ -1327,7 +1349,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_cvttph_epu64 (__m128h __A)
 {
   return __builtin_ia32_vcvttph2uqq128_mask (__A,
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1343,7 +1365,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvttph_epu64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvttph2uqq128_mask (__B,
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           __A);
 }
 extern __inline __m256i
@@ -1351,7 +1373,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvttph_epu64 (__m128h __A)
 {
   return __builtin_ia32_vcvttph2uqq256_mask (__A,
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           (__mmask8) -1);
 }
 extern __inline __m256i
@@ -1367,7 +1389,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvttph_epu64 (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvttph2uqq256_mask (__B,
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           __A);
 }
 extern __inline __m128h
@@ -1465,7 +1487,7 @@ _mm_cvtph_epi16 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvtph2w128_mask (__A,
          (__v8hi)
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1482,7 +1504,7 @@ _mm_maskz_cvtph_epi16 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvtph2w128_mask (__B,
          (__v8hi)
-         _mm_setzero_si128 (),
+         _mm_avx512_setzero_si128 (),
          __A);
 }
 extern __inline __m256i
@@ -1492,7 +1514,7 @@ _mm256_cvtph_epi16 (__m256h __A)
   return (__m256i)
     __builtin_ia32_vcvtph2w256_mask (__A,
          (__v16hi)
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          (__mmask16) -1);
 }
 extern __inline __m256i
@@ -1509,7 +1531,7 @@ _mm256_maskz_cvtph_epi16 (__mmask16 __A, __m256h __B)
   return (__m256i)
     __builtin_ia32_vcvtph2w256_mask (__B,
          (__v16hi)
-         _mm256_setzero_si256 (),
+         _mm256_avx512_setzero_si256 (),
          __A);
 }
 extern __inline __m128i
@@ -1519,7 +1541,7 @@ _mm_cvtph_epu16 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvtph2uw128_mask (__A,
           (__v8hi)
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1536,7 +1558,7 @@ _mm_maskz_cvtph_epu16 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvtph2uw128_mask (__B,
           (__v8hi)
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           __A);
 }
 extern __inline __m256i
@@ -1546,7 +1568,7 @@ _mm256_cvtph_epu16 (__m256h __A)
   return (__m256i)
     __builtin_ia32_vcvtph2uw256_mask (__A,
           (__v16hi)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           (__mmask16) -1);
 }
 extern __inline __m256i
@@ -1563,7 +1585,7 @@ _mm256_maskz_cvtph_epu16 (__mmask16 __A, __m256h __B)
   return (__m256i)
     __builtin_ia32_vcvtph2uw256_mask (__B,
           (__v16hi)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           __A);
 }
 extern __inline __m128i
@@ -1573,7 +1595,7 @@ _mm_cvttph_epi16 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvttph2w128_mask (__A,
           (__v8hi)
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1592,7 +1614,7 @@ _mm_maskz_cvttph_epi16 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvttph2w128_mask (__B,
           (__v8hi)
-          _mm_setzero_si128 (),
+          _mm_avx512_setzero_si128 (),
           __A);
 }
 extern __inline __m256i
@@ -1602,7 +1624,7 @@ _mm256_cvttph_epi16 (__m256h __A)
   return (__m256i)
     __builtin_ia32_vcvttph2w256_mask (__A,
           (__v16hi)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           (__mmask16) -1);
 }
 extern __inline __m256i
@@ -1621,7 +1643,7 @@ _mm256_maskz_cvttph_epi16 (__mmask16 __A, __m256h __B)
   return (__m256i)
     __builtin_ia32_vcvttph2w256_mask (__B,
           (__v16hi)
-          _mm256_setzero_si256 (),
+          _mm256_avx512_setzero_si256 (),
           __A);
 }
 extern __inline __m128i
@@ -1631,7 +1653,7 @@ _mm_cvttph_epu16 (__m128h __A)
   return (__m128i)
     __builtin_ia32_vcvttph2uw128_mask (__A,
            (__v8hi)
-           _mm_setzero_si128 (),
+           _mm_avx512_setzero_si128 (),
            (__mmask8) -1);
 }
 extern __inline __m128i
@@ -1650,7 +1672,7 @@ _mm_maskz_cvttph_epu16 (__mmask8 __A, __m128h __B)
   return (__m128i)
     __builtin_ia32_vcvttph2uw128_mask (__B,
            (__v8hi)
-           _mm_setzero_si128 (),
+           _mm_avx512_setzero_si128 (),
            __A);
 }
 extern __inline __m256i
@@ -1660,7 +1682,7 @@ _mm256_cvttph_epu16 (__m256h __A)
   return (__m256i)
     __builtin_ia32_vcvttph2uw256_mask (__A,
            (__v16hi)
-           _mm256_setzero_si256 (),
+           _mm256_avx512_setzero_si256 (),
            (__mmask16) -1);
 }
 extern __inline __m256i
@@ -1678,7 +1700,7 @@ _mm256_maskz_cvttph_epu16 (__mmask16 __A, __m256h __B)
 {
   return (__m256i)
     __builtin_ia32_vcvttph2uw256_mask (__B,
-           (__v16hi) _mm256_setzero_si256 (),
+           (__v16hi) _mm256_avx512_setzero_si256 (),
            __A);
 }
 extern __inline __m128h
@@ -1778,7 +1800,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_cvtph_pd (__m128h __A)
 {
   return __builtin_ia32_vcvtph2pd128_mask (__A,
-        _mm_setzero_pd (),
+        _mm_avx512_setzero_pd (),
         (__mmask8) -1);
 }
 extern __inline __m128d
@@ -1791,14 +1813,14 @@ extern __inline __m128d
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvtph_pd (__mmask8 __A, __m128h __B)
 {
-  return __builtin_ia32_vcvtph2pd128_mask (__B, _mm_setzero_pd (), __A);
+  return __builtin_ia32_vcvtph2pd128_mask (__B, _mm_avx512_setzero_pd (), __A);
 }
 extern __inline __m256d
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvtph_pd (__m128h __A)
 {
   return __builtin_ia32_vcvtph2pd256_mask (__A,
-        _mm256_setzero_pd (),
+        _mm256_avx512_setzero_pd (),
         (__mmask8) -1);
 }
 extern __inline __m256d
@@ -1812,7 +1834,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvtph_pd (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2pd256_mask (__B,
-        _mm256_setzero_pd (),
+        _mm256_avx512_setzero_pd (),
         __A);
 }
 extern __inline __m128
@@ -1820,7 +1842,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_cvtxph_ps (__m128h __A)
 {
   return __builtin_ia32_vcvtph2psx128_mask (__A,
-        _mm_setzero_ps (),
+        _mm_avx512_setzero_ps (),
         (__mmask8) -1);
 }
 extern __inline __m128
@@ -1833,14 +1855,14 @@ extern __inline __m128
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm_maskz_cvtxph_ps (__mmask8 __A, __m128h __B)
 {
-  return __builtin_ia32_vcvtph2psx128_mask (__B, _mm_setzero_ps (), __A);
+  return __builtin_ia32_vcvtph2psx128_mask (__B, _mm_avx512_setzero_ps (), __A);
 }
 extern __inline __m256
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_cvtxph_ps (__m128h __A)
 {
   return __builtin_ia32_vcvtph2psx256_mask (__A,
-         _mm256_setzero_ps (),
+         _mm256_avx512_setzero_ps (),
          (__mmask8) -1);
 }
 extern __inline __m256
@@ -1854,7 +1876,7 @@ __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_maskz_cvtxph_ps (__mmask8 __A, __m128h __B)
 {
   return __builtin_ia32_vcvtph2psx256_mask (__B,
-         _mm256_setzero_ps (),
+         _mm256_avx512_setzero_ps (),
          __A);
 }
 extern __inline __m128h
@@ -2667,7 +2689,7 @@ _mm256_maskz_fcmul_pch (__mmask8 __A, __m256h __B, __m256h __C)
            _mm256_setzero_ph (),
            __A);
 }
-#define _MM256_REDUCE_OP(op) __m128h __T1 = (__m128h) _mm256_extractf128_pd ((__m256d) __A, 0); __m128h __T2 = (__m128h) _mm256_extractf128_pd ((__m256d) __A, 1); __m128h __T3 = (__T1 op __T2); __m128h __T4 = (__m128h) __builtin_shuffle (__T3, (__v8hi) { 4, 5, 6, 7, 0, 1, 2, 3 }); __m128h __T5 = (__T3) op (__T4); __m128h __T6 = (__m128h) __builtin_shuffle (__T5, (__v8hi) { 2, 3, 0, 1, 4, 5, 6, 7 }); __m128h __T7 = __T5 op __T6; return __T7[0] op __T7[1]
+#define _MM256_REDUCE_OP(op) __m128h __T1 = (__m128h) _mm256_avx512_extractf128_pd ((__m256d) __A, 0); __m128h __T2 = (__m128h) _mm256_avx512_extractf128_pd ((__m256d) __A, 1); __m128h __T3 = (__T1 op __T2); __m128h __T4 = (__m128h) __builtin_shuffle (__T3, (__v8hi) { 4, 5, 6, 7, 0, 1, 2, 3 }); __m128h __T5 = (__T3) op (__T4); __m128h __T6 = (__m128h) __builtin_shuffle (__T5, (__v8hi) { 2, 3, 0, 1, 4, 5, 6, 7 }); __m128h __T7 = __T5 op __T6; return __T7[0] op __T7[1]
 extern __inline _Float16
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_reduce_add_ph (__m256h __A)
@@ -2681,7 +2703,7 @@ _mm256_reduce_mul_ph (__m256h __A)
   _MM256_REDUCE_OP (*);
 }
 #undef _MM256_REDUCE_OP
-#define _MM256_REDUCE_OP(op) __m128h __T1 = (__m128h) _mm256_extractf128_pd ((__m256d) __A, 0); __m128h __T2 = (__m128h) _mm256_extractf128_pd ((__m256d) __A, 1); __m128h __T3 = _mm_##op (__T1, __T2); __m128h __T4 = (__m128h) __builtin_shuffle (__T3, (__v8hi) { 2, 3, 0, 1, 6, 7, 4, 5 }); __m128h __T5 = _mm_##op (__T3, __T4); __m128h __T6 = (__m128h) __builtin_shuffle (__T5, (__v8hi) { 4, 5 }); __m128h __T7 = _mm_##op (__T5, __T6); __m128h __T8 = (__m128h) __builtin_shuffle (__T7, (__v8hi) { 1, 0 }); __m128h __T9 = _mm_##op (__T7, __T8); return __T9[0]
+#define _MM256_REDUCE_OP(op) __m128h __T1 = (__m128h) _mm256_avx512_extractf128_pd ((__m256d) __A, 0); __m128h __T2 = (__m128h) _mm256_avx512_extractf128_pd ((__m256d) __A, 1); __m128h __T3 = _mm_##op (__T1, __T2); __m128h __T4 = (__m128h) __builtin_shuffle (__T3, (__v8hi) { 2, 3, 0, 1, 6, 7, 4, 5 }); __m128h __T5 = _mm_##op (__T3, __T4); __m128h __T6 = (__m128h) __builtin_shuffle (__T5, (__v8hi) { 4, 5 }); __m128h __T7 = _mm_##op (__T5, __T6); __m128h __T8 = (__m128h) __builtin_shuffle (__T7, (__v8hi) { 1, 0 }); __m128h __T9 = _mm_##op (__T7, __T8); return __T9[0]
 extern __inline _Float16
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
 _mm256_reduce_min_ph (__m256h __A)
@@ -2783,10 +2805,10 @@ _mm256_set1_pch (_Float16 _Complex __A)
 {
   union
   {
-    _Float16 _Complex a;
-    float b;
-  } u = { .a = __A };
-  return (__m256h) _mm256_set1_ps (u.b);
+    _Float16 _Complex __a;
+    float __b;
+  } __u = { .__a = __A };
+  return (__m256h) _mm256_avx512_set1_ps (__u.__b);
 }
 extern __inline __m128h
 __attribute__ ((__gnu_inline__, __always_inline__, __artificial__))
@@ -2794,10 +2816,10 @@ _mm_set1_pch (_Float16 _Complex __A)
 {
   union
   {
-    _Float16 _Complex a;
-    float b;
-  } u = { .a = __A };
-  return (__m128h) _mm_set1_ps (u.b);
+    _Float16 _Complex __a;
+    float __b;
+  } __u = { .__a = __A };
+  return (__m128h) _mm_avx512_set1_ps (__u.__b);
 }
 #define _mm_mul_pch(A, B) _mm_fmul_pch ((A), (B))
 #define _mm_mask_mul_pch(W, U, A, B) _mm_mask_fmul_pch ((W), (U), (A), (B))

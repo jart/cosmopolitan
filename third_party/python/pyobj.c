@@ -64,8 +64,6 @@
 #include "libc/serialize.h"
 #include "tool/build/lib/stripcomponents.h"
 
-STATIC_STACK_ALIGN(GetStackSize());
-
 __static_yoink("_PyUnicode_GetCode");
 
 #define MANUAL "\

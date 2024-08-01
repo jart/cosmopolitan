@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #include "libc/atomic.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"

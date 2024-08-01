@@ -30,6 +30,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/log/bsd.h"
 #include "libc/mem/mem.h"

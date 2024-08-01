@@ -35,6 +35,7 @@
 #include <locale.h>
 #include "third_party/musl/mapfile.internal.h"
 #include <sys/mman.h>
+__static_yoink("musl_libc_notice");
 
 #define V(p) be32toh(*(uint32_t *)(p))
 

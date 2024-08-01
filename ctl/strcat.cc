@@ -38,9 +38,9 @@ strcat(const string_view lhs, const string_view rhs) noexcept
     if (rhs.n)
         memcpy(res.data() + lhs.n, rhs.p, rhs.n);
     if (res.isbig()) {
-        res.big()->n = lhs.n + rhs.n;
+        res.__b.n = lhs.n + rhs.n;
     } else {
-        res.small()->rem = __::sso_max - lhs.n - rhs.n;
+        res.__s.rem = __::sso_max - lhs.n - rhs.n;
     }
     res.data()[res.size()] = 0;
     return res;

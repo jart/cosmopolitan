@@ -25,7 +25,7 @@ extern bool noindent, force_color, matchdirs, fflinks;
 extern bool reverse;
 extern int pattern, ipattern;
 
-extern int (*topsort)();
+extern int (*topsort)(const void *, const void *);
 extern FILE *outfile;
 extern int Level, *dirs, maxdirs;
 

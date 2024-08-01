@@ -28,7 +28,7 @@
  * @fileoverview Semaphores w/ Linux Futexes API.
  */
 
-#define ASSERT(x) npassert(x)
+#define ASSERT(x) unassert(x)
 
 /* Check that atomic operations on nsync_atomic_uint32_ can be applied to int. */
 static const int assert_int_size = 1 /
@@ -43,9 +43,10 @@ static nsync_semaphore *sem_big_enough_for_futex = (nsync_semaphore *) (uintptr_
 	(sizeof (struct futex) <= sizeof (*sem_big_enough_for_futex)));
 
 /* Initialize *s; the initial value is 0. */
-void nsync_mu_semaphore_init_futex (nsync_semaphore *s) {
+bool nsync_mu_semaphore_init_futex (nsync_semaphore *s) {
 	struct futex *f = (struct futex *) s;
 	f->i = 0;
+	return true;
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

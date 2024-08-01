@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/xasprintf.h"
 #include "net/https/https.h"
 
@@ -26,7 +27,7 @@ struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
   int i, n, rc;
   unsigned char *p;
   mbedtls_x509_crt *cert;
-  p = malloc((n = FRAMESIZE));
+  p = malloc((n = getgransize()));
   i = mbedtls_x509write_crt_der(wcert, p, n, GenerateHardRandom, 0);
   if (i < 0)
     FATALF("write key (grep -0x%04x)", -i);

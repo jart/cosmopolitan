@@ -23,9 +23,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/mem/alloca.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -82,11 +81,6 @@ ssize_t splice(int infd, int64_t *opt_in_out_inoffset, int outfd,
   cosmo_once(&g_splice.once, splice_init);
   if (!g_splice.ok) {
     rc = enosys();
-  } else if (IsAsan() && ((opt_in_out_inoffset &&
-                           !__asan_is_valid(opt_in_out_inoffset, 8)) ||
-                          (opt_in_out_outoffset &&
-                           !__asan_is_valid(opt_in_out_outoffset, 8)))) {
-    rc = efault();
   } else if (__isfdkind(infd, kFdZip) || __isfdkind(outfd, kFdZip)) {
     rc = enotsup();
   } else {

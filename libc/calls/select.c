@@ -23,9 +23,8 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
 #include "libc/sock/select.internal.h"
@@ -63,12 +62,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   BEGIN_CANCELATION_POINT;
   if (nfds < 0) {
     rc = einval();
-  } else if (IsAsan() &&
-             ((readfds && !__asan_is_valid(readfds, FD_SIZE(nfds))) ||
-              (writefds && !__asan_is_valid(writefds, FD_SIZE(nfds))) ||
-              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))) ||
-              (timeout && !__asan_is_valid(timeout, sizeof(*timeout))))) {
-    rc = efault();
   } else {
     if (readfds) {
       old_readfds = *readfds;

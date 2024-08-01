@@ -1,4 +1,5 @@
 #include "libc/mem/mem.h"
+#include "libc/ctype.h"
 #include "libc/str/str.h"
 
 /*************************************************

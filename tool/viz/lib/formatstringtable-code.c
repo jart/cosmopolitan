@@ -17,24 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "tool/viz/lib/formatstringtable.h"
 
 void *FormatStringTableAsCode(long yn, long xn, const char *const T[yn][xn],
                               int emit(), void *arg, const char *type,
                               const char *name, const char *ignored) {
+  void (*Emit)(const char *, void *) = (void (*)(const char *, void *))emit;
   char ynstr[21], xnstr[21];
   FormatUint64(ynstr, yn);
   FormatUint64(xnstr, xn);
-  emit(type, arg);
-  emit(" ", arg);
-  emit(firstnonnull(name, "M"), arg);
-  emit("[", arg);
-  emit(ynstr, arg);
-  emit("][", arg);
-  emit(xnstr, arg);
-  emit("] = {", arg);
+  Emit(type, arg);
+  Emit(" ", arg);
+  Emit(firstnonnull(name, "M"), arg);
+  Emit("[", arg);
+  Emit(ynstr, arg);
+  Emit("][", arg);
+  Emit(xnstr, arg);
+  Emit("] = {", arg);
   FormatStringTable(yn, xn, T, emit, arg, "\n    {", ", ", "},");
-  emit("\n};\n", arg);
+  Emit("\n};\n", arg);
   return (/* unconst */ void *)T;
 }

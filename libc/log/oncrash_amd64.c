@@ -31,12 +31,11 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describebacktrace.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
@@ -242,15 +241,10 @@ static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
     klog(buf, p - buf);
   }
   kprintf("\n");
-  if (!IsWindows()) {
-    __print_maps();
-  }
-  /* PrintSystemMappings(2); */
-  if (__argv) {
-    for (i = 0; i < __argc; ++i) {
+  __print_maps(15);
+  if (__argv)
+    for (i = 0; i < __argc; ++i)
       kprintf("%s ", __argv[i]);
-    }
-  }
   kprintf("\n");
 }
 
@@ -269,6 +263,8 @@ static inline void SpinUnlock(atomic_uint *lock) {
 
 relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
   static atomic_uint lock;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   BLOCK_CANCELATION;
   SpinLock(&lock);
   int err = errno;
@@ -291,6 +287,8 @@ relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
 
   SpinUnlock(&lock);
   ALLOW_CANCELATION;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
 }
 
 #endif /* __x86_64__ */

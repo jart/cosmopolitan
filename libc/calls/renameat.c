@@ -20,9 +20,8 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -46,12 +45,9 @@
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
   int rc;
-  if (IsAsan() &&
-      (!__asan_is_valid_str(oldpath) || !__asan_is_valid_str(newpath))) {
-    rc = efault();
-  } else if (_weaken(__zipos_notat) &&
-             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
-              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+  if (_weaken(__zipos_notat) &&
+      ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+       (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
     STRACE("zipos renameat not supported yet");
   } else if (!IsWindows()) {
     rc = sys_renameat(olddirfd, oldpath, newdirfd, newpath);

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/thread/pt.internal.h"
@@ -378,30 +377,8 @@ _init_systemfive_magnums:
 	jnz	3b
 	xchg	%rbx,%rax
 	stosq
-#if SYSDEBUG
-	inc	%r8d
-#endif
 	jmp	2b
 5:	nop
-#if SYSDEBUG
-	push	%rdi
-	push	%rsi
-	push	%r8
-	call	__describe_os
-	mov	%rax,%rdx
-	pop	%r8
-	.weak	__stracef
-	ezlea	__stracef,ax
-	test	%rax,%rax
-	jz	5f
-	ezlea	.Llog,di
-	mov	%r8d,%esi
-	push	%rax
-	call	*%rax
-	pop	%rax
-5:	pop	%rsi
-	pop	%rdi
-#endif /* DEBUGSYS */
 	pop	%rdi
 	pop	%rsi
 	pop	%rbx
@@ -447,11 +424,3 @@ _init_systemfive_sigsys:
 _init_systemfive_done:
 	nop
 	.init.end 300,_init_systemfive,globl,hidden
-
-#if SYSDEBUG
-	.rodata.str1.1
-.Llog:	.ascii	STRACE_PROLOGUE
-	.ascii	"bell system five system call support"
-	.asciz	" %'u magnums loaded on %s\n"
-	.previous
-#endif /* DEBUGSYS */

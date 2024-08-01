@@ -17,16 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
@@ -42,53 +46,66 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
+__static_yoink("_pthread_atfork");
+
+extern pthread_mutex_t _rand64_lock_obj;
+extern pthread_mutex_t _pthread_lock_obj;
+
+// fork needs to lock every lock, which makes it very single-threaded in
+// nature. the outermost lock matters the most because it serializes all
+// threads attempting to spawn processes. the outer lock can't be a spin
+// lock that a pthread_atfork() caller slipped in. to ensure it's a fair
+// lock, we add an additional one of our own, which protects other locks
+static pthread_mutex_t _fork_gil = PTHREAD_MUTEX_INITIALIZER;
+
 static void _onfork_prepare(void) {
-  if (_weaken(_pthread_onfork_prepare)) {
+  if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
-  }
+  if (IsWindows())
+    __proc_lock();
   _pthread_lock();
+  __maps_lock();
   __fds_lock();
-  __mmi_lock();
+  pthread_mutex_lock(&_rand64_lock_obj);
+  LOCKTRACE("READY TO ROCK AND ROLL");
 }
 
 static void _onfork_parent(void) {
-  __mmi_unlock();
+  pthread_mutex_unlock(&_rand64_lock_obj);
   __fds_unlock();
+  __maps_unlock();
   _pthread_unlock();
-  if (_weaken(_pthread_onfork_parent)) {
+  if (IsWindows())
+    __proc_unlock();
+  if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
-  }
 }
 
 static void _onfork_child(void) {
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-  extern pthread_mutex_t __mmi_lock_obj;
-  pthread_mutex_init(&__mmi_lock_obj, &attr);
-  pthread_mutex_init(&__fds_lock_obj, &attr);
-  pthread_mutexattr_destroy(&attr);
-  _pthread_init();
-  if (_weaken(_pthread_onfork_child)) {
+  if (IsWindows())
+    __proc_wipe();
+  __fds_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  _rand64_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  _pthread_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  atomic_store_explicit(&__maps.lock, 0, memory_order_relaxed);
+  if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
-  }
 }
 
-int _fork(uint32_t dwCreationFlags) {
+static int _forker(uint32_t dwCreationFlags) {
+  long micros;
   struct Dll *e;
+  struct timespec started;
   int ax, dx, tid, parent;
   parent = __pid;
-  BLOCK_SIGNALS;
-  if (IsWindows())
-    __proc_lock();
-  if (__threaded) {
-    _onfork_prepare();
-  }
+  started = timespec_real();
+  _onfork_prepare();
   if (!IsWindows()) {
     ax = sys_fork();
   } else {
     ax = sys_fork_nt(dwCreationFlags);
   }
+  micros = timespec_tomicros(timespec_sub(timespec_real(), started));
   if (!ax) {
 
     // get new process id
@@ -133,21 +150,28 @@ int _fork(uint32_t dwCreationFlags) {
     atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
 
     // run user fork callbacks
-    if (__threaded) {
-      _onfork_child();
-    }
-    STRACE("fork() → 0 (child of %d)", parent);
+    _onfork_child();
+    STRACE("fork() → 0 (child of %d; took %ld us)", parent, micros);
   } else {
     // this is the parent process
-    if (__threaded) {
-      _onfork_parent();
-    }
-    if (IsWindows())
-      __proc_unlock();
-    STRACE("fork() → %d% m", ax);
+    _onfork_parent();
+    STRACE("fork() → %d% m (took %ld us)", ax, micros);
+  }
+  return ax;
+}
+
+int _fork(uint32_t dwCreationFlags) {
+  int rc;
+  BLOCK_SIGNALS;
+  pthread_mutex_lock(&_fork_gil);
+  rc = _forker(dwCreationFlags);
+  if (!rc) {
+    pthread_mutex_init(&_fork_gil, 0);
+  } else {
+    pthread_mutex_unlock(&_fork_gil);
   }
   ALLOW_SIGNALS;
-  return ax;
+  return rc;
 }
 
 /**

@@ -35,6 +35,7 @@
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
+#include "third_party/lua/cosmo.h"
 #include "third_party/lua/visitor.h"
 
 static int Serialize(lua_State *, char **, int, struct Serializer *, int);
@@ -171,7 +172,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   bool multi;
   bool isarray;
   lua_Unsigned n;
-  if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
+  if (UNLIKELY(GetStackPointer() < z->bsp)) {
     z->reason = "out of stack";
     return -1;
   }
@@ -264,7 +265,11 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
 int LuaEncodeJsonData(lua_State *L, char **buf, int idx,
                       struct EncoderConfig conf) {
   int rc;
-  struct Serializer z = {.reason = "out of memory", .conf = conf};
+  struct Serializer z = {
+    .reason = "out of memory", 
+    .bsp = GetStackBottom() + 4096,
+    .conf = conf,
+  };
   if (lua_checkstack(L, conf.maxdepth * 3 + LUA_MINSTACK)) {
     rc = Serialize(L, buf, idx, &z, 0);
     free(z.visited.p);

@@ -19,7 +19,7 @@
 #include "tool/build/lib/panel.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"

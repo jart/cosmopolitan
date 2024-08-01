@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -28,6 +29,6 @@
  * @return 0 on success, or error on failure
  */
 errno_t pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type) {
-  *type = attr->_type;
+  *type = MUTEX_TYPE(attr->_word);
   return 0;
 }

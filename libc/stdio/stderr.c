@@ -16,27 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
 
+static FILE __stderr = {
+    .fd = STDERR_FILENO,
+    .bufmode = _IONBF,
+    .iomode = O_WRONLY,
+    .buf = __stderr.mem,
+    .size = sizeof(stderr->mem),
+    .lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP,
+};
+
 /**
  * Pointer to standard error stream.
  */
-FILE *stderr;
-
-static FILE __stderr;
+FILE *stderr = &__stderr;
 
 __attribute__((__constructor__(60))) static textstartup void errinit(void) {
-  stderr = &__stderr;
-  stderr->fd = STDERR_FILENO;
-  stderr->bufmode = _IONBF;
-  stderr->iomode = O_WRONLY;
-  stderr->buf = stderr->mem;
-  stderr->size = sizeof(stderr->mem);
-  stderr->lock._type = PTHREAD_MUTEX_RECURSIVE;
   __fflush_register(stderr);
 }

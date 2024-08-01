@@ -21,14 +21,9 @@
 #include "third_party/nsync/mu_semaphore.internal.h"
 __static_yoink("nsync_notice");
 
-/* Apple's ulock (part by Cosmo futexes) is an internal API, but:
-   1. Unlike GCD it's cancellable, i.e. can be EINTR'd by signals
-   2. We currently always use ulock anyway for joining threads */
-#define PREFER_GCD_OVER_ULOCK 1
-
 /* Initialize *s; the initial value is 0. */
-void nsync_mu_semaphore_init (nsync_semaphore *s) {
-	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
+bool nsync_mu_semaphore_init (nsync_semaphore *s) {
+	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
 		return nsync_mu_semaphore_init_gcd (s);
 	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_init_sem (s);
@@ -44,7 +39,7 @@ void nsync_mu_semaphore_init (nsync_semaphore *s) {
 errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	errno_t err;
 	BEGIN_CANCELATION_POINT;
-	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
+	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
 		err = nsync_mu_semaphore_p_gcd (s);
 	} else if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_sem (s);
@@ -62,7 +57,7 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
 	errno_t err;
 	BEGIN_CANCELATION_POINT;
-	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
+	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
 		err = nsync_mu_semaphore_p_with_deadline_gcd (s, abs_deadline);
 	} else if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_with_deadline_sem (s, abs_deadline);
@@ -75,7 +70,7 @@ errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_d
 
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v (nsync_semaphore *s) {
-	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
+	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
 		return nsync_mu_semaphore_v_gcd (s);
 	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_v_sem (s);

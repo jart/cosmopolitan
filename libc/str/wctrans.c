@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/wctype.h"
 
 wctrans_t wctrans(const char *s) {
   if (!strcmp(s, "toupper"))

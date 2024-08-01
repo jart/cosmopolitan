@@ -30,7 +30,7 @@
  * @define 𝐀⁻¹=𝐁 such that 𝐀×𝐁=𝐁×𝐀=𝐈ₙ
  * @see det3()
  */
-void *inv3(double B[restrict 3][3], const double A[restrict 3][3], double d) {
+void *inv3(double B[3][3], const double A[3][3], double d) {
   d = d ? 1 / d : NAN;
   B[0][0] = (A[1][1] * A[2][2] - A[2][1] * A[1][2]) * d;
   B[0][1] = (A[2][1] * A[0][2] - A[0][1] * A[2][2]) * d;

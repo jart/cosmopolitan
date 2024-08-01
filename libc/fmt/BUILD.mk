@@ -55,8 +55,7 @@ $(LIBC_FMT_A).pkg:				\
 
 $(LIBC_FMT_A_OBJS): private			\
 		CFLAGS +=			\
-			-fno-jump-tables	\
-			-fno-sanitize=address
+			-fno-jump-tables
 
 o/$(MODE)/libc/fmt/formatint64.o		\
 o/$(MODE)/libc/fmt/formatint64thousands.o	\

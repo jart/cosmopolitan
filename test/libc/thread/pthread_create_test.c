@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -35,6 +34,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/stdio/rand.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sched.h"
@@ -280,11 +280,10 @@ static void CreateDetached(void) {
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
 }
 
-BENCH(pthread_create, bench) {
+TEST(pthread_create, bench) {
   EZBENCH2("CreateJoin", donothing, CreateJoin());
   EZBENCH2("CreateDetach", donothing, CreateDetach());
   EZBENCH2("CreateDetached", donothing, CreateDetached());
-  while (!pthread_orphan_np()) {
-    _pthread_decimate();
-  }
+  while (!pthread_orphan_np())
+    pthread_decimate_np();
 }

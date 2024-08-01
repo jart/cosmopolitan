@@ -27,5 +27,7 @@
 errno_t pthread_cond_init(pthread_cond_t *cond,
                           const pthread_condattr_t *attr) {
   *cond = (pthread_cond_t){0};
+  if (attr)
+    cond->_pshared = *attr;
   return 0;
 }

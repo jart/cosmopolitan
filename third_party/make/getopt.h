@@ -1,5 +1,7 @@
 /* Declarations for getopt.
 Copyright (C) 1989-2023 Free Software Foundation, Inc.
+#include "third_party/getopt/long2.h"
+#include "third_party/getopt/getopt.internal.h"
 
 NOTE: The canonical source of this file is maintained with the GNU C Library.
 Bugs can be reported to bug-glibc@gnu.org.
@@ -101,8 +103,6 @@ struct option
    differences in the consts, in stdlib.h.  To avoid compilation
    errors, only prototype getopt for the GNU C library.  */
 extern int getopt (int argc, char *const *argv, const char *shortopts);
-#else /* not __GNU_LIBRARY__ */
-extern int getopt ();
 #endif /* __GNU_LIBRARY__ */
 extern int getopt_long (int argc, char *const *argv, const char *shortopts,
 		        const struct option *longopts, int *longind);
@@ -116,11 +116,10 @@ extern int _getopt_internal (int argc, char *const *argv,
 		             const struct option *longopts, int *longind,
 			     int long_only);
 #else /* not __STDC__ */
-extern int getopt ();
-extern int getopt_long ();
-extern int getopt_long_only ();
-
-extern int _getopt_internal ();
+// extern int getopt ();
+// extern int getopt_long ();
+// extern int getopt_long_only ();
+// extern int _getopt_internal ();
 #endif /* __STDC__ */
 
 #ifdef	__cplusplus

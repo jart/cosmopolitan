@@ -19,12 +19,12 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -52,8 +52,7 @@
  */
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   ssize_t bytes;
-  if ((bufsiz && !buf) || (IsAsan() && (!__asan_is_valid_str(path) ||
-                                        !__asan_is_valid(buf, bufsiz)))) {
+  if ((bufsiz && !buf)) {
     bytes = efault();
   } else if (_weaken(__zipos_notat) &&
              (bytes = __zipos_notat(dirfd, path)) == -1) {

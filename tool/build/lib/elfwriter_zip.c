@@ -63,6 +63,13 @@ static int DetermineVersionNeededToExtract(int method) {
   }
 }
 
+static int NormalizeMode(int mode) {
+  int res = mode & S_IFMT;
+  if (mode & 0111)
+    res |= 0111;
+  return res | 0644;
+}
+
 static unsigned char *EmitZipLfileHdr(unsigned char *p, const void *name,
                                       size_t namesize, uint32_t crc,
                                       uint8_t era, uint16_t gflags,
@@ -87,10 +94,10 @@ static unsigned char *EmitZipLfileHdr(unsigned char *p, const void *name,
 static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
                            uint32_t crc, uint8_t era, uint16_t gflags,
                            uint16_t method, uint16_t mtime, uint16_t mdate,
-                           uint16_t iattrs, uint16_t dosmode, uint16_t unixmode,
-                           size_t compsize, size_t uncompsize,
-                           size_t commentsize, struct timespec mtim,
-                           struct timespec atim, struct timespec ctim) {
+                           uint16_t iattrs, uint16_t unixmode, size_t compsize,
+                           size_t uncompsize, size_t commentsize,
+                           struct timespec mtim, struct timespec atim,
+                           struct timespec ctim) {
   uint64_t mt, at, ct;
   p = WRITE32LE(p, kZipCfileHdrMagic);
   *p++ = kZipCosmopolitanVersion;
@@ -111,8 +118,8 @@ static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
   p = WRITE16LE(p, commentsize);
   p = WRITE16LE(p, 0); /* disk */
   p = WRITE16LE(p, iattrs);
-  p = WRITE16LE(p, dosmode);
-  p = WRITE16LE(p, unixmode);
+  p = WRITE16LE(p, 0);
+  p = WRITE16LE(p, NormalizeMode(unixmode));
   p = WRITE32LE(p, 0); /* RELOCATE ME (kZipCfileOffsetOffset) */
   /* 46 */
   memcpy(p, name, namesize);
@@ -142,8 +149,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   uint32_t crc;
   unsigned char *lfile, *cfile;
   struct ElfWriterSymRef lfilesym;
+  uint16_t method, gflags, mtime, mdate, iattrs;
   size_t lfilehdrsize, uncompsize, compsize, commentsize;
-  uint16_t method, gflags, mtime, mdate, iattrs, dosmode;
 
   CHECK_NE(0, mtim.tv_sec);
 
@@ -168,7 +175,6 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   if (S_ISREG(mode) && istext(data, size)) {
     iattrs |= kZipIattrText;
   }
-  dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
   method = ShouldCompress(name, namesize, data, size, nocompress)
                ? kZipCompressionDeflate
                : kZipCompressionNone;
@@ -215,8 +221,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   elfwriter_startsection(elf, ".zip.cdir", SHT_PROGBITS, 0);
   EmitZipCdirHdr(
       (cfile = elfwriter_reserve(elf, ZIP_CFILE_HDR_SIZE + namesize)), name,
-      namesize, crc, era, gflags, method, mtime, mdate, iattrs, dosmode, mode,
-      compsize, uncompsize, commentsize, mtim, atim, ctim);
+      namesize, crc, era, gflags, method, mtime, mdate, iattrs, mode, compsize,
+      uncompsize, commentsize, mtim, atim, ctim);
   elfwriter_appendsym(elf, gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
                       ZIP_CFILE_HDR_SIZE + namesize);

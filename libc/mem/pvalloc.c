@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdckdint.h"
 
 /**
@@ -31,9 +32,9 @@
  * @see valloc()
  */
 void *pvalloc(size_t n) {
-  if (ckd_add(&n, n, FRAMESIZE - 1)) {
+  if (ckd_add(&n, n, __pagesize - 1)) {
     errno = ENOMEM;
     return 0;
   }
-  return memalign(FRAMESIZE, n & -FRAMESIZE);
+  return memalign(__pagesize, n & -__pagesize);
 }

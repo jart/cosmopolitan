@@ -51,6 +51,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/mem/gc.h"
+#include "libc/ctype.h"
 #include "libc/str/str.h"
 
 #include "third_party/hiredis/hiredis.h"

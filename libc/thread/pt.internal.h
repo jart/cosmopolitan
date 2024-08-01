@@ -8,5 +8,7 @@
 #define PT_MASKED         16
 #define PT_INCANCEL       32
 #define PT_OPENBSD_KLUDGE 64
+#define PT_EXITING        128
+#define PT_OWNSIGALTSTACK 256
 
 #endif /* COSMOPOLITAN_LIBC_THREAD_PT_H_ */

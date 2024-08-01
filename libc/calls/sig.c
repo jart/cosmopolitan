@@ -30,10 +30,10 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsf.h"
-#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/context.h"
@@ -81,14 +81,11 @@ textwindows void __sig_delete(int sig) {
   struct Dll *e;
   atomic_fetch_and_explicit(&__sig.pending, ~(1ull << (sig - 1)),
                             memory_order_relaxed);
-  BLOCK_SIGNALS;
   _pthread_lock();
-  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
+  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e))
     atomic_fetch_and_explicit(&POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending,
                               ~(1ull << (sig - 1)), memory_order_relaxed);
-  }
   _pthread_unlock();
-  ALLOW_SIGNALS;
 }
 
 static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
@@ -99,9 +96,8 @@ static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
     if ((deliverable = pending & ~masked)) {
       sig = bsfl(deliverable) + 1;
       bit = 1ull << (sig - 1);
-      if (atomic_fetch_and_explicit(sigs, ~bit, memory_order_acq_rel) & bit) {
+      if (atomic_fetch_and_explicit(sigs, ~bit, memory_order_acq_rel) & bit)
         return sig;
-      }
     } else {
       return 0;
     }
@@ -110,28 +106,23 @@ static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
 
 textwindows int __sig_get(sigset_t masked) {
   int sig;
-  if (!(sig = __sig_getter(&__get_tls()->tib_sigpending, masked))) {
+  if (!(sig = __sig_getter(&__get_tls()->tib_sigpending, masked)))
     sig = __sig_getter(&__sig.pending, masked);
-  }
   return sig;
 }
 
 static textwindows bool __sig_should_use_altstack(unsigned flags,
                                                   struct CosmoTib *tib) {
-  if (!(flags & SA_ONSTACK)) {
+  if (!(flags & SA_ONSTACK))
     return false;  // signal handler didn't enable it
-  }
-  if (!tib->tib_sigstack_size) {
+  if (!tib->tib_sigstack_size)
     return false;  // sigaltstack() wasn't installed on this thread
-  }
-  if (tib->tib_sigstack_flags & SS_DISABLE) {
+  if (tib->tib_sigstack_flags & SS_DISABLE)
     return false;  // sigaltstack() on this thread was disabled by user
-  }
   char *bp = __builtin_frame_address(0);
   if (tib->tib_sigstack_addr <= bp &&
-      bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
+      bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size)
     return false;  // we're already on the alternate stack
-  }
   return true;
 }
 
@@ -285,9 +276,8 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
 
     // jump back into original code if there aren't any pending signals
     do {
-      if (!(sig = __sig_get(sf->ctx.uc_sigmask))) {
+      if (!(sig = __sig_get(sf->ctx.uc_sigmask)))
         __sig_restore(&sf->ctx);
-      }
     } while (!__sig_start(pt, sig, &sf->rva, &sf->flags));
 
     // tail recurse into another signal handler
@@ -399,9 +389,7 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
 textwindows int __sig_kill(struct PosixThread *pt, int sig, int sic) {
   int rc;
   BLOCK_SIGNALS;
-  _pthread_ref(pt);
   rc = __sig_killer(pt, sig, sic);
-  _pthread_unref(pt);
   ALLOW_SIGNALS;
   return rc;
 }
@@ -464,11 +452,9 @@ textwindows void __sig_generate(int sig, int sic) {
 
 static textwindows char *__sig_stpcpy(char *d, const char *s) {
   size_t i;
-  for (i = 0;; ++i) {
-    if (!(d[i] = s[i])) {
+  for (i = 0;; ++i)
+    if (!(d[i] = s[i]))
       return d + i;
-    }
-  }
 }
 
 static textwindows wontreturn void __sig_death(int sig, const char *thing) {
@@ -505,9 +491,8 @@ static textwindows void __sig_unmaskable(struct NtExceptionPointers *ep,
   // if the user didn't install a signal handler for this unmaskable
   // exception, then print a friendly helpful hint message to stderr
   unsigned rva = __sighandrvas[sig];
-  if (rva == (intptr_t)SIG_DFL || rva == (intptr_t)SIG_IGN) {
+  if (rva == (intptr_t)SIG_DFL || rva == (intptr_t)SIG_IGN)
     __sig_death(sig, "uncaught ");
-  }
 
   // if this signal handler is configured to auto-reset to the default
   // then that reset needs to happen before the user handler is called
@@ -559,15 +544,14 @@ void __stack_call(struct NtExceptionPointers *, int, int, struct CosmoTib *,
 __msabi dontinstrument unsigned __sig_crash(struct NtExceptionPointers *ep) {
 
   // translate win32 to unix si_signo and si_code
-  int code, sig = __sig_crash_sig(ep, &code);
+  int code, sig = __sig_crash_sig(ep->ExceptionRecord->ExceptionCode, &code);
 
   // advance the instruction pointer to skip over debugger breakpoints
   // this behavior is consistent with how unix kernels are implemented
   if (sig == SIGTRAP) {
     ep->ContextRecord->Rip++;
-    if (__sig_ignored(sig)) {
+    if (__sig_ignored(sig))
       return kNtExceptionContinueExecution;
-    }
   }
 
   // win32 stack overflow detection executes INSIDE the guard page

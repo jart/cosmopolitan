@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SYSCALL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_SYSCALL_INTERNAL_H_
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/sock/struct/sockaddr.h"

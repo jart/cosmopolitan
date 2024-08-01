@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Free memory returned by malloc() & co.
@@ -34,4 +33,3 @@ void free(void *p) {
   dlfree(p);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

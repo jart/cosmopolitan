@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/wctype.h"
 #include "tool/lambda/lib/blc.h"
 
 char GetBit(FILE* f) {

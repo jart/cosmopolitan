@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
+#include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -36,7 +37,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
-#include "third_party/libcxx/math.h"
 
 bool gotsome;
 ucontext_t uc, goback;
@@ -76,7 +76,7 @@ TEST(makecontext, args) {
   EXPECT_TRUE(gotsome);
 }
 
-dontasan dontubsan void itsatrap(int x, int y) {
+dontubsan void itsatrap(int x, int y) {
   *(int *)(intptr_t)x = scalbn(x, y);
 }
 

@@ -22,7 +22,7 @@
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
@@ -78,7 +78,7 @@ char *xiso8601(struct timespec ts) {
   ptr += snprintf(ptr, end - ptr, "%09ld", ts.tv_nsec);
   ptr += strftime(ptr, end - ptr, "%z", &tm);
   unassert(ptr + 1 <= end);
-  unassert(realloc_in_place(res, ptr - end) == res);
+  unassert(realloc_in_place(res, ptr + 1 - res) == res);
   return res;
 }
 

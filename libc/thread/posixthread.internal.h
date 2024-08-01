@@ -69,12 +69,14 @@ enum PosixThreadStatus {
 
 #define POSIXTHREAD_CONTAINER(e) DLL_CONTAINER(struct PosixThread, list, e)
 
+typedef struct __locale_struct *locale_t;
+
 struct PosixThread {
   int pt_flags;            // 0x00: see PT_* constants
   atomic_int pt_canceled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) pt_status;
   atomic_int ptid;            // transitions 0 → tid
-  atomic_int pt_refs;         // negative means free
+  atomic_int pt_refs;         // prevents decimation
   void *(*pt_start)(void *);  // creation callback
   void *pt_arg;               // start's parameter
   void *pt_rc;                // start's return value
@@ -86,6 +88,7 @@ struct PosixThread {
   uint64_t pt_blkmask;
   int64_t pt_semaphore;
   intptr_t pt_iohandle;
+  locale_t pt_locale;
   void *pt_ioverlap;
   jmp_buf pt_exiter;
   pthread_attr_t pt_attr;
@@ -103,18 +106,13 @@ int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
-void _pthread_decimate(void) libcesque;
-void _pthread_free(struct PosixThread *, bool) libcesque;
-void _pthread_init(void) libcesque;
+void _pthread_decimate(bool) libcesque;
+void _pthread_free(struct PosixThread *) libcesque;
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;
 void _pthread_onfork_parent(void) libcesque;
 void _pthread_onfork_prepare(void) libcesque;
-void _pthread_ungarbage(void) libcesque;
-void _pthread_unkey(struct CosmoTib *) libcesque;
 void _pthread_unlock(void) libcesque;
-void _pthread_unref(struct PosixThread *) libcesque;
-void _pthread_unwind(struct PosixThread *) libcesque;
 void _pthread_zombify(struct PosixThread *) libcesque;
 
 forceinline pureconst struct PosixThread *_pthread_self(void) {
@@ -122,7 +120,11 @@ forceinline pureconst struct PosixThread *_pthread_self(void) {
 }
 
 forceinline void _pthread_ref(struct PosixThread *pt) {
-  atomic_fetch_add_explicit(&pt->pt_refs, 1, memory_order_relaxed);
+  atomic_fetch_add_explicit(&pt->pt_refs, 1, memory_order_acq_rel);
+}
+
+forceinline void _pthread_unref(struct PosixThread *pt) {
+  atomic_fetch_sub_explicit(&pt->pt_refs, 1, memory_order_acq_rel);
 }
 
 COSMOPOLITAN_C_END_

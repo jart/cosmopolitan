@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/extend.internal.h"
+#include "libc/intrin/extend.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
@@ -64,11 +64,9 @@ int __reservefd_unlocked(int start) {
   int fd, f1, f2;
   for (;;) {
     f1 = atomic_load_explicit(&g_fds.f, memory_order_acquire);
-    for (fd = MAX(start, f1); fd < g_fds.n; ++fd) {
-      if (!g_fds.p[fd].kind) {
+    for (fd = MAX(start, f1); fd < g_fds.n; ++fd)
+      if (!g_fds.p[fd].kind)
         break;
-      }
-    }
     fd = __ensurefds_unlocked(fd);
     bzero(g_fds.p + fd, sizeof(*g_fds.p));
     if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {

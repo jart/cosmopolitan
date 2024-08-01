@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bsr.h"
+#include "libc/ctype.h"
 #include "third_party/chibicc/chibicc.h"
 
 #define PRECIOUS 0b1111000000101000  // bx,bp,r12-r15

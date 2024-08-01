@@ -102,9 +102,6 @@ struct protoent *getprotobynumber (int);
 #define NI_MAXHOST 255
 #define NI_MAXSERV 32
 
-#if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || defined(_POSIX_SOURCE) \
- || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE+0 < 200809L) \
- || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE+0 < 700)
 struct hostent *gethostbyname (const char *);
 struct hostent *gethostbyaddr (const void *, uint32_t, int);
 errno_t *__h_errno_location(void) dontthrow pureconst;
@@ -114,7 +111,6 @@ errno_t *__h_errno_location(void) dontthrow pureconst;
 #define NO_RECOVERY    3
 #define NO_DATA        4
 #define NO_ADDRESS     NO_DATA
-#endif
 
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 void herror(const char *);

@@ -16,61 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/enum/offerpriority.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/memoryrangeentry.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/errfuns.h"
 
-typedef bool32 (*__msabi PrefetchVirtualMemoryPtr)(
-    int64_t hProcess, uintptr_t NumberOfEntries,
-    struct NtMemoryRangeEntry *VirtualAddresses, uint32_t reserved_Flags);
-
-textwindows static PrefetchVirtualMemoryPtr GetPrefetchVirtualMemory(void) {
-  static PrefetchVirtualMemoryPtr PrefetchVirtualMemory_;
-  if (!PrefetchVirtualMemory_) {
-    PrefetchVirtualMemory_ = /* win8.1+ */
-        GetProcAddressModule("Kernel32.dll", "PrefetchVirtualMemory");
-  }
-  return PrefetchVirtualMemory_;
-}
-
-typedef bool32 (*__msabi OfferVirtualMemoryPtr)(void *inout_VirtualAddress,
-                                                size_t Size, int Priority);
-
-textwindows static OfferVirtualMemoryPtr GetOfferVirtualMemory(void) {
-  static OfferVirtualMemoryPtr OfferVirtualMemory_;
-  if (!OfferVirtualMemory_) {
-    OfferVirtualMemory_ = /* win8.1+ */
-        GetProcAddressModule("Kernel32.dll", "OfferVirtualMemory");
-  }
-  return OfferVirtualMemory_;
-}
-
 textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
   if (advice == MADV_WILLNEED || advice == MADV_SEQUENTIAL) {
-    PrefetchVirtualMemoryPtr fn = GetPrefetchVirtualMemory();
-    if (fn) {
-      if (fn(GetCurrentProcess(), 1, &(struct NtMemoryRangeEntry){addr, length},
-             0)) {
-        return 0;
-      } else {
-        return __winerr();
-      }
+    if (!length)
+      return 0;
+    if (PrefetchVirtualMemory(GetCurrentProcess(), 1,
+                              &(struct NtMemoryRangeEntry){addr, length}, 0)) {
+      return 0;
     } else {
-      return enosys();
+      return __winerr();
     }
   } else if (advice == MADV_FREE) {
-    OfferVirtualMemoryPtr fn = GetOfferVirtualMemory();
-    if (fn) {
-      if (fn(addr, length, kNtVmOfferPriorityNormal)) {
-        return 0;
-      } else {
-        return __winerr();
-      }
+    if (!length)
+      return 0;
+    if (OfferVirtualMemory(addr, length, kNtVmOfferPriorityNormal)) {
+      return 0;
     } else {
-      return enosys();
+      return __winerr();
     }
   } else {
     return einval();

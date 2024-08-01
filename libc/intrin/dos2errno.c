@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/dos2errno.internal.h"
+#include "libc/intrin/dos2errno.h"
 #include "libc/nt/errors.h"
 #include "libc/sock/sock.h"
 

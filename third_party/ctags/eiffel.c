@@ -14,6 +14,7 @@
 *   INCLUDE FILES
 */
 #include "libc/fmt/conv.h"
+#include "libc/ctype.h"
 #include "third_party/ctags/general.h"  /* must always come first */
 
 #ifdef TYPE_REFERENCE_TOOL

@@ -31,7 +31,7 @@ TEST(HasControlCodes, test) {
 }
 
 TEST(HasControlCodes, testDoesUtf8) {
-  EXPECT_EQ(-1, HasControlCodes(u8"→", -1, kControlC0 | kControlC1));
+  EXPECT_EQ(-1, HasControlCodes("→", -1, kControlC0 | kControlC1));
   EXPECT_EQ(-1, HasControlCodes("\304\200", -1, kControlC0 | kControlC1));
   EXPECT_NE(-1, HasControlCodes("\300\200", -1, kControlC0 | kControlC1));
   EXPECT_EQ(-1, HasControlCodes("\300\200", -1, kControlC1));

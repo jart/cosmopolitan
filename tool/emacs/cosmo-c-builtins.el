@@ -46,6 +46,8 @@
 
         (gcc-builtin-functions
          '("__builtin_strlen"
+           "__builtin_memcpy"
+           "__builtin_memmove"
            "__builtin_setjmp"
            "__builtin_longjmp"
            "__builtin_va_start"

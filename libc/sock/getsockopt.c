@@ -17,11 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/syscall_fd.internal.h"
@@ -47,10 +46,6 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
 
   if (level == -1 || !optname) {
     rc = enoprotoopt();  // see libc/sysv/consts.sh
-  } else if (IsAsan() && (out_opt_optval && out_optlen &&
-                          (!__asan_is_valid(out_optlen, sizeof(uint32_t)) ||
-                           !__asan_is_valid(out_opt_optval, *out_optlen)))) {
-    rc = efault();
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();
   } else if (!IsWindows()) {

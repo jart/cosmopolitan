@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
@@ -45,12 +44,6 @@ int execvpe(const char *prog, char *const argv[], char *const *envp) {
   size_t i;
   char *exe, **argv2;
   char pathbuf[PATH_MAX];
-
-  // validate memory
-  if (IsAsan() &&
-      (!__asan_is_valid_str(prog) || !__asan_is_valid_strlist(argv))) {
-    return efault();
-  }
 
   if (strchr(prog, '/')) {
     return execve(prog, argv, envp);

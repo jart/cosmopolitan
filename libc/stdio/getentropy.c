@@ -20,8 +20,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/stdio/rand.h"
 #include "libc/sysv/errfuns.h"
 
@@ -39,7 +38,7 @@ int getentropy(void *p, size_t n) {
   int rc;
   if (n > 256) {
     rc = eio();
-  } else if ((!p && n) || (IsAsan() && !__asan_is_valid(p, n))) {
+  } else if ((!p && n)) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {
     if (sys_getentropy(p, n))

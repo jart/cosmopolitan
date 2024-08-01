@@ -9,6 +9,7 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/pyerrors.h"
+#include "libc/ctype.h"
 #include "third_party/python/Include/token.h"
 
 extern int Py_DebugFlag;

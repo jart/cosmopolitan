@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
-#include "libc/intrin/promises.internal.h"
+#include "libc/intrin/promises.h"
 #include "libc/runtime/runtime.h"
 
 // runs pledge at glibc executable load time, e.g.

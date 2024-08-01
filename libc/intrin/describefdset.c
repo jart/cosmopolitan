@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/select.h"
@@ -32,8 +31,7 @@ const char *(DescribeFdSet)(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
 
   if (!fds)
     return "NULL";
-  if ((!IsAsan() && kisdangerous(fds)) ||
-      (IsAsan() && !__asan_is_valid(fds, sizeof(*fds) * nfds))) {
+  if (kisdangerous(fds)) {
     ksnprintf(buf, N, "%p", fds);
     return buf;
   }

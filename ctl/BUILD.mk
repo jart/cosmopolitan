@@ -18,7 +18,13 @@ CTL_A_CHECKS =						\
 CTL_A_DIRECTDEPS =					\
 	LIBC_INTRIN					\
 	LIBC_MEM					\
+	LIBC_NEXGEN32E					\
+	LIBC_STDIO					\
 	LIBC_STR					\
+	THIRD_PARTY_DOUBLECONVERSION			\
+	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_LIBCXXABI				\
+	THIRD_PARTY_LIBUNWIND				\
 
 CTL_A_DEPS := $(call uniq,$(foreach x,$(CTL_A_DIRECTDEPS),$($(x))))
 
@@ -36,6 +42,7 @@ $(CTL_A_OBJS): private					\
 			-Walloca-larger-than=4096	\
 			-ffunction-sections		\
 			-fdata-sections			\
+			-fexceptions			\
 
 CTL_LIBS = $(foreach x,$(CTL_ARTIFACTS),$($(x)))
 CTL_SRCS = $(foreach x,$(CTL_ARTIFACTS),$($(x)_SRCS))

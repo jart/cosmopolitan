@@ -17,9 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/getauxval.internal.h"
+#include "libc/intrin/getauxval.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns auxiliary value.
@@ -33,16 +32,6 @@
 unsigned long getauxval(unsigned long key) {
   struct AuxiliaryValue x;
   x = __getauxval(key);
-  if (key == AT_PAGESZ) {
-    if (!x.isfound) {
-#ifdef __aarch64__
-      x.value = 16384;
-#else
-      x.value = 4096;
-#endif
-    }
-    x.isfound = true;
-  }
   if (x.isfound) {
     return x.value;
   } else {

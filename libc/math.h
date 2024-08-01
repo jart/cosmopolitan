@@ -159,10 +159,7 @@ typedef double double_t;
 #define fpclassify(x) \
   __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x)
 
-#define signbit(x)                                          \
-  (sizeof(x) == sizeof(long double) ? __builtin_signbitl(x) \
-   : sizeof(x) == sizeof(float)     ? __builtin_signbitf(x) \
-                                    : __builtin_signbit(x))
+#define signbit(x) __builtin_signbit(x)
 
 extern int signgam;
 

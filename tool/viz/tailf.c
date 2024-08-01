@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -36,7 +36,7 @@
 int fd;
 bool exited;
 struct stat st;
-char buf[FRAMESIZE];
+char buf[65536];
 
 int WriteString(const char *s) {
   return write(1, s, strlen(s));

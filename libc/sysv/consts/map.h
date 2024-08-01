@@ -19,6 +19,7 @@ extern const int MAP_JIT;
 extern const int MAP_LOCKED;
 extern const int MAP_NOCACHE;
 extern const int MAP_NOEXTEND;
+extern const int MAP_NOFORK;
 extern const int MAP_NONBLOCK;
 extern const int MAP_NORESERVE;
 extern const int MAP_NOSYNC;
@@ -33,7 +34,6 @@ COSMOPOLITAN_C_END_
 #define MAP_FILE    0
 #define MAP_SHARED  1
 #define MAP_PRIVATE 2
-#define MAP_STACK   6
 #define MAP_TYPE    15
 #define MAP_FIXED   16
 

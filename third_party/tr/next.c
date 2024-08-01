@@ -35,6 +35,7 @@
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "libc/ctype.h"
 #include "third_party/tr/extern.h"
 
 static int	backslash(STR *);

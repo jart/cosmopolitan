@@ -20,8 +20,7 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sched_param.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -33,7 +32,7 @@
 int sched_getparam(int pid, struct sched_param *param) {
   int rc;
   struct sched_param p;
-  if (!param || (IsAsan() && !__asan_is_valid(param, sizeof(*param)))) {
+  if (!param) {
     rc = efault();
   } else if (IsNetbsd()) {
     if (!(rc = sys_sched_getscheduler_netbsd(pid, &p))) {

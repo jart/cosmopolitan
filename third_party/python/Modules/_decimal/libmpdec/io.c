@@ -34,6 +34,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/io.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
+#include "libc/ctype.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
 __static_yoink("libmpdec_notice");
 

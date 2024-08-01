@@ -6,6 +6,12 @@ COSMOPOLITAN_C_START_
 
 #define ZIPOS_SYNTHETIC_DIRECTORY 0
 
+#ifndef __cplusplus
+#define _ZIPOS_ATOMIC(x) _Atomic(x)
+#else
+#define _ZIPOS_ATOMIC(x) x
+#endif
+
 struct stat;
 struct iovec;
 struct Zipos;
@@ -21,8 +27,8 @@ struct ZiposHandle {
   size_t size;
   size_t mapsize;
   size_t cfile;
-  _Atomic(size_t) refs;
-  _Atomic(size_t) pos;
+  _ZIPOS_ATOMIC(size_t) refs;
+  _ZIPOS_ATOMIC(size_t) pos;
   uint8_t *mem;
   uint8_t data[];
 };
@@ -34,7 +40,6 @@ struct Zipos {
   uint64_t dev;
   size_t *index;
   size_t records;
-  struct ZiposHandle *freelist;
 };
 
 int __zipos_close(int);

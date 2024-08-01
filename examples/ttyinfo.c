@@ -14,6 +14,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/termios.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

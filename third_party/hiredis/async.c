@@ -56,6 +56,7 @@
 #include "third_party/hiredis/async.h"
 #include "third_party/hiredis/net.h"
 #include "third_party/hiredis/dict.c"
+#include "libc/ctype.h"
 #include "third_party/hiredis/sds.h"
 
 #include "third_party/hiredis/async_private.inc"

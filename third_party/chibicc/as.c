@@ -38,6 +38,7 @@
 #include "third_party/chibicc/file.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "libc/serialize.h"
+#include "libc/ctype.h"
 #include "tool/build/lib/elfwriter.h"
 
 #define OSZ  0x66

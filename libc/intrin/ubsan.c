@@ -18,9 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/ubsan.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/pushpop.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
@@ -31,6 +32,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -240,16 +242,20 @@ __wur static __ubsan_die_f *__ubsan_die(void) {
 
 static void __ubsan_warning(const struct UbsanSourceLocation *loc,
                             const char *description) {
-  kprintf("%s:%d: %subsan warning: %s is undefined behavior%s\n", loc->file,
-          loc->line, SUBTLE, description, RESET);
+  kprintf("%s:%d: %subsan warning: %s is undefined behavior%s\n"
+          "cosmoaddr2line %s %s\n",
+          loc->file, loc->line, SUBTLE, description, RESET, __argv[0],
+          DescribeBacktrace(__builtin_frame_address(0)));
   if (__ubsan_strict)
     __ubsan_die()();
 }
 
 __wur __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
                                    const char *description) {
-  kprintf("\n%s:%d: %subsan error%s: %s (tid %d)\n", loc->file, loc->line, RED2,
-          RESET, description, gettid());
+  kprintf("\n%s:%d: %subsan error%s: %s (tid %d)\n"
+          "cosmoaddr2line %s %s\n",
+          loc->file, loc->line, RED2, RESET, description, gettid(), __argv[0],
+          DescribeBacktrace(__builtin_frame_address(0)));
   return __ubsan_die();
 }
 

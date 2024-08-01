@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -32,7 +33,7 @@ errno_t pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
   switch (pshared) {
     case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:
-      attr->_pshared = pshared;
+      attr->_word = MUTEX_SET_PSHARED(attr->_word, pshared);
       return 0;
     default:
       return EINVAL;

@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/counter.h"
 
 /**
  * Destroys barrier.
@@ -27,9 +28,8 @@
  * @raise EINVAL if threads are still inside the barrier
  */
 errno_t pthread_barrier_destroy(pthread_barrier_t *barrier) {
-  if (barrier->_nsync) {
-    nsync_counter_free(barrier->_nsync);
-    barrier->_nsync = 0;
-  }
+  if (atomic_load_explicit(&barrier->_waiters, memory_order_relaxed))
+    return EINVAL;
+  memset(barrier, -1, sizeof(*barrier));
   return 0;
 }

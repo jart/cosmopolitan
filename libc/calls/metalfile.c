@@ -29,7 +29,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
-#include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/directmap.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"

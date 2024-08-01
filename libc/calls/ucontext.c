@@ -34,7 +34,7 @@ int __tailcontext(const ucontext_t *);
  * @see getcontext()
  */
 int setcontext(const ucontext_t *uc) {
-  if (IsWindows()) {
+  if (IsWindows() || IsMetal()) {
     atomic_store_explicit(&__get_tls()->tib_sigmask, uc->uc_sigmask,
                           memory_order_release);
   } else {
@@ -44,7 +44,7 @@ int setcontext(const ucontext_t *uc) {
 }
 
 int __getcontextsig(ucontext_t *uc) {
-  if (IsWindows()) {
+  if (IsWindows() || IsMetal()) {
     uc->uc_sigmask =
         atomic_load_explicit(&__get_tls()->tib_sigmask, memory_order_acquire);
     return 0;
@@ -54,7 +54,7 @@ int __getcontextsig(ucontext_t *uc) {
 }
 
 int __swapcontextsig(ucontext_t *x, const ucontext_t *y) {
-  if (IsWindows()) {
+  if (IsWindows() || IsMetal()) {
     x->uc_sigmask = atomic_exchange_explicit(
         &__get_tls()->tib_sigmask, y->uc_sigmask, memory_order_acquire);
     return 0;

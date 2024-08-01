@@ -212,7 +212,7 @@ void ExpandLuminosityRange(unsigned n, unsigned char *Y) {
 }
 
 TEST(ExpandLuminosityRange, test) {
-  unsigned char Y[32];
+  _Alignas(16) unsigned char Y[32];
   Y[0] = 0;
   ExpandLuminosityRange(16, Y);
   EXPECT_EQ(0, Y[0]);

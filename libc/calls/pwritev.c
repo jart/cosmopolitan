@@ -24,9 +24,8 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/alloca.h"
@@ -52,8 +51,6 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
     return ebadf();
   if (iovlen < 0)
     return einval();
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen))
-    return efault();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)
     return ebadf();
 
@@ -65,6 +62,7 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
       struct iovec *iov2;
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
       iov2 = alloca(iovlen * sizeof(struct iovec));
       CheckLargeStackAllocation(iov2, iovlen * sizeof(struct iovec));
 #pragma GCC pop_options

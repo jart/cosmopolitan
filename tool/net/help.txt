@@ -1063,7 +1063,10 @@ FUNCTIONS
           This function is not available in unsecure mode.
 
   UuidV4() -> str
-          Returns an uuid v4 string.
+          Returns a uuid v4 string.
+
+  UuidV7() -> str
+          Returns a uuid v7 string.
 
   Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
       ├─→ status:int, {header:str=value:str,...}, body:str

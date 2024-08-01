@@ -13,6 +13,7 @@
 *   INCLUDE FILES
 */
 #include "libc/runtime/runtime.h"
+#include "libc/ctype.h"
 #include "third_party/ctags/general.h"  /* must always come first */
 
 #include "libc/mem/alg.h"

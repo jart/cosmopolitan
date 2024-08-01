@@ -87,7 +87,7 @@ int vfprintf_unlocked(FILE *f, const char *fmt, va_list va) {
   st.f = f;
   st.n = 0;
   st.b.n = 0;
-  if ((rc = __fmt(out, &st, fmt, va)) != -1) {
+  if ((rc = __fmt(out, &st, fmt, va, &st.n)) != -1) {
     if (!st.b.n) {
       rc = st.n;
     } else if (fwrite_unlocked(st.b.p, 1, st.b.n, st.f)) {

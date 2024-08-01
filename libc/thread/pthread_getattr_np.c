@@ -20,10 +20,10 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/maps.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/rlim.h"
@@ -73,8 +73,9 @@ errno_t pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
       __builtin_unreachable();
   }
   if (!attr->__stacksize && (pt->pt_flags & PT_STATIC)) {
-    __get_main_stack(&attr->__stackaddr, &attr->__stacksize,
-                     &attr->__guardsize);
+    attr->__stackaddr = __maps.stack.addr;
+    attr->__stacksize = __maps.stack.size;
+    attr->__guardsize = 0;
   }
   return 0;
 }

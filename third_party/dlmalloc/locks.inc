@@ -39,15 +39,17 @@ static int malloc_wipe(MLOCK_T *lk) {
 }
 
 static int malloc_lock(MLOCK_T *lk) {
-  if (!__threaded) return 0;
-  while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
-    pthread_pause_np();
+  for (;;) {
+    if (!atomic_exchange_explicit(lk, 1, memory_order_acquire))
+      break;
+    for (;;)
+      if (!atomic_load_explicit(lk, memory_order_relaxed))
+        break;
   }
   return 0;
 }
 
 static int malloc_unlock(MLOCK_T *lk) {
-  if (!__threaded) return 0;
   atomic_store_explicit(lk, 0, memory_order_release);
   return 0;
 }
@@ -62,13 +64,11 @@ static int malloc_wipe(MLOCK_T *lk) {
 }
 
 static int malloc_lock(MLOCK_T *lk) {
-  if (!__threaded) return 0;
   nsync_mu_lock(lk);
   return 0;
 }
 
 static int malloc_unlock(MLOCK_T *lk) {
-  if (!__threaded) return 0;
   nsync_mu_unlock(lk);
   return 0;
 }

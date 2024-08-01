@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/limits.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -72,10 +72,10 @@ errno_t pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
     attr->__stacksize = 0;
     return 0;
   }
-  if (stacksize < PTHREAD_STACK_MIN ||
-      (IsAsan() && !__asan_is_valid(stackaddr, stacksize))) {
+  if (stacksize > INT_MAX)
     return EINVAL;
-  }
+  if (stacksize < PTHREAD_STACK_MIN)
+    return EINVAL;
   attr->__stackaddr = stackaddr;
   attr->__stacksize = stacksize;
   return 0;

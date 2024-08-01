@@ -23,8 +23,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
 #include "libc/runtime/zipos.internal.h"
@@ -51,11 +50,8 @@ bool32 fileexists(const char *path) {
   struct ZiposUri zipname;
   uint16_t path16[PATH_MAX];
   e = errno;
-  if (IsAsan() && !__asan_is_valid_str(path)) {
-    efault();
-    res = false;
-  } else if (_weaken(__zipos_open) &&
-             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (_weaken(__zipos_open) &&
+      _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (_weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       res = true;
     } else {

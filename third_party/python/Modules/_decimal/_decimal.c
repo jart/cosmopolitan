@@ -46,6 +46,7 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_decimal/docstrings.h"
+#include "libc/ctype.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 
 PYTHON_PROVIDE("_decimal");

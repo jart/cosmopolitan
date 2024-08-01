@@ -16,62 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/cxxabi.h"
-#include "libc/errno.h"
-#include "libc/intrin/pushpop.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/mem/arraylist.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/thread/thread.h"
-
-void(__fflush_lock)(void) {
-  pthread_mutex_lock(&__fflush_lock_obj);
-}
-
-void(__fflush_unlock)(void) {
-  pthread_mutex_unlock(&__fflush_lock_obj);
-}
-
-static void __stdio_fork_prepare(void) {
-  FILE *f;
-  __fflush_lock();
-  for (int i = 0; i < __fflush.handles.i; ++i) {
-    if ((f = __fflush.handles.p[i])) {
-      pthread_mutex_lock(&f->lock);
-    }
-  }
-}
-
-static void __stdio_fork_parent(void) {
-  FILE *f;
-  for (int i = __fflush.handles.i; i--;) {
-    if ((f = __fflush.handles.p[i])) {
-      pthread_mutex_unlock(&f->lock);
-    }
-  }
-  __fflush_unlock();
-}
-
-static void __stdio_fork_child(void) {
-  FILE *f;
-  for (int i = __fflush.handles.i; i--;) {
-    if ((f = __fflush.handles.p[i])) {
-      bzero(&f->lock, sizeof(f->lock));
-      f->lock._type = PTHREAD_MUTEX_RECURSIVE;
-    }
-  }
-  pthread_mutex_init(&__fflush_lock_obj, 0);
-}
-
-__attribute__((__constructor__(60))) static textstartup void stdioinit(void) {
-  pthread_atfork(__stdio_fork_prepare, __stdio_fork_parent, __stdio_fork_child);
-}
 
 /**
  * Blocks until data from stream buffer is written out.

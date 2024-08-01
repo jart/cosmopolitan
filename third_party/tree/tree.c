@@ -29,6 +29,8 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/mem/alg.h"
+#include "libc/ctype.h"
+#include "libc/wctype.h"
 #include "third_party/tree/tree.h"
 
 char *version = "$Version: $ tree v2.1.1 %s 1996 - 2023 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro $";
@@ -59,8 +61,9 @@ const char *charset = NULL;
 
 struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err) = unix_getfulltree;
 /* off_t (*listdir)(char *, int *, int *, u_long, dev_t) = unix_listdir; */
-int (*basesort)() = alnumsort;
-int (*topsort)() = NULL;
+int alnumsort(const void *, const void *);
+int (*basesort)(const void *, const void *) = alnumsort;
+int (*topsort)(const void *, const void *) = NULL;
 
 char *sLevel, *curdir;
 FILE *outfile = NULL;
@@ -87,7 +90,7 @@ const u_short ifmt[]={ FILE_ARCHIVED, FILE_DIRECTORY, FILE_SYSTEM, FILE_HIDDEN, 
 
 struct sorts {
   char *name;
-  int (*cmpfunc)();
+  int (*cmpfunc)(const void *, const void *);
 } sorts[] = {
   {"name", alnumsort},
   {"version", versort},
@@ -1015,16 +1018,20 @@ struct _info **unix_getfulltree(char *d, u_long lev, dev_t dev, off_t *size, cha
 /**
  * filesfirst and dirsfirst are now top-level meta-sorts.
  */
-int filesfirst(struct _info **a, struct _info **b)
+int filesfirst(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   if ((*a)->isdir != (*b)->isdir) {
     return (*a)->isdir ? 1 : -1;
   }
   return basesort(a, b);
 }
 
-int dirsfirst(struct _info **a, struct _info **b)
+int dirsfirst(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   if ((*a)->isdir != (*b)->isdir) {
     return (*a)->isdir ? -1 : 1;
   }
@@ -1032,20 +1039,26 @@ int dirsfirst(struct _info **a, struct _info **b)
 }
 
 /* Sorting functions */
-int alnumsort(struct _info **a, struct _info **b)
+int alnumsort(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   int v = strcoll((*a)->name,(*b)->name);
   return reverse? -v : v;
 }
 
-int versort(struct _info **a, struct _info **b)
+int versort(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   int v = strverscmp((*a)->name,(*b)->name);
   return reverse? -v : v;
 }
 
-int mtimesort(struct _info **a, struct _info **b)
+int mtimesort(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   int v;
 
   if ((*a)->mtime == (*b)->mtime) {
@@ -1056,8 +1069,10 @@ int mtimesort(struct _info **a, struct _info **b)
   return reverse? -v : v;
 }
 
-int ctimesort(struct _info **a, struct _info **b)
+int ctimesort(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   int v;
 
   if ((*a)->ctime == (*b)->ctime) {
@@ -1073,8 +1088,10 @@ int sizecmp(off_t a, off_t b)
   return (a == b)? 0 : ((a < b)? 1 : -1);
 }
 
-int fsizesort(struct _info **a, struct _info **b)
+int fsizesort(const void *a_, const void *b_)
 {
+  struct _info **a = (struct _info **)a_;
+  struct _info **b = (struct _info **)b_;
   int v = sizecmp((*a)->size, (*b)->size);
   if (v == 0) v = strcoll((*a)->name,(*b)->name);
   return reverse? -v : v;

@@ -24,7 +24,7 @@ extern bool Dflag, Hflag, inodeflag, devflag, Rflag, duflag, pruneflag, metafirs
 extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks;
 
 extern struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err);
-extern int (*topsort)();
+extern int (*topsort)(const void *, const void *);
 extern FILE *outfile;
 extern int flimit, Level, *dirs, maxdirs, errors;
 extern int htmldirlen;

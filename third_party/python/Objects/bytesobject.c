@@ -26,6 +26,7 @@
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/sliceobject.h"
+#include "libc/ctype.h"
 #include "third_party/python/Include/warnings.h"
 
 /*[clinic input]

@@ -22,7 +22,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/popcnt.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/subprocess.h"

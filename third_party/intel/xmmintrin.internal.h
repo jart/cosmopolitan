@@ -5,6 +5,8 @@
 #include "third_party/intel/mm_malloc.internal.h"
 enum _mm_hint
 {
+  _MM_HINT_IT0 = 19,
+  _MM_HINT_IT1 = 18,
   _MM_HINT_ET0 = 7,
   _MM_HINT_ET1 = 6,
   _MM_HINT_T0 = 3,
@@ -16,10 +18,11 @@ enum _mm_hint
 extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_prefetch (const void *__P, enum _mm_hint __I)
 {
-  __builtin_prefetch (__P, (__I & 0x4) >> 2, __I & 0x3);
+  __builtin_ia32_prefetch (__P, (__I & 0x4) >> 2,
+      __I & 0x3, (__I & 0x10) >> 4);
 }
 #else
-#define _mm_prefetch(P, I) __builtin_prefetch ((P), ((I & 0x4) >> 2), (I & 0x3))
+#define _mm_prefetch(P, I) __builtin_ia32_prefetch ((P), ((I) & 0x4) >> 2, ((I) & 0x3), ((I) & 0x10) >> 4)
 #endif
 #ifndef __SSE__
 #pragma GCC push_options
@@ -55,7 +58,10 @@ typedef float __v4sf __attribute__ ((__vector_size__ (16)));
 extern __inline __m128 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_undefined_ps (void)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winit-self"
   __m128 __Y = __Y;
+#pragma GCC diagnostic pop
   return __Y;
 }
 extern __inline __m128 __attribute__((__gnu_inline__, __always_inline__, __artificial__))

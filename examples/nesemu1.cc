@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/inttypes.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -137,7 +137,7 @@ struct Action {
 
 struct Audio {
   size_t i;
-  int16_t p[FRAMESIZE];
+  int16_t p[65536];
 };
 
 struct Status {

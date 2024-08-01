@@ -219,16 +219,15 @@ syscon	mmap	MAP_FILE				0			0			0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_SHARED_VALIDATE			3			3			1			1			1			1			1			1			# weird linux thing
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			2			2			# forced consensus & faked nt
-syscon	mmap	MAP_STACK				6			6			6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			15			15			# mask for type of mapping
 syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x00004010		0x00004010		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x00004000		0x00004000		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
 syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
-syscon	mmap	MAP_GROWSDOWN				0x00000100		0x00000100		0			0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
 syscon	mmap	MAP_LOCKED				0x00002000		0x00002000		0			0			0			0			0			0
 syscon	mmap	MAP_NORESERVE				0x00004000		0x00004000		0x00000040		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
 syscon	mmap	MAP_POPULATE				0x00008000		0x00008000		0			0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0x00010000		0			0			0			0			0			0
+syscon	mmap	MAP_NOFORK				0			0			0			0			0			0			0			0x10000000		# used on pages internal to our mmap() implemention on windows
 syscon	mmap	MAP_SYNC				0x00080000		0x00080000		0			0			0			0			0			0			# perform synchronous page faults for mapping (Linux 4.15+)
 syscon	mmap	MAP_HUGETLB				0x00040000		-1			-1			-1			-1			-1			-1			-1			# make it inherit across execve()
 syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
@@ -293,15 +292,7 @@ syscon	mprot	PROT_NONE				0			0			0			0			0			0			0			0			# mmap, mprotect, unix
 syscon	mprot	PROT_READ				1			1			1			1			1			1			1			1			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_WRITE				2			2			2			2			2			2			2			2			# mmap, mprotect, unix consensus
 syscon	mprot	PROT_EXEC				4			4			4			4			4			4			4			4			# mmap, mprotect, unix consensus
-syscon	mprot	PROT_GROWSDOWN				0x01000000		0x01000000		0			0			0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap() (todo: what was 0x01000000 on nt)
-syscon	mprot	PROT_GROWSUP				0x02000000		0x02000000		0			0			0			0			0			0			# intended for mprotect; see MAP_GROWSDOWN for mmap()
-
-#	mremap() flags
-#	the revolutionary praxis of realloc()
-#
-#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	mremap	MREMAP_MAYMOVE				1			1			1			1			1			1			1			1			# faked non-linux (b/c linux only)
-syscon	mremap	MREMAP_FIXED				2			2			2			2			2			2			2			2			# faked non-linux (b/c linux only)
+syscon	mprot	PROT_GUARD				0			0			0			0			0			0			0			0x100			# mmap, mprotect, unix consensus
 
 #	sigprocmask() flags
 #

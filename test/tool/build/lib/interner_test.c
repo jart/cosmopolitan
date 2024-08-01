@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/lib/interner.h"
+#include "libc/ctype.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"

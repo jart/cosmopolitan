@@ -22,7 +22,7 @@
 #include "dsp/tty/ttyrgb.h"
 #include "dsp/tty/windex.h"
 #include "libc/assert.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

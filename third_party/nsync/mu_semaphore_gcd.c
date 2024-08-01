@@ -18,7 +18,7 @@
 #include "libc/assert.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/syslib.internal.h"
@@ -85,8 +85,8 @@ static errno_t nsync_dispatch_semaphore_wait (nsync_semaphore *s,
 }
 
 /* Initialize *s; the initial value is 0.  */
-void nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
-	*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0);
+bool nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
+	return !!(*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0));
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

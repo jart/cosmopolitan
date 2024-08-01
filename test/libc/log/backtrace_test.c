@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -86,10 +85,6 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   ssize_t rc;
   int ws, pid, fds[2];
   char *output, buf[512];
-  if (!IsAsan()) {
-    /* TODO(jart): How can we make this work without ASAN? */
-    return;
-  }
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -254,53 +249,6 @@ TEST(ShowCrashReports, testDivideByZero) {
   free(output);
 }
 
-// clang-format off
-//
-// test/libc/log/backtrace_test.c:59: ubsan error: 'int' index 10 into 'char [10]' out of bounds
-// 0x000000000040a352: __die at libc/log/die.c:40
-// 0x0000000000489bc8: __ubsan_abort at libc/intrin/ubsan.c:196
-// 0x0000000000489e1c: __ubsan_handle_out_of_bounds at libc/intrin/ubsan.c:242
-// 0x0000000000423666: BssOverrunCrash at test/libc/log/backtrace_test.c:59
-// 0x0000000000423e0a: SetUp at test/libc/log/backtrace_test.c:115
-// 0x000000000049350b: testlib_runtestcases at libc/testlib/testrunner.c:98
-// 0x000000000048ab50: testlib_runalltests at libc/testlib/runner.c:37
-// 0x00000000004028d0: main at libc/testlib/testmain.c:94
-// 0x0000000000403977: cosmo at libc/runtime/cosmo.S:69
-// 0x00000000004021ae: _start at libc/crt/crt.S:78
-//
-// asan error: global redzone 1-byte store at 0x00000048cf2a shadow 0x0000800899e5
-//                                         x
-// ........................................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-//       |0      |0      |0      |0      |2      |-6     |-6     |-6     |-6
-//                                ☺☻♥♦♣♠•◘○                                        
-// 000000400000-000000460000 .text
-// 000000460000-000000468000 .data
-// 00007fff0000-00008000ffff
-// 000080070000-00008009ffff ←shadow
-// 02008fff0000-02009001ffff
-// 020090060000-02009007ffff
-// 0e007ffb0000-0e008000ffff
-// 1000286b0000-1000286cffff
-// 100080000000-10008009ffff
-// 100080350000-10008036ffff
-// 100080380000-10008038ffff
-// 6fffffe00000-6fffffffffff
-// 0x0000000000407af6: __die at libc/log/die.c:36
-// 0x0000000000444f13: __asan_die at libc/intrin/asan.c:318
-// 0x0000000000445bc8: __asan_report at libc/intrin/asan.c:667
-// 0x0000000000445e41: __asan_report_memory_fault at libc/intrin/asan.c:672
-// 0x0000000000446312: __asan_report_store at libc/intrin/asan.c:1008
-// 0x0000000000444442: __asan_report_store1 at libc/intrin/somanyasan.S:118
-// 0x0000000000416216: BssOverrunCrash at test/libc/log/backtrace_test.c:52
-// 0x000000000041642a: SetUp at test/libc/log/backtrace_test.c:73
-// 0x00000000004513eb: testlib_runtestcases at libc/testlib/testrunner.c:98
-// 0x000000000044bbe0: testlib_runalltests at libc/testlib/runner.c:37
-// 0x00000000004026db: main at libc/testlib/testmain.c:155
-// 0x000000000040323f: cosmo at libc/runtime/cosmo.S:64
-// 0x000000000040219b: _start at libc/crt/crt.S:67
-//
-// clang-format on
-
 TEST(ShowCrashReports, testBssOverrunCrash) {
   if (!IsAsan()) return;
   size_t got;
@@ -344,78 +292,6 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   } else {
     ASSERT_TRUE(!!strstr(output, "☺☻♥♦♣♠•◘○"));
     ASSERT_TRUE(!!strstr(output, "global redzone"));
-  }
-  free(output);
-}
-
-// clang-format off
-// asan error: null pointer dereference 1-byte load at 0x000000000000 shadow 0x00007fff8000
-//                                         x
-// MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅
-// |-17    |-17    |-17    |-17    |-17    |-1     |-1     |-1     |-1     |-1
-// ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅
-// 000000400000-000000464000 .text
-// 000000464000-00000046d000 .data
-// 00007fff0000-00008000ffff ←shadow
-// 000080070000-00008009ffff
-// 02008fff0000-02009001ffff
-// 020090060000-02009007ffff
-// 0e007fff0000-0e008000ffff
-// 10000d3e0000-10000d3fffff
-// 100080000000-10008009ffff
-// 100080370000-10008038ffff
-// 1000803a0000-1000803affff
-// 6ffffffe0000-6fffffffffff
-// 0x0000000000407c84: __die at libc/log/die.c:37
-// 0x000000000040b1ee: __asan_report_load at libc/intrin/asan.c:1083
-// 0x000000000041639e: NpeCrash at test/libc/log/backtrace_test.c:87
-// 0x0000000000416733: SetUp at test/libc/log/backtrace_test.c:120
-// 0x00000000004541fb: testlib_runtestcases at libc/testlib/testrunner.c:98
-// 0x000000000044d000: testlib_runalltests at libc/testlib/runner.c:37
-// 0x00000000004026db: main at libc/testlib/testmain.c:94
-// 0x000000000040327f: cosmo at libc/runtime/cosmo.S:64
-// 0x000000000040219b: _start at libc/crt/crt.S:67
-// clang-format on
-TEST(ShowCrashReports, testNpeCrash) {
-  if (!IsAsan()) return;
-  size_t got;
-  ssize_t rc;
-  int ws, pid, fds[2];
-  char *output, buf[512];
-  ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    dup2(fds[1], 1);
-    dup2(fds[1], 2);
-    execv("bin/backtrace", (char *const[]){"bin/backtrace", "7", 0});
-    _Exit(127);
-  }
-  close(fds[1]);
-  output = 0;
-  appends(&output, "");
-  for (;;) {
-    rc = read(fds[0], buf, sizeof(buf));
-    if (rc == -1) {
-      ASSERT_EQ(EINTR, errno);
-      continue;
-    }
-    if ((got = rc)) {
-      appendd(&output, buf, got);
-    } else {
-      break;
-    }
-  }
-  close(fds[0]);
-  ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
-  EXPECT_EQ(77 << 8, ws);
-  /* NULL is stopgap until we can copy symbol tables into binary */
-  ASSERT_TRUE(!!strstr(output, "null pointer"));
-#ifdef __FNO_OMIT_FRAME_POINTER__
-  ASSERT_TRUE(OutputHasSymbol(output, "NpeCrash"));
-#endif
-  if (!strstr(output, "null pointer access")) {  // ubsan
-    ASSERT_TRUE(!!strstr(output, "∅∅∅∅"));       // asan
   }
   free(output);
 }

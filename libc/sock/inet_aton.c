@@ -25,6 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/ctype.h"
 #include "libc/fmt/conv.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"

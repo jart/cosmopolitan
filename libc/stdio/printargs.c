@@ -27,10 +27,10 @@
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/promises.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
@@ -464,16 +464,11 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
   PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
         GetInterpreterExecutableName(u.path, sizeof(u.path)));
-  PRINT(" ☼ %s = %p", "GetStackSize()", GetStackSize());
-  PRINT(" ☼ %s = %p", "GetGuardSize()", GetGuardSize());
-  PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr());
-  PRINT(" ☼ %s = %p", "GetStaticStackSize()", GetStaticStackSize());
-  PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
   PRINT(" ☼ %s = %p", "__builtin_frame_address(0)", __builtin_frame_address(0));
 
   PRINT("");
   PRINT("MEMTRACK");
-  __print_maps();
+  __print_maps(0);
 
   PRINT("");
   PRINT("TERMIOS");

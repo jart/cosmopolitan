@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"

@@ -22,8 +22,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -69,7 +68,7 @@ int truncate(const char *path, int64_t length) {
 
   if (IsMetal()) {
     rc = enosys();
-  } else if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+  } else if (!path) {
     rc = efault();
   } else if (_weaken(__zipos_parseuri) &&
              _weaken(__zipos_parseuri)(path, &zipname) != -1) {

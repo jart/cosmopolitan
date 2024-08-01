@@ -19,8 +19,8 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/thread/posixthread.internal.h"
@@ -40,10 +40,8 @@ static errno_t pthread_detach_impl(struct PosixThread *pt) {
     if (atomic_compare_exchange_weak_explicit(&pt->pt_status, &status,
                                               transition, memory_order_release,
                                               memory_order_relaxed)) {
-      if (transition == kPosixThreadZombie) {
+      if (transition == kPosixThreadZombie)
         _pthread_zombify(pt);
-      }
-      _pthread_decimate();
       return 0;
     }
   }
@@ -64,6 +62,7 @@ static errno_t pthread_detach_impl(struct PosixThread *pt) {
  * @returnserrno
  */
 errno_t pthread_detach(pthread_t thread) {
+  unassert(thread);
   struct PosixThread *pt = (struct PosixThread *)thread;
   errno_t err = pthread_detach_impl(pt);
   STRACE("pthread_detach(%d) → %s", _pthread_tid(pt), DescribeErrno(err));

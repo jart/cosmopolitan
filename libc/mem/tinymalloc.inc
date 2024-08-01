@@ -14,6 +14,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "libc/assert.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/stdalign.internal.h"
@@ -25,17 +26,31 @@
 #endif
 
 #ifndef TINYMALLOC_MAX_ALIGN
-#define TINYMALLOC_MAX_ALIGN 4096
+#define TINYMALLOC_MAX_ALIGN sizeof(max_align_t)
 #endif
 
-#ifndef MODE_DBG /* don't interfere with asan malloc */
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+#pragma GCC diagnostic ignored "-Wanalyzer-use-after-free"
 
-alignas(TINYMALLOC_MAX_ALIGN) static struct {
-  char memory[TINYMALLOC_MAX_BYTES];
-  size_t used, last, free;
+static struct {
+  alignas(max_align_t) char bits[TINYMALLOC_MAX_BYTES];
+  char *memory;
+  int once;
+  size_t size, used, last, free;
 } heap;
 
-static inline bool isheap(char *mem) {
+static void tinymalloc_init(void) {
+  int align;
+  if (heap.once)
+    return;
+  align = TINYMALLOC_MAX_ALIGN;
+  heap.memory = (char *)(((uintptr_t)heap.bits + align - 1) & -align);
+  heap.size = sizeof(heap.bits) - (heap.memory - heap.bits);
+  heap.once = 1;
+}
+
+static inline int isheap(char *mem) {
   return heap.memory <= mem && mem < heap.memory + heap.used;
 }
 
@@ -60,6 +75,7 @@ size_t malloc_usable_size(void *ptr) {
 void *memalign(size_t align, size_t need) {
   char *res;
   size_t next, next2, base, toto, *link, *link2;
+  tinymalloc_init();
 
   // normalize arguments
   while (align & (align - 1))
@@ -96,7 +112,7 @@ void *memalign(size_t align, size_t need) {
   base &= -align;
   if (ckd_add(&toto, base, need))
     goto OutOfMemory;
-  if (toto > TINYMALLOC_MAX_BYTES)
+  if (toto > heap.size)
     goto OutOfMemory;
   res = heap.memory + base;
   ((size_t *)res)[-1] = need;
@@ -149,7 +165,7 @@ void *realloc(void *ptr, size_t need) {
       need &= -sizeof(size_t);
       if (ckd_add(&toto, base, need))
         goto OutOfMemory;
-      if (toto > TINYMALLOC_MAX_BYTES)
+      if (toto > heap.size)
         goto OutOfMemory;
       ((size_t *)mem)[-1] = need;
       heap.used = toto;
@@ -167,4 +183,4 @@ OutOfMemory:
   return 0;
 }
 
-#endif /* MODE_DBG */
+#pragma GCC pop_options

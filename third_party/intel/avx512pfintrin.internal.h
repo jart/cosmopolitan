@@ -6,7 +6,7 @@
 #define _AVX512PFINTRIN_H_INCLUDED
 #ifndef __AVX512PF__
 #pragma GCC push_options
-#pragma GCC target("avx512pf")
+#pragma GCC target("avx512pf,evex512")
 #define __DISABLE_AVX512PF__
 #endif
 typedef long long __v8di __attribute__ ((__vector_size__ (64)));

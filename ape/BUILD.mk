@@ -162,7 +162,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\
@@ -189,7 +188,6 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\
@@ -220,10 +218,10 @@ o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
 	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=8 -S -g0 $(APE_LOADER_FLAGS)
 
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
-	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy -f -o $@ $<
+	@$(COMPILE) -AOBJBINCOPY -w $(OBJBINCOPY) -f -o $@ $<
 
 o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.elf.dbg
-	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy -fm -o $@ $<
+	@$(COMPILE) -AOBJBINCOPY -w $(OBJBINCOPY) -fm -o $@ $<
 
 APE_LOADER_LDFLAGS =				\
 	-static					\
@@ -248,8 +246,6 @@ o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape.lds		\
 		o/$(MODE)/ape/ape.elf		\
 		o/$(MODE)/ape/ape.macho		\
-		o/$(MODE)/ape/ape-copy-self.o	\
-		o/$(MODE)/ape/ape-no-modify-self.o
 
 endif
 

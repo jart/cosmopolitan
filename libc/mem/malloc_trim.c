@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#ifndef __SANITIZE_ADDRESS__
 
 /**
  * Releases freed memory back to system.
@@ -30,4 +29,3 @@ int malloc_trim(size_t n) {
   return dlmalloc_trim(n);
 }
 
-#endif /* __SANITIZE_ADDRESS__ */

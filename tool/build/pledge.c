@@ -29,6 +29,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
@@ -38,8 +39,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/promises.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -372,7 +373,11 @@ int SetLimit(int r, long lo, long hi) {
 }
 
 static int GetBaseCpuFreqMhz(void) {
+#ifdef __x86_64__
   return KCPUIDS(16H, EAX) & 0x7fff;
+#else
+  return 0;
+#endif
 }
 
 int SetCpuLimit(int secs) {
@@ -652,8 +657,8 @@ int main(int argc, char *argv[]) {
   bool hasfunbits;
   int useruid, usergid;
   int owneruid, ownergid;
-  int oldfsuid, oldfsgid;
   unsigned long ipromises;
+  int oldfsuid = 0, oldfsgid = 0;
 
   // parse flags
   GetOpts(argc, argv);

@@ -9,7 +9,6 @@
 #include "third_party/libcxx/algorithm"
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/cstdlib"
-#include "third_party/libcxx/__threading_support"
 #include "libc/isystem/unistd.h"
 
 #include "third_party/libcxxabi/cxa_exception.h"

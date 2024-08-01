@@ -23,6 +23,7 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/sysmodule.h"
+#include "libc/ctype.h"
 #include "third_party/python/Include/unicodeobject.h"
 #endif
 
