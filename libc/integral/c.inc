@@ -6,6 +6,10 @@
 #define COSMOPOLITAN_CXX_USING_
 #endif
 
+#pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#pragma GCC diagnostic warning "-Wincompatible-pointer-types"
+#pragma GCC diagnostic warning "-Wint-conversion"
+
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
 #elif !defined(__GNUC__) && __STDC_VERSION__ + 0 < 201112
@@ -524,9 +528,6 @@ typedef struct {
 #pragma GCC diagnostic ignored "-Wuser-defined-literals" /* reserved for me */
 #endif
 
-#pragma GCC diagnostic warning "-Wimplicit-function-declaration"
-#pragma GCC diagnostic warning "-Wincompatible-pointer-types"
-#pragma GCC diagnostic warning "-Wint-conversion"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"     /* todo: patch gcc */
 #pragma GCC diagnostic ignored "-Wunused-function"       /* contradicts dce */
 #pragma GCC diagnostic ignored "-Wunused-const-variable" /* sooo ridiculous */
