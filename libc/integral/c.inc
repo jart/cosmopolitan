@@ -6,9 +6,11 @@
 #define COSMOPOLITAN_CXX_USING_
 #endif
 
+#ifndef __cplusplus
 #pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #pragma GCC diagnostic warning "-Wincompatible-pointer-types"
 #pragma GCC diagnostic warning "-Wint-conversion"
+#endif
 
 #if !defined(__GNUC__) && __cplusplus + 0 >= 201103L
 #define typeof(x) decltype(x)
