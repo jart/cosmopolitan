@@ -31,7 +31,7 @@ static textwindows int64_t GetPosition(struct Fd *f, int whence) {
     case SEEK_SET:
       return 0;
     case SEEK_CUR:
-      return f->pointer;
+      return f->shared->pointer;
     case SEEK_END: {
       struct NtByHandleFileInformation wst;
       if (!GetFileInformationByHandle(f->handle, &wst)) {
@@ -67,11 +67,14 @@ textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
   } else if (__isfdkind(fd, kFdFile)) {
     struct Fd *f = g_fds.p + fd;
     int filetype = GetFileType(f->handle);
-    if (filetype != kNtFileTypePipe && filetype != kNtFileTypeChar) {
+    if (filetype != kNtFileTypePipe &&  //
+        filetype != kNtFileTypeChar &&  //
+        f->shared) {
       int64_t res;
-      if ((res = Seek(f, offset, whence)) != -1) {
-        f->pointer = res;
-      }
+      __fd_lock(f);
+      if ((res = Seek(f, offset, whence)) != -1)
+        f->shared->pointer = res;
+      __fd_unlock(f);
       return res;
     } else {
       return espipe();

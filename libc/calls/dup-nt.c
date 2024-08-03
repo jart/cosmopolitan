@@ -82,6 +82,8 @@ static textwindows int sys_dup_nt_impl(int oldfd, int newfd, int flags,
 
   g_fds.p[newfd] = g_fds.p[oldfd];
   g_fds.p[newfd].handle = handle;
+  g_fds.p[newfd].isdup = true;
+  g_fds.p[oldfd].isdup = true;  // TODO(jart): is it possible to avoid leak?
   if (flags & _O_CLOEXEC) {
     g_fds.p[newfd].flags |= _O_CLOEXEC;
   } else {

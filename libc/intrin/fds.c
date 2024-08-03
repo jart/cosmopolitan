@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/fds.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.h"
-#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/pushpop.h"
@@ -40,6 +40,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 
 #define OPEN_MAX 16
@@ -156,12 +157,29 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
         f->kind = kind;
         f->flags = flags;
         f->mode = mode;
-        f->pointer = pointer;
         f->type = type;
         f->family = family;
         f->protocol = protocol;
         atomic_store_explicit(&fds->f, fd + 1, memory_order_relaxed);
+
+        //
+        // - v1 abi: This field was originally the file pointer.
+        //
+        // - v2 abi: This field is the negated shared memory address.
+        //
+        if (f->kind == kFdFile) {
+          if (pointer < 0) {
+            f->shared = (struct Cursor *)(uintptr_t)-pointer;
+          } else if ((f->shared = __cursor_new())) {
+            f->shared->pointer = pointer;
+          }
+        }
       }
+    }
+    for (int i = 0; i < 3; ++i) {
+      struct Fd *f = fds->p + i;
+      if (f->kind == kFdFile && !f->shared)
+        f->shared = __cursor_new();
     }
   }
 }

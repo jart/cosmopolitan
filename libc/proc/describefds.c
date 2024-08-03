@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
@@ -151,7 +151,12 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     *p++ = '_';
     p = FormatInt64(p, f->mode);
     *p++ = '_';
-    p = FormatInt64(p, f->pointer);
+    //
+    // - v1 abi: This field was originally the file pointer.
+    //
+    // - v2 abi: This field is the negated shared memory address.
+    //
+    p = FormatInt64(p, -(uintptr_t)f->shared);
     *p++ = '_';
     p = FormatInt64(p, f->type);
     *p++ = '_';
