@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
@@ -31,7 +32,7 @@ static textwindows int64_t GetPosition(struct Fd *f, int whence) {
     case SEEK_SET:
       return 0;
     case SEEK_CUR:
-      return f->shared->pointer;
+      return f->cursor->shared->pointer;
     case SEEK_END: {
       struct NtByHandleFileInformation wst;
       if (!GetFileInformationByHandle(f->handle, &wst)) {
@@ -69,12 +70,12 @@ textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
     int filetype = GetFileType(f->handle);
     if (filetype != kNtFileTypePipe &&  //
         filetype != kNtFileTypeChar &&  //
-        f->shared) {
+        f->cursor->shared) {
       int64_t res;
-      __fd_lock(f);
+      __cursor_lock(f->cursor);
       if ((res = Seek(f, offset, whence)) != -1)
-        f->shared->pointer = res;
-      __fd_unlock(f);
+        f->cursor->shared->pointer = res;
+      __cursor_unlock(f->cursor);
       return res;
     } else {
       return espipe();

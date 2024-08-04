@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/fds.h"
-#include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 
 void __fds_lock(void) {
@@ -27,24 +25,4 @@ void __fds_lock(void) {
 
 void __fds_unlock(void) {
   pthread_mutex_unlock(&__fds_lock_obj);
-}
-
-void __fd_lock(struct Fd *f) {
-  pthread_mutex_lock(&f->shared->lock);
-}
-
-void __fd_unlock(struct Fd *f) {
-  pthread_mutex_unlock(&f->shared->lock);
-}
-
-struct Cursor *__cursor_new(void) {
-  struct Cursor *c;
-  if ((c = _mapshared(sizeof(struct Cursor)))) {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    pthread_mutex_init(&c->lock, &attr);
-    pthread_mutexattr_destroy(&attr);
-  }
-  return c;
 }

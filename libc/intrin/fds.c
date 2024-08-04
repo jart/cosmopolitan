@@ -23,7 +23,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
@@ -32,7 +32,9 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -55,7 +57,11 @@ static struct Fd g_fds_static[OPEN_MAX];
 static bool TokAtoi(const char **str, long *res) {
   int c, d;
   unsigned long x = 0;
-  d = **str == '-' ? -1 : 1;
+  d = 1;
+  if (**str == '-') {
+    (*str)++;
+    d = -1;
+  }
   while ((c = *(*str)++)) {
     if (('0' <= c && c <= '9')) {
       x *= 10;
@@ -122,10 +128,11 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   // inherit file descriptors from cosmo parent process
   if (IsWindows()) {
     const char *fdspec;
-    if ((fdspec = getenv("_COSMO_FDS"))) {
+    if ((fdspec = getenv("_COSMO_FDS_V2"))) {
       unsetenv("_COSMO_FDS");
+      unsetenv("_COSMO_FDS_V2");
       for (;;) {
-        long fd, kind, flags, mode, handle, pointer, type, family, protocol;
+        long fd, kind, flags, mode, handle, shand, type, family, protocol;
         if (!TokAtoi(&fdspec, &fd))
           break;
         if (!TokAtoi(&fdspec, &handle))
@@ -136,7 +143,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
           break;
         if (!TokAtoi(&fdspec, &mode))
           break;
-        if (!TokAtoi(&fdspec, &pointer))
+        if (!TokAtoi(&fdspec, &shand))
           break;
         if (!TokAtoi(&fdspec, &type))
           break;
@@ -149,9 +156,8 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
         struct Fd *f = fds->p + fd;
         if (f->handle && f->handle != -1 && f->handle != handle) {
           CloseHandle(f->handle);
-          if (fd < 3) {
+          if (fd < 3)
             SetStdHandle(kNtStdio[fd], handle);
-          }
         }
         f->handle = handle;
         f->kind = kind;
@@ -162,24 +168,31 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
         f->protocol = protocol;
         atomic_store_explicit(&fds->f, fd + 1, memory_order_relaxed);
 
-        //
-        // - v1 abi: This field was originally the file pointer.
-        //
-        // - v2 abi: This field is the negated shared memory address.
-        //
-        if (f->kind == kFdFile) {
-          if (pointer < 0) {
-            f->shared = (struct Cursor *)(uintptr_t)-pointer;
-          } else if ((f->shared = __cursor_new())) {
-            f->shared->pointer = pointer;
+        if (shand) {
+          struct Map *map;
+          struct CursorShared *shared;
+          if ((shared = MapViewOfFileEx(shand, kNtFileMapWrite, 0, 0,
+                                        sizeof(struct CursorShared), 0))) {
+            if ((f->cursor = _mapanon(sizeof(struct Cursor)))) {
+              f->cursor->shared = shared;
+              if ((map = __maps_alloc())) {
+                map->addr = (char *)shared;
+                map->size = sizeof(struct CursorShared);
+                map->off = 0;
+                map->prot = PROT_READ | PROT_WRITE;
+                map->flags = MAP_SHARED | MAP_ANONYMOUS;
+                map->hand = shand;
+                __maps_insert(map);
+              }
+            }
           }
         }
       }
     }
     for (int i = 0; i < 3; ++i) {
       struct Fd *f = fds->p + i;
-      if (f->kind == kFdFile && !f->shared)
-        f->shared = __cursor_new();
+      if (f->kind == kFdFile && !f->cursor)
+        f->cursor = __cursor_new();
     }
   }
 }

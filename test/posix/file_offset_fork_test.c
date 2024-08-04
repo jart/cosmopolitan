@@ -13,42 +13,54 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include <signal.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
-// test that file offset is shared across multiple processes
+// test that lseek() is shared across fork()
 
-atomic_int *phase;
+void on_unexpected_death(int sig) {
+  int ws;
+  if (wait(&ws) == -1)
+    _Exit(33);
+  if (!WIFEXITED(ws))
+    _Exit(34);
+  if (!(WEXITSTATUS(ws) & 255))
+    _Exit(35);
+  _Exit(WEXITSTATUS(ws));
+}
 
 int main() {
+  signal(SIGCHLD, on_unexpected_death);
 
+  atomic_int *phase;
   if ((phase = mmap(0, sizeof(atomic_int), PROT_READ | PROT_WRITE,
                     MAP_SHARED | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED)
-    return 1;
+    return 2;
 
   int fd;
-  char path[] = "/tmp/fd_test.XXXXXX";
+  char path[] = "/tmp/file_offset_fork_test.XXXXXX";
   if ((fd = mkstemp(path)) == -1)
-    return 2;
+    return 3;
   if (lseek(fd, 0, SEEK_CUR) != 0)
-    return 22;
+    return 4;
 
   if (write(fd, "0", 1) != 1)
-    return 3;
+    return 5;
   if (lseek(fd, 0, SEEK_CUR) != 1)
-    return 33;
+    return 6;
 
   int pid;
   if ((pid = fork()) == -1)
-    return 4;
+    return 7;
 
   if (!pid) {
     if (write(fd, "1", 1) != 1)
-      _Exit(100);
+      _Exit(8);
     if (lseek(fd, 0, SEEK_CUR) != 2)
-      _Exit(101);
+      _Exit(9);
 
     *phase = 1;
     for (;;)
@@ -56,10 +68,15 @@ int main() {
         break;
 
     if (write(fd, "3", 1) != 1)
-      _Exit(102);
+      _Exit(10);
     if (lseek(fd, 0, SEEK_CUR) != 4)
-      _Exit(103);
+      _Exit(11);
+
     *phase = 3;
+    for (;;)
+      if (*phase == 4)
+        break;
+
     _Exit(0);
   }
 
@@ -68,9 +85,9 @@ int main() {
       break;
 
   if (write(fd, "2", 1) != 1)
-    return 5;
+    return 12;
   if (lseek(fd, 0, SEEK_CUR) != 3)
-    return 55;
+    return 13;
 
   *phase = 2;
   for (;;)
@@ -78,30 +95,36 @@ int main() {
       break;
 
   if (write(fd, "4", 1) != 1)
-    return 6;
+    return 14;
   if (lseek(fd, 0, SEEK_CUR) != 5)
-    return 66;
+    return 15;
+
+  signal(SIGCHLD, SIG_DFL);
+  *phase = 4;
 
   int ws;
   if (wait(&ws) == -1)
-    return 7;
+    return 16;
   if (!WIFEXITED(ws))
-    return 8;
+    return 17;
   if (WEXITSTATUS(ws))
     return WEXITSTATUS(ws);
 
   char buf[16] = {0};
   if (pread(fd, buf, 15, 0) != 5)
-    return 12;
+    return 18;
   if (lseek(fd, 0, SEEK_CUR) != 5)
-    return 77;
+    return 19;
 
   if (close(fd))
-    return 13;
+    return 20;
+
+  if (munmap(phase, sizeof(atomic_int)))
+    return 21;
 
   if (unlink(path))
-    return 14;
+    return 22;
 
   if (strcmp(buf, "01234"))
-    return 15;
+    return 23;
 }

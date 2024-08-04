@@ -61,29 +61,29 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     return espipe();
 
   // determine if we need to lock a file descriptor across processes
-  bool locked = isdisk && !pwriting && f->shared;
+  bool locked = isdisk && !pwriting && f->cursor;
   if (locked)
-    __fd_lock(f);
+    __cursor_lock(f->cursor);
 
+RestartOperation:
   // when a file is opened in overlapped mode win32 requires that we
   // take over full responsibility for managing our own file pointer
   // which is fine, because the one win32 has was never very good in
   // the sense that it behaves so differently from linux, that using
   // win32 i/o required more compatibilty toil than doing it by hand
   if (!pwriting) {
-    if (seekable && f->shared) {
-      offset = f->shared->pointer;
+    if (seekable && f->cursor) {
+      offset = f->cursor->shared->pointer;
     } else {
       offset = 0;
     }
   }
 
-RestartOperation:
   bool eagained = false;
   // check for signals and cancelation
   if (_check_cancel() == -1) {
     if (locked)
-      __fd_unlock(f);
+      __cursor_unlock(f->cursor);
     return -1;  // ECANCELED
   }
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
@@ -122,10 +122,10 @@ RestartOperation:
 
   // if i/o succeeded then return its result
   if (ok) {
-    if (!pwriting && seekable && f->shared)
-      f->shared->pointer = offset + exchanged;
+    if (!pwriting && seekable && f->cursor)
+      f->cursor->shared->pointer = offset + exchanged;
     if (locked)
-      __fd_unlock(f);
+      __cursor_unlock(f->cursor);
     return exchanged;
   }
 
@@ -134,31 +134,31 @@ RestartOperation:
     // raise EAGAIN if it's due to O_NONBLOCK mmode
     if (eagained) {
       if (locked)
-        __fd_unlock(f);
+        __cursor_unlock(f->cursor);
       return eagain();
     }
     // otherwise it must be due to a kill() via __sig_cancel()
     if (_weaken(__sig_relay) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
       if (locked)
-        __fd_unlock(f);
+        __cursor_unlock(f->cursor);
       int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1)
         return -1;  // possible if we SIGTHR'd
       if (locked)
-        __fd_lock(f);
+        __cursor_lock(f->cursor);
       // read() is @restartable unless non-SA_RESTART hands were called
       if (!(handler_was_called & SIG_HANDLED_NO_RESTART))
         goto RestartOperation;
     }
     if (locked)
-      __fd_unlock(f);
+      __cursor_unlock(f->cursor);
     return eintr();
   }
 
   // read() and write() have generally different error-handling paths
   if (locked)
-    __fd_unlock(f);
+    __cursor_unlock(f->cursor);
   return -2;
 }
 

@@ -151,7 +151,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
     case SEEK_SET:
       break;
     case SEEK_CUR:
-      off = f->shared->pointer + off;
+      off = f->cursor->shared->pointer + off;
       break;
     case SEEK_END: {
       int64_t size;
@@ -352,7 +352,7 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       rc = 0;
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
       struct Fd *f = g_fds.p + fd;
-      if (f->shared) {
+      if (f->cursor) {
         pthread_mutex_lock(&g_locks.mu);
         rc = sys_fcntl_nt_lock(f, fd, cmd, arg);
         pthread_mutex_unlock(&g_locks.mu);

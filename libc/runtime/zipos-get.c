@@ -21,6 +21,7 @@
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/cosmo.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.h"
@@ -62,15 +63,11 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   }
 
   // unmap the executable portion beneath the local files
-  mo = ROUNDDOWN(lo, __gransize);
-  if (mo)
-    munmap(map, mo);
-
-  // this is supposed to reduce our rss usage but does it really?
-  lo = ROUNDDOWN(lo, pg);
-  hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
-  if (hi > lo)
-    posix_madvise(map + lo, hi - lo, POSIX_MADV_DONTNEED);
+  if (!IsWindows()) {
+    mo = ROUNDDOWN(lo, __gransize);
+    if (mo)
+      munmap(map, mo);
+  }
 }
 
 static int __zipos_compare_names(const void *a, const void *b, void *c) {

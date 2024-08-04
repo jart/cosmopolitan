@@ -28,9 +28,8 @@
  */
 textstartup int __strace_init(int argc, char **argv, char **envp, long *auxv) {
   /* asan isn't initialized yet at runlevel 300 */
-  if ((__intercept_flag(&argc, argv, "--strace") ||
-       __atoul(nulltoempty(__getenv(envp, "STRACE").s))) &&
-      !issetugid()) {
+  if (__intercept_flag(&argc, argv, "--strace") ||
+      __atoul(nulltoempty(__getenv(envp, "STRACE").s))) {
     strace_enabled(+1);
   }
   return (__argc = argc);

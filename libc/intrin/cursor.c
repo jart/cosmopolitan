@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,56 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/syscall-nt.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/assert.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nt/enum/filetype.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/zipos.internal.h"
-#include "libc/sock/syscall_fd.internal.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
 
-textwindows int sys_close_nt(int fd, int fildes) {
-  if (fd + 0u >= g_fds.n)
-    return ebadf();
-  struct Fd *f = g_fds.p + fd;
-  switch (f->kind) {
-    case kFdZip:
-      return _weaken(__zipos_close)(fd);
-    case kFdEmpty:
-      return ebadf();
-    case kFdFile:
-      void sys_fcntl_nt_lock_cleanup(int);
-      if (_weaken(sys_fcntl_nt_lock_cleanup)) {
-        _weaken(sys_fcntl_nt_lock_cleanup)(fildes);
-      }
-      if ((f->flags & O_ACCMODE) != O_RDONLY &&
-          GetFileType(f->handle) == kNtFileTypeDisk) {
-        // Like Linux, closing a file on Windows doesn't guarantee it is
-        // immediately synced to disk. But unlike Linux this could cause
-        // subsequent operations, e.g. unlink() to break w/ access error
-        FlushFileBuffers(f->handle);
-      }
-      break;
-    case kFdEpoll:
-      if (_weaken(sys_close_epoll_nt)) {
-        return _weaken(sys_close_epoll_nt)(fd);
-      }
-      break;
-    case kFdSocket:
-      if (_weaken(sys_closesocket_nt)) {
-        return _weaken(sys_closesocket_nt)(g_fds.p + fd);
-      }
-      break;
-    default:
-      break;
+struct Cursor *__cursor_new(void) {
+  struct Cursor *c;
+  if ((c = _mapanon(sizeof(struct Cursor)))) {
+    if ((c->shared = _mapshared(sizeof(struct CursorShared)))) {
+      pthread_mutexattr_t attr;
+      pthread_mutexattr_init(&attr);
+      pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+      pthread_mutex_init(&c->shared->lock, &attr);
+      pthread_mutexattr_destroy(&attr);
+    } else {
+      munmap(c, sizeof(struct Cursor));
+      c = 0;
+    }
   }
-  if (f->cursor)
-    __cursor_unref(f->cursor);
-  return CloseHandle(f->handle) ? 0 : __winerr();
+  return c;
+}
+
+void __cursor_ref(struct Cursor *c) {
+  if (!c)
+    return;
+  unassert(atomic_fetch_add_explicit(&c->refs, 1, memory_order_relaxed) >= 0);
+}
+
+int __cursor_unref(struct Cursor *c) {
+  if (!c)
+    return 0;
+  if (atomic_fetch_sub_explicit(&c->refs, 1, memory_order_release))
+    return 0;
+  atomic_thread_fence(memory_order_acquire);
+  int rc = munmap(c->shared, sizeof(struct CursorShared));
+  rc |= munmap(c, sizeof(struct Cursor));
+  return rc;
+}
+
+void __cursor_lock(struct Cursor *c) {
+  pthread_mutex_lock(&c->shared->lock);
+}
+
+void __cursor_unlock(struct Cursor *c) {
+  pthread_mutex_unlock(&c->shared->lock);
 }
