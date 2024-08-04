@@ -417,7 +417,7 @@ statements instead, so that Cosmopolitan Libc's system constants will
 work as expected. Our modifications to GNU GCC are published under the
 ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-14.1>. The
 binaries you see here were first published at
-<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.48> which
+<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.51> which
 is regularly updated.
 
 ## Legal
