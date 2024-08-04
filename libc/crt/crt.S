@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 .section .start,"ax",@progbits
 
 #if SupportsXnu() && defined(__x86_64__)

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/cpuset.h"
 #include "libc/intrin/popcnt.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 int CPU_COUNT(cpu_set_t *set) {
   int i, c;

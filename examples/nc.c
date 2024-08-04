@@ -10,7 +10,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/linger.h"

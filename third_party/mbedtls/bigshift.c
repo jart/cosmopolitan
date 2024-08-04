@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"

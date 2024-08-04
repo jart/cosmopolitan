@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/ss.h"
 
 const char *(DescribeSigaltstackFlags)(char buf[22], int x) {

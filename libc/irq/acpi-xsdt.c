@@ -30,7 +30,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/irq/acpi.internal.h"
 #include "libc/log/color.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/efi.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/serialize.h"

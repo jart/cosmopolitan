@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdckdint.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 /**
  * Determines if ZIP EOCD record seems legit.

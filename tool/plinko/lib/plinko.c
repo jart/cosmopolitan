@@ -26,7 +26,7 @@
 #include "libc/log/countbranch.h"
 #include "libc/log/countexpr.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"

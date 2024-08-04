@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 // clang-format off
 
 #ifdef __x86_64__

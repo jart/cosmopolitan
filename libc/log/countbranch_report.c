@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/countbranch.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"

@@ -39,7 +39,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/time.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/disassemblehex.h"
 #include "tool/decode/lib/flagger.h"

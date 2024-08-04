@@ -29,7 +29,7 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/struct/imagedatadirectory.internal.h"

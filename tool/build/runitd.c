@@ -33,7 +33,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"

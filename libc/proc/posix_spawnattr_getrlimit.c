@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rlimit.h"
 #include "libc/errno.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 #include "libc/stdio/sysparam.h"

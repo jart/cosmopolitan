@@ -10,7 +10,7 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"

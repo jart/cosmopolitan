@@ -26,7 +26,7 @@
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/console.h"

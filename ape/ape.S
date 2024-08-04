@@ -37,7 +37,7 @@
 #include "libc/calls/metalfile.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
-#include "libc/macho.internal.h"
+#include "libc/macho.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/runtime/pc.internal.h"

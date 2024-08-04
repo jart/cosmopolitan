@@ -1,4 +1,4 @@
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 //	Example assembly function.
 //

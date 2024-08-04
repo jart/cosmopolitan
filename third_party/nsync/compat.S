@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 nsync_time_now:
 	jmp	timespec_real

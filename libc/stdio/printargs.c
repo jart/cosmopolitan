@@ -32,7 +32,7 @@
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"

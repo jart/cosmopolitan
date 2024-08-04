@@ -27,7 +27,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"

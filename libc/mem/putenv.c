@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/getenv.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"

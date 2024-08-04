@@ -27,7 +27,7 @@
 #include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/thread/thread.h"

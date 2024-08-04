@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/serialize.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/stdio/append.h"
 #include "third_party/mbedtls/iana.h"
 

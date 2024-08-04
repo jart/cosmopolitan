@@ -21,7 +21,7 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 uint64_t __zipos_inode(struct Zipos *zipos, int64_t cfile,  //
                        const void *name, size_t namelen) {

@@ -22,7 +22,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/maps.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"

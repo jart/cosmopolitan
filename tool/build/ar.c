@@ -31,7 +31,7 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bsr.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/stdckdint.h"

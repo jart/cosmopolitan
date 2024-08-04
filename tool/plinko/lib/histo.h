@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_HISTO_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_HISTO_H_
 #include "libc/intrin/bsr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 COSMOPOLITAN_C_START_
 
 #define HISTO(H, X)                \

@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/intrin/bsr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/append.h"
 #include "libc/str/str.h"

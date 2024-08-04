@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
 

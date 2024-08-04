@@ -21,7 +21,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"

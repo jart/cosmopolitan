@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/status.h"
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #ifdef __x86_64__
 
 //	@fileoverview NTDLL.DLL Non-Mandatory Importer

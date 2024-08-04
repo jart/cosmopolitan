@@ -23,7 +23,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"

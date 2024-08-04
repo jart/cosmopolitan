@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #include "libc/str/str.h"
 
 alignas(1) static char strerror_buf[128];

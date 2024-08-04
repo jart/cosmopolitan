@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/memflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/memorybasicinformation.h"

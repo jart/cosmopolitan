@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 struct TtyRgb rgb2ttyi2f_(int r, int g, int b) {
   return rgb2ttyf((ttyrgb_m128){r, g, b} / 255);

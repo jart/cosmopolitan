@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #ifndef APE_MACROS_H_
 #define APE_MACROS_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #ifdef __ASSEMBLER__
 /* clang-format off */
 

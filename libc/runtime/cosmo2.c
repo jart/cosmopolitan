@@ -24,7 +24,7 @@
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"

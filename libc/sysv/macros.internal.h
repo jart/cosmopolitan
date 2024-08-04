@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_MACROS_H_
 #define COSMOPOLITAN_LIBC_SYSV_MACROS_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #ifdef __ASSEMBLER__
 /* clang-format off */
 

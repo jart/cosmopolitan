@@ -22,7 +22,7 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

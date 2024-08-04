@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rusage.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 /**
  * Accumulates resource statistics in `y` to `x`.

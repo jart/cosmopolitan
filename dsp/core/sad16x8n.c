@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/emmintrin.internal.h"
 

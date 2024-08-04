@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/dce.h"
 
@@ -42,7 +42,7 @@
 //	@param	r15 is envp (still callee saved)
 //	@note	rdi is __init_bss_start (callee monotonic lockstep)
 //	@note	rsi is __init_rodata_start (callee monotonic lockstep)
-//	@see	.init.start & .init.end (libc/macros.internal.h)
+//	@see	.init.start & .init.end (libc/macros.h)
 //	@see	ape/ape.lds
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
@@ -86,7 +86,7 @@ _init_check_rdi_rsi:
 
 //	Decentralized section for packed data structures & initializers.
 //
-//	@see	.initro (libc/macros.internal.h)
+//	@see	.initro (libc/macros.h)
 //	@see	ape/ape.lds
 	.section .initroprologue,"a",@progbits
 	.type	__init_rodata_start,@object
@@ -110,7 +110,7 @@ __init_rodata_end:
 //
 //	Data in this section becomes read-only after initialization.
 //
-//	@see	.piro.bss.init (libc/macros.internal.h)
+//	@see	.piro.bss.init (libc/macros.h)
 //	@see	libc/runtime/piro.c
 //	@see	ape/ape.lds
 	.section .piro.bss.init.1,"aw",@nobits

@@ -21,7 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"

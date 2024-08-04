@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha1.h"
 #include "libc/serialize.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/sha.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"

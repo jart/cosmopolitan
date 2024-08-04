@@ -26,7 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/irq/acpi.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/pc.internal.h"
 
 	.init.start 310,_init_acpi_xsdt

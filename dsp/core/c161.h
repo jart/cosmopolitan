@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C161_H_
 #define COSMOPOLITAN_DSP_CORE_C161_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 #define EXTRA_SHARP 2
 

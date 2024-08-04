@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #define COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 COSMOPOLITAN_C_START_
 
 #define CHECK(X, ...)         __CHK(ne, !=, false, "false", !!(X), #X, "" __VA_ARGS__)

@@ -28,7 +28,7 @@
 │  SOFTWARE.                                                                   │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/mpeg/mpeg.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 __static_yoink("pl_mpeg_notice");
 
 /**

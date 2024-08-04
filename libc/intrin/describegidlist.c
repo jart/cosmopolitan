@@ -20,7 +20,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 
 #define N 128

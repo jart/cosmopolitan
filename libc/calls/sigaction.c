@@ -36,7 +36,7 @@
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"

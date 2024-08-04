@@ -32,7 +32,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"

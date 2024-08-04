@@ -20,7 +20,7 @@
 #include "dsp/core/ks8.h"
 #include "dsp/core/kss8.h"
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"

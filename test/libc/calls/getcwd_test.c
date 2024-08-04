@@ -22,7 +22,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/serialize.h"
 #include "libc/str/str.h"

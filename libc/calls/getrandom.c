@@ -32,7 +32,7 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/vendor.internal.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/consolemodeflags.h"
 
 static const struct DescribeFlags kConsoleModeInputFlags[] = {

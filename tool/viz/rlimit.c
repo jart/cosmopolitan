@@ -13,7 +13,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/color.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

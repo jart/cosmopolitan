@@ -1203,7 +1203,7 @@ struct XXH64_state_s {
 #ifndef XXH_NO_XXH3
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) /* >= C11 */
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #  define XXH_ALIGN(n)      alignas(n)
 #elif defined(__cplusplus) && (__cplusplus >= 201103L) /* >= C++11 */
 /* In C++ alignas() is a keyword */

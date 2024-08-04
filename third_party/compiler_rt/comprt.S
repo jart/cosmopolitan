@@ -1,4 +1,4 @@
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 //	Nop ref this to force pull the license into linkage.
 	.section .yoink

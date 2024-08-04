@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_STR_TAB_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_STR_TAB_INTERNAL_H_
+#ifndef COSMOPOLITAN_LIBC_STR_TAB_H_
+#define COSMOPOLITAN_LIBC_STR_TAB_H_
 
 #define kHexToInt __kHexToInt
 #define kToLower  __kToLower
@@ -20,4 +20,4 @@ extern const char16_t kCp437[256];
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_STR_TAB_INTERNAL_H_ */
+#endif /* COSMOPOLITAN_LIBC_STR_TAB_H_ */

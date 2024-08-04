@@ -17,7 +17,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 

@@ -24,7 +24,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"

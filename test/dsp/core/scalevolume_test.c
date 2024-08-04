@@ -20,7 +20,7 @@
 #include "dsp/mpeg/mpeg.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"

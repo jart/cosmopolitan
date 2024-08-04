@@ -22,7 +22,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/extend.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"

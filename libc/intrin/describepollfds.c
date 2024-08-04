@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 

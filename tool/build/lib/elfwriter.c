@@ -26,7 +26,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"

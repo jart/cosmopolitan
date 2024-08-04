@@ -21,7 +21,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/errno.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/clock.h"
 #ifdef __x86_64__
 

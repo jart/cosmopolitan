@@ -26,7 +26,7 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
@@ -38,7 +38,7 @@
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 #ifdef __x86_64__
 __static_yoink(APE_COM_NAME);

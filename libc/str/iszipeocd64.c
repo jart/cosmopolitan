@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdckdint.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 /**
  * Returns kZipOk if zip64 end of central directory header seems legit.

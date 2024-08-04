@@ -1,7 +1,7 @@
 #ifndef _TGMATH_H
 #define _TGMATH_H
 #include "libc/complex.h"
-#include "libc/imag.internal.h"
+#include "libc/imag.h"
 #include "libc/math.h"
 #if __STDC_VERSION__ + 0 >= 201112
 

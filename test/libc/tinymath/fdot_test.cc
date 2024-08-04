@@ -1,7 +1,7 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/bsr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/leaks.h"

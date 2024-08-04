@@ -35,7 +35,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/likely.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/stdio/rand.h"
 
 __notice(mt19937_notice, "mt19937 (BSD-3)\n\

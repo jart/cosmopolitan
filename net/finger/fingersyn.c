@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 /**
  * Fingers IP+TCP SYN packet.

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/tab.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/str/tab.h"
+#include "libc/macros.h"
 .rodata
 .balign	2
 

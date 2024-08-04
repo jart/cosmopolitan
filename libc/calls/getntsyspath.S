@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 //	Obtains WIN32 magic path, e.g. GetTempPathA.
 //

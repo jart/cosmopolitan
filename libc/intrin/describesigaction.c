@@ -23,7 +23,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alloca.h"
 #include "libc/sysv/consts/sa.h"
 

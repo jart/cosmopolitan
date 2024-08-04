@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/wctype.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/serialize.h"
 
 static const char kWcTypeNames[][8] = {

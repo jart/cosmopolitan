@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 struct TtyRgb rgb2xterm24_(int r, int g, int b) {
   return (struct TtyRgb){MAX(MIN(r, 255), 0), MAX(MIN(g, 255), 0),

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/dce.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 

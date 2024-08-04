@@ -22,7 +22,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 #define N 64
 

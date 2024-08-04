@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/cachesize.h"

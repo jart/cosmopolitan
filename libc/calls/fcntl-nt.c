@@ -31,7 +31,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"

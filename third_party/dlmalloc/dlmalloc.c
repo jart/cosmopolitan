@@ -8,7 +8,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"

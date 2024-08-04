@@ -20,7 +20,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/memflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/memorybasicinformation.h"

@@ -20,7 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/intrin/directmap.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"

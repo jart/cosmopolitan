@@ -23,7 +23,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "libc/testlib/benchmark.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

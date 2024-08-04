@@ -25,7 +25,7 @@
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

@@ -9,7 +9,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
