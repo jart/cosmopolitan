@@ -229,6 +229,17 @@ static struct Segment *NewSegment(void) {
   return s;
 }
 
+static int ConvertElfMachineToPe(struct Elf *elf) {
+  switch (elf->ehdr->e_machine) {
+    case EM_NEXGEN32E:
+      return kNtImageFileMachineNexgen32e;
+    case EM_AARCH64:
+      return kNtImageFileMachineArm64;
+    default:
+      Die(elf->path, "unsupported e_machine");
+  }
+}
+
 static Elf64_Addr RelocateVaddrWithinSegment(struct Elf *elf,
                                              Elf64_Addr vaddr_old,
                                              struct Segment *segment) {
@@ -811,7 +822,17 @@ static uint32_t GetPeSectionCharacteristics(struct Segment *s) {
 // originally in the elf image that ld linked. in order for this to work
 // the executable needs to be linked in `ld -q` mode, since it'll retain
 // the .rela sections we'll need later to fixup the binary.
-static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
+static struct ImagePointer GeneratePe(struct Elf *elf, char *fp) {
+
+  int64_t vp = 0;
+  Elf64_Phdr *phdr;
+  for (int i = 0; i < elf->ehdr->e_phnum; ++i) {
+    if ((phdr = GetElfProgramHeaderAddress(elf->ehdr, elf->size, i)) &&
+        phdr->p_type == PT_LOAD) {
+      vp = phdr->p_vaddr;
+      break;
+    }
+  }
 
   Elf64_Sym *entry;
   if (!(entry = FindGlobal(elf, "__win32_start")) &&
@@ -855,7 +876,7 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
   struct NtImageFileHeader *filehdr;
   filehdr = (struct NtImageFileHeader *)fp;
   fp += sizeof(struct NtImageFileHeader);
-  filehdr->Machine = kNtImageFileMachineNexgen32e;
+  filehdr->Machine = ConvertElfMachineToPe(elf);
   filehdr->TimeDateStamp = 1690072024;
   filehdr->Characteristics =
       kNtPeFileExecutableImage | kNtImageFileLargeAddressAware |
@@ -873,7 +894,9 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
   opthdr->FileAlignment = 512;
   opthdr->SectionAlignment = MAX(4096, elf->align);
   opthdr->MajorOperatingSystemVersion = 6;
+  opthdr->MinorOperatingSystemVersion = 2;
   opthdr->MajorSubsystemVersion = 6;
+  opthdr->MinorSubsystemVersion = 2;
   opthdr->Subsystem = kNtImageSubsystemWindowsCui;
   opthdr->DllCharacteristics = kNtImageDllcharacteristicsNxCompat |
                                kNtImageDllcharacteristicsHighEntropyVa;
@@ -1116,7 +1139,7 @@ int main(int argc, char *argv[]) {
   // translate executable
   struct Elf *elf = OpenElf(argv[optind]);
   char *buf = Memalign(MAX_ALIGN, 134217728);
-  struct ImagePointer ip = GeneratePe(elf, buf, 0x00400000);
+  struct ImagePointer ip = GeneratePe(elf, buf);
   if (creat(outpath, 0755) == -1)
     DieSys(elf->path);
   Pwrite(3, buf, ip.fp - buf, 0);

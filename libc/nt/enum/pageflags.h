@@ -23,4 +23,7 @@
 #define kNtSecLargePages     0x80000000
 #define kNtSecWritecombine   0x40000000
 
+#define kNtPageTargetsInvalid  0x40000000
+#define kNtPageTargetsNoUpdate 0x40000000
+
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_PAGEFLAGS_H_ */
