@@ -131,7 +131,7 @@ elif [ x"$ARCH" = x"aarch64" ]; then
   OBJCOPYFLAGS="-S"
   PAGESZ=16384
   CPPFLAGS="$CPPFLAGS -fsigned-char"
-  CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
+  CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28"
   LDFLAGS="$LDFLAGS -Wl,-T,$LIB/aarch64.lds"
 else
   fatal_error "$ARCH: unsupported architecture"

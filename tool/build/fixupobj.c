@@ -245,7 +245,7 @@ static void CheckPrivilegedCrossReferences(void) {
       if (~shdr->sh_flags & SHF_EXECINSTR)
         continue;  // data reference
       if ((secname = GetElfString(elf, esize, secstrs, shdr->sh_name)) &&
-          strcmp(".privileged", secname)) {
+          !startswith(secname, ".privileged")) {
         tinyprint(2, epath,
                   ": code in .privileged section "
                   "references symbol '",

@@ -310,7 +310,7 @@ SECTIONS {
     . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: morphable code */
     __privileged_start = .;
-    *(.privileged)
+    *(.privileged .privileged.*)
     __privileged_end = .;
 
     KEEP(*(.ape.pad.text))
