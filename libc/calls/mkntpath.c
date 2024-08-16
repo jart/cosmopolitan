@@ -55,6 +55,19 @@ textwindows size_t __normntpath(char16_t *p, size_t n) {
       // matched "/../" or "/..$"
       while (j && p[j - 1] == '\\')
         --j;
+      if (j && p[j - 1] == '.') {
+        // matched "." before
+        if (j >= 2 && p[j - 2] == '.' &&  //
+            (j == 2 || p[j - 3] == '\\')) {
+          // matched "^.." or "/.." before
+          p[++j] = '.';
+          ++j;
+          continue;
+        } else if (j == 1 || p[j - 2] == '\\') {
+          // matched "^." or "/." before
+          continue;
+        }
+      }
       while (j && p[j - 1] != '\\')
         --j;
     } else {

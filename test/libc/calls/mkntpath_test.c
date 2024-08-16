@@ -51,4 +51,34 @@ TEST(mkntpath, testRemoveDoubleSlash) {
   EXPECT_STREQ(u"C:\\Users\\jart\\.config", p);
 }
 
+TEST(mkntpath, testRelativeCurrentParent) {
+  EXPECT_EQ(3, __mkntpath("./../", p));
+  EXPECT_STREQ(u"..\\", p);
+}
+
+TEST(mkntpath, testRelativeParentParent) {
+  EXPECT_EQ(6, __mkntpath("../../", p));
+  EXPECT_STREQ(u"..\\..\\", p);
+}
+
+TEST(mkntpath, testRelativeParentParentParent) {
+  EXPECT_EQ(9, __mkntpath("../../../", p));
+  EXPECT_STREQ(u"..\\..\\..\\", p);
+}
+
+TEST(mkntpath, testRelativeDirParent) {
+  EXPECT_EQ(2, __mkntpath("abc/../", p));
+  EXPECT_STREQ(u".\\", p);
+}
+
+TEST(mkntpath, testRelativeDirCurrent) {
+  EXPECT_EQ(4, __mkntpath("abc/./", p));
+  EXPECT_STREQ(u"abc\\", p);
+}
+
+TEST(mkntpath, testRelativeDirDirParent) {
+  EXPECT_EQ(4, __mkntpath("abc/def/../", p));
+  EXPECT_STREQ(u"abc\\", p);
+}
+
 #endif /* SupportsWindows() */
