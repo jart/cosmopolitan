@@ -24,6 +24,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/threads.h"
+#include "libc/errno.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 #if !FOOTERS || !MSPACES
@@ -102,8 +103,10 @@ static mstate get_arena(void) {
   if (n == 50)
     n = 0;
   if (!n) {
+    int e = errno;
     i = sched_getcpu();
     if (i == -1) {
+      errno = e;
       i = atomic_fetch_add_explicit(&assign, 1, memory_order_relaxed);
       i %= g_cpucount;
     }
