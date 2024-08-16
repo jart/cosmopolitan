@@ -82,6 +82,7 @@ struct Syslib {
   char *(*__dlerror)(void);
   /* v9 (2024-01-31) */
   int (*__pthread_cpu_number_np)(size_t *);
+  /* v10 (2024-05-02) */
   long (*__sysctl)(int *, unsigned, void *, size_t *, void *, size_t);
   long (*__sysctlbyname)(const char *, void *, size_t *, void *, size_t);
   long (*__sysctlnametomib)(const char *, int *, size_t *);
