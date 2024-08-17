@@ -408,9 +408,7 @@ static int linenoiseIsUnsupportedTerm(void) {
   char *term;
   static char once, res;
   if (!once) {
-    if (IsWindows()) {
-      res = 1;
-    } else if ((term = getenv("TERM"))) {
+    if ((term = getenv("TERM"))) {
       for (i = 0; i < sizeof(kUnsupported) / sizeof(*kUnsupported); i++) {
         if (!strcasecmp(term, kUnsupported[i])) {
           res = 1;
