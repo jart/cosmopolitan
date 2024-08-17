@@ -1040,6 +1040,7 @@ third_party/libcxx/ryu/d2s_intrinsics.h \
 third_party/libcxx/ryu/digit_table.h \
 third_party/libcxx/ryu/f2s.h \
 third_party/libcxx/ryu/ryu.h \
+third_party/libcxx/stdfloat \
 
 THIRD_PARTY_LIBCXX_A_SRCS = \
 third_party/libcxx/algorithm.cpp \
