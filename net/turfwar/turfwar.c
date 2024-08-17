@@ -892,9 +892,7 @@ void *HttpWorker(void *arg) {
 
       // get client address from frontend
       if (HasHeader(kHttpXForwardedFor)) {
-        if (!IsLoopbackIp(clientip) &&  //
-            !IsPrivateIp(clientip) &&   //
-            !IsCloudflareIp(clientip)) {
+        if (!IsLoopbackIp(clientip) && !IsPrivateIp(clientip)) {
           LOG("Got X-Forwarded-For from untrusted IPv4 client address "
               "%hhu.%hhu.%hhu.%hhu\n",
               clientip >> 24, clientip >> 16, clientip >> 8, clientip);

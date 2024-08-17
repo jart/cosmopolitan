@@ -9,8 +9,8 @@ NET_TURFWAR_OBJS =					\
 	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%.o)
 
 NET_TURFWAR_COMS =					\
-	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%.com)		\
-	o/$(MODE)/net/turfwar/turfbean.com
+	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%)		\
+	o/$(MODE)/net/turfwar/turfbean
 
 NET_TURFWAR_BINS =					\
 	$(NET_TURFWAR_COMS)				\
@@ -48,7 +48,7 @@ o/$(MODE)/net/turfwar/turfwar.pkg:			\
 		$(NET_TURFWAR_OBJS)			\
 		$(foreach x,$(NET_TURFWAR_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/net/turfwar/%.com.dbg:			\
+o/$(MODE)/net/turfwar/%.dbg:				\
 		$(NET_TURFWAR_DEPS)			\
 		o/$(MODE)/net/turfwar/%.o		\
 		o/$(MODE)/net/turfwar/turfwar.pkg	\
@@ -56,7 +56,7 @@ o/$(MODE)/net/turfwar/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/net/turfwar/turfbean.com.dbg:			\
+o/$(MODE)/net/turfwar/turfbean.dbg:			\
 		$(TOOL_NET_DEPS)			\
 		o/$(MODE)/tool/net/redbean.o		\
 		$(TOOL_NET_REDBEAN_LUA_MODULES)		\
