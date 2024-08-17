@@ -7,7 +7,6 @@ void *bsearch(const void *, const void *, size_t, size_t,
 void *bsearch_r(const void *, const void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) nosideeffect;
-void djbsort(int32_t *, size_t) libcesque;
 void qsort3(void *, size_t, size_t,
             int (*)(const void *, const void *)) libcesque paramsnonnull();
 void qsort(void *, size_t, size_t,
@@ -25,8 +24,12 @@ int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
 int mergesort_r(void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *);
 
+#ifdef _COSMO_SOURCE
+void djbsort(int32_t *, size_t) libcesque;
 int radix_sort_int32(int32_t *, size_t) libcesque;
 int radix_sort_int64(int64_t *, size_t) libcesque;
+double levenshtein(const char *, const char *) libcesque;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_ALG_ALG_H_ */

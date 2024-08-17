@@ -34,7 +34,7 @@
 #define MLOCK_T atomic_uint
 
 static int malloc_wipe(MLOCK_T *lk) {
-  bzero(lk, sizeof(*lk));
+  atomic_store_explicit(lk, 0, memory_order_relaxed);
   return 0;
 }
 
