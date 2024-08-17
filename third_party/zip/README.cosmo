@@ -11,4 +11,5 @@ ORIGIN
 LOCAL CHANGES
 
   - Use Cosmopolitan's PCLMUL optimized CRC32
+  - Don't magically append .zip extension to filename argument
   - Improve find_next_signature() performance using unlocked stdio

@@ -413,6 +413,10 @@ char *ziptyp(s)
   if ((t = malloc(strlen(s) + 5)) == NULL)
     return NULL;
   strcpy(t, s);
+
+  // [jart] don't magically append .zip extension to filename argument
+  if (1) return t;
+
 #  ifdef __human68k__
   _toslash(t);
 #  endif
