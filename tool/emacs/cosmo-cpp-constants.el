@@ -73,6 +73,7 @@
     "__BMI2__"
     "__FMA__"
     "__FAST_MATH__"
+    "__FINITE_MATH_ONLY__"
     "__ROUNDING_MATH__"
     "__NO_MATH_ERRNO__"
     "__FMA4__"

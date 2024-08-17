@@ -14,22 +14,22 @@
 // with futexes
 // 30 threads / 100000 iterations
 //
-//           54,183 us real
-//           84,723 us user
-//          741,667 us sys
-// footek_test on studio.test.          609 µs   14'106 µs      65'607 µs
-//          406,588 us real
-//          884,696 us user
-//          720,567 us sys
-// footek_test on pi5.test.             334 µs   13'398 µs     408'450 µs
-//        1,253,808 us real
-//        3,608,426 us user
-//        1,378,765 us sys
-// footek_test on freebsdarm.test.      367 µs   16'466 µs   1'287'915 µs
-//        1,316,058 us real
-//        3,286,528 us user
-//        1,738,756 us sys
-// footek_test on pi.test.              450 µs   16'787 µs   1'338'420 µs
+//           46,481 us real
+//           68,745 us user
+//          586,871 us sys
+// footek_test on studio.test.          585 µs   13'597 µs      57'473 µs
+//          389,619 us real
+//          839,848 us user
+//          679,112 us sys
+// footek_test on pi5.test.             335 µs   13'034 µs     432'358 µs
+//          463,799 us real
+//        1,259,267 us user
+//          547,681 us sys
+// footek_test on pi.test.              479 µs   16'539 µs     476'395 µs
+//        1,256,134 us real
+//        3,770,473 us user
+//        1,214,755 us sys
+// footek_test on freebsdarm.test.      364 µs   16'898 µs   1'288'594 µs
 
 // arm fleet
 // without futexes
