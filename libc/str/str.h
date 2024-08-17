@@ -141,6 +141,7 @@ char *strcasestr(const char *, const char *) strlenesque;
 void *memmem(const void *, size_t, const void *, size_t) libcesque;
 void *memrchr(const void *, int, size_t) strlenesque;
 void *mempcpy(void *, const void *, size_t) memcpyesque;
+wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 #endif
 
 #ifdef _COSMO_SOURCE
@@ -185,7 +186,6 @@ bool32 wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool32 wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 char *__join_paths(char *, size_t, const char *, const char *) libcesque __wur;
 int __mkntpathat(int, const char *, int, char16_t[hasatleast 1024]);
-wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
