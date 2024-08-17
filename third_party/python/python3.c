@@ -6,7 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"
-#include "tool/args/args.h"
+#include "libc/cosmo.h"
 
 PYTHON_YOINK("xed");
 PYTHON_YOINK("xterm");

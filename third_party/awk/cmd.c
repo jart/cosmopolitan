@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/awk/cmd.h"
-#include "tool/args/args.h"
+#include "libc/cosmo.h"
 
 int main(int argc, char *argv[]) {
   LoadZipArgs(&argc, &argv);
