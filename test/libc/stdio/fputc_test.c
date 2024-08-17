@@ -33,9 +33,13 @@ void SetUpOnce(void) {
 TEST(fputc, test) {
   ASSERT_NE(NULL, (f = fopen("hog", "w+")));
   EXPECT_EQ('h', fputc('h', f));
+  EXPECT_FALSE(feof(f));
   EXPECT_EQ(0xFF, fputc(-1, f));
+  EXPECT_FALSE(feof(f));
   EXPECT_NE(-1, fseek(f, 0, SEEK_SET));
+  EXPECT_FALSE(feof(f));
   EXPECT_EQ('h', fgetc(f));
+  EXPECT_FALSE(feof(f));
   EXPECT_EQ(0, fread(NULL, 0, 0, f));
   EXPECT_FALSE(feof(f));
   EXPECT_EQ(0xFF, fgetc(f));

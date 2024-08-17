@@ -28,21 +28,27 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-static ssize_t readvall(int fd, struct iovec *iov, int iovlen) {
+static ssize_t readvall(FILE *f, struct iovec *iov, int iovlen, size_t need) {
   ssize_t rc;
   size_t got, toto;
-  toto = 0;
-  do {
-    if ((rc = readv(fd, iov, iovlen)) == -1) {
-      if (toto) {
-        if (errno == EINTR)
-          continue;
+  for (toto = 0;;) {
+
+    // perform i/o
+    if ((rc = readv(f->fd, iov, iovlen)) == -1) {
+      f->state = errno;
+      if (toto)
         return toto;
-      }
       return -1;
     }
     got = rc;
     toto += got;
+    if (!got) {
+      f->state = EOF;
+      return toto;
+    }
+
+    // roll forward iov
+    // skip over empty elements
     for (;;) {
       if (!iov->iov_len) {
         --iovlen;
@@ -56,9 +62,14 @@ static ssize_t readvall(int fd, struct iovec *iov, int iovlen) {
         iov->iov_len -= got;
         break;
       }
+      if (!iovlen)
+        return toto;
     }
-  } while (got && iovlen);
-  return toto;
+
+    // don't trigger eof condition if we're rolling greed to fill buffer
+    if (toto >= need)
+      return toto;
+  }
 }
 
 /**
@@ -134,27 +145,16 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
     iov[1].iov_base = NULL;
     iov[1].iov_len = 0;
   }
-  if (f->bufmode == _IONBF) {
-    rc = readv(f->fd, iov, 2);
-  } else {
-    rc = readvall(f->fd, iov, 2);
-  }
-  if (rc == -1) {
-    f->state = errno;
+  rc = readvall(f, iov, 2, need);
+  if (rc == -1)
     return 0;
-  }
   got = rc;
 
   // handle partial fulfillment
   if (got < need) {
     got += m;
-    if (got % stride) {
-      f->state = eio();
-      return 0;
-    }
     f->beg = 0;
     f->end = 0;
-    f->state = EOF;
     return got / stride;
   }
 
