@@ -141,6 +141,18 @@ for x; do
   elif [ x"$x" != x"${x#-MF}" ]; then  # startswith(x, "-MF")
     DEPENDENCY_OUTPUT=${x#-MF}
     continue
+  elif [ x"$x" = x"-MQ" ]; then
+    NEED_DEPENDENCY_OUTPUT=1
+    continue
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    cat <<EOF
+GNU ld (GNU Binutils) 2.42
+Copyright (C) 2024 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) a later version.
+This program has absolutely no warranty.
+EOF
+    exit
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
