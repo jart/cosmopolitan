@@ -147,10 +147,10 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = .cosmocc/3.6.2
+COSMOCC = .cosmocc/3.7.1
 BOOTSTRAP = $(COSMOCC)/bin
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
-DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.6.2 268aa82d9bfd774f76951b250f87b8edcefd5c754b8b409e1639641e8bd8d5bc)
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.7.1 13b65b0e659b493bd82f3d0a319d0265d66f849839e484aa2a54191024711e85)
 
 IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
