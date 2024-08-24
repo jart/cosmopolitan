@@ -104,7 +104,8 @@
                           cosmo-format-blacklist))
              (not (save-excursion
                     (beginning-of-buffer)
-                    (looking-at "/\\* clang-format off \\*/"))))
+                    (or (looking-at "/\\* clang-format off \\*/")
+                        (looking-at "// clang-format off")))))
     (let* ((bin (cosmo--find-clang-format-bin))
            (this (buffer-file-name))
            (root (locate-dominating-file this ".clang-format")))
