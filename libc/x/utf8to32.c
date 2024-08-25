@@ -16,18 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/intrin/pcmpgtb.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/punpckhbw.h"
-#include "libc/intrin/punpckhwd.h"
-#include "libc/intrin/punpcklbw.h"
-#include "libc/intrin/punpcklwd.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"
+#include "third_party/intel/emmintrin.internal.h"
 
 /**
  * Transcodes UTF-8 to UTF-32.
@@ -41,35 +35,35 @@ wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
   unsigned m, j;
   wint_t x, a, b;
   wchar_t *r, *q;
-  uint8_t v1[16], v2[16], v3[16], v4[16], vz[16];
   if (z)
     *z = 0;
   if (n == -1)
     n = p ? strlen(p) : 0;
   if ((q = r = malloc(n * sizeof(wchar_t) + sizeof(wchar_t)))) {
     for (i = 0; i < n;) {
+#ifdef __x86_64__
       if (!((uintptr_t)(p + i) & 15) && i + 16 < n) {
-        /* 10x speedup for ascii */
-        bzero(vz, 16);
         do {
-          memcpy(v1, p + i, 16);
-          pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-          if (pmovmskb(v2) != 0xFFFF)
+          __m128i v1, v2, v3, v4;
+          v1 = _mm_loadu_si128((__m128i *)(p + i));
+          v2 = _mm_cmpgt_epi8(v1, _mm_setzero_si128());
+          if (_mm_movemask_epi8(v2) != 0xFFFF)
             break;
-          punpcklbw(v3, v1, vz);
-          punpckhbw(v1, v1, vz);
-          punpcklwd((void *)v4, (void *)v3, (void *)vz);
-          punpckhwd((void *)v3, (void *)v3, (void *)vz);
-          punpcklwd((void *)v2, (void *)v1, (void *)vz);
-          punpckhwd((void *)v1, (void *)v1, (void *)vz);
-          memcpy(q + 0, v4, 16);
-          memcpy(q + 4, v3, 16);
-          memcpy(q + 8, v2, 16);
-          memcpy(q + 12, v1, 16);
+          v3 = _mm_unpacklo_epi8(v1, _mm_setzero_si128());
+          v1 = _mm_unpackhi_epi8(v1, _mm_setzero_si128());
+          v4 = _mm_unpacklo_epi16(v3, _mm_setzero_si128());
+          v3 = _mm_unpackhi_epi16(v3, _mm_setzero_si128());
+          v2 = _mm_unpacklo_epi16(v1, _mm_setzero_si128());
+          v1 = _mm_unpackhi_epi16(v1, _mm_setzero_si128());
+          _mm_storeu_si128((__m128i *)(q + 0), v4);
+          _mm_storeu_si128((__m128i *)(q + 4), v3);
+          _mm_storeu_si128((__m128i *)(q + 8), v2);
+          _mm_storeu_si128((__m128i *)(q + 12), v1);
           i += 16;
           q += 16;
         } while (i + 16 < n);
       }
+#endif
       x = p[i++] & 0xff;
       if (x >= 0300) {
         a = ThomPikeByte(x);

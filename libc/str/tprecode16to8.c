@@ -18,34 +18,54 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/packsswb.h"
-#include "libc/intrin/pandn.h"
-#include "libc/intrin/pcmpgtw.h"
-#include "libc/intrin/pmovmskb.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/intel/emmintrin.internal.h"
 
-static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
+#if !IsModeDbg()
+#if defined(__x86_64__)
 
-/* 10x speedup for ascii */
 static axdx_t tprecode16to8_sse2(char *dst, size_t dstsize, const char16_t *src,
                                  axdx_t r) {
-  int16_t v1[8], v2[8], v3[8], vz[8];
-  memset(vz, 0, 16);
+  __m128i v1, v2, v3, vz;
+  vz = _mm_setzero_si128();
   while (r.ax + 8 < dstsize) {
-    memcpy(v1, src + r.dx, 16);
-    pcmpgtw(v2, v1, vz);
-    pcmpgtw(v3, v1, kDel16);
-    pandn((void *)v2, (void *)v3, (void *)v2);
-    if (pmovmskb((void *)v2) != 0xFFFF)
+    v1 = _mm_loadu_si128((__m128i *)(src + r.dx));
+    v2 = _mm_cmpgt_epi16(v1, vz);
+    v3 = _mm_cmpgt_epi16(v1, _mm_set1_epi16(0x7F));
+    v2 = _mm_andnot_si128(v3, v2);
+    if (_mm_movemask_epi8(v2) != 0xFFFF)
       break;
-    packsswb((void *)v1, v1, v1);
-    memcpy(dst + r.ax, v1, 8);
+    v1 = _mm_packs_epi16(v1, v1);
+    _mm_storel_epi64((__m128i *)(dst + r.ax), v1);
     r.ax += 8;
     r.dx += 8;
   }
   return r;
 }
+
+#elif defined(__aarch64__)
+
+static axdx_t tprecode16to8_neon(char *dst, size_t dstsize, const char16_t *src,
+                                 axdx_t r) {
+  uint16x8_t v1, v2, v3;
+  while (r.ax + 8 < dstsize) {
+    v1 = vld1q_u16((const uint16_t *)(src + r.dx));
+    v2 = vcgtq_u16(v1, vdupq_n_u16(0));
+    v3 = vcgtq_u16(v1, vdupq_n_u16(0x7F));
+    v2 = vbicq_u16(v2, v3);
+    if (vaddvq_u16(v2) != 8 * 0xFFFF)
+      break;
+    vst1_u8((uint8_t *)(dst + r.ax), vqmovn_u16(v1));
+    r.ax += 8;
+    r.dx += 8;
+  }
+  return r;
+}
+
+#endif
+#endif
 
 /**
  * Transcodes UTF-16 to UTF-8.
@@ -66,10 +86,14 @@ axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
   r.ax = 0;
   r.dx = 0;
   for (;;) {
-#if defined(__x86_64__) && !IsModeDbg() && !IsTiny()
-    if (!((uintptr_t)(src + r.dx) & 15)) {
+#if !IsModeDbg()
+#if defined(__x86_64__)
+    if (!((uintptr_t)(src + r.dx) & 15))
       r = tprecode16to8_sse2(dst, dstsize, src, r);
-    }
+#elif defined(__aarch64__)
+    if (!((uintptr_t)(src + r.dx) & 15))
+      r = tprecode16to8_neon(dst, dstsize, src, r);
+#endif
 #endif
     if (!(x = src[r.dx++]))
       break;

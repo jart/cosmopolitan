@@ -45,6 +45,12 @@ $(DSP_SCALE_A).pkg:				\
 		$(DSP_SCALE_A_OBJS)		\
 		$(foreach x,$(DSP_SCALE_A_DIRECTDEPS),$($(x)_A).pkg)
 
+ifeq ($(ARCH),x86_64)
+o/$(MODE)/dsp/scale/cdecimate2xuint8x8.o: private \
+		CFLAGS +=			\
+			-mssse3
+endif
+
 o/$(MODE)/dsp/scale/cdecimate2xuint8x8.o	\
 o/$(MODE)/dsp/scale/gyarados.o			\
 o/$(MODE)/dsp/scale/magikarp.o			\

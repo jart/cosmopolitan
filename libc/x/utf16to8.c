@@ -17,21 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/packsswb.h"
-#include "libc/intrin/pandn.h"
-#include "libc/intrin/pcmpgtb.h"
-#include "libc/intrin/pcmpgtw.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/punpckhbw.h"
-#include "libc/intrin/punpcklbw.h"
 #include "libc/mem/mem.h"
 #include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"
-
-static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
+#include "third_party/intel/emmintrin.internal.h"
 
 /**
  * Transcodes UTF-16 to UTF-8.
@@ -45,28 +37,27 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
   char *r, *q;
   wint_t x, y;
   const char16_t *e;
-  int16_t v1[8], v2[8], v3[8], vz[8];
   if (z)
     *z = 0;
   if (n == -1)
     n = p ? strlen16(p) : 0;
   if ((q = r = malloc(n * 4 + 8 + 1))) {
     for (e = p + n; p < e;) {
-      if (p + 8 < e) { /* 17x ascii */
-        bzero(vz, 16);
+#if defined(__x86_64__)
+      if (p + 8 < e) {
         do {
-          memcpy(v1, p, 16);
-          pcmpgtw(v2, v1, vz);
-          pcmpgtw(v3, v1, kDel16);
-          pandn((void *)v2, (void *)v3, (void *)v2);
-          if (pmovmskb((void *)v2) != 0xFFFF)
+          __m128i v1 = _mm_loadu_si128((__m128i *)p);
+          __m128i v2 = _mm_cmpgt_epi16(v1, _mm_setzero_si128());
+          __m128i v3 = _mm_cmpgt_epi16(v1, _mm_set1_epi16(127));
+          v2 = _mm_andnot_si128(v3, v2);
+          if (_mm_movemask_epi8(v2) != 0xFFFF)
             break;
-          packsswb((void *)v1, v1, v1);
-          memcpy(q, v1, 8);
+          _mm_storel_epi64((__m128i *)q, _mm_packs_epi16(v1, v1));
           p += 8;
           q += 8;
         } while (p + 8 < e);
       }
+#endif
       x = *p++ & 0xffff;
       if (!IsUcs2(x)) {
         if (p < e) {
