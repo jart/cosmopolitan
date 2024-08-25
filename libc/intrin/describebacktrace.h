@@ -4,8 +4,8 @@
 #include "libc/nexgen32e/stackframe.h"
 COSMOPOLITAN_C_START_
 
-const char *DescribeBacktrace(char[160], const struct StackFrame *) libcesque;
-#define DescribeBacktrace(x) DescribeBacktrace(alloca(160), x)
+const char *_DescribeBacktrace(char[160], const struct StackFrame *) libcesque;
+#define DescribeBacktrace(x) _DescribeBacktrace(alloca(160), x)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_INTRIN_DESCRIBEBACKTRACE_H_ */

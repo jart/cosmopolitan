@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/ptrace.h"
 
-const char *(DescribePtrace)(char buf[12], int x) {
+const char *_DescribePtrace(char buf[12], int x) {
   if (x == -1)
     return "-1";
   if (x == PTRACE_TRACEME)

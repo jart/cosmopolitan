@@ -22,6 +22,6 @@
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeClockName)(char buf[32], int x) {
-  return DescribeMagnum(buf, kClockNames, "CLOCK_", x);
+const char *_DescribeClockName(char buf[32], int x) {
+  return _DescribeMagnum(buf, kClockNames, "CLOCK_", x);
 }

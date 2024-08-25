@@ -306,7 +306,7 @@ textstartup void __printargs(const char *prologue) {
       if (i && (u.pfds[i].revents & POLLNVAL))
         continue;
       PRINT(" ☼ %d (revents=%#hx fcntl(F_GETFL)=%s isatty()=%hhhd)", i,
-            u.pfds[i].revents, (DescribeOpenFlags)(oflagbuf, fcntl(i, F_GETFL)),
+            u.pfds[i].revents, _DescribeOpenFlags(oflagbuf, fcntl(i, F_GETFL)),
             isatty(i));
     }
   } else {
@@ -375,7 +375,7 @@ textstartup void __printargs(const char *prologue) {
         rlim.rlim_cur = -1;
       if (rlim.rlim_max == RLIM_INFINITY)
         rlim.rlim_max = -1;
-      PRINT(" ☼ %-20s %,16ld %,16ld", (DescribeRlimitName)(buf, i),
+      PRINT(" ☼ %-20s %,16ld %,16ld", _DescribeRlimitName(buf, i),
             rlim.rlim_cur, rlim.rlim_max);
       gotsome = true;
     }

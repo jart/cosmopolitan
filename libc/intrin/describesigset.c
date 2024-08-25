@@ -31,7 +31,7 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
+const char *_DescribeSigset(char buf[N], int rc, const sigset_t *ss) {
   int olderr;
   bool gotsome;
   const char *s;

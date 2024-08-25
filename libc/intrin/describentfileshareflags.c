@@ -26,7 +26,7 @@ static const struct DescribeFlags kFileShareflags[] = {
     {kNtFileShareDelete, "Delete"},  //
 };
 
-const char *(DescribeNtFileShareFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kFileShareflags, ARRAYLEN(kFileShareflags),
-                       "kNtFileShare", x);
+const char *_DescribeNtFileShareFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kFileShareflags, ARRAYLEN(kFileShareflags),
+                        "kNtFileShare", x);
 }

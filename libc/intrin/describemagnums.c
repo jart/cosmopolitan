@@ -20,8 +20,8 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
 
-const char *DescribeMagnum(char *b, const struct MagnumStr *m, const char *p,
-                           int x) {
+const char *_DescribeMagnum(char *b, const struct MagnumStr *m, const char *p,
+                            int x) {
   const char *s;
   if (x == 127)
     return "CLOCK_INVALID";

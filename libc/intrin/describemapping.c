@@ -45,7 +45,7 @@ char *DescribeProt(char p[4], int prot) {
   return p;
 }
 
-const char *(DescribeMapping)(char p[8], int prot, int flags) {
+const char *_DescribeMapping(char p[8], int prot, int flags) {
   /* asan runtime depends on this function */
   DescribeProt(p, prot);
   p[3] = DescribeMapType(flags);

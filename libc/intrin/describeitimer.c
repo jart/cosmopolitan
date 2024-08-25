@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/itimer.h"
 
-const char *(DescribeItimer)(char buf[12], int which) {
+const char *_DescribeItimer(char buf[12], int which) {
   if (which == ITIMER_REAL)
     return "ITIMER_REAL";
   if (which == ITIMER_VIRTUAL)

@@ -72,7 +72,7 @@ static const struct DescribeFlags kFileAccessflags[] = {
     {kNtTokenAdjustSessionid, "kNtTokenAdjustSessionid"},
 };
 
-const char *(DescribeNtFileAccessFlags)(char buf[512], uint32_t x) {
-  return DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
+const char *_DescribeNtFileAccessFlags(char buf[512], uint32_t x) {
+  return _DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
                        "", x);
 }

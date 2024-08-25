@@ -28,7 +28,7 @@ static const struct DescribeFlags kConsoleModeOutputFlags[] = {
     {kNtEnableLvbGridWorldwide, "EnableLvbGridWorldwide"},                    //
 };
 
-const char *(DescribeNtConsoleOutFlags)(char buf[128], uint32_t x) {
-  return DescribeFlags(buf, 128, kConsoleModeOutputFlags,
-                       ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
+const char *_DescribeNtConsoleOutFlags(char buf[128], uint32_t x) {
+  return _DescribeFlags(buf, 128, kConsoleModeOutputFlags,
+                        ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
 }

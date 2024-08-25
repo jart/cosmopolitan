@@ -24,7 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rlim.h"
 
-const char *DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
+const char *_DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
   if (rc == -1)
     return "n/a";
   if (!rlim)

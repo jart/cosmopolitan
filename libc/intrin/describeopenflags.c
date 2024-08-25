@@ -30,7 +30,7 @@
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeOpenFlags)(char buf[128], int x) {
+const char *_DescribeOpenFlags(char buf[128], int x) {
   char *p;
   int i, n;
   const char *pipe;
@@ -68,7 +68,7 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
       d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);
       d[i].name = MAGNUM_STRING(kOpenFlags, i);
     }
-    DescribeFlags(p, 128 - (p - buf), d, n, "O_", x);
+    _DescribeFlags(p, 128 - (p - buf), d, n, "O_", x);
   }
   return buf;
 }

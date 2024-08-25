@@ -4,9 +4,9 @@
 #include "libc/mem/alloca.h"
 COSMOPOLITAN_C_START_
 
-const char *DescribeTermios(char[1024], ssize_t, const struct termios *);
+const char *_DescribeTermios(char[1024], ssize_t, const struct termios *);
 
-#define DescribeTermios(rc, tio) DescribeTermios(alloca(1024), rc, tio)
+#define DescribeTermios(rc, tio) _DescribeTermios(alloca(1024), rc, tio)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TERMIOS_INTERNAL_H_ */

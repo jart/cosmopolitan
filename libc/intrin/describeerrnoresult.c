@@ -22,7 +22,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/str/str.h"
 
-const char *(DescribeErrno)(char buf[30], int ax) {
+const char *_DescribeErrno(char buf[30], int ax) {
   char *p = buf;
   const char *s;
   if (ax < 0) {

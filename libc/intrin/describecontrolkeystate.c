@@ -32,7 +32,7 @@ static const struct DescribeFlags kControlKeyState[] = {
     {kNtEnhancedKey, "EnhancedKey"},            //
 };
 
-const char *(DescribeControlKeyState)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kControlKeyState, ARRAYLEN(kControlKeyState),
-                       "kNt", x);
+const char *_DescribeControlKeyState(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kControlKeyState, ARRAYLEN(kControlKeyState),
+                        "kNt", x);
 }

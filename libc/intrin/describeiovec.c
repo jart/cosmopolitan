@@ -27,8 +27,8 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
-                            int iovlen) {
+const char *_DescribeIovec(char buf[N], ssize_t rc, const struct iovec *iov,
+                           int iovlen) {
   const char *d;
   int i, j, o = 0;
 

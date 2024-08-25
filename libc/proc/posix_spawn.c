@@ -302,30 +302,30 @@ static textwindows errno_t posix_spawn_nt_impl(
         case _POSIX_SPAWN_CLOSE:
           err = spawnfds_close(&fds, a->fildes);
           STRACE("spawnfds_close(%d) → %s", a->fildes,
-                 (DescribeErrno)(errno_buf, err));
+                 _DescribeErrno(errno_buf, err));
           break;
         case _POSIX_SPAWN_DUP2:
           err = spawnfds_dup2(&fds, a->fildes, a->newfildes);
           STRACE("spawnfds_dup2(%d, %d) → %s", a->fildes, a->newfildes,
-                 (DescribeErrno)(errno_buf, err));
+                 _DescribeErrno(errno_buf, err));
           break;
         case _POSIX_SPAWN_OPEN:
           err = spawnfds_open(&fds, dirhand, a->path, a->oflag, a->mode,
                               a->fildes);
           STRACE("spawnfds_open(%#s, %s, %s, %d) → %s", a->path,
-                 (DescribeOpenFlags)(oflags_buf, a->oflag),
-                 (DescribeOpenMode)(openmode_buf, a->oflag, a->mode), a->fildes,
-                 (DescribeErrno)(errno_buf, err));
+                 _DescribeOpenFlags(oflags_buf, a->oflag),
+                 _DescribeOpenMode(openmode_buf, a->oflag, a->mode), a->fildes,
+                 _DescribeErrno(errno_buf, err));
           break;
         case _POSIX_SPAWN_CHDIR:
           err = spawnfds_chdir(&fds, dirhand, a->path, &dirhand);
           STRACE("spawnfds_chdir(%#s) → %s", a->path,
-                 (DescribeErrno)(errno_buf, err));
+                 _DescribeErrno(errno_buf, err));
           break;
         case _POSIX_SPAWN_FCHDIR:
           err = spawnfds_fchdir(&fds, a->fildes, &dirhand);
           STRACE("spawnfds_fchdir(%d) → %s", a->fildes,
-                 (DescribeErrno)(errno_buf, err));
+                 _DescribeErrno(errno_buf, err));
           break;
         default:
           __builtin_unreachable();

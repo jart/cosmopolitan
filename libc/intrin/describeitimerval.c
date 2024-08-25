@@ -25,8 +25,8 @@
 
 #define N 90
 
-const char *(DescribeItimerval)(char buf[N], int rc,
-                                const struct itimerval *it) {
+const char *_DescribeItimerval(char buf[N], int rc,
+                               const struct itimerval *it) {
   if (!it)
     return "NULL";
   if (rc == -1)

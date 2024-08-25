@@ -28,8 +28,8 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
-                              size_t nfds) {
+const char *_DescribePollFds(char buf[N], ssize_t rc, struct pollfd *fds,
+                             size_t nfds) {
   char b64[64];
   int i, o = 0;
 
@@ -45,9 +45,9 @@ const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
   for (i = 0; i < nfds; ++i) {
     if (i)
       append(", ");
-    append("{%d, %s", fds[i].fd, (DescribePollFlags)(b64, fds[i].events));
+    append("{%d, %s", fds[i].fd, _DescribePollFlags(b64, fds[i].events));
     if (rc >= 0) {
-      append(", [%s]", (DescribePollFlags)(b64, fds[i].revents));
+      append(", [%s]", _DescribePollFlags(b64, fds[i].revents));
     }
     append("}");
   }

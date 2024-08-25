@@ -25,7 +25,7 @@ static const struct DescribeFlags kMremapFlags[] = {
     {MREMAP_FIXED, "FIXED"},      //
 };
 
-const char *(DescribeMremapFlags)(char buf[30], int x) {
-  return DescribeFlags(buf, 30, kMremapFlags, ARRAYLEN(kMremapFlags), "MREMAP_",
-                       x);
+const char *_DescribeMremapFlags(char buf[30], int x) {
+  return _DescribeFlags(buf, 30, kMremapFlags, ARRAYLEN(kMremapFlags),
+                        "MREMAP_", x);
 }

@@ -32,7 +32,7 @@ static const struct DescribeFlags kPipeModeFlags[] = {
     //{kNtPipeTypeByte, "TypeByte"},                        // 0x00000000
 };
 
-const char *(DescribeNtPipeModeFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kPipeModeFlags, ARRAYLEN(kPipeModeFlags),
-                       "kNtPipe", x);
+const char *_DescribeNtPipeModeFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kPipeModeFlags, ARRAYLEN(kPipeModeFlags),
+                        "kNtPipe", x);
 }

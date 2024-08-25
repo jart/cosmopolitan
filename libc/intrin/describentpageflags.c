@@ -41,6 +41,6 @@ static const struct DescribeFlags kPageFlags[] = {
     {kNtSecWritecombine, "SecWritecombine"},            //
 };
 
-const char *(DescribeNtPageFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kPageFlags, ARRAYLEN(kPageFlags), "kNt", x);
+const char *_DescribeNtPageFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kPageFlags, ARRAYLEN(kPageFlags), "kNt", x);
 }

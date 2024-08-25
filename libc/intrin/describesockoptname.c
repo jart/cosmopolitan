@@ -25,7 +25,7 @@
 /**
  * Describes setsockopt() optname arguments.
  */
-const char *(DescribeSockOptname)(char buf[32], int l, int x) {
+const char *_DescribeSockOptname(char buf[32], int l, int x) {
   char *p;
   const char *s;
   const struct MagnumStr *ms;

@@ -28,8 +28,8 @@
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
 
-const char *(DescribeSockaddr)(char buf[128], const struct sockaddr *sa,
-                               size_t sasize) {
+const char *_DescribeSockaddr(char buf[128], const struct sockaddr *sa,
+                              size_t sasize) {
   int e;
   size_t n;
   char *p, ip[72];

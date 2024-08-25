@@ -30,7 +30,7 @@ static const struct DescribeFlags kFileMapFlags[] = {
     {kNtFileMapLargePages, "LargePages"},          //
 };
 
-const char *(DescribeNtFileMapFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kFileMapFlags, ARRAYLEN(kFileMapFlags),
-                       "kNtFileMap", x);
+const char *_DescribeNtFileMapFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kFileMapFlags, ARRAYLEN(kFileMapFlags),
+                        "kNtFileMap", x);
 }

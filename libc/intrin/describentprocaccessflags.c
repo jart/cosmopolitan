@@ -37,7 +37,7 @@ static const struct DescribeFlags kProcessAccessflags[] = {
     {kNtProcessSynchronize, "Synchronize"},                          //
 };
 
-const char *(DescribeNtProcAccessFlags)(char buf[256], uint32_t x) {
-  return DescribeFlags(buf, 256, kProcessAccessflags,
-                       ARRAYLEN(kProcessAccessflags), "kNtProcess", x);
+const char *_DescribeNtProcAccessFlags(char buf[256], uint32_t x) {
+  return _DescribeFlags(buf, 256, kProcessAccessflags,
+                        ARRAYLEN(kProcessAccessflags), "kNtProcess", x);
 }

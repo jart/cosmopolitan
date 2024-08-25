@@ -40,8 +40,8 @@ static const struct DescribeFlags kNtMemState[] = {
 };
 
 const char *DescribeNtMemState(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kNtMemState, ARRAYLEN(kNtMemState), "kNtMem",
-                       x);
+  return _DescribeFlags(buf, 64, kNtMemState, ARRAYLEN(kNtMemState), "kNtMem",
+                        x);
 }
 
 static const struct DescribeFlags kNtMemType[] = {
@@ -51,7 +51,7 @@ static const struct DescribeFlags kNtMemType[] = {
 };
 
 const char *DescribeNtMemType(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kNtMemType, ARRAYLEN(kNtMemType), "kNtMem", x);
+  return _DescribeFlags(buf, 64, kNtMemType, ARRAYLEN(kNtMemType), "kNtMem", x);
 }
 
 int main(int argc, char *argv[]) {
@@ -72,8 +72,8 @@ int main(int argc, char *argv[]) {
     printf("%.12lx %.12lx %10s %16s %16s %32s %32s\n", mi.AllocationBase,
            mi.BaseAddress, b[0], DescribeNtMemState(b[1], mi.State),
            DescribeNtMemType(b[2], mi.Type),
-           (DescribeNtPageFlags)(b[3], mi.AllocationProtect),
-           (DescribeNtPageFlags)(b[4], mi.Protect));
+           _DescribeNtPageFlags(b[3], mi.AllocationProtect),
+           _DescribeNtPageFlags(b[4], mi.Protect));
   }
 }
 

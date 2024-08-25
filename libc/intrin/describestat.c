@@ -25,7 +25,7 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
+const char *_DescribeStat(char buf[N], int rc, const struct stat *st) {
   int o = 0;
 
   if (rc == -1)

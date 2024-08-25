@@ -20,11 +20,11 @@
 #include "libc/macros.h"
 #include "libc/sysv/consts/msync.h"
 
-const char *(DescribeMsyncFlags)(char buf[48], int x) {
+const char *_DescribeMsyncFlags(char buf[48], int x) {
   const struct DescribeFlags kMsyncFlags[] = {
       {MS_SYNC, "SYNC"},              //
       {MS_ASYNC, "ASYNC"},            //
       {MS_INVALIDATE, "INVALIDATE"},  //
   };
-  return DescribeFlags(buf, 48, kMsyncFlags, ARRAYLEN(kMsyncFlags), "MS_", x);
+  return _DescribeFlags(buf, 48, kMsyncFlags, ARRAYLEN(kMsyncFlags), "MS_", x);
 }

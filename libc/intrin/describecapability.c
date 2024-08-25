@@ -69,7 +69,7 @@ static const struct thatispacked {
     {CAP_CHECKPOINT_RESTORE, "CHECKPOINT_RESTORE"},  //
 };
 
-const char *(DescribeCapability)(char buf[32], int x) {
+const char *_DescribeCapability(char buf[32], int x) {
   int i;
   for (i = 0; i < ARRAYLEN(kCapabilityName); ++i) {
     if (kCapabilityName[i].x == x) {

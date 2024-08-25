@@ -11,8 +11,8 @@ int sys_lutimes(const char *, const struct timeval *);
 int sys_utimes(const char *, const struct timeval *);
 int sys_utimes_nt(const char *, const struct timeval[2]);
 
-const char *DescribeTimeval(char[45], int, const struct timeval *);
-#define DescribeTimeval(rc, ts) DescribeTimeval(alloca(45), rc, ts)
+const char *_DescribeTimeval(char[45], int, const struct timeval *);
+#define DescribeTimeval(rc, ts) _DescribeTimeval(alloca(45), rc, ts)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_INTERNAL_H_ */

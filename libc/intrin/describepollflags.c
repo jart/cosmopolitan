@@ -21,7 +21,7 @@
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/sysv/consts/poll.h"
 
-const char *(DescribePollFlags)(char buf[64], int x) {
+const char *_DescribePollFlags(char buf[64], int x) {
   const struct DescribeFlags kPollFlags[] = {
       {POLLIN, "IN"},          // order matters
       {POLLOUT, "OUT"},        // order matters
@@ -35,5 +35,5 @@ const char *(DescribePollFlags)(char buf[64], int x) {
       {POLLWRBAND, "WRBAND"},  //
       {POLLWRNORM, "WRNORM"},  //
   };
-  return DescribeFlags(buf, 64, kPollFlags, ARRAYLEN(kPollFlags), "POLL", x);
+  return _DescribeFlags(buf, 64, kPollFlags, ARRAYLEN(kPollFlags), "POLL", x);
 }

@@ -38,7 +38,7 @@ static const struct DescribeFlags kNtStartFlags[] = {
     {kNtStartfUntrustedsource, "Untrustedsource"},    //
 };
 
-const char *(DescribeNtStartFlags)(char buf[128], uint32_t x) {
-  return DescribeFlags(buf, 128, kNtStartFlags, ARRAYLEN(kNtStartFlags),
-                       "kNtStartf", x);
+const char *_DescribeNtStartFlags(char buf[128], uint32_t x) {
+  return _DescribeFlags(buf, 128, kNtStartFlags, ARRAYLEN(kNtStartFlags),
+                        "kNtStartf", x);
 }

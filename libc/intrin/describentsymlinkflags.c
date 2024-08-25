@@ -25,7 +25,7 @@ static const struct DescribeFlags kSymbolicLinkflags[] = {
     {kNtSymbolicLinkFlagAllowUnprivilegedCreate, "AllowUnprivilegedCreate"},  //
 };
 
-const char *(DescribeNtSymlinkFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kSymbolicLinkflags,
-                       ARRAYLEN(kSymbolicLinkflags), "kNtSymbolicLinkFlag", x);
+const char *_DescribeNtSymlinkFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kSymbolicLinkflags,
+                        ARRAYLEN(kSymbolicLinkflags), "kNtSymbolicLinkFlag", x);
 }

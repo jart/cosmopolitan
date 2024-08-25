@@ -22,7 +22,7 @@
 #include "libc/macros.h"
 #include "libc/nt/winsock.h"
 
-void DescribeIovNt(const struct NtIovec *iov, uint32_t iovlen, ssize_t rem) {
+void _DescribeIovNt(const struct NtIovec *iov, uint32_t iovlen, ssize_t rem) {
   int i;
   if (kisdangerous(iov)) {
     kprintf("%p", iov);

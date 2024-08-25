@@ -35,7 +35,7 @@ static const struct DescribeFlags kPipeOpenFlags[] = {
     {kNtAccessSystemSecurity, "kNtAccessSystemSecurity"},
 };
 
-const char *(DescribeNtPipeOpenFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kPipeOpenFlags, ARRAYLEN(kPipeOpenFlags), "",
-                       x);
+const char *_DescribeNtPipeOpenFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kPipeOpenFlags, ARRAYLEN(kPipeOpenFlags), "",
+                        x);
 }

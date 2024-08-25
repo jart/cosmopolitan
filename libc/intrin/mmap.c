@@ -59,7 +59,7 @@
       char bt[160];                                                       \
       struct StackFrame *bp = __builtin_frame_address(0);                 \
       kprintf("%!s:%d: assertion failed: %!s\n", __FILE__, __LINE__, #x); \
-      kprintf("bt %!s\n", (DescribeBacktrace)(bt, bp));                   \
+      kprintf("bt %!s\n", _DescribeBacktrace(bt, bp));                    \
       __print_maps(0);                                                    \
       __builtin_trap();                                                   \
     }                                                                     \

@@ -33,7 +33,7 @@ static const struct DescribeFlags kConsoleModeInputFlags[] = {
     {kNtEnableVirtualTerminalInput, "VirtualTerminalInput"},  //
 };
 
-const char *(DescribeNtConsoleInFlags)(char buf[256], uint32_t x) {
-  return DescribeFlags(buf, 256, kConsoleModeInputFlags,
-                       ARRAYLEN(kConsoleModeInputFlags), "kNtEnable", x);
+const char *_DescribeNtConsoleInFlags(char buf[256], uint32_t x) {
+  return _DescribeFlags(buf, 256, kConsoleModeInputFlags,
+                        ARRAYLEN(kConsoleModeInputFlags), "kNtEnable", x);
 }

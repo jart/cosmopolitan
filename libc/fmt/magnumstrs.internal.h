@@ -28,7 +28,8 @@ extern const struct MagnumStr kSockOptnames[];
 extern const struct MagnumStr kTcpOptnames[];
 extern const struct MagnumStr kPollNames[];
 
-const char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
+const char *_DescribeMagnum(char *, const struct MagnumStr *, const char *,
+                            int);
 
 __funline const char *GetMagnumStr(const struct MagnumStr *ms, int x) {
   int i;

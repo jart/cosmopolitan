@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 
 static const char *__fdkind2str(int x) {
@@ -55,7 +55,7 @@ void __printfds(struct Fd *fds, size_t fdslen) {
       continue;
     kprintf("%3d %s", i, __fdkind2str(fds[i].kind));
     if (fds[i].flags) {
-      kprintf(" flags=%s", (DescribeOpenFlags)(buf, fds[i].flags));
+      kprintf(" flags=%s", _DescribeOpenFlags(buf, fds[i].flags));
     }
     if (fds[i].mode)
       kprintf(" mode=%#o", fds[i].mode);

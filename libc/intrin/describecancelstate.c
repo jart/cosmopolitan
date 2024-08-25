@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/thread/thread.h"
 
-const char *(DescribeCancelState)(char buf[12], int err, int *state) {
+const char *_DescribeCancelState(char buf[12], int err, int *state) {
   if (err)
     return "n/a";
   if (!state)

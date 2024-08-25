@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/ptrace.h"
 
-const char *(DescribePtraceEvent)(char buf[32], int x) {
+const char *_DescribePtraceEvent(char buf[32], int x) {
   if (x == PTRACE_EVENT_FORK)
     return "PTRACE_EVENT_FORK";
   if (x == PTRACE_EVENT_VFORK)

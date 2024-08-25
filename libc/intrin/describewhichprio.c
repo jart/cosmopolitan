@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/prio.h"
 
-const char *(DescribeWhichPrio)(char buf[12], int x) {
+const char *_DescribeWhichPrio(char buf[12], int x) {
   if (x == PRIO_PROCESS)
     return "PRIO_PROCESS";
   if (x == PRIO_PGRP)

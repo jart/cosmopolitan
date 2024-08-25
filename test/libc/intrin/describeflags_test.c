@@ -27,7 +27,7 @@ static const struct DescribeFlags kFlags[] = {
 
 const char *DescribeIt(uint32_t x) {
   static char s[64];
-  return DescribeFlags(s, ARRAYLEN(s), kFlags, ARRAYLEN(kFlags), "x", x);
+  return _DescribeFlags(s, ARRAYLEN(s), kFlags, ARRAYLEN(kFlags), "x", x);
 }
 
 TEST(describeflags, test) {

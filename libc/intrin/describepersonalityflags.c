@@ -36,7 +36,7 @@ static const struct DescribeFlags kPersonalityFlags[] = {
     {UNAME26, "UNAME26"},                        //
 };
 
-const char *(DescribePersonalityFlags)(char buf[128], int x) {
-  return DescribeFlags(buf, 128, kPersonalityFlags, ARRAYLEN(kPersonalityFlags),
-                       "", x);
+const char *_DescribePersonalityFlags(char buf[128], int x) {
+  return _DescribeFlags(buf, 128, kPersonalityFlags,
+                        ARRAYLEN(kPersonalityFlags), "", x);
 }

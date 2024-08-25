@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
 
-const char *DescribeFlags(char *p, size_t n, const struct DescribeFlags *d,
-                          size_t m, const char *prefix, unsigned x) {
+const char *_DescribeFlags(char *p, size_t n, const struct DescribeFlags *d,
+                           size_t m, const char *prefix, unsigned x) {
   bool t;
   char b[21];
   size_t i, j, k;

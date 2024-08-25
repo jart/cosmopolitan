@@ -24,7 +24,7 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeStringList)(char buf[N], char *const list[]) {
+const char *_DescribeStringList(char buf[N], char *const list[]) {
   int i, o = 0;
 
   if (!list)

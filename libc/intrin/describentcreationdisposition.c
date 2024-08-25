@@ -19,7 +19,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/nt/enum/creationdisposition.h"
 
-const char *DescribeNtCreationDisposition(uint32_t x) {
+const char *_DescribeNtCreationDisposition(uint32_t x) {
   switch (x) {
     case kNtCreateNew:
       return "kNtCreateNew";

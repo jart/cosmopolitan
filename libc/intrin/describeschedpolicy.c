@@ -26,7 +26,7 @@
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeSchedPolicy)(char buf[48], int x) {
+const char *_DescribeSchedPolicy(char buf[48], int x) {
   char *p = buf;
   if (x == -1) {
     goto DoNumber;

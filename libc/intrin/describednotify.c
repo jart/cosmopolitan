@@ -31,7 +31,7 @@ static const struct DescribeFlags kDnotifyFlags[] = {
     {DN_MULTISHOT, "MULTISHOT"},  //
 };
 
-const char *(DescribeDnotifyFlags)(char buf[80], int x) {
-  return DescribeFlags(buf, 80, kDnotifyFlags, ARRAYLEN(kDnotifyFlags), "DN_",
-                       x);
+const char *_DescribeDnotifyFlags(char buf[80], int x) {
+  return _DescribeFlags(buf, 80, kDnotifyFlags, ARRAYLEN(kDnotifyFlags), "DN_",
+                        x);
 }

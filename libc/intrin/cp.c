@@ -53,7 +53,7 @@ void report_cancelation_point(int sysv_ordinal, int xnu_ordinal) {
   char bt[160];
   struct StackFrame *bp = __builtin_frame_address(0);
   kprintf("error: report_cancelation_point(%#x, %#x) %s\n", sysv_ordinal,
-          xnu_ordinal, (DescribeBacktrace)(bt, bp));
+          xnu_ordinal, _DescribeBacktrace(bt, bp));
   __builtin_trap();
 }
 

@@ -82,7 +82,7 @@ int seccomp(unsigned operation, unsigned flags, void *args) {
   } else {
     rc = enosys();
   }
-  STRACE("seccomp(%s, %#x, %p) → %d% m", DescribeSeccompOperation(operation),
+  STRACE("seccomp(%s, %#x, %p) → %d% m", _DescribeSeccompOperation(operation),
          flags, args, rc);
   return rc;
 }

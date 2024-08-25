@@ -66,8 +66,8 @@ void __sigenter_netbsd(int, siginfo_t *, void *);
 void __sigenter_freebsd(int, siginfo_t *, void *);
 void __sigenter_openbsd(int, siginfo_t *, void *);
 
-const char *DescribeSigaction(char[256], int, const struct sigaction *);
-#define DescribeSigaction(rc, sa) DescribeSigaction(alloca(256), rc, sa)
+const char *_DescribeSigaction(char[256], int, const struct sigaction *);
+#define DescribeSigaction(rc, sa) _DescribeSigaction(alloca(256), rc, sa)
 
 void _init_onntconsoleevent(void);
 

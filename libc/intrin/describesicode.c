@@ -38,7 +38,7 @@ static void NameIt(char p[20], const char *s, int si_code) {
 /**
  * Returns symbolic name for siginfo::si_code value.
  */
-const char *(DescribeSiCode)(char b[20], int sig, int si_code) {
+const char *_DescribeSiCode(char b[20], int sig, int si_code) {
   NameIt(b, "SI_", si_code);
   if (si_code == SI_QUEUE) {
     strcpy(b + 3, "QUEUE"); /* sent by sigqueue(2) */
