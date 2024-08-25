@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_FD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FD_INTERNAL_H_
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/thread/thread.h"
 COSMOPOLITAN_C_START_
 
@@ -37,6 +38,7 @@ struct Fd {
   unsigned sndtimeo; /* millis; 0 means wait forever */
   void *connect_op;
   struct Cursor *cursor;
+  struct sockaddr_storage peer;
 };
 
 struct Fds {

@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/thunk/msabi.h"
@@ -28,6 +28,7 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"
 
 __msabi extern typeof(__sys_getsockname_nt) *const __imp_getsockname;
@@ -45,7 +46,12 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
   if (IsWindows()) {
     if (__isfdkind(fd, kFdSocket)) {
       if ((rc = impl_win32(g_fds.p[fd].handle, &ss, &size))) {
-        if (impl_win32 == __imp_getsockname && WSAGetLastError() == WSAEINVAL) {
+        if (impl_win32 == __imp_getpeername &&
+            g_fds.p[fd].peer.ss_family != AF_UNSPEC) {
+          ss = g_fds.p[fd].peer;
+          rc = 0;
+        } else if (impl_win32 == __imp_getsockname &&
+                   WSAGetLastError() == WSAEINVAL) {
           // The socket has not been bound to an address with bind, or
           // ADDR_ANY is specified in bind but connection has not yet
           // occurred. -MSDN
