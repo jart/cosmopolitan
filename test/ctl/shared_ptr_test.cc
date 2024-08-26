@@ -17,6 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/shared_ptr.h"
+#include "libc/mem/leaks.h"
 
 #include "libc/runtime/runtime.h"
 

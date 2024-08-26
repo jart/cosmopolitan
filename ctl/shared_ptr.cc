@@ -23,7 +23,7 @@
 namespace {
 
 inline void
-incref(_Atomic(size_t)* r)
+incref(_CTL_ATOMIC(size_t)* r)
 {
     size_t r2 = atomic_fetch_add_explicit(r, 1, memory_order_relaxed);
     if (r2 > ((size_t)-1) >> 1)
@@ -31,7 +31,7 @@ incref(_Atomic(size_t)* r)
 }
 
 inline int
-decref(_Atomic(size_t)* r)
+decref(_CTL_ATOMIC(size_t)* r)
 {
     if (!atomic_fetch_sub_explicit(r, 1, memory_order_release)) {
         atomic_thread_fence(memory_order_acquire);
@@ -41,7 +41,7 @@ decref(_Atomic(size_t)* r)
 }
 
 inline size_t
-getref(const _Atomic(size_t)* r)
+getref(const _CTL_ATOMIC(size_t)* r)
 {
     return atomic_load_explicit(r, memory_order_relaxed);
 }

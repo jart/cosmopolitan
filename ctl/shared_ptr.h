@@ -2,8 +2,17 @@
 // vi: set et ft=cpp ts=4 sts=4 sw=4 fenc=utf-8 :vi
 #ifndef COSMOPOLITAN_CTL_SHARED_PTR_H_
 #define COSMOPOLITAN_CTL_SHARED_PTR_H_
+#include "enable_if.h"
+#include "is_void.h"
 #include "new.h"
 #include "unique_ptr.h"
+
+// TODO(mrdomino): move
+#ifndef __cplusplus
+#define _CTL_ATOMIC(x) _Atomic(x)
+#else
+#define _CTL_ATOMIC(x) x
+#endif
 
 namespace ctl {
 
@@ -20,8 +29,8 @@ namespace __ {
 
 struct shared_control
 {
-    _Atomic(size_t) shared;
-    _Atomic(size_t) weak;
+    _CTL_ATOMIC(size_t) shared;
+    _CTL_ATOMIC(size_t) weak;
 
     constexpr shared_control() noexcept : shared(0), weak(0)
     {
@@ -91,7 +100,7 @@ struct shared_emplace : shared_control
 
     static unique_ptr<shared_emplace> make_unique()
     {
-        return new shared_emplace();
+        return unique_ptr(new shared_emplace());
     }
 
   private:
@@ -201,8 +210,9 @@ class shared_ptr
         return p;
     }
 
-    // TODO(mrdomino): fix for shared_ptr<void>
-    T& operator*() const noexcept
+    template <typename U = T>
+    typename enable_if<!is_void_v<U>, U&>::type
+    operator*() const noexcept
     {
         if (!p)
             __builtin_trap();
@@ -217,7 +227,9 @@ class shared_ptr
         return *p;
     }
 
-    element_type& operator[](ptrdiff_t i) const
+    template <typename U = T>
+    typename enable_if<!is_void_v<U>, U&>::type
+    operator[](ptrdiff_t i) const
     {
         return *(p + i);
     }
