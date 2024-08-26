@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "ape/ape.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 #ifdef __aarch64__
 

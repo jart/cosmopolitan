@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 #define IP(X)  (intptr_t)(X)
 #define VIP(X) (void *)IP(X)

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/wintime.internal.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 static inline int pop(int x) {
   return !!(x & 1) + !!(x & 2) + !!(x & 4);

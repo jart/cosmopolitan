@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filemapflags.h"
@@ -35,7 +35,7 @@ static const struct DescribeFlags kPipeOpenFlags[] = {
     {kNtAccessSystemSecurity, "kNtAccessSystemSecurity"},
 };
 
-const char *(DescribeNtPipeOpenFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kPipeOpenFlags, ARRAYLEN(kPipeOpenFlags), "",
-                       x);
+const char *_DescribeNtPipeOpenFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kPipeOpenFlags, ARRAYLEN(kPipeOpenFlags), "",
+                        x);
 }

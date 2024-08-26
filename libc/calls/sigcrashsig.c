@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/intrin/pushpop.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/ntexceptionpointers.h"

@@ -10,26 +10,26 @@
 #include <unistd.h>
 #include "third_party/nsync/futex.internal.h"
 
-// THIS IS AN EXAMPLE OF HOW TO USE COSMOPOLITAN FUTEXES TO IMPLEMENT
-// YOUR OWN MUTEXES FROM SCRATCH. LOOK AT HOW MUCH BETTER THIS IT CAN
-// MAKE THINGS COMPARED TO SPIN LOCKS. ALGORITHM FROM ULRICH DREPPER.
-
 // arm fleet
 // with futexes
 // 30 threads / 100000 iterations
 //
-//          242,604 us real
-//        4,222,946 us user
-//        1,079,229 us sys
-// footek_test on studio.test.          630 µs   17'415 µs     256'782 µs
-//        1,362,557 us real
-//        3,232,978 us user
-//        2,104,824 us sys
-// footek_test on pi.test.              611 µs   21'708 µs   1'385'129 µs
-//        1,346,482 us real
-//        3,370,513 us user
-//        1,992,383 us sys
-// footek_test on freebsdarm.test.      427 µs   19'967 µs   1'393'476 µs
+//           46,481 us real
+//           68,745 us user
+//          586,871 us sys
+// footek_test on studio.test.          585 µs   13'597 µs      57'473 µs
+//          389,619 us real
+//          839,848 us user
+//          679,112 us sys
+// footek_test on pi5.test.             335 µs   13'034 µs     432'358 µs
+//          463,799 us real
+//        1,259,267 us user
+//          547,681 us sys
+// footek_test on pi.test.              479 µs   16'539 µs     476'395 µs
+//        1,256,134 us real
+//        3,770,473 us user
+//        1,214,755 us sys
+// footek_test on freebsdarm.test.      364 µs   16'898 µs   1'288'594 µs
 
 // arm fleet
 // without futexes
@@ -106,9 +106,14 @@
 //           16,265 us sys
 // footek_test on xnu.test.          98'468 µs    5'242 µs   5'191'724 µs
 
-#define USE_FUTEX  1
-#define THREADS    30
-#define ITERATIONS 30000
+#define SPIN  1
+#define FUTEX 2
+#define NSYNC 3
+
+#define USE NSYNC
+
+#define THREADS    10
+#define ITERATIONS 50000
 
 #define MUTEX_LOCKED(word)  ((word) & 8)
 #define MUTEX_WAITING(word) ((word) & 16)
@@ -130,7 +135,7 @@ void lock(atomic_int *futex) {
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   while (word > 0) {
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-#if USE_FUTEX
+#if USE == FUTEX
     nsync_futex_wait_(futex, 2, 0, 0);
 #endif
     pthread_setcancelstate(cs, 0);
@@ -142,7 +147,7 @@ void unlock(atomic_int *futex) {
   int word = atomic_fetch_sub_explicit(futex, 1, memory_order_release);
   if (word == 2) {
     atomic_store_explicit(futex, 0, memory_order_release);
-#if USE_FUTEX
+#if USE == FUTEX
     nsync_futex_wake_(futex, 1, 0);
 #endif
   }
@@ -154,9 +159,15 @@ pthread_mutex_t g_locker;
 
 void *worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
+#if USE == NSYNC
+    pthread_mutex_lock(&g_locker);
+    ++g_chores;
+    pthread_mutex_unlock(&g_locker);
+#else
     lock(&g_lock);
     ++g_chores;
     unlock(&g_lock);
+#endif
   }
   return 0;
 }
@@ -186,51 +197,52 @@ int main() {
   CheckForMemoryLeaks();
 }
 
-// COMPARE ULRICH DREPPER'S LOCKING ALGORITHM WITH MIKE BURROWS *NSYNC
-// WHICH IS WHAT COSMOPOLITAN LIBC USES FOR YOUR POSIX THREADS MUTEXES
-
 // x86 fleet
 // with pthread_mutex_t
 // 30 threads / 100000 iterations
 //
-//          186,976 us real
-//           43,609 us user
-//          205,585 us sys
-// footek_test on freebsd.test.         410 µs    2'054 µs     195'339 µs
-//          238,902 us real
-//          235,743 us user
-//           97,881 us sys
-// footek_test on rhel7.test.           343 µs    2'339 µs     246'926 µs
-//          201,285 us real
-//          249,612 us user
-//          141,230 us sys
-// footek_test on xnu.test.           1'960 µs    5'350 µs     265'758 µs
-//          303,363 us real
-//           60,000 us user
-//          410,000 us sys
-// footek_test on openbsd.test.         545 µs    3'023 µs     326'200 µs
-//          386,085 us real
-//          586,455 us user
-//          466,991 us sys
-// footek_test on netbsd.test.          344 µs    2'421 µs     413'440 µs
-//          245,010 us real
+//          177,702 us real
+//          183,488 us user
+//           54,921 us sys
+// footek_test on rhel7.test.           304 µs    2'225 µs     185'809 µs
+//          191,346 us real
+//           43,746 us user
+//          257,012 us sys
+// footek_test on freebsd.test.         405 µs    2'186 µs     200'568 µs
+//          194,344 us real
+//          228,235 us user
+//          143,203 us sys
+// footek_test on xnu.test.          33'207 µs    5'164 µs     220'693 µs
+//          199,882 us real
+//          138,178 us user
+//          329,501 us sys
+// footek_test on netbsd.test.          350 µs    3'570 µs     262'186 µs
+//          291,255 us real
+//           70,000 us user
+//          440,000 us sys
+// footek_test on openbsd.test.         628 µs    3'232 µs     342'136 µs
+//          250,072 us real
 //          437,500 us user
-//          140,625 us sys
-// footek_test on win10.test.           300 µs   18'574 µs     441'225 µs
+//           93,750 us sys
+// footek_test on win10.test.           996 µs   10'949 µs     398'435 µs
 
 // arm fleet
 // with pthread_mutex_t
 // 30 threads / 100000 iterations
 //
-//           87,132 us real
-//          183,517 us user
-//           20,020 us sys
-// footek_test on studio.test.          560 µs   12'418 µs      92'825 µs
-//          679,374 us real
-//          957,678 us user
-//          605,078 us sys
-// footek_test on pi.test.              462 µs   16'574 µs     702'833 µs
-//          902,343 us real
-//        1,459,706 us user
-//          781,140 us sys
-// footek_test on freebsdarm.test.      400 µs   16'261 µs     970'022 µs
+//           88,681 us real
+//          163,500 us user
+//           22,183 us sys
+// footek_test on studio.test.          651 µs   15'086 µs      98'632 µs
+//          157,701 us real
+//          215,597 us user
+//           46,436 us sys
+// footek_test on pi5.test.             296 µs   13'222 µs     159'805 µs
+//          699,863 us real
+//        1,027,981 us user
+//          648,353 us sys
+// footek_test on pi.test.              419 µs   16'716 µs     721'851 µs
+//          843,858 us real
+//        1,432,362 us user
+//          696,613 us sys
+// footek_test on freebsdarm.test.      349 µs   16'613 µs     876'863 µs

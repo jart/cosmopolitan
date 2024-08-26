@@ -23,7 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"

@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/sig.h"
 
-const char *(DescribeHow)(char buf[12], int how) {
+const char *_DescribeHow(char buf[12], int how) {
   if (how == SIG_BLOCK)
     return "SIG_BLOCK";
   if (how == SIG_UNBLOCK)

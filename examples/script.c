@@ -41,7 +41,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bswap.h"
 #include "libc/log/bsd.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/pageflags.h"
 
 static const struct DescribeFlags kPageFlags[] = {
@@ -41,6 +41,6 @@ static const struct DescribeFlags kPageFlags[] = {
     {kNtSecWritecombine, "SecWritecombine"},            //
 };
 
-const char *(DescribeNtPageFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kPageFlags, ARRAYLEN(kPageFlags), "kNt", x);
+const char *_DescribeNtPageFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kPageFlags, ARRAYLEN(kPageFlags), "kNt", x);
 }

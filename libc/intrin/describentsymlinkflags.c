@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/symboliclink.h"
 
 static const struct DescribeFlags kSymbolicLinkflags[] = {
@@ -25,7 +25,7 @@ static const struct DescribeFlags kSymbolicLinkflags[] = {
     {kNtSymbolicLinkFlagAllowUnprivilegedCreate, "AllowUnprivilegedCreate"},  //
 };
 
-const char *(DescribeNtSymlinkFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kSymbolicLinkflags,
-                       ARRAYLEN(kSymbolicLinkflags), "kNtSymbolicLinkFlag", x);
+const char *_DescribeNtSymlinkFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kSymbolicLinkflags,
+                        ARRAYLEN(kSymbolicLinkflags), "kNtSymbolicLinkFlag", x);
 }

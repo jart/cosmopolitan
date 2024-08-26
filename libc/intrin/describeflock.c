@@ -27,7 +27,7 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
+const char *_DescribeFlock(char buf[N], int cmd, const struct flock *l) {
   int o = 0;
 
   if (!l)

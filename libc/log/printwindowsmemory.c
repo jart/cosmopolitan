@@ -20,7 +20,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/memflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/memorybasicinformation.h"
@@ -33,8 +33,8 @@ static const struct DescribeFlags kNtMemState[] = {
 };
 
 static const char *DescribeNtMemState(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kNtMemState, ARRAYLEN(kNtMemState), "kNtMem",
-                       x);
+  return _DescribeFlags(buf, 64, kNtMemState, ARRAYLEN(kNtMemState), "kNtMem",
+                        x);
 }
 
 static const struct DescribeFlags kNtMemType[] = {
@@ -44,7 +44,7 @@ static const struct DescribeFlags kNtMemType[] = {
 };
 
 static const char *DescribeNtMemType(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kNtMemType, ARRAYLEN(kNtMemType), "kNtMem", x);
+  return _DescribeFlags(buf, 64, kNtMemType, ARRAYLEN(kNtMemType), "kNtMem", x);
 }
 
 /**
@@ -77,7 +77,7 @@ void PrintWindowsMemory(const char *high, size_t size) {
             mi.AllocationBase, mi.BaseAddress, b[0],
             DescribeNtMemState(b[1], mi.State),
             DescribeNtMemType(b[2], mi.Type),
-            (DescribeNtPageFlags)(b[3], mi.AllocationProtect),
-            (DescribeNtPageFlags)(b[4], mi.Protect), stop);
+            _DescribeNtPageFlags(b[3], mi.AllocationProtect),
+            _DescribeNtPageFlags(b[4], mi.Protect), stop);
   }
 }

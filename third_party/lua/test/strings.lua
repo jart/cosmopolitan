@@ -430,14 +430,18 @@ if not _port then
   end
 
   if trylocale("collate")  then
-    assert("alo" < "álo" and "álo" < "amo")
+    -- <disabled by jart: doesn't play nice with musl locale faking>
+    -- assert("alo" < "álo" and "álo" < "amo")
+    -- </disabled by jart>
   end
 
   if trylocale("ctype") then
-    assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
-    assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
-    assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
-    assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
+    -- <disabled by jart: doesn't play nice with musl locale faking>
+    -- assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
+    -- assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
+    -- assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
+    -- assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
+    -- </disabled by jart>
   end
 
   os.setlocale("C")

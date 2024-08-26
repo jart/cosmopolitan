@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_FASTDIV_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_FASTDIV_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 COSMOPOLITAN_C_START_
 
 struct Divisor {

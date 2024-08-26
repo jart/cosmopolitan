@@ -28,7 +28,7 @@
 #include "libc/calls/struct/ucontext-freebsd.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"

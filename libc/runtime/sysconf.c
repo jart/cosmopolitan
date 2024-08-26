@@ -24,7 +24,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/maps.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"

@@ -24,7 +24,7 @@
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeSchedParam)(char buf[32], const struct sched_param *x) {
+const char *_DescribeSchedParam(char buf[32], const struct sched_param *x) {
   char *p;
   if (!x)
     return "0";

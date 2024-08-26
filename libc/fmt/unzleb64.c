@@ -28,7 +28,7 @@
        ░███▓▀                                                    ▀▓▓██▀▀░
         ░▀░                                                         */
 #include "libc/fmt/leb128.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 /**
  * Decodes array to signed integer w/ zig-zag encoding.

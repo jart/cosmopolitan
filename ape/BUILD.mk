@@ -45,10 +45,10 @@ o/$(MODE)/ape: $(APE)
 
 o/$(MODE)/ape/aarch64.lds:			\
 	ape/aarch64.lds				\
-	libc/zip.internal.h			\
+	libc/zip.h				\
 	libc/thread/tls.h			\
 	libc/calls/struct/timespec.h		\
-	libc/macros.internal.h			\
+	libc/macros.h				\
 	libc/str/str.h
 
 APE_LOADER_LDFLAGS =				\
@@ -162,8 +162,8 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/macho.internal.h		\
-		libc/macros.internal.h		\
+		libc/macho.h			\
+		libc/macros.h			\
 		libc/nexgen32e/uart.internal.h	\
 		libc/calls/metalfile.internal.h	\
 		libc/nt/pedef.internal.h	\
@@ -188,8 +188,8 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/thread/tls.h		\
-		libc/macho.internal.h		\
-		libc/macros.internal.h		\
+		libc/macho.h			\
+		libc/macros.h			\
 		libc/nexgen32e/uart.internal.h	\
 		libc/calls/metalfile.internal.h	\
 		libc/nt/pedef.internal.h	\
@@ -259,8 +259,8 @@ o/$(MODE)/ape/ape.o:				\
 		libc/thread/tls.h		\
 		ape/ape.internal.h		\
 		ape/macros.internal.h		\
-		libc/macho.internal.h		\
-		libc/macros.internal.h		\
+		libc/macho.h			\
+		libc/macros.h			\
 		libc/sysv/consts/prot.h		\
 		libc/nt/pedef.internal.h	\
 		libc/runtime/pc.internal.h	\
@@ -281,7 +281,7 @@ o/$(MODE)/ape/ape.lds:				\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/elf/pf2prot.internal.h	\
-		libc/macros.internal.h		\
+		libc/macros.h			\
 		libc/nt/pedef.internal.h	\
 		libc/str/str.h			\
-		libc/zip.internal.h
+		libc/zip.h

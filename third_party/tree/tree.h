@@ -20,7 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 #ifdef __ANDROID
 #define mbstowcs(w,m,x) mbsrtowcs(w,(const char**)(& #m),x,NULL)

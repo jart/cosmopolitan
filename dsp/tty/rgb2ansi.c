@@ -21,7 +21,7 @@
 #include "libc/assert.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/str/str.h"
 

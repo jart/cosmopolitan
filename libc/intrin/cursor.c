@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,21 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pcmpgtw.h"
-#include "libc/str/str.h"
+#include "libc/assert.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/fds.h"
+#include "libc/runtime/runtime.h"
 
-/**
- * Compares signed 16-bit integers w/ greater than predicate.
- *
- * @param 𝑎 [w/o] receives result
- * @param 𝑏 [r/o] supplies first input vector
- * @param 𝑐 [r/o] supplies second input vector
- * @mayalias
- */
-void(pcmpgtw)(int16_t a[8], const int16_t b[8], const int16_t c[8]) {
-  unsigned i;
-  int16_t r[8];
-  for (i = 0; i < 8; ++i)
-    r[i] = -(b[i] > c[i]);
-  __builtin_memcpy(a, r, 16);
+struct Cursor *__cursor_new(void) {
+  struct Cursor *c;
+  if ((c = _mapanon(sizeof(struct Cursor)))) {
+    if ((c->shared = _mapshared(sizeof(struct CursorShared)))) {
+      pthread_mutexattr_t attr;
+      pthread_mutexattr_init(&attr);
+      pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+      pthread_mutex_init(&c->shared->lock, &attr);
+      pthread_mutexattr_destroy(&attr);
+    } else {
+      munmap(c, sizeof(struct Cursor));
+      c = 0;
+    }
+  }
+  return c;
+}
+
+void __cursor_ref(struct Cursor *c) {
+  if (!c)
+    return;
+  unassert(atomic_fetch_add_explicit(&c->refs, 1, memory_order_relaxed) >= 0);
+}
+
+int __cursor_unref(struct Cursor *c) {
+  if (!c)
+    return 0;
+  if (atomic_fetch_sub_explicit(&c->refs, 1, memory_order_release))
+    return 0;
+  atomic_thread_fence(memory_order_acquire);
+  int rc = munmap(c->shared, sizeof(struct CursorShared));
+  rc |= munmap(c, sizeof(struct Cursor));
+  return rc;
+}
+
+void __cursor_lock(struct Cursor *c) {
+  pthread_mutex_lock(&c->shared->lock);
+}
+
+void __cursor_unlock(struct Cursor *c) {
+  pthread_mutex_unlock(&c->shared->lock);
 }

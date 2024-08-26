@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/iovec.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/iov.h"
 

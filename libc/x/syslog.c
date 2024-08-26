@@ -25,7 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/log/internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/sock.h"

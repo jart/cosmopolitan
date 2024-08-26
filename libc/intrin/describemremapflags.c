@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/mremap.h"
 
 static const struct DescribeFlags kMremapFlags[] = {
@@ -25,7 +25,7 @@ static const struct DescribeFlags kMremapFlags[] = {
     {MREMAP_FIXED, "FIXED"},      //
 };
 
-const char *(DescribeMremapFlags)(char buf[30], int x) {
-  return DescribeFlags(buf, 30, kMremapFlags, ARRAYLEN(kMremapFlags), "MREMAP_",
-                       x);
+const char *_DescribeMremapFlags(char buf[30], int x) {
+  return _DescribeFlags(buf, 30, kMremapFlags, ARRAYLEN(kMremapFlags),
+                        "MREMAP_", x);
 }

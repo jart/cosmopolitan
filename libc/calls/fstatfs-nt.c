@@ -23,7 +23,7 @@
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/fsinformationclass.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/files.h"

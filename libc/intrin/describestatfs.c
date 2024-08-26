@@ -27,7 +27,7 @@
 
 #define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
 
-const char *(DescribeStatfs)(char buf[N], int rc, const struct statfs *f) {
+const char *_DescribeStatfs(char buf[N], int rc, const struct statfs *f) {
   int i = 0;
   char ibuf[21];
   int64_t flags;

@@ -7,7 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/nt/thunk/msabi.h"
 
-__attribute__((__ms_abi__)) long WinMain(void) {
+__msabi long WinMain(void) {
   return 42 << 8;
 }

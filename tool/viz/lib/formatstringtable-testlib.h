@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_FORMATSTRINGTABLE_TESTLIB_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_FORMATSTRINGTABLE_TESTLIB_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "tool/viz/lib/formatstringtable.h"

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pandn.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+
+#define MIN3(a, b, c) \
+  ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
 /**
- * Nands 128-bit integers.
- *
- * @param 𝑎 [w/o] receives result
- * @param 𝑏 [r/o] supplies first input vector
- * @param 𝑐 [r/o] supplies second input vector
- * @mayalias
+ * Computes similarity between two strings.
  */
-void(pandn)(uint64_t a[2], const uint64_t b[2], const uint64_t c[2]) {
-  unsigned i;
-  for (i = 0; i < 2; ++i) {
-    a[i] = ~b[i] & c[i];
+double levenshtein(const char *s0, const char *s1) {
+  int n0 = strlen(s0) + 1;
+  int n1 = strlen(s1) + 1;
+  int *col = (int *)malloc(n1 * sizeof(int));
+  int *pol = (int *)malloc(n1 * sizeof(int));
+  for (int i = 0; i < n1; i++)
+    pol[i] = i;
+  for (int i = 0; i < n0; i++) {
+    col[0] = i;
+    for (int j = 1; j < n1; j++)
+      col[j] = MIN3(1 + col[j - 1], 1 + pol[j],
+                    pol[j - 1] + !(i > 0 && s0[i - 1] == s1[j - 1]));
+    int *t = col;
+    col = pol;
+    pol = t;
   }
+  int dist = pol[n1 - 1];
+  free(pol);
+  free(col);
+  return 1 - dist / ((n0 > n1 ? n0 : n1) - 1.);
 }

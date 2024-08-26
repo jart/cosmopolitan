@@ -23,7 +23,7 @@
 TEST(ParseAsmdown, test) {
   struct Asmdown *ad;
   const char *s = "\
-#include \"libc/macros.internal.h\"\n\
+#include \"libc/macros.h\"\n\
 .source	__FILE__\n\
 \n\
 /	Returns absolute value of double.\n\
@@ -87,7 +87,7 @@ tinymath_acos:\n\
 TEST(ParseAsmdown, testAlias) {
   struct Asmdown *ad;
   const char *s = "\
-#include \"libc/macros.internal.h\"\n\
+#include \"libc/macros.h\"\n\
 .source	__FILE__\n\
 \n\
 /	Returns arc cosine of 𝑥.\n\
@@ -137,7 +137,7 @@ tinymath_acos:\n\
 TEST(ParseAsmdown, testClangIsEvil) {
   struct Asmdown *ad;
   const char *s = "\
-#include \"libc/macros.internal.h\"\n\
+#include \"libc/macros.h\"\n\
 .source	__FILE__\n\
 \n\
 //	Returns arc cosine of 𝑥.\n\

@@ -531,6 +531,10 @@ typedef struct {
 #pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bullsh */
 #endif
 
+#if !defined(__cplusplus) && defined(__GNUC__) && __GNUC__ >= 14
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#endif
+
 #ifdef __x86_64__
 #define DebugBreak() __asm__("int3")
 #elif defined(__aarch64__)

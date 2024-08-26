@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/sysv/consts/mremap.h"
 
@@ -28,7 +28,7 @@ static const struct DescribeFlags kFiletypeFlags[] = {
     {kNtFileTypeChar, "Char"},      //
 };
 
-const char *(DescribeNtFiletypeFlags)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kFiletypeFlags, ARRAYLEN(kFiletypeFlags),
-                       "kNtFileType", x);
+const char *_DescribeNtFiletypeFlags(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kFiletypeFlags, ARRAYLEN(kFiletypeFlags),
+                        "kNtFileType", x);
 }

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/filesharemode.h"
 // clang-format off
@@ -72,7 +72,7 @@ static const struct DescribeFlags kFileAccessflags[] = {
     {kNtTokenAdjustSessionid, "kNtTokenAdjustSessionid"},
 };
 
-const char *(DescribeNtFileAccessFlags)(char buf[512], uint32_t x) {
-  return DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
+const char *_DescribeNtFileAccessFlags(char buf[512], uint32_t x) {
+  return _DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
                        "", x);
 }

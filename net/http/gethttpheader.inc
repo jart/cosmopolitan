@@ -33,7 +33,7 @@
 #line 1 "gethttpheader.gperf"
 
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "net/http/http.h"
 #define GPERF_DOWNCASE
 #line 12 "gethttpheader.gperf"

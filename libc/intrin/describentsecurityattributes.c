@@ -21,9 +21,8 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/nt/struct/securityattributes.h"
 
-const char *(
-    DescribeNtSecurityAttributes)(char buf[32],
-                                  const struct NtSecurityAttributes *p) {
+const char *_DescribeNtSecurityAttributes(
+    char buf[32], const struct NtSecurityAttributes *p) {
   FormatInt64(buf, (uintptr_t)p);
   return buf;
 }

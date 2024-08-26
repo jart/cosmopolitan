@@ -2,7 +2,7 @@
 │ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/time.h"
 
 /* Return the difference between two timestamps.  */

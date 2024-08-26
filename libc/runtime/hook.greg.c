@@ -19,7 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 

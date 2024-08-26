@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,33 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/punpcklwd.h"
+#include "libc/calls/calls.h"
+#include "libc/intrin/getauxval.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
-/**
- * Interleaves low words.
- *
- *          0  1  2  3  4  5  6  7
- *       B  AA BB CC DD ee ff gg hh
- *       C  II JJ KK LL mm nn oo pp
- *          ├┘ ├┘ ├┘ ├┘
- *          │  │  │  └────────┐
- *          │  │  └─────┐     │
- *          │  └──┐     │     │
- *          ├───┐ ├───┐ ├───┐ ├───┐
- *     → A  AA II BB JJ CC KK DD LL
- *
- * @param 𝑎 [w/o] receives reduced 𝑏 and 𝑐 interleaved
- * @param 𝑏 [r/o] supplies eight words
- * @param 𝑐 [r/o] supplies eight words
- * @mayalias
- */
-void(punpcklwd)(uint16_t a[8], const uint16_t b[8], const uint16_t c[8]) {
-  a[7] = c[3];
-  a[6] = b[3];
-  a[5] = c[2];
-  a[4] = b[2];
-  a[3] = c[1];
-  a[2] = b[1];
-  a[1] = c[0];
-  a[0] = b[0];
+int main(int argc, char *argv[]) {
+  struct AuxiliaryValue av;
+  av = __getauxval(AT_SYSINFO_EHDR);
+  if (!av.isfound)
+    return 2;
+  int fd = creat("vdso.so", 0644);
+  if (fd == -1)
+    return 3;
+  int i;
+  for (i = 0;; i += getpagesize())
+    if (write(fd, (char *)av.value + i, getpagesize()) == -1)
+      break;
+  if (!i)
+    return 4;
+  if (close(fd))
+    return 5;
 }

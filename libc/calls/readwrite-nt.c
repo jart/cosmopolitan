@@ -19,9 +19,9 @@
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
@@ -51,39 +51,41 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   uint32_t exchanged;
   struct Fd *f = g_fds.p + fd;
 
-  // win32 i/o apis generally take 32-bit values thus we implicitly
-  // truncate outrageously large sizes. linux actually does it too!
-  size = MIN(size, 0x7ffff000);
-
   // pread() and pwrite() perform an implicit lseek() operation, so
   // similar to the lseek() system call, they too raise ESPIPE when
   // operating on a non-seekable file.
   bool pwriting = offset != -1;
-  bool seekable =
-      (f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk) ||
-      f->kind == kFdDevNull || f->kind == kFdDevRandom;
-  if (pwriting && !seekable) {
+  bool isdisk = f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk;
+  bool seekable = isdisk || f->kind == kFdDevNull || f->kind == kFdDevRandom;
+  if (pwriting && !seekable)
     return espipe();
-  }
 
+  // determine if we need to lock a file descriptor across processes
+  bool locked = isdisk && !pwriting && f->cursor;
+  if (locked)
+    __cursor_lock(f->cursor);
+
+RestartOperation:
   // when a file is opened in overlapped mode win32 requires that we
   // take over full responsibility for managing our own file pointer
   // which is fine, because the one win32 has was never very good in
   // the sense that it behaves so differently from linux, that using
   // win32 i/o required more compatibilty toil than doing it by hand
   if (!pwriting) {
-    if (seekable) {
-      offset = f->pointer;
+    if (seekable && f->cursor) {
+      offset = f->cursor->shared->pointer;
     } else {
       offset = 0;
     }
   }
 
-RestartOperation:
   bool eagained = false;
   // check for signals and cancelation
-  if (_check_cancel() == -1)
+  if (_check_cancel() == -1) {
+    if (locked)
+      __cursor_unlock(f->cursor);
     return -1;  // ECANCELED
+  }
   if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     goto HandleInterrupt;
   }
@@ -114,16 +116,16 @@ RestartOperation:
     }
     ok = true;
   }
-  if (ok) {
+  if (ok)
     ok = GetOverlappedResult(handle, &overlap, &exchanged, true);
-  }
   CloseHandle(overlap.hEvent);
 
   // if i/o succeeded then return its result
   if (ok) {
-    if (!pwriting && seekable) {
-      f->pointer = offset + exchanged;
-    }
+    if (!pwriting && seekable && f->cursor)
+      f->cursor->shared->pointer = offset + exchanged;
+    if (locked)
+      __cursor_unlock(f->cursor);
     return exchanged;
   }
 
@@ -131,23 +133,32 @@ RestartOperation:
   if (GetLastError() == kNtErrorOperationAborted) {
     // raise EAGAIN if it's due to O_NONBLOCK mmode
     if (eagained) {
+      if (locked)
+        __cursor_unlock(f->cursor);
       return eagain();
     }
     // otherwise it must be due to a kill() via __sig_cancel()
     if (_weaken(__sig_relay) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
+      if (locked)
+        __cursor_unlock(f->cursor);
       int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1)
         return -1;  // possible if we SIGTHR'd
+      if (locked)
+        __cursor_lock(f->cursor);
       // read() is @restartable unless non-SA_RESTART hands were called
-      if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) {
+      if (!(handler_was_called & SIG_HANDLED_NO_RESTART))
         goto RestartOperation;
-      }
     }
+    if (locked)
+      __cursor_unlock(f->cursor);
     return eintr();
   }
 
   // read() and write() have generally different error-handling paths
+  if (locked)
+    __cursor_unlock(f->cursor);
   return -2;
 }
 

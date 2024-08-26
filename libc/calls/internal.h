@@ -4,7 +4,7 @@
 #include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/stdbool.h"
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */

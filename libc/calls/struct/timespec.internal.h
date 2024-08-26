@@ -26,8 +26,8 @@ int sys_utimensat(int, const char *, const struct timespec[2], int);
 int sys_utimensat_nt(int, const char *, const struct timespec[2], int);
 int sys_utimensat_old(int, const char *, const struct timespec[2], int);
 
-const char *DescribeTimespec(char[45], int, const struct timespec *);
-#define DescribeTimespec(rc, ts) DescribeTimespec(alloca(45), rc, ts)
+const char *_DescribeTimespec(char[45], int, const struct timespec *);
+#define DescribeTimespec(rc, ts) _DescribeTimespec(alloca(45), rc, ts)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMESPEC_INTERNAL_H_ */

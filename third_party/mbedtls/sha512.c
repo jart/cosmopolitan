@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha512.h"
 #include "libc/literal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"

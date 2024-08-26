@@ -39,8 +39,8 @@ privileged static char *FormatHex(char *p, unsigned long x) {
   return p;
 }
 
-privileged dontinstrument const char *(
-    DescribeBacktrace)(char buf[N], const struct StackFrame *fr) {
+privileged dontinstrument const char *_DescribeBacktrace(
+    char buf[N], const struct StackFrame *fr) {
   char *p = buf;
   char *pe = p + N;
   bool gotsome = false;

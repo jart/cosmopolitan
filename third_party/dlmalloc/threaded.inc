@@ -20,13 +20,11 @@
 #include "libc/intrin/magicu.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
-#include "libc/nexgen32e/rdtscp.h"
-#include "libc/nexgen32e/x86feature.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
-#include "libc/runtime/runtime.h"
-#include "libc/intrin/weaken.h"
+#include "libc/thread/threads.h"
+#include "libc/errno.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 #if !FOOTERS || !MSPACES
@@ -34,6 +32,7 @@
 #endif
 
 static struct magicu magiu;
+static unsigned g_cpucount;
 static unsigned g_heapslen;
 static mstate g_heaps[128];
 
@@ -90,18 +89,31 @@ void dlmalloc_inspect_all(void handler(void *start, void *end,
   }
 }
 
-forceinline mstate get_arena(void) {
-  unsigned cpu;
-#ifdef __x86_64__
-  unsigned tsc_aux;
-  rdtscp(&tsc_aux);
-  cpu = TSC_AUX_CORE(tsc_aux);
-#else
-  long tpidr_el0;
-  asm("mrs\t%0,tpidr_el0" : "=r"(tpidr_el0));
-  cpu = tpidr_el0 & 255;
-#endif
-  return g_heaps[__magicu_div(cpu, magiu) % g_heapslen];
+// we make malloc() scalable basically by
+//
+//     return g_heaps[sched_getcpu() / 2];
+//
+// except we cache the syscall result using thread-local storage. on
+// some platforms, it's not possible to use sched_getcpu() so we use
+// arbitrary assignments to help scalability, but may not be optimal
+static mstate get_arena(void) {
+  static atomic_uint assign;
+  static thread_local unsigned i;
+  static thread_local unsigned n;
+  if (n == 50)
+    n = 0;
+  if (!n) {
+    int e = errno;
+    i = sched_getcpu();
+    if (i == -1) {
+      errno = e;
+      i = atomic_fetch_add_explicit(&assign, 1, memory_order_relaxed);
+      i %= g_cpucount;
+    }
+    i = __magicu_div(i, magiu) % g_heapslen;
+  }
+  ++n;
+  return g_heaps[i];
 }
 
 static void *dlmalloc_single(size_t n) {
@@ -174,19 +186,18 @@ static void threaded_dlmalloc(void) {
   if (!_weaken(pthread_create))
     return use_single_heap(false);
 
-  if (!IsAarch64() && !X86_HAVE(RDTSCP))
-    return use_single_heap(true);
-
   // determine how many independent heaps we should install
   // by default we do an approximation of one heap per core
   // this code makes the c++ stl go 164x faster on my ryzen
-  cpus = __get_cpu_count();
-  if (cpus == -1)
+  g_cpucount = cpus = __get_cpu_count();
+  if (cpus == -1) {
     heaps = 1;
-  else if ((var = getenv("COSMOPOLITAN_HEAP_COUNT")))
+    g_cpucount = 1;
+  } else if ((var = getenv("COSMOPOLITAN_HEAP_COUNT"))) {
     heaps = dlmalloc_atoi(var);
-  else
+  } else {
     heaps = cpus >> 1;
+  }
   if (heaps <= 1)
     return use_single_heap(true);
   if (heaps > ARRAYLEN(g_heaps))

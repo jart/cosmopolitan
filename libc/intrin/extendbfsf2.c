@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pmovmskb.h"
 
-/**
- * Turns result of byte comparison into bitmask.
- *
- * @param 𝑝 is byte vector to crunch
- * @see pcmpeqb(), bsf(), etc.
- */
-uint32_t(pmovmskb)(const uint8_t p[16]) {
-  uint32_t i, m;
-  for (m = i = 0; i < 16; ++i) {
-    if (p[i] & 0x80)
-      m |= 1 << i;
-  }
-  return m;
+float __extendbfsf2(__bf16 f) {
+  union {
+    __bf16 f;
+    unsigned short i;
+  } ub = {f};
+
+  // convert brain16 to binary32
+  unsigned x = (unsigned)ub.i << 16;
+
+  // force nan to quiet
+  if ((x & 0x7fffffff) > 0x7f800000)
+    x |= 0x00400000;
+
+  // pun to float
+  union {
+    unsigned i;
+    float f;
+  } uf = {x};
+  return uf.f;
 }

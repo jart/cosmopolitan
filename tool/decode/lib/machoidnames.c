@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/decode/lib/machoidnames.h"
-#include "libc/macho.internal.h"
+#include "libc/macho.h"
 
 const struct IdName kMachoArchitectures[] = {
     {MAC_CPU_MC680x0, "MAC_CPU_MC680x0"},              //

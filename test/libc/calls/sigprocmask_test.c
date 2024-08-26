@@ -45,7 +45,7 @@ const char *DescribeMask(void) {
   sigset_t ss;
   _Thread_local static char buf[128];
   unassert(!sigprocmask(SIG_SETMASK, 0, &ss));
-  return (DescribeSigset)(buf, 0, &ss);
+  return _DescribeSigset(buf, 0, &ss);
 }
 
 TEST(sigprocmask, testMultipleBlockedDeliveries) {

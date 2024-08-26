@@ -28,7 +28,7 @@ static bool IsCreatingFile(int flags) {
          (IsLinux() && (flags & O_TMPFILE_LINUX) == O_TMPFILE_LINUX);
 }
 
-const char *(DescribeOpenMode)(char buf[15], int flags, int mode) {
+const char *_DescribeOpenMode(char buf[15], int flags, int mode) {
   if (!IsCreatingFile(flags)) {
     return "";
   }

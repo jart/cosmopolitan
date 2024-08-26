@@ -1,8 +1,0 @@
-#ifndef COSMOPOLITAN_TOOL_ARGS_ARGS_H_
-#define COSMOPOLITAN_TOOL_ARGS_ARGS_H_
-COSMOPOLITAN_C_START_
-
-int LoadZipArgs(int *, char ***) libcesque;
-
-COSMOPOLITAN_C_END_
-#endif /* COSMOPOLITAN_TOOL_ARGS_ARGS_H_ */

@@ -21,7 +21,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/countexpr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdckdint.h"

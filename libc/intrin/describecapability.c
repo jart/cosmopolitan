@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/cap.h"
 
@@ -69,7 +69,7 @@ static const struct thatispacked {
     {CAP_CHECKPOINT_RESTORE, "CHECKPOINT_RESTORE"},  //
 };
 
-const char *(DescribeCapability)(char buf[32], int x) {
+const char *_DescribeCapability(char buf[32], int x) {
   int i;
   for (i = 0; i < ARRAYLEN(kCapabilityName); ++i) {
     if (kCapabilityName[i].x == x) {

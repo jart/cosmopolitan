@@ -13,47 +13,25 @@
  */
 
 typedef enum {
-  memory_order_relaxed,
-  memory_order_consume,
-  memory_order_acquire,
-  memory_order_release,
-  memory_order_acq_rel,
-  memory_order_seq_cst,
+  memory_order_relaxed = __ATOMIC_RELAXED,
+  memory_order_consume = __ATOMIC_CONSUME,
+  memory_order_acquire = __ATOMIC_ACQUIRE,
+  memory_order_release = __ATOMIC_RELEASE,
+  memory_order_acq_rel = __ATOMIC_ACQ_REL,
+  memory_order_seq_cst = __ATOMIC_SEQ_CST
 } memory_order;
 
-#define ATOMIC_VAR_INIT(...)     __VA_ARGS__
+#if !(defined __STDC_VERSION__ && __STDC_VERSION__ > 201710L)
+#define ATOMIC_VAR_INIT(...) __VA_ARGS__
+#endif
+
 #define atomic_is_lock_free(obj) ((void)(obj), sizeof(obj) <= sizeof(void *))
 
 #define atomic_flag      atomic_bool
-#define ATOMIC_FLAG_INIT ATOMIC_VAR_INIT(0)
+#define ATOMIC_FLAG_INIT false
 #define atomic_flag_test_and_set_explicit(x, order) \
   atomic_exchange_explicit(x, 1, order)
 #define atomic_flag_clear_explicit(x, order) atomic_store_explicit(x, 0, order)
-
-#define atomic_compare_exchange_strong(pObject, pExpected, desired) \
-  atomic_compare_exchange_strong_explicit(                          \
-      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
-#define atomic_compare_exchange_weak(pObject, pExpected, desired) \
-  atomic_compare_exchange_weak_explicit(                          \
-      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
-#define atomic_exchange(pObject, desired) \
-  atomic_exchange_explicit(pObject, desired, memory_order_seq_cst)
-#define atomic_fetch_add(pObject, operand) \
-  atomic_fetch_add_explicit(pObject, operand, memory_order_seq_cst)
-#define atomic_fetch_and(pObject, operand) \
-  atomic_fetch_and_explicit(pObject, operand, memory_order_seq_cst)
-#define atomic_fetch_or(pObject, operand) \
-  atomic_fetch_or_explicit(pObject, operand, memory_order_seq_cst)
-#define atomic_fetch_sub(pObject, operand) \
-  atomic_fetch_sub_explicit(pObject, operand, memory_order_seq_cst)
-#define atomic_fetch_xor(pObject, operand) \
-  atomic_fetch_xor_explicit(pObject, operand, memory_order_seq_cst)
-#define atomic_load(pObject) atomic_load_explicit(pObject, memory_order_seq_cst)
-#define atomic_store(pObject, desired) \
-  atomic_store_explicit(pObject, desired, memory_order_seq_cst)
-#define atomic_flag_test_and_set(x) \
-  atomic_flag_test_and_set_explicit(x, memory_order_seq_cst)
-#define atomic_flag_clear(x) atomic_flag_clear_explicit(x, memory_order_seq_cst)
 
 #if defined(__CLANG_ATOMIC_BOOL_LOCK_FREE)
 
@@ -84,9 +62,35 @@ typedef enum {
 #define atomic_store_explicit(object, desired, order) \
   __c11_atomic_store(object, desired, order)
 
+#define atomic_compare_exchange_strong(pObject, pExpected, desired) \
+  atomic_compare_exchange_strong_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_compare_exchange_weak(pObject, pExpected, desired) \
+  atomic_compare_exchange_weak_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_exchange(pObject, desired) \
+  atomic_exchange_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_fetch_add(pObject, operand) \
+  atomic_fetch_add_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_and(pObject, operand) \
+  atomic_fetch_and_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_or(pObject, operand) \
+  atomic_fetch_or_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_sub(pObject, operand) \
+  atomic_fetch_sub_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_xor(pObject, operand) \
+  atomic_fetch_xor_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_load(pObject) atomic_load_explicit(pObject, memory_order_seq_cst)
+#define atomic_store(pObject, desired) \
+  atomic_store_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_flag_test_and_set(x) \
+  atomic_flag_test_and_set_explicit(x, memory_order_seq_cst)
+#define atomic_flag_clear(x) atomic_flag_clear_explicit(x, memory_order_seq_cst)
+
 #elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
 
-#define atomic_init(obj, value)    ((void)(*(obj) = (value)))
+#define atomic_init(obj, value) \
+  atomic_store_explicit(obj, value, __ATOMIC_RELAXED)
 #define atomic_thread_fence(order) __atomic_thread_fence(order)
 #define atomic_signal_fence(order) __atomic_signal_fence(order)
 #define atomic_compare_exchange_strong_explicit(pObject, pExpected, desired, \
@@ -110,6 +114,31 @@ typedef enum {
 #define atomic_load_explicit(pObject, order) __atomic_load_n(pObject, order)
 #define atomic_store_explicit(pObject, desired, order) \
   __atomic_store_n(pObject, desired, order)
+
+#define atomic_compare_exchange_strong(pObject, pExpected, desired)    \
+  atomic_compare_exchange_strong_explicit(pObject, pExpected, desired, \
+                                          __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_compare_exchange_weak(pObject, pExpected, desired)    \
+  atomic_compare_exchange_weak_explicit(pObject, pExpected, desired, \
+                                        __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+#define atomic_exchange(pObject, desired) \
+  atomic_exchange_explicit(pObject, desired, __ATOMIC_SEQ_CST)
+#define atomic_fetch_add(pObject, operand) \
+  atomic_fetch_add_explicit(pObject, operand, __ATOMIC_SEQ_CST)
+#define atomic_fetch_and(pObject, operand) \
+  atomic_fetch_and_explicit(pObject, operand, __ATOMIC_SEQ_CST)
+#define atomic_fetch_or(pObject, operand) \
+  atomic_fetch_or_explicit(pObject, operand, __ATOMIC_SEQ_CST)
+#define atomic_fetch_sub(pObject, operand) \
+  atomic_fetch_sub_explicit(pObject, operand, __ATOMIC_SEQ_CST)
+#define atomic_fetch_xor(pObject, operand) \
+  atomic_fetch_xor_explicit(pObject, operand, __ATOMIC_SEQ_CST)
+#define atomic_load(pObject) atomic_load_explicit(pObject, __ATOMIC_SEQ_CST)
+#define atomic_store(pObject, desired) \
+  atomic_store_explicit(pObject, desired, __ATOMIC_SEQ_CST)
+#define atomic_flag_test_and_set(x) \
+  atomic_flag_test_and_set_explicit(x, __ATOMIC_SEQ_CST)
+#define atomic_flag_clear(x) atomic_flag_clear_explicit(x, __ATOMIC_SEQ_CST)
 
 #elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 401
 
@@ -209,6 +238,31 @@ typedef enum {
   atomic_fetch_add_explicit(object, 0, order)
 #define atomic_store_explicit(object, desired, order) \
   ((void)atomic_exchange_explicit(object, desired, order))
+
+#define atomic_compare_exchange_strong(pObject, pExpected, desired) \
+  atomic_compare_exchange_strong_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_compare_exchange_weak(pObject, pExpected, desired) \
+  atomic_compare_exchange_weak_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_exchange(pObject, desired) \
+  atomic_exchange_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_fetch_add(pObject, operand) \
+  atomic_fetch_add_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_and(pObject, operand) \
+  atomic_fetch_and_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_or(pObject, operand) \
+  atomic_fetch_or_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_sub(pObject, operand) \
+  atomic_fetch_sub_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_xor(pObject, operand) \
+  atomic_fetch_xor_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_load(pObject) atomic_load_explicit(pObject, memory_order_seq_cst)
+#define atomic_store(pObject, desired) \
+  atomic_store_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_flag_test_and_set(x) \
+  atomic_flag_test_and_set_explicit(x, memory_order_seq_cst)
+#define atomic_flag_clear(x) atomic_flag_clear_explicit(x, memory_order_seq_cst)
 
 #else /* non-gcc or old gcc w/o x86 */
 #error "atomic operations not supported with this compiler and/or architecture"

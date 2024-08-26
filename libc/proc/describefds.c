@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/fds.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
@@ -27,7 +29,7 @@
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/sysv/consts/o.h"
 
-#define FDS_VAR "_COSMO_FDS="
+#define FDS_VAR "_COSMO_FDS_V2="
 
 #define MAX_ENTRY_BYTES 256
 
@@ -99,6 +101,8 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     if (__is_cloexec(f))
       continue;
     ++handlecount;
+    if (f->cursor)
+      ++handlecount;
   }
   if (!(handles = calloc(handlecount, sizeof(*handles)))) {
   OnFailure:
@@ -116,16 +120,30 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     // make inheritable version of handle exist in creator process
     if (!DuplicateHandle(GetCurrentProcess(), f->handle, hCreatorProcess,
                          &handle, 0, true, kNtDuplicateSameAccess)) {
-      STRACE("__describe_fds() DuplicateHandle() failed w/ %d", GetLastError());
       __winerr();
       goto OnFailure;
     }
-    for (uint32_t i = 0; i < 3; ++i) {
-      if (lpStartupInfo->stdiofds[i] == f->handle) {
+    for (uint32_t i = 0; i < 3; ++i)
+      if (lpStartupInfo->stdiofds[i] == f->handle)
         lpStartupInfo->stdiofds[i] = handle;
-      }
-    }
     handles[hi++] = handle;
+
+    // get shared memory handle for the file offset pointer
+    intptr_t shand = 0;
+    if (f->cursor) {
+      struct Map *map;
+      if (!(map = __maps_floor((const char *)f->cursor->shared)) ||
+          map->addr != (const char *)f->cursor->shared) {
+        errno = EFAULT;
+        goto OnFailure;
+      }
+      if (!DuplicateHandle(GetCurrentProcess(), map->hand, hCreatorProcess,
+                           &shand, 0, true, kNtDuplicateSameAccess)) {
+        __winerr();
+        goto OnFailure;
+      }
+      handles[hi++] = shand;
+    }
 
     // ensure output string has enough space for new entry
     if (sb.i + MAX_ENTRY_BYTES > sb.n) {
@@ -151,7 +169,7 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     *p++ = '_';
     p = FormatInt64(p, f->mode);
     *p++ = '_';
-    p = FormatInt64(p, f->pointer);
+    p = FormatInt64(p, shand);
     *p++ = '_';
     p = FormatInt64(p, f->type);
     *p++ = '_';

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/movefileexflags.h"
 
 static const struct DescribeFlags kMoveFileInputFlags[] = {
@@ -29,7 +29,7 @@ static const struct DescribeFlags kMoveFileInputFlags[] = {
     {kNtMovefileFailIfNotTrackable, "FailIfNotTrackable"},  //
 };
 
-const char *(DescribeNtMovFileInpFlags)(char buf[256], uint32_t x) {
-  return DescribeFlags(buf, 256, kMoveFileInputFlags,
-                       ARRAYLEN(kMoveFileInputFlags), "kNtMovefile", x);
+const char *_DescribeNtMovFileInpFlags(char buf[256], uint32_t x) {
+  return _DescribeFlags(buf, 256, kMoveFileInputFlags,
+                        ARRAYLEN(kMoveFileInputFlags), "kNtMovefile", x);
 }

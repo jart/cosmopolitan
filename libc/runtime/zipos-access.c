@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 // TODO: this should check parent directory components
 

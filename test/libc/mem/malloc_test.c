@@ -24,7 +24,7 @@
 #include "libc/intrin/cxaatexit.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"

@@ -27,3 +27,5 @@ da8baf2aa5ce93b958aca90a0ae69f537806324b
 369f9740de4534c28d0e81ab2afc99decbb9a3e6
 # Get rid of .internal.h convention in LIBC_INTRIN
 86d884cce24d773e298a2714c1e3d91ecab9be45
+# Remove .internal from more header filenames
+31194165d2afca36c2315a6e7ca2f0797dde09e3

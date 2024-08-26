@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
 #define COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/stdbool.h"
 COSMOPOLITAN_C_START_
 

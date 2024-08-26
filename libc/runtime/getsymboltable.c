@@ -23,14 +23,14 @@
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 #include "third_party/puff/puff.h"
 
 __static_yoink("__get_symbol");

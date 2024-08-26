@@ -24,7 +24,7 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   size_t lf;

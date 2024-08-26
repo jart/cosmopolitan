@@ -1,7 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef PYCTYPE_H
 #define PYCTYPE_H
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 
 #define Py_TOLOWER(c) kToLower[255 & (c)]
 #define Py_TOUPPER(c) kToUpper[255 & (c)]

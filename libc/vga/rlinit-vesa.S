@@ -25,7 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/mman.internal.h"
 #include "libc/vga/vga.internal.h"
 

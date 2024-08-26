@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/runtime.h"
@@ -31,6 +32,8 @@ void CheckForFileLeaks(void) {
   char *p = msg;
   char *pe = msg + 256;
   bool gotsome = false;
+  if (IsQemuUser())
+    usleep(1);  // weird qemu mt flake
   for (int fd = 3; fd < MIN_CLANDESTINE_FD; ++fd) {
     if (fcntl(fd, F_GETFL) != -1) {
       if (!gotsome) {

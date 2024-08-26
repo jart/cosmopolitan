@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/consolemodeflags.h"
 
 static const struct DescribeFlags kConsoleModeOutputFlags[] = {
@@ -28,7 +28,7 @@ static const struct DescribeFlags kConsoleModeOutputFlags[] = {
     {kNtEnableLvbGridWorldwide, "EnableLvbGridWorldwide"},                    //
 };
 
-const char *(DescribeNtConsoleOutFlags)(char buf[128], uint32_t x) {
-  return DescribeFlags(buf, 128, kConsoleModeOutputFlags,
-                       ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
+const char *_DescribeNtConsoleOutFlags(char buf[128], uint32_t x) {
+  return _DescribeFlags(buf, 128, kConsoleModeOutputFlags,
+                        ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
 }

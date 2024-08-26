@@ -11,19 +11,19 @@
 
 ;;; Code:
 
-(require 'asm-mode)
-(require 'cc-mode)
-(require 'fortran)
-(require 'cosmo-c-types)
-(require 'cosmo-c-keywords)
-(require 'cosmo-c-builtins)
-(require 'cosmo-c-constants)
-(require 'cosmo-cpp-constants)
-(require 'cosmo-platform-constants)
-(require 'dired)
-(require 'javadown)
-(require 'ld-script)
-(require 'make-mode)
+;; (require 'asm-mode)
+;; (require 'cc-mode)
+;; (require 'fortran)
+;; (require 'cosmo-c-types)
+;; (require 'cosmo-c-keywords)
+;; (require 'cosmo-c-builtins)
+;; (require 'cosmo-c-constants)
+;; (require 'cosmo-cpp-constants)
+;; (require 'cosmo-platform-constants)
+;; (require 'dired)
+;; (require 'javadown)
+;; (require 'ld-script)
+;; (require 'make-mode)
 
 (setq cosmo-arch
       (let ((arch (string-trim-right
@@ -149,8 +149,12 @@
        (format "%s/TAGS"
                (or (locate-dominating-file (buffer-name) "Makefile")
                    (file-name-directory (buffer-name))))))
-(add-hook 'c-mode-common-hook 'stop-asking-questions-etags)
-(add-hook 'c++-mode-common-hook 'stop-asking-questions-etags)
+
+(eval-after-load 'cc-mode
+  '(progn
+     (add-hook 'c-mode-common-hook 'stop-asking-questions-etags)
+     (add-hook 'c++-mode-common-hook 'stop-asking-questions-etags)))
+
 (setq tags-revert-without-query t)
 (setq kill-buffer-query-functions ;; disable kill buffer w/ process question
       (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
@@ -299,14 +303,29 @@
   (local-set-key (kbd "C-c C-c") 'cosmo-compile))
 
 (progn
-  (add-hook 'makefile-mode-hook 'cosmo-compile-hook)
-  (add-hook 'asm-mode-hook 'cosmo-compile-hook)
-  (add-hook 'ld-script-mode-hook 'cosmo-compile-hook)
-  (add-hook 'dired-mode-hook 'cosmo-compile-hook)
-  (add-hook 'c-mode-common-hook 'cosmo-compile-hook)
-  (add-hook 'c++-mode-common-hook 'cosmo-compile-hook)
   (add-hook 'fortran-mode-hook 'cosmo-compile-hook)
   (add-hook 'protobuf-mode-hook 'cosmo-compile-hook))
+
+(eval-after-load 'make-mode
+  '(progn
+     (add-hook 'makefile-mode-hook 'cosmo-compile-hook)))
+
+(eval-after-load 'asm-mode
+  '(progn
+     (add-hook 'asm-mode-hook 'cosmo-compile-hook)))
+
+(eval-after-load 'dired
+  '(progn
+     (add-hook 'dired-mode-hook 'cosmo-compile-hook)))
+
+(eval-after-load 'ld-script
+  '(progn
+     (add-hook 'ld-script-mode-hook 'cosmo-compile-hook)))
+
+(eval-after-load 'cc-mode
+  '(progn
+     (add-hook 'c-mode-common-hook 'cosmo-compile-hook)
+     (add-hook 'c++-mode-common-hook 'cosmo-compile-hook)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -606,9 +625,12 @@
   (add-hook 'asm-mode-hook 'cosmo-assemble-hook)
   (add-hook 'ld-script-mode-hook 'cosmo-assemble-hook)
   (add-hook 'dired-mode-hook 'cosmo-assemble-hook)
-  (add-hook 'c-mode-common-hook 'cosmo-assemble-hook)
   (add-hook 'fortran-mode-hook 'cosmo-assemble-hook)
   (add-hook 'protobuf-mode-hook 'cosmo-assemble-hook))
+
+(eval-after-load 'cc-mode
+  '(progn
+     (add-hook 'c-mode-common-hook 'cosmo-assemble-hook)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -688,18 +710,34 @@
               ('t
                (error "cosmo-run: unknown major mode")))))))
 
-(progn
-  (define-key asm-mode-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key c-mode-base-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key fortran-mode-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key sh-mode-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key lua-mode-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key python-mode-map (kbd "C-c C-r") 'cosmo-run)
-  (define-key c-mode-map (kbd "C-c C-s") 'cosmo-run-test)
-  (define-key c++-mode-map (kbd "C-c C-s") 'cosmo-run-test)
-  (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win7)
-  (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win10)
-  (define-key c++-mode-map (kbd "C-c C-_") 'cosmo-run-win10))
+(eval-after-load 'cc-mode
+  '(progn
+     (define-key c-mode-base-map (kbd "C-c C-r") 'cosmo-run)
+     (define-key c-mode-map (kbd "C-c C-s") 'cosmo-run-test)
+     (define-key c++-mode-map (kbd "C-c C-s") 'cosmo-run-test)
+     (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win7)
+     (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win10)
+     (define-key c++-mode-map (kbd "C-c C-_") 'cosmo-run-win10)))
+
+(eval-after-load 'fortran-mode
+  '(progn
+     (define-key fortran-mode-map (kbd "C-c C-r") 'cosmo-run)))
+
+(eval-after-load 'asm-mode
+  '(progn
+     (define-key asm-mode-map (kbd "C-c C-r") 'cosmo-run)))
+
+(eval-after-load 'sh-script
+  '(progn
+     (define-key sh-mode-map (kbd "C-c C-r") 'cosmo-run)))
+
+(eval-after-load 'lua-mode
+  '(progn
+     (define-key lua-mode-map (kbd "C-c C-r") 'cosmo-run)))
+
+(eval-after-load 'python
+  '(progn
+     (define-key python-mode-map (kbd "C-c C-r") 'cosmo-run)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -725,9 +763,13 @@
         (compile compile-command)
         (gdb (format "gdb -q -i=mi %s -ex run" exec))))))
 
-(progn
-  (define-key asm-mode-map (kbd "C-c C-d") 'cosmo-debug)
-  (define-key c-mode-base-map (kbd "C-c C-d") 'cosmo-debug))
+(eval-after-load 'cc-mode
+  '(progn
+     (define-key c-mode-base-map (kbd "C-c C-d") 'cosmo-debug)))
+
+(eval-after-load 'asm-mode
+  '(progn
+     (define-key asm-mode-map (kbd "C-c C-d") 'cosmo-debug)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -819,10 +861,16 @@
       (message header))))
 
 (progn
-  (define-key prog-mode-map (kbd "C-c C-h") 'cosmo-add-include)
-  (define-key asm-mode-map (kbd "C-c C-h") 'cosmo-add-include)
-  (define-key c-mode-base-map (kbd "C-c C-h") 'cosmo-add-include)
-  (define-key c++-mode-map (kbd "C-c C-h") 'cosmo-add-include))
+  (define-key prog-mode-map (kbd "C-c C-h") 'cosmo-add-include))
+
+(eval-after-load 'cc-mode
+  '(progn
+     (define-key c-mode-base-map (kbd "C-c C-h") 'cosmo-add-include)
+     (define-key c++-mode-map (kbd "C-c C-h") 'cosmo-add-include)))
+
+(eval-after-load 'asm-mode
+  '(progn
+     (define-key asm-mode-map (kbd "C-c C-h") 'cosmo-add-include)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -843,11 +891,17 @@
 
 (defun cosmo-lisp-is-the-best ()
   (define-key c-mode-base-map (kbd "C-c C-o") 'cosmo-show-optinfo))
-(add-hook 'c-mode-common-hook 'cosmo-lisp-is-the-best)
+
+(eval-after-load 'cc-mode
+  '(progn
+     (add-hook 'c-mode-common-hook 'cosmo-lisp-is-the-best)))
 
 (defun cosmo-lisp-is-the-best++ ()
   (define-key c++-mode-base-map (kbd "C-c C-o") 'cosmo-show-optinfo))
-(add-hook 'c++-mode-common-hook 'cosmo-lisp-is-the-best++)
+
+(eval-after-load 'cc-mode
+  '(progn
+     (add-hook 'c++-mode-common-hook 'cosmo-lisp-is-the-best++)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -867,8 +921,8 @@
    nil `((,cosmo-cpp-constants-regex . font-lock-constant-face)
          (,cosmo-platform-constants-regex . font-lock-constant-face))))
 
-(add-hook 'c-mode-common-hook 'cosmo-c-keywords-hook)
-(add-hook 'c++-mode-common-hook 'cosmo-c-keywords-hook)
+;; (add-hook 'c-mode-common-hook 'cosmo-c-keywords-hook)
+;; (add-hook 'c++-mode-common-hook 'cosmo-c-keywords-hook)
 (add-hook 'asm-mode-hook 'cosmo-asm-keywords-hook)
 
 

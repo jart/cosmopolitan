@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-const char *(DescribeMapFlags)(char buf[64], int x) {
+const char *_DescribeMapFlags(char buf[64], int x) {
   const struct DescribeFlags kMapFlags[] = {
       {MAP_PRIVATE, "PRIVATE"},                  //
       {MAP_ANONYMOUS, "ANONYMOUS"},              //
@@ -36,5 +36,5 @@ const char *(DescribeMapFlags)(char buf[64], int x) {
       {MAP_NONBLOCK, "NONBLOCK"},                //
       {MAP_POPULATE, "POPULATE"},                //
   };
-  return DescribeFlags(buf, 64, kMapFlags, ARRAYLEN(kMapFlags), "MAP_", x);
+  return _DescribeFlags(buf, 64, kMapFlags, ARRAYLEN(kMapFlags), "MAP_", x);
 }

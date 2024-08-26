@@ -20,18 +20,18 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"
@@ -151,7 +151,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
     case SEEK_SET:
       break;
     case SEEK_CUR:
-      off = f->pointer + off;
+      off = f->cursor->shared->pointer + off;
       break;
     case SEEK_END: {
       int64_t size;
@@ -351,9 +351,14 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       }
       rc = 0;
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
-      pthread_mutex_lock(&g_locks.mu);
-      rc = sys_fcntl_nt_lock(g_fds.p + fd, fd, cmd, arg);
-      pthread_mutex_unlock(&g_locks.mu);
+      struct Fd *f = g_fds.p + fd;
+      if (f->cursor) {
+        pthread_mutex_lock(&g_locks.mu);
+        rc = sys_fcntl_nt_lock(f, fd, cmd, arg);
+        pthread_mutex_unlock(&g_locks.mu);
+      } else {
+        rc = ebadf();
+      }
     } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
       rc = sys_fcntl_nt_dupfd(fd, cmd, arg);
     } else {

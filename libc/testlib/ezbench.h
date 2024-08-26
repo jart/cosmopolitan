@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/x86feature.h"

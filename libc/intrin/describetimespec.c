@@ -22,8 +22,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 
-const char *(DescribeTimespec)(char buf[45], int rc,
-                               const struct timespec *ts) {
+const char *_DescribeTimespec(char buf[45], int rc, const struct timespec *ts) {
   if (rc == -1)
     return "n/a";
   if (!ts)

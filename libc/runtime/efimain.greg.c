@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/newbie.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/efi.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/e820.internal.h"

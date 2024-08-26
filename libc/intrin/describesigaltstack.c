@@ -21,8 +21,8 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 
-const char *(DescribeSigaltstack)(char buf[128], int rc,
-                                  const struct sigaltstack *ss) {
+const char *_DescribeSigaltstack(char buf[128], int rc,
+                                 const struct sigaltstack *ss) {
   if (rc == -1)
     return "n/a";
   if (!ss)

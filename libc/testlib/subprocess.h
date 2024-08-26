@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_SUBPROCESS_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_SUBPROCESS_H_
 #include "libc/calls/calls.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 COSMOPOLITAN_C_START_

@@ -12,8 +12,8 @@ int sys_fstatfs_nt(int64_t, struct statfs *);
 int sys_statfs_nt(const char *, struct statfs *);
 void statfs2statvfs(struct statvfs *, const struct statfs *);
 
-const char *DescribeStatfs(char[300], int, const struct statfs *);
-#define DescribeStatfs(rc, sf) DescribeStatfs(alloca(300), rc, sf)
+const char *_DescribeStatfs(char[300], int, const struct statfs *);
+#define DescribeStatfs(rc, sf) _DescribeStatfs(alloca(300), rc, sf)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_INTERNAL_H_ */

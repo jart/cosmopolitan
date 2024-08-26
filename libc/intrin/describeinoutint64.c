@@ -20,7 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.h"
 
-const char *(DescribeInOutInt64)(char buf[23], ssize_t rc, int64_t *x) {
+const char *_DescribeInOutInt64(char buf[23], ssize_t rc, int64_t *x) {
   if (!x)
     return "NULL";
   char *p = buf;

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/vk.h"
 
 // clang-format off
@@ -205,7 +205,7 @@ static const struct VirtualKeyCodeName {
 };
 // clang-format on
 
-const char *(DescribeVirtualKeyCode)(char buf[32], uint32_t x) {
+const char *_DescribeVirtualKeyCode(char buf[32], uint32_t x) {
   for (int i = 0; i < ARRAYLEN(kVirtualKeyCodeNames); ++i) {
     if (x == kVirtualKeyCodeNames[i].code) {
       return kVirtualKeyCodeNames[i].name;

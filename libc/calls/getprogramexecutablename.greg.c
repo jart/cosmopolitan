@@ -27,7 +27,7 @@
 #include "libc/intrin/getenv.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"

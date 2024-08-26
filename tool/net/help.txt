@@ -1,6 +1,6 @@
 SYNOPSIS
 
-  redbean [-?BVabdfghjkmsuvz] [-p PORT] [-D DIR] [-- SCRIPTARGS...]
+  redbean.com [-?BVabdfghjkmsuvz] [-p PORT] [-D DIR] [-- SCRIPTARGS...]
 
 DESCRIPTION
 
@@ -137,15 +137,15 @@ USAGE
   This executable is also a ZIP file that contains static assets.
   You can run redbean interactively in your terminal as follows:
 
-    ./redbean -vvvmbag        # starts server verbosely
+    ./redbean.com -vvvmbag        # starts server verbosely
     open http://127.0.0.1:8080/   # shows zip listing page
     CTRL-C                        # 1x: graceful shutdown
     CTRL-C                        # 2x: forceful shutdown
 
   You can override the default listing page by adding:
 
-    zip redbean index.lua     # lua server pages take priority
-    zip redbean index.html    # default page for directory
+    zip redbean.com index.lua     # lua server pages take priority
+    zip redbean.com index.html    # default page for directory
 
   The listing page only applies to the root directory. However the
   default index page applies to subdirectories too. In order for it
@@ -160,7 +160,7 @@ USAGE
       --no-parent            \
       --no-if-modified-since \
       http://a.example/index.html
-    zip -r redbean a.example/  # default page for directory
+    zip -r redbean.com a.example/  # default page for directory
 
   redbean normalizes the trailing slash for you automatically:
 
@@ -198,18 +198,18 @@ USAGE
   by default, embedded as a bas64 data uri. You can override the
   custom page for various errors by adding files to the zip root.
 
-    zip redbean 404.html      # custom not found page
+    zip redbean.com 404.html      # custom not found page
 
   Audio video content should not be compressed in your ZIP files.
   Uncompressed assets enable browsers to send Range HTTP request.
   On the other hand compressed assets are best for gzip encoding.
 
-    zip redbean index.html    # adds file
-    zip -0 redbean video.mp4  # adds without compression
+    zip redbean.com index.html    # adds file
+    zip -0 redbean.com video.mp4  # adds without compression
 
   You can have redbean run as a daemon by doing the following:
 
-    sudo ./redbean -vvdp80 -p443 -L redbean.log -P redbean.pid
+    sudo ./redbean.com -vvdp80 -p443 -L redbean.log -P redbean.pid
     kill -TERM $(cat redbean.pid) # 1x: graceful shutdown
     kill -TERM $(cat redbean.pid) # 2x: forceful shutdown
 
@@ -230,14 +230,7 @@ USAGE
   run on six different operating systems. To do that, it needs to
   extract a 4kb loader program to ${TMPDIR:-${HOME:-.}}/.ape that'll
   map your redbean into memory. It does however check to see if `ape`
-  is on the system path beforehand. You can also "assimilate" any
-  redbean into the platform-local executable format by running:
-
-      $ file redbean
-      redbean: DOS/MBR boot sector
-      $ ./redbean --assimilate
-      $ file redbean
-      redbean: ELF 64-bit LSB executable
+  is on the system path beforehand.
 
 ────────────────────────────────────────────────────────────────────────────────
 SECURITY
@@ -406,12 +399,14 @@ REPL
   encoded in its preferred executable format. You can assimilate your
   redbean into the local format using the following commands:
 
-      $ file redbean
-      redbean: DOS/MBR boot sector
-      $ ./redbean --assimilate
-      $ file redbean
-      redbean: ELF 64-bit LSB executable
-      $ sudo cp redbean /usr/bin/redbean
+      $ file redbean.com
+      redbean.com: DOS/MBR boot sector
+      $ curl -o assimilate https://cosmo.zip/pub/cosmos/bin/assimilate
+      $ chmod +x assimilate
+      $ ./assimilate ./redbean.com
+      $ file redbean.com
+      redbean.com: ELF 64-bit LSB executable
+      $ sudo cp redbean.com /usr/bin/redbean
 
   By following the above steps, redbean can be installed systemwide for
   multiple user accounts. It's also possible to chmod the binary to have
@@ -461,7 +456,7 @@ GLOBALS
 
           Then your `/.init.lua` file will have the `arg` array like:
 
-              arg[-1] = '/usr/bin/redbean'
+              arg[-1] = '/usr/bin/redbean
               arg[ 0] = '/zip/.init.lua'
               arg[ 1] = 'arg1'
               arg[ 2] = 'arg2'
@@ -469,11 +464,11 @@ GLOBALS
           If you launch redbean in interpreter mode (rather than web
           server) mode, then an invocation like this:
 
-              ./redbean -i script.lua arg1 arg2
+              ./redbean.com -i script.lua arg1 arg2
 
           Would have an `arg` array like this:
 
-              arg[-1] = './redbean'
+              arg[-1] = './redbean.com'
               arg[ 0] = 'script.lua'
               arg[ 1] = 'arg1'
               arg[ 2] = 'arg2'
@@ -3689,7 +3684,6 @@ UNIX MODULE
     - `CLOCK_MONOTONIC_RAW`: is actually monotonic but needs Linux 2.6.28+
     - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
     - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
-    - `CLOCK_MONOTONIC_COARSE`: linux, freebsd
     - `CLOCK_PROF`: linux and netbsd
     - `CLOCK_BOOTTIME`: linux and openbsd
     - `CLOCK_REALTIME_ALARM`: linux-only
@@ -4477,9 +4471,8 @@ UNIX MODULE
 
       If the executable in question needs a loader, then you will need
       "rpath prot_exec" too. With APE, security is strongest when you
-      assimilate your binaries beforehand, using the --assimilate flag,
-      or the o//tool/build/assimilate program. On OpenBSD this is
-      mandatory.
+      assimilate your binaries beforehand using the assimilate program.
+      On OpenBSD this is mandatory.
 
     prot_exec
 

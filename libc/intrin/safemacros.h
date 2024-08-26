@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 COSMOPOLITAN_C_START_
 

@@ -19,7 +19,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NTDLLIMPORT_H_
 #define COSMOPOLITAN_LIBC_NT_NTDLLIMPORT_H_
 #include "ape/relocations.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #ifdef __ASSEMBLER__
 /* clang-format off */
 

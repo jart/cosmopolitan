@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/psraw.h"
 
-/**
- * Divides shorts by two power.
- *
- * @note arithmetic shift right will sign extend negatives
- * @mayalias
- */
-void(psrawv)(int16_t a[8], const int16_t b[8], const uint64_t c[2]) {
-  unsigned i;
-  unsigned char k;
-  k = c[0] > 15 ? 15 : c[0];
-  for (i = 0; i < 8; ++i) {
-    a[i] = b[i] >> k;
-  }
+__bf16 __truncsfbf2(float);
+__bf16 __truncdfbf2(double f) {
+  // TODO(jart): What else are we supposed to do here?
+  return __truncsfbf2(f);
 }

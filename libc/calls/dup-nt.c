@@ -24,6 +24,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
@@ -82,6 +83,7 @@ static textwindows int sys_dup_nt_impl(int oldfd, int newfd, int flags,
 
   g_fds.p[newfd] = g_fds.p[oldfd];
   g_fds.p[newfd].handle = handle;
+  __cursor_ref(g_fds.p[newfd].cursor);
   if (flags & _O_CLOEXEC) {
     g_fds.p[newfd].flags |= _O_CLOEXEC;
   } else {

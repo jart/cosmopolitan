@@ -39,7 +39,7 @@
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/startupinfoex.h"
 #include "libc/proc/ntspawn.h"
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__

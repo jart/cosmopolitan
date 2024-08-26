@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_COUNTEXPR_H_
 #define COSMOPOLITAN_LIBC_LOG_COUNTEXPR_H_
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/bench.h"
 COSMOPOLITAN_C_START_
 

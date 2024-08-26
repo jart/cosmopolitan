@@ -39,7 +39,7 @@
 #include "libc/intrin/strace.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/mem/sortedints.internal.h"
@@ -74,7 +74,7 @@
 #include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
@@ -892,9 +892,7 @@ void *HttpWorker(void *arg) {
 
       // get client address from frontend
       if (HasHeader(kHttpXForwardedFor)) {
-        if (!IsLoopbackIp(clientip) &&  //
-            !IsPrivateIp(clientip) &&   //
-            !IsCloudflareIp(clientip)) {
+        if (!IsLoopbackIp(clientip) && !IsPrivateIp(clientip)) {
           LOG("Got X-Forwarded-For from untrusted IPv4 client address "
               "%hhu.%hhu.%hhu.%hhu\n",
               clientip >> 24, clientip >> 16, clientip >> 8, clientip);

@@ -21,11 +21,12 @@
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/cosmo.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
@@ -37,7 +38,7 @@
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 #ifdef __x86_64__
 __static_yoink(APE_COM_NAME);
@@ -62,15 +63,11 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   }
 
   // unmap the executable portion beneath the local files
-  mo = ROUNDDOWN(lo, __gransize);
-  if (mo)
-    munmap(map, mo);
-
-  // this is supposed to reduce our rss usage but does it really?
-  lo = ROUNDDOWN(lo, pg);
-  hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
-  if (hi > lo)
-    posix_madvise(map + lo, hi - lo, POSIX_MADV_DONTNEED);
+  if (!IsWindows()) {
+    mo = ROUNDDOWN(lo, __gransize);
+    if (mo)
+      munmap(map, mo);
+  }
 }
 
 static int __zipos_compare_names(const void *a, const void *b, void *c) {

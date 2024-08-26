@@ -19,7 +19,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"

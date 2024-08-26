@@ -27,7 +27,7 @@
  *
  * @return null always
  */
-void *dlopen(const char *, int) {
+void *dlopen(const char *, int) { 
   return 0;
 }
 

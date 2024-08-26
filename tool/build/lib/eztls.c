@@ -24,7 +24,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"

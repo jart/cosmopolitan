@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/intrin/bswap.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/serialize.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "net/http/http.h"
 
 static const struct ContentTypeExtension {

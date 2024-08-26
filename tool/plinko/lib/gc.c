@@ -24,7 +24,7 @@
 #include "libc/log/check.h"
 #include "libc/log/countbranch.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/plinko/lib/cons.h"

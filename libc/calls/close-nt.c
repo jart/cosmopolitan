@@ -17,13 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/o.h"
@@ -64,5 +65,7 @@ textwindows int sys_close_nt(int fd, int fildes) {
     default:
       break;
   }
+  if (f->cursor)
+    __cursor_unref(f->cursor);
   return CloseHandle(f->handle) ? 0 : __winerr();
 }

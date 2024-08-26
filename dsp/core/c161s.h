@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C161S_H_
 #define COSMOPOLITAN_DSP_CORE_C161S_H_
 #include "dsp/core/c161.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 __funline signed char C161S(signed char al, signed char bl, signed char cl) {
   short ax, bx, cx;

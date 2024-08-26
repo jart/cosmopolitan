@@ -22,13 +22,13 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 #define N 64
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeWinsize)(char buf[N], int rc, const struct winsize *ws) {
+const char *_DescribeWinsize(char buf[N], int rc, const struct winsize *ws) {
   int o = 0;
   if (!ws)
     return "NULL";

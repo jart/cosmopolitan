@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/punpckhbw.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
 
-/**
- * Interleaves high bytes.
- *
- * @param 𝑎 [w/o] receives reduced 𝑏 and 𝑐 interleaved
- * @param 𝑏 [r/o] supplies eight words
- * @param 𝑐 [r/o] supplies eight words
- * @mayalias
- */
-void(punpckhbw)(uint8_t a[16], const uint8_t b[16], const uint8_t c[16]) {
-  a[0x0] = b[0x8];
-  a[0x1] = c[0x8];
-  a[0x2] = b[0x9];
-  a[0x3] = c[0x9];
-  a[0x4] = b[0xa];
-  a[0x5] = c[0xa];
-  a[0x6] = b[0xb];
-  a[0x7] = c[0xb];
-  a[0x8] = b[0xc];
-  a[0x9] = c[0xc];
-  a[0xa] = b[0xd];
-  a[0xb] = c[0xd];
-  a[0xc] = b[0xe];
-  a[0xd] = c[0xe];
-  a[0xe] = b[0xf];
-  a[0xf] = c[0xf];
+#define ALLOCATIONS 1000
+
+void *worker(void *arg) {
+  void **ptrs = malloc(ALLOCATIONS * sizeof(void *));
+  for (int i = 0; i < ALLOCATIONS; ++i)
+    ptrs[i] = malloc(1);
+  for (int i = 0; i < ALLOCATIONS; ++i)
+    free(ptrs[i]);
+  free(ptrs);
+  return 0;
+}
+
+void test(int n) {
+  struct timespec start = timespec_real();
+  pthread_t *th = malloc(sizeof(pthread_t) * n);
+  for (int i = 0; i < n; ++i)
+    pthread_create(th + i, 0, worker, 0);
+  for (int i = 0; i < n; ++i)
+    pthread_join(th[i], 0);
+  free(th);
+  struct timespec end = timespec_real();
+  printf("%2d threads * %d allocs = %ld us\n", n, ALLOCATIONS,
+         timespec_tomicros(timespec_sub(end, start)));
+}
+
+int main(int argc, char *argv[]) {
+  int n = __get_cpu_count();
+  if (n < 8)
+    n = 8;
+  for (int i = 1; i <= n; ++i)
+    test(i);
 }

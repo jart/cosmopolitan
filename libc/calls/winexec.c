@@ -24,7 +24,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "third_party/linenoise/linenoise.h"
 
 #define Read32(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])

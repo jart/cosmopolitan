@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/processaccess.h"
 
 static const struct DescribeFlags kProcessAccessflags[] = {
@@ -37,7 +37,7 @@ static const struct DescribeFlags kProcessAccessflags[] = {
     {kNtProcessSynchronize, "Synchronize"},                          //
 };
 
-const char *(DescribeNtProcAccessFlags)(char buf[256], uint32_t x) {
-  return DescribeFlags(buf, 256, kProcessAccessflags,
-                       ARRAYLEN(kProcessAccessflags), "kNtProcess", x);
+const char *_DescribeNtProcAccessFlags(char buf[256], uint32_t x) {
+  return _DescribeFlags(buf, 256, kProcessAccessflags,
+                        ARRAYLEN(kProcessAccessflags), "kNtProcess", x);
 }

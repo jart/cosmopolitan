@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdalign.internal.h"
-#include "libc/str/tab.internal.h"
+#include "libc/stdalign.h"
+#include "libc/str/tab.h"
 
 alignas(uint8_t) const uint8_t kToLower[256] = {
     0,   1,   2,   3,   4,   5,   6,    7,   8,    9,   10,  11,   12,  13,

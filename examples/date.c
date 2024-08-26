@@ -10,7 +10,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/timezoneid.h"
 #include "libc/nt/struct/timezoneinformation.h"
 #include "libc/nt/time.h"

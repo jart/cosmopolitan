@@ -62,6 +62,7 @@ o/$(MODE)/libc/intrin/kprintf.o: private		\
 			-Wframe-larger-than=128		\
 			-Walloca-larger-than=128
 
+o/$(MODE)/libc/intrin/cursor.o				\
 o/$(MODE)/libc/intrin/mmap.o				\
 o/$(MODE)/libc/intrin/tree.o: private			\
 		CFLAGS +=				\

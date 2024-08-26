@@ -53,7 +53,7 @@
 #include "libc/stdckdint.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"

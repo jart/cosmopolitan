@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nt/struct/inputrecord.h"
 
 static const struct DescribeFlags kControlKeyState[] = {
@@ -32,7 +32,7 @@ static const struct DescribeFlags kControlKeyState[] = {
     {kNtEnhancedKey, "EnhancedKey"},            //
 };
 
-const char *(DescribeControlKeyState)(char buf[64], uint32_t x) {
-  return DescribeFlags(buf, 64, kControlKeyState, ARRAYLEN(kControlKeyState),
-                       "kNt", x);
+const char *_DescribeControlKeyState(char buf[64], uint32_t x) {
+  return _DescribeFlags(buf, 64, kControlKeyState, ARRAYLEN(kControlKeyState),
+                        "kNt", x);
 }

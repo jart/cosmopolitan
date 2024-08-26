@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/wsaid.h"
 #include "libc/nt/errors.h"
@@ -34,6 +35,7 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sock/wsaid.internal.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
@@ -109,6 +111,7 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
 
   // perform normal connect
   if (!(f->flags & O_NONBLOCK)) {
+    f->peer.ss_family = AF_UNSPEC;
     ssize_t rc = __winsock_block(f->handle, 0, false, f->sndtimeo, mask,
                                  sys_connect_nt_start,
                                  &(struct ConnectArgs){addr, addrsize});
@@ -121,6 +124,10 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
     }
     return rc;
   }
+
+  // win32 getpeername() stops working in non-blocking connect mode
+  if (addrsize)
+    memcpy(&f->peer, addr, MIN(addrsize, sizeof(struct sockaddr_storage)));
 
   // perform nonblocking connect(), i.e.
   // 1. connect(O_NONBLOCK) → EINPROGRESS

@@ -4,8 +4,8 @@
 #include "libc/nt/struct/overlapped.h"
 COSMOPOLITAN_C_START_
 
-const char *DescribeNtOverlapped(char[128], const struct NtOverlapped *);
-#define DescribeNtOverlapped(x) DescribeNtOverlapped(alloca(128), x)
+const char *_DescribeNtOverlapped(char[128], const struct NtOverlapped *);
+#define DescribeNtOverlapped(x) _DescribeNtOverlapped(alloca(128), x)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_INTRIN_DESCRIBENTOVERLAPPED_INTERNAL_H_ */

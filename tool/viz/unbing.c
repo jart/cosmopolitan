@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 
 /**
  * @fileoverview UnBing: Glyphs → Binary.

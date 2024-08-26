@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_DSP_CORE_KSS8_H_
 #define COSMOPOLITAN_DSP_CORE_KSS8_H_
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 /**
  * Performs 16-bit scaled rounded saturated madd w/ eight coefficients or fewer.

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/cpuset.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 void CPU_OR(cpu_set_t *d, cpu_set_t *x, cpu_set_t *y) {
   int i;

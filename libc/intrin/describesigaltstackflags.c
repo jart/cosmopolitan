@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/sysv/consts/ss.h"
 
-const char *(DescribeSigaltstackFlags)(char buf[22], int x) {
+const char *_DescribeSigaltstackFlags(char buf[22], int x) {
   const struct DescribeFlags kSigaltstackFlags[] = {
       {SS_ONSTACK, "ONSTACK"},  //
       {SS_DISABLE, "DISABLE"},  //
   };
-  return DescribeFlags(buf, 48, kSigaltstackFlags, ARRAYLEN(kSigaltstackFlags),
-                       "SS_", x);
+  return _DescribeFlags(buf, 48, kSigaltstackFlags, ARRAYLEN(kSigaltstackFlags),
+                        "SS_", x);
 }

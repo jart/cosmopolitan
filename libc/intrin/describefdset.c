@@ -26,7 +26,7 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeFdSet)(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
+const char *_DescribeFdSet(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
   int o = 0;
 
   if (!fds)

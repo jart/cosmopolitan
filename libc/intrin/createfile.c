@@ -57,11 +57,11 @@ TryAgain:
                               opt_lpSecurity, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
   NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → {%ld, %d}", lpFileName,
-          (DescribeNtFileAccessFlags)(buf_accessflags, dwDesiredAccess),
-          (DescribeNtFileShareFlags)(buf_shareflags, dwShareMode),
-          (DescribeNtSecurityAttributes)(buf_secattr, opt_lpSecurity),
-          DescribeNtCreationDisposition(dwCreationDisposition),
-          (DescribeNtFileFlagAttr)(buf_flagattr, dwFlagsAndAttributes),
+          _DescribeNtFileAccessFlags(buf_accessflags, dwDesiredAccess),
+          _DescribeNtFileShareFlags(buf_shareflags, dwShareMode),
+          _DescribeNtSecurityAttributes(buf_secattr, opt_lpSecurity),
+          _DescribeNtCreationDisposition(dwCreationDisposition),
+          _DescribeNtFileFlagAttr(buf_flagattr, dwFlagsAndAttributes),
           opt_hTemplateFile, hHandle, __imp_GetLastError());
   if (hHandle == -1) {
     switch (__imp_GetLastError()) {

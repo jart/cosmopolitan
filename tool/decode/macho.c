@@ -22,13 +22,13 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.h"
-#include "libc/macho.internal.h"
+#include "libc/macho.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -48,7 +48,7 @@ static size_t machosize;
 static void startfile(void) {
   showtitle("αcτµαlly pδrταblε εxεcµταblε", "tool/decode/macho", NULL, NULL,
             &kModelineAsm);
-  printf("#include \"libc/macho.internal.h\"\n\n", path);
+  printf("#include \"libc/macho.h\"\n\n", path);
 }
 
 static void showmachoheader(void) {

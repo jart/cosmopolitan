@@ -22,7 +22,7 @@
 #include "libc/limits.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/str/tab.h"
 
 /**
  * Decodes unsigned integer from wide string.

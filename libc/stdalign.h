@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_STDALIGN_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_STDALIGN_INTERNAL_H_
+#ifndef COSMOPOLITAN_LIBC_STDALIGN_H_
+#define COSMOPOLITAN_LIBC_STDALIGN_H_
 
 #ifndef __cplusplus
 #define alignas _Alignas
@@ -9,4 +9,4 @@
 #define __alignas_is_defined 1
 #define __alignof_is_defined 1
 
-#endif /* COSMOPOLITAN_LIBC_STDALIGN_INTERNAL_H_ */
+#endif /* COSMOPOLITAN_LIBC_STDALIGN_H_ */

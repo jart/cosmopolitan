@@ -141,6 +141,18 @@ for x; do
   elif [ x"$x" != x"${x#-MF}" ]; then  # startswith(x, "-MF")
     DEPENDENCY_OUTPUT=${x#-MF}
     continue
+  elif [ x"$x" = x"-MQ" ]; then
+    NEED_DEPENDENCY_OUTPUT=1
+    continue
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    cat <<EOF
+GNU ld (GNU Binutils) 2.42
+Copyright (C) 2024 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) a later version.
+This program has absolutely no warranty.
+EOF
+    exit
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
@@ -343,7 +355,7 @@ LDLIBS_X86_64="-lcosmo"
 
 CRT_AARCH64="$LIB_AARCH64/crt.o"
 CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
-CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
+CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28"
 LDFLAGS_AARCH64="$LDFLAGS -L$LIB_AARCH64 -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$LIB_AARCH64/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"
 

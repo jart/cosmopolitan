@@ -79,7 +79,7 @@ o/$(MODE)/tool/hello/hello-pe.ape:			\
 # elf2pe can generate binaries that don't have dll imports
 o/$(MODE)/tool/hello/life-pe.dbg:			\
 		o/$(MODE)/tool/hello/life-pe.o
-	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x140000000
 o/$(MODE)/tool/hello/life-pe.ape:			\
 		o/$(MODE)/tool/hello/life-pe.dbg	\
 		o/$(MODE)/tool/build/elf2pe

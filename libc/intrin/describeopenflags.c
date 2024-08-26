@@ -20,7 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sol.h"
@@ -30,7 +30,7 @@
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeOpenFlags)(char buf[128], int x) {
+const char *_DescribeOpenFlags(char buf[128], int x) {
   char *p;
   int i, n;
   const char *pipe;
@@ -68,7 +68,7 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
       d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);
       d[i].name = MAGNUM_STRING(kOpenFlags, i);
     }
-    DescribeFlags(p, 128 - (p - buf), d, n, "O_", x);
+    _DescribeFlags(p, 128 - (p - buf), d, n, "O_", x);
   }
   return buf;
 }

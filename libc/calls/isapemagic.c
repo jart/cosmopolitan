@@ -25,6 +25,5 @@
 bool IsApeLoadable(char buf[8]) {
   return READ32LE(buf) == READ32LE("\177ELF") ||
          READ64LE(buf) == READ64LE("MZqFpD='") ||
-         READ64LE(buf) == READ64LE("jartsr='") ||
-         READ64LE(buf) == READ64LE("APEDBG='");
+         READ64LE(buf) == READ64LE("jartsr='");
 }

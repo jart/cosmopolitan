@@ -19,7 +19,7 @@
 #include "libc/calls/struct/seccomp.internal.h"
 #include "libc/intrin/describeflags.h"
 
-const char *DescribeSeccompOperation(int x) {
+const char *_DescribeSeccompOperation(int x) {
   switch (x) {
     case SECCOMP_SET_MODE_STRICT:
       return "SECCOMP_SET_MODE_STRICT";

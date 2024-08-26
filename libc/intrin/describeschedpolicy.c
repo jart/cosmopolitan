@@ -19,14 +19,14 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sched.h"
 
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *(DescribeSchedPolicy)(char buf[48], int x) {
+const char *_DescribeSchedPolicy(char buf[48], int x) {
   char *p = buf;
   if (x == -1) {
     goto DoNumber;

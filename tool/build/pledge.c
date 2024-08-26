@@ -42,7 +42,7 @@
 #include "libc/intrin/promises.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/limits.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/nexgen32e/kcpuids.h"

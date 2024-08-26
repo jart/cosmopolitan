@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 struct ZiposHandle *__zipos_keep(struct ZiposHandle *h) {
   atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);

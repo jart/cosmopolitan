@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/nrlinux.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 .privileged
 
 //	Linux Signal Trampoline (HOLY CODE)

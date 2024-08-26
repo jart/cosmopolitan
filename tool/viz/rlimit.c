@@ -13,7 +13,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/color.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < RLIM_NLIMITS; ++i) {
     rc = getrlimit(i, &rlim);
     printf("SETRLIMIT(%-20s, %,16ld, %,16ld) → %d %s\n",
-           (DescribeRlimitName)(rlnbuf, i), rlim.rlim_cur, rlim.rlim_max, rc,
+           _DescribeRlimitName(rlnbuf, i), rlim.rlim_cur, rlim.rlim_max, rc,
            !rc ? "" : strerror(errno));
   }
 

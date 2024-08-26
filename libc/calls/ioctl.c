@@ -27,7 +27,7 @@
 #include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/console.h"

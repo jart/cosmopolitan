@@ -1,0 +1,24 @@
+name: Nightly cosmocc
+on:
+  schedule:
+    # https://crontab.guru/#37_4_*_*_*
+    - cron: "37 4 * * *"
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  build-cosmocc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo cp build/bootstrap/ape.elf /usr/bin/ape
+          sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+      - run: tool/cosmocc/package.sh
+      # https://github.com/actions/upload-artifact/issues/590
+      - uses: actions/upload-artifact@v4.3.5
+        with:
+          name: cosmocc
+          path: cosmocc
+          compression-level: 9

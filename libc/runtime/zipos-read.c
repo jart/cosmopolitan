@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 
 static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
                                  size_t iovlen, ssize_t opt_offset) {

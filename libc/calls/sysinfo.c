@@ -23,7 +23,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

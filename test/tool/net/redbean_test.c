@@ -263,7 +263,7 @@ Last-Modified: .*\r\n\
 Accept-Ranges: bytes\r\n\
 X-Content-Type-Options: nosniff\r\n\
 Date: .*\r\n\
-Server: redbean/2.2.0\r\n\
+Server: redbean/.*\r\n\
 Content-Length: 34\r\n\
 \r\n\
 J\n\

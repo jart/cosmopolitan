@@ -30,7 +30,7 @@
 #include "libc/intrin/bswap.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"

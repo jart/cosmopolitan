@@ -19,7 +19,7 @@
 #include "libc/serialize.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bswap.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"

@@ -24,7 +24,8 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/macros.internal.h"
+#include "libc/intrin/fds.h"
+#include "libc/macros.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -138,6 +139,7 @@ static textwindows int sys_open_nt_file(int dirfd, const char *file,
   int64_t handle;
   if ((handle = sys_open_nt_impl(dirfd, file, flags, mode,
                                  kNtFileFlagOverlapped)) != -1) {
+    g_fds.p[fd].cursor = __cursor_new();
     g_fds.p[fd].handle = handle;
     g_fds.p[fd].kind = kFdFile;
     g_fds.p[fd].flags = flags;
@@ -170,15 +172,15 @@ static textwindows int sys_open_nt_no_handle(int fd, int flags, int mode,
 
 static textwindows int sys_open_nt_dup(int fd, int flags, int mode, int oldfd) {
   int64_t handle;
-  if (!__isfdopen(oldfd)) {
+  if (!__isfdopen(oldfd))
     return enoent();
-  }
   if (DuplicateHandle(GetCurrentProcess(), g_fds.p[oldfd].handle,
                       GetCurrentProcess(), &handle, 0, true,
                       kNtDuplicateSameAccess)) {
     g_fds.p[fd] = g_fds.p[oldfd];
     g_fds.p[fd].handle = handle;
     g_fds.p[fd].mode = mode;
+    __cursor_ref(g_fds.p[fd].cursor);
     if (!sys_fcntl_nt_setfl(fd, flags)) {
       return fd;
     } else {

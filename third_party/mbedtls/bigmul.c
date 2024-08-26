@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "third_party/mbedtls/bignum.h"

@@ -38,7 +38,7 @@
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"

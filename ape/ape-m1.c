@@ -16,6 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#ifndef __APPLE__
+#error "ape/ape-m1.c is for apple silicon. chances you want ape/loader.c"
+#endif
+#ifndef __aarch64__
+#error "ape/ape-m1.c is for apple silicon; you want: make o//ape/ape.macho"
+#endif
 #include <assert.h>
 #include <dispatch/dispatch.h>
 #include <dlfcn.h>

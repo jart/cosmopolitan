@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/bing.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 static const int kCp437i[] = {
     0x000a << 8 | 10,   // \n NEWLINE

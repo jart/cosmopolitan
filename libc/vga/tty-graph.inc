@@ -25,7 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/newbie.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"

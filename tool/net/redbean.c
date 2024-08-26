@@ -33,7 +33,7 @@
 #include "libc/calls/termios.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
-#include "libc/dos.internal.h"
+#include "libc/dos.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
@@ -46,7 +46,7 @@
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/gc.h"
@@ -71,6 +71,7 @@
 #include "libc/stdio/hex.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/locale.h"
 #include "libc/str/slice.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
@@ -104,7 +105,7 @@
 #include "libc/thread/tls.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
@@ -129,7 +130,6 @@
 #include "third_party/mbedtls/x509_crt.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
-#include "tool/args/args.h"
 #include "tool/build/lib/case.h"
 #include "tool/net/lfinger.h"
 #include "tool/net/lfuncs.h"
@@ -169,7 +169,8 @@ __static_yoink("blink_xnu_aarch64");    // is apple silicon
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020200
+//                         XXYYZZ
+#define VERSION          0x030000
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define WRITE(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -2545,7 +2546,7 @@ static char *CommitOutput(char *p) {
 
 static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason,
                                    const char *details) {
-  p = AppendContentType(p, "text/html; charset=ISO-8859-1");
+  p = AppendContentType(p, "text/html; charset=UTF-8");
   reason = FreeLater(EscapeHtml(reason, -1, 0));
   appends(&cpm.outbuf, "\
 <!doctype html>\r\n\
@@ -7427,6 +7428,9 @@ int main(int argc, char *argv[]) {
 #if !IsTiny()
   ShowCrashReports();
 #endif
+
+  // just in case
+  setlocale(LC_ALL, "C.UTF-8");
 
   LoadZipArgs(&argc, &argv);
   RedBean(argc, argv);

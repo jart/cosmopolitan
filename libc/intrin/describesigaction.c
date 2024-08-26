@@ -23,7 +23,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/mem/alloca.h"
 #include "libc/sysv/consts/sa.h"
 
@@ -51,15 +51,15 @@ static const char *DescribeSigFlags(char buf[64], int x) {
       {SA_ONESHOT, "ONESHOT"},      //
       {0x04000000, "RESTORER"},     //
   };
-  return DescribeFlags(buf, 64, kSigFlags, ARRAYLEN(kSigFlags), "SA_", x);
+  return _DescribeFlags(buf, 64, kSigFlags, ARRAYLEN(kSigFlags), "SA_", x);
 }
 
 #define N 256
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeSigaction)(char buf[N], int rc,
-                                const struct sigaction *sa) {
+const char *_DescribeSigaction(char buf[N], int rc,
+                               const struct sigaction *sa) {
   int o = 0;
   char b64[64];
 

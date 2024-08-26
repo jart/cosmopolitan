@@ -115,14 +115,10 @@ ifeq ($(ARCH), aarch64)
 # - Cosmopolitan Libc uses x28 for thread-local storage because Apple
 #   forbids us from using tpidr_el0 too.
 #
-# - Cosmopolitan currently lacks an implementation of the runtime
-#   libraries needed by the -moutline-atomics flag
-#
 DEFAULT_COPTS +=							\
 	-ffixed-x18							\
 	-ffixed-x28							\
-	-fsigned-char							\
-	-mno-outline-atomics
+	-fsigned-char
 endif
 
 MATHEMATICAL =								\

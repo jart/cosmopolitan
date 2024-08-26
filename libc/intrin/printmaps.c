@@ -21,7 +21,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
@@ -35,7 +35,7 @@ void __print_maps(size_t limit) {
   for (struct Tree *e = tree_first(__maps.maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
     kprintf("%012lx-%012lx %!s", map->addr, map->addr + map->size,
-            (DescribeMapping)(mappingbuf, map->prot, map->flags));
+            _DescribeMapping(mappingbuf, map->prot, map->flags));
     sizefmt(sb, map->size, 1024);
     kprintf(" %!sb", sb);
     if (map->hand && map->hand != -1)

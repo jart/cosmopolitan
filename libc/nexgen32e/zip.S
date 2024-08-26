@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 #include "ape/relocations.h"
-#include "libc/zip.internal.h"
+#include "libc/zip.h"
 .section .zip.eocd,"",@progbits
 
 //	ZIP End Of Central Directory (EOCD) record.

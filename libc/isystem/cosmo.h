@@ -60,7 +60,6 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 #include "net/http/http.h"
-#include "tool/args/args.h"
 
 #ifdef COSMO_ALREADY_DEFINED
 #undef COSMO_ALREADY_DEFINED

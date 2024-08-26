@@ -59,7 +59,7 @@
       char bt[160];                                                       \
       struct StackFrame *bp = __builtin_frame_address(0);                 \
       kprintf("%!s:%d: assertion failed: %!s\n", __FILE__, __LINE__, #x); \
-      kprintf("bt %!s\n", (DescribeBacktrace)(bt, bp));                   \
+      kprintf("bt %!s\n", _DescribeBacktrace(bt, bp));                    \
       __print_maps(0);                                                    \
       __builtin_trap();                                                   \
     }                                                                     \
@@ -138,7 +138,7 @@ StartOver:
       __maps.count -= 1;
       __maps_check();
     } else if (IsWindows()) {
-      // you can't carve up memory maps on windows ;_;
+      STRACE("you can't carve up memory maps on windows ;_;");
       rc = einval();
     } else if (addr <= map_addr) {
       // shave off lefthand side of mapping
@@ -246,7 +246,7 @@ static void __maps_free_all(struct Map *list) {
   }
 }
 
-static void __maps_insert(struct Map *map) {
+void __maps_insert(struct Map *map) {
   map->flags &= MAP_TYPE | MAP_ANONYMOUS | MAP_NOFORK;
 
   // coalesce adjacent mappings
@@ -351,12 +351,12 @@ static int __munmap(char *addr, size_t size) {
     }
 
   // untrack mappings
+  int rc;
   struct Map *deleted = 0;
-  __muntrack(addr, pgup_size, pagesz, &deleted);
+  rc = __muntrack(addr, pgup_size, pagesz, &deleted);
   __maps_unlock();
 
   // delete mappings
-  int rc = 0;
   for (struct Map *map = deleted; map; map = map->freed) {
     if (!IsWindows()) {
       if (sys_munmap(map->addr, map->size))

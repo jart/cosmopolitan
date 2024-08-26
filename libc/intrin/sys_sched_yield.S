@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/sysv/consts/nr.h"
-#include "libc/macros.internal.h"
+#include "libc/macros.h"
 
 //	Relinquishes scheduled quantum.
 //

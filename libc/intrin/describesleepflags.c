@@ -24,7 +24,7 @@
 /**
  * Describes clock_nanosleep() flags argument.
  */
-const char *(DescribeSleepFlags)(char buf[16], int x) {
+const char *_DescribeSleepFlags(char buf[16], int x) {
   switch (x) {
     case 0:
       return "0";
