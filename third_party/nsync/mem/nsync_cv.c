@@ -233,7 +233,9 @@ static int nsync_cv_wait_with_deadline_impl_ (struct nsync_cv_wait_with_deadline
 		/* Requeue on *pmu using existing waiter struct; current thread
 		   is the designated waker.  */
 		nsync_mu_lock_slow_ (c->cv_mu, c->w, MU_DESIG_WAKER, c->w->l_type);
+		nsync_waiter_free_ (c->w);
 	} else {
+		nsync_waiter_free_ (c->w);
 		/* Traditional case: We've woken from the cv, and need to reacquire *pmu. */
 		if (c->is_reader_mu) {
 			nsync_mu_rlock (c->cv_mu);
@@ -241,7 +243,6 @@ static int nsync_cv_wait_with_deadline_impl_ (struct nsync_cv_wait_with_deadline
 			(*c->lock) (c->pmu);
 		}
 	}
-	nsync_waiter_free_ (c->w);
 	IGNORE_RACES_END ();
 	return (outcome);
 }
