@@ -232,6 +232,21 @@
  *   option might not be a good idea if you're pledging `exec` because
  *   subprocesses can't inherit the `SIGSYS` handler this installs.
  *
+ * If you experience crashes during startup when execve'ing a cosmo
+ * binary that's had permissions like rpath pledged away, then try doing
+ * this before calling execve. This prevents special startup checks.
+ *
+ *     putenv("COMDBG=program.dbg");
+ *
+ * If having pledge() security is mission critical, then add this code
+ * to the start of your main() function to ensure your program fails
+ * with an error if it isn't available.
+ *
+ *     if (pledge(0, 0)) {
+ *       fprintf(stderr, "error: OS doesn't support pledge() security\n");
+ *       exit(1);
+ *     }
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if `pledge(0, 0)` was used and security is not possible
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`

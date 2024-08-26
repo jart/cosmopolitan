@@ -27,6 +27,7 @@
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/ucontext.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -35,6 +36,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/hilbert.h"
+#include "libc/intrin/iscall.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/check.h"
@@ -44,10 +46,12 @@
 #include "libc/mem/mem.h"
 #include "libc/mem/sortedints.internal.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/paths.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/serialize.h"
 #include "libc/sock/sock.h"
@@ -64,6 +68,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
@@ -71,6 +76,7 @@
 #include "libc/sysv/consts/tcp.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
+#include "libc/thread/threads.h"
 #include "libc/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
@@ -256,10 +262,12 @@ struct Blackhole {
 // cli flags
 bool g_integrity;
 bool g_daemonize;
+int g_crash_fd;
 int g_port = PORT;
 int g_workers = WORKERS;
 int g_keepalive = KEEPALIVE_MS;
 struct SortedInts g_whitelisted;
+thread_local char last_message[INBUF_SIZE];
 
 // lifecycle vars
 pthread_t g_listener;
@@ -694,6 +702,14 @@ void FreeSafeBuffer(void *p) {
 void BlockSignals(void) {
   sigset_t mask;
   sigfillset(&mask);
+  sigdelset(&mask, SIGABRT);
+  sigdelset(&mask, SIGTRAP);
+  sigdelset(&mask, SIGFPE);
+  sigdelset(&mask, SIGBUS);
+  sigdelset(&mask, SIGSEGV);
+  sigdelset(&mask, SIGILL);
+  sigdelset(&mask, SIGXCPU);
+  sigdelset(&mask, SIGXFSZ);
   sigprocmask(SIG_SETMASK, &mask, 0);
 }
 
@@ -872,7 +888,12 @@ void *HttpWorker(void *arg) {
       DestroyHttpMessage(msg);
       InitHttpMessage(msg, kHttpRequest);
       g_worker[id].startread = timespec_real();
-      if ((got = read(client.sock, inbuf, INBUF_SIZE)) <= 0) {
+      got = read(client.sock, inbuf, INBUF_SIZE - 1);
+      if (got >= 0) {
+        memcpy(last_message, inbuf, got);
+        last_message[got] = 0;
+      }
+      if (got <= 0) {
         ++g_readfails;
         break;
       }
@@ -1930,8 +1951,171 @@ OnError:
   exit(1);
 }
 
+#ifdef __aarch64__
+#define PC pc
+#define BP regs[29]
+#else
+#define PC gregs[REG_RIP]
+#define BP gregs[REG_RBP]
+#endif
+
+char *hexcpy(char *p, unsigned long x) {
+  int k = x ? (__builtin_clzl(x) ^ 63) + 1 : 1;
+  k = (k + 3) & -4;
+  while (k > 0)
+    *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p;
+}
+
+char *describe_backtrace(char *p, size_t len, const struct StackFrame *sf) {
+  char *pe = p + len;
+  bool gotsome = false;
+
+  // show address of each function
+  while (sf) {
+    if (kisdangerous(sf)) {
+      if (p + 1 + 9 + 1 < pe) {
+        if (gotsome)
+          *p++ = ' ';
+        p = stpcpy(p, "DANGEROUS");
+        if (p + 16 + 1 < pe) {
+          *p++ = ' ';
+          p = hexcpy(p, (long)sf);
+        }
+      }
+      break;
+    }
+    if (p + 16 + 1 < pe) {
+      unsigned char *ip = (unsigned char *)sf->addr;
+#ifdef __x86_64__
+      // x86 advances the progrem counter before an instruction
+      // begins executing. return addresses in backtraces shall
+      // point to code after the call, which means addr2line is
+      // going to print unrelated code unless we fixup the addr
+      if (!kisdangerous(ip))
+        ip -= __is_call(ip);
+#endif
+      if (gotsome)
+        *p++ = ' ';
+      else
+        gotsome = true;
+      p = hexcpy(p, (long)ip);
+    } else {
+      break;
+    }
+    sf = sf->next;
+  }
+
+  // terminate string
+  if (p < pe)
+    *p = '\0';
+  return p;
+}
+
+//                         abashed the devil stood
+//                      and felt how awful goodness is
+char *describe_crash(char *buf, size_t len, int sig, siginfo_t *si, void *arg) {
+  char *p = buf;
+
+  // check minimum length
+  if (len < 64)
+    return p;
+
+  // describe crash
+  char signame[21];
+  p = stpcpy(p, strsignal_r(sig, signame));
+  if (si &&               //
+      (sig == SIGFPE ||   //
+       sig == SIGILL ||   //
+       sig == SIGBUS ||   //
+       sig == SIGSEGV ||  //
+       sig == SIGTRAP)) {
+    p = stpcpy(p, " at ");
+    p = hexcpy(p, (long)si->si_addr);
+  }
+
+  // get stack frame daisy chain
+  struct StackFrame pc;
+  struct StackFrame *sf;
+  ucontext_t *ctx;
+  if ((ctx = (ucontext_t *)arg)) {
+    pc.addr = ctx->uc_mcontext.PC;
+    pc.next = (struct StackFrame *)ctx->uc_mcontext.BP;
+    sf = &pc;
+  } else {
+    sf = (struct StackFrame *)__builtin_frame_address(0);
+  }
+
+  // describe backtrace
+  p = stpcpy(p, " bt ");
+  p = describe_backtrace(p, len - (p - buf), sf);
+
+  return p;
+}
+
+void on_crash_signal(int sig, siginfo_t *si, void *arg) {
+  char *p;
+  char message[512];
+  write(2, "crash!\n", 7);
+  p = describe_crash(message, sizeof(message), sig, si, arg);
+  write(g_crash_fd, "crash: ", 7);
+  write(g_crash_fd, message, p - message);
+  write(g_crash_fd, "\n", 1);
+  write(g_crash_fd, last_message, strlen(last_message));
+  write(g_crash_fd, "\n", 1);
+  pthread_exit(PTHREAD_CANCELED);
+}
+
+static void show_crash_reports(void) {
+
+  const char *path = "crash.log";
+  if ((g_crash_fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644)) == -1) {
+    fprintf(stderr, "%s: %s\n", path, strerror(errno));
+    exit(1);
+  }
+
+  struct sigaction sa;
+  sa.sa_flags = SA_SIGINFO;
+  sigemptyset(&sa.sa_mask);
+
+  sa.sa_sigaction = on_crash_signal;
+  sigaddset(&sa.sa_mask, SIGABRT);
+  sigaddset(&sa.sa_mask, SIGTRAP);
+  sigaddset(&sa.sa_mask, SIGFPE);
+  sigaddset(&sa.sa_mask, SIGBUS);
+  sigaddset(&sa.sa_mask, SIGSEGV);
+  sigaddset(&sa.sa_mask, SIGILL);
+  sigaddset(&sa.sa_mask, SIGXCPU);
+  sigaddset(&sa.sa_mask, SIGXFSZ);
+
+  sigaction(SIGABRT, &sa, 0);
+  sigaction(SIGTRAP, &sa, 0);
+  sigaction(SIGFPE, &sa, 0);
+  sigaction(SIGILL, &sa, 0);
+  sigaction(SIGXCPU, &sa, 0);
+  sigaction(SIGXFSZ, &sa, 0);
+
+  sa.sa_flags |= SA_ONSTACK;
+  sigaction(SIGBUS, &sa, 0);
+  sigaction(SIGSEGV, &sa, 0);
+}
+
 int main(int argc, char *argv[]) {
-  // ShowCrashReports();
+  FindDebugBinary();
+  show_crash_reports();
+
+  unassert(false);
+
+  if (pledge(0, 0)) {
+    fprintf(stderr, "%s: this OS doesn't support pledge() security\n", argv[0]);
+    exit(1);
+  }
+
+  if (unveil("", 0) < 2) {
+    fprintf(stderr, "%s: need OpenBSD or Landlock LSM v3+\n", argv[0]);
+    exit(1);
+  }
 
   if (IsLinux()) {
     Write(2, "Enabling TCP_FASTOPEN for server sockets...\n");
@@ -2026,20 +2210,26 @@ int main(int argc, char *argv[]) {
   sa.sa_handler = IgnoreSignal;
   sigaction(SIGUSR1, &sa, 0);
 
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setstacksize(&attr, 128 * 1024);
+  pthread_attr_setguardsize(&attr, sysconf(_SC_PAGESIZE));
+  pthread_attr_setsigaltstacksize_np(&attr, sysconf(_SC_MINSIGSTKSZ) + 32768);
+
   // make 9 helper threads
   g_ready = nsync_counter_new(10);
   pthread_t scorer, recenter, claimer, nower, replenisher, plotter;
   pthread_t scorer_hour, scorer_day, scorer_week, scorer_month;
-  CHECK_EQ(0, pthread_create(&scorer, 0, ScoreWorker, 0));
-  CHECK_EQ(0, pthread_create(&scorer_hour, 0, ScoreHourWorker, 0));
-  CHECK_EQ(0, pthread_create(&scorer_day, 0, ScoreDayWorker, 0));
-  CHECK_EQ(0, pthread_create(&scorer_week, 0, ScoreWeekWorker, 0));
-  CHECK_EQ(0, pthread_create(&scorer_month, 0, ScoreMonthWorker, 0));
-  CHECK_EQ(0, pthread_create(&replenisher, 0, ReplenishWorker, 0));
-  CHECK_EQ(0, pthread_create(&recenter, 0, RecentWorker, 0));
-  CHECK_EQ(0, pthread_create(&claimer, 0, ClaimWorker, 0));
-  CHECK_EQ(0, pthread_create(&plotter, 0, PlotWorker, 0));
-  CHECK_EQ(0, pthread_create(&nower, 0, NowWorker, 0));
+  CHECK_EQ(0, pthread_create(&scorer, &attr, ScoreWorker, 0));
+  CHECK_EQ(0, pthread_create(&scorer_hour, &attr, ScoreHourWorker, 0));
+  CHECK_EQ(0, pthread_create(&scorer_day, &attr, ScoreDayWorker, 0));
+  CHECK_EQ(0, pthread_create(&scorer_week, &attr, ScoreWeekWorker, 0));
+  CHECK_EQ(0, pthread_create(&scorer_month, &attr, ScoreMonthWorker, 0));
+  CHECK_EQ(0, pthread_create(&replenisher, &attr, ReplenishWorker, 0));
+  CHECK_EQ(0, pthread_create(&recenter, &attr, RecentWorker, 0));
+  CHECK_EQ(0, pthread_create(&claimer, &attr, ClaimWorker, 0));
+  CHECK_EQ(0, pthread_create(&plotter, &attr, PlotWorker, 0));
+  CHECK_EQ(0, pthread_create(&nower, &attr, NowWorker, 0));
 
   // wait for helper threads to warm up creating assets
   if (nsync_counter_add(g_ready, -1)) {  // #10
@@ -2047,14 +2237,16 @@ int main(int argc, char *argv[]) {
   }
 
   // create one thread to listen
-  CHECK_EQ(0, pthread_create(&g_listener, 0, ListenWorker, 0));
+  CHECK_EQ(0, pthread_create(&g_listener, &attr, ListenWorker, 0));
 
   // create lots of http workers to serve those assets
   LOG("Online\n");
   g_worker = xcalloc(g_workers, sizeof(*g_worker));
   for (intptr_t i = 0; i < g_workers; ++i) {
-    CHECK_EQ(0, pthread_create(&g_worker[i].th, 0, HttpWorker, (void *)i));
+    CHECK_EQ(0, pthread_create(&g_worker[i].th, &attr, HttpWorker, (void *)i));
   }
+
+  pthread_attr_destroy(&attr);
 
   // time to serve
   LOG("Ready\n");
