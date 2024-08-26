@@ -1568,7 +1568,7 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
   int rc;
   char *sb = 0;
   sqlite3 *db = 0;
-  /* size_t sblen = 0; */
+  size_t sblen = 0;
   struct Asset a = {0};
   sqlite3_stmt *stmt = 0;
   bool namestate = false;
@@ -1614,7 +1614,7 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
       namestate = true;
       CHECK_SYS(appendf(
           &a.data.p, "\"%s\":[\n",
-          "wut"/* EscapeJsStringLiteral(&sb, &sblen, strcpy(name1, name2), -1, 0) */));
+          EscapeJsStringLiteral(&sb, &sblen, strcpy(name1, name2), -1, 0)));
     } else {
       // name repeated
       CHECK_SYS(appends(&a.data.p, ",\n"));

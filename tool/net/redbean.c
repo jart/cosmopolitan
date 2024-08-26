@@ -31,6 +31,7 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/termios.h"
+#include "libc/cosmo.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/dos.h"

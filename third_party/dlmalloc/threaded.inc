@@ -25,6 +25,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/threads.h"
 #include "libc/errno.h"
+#include "libc/calls/struct/cpuset.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 #if !FOOTERS || !MSPACES

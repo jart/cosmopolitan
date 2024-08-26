@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 #define MIN3(a, b, c) \
   ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
