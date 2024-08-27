@@ -405,6 +405,15 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *     - `c` allows `path` to be created and removed, corresponding to
  *       the pledge promise "cpath".
  *
+ * If having unveil() security is mission critical, then add this code
+ * to the start of your main() function to ensure your program fails
+ * with an error if it isn't available.
+ *
+ *     if (unveil("", 0) >= 0) {
+ *       fprintf(stderr, "error: OS doesn't support unveil() security\n");
+ *       exit(1);
+ *     }
+ *
  * @return 0 on success, or -1 w/ errno; note: if `unveil("",0)` is used
  *     to perform a feature check, then on Linux a value greater than 0
  *     shall be returned which is the supported Landlock ABI version

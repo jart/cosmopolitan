@@ -50,6 +50,7 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
+#include "libc/cosmo.h"
 #include "libc/mem/leaks.h"
 __static_yoink("lua_notice");
 

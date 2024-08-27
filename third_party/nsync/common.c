@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -136,14 +137,45 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
-static _Atomic(waiter *) free_waiters;
+#define MASQUE 0x00fffffffffffff8
+#define PTR(x) ((uintptr_t)(x) & MASQUE)
+#define TAG(x) ROL((uintptr_t)(x) & ~MASQUE, 8)
+#define ABA(p, t) ((uintptr_t)(p) | (ROR((uintptr_t)(t), 8) & ~MASQUE))
+#define ROL(x, n) (((x) << (n)) | ((x) >> (64 - (n))))
+#define ROR(x, n) (((x) >> (n)) | ((x) << (64 - (n))))
+
+static atomic_uintptr_t free_waiters;
 
 static void free_waiters_push (waiter *w) {
-	int backoff = 0;
-	w->next_free = atomic_load_explicit (&free_waiters, memory_order_relaxed);
-	while (!atomic_compare_exchange_weak_explicit (&free_waiters, &w->next_free, w,
-						       memory_order_acq_rel, memory_order_relaxed))
-		backoff = pthread_delay_np (free_waiters, backoff);
+	uintptr_t tip;
+	ASSERT (!TAG(w));
+	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
+	for (;;) {
+		w->next_free = (waiter *) PTR (tip);
+		if (atomic_compare_exchange_weak_explicit (&free_waiters,
+							   &tip,
+							   ABA (w, TAG (tip) + 1),
+							   memory_order_release,
+							   memory_order_relaxed))
+			break;
+		pthread_pause_np ();
+	}
+}
+
+static waiter *free_waiters_pop (void) {
+	waiter *w;
+	uintptr_t tip;
+	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
+	while ((w = (waiter *) PTR (tip))) {
+		if (atomic_compare_exchange_weak_explicit (&free_waiters,
+							   &tip,
+							   ABA (w->next_free, TAG (tip) + 1),
+							   memory_order_acquire,
+							   memory_order_relaxed))
+			break;
+		pthread_pause_np ();
+	}
+	return w;
 }
 
 static void free_waiters_populate (void) {
@@ -172,27 +204,9 @@ static void free_waiters_populate (void) {
 		}
 		w->nw.sem = &w->sem;
 		dll_init (&w->nw.q);
-		NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
 		w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
-		ATM_STORE (&w->remove_count, 0);
 		dll_init (&w->same_condition);
-		w->flags = 0;
 		free_waiters_push (w);
-	}
-}
-
-static waiter *free_waiters_pop (void) {
-	waiter *w;
-	int backoff = 0;
-	for (;;) {
-		if ((w = atomic_load_explicit (&free_waiters, memory_order_relaxed))) {
-			if (atomic_compare_exchange_weak_explicit (&free_waiters, &w, w->next_free,
-								   memory_order_acq_rel, memory_order_relaxed))
-				return w;
-			backoff = pthread_delay_np (free_waiters, backoff);
-		} else {
-			free_waiters_populate ();
-		}
 	}
 }
 
@@ -221,7 +235,8 @@ waiter *nsync_waiter_new_ (void) {
 	tw = waiter_for_thread;
 	w = tw;
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
-		w = free_waiters_pop ();
+		while (!(w = free_waiters_pop ()))
+			free_waiters_populate ();
 		if (tw == NULL) {
 			w->flags |= WAITER_RESERVED;
 			waiter_for_thread = w;

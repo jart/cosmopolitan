@@ -59,8 +59,8 @@ textwindows int WSARecv(
   }
   if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecv(%lu, [", s);
-    DescribeIovNt(inout_lpBuffers, dwBufferCount,
-                  rc != -1 ? NumberOfBytesRecvd : 0);
+    _DescribeIovNt(inout_lpBuffers, dwBufferCount,
+                   rc != -1 ? NumberOfBytesRecvd : 0);
     kprintf("], %u, [%'u], %p, %s, %p) → %d% lm\n", dwBufferCount,
             NumberOfBytesRecvd, inout_lpFlags,
             DescribeNtOverlapped(opt_inout_lpOverlapped),

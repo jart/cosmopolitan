@@ -17,6 +17,7 @@
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
+#include "libc/ctype.h"
 
 /**
  * @fileoverview Roman Transliteration, e.g.

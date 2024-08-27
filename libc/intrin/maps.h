@@ -29,7 +29,7 @@ struct Map {
 struct Maps {
   struct Tree *maps;
   _Atomic(uint64_t) lock;
-  _Atomic(struct Map *) freed;
+  _Atomic(uintptr_t) freed;
   size_t count;
   size_t pages;
   _Atomic(char *) pick;

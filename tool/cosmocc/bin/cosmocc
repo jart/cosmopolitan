@@ -75,6 +75,15 @@ elif [ ! -d "$TMPDIR" ]; then
   fi
 fi
 
+CLANG=0
+CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
+CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
+CXX_X86_64="$BIN/x86_64-linux-cosmo-g++"
+CXX_AARCH64="$BIN/aarch64-linux-cosmo-g++"
+FPORTCOSMO="-fportcosmo"
+TARGET_X86_64=
+TARGET_AARCH64=
+
 X=
 OPT=
 ARGS=
@@ -93,6 +102,7 @@ FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
 DEPENDENCY_OUTPUT=
 NEED_DEPENDENCY_OUTPUT=
+
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
@@ -184,6 +194,16 @@ EOF
     continue
   elif [ x"$x" = x"-moptlinux" ]; then
     MODE=optlinux
+    continue
+  elif [ x"$x" = x"-mclang" ]; then
+    CLANG=1
+    CC_X86_64="$BIN/cosmo-clang"
+    CC_AARCH64="$BIN/cosmo-clang"
+    CXX_X86_64="$BIN/cosmo-clang++"
+    CXX_AARCH64="$BIN/cosmo-clang++"
+    TARGET_X86_64="--target=x86_64"
+    TARGET_AARCH64="--target=aarch64"
+    FPORTCOSMO=
     continue
   elif [ x"$x" = x"-m64" ]; then
     continue
@@ -298,7 +318,7 @@ fi
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
-CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CFLAGS="$FPORTCOSMO -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
 LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
@@ -307,7 +327,9 @@ if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux"
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
 if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
-  CFLAGS="$CFLAGS -fno-schedule-insns2"
+  if [ $CLANG -eq 0 ]; then
+    CFLAGS="$CFLAGS -fno-schedule-insns2"
+  fi
 fi
 
 if [ x"$X" = x"c" ] || [ x"$X" = x"c-header" ]; then
@@ -320,11 +342,9 @@ else
   CPLUSPLUS=0
 fi
 
-CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
-CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
 if [ $CPLUSPLUS -eq 1 ]; then
-  CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
-  CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
+  CC_X86_64=$CXX_X86_64
+  CC_AARCH64=$CXX_AARCH64
   if [ $INTENT != cpp ]; then
     CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   fi
@@ -461,6 +481,7 @@ build_object() {
   (
     set -- \
         "$CC_X86_64" \
+        $TARGET_X86_64 \
         -o"$OUTPUT_X86_64" \
         $PLATFORM \
         $PREDEF \
@@ -482,6 +503,7 @@ build_object() {
   (
     set -- \
         "$CC_AARCH64" \
+        $TARGET_AARCH64 \
         -o"$OUTPUT_AARCH64" \
         $PLATFORM \
         $PREDEF \
@@ -588,6 +610,7 @@ TEMP_FILES="${TEMP_FILES} $out2"
 (
   set -- \
       "$CC_X86_64" \
+      $TARGET_X86_64 \
       -o"$OUTPUT_X86_64"\
       $CRT_X86_64 \
       $LDFLAGS_X86_64 \
@@ -605,6 +628,7 @@ pid1=$!
 (
   set -- \
       "$CC_AARCH64" \
+      $TARGET_AARCH64 \
       -o"$OUTPUT_AARCH64"\
       $CRT_AARCH64 \
       $LDFLAGS_AARCH64 \

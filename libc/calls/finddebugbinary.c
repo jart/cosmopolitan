@@ -27,6 +27,7 @@
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/directmap.h"
+#include "libc/intrin/promises.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
@@ -37,7 +38,6 @@
 #include "libc/sysv/consts/prot.h"
 
 static struct {
-  atomic_uint once;
   const char *res;
   char buf[PATH_MAX];
 } g_comdbg;
@@ -69,35 +69,26 @@ static int GetElfMachine(void) {
 }
 
 static bool IsMyDebugBinary(const char *path) {
+  void *addr;
   int64_t size;
   uintptr_t value;
   bool res = false;
   int fd, e = errno;
-  struct DirectMap dm;
-  BLOCK_CANCELATION;
   if ((fd = open(path, O_RDONLY | O_CLOEXEC, 0)) != -1) {
     // sanity test that this .com.dbg file (1) is an elf image, and (2)
     // contains the same number of bytes of code as our .com executable
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-        (dm = sys_mmap((void *)0x12345000000, size, PROT_READ, MAP_SHARED, fd,
-                       0))
-                .addr != MAP_FAILED) {
-      if (READ32LE((char *)dm.addr) == READ32LE("\177ELF") &&
-          ((Elf64_Ehdr *)dm.addr)->e_machine == GetElfMachine() &&
-          GetElfSymbolValue(dm.addr, "_etext", &value)) {
+        (addr = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
+      if (READ32LE((char *)addr) == READ32LE("\177ELF") &&
+          ((Elf64_Ehdr *)addr)->e_machine == GetElfMachine() &&
+          GetElfSymbolValue(addr, "_etext", &value)) {
         res = !_etext || value == (uintptr_t)_etext;
       }
-      if (!IsWindows()) {
-        sys_munmap(dm.addr, size);
-      } else {
-        CloseHandle(dm.maphandle);
-        UnmapViewOfFile(dm.addr);
-      }
+      munmap(addr, size);
     }
     close(fd);
   }
-  ALLOW_CANCELATION;
   errno = e;
   return res;
 }
@@ -106,7 +97,7 @@ static void FindDebugBinaryInit(void) {
   const char *comdbg;
   if (issetugid())
     return;
-  if ((comdbg = getenv("COMDBG")) && IsMyDebugBinary(comdbg)) {
+  if ((comdbg = getenv("COMDBG"))) {
     g_comdbg.res = comdbg;
     return;
   }
@@ -125,9 +116,18 @@ static void FindDebugBinaryInit(void) {
 /**
  * Returns path of binary with the debug information, or null.
  *
- * @return path to debug binary, or NULL
+ * You can specify the COMDBG environment variable, with the path of the
+ * debug binary, in case the automatic heuristics fail. What we look for
+ * is GetProgramExecutableName() with ".dbg", ".com.dbg", etc. appended.
+ *
+ * @return path to debug binary, or NULL if we couldn't find it
+ * @asyncsignalsafe
  */
 const char *FindDebugBinary(void) {
-  cosmo_once(&g_comdbg.once, FindDebugBinaryInit);
   return g_comdbg.res;
+}
+
+// pay startup cost to make this signal safe from the user's perspective
+__attribute__((__constructor__(10))) static void FindDebugBinaryCtor(void) {
+  FindDebugBinaryInit();
 }

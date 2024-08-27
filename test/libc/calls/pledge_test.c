@@ -109,12 +109,15 @@ TEST(pledge, execpromises_notok) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    putenv("COMDBG=REDACTED");
     __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
     ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
   EXPECT_NE(-1, wait(&ws));
+  EXPECT_FALSE(WIFSIGNALED(ws));
+  EXPECT_EQ(0, WTERMSIG(ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(129, WEXITSTATUS(ws));
 }
@@ -532,6 +535,7 @@ TEST(pledge, execpromises_ok) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    putenv("COMDBG=REDACTED");
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("life.elf", "life.elf", 0);
     _Exit(127);
@@ -547,6 +551,7 @@ TEST(pledge, execpromises_notok1) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    putenv("COMDBG=REDACTED");
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
@@ -562,6 +567,7 @@ TEST(pledge, execpromises_reducesAtExecOnLinux) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    putenv("COMDBG=REDACTED");
     ASSERT_SYS(0, 0, pledge("stdio inet tty exec", "stdio tty"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
@@ -619,6 +625,7 @@ TEST(pledge_openbsd, execpromises_notok) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    putenv("COMDBG=REDACTED");
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);

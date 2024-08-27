@@ -119,7 +119,7 @@ void __morph_begin(void) libcesque;
 void __morph_end(void) libcesque;
 void __jit_begin(void) libcesque;
 void __jit_end(void) libcesque;
-void __clear_cache(void *, void *) libcesque;
+void __clear_cache(void *, void *);
 /* portability */
 bool32 IsGenuineBlink(void) libcesque;
 bool32 IsCygwin(void) libcesque;

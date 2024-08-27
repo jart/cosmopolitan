@@ -44,9 +44,6 @@ $(LIBC_STR_A).pkg:						\
 		$(LIBC_STR_A_OBJS)				\
 		$(foreach x,$(LIBC_STR_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/str/wow.o: private				\
-		CC = gcc
-
 o/$(MODE)/libc/str/wmemset.o					\
 o/$(MODE)/libc/str/memset16.o					\
 o/$(MODE)/libc/str/dosdatetimetounix.o: private			\
