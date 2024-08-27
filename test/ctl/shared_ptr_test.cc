@@ -62,15 +62,12 @@ main()
             return 5;
     }
 
-    // TODO(mrdomino):
-#if 0
     {
         Ptr<int> x(new int);
         Ptr<void> y(x, nullptr);
         if (x.use_count() != 2)
             return 7;
     }
-#endif
 
     {
         auto x = Mk<int>(5);

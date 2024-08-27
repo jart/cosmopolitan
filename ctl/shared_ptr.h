@@ -258,6 +258,9 @@ class shared_ptr
     {
     }
 
+    template <typename U, typename E>
+    friend class shared_ptr;
+
     template<typename U, typename... Args>
     friend shared_ptr<U> make_shared(Args&&... args);
 
