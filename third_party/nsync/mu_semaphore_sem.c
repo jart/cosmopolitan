@@ -52,11 +52,11 @@ static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)
 	(sizeof (struct sem) <= sizeof (*sem_big_enough_for_sem)));
 
 static void sems_push (struct sem *f) {
-	int backoff = 0;
 	f->next = atomic_load_explicit (&g_sems, memory_order_relaxed);
 	while (!atomic_compare_exchange_weak_explicit (&g_sems, &f->next, f,
-						       memory_order_acq_rel, memory_order_relaxed))
-		backoff = pthread_delay_np (&g_sems, backoff);
+						       memory_order_acq_rel,
+						       memory_order_relaxed))
+		pthread_pause_np ();
 }
 
 static bool nsync_mu_semaphore_sem_create (struct sem *f) {

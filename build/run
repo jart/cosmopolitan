@@ -4,5 +4,5 @@ UNAMES=$(uname -s)
 if [ x"$UNAMES" = x"Darwin" ] && [ x"$UNAMEM" = x"arm64" ]; then
   exec ape "$@"
 else
-  exec "$@"
+  exec rusage "$@"
 fi

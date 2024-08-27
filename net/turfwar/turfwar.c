@@ -378,25 +378,25 @@ struct timespec WaitFor(int millis) {
 bool CheckMem(const char *file, int line, void *ptr) {
   if (ptr)
     return true;
-  kprintf("%s:%d: %P: out of memory: %s\n", file, line, strerror(errno));
+  kprintf("%s:%d: %H: out of memory: %s\n", file, line, strerror(errno));
   return false;
 }
 bool CheckSys(const char *file, int line, long rc) {
   if (rc != -1)
     return true;
-  kprintf("%s:%d: %P: %s\n", file, line, strerror(errno));
+  kprintf("%s:%d: %H: %s\n", file, line, strerror(errno));
   return false;
 }
 bool CheckSql(const char *file, int line, int rc) {
   if (rc == SQLITE_OK)
     return true;
-  kprintf("%s:%d: %P: %s\n", file, line, sqlite3_errstr(rc));
+  kprintf("%s:%d: %H: %s\n", file, line, sqlite3_errstr(rc));
   return false;
 }
 bool CheckDb(const char *file, int line, int rc, sqlite3 *db) {
   if (rc == SQLITE_OK)
     return true;
-  kprintf("%s:%d: %P: %s: %s\n", file, line, sqlite3_errstr(rc),
+  kprintf("%s:%d: %H: %s: %s\n", file, line, sqlite3_errstr(rc),
           sqlite3_errmsg(db));
   return false;
 }
@@ -1645,7 +1645,7 @@ OnError:
 void *ScoreWorker(void *arg) {
   pthread_setname_np(pthread_self(), "ScoreAll");
   for (;;) {
-    LOG("%P regenerating score...\n");
+    LOG("%H regenerating score...\n");
     Update(&g_asset.score, GenerateScore, -1, MS2CASH(SCORE_UPDATE_MS));
     usleep(SCORE_UPDATE_MS * 1000);
   }
@@ -1655,9 +1655,9 @@ void *ScoreWorker(void *arg) {
 void *ScoreHourWorker(void *arg) {
   pthread_setname_np(pthread_self(), "ScoreHour");
   for (;;) {
-    LOG("%P regenerating hour score...\n");
+    LOG("%H regenerating hour score...\n");
     Update(&g_asset.score_hour, GenerateScore, 60L * 60,
-           MS2CASH(SCORE_UPDATE_MS));
+           MS2CASH(SCORE_H_UPDATE_MS));
     usleep(SCORE_H_UPDATE_MS * 1000);
   }
 }
@@ -1666,7 +1666,7 @@ void *ScoreHourWorker(void *arg) {
 void *ScoreDayWorker(void *arg) {
   pthread_setname_np(pthread_self(), "ScoreDay");
   for (;;) {
-    LOG("%P regenerating day score...\n");
+    LOG("%H regenerating day score...\n");
     Update(&g_asset.score_day, GenerateScore, 60L * 60 * 24,
            MS2CASH(SCORE_D_UPDATE_MS));
     usleep(SCORE_D_UPDATE_MS * 1000);
@@ -1677,7 +1677,7 @@ void *ScoreDayWorker(void *arg) {
 void *ScoreWeekWorker(void *arg) {
   pthread_setname_np(pthread_self(), "ScoreWeek");
   for (;;) {
-    LOG("%P regenerating week score...\n");
+    LOG("%H regenerating week score...\n");
     Update(&g_asset.score_week, GenerateScore, 60L * 60 * 24 * 7,
            MS2CASH(SCORE_W_UPDATE_MS));
     usleep(SCORE_W_UPDATE_MS * 1000);
@@ -1688,7 +1688,7 @@ void *ScoreWeekWorker(void *arg) {
 void *ScoreMonthWorker(void *arg) {
   pthread_setname_np(pthread_self(), "ScoreMonth");
   for (;;) {
-    LOG("%P regenerating month score...\n");
+    LOG("%H regenerating month score...\n");
     Update(&g_asset.score_month, GenerateScore, 60L * 60 * 24 * 30,
            MS2CASH(SCORE_M_UPDATE_MS));
     usleep(SCORE_M_UPDATE_MS * 1000);
@@ -1874,7 +1874,7 @@ void Meltdown(void) {
   int i, marks;
   struct timespec now;
   ++g_meltdowns;
-  LOG("%P panicking because %d out of %d workers is connected\n", g_connections,
+  LOG("%H panicking because %d out of %d workers is connected\n", g_connections,
       g_workers);
   now = timespec_real();
   for (marks = i = 0; i < g_workers; ++i) {
@@ -1924,9 +1924,9 @@ void CheckDatabase(void) {
   sqlite3 *db;
   if (g_integrity) {
     CHECK_SQL(DbOpen("db.sqlite3", &db));
-    LOG("%P Checking database integrity...\n");
+    LOG("%H Checking database integrity...\n");
     CHECK_SQL(sqlite3_exec(db, "PRAGMA integrity_check", 0, 0, 0));
-    LOG("%P Vacuuming database...\n");
+    LOG("%H Vacuuming database...\n");
     CHECK_SQL(sqlite3_exec(db, "VACUUM", 0, 0, 0));
     CHECK_SQL(sqlite3_close(db));
   }
@@ -2204,11 +2204,11 @@ int main(int argc, char *argv[]) {
   pthread_attr_destroy(&attr);
 
   // time to serve
-  LOG("%P ready\n");
+  LOG("%H ready\n");
   Supervisor(0);
 
   // cancel listen()
-  LOG("%P interrupting services...\n");
+  LOG("%H interrupting services...\n");
   pthread_cancel(scorer);
   pthread_cancel(recenter);
   pthread_cancel(g_listener);
@@ -2218,7 +2218,7 @@ int main(int argc, char *argv[]) {
   pthread_cancel(scorer_month);
   pthread_cancel(replenisher);
 
-  LOG("%P joining services...\n");
+  LOG("%H joining services...\n");
   unassert(!pthread_join(scorer, 0));
   unassert(!pthread_join(recenter, 0));
   unassert(!pthread_join(g_listener, 0));
@@ -2229,13 +2229,13 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_join(replenisher, 0));
 
   // cancel read() so that keepalive clients finish faster
-  LOG("%P interrupting workers...\n");
+  LOG("%H interrupting workers...\n");
   for (int i = 0; i < g_workers; ++i)
     if (!g_worker[i].dead)
       pthread_cancel(g_worker[i].th);
 
   // wait for producers to finish
-  LOG("%P joining workers...\n");
+  LOG("%H joining workers...\n");
   for (int i = 0; i < g_workers; ++i)
     unassert(!pthread_join(g_worker[i].th, 0));
 
@@ -2244,14 +2244,14 @@ int main(int argc, char *argv[]) {
   // claims worker thread which waits forever for new claims.
   unassert(!g_claims.count);
   pthread_cancel(claimer);
-  LOG("%P waiting for claims worker...\n");
+  LOG("%H waiting for claims worker...\n");
   unassert(!pthread_join(claimer, 0));
 
   // perform some sanity checks
   unassert(g_claimsprocessed == g_claimsenqueued);
 
   // free memory
-  LOG("%P freeing memory...\n");
+  LOG("%H freeing memory...\n");
   FreeAsset(&g_asset.user);
   FreeAsset(&g_asset.about);
   FreeAsset(&g_asset.index);
@@ -2267,6 +2267,6 @@ int main(int argc, char *argv[]) {
 
   time_destroy();
 
-  LOG("%P goodbye\n");
+  LOG("%H goodbye\n");
   // CheckForMemoryLeaks();
 }
