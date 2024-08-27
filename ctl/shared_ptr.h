@@ -129,23 +129,75 @@ struct bad_weak_ptr : ctl::exception
     }
 };
 
-template<typename T, typename D = default_delete<T>>
+template<typename T>
+class weak_ptr;
+
+template<typename T>
 class shared_ptr
 {
   public:
-    using element_type = T; // TODO(mrdomino): remove extent?
-    using deleter_type = D;
+    using element_type = T; // TODO(mrdomino): remove extent
+    using weak_type = weak_ptr<T>;
 
-    constexpr shared_ptr(nullptr_t = nullptr) noexcept : p(nullptr), rc(nullptr)
+    constexpr shared_ptr() noexcept : p(nullptr), rc(nullptr)
     {
     }
 
-    explicit shared_ptr(auto* const p)
-      : p(p), rc(__::shared_pointer<T, D>::make(p, D()))
+    constexpr shared_ptr(nullptr_t) noexcept : p(nullptr), rc(nullptr)
     {
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    explicit shared_ptr(U* const p)
+      : p(p)
+      , rc(__::shared_pointer<T, default_delete<T>>::make(p,
+                                                          default_delete<T>()))
+    {
+    }
+
+    template<typename U, typename D>
+        requires is_convertible_v<U, T>
+    shared_ptr(U* const p, D d)
+      : p(p), rc(__::shared_pointer<T, D>::make(p, ctl::move(d)))
+    {
+    }
+
+    template<typename D>
+    shared_ptr(nullptr_t, D d)
+      : p(nullptr), rc(__::shared_pointer<T, D>::make(nullptr, ctl::move(d)))
+    {
+    }
+
+    // TODO(mrdomino): allocators
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    shared_ptr(const shared_ptr<U>& r, element_type* const p) noexcept
+      : p(p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_shared();
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    shared_ptr(shared_ptr<U>&& r, element_type* const p) noexcept
+      : p(p), rc(r.rc)
+    {
+        r.p = nullptr;
+        r.rc = nullptr;
     }
 
     shared_ptr(const shared_ptr& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_shared();
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    shared_ptr(const shared_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
     {
         if (rc)
             rc->keep_shared();
@@ -158,20 +210,30 @@ class shared_ptr
     }
 
     template<typename U>
-    shared_ptr(const shared_ptr<U>& r, T* const p) noexcept : p(p), rc(r.rc)
-    {
-        if (rc)
-            rc->keep_shared();
-    }
-
-    template<typename U>
-    shared_ptr(shared_ptr<U>&& r, T* const p) noexcept : p(p), rc(r.rc)
+        requires is_convertible_v<U, T>
+    shared_ptr(shared_ptr<U>&& r) noexcept : p(r.p), rc(r.rc)
     {
         r.p = nullptr;
         r.rc = nullptr;
     }
 
-    // TODO(mrdomino): moar ctors
+    template<typename U>
+        requires is_convertible_v<U, T>
+    explicit shared_ptr(const weak_ptr<U>& r) : p(r.p), rc(r.rc)
+    {
+        // XXX keep_shared?
+        if (r.expired())
+            // XXX throw bad_weak_ptr?
+            __builtin_trap();
+    }
+
+    template<typename U, typename D>
+        requires is_convertible_v<U, T>
+    shared_ptr(unique_ptr<U, D> r)
+      : p(r.get()), rc(__::shared_pointer<U, D>::make(r.get(), r.get_deleter()))
+    {
+        r.release();
+    }
 
     ~shared_ptr()
     {
@@ -182,6 +244,15 @@ class shared_ptr
     shared_ptr& operator=(shared_ptr r) noexcept
     {
         swap(r);
+        return *this;
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    shared_ptr& operator=(shared_ptr<U> r) noexcept
+    {
+        swap(p, r.p);
+        swap(rc, r.rc);
         return *this;
     }
 
@@ -210,9 +281,8 @@ class shared_ptr
         return p;
     }
 
-    template <typename U = T>
-    typename enable_if<!is_void_v<U>, U&>::type
-    operator*() const noexcept
+    template<typename U = T>
+    typename enable_if<!is_void_v<U>, U&>::type operator*() const noexcept
     {
         if (!p)
             __builtin_trap();
@@ -227,9 +297,8 @@ class shared_ptr
         return *p;
     }
 
-    template <typename U = T>
-    typename enable_if<!is_void_v<U>, U&>::type
-    operator[](ptrdiff_t i) const
+    template<typename U = T>
+    typename enable_if<!is_void_v<U>, U&>::type operator[](ptrdiff_t i) const
     {
         return *(p + i);
     }
@@ -253,17 +322,121 @@ class shared_ptr
     // TODO(mrdomino): owner_before(weak_ptr const&)
 
   private:
-    constexpr shared_ptr(T* const p, __::shared_control* rc) noexcept
-      : p(p), rc(rc)
+    static shared_ptr<T> make_from_rc(T* const p,
+                                      __::shared_control* rc) noexcept
     {
+        shared_ptr<T> r;
+        r.p = p;
+        r.rc = rc;
+        return r;
     }
 
-    template <typename U, typename E>
+    template<typename U>
     friend class shared_ptr;
 
     template<typename U, typename... Args>
     friend shared_ptr<U> make_shared(Args&&... args);
 
+    template<typename U>
+    friend class weak_ptr;
+
+    T* p;
+    __::shared_control* rc;
+};
+
+template<typename T>
+class weak_ptr
+{
+  public:
+    using element_type = T; // TODO(mrdomino): remove extent
+
+    constexpr weak_ptr() noexcept : p(nullptr), rc(nullptr)
+    {
+    }
+
+    weak_ptr(const weak_ptr& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_weak();
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    weak_ptr(const weak_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_weak();
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    weak_ptr(const shared_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_weak();
+    }
+
+    weak_ptr(weak_ptr&& r) noexcept : p(r.p), rc(r.rc)
+    {
+        r.p = nullptr;
+        r.rc = nullptr;
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    weak_ptr(weak_ptr<U>&& r) noexcept : p(r.p), rc(r.rc)
+    {
+        r.p = nullptr;
+        r.rc = nullptr;
+    }
+
+    ~weak_ptr()
+    {
+        if (rc)
+            rc->drop_weak();
+    }
+
+    weak_ptr& operator=(weak_ptr r) noexcept
+    {
+        swap(r);
+        return *this;
+    }
+
+    template<typename U>
+        requires is_convertible_v<U, T>
+    weak_ptr& operator=(weak_ptr<U> r) noexcept
+    {
+        swap(p, r.p);
+        swap(rc, r.rc);
+        return *this;
+    }
+
+    void reset() noexcept
+    {
+        if (rc)
+            rc->drop_shared();
+        p = nullptr;
+        rc = nullptr;
+    }
+
+    void swap(weak_ptr& r) noexcept
+    {
+        using ctl::swap;
+        swap(p, r.p);
+        swap(rc, r.rc);
+    }
+
+    size_t use_count() const noexcept
+    {
+        return rc ? rc->use_count() : 0;
+    }
+
+    bool expired() const noexcept
+    {
+        return use_count() == 0;
+    }
+
+  private:
     T* p;
     __::shared_control* rc;
 };
@@ -274,7 +447,7 @@ make_shared(Args&&... args)
 {
     auto rc = __::shared_emplace<T>::make_unique();
     rc->construct(ctl::forward<Args>(args)...);
-    auto r = shared_ptr<T>(&rc->t, rc.get());
+    auto r = shared_ptr<T>::make_from_rc(&rc->t, rc.get());
     rc.release();
     return r;
 }

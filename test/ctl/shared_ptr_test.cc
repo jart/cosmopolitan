@@ -17,6 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/shared_ptr.h"
+#include "ctl/utility.h"
 #include "libc/mem/leaks.h"
 
 #include "libc/runtime/runtime.h"
@@ -73,6 +74,11 @@ main()
         auto x = Mk<int>(5);
         if (x.use_count() != 1)
             return 8;
+    }
+
+    {
+        auto x = Mk<int>(5);
+        auto y = Ptr(ctl::move(x));
     }
 
     // TODO(mrdomino): exercise more of API
