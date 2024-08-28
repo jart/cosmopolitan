@@ -155,6 +155,7 @@ main()
             return 9;
     }
 
+#if 0
     {
         g = 0;
         // You can create a shared_ptr from a unique_ptr.
@@ -166,6 +167,7 @@ main()
         if (g != 1)
             return 11;
     }
+#endif
 
     {
         g = 0;

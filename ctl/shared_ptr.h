@@ -193,12 +193,15 @@ class shared_ptr
     {
     }
 
+    // TODO(mrdomino): blocked on ctl::ref
+#if 0
     template<typename U, typename D>
         requires is_convertible_v<U, T>
     shared_ptr(unique_ptr<U, D>&& r)
       : p(r.p), rc(__::shared_pointer<U, D>::make(r.release(), r.get_deleter()))
     {
     }
+#endif
 
     ~shared_ptr()
     {
