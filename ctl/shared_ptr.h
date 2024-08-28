@@ -90,15 +90,14 @@ template<typename T, typename D>
 class shared_pointer : public shared_ref
 {
   public:
-    static shared_pointer* make(T* const p, auto&& d)
+    static shared_pointer* make(T* const p, D d)
     {
-        auto p2 = unique_ptr(p);
-        return new shared_pointer(p2.release(), forward<decltype(d)>(d));
+        auto p2 = unique_ptr<T, D>(p, move(d));
+        return new shared_pointer(p2.release(), move(p2.get_deleter()));
     }
 
   private:
-    shared_pointer(T* const p, auto&& d) noexcept
-      : p(p), d(forward<decltype(d)>(d))
+    shared_pointer(T* const p, D d) noexcept : p(p), d(move(d))
     {
     }
 
