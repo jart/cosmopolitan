@@ -4,12 +4,22 @@
 #define CTL_SHARED_PTR_H_
 
 #include "conditional.h"
+#include "exception.h"
 #include "is_convertible.h"
 #include "is_void.h"
 #include "remove_extent.h"
 #include "unique_ptr.h"
 
 namespace ctl {
+
+class bad_weak_ptr : public exception
+{
+  public:
+    const char* what() const noexcept override
+    {
+        return "ctl::bad_weak_ptr";
+    }
+};
 
 namespace __ {
 
@@ -217,8 +227,12 @@ class shared_ptr
 
     template<typename U>
         requires is_convertible_v<U, T>
-    explicit shared_ptr(const weak_ptr<U>& r) : shared_ptr(r.lock())
+    explicit shared_ptr(const weak_ptr<U>& r) : p(r.p), rc(r.rc)
     {
+        if (r.expired()) {
+            throw bad_weak_ptr();
+        }
+        rc->keep_shared();
     }
 
     // TODO(mrdomino): blocked on ctl::ref
@@ -408,6 +422,9 @@ class weak_ptr
     }
 
   private:
+    template<typename U>
+    friend class shared_ptr;
+
     element_type* p = nullptr;
     __::shared_ref* rc = nullptr;
 };

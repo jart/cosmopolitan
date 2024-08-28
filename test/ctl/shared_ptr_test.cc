@@ -36,6 +36,8 @@ make_shared(Args&&... args)
     return ctl::make_shared<T, Args...>(ctl::forward<Args>(args)...);
 }
 
+using bad_weak_ptr = ctl::bad_weak_ptr;
+
 #undef ctl
 
 static int g = 0;
@@ -213,6 +215,32 @@ main()
             return 19;
         if (*x != 5)
             return 20;
+    }
+
+    {
+        // Expired weak pointers lock to nullptr, and throw when promoted to
+        // shared pointer by constructor.
+        auto x = make_shared<int>();
+        weak_ptr<int> y(x);
+        x.reset();
+        if (y.lock())
+            return 21;
+        int caught = 0;
+        try {
+            shared_ptr<int> z(y);
+        } catch (bad_weak_ptr& e) {
+            caught = 1;
+        }
+        if (!caught)
+            return 22;
+    }
+
+    {
+        // nullptr is always expired.
+        shared_ptr<int> x(nullptr);
+        weak_ptr<int> y(x);
+        if (!y.expired())
+            return 23;
     }
 
     // TODO(mrdomino): exercise threads / races. The reference count should be
