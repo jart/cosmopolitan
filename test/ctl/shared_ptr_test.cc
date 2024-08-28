@@ -21,22 +21,16 @@
 #include "libc/mem/leaks.h"
 
 // #include <memory>
+// #include <vector>
 // #define ctl std
 
-template<typename T>
-using shared_ptr = ctl::shared_ptr<T>;
-
-template<typename T>
-using weak_ptr = ctl::weak_ptr<T>;
-
-template<typename T, typename... Args>
-shared_ptr<T>
-make_shared(Args&&... args)
-{
-    return ctl::make_shared<T, Args...>(ctl::forward<Args>(args)...);
-}
-
-using bad_weak_ptr = ctl::bad_weak_ptr;
+using ctl::bad_weak_ptr;
+using ctl::make_shared;
+using ctl::move;
+using ctl::shared_ptr;
+using ctl::unique_ptr;
+using ctl::vector;
+using ctl::weak_ptr;
 
 #undef ctl
 
@@ -149,7 +143,7 @@ main()
     {
         // You can take a shared pointer to a subobject, and it will free the
         // base object.
-        shared_ptr<ctl::vector<int>> x(new ctl::vector<int>);
+        shared_ptr<vector<int>> x(new vector<int>);
         x->push_back(5);
         shared_ptr<int> y(x, &x->at(0));
         x.reset();
@@ -157,19 +151,17 @@ main()
             return 9;
     }
 
-#if 0
     {
         g = 0;
         // You can create a shared_ptr from a unique_ptr.
-        ctl::unique_ptr x(&a, CallG());
-        shared_ptr<int> y(ctl::move(x));
+        unique_ptr<int, CallG> x(&a, CallG());
+        shared_ptr<int> y(move(x));
         if (x)
             return 10;
         y.reset();
         if (g != 1)
             return 11;
     }
-#endif
 
     {
         g = 0;

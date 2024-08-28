@@ -102,8 +102,12 @@ class shared_pointer : public shared_ref
   public:
     static shared_pointer* make(T* const p, D d)
     {
-        auto p2 = unique_ptr<T, D>(p, move(d));
-        return new shared_pointer(p2.release(), move(p2.get_deleter()));
+        return make(unique_ptr<T, D>(p, move(d)));
+    }
+
+    static shared_pointer* make(unique_ptr<T, D> p)
+    {
+        return new shared_pointer(p.release(), move(p.get_deleter()));
     }
 
   private:
@@ -235,15 +239,12 @@ class shared_ptr
         rc->keep_shared();
     }
 
-    // TODO(mrdomino): blocked on ctl::ref
-#if 0
     template<typename U, typename D>
         requires is_convertible_v<U, T>
     shared_ptr(unique_ptr<U, D>&& r)
-      : p(r.p), rc(__::shared_pointer<U, D>::make(r.release(), r.get_deleter()))
+      : p(r.p), rc(__::shared_pointer<U, D>::make(move(r)))
     {
     }
-#endif
 
     ~shared_ptr()
     {
