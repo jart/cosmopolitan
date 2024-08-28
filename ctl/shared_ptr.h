@@ -80,7 +80,7 @@ class shared_ref
     }
 
   private:
-    virtual void dispose() = 0;
+    virtual void dispose() noexcept = 0;
 
     size_t shared = 0;
     size_t weak = 0;
@@ -102,13 +102,42 @@ class shared_pointer : public shared_ref
     {
     }
 
-    void dispose() override
+    void dispose() noexcept override
     {
         move(d)(p);
     }
 
     T* const p;
     [[no_unique_address]] D d;
+};
+
+template<typename T>
+class shared_emplace : public shared_ref
+{
+  public:
+    union
+    {
+        T t;
+    };
+
+    template<typename... Args>
+    void construct(Args&&... args)
+    {
+        ::new (&t) T(forward<Args>(args)...);
+    }
+
+    static unique_ptr<shared_emplace> make()
+    {
+        return unique_ptr(new shared_emplace());
+    }
+
+  private:
+    explicit constexpr shared_emplace() noexcept = default;
+
+    void dispose() noexcept override
+    {
+        t.~T();
+    }
 };
 
 template<typename T, typename U>
@@ -302,6 +331,9 @@ class shared_ptr
     template<typename U>
     friend class shared_ptr;
 
+    template<typename U, typename... Args>
+    friend shared_ptr<U> make_shared(Args&&... args);
+
     element_type* p = nullptr;
     __::shared_ref* rc = nullptr;
 };
@@ -385,8 +417,12 @@ template<typename T, typename... Args>
 shared_ptr<T>
 make_shared(Args&&... args)
 {
-    // TODO(mrdomino): shared_emplace
-    return shared_ptr<T>(new T(forward<Args>(args)...));
+    auto rc = __::shared_emplace<T>::make();
+    rc->construct(forward<Args>(args)...);
+    shared_ptr<T> r;
+    r.p = &rc->t;
+    r.rc = rc.release();
+    return r;
 }
 
 } // namespace ctl
