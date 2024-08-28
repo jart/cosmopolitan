@@ -322,7 +322,7 @@ class shared_ptr
         return rc ? rc->use_count() : 0;
     }
 
-    operator bool() const noexcept
+    explicit operator bool() const noexcept
     {
         return p;
     }
