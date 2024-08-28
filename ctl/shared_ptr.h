@@ -7,6 +7,7 @@
 #include "exception.h"
 #include "is_convertible.h"
 #include "is_void.h"
+#include "new.h"
 #include "remove_extent.h"
 #include "unique_ptr.h"
 
