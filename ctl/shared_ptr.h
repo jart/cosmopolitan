@@ -154,7 +154,7 @@ class shared_emplace : public shared_ref
     }
 };
 
-template <typename T, typename U>
+template<typename T, typename U>
 concept shared_ptr_compatible = is_convertible_v<U*, T*>;
 
 } // namespace __
