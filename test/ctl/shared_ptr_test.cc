@@ -141,6 +141,11 @@ main()
     }
 
     {
+        // You can also create a shared pointer to void in the first place.
+        shared_ptr<void> x(new int);
+    }
+
+    {
         // You can take a shared pointer to a subobject, and it will free the
         // base object.
         shared_ptr<vector<int>> x(new vector<int>);

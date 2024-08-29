@@ -154,8 +154,8 @@ class shared_emplace : public shared_ref
     }
 };
 
-template<typename T, typename U>
-concept shared_ptr_convertible = is_convertible_v<U, T> || is_void_v<T>;
+template <typename T, typename U>
+concept shared_ptr_compatible = is_convertible_v<U*, T*>;
 
 } // namespace __
 
@@ -175,15 +175,15 @@ class shared_ptr
     }
 
     template<typename U>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     explicit shared_ptr(U* const p) : shared_ptr(p, default_delete<U>())
     {
     }
 
     template<typename U, typename D>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     shared_ptr(U* const p, D d)
-      : p(p), rc(__::shared_pointer<T, D>::make(p, move(d)))
+      : p(p), rc(__::shared_pointer<U, D>::make(p, move(d)))
     {
     }
 
@@ -203,7 +203,7 @@ class shared_ptr
     }
 
     template<typename U>
-        requires __::shared_ptr_convertible<T, U>
+        requires __::shared_ptr_compatible<T, U>
     shared_ptr(const shared_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
     {
         if (rc)
@@ -211,7 +211,7 @@ class shared_ptr
     }
 
     template<typename U>
-        requires __::shared_ptr_convertible<T, U>
+        requires __::shared_ptr_compatible<T, U>
     shared_ptr(shared_ptr<U>&& r) noexcept : p(r.p), rc(r.rc)
     {
         r.p = nullptr;
@@ -231,7 +231,7 @@ class shared_ptr
     }
 
     template<typename U>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     explicit shared_ptr(const weak_ptr<U>& r) : p(r.p), rc(r.rc)
     {
         if (r.expired()) {
@@ -241,7 +241,7 @@ class shared_ptr
     }
 
     template<typename U, typename D>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     shared_ptr(unique_ptr<U, D>&& r)
       : p(r.p), rc(__::shared_pointer<U, D>::make(move(r)))
     {
@@ -260,7 +260,7 @@ class shared_ptr
     }
 
     template<typename U>
-        requires __::shared_ptr_convertible<T, U>
+        requires __::shared_ptr_compatible<T, U>
     shared_ptr& operator=(shared_ptr<U> r) noexcept
     {
         shared_ptr<T>(move(r)).swap(*this);
@@ -277,14 +277,14 @@ class shared_ptr
     }
 
     template<typename U>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     void reset(U* const p2)
     {
         shared_ptr<T>(p2).swap(*this);
     }
 
     template<typename U, typename D>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     void reset(U* const p2, D d)
     {
         shared_ptr<T>(p2, d).swap(*this);
@@ -362,7 +362,7 @@ class weak_ptr
     constexpr weak_ptr() noexcept = default;
 
     template<typename U>
-        requires is_convertible_v<U, T>
+        requires __::shared_ptr_compatible<T, U>
     weak_ptr(const shared_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
     {
         if (rc)
