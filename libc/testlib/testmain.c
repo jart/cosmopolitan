@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
   __log_level = kLogInfo;
   GetOpts(argc, argv);
 
-  for (fd = 3; fd < 10; ++fd) {
+  for (fd = 3; fd < 100; ++fd) {
     close(fd);
   }
 
