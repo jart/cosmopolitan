@@ -72,7 +72,7 @@ class shared_ref
         incref(&shared);
     }
 
-    void drop_shared()
+    void drop_shared() noexcept
     {
         if (decref(&shared)) {
             dispose();
@@ -281,11 +281,7 @@ class shared_ptr
 
     void reset() noexcept
     {
-        if (rc) {
-            rc->drop_shared();
-        }
-        p = nullptr;
-        rc = nullptr;
+        shared_ptr().swap(*this);
     }
 
     template<typename U>
@@ -398,14 +394,12 @@ class weak_ptr
 
     void reset() noexcept
     {
-        if (rc)
-            rc->drop_weak();
-        p = nullptr;
-        rc = nullptr;
+        weak_ptr().swap(*this);
     }
 
     void swap(weak_ptr& r) noexcept
     {
+        using ctl::swap;
         swap(p, r.p);
         swap(rc, r.rc);
     }
