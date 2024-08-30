@@ -9,7 +9,8 @@
 #include "unique_ptr.h"
 
 // XXX currently needed to use placement-new syntax (move to cxx.inc?)
-void* operator new(size_t, void*) noexcept;
+void*
+operator new(size_t, void*) noexcept;
 
 namespace ctl {
 
@@ -30,7 +31,7 @@ struct ptr_ref
     using type = T&;
 };
 
-template <>
+template<>
 struct ptr_ref<void>
 {
     using type = void;
