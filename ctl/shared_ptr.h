@@ -3,13 +3,13 @@
 #ifndef CTL_SHARED_PTR_H_
 #define CTL_SHARED_PTR_H_
 
-#include "conditional.h"
 #include "exception.h"
 #include "is_convertible.h"
-#include "is_void.h"
-#include "new.h"
 #include "remove_extent.h"
 #include "unique_ptr.h"
+
+// XXX currently needed to use placement-new syntax (move to cxx.inc?)
+void* operator new(size_t, void*) noexcept;
 
 namespace ctl {
 
@@ -23,6 +23,18 @@ class bad_weak_ptr : public exception
 };
 
 namespace __ {
+
+template<typename T>
+struct ptr_ref
+{
+    using type = T&;
+};
+
+template <>
+struct ptr_ref<void>
+{
+    using type = void;
+};
 
 static inline __attribute__((always_inline)) void
 incref(size_t* r) noexcept
@@ -302,8 +314,7 @@ class shared_ptr
         return p;
     }
 
-    conditional_t<is_void_v<T>, void, add_lvalue_reference_t<T>> operator*()
-      const noexcept
+    typename __::ptr_ref<T>::type operator*() const noexcept
     {
         if (!p)
             __builtin_trap();
