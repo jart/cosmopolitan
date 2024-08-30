@@ -38,6 +38,7 @@
 #include "libc/sysv/consts/prot.h"
 
 static struct {
+  atomic_uint once;
   const char *res;
   char buf[PATH_MAX];
 } g_comdbg;
@@ -124,10 +125,11 @@ static void FindDebugBinaryInit(void) {
  * @asyncsignalsafe
  */
 const char *FindDebugBinary(void) {
+  cosmo_once(&g_comdbg.once, FindDebugBinaryInit);
   return g_comdbg.res;
 }
 
 // pay startup cost to make this signal safe from the user's perspective
 __attribute__((__constructor__(10))) static void FindDebugBinaryCtor(void) {
-  FindDebugBinaryInit();
+  cosmo_once(&g_comdbg.once, FindDebugBinaryInit);
 }
