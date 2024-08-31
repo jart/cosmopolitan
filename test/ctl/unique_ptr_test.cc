@@ -36,23 +36,23 @@ using ctl::make_unique_for_overwrite;
 // object.
 static int g = 0;
 
-struct SetsGCtor
+struct ConstructG
 {
-    SetsGCtor()
+    ConstructG()
     {
         ++g;
     }
 };
 
-struct SetsGDtor
+struct DestructG
 {
-    ~SetsGDtor()
+    ~DestructG()
     {
         ++g;
     }
 };
 
-struct SetsGDeleter
+struct CallG
 {
     void operator()(auto* x) const noexcept
     {
@@ -93,7 +93,7 @@ main()
 
     {
         // Deleter is called if the pointer is non-null when reset.
-        unique_ptr<int, SetsGDeleter> x(&a);
+        unique_ptr<int, CallG> x(&a);
         x.reset();
         if (g != 1)
             return 1;
@@ -102,7 +102,7 @@ main()
     {
         g = 0;
         // Deleter is not called if the pointer is null when reset.
-        unique_ptr<int, SetsGDeleter> x(&a);
+        unique_ptr<int, CallG> x(&a);
         x.release();
         x.reset();
         if (g)
@@ -113,7 +113,7 @@ main()
         g = 0;
         // Deleter is called when the pointer goes out of scope.
         {
-            unique_ptr<int, SetsGDeleter> x(&a);
+            unique_ptr<int, CallG> x(&a);
         }
         if (!g)
             return 18;
@@ -123,7 +123,7 @@ main()
         g = 0;
         // Deleter is called if scope ends exceptionally.
         try {
-            unique_ptr<int, SetsGDeleter> x(&a);
+            unique_ptr<int, CallG> x(&a);
             throw 'a';
         } catch (char) {
         }
@@ -149,17 +149,17 @@ main()
 
     {
         g = 0;
-        unique_ptr<SetsGCtor> x;
+        unique_ptr<ConstructG> x;
         if (g)
             return 5;
-        x = make_unique<SetsGCtor>();
+        x = make_unique<ConstructG>();
         if (g != 1)
             return 6;
     }
 
     {
         g = 0;
-        auto x = make_unique<SetsGDtor>();
+        auto x = make_unique<DestructG>();
         if (g)
             return 7;
         x.reset();
@@ -171,9 +171,9 @@ main()
 
     {
         g = 0;
-        unique_ptr<SetsGDtor> x, y;
-        x = make_unique<SetsGDtor>();
-        y = make_unique<SetsGDtor>();
+        unique_ptr<DestructG> x, y;
+        x = make_unique<DestructG>();
+        y = make_unique<DestructG>();
 #if 0
         // shouldn't compile
         x = y;
@@ -188,7 +188,7 @@ main()
     {
         g = 0;
         {
-            auto x = make_unique<SetsGDtor>();
+            auto x = make_unique<DestructG>();
         }
         if (g != 1)
             return 12;
@@ -197,7 +197,7 @@ main()
     {
         g = 0;
         {
-            auto x = make_unique<SetsGDtor>();
+            auto x = make_unique<DestructG>();
             delete x.release();
         }
         if (g != 1)
