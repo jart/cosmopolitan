@@ -321,7 +321,7 @@ void __unw_remove_dynamic_fde(unw_word_t fde) {
 void __unw_add_dynamic_eh_frame_section(unw_word_t eh_frame_start) {
   // The eh_frame section start serves as the mh_group
   unw_word_t mh_group = eh_frame_start;
-  CFI_Parser<LocalAddressSpace>::CIE_Info cieInfo;
+  CFI_Parser<LocalAddressSpace>::CIE_Info cieInfo = {};
   CFI_Parser<LocalAddressSpace>::FDE_Info fdeInfo;
   auto p = (LocalAddressSpace::pint_t)eh_frame_start;
   while (true) {

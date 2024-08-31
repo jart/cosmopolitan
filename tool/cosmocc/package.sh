@@ -102,8 +102,6 @@ make -j$NPROC m=$ARM64 \
   o/$ARM64/ape/ape.elf \
   o/$ARM64/ape/aarch64.lds \
   o/$ARM64/libc/crt/crt.o \
-  o/$ARM64/ape/ape-copy-self.o \
-  o/$ARM64/ape/ape-no-modify-self.o \
   o/$ARM64/cosmopolitan.a \
   o/$ARM64/third_party/libcxx/libcxx.a \
   o/$ARM64/tool/build/assimilate.dbg \
@@ -136,8 +134,6 @@ make -j$NPROC m=$ARM64-tiny \
   o/$ARM64-tiny/ape/ape.elf \
   o/$ARM64-tiny/ape/aarch64.lds \
   o/$ARM64-tiny/libc/crt/crt.o \
-  o/$ARM64-tiny/ape/ape-copy-self.o \
-  o/$ARM64-tiny/ape/ape-no-modify-self.o \
   o/$ARM64-tiny/cosmopolitan.a \
   o/$ARM64-tiny/third_party/libcxx/libcxx.a \
 
@@ -145,8 +141,6 @@ make -j$NPROC m=$ARM64-dbg \
   o/$ARM64-dbg/ape/ape.elf \
   o/$ARM64-dbg/ape/aarch64.lds \
   o/$ARM64-dbg/libc/crt/crt.o \
-  o/$ARM64-dbg/ape/ape-copy-self.o \
-  o/$ARM64-dbg/ape/ape-no-modify-self.o \
   o/$ARM64-dbg/cosmopolitan.a \
   o/$ARM64-dbg/third_party/libcxx/libcxx.a \
 
@@ -154,8 +148,6 @@ make -j$NPROC m=$ARM64-optlinux \
   o/$ARM64-optlinux/ape/ape.elf \
   o/$ARM64-optlinux/ape/aarch64.lds \
   o/$ARM64-optlinux/libc/crt/crt.o \
-  o/$ARM64-optlinux/ape/ape-copy-self.o \
-  o/$ARM64-optlinux/ape/ape-no-modify-self.o \
   o/$ARM64-optlinux/cosmopolitan.a \
   o/$ARM64-optlinux/third_party/libcxx/libcxx.a \
 
@@ -182,17 +174,18 @@ fetch() {
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.53/aarch64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.53/x86_64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.53/llvm.zip &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.54/aarch64-gcc.zip &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.54/x86_64-gcc.zip &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.54/llvm.zip &
   wait
   unzip aarch64-gcc.zip &
   unzip x86_64-gcc.zip &
-  unzip llvm.zip bin/clang-18 &
+  unzip llvm.zip bin/clang-19 &
   wait
   rm -f aarch64-gcc.zip
   rm -f x86_64-gcc.zip
-  mv bin/clang-18 bin/cosmo-clang
+  rm -f llvm.zip
+  mv bin/clang-19 bin/cosmo-clang
 fi
 rm -f bin/*-cpp
 rm -f bin/*-gcc-*

@@ -21,13 +21,6 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
-// this dontthrow keyword SHOULD break this test. it's probably passing
-// because we're currently using SjLj exceptions. the day we can change
-// things, remove `dontthrow` and this test will still be a useful help
-extern "C" dontthrow void qsort_(void *, size_t, size_t,
-                                 int (*)(const void *,
-                                         const void *)) asm("qsort");
-
 struct Resource {
   char *p;
   Resource() {
@@ -60,7 +53,7 @@ int A[3] = {3, 2, 1};
 int Work(void) {
   Resource r;
   pPoke(r.p);
-  qsort_(A, 3, sizeof(int), cmp);
+  qsort(A, 3, sizeof(int), cmp);
   return A[0];
 }
 int (*pWork)(void) = Work;

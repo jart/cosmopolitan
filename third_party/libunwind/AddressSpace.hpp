@@ -94,12 +94,12 @@ namespace libunwind {
 //   __eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
 //   __eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
 
-extern char __eh_frame_start;
-extern char __eh_frame_end;
+extern char __eh_frame_start __attribute__((__weak__)); // [jart]
+extern char __eh_frame_end __attribute__((__weak__)); // [jart]
 
 #if defined(_LIBUNWIND_SUPPORT_DWARF_INDEX)
-extern char __eh_frame_hdr_start;
-extern char __eh_frame_hdr_end;
+extern char __eh_frame_hdr_start __attribute__((__weak__)); // [jart]
+extern char __eh_frame_hdr_end __attribute__((__weak__)); // [jart]
 #endif
 
 #elif defined(_LIBUNWIND_ARM_EHABI) && defined(_LIBUNWIND_IS_BAREMETAL)

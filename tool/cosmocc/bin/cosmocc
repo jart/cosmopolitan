@@ -75,14 +75,31 @@ elif [ ! -d "$TMPDIR" ]; then
   fi
 fi
 
-CLANG=0
-CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
-CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
-CXX_X86_64="$BIN/x86_64-linux-cosmo-g++"
-CXX_AARCH64="$BIN/aarch64-linux-cosmo-g++"
-FPORTCOSMO="-fportcosmo"
-TARGET_X86_64=
-TARGET_AARCH64=
+use_gcc() {
+  CLANG=0
+  CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
+  CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
+  CXX_X86_64="$BIN/x86_64-linux-cosmo-g++"
+  CXX_AARCH64="$BIN/aarch64-linux-cosmo-g++"
+  TARGET_X86_64=
+  TARGET_AARCH64=
+  FPORTCOSMO="-fportcosmo"
+  FNO_INLINE_FUNCTIONS_CALLED_ONCE="-fno-inline-functions-called-once"
+}
+
+use_clang() {
+  CLANG=1
+  CC_X86_64="$BIN/cosmo-clang"
+  CC_AARCH64="$BIN/cosmo-clang"
+  CXX_X86_64="$BIN/cosmo-clang"
+  CXX_AARCH64="$BIN/cosmo-clang"
+  TARGET_X86_64="--target=x86_64"
+  TARGET_AARCH64="--target=aarch64"
+  FPORTCOSMO=
+  FNO_INLINE_FUNCTIONS_CALLED_ONCE="-fno-inline-functions-called-once"
+}
+
+use_gcc
 
 X=
 OPT=
@@ -196,14 +213,10 @@ EOF
     MODE=optlinux
     continue
   elif [ x"$x" = x"-mclang" ]; then
-    CLANG=1
-    CC_X86_64="$BIN/cosmo-clang"
-    CC_AARCH64="$BIN/cosmo-clang"
-    CXX_X86_64="$BIN/cosmo-clang++"
-    CXX_AARCH64="$BIN/cosmo-clang++"
-    TARGET_X86_64="--target=x86_64"
-    TARGET_AARCH64="--target=aarch64"
-    FPORTCOSMO=
+    use_clang
+    continue
+  elif [ x"$x" = x"-mgcc" ]; then
+    use_gcc
     continue
   elif [ x"$x" = x"-m64" ]; then
     continue
@@ -315,10 +328,14 @@ elif [ -n "$OUTPUT" ] && [ $INPUT_FILE_COUNT -gt 1 ]; then
   fi
 fi
 
+if [ $INTENT = ld ]; then
+  use_gcc
+fi
+
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
-CFLAGS="$FPORTCOSMO -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CFLAGS="$FPORTCOSMO -fno-semantic-interposition"
 LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
@@ -345,9 +362,6 @@ fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC_X86_64=$CXX_X86_64
   CC_AARCH64=$CXX_AARCH64
-  if [ $INTENT != cpp ]; then
-    CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
-  fi
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 else
   CFLAGS="$CFLAGS -Wno-implicit-int"
@@ -386,8 +400,8 @@ if [ x"$MODE" = x"optlinux" ]; then
 fi
 
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
-  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
-  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
+  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
+  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
 fi
 
 if [ $CPLUSPLUS -eq 1 ]; then

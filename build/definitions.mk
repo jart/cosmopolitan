@@ -92,10 +92,7 @@ DEFAULT_COPTS ?=							\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
-	-fno-semantic-interposition					\
-	-fno-dwarf2-cfi-asm						\
-	-fno-unwind-tables						\
-	-fno-asynchronous-unwind-tables
+	-fno-semantic-interposition
 
 ifeq ($(ARCH), x86_64)
 # Microsoft says "[a]ny memory below the stack beyond the red zone
@@ -139,8 +136,6 @@ DEFAULT_CFLAGS =							\
 
 DEFAULT_CXXFLAGS =							\
 	-std=gnu++23							\
-	-fno-rtti							\
-	-fno-exceptions							\
 	-fuse-cxa-atexit						\
 	-Wno-int-in-bool-context					\
 	-Wno-narrowing							\

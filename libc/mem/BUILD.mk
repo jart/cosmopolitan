@@ -42,7 +42,8 @@ $(LIBC_MEM_A_OBJS): private				\
 		COPTS +=				\
 			-fno-sanitize=all		\
 			-Wframe-larger-than=4096	\
-			-Walloca-larger-than=4096
+			-Walloca-larger-than=4096	\
+			-fexceptions
 
 o/$(MODE)/libc/mem/asan.o: private			\
 		CFLAGS +=				\

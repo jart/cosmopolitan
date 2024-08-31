@@ -241,8 +241,9 @@ class set
       private:
         friend class set;
         node_type* node_;
+        node_type* root_;
 
-        explicit reverse_iterator(node_type* node) : node_(node)
+        explicit reverse_iterator(node_type* node, node_type* root) : node_(node), root_(root)
         {
         }
     };
@@ -347,17 +348,17 @@ class set
 
     reverse_iterator rbegin()
     {
-        return reverse_iterator(rightmost(root_));
+        return reverse_iterator(rightmost(root_), root_);
     }
 
     const_reverse_iterator rbegin() const
     {
-        return const_reverse_iterator(rightmost(root_));
+        return const_reverse_iterator(rightmost(root_), root_);
     }
 
     const_reverse_iterator crbegin() const
     {
-        return const_reverse_iterator(rightmost(root_));
+        return const_reverse_iterator(rightmost(root_), root_);
     }
 
     iterator end() noexcept
@@ -377,17 +378,17 @@ class set
 
     reverse_iterator rend()
     {
-        return reverse_iterator(nullptr);
+        return reverse_iterator(nullptr, root_);
     }
 
     const_reverse_iterator rend() const
     {
-        return const_reverse_iterator(nullptr);
+        return const_reverse_iterator(nullptr, root_);
     }
 
     const_reverse_iterator crend() const
     {
-        return const_reverse_iterator(nullptr);
+        return const_reverse_iterator(nullptr, root_);
     }
 
     void clear() noexcept

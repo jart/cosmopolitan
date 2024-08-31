@@ -5,7 +5,7 @@
 #ifndef __cplusplus
 extern int posix_memalign (void **, size_t, size_t);
 #else
-extern "C" int posix_memalign (void **, size_t, size_t) throw ();
+extern "C" int posix_memalign (void **, size_t, size_t);
 #endif
 static __inline void *
 _mm_malloc (size_t __size, size_t __alignment)
