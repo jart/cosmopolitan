@@ -47,7 +47,7 @@ log_command() {
 ORIGINAL="$0 $*"
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
-CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CFLAGS="-fportcosmo -fno-semantic-interposition"
 CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-z,noexecstack"
 APEFLAGS="-Wl,--gc-sections"
@@ -109,7 +109,6 @@ else
 fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
-  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
   LDLIBS="-lcxx $LDLIBS"
 else

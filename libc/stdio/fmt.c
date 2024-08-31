@@ -76,9 +76,9 @@
 #define FLAGS_PRECISION 0x20
 #define FLAGS_ISSIGNED  0x40
 #define FLAGS_NOQUOTE   0x80
+#define FLAGS_REPR      0x100
 #define FLAGS_QUOTE     FLAGS_SPACE
 #define FLAGS_GROUPING  FLAGS_NOQUOTE
-#define FLAGS_REPR      FLAGS_PLUS
 
 #define __FMT_PUT(C)              \
   do {                            \

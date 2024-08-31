@@ -495,7 +495,7 @@ makearraystring(Node *p, const char *func)
 
 		if (!adjbuf(&buf, &bufsz, tlen + 1, recsize, 0, func)) {
 			FATAL("%s: out of memory %s[%s...]",
-			    func, x->nval, buf);
+			      func ? func : "NULL", x->nval, buf);
 		}
 		memcpy(buf + blen, s, slen);
 		if (nsub) {

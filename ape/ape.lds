@@ -329,6 +329,10 @@ SECTIONS {
     *(.ubsan.types)
     *(.ubsan.data)
 
+    __eh_frame_hdr_start_actual = .;
+    *(.eh_frame_hdr)
+    __eh_frame_hdr_end_actual = .;
+
     /* Legal Notices */
     __notices = .;
     KEEP(*(.notice))
@@ -421,6 +425,11 @@ SECTIONS {
     KEEP(*(.fini_array))
     KEEP(*(.dtors))
     __fini_array_end = .;
+
+    __eh_frame_start = .;
+    KEEP(*(.eh_frame))
+    *(.eh_frame.*)
+    __eh_frame_end = .;
 
 /*BEGIN: Post-Initialization Read-Only */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
@@ -600,6 +609,9 @@ ape_text_filesz = ADDR(.rodata) - ADDR(.text);
 ape_text_memsz = ape_text_filesz;
 ape_text_align = CONSTANT(COMMONPAGESIZE);
 ape_text_rva = RVA(ape_text_vaddr);
+
+__eh_frame_hdr_start = __eh_frame_hdr_end_actual > __eh_frame_hdr_start_actual ? __eh_frame_hdr_start_actual : 0;
+__eh_frame_hdr_end = __eh_frame_hdr_end_actual > __eh_frame_hdr_start_actual ? __eh_frame_hdr_end_actual : 0;
 
 /* we roundup here because xnu wants the file load segments page-aligned */
 /* but we don't want to add the nop padding to the ape program, so we'll */

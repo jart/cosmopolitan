@@ -19,6 +19,9 @@ template<typename _Tp>
 struct is_void : public is_void_<typename ctl::remove_cv<_Tp>::type>::type
 {};
 
+template<typename T>
+inline constexpr bool is_void_v = is_void<T>::value;
+
 } // namespace ctl
 
 #endif // CTL_IS_VOID_H_

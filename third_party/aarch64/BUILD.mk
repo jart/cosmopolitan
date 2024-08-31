@@ -3,4 +3,4 @@
 
 PKGS += THIRD_PARTY_AARCH64
 THIRD_PARTY_AARCH64_HDRS = $(filter %.h,$(THIRD_PARTY_AARCH64_FILES))
-THIRD_PARTY_AARCH64_FILES := $(wildcard third_party/aarch64/*)
+THIRD_PARTY_AARCH64_FILES := $(wildcard third_party/aarch64/*) $(wildcard third_party/aarch64/clang/*)

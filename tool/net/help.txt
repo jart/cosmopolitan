@@ -581,10 +581,10 @@ HOOKS
           `true`, redbean will close the connection without calling fork.
 
   OnLogLatency(reqtimeus:int, contimeus:int)
-          If this function is defined it'll be called from the main process
-          each time redbean completes handling of a request, but before the
-          response is sent. The handler received the time (in µs) since the
-          request handling and connection handling started.
+          If this function is defined it'll be called from the child worker
+          process each time redbean completes the handling of a request, but
+          before the response is sent. The handler receives the time (in µs)
+          since the request handling and connection handling started.
 
   OnProcessCreate(pid:int, ip:int, port:int, serverip:int, serverport:int)
           If this function is defined it'll be called from the main process

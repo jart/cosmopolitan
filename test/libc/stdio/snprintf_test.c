@@ -27,3 +27,11 @@ TEST(snprintf, testVeryLargePrecision) {
   ASSERT_EQ(i, 9999);
   ASSERT_EQ(strlen(buf), 511);
 }
+
+TEST(snprintf, testPlusFlagOnChar) {
+  char buf[10] = {};
+  int i = snprintf(buf, sizeof(buf), "%+c", '=');
+
+  ASSERT_EQ(i, 1);
+  ASSERT_STREQ(buf, "=");
+}
