@@ -33,11 +33,13 @@
  *   consistent with glibc, musl, and uclibc.
  *
  * - `%hs` converts UTF-16/UCS-2 → UTF-8, which can be helpful on Windows.
- *   Formatting (e.g. %-10hs) will use monospace display width rather
- *   than string length or codepoint count.
+ *   Formatting (e.g. %-10hs) will use output byte length (rounded down to
+ *   ensure only full multibyte characters are output) rather than string
+ *   length or codepoint count.
  *
  * - `%ls` (or `%Ls`) converts UTF-32 → UTF-8. Formatting (e.g. %-10ls)
- *   will use monospace display width rather than string length.
+ *   will use output byte length (rounded down to ensure only full multibyte
+ *   characters are output) rather than string length.
  *
  * - The `%#s` and `%#c` alternate forms display values using the
  *   standard IBM standard 256-letter alphabet. Using `%#.*s` to specify

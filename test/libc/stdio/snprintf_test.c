@@ -35,3 +35,81 @@ TEST(snprintf, testPlusFlagOnChar) {
   ASSERT_EQ(i, 1);
   ASSERT_STREQ(buf, "=");
 }
+
+TEST(snprintf, testStringWidth) {
+  char buf[100] = {};
+  int i = snprintf(buf, sizeof(buf), "<%9ls>", L"éée");
+
+  ASSERT_EQ(i, 11);
+  ASSERT_STREQ(buf, "<    éée>");
+
+  i = snprintf(buf, sizeof(buf), "<%9s>", "éée");
+  ASSERT_EQ(i, 11);
+  ASSERT_STREQ(buf, "<    éée>");
+
+  i = snprintf(buf, sizeof(buf), "<%9hs>", u"éée");
+  ASSERT_EQ(i, 11);
+  ASSERT_STREQ(buf, "<    éée>");
+}
+
+TEST(snprintf, testStringPrecision) {
+  char buf[100] = {};
+  int i = snprintf(buf, sizeof(buf), "%.4ls", L"eeée");
+
+  ASSERT_EQ(i, 4);
+  ASSERT_STREQ(buf, "eeé");
+
+  i = snprintf(buf, sizeof(buf), "%.4s", "eeée");
+  ASSERT_EQ(i, 4);
+  ASSERT_STREQ(buf, "eeé");
+
+  i = snprintf(buf, sizeof(buf), "%.4hs", u"eeée");
+  ASSERT_EQ(i, 4);
+  ASSERT_STREQ(buf, "eeé");
+}
+
+TEST(snprintf, testStringPrecisionPartialChar) {
+  char buf[100] = {};
+  int i = snprintf(buf, sizeof(buf), "%.4ls", L"eéée");
+
+  ASSERT_EQ(i, 3);
+  ASSERT_STREQ(buf, "eé");
+
+  // Note that partial multibyte characters are fine on non-wide conversions
+  // (whereas they are not written on wide conversions,
+  // according to the standard)
+  i = snprintf(buf, sizeof(buf), "%.4s", "eéée");
+  ASSERT_EQ(i, 4);
+  ASSERT_STREQ(buf, "eé\xc3");
+
+  i = snprintf(buf, sizeof(buf), "%.4hs", u"eéée");
+  ASSERT_EQ(i, 3);
+  ASSERT_STREQ(buf, "eé");
+}
+
+TEST(snprintf, testWideChar) {
+  char buf[100] = { 'a', 'b', 'c' };
+  int i = snprintf(buf, sizeof(buf), "%lc", L'\0');
+
+  ASSERT_EQ(i, 1);
+  ASSERT_EQ(buf[0], '\0');
+  ASSERT_EQ(buf[1], '\0');
+  ASSERT_EQ(buf[2], 'c');
+
+  buf[0] = 'a';
+  buf[1] = 'b';
+  i = snprintf(buf, sizeof(buf), "%hc", u'\0');
+
+  ASSERT_EQ(i, 1);
+  ASSERT_EQ(buf[0], '\0');
+  ASSERT_EQ(buf[1], '\0');
+  ASSERT_EQ(buf[2], 'c');
+
+  i = snprintf(buf, sizeof(buf), "%lc", L'þ');
+  ASSERT_EQ(i, 2);
+  ASSERT_STREQ(buf, "þ");
+
+  i = snprintf(buf, sizeof(buf), "%hc", u'þ');
+  ASSERT_EQ(i, 2);
+  ASSERT_STREQ(buf, "þ");
+}

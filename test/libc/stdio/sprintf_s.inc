@@ -34,23 +34,33 @@ TEST(SUITE(sprintf), testStringLength) {
 }
 
 TEST(SUITE(sprintf), testCharacterCounting) {
-  ASSERT_STREQ("         ♥♦♣♠☺☻▲", Format(FORMAT("%16"), STRING("♥♦♣♠☺☻▲")));
+  ASSERT_STREQ("         ♥♦♣♠☺☻▲", Format(FORMAT("%30"), STRING("♥♦♣♠☺☻▲")));
+  ASSERT_STREQ("♥♦♣♠☺☻▲", Format(FORMAT("%16"), STRING("♥♦♣♠☺☻▲")));
 }
 
 TEST(SUITE(snprintf), testTableFlip) {
   EXPECT_STREQ("Table flip          ", Format("%-20ls", L"Table flip"));
-  EXPECT_STREQ("(╯°□°)╯︵L┻━┻       ", Format("%-20ls", L"(╯°□°)╯︵L┻━┻"));
-  EXPECT_STREQ("(╯°□°)╯︵u┻━┻       ", Format("%-20hs", u"(╯°□°)╯︵u┻━┻"));
-  EXPECT_STREQ("ちゃぶ台返し        ", Format("%-20ls", L"ちゃぶ台返し"));
-  EXPECT_STREQ("       (╯°□°)╯︵L┻━┻", Format("%20ls", L"(╯°□°)╯︵L┻━┻"));
-  EXPECT_STREQ("        ちゃぶ台返し", Format("%20ls", L"ちゃぶ台返し"));
+  EXPECT_STREQ("(╯°□°)╯︵L┻━┻", Format("%-20ls", L"(╯°□°)╯︵L┻━┻"));
+  EXPECT_STREQ("(╯°□°)╯︵L┻━┻       ", Format("%-35ls", L"(╯°□°)╯︵L┻━┻"));
+  EXPECT_STREQ("(╯°□°)╯︵u┻━┻", Format("%-20hs", u"(╯°□°)╯︵u┻━┻"));
+  EXPECT_STREQ("(╯°□°)╯︵u┻━┻       ", Format("%-35hs", u"(╯°□°)╯︵u┻━┻"));
+  EXPECT_STREQ("ちゃぶ台返し  ", Format("%-20ls", L"ちゃぶ台返し"));
+  EXPECT_STREQ("ちゃぶ台返し        ", Format("%-26ls", L"ちゃぶ台返し"));
+  EXPECT_STREQ("(╯°□°)╯︵L┻━┻", Format("%20ls", L"(╯°□°)╯︵L┻━┻"));
+  EXPECT_STREQ("       (╯°□°)╯︵L┻━┻", Format("%35ls", L"(╯°□°)╯︵L┻━┻"));
+  EXPECT_STREQ("  ちゃぶ台返し", Format("%20ls", L"ちゃぶ台返し"));
+  EXPECT_STREQ("        ちゃぶ台返し", Format("%26ls", L"ちゃぶ台返し"));
 }
 
 TEST(SUITE(snprintf), testCombiningWidth) {
-  EXPECT_STREQ("H̲E̲L̲L̲O̲     ",
+  EXPECT_STREQ("H̲E̲L̲L̲O̲",
                Format("%-10ls", L"H\u0332E\u0332L\u0332L\u0332O\u0332"));
-  EXPECT_STREQ("     H̲E̲L̲L̲O̲",
+  EXPECT_STREQ("H̲E̲L̲L̲O̲     ",
+               Format("%-20ls", L"H\u0332E\u0332L\u0332L\u0332O\u0332"));
+  EXPECT_STREQ("H̲E̲L̲L̲O̲",
                Format("%10hs", u"H\u0332E\u0332L\u0332L\u0332O\u0332"));
+  EXPECT_STREQ("     H̲E̲L̲L̲O̲",
+               Format("%20hs", u"H\u0332E\u0332L\u0332L\u0332O\u0332"));
 }
 
 TEST(SUITE(snprintf), testQuoting) {

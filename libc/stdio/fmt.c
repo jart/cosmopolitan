@@ -365,19 +365,24 @@ static int __fmt_stoa_byte(out_f out, void *a, uint64_t c) {
   return out(buf, a, 1);
 }
 
+static size_t __fmt_stoa_get_utf8_size(uint64_t w)
+{
+  return w ? (bsr(w) >> 3) + 1 : 1;
+}
+
 static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
   char buf[8];
   if (!isascii(w))
     w = tpenc(w);
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, __fmt_stoa_get_utf8_size(w));
 }
 
 static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
   char buf[8];
   w = tpenc(kCp437[w & 0xFF]);
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, __fmt_stoa_get_utf8_size(w));
 }
 
 static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
@@ -388,7 +393,7 @@ static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
     w = tpenc(w);
   }
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, __fmt_stoa_get_utf8_size(w));
 }
 
 /**
@@ -410,6 +415,7 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
   char *p, buf[1];
   unsigned w, pad;
   bool justdobytes, ignorenul;
+  size_t i, next_char_outputted_byte_length, current_outputted_byte_length;
 
   p = data;
   if (!p) {
@@ -442,13 +448,93 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
     emit = __fmt_stoa_byte;
   }
 
+  /*
+    The standard specifies precision and field length in terms of bytes, not
+    characters, despite the confusing mention of "characters" when defining
+    field length (in the C standard, "character" usually actually means
+    "byte").
+
+    This is made clear in the standard by this example:
+    > EXAMPLE 2 - In this example, multibyte characters do not have a
+    > state-dependent encoding, and the members of the extended character set
+    > that consist of more than one byte each consist of exactly two bytes, the
+    > first of which is denoted here by a □ and the second by an uppercase
+    > letter.
+    >
+    > Given the following wide string with length seven,
+    >
+    >     static wchar_t wstr[] = L"□X□Yabc□Z□W";
+    >
+    > the seven calls
+    >
+    >     fprintf(stdout, "|1234567890123|\n");
+    >     fprintf(stdout, "|%13ls|\n", wstr);
+    >     fprintf(stdout, "|%-13.9ls|\n", wstr);
+    >     fprintf(stdout, "|%13.10ls|\n", wstr);
+    >     fprintf(stdout, "|%13.11ls|\n", wstr);
+    >     fprintf(stdout, "|%13.15ls|\n", &wstr[2]);
+    >     fprintf(stdout, "|%13lc|\n", (wint_t) wstr[5]);
+    >
+    > will print the following seven lines:
+    >
+    >     |1234567890123|
+    >     |  □X□Yabc□Z□W|
+    >     |□X□Yabc□Z    |
+    >     |    □X□Yabc□Z|
+    >     |  □X□Yabc□Z□W|
+    >     |      abc□Z□W|
+    >     |           □Z|
+    - C Standard, 7.23.5.6.18, The fprintf function
+
+    The example explicitly shows that precision and field width are interpreted
+    as output byte length.
+
+    Thus, to determine how many wide characters we must output, we need to
+    calculate how many bytes we are going to output.
+
+    Note that the standard also states that "In no case is a partial multibyte
+    character written", when specifying the behavior of wide string conversions,
+    meaning we need to make sure that we stop before any character that would
+    result in more bytes being outputted than the precision specified is reached
+    (this is not the case for non-wide string conversions, meaning those may
+    write partial multibyte characters just fine)
+  */
   if (!(flags & FLAGS_PRECISION))
     precision = -1;
   if (!(flags & FLAGS_PRECISION) || !ignorenul) {
+    current_outputted_byte_length = 0;
     if (signbit == 63) {
-      precision = wcsnlen((const wchar_t *)p, precision);
+      for (i = 0; i < precision; ++i) {
+        wc = ((const wchar_t *)p)[i];
+        if (wc == L'\0')
+          break;
+        next_char_outputted_byte_length = __fmt_stoa_get_utf8_size(tpenc(wc));
+        if (current_outputted_byte_length + next_char_outputted_byte_length >
+            precision)
+          break;
+        current_outputted_byte_length += next_char_outputted_byte_length;
+      }
+      precision = current_outputted_byte_length;
     } else if (signbit == 15) {
-      precision = strnlen16((const char16_t *)p, precision);
+      for (i = 0; i < precision; ++i) {
+        wc = ((const char16_t *)p)[i];
+        if (wc == 0)
+          break;
+        if (IsUcs2(wc))
+          next_char_outputted_byte_length = __fmt_stoa_get_utf8_size(tpenc(wc));
+        else if (IsUtf16Cont(wc)) {
+          if (i + 1 < precision && ((const char16_t *)p)[i + 1] != 0)
+            wc = MergeUtf16(wc, ((const char16_t *)p)[i + 1]);
+          next_char_outputted_byte_length = __fmt_stoa_get_utf8_size(tpenc(wc));
+        } else {
+          next_char_outputted_byte_length = 0;
+        }
+        if (current_outputted_byte_length + next_char_outputted_byte_length >
+            precision)
+          break;
+        current_outputted_byte_length += next_char_outputted_byte_length;
+      }
+      precision = current_outputted_byte_length;
     } else {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overread"
@@ -460,13 +546,6 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
   pad = 0;
   if (width) {
     w = precision;
-    if (signbit == 63) {
-      w = wcsnwidth((const wchar_t *)p, precision, 0);
-    } else if (signbit == 15) {
-      w = strnwidth16((const char16_t *)p, precision, 0);
-    } else {
-      w = strnwidth(p, precision, 0);
-    }
     if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
       w += 2 + (signbit == 63) + (signbit == 15);
     }
@@ -502,20 +581,16 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
         return -1;
     }
   } else {
-    while (precision--) {
+    while (precision) {
       if (signbit == 15) {
         wc = *(const char16_t *)p;
         if (!wc && !ignorenul)
           break;
         if (IsUcs2(wc)) {
           p += sizeof(char16_t);
-        } else if (IsUtf16Cont(wc)) {
+        } else if (IsUtf16Cont(wc) &&
+                   precision > __fmt_stoa_get_utf8_size(tpenc(wc))) {
           p += sizeof(char16_t);
-          continue;
-        } else if (!precision) {
-          break;
-        } else {
-          --precision;
           wc = MergeUtf16(wc, *(const char16_t *)p);
         }
       } else if (signbit == 63) {
@@ -536,7 +611,6 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
           wc = ThomPikeByte(wc);
           if (n > precision)
             break;
-          precision -= n;
           while (n--) {
             wc = ThomPikeMerge(wc, *p++);
           }
@@ -544,6 +618,11 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
       }
       if (emit(out, arg, wc) == -1)
         return -1;
+      next_char_outputted_byte_length = __fmt_stoa_get_utf8_size(tpenc(wc));
+      if (next_char_outputted_byte_length > precision)
+        precision = 0;
+      else
+        precision -= next_char_outputted_byte_length;
     }
   }
 
@@ -792,8 +871,8 @@ static int __fmt_noop(const char *, void *, size_t) {
  *   - `%.*s`    supplied byte length argument (obeys nul terminator)
  *   - ``%`.*s`` supplied byte length argument c escaped (ignores nul term)
  *   - `%#.*s`   supplied byte length argument visualized (ignores nul term)
- *   - `%.*hs`   supplied char16_t length argument (obeys nul terminator)
- *   - `%.*ls`   supplied wchar_t length argument (obeys nul terminator)
+ *   - `%.*hs`   supplied output byte length argument (obeys nul terminator)
+ *   - `%.*ls`   supplied output byte length argument (obeys nul terminator)
  *
  * Formatting Modifiers
  *
@@ -1078,7 +1157,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           p = charbuf;
           qchar = '\'';
           flags |= FLAGS_PRECISION;
-          prec = 1;
+          prec = __fmt_stoa_get_utf8_size(tpenc(charbuf[0]));
           goto FormatString;
         } else if (flags & (FLAGS_QUOTE | FLAGS_REPR)) {
           p = "'\\0'";
