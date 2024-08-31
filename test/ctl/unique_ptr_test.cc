@@ -24,22 +24,9 @@
 // #include <type_traits>
 // #define ctl std
 
-template<typename T, typename D = ctl::default_delete<T>>
-using unique_ptr = ctl::unique_ptr<T, D>;
-
-template<typename T, typename... Args>
-unique_ptr<T>
-make_unique(Args&&... args)
-{
-    return ctl::make_unique<T, Args...>(ctl::forward<Args>(args)...);
-}
-
-template<typename T>
-unique_ptr<T>
-make_unique_for_overwrite()
-{
-    return ctl::make_unique_for_overwrite<T>();
-}
+using ctl::unique_ptr;
+using ctl::make_unique;
+using ctl::make_unique_for_overwrite;
 
 #undef ctl
 
