@@ -17,6 +17,9 @@ struct conditional<false, T, F>
     typedef F type;
 };
 
+template<bool B, typename T, typename F>
+using conditional_t = typename conditional<B, T, F>::type;
+
 } // namespace ctl
 
 #endif // CTL_CONDITIONAL_H_
