@@ -39,8 +39,8 @@ static const unsigned char wtable[] = {
 
 int wcwidth(wchar_t wc)
 {
-	if (wc < 0xff) {
-		if (wc >= 0)
+	if ((int)wc < 0xff) {
+		if ((int)wc >= 0)
 			return ((wc+1) & 0x7f) >= 0x21 ? 1 : wc ? -1 : 0;
 		return -1;
 	}

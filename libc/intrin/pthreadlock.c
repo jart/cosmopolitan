@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/posixthread.internal.h"
 
-pthread_mutex_t _pthread_lock_obj = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+pthread_mutex_t _pthread_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void _pthread_lock(void) {
   pthread_mutex_lock(&_pthread_lock_obj);
