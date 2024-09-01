@@ -335,11 +335,10 @@ class shared_ptr
         return p;
     }
 
-#if 0 // TODO(mrdomino): find a different way
     template<typename U>
     bool owner_before(const shared_ptr<U>& r) const noexcept
     {
-        return p < r.p;
+        return rc < r.rc;
     }
 
     template<typename U>
@@ -347,7 +346,6 @@ class shared_ptr
     {
         return !r.owner_before(*this);
     }
-#endif
 
   private:
     template<typename U>
@@ -422,13 +420,13 @@ class weak_ptr
     template<typename U>
     bool owner_before(const weak_ptr<U>& r) const noexcept
     {
-        return p < r.p;
+        return rc < r.rc;
     }
 
     template<typename U>
     bool owner_before(const shared_ptr<U>& r) const noexcept
     {
-        return p < r.p;
+        return rc < r.rc;
     }
 
   private:
