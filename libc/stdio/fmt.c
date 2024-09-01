@@ -615,7 +615,7 @@ static void __fmt_ldfpbits(union U *u, struct FPBits *b) {
 #if LDBL_MANT_DIG == 113
       b->bits[3] |= 1 << (112 - 32 * 3);  // set lowest exponent bit
 #endif
-    } else if (b->bits[0] | b->bits[1] | b->bits[2] | b->bits[3]) {
+    } else if (isnan(u->ld)) {
       i = STRTOG_NaN;
     } else {
       i = STRTOG_Infinite;
@@ -1145,8 +1145,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 =
               gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
         }
-        if (decpt == 9999) {
-        Format9999:
+        if (decpt == 9999 || decpt == -32768) {
+        FormatDecpt9999Or32768:
           if (s0)
             freedtoa(s0);
           bzero(special, sizeof(special));
@@ -1258,8 +1258,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
-        if (decpt == 9999)
-          goto Format9999;
+        if (decpt == 9999 || decpt == -32768)
+          goto FormatDecpt9999Or32768;
         c = se - s;
         prec1 = prec;
         if (!prec) {
@@ -1304,8 +1304,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
-        if (decpt == 9999)
-          goto Format9999;
+        if (decpt == 9999 || decpt == -32768)
+          goto FormatDecpt9999Or32768;
       FormatExpo:
         if (fpb.sign /* && (x || sign) */)
           sign = '-';
@@ -1386,7 +1386,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         }
         if (fpb.kind == STRTOG_Infinite || fpb.kind == STRTOG_NaN) {
           s0 = 0;
-          goto Format9999;
+          goto FormatDecpt9999Or32768;
         }
         prec1 = __fmt_fpiprec(&fpb);
         if ((flags & FLAGS_PRECISION) && prec < prec1) {
