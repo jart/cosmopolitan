@@ -23,6 +23,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/iovec.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
@@ -54,8 +55,8 @@ textwindows int WSARecvFrom(
   }
   if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecvFrom(%lu, [", s);
-    DescribeIovNt(inout_lpBuffers, dwBufferCount,
-                  rc != -1 ? NumberOfBytesRecvd : 0);
+    _DescribeIovNt(inout_lpBuffers, dwBufferCount,
+                   rc != -1 ? NumberOfBytesRecvd : 0);
     kprintf("], %u, [%'u], %p, %p, %p, %s, %p) → %d %d\n", dwBufferCount,
             NumberOfBytesRecvd, opt_out_fromsockaddr, opt_inout_fromsockaddrlen,
             inout_lpFlags, DescribeNtOverlapped(opt_inout_lpOverlapped),

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -26,6 +27,18 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
+
+static int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+static bool IsAbsolutePathWin32(char16_t *path) {
+  if (path[0] == '\\')
+    return true;
+  if (IsAlpha(path[0]) && path[1] == ':')
+    return true;
+  return false;
+}
 
 static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
                                           int flags,
@@ -39,7 +52,7 @@ static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
     return -1;
   if (!filelen)
     return enoent();
-  if (file[0] != u'\\' && dirhand != AT_FDCWD) {  // ProTip: \\?\C:\foo
+  if (dirhand != AT_FDCWD && !IsAbsolutePathWin32(file)) {
     dirlen = GetFinalPathNameByHandle(dirhand, dir, ARRAYLEN(dir),
                                       kNtFileNameNormalized | kNtVolumeNameDos);
     if (!dirlen)
@@ -49,7 +62,8 @@ static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
     dir[dirlen] = u'\\';
     memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
     memcpy(file, dir, ((n = dirlen + 1 + filelen) + 1) * sizeof(char16_t));
-    return __normntpath(file, n);
+    int res = __normntpath(file, n);
+    return res;
   } else {
     return filelen;
   }

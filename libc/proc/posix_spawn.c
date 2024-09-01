@@ -450,23 +450,101 @@ static textwindows dontinline errno_t posix_spawn_nt(
  *     posix_spawnattr_destroy(&sa);
  *     while (wait(&status) != -1);
  *
- * This provides superior process creation performance across systems
+ * The posix_spawn() function may be used to launch subprocesses. The
+ * primary advantage of using posix_spawn() instead of the traditional
+ * fork() / execve() combination for launching processes is efficiency
+ * and cross-platform compatibility.
  *
- * Processes are normally spawned by calling fork() and execve(), but
- * that goes slow on Windows if the caller has allocated a nontrivial
- * number of memory mappings, all of which need to be copied into the
- * forked child, only to be destroyed a moment later. On UNIX systems
- * fork() bears a similar cost that's 100x less bad, which is copying
- * the page tables. So what this implementation does is on Windows it
- * calls CreateProcess() directly and on UNIX it uses vfork() if it's
- * possible (XNU and OpenBSD don't have it). On UNIX this API has the
- * benefit of avoiding the footguns of using vfork() directly because
- * this implementation will ensure signal handlers can't be called in
- * the child process since that'd likely corrupt the parent's memory.
- * On systems with a real vfork() implementation, the execve() status
- * code is returned by this function via shared memory; otherwise, it
- * gets passed via a temporary pipe (on systems like QEmu, Blink, and
- * XNU/OpenBSD) whose support is auto-detected at runtime.
+ * 1. On Linux, FreeBSD, and NetBSD:
+ *
+ *    Cosmopolitan Libc's posix_spawn() uses vfork() under the hood on
+ *    these platforms automatically, since it's faster than fork(). It's
+ *    because vfork() creates a child process without needing to copy
+ *    the parent's page tables, making it more efficient, especially for
+ *    large processes. Furthermore, vfork() avoids the need to acquire
+ *    every single mutex (see pthread_atfork() for more details) which
+ *    makes it scalable in multi-threaded apps, since the other threads
+ *    in your app can keep going while the spawning thread waits for the
+ *    subprocess to call execve(). Normally vfork() is error-prone since
+ *    there exists few functions that are @vforksafe. the posix_spawn()
+ *    API is designed to offer maximum assurance that you can't shoot
+ *    yourself in the foot. If you do, then file a bug with Cosmo.
+ *
+ * 2. On Windows:
+ *
+ *    posix_spawn() avoids fork() entirely. Windows doesn't natively
+ *    support fork(), and emulating it can be slow and memory-intensive.
+ *    By using posix_spawn(), we get a much faster process creation on
+ *    Windows systems, because it only needs to call CreateProcess().
+ *    Your file actions are replayed beforehand in a simulated way. Only
+ *    Cosmopolitan Libc offers this level of quality. With Cygwin you'd
+ *    have to use its proprietary APIs to achieve the same performance.
+ *
+ * 3. Simplified error handling:
+ *
+ *    posix_spawn() combines process creation and program execution in a
+ *    single call, reducing the points of failure and simplifying error
+ *    handling. One important thing that happens with Cosmopolitan's
+ *    posix_spawn() implementation is that the error code of execve()
+ *    inside your subprocess, should it fail, will be propagated to your
+ *    parent process. This will happen efficiently via vfork() shared
+ *    memory in the event your Linux environment supports this. If it
+ *    doesn't, then Cosmopolitan will fall back to a throwaway pipe().
+ *    The pipe is needed on platforms like XNU and OpenBSD which do not
+ *    support vfork(). It's also needed under QEMU User.
+ *
+ * 4. Signal safety:
+ *
+ *    posix_spawn() guarantees your signal handler callback functions
+ *    won't be executed in the child process. By default, it'll remove
+ *    sigaction() callbacks atomically. This ensures that if something
+ *    like a SIGTERM or SIGHUP is sent to the child process before it's
+ *    had a chance to call execve(), then the child process will simply
+ *    be terminated (like the spawned process would) instead of running
+ *    whatever signal handlers the spawning process has installed. If
+ *    you've set some signals to SIG_IGN, then that'll be preserved for
+ *    the child process by posix_spawn(), unless you explicitly call
+ *    posix_spawnattr_setsigdefault() to reset them.
+ *
+ * 5. Portability:
+ *
+ *    posix_spawn() is part of the POSIX standard, making it more
+ *    portable across different UNIX-like systems and Windows (with
+ *    appropriate libraries). Even the non-POSIX APIs we use here are
+ *    portable; e.g. posix_spawn_file_actions_addchdir_np() is supported
+ *    by glibc, musl libc, and apple libc too.
+ *
+ * When using posix_spawn() you have the option of passing an attributes
+ * object that specifies how the child process should be created. These
+ * functions are provided by Cosmopolitan Libc for setting attributes:
+ *
+ * - posix_spawnattr_init()
+ * - posix_spawnattr_destroy()
+ * - posix_spawnattr_setflags()
+ * - posix_spawnattr_getflags()
+ * - posix_spawnattr_setsigmask()
+ * - posix_spawnattr_getsigmask()
+ * - posix_spawnattr_setpgroup()
+ * - posix_spawnattr_getpgroup()
+ * - posix_spawnattr_setrlimit_np()
+ * - posix_spawnattr_getrlimit_np()
+ * - posix_spawnattr_setschedparam()
+ * - posix_spawnattr_getschedparam()
+ * - posix_spawnattr_setschedpolicy()
+ * - posix_spawnattr_getschedpolicy()
+ * - posix_spawnattr_setsigdefault()
+ * - posix_spawnattr_getsigdefault()
+ *
+ * You can also pass an ordered list of file actions to perform. The
+ * following APIs are provided by Cosmopolitan Libc for doing that:
+ *
+ * - posix_spawn_file_actions_init()
+ * - posix_spawn_file_actions_destroy()
+ * - posix_spawn_file_actions_adddup2()
+ * - posix_spawn_file_actions_addopen()
+ * - posix_spawn_file_actions_addclose()
+ * - posix_spawn_file_actions_addchdir_np()
+ * - posix_spawn_file_actions_addfchdir_np()
  *
  * @param pid if non-null shall be set to child pid on success
  * @param path is resolved path of program which is not `$PATH` searched
@@ -496,31 +574,30 @@ errno_t posix_spawn(int *pid, const char *path,
   sigset_t blockall, oldmask;
   int child, res, cs, e = errno;
   volatile bool can_clobber = false;
+  short flags = attrp && *attrp ? (*attrp)->flags : 0;
   sigfillset(&blockall);
   sigprocmask(SIG_SETMASK, &blockall, &oldmask);
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-  if ((use_pipe = !atomic_load_explicit(&has_vfork, memory_order_acquire))) {
+  if ((use_pipe = (flags & POSIX_SPAWN_USEFORK) ||
+                  !atomic_load_explicit(&has_vfork, memory_order_acquire))) {
     if (pipe2(pfds, O_CLOEXEC)) {
       res = errno;
       goto ParentFailed;
     }
   }
-  if (!(child = vfork())) {
+  if (!(child = (flags & POSIX_SPAWN_USEFORK) ? fork() : vfork())) {
     can_clobber = true;
     sigset_t childmask;
     bool lost_cloexec = 0;
     struct sigaction dfl = {0};
-    short flags = attrp && *attrp ? (*attrp)->flags : 0;
     if (use_pipe)
       close(pfds[0]);
-    for (int sig = 1; sig < _NSIG; sig++) {
+    for (int sig = 1; sig < _NSIG; sig++)
       if (__sighandrvas[sig] != (long)SIG_DFL &&
           (__sighandrvas[sig] != (long)SIG_IGN ||
            ((flags & POSIX_SPAWN_SETSIGDEF) &&
-            sigismember(&(*attrp)->sigdefault, sig) == 1))) {
+            sigismember(&(*attrp)->sigdefault, sig) == 1)))
         sigaction(sig, &dfl, 0);
-      }
-    }
     if (flags & POSIX_SPAWN_SETSID)
       setsid();
     if ((flags & POSIX_SPAWN_SETPGROUP) && setpgid(0, (*attrp)->pgroup))
@@ -585,7 +662,7 @@ errno_t posix_spawn(int *pid, const char *path,
         if (sched_setparam(0, &(*attrp)->schedparam))
           goto ChildFailed;
     }
-    if (flags & POSIX_SPAWN_SETRLIMIT) {
+    if (flags & POSIX_SPAWN_SETRLIMIT_NP) {
       int rlimset = (*attrp)->rlimset;
       while (rlimset) {
         int resource = bsf(rlimset);
@@ -618,9 +695,8 @@ errno_t posix_spawn(int *pid, const char *path,
     }
     _Exit(127);
   }
-  if (use_pipe) {
+  if (use_pipe)
     close(pfds[1]);
-  }
   if (child != -1) {
     if (!use_pipe) {
       res = status;

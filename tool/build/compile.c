@@ -529,7 +529,7 @@ void PlanResource(int resource, struct rlimit rlim) {
     return;
   rlim.rlim_cur = MIN(rlim.rlim_cur, prior.rlim_max);
   rlim.rlim_max = MIN(rlim.rlim_max, prior.rlim_max);
-  posix_spawnattr_setrlimit(&spawnattr, resource, &rlim);
+  posix_spawnattr_setrlimit_np(&spawnattr, resource, &rlim);
 }
 
 void SetCpuLimit(int secs) {
@@ -651,7 +651,7 @@ int Launch(void) {
   posix_spawnattr_init(&spawnattr);
   posix_spawnattr_setsigmask(&spawnattr, &savemask);
   posix_spawnattr_setflags(&spawnattr,
-                           POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETRLIMIT);
+                           POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETRLIMIT_NP);
   SetCpuLimit(cpuquota);
   SetFszLimit(fszquota);
   SetMemLimit(memquota);

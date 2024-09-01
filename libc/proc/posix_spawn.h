@@ -12,7 +12,8 @@
 #define POSIX_SPAWN_SETSCHEDPARAM 16
 #define POSIX_SPAWN_SETSCHEDULER  32
 #define POSIX_SPAWN_SETSID        128
-#define POSIX_SPAWN_SETRLIMIT     256
+#define POSIX_SPAWN_SETRLIMIT_NP  256
+#define POSIX_SPAWN_USEFORK       512
 
 COSMOPOLITAN_C_START_
 
@@ -55,10 +56,10 @@ int posix_spawnattr_getsigdefault(const posix_spawnattr_t *,
                                   sigset_t *) libcesque;
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *,
                                   const sigset_t *) libcesque;
-int posix_spawnattr_getrlimit(const posix_spawnattr_t *, int,
-                              struct rlimit *) libcesque;
-int posix_spawnattr_setrlimit(posix_spawnattr_t *, int,
-                              const struct rlimit *) libcesque;
+int posix_spawnattr_getrlimit_np(const posix_spawnattr_t *, int,
+                                 struct rlimit *) libcesque;
+int posix_spawnattr_setrlimit_np(posix_spawnattr_t *, int,
+                                 const struct rlimit *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STDIO_SPAWN_H_ */

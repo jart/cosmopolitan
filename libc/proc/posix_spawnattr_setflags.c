@@ -25,6 +25,8 @@
  *
  * @param attr was initialized by posix_spawnattr_init()
  * @param flags may have any of the following
+ *     - `POSIX_SPAWN_USEFORK`
+ *     - `POSIX_SPAWN_USEVFORK`
  *     - `POSIX_SPAWN_RESETIDS`
  *     - `POSIX_SPAWN_SETPGROUP`
  *     - `POSIX_SPAWN_SETSIGDEF`
@@ -32,12 +34,13 @@
  *     - `POSIX_SPAWN_SETSCHEDPARAM`
  *     - `POSIX_SPAWN_SETSCHEDULER`
  *     - `POSIX_SPAWN_SETSID`
- *     - `POSIX_SPAWN_SETRLIMIT`
+ *     - `POSIX_SPAWN_SETRLIMIT_NP`
  * @return 0 on success, or errno on error
  * @raise EINVAL if `flags` has invalid bits
  */
 int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
-  if (flags & ~(POSIX_SPAWN_USEVFORK |       //
+  if (flags & ~(POSIX_SPAWN_USEFORK |        //
+                POSIX_SPAWN_USEVFORK |       //
                 POSIX_SPAWN_RESETIDS |       //
                 POSIX_SPAWN_SETPGROUP |      //
                 POSIX_SPAWN_SETSIGDEF |      //
@@ -45,7 +48,7 @@ int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
                 POSIX_SPAWN_SETSCHEDPARAM |  //
                 POSIX_SPAWN_SETSCHEDULER |   //
                 POSIX_SPAWN_SETSID |         //
-                POSIX_SPAWN_SETRLIMIT)) {
+                POSIX_SPAWN_SETRLIMIT_NP)) {
     return EINVAL;
   }
   (*attr)->flags = flags;
