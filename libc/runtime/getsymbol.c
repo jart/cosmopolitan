@@ -33,23 +33,21 @@ privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
   // we don't want function tracing because:
   //   function tracing depends on this function via kprintf
   unsigned l, m, r, n, k;
-  if (!t && __symtab) {
+  if (!t && __symtab)
     t = __symtab;
-  }
   if (t) {
     l = 0;
     r = n = t->count;
     k = a - t->addr_base;
     while (l < r) {
       m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-      if (t->symbols[m].y < k) {
+      if (k < t->symbols[m].x) {
+        r = m;
+      } else if (k > t->symbols[m].y) {
         l = m + 1;
       } else {
-        r = m;
+        return m;
       }
-    }
-    if (l < n && t->symbols[l].x <= k && k <= t->symbols[l].y) {
-      return l;
     }
   }
   return -1;

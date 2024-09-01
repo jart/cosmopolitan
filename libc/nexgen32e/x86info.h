@@ -65,7 +65,6 @@ struct X86ProcessorModel {
   unsigned char grade;
 };
 
-extern const size_t kX86ProcessorModelCount;
 extern const struct X86ProcessorModel kX86ProcessorModels[];
 
 const struct X86ProcessorModel *getx86processormodel(short) nosideeffect;

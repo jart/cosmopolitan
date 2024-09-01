@@ -20,7 +20,6 @@
 #include "libc/nexgen32e/x86info.h"
 
 const struct X86ProcessorModel kX86ProcessorModels[] = {
-    /* <SORTED> */
     {0x060F, X86_MARCH_CORE2, X86_GRADE_CLIENT},
     {0x0616, X86_MARCH_CORE2, X86_GRADE_MOBILE},
     {0x0617, X86_MARCH_CORE2, X86_GRADE_SERVER},
@@ -85,7 +84,5 @@ const struct X86ProcessorModel kX86ProcessorModels[] = {
     {0x06A7, X86_MARCH_ROCKETLAKE, X86_GRADE_CLIENT},
     {0x06B7, X86_MARCH_RAPTORLAKE, X86_GRADE_CLIENT},
     {0x06BA, X86_MARCH_RAPTORLAKE, X86_GRADE_CLIENT},
-    /* </SORTED> */
+    {0},
 };
-
-const size_t kX86ProcessorModelCount = ARRAYLEN(kX86ProcessorModels);

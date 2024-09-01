@@ -25,37 +25,89 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/unicode.h"
+#include <wctype.h>
+#include <locale.h>
 __static_yoink("musl_libc_notice");
-// clang-format off
 
-static const unsigned char table[] = {
-#include "nonspacing.inc"
-};
+static const unsigned char tab[];
 
-static const unsigned char wtable[] = {
-#include "wide.inc"
-};
+static const unsigned char rulebases[512];
+static const int rules[];
 
-int wcwidth(wchar_t wc)
+static const unsigned char exceptions[][2];
+
+#include "casemap.inc"
+
+static int casemap(unsigned c, int dir)
 {
-	if (wc < 0xff) {
-		if (wc >= 0)
-			return ((wc+1) & 0x7f) >= 0x21 ? 1 : wc ? -1 : 0;
-		return -1;
+	unsigned b, x, y, v, rt, xb, xn;
+	int r, rd, c0 = c;
+
+	if (c >= 0x20000) return c;
+
+	b = c>>8;
+	c &= 255;
+	x = c/3;
+	y = c%3;
+
+	/* lookup entry in two-level base-6 table */
+	v = tab[tab[b]*86+x];
+	static const int mt[] = { 2048, 342, 57 };
+	v = (v*mt[y]>>11)%6;
+
+	/* use the bit vector out of the tables as an index into
+	 * a block-specific set of rules and decode the rule into
+	 * a type and a case-mapping delta. */
+	r = rules[rulebases[b]+v];
+	rt = r & 255;
+	rd = r >> 8;
+
+	/* rules 0/1 are simple lower/upper case with a delta.
+	 * apply according to desired mapping direction. */
+	if (rt < 2) return c0 + (rd & -(rt^dir));
+
+	/* binary search. endpoints of the binary search for
+	 * this block are stored in the rule delta field. */
+	xn = rd & 0xff;
+	xb = (unsigned)rd >> 8;
+	while (xn) {
+		unsigned try = exceptions[xb+xn/2][0];
+		if (try == c) {
+			r = rules[exceptions[xb+xn/2][1]];
+			rt = r & 255;
+			rd = r >> 8;
+			if (rt < 2) return c0 + (rd & -(rt^dir));
+			/* Hard-coded for the four exceptional titlecase */
+			return c0 + (dir ? -1 : 1);
+		} else if (try > c) {
+			xn /= 2;
+		} else {
+			xb += xn/2;
+			xn -= xn/2;
+		}
 	}
-	if ((wc & 0xfffeffffU) < 0xfffe) {
-		if ((table[table[wc>>8]*32+((wc&255)>>3)]>>(wc&7))&1)
-			return 0;
-		if ((wtable[wtable[wc>>8]*32+((wc&255)>>3)]>>(wc&7))&1)
-			return 2;
-		return 1;
-	}
-	if ((wc & 0xfffe) == 0xfffe)
-		return -1;
-	if (wc-0x20000U < 0x20000)
-		return 2;
-	if (wc == 0xe0001 || wc-0xe0020U < 0x5f || wc-0xe0100U < 0xef)
-		return 0;
-	return 1;
+	return c0;
 }
+
+wint_t towlower(wint_t wc)
+{
+	return casemap(wc, 0);
+}
+
+wint_t towupper(wint_t wc)
+{
+	return casemap(wc, 1);
+}
+
+wint_t __towupper_l(wint_t c, locale_t l)
+{
+	return towupper(c);
+}
+
+wint_t __towlower_l(wint_t c, locale_t l)
+{
+	return towlower(c);
+}
+
+__weak_reference(__towupper_l, towupper_l);
+__weak_reference(__towlower_l, towlower_l);

@@ -71,8 +71,6 @@ o/$(MODE)/libc/nexgen32e/ksha512.o: libc/nexgen32e/ksha512.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/kcp437.o: libc/nexgen32e/kcp437.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/nexgen32e/kreversebits.o: libc/nexgen32e/kreversebits.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/ktensindex.o: libc/nexgen32e/ktensindex.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/longjmp.o: libc/nexgen32e/longjmp.S

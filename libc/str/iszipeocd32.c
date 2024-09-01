@@ -24,32 +24,23 @@
  */
 int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
   size_t offset;
-  if (i > n || n - i < kZipCdirHdrMinSize) {
+  if (i > n || n - i < kZipCdirHdrMinSize)
     return kZipErrorEocdOffsetOverflow;
-  }
-  if (ZIP_READ32(p + i) != kZipCdirHdrMagic) {
+  if (ZIP_READ32(p + i) != kZipCdirHdrMagic)
     return kZipErrorEocdMagicNotFound;
-  }
-  if (i + ZIP_CDIR_HDRSIZE(p + i) > n) {
+  if (i + ZIP_CDIR_HDRSIZE(p + i) > n)
     return kZipErrorEocdSizeOverflow;
-  }
-  if (ZIP_CDIR_DISK(p + i) != ZIP_CDIR_STARTINGDISK(p + i)) {
+  if (ZIP_CDIR_DISK(p + i) != ZIP_CDIR_STARTINGDISK(p + i))
     return kZipErrorEocdDiskMismatch;
-  }
-  if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i)) {
+  if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i))
     return kZipErrorEocdRecordsMismatch;
-  }
-  if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i)) {
+  if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i))
     return kZipErrorEocdRecordsOverflow;
-  }
-  if (ZIP_CDIR_OFFSET(p + i) == 0xFFFFFFFFu) {
+  if (ZIP_CDIR_OFFSET(p + i) == 0xFFFFFFFFu)
     return kZipErrorEocdRecordsOverflow;
-  }
-  if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i))) {
+  if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i)))
     return kZipErrorEocdOffsetSizeOverflow;
-  }
-  if (offset > i) {
+  if (offset > i)
     return kZipErrorCdirOffsetPastEocd;
-  }
   return kZipOk;
 }

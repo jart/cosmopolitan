@@ -22,8 +22,11 @@
  * Returns nonzero if c is printable.
  */
 int iswprint(wint_t c) {
-  return !((0x00 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F) ||
-           (0xFFF9 <= c && c <= 0xFFFB) || c == 0x2028 || c == 0x2029);
+  return (0 <= c && c <= 0x10FFFD) &&      // legal unicode
+         !(0x0000 <= c && c <= 0x001F) &&  // c0 control codes
+         !(0x007F <= c && c <= 0x009F) &&  // c1 control codes
+         !(0x2028 <= c && c <= 0x2029) &&  // line / paragraph separator
+         !(0xFFF9 <= c && c <= 0xFFFB);    // interlinear annotation controls
 }
 
 __weak_reference(iswprint, iswprint_l);

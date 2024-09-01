@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,60 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
-#include "libc/wctype.h"
+#include "libc/mem/alloca.h"
+#include "libc/runtime/stack.h"
+#include "libc/str/kmp.h"
 
-wctrans_t wctrans(const char *s) {
-  if (!strcmp(s, "toupper"))
-    return (wctrans_t)1;
-  if (!strcmp(s, "tolower"))
-    return (wctrans_t)2;
-  return 0;
+static void computeLPS(const char16_t *pattern, long M, long *lps) {
+  long len = 0;
+  lps[0] = 0;
+  long i = 1;
+  while (i < M) {
+    if (pattern[i] == pattern[len]) {
+      len++;
+      lps[i] = len;
+      i++;
+    } else {
+      if (len != 0) {
+        len = lps[len - 1];
+      } else {
+        lps[i] = 0;
+        i++;
+      }
+    }
+  }
+}
+
+char16_t *__memmem_kmp16(const char16_t *s, size_t n, const char16_t *ss,
+                         size_t m) {
+  if (!m)
+    return (char16_t *)s;
+  if (n < m)
+    return NULL;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
+  long need = sizeof(long) * m;
+  long *lps = (long *)alloca(need);
+  CheckLargeStackAllocation(lps, need);
+#pragma GCC pop_options
+  computeLPS(ss, m, lps);
+  long i = 0;
+  long j = 0;
+  while (i < n) {
+    if (ss[j] == s[i]) {
+      i++;
+      j++;
+    }
+    if (j == m) {
+      return (char16_t *)(s + i - j);
+    } else if (i < n && ss[j] != s[i]) {
+      if (j != 0) {
+        j = lps[j - 1];
+      } else {
+        i++;
+      }
+    }
+  }
+  return NULL;
 }

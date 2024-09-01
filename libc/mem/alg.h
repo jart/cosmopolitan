@@ -4,9 +4,6 @@ COSMOPOLITAN_C_START_
 
 void *bsearch(const void *, const void *, size_t, size_t,
               int (*)(const void *, const void *)) paramsnonnull() nosideeffect;
-void *bsearch_r(const void *, const void *, size_t, size_t,
-                int (*)(const void *, const void *, void *), void *)
-    paramsnonnull((1, 2, 5)) nosideeffect;
 void qsort3(void *, size_t, size_t, int (*)(const void *, const void *))
     paramsnonnull();
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *))

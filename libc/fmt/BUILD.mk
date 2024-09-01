@@ -40,7 +40,7 @@ LIBC_FMT_A_DIRECTDEPS =				\
 	LIBC_STR				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\
-	THIRD_PARTY_COMPILER_RT
+	THIRD_PARTY_COMPILER_RT			\
 
 LIBC_FMT_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_FMT_A_DIRECTDEPS),$($(x))))

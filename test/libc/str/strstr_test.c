@@ -17,11 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/stdalign.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -48,6 +60,13 @@ char *strstr_naive(const char *haystack, const char *needle) {
   return 0;
 }
 
+TEST(strstr, special) {
+  MAKESTRING(haystack, "abc123def");
+  ASSERT_STREQ(&haystack[0], strstr(haystack, haystack));
+  ASSERT_STREQ(&haystack[0], strstr(haystack, ""));
+  free(haystack);
+}
+
 TEST(strstr, test_emptyString_isFoundAtBeginning) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[0], strstr(haystack, gc(strdup(""))));
@@ -67,7 +86,8 @@ TEST(strstr, test_notFound1) {
 }
 
 TEST(strstr, test_middleOfString) {
-  MAKESTRING(haystack, "abc123def");
+  alignas(16) char hog[] = "abc123def";
+  MAKESTRING(haystack, hog);
   ASSERT_STREQ(&haystack[3], strstr(haystack, gc(strdup("123"))));
   free(haystack);
 }
@@ -96,6 +116,25 @@ TEST(strstr, test) {
   ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "stack-protector"));
   ASSERT_EQ(NULL, strstr("-Wl,--gc-sections", "sanitize"));
   ASSERT_STREQ("x", strstr("x", "x"));
+}
+
+TEST(strstr, safety) {
+  int pagesz = sysconf(_SC_PAGESIZE);
+  char *map = (char *)mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  npassert(map != MAP_FAILED);
+  npassert(!mprotect(map + pagesz, pagesz, PROT_NONE));
+  for (int haylen = 1; haylen < 128; ++haylen) {
+    char *hay = map + pagesz - (haylen + 1);
+    for (int i = 0; i < haylen; ++i)
+      hay[i] = max(rand() & 255, 1);
+    hay[haylen] = 0;
+    for (int neelen = 1; neelen < haylen; ++neelen) {
+      char *nee = hay + (haylen + 1) - (neelen + 1);
+      ASSERT_EQ(strstr_naive(hay, nee), strstr(hay, nee));
+    }
+  }
+  munmap(map, pagesz * 2);
 }
 
 TEST(strstr, breakit) {

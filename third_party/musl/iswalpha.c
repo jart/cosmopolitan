@@ -25,37 +25,26 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/unicode.h"
+#include <wctype.h>
+#include <locale.h>
 __static_yoink("musl_libc_notice");
-// clang-format off
 
 static const unsigned char table[] = {
-#include "nonspacing.inc"
+#include "alpha.inc"
 };
 
-static const unsigned char wtable[] = {
-#include "wide.inc"
-};
-
-int wcwidth(wchar_t wc)
+int iswalpha(wint_t wc)
 {
-	if (wc < 0xff) {
-		if (wc >= 0)
-			return ((wc+1) & 0x7f) >= 0x21 ? 1 : wc ? -1 : 0;
-		return -1;
-	}
-	if ((wc & 0xfffeffffU) < 0xfffe) {
-		if ((table[table[wc>>8]*32+((wc&255)>>3)]>>(wc&7))&1)
-			return 0;
-		if ((wtable[wtable[wc>>8]*32+((wc&255)>>3)]>>(wc&7))&1)
-			return 2;
+	if (wc<0x20000U)
+		return (table[table[wc>>8]*32+((wc&255)>>3)]>>(wc&7))&1;
+	if (wc<0x2fffeU)
 		return 1;
-	}
-	if ((wc & 0xfffe) == 0xfffe)
-		return -1;
-	if (wc-0x20000U < 0x20000)
-		return 2;
-	if (wc == 0xe0001 || wc-0xe0020U < 0x5f || wc-0xe0100U < 0xef)
-		return 0;
-	return 1;
+	return 0;
 }
+
+int __iswalpha_l(wint_t c, locale_t l)
+{
+	return iswalpha(c);
+}
+
+__weak_reference(__iswalpha_l, iswalpha_l);

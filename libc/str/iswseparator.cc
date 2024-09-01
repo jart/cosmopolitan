@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8-*-│
+│ vi: set et ft=c++ ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.h"
+#include "libc/str/has_char.h"
 #include "libc/wctype.h"
 
-static const unsigned short kCodes[][2] = {
+static const unsigned short kSeparators[][2] = {
     {0x00aa, 0x00aa}, /*     1x English */
     {0x00b2, 0x00b3}, /*     2x English Arabic */
     {0x00b5, 0x00b5}, /*     1x Greek */
@@ -172,7 +174,7 @@ static const unsigned short kCodes[][2] = {
     {0xffda, 0xffdc}, /*     3x Dubs */
 };
 
-static const unsigned kAstralCodes[][2] = {
+static const unsigned kAstralSeparators[][2] = {
     {0x10107, 0x10133}, /*    45x Aegean */
     {0x10140, 0x10178}, /*    57x Ancient Greek Numbers */
     {0x1018a, 0x1018b}, /*     2x Ancient Greek Numbers */
@@ -390,34 +392,11 @@ static const unsigned kAstralCodes[][2] = {
  * other things like blocks and emoji (So).
  */
 int iswseparator(wint_t c) {
-  int m, l, r, n;
-  if (c < 0200) {
-    return !(('0' <= c && c <= '9') || ('A' <= c && c <= 'Z') ||
+  if (c < 128)
+    return !(('0' <= c && c <= '9') ||  //
+             ('A' <= c && c <= 'Z') ||  //
              ('a' <= c && c <= 'z'));
-  }
-  if (c <= 0xffff) {
-    l = 0;
-    r = n = sizeof(kCodes) / sizeof(kCodes[0]);
-    while (l < r) {
-      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-      if (kCodes[m][1] < c) {
-        l = m + 1;
-      } else {
-        r = m;
-      }
-    }
-    return !(l < n && kCodes[l][0] <= c && c <= kCodes[l][1]);
-  } else {
-    l = 0;
-    r = n = sizeof(kAstralCodes) / sizeof(kAstralCodes[0]);
-    while (l < r) {
-      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-      if (kAstralCodes[m][1] < c) {
-        l = m + 1;
-      } else {
-        r = m;
-      }
-    }
-    return !(l < n && kAstralCodes[l][0] <= c && c <= kAstralCodes[l][1]);
-  }
+  if (c < 65536)
+    return has_char(kSeparators, ARRAYLEN(kSeparators), (unsigned short)c);
+  return has_char(kAstralSeparators, ARRAYLEN(kAstralSeparators), (unsigned)c);
 }

@@ -16,15 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <xmmintrin.h>
+#endif
 
 /**
  * Yields hyperthread.
  */
 void pthread_pause_np(void) {
 #if defined(__GNUC__) && defined(__aarch64__)
-  __asm__ volatile("yield");
-#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-  __asm__ volatile("pause");
+  __asm__("yield");
+#elif defined(__x86_64__) || defined(__i386__)
+  _mm_pause();
+#elif defined(__GNUC__) && (defined(__PPC__) || defined(__PPC64__))
+  __asm__("or 27,27,27");
+#else
+  // do nothing
 #endif
 }

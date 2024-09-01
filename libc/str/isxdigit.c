@@ -22,7 +22,8 @@
  * Returns true if c is hexadecimal digit.
  */
 int isxdigit(int c) {
-  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
+  return ('0' <= c && c <= '9') ||  //
+         ('A' <= c && c <= 'F') ||  //
          ('a' <= c && c <= 'f');
 }
 

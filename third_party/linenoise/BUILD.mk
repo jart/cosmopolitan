@@ -19,16 +19,17 @@ THIRD_PARTY_LINENOISE_A_DIRECTDEPS =				\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
-	LIBC_NEXGEN32E						\
+	LIBC_LOG						\
 	LIBC_MEM						\
-	LIBC_SYSV						\
+	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
-	LIBC_RUNTIME						\
-	LIBC_LOG						\
-	LIBC_SYSV_CALLS						\
 	LIBC_STR						\
-	NET_HTTP
+	LIBC_SYSV						\
+	LIBC_SYSV_CALLS						\
+	NET_HTTP						\
+	THIRD_PARTY_MUSL					\
 
 THIRD_PARTY_LINENOISE_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LINENOISE_A_DIRECTDEPS),$($(x))))

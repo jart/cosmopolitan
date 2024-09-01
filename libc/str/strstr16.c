@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/kmp.h"
 #include "libc/str/str.h"
 
 /**
@@ -28,19 +29,5 @@
  * @see memmem()
  */
 char16_t *strstr16(const char16_t *haystack, const char16_t *needle) {
-  size_t i;
-  for (;;) {
-    for (i = 0;;) {
-      if (!needle[i])
-        return (/*unconst*/ char16_t *)haystack;
-      if (!haystack[i])
-        break;
-      if (needle[i] != haystack[i])
-        break;
-      ++i;
-    }
-    if (!*haystack++)
-      break;
-  }
-  return NULL;
+  return __memmem_kmp16(haystack, strlen16(haystack), needle, strlen16(needle));
 }

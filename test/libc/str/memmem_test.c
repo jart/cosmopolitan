@@ -17,10 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/safemacros.h"
 #include "libc/mem/alg.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -172,6 +179,26 @@ TEST(memmem, fuzz) {
   }
 }
 
+TEST(memmem, safety) {
+  int pagesz = sysconf(_SC_PAGESIZE);
+  char *map = (char *)mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                           MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  npassert(map != MAP_FAILED);
+  npassert(!mprotect(map + pagesz, pagesz, PROT_NONE));
+  for (int haylen = 1; haylen < 128; ++haylen) {
+    char *hay = map + pagesz - (haylen + 1);
+    for (int i = 0; i < haylen; ++i)
+      hay[i] = max(rand() & 255, 1);
+    hay[haylen] = 0;
+    for (int neelen = 1; neelen < haylen; ++neelen) {
+      char *nee = hay + (haylen + 1) - (neelen + 1);
+      ASSERT_EQ(memmem_naive(hay, haylen, nee, neelen),
+                memmem(hay, haylen, nee, neelen));
+    }
+  }
+  munmap(map, pagesz * 2);
+}
+
 /*
  *     memmem naive        l:    43,783c    14,142ns   m:    31,285c    10,105ns
  *     memmem              l:     2,597c       839ns   m:     2,612c       844ns
@@ -201,7 +228,12 @@ BENCH(memmem, bench) {
   EZBENCH2("memmem", donothing,
            __expropriate(memmem(kHyperion, kHyperionSize, "THE END", 7)));
   EZBENCH2("memmem", donothing,
-           __expropriate(memmem(
-               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
-               62, "aaaaaab", 7)));
+           __expropriate(
+               memmem("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+                      152,
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      "aaaaaaaaaaaaaaaaaaaaaaaab",
+                      81)));
 }

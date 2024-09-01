@@ -19,10 +19,15 @@
 #include "libc/wctype.h"
 
 /**
- * Returns nonzero if c is C0 or C1 control code.
+ * Returns nonzero if `c` is control code.
+ *
+ * This includes C0 or C1 control codes, in addition to the "LINE
+ * SEPARATOR" and "PARAGRAPH SEPARATOR" characters.
  */
 int iswcntrl(wint_t c) {
-  return (0x00 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F);
+  return (0x0000 <= c && c <= 0x001F) ||  //
+         (0x007F <= c && c <= 0x009F) ||  //
+         (0x2028 <= c && c <= 0x2029);
 }
 
 __weak_reference(iswcntrl, iswcntrl_l);

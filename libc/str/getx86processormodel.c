@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/bisect.internal.h"
 #include "libc/nexgen32e/x86info.h"
 
 static int CmpX86ProcModelKey(const struct X86ProcessorModel *a,
@@ -32,7 +31,8 @@ static int CmpX86ProcModelKey(const struct X86ProcessorModel *a,
  * @see https://a4lg.com/tech/x86/database/x86-families-and-models.en.html
  */
 const struct X86ProcessorModel *getx86processormodel(short key) {
-  return bisect(&(struct X86ProcessorModel){key}, kX86ProcessorModels,
-                kX86ProcessorModelCount, sizeof(struct X86ProcessorModel),
-                (void *)CmpX86ProcModelKey, NULL);
+  for (int i = 0; kX86ProcessorModels[i].key; ++i)
+    if (kX86ProcessorModels[i].key == key)
+      return &kX86ProcessorModels[i];
+  return 0;
 }
