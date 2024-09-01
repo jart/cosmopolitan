@@ -49,6 +49,8 @@ __gdtoa_rv_alloc(int i, ThInfo **PTI)
 	     j <<= 1)
 		k++;
 	r = (int *)__gdtoa_Balloc(k, PTI);
+	if (r == NULL)
+		return NULL;
 	*r = k;
 	return (char *)(r + 1);
 }
