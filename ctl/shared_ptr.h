@@ -43,8 +43,8 @@ incref(size_t* r) noexcept
 #ifdef NDEBUG
     __atomic_fetch_add(r, 1, __ATOMIC_RELAXED);
 #else
-    size_t refs = __atomic_fetch_add(r, 1, __ATOMIC_RELAXED);
-    if (refs > ((size_t)-1) >> 1)
+    ssize_t refs = __atomic_fetch_add(r, 1, __ATOMIC_RELAXED);
+    if (refs < 0)
         __builtin_trap();
 #endif
 }
