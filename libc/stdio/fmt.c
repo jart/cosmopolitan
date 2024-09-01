@@ -1145,6 +1145,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 =
               gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
         }
+        if (s0 == NULL)
+          return -1;
         if (decpt == 9999 || decpt == -32768) {
         FormatDecpt9999Or32768:
           if (s0)
@@ -1258,6 +1260,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
+        if (s0 == NULL)
+          return -1;
         if (decpt == 9999 || decpt == -32768)
           goto FormatDecpt9999Or32768;
         c = se - s;
@@ -1304,6 +1308,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
+        if (s0 == NULL)
+          return -1;
         if (decpt == 9999 || decpt == -32768)
           goto FormatDecpt9999Or32768;
       FormatExpo:

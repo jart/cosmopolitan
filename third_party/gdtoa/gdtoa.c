@@ -286,6 +286,8 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			i = 1;
 	}
 	s = s0 = __gdtoa_rv_alloc(i, &TI);
+	if (s0 == NULL)
+		goto ret1;
 	if (mode <= 1)
 		rdir = 0;
 	else if ( (rdir = fpi->rounding - 1) !=0) {
@@ -673,10 +675,12 @@ ret:
 		__gdtoa_Bfree(mhi, &TI);
 	}
 ret1:
-	while(s > s0 && s[-1] == '0')
-		--s;
+	if (s != NULL)
+		while(s > s0 && s[-1] == '0')
+			--s;
 	__gdtoa_Bfree(b, &TI);
-	*s = 0;
+	if (s != NULL)
+		*s = 0;
 	*decpt = k + 1;
 	if (rve)
 		*rve = s;

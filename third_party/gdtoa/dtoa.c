@@ -246,6 +246,9 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 			i = 1;
 	}
 	s = s0 = __gdtoa_rv_alloc(i, &TI);
+	if (s0 == NULL)
+		goto ret1;
+
 	if (mode > 1 && Rounding != 1)
 		leftright = 0;
 	if (ilim >= 0 && ilim <= Quick_max && try_quick) {
@@ -614,7 +617,8 @@ retc:
 		--s;
 ret1:
 	__gdtoa_Bfree(b, &TI);
-	*s = 0;
+	if (s != NULL)
+		*s = 0;
 	*decpt = k + 1;
 	if (rve)
 		*rve = s;
