@@ -129,6 +129,7 @@
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
+#include "third_party/mbedtls/entropy.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
@@ -3977,6 +3978,7 @@ static int LuaNilTlsError(lua_State *L, const char *s, int r) {
 }
 
 #include "tool/net/fetch.inc"
+#include "tool/net/ltls.inc"
 
 static int LuaGetDate(lua_State *L) {
   lua_pushinteger(L, shared->nowish.tv_sec);
@@ -5401,6 +5403,9 @@ static const luaL_Reg kLuaFuncs[] = {
 static const luaL_Reg kLuaLibs[] = {
     {"argon2", luaopen_argon2},      //
     {"lsqlite3", luaopen_lsqlite3},  //
+#ifndef UNSECURE
+    {"tls", luaopen_tls},            //
+#endif
     {"maxmind", LuaMaxmind},         //
     {"finger", LuaFinger},           //
     {"path", LuaPath},               //
