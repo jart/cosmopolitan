@@ -62,8 +62,18 @@ static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
     dir[dirlen] = u'\\';
     memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
     memcpy(file, dir, ((n = dirlen + 1 + filelen) + 1) * sizeof(char16_t));
-    int res = __normntpath(file, n);
-    return res;
+    n = __normntpath(file, n);
+
+    // UNC paths break some things when they are not needed.
+    if (n > 4 && n < 260 &&  //
+        file[0] == '\\' &&   //
+        file[1] == '\\' &&   //
+        file[2] == '?' &&    //
+        file[3] == '\\') {
+      memmove(file, file + 4, (n - 4 + 1) * sizeof(char16_t));
+    }
+
+    return n;
   } else {
     return filelen;
   }

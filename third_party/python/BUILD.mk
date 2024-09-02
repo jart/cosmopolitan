@@ -1844,7 +1844,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_enum.py				\
 	third_party/python/Lib/test/test_enumerate.py				\
 	third_party/python/Lib/test/test_eof.py					\
-	third_party/python/Lib/test/test_epoll.py				\
 	third_party/python/Lib/test/test_errno.py				\
 	third_party/python/Lib/test/test_exception_hierarchy.py			\
 	third_party/python/Lib/test/test_exception_variations.py		\
@@ -2148,8 +2147,6 @@ o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs: private	\
 			/usr/local/etc/httpd/conf/mime.types		\
 			/usr/local/etc/mime.types
 
-o/$(MODE)/third_party/python/Lib/test/test_epoll.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 o/$(MODE)/third_party/python/Lib/test/test_fcntl.py.runs:		\
@@ -2786,9 +2783,6 @@ o/$(MODE)/third_party/python/Lib/test/test_dis.py.runs: $(PYTHONTESTER)
 
 o/$(MODE)/third_party/python/Lib/test/test_asyncore.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_asyncore $(PYTESTARGS)
-
-o/$(MODE)/third_party/python/Lib/test/test_epoll.py.runs: $(PYTHONTESTER)
-	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_epoll $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_cmd_line.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_cmd_line $(PYTESTARGS)

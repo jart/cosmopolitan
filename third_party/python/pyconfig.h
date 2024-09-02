@@ -122,8 +122,8 @@
 #define HAVE_DIRENT_D_TYPE 1
 #define HAVE_DUP2          1
 #define HAVE_DUP3          1
-#define HAVE_EPOLL         1
-#define HAVE_EPOLL_CREATE1 1
+// #define HAVE_EPOLL         1
+// #define HAVE_EPOLL_CREATE1 1
 #define HAVE_ERF           1
 #define HAVE_ERFC          1
 #define HAVE_EXECV         1

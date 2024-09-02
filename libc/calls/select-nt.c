@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -31,37 +30,48 @@
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
 
+// <sync libc/sysv/consts.sh>
+#define POLLERR_    0x0001  // implied in events
+#define POLLHUP_    0x0002  // implied in events
+#define POLLNVAL_   0x0004  // implied in events
+#define POLLIN_     0x0300
+#define POLLRDNORM_ 0x0100
+#define POLLRDBAND_ 0x0200
+#define POLLOUT_    0x0010
+#define POLLWRNORM_ 0x0010
+#define POLLWRBAND_ 0x0020  // MSDN undocumented
+#define POLLPRI_    0x0400  // MSDN unsupported
+// </sync libc/sysv/consts.sh>
+
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
                   fd_set *exceptfds, struct timeval *timeout,
                   const sigset_t *sigmask) {
-  int i, pfds, events, fdcount;
+  int pfds = 0;
 
   // convert bitsets to pollfd
-  struct pollfd fds[64];
-  for (pfds = i = 0; i < nfds; ++i) {
-    events = 0;
-    if (readfds && FD_ISSET(i, readfds))
-      events |= POLLIN;
-    if (writefds && FD_ISSET(i, writefds))
-      events |= POLLOUT;
-    if (exceptfds && FD_ISSET(i, exceptfds))
-      events |= POLLERR;
+  struct pollfd fds[128];
+  for (int fd = 0; fd < nfds; ++fd) {
+    int events = 0;
+    if (readfds && FD_ISSET(fd, readfds))
+      events |= POLLIN_;
+    if (writefds && FD_ISSET(fd, writefds))
+      events |= POLLOUT_;
+    if (exceptfds && FD_ISSET(fd, exceptfds))
+      events |= POLLPRI_;
     if (events) {
-      if (pfds < ARRAYLEN(fds)) {
-        fds[pfds].fd = i;
-        fds[pfds].events = events;
-        fds[pfds].revents = 0;
-        pfds += 1;
-      } else {
-        return enomem();
-      }
+      if (pfds == ARRAYLEN(fds))
+        return e2big();
+      fds[pfds].fd = fd;
+      fds[pfds].events = events;
+      fds[pfds].revents = 0;
+      ++pfds;
     }
   }
 
   // convert the wait time to a word
   uint32_t millis;
   if (!timeout) {
-    millis = -1;
+    millis = -1u;
   } else {
     int64_t ms = timeval_tomillis(*timeout);
     if (ms < 0 || ms > UINT32_MAX) {
@@ -72,9 +82,8 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // call our nt poll implementation
-  fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
-  unassert(fdcount < 64);
-  if (fdcount < 0)
+  int fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
+  if (fdcount == -1)
     return -1;
 
   // convert pollfd back to bitsets
@@ -85,20 +94,20 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   if (exceptfds)
     FD_ZERO(exceptfds);
   int bits = 0;
-  for (i = 0; i < pfds; ++i) {
-    if (fds[i].revents & POLLIN) {
+  for (int i = 0; i < pfds; ++i) {
+    if (fds[i].revents & (POLLIN_ | POLLHUP_ | POLLERR_ | POLLNVAL_)) {
       if (readfds) {
         FD_SET(fds[i].fd, readfds);
         ++bits;
       }
     }
-    if (fds[i].revents & POLLOUT) {
+    if (fds[i].revents & POLLOUT_) {
       if (writefds) {
         FD_SET(fds[i].fd, writefds);
         ++bits;
       }
     }
-    if (fds[i].revents & (POLLERR | POLLNVAL)) {
+    if (fds[i].revents & POLLPRI_) {
       if (exceptfds) {
         FD_SET(fds[i].fd, exceptfds);
         ++bits;
@@ -107,9 +116,8 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // store remaining time back in caller's timeval
-  if (timeout) {
+  if (timeout)
     *timeout = timeval_frommillis(millis);
-  }
 
   return bits;
 }

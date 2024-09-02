@@ -10,11 +10,9 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/efi.h"
-#include "libc/sock/epoll.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
-#include "libc/sysv/consts/epoll.h"
 #include "libc/sysv/consts/poll.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
@@ -35,21 +33,6 @@
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("select");
-PYTHON_PROVIDE("select.EPOLLERR");
-PYTHON_PROVIDE("select.EPOLLET");
-PYTHON_PROVIDE("select.EPOLLEXCLUSIVE");
-PYTHON_PROVIDE("select.EPOLLHUP");
-PYTHON_PROVIDE("select.EPOLLIN");
-PYTHON_PROVIDE("select.EPOLLMSG");
-PYTHON_PROVIDE("select.EPOLLONESHOT");
-PYTHON_PROVIDE("select.EPOLLOUT");
-PYTHON_PROVIDE("select.EPOLLPRI");
-PYTHON_PROVIDE("select.EPOLLRDBAND");
-PYTHON_PROVIDE("select.EPOLLRDHUP");
-PYTHON_PROVIDE("select.EPOLLRDNORM");
-PYTHON_PROVIDE("select.EPOLLWRBAND");
-PYTHON_PROVIDE("select.EPOLLWRNORM");
-PYTHON_PROVIDE("select.EPOLL_CLOEXEC");
 PYTHON_PROVIDE("select.POLLERR");
 PYTHON_PROVIDE("select.POLLHUP");
 PYTHON_PROVIDE("select.POLLIN");
@@ -61,7 +44,6 @@ PYTHON_PROVIDE("select.POLLRDHUP");
 PYTHON_PROVIDE("select.POLLRDNORM");
 PYTHON_PROVIDE("select.POLLWRBAND");
 PYTHON_PROVIDE("select.POLLWRNORM");
-PYTHON_PROVIDE("select.epoll");
 PYTHON_PROVIDE("select.error");
 PYTHON_PROVIDE("select.poll");
 PYTHON_PROVIDE("select.select");

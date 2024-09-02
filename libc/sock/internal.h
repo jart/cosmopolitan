@@ -52,11 +52,6 @@ int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *, struct timeval *);
 int sys_pselect(int, fd_set *, fd_set *, fd_set *, struct timespec *,
                 const void *);
 int sys_setsockopt(int, int, int, const void *, uint32_t);
-int32_t sys_epoll_create(int32_t);
-int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *);
-int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t);
-int32_t sys_epoll_pwait(int32_t, void *, int32_t, int32_t, const sigset_t *,
-                        size_t);
 
 int sys_socket_nt(int, int, int);
 

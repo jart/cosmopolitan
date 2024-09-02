@@ -52,11 +52,6 @@ textwindows int sys_close_nt(int fd, int fildes) {
         FlushFileBuffers(f->handle);
       }
       break;
-    case kFdEpoll:
-      if (_weaken(sys_close_epoll_nt)) {
-        return _weaken(sys_close_epoll_nt)(fd);
-      }
-      break;
     case kFdSocket:
       if (_weaken(sys_closesocket_nt)) {
         return _weaken(sys_closesocket_nt)(g_fds.p + fd);

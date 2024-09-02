@@ -20,12 +20,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
@@ -74,7 +74,6 @@ static int close_impl(int fd) {
  * - openat()
  * - socket()
  * - accept()
- * - epoll_create()
  * - landlock_create_ruleset()
  *
  * This function should never be reattempted if an error is returned;

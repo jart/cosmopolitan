@@ -196,10 +196,21 @@ static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int64_t dirhand,
   errno_t err;
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
+  if (!strcmp(path, "/dev/null")) {
+    strcpy16(path16, u"NUL");
+  } else if (!strcmp(path, "/dev/stdin")) {
+    return spawnfds_dup2(fds, 0, fildes);
+  } else if (!strcmp(path, "/dev/stdout")) {
+    return spawnfds_dup2(fds, 1, fildes);
+  } else if (!strcmp(path, "/dev/stderr")) {
+    return spawnfds_dup2(fds, 2, fildes);
+  } else {
+    if (__mkntpathath(dirhand, path, 0, path16) == -1)
+      return errno;
+  }
   if ((err = spawnfds_ensure(fds, fildes)))
     return err;
-  if (__mkntpathath(dirhand, path, 0, path16) != -1 &&
-      GetNtOpenFlags(oflag, mode, &perm, &share, &disp, &attr) != -1 &&
+  if (GetNtOpenFlags(oflag, mode, &perm, &share, &disp, &attr) != -1 &&
       (h = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0))) {
     spawnfds_closelater(fds, h);
     fds->p[fildes].kind = kFdFile;
@@ -363,6 +374,19 @@ static textwindows errno_t posix_spawn_nt_impl(
                                   kNtFileNameNormalized | kNtVolumeNameDos)) {
       err = GetLastError();
       goto ReturnErr;
+    }
+  }
+
+  // UNC paths break some things when they are not needed.
+  if (lpCurrentDirectory) {
+    size_t n = strlen16(lpCurrentDirectory);
+    if (n > 4 && n < 260 &&               //
+        lpCurrentDirectory[0] == '\\' &&  //
+        lpCurrentDirectory[1] == '\\' &&  //
+        lpCurrentDirectory[2] == '?' &&   //
+        lpCurrentDirectory[3] == '\\') {
+      memmove(lpCurrentDirectory, lpCurrentDirectory + 4,
+              (n - 4 + 1) * sizeof(char16_t));
     }
   }
 

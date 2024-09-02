@@ -17,26 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/select.h"
-#include "libc/calls/cp.internal.h"
-#include "libc/calls/struct/itimerval.internal.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/calls/struct/timeval.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/strace.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/select.h"
-#include "libc/sock/select.internal.h"
-#include "libc/sysv/errfuns.h"
 
 /**
- * Does what poll() does except with bitset API.
+ * Checks status on multiple file descriptors at once.
  *
- * This system call is supported on all platforms. However, on Windows,
- * this is polyfilled to translate into poll(). So it's recommended that
- * poll() be used instead.
- *
+ * @param readfds may be used to be notified when you can call read() on
+ *     a file descriptor without it blocking; this includes when data is
+ *     is available to be read as well as eof and error conditions
+ * @param writefds may be used to be notified when write() may be called
+ *     on a file descriptor without it blocking
+ * @param exceptfds may be used to be notified of exceptional conditions
+ *     such as out-of-band data on a socket; it is equivalent to POLLPRI
+ *     in the revents of poll()
+ * @param timeout may be null which means to block indefinitely; cosmo's
+ *     implementation of select() never modifies this parameter which is
+ *     how most platforms except Linux work which modifies it to reflect
+ *     elapsed time, noting that POSIX permits either behavior therefore
+ *     portable code should assume that timeout memory becomes undefined
+ * @raise E2BIG if we exceeded the 64 socket limit on Windows
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
  * @cancelationpoint
@@ -45,70 +44,13 @@
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
-
-  int rc;
-  fd_set old_readfds;
-  fd_set *old_readfds_ptr = 0;
-  fd_set old_writefds;
-  fd_set *old_writefds_ptr = 0;
-  fd_set old_exceptfds;
-  fd_set *old_exceptfds_ptr = 0;
-  struct timeval old_timeout;
-  struct timeval *old_timeout_ptr = 0;
-
-  POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
-            exceptfds, DescribeTimeval(0, timeout));
-
-  BEGIN_CANCELATION_POINT;
-  if (nfds < 0) {
-    rc = einval();
+  struct timespec ts;
+  struct timespec *tsp;
+  if (timeout) {
+    ts = timeval_totimespec(*timeout);
+    tsp = &ts;
   } else {
-    if (readfds) {
-      old_readfds = *readfds;
-      old_readfds_ptr = &old_readfds;
-    }
-    if (writefds) {
-      old_writefds = *writefds;
-      old_writefds_ptr = &old_writefds;
-    }
-    if (exceptfds) {
-      old_exceptfds = *exceptfds;
-      old_exceptfds_ptr = &old_exceptfds;
-    }
-    if (timeout) {
-      old_timeout = *timeout;
-      old_timeout_ptr = &old_timeout;
-    }
-    if (!IsWindows()) {
-#ifdef __aarch64__
-      struct timespec ts, *tsp;
-      if (timeout) {
-        ts = timeval_totimespec(*timeout);
-        tsp = &ts;
-      } else {
-        tsp = 0;
-      }
-      rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, 0);
-      if (timeout) {
-        *timeout = timespec_totimeval(ts);
-      }
-#else
-      rc = sys_select(nfds, readfds, writefds, exceptfds, timeout);
-#endif
-    } else {
-      rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
-    }
+    tsp = 0;
   }
-  END_CANCELATION_POINT;
-
-  STRACE("select(%d, %s → [%s], %s → [%s], %s → [%s], %s → [%s]) → %d% m", nfds,
-         DescribeFdSet(rc, nfds, old_readfds_ptr),
-         DescribeFdSet(rc, nfds, readfds),
-         DescribeFdSet(rc, nfds, old_writefds_ptr),
-         DescribeFdSet(rc, nfds, writefds),
-         DescribeFdSet(rc, nfds, old_exceptfds_ptr),
-         DescribeFdSet(rc, nfds, exceptfds),    //
-         DescribeTimeval(rc, old_timeout_ptr),  //
-         DescribeTimeval(rc, timeout), rc);
-  return rc;
+  return pselect(nfds, readfds, writefds, exceptfds, tsp, 0);
 }

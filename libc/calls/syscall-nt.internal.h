@@ -4,7 +4,6 @@ COSMOPOLITAN_C_START_
 
 bool32 sys_isatty(int);
 int sys_chdir_nt(const char *);
-int sys_close_epoll_nt(int);
 int sys_dup_nt(int, int, int, int);
 int sys_execve_nt(const char *, char *const[], char *const[]);
 int sys_faccessat_nt(int, const char *, int, uint32_t);

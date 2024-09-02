@@ -10,7 +10,7 @@ COSMOPOLITAN_C_START_
 #define kFdConsole   4
 #define kFdSerial    5
 #define kFdZip       6
-#define kFdEpoll     7
+#define kFdEpoll     7 /* epoll() deleted on 2024-09-01 */
 #define kFdReserved  8
 #define kFdDevNull   9
 #define kFdDevRandom 10

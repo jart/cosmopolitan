@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -53,12 +54,6 @@ void SetUp(void) {
 
 void OnSig(int sig) {
   gotsig = true;
-}
-
-__wur char *FormatPollFd(struct pollfd p[2]) {
-  return xasprintf("fd:%d revents:%s\n"
-                   "fd:%d revents:%s\n",
-                   p[0].fd, "<TODO:kPollNames>", p[1].fd, "<TODO:kPollNames>");
 }
 
 TEST(poll, allZero_doesNothingPrettyMuch) {
@@ -94,12 +89,50 @@ TEST(poll, testNegativeOneFd_isIgnored) {
   struct sockaddr_in addr = {AF_INET, 0, {htonl(INADDR_LOOPBACK)}};
   ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, listen(3, 10));
-  struct pollfd fds[] = {{-1}, {3}};
+  struct pollfd fds[] = {{-1, 0, -1}, {3, 0, -1}};
   EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));
-  EXPECT_STREQ("fd:-1 revents:<TODO:kPollNames>\n"
-               "fd:3 revents:<TODO:kPollNames>\n",
-               gc(FormatPollFd(&fds[0])));
+  EXPECT_EQ(-1, fds[0].fd);
+  EXPECT_EQ(0, fds[0].revents);
+  EXPECT_EQ(3, fds[1].fd);
+  EXPECT_EQ(0, fds[1].revents);
   ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(poll, testInvalidFd_POLLIN_isChecked) {
+  struct pollfd fds[] = {{77, POLLIN, -1}};
+  EXPECT_SYS(0, 1, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_EQ(77, fds[0].fd);
+  EXPECT_EQ(POLLNVAL, fds[0].revents);
+}
+
+TEST(poll, testInvalidFd_POLLOUT_isChecked) {
+  struct pollfd fds[] = {{77, POLLOUT, -1}};
+  EXPECT_SYS(0, 1, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_EQ(77, fds[0].fd);
+  EXPECT_EQ(POLLNVAL, fds[0].revents);
+}
+
+TEST(poll, testInvalidFd_POLLPRI_isChecked) {
+  struct pollfd fds[] = {{77, POLLPRI, -1}};
+  EXPECT_SYS(0, 1, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_EQ(77, fds[0].fd);
+  EXPECT_EQ(POLLNVAL, fds[0].revents);
+}
+
+TEST(poll, testInvalidFd_POLLHUP_isChecked) {
+  // this behavior has to be polyfilled on xnu
+  struct pollfd fds[] = {{77, POLLHUP, -1}};
+  EXPECT_SYS(0, 1, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_EQ(77, fds[0].fd);
+  EXPECT_EQ(POLLNVAL, fds[0].revents);
+}
+
+TEST(poll, testInvalidFd_ZERO_isChecked) {
+  // this behavior has to be polyfilled on xnu
+  struct pollfd fds[] = {{77, 0, -1}};
+  EXPECT_SYS(0, 1, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_EQ(77, fds[0].fd);
+  EXPECT_EQ(POLLNVAL, fds[0].revents);
 }
 
 TEST(poll, pipe_noInput) {
@@ -115,6 +148,17 @@ TEST(poll, pipe_noInput) {
   EXPECT_SYS(0, 0, close(pipefds[1]));
 }
 
+TEST(poll, pipe_broken) {
+  int pipefds[2];
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  struct pollfd fds[] = {{pipefds[0], POLLIN}};
+  EXPECT_SYS(0, 1, poll(fds, 1, 0));
+  // BSDs also set POLLIN here too even though that's wrong
+  EXPECT_TRUE(!!(fds[0].revents & POLLHUP));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+}
+
 TEST(poll, pipe_hasInputFromSameProcess) {
   char buf[2];
   int pipefds[2];
@@ -122,7 +166,7 @@ TEST(poll, pipe_hasInputFromSameProcess) {
   struct pollfd fds[] = {{pipefds[0], POLLIN}};
   EXPECT_SYS(0, 2, write(pipefds[1], "hi", 2));
   EXPECT_SYS(0, 1, poll(fds, 1, 1000));  // flake nt!
-  EXPECT_EQ(POLLIN, fds[0].revents);
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
   EXPECT_SYS(0, 2, read(pipefds[0], buf, 2));
   EXPECT_SYS(0, 0, poll(fds, 1, 0));
   EXPECT_SYS(0, 0, close(pipefds[0]));
@@ -150,7 +194,7 @@ TEST(poll, pipe_hasInput) {
   EXPECT_SYS(0, 2, read(pipefds[0], buf, 2));
   struct pollfd fds[] = {{pipefds[0], POLLIN}};
   EXPECT_SYS(0, 1, poll(fds, 1, -1));
-  EXPECT_EQ(POLLIN, fds[0].revents & POLLIN);
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
   EXPECT_SYS(0, 2, read(pipefds[0], buf, 2));
   EXPECT_SYS(0, 0, close(pipefds[0]));
   ASSERT_NE(-1, wait(&ws));
