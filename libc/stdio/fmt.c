@@ -1073,6 +1073,9 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         }
         break;
       }
+      case 'C':
+        signbit = 63;
+        // fallthrough
       case 'c':
         if ((charbuf[0] = va_arg(va, int))) {
           p = charbuf;
