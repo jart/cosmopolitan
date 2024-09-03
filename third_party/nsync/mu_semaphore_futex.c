@@ -63,7 +63,7 @@ errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
 			int futex_result;
 			futex_result = -nsync_futex_wait_ (
 				(atomic_int *)&f->i, i,
-				PTHREAD_PROCESS_PRIVATE, 0);
+				PTHREAD_PROCESS_PRIVATE, 0, 0);
 			ASSERT (futex_result == 0 ||
 				futex_result == EINTR ||
 				futex_result == EAGAIN ||
@@ -81,7 +81,7 @@ errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
    while additionally supporting a time parameter specifying at what point
    in the future ETIMEDOUT should be returned, if neither cancellation, or
    semaphore release happens. */
-errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, nsync_time abs_deadline) {
+errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, int clock, nsync_time abs_deadline) {
 	struct futex *f = (struct futex *)s;
 	int i;
 	int result = 0;
@@ -98,7 +98,8 @@ errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, nsync_time
 				ts = &ts_buf;
 			}
 			futex_result = nsync_futex_wait_ ((atomic_int *)&f->i, i,
-							  PTHREAD_PROCESS_PRIVATE, ts);
+							  PTHREAD_PROCESS_PRIVATE,
+							  clock, ts);
 			ASSERT (futex_result == 0 ||
 				futex_result == -EINTR ||
 				futex_result == -EAGAIN ||
@@ -106,9 +107,12 @@ errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, nsync_time
 				futex_result == -ETIMEDOUT ||
 				futex_result == -EWOULDBLOCK);
 			/* Some systems don't wait as long as they are told. */
-			if (futex_result == -ETIMEDOUT &&
-			    nsync_time_cmp (abs_deadline, nsync_time_now ()) <= 0) {
-				result = ETIMEDOUT;
+			if (futex_result == -ETIMEDOUT) {
+				nsync_time now;
+				if (clock_gettime (clock, &now))
+					result = EINVAL;
+				if (nsync_time_cmp (now, abs_deadline) >= 0)
+					result = ETIMEDOUT;
 			}
 			if (futex_result == -ECANCELED) {
 				result = ECANCELED;

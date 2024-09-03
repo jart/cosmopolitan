@@ -29,11 +29,11 @@ __static_yoink("nsync_notice");
      w->sem is non-zero----decrement it and return 0.
      abs_deadline expires---return ETIMEDOUT.
      cancel_note is non-NULL and *cancel_note becomes notified---return ECANCELED. */
-int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
+int nsync_sem_wait_with_cancel_ (waiter *w, int clock, nsync_time abs_deadline,
 			         nsync_note cancel_note) {
 	int sem_outcome;
 	if (cancel_note == NULL) {
-		sem_outcome = nsync_mu_semaphore_p_with_deadline (&w->sem, abs_deadline);
+		sem_outcome = nsync_mu_semaphore_p_with_deadline (&w->sem, clock, abs_deadline);
 	} else {
 		nsync_time cancel_time;
 		cancel_time = nsync_note_notified_deadline_ (cancel_note);
@@ -58,7 +58,7 @@ int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
 				}
 				nsync_mu_unlock (&cancel_note->note_mu);
 				sem_outcome = nsync_mu_semaphore_p_with_deadline (&w->sem,
-					local_abs_deadline);
+					clock, local_abs_deadline);
 				if (sem_outcome == ETIMEDOUT && !deadline_is_nearer) {
 					sem_outcome = ECANCELED;
 					nsync_note_notify (cancel_note);

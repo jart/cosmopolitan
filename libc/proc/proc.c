@@ -27,6 +27,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/leaks.h"
@@ -59,6 +60,8 @@
 /**
  * @fileoverview Windows Subprocess Management.
  */
+
+#define STACK_SIZE 65536
 
 struct Procs __proc;
 
@@ -130,7 +133,11 @@ textwindows int __proc_harvest(struct Proc *pr, bool iswait4) {
 
 static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
   struct CosmoTib tls;
+  char *sp = __builtin_frame_address(0);
   __bootstrap_tls(&tls, __builtin_frame_address(0));
+  __maps_track(
+      (char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STACK_SIZE,
+      STACK_SIZE);
   for (;;) {
 
     // assemble a group of processes to wait on. if more than 64
@@ -238,7 +245,7 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
 static textwindows void __proc_setup(void) {
   __proc.onbirth = CreateEvent(0, 0, 0, 0);     // auto reset
   __proc.haszombies = CreateEvent(0, 1, 0, 0);  // manual reset
-  __proc.thread = CreateThread(0, 65536, __proc_worker, 0,
+  __proc.thread = CreateThread(0, STACK_SIZE, __proc_worker, 0,
                                kNtStackSizeParamIsAReservation, 0);
 }
 

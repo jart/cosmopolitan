@@ -47,7 +47,8 @@ struct _umtx_time {
   uint32_t _clockid;
 };
 
-int sys_umtx_timedwait_uint(_Atomic(int) *, int, bool, const struct timespec *);
+int sys_umtx_timedwait_uint(_Atomic(int) *, int, bool, int,
+                            const struct timespec *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_ */

@@ -22,6 +22,7 @@
 #include "third_party/nsync/once.h"
 #include "third_party/nsync/races.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -91,7 +92,7 @@ static void nsync_run_once_impl (nsync_once *once, struct once_sync_s *s,
 					attempts += 10;
 				}
 				deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (attempts));
-				nsync_cv_wait_with_deadline (&s->once_cv, &s->once_mu, deadline, NULL);
+				nsync_cv_wait_with_deadline (&s->once_cv, &s->once_mu, CLOCK_REALTIME, deadline, NULL);
 			} else {
 				attempts = pthread_delay_np (once, attempts);
 			}

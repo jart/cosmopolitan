@@ -29,6 +29,7 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/time.h"
 
 /* --------------------------- */
@@ -63,7 +64,7 @@ static int cv_queue_put (cv_queue *q, void *v, nsync_time abs_deadline) {
 	int wake = 0;
 	nsync_mu_lock (&q->mu);
 	while (q->count == q->limit &&
-	       nsync_cv_wait_with_deadline (&q->non_full, &q->mu, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&q->non_full, &q->mu, CLOCK_REALTIME, abs_deadline, NULL) == 0) {
 	}
 	if (q->count != q->limit) {
 		int i = q->pos + q->count;
@@ -91,7 +92,7 @@ static void *cv_queue_get (cv_queue *q, nsync_time abs_deadline) {
 	void *v = NULL;
 	nsync_mu_lock (&q->mu);
 	while (q->count == 0 &&
-	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, CLOCK_REALTIME, abs_deadline, NULL) == 0) {
 	}
 	if (q->count != 0) {
 		v = q->data[q->pos];
@@ -237,7 +238,7 @@ static void test_cv_deadline (testing t) {
 		nsync_time expected_end_time;
 		start_time = nsync_time_now ();
 		expected_end_time = nsync_time_add (start_time, nsync_time_ms (87));
-		if (nsync_cv_wait_with_deadline (&cv, &mu, expected_end_time,
+		if (nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, expected_end_time,
 						 NULL) != ETIMEDOUT) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-expired for a timeout"));
 		}
@@ -289,7 +290,7 @@ static void test_cv_cancel (testing t) {
 
 		cancel = nsync_note_new (NULL, expected_end_time);
 
-		x = nsync_cv_wait_with_deadline (&cv, &mu, future_time, cancel);
+		x = nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, future_time, cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-cancelled (%d) for "
 				   "a cancellation; expected %d",
@@ -308,7 +309,7 @@ static void test_cv_cancel (testing t) {
 		/* Check that an already cancelled wait returns immediately. */
 		start_time = nsync_time_now ();
 
-		x = nsync_cv_wait_with_deadline (&cv, &mu, nsync_time_no_deadline, cancel);
+		x = nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, nsync_time_no_deadline, cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-cancelled (%d) for "
 				   "a cancellation; expected %d",

@@ -57,12 +57,12 @@ static void pthread_mutex_lock_drepper(atomic_int *futex, char pshare) {
   LOCKTRACE("acquiring pthread_mutex_lock_drepper(%t)...", futex);
   if (word == 1)
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
+  BLOCK_CANCELATION;
   while (word > 0) {
-    BLOCK_CANCELATION;
-    _weaken(nsync_futex_wait_)(futex, 2, pshare, 0);
-    ALLOW_CANCELATION;
+    _weaken(nsync_futex_wait_)(futex, 2, pshare, 0, 0);
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   }
+  ALLOW_CANCELATION;
 }
 
 static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,

@@ -110,6 +110,7 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/nsync/futex.internal.h"
+#include "libc/sysv/consts/clock.h"
 #include "tool/net/luacheck.h"
 
 #define DNS_NAME_MAX  253
@@ -2855,7 +2856,7 @@ static int LuaUnixMemoryWait(lua_State *L) {
   }
   BEGIN_CANCELATION_POINT;
   rc = nsync_futex_wait_((atomic_int *)GetWord(L), expect,
-                         PTHREAD_PROCESS_SHARED, deadline);
+                         PTHREAD_PROCESS_SHARED, CLOCK_REALTIME, deadline);
   END_CANCELATION_POINT;
   if (rc < 0) errno = -rc, rc = -1;
   return SysretInteger(L, "futex_wait", olderr, rc);

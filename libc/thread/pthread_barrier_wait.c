@@ -61,7 +61,7 @@ errno_t pthread_barrier_wait(pthread_barrier_t *barrier) {
   // wait for everyone else to arrive at barrier
   BLOCK_CANCELATION;
   while ((n = atomic_load_explicit(&barrier->_waiters, memory_order_acquire)))
-    nsync_futex_wait_(&barrier->_waiters, n, barrier->_pshared, 0);
+    nsync_futex_wait_(&barrier->_waiters, n, barrier->_pshared, 0, 0);
   ALLOW_CANCELATION;
 
   return 0;

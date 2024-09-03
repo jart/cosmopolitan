@@ -11,7 +11,7 @@ COSMOPOLITAN_C_START_
 #endif
 
 int nsync_futex_wake_(_FUTEX_ATOMIC(int) *, int, char);
-int nsync_futex_wait_(_FUTEX_ATOMIC(int) *, int, char, const struct timespec *);
+int nsync_futex_wait_(_FUTEX_ATOMIC(int) *, int, char, int, const struct timespec *);
 
 COSMOPOLITAN_C_END_
 #endif /* NSYNC_FUTEX_INTERNAL_H_ */

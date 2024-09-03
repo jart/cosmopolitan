@@ -144,7 +144,7 @@ int nsync_cv_wait(nsync_cv *cv, nsync_mu *mu);
    mostly in tests and trivial examples than they are in real
    programmes. */
 int nsync_cv_wait_with_deadline(nsync_cv *cv, nsync_mu *mu,
-                                nsync_time abs_deadline,
+                                int clock, nsync_time abs_deadline,
                                 struct nsync_note_s_ *cancel_note);
 
 /* Like nsync_cv_wait_with_deadline(), but allow an arbitrary lock *v to be
@@ -152,7 +152,7 @@ int nsync_cv_wait_with_deadline(nsync_cv *cv, nsync_mu *mu,
 int nsync_cv_wait_with_deadline_generic(nsync_cv *cv, void *mu,
                                         void (*lock)(void *),
                                         void (*unlock)(void *),
-                                        nsync_time abs_deadline,
+                                        int clock, nsync_time abs_deadline,
                                         struct nsync_note_s_ *cancel_note);
 
 COSMOPOLITAN_C_END_

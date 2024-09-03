@@ -54,15 +54,15 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
    while additionally supporting a time parameter specifying at what point
    in the future ETIMEDOUT should be returned, if neither cancelation, or
    semaphore release happens. */
-errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
+errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, int clock, nsync_time abs_deadline) {
 	errno_t err;
 	BEGIN_CANCELATION_POINT;
 	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
-		err = nsync_mu_semaphore_p_with_deadline_gcd (s, abs_deadline);
+		err = nsync_mu_semaphore_p_with_deadline_gcd (s, clock, abs_deadline);
 	} else if (IsNetbsd ()) {
-		err = nsync_mu_semaphore_p_with_deadline_sem (s, abs_deadline);
+		err = nsync_mu_semaphore_p_with_deadline_sem (s, clock, abs_deadline);
 	} else {
-		err = nsync_mu_semaphore_p_with_deadline_futex (s, abs_deadline);
+		err = nsync_mu_semaphore_p_with_deadline_futex (s, clock, abs_deadline);
 	}
 	END_CANCELATION_POINT;
 	return err;

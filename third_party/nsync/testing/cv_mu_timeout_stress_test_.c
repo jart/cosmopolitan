@@ -22,6 +22,7 @@
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/testing/testing.h"
 
 /* A cv_stress_data represents the data used by the threads of the tests below. */
@@ -79,7 +80,7 @@ static void cv_stress_inc_loop (cv_stress_data *s, uintmax_t count_imod4) {
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			while (nsync_cv_wait_with_deadline (
 					&s->count_is_imod4[count_imod4],
-					&s->mu, abs_deadline, NULL) != 0 &&
+					&s->mu, CLOCK_REALTIME, abs_deadline, NULL) != 0 &&
 			       (s->count&3) != count_imod4) {
 				nsync_mu_assert_held (&s->mu);
 				s->timeouts++;
@@ -130,7 +131,8 @@ static void cv_stress_reader_loop (cv_stress_data *s, uintmax_t count_imod4) {
 			abs_deadline = nsync_time_add (nsync_time_now (),
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			while (nsync_cv_wait_with_deadline (&s->count_is_imod4[count_imod4],
-							    &s->mu, abs_deadline, NULL) != 0 &&
+							    &s->mu, CLOCK_REALTIME,
+							    abs_deadline, NULL) != 0 &&
 			       (s->count&3) != count_imod4 && s->refs != 0) {
 
 				nsync_mu_rassert_held (&s->mu);

@@ -380,7 +380,7 @@ __kmp_acquire_futex_lock_timed_template(kmp_futex_lock_t *lck, kmp_int32 gtid) {
 
     long rc;
 #ifdef __COSMOPOLITAN__
-    if ((rc = nsync_futex_wait_((int *)&(lck->lk.poll), poll_val, false, NULL)) != 0) {
+    if ((rc = nsync_futex_wait_((int *)&(lck->lk.poll), poll_val, false, 0, NULL)) != 0) {
 #else
     if ((rc = syscall(__NR_futex, (int *)&(lck->lk.poll), FUTEX_WAIT, poll_val, NULL,
                       NULL, 0)) != 0) {

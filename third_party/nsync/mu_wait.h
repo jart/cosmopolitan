@@ -97,7 +97,7 @@ void nsync_mu_wait(nsync_mu *mu, int (*condition)(const void *condition_arg),
 int nsync_mu_wait_with_deadline(
     nsync_mu *mu, int (*condition)(const void *condition_arg),
     const void *condition_arg,
-    int (*condition_arg_eq)(const void *a, const void *b),
+    int (*condition_arg_eq)(const void *a, const void *b), int clock,
     nsync_time abs_deadline, struct nsync_note_s_ *cancel_note);
 
 /* Unlock *mu, which must be held in write mode, and wake waiters, if

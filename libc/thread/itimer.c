@@ -24,10 +24,12 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -36,11 +38,17 @@
 #include "third_party/nsync/mu.h"
 #ifdef __x86_64__
 
+#define STACK_SIZE 65536
+
 struct IntervalTimer __itimer;
 
 static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   struct CosmoTib tls;
-  __bootstrap_tls(&tls, __builtin_frame_address(0));
+  char *sp = __builtin_frame_address(0);
+  __bootstrap_tls(&tls, sp);
+  __maps_track(
+      (char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STACK_SIZE,
+      STACK_SIZE);
   for (;;) {
     bool dosignal = false;
     struct timeval now, waituntil;
@@ -66,11 +74,10 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
       }
     }
     nsync_mu_unlock(&__itimer.lock);
-    if (dosignal) {
+    if (dosignal)
       __sig_generate(SIGALRM, SI_TIMER);
-    }
     nsync_mu_lock(&__itimer.lock);
-    nsync_cv_wait_with_deadline(&__itimer.cond, &__itimer.lock,
+    nsync_cv_wait_with_deadline(&__itimer.cond, &__itimer.lock, CLOCK_REALTIME,
                                 timeval_totimespec(waituntil), 0);
     nsync_mu_unlock(&__itimer.lock);
   }
@@ -78,7 +85,7 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
 }
 
 static textwindows void __itimer_setup(void) {
-  __itimer.thread = CreateThread(0, 65536, __itimer_worker, 0,
+  __itimer.thread = CreateThread(0, STACK_SIZE, __itimer_worker, 0,
                                  kNtStackSizeParamIsAReservation, 0);
 }
 

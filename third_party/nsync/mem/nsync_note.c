@@ -24,6 +24,7 @@
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/waiter.h"
 __static_yoink("nsync_notice");
 
@@ -247,7 +248,7 @@ int nsync_note_wait (nsync_note n, nsync_time abs_deadline) {
 	struct nsync_waitable_s *pwaitable = &waitable;
 	waitable.v = n;
 	waitable.funcs = &nsync_note_waitable_funcs;
-	return (nsync_wait_n (NULL, NULL, NULL, abs_deadline, 1, &pwaitable) == 0);
+	return (nsync_wait_n (NULL, NULL, NULL, CLOCK_REALTIME, abs_deadline, 1, &pwaitable) == 0);
 }
 
 nsync_time nsync_note_expiry (nsync_note n) {

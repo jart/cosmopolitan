@@ -175,6 +175,7 @@ struct nsync_cv_wait_with_deadline_s {
 	void *pmu;
 	void (*lock) (void *);
 	nsync_mu *cv_mu;
+	int clock;
 	nsync_time abs_deadline;
 	nsync_note cancel_note;
 	waiter *w;
@@ -187,7 +188,7 @@ static int nsync_cv_wait_with_deadline_impl_ (struct nsync_cv_wait_with_deadline
 	IGNORE_RACES_START ();
 	while (ATM_LOAD_ACQ (&c->w->nw.waiting) != 0) { /* acquire load */
 		if (c->sem_outcome == 0) {
-			c->sem_outcome = nsync_sem_wait_with_cancel_ (c->w, c->abs_deadline, c->cancel_note);
+			c->sem_outcome = nsync_sem_wait_with_cancel_ (c->w, c->clock, c->abs_deadline, c->cancel_note);
 		}
 		if (c->sem_outcome != 0 && ATM_LOAD (&c->w->nw.waiting) != 0) {
 			/* A timeout or cancellation occurred, and no wakeup.
@@ -278,13 +279,14 @@ static void nsync_cv_wait_with_deadline_unwind_ (void *arg) {
    programmes. */
 int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 					 void (*lock) (void *), void (*unlock) (void *),
-					 nsync_time abs_deadline,
+					 int clock, nsync_time abs_deadline,
 					 nsync_note cancel_note) {
 	int outcome;
 	struct nsync_cv_wait_with_deadline_s c;
 	IGNORE_RACES_START ();
 
 	c.w = nsync_waiter_new_ ();
+	c.clock = clock;
 	c.abs_deadline = abs_deadline;
 	c.cancel_note = cancel_note;
 	c.cv_mu = NULL;
@@ -470,10 +472,10 @@ void nsync_cv_broadcast (nsync_cv *pcv) {
 
 /* Wait with deadline, using an nsync_mu. */
 errno_t nsync_cv_wait_with_deadline (nsync_cv *pcv, nsync_mu *pmu,
-				     nsync_time abs_deadline,
+				     int clock, nsync_time abs_deadline,
 				     nsync_note cancel_note) {
 	return (nsync_cv_wait_with_deadline_generic (pcv, pmu, &void_mu_lock,
-						     &void_mu_unlock,
+						     &void_mu_unlock, clock,
 						     abs_deadline, cancel_note));
 }
 
@@ -486,7 +488,7 @@ errno_t nsync_cv_wait_with_deadline (nsync_cv *pcv, nsync_mu *pmu,
    ECANCELED may be returned if calling POSIX thread is cancelled only when
    the PTHREAD_CANCEL_MASKED mode is in play. */
 errno_t nsync_cv_wait (nsync_cv *pcv, nsync_mu *pmu) {
-	return nsync_cv_wait_with_deadline (pcv, pmu, nsync_time_no_deadline, NULL);
+	return nsync_cv_wait_with_deadline (pcv, pmu, 0, nsync_time_no_deadline, NULL);
 }
 
 static nsync_time cv_ready_time (void *v, struct nsync_waiter_s *nw) {

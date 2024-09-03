@@ -24,6 +24,7 @@
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/testing/time_extra.h"
 
 /* The state shared between the threads in each of the tests below. */
@@ -67,6 +68,7 @@ static void test_data_wait_for_all_threads (test_data *td) {
 	while (td->finished_threads != td->n_threads) {
 		nsync_cv_wait_with_deadline_generic (&td->done, td->mu_in_use,
 						     td->lock, td->unlock,
+						     CLOCK_REALTIME,
 						     nsync_time_no_deadline, NULL);
 	}
 	(*td->unlock) (td->mu_in_use);
@@ -303,7 +305,7 @@ static int counter_wait_for_zero_with_deadline (counter *c, nsync_time abs_deadl
 	int value;
 	nsync_mu_rlock (&c->mu);
 	while (c->value != 0 &&
-	       nsync_cv_wait_with_deadline (&c->cv, &c->mu, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&c->cv, &c->mu, CLOCK_REALTIME, abs_deadline, NULL) == 0) {
 	}
 	value = c->value;
 	nsync_mu_runlock (&c->mu);

@@ -107,6 +107,7 @@ static void mutex_cv_ping_pong (ping_pong *pp, int parity) {
 			nsync_cv_wait_with_deadline_generic (&pp->cv[parity], &pp->mutex,
 						             &void_pthread_mutex_lock,
 						             &void_pthread_mutex_unlock,
+							     CLOCK_REALTIME,
 						             nsync_time_no_deadline, NULL);
 		}
 		pp->i++;
@@ -163,7 +164,8 @@ static void mu_cv_unexpired_deadline_ping_pong (ping_pong *pp, int parity) {
 	while (pp->i < pp->limit) {
 		while ((pp->i & 1) == parity) {
 			nsync_cv_wait_with_deadline (&pp->cv[parity], &pp->mu,
-						     deadline_in1hour, NULL);
+						     CLOCK_REALTIME, deadline_in1hour,
+						     NULL);
 		}
 		pp->i++;
 		nsync_cv_signal (&pp->cv[1 - parity]);
@@ -318,6 +320,7 @@ static void rw_mutex_cv_ping_pong (ping_pong *pp, int parity) {
 			nsync_cv_wait_with_deadline_generic (&pp->cv[parity], &pp->rwmutex,
 						             &void_pthread_rwlock_wrlock,
 						             &void_pthread_rwlock_unlock,
+							     CLOCK_REALTIME,
 						             nsync_time_no_deadline, NULL);
 		}
 		pp->i++;

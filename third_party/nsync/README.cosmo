@@ -17,6 +17,8 @@ LOCAL CHANGES
 
   - Fix nsync_mu_unlock() on Apple Silicon
 
+  - Add clock parameter to many NSYNC wait APIs
+
   - Time APIs were so good that they're now in libc
 
   - Double linked list API was so good that it's now in libc

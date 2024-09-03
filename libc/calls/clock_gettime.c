@@ -24,6 +24,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/consts/clock.h"
 
 #ifdef __aarch64__
 #define CGT_VDSO __vdsosym("LINUX_2.6.39", "__kernel_clock_gettime")
@@ -58,14 +59,43 @@ static int __clock_gettime_init(int clockid, struct timespec *ts) {
   return cgt(clockid, ts);
 }
 
+static int clock_gettime_impl(int clock, struct timespec *ts) {
+  int rc;
+  if (!IsLinux())
+    return __clock_gettime(clock, ts);
+TryAgain:
+
+  // Ensure fallback for old Linux sticks.
+  if (clock == 4 /* CLOCK_MONOTONIC_RAW */)
+    clock = CLOCK_MONOTONIC_RAW;
+
+  // Call appropriate implementation.
+  rc = __clock_gettime(clock, ts);
+
+  // CLOCK_MONOTONIC_RAW is Linux 2.6.28+ so not available on RHEL5
+  if (rc == -EINVAL && clock == 4 /* CLOCK_MONOTONIC_RAW */) {
+    CLOCK_MONOTONIC_RAW = CLOCK_MONOTONIC;
+    CLOCK_MONOTONIC_RAW_APPROX = CLOCK_MONOTONIC;
+    goto TryAgain;
+  }
+
+  return rc;
+}
+
 /**
  * Returns nanosecond time.
  *
  * @param clock supports the following values across OSes:
  *    - `CLOCK_REALTIME`
  *    - `CLOCK_MONOTONIC`
+ *    - `CLOCK_MONOTONIC_RAW`
+ *    - `CLOCK_MONOTONIC_RAW_APPROX`
+ *    - `CLOCK_REALTIME_FAST`
  *    - `CLOCK_REALTIME_COARSE`
+ *    - `CLOCK_REALTIME_PRECISE`
+ *    - `CLOCK_MONOTONIC_FAST`
  *    - `CLOCK_MONOTONIC_COARSE`
+ *    - `CLOCK_MONOTONIC_PRECISE`
  *    - `CLOCK_THREAD_CPUTIME_ID`
  *    - `CLOCK_PROCESS_CPUTIME_ID`
  * @param ts is where the result is stored (or null to do clock check)
@@ -80,7 +110,7 @@ static int __clock_gettime_init(int clockid, struct timespec *ts) {
  */
 int clock_gettime(int clock, struct timespec *ts) {
   // threads on win32 stacks call this so we can't asan check *ts
-  int rc = __clock_gettime(clock, ts);
+  int rc = clock_gettime_impl(clock, ts);
   if (rc) {
     errno = -rc;
     rc = -1;

@@ -102,7 +102,7 @@ struct nsync_waitable_s {
    mu/lock/unlock are used to acquire and release the relevant locks
    whan waiting on condition variables. */
 int nsync_wait_n(void *mu, void (*lock)(void *), void (*unlock)(void *),
-                 nsync_time abs_deadline, int count,
+                 int clock, nsync_time abs_deadline, int count,
                  struct nsync_waitable_s *waitable[]);
 
 /* A "struct nsync_waitable_s" implementation must implement these

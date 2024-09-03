@@ -56,7 +56,6 @@ COSMOPOLITAN_C_START_
 
 typedef uintptr_t pthread_t;
 typedef int pthread_id_np_t;
-typedef char pthread_condattr_t;
 typedef char pthread_rwlockattr_t;
 typedef char pthread_barrierattr_t;
 typedef unsigned pthread_key_t;
@@ -83,12 +82,18 @@ typedef struct pthread_mutexattr_s {
   unsigned _word;
 } pthread_mutexattr_t;
 
+typedef struct pthread_condattr_s {
+  char _pshared;
+  char _clock;
+} pthread_condattr_t;
+
 typedef struct pthread_cond_s {
   union {
     void *_align;
     struct {
       uint32_t _nsync;
       char _pshared;
+      char _clock;
     };
   };
   _PTHREAD_ATOMIC(uint32_t) _sequence;
@@ -165,10 +170,12 @@ int pthread_cond_destroy(pthread_cond_t *) libcesque paramsnonnull();
 int pthread_cond_init(pthread_cond_t *, const pthread_condattr_t *) libcesque paramsnonnull((1));
 int pthread_cond_signal(pthread_cond_t *) libcesque paramsnonnull();
 int pthread_cond_wait(pthread_cond_t *, pthread_mutex_t *) libcesque paramsnonnull();
-int pthread_condattr_destroy(pthread_condattr_t *) libcesque paramsnonnull();
-int pthread_condattr_getpshared(const pthread_condattr_t *, int *) libcesque paramsnonnull();
 int pthread_condattr_init(pthread_condattr_t *) libcesque paramsnonnull();
+int pthread_condattr_destroy(pthread_condattr_t *) libcesque paramsnonnull();
 int pthread_condattr_setpshared(pthread_condattr_t *, int) libcesque paramsnonnull();
+int pthread_condattr_getpshared(const pthread_condattr_t *, int *) libcesque paramsnonnull();
+int pthread_condattr_setclock(pthread_condattr_t *, int) libcesque paramsnonnull();
+int pthread_condattr_getclock(const pthread_condattr_t *, int *) libcesque paramsnonnull();
 int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *) dontthrow paramsnonnull((1));
 int pthread_detach(pthread_t) libcesque;
 int pthread_equal(pthread_t, pthread_t) libcesque;

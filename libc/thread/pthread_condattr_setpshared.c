@@ -32,7 +32,7 @@ errno_t pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared) {
   switch (pshared) {
     case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:
-      *attr = pshared;
+      attr->_pshared = pshared;
       return 0;
     default:
       return EINVAL;

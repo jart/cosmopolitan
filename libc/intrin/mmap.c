@@ -305,6 +305,28 @@ void __maps_insert(struct Map *map) {
   __maps_check();
 }
 
+static void __maps_track_insert(struct Map *map, char *addr, size_t size,
+                                uintptr_t map_handle) {
+  map->addr = addr;
+  map->size = size;
+  map->prot = PROT_READ | PROT_WRITE;
+  map->flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK;
+  map->hand = map_handle;
+  __maps_lock();
+  __maps_insert(map);
+  __maps_unlock();
+}
+
+bool __maps_track(char *addr, size_t size) {
+  struct Map *map;
+  do {
+    if (!(map = __maps_alloc()))
+      return false;
+  } while (map == MAPS_RETRY);
+  __maps_track_insert(map, addr, size, -1);
+  return true;
+}
+
 struct Map *__maps_alloc(void) {
   struct Map *map;
   uintptr_t tip = atomic_load_explicit(&__maps.freed, memory_order_relaxed);
@@ -321,14 +343,7 @@ struct Map *__maps_alloc(void) {
   if (sys.addr == MAP_FAILED)
     return 0;
   map = sys.addr;
-  map->addr = sys.addr;
-  map->size = gransz;
-  map->prot = PROT_READ | PROT_WRITE;
-  map->flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK;
-  map->hand = sys.maphandle;
-  __maps_lock();
-  __maps_insert(map);
-  __maps_unlock();
+  __maps_track_insert(map, sys.addr, gransz, sys.maphandle);
   for (int i = 1; i < gransz / sizeof(struct Map); ++i)
     __maps_free(map + i);
   return MAPS_RETRY;

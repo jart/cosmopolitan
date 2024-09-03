@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,21 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/clock.h"
 #include "libc/thread/thread.h"
 
 /**
- * Initializes condition variable.
+ * Gets clock on condition variable attributes.
  *
- * @param attr may be null
- * @return 0 on success, or error number on failure
+ * @param clock will be set to one of
+ *     - `CLOCK_REALTIME` (default)
+ *     - `CLOCK_MONOTONIC`
+ * @return 0 on success, or error on failure
  */
-errno_t pthread_cond_init(pthread_cond_t *cond,
-                          const pthread_condattr_t *attr) {
-  *cond = (pthread_cond_t){0};
-  if (attr) {
-    cond->_pshared = attr->_pshared;
-    cond->_clock = attr->_clock;
-  }
+int pthread_condattr_getclock(const pthread_condattr_t *attr, int *clock) {
+  *clock = attr->_clock;
   return 0;
 }

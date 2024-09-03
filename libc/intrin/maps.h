@@ -53,6 +53,7 @@ void *__maps_pickaddr(size_t);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 void __maps_insert(struct Map *);
+bool __maps_track(char *, size_t);
 struct Map *__maps_alloc(void);
 struct Map *__maps_floor(const char *);
 void __maps_stack(char *, int, int, size_t, int, intptr_t);

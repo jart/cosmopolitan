@@ -28,6 +28,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
@@ -121,7 +122,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
 
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
-      rc = nsync_futex_wait_(&sem->sem_value, v, true, abstime);
+      rc = nsync_futex_wait_(&sem->sem_value, v, true, CLOCK_REALTIME, abstime);
       if (rc == -EINTR || rc == -ECANCELED) {
         errno = -rc;
         rc = -1;

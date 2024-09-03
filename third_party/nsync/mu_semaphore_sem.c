@@ -33,6 +33,7 @@
 #include "third_party/nsync/mu_semaphore.h"
 #include "libc/intrin/atomic.h"
 #include "libc/atomic.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/time.h"
 
 /**
@@ -126,10 +127,22 @@ errno_t nsync_mu_semaphore_p_sem (nsync_semaphore *s) {
    while additionally supporting a time parameter specifying at what point
    in the future ETIMEDOUT should be returned, if neither cancellation, or
    semaphore release happens. */
-errno_t nsync_mu_semaphore_p_with_deadline_sem (nsync_semaphore *s, nsync_time abs_deadline) {
+errno_t nsync_mu_semaphore_p_with_deadline_sem (nsync_semaphore *s, int clock,
+						nsync_time abs_deadline) {
 	int e, rc;
 	errno_t result;
 	struct sem *f = (struct sem *) s;
+
+	// convert monotonic back to realtime just for netbsd
+	if (clock && nsync_time_cmp (abs_deadline, nsync_time_no_deadline)) {
+		struct timespec now, delta;
+		if (clock_gettime (clock, &now))
+			return EINVAL;
+		delta = timespec_subz (abs_deadline, now);
+		clock_gettime (CLOCK_REALTIME, &now);
+		abs_deadline = timespec_add (now, delta);
+	}
+
 	e = errno;
 	rc = sys_sem_timedwait (f->id, &abs_deadline);
 	STRACE ("sem_timedwait(%ld, %s) → %d% m", f->id,

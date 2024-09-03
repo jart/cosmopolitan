@@ -577,10 +577,11 @@ syscon	clock	CLOCK_REALTIME_PRECISE			0			0			0			0			9			0			0			0			#
 syscon	clock	CLOCK_REALTIME_FAST			0			0			0			0			10			0			0			0			#
 syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			2			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC				1			1			6			6			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
+syscon	clock	CLOCK_MONOTONIC_RAW			4			4			4			4			4			3			3			1			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5 (will fallback to CLOCK_MONOTONIC)
+syscon	clock	CLOCK_MONOTONIC_RAW_APPROX		4			4			5			5			4			3			3			1			# goes faster on xnu, otherwise faked
 syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			6			6			11			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_FAST			1			1			6			6			12			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			5			5			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_MONOTONIC_RAW			4			4			4			4			127			127			127			127			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			12			12			15			2			0x40000000		4			# NetBSD lets you bitwise a PID into clockid_t
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			16			16			14			4			0x20000000		5			#
 syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#

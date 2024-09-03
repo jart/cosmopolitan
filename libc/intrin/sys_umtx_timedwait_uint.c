@@ -23,7 +23,7 @@
 int sys_umtx_timedwait_uint_cp(atomic_int *, int, int, size_t,
                                struct _umtx_time *) asm("sys_futex_cp");
 
-int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
+int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare, int clock,
                             const struct timespec *abstime) {
   int op;
   size_t size;
@@ -32,7 +32,7 @@ int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
     tm_p = 0;
     size = 0;
   } else {
-    timo._clockid = CLOCK_REALTIME;
+    timo._clockid = clock;
     timo._flags = UMTX_ABSTIME;
     timo._timeout = *abstime;
     tm_p = &timo;

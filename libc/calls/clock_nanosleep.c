@@ -19,6 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 
 /**
@@ -79,18 +80,32 @@
 errno_t clock_nanosleep(int clock, int flags,        //
                         const struct timespec *req,  //
                         struct timespec *rem) {
-  if (IsMetal()) {
+  if (IsMetal())
     return ENOSYS;
-  }
   if (clock == 127 ||              //
       (flags & ~TIMER_ABSTIME) ||  //
       req->tv_sec < 0 ||           //
-      !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
+      !(0 <= req->tv_nsec && req->tv_nsec <= 999999999))
     return EINVAL;
+  int rc;
+  errno_t err, old = errno;
+
+TryAgain:
+  // Ensure fallback for old Linux sticks.
+  if (IsLinux() && clock == 4 /* CLOCK_MONOTONIC_RAW */)
+    clock = CLOCK_MONOTONIC_RAW;
+
+  rc = sys_clock_nanosleep(clock, flags, req, rem);
+
+  // CLOCK_MONOTONIC_RAW is Linux 2.6.28+ so not available on RHEL5
+  if (IsLinux() && rc && errno == EINVAL &&
+      clock == 4 /* CLOCK_MONOTONIC_RAW */) {
+    CLOCK_MONOTONIC_RAW = CLOCK_MONOTONIC;
+    CLOCK_MONOTONIC_RAW_APPROX = CLOCK_MONOTONIC;
+    goto TryAgain;
   }
-  errno_t old = errno;
-  int rc = sys_clock_nanosleep(clock, flags, req, rem);
-  errno_t err = !rc ? 0 : errno;
+
+  err = !rc ? 0 : errno;
   errno = old;
   return err;
 }

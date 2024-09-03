@@ -26,6 +26,7 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
@@ -74,7 +75,8 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
     if (!(err = pthread_testcancel_np())) {
       BEGIN_CANCELATION_POINT;
       while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-        e = nsync_futex_wait_(ctid, x, !IsWindows() && !IsXnu(), abstime);
+        e = nsync_futex_wait_(ctid, x, !IsWindows() && !IsXnu(), CLOCK_REALTIME,
+                              abstime);
         if (e == -ECANCELED) {
           err = ECANCELED;
           break;

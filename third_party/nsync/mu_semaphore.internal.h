@@ -20,17 +20,17 @@ COSMOPOLITAN_C_START_
 
 bool nsync_mu_semaphore_init_futex(nsync_semaphore *);
 errno_t nsync_mu_semaphore_p_futex(nsync_semaphore *);
-errno_t nsync_mu_semaphore_p_with_deadline_futex(nsync_semaphore *, nsync_time);
+errno_t nsync_mu_semaphore_p_with_deadline_futex(nsync_semaphore *, int, nsync_time);
 void nsync_mu_semaphore_v_futex(nsync_semaphore *);
 
 bool nsync_mu_semaphore_init_sem(nsync_semaphore *);
 errno_t nsync_mu_semaphore_p_sem(nsync_semaphore *);
-errno_t nsync_mu_semaphore_p_with_deadline_sem(nsync_semaphore *, nsync_time);
+errno_t nsync_mu_semaphore_p_with_deadline_sem(nsync_semaphore *, int, nsync_time);
 void nsync_mu_semaphore_v_sem(nsync_semaphore *);
 
 bool nsync_mu_semaphore_init_gcd(nsync_semaphore *);
 errno_t nsync_mu_semaphore_p_gcd(nsync_semaphore *);
-errno_t nsync_mu_semaphore_p_with_deadline_gcd(nsync_semaphore *, nsync_time);
+errno_t nsync_mu_semaphore_p_with_deadline_gcd(nsync_semaphore *, int, nsync_time);
 void nsync_mu_semaphore_v_gcd(nsync_semaphore *);
 
 COSMOPOLITAN_C_END_

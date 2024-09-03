@@ -24,6 +24,7 @@
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
+#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/testing/time_extra.h"
 
 /* Example use of CV.wait():  A priority queue of strings whose
@@ -74,7 +75,8 @@ static const char *string_priority_queue_cv_remove_with_deadline (string_priorit
 	const char *s = NULL;
 	nsync_mu_lock (&q->mu);
 	while (A_LEN (&q->heap) == 0 &&
-	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, CLOCK_REALTIME,
+					    abs_deadline, NULL) == 0) {
 	}
 	alen = A_LEN (&q->heap);
 	if (alen != 0) {

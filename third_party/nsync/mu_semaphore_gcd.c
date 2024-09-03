@@ -94,14 +94,14 @@ bool nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
    they're enabled in MASKED mode, this function may return ECANCELED. Otherwise,
    cancellation will occur by unwinding cleanup handlers pushed to the stack. */
 errno_t nsync_mu_semaphore_p_gcd (nsync_semaphore *s) {
-	return nsync_mu_semaphore_p_with_deadline_gcd (s, nsync_time_no_deadline);
+	return nsync_mu_semaphore_p_with_deadline_gcd (s, 0, nsync_time_no_deadline);
 }
 
 /* Like nsync_mu_semaphore_p() this waits for the count of *s to exceed 0,
    while additionally supporting a time parameter specifying at what point
    in the future ETIMEDOUT should be returned, if neither cancellation, or
    semaphore release happens. */
-errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s,
+errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s, int clock,
 						nsync_time abs_deadline) {
 	errno_t result = 0;
 	struct PosixThread *pt;
@@ -117,7 +117,10 @@ errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s,
 				result = ECANCELED;
 				break;
 			}
-			now = timespec_real();
+			if (clock_gettime (clock, &now)) {
+				result = EINVAL;
+				break;
+			}
 			if (timespec_cmp (now, abs_deadline) >= 0) {
 				result = ETIMEDOUT;
 				break;

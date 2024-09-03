@@ -266,7 +266,7 @@ void nsync_mu_unlock_slow_(nsync_mu *mu, lock_type *l_type);
 struct Dll *nsync_remove_from_mu_queue_(struct Dll *mu_queue, struct Dll *e);
 void nsync_maybe_merge_conditions_(struct Dll *p, struct Dll *n);
 nsync_time nsync_note_notified_deadline_(nsync_note n);
-int nsync_sem_wait_with_cancel_(waiter *w, nsync_time abs_deadline,
+int nsync_sem_wait_with_cancel_(waiter *w, int clock, nsync_time abs_deadline,
                                 nsync_note cancel_note);
 
 COSMOPOLITAN_C_END_

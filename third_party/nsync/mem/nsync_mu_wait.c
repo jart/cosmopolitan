@@ -141,7 +141,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 				 int (*condition) (const void *condition_arg),
 				 const void *condition_arg,
 				 int (*condition_arg_eq) (const void *a, const void *b),
-				 nsync_time abs_deadline, nsync_note cancel_note) {
+				 int clock, nsync_time abs_deadline, nsync_note cancel_note) {
 	lock_type *l_type;
 	int first_wait;
 	int condition_is_true;
@@ -231,7 +231,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 		have_lock = 0;
 		while (ATM_LOAD_ACQ (&w->nw.waiting) != 0) { /* acquire load */
 			if (sem_outcome == 0) {
-				sem_outcome = nsync_sem_wait_with_cancel_ (w, abs_deadline,
+				sem_outcome = nsync_sem_wait_with_cancel_ (w, clock, abs_deadline,
 									   cancel_note);
 				if (sem_outcome != 0 && ATM_LOAD (&w->nw.waiting) != 0) {
 					/* A timeout or cancellation occurred, and no wakeup.
@@ -280,7 +280,7 @@ void nsync_mu_wait (nsync_mu *mu, int (*condition) (const void *condition_arg),
                     const void *condition_arg,
 		    int (*condition_arg_eq) (const void *a, const void *b)) {
 	if (nsync_mu_wait_with_deadline (mu, condition, condition_arg, condition_arg_eq,
-					 nsync_time_no_deadline, NULL) != 0) {
+					 0, nsync_time_no_deadline, NULL) != 0) {
 		nsync_panic_ ("nsync_mu_wait woke but condition not true\n");
 	}
 }

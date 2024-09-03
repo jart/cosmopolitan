@@ -1,0 +1,64 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread2.h"
+
+TEST(pthread_cond_timedwait, real) {
+  pthread_cond_t cv;
+  pthread_mutex_t mu;
+  pthread_condattr_t ca;
+  ASSERT_EQ(0, pthread_condattr_init(&ca));
+  ASSERT_EQ(0, pthread_condattr_setclock(&ca, CLOCK_REALTIME));
+  ASSERT_EQ(0, pthread_cond_init(&cv, &ca));
+  ASSERT_EQ(0, pthread_condattr_destroy(&ca));
+  ASSERT_EQ(0, pthread_mutex_init(&mu, 0));
+  ASSERT_EQ(0, pthread_mutex_lock(&mu));
+  struct timespec start = timespec_real();
+  struct timespec deadline = timespec_add(start, timespec_frommillis(100));
+  ASSERT_EQ(ETIMEDOUT, pthread_cond_timedwait(&cv, &mu, &deadline));
+  struct timespec end = timespec_real();
+  ASSERT_GE(timespec_tomillis(timespec_sub(end, start)), 100);
+  ASSERT_EQ(0, pthread_mutex_unlock(&mu));
+  ASSERT_EQ(0, pthread_mutex_destroy(&mu));
+  ASSERT_EQ(0, pthread_cond_destroy(&cv));
+}
+
+TEST(pthread_cond_timedwait, mono) {
+  pthread_cond_t cv;
+  pthread_mutex_t mu;
+  pthread_condattr_t ca;
+  ASSERT_EQ(0, pthread_condattr_init(&ca));
+  ASSERT_EQ(0, pthread_condattr_setclock(&ca, CLOCK_MONOTONIC));
+  ASSERT_EQ(0, pthread_cond_init(&cv, &ca));
+  ASSERT_EQ(0, pthread_condattr_destroy(&ca));
+  ASSERT_EQ(0, pthread_mutex_init(&mu, 0));
+  ASSERT_EQ(0, pthread_mutex_lock(&mu));
+  struct timespec start = timespec_mono();
+  struct timespec deadline = timespec_add(start, timespec_frommillis(100));
+  ASSERT_EQ(ETIMEDOUT, pthread_cond_timedwait(&cv, &mu, &deadline));
+  struct timespec end = timespec_mono();
+  ASSERT_GE(timespec_tomillis(timespec_sub(end, start)), 100);
+  ASSERT_EQ(0, pthread_mutex_unlock(&mu));
+  ASSERT_EQ(0, pthread_mutex_destroy(&mu));
+  ASSERT_EQ(0, pthread_cond_destroy(&cv));
+}
