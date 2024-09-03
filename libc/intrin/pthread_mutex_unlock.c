@@ -91,8 +91,12 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
       MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_unlock)) {
-    _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
-    return 0;
+    // on apple silicon we should just put our faith in ulock
+    // otherwise *nsync gets struck down by the eye of sauron
+    if (!IsXnuSilicon()) {
+      _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
+      return 0;
+    }
   }
 #endif
 

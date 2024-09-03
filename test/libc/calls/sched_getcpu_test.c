@@ -62,7 +62,7 @@ TEST(sched_getcpu, affinity_test) {
 // KLUDGE TEST
 
 #define THREADS    2
-#define ITERATIONS 10000
+#define ITERATIONS 100000
 
 int g_hits[256];
 atomic_int g_sync;

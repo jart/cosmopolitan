@@ -33,13 +33,16 @@
 
 static void pthread_mutex_lock_spin(atomic_int *word) {
   int backoff = 0;
-  for (;;) {
-    if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
-      break;
+  if (atomic_exchange_explicit(word, 1, memory_order_acquire)) {
+    LOCKTRACE("acquiring pthread_mutex_lock_spin(%t)...", word);
     for (;;) {
-      if (!atomic_load_explicit(word, memory_order_relaxed))
+      for (;;) {
+        if (!atomic_load_explicit(word, memory_order_relaxed))
+          break;
+        backoff = pthread_delay_np(word, backoff);
+      }
+      if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
         break;
-      backoff = pthread_delay_np(word, backoff);
     }
   }
 }
@@ -47,14 +50,11 @@ static void pthread_mutex_lock_spin(atomic_int *word) {
 // see "take 3" algorithm in "futexes are tricky" by ulrich drepper
 // slightly improved to attempt acquiring multiple times b4 syscall
 static void pthread_mutex_lock_drepper(atomic_int *futex, char pshare) {
-  int word;
-  for (int i = 0; i < 4; ++i) {
-    word = 0;
-    if (atomic_compare_exchange_strong_explicit(
-            futex, &word, 1, memory_order_acquire, memory_order_acquire))
-      return;
-    pthread_pause_np();
-  }
+  int word = 0;
+  if (atomic_compare_exchange_strong_explicit(
+          futex, &word, 1, memory_order_acquire, memory_order_acquire))
+    return;
+  LOCKTRACE("acquiring pthread_mutex_lock_drepper(%t)...", futex);
   if (word == 1)
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   while (word > 0) {
@@ -70,6 +70,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
   uint64_t lock;
   int backoff = 0;
   int me = gettid();
+  bool once = false;
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
       if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
@@ -95,6 +96,10 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
       mutex->_pid = __pid;
       return 0;
     }
+    if (!once) {
+      LOCKTRACE("acquiring pthread_mutex_lock_recursive(%t)...", mutex);
+      once = true;
+    }
     for (;;) {
       word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
       if (MUTEX_OWNER(word) == me)
@@ -117,8 +122,12 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL &&        //
       MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_lock)) {
-    _weaken(nsync_mu_lock)((nsync_mu *)mutex);
-    return 0;
+    // on apple silicon we should just put our faith in ulock
+    // otherwise *nsync gets struck down by the eye of sauron
+    if (!IsXnuSilicon()) {
+      _weaken(nsync_mu_lock)((nsync_mu *)mutex);
+      return 0;
+    }
   }
 #endif
 
@@ -169,15 +178,26 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
  *
  * This function does nothing in vfork() children.
  *
+ * You can debug locks the acquisition of locks by building your program
+ * with `cosmocc -mdbg` and passing the `--strace` flag to your program.
+ * This will cause a line to be logged each time a mutex or spin lock is
+ * locked or unlocked. When locking, this is printed after the lock gets
+ * acquired. The entry to the lock operation will be logged too but only
+ * if the lock couldn't be immediately acquired. Lock logging works best
+ * when `mutex` refers to a static variable, in which case its name will
+ * be printed in the log.
+ *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock()
  * @vforksafe
  */
 errno_t pthread_mutex_lock(pthread_mutex_t *mutex) {
-  if (__vforked)
+  if (!__vforked) {
+    errno_t err = pthread_mutex_lock_impl(mutex);
+    LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
+    return err;
+  } else {
+    LOCKTRACE("skipping pthread_mutex_lock(%t) due to vfork", mutex);
     return 0;
-  LOCKTRACE("acquiring %t...", mutex);
-  errno_t err = pthread_mutex_lock_impl(mutex);
-  LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
-  return err;
+  }
 }

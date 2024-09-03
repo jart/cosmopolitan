@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
@@ -122,7 +123,7 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
 #if PTHREAD_USE_NSYNC
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
-  if (!cond->_pshared) {
+  if (!cond->_pshared && !IsXnuSilicon()) {
     err = nsync_cv_wait_with_deadline(
         (nsync_cv *)cond, (nsync_mu *)mutex,
         abstime ? *abstime : nsync_time_no_deadline, 0);

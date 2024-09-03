@@ -428,7 +428,7 @@ HTAGS:	o/$(MODE)/hdrs-old.txt $(filter-out third_party/libcxx/%,$(HDRS)) #o/$(MO
 
 loc: private .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy
-	find -name \*.h -or -name \*.c -or -name \*.S | \
+	find -name \*.h -or -name \*.hpp -or -name \*.c -or -name \*.cc -or -name \*.cpp -or -name \*.S -or -name \*.mk | \
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 # PLEASE: MAINTAIN TOPOLOGICAL ORDER

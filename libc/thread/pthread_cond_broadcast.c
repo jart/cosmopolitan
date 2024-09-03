@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "libc/thread/thread.h"
@@ -44,7 +45,7 @@ errno_t pthread_cond_broadcast(pthread_cond_t *cond) {
 #if PTHREAD_USE_NSYNC
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
-  if (!cond->_pshared) {
+  if (!cond->_pshared && !IsXnuSilicon()) {
     nsync_cv_broadcast((nsync_cv *)cond);
     return 0;
   }

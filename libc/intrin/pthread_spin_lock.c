@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -29,8 +30,17 @@
  *     pthread_spin_unlock(&lock);
  *     pthread_spin_destroy(&lock);
  *
- * This function has undefined behavior when `spin` wasn't intialized,
- * was destroyed, or if the lock's already held by the calling thread.
+ * This function has undefined behavior when `spin` wasn't intialized or
+ * was destroyed, and if the lock is already held by the calling thread.
+ *
+ * You can debug locks the acquisition of locks by building your program
+ * with `cosmocc -mdbg` and passing the `--strace` flag to your program.
+ * This will cause a line to be logged each time a mutex or spin lock is
+ * locked or unlocked. When locking, this is printed after the lock gets
+ * acquired. The entry to the lock operation will be logged too but only
+ * if the lock couldn't be immediately acquired. Lock logging works best
+ * when `mutex` refers to a static variable, in which case its name will
+ * be printed in the log.
  *
  * @return 0 on success, or errno on error
  * @see pthread_spin_trylock
@@ -38,12 +48,16 @@
  * @see pthread_spin_init
  */
 errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
-  for (;;) {
-    if (!atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire))
-      break;
-    for (;;)
-      if (!atomic_load_explicit(&spin->_lock, memory_order_relaxed))
+  if (atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire)) {
+    LOCKTRACE("acquiring pthread_spin_lock(%t)...", spin);
+    for (;;) {
+      for (;;)
+        if (!atomic_load_explicit(&spin->_lock, memory_order_relaxed))
+          break;
+      if (!atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire))
         break;
+    }
   }
+  LOCKTRACE("pthread_spin_lock(%t)", spin);
   return 0;
 }
