@@ -18,14 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 
-textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
-                              const char *newpath) {
+textwindows int sys_linkat_nt(int olddirfd, const char *oldpath,  //
+                              int newdirfd, const char *newpath) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct {
@@ -36,7 +37,10 @@ textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
 #pragma GCC pop_options
   if (__mkntpathat(olddirfd, oldpath, 0, M.oldpath16) != -1 &&
       __mkntpathat(newdirfd, newpath, 0, M.newpath16) != -1) {
-    if (CreateHardLink(M.newpath16, M.oldpath16, NULL)) {
+    bool32 ok = CreateHardLink(M.newpath16, M.oldpath16, NULL);
+    NTTRACE("CreateHardLink(%#hs, %#hs, NULL) → {%hhhd, %d}", M.newpath16,
+            M.oldpath16, ok, GetLastError());
+    if (ok) {
       return 0;
     } else {
       return __fix_enotdir3(__winerr(), M.newpath16, M.oldpath16);

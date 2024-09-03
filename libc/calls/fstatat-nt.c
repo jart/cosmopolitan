@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -97,14 +97,27 @@ TryAgain:
            0)) != -1) {
     rc = st ? sys_fstat_nt_handle(fh, path16, st) : 0;
     CloseHandle(fh);
-  } else if (dwDesiredAccess == kNtFileGenericRead &&
-             (GetLastError() == kNtErrorAccessDenied ||
-              GetLastError() == kNtErrorSharingViolation)) {
-    dwDesiredAccess = kNtFileReadAttributes;
-    errno = e;
-    goto TryAgain;
   } else {
-    rc = __winerr();
+    uint32_t dwErrorCode = GetLastError();
+    if (dwDesiredAccess == kNtFileGenericRead &&
+        (dwErrorCode == kNtErrorAccessDenied ||
+         dwErrorCode == kNtErrorSharingViolation)) {
+      dwDesiredAccess = kNtFileReadAttributes;
+      errno = e;
+      goto TryAgain;
+    } else if (!(flags & AT_SYMLINK_NOFOLLOW) &&
+               dwErrorCode == kNtErrorCantAccessFile) {
+      // ERROR_CANT_ACCESS_FILE (1920) usually means that the I/O system
+      // a WSL symlink is accessed from WIN32 API. Falling back with the
+      // failed to traverse a filesystem reparse point. For example when
+      // details of the link itself is better than providing nothing. It
+      // should never be like this on UNIX but Windows gets a bit screwy
+      flags |= AT_SYMLINK_NOFOLLOW;
+      errno = e;
+      goto TryAgain;
+    } else {
+      rc = __winerr();
+    }
   }
   ALLOW_SIGNALS;
 
