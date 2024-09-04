@@ -20,7 +20,6 @@ int timespec_get(struct timespec *, int) libcesque;
 
 #ifdef _COSMO_SOURCE
 int sys_clock_nanosleep(int, int, const struct timespec *, struct timespec *);
-int cosmo_clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 #define timespec_zero ((struct timespec){0})
 #define timespec_max  ((struct timespec){0x7fffffffffffffff, 999999999})
 libcesque int timespec_cmp(struct timespec, struct timespec) pureconst;
@@ -34,8 +33,8 @@ libcesque struct timespec timespec_frommicros(int64_t) pureconst;
 libcesque struct timespec timespec_frommillis(int64_t) pureconst;
 libcesque struct timespec timespec_real(void) libcesque;
 libcesque struct timespec timespec_mono(void) libcesque;
-libcesque struct timespec timespec_sleep(struct timespec) libcesque;
-libcesque int timespec_sleep_until(struct timespec) libcesque;
+libcesque struct timespec timespec_sleep(int, struct timespec) libcesque;
+libcesque int timespec_sleep_until(int, struct timespec) libcesque;
 libcesque struct timespec timespec_sub(struct timespec,
                                        struct timespec) pureconst;
 libcesque struct timespec timespec_subz(struct timespec,

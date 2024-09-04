@@ -25,7 +25,7 @@
 /* Verify the properties of a prenotified note. */
 static void test_note_prenotified (testing t) {
 	int i;
-	nsync_note n = nsync_note_new (NULL, nsync_time_zero /* prenotified */);
+	nsync_note n = nsync_note_new (NULL, NSYNC_CLOCK, nsync_time_zero /* prenotified */);
 	nsync_time expiry;
 	expiry = nsync_note_expiry (n);
 	if (nsync_time_cmp (expiry, nsync_time_zero) != 0) {
@@ -55,7 +55,7 @@ static void test_note_unnotified (testing t) {
 	nsync_time start;
 	nsync_time waited;
 	nsync_time deadline;
-	nsync_note n = nsync_note_new (NULL, nsync_time_no_deadline);
+	nsync_note n = nsync_note_new (NULL, NSYNC_CLOCK, nsync_time_no_deadline);
 	nsync_time expiry;
 	expiry = nsync_note_expiry (n);
 	if (nsync_time_cmp (expiry, nsync_time_no_deadline) != 0) {
@@ -68,12 +68,12 @@ static void test_note_unnotified (testing t) {
 	if (nsync_note_wait (n, nsync_time_zero)) {
 		TEST_ERROR (t, ("notified note is notified (poll)"));
 	}
-	start = nsync_time_now ();
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (1000));
+	start = nsync_time_now (NSYNC_CLOCK);
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000));
 	if (nsync_note_wait (n, deadline)) {
 		TEST_ERROR (t, ("unnotified note is notified (1s wait)"));
 	}
-	waited = nsync_time_sub (nsync_time_now (), start);
+	waited = nsync_time_sub (nsync_time_now (NSYNC_CLOCK), start);
 	if (nsync_time_cmp (waited, nsync_time_ms (900)) < 0) {
 		TEST_ERROR (t, ("timed wait on unnotified note returned too quickly (1s wait took %s)",
 			   nsync_time_str (waited, 2)));
@@ -110,13 +110,13 @@ static void test_note_expiry (testing t) {
 	nsync_time deadline;
 	nsync_note n;
 
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (1000));
-	n = nsync_note_new (NULL, deadline);
-	start = nsync_time_now ();
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000));
+	n = nsync_note_new (NULL, NSYNC_CLOCK, deadline);
+	start = nsync_time_now (NSYNC_CLOCK);
 	if (!nsync_note_wait (n, nsync_time_no_deadline)) {
 		TEST_ERROR (t, ("expired note is not notified"));
 	}
-	waited = nsync_time_sub (nsync_time_now (), start);
+	waited = nsync_time_sub (nsync_time_now (NSYNC_CLOCK), start);
 	if (nsync_time_cmp (waited, nsync_time_ms (900)) < 0) {
 		TEST_ERROR (t, ("note expired too quickly (1s expiry took %s)",
 			   nsync_time_str (waited, 2)));
@@ -136,13 +136,13 @@ static void test_note_expiry (testing t) {
 	}
 	nsync_note_free (n);
 
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (1000));
-	n = nsync_note_new (NULL, deadline);
-	start = nsync_time_now ();
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000));
+	n = nsync_note_new (NULL, NSYNC_CLOCK, deadline);
+	start = nsync_time_now (NSYNC_CLOCK);
 	while (!nsync_note_is_notified (n)) {
-		nsync_time_sleep (nsync_time_ms (10));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (10));
 	}
-	waited = nsync_time_sub (nsync_time_now (), start);
+	waited = nsync_time_sub (nsync_time_now (NSYNC_CLOCK), start);
 	if (nsync_time_cmp (waited, nsync_time_ms (900)) < 0) {
 		TEST_ERROR (t, ("note expired too quickly (1s expiry took %s)",
 			   nsync_time_str (waited, 2)));
@@ -164,7 +164,7 @@ static void test_note_expiry (testing t) {
 }
 
 static void notify_at (nsync_note n, nsync_time abs_deadline) {
-	nsync_time_sleep_until (abs_deadline);
+	nsync_time_sleep_until (NSYNC_CLOCK, abs_deadline);
 	nsync_note_notify (n);
 }
 
@@ -177,14 +177,14 @@ static void test_note_notify (testing t) {
 	nsync_time deadline;
 	nsync_note n;
 
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (10000));
-	n = nsync_note_new (NULL, deadline);
-	closure_fork (closure_notify (&notify_at, n, nsync_time_add (nsync_time_now (), nsync_time_ms (1000))));
-	start = nsync_time_now ();
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (10000));
+	n = nsync_note_new (NULL, NSYNC_CLOCK, deadline);
+	closure_fork (closure_notify (&notify_at, n, nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000))));
+	start = nsync_time_now (NSYNC_CLOCK);
 	if (!nsync_note_wait (n, nsync_time_no_deadline)) {
 		TEST_ERROR (t, ("expired note is not notified"));
 	}
-	waited = nsync_time_sub (nsync_time_now (), start);
+	waited = nsync_time_sub (nsync_time_now (NSYNC_CLOCK), start);
 	if (nsync_time_cmp (waited, nsync_time_ms (900)) < 0) {
 		TEST_ERROR (t, ("note expired too quickly (1s expiry took %s)",
 			   nsync_time_str (waited, 2)));
@@ -204,14 +204,14 @@ static void test_note_notify (testing t) {
 	}
 	nsync_note_free (n);
 
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (10000));
-	n = nsync_note_new (NULL, deadline);
-	closure_fork (closure_notify (&notify_at, n, nsync_time_add (nsync_time_now (), nsync_time_ms (1000))));
-	start = nsync_time_now ();
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (10000));
+	n = nsync_note_new (NULL, NSYNC_CLOCK, deadline);
+	closure_fork (closure_notify (&notify_at, n, nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000))));
+	start = nsync_time_now (NSYNC_CLOCK);
 	while (!nsync_note_is_notified (n)) {
-		nsync_time_sleep (nsync_time_ms (10));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (10));
 	}
-	waited = nsync_time_sub (nsync_time_now (), start);
+	waited = nsync_time_sub (nsync_time_now (NSYNC_CLOCK), start);
 	if (nsync_time_cmp (waited, nsync_time_ms (900)) < 0) {
 		TEST_ERROR (t, ("note expired too quickly (1s expiry took %s)",
 			   nsync_time_str (waited, 2)));
@@ -253,9 +253,9 @@ static void test_note_in_tree (testing t) {
 	nsync_note node[count_i];
 
 	/* Initialize heap structure in the nodes.  No deadlines. */
-	node[0] = nsync_note_new (NULL, nsync_time_no_deadline);
+	node[0] = nsync_note_new (NULL, NSYNC_CLOCK, nsync_time_no_deadline);
 	for (i = 1; i != count_i; i++) {
-		node[i] = nsync_note_new (node[(i-1)/2], nsync_time_no_deadline);
+		node[i] = nsync_note_new (node[(i-1)/2], NSYNC_CLOCK, nsync_time_no_deadline);
 	}
 
 	/* check that the nodes are not yet notified. */
@@ -285,14 +285,14 @@ static void test_note_in_tree (testing t) {
 	}
 
 	/* Initialize heap structure in the nodes.  The focus node has a 1s deadline. */
-	node[0] = nsync_note_new (NULL, nsync_time_no_deadline);
+	node[0] = nsync_note_new (NULL, NSYNC_CLOCK, nsync_time_no_deadline);
 	for (i = 1; i != count_i; i++) {
 		nsync_time deadline;
-		deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (1000));
+		deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1000));
 		if (i != focus_i) {
 			deadline = nsync_time_no_deadline;
 		}
-		node[i] = nsync_note_new (node[(i - 1) / 2], deadline);
+		node[i] = nsync_note_new (node[(i - 1) / 2], NSYNC_CLOCK, deadline);
 	}
 
 	/* check that the nodes are not yet notified. */
@@ -303,7 +303,7 @@ static void test_note_in_tree (testing t) {
 	}
 
 	/* Wait for timer to go off. */
-	nsync_time_sleep (nsync_time_ms (1100));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1100));
 
 	/* Check that the right nodes have been notified. */
 	for (i = 0; i != count_i; i++) {

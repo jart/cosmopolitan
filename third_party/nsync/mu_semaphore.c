@@ -15,17 +15,15 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/nsync/mu_semaphore.h"
+#include "third_party/nsync/mu_semaphore.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
-#include "third_party/nsync/mu_semaphore.internal.h"
+#include "third_party/nsync/mu_semaphore.h"
 __static_yoink("nsync_notice");
 
 /* Initialize *s; the initial value is 0. */
 bool nsync_mu_semaphore_init (nsync_semaphore *s) {
-	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
-		return nsync_mu_semaphore_init_gcd (s);
-	} else if (IsNetbsd ()) {
+	if (IsNetbsd ()) {
 		return nsync_mu_semaphore_init_sem (s);
 	} else {
 		return nsync_mu_semaphore_init_futex (s);
@@ -39,9 +37,7 @@ bool nsync_mu_semaphore_init (nsync_semaphore *s) {
 errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	errno_t err;
 	BEGIN_CANCELATION_POINT;
-	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
-		err = nsync_mu_semaphore_p_gcd (s);
-	} else if (IsNetbsd ()) {
+	if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_sem (s);
 	} else {
 		err = nsync_mu_semaphore_p_futex (s);
@@ -57,9 +53,7 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, int clock, nsync_time abs_deadline) {
 	errno_t err;
 	BEGIN_CANCELATION_POINT;
-	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
-		err = nsync_mu_semaphore_p_with_deadline_gcd (s, clock, abs_deadline);
-	} else if (IsNetbsd ()) {
+	if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_with_deadline_sem (s, clock, abs_deadline);
 	} else {
 		err = nsync_mu_semaphore_p_with_deadline_futex (s, clock, abs_deadline);
@@ -70,9 +64,7 @@ errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, int clock, nsync
 
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v (nsync_semaphore *s) {
-	if (NSYNC_USE_GRAND_CENTRAL && IsXnuSilicon ()) {
-		return nsync_mu_semaphore_v_gcd (s);
-	} else if (IsNetbsd ()) {
+	if (IsNetbsd ()) {
 		return nsync_mu_semaphore_v_sem (s);
 	} else {
 		return nsync_mu_semaphore_v_futex (s);

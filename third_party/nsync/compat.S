@@ -19,10 +19,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/macros.h"
 
-nsync_time_now:
-	jmp	timespec_real
-	.endfn	nsync_time_now,globl
-
 nsync_time_add:
 	jmp	timespec_add
 	.endfn	nsync_time_add,globl

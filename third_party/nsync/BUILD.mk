@@ -76,4 +76,5 @@ $(THIRD_PARTY_NSYNC_OBJS): third_party/nsync/BUILD.mk
 .PHONY: o/$(MODE)/third_party/nsync
 o/$(MODE)/third_party/nsync:				\
 	o/$(MODE)/third_party/nsync/mem			\
+	o/$(MODE)/third_party/nsync/testing		\
 	$(THIRD_PARTY_NSYNC_CHECKS)

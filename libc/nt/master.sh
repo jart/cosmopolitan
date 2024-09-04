@@ -218,8 +218,9 @@ imp	'Process32First'					Process32FirstW						kernel32	2
 imp	'Process32Next'						Process32NextW						kernel32	2
 imp	'PulseEvent'						PulseEvent						kernel32	1
 imp	'PurgeComm'						PurgeComm						kernel32	2
-imp	'QueryPerformanceCounter'				QueryPerformanceCounter					kernel32	1
+imp	'QueryPerformanceCounter'				QueryPerformanceCounter					kernel32	1	# Windows 7+
 imp	'QueryPerformanceFrequency'				QueryPerformanceFrequency				kernel32	1
+imp	'QueryUnbiasedInterruptTime'				QueryUnbiasedInterruptTime				kernel32	1	# Windows 7+
 imp	'ReadConsole'						ReadConsoleW						kernel32	5
 imp	'ReadConsoleInput'					ReadConsoleInputW					kernel32	4
 imp	'ReadConsoleOutput'					ReadConsoleOutputW					kernel32	5
@@ -633,6 +634,13 @@ imp	'WakeByAddressSingle'					WakeByAddressSingle					API-MS-Win-Core-Synch-l1-2
 #	Name							Actual							DLL					Arity
 imp	'MapViewOfFile3'					MapViewOfFile3						API-MS-Win-Core-Memory-l1-1-6		9
 imp	'VirtualAlloc2'						VirtualAlloc2						API-MS-Win-Core-Memory-l1-1-6		7
+
+# API-MS-Win-Core-Realtime-l1-1-1.dll (Windows 10+)
+#
+#	Name							Actual							DLL					Arity
+imp	'QueryInterruptTime'					QueryInterruptTime					API-MS-Win-Core-Realtime-l1-1-1		1
+imp	'QueryInterruptTimePrecise'				QueryInterruptTimePrecise				API-MS-Win-Core-Realtime-l1-1-1		1
+imp	'QueryUnbiasedInterruptTimePrecise'			QueryUnbiasedInterruptTimePrecise			API-MS-Win-Core-Realtime-l1-1-1		1
 
 # NTDLL.DLL
 # BEYOND THE PALE

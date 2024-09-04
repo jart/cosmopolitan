@@ -33,7 +33,7 @@ uint32_t nsync_counter_value(nsync_counter c);
    a waiter may have been woken due to the counter reaching zero.
    If abs_deadline==nsync_time_no_deadline, the deadline
    is far in the future. */
-uint32_t nsync_counter_wait(nsync_counter c, nsync_time abs_deadline);
+uint32_t nsync_counter_wait(nsync_counter c, int clock, nsync_time abs_deadline);
 
 COSMOPOLITAN_C_END_
 #endif /* NSYNC_COUNTER_H_ */

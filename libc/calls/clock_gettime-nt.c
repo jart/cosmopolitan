@@ -25,6 +25,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/time.h"
 
 #define _CLOCK_REALTIME           0
 #define _CLOCK_MONOTONIC          1
@@ -32,64 +33,82 @@
 #define _CLOCK_BOOTTIME           3
 #define _CLOCK_PROCESS_CPUTIME_ID 4
 #define _CLOCK_THREAD_CPUTIME_ID  5
-
-static struct {
-  uint64_t base;
-  uint64_t freq;
-} g_winclock;
+#define _CLOCK_MONOTONIC_COARSE   6
 
 textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
-  uint64_t t;
+  uint64_t hectons;
   struct NtFileTime ft, ftExit, ftUser, ftKernel, ftCreation;
   switch (clock) {
     case _CLOCK_REALTIME:
-      if (ts) {
-        GetSystemTimePreciseAsFileTime(&ft);
-        *ts = FileTimeToTimeSpec(ft);
-      }
+      GetSystemTimePreciseAsFileTime(&ft);
+      *ts = FileTimeToTimeSpec(ft);
       return 0;
     case _CLOCK_REALTIME_COARSE:
-      if (ts) {
-        GetSystemTimeAsFileTime(&ft);
-        *ts = FileTimeToTimeSpec(ft);
-      }
+      GetSystemTimeAsFileTime(&ft);
+      *ts = FileTimeToTimeSpec(ft);
       return 0;
     case _CLOCK_MONOTONIC:
-      if (ts) {
-        QueryPerformanceCounter(&t);
-        t = ((t - g_winclock.base) * 1000000000) / g_winclock.freq;
-        *ts = timespec_fromnanos(t);
-      }
+      //
+      // "If you need a higher resolution timer, use the
+      //  QueryUnbiasedInterruptTime function, a multimedia timer, or a
+      //  high-resolution timer. The elapsed time retrieved by the
+      //  QueryUnbiasedInterruptTime function includes only time that
+      //  the system spends in the working state."
+      //
+      //                     —Quoth MSDN § Windows Time
+      //
+      QueryUnbiasedInterruptTimePrecise(&hectons);
+      *ts = timespec_fromnanos(hectons * 100);
+      return 0;
+    case _CLOCK_MONOTONIC_COARSE:
+      //
+      // "QueryUnbiasedInterruptTimePrecise is similar to the
+      //  QueryUnbiasedInterruptTime routine, but is more precise. The
+      //  interrupt time reported by QueryUnbiasedInterruptTime is based
+      //  on the latest tick of the system clock timer. The system clock
+      //  timer is the hardware timer that periodically generates
+      //  interrupts for the system clock. The uniform period between
+      //  system clock timer interrupts is referred to as a system clock
+      //  tick, and is typically in the range of 0.5 milliseconds to
+      //  15.625 milliseconds, depending on the hardware platform. The
+      //  interrupt time value retrieved by QueryUnbiasedInterruptTime
+      //  is accurate within a system clock tick. ¶To provide a system
+      //  time value that is more precise than that of
+      //  QueryUnbiasedInterruptTime, QueryUnbiasedInterruptTimePrecise
+      //  reads the timer hardware directly, therefore a
+      //  QueryUnbiasedInterruptTimePrecise call can be slower than a
+      //  QueryUnbiasedInterruptTime call."
+      //
+      //                     —Quoth MSDN § QueryUnbiasedInterruptTimePrecise
+      //
+      QueryUnbiasedInterruptTime(&hectons);
+      *ts = timespec_fromnanos(hectons * 100);
       return 0;
     case _CLOCK_BOOTTIME:
-      if (ts) {
-        *ts = timespec_frommillis(GetTickCount64());
-      }
+      //
+      // "Unbiased interrupt-time means that only time that the system
+      //  is in the working state is counted; therefore, the interrupt
+      //  time count is not "biased" by time the system spends in sleep
+      //  or hibernation."
+      //
+      //                     —Quoth MSDN § Interrupt Time
+      //
+      QueryInterruptTimePrecise(&hectons);
+      *ts = timespec_fromnanos(hectons * 100);
       return 0;
     case _CLOCK_PROCESS_CPUTIME_ID:
-      if (ts) {
-        GetProcessTimes(GetCurrentProcess(), &ftCreation, &ftExit, &ftKernel,
-                        &ftUser);
-        *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
-                                        ReadFileTime(ftKernel));
-      }
+      GetProcessTimes(GetCurrentProcess(), &ftCreation, &ftExit, &ftKernel,
+                      &ftUser);
+      *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
+                                      ReadFileTime(ftKernel));
       return 0;
     case _CLOCK_THREAD_CPUTIME_ID:
-      if (ts) {
-        GetThreadTimes(GetCurrentThread(), &ftCreation, &ftExit, &ftKernel,
-                       &ftUser);
-        *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
-                                        ReadFileTime(ftKernel));
-      }
+      GetThreadTimes(GetCurrentThread(), &ftCreation, &ftExit, &ftKernel,
+                     &ftUser);
+      *ts = WindowsDurationToTimeSpec(ReadFileTime(ftUser) +
+                                      ReadFileTime(ftKernel));
       return 0;
     default:
       return -EINVAL;
-  }
-}
-
-__attribute__((__constructor__(40))) static textstartup void winclock_init() {
-  if (IsWindows()) {
-    QueryPerformanceCounter(&g_winclock.base);
-    QueryPerformanceFrequency(&g_winclock.freq);
   }
 }

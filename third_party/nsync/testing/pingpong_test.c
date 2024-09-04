@@ -17,9 +17,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
@@ -107,7 +107,7 @@ static void mutex_cv_ping_pong (ping_pong *pp, int parity) {
 			nsync_cv_wait_with_deadline_generic (&pp->cv[parity], &pp->mutex,
 						             &void_pthread_mutex_lock,
 						             &void_pthread_mutex_unlock,
-							     CLOCK_REALTIME,
+							     NSYNC_CLOCK,
 						             nsync_time_no_deadline, NULL);
 		}
 		pp->i++;
@@ -159,12 +159,12 @@ static void benchmark_ping_pong_mu_cv (testing t) {
 /* Run by each thread in benchmark_ping_pong_mu_cv_unexpired_deadline(). */
 static void mu_cv_unexpired_deadline_ping_pong (ping_pong *pp, int parity) {
 	nsync_time deadline_in1hour;
-	deadline_in1hour = nsync_time_add (nsync_time_now (), nsync_time_ms (3600000));
+	deadline_in1hour = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (3600000));
 	nsync_mu_lock (&pp->mu);
 	while (pp->i < pp->limit) {
 		while ((pp->i & 1) == parity) {
 			nsync_cv_wait_with_deadline (&pp->cv[parity], &pp->mu,
-						     CLOCK_REALTIME, deadline_in1hour,
+						     NSYNC_CLOCK, deadline_in1hour,
 						     NULL);
 		}
 		pp->i++;
@@ -200,11 +200,11 @@ static const condition_func condition[] = { &even_ping_pong, &odd_ping_pong };
 /* Run by each thread in benchmark_ping_pong_mu_unexpired_deadline(). */
 static void mu_unexpired_deadline_ping_pong (ping_pong *pp, int parity) {
 	nsync_time deadline_in1hour;
-	deadline_in1hour = nsync_time_add (nsync_time_now (), nsync_time_ms (3600000));
+	deadline_in1hour = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (3600000));
 	nsync_mu_lock (&pp->mu);
 	while (pp->i < pp->limit) {
 		nsync_mu_wait_with_deadline (&pp->mu, condition[parity], pp, NULL,
-					     deadline_in1hour, NULL);
+					     NSYNC_CLOCK, deadline_in1hour, NULL);
 		pp->i++;
 	}
 	nsync_mu_unlock (&pp->mu);
@@ -227,7 +227,7 @@ static void benchmark_ping_pong_mu_unexpired_deadline (testing t) {
 /* Run by each thread in benchmark_ping_pong_mutex_cond_unexpired_deadline(). */
 static void mutex_cond_unexpired_deadline_ping_pong (ping_pong *pp, int parity) {
 	struct timespec ts;
-	clock_gettime (CLOCK_REALTIME, &ts);
+	clock_gettime (NSYNC_CLOCK, &ts);
 	ts.tv_sec += 3600;
 	pthread_mutex_lock (&pp->mutex);
 	while (pp->i < pp->limit) {
@@ -320,7 +320,7 @@ static void rw_mutex_cv_ping_pong (ping_pong *pp, int parity) {
 			nsync_cv_wait_with_deadline_generic (&pp->cv[parity], &pp->rwmutex,
 						             &void_pthread_rwlock_wrlock,
 						             &void_pthread_rwlock_unlock,
-							     CLOCK_REALTIME,
+							     NSYNC_CLOCK,
 						             nsync_time_no_deadline, NULL);
 		}
 		pp->i++;
@@ -353,7 +353,8 @@ static void wait_n_cv_ping_pong (ping_pong *pp, int parity) {
 		while ((pp->i & 1) == parity) {
 			nsync_wait_n (&pp->mu, (void (*) (void *)) &nsync_mu_lock,
 				      (void (*) (void *)) &nsync_mu_unlock,
-				      nsync_time_no_deadline, 1, &pwaitable);
+				      NSYNC_CLOCK, nsync_time_no_deadline, 1,
+				      &pwaitable);
 		}
 		pp->i++;
 		nsync_cv_signal (&pp->cv[1 - parity]);

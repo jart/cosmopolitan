@@ -30,10 +30,10 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "libc/intrin/atomic.h"
 #include "libc/atomic.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/time.h"
 
 /**

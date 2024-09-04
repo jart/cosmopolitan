@@ -246,6 +246,7 @@ void nsync_waiter_free_(waiter *w);
    discipline.  */
 struct nsync_note_s_ {
   struct Dll parent_child_link; /* parent's children, under parent->note_mu  */
+  int clock; /* system clock that should be used */
   int expiry_time_valid; /* whether expiry_time is valid; r/o after init */
   nsync_time
       expiry_time;  /* expiry time, if expiry_time_valid != 0; r/o after init */

@@ -571,28 +571,60 @@ syscon	close	CLOSE_RANGE_CLOEXEC			4			4			-1			-1			-1			-1			-1			-1			#
 
 #	clock_{gettime,settime} timers
 #
+#	Executive Summary
+#	- CLOCK_MONOTONIC shouldn't count suspended time
+#	- CLOCK_BOOTTIME is monotonic and should count suspended time
+#	- Only CLOCK_REALTIME and CLOCK_MONOTONIC can be used with futexes
+#	- CLOCK_MONOTONIC_RAW should fail with EINVAL if host lacks support
+#	- CLOCK_MONOTONIC and CLOCK_BOOTTIME should be relative to system boot time
+#	- COARSE can be CLK_TCK behind (~20ms) and will EINVAL on RHEL5 which isn't worth polyfilling
+#
+#	FreeBSD defines the following rosetta stone
+#	Taken from freebsd/sys/compat/linux/linux_time.c
+#	- Linux CLOCK_MONOTONIC        -> FreeBSD CLOCK_UPTIME [5]
+#	- Linux CLOCK_MONOTONIC_RAW    -> FreeBSD CLOCK_UPTIME_FAST [8]
+#	- Linux CLOCK_REALTIME_COARSE  -> FreeBSD CLOCK_REALTIME_FAST [10]
+#	- Linux CLOCK_MONOTONIC_COARSE -> FreeBSD CLOCK_UPTIME_FAST [8]
+#	- Linux CLOCK_BOOTTIME         -> FreeBSD CLOCK_MONOTONIC [4]
+#
+#	For MacOS we define the following mappings
+#	- Linux CLOCK_MONOTONIC        -> MacOS CLOCK_UPTIME_RAW [8]
+#	- Linux CLOCK_MONOTONIC_RAW    -> MacOS CLOCK_UPTIME_RAW [8]
+#	- Linux CLOCK_REALTIME_COARSE  -> MacOS CLOCK_REALTIME [0]
+#	- Linux CLOCK_MONOTONIC_COARSE -> MacOS CLOCK_UPTIME_RAW_APPROX [9]
+#	- Linux CLOCK_BOOTTIME         -> MacOS CLOCK_MONOTONIC [6]
+#
+#	For OpenBSD we define the following mappings
+#	- Linux CLOCK_MONOTONIC        -> OpenBSD CLOCK_UPTIME [5]
+#	- Linux CLOCK_MONOTONIC_RAW    -> EINVAL because OpenBSD ntpd can adjfreq(2)
+#	- Linux CLOCK_REALTIME_COARSE  -> OpenBSD CLOCK_REALTIME [0]
+#	- Linux CLOCK_MONOTONIC_COARSE -> OpenBSD CLOCK_UPTIME [5]
+#	- Linux CLOCK_BOOTTIME         -> OpenBSD CLOCK_MONOTONIC [3]
+#
+#	For NetBSD we define the following mappings
+#	- Linux CLOCK_MONOTONIC        -> NetBSD CLOCK_MONOTONIC [3] TODO: suspend?
+#	- Linux CLOCK_MONOTONIC_RAW    -> NetBSD CLOCK_MONOTONIC [3] NetBSD clock_gettime(2) says it isn't impacted by adjfreq(2)
+#	- Linux CLOCK_REALTIME_COARSE  -> NetBSD CLOCK_REALTIME [0]
+#	- Linux CLOCK_MONOTONIC_COARSE -> NetBSD CLOCK_MONOTONIC [3]
+#	- Linux CLOCK_BOOTTIME         -> NetBSD CLOCK_MONOTONIC [3] TODO: suspend?
+#
+#	For Windows we define the following mappings
+#	- Linux CLOCK_REALTIME         -> GetSystemTimePreciseAsFileTime()
+#	- Linux CLOCK_MONOTONIC        -> QueryUnbiasedInterruptTimePrecise()
+#	- Linux CLOCK_MONOTONIC_RAW    -> QueryUnbiasedInterruptTimePrecise()
+#	- Linux CLOCK_REALTIME_COARSE  -> GetSystemTimeAsFileTime()
+#	- Linux CLOCK_MONOTONIC_COARSE -> QueryUnbiasedInterruptTime()
+#	- Linux CLOCK_BOOTTIME         -> QueryInterruptTimePrecise()
+#
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			0			0			# consensus
-syscon	clock	CLOCK_REALTIME_PRECISE			0			0			0			0			9			0			0			0			#
-syscon	clock	CLOCK_REALTIME_FAST			0			0			0			0			10			0			0			0			#
-syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			2			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_MONOTONIC				1			1			6			6			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
-syscon	clock	CLOCK_MONOTONIC_RAW			4			4			4			4			4			3			3			1			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5 (will fallback to CLOCK_MONOTONIC)
-syscon	clock	CLOCK_MONOTONIC_RAW_APPROX		4			4			5			5			4			3			3			1			# goes faster on xnu, otherwise faked
-syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			6			6			11			3			3			1			#
-syscon	clock	CLOCK_MONOTONIC_FAST			1			1			6			6			12			3			3			1			#
-syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			5			5			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			12			12			15			2			0x40000000		4			# NetBSD lets you bitwise a PID into clockid_t
+syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			0			0			#
+syscon	clock	CLOCK_MONOTONIC				1			1			8			8			5			5			3			1			#
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			12			12			15			2			0x40000000		4			#
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			16			16			14			4			0x20000000		5			#
-syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#
-syscon	clock	CLOCK_BOOTTIME				7			7			7			127			127			6			127			3			#
-syscon	clock	CLOCK_REALTIME_ALARM			8			8			127			127			127			127			127			127			#
-syscon	clock	CLOCK_BOOTTIME_ALARM			9			9			127			127			127			127			127			127			#
-syscon	clock	CLOCK_TAI				11			11			127			127			127			127			127			127			#
-syscon	clock	CLOCK_UPTIME				127			127			8			8			5			5			127			127			#
-syscon	clock	CLOCK_UPTIME_PRECISE			127			127			127			127			7			127			127			127			#
-syscon	clock	CLOCK_UPTIME_FAST			127			127			127			127			8			127			127			127			#
-syscon	clock	CLOCK_SECOND				127			127			127			127			13			127			127			127			#
+syscon	clock	CLOCK_MONOTONIC_RAW			4			4			127			8			8			127			3			1			# Linux 2.6.28+
+syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			2			# Linux 2.6.32+
+syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			9			9			8			5			3			6			# Linux 2.6.32+
+syscon	clock	CLOCK_BOOTTIME				7			7			6			6			4			3			3			3			# Linux 2.6.39+
 
 #	poll()
 #

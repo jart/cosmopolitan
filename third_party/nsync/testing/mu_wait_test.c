@@ -18,13 +18,13 @@
 #include "third_party/nsync/mu_wait.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
-#include "third_party/nsync/time.h"
 
 /* --------------------------- */
 
@@ -64,7 +64,7 @@ static int mu_queue_put (mu_queue *q, void *v, nsync_time abs_deadline) {
 	int added = 0;
 	nsync_mu_lock (&q->mu);
 	if (nsync_mu_wait_with_deadline (&q->mu, &mu_queue_non_full,
-					 q, NULL, abs_deadline, NULL) == 0) {
+					 q, NULL, 0, abs_deadline, NULL) == 0) {
 		int i = q->pos + q->count;
 		if (q->count == q->limit) {
 			testing_panic ("q->count == q->limit");
@@ -87,7 +87,8 @@ static void *mu_queue_get (mu_queue *q, nsync_time abs_deadline) {
 	void *v = NULL;
 	nsync_mu_lock (&q->mu);
 	if (nsync_mu_wait_with_deadline (&q->mu, &mu_queue_non_empty,
-					 q, NULL, abs_deadline, NULL) == 0) {
+					 q, NULL, NSYNC_CLOCK,
+					 abs_deadline, NULL) == 0) {
 		if (q->count == 0) {
 			testing_panic ("q->count == 0");
 		}
@@ -228,18 +229,18 @@ static void test_mu_deadline (testing t) {
 	too_early = nsync_time_ms (TOO_EARLY_MS);
 	too_late = nsync_time_ms (TOO_LATE_MS);
 	too_late_violations = 0;
-	nsync_mu_lock (&mu);;
+	nsync_mu_lock (&mu);
 	for (i = 0; i != 50; i++) {
 		nsync_time end_time;
 		nsync_time start_time;
 		nsync_time expected_end_time;
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 		expected_end_time = nsync_time_add (start_time, nsync_time_ms (87));
-		if (nsync_mu_wait_with_deadline (&mu, &false_condition, NULL, NULL,
+		if (nsync_mu_wait_with_deadline (&mu, &false_condition, NULL, NULL, NSYNC_CLOCK,
 						 expected_end_time, NULL) != ETIMEDOUT) {
 			TEST_FATAL (t, ("nsync_mu_wait() returned non-expired for a timeout"));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, nsync_time_sub (expected_end_time, too_early)) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_mu_wait() returned %s too early", elapsed_str));
@@ -271,7 +272,7 @@ static void test_mu_cancel (testing t) {
 
 	/* The loops below cancel after 87 milliseconds, like the timeout tests above. */
 
-	future_time = nsync_time_add (nsync_time_now (), nsync_time_ms (3600000)); /* test cancels with timeout */
+	future_time = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (3600000)); /* test cancels with timeout */
 
 	too_late_violations = 0;
 	nsync_mu_lock (&mu);
@@ -282,18 +283,18 @@ static void test_mu_cancel (testing t) {
 		int x;
 		nsync_note cancel;
 
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 		expected_end_time = nsync_time_add (start_time, nsync_time_ms (87));
-		cancel = nsync_note_new (NULL, expected_end_time);
+		cancel = nsync_note_new (NULL, NSYNC_CLOCK, expected_end_time);
 
 		x = nsync_mu_wait_with_deadline (&mu, &false_condition, NULL, NULL,
-						 future_time, cancel);
+						 NSYNC_CLOCK, future_time, cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_mu_wait() return non-cancelled (%d) for "
 				   "a cancellation; expected %d",
 				   x, ECANCELED));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, nsync_time_sub (expected_end_time, too_early)) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_mu_wait() returned %s too early", elapsed_str));
@@ -304,15 +305,16 @@ static void test_mu_cancel (testing t) {
 		}
 
 		/* Check that an already cancelled wait returns immediately. */
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 		x = nsync_mu_wait_with_deadline (&mu, &false_condition, NULL, NULL,
-						 nsync_time_no_deadline, cancel);
+						 NSYNC_CLOCK, nsync_time_no_deadline,
+						 cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_mu_wait() returned non-cancelled for a "
 				   "cancellation; expected %d",
 				   x, ECANCELED));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, start_time) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_mu_wait() returned %s too early", elapsed_str));

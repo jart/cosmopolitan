@@ -18,13 +18,13 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/array.internal.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/heap.internal.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/testing/time_extra.h"
 
 /* Example use of CV.wait():  A priority queue of strings whose
@@ -75,7 +75,7 @@ static const char *string_priority_queue_cv_remove_with_deadline (string_priorit
 	const char *s = NULL;
 	nsync_mu_lock (&q->mu);
 	while (A_LEN (&q->heap) == 0 &&
-	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, CLOCK_REALTIME,
+	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, NSYNC_CLOCK,
 					    abs_deadline, NULL) == 0) {
 	}
 	alen = A_LEN (&q->heap);
@@ -101,7 +101,7 @@ static void add_and_wait_cv (string_priority_queue_cv *q, nsync_time delay,
 	int i;
 	for (i = 0; i != n; i++) {
 		string_priority_queue_cv_add (q, s[i]);
-		nsync_time_sleep (delay);
+		nsync_time_sleep (NSYNC_CLOCK, delay);
 	}
 }
 
@@ -123,7 +123,7 @@ static void a_char_append (a_char *a, const char *str) {
 static void remove_and_print_cv (string_priority_queue_cv *q, nsync_time delay, a_char *output) {
 	const char *s;
 	if ((s = string_priority_queue_cv_remove_with_deadline (
-			q, nsync_time_add (nsync_time_now(), delay))) != NULL) {
+			q, nsync_time_add (nsync_time_now (NSYNC_CLOCK), delay))) != NULL) {
 		a_char_append (output, s);
 		a_char_append (output, "\n");
 	} else {
@@ -157,7 +157,7 @@ static void example_cv_wait (testing t) {
 					       nsync_time_ms (500), NELEM (input), input));
 
 	/* delay: "one", "two", "three" are queued; not "four" */
-	nsync_time_sleep (nsync_time_ms (1200));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1200));
 
 	remove_and_print_cv (&q, nsync_time_ms (1000), &output);    /* "one" */
 	remove_and_print_cv (&q, nsync_time_ms (1000), &output);    /* "three" (less than "two") */

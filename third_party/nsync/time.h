@@ -1,7 +1,10 @@
 #ifndef NSYNC_TIME_H_
 #define NSYNC_TIME_H_
+#include "libc/sysv/consts/clock.h"
 #include "libc/calls/struct/timespec.h"
 COSMOPOLITAN_C_START_
+
+#define NSYNC_CLOCK CLOCK_REALTIME
 
 #define NSYNC_TIME_SEC(t)  ((t).tv_sec)
 #define NSYNC_TIME_NSEC(t) ((t).tv_nsec)
@@ -22,15 +25,15 @@ typedef struct timespec nsync_time;
 #define nsync_time_zero timespec_zero
 
 /* Return the current time since the epoch.  */
-#define nsync_time_now() timespec_real()
+nsync_time nsync_time_now(int clock);
 
 /* Sleep for the specified delay. Returns the unslept time which may be
    non-zero if the call was interrupted. */
-#define nsync_time_sleep(a) timespec_sleep(a)
+#define nsync_time_sleep(c,a) timespec_sleep(c,a)
 
 /* Sleep until the specified time.  Returns 0 on success, and EINTR
    if the call was interrupted. */
-#define nsync_time_sleep_until(a) timespec_sleep_until(a)
+#define nsync_time_sleep_until(c,a) timespec_sleep_until(c,a)
 
 /* Return a+b */
 #define nsync_time_add(a, b) timespec_add(a, b)

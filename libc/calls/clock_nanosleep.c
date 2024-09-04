@@ -82,6 +82,10 @@ errno_t clock_nanosleep(int clock, int flags,        //
                         struct timespec *rem) {
   if (IsMetal())
     return ENOSYS;
+  if (IsLinux() && clock == CLOCK_REALTIME_COARSE)
+    clock = CLOCK_REALTIME;
+  if (IsLinux() && clock == CLOCK_MONOTONIC_COARSE)
+    clock = CLOCK_MONOTONIC;
   if (clock == 127 ||              //
       (flags & ~TIMER_ABSTIME) ||  //
       req->tv_sec < 0 ||           //
@@ -89,22 +93,7 @@ errno_t clock_nanosleep(int clock, int flags,        //
     return EINVAL;
   int rc;
   errno_t err, old = errno;
-
-TryAgain:
-  // Ensure fallback for old Linux sticks.
-  if (IsLinux() && clock == 4 /* CLOCK_MONOTONIC_RAW */)
-    clock = CLOCK_MONOTONIC_RAW;
-
   rc = sys_clock_nanosleep(clock, flags, req, rem);
-
-  // CLOCK_MONOTONIC_RAW is Linux 2.6.28+ so not available on RHEL5
-  if (IsLinux() && rc && errno == EINVAL &&
-      clock == 4 /* CLOCK_MONOTONIC_RAW */) {
-    CLOCK_MONOTONIC_RAW = CLOCK_MONOTONIC;
-    CLOCK_MONOTONIC_RAW_APPROX = CLOCK_MONOTONIC;
-    goto TryAgain;
-  }
-
   err = !rc ? 0 : errno;
   errno = old;
   return err;

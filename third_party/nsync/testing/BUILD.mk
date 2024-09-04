@@ -12,8 +12,8 @@ THIRD_PARTY_NSYNC_TESTING_SRCS_TEST = $(filter %_test.c,$(THIRD_PARTY_NSYNC_TEST
 THIRD_PARTY_NSYNC_TESTING_OBJS = $(THIRD_PARTY_NSYNC_TESTING_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_NSYNC_TESTING_COMS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%)
 THIRD_PARTY_NSYNC_TESTING_BINS = $(THIRD_PARTY_NSYNC_TESTING_COMS) $(THIRD_PARTY_NSYNC_TESTING_COMS:%=%.dbg)
-THIRD_PARTY_NSYNC_TESTING_TESTS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.ok)
-THIRD_PARTY_NSYNC_TESTING_CHECKS_ = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.runs)
+THIRD_PARTY_NSYNC_TESTING_TESTS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.ok)
+THIRD_PARTY_NSYNC_TESTING_CHECKS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 THIRD_PARTY_NSYNC_TESTING_DIRECTDEPS =				\
 	LIBC_CALLS						\
@@ -51,15 +51,21 @@ o/$(MODE)/third_party/nsync/testing/%_test.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/nsync/testing/mu_starvation_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/mu_starvation_test.runs: private QUOTA = -C128 -L300
+o/$(MODE)/third_party/nsync/testing/mu_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/mu_test.runs: private QUOTA = -C128 -L300
+o/$(MODE)/third_party/nsync/testing/wait_test.ok: private QUOTA = -P65536
+o/$(MODE)/third_party/nsync/testing/wait_test.runs: private QUOTA = -P65536
+
 $(THIRD_PARTY_NSYNC_TESTING_OBJS): third_party/nsync/testing/BUILD.mk
-o/$(MODE)/third_party/nsync/testing/mu_test.runs: private QUOTA = -C64
 
 .PHONY: o/$(MODE)/third_party/nsync/testing
 o/$(MODE)/third_party/nsync/testing:				\
-	$(THIRD_PARTY_NSYNC_TESTING_CHECKS_)			\
-	$(THIRD_PARTY_NSYNC_TESTING_BINS_)
+	$(THIRD_PARTY_NSYNC_TESTING_CHECKS)			\
+	$(THIRD_PARTY_NSYNC_TESTING_BINS)
 
 .PHONY: o/$(MODE)/third_party/nsync/test
 o/$(MODE)/third_party/nsync/test:				\
-	$(THIRD_PARTY_NSYNC_TESTING_CHECKS_)			\
-	$(THIRD_PARTY_NSYNC_TESTING_TESTS_)
+	$(THIRD_PARTY_NSYNC_TESTING_CHECKS)			\
+	$(THIRD_PARTY_NSYNC_TESTING_TESTS)

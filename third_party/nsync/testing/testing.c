@@ -239,9 +239,9 @@ static void run_test (testing t) {
 	t->test_status = 0;
 	t->n = 0;
 	t->stop_time = nsync_time_zero;
-	t->start_time = nsync_time_now ();
+	t->start_time = nsync_time_now (NSYNC_CLOCK);
 	(*t->f) (t);
-	elapsed_str = nsync_time_str (nsync_time_sub (nsync_time_now (), t->start_time), 2);
+	elapsed_str = nsync_time_str (nsync_time_sub (nsync_time_now (NSYNC_CLOCK), t->start_time), 2);
 	if (!ATM_LOAD (&t->partial_line)) {
 		fprintf (t->fp, "%-25s %-45s  %s %8s\n", tb->prog, t->name,
 		         t->test_status != 0? "failed": "passed", elapsed_str);
@@ -275,9 +275,9 @@ static void run_benchmark (testing t) {
 		t->test_status = 0;
 		t->n = n;
 		t->stop_time = nsync_time_zero;
-		t->start_time = nsync_time_now ();
+		t->start_time = nsync_time_now (NSYNC_CLOCK);
 		(*t->f) (t);
-		elapsed = nsync_time_to_dbl (nsync_time_sub (nsync_time_now (), t->start_time));
+		elapsed = nsync_time_to_dbl (nsync_time_sub (nsync_time_now (NSYNC_CLOCK), t->start_time));
 		if (elapsed < 1e-1) {
 			elapsed = 1e-1;
 		}
@@ -445,9 +445,9 @@ int testing_is_uniprocessor (testing t) {
 
 		ATM_STORE_REL (&state, 0);
 		closure_fork (closure_uniprocessor_check (&uniprocessor_check, &state, &s[0]));
-		nsync_time_sleep (nsync_time_ms (100));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (100));
 		ATM_STORE_REL (&state, 1);
-		nsync_time_sleep (nsync_time_ms (400));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (400));
 		ATM_STORE_REL (&state, 2);
 		while (!ATM_LOAD_ACQ (&s[0].done)) {
 		}
@@ -455,9 +455,9 @@ int testing_is_uniprocessor (testing t) {
 		ATM_STORE_REL (&state, 0);
 		closure_fork (closure_uniprocessor_check (&uniprocessor_check, &state, &s[1]));
 		closure_fork (closure_uniprocessor_check (&uniprocessor_check, &state, &s[2]));
-		nsync_time_sleep (nsync_time_ms (100));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (100));
 		ATM_STORE_REL (&state, 1);
-		nsync_time_sleep (nsync_time_ms (400));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (400));
 		ATM_STORE_REL (&state, 2);
 		while (!ATM_LOAD_ACQ (&s[1].done) || !ATM_LOAD_ACQ (&s[2].done)) {
 		}
@@ -472,7 +472,7 @@ void testing_stop_timer (testing t) {
 	if (nsync_time_cmp (t->stop_time, nsync_time_zero) != 0) {
 		abort ();
 	}
-	t->stop_time = nsync_time_now ();
+	t->stop_time = nsync_time_now (NSYNC_CLOCK);
 }
 
 void testing_start_timer (testing t) {
@@ -480,7 +480,7 @@ void testing_start_timer (testing t) {
 		abort ();
 	}
 	t->start_time = nsync_time_add (t->start_time,
-		nsync_time_sub (nsync_time_now (), t->stop_time));
+		nsync_time_sub (nsync_time_now (NSYNC_CLOCK), t->stop_time));
 	t->stop_time = nsync_time_zero;
 }
 

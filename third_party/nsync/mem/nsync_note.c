@@ -19,12 +19,12 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/atomic.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/waiter.h"
 __static_yoink("nsync_notice");
 
@@ -152,7 +152,7 @@ nsync_time nsync_note_notified_deadline_ (nsync_note n) {
 		ntime = NOTIFIED_TIME (n);
 		nsync_mu_unlock (&n->note_mu);
 		if (nsync_time_cmp (ntime, nsync_time_zero) > 0) {
-			if (nsync_time_cmp (ntime, nsync_time_now ()) <= 0) {
+			if (nsync_time_cmp (ntime, nsync_time_now (n->clock)) <= 0) {
 				notify (n);
 				ntime = nsync_time_zero;
 			}
@@ -169,11 +169,12 @@ int nsync_note_is_notified (nsync_note n) {
 	return (result);
 }
 
-nsync_note nsync_note_new (nsync_note parent,
+nsync_note nsync_note_new (nsync_note parent, int clock,
 			   nsync_time abs_deadline) {
 	nsync_note n = (nsync_note) malloc (sizeof (*n));
 	if (n != NULL) {
 		bzero (n, sizeof (*n));
+		n->clock = clock;
 		dll_init (&n->parent_child_link);
 		set_expiry_time (n, abs_deadline);
 		if (!nsync_note_is_notified (n) && parent != NULL) {
@@ -248,7 +249,7 @@ int nsync_note_wait (nsync_note n, nsync_time abs_deadline) {
 	struct nsync_waitable_s *pwaitable = &waitable;
 	waitable.v = n;
 	waitable.funcs = &nsync_note_waitable_funcs;
-	return (nsync_wait_n (NULL, NULL, NULL, CLOCK_REALTIME, abs_deadline, 1, &pwaitable) == 0);
+	return (nsync_wait_n (NULL, NULL, NULL, n->clock, abs_deadline, 1, &pwaitable) == 0);
 }
 
 nsync_time nsync_note_expiry (nsync_note n) {

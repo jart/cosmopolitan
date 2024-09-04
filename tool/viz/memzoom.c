@@ -44,6 +44,7 @@
 #include "libc/str/str.h"
 #include "libc/str/tab.h"
 #include "libc/str/unicode.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
@@ -337,7 +338,7 @@ static void PreventBufferbloat(void) {
   now = timespec_real();
   rate = timespec_frommicros(1. / fps * 1e6);
   if (timespec_cmp(timespec_sub(now, last), rate) < 0) {
-    timespec_sleep(timespec_sub(rate, timespec_sub(now, last)));
+    timespec_sleep(CLOCK_REALTIME, timespec_sub(rate, timespec_sub(now, last)));
   }
   last = now;
 }

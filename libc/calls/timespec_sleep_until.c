@@ -30,9 +30,9 @@
  * @raise EINTR if signal was delivered
  * @cancelationpoint
  */
-errno_t timespec_sleep_until(struct timespec abs_deadline) {
+errno_t timespec_sleep_until(int clock, struct timespec abs_deadline) {
   errno_t rc;
-  rc = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs_deadline, 0);
+  rc = clock_nanosleep(clock, TIMER_ABSTIME, &abs_deadline, 0);
   unassert(!rc || rc == EINTR || rc == ECANCELED);
   return rc;
 }

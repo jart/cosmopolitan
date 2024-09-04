@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/itimer.h"
 
 /**
@@ -36,5 +37,6 @@ unsigned ualarm(unsigned usecs, unsigned reload) {
   it.it_value = timeval_frommicros(usecs);
   it.it_interval = timeval_frommicros(reload);
   npassert(!setitimer(ITIMER_REAL, &it, &old));
-  return timeval_tomicros(old.it_value);
+  int64_t us = timeval_tomicros(old.it_value);
+  return MIN(us, -1u);
 }

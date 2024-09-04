@@ -17,12 +17,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/once.h"
 #include "third_party/nsync/races.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -91,8 +91,8 @@ static void nsync_run_once_impl (nsync_once *once, struct once_sync_s *s,
 				if (attempts < 50) {
 					attempts += 10;
 				}
-				deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (attempts));
-				nsync_cv_wait_with_deadline (&s->once_cv, &s->once_mu, CLOCK_REALTIME, deadline, NULL);
+				deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (attempts));
+				nsync_cv_wait_with_deadline (&s->once_cv, &s->once_mu, NSYNC_CLOCK, deadline, NULL);
 			} else {
 				attempts = pthread_delay_np (once, attempts);
 			}

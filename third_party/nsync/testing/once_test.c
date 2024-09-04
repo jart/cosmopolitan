@@ -76,7 +76,7 @@ static void once_thread (struct once_test_thread_s *lott) {
 	nsync_mu_lock (&ott_s_mu);
         s = lott->s;
 	nsync_mu_unlock (&ott_s_mu);
-        nsync_time_sleep (nsync_time_s_ns (0, 1 * 1000 * 1000));
+        nsync_time_sleep (NSYNC_CLOCK, nsync_time_s_ns (0, 1 * 1000 * 1000));
         switch (lott->id & 3) {
         case 0:  nsync_run_once (&s->once, &once_func0); break;
         case 1:  nsync_run_once_spin (&s->once, &once_func1); break;
@@ -111,7 +111,7 @@ static void test_once_run (testing t) {
                         closure_fork (closure_once_thread (&once_thread,
                                                            &ott[j]));
                 }
-                if (nsync_counter_wait (s->done,
+                if (nsync_counter_wait (s->done, NSYNC_CLOCK,
                                         nsync_time_no_deadline) != 0) {
                         TEST_ERROR (t, ("s.done not decremented to 0"));
                 }

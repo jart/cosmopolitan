@@ -17,12 +17,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/testing/testing.h"
 
 /* A cv_stress_data represents the data used by the threads of the tests below. */
@@ -76,16 +76,16 @@ static void cv_stress_inc_loop (cv_stress_data *s, uintmax_t count_imod4) {
 		nsync_mu_assert_held (&s->mu);
 		while ((s->count & 3) != count_imod4) {
 			nsync_time abs_deadline;
-			abs_deadline = nsync_time_add (nsync_time_now (),
+			abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			while (nsync_cv_wait_with_deadline (
 					&s->count_is_imod4[count_imod4],
-					&s->mu, CLOCK_REALTIME, abs_deadline, NULL) != 0 &&
+					&s->mu, NSYNC_CLOCK, abs_deadline, NULL) != 0 &&
 			       (s->count&3) != count_imod4) {
 				nsync_mu_assert_held (&s->mu);
 				s->timeouts++;
 				nsync_mu_assert_held (&s->mu);
-				abs_deadline = nsync_time_add (nsync_time_now (),
+				abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 				       nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			}
 		}
@@ -128,16 +128,16 @@ static void cv_stress_reader_loop (cv_stress_data *s, uintmax_t count_imod4) {
 		nsync_mu_rassert_held (&s->mu);
 		while ((s->count&3) != count_imod4 && s->refs != 0) {
 			nsync_time abs_deadline;
-			abs_deadline = nsync_time_add (nsync_time_now (),
+			abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			while (nsync_cv_wait_with_deadline (&s->count_is_imod4[count_imod4],
-							    &s->mu, CLOCK_REALTIME,
+							    &s->mu, NSYNC_CLOCK,
 							    abs_deadline, NULL) != 0 &&
 			       (s->count&3) != count_imod4 && s->refs != 0) {
 
 				nsync_mu_rassert_held (&s->mu);
 				timeouts++;
-				abs_deadline = nsync_time_add (nsync_time_now (),
+				abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 					nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 			}
 		}
@@ -146,7 +146,7 @@ static void cv_stress_reader_loop (cv_stress_data *s, uintmax_t count_imod4) {
 		if ((loops & 0xf) == 0) {
 			nsync_mu_runlock (&s->mu);
 			if ((loops & 0xfff) == 0) {
-				nsync_time_sleep (nsync_time_ms (1));
+				nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1));
 			}
 			nsync_mu_rlock (&s->mu);
 		}
@@ -236,14 +236,14 @@ static void mu_stress_inc_loop (cv_stress_data *s, condition_func condition,
 		nsync_time abs_deadline;
 		nsync_mu_assert_held (&s->mu);
 
-		abs_deadline = nsync_time_add (nsync_time_now (),
+		abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 			nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 		while (nsync_mu_wait_with_deadline (&s->mu, condition, condition_arg, NULL,
-						    abs_deadline, NULL) != 0) {
+						    NSYNC_CLOCK, abs_deadline, NULL) != 0) {
 			nsync_mu_assert_held (&s->mu);
 			s->timeouts++;
 			nsync_mu_assert_held (&s->mu);
-			abs_deadline = nsync_time_add (nsync_time_now (),
+			abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 		}
 
@@ -286,14 +286,14 @@ static void mu_stress_reader_loop (cv_stress_data *s, condition_func condition,
 	while (s->refs != 0) {
 		nsync_time abs_deadline;
 		nsync_mu_rassert_held (&s->mu);
-		abs_deadline = nsync_time_add (nsync_time_now (),
+		abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 			nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 		while (nsync_mu_wait_with_deadline (&s->mu, condition, condition_arg, NULL,
-						    abs_deadline, NULL) != 0) {
+						    NSYNC_CLOCK, abs_deadline, NULL) != 0) {
 			nsync_mu_rassert_held (&s->mu);
 			s->timeouts++;
 			nsync_mu_rassert_held (&s->mu);
-			abs_deadline = nsync_time_add (nsync_time_now (),
+			abs_deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK),
 				nsync_time_us (rand () % STRESS_MAX_DELAY_MICROS));
 		}
 
@@ -302,7 +302,7 @@ static void mu_stress_reader_loop (cv_stress_data *s, condition_func condition,
 		if ((loops & 0xf) == 0) {
 			nsync_mu_runlock (&s->mu);
 			if ((loops & 0xfff) == 0) {
-				nsync_time_sleep (nsync_time_ms (1));
+				nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1));
 			}
 			nsync_mu_rlock (&s->mu);
 		}
@@ -418,7 +418,7 @@ static int run_stress_test (cv_stress_data *s, testing t,
 	nsync_mu_unlock (&s->mu);
 
 	/* Sleep a while to cause many timeouts. */
-	nsync_time_sleep (nsync_time_ms (sleep_seconds * 1000));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (sleep_seconds * 1000));
 
 	nsync_mu_lock (&s->mu);
 	nsync_mu_assert_held (&s->mu);
@@ -467,7 +467,7 @@ static int run_stress_test (cv_stress_data *s, testing t,
 	nsync_mu_assert_held (&s->mu);
 	nsync_mu_unlock (&s->mu);
 
-	if (nsync_time_cmp (s->deadline, nsync_time_now ()) < 0) {
+	if (nsync_time_cmp (s->deadline, nsync_time_now (NSYNC_CLOCK)) < 0) {
 		if (timeouts_seen < expected_timeouts && !testing_is_uniprocessor (t)) {
 			TEST_ERROR (t, ("%s: expected more than %d timeouts, got %d",
 				   test_name, expected_timeouts, timeouts_seen));
@@ -498,7 +498,7 @@ static void test_cv_timeout_stress (testing t) {
 	uintmax_t loop_count = 3;
 	cv_stress_data s;
 	nsync_time deadline;
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	do {
 		bzero ((void *) &s, sizeof (s));
 		s.loop_count = loop_count;
@@ -518,7 +518,7 @@ static void test_mu_timeout_stress (testing t) {
 	uintmax_t loop_count = 3;
 	cv_stress_data s;
 	nsync_time deadline;
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	do {
 		bzero ((void *) &s, sizeof (s));
 		s.loop_count = loop_count;
@@ -538,7 +538,7 @@ static void test_mu_cv_timeout_stress (testing t) {
 	uintmax_t loop_count = 3;
 	cv_stress_data s;
 	nsync_time deadline;
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	do {
 		bzero ((void *) &s, sizeof (s));
 		s.loop_count = loop_count;

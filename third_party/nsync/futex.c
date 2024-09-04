@@ -41,7 +41,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/clktck.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
@@ -50,6 +49,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/time.h"
@@ -92,7 +92,7 @@ static void nsync_futex_init_ (void) {
 		return;
 	}
 
-        if (!(nsync_futex_.is_supported = IsLinux () || IsOpenbsd ()))
+	if (!(nsync_futex_.is_supported = IsLinux () || IsOpenbsd ()))
 		return;
 
 	// In our testing, we found that the monotonic clock on various
@@ -124,6 +124,12 @@ static void nsync_futex_init_ (void) {
 		nsync_futex_.timeout_is_relative = true;
 	}
 	errno = e;
+}
+
+static uint32_t nsync_time_64to32u (uint64_t duration) {
+	if (duration <= -1u)
+		return duration;
+	return -1u;
 }
 
 static int nsync_futex_polyfill_ (atomic_int *w, int expect, int clock, struct timespec *abstime) {
@@ -177,7 +183,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			pt->pt_blkmask = waitmask;
 			atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
 		}
-		ok = WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait));
+		ok = WaitOnAddress (w, &expect, sizeof(int), nsync_time_64to32u (timespec_tomillis (wait)));
 		if (pt) {
 			/* __sig_cancel wakes our futex without changing `w` after enqueing signals */
 			atomic_store_explicit (&pt->pt_blocker, 0, memory_order_release);
@@ -232,7 +238,8 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 	op = nsync_futex_.FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE)
 		op |= nsync_futex_.FUTEX_PRIVATE_FLAG_;
-	if (clock == CLOCK_REALTIME)
+	if (clock == CLOCK_REALTIME ||
+	    clock == CLOCK_REALTIME_COARSE)
 		op |= nsync_futex_.FUTEX_CLOCK_REALTIME_;
 
 	if (abstime && timespec_cmp (*abstime, timespec_zero) <= 0) {
@@ -265,6 +272,20 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 			rc = nsync_futex_wait_win32_ (w, expect, pshare, clock, timeout, pt, m);
 			__sig_unblock (m);
 		} else if (IsXnu ()) {
+
+			/* XNU ulock (used by cosmo futexes) is an internal API, however:
+
+			     1. Unlike GCD it's cancelable i.e. can be EINTR'd by signals
+			     2. We have no choice but to use ulock for joining threads
+			     3. Grand Central Dispatch requires a busy loop workaround
+			     4. ulock makes our mutexes use 20% more system time (meh)
+			     5. ulock makes our mutexes use 40% less wall time (good)
+			     6. ulock makes our mutexes use 64% less user time (woop)
+			     7. GCD uses Mach timestamps D: ulock just uses rel. time
+
+			   ulock is an outstanding system call that must be used.
+			   gcd is not an acceptable alternative to ulock. */
+
 			uint32_t op, us;
 			if (pshare) {
 				op = UL_COMPARE_AND_WAIT_SHARED;
@@ -272,7 +293,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 				op = UL_COMPARE_AND_WAIT;
 			}
 			if (timeout) {
-				us = timespec_tomicros (*timeout);
+				us = nsync_time_64to32u (timespec_tomicros (*timeout));
 			} else {
 				us = -1u;
 			}

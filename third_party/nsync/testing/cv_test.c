@@ -29,7 +29,6 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
-#include "libc/sysv/consts/clock.h"
 #include "third_party/nsync/time.h"
 
 /* --------------------------- */
@@ -64,7 +63,7 @@ static int cv_queue_put (cv_queue *q, void *v, nsync_time abs_deadline) {
 	int wake = 0;
 	nsync_mu_lock (&q->mu);
 	while (q->count == q->limit &&
-	       nsync_cv_wait_with_deadline (&q->non_full, &q->mu, CLOCK_REALTIME, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&q->non_full, &q->mu, NSYNC_CLOCK, abs_deadline, NULL) == 0) {
 	}
 	if (q->count != q->limit) {
 		int i = q->pos + q->count;
@@ -92,7 +91,7 @@ static void *cv_queue_get (cv_queue *q, nsync_time abs_deadline) {
 	void *v = NULL;
 	nsync_mu_lock (&q->mu);
 	while (q->count == 0 &&
-	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, CLOCK_REALTIME, abs_deadline, NULL) == 0) {
+	       nsync_cv_wait_with_deadline (&q->non_empty, &q->mu, NSYNC_CLOCK, abs_deadline, NULL) == 0) {
 	}
 	if (q->count != 0) {
 		v = q->data[q->pos];
@@ -236,13 +235,13 @@ static void test_cv_deadline (testing t) {
 		nsync_time end_time;
 		nsync_time start_time;
 		nsync_time expected_end_time;
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 		expected_end_time = nsync_time_add (start_time, nsync_time_ms (87));
-		if (nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, expected_end_time,
+		if (nsync_cv_wait_with_deadline (&cv, &mu, NSYNC_CLOCK, expected_end_time,
 						 NULL) != ETIMEDOUT) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-expired for a timeout"));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, nsync_time_sub (expected_end_time, too_early)) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_cv_wait() returned %s too early", elapsed_str));
@@ -275,7 +274,7 @@ static void test_cv_cancel (testing t) {
 
 	/* The loops below cancel after 87 milliseconds, like the timeout tests above. */
 
-	future_time = nsync_time_add (nsync_time_now (), nsync_time_ms (3600000)); /* test cancels with timeout */
+	future_time = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (3600000)); /* test cancels with timeout */
 
 	too_late_violations = 0;
 	nsync_mu_lock (&mu);
@@ -285,18 +284,18 @@ static void test_cv_cancel (testing t) {
 		nsync_time end_time;
 		nsync_time start_time;
 		nsync_time expected_end_time;
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 		expected_end_time = nsync_time_add (start_time, nsync_time_ms (87));
 
-		cancel = nsync_note_new (NULL, expected_end_time);
+		cancel = nsync_note_new (NULL, NSYNC_CLOCK, expected_end_time);
 
-		x = nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, future_time, cancel);
+		x = nsync_cv_wait_with_deadline (&cv, &mu, NSYNC_CLOCK, future_time, cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-cancelled (%d) for "
 				   "a cancellation; expected %d",
 				   x, ECANCELED));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, nsync_time_sub (expected_end_time, too_early)) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_cv_wait() returned %s too early", elapsed_str));
@@ -307,15 +306,15 @@ static void test_cv_cancel (testing t) {
 		}
 
 		/* Check that an already cancelled wait returns immediately. */
-		start_time = nsync_time_now ();
+		start_time = nsync_time_now (NSYNC_CLOCK);
 
-		x = nsync_cv_wait_with_deadline (&cv, &mu, CLOCK_REALTIME, nsync_time_no_deadline, cancel);
+		x = nsync_cv_wait_with_deadline (&cv, &mu, NSYNC_CLOCK, nsync_time_no_deadline, cancel);
 		if (x != ECANCELED) {
 			TEST_FATAL (t, ("nsync_cv_wait() returned non-cancelled (%d) for "
 				   "a cancellation; expected %d",
 				   x, ECANCELED));
 		}
-		end_time = nsync_time_now ();
+		end_time = nsync_time_now (NSYNC_CLOCK);
 		if (nsync_time_cmp (end_time, start_time) < 0) {
 			char *elapsed_str = nsync_time_str (nsync_time_sub (expected_end_time, end_time), 2);
 			TEST_ERROR (t, ("nsync_cv_wait() returned %s too early", elapsed_str));
@@ -522,7 +521,7 @@ static void test_cv_debug (testing t) {
 	closure_fork (closure_debug_thread (&debug_thread_writer_cv, s));
 	closure_fork (closure_debug_thread (&debug_thread_writer_cv, s));
 	closure_fork (closure_debug_thread_reader (&debug_thread_reader_cv, s, NULL));
-	nsync_time_sleep (nsync_time_ms (500));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (500));
 	*slot (s, "wait0_mu") = nsync_mu_debug_state_and_waiters (
 		&s->mu, (char *) malloc (len), len);
 	*slot (s, "wait0_cv") = nsync_cv_debug_state_and_waiters (
@@ -530,7 +529,7 @@ static void test_cv_debug (testing t) {
 
 	/* allow the threads to proceed to their conditional waits */
 	nsync_mu_unlock (&s->mu);
-	nsync_time_sleep (nsync_time_ms (500));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (500));
 	*slot (s, "wait1_mu") = nsync_mu_debug_state_and_waiters (
 		&s->mu, (char *) malloc (len), len);
 	*slot (s, "wait1_cv") = nsync_cv_debug_state_and_waiters (
@@ -547,7 +546,7 @@ static void test_cv_debug (testing t) {
 	/* allow all threads to proceed and exit */
 	s->flag = 0;
 	nsync_mu_unlock (&s->mu);
-	nsync_time_sleep (nsync_time_ms (500));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (500));
 	*slot (s, "wait3_mu") = nsync_mu_debug_state_and_waiters (
 		&s->mu, (char *) malloc (len), len);
 	*slot (s, "wait3_cv") = nsync_cv_debug_state_and_waiters (
@@ -559,7 +558,7 @@ static void test_cv_debug (testing t) {
 		&s->mu, (char *) malloc (len), len);
 	closure_fork (closure_debug_thread_reader (
 		&debug_thread_reader, s, "rheld2_mu"));
-	nsync_time_sleep (nsync_time_ms (500));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (500));
 	*slot (s, "rheld1again_mu") = nsync_mu_debug_state_and_waiters (
 		&s->mu, (char *) malloc (len), len);
 	nsync_mu_runlock (&s->mu);

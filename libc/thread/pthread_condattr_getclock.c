@@ -24,6 +24,8 @@
  * @param clock will be set to one of
  *     - `CLOCK_REALTIME` (default)
  *     - `CLOCK_MONOTONIC`
+ *     - `CLOCK_REALTIME_COARSE`
+ *     - `CLOCK_MONOTONIC_COARSE`
  * @return 0 on success, or error on failure
  */
 int pthread_condattr_getclock(const pthread_condattr_t *attr, int *clock) {

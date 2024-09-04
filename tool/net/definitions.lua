@@ -4129,37 +4129,21 @@ unix = {
     CLK_TCK = nil,
 
     --- @type integer
-    CLOCK_BOOTTIME = nil,
-    --- @type integer
-    CLOCK_BOOTTIME_ALARM = nil,
+    CLOCK_REALTIME = nil,
     --- @type integer
     CLOCK_MONOTONIC = nil,
     --- @type integer
-    CLOCK_MONOTONIC_COARSE = nil,
-    --- @type integer
-    CLOCK_MONOTONIC_PRECISE = nil,
-    --- @type integer
-    CLOCK_MONOTONIC_FAST = nil,
+    CLOCK_BOOTTIME = nil,
     --- @type integer
     CLOCK_MONOTONIC_RAW = nil,
     --- @type integer
-    CLOCK_PROCESS_CPUTIME_ID = nil,
-    --- @type integer
-    CLOCK_PROF = nil,
-    --- @type integer
-    CLOCK_REALTIME = nil,
-    --- @type integer
-    CLOCK_REALTIME_PRECISE = nil,
-    --- @type integer
-    CLOCK_REALTIME_ALARM = nil,
-    --- @type integer
     CLOCK_REALTIME_COARSE = nil,
     --- @type integer
-    CLOCK_REALTIME_FAST = nil,
-    --- @type integer
-    CLOCK_TAI = nil,
+    CLOCK_MONOTONIC_COARSE = nil,
     ---@type integer
     CLOCK_THREAD_CPUTIME_ID = nil,
+    --- @type integer
+    CLOCK_PROCESS_CPUTIME_ID = nil,
     --- @type integer
     DT_BLK = nil,
     --- @type integer
@@ -6097,23 +6081,73 @@ function unix.syslog(priority, msg) end
 ---
 --- `clock` can be any one of of:
 ---
---- - `CLOCK_REALTIME`: universally supported
---- - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
---- - `CLOCK_REALTIME_PRECISE`: ditto but better on freebsd
---- - `CLOCK_REALTIME_COARSE`: : like `CLOCK_REALTIME_FAST` but needs Linux 2.6.32+
---- - `CLOCK_MONOTONIC`: universally supported
---- - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
---- - `CLOCK_MONOTONIC_PRECISE`: ditto but better on freebsd
---- - `CLOCK_MONOTONIC_COARSE`: : like `CLOCK_MONOTONIC_FAST` but needs Linux 2.6.32+
---- - `CLOCK_MONOTONIC_RAW`: is actually monotonic but needs Linux 2.6.28+
---- - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
---- - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
---- - `CLOCK_MONOTONIC_COARSE`: linux, freebsd
---- - `CLOCK_PROF`: linux and netbsd
---- - `CLOCK_BOOTTIME`: linux and openbsd
---- - `CLOCK_REALTIME_ALARM`: linux-only
---- - `CLOCK_BOOTTIME_ALARM`: linux-only
---- - `CLOCK_TAI`: linux-only
+--- - `CLOCK_REALTIME` returns a wall clock timestamp represented in
+---   nanoseconds since the UNIX epoch (~1970). It'll count time in the
+---   suspend state. This clock is subject to being smeared by various
+---   adjustments made by NTP. These timestamps can have unpredictable
+---   discontinuous jumps when clock_settime() is used. Therefore this
+---   clock is the default clock for everything, even pthread condition
+---   variables. Cosmopoiltan guarantees this clock will never raise
+---   `EINVAL` and also guarantees `CLOCK_REALTIME == 0` will always be
+---   the case. On Windows this maps to GetSystemTimePreciseAsFileTime().
+---   On platforms with vDSOs like Linux, Windows, and MacOS ARM64 this
+---   should take about 20 nanoseconds.
+---
+--- - `CLOCK_MONOTONIC` returns a timestamp with an unspecified epoch,
+---   that should be when the system was powered on. These timestamps
+---   shouldn't go backwards. Timestamps shouldn't count time spent in
+---   the sleep, suspend, and hibernation states. These timestamps won't
+---   be impacted by clock_settime(). These timestamps may be impacted by
+---   frequency adjustments made by NTP. Cosmopoiltan guarantees this
+---   clock will never raise `EINVAL`. MacOS and BSDs use the word
+---   "uptime" to describe this clock. On Windows this maps to
+---   QueryUnbiasedInterruptTimePrecise().
+---
+--- - `CLOCK_BOOTTIME` is a monotonic clock returning a timestamp with an
+---   unspecified epoch, that should be relative to when the host system
+---   was powered on. These timestamps shouldn't go backwards. Timestamps
+---   should also include time spent in a sleep, suspend, or hibernation
+---   state. These timestamps aren't impacted by clock_settime(), but
+---   they may be impacted by frequency adjustments made by NTP. This
+---   clock will raise an `EINVAL` error on extremely old Linux distros
+---   like RHEL5. MacOS and BSDs use the word "monotonic" to describe
+---   this clock. On Windows this maps to QueryInterruptTimePrecise().
+---
+--- - `CLOCK_MONOTONIC_RAW` returns a timestamp from an unspecified
+---   epoch. These timestamps don't count time spent in the sleep,
+---   suspend, and hibernation states. Unlike `CLOCK_MONOTONIC` this
+---   clock is guaranteed to not be impacted by frequency adjustments or
+---   discontinuous jumps caused by clock_settime(). Providing this level
+---   of assurances may make this clock slower than the normal monotonic
+---   clock. Furthermore this clock may cause `EINVAL` to be raised if
+---   running on a host system that doesn't provide those guarantees,
+---   e.g. OpenBSD and MacOS on AMD64.
+---
+--- - `CLOCK_REALTIME_COARSE` is the same as `CLOCK_REALTIME` except
+---   it'll go faster if the host OS provides a cheaper way to read the
+---   wall time. Please be warned that coarse can be really coarse.
+---   Rather than nano precision, you're looking at `CLK_TCK` precision,
+---   which can lag as far as 30 milliseconds behind or possibly more.
+---   Cosmopolitan may fallback to `CLOCK_REALTIME` if a faster less
+---   accurate clock isn't provided by the system. This clock will raise
+---   an `EINVAL` error on extremely old Linux distros like RHEL5.
+---
+--- - `CLOCK_MONOTONIC_COARSE` is the same as `CLOCK_MONOTONIC` except
+---   it'll go faster if the host OS provides a cheaper way to read the
+---   unbiased time. Please be warned that coarse can be really coarse.
+---   Rather than nano precision, you're looking at `CLK_TCK` precision,
+---   which can lag as far as 30 milliseconds behind or possibly more.
+---   Cosmopolitan may fallback to `CLOCK_REALTIME` if a faster less
+---   accurate clock isn't provided by the system. This clock will raise
+---   an `EINVAL` error on extremely old Linux distros like RHEL5.
+---
+--- - `CLOCK_PROCESS_CPUTIME_ID` returns the amount of time this process
+---   was actively scheduled. This is similar to getrusage() and clock().
+---   Cosmopoiltan guarantees this clock will never raise `EINVAL`.
+---
+--- - `CLOCK_THREAD_CPUTIME_ID` returns the amount of time this thread
+---   was actively scheduled. This is similar to getrusage() and clock().
+---   Cosmopoiltan guarantees this clock will never raise `EINVAL`.
 ---
 --- Returns `EINVAL` if clock isn't supported on platform.
 ---

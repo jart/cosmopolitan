@@ -25,9 +25,6 @@
 #include "libc/sysv/consts/clock.h"
 #ifdef __x86_64__
 
-#define CTL_KERN      1
-#define KERN_BOOTTIME 21
-
 int sys_clock_gettime_xnu(int clock, struct timespec *ts) {
   long ax, dx;
   if (clock == CLOCK_REALTIME) {
@@ -47,31 +44,20 @@ int sys_clock_gettime_xnu(int clock, struct timespec *ts) {
     //   2. old xnu returns *ts in rax:rdx regs
     //
     // we assume this system call always succeeds
-    if (ts) {
-      asm volatile("syscall"
-                   : "=a"(ax), "=d"(dx)
-                   : "0"(0x2000000 | 116), "D"(ts), "S"(0), "1"(0)
-                   : "rcx", "r8", "r9", "r10", "r11", "memory");
-      if (ax) {
-        ts->tv_sec = ax;
-        ts->tv_nsec = dx;
-      }
-      ts->tv_nsec *= 1000;
+    asm volatile("syscall"
+                 : "=a"(ax), "=d"(dx)
+                 : "0"(0x2000000 | 116), "D"(ts), "S"(0), "1"(0)
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
+    if (ax) {
+      ts->tv_sec = ax;
+      ts->tv_nsec = dx;
     }
+    ts->tv_nsec *= 1000;
     return 0;
-  } else if (clock == CLOCK_MONOTONIC) {
-    if (!ts)
-      return 0;
+  } else if (clock == CLOCK_BOOTTIME ||   //
+             clock == CLOCK_MONOTONIC ||  //
+             clock == CLOCK_MONOTONIC_COARSE) {
     return sys_clock_gettime_mono(ts);
-  } else if (clock == CLOCK_BOOTTIME) {
-    struct timeval x;
-    size_t n = sizeof(x);
-    int mib[] = {CTL_KERN, KERN_BOOTTIME};
-    if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1)
-      return -1;
-    if (ts)
-      *ts = timeval_totimespec(timeval_sub(timeval_real(), x));
-    return 0;
   } else {
     return -EINVAL;
   }

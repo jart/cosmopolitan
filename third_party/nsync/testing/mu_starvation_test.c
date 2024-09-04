@@ -44,7 +44,7 @@ static void starve_data_init (starve_data *sd, int threads) {
 	bzero ((void *) sd, sizeof (*sd));
 	sd->not_yet_started = threads;
 	sd->not_yet_done = threads;
-	sd->start = nsync_time_now ();
+	sd->start = nsync_time_now (NSYNC_CLOCK);
 }
 
 /* Loop until *cancel or deadline, and on each iteration
@@ -62,9 +62,9 @@ static void starve_with_readers (starve_data *sd, nsync_time period,
 	sd->not_yet_started--;
 	nsync_mu_unlock (&sd->control_mu);
 
-	for (now = nsync_time_now ();
+	for (now = nsync_time_now (NSYNC_CLOCK);
 	     !sd->cancel && nsync_time_cmp (now, deadline) < 0;
-	     now = nsync_time_now ()) {
+	     now = nsync_time_now (NSYNC_CLOCK)) {
 		uint32_t new_us;
 		uint32_t now_us = (uint32_t) (nsync_time_to_dbl (nsync_time_sub (now, sd->start)) * 1e6);
 		uint32_t index = (now_us + period_us - 1) / period_us;
@@ -72,7 +72,7 @@ static void starve_with_readers (starve_data *sd, nsync_time period,
 			index++;
 		}
 		new_us = index * period_us;
-		nsync_time_sleep (nsync_time_from_dbl (1e-6 * (double) (new_us-now_us)));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_from_dbl (1e-6 * (double) (new_us-now_us)));
 		nsync_mu_runlock (&sd->mu);
 		nsync_mu_rlock (&sd->mu);
 	}
@@ -113,7 +113,7 @@ static void test_starve_with_readers (testing t) {
 	starve_data_init (&sd, 2); /* two threads, started below */
 
 	/* Threads run for at most 10s. */
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (10000));
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (10000));
 
 	/* These two threads will try to hold a reader lock
 	   continuously until cancel is set or deadline is reached,
@@ -130,9 +130,9 @@ static void test_starve_with_readers (testing t) {
 
 	/* If using an nsync_mu, use nsync_mu_trylock() to attempt to acquire while the
 	   readers are hogging the lock.  We expect no acquisitions to succeed. */
-	finish = nsync_time_add (nsync_time_now (), nsync_time_ms (500));
+	finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (500));
 	trylock_acquires = 0; /* number of acquires */
-	while (nsync_time_cmp (nsync_time_now (), finish) < 0) {
+	while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0) {
 		if (nsync_mu_trylock (&sd.mu)) {
 			trylock_acquires++;
 			nsync_mu_unlock (&sd.mu);
@@ -147,15 +147,15 @@ static void test_starve_with_readers (testing t) {
 	/* Use nsync_mu_lock() to attempt to acquire while the readers are hogging
 	   the lock.  We expect several acquisitions to succeed. */
 	expected_lo = 2;
-	finish = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	lock_acquires = 0; /* number of acquires */
-	while (nsync_time_cmp (nsync_time_now (), finish) < 0 && lock_acquires < expected_lo) {
+	while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0 && lock_acquires < expected_lo) {
 		nsync_mu_lock (&sd.mu);
 		lock_acquires++;
 		nsync_mu_unlock (&sd.mu);
-		nsync_time_sleep (nsync_time_ms (1));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1));
 	}
-	if (nsync_time_cmp (nsync_time_now (), deadline) > 0 && lock_acquires == 1) {
+	if (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), deadline) > 0 && lock_acquires == 1) {
 		lock_acquires = 0; /* hog threads timed out */
 	}
 	if (lock_acquires < expected_lo) {
@@ -185,10 +185,10 @@ static void starve_with_writer (starve_data *sd, nsync_time hold_time,
 	sd->not_yet_started--;
 	nsync_mu_unlock (&sd->control_mu);
 
-	for (now = nsync_time_now ();
+	for (now = nsync_time_now (NSYNC_CLOCK);
 	     !sd->cancel && nsync_time_cmp (now, deadline) < 0;
-	     now = nsync_time_now ()) {
-		nsync_time_sleep (hold_time);
+	     now = nsync_time_now (NSYNC_CLOCK)) {
+		nsync_time_sleep (NSYNC_CLOCK, hold_time);
 		nsync_mu_unlock (&sd->mu);
 		nsync_mu_lock (&sd->mu);
 	}
@@ -231,7 +231,7 @@ static void test_starve_with_writer (testing t) {
 	nsync_time deadline;
 	starve_data sd;
 	starve_data_init (&sd, 1); /* one thread, started below */
-	deadline = nsync_time_add (nsync_time_now (), nsync_time_ms (25000)); /* runs for at most 25s. */
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (25000)); /* runs for at most 25s. */
 
 	/* This thread will try to hold a writer lock almost
 	   continuously, releasing momentarily every 10ms. */
@@ -249,9 +249,9 @@ static void test_starve_with_writer (testing t) {
 		/* Use nsync_mu_trylock() to attempt to acquire while the writer is hogging the
 		   lock.  We expect some acquisitions to succeed. */
 		expected_lo = 1;
-		finish = nsync_time_add (nsync_time_now (), nsync_time_ms (30000));
+		finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (30000));
 		trylock_acquires = 0; /* number of acquires */
-		while (nsync_time_cmp (nsync_time_now (), finish) < 0 && trylock_acquires < expected_lo) {
+		while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0 && trylock_acquires < expected_lo) {
 			if (nsync_mu_trylock (&sd.mu)) {
 				trylock_acquires++;
 				nsync_mu_unlock (&sd.mu);
@@ -269,9 +269,9 @@ static void test_starve_with_writer (testing t) {
 		/* Use nsync_mu_rtrylock() to attempt to read-acquire while the writer is
 		   hogging the lock.  We expect some acquisitions to succeed. */
 		expected_lo = 1;
-		finish = nsync_time_add (nsync_time_now (), nsync_time_ms (30000));
+		finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (30000));
 		rtrylock_acquires = 0; /* number of acquires */
-		while (nsync_time_cmp (nsync_time_now (), finish) < 0 && rtrylock_acquires < expected_lo) {
+		while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0 && rtrylock_acquires < expected_lo) {
 			if (nsync_mu_rtrylock (&sd.mu)) {
 				rtrylock_acquires++;
 				nsync_mu_runlock (&sd.mu);
@@ -288,15 +288,15 @@ static void test_starve_with_writer (testing t) {
 	/* Use nsync_mu_lock() to attempt to acquire while the writer is hogging
 	   the lock.  We expect several acquisitions to succeed. */
 	expected_lo = 2;
-	finish = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	lock_acquires = 0; /* number of acquires */
-	while (nsync_time_cmp (nsync_time_now (), finish) < 0 && lock_acquires < expected_lo) {
+	while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0 && lock_acquires < expected_lo) {
 		nsync_mu_lock (&sd.mu);
 		lock_acquires++;
 		nsync_mu_unlock (&sd.mu);
-		nsync_time_sleep (nsync_time_ms (2));
+		nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (2));
 	}
-	if (lock_acquires == 1 && nsync_time_cmp (nsync_time_now (), deadline) > 0) {
+	if (lock_acquires == 1 && nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), deadline) > 0) {
 		lock_acquires = 0; /* hog thread timed out */
 	}
 	if (lock_acquires < expected_lo) {
@@ -310,16 +310,16 @@ static void test_starve_with_writer (testing t) {
 	   time----it means that a writer couldn't break in (the test case
 	   above failed), so a reader is unlikely to manage it either. */
 	expected_lo = 2;
-	finish = nsync_time_add (nsync_time_now (), nsync_time_ms (5000));
+	finish = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (5000));
 	rlock_acquires = 0; /* number of acquires */
 	if (nsync_time_cmp (finish, deadline) < 0) {
-		while (nsync_time_cmp (nsync_time_now (), finish) < 0 && rlock_acquires < expected_lo) {
+		while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), finish) < 0 && rlock_acquires < expected_lo) {
 			nsync_mu_rlock (&sd.mu);
 			rlock_acquires++;
 			nsync_mu_runlock (&sd.mu);
-			nsync_time_sleep (nsync_time_ms (2));
+			nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (2));
 		}
-		if (rlock_acquires == 1 && nsync_time_cmp (nsync_time_now (), deadline) > 0) {
+		if (rlock_acquires == 1 && nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), deadline) > 0) {
 			rlock_acquires = 0; /* hog thread timed out */
 		}
 		if (rlock_acquires < expected_lo) {

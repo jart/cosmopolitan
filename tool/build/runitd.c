@@ -49,6 +49,7 @@
 #include "libc/stdio/append.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -626,8 +627,8 @@ RetryOnEtxtbsyRaceCondition:
     fds[1].fd = client->pipe[0];
     fds[1].events = POLLIN;
     ts1 = timespec_real();
-    events = poll(fds, ARRAYLEN(fds),
-                  timespec_tomillis(timespec_sub(deadline, now)));
+    int64_t ms = timespec_tomillis(timespec_sub(deadline, now));
+    events = poll(fds, ARRAYLEN(fds), MIN(ms, -1u));
     DEBUF("it took %'zu us to call poll",
           timespec_tomicros(timespec_sub(timespec_real(), ts1)));
     if (events == -1) {

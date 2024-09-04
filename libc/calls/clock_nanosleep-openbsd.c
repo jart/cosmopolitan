@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 
@@ -25,21 +27,18 @@ int sys_clock_nanosleep_openbsd(int clock, int flags,
                                 const struct timespec *req,
                                 struct timespec *rem) {
   int res;
-  struct timespec now, rel;
-  if (clock == CLOCK_REALTIME) {
-    if (!flags) {
-      res = sys_nanosleep(req, rem);
-    } else {
-      sys_clock_gettime(clock, &now);
-      if (timespec_cmp(*req, now) > 0) {
-        rel = timespec_sub(*req, now);
-        res = sys_nanosleep(&rel, 0);
-      } else {
-        res = 0;
-      }
-    }
+  struct timespec start, relative, remainder;
+  if (!flags) {
+    relative = *req;
   } else {
-    res = enotsup();
+    if ((res = sys_clock_gettime(clock, &start)))
+      return _sysret(res);
+    if (timespec_cmp(start, *req) >= 0)
+      return 0;
+    relative = timespec_sub(*req, start);
   }
+  res = sys_nanosleep(&relative, &remainder);
+  if (res == -1 && errno == EINTR && rem && !flags)
+    *rem = remainder;
   return res;
 }

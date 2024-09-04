@@ -19,7 +19,7 @@ typedef struct nsync_note_s_ *nsync_note;
    abs_deadline==nsync_zero_time.
 
    nsync_notes should be passed to nsync_note_free() when no longer needed. */
-nsync_note nsync_note_new(nsync_note parent, nsync_time abs_deadline);
+nsync_note nsync_note_new(nsync_note parent, int clock, nsync_time abs_deadline);
 
 /* Free resources associated with n. Requires that n was allocated by
    nsync_note_new(), and no concurrent or future operations are applied

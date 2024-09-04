@@ -26,12 +26,16 @@
  * @param clock can be one of
  *     - `CLOCK_REALTIME` (default)
  *     - `CLOCK_MONOTONIC`
+ *     - `CLOCK_REALTIME_COARSE`
+ *     - `CLOCK_MONOTONIC_COARSE`
  * @return 0 on success, or error on failure
  * @raises EINVAL if `clock` is invalid
  */
 int pthread_condattr_setclock(pthread_condattr_t *attr, int clock) {
-  if (clock != CLOCK_REALTIME &&  //
-      clock != CLOCK_MONOTONIC)
+  if (clock != CLOCK_REALTIME &&         //
+      clock != CLOCK_REALTIME_COARSE &&  //
+      clock != CLOCK_MONOTONIC &&        //
+      clock != CLOCK_MONOTONIC_COARSE)
     return EINVAL;
   attr->_clock = clock;
   return 0;

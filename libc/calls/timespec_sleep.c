@@ -34,19 +34,16 @@
  * @return unslept time which may be non-zero if the call was interrupted
  * @cancelationpoint
  */
-struct timespec timespec_sleep(struct timespec delay) {
+struct timespec timespec_sleep(int clock, struct timespec delay) {
   int cs = -1;
   errno_t err;
   struct timespec remain;
   remain = timespec_zero;
-  if (_pthread_self()->pt_flags & PT_MASKED) {
+  if (_pthread_self()->pt_flags & PT_MASKED)
     cs = _pthread_block_cancelation();
-  }
-  if ((err = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
+  if ((err = clock_nanosleep(clock, 0, &delay, &remain)))
     unassert(err == EINTR);
-  }
-  if (cs != -1) {
+  if (cs != -1)
     _pthread_allow_cancelation(cs);
-  }
   return remain;
 }

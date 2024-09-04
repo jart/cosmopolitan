@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
 
@@ -31,6 +30,6 @@
  */
 struct timespec timespec_real(void) {
   struct timespec ts;
-  unassert(!clock_gettime(CLOCK_REALTIME, &ts));
+  clock_gettime(CLOCK_REALTIME, &ts);
   return ts;
 }

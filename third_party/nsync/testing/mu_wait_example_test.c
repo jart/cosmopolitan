@@ -18,6 +18,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/array.internal.h"
+#include "third_party/nsync/time.h"
 #include "third_party/nsync/heap.internal.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
@@ -74,7 +75,7 @@ static const char *string_priority_queue_mu_remove_with_deadline (
 	const char *s = NULL;
 	nsync_mu_lock (&q->mu);
 	if (nsync_mu_wait_with_deadline (&q->mu, &spq_is_non_empty, q, NULL,
-					 abs_deadline, NULL) == 0) {
+					 NSYNC_CLOCK, abs_deadline, NULL) == 0) {
 		int alen = A_LEN (&q->heap);
 		if (alen != 0) {
 			s = A (&q->heap, 0);
@@ -99,7 +100,7 @@ static void add_and_wait_mu (string_priority_queue_mu *q,
 	int i;
 	for (i = 0; i != n; i++) {
 		string_priority_queue_mu_add (q, s[i]);
-		nsync_time_sleep (delay);
+		nsync_time_sleep (NSYNC_CLOCK, delay);
 	}
 }
 
@@ -120,7 +121,7 @@ static void a_char_append (a_char *a, const char *str) {
 static void remove_and_print_mu (string_priority_queue_mu *q, nsync_time delay, a_char *output) {
 	const char *s;
 	if ((s = string_priority_queue_mu_remove_with_deadline (q,
-			nsync_time_add (nsync_time_now (), delay))) != NULL) {
+			nsync_time_add (nsync_time_now (NSYNC_CLOCK), delay))) != NULL) {
 		a_char_append (output, s);
 		a_char_append (output, "\n");
 	} else {
@@ -154,7 +155,7 @@ static void example_mu_wait (testing t) {
 					       NELEM (input), input));
 
 	/* delay: "one", "two", "three"; not yet "four" */
-	nsync_time_sleep (nsync_time_ms (1200));
+	nsync_time_sleep (NSYNC_CLOCK, nsync_time_ms (1200));
 
 	remove_and_print_mu (&q, nsync_time_ms (1000), &output);    /* "one" */
 	remove_and_print_mu (&q, nsync_time_ms (1000), &output);    /* "three" (less than "two") */

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/struct/linger.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -42,8 +42,8 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
       return einval();
     const struct timeval *tv = optval;
     int64_t ms = timeval_tomillis(*tv);
-    if (ms >= 0xffffffffu)
-      ms = 0;  // wait forever (default)
+    if (ms > -1u)
+      ms = 0;  // wait forever (default) yes zero actually means this
     if (optname == SO_RCVTIMEO)
       fd->rcvtimeo = ms;
     if (optname == SO_SNDTIMEO)

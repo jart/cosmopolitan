@@ -15,33 +15,12 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/thread.h"
+#include "third_party/nsync/time.h"
 
-struct thd_args {
-	void (*f) (void *);
-	void *arg;
-};
-
-static void *body (void *v) {
-	struct thd_args *args = (struct thd_args *) v;
-	(*args->f) (args->arg);
-	free (args);
-	return (NULL);
-}
-
-void nsync_start_thread_ (void (*f) (void *), void *arg) {
-	struct thd_args *args = (struct thd_args *) malloc (sizeof (*args));
-	pthread_t t;
-	args->f = f;
-	args->arg = arg;
-	errno_t err = pthread_create (&t, NULL, body, args);
-	if (err) {
-		fprintf(stderr, "pthread_create: %s\n", strerror(err));
-		exit(1);
-	}
-	pthread_detach (t);
+/* Return the current time since the epoch.  */
+nsync_time nsync_time_now(int clock) {
+	nsync_time result;
+	if (clock_gettime (clock, &result))
+		__builtin_trap();
+	return result;
 }

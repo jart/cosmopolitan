@@ -20,8 +20,10 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
@@ -37,6 +39,7 @@ static textwindows int sys_clock_nanosleep_nt_impl(int clock,
     if (timespec_cmp(now, abs) >= 0)
       return 0;
     msdelay = timespec_tomillis(timespec_sub(abs, now));
+    msdelay = MIN(msdelay, -1u);
     if (_park_norestart(msdelay, waitmask))
       return -1;
   }
@@ -48,15 +51,17 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
   int rc;
   struct timespec abs, now;
   sigset_t m = __sig_block();
-  if (flags & TIMER_ABSTIME) {
+  if (flags) {
     abs = *req;
   } else {
-    if ((rc = sys_clock_gettime_nt(clock, &now)))
+    if ((rc = sys_clock_gettime_nt(clock, &now))) {
+      rc = _sysret(rc);
       goto BailOut;
+    }
     abs = timespec_add(now, *req);
   }
   rc = sys_clock_nanosleep_nt_impl(clock, abs, m);
-  if (rc == -1 && rem && errno == EINTR) {
+  if (rc == -1 && !flags && rem && errno == EINTR) {
     sys_clock_gettime_nt(clock, &now);
     *rem = timespec_subz(abs, now);
   }

@@ -121,6 +121,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
   unassert(thread);
+  _pthread_ref(pt);
 
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."
@@ -140,6 +141,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
       *value_ptr = pt->pt_rc;
   }
 
+  _pthread_unref(pt);
   STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", tid,
          DescribeReturnValue(alloca(30), err, value_ptr),
          DescribeTimespec(err ? -1 : 0, abstime), DescribeErrno(err));
