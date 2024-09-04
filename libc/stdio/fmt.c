@@ -1125,7 +1125,25 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         }
         break;
       case 'n':
-        *va_arg(va, int *) = *wrote;
+        switch (signbit) {
+          case 7:
+            *va_arg(va, int8_t *) = *wrote;
+            break;
+          case 15:
+            *va_arg(va, int16_t *) = *wrote;
+            break;
+          case 31:
+            *va_arg(va, int32_t *) = *wrote;
+            break;
+          case 63:
+            *va_arg(va, int64_t *) = *wrote;
+            break;
+          case 127:
+            *va_arg(va, int128_t *) = *wrote;
+            break;
+          default:
+            npassert(false);
+        }
         break;
 
       case 'F':
