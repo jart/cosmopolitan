@@ -1,9 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #include "libc/atomic.h"
-#include "libc/intrin/fds.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/macros.h"
 #include "libc/stdbool.h"
 
@@ -25,6 +26,7 @@ uint32_t sys_getuid_nt(void);
 int __ensurefds_unlocked(int);
 void __printfds(struct Fd *, size_t);
 int CountConsoleInputBytes(void);
+int CountConsoleInputBytesBlocking(uint32_t, sigset_t);
 int FlushConsoleInputBytes(void);
 int64_t GetConsoleInputHandle(void);
 int64_t GetConsoleOutputHandle(void);

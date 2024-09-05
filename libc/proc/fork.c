@@ -98,14 +98,14 @@ static int _forker(uint32_t dwCreationFlags) {
   struct timespec started;
   int ax, dx, tid, parent;
   parent = __pid;
-  started = timespec_real();
+  started = timespec_mono();
   _onfork_prepare();
   if (!IsWindows()) {
     ax = sys_fork();
   } else {
     ax = sys_fork_nt(dwCreationFlags);
   }
-  micros = timespec_tomicros(timespec_sub(timespec_real(), started));
+  micros = timespec_tomicros(timespec_sub(timespec_mono(), started));
   if (!ax) {
 
     // get new process id

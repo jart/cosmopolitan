@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-nt.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -58,32 +58,34 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   // kNtEnableLineInput and kNtEnableEchoInput only apply to programs
   // that call ReadFile() or ReadConsole(). since we do not use them,
   // the flags could serve the purpose of inter-process communication
-  if ((inmode & kNtEnableLineInput) || !(__ttyconf.magic & kTtyUncanon)) {
+  if ((inmode & kNtEnableLineInput) || !(__ttyconf.magic & kTtyUncanon))
     tio->c_lflag |= ICANON;
-  }
+
   // kNtEnableEchoInput only works with kNtEnableLineInput enabled.
-  if ((inmode & kNtEnableEchoInput) || !(__ttyconf.magic & kTtySilence)) {
+  if ((inmode & kNtEnableEchoInput) || !(__ttyconf.magic & kTtySilence))
     tio->c_lflag |= ECHO;
-  }
+
   // The Windows console itself always echos control codes as ASCII.
-  if ((inmode & kNtEnableEchoInput) || !(__ttyconf.magic & kTtyEchoRaw)) {
+  if (!(__ttyconf.magic & kTtyEchoRaw))
     tio->c_lflag |= ECHOCTL;
-  }
-  if (!(__ttyconf.magic & kTtyNoCr2Nl)) {
+
+  if (!(__ttyconf.magic & kTtyNoEchoe))
+    tio->c_lflag |= ECHOE;
+  if (!(__ttyconf.magic & kTtyNoEchok))
+    tio->c_lflag |= ECHOK;
+  if (!(__ttyconf.magic & kTtyNoEchoke))
+    tio->c_lflag |= ECHOKE;
+
+  if (!(__ttyconf.magic & kTtyNoCr2Nl))
     tio->c_iflag |= ICRNL;
-  }
-  if (!(__ttyconf.magic & kTtyNoIsigs)) {
+  if (!(__ttyconf.magic & kTtyNoIsigs))
     tio->c_lflag |= ISIG;
-  }
-  if (inmode & kNtEnableProcessedInput) {
+  if (!(__ttyconf.magic & kTtyNoIexten))
     tio->c_lflag |= IEXTEN;
-  }
-  if (outmode & kNtEnableProcessedOutput) {
+  if (outmode & kNtEnableProcessedOutput)
     tio->c_oflag |= OPOST;
-  }
-  if (!(outmode & kNtDisableNewlineAutoReturn)) {
+  if (!(outmode & kNtDisableNewlineAutoReturn))
     tio->c_oflag |= OPOST | ONLCR;
-  }
 
   return 0;
 }

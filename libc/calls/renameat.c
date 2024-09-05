@@ -41,6 +41,7 @@
  * @param newdirfd is normally AT_FDCWD but if it's an open directory
  *     and newpath is relative, then newpath become relative to dirfd
  * @return 0 on success, or -1 w/ errno
+ * @raise EROFS if either path is under /zip/...
  */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
@@ -48,7 +49,7 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
   if (_weaken(__zipos_notat) &&
       ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
        (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
-    STRACE("zipos renameat not supported yet");
+    rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_renameat(olddirfd, oldpath, newdirfd, newpath);
   } else {

@@ -161,12 +161,12 @@ void Connect(void) {
   CHECK_NE(-1,
            (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
   expo = INITIAL_CONNECT_TIMEOUT;
-  deadline = timespec_add(timespec_real(),
+  deadline = timespec_add(timespec_mono(),
                           timespec_fromseconds(MAX_WAIT_CONNECT_SECONDS));
   LOGIFNEG1(sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, 0));
   DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
          ip4[1], ip4[2], ip4[3], g_prog);
-  struct timespec start = timespec_real();
+  struct timespec start = timespec_mono();
 TryAgain:
   alarmed = false;
   LOGIFNEG1(setitimer(
@@ -178,7 +178,7 @@ TryAgain:
   if (rc == -1) {
     if (err == EINTR) {
       expo *= 1.5;
-      if (timespec_cmp(timespec_real(), deadline) >= 0) {
+      if (timespec_cmp(timespec_mono(), deadline) >= 0) {
         FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
                ip4[0], ip4[1], ip4[2], ip4[3],
                ntohs(((struct sockaddr_in *)ai->ai_addr)->sin_port));
@@ -193,7 +193,7 @@ TryAgain:
   }
   setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
   freeaddrinfo(ai);
-  connect_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
+  connect_latency = timespec_tomicros(timespec_sub(timespec_mono(), start));
 }
 
 bool Send(int tmpfd, const void *output, size_t outputsize) {
@@ -309,7 +309,7 @@ bool Recv(char *p, int n) {
 
 int ReadResponse(void) {
   int exitcode;
-  struct timespec start = timespec_real();
+  struct timespec start = timespec_mono();
   for (;;) {
     char msg[5];
     if (!Recv(msg, 5)) {
@@ -354,7 +354,7 @@ int ReadResponse(void) {
       break;
     }
   }
-  execute_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
+  execute_latency = timespec_tomicros(timespec_sub(timespec_mono(), start));
   close(g_sock);
   return exitcode;
 }
@@ -379,9 +379,9 @@ int RunOnHost(char *spec) {
   for (;;) {
     Connect();
     EzFd(g_sock);
-    struct timespec start = timespec_real();
+    struct timespec start = timespec_mono();
     err = EzHandshake2();
-    handshake_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
+    handshake_latency = timespec_tomicros(timespec_sub(timespec_mono(), start));
     if (!err)
       break;
     WARNF("handshake with %s:%d failed -0x%04x (%s)",  //

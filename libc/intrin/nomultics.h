@@ -1,17 +1,21 @@
 #ifndef COSMOPOLITAN_NOMULTICS_H_
 #define COSMOPOLITAN_NOMULTICS_H_
 
-#define kTtySilence 1  /* do not relay read() into write() */
-#define kTtyEchoRaw 2  /* don't ^X visualize control codes */
-#define kTtyUncanon 4  /* enables non-canonical (raw) mode */
-#define kTtyNoCr2Nl 8  /* don't map \r → \n (a.k.a !ICRNL) */
-#define kTtyNoIsigs 16 /* don't auto-raise signals on keys */
-#define kTtyXtMouse 32 /* enables eXtreme Xterm mouse mode */
+#define kTtySilence  1  /* do not relay read() into write() */
+#define kTtyEchoRaw  2  /* don't ^X visualize control codes */
+#define kTtyUncanon  4  /* enables non-canonical (raw) mode */
+#define kTtyNoCr2Nl  8  /* don't map \r → \n (a.k.a !ICRNL) */
+#define kTtyNoIsigs  16 /* don't auto-raise signals on keys */
+#define kTtyXtMouse  32 /* enables eXtreme Xterm mouse mode */
+#define kTtyNoIexten 64 /* disable various canon keystrokes */
+#define kTtyNoEchoe  128
+#define kTtyNoEchok  256
+#define kTtyNoEchoke 512
 
 COSMOPOLITAN_C_START_
 
 struct TtyConf {
-  unsigned char magic;
+  unsigned magic;
   unsigned char mousebs;
   unsigned char replmode;
   unsigned char replstderr;

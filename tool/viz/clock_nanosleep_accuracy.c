@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -26,36 +27,19 @@
 #define MAXIMUM    1e9
 #define ITERATIONS 10
 
-void TestSleepRealRelative(void) {
+void TestSleepRelative(int clock) {
   printf("\n");
-  printf("testing: clock_nanosleep(CLOCK_REALTIME) with relative "
-         "timeout\n");
+  printf("testing: clock_nanosleep(%s) with relative timeout\n",
+         DescribeClockName(clock));
   for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 2) {
     struct timespec t1, t2, wf;
     wf = timespec_fromnanos(nanos);
-    clock_gettime(CLOCK_REALTIME, &t1);
+    if (clock_gettime(clock, &t1))
+      return;
     for (int i = 0; i < ITERATIONS; ++i) {
-      npassert(!clock_nanosleep(CLOCK_REALTIME, 0, &wf, 0));
+      npassert(!clock_nanosleep(clock, 0, &wf, 0));
     }
-    clock_gettime(CLOCK_REALTIME, &t2);
-    long took = timespec_tonanos(timespec_sub(t2, t1)) / ITERATIONS;
-    printf("%,12ld ns sleep took %,12ld ns delta %,12ld ns\n", nanos, took,
-           took - nanos);
-  }
-}
-
-void TestSleepMonoRelative(void) {
-  printf("\n");
-  printf("testing: clock_nanosleep(CLOCK_MONOTONIC) with relative "
-         "timeout\n");
-  for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 2) {
-    struct timespec t1, t2, wf;
-    wf = timespec_fromnanos(nanos);
-    clock_gettime(CLOCK_REALTIME, &t1);
-    for (int i = 0; i < ITERATIONS; ++i) {
-      npassert(!clock_nanosleep(CLOCK_MONOTONIC, 0, &wf, 0));
-    }
-    clock_gettime(CLOCK_REALTIME, &t2);
+    clock_gettime(clock, &t2);
     long took = timespec_tonanos(timespec_sub(t2, t1)) / ITERATIONS;
     printf("%,12ld ns sleep took %,12ld ns delta %,12ld ns\n", nanos, took,
            took - nanos);
@@ -63,6 +47,8 @@ void TestSleepMonoRelative(void) {
 }
 
 int main(int argc, char *argv[]) {
-  TestSleepRealRelative();
-  TestSleepMonoRelative();
+  TestSleepRelative(CLOCK_REALTIME);
+  TestSleepRelative(CLOCK_MONOTONIC);
+  TestSleepRelative(CLOCK_REALTIME_COARSE);
+  TestSleepRelative(CLOCK_MONOTONIC_COARSE);
 }

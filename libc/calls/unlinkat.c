@@ -39,12 +39,13 @@
  * @param path is the thing to delete
  * @param flags can have AT_REMOVEDIR
  * @return 0 on success, or -1 w/ errno
+ * @raise EROFS if either path is under /zip/...
  */
 int unlinkat(int dirfd, const char *path, int flags) {
   int rc;
 
   if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
-    STRACE("zipos unlinkat not supported yet");
+    rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_unlinkat(dirfd, path, flags);
   } else {

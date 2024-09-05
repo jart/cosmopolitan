@@ -79,15 +79,15 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
   bool ok;
   uint64_t millis;
   uint32_t cm, avail, waitfor;
-  struct sys_pollfd_nt pipefds[8];
+  struct sys_pollfd_nt pipefds[64];
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
   int sockindices[ARRAYLEN(sockfds)];
-  struct timespec started, deadline, remain, now;
+  struct timespec deadline, remain, now;
   int i, rc, sn, pn, gotinvals, gotpipes, gotsocks;
 
-  started = timespec_real();
-  deadline = timespec_add(started, timespec_frommillis(ms ? *ms : -1u));
+  waitfor = ms ? *ms : -1u;
+  deadline = timespec_add(timespec_mono(), timespec_frommillis(waitfor));
 
   // do the planning
   // we need to read static variables
@@ -168,16 +168,39 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
           pipefds[i].revents |= POLLERR_;
         }
       } else if (GetConsoleMode(pipefds[i].handle, &cm)) {
-        switch (CountConsoleInputBytes()) {
-          case 0:
-            break;
-          case -1:
-            pipefds[i].revents &= ~POLLWRNORM_;
-            pipefds[i].revents |= POLLHUP_;
-            break;
-          default:
-            pipefds[i].revents |= POLLRDNORM_;
-            break;
+        // some programs like bash like to poll([stdin], 1, -1) so let's
+        // avoid busy looping in such cases. we could generalize this to
+        // always avoid busy loops, but we'd need poll to launch threads
+        if (pn == 1 && sn == 0 && (pipefds[i].events & POLLRDNORM_)) {
+          int err = errno;
+          switch (CountConsoleInputBytesBlocking(waitfor, sigmask)) {
+            case -1:
+              if (errno == EINTR || errno == ECANCELED)
+                return -1;
+              errno = err;
+              pipefds[i].revents &= ~POLLWRNORM_;
+              pipefds[i].revents |= POLLERR_;
+              break;
+            case 0:
+              pipefds[i].revents &= ~POLLWRNORM_;
+              pipefds[i].revents |= POLLHUP_;
+              break;
+            default:
+              pipefds[i].revents |= POLLRDNORM_;
+              break;
+          }
+        } else {
+          switch (CountConsoleInputBytes()) {
+            case 0:
+              break;
+            case -1:
+              pipefds[i].revents &= ~POLLWRNORM_;
+              pipefds[i].revents |= POLLHUP_;
+              break;
+            default:
+              pipefds[i].revents |= POLLRDNORM_;
+              break;
+          }
         }
       } else {
         // we have no way of polling if a non-socket is readable yet
@@ -202,7 +225,7 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
     // check for pending signals, thread cancelation, etc.
     waitfor = 0;
     if (!gotinvals && !gotsocks && !gotpipes) {
-      now = timespec_real();
+      now = timespec_mono();
       if (timespec_cmp(now, deadline) < 0) {
         remain = timespec_sub(deadline, now);
         millis = timespec_tomillis(remain);
@@ -211,7 +234,7 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
         if (waitfor) {
           POLLTRACE("poll() sleeping for %'d out of %'lu ms", waitfor,
                     timespec_tomillis(remain));
-          if ((rc = _park_norestart(waitfor, sigmask)) == -1)
+          if (_park_norestart(waitfor, sigmask) == -1)
             return -1;  // eintr, ecanceled, etc.
         }
       }

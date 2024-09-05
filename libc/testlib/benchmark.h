@@ -6,14 +6,14 @@ COSMOPOLITAN_C_START_
 
 #define BENCHMARK(ITERATIONS, WORK_PER_RUN, CODE)                             \
   do {                                                                        \
-    struct timespec start = timespec_real();                                  \
+    struct timespec start = timespec_mono();                                  \
     for (int __i = 0; __i < ITERATIONS; ++__i) {                              \
       asm volatile("" ::: "memory");                                          \
       CODE;                                                                   \
     }                                                                         \
     long long work = ((WORK_PER_RUN) ? (WORK_PER_RUN) : 1) * (ITERATIONS);    \
     double nanos =                                                            \
-        (timespec_tonanos(timespec_sub(timespec_real(), start)) + work - 1) / \
+        (timespec_tonanos(timespec_sub(timespec_mono(), start)) + work - 1) / \
         (double)work;                                                         \
     if (nanos < 1000) {                                                       \
       printf("%10g ns %2dx %s\n", nanos, (ITERATIONS), #CODE);                \

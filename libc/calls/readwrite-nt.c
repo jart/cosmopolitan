@@ -86,9 +86,8 @@ RestartOperation:
       __cursor_unlock(f->cursor);
     return -1;  // ECANCELED
   }
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask)))
     goto HandleInterrupt;
-  }
 
   // signals have already been fully blocked by caller
   // perform i/o operation with atomic signal/cancel checking

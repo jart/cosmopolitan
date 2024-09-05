@@ -34,6 +34,7 @@
  *
  * @param flags can have AT_EMPTY_PATH or AT_SYMLINK_NOFOLLOW
  * @return 0 on success, or -1 w/ errno
+ * @raise EROFS if either path is under /zip/...
  * @asyncsignalsafe
  */
 int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
@@ -42,7 +43,7 @@ int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
   if (_weaken(__zipos_notat) &&
       ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
        (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
-    STRACE("zipos fchownat not supported yet");
+    rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);
   } else {

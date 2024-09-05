@@ -74,17 +74,14 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
 
     // check for signals and cancelation
     int sig, handler_was_called;
-    if (_check_cancel() == -1) {
+    if (_check_cancel() == -1)
       return -1;
-    }
     if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
       handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-      if (_check_cancel() == -1) {
+      if (_check_cancel() == -1)
         return -1;  // ECANCELED because SIGTHR was just handled
-      }
-      if (handler_was_called & SIG_HANDLED_NO_RESTART) {
+      if (handler_was_called & SIG_HANDLED_NO_RESTART)
         return eintr();  // a non-SA_RESTART handler was called
-      }
     }
 
     // check for zombie to harvest

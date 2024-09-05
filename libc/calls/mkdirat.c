@@ -53,7 +53,7 @@
 int mkdirat(int dirfd, const char *path, unsigned mode) {
   int rc;
   if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
-    STRACE("zipos mkdirat not supported yet");
+    rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_mkdirat(dirfd, path, mode);
   } else {

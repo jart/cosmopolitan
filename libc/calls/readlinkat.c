@@ -57,6 +57,7 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   } else if (_weaken(__zipos_notat) &&
              (bytes = __zipos_notat(dirfd, path)) == -1) {
     STRACE("TODO: zipos support for readlinkat");
+    bytes = einval();
   } else if (!IsWindows()) {
     bytes = sys_readlinkat(dirfd, path, buf, bufsiz);
   } else {

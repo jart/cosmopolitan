@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/ttydefaults.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -61,40 +61,50 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
     inmode &= ~kNtEnableQuickEditMode;
     __ttyconf.magic |= kTtyUncanon;
   }
-  if (!(tio->c_iflag & ICRNL)) {
+  if (!(tio->c_iflag & ICRNL))
     __ttyconf.magic |= kTtyNoCr2Nl;
-  }
-  if (!(tio->c_lflag & ECHOCTL)) {
+
+  if (!(tio->c_lflag & ECHOE))
+    __ttyconf.magic |= kTtyNoEchoe;
+  if (!(tio->c_lflag & ECHOK))
+    __ttyconf.magic |= kTtyNoEchok;
+  if (!(tio->c_lflag & ECHOKE))
+    __ttyconf.magic |= kTtyNoEchoke;
+  if (!(tio->c_lflag & ECHOCTL))
     __ttyconf.magic |= kTtyEchoRaw;
-  }
+
   if (tio->c_lflag & ECHO) {
     // "kNtEnableEchoInput can be used only if the
     //  kNtEnableLineInput mode is also enabled." -MSDN
-    if (tio->c_lflag & ICANON) {
+    if (tio->c_lflag & ICANON)
       inmode |= kNtEnableEchoInput;
-    }
   } else {
     __ttyconf.magic |= kTtySilence;
   }
-  if (!(tio->c_lflag & ISIG)) {
+
+  if (!(tio->c_lflag & ISIG))
     __ttyconf.magic |= kTtyNoIsigs;
-  }
+
+  // IEXTEN enables implementation-defined input processing. This flag,
+  // as well as ICANON must be enabled for the special characters EOL2,
+  // LNEXT, REPRINT, WERASE to be interpreted.
+  if (!(tio->c_lflag & IEXTEN))
+    __ttyconf.magic |= kTtyNoIexten;
+
   memcpy(__ttyconf.c_cc, tio->c_cc, NCCS);
-  if ((tio->c_lflag & ISIG) &&     //
-      !(tio->c_lflag & ICANON) &&  //
-      __ttyconf.vintr == CTRL('C')) {
+
+  if ((tio->c_lflag & ISIG) && __ttyconf.vintr == CTRL('C'))
     // allows ctrl-c to be delivered asynchronously via win32
     // we normally don't want win32 doing this 24/7 in the bg
     // because we don't have job control, tcsetpgrp, etc. yet
     // it's normally much better to let read-nt.c raise a sig
-    // because read-nt only manages your tty whilst it's used
+    // because read-nt only manages your tty while it is used
     inmode |= kNtEnableProcessedInput;
-  }
+
   outmode &= ~kNtDisableNewlineAutoReturn;
   outmode |= kNtEnableProcessedOutput;
-  if (!(tio->c_oflag & ONLCR)) {
+  if (!(tio->c_oflag & ONLCR))
     outmode |= kNtDisableNewlineAutoReturn;
-  }
   outmode |= kNtEnableVirtualTerminalProcessing;
 
   // tune the win32 configuration

@@ -34,9 +34,8 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   int sig, handler_was_called;
   if (_check_cancel() == -1)
     return -1;
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask)))
     goto HandleSignal;
-  }
   int expect = 0;
   atomic_int futex = 0;
   struct PosixThread *pt = _pthread_self();
@@ -49,9 +48,11 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
     handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
     if (_check_cancel() == -1)
       return -1;
-    if (!restartable || (handler_was_called & SIG_HANDLED_NO_RESTART)) {
+    if (handler_was_called & SIG_HANDLED_NO_RESTART)
       return eintr();
-    }
+    if (handler_was_called & SIG_HANDLED_SA_RESTART)
+      if (!restartable)
+        return eintr();
   }
   return 0;
 }
