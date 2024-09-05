@@ -26,6 +26,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/time.h"
+#ifdef __x86_64__
 
 #define _CLOCK_REALTIME           0
 #define _CLOCK_MONOTONIC          1
@@ -112,3 +113,5 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
       return -EINVAL;
   }
 }
+
+#endif  // __x86_64__

@@ -34,7 +34,6 @@
 #include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.h"
-#include "libc/intrin/safemacros.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.h"
@@ -873,7 +872,8 @@ RestartOperation:
       now = timespec_mono();
       if (timespec_cmp(now, deadline) >= 0)
         return etimedout();
-      ms = min(-1u, timespec_tomillis(timespec_sub(deadline, now)));
+      ms = timespec_tomillis(timespec_sub(deadline, now));
+      ms = ms > -1u ? -1u : ms;
       goto RestartOperation;
     }
     return got;

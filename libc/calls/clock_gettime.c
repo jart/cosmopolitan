@@ -40,9 +40,9 @@ static clock_gettime_f *__clock_gettime_get(void) {
     return cgt;
   } else if (__syslib) {
     return (void *)__syslib->__clock_gettime;
+#ifdef __x86_64__
   } else if (IsWindows()) {
     return sys_clock_gettime_nt;
-#ifdef __x86_64__
   } else if (IsXnu()) {
     return sys_clock_gettime_xnu;
 #endif
