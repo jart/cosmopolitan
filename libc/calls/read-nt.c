@@ -901,6 +901,11 @@ RestartOperation:
 }
 
 textwindows int CountConsoleInputBytesBlocking(uint32_t ms, sigset_t waitmask) {
+  int got = CountConsoleInputBytes();
+  if (got == -1)
+    return 0;
+  if (got > 0)
+    return got;
   uint32_t inmode = DisableProcessedInput();
   int rc = CountConsoleInputBytesBlockingImpl(ms, waitmask, false);
   RestoreProcessedInput(inmode);
