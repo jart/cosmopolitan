@@ -16,6 +16,7 @@ TOOL_VIZ_BINS =						\
 	$(TOOL_VIZ_COMS:%=%.dbg)
 
 TOOL_VIZ_DIRECTDEPS =					\
+	DSP_AUDIO					\
 	DSP_CORE					\
 	DSP_MPEG					\
 	DSP_SCALE					\

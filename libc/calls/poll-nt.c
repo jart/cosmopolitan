@@ -171,7 +171,7 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
         // some programs like bash like to poll([stdin], 1, -1) so let's
         // avoid busy looping in such cases. we could generalize this to
         // always avoid busy loops, but we'd need poll to launch threads
-        if (pn == 1 && sn == 0 && (pipefds[i].events & POLLRDNORM_)) {
+        if (0 && pn == 1 && sn == 0 && (pipefds[i].events & POLLRDNORM_)) {
           int err = errno;
           switch (CountConsoleInputBytesBlocking(waitfor, sigmask)) {
             case -1:

@@ -278,6 +278,7 @@ include libc/x/BUILD.mk				# │
 include dsp/scale/BUILD.mk			# │
 include dsp/mpeg/BUILD.mk			# │
 include dsp/tty/BUILD.mk			# │
+include dsp/audio/BUILD.mk			# │
 include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │
@@ -439,6 +440,7 @@ COSMOPOLITAN_OBJECTS =			\
 	THIRD_PARTY_OPENMP		\
 	TOOL_ARGS			\
 	NET_HTTP			\
+	DSP_AUDIO			\
 	LIBC_SOCK			\
 	LIBC_NT_WS2_32			\
 	LIBC_NT_IPHLPAPI		\

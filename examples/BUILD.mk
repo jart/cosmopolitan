@@ -40,6 +40,7 @@ EXAMPLES_BINS =							\
 
 EXAMPLES_DIRECTDEPS =						\
 	CTL							\
+	DSP_AUDIO						\
 	DSP_CORE						\
 	DSP_SCALE						\
 	DSP_TTY							\

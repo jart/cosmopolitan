@@ -1,0 +1,86 @@
+# Makefile for MSVC x64 Command Line Developer Tools
+#
+#     nmake /f Makefile.msvc check
+#     nmake /f Makefile.msvc MODE=debug check
+#
+
+# Compiler and linker
+CC=cl
+LINK=link
+
+# Build mode (can be overridden from command line)
+!IFNDEF MODE
+MODE=release
+!ENDIF
+
+# Library dependencies.
+TEST_LIBS=OneCore.lib
+
+# Compiler flags
+CFLAGS_COMMON=/nologo /W4 /Gy /EHsc
+CFLAGS_DEBUG=/Od /Zi /MDd /D_DEBUG
+CFLAGS_RELEASE=/O2 /MD /DNDEBUG
+
+!IF "$(MODE)"=="debug"
+CFLAGS=$(CFLAGS_COMMON) $(CFLAGS_DEBUG)
+LDFLAGS=/DEBUG
+OUT_DIR=Debug
+!ELSE
+CFLAGS=$(CFLAGS_COMMON) $(CFLAGS_RELEASE) /GL
+LDFLAGS=/RELEASE /OPT:REF /OPT:ICF /LTCG /INCREMENTAL:NO
+OUT_DIR=Release
+!ENDIF
+
+# Additional flags for DLL
+DLL_CFLAGS=$(CFLAGS) /D_USRDLL /D_WINDLL
+
+# Linker flags
+LDFLAGS=/NOLOGO /SUBSYSTEM:CONSOLE $(LDFLAGS)
+
+# Output file names
+DLL_TARGET=$(OUT_DIR)\cosmoaudio.dll
+TEST_TARGET=$(OUT_DIR)\test.exe
+
+# Source files
+DLL_SOURCES=cosmoaudio.c
+TEST_SOURCES=test.c
+
+# Object files
+DLL_OBJECTS=$(OUT_DIR)\cosmoaudio.obj
+TEST_OBJECTS=$(OUT_DIR)\test.obj
+
+# Default target
+all: $(OUT_DIR) $(DLL_TARGET) $(TEST_TARGET)
+
+# Create output directory
+$(OUT_DIR):
+    if not exist $(OUT_DIR) mkdir $(OUT_DIR)
+
+# Rule to build the DLL
+$(DLL_TARGET): $(OUT_DIR) $(DLL_OBJECTS)
+    $(LINK) /DLL $(LDFLAGS) /OUT:$(DLL_TARGET) $(DLL_OBJECTS)
+
+# Rule to build the test program
+$(TEST_TARGET): $(OUT_DIR) $(TEST_OBJECTS) $(DLL_TARGET)
+    $(LINK) $(LDFLAGS) /OUT:$(TEST_TARGET) $(TEST_OBJECTS) $(DLL_TARGET:.dll=.lib) $(TEST_LIBS)
+
+# Rules to compile .c files to .obj files with header dependencies
+{.}.c{$(OUT_DIR)}.obj:
+    $(CC) $(DLL_CFLAGS) /c /Fo$(OUT_DIR)\ $<
+
+$(OUT_DIR)\test.obj: $(OUT_DIR) test.c cosmoaudio.h
+    $(CC) $(CFLAGS) /c /Fo$(OUT_DIR)\ test.c
+
+$(OUT_DIR)\cosmoaudio.obj: $(OUT_DIR) cosmoaudio.c miniaudio.h cosmoaudio.h
+    $(CC) $(DLL_CFLAGS) /c /Fo$(OUT_DIR)\ cosmoaudio.c
+
+# Clean target
+clean:
+    if exist $(OUT_DIR) rmdir /s /q $(OUT_DIR)
+
+# Run tests (now called 'check')
+check: $(TEST_TARGET)
+    $(TEST_TARGET)
+
+# Phony targets
+.PHONY: all clean check

@@ -18,6 +18,7 @@ libc/isystem/byteswap.h \
 libc/isystem/clzerointrin.h \
 libc/isystem/complex.h \
 libc/isystem/cosmo.h \
+libc/isystem/cosmoaudio.h \
 libc/isystem/cpio.h \
 libc/isystem/cpuid.h \
 libc/isystem/crypt.h \
