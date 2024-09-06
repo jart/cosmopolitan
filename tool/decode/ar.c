@@ -110,9 +110,8 @@ static void Print(void) {
   printf("\n");
   printf("\t.long\t%-*.u# %s\n", 35, entries, "symbol table entries");
   table = 8 + 60 + 4;
-  for (i = 0; i < entries; ++i) {
+  for (i = 0; i < entries; ++i)
     printf("\t.long\t%#-*.x# %u\n", 35, READ32BE(data + table + i * 4), i);
-  }
   symbols = table + entries * 4;
   symbolslen = arsize - (entries + 1) * 4;
   for (i = o = 0; o < symbolslen; ++i, o += n + 1) {
