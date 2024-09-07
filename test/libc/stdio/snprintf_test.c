@@ -43,27 +43,27 @@ TEST(snprintf, testInf) {
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
 
-  memset(buf, 0, 4);
+  memset(buf, '\0', 4);
   i = snprintf(buf, sizeof(buf), "%Lf", 1.0L / 0.0L);
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
 
-  memset(buf, 0, 4);
+  memset(buf, '\0', 4);
   i = snprintf(buf, sizeof(buf), "%e", 1.0 / 0.0);
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
 
-  memset(buf, 0, 4);
+  memset(buf, '\0', 4);
   i = snprintf(buf, sizeof(buf), "%Le", 1.0L / 0.0L);
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
 
-  memset(buf, 0, 4);
+  memset(buf, '\0', 4);
   i = snprintf(buf, sizeof(buf), "%g", 1.0 / 0.0);
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
 
-  memset(buf, 0, 4);
+  memset(buf, '\0', 4);
   i = snprintf(buf, sizeof(buf), "%Lg", 1.0L / 0.0L);
   ASSERT_EQ(i, 3);
   ASSERT_STREQ(buf, "inf");
@@ -100,4 +100,88 @@ TEST(snprintf,
                L'x', 1);
   ASSERT_EQ(i, 10);
   ASSERT_STREQ(buf, "00000000x1");
+}
+
+static void check_n_buffer_contents(char buf[350]) {
+  for (int i = 0; i < 284; ++i)
+    ASSERT_EQ(buf[i], ' ');
+  ASSERT_STREQ(&buf[284], "428463");
+  for (int i = 290; i < 350; ++i)
+    ASSERT_EQ(buf[i], '\0');
+}
+
+TEST(snprintf, testNConversionSpecifier) {
+  char buf[350] = {};
+
+  int n_res_int = -1;
+  int i = snprintf(buf, sizeof(buf), "%286d%d%n%d", 42, 84, &n_res_int, 63);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_int, 288);
+
+  memset(&buf, '\0', sizeof(buf));
+  long n_res_long = -1;
+  i = snprintf(buf, sizeof(buf), "%286ld%ld%ln%ld", 42L, 84L, &n_res_long, 63L);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_long, 288);
+
+  memset(&buf, '\0', sizeof(buf));
+  long long n_res_long_long = -1;
+  i = snprintf(buf, sizeof(buf), "%286lld%lld%lln%lld", 42LL, 84LL,
+               &n_res_long_long, 63LL);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_long_long, 288);
+
+  ASSERT_EQ(sizeof(short), 2);
+  ASSERT_EQ(sizeof(int), 4);
+  memset(&buf, '\0', sizeof(buf));
+  short n_res_short = -1;
+  i = snprintf(buf, sizeof(buf), "%286hd%hd%hn%hd", (42 | 0xFFFF0000),
+               (84 | 0xFFFF0000), &n_res_short, (63 | 0xFFFF0000));
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_short, 288);
+
+  ASSERT_EQ(sizeof(unsigned char), 1);
+  memset(&buf, '\0', sizeof(buf));
+  signed char n_res_char = -1;
+  i = snprintf(buf, sizeof(buf), "%286hhd%hhd%hhn%hhd", (42 | 0xFFFFFF00),
+               (84 | 0xFFFFFF00), &n_res_char, (63 | 0xFFFFFF00));
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_char, (signed char)288);
+
+  memset(&buf, '\0', sizeof(buf));
+  ssize_t n_res_size_t = -1;
+  i = snprintf(buf, sizeof(buf), "%286zd%zd%zn%zd", (ssize_t)42, (ssize_t)84,
+               &n_res_size_t, (ssize_t)63);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_size_t, 288);
+
+  memset(&buf, '\0', sizeof(buf));
+  intmax_t n_res_intmax_t = -1;
+  i = snprintf(buf, sizeof(buf), "%286jd%jd%jn%jd", (intmax_t)42, (intmax_t)84,
+               &n_res_intmax_t, (intmax_t)63);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_intmax_t, 288);
+
+  memset(&buf, '\0', sizeof(buf));
+  int128_t n_res_int128_t = -1;
+  i = snprintf(buf, sizeof(buf), "%286jjd%jjd%jjn%jjd", (int128_t)42,
+               (int128_t)84, &n_res_int128_t, (int128_t)63);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_int128_t, 288);
+
+  memset(&buf, '\0', sizeof(buf));
+  ptrdiff_t n_res_ptrdiff_t = -1;
+  i = snprintf(buf, sizeof(buf), "%286td%td%tn%td", (ptrdiff_t)42,
+               (ptrdiff_t)84, &n_res_ptrdiff_t, (ptrdiff_t)63);
+  ASSERT_EQ(i, 290);
+  check_n_buffer_contents(buf);
+  ASSERT_EQ(n_res_ptrdiff_t, 288);
 }
