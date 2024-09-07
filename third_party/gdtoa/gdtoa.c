@@ -293,7 +293,9 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	else if ( (rdir = fpi->rounding - 1) !=0) {
 		if (rdir < 0)
 			rdir = 2;
-		if (kind & STRTOG_Neg)
+		// note that we check for fpi->rounding == 0 as in that case we
+		// must *always* round towards 0, i.e. downwards, with rdir = 2
+		if (kind & STRTOG_Neg && fpi->rounding != 0)
 			rdir = 3 - rdir;
 	}
 	/* Now rdir = 0 ==> round near, 1 ==> round up, 2 ==> round down. */

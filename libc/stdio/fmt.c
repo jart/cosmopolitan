@@ -53,6 +53,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/mem/reverse.internal.h"
+#include "libc/runtime/fenv.h"
 #include "libc/runtime/internal.h"
 #include "libc/serialize.h"
 #include "libc/str/str.h"
@@ -90,7 +91,7 @@
 
 struct FPBits {
   uint32_t bits[4];
-  const FPI *fpi;
+  FPI fpi;
   int sign;
   int ex;  // exponent
   int kind;
@@ -563,7 +564,13 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
 
 static void __fmt_dfpbits(union U *u, struct FPBits *b) {
   int ex, i;
-  b->fpi = &kFpiDbl;
+  b->fpi = kFpiDbl;
+  // Uncomment this if needed in the future - we currently do not need it, as
+  // the only reason we need it in __fmt_ldfpbits is because gdtoa reads
+  // fpi.rounding to determine rounding (which dtoa does not need as it directly
+  // reads FLT_ROUNDS)
+  // if (FLT_ROUNDS != -1)
+  //   b->fpi.rounding = FLT_ROUNDS;
   b->sign = u->ui[1] & 0x80000000L;
   b->bits[1] = u->ui[1] & 0xfffff;
   b->bits[0] = u->ui[0];
@@ -582,6 +589,7 @@ static void __fmt_dfpbits(union U *u, struct FPBits *b) {
   } else {
     i = STRTOG_Zero;
   }
+  i |= signbit(u->d) ? STRTOG_Neg : 0;
   b->kind = i;
   b->ex = ex - (0x3ff + 52);
 }
@@ -607,7 +615,11 @@ static void __fmt_ldfpbits(union U *u, struct FPBits *b) {
 #else
 #error "unsupported architecture"
 #endif
-  b->fpi = &kFpiLdbl;
+  b->fpi = kFpiLdbl;
+  // gdtoa doesn't check for FLT_ROUNDS but for fpi.rounding (which has the
+  // same valid values as FLT_ROUNDS), so handle this here
+  if (FLT_ROUNDS != -1)
+    b->fpi.rounding = FLT_ROUNDS;
   b->sign = sex & 0x8000;
   if ((ex = sex & 0x7fff) != 0) {
     if (ex != 0x7fff) {
@@ -626,6 +638,7 @@ static void __fmt_ldfpbits(union U *u, struct FPBits *b) {
   } else {
     i = STRTOG_Zero;
   }
+  i |= signbit(u->ld) ? STRTOG_Neg : 0;
   b->kind = i;
   b->ex = ex - (0x3fff + (LDBL_MANT_DIG - 1));
 #endif
@@ -636,9 +649,9 @@ static int __fmt_fpiprec(struct FPBits *b) {
   const FPI *fpi;
   int i, j, k, m;
   uint32_t *bits;
-  if (b->kind == STRTOG_Zero)
+  if ((b->kind & STRTOG_Retmask) == STRTOG_Zero)
     return (b->ex = 0);
-  fpi = b->fpi;
+  fpi = &b->fpi;
   bits = b->bits;
   for (k = (fpi->nbits - 1) >> 2; k > 0; --k) {
     if ((bits[k >> 3] >> 4 * (k & 7)) & 0xf) {
@@ -1163,8 +1176,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         } else {
           un.ld = va_arg(va, long double);
           __fmt_ldfpbits(&un, &fpb);
-          s = s0 =
-              gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
+          s = s0 = gdtoa(&fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt,
+                         &se);
         }
         if (s0 == NULL)
           return -1;
@@ -1181,7 +1194,10 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           } else if (flags & FLAGS_SPACE) {
             *q++ = ' ';
           }
-          memcpy(q, kSpecialFloats[fpb.kind == STRTOG_NaN][d >= 'a'], 4);
+          memcpy(q,
+                 kSpecialFloats[(fpb.kind & STRTOG_Retmask) == STRTOG_NaN]
+                               [d >= 'a'],
+                 4);
           flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_HASH | FLAGS_SPACE);
           prec = 0;
           rc = __fmt_stoa(out, arg, s, flags, prec, width, signbit, qchar);
@@ -1278,7 +1294,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         } else {
           un.ld = va_arg(va, long double);
           __fmt_ldfpbits(&un, &fpb);
-          s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
+          s = s0 = gdtoa(&fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
         }
         if (s0 == NULL)
@@ -1326,8 +1342,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         } else {
           un.ld = va_arg(va, long double);
           __fmt_ldfpbits(&un, &fpb);
-          s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
-                         prec, &decpt, &se);
+          s = s0 = gdtoa(&fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
+                         prec + 1, &decpt, &se);
         }
         if (s0 == NULL)
           return -1;
@@ -1411,7 +1427,8 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
           un.d = va_arg(va, double);
           __fmt_dfpbits(&un, &fpb);
         }
-        if (fpb.kind == STRTOG_Infinite || fpb.kind == STRTOG_NaN) {
+        if ((fpb.kind & STRTOG_Retmask) == STRTOG_Infinite ||
+            (fpb.kind & STRTOG_Retmask) == STRTOG_NaN) {
           s0 = 0;
           goto FormatDecpt9999Or32768;
         }
@@ -1429,7 +1446,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
             i1 /= 10;
           }
         }
-        if (fpb.sign /* && (sign || fpb.kind != STRTOG_Zero) */) {
+        if (fpb.sign /* && (sign || (fpb.kind & STRTOG_Retmask) != STRTOG_Zero) */) {
           sign = '-';
         }
         if ((width -= bw + 5) > 0) {
