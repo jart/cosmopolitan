@@ -25,18 +25,13 @@ DSP_MPEG_A_CHECKS =				\
 
 DSP_MPEG_A_DIRECTDEPS =				\
 	LIBC_CALLS				\
-	LIBC_FMT				\
 	LIBC_INTRIN				\
-	LIBC_LOG				\
-	LIBC_LOG				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
-	LIBC_RUNTIME				\
 	LIBC_STDIO				\
 	LIBC_STR				\
-	LIBC_SYSV				\
 	LIBC_TINYMATH				\
-	THIRD_PARTY_COMPILER_RT
+	THIRD_PARTY_COMPILER_RT			\
 
 DSP_MPEG_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_MPEG_A_DIRECTDEPS),$($(x))))
@@ -49,9 +44,10 @@ $(DSP_MPEG_A).pkg:				\
 		$(DSP_MPEG_A_OBJS)		\
 		$(foreach x,$(DSP_MPEG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/dsp/mpeg/clamp4int256-k8.o: private	\
+o/$(MODE)/dsp/mpeg/pl_mpeg.o: private		\
 		CFLAGS +=			\
-			-Os
+			-ffunction-sections	\
+			-fdata-sections
 
 DSP_MPEG_LIBS = $(foreach x,$(DSP_MPEG_ARTIFACTS),$($(x)))
 DSP_MPEG_SRCS = $(foreach x,$(DSP_MPEG_ARTIFACTS),$($(x)_SRCS))

@@ -30,7 +30,6 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"

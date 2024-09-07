@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
-#include "dsp/mpeg/video.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"

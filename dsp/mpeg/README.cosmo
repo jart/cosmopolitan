@@ -1,0 +1,17 @@
+DESCRIPTION
+
+  pl_mpeg lets you decode .mpg files
+
+ORIGIN
+
+  https://github.com/phoboslab/pl_mpeg/
+  9e40dd6536269d788728e32c39bfacf2ab7a0866
+
+LICENSE
+
+  MIT
+
+LOCAL CHANGES
+
+  - Added API for extracting pixel aspect ratio
+    https://github.com/phoboslab/pl_mpeg/pull/42

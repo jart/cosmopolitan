@@ -20,7 +20,7 @@
 #include "dsp/core/core.h"
 #include "dsp/core/half.h"
 #include "dsp/core/illumination.h"
-#include "dsp/mpeg/mpeg.h"
+#include "dsp/mpeg/pl_mpeg.h"
 #include "dsp/scale/scale.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
@@ -239,7 +239,7 @@ static const struct NamedVector kLightings[] = {
 
 static plm_t *plm_;
 static float gamma_;
-static int volscale_;
+static float volscale_;
 struct CosmoAudio *ca_;
 static enum Blur blur_;
 static enum Sharp sharp_;
@@ -425,6 +425,9 @@ static bool OpenSpeaker(void) {
 static void OnAudio(plm_t *mpeg, plm_samples_t *samples, void *user) {
   if (!ca_)
     return;
+  if (volscale_ != 1.f)
+    for (unsigned i = 0; i < samples->count * chans_; ++i)
+      samples->interleaved[i] *= volscale_;
   cosmoaudio_write(ca_, samples->interleaved, samples->count);
 }
 
@@ -752,9 +755,9 @@ static void OpenVideo(void) {
   FormatInt64(chansstr_, (chans_ = 2));
   FormatInt64(sratestr_, (srate_ = plm_get_samplerate(plm_)));
   if (plm_get_num_audio_streams(plm_) && OpenSpeaker()) {
-    plm_set_audio_enabled(plm_, true, 0);
+    plm_set_audio_enabled(plm_, true);
   } else {
-    plm_set_audio_enabled(plm_, false, 0);
+    plm_set_audio_enabled(plm_, false);
   }
   g2_ = g1_ = resizegraphic(&graphic_[0], yn, xn);
 }
@@ -942,10 +945,10 @@ static optimizesize void ReadKeyboard(void) {
               case '[':
                 switch (b[i++]) {
                   case 'A': /* "\e[A" is up arrow */
-                    ++volscale_;
+                    volscale_ *= 1.05f;
                     break;
                   case 'B': /* "\e[B" is down arrow */
-                    --volscale_;
+                    volscale_ *= 0.95f;
                     break;
                   case 'C': /* "\e[C" is right arrow */
                     break;
@@ -1405,7 +1408,7 @@ int main(int argc, char *argv[]) {
   sigset_t wut;
   ShowCrashReports();
   gamma_ = 2.4;
-  volscale_ -= 2;
+  volscale_ = 1.f;
   dither_ = true;
   sigemptyset(&wut);
   sigaddset(&wut, SIGCHLD);

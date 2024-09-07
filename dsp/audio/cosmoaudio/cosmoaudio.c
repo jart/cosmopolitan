@@ -178,6 +178,7 @@ COSMOAUDIO_ABI int cosmoaudio_open(struct CosmoAudio** cap, int sampleRate,
 COSMOAUDIO_ABI int cosmoaudio_close(struct CosmoAudio* ca) {
   ma_device_uninit(&ca->device);
   ma_pcm_rb_uninit(&ca->output);
+  ma_pcm_rb_uninit(&ca->input);
   free(ca);
   return COSMOAUDIO_SUCCESS;
 }
@@ -221,15 +222,7 @@ COSMOAUDIO_ABI int cosmoaudio_write(struct CosmoAudio* ca, const float* data,
  */
 COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio* ca, float* data,
                                    int frames) {
-  int read;
-  for (int i = 0; i < frames; i += read) {
-    int remaining = frames - i;
-    read = read_ring_buffer(&ca->input, data + i * ca->channels, remaining,
-                            ca->channels);
-    if (read < 0)
-      return read;
-  }
-  return frames;
+  return read_ring_buffer(&ca->input, data, frames, ca->channels);
 }
 
 #ifdef _MSC_VER

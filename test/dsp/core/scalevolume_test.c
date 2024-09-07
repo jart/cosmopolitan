@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
-#include "dsp/mpeg/mpeg.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"

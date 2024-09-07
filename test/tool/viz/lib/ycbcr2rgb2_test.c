@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/mpeg/mpeg.h"
 #include "libc/macros.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
