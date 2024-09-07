@@ -3216,7 +3216,7 @@ int plm_video_decode_motion_vector(plm_video_t *self, int r_size, int motion) {
 	if (motion > (fscale << 4) - 1) {
 		motion -= fscale << 5;
 	}
-	else if (motion < ((-fscale) << 4)) {
+	else if (motion < (int)((unsigned)(-fscale) << 4)) {  // [jart]
 		motion += fscale << 5;
 	}
 
@@ -3404,7 +3404,7 @@ void plm_video_decode_block(plm_video_t *self, int block) {
 		n++;
 
 		// Dequantize, oddify, clip
-		level <<= 1;
+		level = (unsigned)level << 1;  // [jart]
 		if (!self->macroblock_intra) {
 			level += (level < 0 ? -1 : 1);
 		}

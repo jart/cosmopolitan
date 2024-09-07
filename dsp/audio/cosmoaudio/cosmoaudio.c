@@ -1,3 +1,18 @@
+// Copyright 2024 Justine Alexandra Roberts Tunney
+//
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that the
+// above copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+// DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+// PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+// TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
+
 #define COSMOAUDIO_BUILD
 #include "cosmoaudio.h"
 #include <stdio.h>
@@ -7,6 +22,10 @@
 #define MA_STATIC
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
+#define MA_NO_ENGINE
+#define MA_NO_GENERATION
+#define MA_NO_NODE_GRAPH
+#define MA_NO_RESOURCE_MANAGER
 #ifdef NDEBUG
 #define MA_DR_MP3_NO_STDIO
 #endif
@@ -25,6 +44,10 @@ struct CosmoAudio {
   ma_pcm_rb output;
   ma_uint32 sampleRate;
   ma_uint32 channels;
+  ma_uint32 periods;
+  enum CosmoAudioDeviceType deviceType;
+  cosmoaudio_data_callback_f* dataCallback;
+  void* argument;
 };
 
 static int read_ring_buffer(ma_pcm_rb* rb, float* pOutput, ma_uint32 frameCount,
@@ -88,8 +111,15 @@ static int write_ring_buffer(ma_pcm_rb* rb, const float* pInput,
 static void data_callback_f32(ma_device* pDevice, float* pOutput,
                               const float* pInput, ma_uint32 frameCount) {
   struct CosmoAudio* ca = (struct CosmoAudio*)pDevice->pUserData;
-  read_ring_buffer(&ca->output, pOutput, frameCount, ca->channels);
-  write_ring_buffer(&ca->input, pInput, frameCount, ca->channels);
+  if (ca->dataCallback) {
+    ca->dataCallback(ca, pOutput, pInput, frameCount, ca->channels,
+                     ca->argument);
+  } else {
+    if (ca->deviceType & kCosmoAudioDeviceTypePlayback)
+      read_ring_buffer(&ca->output, pOutput, frameCount, ca->channels);
+    if (ca->deviceType & kCosmoAudioDeviceTypeCapture)
+      write_ring_buffer(&ca->input, pInput, frameCount, ca->channels);
+  }
 }
 
 static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
@@ -98,33 +128,71 @@ static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
 }
 
 /**
+ * Returns current version of cosmo audio library.
+ */
+COSMOAUDIO_ABI int cosmoaudio_version(void) {
+  return 1;
+}
+
+/**
  * Opens access to speaker and microphone.
  *
- * @param cap will receive pointer to allocated CosmoAudio object on success,
- *     which must be freed by caller with cosmoaudio_close()
- * @param sampleRate is sample rate in Hz, e.g. 44100
- * @param channels is number of channels (1 for mono, 2 for stereo)
+ * @param out_ca will receive pointer to allocated CosmoAudio object,
+ *     which must be freed by caller with cosmoaudio_close(); if this
+ *     function fails, then this will receive a NULL pointer value so
+ *     that cosmoaudio_close(), cosmoaudio_write() etc. can be called
+ *     without crashing if no error checking is performed
  * @return 0 on success, or negative error code on failure
  */
-COSMOAUDIO_ABI int cosmoaudio_open(struct CosmoAudio** cap, int sampleRate,
-                                   int channels) {
+COSMOAUDIO_ABI int cosmoaudio_open(  //
+    struct CosmoAudio** out_ca,      //
+    const struct CosmoAudioOpenOptions* options) {
+
+  // Validate arguments.
+  if (!out_ca)
+    return COSMOAUDIO_EINVAL;
+  *out_ca = NULL;
+  if (!options)
+    return COSMOAUDIO_EINVAL;
+  if (options->sizeofThis < (int)sizeof(struct CosmoAudioOpenOptions))
+    return COSMOAUDIO_EINVAL;
+  if (options->periods < 0)
+    return COSMOAUDIO_EINVAL;
+  if (options->sampleRate < 8000)
+    return COSMOAUDIO_EINVAL;
+  if (options->channels < 1)
+    return COSMOAUDIO_EINVAL;
+  if (!options->deviceType)
+    return COSMOAUDIO_EINVAL;
+  if (options->deviceType &
+      ~(kCosmoAudioDeviceTypePlayback | kCosmoAudioDeviceTypeCapture))
+    return COSMOAUDIO_EINVAL;
 
   // Allocate cosmo audio object.
   struct CosmoAudio* ca;
-  if (!(ca = (struct CosmoAudio*)malloc(sizeof(struct CosmoAudio))))
+  if (!(ca = (struct CosmoAudio*)calloc(1, sizeof(struct CosmoAudio))))
     return COSMOAUDIO_ERROR;
-  ca->channels = channels;
-  ca->sampleRate = sampleRate;
+  ca->channels = options->channels;
+  ca->sampleRate = options->sampleRate;
+  ca->deviceType = options->deviceType;
+  ca->periods = options->periods ? options->periods : 10;
+  ca->dataCallback = options->dataCallback;
+  ca->argument = options->argument;
 
   // Initialize device.
   ma_result result;
-  ma_device_config deviceConfig = ma_device_config_init(ma_device_type_duplex);
-  deviceConfig.sampleRate = sampleRate;
-  deviceConfig.capture.channels = channels;
-  deviceConfig.capture.format = ma_format_f32;
-  deviceConfig.capture.shareMode = ma_share_mode_shared;
-  deviceConfig.playback.channels = channels;
-  deviceConfig.playback.format = ma_format_f32;
+  ma_device_config deviceConfig;
+  deviceConfig = ma_device_config_init(ca->deviceType);
+  deviceConfig.sampleRate = ca->sampleRate;
+  if (ca->deviceType & kCosmoAudioDeviceTypeCapture) {
+    deviceConfig.capture.channels = ca->channels;
+    deviceConfig.capture.format = ma_format_f32;
+    deviceConfig.capture.shareMode = ma_share_mode_shared;
+  }
+  if (ca->deviceType & kCosmoAudioDeviceTypePlayback) {
+    deviceConfig.playback.channels = ca->channels;
+    deviceConfig.playback.format = ma_format_f32;
+  }
   deviceConfig.dataCallback = data_callback;
   deviceConfig.pUserData = ca;
   result = ma_device_init(NULL, &deviceConfig, &ca->device);
@@ -134,51 +202,67 @@ COSMOAUDIO_ABI int cosmoaudio_open(struct CosmoAudio** cap, int sampleRate,
   }
 
   // Initialize the speaker ring buffer.
-  result = ma_pcm_rb_init(ma_format_f32, channels,
-                          ca->device.playback.internalPeriodSizeInFrames * 10,
-                          NULL, NULL, &ca->output);
-  if (result != MA_SUCCESS) {
-    ma_device_uninit(&ca->device);
-    free(ca);
-    return COSMOAUDIO_ERROR;
+  if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypePlayback)) {
+    result = ma_pcm_rb_init(
+        ma_format_f32, ca->channels,
+        ca->device.playback.internalPeriodSizeInFrames * ca->periods, NULL,
+        NULL, &ca->output);
+    if (result != MA_SUCCESS) {
+      ma_device_uninit(&ca->device);
+      free(ca);
+      return COSMOAUDIO_ERROR;
+    }
+    ma_pcm_rb_set_sample_rate(&ca->output, ca->sampleRate);
   }
-  ma_pcm_rb_set_sample_rate(&ca->output, sampleRate);
 
   // Initialize the microphone ring buffer.
-  result = ma_pcm_rb_init(ma_format_f32, channels,
-                          ca->device.capture.internalPeriodSizeInFrames * 10,
-                          NULL, NULL, &ca->input);
-  if (result != MA_SUCCESS) {
-    ma_pcm_rb_uninit(&ca->output);
-    ma_device_uninit(&ca->device);
-    free(ca);
-    return COSMOAUDIO_ERROR;
+  if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypeCapture)) {
+    result = ma_pcm_rb_init(
+        ma_format_f32, ca->channels,
+        ca->device.capture.internalPeriodSizeInFrames * ca->periods, NULL, NULL,
+        &ca->input);
+    if (result != MA_SUCCESS) {
+      if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypePlayback))
+        ma_pcm_rb_uninit(&ca->output);
+      ma_device_uninit(&ca->device);
+      free(ca);
+      return COSMOAUDIO_ERROR;
+    }
+    ma_pcm_rb_set_sample_rate(&ca->output, ca->sampleRate);
   }
-  ma_pcm_rb_set_sample_rate(&ca->output, sampleRate);
 
   // Start audio playback.
   if (ma_device_start(&ca->device) != MA_SUCCESS) {
-    ma_pcm_rb_uninit(&ca->input);
-    ma_pcm_rb_uninit(&ca->output);
+    if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypeCapture))
+      ma_pcm_rb_uninit(&ca->input);
+    if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypePlayback))
+      ma_pcm_rb_uninit(&ca->output);
     ma_device_uninit(&ca->device);
     free(ca);
     return COSMOAUDIO_ERROR;
   }
 
-  *cap = ca;
+  *out_ca = ca;
   return COSMOAUDIO_SUCCESS;
 }
 
 /**
  * Closes audio device and frees all associated resources.
  *
+ * Calling this function twice on the same object will result in
+ * undefined behavior.
+ *
  * @param ca is CosmoAudio object returned earlier by cosmoaudio_open()
  * @return 0 on success, or negative error code on failure
  */
 COSMOAUDIO_ABI int cosmoaudio_close(struct CosmoAudio* ca) {
+  if (!ca)
+    return COSMOAUDIO_EINVAL;
   ma_device_uninit(&ca->device);
-  ma_pcm_rb_uninit(&ca->output);
-  ma_pcm_rb_uninit(&ca->input);
+  if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypePlayback))
+    ma_pcm_rb_uninit(&ca->output);
+  if (!ca->dataCallback && (ca->deviceType & kCosmoAudioDeviceTypeCapture))
+    ma_pcm_rb_uninit(&ca->input);
   free(ca);
   return COSMOAUDIO_SUCCESS;
 }
@@ -201,6 +285,18 @@ COSMOAUDIO_ABI int cosmoaudio_close(struct CosmoAudio* ca) {
  */
 COSMOAUDIO_ABI int cosmoaudio_write(struct CosmoAudio* ca, const float* data,
                                     int frames) {
+  if (!ca)
+    return COSMOAUDIO_EINVAL;
+  if (frames < 0)
+    return COSMOAUDIO_EINVAL;
+  if (ca->dataCallback)
+    return COSMOAUDIO_EINVAL;
+  if (!(ca->deviceType & kCosmoAudioDeviceTypePlayback))
+    return COSMOAUDIO_EINVAL;
+  if (!frames)
+    return 0;
+  if (!data)
+    return COSMOAUDIO_EINVAL;
   return write_ring_buffer(&ca->output, data, frames, ca->channels);
 }
 
@@ -222,6 +318,18 @@ COSMOAUDIO_ABI int cosmoaudio_write(struct CosmoAudio* ca, const float* data,
  */
 COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio* ca, float* data,
                                    int frames) {
+  if (!ca)
+    return COSMOAUDIO_EINVAL;
+  if (frames < 0)
+    return COSMOAUDIO_EINVAL;
+  if (ca->dataCallback)
+    return COSMOAUDIO_EINVAL;
+  if (!(ca->deviceType & kCosmoAudioDeviceTypeCapture))
+    return COSMOAUDIO_EINVAL;
+  if (!frames)
+    return 0;
+  if (!data)
+    return COSMOAUDIO_EINVAL;
   return read_ring_buffer(&ca->input, data, frames, ca->channels);
 }
 

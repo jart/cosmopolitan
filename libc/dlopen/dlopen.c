@@ -136,19 +136,16 @@ static _Thread_local char dlerror_buf[128];
 
 static const char *get_tmp_dir(void) {
   const char *tmpdir;
-  if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir) {
-    if (!(tmpdir = getenv("HOME")) || !*tmpdir) {
+  if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir)
+    if (!(tmpdir = getenv("HOME")) || !*tmpdir)
       tmpdir = ".";
-    }
-  }
   return tmpdir;
 }
 
 static int is_file_newer_than(const char *path, const char *other) {
   struct stat st1, st2;
-  if (stat(path, &st1)) {
+  if (stat(path, &st1))
     return -1;
-  }
   if (stat(other, &st2)) {
     if (errno == ENOENT) {
       return 2;
@@ -191,29 +188,24 @@ static char *elf_map(int fd, Elf64_Ehdr *ehdr, Elf64_Phdr *phdr, long pagesz,
   Elf64_Addr maxva = 0;
   Elf64_Addr minva = -1;
   for (Elf64_Phdr *p = phdr; p < phdr + ehdr->e_phnum; p++) {
-    if (p->p_type != PT_LOAD) {
+    if (p->p_type != PT_LOAD)
       continue;
-    }
-    if (p->p_vaddr < minva) {
+    if (p->p_vaddr < minva)
       minva = p->p_vaddr & -pagesz;
-    }
-    if (p->p_vaddr + p->p_memsz > maxva) {
+    if (p->p_vaddr + p->p_memsz > maxva)
       maxva = p->p_vaddr + p->p_memsz;
-    }
   }
   uint8_t *base =
       __sys_mmap(0, maxva - minva, PROT_NONE,
                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0, 0);
-  if (base == MAP_FAILED) {
+  if (base == MAP_FAILED)
     return MAP_FAILED;
-  }
   for (Elf64_Phdr *p = phdr; p < phdr + ehdr->e_phnum; p++) {
     if (p->p_type != PT_LOAD) {
       if (p->p_type == PT_INTERP && interp_size &&
           (p->p_filesz >= interp_size - 1 ||
-           pread(fd, interp_path, p->p_filesz, p->p_offset) != p->p_filesz)) {
+           pread(fd, interp_path, p->p_filesz, p->p_offset) != p->p_filesz))
         return MAP_FAILED;
-      }
       continue;
     }
     Elf64_Addr skew = p->p_vaddr & (pagesz - 1);
@@ -228,29 +220,24 @@ static char *elf_map(int fd, Elf64_Ehdr *ehdr, Elf64_Phdr *phdr, long pagesz,
       prot1 &= ~PROT_EXEC;
     }
     if (__sys_mmap(base + p->p_vaddr - skew, skew + p->p_filesz, prot1,
-                   MAP_FIXED | MAP_PRIVATE, fd, off, off) == MAP_FAILED) {
+                   MAP_FIXED | MAP_PRIVATE, fd, off, off) == MAP_FAILED)
       return MAP_FAILED;
-    }
-    if (b > a) {
+    if (b > a)
       bzero(base + a, b - a);
-    }
     if (c > b && __sys_mmap(base + b, c - b, prot2,
                             MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0,
-                            0) == MAP_FAILED) {
+                            0) == MAP_FAILED)
       return MAP_FAILED;
-    }
     if (prot1 != prot2 &&
-        sys_mprotect(base + p->p_vaddr - skew, skew + p->p_filesz, prot2)) {
+        sys_mprotect(base + p->p_vaddr - skew, skew + p->p_filesz, prot2))
       return MAP_FAILED;
-    }
   }
   return (void *)base;
 }
 
 static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
-  if (pread(fd, &l->eh, 64, 0) != 64) {
+  if (pread(fd, &l->eh, 64, 0) != 64)
     return false;
-  }
   if (!IsElf64Binary(&l->eh, 64) ||                      //
       l->eh.e_phnum > sizeof(l->ph) / sizeof(*l->ph) ||  //
       l->eh.e_machine != get_host_elf_machine()) {
@@ -258,9 +245,8 @@ static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
     return false;
   }
   int bytes = l->eh.e_phnum * sizeof(l->ph[0]);
-  if (pread(fd, l->ph, bytes, l->eh.e_phoff) != bytes) {
+  if (pread(fd, l->ph, bytes, l->eh.e_phoff) != bytes)
     return false;
-  }
   l->entry = (char *)l->eh.e_entry;
   return true;
 }
@@ -268,9 +254,8 @@ static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
 static dontinline bool elf_load(struct Loaded *l, const char *file, long pagesz,
                                 char *interp_path, size_t interp_size) {
   int fd;
-  if ((fd = open(file, O_RDONLY | O_CLOEXEC)) == -1) {
+  if ((fd = open(file, O_RDONLY | O_CLOEXEC)) == -1)
     return false;
-  }
   if (!elf_slurp(l, fd, file)) {
     close(fd);
     return false;
@@ -308,15 +293,13 @@ static dontinline void elf_exec(const char *file, char **envp) {
   // load helper executable into address space
   struct Loaded prog;
   char interp_path[256] = {0};
-  if (!elf_load(&prog, file, pagesz, interp_path, sizeof(interp_path))) {
+  if (!elf_load(&prog, file, pagesz, interp_path, sizeof(interp_path)))
     return;
-  }
 
   // load platform c library into address space
   struct Loaded interp;
-  if (!elf_load(&interp, interp_path, pagesz, 0, 0)) {
+  if (!elf_load(&interp, interp_path, pagesz, 0, 0))
     return;
-  }
 
   // count environment variables
   int envc = 0;
@@ -432,9 +415,8 @@ static dontinline char *foreign_alloc_block(void) {
   if (!IsWindows()) {
     p = __sys_mmap(0, sz, PROT_READ | PROT_WRITE | PROT_EXEC,
                    MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0, 0);
-    if (p == MAP_FAILED) {
+    if (p == MAP_FAILED)
       p = 0;
-    }
   } else {
     uintptr_t h;
     if ((h = CreateFileMapping(-1, 0, kNtPageExecuteReadwrite, 0, sz, 0))) {
@@ -455,11 +437,9 @@ static dontinline void *foreign_alloc(size_t n) {
   static char *block;
   static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
   pthread_mutex_lock(&lock);
-  if (!block || READ32LE(block) + n > 65536) {
-    if (!(block = foreign_alloc_block())) {
+  if (!block || READ32LE(block) + n > 65536)
+    if (!(block = foreign_alloc_block()))
       return 0;
-    }
-  }
   res = block + READ32LE(block);
   WRITE32LE(block, READ32LE(block) + n);
   pthread_mutex_unlock(&lock);
@@ -470,9 +450,8 @@ static uint8_t *movimm(uint8_t p[static 16], int reg, uint64_t val) {
 #ifdef __x86_64__
   int rex;
   rex = AMD_REXW;
-  if (reg & 8) {
+  if (reg & 8)
     rex |= AMD_REXB;
-  }
   *p++ = rex;
   *p++ = AMD_MOV_IMM | (reg & 7);
   p = WRITE64LE(p, val);
@@ -572,9 +551,8 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   // construct path
   strlcpy(exe, get_tmp_dir(), PATH_MAX);
   strlcat(exe, "/.cosmo/", PATH_MAX);
-  if (mkdir(exe, 0755) && errno != EEXIST) {
+  if (mkdir(exe, 0755) && errno != EEXIST)
     return false;
-  }
   strlcat(exe, "dlopen-helper", PATH_MAX);
 
   // skip build if helper exists and this program is older
@@ -605,9 +583,8 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
       ssize_t got = pread(fd, sauce, sizeof(HELPER), 0);
       close(fd);
       if (got == sizeof(HELPER) - 1 &&
-          !memcmp(sauce, HELPER, sizeof(HELPER) - 1)) {
+          !memcmp(sauce, HELPER, sizeof(HELPER) - 1))
         return true;
-      }
     }
   }
 
@@ -615,9 +592,8 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   char tmp[PATH_MAX];
   strlcpy(tmp, src, PATH_MAX);
   strlcat(tmp, ".XXXXXX", PATH_MAX);
-  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1) {
+  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1)
     return false;
-  }
   if (write(fd, HELPER, sizeof(HELPER) - 1) != sizeof(HELPER) - 1) {
     close(fd);
     unlink(tmp);
@@ -635,9 +611,8 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   // create executable
   strlcpy(tmp, exe, PATH_MAX);
   strlcat(tmp, ".XXXXXX", PATH_MAX);
-  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1) {
+  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1)
     return false;
-  }
   int pid, ws;
   char *args[] = {
       "cc",
@@ -706,9 +681,8 @@ static void foreign_once(void) {
 static bool foreign_init(void) {
   bool res;
   cosmo_once(&__foreign.once, foreign_once);
-  if (!(res = __foreign.is_supported)) {
+  if (!(res = __foreign.is_supported))
     dlerror_set("dlopen() isn't supported on this platform");
-  }
   return res;
 }
 
@@ -744,9 +718,8 @@ static void *dlopen_nt(const char *path, int mode) {
     path16[n + 0] = 'l';
     path16[n + 1] = 0;
   }
-  if (!(handle = LoadLibrary(path16))) {
+  if (!(handle = LoadLibrary(path16)))
     dlerror_set("library not found");
-  }
   return (void *)handle;
 }
 
@@ -765,18 +738,14 @@ static void *dlopen_silicon(const char *path, int mode) {
   int n;
   int xnu_mode = 0;
   char path2[PATH_MAX + 5];
-  if (mode & ~(RTLD_LOCAL | RTLD_LAZY | RTLD_NOW | RTLD_GLOBAL)) {
+  if (mode & ~(RTLD_LOCAL | RTLD_LAZY | RTLD_NOW | RTLD_GLOBAL))
     xnu_mode = -1;  // punt error to system dlerror() impl
-  }
-  if (!(mode & RTLD_GLOBAL)) {
+  if (!(mode & RTLD_GLOBAL))
     xnu_mode |= XNU_RTLD_LOCAL;  // unlike Linux, XNU defaults to RTLD_GLOBAL
-  }
-  if (mode & RTLD_NOW) {
+  if (mode & RTLD_NOW)
     xnu_mode |= XNU_RTLD_NOW;
-  }
-  if (mode & RTLD_LAZY) {
+  if (mode & RTLD_LAZY)
     xnu_mode |= XNU_RTLD_LAZY;
-  }
   if ((n = strlen(path)) < PATH_MAX && n > 3 &&  //
       path[n - 3] == '.' &&                      //
       path[n - 2] == 's' &&                      //

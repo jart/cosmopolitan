@@ -3,6 +3,7 @@
 /* PORTED TO TELETYPEWRITERS IN YEAR 2020 BY JUSTINE ALEXANDRA ROBERTS TUNNEY */
 /* TRADEMARKS ARE OWNED BY THEIR RESPECTIVE OWNERS LAWYERCATS LUV TAUTOLOGIES */
 /* https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/nesemu1.cc */
+#include "dsp/audio/cosmoaudio/cosmoaudio.h"
 #include "dsp/core/core.h"
 #include "dsp/core/half.h"
 #include "dsp/core/illumination.h"
@@ -111,7 +112,9 @@ AUTHORS\n\
 #define DYN     240
 #define DXN     256
 #define FPS     60.0988
-#define HZ      1789773
+#define CPUHZ   1789773
+#define SRATE   44100
+#define ABUFZ   ((int)(SRATE / FPS) + 1)
 #define GAMMA   2.2
 #define CTRL(C) ((C) ^ 0100)
 #define ALT(C)  ((033 << 010) | (C))
@@ -135,11 +138,6 @@ struct Action {
   int wait;
 };
 
-struct Audio {
-  size_t i;
-  int16_t p[65536];
-};
-
 struct Status {
   int wait;
   char text[80];
@@ -151,18 +149,16 @@ struct ZipGames {
 };
 
 static int frame_;
-static int playfd_;
-static int playpid_;
 static size_t vtsize_;
 static bool artifacts_;
 static long tyn_, txn_;
 static struct Frame vf_[2];
-static struct Audio audio_;
 static const char* inputfn_;
 static struct Status status_;
 static volatile bool exited_;
 static volatile bool timeout_;
 static volatile bool resized_;
+static struct CosmoAudio* ca_;
 static struct TtyRgb* ttyrgb_;
 static unsigned char *R, *G, *B;
 static struct ZipGames zipgames_;
@@ -175,7 +171,7 @@ static int joy_current_[2], joy_next_[2], joypos_[2];
 
 static int keyframes_ = 10;
 static enum TtyBlocksSelection blocks_ = kTtyBlocksUnicode;
-static enum TtyQuantizationAlgorithm quant_ = kTtyQuantTrue;
+static enum TtyQuantizationAlgorithm quant_ = kTtyQuantXterm256;
 
 static int Clamp(int v) {
   return MAX(0, MIN(255, v));
@@ -229,9 +225,8 @@ void InitPalette(void) {
           rgbc[u] = FixGamma(y / 1980. + i * A[u] / 9e6 + q * B[u] / 9e6);
         }
         matvmul3(rgbd65, lightbulb, rgbc);
-        for (u = 0; u < 3; ++u) {
+        for (u = 0; u < 3; ++u)
           palette_[o][p1][p0][u] = Clamp(rgbd65[u] * 255);
-        }
       }
     }
   }
@@ -253,20 +248,16 @@ static void WriteString(const char* s) {
 
 void Exit(int rc) {
   WriteString("\r\n\e[0m\e[J");
-  if (rc && errno) {
+  if (rc && errno)
     fprintf(stderr, "%s%s\r\n", "error: ", strerror(errno));
-  }
   exit(rc);
 }
 
 void Cleanup(void) {
   ttyraw((enum TtyRawFlags)(-1u));
   ttyshowcursor(STDOUT_FILENO);
-  if (playpid_) {
-    kill(playpid_, SIGKILL);
-    close(playfd_);
-    playfd_ = -1;
-  }
+  cosmoaudio_close(ca_);
+  ca_ = 0;
 }
 
 void OnCtrlC(void) {
@@ -287,9 +278,8 @@ void OnPiped(void) {
 
 void OnSigChld(void) {
   waitpid(-1, 0, WNOHANG);
-  close(playfd_);
-  playpid_ = 0;
-  playfd_ = -1;
+  cosmoaudio_close(ca_);
+  ca_ = 0;
 }
 
 void InitFrame(struct Frame* f) {
@@ -479,10 +469,6 @@ bool HasPendingVideo(void) {
   return HasVideo(&vf_[0]) || HasVideo(&vf_[1]);
 }
 
-bool HasPendingAudio(void) {
-  return playpid_ && audio_.i;
-}
-
 struct Frame* FlipFrameBuffer(void) {
   frame_ = !frame_;
   return &vf_[frame_];
@@ -499,26 +485,6 @@ void TransmitVideo(void) {
   } else if (errno == EAGAIN) {
     // slow teletypewriter
   } else if (errno == EPIPE) {
-    Exit(0);
-  }
-}
-
-void TransmitAudio(void) {
-  ssize_t rc;
-  if (!playpid_)
-    return;
-  if (!audio_.i)
-    return;
-  if (playfd_ == -1)
-    return;
-  if ((rc = Write(playfd_, audio_.p, audio_.i * sizeof(short))) != -1) {
-    rc /= sizeof(short);
-    memmove(audio_.p, audio_.p + rc, (audio_.i - rc) * sizeof(short));
-    audio_.i -= rc;
-  } else if (errno == EPIPE) {
-    kill(playpid_, SIGKILL);
-    close(playfd_);
-    playfd_ = -1;
     Exit(0);
   }
 }
@@ -574,7 +540,6 @@ void PollAndSynchronize(void) {
     }
   } while (!timeout_);
   TransmitVideo();
-  TransmitAudio();
   timeout_ = false;
   KeyCountdown(&arrow_);
   KeyCountdown(&button_);
@@ -601,9 +566,8 @@ void Raster(void) {
 
 void FlushScanline(unsigned py) {
   if (py == DYN - 1) {
-    if (!timeout_) {
+    if (!timeout_)
       Raster();
-    }
     timeout_ = false;
   }
 }
@@ -1494,8 +1458,7 @@ void Tick() {  // Invoked at CPU's rate.
 // Mix the audio: Get the momentary sample from each channel and mix them.
 #define s(c) channels[c].Tick<c == 1 ? 0 : c>()
   auto v = [](float m, float n, float d) { return n != 0.f ? m / n : d; };
-  short sample =
-      30000 *
+  float sample =
       (v(95.88f, (100.f + v(8128.f, s(0) + s(1), -100.f)), 0.f) +
        v(159.79f,
          (100.f +
@@ -1504,7 +1467,19 @@ void Tick() {  // Invoked at CPU's rate.
        0.5f);
 #undef s
 
-  audio_.p[audio_.i = (audio_.i + 1) & (ARRAYLEN(audio_.p) - 1)] = sample;
+  // Relay audio to speaker.
+  static int buffer_position = 0;
+  static float audio_buffer[ABUFZ];
+  static double sample_counter = 0.0;
+  sample_counter += (double)SRATE / CPUHZ;
+  while (sample_counter >= 1.0) {
+    audio_buffer[buffer_position++] = sample;
+    sample_counter -= 1.0;
+    if (buffer_position == ABUFZ) {
+      cosmoaudio_write(ca_, audio_buffer, buffer_position);
+      buffer_position = 0;
+    }
+  }
 }
 
 }  // namespace APU
@@ -1716,8 +1691,8 @@ void Op() {
   if (!nmi_now)
     nmi_edge_detected = false;
 
-    // Define function pointers for each opcode (00..FF) and each interrupt
-    // (100,101,102)
+  // Define function pointers for each opcode (00..FF) and each interrupt
+  // (100,101,102)
 #define c(n) Ins<0x##n>, Ins<0x##n + 1>,
 #define o(n) c(n) c(n + 2) c(n + 4) c(n + 6)
   static void (*const i[0x108])() = {
@@ -1745,9 +1720,6 @@ char* GetLine(void) {
 
 int PlayGame(const char* romfile, const char* opt_tasfile) {
   FILE* fp;
-  int devnull;
-  int pipefds[2];
-  const char* ffplay;
   inputfn_ = opt_tasfile;
 
   if (!(fp = fopen(romfile, "rb"))) {
@@ -1763,43 +1735,12 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
   InitPalette();
 
   // open speaker
-  // todo: this needs plenty of work
-  if (!IsWindows()) {
-    if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
-      devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
-      pipe2(pipefds, O_CLOEXEC);
-      if (!(playpid_ = fork())) {
-        const char* const args[] = {
-            ffplay,                  //
-            "-nodisp",               //
-            "-loglevel", "quiet",    //
-            "-ac",       "1",        //
-            "-ar",       "1789773",  //
-            "-f",        "s16le",    //
-            "pipe:",                 //
-            NULL,
-        };
-        dup2(pipefds[0], 0);
-        dup2(devnull, 1);
-        dup2(devnull, 2);
-        execv(ffplay, (char* const*)args);
-        abort();
-      }
-      close(pipefds[0]);
-      playfd_ = pipefds[1];
-    } else {
-      fputs("\nWARNING\n\
-\n\
-  Need `ffplay` command to play audio\n\
-  Try `sudo apt install ffmpeg` on Linux\n\
-  You can specify it on `PATH` or in `FFPLAY`\n\
-\n\
-Press enter to continue without sound: ",
-            stdout);
-      fflush(stdout);
-      GetLine();
-    }
-  }
+  struct CosmoAudioOpenOptions cao = {};
+  cao.sizeofThis = sizeof(struct CosmoAudioOpenOptions);
+  cao.deviceType = kCosmoAudioDeviceTypePlayback;
+  cao.sampleRate = SRATE;
+  cao.channels = 1;
+  cosmoaudio_open(&ca_, &cao);
 
   // Read the ROM file header
   u8 rom16count = fgetc(fp);
@@ -1907,9 +1848,8 @@ int SelectGameFromZip(void) {
   int i, rc;
   char *line, *uri;
   fputs("\nCOSMOPOLITAN NESEMU1\n\n", stdout);
-  for (i = 0; i < (int)zipgames_.i; ++i) {
+  for (i = 0; i < (int)zipgames_.i; ++i)
     printf("  [%d] %s\n", i, zipgames_.p[i]);
-  }
   fputs("\nPlease choose a game (or CTRL-C to quit) [default 0]: ", stdout);
   fflush(stdout);
   rc = 0;
@@ -1932,9 +1872,8 @@ int main(int argc, char** argv) {
   } else if (optind < argc) {
     rc = PlayGame(argv[optind], NULL);
   } else {
-    if (!FindZipGames()) {
+    if (!FindZipGames())
       PrintUsage(0, stderr);
-    }
     rc = SelectGameFromZip();
   }
   return rc;

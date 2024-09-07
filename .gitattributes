@@ -1,4 +1,10 @@
 # -*- conf -*-
 *.gz                         binary
-/build/bootstrap/*.com       binary
+*.so                         binary
+*.dll                        binary
+*.dylib                      binary
+/build/bootstrap/*           binary
+/usr/share/terminfo/*        binary
+/usr/share/terminfo/*/*      binary
 /usr/share/zoneinfo/*        binary
+/usr/share/zoneinfo/*/*      binary

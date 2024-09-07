@@ -17,19 +17,27 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/audio/cosmoaudio/cosmoaudio.h"
+#include "dsp/audio/describe.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/dlopen/dlfcn.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
+#include "libc/macros.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/temp.h"
 #include "libc/thread/thread.h"
+
+#define COSMOAUDIO_MINIMUM_VERISON 1
+
+#define COSMOAUDIO_DSO_NAME "cosmoaudio." STRINGIFY(COSMOAUDIO_MINIMUM_VERISON)
 
 __static_yoink("dsp/audio/cosmoaudio/miniaudio.h");
 __static_yoink("dsp/audio/cosmoaudio/cosmoaudio.h");
@@ -53,7 +61,7 @@ static struct {
   typeof(cosmoaudio_read) *read;
 } g_audio;
 
-static const char *get_tmp_dir(void) {
+static const char *cosmoaudio_tmp_dir(void) {
   const char *tmpdir;
   if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir)
     if (!(tmpdir = getenv("HOME")) || !*tmpdir)
@@ -61,18 +69,18 @@ static const char *get_tmp_dir(void) {
   return tmpdir;
 }
 
-static bool get_app_dir(char *path, size_t size) {
-  strlcpy(path, get_tmp_dir(), size);
+static bool cosmoaudio_app_dir(char *path, size_t size) {
+  strlcpy(path, cosmoaudio_tmp_dir(), size);
   strlcat(path, "/.cosmo/", size);
   if (makedirs(path, 0755))
     return false;
   return true;
 }
 
-static bool get_dso_path(char *path, size_t size) {
-  if (!get_app_dir(path, size))
+static bool cosmoaudio_dso_path(char *path, size_t size) {
+  if (!cosmoaudio_app_dir(path, size))
     return false;
-  strlcat(path, "cosmoaudio", size);
+  strlcat(path, COSMOAUDIO_DSO_NAME, size);
   if (IsWindows()) {
     strlcat(path, ".dll", size);
   } else if (IsXnu()) {
@@ -83,86 +91,7 @@ static bool get_dso_path(char *path, size_t size) {
   return true;
 }
 
-static int is_file_newer_than_time(const char *path, const char *other) {
-  struct stat st1, st2;
-  if (stat(path, &st1))
-    // PATH should always exist when calling this function
-    return -1;
-  if (stat(other, &st2)) {
-    if (errno == ENOENT) {
-      // PATH should replace OTHER because OTHER doesn't exist yet
-      return true;
-    } else {
-      // some other error happened, so we can't do anything
-      return -1;
-    }
-  }
-  // PATH should replace OTHER if PATH was modified more recently
-  return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
-}
-
-static int is_file_newer_than_bytes(const char *path, const char *other) {
-  int other_fd;
-  if ((other_fd = open(other, O_RDONLY | O_CLOEXEC)) == -1) {
-    if (errno == ENOENT) {
-      return true;
-    } else {
-      return -1;
-    }
-  }
-  int path_fd;
-  if ((path_fd = open(path, O_RDONLY | O_CLOEXEC)) == -1) {
-    close(other_fd);
-    return -1;
-  }
-  int res;
-  long i = 0;
-  for (;;) {
-    char path_buf[512];
-    ssize_t path_rc = pread(path_fd, path_buf, sizeof(path_buf), i);
-    if (path_rc == -1) {
-      res = -1;
-      break;
-    }
-    char other_buf[512];
-    ssize_t other_rc = pread(other_fd, other_buf, sizeof(other_buf), i);
-    if (other_rc == -1) {
-      res = -1;
-      break;
-    }
-    if (!path_rc || !other_rc) {
-      if (!path_rc && !other_rc)
-        res = false;
-      else
-        res = true;
-      break;
-    }
-    size_t size = path_rc;
-    if (other_rc < path_rc)
-      size = other_rc;
-    if (memcmp(path_buf, other_buf, size)) {
-      res = true;
-      break;
-    }
-    i += size;
-  }
-  if (close(path_fd))
-    res = -1;
-  if (close(other_fd))
-    res = -1;
-  return res;
-}
-
-static int is_file_newer_than(const char *path, const char *other) {
-  if (startswith(path, "/zip/"))
-    // to keep builds deterministic, embedded zip files always have
-    // the same timestamp from back in 2022 when it was implemented
-    return is_file_newer_than_bytes(path, other);
-  else
-    return is_file_newer_than_time(path, other);
-}
-
-static bool extract(const char *zip, const char *to) {
+static bool cosmoaudio_extract(const char *zip, const char *to) {
   int fdin, fdout;
   char stage[PATH_MAX];
   strlcpy(stage, to, sizeof(stage));
@@ -170,9 +99,8 @@ static bool extract(const char *zip, const char *to) {
     errno = ENAMETOOLONG;
     return false;
   }
-  if ((fdout = mkostemp(stage, O_CLOEXEC)) == -1) {
+  if ((fdout = mkostemp(stage, O_CLOEXEC)) == -1)
     return false;
-  }
   if ((fdin = open(zip, O_RDONLY | O_CLOEXEC)) == -1) {
     close(fdout);
     unlink(stage);
@@ -200,114 +128,104 @@ static bool extract(const char *zip, const char *to) {
   return true;
 }
 
-static bool deploy(const char *dso) {
-  switch (is_file_newer_than("/zip/dsp/audio/cosmoaudio/cosmoaudio.dll", dso)) {
-    case 0:
-      return true;
-    case 1:
-      return extract("/zip/dsp/audio/cosmoaudio/cosmoaudio.dll", dso);
-    default:
-      return false;
-  }
-}
+static bool cosmoaudio_build(const char *dso) {
 
-static bool build(const char *dso) {
-
-  // extract source code
+  // extract sauce
   char src[PATH_MAX];
-  bool needs_rebuild = false;
   for (int i = 0; i < sizeof(srcs) / sizeof(*srcs); ++i) {
-    get_app_dir(src, PATH_MAX);
+    if (!cosmoaudio_app_dir(src, PATH_MAX))
+      return false;
     strlcat(src, srcs[i].name, sizeof(src));
-    switch (is_file_newer_than(srcs[i].zip, src)) {
-      case -1:
-        return false;
-      case 0:
-        break;
-      case 1:
-        needs_rebuild = true;
-        if (!extract(srcs[i].zip, src))
-          return false;
-        break;
-      default:
-        __builtin_unreachable();
-    }
+    if (!cosmoaudio_extract(srcs[i].zip, src))
+      return false;
   }
 
-  // determine if we need to build
-  if (!needs_rebuild) {
-    switch (is_file_newer_than(src, dso)) {
-      case -1:
-        return false;
-      case 0:
-        break;
-      case 1:
-        needs_rebuild = true;
-        break;
-      default:
-        __builtin_unreachable();
-    }
+  // create temporary name for compiled dso
+  // it'll ensure build operation is atomic
+  int fd;
+  char tmpdso[PATH_MAX];
+  strlcpy(tmpdso, dso, sizeof(tmpdso));
+  strlcat(tmpdso, ".XXXXXX", sizeof(tmpdso));
+  if ((fd = mkostemp(tmpdso, O_CLOEXEC)) != -1) {
+    close(fd);
+  } else {
+    return false;
   }
 
-  // compile dynamic shared object
-  if (needs_rebuild) {
-    int fd;
-    char tmpdso[PATH_MAX];
-    strlcpy(tmpdso, dso, sizeof(tmpdso));
-    strlcat(tmpdso, ".XXXXXX", sizeof(tmpdso));
-    if ((fd = mkostemp(tmpdso, O_CLOEXEC)) != -1) {
-      close(fd);
-    } else {
+  // build cosmoaudio with host c compiler
+  char *args[] = {
+      "cc",                                       //
+      "-w",                                       //
+      "-I.",                                      //
+      "-O2",                                      //
+      "-fPIC",                                    //
+      "-shared",                                  //
+      "-pthread",                                 //
+      "-DNDEBUG",                                 //
+      IsAarch64() ? "-ffixed-x28" : "-DIGNORE1",  //
+      src,                                        //
+      "-o",                                       //
+      tmpdso,                                     //
+      "-lm",                                      //
+      IsNetbsd() ? 0 : "-ldl",                    //
+      NULL,
+  };
+  int pid, ws;
+  errno_t err = posix_spawnp(&pid, args[0], NULL, NULL, args, environ);
+  if (err)
+    return false;
+  while (waitpid(pid, &ws, 0) == -1)
+    if (errno != EINTR)
       return false;
-    }
-    char *args[] = {
-        "cc",                                       //
-        "-I.",                                      //
-        "-O2",                                      //
-        "-fPIC",                                    //
-        "-shared",                                  //
-        "-pthread",                                 //
-        "-DNDEBUG",                                 //
-        IsAarch64() ? "-ffixed-x28" : "-DIGNORE1",  //
-        src,                                        //
-        "-o",                                       //
-        tmpdso,                                     //
-        "-ldl",                                     //
-        "-lm",                                      //
-        NULL,
-    };
-    int pid, ws;
-    errno_t err = posix_spawnp(&pid, "cc", NULL, NULL, args, environ);
-    if (err)
-      return false;
-    while (waitpid(pid, &ws, 0) == -1) {
-      if (errno != EINTR)
-        return false;
-    }
-    if (ws)
-      return false;
-    if (rename(tmpdso, dso))
-      return false;
-  }
+  if (ws)
+    return false;
+
+  // move dso to its final destination
+  if (rename(tmpdso, dso))
+    return false;
 
   return true;
 }
 
+static void *cosmoaudio_dlopen(const char *name) {
+  void *handle;
+  if ((handle = cosmo_dlopen(name, RTLD_NOW))) {
+    typeof(cosmoaudio_version) *version;
+    if ((version = cosmo_dlsym(handle, "cosmoaudio_version")))
+      if (version() >= COSMOAUDIO_MINIMUM_VERISON)
+        return handle;
+    cosmo_dlclose(handle);
+  }
+  return 0;
+}
+
 static void cosmoaudio_setup(void) {
   void *handle;
-  if (!(handle = cosmo_dlopen("cosmoaudio.so", RTLD_LOCAL))) {
-    if (issetugid())
-      return;
+  if (IsOpenbsd())
+    return;  // no dlopen support yet
+  if (IsXnu() && !IsXnuSilicon())
+    return;  // no dlopen support yet
+  if (!(handle = cosmoaudio_dlopen(COSMOAUDIO_DSO_NAME ".so")) &&
+      !(handle = cosmoaudio_dlopen("lib" COSMOAUDIO_DSO_NAME ".so")) &&
+      !(handle = cosmoaudio_dlopen("cosmoaudio.so")) &&
+      !(handle = cosmoaudio_dlopen("libcosmoaudio.so"))) {
     char dso[PATH_MAX];
-    if (!get_dso_path(dso, sizeof(dso)))
+    if (!cosmoaudio_dso_path(dso, sizeof(dso)))
       return;
-    if (IsWindows())
-      if (deploy(dso))
-        if ((handle = cosmo_dlopen(dso, RTLD_LOCAL)))
+    if ((handle = cosmoaudio_dlopen(dso)))
+      goto WeAreGood;
+    if (IsWindows()) {
+      if (cosmoaudio_extract("/zip/dsp/audio/cosmoaudio/cosmoaudio.dll", dso)) {
+        if ((handle = cosmoaudio_dlopen(dso))) {
           goto WeAreGood;
-    if (!build(dso))
+        } else {
+          return;
+        }
+      }
+    }
+    if (!cosmoaudio_build(dso))
       return;
-    if (!(handle = cosmo_dlopen(dso, RTLD_LOCAL)))
+    if (!(handle = cosmoaudio_dlopen(dso)))
       return;
   }
 WeAreGood:
@@ -321,33 +239,59 @@ static void cosmoaudio_init(void) {
   pthread_once(&g_audio.once, cosmoaudio_setup);
 }
 
-COSMOAUDIO_ABI int cosmoaudio_open(struct CosmoAudio **cap, int sampleRate,
-                                   int channels) {
+COSMOAUDIO_ABI int cosmoaudio_open(
+    struct CosmoAudio **out_ca, const struct CosmoAudioOpenOptions *options) {
+  int status;
+  char sbuf[32];
+  char dbuf[256];
   cosmoaudio_init();
-  if (!g_audio.open)
-    return COSMOAUDIO_ERROR;
-  return g_audio.open(cap, sampleRate, channels);
+  if (g_audio.open)
+    status = g_audio.open(out_ca, options);
+  else
+    status = COSMOAUDIO_ELINK;
+  STRACE("cosmoaudio_open([%p], %s) → %s",
+         out_ca ? *out_ca : (struct CosmoAudio *)-1,
+         cosmoaudio_describe_open_options(dbuf, sizeof(dbuf), options),
+         cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
 }
 
 COSMOAUDIO_ABI int cosmoaudio_close(struct CosmoAudio *ca) {
-  cosmoaudio_init();
-  if (!g_audio.close)
-    return COSMOAUDIO_ERROR;
-  return g_audio.close(ca);
+  int status;
+  char sbuf[32];
+  if (g_audio.close)
+    status = g_audio.close(ca);
+  else
+    status = COSMOAUDIO_ELINK;
+  STRACE("cosmoaudio_close(%p) → %s", ca,
+         cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
 }
 
 COSMOAUDIO_ABI int cosmoaudio_write(struct CosmoAudio *ca, const float *data,
                                     int frames) {
-  cosmoaudio_init();
-  if (!g_audio.write)
-    return COSMOAUDIO_ERROR;
-  return g_audio.write(ca, data, frames);
+  int status;
+  char sbuf[32];
+  if (g_audio.write)
+    status = g_audio.write(ca, data, frames);
+  else
+    status = COSMOAUDIO_ELINK;
+  if (frames <= 0 || frames >= 160)
+    DATATRACE("cosmoaudio_write(%p, %p, %d) → %s", ca, data, frames,
+              cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
 }
 
 COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio *ca, float *data,
                                    int frames) {
-  cosmoaudio_init();
-  if (!g_audio.read)
-    return COSMOAUDIO_ERROR;
-  return g_audio.read(ca, data, frames);
+  int status;
+  char sbuf[32];
+  if (g_audio.read)
+    status = g_audio.read(ca, data, frames);
+  else
+    status = COSMOAUDIO_ELINK;
+  if (frames <= 0 || frames >= 160)
+    DATATRACE("cosmoaudio_read(%p, %p, %d) → %s", ca, data, frames,
+              cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
 }
