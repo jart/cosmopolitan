@@ -22,6 +22,7 @@
 │ Materiel Command, USAF, under agreement number F39502-99-1-0512.             │
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -53,8 +54,11 @@ __cvt(double value, int ndigit, int *decpt, int *sign, int fmode, int pad)
 	char *p, *rve, c;
 	size_t siz;
 
-	if (ndigit == 0) {
-		*sign = value < 0.0;
+	// Note that we exclude the case of fmode here, since for fcvt having
+	// `ndigit == 0` just means we have to output 0 digits *after* the radix
+	// character
+	if (ndigit == 0 && !fmode) {
+		*sign = signbit(value);
 		*decpt = 0;
 		return ("");
 	}
@@ -71,10 +75,12 @@ __cvt(double value, int ndigit, int *decpt, int *sign, int fmode, int pad)
 	/* __dtoa() doesn't allocate space for 0 so we do it by hand */
 	if (value == 0.0) {
 		*decpt = 1 - fmode;	/* 1 for 'e', 0 for 'f' */
-		*sign = 0;
+		*sign = signbit(value);
 		if ((rve = s = malloc(siz)) == NULL)
 			return(NULL);
-		*rve++ = '0';
+		// handle fcvt(0, 0, ...) by returning ""
+		if (siz > 1)
+			*rve++ = '0';
 		*rve = '\0';
 	} else {
 		p = dtoa(value, fmode + 2, ndigit, decpt, sign, &rve);
