@@ -166,7 +166,7 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
         alist, 0, kNtProcThreadAttributeParentProcess, &a->opt_hParentProcess,
         sizeof(a->opt_hParentProcess), 0, 0);
   }
-  if (ok && a->opt_lpExplicitHandleList) {
+  if (ok && a->dwExplicitHandleCount) {
     ok = UpdateProcThreadAttribute(
         alist, 0, kNtProcThreadAttributeHandleList, a->opt_lpExplicitHandleList,
         a->dwExplicitHandleCount * sizeof(*a->opt_lpExplicitHandleList), 0, 0);
