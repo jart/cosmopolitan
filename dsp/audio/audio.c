@@ -58,7 +58,9 @@ static struct {
   typeof(cosmoaudio_open) *open;
   typeof(cosmoaudio_close) *close;
   typeof(cosmoaudio_write) *write;
+  typeof(cosmoaudio_flush) *flush;
   typeof(cosmoaudio_read) *read;
+  typeof(cosmoaudio_poll) *poll;
 } g_audio;
 
 static const char *cosmoaudio_tmp_dir(void) {
@@ -232,7 +234,9 @@ WeAreGood:
   g_audio.open = cosmo_dlsym(handle, "cosmoaudio_open");
   g_audio.close = cosmo_dlsym(handle, "cosmoaudio_close");
   g_audio.write = cosmo_dlsym(handle, "cosmoaudio_write");
+  g_audio.flush = cosmo_dlsym(handle, "cosmoaudio_flush");
   g_audio.read = cosmo_dlsym(handle, "cosmoaudio_read");
+  g_audio.poll = cosmo_dlsym(handle, "cosmoaudio_poll");
 }
 
 static void cosmoaudio_init(void) {
@@ -293,5 +297,36 @@ COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio *ca, float *data,
   if (frames <= 0 || frames >= 160)
     DATATRACE("cosmoaudio_read(%p, %p, %d) → %s", ca, data, frames,
               cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
+}
+
+COSMOAUDIO_ABI int cosmoaudio_flush(struct CosmoAudio *ca) {
+  int status;
+  char sbuf[32];
+  if (g_audio.flush)
+    status = g_audio.flush(ca);
+  else
+    status = COSMOAUDIO_ELINK;
+  DATATRACE("cosmoaudio_flush(%p) → %s", ca,
+            cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
+  return status;
+}
+
+COSMOAUDIO_ABI int cosmoaudio_poll(struct CosmoAudio *ca,
+                                   int *in_out_readFrames,
+                                   int *in_out_writeFrames) {
+  int status;
+  char sbuf[32];
+  char fbuf[2][20];
+  if (g_audio.poll)
+    status = g_audio.poll(ca, in_out_readFrames, in_out_writeFrames);
+  else
+    status = COSMOAUDIO_ELINK;
+  DATATRACE("cosmoaudio_poll(%p, %s, %s) → %s", ca,
+            cosmoaudio_describe_poll_frames(fbuf[0], sizeof(fbuf[0]),
+                                            in_out_readFrames),
+            cosmoaudio_describe_poll_frames(fbuf[1], sizeof(fbuf[1]),
+                                            in_out_writeFrames),
+            cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
   return status;
 }

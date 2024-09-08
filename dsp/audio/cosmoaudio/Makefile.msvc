@@ -3,6 +3,7 @@
 #     nmake /f Makefile.msvc check
 #     nmake /f Makefile.msvc MODE=debug check
 #
+# Note: MSVC 2019 makes the DLL 64kb smaller than MSVC 2022.
 
 # Compiler and linker
 CC=cl

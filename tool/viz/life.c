@@ -1130,7 +1130,7 @@ static bool ShouldDraw(void) {
   static struct timespec next;
   if (!isdragging)
     return true;
-  now = timespec_real();
+  now = timespec_mono();
   if (timespec_cmp(now, next) > 0 && !HasPendingInput()) {
     next = timespec_add(now, timespec_frommicros(1. / 24 * 1e6));
     return true;

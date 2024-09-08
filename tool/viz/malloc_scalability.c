@@ -35,14 +35,14 @@ void *worker(void *arg) {
 }
 
 void test(int n) {
-  struct timespec start = timespec_real();
+  struct timespec start = timespec_mono();
   pthread_t *th = malloc(sizeof(pthread_t) * n);
   for (int i = 0; i < n; ++i)
     pthread_create(th + i, 0, worker, 0);
   for (int i = 0; i < n; ++i)
     pthread_join(th[i], 0);
   free(th);
-  struct timespec end = timespec_real();
+  struct timespec end = timespec_mono();
   printf("%2d threads * %d allocs = %ld us\n", n, ALLOCATIONS,
          timespec_tomicros(timespec_sub(end, start)));
 }

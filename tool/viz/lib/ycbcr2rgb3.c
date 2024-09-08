@@ -43,6 +43,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/time.h"
 #include "libc/x/x.h"
 #include "tool/viz/lib/graphic.h"
@@ -69,6 +70,7 @@ struct timespec magikarp_start_;
 
 struct YCbCr {
   bool yonly;
+  int cpu_count;
   int magnums[8][4];
   int lighting[6][4];
   unsigned char transfer[2][256];
@@ -165,6 +167,7 @@ void YCbCrInit(struct YCbCr **ycbcr, bool yonly, int swing, double gamma,
   if (!*ycbcr)
     *ycbcr = xcalloc(1, sizeof(struct YCbCr));
   (*ycbcr)->yonly = yonly;
+  (*ycbcr)->cpu_count = __get_cpu_count();
   bzero((*ycbcr)->magnums, sizeof((*ycbcr)->magnums));
   bzero((*ycbcr)->lighting, sizeof((*ycbcr)->lighting));
   YCbCrComputeCoefficients(swing, gamma, gamut, illuminant, (*ycbcr)->magnums,
@@ -263,14 +266,32 @@ void YCbCrConvert(struct YCbCr *me, long yn, long xn,
                   const unsigned char Y[restrict yys][yxs], long cys, long cxs,
                   unsigned char Cb[restrict cys][cxs],
                   unsigned char Cr[restrict cys][cxs]) {
-  struct timespec ts = timespec_real();
+  struct timespec ts = timespec_mono();
   if (!me->yonly) {
     YCbCr2Rgb(yn, xn, RGB, yys, yxs, Y, cys, cxs, Cb, Cr, me->magnums,
               me->lighting, me->transfer[pf10_]);
   } else {
     Y2Rgb(yn, xn, RGB, yys, yxs, Y, me->magnums, me->transfer[pf10_]);
   }
-  ycbcr2rgb_latency_ = timespec_tomicros(timespec_sub(timespec_real(), ts));
+  ycbcr2rgb_latency_ = timespec_tomicros(timespec_sub(timespec_mono(), ts));
+}
+
+struct YCbCr2RgbScalerThreadData {
+  long syw, sxw, dyw, dxw, dyn, dxn, syn, sxn;
+  unsigned char *src;
+  unsigned char *dst;
+  int min, max;
+  struct SamplingSolution *cy, *cx;
+  bool sharpen;
+};
+
+static void *YCbCr2RgbScalerThread(void *arg) {
+  struct YCbCr2RgbScalerThreadData *data =
+      (struct YCbCr2RgbScalerThreadData *)arg;
+  GyaradosUint8(data->syw, data->sxw, data->src, data->dyw, data->dxw,
+                data->dst, data->dyn, data->dxn, data->syn, data->sxn,
+                data->min, data->max, data->cy, data->cx, data->sharpen);
+  return NULL;
 }
 
 void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
@@ -297,7 +318,7 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                     Magkern2xY(cys, cxs, Cr, scyn, scxn), HALF(yyn), yxn,
                     HALF(cyn), scxn, syn / 2, sxn, pry, prx);
   } else {
-    struct timespec ts = timespec_real();
+    struct timespec ts = timespec_mono();
     magikarp_latency_ = timespec_tomicros(timespec_sub(ts, magikarp_start_));
     yry = syn / dyn;
     yrx = sxn / dxn;
@@ -322,13 +343,83 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
       sharpen(1, yys, yxs, (void *)Y, yyn, yxn);
     if (pf9_)
       unsharp(1, yys, yxs, (void *)Y, yyn, yxn);
-    GyaradosUint8(yys, yxs, Y, yys, yxs, Y, dyn, dxn, syn, sxn, 0, 255,
-                  me->luma.cy, me->luma.cx, true);
-    GyaradosUint8(cys, cxs, Cb, cys, cxs, Cb, dyn, dxn, scyn, scxn, 0, 255,
-                  me->chroma.cy, me->chroma.cx, false);
-    GyaradosUint8(cys, cxs, Cr, cys, cxs, Cr, dyn, dxn, scyn, scxn, 0, 255,
-                  me->chroma.cy, me->chroma.cx, false);
-    gyarados_latency_ = timespec_tomicros(timespec_sub(timespec_real(), ts));
+
+    if (me->cpu_count < 6) {
+      GyaradosUint8(yys, yxs, Y, yys, yxs, Y, dyn, dxn, syn, sxn, 0, 255,
+                    me->luma.cy, me->luma.cx, true);
+      GyaradosUint8(cys, cxs, Cb, cys, cxs, Cb, dyn, dxn, scyn, scxn, 0, 255,
+                    me->chroma.cy, me->chroma.cx, false);
+      GyaradosUint8(cys, cxs, Cr, cys, cxs, Cr, dyn, dxn, scyn, scxn, 0, 255,
+                    me->chroma.cy, me->chroma.cx, false);
+    } else {
+      pthread_t threads[3];
+      struct YCbCr2RgbScalerThreadData thread_data[3];
+
+      // Set up thread data for Y plane.
+      thread_data[0] = (struct YCbCr2RgbScalerThreadData){
+          .syw = yys,
+          .sxw = yxs,
+          .dyw = yys,
+          .dxw = yxs,
+          .dyn = dyn,
+          .dxn = dxn,
+          .syn = syn,
+          .sxn = sxn,
+          .src = (unsigned char *)Y,
+          .dst = (unsigned char *)Y,
+          .min = 0,
+          .max = 255,
+          .cy = me->luma.cy,
+          .cx = me->luma.cx,
+          .sharpen = true,
+      };
+
+      // Set up thread data for Cb plane.
+      thread_data[1] = (struct YCbCr2RgbScalerThreadData){
+          .syw = cys,
+          .sxw = cxs,
+          .dyw = cys,
+          .dxw = cxs,
+          .dyn = dyn,
+          .dxn = dxn,
+          .syn = scyn,
+          .sxn = scxn,
+          .src = (unsigned char *)Cb,
+          .dst = (unsigned char *)Cb,
+          .min = 0,
+          .max = 255,
+          .cy = me->chroma.cy,
+          .cx = me->chroma.cx,
+          .sharpen = false,
+      };
+
+      // Set up thread data for Cr plane.
+      thread_data[2] = (struct YCbCr2RgbScalerThreadData){
+          .syw = cys,
+          .sxw = cxs,
+          .dyw = cys,
+          .dxw = cxs,
+          .dyn = dyn,
+          .dxn = dxn,
+          .syn = scyn,
+          .sxn = scxn,
+          .src = (unsigned char *)Cr,
+          .dst = (unsigned char *)Cr,
+          .min = 0,
+          .max = 255,
+          .cy = me->chroma.cy,
+          .cx = me->chroma.cx,
+          .sharpen = false,
+      };
+
+      // Dispatch threads.
+      for (int i = 0; i < 3; i++)
+        pthread_create(&threads[i], NULL, YCbCr2RgbScalerThread,
+                       &thread_data[i]);
+      for (int i = 3; i--;)
+        pthread_join(threads[i], NULL);
+    }
+    gyarados_latency_ = timespec_tomicros(timespec_sub(timespec_mono(), ts));
     YCbCrConvert(me, dyn, dxn, RGB, yys, yxs, Y, cys, cxs, Cb, Cr);
     INFOF("done");
   }
@@ -383,7 +474,7 @@ void *YCbCr2RgbScale(long dyn, long dxn,
   CHECK_LE(cyn, cys);
   CHECK_LE(cxn, cxs);
   INFOF("magikarp2x");
-  magikarp_start_ = timespec_real();
+  magikarp_start_ = timespec_mono();
   minyys = MAX(ceil(syn), MAX(yyn, ceil(dyn * pry)));
   minyxs = MAX(ceil(sxn), MAX(yxn, ceil(dxn * prx)));
   mincys = MAX(cyn, ceil(dyn * pry));

@@ -335,10 +335,11 @@ static long Index(long y, long x) {
 static void PreventBufferbloat(void) {
   struct timespec now, rate;
   static struct timespec last;
-  now = timespec_real();
+  now = timespec_mono();
   rate = timespec_frommicros(1. / fps * 1e6);
   if (timespec_cmp(timespec_sub(now, last), rate) < 0) {
-    timespec_sleep(CLOCK_REALTIME, timespec_sub(rate, timespec_sub(now, last)));
+    timespec_sleep(CLOCK_MONOTONIC,
+                   timespec_sub(rate, timespec_sub(now, last)));
   }
   last = now;
 }

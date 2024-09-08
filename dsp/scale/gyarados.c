@@ -53,11 +53,11 @@ struct SamplingSolution {
 static double ComputeWeight(double x) {
   if (-1.5 < x && x < 1.5) {
     if (-.5 < x && x < .5) {
-      return.75 - SQR(x);
+      return .75 - SQR(x);
     } else if (x < 0) {
-      return.5 * SQR(x + 1.5);
+      return .5 * SQR(x + 1.5);
     } else {
-      return.5 * SQR(x - 1.5);
+      return .5 * SQR(x - 1.5);
     }
   } else {
     return 0;
@@ -164,12 +164,19 @@ static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
       tmp0[dy][sx] = QRS(M, eax);
     }
   }
-  for (dy = 0; dy < dyn; ++dy) {
-    for (sx = 0; sx < sxn; ++sx) {
-      tmp1[dy][sx] = sharpen ? Sharpen(tmp0[MIN(dyn - 1, MAX(0, dy - 1))][sx],
-                                       tmp0[dy][sx],
-                                       tmp0[MIN(dyn - 1, MAX(0, dy + 1))][sx])
-                             : tmp0[dy][sx];
+  if (sharpen) {
+    for (dy = 0; dy < dyn; ++dy) {
+      for (sx = 0; sx < sxn; ++sx) {
+        tmp1[dy][sx] =
+            Sharpen(tmp0[MIN(dyn - 1, MAX(0, dy - 1))][sx], tmp0[dy][sx],
+                    tmp0[MIN(dyn - 1, MAX(0, dy + 1))][sx]);
+      }
+    }
+  } else {
+    for (dy = 0; dy < dyn; ++dy) {
+      for (sx = 0; sx < sxn; ++sx) {
+        tmp1[dy][sx] = tmp0[dy][sx];
+      }
     }
   }
   for (dx = 0; dx < dxn; ++dx) {
@@ -180,12 +187,19 @@ static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
       tmp2[dy][dx] = QRS(M, eax);
     }
   }
-  for (dx = 0; dx < dxn; ++dx) {
-    for (dy = 0; dy < dyn; ++dy) {
-      dst[dy][dx] = sharpen ? Sharpen(tmp2[dy][MIN(dxn - 1, MAX(0, dx - 1))],
-                                      tmp2[dy][dx],
-                                      tmp2[dy][MIN(dxn - 1, MAX(0, dx + 1))])
-                            : tmp2[dy][dx];
+  if (sharpen) {
+    for (dx = 0; dx < dxn; ++dx) {
+      for (dy = 0; dy < dyn; ++dy) {
+        dst[dy][dx] =
+            Sharpen(tmp2[dy][MIN(dxn - 1, MAX(0, dx - 1))], tmp2[dy][dx],
+                    tmp2[dy][MIN(dxn - 1, MAX(0, dx + 1))]);
+      }
+    }
+  } else {
+    for (dx = 0; dx < dxn; ++dx) {
+      for (dy = 0; dy < dyn; ++dy) {
+        dst[dy][dx] = tmp2[dy][dx];
+      }
     }
   }
 }

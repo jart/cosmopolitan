@@ -34,6 +34,8 @@ const char *cosmoaudio_describe_status(char *buf, int n, int status) {
       return "COSMOAUDIO_EINVAL";
     case COSMOAUDIO_ELINK:
       return "COSMOAUDIO_ELINK";
+    case COSMOAUDIO_ENOBUF:
+      return "COSMOAUDIO_ENOBUF";
     default:
       ksnprintf(buf, n, "%d", status);
       return buf;
@@ -81,24 +83,11 @@ const char *cosmoaudio_describe_open_options(
     gotsome = true;
   }
 
-  if (options->dataCallback) {
+  if (options->bufferFrames) {
     if (gotsome)
       append(", ");
-    append(".dataCallback=%t", options->dataCallback);
+    append(".bufferFrames=%d", options->bufferFrames);
     gotsome = true;
-    if (options->argument) {
-      if (gotsome)
-        append(", ");
-      append(".argument=%p", options->argument);
-      gotsome = true;
-    }
-  } else {
-    if (options->periods) {
-      if (gotsome)
-        append(", ");
-      append(".periods=%d", options->periods);
-      gotsome = true;
-    }
   }
 
   if (options->sizeofThis) {
@@ -109,5 +98,17 @@ const char *cosmoaudio_describe_open_options(
   }
 
   append("}");
+  return buf;
+}
+
+const char *cosmoaudio_describe_poll_frames(char *buf, int n,
+                                            int *in_out_frames) {
+  if (!in_out_frames)
+    return "NULL";
+  if (kisdangerous(in_out_frames)) {
+    ksnprintf(buf, n, "%p", in_out_frames);
+    return buf;
+  }
+  ksnprintf(buf, n, "[%d]", *in_out_frames);
   return buf;
 }

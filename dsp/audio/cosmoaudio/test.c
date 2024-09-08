@@ -9,50 +9,68 @@
 #endif
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include "cosmoaudio.h"
+
+#define SAMPLING_RATE 44100
+#define WAVE_INTERVAL 440
+#define CHANNELS      2
 
 #ifndef M_PIf
 #define M_PIf 3.14159265358979323846f
 #endif
 
-int g_hz = 44100;
-int g_channels = 2;
-int g_generation = 0;
-int g_freq = 440;
-
-void data_callback(struct CosmoAudio *ca, float *outputSamples,
-                   const float *inputSamples, int frameCount, int channels,
-                   void *argument) {
-  for (int i = 0; i < frameCount; i++) {
-    float t = (float)g_generation++ / g_hz;
-    if (g_generation == g_hz)
-      g_generation = 0;
-    float s = sinf(2 * M_PIf * g_freq * t);
-    for (int j = 0; j < channels; j++)
-      outputSamples[i * channels + j] = s;
-  }
-  (void)inputSamples;
-  (void)argument;
-  (void)ca;
-}
-
 int main() {
 
-  struct CosmoAudioOpenOptions cao = {};
+  struct CosmoAudioOpenOptions cao = {0};
   cao.sizeofThis = sizeof(struct CosmoAudioOpenOptions);
   cao.deviceType = kCosmoAudioDeviceTypePlayback;
-  cao.sampleRate = g_hz;
-  cao.channels = g_channels;
-  cao.dataCallback = data_callback;
+  cao.sampleRate = SAMPLING_RATE;
+  cao.channels = CHANNELS;
 
+  int status;
   struct CosmoAudio *ca;
-  if (cosmoaudio_open(&ca, &cao) != COSMOAUDIO_SUCCESS) {
-    fprintf(stderr, "failed to open audio\n");
+  status = cosmoaudio_open(&ca, &cao);
+  if (status != COSMOAUDIO_SUCCESS) {
+    fprintf(stderr, "failed to open audio: %d\n", status);
     return 1;
   }
 
-  fgetc(stdin);
+  float buf[256 * CHANNELS];
+  for (int g = 0; g < SAMPLING_RATE;) {
+    int frames = 1;
+    status = cosmoaudio_poll(ca, NULL, &frames);
+    if (status != COSMOAUDIO_SUCCESS) {
+      fprintf(stderr, "failed to poll output: %d\n", status);
+      return 2;
+    }
+    if (frames > 256)
+      frames = 256;
+    if (frames > SAMPLING_RATE - g)
+      frames = SAMPLING_RATE - g;
+    for (int f = 0; f < frames; ++f) {
+      float t = (float)g++ / SAMPLING_RATE;
+      float s = sinf(2 * M_PIf * WAVE_INTERVAL * t);
+      for (int c = 0; c < CHANNELS; c++)
+        buf[f * CHANNELS + c] = s;
+    }
+    status = cosmoaudio_write(ca, buf, frames);
+    if (status != frames) {
+      fprintf(stderr, "failed to write output: %d\n", status);
+      return 3;
+    }
+  }
 
-  cosmoaudio_close(ca);
+  status = cosmoaudio_flush(ca);
+  if (status != COSMOAUDIO_SUCCESS) {
+    fprintf(stderr, "failed to flush output: %d\n", status);
+    return 4;
+  }
+
+  status = cosmoaudio_close(ca);
+  if (status != COSMOAUDIO_SUCCESS) {
+    fprintf(stderr, "failed to close audio: %d\n", status);
+    return 5;
+  }
 }

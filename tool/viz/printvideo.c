@@ -40,6 +40,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/ctype.h"
 #include "libc/cxxabi.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
@@ -56,7 +57,9 @@
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/console.h"
+#include "libc/nt/enum/threadpriority.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -1398,6 +1401,10 @@ static void TryToOpenFrameBuffer(void) {
 int main(int argc, char *argv[]) {
   sigset_t wut;
   ShowCrashReports();
+#ifdef __x86_64__
+  if (IsWindows())
+    SetThreadPriority(GetCurrentThread(), kNtThreadPriorityHighest);
+#endif
   gamma_ = 2.4;
   volscale_ = 1.f;
   dither_ = true;

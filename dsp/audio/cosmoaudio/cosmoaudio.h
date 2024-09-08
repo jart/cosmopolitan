@@ -21,20 +21,13 @@
 #define COSMOAUDIO_ERROR   -1  // unspecified error
 #define COSMOAUDIO_EINVAL  -2  // invalid parameters passed to api
 #define COSMOAUDIO_ELINK   -3  // loading cosmoaudio dso failed
+#define COSMOAUDIO_ENOBUF  -4  // invalid buffering parameters
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct CosmoAudio;
-
-typedef void cosmoaudio_data_callback_f(  //
-    struct CosmoAudio *ca,                //
-    float *outputSamples,                 //
-    const float *inputSamples,            //
-    int frameCount,                       //
-    int channels,                         //
-    void *argument);
 
 enum CosmoAudioDeviceType {
   kCosmoAudioDeviceTypePlayback = 1,
@@ -62,20 +55,10 @@ struct CosmoAudioOpenOptions {
   // for mono or 2 for stereo.
   int channels;
 
-  // Number of periods in ring buffer. Set to 0 for default. Higher
-  // numbers (e.g. 20) means more buffering. Lower numbers (e.g. 2)
-  // means less buffering. This is ignored if callback is specified.
-  int periods;
-
-  // If callback is NULL, then cosmoaudio_write() and cosmoaudio_read()
-  // should be used, which ring buffer audio to the default internal
-  // routine. Setting this callback to non-NULL puts CosmoAudio in
-  // manual mode, where the callback is responsible for copying PCM
-  // samples each time the device calls this.
-  cosmoaudio_data_callback_f *dataCallback;
-
-  // This is an arbitrary value passed to the callback.
-  void *argument;
+  // Number of frames in each ring buffer. A frame consists of a PCM
+  // sample for each channel. Set to 0 for default. If this is less than
+  // the device period size times two, it'll be increased to that value.
+  int bufferFrames;
 };
 
 COSMOAUDIO_API int cosmoaudio_version(void) COSMOAUDIO_ABI;
@@ -95,10 +78,20 @@ COSMOAUDIO_API int cosmoaudio_write(  //
     int frameCount                    //
     ) COSMOAUDIO_ABI;
 
+COSMOAUDIO_API int cosmoaudio_flush(  //
+    struct CosmoAudio *ca             //
+    ) COSMOAUDIO_ABI;
+
 COSMOAUDIO_API int cosmoaudio_read(  //
     struct CosmoAudio *ca,           //
     float *out_samples,              //
     int frameCount                   //
+    ) COSMOAUDIO_ABI;
+
+COSMOAUDIO_API int cosmoaudio_poll(  //
+    struct CosmoAudio *ca,           //
+    int *in_out_readFrames,          //
+    int *in_out_writeFrames          //
     ) COSMOAUDIO_ABI;
 
 #ifdef __cplusplus
