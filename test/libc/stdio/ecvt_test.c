@@ -31,3 +31,38 @@ TEST(fcvt, test) {
   ASSERT_EQ(1, decpt);
   ASSERT_EQ(0, sign);
 }
+
+TEST(ecvt, minus0) {
+  int decpt = 110000000, sign = 110000000;
+
+  ASSERT_STREQ("00000", ecvt(-0.0, 5, &decpt, &sign));
+  ASSERT_LE(0, decpt);
+  ASSERT_GE(1, decpt);
+  ASSERT_EQ(1, sign);
+}
+
+TEST(ecvt, minus0ndigits0) {
+  int decpt = 110000000, sign = 110000000;
+
+  ASSERT_STREQ("", ecvt(-0.0, 0, &decpt, &sign));
+  ASSERT_LE(0, decpt);
+  ASSERT_GE(1, decpt);
+  ASSERT_EQ(1, sign);
+}
+
+TEST(fcvt, ndigits0) {
+  int decpt = 110000000, sign = 110000000;
+
+  ASSERT_STREQ("1", fcvt(0.6, 0, &decpt, &sign));
+  ASSERT_EQ(1, decpt);
+  ASSERT_EQ(0, sign);
+}
+
+TEST(fcvt, minus0ndigits0) {
+  int decpt = 110000000, sign = 110000000;
+
+  ASSERT_STREQ("", fcvt(-0.0, 0, &decpt, &sign));
+  ASSERT_LE(0, decpt);
+  ASSERT_GE(1, decpt);
+  ASSERT_EQ(1, sign);
+}
