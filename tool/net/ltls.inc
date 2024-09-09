@@ -212,12 +212,9 @@ static int tls_read(lua_State *L) {
     lua_pushnil(L);
     return 1;
   } else {
+    // All negative values are treated as errors
     lua_pushnil(L);
-    if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-      lua_pushstring(L, "EAGAIN");
-    } else {
-      lua_pushfstring(L, "Read error: %d", ret);
-    }
+    lua_pushfstring(L, "Read error: %d", ret);
     return 2;
   }
 }
