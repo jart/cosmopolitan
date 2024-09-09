@@ -258,7 +258,7 @@ static int tls_tostring(lua_State *L) {
   TlsContext **tlsp = checktls(L);
   TlsContext *tls = *tlsp;
 
-  lua_pushfstring(L, "tls.TlsClient(fd=%d)", tls->fd);
+  lua_pushfstring(L, "tls.TlsClient({fd=%d})", tls->fd);
   return 1;
 }
 
