@@ -137,6 +137,7 @@
 #include "tool/net/lfuncs.h"
 #include "tool/net/ljson.h"
 #include "tool/net/lpath.h"
+#include "tool/net/ltls.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
@@ -3978,7 +3979,6 @@ static int LuaNilTlsError(lua_State *L, const char *s, int r) {
 }
 
 #include "tool/net/fetch.inc"
-#include "tool/net/ltls.inc"
 
 static int LuaGetDate(lua_State *L) {
   lua_pushinteger(L, shared->nowish.tv_sec);

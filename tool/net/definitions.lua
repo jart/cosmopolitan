@@ -4992,11 +4992,12 @@ unix = {
 local tls = {}
 
 --- Creates a new TLS socket.
+---@param fd integer File descriptor of the socket
 ---@param verify? boolean Whether to verify the server's certificate (default: true)
 ---@param timeout? integer Read timeout in milliseconds (default: 0, no timeout)
 ---@return TlsContext|nil context
 ---@return string? error
-function tls.socket(verify, timeout) end
+function tls.TlsClient(fd, verify, timeout) end
 
 --- Connects to a server using TLS.
 ---@param context TlsContext
