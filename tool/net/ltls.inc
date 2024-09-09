@@ -259,13 +259,15 @@ static int tls_tostring(lua_State *L) {
   return 1;
 }
 
-static const struct luaL_Reg tls_methods[] = {{"connect", tls_connect},
-                                              {"write", tls_write},
-                                              {"read", tls_read},
-                                              {"close", tls_close},
-                                              {"__gc", tls_gc},
-                                              {"__tostring", tls_tostring},
-                                              {NULL, NULL}};
+static const struct luaL_Reg tls_methods[] = {
+    {"connect", tls_connect},
+    {"write", tls_write},
+    {"read", tls_read},
+    {"close", tls_close},
+    {"__gc", tls_gc},
+    {"__tostring", tls_tostring},
+    {NULL, NULL}
+};
 
 static const struct luaL_Reg tlslib[] = {{"socket", tls_socket}, {NULL, NULL}};
 
