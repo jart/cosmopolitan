@@ -75,6 +75,7 @@ typedef struct pthread_mutex_s {
     int32_t _pid;
     _PTHREAD_ATOMIC(int32_t) _futex;
   };
+  /* this cleverly overlaps with NSYNC struct Dll *waiters; */
   _PTHREAD_ATOMIC(uint64_t) _word;
 } pthread_mutex_t;
 

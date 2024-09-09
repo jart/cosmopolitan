@@ -177,6 +177,41 @@ static void test_mutex_nthread (testing t) {
 	} while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), deadline) < 0);
 }
 
+/* Create a few threads, each of which increments an integer a fixed
+   number of times, using a recursive pthread_mutex_t for mutual exclusion.
+   It checks that the integer is incremented the correct number of times. */
+static void test_xmutex_nthread (testing t) {
+	int loop_count = 100000;
+	nsync_time deadline;
+	deadline = nsync_time_add (nsync_time_now (NSYNC_CLOCK), nsync_time_ms (1500));
+	do {
+		int i;
+		test_data td;
+		pthread_mutexattr_t attr;
+		bzero ((void *) &td, sizeof (td));
+		td.t = t;
+		td.n_threads = 5;
+		td.loop_count = loop_count;
+		td.mu_in_use = &td.mutex;
+		td.lock = &void_pthread_mutex_lock;
+		td.unlock = &void_pthread_mutex_unlock;
+		pthread_mutexattr_init (&attr);
+		pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+		pthread_mutex_init (&td.mutex, &attr);
+		pthread_mutexattr_destroy (&attr);
+		for (i = 0; i != td.n_threads; i++) {
+			closure_fork (closure_counting (&counting_loop, &td, i));
+		}
+		test_data_wait_for_all_threads (&td);
+		if (td.i != td.n_threads*td.loop_count) {
+			TEST_FATAL (t, ("test_mutex_nthread final count inconsistent: want %d, got %d",
+				   td.n_threads*td.loop_count, td.i));
+		}
+		pthread_mutex_destroy (&td.mutex);
+		loop_count *= 2;
+	} while (nsync_time_cmp (nsync_time_now (NSYNC_CLOCK), deadline) < 0);
+}
+
 /* void pthread_rwlock_wrlock */
 static void void_pthread_rwlock_wrlock (void *mu) {
         pthread_rwlock_wrlock ((pthread_rwlock_t *) mu);
@@ -1040,6 +1075,21 @@ static void benchmark_mutex_contended (testing t) {
 	pthread_mutex_destroy (&cs.mutex);
 }
 
+/* Measure the performance of highly contended recursive
+   pthread_mutex_t locks, with small critical sections.  */
+static void benchmark_xmutex_contended (testing t) {
+	contended_state cs;
+	pthread_mutexattr_t attr;
+	bzero ((void *) &cs, sizeof (cs));
+	pthread_mutexattr_init (&attr);
+	pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init (&cs.mutex, &attr);
+	pthread_mutexattr_destroy (&attr);
+	contended_state_run_test (&cs, t, &cs.mutex, &void_pthread_mutex_lock,
+				  &void_pthread_mutex_unlock);
+	pthread_mutex_destroy (&cs.mutex);
+}
+
 /* Measure the performance of highly contended
    pthread_rwlock_t locks, with small critical sections.  */
 static void benchmark_wmutex_contended (testing t) {
@@ -1057,11 +1107,13 @@ int main (int argc, char *argv[]) {
 	TEST_RUN (tb, test_rlock);
 	TEST_RUN (tb, test_mu_nthread);
 	TEST_RUN (tb, test_mutex_nthread);
+	TEST_RUN (tb, test_xmutex_nthread);
 	TEST_RUN (tb, test_rwmutex_nthread);
 	TEST_RUN (tb, test_try_mu_nthread);
 
 	BENCHMARK_RUN (tb, benchmark_mu_contended);
 	BENCHMARK_RUN (tb, benchmark_mutex_contended);
+	BENCHMARK_RUN (tb, benchmark_xmutex_contended);
 	BENCHMARK_RUN (tb, benchmark_wmutex_contended);
 
 	BENCHMARK_RUN (tb, benchmark_mu_uncontended);

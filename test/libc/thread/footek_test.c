@@ -1,15 +1,15 @@
 #define USE        POSIX
-#define ITERATIONS 50000
-#define THREADS    10
-// #define ITERATIONS 100000
-// #define THREADS    30
+#define ITERATIONS 100000
+#define THREADS    30
 
-#define SPIN  1
-#define FUTEX 2
-#define POSIX 3
+#define SPIN            1
+#define FUTEX           2
+#define POSIX           3
+#define POSIX_RECURSIVE 4
 
 #ifdef __COSMOPOLITAN__
 #include <cosmo.h>
+#include "libc/thread/thread.h"
 #include "third_party/nsync/futex.internal.h"
 #endif
 
@@ -278,6 +278,8 @@ void lock(atomic_int *futex) {
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
 #if USE == FUTEX
     nsync_futex_wait_(futex, 2, 0, 0, 0);
+#else
+    pthread_yield_np();
 #endif
     pthread_setcancelstate(cs, 0);
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
@@ -296,11 +298,11 @@ void unlock(atomic_int *futex) {
 
 int g_chores;
 atomic_int g_lock;
-pthread_mutex_t g_locker = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_locker;
 
 void *worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
-#if USE == POSIX
+#if USE == POSIX || USE == POSIX_RECURSIVE
     pthread_mutex_lock(&g_locker);
     ++g_chores;
     pthread_mutex_unlock(&g_locker);
@@ -331,6 +333,17 @@ int main() {
   struct timeval start;
   gettimeofday(&start, 0);
 
+  pthread_mutex_t lock;
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+#if USE == POSIX_RECURSIVE
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+#else
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+#endif
+  pthread_mutex_init(&g_locker, &attr);
+  pthread_mutexattr_destroy(&attr);
+
   pthread_t th[THREADS];
   for (int i = 0; i < THREADS; ++i)
     pthread_create(&th[i], 0, worker, 0);
@@ -348,6 +361,8 @@ int main() {
          tomicros(tub(end, start)),  //
          tomicros(ru.ru_utime),      //
          tomicros(ru.ru_stime));
+
+  pthread_mutex_destroy(&lock);
 
 #ifdef __COSMOPOLITAN__
   CheckForMemoryLeaks();
