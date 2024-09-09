@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ltls.h"
 #include "libc/calls/struct/iovec.h"
+#include "net/https/https.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
+#include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/iana.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/oid.h"
@@ -28,11 +30,9 @@
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
-#include "third_party/mbedtls/entropy.h"
-#include "net/https/https.h"
 
 #ifndef MIN
-#define MIN(a,b)   ( (a) < (b) ? (a) :(b) )
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 static const char *const tls_meta = ":mbedtls";
