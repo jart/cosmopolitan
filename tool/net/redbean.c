@@ -129,7 +129,6 @@
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
-#include "third_party/mbedtls/entropy.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
