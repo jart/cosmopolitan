@@ -1,4 +1,3 @@
-#include "libc/intrin/kprintf.h"
 static const char *const tls_meta = ":mbedtls";
 
 typedef enum {
