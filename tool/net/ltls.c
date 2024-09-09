@@ -254,21 +254,6 @@ static int tls_read(lua_State *L) {
   }
 }
 
-static int tls_close(lua_State *L) {
-  TlsContext **tlsp = checktls(L);
-  TlsContext *tls = *tlsp;
-
-  mbedtls_ssl_free(&tls->ssl);
-  mbedtls_ssl_config_free(&tls->conf);
-  mbedtls_ctr_drbg_free(&tls->ctr_drbg);
-  mbedtls_entropy_free(&tls->entropy);
-  free(tls->read_buffer);
-  tls->read_buffer = NULL;
-  tls->read_buffer_size = 0;
-
-  return 0;
-}
-
 static int tls_tostring(lua_State *L) {
   TlsContext **tlsp = checktls(L);
   TlsContext *tls = *tlsp;
@@ -280,7 +265,6 @@ static int tls_tostring(lua_State *L) {
 static const struct luaL_Reg tls_methods[] = {
     {"write", tls_write},
     {"read", tls_read},
-    {"close", tls_close},
     {"__gc", tls_gc},
     {"__tostring", tls_tostring},
     {"__repr", tls_tostring},

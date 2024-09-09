@@ -4991,21 +4991,13 @@ unix = {
 ---@class tls
 local tls = {}
 
---- Creates a new TLS socket.
+--- Creates a new TLS client.
 ---@param fd integer File descriptor of the socket
 ---@param verify? boolean Whether to verify the server's certificate (default: true)
 ---@param timeout? integer Read timeout in milliseconds (default: 0, no timeout)
 ---@return TlsContext|nil context
 ---@return string? error
 function tls.TlsClient(fd, verify, timeout) end
-
---- Connects to a server using TLS.
----@param context TlsContext
----@param server_name string
----@param server_port string
----@return boolean success
----@return string? error
-function tls:connect(server_name, server_port) end
 
 --- Writes data to the TLS connection.
 ---@param context TlsContext
@@ -5020,10 +5012,6 @@ function tls:write(data) end
 ---@return string? data
 ---@return string? error
 function tls:read(bufsiz) end
-
---- Closes the TLS connection.
----@param context TlsContext
-function tls:close() end
 
 --- Opens file.
 ---
