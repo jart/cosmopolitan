@@ -55,13 +55,10 @@ static TlsContext **checktls(lua_State *L) {
   return tls;
 }
 
-
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
   int rc;
   if ((rc = write(*(int *)c, p, n)) == -1) {
-    perror("TlsSend");
-    fprintf(stderr, "TlsSend error: rc=%d, c=%d\n", rc, *(int *)c);
-    exit(1);
+    return -1;  // Return error code instead of exiting
   }
   return rc;
 }
@@ -84,8 +81,7 @@ static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
   v[1].iov_base = t;
   v[1].iov_len = sizeof(t);
   if ((r = readv(*(int *)c, v, 2)) == -1) {
-    perror("TlsRecv");
-    exit(1);
+    return -1;  // Return error code instead of exiting
   }
   if (r > n) {
     b = r - n;
