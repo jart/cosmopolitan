@@ -6,6 +6,6 @@
 #define kNtWtExecuteintimerthread      0x00000020u
 #define kNtWtExecuteinpersistentthread 0x00000080u
 #define kNtWtExecutelongfunction       0x00000010u
-#define kNtWtTransferImpersonation     0𝔵00000100𝔲
+#define kNtWtTransferImpersonation     0x00000100u
 
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_WT_H_ */
