@@ -16,28 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/clock.h"
+#include <assert.h>
+#include <stdio.h>
+#include <time.h>
 
 #define MAXIMUM    1e9
 #define ITERATIONS 10
 
+const char *MyDescribeClockName(int clock) {
+  if (clock == CLOCK_REALTIME)
+    return "CLOCK_REALTIME";
+  if (clock == CLOCK_MONOTONIC)
+    return "CLOCK_MONOTONIC";
+  if (clock == CLOCK_REALTIME_COARSE)
+    return "CLOCK_REALTIME_COARSE";
+  if (clock == CLOCK_MONOTONIC_COARSE)
+    return "CLOCK_MONOTONIC_COARSE";
+  __builtin_trap();
+}
+
 void TestSleepRelative(int clock) {
   printf("\n");
   printf("testing: clock_nanosleep(%s) with relative timeout\n",
-         DescribeClockName(clock));
+         MyDescribeClockName(clock));
   for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 2) {
     struct timespec t1, t2, wf;
     wf = timespec_fromnanos(nanos);
     if (clock_gettime(clock, &t1))
       return;
     for (int i = 0; i < ITERATIONS; ++i) {
-      npassert(!clock_nanosleep(clock, 0, &wf, 0));
+      assert(!clock_nanosleep(clock, 0, &wf, 0));
     }
     clock_gettime(clock, &t2);
     long took = timespec_tonanos(timespec_sub(t2, t1)) / ITERATIONS;

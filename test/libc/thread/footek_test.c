@@ -1,4 +1,4 @@
-#define USE        POSIX
+#define USE        POSIX_RECURSIVE
 #define ITERATIONS 100000
 #define THREADS    30
 

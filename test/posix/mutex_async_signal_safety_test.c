@@ -8,6 +8,8 @@
 // tests that recursive mutexes are implemented atomically
 //
 // glibc fails this test
+// musl passes this test
+// cosmo only guarantees this in process shared mode
 
 atomic_bool done;
 atomic_bool ready;
@@ -44,6 +46,8 @@ int main() {
   if (pthread_mutexattr_init(&attr))
     _Exit(2);
   if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE))
+    _Exit(3);
+  if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED))
     _Exit(3);
   if (pthread_mutex_init(&lock, &attr))
     _Exit(4);

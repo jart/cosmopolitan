@@ -15,18 +15,13 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/nsync/testing/cv_test.inc"
+#include "third_party/nsync/testing/mu_test.inc"
 
 int main (int argc, char *argv[]) {
 	testing_base tb = testing_new (argc, argv, 0);
-	TEST_RUN (tb, test_cv_producer_consumer0);
-	TEST_RUN (tb, test_cv_producer_consumer1);
-	TEST_RUN (tb, test_cv_producer_consumer2);
-	TEST_RUN (tb, test_cv_producer_consumer3);
-	TEST_RUN (tb, test_cv_producer_consumer4);
-	TEST_RUN (tb, test_cv_producer_consumer5);
-	TEST_RUN (tb, test_cv_producer_consumer6);
-	TEST_RUN (tb, test_cv_debug);
-	TEST_RUN (tb, test_cv_transfer);
+
+	TEST_RUN (tb, test_mutex_nthread);
+	TEST_RUN (tb, test_xmutex_nthread);
+
 	return (testing_base_exit (tb));
 }

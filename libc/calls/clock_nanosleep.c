@@ -58,6 +58,8 @@
  * @param clock may be
  *     - `CLOCK_REALTIME`
  *     - `CLOCK_MONOTONIC`
+ *     - `CLOCK_REALTIME_COARSE` but is likely to sleep negative time
+ *     - `CLOCK_MONTONIC_COARSE` but is likely to sleep negative time
  * @param flags can be 0 for relative and `TIMER_ABSTIME` for absolute
  * @param req can be a relative or absolute time, depending on `flags`
  * @param rem shall be updated with the remainder of unslept time when

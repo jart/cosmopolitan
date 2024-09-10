@@ -19,14 +19,6 @@
 
 int main (int argc, char *argv[]) {
 	testing_base tb = testing_new (argc, argv, 0);
-	TEST_RUN (tb, test_cv_producer_consumer0);
-	TEST_RUN (tb, test_cv_producer_consumer1);
-	TEST_RUN (tb, test_cv_producer_consumer2);
-	TEST_RUN (tb, test_cv_producer_consumer3);
-	TEST_RUN (tb, test_cv_producer_consumer4);
-	TEST_RUN (tb, test_cv_producer_consumer5);
-	TEST_RUN (tb, test_cv_producer_consumer6);
-	TEST_RUN (tb, test_cv_debug);
-	TEST_RUN (tb, test_cv_transfer);
+	TEST_RUN (tb, test_cv_cancel);
 	return (testing_base_exit (tb));
 }

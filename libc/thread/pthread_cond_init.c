@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/thread.h"
 
@@ -29,8 +30,11 @@ errno_t pthread_cond_init(pthread_cond_t *cond,
                           const pthread_condattr_t *attr) {
   *cond = (pthread_cond_t){0};
   if (attr) {
+    cond->_footek = IsXnuSilicon() || attr->_pshared;
     cond->_pshared = attr->_pshared;
     cond->_clock = attr->_clock;
+  } else {
+    cond->_footek = IsXnuSilicon();
   }
   return 0;
 }

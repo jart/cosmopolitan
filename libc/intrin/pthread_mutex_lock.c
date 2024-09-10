@@ -111,6 +111,37 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
   }
 }
 
+#if PTHREAD_USE_NSYNC
+static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex,
+                                                  uint64_t word) {
+  int me = gettid();
+  for (;;) {
+    if (MUTEX_OWNER(word) == me) {
+      if (MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK) {
+        if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {
+          if (atomic_compare_exchange_weak_explicit(
+                  &mutex->_word, &word, MUTEX_INC_DEPTH(word),
+                  memory_order_relaxed, memory_order_relaxed))
+            return 0;
+          continue;
+        } else {
+          return EAGAIN;
+        }
+      } else {
+        return EDEADLK;
+      }
+    }
+    _weaken(nsync_mu_lock)((nsync_mu *)mutex->_nsyncx);
+    word = MUTEX_UNLOCK(word);
+    word = MUTEX_LOCK(word);
+    word = MUTEX_SET_OWNER(word, me);
+    mutex->_word = word;
+    mutex->_pid = __pid;
+    return 0;
+  }
+}
+#endif
+
 static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
   uint64_t word;
 
@@ -141,8 +172,17 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
     return 0;
   }
 
-  // handle recursive and error checking mutexes
+// handle recursive and error checking mutexes
+#if PTHREAD_USE_NSYNC
+  if (_weaken(nsync_mu_lock) &&
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE) {
+    return pthread_mutex_lock_recursive_nsync(mutex, word);
+  } else {
+    return pthread_mutex_lock_recursive(mutex, word);
+  }
+#else
   return pthread_mutex_lock_recursive(mutex, word);
+#endif
 }
 
 /**

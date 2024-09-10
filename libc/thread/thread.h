@@ -8,7 +8,6 @@
 
 #define PTHREAD_BARRIER_SERIAL_THREAD 31337
 
-#define PTHREAD_MUTEX_DEFAULT    0
 #define PTHREAD_MUTEX_NORMAL     0
 #define PTHREAD_MUTEX_RECURSIVE  1
 #define PTHREAD_MUTEX_ERRORCHECK 2
@@ -77,6 +76,7 @@ typedef struct pthread_mutex_s {
   };
   /* this cleverly overlaps with NSYNC struct Dll *waiters; */
   _PTHREAD_ATOMIC(uint64_t) _word;
+  long _nsyncx[2];
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
@@ -95,6 +95,8 @@ typedef struct pthread_cond_s {
       uint32_t _nsync;
       char _pshared;
       char _clock;
+      char _footek;
+      _PTHREAD_ATOMIC(char) _waited;
     };
   };
   _PTHREAD_ATOMIC(uint32_t) _sequence;

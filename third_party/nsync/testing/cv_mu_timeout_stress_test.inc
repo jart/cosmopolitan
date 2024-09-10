@@ -23,6 +23,7 @@
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
+#include "libc/dce.h"
 #include "third_party/nsync/testing/testing.h"
 
 /* A cv_stress_data represents the data used by the threads of the tests below. */
@@ -59,8 +60,8 @@ typedef struct cv_stress_data_s {
 /* The delays in cv_stress_inc_loop(), cv_stress_reader_loop(), mu_stress_inc_loop(),
    and mu_stress_reader_loop() are uniformly distributed from 0 to
    STRESS_MAX_DELAY_MICROS-1 microseconds. */
-#define STRESS_MAX_DELAY_MICROS (4000)                                    /* maximum delay */
-#define STRESS_MEAN_DELAY_MICROS (STRESS_MAX_DELAY_MICROS / 2)               /* mean delay */
+#define STRESS_MAX_DELAY_MICROS (IsNetbsd() || IsOpenbsd() ? 20000 : 4000)  /* maximum delay */
+#define STRESS_MEAN_DELAY_MICROS (STRESS_MAX_DELAY_MICROS / 2)              /* mean delay */
 #define STRESS_EXPECT_TIMEOUTS_PER_SEC (1000000 / STRESS_MEAN_DELAY_MICROS) /* expect timeouts/s*/
 
 /* Acquire s.mu, then increment s.count n times, each time
@@ -549,12 +550,4 @@ static void test_mu_cv_timeout_stress (testing t) {
 		s.deadline = deadline;
 		loop_count *= 2;
 	} while (!run_stress_test (&s, t, "test_mu_cv_timeout_stress"));
-}
-
-int main (int argc, char *argv[]) {
-	testing_base tb = testing_new (argc, argv, 0);
-	TEST_RUN (tb, test_cv_timeout_stress);
-	TEST_RUN (tb, test_mu_timeout_stress);
-	TEST_RUN (tb, test_mu_cv_timeout_stress);
-	return (testing_base_exit (tb));
 }

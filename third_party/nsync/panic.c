@@ -24,6 +24,8 @@
 
 /* Aborts after printing the nul-terminated string s[]. */
 void nsync_panic_ (const char *s) {
+	if (1)
+		__builtin_trap();
 	tinyprint(2, "error: nsync panic: ", s,
 		"cosmoaddr2line ", program_invocation_name, " ",
 		DescribeBacktrace (__builtin_frame_address (0)), "\n",

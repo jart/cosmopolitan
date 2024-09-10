@@ -40,6 +40,12 @@ atomic_int gotcleanup;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
+  pthread_mutexattr_t at;
+  pthread_mutexattr_init(&at);
+  pthread_mutexattr_settype(&at, PTHREAD_MUTEX_NORMAL);
+  pthread_mutex_init(&mu, &at);
+  pthread_mutexattr_destroy(&at);
+  pthread_cond_init(&cv, 0);
 }
 
 void SetUp(void) {

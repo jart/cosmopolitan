@@ -23,6 +23,8 @@ LOCAL CHANGES
 
   - Double linked list API was so good that it's now in libc
 
+  - Max delay on sleep should be 20ms (not 4ms) on OpenBSD and NetBSD
+
   - Support Apple's ulock futexes which are internal but nicer than GCD
 
   - Ensure resources such as POSIX semaphores are are released on fork.

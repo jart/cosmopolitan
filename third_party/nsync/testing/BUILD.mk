@@ -8,6 +8,7 @@ THIRD_PARTY_NSYNC_TESTING_A = o/$(MODE)/third_party/nsync/testing/lib.a
 THIRD_PARTY_NSYNC_TESTING_FILES = $(wildcard third_party/nsync/testing/*)
 THIRD_PARTY_NSYNC_TESTING_SRCS = $(filter %.c,$(THIRD_PARTY_NSYNC_TESTING_FILES))
 THIRD_PARTY_NSYNC_TESTING_HDRS = $(filter %.h,$(THIRD_PARTY_NSYNC_TESTING_FILES))
+THIRD_PARTY_NSYNC_TESTING_INCS = $(filter %.inc,$(THIRD_PARTY_NSYNC_TESTING_FILES))
 THIRD_PARTY_NSYNC_TESTING_SRCS_TEST = $(filter %_test.c,$(THIRD_PARTY_NSYNC_TESTING_SRCS))
 THIRD_PARTY_NSYNC_TESTING_OBJS = $(THIRD_PARTY_NSYNC_TESTING_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_NSYNC_TESTING_COMS = $(THIRD_PARTY_NSYNC_TESTING_SRCS_TEST:%.c=o/$(MODE)/%)
@@ -54,7 +55,14 @@ o/$(MODE)/third_party/nsync/testing/%_test.dbg:			\
 o/$(MODE)/third_party/nsync/testing/mu_starvation_test.ok: private QUOTA = -L300
 o/$(MODE)/third_party/nsync/testing/mu_starvation_test.runs: private QUOTA = -C128 -L300
 o/$(MODE)/third_party/nsync/testing/mu_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/mu2_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/mu3_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/cv_mu_timeout_stress_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/cv_mu_timeout_stress2_test.ok: private QUOTA = -L300
+o/$(MODE)/third_party/nsync/testing/cv_mu_timeout_stress3_test.ok: private QUOTA = -L300
 o/$(MODE)/third_party/nsync/testing/mu_test.runs: private QUOTA = -C128 -L300
+o/$(MODE)/third_party/nsync/testing/mu2_test.runs: private QUOTA = -C128 -L300
+o/$(MODE)/third_party/nsync/testing/mu3_test.runs: private QUOTA = -C128 -L300
 o/$(MODE)/third_party/nsync/testing/wait_test.ok: private QUOTA = -P65536
 o/$(MODE)/third_party/nsync/testing/wait_test.runs: private QUOTA = -P65536
 

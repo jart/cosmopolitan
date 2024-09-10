@@ -20,6 +20,7 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
@@ -116,17 +117,30 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
       MUTEX_OWNER(muword) != gettid())
     return EPERM;
 
-  // if condition variable is shared then mutex must be too
-  if (cond->_pshared)
-    if (MUTEX_PSHARED(muword) != PTHREAD_PROCESS_SHARED)
+#if PTHREAD_USE_NSYNC
+  // the first time pthread_cond_timedwait() is called we learn if the
+  // associated mutex is normal and private. that means *NSYNC is safe
+  // this decision is permanent. you can't use a recursive mutex later
+  if (!atomic_load_explicit(&cond->_waited, memory_order_acquire)) {
+    if (!cond->_footek)
+      if (MUTEX_TYPE(muword) != PTHREAD_MUTEX_NORMAL ||
+          MUTEX_PSHARED(muword) != PTHREAD_PROCESS_PRIVATE)
+        cond->_footek = true;
+    atomic_store_explicit(&cond->_waited, true, memory_order_release);
+  } else if (!cond->_footek) {
+    if (MUTEX_TYPE(muword) != PTHREAD_MUTEX_NORMAL ||
+        MUTEX_PSHARED(muword) != PTHREAD_PROCESS_PRIVATE)
       return EINVAL;
+  }
+#endif
 
+  // now perform the actual wait
   errno_t err;
   BEGIN_CANCELATION_POINT;
 #if PTHREAD_USE_NSYNC
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
-  if (!cond->_pshared && !IsXnuSilicon()) {
+  if (!cond->_footek) {
     err = nsync_cv_wait_with_deadline(
         (nsync_cv *)cond, (nsync_mu *)mutex, cond->_clock,
         abstime ? *abstime : nsync_time_no_deadline, 0);

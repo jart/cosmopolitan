@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -69,6 +70,35 @@ static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
   }
 }
 
+#if PTHREAD_USE_NSYNC
+static errno_t pthread_mutex_unlock_recursive_nsync(pthread_mutex_t *mutex,
+                                                    uint64_t word) {
+  int me = gettid();
+  for (;;) {
+
+    // we allow unlocking an initialized lock that wasn't locked, but we
+    // don't allow unlocking a lock held by another thread, or unlocking
+    // recursive locks from a forked child, since it should be re-init'd
+    if (MUTEX_OWNER(word) && (MUTEX_OWNER(word) != me || mutex->_pid != __pid))
+      return EPERM;
+
+    // check if this is a nested lock with signal safety
+    if (MUTEX_DEPTH(word)) {
+      if (atomic_compare_exchange_strong_explicit(
+              &mutex->_word, &word, MUTEX_DEC_DEPTH(word), memory_order_relaxed,
+              memory_order_relaxed))
+        return 0;
+      continue;
+    }
+
+    // actually unlock the mutex
+    mutex->_word = MUTEX_UNLOCK(word);
+    _weaken(nsync_mu_unlock)((nsync_mu *)mutex->_nsyncx);
+    return 0;
+  }
+}
+#endif
+
 /**
  * Releases mutex.
  *
@@ -80,6 +110,11 @@ static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
  */
 errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
   uint64_t word;
+
+  if (__vforked) {
+    LOCKTRACE("skipping pthread_mutex_lock(%t) due to vfork", mutex);
+    return 0;
+  }
 
   LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
 
@@ -111,5 +146,14 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
   }
 
   // handle recursive and error checking mutexes
+#if PTHREAD_USE_NSYNC
+  if (_weaken(nsync_mu_unlock) &&
+      MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE) {
+    return pthread_mutex_unlock_recursive_nsync(mutex, word);
+  } else {
+    return pthread_mutex_unlock_recursive(mutex, word);
+  }
+#else
   return pthread_mutex_unlock_recursive(mutex, word);
+#endif
 }

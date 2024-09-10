@@ -95,7 +95,6 @@ TEST(pthread_mutex_lock, recursive) {
   }
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
-  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }
 

@@ -31,7 +31,7 @@
 #define FOOTERS 1
 #define MSPACES 1
 #define ONLY_MSPACES 1 // enables scalable multi-threaded malloc
-#define USE_SPIN_LOCKS 1 // only profitable using sched_getcpu()
+#define USE_SPIN_LOCKS 0 // only profitable using sched_getcpu()
 #else
 #define INSECURE 1
 #define PROCEED_ON_ERROR 1

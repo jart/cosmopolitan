@@ -25,7 +25,6 @@
  *
  * @param type can be one of
  *     - `PTHREAD_MUTEX_NORMAL`
- *     - `PTHREAD_MUTEX_DEFAULT`
  *     - `PTHREAD_MUTEX_RECURSIVE`
  *     - `PTHREAD_MUTEX_ERRORCHECK`
  * @return 0 on success, or error on failure
