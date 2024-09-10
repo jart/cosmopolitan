@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
+#include "libc/assert.h"
 
 #define MAXIMUM    1e9
 #define ITERATIONS 10
@@ -45,7 +46,7 @@ void TestSleepRelative(int clock) {
     if (clock_gettime(clock, &t1))
       return;
     for (int i = 0; i < ITERATIONS; ++i) {
-      assert(!clock_nanosleep(clock, 0, &wf, 0));
+      unassert(!clock_nanosleep(clock, 0, &wf, 0));
     }
     clock_gettime(clock, &t2);
     long took = timespec_tonanos(timespec_sub(t2, t1)) / ITERATIONS;

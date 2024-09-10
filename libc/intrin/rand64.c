@@ -27,7 +27,7 @@
 
 static int _rand64_pid;
 static unsigned __int128 _rand64_pool;
-pthread_mutex_t _rand64_lock_obj = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+pthread_mutex_t _rand64_lock_obj = PTHREAD_SIGNAL_SAFE_MUTEX_INITIALIZER_NP;
 
 /**
  * Returns nondeterministic random data.

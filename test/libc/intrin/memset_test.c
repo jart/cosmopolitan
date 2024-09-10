@@ -21,7 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
 
 static void *golden(void *p, int c, size_t n) {
@@ -64,36 +64,11 @@ TEST(bzero, hug) {
   }
 }
 
-BENCH(memset, bench) {
-  int n, max = 8 * 1024 * 1024;
-  char *volatile p = gc(malloc(max));
-
-  EZBENCH_N("memset", 0, memset(p, -1, 0));
-  for (n = 2; n <= max; n *= 2) {
-    EZBENCH_N("memset", n - 1, memset(p, -1, n - 1));
-    EZBENCH_N("memset", n, memset(p, -1, n));
-  }
-
-  EZBENCH_N("memset16", 0, memset16((char16_t *)p, -1, 0));
-  for (n = 2; n <= max; n *= 2) {
-    EZBENCH_N("memset16", n, memset16((char16_t *)p, -1, n / 2));
-  }
-
-  EZBENCH_N("bzero", 0, bzero(p, 0));
-  for (n = 2; n <= max; n *= 2) {
-    EZBENCH_N("bzero", n - 1, bzero(p, n - 1));
-    EZBENCH_N("bzero", n, bzero(p, n));
-  }
-}
+#define N (256 * 1024 * 1024)
 
 BENCH(strlen, bench) {
-  int n, max = 8 * 1024 * 1024;
-  char *volatile p = gc(calloc(max + 1, 1));
-  EZBENCH_N("strlen", 0, strlen(p));
-  for (n = 2; n <= max; n *= 2) {
-    memset(p, -1, n - 1);
-    EZBENCH_N("strlen", n - 1, strlen(p));
-    p[n - 1] = -1;
-    EZBENCH_N("strlen", n, strlen(p));
-  }
+  static char A[N];
+  memset(A, 2, N);
+  for (int n = 1; n <= N; n *= 2)
+    BENCHMARK(100, n, X(memset(V(A), 1, n)));
 }
