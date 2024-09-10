@@ -85,15 +85,15 @@ struct VirtualKey {
 #define S(s) W(s "\0\0")
 #define W(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
 
-static const struct VirtualKey kVirtualKey[] = {
-    {kNtVkUp, S("A"), S("1;2A"), S("1;5A"), S("1;6A")},
-    {kNtVkDown, S("B"), S("1;2B"), S("1;5B"), S("1;6B")},
-    {kNtVkRight, S("C"), S("1;2C"), S("1;5C"), S("1;6C")},
-    {kNtVkLeft, S("D"), S("1;2D"), S("1;5D"), S("1;6D")},
+static struct VirtualKey kVirtualKey[] = {
+    {kNtVkUp, S("A"), S("1;2A"), S("1;5A"), S("1;6A")},     // order matters
+    {kNtVkDown, S("B"), S("1;2B"), S("1;5B"), S("1;6B")},   // order matters
+    {kNtVkRight, S("C"), S("1;2C"), S("1;5C"), S("1;6C")},  // order matters
+    {kNtVkLeft, S("D"), S("1;2D"), S("1;5D"), S("1;6D")},   // order matters
+    {kNtVkEnd, S("F"), S("1;2F"), S("1;5F"), S("1;6F")},    // order matters
+    {kNtVkHome, S("H"), S("1;2H"), S("1;5H"), S("1;6H")},   // order matters
     {kNtVkInsert, S("2~"), S("2;2~"), S("2;5~"), S("2;6~")},
     {kNtVkDelete, S("3~"), S("3;2~"), S("3;5~"), S("3;6~")},
-    {kNtVkHome, S("H"), S("1;2H"), S("1;5H"), S("1;6H")},
-    {kNtVkEnd, S("F"), S("1;2F"), S("1;5F"), S("1;6F")},
     {kNtVkPrior, S("5~"), S("5;2~"), S("5;5~"), S("5;6~")},
     {kNtVkNext, S("6~"), S("6;2~"), S("6;5~"), S("6;6~")},
     {kNtVkF1, -S("OP"), S("1;2P"), S("11^"), S("1;6P")},
@@ -108,17 +108,6 @@ static const struct VirtualKey kVirtualKey[] = {
     {kNtVkF10, S("21~"), S("34~"), S("21^"), S("34^")},
     {kNtVkF11, S("23~"), S("23$"), S("23^"), S("23@")},
     {kNtVkF12, S("24~"), S("24$"), S("24^"), S("24@")},
-    {0},
-};
-
-// TODO: How can we configure `less` to not need this bloat?
-static const struct VirtualKey kDecckm[] = {
-    {kNtVkUp, -S("OA"), -S("OA"), S("A"), S("A")},
-    {kNtVkDown, -S("OB"), -S("OB"), S("B"), S("B")},
-    {kNtVkRight, -S("OC"), -S("OC"), S("C"), S("C")},
-    {kNtVkLeft, -S("OD"), -S("OD"), S("D"), S("D")},
-    {kNtVkPrior, S("5~"), S("5;2~"), S("5;5~"), S("5;6~")},
-    {kNtVkNext, S("6~"), S("6;2~"), S("6;5~"), S("6;6~")},
     {0},
 };
 
@@ -142,7 +131,6 @@ struct Keystrokes {
   struct Dll *line;
   struct Dll *free;
   pthread_mutex_t lock;
-  const struct VirtualKey *vkt;
   struct Keystroke pool[512];
 };
 
@@ -180,7 +168,6 @@ textwindows static void FreeKeystrokes(struct Dll **list) {
 }
 
 textwindows static void OpenConsole(void) {
-  __keystroke.vkt = kVirtualKey;
   __keystroke.cin = CreateFile(u"CONIN$", kNtGenericRead | kNtGenericWrite,
                                kNtFileShareRead, 0, kNtOpenExisting, 0, 0);
   __keystroke.cot = CreateFile(u"CONOUT$", kNtGenericRead | kNtGenericWrite,
@@ -227,16 +214,16 @@ textwindows static bool IsMouseModeCommand(int x) {
 }
 
 textwindows static int GetVirtualKey(uint16_t vk, bool shift, bool ctrl) {
-  for (int i = 0; __keystroke.vkt[i].vk; ++i) {
-    if (__keystroke.vkt[i].vk == vk) {
+  for (int i = 0; kVirtualKey[i].vk; ++i) {
+    if (kVirtualKey[i].vk == vk) {
       if (shift && ctrl) {
-        return __keystroke.vkt[i].shift_ctrl_str;
+        return kVirtualKey[i].shift_ctrl_str;
       } else if (shift) {
-        return __keystroke.vkt[i].shift_str;
+        return kVirtualKey[i].shift_str;
       } else if (ctrl) {
-        return __keystroke.vkt[i].ctrl_str;
+        return kVirtualKey[i].ctrl_str;
       } else {
-        return __keystroke.vkt[i].normal_str;
+        return kVirtualKey[i].normal_str;
       }
     }
   }
@@ -737,8 +724,14 @@ textwindows void InterceptTerminalCommands(const char *data, size_t size) {
           x = 0;
         } else if (data[i] == 'h') {
           if (x == 1) {
-            __keystroke.vkt = kDecckm;  // \e[?1h decckm on
+            // \e[?1h decckm on
             __keystroke.ohno_decckm = true;
+            kVirtualKey[0].normal_str = -S("OA");  // kNtVkUp
+            kVirtualKey[1].normal_str = -S("OB");  // kNtVkDown
+            kVirtualKey[2].normal_str = -S("OC");  // kNtVkRight
+            kVirtualKey[3].normal_str = -S("OD");  // kNtVkLeft
+            kVirtualKey[4].normal_str = -S("OF");  // kNtVkEnd
+            kVirtualKey[5].normal_str = -S("OH");  // kNtVkHome
           } else if ((ismouse |= IsMouseModeCommand(x))) {
             __ttyconf.magic |= kTtyXtMouse;
             cm2 |= kNtEnableMouseInput;
@@ -747,8 +740,14 @@ textwindows void InterceptTerminalCommands(const char *data, size_t size) {
           t = ASC;
         } else if (data[i] == 'l') {
           if (x == 1) {
-            __keystroke.vkt = kVirtualKey;  // \e[?1l decckm off
+            // \e[?1l decckm off
             __keystroke.ohno_decckm = false;
+            kVirtualKey[0].normal_str = S("A");  // kNtVkUp
+            kVirtualKey[1].normal_str = S("B");  // kNtVkDown
+            kVirtualKey[2].normal_str = S("C");  // kNtVkRight
+            kVirtualKey[3].normal_str = S("D");  // kNtVkLeft
+            kVirtualKey[4].normal_str = S("F");  // kNtVkEnd
+            kVirtualKey[5].normal_str = S("H");  // kNtVkHome
           } else if ((ismouse |= IsMouseModeCommand(x))) {
             __ttyconf.magic &= ~kTtyXtMouse;
             cm2 |= kNtEnableQuickEditMode;  // release mouse
