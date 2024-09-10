@@ -28,6 +28,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/console.h"
@@ -48,6 +49,7 @@
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -78,13 +80,13 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
                                         uint32_t *ms, sigset_t sigmask) {
   bool ok;
   uint64_t millis;
-  uint32_t cm, avail, waitfor;
   struct sys_pollfd_nt pipefds[64];
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
   int sockindices[ARRAYLEN(sockfds)];
   struct timespec deadline, remain, now;
-  int i, rc, sn, pn, gotinvals, gotpipes, gotsocks;
+  uint32_t cm, avail, waitfor, already_slept;
+  int i, rc, sn, pn, sig, gotinvals, gotpipes, gotsocks, handler_was_called;
 
   waitfor = ms ? *ms : -1u;
   deadline = timespec_add(timespec_mono(), timespec_frommillis(waitfor));
@@ -146,7 +148,20 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
 
   // perform the i/o and sleeping and looping
   for (;;) {
+
+    // determine how long to wait
+    now = timespec_mono();
+    if (timespec_cmp(now, deadline) < 0) {
+      remain = timespec_sub(deadline, now);
+      millis = timespec_tomillis(remain);
+      waitfor = MIN(millis, 0xffffffffu);
+      waitfor = MIN(waitfor, POLL_INTERVAL_MS);
+    } else {
+      waitfor = 0;
+    }
+
     // see if input is available on non-sockets
+    already_slept = 0;
     for (gotpipes = i = 0; i < pn; ++i) {
       if (pipefds[i].events & POLLWRNORM_)
         // we have no way of polling if a non-socket is writeable yet
@@ -171,7 +186,7 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
         // some programs like bash like to poll([stdin], 1, -1) so let's
         // avoid busy looping in such cases. we could generalize this to
         // always avoid busy loops, but we'd need poll to launch threads
-        if (0 && pn == 1 && sn == 0 && (pipefds[i].events & POLLRDNORM_)) {
+        if (!sn && (pipefds[i].events & POLLRDNORM_) && !already_slept++) {
           int err = errno;
           switch (CountConsoleInputBytesBlocking(waitfor, sigmask)) {
             case -1:
@@ -212,10 +227,12 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
       if (pipefds[i].revents)
         ++gotpipes;
     }
+
     // if we haven't found any good results yet then here we
     // compute a small time slice we don't mind sleeping for
     if (sn) {
-      if ((gotsocks = WSAPoll(sockfds, sn, 0)) == -1)
+      already_slept = 1;
+      if ((gotsocks = WSAPoll(sockfds, sn, waitfor)) == -1)
         return __winsockerr();
     } else {
       gotsocks = 0;
@@ -223,19 +240,21 @@ static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
 
     // add some artificial delay, which we use as an opportunity to also
     // check for pending signals, thread cancelation, etc.
-    waitfor = 0;
-    if (!gotinvals && !gotsocks && !gotpipes) {
-      now = timespec_mono();
-      if (timespec_cmp(now, deadline) < 0) {
-        remain = timespec_sub(deadline, now);
-        millis = timespec_tomillis(remain);
-        waitfor = MIN(millis, 0xffffffffu);
-        waitfor = MIN(waitfor, POLL_INTERVAL_MS);
-        if (waitfor) {
-          POLLTRACE("poll() sleeping for %'d out of %'lu ms", waitfor,
-                    timespec_tomillis(remain));
-          if (_park_norestart(waitfor, sigmask) == -1)
-            return -1;  // eintr, ecanceled, etc.
+    if (!gotinvals && !gotsocks && !gotpipes && waitfor) {
+      if (!already_slept) {
+        POLLTRACE("poll() parking for %'d out of %'lu ms", waitfor,
+                  timespec_tomillis(remain));
+        if (_park_norestart(waitfor, sigmask) == -1)
+          return -1;  // eintr, ecanceled, etc.
+      } else {
+        if (_check_cancel() == -1)
+          return -1;
+        if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(sigmask))) {
+          handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, sigmask);
+          if (_check_cancel() == -1)
+            return -1;
+          if (handler_was_called)
+            return eintr();
         }
       }
     }
