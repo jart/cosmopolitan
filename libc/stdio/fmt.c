@@ -1497,9 +1497,13 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
         i1 = prec1 & 7;
         k = prec1 >> 3;
         __FMT_PUT(alphabet[(fpb.bits[k] >> 4 * i1) & 0xf]);
-        if (prec1 > 0 || prec > 0) {
+
+        // decimal-point character appears if the precision isn't 0
+        // or the # flag is specified
+        if (prec1 > 0 || prec > 0 || (flags & FLAGS_HASH)) {
           __FMT_PUT('.');
         }
+
         while (prec1 > 0) {
           if (--i1 < 0) {
             if (--k < 0)
