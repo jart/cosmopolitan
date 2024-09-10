@@ -690,26 +690,45 @@ static int __fmt_fpiprec(struct FPBits *b) {
 // prec1 = incoming precision (after ".")
 static int __fmt_bround(struct FPBits *b, int prec, int prec1) {
   uint32_t *bits, t;
-  int i, inc, j, k, m, n;
+  int i, j, k, m, n;
+  bool inc = false;
+  int current_rounding_mode;
   m = prec1 - prec;
   bits = b->bits;
-  inc = 0;
   k = m - 1;
+
+  // The first two ifs here handle cases where rounding is simple, i.e. where we
+  // always know in which direction we must round because of the current
+  // rounding mode (note that if the correct value for inc is `false` then it
+  // doesn't need to be set as we have already done so above)
+  // The last one handles rounding to nearest
+  current_rounding_mode = fegetround();
+  if (current_rounding_mode == FE_TOWARDZERO ||
+      (current_rounding_mode == FE_UPWARD && b->sign) ||
+      (current_rounding_mode == FE_DOWNWARD && !b->sign))
+    goto have_inc;
+  if ((current_rounding_mode == FE_UPWARD && !b->sign) ||
+      (current_rounding_mode == FE_DOWNWARD && b->sign)) {
+    inc = true;
+    goto have_inc;
+  }
+
   if ((t = bits[k >> 3] >> (j = (k & 7) * 4)) & 8) {
     if (t & 7)
-      goto inc1;
+      goto inc_true;
     if (j && bits[k >> 3] << (32 - j))
-      goto inc1;
+      goto inc_true;
     while (k >= 8) {
       k -= 8;
       if (bits[k >> 3]) {
-      inc1:
-        inc = 1;
-        goto haveinc;
+      inc_true:
+        inc = true;
+        goto have_inc;
       }
     }
   }
-haveinc:
+
+have_inc:
   b->ex += m * 4;
   i = m >> 3;
   k = prec1 >> 3;
