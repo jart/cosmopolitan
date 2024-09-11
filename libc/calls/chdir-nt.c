@@ -16,70 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/macros.h"
-#include "libc/nt/errors.h"
+#include "libc/limits.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_chdir_nt_impl(char16_t path[hasatleast PATH_MAX],
                                   uint32_t len) {
   uint32_t n;
-  int e, ms, err;
   char16_t var[4];
-
   if (len && path[len - 1] != u'\\') {
     if (len + 2 > PATH_MAX)
       return enametoolong();
     path[len + 0] = u'\\';
     path[len + 1] = u'\0';
   }
-
-  /*
-   * chdir() seems flaky on windows 7
-   * in a similar way to rmdir() sigh
-   */
-  for (err = errno, ms = 1;; ms *= 2) {
-    if (SetCurrentDirectory(path)) {
-      /*
-       * Now we need to set a magic environment variable.
-       */
-      if ((n = GetCurrentDirectory(PATH_MAX, path))) {
-        if (n < PATH_MAX) {
-          if (!((path[0] == '/' && path[1] == '/') ||
-                (path[0] == '\\' && path[1] == '\\'))) {
-            var[0] = '=';
-            var[1] = path[0];
-            var[2] = ':';
-            var[3] = 0;
-            if (!SetEnvironmentVariable(var, path)) {
-              return __winerr();
-            }
-          }
-          return 0;
-        } else {
-          return enametoolong();
+  if (SetCurrentDirectory(path)) {
+    /*
+     * Now we need to set a magic environment variable.
+     */
+    if ((n = GetCurrentDirectory(PATH_MAX, path))) {
+      if (n < PATH_MAX) {
+        if (!((path[0] == '/' && path[1] == '/') ||
+              (path[0] == '\\' && path[1] == '\\'))) {
+          var[0] = '=';
+          var[1] = path[0];
+          var[2] = ':';
+          var[3] = 0;
+          if (!SetEnvironmentVariable(var, path))
+            return __winerr();
         }
+        return 0;
       } else {
-        return __winerr();
+        return enametoolong();
       }
     } else {
-      e = GetLastError();
-      if (ms <= 512 &&
-          (e == kNtErrorFileNotFound || e == kNtErrorAccessDenied)) {
-        Sleep(ms);
-        errno = err;
-        continue;
-      } else {
-        break;
-      }
+      return __winerr();
     }
+  } else {
+    return __fix_enotdir(__winerr(), path);
   }
-  return __fix_enotdir(-1, path);
 }
 
 textwindows int sys_chdir_nt(const char *path) {
