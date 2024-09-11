@@ -26,7 +26,6 @@ uint32_t sys_getuid_nt(void);
 int __ensurefds_unlocked(int);
 void __printfds(struct Fd *, size_t);
 int CountConsoleInputBytes(void);
-int CountConsoleInputBytesBlocking(uint32_t, sigset_t);
 int FlushConsoleInputBytes(void);
 int64_t GetConsoleInputHandle(void);
 int64_t GetConsoleOutputHandle(void);

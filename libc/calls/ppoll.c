@@ -90,8 +90,11 @@
  *     was determined about the file descriptor
  * @param timeout if null will block indefinitely
  * @param sigmask may be null in which case no mask change happens
- * @raise E2BIG if we exceeded the 64 socket limit on Windows
+ * @raise EINVAL if we exceeded the 64 socket limit on Windows
  * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINVAL if `nfds` exceeded `RLIMIT_NOFILE`
+ * @raise ENOMEM on failure to allocate memory
+ * @raise EINVAL if `*timeout` is invalid
  * @raise EINTR if signal was delivered
  * @cancelationpoint
  * @asyncsignalsafe
@@ -103,6 +106,10 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
   sigset_t oldmask;
   struct timespec ts, *tsp;
   BEGIN_CANCELATION_POINT;
+
+  // validate timeout
+  if (timeout && timeout->tv_nsec >= 1000000000)
+    return einval();
 
   // The OpenBSD poll() man pages claims it'll ignore POLLERR, POLLHUP,
   // and POLLNVAL in pollfd::events except it doesn't actually do this.

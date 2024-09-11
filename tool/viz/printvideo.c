@@ -1166,9 +1166,9 @@ static void PerformBestEffortIo(void) {
     DEBUGF("poll() toto=%d [grace=%,ldns]", toto,
            timespec_tonanos(GetGraceTime()));
     if (toto) {
-      if (fds[0].revents & (POLLIN | POLLERR))
+      if (fds[0].revents & (POLLIN | POLLHUP | POLLERR))
         ReadKeyboard();
-      if (fds[1].revents & (POLLOUT | POLLERR))
+      if (fds[1].revents & (POLLOUT | POLLHUP | POLLERR))
         WriteVideo();
     }
   } else if (errno == EINTR) {
@@ -1299,7 +1299,7 @@ static void PickDefaults(void) {
    *
    * strcmp(nulltoempty(getenv("TERM")), "xterm-direct") == 0
    */
-  if (strcmp(nulltoempty(getenv("TERM")), "xterm-kitty") == 0)
+  if (IsWindows() || !strcmp(nulltoempty(getenv("TERM")), "xterm-kitty"))
     ttyquantsetup(kTtyQuantTrue, TTYQUANT()->chans, kTtyBlocksUnicode);
 }
 

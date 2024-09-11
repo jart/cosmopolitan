@@ -117,6 +117,11 @@ int main(int argc, char *argv[]) {
   void *p;
   const char *prog;
 
+  // if you need the tiny64 program for windows:
+  //
+  //     make -j o//tool/hello/life-pe.ape
+  //     scp o//tool/hello/life-pe.ape windows:tiny64
+  //
   if (argc <= 1) {
     prog = "tiny64";
   } else {

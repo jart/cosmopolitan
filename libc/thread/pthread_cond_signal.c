@@ -22,6 +22,10 @@
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/futex.internal.h"
 
+__static_yoink("nsync_mu_lock");
+__static_yoink("nsync_mu_unlock");
+__static_yoink("nsync_mu_trylock");
+
 /**
  * Wakes at least one thread waiting on condition, e.g.
  *
@@ -43,7 +47,7 @@ errno_t pthread_cond_signal(pthread_cond_t *cond) {
 
 #if PTHREAD_USE_NSYNC
   // do nothing if pthread_cond_timedwait() hasn't been called yet
-  // this is because we dont know for certain if nsync is safe
+  // this is because we dont know for certain if nsync use is safe
   if (!atomic_load_explicit(&cond->_waited, memory_order_acquire))
     return 0;
 

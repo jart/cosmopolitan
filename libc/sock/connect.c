@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -36,6 +36,12 @@
  * also means getsockname() can be called to retrieve routing details.
  *
  * @return 0 on success or -1 w/ errno
+ * @raise EALREADY if a non-blocking connection request already happened
+ * @raise EADDRINUSE if local address is already in use
+ * @raise EINTR if a signal handler was called instead
+ * @raise ENETUNREACH if network is unreachable
+ * @raise ETIMEDOUT if connection timed out
+ * @raise EISCONN if already connected
  * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)

@@ -31,10 +31,20 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/time.h"
 
+__static_yoink("nsync_mu_lock");
+__static_yoink("nsync_mu_unlock");
+__static_yoink("nsync_mu_trylock");
+
 struct PthreadWait {
   pthread_cond_t *cond;
   pthread_mutex_t *mutex;
 };
+
+static bool can_use_nsync(uint64_t muword) {
+  return !IsXnuSilicon() &&  //
+         MUTEX_TYPE(muword) == PTHREAD_MUTEX_NORMAL &&
+         MUTEX_PSHARED(muword) == PTHREAD_PROCESS_PRIVATE;
+}
 
 static void pthread_cond_leave(void *arg) {
   struct PthreadWait *wait = (struct PthreadWait *)arg;
@@ -117,19 +127,20 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
       MUTEX_OWNER(muword) != gettid())
     return EPERM;
 
+  // if the cond is process shared then the mutex needs to be too
+  if ((cond->_pshared == PTHREAD_PROCESS_SHARED) ^
+      (MUTEX_PSHARED(muword) == PTHREAD_PROCESS_SHARED))
+    return EINVAL;
+
 #if PTHREAD_USE_NSYNC
   // the first time pthread_cond_timedwait() is called we learn if the
   // associated mutex is normal and private. that means *NSYNC is safe
   // this decision is permanent. you can't use a recursive mutex later
   if (!atomic_load_explicit(&cond->_waited, memory_order_acquire)) {
-    if (!cond->_footek)
-      if (MUTEX_TYPE(muword) != PTHREAD_MUTEX_NORMAL ||
-          MUTEX_PSHARED(muword) != PTHREAD_PROCESS_PRIVATE)
-        cond->_footek = true;
+    cond->_footek = !can_use_nsync(muword);
     atomic_store_explicit(&cond->_waited, true, memory_order_release);
   } else if (!cond->_footek) {
-    if (MUTEX_TYPE(muword) != PTHREAD_MUTEX_NORMAL ||
-        MUTEX_PSHARED(muword) != PTHREAD_PROCESS_PRIVATE)
+    if (!can_use_nsync(muword))
       return EINVAL;
   }
 #endif

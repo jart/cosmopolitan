@@ -23,6 +23,10 @@
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/futex.internal.h"
 
+__static_yoink("nsync_mu_lock");
+__static_yoink("nsync_mu_unlock");
+__static_yoink("nsync_mu_trylock");
+
 /**
  * Wakes all threads waiting on condition, e.g.
  *
@@ -43,9 +47,14 @@
 errno_t pthread_cond_broadcast(pthread_cond_t *cond) {
 
 #if PTHREAD_USE_NSYNC
+  // do nothing if pthread_cond_timedwait() hasn't been called yet
+  // this is because we dont know for certain if nsync use is safe
+  if (!atomic_load_explicit(&cond->_waited, memory_order_acquire))
+    return 0;
+
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
-  if (!cond->_pshared && !IsXnuSilicon()) {
+  if (!cond->_footek) {
     nsync_cv_broadcast((nsync_cv *)cond);
     return 0;
   }

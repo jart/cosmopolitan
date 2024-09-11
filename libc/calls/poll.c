@@ -29,7 +29,7 @@
  * On Windows it's only possible to poll 64 file descriptors at a time.
  * This is a limitation imposed by WSAPoll(). Cosmopolitan Libc's poll()
  * polyfill can go higher in some cases. For example, you can actually
- * poll 64 sockets and 64 pipes/terminals at the same time. Furthermore,
+ * poll 64 sockets and 63 non-sockets at the same time. Furthermore,
  * elements whose fd field is set to a negative number are ignored and
  * will not count against this limit.
  *
@@ -59,8 +59,10 @@
  * @return fds[𝑖].revents is always zero initializaed and then will
  *     be populated with POLL{IN,OUT,PRI,HUP,ERR,NVAL} if something
  *     was determined about the file descriptor
- * @raise E2BIG if we exceeded the 64 socket limit on Windows
+ * @raise EINVAL if we exceeded the 64 socket limit on Windows
  * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINVAL if `nfds` exceeded `RLIMIT_NOFILE`
+ * @raise ENOMEM on failure to allocate memory
  * @raise EINTR if signal was delivered
  * @cancelationpoint
  * @asyncsignalsafe

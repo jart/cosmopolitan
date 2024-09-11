@@ -899,7 +899,8 @@ RestartOperation:
   goto RestartOperation;
 }
 
-textwindows int CountConsoleInputBytesBlocking(uint32_t ms, sigset_t waitmask) {
+textwindows static int CountConsoleInputBytesBlocking(uint32_t ms,
+                                                      sigset_t waitmask) {
   int got = CountConsoleInputBytes();
   if (got == -1)
     return 0;

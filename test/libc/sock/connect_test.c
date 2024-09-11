@@ -46,14 +46,18 @@ TEST(connect, blocking) {
   ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
+
   SPAWN(fork);
+
   while (!*sem)
     pthread_yield();
   ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 2, read(4, buf, 16));  // hi
   ASSERT_SYS(0, 5, write(4, "hello", 5));
   ASSERT_SYS(0, 3, read(4, buf, 16));  // bye
+
   PARENT();
+
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
   ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
@@ -79,7 +83,9 @@ TEST(connect, blocking) {
   ASSERT_STREQ("hello", buf);
   ASSERT_SYS(0, 3, write(3, "bye", 3));
   ASSERT_SYS(0, 0, close(3));
+
   WAIT(exit, 0);
+
   munmap(sem, sizeof(unsigned));
 }
 
@@ -99,20 +105,25 @@ TEST(connect, nonblocking) {
   ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
+
   SPAWN(fork);
+
   while (!*sem)
     pthread_yield();
   ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 2, read(4, buf, 16));  // hi
   ASSERT_SYS(0, 5, write(4, "hello", 5));
   ASSERT_SYS(0, 3, read(4, buf, 16));  // bye
+
   PARENT();
+
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP));
   ASSERT_SYS(EINPROGRESS, -1,
              connect(3, (struct sockaddr *)&addr, sizeof(addr)));
-  if (!(IsLinux() || IsNetbsd())) {
-    // this doens't work on rhel7 and netbsd
+  if (!IsLinux() && !IsNetbsd() && !IsXnu()) {
+    // this doens't work on linux and netbsd
+    // on MacOS this can EISCONN before accept() is called
     ASSERT_SYS(EALREADY, -1,
                connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   }
@@ -137,6 +148,8 @@ TEST(connect, nonblocking) {
   ASSERT_STREQ("hello", buf);
   ASSERT_SYS(0, 3, write(3, "bye", 3));
   ASSERT_SYS(0, 0, close(3));
+
   WAIT(exit, 0);
+
   munmap(sem, sizeof(unsigned));
 }

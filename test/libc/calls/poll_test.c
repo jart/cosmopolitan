@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
@@ -34,6 +35,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
@@ -44,8 +46,7 @@
 bool gotsig;
 
 void SetUpOnce(void) {
-  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS | PLEDGE_STDERR_LOGGING;
-  ASSERT_SYS(0, 0, pledge("stdio proc inet", 0));
+  testlib_enable_tmp_setup_teardown();
 }
 
 void SetUp(void) {
@@ -58,6 +59,12 @@ void OnSig(int sig) {
 
 TEST(poll, allZero_doesNothingPrettyMuch) {
   EXPECT_SYS(0, 0, poll(0, 0, 0));
+}
+
+TEST(poll, allZeroWithTimeout_sleeps) {
+  struct timespec ts1 = timespec_mono();
+  EXPECT_SYS(0, 0, poll(0, 0, 100));
+  EXPECT_GE(timespec_tomillis(timespec_sub(timespec_mono(), ts1)), 100);
 }
 
 TEST(ppoll, weCanProveItChecksForSignals) {
@@ -203,22 +210,141 @@ TEST(poll, pipe_hasInput) {
   EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
 
-#if 0
-TEST(poll, emptyFds_becomesSleep) {
-  // timing tests w/o mocks are always the hardest
-  int64_t a, b, c, p, i = 0;
-  do {
-    if (++i == 5) {
-      kprintf("too much cpu churn%n");
-      return;
-    }
-    p = TSC_AUX_CORE(rdpid());
-    a = rdtsc();
-    EXPECT_SYS(0, 0, poll(0, 0, 5));
-    b = rdtsc();
-    EXPECT_SYS(0, 0, poll(0, 0, 50));
-    c = rdtsc();
-  } while (TSC_AUX_CORE(rdpid()) != p);
-  EXPECT_LT((b - a) * 2, c - b);
+TEST(poll, file_pollin) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644)));
+  struct pollfd fds[] = {{fd, POLLIN}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
 }
-#endif
+
+TEST(poll, file_pollout) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644)));
+  struct pollfd fds[] = {{fd, POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_pollinout) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644)));
+  struct pollfd fds[] = {{fd, POLLIN | POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_rdonly_pollinout) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644)));
+  EXPECT_SYS(0, 0, close(fd));
+  EXPECT_SYS(0, 3, (fd = open("boop", O_RDONLY)));
+  struct pollfd fds[] = {{fd, POLLIN | POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));  // counter-intuitive
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_wronly_pollin) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = creat("boop", 0644)));
+  struct pollfd fds[] = {{fd, POLLIN}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_wronly_pollout) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = creat("boop", 0644)));
+  struct pollfd fds[] = {{fd, POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_wronly_pollinout) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = creat("boop", 0644)));
+  struct pollfd fds[] = {{fd, POLLIN | POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, file_rdwr_pollinoutpri) {
+  int fd;
+  EXPECT_SYS(0, 3, (fd = open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644)));
+  struct pollfd fds[] = {{fd, POLLIN | POLLOUT | POLLPRI}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  if (IsXnu())
+    EXPECT_TRUE(!!(fds[0].revents & POLLPRI));  // wut
+  else
+    EXPECT_TRUE(!(fds[0].revents & POLLPRI));
+  EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, pipein_pollout_blocks) {
+  if (IsFreebsd() || IsOpenbsd())
+    return;
+  int pipefds[2];
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[0], POLLOUT}};
+  EXPECT_SYS(0, 0, poll(fds, 1, 0));
+  struct timespec ts1 = timespec_mono();
+  EXPECT_SYS(0, 0, poll(fds, 1, 10));
+  EXPECT_GE(timespec_tomillis(timespec_sub(timespec_mono(), ts1)), 10);
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+}
+
+TEST(poll, pipeout_pollout) {
+  int pipefds[2];
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[1], POLLOUT}};
+  EXPECT_SYS(0, 1, poll(fds, 1, 0));
+  EXPECT_TRUE(!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 1, poll(fds, 1, 1));
+  EXPECT_TRUE(!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[0].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+}
+
+TEST(poll, pipein_pollin_timeout) {
+  int pipefds[2];
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[0], POLLIN}};
+  struct timespec ts1 = timespec_mono();
+  EXPECT_SYS(0, 0, poll(fds, 1, 10));
+  EXPECT_GE(timespec_tomillis(timespec_sub(timespec_mono(), ts1)), 10);
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+}
+
+TEST(poll, pipein_pollinout_timeout) {
+  if (IsFreebsd() || IsOpenbsd())
+    return;
+  int pipefds[2];
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[0], POLLIN | POLLOUT}};
+  EXPECT_SYS(0, 0, poll(fds, 1, 0));
+  struct timespec ts1 = timespec_mono();
+  EXPECT_SYS(0, 0, poll(fds, 1, 10));
+  EXPECT_GE(timespec_tomillis(timespec_sub(timespec_mono(), ts1)), 10);
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+}
