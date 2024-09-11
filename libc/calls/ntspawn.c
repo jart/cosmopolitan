@@ -153,7 +153,7 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
   alignas(16) char memory[128];
   size_t size = sizeof(memory);
   struct NtProcThreadAttributeList *alist = (void *)memory;
-  uint32_t items = !!a->opt_hParentProcess + !!a->opt_lpExplicitHandleList;
+  uint32_t items = !!a->opt_hParentProcess + !!a->dwExplicitHandleCount;
   ok = InitializeProcThreadAttributeList(alist, items, 0, &size);
   if (!ok && GetLastError() == kNtErrorInsufficientBuffer) {
     ok = !!(alist = freeme = ntspawn_malloc(size));
@@ -166,7 +166,7 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
         alist, 0, kNtProcThreadAttributeParentProcess, &a->opt_hParentProcess,
         sizeof(a->opt_hParentProcess), 0, 0);
   }
-  if (ok && a->opt_lpExplicitHandleList) {
+  if (ok && a->dwExplicitHandleCount) {
     ok = UpdateProcThreadAttribute(
         alist, 0, kNtProcThreadAttributeHandleList, a->opt_lpExplicitHandleList,
         a->dwExplicitHandleCount * sizeof(*a->opt_lpExplicitHandleList), 0, 0);
