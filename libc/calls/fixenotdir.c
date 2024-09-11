@@ -23,10 +23,20 @@
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
 
+static int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
 static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
   char16_t *p;
   uint32_t attrs;
   while ((p = strrchr16(path, '\\'))) {
+    if (p == path)
+      // don't bother checking GetFileAttributes(u"\\")
+      break;
+    if (p == path + 2 && IsAlpha(path[0]) && path[1] == ':')
+      // don't bother checking GetFileAttributes(u"C:\\")
+      break;
     *p = u'\0';
     if ((attrs = GetFileAttributes(path)) != -1u &&
         !(attrs & kNtFileAttributeDirectory)) {

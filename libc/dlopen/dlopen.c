@@ -631,11 +631,11 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
     errno = err;
     return false;
   }
-  while (waitpid(pid, &ws, 0) == -1) {
-    if (errno != EINTR) {
-      unlink(tmp);
-      return false;
-    }
+  if (waitpid(pid, &ws, 0) == -1) {
+    // signals and cancelation are blocked
+    // therefore this must be a real error
+    unlink(tmp);
+    return false;
   }
   if (ws) {
     unlink(tmp);

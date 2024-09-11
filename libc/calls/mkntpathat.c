@@ -75,6 +75,7 @@ static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
 
     return n;
   } else {
+    filelen = __normntpath(file, filelen);
     return filelen;
   }
 }
@@ -84,23 +85,20 @@ textwindows int __mkntpathath(int64_t dirhand, const char *path, int flags,
 
   // convert the path.
   int len;
-  if ((len = __mkntpathath_impl(dirhand, path, flags, file)) == -1) {
+  if ((len = __mkntpathath_impl(dirhand, path, flags, file)) == -1)
     return -1;
-  }
 
   // if path ends with a slash, then we need to manually do what linux
   // does and check to make sure it's a directory, and return ENOTDIR,
   // since WIN32 will reject the path with EINVAL if we don't do this.
   if (len && file[len - 1] == '\\') {
     uint32_t fattr;
-    if (len > 1 && !(len == 3 && file[1] == ':')) {
+    if (len > 1 && !(len == 3 && file[1] == ':'))
       file[--len] = 0;
-    }
     if ((fattr = GetFileAttributes(file)) != -1u &&
         !(fattr & kNtFileAttributeReparsePoint) &&
-        !(fattr & kNtFileAttributeDirectory)) {
+        !(fattr & kNtFileAttributeDirectory))
       return enotdir();
-    }
   }
 
   return len;

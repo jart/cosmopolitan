@@ -91,8 +91,9 @@ __fopen_passwd(void)
 {
 	FILE *f;
 	char *s;
-	// MacOS has a fake /etc/passwd file without any user details.
-	if (!IsXnu() && (f = fopen("/etc/passwd", "rbe")))
+	// MacOS has a fake /etc/passwd file without any user details
+	// GetFileAttributes(u"\\etc\\passwd") takes 2 seconds sometimes
+	if (!IsXnu() && !IsWindows() && (f = fopen("/etc/passwd", "rbe")))
 		return f;
 	if (!(s = __create_synthetic_passwd_file()))
 		return 0;
