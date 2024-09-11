@@ -90,6 +90,13 @@ const char *cosmoaudio_describe_open_options(
     gotsome = true;
   }
 
+  if (options->debugLog) {
+    if (gotsome)
+      append(", ");
+    append(".debugLog=%d", options->debugLog);
+    gotsome = true;
+  }
+
   if (options->sizeofThis) {
     if (gotsome)
       append(", ");

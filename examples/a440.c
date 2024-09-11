@@ -7,19 +7,22 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include <cosmoaudio.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "cosmoaudio.h"
+
+/**
+ * @fileoverview plays pure A.440 tone on speakers for 1 second
+ * @see https://en.wikipedia.org/wiki/A440_%28pitch_standard%29
+ */
 
 #define SAMPLING_RATE 44100
 #define WAVE_INTERVAL 440
 #define CHANNELS      2
-
-#ifndef M_PIf
-#define M_PIf 3.14159265358979323846f
-#endif
+#define LOUDNESS      .3
+#define DEBUG_LOG     1
 
 int main() {
 
@@ -27,6 +30,7 @@ int main() {
   cao.sizeofThis = sizeof(struct CosmoAudioOpenOptions);
   cao.deviceType = kCosmoAudioDeviceTypePlayback;
   cao.sampleRate = SAMPLING_RATE;
+  cao.debugLog = DEBUG_LOG;
   cao.channels = CHANNELS;
 
   int status;
@@ -53,7 +57,7 @@ int main() {
       float t = (float)g++ / SAMPLING_RATE;
       float s = sinf(2 * M_PIf * WAVE_INTERVAL * t);
       for (int c = 0; c < CHANNELS; c++)
-        buf[f * CHANNELS + c] = s * .3f;
+        buf[f * CHANNELS + c] = s * LOUDNESS;
     }
     status = cosmoaudio_write(ca, buf, frames);
     if (status != frames) {

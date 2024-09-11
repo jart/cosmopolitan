@@ -7,18 +7,11 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.h"
-#include "libc/nt/enum/timezoneid.h"
-#include "libc/nt/struct/timezoneinformation.h"
-#include "libc/nt/time.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/thread/threads.h"
-#include "libc/time.h"
+#include <stdlib.h>
+#include <string.h>
+#include <threads.h>
+#include <time.h>
+#include <unistd.h>
 
 /**
  * @fileoverview High performance ISO-8601 timestamp formatter.
@@ -26,6 +19,8 @@
  * The strftime() function is very slow. This goes much faster.
  * Consider using something like this instead for your loggers.
  */
+
+#define ABS(X) ((X) >= 0 ? (X) : -(X))
 
 char *GetTimestamp(void) {
   int x;

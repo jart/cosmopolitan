@@ -23,8 +23,6 @@
 #include <sys/auxv.h>
 #include <sys/socket.h>
 #include <time.h>
-#include "libc/mem/leaks.h"
-#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview greenbean lightweight threaded web server

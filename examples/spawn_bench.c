@@ -7,24 +7,20 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/mem/mem.h"
-#include "libc/proc/posix_spawn.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include <spawn.h>
+#include <stdalign.h>
+#include <stdatomic.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <time.h>
 
 #define ITERATIONS 10
 
-_Alignas(128) int a;
-_Alignas(128) int b;
-_Alignas(128) atomic_int lock;
+alignas(128) int a;
+alignas(128) int b;
+alignas(128) atomic_int lock;
 
 static struct timespec SubtractTime(struct timespec a, struct timespec b) {
   a.tv_sec -= b.tv_sec;

@@ -13,11 +13,11 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
-#include "libc/ctype.h"
 
 /**
  * @fileoverview Roman Transliteration, e.g.

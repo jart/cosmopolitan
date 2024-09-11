@@ -7,19 +7,19 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/struct/sysinfo.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/itoa.h"
-#include "libc/log/check.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/clock.h"
+#include <cosmo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/sysinfo.h>
 
 int main(int argc, char *argv[]) {
   int64_t x;
   char ibuf[21];
   struct sysinfo si;
-  CHECK_NE(-1, sysinfo(&si));
+  if (sysinfo(&si)) {
+    perror("sysinfo");
+    exit(1);
+  }
 
   printf("%-16s", "uptime");
   x = si.uptime / (24 * 60 * 60);

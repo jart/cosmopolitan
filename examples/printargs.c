@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/runtime/runtime.h"
+#include <cosmo.h>
 
 int main() {
   __printargs("");

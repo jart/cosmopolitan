@@ -7,9 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/itoa.h"
+#include <cosmo.h>
+#include <stdlib.h>
 
 /**
  * @fileoverview Prints sequence of numbers.

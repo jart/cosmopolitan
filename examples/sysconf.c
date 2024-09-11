@@ -7,8 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/runtime/sysconf.h"
-#include "libc/stdio/stdio.h"
+#include <stdio.h>
+#include <unistd.h>
 
 #define SYSCONF(NAME) printf("%-24s %,ld\n", #NAME, sysconf(NAME))
 

@@ -7,18 +7,19 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/struct/statfs.h"
-#include "libc/dce.h"
-#include "libc/fmt/conv.h"
-#include "libc/log/check.h"
 #include "libc/nt/enum/statfs.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/st.h"
+#include <cosmo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/vfs.h>
 
-dontinline void ShowIt(const char *path) {
+void ShowIt(const char *path) {
   char ibuf[21];
   struct statfs sf = {0};
-  CHECK_NE(-1, statfs(path, &sf));
+  if (statfs(path, &sf)) {
+    perror(path);
+    exit(1);
+  }
 
   printf("filesystem %s\n", path);
   printf("f_type    = %#x (%s)\n", sf.f_type, sf.f_fstypename);

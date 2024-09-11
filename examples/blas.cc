@@ -14,16 +14,16 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include <unistd.h>
+#include <cassert>
 #include <cinttypes>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include "libc/assert.h"
 
 // high performance high accuracy matrix multiplication in ansi c
 
-#define MATH __target_clones("avx512f,fma")
+#define MATH __target_clones("avx512f,fma,avx")
 
 namespace {
 namespace ansiBLAS {

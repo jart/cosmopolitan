@@ -7,17 +7,15 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/itimerval.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/ucontext.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/itimer.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/time.h"
+#include <assert.h>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+/**
+ * @fileoverview interval timer tutorial
+ */
 
 volatile bool gotalrm;
 

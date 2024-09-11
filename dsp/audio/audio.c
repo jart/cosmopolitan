@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/audio/cosmoaudio/cosmoaudio.h"
 #include "dsp/audio/describe.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
@@ -201,7 +203,7 @@ static void *cosmoaudio_dlopen(const char *name) {
   return 0;
 }
 
-static void cosmoaudio_setup(void) {
+static void cosmoaudio_setup_impl(void) {
   void *handle;
   if (IsOpenbsd())
     return;  // no dlopen support yet
@@ -239,6 +241,12 @@ WeAreGood:
   g_audio.poll = cosmo_dlsym(handle, "cosmoaudio_poll");
 }
 
+static void cosmoaudio_setup(void) {
+  BLOCK_CANCELATION;
+  cosmoaudio_setup_impl();
+  ALLOW_CANCELATION;
+}
+
 static void cosmoaudio_init(void) {
   pthread_once(&g_audio.once, cosmoaudio_setup);
 }
@@ -249,10 +257,13 @@ COSMOAUDIO_ABI int cosmoaudio_open(
   char sbuf[32];
   char dbuf[256];
   cosmoaudio_init();
-  if (g_audio.open)
+  if (g_audio.open) {
+    BLOCK_SIGNALS;
     status = g_audio.open(out_ca, options);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   STRACE("cosmoaudio_open([%p], %s) → %s",
          out_ca ? *out_ca : (struct CosmoAudio *)-1,
          cosmoaudio_describe_open_options(dbuf, sizeof(dbuf), options),
@@ -263,10 +274,13 @@ COSMOAUDIO_ABI int cosmoaudio_open(
 COSMOAUDIO_ABI int cosmoaudio_close(struct CosmoAudio *ca) {
   int status;
   char sbuf[32];
-  if (g_audio.close)
+  if (g_audio.close) {
+    BLOCK_SIGNALS;
     status = g_audio.close(ca);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   STRACE("cosmoaudio_close(%p) → %s", ca,
          cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
   return status;
@@ -276,10 +290,13 @@ COSMOAUDIO_ABI int cosmoaudio_write(struct CosmoAudio *ca, const float *data,
                                     int frames) {
   int status;
   char sbuf[32];
-  if (g_audio.write)
+  if (g_audio.write) {
+    BLOCK_SIGNALS;
     status = g_audio.write(ca, data, frames);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   if (frames <= 0 || frames >= 160)
     DATATRACE("cosmoaudio_write(%p, %p, %d) → %s", ca, data, frames,
               cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
@@ -290,10 +307,13 @@ COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio *ca, float *data,
                                    int frames) {
   int status;
   char sbuf[32];
-  if (g_audio.read)
+  if (g_audio.read) {
+    BLOCK_SIGNALS;
     status = g_audio.read(ca, data, frames);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   if (frames <= 0 || frames >= 160)
     DATATRACE("cosmoaudio_read(%p, %p, %d) → %s", ca, data, frames,
               cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
@@ -303,10 +323,13 @@ COSMOAUDIO_ABI int cosmoaudio_read(struct CosmoAudio *ca, float *data,
 COSMOAUDIO_ABI int cosmoaudio_flush(struct CosmoAudio *ca) {
   int status;
   char sbuf[32];
-  if (g_audio.flush)
+  if (g_audio.flush) {
+    BLOCK_SIGNALS;
     status = g_audio.flush(ca);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   DATATRACE("cosmoaudio_flush(%p) → %s", ca,
             cosmoaudio_describe_status(sbuf, sizeof(sbuf), status));
   return status;
@@ -318,10 +341,13 @@ COSMOAUDIO_ABI int cosmoaudio_poll(struct CosmoAudio *ca,
   int status;
   char sbuf[32];
   char fbuf[2][20];
-  if (g_audio.poll)
+  if (g_audio.poll) {
+    BLOCK_SIGNALS;
     status = g_audio.poll(ca, in_out_readFrames, in_out_writeFrames);
-  else
+    ALLOW_SIGNALS;
+  } else {
     status = COSMOAUDIO_ELINK;
+  }
   DATATRACE("cosmoaudio_poll(%p, %s, %s) → %s", ca,
             cosmoaudio_describe_poll_frames(fbuf[0], sizeof(fbuf[0]),
                                             in_out_readFrames),

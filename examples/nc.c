@@ -7,25 +7,16 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/log/log.h"
-#include "libc/macros.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/sock.h"
-#include "libc/sock/struct/linger.h"
-#include "libc/sock/struct/pollfd.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/shut.h"
-#include "libc/sysv/consts/so.h"
-#include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
-#include "third_party/getopt/getopt.internal.h"
-#include "third_party/musl/netdb.h"
+#include <cosmo.h>
+#include <getopt.h>
+#include <netdb.h>
+#include <poll.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+// clang-format off
 
 /**
  * @fileoverview netcat clone
@@ -36,11 +27,13 @@
  * Here's an example usage:
  *
  *     make -j8 o//examples/nc.com
- *     printf 'GET /\r\nHost: justine.lol\r\n\r\n' | o//examples/nc.com
- * justine.lol 80
+ *     printf 'GET /\r\nHost: justine.lol\r\n\r\n' | o//examples/nc.com justine.lol 80
  *
- * Once upon time we called this command "telnet"
+ * Once upon time we called this command basically "telnet"
  */
+
+#define ARRAYLEN(A) \
+  ((sizeof(A) / sizeof(*(A))) / ((unsigned)!(sizeof(A) % sizeof(*(A)))))
 
 int main(int argc, char *argv[]) {
   ssize_t rc;

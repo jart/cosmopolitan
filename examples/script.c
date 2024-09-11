@@ -29,29 +29,20 @@
 │ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF       │
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/termios.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/calls/struct/winsize.h"
-#include "libc/calls/termios.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/intrin/bswap.h"
-#include "libc/log/bsd.h"
-#include "libc/macros.h"
-#include "libc/mem/mem.h"
-#include "libc/paths.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/select.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/termios.h"
-#include "libc/time.h"
-#include "third_party/getopt/getopt.internal.h"
+#include <err.h>
+#include <errno.h>
+#include <paths.h>
+#include <pty.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/uio.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 // clang-format off
 
 /**

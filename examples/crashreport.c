@@ -7,12 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/math.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
-#include "libc/stdio/stdio.h"
+#include <cosmo.h>
 
 /**
  * @fileoverview How to print backtraces and cpu state on crash.

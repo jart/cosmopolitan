@@ -59,6 +59,9 @@ struct CosmoAudioOpenOptions {
   // sample for each channel. Set to 0 for default. If this is less than
   // the device period size times two, it'll be increased to that value.
   int bufferFrames;
+
+  // Enables debug logging if non-zero.
+  int debugLog;
 };
 
 COSMOAUDIO_API int cosmoaudio_version(void) COSMOAUDIO_ABI;

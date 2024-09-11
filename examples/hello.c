@@ -7,9 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/stdio/stdio.h"
+#include <stdio.h>
 
 int main() {
   printf("hello world\n");
-  return 0;
 }

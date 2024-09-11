@@ -7,19 +7,12 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/struct/stat.h"
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/time.h"
+#include <assert.h>
+#include <cosmo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <time.h>
 
 /**
  * @fileoverview File metadata viewer.
@@ -72,9 +65,15 @@ void PrintFileMetadata(const char *pathname, struct stat *st) {
   printf("\n%s:", pathname);
   if (numeric) {
     fd = atoi(pathname);
-    CHECK_NE(-1, fstat(fd, st), "fd=%d", fd);
+    if (fstat(fd, st)) {
+      perror(pathname);
+      exit(1);
+    }
   } else {
-    CHECK_NE(-1, stat(pathname, st), "pathname=%s", pathname);
+    if (stat(pathname, st)) {
+      perror(pathname);
+      exit(1);
+    }
   }
   printf("\n"
          "%-32s%,ld\n"

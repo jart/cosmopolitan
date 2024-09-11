@@ -7,11 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/dlopen/dlfcn.h"
-#include "libc/fmt/itoa.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/runtime.h"
+#include <cosmo.h>
+#include <dlfcn.h>
+#include <stdlib.h>
 
 /**
  * @fileoverview cosmopolitan dynamic runtime linking demo
