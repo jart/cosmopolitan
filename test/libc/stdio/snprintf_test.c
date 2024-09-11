@@ -216,3 +216,37 @@ TEST(snprintf, testLongDoubleRounding) {
 
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
+
+TEST(snprintf, testAConversionSpecifierRounding) {
+  int previous_rounding = fegetround();
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+
+  char buf[20];
+  int i = snprintf(buf, sizeof(buf), "%.1a", 0x1.fffffp+4);
+  ASSERT_EQ(8, i);
+  ASSERT_STREQ("0x1.fp+4", buf);
+
+  ASSERT_EQ(0, fesetround(FE_UPWARD));
+
+  i = snprintf(buf, sizeof(buf), "%.1a", 0x1.f8p+4);
+  ASSERT_EQ(8, i);
+  ASSERT_STREQ("0x2.0p+4", buf);
+
+  ASSERT_EQ(0, fesetround(previous_rounding));
+}
+
+// This test currently fails because of rounding issues
+// If that ever gets fixed, uncomment this
+/*
+TEST(snprintf, testAConversionSpecifier) {
+  char buf[20];
+  int i = snprintf(buf, sizeof(buf), "%.1a", 0x1.7800000000001p+4);
+  ASSERT_EQ(8, i);
+  ASSERT_STREQ("0x1.8p+4", buf);
+
+  memset(buf, 0, sizeof(buf));
+  i = snprintf(buf, sizeof(buf), "%.1a", 0x1.78p+4);
+  ASSERT_EQ(8, i);
+  ASSERT_STREQ("0x1.8p+4", buf);
+}
+*/
