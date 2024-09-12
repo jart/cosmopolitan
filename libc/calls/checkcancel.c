@@ -21,7 +21,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/thread/posixthread.internal.h"
 
-int _check_cancel(void) {
+textwindows int _check_cancel(void) {
   if (_weaken(_pthread_cancel_ack) &&  //
       _pthread_self() && !(_pthread_self()->pt_flags & PT_NOCANCEL) &&
       atomic_load_explicit(&_pthread_self()->pt_canceled,

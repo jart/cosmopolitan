@@ -41,9 +41,9 @@
 
 void SetUpOnce(void) {
   if (IsNetbsd())
-    exit(0);
+    exit(0);  // no sendfile support
   if (IsOpenbsd())
-    exit(0);
+    exit(0);  // no sendfile support
   testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc inet", 0));
 }
@@ -102,9 +102,6 @@ TEST(sendfile, testSeeking) {
 }
 
 TEST(sendfile, testPositioning) {
-  // TODO(jart): fix test regression on windows
-  if (IsWindows())
-    return;
   char buf[1024];
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
@@ -130,9 +127,8 @@ TEST(sendfile, testPositioning) {
     ASSERT_TRUE(errno == EINVAL || errno == EPIPE);
     errno = 0;
     // XXX: WSL1 clobbers file offset on failure!
-    if (!__iswsl1()) {
+    if (!__iswsl1())
       ASSERT_EQ(12, GetFileOffset(5));
-    }
     _Exit(0);
   }
   ASSERT_SYS(0, 0, close(3));

@@ -16,23 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
-#include "libc/intrin/strace.h"
-#include "libc/intrin/weaken.h"
 #include "libc/macros.h"
-#include "libc/mem/mem.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/wait.h"
@@ -42,22 +34,13 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/time.h"
 #include "libc/nt/winsock.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/pollfd.h"
-#include "libc/sock/struct/pollfd.internal.h"
-#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 #define POLL_INTERVAL_MS 10
@@ -75,24 +58,22 @@
 #define POLLPRI_    0x0400  // MSDN unsupported
 // </sync libc/sysv/consts.sh>
 
-textwindows static dontinline struct timespec sys_poll_nt_now(void) {
+textwindows dontinline static struct timespec sys_poll_nt_now(void) {
   uint64_t hectons;
   QueryUnbiasedInterruptTimePrecise(&hectons);
   return timespec_fromnanos(hectons * 100);
 }
 
-textwindows static int sys_poll_nt_sigcheck(sigset_t sigmask) {
-  int sig, handler_was_called;
-  if (_check_cancel() == -1)
-    return -1;
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(sigmask))) {
-    handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, sigmask);
-    if (_check_cancel() == -1)
-      return -1;
-    if (handler_was_called)
-      return eintr();
+textwindows static uint32_t sys_poll_nt_waitms(struct timespec deadline) {
+  struct timespec now = sys_poll_nt_now();
+  if (timespec_cmp(now, deadline) < 0) {
+    struct timespec remain = timespec_sub(deadline, now);
+    int64_t millis = timespec_tomillis(remain);
+    uint32_t waitfor = MIN(millis, 0xffffffffu);
+    return MIN(waitfor, POLL_INTERVAL_MS);
+  } else {
+    return 0;  // we timed out
   }
-  return 0;
 }
 
 // Polls on the New Technology.
@@ -100,21 +81,16 @@ textwindows static int sys_poll_nt_sigcheck(sigset_t sigmask) {
 // This function is used to implement poll() and select(). You may poll
 // on sockets, files and the console at the same time. We also poll for
 // both signals and posix thread cancelation, while the poll is polling
-textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
-                                        uint32_t *ms, sigset_t sigmask) {
-  bool ok;
-  uint64_t millis;
+textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
+                                          struct timespec deadline,
+                                          sigset_t waitmask) {
   int fileindices[64];
   int sockindices[64];
   int64_t filehands[64];
   struct PosixThread *pt;
   int i, rc, ev, kind, gotsocks;
   struct sys_pollfd_nt sockfds[64];
-  struct timespec deadline, remain, now;
   uint32_t cm, fi, wi, sn, pn, avail, waitfor, already_slept;
-
-  waitfor = ms ? *ms : -1u;
-  deadline = timespec_add(sys_poll_nt_now(), timespec_frommillis(waitfor));
 
   // ensure revents is cleared
   for (i = 0; i < nfds; ++i)
@@ -171,7 +147,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
     rc += !!fds[i].revents;
   }
   __fds_unlock();
-  if (rc)
+  if (rc == -1)
     return rc;
 
   // perform poll operation
@@ -191,10 +167,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
       if ((ev & POLLWRNORM_) && !(ev & POLLRDNORM_)) {
         fds[fi].revents = fds[fi].events & (POLLRDNORM_ | POLLWRNORM_);
       } else if (GetFileType(filehands[i]) == kNtFileTypePipe) {
-        ok = PeekNamedPipe(filehands[i], 0, 0, 0, &avail, 0);
-        POLLTRACE("PeekNamedPipe(%ld, 0, 0, 0, [%'u], 0) → {%hhhd, %d}",
-                  filehands[i], avail, ok, GetLastError());
-        if (ok) {
+        if (PeekNamedPipe(filehands[i], 0, 0, 0, &avail, 0)) {
           if (avail)
             fds[fi].revents = POLLRDNORM_;
         } else if (GetLastError() == kNtErrorHandleEof ||
@@ -222,15 +195,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
     }
 
     // determine how long to wait
-    now = sys_poll_nt_now();
-    if (timespec_cmp(now, deadline) < 0) {
-      remain = timespec_sub(deadline, now);
-      millis = timespec_tomillis(remain);
-      waitfor = MIN(millis, 0xffffffffu);
-      waitfor = MIN(waitfor, POLL_INTERVAL_MS);
-    } else {
-      waitfor = 0;  // we timed out
-    }
+    waitfor = sys_poll_nt_waitms(deadline);
 
     // check for events and/or readiness on sockets
     // we always do this due to issues with POLLOUT
@@ -238,7 +203,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
       // if we need to wait, then we prefer to wait inside WSAPoll()
       // this ensures network events are received in ~10µs not ~10ms
       if (!rc && waitfor) {
-        if (sys_poll_nt_sigcheck(sigmask))
+        if (__sigcheck(waitmask, false))
           return -1;
         already_slept = waitfor;
       } else {
@@ -253,7 +218,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
             ++rc;
           }
       } else if (already_slept) {
-        if (sys_poll_nt_sigcheck(sigmask))
+        if (__sigcheck(waitmask, false))
           return -1;
       }
     } else {
@@ -269,7 +234,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
     // this ensures low latency for apps like emacs which with no sock
     // here we shall actually report that something can be written too
     if (!already_slept) {
-      if (sys_poll_nt_sigcheck(sigmask))
+      if (__sigcheck(waitmask, false))
         return -1;
       pt = _pthread_self();
       filehands[pn] = pt->pt_semaphore = CreateSemaphore(0, 0, 1, 0);
@@ -283,7 +248,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
         return __winerr();
       } else if (wi == pn) {
         // our semaphore was signalled
-        if (sys_poll_nt_sigcheck(sigmask))
+        if (__sigcheck(waitmask, false))
           return -1;
       } else if ((wi ^ kNtWaitAbandoned) < pn) {
         // this is possibly because a process or thread was killed
@@ -328,7 +293,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
       } else {
         // should only be possible on kNtWaitTimeout or semaphore abandoned
         // keep looping for events and we'll catch timeout when appropriate
-        if (sys_poll_nt_sigcheck(sigmask))
+        if (__sigcheck(waitmask, false))
           return -1;
       }
     }
@@ -341,11 +306,44 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
   return rc;
 }
 
+textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
+                                        struct timespec deadline,
+                                        const sigset_t waitmask) {
+  uint32_t waitms;
+  int i, n, rc, got = 0;
+
+  // fast path
+  if (nfds <= 63)
+    return sys_poll_nt_actual(fds, nfds, deadline, waitmask);
+
+  // clumsy path
+  for (;;) {
+    for (i = 0; i < nfds; i += 64) {
+      n = nfds - i;
+      n = n > 64 ? 64 : n;
+      rc = sys_poll_nt_actual(fds + i, n, timespec_zero, waitmask);
+      if (rc == -1)
+        return -1;
+      got += rc;
+    }
+    if (got)
+      return got;
+    if (!(waitms = sys_poll_nt_waitms(deadline)))
+      return 0;
+    if (_park_norestart(waitms, waitmask) == -1)
+      return -1;
+  }
+}
+
 textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
                             const sigset_t *sigmask) {
   int rc;
+  struct timespec now, timeout, deadline;
   BLOCK_SIGNALS;
-  rc = sys_poll_nt_impl(fds, nfds, ms, sigmask ? *sigmask : 0);
+  now = ms ? sys_poll_nt_now() : timespec_zero;
+  timeout = ms ? timespec_frommillis(*ms) : timespec_max;
+  deadline = timespec_add(now, timeout);
+  rc = sys_poll_nt_impl(fds, nfds, deadline, sigmask ? *sigmask : _SigMask);
   ALLOW_SIGNALS;
   return rc;
 }

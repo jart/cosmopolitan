@@ -32,7 +32,9 @@ TEST_POSIX_DIRECTDEPS =							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
 	LIBC_PROC							\
+	LIBC_LOG							\
 	LIBC_RUNTIME							\
+	LIBC_SOCK							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\

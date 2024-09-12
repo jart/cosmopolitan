@@ -384,12 +384,14 @@ textwindows static int ProcessMouseEvent(const struct NtInputRecord *r,
                   kNtLeftAltPressed | kNtRightAltPressed))) {
       // we disable mouse highlighting when the tty is put in raw mode
       // to mouse wheel events with widely understood vt100 arrow keys
-      *p++ = 033;
-      *p++ = !__keystroke.ohno_decckm ? '[' : 'O';
-      if (isup) {
-        *p++ = 'A';
-      } else {
-        *p++ = 'B';
+      for (int i = 0; i < 3; ++i) {
+        *p++ = 033;
+        *p++ = !__keystroke.ohno_decckm ? '[' : 'O';
+        if (isup) {
+          *p++ = 'A';
+        } else {
+          *p++ = 'B';
+        }
       }
     }
   } else if ((bs || currentbs) && (__ttyconf.magic & kTtyXtMouse)) {

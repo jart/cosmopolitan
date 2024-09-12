@@ -16,115 +16,87 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/cosmo.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/nt/enum/wsaid.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/struct/pollfd.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/sockaddr.h"
-#include "libc/sock/wsaid.internal.h"
-#include "libc/str/str.h"
+#include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
-#include "libc/thread/thread.h"
+#include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
+
+#define POLL_INTERVAL_MS 10
 
 __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 __msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
+__msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
 
-union AcceptExAddr {
-  struct sockaddr_storage addr;
-  char buf[sizeof(struct sockaddr_storage) + 16];
-};
-
-struct AcceptExBuffer {
-  union AcceptExAddr local;
-  union AcceptExAddr remote;
-};
-
-struct AcceptResources {
+textwindows static int sys_accept_nt_impl(struct Fd *f,
+                                          struct sockaddr_storage *addr,
+                                          int accept4_flags,
+                                          sigset_t waitmask) {
   int64_t handle;
-};
-
-struct AcceptArgs {
-  int64_t listensock;
-  struct AcceptExBuffer *buffer;
-};
-
-static struct {
-  atomic_uint once;
-  bool32 (*__msabi lpAcceptEx)(
-      int64_t sListenSocket, int64_t sAcceptSocket,
-      void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
-      uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
-      uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
-      struct NtOverlapped *inout_lpOverlapped);
-} g_acceptex;
-
-static void acceptex_init(void) {
-  static struct NtGuid AcceptExGuid = WSAID_ACCEPTEX;
-  g_acceptex.lpAcceptEx = __get_wsaid(&AcceptExGuid);
-}
-
-static void sys_accept_nt_unwind(void *arg) {
-  struct AcceptResources *resources = arg;
-  if (resources->handle != -1) {
-    __imp_closesocket(resources->handle);
-  }
-}
-
-static int sys_accept_nt_start(int64_t handle, struct NtOverlapped *overlap,
-                               uint32_t *flags, void *arg) {
-  struct AcceptArgs *args = arg;
-  cosmo_once(&g_acceptex.once, acceptex_init);
-  if (g_acceptex.lpAcceptEx(args->listensock, handle, args->buffer, 0,
-                            sizeof(args->buffer->local),
-                            sizeof(args->buffer->remote), 0, overlap)) {
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
-                              int accept4_flags) {
   int client = -1;
-  sigset_t m = __sig_block();
-  struct AcceptResources resources = {-1};
-  pthread_cleanup_push(sys_accept_nt_unwind, &resources);
 
-  // creates resources for child socket
-  // inherit the listener configuration
-  if ((resources.handle = WSASocket(f->family, f->type, f->protocol, 0, 0,
-                                    kNtWsaFlagOverlapped)) == -1) {
-    client = __winsockerr();
-    goto Finish;
-  }
+  // accepting sockets must always be non-blocking at the os level. this
+  // is because WSAAccept doesn't support overlapped i/o operations. the
+  // AcceptEx function claims to support overlapped i/o however it can't
+  // be canceled by CancelIoEx, which makes it quite useless to us sadly
+  // this can't be called in listen(), because then fork() will break it
+  uint32_t mode = 1;
+  if (__imp_ioctlsocket(f->handle, FIONBIO, &mode))
+    return __winsockerr();
 
-  // accept network connection
-  // this operation can re-enter, interrupt, cancel, block, timeout, etc.
-  struct AcceptExBuffer buffer;
-  ssize_t bytes_received = __winsock_block(
-      resources.handle, 0, !!(f->flags & O_NONBLOCK), f->rcvtimeo, m,
-      sys_accept_nt_start, &(struct AcceptArgs){f->handle, &buffer});
-  if (bytes_received == -1) {
-    __imp_closesocket(resources.handle);
-    goto Finish;
+  for (;;) {
+
+    // perform non-blocking accept
+    // we assume listen() put f->handle in non-blocking mode
+    int32_t addrsize = sizeof(*addr);
+    struct sockaddr *paddr = (struct sockaddr *)addr;
+    if ((handle = WSAAccept(f->handle, paddr, &addrsize, 0, 0)) != -1)
+      break;
+
+    // return on genuine errors
+    uint32_t err = WSAGetLastError();
+    if (err != WSAEWOULDBLOCK) {
+      errno = __dos2errno(err);
+      if (errno == ECONNRESET)
+        errno = ECONNABORTED;
+      return -1;
+    }
+
+    // we're done if user wants non-blocking
+    if (f->flags & O_NONBLOCK)
+      return eagain();
+
+    // check for signals and thread cancelation
+    // accept() will restart if SA_RESTART is used
+    if (__sigcheck(waitmask, true) == -1)
+      return -1;
+
+    // time to block
+    struct sys_pollfd_nt fds[1] = {{f->handle, POLLIN}};
+    if (WSAPoll(fds, 1, POLL_INTERVAL_MS) == -1)
+      return __winsockerr();
   }
 
   // inherit properties of listening socket
   // errors ignored as if f->handle was created before forking
   // this fails with WSAENOTSOCK, see
   // https://github.com/jart/cosmopolitan/issues/1174
-  __imp_setsockopt(resources.handle, SOL_SOCKET, kNtSoUpdateAcceptContext,
-                   &f->handle, sizeof(f->handle));
+  __imp_setsockopt(handle, SOL_SOCKET, kNtSoUpdateAcceptContext, &f->handle,
+                   sizeof(f->handle));
 
   // create file descriptor for new socket
   // don't inherit the file open mode bits
@@ -141,18 +113,18 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
   g_fds.p[client].protocol = f->protocol;
   g_fds.p[client].sndtimeo = f->sndtimeo;
   g_fds.p[client].rcvtimeo = f->rcvtimeo;
-  g_fds.p[client].handle = resources.handle;
-  resources.handle = -1;
-  memcpy(addr, &buffer.remote.addr, sizeof(*addr));
+  g_fds.p[client].handle = handle;
   g_fds.p[client].kind = kFdSocket;
-
-Finish:
-  pthread_cleanup_pop(false);
-  __sig_unblock(m);
-  if (client == -1 && errno == ECONNRESET) {
-    errno = ECONNABORTED;
-  }
   return client;
+}
+
+textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
+                              int accept4_flags) {
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_accept_nt_impl(f, addr, accept4_flags, _SigMask);
+  ALLOW_SIGNALS;
+  return rc;
 }
 
 #endif /* __x86_64__ */

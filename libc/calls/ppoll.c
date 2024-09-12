@@ -156,11 +156,14 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     }
   } else {
     uint32_t ms;
-    if (!timeout ||
-        ckd_add(&ms, timeout->tv_sec, (timeout->tv_nsec + 999999) / 1000000)) {
-      ms = -1u;
+    uint32_t *msp;
+    if (timeout &&
+        !ckd_add(&ms, timeout->tv_sec, (timeout->tv_nsec + 999999) / 1000000)) {
+      msp = &ms;
+    } else {
+      msp = 0;
     }
-    fdcount = sys_poll_nt(fds, nfds, &ms, sigmask);
+    fdcount = sys_poll_nt(fds, nfds, msp, sigmask);
   }
 
   if (IsOpenbsd() && fdcount != -1) {

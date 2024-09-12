@@ -26,13 +26,6 @@
  * should just create a separate thread for each client. poll() isn't a
  * scalable i/o solution on any platform.
  *
- * On Windows it's only possible to poll 64 file descriptors at a time.
- * This is a limitation imposed by WSAPoll(). Cosmopolitan Libc's poll()
- * polyfill can go higher in some cases. For example, you can actually
- * poll 64 sockets and 63 non-sockets at the same time. Furthermore,
- * elements whose fd field is set to a negative number are ignored and
- * will not count against this limit.
- *
  * One of the use cases for poll() is to quickly check if a number of
  * file descriptors are valid. The canonical way to do this is to set
  * events to 0 which prevents blocking and causes only the invalid,
@@ -45,6 +38,12 @@
  *
  * When XNU and BSD OSes report POLLHUP, they will always set POLLIN too
  * when POLLIN is requested, even in cases when there isn't unread data.
+ *
+ * Your poll() function will check the status of all file descriptors
+ * before returning. This function won't block unless none of the fds
+ * had had any reportable status.
+ *
+ * The impact shutdown() will have on poll() is a dice roll across OSes.
  *
  * @param fds[𝑖].fd should be a socket, input pipe, or conosle input
  *     and if it's a negative number then the entry is ignored, plus

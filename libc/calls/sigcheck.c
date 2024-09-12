@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,37 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nt/synchronization.h"
-#include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
+#include "libc/calls/sig.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/errfuns.h"
 
-// returns 0 on timeout or spurious wakeup
-// raises EINTR if a signal delivery interrupted wait operation
-// raises ECANCELED if this POSIX thread was canceled in masked mode
-textwindows static int _park_thread(uint32_t msdelay, sigset_t waitmask,
-                                    bool restartable) {
-  if (__sigcheck(waitmask, restartable) == -1)
+textwindows int __sigcheck(sigset_t waitmask, bool restartable) {
+  int sig, handler_was_called;
+  if (_check_cancel() == -1)
     return -1;
-  int expect = 0;
-  atomic_int futex = 0;
-  struct PosixThread *pt = _pthread_self();
-  pt->pt_blkmask = waitmask;
-  atomic_store_explicit(&pt->pt_blocker, &futex, memory_order_release);
-  bool32 ok = WaitOnAddress(&futex, &expect, sizeof(int), msdelay);
-  atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-  if (ok && __sigcheck(waitmask, restartable) == -1)
-    return -1;
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+    handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+    if (_check_cancel() == -1)
+      return -1;
+    if (handler_was_called & SIG_HANDLED_NO_RESTART)
+      return eintr();
+    if (handler_was_called & SIG_HANDLED_SA_RESTART)
+      if (!restartable)
+        return eintr();
+  }
   return 0;
 }
-
-textwindows int _park_norestart(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, false);
-}
-
-textwindows int _park_restartable(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, true);
-}
-
-#endif /* __x86_64__ */
