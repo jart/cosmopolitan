@@ -310,6 +310,39 @@ TEST(poll, pipein_pollout_blocks) {
   EXPECT_SYS(0, 0, close(pipefds[0]));
 }
 
+TEST(poll, pipein_file_noblock) {
+  if (IsFreebsd() || IsOpenbsd())
+    return;
+  int pipefds[2];
+  EXPECT_SYS(0, 3, open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644));
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[0], POLLIN}, {3, POLLIN}};
+  EXPECT_SYS(0, 1, poll(fds, 2, -1u));
+  EXPECT_TRUE(!!(fds[1].revents & POLLIN));
+  EXPECT_TRUE(!(fds[1].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(poll, pipein_file_noblock2) {
+  if (IsFreebsd() || IsOpenbsd())
+    return;
+  int pipefds[2];
+  EXPECT_SYS(0, 3, open("boop", O_CREAT | O_RDWR | O_TRUNC, 0644));
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  EXPECT_SYS(0, 1, write(5, "x", 1));
+  struct pollfd fds[] = {{pipefds[0], POLLIN}, {3, POLLIN | POLLOUT}};
+  EXPECT_SYS(0, 2, poll(fds, 2, -1u));
+  EXPECT_TRUE(!!(fds[0].revents & POLLIN));
+  EXPECT_TRUE(!(fds[0].revents & POLLOUT));
+  EXPECT_TRUE(!!(fds[1].revents & POLLIN));
+  EXPECT_TRUE(!!(fds[1].revents & POLLOUT));
+  EXPECT_SYS(0, 0, close(pipefds[1]));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+  EXPECT_SYS(0, 0, close(3));
+}
+
 TEST(poll, pipeout_pollout) {
   int pipefds[2];
   EXPECT_SYS(0, 0, pipe(pipefds));

@@ -179,7 +179,7 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
 
     // check input status of pipes / consoles without blocking
     // this ensures any socket fds won't starve them of events
-    // if a file handle is POLLOUT only, we just mark it ready
+    // we can't poll file handles, so we just mark those ready
     for (i = 0; i < pn; ++i) {
       fi = fileindices[i];
       ev = fds[fi].events;
@@ -215,6 +215,8 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
             fds[fi].revents = fds[fi].events & (POLLRDNORM_ | POLLWRNORM_);
             break;
         }
+      } else {
+        fds[fi].revents = fds[fi].events & (POLLRDNORM_ | POLLWRNORM_);
       }
       rc += !!fds[fi].revents;
     }
