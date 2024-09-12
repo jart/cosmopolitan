@@ -33,8 +33,6 @@ const char *FLAG_prefix;
 const char *FLAG_suffix;
 const char *path;
 
-#include "libc/mem/tinymalloc.inc"
-
 wontreturn void PrintUsage(int fd, int exitcode) {
   tinyprint(fd, "\n\
 NAME\n\

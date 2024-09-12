@@ -48,8 +48,6 @@ static bool recursive;
 static bool doemptydirs;
 static const char *prog;
 
-#include "libc/mem/tinymalloc.inc"
-
 static wontreturn void PrintUsage(int rc, int fd) {
   tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);

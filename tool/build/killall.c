@@ -51,8 +51,6 @@ static const char *prog;
 static char16_t **filters;
 static uint32_t pids[10000];
 
-#include "libc/mem/tinymalloc.inc"
-
 static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f,
           "Usage: %s [-nshv] NAME...\n"

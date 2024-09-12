@@ -67,8 +67,6 @@
 #define FORMAT_MACHO  2
 #define FORMAT_PE     3
 
-#include "libc/mem/tinymalloc.inc"
-
 static int g_arch;
 static int g_format;
 static bool g_force;

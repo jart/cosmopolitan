@@ -22,10 +22,10 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/mem/alg.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
@@ -145,8 +145,6 @@ static struct Paths systempaths;
 static const char *buildroot;
 static const char *genroot;
 static const char *outpath;
-
-#include "libc/mem/tinymalloc.inc"
 
 static inline bool IsBlank(int c) {
   return c == ' ' || c == '\t';
@@ -345,9 +343,8 @@ static const char *FindIncludePath(const char *map, size_t mapsize,
 
   // scan backwards for hash character
   for (;;) {
-    if (q == map) {
+    if (q == map)
       return 0;
-    }
     if (IsBlank(q[-1])) {
       --q;
       continue;
@@ -414,17 +411,15 @@ static void LoadRelationships(int argc, char *argv[]) {
   static char srcdirbuf[PATH_MAX];
   const char *p, *pe, *src, *path, *pathend, *srcdir, *final;
   getargs_init(&ga, argv + optind);
-  while ((src = getargs_next(&ga))) {
+  while ((src = getargs_next(&ga)))
     CreateSourceId(src);
-  }
   getargs_destroy(&ga);
   getargs_init(&ga, argv + optind);
   while ((src = getargs_next(&ga))) {
     is_assembly = endswith(src, ".s");
     srcid = GetSourceId(src);
-    if (strlcpy(srcdirbuf, src, PATH_MAX) >= PATH_MAX) {
+    if (strlcpy(srcdirbuf, src, PATH_MAX) >= PATH_MAX)
       DiePathTooLong(src);
-    }
     srcdir = dirname(srcdirbuf);
     if ((fd = open(src, O_RDONLY)) == -1) {
       if (errno == ENOENT && ga.path) {
@@ -438,17 +433,14 @@ static void LoadRelationships(int argc, char *argv[]) {
       }
       DieSys(src);
     }
-    if ((rc = lseek(fd, 0, SEEK_END)) == -1) {
+    if ((rc = lseek(fd, 0, SEEK_END)) == -1)
       DieSys(src);
-    }
     if ((size = rc)) {
       // repeatedly map to same fixed address so in order to weasel out
       // of incurring the additional overhead of all these munmap calls
-      map = mmap((void *)0x311987030000, size, PROT_READ,
-                 MAP_SHARED | MAP_FIXED, fd, 0);
-      if (map == MAP_FAILED) {
+      map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0);
+      if (map == MAP_FAILED)
         DieSys(src);
-      }
       for (p = map, pe = map + size; p < pe; ++p) {
         if (!(p = memmem(p, pe - p, "include ", 8)))
           break;
@@ -477,12 +469,10 @@ static void LoadRelationships(int argc, char *argv[]) {
           dependency = -1;
           for (long i = 0; i < systempaths.n; ++i) {
             if (!(final =
-                      __join_paths(juf, PATH_MAX, systempaths.p[i], incpath))) {
+                      __join_paths(juf, PATH_MAX, systempaths.p[i], incpath)))
               DiePathTooLong(incpath);
-            }
-            if ((dependency = GetSourceId(final)) != -1) {
+            if ((dependency = GetSourceId(final)) != -1)
               break;
-            }
           }
           if (dependency != -1) {
             AppendEdge(&edges, dependency, srcid);
@@ -506,9 +496,8 @@ static void LoadRelationships(int argc, char *argv[]) {
           dependency = GetSourceId((final = incpath));
           // let foo/bar.c say `#include "hdr.h"`
           if (dependency == -1 && !strchr(final, '/')) {
-            if (!(final = __join_paths(juf, PATH_MAX, srcdir, final))) {
+            if (!(final = __join_paths(juf, PATH_MAX, srcdir, final)))
               DiePathTooLong(incpath);
-            }
             dependency = GetSourceId(final);
           }
           if (dependency == -1) {
@@ -526,10 +515,11 @@ static void LoadRelationships(int argc, char *argv[]) {
           p = pathend + 1;
         }
       }
+      if (munmap(map, size))
+        DieSys(src);
     }
-    if (close(fd)) {
+    if (close(fd))
       DieSys(src);
-    }
   }
   getargs_destroy(&ga);
 }
@@ -540,9 +530,8 @@ static wontreturn void ShowUsage(int rc, int fd) {
 }
 
 static void AddPath(struct Paths *paths, const char *path) {
-  if (paths->n == ARRAYLEN(paths->p)) {
+  if (paths->n == ARRAYLEN(paths->p))
     Die("too many path arguments");
-  }
   paths->p[paths->n++] = path;
 }
 
@@ -557,21 +546,18 @@ static void GetOpts(int argc, char *argv[]) {
         AddPath(&systempaths, optarg);
         break;
       case 'o':
-        if (outpath) {
+        if (outpath)
           Die("multiple output paths specified");
-        }
         outpath = optarg;
         break;
       case 'r':
-        if (buildroot) {
+        if (buildroot)
           Die("multiple build roots specified");
-        }
         buildroot = optarg;
         break;
       case 'g':
-        if (genroot) {
+        if (genroot)
           Die("multiple generated roots specified");
-        }
         genroot = optarg;
         break;
       case 'n':
@@ -582,31 +568,24 @@ static void GetOpts(int argc, char *argv[]) {
         ShowUsage(1, 2);
     }
   }
-  if (optind == argc) {
+  if (optind == argc)
     Die("missing input argument");
-  }
-  if (!genroot) {
+  if (!genroot)
     genroot = "o/";
-  }
-  if (!endswith(genroot, "/")) {
+  if (!endswith(genroot, "/"))
     Die("generated output path must end with slash");
-  }
-  if (!buildroot) {
+  if (!buildroot)
     Die("need build output path");
-  }
-  if (!endswith(buildroot, "/")) {
+  if (!endswith(buildroot, "/"))
     Die("build output path must end with slash");
-  }
-  if (!startswith(buildroot, genroot)) {
+  if (!startswith(buildroot, genroot))
     Die("build output path must start with generated output path");
-  }
   if (!systempaths.n && hermetic) {
     AddPath(&systempaths, "third_party/libcxx/include/");
     AddPath(&systempaths, "libc/isystem/");
   }
-  if (systempaths.n && !hermetic) {
+  if (systempaths.n && !hermetic)
     Die("system path can only be specified in hermetic mode");
-  }
   long j = 0;
   for (long i = 0; i < systempaths.n; ++i) {
     size_t n;
@@ -619,21 +598,18 @@ static void GetOpts(int argc, char *argv[]) {
         DieSys(path);
       }
     }
-    if ((n = strlen(path)) >= PATH_MAX) {
+    if ((n = strlen(path)) >= PATH_MAX)
       DiePathTooLong(path);
-    }
-    if (!n || path[n - 1] != '/') {
+    if (!n || path[n - 1] != '/')
       Die("system path must end with slash");
-    }
   }
   systempaths.n = j;
 }
 
 static const char *StripExt(char pathbuf[hasatleast PATH_MAX], const char *s) {
   static char *dot;
-  if (strlcpy(pathbuf, s, PATH_MAX) >= PATH_MAX) {
+  if (strlcpy(pathbuf, s, PATH_MAX) >= PATH_MAX)
     DiePathTooLong(s);
-  }
   dot = strrchr(pathbuf, '.');
   if (dot)
     *dot = '\0';
@@ -661,13 +637,10 @@ static uint32_t GetFileExtension(const char *s) {
 static bool IsObjectSource(const char *name) {
   int i;
   uint32_t ext;
-  if ((ext = GetFileExtension(name))) {
-    for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
-      if (ext == kSourceExts[i]) {
+  if ((ext = GetFileExtension(name)))
+    for (i = 0; i < ARRAYLEN(kSourceExts); ++i)
+      if (ext == kSourceExts[i])
         return true;
-      }
-    }
-  }
   return false;
 }
 
@@ -736,22 +709,18 @@ int main(int argc, char *argv[]) {
   LoadRelationships(argc, argv);
   Crunch();
   makefile = Explore();
-  if (outpath &&
-      (fd = open(outpath, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+  if (outpath && (fd = open(outpath, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1)
     DieSys(outpath);
-  }
   n = appendz(makefile).i;
-  for (i = 0; i < n; i += (size_t)rc) {
-    if ((rc = write(fd, makefile + i, n - i)) == -1) {
+  for (i = 0; i < n; i += (size_t)rc)
+    if ((rc = write(fd, makefile + i, n - i)) == -1)
       DieSys(outpath);
-    }
-  }
-  if (outpath && close(fd)) {
+  if (outpath && close(fd))
     DieSys(outpath);
-  }
   free(makefile);
   free(edges.p);
   free(sauces);
   free(names);
+  CheckForMemoryLeaks();
   return 0;
 }

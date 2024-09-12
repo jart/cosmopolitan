@@ -67,8 +67,6 @@ static Elf64_Ehdr *elf;
 static const char *epath;
 static Elf64_Xword symcount;
 
-#include "libc/mem/tinymalloc.inc"
-
 static wontreturn void Die(const char *reason) {
   tinyprint(2, epath, ": ", reason, "\n", NULL);
   exit(1);

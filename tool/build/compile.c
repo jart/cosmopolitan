@@ -229,8 +229,6 @@ const char *const kSafeEnv[] = {
     "TMPDIR",       // needed by compiler
 };
 
-#include "libc/mem/tinymalloc.inc"
-
 void OnAlrm(int sig) {
   ++gotalrm;
 }

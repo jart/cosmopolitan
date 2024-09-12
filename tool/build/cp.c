@@ -69,8 +69,6 @@ char linkbuf[PATH_MAX];
 
 void Cp(char *, char *);
 
-#include "libc/mem/tinymalloc.inc"
-
 bool IsDirectory(const char *path) {
   int e;
   bool res;

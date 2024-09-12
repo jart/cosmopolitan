@@ -260,8 +260,6 @@ static Elf64_Xword notesize;
 
 static char *r_off32_e_lfanew;
 
-#include "libc/mem/tinymalloc.inc"
-
 static wontreturn void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
   exit(1);
