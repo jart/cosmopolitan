@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2024 Ivan Komarov                                                  │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,17 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
-TEST(fscanf, test_readAfterFloat) {
-  FILE *f = fmemopen("infDEAD-.125e-2BEEF", 19, "r");
-  float f1 = 666.666f, f2 = f1;
-  int i1 = 666, i2 = i1;
-  EXPECT_EQ(4, fscanf(f, "%f%x%f%x", &f1, &i1, &f2, &i2));
-  EXPECT_TRUE(isinf(f1));
-  EXPECT_EQ(0xDEAD, i1);
-  EXPECT_FLOAT_EXACTLY_EQ(-0.125e-2f, f2);
-  EXPECT_EQ(0xBEEF, i2);
-  fclose(f);
+bool testlib_exactlyequallongdouble(long double x, long double y) {
+  if (isnan(x) && isnan(y))
+    return true;
+  // Check that we don't have e.g. one input denormal and the other not
+  // (a denormal and a non-denormal can sometimes compare equal)
+  if (fpclassify(x) != fpclassify(y))
+    return false;
+  // Check that we don't have -0 and 0
+  if (signbit(x) != signbit(y))
+    return false;
+  if (x != y)
+    return false;
+  return true;
 }

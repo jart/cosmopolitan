@@ -169,7 +169,9 @@ pcheck:
 			L = 0;
 			n = 0;
 		}
-		L |= (__gdtoa_hexdig[*s1] & 0x0f) << n;
+		// We can shift in a way that changes the sign bit or overflows,
+		// so we need to cast to unsigned to avoid undefined behavior
+		L |= (unsigned)(__gdtoa_hexdig[*s1] & 0x0f) << n;
 		n += 4;
 	}
 	*x++ = L;
