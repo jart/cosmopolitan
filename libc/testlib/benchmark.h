@@ -7,24 +7,22 @@ COSMOPOLITAN_C_START_
 #define X(x) __expropriate(x)
 #define V(x) __veil("r", x)
 
-#define BENCHMARK(ITERATIONS, WORK_PER_RUN, CODE)                        \
-  do {                                                                   \
-    struct timespec start = timespec_mono();                             \
-    for (int __i = 0; __i < ITERATIONS; ++__i) {                         \
-      asm volatile("" ::: "memory");                                     \
-      CODE;                                                              \
-    }                                                                    \
-    double total_nanos =                                                 \
-        (double)timespec_tonanos(timespec_sub(timespec_mono(), start));  \
-    double total_work =                                                  \
-        (double)((WORK_PER_RUN) ? (WORK_PER_RUN) : 1) * (ITERATIONS);    \
-    _print_benchmark_result(total_nanos, total_work, ITERATIONS, #CODE); \
+#define BENCHMARK(ITERATIONS, WORK_PER_RUN, CODE)                     \
+  do {                                                                \
+    struct timespec start = timespec_real();                          \
+    for (int __i = 0; __i < ITERATIONS; ++__i) {                      \
+      asm volatile("" ::: "memory");                                  \
+      CODE;                                                           \
+    }                                                                 \
+    long ns = timespec_tonanos(timespec_sub(timespec_real(), start)); \
+    _print_benchmark_result(ns, WORK_PER_RUN, ITERATIONS, #CODE);     \
   } while (0)
 
-static void _print_benchmark_result(double total_nanos, double total_work,
+static void _print_benchmark_result(double total_nanos, double work_per_run,
                                     int iterations, const char* code) {
-  double time_per_op = total_nanos / iterations;
-  double throughput = total_work / (total_nanos * 1e-9);
+  double time_per_op = total_nanos / (work_per_run * iterations);
+  double throughput = work_per_run / (total_nanos / iterations * 1e-9);
+
   const char* throughput_unit;
   const char* time_unit;
   double time_value;
@@ -50,29 +48,32 @@ static void _print_benchmark_result(double total_nanos, double total_work,
   } else if (time_per_op >= 1e3) {
     time_value = time_per_op / 1e3;
     time_unit = "µs";
-  } else {
+  } else if (time_per_op >= .01) {
     time_value = time_per_op;
     time_unit = "ns";
+  } else {
+    time_value = time_per_op * 1e3;
+    time_unit = "ps";
   }
 
   // Determine work unit
   const char* work_unit;
-  double work_value = total_work / iterations;
-  if (work_value >= 1e9) {
-    work_value /= 1e9;
+  if (work_per_run >= 1e9) {
+    work_per_run /= 1e9;
     work_unit = "G";
-  } else if (work_value >= 1e6) {
-    work_value /= 1e6;
+  } else if (work_per_run >= 1e6) {
+    work_per_run /= 1e6;
     work_unit = "M";
-  } else if (work_value >= 1e3) {
-    work_value /= 1e3;
+  } else if (work_per_run >= 1e3) {
+    work_per_run /= 1e3;
     work_unit = "K";
   } else {
     work_unit = " ";
   }
 
-  printf("%8.2f %-2s %6.2f %s/s %6.2f %s %2dx %s\n", time_value, time_unit,
-         throughput, throughput_unit, work_value, work_unit, iterations, code);
+  printf("%8.2f %-2s %8.2f %s/s %6.2f %s %2dx %s\n", time_value, time_unit,
+         throughput, throughput_unit, work_per_run, work_unit, iterations,
+         code);
 }
 
 COSMOPOLITAN_C_END_
