@@ -21,6 +21,70 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
+static void check_single_double(const char *fmt, const char *expected_str,
+                                double value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), fmt, value);
+
+  ASSERT_GE(sizeof(buf), strlen(expected_str));
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+  while (i < sizeof(buf))
+    ASSERT_EQ('\0', buf[i++]);
+}
+
+static void check_single_long_double(const char *fmt, const char *expected_str,
+                                     long double value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), fmt, value);
+
+  ASSERT_GE(sizeof(buf), strlen(expected_str));
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+  while (i < sizeof(buf))
+    ASSERT_EQ('\0', buf[i++]);
+}
+
+void check_single_long_double_arr_allowed(
+    const char *fmt, const char *allowed_strs[], long double value) {
+  char buf[30] = {0};
+  int res = snprintf(buf, sizeof(buf), fmt, value);
+
+  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
+    if (strlen(allowed_strs[i]) == res && strcmp(allowed_strs[i], buf) == 0)
+      return;
+
+  printf("Failed to find matching str for %`'s, allowed strs:\n", buf);
+  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
+    printf("- %`'s\n", allowed_strs[i]);
+  fflush(stdout);
+  ASSERT_EQ(false, true);
+}
+
+static void check_single_int(const char *fmt, const char *expected_str,
+                             int value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), fmt, value);
+
+  ASSERT_GE(sizeof(buf), strlen(expected_str));
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+  while (i < sizeof(buf))
+    ASSERT_EQ('\0', buf[i++]);
+}
+
+static void check_single_wint_t(const char *fmt, const char *expected_str,
+                                wint_t value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), fmt, value);
+
+  ASSERT_GE(sizeof(buf), strlen(expected_str));
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+  while (i < sizeof(buf))
+    ASSERT_EQ('\0', buf[i++]);
+}
+
 TEST(snprintf, testVeryLargePrecision) {
   char buf[512] = {};
   int i = snprintf(buf, sizeof(buf), "%.9999u", 10);
@@ -30,59 +94,21 @@ TEST(snprintf, testVeryLargePrecision) {
 }
 
 TEST(snprintf, testPlusFlagOnChar) {
-  char buf[10] = {};
-  int i = snprintf(buf, sizeof(buf), "%+c", '=');
-
-  ASSERT_EQ(1, i);
-  ASSERT_STREQ("=", buf);
+  check_single_int("%+c", "=", '=');
 }
 
 TEST(snprintf, testInf) {
-  char buf[10] = {};
-  int i = snprintf(buf, sizeof(buf), "%f", 1.0 / 0.0);
-
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  memset(buf, '\0', 4);
-  i = snprintf(buf, sizeof(buf), "%Lf", 1.0L / 0.0L);
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  memset(buf, '\0', 4);
-  i = snprintf(buf, sizeof(buf), "%e", 1.0 / 0.0);
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  memset(buf, '\0', 4);
-  i = snprintf(buf, sizeof(buf), "%Le", 1.0L / 0.0L);
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  memset(buf, '\0', 4);
-  i = snprintf(buf, sizeof(buf), "%g", 1.0 / 0.0);
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  memset(buf, '\0', 4);
-  i = snprintf(buf, sizeof(buf), "%Lg", 1.0L / 0.0L);
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("inf", buf);
-
-  for (i = 4; i < 10; ++i)
-    ASSERT_EQ('\0', buf[i]);
+  check_single_double("%f", "inf", 1.0 / 0.0);
+  check_single_long_double("%Lf", "inf", 1.0L / 0.0L);
+  check_single_double("%e", "inf", 1.0 / 0.0);
+  check_single_long_double("%Le", "inf", 1.0L / 0.0L);
+  check_single_double("%g", "inf", 1.0 / 0.0);
+  check_single_long_double("%Lg", "inf", 1.0L / 0.0L);
 }
 
 TEST(snprintf, testUppercaseCConversionSpecifier) {
-  char buf[10] = {};
-  int i = snprintf(buf, sizeof(buf), "%C", L'a');
-
-  ASSERT_EQ(1, i);
-  ASSERT_STREQ("a", buf);
-
-  i = snprintf(buf, sizeof(buf), "%C", L'☺');
-  ASSERT_EQ(3, i);
-  ASSERT_STREQ("☺", buf);
+  check_single_wint_t("%C", "a", L'a');
+  check_single_wint_t("%C", "☺", L'☺');
 }
 
 // Make sure we don't va_arg the wrong argument size on wide character
@@ -188,74 +214,26 @@ TEST(snprintf, testNConversionSpecifier) {
 }
 
 TEST(snprintf, testLongDoubleEConversionSpecifier) {
-  char buf[20] = {};
-  int i = snprintf(buf, sizeof(buf), "%Le", 1234567.8L);
-
-  ASSERT_EQ(12, i);
-  ASSERT_STREQ("1.234568e+06", buf);
+  check_single_long_double("%Le", "1.234568e+06", 1234567.8L);
 }
 
 TEST(snprintf, testLongDoubleRounding) {
   int previous_rounding = fegetround();
   ASSERT_EQ(0, fesetround(FE_DOWNWARD));
 
-  char buf[20];
-  int i = snprintf(buf, sizeof(buf), "%.3Lf", 4.4375L);
-  ASSERT_EQ(5, i);
-  ASSERT_STREQ("4.437", buf);
-
-  i = snprintf(buf, sizeof(buf), "%.3Lf", -4.4375L);
-  ASSERT_EQ(6, i);
-  ASSERT_STREQ("-4.438", buf);
+  check_single_long_double("%.3Lf", "4.437", 4.4375L);
+  check_single_long_double("%.3Lf", "-4.438", -4.4375L);
 
   ASSERT_EQ(0, fesetround(FE_TOWARDZERO));
 
-  i = snprintf(buf, sizeof(buf), "%.3Lf", -4.4375L);
-  ASSERT_EQ(6, i);
-  ASSERT_STREQ("-4.437", buf);
+  check_single_long_double("%.3Lf", "-4.437", -4.4375L);
 
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
 
-void check_a_conversion_specifier_double(const char *fmt,
-                                         const char *expected_str,
-                                         double value) {
-  char buf[30] = {0};
-  int i = snprintf(buf, sizeof(buf), fmt, value);
-
-  ASSERT_EQ(strlen(expected_str), i);
-  ASSERT_STREQ(expected_str, buf);
-}
-
-void check_a_conversion_specifier_long_double(const char *fmt,
-                                              const char *expected_str,
-                                              long double value) {
-  char buf[30] = {0};
-  int i = snprintf(buf, sizeof(buf), fmt, value);
-
-  ASSERT_EQ(strlen(expected_str), i);
-  ASSERT_STREQ(expected_str, buf);
-}
-
-void check_a_conversion_specifier_long_double_arr_allowed(
-    const char *fmt, const char *allowed_strs[], long double value) {
-  char buf[30] = {0};
-  int res = snprintf(buf, sizeof(buf), fmt, value);
-
-  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
-    if (strlen(allowed_strs[i]) == res && strcmp(allowed_strs[i], buf) == 0)
-      return;
-
-  printf("Failed to find matching str for %`'s, allowed strs:\n", buf);
-  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
-    printf("- %`'s\n", allowed_strs[i]);
-  fflush(stdout);
-  ASSERT_EQ(false, true);
-}
-
 void check_a_conversion_specifier_double_prec_1(const char *expected_str,
                                                 double value) {
-  check_a_conversion_specifier_double("%.1a", expected_str, value);
+  check_single_double("%.1a", expected_str, value);
 }
 
 TEST(snprintf, testAConversionSpecifierRounding) {
@@ -281,23 +259,25 @@ TEST(snprintf, testAConversionSpecifier) {
   check_a_conversion_specifier_double_prec_1("0x1.ap+4", 0x1.98p+4);
   check_a_conversion_specifier_double_prec_1("0x1.ap+4", 0x1.a8p+4);
 
-  check_a_conversion_specifier_double("%#a", "0x0.p+0", 0x0.0p0);
-  check_a_conversion_specifier_double("%#A", "0X0.P+0", 0x0.0p0);
-  check_a_conversion_specifier_long_double("%#La", "0x0.p+0", 0x0.0p0L);
-  check_a_conversion_specifier_long_double("%#LA", "0X0.P+0", 0x0.0p0L);
+  check_single_double("%#a", "0x0.p+0", 0x0.0p0);
+  check_single_double("%#A", "0X0.P+0", 0x0.0p0);
+  check_single_long_double("%#La", "0x0.p+0", 0x0.0p0L);
+  check_single_long_double("%#LA", "0X0.P+0", 0x0.0p0L);
 
-  check_a_conversion_specifier_double("%.2a", "0x1.00p-1026", 0xf.fffp-1030);
+  check_single_double("%.2a", "0x1.00p-1026", 0xf.fffp-1030);
 
-  check_a_conversion_specifier_double("%.1a", "0x2.0p+0", 1.999);
-
+  check_single_double("%.1a", "0x2.0p+0", 1.999);
   const char *acceptable_results1[] = {"0x1.0p+1", "0x2.0p+0", NULL};
-  check_a_conversion_specifier_long_double_arr_allowed(
+  check_single_long_double_arr_allowed(
       "%.1La", acceptable_results1, 1.999L);
 }
 
-TEST(snprintf, apostropheFlag) {
-  char buf[20];
-  int i = snprintf(buf, sizeof(buf), "%'d", 1000000);
-  ASSERT_EQ(7, i);
-  ASSERT_STREQ("1000000", buf);
+TEST(snprintf, testApostropheFlag) {
+  check_single_int("%'d", "10000000", 10000000);
+}
+
+TEST(snprintf, testUppercaseBConversionSpecifier) {
+  check_single_int("%B", "0", 0);
+  check_single_int("%B", "10", 2);
+  check_single_int("%#B", "0B10011", 19);
 }

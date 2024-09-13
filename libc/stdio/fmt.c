@@ -1090,9 +1090,10 @@ int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
       case 'x':
         log2base = 4;
         goto FormatNumber;
+      case 'B':
       case 'b':
         log2base = 1;
-        alphabet = "0123456789abcdefpb";
+        alphabet = (d == 'b' ? "0123456789abcdefpb" : "0123456789ABCDEFPB");
         goto FormatNumber;
       case 'o':
         log2base = 3;
