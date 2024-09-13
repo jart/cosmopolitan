@@ -714,6 +714,7 @@ static int __fmt_bround(struct FPBits *b, int prec, int prec1) {
       (b->fpi.rounding == FPI_Round_down && b->sign))
     goto inc_true;
 
+  // Rounding to nearest, ties to even
   if ((t = bits[k >> 3] >> (j = (k & 7) * 4)) & 8) {
     if (t & 7)
       goto inc_true;
@@ -757,7 +758,12 @@ have_inc:
       donothing;
     if (j > k) {
     onebit:
-      bits[0] = 1;
+      // We use 0x10 instead of 1 here to ensure that the digit before the
+      // decimal-point is non-0 (the C standard mandates this, i.e. considers
+      // that printing 0x0.1p+5 is illegal where 0x1.0p+1 is even though both
+      // evaluate to the same value because the first has 0 as the digit before
+      // the decimal-point character)
+      bits[0] = 0x10;
       b->ex += 4 * prec;
       return 1;
     }
