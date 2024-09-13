@@ -38,7 +38,7 @@ struct SendArgs {
   struct NtIovec iovnt[16];
 };
 
-static textwindows int sys_send_nt_start(int64_t handle,
+textwindows static int sys_send_nt_start(int64_t handle,
                                          struct NtOverlapped *overlap,
                                          uint32_t *flags, void *arg) {
   struct SendArgs *args = arg;

@@ -38,6 +38,7 @@
 #include "libc/nt/iphlpapi.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/ipadapteraddresses.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -59,6 +60,8 @@
 #define MAX_UNICAST_ADDR 32
 #define MAX_NAME_CLASH   ((int)('z' - 'a')) /* Allow a..z */
 
+__msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
+
 static struct HostAdapterInfoNode {
   struct HostAdapterInfoNode *next;
   char name[IFNAMSIZ]; /* Obtained from FriendlyName */
@@ -76,7 +79,7 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
   } else if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdSocket) {
       handle = g_fds.p[fd].handle;
-      if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
+      if ((rc = __imp_ioctlsocket(handle, request, arg)) != -1) {
         return rc;
       } else {
         return _weaken(__winsockerr)();
@@ -97,7 +100,7 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
   } else if (__isfdopen(fd)) {
     handle = g_fds.p[fd].handle;
     if (g_fds.p[fd].kind == kFdSocket) {
-      if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, FIONREAD, arg)) != -1) {
+      if ((rc = __imp_ioctlsocket(handle, FIONREAD, arg)) != -1) {
         return rc;
       } else {
         return _weaken(__winsockerr)();
