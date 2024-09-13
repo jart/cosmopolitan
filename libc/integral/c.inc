@@ -65,6 +65,26 @@ typedef __UINT64_TYPE__ uint64_t;
 typedef __INTMAX_TYPE__ intmax_t;
 typedef __UINTMAX_TYPE__ uintmax_t;
 
+/* TODO(jart): re-import compiler-rt once they have it */
+#if defined(__x86_64__) && defined(__FLT128_MAX_10_EXP__)
+#undef __FLT128_MAX_10_EXP__
+#undef __FLT128_DENORM_MIN__
+#undef __FLT128_MIN_EXP__
+#undef __FLT128_MIN_10_EXP__
+#undef __FLT128_MANT_DIG__
+#undef __FLT128_HAS_INFINITY__
+#undef __FLT128_EPSILON__
+#undef __FLT128_MAX_EXP__
+#undef __FLT128_HAS_DENORM__
+#undef __FLT128_DIG__
+#undef __FLT128_MIN__
+#undef __FLT128_MAX__
+#undef __FLT128_NORM_MAX__
+#undef __FLT128_HAS_QUIET_NAN__
+#undef __FLT128_IS_IEC_60559__
+#undef __FLT128_DECIMAL_DIG__
+#endif
+
 #define __DEFINED_max_align_t
 typedef long double max_align_t;
 

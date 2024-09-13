@@ -8,8 +8,6 @@
 //===----------------------------------------------------------------------===//
 //
 
-__static_yoink("huge_compiler_rt_license");
-
 #define QUAD_PRECISION
 #include "third_party/compiler_rt/fp_lib.inc"
 
@@ -19,7 +17,7 @@ __static_yoink("huge_compiler_rt_license");
 #include "third_party/compiler_rt/fp_extend_impl.inc"
 
 COMPILER_RT_ABI long double __extendsftf2(float a) {
-    return __extendXfYf2__(a);
+  return __extendXfYf2__(a);
 }
 
 #endif
