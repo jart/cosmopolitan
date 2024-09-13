@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
@@ -37,12 +38,17 @@
  * @raise EINVAL if `value` exceeds `SEM_VALUE_MAX`
  */
 int sem_init(sem_t *sem, int pshared, unsigned value) {
-  if (value > SEM_VALUE_MAX)
-    return einval();
-  sem->sem_magic = SEM_MAGIC_UNNAMED;
-  atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
-  sem->sem_pshared = !!pshared;
-  sem->sem_pid = getpid();
-  sem->sem_waiters = 0;
-  return 0;
+  int rc;
+  if (value > SEM_VALUE_MAX) {
+    rc = einval();
+  } else {
+    sem->sem_magic = SEM_MAGIC_UNNAMED;
+    atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
+    sem->sem_pshared = !!pshared;
+    sem->sem_pid = getpid();
+    sem->sem_waiters = 0;
+    rc = 0;
+  }
+  STRACE("sem_init(%p, %hhhd, %u) → %d% m", sem, pshared, value, rc);
+  return rc;
 }

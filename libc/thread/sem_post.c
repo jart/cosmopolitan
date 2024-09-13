@@ -46,7 +46,7 @@ int sem_post(sem_t *sem) {
   old = atomic_fetch_add_explicit(&sem->sem_value, 1, memory_order_acq_rel);
   unassert(old > INT_MIN);
   if (old >= 0) {
-    wakeups = nsync_futex_wake_(&sem->sem_value, 1, true);
+    wakeups = nsync_futex_wake_(&sem->sem_value, 1, sem->sem_pshared);
     npassert(wakeups >= 0);
     rc = 0;
   } else {

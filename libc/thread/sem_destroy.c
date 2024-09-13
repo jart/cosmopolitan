@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
@@ -40,14 +41,20 @@
  * @raise EBUSY if `sem` has waiters
  */
 int sem_destroy(sem_t *sem) {
-  int waiters;
+  int rc, waiters;
   npassert(sem->sem_magic != SEM_MAGIC_NAMED);
-  if (sem->sem_magic != SEM_MAGIC_UNNAMED)
-    return einval();
-  waiters = atomic_load_explicit(&sem->sem_waiters, memory_order_relaxed);
-  unassert(waiters >= 0);
-  if (waiters)
-    return ebusy();
-  atomic_store_explicit(&sem->sem_value, INT_MIN, memory_order_relaxed);
-  return 0;
+  if (sem->sem_magic != SEM_MAGIC_UNNAMED) {
+    rc = einval();
+  } else {
+    waiters = atomic_load_explicit(&sem->sem_waiters, memory_order_relaxed);
+    unassert(waiters >= 0);
+    if (waiters) {
+      rc = ebusy();
+    } else {
+      atomic_store_explicit(&sem->sem_value, INT_MIN, memory_order_relaxed);
+      rc = 0;
+    }
+  }
+  STRACE("sem_destroy(%p) → %d% m", sem, rc);
+  return rc;
 }
