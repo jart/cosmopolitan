@@ -31,12 +31,23 @@
 /**
  * Connects socket to remote end.
  *
- * ProTip: Connectionless sockets, e.g. UDP, can be connected too. The
- * benefit is not needing to specify the remote address on each send. It
- * also means getsockname() can be called to retrieve routing details.
+ * When `fd` is in `O_NONBLOCK` mode, this raises `EINPROGRESS`. To wait
+ * for establishment poll() function may be called using `POLLOUT`. Then
+ * `SO_ERROR` may be used to check for errors.
+ *
+ * Connectionless sockets, e.g. UDP, can be connected too. The benefit
+ * is not needing to specify the remote address on each send. It also
+ * means getsockname() can be called to retrieve routing details.
+ *
+ * On Linux, your `SO_SNDTIMEO` will timeout connect(). Other OSes (i.e.
+ * Windows, MacOS, and BSDs) do not support this and will block forever.
+ *
+ * On Windows, when this function blocks, there may be a 10 millisecond
+ * delay on the handling of signals or thread cancelation.
  *
  * @return 0 on success or -1 w/ errno
- * @raise EALREADY if a non-blocking connection request already happened
+ * @raise EINPROGRESS if `O_NONBLOCK` and connecting process initiated
+ * @raise EALREADY if a `O_NONBLOCK` connecting already in flight
  * @raise EADDRINUSE if local address is already in use
  * @raise EINTR if a signal handler was called instead
  * @raise ENETUNREACH if network is unreachable

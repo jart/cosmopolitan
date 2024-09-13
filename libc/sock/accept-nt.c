@@ -18,15 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
@@ -38,8 +35,6 @@
 
 #define POLL_INTERVAL_MS 10
 
-__msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
-__msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 __msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
 
 textwindows static int sys_accept_nt_impl(struct Fd *f,
@@ -61,7 +56,6 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
   for (;;) {
 
     // perform non-blocking accept
-    // we assume listen() put f->handle in non-blocking mode
     int32_t addrsize = sizeof(*addr);
     struct sockaddr *paddr = (struct sockaddr *)addr;
     if ((handle = WSAAccept(f->handle, paddr, &addrsize, 0, 0)) != -1)
@@ -76,7 +70,7 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
       return -1;
     }
 
-    // we're done if user wants non-blocking
+    // check for non-blocking
     if (f->flags & O_NONBLOCK)
       return eagain();
 
@@ -90,13 +84,6 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
     if (WSAPoll(fds, 1, POLL_INTERVAL_MS) == -1)
       return __winsockerr();
   }
-
-  // inherit properties of listening socket
-  // errors ignored as if f->handle was created before forking
-  // this fails with WSAENOTSOCK, see
-  // https://github.com/jart/cosmopolitan/issues/1174
-  __imp_setsockopt(handle, SOL_SOCKET, kNtSoUpdateAcceptContext, &f->handle,
-                   sizeof(f->handle));
 
   // create file descriptor for new socket
   // don't inherit the file open mode bits

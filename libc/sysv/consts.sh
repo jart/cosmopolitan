@@ -19,6 +19,10 @@
 dir=libc/sysv/consts
 . libc/sysv/gen.sh
 
+# syscon	errno	EALREADY				114			114			37			37			37			37			37			10037			# connection already in progress; bsd consensus; WSAEALREADY; raised by connect(2), send(2), ip(7)
+# syscon	errno	EINPROGRESS				115			115			36			36			36			36			36			10036			# bsd consensus; WSAEINPROGRESS; raised by connect(2) w/ O_NONBLOCK
+# syscon	errno	EISCONN					106			106			56			56			56			56			56			10056			# socket is connected; bsd consensus; WSAEISCONN; raised by connect(2), send(2), unix(7), ip(7)
+
 #	The Fifth Bell System, Community Edition
 #	» catalogue of carnage
 #

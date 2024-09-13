@@ -46,12 +46,7 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
   if (IsWindows()) {
     if (__isfdkind(fd, kFdSocket)) {
       if ((rc = impl_win32(g_fds.p[fd].handle, &ss, &size))) {
-        if (impl_win32 == __imp_getpeername &&
-            g_fds.p[fd].peer.ss_family != AF_UNSPEC) {
-          ss = g_fds.p[fd].peer;
-          rc = 0;
-        } else if (impl_win32 == __imp_getsockname &&
-                   WSAGetLastError() == WSAEINVAL) {
+        if (impl_win32 == __imp_getsockname && WSAGetLastError() == WSAEINVAL) {
           // The socket has not been bound to an address with bind, or
           // ADDR_ANY is specified in bind but connection has not yet
           // occurred. -MSDN

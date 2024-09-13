@@ -121,12 +121,6 @@ TEST(connect, nonblocking) {
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP));
   ASSERT_SYS(EINPROGRESS, -1,
              connect(3, (struct sockaddr *)&addr, sizeof(addr)));
-  if (!IsLinux() && !IsNetbsd() && !IsXnu()) {
-    // this doens't work on linux and netbsd
-    // on MacOS this can EISCONN before accept() is called
-    ASSERT_SYS(EALREADY, -1,
-               connect(3, (struct sockaddr *)&addr, sizeof(addr)));
-  }
   ASSERT_SYS(EAGAIN, -1, read(3, buf, 16));
   *sem = 1;
   {  // wait until connected

@@ -30,12 +30,23 @@
 /**
  * Creates client socket file descriptor for incoming connection.
  *
+ * When `fd` is in `O_NONBLOCK` mode, this function will raise `EAGAIN`
+ * when no client is available to accept. To wait until a client exists
+ * the poll() function may be called using `POLLIN`.
+ *
+ * On Linux, your `SO_RCVTIMEO` will timeout accept4(). Other OSes (i.e.
+ * Windows, MacOS, and BSDs) do not support this and will block forever.
+ *
+ * On Windows, when this function blocks, there may be a 10 millisecond
+ * delay on the handling of signals or thread cancelation.
+ *
  * @param fd is the server socket file descriptor
  * @param opt_out_addr will receive the remote address
  * @param opt_inout_addrsize provides and receives out_addr's byte length
  * @param flags can have SOCK_{CLOEXEC,NONBLOCK}, which may apply to
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
+ * @raise EAGAIN if `O_NONBLOCK` and no clients pending
  * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)

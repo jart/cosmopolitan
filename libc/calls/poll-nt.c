@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
@@ -58,14 +59,8 @@
 #define POLLPRI_    0x0400  // MSDN unsupported
 // </sync libc/sysv/consts.sh>
 
-textwindows dontinline static struct timespec sys_poll_nt_now(void) {
-  uint64_t hectons;
-  QueryUnbiasedInterruptTimePrecise(&hectons);
-  return timespec_fromnanos(hectons * 100);
-}
-
 textwindows static uint32_t sys_poll_nt_waitms(struct timespec deadline) {
-  struct timespec now = sys_poll_nt_now();
+  struct timespec now = sys_clock_gettime_monotonic_nt();
   if (timespec_cmp(now, deadline) < 0) {
     struct timespec remain = timespec_sub(deadline, now);
     int64_t millis = timespec_tomillis(remain);
@@ -340,7 +335,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
   int rc;
   struct timespec now, timeout, deadline;
   BLOCK_SIGNALS;
-  now = ms ? sys_poll_nt_now() : timespec_zero;
+  now = ms ? sys_clock_gettime_monotonic_nt() : timespec_zero;
   timeout = ms ? timespec_frommillis(*ms) : timespec_max;
   deadline = timespec_add(now, timeout);
   rc = sys_poll_nt_impl(fds, nfds, deadline, sigmask ? *sigmask : _SigMask);

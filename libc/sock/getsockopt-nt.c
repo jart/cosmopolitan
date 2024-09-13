@@ -47,6 +47,19 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
     in_optlen = 0;
   }
 
+  if (level == SOL_SOCKET && optname == SO_ERROR) {
+    if (in_optlen >= sizeof(int)) {
+      int err;
+      uint32_t len = sizeof(err);
+      if (__imp_getsockopt(fd->handle, SOL_SOCKET, SO_ERROR, &err, &len) == -1)
+        return __winsockerr();
+      *(int *)out_opt_optval = __dos2errno(err);
+      *inout_optlen = sizeof(int);
+    } else {
+      return einval();
+    }
+  }
+
   if (level == SOL_SOCKET &&
       (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
     if (in_optlen >= sizeof(struct timeval)) {

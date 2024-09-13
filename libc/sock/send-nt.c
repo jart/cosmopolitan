@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"

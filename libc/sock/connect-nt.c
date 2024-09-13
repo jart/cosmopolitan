@@ -16,92 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/atomic.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/cosmo.h"
 #include "libc/errno.h"
-#include "libc/intrin/fds.h"
 #include "libc/macros.h"
-#include "libc/mem/mem.h"
-#include "libc/nt/enum/wsaid.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/struct/guid.h"
-#include "libc/nt/struct/overlapped.h"
-#include "libc/nt/thread.h"
+#include "libc/nt/struct/fdset.h"
+#include "libc/nt/struct/pollfd.h"
+#include "libc/nt/struct/timeval.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
-#include "libc/sock/wsaid.internal.h"
-#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
-
 #ifdef __x86_64__
-#include "libc/sock/yoink.inc"
 
-__msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
+#define UNCONNECTED 0
+#define CONNECTING  1
+#define CONNECTED   2
 
-struct ConnectArgs {
-  const void *addr;
-  uint32_t addrsize;
-};
+#define POLL_INTERVAL_MS 10
 
-static struct {
-  atomic_uint once;
-  bool32 (*__msabi lpConnectEx)(int64_t hSocket, const struct sockaddr *name,
-                                int namelen, const void *opt_lpSendBuffer,
-                                uint32_t dwSendDataLength,
-                                uint32_t *opt_out_lpdwBytesSent,
-                                struct NtOverlapped *lpOverlapped);
-} g_connectex;
+__msabi extern typeof(__sys_getsockopt_nt) *const __imp_getsockopt;
+__msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
+__msabi extern typeof(__sys_select_nt) *const __imp_select;
 
-static void connectex_init(void) {
-  static struct NtGuid ConnectExGuid = WSAID_CONNECTEX;
-  g_connectex.lpConnectEx = __get_wsaid(&ConnectExGuid);
-}
+textwindows static int sys_connect_nt_impl(struct Fd *f, const void *addr,
+                                           uint32_t addrsize,
+                                           sigset_t waitmask) {
 
-void sys_connect_nt_cleanup(struct Fd *f, bool cancel) {
-  struct NtOverlapped *overlap;
-  if ((overlap = f->connect_op)) {
-    uint32_t got, flags;
-    if (cancel)
-      CancelIoEx(f->handle, overlap);
-    if (WSAGetOverlappedResult(f->handle, overlap, &got, cancel, &flags) ||
-        WSAGetLastError() != kNtErrorIoIncomplete) {
-      WSACloseEvent(overlap->hEvent);
-      free(overlap);
-      f->connect_op = 0;
-    }
-  }
-}
+  // check if already connected
+  if (f->connecting == 2)
+    return eisconn();
 
-static int sys_connect_nt_start(int64_t hSocket,
-                                struct NtOverlapped *lpOverlapped,
-                                uint32_t *flags, void *arg) {
-  struct ConnectArgs *args = arg;
-  if (g_connectex.lpConnectEx(hSocket, args->addr, args->addrsize, 0, 0, 0,
-                              lpOverlapped)) {
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
-                                           uint32_t addrsize, sigset_t mask) {
-
-  // get connect function from winsock api
-  cosmo_once(&g_connectex.once, connectex_init);
-
-  // fail if previous connect() is still in progress
-  if (f->connect_op)
-    return ealready();
-
-  // ConnectEx() requires bind() be called beforehand
+  // winsock requires bind() be called beforehand
   if (!f->isbound) {
     struct sockaddr_storage ss = {0};
     ss.ss_family = ((struct sockaddr *)addr)->sa_family;
@@ -109,60 +64,121 @@ static textwindows int sys_connect_nt_impl(struct Fd *f, const void *addr,
       return -1;
   }
 
-  // perform normal connect
-  if (!(f->flags & O_NONBLOCK)) {
-    f->peer.ss_family = AF_UNSPEC;
-    ssize_t rc = __winsock_block(f->handle, 0, false, f->sndtimeo, mask,
-                                 sys_connect_nt_start,
-                                 &(struct ConnectArgs){addr, addrsize});
-    if (rc == -1 && errno == EAGAIN) {
-      // return ETIMEDOUT if SO_SNDTIMEO elapsed
-      // note that Linux will return EINPROGRESS
-      errno = etimedout();
-    } else if (!rc) {
-      __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
+  if (f->connecting == UNCONNECTED) {
+
+    // make sure winsock is in non-blocking mode
+    uint32_t mode = 1;
+    if (__imp_ioctlsocket(f->handle, FIONBIO, &mode))
+      return __winsockerr();
+
+    // perform non-blocking connect
+    if (!WSAConnect(f->handle, addr, addrsize, 0, 0, 0, 0)) {
+      f->connecting = CONNECTED;
+      return 0;
     }
-    return rc;
+
+    // check for errors
+    switch (WSAGetLastError()) {
+      case WSAEISCONN:
+        f->connecting = CONNECTED;
+        return eisconn();
+      case WSAEALREADY:
+        f->connecting = CONNECTING;
+        break;
+      case WSAEWOULDBLOCK:
+        break;
+      default:
+        return __winsockerr();
+    }
+
+    // handle non-blocking
+    if (f->flags & O_NONBLOCK) {
+      if (f->connecting == UNCONNECTED) {
+        f->connecting = CONNECTING;
+        return einprogress();
+      } else {
+        return ealready();
+      }
+    } else {
+      f->connecting = CONNECTING;
+    }
   }
 
-  // win32 getpeername() stops working in non-blocking connect mode
-  if (addrsize)
-    memcpy(&f->peer, addr, MIN(addrsize, sizeof(struct sockaddr_storage)));
+  for (;;) {
 
-  // perform nonblocking connect(), i.e.
-  // 1. connect(O_NONBLOCK) → EINPROGRESS
-  // 2. poll(POLLOUT)
-  bool32 ok;
-  struct NtOverlapped *overlap = calloc(1, sizeof(struct NtOverlapped));
-  if (!overlap)
-    return -1;
-  overlap->hEvent = WSACreateEvent();
-  ok = g_connectex.lpConnectEx(f->handle, addr, addrsize, 0, 0, 0, overlap);
-  if (ok) {
-    uint32_t dwBytes, dwFlags;
-    ok = WSAGetOverlappedResult(f->handle, overlap, &dwBytes, false, &dwFlags);
-    WSACloseEvent(overlap->hEvent);
-    free(overlap);
-    if (!ok) {
-      return __winsockerr();
+    // check for signals and thread cancelation
+    // connect() will restart if SA_RESTART is used
+    if (!(f->flags & O_NONBLOCK))
+      if (__sigcheck(waitmask, true) == -1)
+        return -1;
+
+    //
+    // "Use select to determine the completion of the connection request
+    //  by checking if the socket is writable."
+    //
+    //                  —Quoth MSDN § WSAConnect function
+    //
+    // "If a socket is processing a connect call (nonblocking), failure
+    //  of the connect attempt is indicated in exceptfds (application
+    //  must then call getsockopt SO_ERROR to determine the error value
+    //  to describe why the failure occurred). This document does not
+    //  define which other errors will be included."
+    //
+    //                  —Quoth MSDN § select function
+    //
+    struct NtFdSet wrfds;
+    struct NtFdSet exfds;
+    struct NtTimeval timeout;
+    wrfds.fd_count = 1;
+    wrfds.fd_array[0] = f->handle;
+    exfds.fd_count = 1;
+    exfds.fd_array[0] = f->handle;
+    if (f->flags & O_NONBLOCK) {
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 0;
+    } else {
+      timeout.tv_sec = POLL_INTERVAL_MS / 1000;
+      timeout.tv_usec = POLL_INTERVAL_MS % 1000 * 1000;
     }
-    __imp_setsockopt(f->handle, SOL_SOCKET, kNtSoUpdateConnectContext, 0, 0);
+    int ready = __imp_select(1, 0, &wrfds, &exfds, &timeout);
+    if (ready == -1)
+      return __winsockerr();
+
+    // check if we still need more time
+    if (!ready) {
+      if (f->flags & O_NONBLOCK) {
+        return ealready();
+      } else {
+        continue;
+      }
+    }
+
+    // check if connect failed
+    if (exfds.fd_count) {
+      int err;
+      uint32_t len = sizeof(err);
+      if (__imp_getsockopt(f->handle, SOL_SOCKET, SO_ERROR, &err, &len) == -1)
+        return __winsockerr();
+      if (!err)
+        return eio();  // should be impossible
+      errno = __dos2errno(err);
+      return -1;
+    }
+
+    // handle successful connection
+    if (!wrfds.fd_count)
+      return eio();  // should be impossible
+    f->connecting = CONNECTED;
     return 0;
-  } else if (WSAGetLastError() == kNtErrorIoPending) {
-    f->connect_op = overlap;
-    return einprogress();
-  } else {
-    WSACloseEvent(overlap->hEvent);
-    free(overlap);
-    return __winsockerr();
   }
 }
 
 textwindows int sys_connect_nt(struct Fd *f, const void *addr,
                                uint32_t addrsize) {
-  sigset_t mask = __sig_block();
-  int rc = sys_connect_nt_impl(f, addr, addrsize, mask);
-  __sig_unblock(mask);
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_connect_nt_impl(f, addr, addrsize, _SigMask);
+  ALLOW_SIGNALS;
   return rc;
 }
 

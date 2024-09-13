@@ -24,6 +24,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
 #include "libc/ctype.h"
@@ -837,7 +838,8 @@ textwindows static int CountConsoleInputBytesBlockingImpl(uint32_t ms,
   uint32_t wi;
   struct timespec now, deadline;
   InitConsole();
-  deadline = timespec_add(timespec_mono(), timespec_frommillis(ms));
+  deadline =
+      timespec_add(sys_clock_gettime_monotonic_nt(), timespec_frommillis(ms));
 RestartOperation:
   if (_check_cancel() == -1)
     return -1;
@@ -870,7 +872,7 @@ RestartOperation:
       // this can happen for multiple reasons. first our driver controls
       // user interactions in canonical mode. secondly we could lose the
       // race with another thread that's reading input.
-      now = timespec_mono();
+      now = sys_clock_gettime_monotonic_nt();
       if (timespec_cmp(now, deadline) >= 0)
         return etimedout();
       ms = timespec_tomillis(timespec_sub(deadline, now));

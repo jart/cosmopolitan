@@ -28,6 +28,7 @@ struct Cursor {
 struct Fd {
   char kind;
   bool isbound;
+  char connecting;
   unsigned flags;
   unsigned mode;
   long handle;
@@ -38,7 +39,6 @@ struct Fd {
   unsigned sndtimeo; /* millis; 0 means wait forever */
   void *connect_op;
   struct Cursor *cursor;
-  struct sockaddr_storage peer;
 };
 
 struct Fds {

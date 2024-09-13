@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sock/sock.h"
-#include "libc/sock/struct/sockaddr.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/nt/time.h"
 
-/**
- * Creates client socket file descriptor for incoming connection.
- *
- * On Windows, when this function blocks, there may be a 10 millisecond
- * delay on the handling of signals or thread cancelation.
- *
- * @param fd is the server socket file descriptor
- * @param opt_out_addr will receive the remote address
- * @param opt_inout_addrsize provides and receives addr's byte length
- * @return client fd which needs close(), or -1 w/ errno
- * @cancelationpoint
- * @asyncsignalsafe
- * @restartable (unless SO_RCVTIMEO)
- */
-int accept(int fd, struct sockaddr *opt_out_addr,
-           uint32_t *opt_inout_addrsize) {
-  return accept4(fd, opt_out_addr, opt_inout_addrsize, 0);
+textwindows struct timespec sys_clock_gettime_monotonic_nt(void) {
+  uint64_t hectons;
+  QueryUnbiasedInterruptTimePrecise(&hectons);
+  return timespec_fromnanos(hectons * 100);
 }
