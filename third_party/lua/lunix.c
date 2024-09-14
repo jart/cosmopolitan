@@ -1008,7 +1008,7 @@ static int LuaUnixOpen(lua_State *L) {
   return SysretInteger(
       L, "open", olderr,
       openat(luaL_optinteger(L, 4, AT_FDCWD), luaL_checkstring(L, 1),
-             luaL_optinteger(L, 2, O_RDONLY), luaL_optinteger(L, 3, 0)));
+             luaL_optinteger(L, 2, O_RDONLY), luaL_optinteger(L, 3, 0644)));
 }
 
 // unix.tmpfd()
