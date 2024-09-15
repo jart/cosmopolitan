@@ -565,12 +565,12 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
 static void __fmt_dfpbits(union U *u, struct FPBits *b) {
   int ex, i;
   b->fpi = kFpiDbl;
-  // Uncomment this if needed in the future - we currently do not need it, as
-  // the only reason we need it in __fmt_ldfpbits is because gdtoa reads
-  // fpi.rounding to determine rounding (which dtoa does not need as it directly
-  // reads FLT_ROUNDS)
-  // if (FLT_ROUNDS != -1)
-  //   b->fpi.rounding = FLT_ROUNDS;
+
+  // dtoa doesn't need this, unlike gdtoa, but we use it for __fmt_bround
+  i = FLT_ROUNDS;
+  if (i != -1)
+    b->fpi.rounding = i;
+
   b->sign = u->ui[1] & 0x80000000L;
   b->bits[1] = u->ui[1] & 0xfffff;
   b->bits[0] = u->ui[0];
@@ -616,10 +616,14 @@ static void __fmt_ldfpbits(union U *u, struct FPBits *b) {
 #error "unsupported architecture"
 #endif
   b->fpi = kFpiLdbl;
+
   // gdtoa doesn't check for FLT_ROUNDS but for fpi.rounding (which has the
   // same valid values as FLT_ROUNDS), so handle this here
-  if (FLT_ROUNDS != -1)
-    b->fpi.rounding = FLT_ROUNDS;
+  // (we also use this in __fmt_bround now)
+  i = FLT_ROUNDS;
+  if (i != -1)
+    b->fpi.rounding = i;
+
   b->sign = sex & 0x8000;
   if ((ex = sex & 0x7fff) != 0) {
     if (ex != 0x7fff) {
@@ -692,7 +696,6 @@ static int __fmt_bround(struct FPBits *b, int prec, int prec1) {
   uint32_t *bits, t;
   int i, j, k, m, n;
   bool inc = false;
-  int current_rounding_mode;
   m = prec1 - prec;
   bits = b->bits;
   k = m - 1;
@@ -701,22 +704,24 @@ static int __fmt_bround(struct FPBits *b, int prec, int prec1) {
   // always know in which direction we must round because of the current
   // rounding mode (note that if the correct value for inc is `false` then it
   // doesn't need to be set as we have already done so above)
-  // The last one handles rounding to nearest
-  current_rounding_mode = fegetround();
-  if (current_rounding_mode == FE_TOWARDZERO ||
-      (current_rounding_mode == FE_UPWARD && b->sign) ||
-      (current_rounding_mode == FE_DOWNWARD && !b->sign))
+  // They use the FLT_ROUNDS value, which are the same as gdtoa's FPI_Round_*
+  // enum values
+  if (b->fpi.rounding == FPI_Round_zero ||
+      (b->fpi.rounding == FPI_Round_up && b->sign) ||
+      (b->fpi.rounding == FPI_Round_down && !b->sign))
     goto have_inc;
-  if ((current_rounding_mode == FE_UPWARD && !b->sign) ||
-      (current_rounding_mode == FE_DOWNWARD && b->sign)) {
-    inc = true;
-    goto have_inc;
-  }
+  if ((b->fpi.rounding == FPI_Round_up && !b->sign) ||
+      (b->fpi.rounding == FPI_Round_down && b->sign))
+    goto inc_true;
 
   if ((t = bits[k >> 3] >> (j = (k & 7) * 4)) & 8) {
     if (t & 7)
       goto inc_true;
-    if (j && bits[k >> 3] << (32 - j))
+    // ((1 << (j * 4)) - 1) will mask appropriately for the lower bits
+    if ((bits[k >> 3] & ((1 << (j * 4)) - 1)) != 0)
+      goto inc_true;
+    // If exactly halfway and all lower bits are zero (tie), round to even
+    if ((bits[k >> 3] >> (j + 1) * 4) & 1)
       goto inc_true;
     while (k >= 8) {
       k -= 8;

@@ -217,39 +217,37 @@ TEST(snprintf, testLongDoubleRounding) {
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
 
+void check_a_conversion_specifier_prec_1(const char *result_str, double value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), "%.1a", value);
+
+  ASSERT_EQ(strlen(result_str), i);
+  ASSERT_STREQ(result_str, buf);
+}
+
 TEST(snprintf, testAConversionSpecifierRounding) {
   int previous_rounding = fegetround();
-  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
 
-  char buf[20];
-  int i = snprintf(buf, sizeof(buf), "%.1a", 0x1.fffffp+4);
-  ASSERT_EQ(8, i);
-  ASSERT_STREQ("0x1.fp+4", buf);
+  ASSERT_EQ(0, fesetround(FE_DOWNWARD));
+  check_a_conversion_specifier_prec_1("0x1.fp+4", 0x1.fffffp+4);
 
   ASSERT_EQ(0, fesetround(FE_UPWARD));
-
-  i = snprintf(buf, sizeof(buf), "%.1a", 0x1.f8p+4);
-  ASSERT_EQ(8, i);
-  ASSERT_STREQ("0x2.0p+4", buf);
+  check_a_conversion_specifier_prec_1("0x2.0p+4", 0x1.f8p+4);
 
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
 
-// This test currently fails because of rounding issues
-// If that ever gets fixed, uncomment this
-/*
+// This test specifically checks that we round to even, accordingly to IEEE
+// rules
 TEST(snprintf, testAConversionSpecifier) {
-  char buf[20];
-  int i = snprintf(buf, sizeof(buf), "%.1a", 0x1.7800000000001p+4);
-  ASSERT_EQ(8, i);
-  ASSERT_STREQ("0x1.8p+4", buf);
-
-  memset(buf, 0, sizeof(buf));
-  i = snprintf(buf, sizeof(buf), "%.1a", 0x1.78p+4);
-  ASSERT_EQ(8, i);
-  ASSERT_STREQ("0x1.8p+4", buf);
+  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.7800000000001p+4);
+  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.78p+4);
+  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.88p+4);
+  check_a_conversion_specifier_prec_1("0x1.6p+4", 0x1.58p+4);
+  check_a_conversion_specifier_prec_1("0x1.6p+4", 0x1.68p+4);
+  check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.98p+4);
+  check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.a8p+4);
 }
-*/
 
 TEST(snprintf, apostropheFlag) {
   char buf[20];
