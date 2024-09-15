@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xspawn.h"
 
@@ -524,7 +524,7 @@ TEST(mmap, sharedFileMapFork) {
 ////////////////////////////////////////////////////////////////////////////////
 // BENCHMARKS
 
-#define N (EZBENCH_COUNT * EZBENCH_TRIES)
+#define N 1000
 
 int count;
 void *ptrs[N];
@@ -561,8 +561,8 @@ void BenchBigMunmap(void) {
 }
 
 TEST(mmap, bench) {
-  EZBENCH2("mmap", donothing, BenchMmapPrivate());
-  EZBENCH2("munmap", donothing, BenchUnmap());
-  // EZBENCH2("big mmap", donothing, BenchBigMmap());
-  // EZBENCH2("big munmap", donothing, BenchBigMunmap());
+  BENCHMARK(N, 1, BenchMmapPrivate());
+  BENCHMARK(N, 1, BenchUnmap());
+  // BENCHMARK(N, 1, BenchBigMmap());
+  // BENCHMARK(N, 1, BenchBigMunmap());
 }
