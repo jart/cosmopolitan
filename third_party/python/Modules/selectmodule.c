@@ -9,7 +9,6 @@
 #include "libc/errno.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/nt/efi.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"

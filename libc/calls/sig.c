@@ -40,6 +40,7 @@
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
+#include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
@@ -230,16 +231,10 @@ textwindows void __sig_cancel(struct PosixThread *pt, int sig, unsigned flags) {
     STRACE("%G sent to %d asynchronously", sig, _pthread_tid(pt));
     return;
   }
-  // we can cancel another thread's overlapped i/o op after the freeze
-  if (blocker == PT_BLOCKER_IO) {
-    STRACE("%G canceling %d's i/o", sig, _pthread_tid(pt));
-    CancelIoEx(pt->pt_iohandle, pt->pt_ioverlap);
-    return;
-  }
   // threads can create semaphores on an as-needed basis
-  if (blocker == PT_BLOCKER_SEM) {
-    STRACE("%G releasing %d's semaphore", sig, _pthread_tid(pt));
-    ReleaseSemaphore(pt->pt_semaphore, 1, 0);
+  if (blocker == PT_BLOCKER_EVENT) {
+    STRACE("%G set %d's event object", sig, _pthread_tid(pt));
+    SetEvent(pt->pt_event);
     return;
   }
   // all other blocking ops that aren't overlap should use futexes

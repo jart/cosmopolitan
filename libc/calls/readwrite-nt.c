@@ -104,13 +104,13 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
         // atomic block on i/o completion, signal, or cancel
         // it's not safe to acknowledge cancelation from here
         // it's not safe to call any signal handlers from here
-        intptr_t sem;
-        if ((sem = CreateSemaphore(0, 0, 1, 0))) {
+        intptr_t sigev;
+        if ((sigev = CreateEvent(0, 0, 0, 0))) {
           // installing semaphore before sig get makes wait atomic
           struct PosixThread *pt = _pthread_self();
-          pt->pt_semaphore = sem;
+          pt->pt_event = sigev;
           pt->pt_blkmask = waitmask;
-          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM,
+          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
                                 memory_order_release);
           if (_is_canceled()) {
             CancelIoEx(handle, &overlap);
@@ -118,9 +118,9 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
                      (got_sig = _weaken(__sig_get)(waitmask))) {
             CancelIoEx(handle, &overlap);
           } else {
-            intptr_t hands[] = {event, sem};
+            intptr_t hands[] = {event, sigev};
             uint32_t wi = WaitForMultipleObjects(2, hands, 0, -1u);
-            if (wi == 1) {  // semaphore was signaled by signal enqueue
+            if (wi == 1) {  // event was signaled by signal enqueue
               CancelIoEx(handle, &overlap);
               if (_weaken(__sig_get))
                 got_sig = _weaken(__sig_get)(waitmask);
@@ -130,7 +130,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
             }
           }
           atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-          CloseHandle(sem);
+          CloseHandle(sigev);
         } else {
           other_error = GetLastError();
           CancelIoEx(handle, &overlap);

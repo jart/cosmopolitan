@@ -47,6 +47,7 @@
 #include "libc/nt/enum/vk.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/inputrecord.h"
 #include "libc/nt/synchronization.h"
@@ -833,74 +834,80 @@ textwindows static void RestoreProcessedInput(uint32_t inmode) {
 textwindows static int CountConsoleInputBytesBlockingImpl(uint32_t ms,
                                                           sigset_t waitmask,
                                                           bool restartable) {
-  int sig;
-  int64_t sem;
-  uint32_t wi;
-  struct timespec now, deadline;
   InitConsole();
-  deadline =
+  struct timespec deadline =
       timespec_add(sys_clock_gettime_monotonic_nt(), timespec_frommillis(ms));
-RestartOperation:
-  if (_check_cancel() == -1)
-    return -1;
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask)))
-    goto DeliverSignal;
-  struct PosixThread *pt = _pthread_self();
-  pt->pt_blkmask = waitmask;
-  pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
-  atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
-  wi = WaitForMultipleObjects(2, (int64_t[2]){__keystroke.cin, sem}, 0, ms);
-  atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-  CloseHandle(sem);
-
-  // check for wait timeout
-  if (wi == kNtWaitTimeout)
-    return etimedout();
-
-  // handle event on console handle. this means we can now read from the
-  // conosle without blocking. so the first thing we do is slurp up your
-  // keystroke data. some of those keystrokes might cause a signal to be
-  // raised. so we need to check for pending signals again and handle it
-  if (wi == 0) {
-    int got = CountConsoleInputBytes();
-    if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask)))
-      goto DeliverSignal;
-    if (got == -1)
-      // this is a bona fide eof and console errors are logged to strace
-      return 0;
-    if (got == 0) {
-      // this can happen for multiple reasons. first our driver controls
-      // user interactions in canonical mode. secondly we could lose the
-      // race with another thread that's reading input.
-      now = sys_clock_gettime_monotonic_nt();
-      if (timespec_cmp(now, deadline) >= 0)
-        return etimedout();
-      ms = timespec_tomillis(timespec_sub(deadline, now));
-      ms = ms > -1u ? -1u : ms;
-      goto RestartOperation;
-    }
-    return got;
-  }
-
-  // handle wait itself failing
-  if (wi != 1)
-    return __winerr();
-
-  // handle event on throwaway semaphore, it is poked by signal delivery
-  if (_weaken(__sig_get)) {
-    if (!(sig = _weaken(__sig_get)(waitmask)))
-      return eintr();
-  DeliverSignal:
-    int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1)
+  for (;;) {
+    int sig = 0;
+    intptr_t sev;
+    if (!(sev = CreateEvent(0, 0, 0, 0)))
+      return __winerr();
+    struct PosixThread *pt = _pthread_self();
+    pt->pt_event = sev;
+    pt->pt_blkmask = waitmask;
+    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
+                          memory_order_release);
+    if (_check_cancel() == -1) {
+      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
+      CloseHandle(sev);
       return -1;
-    if (handler_was_called & SIG_HANDLED_NO_RESTART)
-      return eintr();
-    if (handler_was_called & SIG_HANDLED_SA_RESTART)
-      if (!restartable)
+    }
+    if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
+      CloseHandle(sev);
+      goto DeliverSignal;
+    }
+    struct timespec now = sys_clock_gettime_monotonic_nt();
+    struct timespec remain = timespec_subz(deadline, now);
+    int64_t millis = timespec_tomillis(remain);
+    uint32_t waitms = MIN(millis, 0xffffffffu);
+    intptr_t hands[] = {__keystroke.cin, sev};
+    uint32_t wi = WaitForMultipleObjects(2, hands, 0, waitms);
+    atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
+    CloseHandle(sev);
+    if (wi == -1u)
+      return __winerr();
+
+    // check for wait timeout
+    if (wi == kNtWaitTimeout)
+      return etimedout();
+
+    // handle event on console handle. this means we can now read from the
+    // conosle without blocking. so the first thing we do is slurp up your
+    // keystroke data. some of those keystrokes might cause a signal to be
+    // raised. so we need to check for pending signals again and handle it
+    if (wi == 0) {
+      int got = CountConsoleInputBytes();
+      // we might have read a keystroke that generated a signal
+      if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask)))
+        goto DeliverSignal;
+      if (got == -1)
+        // this is a bona fide eof and console errors are logged to strace
+        return 0;
+      if (got == 0)
+        // this can happen for multiple reasons. first our driver controls
+        // user interactions in canonical mode. secondly we could lose the
+        // race with another thread that's reading input.
+        continue;
+      return got;
+    }
+
+    if (wi == 1 && _weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+      // handle event on throwaway semaphore, it is poked by signal delivery
+    DeliverSignal:;
+      int handler_was_called = 0;
+      do {
+        handler_was_called |= _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+      } while ((sig = _weaken(__sig_get)(waitmask)));
+      if (_check_cancel() == -1)
+        return -1;
+      if (handler_was_called & SIG_HANDLED_NO_RESTART)
         return eintr();
+      if (handler_was_called & SIG_HANDLED_SA_RESTART)
+        if (!restartable)
+          return eintr();
+    }
   }
-  goto RestartOperation;
 }
 
 textwindows static int CountConsoleInputBytesBlocking(uint32_t ms,
@@ -911,7 +918,7 @@ textwindows static int CountConsoleInputBytesBlocking(uint32_t ms,
   if (got > 0)
     return got;
   uint32_t inmode = DisableProcessedInput();
-  int rc = CountConsoleInputBytesBlockingImpl(ms, waitmask, false);
+  int rc = CountConsoleInputBytesBlockingImpl(ms, waitmask, true);
   RestoreProcessedInput(inmode);
   return rc;
 }

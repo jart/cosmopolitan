@@ -30,6 +30,7 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
@@ -114,7 +115,7 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
         }
       } else if (kind == kFdFile || kind == kFdConsole) {
         // we can use WaitForMultipleObjects() for these fds
-        if (pn < ARRAYLEN(fileindices) - 1) {  // last slot for semaphore
+        if (pn < ARRAYLEN(fileindices) - 1) {  // last slot for signal event
           fileindices[pn] = i;
           filehands[pn] = g_fds.p[fds[i].fd].handle;
           ++pn;
@@ -230,8 +231,8 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
       if (__sigcheck(waitmask, false))
         return -1;
       pt = _pthread_self();
-      filehands[pn] = pt->pt_semaphore = CreateSemaphore(0, 0, 1, 0);
-      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM,
+      filehands[pn] = pt->pt_event = CreateEvent(0, 0, 0, 0);
+      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
                             memory_order_release);
       wi = WaitForMultipleObjects(pn + 1, filehands, 0, waitfor);
       atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
@@ -240,7 +241,7 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
         // win32 wait failure
         return __winerr();
       } else if (wi == pn) {
-        // our semaphore was signalled
+        // our signal event was signalled
         if (__sigcheck(waitmask, false))
           return -1;
       } else if ((wi ^ kNtWaitAbandoned) < pn) {

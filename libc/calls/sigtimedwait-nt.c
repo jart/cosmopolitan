@@ -25,6 +25,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/macros.h"
+#include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/str/str.h"
@@ -85,7 +86,7 @@ textwindows static int sys_sigtimedwait_nt_impl(sigset_t syncsigs,
 textwindows int sys_sigtimedwait_nt(const sigset_t *set, siginfo_t *opt_info,
                                     const struct timespec *opt_timeout) {
   int rc;
-  intptr_t sem;
+  intptr_t sev;
   struct PosixThread *pt;
   struct timespec deadline;
   sigset_t syncsigs, waitmask;
@@ -95,17 +96,17 @@ textwindows int sys_sigtimedwait_nt(const sigset_t *set, siginfo_t *opt_info,
   } else {
     deadline = timespec_max;
   }
-  if ((sem = CreateSemaphore(0, 0, 1, 0))) {
+  if ((sev = CreateEvent(0, 0, 0, 0))) {
     syncsigs = *set & ~(1ull << (SIGTHR - 1));  // internal to pthreads
     waitmask = ~syncsigs & _SigMask;
     pt = _pthread_self();
+    pt->pt_event = sev;
     pt->pt_blkmask = waitmask;
-    pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM,
+    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
                           memory_order_release);
-    rc = sys_sigtimedwait_nt_impl(syncsigs, opt_info, deadline, waitmask, sem);
+    rc = sys_sigtimedwait_nt_impl(syncsigs, opt_info, deadline, waitmask, sev);
     atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-    CloseHandle(sem);
+    CloseHandle(sev);
   } else {
     rc = __winerr();
   }

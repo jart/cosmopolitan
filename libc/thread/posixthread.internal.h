@@ -9,8 +9,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define PT_BLOCKER_SEM ((atomic_int *)-1)
-#define PT_BLOCKER_IO  ((atomic_int *)-2)
+#define PT_BLOCKER_EVENT ((atomic_int *)-1)
 
 COSMOPOLITAN_C_START_
 
@@ -86,10 +85,8 @@ struct PosixThread {
   struct _pthread_cleanup_buffer *pt_cleanup;
   _Atomic(atomic_int *) pt_blocker;
   uint64_t pt_blkmask;
-  int64_t pt_semaphore;
-  intptr_t pt_iohandle;
+  int64_t pt_event;
   locale_t pt_locale;
-  void *pt_ioverlap;
   jmp_buf pt_exiter;
   pthread_attr_t pt_attr;
 };

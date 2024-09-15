@@ -27,6 +27,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
@@ -75,13 +76,13 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
         // atomic block on i/o completion, signal, or cancel
         // it's not safe to acknowledge cancelation from here
         // it's not safe to call any signal handlers from here
-        intptr_t sem;
-        if ((sem = CreateSemaphore(0, 0, 1, 0))) {
+        intptr_t sev;
+        if ((sev = CreateEvent(0, 0, 0, 0))) {
           // installing semaphore before sig get makes wait atomic
           struct PosixThread *pt = _pthread_self();
-          pt->pt_semaphore = sem;
+          pt->pt_event = sev;
           pt->pt_blkmask = waitmask;
-          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM,
+          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
                                 memory_order_release);
           if (_is_canceled()) {
             got_cancel = true;
@@ -94,7 +95,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
             struct timespec remain = timespec_subz(deadline, now);
             int64_t millis = timespec_tomillis(remain);
             uint32_t waitms = MIN(millis, 0xffffffffu);
-            intptr_t hands[] = {event, sem};
+            intptr_t hands[] = {event, sev};
             uint32_t wi = WSAWaitForMultipleEvents(2, hands, 0, waitms, 0);
             if (wi == 1) {  // semaphore was signaled by signal enqueue
               CancelIoEx(handle, &overlap);
@@ -109,7 +110,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
             }
           }
           atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-          CloseHandle(sem);
+          CloseHandle(sev);
         } else {
           other_error = GetLastError();
           CancelIoEx(handle, &overlap);
