@@ -147,6 +147,10 @@ class shared_emplace : public shared_ref
         T t;
     };
 
+    ~shared_emplace() override
+    {
+    }
+
     template<typename... Args>
     void construct(Args&&... args)
     {
@@ -159,7 +163,9 @@ class shared_emplace : public shared_ref
     }
 
   private:
-    explicit constexpr shared_emplace() noexcept = default;
+    explicit constexpr shared_emplace() noexcept
+    {
+    }
 
     void dispose() noexcept override
     {
