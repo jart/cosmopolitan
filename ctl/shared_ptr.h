@@ -4,6 +4,7 @@
 #define CTL_SHARED_PTR_H_
 
 #include "exception.h"
+#include "is_base_of.h"
 #include "is_convertible.h"
 #include "remove_extent.h"
 #include "unique_ptr.h"
@@ -201,10 +202,7 @@ class shared_ptr
 
     template<typename U, typename D>
         requires __::shared_ptr_compatible<T, U>
-    shared_ptr(U* const p, D d)
-      : p(p), rc(__::shared_pointer<U, D>::make(p, move(d)))
-    {
-    }
+    shared_ptr(U*, D);
 
     template<typename U>
     shared_ptr(const shared_ptr<U>& r, element_type* p) noexcept
@@ -443,6 +441,62 @@ class weak_ptr
     __::shared_ref* rc = nullptr;
 };
 
+template<typename T>
+class enable_shared_from_this
+{
+  public:
+    shared_ptr<T> shared_from_this()
+    {
+        return shared_ptr<T>(weak_this);
+    }
+    shared_ptr<T const> shared_from_this() const
+    {
+        return shared_ptr<T>(weak_this);
+    }
+
+    weak_ptr<T> weak_from_this()
+    {
+        return weak_this;
+    }
+    weak_ptr<T const> weak_from_this() const
+    {
+        return weak_this;
+    }
+
+  protected:
+    constexpr enable_shared_from_this() noexcept = default;
+    enable_shared_from_this(const enable_shared_from_this& r) noexcept
+    {
+    }
+    ~enable_shared_from_this() = default;
+
+    enable_shared_from_this& operator=(
+      const enable_shared_from_this& r) noexcept
+    {
+        return *this;
+    }
+
+  private:
+    template<typename U, typename... Args>
+    friend shared_ptr<U> make_shared(Args&&...);
+
+    template<typename U>
+    friend class shared_ptr;
+
+    weak_ptr<T> weak_this;
+};
+
+template<typename T>
+template<typename U, typename D>
+    requires __::shared_ptr_compatible<T, U>
+shared_ptr<T>::shared_ptr(U* const p, D d)
+  : p(p), rc(__::shared_pointer<U, D>::make(p, move(d)))
+{
+    if constexpr (is_base_of_v<enable_shared_from_this<U>, U>) {
+        p->weak_this = *this;
+    }
+}
+
 template<typename T, typename... Args>
 shared_ptr<T>
 make_shared(Args&&... args)
@@ -452,6 +506,9 @@ make_shared(Args&&... args)
     shared_ptr<T> r;
     r.p = &rc->t;
     r.rc = rc.release();
+    if constexpr (is_base_of_v<enable_shared_from_this<T>, T>) {
+        r->weak_this = r;
+    }
     return r;
 }
 
