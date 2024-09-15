@@ -217,12 +217,24 @@ TEST(snprintf, testLongDoubleRounding) {
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
 
-void check_a_conversion_specifier_prec_1(const char *result_str, double value) {
+void check_a_conversion_specifier_double(const char *fmt, const char *expected_str, double value) {
   char buf[30] = {0};
-  int i = snprintf(buf, sizeof(buf), "%.1a", value);
+  int i = snprintf(buf, sizeof(buf), fmt, value);
 
-  ASSERT_EQ(strlen(result_str), i);
-  ASSERT_STREQ(result_str, buf);
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+}
+
+void check_a_conversion_specifier_long_double(const char *fmt, const char *expected_str, long double value) {
+  char buf[30] = {0};
+  int i = snprintf(buf, sizeof(buf), fmt, value);
+
+  ASSERT_EQ(strlen(expected_str), i);
+  ASSERT_STREQ(expected_str, buf);
+}
+
+void check_a_conversion_specifier_prec_1(const char *expected_str, double value) {
+  check_a_conversion_specifier_double("%.1a", expected_str, value);
 }
 
 TEST(snprintf, testAConversionSpecifierRounding) {
@@ -247,6 +259,11 @@ TEST(snprintf, testAConversionSpecifier) {
   check_a_conversion_specifier_prec_1("0x1.6p+4", 0x1.68p+4);
   check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.98p+4);
   check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.a8p+4);
+
+  check_a_conversion_specifier_double("%#a", "0x0.p+0", 0x0.0p0);
+  check_a_conversion_specifier_double("%#A", "0X0.P+0", 0x0.0p0);
+  check_a_conversion_specifier_long_double("%#La", "0x0.p+0", 0x0.0p0L);
+  check_a_conversion_specifier_long_double("%#LA", "0X0.P+0", 0x0.0p0L);
 }
 
 TEST(snprintf, apostropheFlag) {
