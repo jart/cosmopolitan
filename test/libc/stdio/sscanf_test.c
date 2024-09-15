@@ -338,17 +338,17 @@ TEST(sscanf, flexdecimal_hex) {
 TEST(sscanf, floating_point_simple) {
   float x = 666.666f, y = x, z = y;
   EXPECT_EQ(3, sscanf("0.3715 .3715 3715", "%f %f %f", &x, &y, &z));
-  EXPECT_EQ(0.3715f, x);
-  EXPECT_EQ(0.3715f, y);
-  EXPECT_EQ(3715.0f, z);
+  EXPECT_FLOAT_EXACTLY_EQ(0.3715f, x);
+  EXPECT_FLOAT_EXACTLY_EQ(0.3715f, y);
+  EXPECT_FLOAT_EXACTLY_EQ(3715.0f, z);
 }
 
 TEST(sscanf, floating_point_simple_double_precision) {
   double x = 666.666, y = x, z = y;
   EXPECT_EQ(3, sscanf("0.3715 .3715 3715", "%lf %lf %lf", &x, &y, &z));
-  EXPECT_EQ(0.3715, x);
-  EXPECT_EQ(0.3715, y);
-  EXPECT_EQ(3715.0, z);
+  EXPECT_DOUBLE_EXACTLY_EQ(0.3715, x);
+  EXPECT_DOUBLE_EXACTLY_EQ(0.3715, y);
+  EXPECT_DOUBLE_EXACTLY_EQ(3715.0, z);
 }
 
 TEST(sscanf, floating_point_nan) {
@@ -426,12 +426,12 @@ TEST(sscanf, floating_point_documentation_examples) {
       2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
                 "%f %f %f %f %f", &f, &g, &h, &i, &j));
 
-  EXPECT_EQ(111.11f, a);
-  EXPECT_EQ(-2.22f, b);
+  EXPECT_FLOAT_EXACTLY_EQ(111.11f, a);
+  EXPECT_FLOAT_EXACTLY_EQ(-2.22f, b);
   EXPECT_TRUE(isnan(c));
   EXPECT_TRUE(isnan(d));
   EXPECT_TRUE(isinf(e));
-  EXPECT_EQ(0X1.BC70A3D70A3D7P+6f, f);
+  EXPECT_FLOAT_EXACTLY_EQ(0X1.BC70A3D70A3D7P+6f, f);
   EXPECT_TRUE(isinf(g));
 }
 
@@ -445,12 +445,12 @@ TEST(sscanf, floating_point_documentation_examples_double_precision) {
       2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk",
                 "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
 
-  EXPECT_EQ(111.11, a);
-  EXPECT_EQ(-2.22, b);
+  EXPECT_DOUBLE_EXACTLY_EQ(111.11, a);
+  EXPECT_DOUBLE_EXACTLY_EQ(-2.22, b);
   EXPECT_TRUE(isnan(c));
   EXPECT_TRUE(isnan(d));
   EXPECT_TRUE(isinf(e));
-  EXPECT_EQ(0X1.BC70A3D70A3D7P+6, f);
+  EXPECT_DOUBLE_EXACTLY_EQ(0X1.BC70A3D70A3D7P+6, f);
   EXPECT_TRUE(isinf(g));
 }
 
@@ -505,4 +505,10 @@ TEST(scanf, n) {
   ASSERT_EQ(4, d);
   ASSERT_EQ(1848, port);
   ASSERT_EQ(12, len);
+}
+
+TEST(sscanf, floating_point_hexadecimal) {
+  double a = 0;
+  ASSERT_EQ(1, sscanf("0x1.5014c3472bc2c0000000p-123", "%lf", &a));
+  ASSERT_DOUBLE_EXACTLY_EQ(0x1.5014c3472bc2c0000000p-123, a);
 }

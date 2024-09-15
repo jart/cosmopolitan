@@ -195,6 +195,13 @@ void TearDownOnce(void);
 #define ASSERT_LDBL_LT(VAL, GOT) \
   assertLongDoubleLessThan(VAL, GOT, #VAL " < " #GOT, true)
 
+#define ASSERT_FLOAT_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, true)
+#define ASSERT_DOUBLE_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, true)
+#define ASSERT_LDBL_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, true)
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library » assert or log                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -270,6 +277,13 @@ void TearDownOnce(void);
   expectLongDoubleGreaterThan(VAL, GOT, #VAL " > " #GOT, false)
 #define EXPECT_LGBL_LT(VAL, GOT) \
   expectLongDoubleLessThan(VAL, GOT, #VAL " < " #GOT, false)
+
+#define EXPECT_FLOAT_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, false)
+#define EXPECT_DOUBLE_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, false)
+#define EXPECT_LDBL_EXACTLY_EQ(WANT, GOT) \
+  assertLongDoubleExactlyEquals(FILIFU WANT, GOT, #GOT, false)
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library » implementation details                  ─╬─│┼
@@ -404,6 +418,7 @@ void testlib_formatbinaryashex(const char *, const void *, size_t, char **,
 void testlib_formatbinaryasglyphs(const char16_t *, const void *, size_t,
                                   char **, char **);
 bool testlib_almostequallongdouble(long double, long double);
+bool testlib_exactlyequallongdouble(long double, long double);
 void testlib_incrementfailed(void);
 void testlib_clearxmmregisters(void);
 
@@ -693,6 +708,21 @@ forceinline void assertLongDoubleEquals(FILIFU_ARGS long double want,
     DebugBreak();
   testlib_showerror(file, line, func, "assertLongDoubleEquals", "≠", gotcode,
                     testlib_formatfloat(want), testlib_formatfloat(got));
+  testlib_onfail2(isfatal);
+}
+
+forceinline void assertLongDoubleExactlyEquals(FILIFU_ARGS long double want,
+                                               long double got,
+                                               const char *gotcode,
+                                               bool isfatal) {
+  ++g_testlib_ran;
+  if (testlib_exactlyequallongdouble(want, got))
+    return;
+  if (g_testlib_shoulddebugbreak)
+    DebugBreak();
+  testlib_showerror(file, line, func, "assertLongDoubleExactlyEquals", "≠",
+                    gotcode, testlib_formatfloat(want),
+                    testlib_formatfloat(got));
   testlib_onfail2(isfatal);
 }
 
