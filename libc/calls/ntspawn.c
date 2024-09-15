@@ -238,6 +238,7 @@ textwindows int ntspawn(struct NtSpawnArgs *args) {
   BLOCK_SIGNALS;
   if ((sb = ntspawn_malloc(sizeof(*sb)))) {
     rc = ntspawn2(args, sb);
+    ntspawn_free(sb);
   } else {
     rc = -1;
   }
