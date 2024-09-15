@@ -16,14 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -39,69 +45,138 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
                                   uint32_t *flags, void *arg),
                 void *arg) {
 
-RestartOperation:
-  int rc, sig, reason = 0;
-  uint32_t status, exchanged;
-  if (_check_cancel() == -1)
-    return -1;  // ECANCELED
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
-    goto HandleInterrupt;
+  // convert relative to absolute timeout
+  struct timespec deadline;
+  if (srwtimeout) {
+    deadline = timespec_add(sys_clock_gettime_monotonic_nt(),
+                            timespec_frommillis(srwtimeout));
+  } else {
+    deadline = timespec_max;
   }
 
-  struct NtOverlapped overlap = {.hEvent = WSACreateEvent()};
-  rc = StartSocketOp(handle, &overlap, &flags, arg);
-  if (rc && WSAGetLastError() == kNtErrorIoPending) {
-    if (nonblock) {
-      CancelIoEx(handle, &overlap);
-      reason = EAGAIN;
-    } else {
-      struct PosixThread *pt;
-      pt = _pthread_self();
-      pt->pt_blkmask = waitmask;
-      pt->pt_iohandle = handle;
-      pt->pt_ioverlap = &overlap;
-      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_IO,
-                            memory_order_release);
-      status = WSAWaitForMultipleEvents(1, &overlap.hEvent, 0,
-                                        srwtimeout ? srwtimeout : -1u, 0);
-      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      if (status) {
-        if (status == kNtWaitTimeout) {
-          reason = EAGAIN;  // SO_RCVTIMEO or SO_SNDTIMEO elapsed
-        } else {
-          reason = WSAGetLastError();  // ENETDOWN or ENOBUFS
-        }
+  for (;;) {
+    int got_sig = 0;
+    bool got_cancel = false;
+    bool got_eagain = false;
+    uint32_t other_error = 0;
+
+    // create event handle for overlapped i/o
+    intptr_t event;
+    if (!(event = WSACreateEvent()))
+      return __winsockerr();
+
+    struct NtOverlapped overlap = {.hEvent = event};
+    bool32 ok = !StartSocketOp(handle, &overlap, &flags, arg);
+    if (!ok && WSAGetLastError() == kNtErrorIoPending) {
+      if (nonblock) {
         CancelIoEx(handle, &overlap);
+        got_eagain = true;
+      } else {
+        // atomic block on i/o completion, signal, or cancel
+        // it's not safe to acknowledge cancelation from here
+        // it's not safe to call any signal handlers from here
+        intptr_t sem;
+        if ((sem = CreateSemaphore(0, 0, 1, 0))) {
+          // installing semaphore before sig get makes wait atomic
+          struct PosixThread *pt = _pthread_self();
+          pt->pt_semaphore = sem;
+          pt->pt_blkmask = waitmask;
+          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM,
+                                memory_order_release);
+          if (_is_canceled()) {
+            got_cancel = true;
+            CancelIoEx(handle, &overlap);
+          } else if (_weaken(__sig_get) &&
+                     (got_sig = _weaken(__sig_get)(waitmask))) {
+            CancelIoEx(handle, &overlap);
+          } else {
+            struct timespec now = sys_clock_gettime_monotonic_nt();
+            struct timespec remain = timespec_subz(deadline, now);
+            int64_t millis = timespec_tomillis(remain);
+            uint32_t waitms = MIN(millis, 0xffffffffu);
+            intptr_t hands[] = {event, sem};
+            uint32_t wi = WSAWaitForMultipleEvents(2, hands, 0, waitms, 0);
+            if (wi == 1) {  // semaphore was signaled by signal enqueue
+              CancelIoEx(handle, &overlap);
+              if (_weaken(__sig_get))
+                got_sig = _weaken(__sig_get)(waitmask);
+            } else if (wi == kNtWaitTimeout) {
+              CancelIoEx(handle, &overlap);
+              got_eagain = true;
+            } else if (wi == -1u) {
+              other_error = WSAGetLastError();
+              CancelIoEx(handle, &overlap);
+            }
+          }
+          atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
+          CloseHandle(sem);
+        } else {
+          other_error = GetLastError();
+          CancelIoEx(handle, &overlap);
+        }
       }
+      ok = true;
     }
-    rc = 0;
-  }
-  if (!rc) {
-    rc = WSAGetOverlappedResult(handle, &overlap, &exchanged, true, &flags)
-             ? 0
-             : -1;
-  }
-  WSACloseEvent(overlap.hEvent);
+    uint32_t exchanged = 0;
+    if (ok)
+      ok = WSAGetOverlappedResult(handle, &overlap, &exchanged, true, &flags);
+    uint32_t io_error = WSAGetLastError();
+    WSACloseEvent(event);
 
-  if (!rc) {
-    return exchanged;
-  }
-  if (WSAGetLastError() == kNtErrorOperationAborted) {
-    if (reason) {
-      errno = reason;
+    // check if i/o completed
+    // this could forseeably happen even if CancelIoEx was called
+    if (ok) {
+      if (got_sig)  // swallow dequeued signal
+        _weaken(__sig_relay)(got_sig, SI_KERNEL, waitmask);
+      return exchanged;
+    }
+
+    // check if i/o failed
+    if (io_error != kNtErrorOperationAborted) {
+      if (got_sig)  // swallow dequeued signal
+        _weaken(__sig_relay)(got_sig, SI_KERNEL, waitmask);
+      errno = __dos2errno(io_error);
       return -1;
     }
-    if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
-    HandleInterrupt:
-      int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+
+    // it's now reasonable to report semaphore creation error
+    if (other_error) {
+      unassert(!got_sig);
+      errno = __dos2errno(other_error);
+      return -1;
+    }
+
+    // check for non-block cancel or timeout
+    if (got_eagain && !got_sig && !got_cancel)
+      return eagain();
+
+    // check for thread cancelation and acknowledge
+    if (_check_cancel() == -1)
+      return -1;
+
+    // if signal module has been linked, then
+    if (_weaken(__sig_get)) {
+
+      // gobble up all unmasked pending signals
+      // it's now safe to recurse into signal handlers
+      int handler_was_called = 0;
+      do {
+        if (got_sig)
+          handler_was_called |=
+              _weaken(__sig_relay)(got_sig, SI_KERNEL, waitmask);
+      } while ((got_sig = _weaken(__sig_get)(waitmask)));
+
+      // check if SIGTHR handler was called
       if (_check_cancel() == -1)
         return -1;
-      if (handler_was_called != 1)
-        goto RestartOperation;
+
+      // check if signal handler without SA_RESTART was called
+      if (handler_was_called & SIG_HANDLED_NO_RESTART)
+        return eintr();
     }
-    return eintr();
+
+    // otherwise try the i/o operation again
   }
-  return __winsockerr();
 }
 
 #endif /* __x86_64__ */

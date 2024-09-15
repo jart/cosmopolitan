@@ -53,20 +53,17 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   bool isconsole = f->kind == kFdConsole;
 
   // not implemented, XNU returns eperm();
-  if (f->kind == kFdDevRandom) {
+  if (f->kind == kFdDevRandom)
     return eperm();
-  }
 
   // determine win32 handle for writing
   int64_t handle = f->handle;
-  if (isconsole && _weaken(GetConsoleOutputHandle)) {
+  if (isconsole && _weaken(GetConsoleOutputHandle))
     handle = _weaken(GetConsoleOutputHandle)();
-  }
 
   // intercept ansi tty configuration sequences
-  if (isconsole && _weaken(GetConsoleOutputHandle)) {
+  if (isconsole && _weaken(GetConsoleOutputHandle))
     _weaken(InterceptTerminalCommands)(data, size);
-  }
 
   // perform heavy lifting
   ssize_t rc;

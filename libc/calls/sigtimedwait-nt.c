@@ -32,6 +32,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
+#ifdef __x86_64__
 
 textwindows static int sys_sigtimedwait_nt_check(sigset_t syncsigs,
                                                  siginfo_t *opt_info,
@@ -111,3 +112,5 @@ textwindows int sys_sigtimedwait_nt(const sigset_t *set, siginfo_t *opt_info,
   ALLOW_SIGNALS;
   return rc;
 }
+
+#endif /* __x86_64__ */

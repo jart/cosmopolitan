@@ -465,7 +465,7 @@ syscon	rlimit	RLIMIT_RSS				5			5			5			5			5			5			5			127			# max physical mem
 syscon	rlimit	RLIMIT_NPROC				6			6			7			7			7			7			7			127			# max number of processes; see fork()→EAGAIN; bsd consensus
 syscon	rlimit	RLIMIT_NOFILE				7			7			8			8			8			8			8			127			# max number of open files; see accept()→EMFILE/ENFILE; bsd consensus
 syscon	rlimit	RLIMIT_MEMLOCK				8			8			6			6			6			6			6			127			# max locked-in-memory address space; bsd consensus
-syscon	rlimit	RLIMIT_AS				9\			9			5			5			10			2			10			0			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
+syscon	rlimit	RLIMIT_AS				9			9			5			5			10			2			10			0			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
 syscon	rlimit	RLIMIT_LOCKS				10			10			127			127			127			127			127			127			# max flock() / fcntl() locks; bsd consensus
 syscon	rlimit	RLIMIT_SIGPENDING			11			11			127			127			127			127			127			127			# max sigqueue() can enqueue; bsd consensus
 syscon	rlimit	RLIMIT_MSGQUEUE				12			12			127			127			127			127			127			127			# meh posix message queues; bsd consensus

@@ -146,7 +146,7 @@ textwindows static int sys_connect_nt_impl(struct Fd *f, const void *addr,
     // check if we still need more time
     if (!ready) {
       if (f->flags & O_NONBLOCK) {
-        return ealready();
+        return etimedout();
       } else {
         continue;
       }

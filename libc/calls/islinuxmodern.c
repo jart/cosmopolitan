@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,21 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/weaken.h"
-#include "libc/thread/posixthread.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 
-textwindows bool _is_canceled(void) {
-  struct PosixThread *pt;
-  return _weaken(_pthread_cancel_ack) && (pt = _pthread_self()) &&
-         atomic_load_explicit(&pt->pt_canceled, memory_order_acquire) &&
-         !(pt->pt_flags & PT_NOCANCEL);
-}
-
-textwindows int _check_cancel(void) {
-  if (_is_canceled())
-    // once acknowledged _is_canceled() will return false
-    return _weaken(_pthread_cancel_ack)();
-  return 0;
+bool IsLinuxModern(void) {
+  return IsLinux() && sys_close_range(-1, -2, 0) == -1 && errno == EINVAL;
 }
