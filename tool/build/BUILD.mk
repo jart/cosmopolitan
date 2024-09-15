@@ -86,9 +86,11 @@ o/$(MODE)/tool/build/cocmd.zip.o: private				\
 
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
+# we need fsanitize-trap=all becuase:
+#   so we don't need to pull in the entire ubsan runtime
 o/$(MODE)/tool/build/dso/sandbox.o: private				\
 		CFLAGS +=						\
-			-fPIC
+			-fPIC -fsanitize-trap=all
 
 o/$(MODE)/tool/build/dso/sandbox.o:					\
 		libc/calls/calls.h					\
