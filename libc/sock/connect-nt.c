@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
 #include "libc/nt/errors.h"
@@ -41,8 +42,6 @@
 #define UNCONNECTED 0
 #define CONNECTING  1
 #define CONNECTED   2
-
-#define POLL_INTERVAL_MS 10
 
 __msabi extern typeof(__sys_getsockopt_nt) *const __imp_getsockopt;
 __msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;

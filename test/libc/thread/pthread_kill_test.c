@@ -193,8 +193,6 @@ void *SocketAcceptWorker(void *arg) {
 }
 
 TEST(pthread_kill, canInterruptSocketAcceptOperation) {
-  if (IsWindows())
-    return;  // TODO(jart): BAH
   pthread_t t;
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnSig};

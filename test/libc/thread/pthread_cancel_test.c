@@ -103,8 +103,6 @@ TEST(pthread_cancel, synchronous) {
 TEST(pthread_cancel, synchronous_deferred) {
   void *rc;
   pthread_t th;
-  if (!IsWindows())
-    return;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
   while (!ready)

@@ -27,48 +27,62 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+int sys_sigtimedwait_nt(const sigset_t *, siginfo_t *, const struct timespec *);
+
 /**
  * Waits for signal synchronously, w/ timeout.
  *
+ * This function does not change the thread signal mask. Signals that
+ * aren't masked, which aren't in `set`, will be handled normally, in
+ * which case this function will raise `EINTR`.
+ *
+ * This function silently ignores attempts to synchronously wait for
+ * SIGTHR which is used internally by the POSIX threads implementation.
+ *
  * @param set is signals for which we'll be waiting
- * @param info if not null shall receive info about signal
- * @param timeout is relative deadline and null means wait forever
+ * @param opt_info if not null shall receive info about signal
+ * @param opt_timeout is relative deadline and null means wait forever
  * @return signal number on success, or -1 w/ errno
  * @raise EINTR if an asynchronous signal was delivered instead
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if nanoseconds parameter was out of range
- * @raise EAGAIN if deadline expired
- * @raise ENOSYS on Windows, XNU, OpenBSD, Metal
+ * @raise EAGAIN if timeout elapsed
+ * @raise ENOSYS on XNU, OpenBSD, and Metal
  * @raise EFAULT if invalid memory was supplied
  * @cancelationpoint
+ * @norestart
  */
-int sigtimedwait(const sigset_t *set, siginfo_t *info,
-                 const struct timespec *timeout) {
+int sigtimedwait(const sigset_t *set, siginfo_t *opt_info,
+                 const struct timespec *opt_timeout) {
   int rc;
   char strsig[21];
   struct timespec ts;
   union siginfo_meta si = {0};
   BEGIN_CANCELATION_POINT;
 
-  if (IsLinux() || IsFreebsd() || IsNetbsd()) {
-    if (timeout) {
+  // validate timeout
+  if (opt_timeout && opt_timeout->tv_nsec >= 1000000000ull) {
+    rc = einval();
+  } else if (IsLinux() || IsFreebsd() || IsNetbsd()) {
+    if (opt_timeout) {
       // 1. Linux needs its size parameter
       // 2. NetBSD modifies timeout argument
-      ts = *timeout;
+      ts = *opt_timeout;
       rc = sys_sigtimedwait(set, &si, &ts, 8);
     } else {
       rc = sys_sigtimedwait(set, &si, 0, 8);
     }
-    if (rc != -1 && info) {
-      __siginfo2cosmo(info, &si);
-    }
+    if (rc != -1 && opt_info)
+      __siginfo2cosmo(opt_info, &si);
+  } else if (IsWindows()) {
+    rc = sys_sigtimedwait_nt(set, opt_info, opt_timeout);
   } else {
     rc = enosys();
   }
 
   END_CANCELATION_POINT;
   STRACE("sigtimedwait(%s, [%s], %s) → %s% m", DescribeSigset(0, set),
-         DescribeSiginfo(rc, info), DescribeTimespec(0, timeout),
+         DescribeSiginfo(rc, opt_info), DescribeTimespec(0, opt_timeout),
          strsignal_r(rc, strsig));
   return rc;
 }

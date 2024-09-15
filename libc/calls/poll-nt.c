@@ -44,8 +44,6 @@
 #include "libc/thread/posixthread.internal.h"
 #ifdef __x86_64__
 
-#define POLL_INTERVAL_MS 10
-
 // <sync libc/sysv/consts.sh>
 #define POLLERR_    0x0001  // implied in events
 #define POLLHUP_    0x0002  // implied in events

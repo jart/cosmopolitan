@@ -21,14 +21,17 @@
 /**
  * Waits for signal synchronously.
  *
+ * See sigtimedwait() for further details.
+ *
  * @param set is signals for which we'll be waiting
  * @param info if not null shall receive info about signal
  * @return signal number on success, or -1 w/ errno
  * @raise EINTR if an asynchronous signal was delivered instead
  * @raise ECANCELED if thread was cancelled in masked mode
- * @raise ENOSYS on OpenBSD, XNU, and Windows
+ * @raise ENOSYS on OpenBSD, XNU, and Metal
  * @see sigtimedwait()
  * @cancelationpoint
+ * @norestart
  */
 int sigwaitinfo(const sigset_t *mask, siginfo_t *si) {
   return sigtimedwait(mask, si, 0);

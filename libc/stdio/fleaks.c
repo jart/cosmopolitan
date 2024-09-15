@@ -33,7 +33,7 @@ void CheckForFileLeaks(void) {
   char *pe = msg + 256;
   bool gotsome = false;
   if (IsQemuUser())
-    usleep(1);  // weird qemu mt flake
+    usleep(10000);  // weird qemu mt flake
   for (int fd = 3; fd < MIN_CLANDESTINE_FD; ++fd) {
     if (fcntl(fd, F_GETFL) != -1) {
       if (!gotsome) {

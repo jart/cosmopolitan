@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/struct/pollfd.h"
@@ -32,8 +33,6 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
-
-#define POLL_INTERVAL_MS 10
 
 __msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
 

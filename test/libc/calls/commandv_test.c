@@ -100,8 +100,6 @@ TEST(commandv, test_DirPaths_wontConsiderDirectoriesExecutable2) {
 }
 
 TEST(commandv, test_nonExecutableFile_willEacces) {
-  if (IsWindows())
-    return;  // TODO: fixme
   setenv("PATH", "foo", true);
   EXPECT_SYS(0, 0, mkdir("foo", 0755));
   EXPECT_SYS(0, 0, touch("foo/bar", 0400));

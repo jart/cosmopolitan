@@ -302,6 +302,15 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     return 0;
   }
 
+  // we can't preempt threads that masked sig or are blocked
+  if (atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
+      (1ull << (sig - 1))) {
+    atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
+                             memory_order_relaxed);
+    __sig_cancel(pt, sig, flags);
+    return 0;
+  }
+
   // if there's no handler then killing a thread kills the process
   if (rva == (intptr_t)SIG_DFL) {
     STRACE("terminating on %G due to no handler", sig);

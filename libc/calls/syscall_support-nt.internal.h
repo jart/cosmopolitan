@@ -4,6 +4,8 @@
 #include "libc/nt/struct/overlapped.h"
 COSMOPOLITAN_C_START_
 
+#define POLL_INTERVAL_MS 10
+
 bool isdirectory_nt(const char *);
 bool isregularfile_nt(const char *);
 bool issymlink_nt(const char *);

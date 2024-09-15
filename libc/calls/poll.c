@@ -58,7 +58,6 @@
  * @return fds[𝑖].revents is always zero initializaed and then will
  *     be populated with POLL{IN,OUT,PRI,HUP,ERR,NVAL} if something
  *     was determined about the file descriptor
- * @raise EINVAL if we exceeded the 64 socket limit on Windows
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if `nfds` exceeded `RLIMIT_NOFILE`
  * @raise ENOMEM on failure to allocate memory

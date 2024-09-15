@@ -18,10 +18,26 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigtimedwait.h"
 
-int sigwait(const sigset_t *mask, int *sig) {
-  siginfo_t si;
-  if (sigtimedwait(mask, &si, 0) < 0)
+/**
+ * Waits for signal synchronously.
+ *
+ * See sigtimedwait() for further details.
+ *
+ * @param set is signals for which we'll be waiting
+ * @param out_sig shall receive signal number
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINTR if an asynchronous signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise ENOSYS on OpenBSD, XNU, and Metal
+ * @see sigtimedwait()
+ * @cancelationpoint
+ * @norestart
+ */
+int sigwait(const sigset_t *mask, int *out_sig) {
+  int sig;
+  if ((sig = sigtimedwait(mask, 0, 0)) == -1)
     return -1;
-  *sig = si.si_signo;
+  if (out_sig)
+    *out_sig = sig;
   return 0;
 }
