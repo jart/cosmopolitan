@@ -250,3 +250,10 @@ TEST(snprintf, testAConversionSpecifier) {
   ASSERT_STREQ("0x1.8p+4", buf);
 }
 */
+
+TEST(snprintf, apostropheFlag) {
+  char buf[20];
+  int i = snprintf(buf, sizeof(buf), "%'d", 1000000);
+  ASSERT_EQ(7, i);
+  ASSERT_STREQ("1000000", buf);
+}
