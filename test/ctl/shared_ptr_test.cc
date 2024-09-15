@@ -25,6 +25,7 @@
 // #define ctl std
 
 using ctl::bad_weak_ptr;
+using ctl::enable_shared_from_this;
 using ctl::make_shared;
 using ctl::move;
 using ctl::shared_ptr;
@@ -64,6 +65,27 @@ struct Base
 {};
 
 struct Derived : Base
+{};
+
+class SharedThis : public enable_shared_from_this<SharedThis>
+{
+    struct Private
+    {
+        explicit Private() = default;
+    };
+
+  public:
+    SharedThis(Private)
+    {
+    }
+
+    static shared_ptr<SharedThis> create()
+    {
+        return make_shared<SharedThis>(Private());
+    }
+};
+
+class CanShareThis : public enable_shared_from_this<CanShareThis>
 {};
 
 int
@@ -239,6 +261,19 @@ main()
         weak_ptr<int> y(x);
         if (!y.expired())
             return 23;
+    }
+
+    {
+        // enable_shared_from_this allows shared pointers to self.
+        auto x = SharedThis::create();
+        auto y = x->shared_from_this();
+        if (x.use_count() != 2 || x.get() != y.get())
+            return 24;
+        auto z = new CanShareThis();
+        auto w = shared_ptr<CanShareThis>(z);
+        auto v = w->shared_from_this();
+        if (w.use_count() != 2 || w.get() != v.get())
+            return 25;
     }
 
     // TODO(mrdomino): exercise threads / races. The reference count should be
