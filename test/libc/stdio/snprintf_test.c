@@ -233,7 +233,7 @@ void check_a_conversion_specifier_long_double(const char *fmt, const char *expec
   ASSERT_STREQ(expected_str, buf);
 }
 
-void check_a_conversion_specifier_prec_1(const char *expected_str, double value) {
+void check_a_conversion_specifier_double_prec_1(const char *expected_str, double value) {
   check_a_conversion_specifier_double("%.1a", expected_str, value);
 }
 
@@ -241,10 +241,10 @@ TEST(snprintf, testAConversionSpecifierRounding) {
   int previous_rounding = fegetround();
 
   ASSERT_EQ(0, fesetround(FE_DOWNWARD));
-  check_a_conversion_specifier_prec_1("0x1.fp+4", 0x1.fffffp+4);
+  check_a_conversion_specifier_double_prec_1("0x1.fp+4", 0x1.fffffp+4);
 
   ASSERT_EQ(0, fesetround(FE_UPWARD));
-  check_a_conversion_specifier_prec_1("0x2.0p+4", 0x1.f8p+4);
+  check_a_conversion_specifier_double_prec_1("0x2.0p+4", 0x1.f8p+4);
 
   ASSERT_EQ(0, fesetround(previous_rounding));
 }
@@ -252,18 +252,21 @@ TEST(snprintf, testAConversionSpecifierRounding) {
 // This test specifically checks that we round to even, accordingly to IEEE
 // rules
 TEST(snprintf, testAConversionSpecifier) {
-  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.7800000000001p+4);
-  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.78p+4);
-  check_a_conversion_specifier_prec_1("0x1.8p+4", 0x1.88p+4);
-  check_a_conversion_specifier_prec_1("0x1.6p+4", 0x1.58p+4);
-  check_a_conversion_specifier_prec_1("0x1.6p+4", 0x1.68p+4);
-  check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.98p+4);
-  check_a_conversion_specifier_prec_1("0x1.ap+4", 0x1.a8p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.8p+4", 0x1.7800000000001p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.8p+4", 0x1.78p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.8p+4", 0x1.88p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.6p+4", 0x1.58p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.6p+4", 0x1.68p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.ap+4", 0x1.98p+4);
+  check_a_conversion_specifier_double_prec_1("0x1.ap+4", 0x1.a8p+4);
 
   check_a_conversion_specifier_double("%#a", "0x0.p+0", 0x0.0p0);
   check_a_conversion_specifier_double("%#A", "0X0.P+0", 0x0.0p0);
   check_a_conversion_specifier_long_double("%#La", "0x0.p+0", 0x0.0p0L);
   check_a_conversion_specifier_long_double("%#LA", "0X0.P+0", 0x0.0p0L);
+
+  check_a_conversion_specifier_double("%.2a", "0x1.00p-1026", 0xf.fffp-1030);
+  check_a_conversion_specifier_long_double("%.1La", "0x1.0p+1", 1.999L);
 }
 
 TEST(snprintf, apostropheFlag) {
