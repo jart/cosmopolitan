@@ -72,7 +72,7 @@ int __reservefd_unlocked(int start) {
     if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
       // g_fds.f isn't guarded by our mutex
       do {
-        f2 = MAX(fd + 1, f1);
+        f2 = MIN(fd + 1, f1);
       } while (!atomic_compare_exchange_weak_explicit(
           &g_fds.f, &f1, f2, memory_order_release, memory_order_relaxed));
       return fd;
