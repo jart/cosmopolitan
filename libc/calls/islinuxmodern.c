@@ -22,6 +22,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 
-bool IsLinuxModern(void) {
+bool32 IsLinuxModern(void) {
   return IsLinux() && sys_close_range(-1, -2, 0) == -1 && errno == EINVAL;
 }
