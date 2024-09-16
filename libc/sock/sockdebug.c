@@ -56,7 +56,7 @@ const char *_DescribeSockaddr(char buf[128], const struct sockaddr *sa,
         p = stpcpy(p, ip);
         *p++ = ']';
         *p++ = ':';
-        p = FormatUint32(p, in6->sin6_port);
+        p = FormatUint32(p, ntohs(in6->sin6_port));
       }
     } else if (sa->sa_family == AF_UNIX &&
                sasize >= sizeof(struct sockaddr_un)) {
