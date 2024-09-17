@@ -5,6 +5,7 @@
 
 #include "exception.h"
 #include "is_base_of.h"
+#include "is_constructible.h"
 #include "is_convertible.h"
 #include "remove_extent.h"
 #include "unique_ptr.h"
@@ -437,6 +438,9 @@ class weak_ptr
     template<typename U>
     friend class shared_ptr;
 
+    template<typename U, typename... Args>
+    friend shared_ptr<U> make_shared(Args&&...);
+
     element_type* p = nullptr;
     __::shared_ref* rc = nullptr;
 };
@@ -497,19 +501,75 @@ shared_ptr<T>::shared_ptr(U* const p, D d)
     }
 }
 
+// Our make_shared supports passing a weak self reference as the first parameter
+// to your constructor, e.g.:
+//
+//     struct Tree : ctl::weak_self_base
+//     {
+//         ctl::shared_ptr<Tree> l, r;
+//         ctl::weak_ptr<Tree> parent;
+//         Tree(weak_ptr<Tree> const& self, auto&& l2, auto&& r2)
+//           : l(ctl::forward<decltype(l2)>(l2)),
+//             r(ctl::forward<decltype(r2)>(r2))
+//         {
+//             if (l) l->parent = self;
+//             if (r) r->parent = self;
+//         }
+//     };
+//
+//     int main() {
+//         auto t = ctl::make_shared<Tree>(
+//             ctl::make_shared<Tree>(nullptr, nullptr), nullptr);
+//         return t->l->parent.lock().get() == t.get() ? 0 : 1;
+//     }
+//
+// As shown, passing the parameter at object construction time lets you complete
+// object construction without needing a separate Init method. But because we go
+// off spec as far as the STL is concerned, there is a potential ambiguity where
+// you might have a constructor with a weak_ptr first parameter that is intended
+// to be something other than a self-reference. So this feature is opt-in by way
+// of inheriting from the following struct.
+struct weak_self_base
+{};
+
 template<typename T, typename... Args>
 shared_ptr<T>
 make_shared(Args&&... args)
 {
-    auto rc = __::shared_emplace<T>::make();
-    rc->construct(forward<Args>(args)...);
-    shared_ptr<T> r;
-    r.p = &rc->t;
-    r.rc = rc.release();
-    if constexpr (is_base_of_v<enable_shared_from_this<T>, T>) {
-        r->weak_this = r;
+    unique_ptr rc = __::shared_emplace<T>::make();
+    if constexpr (is_base_of_v<weak_self_base, T> &&
+                  is_constructible_v<T, const weak_ptr<T>&, Args...>) {
+        // A __::shared_ref has a virtual weak reference that is owned by all of
+        // the shared references. We can avoid some unnecessary refcount changes
+        // by "borrowing" that reference and passing it to the constructor, then
+        // promoting it to a shared reference by swapping it with the shared_ptr
+        // that we return.
+        weak_ptr<T> w;
+        w.p = &rc->t;
+        w.rc = rc.get();
+        try {
+            rc->construct(const_cast<const weak_ptr<T>&>(w),
+                          forward<Args>(args)...);
+        } catch (...) {
+            w.p = nullptr;
+            w.rc = nullptr;
+            throw;
+        }
+        rc.release();
+        shared_ptr<T> r;
+        swap(r.p, w.p);
+        swap(r.rc, w.rc);
+        return r;
+    } else {
+        rc->construct(forward<Args>(args)...);
+        shared_ptr<T> r;
+        r.p = &rc->t;
+        r.rc = rc.release();
+        if constexpr (is_base_of_v<enable_shared_from_this<T>, T>) {
+            r->weak_this = r;
+        }
+        return r;
     }
-    return r;
 }
 
 } // namespace ctl
