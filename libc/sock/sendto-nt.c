@@ -60,7 +60,7 @@ textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
   bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
   flags &= ~_MSG_DONTWAIT;
   rc = __winsock_block(
-      f->handle, flags, nonblock, f->sndtimeo, m, sys_sendto_nt_start,
+      f->handle, flags, -nonblock, f->sndtimeo, m, sys_sendto_nt_start,
       &(struct SendToArgs){iov, iovlen, opt_in_addr, in_addrsize});
   __sig_unblock(m);
   return rc;

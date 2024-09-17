@@ -56,7 +56,7 @@ textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
   sigset_t m = __sig_block();
   bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
   flags &= ~_MSG_DONTWAIT;
-  rc = __winsock_block(f->handle, flags, nonblock, f->sndtimeo, m,
+  rc = __winsock_block(f->handle, flags, -nonblock, f->sndtimeo, m,
                        sys_send_nt_start, &(struct SendArgs){iov, iovlen});
   __sig_unblock(m);
   return rc;

@@ -30,17 +30,19 @@
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/pollfd.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #ifdef __x86_64__
 
 textwindows ssize_t
-__winsock_block(int64_t handle, uint32_t flags, bool nonblock,
+__winsock_block(int64_t handle, uint32_t flags, int nonblock,
                 uint32_t srwtimeout, sigset_t waitmask,
                 int StartSocketOp(int64_t handle, struct NtOverlapped *overlap,
                                   uint32_t *flags, void *arg),
@@ -61,6 +63,21 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     bool got_eagain = false;
     uint32_t other_error = 0;
 
+    // send() and sendto() provide O_NONBLOCK as a negative number
+    // because winsock has a bug that causes CancelIoEx() to cause
+    // WSAGetOverlappedResult() to report errors when it succeeded
+    if (nonblock < 0) {
+      struct sys_pollfd_nt fds[1] = {{handle, POLLOUT}};
+      switch (WSAPoll(fds, 1, 0)) {
+        case -1:
+          return __winsockerr();
+        case 0:
+          return eagain();
+        default:
+          break;
+      }
+    }
+
     // create event handle for overlapped i/o
     intptr_t event;
     if (!(event = WSACreateEvent()))
@@ -69,7 +86,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     struct NtOverlapped overlap = {.hEvent = event};
     bool32 ok = !StartSocketOp(handle, &overlap, &flags, arg);
     if (!ok && WSAGetLastError() == kNtErrorIoPending) {
-      if (nonblock) {
+      if (nonblock > 0) {
         CancelIoEx(handle, &overlap);
         got_eagain = true;
       } else {
