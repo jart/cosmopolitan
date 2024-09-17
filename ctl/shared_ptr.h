@@ -536,9 +536,14 @@ template<typename T, typename... Args>
 shared_ptr<T>
 make_shared(Args&&... args)
 {
-    auto rc = __::shared_emplace<T>::make();
+    unique_ptr rc = __::shared_emplace<T>::make();
     if constexpr (is_base_of_v<weak_self_base, T> &&
                   is_constructible_v<T, const weak_ptr<T>&, Args...>) {
+        // A __::shared_ref has a virtual weak reference that is owned by all of
+        // the shared references. We can avoid some unnecessary refcount changes
+        // by "borrowing" that reference and passing it to the constructor, then
+        // promoting it to a shared reference by swapping it with the shared_ptr
+        // that we return.
         weak_ptr<T> w;
         w.p = &rc->t;
         w.rc = rc.get();
