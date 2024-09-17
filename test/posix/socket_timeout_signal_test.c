@@ -13,7 +13,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "libc/limits.h"
 
 /**
  * @fileoverview SO_RCVTIMEO + SA_RESTART interaction test
@@ -109,7 +108,7 @@ void *server_thread(void *arg) {
   timeout.tv_sec = 5000000;
   timeout.tv_usec = 0;
   if (setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout,
-                 sizeof(timeout) + !IsNetbsd())) {
+                 sizeof(timeout) + (!IsNetbsd() && !IsQemuUser()))) {
     perror("setsockopt");
     exit(34);
   }
