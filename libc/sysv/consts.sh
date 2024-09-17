@@ -2044,7 +2044,7 @@ syscon	misc	IF_NAMESIZE				0x10			0x10			0x10			0x10			0x10			0x10			0x10			0			
 syscon	misc	INTERMEDIATE_C_GOOD			10			10			0			0			0			0			0			0
 syscon	misc	INTERMEDIATE_GOOD			8			8			0			0			0			0			0			0
 
-syscon	misc	IOV_MAX					0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			16			# unix consensus & MSG_MAXIOVLEN
+syscon	misc	IOV_MAX					1024			1024			1024			1024			1024			1024			1024			16			# unix consensus & MSG_MAXIOVLEN
 syscon	misc	LINE_MAX				0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
 syscon	misc	LINKED_CMD_COMPLETE			10			10			0			0			0			0			0			0
 syscon	misc	LINKED_FLG_CMD_COMPLETE			11			11			0			0			0			0			0			0

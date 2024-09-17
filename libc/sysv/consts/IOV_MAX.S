@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,IOV_MAX,0x0400,0x0400,0x0400,0x0400,0x0400,0x0400,0x0400,16
+.syscon misc,IOV_MAX,1024,1024,1024,1024,1024,1024,1024,16
