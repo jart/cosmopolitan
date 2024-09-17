@@ -7015,12 +7015,6 @@ PyInit__socket(void)
     PyModule_AddIntMacro(m, IP_MULTICAST_LOOP);
     PyModule_AddIntMacro(m, IP_DEFAULT_MULTICAST_TTL);
     PyModule_AddIntMacro(m, IP_DEFAULT_MULTICAST_LOOP);
-    PyModule_AddIntMacro(m, IP_MAX_MEMBERSHIPS);
-    if (IP_RECVOPTS) PyModule_AddIntMacro(m, IP_RECVOPTS);
-    if (IP_RECVRETOPTS) PyModule_AddIntMacro(m, IP_RECVRETOPTS);
-    if (IP_RECVDSTADDR) PyModule_AddIntMacro(m, IP_RECVDSTADDR);
-    if (IP_RETOPTS) PyModule_AddIntMacro(m, IP_RETOPTS);
-    if (IP_TRANSPARENT) PyModule_AddIntMacro(m, IP_TRANSPARENT);
 
 #ifdef ENABLE_IPV6
     /* IPv6 [gs]etsockopt options, defined in RFC2553 */

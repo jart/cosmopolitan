@@ -20,8 +20,8 @@
 #include "libc/macros.h"
 
 	.macro	.e e s
-	.long	\e - kIpOptnames
-	.long	.L\@ - kIpOptnames
+	.long	\e - kIpv6Optnames
+	.long	.L\@ - kIpv6Optnames
 	.rodata.str1.1
 .L\@:	.string	"\s"
 	.previous
@@ -30,20 +30,23 @@
 	.section .rodata
 	.balign	4
 	.underrun
-kIpOptnames:
-	.e	IP_TOS,"TOS"			// int
-	.e	IP_TTL,"TTL"			// int
-	.e	IP_MTU,"MTU"			// int
-	.e	IP_HDRINCL,"HDRINCL"		// bool32
-	.e	IP_OPTIONS,"OPTIONS"
-	.e	IP_RECVTTL,"RECVTTL"
-	.e	IP_ADD_MEMBERSHIP,"ADD_MEMBERSHIP"
-	.e	IP_DROP_MEMBERSHIP,"DROP_MEMBERSHIP"
-	.e	IP_MULTICAST_IF,"MULTICAST_IF"
-	.e	IP_MULTICAST_LOOP,"MULTICAST_LOOP"
-	.e	IP_MULTICAST_TTL,"MULTICAST_TTL"
-	.e	IP_PKTINFO,"PKTINFO"
-	.e	IP_RECVTOS,"RECVTOS"
+kIpv6Optnames:
+	.e	IPV6_V6ONLY,"V6ONLY"
+	.e	IPV6_CHECKSUM,"CHECKSUM"
+	.e	IPV6_JOIN_GROUP,"JOIN_GROUP"
+	.e	IPV6_LEAVE_GROUP,"LEAVE_GROUP"
+	.e	IPV6_MULTICAST_HOPS,"MULTICAST_HOPS"
+	.e	IPV6_MULTICAST_IF,"MULTICAST_IF"
+	.e	IPV6_MULTICAST_LOOP,"MULTICAST_LOOP"
+	.e	IPV6_UNICAST_HOPS,"UNICAST_HOPS"
+	.e	IPV6_RECVTCLASS,"RECVTCLASS"
+	.e	IPV6_TCLASS,"TCLASS"
+	.e	IPV6_DONTFRAG,"DONTFRAG"
+	.e	IPV6_HOPLIMIT,"HOPLIMIT"
+	.e	IPV6_HOPOPTS,"HOPOPTS"
+	.e	IPV6_PKTINFO,"PKTINFO"
+	.e	IPV6_RECVRTHDR,"RECVRTHDR"
+	.e	IPV6_RTHDR,"RTHDR"
 	.long	MAGNUM_TERMINATOR
-	.endobj	kIpOptnames,globl,hidden
+	.endobj	kIpv6Optnames,globl,hidden
 	.overrun

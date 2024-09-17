@@ -21,6 +21,7 @@ extern const struct MagnumStr kErrnoDocs[];
 extern const struct MagnumStr kErrnoNames[];
 extern const struct MagnumStr kFcntlCmds[];
 extern const struct MagnumStr kIpOptnames[];
+extern const struct MagnumStr kIpv6Optnames[];
 extern const struct MagnumStr kOpenFlags[];
 extern const struct MagnumStr kRlimitNames[];
 extern const struct MagnumStr kSignalNames[];

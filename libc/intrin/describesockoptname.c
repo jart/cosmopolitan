@@ -49,6 +49,14 @@ const char *_DescribeSockOptname(char buf[32], int l, int x) {
       *p++ = '_';
       *p = 0;
       ms = kIpOptnames;
+    } else if (l == SOL_IPV6) {
+      *p++ = 'I';
+      *p++ = 'P';
+      *p++ = 'V';
+      *p++ = '6';
+      *p++ = '_';
+      *p = 0;
+      ms = kIpv6Optnames;
     } else {
       ms = 0;
     }
