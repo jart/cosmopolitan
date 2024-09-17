@@ -678,18 +678,18 @@ syscon	tcp	TCP_CORK				3			3			4			4			4			16			4			0			# nagle's algorithm stri
 syscon	tcp	TCP_MAXSEG				2			2			2			2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
 syscon	tcp	TCP_FASTOPEN				23			23			0x105			0x105			0x0401			0			0			15			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
 syscon	tcp	TCP_FASTOPEN_CONNECT			30			30			0			0			0			0			0			0			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
-syscon	tcp	TCP_KEEPIDLE				4			4			0			0			0x100			0			3			0			# start keepalives after this period
-syscon	tcp	TCP_KEEPINTVL				5			5			0x101			0x101			0x200			0			5			0			# interval between keepalives
-syscon	tcp	TCP_KEEPCNT				6			6			0x102			0x102			0x400			0			6			0			# number of keepalives before death
+syscon	tcp	TCP_KEEPIDLE				4			4			0			0			0x100			0			3			3			# start keepalives after this period
+syscon	tcp	TCP_KEEPINTVL				5			5			0x101			0x101			0x200			0			5			17			# interval between keepalives
+syscon	tcp	TCP_KEEPCNT				6			6			0x102			0x102			0x400			0			6			16			# number of keepalives before death
+syscon	tcp	TCP_INFO				11			11			0x200			0x200			32			9			9			0			# get connection info
+syscon	tcp	TCP_NOTSENT_LOWAT			25			25			513			513			0			0			0			0			# limit unset byte queue
+syscon	tcp	TCP_MD5SIG				14			14			0			0			16			4			16			0			# what is it (rfc2385)
+syscon	tcp	TCP_CONGESTION				13			13			0			0			64			0			0			0			# set traffic control
 syscon	tcp	TCP_SYNCNT				7			7			0			0			0			0			0			0			# how hard to syn packet the enemy
 syscon	tcp	TCP_ULP					31			31			0			0			0			0			0			0			# setsockopt(sock, IPPROTO_TCP, TCP_ULP, "tls", 4)
 syscon	tcp	TCP_COOKIE_TRANSACTIONS			15			15			0			0			0			0			0			0			# defense against the syn packets
 syscon	tcp	TCP_LINGER2				8			8			0			0			0			0			0			0			# orphaned fin-wait-2 lifetime cf. net.ipv4.tcp_fin_timeout see cloudflare blog
-syscon	tcp	TCP_NOTSENT_LOWAT			25			25			513			513			0			0			0			0			# limit unset byte queue
-syscon	tcp	TCP_INFO				11			11			0			0			0x20			0			9			0			# get connection info
 syscon	tcp	TCP_CC_INFO				26			26			0			0			0			0			0			0			# get congestion control info
-syscon	tcp	TCP_CONGESTION				13			13			0			0			0x40			0			0			0			# set traffic control
-syscon	tcp	TCP_MD5SIG				14			14			0			0			0x10			4			16			0			# what is it (rfc2385)
 syscon	tcp	TCP_MD5SIG_MAXKEYLEN			80			80			0			0			0			0			0			0			# what is it
 syscon	tcp	TCP_TIMESTAMP				24			24			0			0			0			0			0			0			# what is it
 syscon	tcp	TCP_USER_TIMEOUT			18			18			0			0			0			0			0			0			# what is it
