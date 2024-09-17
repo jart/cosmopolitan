@@ -54,7 +54,14 @@ textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
   sigset_t m = __sig_block();
-  bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
+
+  // we don't check O_NONBLOCK because we want to avoid needing to call
+  // WSAPoll() every time we write() to a non-blocking socket. WIN32 is
+  // unsafe at canceling socket sends. lots of code doesn't check write
+  // return status. good programs that sincerely want to avoid blocking
+  // on send() operations should have already called poll() beforehand.
+  bool nonblock = flags & _MSG_DONTWAIT;
+
   flags &= ~_MSG_DONTWAIT;
   rc = __winsock_block(f->handle, flags, -nonblock, f->sndtimeo, m,
                        sys_send_nt_start, &(struct SendArgs){iov, iovlen});

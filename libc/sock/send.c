@@ -30,6 +30,18 @@
 /**
  * Sends data to network socket.
  *
+ * Calling `send(fd, p, n, 0)` is equivalent to `write(fd, p, n)`.
+ *
+ * On Windows, calling send() or write() on a socket in `O_NONBLOCK`
+ * mode will block. This is done for many reasons. First, most UNIX OSes
+ * have a similar behavior, due to how little code checks the return
+ * status of write(). Secondly, WIN32 has bugs that prevent us from
+ * canceling an overlapped WSASend() operation safely. Programs that
+ * want to avoid send() blocking should call poll() beforehand with the
+ * POLLOUT flag to test when the socket can safely be written without
+ * blocking. It's also possible to pass `MSG_DONTWAIT` via `flags` in
+ * which case send() will do this for you automatically.
+ *
  * @param fd is the file descriptor returned by socket()
  * @param buf is the data to send, which we'll copy if necessary
  * @param size is the byte-length of buf
