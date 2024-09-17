@@ -51,7 +51,7 @@
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @cancelationpoint
  * @asyncsignalsafe
- * @restartable (unless SO_RCVTIMEO)
+ * @restartable (unless SO_SNDTIMEO on Linux or Windows)
  */
 ssize_t sendto(int fd, const void *buf, size_t size, int flags,
                const struct sockaddr *opt_addr, uint32_t addrsize) {

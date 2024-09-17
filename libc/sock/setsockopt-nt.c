@@ -36,14 +36,17 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                                   const void *optval, uint32_t optlen) {
 
   // socket read/write timeouts
+  // timeout of zero means wait forever (default)
   if (level == SOL_SOCKET &&
       (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
-    if (!(optval && optlen == sizeof(struct timeval)))
+    if (!optval)
+      return einval();
+    if (optlen < sizeof(struct timeval))
       return einval();
     const struct timeval *tv = optval;
     int64_t ms = timeval_tomillis(*tv);
     if (ms > -1u)
-      ms = 0;  // wait forever (default) yes zero actually means this
+      ms = -1u;
     if (optname == SO_RCVTIMEO)
       fd->rcvtimeo = ms;
     if (optname == SO_SNDTIMEO)
@@ -51,7 +54,7 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
     return 0;  // we want to handle this on our own
   }
 
-  // how to make close() a blocking i/o call
+  // how to make close() a blocking i/o call lool
   union {
     uint32_t millis;
     struct linger_nt linger;

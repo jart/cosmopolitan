@@ -49,7 +49,7 @@
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @cancelationpoint
  * @asyncsignalsafe
- * @restartable (unless SO_RCVTIMEO)
+ * @restartable (unless SO_RCVTIMEO on Linux or Windows)
  */
 ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
                  struct sockaddr *opt_out_srcaddr,

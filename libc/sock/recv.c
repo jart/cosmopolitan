@@ -38,7 +38,7 @@
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @cancelationpoint
  * @asyncsignalsafe
- * @restartable (unless SO_RCVTIMEO)
+ * @restartable (unless SO_RCVTIMEO on Linux or Windows)
  */
 ssize_t recv(int fd, void *buf, size_t size, int flags) {
   ssize_t rc;

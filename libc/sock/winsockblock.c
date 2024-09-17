@@ -191,6 +191,11 @@ __winsock_block(int64_t handle, uint32_t flags, int nonblock,
       // check if signal handler without SA_RESTART was called
       if (handler_was_called & SIG_HANDLED_NO_RESTART)
         return eintr();
+
+      // emulates linux behavior of having timeouts @norestart
+      if (handler_was_called & SIG_HANDLED_SA_RESTART)
+        if (srwtimeout)
+          return eintr();
     }
 
     // otherwise try the i/o operation again
