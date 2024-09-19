@@ -20,6 +20,7 @@
 #include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
@@ -242,6 +243,9 @@ static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
   }
   kprintf("\n");
   __print_maps(15);
+  if (g_fds.n)
+    kprintf("\n");
+  __printfds(g_fds.p, g_fds.n);
   if (__argv)
     for (i = 0; i < __argc; ++i)
       kprintf("%s ", __argv[i]);

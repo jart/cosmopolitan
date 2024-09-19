@@ -39,7 +39,6 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
   uint64_t ms;
   uint32_t in_optlen;
   struct linger_nt linger;
-  npassert(fd->kind == kFdSocket);
 
   if (out_opt_optval && inout_optlen) {
     in_optlen = *inout_optlen;
