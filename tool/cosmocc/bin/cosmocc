@@ -96,7 +96,7 @@ use_clang() {
   TARGET_X86_64="--target=x86_64"
   TARGET_AARCH64="--target=aarch64"
   FPORTCOSMO=
-  FNO_INLINE_FUNCTIONS_CALLED_ONCE="-fno-inline-functions-called-once"
+  FNO_INLINE_FUNCTIONS_CALLED_ONCE=
 }
 
 use_gcc

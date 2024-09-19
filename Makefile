@@ -279,6 +279,7 @@ include dsp/scale/BUILD.mk			# │
 include dsp/mpeg/BUILD.mk			# │
 include dsp/tty/BUILD.mk			# │
 include dsp/audio/BUILD.mk			# │
+include dsp/prog/BUILD.mk			# │
 include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │

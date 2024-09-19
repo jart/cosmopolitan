@@ -469,16 +469,16 @@ COSMOAUDIO_ABI int cosmoaudio_poll(struct CosmoAudio* ca,
   if (in_out_writeFrames && 1u + *in_out_writeFrames > ca->outputBufferFrames)
     return COSMOAUDIO_ENOBUF;
   for (;;) {
-    int done = 0;
+    int done = 1;
     ma_uint32 readable = 0;
     ma_uint32 writable = 0;
     if (in_out_readFrames) {
       readable = ma_pcm_rb_available_read(&ca->input);
-      done |= readable >= (ma_uint32)*in_out_readFrames;
+      done &= readable >= (ma_uint32)*in_out_readFrames;
     }
     if (in_out_writeFrames) {
       writable = ma_pcm_rb_available_write(&ca->output);
-      done |= writable >= (ma_uint32)*in_out_writeFrames;
+      done &= writable >= (ma_uint32)*in_out_writeFrames;
     }
     if (done) {
       if (in_out_readFrames)

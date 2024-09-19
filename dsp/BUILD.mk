@@ -6,4 +6,5 @@ o/$(MODE)/dsp:	o/$(MODE)/dsp/audio	\
 		o/$(MODE)/dsp/core	\
 		o/$(MODE)/dsp/mpeg	\
 		o/$(MODE)/dsp/scale	\
+		o/$(MODE)/dsp/prog	\
 		o/$(MODE)/dsp/tty
