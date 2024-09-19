@@ -16,16 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/enum/processaccess.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/proc/proc.internal.h"
@@ -36,21 +41,18 @@
 textwindows int sys_kill_nt(int pid, int sig) {
 
   // validate api usage
-  if (!(0 <= sig && sig <= 64)) {
+  if (!(0 <= sig && sig <= 64))
     return einval();
-  }
 
   // XXX: NT doesn't really have process groups. For instance the
   //      CreateProcess() flag for starting a process group actually
   //      just does an "ignore ctrl-c" internally.
-  if (pid < -1) {
+  if (pid < -1)
     pid = -pid;
-  }
 
   // no support for kill all yet
-  if (pid == -1) {
+  if (pid == -1)
     return einval();
-  }
 
   // just call raise() if we're targeting self
   if (pid <= 0 || pid == getpid()) {
@@ -67,6 +69,18 @@ textwindows int sys_kill_nt(int pid, int sig) {
       return raise(sig);
     } else {
       return 0;  // ability check passes
+    }
+  }
+
+  // attempt to signal via /var/sig shared memory file
+  if (pid > 0 && sig != 9) {
+    atomic_ulong *sigproc;
+    if ((sigproc = __sig_map_process(pid))) {
+      if (sig > 0)
+        atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
+                                 memory_order_release);
+      UnmapViewOfFile(sigproc);
+      return 0;
     }
   }
 

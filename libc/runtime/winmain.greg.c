@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/weaken.h"
@@ -294,7 +294,6 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
                 ARRAYLEN(wa->envp) - 1);
   __imp_FreeEnvironmentStringsW(env16);
   __envp = &wa->envp[0];
-
   // handover control to cosmopolitan runtime
   __stack_call(count, wa->argv, wa->envp, wa->auxv, cosmo,
                (uintptr_t)(stackaddr + (stacksize - sizeof(struct WinArgs))));
@@ -302,6 +301,7 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
 
 abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                     const char *lpCmdLine, int64_t nCmdShow) {
+  static atomic_ulong fake_process_signals;
   const char16_t *cmdline;
   extern char os asm("__hostos");
   os = _HOSTWINDOWS;  // madness https://news.ycombinator.com/item?id=21019722
@@ -317,19 +317,20 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   __gransize = si.dwAllocationGranularity;
   __umask = 077;
   __pid = __imp_GetCurrentProcessId();
+  if (!(__sig.process = __sig_map_process(__pid)))
+    __sig.process = &fake_process_signals;
+  atomic_store_explicit(__sig.process, 0, memory_order_release);
   cmdline = __imp_GetCommandLineW();
 #if SYSDEBUG
   // sloppy flag-only check for early initialization
   if (StrStr(cmdline, u"--strace"))
     ++__strace;
 #endif
-  if (_weaken(WinSockInit)) {
+  if (_weaken(WinSockInit))
     _weaken(WinSockInit)();
-  }
   DeduplicateStdioHandles();
-  if (_weaken(WinMainForked)) {
+  if (_weaken(WinMainForked))
     _weaken(WinMainForked)();
-  }
   WinInit(cmdline);
 }
 

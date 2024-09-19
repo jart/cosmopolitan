@@ -16,8 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
+#include "libc/nt/files.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/internal.h"
+#ifdef __x86_64__
 
 __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
 
@@ -25,8 +33,20 @@ __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
  * Terminates the calling process and all of its threads.
  */
 textwindows dontinstrument void TerminateThisProcess(uint32_t dwWaitStatus) {
+
+  // delete sig file
+  char16_t path[128];
+  atomic_ulong *real;
+  atomic_ulong fake = 0;
+  real = __sig.process;
+  __sig.process = &fake;
+  UnmapViewOfFile(real);
+  DeleteFile(__sig_process_path(path, __pid));
+
   // "When a process terminates itself, TerminateProcess stops execution
   // of the calling thread and does not return." -Quoth MSDN
   __imp_TerminateProcess(-1, dwWaitStatus);
   __builtin_unreachable();
 }
+
+#endif /* __x86_64__ */

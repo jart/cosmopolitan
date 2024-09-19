@@ -76,10 +76,6 @@ TEST(sigsuspend, testSignalQueuingSelf) {
 }
 
 TEST(sigsuspend, testSignalQueuingIpc) {
-  if (IsWindows()) {
-    // xxx: probably need a signal server to do this kind of signalling
-    return;
-  }
   int pid, ws;
   sigset_t neu, old, bits;
   struct sigaction oldusr1, oldusr2;

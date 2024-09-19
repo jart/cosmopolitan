@@ -259,6 +259,7 @@ imp	'SetEvent'						SetEvent						kernel32	1
 imp	'SetFileAttributes'					SetFileAttributesW					kernel32	2
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	2
 imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	4
+imp	'SetFilePointer'					SetFilePointer						kernel32	4
 imp	'SetFileTime'						SetFileTime						kernel32	4
 imp	'SetFileValidData'					SetFileValidData					kernel32	2
 imp	'SetHandleCount'					SetHandleCount						kernel32	1

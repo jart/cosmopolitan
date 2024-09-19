@@ -196,8 +196,12 @@ textwindows void WinMainForked(void) {
   int64_t reader;
   int64_t savetsc;
   uint32_t varlen;
+  atomic_ulong *sigproc;
   char16_t fvar[21 + 1 + 21 + 1];
   struct Fds *fds = __veil("r", &g_fds);
+
+  // save signal pointer
+  sigproc = __sig.process;
 
   // check to see if the process was actually forked
   // this variable should have the pipe handle numba
@@ -295,12 +299,13 @@ textwindows void WinMainForked(void) {
   fds->p[1].handle = GetStdHandle(kNtStdOutputHandle);
   fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);
 
+  // restore signal pointer
+  __sig.process = sigproc;
+
   // restore the crash reporting stuff
 #if SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
-  if (_weaken(__sig_init))
-    _weaken(__sig_init)();
 
   // jump back into function below
   longjmp(jb, 1);
@@ -460,15 +465,16 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     __morph_tls();
     __tls_enabled = true;
     // the child's pending signals is initially empty
-    atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
+    atomic_store_explicit(__sig.process, 0, memory_order_relaxed);
     atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
     // re-apply code morphing for function tracing
-    if (ftrace_stackdigs) {
+    if (ftrace_stackdigs)
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
-    }
     // reset core runtime services
     __proc_wipe();
     WipeKeystrokes();
+    if (_weaken(__sig_init))
+      _weaken(__sig_init)();
     if (_weaken(__itimer_wipe))
       _weaken(__itimer_wipe)();
     // notify pthread join

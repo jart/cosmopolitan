@@ -262,8 +262,6 @@ void EmptySigHandler(int sig) {
 }
 
 TEST(posix_spawn, etxtbsy) {
-  if (IsWindows())
-    return;  // can't deliver signals between processes
   if (IsXnu())
     return;  // they don't appear impacted by this race condition
   if (IsNetbsd())

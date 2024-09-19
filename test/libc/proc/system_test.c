@@ -166,13 +166,12 @@ TEST(system, notequals) {
 }
 
 TEST(system, usleep) {
-  ASSERT_EQ(0, GETEXITSTATUS(system("usleep & kill $!")));
+  ASSERT_EQ(0, GETEXITSTATUS(system("usleep & kill $!; wait")));
 }
 
 TEST(system, kill) {
   int ws = system("kill -TERM $$; usleep");
-  if (!IsWindows())
-    ASSERT_EQ(SIGTERM, WTERMSIG(ws));
+  ASSERT_EQ(SIGTERM, WTERMSIG(ws));
 }
 
 TEST(system, exitStatusPreservedAfterSemiColon) {

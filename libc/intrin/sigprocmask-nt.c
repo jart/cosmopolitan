@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/atomic.h"
@@ -34,7 +35,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
   }
 
   // get address of sigset to modify
-  _Atomic(uint64_t) *mask = &__get_tls()->tib_sigmask;
+  atomic_ulong *mask = &__get_tls()->tib_sigmask;
 
   // handle read-only case
   sigset_t oldmask;

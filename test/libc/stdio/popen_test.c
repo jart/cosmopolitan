@@ -120,8 +120,6 @@ void OnSig(int sig) {
 }
 
 TEST(popen, complicated) {
-  if (IsWindows())
-    return;  // windows treats sigusr1 as terminate
   char cmd[64];
   signal(SIGUSR1, OnSig);
   sprintf(cmd, "read a ; test \"x$a\" = xhello && kill -USR1 %d", getpid());

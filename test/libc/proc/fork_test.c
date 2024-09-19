@@ -103,8 +103,6 @@ static void OnSigusr2(int sig) {
 }
 
 TEST(fork, childToChild) {
-  if (IsWindows())
-    return;  // :'(
   sigset_t mask, oldmask;
   int ws, parent, child1, child2;
   gotsigusr1 = false;

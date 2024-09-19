@@ -32,12 +32,13 @@
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/context.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/events.h"
@@ -46,6 +47,7 @@
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -57,6 +59,8 @@
 /**
  * @fileoverview Cosmopolitan Signals for Windows.
  */
+
+#define STKSZ 65536
 
 struct SignalFrame {
   unsigned rva;
@@ -80,7 +84,7 @@ textwindows bool __sig_ignored(int sig) {
 
 textwindows void __sig_delete(int sig) {
   struct Dll *e;
-  atomic_fetch_and_explicit(&__sig.pending, ~(1ull << (sig - 1)),
+  atomic_fetch_and_explicit(__sig.process, ~(1ull << (sig - 1)),
                             memory_order_relaxed);
   _pthread_lock();
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e))
@@ -108,7 +112,7 @@ static textwindows int __sig_getter(atomic_ulong *sigs, sigset_t masked) {
 textwindows int __sig_get(sigset_t masked) {
   int sig;
   if (!(sig = __sig_getter(&__get_tls()->tib_sigpending, masked)))
-    sig = __sig_getter(&__sig.pending, masked);
+    sig = __sig_getter(__sig.process, masked);
   return sig;
 }
 
@@ -179,6 +183,7 @@ textwindows int __sig_raise(volatile int sig, int sic) {
   unsigned rva, flags;
   struct PosixThread *pt = _pthread_self();
   if (__sig_start(pt, sig, &rva, &flags)) {
+
     if (flags & SA_RESETHAND) {
       STRACE("resetting %G handler", sig);
       __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
@@ -410,7 +415,7 @@ textwindows void __sig_generate(int sig, int sic) {
     STRACE("terminating on %G due to no handler", sig);
     __sig_terminate(sig);
   }
-  if (atomic_load_explicit(&__sig.pending, memory_order_acquire) &
+  if (atomic_load_explicit(__sig.process, memory_order_acquire) &
       (1ull << (sig - 1))) {
     return;
   }
@@ -448,7 +453,7 @@ textwindows void __sig_generate(int sig, int sic) {
     __sig_killer(mark, sig, sic);
     _pthread_unref(mark);
   } else {
-    atomic_fetch_or_explicit(&__sig.pending, 1ull << (sig - 1),
+    atomic_fetch_or_explicit(__sig.process, 1ull << (sig - 1),
                              memory_order_relaxed);
   }
   ALLOW_SIGNALS;
@@ -611,11 +616,28 @@ textwindows int __sig_check(void) {
   }
 }
 
+// delivers signals from other processes asynchronously
+textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
+  struct CosmoTib tls;
+  __bootstrap_tls(&tls, __builtin_frame_address(0));
+  char *sp = __builtin_frame_address(0);
+  __maps_track((char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STKSZ,
+               STKSZ);
+  for (;;) {
+    int sig;
+    if ((sig = __sig_getter(__sig.process, 0)))
+      __sig_generate(sig, SI_KERNEL);
+    Sleep(1);
+  }
+  return 0;
+}
+
 __attribute__((__constructor__(10))) textstartup void __sig_init(void) {
   if (!IsWindows())
     return;
   AddVectoredExceptionHandler(true, (void *)__sig_crash);
   SetConsoleCtrlHandler((void *)__sig_console, true);
+  CreateThread(0, STKSZ, __sig_worker, 0, kNtStackSizeParamIsAReservation, 0);
 }
 
 #endif /* __x86_64__ */

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,50 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sig.internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/strace.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/tls.h"
+#include "libc/fmt/internal.h"
 
-/**
- * Determines the blocked pending signals
- *
- * @param pending is where the bitset of pending signals is returned,
- *     which may not be null
- * @return 0 on success, or -1 w/ errno
- * @raise EFAULT if `pending` points to invalid memory
- * @asyncsignalsafe
- */
-int sigpending(sigset_t *pending) {
-  int rc;
-  if (!pending) {
-    rc = efault();
-  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    // 128 signals on NetBSD and FreeBSD, 64 on Linux, 32 on OpenBSD and XNU
-    uint64_t mem[2];
-    rc = sys_sigpending(mem, 8);
-    if (IsOpenbsd()) {
-      *pending = rc;
-    } else {
-      *pending = mem[0];
+textwindows char16_t *__itoa16(char16_t p[21], uint64_t x) {
+  char t;
+  size_t a, b, i = 0;
+  do {
+    p[i++] = x % 10 + '0';
+    x = x / 10;
+  } while (x > 0);
+  if (i) {
+    for (a = 0, b = i - 1; a < b; ++a, --b) {
+      t = p[a];
+      p[a] = p[b];
+      p[b] = t;
     }
-    if (IsXnu() || IsOpenbsd()) {
-      *pending &= 0xffffffff;
-    }
-    rc = 0;
-  } else if (IsWindows()) {
-    *pending = atomic_load_explicit(__sig.process, memory_order_acquire) |
-               atomic_load_explicit(&__get_tls()->tib_sigpending,
-                                    memory_order_acquire);
-    rc = 0;
-  } else {
-    rc = enosys();
   }
-  STRACE("sigpending([%s]) → %d% m", DescribeSigset(rc, pending), rc);
-  return rc;
+  return p + i;
 }

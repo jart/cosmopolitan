@@ -225,6 +225,10 @@ bool32 GetVolumeInformationByHandle(int64_t hFile,
                                     char16_t *opt_out_lpFileSystemNameBuffer,
                                     uint32_t nFileSystemNameSize);
 
+uint32_t SetFilePointer(intptr_t hFile, int32_t lDistanceToMove,
+                        long *opt_inout_lpDistanceToMoveHigh,
+                        uint32_t dwMoveMethod);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */

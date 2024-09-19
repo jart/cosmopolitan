@@ -125,8 +125,6 @@ TEST(handkill, thread2thread_async) {
 }
 
 TEST(handkill, process_async) {
-  if (IsWindows())
-    return;
   SPAWN(fork);
   shm->ready = true;
   while (!shm->got_signal)
@@ -142,8 +140,6 @@ TEST(handkill, process_async) {
 }
 
 TEST(handkill, process_pause) {
-  if (IsWindows())
-    return;
   SPAWN(fork);
   shm->ready = true;
   pause();
