@@ -17,25 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/sig.h"
-#include "libc/atomic.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
-#include "libc/fmt/internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
-#include "libc/limits.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/filemovemethod.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/pageflags.h"
-#include "libc/nt/files.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/runtime.h"
 #include "libc/thread/tls.h"
 
 struct Signals __sig;
@@ -66,66 +52,3 @@ void __sig_unblock(sigset_t m) {
     sys_sigprocmask(SIG_SETMASK, &m, 0);
   }
 }
-
-#ifdef __x86_64__
-
-textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid) {
-  char16_t *p = path;
-  *p++ = 'C';
-  *p++ = ':';
-  *p++ = '\\';
-  *p++ = 'v';
-  *p++ = 'a';
-  *p++ = 'r';
-  *p = 0;
-  CreateDirectory(path, 0);
-  *p++ = '\\';
-  *p++ = 's';
-  *p++ = 'i';
-  *p++ = 'g';
-  *p = 0;
-  CreateDirectory(path, 0);
-  *p++ = '\\';
-  p = __itoa16(p, (pid & 0x000fff00) >> 8);
-  *p = 0;
-  CreateDirectory(path, 0);
-  *p++ = '\\';
-  p = __itoa16(p, pid);
-  *p++ = '.';
-  *p++ = 'p';
-  *p++ = 'i';
-  *p++ = 'd';
-  *p = 0;
-  return path;
-}
-
-textwindows static atomic_ulong *__sig_map_process_impl(int pid,
-                                                        int disposition) {
-  char16_t path[128];
-  intptr_t hand = CreateFile(__sig_process_path(path, pid),
-                             kNtGenericRead | kNtGenericWrite,
-                             kNtFileShareRead | kNtFileShareWrite, 0,
-                             disposition, kNtFileAttributeNormal, 0);
-  if (hand == -1)
-    return 0;
-  SetFilePointer(hand, 8, 0, kNtFileBegin);
-  SetEndOfFile(hand);
-  intptr_t map = CreateFileMapping(hand, 0, kNtPageReadwrite, 0, 8, 0);
-  if (!map) {
-    CloseHandle(hand);
-    return 0;
-  }
-  atomic_ulong *sigs = MapViewOfFileEx(map, kNtFileMapWrite, 0, 0, 8, 0);
-  CloseHandle(map);
-  CloseHandle(hand);
-  return sigs;
-}
-
-textwindows atomic_ulong *__sig_map_process(int pid, int disposition) {
-  int e = errno;
-  atomic_ulong *res = __sig_map_process_impl(pid, disposition);
-  errno = e;
-  return res;
-}
-
-#endif /* __x86_64__ */
