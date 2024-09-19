@@ -17,21 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/nt/struct/iovec.h"
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/vga/vga.internal.h"
 #ifdef __x86_64__
 
 #define _MSG_OOB      1
 #define _MSG_PEEK     2
 #define _MSG_WAITALL  8
 #define _MSG_DONTWAIT 64
+
+__msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
 
 struct RecvArgs {
   const struct iovec *iov;
@@ -54,13 +58,24 @@ textwindows ssize_t sys_recv_nt(int fd, const struct iovec *iov, size_t iovlen,
     return einval();
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
-  sigset_t m = __sig_block();
-  bool nonblock = !(flags & _MSG_WAITALL) &&
-                  ((f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT));
-  flags &= ~_MSG_DONTWAIT;
-  rc = __winsock_block(f->handle, flags, nonblock, f->rcvtimeo, m,
-                       sys_recv_nt_start, &(struct RecvArgs){iov, iovlen});
-  __sig_unblock(m);
+  sigset_t waitmask = __sig_block();
+
+  // "Be aware that if the underlying transport provider does not
+  //  support MSG_WAITALL, or if the socket is in a non-blocking mode,
+  //  then this call will fail with WSAEOPNOTSUPP. Also, if MSG_WAITALL
+  //  is specified along with MSG_OOB, MSG_PEEK, or MSG_PARTIAL, then
+  //  this call will fail with WSAEOPNOTSUPP."
+  //                             —Quoth MSDN § WSARecv
+  if (flags & _MSG_WAITALL)
+    __imp_ioctlsocket(f->handle, FIONBIO, (uint32_t[]){0});
+
+  rc = __winsock_block(f->handle, flags & ~_MSG_DONTWAIT,
+                       (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT),
+                       f->rcvtimeo, waitmask, sys_recv_nt_start,
+                       &(struct RecvArgs){iov, iovlen});
+
+  __sig_unblock(waitmask);
+
   return rc;
 }
 

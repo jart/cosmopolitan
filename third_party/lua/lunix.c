@@ -3439,12 +3439,14 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "SHUT_RDWR", SHUT_RDWR);
 
   // recvfrom() / sendto() flags
-  LuaSetIntField(L, "MSG_WAITALL", MSG_WAITALL);
-  LuaSetIntField(L, "MSG_DONTROUTE", MSG_DONTROUTE);
-  LuaSetIntField(L, "MSG_PEEK", MSG_PEEK);
   LuaSetIntField(L, "MSG_OOB", MSG_OOB);
+  LuaSetIntField(L, "MSG_PEEK", MSG_PEEK);
+  LuaSetIntField(L, "MSG_DONTROUTE", MSG_DONTROUTE);
+  LuaSetIntField(L, "MSG_DONTWAIT", MSG_DONTWAIT);
   LuaSetIntField(L, "MSG_NOSIGNAL", MSG_NOSIGNAL);
-  LuaSetIntField(L, "MSG_MORE", MSG_MORE);
+  LuaSetIntField(L, "MSG_WAITALL", MSG_WAITALL);
+  LuaSetIntField(L, "MSG_TRUNC", MSG_TRUNC);
+  LuaSetIntField(L, "MSG_CTRUNC", MSG_CTRUNC);
 
   // readdir() type
   LuaSetIntField(L, "DT_UNKNOWN", DT_UNKNOWN);

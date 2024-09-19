@@ -21,6 +21,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -95,7 +96,11 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   }
 
   END_CANCELATION_POINT;
-  DATATRACE("recvfrom(%d, [%#.*hhs%s], %'zu, %#x) → %'ld% lm", fd,
-            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
+  DATATRACE(
+      "recvfrom(%d, [%#.*hhs%s], %'zu, %s, %s) → %'ld% lm", fd,
+      MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, DescribeMsg(flags),
+      DescribeSockaddr(opt_out_srcaddr,
+                       opt_inout_srcaddrsize ? *opt_inout_srcaddrsize : 0),
+      rc);
   return rc;
 }

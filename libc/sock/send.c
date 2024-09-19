@@ -21,6 +21,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/sock/internal.h"
@@ -78,7 +79,7 @@ ssize_t send(int fd, const void *buf, size_t size, int flags) {
   }
 
   END_CANCELATION_POINT;
-  DATATRACE("send(%d, %#.*hhs%s, %'zu, %#x) → %'ld% lm", fd,
-            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
+  DATATRACE("send(%d, %#.*hhs%s, %'zu, %s) → %'ld% lm", fd, MAX(0, MIN(40, rc)),
+            buf, rc > 40 ? "..." : "", size, DescribeMsg(flags), rc);
   return rc;
 }

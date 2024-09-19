@@ -17,20 +17,26 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/fds.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
 
 #define _MSG_OOB       1
 #define _MSG_DONTROUTE 4
 #define _MSG_DONTWAIT  64
+#define _MSG_NOSIGNAL  0x10000000
 
 struct SendToArgs {
   const struct iovec *iov;
@@ -52,17 +58,25 @@ static textwindows int sys_sendto_nt_start(int64_t handle,
 textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
                                   size_t iovlen, uint32_t flags,
                                   void *opt_in_addr, uint32_t in_addrsize) {
-  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_DONTROUTE))
+  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_DONTROUTE | _MSG_NOSIGNAL))
     return einval();
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
-  sigset_t m = __sig_block();
-  bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
-  flags &= ~_MSG_DONTWAIT;
-  rc = __winsock_block(
-      f->handle, flags, -nonblock, f->sndtimeo, m, sys_sendto_nt_start,
-      &(struct SendToArgs){iov, iovlen, opt_in_addr, in_addrsize});
-  __sig_unblock(m);
+  sigset_t waitmask = __sig_block();
+
+  rc = __winsock_block(f->handle, flags & ~(_MSG_DONTWAIT | _MSG_NOSIGNAL),
+                       false, f->sndtimeo, waitmask, sys_sendto_nt_start,
+                       &(struct SendToArgs){iov, iovlen,  //
+                                            opt_in_addr, in_addrsize});
+
+  __sig_unblock(waitmask);
+
+  if (rc == -1 && errno == WSAESHUTDOWN) {  // ESHUTDOWN
+    errno = kNtErrorBrokenPipe;             // EPIPE
+    if (!(flags & _MSG_NOSIGNAL))
+      __sig_raise(SIGPIPE, SI_KERNEL);
+  }
+
   return rc;
 }
 

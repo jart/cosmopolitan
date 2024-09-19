@@ -8,8 +8,8 @@ struct thatispacked DescribeFlags {
   const char *name;
 };
 
-const char *_DescribeFlags(char *, size_t, const struct DescribeFlags *,
-                           size_t, const char *, unsigned) libcesque;
+const char *_DescribeFlags(char *, size_t, const struct DescribeFlags *, size_t,
+                           const char *, unsigned) libcesque;
 
 const char *_DescribeArchPrctlCode(char[12], int) libcesque;
 const char *_DescribeCancelState(char[12], int, int *) libcesque;
@@ -27,6 +27,7 @@ const char *_DescribeItimer(char[12], int) libcesque;
 const char *_DescribeMapFlags(char[64], int) libcesque;
 const char *_DescribeMapping(char[8], int, int) libcesque;
 const char *_DescribeMremapFlags(char[30], int) libcesque;
+const char *_DescribeMsg(char[16], int) libcesque;
 const char *_DescribeMsyncFlags(char[48], int) libcesque;
 const char *_DescribeNtConsoleInFlags(char[256], uint32_t) libcesque;
 const char *_DescribeNtConsoleOutFlags(char[128], uint32_t) libcesque;
@@ -84,6 +85,7 @@ const char *_DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeMapFlags(x)          _DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        _DescribeMapping(alloca(8), x, y)
 #define DescribeMremapFlags(x)       _DescribeMremapFlags(alloca(30), x)
+#define DescribeMsg(x)               _DescribeMsg(alloca(16), x)
 #define DescribeMsyncFlags(x)        _DescribeMsyncFlags(alloca(48), x)
 #define DescribeNtConsoleInFlags(x)  _DescribeNtConsoleInFlags(alloca(256), x)
 #define DescribeNtConsoleOutFlags(x) _DescribeNtConsoleOutFlags(alloca(128), x)

@@ -25,6 +25,7 @@
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
+#include "libc/dce.h"
 #include "third_party/nsync/testing/time_extra.h"
 
 /* Example use of CV.wait():  A priority queue of strings whose

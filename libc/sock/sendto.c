@@ -22,6 +22,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/sock/internal.h"
@@ -88,8 +89,8 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
   }
 
   END_CANCELATION_POINT;
-  DATATRACE("sendto(%d, %#.*hhs%s, %'zu, %#x, %p, %u) → %'ld% lm", fd,
-            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags,
-            opt_addr, addrsize, rc);
+  DATATRACE("sendto(%d, %#.*hhs%s, %'zu, %s, %s) → %'ld% lm", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size,
+            DescribeMsg(flags), DescribeSockaddr(opt_addr, addrsize), rc);
   return rc;
 }

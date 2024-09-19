@@ -1138,32 +1138,12 @@ syscon	reboot	RB_NOSYNC				0x20000000		0x20000000		4			4			4			4			4			0x2000000
 syscon	msg	MSG_OOB					1			1			1			1			1			1			1			1			# consensus
 syscon	msg	MSG_PEEK				2			2			2			2			2			2			2			2			# consensus
 syscon	msg	MSG_DONTROUTE				4			4			4			4			4			4			4			4			# consensus
-syscon	msg	MSG_FASTOPEN				0x20000000		0x20000000		0			0			0			0			0			0			# TODO
-syscon	msg	MSG_WAITALL				0x0100			0x0100			0x40			0x40			0x40			0x40			0x40			8			# bsd consensus
-syscon	msg	MSG_MORE				0x8000			0x8000			0			0			0			0			0			0			# send/sendto: manual TCP_CORK hbasically
-syscon	msg	MSG_NOSIGNAL				0x4000			0x4000			0x80000			0x80000			0x020000		0x0400			0x0400			0			# send/sendto: don't SIGPIPE on EOF
 syscon	msg	MSG_DONTWAIT				0x40			0x40			0x80			0x80			0x80			0x80			0x80			0x40			# send/sendto: manual non-blocking
+syscon	msg	MSG_WAITALL				0x0100			0x0100			0x40			0x40			0x40			0x40			0x40			8			# bsd consensus
+syscon	msg	MSG_NOSIGNAL				0x4000			0x4000			0x80000			0x80000			0x020000		0x0400			0x0400			0x10000000		# send/sendto: don't raise sigpipe on local shutdown
 syscon	msg	MSG_TRUNC				0x20			0x20			0x10			0x10			0x10			0x10			0x10			0x0100			# bsd consensus
 syscon	msg	MSG_CTRUNC				8			8			0x20			0x20			0x20			0x20			0x20			0x0200			# bsd consensus
-syscon	msg	MSG_ERRQUEUE				0x2000			0x2000			0			0			0			0			0			0x1000			# bsd consensus
-syscon	msg	MSG_NOERROR				0x1000			0x1000			0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
-syscon	msg	MSG_EOR					0x80			0x80			8			8			8			8			8			0			# bsd consensus
-syscon	msg	MSG_CMSG_CLOEXEC			0x40000000		0x40000000		0			0			0x040000		0x0800			0x0800			0
-syscon	msg	MSG_WAITFORONE				0x010000		0x010000		0			0			0x080000		0			0x2000			0
-syscon	msg	MSG_BATCH				0x040000		0x040000		0			0			0			0			0			0
-syscon	msg	MSG_CONFIRM				0x0800			0x0800			0			0			0			0			0			0
-syscon	msg	MSG_EXCEPT				0x2000			0x2000			0			0			0			0			0			0
-syscon	msg	MSG_FIN					0x0200			0x0200			0x0100			0x0100			0x0100			0			0			0
-syscon	msg	MSG_EOF					0x0200			0x0200			0x0100			0x0100			0x0100			0			0			0
-syscon	msg	MSG_INFO				12			12			0			0			0			0			0			0
-syscon	msg	MSG_PARITY_ERROR			9			9			0			0			0			0			0			0
-syscon	msg	MSG_PROXY				0x10			0x10			0			0			0			0			0			0
-syscon	msg	MSG_RST					0x1000			0x1000			0			0			0			0			0			0
-syscon	msg	MSG_STAT				11			11			0			0			0			0			0			0
-syscon	msg	MSG_SYN					0x0400			0x0400			0			0			0			0			0			0
-syscon	msg	MSG_BCAST				0			0			0			0			0			0x100			0x100			0
-syscon	msg	MSG_MCAST				0			0			0			0			0			0x200			0x200			0
-syscon	msg	MSG_NOTIFICATION			0x8000			0x8000			0			0			0x2000			0			0x4000			0
+syscon	msg	MSG_FASTOPEN				0x20000000		0x20000000		-1			-1			-1			-1			-1			-1			#
 
 #	getpriority() / setpriority() magnums (a.k.a. nice)
 #

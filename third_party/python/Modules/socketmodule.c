@@ -6790,24 +6790,9 @@ PyInit__socket(void)
     PyModule_AddIntMacro(m, MSG_TRUNC);
     PyModule_AddIntMacro(m, MSG_CTRUNC);
     PyModule_AddIntMacro(m, MSG_WAITALL);
-    if (MSG_DONTWAIT) PyModule_AddIntMacro(m, MSG_DONTWAIT);
-    if (MSG_EOR) PyModule_AddIntMacro(m, MSG_EOR);
-    if (MSG_NOSIGNAL) PyModule_AddIntMacro(m, MSG_NOSIGNAL);
-    if (MSG_BCAST) PyModule_AddIntMacro(m, MSG_BCAST);
-    if (MSG_MCAST) PyModule_AddIntMacro(m, MSG_MCAST);
-    if (MSG_CMSG_CLOEXEC) PyModule_AddIntMacro(m, MSG_CMSG_CLOEXEC);
-    if (MSG_ERRQUEUE) PyModule_AddIntMacro(m, MSG_ERRQUEUE);
-    if (MSG_CONFIRM) PyModule_AddIntMacro(m, MSG_CONFIRM);
-    if (MSG_MORE) PyModule_AddIntMacro(m, MSG_MORE);
-    if (MSG_NOTIFICATION) PyModule_AddIntMacro(m, MSG_NOTIFICATION);
-    if (MSG_EOF) PyModule_AddIntMacro(m, MSG_EOF);
-    if (MSG_FASTOPEN) PyModule_AddIntMacro(m, MSG_FASTOPEN);
-#ifdef MSG_BTAG
-    if (MSG_BTAG) PyModule_AddIntMacro(m, MSG_BTAG);
-#endif
-#ifdef MSG_ETAG
-    if (MSG_ETAG) PyModule_AddIntMacro(m, MSG_ETAG);
-#endif
+    PyModule_AddIntMacro(m, MSG_DONTWAIT);
+    PyModule_AddIntMacro(m, MSG_NOSIGNAL);
+    if (MSG_FASTOPEN != -1) PyModule_AddIntMacro(m, MSG_FASTOPEN);
 
     /* Protocol level and numbers, usable for [gs]etsockopt */
     PyModule_AddIntMacro(m, SOL_SOCKET);
