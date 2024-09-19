@@ -27,6 +27,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/console.h"
+#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/enum/processaccess.h"
 #include "libc/nt/errors.h"
@@ -75,7 +76,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // attempt to signal via /var/sig shared memory file
   if (pid > 0 && sig != 9) {
     atomic_ulong *sigproc;
-    if ((sigproc = __sig_map_process(pid))) {
+    if ((sigproc = __sig_map_process(pid, kNtOpenExisting))) {
       if (sig > 0)
         atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
                                  memory_order_release);

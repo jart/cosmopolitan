@@ -99,12 +99,13 @@ textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid) {
   return path;
 }
 
-textwindows static atomic_ulong *__sig_map_process_impl(int pid) {
+textwindows static atomic_ulong *__sig_map_process_impl(int pid,
+                                                        int disposition) {
   char16_t path[128];
   intptr_t hand = CreateFile(__sig_process_path(path, pid),
                              kNtGenericRead | kNtGenericWrite,
                              kNtFileShareRead | kNtFileShareWrite, 0,
-                             kNtOpenAlways, kNtFileAttributeNormal, 0);
+                             disposition, kNtFileAttributeNormal, 0);
   if (hand == -1)
     return 0;
   SetFilePointer(hand, 8, 0, kNtFileBegin);
@@ -120,9 +121,9 @@ textwindows static atomic_ulong *__sig_map_process_impl(int pid) {
   return sigs;
 }
 
-textwindows atomic_ulong *__sig_map_process(int pid) {
+textwindows atomic_ulong *__sig_map_process(int pid, int disposition) {
   int e = errno;
-  atomic_ulong *res = __sig_map_process_impl(pid);
+  atomic_ulong *res = __sig_map_process_impl(pid, disposition);
   errno = e;
   return res;
 }
