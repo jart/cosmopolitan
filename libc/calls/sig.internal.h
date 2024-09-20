@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_SIGNALS_INTERNAL_H_
 #include "libc/atomic.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/thread/posixthread.internal.h"
 
 #define SIG_HANDLED_NO_RESTART 1
@@ -28,8 +29,8 @@ void __sig_delete(int);
 void __sig_generate(int, int);
 void __sig_init(void);
 
-char16_t *__sig_process_path(char16_t *, uint32_t);
-atomic_ulong *__sig_map_process(int, int);
+__msabi char16_t *__sig_process_path(char16_t *, uint32_t, int);
+__msabi atomic_ulong *__sig_map_process(int, int);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_SIGNALS_INTERNAL_H_ */

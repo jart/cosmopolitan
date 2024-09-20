@@ -59,11 +59,22 @@ textwindows int sys_kill_nt(int pid, int sig) {
   if (pid <= 0 || pid == getpid()) {
     if (sig) {
       if (pid <= 0) {
+        // if pid is 0 or -1 then kill the processes beneath us too.
+        // this isn't entirely right but it's closer to being right.
+        // having this behavior is helpful for servers like redbean.
         struct Dll *e;
         BLOCK_SIGNALS;
         __proc_lock();
-        for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e))
-          TerminateProcess(PROC_CONTAINER(e)->handle, sig);
+        for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e)) {
+          atomic_ulong *sigproc;
+          struct Proc *pr = PROC_CONTAINER(e);
+          if (sig != 9 && (sigproc = __sig_map_process(pid, kNtOpenExisting))) {
+            atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
+                                     memory_order_release);
+          } else {
+            TerminateProcess(pr->handle, sig);
+          }
+        }
         __proc_unlock();
         ALLOW_SIGNALS;
       }
@@ -73,7 +84,25 @@ textwindows int sys_kill_nt(int pid, int sig) {
     }
   }
 
-  // attempt to signal via /var/sig shared memory file
+  // find existing handle we own for process
+  //
+  // this step should come first to verify process existence. this is
+  // because there's no guarantee that just because the shared memory
+  // file exists, the process actually exists.
+  int64_t handle, closeme = 0;
+  if (!(handle = __proc_handle(pid))) {
+    if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
+      closeme = handle;
+    } else {
+      goto OnError;
+    }
+  }
+
+  // attempt to signal via shared memory file
+  //
+  // now that we know the process exists, if it has a shared memory file
+  // then we can be reasonably certain it's a cosmo process which should
+  // be trusted to deliver its signal, unless it's a nine exterminations
   if (pid > 0 && sig != 9) {
     atomic_ulong *sigproc;
     if ((sigproc = __sig_map_process(pid, kNtOpenExisting))) {
@@ -81,17 +110,9 @@ textwindows int sys_kill_nt(int pid, int sig) {
         atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
                                  memory_order_release);
       UnmapViewOfFile(sigproc);
+      if (closeme)
+        CloseHandle(closeme);
       return 0;
-    }
-  }
-
-  // find existing handle we own for process
-  int64_t handle, closeme = 0;
-  if (!(handle = __proc_handle(pid))) {
-    if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
-      closeme = handle;
-    } else {
-      goto OnError;
     }
   }
 

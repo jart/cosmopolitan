@@ -29,6 +29,17 @@
  * The impact of this action can be terminating the process, or
  * interrupting it to request something happen.
  *
+ * On Windows, signals are delivered between processes using shared
+ * memory files stored in C:\ProgramData\cosmo\sig\x\y.pid which hold
+ * the process signal mask. Any process that can access these files can
+ * signal a cosmo process. The targeting process will then notice that a
+ * signal has been added and delivers to any thread as soon as possible.
+ *
+ * On Windows, the concept of a process group isn't fully implemented.
+ * Saying `kill(0, sig)` will deliver `sig` to all direct descendent
+ * processes. Saying `kill(-pid, sig)` will be the same as saying
+ * `kill(pid, sig)`.
+ *
  * @param pid can be:
  *      >0 signals one process by id
  *      =0 signals all processes in current process group

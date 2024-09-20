@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 #include "libc/ctype.h"
 #include "libc/errno.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 
 #define CONSUME_SPACES(t, s, c) \
@@ -48,6 +49,6 @@
 int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
               va_list);
 int __fmt(void *, void *, const char *, va_list, int *);
-char16_t *__itoa16(char16_t[21], uint64_t);
+__msabi char16_t *__itoa16(char16_t[21], uint64_t);
 
 #endif /* COSMOPOLITAN_LIBC_FMT_STRTOL_H_ */

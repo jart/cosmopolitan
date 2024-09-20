@@ -596,6 +596,9 @@ static textwindows int __sig_console_sig(uint32_t dwCtrlType) {
 }
 
 __msabi textwindows dontinstrument bool32 __sig_console(uint32_t dwCtrlType) {
+  // win32 launches a thread to deliver ctrl-c and ctrl-break when typed
+  // it only happens when kNtEnableProcessedInput is in play on console.
+  // otherwise we need to wait until read-nt.c discovers that keystroke.
   struct CosmoTib tls;
   __bootstrap_tls(&tls, __builtin_frame_address(0));
   __sig_generate(__sig_console_sig(dwCtrlType), SI_KERNEL);
@@ -616,7 +619,12 @@ textwindows int __sig_check(void) {
   }
 }
 
-// delivers signals from other processes asynchronously
+// background thread for delivering inter-process signals asynchronously
+// this checks for undelivered process-wide signals, once per scheduling
+// quantum, which on windows should be every ~15ms or so, unless somehow
+// the process was tuned to have more fine-grained event timing. we want
+// signals to happen faster when possible; that happens when cancelation
+// points, e.g. read need to wait on i/o; they too check for new signals
 textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
   struct CosmoTib tls;
   __bootstrap_tls(&tls, __builtin_frame_address(0));
@@ -624,9 +632,16 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
   __maps_track((char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STKSZ,
                STKSZ);
   for (;;) {
-    int sig;
-    if ((sig = __sig_getter(__sig.process, 0)))
+    // dequeue all pending signals and fire them off. if there's no
+    // thread that can handle them then __sig_generate will requeue
+    // those signals back to __sig.process; hence the need for xchg
+    unsigned long sigs =
+        atomic_exchange_explicit(__sig.process, 0, memory_order_acq_rel);
+    while (sigs) {
+      int sig = bsfl(sigs) + 1;
+      sigs &= ~(1ull << (sig - 1));
       __sig_generate(sig, SI_KERNEL);
+    }
     Sleep(1);
   }
   return 0;

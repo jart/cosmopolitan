@@ -323,6 +323,7 @@ textwindows int64_t __proc_search(int pid) {
   int64_t handle = 0;
   BLOCK_SIGNALS;
   __proc_lock();
+  // TODO(jart): we should increment a reference count when returning
   for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e)) {
     if (pid == PROC_CONTAINER(e)->pid) {
       handle = PROC_CONTAINER(e)->handle;

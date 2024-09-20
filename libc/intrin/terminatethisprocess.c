@@ -27,7 +27,9 @@
 #include "libc/runtime/internal.h"
 #ifdef __x86_64__
 
+__msabi extern typeof(DeleteFile) *const __imp_DeleteFileW;
 __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
+__msabi extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile;
 
 /**
  * Terminates the calling process and all of its threads.
@@ -40,8 +42,8 @@ textwindows dontinstrument void TerminateThisProcess(uint32_t dwWaitStatus) {
   atomic_ulong fake = 0;
   real = __sig.process;
   __sig.process = &fake;
-  UnmapViewOfFile(real);
-  DeleteFile(__sig_process_path(path, __pid));
+  __imp_UnmapViewOfFile(real);
+  __imp_DeleteFileW(__sig_process_path(path, __pid, false));
 
   // "When a process terminates itself, TerminateProcess stops execution
   // of the calling thread and does not return." -Quoth MSDN

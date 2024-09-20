@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/internal.h"
 
-textwindows char16_t *__itoa16(char16_t p[21], uint64_t x) {
+__msabi textwindows char16_t *__itoa16(char16_t p[21], uint64_t x) {
   char t;
   size_t a, b, i = 0;
   do {

@@ -465,7 +465,6 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     __morph_tls();
     __tls_enabled = true;
     // the child's pending signals is initially empty
-    atomic_store_explicit(__sig.process, 0, memory_order_relaxed);
     atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
     // re-apply code morphing for function tracing
     if (ftrace_stackdigs)

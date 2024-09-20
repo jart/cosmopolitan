@@ -21,6 +21,7 @@
 #include "libc/fmt/internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/filemovemethod.h"
@@ -29,28 +30,60 @@
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
 #ifdef __x86_64__
 
-textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid) {
+// cut back on code size and avoid setting errno
+// this code is a mandatory dependency of winmain
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
+__msabi extern typeof(CreateDirectory) *const __imp_CreateDirectoryW;
+__msabi extern typeof(CreateFile) *const __imp_CreateFileW;
+__msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
+__msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
+__msabi extern typeof(SetEndOfFile) *const __imp_SetEndOfFile;
+__msabi extern typeof(SetFilePointer) *const __imp_SetFilePointer;
+
+__msabi textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid,
+                                                 int create_directories) {
   char16_t *p = path;
-  *p++ = 'C';
+  *p++ = 'C';  // C:\ProgramData\cosmo\sig\x\y.pid
   *p++ = ':';
   *p++ = '\\';
-  *p++ = 'v';
-  *p++ = 'a';
+  *p++ = 'P';
   *p++ = 'r';
+  *p++ = 'o';
+  *p++ = 'g';
+  *p++ = 'r';
+  *p++ = 'a';
+  *p++ = 'm';
+  *p++ = 'D';
+  *p++ = 'a';
+  *p++ = 't';
+  *p++ = 'a';
   *p = 0;
-  CreateDirectory(path, 0);
+  if (create_directories)
+    __imp_CreateDirectoryW(path, 0);
+  *p++ = '\\';
+  *p++ = 'c';
+  *p++ = 'o';
+  *p++ = 's';
+  *p++ = 'm';
+  *p++ = 'o';
+  *p = 0;
+  if (create_directories)
+    __imp_CreateDirectoryW(path, 0);
   *p++ = '\\';
   *p++ = 's';
   *p++ = 'i';
   *p++ = 'g';
   *p = 0;
-  CreateDirectory(path, 0);
+  if (create_directories)
+    __imp_CreateDirectoryW(path, 0);
   *p++ = '\\';
-  p = __itoa16(p, (pid & 0x000fff00) >> 8);
+  p = __itoa16(p, (pid & 0x000ff800) >> 11);
   *p = 0;
-  CreateDirectory(path, 0);
+  if (create_directories)
+    __imp_CreateDirectoryW(path, 0);
   *p++ = '\\';
   p = __itoa16(p, pid);
   *p++ = '.';
@@ -61,33 +94,25 @@ textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid) {
   return path;
 }
 
-textwindows static atomic_ulong *__sig_map_process_impl(int pid,
-                                                        int disposition) {
+__msabi textwindows atomic_ulong *__sig_map_process(int pid, int disposition) {
   char16_t path[128];
-  intptr_t hand = CreateFile(__sig_process_path(path, pid),
-                             kNtGenericRead | kNtGenericWrite,
-                             kNtFileShareRead | kNtFileShareWrite, 0,
-                             disposition, kNtFileAttributeNormal, 0);
+  __sig_process_path(path, pid, disposition == kNtOpenAlways);
+  intptr_t hand = __imp_CreateFileW(path, kNtGenericRead | kNtGenericWrite,
+                                    kNtFileShareRead | kNtFileShareWrite, 0,
+                                    disposition, kNtFileAttributeNormal, 0);
   if (hand == -1)
     return 0;
-  SetFilePointer(hand, 8, 0, kNtFileBegin);
-  SetEndOfFile(hand);
-  intptr_t map = CreateFileMapping(hand, 0, kNtPageReadwrite, 0, 8, 0);
+  __imp_SetFilePointer(hand, 8, 0, kNtFileBegin);
+  __imp_SetEndOfFile(hand);
+  intptr_t map = __imp_CreateFileMappingW(hand, 0, kNtPageReadwrite, 0, 8, 0);
   if (!map) {
-    CloseHandle(hand);
+    __imp_CloseHandle(hand);
     return 0;
   }
-  atomic_ulong *sigs = MapViewOfFileEx(map, kNtFileMapWrite, 0, 0, 8, 0);
-  CloseHandle(map);
-  CloseHandle(hand);
+  atomic_ulong *sigs = __imp_MapViewOfFileEx(map, kNtFileMapWrite, 0, 0, 8, 0);
+  __imp_CloseHandle(map);
+  __imp_CloseHandle(hand);
   return sigs;
-}
-
-textwindows atomic_ulong *__sig_map_process(int pid, int disposition) {
-  int e = errno;
-  atomic_ulong *res = __sig_map_process_impl(pid, disposition);
-  errno = e;
-  return res;
 }
 
 #endif /* __x86_64__ */
