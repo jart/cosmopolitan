@@ -29,6 +29,7 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 #ifdef __x86_64__
@@ -42,11 +43,16 @@ __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
 __msabi extern typeof(SetEndOfFile) *const __imp_SetEndOfFile;
 __msabi extern typeof(SetFilePointer) *const __imp_SetFilePointer;
+__msabi extern typeof(GetEnvironmentVariable)
+    *const __imp_GetEnvironmentVariableW;
 
-__msabi textwindows char16_t *__sig_process_path(char16_t *path, uint32_t pid,
-                                                 int create_directories) {
+// Generates C:\ProgramData\cosmo\sig\x\y.pid like path
+__msabi textwindows dontinstrument char16_t *__sig_process_path(
+    char16_t *path, uint32_t pid, int create_directories) {
+  char16_t buf[3];
   char16_t *p = path;
-  *p++ = 'C';  // C:\ProgramData\cosmo\sig\x\y.pid
+  uint32_t vlen = __imp_GetEnvironmentVariableW(u"SYSTEMDRIVE", buf, 3);
+  *p++ = vlen == 2 ? buf[0] : 'C';
   *p++ = ':';
   *p++ = '\\';
   *p++ = 'P';

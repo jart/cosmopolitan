@@ -25,6 +25,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -135,7 +136,24 @@ static textwindows wontreturn void __sig_terminate(int sig) {
   TerminateThisProcess(sig);
 }
 
-static textwindows bool __sig_start(struct PosixThread *pt, int sig,
+textwindows static void __sig_wake(struct PosixThread *pt, int sig) {
+  atomic_int *blocker;
+  blocker = atomic_load_explicit(&pt->pt_blocker, memory_order_acquire);
+  if (!blocker)
+    return;
+  // threads can create semaphores on an as-needed basis
+  if (blocker == PT_BLOCKER_EVENT) {
+    STRACE("%G set %d's event object", sig, _pthread_tid(pt));
+    SetEvent(pt->pt_event);
+    return;
+  }
+  // all other blocking ops that aren't overlap should use futexes
+  // we force restartable futexes to churn by waking w/o releasing
+  STRACE("%G waking %d's futex", sig, _pthread_tid(pt));
+  WakeByAddressSingle(blocker);
+}
+
+textwindows static bool __sig_start(struct PosixThread *pt, int sig,
                                     unsigned *rva, unsigned *flags) {
   *rva = __sighandrvas[sig];
   *flags = __sighandflags[sig];
@@ -149,6 +167,7 @@ static textwindows bool __sig_start(struct PosixThread *pt, int sig,
     STRACE("enqueing %G on %d", sig, _pthread_tid(pt));
     atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
                              memory_order_relaxed);
+    __sig_wake(pt, sig);
     return false;
   }
   if (*rva == (intptr_t)SIG_DFL) {
@@ -158,7 +177,7 @@ static textwindows bool __sig_start(struct PosixThread *pt, int sig,
   return true;
 }
 
-static textwindows sigaction_f __sig_handler(unsigned rva) {
+textwindows static sigaction_f __sig_handler(unsigned rva) {
   atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
   return (sigaction_f)(__executable_start + rva);
 }
@@ -228,34 +247,15 @@ textwindows int __sig_relay(int sig, int sic, sigset_t waitmask) {
   return handler_was_called;
 }
 
-// cancels blocking operations being performed by signaled thread
-textwindows void __sig_cancel(struct PosixThread *pt, int sig, unsigned flags) {
-  atomic_int *blocker;
-  blocker = atomic_load_explicit(&pt->pt_blocker, memory_order_acquire);
-  if (!blocker) {
-    STRACE("%G sent to %d asynchronously", sig, _pthread_tid(pt));
-    return;
-  }
-  // threads can create semaphores on an as-needed basis
-  if (blocker == PT_BLOCKER_EVENT) {
-    STRACE("%G set %d's event object", sig, _pthread_tid(pt));
-    SetEvent(pt->pt_event);
-    return;
-  }
-  // all other blocking ops that aren't overlap should use futexes
-  // we force restartable futexes to churn by waking w/o releasing
-  STRACE("%G waking %d's futex", sig, _pthread_tid(pt));
-  WakeByAddressSingle(blocker);
-}
-
 // the user's signal handler callback is wrapped with this trampoline
 static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
   int sig = sf->si.si_signo;
   struct CosmoTib *tib = __get_tls();
   struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+  atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
   for (;;) {
 
-    // update the signal mask in preparation for signal handller
+    // update the signal mask in preparation for signal handler
     sigset_t blocksigs = __sighandmask[sig];
     if (!(sf->flags & SA_NODEFER))
       blocksigs |= 1ull << (sig - 1);
@@ -302,12 +302,16 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     return 0;
   }
 
-  // we can't preempt threads that masked sig or are blocked
-  if (atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
-      (1ull << (sig - 1))) {
+  // we can't preempt threads that masked sig or are blocked. we aso
+  // need to ensure we don't the target thread's stack if many signals
+  // need to be delivered at once. we also need to make sure two threads
+  // can't deadlock by killing each other at the same time.
+  if ((atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
+       (1ull << (sig - 1))) ||
+      atomic_exchange_explicit(&pt->pt_intoff, 1, memory_order_acquire)) {
     atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
                              memory_order_relaxed);
-    __sig_cancel(pt, sig, flags);
+    __sig_wake(pt, sig);
     return 0;
   }
 
@@ -321,17 +325,16 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   uintptr_t th = _pthread_syshand(pt);
   if (atomic_load_explicit(&pt->tib->tib_sigpending, memory_order_acquire) &
       (1ull << (sig - 1))) {
+    atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
     return 0;
   }
 
   // take control of thread
   // suspending the thread happens asynchronously
   // however getting the context blocks until it's frozen
-  static pthread_spinlock_t killer_lock;
-  pthread_spin_lock(&killer_lock);
   if (SuspendThread(th) == -1u) {
     STRACE("SuspendThread failed w/ %d", GetLastError());
-    pthread_spin_unlock(&killer_lock);
+    atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
     return ESRCH;
   }
   struct NtContext nc;
@@ -339,10 +342,9 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   if (!GetThreadContext(th, &nc)) {
     STRACE("GetThreadContext failed w/ %d", GetLastError());
     ResumeThread(th);
-    pthread_spin_unlock(&killer_lock);
+    atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
     return ESRCH;
   }
-  pthread_spin_unlock(&killer_lock);
 
   // we can't preempt threads that masked sig or are blocked
   // we can't preempt threads that are running in win32 code
@@ -354,7 +356,8 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
                              memory_order_relaxed);
     ResumeThread(th);
-    __sig_cancel(pt, sig, flags);
+    atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
+    __sig_wake(pt, sig);
     return 0;
   }
 
@@ -387,10 +390,11 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   nc.Rsp = sp;
   if (!SetThreadContext(th, &nc)) {
     STRACE("SetThreadContext failed w/ %d", GetLastError());
+    atomic_store_explicit(&pt->pt_intoff, 0, memory_order_release);
     return ESRCH;
   }
   ResumeThread(th);
-  __sig_cancel(pt, sig, flags);
+  __sig_wake(pt, sig);
   return 0;
 }
 
@@ -404,6 +408,7 @@ textwindows int __sig_kill(struct PosixThread *pt, int sig, int sic) {
 }
 
 // sends signal to any other thread
+// this should only be called by non-posix threads
 textwindows void __sig_generate(int sig, int sic) {
   struct Dll *e;
   struct PosixThread *pt, *mark = 0;
@@ -450,6 +455,7 @@ textwindows void __sig_generate(int sig, int sic) {
   }
   _pthread_unlock();
   if (mark) {
+    // no lock needed since current thread is nameless and formless
     __sig_killer(mark, sig, sic);
     _pthread_unref(mark);
   } else {
@@ -610,13 +616,11 @@ __msabi textwindows dontinstrument bool32 __sig_console(uint32_t dwCtrlType) {
 // didn't have the SA_RESTART flag, and `2`, which means SA_RESTART
 // handlers were called (or `3` if both were the case).
 textwindows int __sig_check(void) {
-  int sig;
-  if ((sig = __sig_get(atomic_load_explicit(&__get_tls()->tib_sigmask,
-                                            memory_order_acquire)))) {
-    return __sig_raise(sig, SI_KERNEL);
-  } else {
-    return 0;
-  }
+  int sig, res = 0;
+  while ((sig = __sig_get(atomic_load_explicit(&__get_tls()->tib_sigmask,
+                                               memory_order_acquire))))
+    res |= __sig_raise(sig, SI_KERNEL);
+  return res;
 }
 
 // background thread for delivering inter-process signals asynchronously
@@ -642,7 +646,7 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
       sigs &= ~(1ull << (sig - 1));
       __sig_generate(sig, SI_KERNEL);
     }
-    Sleep(1);
+    Sleep(POLL_INTERVAL_MS);
   }
   return 0;
 }

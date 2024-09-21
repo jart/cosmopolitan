@@ -53,8 +53,15 @@ int sigsuspend(const sigset_t *ignore) {
   } else {
     sigset_t waitmask = ignore ? *ignore : 0;
     if (IsWindows() || IsMetal()) {
+      // we don't strictly need to block signals, but it reduces signal
+      // delivery latency, by preventing other threads from delivering a
+      // signal asynchronously. it takes about ~5us to deliver a signal
+      // using SetEvent() whereas it takes ~30us to use SuspendThread(),
+      // GetThreadContext(), SetThreadContext(), and ResumeThread().
+      BLOCK_SIGNALS;
       while (!(rc = _park_norestart(-1u, waitmask)))
         donothing;
+      ALLOW_SIGNALS;
     } else {
       rc = sys_sigsuspend((uint64_t[2]){waitmask}, 8);
     }

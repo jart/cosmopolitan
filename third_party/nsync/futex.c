@@ -185,7 +185,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 		}
 		ok = WaitOnAddress (w, &expect, sizeof(int), nsync_time_64to32u (timespec_tomillis (wait)));
 		if (pt) {
-			/* __sig_cancel wakes our futex without changing `w` after enqueing signals */
+			/* __sig_wake wakes our futex without changing `w` after enqueing signals */
 			atomic_store_explicit (&pt->pt_blocker, 0, memory_order_release);
 			if (ok && atomic_load_explicit (w, memory_order_acquire) == expect && (sig = __sig_get (waitmask))) {
 				__sig_relay (sig, SI_KERNEL, waitmask);

@@ -182,7 +182,6 @@ static void free_waiters_populate (void) {
 	int n;
 	if (IsNetbsd ()) {
 		// netbsd needs a real file descriptor per semaphore
-		// tim cook wants us to use his lol central dispatch
 		n = 1;
 	} else {
 		n = __pagesize / sizeof(waiter);

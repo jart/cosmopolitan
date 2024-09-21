@@ -89,6 +89,7 @@ struct PosixThread {
   locale_t pt_locale;
   jmp_buf pt_exiter;
   pthread_attr_t pt_attr;
+  atomic_bool pt_intoff;
 };
 
 typedef void (*atfork_f)(void);

@@ -47,6 +47,9 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
     } else {  // SIG_SETMASK
       oldmask = atomic_exchange_explicit(mask, *neu, memory_order_acq_rel);
     }
+    if (_weaken(__sig_check)) {
+      _weaken(__sig_check)();
+    }
   } else {
     oldmask = atomic_load_explicit(mask, memory_order_acquire);
   }
@@ -54,10 +57,6 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
   // return old signal mask to caller
   if (old) {
     *old = oldmask;
-  }
-
-  if (_weaken(__sig_check)) {
-    _weaken(__sig_check)();
   }
 
   return 0;

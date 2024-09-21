@@ -43,7 +43,9 @@ errno_t pthread_kill(pthread_t thread, int sig) {
   int err = 0;
   struct PosixThread *pt;
   pt = (struct PosixThread *)thread;
-  if (!(1 <= sig && sig <= 64)) {
+  if (!thread) {
+    err = EFAULT;
+  } else if (!(1 <= sig && sig <= 64)) {
     err = EINVAL;
   } else if (thread == __get_tls()->tib_pthread) {
     err = raise(sig);  // XNU will EDEADLK it otherwise
@@ -62,9 +64,8 @@ errno_t pthread_kill(pthread_t thread, int sig) {
         errno = e;
       }
     }
-    if (err == ESRCH) {
+    if (err == ESRCH)
       err = 0;  // we already reported this
-    }
   }
   STRACE("pthread_kill(%d, %G) → %s", _pthread_tid(pt), sig,
          DescribeErrno(err));

@@ -40,7 +40,7 @@ static textwindows int sys_clock_nanosleep_nt_impl(int clock,
       return 0;
     msdelay = timespec_tomillis(timespec_sub(abs, now));
     msdelay = MIN(msdelay, -1u);
-    if (_park_norestart(msdelay, waitmask))
+    if (_park_norestart(msdelay, waitmask) == -1)
       return -1;
   }
 }

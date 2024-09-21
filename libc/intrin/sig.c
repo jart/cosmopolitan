@@ -44,9 +44,8 @@ void __sig_unblock(sigset_t m) {
   if (IsWindows() || IsMetal()) {
     if (__tls_enabled) {
       atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
-      if (_weaken(__sig_check)) {
+      if (_weaken(__sig_check))
         _weaken(__sig_check)();
-      }
     }
   } else {
     sys_sigprocmask(SIG_SETMASK, &m, 0);

@@ -23,18 +23,18 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int __sigcheck(sigset_t waitmask, bool restartable) {
-  int sig, handler_was_called;
+  int sig, handler_was_called = 0;
   if (_check_cancel() == -1)
     return -1;
-  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
-    handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+  while (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+    handler_was_called |= _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
     if (_check_cancel() == -1)
       return -1;
-    if (handler_was_called & SIG_HANDLED_NO_RESTART)
-      return eintr();
-    if (handler_was_called & SIG_HANDLED_SA_RESTART)
-      if (!restartable)
-        return eintr();
   }
+  if (handler_was_called & SIG_HANDLED_NO_RESTART)
+    return eintr();
+  if (handler_was_called & SIG_HANDLED_SA_RESTART)
+    if (!restartable)
+      return eintr();
   return 0;
 }

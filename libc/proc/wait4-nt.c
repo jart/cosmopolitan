@@ -167,7 +167,7 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
       }
       __proc_unlock();
       if (wi == 1) {
-        // __sig_cancel() woke our semaphore
+        // __sig_wake() woke our semaphore
         continue;
       } else {
         // neither posix or win32 define i/o error conditions for

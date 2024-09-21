@@ -246,6 +246,7 @@ static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
   if (g_fds.n)
     kprintf("\n");
   __printfds(g_fds.p, g_fds.n);
+  kprintf("\n");
   if (__argv)
     for (i = 0; i < __argc; ++i)
       kprintf("%s ", __argv[i]);
