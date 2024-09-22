@@ -150,6 +150,10 @@ o/$(MODE)/examples/picol.o: private				\
 		CPPFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/examples/nesemu1.o: private				\
+		CPPFLAGS +=					\
+			-O3
+
 o/$(MODE)/examples/picol.dbg:					\
 		$(EXAMPLES_DEPS)				\
 		o/$(MODE)/examples/picol.o			\

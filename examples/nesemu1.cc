@@ -13,7 +13,6 @@
 #include "dsp/tty/tty.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
@@ -36,20 +35,17 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/itimer.h"
-#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/w.h"
 #include "libc/thread/thread.h"
 #include "libc/time.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xsigaction.h"
 #include "libc/zip.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/libcxx/__atomic/atomic.h"
 #include "third_party/libcxx/vector"
 #include "tool/viz/lib/knobs.h"
 
@@ -124,15 +120,6 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 
-static const struct itimerval kNesFps = {
-    {0, 1. / FPS * 1e6},
-    {0, 1. / FPS * 1e6},
-};
-
-struct Frame {
-  char *p, *w, *mem;
-};
-
 struct Action {
   int code;
   int wait;
@@ -148,15 +135,13 @@ struct ZipGames {
   char** p;
 };
 
-static int frame_;
-static size_t vtsize_;
+static const struct timespec kNesFps = {0, 1. / FPS * 1e9};
+
 static bool artifacts_;
 static long tyn_, txn_;
-static struct Frame vf_[2];
 static const char* inputfn_;
 static struct Status status_;
 static volatile bool exited_;
-static volatile bool timeout_;
 static volatile bool resized_;
 static struct CosmoAudio* ca_;
 static struct TtyRgb* ttyrgb_;
@@ -165,13 +150,18 @@ static struct ZipGames zipgames_;
 static struct Action arrow_, button_;
 static struct SamplingSolution* ssy_;
 static struct SamplingSolution* ssx_;
-static unsigned char pixels_[3][DYN][DXN];
+static unsigned char (*pixels_)[3][DYN][DXN];
 static unsigned char palette_[3][64][512][3];
 static int joy_current_[2], joy_next_[2], joypos_[2];
 
 static int keyframes_ = 10;
 static enum TtyBlocksSelection blocks_ = kTtyBlocksUnicode;
 static enum TtyQuantizationAlgorithm quant_ = kTtyQuantXterm256;
+
+static struct timespec deadline_;
+static std::atomic<void*> pixels_ready_;
+static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int Clamp(int v) {
   return MAX(0, MIN(255, v));
@@ -232,18 +222,8 @@ void InitPalette(void) {
   }
 }
 
-static ssize_t Write(int fd, const void* p, size_t n) {
-  int rc;
-  sigset_t ss, oldss;
-  sigfillset(&ss);
-  sigprocmask(SIG_SETMASK, &ss, &oldss);
-  rc = write(fd, p, n);
-  sigprocmask(SIG_SETMASK, &oldss, 0);
-  return rc;
-}
-
 static void WriteString(const char* s) {
-  Write(STDOUT_FILENO, s, strlen(s));
+  write(STDOUT_FILENO, s, strlen(s));
 }
 
 void Exit(int rc) {
@@ -264,26 +244,8 @@ void OnCtrlC(void) {
   exited_ = true;
 }
 
-void OnTimer(void) {
-  timeout_ = true;
-}
-
 void OnResize(void) {
   resized_ = true;
-}
-
-void OnPiped(void) {
-  exited_ = true;
-}
-
-void OnSigChld(void) {
-  waitpid(-1, 0, WNOHANG);
-  cosmoaudio_close(ca_);
-  ca_ = 0;
-}
-
-void InitFrame(struct Frame* f) {
-  f->p = f->w = f->mem = (char*)realloc(f->mem, vtsize_);
 }
 
 long ChopAxis(long dn, long sn) {
@@ -308,11 +270,6 @@ void GetTermSize(void) {
   G = (unsigned char*)realloc(G, tyn_ * txn_);
   B = (unsigned char*)realloc(B, tyn_ * txn_);
   ttyrgb_ = (struct TtyRgb*)realloc(ttyrgb_, tyn_ * txn_ * 4);
-  vtsize_ = ((tyn_ * txn_ * strlen("\e[48;2;255;48;2;255m▄")) +
-             (tyn_ * strlen("\e[0m\r\n")) + 128);
-  frame_ = 0;
-  InitFrame(&vf_[0]);
-  InitFrame(&vf_[1]);
   WriteString("\e[0m\e[H\e[J");
   resized_ = false;
 }
@@ -320,11 +277,7 @@ void GetTermSize(void) {
 void IoInit(void) {
   GetTermSize();
   xsigaction(SIGINT, (void*)OnCtrlC, 0, 0, NULL);
-  xsigaction(SIGPIPE, (void*)OnPiped, 0, 0, NULL);
   xsigaction(SIGWINCH, (void*)OnResize, 0, 0, NULL);
-  xsigaction(SIGALRM, (void*)OnTimer, 0, 0, NULL);
-  xsigaction(SIGCHLD, (void*)OnSigChld, 0, 0, NULL);
-  setitimer(ITIMER_REAL, &kNesFps, NULL);
   ttyhidecursor(STDOUT_FILENO);
   ttyraw(kTtySigs);
   ttyquantsetup(quant_, kTtyQuantRgb, blocks_);
@@ -461,57 +414,29 @@ ssize_t ReadKeyboard(void) {
   return rc;
 }
 
-bool HasVideo(struct Frame* f) {
-  return f->w < f->p;
-}
-
-bool HasPendingVideo(void) {
-  return HasVideo(&vf_[0]) || HasVideo(&vf_[1]);
-}
-
-struct Frame* FlipFrameBuffer(void) {
-  frame_ = !frame_;
-  return &vf_[frame_];
-}
-
-void TransmitVideo(void) {
-  ssize_t rc;
-  struct Frame* f;
-  f = &vf_[frame_];
-  if (!HasVideo(f))
-    f = FlipFrameBuffer();
-  if ((rc = Write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
-    f->w += rc;
-  } else if (errno == EAGAIN) {
-    // slow teletypewriter
-  } else if (errno == EPIPE) {
-    Exit(0);
-  }
-}
-
-void ScaleVideoFrameToTeletypewriter(void) {
+void ScaleVideoFrameToTeletypewriter(unsigned char (*pixels)[3][DYN][DXN]) {
   long y, x, yn, xn;
   yn = DYN, xn = DXN;
   while (HALF(yn) > tyn_ || HALF(xn) > txn_) {
     if (HALF(xn) > txn_) {
-      Magikarp2xX(DYN, DXN, pixels_[0], yn, xn);
-      Magikarp2xX(DYN, DXN, pixels_[1], yn, xn);
-      Magikarp2xX(DYN, DXN, pixels_[2], yn, xn);
+      Magikarp2xX(DYN, DXN, (*pixels)[0], yn, xn);
+      Magikarp2xX(DYN, DXN, (*pixels)[1], yn, xn);
+      Magikarp2xX(DYN, DXN, (*pixels)[2], yn, xn);
       xn = HALF(xn);
     }
     if (HALF(yn) > tyn_) {
-      Magikarp2xY(DYN, DXN, pixels_[0], yn, xn);
-      Magikarp2xY(DYN, DXN, pixels_[1], yn, xn);
-      Magikarp2xY(DYN, DXN, pixels_[2], yn, xn);
+      Magikarp2xY(DYN, DXN, (*pixels)[0], yn, xn);
+      Magikarp2xY(DYN, DXN, (*pixels)[1], yn, xn);
+      Magikarp2xY(DYN, DXN, (*pixels)[2], yn, xn);
       yn = HALF(yn);
     }
   }
-  GyaradosUint8(tyn_, txn_, R, DYN, DXN, pixels_[0], tyn_, txn_, yn, xn, 0, 255,
-                ssy_, ssx_, true);
-  GyaradosUint8(tyn_, txn_, G, DYN, DXN, pixels_[1], tyn_, txn_, yn, xn, 0, 255,
-                ssy_, ssx_, true);
-  GyaradosUint8(tyn_, txn_, B, DYN, DXN, pixels_[2], tyn_, txn_, yn, xn, 0, 255,
-                ssy_, ssx_, true);
+  GyaradosUint8(tyn_, txn_, R, DYN, DXN, (*pixels)[0], tyn_, txn_, yn, xn, 0,
+                255, ssy_, ssx_, true);
+  GyaradosUint8(tyn_, txn_, G, DYN, DXN, (*pixels)[1], tyn_, txn_, yn, xn, 0,
+                255, ssy_, ssx_, true);
+  GyaradosUint8(tyn_, txn_, B, DYN, DXN, (*pixels)[2], tyn_, txn_, yn, xn, 0,
+                255, ssy_, ssx_, true);
   for (y = 0; y < tyn_; ++y) {
     for (x = 0; x < txn_; ++x) {
       ttyrgb_[y * txn_ + x] =
@@ -528,55 +453,104 @@ void KeyCountdown(struct Action* a) {
   }
 }
 
-void PollAndSynchronize(void) {
-  do {
-    if (ReadKeyboard() == -1) {
-      if (errno != EINTR)
-        Exit(1);
-      if (exited_)
-        Exit(0);
-      if (resized_)
-        GetTermSize();
-    }
-  } while (!timeout_);
-  TransmitVideo();
-  timeout_ = false;
-  KeyCountdown(&arrow_);
-  KeyCountdown(&button_);
-  joy_next_[0] = arrow_.code | button_.code;
-  joy_next_[1] = arrow_.code | button_.code;
-}
-
-void Raster(void) {
-  struct Frame* f;
+void Raster(unsigned char (*pixels)[3][DYN][DXN]) {
   struct TtyRgb bg = {0x12, 0x34, 0x56, 0};
   struct TtyRgb fg = {0x12, 0x34, 0x56, 0};
-  ScaleVideoFrameToTeletypewriter();
-  f = &vf_[!frame_];
-  f->p = f->w = f->mem;
-  f->p = stpcpy(f->p, "\e[0m\e[H");
-  f->p = ttyraster(f->p, ttyrgb_, tyn_, txn_, bg, fg);
+  ScaleVideoFrameToTeletypewriter(pixels);
+  char* ansi = (char*)malloc((tyn_ * txn_ * strlen("\e[48;2;255;48;2;255m▄")) +
+                             (tyn_ * strlen("\e[0m\r\n")) + 128);
+  char* p = ansi;
+  p = stpcpy(p, "\e[0m\e[H");
+  p = ttyraster(p, ttyrgb_, tyn_, txn_, bg, fg);
+  free(pixels);
   if (status_.wait) {
     status_.wait--;
-    f->p = stpcpy(f->p, "\e[0m\e[H");
-    f->p = stpcpy(f->p, status_.text);
+    p = stpcpy(p, "\e[0m\e[H");
+    p = stpcpy(p, status_.text);
   }
-  PollAndSynchronize();
+  size_t n = p - ansi;
+  ssize_t wrote;
+  for (size_t i = 0; i < n; i += wrote) {
+    if ((wrote = write(STDOUT_FILENO, ansi + i, n - i)) == -1) {
+      exited_ = true;
+      break;
+    }
+  }
+  free(ansi);
+}
+
+void* RasterThread(void* arg) {
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGINT);
+  sigaddset(&ss, SIGHUP);
+  sigaddset(&ss, SIGQUIT);
+  sigaddset(&ss, SIGTERM);
+  sigaddset(&ss, SIGPIPE);
+  sigprocmask(SIG_SETMASK, &ss, 0);
+  for (;;) {
+    unsigned char(*pixels)[3][DYN][DXN];
+    pthread_mutex_lock(&lock);
+    while (!(pixels = (unsigned char(*)[3][DYN][DXN])pixels_ready_.load()))
+      pthread_cond_wait(&cond, &lock);
+    pixels_ready_.store(0);
+    pthread_mutex_unlock(&lock);
+    if (resized_)
+      GetTermSize();
+    Raster(pixels);
+  }
 }
 
 void FlushScanline(unsigned py) {
-  if (py == DYN - 1) {
-    if (!timeout_)
-      Raster();
-    timeout_ = false;
+  if (py != DYN - 1)
+    return;
+  pthread_mutex_lock(&lock);
+  if (!pixels_ready_) {
+    pixels_ready_.store(pixels_);
+    pixels_ = 0;
+    pthread_cond_signal(&cond);
   }
+  pthread_mutex_unlock(&lock);
+  if (!pixels_)
+    pixels_ = (unsigned char(*)[3][DYN][DXN])malloc(3 * DYN * DXN);
+  if (exited_)
+    Exit(0);
+  do {
+    struct timespec now = timespec_mono();
+    struct timespec remain = timespec_subz(deadline_, now);
+    int remain_ms = timespec_tomillis(remain);
+    struct pollfd fds[] = {{STDIN_FILENO, POLLIN}};
+    int got = poll(fds, 1, remain_ms);
+    if (got == -1) {
+      if (errno == EINTR)
+        continue;
+      Exit(1);
+    }
+    if (got == 1) {
+      do {
+        if (ReadKeyboard() == -1) {
+          if (errno == EINTR)
+            continue;
+          Exit(1);
+        }
+      } while (0);
+    }
+    KeyCountdown(&arrow_);
+    KeyCountdown(&button_);
+    joy_next_[0] = arrow_.code | button_.code;
+    joy_next_[1] = arrow_.code | button_.code;
+    now = timespec_mono();
+    do
+      deadline_ = timespec_add(deadline_, kNesFps);
+    while (timespec_cmp(deadline_, now) <= 0);
+  } while (0);
 }
 
 static void PutPixel(unsigned px, unsigned py, unsigned pixel, int offset) {
   static unsigned prev;
-  pixels_[0][py][px] = palette_[offset][prev % 64][pixel][2];
-  pixels_[1][py][px] = palette_[offset][prev % 64][pixel][1];
-  pixels_[2][py][px] = palette_[offset][prev % 64][pixel][0];
+  (*pixels_)[0][py][px] = palette_[offset][prev % 64][pixel][2];
+  (*pixels_)[1][py][px] = palette_[offset][prev % 64][pixel][1];
+  (*pixels_)[2][py][px] = palette_[offset][prev % 64][pixel][0];
   prev = pixel;
 }
 
@@ -1732,7 +1706,17 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
     return 3;
   }
 
+  // initialize screen
+  pixels_ = (unsigned char(*)[3][DYN][DXN])malloc(3 * DYN * DXN);
   InitPalette();
+
+  // start raster thread
+  errno_t err;
+  pthread_t th;
+  if ((err = pthread_create(&th, 0, RasterThread, 0))) {
+    fprintf(stderr, "pthread_create: %s\n", strerror(err));
+    exit(1);
+  }
 
   // open speaker
   struct CosmoAudioOpenOptions cao = {};
@@ -1741,6 +1725,9 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
   cao.sampleRate = SRATE;
   cao.channels = 1;
   cosmoaudio_open(&ca_, &cao);
+
+  // initialize time
+  deadline_ = timespec_add(timespec_mono(), kNesFps);
 
   // Read the ROM file header
   u8 rom16count = fgetc(fp);
