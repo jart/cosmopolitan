@@ -2276,7 +2276,7 @@ static struct Asset *GetAssetZip(const char *path, size_t pathlen) {
   hash = Hash(path, pathlen);
   for (step = 0;; ++step) {
     i = (hash + ((step * (step + 1)) >> 1)) & (assets.n - 1);
-    if (!assets.p[i].hash)
+    if (i >= assets.n || !assets.p || !assets.p[i].hash)
       return NULL;
     if (hash == assets.p[i].hash &&
         pathlen == ZIP_CFILE_NAMESIZE(zmap + assets.p[i].cf) &&

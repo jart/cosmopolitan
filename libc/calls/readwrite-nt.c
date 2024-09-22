@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -170,14 +169,11 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     }
 
     // the i/o operation was successfully canceled
-    if (got_eagain) {
-      unassert(!got_sig);
+    if (got_eagain)
       return eagain();
-    }
 
     // it's now reasonable to report semaphore creation error
     if (other_error) {
-      unassert(!got_sig);
       errno = __dos2errno(other_error);
       return -1;
     }

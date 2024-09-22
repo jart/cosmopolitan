@@ -13,8 +13,6 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#include <assert.h>
-#include <errno.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
@@ -28,16 +26,16 @@
 pthread_t sender_thread;
 pthread_t receiver_thread;
 struct timespec send_time;
+atomic_int sender_got_signal;
 double latencies[ITERATIONS];
 
 void sender_signal_handler(int signo) {
-  // Empty handler to unblock sigsuspend()
+  sender_got_signal = 1;
 }
 
 void receiver_signal_handler(int signo) {
   struct timespec receive_time;
-  if (clock_gettime(CLOCK_MONOTONIC, &receive_time) == -1)
-    exit(1);
+  clock_gettime(CLOCK_MONOTONIC, &receive_time);
 
   long sec_diff = receive_time.tv_sec - send_time.tv_sec;
   long nsec_diff = receive_time.tv_nsec - send_time.tv_nsec;
@@ -47,68 +45,48 @@ void receiver_signal_handler(int signo) {
   if (iteration < ITERATIONS)
     latencies[iteration++] = latency_ns;
 
-  // Send SIGUSR2 back to sender_thread
+  // Pong sender
   if (pthread_kill(sender_thread, SIGUSR2))
     exit(2);
 
-  // Exit if we're done.
+  // Exit if done
   if (iteration >= ITERATIONS)
     pthread_exit(0);
 }
 
 void *sender_func(void *arg) {
-  // Block SIGUSR2
-  sigset_t block_set;
-  sigemptyset(&block_set);
-  sigaddset(&block_set, SIGUSR2);
-  if (pthread_sigmask(SIG_BLOCK, &block_set, 0))
-    exit(3);
-
-  // Install signal handler for SIGUSR2
-  struct sigaction sa;
-  sa.sa_handler = sender_signal_handler;
-  sa.sa_flags = 0;
-  sigemptyset(&sa.sa_mask);
-  if (sigaction(SIGUSR2, &sa, 0))
-    exit(4);
 
   for (int i = 0; i < ITERATIONS; i++) {
-    if (clock_gettime(CLOCK_MONOTONIC, &send_time))
-      exit(5);
 
-    // Send SIGUSR1 to receiver_thread
+    // Wait a bit sometimes
+    if (rand() % 2 == 1) {
+      volatile unsigned v = 0;
+      for (;;)
+        if (++v == 4000)
+          break;
+    }
+
+    // Ping receiver
+    clock_gettime(CLOCK_MONOTONIC, &send_time);
     if (pthread_kill(receiver_thread, SIGUSR1))
       exit(6);
 
-    // Unblock SIGUSR2 and wait for it
-    sigset_t wait_set;
-    sigemptyset(&wait_set);
-    if (sigsuspend(&wait_set) && errno != EINTR)
-      exit(7);
+    // Wait for pong
+    for (;;)
+      if (atomic_load_explicit(&sender_got_signal, memory_order_relaxed))
+        break;
+    sender_got_signal = 0;
   }
 
   return 0;
 }
 
 void *receiver_func(void *arg) {
-  // Install signal handler for SIGUSR1
-  struct sigaction sa;
-  sa.sa_handler = receiver_signal_handler;
-  sa.sa_flags = 0;
-  sigemptyset(&sa.sa_mask);
-  if (sigaction(SIGUSR1, &sa, 0))
-    exit(8);
 
-  // Block all signals except SIGUSR1
-  sigset_t block_set;
-  sigfillset(&block_set);
-  sigdelset(&block_set, SIGUSR1);
-  if (pthread_sigmask(SIG_SETMASK, &block_set, 0))
-    exit(9);
-
-  // Wait indefinitely for signals
-  while (1)
-    pause();
+  // Wait for asynchronous signals
+  volatile unsigned v = 0;
+  for (;;)
+    ++v;
 
   return 0;
 }
@@ -125,13 +103,14 @@ int compare(const void *a, const void *b) {
 
 int main() {
 
-  // Block SIGUSR1 and SIGUSR2 in main thread
-  sigset_t block_set;
-  sigemptyset(&block_set);
-  sigaddset(&block_set, SIGUSR1);
-  sigaddset(&block_set, SIGUSR2);
-  if (pthread_sigmask(SIG_BLOCK, &block_set, 0))
-    exit(10);
+  // Install signal handlers
+  struct sigaction sa;
+  sa.sa_handler = receiver_signal_handler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sigaction(SIGUSR1, &sa, 0);
+  sa.sa_handler = sender_signal_handler;
+  sigaction(SIGUSR2, &sa, 0);
 
   // Create receiver thread first
   if (pthread_create(&receiver_thread, 0, receiver_func, 0))

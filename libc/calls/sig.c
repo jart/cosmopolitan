@@ -302,10 +302,10 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     return 0;
   }
 
-  // we can't preempt threads that masked sig or are blocked. we aso
-  // need to ensure we don't the target thread's stack if many signals
-  // need to be delivered at once. we also need to make sure two threads
-  // can't deadlock by killing each other at the same time.
+  // we can't preempt threads that masked sigs or are blocked. we also
+  // need to ensure we don't overflow the target thread's stack if many
+  // signals need to be delivered at once. we also need to make sure two
+  // threads can't deadlock by killing each other at the same time.
   if ((atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
        (1ull << (sig - 1))) ||
       atomic_exchange_explicit(&pt->pt_intoff, 1, memory_order_acquire)) {
