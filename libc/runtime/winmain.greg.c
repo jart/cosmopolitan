@@ -316,7 +316,6 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   __imp_GetSystemInfo(&si);
   __pagesize = si.dwPageSize;
   __gransize = si.dwAllocationGranularity;
-  __umask = 077;
   __pid = __imp_GetCurrentProcessId();
   if (!(__sig.process = __sig_map_process(__pid, kNtOpenAlways)))
     __sig.process = &fake_process_signals;

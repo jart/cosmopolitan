@@ -19,4 +19,4 @@
 #include "libc/atomic.h"
 #include "libc/calls/internal.h"
 
-atomic_int __umask;
+atomic_int __umask = 0777;

@@ -122,34 +122,29 @@ textwindows int sys_fstat_nt_handle(int64_t handle, const char16_t *path,
   st.st_blksize = 4096;
   st.st_gid = st.st_uid = sys_getuid_nt();
 
-  // We'll use the "umask" to fake out the mode bits.
-  uint32_t umask = atomic_load_explicit(&__umask, memory_order_acquire);
-
   switch (GetFileType(handle)) {
     case kNtFileTypeUnknown:
       break;
     case kNtFileTypeChar:
-      st.st_mode = S_IFCHR | (0666 & ~umask);
+      st.st_mode = S_IFCHR | 0664;
       st.st_dev = 0x66666666;
       st.st_ino = handle;
       break;
     case kNtFileTypePipe:
-      st.st_mode = S_IFIFO | (0666 & ~umask);
+      st.st_mode = S_IFIFO | 0664;
       st.st_dev = 0x55555555;
       st.st_ino = handle;
       break;
     case kNtFileTypeDisk: {
       struct NtByHandleFileInformation wst;
       if (GetFileInformationByHandle(handle, &wst)) {
-        st.st_mode = 0444 & ~umask;
+        st.st_mode = 0444;
         if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
-            IsWindowsExecutable(handle, path)) {
-          st.st_mode |= 0111 & ~umask;
-        }
+            IsWindowsExecutable(handle, path))
+          st.st_mode |= 0111;
         st.st_flags = wst.dwFileAttributes;
-        if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
-          st.st_mode |= 0222 & ~umask;
-        }
+        if (!(wst.dwFileAttributes & kNtFileAttributeReadonly))
+          st.st_mode |= 0220;
         if (wst.dwFileAttributes & kNtFileAttributeReparsePoint) {
           st.st_mode |= S_IFLNK;
         } else if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
@@ -195,7 +190,7 @@ textwindows int sys_fstat_nt_handle(int64_t handle, const char16_t *path,
       } else if (GetVolumeInformationByHandle(
                      handle, 0, 0, &wst.dwVolumeSerialNumber, 0, 0, 0, 0)) {
         st.st_dev = wst.dwVolumeSerialNumber;
-        st.st_mode = S_IFDIR | (0444 & ~umask);
+        st.st_mode = S_IFDIR | 0555;
       } else {
         // both GetFileInformationByHandle and
         // GetVolumeInformationByHandle failed
