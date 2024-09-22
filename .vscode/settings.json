@@ -1,5 +1,5 @@
 {
-    "C_Cpp.default.compilerPath": ".cosmocc/3.8.0/bin/aarch64-linux-cosmo-c++",
+    "C_Cpp.default.compilerPath": ".cosmocc/3.9.2/bin/aarch64-linux-cosmo-c++",
     "C_Cpp.default.compilerArgs": [
         "-nostdinc",
         "-nostdlib",

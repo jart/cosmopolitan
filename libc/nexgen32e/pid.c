@@ -17,5 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
+#ifndef __x86_64__
 
 int __pid;
+
+#endif
