@@ -237,6 +237,22 @@ void check_a_conversion_specifier_long_double(const char *fmt,
   ASSERT_STREQ(expected_str, buf);
 }
 
+void check_a_conversion_specifier_long_double_arr_allowed(
+    const char *fmt, const char *allowed_strs[], long double value) {
+  char buf[30] = {0};
+  int res = snprintf(buf, sizeof(buf), fmt, value);
+
+  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
+    if (strlen(allowed_strs[i]) == res && strcmp(allowed_strs[i], buf) == 0)
+      return;
+
+  printf("Failed to find matching str for %`'s, allowed strs:\n", buf);
+  for (size_t i = 0; allowed_strs[i] != NULL; ++i)
+    printf("- %`'s\n", allowed_strs[i]);
+  fflush(stdout);
+  ASSERT_EQ(false, true);
+}
+
 void check_a_conversion_specifier_double_prec_1(const char *expected_str,
                                                 double value) {
   check_a_conversion_specifier_double("%.1a", expected_str, value);
@@ -272,8 +288,11 @@ TEST(snprintf, testAConversionSpecifier) {
 
   check_a_conversion_specifier_double("%.2a", "0x1.00p-1026", 0xf.fffp-1030);
 
-  // TODO(GabrielRavier): fix me on aarch64
-  /* check_a_conversion_specifier_long_double("%.1La", "0x1.0p+1", 1.999L); */
+  check_a_conversion_specifier_double("%.1a", "0x2.0p+0", 1.999);
+
+  const char *acceptable_results1[] = {"0x1.0p+1", "0x2.0p+0", NULL};
+  check_a_conversion_specifier_long_double_arr_allowed(
+      "%.1La", acceptable_results1, 1.999L);
 }
 
 TEST(snprintf, apostropheFlag) {
