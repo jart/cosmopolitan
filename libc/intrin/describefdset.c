@@ -31,6 +31,8 @@ const char *_DescribeFdSet(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
 
   if (!fds)
     return "NULL";
+  if (rc == -1)
+    return "n/a";
   if (kisdangerous(fds)) {
     ksnprintf(buf, N, "%p", fds);
     return buf;

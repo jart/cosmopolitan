@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -25,6 +26,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/filetype.h"
@@ -41,6 +43,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #ifdef __x86_64__
@@ -84,7 +87,7 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
   struct PosixThread *pt;
   int i, rc, ev, kind, gotsocks;
   struct sys_pollfd_nt sockfds[64];
-  uint32_t cm, fi, wi, sn, pn, avail, waitfor, already_slept;
+  uint32_t cm, fi, sn, pn, avail, waitfor, already_slept;
 
   // ensure revents is cleared
   for (i = 0; i < nfds; ++i)
@@ -228,22 +231,36 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
     // this ensures low latency for apps like emacs which with no sock
     // here we shall actually report that something can be written too
     if (!already_slept) {
-      if (__sigcheck(waitmask, false))
-        return -1;
+      intptr_t sigev;
+      if (!(sigev = CreateEvent(0, 0, 0, 0)))
+        return __winerr();
+      filehands[pn] = sigev;
       pt = _pthread_self();
-      filehands[pn] = pt->pt_event = CreateEvent(0, 0, 0, 0);
+      pt->pt_event = sigev;
+      pt->pt_blkmask = waitmask;
       atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
                             memory_order_release);
-      wi = WaitForMultipleObjects(pn + 1, filehands, 0, waitfor);
+      //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
+      int sig = 0;
+      uint32_t wi = pn;
+      if (!_is_canceled() &&
+          !(_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))))
+        wi = WaitForMultipleObjects(pn + 1, filehands, 0, waitfor);
+      //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
       atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      CloseHandle(filehands[pn]);
-      if (wi == -1u) {
+      CloseHandle(sigev);
+      if (wi == -1u)
         // win32 wait failure
         return __winerr();
-      } else if (wi == pn) {
+      if (wi == pn) {
         // our signal event was signalled
-        if (__sigcheck(waitmask, false))
+        int handler_was_called = 0;
+        if (sig)
+          handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+        if (_check_cancel() == -1)
           return -1;
+        if (handler_was_called)
+          return eintr();
       } else if ((wi ^ kNtWaitAbandoned) < pn) {
         // this is possibly because a process or thread was killed
         fds[fileindices[wi ^ kNtWaitAbandoned]].revents = POLLERR_;
@@ -287,8 +304,6 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
       } else {
         // should only be possible on kNtWaitTimeout or semaphore abandoned
         // keep looping for events and we'll catch timeout when appropriate
-        if (__sigcheck(waitmask, false))
-          return -1;
       }
     }
 
@@ -305,6 +320,13 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
                                         const sigset_t waitmask) {
   uint32_t waitms;
   int i, n, rc, got = 0;
+
+  // we normally don't check for signals until we decide to wait, since
+  // it's nice to have functions like write() be unlikely to EINTR, but
+  // ppoll is a function where users are surely thinking about signals,
+  // since ppoll actually allows them to block signals everywhere else.
+  if (__sigcheck(waitmask, false))
+    return -1;
 
   // fast path
   if (nfds <= 63)

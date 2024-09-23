@@ -124,11 +124,11 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   END_CANCELATION_POINT;
 
   STRACE("pselect(%d, %s → [%s], %s → [%s], %s → [%s], %s, %s) → %d% m", nfds,
-         DescribeFdSet(rc, nfds, old_readfds_ptr),
+         DescribeFdSet(0, nfds, old_readfds_ptr),
          DescribeFdSet(rc, nfds, readfds),
-         DescribeFdSet(rc, nfds, old_writefds_ptr),
+         DescribeFdSet(0, nfds, old_writefds_ptr),
          DescribeFdSet(rc, nfds, writefds),
-         DescribeFdSet(rc, nfds, old_exceptfds_ptr),
+         DescribeFdSet(0, nfds, old_exceptfds_ptr),
          DescribeFdSet(rc, nfds, exceptfds),  //
          DescribeTimespec(0, timeout),        //
          DescribeSigset(0, sigmask), rc);

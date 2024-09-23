@@ -57,7 +57,7 @@ textwindows static int _park_thread(uint32_t msdelay, sigset_t waitmask,
   CloseHandle(sigev);
 
   // recursion is now safe
-  if (ws == -1)
+  if (ws == -1u)
     return __winerr();
   int handler_was_called = 0;
   if (sig)

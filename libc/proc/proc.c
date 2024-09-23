@@ -102,14 +102,14 @@ textwindows int __proc_harvest(struct Proc *pr, bool iswait4) {
     pr->handle = status & 0x00FFFFFF;
   } else {
     // handle child _Exit()
-    if (status == 0xc9af3d51u) {
+    if (status == 0xc9af3d51u)
       status = kNtStillActive;
-    }
     pr->wstatus = status;
     if (!iswait4 && !pr->waiters && !__proc.waiters &&
         (__sighandrvas[SIGCHLD] == (uintptr_t)SIG_IGN ||
          (__sighandflags[SIGCHLD] & SA_NOCLDWAIT))) {
       // perform automatic zombie reaping
+      STRACE("automatically reaping zombie");
       dll_remove(&__proc.list, &pr->elem);
       dll_make_first(&__proc.free, &pr->elem);
       CloseHandle(pr->handle);
@@ -192,9 +192,8 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
         continue;
       if (j == i)
         continue;
-      if (!--objects[j]->waiters && objects[j]->status == PROC_UNDEAD) {
+      if (!--objects[j]->waiters && objects[j]->status == PROC_UNDEAD)
         __proc_free(objects[j]);
-      }
     }
 
     // check if we need to churn due to >64 processes
@@ -219,9 +218,8 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
       case PROC_ZOMBIE:
         break;
       case PROC_UNDEAD:
-        if (!objects[i]->waiters) {
+        if (!objects[i]->waiters)
           __proc_free(objects[i]);
-        }
         break;
       default:
         __builtin_unreachable();
@@ -233,9 +231,8 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
     // 1. wait4() is being used
     // 2. SIGCHLD has SIG_IGN handler
     // 3. SIGCHLD has SA_NOCLDWAIT flag
-    if (sic) {
+    if (sic)
       __sig_generate(SIGCHLD, sic);
-    }
   }
   return 0;
 }
