@@ -1415,16 +1415,6 @@ syscon	shm	SHM_NORESERVE				0x1000			0x1000			0			0			0			0			0			0
 syscon	shm	SHM_REMAP				0x4000			0x4000			0			0			0			0			0			0
 syscon	shm	SHM_ANON				0			0			0			0			1			0			0			0
 
-syscon	lock	LOCK_UNLOCK_CACHE			54			54			0			0			0			0			0			0			# wut
-
-syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			# consensus
-syscon	misc	IP6F_OFF_MASK				0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			# consensus
-syscon	misc	IP6F_RESERVED_MASK			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			# consensus
-
-syscon	misc	L_SET					0			0			0			0			0			0			0			0			# consensus
-syscon	misc	L_INCR					1			1			1			1			1			1			1			0			# unix consensus
-syscon	misc	L_XTND					2			2			2			2			2			2			2			0			# unix consensus
-
 syscon	misc	SHUT_RD					0			0			0			0			0			0			0			0			# consensus (SD_RECEIVE)
 syscon	misc	SHUT_WR					1			1			1			1			1			1			1			1			# consensus (SD_SEND)
 syscon	misc	SHUT_RDWR				2			2			2			2			2			2			2			2			# consensus (SD_BOTH)
@@ -1469,11 +1459,6 @@ syscon	misc	ACCT_COMM				0x10			0x10			0			0			0			0			0			0
 
 syscon	misc	COMMAND_COMPLETE			0			0			0			0			0			0			0			0			# consensus
 syscon	misc	COMMAND_TERMINATED			17			17			0			0			0			0			0			0
-
-syscon	select	FD_SETSIZE				0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			# forced consensus (0x40 on NT)
-
-syscon	misc	MATH_ERREXCEPT				2			2			2			2			2			2			2			0			# unix consensus
-syscon	misc	MATH_ERRNO				1			1			1			1			1			1			1			0			# unix consensus
 
 syscon	misc	MCAST_BLOCK_SOURCE			43			43			84			84			84			0			0			43
 syscon	misc	MCAST_JOIN_GROUP			42			42			80			80			80			0			0			41
@@ -1943,86 +1928,8 @@ syscon	junkerr	EKEYREJECTED				129			129			-1			-1			-1			-1			-1			-1
 syscon	junkerr	ERFKILL					132			132			-1			-1			-1			-1			-1			-1
 syscon	junkerr	EHWPOISON				133			133			-1			-1			-1			-1			-1			-1
 
-syscon	misc	FIFOTYPE				54			54			54			54			54			54			54			0			# unix consensus
-syscon	misc	GRPQUOTA				1			1			1			1			1			1			1			0			# unix consensus
-syscon	misc	IF_NAMESIZE				0x10			0x10			0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	misc	INTERMEDIATE_C_GOOD			10			10			0			0			0			0			0			0
-syscon	misc	INTERMEDIATE_GOOD			8			8			0			0			0			0			0			0
-
+syscon	select	FD_SETSIZE				0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			# forced consensus (0x40 on NT)
 syscon	misc	IOV_MAX					1024			1024			1024			1024			1024			1024			1024			16			# unix consensus & MSG_MAXIOVLEN
-syscon	misc	LINE_MAX				0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	LINKED_CMD_COMPLETE			10			10			0			0			0			0			0			0
-syscon	misc	LINKED_FLG_CMD_COMPLETE			11			11			0			0			0			0			0			0
-
-syscon	misc	LNKTYPE					49			49			49			49			49			49			49			0			# unix consensus
-syscon	misc	MAXNAMLEN				255			255			255			255			255			255			255			0			# unix consensus
-syscon	misc	MAXQUOTAS				2			2			2			2			2			2			2			0			# unix consensus
-syscon	misc	MEDIUM_ERROR				3			3			0			0			0			0			0			0
-syscon	misc	MEDIUM_SCAN				56			56			0			0			0			0			0			0
-
-syscon	misc	NBBY					8			8			8			8			8			8			8			0			# unix consensus
-syscon	misc	NR_DQHASH				43			43			0			0			0			0			0			0
-syscon	misc	NR_DQUOTS				0x0100			0x0100			0			0			0			0			0			0
-
-syscon	misc	PERSISTENT_RESERVE_IN			94			94			0			0			0			0			0			0
-syscon	misc	PERSISTENT_RESERVE_OUT			95			95			0			0			0			0			0			0
-
-syscon	misc	PRELIM					1			1			1			1			1			1			1			0			# unix consensus
-syscon	misc	REGTYPE					48			48			48			48			48			48			48			0			# unix consensus
-syscon	misc	RES_PRF_CLASS				4			4			4			4			4			4			4			0			# unix consensus
-syscon	misc	RHF_GUARANTEE_START_INIT		0x80			0x80			0			0			0			0			0			0
-syscon	misc	RHF_NO_LIBRARY_REPLACEMENT		4			4			0			0			0			0			0			0
-
-syscon	misc	RRQ					1			1			1			1			1			1			1			0			# unix consensus
-syscon	misc	RTF_NOFORWARD				0x1000			0x1000			0			0			0			0			0			0
-syscon	misc	RTF_NOPMTUDISC				0x4000			0x4000			0			0			0			0			0			0
-
-syscon	misc	SARMAG					8			8			8			8			8			8			8			0			# unix consensus
-syscon	misc	SEGSIZE					0x0200			0x0200			0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	misc	SEND_DIAGNOSTIC				29			29			0			0			0			0			0			0
-syscon	misc	SEND_VOLUME_TAG				182			182			0			0			0			0			0			0
-
-syscon	misc	SET_LIMITS				51			51			0			0			0			0			0			0
-syscon	misc	SET_WINDOW				36			36			0			0			0			0			0			0
-
-syscon	misc	SFD_CLOEXEC				0x080000		0x080000		0			0			0			0			0			0
-syscon	misc	SFD_NONBLOCK				0x0800			0x0800			0			0			0			0			0			0
-
-syscon	misc	SUBCMDMASK				255			255			255			255			255			255			255			0			# unix consensus
-syscon	misc	SUBCMDSHIFT				8			8			8			8			8			8			8			0			# unix consensus
-syscon	misc	SYMTYPE					50			50			50			50			50			50			50			0			# unix consensus
-syscon	misc	TGEXEC					8			8			8			8			8			8			8			0			# unix consensus
-syscon	misc	TGREAD					0x20			0x20			0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	TGWRITE					0x10			0x10			0x10			0x10			0x10			0x10			0x10			0			# unix consensus
-syscon	misc	TMAGLEN					6			6			6			6			6			6			6			0			# unix consensus
-syscon	misc	TOEXEC					1			1			1			1			1			1			1			0			# unix consensus
-syscon	misc	TOREAD					4			4			4			4			4			4			4			0			# unix consensus
-syscon	misc	TOWRITE					2			2			2			2			2			2			2			0			# unix consensus
-syscon	misc	TRANSIENT				4			4			4			4			4			4			4			0			# unix consensus
-syscon	misc	TSGID					0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			0			# unix consensus
-syscon	misc	TSUID					0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	TSVTX					0x0200			0x0200			0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	misc	TUEXEC					0x40			0x40			0x40			0x40			0x40			0x40			0x40			0			# unix consensus
-syscon	misc	TUREAD					0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
-syscon	misc	TUWRITE					0x80			0x80			0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	misc	TVERSLEN				2			2			2			2			2			2			2			0			# unix consensus
-syscon	misc	WORD_BIT				0x20			0x20			0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	WRQ					2			2			2			2			2			2			2			0			# unix consensus
-syscon	misc	SIGEV_THREAD				2			2			3			3			2			0			2			0
-syscon	misc	SIGEV_SIGNAL				0			0			1			1			1			0			1			0
-syscon	misc	SIGEV_NONE				1			1			0			0			0			0			0			0
-
-syscon	misc	BC_BASE_MAX				99			99			99			99			99			0x7fffffff		0x7fffffff		0
-syscon	misc	BC_DIM_MAX				0x0800			0x0800			0x0800			0x0800			0x0800			0xffff			0xffff			0
-syscon	misc	BC_SCALE_MAX				99			99			99			99			99			0x7fffffff		0x7fffffff		0
-syscon	misc	BC_STRING_MAX				0x03e8			0x03e8			0x03e8			0x03e8			0x03e8			0x7fffffff		0x7fffffff		0
-
-syscon	misc	ABORTED_COMMAND				11			11			0			0			0			0			0			0
-syscon	misc	ACORE					0			0			8			8			8			8			8			0			# bsd consensus
-syscon	misc	AFORK					0			0			1			1			1			1			1			0			# bsd consensus
-syscon	misc	AIO_ALLDONE				2			2			1			1			3			0			0			0
-syscon	misc	AIO_NOTCANCELED				1			1			4			4			2			0			0			0
-syscon	misc	AIO_CANCELED				0			0			2			2			1			0			0			0
 
 #	baud rates
 #
