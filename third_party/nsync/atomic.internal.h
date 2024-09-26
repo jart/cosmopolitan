@@ -85,13 +85,6 @@ static inline int atm_cas_relacq_u32_(nsync_atomic_uint32_ *p, uint32_t o,
                                                  memory_order_relaxed);
 }
 
-static inline int atm_cas_seqcst_u32_(nsync_atomic_uint32_ *p, uint32_t o,
-                                      uint32_t n) {
-  return atomic_compare_exchange_strong_explicit(NSYNC_ATOMIC_UINT32_PTR_(p),
-                                                 &o, n, memory_order_seq_cst,
-                                                 memory_order_relaxed);
-}
-
 #define ATM_CAS_HELPER_(barrier, p, o, n) \
   (atm_cas_##barrier##_u32_((p), (o), (n)))
 
@@ -99,7 +92,6 @@ static inline int atm_cas_seqcst_u32_(nsync_atomic_uint32_ *p, uint32_t o,
 #define ATM_CAS_ACQ(p, o, n)    ATM_CAS_HELPER_(acq, (p), (o), (n))
 #define ATM_CAS_REL(p, o, n)    ATM_CAS_HELPER_(rel, (p), (o), (n))
 #define ATM_CAS_RELACQ(p, o, n) ATM_CAS_HELPER_(relacq, (p), (o), (n))
-#define ATM_CAS_SEQCST(p, o, n) ATM_CAS_HELPER_(seqcst, (p), (o), (n))
 
 /* Need a cast to remove "const" from some uses. */
 #define ATM_LOAD(p)                                                          \

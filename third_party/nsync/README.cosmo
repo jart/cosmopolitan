@@ -29,6 +29,10 @@ LOCAL CHANGES
 
   - Ensure resources such as POSIX semaphores are are released on fork.
 
+  - Make contended mutexes go 30% faster by using C11 atomics API. This
+    lets us use weak cas when appropriate. It also avoids a superfluous
+    relaxed load on failure. This mostly impacts aarch64, not x86_64.
+
   - Modified *NSYNC to allocate waiter objects on the stack. We need it
     because we use *NSYNC mutexes to implement POSIX mutexes, which are
     too low-level to safely depend on malloc, or even mmap in our case.

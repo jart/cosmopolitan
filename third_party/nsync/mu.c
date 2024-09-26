@@ -34,9 +34,11 @@ void nsync_mu_init (nsync_mu *mu) {
 
 /* Release the mutex spinlock. */
 static void mu_release_spinlock (nsync_mu *mu) {
-	uint32_t old_word = ATM_LOAD (&mu->word);
-	while (!ATM_CAS_REL (&mu->word, old_word, old_word & ~MU_SPINLOCK)) {
-		old_word = ATM_LOAD (&mu->word);
+	uint32_t old_word = atomic_load_explicit (&mu->word,
+						  memory_order_relaxed);
+	while (!atomic_compare_exchange_weak_explicit (
+		       &mu->word, &old_word, old_word & ~MU_SPINLOCK,
+		       memory_order_release, memory_order_relaxed)) {
 	}
 }
 
@@ -68,15 +70,17 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 		if ((old_word & zero_to_acquire) == 0) {
 			/* lock can be acquired; try to acquire, possibly
 			   clearing MU_DESIG_WAKER and MU_LONG_WAIT.  */
-			if (ATM_CAS_ACQ (&mu->word, old_word,
-					 (old_word+l_type->add_to_acquire) &
-					  ~(clear|long_wait|l_type->clear_on_acquire))) {
+			if (atomic_compare_exchange_weak_explicit (&mu->word, &old_word,
+								   (old_word+l_type->add_to_acquire) &
+								   ~(clear|long_wait|l_type->clear_on_acquire),
+								   memory_order_acquire, memory_order_relaxed)) {
 				break;
 			}
 		} else if ((old_word&MU_SPINLOCK) == 0 &&
-			   ATM_CAS_ACQ (&mu->word, old_word,
-					(old_word|MU_SPINLOCK|long_wait|
-					 l_type->set_when_waiting) & ~(clear | MU_ALL_FALSE))) {
+			   atomic_compare_exchange_weak_explicit (&mu->word, &old_word,
+								  (old_word|MU_SPINLOCK|long_wait|
+								   l_type->set_when_waiting) & ~(clear | MU_ALL_FALSE),
+								  memory_order_acquire, memory_order_relaxed)) {
 
 			/* Spinlock is now held, and lock is held by someone
 			   else; MU_WAITING has also been set; queue ourselves.
@@ -133,13 +137,16 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 int nsync_mu_trylock (nsync_mu *mu) {
 	int result;
 	IGNORE_RACES_START ();
-	if (ATM_CAS_ACQ (&mu->word, 0, MU_WADD_TO_ACQUIRE)) { /* acquire CAS */
+	uint32_t old_word = 0;
+	if (atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_WADD_TO_ACQUIRE,
+						     memory_order_acquire, memory_order_relaxed)) {
 		result = 1;
 	} else {
-		uint32_t old_word = ATM_LOAD (&mu->word);
 		result = ((old_word & MU_WZERO_TO_ACQUIRE) == 0 &&
-			  ATM_CAS_ACQ (&mu->word, old_word,
-				       (old_word + MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE));
+			  atomic_compare_exchange_strong_explicit (
+				  &mu->word, &old_word,
+				  (old_word + MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE,
+				  memory_order_acquire, memory_order_relaxed));
 	}
 	IGNORE_RACES_END ();
 	return (result);
@@ -148,11 +155,13 @@ int nsync_mu_trylock (nsync_mu *mu) {
 /* Block until *mu is free and then acquire it in writer mode. */
 void nsync_mu_lock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
-	if (!ATM_CAS_ACQ (&mu->word, 0, MU_WADD_TO_ACQUIRE)) { /* acquire CAS */
-		uint32_t old_word = ATM_LOAD (&mu->word);
+	uint32_t old_word = 0;
+	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_WADD_TO_ACQUIRE,
+						      memory_order_acquire, memory_order_relaxed)) {
 		if ((old_word&MU_WZERO_TO_ACQUIRE) != 0 ||
-		    !ATM_CAS_ACQ (&mu->word, old_word,
-				  (old_word+MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE)) {
+		    !atomic_compare_exchange_strong_explicit (&mu->word, &old_word,
+							      (old_word+MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE,
+							      memory_order_acquire, memory_order_relaxed)) {
 			LOCKTRACE("acquiring nsync_mu_lock(%t)...", mu);
 			waiter *w = nsync_waiter_new_ ();
 			nsync_mu_lock_slow_ (mu, w, 0, nsync_writer_type_);
@@ -169,13 +178,15 @@ void nsync_mu_lock (nsync_mu *mu) {
 int nsync_mu_rtrylock (nsync_mu *mu) {
 	int result;
 	IGNORE_RACES_START ();
-	if (ATM_CAS_ACQ (&mu->word, 0, MU_RADD_TO_ACQUIRE)) { /* acquire CAS */
+	uint32_t old_word = 0;
+	if (atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_RADD_TO_ACQUIRE,
+						     memory_order_acquire, memory_order_relaxed)) {
 		result = 1;
 	} else {
-		uint32_t old_word = ATM_LOAD (&mu->word);
 		result = ((old_word&MU_RZERO_TO_ACQUIRE) == 0 &&
-			  ATM_CAS_ACQ (&mu->word, old_word,
-				       (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE));
+			  atomic_compare_exchange_strong_explicit (&mu->word, &old_word,
+								   (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE,
+								   memory_order_acquire, memory_order_relaxed));
 	}
 	IGNORE_RACES_END ();
 	return (result);
@@ -184,11 +195,13 @@ int nsync_mu_rtrylock (nsync_mu *mu) {
 /* Block until *mu can be acquired in reader mode and then acquire it. */
 void nsync_mu_rlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
-	if (!ATM_CAS_ACQ (&mu->word, 0, MU_RADD_TO_ACQUIRE)) { /* acquire CAS */
-		uint32_t old_word = ATM_LOAD (&mu->word);
+	uint32_t old_word = 0;
+	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_RADD_TO_ACQUIRE,
+						      memory_order_acquire, memory_order_relaxed)) {
 		if ((old_word&MU_RZERO_TO_ACQUIRE) != 0 ||
-		    !ATM_CAS_ACQ (&mu->word, old_word,
-				  (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE)) {
+		    !atomic_compare_exchange_strong_explicit (&mu->word, &old_word,
+							      (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE,
+							      memory_order_acquire, memory_order_relaxed)) {
 			waiter *w = nsync_waiter_new_ ();
 			nsync_mu_lock_slow_ (mu, w, 0, nsync_reader_type_);
 			nsync_waiter_free_ (w);
@@ -236,16 +249,16 @@ struct Dll *nsync_remove_from_mu_queue_ (struct Dll *mu_queue, struct Dll *e) {
 	/* Record previous and next elements in the original queue. */
 	struct Dll *prev = e->prev;
 	struct Dll *next = e->next;
-	uint32_t old_value;
 	/* Remove. */
 	dll_remove (&mu_queue, e);
-        do {    
-                old_value = ATM_LOAD (&DLL_WAITER (e)->remove_count);
-        } while (!ATM_CAS (&DLL_WAITER (e)->remove_count, old_value, old_value+1));
+	uint32_t old_value = ATM_LOAD (&DLL_WAITER (e)->remove_count);
+        while (!atomic_compare_exchange_weak_explicit (
+		       &DLL_WAITER (e)->remove_count, &old_value, old_value+1,
+		       memory_order_relaxed, memory_order_relaxed)) {
+	}
 	if (!dll_is_empty (mu_queue)) {
 		/* Fix up same_condition. */
 		struct Dll *e_same_condition = &DLL_WAITER (e)->same_condition;
-
 		if (e_same_condition->next != e_same_condition) {
 			/* *e is linked to a same_condition neighbour---just remove it. */
 			e_same_condition->next->prev = e_same_condition->prev;
@@ -290,14 +303,18 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			/* no one to wake, there's a designated waker waking
 			   up, there are still readers, or it's a reader and all waiters
 			   have false conditions */
-			if (ATM_CAS_REL (&mu->word, old_word,
-					 (old_word - l_type->add_to_acquire) &
-					 ~l_type->clear_on_uncontended_release)) {
+			if (atomic_compare_exchange_weak_explicit (
+				    &mu->word, &old_word,
+				    (old_word - l_type->add_to_acquire) &
+				    ~l_type->clear_on_uncontended_release,
+				    memory_order_release, memory_order_relaxed)) {
 				return;
 			}
 		} else if ((old_word&MU_SPINLOCK) == 0 &&
-			   ATM_CAS_SEQCST (&mu->word, old_word, /* [jart] fixes issues on apple silicon */
-                                           (old_word-early_release_mu)|MU_SPINLOCK|MU_DESIG_WAKER)) {
+			   atomic_compare_exchange_weak_explicit (
+				   &mu->word, &old_word,
+				   (old_word-early_release_mu)|MU_SPINLOCK|MU_DESIG_WAKER,
+				   memory_order_acq_rel, memory_order_relaxed)) {
 			struct Dll *wake;
 			lock_type *wake_type;
 			uint32_t clear_on_release;
@@ -433,10 +450,10 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			   whether any waiters remain, and whether any of them
 			   are writers.  */
 			old_word = ATM_LOAD (&mu->word);
-			while (!ATM_CAS_REL (&mu->word, old_word,
-					     ((old_word-late_release_mu)|set_on_release) &
-					     ~clear_on_release)) { /* release CAS */
-				old_word = ATM_LOAD (&mu->word);
+			while (!atomic_compare_exchange_weak_explicit (
+				       &mu->word, &old_word,
+				       ((old_word - late_release_mu) | set_on_release) & ~clear_on_release,
+				       memory_order_release, memory_order_relaxed)) {
 			}
 			/* Wake the waiters. */
 			for (p = dll_first (wake); p != NULL; p = next) {
@@ -459,8 +476,10 @@ void nsync_mu_unlock (nsync_mu *mu) {
 	   waiter.  Another thread could acquire, decrement a reference count
 	   and deallocate the mutex before the current thread touched the mutex
 	   word again. */
-	if (!ATM_CAS_REL (&mu->word, MU_WLOCK, 0)) {
-		uint32_t old_word = ATM_LOAD (&mu->word);
+	uint32_t old_word = MU_WLOCK;
+	if (!atomic_compare_exchange_weak_explicit (&mu->word, &old_word, 0,
+						    memory_order_release,
+						    memory_order_relaxed)) {
                 /* Clear MU_ALL_FALSE because the critical section we're just
                    leaving may have made some conditions true.  */
 		uint32_t new_word = (old_word - MU_WLOCK) & ~MU_ALL_FALSE;
@@ -488,8 +507,10 @@ void nsync_mu_unlock (nsync_mu *mu) {
 void nsync_mu_runlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	/* See comment in nsync_mu_unlock(). */
-	if (!ATM_CAS_REL (&mu->word, MU_RLOCK, 0)) {
-		uint32_t old_word = ATM_LOAD (&mu->word);
+	uint32_t old_word = MU_RLOCK;
+	if (!atomic_compare_exchange_weak_explicit (&mu->word, &old_word, 0,
+						    memory_order_release,
+						    memory_order_relaxed)) {
                 /* Sanity check:  mutex must not be held in write mode and
                    reader count must not be 0.  */
 		if (((old_word ^ MU_WLOCK) & (MU_WLOCK | MU_RLOCK_FIELD)) == 0) {

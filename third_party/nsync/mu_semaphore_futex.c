@@ -73,7 +73,10 @@ errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
 				result = ECANCELED;
 			}
 		}
-	} while (result == 0 && (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i-1)));
+	} while (result == 0 && (i == 0 ||
+				 !atomic_compare_exchange_weak_explicit (
+					 (nsync_atomic_uint32_ *) &f->i, &i, i-1,
+					 memory_order_acquire, memory_order_relaxed)));
 	return result;
 }
 
@@ -118,16 +121,20 @@ errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, int clock,
 				result = ECANCELED;
 			}
 		}
-	} while (result == 0 && (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i - 1)));
+	} while (result == 0 && (i == 0 ||
+				 !atomic_compare_exchange_weak_explicit (
+					 (nsync_atomic_uint32_ *) &f->i, &i, i-1,
+					 memory_order_acquire, memory_order_relaxed)));
 	return (result);
 }
 
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v_futex (nsync_semaphore *s) {
 	struct futex *f = (struct futex *) s;
-        uint32_t old_value;
-	do {
-		old_value = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
-	} while (!ATM_CAS_REL ((nsync_atomic_uint32_ *) &f->i, old_value, old_value+1));
+        uint32_t old_value = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
+	while (!atomic_compare_exchange_weak_explicit (
+		       (nsync_atomic_uint32_ *) &f->i, &old_value, old_value+1,
+		       memory_order_release, memory_order_relaxed)) {
+	}
 	ASSERT (nsync_futex_wake_ ((atomic_int *)&f->i, 1, PTHREAD_PROCESS_PRIVATE) >= 0);
 }
