@@ -424,7 +424,6 @@ textwindows void __sig_generate(int sig, int sic) {
       (1ull << (sig - 1))) {
     return;
   }
-  BLOCK_SIGNALS;
   _pthread_lock();
   for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
@@ -462,7 +461,6 @@ textwindows void __sig_generate(int sig, int sic) {
     atomic_fetch_or_explicit(__sig.process, 1ull << (sig - 1),
                              memory_order_relaxed);
   }
-  ALLOW_SIGNALS;
 }
 
 static textwindows char *__sig_stpcpy(char *d, const char *s) {

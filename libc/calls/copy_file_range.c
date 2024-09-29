@@ -83,9 +83,11 @@ static void copy_file_range_init(void) {
  * @return number of bytes transferred, or -1 w/ errno
  * @raise EXDEV if source and destination are on different filesystems
  * @raise EBADF if `infd` or `outfd` aren't open files or append-only
+ * @raise EOPNOTSUPP if filesystem doesn't support this operation
  * @raise EPERM if `fdout` refers to an immutable file on Linux
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if ranges overlap or `flags` is non-zero
+ * @raise EINVAL on eCryptFs filesystems that have a bug
  * @raise EFBIG if `setrlimit(RLIMIT_FSIZE)` is exceeded
  * @raise EFAULT if one of the pointers memory is bad
  * @raise ERANGE if overflow happens computing ranges

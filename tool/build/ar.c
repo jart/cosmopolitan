@@ -298,6 +298,7 @@ static void CopyFileOrDie(const char *inpath, int infd,    //
       if (got != -1) {
         exchanged = got;
       } else if (errno == EXDEV ||       // different partitions
+                 errno == EINVAL ||      // possible w/ ecryptfs
                  errno == ENOSYS ||      // not linux or freebsd
                  errno == ENOTSUP ||     // probably a /zip file
                  errno == EOPNOTSUPP) {  // technically the same

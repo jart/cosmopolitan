@@ -798,7 +798,11 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
     rc = copy_file_range(fdin, 0, fdout, 0, remain, 0);
     if (rc != -1) {
       remain -= rc;
-    } else if (errno == EXDEV || errno == ENOSYS) {
+    } else if (errno == EXDEV ||    // different partitions
+               errno == EINVAL ||   // possible w/ ecryptfs
+               errno == ENOSYS ||   // not linux or freebsd
+               errno == ENOTSUP ||  // no fs support for it
+               errno == EOPNOTSUPP) {
       if (lseek(fdin, 0, SEEK_SET) == -1) {
         res = false;
         break;

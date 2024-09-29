@@ -32,6 +32,7 @@
  *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
  *     pthread_cancel() destroyed the thread instead
  * @return 0 on success, or errno on error
+ * @raise EBUSY if thread has not yet terminated
  * @raise ECANCELED if calling thread was cancelled in masked mode
  * @cancelationpoint
  * @returnserrno
