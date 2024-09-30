@@ -19,9 +19,9 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/intel/immintrin.internal.h"
 #ifndef __aarch64__
-
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 static inline const unsigned char *memchr_pure(const unsigned char *s,
                                                unsigned char c, size_t n) {
@@ -35,22 +35,27 @@ static inline const unsigned char *memchr_pure(const unsigned char *s,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-static __vex const unsigned char *memchr_sse(const unsigned char *s,
-                                             unsigned char c, size_t n) {
-  size_t i;
-  unsigned m;
-  xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  for (; n >= 16; n -= 16, s += 16) {
-    v = *(const xmm_t *)s;
-    m = __builtin_ia32_pmovmskb128(v == t);
-    if (m) {
-      m = __builtin_ctzll(m);
-      return s + m;
-    }
+static const char *memchr_sse(const char *s, char c, size_t n) {
+  const char *e = s + n;
+  __m128i t = _mm_set1_epi8(c);
+  unsigned m, k = (uintptr_t)s & 15;
+  m = _mm_movemask_epi8(
+      _mm_cmpeq_epi8(_mm_load_si128((const __m128i *)((uintptr_t)s & -16)), t));
+  m >>= k;
+  if (m) {
+    s += __builtin_ctz(m);
+    if (s < e)
+      return s;
+    return 0;
   }
-  for (i = 0; i < n; ++i) {
-    if (s[i] == c) {
-      return s + i;
+  for (s += 16 - k; s < e; s += 16) {
+    m = _mm_movemask_epi8(
+        _mm_cmpeq_epi8(_mm_load_si128((const __m128i *)s), t));
+    if (m) {
+      s += __builtin_ctz(m);
+      if (s < e)
+        return s;
+      return 0;
     }
   }
   return 0;
