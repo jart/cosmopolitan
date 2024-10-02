@@ -27,6 +27,7 @@ pthread_t sender_thread;
 pthread_t receiver_thread;
 struct timespec send_time;
 atomic_int sender_got_signal;
+atomic_int receiver_got_signal;
 double latencies[ITERATIONS];
 
 void sender_signal_handler(int signo) {
@@ -34,24 +35,7 @@ void sender_signal_handler(int signo) {
 }
 
 void receiver_signal_handler(int signo) {
-  struct timespec receive_time;
-  clock_gettime(CLOCK_MONOTONIC, &receive_time);
-
-  long sec_diff = receive_time.tv_sec - send_time.tv_sec;
-  long nsec_diff = receive_time.tv_nsec - send_time.tv_nsec;
-  double latency_ns = sec_diff * 1e9 + nsec_diff;
-
-  static int iteration = 0;
-  if (iteration < ITERATIONS)
-    latencies[iteration++] = latency_ns;
-
-  // Pong sender
-  if (pthread_kill(sender_thread, SIGUSR2))
-    exit(2);
-
-  // Exit if done
-  if (iteration >= ITERATIONS)
-    pthread_exit(0);
+  receiver_got_signal = 1;
 }
 
 void *sender_func(void *arg) {
@@ -84,9 +68,29 @@ void *sender_func(void *arg) {
 void *receiver_func(void *arg) {
 
   // Wait for asynchronous signals
-  volatile unsigned v = 0;
-  for (;;)
-    ++v;
+  for (;;) {
+    if (atomic_exchange_explicit(&receiver_got_signal, 0,
+                                 memory_order_acq_rel)) {
+      struct timespec receive_time;
+      clock_gettime(CLOCK_MONOTONIC, &receive_time);
+
+      long sec_diff = receive_time.tv_sec - send_time.tv_sec;
+      long nsec_diff = receive_time.tv_nsec - send_time.tv_nsec;
+      double latency_ns = sec_diff * 1e9 + nsec_diff;
+
+      static int iteration = 0;
+      if (iteration < ITERATIONS)
+        latencies[iteration++] = latency_ns;
+
+      // Pong sender
+      if (pthread_kill(sender_thread, SIGUSR2))
+        exit(2);
+
+      // Exit if done
+      if (iteration >= ITERATIONS)
+        pthread_exit(0);
+    }
+  }
 
   return 0;
 }
