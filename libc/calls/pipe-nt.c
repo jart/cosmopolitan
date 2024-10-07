@@ -56,7 +56,6 @@ static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
   __fds_unlock();
   hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
                         mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
-  __fds_lock();
   if (hin != -1) {
     if ((hout = CreateFile(
              pipename, kNtGenericWrite,
@@ -73,7 +72,6 @@ static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;
       pipefd[1] = writer;
-      __fds_unlock();
       return 0;
     } else {
       CloseHandle(hin);
@@ -81,7 +79,6 @@ static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
   }
   __releasefd(writer);
   __releasefd(reader);
-  __fds_unlock();
   return -1;
 }
 

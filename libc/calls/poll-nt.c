@@ -351,13 +351,14 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
   }
 }
 
-textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
+textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds,
+                            const struct timespec *relative,
                             const sigset_t *sigmask) {
   int rc;
   struct timespec now, timeout, deadline;
   BLOCK_SIGNALS;
-  now = ms ? sys_clock_gettime_monotonic_nt() : timespec_zero;
-  timeout = ms ? timespec_frommillis(*ms) : timespec_max;
+  now = relative ? sys_clock_gettime_monotonic_nt() : timespec_zero;
+  timeout = relative ? *relative : timespec_max;
   deadline = timespec_add(now, timeout);
   rc = sys_poll_nt_impl(fds, nfds, deadline, sigmask ? *sigmask : _SigMask);
   ALLOW_SIGNALS;

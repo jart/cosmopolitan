@@ -71,8 +71,9 @@ textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
 
   __sig_unblock(waitmask);
 
-  if (rc == -1 && errno == WSAESHUTDOWN) {  // ESHUTDOWN
-    errno = kNtErrorBrokenPipe;             // EPIPE
+  if (rc == -1 && (errno == WSAESHUTDOWN ||      // ESHUTDOWN
+                   errno == WSAECONNABORTED)) {  // ECONNABORTED
+    errno = kNtErrorBrokenPipe;                  // EPIPE
     if (!(flags & _MSG_NOSIGNAL))
       __sig_raise(SIGPIPE, SI_KERNEL);
   }

@@ -25,6 +25,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
+#include "libc/limits.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
@@ -76,10 +77,13 @@ static int ppoll_impl(struct pollfd *fds, size_t nfds,
     }
     fdcount = sys_ppoll(fds, nfds, tsp, sigmask, 8);
     if (fdcount == -1 && errno == ENOSYS) {
-      int ms;
+      int64_t ms;
       errno = e;
-      if (!timeout || ckd_add(&ms, timeout->tv_sec,
-                              (timeout->tv_nsec + 999999) / 1000000)) {
+      if (timeout) {
+        ms = timespec_tomillis(*timeout);
+        if (ms > INT_MAX)
+          ms = -1;
+      } else {
         ms = -1;
       }
       if (sigmask)
@@ -89,15 +93,7 @@ static int ppoll_impl(struct pollfd *fds, size_t nfds,
         sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
-    uint32_t ms;
-    uint32_t *msp;
-    if (timeout &&
-        !ckd_add(&ms, timeout->tv_sec, (timeout->tv_nsec + 999999) / 1000000)) {
-      msp = &ms;
-    } else {
-      msp = 0;
-    }
-    fdcount = sys_poll_nt(fds, nfds, msp, sigmask);
+    fdcount = sys_poll_nt(fds, nfds, timeout, sigmask);
   }
 
   if (IsOpenbsd() && fdcount != -1) {

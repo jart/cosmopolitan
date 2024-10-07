@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
@@ -46,9 +47,8 @@ static int __vfprintf_flbuf(const char *s, struct state *t, size_t n) {
     } else {
       rc = -1;
     }
-    if (ckd_add(&t->n, t->n, n)) {
+    if (ckd_add(&t->n, t->n, n))
       rc = eoverflow();
-    }
   } else {
     rc = 0;
   }
@@ -60,9 +60,8 @@ static int __vfprintf_nbuf(const char *s, struct state *t, size_t n) {
   for (i = 0; i < n; ++i) {
     t->b.p[t->b.n++] = s[i];
     if (t->b.n == sizeof(t->b.p)) {
-      if (!fwrite_unlocked(t->b.p, 1, t->b.n, t->f)) {
+      if (!fwrite_unlocked(t->b.p, 1, t->b.n, t->f))
         return -1;
-      }
       t->b.n = 0;
     } else if (ckd_add(&t->n, t->n, 1)) {
       return eoverflow();
@@ -91,9 +90,7 @@ int vfprintf_unlocked(FILE *f, const char *fmt, va_list va) {
     if (!st.b.n) {
       rc = st.n;
     } else if (fwrite_unlocked(st.b.p, 1, st.b.n, st.f)) {
-      if (ckd_add(&rc, st.n, st.b.n)) {
-        rc = eoverflow();
-      }
+      rc = st.n;
     } else {
       rc = -1;
     }

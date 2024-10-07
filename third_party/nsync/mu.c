@@ -477,9 +477,9 @@ void nsync_mu_unlock (nsync_mu *mu) {
 	   and deallocate the mutex before the current thread touched the mutex
 	   word again. */
 	uint32_t old_word = MU_WLOCK;
-	if (!atomic_compare_exchange_weak_explicit (&mu->word, &old_word, 0,
-						    memory_order_release,
-						    memory_order_relaxed)) {
+	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, 0,
+						      memory_order_release,
+						      memory_order_relaxed)) {
                 /* Clear MU_ALL_FALSE because the critical section we're just
                    leaving may have made some conditions true.  */
 		uint32_t new_word = (old_word - MU_WLOCK) & ~MU_ALL_FALSE;
@@ -508,9 +508,9 @@ void nsync_mu_runlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	/* See comment in nsync_mu_unlock(). */
 	uint32_t old_word = MU_RLOCK;
-	if (!atomic_compare_exchange_weak_explicit (&mu->word, &old_word, 0,
-						    memory_order_release,
-						    memory_order_relaxed)) {
+	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, 0,
+						      memory_order_release,
+						      memory_order_relaxed)) {
                 /* Sanity check:  mutex must not be held in write mode and
                    reader count must not be 0.  */
 		if (((old_word ^ MU_WLOCK) & (MU_WLOCK | MU_RLOCK_FIELD)) == 0) {

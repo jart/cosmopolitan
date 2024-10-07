@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
-#include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
 
 /**

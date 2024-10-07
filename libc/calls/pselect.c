@@ -67,7 +67,6 @@
 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
             const struct timespec *timeout, const sigset_t *sigmask) {
   int rc;
-  struct timeval tv, *tvp;
   struct timespec ts, *tsp;
   struct {
     const sigset_t *s;
@@ -111,14 +110,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       rc = sys_pselect(nfds, readfds, writefds, exceptfds,
                        (struct timespec *)timeout, sigmask);
     } else {
-      if (timeout) {
-        tv.tv_sec = timeout->tv_sec;
-        tv.tv_usec = timeout->tv_nsec / 1000;
-        tvp = &tv;
-      } else {
-        tvp = 0;
-      }
-      rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
+      rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, sigmask);
     }
   }
   END_CANCELATION_POINT;

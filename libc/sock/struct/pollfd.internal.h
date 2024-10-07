@@ -11,7 +11,8 @@ int32_t __sys_poll(struct pollfd *, uint64_t, signed);
 int sys_ppoll(struct pollfd *, size_t, const struct timespec *,
               const sigset_t *, size_t);
 int sys_poll_metal(struct pollfd *, size_t, unsigned);
-int sys_poll_nt(struct pollfd *, uint64_t, uint32_t *, const sigset_t *);
+int sys_poll_nt(struct pollfd *, uint64_t, const struct timespec *,
+                const sigset_t *);
 
 const char *_DescribePollFds(char[300], ssize_t, struct pollfd *, size_t);
 #define DescribePollFds(x, y, z) _DescribePollFds(alloca(300), x, y, z)

@@ -31,10 +31,7 @@
  *     such as out-of-band data on a socket; it is equivalent to POLLPRI
  *     in the revents of poll()
  * @param timeout may be null which means to block indefinitely; cosmo's
- *     implementation of select() never modifies this parameter which is
- *     how most platforms except Linux work which modifies it to reflect
- *     elapsed time, noting that POSIX permits either behavior therefore
- *     portable code should assume that timeout memory becomes undefined
+ *     implementation of select() never modifies this parameter
  * @raise E2BIG if we exceeded the 64 socket limit on Windows
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered

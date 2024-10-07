@@ -25,7 +25,6 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
-#include "libc/stdckdint.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
@@ -44,7 +43,7 @@
 // </sync libc/sysv/consts.sh>
 
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
-                  fd_set *exceptfds, struct timeval *timeout,
+                  fd_set *exceptfds, const struct timespec *timeout,
                   const sigset_t *sigmask) {
   int pfds = 0;
 
@@ -68,21 +67,8 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
     }
   }
 
-  // convert the wait time to a word
-  uint32_t millis;
-  if (!timeout) {
-    millis = -1u;
-  } else {
-    int64_t ms = timeval_tomillis(*timeout);
-    if (ms < 0 || ms > UINT32_MAX) {
-      millis = -1u;
-    } else {
-      millis = ms;
-    }
-  }
-
   // call our nt poll implementation
-  int fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
+  int fdcount = sys_poll_nt(fds, pfds, timeout, sigmask);
   if (fdcount == -1)
     return -1;
 
@@ -114,10 +100,6 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
       }
     }
   }
-
-  // store remaining time back in caller's timeval
-  if (timeout)
-    *timeout = timeval_frommillis(millis);
 
   return bits;
 }
