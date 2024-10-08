@@ -69,9 +69,8 @@ uintptr_t GetStackBottom(void) pureconst;
  * will also trigger the stack to grow down safely.
  */
 forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
-  for (; n > 0; n -= 4096) {
-    ((char *)p)[n - 1] = 0;
-  }
+  for (; n > 0; n -= 4096)
+    ((volatile char *)p)[n - 1] = 0;
 }
 
 void *NewCosmoStack(void) vallocesque;

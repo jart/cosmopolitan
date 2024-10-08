@@ -106,8 +106,9 @@ static long AlignStack(long sp, char *stk, long stksz, int mal) {
 ////////////////////////////////////////////////////////////////////////////////
 // THE NEW TECHNOLOGY
 
-__msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
 __msabi extern typeof(ExitThread) *const __imp_ExitThread;
+__msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
+__msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
 __msabi extern typeof(WakeByAddressAll) *const __imp_WakeByAddressAll;
 
 static textwindows dontinstrument wontreturn void  //
@@ -118,7 +119,7 @@ WinThreadEntry(int rdi,                            // rcx
   int rc;
   if (wt->tls)
     __set_tls_win32(wt->tls);
-  *wt->ctid = GetCurrentThreadId();
+  *wt->ctid = __imp_GetCurrentThreadId();
   rc = __stack_call(wt->arg, wt->tid, 0, 0, wt->func, wt->sp);
   // we can now clear ctid directly since we're no longer using our own
   // stack memory, which can now be safely free'd by the parent thread.

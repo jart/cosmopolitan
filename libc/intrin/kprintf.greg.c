@@ -40,9 +40,11 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -113,10 +115,13 @@
   }
 
 // clang-format off
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
+__msabi extern typeof(CreateEvent) *const __imp_CreateEventW;
 __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetLastError) *const __imp_GetLastError;
+__msabi extern typeof(GetOverlappedResult) *const __imp_GetOverlappedResult;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(SetLastError) *const __imp_SetLastError;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
@@ -283,7 +288,7 @@ privileged long kloghandle(void) {
         hand = __imp_CreateFileW(
             path, kNtFileAppendData,
             kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
-            kNtOpenAlways, kNtFileAttributeNormal, 0);
+            kNtOpenAlways, kNtFileAttributeNormal | kNtFileFlagOverlapped, 0);
       } else {
         hand = -1;  // KPRINTF_LOG was empty string or too long
       }
@@ -359,7 +364,6 @@ privileged void _klog_serial(const char *b, size_t n) {
 
 privileged void klog(const char *b, size_t n) {
 #ifdef __x86_64__
-  int e;
   long h;
   uint32_t wrote;
   long rax, rdi, rsi, rdx;
@@ -367,11 +371,20 @@ privileged void klog(const char *b, size_t n) {
     return;
   }
   if (IsWindows()) {
-    e = __imp_GetLastError();
-    if (!__imp_WriteFile(h, b, n, &wrote, 0)) {
-      __imp_SetLastError(e);
-      __klog_handle = 0;
+    bool32 ok;
+    intptr_t ev;
+    int e = __imp_GetLastError();
+    if ((ev = __imp_CreateEventW(0, 0, 0, 0))) {
+      struct NtOverlapped overlap = {.hEvent = ev};
+      ok = !!__imp_WriteFile(h, b, n, 0, &overlap);
+      if (!ok && __imp_GetLastError() == kNtErrorIoPending)
+        ok = true;
+      ok &= !!__imp_GetOverlappedResult(h, &overlap, &wrote, true);
+      if (!ok)
+        __klog_handle = 0;
+      __imp_CloseHandle(ev);
     }
+    __imp_SetLastError(e);
   } else if (IsMetal()) {
     if (_weaken(_klog_vga)) {
       _weaken(_klog_vga)(b, n);
