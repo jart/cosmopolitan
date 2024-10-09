@@ -136,6 +136,7 @@
 #include "tool/net/lfuncs.h"
 #include "tool/net/ljson.h"
 #include "tool/net/lpath.h"
+#include "tool/net/ltls.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
@@ -5401,6 +5402,9 @@ static const luaL_Reg kLuaFuncs[] = {
 static const luaL_Reg kLuaLibs[] = {
     {"argon2", luaopen_argon2},      //
     {"lsqlite3", luaopen_lsqlite3},  //
+#ifndef UNSECURE
+    {"tls", luaopen_tls},            //
+#endif
     {"maxmind", LuaMaxmind},         //
     {"finger", LuaFinger},           //
     {"path", LuaPath},               //
