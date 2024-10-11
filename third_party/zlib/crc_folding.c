@@ -406,7 +406,7 @@ partial:
     }
 #endif
 
-    _mm_storeu_si128((__m128i *)dst, xmm_crc_part);
+    memcpy(dst, src, len);  /* TODO: Possibly generate more efficient code. */
     partial_fold(s, len, &xmm_crc0, &xmm_crc1, &xmm_crc2, &xmm_crc3,
         &xmm_crc_part);
 done:

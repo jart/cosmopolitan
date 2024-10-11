@@ -256,6 +256,8 @@ int value;
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
+    if (bits == 0)
+        return Z_OK;
     state = (struct inflate_state FAR *)strm->state;
     if (bits < 0) {
         state->hold = 0;
@@ -1480,7 +1482,7 @@ z_streamp strm;
     /* if first time, start search in bit buffer */
     if (state->mode != SYNC) {
         state->mode = SYNC;
-        state->hold <<= state->bits & 7;
+        state->hold >>= state->bits & 7;
         state->bits -= state->bits & 7;
         len = 0;
         while (state->bits >= 8) {
@@ -1551,8 +1553,9 @@ z_streamp source;
     if (copy == Z_NULL) return Z_MEM_ERROR;
     window = Z_NULL;
     if (state->window != Z_NULL) {
-        window = (unsigned char FAR *)
-                 ZALLOC(source, 1U << state->wbits, sizeof(unsigned char));
+        window = (unsigned char FAR *)ZALLOC(
+            source, (1U << state->wbits) + CHUNKCOPY_CHUNK_SIZE,
+            sizeof(unsigned char));
         if (window == Z_NULL) {
             ZFREE(source, copy);
             return Z_MEM_ERROR;
