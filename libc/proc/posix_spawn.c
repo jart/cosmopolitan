@@ -350,12 +350,8 @@ static textwindows errno_t posix_spawn_nt_impl(
   // figure out flags
   uint32_t dwCreationFlags = 0;
   short flags = attrp && *attrp ? (*attrp)->flags : 0;
-  if (flags & POSIX_SPAWN_SETSID) {
-    dwCreationFlags |= kNtDetachedProcess;
-  }
-  if (flags & POSIX_SPAWN_SETPGROUP) {
+  if (flags & POSIX_SPAWN_SETPGROUP)
     dwCreationFlags |= kNtCreateNewProcessGroup;
-  }
 
   // create process startinfo
   struct NtStartupInfo startinfo = {
