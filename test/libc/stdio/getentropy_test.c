@@ -33,8 +33,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #ifndef __aarch64__
-// TODO(jart): Make this test less resource intensive.
-// TODO(jart): Why can EINTR happen on Windows?
 
 atomic_int done;
 atomic_int ready;
@@ -51,11 +49,9 @@ void *TortureWorker(void *arg) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &ss, 0));
   ready = true;
   while (!done) {
-    if (!IsWindows())
-      pthread_kill(parent, SIGUSR1);
+    pthread_kill(parent, SIGUSR1);
     usleep(1);
-    if (!IsWindows())
-      pthread_kill(parent, SIGUSR2);
+    pthread_kill(parent, SIGUSR2);
     usleep(1);
   }
   return 0;
@@ -100,8 +96,7 @@ TEST(getentropy, test) {
   }
   done = true;
   ASSERT_EQ(0, pthread_join(child, 0));
-  if (!IsWindows())
-    ASSERT_GT(gotsome, 0);
+  ASSERT_GT(gotsome, 0);
 }
 
 #endif /* __aarch64__ */
