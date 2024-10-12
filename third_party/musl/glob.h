@@ -30,5 +30,11 @@ typedef struct {
 int glob(const char *, int, int (*)(const char *, int), glob_t *);
 void globfree(glob_t *);
 
+#ifdef _LARGEFILE64_SOURCE
+#define glob64 glob
+#define globfree64 globfree
+#define glob64_t glob_t
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MUSL_GLOB_H_ */
