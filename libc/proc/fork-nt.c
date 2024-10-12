@@ -125,11 +125,9 @@ static dontinline textwindows ssize_t ForkIo2(
 static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   bool ok;
   ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false) != -1;
-  if (!ok) {
+  if (!ok)
     STRACE("fork() failed in parent due to WriteAll(%ld, %p, %'zu) → %u", h,
            buf, n, GetLastError());
-    __print_maps(0);
-  }
   return ok;
 }
 

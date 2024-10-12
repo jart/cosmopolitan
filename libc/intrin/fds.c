@@ -129,6 +129,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   if (IsWindows()) {
     const char *fdspec;
     if ((fdspec = getenv("_COSMO_FDS_V2"))) {
+      char *smaddr = 0;
       unsetenv("_COSMO_FDS");
       unsetenv("_COSMO_FDS_V2");
       for (;;) {
@@ -171,8 +172,13 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
         if (shand) {
           struct Map *map;
           struct CursorShared *shared;
+          if (!smaddr) {
+            smaddr = __maps_randaddr();
+          } else {
+            smaddr += 65536;
+          }
           if ((shared = MapViewOfFileEx(shand, kNtFileMapWrite, 0, 0,
-                                        sizeof(struct CursorShared), 0))) {
+                                        sizeof(struct CursorShared), smaddr))) {
             if ((f->cursor = _mapanon(sizeof(struct Cursor)))) {
               f->cursor->shared = shared;
               if ((map = __maps_alloc())) {
