@@ -378,7 +378,7 @@ static int LuaFetch(lua_State *L) {
           WARNF("(ftch) HTTP client %s error", "EOF headers");
           goto TransportError;
         }
-        rc = ParseHttpMessage(&msg, inbuf.p, inbuf.n, inbuf.c);
+        rc = ParseHttpMessage(&msg, inbuf.p, inbuf.n, SHRT_MAX);
         if (rc == -1) {
           WARNF("(ftch) HTTP client %s error", "ParseHttpMessage");
           goto TransportError;
