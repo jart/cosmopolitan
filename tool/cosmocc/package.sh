@@ -185,7 +185,7 @@ if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
   rm -f aarch64-gcc.zip
   rm -f x86_64-gcc.zip
   rm -f llvm.zip
-  mv bin/clang-19 bin/cosmo-clang
+  mv bin/clang-19 libexec/clang  # use `cosmocc -mclang` instead
 fi
 rm -f bin/*-cpp
 rm -f bin/*-gcc-*

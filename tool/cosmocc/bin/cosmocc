@@ -89,10 +89,10 @@ use_gcc() {
 
 use_clang() {
   CLANG=1
-  CC_X86_64="$BIN/cosmo-clang"
-  CC_AARCH64="$BIN/cosmo-clang"
-  CXX_X86_64="$BIN/cosmo-clang"
-  CXX_AARCH64="$BIN/cosmo-clang"
+  CC_X86_64="$BIN/../libexec/clang"
+  CC_AARCH64="$BIN/../libexec/clang"
+  CXX_X86_64="$BIN/../libexec/clang"
+  CXX_AARCH64="$BIN/../libexec/clang"
   TARGET_X86_64="--target=x86_64"
   TARGET_AARCH64="--target=aarch64"
   FPORTCOSMO=
