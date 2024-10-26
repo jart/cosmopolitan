@@ -91,6 +91,27 @@ $(LIBC_NT_COMDLG32_A).pkg:				\
 
 #───────────────────────────────────────────────────────────────────────────────
 
+LIBC_NT_ARTIFACTS += LIBC_NT_SHELL32_A
+LIBC_NT_SHELL32 = $(LIBC_NT_SHELL32_A_DEPS) $(LIBC_NT_SHELL32_A)
+LIBC_NT_SHELL32_A = o/$(MODE)/libc/nt/shell32.a
+LIBC_NT_SHELL32_A_SRCS := $(wildcard libc/nt/shell32/*.S)
+LIBC_NT_SHELL32_A_OBJS = $(LIBC_NT_SHELL32_A_SRCS:%.S=o/$(MODE)/%.o)
+LIBC_NT_SHELL32_A_CHECKS = $(LIBC_NT_SHELL32_A).pkg
+LIBC_NT_SHELL32_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_SHELL32_A_DEPS :=					\
+	$(call uniq,$(foreach x,$(LIBC_NT_SHELL32_A_DIRECTDEPS),$($(x))))
+
+$(LIBC_NT_SHELL32_A):						\
+		libc/nt/shell32/				\
+		$(LIBC_NT_SHELL32_A).pkg			\
+		$(LIBC_NT_SHELL32_A_OBJS)
+
+$(LIBC_NT_SHELL32_A).pkg:					\
+		$(LIBC_NT_SHELL32_A_OBJS)			\
+		$(foreach x,$(LIBC_NT_SHELL32_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
 LIBC_NT_ARTIFACTS += LIBC_NT_GDI32_A
 LIBC_NT_GDI32 = $(LIBC_NT_GDI32_A_DEPS) $(LIBC_NT_GDI32_A)
 LIBC_NT_GDI32_A = o/$(MODE)/libc/nt/gdi32.a
