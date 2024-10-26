@@ -393,7 +393,6 @@ imp	'CreateIconIndirect'					CreateIconIndirect					user32		1
 imp	'CreateMenu'						CreateMenu						user32		0
 imp	'CreatePopupMenu'					CreatePopupMenu						user32		0
 imp	'CreateWindowEx'					CreateWindowExW						user32		12
-imp	'CreateWindow'						CreateWindowW						user32		11
 imp	'DefWindowProc'						DefWindowProcW						user32		4
 imp	'DeleteMenu'						DeleteMenu						user32		3
 imp	'DestroyIcon'						DestroyIcon						user32		1
