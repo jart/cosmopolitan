@@ -88,6 +88,34 @@ format used by the host system; however it's also possible to explicitly
 convert APE programs to any architectures / OS combination. For further
 details on usage, run the `assimilate -h` command.
 
+
+## Binary archive format
+
+The APE format includes another portability superpower: the ability to 
+distribute application support files WITHIN the compiled executable file. 
+This is because APE files are also mostly regular zip files! You will 
+need a copy of a compatible zip tool like the modified version of 
+Info-ZIP available here: https://cosmo.zip/pub/cosmos/bin/zip. With this 
+in hand the following command:
+
+```sh
+zip [APE file] [support_file.txt]
+```
+
+adds support_file.txt to your executable. You can see it listed within 
+the archive with `unzip -l [APE file]`. 
+
+Cosmo libc includes compatible file handling functions for accessing the 
+contents of an APE file at the special '/zip' path. So your code is now 
+able to do the following:
+
+```c
+
+if (access( "/zip/support_file.txt", F_OK) == 0) {
+	fprintf(stderr, "/zip/support_file.txt FOUND and can be used as an asset\n");
+}
+```
+
 ## Gotchas
 
 If you use zsh and have trouble running APE programs try `sh -c ./prog`
