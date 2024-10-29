@@ -404,5 +404,13 @@ main()
         }
     }
 
+    {
+        String s = "love";
+        String b;
+        b.append(s, 1, 2);
+        if (b != "ov")
+            return 107;
+    }
+
     CheckForMemoryLeaks();
 }

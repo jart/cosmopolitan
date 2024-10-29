@@ -383,4 +383,10 @@ string::erase(const size_t pos, size_t count) noexcept
     return *this;
 }
 
+void
+string::append(const ctl::string_view& s, size_t pos, size_t count) noexcept
+{
+    append(s.substr(pos, count));
+}
+
 } // namespace ctl
