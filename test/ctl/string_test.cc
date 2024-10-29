@@ -412,5 +412,61 @@ main()
             return 107;
     }
 
+    {
+        String s = "ee";
+        if (s.find_last_of('E') != String::npos)
+            return 108;
+        if (s.find_last_of('e') != 1)
+            return 109;
+    }
+
+    {
+        String e = "";
+        String s = "ee";
+        if (e.find_last_of("") != String::npos)
+            return 110;
+        if (s.find_last_of("") != String::npos)
+            return 111;
+        if (s.find_last_of("AE") != String::npos)
+            return 112;
+        if (s.find_last_of("ae") != 1)
+            return 113;
+        if (s.find_last_of("ae", 1) != 1)
+            return 114;
+        if (s.find_last_of("ae", 0) != 0)
+            return 115;
+        if (s.find_last_of("ae", 10) != 1)
+            return 116;
+    }
+
+    {
+        String s = "ee";
+        if (s.find_first_of('E') != String::npos)
+            return 117;
+        if (s.find_first_of('e') != 0)
+            return 118;
+        if (s.find_first_of('e', 1) != 1)
+            return 119;
+    }
+
+    {
+        String e = "";
+        String s = "ee";
+        if (e.find_first_of("") != String::npos)
+            return 120;
+        if (s.find_first_of("") != String::npos)
+            return 121;
+        if (s.find_first_of("AE") != String::npos)
+            return 122;
+        if (s.find_first_of("ae") != 0)
+            return 123;
+        if (s.find_first_of("ae", 1) != 1)
+            return 124;
+        if (s.find_first_of("ae", 0) != 0)
+            return 125;
+        if (s.find_first_of("ae", 10) != String::npos)
+            return 126;
+    }
+
     CheckForMemoryLeaks();
 }

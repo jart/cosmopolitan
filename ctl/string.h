@@ -137,6 +137,10 @@ class string
     bool starts_with(ctl::string_view) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
     size_t find(ctl::string_view, size_t = 0) const noexcept;
+    size_t find_first_of(char, size_t = 0) const noexcept;
+    size_t find_first_of(ctl::string_view, size_t = 0) const noexcept;
+    size_t find_last_of(char, size_t = npos) const noexcept;
+    size_t find_last_of(ctl::string_view, size_t = npos) const noexcept;
 
     void swap(string& s) noexcept
     {
