@@ -109,12 +109,12 @@ struct string_view
         return p[n - 1];
     }
 
-    constexpr const_iterator begin() noexcept
+    constexpr const_iterator begin() const noexcept
     {
         return p;
     }
 
-    constexpr const_iterator end() noexcept
+    constexpr const_iterator end() const noexcept
     {
         return p + n;
     }
