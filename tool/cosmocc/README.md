@@ -110,7 +110,6 @@ contents of an APE file at the special '/zip' path. So your code is now
 able to do the following:
 
 ```c
-
 if (access( "/zip/support_file.txt", F_OK) == 0) {
 	fprintf(stderr, "/zip/support_file.txt FOUND and can be used as an asset\n");
 }
