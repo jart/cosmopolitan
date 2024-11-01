@@ -32,7 +32,7 @@ struct Maps {
   _Atomic(uintptr_t) freed;
   size_t count;
   size_t pages;
-  _Atomic(char *) pick;
+  char *pick;
   struct Map stack;
   struct Map guard;
 };
@@ -49,7 +49,6 @@ bool __maps_lock(void);
 void __maps_check(void);
 void __maps_unlock(void);
 void *__maps_randaddr(void);
-void *__maps_pickaddr(size_t);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 void __maps_insert(struct Map *);

@@ -411,22 +411,21 @@ void *__maps_randaddr(void) {
   return (void *)addr;
 }
 
-void *__maps_pickaddr(size_t size) {
+static void *__maps_pickaddr(size_t size) {
   char *addr;
+  __maps_lock();
   for (int try = 0; try < MAX_TRIES; ++try) {
-    addr = atomic_exchange_explicit(&__maps.pick, 0, memory_order_acq_rel);
+    addr = __maps.pick;
+    __maps.pick = 0;
     if (!addr)
       addr = __maps_randaddr();
-    __maps_lock();
-    bool overlaps = __maps_overlaps(addr, size, __pagesize);
-    __maps_unlock();
-    if (!overlaps) {
-      atomic_store_explicit(&__maps.pick,
-                            addr + ((size + __gransize - 1) & __gransize),
-                            memory_order_release);
+    if (!__maps_overlaps(addr, size, __pagesize)) {
+      __maps.pick = addr + ((size + __gransize - 1) & __gransize);
+      __maps_unlock();
       return addr;
     }
   }
+  __maps_unlock();
   return 0;
 }
 
