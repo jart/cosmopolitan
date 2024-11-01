@@ -7,8 +7,8 @@
 a build-once run-anywhere language, like Java, except it doesn't need an
 interpreter or virtual machine. Instead, it reconfigures stock GCC and
 Clang to output a POSIX-approved polyglot format that runs natively on
-Linux + Mac + Windows + FreeBSD + OpenBSD + NetBSD + BIOS with the best
-possible performance and the tiniest footprint imaginable.
+Linux + Mac + Windows + FreeBSD + OpenBSD 7.3 + NetBSD + BIOS with the
+best possible performance and the tiniest footprint imaginable.
 
 ## Background
 
@@ -242,16 +242,16 @@ server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 
 ## Support Vector
 
-| Platform       | Min Version | Circa |
-| :---           | ---:        | ---:  |
-| AMD            | K8          | 2003  |
-| Intel          | Core        | 2006  |
-| Linux          | 2.6.18      | 2007  |
-| Windows        | 8 [1]       | 2012  |
-| Darwin (macOS) | 23.1.0+     | 2023  |
-| OpenBSD        | 7           | 2021  |
-| FreeBSD        | 13          | 2020  |
-| NetBSD         | 9.2         | 2021  |
+| Platform       | Min Version    | Circa |
+| :---           | ---:           | ---:  |
+| AMD            | K8             | 2003  |
+| Intel          | Core           | 2006  |
+| Linux          | 2.6.18         | 2007  |
+| Windows        | 8 [1]          | 2012  |
+| Darwin (macOS) | 23.1.0+        | 2023  |
+| OpenBSD        | 7.3 or earlier | 2023  |
+| FreeBSD        | 13             | 2020  |
+| NetBSD         | 9.2            | 2021  |
 
 [1] See our [vista branch](https://github.com/jart/cosmopolitan/tree/vista)
     for a community supported version of Cosmopolitan that works on Windows

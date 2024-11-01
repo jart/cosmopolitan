@@ -1,7 +1,7 @@
 # Cosmopolitan Toolchain
 
 This toolchain can be used to compile executables that run on Linux /
-MacOS / Windows / FreeBSD / OpenBSD / NetBSD for both the x86_64 and
+MacOS / Windows / FreeBSD / OpenBSD 7.3 / NetBSD for both the x86_64 and
 AARCH64 architectures. In addition to letting you create portable
 binaries, your toolchain is itself comprised of portable binaries,
 enabling you to have a consistent development environment that lets you
