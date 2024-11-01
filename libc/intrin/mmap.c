@@ -420,7 +420,7 @@ static void *__maps_pickaddr(size_t size) {
     if (!addr)
       addr = __maps_randaddr();
     if (!__maps_overlaps(addr, size, __pagesize)) {
-      __maps.pick = addr + ((size + __gransize - 1) & __gransize);
+      __maps.pick = addr + ((size + __gransize - 1) & -__gransize);
       __maps_unlock();
       return addr;
     }
