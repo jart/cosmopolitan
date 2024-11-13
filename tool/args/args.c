@@ -133,6 +133,7 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
  * replaced with whatever CLI args were specified by the user.
  *
  * @return 0 on success, or -1 if not found w/o errno clobber
+ * @deprecated please use `cosmo_args()` it's more powerful
  */
 int LoadZipArgs(int *argc, char ***argv) {
   int e;
