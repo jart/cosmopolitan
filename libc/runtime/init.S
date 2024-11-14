@@ -28,7 +28,7 @@
 //	that's restricted to read-only after initialization by PIRO.
 //
 //	This is fast, since the linker is able to roll-up initialization
-//	for large codebases comprised of many modules, into a perfectly
+//	for large codebases made up of many modules, into a perfectly
 //	linear order. It also enables a common pattern we use, which we
 //	call “Referencing Is Initialization” (RII).
 //

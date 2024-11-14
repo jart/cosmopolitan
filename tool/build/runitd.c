@@ -92,7 +92,7 @@
  *
  * Here's how it handles connections:
  *
- * 1. Receives atomically-written request header, comprised of:
+ * 1. Receives atomically-written request header, comprising:
  *
  *   - 4 byte nbo magic = 0xFEEDABEEu
  *   - 1 byte command = kRunitExecute

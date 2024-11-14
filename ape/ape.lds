@@ -113,7 +113,7 @@
 
   Your linker and assemblies were designed provide extensibility through
   the use of link-time data structures we call "decentralized sections".
-  They allow functions like _init() to be comprised of many small pieces
+  They allow functions like _init() to comprise many small pieces
   defined throughout the codebase. The same applies to ELF / PE headers.
 
   Extending that content usually entails writing a .S file. The process

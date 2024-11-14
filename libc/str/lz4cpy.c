@@ -26,7 +26,7 @@
  * Decompresses LZ4 block.
  *
  * This is a 103 byte implementation of the LZ4 algorithm. Please note
- * LZ4 files are comprised of multiple frames, which may be decoded
+ * LZ4 files are a sequence of multiple frames, which may be decoded
  * together using the wrapper function lz4decode().
  *
  * @see rldecode() for a 16-byte decompressor
