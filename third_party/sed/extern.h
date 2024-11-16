@@ -4,6 +4,7 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/regex/regex.h"
 #include "third_party/sed/defs.h"
+#include "third_party/sed/shade.h"
 COSMOPOLITAN_C_START_
 
 extern struct s_command *prog;

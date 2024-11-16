@@ -3,6 +3,8 @@
 #include "libc/limits.h"
 COSMOPOLITAN_C_START_
 
+#define next _tr_next
+
 typedef struct {
   enum { STRING1, STRING2 } which;
   enum { EOS, INFINITE, NORMAL, RANGE, SEQUENCE, SET } state;

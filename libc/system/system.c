@@ -38,9 +38,7 @@
  * provides Bourne-like syntax on all platforms, including Windows. Many
  * builtin commands are included, e.g. exit, cd, rm, [, cat, wait, exec,
  * env, echo, read, true, test, kill, touch, rmdir, mkdir, false, mktemp
- * and usleep. It's also possible to __static_yoink() the symbols `_tr`,
- * `_sed`, `_awk`, and `_curl` for the tr, sed, awk and curl commands if
- * you're using the Cosmopolitan mono-repo.
+ * sed, tr, and usleep.
  *
  * If you just have a program name and arguments, and you don't need the
  * full power of a UNIX-like shell, then consider using the Cosmopolitan

@@ -743,15 +743,12 @@ static int TryBuiltin(bool wantexec) {
     return Usleep();
   if (!strcmp(args[0], "toupper"))
     return Toupper();
-  if (_weaken(_tr) && !strcmp(args[0], "tr")) {
-    return Fake(_weaken(_tr), wantexec);
-  }
-  if (_weaken(_sed) && !strcmp(args[0], "sed")) {
-    return Fake(_weaken(_sed), wantexec);
-  }
-  if (_weaken(_awk) && !strcmp(args[0], "awk")) {
+  if (!strcmp(args[0], "tr"))
+    return Fake(_tr, wantexec);
+  if (!strcmp(args[0], "sed"))
+    return Fake(_sed, wantexec);
+  if (_weaken(_awk) && strcmp(args[0], "awk"))
     return Fake(_weaken(_awk), wantexec);
-  }
   if (_weaken(_curl) && !strcmp(args[0], "curl")) {
     return Fake(_weaken(_curl), wantexec);
   }

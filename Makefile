@@ -274,6 +274,9 @@ include libc/BUILD.mk				#─┘
 include libc/sock/BUILD.mk			#─┐
 include net/http/BUILD.mk			# ├──ONLINE RUNTIME
 include third_party/musl/BUILD.mk		# │  You can communicate with the network
+include third_party/regex/BUILD.mk		# │
+include third_party/tr/BUILD.mk			# │
+include third_party/sed/BUILD.mk		# │
 include libc/system/BUILD.mk			# │
 include libc/x/BUILD.mk				# │
 include dsp/scale/BUILD.mk			# │
@@ -294,8 +297,7 @@ include third_party/libcxx/BUILD.mk		# │
 include third_party/openmp/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
-include net/https/BUILD.mk			# │
-include third_party/regex/BUILD.mk		#─┘
+include net/https/BUILD.mk			#─┘
 include third_party/tidy/BUILD.mk
 include third_party/BUILD.mk
 include third_party/nsync/testing/BUILD.mk
@@ -314,8 +316,6 @@ include third_party/double-conversion/test/BUILD.mk
 include third_party/lua/BUILD.mk
 include third_party/tree/BUILD.mk
 include third_party/zstd/BUILD.mk
-include third_party/tr/BUILD.mk
-include third_party/sed/BUILD.mk
 include third_party/awk/BUILD.mk
 include third_party/hiredis/BUILD.mk
 include third_party/make/BUILD.mk

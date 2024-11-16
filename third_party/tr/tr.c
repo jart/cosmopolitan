@@ -42,8 +42,8 @@
 #include "third_party/tr/cmd.h"
 #include "third_party/tr/extern.h"
 
-int delete[NCHARS], squeeze[NCHARS];
-int translate[NCHARS] = {
+static int delete[NCHARS], squeeze[NCHARS];
+static int translate[NCHARS] = {
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,		/* ASCII */
 	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
@@ -78,8 +78,8 @@ int translate[NCHARS] = {
 	0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
 };
 
-STR s1 = { STRING1, NORMAL, 0, OOBCH, { 0, OOBCH }, NULL, NULL };
-STR s2 = { STRING2, NORMAL, 0, OOBCH, { 0, OOBCH }, NULL, NULL };
+static STR s1 = { STRING1, NORMAL, 0, OOBCH, { 0, OOBCH }, NULL, NULL };
+static STR s2 = { STRING2, NORMAL, 0, OOBCH, { 0, OOBCH }, NULL, NULL };
 
 static void setup(int *, char *, STR *, int);
 static void usage(void);
@@ -89,9 +89,6 @@ _tr(int argc, char *argv[])
 {
 	int ch, cnt, lastch, *p;
 	int cflag, dflag, sflag;
-
-	if (pledge("stdio", NULL) == -1)
-		err(1, "pledge");
 
 	cflag = dflag = sflag = 0;
 	while ((ch = getopt(argc, argv, "Ccds")) != -1)

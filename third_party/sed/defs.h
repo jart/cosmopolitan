@@ -3,6 +3,7 @@
 #include "libc/calls/typedef/u.h"
 #include "libc/limits.h"
 #include "third_party/regex/regex.h"
+#include "third_party/sed/shade.h"
 COSMOPOLITAN_C_START_
 
 /*
