@@ -52,6 +52,7 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_STR							\
+	LIBC_SYSTEM							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_THREAD							\
@@ -62,7 +63,7 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_TZ							\
 	THIRD_PARTY_ZLIB						\
-	TOOL_ARGS
+	TOOL_ARGS							\
 
 THIRD_PARTY_SQLITE3_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x))))

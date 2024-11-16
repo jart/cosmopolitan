@@ -274,6 +274,7 @@ include libc/BUILD.mk				#─┘
 include libc/sock/BUILD.mk			#─┐
 include net/http/BUILD.mk			# ├──ONLINE RUNTIME
 include third_party/musl/BUILD.mk		# │  You can communicate with the network
+include libc/system/BUILD.mk			# │
 include libc/x/BUILD.mk				# │
 include dsp/scale/BUILD.mk			# │
 include dsp/mpeg/BUILD.mk			# │
@@ -367,6 +368,7 @@ include test/libc/fmt/BUILD.mk
 include test/libc/time/BUILD.mk
 include test/libc/proc/BUILD.mk
 include test/libc/stdio/BUILD.mk
+include test/libc/system/BUILD.mk
 include test/libc/BUILD.mk
 include test/net/http/BUILD.mk
 include test/net/https/BUILD.mk
@@ -449,7 +451,6 @@ COSMOPOLITAN =				\
 	LIBC_NT_BCRYPTPRIMITIVES	\
 	LIBC_NT_COMDLG32		\
 	LIBC_NT_GDI32			\
-	LIBC_NT_SHELL32			\
 	LIBC_NT_IPHLPAPI		\
 	LIBC_NT_KERNEL32		\
 	LIBC_NT_NTDLL			\
@@ -457,6 +458,7 @@ COSMOPOLITAN =				\
 	LIBC_NT_POWRPROF		\
 	LIBC_NT_PSAPI			\
 	LIBC_NT_REALTIME		\
+	LIBC_NT_SHELL32			\
 	LIBC_NT_SYNCHRONIZATION		\
 	LIBC_NT_USER32			\
 	LIBC_NT_WS2_32			\
@@ -465,6 +467,7 @@ COSMOPOLITAN =				\
 	LIBC_SOCK			\
 	LIBC_STDIO			\
 	LIBC_STR			\
+	LIBC_SYSTEM			\
 	LIBC_SYSV			\
 	LIBC_SYSV_CALLS			\
 	LIBC_THREAD			\

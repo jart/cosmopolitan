@@ -73,18 +73,6 @@ o/$(MODE)/test/libc/proc/posix_spawn_test.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/proc/system_test.dbg:				\
-		$(TEST_LIBC_PROC_DEPS)					\
-		o/$(MODE)/test/libc/proc/system_test.o			\
-		o/$(MODE)/test/libc/proc/proc.pkg			\
-		o/$(MODE)/tool/build/echo.zip.o				\
-		o/$(MODE)/tool/build/cocmd.zip.o			\
-		o/$(MODE)/tool/build/false.zip.o			\
-		$(LIBC_TESTMAIN)					\
-		$(CRT)							\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/execve_test.o			\

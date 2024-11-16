@@ -28,6 +28,7 @@ NET_TURFWAR_DIRECTDEPS =				\
 	LIBC_SOCK					\
 	LIBC_STDIO					\
 	LIBC_STR					\
+	LIBC_SYSTEM					\
 	LIBC_SYSV					\
 	LIBC_THREAD					\
 	LIBC_X						\
@@ -39,7 +40,7 @@ NET_TURFWAR_DIRECTDEPS =				\
 	THIRD_PARTY_SQLITE3				\
 	THIRD_PARTY_STB					\
 	THIRD_PARTY_TZ					\
-	THIRD_PARTY_ZLIB
+	THIRD_PARTY_ZLIB				\
 
 NET_TURFWAR_DEPS :=					\
 	$(call uniq,$(foreach x,$(NET_TURFWAR_DIRECTDEPS),$($(x))))

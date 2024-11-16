@@ -28,26 +28,27 @@ TEST_LIBC_STDIO_DIRECTDEPS =					\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
+	LIBC_LOG						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_PROC						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
+	LIBC_SYSTEM						\
 	LIBC_SYSV						\
-	LIBC_TINYMATH						\
 	LIBC_TESTLIB						\
 	LIBC_THREAD						\
-	LIBC_LOG						\
+	LIBC_TINYMATH						\
 	LIBC_X							\
 	THIRD_PARTY_COMPILER_RT					\
 	THIRD_PARTY_GDTOA					\
 	THIRD_PARTY_MBEDTLS					\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_NSYNC					\
+	THIRD_PARTY_TZ						\
 	THIRD_PARTY_ZLIB					\
 	THIRD_PARTY_ZLIB_GZ					\
-	THIRD_PARTY_TZ
 
 TEST_LIBC_STDIO_DEPS :=						\
 	$(call uniq,$(foreach x,$(TEST_LIBC_STDIO_DIRECTDEPS),$($(x))))
@@ -59,16 +60,6 @@ o/$(MODE)/test/libc/stdio/stdio.pkg:				\
 o/$(MODE)/test/libc/stdio/%.dbg:				\
 		$(TEST_LIBC_STDIO_DEPS)				\
 		o/$(MODE)/test/libc/stdio/%.o			\
-		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.zip.o			\
-		$(LIBC_TESTMAIN)				\
-		$(CRT)						\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/test/libc/stdio/popen_test.dbg:			\
-		$(TEST_LIBC_STDIO_DEPS)				\
-		o/$(MODE)/test/libc/stdio/popen_test.o		\
 		o/$(MODE)/test/libc/stdio/stdio.pkg		\
 		o/$(MODE)/tool/build/echo.zip.o			\
 		$(LIBC_TESTMAIN)				\

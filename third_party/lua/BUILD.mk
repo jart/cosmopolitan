@@ -131,6 +131,7 @@ THIRD_PARTY_LUA_A_DIRECTDEPS =					\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
+	LIBC_SYSTEM						\
 	LIBC_SYSV						\
 	LIBC_THREAD						\
 	LIBC_TINYMATH						\

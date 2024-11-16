@@ -22,11 +22,12 @@ THIRD_PARTY_AWK_A_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
+	LIBC_SYSTEM					\
 	LIBC_SYSV					\
 	LIBC_TINYMATH					\
-	TOOL_ARGS					\
 	THIRD_PARTY_GDTOA				\
 	THIRD_PARTY_MUSL				\
+	TOOL_ARGS					\
 
 THIRD_PARTY_AWK_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x))))

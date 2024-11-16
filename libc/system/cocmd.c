@@ -1055,12 +1055,9 @@ int _cocmd(int argc, char **argv, char **envp) {
   unsupported['('] = true;
   unsupported[')'] = true;
   unsupported['{'] = true;
-  unsupported['}'] = false;  // Perl t/op/exec.t depends on unpaired } being
-                             // passed from the shell to Perl
-  if (!_weaken(glob)) {
-    unsupported['*'] = true;
-    unsupported['?'] = true;
-  }
+  // Perl t/op/exec.t depends on unpaired } being
+  // passed from the shell to Perl
+  unsupported['}'] = false;
 
   if (argc >= 3 && !strcmp(argv[1], "--")) {
     for (i = 2; i < argc; ++i) {
@@ -1121,18 +1118,16 @@ int _cocmd(int argc, char **argv, char **envp) {
         Open(GetRedirectArg(prog, arg, 1), 0, O_RDONLY);
       } else {
         int globrc = GLOB_NOMATCH;
-        if (_weaken(glob)) {
-          globrc = _weaken(glob)(arg, globFlags, NULL, &globTheBuilder);
-          if (globrc == 0) {
-            for (; globCount < globTheBuilder.gl_pathc; globCount++) {
-              args[n++] = globTheBuilder.gl_pathv[globCount];
-            }
-          } else if (globrc != GLOB_NOMATCH) {
-            tinyprint(2, prog, ": error: with glob\n", NULL);
-            _Exit(16);
+        globrc = glob(arg, globFlags, NULL, &globTheBuilder);
+        if (globrc == 0) {
+          for (; globCount < globTheBuilder.gl_pathc; globCount++) {
+            args[n++] = globTheBuilder.gl_pathv[globCount];
           }
-          globFlags |= GLOB_APPEND;
+        } else if (globrc != GLOB_NOMATCH) {
+          tinyprint(2, prog, ": error: with glob\n", NULL);
+          _Exit(16);
         }
+        globFlags |= GLOB_APPEND;
         if (globrc == GLOB_NOMATCH) {
           args[n++] = arg;
         }
