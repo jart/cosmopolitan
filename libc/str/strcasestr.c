@@ -17,10 +17,62 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/dce.h"
+#include "libc/mem/alloca.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/tab.h"
 
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+static void computeLPS(const char *pattern, long M, long *lps) {
+  long len = 0;
+  lps[0] = 0;
+  long i = 1;
+  while (i < M) {
+    if (kToLower[pattern[i] & 255] == kToLower[pattern[len] & 255]) {
+      len++;
+      lps[i] = len;
+      i++;
+    } else {
+      if (len != 0) {
+        len = lps[len - 1];
+      } else {
+        lps[i] = 0;
+        i++;
+      }
+    }
+  }
+}
+
+static char *kmp(const char *s, size_t n, const char *ss, size_t m) {
+  if (!m)
+    return (char *)s;
+  if (n < m)
+    return NULL;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
+  long need = sizeof(long) * m;
+  long *lps = (long *)alloca(need);
+  CheckLargeStackAllocation(lps, need);
+#pragma GCC pop_options
+  computeLPS(ss, m, lps);
+  long i = 0;
+  long j = 0;
+  while (i < n) {
+    if (kToLower[ss[j] & 255] == kToLower[s[i] & 255]) {
+      i++;
+      j++;
+    }
+    if (j == m) {
+      return (char *)(s + i - j);
+    } else if (i < n && kToLower[ss[j] & 255] != kToLower[s[i] & 255]) {
+      if (j != 0) {
+        j = lps[j - 1];
+      } else {
+        i++;
+      }
+    }
+  }
+  return NULL;
+}
 
 /**
  * Searches for substring case-insensitively.
@@ -28,65 +80,9 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @param haystack is the search area, as a NUL-terminated string
  * @param needle is the desired substring, also NUL-terminated
  * @return pointer to first substring within haystack, or NULL
- * @note this implementation goes fast in practice but isn't hardened
- *     against pathological cases, and therefore shouldn't be used on
- *     untrustworthy data
  * @asyncsignalsafe
  * @see strstr()
  */
-__vex char *strcasestr(const char *haystack, const char *needle) {
-#if defined(__x86_64__) && !defined(__chibicc__)
-  char c;
-  size_t i;
-  unsigned k, m;
-  const xmm_t *p;
-  xmm_t v, n1, n2, z = {0};
-  if (haystack == needle || !*needle)
-    return (char *)haystack;
-  c = *needle;
-  n1 = (xmm_t){c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  c = kToLower[c & 255];
-  n2 = (xmm_t){c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  for (;;) {
-    k = (uintptr_t)haystack & 15;
-    p = (const xmm_t *)((uintptr_t)haystack & -16);
-    v = *p;
-    m = __builtin_ia32_pmovmskb128((v == z) | (v == n1) | (v == n2));
-    m >>= k;
-    m <<= k;
-    while (!m) {
-      v = *++p;
-      m = __builtin_ia32_pmovmskb128((v == z) | (v == n1) | (v == n2));
-    }
-    haystack = (const char *)p + __builtin_ctzl(m);
-    for (i = 0;; ++i) {
-      if (!needle[i])
-        return (/*unconst*/ char *)haystack;
-      if (!haystack[i])
-        break;
-      if (kToLower[needle[i] & 255] != kToLower[haystack[i] & 255])
-        break;
-    }
-    if (!*haystack++)
-      break;
-  }
-  return 0;
-#else
-  size_t i;
-  if (haystack == needle || !*needle)
-    return (void *)haystack;
-  for (;;) {
-    for (i = 0;; ++i) {
-      if (!needle[i])
-        return (/*unconst*/ char *)haystack;
-      if (!haystack[i])
-        break;
-      if (kToLower[needle[i] & 255] != kToLower[haystack[i] & 255])
-        break;
-    }
-    if (!*haystack++)
-      break;
-  }
-  return 0;
-#endif
+char *strcasestr(const char *haystack, const char *needle) {
+  return kmp(haystack, strlen(haystack), needle, strlen(needle));
 }

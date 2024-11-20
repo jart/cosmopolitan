@@ -49,6 +49,11 @@ char *strcasestr_naive(const char *haystack, const char *needle) {
   return 0;
 }
 
+TEST(strcasestr, tester) {
+  const char *haystack = "Windows";
+  ASSERT_STREQ(haystack, strcasestr(haystack, "win"));
+}
+
 TEST(strcasestr, test_emptyString_isFoundAtBeginning) {
   MAKESTRING(haystack, "abc123def");
   ASSERT_STREQ(&haystack[0], strcasestr(haystack, gc(strdup(""))));
