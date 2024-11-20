@@ -2620,7 +2620,8 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
     lua_getglobal(L, "OnError");
     lua_pushinteger(L, code);
     lua_pushstring(L, reason);
-    if (LuaCallWithTrace(L, 2, 0, NULL) == LUA_OK) {
+    lua_pushstring(L, details);
+    if (LuaCallWithTrace(L, 3, 0, NULL) == LUA_OK) {
       return CommitOutput(GetLuaResponse());
     } else {
       return ServeErrorImplDefault(code, reason, details);

@@ -569,7 +569,7 @@ HOOKS
           *). See functions like Route which asks redbean to do its default
           thing from the handler.
 
-  OnError(status:int, message:string)
+  OnError(status:int, message:string, details:string)
           If this function is defined and if any errors occurs in
           OnHttpRequest() then this method will be called instead of displaying
           the default error page. Useful if you need to display the error page
