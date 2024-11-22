@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 
 /**
  * Waits for all threads to arrive at barrier.
@@ -54,14 +54,14 @@ errno_t pthread_barrier_wait(pthread_barrier_t *barrier) {
     atomic_store_explicit(&barrier->_counter, barrier->_count,
                           memory_order_release);
     atomic_store_explicit(&barrier->_waiters, 0, memory_order_release);
-    nsync_futex_wake_(&barrier->_waiters, INT_MAX, barrier->_pshared);
+    cosmo_futex_wake(&barrier->_waiters, INT_MAX, barrier->_pshared);
     return PTHREAD_BARRIER_SERIAL_THREAD;
   }
 
   // wait for everyone else to arrive at barrier
   BLOCK_CANCELATION;
   while ((n = atomic_load_explicit(&barrier->_waiters, memory_order_acquire)))
-    nsync_futex_wait_(&barrier->_waiters, n, barrier->_pshared, 0, 0);
+    cosmo_futex_wait(&barrier->_waiters, n, barrier->_pshared, 0, 0);
   ALLOW_CANCELATION;
 
   return 0;

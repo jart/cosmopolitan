@@ -32,7 +32,7 @@
 	.ftrace1
 swapcontext:
 	.ftrace2
-#include "libc/calls/getcontext.inc"
+#include "libc/intrin/getcontext.inc"
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

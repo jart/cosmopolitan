@@ -19,6 +19,7 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -28,24 +29,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
-
-static void pthread_mutex_lock_spin(atomic_int *word) {
-  int backoff = 0;
-  if (atomic_exchange_explicit(word, 1, memory_order_acquire)) {
-    LOCKTRACE("acquiring pthread_mutex_lock_spin(%t)...", word);
-    for (;;) {
-      for (;;) {
-        if (!atomic_load_explicit(word, memory_order_relaxed))
-          break;
-        backoff = pthread_delay_np(word, backoff);
-      }
-      if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
-        break;
-    }
-  }
-}
 
 // see "take 3" algorithm in "futexes are tricky" by ulrich drepper
 // slightly improved to attempt acquiring multiple times b4 syscall
@@ -59,7 +43,7 @@ static void pthread_mutex_lock_drepper(atomic_int *futex, char pshare) {
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   BLOCK_CANCELATION;
   while (word > 0) {
-    _weaken(nsync_futex_wait_)(futex, 2, pshare, 0, 0);
+    cosmo_futex_wait(futex, 2, pshare, 0, 0);
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   }
   ALLOW_CANCELATION;
@@ -164,11 +148,7 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
 
   // handle normal mutexes
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    if (_weaken(nsync_futex_wait_)) {
-      pthread_mutex_lock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
-    } else {
-      pthread_mutex_lock_spin(&mutex->_futex);
-    }
+    pthread_mutex_lock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
     return 0;
   }
 

@@ -16,18 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/futex.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -37,62 +33,56 @@
 #include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
-#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/clktck.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "third_party/nsync/atomic.h"
-#include "third_party/nsync/time.h"
-#include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/futex.internal.h"
-#include "third_party/nsync/time.h"
+// clang-format off
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
 
-errno_t _futex (atomic_int *, int, int, const struct timespec *, int *, int);
-errno_t _futex_wake (atomic_int *, int, int) asm ("_futex");
+errno_t cosmo_futex_thunk (atomic_int *, int, int, const struct timespec *, int *, int);
+errno_t _futex_wake (atomic_int *, int, int) asm ("cosmo_futex_thunk");
 int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
-static struct NsyncFutex {
+static struct CosmoFutex {
 	atomic_uint once;
 	int FUTEX_WAIT_;
 	int FUTEX_PRIVATE_FLAG_;
 	int FUTEX_CLOCK_REALTIME_;
 	bool is_supported;
 	bool timeout_is_relative;
-} nsync_futex_;
+} g_cosmo_futex;
 
-static void nsync_futex_init_ (void) {
+static void cosmo_futex_init (void) {
 	int e;
 	atomic_int x;
 
-	nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
+	g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT;
 
 	if (IsWindows ()) {
-		nsync_futex_.is_supported = true;
+		g_cosmo_futex.is_supported = true;
 		return;
 	}
 
 	if (IsXnu ()) {
-		nsync_futex_.is_supported = true;
-		nsync_futex_.timeout_is_relative = true;
+		g_cosmo_futex.is_supported = true;
+		g_cosmo_futex.timeout_is_relative = true;
 		return;
 	}
 
 	if (IsFreebsd ()) {
-		nsync_futex_.is_supported = true;
-		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		g_cosmo_futex.is_supported = true;
+		g_cosmo_futex.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		return;
 	}
 
-	if (!(nsync_futex_.is_supported = IsLinux () || IsOpenbsd ()))
+	if (!(g_cosmo_futex.is_supported = IsLinux () || IsOpenbsd ()))
 		return;
 
 	// In our testing, we found that the monotonic clock on various
@@ -100,7 +90,7 @@ static void nsync_futex_init_ (void) {
 	// better behaved than the realtime clock, and routinely took
 	// large steps backwards, especially on multiprocessors. Given
 	// that "monotonic" doesn't seem to mean what it says,
-	// implementers of nsync_time might consider retaining the
+	// implementers of cosmo_time might consider retaining the
 	// simplicity of a single epoch within an address space, by
 	// configuring any time synchronization mechanism (like ntp) to
 	// adjust for leap seconds by adjusting the rate, rather than
@@ -108,31 +98,32 @@ static void nsync_futex_init_ (void) {
 	e = errno;
 	atomic_store_explicit (&x, 0, memory_order_relaxed);
 	if (IsLinux () &&
-	    _futex (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
-		    1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
-		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
-		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-		nsync_futex_.FUTEX_CLOCK_REALTIME_ = FUTEX_CLOCK_REALTIME;
+	    cosmo_futex_thunk (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
+			       1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
+		g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
+		g_cosmo_futex.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		g_cosmo_futex.FUTEX_CLOCK_REALTIME_ = FUTEX_CLOCK_REALTIME;
 	} else if (IsOpenbsd () ||
 		   (IsLinux () &&
 		    !_futex_wake (&x, FUTEX_WAKE_PRIVATE, 1))) {
-		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
-		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-		nsync_futex_.timeout_is_relative = true;
+		g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT;
+		g_cosmo_futex.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		g_cosmo_futex.timeout_is_relative = true;
 	} else {
-		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
-		nsync_futex_.timeout_is_relative = true;
+		g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT;
+		g_cosmo_futex.timeout_is_relative = true;
 	}
 	errno = e;
 }
 
-static uint32_t nsync_time_64to32u (uint64_t duration) {
+static uint32_t cosmo_time_64to32u (uint64_t duration) {
 	if (duration <= -1u)
 		return duration;
 	return -1u;
 }
 
-static int nsync_futex_polyfill_ (atomic_int *w, int expect, int clock, struct timespec *abstime) {
+static int cosmo_futex_polyfill (atomic_int *w, int expect, int clock,
+				 struct timespec *abstime) {
 	for (;;) {
 		if (atomic_load_explicit (w, memory_order_acquire) != expect)
 			return 0;
@@ -148,10 +139,10 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, int clock, struct t
 	}
 }
 
-static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
-				    int clock, const struct timespec *timeout,
-				    struct PosixThread *pt,
-				    sigset_t waitmask) {
+static int cosmo_futex_wait_win32 (atomic_int *w, int expect, char pshare,
+				   int clock, const struct timespec *timeout,
+				   struct PosixThread *pt,
+				   sigset_t waitmask) {
 #ifdef __x86_64__
 	int sig;
 	bool32 ok;
@@ -183,7 +174,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			pt->pt_blkmask = waitmask;
 			atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
 		}
-		ok = WaitOnAddress (w, &expect, sizeof(int), nsync_time_64to32u (timespec_tomillis (wait)));
+		ok = WaitOnAddress (w, &expect, sizeof(int), cosmo_time_64to32u (timespec_tomillis (wait)));
 		if (pt) {
 			/* __sig_wake wakes our futex without changing `w` after enqueing signals */
 			atomic_store_explicit (&pt->pt_blocker, 0, memory_order_release);
@@ -197,7 +188,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 		if (ok) {
 			return 0;
 		} else {
-			ASSERT (GetLastError () == ETIMEDOUT);
+			unassert (GetLastError () == ETIMEDOUT);
 		}
 	}
 #else
@@ -205,14 +196,14 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 #endif /* __x86_64__ */
 }
 
-static int nsync_futex_fix_timeout_ (struct timespec *memory, int clock,
-				     const struct timespec *abstime,
-				     struct timespec **result) {
+static int cosmo_futex_fix_timeout (struct timespec *memory, int clock,
+				    const struct timespec *abstime,
+				    struct timespec **result) {
 	struct timespec now;
 	if (!abstime) {
 		*result = 0;
 		return 0;
-	} else if (!nsync_futex_.timeout_is_relative) {
+	} else if (!g_cosmo_futex.timeout_is_relative) {
 		*memory = *abstime;
 		*result = memory;
 		return 0;
@@ -225,22 +216,39 @@ static int nsync_futex_fix_timeout_ (struct timespec *memory, int clock,
 	}
 }
 
-int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
-		       int clock, const struct timespec *abstime) {
+/**
+ * Waits on futex.
+ *
+ * This function may be used to ask the OS to park the calling thread
+ * until cosmo_futex_wake() is called on the memory address `w`.
+ *
+ * @param w is your futex
+ * @param expect is the value `*w` is expected to have on entry
+ * @param pshare is `PTHREAD_PROCESS_PRIVATE` / `PTHREAD_PROCESS_SHARED`
+ * @param clock is `CLOCK_MONOTONIC`, `CLOCK_REALTIME`, etc.
+ * @param abstime is null to wait forever or absolute timestamp to stop
+ * @return 0 on success, or -errno on error
+ * @raise EINVAL on bad parameter
+ * @raise EAGAIN if `*w` wasn't `expect`
+ * @raise EINTR if a signal handler was called while waiting
+ * @raise ECANCELED if calling thread was canceled while waiting
+ */
+int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
+		      int clock, const struct timespec *abstime) {
 	int e, rc, op;
 	struct CosmoTib *tib;
 	struct PosixThread *pt;
 	struct timespec tsmem;
 	struct timespec *timeout = 0;
 
-	cosmo_once (&nsync_futex_.once, nsync_futex_init_);
+	cosmo_once (&g_cosmo_futex.once, cosmo_futex_init);
 
-	op = nsync_futex_.FUTEX_WAIT_;
+	op = g_cosmo_futex.FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE)
-		op |= nsync_futex_.FUTEX_PRIVATE_FLAG_;
+		op |= g_cosmo_futex.FUTEX_PRIVATE_FLAG_;
 	if (clock == CLOCK_REALTIME ||
 	    clock == CLOCK_REALTIME_COARSE)
-		op |= nsync_futex_.FUTEX_CLOCK_REALTIME_;
+		op |= g_cosmo_futex.FUTEX_CLOCK_REALTIME_;
 
 	if (abstime && timespec_cmp (*abstime, timespec_zero) <= 0) {
 		rc = -ETIMEDOUT;
@@ -252,7 +260,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 		goto Finished;
 	}
 
-	if ((rc = nsync_futex_fix_timeout_ (&tsmem, clock, abstime, &timeout)))
+	if ((rc = cosmo_futex_fix_timeout (&tsmem, clock, abstime, &timeout)))
 		goto Finished;
 
 	LOCKTRACE ("futex(%t [%d], %s, %#x, %s) → ...",
@@ -263,13 +271,13 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 	tib = __get_tls();
 	pt = (struct PosixThread *)tib->tib_pthread;
 
-	if (nsync_futex_.is_supported) {
+	if (g_cosmo_futex.is_supported) {
 		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
 			if (pshare) goto Polyfill;
 			sigset_t m = __sig_block ();
-			rc = nsync_futex_wait_win32_ (w, expect, pshare, clock, timeout, pt, m);
+			rc = cosmo_futex_wait_win32 (w, expect, pshare, clock, timeout, pt, m);
 			__sig_unblock (m);
 		} else if (IsXnu ()) {
 
@@ -293,7 +301,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 				op = UL_COMPARE_AND_WAIT;
 			}
 			if (timeout) {
-				us = nsync_time_64to32u (timespec_tomicros (*timeout));
+				us = cosmo_time_64to32u (timespec_tomicros (*timeout));
 			} else {
 				us = -1u;
 			}
@@ -333,7 +341,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare,
 		}
 	} else {
 	Polyfill:
-		rc = nsync_futex_polyfill_ (w, expect, clock, timeout);
+		rc = cosmo_futex_polyfill (w, expect, clock, timeout);
 	}
 
 Finished:
@@ -346,18 +354,24 @@ Finished:
 	return rc;
 }
 
-int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
+/**
+ * Wakes futex.
+ *
+ * @param w is your futex
+ * @param count is number of threads to wake (usually 1 or `INT_MAX`)
+ * @param pshare is `PTHREAD_PROCESS_PRIVATE` / `PTHREAD_PROCESS_SHARED`
+ * @return number of threads woken on success, or -errno on error
+ */
+int cosmo_futex_wake (atomic_int *w, int count, char pshare) {
 	int rc, op, fop;
 
-	ASSERT (count == 1 || count == INT_MAX);
-
-	cosmo_once (&nsync_futex_.once, nsync_futex_init_);
+	cosmo_once (&g_cosmo_futex.once, cosmo_futex_init);
 
 	op = FUTEX_WAKE;
 	if (pshare == PTHREAD_PROCESS_PRIVATE)
-		op |= nsync_futex_.FUTEX_PRIVATE_FLAG_;
+		op |= g_cosmo_futex.FUTEX_PRIVATE_FLAG_;
 
-	if (nsync_futex_.is_supported) {
+	if (g_cosmo_futex.is_supported) {
 		if (IsWindows ()) {
 			if (pshare) {
 				goto Polyfill;
@@ -379,7 +393,7 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 				op |= ULF_WAKE_ALL;
 			}
 			rc = ulock_wake (op, w, 0);
-			ASSERT (!rc || rc == -ENOENT);
+			unassert (!rc || rc == -ENOENT);
 			if (!rc) {
 				rc = 1;
 			} else if (rc == -ENOENT) {

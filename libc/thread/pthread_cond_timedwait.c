@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -28,7 +30,6 @@
 #include "libc/thread/thread2.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/cv.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/time.h"
 
 __static_yoink("nsync_mu_lock");
@@ -74,8 +75,8 @@ static errno_t pthread_cond_timedwait_impl(pthread_cond_t *cond,
   int rc;
   struct PthreadWait waiter = {cond, mutex};
   pthread_cleanup_push(pthread_cond_leave, &waiter);
-  rc = nsync_futex_wait_((atomic_int *)&cond->_sequence, seq1, cond->_pshared,
-                         cond->_clock, abstime);
+  rc = cosmo_futex_wait((atomic_int *)&cond->_sequence, seq1, cond->_pshared,
+                        cond->_clock, abstime);
   pthread_cleanup_pop(true);
   if (rc == -EAGAIN)
     rc = 0;

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -26,19 +27,14 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
-
-static void pthread_mutex_unlock_spin(atomic_int *word) {
-  atomic_store_explicit(word, 0, memory_order_release);
-}
 
 // see "take 3" algorithm in "futexes are tricky" by ulrich drepper
 static void pthread_mutex_unlock_drepper(atomic_int *futex, char pshare) {
   int word = atomic_fetch_sub_explicit(futex, 1, memory_order_release);
   if (word == 2) {
     atomic_store_explicit(futex, 0, memory_order_release);
-    _weaken(nsync_futex_wake_)(futex, 1, pshare);
+    cosmo_futex_wake(futex, 1, pshare);
   }
 }
 
@@ -137,11 +133,7 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
 
   // implement barebones normal mutexes
   if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    if (_weaken(nsync_futex_wake_)) {
-      pthread_mutex_unlock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
-    } else {
-      pthread_mutex_unlock_spin(&mutex->_futex);
-    }
+    pthread_mutex_unlock_drepper(&mutex->_futex, MUTEX_PSHARED(word));
     return 0;
   }
 

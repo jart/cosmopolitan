@@ -22,6 +22,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -32,7 +33,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 
 static void sem_delay(int n) {
   volatile int i;
@@ -119,8 +119,8 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
 
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
-      rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared,
-                             CLOCK_REALTIME, abstime);
+      rc = cosmo_futex_wait(&sem->sem_value, v, sem->sem_pshared,
+                            CLOCK_REALTIME, abstime);
       if (rc == -EINTR || rc == -ECANCELED) {
         errno = -rc;
         rc = -1;

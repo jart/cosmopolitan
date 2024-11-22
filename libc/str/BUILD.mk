@@ -77,13 +77,7 @@ o/$(MODE)/libc/str/iswseparator.o: private			\
 
 # ensure that division is optimized
 o/$(MODE)/libc/str/bcmp.o					\
-o/$(MODE)/libc/str/strcmp.o					\
-o/$(MODE)/libc/str/windowsdurationtotimeval.o			\
-o/$(MODE)/libc/str/windowsdurationtotimespec.o			\
-o/$(MODE)/libc/str/timevaltowindowstime.o			\
-o/$(MODE)/libc/str/timespectowindowstime.o			\
-o/$(MODE)/libc/str/windowstimetotimeval.o			\
-o/$(MODE)/libc/str/windowstimetotimespec.o: private		\
+o/$(MODE)/libc/str/strcmp.o: private				\
 		CFLAGS +=					\
 			-O2
 

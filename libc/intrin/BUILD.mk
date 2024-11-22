@@ -30,9 +30,11 @@ LIBC_INTRIN_A_CHECKS =					\
 LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32				\
+	LIBC_NT_REALTIME				\
+	LIBC_NT_SYNCHRONIZATION				\
 	LIBC_NT_WS2_32					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS					\
 
 LIBC_INTRIN_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x))))
@@ -105,6 +107,16 @@ o//libc/intrin/mmap.o					\
 o//libc/intrin/demangle.o: private			\
 		CFLAGS +=				\
 			-mgeneral-regs-only
+
+# ensure that division is optimized
+o/$(MODE)/libc/intrin/windowsdurationtotimeval.o	\
+o/$(MODE)/libc/intrin/windowsdurationtotimespec.o	\
+o/$(MODE)/libc/intrin/timevaltowindowstime.o		\
+o/$(MODE)/libc/intrin/timespectowindowstime.o		\
+o/$(MODE)/libc/intrin/windowstimetotimeval.o		\
+o/$(MODE)/libc/intrin/windowstimetotimespec.o: private	\
+		CFLAGS +=				\
+			-O2
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S

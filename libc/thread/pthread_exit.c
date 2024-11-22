@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
@@ -33,7 +34,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 
 /**
@@ -137,8 +137,8 @@ wontreturn void pthread_exit(void *rc) {
   // note that the main thread is joinable by child threads
   if (pt->pt_flags & PT_STATIC) {
     atomic_store_explicit(&tib->tib_tid, 0, memory_order_release);
-    nsync_futex_wake_((atomic_int *)&tib->tib_tid, INT_MAX,
-                      !IsWindows() && !IsXnu());
+    cosmo_futex_wake((atomic_int *)&tib->tib_tid, INT_MAX,
+                     !IsWindows() && !IsXnu());
     _Exit1(0);
   }
 

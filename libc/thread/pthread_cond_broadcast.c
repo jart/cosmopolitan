@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/cv.h"
-#include "third_party/nsync/futex.internal.h"
 
 __static_yoink("nsync_mu_lock");
 __static_yoink("nsync_mu_unlock");
@@ -63,6 +63,6 @@ errno_t pthread_cond_broadcast(pthread_cond_t *cond) {
   // roll forward the monotonic sequence
   atomic_fetch_add_explicit(&cond->_sequence, 1, memory_order_acq_rel);
   if (atomic_load_explicit(&cond->_waiters, memory_order_acquire))
-    nsync_futex_wake_((atomic_int *)&cond->_sequence, INT_MAX, cond->_pshared);
+    cosmo_futex_wake((atomic_int *)&cond->_sequence, INT_MAX, cond->_pshared);
   return 0;
 }

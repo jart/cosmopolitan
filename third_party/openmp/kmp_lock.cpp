@@ -23,7 +23,7 @@
 
 #if KMP_USE_FUTEX
 #ifdef __COSMOPOLITAN__
-#include "third_party/nsync/futex.internal.h"
+#include <cosmo.h>
 #else
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -380,7 +380,7 @@ __kmp_acquire_futex_lock_timed_template(kmp_futex_lock_t *lck, kmp_int32 gtid) {
 
     long rc;
 #ifdef __COSMOPOLITAN__
-    if ((rc = nsync_futex_wait_((int *)&(lck->lk.poll), poll_val, false, 0, NULL)) != 0) {
+    if ((rc = cosmo_futex_wait((int *)&(lck->lk.poll), poll_val, false, 0, NULL)) != 0) {
 #else
     if ((rc = syscall(__NR_futex, (int *)&(lck->lk.poll), FUTEX_WAIT, poll_val, NULL,
                       NULL, 0)) != 0) {
@@ -462,7 +462,7 @@ int __kmp_release_futex_lock(kmp_futex_lock_t *lck, kmp_int32 gtid) {
              ("__kmp_release_futex_lock: lck:%p, T#%d futex_wake 1 thread\n",
               lck, gtid));
 #ifdef __COSMOPOLITAN__
-    nsync_futex_wake_((int *)&(lck->lk.poll), 1, false);
+    cosmo_futex_wake((int *)&(lck->lk.poll), 1, false);
 #else
     syscall(__NR_futex, &(lck->lk.poll), FUTEX_WAKE, KMP_LOCK_BUSY(1, futex),
             NULL, NULL, 0);

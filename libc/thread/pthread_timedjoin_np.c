@@ -20,6 +20,8 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/cosmo.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
@@ -30,7 +32,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/futex.internal.h"
 
 static const char *DescribeReturnValue(char buf[30], int err, void **value) {
   char *p = buf;
@@ -75,8 +76,8 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
     if (!(err = pthread_testcancel_np())) {
       BEGIN_CANCELATION_POINT;
       while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-        e = nsync_futex_wait_(ctid, x, !IsWindows() && !IsXnu(), CLOCK_REALTIME,
-                              abstime);
+        e = cosmo_futex_wait(ctid, x, !IsWindows() && !IsXnu(), CLOCK_REALTIME,
+                             abstime);
         if (e == -ECANCELED) {
           err = ECANCELED;
           break;

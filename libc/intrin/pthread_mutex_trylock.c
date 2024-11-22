@@ -24,14 +24,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu.h"
-
-static errno_t pthread_mutex_trylock_spin(atomic_int *word) {
-  if (!atomic_exchange_explicit(word, 1, memory_order_acquire))
-    return 0;
-  return EBUSY;
-}
 
 static errno_t pthread_mutex_trylock_drepper(atomic_int *futex) {
   int word = 0;
@@ -142,13 +135,8 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
 #endif
 
   // handle normal mutexes
-  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL) {
-    if (_weaken(nsync_futex_wait_)) {
-      return pthread_mutex_trylock_drepper(&mutex->_futex);
-    } else {
-      return pthread_mutex_trylock_spin(&mutex->_futex);
-    }
-  }
+  if (MUTEX_TYPE(word) == PTHREAD_MUTEX_NORMAL)
+    return pthread_mutex_trylock_drepper(&mutex->_futex);
 
   // handle recursive and error checking mutexes
 #if PTHREAD_USE_NSYNC

@@ -9,8 +9,6 @@
 
 #ifdef __COSMOPOLITAN__
 #include <cosmo.h>
-#include "libc/thread/thread.h"
-#include "third_party/nsync/futex.internal.h"
 #endif
 
 #include <assert.h>

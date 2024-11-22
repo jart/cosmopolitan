@@ -20,7 +20,7 @@
 #include "libc/macros.h"
 .privileged
 
-_futex:
+cosmo_futex_thunk:
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
@@ -47,4 +47,4 @@ _futex:
 #error "unsupported architecture"
 #endif /* __x86_64__ */
 1:	ret
-	.endfn	_futex,globl,hidden
+	.endfn	cosmo_futex_thunk,globl,hidden
