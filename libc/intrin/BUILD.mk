@@ -119,6 +119,12 @@ o/$(MODE)/libc/intrin/windowstimetotimespec.o: private	\
 			-O2
 
 # these assembly files are safe to build on aarch64
+o/$(MODE)/libc/intrin/getcontext.o: libc/intrin/getcontext.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/swapcontext.o: libc/intrin/swapcontext.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/tailcontext.o: libc/intrin/tailcontext.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/fenv.o: libc/intrin/fenv.S

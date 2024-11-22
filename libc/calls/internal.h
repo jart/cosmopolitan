@@ -30,6 +30,7 @@ int CountConsoleInputBytes(void);
 int FlushConsoleInputBytes(void);
 int64_t GetConsoleInputHandle(void);
 int64_t GetConsoleOutputHandle(void);
+void EchoConsoleNt(const char *, size_t, bool);
 int IsWindowsExecutable(int64_t, const char16_t *);
 void InterceptTerminalCommands(const char *, size_t);
 

@@ -320,9 +320,12 @@ textwindows static int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
   // note we define _POSIX_VDISABLE as zero
   // tcsetattr() lets anyone reconfigure these keybindings
   if (c && !(__ttyconf.magic & kTtyNoIsigs) && !__keystroke.bypass_mode) {
+    char b[] = {c};
     if (c == __ttyconf.vintr) {
+      EchoConsoleNt(b, 1, false);
       return AddSignal(SIGINT);
     } else if (c == __ttyconf.vquit) {
+      EchoConsoleNt(b, 1, false);
       return AddSignal(SIGQUIT);
     }
   }
@@ -457,7 +460,8 @@ textwindows static void WriteCtl(const char *p, size_t n, bool escape_harder) {
   }
 }
 
-textwindows static void EchoTty(const char *p, size_t n, bool escape_harder) {
+textwindows void EchoConsoleNt(const char *p, size_t n, bool escape_harder) {
+  InitConsole();
   if (!(__ttyconf.magic & kTtySilence)) {
     if (__ttyconf.magic & kTtyEchoRaw) {
       WriteTty(p, n);
@@ -517,7 +521,7 @@ textwindows static void IngestConsoleInputRecord(struct NtInputRecord *r) {
       memcpy(k->buf, buf, sizeof(k->buf));
       k->buflen = len;
       dll_make_last(&__keystroke.line, &k->elem);
-      EchoTty(buf, len, true);
+      EchoConsoleNt(buf, len, true);
       if (!__keystroke.freekeys) {
         dll_make_last(&__keystroke.list, __keystroke.line);
         __keystroke.line = 0;
@@ -616,7 +620,7 @@ textwindows static void IngestConsoleInputRecord(struct NtInputRecord *r) {
 
   // echo input if it was successfully recorded
   // assuming the win32 console isn't doing it already
-  EchoTty(buf, len, false);
+  EchoConsoleNt(buf, len, false);
 
   // save keystroke to appropriate list
   if (__ttyconf.magic & kTtyUncanon) {

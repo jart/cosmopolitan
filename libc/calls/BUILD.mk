@@ -216,12 +216,6 @@ o//libc/calls/writev.o: private				\
 			-mgeneral-regs-only
 
 # these assembly files are safe to build on aarch64
-o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/calls/swapcontext.o: libc/calls/swapcontext.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/calls/tailcontext.o: libc/calls/tailcontext.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/calls/stackjump.o: libc/calls/stackjump.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 

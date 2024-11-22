@@ -19,6 +19,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -34,6 +35,7 @@
 #include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/maps.h"
+#include "libc/intrin/nomultics.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
@@ -54,6 +56,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/thread/posixthread.internal.h"
 #ifdef __x86_64__
 
@@ -622,12 +625,32 @@ static textwindows int __sig_console_sig(uint32_t dwCtrlType) {
   }
 }
 
+static textwindows int __sig_console_char(uint32_t dwCtrlType) {
+  switch (dwCtrlType) {
+    case kNtCtrlCEvent:
+      return __ttyconf.vintr;
+    case kNtCtrlBreakEvent:
+      return __ttyconf.vquit;
+    default:
+      return _POSIX_VDISABLE;
+  }
+}
+
 __msabi textwindows dontinstrument bool32 __sig_console(uint32_t dwCtrlType) {
   // win32 launches a thread to deliver ctrl-c and ctrl-break when typed
   // it only happens when kNtEnableProcessedInput is in play on console.
   // otherwise we need to wait until read-nt.c discovers that keystroke.
   struct CosmoTib tls;
   __bootstrap_tls(&tls, __builtin_frame_address(0));
+
+  // ensure that ^C or ^\ gets printed to console appropriately
+  if (_weaken(EchoConsoleNt)) {
+    char c;
+    if ((c = __sig_console_char(dwCtrlType)) != _POSIX_VDISABLE)
+      _weaken(EchoConsoleNt)(&c, sizeof(c), false);
+  }
+
+  // take control of random thread and inject call to signal handler
   __sig_generate(__sig_console_sig(dwCtrlType), SI_KERNEL);
   return true;
 }
