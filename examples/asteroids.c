@@ -12,6 +12,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 #include <termios.h>
 #include <sys/select.h>
 
@@ -38,6 +39,7 @@ GameObject bullets[MAX_BULLETS];
 int score = 0;
 time_t startTime;
 int isGameOver = 0;
+int shouldExit = 0;
 int finalTime = 0; // To store final time at game over
 char display[SCREEN_HEIGHT][SCREEN_WIDTH];
 
@@ -298,8 +300,13 @@ void restoreTerminal(struct termios *old_tio) {
     tcsetattr(STDIN_FILENO, TCSANOW, old_tio);
 }
 
+void onSignal(int sig) {
+    shouldExit = 1;
+}
+
 // Main game loop
 int main() {
+    signal(SIGINT, onSignal); // Capture ^C
     srand(time(NULL)); // Seed the random number generator
     initGame(); // Initialize the game state
 
@@ -308,7 +315,7 @@ int main() {
 
     printf("\033[?25l");  // Hide the cursor
 
-    while (1) {
+    while (!shouldExit) {
         if (isKeyHit()) {
             char input = getchar();
             if (input == 27) {  // ESC key
