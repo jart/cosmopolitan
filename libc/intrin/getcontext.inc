@@ -34,6 +34,7 @@
 	mov	%rbp,120(%rdi)
 	mov	%rbx,128(%rdi)
 	mov	%rdx,136(%rdi)
+	mov	%rax,144(%rdi)
 	mov	%rcx,152(%rdi)
 	lea	8(%rsp),%rax
 	mov	%rax,160(%rdi)		// rsp = caller's rsp
