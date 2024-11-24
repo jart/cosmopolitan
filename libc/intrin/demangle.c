@@ -103,6 +103,7 @@ Copyright (c) 2024 Justine Tunney <jtunney@gmail.com>");
 #define ELFTC_SUCCESS	    1
 
 #define VECTOR_DEF_CAPACITY 1
+#define MAX_DEPTH           20
 
 typedef unsigned short index_t;
 
@@ -188,6 +189,7 @@ struct demangle_data {
 	enum type_qualifier ref_qualifier_type; /* ref qualifier type */
 	enum push_qualifier push_qualifier;	/* which qualifiers to push */
 	int func_type;
+	int depth;
 	const char *cur;	/* current mangled name ptr */
 	const char *last_sname; /* last source name */
 	intptr_t jmpbuf[5];
@@ -2261,7 +2263,7 @@ demangle_read_expression_binary(struct demangle_data *ddata, const char *name,
 }
 
 static privileged int
-demangle_read_expression(struct demangle_data *ddata)
+demangle_read_expression_impl(struct demangle_data *ddata)
 {
 	if (*ddata->cur == '\0')
 		return 0;
@@ -2540,6 +2542,17 @@ demangle_read_expression(struct demangle_data *ddata)
 	}
 
 	return 0;
+}
+
+static privileged int
+demangle_read_expression(struct demangle_data *ddata)
+{
+	if (ddata->depth == MAX_DEPTH)
+		__builtin_longjmp(ddata->jmpbuf, 1);
+	++ddata->depth;
+	int res = demangle_read_expression_impl(ddata);
+	--ddata->depth;
+	return res;
 }
 
 static privileged int
@@ -2891,9 +2904,8 @@ demangle_read_number_as_string(struct demangle_data *ddata, char **str)
 	return 1;
 }
 
-/* read encoding, encoding are function name, data name, special-name */
 static privileged int
-demangle_read_encoding(struct demangle_data *ddata)
+demangle_read_encoding_impl(struct demangle_data *ddata)
 {
 	char *name, *type, *num_str;
 	long offset;
@@ -3100,6 +3112,18 @@ demangle_read_encoding(struct demangle_data *ddata)
 	return demangle_read_name(ddata);
 }
 
+/* read encoding, encoding are function name, data name, special-name */
+static privileged int
+demangle_read_encoding(struct demangle_data *ddata)
+{
+	if (ddata->depth == MAX_DEPTH)
+		__builtin_longjmp(ddata->jmpbuf, 1);
+	++ddata->depth;
+	int res = demangle_read_encoding_impl(ddata);
+	--ddata->depth;
+	return res;
+}
+
 static privileged int
 demangle_read_local_name(struct demangle_data *ddata)
 {
@@ -3270,7 +3294,7 @@ next:
 }
 
 static privileged int
-demangle_read_name(struct demangle_data *ddata)
+demangle_read_name_impl(struct demangle_data *ddata)
 {
 	struct stack_str v;
 	struct vector_str *output;
@@ -3329,6 +3353,17 @@ clean:
 	demangle_free(ddata, subst_str);
 
 	return rtn;
+}
+
+static privileged int
+demangle_read_name(struct demangle_data *ddata)
+{
+	if (ddata->depth == MAX_DEPTH)
+		__builtin_longjmp(ddata->jmpbuf, 1);
+	++ddata->depth;
+	int res = demangle_read_name_impl(ddata);
+	--ddata->depth;
+	return res;
 }
 
 static privileged int
@@ -3697,7 +3732,7 @@ demangle_vector_type_qualifier_push(struct demangle_data *ddata,
 }
 
 static privileged int
-demangle_read_type(struct demangle_data *ddata, struct type_delimit *td)
+demangle_read_type_impl(struct demangle_data *ddata, struct type_delimit *td)
 {
 	struct vector_type_qualifier v;
 	struct vector_str *output, sv;
@@ -4217,6 +4252,17 @@ clean:
 	demangle_vector_type_qualifier_dest(ddata, &v);
 
 	return 0;
+}
+
+static privileged int
+demangle_read_type(struct demangle_data *ddata, struct type_delimit *td)
+{
+	if (ddata->depth == MAX_DEPTH)
+		__builtin_longjmp(ddata->jmpbuf, 1);
+	++ddata->depth;
+	int res = demangle_read_type_impl(ddata, td);
+	--ddata->depth;
+	return res;
 }
 
 static privileged int
