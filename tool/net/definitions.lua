@@ -5188,11 +5188,14 @@ function unix.fork() end
 ---     unix.execve(prog, {prog, '-hal', '.'}, {'PATH=/bin'})
 ---     unix.exit(127)
 ---
---- We automatically suffix `.com` and `.exe` for all platforms when
---- path searching. By default, the current directory is not on the
---- path. If `prog` is an absolute path, then it's returned as-is. If
---- `prog` contains slashes then it's not path searched either and will
---- be returned if it exists.
+--- If `prog` is an absolute path, then it's returned as-is. If `prog`
+--- contains slashes then it's not path searched either and will be
+--- returned if it exists. On Windows, it's recommended that you install
+--- programs from cosmos to c:/bin/ without any .exe or .com suffix, so
+--- they can be discovered like they would on UNIX. If you want to find
+--- a program like notepad on the $PATH using this function, then you
+--- need to specify "notepad.exe" so it includes the extension.
+---
 ---@param prog string
 ---@return string path
 ---@overload fun(prog: string): nil, error: unix.Errno
