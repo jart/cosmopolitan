@@ -1351,7 +1351,7 @@ static void CallSimpleHookIfDefined(const char *s) {
 
 static void ReportWorkerExit(int pid, int ws) {
   int workers;
-  workers = atomic_fetch_sub(&shared->workers, 1) - 1;
+  workers = atomic_fetch_sub((_Atomic(int) *)&shared->workers, 1) - 1;
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws)) {
       LockInc(&shared->c.failedchildren);
