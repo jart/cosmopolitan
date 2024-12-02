@@ -182,11 +182,9 @@ __static_yoink("blink_xnu_aarch64");    // is apple silicon
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 #define LockInc(P)                                            \
-  atomic_fetch_add_explicit((_Atomic(typeof(*(P))) *)(P), +1, \
-                            memory_order_relaxed)
+  atomic_fetch_add_explicit(P, +1, memory_order_relaxed)
 #define LockDec(P)                                            \
-  atomic_fetch_add_explicit((_Atomic(typeof(*(P))) *)(P), -1, \
-                            memory_order_relaxed)
+  atomic_fetch_add_explicit(P, -1, memory_order_relaxed)
 
 #define TRACE_BEGIN         \
   do {                      \
@@ -385,7 +383,7 @@ static struct Shared {
   struct rusage server;
   struct rusage children;
   struct Counters {
-#define C(x) long x;
+#define C(x) _Atomic(long) x;
 #include "tool/net/counters.inc"
 #undef C
   } c;
