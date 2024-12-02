@@ -7376,6 +7376,14 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), getgransize()),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
+  pthread_mutexattr_t attr;
+  unassert(pthread_mutexattr_init(&attr));
+  unassert(pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED));
+  unassert(pthread_mutex_init(&shared->datetime_mu, &attr));
+  unassert(pthread_mutex_init(&shared->server_mu, &attr));
+  unassert(pthread_mutex_init(&shared->children_mu, &attr));
+  unassert(pthread_mutex_init(&shared->lastmeltdown_mu, &attr));
+  unassert(pthread_mutexattr_destroy(&attr));
   if (daemonize) {
     for (int i = 0; i < 256; ++i) {
       close(i);
