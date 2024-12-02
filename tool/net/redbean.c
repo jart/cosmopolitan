@@ -2130,10 +2130,10 @@ static void UpdateCurrentDate(struct timespec now) {
   struct tm tm;
   t = now.tv_sec;
   gmtime_r(&t, &tm);
-  unassert(pthread_mutex_lock(&shared->datetime_mu));
+  unassert(!pthread_mutex_lock(&shared->datetime_mu));
   shared->nowish = now;
   FormatHttpDateTime(shared->currentdate, &tm);
-  unassert(pthread_mutex_unlock(&shared->datetime_mu));
+  unassert(!pthread_mutex_unlock(&shared->datetime_mu));
 }
 
 static int64_t GetGmtOffset(int64_t t) {
@@ -2366,9 +2366,9 @@ static char *AppendCache(char *p, int64_t seconds, char *directive) {
     p = stpcpy(p, directive);
   }
   p = AppendCrlf(p);
-  unassert(pthread_mutex_lock(&shared->datetime_mu));
+  unassert(!pthread_mutex_lock(&shared->datetime_mu));
   long nowish_sec = shared->nowish.tv_sec;
-  unassert(pthread_mutex_unlock(&shared->datetime_mu));
+  unassert(!pthread_mutex_unlock(&shared->datetime_mu));
   return AppendExpires(p, nowish_sec + seconds);
 }
 
@@ -3111,9 +3111,9 @@ td { padding-right: 3em; }\r\n\
   if (atomic_load_explicit(&shared->c.connectionshandled,
                            memory_order_acquire)) {
     appends(&cpm.outbuf, "says your redbean<br>\r\n");
-    unassert(pthread_mutex_lock(&shared->children_mu));
+    unassert(!pthread_mutex_lock(&shared->children_mu));
     AppendResourceReport(&cpm.outbuf, &shared->children, "<br>\r\n");
-    unassert(pthread_mutex_unlock(&shared->children_mu));
+    unassert(!pthread_mutex_unlock(&shared->children_mu));
   }
   appends(&cpm.outbuf, "<td valign=\"top\">\r\n");
   and = "";
@@ -3209,15 +3209,15 @@ static char *ServeStatusz(void) {
   AppendLong1("pid", getpid());
   AppendLong1("ppid", getppid());
   AppendLong1("now", timespec_real().tv_sec);
-  unassert(pthread_mutex_lock(&shared->datetime_mu));
+  unassert(!pthread_mutex_lock(&shared->datetime_mu));
   AppendLong1("nowish", shared->nowish.tv_sec);
-  unassert(pthread_mutex_unlock(&shared->datetime_mu));
+  unassert(!pthread_mutex_unlock(&shared->datetime_mu));
   AppendLong1("gmtoff", gmtoff);
   AppendLong1("CLK_TCK", CLK_TCK);
   AppendLong1("startserver", startserver.tv_sec);
-  unassert(pthread_mutex_lock(&shared->lastmeltdown_mu));
+  unassert(!pthread_mutex_lock(&shared->lastmeltdown_mu));
   AppendLong1("lastmeltdown", shared->lastmeltdown.tv_sec);
-  unassert(pthread_mutex_unlock(&shared->lastmeltdown_mu));
+  unassert(!pthread_mutex_unlock(&shared->lastmeltdown_mu));
   AppendLong1("workers",
               atomic_load_explicit(&shared->workers, memory_order_relaxed));
   AppendLong1("assets.n", assets.n);
@@ -3227,12 +3227,12 @@ static char *ServeStatusz(void) {
               lua_gc(L, LUA_GCCOUNT) * 1024 + lua_gc(L, LUA_GCCOUNTB));
 #endif
   ServeCounters();
-  unassert(pthread_mutex_lock(&shared->server_mu));
+  unassert(!pthread_mutex_lock(&shared->server_mu));
   AppendRusage("server", &shared->server);
-  unassert(pthread_mutex_unlock(&shared->server_mu));
-  unassert(pthread_mutex_lock(&shared->children_mu));
+  unassert(!pthread_mutex_unlock(&shared->server_mu));
+  unassert(!pthread_mutex_lock(&shared->children_mu));
   AppendRusage("children", &shared->children);
-  unassert(pthread_mutex_unlock(&shared->children_mu));
+  unassert(!pthread_mutex_unlock(&shared->children_mu));
   p = SetStatus(200, "OK");
   p = AppendContentType(p, "text/plain");
   if (cpm.msg.version >= 11) {
@@ -3997,9 +3997,9 @@ static int LuaNilTlsError(lua_State *L, const char *s, int r) {
 #include "tool/net/fetch.inc"
 
 static int LuaGetDate(lua_State *L) {
-  unassert(pthread_mutex_lock(&shared->datetime_mu));
+  unassert(!pthread_mutex_lock(&shared->datetime_mu));
   lua_pushinteger(L, shared->nowish.tv_sec);
-  unassert(pthread_mutex_unlock(&shared->datetime_mu));
+  unassert(!pthread_mutex_unlock(&shared->datetime_mu));
   return 1;
 }
 
@@ -5757,10 +5757,10 @@ Content-Length: 22\r\n\
 }
 
 static void EnterMeltdownMode(void) {
-  unassert(pthread_mutex_lock(&shared->lastmeltdown_mu));
+  unassert(!pthread_mutex_lock(&shared->lastmeltdown_mu));
   if (timespec_cmp(timespec_sub(timespec_real(), shared->lastmeltdown),
                    (struct timespec){1}) < 0) {
-    unassert(pthread_mutex_unlock(&shared->lastmeltdown_mu));
+    unassert(!pthread_mutex_unlock(&shared->lastmeltdown_mu));
     return;
   }
   shared->lastmeltdown = timespec_real();
@@ -5885,9 +5885,9 @@ static void HandleHeartbeat(void) {
   size_t i;
   UpdateCurrentDate(timespec_real());
   Reindex();
-  unassert(pthread_mutex_lock(&shared->server_mu));
+  unassert(!pthread_mutex_lock(&shared->server_mu));
   getrusage(RUSAGE_SELF, &shared->server);
-  unassert(pthread_mutex_unlock(&shared->server_mu));
+  unassert(!pthread_mutex_unlock(&shared->server_mu));
 #ifndef STATIC
   CallSimpleHookIfDefined("OnServerHeartbeat");
   CollectGarbage();
@@ -6507,9 +6507,9 @@ static bool HandleMessageActual(void) {
     DEBUGF("(clnt) could not synchronize message stream");
   }
   if (cpm.msg.version >= 10) {
-    unassert(pthread_mutex_lock(&shared->datetime_mu));
+    unassert(!pthread_mutex_lock(&shared->datetime_mu));
     p = AppendCrlf(stpcpy(stpcpy(p, "Date: "), shared->currentdate));
-    unassert(pthread_mutex_unlock(&shared->datetime_mu));
+    unassert(!pthread_mutex_unlock(&shared->datetime_mu));
     if (!cpm.branded)
       p = stpcpy(p, serverheader);
     if (extrahdrs)
@@ -7377,13 +7377,13 @@ void RedBean(int argc, char *argv[]) {
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
   pthread_mutexattr_t attr;
-  unassert(pthread_mutexattr_init(&attr));
-  unassert(pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED));
-  unassert(pthread_mutex_init(&shared->datetime_mu, &attr));
-  unassert(pthread_mutex_init(&shared->server_mu, &attr));
-  unassert(pthread_mutex_init(&shared->children_mu, &attr));
-  unassert(pthread_mutex_init(&shared->lastmeltdown_mu, &attr));
-  unassert(pthread_mutexattr_destroy(&attr));
+  unassert(!pthread_mutexattr_init(&attr));
+  unassert(!pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED));
+  unassert(!pthread_mutex_init(&shared->datetime_mu, &attr));
+  unassert(!pthread_mutex_init(&shared->server_mu, &attr));
+  unassert(!pthread_mutex_init(&shared->children_mu, &attr));
+  unassert(!pthread_mutex_init(&shared->lastmeltdown_mu, &attr));
+  unassert(!pthread_mutexattr_destroy(&attr));
   if (daemonize) {
     for (int i = 0; i < 256; ++i) {
       close(i);
