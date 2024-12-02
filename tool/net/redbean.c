@@ -374,9 +374,8 @@ struct Blackhole {
 
 static struct Shared {
   _Atomic(int) workers;
-  struct timespec nowish;
-  struct timespec lastreindex;
   struct timespec lastmeltdown;
+  struct timespec nowish;
   char currentdate[32];
   struct rusage server;
   struct rusage children;
@@ -388,6 +387,7 @@ static struct Shared {
   pthread_mutex_t datetime_mu;
   pthread_mutex_t server_mu;
   pthread_mutex_t children_mu;
+  pthread_mutex_t lastmeltdown_mu;
 } *shared;
 
 static const char kCounterNames[] =
@@ -3215,7 +3215,9 @@ static char *ServeStatusz(void) {
   AppendLong1("gmtoff", gmtoff);
   AppendLong1("CLK_TCK", CLK_TCK);
   AppendLong1("startserver", startserver.tv_sec);
+  unassert(pthread_mutex_lock(&shared->lastmeltdown_mu));
   AppendLong1("lastmeltdown", shared->lastmeltdown.tv_sec);
+  unassert(pthread_mutex_unlock(&shared->lastmeltdown_mu));
   AppendLong1("workers",
               atomic_load_explicit(&shared->workers, memory_order_relaxed));
   AppendLong1("assets.n", assets.n);
@@ -5755,14 +5757,17 @@ Content-Length: 22\r\n\
 }
 
 static void EnterMeltdownMode(void) {
+  unassert(pthread_mutex_lock(&shared->lastmeltdown_mu));
   if (timespec_cmp(timespec_sub(timespec_real(), shared->lastmeltdown),
                    (struct timespec){1}) < 0) {
+    unassert(pthread_mutex_unlock(&shared->lastmeltdown_mu));
     return;
   }
+  shared->lastmeltdown = timespec_real();
+  pthread_mutex_unlock(&shared->lastmeltdown_mu);
   WARNF("(srvr) server is melting down (%,d workers)",
         atomic_load_explicit(&shared->workers, memory_order_relaxed));
   LOGIFNEG1(kill(0, SIGUSR2));
-  shared->lastmeltdown = timespec_real();
   LockInc(&shared->c.meltdowns);
 }
 
