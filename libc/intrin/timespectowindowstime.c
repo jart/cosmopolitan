@@ -17,7 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/wintime.internal.h"
+#include "libc/limits.h"
+#include "libc/stdckdint.h"
 
-int64_t TimeSpecToWindowsTime(struct timespec t) {
-  return t.tv_nsec / 100 + (t.tv_sec + MODERNITYSECONDS) * HECTONANOSECONDS;
+int64_t TimeSpecToWindowsTime(struct timespec time) {
+  int64_t wt;
+  if (ckd_add(&wt, time.tv_sec, MODERNITYSECONDS) ||
+      ckd_mul(&wt, wt, HECTONANOSECONDS) ||
+      ckd_add(&wt, wt, time.tv_nsec / 100))
+    wt = INT64_MAX;
+  return wt;
 }

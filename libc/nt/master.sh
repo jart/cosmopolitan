@@ -751,6 +751,7 @@ imp	'NtQuerySecurityObject'					NtQuerySecurityObject					ntdll		5
 imp	'NtQuerySymbolicLinkObject'				NtQuerySymbolicLinkObject				ntdll		3
 imp	'NtQuerySystemInformation'				NtQuerySystemInformation				ntdll		4
 imp	'NtQuerySystemTime'					NtQuerySystemTime					ntdll		1
+imp	'NtQueryTimerResolution'				NtQueryTimerResolution					ntdll		3
 imp	'NtQueryValueKey'					NtQueryValueKey						ntdll		6
 imp	'NtQueryVirtualMemory'					NtQueryVirtualMemory					ntdll		6
 imp	'NtQueryVolumeInformationFile'				NtQueryVolumeInformationFile				ntdll		5
@@ -767,6 +768,7 @@ imp	'NtSetInformationFile'					NtSetInformationFile					ntdll		5
 imp	'NtSetInformationThread'				NtSetInformationThread					ntdll		4
 imp	'NtSetIntervalProfile'					NtSetIntervalProfile					ntdll		2
 imp	'NtSetTimer'						NtSetTimer						ntdll		7
+imp	'NtSetTimerResolution'					NtSetTimerResolution					ntdll		3
 imp	'NtSetValueKey'						NtSetValueKey						ntdll		6
 imp	'NtSignalAndWaitForSingleObject'			NtSignalAndWaitForSingleObject				ntdll		4
 imp	'NtStartProfile'					NtStartProfile						ntdll		1

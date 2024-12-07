@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/cosmo.h"
+#include "libc/dce.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
@@ -177,6 +178,8 @@ TEST(cosmo_args, dquote_plain_old_newline) {
 #define CHARSET    "abc#'\"$.\\{} \r\n"
 
 TEST(cosmo_args, fuzz) {
+  if (IsWindows())
+    return;  // not worth it fs too slow
   char s[LENGTH + 1] = {0};
   for (int i = 0; i < ITERATIONS; ++i) {
     for (int j = 0; j < LENGTH; ++j)

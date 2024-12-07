@@ -20,8 +20,17 @@
 #include <stdio.h>
 #include <time.h>
 #include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/nt/enum/processcreationflags.h"
+#include "libc/nt/enum/status.h"
+#include "libc/nt/enum/threadpriority.h"
+#include "libc/nt/ntdll.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
 
-#define MAXIMUM    1e9
+#define MAXIMUM    1e8
 #define ITERATIONS 10
 
 const char *MyDescribeClockName(int clock) {
@@ -29,6 +38,8 @@ const char *MyDescribeClockName(int clock) {
     return "CLOCK_REALTIME";
   if (clock == CLOCK_MONOTONIC)
     return "CLOCK_MONOTONIC";
+  if (clock == CLOCK_BOOTTIME)
+    return "CLOCK_BOOTTIME";
   if (clock == CLOCK_REALTIME_COARSE)
     return "CLOCK_REALTIME_COARSE";
   if (clock == CLOCK_MONOTONIC_COARSE)
@@ -40,7 +51,7 @@ void TestSleepRelative(int clock) {
   printf("\n");
   printf("testing: clock_nanosleep(%s) with relative timeout\n",
          MyDescribeClockName(clock));
-  for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 2) {
+  for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 4) {
     struct timespec t1, t2, wf;
     wf = timespec_fromnanos(nanos);
     if (clock_gettime(clock, &t1))
@@ -57,7 +68,8 @@ void TestSleepRelative(int clock) {
 
 int main(int argc, char *argv[]) {
   TestSleepRelative(CLOCK_REALTIME);
-  TestSleepRelative(CLOCK_MONOTONIC);
   TestSleepRelative(CLOCK_REALTIME_COARSE);
+  TestSleepRelative(CLOCK_MONOTONIC);
+  TestSleepRelative(CLOCK_BOOTTIME);
   TestSleepRelative(CLOCK_MONOTONIC_COARSE);
 }

@@ -224,6 +224,16 @@ NtStatus RtlUnlockHeap(int64_t heap);
 NtStatus RtlGetProcessHeaps(uint32_t count, void **out_Heaps);
 NtStatus RtlWalkHeap(int64_t heap, void *out_Info);
 
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § new technology » beyond the pale » i am the time lorde    ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+NtStatus NtSetTimerResolution(uint32_t DesiredResolution, bool32 SetResolution,
+                              uint32_t *out_CurrentResolution);
+NtStatus NtQueryTimerResolution(uint32_t *out_MinimumResolution,
+                                uint32_t *out_MaximumResolution,
+                                uint32_t *out_CurrentResolution);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/ntdll.inc"
 #endif /* ShouldUseMsabiAttribute() */

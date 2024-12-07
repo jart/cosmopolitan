@@ -3,6 +3,7 @@
 #include "libc/atomic.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigval.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/intrin/fds.h"
 #include "libc/macros.h"
@@ -46,8 +47,8 @@ int _check_signal(bool);
 int _check_cancel(void);
 bool _is_canceled(void);
 int sys_close_nt(int, int);
-int _park_norestart(uint32_t, uint64_t);
-int _park_restartable(uint32_t, uint64_t);
+int _park_norestart(struct timespec, uint64_t);
+int _park_restartable(struct timespec, uint64_t);
 int sys_openat_metal(int, const char *, int, unsigned);
 
 #ifdef __x86_64__

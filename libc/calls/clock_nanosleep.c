@@ -57,6 +57,7 @@
  *
  * @param clock may be
  *     - `CLOCK_REALTIME`
+ *     - `CLOCK_BOOTTIME`
  *     - `CLOCK_MONOTONIC`
  *     - `CLOCK_REALTIME_COARSE` but is likely to sleep negative time
  *     - `CLOCK_MONTONIC_COARSE` but is likely to sleep negative time

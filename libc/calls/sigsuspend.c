@@ -21,6 +21,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -59,8 +60,7 @@ int sigsuspend(const sigset_t *ignore) {
       // using SetEvent() whereas it takes ~30us to use SuspendThread(),
       // GetThreadContext(), SetThreadContext(), and ResumeThread().
       BLOCK_SIGNALS;
-      while (!(rc = _park_norestart(-1u, waitmask)))
-        donothing;
+      rc = _park_norestart(timespec_max, waitmask);
       ALLOW_SIGNALS;
     } else {
       rc = sys_sigsuspend((uint64_t[2]){waitmask}, 8);

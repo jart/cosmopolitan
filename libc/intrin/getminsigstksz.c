@@ -26,7 +26,7 @@ long __get_minsigstksz(void) {
   struct AuxiliaryValue x;
   x = __getauxval(AT_MINSIGSTKSZ);
   if (x.isfound) {
-    return MAX(_MINSIGSTKSZ, x.value);
+    return MAX(_MINSIGSTKSZ - 1024, x.value) + 1024;
   } else {
     return _MINSIGSTKSZ;
   }

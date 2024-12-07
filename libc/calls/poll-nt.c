@@ -318,8 +318,8 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
 textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
                                         struct timespec deadline,
                                         const sigset_t waitmask) {
-  uint32_t waitms;
   int i, n, rc, got = 0;
+  struct timespec now, next, target;
 
   // we normally don't check for signals until we decide to wait, since
   // it's nice to have functions like write() be unlikely to EINTR, but
@@ -344,9 +344,16 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
     }
     if (got)
       return got;
-    if (!(waitms = sys_poll_nt_waitms(deadline)))
+    now = sys_clock_gettime_monotonic_nt();
+    if (timespec_cmp(now, deadline) >= 0)
       return 0;
-    if (_park_norestart(waitms, waitmask) == -1)
+    next = timespec_add(now, timespec_frommillis(POLL_INTERVAL_MS));
+    if (timespec_cmp(next, deadline) >= 0) {
+      target = deadline;
+    } else {
+      target = next;
+    }
+    if (_park_norestart(target, waitmask) == -1)
       return -1;
   }
 }
