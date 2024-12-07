@@ -39,7 +39,7 @@
  *
  * @see https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3096.pdf
  * @see https://github.com/jart/jtckdint
- * @version 0.2 (2024-11-20)
+ * @version 1.0 (2024-12-07)
  */
 
 #define __STDC_VERSION_STDCKDINT_H__ 202311L
