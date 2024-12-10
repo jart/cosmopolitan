@@ -87,7 +87,7 @@ void CheckForMemoryLeaks(void) {
   // check for leaks
   malloc_inspect_all(visitor, 0);
   if (leak_count) {
-    kprintf("loser: you forgot to call free %'d time%s\n", leak_count,
+    kprintf("you forgot to call free %'d time%s\n", leak_count,
             leak_count == 1 ? "" : "s");
     _exit(73);
   }
