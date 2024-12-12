@@ -307,54 +307,6 @@ long double    truncl(long double x);
 // back to C++ linkage before including these C++ headers.
 extern "C++" {
 
-#    ifdef fpclassify
-#      undef fpclassify
-#    endif
-
-#    ifdef signbit
-#      undef signbit
-#    endif
-
-#    ifdef isfinite
-#      undef isfinite
-#    endif
-
-#    ifdef isinf
-#      undef isinf
-#    endif
-
-#    ifdef isnan
-#      undef isnan
-#    endif
-
-#    ifdef isnormal
-#      undef isnormal
-#    endif
-
-#    ifdef isgreater
-#      undef isgreater
-#    endif
-
-#    ifdef isgreaterequal
-#      undef isgreaterequal
-#    endif
-
-#    ifdef isless
-#      undef isless
-#    endif
-
-#    ifdef islessequal
-#      undef islessequal
-#    endif
-
-#    ifdef islessgreater
-#      undef islessgreater
-#    endif
-
-#    ifdef isunordered
-#      undef isunordered
-#    endif
-
 #    include <__math/abs.h>
 #    include <__math/copysign.h>
 #    include <__math/error_functions.h>
@@ -378,6 +330,10 @@ extern "C++" {
 #    include <__type_traits/is_floating_point.h>
 #    include <__type_traits/is_integral.h>
 #    include <stdlib.h>
+
+#    ifdef fpclassify
+#      undef fpclassify
+#    endif
 
 // fpclassify relies on implementation-defined constants, so we can't move it to a detail header
 _LIBCPP_BEGIN_NAMESPACE_STD
