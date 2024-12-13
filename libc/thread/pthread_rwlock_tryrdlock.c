@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 
@@ -29,9 +30,26 @@
  * @raise EINVAL if `rwlock` doesn't refer to an initialized r/w lock
  */
 errno_t pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock) {
-  if (nsync_mu_rtrylock((nsync_mu *)rwlock)) {
-    return 0;
-  } else {
-    return EBUSY;
+
+#if PTHREAD_USE_NSYNC
+  // use nsync if possible
+  if (!rwlock->_pshared) {
+    if (nsync_mu_rtrylock((nsync_mu *)rwlock->_nsync)) {
+      return 0;
+    } else {
+      return EBUSY;
+    }
+  }
+#endif
+
+  // naive implementation
+  uint32_t word = 0;
+  for (;;) {
+    if (word & 1)
+      return EBUSY;
+    if (atomic_compare_exchange_weak_explicit(&rwlock->_word, &word, word + 2,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
+      return 0;
   }
 }

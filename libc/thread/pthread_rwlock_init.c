@@ -26,6 +26,8 @@
  */
 errno_t pthread_rwlock_init(pthread_rwlock_t *rwlock,
                             const pthread_rwlockattr_t *attr) {
-  *rwlock = (pthread_rwlock_t){0};
+  *rwlock = (pthread_rwlock_t){
+      ._pshared = attr ? *attr : PTHREAD_PROCESS_PRIVATE,
+  };
   return 0;
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 
@@ -24,7 +25,25 @@
  *
  * @return 0 on success, or errno on error
  */
-errno_t pthread_rwlock_rdlock(pthread_rwlock_t *rwlock) {
-  nsync_mu_rlock((nsync_mu *)rwlock);
-  return 0;
+errno_t pthread_rwlock_rdlock(pthread_rwlock_t *lk) {
+
+#if PTHREAD_USE_NSYNC
+  // use nsync if possible
+  if (!lk->_pshared) {
+    nsync_mu_rlock((nsync_mu *)lk->_nsync);
+    return 0;
+  }
+#endif
+
+  // naive implementation
+  uint32_t w = 0;
+  for (;;) {
+    if (w & 1)
+      for (;;)
+        if (~(w = atomic_load_explicit(&lk->_word, memory_order_relaxed)) & 1)
+          break;
+    if (atomic_compare_exchange_weak_explicit(
+            &lk->_word, &w, w + 2, memory_order_acquire, memory_order_relaxed))
+      return 0;
+  }
 }

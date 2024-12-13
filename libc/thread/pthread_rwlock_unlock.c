@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 
@@ -26,11 +28,33 @@
  * @raise EINVAL if lock is in a bad state
  */
 errno_t pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
-  if (rwlock->_iswrite) {
-    rwlock->_iswrite = 0;
-    nsync_mu_unlock((nsync_mu *)rwlock);
-  } else {
-    nsync_mu_runlock((nsync_mu *)rwlock);
+
+#if PTHREAD_USE_NSYNC
+  // use nsync if possible
+  if (!rwlock->_pshared) {
+    if (rwlock->_iswrite) {
+      rwlock->_iswrite = 0;
+      nsync_mu_unlock((nsync_mu *)rwlock->_nsync);
+    } else {
+      nsync_mu_runlock((nsync_mu *)rwlock->_nsync);
+    }
+    return 0;
   }
-  return 0;
+#endif
+
+  // naive implementation
+  uint32_t word = atomic_load_explicit(&rwlock->_word, memory_order_relaxed);
+  for (;;) {
+    if (word & 1) {
+      atomic_store_explicit(&rwlock->_word, 0, memory_order_release);
+      return 0;
+    } else if (word) {
+      if (atomic_compare_exchange_weak_explicit(&rwlock->_word, &word, word - 2,
+                                                memory_order_release,
+                                                memory_order_relaxed))
+        return 0;
+    } else {
+      return EPERM;
+    }
+  }
 }

@@ -107,8 +107,15 @@ typedef struct pthread_cond_s {
 } pthread_cond_t;
 
 typedef struct pthread_rwlock_s {
-  void *_nsync[2];
-  char _iswrite;
+  union {
+    void *_nsync[2];
+    struct {
+      uint32_t _nsync_word;
+      char _pshared;
+      char _iswrite;
+      _PTHREAD_ATOMIC(uint32_t) _word;
+    };
+  };
 } pthread_rwlock_t;
 
 typedef struct pthread_barrier_s {

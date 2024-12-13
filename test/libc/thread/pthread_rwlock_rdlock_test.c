@@ -17,23 +17,48 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
+#include "libc/calls/calls.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-#define ITERATIONS 50000
-#define READERS    8
-#define WRITERS    2
+#define READERS           8
+#define WRITERS           2
+#define READER_ITERATIONS 10000
+#define WRITER_ITERATIONS 1000
 
+int writes;
 atomic_int reads;
-atomic_int writes;
 pthread_rwlock_t lock;
+pthread_rwlockattr_t attr;
 pthread_barrier_t barrier;
+
+FIXTURE(pthread_rwlock, private) {
+  reads = 0;
+  writes = 0;
+  ASSERT_EQ(0, pthread_rwlockattr_init(&attr));
+  ASSERT_EQ(0, pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE));
+  ASSERT_EQ(0, pthread_rwlock_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_rwlockattr_destroy(&attr));
+}
+
+FIXTURE(pthread_rwlock, pshared) {
+  reads = 0;
+  writes = 0;
+  ASSERT_EQ(0, pthread_rwlockattr_init(&attr));
+  ASSERT_EQ(0, pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED));
+  ASSERT_EQ(0, pthread_rwlock_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_rwlockattr_destroy(&attr));
+}
+
+void TearDown(void) {
+  ASSERT_EQ(0, pthread_rwlock_destroy(&lock));
+}
 
 void *Reader(void *arg) {
   pthread_barrier_wait(&barrier);
-  for (int i = 0; i < ITERATIONS; ++i) {
+  for (int i = 0; i < READER_ITERATIONS; ++i) {
     ASSERT_EQ(0, pthread_rwlock_rdlock(&lock));
     ++reads;
     ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
@@ -43,10 +68,12 @@ void *Reader(void *arg) {
 
 void *Writer(void *arg) {
   pthread_barrier_wait(&barrier);
-  for (int i = 0; i < ITERATIONS; ++i) {
+  for (int i = 0; i < WRITER_ITERATIONS; ++i) {
     ASSERT_EQ(0, pthread_rwlock_wrlock(&lock));
     ++writes;
     ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
+    for (volatile int i = 0; i < 100; ++i)
+      pthread_pause_np();
   }
   return 0;
 }
@@ -62,7 +89,7 @@ TEST(pthread_rwlock_rdlock, test) {
   for (i = 0; i < READERS + WRITERS; ++i) {
     EXPECT_SYS(0, 0, pthread_join(t[i], 0));
   }
-  EXPECT_EQ(READERS * ITERATIONS, reads);
-  EXPECT_EQ(WRITERS * ITERATIONS, writes);
+  EXPECT_EQ(READERS * READER_ITERATIONS, reads);
+  EXPECT_EQ(WRITERS * WRITER_ITERATIONS, writes);
   ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }
