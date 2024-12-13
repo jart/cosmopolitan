@@ -134,6 +134,14 @@ typedef void (*lua_Hook) (lua_State *L, lua_Debug *ar);
 
 
 /*
+** [jart] support ltests.h without unsafe LUA_USER_H kludge
+**        use `make MODE=dbg` to get this functionality
+*/
+#ifdef MODE_DBG
+#include "ltests.h"
+#endif
+
+/*
 ** generic extra include file
 */
 #if defined(LUA_USER_H)

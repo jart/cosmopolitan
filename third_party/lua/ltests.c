@@ -28,23 +28,37 @@
 #define ltests_c
 #define LUA_CORE
 
-#include "third_party/lua/lapi.h"
-#include "third_party/lua/lauxlib.h"
-#include "third_party/lua/lcode.h"
-#include "third_party/lua/lctype.h"
-#include "third_party/lua/ldebug.h"
-#include "third_party/lua/ldo.h"
-#include "third_party/lua/lfunc.h"
-#include "third_party/lua/lmem.h"
-#include "third_party/lua/lopcodes.h"
-#include "third_party/lua/lopnames.inc"
-#include "third_party/lua/lprefix.h"
-#include "third_party/lua/lstate.h"
-#include "third_party/lua/lstring.h"
-#include "third_party/lua/ltable.h"
-#include "third_party/lua/lua.h"
-#include "third_party/lua/lualib.h"
+#include "lprefix.h"
+
+#include <limits.h>
+#include <setjmp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "libc/mem/gc.h"
+#include "libc/log/log.h"
+
+#include "lua.h"
+
+#include "lapi.h"
+#include "lauxlib.h"
+#include "lcode.h"
+#include "lctype.h"
+#include "ldebug.h"
+#include "ldo.h"
+#include "lfunc.h"
+#include "lmem.h"
+#include "lopcodes.h"
+#include "lopnames.inc"
+#include "lprefix.h"
+#include "lstate.h"
+#include "lstring.h"
+#include "ltable.h"
+#include "lualib.h"
+#include "ltm.h"
+
 __static_yoink("lua_notice");
+
 
 
 /*
