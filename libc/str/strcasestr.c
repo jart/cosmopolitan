@@ -17,9 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/ctype.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/tab.h"
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/intel/immintrin.internal.h"
+
+static int ToUpper(int c) {
+  return 'a' <= c && c <= 'z' ? c - ('a' - 'A') : c;
+}
 
 static void computeLPS(const char *pattern, long M, long *lps) {
   long len = 0;
@@ -84,5 +91,104 @@ static char *kmp(const char *s, size_t n, const char *ss, size_t m) {
  * @see strstr()
  */
 char *strcasestr(const char *haystack, const char *needle) {
+  if (haystack == needle || !*needle)
+    return (char *)haystack;
+#if defined(__x86_64__) && !defined(__chibicc__)
+  size_t i;
+  unsigned k, m;
+  const __m128i *p;
+  long progress = 0;
+  __m128i v, nl, nu, z = _mm_setzero_si128();
+  const char *hay = haystack;
+  char first_lower = kToLower[*needle & 255];
+  char first_upper = ToUpper(*needle);
+  nl = _mm_set1_epi8(first_lower);
+  nu = _mm_set1_epi8(first_upper);
+  for (;;) {
+    k = (uintptr_t)hay & 15;
+    p = (const __m128i *)((uintptr_t)hay & -16);
+    v = _mm_load_si128(p);
+    m = _mm_movemask_epi8(_mm_or_si128(
+        _mm_or_si128(_mm_cmpeq_epi8(v, z),    // Check for null terminator
+                     _mm_cmpeq_epi8(v, nl)),  // Check lowercase
+        _mm_cmpeq_epi8(v, nu)));              // Check uppercase
+    m >>= k;
+    m <<= k;
+    while (!m) {
+      progress += 16;
+      v = _mm_load_si128(++p);
+      m = _mm_movemask_epi8(_mm_or_si128(
+          _mm_or_si128(_mm_cmpeq_epi8(v, z), _mm_cmpeq_epi8(v, nl)),
+          _mm_cmpeq_epi8(v, nu)));
+    }
+    int offset = __builtin_ctzl(m);
+    progress += offset;
+    hay = (const char *)p + offset;
+    for (i = 0;; ++i) {
+      if (--progress <= -512)
+        goto OfferPathologicalAssurances;
+      if (!needle[i])
+        return (char *)hay;
+      if (!hay[i])
+        break;
+      if (kToLower[needle[i] & 255] != kToLower[hay[i] & 255])
+        break;
+    }
+    if (!*hay++)
+      break;
+  }
+  return 0;
+#elif defined(__aarch64__) && defined(__ARM_NEON)
+  size_t i;
+  const char *hay = haystack;
+  uint8_t first_lower = kToLower[*needle & 255];
+  uint8_t first_upper = ToUpper(*needle);
+  uint8x16_t nl = vdupq_n_u8(first_lower);
+  uint8x16_t nu = vdupq_n_u8(first_upper);
+  uint8x16_t z = vdupq_n_u8(0);
+  long progress = 0;
+  for (;;) {
+    int k = (uintptr_t)hay & 15;
+    hay = (const char *)((uintptr_t)hay & -16);
+    uint8x16_t v = vld1q_u8((const uint8_t *)hay);
+    uint8x16_t cmp_lower = vceqq_u8(v, nl);
+    uint8x16_t cmp_upper = vceqq_u8(v, nu);
+    uint8x16_t cmp_null = vceqq_u8(v, z);
+    uint8x16_t cmp = vorrq_u8(vorrq_u8(cmp_lower, cmp_upper), cmp_null);
+    uint8x8_t mask = vshrn_n_u16(vreinterpretq_u16_u8(cmp), 4);
+    uint64_t m;
+    vst1_u8((uint8_t *)&m, mask);
+    m >>= k * 4;
+    m <<= k * 4;
+    while (!m) {
+      hay += 16;
+      progress += 16;
+      v = vld1q_u8((const uint8_t *)hay);
+      cmp_lower = vceqq_u8(v, nl);
+      cmp_upper = vceqq_u8(v, nu);
+      cmp_null = vceqq_u8(v, z);
+      cmp = vorrq_u8(vorrq_u8(cmp_lower, cmp_upper), cmp_null);
+      mask = vshrn_n_u16(vreinterpretq_u16_u8(cmp), 4);
+      vst1_u8((uint8_t *)&m, mask);
+    }
+    int offset = __builtin_ctzll(m) >> 2;
+    progress += offset;
+    hay += offset;
+    for (i = 0;; ++i) {
+      if (--progress <= -512)
+        goto OfferPathologicalAssurances;
+      if (!needle[i])
+        return (char *)hay;
+      if (!hay[i])
+        break;
+      if (kToLower[needle[i] & 255] != kToLower[hay[i] & 255])
+        break;
+    }
+    if (!*hay++)
+      break;
+  }
+  return 0;
+#endif
+OfferPathologicalAssurances:
   return kmp(haystack, strlen(haystack), needle, strlen(needle));
 }
