@@ -30,7 +30,8 @@ LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/moby.h					\
 	libc/testlib/subprocess.h				\
 	libc/testlib/testlib.h					\
-	libc/testlib/viewables.h
+	libc/testlib/trace.h					\
+	libc/testlib/viewables.h				\
 
 LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/bench.S					\
@@ -80,9 +81,10 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/testrunner.c				\
 	libc/testlib/thunks.c					\
 	libc/testlib/tmptest.c					\
+	libc/testlib/trace.c					\
 	libc/testlib/waitforexit.c				\
 	libc/testlib/waitforterm.c				\
-	libc/testlib/yield.c
+	libc/testlib/yield.c					\
 
 LIBC_TESTLIB_A_SRCS =						\
 	$(LIBC_TESTLIB_A_SRCS_S)				\

@@ -18,34 +18,32 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/atomic.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/stdalign.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-#define READERS           8
-#define WRITERS           2
-#define READER_ITERATIONS 10000
-#define WRITER_ITERATIONS 1000
+#define READERS    8
+#define WRITERS    2
+#define ITERATIONS 1000
 
-int writes;
-atomic_int reads;
+atomic_bool done;
+alignas(128) int foo;
+alignas(128) int bar;
 pthread_rwlock_t lock;
 pthread_rwlockattr_t attr;
 pthread_barrier_t barrier;
 
-FIXTURE(pthread_rwlock, private) {
-  reads = 0;
-  writes = 0;
-  ASSERT_EQ(0, pthread_rwlockattr_init(&attr));
-  ASSERT_EQ(0, pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE));
-  ASSERT_EQ(0, pthread_rwlock_init(&lock, &attr));
-  ASSERT_EQ(0, pthread_rwlockattr_destroy(&attr));
+void delay(int k) {
+  int n = rand() % k;
+  for (volatile int i = 0; i < n; ++i) {
+  }
 }
 
-FIXTURE(pthread_rwlock, pshared) {
-  reads = 0;
-  writes = 0;
+void SetUp(void) {
   ASSERT_EQ(0, pthread_rwlockattr_init(&attr));
   ASSERT_EQ(0, pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED));
   ASSERT_EQ(0, pthread_rwlock_init(&lock, &attr));
@@ -58,23 +56,33 @@ void TearDown(void) {
 
 void *Reader(void *arg) {
   pthread_barrier_wait(&barrier);
-  for (int i = 0; i < READER_ITERATIONS; ++i) {
+  while (!atomic_load_explicit(&done, memory_order_relaxed)) {
     ASSERT_EQ(0, pthread_rwlock_rdlock(&lock));
-    ++reads;
+    // cosmo_trace_begin("reader");
+    int x = foo;
+    usleep(1);  // delay(100000);
+    int y = bar;
+    ASSERT_EQ(x, y);
+    // cosmo_trace_end("reader");
     ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
+    usleep(1);  // delay(100000);
   }
   return 0;
 }
 
 void *Writer(void *arg) {
   pthread_barrier_wait(&barrier);
-  for (int i = 0; i < WRITER_ITERATIONS; ++i) {
+  for (int i = 0; i < ITERATIONS; ++i) {
     ASSERT_EQ(0, pthread_rwlock_wrlock(&lock));
-    ++writes;
+    // cosmo_trace_begin("writer");
+    ++foo;
+    delay(100);
+    ++bar;
+    // cosmo_trace_end("writer");
     ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
-    for (volatile int i = 0; i < 100; ++i)
-      pthread_pause_np();
+    delay(100);
   }
+  done = true;
   return 0;
 }
 
@@ -82,14 +90,12 @@ TEST(pthread_rwlock_rdlock, test) {
   int i;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * (READERS + WRITERS)));
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, READERS + WRITERS));
-  for (i = 0; i < READERS + WRITERS; ++i) {
+  for (i = 0; i < READERS + WRITERS; ++i)
     ASSERT_SYS(0, 0,
                pthread_create(t + i, 0, i < READERS ? Reader : Writer, 0));
-  }
-  for (i = 0; i < READERS + WRITERS; ++i) {
+  for (i = 0; i < READERS + WRITERS; ++i)
     EXPECT_SYS(0, 0, pthread_join(t[i], 0));
-  }
-  EXPECT_EQ(READERS * READER_ITERATIONS, reads);
-  EXPECT_EQ(WRITERS * WRITER_ITERATIONS, writes);
+  EXPECT_EQ(WRITERS * ITERATIONS, foo);
+  EXPECT_EQ(WRITERS * ITERATIONS, bar);
   ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

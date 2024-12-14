@@ -1,11 +1,14 @@
-#define USE        POSIX_RECURSIVE
+#define USE        POSIX
 #define ITERATIONS 100000
 #define THREADS    30
 
 #define SPIN            1
 #define FUTEX           2
-#define POSIX           3
-#define POSIX_RECURSIVE 4
+#define FUTEX_SHARED    3
+#define POSIX           4
+#define POSIX_RECURSIVE 5
+#define RWLOCK          6
+#define RWLOCK_SHARED   7
 
 #ifdef __COSMOPOLITAN__
 #include <cosmo.h>
@@ -274,8 +277,11 @@ void lock(atomic_int *futex) {
     word = atomic_exchange_explicit(futex, 2, memory_order_acquire);
   while (word > 0) {
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-#if USE == FUTEX
-    nsync_futex_wait_(futex, 2, 0, 0, 0);
+#if USE == FUTEX || USE == FUTEX_SHARED
+    cosmo_futex_wait(
+        futex, 2,
+        USE == FUTEX_SHARED ? PTHREAD_PROCESS_SHARED : PTHREAD_PROCESS_PRIVATE,
+        0, 0);
 #else
     pthread_yield_np();
 #endif
@@ -288,8 +294,10 @@ void unlock(atomic_int *futex) {
   int word = atomic_fetch_sub_explicit(futex, 1, memory_order_release);
   if (word == 2) {
     atomic_store_explicit(futex, 0, memory_order_release);
-#if USE == FUTEX
-    nsync_futex_wake_(futex, 1, 0);
+#if USE == FUTEX || USE == FUTEX_SHARED
+    cosmo_futex_wake(
+        futex, 1,
+        USE == FUTEX_SHARED ? PTHREAD_PROCESS_SHARED : PTHREAD_PROCESS_PRIVATE);
 #endif
   }
 }
@@ -297,6 +305,7 @@ void unlock(atomic_int *futex) {
 int g_chores;
 atomic_int g_lock;
 pthread_mutex_t g_locker;
+pthread_rwlock_t g_rwlocker;
 
 void *worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
@@ -304,6 +313,10 @@ void *worker(void *arg) {
     pthread_mutex_lock(&g_locker);
     ++g_chores;
     pthread_mutex_unlock(&g_locker);
+#elif USE == RWLOCK || USE == RWLOCK_SHARED
+    pthread_rwlock_wrlock(&g_rwlocker);
+    ++g_chores;
+    pthread_rwlock_unlock(&g_rwlocker);
 #else
     lock(&g_lock);
     ++g_chores;
@@ -331,7 +344,6 @@ int main() {
   struct timeval start;
   gettimeofday(&start, 0);
 
-  pthread_mutex_t lock;
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
 #if USE == POSIX_RECURSIVE
@@ -341,6 +353,14 @@ int main() {
 #endif
   pthread_mutex_init(&g_locker, &attr);
   pthread_mutexattr_destroy(&attr);
+
+  pthread_rwlockattr_t rwattr;
+  pthread_rwlockattr_init(&rwattr);
+#if USE == RWLOCK_SHARED
+  pthread_rwlockattr_setpshared(&rwattr, PTHREAD_PROCESS_SHARED);
+#endif
+  pthread_rwlock_init(&g_rwlocker, &rwattr);
+  pthread_rwlockattr_destroy(&rwattr);
 
   pthread_t th[THREADS];
   for (int i = 0; i < THREADS; ++i)
@@ -360,7 +380,8 @@ int main() {
          tomicros(ru.ru_utime),      //
          tomicros(ru.ru_stime));
 
-  pthread_mutex_destroy(&lock);
+  pthread_rwlock_destroy(&g_rwlocker);
+  pthread_mutex_destroy(&g_locker);
 
 #ifdef __COSMOPOLITAN__
   CheckForMemoryLeaks();
