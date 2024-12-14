@@ -36,14 +36,55 @@
 /**
  * Replaces current process with program.
  *
+ * Your `prog` may be an actually portable executable or a platform
+ * native binary (e.g. ELF, Mach-O, PE). On UNIX systems, your execve
+ * implementation will try to find where the `ape` interpreter program
+ * is installed on your system. The preferred location is `/usr/bin/ape`
+ * except on Apple Silicon where it's `/usr/local/bin/ape`. The $TMPDIR
+ * and $HOME locations that the APE shell script extracts the versioned
+ * ape binaries to will also be checked as a fallback path. Finally, if
+ * `prog` isn't an executable in any recognizable format, cosmo assumes
+ * it's a bourne shell script and launches it under /bin/sh.
+ *
+ * The signal mask and pending signals are inherited by the new process.
+ * Note the NetBSD kernel has a bug where pending signals are cleared.
+ *
+ * File descriptors that haven't been marked `O_CLOEXEC` through various
+ * devices such as open() and fcntl() will be inherited by the executed
+ * subprocess. The current file position of the duplicated descriptors
+ * is shared across processes. On Windows, `prog` needs to be built by
+ * cosmocc in order to properly inherit file descriptors. If a program
+ * compiled by MSVC or Cygwin is launched instead, then only the stdio
+ * file descriptors can be passed along.
+ *
  * On Windows, `argv` and `envp` can't contain binary strings. They need
  * to be valid UTF-8 in order to round-trip the WIN32 API, without being
  * corrupted.
  *
- * On Windows, only file descriptors 0, 1 and 2 can be passed to a child
- * process in such a way that allows them to be automatically discovered
- * when the child process initializes. Cosmpolitan currently treats your
- * other file descriptors as implicitly O_CLOEXEC.
+ * On Windows, cosmo execve uses parent spoofing to implement the UNIX
+ * behavior of replacing the current process. Since POSIX.1 also needs
+ * us to maintain the same PID number too, the _COSMO_PID environemnt
+ * variable is passed to the child process which specifies a spoofed
+ * PID. Whatever is in that variable will be reported by getpid() and
+ * other cosmo processes will be able to send signals to the process
+ * using that pid, via kill(). These synthetic PIDs which are only
+ * created by execve could potentially overlap with OS assignments if
+ * Windows recycles them. Cosmo avoids that by tracking handles of
+ * subprocesses. Each process has its own process manager thread, to
+ * associate pids with win32 handles, and execve will tell the parent
+ * process its new handle when it changes. However it's not perfect.
+ * There's still situations where processes created by execve() can
+ * cause surprising things to happen. For an alternative, consider
+ * posix_spawn() which is fastest and awesomest across all OSes.
+ *
+ * On Windows, support is currently not implemented for inheriting
+ * setitimer() and alarm() into an executed process.
+ *
+ * On Windows, support is currently not implemented for inheriting
+ * getrusage() statistics into an executed process.
+ *
+ * The executed process will share the same terminal and current
+ * directory.
  *
  * @param program will not be PATH searched, see commandv()
  * @param argv[0] is the name of the program to run

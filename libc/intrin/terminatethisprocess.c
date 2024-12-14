@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"

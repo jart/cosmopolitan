@@ -92,6 +92,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   int64_t handle, closeme = 0;
   if (!(handle = __proc_handle(pid))) {
     if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
+      STRACE("warning: kill() using raw win32 pid");
       closeme = handle;
     } else {
       goto OnError;
@@ -103,7 +104,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // now that we know the process exists, if it has a shared memory file
   // then we can be reasonably certain it's a cosmo process which should
   // be trusted to deliver its signal, unless it's a nine exterminations
-  if (pid > 0 && sig != 9) {
+  if (pid > 0) {
     atomic_ulong *sigproc;
     if ((sigproc = __sig_map_process(pid, kNtOpenExisting))) {
       if (sig > 0)
@@ -112,12 +113,15 @@ textwindows int sys_kill_nt(int pid, int sig) {
       UnmapViewOfFile(sigproc);
       if (closeme)
         CloseHandle(closeme);
-      return 0;
+      if (sig != 9)
+        return 0;
     }
   }
 
   // perform actual kill
   // process will report WIFSIGNALED with WTERMSIG(sig)
+  if (sig != 9)
+    STRACE("warning: kill() sending %G via terminate", sig);
   bool32 ok = TerminateProcess(handle, sig);
   if (closeme)
     CloseHandle(closeme);

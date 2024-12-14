@@ -300,6 +300,37 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
                (uintptr_t)(stackaddr + (stacksize - sizeof(struct WinArgs))));
 }
 
+static int Atoi(const char16_t *str) {
+  int c;
+  unsigned x = 0;
+  while ((c = *str++)) {
+    if ('0' <= c && c <= '9') {
+      x *= 10;
+      x += c - '0';
+    } else {
+      return -1;
+    }
+  }
+  return x;
+}
+
+static abi int WinGetPid(const char16_t *var, bool *out_is_inherited) {
+  uint32_t len;
+  char16_t val[12];
+  if ((len = __imp_GetEnvironmentVariableW(var, val, ARRAYLEN(val)))) {
+    int pid = -1;
+    if (len < ARRAYLEN(val))
+      pid = Atoi(val);
+    __imp_SetEnvironmentVariableW(var, NULL);
+    if (pid > 0) {
+      *out_is_inherited = true;
+      return pid;
+    }
+  }
+  *out_is_inherited = false;
+  return __imp_GetCurrentProcessId();
+}
+
 abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                     const char *lpCmdLine, int64_t nCmdShow) {
   static atomic_ulong fake_process_signals;
@@ -316,10 +347,12 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   __imp_GetSystemInfo(&si);
   __pagesize = si.dwPageSize;
   __gransize = si.dwAllocationGranularity;
-  __pid = __imp_GetCurrentProcessId();
+  bool pid_is_inherited;
+  __pid = WinGetPid(u"_COSMO_PID", &pid_is_inherited);
   if (!(__sig.process = __sig_map_process(__pid, kNtOpenAlways)))
     __sig.process = &fake_process_signals;
-  atomic_store_explicit(__sig.process, 0, memory_order_release);
+  if (!pid_is_inherited)
+    atomic_store_explicit(__sig.process, 0, memory_order_release);
   cmdline = __imp_GetCommandLineW();
 #if SYSDEBUG
   // sloppy flag-only check for early initialization

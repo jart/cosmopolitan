@@ -35,6 +35,9 @@
  * signal a cosmo process. The targeting process will then notice that a
  * signal has been added and delivers to any thread as soon as possible.
  *
+ * On Windows, the only signal that's guaranteed to work on non-cosmocc
+ * processes is SIGKILL.
+ *
  * On Windows, the concept of a process group isn't fully implemented.
  * Saying `kill(0, sig)` will deliver `sig` to all direct descendent
  * processes. Saying `kill(-pid, sig)` will be the same as saying

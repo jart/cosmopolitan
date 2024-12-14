@@ -667,6 +667,9 @@ textwindows int __sig_check(void) {
   return res;
 }
 
+// this mutex is needed so execve() can shut down the signal worker
+pthread_mutex_t __sig_worker_lock;
+
 // background thread for delivering inter-process signals asynchronously
 // this checks for undelivered process-wide signals, once per scheduling
 // quantum, which on windows should be every ~15ms or so, unless somehow
@@ -680,6 +683,7 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
   __maps_track((char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STKSZ,
                STKSZ);
   for (;;) {
+    pthread_mutex_lock(&__sig_worker_lock);
 
     // dequeue all pending signals and fire them off. if there's no
     // thread that can handle them then __sig_generate will requeue
@@ -724,6 +728,7 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
     _pthread_unlock();
 
     // wait until next scheduler quantum
+    pthread_mutex_unlock(&__sig_worker_lock);
     Sleep(POLL_INTERVAL_MS);
   }
   return 0;
