@@ -19,6 +19,8 @@
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
+__static_yoink("free");
+
 /**
  * Allocates aligned memory.
  *
@@ -35,4 +37,3 @@
 void *memalign(size_t align, size_t bytes) {
   return dlmemalign(align, bytes);
 }
-

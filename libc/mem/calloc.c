@@ -19,6 +19,8 @@
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
+__static_yoink("free");
+
 /**
  * Allocates n * itemsize bytes, initialized to zero.
  *
@@ -31,4 +33,3 @@
 void *calloc(size_t n, size_t itemsize) {
   return dlcalloc(n, itemsize);
 }
-
