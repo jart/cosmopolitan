@@ -29,7 +29,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 
 /**
  * @fileoverview Plain-text function call logging.

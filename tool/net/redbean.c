@@ -6799,6 +6799,8 @@ static int HandleConnection(size_t i) {
     } else {
       switch ((pid = fork())) {
         case 0:
+          lua_repl_wock();
+          lua_repl_lock();
           meltdown = false;
           __isworker = true;
           connectionclose = false;

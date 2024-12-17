@@ -21,7 +21,7 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
+#ifdef __x86_64__
 
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
@@ -41,3 +41,5 @@ textwindows dontinstrument void __bootstrap_tls(struct CosmoTib *tib,
   tib->tib_tid = __imp_GetCurrentThreadId();
   __set_tls_win32(tib);
 }
+
+#endif /* __x86_64__ */

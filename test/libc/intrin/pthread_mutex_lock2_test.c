@@ -40,7 +40,7 @@ pthread_mutexattr_t attr;
 
 FIXTURE(pthread_mutex_lock, normal) {
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
-  ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL));
+  ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
 }
@@ -79,7 +79,7 @@ TEST(pthread_mutex_lock, contention) {
   int i;
   pthread_t *th = gc(malloc(sizeof(pthread_t) * THREADS));
   pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
   pthread_mutex_init(&lock, &attr);
   pthread_mutexattr_destroy(&attr);
   count = 0;
@@ -128,7 +128,7 @@ BENCH(pthread_mutex_lock, bench_uncontended) {
     pthread_mutex_t m;
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
     pthread_mutex_init(&m, &attr);
     EZBENCH2("normal 1x", donothing, BenchLockUnlock(&m));
   }
@@ -226,7 +226,7 @@ BENCH(pthread_mutex_lock, bench_contended) {
     pthread_mutex_t m;
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
     pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     pthread_create(&t, 0, MutexContentionWorker, &a);

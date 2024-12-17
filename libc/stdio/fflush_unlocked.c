@@ -16,75 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/cxxabi.h"
-#include "libc/intrin/pushpop.h"
-#include "libc/mem/arraylist.internal.h"
-#include "libc/stdio/fflush.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/weaken.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
+#include "libc/sysv/consts/o.h"
 
 /**
  * Blocks until data from stream buffer is written out.
  *
- * @param f is the stream handle, or 0 for all streams
- * @return is 0 on success or -1 on error
+ * @param f is the stream handle, which must not be null
+ * @return is 0 on success or EOF on error
  */
 int fflush_unlocked(FILE *f) {
-  int rc = 0;
   size_t i;
-  if (!f) {
-    __fflush_lock();
-    for (i = __fflush.handles.i; i; --i) {
-      if ((f = __fflush.handles.p[i - 1])) {
-        if (fflush(f) == -1) {
-          rc = -1;
+  if (f->getln) {
+    if (_weaken(free))
+      _weaken(free)(f->getln);
+    f->getln = 0;
+  }
+  if (f->fd != -1) {
+    if (f->beg && !f->end && (f->oflags & O_ACCMODE) != O_RDONLY) {
+      ssize_t rc;
+      for (i = 0; i < f->beg; i += rc) {
+        if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {
+          f->state = errno;
+          return EOF;
         }
       }
+      f->beg = 0;
     }
-    __fflush_unlock();
-  } else if (f->fd != -1) {
-    if (__fflush_impl(f) == -1) {
-      rc = -1;
+    if (f->beg < f->end && (f->oflags & O_ACCMODE) != O_WRONLY) {
+      if (lseek(f->fd, -(int)(f->end - f->beg), SEEK_CUR) == -1) {
+        f->state = errno;
+        return EOF;
+      }
+      f->end = f->beg;
     }
-  } else if (f->beg && f->beg < f->size) {
+  }
+  if (f->buf && f->beg && f->beg < f->size)
     f->buf[f->beg] = 0;
-  }
-  return rc;
-}
-
-textstartup int __fflush_register(FILE *f) {
-  int rc;
-  size_t i;
-  struct StdioFlush *sf;
-  __fflush_lock();
-  sf = &__fflush;
-  if (!sf->handles.p) {
-    sf->handles.p = sf->handles_initmem;
-    pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));
-    __cxa_atexit((void *)fflush_unlocked, 0, 0);
-  }
-  for (i = sf->handles.i; i; --i) {
-    if (!sf->handles.p[i - 1]) {
-      sf->handles.p[i - 1] = f;
-      __fflush_unlock();
-      return 0;
-    }
-  }
-  rc = append(&sf->handles, &f);
-  __fflush_unlock();
-  return rc;
-}
-
-void __fflush_unregister(FILE *f) {
-  size_t i;
-  struct StdioFlush *sf;
-  __fflush_lock();
-  sf = &__fflush;
-  sf = pushpop(sf);
-  for (i = sf->handles.i; i; --i) {
-    if (sf->handles.p[i - 1] == f) {
-      pushmov(&sf->handles.p[i - 1], 0);
-      break;
-    }
-  }
-  __fflush_unlock();
+  return 0;
 }

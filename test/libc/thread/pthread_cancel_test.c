@@ -40,11 +40,7 @@ atomic_int gotcleanup;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
-  pthread_mutexattr_t at;
-  pthread_mutexattr_init(&at);
-  pthread_mutexattr_settype(&at, PTHREAD_MUTEX_NORMAL);
-  pthread_mutex_init(&mu, &at);
-  pthread_mutexattr_destroy(&at);
+  pthread_mutex_init(&mu, 0);
   pthread_cond_init(&cv, 0);
 }
 
@@ -194,6 +190,7 @@ TEST(pthread_cancel, condDeferredWait_reacquiresMutex) {
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_EQ(EBUSY, pthread_mutex_trylock(&mu));
+  ASSERT_EQ(0, pthread_mutex_consistent(&mu));
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
 }
 
@@ -206,6 +203,7 @@ TEST(pthread_cancel, condDeferredWaitDelayed) {
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_EQ(EBUSY, pthread_mutex_trylock(&mu));
+  ASSERT_EQ(0, pthread_mutex_consistent(&mu));
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
 }
 

@@ -9,6 +9,7 @@ LICENSE
 
 LOCAL CHANGES
 
+  - Fix MT-safety bugs in DEBUG mode
   - Fix bug in dlmalloc_inspect_all()
   - Define dlmalloc_requires_more_vespene_gas()
   - Make dlmalloc scalable using sched_getcpu()

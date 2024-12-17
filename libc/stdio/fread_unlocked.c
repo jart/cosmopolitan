@@ -86,7 +86,7 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
   size_t n, m, got, need;
 
   // check state and parameters
-  if ((f->iomode & O_ACCMODE) == O_WRONLY) {
+  if ((f->oflags & O_ACCMODE) == O_WRONLY) {
     f->state = errno = EBADF;
     return 0;
   }

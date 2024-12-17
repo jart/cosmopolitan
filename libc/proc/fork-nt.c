@@ -65,7 +65,6 @@
 #include "libc/thread/itimer.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 #ifdef __x86_64__
 
 extern long __klog_handle;

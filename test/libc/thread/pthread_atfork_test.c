@@ -22,6 +22,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -51,7 +52,6 @@ TEST(pthread_atfork, test) {
   SPAWN(fork);
   ASSERT_EQ(0, pthread_atfork(prepare1, parent1, child1));
   ASSERT_EQ(0, pthread_atfork(prepare2, parent2, child2));
-  flockfile(stdout);
   SPAWN(fork);
   flockfile(stdout);
   ASSERT_STREQ("prepare2", A[0]);
@@ -60,7 +60,6 @@ TEST(pthread_atfork, test) {
   ASSERT_STREQ("child2", A[3]);
   funlockfile(stdout);
   EXITS(0);
-  funlockfile(stdout);
   ASSERT_STREQ("prepare2", A[0]);
   ASSERT_STREQ("prepare1", A[1]);
   ASSERT_STREQ("parent1", A[2]);
@@ -79,7 +78,7 @@ void mu_unlock(void) {
 }
 
 void mu_wipe(void) {
-  pthread_mutex_init(&mu, 0);
+  pthread_mutex_wipe_np(&mu);
 }
 
 void *Worker(void *arg) {

@@ -54,6 +54,7 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
 #ifdef __x86_64__
@@ -64,7 +65,9 @@
 
 #define STACK_SIZE 65536
 
-struct Procs __proc;
+struct Procs __proc = {
+    .lock = PTHREAD_MUTEX_INITIALIZER,
+};
 
 static textwindows void __proc_stats(int64_t h, struct rusage *ru) {
   bzero(ru, sizeof(*ru));
@@ -252,21 +255,24 @@ static textwindows void __proc_setup(void) {
  */
 textwindows void __proc_lock(void) {
   cosmo_once(&__proc.once, __proc_setup);
-  nsync_mu_lock(&__proc.lock);
+  pthread_mutex_lock(&__proc.lock);
 }
 
 /**
  * Unlocks process tracker.
  */
 textwindows void __proc_unlock(void) {
-  nsync_mu_unlock(&__proc.lock);
+  pthread_mutex_unlock(&__proc.lock);
 }
 
 /**
  * Resets process tracker from forked child.
  */
 textwindows void __proc_wipe(void) {
+  pthread_mutex_t lock = __proc.lock;
   bzero(&__proc, sizeof(__proc));
+  __proc.lock = lock;
+  pthread_mutex_wipe_np(&__proc.lock);
 }
 
 /**

@@ -51,7 +51,7 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
       close(fd);
       if (fd2 != -1) {
         stream->fd = fd2;
-        stream->iomode = flags;
+        stream->oflags = flags;
         stream->beg = 0;
         stream->end = 0;
         res = stream;

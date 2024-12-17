@@ -44,6 +44,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define OPEN_MAX 16
 
@@ -86,6 +87,7 @@ static textwindows void SetupWinStd(struct Fds *fds, int i, uint32_t x) {
 }
 
 textstartup void __init_fds(int argc, char **argv, char **envp) {
+
   struct Fds *fds;
   fds = &g_fds;
   fds->n = 4;

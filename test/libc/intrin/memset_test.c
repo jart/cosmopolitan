@@ -66,9 +66,11 @@ TEST(bzero, hug) {
 
 #define N (256 * 1024 * 1024)
 
-BENCH(strlen, bench) {
+BENCH(memset, bench) {
+  void *memset_(void *, int, size_t) asm("memset");
+  printf("\n");
   static char A[N];
   memset(A, 2, N);
   for (int n = 1; n <= N; n *= 2)
-    BENCHMARK(100, n, X(memset(V(A), 1, n)));
+    BENCHMARK(100, n, X(memset_(V(A), 0, n)));
 }

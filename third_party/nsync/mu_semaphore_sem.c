@@ -78,7 +78,7 @@ static bool nsync_mu_semaphore_sem_create (struct sem *f) {
 	return true;
 }
 
-static void nsync_mu_semaphore_sem_fork_child (void) {
+void nsync_mu_semaphore_sem_fork_child (void) {
 	struct sem *f;
 	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next) {
 		int rc = sys_close (f->id);
@@ -87,17 +87,11 @@ static void nsync_mu_semaphore_sem_fork_child (void) {
 	}
 }
 
-static void nsync_mu_semaphore_sem_init (void) {
-	pthread_atfork (0, 0, nsync_mu_semaphore_sem_fork_child);
-}
-
 /* Initialize *s; the initial value is 0. */
 bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
-	static atomic_uint once;
 	struct sem *f = (struct sem *) s;
 	if (!nsync_mu_semaphore_sem_create (f))
 		return false;
-	cosmo_once (&once, nsync_mu_semaphore_sem_init);
 	sems_push(f);
 	return true;
 }

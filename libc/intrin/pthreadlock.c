@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/posixthread.internal.h"
 
-pthread_mutex_t _pthread_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t __pthread_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void _pthread_lock(void) {
-  pthread_mutex_lock(&_pthread_lock_obj);
+  pthread_mutex_lock(&__pthread_lock_obj);
 }
 
 void _pthread_unlock(void) {
-  pthread_mutex_unlock(&_pthread_lock_obj);
+  pthread_mutex_unlock(&__pthread_lock_obj);
 }

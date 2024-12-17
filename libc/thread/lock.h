@@ -3,18 +3,25 @@
 COSMOPOLITAN_C_START_
 
 //
-//                                                          ┌depth
-//                                                          │
-//         COSMOPOLITAN MUTEXES                             │   ┌waited
-//                                                          │   │
-//                                                          │   │┌locked
-//                                                          │   ││
-//                                                          │   ││┌pshared
-//                owner                                     │   │││
-//                 tid                                      │   │││┌type
-//                  │                                       │   ││││
-//   ┌──────────────┴───────────────┐                     ┌─┴──┐│││├┐
+//                                                     ┌undead
+//                                                     │
+//                                                     │┌dead
+//                                                     ││
+//                                                     ││┌robust
+//                                                     │││
+//                                                     │││  ┌depth
+//                                                     │││  │
+//         COSMOPOLITAN MUTEXES                        │││  │   ┌waited
+//                                                     │││  │   │
+//                                                     │││  │   │┌locked
+//                                                     │││  │   ││
+//                                                     │││  │   ││┌pshared
+//                owner                                │││  │   │││
+//                 tid                                 │││  │   │││┌type
+//                  │                                  │││  │   ││││
+//   ┌──────────────┴───────────────┐                  │││┌─┴──┐│││├┐
 // 0b0000000000000000000000000000000000000000000000000000000000000000
+//
 
 #define MUTEX_DEPTH_MIN 0x00000020ull
 #define MUTEX_DEPTH_MAX 0x000007e0ull

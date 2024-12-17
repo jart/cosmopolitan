@@ -1,3 +1,19 @@
+// Copyright 2024 Justine Alexandra Roberts Tunney
+//
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that the
+// above copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+// DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+// PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+// TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
+
+#include <cosmo.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
@@ -34,6 +50,11 @@ void* work(void* arg) {
 }
 
 int main() {
+
+  if (IsModeDbg()) {
+    kprintf("mutex_async_signal_safety_test not feasible in debug mode\n");
+    return 0;
+  }
 
   struct sigaction sa;
   sa.sa_handler = hand;

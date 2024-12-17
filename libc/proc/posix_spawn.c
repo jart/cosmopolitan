@@ -612,7 +612,7 @@ errno_t posix_spawn(int *pid, const char *path,
     struct sigaction dfl = {0};
     if (use_pipe)
       close(pfds[0]);
-    for (int sig = 1; sig < _NSIG; sig++)
+    for (int sig = 1; sig <= NSIG; sig++)
       if (__sighandrvas[sig] != (long)SIG_DFL &&
           (__sighandrvas[sig] != (long)SIG_IGN ||
            ((flags & POSIX_SPAWN_SETSIGDEF) &&

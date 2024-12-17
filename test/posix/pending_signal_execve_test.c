@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
       execlp(argv[0], argv[0], "childe", NULL);
       _Exit(127);
     }
-    if (IsNetbsd()) {
+    if (IsNetbsd() || IsOpenbsd()) {
       // NetBSD has a bug where pending signals don't inherit across
       // execve, even though POSIX.1 literally says you must do this
       sleep(1);

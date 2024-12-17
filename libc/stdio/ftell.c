@@ -26,7 +26,7 @@
 static inline int64_t ftell_unlocked(FILE *f) {
   int64_t pos;
   if (f->fd != -1) {
-    if (__fflush_impl(f) == -1)
+    if (fflush_unlocked(f) == EOF)
       return -1;
     if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
       if (f->beg < f->end)

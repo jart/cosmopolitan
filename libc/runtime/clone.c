@@ -58,7 +58,6 @@
 #include "libc/thread/openbsd.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 #include "libc/thread/xnu.internal.h"
 
 #define kMaxThreadIds 32768

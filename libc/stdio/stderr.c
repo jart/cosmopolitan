@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,18 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/dll.h"
 #include "libc/stdio/internal.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/thread/thread.h"
 
 static FILE __stderr = {
     .fd = STDERR_FILENO,
     .bufmode = _IONBF,
-    .iomode = O_WRONLY,
-    .buf = __stderr.mem,
-    .size = sizeof(stderr->mem),
+    .oflags = O_WRONLY,
     .lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP,
+    .elem = {&__stderr.elem, &__stderr.elem},
 };
 
 /**
@@ -35,6 +34,6 @@ static FILE __stderr = {
  */
 FILE *stderr = &__stderr;
 
-__attribute__((__constructor__(60))) static textstartup void errinit(void) {
-  __fflush_register(stderr);
+__attribute__((__constructor__(60))) static textstartup void stderr_init(void) {
+  dll_make_last(&__stdio.files, &__stderr.elem);
 }

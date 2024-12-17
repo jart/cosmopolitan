@@ -34,13 +34,13 @@
  * @param f is a non-null stream handle
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
- * @returns 0 on success or -1 on error
+ * @returns 0 on success or -1 w/ errno
  */
 int fseek_unlocked(FILE *f, int64_t offset, int whence) {
   int res;
   int64_t pos;
   if (f->fd != -1) {
-    if (__fflush_impl(f) == -1)
+    if (fflush_unlocked(f) == EOF)
       return -1;
     if (whence == SEEK_CUR && f->beg < f->end) {
       offset -= f->end - f->beg;

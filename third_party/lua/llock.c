@@ -19,12 +19,16 @@
 #include "libc/thread/thread.h"
 #include "third_party/lua/lrepl.h"
 
-static pthread_mutex_t lua_repl_lock_obj;
+static pthread_mutex_t lua_repl_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
-void(lua_repl_lock)(void) {
+void lua_repl_wock(void) {
+  lua_repl_lock_obj = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+}
+
+void lua_repl_lock(void) {
   pthread_mutex_lock(&lua_repl_lock_obj);
 }
 
-void(lua_repl_unlock)(void) {
+void lua_repl_unlock(void) {
   pthread_mutex_unlock(&lua_repl_lock_obj);
 }

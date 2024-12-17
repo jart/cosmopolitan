@@ -2,15 +2,14 @@
 #define COSMOPOLITAN_LIBC_ITIMER_H_
 #include "libc/atomic.h"
 #include "libc/calls/struct/itimerval.h"
-#include "third_party/nsync/cv.h"
-#include "third_party/nsync/mu.h"
+#include "libc/thread/thread.h"
 COSMOPOLITAN_C_START_
 
 struct IntervalTimer {
   atomic_uint once;
   intptr_t thread;
-  nsync_mu lock;
-  nsync_cv cond;
+  pthread_mutex_t lock;
+  pthread_cond_t cond;
   struct itimerval it;
 };
 

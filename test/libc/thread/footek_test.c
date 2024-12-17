@@ -349,7 +349,7 @@ int main() {
 #if USE == POSIX_RECURSIVE
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 #else
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
 #endif
   pthread_mutex_init(&g_locker, &attr);
   pthread_mutexattr_destroy(&attr);

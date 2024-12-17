@@ -17,36 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
 
-static const char *fixpathname(const char *pathname, int flags) {
-  if ((flags & O_ACCMODE) == O_RDONLY && strcmp(pathname, "-") == 0) {
-    return "/dev/stdin";
-  } else if ((flags & O_ACCMODE) == O_WRONLY && strcmp(pathname, "-") == 0) {
-    return "/dev/stdout";
-  } else {
-    return pathname;
-  }
-}
-
-static int openpathname(const char *pathname, int flags, bool *out_noclose) {
-  if ((flags & O_ACCMODE) == O_RDONLY && strcmp(pathname, "/dev/stdin") == 0) {
-    *out_noclose = true;
-    return fileno(stdin);
-  } else if ((flags & O_ACCMODE) == O_WRONLY &&
-             strcmp(pathname, "/dev/stdout") == 0) {
-    *out_noclose = true;
-    return fileno(stdout);
-  } else {
-    *out_noclose = false;
-    return open(pathname, flags, 0666);
-  }
-}
+__static_yoink("fflush");
 
 /**
  * Opens file as stream object.
@@ -57,21 +30,13 @@ static int openpathname(const char *pathname, int flags, bool *out_noclose) {
  * @note microsoft unilaterally deprecated this function lool
  */
 FILE *fopen(const char *pathname, const char *mode) {
-  FILE *f = 0;
-  bool noclose;
-  int fd, flags;
-  if (!pathname) {
-    efault();
+  int fd;
+  if ((fd = open(pathname, fopenflags(mode), 0666)) == -1)
     return 0;
-  }
-  flags = fopenflags(mode);
-  pathname = fixpathname(pathname, flags);
-  if ((fd = openpathname(pathname, flags, &noclose)) != -1) {
-    if ((f = fdopen(fd, mode)) != NULL) {
-      f->noclose = noclose;
-    } else if (!noclose) {
-      close(fd);
-    }
+  FILE *f;
+  if (!(f = fdopen(fd, mode))) {
+    close(fd);
+    return 0;
   }
   return f;
 }

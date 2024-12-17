@@ -16,35 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
+#include "libc/intrin/cxaatexit.h"
 #include "libc/macros.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/thread.h"
+#include "libc/stdlib.h"
 
 static void (*funcs[32])(void);
 static int count;
-static pthread_spinlock_t lock;
-pthread_spinlock_t *const __at_quick_exit_lockptr = &lock;
 
 void __funcs_on_quick_exit(void) {
   void (*func)(void);
-  pthread_spin_lock(&lock);
+  __cxa_lock();
   while (count) {
     func = funcs[--count];
-    pthread_spin_unlock(&lock);
+    __cxa_unlock();
     func();
-    pthread_spin_lock(&lock);
+    __cxa_lock();
   }
 }
 
 int at_quick_exit(void func(void)) {
   int res = 0;
-  pthread_spin_lock(&lock);
+  __cxa_lock();
   if (count == ARRAYLEN(funcs)) {
     res = -1;
   } else {
     funcs[count++] = func;
   }
-  pthread_spin_unlock(&lock);
+  __cxa_unlock();
   return res;
 }

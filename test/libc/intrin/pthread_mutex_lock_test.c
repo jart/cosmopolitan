@@ -20,12 +20,16 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -34,6 +38,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
@@ -48,16 +53,38 @@
 int count;
 atomic_int started;
 atomic_int finished;
+pthread_mutex_t lock;
 pthread_mutex_t mylock;
 pthread_spinlock_t slock;
 pthread_t th[THREADS];
 
+void ignore_signal(int sig) {
+}
+
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+  kprintf("running %s\n", program_invocation_name);
+  signal(SIGTRAP, ignore_signal);
+}
+
+TEST(pthread_mutex_lock, default) {
+  pthread_mutexattr_t attr;
+  ASSERT_EQ(0, pthread_mutexattr_init(&attr));
+  ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT));
+  ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
+  ASSERT_EQ(0, pthread_mutex_init(&lock, 0));
+  ASSERT_EQ(0, pthread_mutex_lock(&lock));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  ASSERT_EQ(0, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  ASSERT_EQ(0, pthread_mutex_lock(&lock));
+  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }
 
 TEST(pthread_mutex_lock, normal) {
-  pthread_mutex_t lock;
   pthread_mutexattr_t attr;
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL));
@@ -75,7 +102,6 @@ TEST(pthread_mutex_lock, normal) {
 }
 
 TEST(pthread_mutex_lock, recursive) {
-  pthread_mutex_t lock;
   pthread_mutexattr_t attr;
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE));
@@ -99,15 +125,15 @@ TEST(pthread_mutex_lock, recursive) {
 }
 
 TEST(pthread_mutex_lock, errorcheck) {
-  pthread_mutex_t lock;
   pthread_mutexattr_t attr;
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
+  ASSERT_EQ(1, __deadlock_tracked(&lock));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&lock));
-  ASSERT_EQ(EDEADLK, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }
@@ -130,7 +156,7 @@ TEST(pthread_mutex_lock, contention) {
   int i;
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
   pthread_mutex_init(&mylock, &attr);
   pthread_mutexattr_destroy(&attr);
   count = 0;

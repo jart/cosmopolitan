@@ -9,7 +9,6 @@
 #define dlmallinfo                   __dlmallinfo
 #define dlmalloc                     __dlmalloc
 #define dlmalloc_abort               __dlmalloc_abort
-#define dlmalloc_atfork              __dlmalloc_atfork
 #define dlmalloc_footprint           __dlmalloc_footprint
 #define dlmalloc_footprint_limit     __dlmalloc_footprint_limit
 #define dlmalloc_inspect_all         __dlmalloc_inspect_all
@@ -527,7 +526,10 @@ void mspace_inspect_all(mspace msp,
                         void (*handler)(void*, void*, size_t, void*),
                         void* arg);
 
-void dlmalloc_atfork(void);
+void dlmalloc_pre_fork(void) libcesque;
+void dlmalloc_post_fork_parent(void) libcesque;
+void dlmalloc_post_fork_child(void) libcesque;
+
 void dlmalloc_abort(void) relegated wontreturn;
 
 COSMOPOLITAN_C_END_

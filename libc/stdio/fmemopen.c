@@ -37,36 +37,31 @@
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
   FILE *f;
   char *p;
-  int iomode;
-  iomode = fopenflags(mode);
+  int oflags;
+  oflags = fopenflags(mode);
   if ((size && size > 0x7ffff000) ||  //
-      (!buf && (iomode & O_ACCMODE) != O_RDWR)) {
+      (!buf && (oflags & O_ACCMODE) != O_RDWR)) {
     einval();
     return NULL;
   }
-  if (!(f = __stdio_alloc())) {
+  if (!(f = __stdio_alloc()))
     return NULL;
-  }
-  if (buf) {
-    f->nofree = true;
-  } else {
+  if (!buf) {
     if (!size)
       size = BUFSIZ;
-    // TODO(jart): Why do we need calloc()?
-    if (!_weaken(calloc) || !(buf = _weaken(calloc)(1, size))) {
-      __stdio_free(f);
+    if (!(buf = malloc(size))) {
+      __stdio_unref(f);
       enomem();
       return NULL;
     }
+    f->freebuf = 1;
   }
-  f->fd = -1;
   f->buf = buf;
-  if (!(iomode & O_TRUNC)) {
+  if (!(oflags & O_TRUNC))
     f->end = size;
-  }
   f->size = size;
-  f->iomode = iomode;
-  if (iomode & O_APPEND) {
+  f->oflags = oflags;
+  if (oflags & O_APPEND) {
     if ((p = memchr(buf, '\0', size))) {
       f->beg = p - (char *)buf;
     } else {

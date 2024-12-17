@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,41 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/intrin/weaken.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/str/str.h"
+#include "libc/thread/lock.h"
+#include "libc/thread/thread.h"
 
-int __fflush_impl(FILE *f) {
-  size_t i;
-  ssize_t rc;
-  if (f->getln) {
-    if (_weaken(free)) {
-      _weaken(free)(f->getln);
-    }
-    f->getln = 0;
-  }
-  if (f->fd != -1) {
-    if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
-      for (i = 0; i < f->beg; i += rc) {
-        if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {
-          f->state = errno;
-          return -1;
-        }
-      }
-      f->beg = 0;
-    }
-    if (f->beg < f->end && (f->iomode & O_ACCMODE) != O_WRONLY) {
-      if (lseek(f->fd, -(int)(f->end - f->beg), SEEK_CUR) == -1) {
-        f->state = errno;
-        return -1;
-      }
-      f->end = f->beg;
-    }
-  }
+/**
+ * Unlocks mutex from child process after fork.
+ */
+int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
+  void *edges = mutex->_edges;
+  uint64_t word = mutex->_word;
+  bzero(mutex, sizeof(*mutex));
+  mutex->_word = MUTEX_UNLOCK(word);
+  mutex->_edges = edges;
   return 0;
 }

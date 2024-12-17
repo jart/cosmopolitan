@@ -2959,7 +2959,7 @@ static int LuaUnixMapshared(lua_State *L) {
   m->mapsize = c;
   m->lock = (pthread_mutex_t *)p;
   pthread_mutexattr_init(&mattr);
-  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_DEFAULT);
   pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
   pthread_mutex_init(m->lock, &mattr);
   pthread_mutexattr_destroy(&mattr);

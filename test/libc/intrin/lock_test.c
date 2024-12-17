@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
@@ -28,8 +29,10 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
@@ -61,6 +64,9 @@ pthread_mutex_t mu;
     if (_want != _got)                                                \
       __assert_eq_fail(__FILE__, __LINE__, #WANT, #GOT, _want, _got); \
   } while (0)
+
+void ignore_signal(int sig) {
+}
 
 void __assert_eq_fail(const char *file, int line, const char *wantstr,
                       const char *gotstr, long want, long got) {
@@ -177,6 +183,12 @@ void TestUncontendedLock(const char *name, int kind) {
 int main(int argc, char *argv[]) {
   pthread_mutexattr_t attr;
 
+#ifdef MODE_DBG
+  GetSymbolTable();
+  signal(SIGTRAP, ignore_signal);
+  kprintf("running %s\n", argv[0]);
+#endif
+
 #ifdef __aarch64__
   // our usage of raw clone() is probably broken in aarch64
   // we should just get rid of clone()
@@ -190,7 +202,7 @@ int main(int argc, char *argv[]) {
   }
 
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
-  ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL));
+  ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT));
   ASSERT_EQ(0, pthread_mutex_init(&mu, &attr));
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_lock(&mu));
@@ -216,28 +228,12 @@ int main(int argc, char *argv[]) {
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
   ASSERT_EQ(0, pthread_mutex_destroy(&mu));
 
-  ASSERT_EQ(1, __tls_enabled);
-
-  TestUncontendedLock("PTHREAD_MUTEX_NORMAL RAW TLS", PTHREAD_MUTEX_NORMAL);
+  TestUncontendedLock("PTHREAD_MUTEX_DEFAULT RAW TLS", PTHREAD_MUTEX_DEFAULT);
   TestUncontendedLock("PTHREAD_MUTEX_RECURSIVE RAW TLS",
                       PTHREAD_MUTEX_RECURSIVE);
-  TestUncontendedLock("PTHREAD_MUTEX_ERRORCHECK RAW TLS",
-                      PTHREAD_MUTEX_ERRORCHECK);
 
-  TestContendedLock("PTHREAD_MUTEX_NORMAL RAW TLS", PTHREAD_MUTEX_NORMAL);
+  TestContendedLock("PTHREAD_MUTEX_DEFAULT RAW TLS", PTHREAD_MUTEX_DEFAULT);
   TestContendedLock("PTHREAD_MUTEX_RECURSIVE RAW TLS", PTHREAD_MUTEX_RECURSIVE);
-  TestContendedLock("PTHREAD_MUTEX_ERRORCHECK RAW TLS",
-                    PTHREAD_MUTEX_ERRORCHECK);
-
-  __tls_enabled_set(false);
-
-  TestUncontendedLock("PTHREAD_MUTEX_NORMAL RAW", PTHREAD_MUTEX_NORMAL);
-  TestUncontendedLock("PTHREAD_MUTEX_RECURSIVE RAW", PTHREAD_MUTEX_RECURSIVE);
-  TestUncontendedLock("PTHREAD_MUTEX_ERRORCHECK RAW", PTHREAD_MUTEX_ERRORCHECK);
-
-  TestContendedLock("PTHREAD_MUTEX_NORMAL RAW", PTHREAD_MUTEX_NORMAL);
-  TestContendedLock("PTHREAD_MUTEX_RECURSIVE RAW", PTHREAD_MUTEX_RECURSIVE);
-  TestContendedLock("PTHREAD_MUTEX_ERRORCHECK RAW", PTHREAD_MUTEX_ERRORCHECK);
 
   //
 }

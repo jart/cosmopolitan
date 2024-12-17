@@ -96,9 +96,8 @@ static int OldApeLoader(char *s) {
 static int CopyWithCwd(const char *q, char *p, char *e) {
   char c;
   if (*q != '/') {
-    if (q[0] == '.' && q[1] == '/') {
+    if (q[0] == '.' && q[1] == '/')
       q += 2;
-    }
     int got = __getcwd(p, e - p - 1 /* '/' */);
     if (got != -1) {
       p += got - 1;
@@ -118,9 +117,10 @@ static int CopyWithCwd(const char *q, char *p, char *e) {
 
 // if q exists then turn it into an absolute path.
 static int TryPath(const char *q) {
-  if (!CopyWithCwd(q, g_prog.u.buf, g_prog.u.buf + sizeof(g_prog.u.buf))) {
+  if (!q)
     return 0;
-  }
+  if (!CopyWithCwd(q, g_prog.u.buf, g_prog.u.buf + sizeof(g_prog.u.buf)))
+    return 0;
   return !sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0);
 }
 
@@ -129,9 +129,8 @@ static int TryPath(const char *q) {
 void __init_program_executable_name(void) {
   if (__program_executable_name && *__program_executable_name != '/' &&
       CopyWithCwd(__program_executable_name, g_prog.u.buf,
-                  g_prog.u.buf + sizeof(g_prog.u.buf))) {
+                  g_prog.u.buf + sizeof(g_prog.u.buf)))
     __program_executable_name = g_prog.u.buf;
-  }
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
@@ -212,14 +211,12 @@ static inline void InitProgramExecutableNameImpl(void) {
   }
 
   // don't trust argv or envp if set-id.
-  if (issetugid()) {
+  if (issetugid())
     goto UseEmpty;
-  }
 
   // try argv[0], then then $_.
-  if (TryPath(__argv[0]) || TryPath(__getenv(__envp, "_").s)) {
+  if (TryPath(__argv[0]) || TryPath(__getenv(__envp, "_").s))
     goto UseBuf;
-  }
 
   // give up and just copy argv[0] into it
   if ((q = __argv[0])) {

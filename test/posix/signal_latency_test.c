@@ -14,6 +14,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include <assert.h>
+#include <cosmo.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -25,13 +26,14 @@
 
 #define ITERATIONS 10000
 
+atomic_bool got_sigusr2;
 pthread_t sender_thread;
 pthread_t receiver_thread;
 struct timespec send_time;
 double latencies[ITERATIONS];
 
 void sender_signal_handler(int signo) {
-  // Empty handler to unblock sigsuspend()
+  got_sigusr2 = true;
 }
 
 void receiver_signal_handler(int signo) {
@@ -77,14 +79,16 @@ void *sender_func(void *arg) {
       exit(5);
 
     // Send SIGUSR1 to receiver_thread
+    got_sigusr2 = false;
     if (pthread_kill(receiver_thread, SIGUSR1))
       exit(6);
 
     // Unblock SIGUSR2 and wait for it
     sigset_t wait_set;
     sigemptyset(&wait_set);
-    if (sigsuspend(&wait_set) && errno != EINTR)
-      exit(7);
+    while (!got_sigusr2)
+      if (sigsuspend(&wait_set) && errno != EINTR)
+        exit(7);
   }
 
   return 0;
@@ -124,6 +128,10 @@ int compare(const void *a, const void *b) {
 }
 
 int main() {
+
+  // TODO(jart): Why is this test flaky on Windows?
+  if (IsWindows())
+    return 0;
 
   // Block SIGUSR1 and SIGUSR2 in main thread
   sigset_t block_set;

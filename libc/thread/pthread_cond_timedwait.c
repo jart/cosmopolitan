@@ -43,7 +43,7 @@ struct PthreadWait {
 
 static bool can_use_nsync(uint64_t muword) {
   return !IsXnuSilicon() &&  //
-         MUTEX_TYPE(muword) == PTHREAD_MUTEX_NORMAL &&
+         MUTEX_TYPE(muword) != PTHREAD_MUTEX_RECURSIVE &&
          MUTEX_PSHARED(muword) == PTHREAD_PROCESS_PRIVATE;
 }
 
@@ -124,9 +124,9 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
   uint64_t muword = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
 
   // check that mutex is held by caller
-  if (MUTEX_TYPE(muword) == PTHREAD_MUTEX_ERRORCHECK &&
-      MUTEX_OWNER(muword) != gettid())
-    return EPERM;
+  if (IsModeDbg() || MUTEX_TYPE(muword) == PTHREAD_MUTEX_ERRORCHECK)
+    if (__deadlock_tracked(mutex) == 0)
+      return EPERM;
 
   // if the cond is process shared then the mutex needs to be too
   if ((cond->_pshared == PTHREAD_PROCESS_SHARED) ^
@@ -154,7 +154,7 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
   // if using Mike Burrows' code isn't possible, use a naive impl
   if (!cond->_footek) {
     err = nsync_cv_wait_with_deadline(
-        (nsync_cv *)cond, (nsync_mu *)mutex, cond->_clock,
+        (nsync_cv *)cond->_nsync, (nsync_mu *)mutex->_nsync, cond->_clock,
         abstime ? *abstime : nsync_time_no_deadline, 0);
   } else {
     err = pthread_cond_timedwait_impl(cond, mutex, abstime);

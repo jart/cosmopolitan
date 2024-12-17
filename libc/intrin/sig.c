@@ -73,6 +73,8 @@ struct SignalFrame {
   ucontext_t ctx;
 };
 
+extern pthread_mutex_t __sig_worker_lock;
+
 static textwindows bool __sig_ignored_by_default(int sig) {
   return sig == SIGURG ||   //
          sig == SIGCONT ||  //
@@ -666,9 +668,6 @@ textwindows int __sig_check(void) {
     res |= __sig_raise(sig, SI_KERNEL);
   return res;
 }
-
-// this mutex is needed so execve() can shut down the signal worker
-pthread_mutex_t __sig_worker_lock;
 
 // background thread for delivering inter-process signals asynchronously
 // this checks for undelivered process-wide signals, once per scheduling

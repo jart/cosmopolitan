@@ -13,7 +13,6 @@ extern unsigned __sighandflags[NSIG + 1];
 extern uint64_t __sighandmask[NSIG + 1];
 extern const struct NtSecurityAttributes kNtIsInheritable;
 
-void __fds_wipe(void);
 void __fds_lock(void);
 void __fds_unlock(void);
 

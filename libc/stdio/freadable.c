@@ -24,6 +24,6 @@
  * Returns nonzero if stream allows reading.
  */
 int __freadable(FILE *f) {
-  return (f->iomode & O_ACCMODE) == O_RDONLY ||
-         (f->iomode & O_ACCMODE) == O_RDWR;
+  return (f->oflags & O_ACCMODE) == O_RDONLY ||
+         (f->oflags & O_ACCMODE) == O_RDWR;
 }

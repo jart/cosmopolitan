@@ -98,7 +98,6 @@ extern struct Dll *_pthread_list;
 extern struct PosixThread _pthread_static;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
-int _pthread_atfork(atfork_f, atfork_f, atfork_f) libcesque;
 int _pthread_reschedule(struct PosixThread *) libcesque;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 int _pthread_tid(struct PosixThread *) libcesque;

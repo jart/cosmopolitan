@@ -22,5 +22,11 @@ int cosmo_futex_wake(_COSMO_ATOMIC(int) *, int, char);
 int cosmo_futex_wait(_COSMO_ATOMIC(int) *, int, char, int,
                      const struct timespec *);
 
+int __deadlock_check(void *, int) libcesque;
+int __deadlock_tracked(void *) libcesque;
+void __deadlock_record(void *, int) libcesque;
+void __deadlock_track(void *, int) libcesque;
+void __deadlock_untrack(void *) libcesque;
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_COSMO_H_ */

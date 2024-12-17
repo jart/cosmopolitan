@@ -55,7 +55,7 @@ errno_t pthread_cond_broadcast(pthread_cond_t *cond) {
   // favor *NSYNC if this is a process private condition variable
   // if using Mike Burrows' code isn't possible, use a naive impl
   if (!cond->_footek) {
-    nsync_cv_broadcast((nsync_cv *)cond);
+    nsync_cv_broadcast((nsync_cv *)cond->_nsync);
     return 0;
   }
 #endif

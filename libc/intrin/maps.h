@@ -3,7 +3,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/tree.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/tls2.internal.h"
 COSMOPOLITAN_C_START_
 
 #define MAPS_RETRY ((void *)-1)
@@ -26,9 +25,15 @@ struct Map {
   };
 };
 
+struct MapLock {
+  void *edges;
+  _Atomic(uint64_t) word;
+};
+
 struct Maps {
+  uint128_t rand;
   struct Tree *maps;
-  _Atomic(uint64_t) lock;
+  struct MapLock lock;
   _Atomic(uintptr_t) freed;
   size_t count;
   size_t pages;

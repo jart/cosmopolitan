@@ -24,5 +24,5 @@
  * Returns nonzero if stream is write only.
  */
 int __fwriting(FILE *f) {
-  return (f->iomode & O_ACCMODE) == O_WRONLY;
+  return (f->oflags & O_ACCMODE) == O_WRONLY;
 }

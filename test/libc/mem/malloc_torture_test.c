@@ -19,6 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
@@ -33,8 +34,8 @@
 void *Worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
     char *p;
-    ASSERT_NE(NULL, (p = malloc(lemur64() % SIZE)));
-    ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % SIZE, 1))));
+    ASSERT_NE(NULL, (p = malloc(rand() % SIZE)));
+    ASSERT_NE(NULL, (p = realloc(p, rand() % SIZE)));
     free(p);
   }
   return 0;
@@ -48,6 +49,7 @@ TEST(malloc, torture) {
   printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,
          ITERATIONS);
   SPAWN(fork);
+  AssertNoLocksAreHeld();
   struct timespec t1 = timespec_real();
   for (i = 0; i < n; ++i)
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));

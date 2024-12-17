@@ -32,7 +32,7 @@ ssize_t getdelim_unlocked(char **s, size_t *n, int delim, FILE *f) {
   ssize_t rc;
   char *p, *s2;
   size_t i, m, n2;
-  if ((f->iomode & O_ACCMODE) == O_WRONLY) {
+  if ((f->oflags & O_ACCMODE) == O_WRONLY) {
     f->state = errno = EBADF;
     return -1;
   }

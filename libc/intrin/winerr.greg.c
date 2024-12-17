@@ -24,7 +24,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/tls2.internal.h"
+#include "libc/thread/tls.h"
 
 /**
  * Return path for failed Win32 API calls.
@@ -32,7 +32,7 @@
  * @return -1 w/ few exceptions
  * @note this is a code-size saving device
  */
-privileged int64_t __winerr(void) {
+privileged optimizesize int64_t __winerr(void) {
   errno_t e;
   if (IsWindows()) {
     e = __dos2errno(__imp_GetLastError());

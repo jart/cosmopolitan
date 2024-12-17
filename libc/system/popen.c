@@ -22,7 +22,6 @@
 #include "libc/intrin/weaken.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
@@ -54,7 +53,7 @@
  * @cancelationpoint
  */
 FILE *popen(const char *cmdline, const char *mode) {
-  FILE *f, *f2;
+  FILE *f;
   int e, rc, pid, dir, flags, pipefds[2];
   flags = fopenflags(mode);
   if ((flags & O_ACCMODE) == O_RDONLY) {
@@ -84,14 +83,21 @@ FILE *popen(const char *cmdline, const char *mode) {
           unassert(!close(pipefds[0]));
         if (pipefds[1] != !dir)
           unassert(!close(pipefds[1]));
+
         // "The popen() function shall ensure that any streams from
         //  previous popen() calls that remain open in the parent
         //  process are closed in the new child process." -POSIX
-        for (int i = 0; i < __fflush.handles.i; ++i) {
-          if ((f2 = __fflush.handles.p[i]) && f2->pid) {
+        __stdio_lock();
+        for (struct Dll *e = dll_first(__stdio.files); e;
+             e = dll_next(__stdio.files, e)) {
+          FILE *f2 = FILE_CONTAINER(e);
+          if (f != f2 && f2->pid && f2->fd != -1) {
             close(f2->fd);
+            f2->fd = -1;
           }
         }
+        __stdio_unlock();
+
         _Exit(_cocmd(3,
                      (char *[]){
                          "popen",

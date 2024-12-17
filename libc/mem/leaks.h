@@ -4,6 +4,7 @@
 COSMOPOLITAN_C_START_
 
 void CheckForMemoryLeaks(void) libcesque;
+void AssertNoLocksAreHeld(void) libcesque;
 
 /**
  * Declares that allocation needn't be freed.

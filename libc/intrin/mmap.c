@@ -34,7 +34,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
-#include "libc/stdio/rand.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"
@@ -42,7 +41,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define MMDEBUG   IsModeDbg()
+#define MMDEBUG   0
 #define MAX_SIZE  0x0ff800000000ul
 #define MAX_TRIES 50
 
@@ -404,7 +403,9 @@ static int __munmap(char *addr, size_t size) {
 
 void *__maps_randaddr(void) {
   uintptr_t addr;
-  addr = _rand64();
+  __maps_lock();
+  addr = (__maps.rand *= 15750249268501108917ull) >> 64;
+  __maps_unlock();
   addr &= 0x3fffffffffff;
   addr |= 0x004000000000;
   addr &= -__gransize;

@@ -17,8 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/rand.h"
-#include "libc/stdio/internal.h"
 #include "libc/stdio/lcg.internal.h"
+
+static uint64_t rando;
+
+/**
+ * Seeds random number generator that's used by rand().
+ */
+void srand(unsigned seed) {
+  rando = seed;
+}
 
 /**
  * Returns 31-bit linear congruential pseudorandom number, e.g.
@@ -39,5 +47,5 @@
  * @threadunsafe
  */
 int rand(void) {
-  return KnuthLinearCongruentialGenerator(&g_rando) >> 33;
+  return KnuthLinearCongruentialGenerator(&rando) >> 33;
 }

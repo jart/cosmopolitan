@@ -24,6 +24,7 @@
  * Sets mutex type.
  *
  * @param type can be one of
+ *     - `PTHREAD_MUTEX_DEFAULT`
  *     - `PTHREAD_MUTEX_NORMAL`
  *     - `PTHREAD_MUTEX_RECURSIVE`
  *     - `PTHREAD_MUTEX_ERRORCHECK`
@@ -32,6 +33,7 @@
  */
 errno_t pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
   switch (type) {
+    case PTHREAD_MUTEX_DEFAULT:
     case PTHREAD_MUTEX_NORMAL:
     case PTHREAD_MUTEX_RECURSIVE:
     case PTHREAD_MUTEX_ERRORCHECK:

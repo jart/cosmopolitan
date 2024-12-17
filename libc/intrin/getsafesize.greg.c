@@ -22,7 +22,6 @@
 #include "libc/runtime/stack.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 
 /**
  * Computes safer buffer size for alloca().
@@ -32,7 +31,7 @@
  * @return number of bytes to use for your buffer, or negative if the
  *     allocation would likely cause a stack overflow
  */
-privileged long __get_safe_size(long want, long extraspace) {
+privileged optimizesize long __get_safe_size(long want, long extraspace) {
   if (!__tls_enabled)
     return want;
   struct PosixThread *pt;

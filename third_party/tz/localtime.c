@@ -2,6 +2,10 @@
 │ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define LOCALTIME_IMPLEMENTATION
+#include "lock.h"
+#include "tzdir.h"
+#include "tzfile.h"
+#include "private.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/cxxabi.h"
@@ -10,20 +14,15 @@
 #include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #include "libc/time.h"
 #include "libc/inttypes.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdckdint.h"
 #include "libc/time.h"
-#include "tzdir.h"
-#include "tzfile.h"
 #include "libc/nt/struct/timezoneinformation.h"
 #include "libc/nt/time.h"
 #include "libc/dce.h"
-#include "private.h"
 
 /* Convert timestamp from time_t to struct tm.  */
 
@@ -624,34 +623,10 @@ localtime_windows_init(void)
 	setenv("TZ", buf, true);
 }
 
-static pthread_mutex_t locallock = PTHREAD_MUTEX_INITIALIZER;
-
-static dontinline void
-localtime_wipe(void)
-{
-	pthread_mutex_init(&locallock, 0);
-}
-
-static dontinline void
-localtime_lock(void)
-{
-	pthread_mutex_lock(&locallock);
-}
-
-static dontinline void
-localtime_unlock(void)
-{
-	pthread_mutex_unlock(&locallock);
-}
-
 __attribute__((__constructor__(80)))
 textstartup static void
 localtime_init(void)
 {
-	localtime_wipe();
-	pthread_atfork(localtime_lock,
-		       localtime_unlock,
-		       localtime_wipe);
 	if (IsWindows())
 		localtime_windows_init();
 }
@@ -2052,9 +2027,9 @@ localtime_tzset_unlocked(void)
 void
 tzset(void)
 {
-	localtime_lock();
+	__localtime_lock();
 	localtime_tzset_unlocked();
-	localtime_unlock();
+	__localtime_unlock();
 }
 
 static void
@@ -2067,7 +2042,7 @@ static void
 localtime_gmtcheck(void)
 {
 	static bool gmt_is_set;
-	localtime_lock();
+	__localtime_lock();
 	if (! gmt_is_set) {
 #ifdef ALL_STATE
 		gmtptr = malloc(sizeof *gmtptr);
@@ -2077,7 +2052,7 @@ localtime_gmtcheck(void)
 			localtime_gmtload(gmtptr);
 		gmt_is_set = true;
 	}
-	localtime_unlock();
+	__localtime_unlock();
 }
 
 /*
@@ -2193,11 +2168,11 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 static struct tm *
 localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
 {
-	localtime_lock();
+	__localtime_lock();
 	if (setname || !lcl_is_set)
 		localtime_tzset_unlocked();
 	tmp = localsub(lclptr, timep, setname, tmp);
-	localtime_unlock();
+	__localtime_unlock();
 	return tmp;
 }
 
@@ -2834,10 +2809,10 @@ time_t
 mktime(struct tm *tmp)
 {
 	time_t t;
-	localtime_lock();
+	__localtime_lock();
 	localtime_tzset_unlocked();
 	t = mktime_tzname(lclptr, tmp, true);
-	localtime_unlock();
+	__localtime_unlock();
 	return t;
 }
 

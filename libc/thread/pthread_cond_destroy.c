@@ -33,7 +33,7 @@ errno_t pthread_cond_destroy(pthread_cond_t *cond) {
   // check if there's active waiters
 #if PTHREAD_USE_NSYNC
   if (!cond->_pshared) {
-    if (((nsync_cv *)cond)->waiters)
+    if (((nsync_cv *)cond->_nsync)->waiters)
       return EINVAL;
   } else {
     if (atomic_load_explicit(&cond->_waiters, memory_order_relaxed))

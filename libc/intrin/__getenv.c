@@ -20,7 +20,7 @@
 #include "libc/intrin/getenv.h"
 #include "libc/intrin/kprintf.h"
 
-privileged struct Env __getenv(char **p, const char *k) {
+privileged optimizesize struct Env __getenv(char **p, const char *k) {
   char *t;
   int i, j;
   for (i = 0; (t = p[i]); ++i) {

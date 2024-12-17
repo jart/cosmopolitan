@@ -65,9 +65,10 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 #include "libc/vga/vga.internal.h"
 #include "libc/wctype.h"
+
+#define ABI privileged optimizesize
 
 #define STACK_ERROR "kprintf error: stack is about to overflow\n"
 
@@ -159,7 +160,7 @@ __funline bool kischarmisaligned(const char *p, signed char t) {
   return false;
 }
 
-privileged bool32 kisdangerous(const void *addr) {
+ABI bool32 kisdangerous(const void *addr) {
   bool32 res = true;
   __maps_lock();
   if (__maps.maps) {
@@ -175,7 +176,7 @@ privileged bool32 kisdangerous(const void *addr) {
   return res;
 }
 
-privileged static void klogclose(long fd) {
+ABI static void klogclose(long fd) {
 #ifdef __x86_64__
   long ax = __NR_close;
   asm volatile("syscall"
@@ -192,7 +193,7 @@ privileged static void klogclose(long fd) {
 #endif
 }
 
-privileged static long klogfcntl(long fd, long cmd, long arg) {
+ABI static long klogfcntl(long fd, long cmd, long arg) {
 #ifdef __x86_64__
   char cf;
   long ax = __NR_fcntl;
@@ -224,7 +225,7 @@ privileged static long klogfcntl(long fd, long cmd, long arg) {
 #endif
 }
 
-privileged static long klogopen(const char *path) {
+ABI static long klogopen(const char *path) {
   long dirfd = AT_FDCWD;
   long flags = O_WRONLY | O_CREAT | O_APPEND;
   long mode = 0600;
@@ -263,7 +264,7 @@ privileged static long klogopen(const char *path) {
 }
 
 // returns log handle or -1 if logging shouldn't happen
-privileged long kloghandle(void) {
+ABI long kloghandle(void) {
   // kprintf() needs to own a file descriptor in case apps closes stderr
   // our close() and dup() implementations will trigger this initializer
   // to minimize a chance that the user accidentally closes their logger
@@ -342,7 +343,7 @@ privileged long kloghandle(void) {
 }
 
 #ifdef __x86_64__
-privileged void _klog_serial(const char *b, size_t n) {
+ABI void _klog_serial(const char *b, size_t n) {
   size_t i;
   uint16_t dx;
   unsigned char al;
@@ -362,7 +363,7 @@ privileged void _klog_serial(const char *b, size_t n) {
 }
 #endif /* __x86_64__ */
 
-privileged void klog(const char *b, size_t n) {
+ABI void klog(const char *b, size_t n) {
 #ifdef __x86_64__
   long h;
   uint32_t wrote;
@@ -420,8 +421,7 @@ privileged void klog(const char *b, size_t n) {
 #endif
 }
 
-privileged static size_t kformat(char *b, size_t n, const char *fmt,
-                                 va_list va) {
+ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
   int si;
   wint_t t, u;
   const char *abet;
@@ -1033,7 +1033,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
  * @asyncsignalsafe
  * @vforksafe
  */
-privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
+ABI size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
   size_t m;
   va_list v;
   va_start(v, fmt);
@@ -1052,7 +1052,7 @@ privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
  * @asyncsignalsafe
  * @vforksafe
  */
-privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
+ABI size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
   return kformat(b, n, fmt, v);
 }
 
@@ -1063,7 +1063,7 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
  * @asyncsignalsafe
  * @vforksafe
  */
-privileged void kvprintf(const char *fmt, va_list v) {
+ABI void kvprintf(const char *fmt, va_list v) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(8000, 8000);
@@ -1149,7 +1149,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * @asyncsignalsafe
  * @vforksafe
  */
-privileged void kprintf(const char *fmt, ...) {
+ABI void kprintf(const char *fmt, ...) {
   // system call support runtime depends on this function
   // function tracing runtime depends on this function
   // asan runtime depends on this function

@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/atomic.h"
@@ -28,37 +26,25 @@
 #ifdef __x86_64__
 
 textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
-
-  // validate api usage
-  if (how != SIG_BLOCK && how != SIG_UNBLOCK && how != SIG_SETMASK) {
+  if (how != SIG_BLOCK && how != SIG_UNBLOCK && how != SIG_SETMASK)
     return einval();
-  }
-
-  // get address of sigset to modify
-  atomic_ulong *mask = &__get_tls()->tib_sigmask;
-
-  // handle read-only case
   sigset_t oldmask;
+  atomic_ulong *mask = &__get_tls()->tib_sigmask;
   if (neu) {
     if (how == SIG_BLOCK) {
-      oldmask = atomic_fetch_or_explicit(mask, *neu, memory_order_acq_rel);
+      oldmask = atomic_fetch_or(mask, *neu);
     } else if (how == SIG_UNBLOCK) {
-      oldmask = atomic_fetch_and_explicit(mask, ~*neu, memory_order_acq_rel);
-    } else {  // SIG_SETMASK
-      oldmask = atomic_exchange_explicit(mask, *neu, memory_order_acq_rel);
+      oldmask = atomic_fetch_and(mask, ~*neu);
+    } else {
+      oldmask = atomic_exchange(mask, *neu);
     }
-    if (_weaken(__sig_check)) {
+    if (_weaken(__sig_check))
       _weaken(__sig_check)();
-    }
   } else {
-    oldmask = atomic_load_explicit(mask, memory_order_acquire);
+    oldmask = atomic_load(mask);
   }
-
-  // return old signal mask to caller
-  if (old) {
+  if (old)
     *old = oldmask;
-  }
-
   return 0;
 }
 

@@ -76,11 +76,11 @@ void *Writer(void *arg) {
     ASSERT_EQ(0, pthread_rwlock_wrlock(&lock));
     // cosmo_trace_begin("writer");
     ++foo;
-    delay(100);
+    delay(10);
     ++bar;
     // cosmo_trace_end("writer");
     ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
-    delay(100);
+    delay(10);
   }
   done = true;
   return 0;

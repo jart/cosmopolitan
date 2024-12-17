@@ -7,31 +7,34 @@
 #if LOCK_AT_FORK
 #if ONLY_MSPACES
 
-static void dlmalloc_pre_fork(void) {
+void dlmalloc_pre_fork(void) {
   mstate h;
-  for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
+  ACQUIRE_MALLOC_GLOBAL_LOCK();
+  for (unsigned i = ARRAYLEN(g_heaps); i--;)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       ACQUIRE_LOCK(&h->mutex);
 }
 
-static void dlmalloc_post_fork_parent(void) {
+void dlmalloc_post_fork_parent(void) {
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       RELEASE_LOCK(&h->mutex);
+  RELEASE_MALLOC_GLOBAL_LOCK();
 }
 
-static void dlmalloc_post_fork_child(void) {
+void dlmalloc_post_fork_child(void) {
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      (void)INITIAL_LOCK(&h->mutex);
+      (void)REFRESH_LOCK(&h->mutex);
+  (void)REFRESH_MALLOC_GLOBAL_LOCK();
 }
 
 #else
-static void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
-static void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
-static void dlmalloc_post_fork_child(void)  { (void)INITIAL_LOCK(&(gm)->mutex); }
+void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
+void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
+void dlmalloc_post_fork_child(void)  { (void)REFRESH_LOCK(&(gm)->mutex); }
 #endif /* ONLY_MSPACES */
 #endif /* LOCK_AT_FORK */
 
@@ -93,12 +96,6 @@ __attribute__((__constructor__(49))) int init_mparams(void) {
     /* Set up lock for main malloc area */
     gm->mflags = mparams.default_mflags;
     (void)INITIAL_LOCK(&gm->mutex);
-#endif
-
-#if LOCK_AT_FORK
-    pthread_atfork(&dlmalloc_pre_fork,
-                   &dlmalloc_post_fork_parent,
-                   &dlmalloc_post_fork_child);
 #endif
 
     {

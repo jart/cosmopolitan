@@ -163,6 +163,7 @@ int main(int argc, char *argv[]) {
   }
 
   // check for memory leaks
+  AssertNoLocksAreHeld();
   if (!g_testlib_failed)
     CheckForMemoryLeaks();
 

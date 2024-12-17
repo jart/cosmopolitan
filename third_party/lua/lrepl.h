@@ -11,6 +11,7 @@ extern struct linenoiseState *lua_repl_linenoise;
 extern linenoiseCompletionCallback *lua_repl_completions_callback;
 
 void lua_freerepl(void);
+void lua_repl_wock(void);
 void lua_repl_lock(void);
 void lua_repl_unlock(void);
 int lua_loadline(lua_State *);

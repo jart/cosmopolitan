@@ -24,7 +24,6 @@
 #include "libc/nt/thread.h"
 #include "libc/sysv/consts/arch.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 
 #define AMD64_SET_FSBASE 129
 #define AMD64_SET_GSBASE 131

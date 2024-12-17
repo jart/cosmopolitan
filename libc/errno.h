@@ -26,11 +26,11 @@ COSMOPOLITAN_C_START_
 /* this header is included by 700+ files; therefore we */
 /* hand-roll &__get_tls()->tib_errno to avoid #include */
 /* cosmopolitan uses x28 as the tls register b/c apple */
-#define errno                                      \
-  (*__extension__({                                \
-    errno_t *__ep;                                 \
-    __asm__("sub\t%0,x28,#512-0x3c" : "=r"(__ep)); \
-    __ep;                                          \
+#define errno                                       \
+  (*__extension__({                                 \
+    errno_t *__ep;                                  \
+    __asm__("sub\t%0,x28,#1024-0x3c" : "=r"(__ep)); \
+    __ep;                                           \
   }))
 #else
 #define errno (*__errno_location())

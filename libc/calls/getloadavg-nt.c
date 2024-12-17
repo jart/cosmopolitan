@@ -21,24 +21,23 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/cxaatexit.h"
 #include "libc/macros.h"
 #include "libc/nt/accounting.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/thread.h"
 
+#define CTOR  __attribute__((__constructor__(99)))
 #define FT(x) (x.dwLowDateTime | (uint64_t)x.dwHighDateTime << 32)
 
 static int cpus;
 static double load;
-static pthread_spinlock_t lock;
 static struct NtFileTime idle1, kern1, user1;
 
 textwindows int sys_getloadavg_nt(double *a, int n) {
   int i, rc;
   uint64_t elapsed, used;
   struct NtFileTime idle, kern, user;
-  BLOCK_SIGNALS;
-  pthread_spin_lock(&lock);
+  __cxa_lock();
   if (GetSystemTimes(&idle, &kern, &user)) {
     elapsed = (FT(kern) - FT(kern1)) + (FT(user) - FT(user1));
     if (elapsed) {
@@ -54,12 +53,11 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
   } else {
     rc = __winerr();
   }
-  pthread_spin_unlock(&lock);
-  ALLOW_SIGNALS;
+  __cxa_unlock();
   return rc;
 }
 
-__attribute__((__constructor__(40))) static textstartup void ntinitload(void) {
+CTOR static textstartup void sys_getloadavg_nt_init(void) {
   if (IsWindows()) {
     load = 1;
     cpus = __get_cpu_count() / 2;

@@ -24,6 +24,6 @@
  * Returns nonzero if stream allows reading.
  */
 int __fwritable(FILE *f) {
-  return (f->iomode & O_ACCMODE) == O_WRONLY ||
-         (f->iomode & O_ACCMODE) == O_RDWR;
+  return (f->oflags & O_ACCMODE) == O_WRONLY ||
+         (f->oflags & O_ACCMODE) == O_RDWR;
 }

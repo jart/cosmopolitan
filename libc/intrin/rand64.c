@@ -27,7 +27,7 @@
 
 static int _rand64_pid;
 static unsigned __int128 _rand64_pool;
-pthread_mutex_t _rand64_lock_obj = PTHREAD_SIGNAL_SAFE_MUTEX_INITIALIZER_NP;
+pthread_mutex_t __rand64_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * Returns nondeterministic random data.
@@ -38,12 +38,11 @@ pthread_mutex_t _rand64_lock_obj = PTHREAD_SIGNAL_SAFE_MUTEX_INITIALIZER_NP;
  *
  * @see rdseed(), rdrand(), rand(), random(), rngset()
  * @note this function passes bigcrush and practrand
- * @asyncsignalsafe
  */
 uint64_t _rand64(void) {
   void *p;
   uint128_t s;
-  pthread_mutex_lock(&_rand64_lock_obj);
+  pthread_mutex_lock(&__rand64_lock_obj);
   if (__pid == _rand64_pid) {
     s = _rand64_pool;  // normal path
   } else {
@@ -64,6 +63,6 @@ uint64_t _rand64(void) {
     _rand64_pid = __pid;
   }
   _rand64_pool = (s *= 15750249268501108917ull);  // lemur64
-  pthread_mutex_unlock(&_rand64_lock_obj);
+  pthread_mutex_unlock(&__rand64_lock_obj);
   return s >> 64;
 }

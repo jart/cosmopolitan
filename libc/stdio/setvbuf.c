@@ -38,15 +38,13 @@ int setvbuf(FILE *f, char *buf, int mode, size_t size) {
   if (buf) {
     if (!size)
       size = BUFSIZ;
-    if (!f->nofree &&        //
-        f->buf != buf &&     //
-        f->buf != f->mem &&  //
-        _weaken(free)) {
-      _weaken(free)(f->buf);
-    }
+    if (f->freebuf)
+      if (f->buf != buf)
+        if (_weaken(free))
+          _weaken(free)(f->buf);
     f->buf = buf;
     f->size = size;
-    f->nofree = true;
+    f->freebuf = 0;
   }
   f->bufmode = mode;
   funlockfile(f);

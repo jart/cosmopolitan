@@ -5,7 +5,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/mu.h"
 COSMOPOLITAN_C_START_
 
 #define PROC_ALIVE  0
@@ -28,7 +27,7 @@ struct Proc {
 struct Procs {
   int waiters;
   atomic_uint once;
-  nsync_mu lock;
+  pthread_mutex_t lock;
   intptr_t thread;
   intptr_t onbirth;
   intptr_t haszombies;

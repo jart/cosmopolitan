@@ -16,13 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/sig.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
+
+// since there's so many c library interfaces and system call wrappers
+// that always need to block signals we avoid the distraction of their
+// ftrace and strace output being muddied with sigprocmask lines. it's
+// usually better that sigprocmask only strace the user is calling it.
+// plus, since we have a very specific use case, this code goes faster
 
 struct Signals __sig;
 

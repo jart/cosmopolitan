@@ -22,20 +22,14 @@
 
 FILE *__stdio_alloc(void) {
   FILE *f;
+  __stdio_lock();
   if ((f = calloc(1, sizeof(FILE)))) {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&f->lock, &attr);
-    pthread_mutexattr_destroy(&attr);
-    f->dynamic = 1;
+    f->freethis = 1;
+    f->fd = -1;
+    f->lock = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+    dll_init(&f->elem);
+    dll_make_last(&__stdio.files, &f->elem);
   }
+  __stdio_unlock();
   return f;
-}
-
-void __stdio_free(FILE *f) {
-  pthread_mutex_destroy(&f->lock);
-  if (f->dynamic) {
-    free(f);
-  }
 }

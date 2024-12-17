@@ -135,7 +135,7 @@ typedef struct {
 #define strftimeesque(n) __attribute__((__format__(__strftime__, n, 0)))
 
 #ifndef privileged
-#define privileged _Section(".privileged") dontinline dontinstrument dontubsan
+#define privileged _Section(".privileged") dontinstrument dontubsan
 #endif
 
 #ifndef wontreturn

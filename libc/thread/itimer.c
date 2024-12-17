@@ -34,13 +34,16 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/itimer.internal.h"
+#include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/mu.h"
 #ifdef __x86_64__
 
 #define STACK_SIZE 65536
 
-struct IntervalTimer __itimer;
+struct IntervalTimer __itimer = {
+    .lock = PTHREAD_MUTEX_INITIALIZER,
+    .cond = PTHREAD_COND_INITIALIZER,
+};
 
 static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   struct CosmoTib tls;
@@ -52,7 +55,7 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   for (;;) {
     bool dosignal = false;
     struct timeval now, waituntil;
-    nsync_mu_lock(&__itimer.lock);
+    pthread_mutex_lock(&__itimer.lock);
     now = timeval_real();
     if (timeval_iszero(__itimer.it.it_value)) {
       waituntil = timeval_max;
@@ -73,13 +76,13 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
         dosignal = true;
       }
     }
-    nsync_mu_unlock(&__itimer.lock);
+    pthread_mutex_unlock(&__itimer.lock);
     if (dosignal)
       __sig_generate(SIGALRM, SI_TIMER);
-    nsync_mu_lock(&__itimer.lock);
-    nsync_cv_wait_with_deadline(&__itimer.cond, &__itimer.lock, CLOCK_REALTIME,
-                                timeval_totimespec(waituntil), 0);
-    nsync_mu_unlock(&__itimer.lock);
+    pthread_mutex_lock(&__itimer.lock);
+    struct timespec deadline = timeval_totimespec(waituntil);
+    pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
+    pthread_mutex_unlock(&__itimer.lock);
   }
   return 0;
 }
@@ -109,7 +112,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
     config = *neu;
   }
   BLOCK_SIGNALS;
-  nsync_mu_lock(&__itimer.lock);
+  pthread_mutex_lock(&__itimer.lock);
   if (old) {
     old->it_interval = __itimer.it.it_interval;
     old->it_value = timeval_subz(__itimer.it.it_value, timeval_real());
@@ -119,9 +122,9 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
       config.it_value = timeval_add(config.it_value, timeval_real());
     }
     __itimer.it = config;
-    nsync_cv_signal(&__itimer.cond);
+    pthread_cond_signal(&__itimer.cond);
   }
-  nsync_mu_unlock(&__itimer.lock);
+  pthread_mutex_unlock(&__itimer.lock);
   ALLOW_SIGNALS;
   return 0;
 }

@@ -23,6 +23,7 @@
  * Gets mutex type.
  *
  * @param type will be set to one of these on success
+ *     - `PTHREAD_MUTEX_DEFAULT`
  *     - `PTHREAD_MUTEX_NORMAL`
  *     - `PTHREAD_MUTEX_RECURSIVE`
  *     - `PTHREAD_MUTEX_ERRORCHECK`

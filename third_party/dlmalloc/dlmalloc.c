@@ -31,13 +31,14 @@
 #define FOOTERS 1
 #define MSPACES 1
 #define ONLY_MSPACES 1 // enables scalable multi-threaded malloc
-#define USE_SPIN_LOCKS 0 // only profitable using sched_getcpu()
+#define USE_SPIN_LOCKS 0 // set to 0 to use scalable nsync locks
 #else
 #define INSECURE 1
 #define PROCEED_ON_ERROR 1
 #define FOOTERS 0
 #define MSPACES 0
 #define ONLY_MSPACES 0
+#define USE_SPIN_LOCKS 1
 #endif
 
 #define HAVE_MMAP 1
@@ -1263,12 +1264,15 @@ void* dlrealloc_single(void* oldmem, size_t bytes) {
 #endif /* FOOTERS */
     if (!PREACTION(m)) {
       mchunkptr newp = try_realloc_chunk(m, oldp, nb, MREMAP_MAYMOVE);
-      POSTACTION(m);
       if (newp != 0) {
+        /* [jart] fix realloc MT bug in DEBUG mode
+                  https://github.com/intel/linux-sgx/issues/534 */
         check_inuse_chunk(m, newp);
+        POSTACTION(m);
         mem = chunk2mem(newp);
       }
       else {
+        POSTACTION(m);
         mem = internal_malloc(m, bytes);
         if (mem != 0) {
           size_t oc = chunksize(oldp) - overhead_for(oldp);
@@ -1301,11 +1305,13 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
 #endif /* FOOTERS */
       if (!PREACTION(m)) {
         mchunkptr newp = try_realloc_chunk(m, oldp, nb, 0);
-        POSTACTION(m);
         if (newp == oldp) {
+          /* [jart] fix realloc MT bug in DEBUG mode
+                    https://github.com/intel/linux-sgx/issues/534 */
           check_inuse_chunk(m, newp);
           mem = oldmem;
         }
+        POSTACTION(m);
       }
     }
   }
@@ -1318,13 +1324,6 @@ void* dlmemalign_single(size_t alignment, size_t bytes) {
   }
   return internal_memalign(gm, alignment, bytes);
 }
-
-#if USE_LOCKS
-void dlmalloc_atfork(void) {
-  bzero(&gm->mutex, sizeof(gm->mutex));
-  bzero(&malloc_global_mutex, sizeof(malloc_global_mutex));
-}
-#endif
 
 void** dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void* chunks[]) {

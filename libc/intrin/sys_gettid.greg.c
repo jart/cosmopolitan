@@ -25,7 +25,10 @@
 
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
-int sys_gettid(void) {
+// it's important that this be noinstrument because the child process
+// created by fork() needs to update this value quickly, since ftrace
+// will deadlock __maps_lock() if the wrong tid is accidentally used.
+dontinstrument int sys_gettid(void) {
   int64_t wut;
 #ifdef __x86_64__
   int tid;

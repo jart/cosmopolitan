@@ -16,16 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/leaks.h"
 #include "libc/cxxabi.h"
 #include "libc/intrin/cxaatexit.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/typedef/imagetlscallback.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define LEAK_CONTAINER(e) DLL_CONTAINER(struct Leak, elem, e)
 
@@ -87,8 +90,29 @@ void CheckForMemoryLeaks(void) {
   // check for leaks
   malloc_inspect_all(visitor, 0);
   if (leak_count) {
-    kprintf("you forgot to call free %'d time%s\n", leak_count,
+    kprintf("       you forgot to call free %'d time%s\n", leak_count,
             leak_count == 1 ? "" : "s");
     _exit(73);
+  }
+}
+
+static bool IsHoldingLocks(struct CosmoTib *tib) {
+  for (int i = 0; i < ARRAYLEN(tib->tib_locks); ++i)
+    if (tib->tib_locks[i])
+      return true;
+  return false;
+}
+
+/**
+ * Aborts if any locks are held by calling thread.
+ */
+void AssertNoLocksAreHeld(void) {
+  struct CosmoTib *tib = __get_tls();
+  if (IsHoldingLocks(tib)) {
+    kprintf("error: the following locks are held by this thread:\n");
+    for (int i = 0; i < ARRAYLEN(tib->tib_locks); ++i)
+      if (tib->tib_locks[i])
+        kprintf("\t- %t\n", tib->tib_locks[i]);
+    _Exit(74);
   }
 }

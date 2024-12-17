@@ -52,7 +52,7 @@ TEST(lockipc, mutex) {
   // create shared mutex
   pthread_mutexattr_t mattr;
   pthread_mutexattr_init(&mattr);
-  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_DEFAULT);
   pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
   pthread_mutex_init(&shm->mutex, &mattr);
   pthread_mutexattr_destroy(&mattr);

@@ -16,90 +16,160 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/cxaatexit.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/stdio/internal.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/thread.h"
+#include "third_party/dlmalloc/dlmalloc.h"
+#include "third_party/gdtoa/lock.h"
+#include "third_party/tz/lock.h"
 
-__static_yoink("_pthread_atfork");
+__msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
-extern pthread_mutex_t _rand64_lock_obj;
-extern pthread_mutex_t _pthread_lock_obj;
+extern pthread_mutex_t __rand64_lock_obj;
+extern pthread_mutex_t __pthread_lock_obj;
+extern pthread_mutex_t __cxa_lock_obj;
+extern pthread_mutex_t __sig_worker_lock;
 
-// fork needs to lock every lock, which makes it very single-threaded in
-// nature. the outermost lock matters the most because it serializes all
-// threads attempting to spawn processes. the outer lock can't be a spin
-// lock that a pthread_atfork() caller slipped in. to ensure it's a fair
-// lock, we add an additional one of our own, which protects other locks
-static pthread_mutex_t _fork_gil = PTHREAD_MUTEX_INITIALIZER;
+void nsync_mu_semaphore_sem_fork_child(void);
 
-static void _onfork_prepare(void) {
+// first and last and always
+// it is the lord of all locks
+// subordinate to no other lock
+static pthread_mutex_t supreme_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void fork_prepare_stdio(void) {
+  struct Dll *e;
+  // we acquire the following locks, in order
+  //
+  //   1. FILE objects created by the user
+  //   2. stdin, stdout, and stderr
+  //   3. __stdio.lock
+  //
+StartOver:
+  __stdio_lock();
+  for (e = dll_last(__stdio.files); e; e = dll_prev(__stdio.files, e)) {
+    FILE *f = FILE_CONTAINER(e);
+    if (f->forking)
+      continue;
+    f->forking = 1;
+    __stdio_ref(f);
+    __stdio_unlock();
+    pthread_mutex_lock(&f->lock);
+    __stdio_unref(f);
+    goto StartOver;
+  }
+}
+
+static void fork_parent_stdio(void) {
+  struct Dll *e;
+  for (e = dll_first(__stdio.files); e; e = dll_next(__stdio.files, e)) {
+    FILE_CONTAINER(e)->forking = 0;
+    pthread_mutex_unlock(&FILE_CONTAINER(e)->lock);
+  }
+  __stdio_unlock();
+}
+
+static void fork_child_stdio(void) {
+  struct Dll *e;
+  for (e = dll_first(__stdio.files); e; e = dll_next(__stdio.files, e)) {
+    pthread_mutex_wipe_np(&FILE_CONTAINER(e)->lock);
+    FILE_CONTAINER(e)->forking = 0;
+  }
+  pthread_mutex_wipe_np(&__stdio.lock);
+}
+
+static void fork_prepare(void) {
+  pthread_mutex_lock(&supreme_lock);
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
-  if (IsWindows())
+  if (IsWindows()) {
+    pthread_mutex_lock(&__sig_worker_lock);
     __proc_lock();
+  }
+  fork_prepare_stdio();
+  __localtime_lock();
+  __cxa_lock();
+  __gdtoa_lock1();
+  __gdtoa_lock();
   _pthread_lock();
-  __maps_lock();
+  dlmalloc_pre_fork();
   __fds_lock();
-  pthread_mutex_lock(&_rand64_lock_obj);
-  LOCKTRACE("READY TO ROCK AND ROLL");
+  pthread_mutex_lock(&__rand64_lock_obj);
+  __maps_lock();
+  LOCKTRACE("READY TO LOCK AND ROLL");
 }
 
-static void _onfork_parent(void) {
-  pthread_mutex_unlock(&_rand64_lock_obj);
-  __fds_unlock();
+static void fork_parent(void) {
   __maps_unlock();
+  pthread_mutex_unlock(&__rand64_lock_obj);
+  __fds_unlock();
+  dlmalloc_post_fork_parent();
   _pthread_unlock();
-  if (IsWindows())
+  __gdtoa_unlock();
+  __gdtoa_unlock1();
+  __cxa_unlock();
+  __localtime_unlock();
+  fork_parent_stdio();
+  if (IsWindows()) {
     __proc_unlock();
+    pthread_mutex_unlock(&__sig_worker_lock);
+  }
   if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
+  pthread_mutex_unlock(&supreme_lock);
 }
 
-static void _onfork_child(void) {
-  if (IsWindows())
+static void fork_child(void) {
+  nsync_mu_semaphore_sem_fork_child();
+  pthread_mutex_wipe_np(&__rand64_lock_obj);
+  pthread_mutex_wipe_np(&__fds_lock_obj);
+  dlmalloc_post_fork_child();
+  pthread_mutex_wipe_np(&__gdtoa_lock_obj);
+  pthread_mutex_wipe_np(&__gdtoa_lock1_obj);
+  fork_child_stdio();
+  pthread_mutex_wipe_np(&__pthread_lock_obj);
+  pthread_mutex_wipe_np(&__cxa_lock_obj);
+  pthread_mutex_wipe_np(&__localtime_lock_obj);
+  if (IsWindows()) {
     __proc_wipe();
-  __fds_lock_obj = (pthread_mutex_t)PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-  _rand64_lock_obj = (pthread_mutex_t)PTHREAD_SIGNAL_SAFE_MUTEX_INITIALIZER_NP;
-  _pthread_lock_obj = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
-  atomic_store_explicit(&__maps.lock, 0, memory_order_relaxed);
+    pthread_mutex_wipe_np(&__sig_worker_lock);
+  }
   if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
+  pthread_mutex_wipe_np(&supreme_lock);
 }
 
-static int _forker(uint32_t dwCreationFlags) {
+int _fork(uint32_t dwCreationFlags) {
   long micros;
   struct Dll *e;
   struct timespec started;
   int ax, dx, tid, parent;
   parent = __pid;
   started = timespec_mono();
-  _onfork_prepare();
+  BLOCK_SIGNALS;
+  fork_prepare();
   if (!IsWindows()) {
     ax = sys_fork();
   } else {
@@ -112,15 +182,27 @@ static int _forker(uint32_t dwCreationFlags) {
     if (!IsWindows()) {
       dx = sys_getpid().ax;
     } else {
-      dx = GetCurrentProcessId();
+      dx = __imp_GetCurrentProcessId();
     }
     __pid = dx;
+
+    // get new thread id
+    struct CosmoTib *tib = __get_tls();
+    struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+    tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
+    atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
+    atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);
+
+    // tracing and kisdangerous need this lock wiped a little earlier
+    atomic_store_explicit(&__maps.lock.word, 0, memory_order_relaxed);
+
+    /*
+     * it's now safe to call normal functions again
+     */
 
     // turn other threads into zombies
     // we can't free() them since we're monopolizing all locks
     // we assume the operating system already reclaimed system handles
-    struct CosmoTib *tib = __get_tls();
-    struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
     dll_remove(&_pthread_list, &pt->list);
     for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
       atomic_store_explicit(&POSIXTHREAD_CONTAINER(e)->pt_status,
@@ -129,11 +211,6 @@ static int _forker(uint32_t dwCreationFlags) {
                             memory_order_relaxed);
     }
     dll_make_first(&_pthread_list, &pt->list);
-
-    // get new main thread id
-    tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
-    atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
-    atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);
 
     // get new system thread handle
     intptr_t syshand = 0;
@@ -149,29 +226,19 @@ static int _forker(uint32_t dwCreationFlags) {
     // we can't be canceled if the canceler no longer exists
     atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
 
+    // forget locks
+    memset(tib->tib_locks, 0, sizeof(tib->tib_locks));
+
     // run user fork callbacks
-    _onfork_child();
+    fork_child();
     STRACE("fork() → 0 (child of %d; took %ld us)", parent, micros);
   } else {
     // this is the parent process
-    _onfork_parent();
+    fork_parent();
     STRACE("fork() → %d% m (took %ld us)", ax, micros);
   }
-  return ax;
-}
-
-int _fork(uint32_t dwCreationFlags) {
-  int rc;
-  BLOCK_SIGNALS;
-  pthread_mutex_lock(&_fork_gil);
-  rc = _forker(dwCreationFlags);
-  if (!rc) {
-    pthread_mutex_init(&_fork_gil, 0);
-  } else {
-    pthread_mutex_unlock(&_fork_gil);
-  }
   ALLOW_SIGNALS;
-  return rc;
+  return ax;
 }
 
 /**

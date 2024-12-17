@@ -24,5 +24,5 @@
  * Returns nonzero if stream is read only.
  */
 int __freading(FILE *f) {
-  return (f->iomode & O_ACCMODE) == O_RDONLY;
+  return (f->oflags & O_ACCMODE) == O_RDONLY;
 }

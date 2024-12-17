@@ -39,6 +39,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
