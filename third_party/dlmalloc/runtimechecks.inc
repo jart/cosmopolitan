@@ -28,7 +28,7 @@
 */
 
 #if !INSECURE
-/* Check if address a is at least as high as any from MORECORE or MMAP */
+/* Check if address a is at least as high as any from MMAP */
 #define ok_address(M, a) ((char*)(a) >= (M)->least_addr)
 /* Check if address of next chunk n is higher than base chunk p */
 #define ok_next(p, n)    ((char*)(p) < (char*)(n))

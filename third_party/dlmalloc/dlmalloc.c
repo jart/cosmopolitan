@@ -41,11 +41,8 @@
 #define USE_SPIN_LOCKS 1
 #endif
 
-#define HAVE_MMAP 1
 #define HAVE_MREMAP 1
-#define HAVE_MORECORE 0
 #define USE_LOCKS 2
-#define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
 #define ABORT_ON_ASSERT_FAILURE 0
 #define LOCK_AT_FORK 1
@@ -88,7 +85,7 @@
 
 /* -------------------------- System allocation -------------------------- */
 
-/* Get memory from system using MORECORE or MMAP */
+/* Get memory from system */
 static void* sys_alloc(mstate m, size_t nb) {
   char* tbase = CMFAIL;
   size_t tsize = 0;
@@ -113,113 +110,12 @@ static void* sys_alloc(mstate m, size_t nb) {
       return 0;
   }
 
-  /*
-    Try getting memory in any of three ways (in most-preferred to
-    least-preferred order):
-    1. A call to MORECORE that can normally contiguously extend memory.
-       (disabled if not MORECORE_CONTIGUOUS or not HAVE_MORECORE or
-       or main space is mmapped or a previous contiguous call failed)
-    2. A call to MMAP new space (disabled if not HAVE_MMAP).
-       Note that under the default settings, if MORECORE is unable to
-       fulfill a request, and HAVE_MMAP is true, then mmap is
-       used as a noncontiguous system allocator. This is a useful backup
-       strategy for systems with holes in address spaces -- in this case
-       sbrk cannot contiguously expand the heap, but mmap may be able to
-       find space.
-    3. A call to MORECORE that cannot usually contiguously extend memory.
-       (disabled if not HAVE_MORECORE)
-
-   In all cases, we need to request enough bytes from system to ensure
-   we can malloc nb bytes upon success, so pad with enough space for
-   top_foot, plus alignment-pad to make sure we don't lose bytes if
-   not on boundary, and round this up to a granularity unit.
-  */
-
-  if (MORECORE_CONTIGUOUS && !use_noncontiguous(m)) {
-    char* br = CMFAIL;
-    size_t ssize = asize; /* sbrk call size */
-    msegmentptr ss = (m->top == 0)? 0 : segment_holding(m, (char*)m->top);
-    ACQUIRE_MALLOC_GLOBAL_LOCK();
-
-    if (ss == 0) {  /* First time through or recovery */
-      char* base = (char*)CALL_MORECORE(0);
-      if (base != CMFAIL) {
-        size_t fp;
-        /* Adjust to end on a page boundary */
-        if (!is_page_aligned(base))
-          ssize += (page_align((size_t)base) - (size_t)base);
-        fp = m->footprint + ssize; /* recheck limits */
-        if (ssize > nb && ssize < HALF_MAX_SIZE_T &&
-            (m->footprint_limit == 0 ||
-             (fp > m->footprint && fp <= m->footprint_limit)) &&
-            (br = (char*)(CALL_MORECORE(ssize))) == base) {
-          tbase = base;
-          tsize = ssize;
-        }
-      }
-    }
-    else {
-      /* Subtract out existing available top space from MORECORE request. */
-      ssize = granularity_align(nb - m->topsize + SYS_ALLOC_PADDING);
-      /* Use mem here only if it did continuously extend old space */
-      if (ssize < HALF_MAX_SIZE_T &&
-          (br = (char*)(CALL_MORECORE(ssize))) == ss->base+ss->size) {
-        tbase = br;
-        tsize = ssize;
-      }
-    }
-
-    if (tbase == CMFAIL) {    /* Cope with partial failure */
-      if (br != CMFAIL) {    /* Try to use/extend the space we did get */
-        if (ssize < HALF_MAX_SIZE_T &&
-            ssize < nb + SYS_ALLOC_PADDING) {
-          size_t esize = granularity_align(nb + SYS_ALLOC_PADDING - ssize);
-          if (esize < HALF_MAX_SIZE_T) {
-            char* end = (char*)CALL_MORECORE(esize);
-            if (end != CMFAIL)
-              ssize += esize;
-            else {            /* Can't use; try to release */
-              (void) CALL_MORECORE(-ssize);
-              br = CMFAIL;
-            }
-          }
-        }
-      }
-      if (br != CMFAIL) {    /* Use the space we did get */
-        tbase = br;
-        tsize = ssize;
-      }
-      else
-        disable_contiguous(m); /* Don't try contiguous path in the future */
-    }
-
-    RELEASE_MALLOC_GLOBAL_LOCK();
-  }
-
-  if (HAVE_MMAP && tbase == CMFAIL) {  /* Try MMAP */
+  if (tbase == CMFAIL) {  /* Try MMAP */
     char* mp = dlmalloc_requires_more_vespene_gas(asize);
     if (mp != CMFAIL) {
       tbase = mp;
       tsize = asize;
       mmap_flag = USE_MMAP_BIT;
-    }
-  }
-
-  if (HAVE_MORECORE && tbase == CMFAIL) { /* Try noncontiguous MORECORE */
-    if (asize < HALF_MAX_SIZE_T) {
-      char* br = CMFAIL;
-      char* end = CMFAIL;
-      ACQUIRE_MALLOC_GLOBAL_LOCK();
-      br = (char*)(CALL_MORECORE(asize));
-      end = (char*)(CALL_MORECORE(0));
-      RELEASE_MALLOC_GLOBAL_LOCK();
-      if (br != CMFAIL && end != CMFAIL && br < end) {
-        size_t ssize = end - br;
-        if (ssize > nb + TOP_FOOT_SIZE) {
-          tbase = br;
-          tsize = ssize;
-        }
-      }
     }
   }
 
@@ -362,8 +258,7 @@ static int sys_trim(mstate m, size_t pad) {
 
       if (!is_extern_segment(sp)) {
         if (is_mmapped_segment(sp)) {
-          if (HAVE_MMAP &&
-              sp->size >= extra &&
+          if (sp->size >= extra &&
               !has_segment_link(m, sp)) { /* can't shrink if pinned */
             size_t newsize = sp->size - extra;
             (void)newsize; /* placate people compiling -Wunused-variable */
@@ -373,22 +268,6 @@ static int sys_trim(mstate m, size_t pad) {
               released = extra;
             }
           }
-        }
-        else if (HAVE_MORECORE) {
-          if (extra >= HALF_MAX_SIZE_T) /* Avoid wrapping negative */
-            extra = (HALF_MAX_SIZE_T) + SIZE_T_ONE - unit;
-          ACQUIRE_MALLOC_GLOBAL_LOCK();
-          {
-            /* Make sure end of memory is where we last set it. */
-            char* old_br = (char*)(CALL_MORECORE(0));
-            if (old_br == sp->base + sp->size) {
-              char* rel_br = (char*)(CALL_MORECORE(-extra));
-              char* new_br = (char*)(CALL_MORECORE(0));
-              if (rel_br != CMFAIL && new_br < old_br)
-                released = old_br - new_br;
-            }
-          }
-          RELEASE_MALLOC_GLOBAL_LOCK();
         }
       }
 
@@ -401,8 +280,7 @@ static int sys_trim(mstate m, size_t pad) {
     }
 
     /* Unmap any unused mmapped segments */
-    if (HAVE_MMAP)
-      released += release_unused_segments(m);
+    released += release_unused_segments(m);
 
     /* On failure, disable autotrim to avoid repeated failed future calls */
     if (released == 0 && m->topsize > m->trim_check)

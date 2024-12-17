@@ -125,12 +125,6 @@ static int malloc_unlk(MLOCK_T *lk) {
 #define INITIAL_LOCK(lk) malloc_inlk(lk)
 #define REFRESH_LOCK(lk) malloc_wipe(lk)
 #define DESTROY_LOCK(lk) malloc_kilk(lk)
-#define INITIAL_MALLOC_GLOBAL_LOCK() INITIAL_LOCK(&malloc_global_mutex);
-#define REFRESH_MALLOC_GLOBAL_LOCK() REFRESH_LOCK(&malloc_global_mutex);
-#define ACQUIRE_MALLOC_GLOBAL_LOCK() ACQUIRE_LOCK(&malloc_global_mutex);
-#define RELEASE_MALLOC_GLOBAL_LOCK() RELEASE_LOCK(&malloc_global_mutex);
-
-static MLOCK_T malloc_global_mutex;
 
 #define USE_LOCK_BIT               (2U)
 
