@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -27,6 +28,7 @@
 #include "libc/intrin/cxaatexit.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/maps.h"
+#include "libc/intrin/stack.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
@@ -39,6 +41,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/itimer.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/dlmalloc/dlmalloc.h"
@@ -104,10 +107,6 @@ static void fork_prepare(void) {
   pthread_mutex_lock(&supreme_lock);
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
-  if (IsWindows()) {
-    pthread_mutex_lock(&__sig_worker_lock);
-    __proc_lock();
-  }
   fork_prepare_stdio();
   __localtime_lock();
   __cxa_lock();
@@ -117,12 +116,16 @@ static void fork_prepare(void) {
   dlmalloc_pre_fork();
   __fds_lock();
   pthread_mutex_lock(&__rand64_lock_obj);
+  if (_weaken(cosmo_stack_lock))
+    _weaken(cosmo_stack_lock)();
   __maps_lock();
   LOCKTRACE("READY TO LOCK AND ROLL");
 }
 
 static void fork_parent(void) {
   __maps_unlock();
+  if (_weaken(cosmo_stack_unlock))
+    _weaken(cosmo_stack_unlock)();
   pthread_mutex_unlock(&__rand64_lock_obj);
   __fds_unlock();
   dlmalloc_post_fork_parent();
@@ -132,10 +135,6 @@ static void fork_parent(void) {
   __cxa_unlock();
   __localtime_unlock();
   fork_parent_stdio();
-  if (IsWindows()) {
-    __proc_unlock();
-    pthread_mutex_unlock(&__sig_worker_lock);
-  }
   if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
   pthread_mutex_unlock(&supreme_lock);
@@ -143,6 +142,8 @@ static void fork_parent(void) {
 
 static void fork_child(void) {
   nsync_mu_semaphore_sem_fork_child();
+  if (_weaken(cosmo_stack_wipe))
+    _weaken(cosmo_stack_wipe)();
   pthread_mutex_wipe_np(&__rand64_lock_obj);
   pthread_mutex_wipe_np(&__fds_lock_obj);
   dlmalloc_post_fork_child();
@@ -153,8 +154,13 @@ static void fork_child(void) {
   pthread_mutex_wipe_np(&__cxa_lock_obj);
   pthread_mutex_wipe_np(&__localtime_lock_obj);
   if (IsWindows()) {
-    __proc_wipe();
+    // we don't bother locking the proc/itimer/sig locks above since
+    // their state is reset in the forked child. nothing to protect.
+    __proc_wipe_and_reset();
+    __itimer_wipe_and_reset();
     pthread_mutex_wipe_np(&__sig_worker_lock);
+    if (_weaken(__sig_init))
+      _weaken(__sig_init)();
   }
   if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
@@ -211,6 +217,7 @@ int _fork(uint32_t dwCreationFlags) {
                             memory_order_relaxed);
     }
     dll_make_first(&_pthread_list, &pt->list);
+    atomic_store_explicit(&_pthread_count, 1, memory_order_relaxed);
 
     // get new system thread handle
     intptr_t syshand = 0;

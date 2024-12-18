@@ -74,6 +74,7 @@ struct PosixThread {
   int pt_flags;            // 0x00: see PT_* constants
   atomic_int pt_canceled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) pt_status;
+  _Atomic(atomic_int *) pt_blocker;
   atomic_int ptid;            // transitions 0 → tid
   atomic_int pt_refs;         // prevents decimation
   void *(*pt_start)(void *);  // creation callback
@@ -83,11 +84,10 @@ struct PosixThread {
   struct CosmoTib *tib;       // middle of tls allocation
   struct Dll list;            // list of threads
   struct _pthread_cleanup_buffer *pt_cleanup;
-  _Atomic(atomic_int *) pt_blocker;
   uint64_t pt_blkmask;
   int64_t pt_event;
   locale_t pt_locale;
-  jmp_buf pt_exiter;
+  intptr_t pt_exiter[5];
   pthread_attr_t pt_attr;
   atomic_bool pt_intoff;
 };
@@ -95,6 +95,7 @@ struct PosixThread {
 typedef void (*atfork_f)(void);
 
 extern struct Dll *_pthread_list;
+extern _Atomic(unsigned) _pthread_count;
 extern struct PosixThread _pthread_static;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
@@ -103,7 +104,7 @@ int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
-void _pthread_decimate(bool) libcesque;
+void _pthread_decimate(void) libcesque;
 void _pthread_free(struct PosixThread *) libcesque;
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;

@@ -87,7 +87,6 @@ FILE *popen(const char *cmdline, const char *mode) {
         // "The popen() function shall ensure that any streams from
         //  previous popen() calls that remain open in the parent
         //  process are closed in the new child process." -POSIX
-        __stdio_lock();
         for (struct Dll *e = dll_first(__stdio.files); e;
              e = dll_next(__stdio.files, e)) {
           FILE *f2 = FILE_CONTAINER(e);
@@ -96,7 +95,6 @@ FILE *popen(const char *cmdline, const char *mode) {
             f2->fd = -1;
           }
         }
-        __stdio_unlock();
 
         _Exit(_cocmd(3,
                      (char *[]){

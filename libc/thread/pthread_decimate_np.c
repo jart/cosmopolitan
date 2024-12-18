@@ -16,22 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cosmo.h"
+#include "libc/intrin/stack.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
  * Garbage collects POSIX threads runtime.
  *
- * Let's say you want to run a memory leak detector. You can say:
+ * This function frees unreferenced zombie threads and empties cache
+ * memory associated with the Cosmopolitan POSIX threads runtime.
+ *
+ * Here's an example use case for this function. Let's say you want to
+ * create a malloc() memory leak detector. If your program was running
+ * threads earlier, then there might still be allocations lingering
+ * around, that'll give you false positives. To fix this, what you would
+ * do is call the following, right before running your leak detector:
  *
  *     while (!pthread_orphan_np())
  *       pthread_decimate_np();
  *
- * To wait until all threads have exited.
+ * Which will wait until all threads have exited and their memory freed.
  *
  * @return 0 on success, or errno on error
  */
 int pthread_decimate_np(void) {
-  _pthread_decimate(false);
+  _pthread_decimate();
+  cosmo_stack_clear();
   return 0;
 }

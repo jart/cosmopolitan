@@ -33,7 +33,6 @@
 #include "third_party/nsync/time.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "libc/intrin/atomic.h"
-#include "libc/atomic.h"
 #include "third_party/nsync/time.h"
 
 /**
@@ -83,8 +82,9 @@ void nsync_mu_semaphore_sem_fork_child (void) {
 	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next) {
 		int rc = sys_close (f->id);
 		STRACE ("close(%ld) → %d", f->id, rc);
-		ASSERT (nsync_mu_semaphore_sem_create (f));
 	}
+	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next)
+		ASSERT (nsync_mu_semaphore_sem_create (f));
 }
 
 /* Initialize *s; the initial value is 0. */
@@ -92,7 +92,7 @@ bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
 	struct sem *f = (struct sem *) s;
 	if (!nsync_mu_semaphore_sem_create (f))
 		return false;
-	sems_push(f);
+	sems_push (f);
 	return true;
 }
 

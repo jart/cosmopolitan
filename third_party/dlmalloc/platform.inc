@@ -151,10 +151,6 @@
   ========================================================================
 */
 
-#ifndef LOCK_AT_FORK
-#define LOCK_AT_FORK 0
-#endif
-
 /* ------------------- size_t and alignment properties -------------------- */
 
 /* The byte and bit size of a size_t */

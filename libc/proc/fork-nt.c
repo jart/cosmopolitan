@@ -62,7 +62,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/itimer.internal.h"
+#include "libc/thread/itimer.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
@@ -189,7 +189,7 @@ static textwindows void *Malloc(size_t size) {
 }
 
 textwindows void WinMainForked(void) {
-  jmp_buf jb;
+  intptr_t jb[5];
   int64_t reader;
   int64_t savetsc;
   uint32_t varlen;
@@ -305,14 +305,14 @@ textwindows void WinMainForked(void) {
 #endif
 
   // jump back into function below
-  longjmp(jb, 1);
+  __builtin_longjmp(jb, 1);
 }
 
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   char ok;
-  jmp_buf jb;
   char **args;
   int rc = -1;
+  intptr_t jb[5];
   struct Proc *proc;
   struct CosmoTib *tib;
   char16_t pipename[64];
@@ -325,7 +325,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     return -1;
   ftrace_enabled(-1);
   strace_enabled(-1);
-  if (!setjmp(jb)) {
+  if (!__builtin_setjmp(jb)) {
     reader = CreateNamedPipe(__create_pipe_name(pipename), kNtPipeAccessInbound,
                              kNtPipeTypeByte | kNtPipeReadmodeByte, 1, PIPE_BUF,
                              PIPE_BUF, 0, &kNtIsInheritable);
@@ -467,12 +467,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     if (ftrace_stackdigs)
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
     // reset core runtime services
-    __proc_wipe();
     WipeKeystrokes();
-    if (_weaken(__sig_init))
-      _weaken(__sig_init)();
-    if (_weaken(__itimer_wipe))
-      _weaken(__itimer_wipe)();
     // notify pthread join
     atomic_store_explicit(&_pthread_static.ptid, GetCurrentThreadId(),
                           memory_order_release);

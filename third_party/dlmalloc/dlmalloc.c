@@ -45,7 +45,6 @@
 #define USE_LOCKS 2
 #define MALLOC_INSPECT_ALL 1
 #define ABORT_ON_ASSERT_FAILURE 0
-#define LOCK_AT_FORK 1
 #define NO_MALLOC_STATS 1
 
 #if IsModeDbg()

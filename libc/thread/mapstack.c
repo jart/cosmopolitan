@@ -16,18 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/cosmo.h"
+#include "libc/errno.h"
 #include "libc/runtime/stack.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
-
-#define MAP_ANON_OPENBSD  0x1000
-#define MAP_STACK_OPENBSD 0x4000
 
 /**
  * Allocates stack.
@@ -43,28 +34,23 @@
  * @return stack bottom address on success, or null w/ errno
  */
 void *NewCosmoStack(void) {
-  char *p;
-  size_t n = GetStackSize();
-  if ((p = mmap(0, n, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1,
-                0)) != MAP_FAILED) {
-    if (IsOpenbsd() && __sys_mmap(p, n, PROT_READ | PROT_WRITE,
-                                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD |
-                                      MAP_STACK_OPENBSD,
-                                  -1, 0, 0) != p)
-      notpossible;
-    if (mprotect(p, GetGuardSize(), PROT_NONE | PROT_GUARD))
-      notpossible;
-    return p;
-  } else {
-    return 0;
-  }
+  void *stackaddr;
+  size_t stacksize = GetStackSize();
+  size_t guardsize = GetGuardSize();
+  errno_t err = cosmo_stack_alloc(&stacksize, &guardsize, &stackaddr);
+  if (!err)
+    return stackaddr;
+  errno = err;
+  return 0;
 }
 
 /**
  * Frees stack.
  *
- * @param stk was allocated by NewCosmoStack()
+ * @param stackaddr was allocated by NewCosmoStack()
+ * @return 0 on success, or -1 w/ errno
  */
-int FreeCosmoStack(void *stk) {
-  return munmap(stk, GetStackSize());
+int FreeCosmoStack(void *stackaddr) {
+  cosmo_stack_free(stackaddr, GetStackSize(), GetGuardSize());
+  return 0;
 }

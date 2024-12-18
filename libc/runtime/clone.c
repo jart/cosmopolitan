@@ -29,6 +29,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -56,6 +57,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/openbsd.internal.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/xnu.internal.h"
@@ -188,6 +190,7 @@ XnuThreadMain(void *pthread,                    // rdi
               struct CloneArgs *wt,             // r8
               unsigned xnuflags) {              // r9
   int ax;
+
   wt->tid = tid;
   *wt->ctid = tid;
   *wt->ptid = tid;
@@ -259,7 +262,7 @@ static errno_t CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
 
 // we can't use address sanitizer because:
 //   1. __asan_handle_no_return wipes stack [todo?]
-static wontreturn void OpenbsdThreadMain(void *p) {
+relegated static wontreturn void OpenbsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
   *wt->ctid = wt->tid;
   wt->func(wt->arg, wt->tid);
@@ -276,9 +279,9 @@ static wontreturn void OpenbsdThreadMain(void *p) {
   __builtin_unreachable();
 }
 
-static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
-                            int flags, void *arg, void *tls, atomic_int *ptid,
-                            atomic_int *ctid) {
+relegated errno_t CloneOpenbsd(int (*func)(void *, int), char *stk,
+                               size_t stksz, int flags, void *arg, void *tls,
+                               atomic_int *ptid, atomic_int *ctid) {
   int rc;
   intptr_t sp;
   struct __tfork *tf;
@@ -299,10 +302,8 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
   tf->tf_tcb = flags & CLONE_SETTLS ? tls : 0;
   tf->tf_tid = &wt->tid;
   if ((rc = __tfork_thread(tf, sizeof(*tf), OpenbsdThreadMain, wt)) >= 0) {
-    npassert(rc);
-    if (flags & CLONE_PARENT_SETTID) {
+    if (flags & CLONE_PARENT_SETTID)
       *ptid = rc;
-    }
     return 0;
   } else {
     return -rc;
@@ -314,18 +315,20 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
 
 static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
                                         int (*func)(void *, int),  // rsi
-                                        int *tid,                  // rdx
-                                        atomic_int *ctid,          // rcx
-                                        int *ztid) {               // r9
+                                        int flags,                 // rdx
+                                        atomic_int *ctid) {        // rcx
   int ax, dx;
-  // TODO(jart): Why are we seeing flakes where *tid is zero?
-  // ax = *tid;
+  static atomic_int clobber;
+  atomic_int *ztid = &clobber;
   ax = sys_gettid();
-  *ctid = ax;
+  if (flags & CLONE_CHILD_SETTID)
+    atomic_store_explicit(ctid, ax, memory_order_release);
+  if (flags & CLONE_CHILD_CLEARTID)
+    ztid = ctid;
   func(arg, ax);
   // we no longer use the stack after this point
   // %eax = int __lwp_exit(void);
-  asm volatile("movl\t$0,%2\n\t"  // *wt->ztid = 0
+  asm volatile("movl\t$0,%2\n\t"  // *ztid = 0
                "syscall"          // __lwp_exit()
                : "=a"(ax), "=d"(dx), "=m"(*ztid)
                : "0"(310)
@@ -340,7 +343,6 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   // second-class API, intended to help Linux folks migrate to this.
   int ax;
   bool failed;
-  atomic_int *tid;
   intptr_t dx, sp;
   static bool once;
   struct ucontext_netbsd *ctx;
@@ -356,12 +358,6 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
     once = true;
   }
   sp = (intptr_t)stk + stksz;
-
-  // allocate memory for tid
-  sp -= sizeof(atomic_int);
-  sp = sp & -alignof(atomic_int);
-  tid = (atomic_int *)sp;
-  *tid = 0;
 
   // align the stack
   sp = AlignStack(sp, stk, stksz, 16);
@@ -383,9 +379,8 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   ctx->uc_mcontext.rip = (intptr_t)NetbsdThreadMain;
   ctx->uc_mcontext.rdi = (intptr_t)arg;
   ctx->uc_mcontext.rsi = (intptr_t)func;
-  ctx->uc_mcontext.rdx = (intptr_t)tid;
-  ctx->uc_mcontext.rcx = (intptr_t)(flags & CLONE_CHILD_SETTID ? ctid : tid);
-  ctx->uc_mcontext.r8 = (intptr_t)(flags & CLONE_CHILD_CLEARTID ? ctid : tid);
+  ctx->uc_mcontext.rdx = flags;
+  ctx->uc_mcontext.rcx = (intptr_t)ctid;
   ctx->uc_flags |= _UC_STACK;
   ctx->uc_stack.ss_sp = stk;
   ctx->uc_stack.ss_size = stksz;
@@ -396,15 +391,15 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   }
 
   // perform the system call
+  int tid = 0;
   asm volatile(CFLAG_ASM("syscall")
                : CFLAG_CONSTRAINT(failed), "=a"(ax), "=d"(dx)
-               : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(tid)
+               : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(&tid)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (!failed) {
-    npassert(*tid);
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = *tid;
-    }
+    unassert(tid);
+    if (flags & CLONE_PARENT_SETTID)
+      *ptid = tid;
     return 0;
   } else {
     return ax;
@@ -744,43 +739,47 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  */
 errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
               void *ptid, void *tls, void *ctid) {
-  int rc;
+  errno_t err;
+
+  atomic_fetch_add(&_pthread_count, 1);
 
   if (!func) {
-    rc = EINVAL;
+    err = EINVAL;
   } else if (IsLinux()) {
-    rc = CloneLinux(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneLinux(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (!IsTiny() &&
              (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
                         CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID)) !=
                  (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                   CLONE_SIGHAND | CLONE_SYSVSEM)) {
-    rc = EINVAL;
+    err = EINVAL;
   } else if (IsXnu()) {
 #ifdef __x86_64__
-    rc = CloneXnu(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneXnu(func, stk, stksz, flags, arg, tls, ptid, ctid);
 #elif defined(__aarch64__)
-    rc = CloneSilicon(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneSilicon(func, stk, stksz, flags, arg, tls, ptid, ctid);
 #else
 #error "unsupported architecture"
 #endif
   } else if (IsFreebsd()) {
-    rc = CloneFreebsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneFreebsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
 #ifdef __x86_64__
   } else if (IsNetbsd()) {
-    rc = CloneNetbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneNetbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsOpenbsd()) {
-    rc = CloneOpenbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneOpenbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsWindows()) {
-    rc = CloneWindows(func, stk, stksz, flags, arg, tls, ptid, ctid);
+    err = CloneWindows(func, stk, stksz, flags, arg, tls, ptid, ctid);
 #endif /* __x86_64__ */
   } else {
-    rc = ENOSYS;
+    err = ENOSYS;
   }
 
-  if (SupportsBsd() && rc == EPROCLIM) {
-    rc = EAGAIN;
-  }
+  if (SupportsBsd() && err == EPROCLIM)
+    err = EAGAIN;
 
-  return rc;
+  if (err)
+    unassert(atomic_fetch_sub(&_pthread_count, 1) > 1);
+
+  return err;
 }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -31,15 +32,40 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#include "libc/time.h"
 
 FILE *f;
 char buf[32];
 
+void OnAlarm(int sig) {
+}
+
+void *LolThread(void *arg) {
+  return 0;
+}
+
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
+
+  // give deadlock detector more information
+  int64_t t = 0x5cd04d0e;
+  localtime(&t);
+  pthread_t th;
+  pthread_create(&th, 0, LolThread, 0);
+  pthread_join(th, 0);
+  char buf[32];
+  sprintf(buf, "%g", 3.14);
+  atexit((void *)LolThread);
+  FILE *f = fopen("/zip/.cosmo", "r");
+  fgetc(f);
+  fclose(f);
+  signal(SIGALRM, OnAlarm);
+  struct itimerval it = {{0, 1000}, {0, 1}};
+  setitimer(ITIMER_REAL, &it, 0);
 }
 
 void CheckForFdLeaks(void) {

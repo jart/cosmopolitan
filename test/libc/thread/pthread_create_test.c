@@ -22,6 +22,8 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
@@ -40,7 +42,9 @@
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/manystack.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/posixthread.internal.h"
@@ -48,6 +52,10 @@
 #include "libc/thread/thread2.h"
 
 void OnUsr1(int sig, siginfo_t *si, void *vctx) {
+}
+
+void SetUpOnce(void) {
+  cosmo_stack_setmaxstacks((_rand64() & 7) - 1);
 }
 
 void SetUp(void) {
@@ -280,10 +288,60 @@ static void CreateDetached(void) {
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
 }
 
+#define LAUNCHES  10
+#define LAUNCHERS 10
+
+errno_t pthread_create2(pthread_t *thread, const pthread_attr_t *attr,
+                        void *(*start_routine)(void *), void *arg) {
+  for (int i = 1;; i <<= 1) {
+    errno_t err = pthread_create(thread, attr, start_routine, arg);
+    if (err != EAGAIN)
+      return err;
+    usleep(i);
+  }
+}
+
+static void *CreateDetachedParallelThreads(void *arg) {
+  for (int i = 0; i < LAUNCHES; ++i)
+    CreateDetached();
+  return 0;
+}
+
+static void CreateDetachedParallel(void) {
+  pthread_t th[LAUNCHERS];
+  for (int i = 0; i < LAUNCHERS; ++i)
+    ASSERT_EQ(0, pthread_create2(&th[i], 0, CreateDetachedParallelThreads, 0));
+  for (int i = 0; i < LAUNCHERS; ++i)
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+}
+
+static void *CreateJoinParallelThreads(void *arg) {
+  for (int i = 0; i < LAUNCHES; ++i)
+    CreateJoin();
+  return 0;
+}
+
+static void CreateJoinParallel(void) {
+  pthread_t th[LAUNCHERS];
+  for (int i = 0; i < LAUNCHERS; ++i)
+    ASSERT_EQ(0, pthread_create2(&th[i], 0, CreateJoinParallelThreads, 0));
+  for (int i = 0; i < LAUNCHERS; ++i)
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+}
+
 TEST(pthread_create, bench) {
-  EZBENCH2("CreateJoin", donothing, CreateJoin());
-  EZBENCH2("CreateDetach", donothing, CreateDetach());
-  EZBENCH2("CreateDetached", donothing, CreateDetached());
+  kprintf("cosmo_stack_getmaxstacks() = %d\n", cosmo_stack_getmaxstacks());
+  pthread_t msh = manystack_start();
+  BENCHMARK(100, 1, CreateJoin());
+  BENCHMARK(100, 1, CreateDetach());
+  usleep(10000);
+  pthread_decimate_np();
+  BENCHMARK(100, 1, CreateDetached());
+  usleep(10000);
+  pthread_decimate_np();
+  BENCHMARK(1, LAUNCHERS + LAUNCHERS * LAUNCHES, CreateJoinParallel());
+  BENCHMARK(1, LAUNCHERS + LAUNCHERS * LAUNCHES, CreateDetachedParallel());
+  manystack_stop(msh);
   while (!pthread_orphan_np())
     pthread_decimate_np();
 }

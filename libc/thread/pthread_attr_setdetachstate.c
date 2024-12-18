@@ -28,6 +28,10 @@
  *     pthread_create(0, &attr, func, 0);
  *     pthread_attr_destroy(&attr);
  *
+ * If you use this, please be warned that your thread might run and exit
+ * before pthread_create() even returns. You really should assume it can
+ * not be used with any pthread APIs from the calling thread.
+ *
  * @param detachstate can be one of
  *     - `PTHREAD_CREATE_JOINABLE` (default)
  *     - `PTHREAD_CREATE_DETACHED`

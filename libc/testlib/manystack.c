@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,62 +16,54 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/sig.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/strace.h"
-#include "libc/runtime/syslib.internal.h"
-#include "libc/sysv/consts/sicode.h"
+#include "libc/testlib/manystack.h"
+#include "libc/atomic.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/intrin/dll.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 
-/**
- * Sends signal to thread.
- *
- * @return 0 on success, or errno on error
- * @raise ESRCH if `tid` was valid but no such thread existed
- * @raise EAGAIN if `RLIMIT_SIGPENDING` was exceeded
- * @raise EINVAL if `sig` wasn't a legal signal
- * @raise EPERM if permission was denied
- * @asyncsignalsafe
- */
-errno_t pthread_kill(pthread_t thread, int sig) {
-  int err = 0;
-  struct PosixThread *pt;
-  pt = (struct PosixThread *)thread;
-  if (pt)
-    _pthread_ref(pt);
-  if (!thread) {
-    err = EFAULT;
-  } else if (!(1 <= sig && sig <= 64)) {
-    err = EINVAL;
-  } else if (thread == __get_tls()->tib_pthread) {
-    err = raise(sig);  // XNU will EDEADLK it otherwise
-  } else if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
-             kPosixThreadTerminated) {
-    err = ESRCH;
-  } else if (IsWindows()) {
-    err = __sig_kill(pt, sig, SI_TKILL);
-  } else {
-    if (IsXnuSilicon()) {
-      err = __syslib->__pthread_kill(_pthread_syshand(pt), sig);
-    } else {
-      int e = errno;
-      if (sys_tkill(_pthread_tid(pt), sig, pt->tib)) {
-        err = errno;
-        errno = e;
+static atomic_int manystack_gotsig;
+static atomic_bool manystack_shutdown;
+
+static void manystack_signal(int sig) {
+  manystack_gotsig = sig;
+}
+
+static void *manystack_thread(void *arg) {
+  sigset_t ss;
+  sigfillset(&ss);
+  sigdelset(&ss, SIGUSR2);
+  while (!manystack_shutdown) {
+    sigsuspend(&ss);
+    if (!manystack_shutdown) {
+      _pthread_lock();
+      for (struct Dll *e = dll_first(_pthread_list); e;
+           e = dll_next(_pthread_list, e)) {
+        pthread_t th = (pthread_t)POSIXTHREAD_CONTAINER(e);
+        if (!pthread_equal(th, pthread_self()))
+          pthread_kill(th, SIGQUIT);
       }
+      _pthread_unlock();
     }
-    if (err == ESRCH)
-      err = 0;  // we already reported this
   }
-  STRACE("pthread_kill(%d, %G) → %s", _pthread_tid(pt), sig,
-         DescribeErrno(err));
-  if (pt)
-    _pthread_unref(pt);
-  return err;
+  return 0;
+}
+
+pthread_t manystack_start(void) {
+  sigset_t ss;
+  pthread_t msh;
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGUSR2);
+  sigprocmask(SIG_BLOCK, &ss, 0);
+  signal(SIGUSR2, manystack_signal);
+  pthread_create(&msh, 0, manystack_thread, 0);
+  return msh;
+}
+
+void manystack_stop(pthread_t msh) {
+  manystack_shutdown = true;
+  pthread_kill(msh, SIGUSR2);
+  pthread_join(msh, 0);
 }

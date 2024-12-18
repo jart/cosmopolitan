@@ -160,22 +160,6 @@ __funline bool kischarmisaligned(const char *p, signed char t) {
   return false;
 }
 
-ABI bool32 kisdangerous(const void *addr) {
-  bool32 res = true;
-  __maps_lock();
-  if (__maps.maps) {
-    struct Map *map;
-    if ((map = __maps_floor(addr)))
-      if ((const char *)addr >= map->addr &&
-          (const char *)addr < map->addr + map->size)
-        res = false;
-  } else {
-    res = false;
-  }
-  __maps_unlock();
-  return res;
-}
-
 ABI static void klogclose(long fd) {
 #ifdef __x86_64__
   long ax = __NR_close;

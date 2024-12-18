@@ -16,10 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/time.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/sysv/consts/clock.h"
 
 /**
  * Returns time as seconds from UNIX epoch.
@@ -29,15 +28,11 @@
  * @asyncsignalsafe
  */
 int64_t time(int64_t *opt_out_ret) {
-  int64_t secs;
-  struct timeval tv;
-  if (gettimeofday(&tv, 0) != -1) {
-    secs = tv.tv_sec;
-    if (opt_out_ret) {
-      *opt_out_ret = secs;
-    }
-  } else {
-    secs = -1;
-  }
+  int64_t secs = -1;
+  struct timespec ts;
+  if (!clock_gettime(CLOCK_REALTIME, &ts))
+    secs = ts.tv_sec;
+  if (opt_out_ret)
+    *opt_out_ret = secs;
   return secs;
 }

@@ -40,6 +40,7 @@
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -179,10 +180,10 @@ static waiter *free_waiters_pop (void) {
 	return w;
 }
 
-static void free_waiters_populate (void) {
+static bool free_waiters_populate (void) {
 	int n;
 	if (IsNetbsd ()) {
-		// netbsd needs a real file descriptor per semaphore
+		// netbsd semaphores are file descriptors
 		n = 1;
 	} else {
 		n = __pagesize / sizeof(waiter);
@@ -192,14 +193,17 @@ static void free_waiters_populate (void) {
 				MAP_PRIVATE | MAP_ANONYMOUS,
 				-1, 0);
 	if (waiters == MAP_FAILED)
-		nsync_panic_ ("out of memory\n");
+		return false;
 	for (size_t i = 0; i < n; ++i) {
 		waiter *w = &waiters[i];
 		w->tag = WAITER_TAG;
 		w->nw.tag = NSYNC_WAITER_TAG;
 		if (!nsync_mu_semaphore_init (&w->sem)) {
-			if (!i)
-				nsync_panic_ ("out of semaphores\n");
+			if (!i) {
+				// netbsd can run out of semaphores
+				munmap (waiters, n * sizeof (waiter));
+				return false;
+			}
 			break;
 		}
 		w->nw.sem = &w->sem;
@@ -208,6 +212,7 @@ static void free_waiters_populate (void) {
 		dll_init (&w->same_condition);
 		free_waiters_push (w);
 	}
+	return true;
 }
 
 /* -------------------------------- */
@@ -232,11 +237,18 @@ void nsync_waiter_destroy (void *v) {
 waiter *nsync_waiter_new_ (void) {
 	waiter *w;
 	waiter *tw;
+	unsigned attempts = 0;
+	bool out_of_semaphores = false;
 	tw = waiter_for_thread;
 	w = tw;
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
-		while (!(w = free_waiters_pop ()))
-			free_waiters_populate ();
+		while (!(w = free_waiters_pop ())) {
+			if (!out_of_semaphores)
+				if (!free_waiters_populate ())
+					out_of_semaphores = true;
+			if (out_of_semaphores)
+				attempts = pthread_delay_np (&free_waiters, attempts);
+		}
 		if (tw == NULL) {
 			w->flags |= WAITER_RESERVED;
 			waiter_for_thread = w;

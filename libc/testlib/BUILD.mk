@@ -27,6 +27,7 @@ LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/ezbench.h					\
 	libc/testlib/fastrandomstring.h				\
 	libc/testlib/hyperion.h					\
+	libc/testlib/manystack.h				\
 	libc/testlib/moby.h					\
 	libc/testlib/subprocess.h				\
 	libc/testlib/testlib.h					\
@@ -70,6 +71,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/globals.c					\
 	libc/testlib/hexequals.c				\
 	libc/testlib/incrementfailed.c				\
+	libc/testlib/manystack.c				\
 	libc/testlib/memoryexists.c				\
 	libc/testlib/seterrno.c					\
 	libc/testlib/shoulddebugbreak.c				\
@@ -110,6 +112,7 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_STR						\
 	LIBC_SYSV						\
 	LIBC_SYSV_CALLS						\
+	LIBC_THREAD						\
 	LIBC_TINYMATH						\
 	LIBC_X							\
 	THIRD_PARTY_COMPILER_RT					\

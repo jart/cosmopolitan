@@ -23,9 +23,9 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_clock_nanosleep_openbsd(int clock, int flags,
-                                const struct timespec *req,
-                                struct timespec *rem) {
+relegated int sys_clock_nanosleep_openbsd(int clock, int flags,
+                                          const struct timespec *req,
+                                          struct timespec *rem) {
   int res;
   struct timespec start, relative, remainder;
   if (!flags) {

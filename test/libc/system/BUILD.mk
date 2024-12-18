@@ -33,6 +33,7 @@ TEST_LIBC_SYSTEM_DIRECTDEPS =					\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STDIO						\
+	LIBC_STR						\
 	LIBC_SYSTEM						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
@@ -40,6 +41,7 @@ TEST_LIBC_SYSTEM_DIRECTDEPS =					\
 	LIBC_X							\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_TR						\
+	THIRD_PARTY_TZ						\
 
 TEST_LIBC_SYSTEM_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_SYSTEM_DIRECTDEPS),$($(x))))

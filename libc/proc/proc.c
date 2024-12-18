@@ -268,7 +268,8 @@ textwindows void __proc_unlock(void) {
 /**
  * Resets process tracker from forked child.
  */
-textwindows void __proc_wipe(void) {
+textwindows void __proc_wipe_and_reset(void) {
+  // TODO(jart): Should we preserve this state in forked children?
   pthread_mutex_t lock = __proc.lock;
   bzero(&__proc, sizeof(__proc));
   __proc.lock = lock;

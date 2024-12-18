@@ -3,38 +3,38 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 
-/* ---------------------------- setting mparams -------------------------- */
-
-#if LOCK_AT_FORK
-#if ONLY_MSPACES
-
 void dlmalloc_pre_fork(void) {
+#if ONLY_MSPACES
   mstate h;
   for (unsigned i = ARRAYLEN(g_heaps); i--;)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       ACQUIRE_LOCK(&h->mutex);
+#else
+  ACQUIRE_LOCK(&(gm)->mutex);
+#endif
 }
 
 void dlmalloc_post_fork_parent(void) {
+#if ONLY_MSPACES
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       RELEASE_LOCK(&h->mutex);
+#else
+  RELEASE_LOCK(&(gm)->mutex);
+#endif
 }
 
 void dlmalloc_post_fork_child(void) {
+#if ONLY_MSPACES
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      (void)REFRESH_LOCK(&h->mutex);
-}
-
+      REFRESH_LOCK(&h->mutex);
 #else
-void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
-void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
-void dlmalloc_post_fork_child(void)  { (void)REFRESH_LOCK(&(gm)->mutex); }
-#endif /* ONLY_MSPACES */
-#endif /* LOCK_AT_FORK */
+  REFRESH_LOCK(&(gm)->mutex);
+#endif
+}
 
 /* Initialize mparams */
 __attribute__((__constructor__(49))) int init_mparams(void) {

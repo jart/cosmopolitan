@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/intrin/atomic.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 
-/**
- * Returns true if calling thread is the only thread.
- */
-int pthread_orphan_np(void) {
-  bool res;
-  _pthread_lock();
-  res = _pthread_list == _pthread_list->prev &&
-        _pthread_list == _pthread_list->next;
-  _pthread_unlock();
-  unassert(!res || atomic_load(&_pthread_count) <= 1);
+privileged optimizesize bool32 kisdangerous(const void *addr) {
+  bool32 res = true;
+  __maps_lock();
+  if (__maps.maps) {
+    struct Map *map;
+    if ((map = __maps_floor(addr)))
+      if ((const char *)addr >= map->addr &&
+          (const char *)addr < map->addr + map->size)
+        res = false;
+  } else {
+    res = false;
+  }
+  __maps_unlock();
   return res;
 }

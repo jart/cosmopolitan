@@ -33,17 +33,12 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/itimer.internal.h"
+#include "libc/thread/itimer.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 #define STACK_SIZE 65536
-
-struct IntervalTimer __itimer = {
-    .lock = PTHREAD_MUTEX_INITIALIZER,
-    .cond = PTHREAD_COND_INITIALIZER,
-};
 
 static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   struct CosmoTib tls;
@@ -55,7 +50,7 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   for (;;) {
     bool dosignal = false;
     struct timeval now, waituntil;
-    pthread_mutex_lock(&__itimer.lock);
+    __itimer_lock();
     now = timeval_real();
     if (timeval_iszero(__itimer.it.it_value)) {
       waituntil = timeval_max;
@@ -76,13 +71,13 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
         dosignal = true;
       }
     }
-    pthread_mutex_unlock(&__itimer.lock);
+    __itimer_unlock();
     if (dosignal)
       __sig_generate(SIGALRM, SI_TIMER);
-    pthread_mutex_lock(&__itimer.lock);
+    __itimer_lock();
     struct timespec deadline = timeval_totimespec(waituntil);
     pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
-    pthread_mutex_unlock(&__itimer.lock);
+    __itimer_unlock();
   }
   return 0;
 }
@@ -92,39 +87,30 @@ static textwindows void __itimer_setup(void) {
                                  kNtStackSizeParamIsAReservation, 0);
 }
 
-textwindows void __itimer_wipe(void) {
-  // this function is called by fork(), because
-  // timers aren't inherited by forked subprocesses
-  bzero(&__itimer, sizeof(__itimer));
-}
-
 textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
                                  struct itimerval *old) {
   struct itimerval config;
   cosmo_once(&__itimer.once, __itimer_setup);
   if (which != ITIMER_REAL || (neu && (!timeval_isvalid(neu->it_value) ||
-                                       !timeval_isvalid(neu->it_interval)))) {
+                                       !timeval_isvalid(neu->it_interval))))
     return einval();
-  }
-  if (neu) {
+  if (neu)
     // POSIX defines setitimer() with the restrict keyword but let's
     // accommodate the usage setitimer(ITIMER_REAL, &it, &it) anyway
     config = *neu;
-  }
   BLOCK_SIGNALS;
-  pthread_mutex_lock(&__itimer.lock);
+  __itimer_lock();
   if (old) {
     old->it_interval = __itimer.it.it_interval;
     old->it_value = timeval_subz(__itimer.it.it_value, timeval_real());
   }
   if (neu) {
-    if (!timeval_iszero(config.it_value)) {
+    if (!timeval_iszero(config.it_value))
       config.it_value = timeval_add(config.it_value, timeval_real());
-    }
     __itimer.it = config;
     pthread_cond_signal(&__itimer.cond);
   }
-  pthread_mutex_unlock(&__itimer.lock);
+  __itimer_unlock();
   ALLOW_SIGNALS;
   return 0;
 }

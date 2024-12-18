@@ -384,6 +384,10 @@ int RunOnHost(char *spec) {
     handshake_latency = timespec_tomicros(timespec_sub(timespec_mono(), start));
     if (!err)
       break;
+    if (err == MBEDTLS_ERR_NET_CONN_RESET) {
+      close(g_sock);
+      continue;
+    }
     WARNF("handshake with %s:%d failed -0x%04x (%s)",  //
           g_hostname, g_runitdport, err, GetTlsError(err));
     close(g_sock);

@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
 #include "libc/mem/mem.h"
@@ -28,13 +30,12 @@ struct AtFork {
 };
 
 struct AtForks {
-  pthread_once_t once;
+  atomic_uint once;
   pthread_mutex_t lock;
   struct AtFork *list;
 };
 
 static struct AtForks _atforks = {
-    .once = PTHREAD_ONCE_INIT,
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
@@ -161,7 +162,7 @@ void _pthread_onfork_child(void) {
  * @raise ENOMEM if we require more vespene gas
  */
 int pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
-  pthread_once(&_atforks.once, pthread_atfork_init);
+  cosmo_once(&_atforks.once, pthread_atfork_init);
   struct AtFork *a;
   if (!(a = calloc(1, sizeof(struct AtFork))))
     return ENOMEM;

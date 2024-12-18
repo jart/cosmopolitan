@@ -69,7 +69,7 @@
  * @noreturn
  */
 wontreturn void pthread_exit(void *rc) {
-  int orphan;
+  unsigned population;
   struct CosmoTib *tib;
   struct PosixThread *pt;
   enum PosixThreadStatus status, transition;
@@ -94,10 +94,21 @@ wontreturn void pthread_exit(void *rc) {
   __cxa_thread_finalize();
 
   // run atexit handlers if orphaned thread
-  _pthread_decimate(true);
-  if ((orphan = pthread_orphan_np()))
-    if (_weaken(__cxa_finalize))
-      _weaken(__cxa_finalize)(NULL);
+  // notice how we avoid acquiring the pthread gil
+  if (!(population = atomic_fetch_sub(&_pthread_count, 1) - 1)) {
+    // we know for certain we're an orphan. any other threads that
+    // exist, will terminate and clear their tid very soon. but...
+    // some goofball could spawn more threads from atexit handlers
+    for (;;) {
+      _pthread_decimate();
+      if (pthread_orphan_np()) {
+        if (_weaken(__cxa_finalize))
+          _weaken(__cxa_finalize)(NULL);
+        population = atomic_load(&_pthread_count);
+        break;
+      }
+    }
+  }
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
@@ -127,7 +138,7 @@ wontreturn void pthread_exit(void *rc) {
   //  thread has been terminated. The behavior shall be as if the
   //  implementation called exit() with a zero argument at thread
   //  termination time." ──Quoth POSIX.1-2017
-  if (orphan) {
+  if (!population) {
     for (int i = __fini_array_end - __fini_array_start; i--;)
       ((void (*)(void))__fini_array_start[i])();
     _Exit(0);
@@ -143,7 +154,7 @@ wontreturn void pthread_exit(void *rc) {
   }
 
   // this is a child thread
-  longjmp(pt->pt_exiter, 1);
+  __builtin_longjmp(pt->pt_exiter, 1);
 }
 
 __weak_reference(pthread_exit, thr_exit);
