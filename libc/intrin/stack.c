@@ -64,7 +64,7 @@ static struct CosmoStacks cosmo_stacks = {
 };
 
 static struct CosmoStacksConfig cosmo_stacks_config = {
-    .maxstacks = 16,
+    .maxstacks = 3,
 };
 
 void cosmo_stack_lock(void) {
@@ -169,7 +169,7 @@ int cosmo_stack_getmaxstacks(void) {
  *
  * Please note this limit only applies to stacks that aren't in use.
  *
- * Your default is sixteen stacks may be cached at any given moment.
+ * Your default is three stacks may be cached at any given moment.
  *
  * If `maxstacks` is less than the current cache size, then surplus
  * entries will be evicted and freed before this function returns.
@@ -292,10 +292,10 @@ errno_t cosmo_stack_free(void *stackaddr, unsigned stacksize,
     return EINVAL;
   if ((uintptr_t)stackaddr & (__gransize - 1))
     return EINVAL;
-  cosmo_once(&cosmo_stacks.once, cosmo_stack_setup);
   cosmo_stack_lock();
   struct Dll *surplus = 0;
   if (cosmo_stacks_config.maxstacks) {
+    cosmo_once(&cosmo_stacks.once, cosmo_stack_setup);
     surplus = cosmo_stack_decimate(cosmo_stacks_config.maxstacks - 1);
     struct CosmoStack *ts = 0;
     if (dll_is_empty(cosmo_stacks.objects))

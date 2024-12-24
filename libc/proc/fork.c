@@ -114,6 +114,8 @@ static void fork_prepare(void) {
   fork_prepare_stdio();
   __localtime_lock();
   __dlopen_lock();
+  if (_weaken(cosmo_stack_lock))
+    _weaken(cosmo_stack_lock)();
   __cxa_lock();
   __gdtoa_lock1();
   __gdtoa_lock();
@@ -121,16 +123,12 @@ static void fork_prepare(void) {
   dlmalloc_pre_fork();
   __fds_lock();
   _pthread_mutex_lock(&__rand64_lock_obj);
-  if (_weaken(cosmo_stack_lock))
-    _weaken(cosmo_stack_lock)();
   __maps_lock();
   LOCKTRACE("READY TO LOCK AND ROLL");
 }
 
 static void fork_parent(void) {
   __maps_unlock();
-  if (_weaken(cosmo_stack_unlock))
-    _weaken(cosmo_stack_unlock)();
   _pthread_mutex_unlock(&__rand64_lock_obj);
   __fds_unlock();
   dlmalloc_post_fork_parent();
@@ -138,6 +136,8 @@ static void fork_parent(void) {
   __gdtoa_unlock();
   __gdtoa_unlock1();
   __cxa_unlock();
+  if (_weaken(cosmo_stack_unlock))
+    _weaken(cosmo_stack_unlock)();
   __dlopen_unlock();
   __localtime_unlock();
   fork_parent_stdio();
@@ -148,8 +148,6 @@ static void fork_parent(void) {
 
 static void fork_child(void) {
   nsync_mu_semaphore_sem_fork_child();
-  if (_weaken(cosmo_stack_wipe))
-    _weaken(cosmo_stack_wipe)();
   _pthread_mutex_wipe_np(&__dlopen_lock_obj);
   _pthread_mutex_wipe_np(&__rand64_lock_obj);
   _pthread_mutex_wipe_np(&__fds_lock_obj);
@@ -159,6 +157,8 @@ static void fork_child(void) {
   fork_child_stdio();
   _pthread_mutex_wipe_np(&__pthread_lock_obj);
   _pthread_mutex_wipe_np(&__cxa_lock_obj);
+  if (_weaken(cosmo_stack_wipe))
+    _weaken(cosmo_stack_wipe)();
   _pthread_mutex_wipe_np(&__localtime_lock_obj);
   if (IsWindows()) {
     // we don't bother locking the proc/itimer/sig locks above since
@@ -204,11 +204,11 @@ int _fork(uint32_t dwCreationFlags) {
     struct CosmoTib *tib = __get_tls();
     struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
     tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
-    atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
-    atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);
+    atomic_init(&tib->tib_tid, tid);
+    atomic_init(&pt->ptid, tid);
 
     // tracing and kisdangerous need this lock wiped a little earlier
-    atomic_store_explicit(&__maps.lock.word, 0, memory_order_relaxed);
+    atomic_init(&__maps.lock.word, 0);
 
     /*
      * it's now safe to call normal functions again
@@ -218,14 +218,10 @@ int _fork(uint32_t dwCreationFlags) {
     // we can't free() them since we're monopolizing all locks
     // we assume the operating system already reclaimed system handles
     dll_remove(&_pthread_list, &pt->list);
-    for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
-      atomic_store_explicit(&POSIXTHREAD_CONTAINER(e)->pt_status,
-                            kPosixThreadZombie, memory_order_relaxed);
-      atomic_store_explicit(&POSIXTHREAD_CONTAINER(e)->tib->tib_syshand, 0,
-                            memory_order_relaxed);
-    }
+    struct Dll *old_threads = _pthread_list;
+    _pthread_list = 0;
     dll_make_first(&_pthread_list, &pt->list);
-    atomic_store_explicit(&_pthread_count, 1, memory_order_relaxed);
+    atomic_init(&_pthread_count, 1);
 
     // get new system thread handle
     intptr_t syshand = 0;
@@ -236,16 +232,27 @@ int _fork(uint32_t dwCreationFlags) {
                       GetCurrentProcess(), &syshand, 0, false,
                       kNtDuplicateSameAccess);
     }
-    atomic_store_explicit(&tib->tib_syshand, syshand, memory_order_relaxed);
+    atomic_init(&tib->tib_syshand, syshand);
 
     // we can't be canceled if the canceler no longer exists
-    atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
+    atomic_init(&pt->pt_canceled, false);
 
     // forget locks
     memset(tib->tib_locks, 0, sizeof(tib->tib_locks));
 
     // run user fork callbacks
     fork_child();
+
+    // free threads
+    if (_weaken(_pthread_free)) {
+      while ((e = dll_first(old_threads))) {
+        pt = POSIXTHREAD_CONTAINER(e);
+        atomic_init(&pt->tib->tib_syshand, 0);
+        dll_remove(&old_threads, e);
+        _weaken(_pthread_free)(pt);
+      }
+    }
+
     STRACE("fork() → 0 (child of %d; took %ld us)", parent, micros);
   } else {
     // this is the parent process

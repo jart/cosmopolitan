@@ -94,7 +94,7 @@ struct PosixThread {
 typedef void (*atfork_f)(void);
 
 extern struct Dll *_pthread_list;
-extern _Atomic(unsigned) _pthread_count;
+extern atomic_uint _pthread_count;
 extern struct PosixThread _pthread_static;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
@@ -109,6 +109,7 @@ int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
 void _pthread_decimate(void) libcesque;
+void _pthread_free(struct PosixThread *) libcesque paramsnonnull();
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;
 void _pthread_onfork_parent(void) libcesque;

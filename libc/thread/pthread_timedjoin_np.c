@@ -62,33 +62,34 @@ static const char *DescribeReturnValue(char buf[30], int err, void **value) {
  * @cancelationpoint
  */
 static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
-  int x, e;
-  errno_t err = 0;
-  if (ctid == &__get_tls()->tib_tid) {
-    // "If an implementation detects that the value specified by the
-    //  thread argument to pthread_join() refers to the calling thread,
-    //  it is recommended that the function should fail and report an
-    //  [EDEADLK] error." ──Quoth POSIX.1-2017
-    err = EDEADLK;
-  } else {
-    // "If the thread calling pthread_join() is canceled, then the target
-    //  thread shall not be detached."  ──Quoth POSIX.1-2017
-    if (!(err = pthread_testcancel_np())) {
-      BEGIN_CANCELATION_POINT;
-      while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-        e = cosmo_futex_wait(ctid, x, !IsWindows() && !IsXnu(), CLOCK_REALTIME,
+
+  // "If an implementation detects that the value specified by the
+  //  thread argument to pthread_join() refers to the calling thread,
+  //  it is recommended that the function should fail and report an
+  //  [EDEADLK] error." ──Quoth POSIX.1-2017
+  if (ctid == &__get_tls()->tib_tid)
+    return EDEADLK;
+
+  // "If the thread calling pthread_join() is canceled, then the target
+  //  thread shall not be detached."  ──Quoth POSIX.1-2017
+  errno_t err;
+  if ((err = pthread_testcancel_np()))
+    return err;
+
+  BEGIN_CANCELATION_POINT;
+  int x;
+  while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
+    int e = cosmo_futex_wait(ctid, x, !IsWindows() && !IsXnu(), CLOCK_REALTIME,
                              abstime);
-        if (e == -ECANCELED) {
-          err = ECANCELED;
-          break;
-        } else if (e == -ETIMEDOUT) {
-          err = EBUSY;
-          break;
-        }
-      }
-      END_CANCELATION_POINT;
+    if (e == -ECANCELED) {
+      err = ECANCELED;
+      break;
+    } else if (e == -ETIMEDOUT) {
+      err = EBUSY;
+      break;
     }
   }
+  END_CANCELATION_POINT;
   return err;
 }
 
@@ -117,12 +118,11 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
 errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
                              struct timespec *abstime) {
   int tid;
-  errno_t err = 0;
+  errno_t err;
   struct PosixThread *pt;
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
   unassert(thread);
-  _pthread_ref(pt);
 
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."
@@ -135,14 +135,23 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   //  specifying the same target thread are undefined."
   //                                  ──Quoth POSIX.1-2017
   if (!(err = _pthread_wait(&pt->tib->tib_tid, abstime))) {
-    atomic_store_explicit(&pt->pt_status, kPosixThreadZombie,
-                          memory_order_release);
-    _pthread_zombify(pt);
     if (value_ptr)
       *value_ptr = pt->pt_val;
+    if (atomic_load_explicit(&pt->pt_refs, memory_order_acquire)) {
+      _pthread_lock();
+      dll_remove(&_pthread_list, &pt->list);
+      dll_make_last(&_pthread_list, &pt->list);
+      atomic_store_explicit(&pt->pt_status, kPosixThreadZombie,
+                            memory_order_release);
+      _pthread_unlock();
+    } else {
+      _pthread_lock();
+      dll_remove(&_pthread_list, &pt->list);
+      _pthread_unlock();
+      _pthread_free(pt);
+    }
   }
 
-  _pthread_unref(pt);
   STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", tid,
          DescribeReturnValue(alloca(30), err, value_ptr),
          DescribeTimespec(err ? -1 : 0, abstime), DescribeErrno(err));

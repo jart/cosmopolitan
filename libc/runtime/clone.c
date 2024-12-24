@@ -535,7 +535,7 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
   wt = (struct CloneArgs *)sp;
   sp = AlignStack(sp, stk, stksz, 16);
   tid = atomic_fetch_add_explicit(&tids, 1, memory_order_acq_rel);
-  wt->this = tid = (tid & (kMaxThreadIds - 1)) + kMinThreadId;
+  wt->this = tid = (tid % kMaxThreadIds) + kMinThreadId;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
@@ -550,9 +550,9 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
   unassert(!__syslib->__pthread_attr_init(attr));
   unassert(!__syslib->__pthread_attr_setguardsize(attr, 0));
   unassert(!__syslib->__pthread_attr_setstacksize(attr, babystack));
-  if (!(res = __syslib->__pthread_create(&th, attr, SiliconThreadMain, wt)) &&
-      (flags & CLONE_PARENT_SETTID)) {
-    *ptid = tid;
+  if (!(res = __syslib->__pthread_create(&th, attr, SiliconThreadMain, wt))) {
+    if (flags & CLONE_PARENT_SETTID)
+      *ptid = tid;
     if (flags & CLONE_SETTLS) {
       struct CosmoTib *tib = tls;
       atomic_store_explicit(&tib[-1].tib_syshand, th, memory_order_release);

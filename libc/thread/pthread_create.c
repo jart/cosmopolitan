@@ -67,7 +67,7 @@ __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
 
-static void _pthread_free(struct PosixThread *pt) {
+void _pthread_free(struct PosixThread *pt) {
 
   // thread must be removed from _pthread_list before calling
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
@@ -84,7 +84,7 @@ static void _pthread_free(struct PosixThread *pt) {
   // free any additional upstream system resources
   // our fork implementation wipes this handle in child automatically
   uint64_t syshand =
-      atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
+      atomic_load_explicit(&pt->tib->tib_syshand, memory_order_relaxed);
   if (syshand) {
     if (IsWindows())
       unassert(CloseHandle(syshand));  // non-inheritable
