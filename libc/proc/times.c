@@ -16,55 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/tms.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/fmt/wintime.internal.h"
-#include "libc/nt/accounting.h"
-#include "libc/nt/runtime.h"
 #include "libc/runtime/clktck.h"
-#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/time.h"
 
-static dontinline long ConvertMicros(struct timeval tv) {
+static long MicrosToTicks(struct timeval tv) {
   return tv.tv_sec * CLK_TCK + tv.tv_usec / (1000000 / CLK_TCK);
 }
 
-static dontinline long times2(struct tms *out_times, struct rusage *ru) {
-  struct timeval tv;
-  struct NtFileTime CreationTime, ExitTime, KernelTime, UserTime;
-  if (!IsWindows()) {
-    if (getrusage(RUSAGE_SELF, ru) == -1)
-      return -1;
-    out_times->tms_utime = ConvertMicros(ru->ru_utime);
-    out_times->tms_stime = ConvertMicros(ru->ru_stime);
-    if (getrusage(RUSAGE_CHILDREN, ru) == -1)
-      return -1;
-    out_times->tms_cutime = ConvertMicros(ru->ru_utime);
-    out_times->tms_cstime = ConvertMicros(ru->ru_stime);
-  } else {
-    if (!GetProcessTimes(GetCurrentProcess(), &CreationTime, &ExitTime,
-                         &KernelTime, &UserTime)) {
-      return __winerr();
-    }
-    out_times->tms_utime = ReadFileTime(UserTime);
-    out_times->tms_stime = ReadFileTime(KernelTime);
-    out_times->tms_cutime = 0;
-    out_times->tms_cstime = 0;
-  }
-  if (gettimeofday(&tv, NULL) == -1)
-    return -1;
-  return ConvertMicros(tv);
+static long NanosToTicks(struct timespec ts) {
+  return ts.tv_sec * CLK_TCK + ts.tv_nsec / (1000000000 / CLK_TCK);
 }
 
 /**
  * Returns accounting data for process on time-sharing system.
+ * @return number of `CLK_TCK` from `CLOCK_BOOTTIME` epoch
  */
 long times(struct tms *out_times) {
-  struct rusage ru;
-  return times2(out_times, &ru);
+  struct timespec bt;
+  struct rusage rus, ruc;
+  if (getrusage(RUSAGE_SELF, &rus))
+    return -1;
+  if (getrusage(RUSAGE_CHILDREN, &ruc))
+    return -1;
+  if (clock_gettime(CLOCK_BOOTTIME, &bt))
+    return -1;
+  out_times->tms_utime = MicrosToTicks(rus.ru_utime);
+  out_times->tms_stime = MicrosToTicks(rus.ru_stime);
+  out_times->tms_cutime = MicrosToTicks(ruc.ru_utime);
+  out_times->tms_cstime = MicrosToTicks(ruc.ru_stime);
+  return NanosToTicks(bt);
 }

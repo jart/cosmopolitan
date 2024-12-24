@@ -58,9 +58,8 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
     return einval();
   }
 
-  if (!usage) {
+  if (!usage)
     return 0;
-  }
 
   if (!(who == RUSAGE_THREAD ? GetThreadTimes : GetProcessTimes)(
           me, &ftCreation, &ftExit, &ftKernel, &ftUser) ||
