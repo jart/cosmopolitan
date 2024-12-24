@@ -139,7 +139,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
                           memory_order_release);
     _pthread_zombify(pt);
     if (value_ptr)
-      *value_ptr = pt->pt_rc;
+      *value_ptr = pt->pt_val;
   }
 
   _pthread_unref(pt);

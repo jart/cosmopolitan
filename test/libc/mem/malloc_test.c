@@ -22,7 +22,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/cxaatexit.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
@@ -162,7 +161,7 @@ void *bulk[1024];
 void BulkFreeBenchSetup(void) {
   size_t i;
   for (i = 0; i < ARRAYLEN(bulk); ++i) {
-    bulk[i] = malloc(rand() % 64);
+    bulk[i] = rand() % 64 ? malloc(rand() % 64) : 0;
   }
 }
 

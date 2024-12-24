@@ -62,11 +62,6 @@
 #include "locks.inc"
 #include "chunks.inc"
 #include "headfoot.inc"
-
-#if ONLY_MSPACES
-#include "threaded.inc"
-#endif
-
 #include "global.inc"
 #include "system.inc"
 #include "hooks.inc"
@@ -74,6 +69,11 @@
 #include "indexing.inc"
 #include "binmaps.inc"
 #include "runtimechecks.inc"
+
+#if ONLY_MSPACES
+#include "threaded.inc"
+#endif
+
 #include "init.inc"
 #include "debuglib.inc"
 #include "statistics.inc"

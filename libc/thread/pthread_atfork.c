@@ -63,11 +63,13 @@ static void _pthread_onfork(int i, const char *op) {
 }
 
 void _pthread_onfork_prepare(void) {
+  pthread_mutex_lock(&_atforks.lock);
   _pthread_onfork(0, "prepare");
 }
 
 void _pthread_onfork_parent(void) {
   _pthread_onfork(1, "parent");
+  pthread_mutex_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_child(void) {

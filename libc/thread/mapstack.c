@@ -35,8 +35,8 @@
  */
 void *NewCosmoStack(void) {
   void *stackaddr;
-  size_t stacksize = GetStackSize();
-  size_t guardsize = GetGuardSize();
+  unsigned stacksize = GetStackSize();
+  unsigned guardsize = GetGuardSize();
   errno_t err = cosmo_stack_alloc(&stacksize, &guardsize, &stackaddr);
   if (!err)
     return stackaddr;

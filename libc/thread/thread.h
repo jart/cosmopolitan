@@ -130,8 +130,8 @@ typedef struct pthread_attr_s {
   int __contentionscope;
   int __sigaltstacksize;
   uint64_t __sigmask;
-  size_t __guardsize;
-  size_t __stacksize;
+  unsigned __guardsize;
+  unsigned __stacksize;
   void *__stackaddr;
   void *__sigaltstackaddr;
 } pthread_attr_t;

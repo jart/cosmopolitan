@@ -78,8 +78,7 @@ struct PosixThread {
   atomic_int ptid;            // transitions 0 → tid
   atomic_int pt_refs;         // prevents decimation
   void *(*pt_start)(void *);  // creation callback
-  void *pt_arg;               // start's parameter
-  void *pt_rc;                // start's return value
+  void *pt_val;               // start param / return val
   char *pt_tls;               // bottom of tls allocation
   struct CosmoTib *tib;       // middle of tls allocation
   struct Dll list;            // list of threads
@@ -105,7 +104,6 @@ int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
 void _pthread_decimate(void) libcesque;
-void _pthread_free(struct PosixThread *) libcesque;
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;
 void _pthread_onfork_parent(void) libcesque;

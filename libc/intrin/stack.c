@@ -42,8 +42,8 @@
 struct CosmoStack {
   struct Dll elem;
   void *stackaddr;
-  size_t stacksize;
-  size_t guardsize;
+  unsigned stacksize;
+  unsigned guardsize;
 };
 
 struct CosmoStacks {
@@ -215,13 +215,13 @@ void cosmo_stack_setmaxstacks(int maxstacks) {
  * This function returns 0 on success, or an errno on error. See the
  * documentation of mmap() for a list possible errors that may occur.
  */
-errno_t cosmo_stack_alloc(size_t *inout_stacksize,  //
-                          size_t *inout_guardsize,  //
+errno_t cosmo_stack_alloc(unsigned *inout_stacksize,  //
+                          unsigned *inout_guardsize,  //
                           void **out_addr) {
 
   // validate arguments
-  size_t stacksize = *inout_stacksize;
-  size_t guardsize = *inout_guardsize;
+  unsigned stacksize = *inout_stacksize;
+  unsigned guardsize = *inout_guardsize;
   stacksize = (stacksize + __gransize - 1) & -__gransize;
   guardsize = (guardsize + __pagesize - 1) & -__pagesize;
   if (guardsize + __pagesize > stacksize)
@@ -283,7 +283,8 @@ static void cosmo_stack_setup(void) {
  * variable is never clobbered. You can only dependably count on this to
  * return an error on failure when you say `cosmo_stack_setmaxstacks(0)`
  */
-errno_t cosmo_stack_free(void *stackaddr, size_t stacksize, size_t guardsize) {
+errno_t cosmo_stack_free(void *stackaddr, unsigned stacksize,
+                         unsigned guardsize) {
   stacksize = (stacksize + __gransize - 1) & -__gransize;
   guardsize = (guardsize + __pagesize - 1) & -__pagesize;
   if (guardsize + __pagesize > stacksize)

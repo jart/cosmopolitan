@@ -67,7 +67,7 @@ __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
 
-void _pthread_free(struct PosixThread *pt) {
+static void _pthread_free(struct PosixThread *pt) {
 
   // thread must be removed from _pthread_list before calling
   unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
@@ -93,10 +93,13 @@ void _pthread_free(struct PosixThread *pt) {
   }
 
   // free heap memory associated with thread
-  if (pt->pt_flags & PT_OWNSIGALTSTACK)
-    free(pt->pt_attr.__sigaltstackaddr);
-  free(pt->pt_tls);
-  free(pt);
+  bulk_free(
+      (void *[]){
+          pt->pt_flags & PT_OWNSIGALTSTACK ? pt->pt_attr.__sigaltstackaddr : 0,
+          pt->pt_tls,
+          pt,
+      },
+      3);
 }
 
 void _pthread_decimate(void) {
@@ -137,7 +140,6 @@ void _pthread_decimate(void) {
 }
 
 static int PosixThread(void *arg, int tid) {
-  void *rc;
   struct PosixThread *pt = arg;
 
   // setup scheduling
@@ -167,11 +169,11 @@ static int PosixThread(void *arg, int tid) {
     } else {
       sys_sigprocmask(SIG_SETMASK, &pt->pt_attr.__sigmask, 0);
     }
-    rc = pt->pt_start(pt->pt_arg);
+    void *ret = pt->pt_start(pt->pt_val);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     unassert(!pt->pt_cleanup);
     // calling pthread_exit() will either jump back here, or call exit
-    pthread_exit(rc);
+    pthread_exit(ret);
   }
 
   // avoid signal handler being triggered after we trash our own stack
@@ -196,7 +198,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
   dll_init(&pt->list);
   pt->pt_locale = &__global_locale;
   pt->pt_start = start_routine;
-  pt->pt_arg = arg;
+  pt->pt_val = arg;
 
   // create thread local storage memory
   if (!(pt->pt_tls = _mktls(&pt->tib))) {

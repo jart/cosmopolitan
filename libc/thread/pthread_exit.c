@@ -88,7 +88,7 @@ wontreturn void pthread_exit(void *rc) {
 
   // set state
   pt->pt_flags |= PT_NOCANCEL | PT_EXITING;
-  pt->pt_rc = rc;
+  pt->pt_val = rc;
 
   // free resources
   __cxa_thread_finalize();

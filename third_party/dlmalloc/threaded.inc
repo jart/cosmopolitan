@@ -61,8 +61,23 @@ int dlmalloc_trim(size_t pad) {
 }
 
 size_t dlbulk_free(void *array[], size_t nelem) {
-  for (size_t i = 0; i < nelem; ++i)
-    mspace_free(0, array[i]);
+  size_t j = 0;
+  mstate msp = (mstate)-1;
+  for (size_t i = 0; i < nelem; ++i) {
+    mstate next;
+    if (array[i]) {
+      next = get_mstate_for(mem2chunk(array[i]));
+      if (next != msp) {
+        if (j)
+          mspace_bulk_free(msp, array, j);
+        msp = next;
+        j = 0;
+      }
+      array[j++] = array[i];
+    }
+  }
+  if (j)
+    mspace_bulk_free(msp, array, j);
   return 0;
 }
 
