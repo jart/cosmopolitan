@@ -22,7 +22,7 @@ def find_test_files(root_dir: str) -> List[str]:
 def run_single_test(test_path: str) -> int:
     """Run a single test and return its exit code."""
     try:
-        result = subprocess.run([test_path], capture_output=False)
+        result = subprocess.run(["ape", test_path], capture_output=False)
         return result.returncode
     except Exception as e:
         print(f"Error running {test_path}: {e}")
