@@ -42,6 +42,9 @@ errno_t pthread_rwlock_rdlock(pthread_rwlock_t *lk) {
       for (;;)
         if (~(w = atomic_load_explicit(&lk->_word, memory_order_relaxed)) & 1)
           break;
+    // xxx: avoid writer starvation in pthread_rwlock_rdlock_test
+    while (atomic_load(&lk->_waiters))
+      pthread_yield_np();
     if (atomic_compare_exchange_weak_explicit(
             &lk->_word, &w, w + 2, memory_order_acquire, memory_order_relaxed))
       return 0;

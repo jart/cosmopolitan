@@ -111,6 +111,7 @@ typedef struct pthread_rwlock_s {
       char _pshared;
       char _iswrite;
       _PTHREAD_ATOMIC(uint32_t) _word;
+      _PTHREAD_ATOMIC(uint32_t) _waiters;
     };
   };
 } pthread_rwlock_t;

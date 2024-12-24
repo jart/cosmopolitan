@@ -42,8 +42,10 @@ errno_t pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
     if (atomic_compare_exchange_weak_explicit(
             &rwlock->_word, &w, 1, memory_order_acquire, memory_order_relaxed))
       return 0;
+    atomic_fetch_add(&rwlock->_waiters, 1);
     for (;;)
       if (!(w = atomic_load_explicit(&rwlock->_word, memory_order_relaxed)))
         break;
+    atomic_fetch_sub(&rwlock->_waiters, 1);
   }
 }
