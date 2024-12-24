@@ -255,14 +255,14 @@ static textwindows void __proc_setup(void) {
  */
 textwindows void __proc_lock(void) {
   cosmo_once(&__proc.once, __proc_setup);
-  pthread_mutex_lock(&__proc.lock);
+  _pthread_mutex_lock(&__proc.lock);
 }
 
 /**
  * Unlocks process tracker.
  */
 textwindows void __proc_unlock(void) {
-  pthread_mutex_unlock(&__proc.lock);
+  _pthread_mutex_unlock(&__proc.lock);
 }
 
 /**
@@ -273,7 +273,7 @@ textwindows void __proc_wipe_and_reset(void) {
   pthread_mutex_t lock = __proc.lock;
   bzero(&__proc, sizeof(__proc));
   __proc.lock = lock;
-  pthread_mutex_wipe_np(&__proc.lock);
+  _pthread_mutex_wipe_np(&__proc.lock);
 }
 
 /**

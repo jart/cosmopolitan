@@ -34,6 +34,7 @@ int64_t GetConsoleOutputHandle(void);
 void EchoConsoleNt(const char *, size_t, bool);
 int IsWindowsExecutable(int64_t, const char16_t *);
 void InterceptTerminalCommands(const char *, size_t);
+void sys_read_nt_wipe_keystrokes(void);
 
 forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;

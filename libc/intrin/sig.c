@@ -682,7 +682,7 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
   __maps_track((char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STKSZ,
                STKSZ);
   for (;;) {
-    pthread_mutex_lock(&__sig_worker_lock);
+    _pthread_mutex_lock(&__sig_worker_lock);
 
     // dequeue all pending signals and fire them off. if there's no
     // thread that can handle them then __sig_generate will requeue
@@ -732,7 +732,7 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
     }
 
     // wait until next scheduler quantum
-    pthread_mutex_unlock(&__sig_worker_lock);
+    _pthread_mutex_unlock(&__sig_worker_lock);
     Sleep(POLL_INTERVAL_MS);
   }
   return 0;

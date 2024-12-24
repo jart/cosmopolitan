@@ -29,6 +29,7 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/posixthread.internal.h"
 #include "third_party/gdtoa/lock.h"
 
 pthread_mutex_t __gdtoa_lock_obj = PTHREAD_MUTEX_INITIALIZER;
@@ -37,23 +38,23 @@ pthread_mutex_t __gdtoa_lock1_obj = PTHREAD_MUTEX_INITIALIZER;
 void
 __gdtoa_lock(void)
 {
-	pthread_mutex_lock(&__gdtoa_lock_obj);
+	_pthread_mutex_lock(&__gdtoa_lock_obj);
 }
 
 void
 __gdtoa_unlock(void)
 {
-	pthread_mutex_unlock(&__gdtoa_lock_obj);
+	_pthread_mutex_unlock(&__gdtoa_lock_obj);
 }
 
 void
 __gdtoa_lock1(void)
 {
-	pthread_mutex_lock(&__gdtoa_lock1_obj);
+	_pthread_mutex_lock(&__gdtoa_lock1_obj);
 }
 
 void
 __gdtoa_unlock1(void)
 {
-	pthread_mutex_unlock(&__gdtoa_lock1_obj);
+	_pthread_mutex_unlock(&__gdtoa_lock1_obj);
 }

@@ -28,6 +28,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 
@@ -166,7 +167,7 @@ static errno_t pthread_mutex_unlock_impl(pthread_mutex_t *mutex) {
  * @raises EPERM if mutex ownership isn't acceptable
  * @vforksafe
  */
-errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
+errno_t _pthread_mutex_unlock(pthread_mutex_t *mutex) {
   if (__tls_enabled && !__vforked) {
     errno_t err = pthread_mutex_unlock_impl(mutex);
     LOCKTRACE("pthread_mutex_unlock(%t) → %s", mutex, DescribeErrno(err));
@@ -176,3 +177,5 @@ errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
     return 0;
   }
 }
+
+__weak_reference(_pthread_mutex_unlock, pthread_mutex_unlock);

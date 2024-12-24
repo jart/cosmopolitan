@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/posixthread.internal.h"
 #include "third_party/tz/lock.h"
 
 pthread_mutex_t __localtime_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void __localtime_lock(void) {
-  pthread_mutex_lock(&__localtime_lock_obj);
+  _pthread_mutex_lock(&__localtime_lock_obj);
 }
 
 void __localtime_unlock(void) {
-  pthread_mutex_unlock(&__localtime_lock_obj);
+  _pthread_mutex_unlock(&__localtime_lock_obj);
 }

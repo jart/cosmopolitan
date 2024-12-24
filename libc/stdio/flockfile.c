@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/stdio/internal.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -25,5 +26,5 @@
  */
 void flockfile(FILE *f) {
   unassert(f != NULL);
-  pthread_mutex_lock(&f->lock);
+  _pthread_mutex_lock(&f->lock);
 }

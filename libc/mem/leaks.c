@@ -40,12 +40,12 @@ struct Leak {
 static int leak_count;
 static struct Dll *leaks;
 static struct Dll *freaks;
-static pthread_mutex_t lock;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void __may_leak(void *alloc) {
   if (!alloc)
     return;
-  pthread_mutex_lock(&lock);
+  _pthread_mutex_lock(&lock);
   if (dll_is_empty(freaks)) {
     int g = __gransize;
     struct Leak *p = _mapanon(g);
@@ -59,7 +59,7 @@ void __may_leak(void *alloc) {
   LEAK_CONTAINER(e)->alloc = alloc;
   dll_remove(&freaks, e);
   dll_make_first(&leaks, e);
-  pthread_mutex_unlock(&lock);
+  _pthread_mutex_unlock(&lock);
 }
 
 static void visitor(void *start, void *end, size_t used_bytes, void *arg) {

@@ -49,6 +49,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/zip.h"
@@ -134,11 +135,11 @@ struct dirent_netbsd {
 };
 
 static void lockdir(DIR *dir) {
-  pthread_mutex_lock(&dir->lock);
+  _pthread_mutex_lock(&dir->lock);
 }
 
 static void unlockdir(DIR *dir) {
-  pthread_mutex_unlock(&dir->lock);
+  _pthread_mutex_unlock(&dir->lock);
 }
 
 static textwindows dontinline int fdopendir_nt(DIR *res, int fd) {

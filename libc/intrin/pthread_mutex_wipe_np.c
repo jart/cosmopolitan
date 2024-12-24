@@ -18,12 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/thread/lock.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
  * Unlocks mutex from child process after fork.
  */
-int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
+int _pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
   void *edges = mutex->_edges;
   uint64_t word = mutex->_word;
   bzero(mutex, sizeof(*mutex));
@@ -31,3 +32,5 @@ int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
   mutex->_edges = edges;
   return 0;
 }
+
+__weak_reference(_pthread_mutex_wipe_np, pthread_mutex_wipe_np);

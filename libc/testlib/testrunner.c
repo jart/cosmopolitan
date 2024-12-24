@@ -34,6 +34,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/aspect.internal.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
@@ -52,7 +53,7 @@ void testlib_finish(void) {
 void testlib_error_enter(const char *file, const char *func) {
   ftrace_enabled(-1);
   strace_enabled(-1);
-  pthread_mutex_lock(&testlib_error_lock);
+  _pthread_mutex_lock(&testlib_error_lock);
   if (!IsWindows())
     sys_getpid(); /* make strace easier to read */
   if (!IsWindows())
@@ -67,7 +68,7 @@ void testlib_error_enter(const char *file, const char *func) {
 void testlib_error_leave(void) {
   strace_enabled(+1);
   ftrace_enabled(+1);
-  pthread_mutex_unlock(&testlib_error_lock);
+  _pthread_mutex_unlock(&testlib_error_lock);
 }
 
 wontreturn void testlib_abort(void) {

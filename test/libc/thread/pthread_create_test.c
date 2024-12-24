@@ -51,6 +51,20 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
+// test ability of user to override pthread mutex api
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
+  abort();
+}
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+  abort();
+}
+int pthread_mutex_trylock(pthread_mutex_t *mutex) {
+  abort();
+}
+int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
+  abort();
+}
+
 void OnUsr1(int sig, siginfo_t *si, void *vctx) {
 }
 

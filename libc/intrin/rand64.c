@@ -22,6 +22,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
@@ -42,7 +43,7 @@ pthread_mutex_t __rand64_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 uint64_t _rand64(void) {
   void *p;
   uint128_t s;
-  pthread_mutex_lock(&__rand64_lock_obj);
+  _pthread_mutex_lock(&__rand64_lock_obj);
   if (__pid == _rand64_pid) {
     s = _rand64_pool;  // normal path
   } else {
@@ -63,6 +64,6 @@ uint64_t _rand64(void) {
     _rand64_pid = __pid;
   }
   _rand64_pool = (s *= 15750249268501108917ull);  // lemur64
-  pthread_mutex_unlock(&__rand64_lock_obj);
+  _pthread_mutex_unlock(&__rand64_lock_obj);
   return s >> 64;
 }

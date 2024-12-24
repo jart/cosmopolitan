@@ -17,12 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 void __fds_lock(void) {
-  pthread_mutex_lock(&__fds_lock_obj);
+  _pthread_mutex_lock(&__fds_lock_obj);
 }
 
 void __fds_unlock(void) {
-  pthread_mutex_unlock(&__fds_lock_obj);
+  _pthread_mutex_unlock(&__fds_lock_obj);
 }

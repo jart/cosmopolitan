@@ -22,6 +22,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
+#include "libc/thread/posixthread.internal.h"
 
 #define STDIO_FILE_USE_AFTER_FREE 1
 #define CORRUPT_STDIO_FILE_OBJECT 1
@@ -31,11 +32,11 @@ struct Stdio __stdio = {
 };
 
 void __stdio_lock(void) {
-  pthread_mutex_lock(&__stdio.lock);
+  _pthread_mutex_lock(&__stdio.lock);
 }
 
 void __stdio_unlock(void) {
-  pthread_mutex_unlock(&__stdio.lock);
+  _pthread_mutex_unlock(&__stdio.lock);
 }
 
 static int refchk(int refs) {

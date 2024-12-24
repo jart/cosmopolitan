@@ -28,6 +28,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -67,15 +68,15 @@ static struct CosmoStacksConfig cosmo_stacks_config = {
 };
 
 void cosmo_stack_lock(void) {
-  pthread_mutex_lock(&cosmo_stacks.lock);
+  _pthread_mutex_lock(&cosmo_stacks.lock);
 }
 
 void cosmo_stack_unlock(void) {
-  pthread_mutex_unlock(&cosmo_stacks.lock);
+  _pthread_mutex_unlock(&cosmo_stacks.lock);
 }
 
 void cosmo_stack_wipe(void) {
-  pthread_mutex_wipe_np(&cosmo_stacks.lock);
+  _pthread_mutex_wipe_np(&cosmo_stacks.lock);
 }
 
 static errno_t cosmo_stack_munmap(void *addr, size_t size) {

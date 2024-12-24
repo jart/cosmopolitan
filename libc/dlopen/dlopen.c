@@ -57,6 +57,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/temp.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
@@ -131,6 +132,8 @@ struct {
 
 long __sysv2nt14();
 long foreign_tramp();
+void __dlopen_lock(void);
+void __dlopen_unlock(void);
 
 static _Thread_local char dlerror_buf[128];
 
@@ -435,14 +438,13 @@ static dontinline char *foreign_alloc_block(void) {
 static dontinline void *foreign_alloc(size_t n) {
   void *res;
   static char *block;
-  static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-  pthread_mutex_lock(&lock);
+  __dlopen_lock();
   if (!block || READ32LE(block) + n > 65536)
     if (!(block = foreign_alloc_block()))
       return 0;
   res = block + READ32LE(block);
   WRITE32LE(block, READ32LE(block) + n);
-  pthread_mutex_unlock(&lock);
+  __dlopen_unlock();
   return res;
 }
 

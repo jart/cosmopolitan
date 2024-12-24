@@ -30,6 +30,7 @@
 #include "libc/macros.h"
 #include "libc/runtime/internal.h"
 #include "libc/thread/lock.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
@@ -300,7 +301,7 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
  * @see pthread_spin_lock()
  * @vforksafe
  */
-errno_t pthread_mutex_lock(pthread_mutex_t *mutex) {
+errno_t _pthread_mutex_lock(pthread_mutex_t *mutex) {
   if (__tls_enabled && !__vforked) {
     errno_t err = pthread_mutex_lock_impl(mutex, false);
     LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
@@ -323,7 +324,7 @@ errno_t pthread_mutex_lock(pthread_mutex_t *mutex) {
  * @raise EDEADLK if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the
  *     current thread already holds this mutex
  */
-errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
+errno_t _pthread_mutex_trylock(pthread_mutex_t *mutex) {
   if (__tls_enabled && !__vforked) {
     errno_t err = pthread_mutex_lock_impl(mutex, true);
     LOCKTRACE("pthread_mutex_trylock(%t) → %s", mutex, DescribeErrno(err));
@@ -333,3 +334,6 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
     return 0;
   }
 }
+
+__weak_reference(_pthread_mutex_lock, pthread_mutex_lock);
+__weak_reference(_pthread_mutex_trylock, pthread_mutex_trylock);

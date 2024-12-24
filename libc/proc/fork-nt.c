@@ -68,7 +68,6 @@
 #ifdef __x86_64__
 
 extern long __klog_handle;
-void WipeKeystrokes(void);
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
 static textwindows wontreturn void AbortFork(const char *func, void *addr) {
@@ -466,8 +465,6 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     // re-apply code morphing for function tracing
     if (ftrace_stackdigs)
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
-    // reset core runtime services
-    WipeKeystrokes();
     // notify pthread join
     atomic_store_explicit(&_pthread_static.ptid, GetCurrentThreadId(),
                           memory_order_release);

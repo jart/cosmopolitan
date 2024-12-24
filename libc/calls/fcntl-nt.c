@@ -51,6 +51,7 @@
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 struct FileLock {
@@ -67,7 +68,9 @@ struct FileLocks {
   struct FileLock *free;
 };
 
-static struct FileLocks g_locks;
+static struct FileLocks g_locks = {
+    .mu = PTHREAD_MUTEX_INITIALIZER,
+};
 
 static textwindows struct FileLock *NewFileLock(void) {
   struct FileLock *fl;
@@ -110,7 +113,7 @@ static textwindows bool EqualsFileLock(struct FileLock *fl, int64_t off,
 
 textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
   struct FileLock *fl, *ft, **flp;
-  pthread_mutex_lock(&g_locks.mu);
+  _pthread_mutex_lock(&g_locks.mu);
   for (flp = &g_locks.list, fl = *flp; fl;) {
     if (fl->fd == fd) {
       *flp = fl->next;
@@ -122,7 +125,7 @@ textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
       fl = *flp;
     }
   }
-  pthread_mutex_unlock(&g_locks.mu);
+  _pthread_mutex_unlock(&g_locks.mu);
 }
 
 static textwindows int64_t GetfileSize(int64_t handle) {
@@ -353,9 +356,9 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
       struct Fd *f = g_fds.p + fd;
       if (f->cursor) {
-        pthread_mutex_lock(&g_locks.mu);
+        _pthread_mutex_lock(&g_locks.mu);
         rc = sys_fcntl_nt_lock(f, fd, cmd, arg);
-        pthread_mutex_unlock(&g_locks.mu);
+        _pthread_mutex_unlock(&g_locks.mu);
       } else {
         rc = ebadf();
       }

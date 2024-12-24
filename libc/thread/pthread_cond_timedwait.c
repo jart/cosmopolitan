@@ -49,7 +49,7 @@ static bool can_use_nsync(uint64_t muword) {
 
 static void pthread_cond_leave(void *arg) {
   struct PthreadWait *wait = (struct PthreadWait *)arg;
-  if (pthread_mutex_lock(wait->mutex))
+  if (_pthread_mutex_lock(wait->mutex))
     __builtin_trap();
   atomic_fetch_sub_explicit(&wait->cond->_waiters, 1, memory_order_acq_rel);
 }
@@ -68,7 +68,7 @@ static errno_t pthread_cond_timedwait_impl(pthread_cond_t *cond,
 
   // start waiting on condition variable
   atomic_fetch_add_explicit(&cond->_waiters, 1, memory_order_acq_rel);
-  if (pthread_mutex_unlock(mutex))
+  if (_pthread_mutex_unlock(mutex))
     __builtin_trap();
 
   // wait for sequence change, timeout, or cancelation
@@ -110,8 +110,8 @@ static errno_t pthread_cond_timedwait_impl(pthread_cond_t *cond,
  * @see pthread_cond_signal()
  * @cancelationpoint
  */
-errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
-                               const struct timespec *abstime) {
+errno_t _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
+                                const struct timespec *abstime) {
 
   // validate arguments
   struct PosixThread *pt;
@@ -165,3 +165,5 @@ errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
   END_CANCELATION_POINT;
   return err;
 }
+
+__weak_reference(_pthread_cond_timedwait, pthread_cond_timedwait);

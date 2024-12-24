@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
@@ -39,6 +40,8 @@
  * @see pthread_cond_signal
  * @cancelationpoint
  */
-errno_t pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+errno_t _pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
   return pthread_cond_timedwait(cond, mutex, 0);
 }
+
+__weak_reference(_pthread_cond_wait, pthread_cond_wait);

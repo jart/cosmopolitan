@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
  * Releases lock on stdio object.
  */
 void funlockfile(FILE *f) {
-  pthread_mutex_unlock(&f->lock);
+  _pthread_mutex_unlock(&f->lock);
 }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -50,11 +51,14 @@
 
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
-extern pthread_mutex_t __rand64_lock_obj;
-extern pthread_mutex_t __pthread_lock_obj;
 extern pthread_mutex_t __cxa_lock_obj;
+extern pthread_mutex_t __dlopen_lock_obj;
+extern pthread_mutex_t __pthread_lock_obj;
+extern pthread_mutex_t __rand64_lock_obj;
 extern pthread_mutex_t __sig_worker_lock;
 
+void __dlopen_lock(void);
+void __dlopen_unlock(void);
 void nsync_mu_semaphore_sem_fork_child(void);
 
 // first and last and always
@@ -79,7 +83,7 @@ StartOver:
     f->forking = 1;
     __stdio_ref(f);
     __stdio_unlock();
-    pthread_mutex_lock(&f->lock);
+    _pthread_mutex_lock(&f->lock);
     __stdio_unref(f);
     goto StartOver;
   }
@@ -89,7 +93,7 @@ static void fork_parent_stdio(void) {
   struct Dll *e;
   for (e = dll_first(__stdio.files); e; e = dll_next(__stdio.files, e)) {
     FILE_CONTAINER(e)->forking = 0;
-    pthread_mutex_unlock(&FILE_CONTAINER(e)->lock);
+    _pthread_mutex_unlock(&FILE_CONTAINER(e)->lock);
   }
   __stdio_unlock();
 }
@@ -97,25 +101,26 @@ static void fork_parent_stdio(void) {
 static void fork_child_stdio(void) {
   struct Dll *e;
   for (e = dll_first(__stdio.files); e; e = dll_next(__stdio.files, e)) {
-    pthread_mutex_wipe_np(&FILE_CONTAINER(e)->lock);
+    _pthread_mutex_wipe_np(&FILE_CONTAINER(e)->lock);
     FILE_CONTAINER(e)->forking = 0;
   }
-  pthread_mutex_wipe_np(&__stdio.lock);
+  _pthread_mutex_wipe_np(&__stdio.lock);
 }
 
 static void fork_prepare(void) {
-  pthread_mutex_lock(&supreme_lock);
+  _pthread_mutex_lock(&supreme_lock);
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
   fork_prepare_stdio();
   __localtime_lock();
+  __dlopen_lock();
   __cxa_lock();
   __gdtoa_lock1();
   __gdtoa_lock();
   _pthread_lock();
   dlmalloc_pre_fork();
   __fds_lock();
-  pthread_mutex_lock(&__rand64_lock_obj);
+  _pthread_mutex_lock(&__rand64_lock_obj);
   if (_weaken(cosmo_stack_lock))
     _weaken(cosmo_stack_lock)();
   __maps_lock();
@@ -126,45 +131,48 @@ static void fork_parent(void) {
   __maps_unlock();
   if (_weaken(cosmo_stack_unlock))
     _weaken(cosmo_stack_unlock)();
-  pthread_mutex_unlock(&__rand64_lock_obj);
+  _pthread_mutex_unlock(&__rand64_lock_obj);
   __fds_unlock();
   dlmalloc_post_fork_parent();
   _pthread_unlock();
   __gdtoa_unlock();
   __gdtoa_unlock1();
   __cxa_unlock();
+  __dlopen_unlock();
   __localtime_unlock();
   fork_parent_stdio();
   if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
-  pthread_mutex_unlock(&supreme_lock);
+  _pthread_mutex_unlock(&supreme_lock);
 }
 
 static void fork_child(void) {
   nsync_mu_semaphore_sem_fork_child();
   if (_weaken(cosmo_stack_wipe))
     _weaken(cosmo_stack_wipe)();
-  pthread_mutex_wipe_np(&__rand64_lock_obj);
-  pthread_mutex_wipe_np(&__fds_lock_obj);
+  _pthread_mutex_wipe_np(&__dlopen_lock_obj);
+  _pthread_mutex_wipe_np(&__rand64_lock_obj);
+  _pthread_mutex_wipe_np(&__fds_lock_obj);
   dlmalloc_post_fork_child();
-  pthread_mutex_wipe_np(&__gdtoa_lock_obj);
-  pthread_mutex_wipe_np(&__gdtoa_lock1_obj);
+  _pthread_mutex_wipe_np(&__gdtoa_lock_obj);
+  _pthread_mutex_wipe_np(&__gdtoa_lock1_obj);
   fork_child_stdio();
-  pthread_mutex_wipe_np(&__pthread_lock_obj);
-  pthread_mutex_wipe_np(&__cxa_lock_obj);
-  pthread_mutex_wipe_np(&__localtime_lock_obj);
+  _pthread_mutex_wipe_np(&__pthread_lock_obj);
+  _pthread_mutex_wipe_np(&__cxa_lock_obj);
+  _pthread_mutex_wipe_np(&__localtime_lock_obj);
   if (IsWindows()) {
     // we don't bother locking the proc/itimer/sig locks above since
     // their state is reset in the forked child. nothing to protect.
+    sys_read_nt_wipe_keystrokes();
     __proc_wipe_and_reset();
     __itimer_wipe_and_reset();
-    pthread_mutex_wipe_np(&__sig_worker_lock);
+    _pthread_mutex_wipe_np(&__sig_worker_lock);
     if (_weaken(__sig_init))
       _weaken(__sig_init)();
   }
   if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
-  pthread_mutex_wipe_np(&supreme_lock);
+  _pthread_mutex_wipe_np(&supreme_lock);
 }
 
 int _fork(uint32_t dwCreationFlags) {

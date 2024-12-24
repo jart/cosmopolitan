@@ -63,17 +63,17 @@ static void _pthread_onfork(int i, const char *op) {
 }
 
 void _pthread_onfork_prepare(void) {
-  pthread_mutex_lock(&_atforks.lock);
+  _pthread_mutex_lock(&_atforks.lock);
   _pthread_onfork(0, "prepare");
 }
 
 void _pthread_onfork_parent(void) {
   _pthread_onfork(1, "parent");
-  pthread_mutex_unlock(&_atforks.lock);
+  _pthread_mutex_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_child(void) {
-  pthread_mutex_wipe_np(&_atforks.lock);
+  _pthread_mutex_wipe_np(&_atforks.lock);
   _pthread_onfork(2, "child");
 }
 
@@ -171,12 +171,12 @@ int pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;
-  pthread_mutex_lock(&_atforks.lock);
+  _pthread_mutex_lock(&_atforks.lock);
   a->p[0] = 0;
   a->p[1] = _atforks.list;
   if (_atforks.list)
     _atforks.list->p[0] = a;
   _atforks.list = a;
-  pthread_mutex_unlock(&_atforks.lock);
+  _pthread_mutex_unlock(&_atforks.lock);
   return 0;
 }

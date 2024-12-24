@@ -34,6 +34,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/itimer.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
@@ -76,7 +77,7 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
       __sig_generate(SIGALRM, SI_TIMER);
     __itimer_lock();
     struct timespec deadline = timeval_totimespec(waituntil);
-    pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
+    _pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
     __itimer_unlock();
   }
   return 0;
@@ -108,7 +109,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
     if (!timeval_iszero(config.it_value))
       config.it_value = timeval_add(config.it_value, timeval_real());
     __itimer.it = config;
-    pthread_cond_signal(&__itimer.cond);
+    _pthread_cond_signal(&__itimer.cond);
   }
   __itimer_unlock();
   ALLOW_SIGNALS;

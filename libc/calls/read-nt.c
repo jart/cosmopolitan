@@ -136,10 +136,15 @@ struct Keystrokes {
   struct Keystroke pool[512];
 };
 
-static struct Keystrokes __keystroke;
+static struct Keystrokes __keystroke = {
+    .lock = PTHREAD_MUTEX_INITIALIZER,
+};
 
-textwindows void WipeKeystrokes(void) {
+textwindows void sys_read_nt_wipe_keystrokes(void) {
+  pthread_mutex_t lock = __keystroke.lock;
   bzero(&__keystroke, sizeof(__keystroke));
+  __keystroke.lock = lock;
+  _pthread_mutex_wipe_np(&__keystroke.lock);
 }
 
 textwindows static void FreeKeystrokeImpl(struct Dll *key) {
@@ -191,11 +196,11 @@ textwindows static void InitConsole(void) {
 }
 
 textwindows static void LockKeystrokes(void) {
-  pthread_mutex_lock(&__keystroke.lock);
+  _pthread_mutex_lock(&__keystroke.lock);
 }
 
 textwindows static void UnlockKeystrokes(void) {
-  pthread_mutex_unlock(&__keystroke.lock);
+  _pthread_mutex_unlock(&__keystroke.lock);
 }
 
 textwindows int64_t GetConsoleInputHandle(void) {

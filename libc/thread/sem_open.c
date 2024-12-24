@@ -37,6 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -56,19 +57,18 @@ static struct Semaphores {
 };
 
 static void sem_open_lock(void) {
-  pthread_mutex_lock(&g_semaphores.lock);
+  _pthread_mutex_lock(&g_semaphores.lock);
 }
 
 static void sem_open_unlock(void) {
-  pthread_mutex_unlock(&g_semaphores.lock);
+  _pthread_mutex_unlock(&g_semaphores.lock);
 }
 
 static void sem_open_wipe(void) {
-  pthread_mutex_init(&g_semaphores.lock, 0);
+  _pthread_mutex_wipe_np(&g_semaphores.lock);
 }
 
 static void sem_open_setup(void) {
-  sem_open_wipe();
   pthread_atfork(sem_open_lock, sem_open_unlock, sem_open_wipe);
 }
 

@@ -20,16 +20,13 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/posixthread.internal.h"
 
 struct Cursor *__cursor_new(void) {
   struct Cursor *c;
   if ((c = _mapanon(sizeof(struct Cursor)))) {
     if ((c->shared = _mapshared(sizeof(struct CursorShared)))) {
-      pthread_mutexattr_t attr;
-      pthread_mutexattr_init(&attr);
-      pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-      pthread_mutex_init(&c->shared->lock, &attr);
-      pthread_mutexattr_destroy(&attr);
+      c->shared->lock = (pthread_mutex_t)PTHREAD_SHARED_MUTEX_INITIALIZER_NP;
     } else {
       munmap(c, sizeof(struct Cursor));
       c = 0;
@@ -56,9 +53,9 @@ int __cursor_unref(struct Cursor *c) {
 }
 
 void __cursor_lock(struct Cursor *c) {
-  pthread_mutex_lock(&c->shared->lock);
+  _pthread_mutex_lock(&c->shared->lock);
 }
 
 void __cursor_unlock(struct Cursor *c) {
-  pthread_mutex_unlock(&c->shared->lock);
+  _pthread_mutex_unlock(&c->shared->lock);
 }
