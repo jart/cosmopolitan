@@ -56,9 +56,8 @@ int threadid;
 
 void WorkerQuit(int sig, siginfo_t *si, void *ctx) {
   ASSERT_EQ(SIGILL, sig);
-  if (!IsXnu() && !IsOpenbsd()) {
+  if (!IsXnu() && !IsOpenbsd())
     ASSERT_EQ(SI_TKILL, si->si_code);
-  }
   ASSERT_EQ(threadid, gettid());
 }
 

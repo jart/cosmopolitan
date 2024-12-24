@@ -138,8 +138,8 @@ o/$(MODE)/tool/build/dso/dlopen_helper.so:				\
 		o/$(MODE)/tool/build/dso/dlopen_helper.o		\
 		$(OUTPUT_OPTION)
 
-o/$(MODE)/tool/build/dlopen_test.runs:					\
-		o/$(MODE)/tool/build/dlopen_test			\
+o/$(MODE)/tool/build/dlopen_tester.runs:				\
+		o/$(MODE)/tool/build/dlopen_tester			\
 		o/$(MODE)/tool/build/dso/dlopen_helper.so
 	$< o/$(MODE)/tool/build/dso/dlopen_helper.so
 

@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import concurrent.futures
+from collections import Counter
+from typing import List, Dict, Tuple
+
+NUM_PARALLEL = int(os.cpu_count() * 1.5)
+
+def find_test_files(root_dir: str) -> List[str]:
+    """Find all executable files ending with _test recursively."""
+    test_files = []
+    for root, _, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith('_test'):
+                file_path = os.path.join(root, file)
+                if os.access(file_path, os.X_OK):
+                    test_files.append(file_path)
+    return test_files
+
+def run_single_test(test_path: str) -> int:
+    """Run a single test and return its exit code."""
+    try:
+        result = subprocess.run([test_path], capture_output=False)
+        return result.returncode
+    except Exception as e:
+        print(f"Error running {test_path}: {e}")
+        return -1
+
+def run_test_multiple_times(test_path: str, iterations: int = NUM_PARALLEL) -> List[int]:
+    """Run a test multiple times in parallel and collect exit codes."""
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(run_single_test, test_path) for _ in range(iterations)]
+        return [f.result() for f in concurrent.futures.as_completed(futures)]
+
+def analyze_results(test_path: str, exit_codes: List[int]) -> Tuple[bool, Dict[int, int]]:
+    """Analyze test results and return if it flaked and error distribution."""
+    error_counts = Counter(code for code in exit_codes if code != 0)
+    return bool(error_counts), dict(error_counts)
+
+def print_flaky_report(test_path: str, error_distribution: Dict[int, int], total_runs: int):
+    """Print a report for a flaky test."""
+    print(f"{test_path} flaked!")
+    for exit_code, count in error_distribution.items():
+        print(f"* {count}/{total_runs} processes died with exit code {exit_code}")
+
+def main(directory = "o"):
+    test_files = find_test_files(directory)
+    for i, test_path in enumerate(test_files):
+        print("testing [%d/%d] %s..." % (i, len(test_files), test_path))
+        sys.stdout.flush()
+        exit_codes = run_test_multiple_times(test_path)
+        is_flaky, error_distribution = analyze_results(test_path, exit_codes)
+        if is_flaky:
+            print_flaky_report(test_path, error_distribution, len(exit_codes))
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main(*sys.argv[1:])

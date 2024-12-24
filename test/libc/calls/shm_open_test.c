@@ -9,6 +9,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -18,7 +19,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/semaphore.h"
 
-#define SHM_PATH    "/fc7261622dd420d8"
 #define STRING_SEND "hello"
 #define STRING_RECV "HELLO"
 
@@ -29,13 +29,14 @@ struct shmbuf {
   char buf[256]; /* Data being transferred */
 };
 
+char shm_path[64];
 atomic_bool *ready;
 
 wontreturn void Bouncer(void) {
 
   /* Create shared memory object and set its size to the size
      of our structure. */
-  int fd = shm_open(SHM_PATH, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+  int fd = shm_open(shm_path, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
   if (fd == -1) {
     perror("shm_open(bouncer)");
     exit(1);
@@ -96,7 +97,7 @@ wontreturn void Sender(void) {
 
   /* Open the existing shared memory object and map it
      into the caller's address space. */
-  int fd = shm_open(SHM_PATH, O_RDWR, 0);
+  int fd = shm_open(shm_path, O_RDWR, 0);
   if (fd == -1) {
     perror("shm_open(sender)");
     exit(1);
@@ -136,7 +137,7 @@ wontreturn void Sender(void) {
   /* Unlink the shared memory object. Even if the peer process
      is still using the object, this is okay. The object will
      be removed only after all open references are closed. */
-  if (shm_unlink(SHM_PATH)) {
+  if (shm_unlink(shm_path)) {
     if (IsWindows() && errno == EACCES) {
       // TODO(jart): Make unlink() work better on Windows.
     } else {
@@ -154,7 +155,7 @@ int pid2;
 void OnExit(void) {
   kill(pid1, SIGKILL);
   kill(pid2, SIGKILL);
-  shm_unlink(SHM_PATH);
+  shm_unlink(shm_path);
 }
 
 void OnTimeout(int sig) {
@@ -163,6 +164,9 @@ void OnTimeout(int sig) {
 }
 
 int main(int argc, char *argv[]) {
+
+  // create random shared memory name
+  sprintf(shm_path, "/shm_open_test-%ld", _rand64());
 
   // create synchronization object
   ready = _mapshared(1);

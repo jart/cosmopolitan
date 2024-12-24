@@ -35,9 +35,8 @@ void shm_path_np(const char *name, char buf[hasatleast 78]) {
   const char *a;
   uint8_t digest[BLAKE2B256_DIGEST_LENGTH];
   a = "/tmp/", n = 5;
-  if (IsLinux() && isdirectory("/dev/shm")) {
+  if (IsLinux() && isdirectory("/dev/shm"))
     a = "/dev/shm/", n = 9;
-  }
   BLAKE2B256(name, strlen(name), digest);
   p = mempcpy(buf, a, n);
   p = hexpcpy(p, digest, BLAKE2B256_DIGEST_LENGTH);

@@ -29,6 +29,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
@@ -104,12 +105,14 @@ done:
 }
 
 TEST(cachestat, testCachestatShmem) {
+  char name[64];
+  sprintf(name, "/cachestat_test-%ld", _rand64());
   size_t filesize = 512 * 2 * pagesize;  // 2 2MB huge pages.
   size_t compute_len = 512 * pagesize;
   unsigned long num_pages = compute_len / pagesize;
   char *data = gc(xmalloc(filesize));
   ASSERT_SYS(0, filesize, getrandom(data, filesize, 0));
-  ASSERT_SYS(0, 3, shm_open("tmpshmcstat", O_CREAT | O_RDWR, 0600));
+  ASSERT_SYS(0, 3, shm_open(name, O_CREAT | O_RDWR, 0600));
   ASSERT_SYS(0, 0, ftruncate(3, filesize));
   ASSERT_SYS(0, filesize, write(3, data, filesize));
   struct cachestat_range range = {pagesize, compute_len};
@@ -117,6 +120,6 @@ TEST(cachestat, testCachestatShmem) {
   ASSERT_SYS(0, 0, cachestat(3, &range, &cs, 0));
   ASSERT_EQ(num_pages, cs.nr_cache + cs.nr_evicted,
             "total number of cached and evicted pages is off.\n");
-  ASSERT_SYS(0, 0, shm_unlink("tmpshmcstat"));
+  ASSERT_SYS(0, 0, shm_unlink(name));
   ASSERT_SYS(0, 0, close(3));
 }

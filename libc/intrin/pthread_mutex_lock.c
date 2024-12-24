@@ -242,7 +242,6 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
  *
  * - `PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP`
  * - `PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP`
- * - `PTHREAD_SIGNAL_SAFE_MUTEX_INITIALIZER_NP`
  * - `PTHREAD_NORMAL_MUTEX_INITIALIZER_NP`
  *
  * Locking a mutex that's already locked by the calling thread will make
