@@ -17,16 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rlimit.h"
-#include "libc/calls/struct/rlimit.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/getauxval.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
+#include "libc/intrin/rlimit.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 
 // Hack for guessing boundaries of _start()'s stack
 //
@@ -91,12 +88,9 @@ static uintptr_t __get_main_top(int pagesz) {
 }
 
 static size_t __get_stack_size(int pagesz, uintptr_t start, uintptr_t top) {
-  size_t size, max = 8 * 1024 * 1024;
-  struct rlimit rlim = {RLIM_INFINITY};
-  sys_getrlimit(RLIMIT_STACK, &rlim);
-  if ((size = rlim.rlim_cur) > max)
-    size = max;
-  return MAX(ROUNDUP(size, pagesz), ROUNDUP(top - start, pagesz));
+  size_t stacksz = __rlimit_stack_get().rlim_cur;
+  stacksz = MIN(stacksz, 1024ul * 1024 * 1024 * 1024);
+  return MAX(ROUNDDOWN(stacksz, pagesz), ROUNDUP(top - start, pagesz));
 }
 
 /**

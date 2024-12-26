@@ -21,6 +21,8 @@
 #include "libc/sysv/consts/prot.h"
 
 const char *_DescribeProtFlags(char buf[48], int x) {
+  if (!x)
+    return "PROT_NONE";
   const struct DescribeFlags kProtFlags[] = {
       {PROT_READ, "READ"},    //
       {PROT_WRITE, "WRITE"},  //

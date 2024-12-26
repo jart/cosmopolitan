@@ -141,7 +141,8 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
   __bootstrap_tls(&tls, __builtin_frame_address(0));
   __maps_track(
       (char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STACK_SIZE,
-      STACK_SIZE);
+      STACK_SIZE, PROT_READ | PROT_WRITE,
+      MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
   for (;;) {
 
     // assemble a group of processes to wait on. if more than 64

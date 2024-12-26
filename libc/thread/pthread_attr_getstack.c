@@ -20,15 +20,13 @@
 #include "libc/thread/thread.h"
 
 /**
- * Returns configuration for thread stack.
+ * Returns configuration for custom thread stack.
  *
- * This is a getter for a configuration attribute. By default, zeros are
- * returned. If pthread_attr_setstack() was called earlier, then this'll
- * return those earlier supplied values.
+ * If zero is returned to `*stackaddr` then a custom stack hasn't been
+ * specified by a previous call to pthread_attr_setstack().
  *
  * @param stackaddr will be set to stack address in bytes
  * @return 0 on success, or errno on error
- * @see pthread_attr_setstacksize()
  */
 errno_t pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
                               size_t *stacksize) {

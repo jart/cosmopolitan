@@ -70,6 +70,7 @@ void OnUsr1(int sig, siginfo_t *si, void *vctx) {
 
 void SetUpOnce(void) {
   cosmo_stack_setmaxstacks((_rand64() & 7) - 1);
+  cosmo_stack_setmaxstacks(100);
 }
 
 void SetUp(void) {

@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/rlimit.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
@@ -88,10 +89,12 @@ int setrlimit(int resource, const struct rlimit *rlim) {
   } else if (!IsWindows() && !(IsNetbsd() && resource == RLIMIT_AS)) {
     rc = sys_setrlimit(resource, rlim);
   } else if (resource == RLIMIT_STACK) {
-    rc = enotsup();
+    rc = 0;
   } else {
     rc = einval();
   }
+  if (!rc && resource == RLIMIT_STACK)
+    __rlimit_stack_set(*rlim);  // so __rlimit_stack_get() works on all OSes
   if (resource == RLIMIT_AS) {
     __virtualmax = rlim->rlim_cur;
     errno = olde;

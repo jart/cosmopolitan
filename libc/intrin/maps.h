@@ -57,7 +57,8 @@ void *__maps_randaddr(void);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
 void __maps_insert(struct Map *);
-bool __maps_track(char *, size_t);
+int __maps_untrack(char *, size_t);
+bool __maps_track(char *, size_t, int, int);
 struct Map *__maps_alloc(void);
 struct Map *__maps_floor(const char *);
 void __maps_stack(char *, int, int, size_t, int, intptr_t);
@@ -74,6 +75,13 @@ forceinline optimizespeed int __maps_search(const void *key,
 static inline struct Map *__maps_next(struct Map *map) {
   struct Tree *node;
   if ((node = tree_next(&map->tree)))
+    return MAP_TREE_CONTAINER(node);
+  return 0;
+}
+
+static inline struct Map *__maps_prev(struct Map *map) {
+  struct Tree *node;
+  if ((node = tree_prev(&map->tree)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }

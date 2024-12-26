@@ -53,6 +53,8 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
@@ -680,7 +682,8 @@ textwindows dontinstrument static uint32_t __sig_worker(void *arg) {
   __bootstrap_tls(&tls, __builtin_frame_address(0));
   char *sp = __builtin_frame_address(0);
   __maps_track((char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STKSZ,
-               STKSZ);
+               STKSZ, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
   for (;;) {
     _pthread_mutex_lock(&__sig_worker_lock);
 

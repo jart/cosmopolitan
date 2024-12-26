@@ -17,19 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/limits.h"
 #include "libc/thread/thread.h"
 
 /**
- * Defines minimum stack size for thread.
+ * Specifies minimum stack size for thread.
+ *
+ * On Linux, if you're not using `cosmocc -mtiny`, and you're not using
+ * cosmo_dlopen(), and guard size is nonzero, then `MAP_GROWSDOWN` will
+ * be used to create your stack memory. This helps minimize virtual
+ * memory consumption. Please note this is only possible if `stacksize`
+ * is no larger than the current `RLIMIT_STACK`, otherwise the runtime
+ * will map your stack using plain old mmap().
+ *
+ * Non-custom stacks may be recycled by the cosmo runtime. You can
+ * control this behavior by calling cosmo_stack_setmaxstacks(). It's
+ * useful for both tuning performance and hardening security. See also
+ * pthread_attr_setguardsize() which is important for security too.
  *
  * @param stacksize contains stack size in bytes
  * @return 0 on success, or errno on error
  * @raise EINVAL if `stacksize` is less than `PTHREAD_STACK_MIN`
  */
 errno_t pthread_attr_setstacksize(pthread_attr_t *a, size_t stacksize) {
-  if (stacksize > INT_MAX)
-    return EINVAL;
   if (stacksize < PTHREAD_STACK_MIN)
     return EINVAL;
   a->__stacksize = stacksize;

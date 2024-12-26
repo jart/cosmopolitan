@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 
 #define PTHREAD_KEYS_MAX              46
-#define PTHREAD_STACK_MIN             65536
+#define PTHREAD_STACK_MIN             32768
 #define PTHREAD_USE_NSYNC             1
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
@@ -129,8 +129,8 @@ typedef struct pthread_attr_s {
   int __contentionscope;
   int __sigaltstacksize;
   uint64_t __sigmask;
-  unsigned __guardsize;
-  unsigned __stacksize;
+  size_t __guardsize;
+  size_t __stacksize;
   void *__stackaddr;
   void *__sigaltstackaddr;
 } pthread_attr_t;

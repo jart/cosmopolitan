@@ -85,7 +85,8 @@ privileged optimizespeed struct Map *__maps_floor(const char *addr) {
   return 0;
 }
 
-static bool __maps_overlaps(const char *addr, size_t size, int pagesz) {
+static bool __maps_overlaps(const char *addr, size_t size) {
+  int pagesz = __pagesize;
   struct Map *map, *floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = __maps_next(map))
     if (MAX(addr, map->addr) <
@@ -305,25 +306,37 @@ void __maps_insert(struct Map *map) {
 }
 
 static void __maps_track_insert(struct Map *map, char *addr, size_t size,
-                                uintptr_t map_handle) {
+                                uintptr_t map_handle, int prot, int flags) {
   map->addr = addr;
   map->size = size;
-  map->prot = PROT_READ | PROT_WRITE;
-  map->flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK;
+  map->prot = prot;
+  map->flags = flags;
   map->hand = map_handle;
   __maps_lock();
+  ASSERT(!__maps_overlaps(addr, size));
   __maps_insert(map);
   __maps_unlock();
 }
 
-bool __maps_track(char *addr, size_t size) {
+// adds interval to rbtree (no sys_mmap)
+bool __maps_track(char *addr, size_t size, int prot, int flags) {
   struct Map *map;
   do {
     if (!(map = __maps_alloc()))
       return false;
   } while (map == MAPS_RETRY);
-  __maps_track_insert(map, addr, size, -1);
+  __maps_track_insert(map, addr, size, -1, prot, flags);
   return true;
+}
+
+// removes interval from rbtree (no sys_munmap)
+int __maps_untrack(char *addr, size_t size) {
+  struct Map *deleted = 0;
+  __maps_lock();
+  int rc = __muntrack(addr, size, __pagesize, &deleted);
+  __maps_unlock();
+  __maps_free_all(deleted);
+  return rc;
 }
 
 struct Map *__maps_alloc(void) {
@@ -342,7 +355,9 @@ struct Map *__maps_alloc(void) {
   if (sys.addr == MAP_FAILED)
     return 0;
   map = sys.addr;
-  __maps_track_insert(map, sys.addr, gransz, sys.maphandle);
+  __maps_track_insert(map, sys.addr, gransz, sys.maphandle,
+                      PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
   for (int i = 1; i < gransz / sizeof(struct Map); ++i)
     __maps_free(map + i);
   return MAPS_RETRY;
@@ -370,7 +385,7 @@ static int __munmap(char *addr, size_t size) {
   size_t pgup_size = (size + pagesz - 1) & -pagesz;
   size_t grup_size = (size + gransz - 1) & -gransz;
   if (grup_size > pgup_size)
-    if (__maps_overlaps(addr + pgup_size, grup_size - pgup_size, pagesz)) {
+    if (__maps_overlaps(addr + pgup_size, grup_size - pgup_size)) {
       __maps_unlock();
       return einval();
     }
@@ -420,7 +435,7 @@ static void *__maps_pickaddr(size_t size) {
     __maps.pick = 0;
     if (!addr)
       addr = __maps_randaddr();
-    if (!__maps_overlaps(addr, size, __pagesize)) {
+    if (!__maps_overlaps(addr, size)) {
       __maps.pick = addr + ((size + __gransize - 1) & -__gransize);
       __maps_unlock();
       return addr;
@@ -455,7 +470,7 @@ static void *__mmap_chunk(void *addr, size_t size, int prot, int flags, int fd,
       sysflags |= MAP_FIXED_NOREPLACE_linux;
     } else if (IsFreebsd() || IsNetbsd()) {
       sysflags |= MAP_FIXED;
-      if (__maps_overlaps(addr, size, pagesz)) {
+      if (__maps_overlaps(addr, size)) {
         __maps_free(map);
         return (void *)eexist();
       }
@@ -508,11 +523,8 @@ TryAgain:
   }
 
   // untrack mapping we blew away
-  if (!IsWindows() && should_untrack) {
-    struct Map *deleted = 0;
-    __muntrack(res.addr, size, pagesz, &deleted);
-    __maps_free_all(deleted);
-  }
+  if (!IsWindows() && should_untrack)
+    __maps_untrack(res.addr, size);
 
   // track map object
   map->addr = res.addr;
@@ -599,8 +611,8 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
   size_t pgup_old_size = (old_size + pagesz - 1) & -pagesz;
   size_t grup_old_size = (old_size + gransz - 1) & -gransz;
   if (grup_old_size > pgup_old_size)
-    if (__maps_overlaps(old_addr + pgup_old_size, grup_old_size - pgup_old_size,
-                        pagesz))
+    if (__maps_overlaps(old_addr + pgup_old_size,
+                        grup_old_size - pgup_old_size))
       return (void *)einval();
   old_size = pgup_old_size;
 
@@ -611,7 +623,7 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
     size_t grup_new_size = (new_size + gransz - 1) & -gransz;
     if (grup_new_size > pgup_new_size)
       if (__maps_overlaps(new_addr + pgup_new_size,
-                          grup_new_size - pgup_new_size, pagesz))
+                          grup_new_size - pgup_new_size))
         return (void *)einval();
   }
 

@@ -7,9 +7,13 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/dce.h"
+#include "libc/intrin/maps.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
+#include "libc/runtime/winargs.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/xasprintf.h"
 
@@ -67,8 +71,18 @@ int main(int argc, char *argv[]) {
     Append((uintptr_t)&__auxv[i + 1],
            xasprintf("&auxv[%d] = %#lx", i + 1, __auxv[i + 1]));
   }
-  qsort(things.p, things.n, sizeof(*things.p), Compare);
-  for (int i = 0; i < things.n; ++i) {
-    printf("%012lx %s\n", things.p[i].i, things.p[i].s);
+  if (!IsWindows()) {
+    struct AddrSize stak = __get_main_stack();
+    Append((intptr_t)stak.addr + stak.size, "top of stack");
+    Append((intptr_t)stak.addr, "bottom of stack");
+  } else {
+#ifdef __x86_64__
+    Append(GetStaticStackAddr(0) + GetStaticStackSize(), "top of stack");
+    Append(GetStaticStackAddr(0) + GetGuardSize(), "bottom of stack");
+    Append(GetStaticStackAddr(0), "bottom of guard region");
+#endif
   }
+  qsort(things.p, things.n, sizeof(*things.p), Compare);
+  for (int i = 0; i < things.n; ++i)
+    printf("%012lx %s\n", things.p[i].i, things.p[i].s);
 }

@@ -19,13 +19,7 @@
 #include "libc/thread/thread.h"
 
 /**
- * Sets size of protected region at bottom of thread stack.
- *
- * Cosmopolitan sets this value to `sysconf(_SC_PAGESIZE)` by default.
- *
- * You may set `guardsize` to disable the stack guard feature and gain a
- * slight performance advantage by avoiding mprotect() calls. Note that
- * it could make your code more prone to silent unreported corruption.
+ * Sets minimum size of protected region beneath thread stack.
  *
  * @param guardsize contains guard size in bytes, which is implicitly
  *     rounded up to `sysconf(_SC_PAGESIZE)`, or zero to disable

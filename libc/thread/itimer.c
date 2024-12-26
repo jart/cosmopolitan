@@ -30,6 +30,8 @@
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -47,7 +49,8 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   __bootstrap_tls(&tls, sp);
   __maps_track(
       (char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STACK_SIZE,
-      STACK_SIZE);
+      STACK_SIZE, PROT_READ | PROT_WRITE,
+      MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
   for (;;) {
     bool dosignal = false;
     struct timeval now, waituntil;
