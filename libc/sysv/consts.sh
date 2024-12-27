@@ -1104,8 +1104,8 @@ syscon	limits	_ARG_MAX				128*1024		128*1024		1024*1024		1024*1024		512*1024		51
 syscon	limits	_NAME_MAX				255			255			255			255			255			255			511			255			# probably higher on windows?
 syscon	limits	_PATH_MAX				4096			4096			1024			1024			1024			1024			1024			260			#
 syscon	limits	_NSIG					64			64			32			32			128			32			64			64			# _SIG_MAXSIG on FreeBSD
-syscon	limits	_MINSIGSTKSZ				2048			2048			32768			32768			4096			12288			8192			2048			#
-syscon	limits	_SIGSTKSZ				8192			2048			131072			131072			36864			28672			40960			8192			#
+syscon	limits	_MINSIGSTKSZ				2048			6144			8192			32768			6656			14336			8192			2048			# FreeBSD upscaled a bit for ARM
+syscon	limits	_SIGSTKSZ				10240			10240			131072			131072			36864			28672			40960			10240			#
 
 #	unmount() flags
 #	a.k.a. umount2() on linux

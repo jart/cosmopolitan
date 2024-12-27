@@ -18,23 +18,57 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
-#include "libc/macros.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
-/**
- * Prints memory mappings.
- */
-void __print_maps(size_t limit) {
-  char mappingbuf[8], sb[16];
-  __maps_lock();
+// this will usually return 12 since x86 pml4t uses a 47 bit address
+// space in userspace, and decent arm machines uses a 48 bit address
+// space. however it could go lower on embedded devices. it can also
+// rise higher on expensive x86 machines with pml5t, if user uses it
+static int get_address_digits(int pagesz) {
+  int max_bits = 0;
   for (struct Tree *e = tree_first(__maps.maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
-    kprintf("%012lx-%012lx %!s", map->addr, map->addr + map->size,
+    char *end = map->addr + ((map->size + pagesz - 1) & -pagesz);
+    int bits = bsrll((uintptr_t)end) + 1;
+    if (bits > max_bits)
+      max_bits = bits;
+  }
+  return ((max_bits + 3) & -4) / 4;
+}
+
+/**
+ * Prints memory mappings known to cosmo.
+ */
+void __print_maps(size_t limit) {
+  __maps_lock();
+  char sb[16];
+  char mappingbuf[8];
+  struct Map *last = 0;
+  int pagesz = __pagesize;
+  int digs = get_address_digits(pagesz);
+  for (struct Tree *e = tree_first(__maps.maps); e; e = tree_next(e)) {
+    struct Map *map = MAP_TREE_CONTAINER(e);
+
+    // show gaps between maps
+    if (last) {
+      char *beg = last->addr + ((last->size + pagesz - 1) & -pagesz);
+      char *end = map->addr;
+      if (end > beg) {
+        size_t gap = end - beg;
+        sizefmt(sb, gap, 1024);
+        kprintf("%0*lx-%0*lx       %sb\n", digs, beg, digs, end, sb);
+      }
+    }
+    last = map;
+
+    // show mapping
+    kprintf("%0*lx-%0*lx %!s", digs, map->addr, digs, map->addr + map->size,
             _DescribeMapping(mappingbuf, map->prot, map->flags));
     sizefmt(sb, map->size, 1024);
     kprintf(" %!sb", sb);
@@ -45,10 +79,14 @@ void __print_maps(size_t limit) {
     if (map->readonlyfile)
       kprintf(" readonlyfile");
     kprintf("\n");
+
+    // stay beneath our limit
     if (!--limit)
       break;
   }
-  kprintf("# %'zu bytes in %'zu mappings\n", __maps.pages * __pagesize,
+
+  // print summary
+  kprintf("# %'zu bytes in %'zu mappings\n", __maps.pages * pagesz,
           __maps.count);
   __maps_unlock();
 }

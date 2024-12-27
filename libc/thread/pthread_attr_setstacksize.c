@@ -20,7 +20,15 @@
 #include "libc/thread/thread.h"
 
 /**
- * Specifies minimum stack size for thread.
+ * Specifies minimum stack size for thread, e.g.
+ *
+ *     pthread_t th;
+ *     pthread_attr_t attr;
+ *     pthread_attr_init(&attr);
+ *     pthread_attr_setguardsize(&attr, 4096);
+ *     pthread_attr_setstacksize(&attr, 61440);
+ *     pthread_create(&th, &attr, thfunc, arg);
+ *     pthread_attr_destroy(&attr);
  *
  * On Linux, if you're not using `cosmocc -mtiny`, and you're not using
  * cosmo_dlopen(), and guard size is nonzero, then `MAP_GROWSDOWN` will

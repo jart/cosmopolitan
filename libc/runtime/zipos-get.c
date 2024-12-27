@@ -63,11 +63,9 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   }
 
   // unmap the executable portion beneath the local files
-  if (!IsWindows()) {
-    mo = ROUNDDOWN(lo, __gransize);
-    if (mo)
-      munmap(map, mo);
-  }
+  mo = ROUNDDOWN(lo, __gransize);
+  if (mo && !IsWindows())
+    munmap(map, mo);
 }
 
 static int __zipos_compare_names(const void *a, const void *b, void *c) {

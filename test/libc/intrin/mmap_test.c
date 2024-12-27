@@ -95,7 +95,7 @@ TEST(mmap, pageBeyondGone) {
            MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   ASSERT_NE(MAP_FAILED, p);
   EXPECT_TRUE(testlib_memoryexists(p));
-  EXPECT_FALSE(testlib_memoryexists(p + 1));  // b/c kisdangerous
+  EXPECT_TRUE(testlib_memoryexists(p + 1));
   EXPECT_FALSE(testlib_memoryexists(p + pagesz));
   ASSERT_EQ(0, munmap(p, 1));
 }
@@ -184,7 +184,7 @@ TEST(mmap, smallerThanPage_mapsRemainder) {
   ASSERT_NE(MAP_FAILED, map);
   EXPECT_TRUE(testlib_memoryexists(map));
   EXPECT_TRUE(testlib_pokememory(map + (pagesz - 1)));
-  EXPECT_TRUE(!testlib_memoryexists(map + (pagesz - 1)));
+  EXPECT_TRUE(testlib_memoryexists(map + (pagesz - 1)));
   EXPECT_SYS(0, 0, munmap(map, 1));
   EXPECT_FALSE(testlib_memoryexists(map));
   EXPECT_FALSE(testlib_memoryexists(map + (pagesz - 1)));

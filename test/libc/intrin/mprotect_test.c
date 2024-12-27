@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/ucontext.h"
@@ -108,15 +109,15 @@ void SetUp(void) {
                             .sa_flags = SA_SIGINFO | SA_RESETHAND};
   struct sigaction sasegv = {.sa_sigaction = OnSigSegv,
                              .sa_flags = SA_SIGINFO | SA_RESETHAND};
-  sigaction(SIGBUS, &sabus, old + 0);
-  sigaction(SIGSEGV, &sasegv, old + 1);
+  unassert(!sigaction(SIGBUS, &sabus, old + 0));
+  unassert(!sigaction(SIGSEGV, &sasegv, old + 1));
   gotbusted = false;
   gotsegv = false;
 }
 
 void TearDown(void) {
-  sigaction(SIGBUS, old + 0, 0);
-  sigaction(SIGSEGV, old + 1, 0);
+  unassert(!sigaction(SIGBUS, old + 0, 0));
+  unassert(!sigaction(SIGSEGV, old + 1, 0));
 }
 
 TEST(mprotect, testOkMemory) {

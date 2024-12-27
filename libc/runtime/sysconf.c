@@ -45,8 +45,8 @@
  * - `_SC_GRANSIZE` returns addr alignment for mmap()
  * - `_SC_CLK_TCK` returns number of clock ticks per second
  * - `_SC_ARG_MAX` will perform expensive rlimit calculations
- * - `_SC_SIGSTKSZ` returns host platform's preferred SIGSTKSZ
- * - `_SC_MINSIGSTKSZ` returns host platform's required MINSIGSTKSZ
+ * - `_SC_SIGSTKSZ` returns recommended `SIGSTKSZ` for platform
+ * - `_SC_MINSIGSTKSZ` returns size of kernel pushed signal frame
  * - `_SC_AVPHYS_PAGES` returns average physical memory pages
  * - `_SC_PHYS_PAGES` returns physical memory pages available
  * - `_SC_NPROCESSORS_ONLN` returns number of effective CPUs
@@ -67,7 +67,7 @@ long sysconf(int name) {
     case _SC_ARG_MAX:
       return __get_arg_max();
     case _SC_SIGSTKSZ:
-      return _SIGSTKSZ;
+      return __get_minsigstksz() + SIGSTKSZ;
     case _SC_MINSIGSTKSZ:
       return __get_minsigstksz();
     case _SC_CHILD_MAX:

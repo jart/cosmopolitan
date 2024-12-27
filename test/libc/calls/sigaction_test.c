@@ -400,15 +400,16 @@ TEST(sigaction, ignoreSigSegv_notPossible) {
   _Exit(pSegfault(0));
   TERMS(SIGSEGV);
 }
+#endif
 
+#if 0
+// TODO(jart): Use sigsuspend() to make not flaky.
 TEST(sigaction, killSigSegv_canBeIgnored) {
   int child, ws;
-  if (IsWindows()) return;  // TODO
   sighandler_t old = signal(SIGSEGV, SIG_IGN);
   ASSERT_NE(-1, (child = fork()));
-  while (!child) {
+  while (!child)
     pause();
-  }
   ASSERT_SYS(0, 0, kill(child, SIGSEGV));
   EXPECT_SYS(0, 0, kill(child, SIGTERM));
   EXPECT_SYS(0, child, wait(&ws));

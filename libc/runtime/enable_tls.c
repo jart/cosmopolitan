@@ -220,7 +220,7 @@ textstartup void __enable_tls(void) {
     DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
                     GetCurrentProcess(), &hThread, 0, false,
                     kNtDuplicateSameAccess);
-    atomic_store_explicit(&tib->tib_syshand, hThread, memory_order_relaxed);
+    atomic_init(&tib->tib_syshand, hThread);
   } else if (IsXnuSilicon()) {
     tib->tib_syshand = __syslib->__pthread_self();
   }
@@ -233,23 +233,22 @@ textstartup void __enable_tls(void) {
   } else {
     tid = sys_gettid();
   }
-  atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
+  atomic_init(&tib->tib_tid, tid);
   // TODO(jart): set_tid_address?
 
   // inherit signal mask
-  if (IsWindows()) {
-    atomic_store_explicit(&tib->tib_sigmask,
-                          ParseMask(__getenv(environ, "_MASK").s),
-                          memory_order_relaxed);
-  }
+  if (IsWindows())
+    atomic_init(&tib->tib_sigmask, ParseMask(__getenv(environ, "_MASK").s));
 
   // initialize posix threads
   _pthread_static.tib = tib;
   _pthread_static.pt_flags = PT_STATIC;
   _pthread_static.pt_locale = &__global_locale;
+  _pthread_static.pt_attr.__stackaddr = __maps.stack.addr;
+  _pthread_static.pt_attr.__stacksize = __maps.stack.size;
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
-  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_release);
+  atomic_init(&_pthread_static.ptid, tid);
 
   // ask the operating system to change the x86 segment register
   if (IsWindows())

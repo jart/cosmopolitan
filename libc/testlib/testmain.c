@@ -38,9 +38,12 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/aspect.internal.h"
@@ -95,14 +98,24 @@ int main(int argc, char *argv[]) {
   struct Dll *e;
   struct TestAspect *a;
 
+  // some settings
+  __ubsan_strict = true;
+  __log_level = kLogInfo;
+
   if (errno) {
     tinyprint(2, "error: the errno variable was contaminated by constructors\n",
               NULL);
     return 1;
   }
 
-  __ubsan_strict = true;
-  __log_level = kLogInfo;
+  // test huge pointers by enabling pml5t
+  if (_rand64() % 2) {
+    errno_t e = errno;
+    mmap((char *)0x80000000000000, 1, PROT_NONE,  //
+         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    errno = e;
+  }
+
   GetOpts(argc, argv);
 
   for (fd = 3; fd < 100; ++fd) {

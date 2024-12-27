@@ -29,7 +29,7 @@
 
 //	Saves caller CPU state and signal mask.
 //
-//	@param	rdi points to jmp_buf
+//	@param	rdi points to sigjmp_buf
 //	@param	esi if non-zero will cause mask to be saved
 //	@return	eax 0 when set and !0 when longjmp'd
 //	@returnstwice

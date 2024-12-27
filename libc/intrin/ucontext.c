@@ -23,7 +23,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
 
-int __tailcontext(const ucontext_t *);
+int __tailcontext(const ucontext_t *) wontreturn;
 
 /**
  * Sets machine context.
@@ -40,7 +40,7 @@ int setcontext(const ucontext_t *uc) {
   } else {
     sys_sigprocmask(SIG_SETMASK, &uc->uc_sigmask, 0);
   }
-  return __tailcontext(uc);
+  __tailcontext(uc);
 }
 
 int __getcontextsig(ucontext_t *uc) {

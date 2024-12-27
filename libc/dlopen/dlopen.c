@@ -810,7 +810,7 @@ void *cosmo_dlopen(const char *path, int mode) {
   }
   ALLOW_CANCELATION;
   ALLOW_SIGNALS;
-  STRACE("dlopen(%#s, %d) → %p% m", path, mode, res);
+  STRACE("cosmo_dlopen(%#s, %d) → %p% m", path, mode, res);
   return res;
 }
 
@@ -855,7 +855,7 @@ void *cosmo_dlsym(void *handle, const char *name) {
   } else {
     func = 0;
   }
-  STRACE("dlsym(%p, %#s) → %p", handle, name, func);
+  STRACE("cosmo_dlsym(%p, %#s) → %p", handle, name, func);
   return func;
 }
 
@@ -890,7 +890,7 @@ int cosmo_dlclose(void *handle) {
   } else {
     res = -1;
   }
-  STRACE("dlclose(%p) → %d", handle, res);
+  STRACE("cosmo_dlclose(%p) → %d", handle, res);
   return res;
 }
 
@@ -909,6 +909,6 @@ char *cosmo_dlerror(void) {
   } else {
     res = dlerror_buf;
   }
-  STRACE("dlerror() → %#s", res);
+  STRACE("cosmo_dlerror() → %#s", res);
   return res;
 }

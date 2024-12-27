@@ -17,6 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dlopen/dlfcn.h"
+#include "libc/intrin/strace.h"
+
+#define DLOPEN_ERROR \
+  "dlopen() isn't supported; consider using cosmo_dlopen() and read its docs"
 
 /**
  * Opens dynamic shared object using host platform libc.
@@ -27,12 +31,13 @@
  *
  * @return null always
  */
-void *dlopen(const char *, int) {
+void *dlopen(const char *path, int mode) {
+  STRACE("dlopen(%#s, %d) → 0 [%s]", path, mode, DLOPEN_ERROR);
   return 0;
 }
 
 char *dlerror(void) {
-  return "dlopen() isn't supported by cosmo; try using cosmo_dlopen()";
+  return DLOPEN_ERROR;
 }
 
 void *dlsym(void *, const char *) {

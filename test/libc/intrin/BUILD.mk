@@ -59,6 +59,15 @@ o/$(MODE)/test/libc/intrin/%.dbg:				\
 		$(TEST_LIBC_INTRIN_DEPS)			\
 		o/$(MODE)/test/libc/intrin/%.o			\
 		o/$(MODE)/test/libc/intrin/intrin.pkg		\
+		$(LIBC_TESTMAIN)				\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/intrin/mmap_test.dbg:			\
+		$(TEST_LIBC_INTRIN_DEPS)			\
+		o/$(MODE)/test/libc/intrin/mmap_test.o		\
+		o/$(MODE)/test/libc/intrin/intrin.pkg		\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\

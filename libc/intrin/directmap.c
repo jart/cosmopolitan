@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/directmap.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/intrin/directmap.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"

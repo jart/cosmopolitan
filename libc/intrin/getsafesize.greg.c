@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
@@ -37,12 +37,13 @@ privileged optimizesize long __get_safe_size(long want, long extraspace) {
   struct PosixThread *pt;
   struct CosmoTib *tib = __get_tls_privileged();
   long bottom, sp = GetStackPointer();
-  if ((char *)sp >= tib->tib_sigstack_addr &&
-      (char *)sp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
+  if (sp >= (long)tib->tib_sigstack_addr &&
+      sp < (long)tib->tib_sigstack_addr + tib->tib_sigstack_size) {
     bottom = (long)tib->tib_sigstack_addr;
   } else if ((pt = (struct PosixThread *)tib->tib_pthread) &&
-             pt->pt_attr.__stacksize) {
-    bottom = (long)pt->pt_attr.__stackaddr + pt->pt_attr.__guardsize;
+             sp >= (long)pt->pt_attr.__stackaddr &&
+             sp < (long)pt->pt_attr.__stackaddr + pt->pt_attr.__stacksize) {
+    bottom = (long)pt->pt_attr.__stackaddr;
   } else {
     return want;
   }

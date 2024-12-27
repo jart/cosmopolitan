@@ -19,6 +19,9 @@
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/testlib/testlib.h"
 
@@ -37,4 +40,14 @@ TEST(sigaltstack, disable) {
   EXPECT_SYS(0, 0, sigaltstack(&ss, 0));
   EXPECT_SYS(0, 0, sigaltstack(0, &ss));
   EXPECT_EQ(SS_DISABLE, ss.ss_flags);
+}
+
+TEST(sigaltstack, size_requirement) {
+  struct sigaltstack ss;
+  EXPECT_SYS(0, 0, sigaltstack(0, &ss));
+  ss.ss_size = sysconf(_SC_MINSIGSTKSZ);
+  ss.ss_sp = gc(malloc(ss.ss_size));
+  ss.ss_flags = 0;
+  ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
+  ASSERT_SYS(0, 0, sigaltstack(0, &ss));
 }

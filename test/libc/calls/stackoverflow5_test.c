@@ -44,7 +44,7 @@ int StackOverflow(int d) {
 }
 
 void *MyPosixThread(void *arg) {
-  exit(StackOverflow(0));
+  exit(StackOverflow(1));
   return 0;
 }
 

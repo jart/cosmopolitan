@@ -16,10 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
@@ -27,12 +31,15 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
-#include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -42,15 +49,17 @@
  */
 
 jmp_buf recover;
-volatile bool smashed_stack;
+atomic_bool g_isdone;
+atomic_bool smashed_stack;
 
 void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   struct sigaltstack ss;
-  ASSERT_SYS(0, 0, sigaltstack(0, &ss));
-  ASSERT_EQ(SS_ONSTACK, ss.ss_flags);
-  kprintf("kprintf avoids overflowing %G %p\n", si->si_signo, si->si_addr);
+  unassert(!sigaltstack(0, &ss));
+  unassert(SS_ONSTACK == ss.ss_flags);
+  kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
+          si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
   smashed_stack = true;
-  ASSERT_TRUE(__is_stack_overflow(si, ctx));
+  unassert(__is_stack_overflow(si, ctx));
   longjmp(recover, 123);
 }
 
@@ -63,7 +72,7 @@ void SetUp(void) {
     struct rlimit rl;
     getrlimit(RLIMIT_STACK, &rl);
     rl.rlim_cur = MIN(rl.rlim_cur, 2 * 1024 * 1024);
-    ASSERT_SYS(0, 0, setrlimit(RLIMIT_STACK, &rl));
+    unassert(!setrlimit(RLIMIT_STACK, &rl));
   }
 
   // set up the signal handler and alternative stack
@@ -72,7 +81,7 @@ void SetUp(void) {
   ss.ss_flags = 0;
   ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 8192;
   ss.ss_sp = _mapanon(ss.ss_size);
-  ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
+  unassert(!sigaltstack(&ss, 0));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = CrashHandler;
@@ -89,20 +98,39 @@ int StackOverflow(int d) {
   return 0;
 }
 
-TEST(stackoverflow, standardStack_altStack_process_longjmp) {
+void *innocent_thread(void *arg) {
+  atomic_long dont_clobber_me_bro = 0;
+  while (!g_isdone)
+    unassert(!dont_clobber_me_bro);
+  return 0;
+}
+
+int main() {
+
+  // libc/intrin/stack.c is designed so that this thread's stack should
+  // be allocated right beneath the main thread's stack. our goal is to
+  // make sure overflowing the main stack won't clobber our poor thread
+  pthread_t th;
+  unassert(!pthread_create(&th, 0, innocent_thread, 0));
+
+  SetUp();
+
   int jumpcode;
-  if (!(jumpcode = setjmp(recover))) {
-    exit(StackOverflow(0));
-  }
-  ASSERT_EQ(123, jumpcode);
-  ASSERT_TRUE(smashed_stack);
+  if (!(jumpcode = setjmp(recover)))
+    exit(StackOverflow(1));
+  unassert(123 == jumpcode);
+  unassert(smashed_stack);
+
+  // join the thread
+  g_isdone = true;
+  unassert(!pthread_join(th, 0));
 
   // here's where longjmp() gets us into trouble
   struct sigaltstack ss;
-  ASSERT_SYS(0, 0, sigaltstack(0, &ss));
+  unassert(!sigaltstack(0, &ss));
   if (IsXnu() || IsNetbsd()) {
-    ASSERT_EQ(SS_ONSTACK, ss.ss_flags);  // wut
+    unassert(SS_ONSTACK == ss.ss_flags);  // wut
   } else {
-    ASSERT_EQ(0, ss.ss_flags);
+    unassert(0 == ss.ss_flags);
   }
 }

@@ -8,7 +8,7 @@ extern const int _MINSIGSTKSZ;
 
 COSMOPOLITAN_C_END_
 
-#define SIGSTKSZ    32768
+#define SIGSTKSZ    32768 /* just itself believed to be safe */
 #define MINSIGSTKSZ 32768 /* xnu defines the highest minimum */
 #define SS_ONSTACK  1
 #define SS_DISABLE  SS_DISABLE

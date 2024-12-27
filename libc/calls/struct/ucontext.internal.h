@@ -1,13 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_INTERNAL_H_
 #include "libc/calls/ucontext.h"
-#include "libc/nt/struct/context.h"
 COSMOPOLITAN_C_START_
 
 #ifdef __x86_64__
 #define PC   rip
 #define SP   rsp
 #define BP   rbp
+#define RES0 rax
+#define RES1 rdx
 #define ARG0 rdi
 #define ARG1 rsi
 #define ARG2 rdx
@@ -18,6 +19,8 @@ COSMOPOLITAN_C_START_
 #define PC   pc
 #define SP   sp
 #define BP   regs[29]
+#define RES0 regs[0]
+#define RES1 regs[1]
 #define ARG0 regs[0]
 #define ARG1 regs[1]
 #define ARG2 regs[2]
@@ -27,9 +30,6 @@ COSMOPOLITAN_C_START_
 #else
 #error "unsupported architecture"
 #endif
-
-void _ntcontext2linux(struct ucontext *, const struct NtContext *);
-void _ntlinux2context(struct NtContext *, const ucontext_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_INTERNAL_H_ */

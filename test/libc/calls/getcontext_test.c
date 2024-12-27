@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
@@ -60,6 +61,7 @@ TEST(getcontext, canReadAndWriteSignalMask) {
   ASSERT_EQ(0, getcontext(&context));
   if (!n) {
     n = 1;
+    context.uc_mcontext.RES0 = 0;
     ASSERT_TRUE(sigismember(&context.uc_sigmask, SIGUSR1));
     sigaddset(&context.uc_sigmask, SIGUSR2);
     setcontext(&context);

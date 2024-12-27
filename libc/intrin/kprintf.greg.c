@@ -352,9 +352,8 @@ ABI void klog(const char *b, size_t n) {
   long h;
   uint32_t wrote;
   long rax, rdi, rsi, rdx;
-  if ((h = kloghandle()) == -1) {
+  if ((h = kloghandle()) == -1)
     return;
-  }
   if (IsWindows()) {
     bool32 ok;
     intptr_t ev;
@@ -408,10 +407,11 @@ ABI void klog(const char *b, size_t n) {
 ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
   int si;
   wint_t t, u;
+  char *cxxbuf;
   const char *abet;
   signed char type;
   const char *s, *f;
-  char cxxbuf[3000];
+  int cxxbufsize = 0;
   struct CosmoTib *tib;
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
@@ -755,13 +755,25 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
           x = va_arg(va, intptr_t);
           if (_weaken(__symtab) && *_weaken(__symtab) &&
               (idx = _weaken(__get_symbol)(0, x)) != -1) {
-            /* if (p + 1 <= e) */
-            /*   *p++ = '&'; */
             s = (*_weaken(__symtab))->name_base +
                 (*_weaken(__symtab))->names[idx];
-            if (_weaken(__is_mangled) && _weaken(__is_mangled)(s) &&
-                _weaken(__demangle)(cxxbuf, s, sizeof(cxxbuf)) != -1)
-              s = cxxbuf;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+            // decipher c++ symbols if there's enough stack memory
+            // stack size requirement assumes max_depth's still 20
+            if (_weaken(__demangle) &&    //
+                _weaken(__is_mangled) &&  //
+                _weaken(__is_mangled)(s)) {
+              if (!cxxbufsize)
+                if ((cxxbufsize = __get_safe_size(8192, 8192)) >= 512) {
+                  cxxbuf = alloca(cxxbufsize);
+                  CheckLargeStackAllocation(cxxbuf, sizeof(cxxbufsize));
+                }
+              if (cxxbufsize >= 512)
+                if (_weaken(__demangle)(cxxbuf, s, cxxbufsize) != -1)
+                  s = cxxbuf;
+            }
+#pragma GCC pop_options
             goto FormatString;
           }
           base = 4;
@@ -1050,7 +1062,7 @@ ABI size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
 ABI void kvprintf(const char *fmt, va_list v) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
-  long size = __get_safe_size(8000, 8000);
+  long size = __get_safe_size(8192, 2048);
   if (size < 80) {
     klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
     return;

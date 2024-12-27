@@ -396,12 +396,6 @@ relegated void __oncrash(int sig, siginfo_t *si, void *arg) {
   SpinLock(&lock);
   __oncrash_impl(sig, si, arg);
 
-  // unlike amd64, the instruction pointer on arm64 isn't advanced past
-  // the debugger breakpoint instruction automatically. we need this so
-  // execution can resume after __builtin_trap().
-  if (arg && sig == SIGTRAP)
-    ((ucontext_t *)arg)->uc_mcontext.PC += 4;
-
   // ensure execution doesn't resume for anything but SIGTRAP / SIGQUIT
   if (arg && sig != SIGTRAP && sig != SIGQUIT) {
     if (!IsXnu()) {

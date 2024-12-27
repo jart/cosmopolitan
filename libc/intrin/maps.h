@@ -37,9 +37,9 @@ struct Maps {
   _Atomic(uintptr_t) freed;
   size_t count;
   size_t pages;
-  char *pick;
   struct Map stack;
   struct Map guard;
+  struct Map spool[13];
 };
 
 struct AddrSize {
@@ -89,6 +89,13 @@ static inline struct Map *__maps_prev(struct Map *map) {
 static inline struct Map *__maps_first(void) {
   struct Tree *node;
   if ((node = tree_first(__maps.maps)))
+    return MAP_TREE_CONTAINER(node);
+  return 0;
+}
+
+static inline struct Map *__maps_last(void) {
+  struct Tree *node;
+  if ((node = tree_last(__maps.maps)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }

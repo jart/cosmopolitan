@@ -98,7 +98,7 @@ void *MyPosixThread(void *arg) {
   struct sigaction sa;
   struct sigaltstack ss;
   ss.ss_flags = 0;
-  ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 4096;
+  ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 8192;
   ss.ss_sp = gc(malloc(ss.ss_size));
   ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
@@ -106,7 +106,7 @@ void *MyPosixThread(void *arg) {
   sa.sa_sigaction = CrashHandler;
   sigaction(SIGBUS, &sa, 0);
   sigaction(SIGSEGV, &sa, 0);
-  exit(StackOverflow(0));
+  exit(StackOverflow(1));
   return 0;
 }
 

@@ -22,7 +22,6 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/directmap.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/tree.h"

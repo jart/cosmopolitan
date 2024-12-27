@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
+#include "libc/runtime/runtime.h"
 
 privileged optimizesize bool32 kisdangerous(const void *addr) {
   bool32 res = true;
@@ -26,7 +27,8 @@ privileged optimizesize bool32 kisdangerous(const void *addr) {
     struct Map *map;
     if ((map = __maps_floor(addr)))
       if ((const char *)addr >= map->addr &&
-          (const char *)addr < map->addr + map->size)
+          (const char *)addr <
+              map->addr + ((map->size + __pagesize - 1) & -__pagesize))
         res = false;
   } else {
     res = false;

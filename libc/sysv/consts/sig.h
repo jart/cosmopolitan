@@ -2,45 +2,25 @@
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_
 COSMOPOLITAN_C_START_
 
-extern const int SIGABRT;
-extern const int SIGALRM;
 extern const int SIGBUS;
 extern const int SIGTHR;
 extern const int SIGCHLD;
 extern const int SIGCONT;
 extern const int SIGEMT;
-extern const int SIGFPE;
-extern const int SIGHUP;
-extern const int SIGILL;
 extern const int SIGINFO;
-extern const int SIGINT;
 extern const int SIGIO;
-extern const int SIGIOT;
-extern const int SIGKILL;
-extern const int SIGPIPE;
 extern const int SIGPOLL;
-extern const int SIGPROF;
 extern const int SIGPWR;
-extern const int SIGQUIT;
 extern const int SIGRTMAX;
 extern const int SIGRTMIN;
-extern const int SIGSEGV;
 extern const int SIGSTKFLT;
 extern const int SIGSTOP;
 extern const int SIGSYS;
-extern const int SIGTERM;
-extern const int SIGTRAP;
 extern const int SIGTSTP;
-extern const int SIGTTIN;
-extern const int SIGTTOU;
 extern const int SIGUNUSED;
 extern const int SIGURG;
 extern const int SIGUSR1;
 extern const int SIGUSR2;
-extern const int SIGVTALRM;
-extern const int SIGWINCH;
-extern const int SIGXCPU;
-extern const int SIGXFSZ;
 
 extern const int SIG_BLOCK;
 extern const int SIG_SETMASK;

@@ -33,6 +33,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * @fileoverview XNU kernel callback normalization.
@@ -513,6 +514,7 @@ privileged void __sigenter_xnu(int sig, struct siginfo_xnu *xnuinfo,
     flags = __sighandflags[sig];
 
 #ifdef __aarch64__
+
     // xnu silicon claims to support sa_resethand but it does nothing
     // this can be tested, since it clears the bit from flags as well
     if (flags & SA_RESETHAND) {
@@ -521,6 +523,13 @@ privileged void __sigenter_xnu(int sig, struct siginfo_xnu *xnuinfo,
       __sighandflags[sig] = 0;
       __sighandrvas[sig] = 0;
     }
+
+    // unlike amd64, the instruction pointer on arm64 isn't advanced
+    // past the debugger breakpoint instruction automatically. we need
+    // this so execution can resume after __builtin_trap().
+    if (xnuctx && sig == SIGTRAP)
+      xnuctx->uc_mcontext->__ss.__pc += 4;
+
 #endif
 
     if (~flags & SA_SIGINFO) {

@@ -57,8 +57,7 @@ __tailcontext:
 	mov	80(%rax),%rsp
 	push	88(%rax)
 	mov	24(%rax),%rdi
-
-	xor	%eax,%eax
+	mov	64(%rax),%rax
 	ret
 
 #elif defined(__aarch64__)

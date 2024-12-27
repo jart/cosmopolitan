@@ -113,7 +113,7 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
  *     struct sigaction sa;
  *     struct sigaltstack ss;
  *     ss.ss_flags = 0;
- *     ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 8192;
+ *     ss.ss_size = sysconf(_SC_SIGSTKSZ);
  *     ss.ss_sp = malloc(ss.ss_size);
  *     sigaltstack(&ss, 0);
  *     sigemptyset(&sa.ss_mask);
@@ -121,11 +121,16 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
  *     sa.sa_handler = OnStackOverflow;
  *     sigaction(SIGSEGV, &sa, 0);
  *
+ * Your stack size should be `sysconf(_SC_SIGSTKSZ)` which should be
+ * somewhere in the ballpark of 32kb to 64kb. You should go no lower
+ * than `sysconf(_SC_MINSIGSTKSZ) + 2048` which could be 4kb - 34kb.
+ * Cosmo also defines `SIGSTKSZ` as 32kb, which should also be safe.
+ *
  * @param neu if non-null will install new signal alt stack
  * @param old if non-null will receive current signal alt stack
  * @return 0 on success, or -1 w/ errno
  * @raise EFAULT if bad memory was supplied
- * @raise ENOMEM if `neu->ss_size` is less than `MINSIGSTKSZ`
+ * @raise ENOMEM if `neu->ss_size` is beneath `sysconf(_SC_MINSIGSTKSZ)`
  */
 int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;

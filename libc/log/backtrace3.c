@@ -25,10 +25,12 @@
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.h"
+#include "libc/mem/alloca.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
@@ -50,9 +52,10 @@ dontinstrument int PrintBacktraceUsingSymbols(int fd,
                                               const struct StackFrame *bp,
                                               struct SymbolTable *st) {
   size_t gi;
+  char *cxxbuf;
   intptr_t addr;
   const char *name;
-  char cxxbuf[3000];
+  int cxxbufsize = 0;
   int i, symbol, addend;
   struct Garbages *garbage;
   const struct StackFrame *frame;
@@ -91,14 +94,25 @@ dontinstrument int PrintBacktraceUsingSymbols(int fd,
       symbol = 0;
       addend = 0;
     }
-    if ((name = __get_symbol_name(st, symbol)) &&
-        (_weaken(__is_mangled) && _weaken(__is_mangled)(name))) {
-      _weaken(__demangle)(cxxbuf, name, sizeof(cxxbuf));
-      kprintf("%012lx %lx %s%+d\n", frame, addr, cxxbuf, addend);
-      name = cxxbuf;
-    } else {
-      kprintf("%012lx %lx %s%+d\n", frame, addr, name, addend);
+    name = __get_symbol_name(st, symbol);
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+    // decipher c++ symbols if there's enough stack memory
+    // stack size requirement assumes max_depth's still 20
+    if (_weaken(__demangle) &&    //
+        _weaken(__is_mangled) &&  //
+        _weaken(__is_mangled)(name)) {
+      if (!cxxbufsize)
+        if ((cxxbufsize = __get_safe_size(8192, 8192)) >= 512) {
+          cxxbuf = alloca(cxxbufsize);
+          CheckLargeStackAllocation(cxxbuf, sizeof(cxxbufsize));
+        }
+      if (cxxbufsize >= 512)
+        if (_weaken(__demangle)(cxxbuf, name, cxxbufsize) != -1)
+          name = cxxbuf;
     }
+#pragma GCC pop_options
+    kprintf("%012lx %lx %s%+d\n", frame, addr, name, addend);
   }
   return 0;
 }

@@ -130,7 +130,8 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
     ++j;
   }
   t->count = j;
-  munmap(stp, sizeof(const Elf64_Sym *) * n);
+  if (!IsWindows())
+    munmap(stp, sizeof(const Elf64_Sym *) * n);
   munmap(map, filesize);
   close(fd);
   return t;
@@ -144,9 +145,8 @@ RaiseEnoexec:
   errno = ENOEXEC;
 SystemError:
   STRACE("OpenSymbolTable()% m");
-  if (map != MAP_FAILED) {
+  if (map != MAP_FAILED)
     munmap(map, filesize);
-  }
   close(fd);
   return 0;
 }
