@@ -404,16 +404,17 @@ static void OpenInput(const char *path) {
 
 static void ReplaceString(struct Param *param) {
   Elf64_Xword len = strnlen(param->roloc, roend - param->roloc);
-  char *targstr = Malloc(len);
-  for (Elf64_Xword i = 0; i < len; ++i)
+  char *targstr = Malloc(len + 1);
+  for (Elf64_Xword i = 0; i < len + 1; ++i)
     targstr[i] = 0;
-  strcat(targstr, param->to_string);
+  strcpy(targstr, param->to_string);
   strcat(targstr, param->roloc + param->from_len);
 #ifdef MODE_DBG
   kprintf("'%s' should be '%s'\n", param->roloc, targstr);
 #endif
   strcpy(param->roloc, targstr);
   param->roloc += len;
+  free(targstr);
 }
 
 int main(int argc, char *argv[]) {
