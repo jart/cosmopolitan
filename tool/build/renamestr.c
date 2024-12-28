@@ -39,14 +39,14 @@
   "https://github.com/jart/cosmopolitan\n"
 
 #define MANUAL                                                \
-  " -f FROM -t TO -o OUTPUT INPUT \n"                         \
+  " -f FROM -t TO INPUT \n"                                   \
   "\n"                                                        \
   "DESCRIPTION\n"                                             \
   "\n"                                                        \
-  "  string replacement in ELF binary .rodata\n"              \
+  "  in-place string replacement in ELF binary .rodata\n"     \
   "\n"                                                        \
   "  this program may be used to replace strings in the\n"    \
-  "  .rodata sections of ELF binaries.\n"                     \
+  "  .rodata sections of ELF binaries, in-place.\n"           \
   "\n"                                                        \
   "FLAGS\n"                                                   \
   "\n"                                                        \
@@ -59,8 +59,6 @@
   "  -t TO      target string replacement. must be shorter\n" \
   "             than FROM string for replacement to work\n"   \
   "\n"                                                        \
-  "  -o OUTPUT  output file\n"                                \
-  "\n"                                                        \
   "  INPUT      ELF binary containing strings to replace\n"   \
   "\n"
 
@@ -69,8 +67,7 @@ static const char *exepath;
 static Elf64_Shdr *rodata;
 static char *rostart;
 static char *roend;
-static const char *outpath;
-static int outfd;
+static int exefd;
 
 static wontreturn void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
@@ -108,8 +105,8 @@ static void Pwrite(const void *data, size_t size, uint64_t offset) {
   ssize_t rc;
   const char *p, *e;
   for (p = data, e = p + size; p < e; p += (size_t)rc, offset += (size_t)rc) {
-    if ((rc = pwrite(outfd, p, e - p, offset)) == -1) {
-      DieSys(outpath);
+    if ((rc = pwrite(exefd, p, e - p, offset)) == -1) {
+      DieSys(exepath);
     }
   }
 }
@@ -135,19 +132,13 @@ static void GetOpts(int argc, char *argv[]) {
   bool partial = false;
   params.n = 0;
   struct Param *param;
-  while ((opt = getopt(argc, argv, "hvf:t:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvf:t:")) != -1) {
     if (params.n >= ARRAYLEN(params.p)) {
       param = NULL;
     } else {
       param = &(params.p[params.n]);
     }
     switch (opt) {
-      case 'o':
-        if (outpath) {
-          Die(prog, "outpath already provided");
-        }
-        outpath = optarg;
-        break;
       case 'f':
         if (!param) {
           Die(prog, "too many replacements provided");
@@ -198,9 +189,6 @@ static void GetOpts(int argc, char *argv[]) {
     if (!params.p[i].to_string) {
       Die(prog, "need to_string for replacement");
     }
-  }
-  if (!outpath) {
-    Die(prog, "need outpath to write file");
   }
   if (optind == argc) {
     Die(prog, "missing input argument");
@@ -389,7 +377,7 @@ static struct Input input;
 
 static void OpenInput(const char *path) {
   int fd;
-  if ((fd = open(path, O_RDONLY)) == -1)
+  if ((fd = open(path, O_RDWR)) == -1)
     DieSys(path);
   if ((input.size = lseek(fd, 0, SEEK_END)) == -1)
     DieSys(path);
@@ -399,7 +387,7 @@ static void OpenInput(const char *path) {
     DieSys(path);
   if (!IsElf64Binary(input.elf, input.size))
     Die(path, "not an elf64 binary");
-  close(fd);
+  exefd = fd;
 }
 
 static void ReplaceString(struct Param *param) {
@@ -473,11 +461,8 @@ int main(int argc, char *argv[]) {
   }
 #undef NEXT_ROLOC
 
-  if ((outfd = creat(outpath, 0755)) == -1) {
-    Die(prog, "unable to open file for writing");
-  }
   Pwrite(input.map, input.size, 0);
-  if (close(outfd)) {
+  if (close(exefd)) {
     Die(prog, "unable to close file after writing");
   }
 
