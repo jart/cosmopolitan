@@ -449,14 +449,8 @@ int main(int argc, char *argv[]) {
     struct Param *param = &(params.p[i]);
     for (param->roloc = NEXT_ROLOC(param); param->roloc != NULL;
          param->roloc = NEXT_ROLOC(param)) {
-      if (param->roloc == rostart ||
-          param->roloc[-1] == '\0') {  // confirm start of string
         ReplaceString(param);
         param->count++;
-      } else {
-        // in the middle of a string, so move forward
-        param->roloc += param->from_len;
-      }
     }
   }
 #undef NEXT_ROLOC
