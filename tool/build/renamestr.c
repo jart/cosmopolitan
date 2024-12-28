@@ -413,7 +413,7 @@ static void ReplaceString(struct Param *param) {
   kprintf("'%s' should be '%s'\n", param->roloc, targstr);
 #endif
   strcpy(param->roloc, targstr);
-  param->roloc += len;
+  param->roloc += param->to_len;
   free(targstr);
 }
 
