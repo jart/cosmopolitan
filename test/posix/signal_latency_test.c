@@ -133,10 +133,6 @@ int main() {
   if (IsOpenbsd())
     return 0;
 
-  // TODO(jart): Why is this test flaky on Windows?
-  if (IsWindows())
-    return 0;
-
   // Block SIGUSR1 and SIGUSR2 in main thread
   sigset_t block_set;
   sigemptyset(&block_set);

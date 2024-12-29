@@ -492,9 +492,8 @@ textwindows void __sig_generate(int sig, int sic) {
     __sig_terminate(sig);
   }
   if (atomic_load_explicit(__sig.process, memory_order_acquire) &
-      (1ull << (sig - 1))) {
+      (1ull << (sig - 1)))
     return;
-  }
   _pthread_lock();
   for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
@@ -503,9 +502,8 @@ textwindows void __sig_generate(int sig, int sic) {
       continue;
     // we don't want to signal a thread that isn't running
     if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
-        kPosixThreadTerminated) {
+        kPosixThreadTerminated)
       continue;
-    }
     // choose this thread if it isn't masking sig
     if (!(atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
           (1ull << (sig - 1)))) {
@@ -756,11 +754,26 @@ HAIRY static uint32_t __sig_worker(void *arg) {
       __sig_generate(sig, SI_KERNEL);
     }
 
+    // unblock stalled i/o signals in threads
+    _pthread_lock();
+    for (struct Dll *e = dll_first(_pthread_list); e;
+         e = dll_next(_pthread_list, e)) {
+      struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
+      if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
+          kPosixThreadTerminated)
+        break;
+      if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
+          (atomic_load_explicit(&pt->tib->tib_sigpending,
+                                memory_order_acquire) &
+           ~atomic_load_explicit(&pt->pt_blkmask, memory_order_acquire)))
+        __sig_wake(pt, 0);
+    }
+    _pthread_unlock();
+
     // unblock stalled asynchronous signals in threads
-    struct PosixThread *mark;
     for (;;) {
       sigset_t pending, mask;
-      mark = 0;
+      struct PosixThread *mark = 0;
       _pthread_lock();
       for (struct Dll *e = dll_first(_pthread_list); e;
            e = dll_next(_pthread_list, e)) {
@@ -790,6 +803,7 @@ HAIRY static uint32_t __sig_worker(void *arg) {
         pending &= ~(1ull << (sig - 1));
         __sig_killer(mark, sig, SI_KERNEL);
       }
+      _pthread_unref(mark);
     }
 
     // wait until next scheduler quantum

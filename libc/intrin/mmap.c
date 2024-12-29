@@ -660,7 +660,7 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   if (!IsWindows()) {
     struct Map *deleted = 0;
     __maps_lock();
-    if (IsWindows() || fixedmode)
+    if (fixedmode)
       if (__muntrack(res.addr, size, &deleted, 0, 0))
         STRACE("memtrack compromised by hole punch oom");
     __maps_insert(map);
