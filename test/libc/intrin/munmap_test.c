@@ -53,24 +53,104 @@ TEST(munmap, test) {
   EXPECT_FALSE(testlib_memoryexists(p));
 }
 
+TEST(munmap, carveMemory) {
+  if (IsWindows())
+    return;  // needs carving
+  char *p;
+  int count = __maps.count;
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(__maps_randaddr(), gransz * 3, PROT_READ | PROT_WRITE,
+                      MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  EXPECT_EQ(count + 1, __maps.count);
+  count = __maps.count;
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p + gransz * 0, gransz));
+  EXPECT_EQ(count + 0, __maps.count);
+  count = __maps.count;
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p + gransz * 2, gransz));
+  EXPECT_EQ(count + 0, __maps.count);
+  count = __maps.count;
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(p + gransz * 1, gransz));
+  EXPECT_EQ(count - 1, __maps.count);
+  count = __maps.count;
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+}
+
 TEST(munmap, punchHoleInMemory) {
   if (IsWindows())
     return;  // needs carving
   char *p;
-  ASSERT_NE(MAP_FAILED, (p = mmap(0, gransz * 3, PROT_READ | PROT_WRITE,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  int count = __maps.count;
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(__maps_randaddr(), gransz * 3, PROT_READ | PROT_WRITE,
+                      MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  EXPECT_EQ(count + 1, __maps.count);
+  count = __maps.count;
   EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
   EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
   EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
   EXPECT_SYS(0, 0, munmap(p + gransz, gransz));
+  EXPECT_EQ(count + 1, __maps.count);
+  count = __maps.count;
   EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
   EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
   EXPECT_TRUE(testlib_memoryexists(p + gransz * 2));
   EXPECT_SYS(0, 0, munmap(p, gransz));
+  EXPECT_EQ(count - 1, __maps.count);
+  count = __maps.count;
   EXPECT_SYS(0, 0, munmap(p + gransz * 2, gransz));
+  EXPECT_EQ(count - 1, __maps.count);
+  count = __maps.count;
   EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
   EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
   EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+}
+
+TEST(munmap, fillHoleInMemory) {
+  if (IsWindows())
+    return;  // needs fungible memory
+  int count = __maps.count;
+  char *base = __maps_randaddr();
+  EXPECT_EQ(base + gransz * 0,
+            mmap(base + gransz * 0, gransz, PROT_READ | PROT_WRITE,
+                 MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+  EXPECT_EQ(count + 1, __maps.count);
+  count = __maps.count;
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 2));
+  EXPECT_EQ(base + gransz * 2,
+            mmap(base + gransz * 2, gransz, PROT_READ | PROT_WRITE,
+                 MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+  EXPECT_EQ(count + 1, __maps.count);
+  count = __maps.count;
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 2));
+  EXPECT_EQ(base + gransz * 1,
+            mmap(base + gransz * 1, gransz, PROT_READ | PROT_WRITE,
+                 MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+  EXPECT_EQ(count - 1, __maps.count);
+  count = __maps.count;
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 1));
+  EXPECT_TRUE(testlib_memoryexists(base + gransz * 2));
+  EXPECT_SYS(0, 0, munmap(base, gransz * 3));
+  EXPECT_EQ(count - 1, __maps.count);
+  count = __maps.count;
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(base + gransz * 2));
 }
 
 TEST(munmap, memoryHasHole) {

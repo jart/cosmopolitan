@@ -66,15 +66,15 @@ int __mprotect(char *addr, size_t size, int prot) {
   // normalize size
   size = (size + pagesz - 1) & -pagesz;
 
+  // test for signal handler reentry
+  if (__maps_held())
+    return edeadlk();
+
   // change mappings
   int rc = 0;
   bool found = false;
-  if (__maps_lock()) {
-    __maps_unlock();
-    return edeadlk();
-  }
+  __maps_lock();
   struct Map *map, *floor;
-StartOver:
   floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = __maps_next(map)) {
     char *map_addr = map->addr;
@@ -97,8 +97,6 @@ StartOver:
       size_t right = map_size - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
-        if (leftmap == MAPS_RETRY)
-          goto StartOver;
         if (!__mprotect_chunk(map_addr, left, prot, false)) {
           leftmap->addr = map_addr;
           leftmap->size = left;
@@ -129,8 +127,6 @@ StartOver:
       size_t right = map_addr + map_size - addr;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
-        if (leftmap == MAPS_RETRY)
-          goto StartOver;
         if (!__mprotect_chunk(map_addr + left, right, prot, false)) {
           leftmap->addr = map_addr;
           leftmap->size = left;
@@ -163,14 +159,8 @@ StartOver:
       size_t right = map_size - middle - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
-        if (leftmap == MAPS_RETRY)
-          goto StartOver;
         struct Map *midlmap;
         if ((midlmap = __maps_alloc())) {
-          if (midlmap == MAPS_RETRY) {
-            __maps_free(leftmap);
-            goto StartOver;
-          }
           if (!__mprotect_chunk(map_addr + left, middle, prot, false)) {
             leftmap->addr = map_addr;
             leftmap->size = left;
@@ -221,11 +211,20 @@ StartOver:
 /**
  * Modifies restrictions on virtual memory address range.
  *
- * @param addr needs to be 4kb aligned
- * @param prot can have PROT_{NONE,READ,WRITE,EXEC}
+ * POSIX doesn't require mprotect() to be async signal safe. However you
+ * should be able to call this from a signal handler safely, if you know
+ * that your signal will never interrupt the cosmopolitan memory manager
+ * and the only way you can ensure that, is by blocking signals whenever
+ * you call mmap(), munmap(), mprotect(), etc.
+ *
+ * @param addr needs to be page size aligned
+ * @param size is rounded up to the page size
+ * @param prot can be PROT_NONE or a combination of PROT_READ,
+ *     PROT_WRITE, and PROT_EXEC
  * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `size` is zero
  * @raise ENOMEM on tracking memory oom
- * @see mmap()
+ * @raise EDEADLK if called from signal handler interrupting mmap()
  */
 int mprotect(void *addr, size_t size, int prot) {
   int rc;

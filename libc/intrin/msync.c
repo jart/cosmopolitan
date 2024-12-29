@@ -38,6 +38,7 @@
  * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
  * @return 0 on success or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EDEADLK if called from signal handler interrupting mmap()
  * @raise EINTR if we needed to block and a signal was delivered instead
  * @raise EINVAL if `MS_SYNC` and `MS_ASYNC` were both specified
  * @raise EINVAL if unknown `flags` were passed

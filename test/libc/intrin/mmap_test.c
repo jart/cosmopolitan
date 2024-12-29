@@ -534,35 +534,31 @@ void BenchMmapPrivate(void) {
   void *p;
   p = mmap(0, (sizes[count] = rand() % (pagesz * 500)), PROT_READ | PROT_WRITE,
            MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (p == MAP_FAILED)
-    __builtin_trap();
+  ASSERT_NE(MAP_FAILED, p);
   ptrs[count] = p;
   ++count;
 }
 
 void BenchUnmap(void) {
   --count;
-  if (munmap(ptrs[count], sizes[count]))
-    __builtin_trap();
+  ASSERT_SYS(0, 0, munmap(ptrs[count], sizes[count]));
 }
 
 void BenchBigMmap(void) {
   void *p;
   p = mmap(0, 101 * 1024 * 1024, PROT_READ | PROT_WRITE,
            MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (p == MAP_FAILED)
-    __builtin_trap();
+  ASSERT_NE(MAP_FAILED, p);
   ptrs[count++] = p;
 }
 
 void BenchBigMunmap(void) {
-  if (munmap(ptrs[--count], 101 * 1024 * 1024))
-    __builtin_trap();
+  ASSERT_SYS(0, 0, munmap(ptrs[--count], 101 * 1024 * 1024));
 }
 
 TEST(mmap, bench) {
   BENCHMARK(N, 1, BenchMmapPrivate());
   BENCHMARK(N, 1, BenchUnmap());
-  // BENCHMARK(N, 1, BenchBigMmap());
-  // BENCHMARK(N, 1, BenchBigMunmap());
+  /* BENCHMARK(N, 1, BenchBigMmap()); */
+  /* BENCHMARK(N, 1, BenchBigMunmap()); */
 }

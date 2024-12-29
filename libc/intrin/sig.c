@@ -588,6 +588,22 @@ textwindows static void __sig_unmaskable(struct SignalFrame *sf) {
          DescribeBacktrace(
              (struct StackFrame *)sf->ctx.uc_mcontext.gregs[REG_RBP]));
 
+  // kills process if the user did not specify a handler for this signal
+  // we also don't allow unmaskable signals to be ignored by the program
+  if (sf->rva == (intptr_t)SIG_DFL ||  //
+      sf->rva == (intptr_t)SIG_IGN)
+    __sig_death(sf->si.si_signo, "uncaught ");
+
+  // we kill the process if this thread's signal mask blocks this signal
+  // then we block some extra signals while executing the signal handler
+  struct CosmoTib *tib = __get_tls();
+  sigset_t blocksigs = __sighandmask[sf->si.si_signo];
+  if (!(sf->flags & SA_NODEFER))
+    blocksigs |= 1ull << (sf->si.si_signo - 1);
+  sf->ctx.uc_sigmask = atomic_fetch_or(&tib->tib_sigmask, blocksigs);
+  if (sf->ctx.uc_sigmask & (1ull << (sf->si.si_signo - 1)))
+    __sig_death(sf->si.si_signo, "masked ");
+
   // this will restore the guard page if the user is using a sigaltstack
   if (sf->si.si_errno == kNtStatusGuardPageViolation)
     __sig_reguard(sf->si.si_addr);
@@ -620,22 +636,6 @@ __msabi HAIRY static unsigned __sig_crash(struct NtExceptionPointers *ep) {
   if (flags & SA_RESETHAND)
     __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
 
-  // kills process if the user did not specify a handler for this signal
-  // we also don't allow unmaskable signals to be ignored by the program
-  if (rva == (intptr_t)SIG_DFL ||  //
-      rva == (intptr_t)SIG_IGN)
-    __sig_death(sig, "uncaught ");
-
-  // we kill the process if this thread's signal mask blocks this signal
-  // then we block some extra signals while executing the signal handler
-  struct CosmoTib *tib = __get_tls();
-  sigset_t blocksigs = __sighandmask[sig];
-  if (!(flags & SA_NODEFER))
-    blocksigs |= 1ull << (sig - 1);
-  sigset_t oldsigmask = atomic_fetch_or(&tib->tib_sigmask, blocksigs);
-  if (oldsigmask & (1ull << (sig - 1)))
-    __sig_death(sig, "masked ");
-
   // we don't know if it is safe for signal handlers to longjmp() out of
   // win32 vectored exception handlers so let's copy the machine context
   // and tell win32 to restore control to __sig_unmaskable() which shall
@@ -643,6 +643,7 @@ __msabi HAIRY static unsigned __sig_crash(struct NtExceptionPointers *ep) {
   // was caused by stack overflow, then we're literally executing inside
   // the guard page so this code can't use more than 4096 bytes of stack
   uintptr_t sp;
+  struct CosmoTib *tib = __get_tls();
   if (__sig_should_use_altstack(flags, tib)) {
     sp = (uintptr_t)tib->tib_sigstack_addr + tib->tib_sigstack_size;
   } else {
@@ -654,7 +655,6 @@ __msabi HAIRY static unsigned __sig_crash(struct NtExceptionPointers *ep) {
   struct SignalFrame *sf = (struct SignalFrame *)sp;
   __repstosb(sf, 0, sizeof(*sf));
   __sig_translate(&sf->ctx, ep->ContextRecord);
-  sf->ctx.uc_sigmask = oldsigmask;
   sf->rva = rva;
   sf->flags = flags;
   sf->si.si_code = sic;

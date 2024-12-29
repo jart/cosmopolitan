@@ -5,17 +5,16 @@
 #include "libc/runtime/runtime.h"
 COSMOPOLITAN_C_START_
 
-#define MAPS_RETRY ((void *)-1)
-
 #define MAP_TREE_CONTAINER(e) TREE_CONTAINER(struct Map, tree, e)
 
 struct Map {
   char *addr;        /* granule aligned */
   size_t size;       /* must be nonzero */
   int64_t off;       /* ignore for anon */
-  int prot;          /* memory protects */
   int flags;         /* memory map flag */
+  char prot;         /* memory protects */
   bool iscow;        /* windows nt only */
+  bool precious;     /* windows nt only */
   bool readonlyfile; /* windows nt only */
   unsigned visited;  /* checks and fork */
   intptr_t hand;     /* windows nt only */
@@ -39,7 +38,11 @@ struct Maps {
   size_t pages;
   struct Map stack;
   struct Map guard;
-  struct Map spool[13];
+#ifdef MODE_DBG
+  struct Map spool[1];
+#else
+  struct Map spool[20];
+#endif
 };
 
 struct AddrSize {
@@ -49,8 +52,9 @@ struct AddrSize {
 
 extern struct Maps __maps;
 
+bool __maps_held(void);
 void __maps_init(void);
-bool __maps_lock(void);
+void __maps_lock(void);
 void __maps_check(void);
 void __maps_unlock(void);
 void *__maps_randaddr(void);

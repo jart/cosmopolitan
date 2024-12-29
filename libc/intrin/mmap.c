@@ -43,13 +43,16 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/lock.h"
+#include "libc/thread/tls.h"
 
 #define MMDEBUG  0
 #define MAX_SIZE 0x0ff800000000ul
 
 #define MAP_FIXED_NOREPLACE_linux 0x100000
 
-#define PGUP(x) (((x) + pagesz - 1) & -pagesz)
+#define PGUP(x) (((x) + __pagesize - 1) & -__pagesize)
+#define GRUP(x) (((x) + __gransize - 1) & -__gransize)
 
 #define MASQUE    0x00fffffffffffff8
 #define PTR(x)    ((uintptr_t)(x) & MASQUE)
@@ -88,7 +91,6 @@ privileged optimizespeed struct Map *__maps_floor(const char *addr) {
 }
 
 static bool __maps_overlaps(const char *addr, size_t size) {
-  int pagesz = __pagesize;
   struct Map *map, *floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = __maps_next(map))
     if (MAX(addr, map->addr) <
@@ -101,7 +103,6 @@ void __maps_check(void) {
 #if MMDEBUG
   size_t maps = 0;
   size_t pages = 0;
-  int pagesz = __pagesize;
   static unsigned mono;
   unsigned id = ++mono;
   for (struct Map *map = __maps_first(); map; map = __maps_next(map)) {
@@ -109,7 +110,7 @@ void __maps_check(void) {
     ASSERT(map->visited != id);
     ASSERT(map->size);
     map->visited = id;
-    pages += (map->size + pagesz - 1) / pagesz;
+    pages += (map->size + __pagesize - 1) / __pagesize;
     maps += 1;
     struct Map *next;
     if ((next = __maps_next(map))) {
@@ -123,110 +124,98 @@ void __maps_check(void) {
 #endif
 }
 
-static int __muntrack(char *addr, size_t size, int pagesz,
-                      struct Map **deleted) {
+static int __muntrack(char *addr, size_t size, struct Map **deleted,
+                      struct Map **untracked, struct Map temp[2]) {
   int rc = 0;
+  size_t ti = 0;
   struct Map *map;
   struct Map *next;
   struct Map *floor;
-StartOver:
+  size = PGUP(size);
   floor = __maps_floor(addr);
   for (map = floor; map && map->addr <= addr + size; map = next) {
     next = __maps_next(map);
     char *map_addr = map->addr;
     size_t map_size = map->size;
-    if (!(MAX(addr, map_addr) <
-          MIN(addr + PGUP(size), map_addr + PGUP(map_size))))
+    if (!(MAX(addr, map_addr) < MIN(addr + size, map_addr + PGUP(map_size))))
       continue;
-    if (addr <= map_addr && addr + PGUP(size) >= map_addr + PGUP(map_size)) {
+    if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
+      if (map->precious)
+        continue;
       // remove mapping completely
       tree_remove(&__maps.maps, &map->tree);
       map->freed = *deleted;
       *deleted = map;
-      __maps.pages -= (map_size + pagesz - 1) / pagesz;
+      __maps.pages -= (map_size + __pagesize - 1) / __pagesize;
       __maps.count -= 1;
       __maps_check();
     } else if (IsWindows()) {
       STRACE("you can't carve up memory maps on windows ;_;");
-      rc = einval();
+      rc = enotsup();
     } else if (addr <= map_addr) {
       // shave off lefthand side of mapping
-      ASSERT(addr + PGUP(size) < map_addr + PGUP(map_size));
-      size_t left = addr + PGUP(size) - map_addr;
+      ASSERT(addr + size < map_addr + PGUP(map_size));
+      size_t left = addr + size - map_addr;
       size_t right = map_size - left;
       ASSERT(right > 0);
       ASSERT(left > 0);
-      struct Map *leftmap;
-      if ((leftmap = __maps_alloc())) {
-        if (leftmap == MAPS_RETRY)
-          goto StartOver;
-        map->addr += left;
-        map->size = right;
-        if (!(map->flags & MAP_ANONYMOUS))
-          map->off += left;
-        __maps.pages -= (left + pagesz - 1) / pagesz;
-        leftmap->addr = map_addr;
-        leftmap->size = left;
-        leftmap->freed = *deleted;
-        *deleted = leftmap;
-        __maps_check();
-      } else {
-        rc = -1;
+      map->addr += left;
+      map->size = right;
+      if (!(map->flags & MAP_ANONYMOUS))
+        map->off += left;
+      __maps.pages -= (left + __pagesize - 1) / __pagesize;
+      if (untracked) {
+        ASSERT(ti < 2);
+        temp[ti].addr = map_addr;
+        temp[ti].size = left;
+        temp[ti].freed = *untracked;
+        *untracked = temp;
+        ++ti;
       }
-    } else if (addr + PGUP(size) >= map_addr + PGUP(map_size)) {
+      __maps_check();
+    } else if (addr + size >= map_addr + PGUP(map_size)) {
       // shave off righthand side of mapping
       size_t left = addr - map_addr;
       size_t right = map_addr + map_size - addr;
-      struct Map *rightmap;
-      if ((rightmap = __maps_alloc())) {
-        if (rightmap == MAPS_RETRY)
-          goto StartOver;
-        map->size = left;
-        __maps.pages -= (right + pagesz - 1) / pagesz;
-        rightmap->addr = addr;
-        rightmap->size = right;
-        rightmap->freed = *deleted;
-        *deleted = rightmap;
-        __maps_check();
-      } else {
-        rc = -1;
+      map->size = left;
+      __maps.pages -= (right + __pagesize - 1) / __pagesize;
+      if (untracked) {
+        ASSERT(ti < 2);
+        temp[ti].addr = addr;
+        temp[ti].size = right;
+        temp[ti].freed = *untracked;
+        *untracked = temp;
+        ++ti;
       }
+      __maps_check();
     } else {
       // punch hole in mapping
       size_t left = addr - map_addr;
-      size_t middle = PGUP(size);
+      size_t middle = size;
       size_t right = map_size - middle - left;
       struct Map *leftmap;
       if ((leftmap = __maps_alloc())) {
-        if (leftmap == MAPS_RETRY)
-          goto StartOver;
-        struct Map *middlemap;
-        if ((middlemap = __maps_alloc())) {
-          if (middlemap == MAPS_RETRY) {
-            __maps_free(leftmap);
-            goto StartOver;
-          }
-          leftmap->addr = map_addr;
-          leftmap->size = left;
-          leftmap->off = map->off;
-          leftmap->prot = map->prot;
-          leftmap->flags = map->flags;
-          map->addr += left + middle;
-          map->size = right;
-          if (!(map->flags & MAP_ANONYMOUS))
-            map->off += left + middle;
-          tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);
-          __maps.pages -= (middle + pagesz - 1) / pagesz;
-          __maps.count += 1;
-          middlemap->addr = addr;
-          middlemap->size = size;
-          middlemap->freed = *deleted;
-          *deleted = middlemap;
-          __maps_check();
-        } else {
-          __maps_free(leftmap);
-          rc = -1;
+        leftmap->addr = map_addr;
+        leftmap->size = left;
+        leftmap->off = map->off;
+        leftmap->prot = map->prot;
+        leftmap->flags = map->flags;
+        map->addr += left + middle;
+        map->size = right;
+        if (!(map->flags & MAP_ANONYMOUS))
+          map->off += left + middle;
+        tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);
+        __maps.pages -= (middle + __pagesize - 1) / __pagesize;
+        __maps.count += 1;
+        if (untracked) {
+          ASSERT(ti < 2);
+          temp[ti].addr = addr;
+          temp[ti].size = size;
+          temp[ti].freed = *untracked;
+          *untracked = temp;
+          ++ti;
         }
+        __maps_check();
       } else {
         rc = -1;
       }
@@ -258,13 +247,33 @@ static void __maps_free_all(struct Map *list) {
   }
 }
 
-static int __maps_funge_prot(int prot) {
-  prot &= ~MAP_FIXED;
-  prot &= ~MAP_FIXED_NOREPLACE;
-  return prot;
+static void __maps_insert_all(struct Map *list) {
+  struct Map *next;
+  for (struct Map *map = list; map; map = next) {
+    next = map->freed;
+    __maps_insert(map);
+  }
+}
+
+static int __maps_destroy_all(struct Map *list) {
+  int rc = 0;
+  for (struct Map *map = list; map; map = map->freed) {
+    if (!IsWindows()) {
+      if (sys_munmap(map->addr, map->size))
+        rc = -1;
+    } else if (map->hand != -1) {
+      if (!UnmapViewOfFile(map->addr))
+        rc = -1;
+      if (!CloseHandle(map->hand))
+        rc = -1;
+    }
+  }
+  return rc;
 }
 
 static int __maps_funge_flags(int flags) {
+  flags &= ~MAP_FIXED;
+  flags &= ~MAP_FIXED_NOREPLACE;
   if ((flags & MAP_TYPE) == MAP_SHARED_VALIDATE) {
     flags &= ~MAP_TYPE;
     flags |= MAP_SHARED;
@@ -280,20 +289,20 @@ static bool __maps_fungible(const struct Map *map) {
 }
 
 static bool __maps_adjacent(const struct Map *x, const struct Map *y) {
-  char *a = x->addr + ((x->size + __pagesize - 1) & -__pagesize);
+  char *a = x->addr + PGUP(x->size);
   char *b = y->addr;
   ASSERT(a <= b);
   return a == b;
 }
 
 static bool __maps_mergeable(const struct Map *x, const struct Map *y) {
+  if (!__maps_adjacent(x, y))
+    return false;
   if (!__maps_fungible(x))
     return false;
   if (!__maps_fungible(y))
     return false;
-  if (!__maps_adjacent(x, y))
-    return false;
-  if (__maps_funge_prot(x->prot) != __maps_funge_prot(y->prot))
+  if (x->prot != y->prot)
     return false;
   if (__maps_funge_flags(x->flags) != __maps_funge_flags(y->flags))
     return false;
@@ -304,7 +313,6 @@ void __maps_insert(struct Map *map) {
   struct Map *left, *right;
   ASSERT(map->size);
   ASSERT(!__maps_overlaps(map->addr, map->size));
-  map->flags &= MAP_TYPE | MAP_ANONYMOUS | MAP_NOFORK;
   __maps.pages += (map->size + __pagesize - 1) / __pagesize;
 
   // find adjacent mappings
@@ -317,8 +325,7 @@ void __maps_insert(struct Map *map) {
   // avoid insert by making mapping on left bigger
   if (left)
     if (__maps_mergeable(left, map)) {
-      left->size += __pagesize - 1;
-      left->size &= -__pagesize;
+      left->size = PGUP(left->size);
       left->size += map->size;
       __maps_free(map);
       map = 0;
@@ -327,8 +334,7 @@ void __maps_insert(struct Map *map) {
   // avoid insert by making mapping on right bigger
   if (map && right)
     if (__maps_mergeable(map, right)) {
-      map->size += __pagesize - 1;
-      map->size &= -__pagesize;
+      map->size = PGUP(map->size);
       right->addr -= map->size;
       right->size += map->size;
       __maps_free(map);
@@ -338,14 +344,12 @@ void __maps_insert(struct Map *map) {
   // check if we filled a hole
   if (!map && left && right)
     if (__maps_mergeable(left, right)) {
-      left->size += __pagesize - 1;
-      left->size &= -__pagesize;
+      left->size = PGUP(left->size);
       right->addr -= left->size;
       right->size += left->size;
       tree_remove(&__maps.maps, &left->tree);
-      __maps.count -= 1;
       __maps_free(left);
-      map = 0;
+      __maps.count -= 1;
     }
 
   // otherwise just insert
@@ -356,26 +360,19 @@ void __maps_insert(struct Map *map) {
   __maps_check();
 }
 
-static void __maps_track_insert(struct Map *map, char *addr, size_t size,
-                                uintptr_t map_handle, int prot, int flags) {
+// adds interval to rbtree (no sys_mmap)
+bool __maps_track(char *addr, size_t size, int prot, int flags) {
+  struct Map *map;
+  if (!(map = __maps_alloc()))
+    return false;
   map->addr = addr;
   map->size = size;
   map->prot = prot;
   map->flags = flags;
-  map->hand = map_handle;
+  map->hand = -1;
   __maps_lock();
   __maps_insert(map);
   __maps_unlock();
-}
-
-// adds interval to rbtree (no sys_mmap)
-bool __maps_track(char *addr, size_t size, int prot, int flags) {
-  struct Map *map;
-  do {
-    if (!(map = __maps_alloc()))
-      return false;
-  } while (map == MAPS_RETRY);
-  __maps_track_insert(map, addr, size, -1, prot, flags);
   return true;
 }
 
@@ -383,7 +380,7 @@ bool __maps_track(char *addr, size_t size, int prot, int flags) {
 int __maps_untrack(char *addr, size_t size) {
   struct Map *deleted = 0;
   __maps_lock();
-  int rc = __muntrack(addr, size, __pagesize, &deleted);
+  int rc = __muntrack(addr, size, &deleted, 0, 0);
   __maps_unlock();
   __maps_free_all(deleted);
   return rc;
@@ -399,29 +396,22 @@ struct Map *__maps_alloc(void) {
       return map;
     pthread_pause_np();
   }
-  void *mark;
   int size = 65536;
-  __maps_lock();
-  do {
-    // we're creating sudden surprise memory. the user might be in the
-    // middle of carefully planning a fixed memory structure. we don't
-    // want the system allocator to put our surprise memory inside it.
-    mark = __maps_randaddr();
-  } while (__maps_overlaps(mark, size));
-  struct DirectMap sys = sys_mmap(mark, size, PROT_READ | PROT_WRITE,
-                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (sys.addr == MAP_FAILED) {
-    __maps_unlock();
+  // we're creating sudden surprise memory. the user might be in the
+  // middle of carefully planning a fixed memory structure. we don't
+  // want the system allocator to put our surprise memory inside it,
+  // and we also want to avoid the chances of accidentally unmapping
+  struct DirectMap sys =
+      sys_mmap(__maps_randaddr(), size, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (sys.addr == MAP_FAILED)
     return 0;
-  }
   map = sys.addr;
-  __maps_track_insert(map, sys.addr, size, sys.maphandle,
-                      PROT_READ | PROT_WRITE,
-                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
-  __maps_unlock();
+  if (IsWindows())
+    CloseHandle(sys.maphandle);
   for (int i = 1; i < size / sizeof(struct Map); ++i)
     __maps_free(map + i);
-  return MAPS_RETRY;
+  return map;
 }
 
 static int __munmap(char *addr, size_t size) {
@@ -431,41 +421,33 @@ static int __munmap(char *addr, size_t size) {
       !size || (uintptr_t)addr + size < size)
     return einval();
 
+  // test for signal handler tragedy
+  if (__maps_held())
+    return edeadlk();
+
   // lock the memory manager
   __maps_lock();
   __maps_check();
 
   // normalize size
   // abort if size doesn't include all pages in granule
-  size_t pgup_size = (size + __pagesize - 1) & -__pagesize;
-  size_t grup_size = (size + __gransize - 1) & -__gransize;
-  if (grup_size > pgup_size)
-    if (__maps_overlaps(addr + pgup_size, grup_size - pgup_size)) {
+  if (GRUP(size) > PGUP(size))
+    if (__maps_overlaps(addr + PGUP(size), GRUP(size) - PGUP(size))) {
       __maps_unlock();
       return einval();
     }
 
   // untrack mappings
   int rc;
+  struct Map temp[2];
   struct Map *deleted = 0;
-  rc = __muntrack(addr, pgup_size, __pagesize, &deleted);
+  struct Map *untracked = 0;
+  rc = __muntrack(addr, size, &deleted, &untracked, temp);
   __maps_unlock();
 
-  // delete mappings
-  for (struct Map *map = deleted; map; map = map->freed) {
-    if (!IsWindows()) {
-      if (sys_munmap(map->addr, map->size))
-        rc = -1;
-    } else if (map->hand != -1) {
-      ASSERT(!((uintptr_t)map->addr & (__gransize - 1)));
-      if (!UnmapViewOfFile(map->addr))
-        rc = -1;
-      if (!CloseHandle(map->hand))
-        rc = -1;
-    }
-  }
-
-  // freed mappings
+  // ask operating system to remove mappings
+  rc |= __maps_destroy_all(untracked);
+  rc |= __maps_destroy_all(deleted);
   __maps_free_all(deleted);
 
   return rc;
@@ -485,14 +467,13 @@ void *__maps_randaddr(void) {
 static void *__maps_pickaddr(size_t size) {
   char *addr = 0;
   struct Map *map, *prev;
-  size += __gransize - 1;
-  size &= -__gransize;
+  size = GRUP(size);
   if ((map = __maps_last())) {
     // choose address beneath higher mapping
     for (; map; map = prev) {
       char *min = (char *)(intptr_t)__gransize;
       if ((prev = __maps_prev(map)))
-        min = prev->addr + ((prev->size + __gransize - 1) & -__gransize);
+        min = prev->addr + GRUP(prev->size);
       if (map->addr > min &&  //
           map->addr - min >= size) {
         addr = map->addr - size;
@@ -502,7 +483,7 @@ static void *__maps_pickaddr(size_t size) {
     // append if existing maps are too dense
     if (!addr) {
       map = __maps_last();
-      addr = map->addr + ((map->size + __gransize - 1) & -__gransize);
+      addr = map->addr + GRUP(map->size);
       intptr_t end = (intptr_t)addr;
       if (ckd_add(&end, end, size))
         return 0;
@@ -518,7 +499,12 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
                          int64_t off) {
 
   // validate file map args
-  if (!(flags & MAP_ANONYMOUS)) {
+  if (flags & MAP_ANONYMOUS) {
+    // some operating systems will complain unless we do this
+    fd = -1;
+    off = 0;
+  } else {
+    // validate arguments for file mapping
     if (off & (__gransize - 1))
       return (void *)einval();
     if (IsWindows()) {
@@ -531,10 +517,8 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
 
   // allocate Map object
   struct Map *map;
-  do {
-    if (!(map = __maps_alloc()))
-      return MAP_FAILED;
-  } while (map == MAPS_RETRY);
+  if (!(map = __maps_alloc()))
+    return MAP_FAILED;
 
   // polyfill nuances of fixed mappings
   int sysflags = flags;
@@ -588,18 +572,29 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
         }
       } else {
         // remove existing mappings and their tracking objects
-        if (__munmap(addr, size)) {
+        struct Map *deleted = 0;
+        if (__muntrack(addr, size, &deleted, 0, 0)) {
+          __maps_insert_all(deleted);
           __maps_unlock();
           __maps_free(map);
-          return (void *)enomem();
+          return MAP_FAILED;
+        }
+        int rc = __maps_destroy_all(deleted);
+        __maps_free_all(deleted);
+        if (rc) {
+          __maps_unlock();
+          __maps_free(map);
+          return (void *)eperm();
         }
       }
       // claims intended interval while still holding the lock
-      if (!__maps_track(addr, size, 0, 0)) {
-        __maps_unlock();
-        __maps_free(map);
-        return (void *)enomem();
-      }
+      map->addr = addr;
+      map->size = size;
+      map->prot = 0;
+      map->flags = 0;
+      map->hand = -1;
+      map->precious = true;
+      __maps_insert(map);
       __maps_unlock();
     }
 
@@ -611,15 +606,19 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
 
     // handle failure
     if (IsWindows()) {
+      // untrack reservation
+      __maps_lock();
+      tree_remove(&__maps.maps, &map->tree);
+      __maps.pages -= (map->size + __pagesize - 1) / __pagesize;
+      map->precious = false;
+      __maps_unlock();
       if (errno == EADDRNOTAVAIL) {
         // we've encountered mystery memory
         if (fixedmode) {
           // TODO(jart): Use VirtualQuery() to destroy mystery memory.
-          __maps_untrack(addr, size);
           errno = ENOMEM;
         } else if (noreplace) {
           // we can't try again with a different address in this case
-          __maps_untrack(addr, size);
           errno = EEXIST;
         } else {
           // we shall leak the tracking object since it should at least
@@ -629,8 +628,6 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
           addr = 0;
           continue;
         }
-      } else {
-        __maps_untrack(addr, size);
       }
     }
     __maps_free(map);
@@ -652,6 +649,7 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   map->prot = prot;
   map->flags = flags;
   map->hand = res.maphandle;
+  map->precious = false;
   if (IsWindows()) {
     map->iscow = (flags & MAP_TYPE) != MAP_SHARED && fd != -1;
     map->readonlyfile = (flags & MAP_TYPE) == MAP_SHARED && fd != -1 &&
@@ -659,11 +657,18 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   }
 
   // track map object
-  __maps_lock();
-  if (IsWindows() || fixedmode)
-    __maps_untrack(res.addr, size);
-  __maps_insert(map);
-  __maps_unlock();
+  if (!IsWindows()) {
+    struct Map *deleted = 0;
+    __maps_lock();
+    if (IsWindows() || fixedmode)
+      if (__muntrack(res.addr, size, &deleted, 0, 0))
+        STRACE("memtrack compromised by hole punch oom");
+    __maps_insert(map);
+    __maps_unlock();
+    __maps_free_all(deleted);
+  } else {
+    atomic_thread_fence(memory_order_release);
+  }
 
   return res.addr;
 }
@@ -686,6 +691,10 @@ static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
   if (__maps.count * __pagesize + size > __virtualmax)
     return (void *)enomem();
 
+  // test for signal handler reentry
+  if (__maps_held())
+    return (void *)edeadlk();
+
   // create memory mappping
   if (!__isfdkind(fd, kFdZip)) {
     res = __mmap_impl(addr, size, prot, flags, fd, off);
@@ -699,40 +708,32 @@ static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
 }
 
 static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
-                           int flags, char *new_addr, int pagesz, int gransz) {
+                           int flags, char *new_addr) {
 
   // normalize and validate old size
   // abort if size doesn't include all pages in granule
-  size_t pgup_old_size = (old_size + pagesz - 1) & -pagesz;
-  size_t grup_old_size = (old_size + gransz - 1) & -gransz;
-  if (grup_old_size > pgup_old_size)
-    if (__maps_overlaps(old_addr + pgup_old_size,
-                        grup_old_size - pgup_old_size))
+  if (GRUP(old_size) > PGUP(old_size))
+    if (__maps_overlaps(old_addr + PGUP(old_size),
+                        GRUP(old_size) - PGUP(old_size)))
       return (void *)einval();
-  old_size = pgup_old_size;
 
   // validate new size
   // abort if size doesn't include all pages in granule
-  if (flags & MREMAP_FIXED) {
-    size_t pgup_new_size = (new_size + pagesz - 1) & -pagesz;
-    size_t grup_new_size = (new_size + gransz - 1) & -gransz;
-    if (grup_new_size > pgup_new_size)
-      if (__maps_overlaps(new_addr + pgup_new_size,
-                          grup_new_size - pgup_new_size))
+  if (flags & MREMAP_FIXED)
+    if (GRUP(new_size) > PGUP(new_size))
+      if (__maps_overlaps(new_addr + PGUP(new_size),
+                          GRUP(new_size) - PGUP(new_size)))
         return (void *)einval();
-  }
 
   // allocate object for tracking new mapping
   struct Map *map;
-  do {
-    if (!(map = __maps_alloc()))
-      return (void *)enomem();
-  } while (map == MAPS_RETRY);
+  if (!(map = __maps_alloc()))
+    return (void *)enomem();
 
   // check old interval is fully contained within one mapping
   struct Map *old_map;
   if (!(old_map = __maps_floor(old_addr)) ||
-      old_addr + old_size > old_map->addr + PGUP(old_map->size) ||
+      old_addr + PGUP(old_size) > old_map->addr + PGUP(old_map->size) ||
       old_addr < old_map->addr) {
     __maps_free(map);
     return (void *)efault();
@@ -777,7 +778,7 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
 
   // untrack old mapping
   struct Map *deleted = 0;
-  __muntrack(old_addr, old_size, pagesz, &deleted);
+  __muntrack(old_addr, old_size, &deleted, 0, 0);
   __maps_free_all(deleted);
 
   // track map object
@@ -794,9 +795,6 @@ static void *__mremap_impl(char *old_addr, size_t old_size, size_t new_size,
 static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
                       int flags, char *new_addr) {
 
-  int pagesz = __pagesize;
-  int gransz = __gransize;
-
   // kernel support
   if (!IsLinux() && !IsNetbsd())
     return (void *)enosys();
@@ -810,17 +808,16 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
   // we support these flags
   if (flags & ~(MREMAP_MAYMOVE | MREMAP_FIXED))
     return (void *)einval();
-  if (IsNetbsd() && !(flags & MREMAP_MAYMOVE) &&
-      ((new_size + pagesz - 1) & -pagesz) > old_size)
+  if (IsNetbsd() && !(flags & MREMAP_MAYMOVE) && PGUP(new_size) > old_size)
     return (void *)enotsup();
   if ((flags & MREMAP_FIXED) && !(flags & MREMAP_MAYMOVE))
     return (void *)einval();
 
   // addresses must be granularity aligned
-  if ((uintptr_t)old_addr & (gransz - 1))
+  if ((uintptr_t)old_addr & (__gransize - 1))
     return (void *)einval();
   if (flags & MREMAP_FIXED)
-    if ((uintptr_t)new_addr & (gransz - 1))
+    if ((uintptr_t)new_addr & (__gransize - 1))
       return (void *)einval();
 
   // sizes must not be zero
@@ -850,20 +847,19 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
 
   // memory increase must not exceed RLIMIT_AS
   if (PGUP(new_size) > old_size)
-    if (__maps.count * pagesz - old_size + PGUP(new_size) > __virtualmax)
+    if (__maps.count * __pagesize - old_size + PGUP(new_size) > __virtualmax)
       return (void *)enomem();
 
-  // lock the memory manager
-  // abort on reentry due to signal handler
-  if (__maps_lock()) {
-    __maps_unlock();
+  // test for signal handler reentry
+  if (__maps_held())
     return (void *)edeadlk();
-  }
+
+  // lock the memory manager
+  __maps_lock();
   __maps_check();
 
   // perform operation
-  char *res = __mremap_impl(old_addr, old_size, new_size, flags, new_addr,
-                            pagesz, gransz);
+  char *res = __mremap_impl(old_addr, old_size, new_size, flags, new_addr);
 
   // return result
   __maps_unlock();
@@ -940,6 +936,24 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
  * The `MAP_CONCEAL` flag may be passed to prevent a memory mapping from
  * appearing in core dumps. This is currently supported on BSD OSes, and
  * is ignored on everything else.
+ *
+ * POSIX does not require mmap() to be asynchronous signal safe. But you
+ * should be able to call this from a signal handler safely, if you know
+ * that your signal will never interrupt the cosmopolitan memory manager
+ * and the only way you can ensure that, is by blocking signals whenever
+ * you call mmap(), munmap(), mprotect(), etc.
+ *
+ * @raise ENOMEM if `RUSAGE_AS` or similar limits are exceeded
+ * @raise EEXIST if `flags` has `MAP_FIXED_NOREPLACE` and `addr` is used
+ * @raise EPERM if `addr` is null and `flags` has `MAP_FIXED`
+ * @raise ENOTSUP if memory map is cleaved on windows with `MAP_FIXED`
+ * @raise EINVAL if `addr` isn't granularity aligned with `MAP_FIXED`
+ * @raise EINVAL if `size` is zero
+ * @raise EINVAL if `flags` or `prot` hold invalid values
+ * @raise EACCESS if `fd` isn't a regular file
+ * @raise EACCESS if `fd` was opened in write-only mode
+ * @raise EACCESS if `off` isn't getgransize() aligned
+ * @raise EDEADLK if called from signal handler interrupting mmap()
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res = __mmap(addr, size, prot, flags, fd, off);
@@ -985,6 +999,11 @@ void *mremap(void *old_addr, size_t old_size, size_t new_size, int flags, ...) {
  * The `size` parameter is implicitly rounded up to the page size.
  *
  * @return 0 on success, or -1 w/ errno.
+ * @raise ENOMEM if OOM happened when punching hole in existing mapping
+ * @raise ENOTSUP if memory map is cleaved on windows with `MAP_FIXED`
+ * @raise EDEADLK if called from signal handler interrupting mmap()
+ * @raise EINVAL if `addr` isn't granularity aligned
+ * @raise EINVAL if `size` didn't include all pages in granule
  */
 int munmap(void *addr, size_t size) {
   int rc = __munmap(addr, size);

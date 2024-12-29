@@ -33,11 +33,13 @@
 #include "libc/intrin/weaken.h"
 #include "libc/mem/leaks.h"
 #include "libc/nt/accounting.h"
+#include "libc/nt/enum/heap.h"
 #include "libc/nt/enum/processaccess.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/events.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
@@ -292,16 +294,9 @@ textwindows struct Proc *__proc_new(void) {
     proc = PROC_CONTAINER(e);
     dll_remove(&__proc.free, &proc->elem);
   }
-  if (proc) {
-    bzero(proc, sizeof(*proc));
-  } else {
-    proc = mmap(0, sizeof(struct Proc), PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (proc == MAP_FAILED) {
-      enomem();
-      return 0;
-    }
-  }
+  if (!proc && !(proc = HeapAlloc(GetProcessHeap(), 0, sizeof(struct Proc))))
+    return 0;
+  bzero(proc, sizeof(*proc));
   dll_init(&proc->elem);
   return proc;
 }

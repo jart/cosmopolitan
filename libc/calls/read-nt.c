@@ -48,6 +48,7 @@
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/inputrecord.h"
 #include "libc/nt/synchronization.h"
@@ -127,38 +128,46 @@ struct Keystrokes {
   bool ohno_decckm;
   bool bypass_mode;
   uint16_t utf16hs;
-  int16_t freekeys;
+  size_t free_keys;
   int64_t cin, cot;
   struct Dll *list;
   struct Dll *line;
   struct Dll *free;
-  pthread_mutex_t lock;
-  struct Keystroke pool[512];
 };
 
-static struct Keystrokes __keystroke = {
-    .lock = PTHREAD_MUTEX_INITIALIZER,
-};
+static struct Keystrokes __keystroke;
+static pthread_mutex_t __keystroke_lock = PTHREAD_MUTEX_INITIALIZER;
 
 textwindows void sys_read_nt_wipe_keystrokes(void) {
-  pthread_mutex_t lock = __keystroke.lock;
   bzero(&__keystroke, sizeof(__keystroke));
-  __keystroke.lock = lock;
-  _pthread_mutex_wipe_np(&__keystroke.lock);
+  _pthread_mutex_wipe_np(&__keystroke_lock);
 }
 
 textwindows static void FreeKeystrokeImpl(struct Dll *key) {
   dll_make_first(&__keystroke.free, key);
-  ++__keystroke.freekeys;
+  ++__keystroke.free_keys;
+}
+
+textwindows static struct Keystroke *AllocKeystroke(void) {
+  struct Keystroke *k;
+  if (!(k = HeapAlloc(GetProcessHeap(), 0, sizeof(struct Keystroke))))
+    return 0;
+  dll_init(&k->elem);
+  return k;
 }
 
 textwindows static struct Keystroke *NewKeystroke(void) {
-  struct Dll *e = dll_first(__keystroke.free);
-  if (!e)  // See MIN(freekeys) before ReadConsoleInput()
-    __builtin_trap();
-  struct Keystroke *k = KEYSTROKE_CONTAINER(e);
-  dll_remove(&__keystroke.free, &k->elem);
-  --__keystroke.freekeys;
+  struct Dll *e;
+  struct Keystroke *k;
+  if ((e = dll_first(__keystroke.free))) {
+    dll_remove(&__keystroke.free, e);
+    k = KEYSTROKE_CONTAINER(e);
+    --__keystroke.free_keys;
+  } else {
+    // PopulateKeystrokes() should make this branch impossible
+    if (!(k = AllocKeystroke()))
+      return 0;
+  }
   k->buflen = 0;
   return k;
 }
@@ -174,15 +183,22 @@ textwindows static void FreeKeystrokes(struct Dll **list) {
     FreeKeystroke(list, key);
 }
 
+textwindows static void PopulateKeystrokes(size_t want) {
+  struct Keystroke *k;
+  while (__keystroke.free_keys < want) {
+    if ((k = AllocKeystroke())) {
+      FreeKeystrokeImpl(&k->elem);
+    } else {
+      break;
+    }
+  }
+}
+
 textwindows static void OpenConsole(void) {
   __keystroke.cin = CreateFile(u"CONIN$", kNtGenericRead | kNtGenericWrite,
                                kNtFileShareRead, 0, kNtOpenExisting, 0, 0);
   __keystroke.cot = CreateFile(u"CONOUT$", kNtGenericRead | kNtGenericWrite,
                                kNtFileShareWrite, 0, kNtOpenExisting, 0, 0);
-  for (int i = 0; i < ARRAYLEN(__keystroke.pool); ++i) {
-    dll_init(&__keystroke.pool[i].elem);
-    FreeKeystrokeImpl(&__keystroke.pool[i].elem);
-  }
 }
 
 textwindows static int AddSignal(int sig) {
@@ -196,11 +212,11 @@ textwindows static void InitConsole(void) {
 }
 
 textwindows static void LockKeystrokes(void) {
-  _pthread_mutex_lock(&__keystroke.lock);
+  _pthread_mutex_lock(&__keystroke_lock);
 }
 
 textwindows static void UnlockKeystrokes(void) {
-  _pthread_mutex_unlock(&__keystroke.lock);
+  _pthread_mutex_unlock(&__keystroke_lock);
 }
 
 textwindows int64_t GetConsoleInputHandle(void) {
@@ -523,14 +539,12 @@ textwindows static void IngestConsoleInputRecord(struct NtInputRecord *r) {
       !(__ttyconf.magic & kTtyNoIexten)) {  // IEXTEN
     if (__keystroke.bypass_mode) {
       struct Keystroke *k = NewKeystroke();
+      if (!k)
+        return;
       memcpy(k->buf, buf, sizeof(k->buf));
       k->buflen = len;
       dll_make_last(&__keystroke.line, &k->elem);
       EchoConsoleNt(buf, len, true);
-      if (!__keystroke.freekeys) {
-        dll_make_last(&__keystroke.list, __keystroke.line);
-        __keystroke.line = 0;
-      }
       __keystroke.bypass_mode = false;
       return;
     } else if (len == 1 && buf[0] &&  //
@@ -620,6 +634,8 @@ textwindows static void IngestConsoleInputRecord(struct NtInputRecord *r) {
 
   // allocate object to hold keystroke
   struct Keystroke *k = NewKeystroke();
+  if (!k)
+    return;
   memcpy(k->buf, buf, sizeof(k->buf));
   k->buflen = len;
 
@@ -633,12 +649,12 @@ textwindows static void IngestConsoleInputRecord(struct NtInputRecord *r) {
   } else {
     dll_make_last(&__keystroke.line, &k->elem);
 
-    // flush canonical mode line if oom or enter
-    if (!__keystroke.freekeys || (len == 1 && buf[0] &&
-                                  ((buf[0] & 255) == '\n' ||            //
-                                   (buf[0] & 255) == __ttyconf.veol ||  //
-                                   ((buf[0] & 255) == __ttyconf.veol2 &&
-                                    !(__ttyconf.magic & kTtyNoIexten))))) {
+    // flush canonical mode line on enter
+    if (len == 1 && buf[0] &&
+        ((buf[0] & 255) == '\n' ||            //
+         (buf[0] & 255) == __ttyconf.veol ||  //
+         ((buf[0] & 255) == __ttyconf.veol2 &&
+          !(__ttyconf.magic & kTtyNoIexten)))) {
       dll_make_last(&__keystroke.list, __keystroke.line);
       __keystroke.line = 0;
     }
@@ -649,15 +665,17 @@ textwindows static void IngestConsoleInput(void) {
   uint32_t i, n;
   struct NtInputRecord records[16];
   for (;;) {
-    if (!__keystroke.freekeys)
-      return;
     if (__keystroke.end_of_file)
       return;
     if (!GetNumberOfConsoleInputEvents(__keystroke.cin, &n))
       goto UnexpectedEof;
-    if (!n || !__keystroke.freekeys)
+    if (n > ARRAYLEN(records))
+      n = ARRAYLEN(records);
+    PopulateKeystrokes(n + 1);
+    if (n > __keystroke.free_keys)
+      n = __keystroke.free_keys;
+    if (!n)
       return;
-    n = MIN(__keystroke.freekeys, MIN(ARRAYLEN(records), n));
     if (!ReadConsoleInput(__keystroke.cin, records, n, &n))
       goto UnexpectedEof;
     for (i = 0; i < n && !__keystroke.end_of_file; ++i)

@@ -32,6 +32,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/lock.h"
+#include "libc/thread/tls.h"
 
 #ifdef __x86_64__
 __static_yoink("_init_maps");
@@ -124,26 +125,33 @@ privileged static void __maps_panic(const char *msg) {
 }
 #endif
 
-ABI bool __maps_lock(void) {
+bool __maps_held(void) {
+  return __tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_VFORKED) &&
+         MUTEX_OWNER(
+             atomic_load_explicit(&__maps.lock.word, memory_order_relaxed)) ==
+             atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+}
+
+ABI void __maps_lock(void) {
   int me;
   uint64_t word, lock;
   struct CosmoTib *tib;
   if (!__tls_enabled)
-    return false;
+    return;
   if (!(tib = __get_tls_privileged()))
-    return false;
+    return;
   if (tib->tib_flags & TIB_FLAG_VFORKED)
-    return false;
-  me = atomic_load_explicit(&tib->tib_tid, memory_order_acquire);
+    return;
+  me = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
   if (me <= 0)
-    return false;
+    return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
       if (atomic_compare_exchange_weak_explicit(
               &__maps.lock.word, &word, MUTEX_INC_DEPTH(word),
               memory_order_relaxed, memory_order_relaxed))
-        return true;
+        return;
       continue;
     }
 #if DEBUG_MAPS_LOCK
@@ -162,7 +170,7 @@ ABI bool __maps_lock(void) {
       __deadlock_track(&__maps.lock, 0);
       __deadlock_record(&__maps.lock, 0);
 #endif
-      return false;
+      return;
     }
     for (;;) {
       word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
