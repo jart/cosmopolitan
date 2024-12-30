@@ -16,14 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/shuffle.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 
 /**
- * Jumbles up string.
+ * Performs Fisher-Yates shuffle on string in-place to create anagram.
+ *
+ * This implementation uses rand() so `srand(time(0))` may be desired.
  */
 char *strfry(char *s) {
-  shuffle(rand, s, strlen(s));
+  size_t i = strlen(s);
+  while (i > 1) {
+    size_t x = rand();
+    size_t y = rand();
+    size_t j = ((x << 31) ^ y) % i--;
+    char t = s[j];
+    s[j] = s[i];
+    s[i] = t;
+  }
   return s;
 }

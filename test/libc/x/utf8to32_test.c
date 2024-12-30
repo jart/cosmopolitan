@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/mem/shuffle.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -82,11 +81,20 @@ TEST(utf32to8, testLargeThompsonPikeEncoded) {
           -1, 0)));
 }
 
+void shuffle(wchar_t *a, int n) {
+  for (int i = n - 1; i >= 1; --i) {
+    int r = rand() % (i + 1);
+    wchar_t t = a[r];
+    a[r] = a[i];
+    a[i] = t;
+  }
+}
+
 char *GenerateBranchyUtf8Text(size_t *out_n) {
   char *p;
   size_t n;
   wchar_t *q = gc(utf8to32(kViewables, kViewablesSize, &n));
-  shuffle(lemur64, q, n);
+  shuffle(q, n);
   p = utf32to8(q, n, &n);
   if (out_n)
     *out_n = n;
