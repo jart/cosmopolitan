@@ -81,7 +81,7 @@ errno_t pthread_setcancelstate(int state, int *oldstate) {
     }
     err = 0;
   }
-#if IsModeDbg()
+#if IsModeDbg() && 0
   STRACE("pthread_setcancelstate(%s, [%s]) → %s",
          DescribeCancelState(0, &state), DescribeCancelState(err, oldstate),
          DescribeErrno(err));

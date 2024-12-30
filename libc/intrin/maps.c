@@ -192,7 +192,7 @@ ABI void __maps_unlock(void) {
     return;
   if (tib->tib_flags & TIB_FLAG_VFORKED)
     return;
-  me = atomic_load_explicit(&tib->tib_tid, memory_order_acquire);
+  me = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
   if (me <= 0)
     return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);

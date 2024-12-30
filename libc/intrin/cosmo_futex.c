@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -232,6 +233,7 @@ static int cosmo_futex_fix_timeout (struct timespec *memory, int clock,
  * @raise EAGAIN if `*w` wasn't `expect`
  * @raise EINTR if a signal handler was called while waiting
  * @raise ECANCELED if calling thread was canceled while waiting
+ * @cancelationpoint
  */
 int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 		      int clock, const struct timespec *abstime) {
@@ -240,6 +242,7 @@ int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 	struct PosixThread *pt;
 	struct timespec tsmem;
 	struct timespec *timeout = 0;
+	BEGIN_CANCELATION_POINT;
 
 	cosmo_once (&g_cosmo_futex.once, cosmo_futex_init);
 
@@ -351,6 +354,7 @@ Finished:
 		DescribeTimespec (0, abstime),
 		DescribeErrno (rc));
 
+	END_CANCELATION_POINT;
 	return rc;
 }
 

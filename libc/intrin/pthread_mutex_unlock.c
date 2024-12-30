@@ -30,6 +30,7 @@
 #include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
 
 // see "take 3" algorithm in "futexes are tricky" by ulrich drepper
@@ -43,7 +44,7 @@ static void pthread_mutex_unlock_drepper(atomic_int *futex, char pshare) {
 
 static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
                                               uint64_t word) {
-  int me = gettid();
+  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
   for (;;) {
 
     // we allow unlocking an initialized lock that wasn't locked, but we
@@ -75,7 +76,7 @@ static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
 #if PTHREAD_USE_NSYNC
 static errno_t pthread_mutex_unlock_recursive_nsync(pthread_mutex_t *mutex,
                                                     uint64_t word) {
-  int me = gettid();
+  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
   for (;;) {
 
     // we allow unlocking an initialized lock that wasn't locked, but we

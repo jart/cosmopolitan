@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
@@ -70,7 +69,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
                                             uint64_t word, bool is_trylock) {
   uint64_t lock;
   int backoff = 0;
-  int me = gettid();
+  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
   bool once = false;
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
@@ -120,7 +119,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
 static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex,
                                                   uint64_t word,
                                                   bool is_trylock) {
-  int me = gettid();
+  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
       if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {
