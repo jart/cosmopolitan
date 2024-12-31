@@ -23,7 +23,6 @@
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/wait_s.internal.h"
 
 struct Dtor {
   void *fun;
@@ -89,10 +88,7 @@ void __cxa_thread_finalize(void) {
   //  thread has any thread-specific data, appropriate destructor
   //  functions shall be called in an unspecified order."
   //                              ──Quoth POSIX.1-2017
-  if (tib->tib_nsync)
-    _weaken(nsync_waiter_destroy)(tib->tib_nsync);
   _pthread_unkey(tib);
-
   _pthread_ungarbage(tib);
 
   while ((dtor = tib->tib_atexit)) {

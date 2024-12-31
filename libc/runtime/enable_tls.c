@@ -233,7 +233,8 @@ textstartup void __enable_tls(void) {
   } else {
     tid = sys_gettid();
   }
-  atomic_init(&tib->tib_tid, tid);
+  atomic_init(&tib->tib_ptid, tid);
+  atomic_init(&tib->tib_ctid, tid);
   // TODO(jart): set_tid_address?
 
   // inherit signal mask
@@ -248,7 +249,6 @@ textstartup void __enable_tls(void) {
   _pthread_static.pt_attr.__stacksize = __maps.stack.size;
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
-  atomic_init(&_pthread_static.ptid, tid);
 
   // ask the operating system to change the x86 segment register
   if (IsWindows())

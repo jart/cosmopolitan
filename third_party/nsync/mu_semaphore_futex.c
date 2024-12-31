@@ -51,6 +51,9 @@ bool nsync_mu_semaphore_init_futex (nsync_semaphore *s) {
 	return true;
 }
 
+void nsync_mu_semaphore_destroy_futex (nsync_semaphore *s) {
+}
+
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations
    are currently disabled by the thread, then this function always succeeds. When
    they're enabled in MASKED mode, this function may return ECANCELED. Otherwise,

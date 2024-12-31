@@ -57,6 +57,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 	w->cond.f = NULL; /* Not using a conditional critical section. */
 	w->cond.v = NULL;
 	w->cond.eq = NULL;
+	w->wipe_mu = mu;
 	w->l_type = l_type;
 	zero_to_acquire = l_type->zero_to_acquire;
 	if (clear != 0) {
@@ -202,6 +203,7 @@ void nsync_mu_rlock (nsync_mu *mu) {
 		    !atomic_compare_exchange_strong_explicit (&mu->word, &old_word,
 							      (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE,
 							      memory_order_acquire, memory_order_relaxed)) {
+			LOCKTRACE("acquiring nsync_mu_rlock(%t)...", mu);
 			waiter *w = nsync_waiter_new_ ();
 			nsync_mu_lock_slow_ (mu, w, 0, nsync_reader_type_);
 			nsync_waiter_free_ (w);

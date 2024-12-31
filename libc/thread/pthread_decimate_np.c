@@ -41,7 +41,7 @@
  * @return 0 on success, or errno on error
  */
 int pthread_decimate_np(void) {
-  _pthread_decimate();
+  _pthread_decimate(kPosixThreadZombie);
   cosmo_stack_clear();
   return 0;
 }

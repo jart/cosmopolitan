@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
@@ -38,7 +39,9 @@ textwindows dontinstrument void __bootstrap_tls(struct CosmoTib *tib,
   tib->tib_ftrace = __ftrace;
   tib->tib_sigstack_size = 57344;
   tib->tib_sigstack_addr = bp - 57344;
-  tib->tib_tid = __imp_GetCurrentThreadId();
+  int tid = __imp_GetCurrentThreadId();
+  atomic_init(&tib->tib_ptid, tid);
+  atomic_init(&tib->tib_ctid, tid);
   __set_tls_win32(tib);
 }
 

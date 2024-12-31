@@ -57,6 +57,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/nsync/wait_s.internal.h"
 
 __static_yoink("nsync_mu_lock");
 __static_yoink("nsync_mu_unlock");
@@ -81,6 +82,10 @@ void _pthread_free(struct PosixThread *pt) {
     cosmo_stack_free(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
                      pt->pt_attr.__guardsize);
 
+  // reclaim thread's cached nsync waiter object
+  if (pt->tib->tib_nsync)
+    nsync_waiter_destroy_(pt->tib->tib_nsync);
+
   // free any additional upstream system resources
   // our fork implementation wipes this handle in child automatically
   uint64_t syshand =
@@ -102,7 +107,7 @@ void _pthread_free(struct PosixThread *pt) {
       3);
 }
 
-void _pthread_decimate(void) {
+void _pthread_decimate(enum PosixThreadStatus threshold) {
   struct PosixThread *pt;
   struct Dll *e, *e2, *list = 0;
   enum PosixThreadStatus status;
@@ -117,11 +122,18 @@ void _pthread_decimate(void) {
     pt = POSIXTHREAD_CONTAINER(e);
     if (atomic_load_explicit(&pt->pt_refs, memory_order_acquire) > 0)
       continue;  // pthread_kill() has a lease on this thread
+    if (atomic_load_explicit(&pt->tib->tib_ctid, memory_order_acquire))
+      continue;  // thread is still using stack so leave alone
     status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
-    if (status != kPosixThreadZombie)
-      break;  // zombies only exist at the end of the linked list
-    if (atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire))
-      continue;  // undead thread that should stop existing soon
+    if (status < threshold) {
+      if (threshold == kPosixThreadZombie)
+        break;  // zombies only exist at the end of the linked list
+      continue;
+    }
+    if (status == kPosixThreadTerminated)
+      if (!(pt->pt_flags & PT_STATIC))
+        STRACE("warning: you forgot to join or detach thread id %d",
+               atomic_load_explicit(&pt->tib->tib_ptid, memory_order_acquire));
     dll_remove(&_pthread_list, e);
     dll_make_first(&list, e);
   }
@@ -139,7 +151,7 @@ void _pthread_decimate(void) {
   }
 }
 
-static int PosixThread(void *arg, int tid) {
+dontinstrument static int PosixThread(void *arg, int tid) {
   struct PosixThread *pt = arg;
 
   // setup scheduling
@@ -285,12 +297,12 @@ static errno_t pthread_create_impl(pthread_t *thread,
   _pthread_ref(pt);
 
   // launch PosixThread(pt) in new thread
-  if ((rc = clone(PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
-                  CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
-                      CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_SETTLS |
-                      CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
-                      CLONE_CHILD_CLEARTID,
-                  pt, &pt->ptid, __adj_tls(pt->tib), &pt->tib->tib_tid))) {
+  if ((rc = clone(
+           PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
+           CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+               CLONE_SYSVSEM | CLONE_SETTLS | CLONE_PARENT_SETTID |
+               CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+           pt, &pt->tib->tib_ptid, __adj_tls(pt->tib), &pt->tib->tib_ctid))) {
     _pthread_lock();
     dll_remove(&_pthread_list, &pt->list);
     _pthread_unlock();
@@ -363,7 +375,7 @@ static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
   errno_t err;
-  _pthread_decimate();
+  _pthread_decimate(kPosixThreadZombie);
   BLOCK_SIGNALS;
   err = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
   ALLOW_SIGNALS;

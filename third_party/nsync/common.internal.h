@@ -154,7 +154,7 @@ extern lock_type *nsync_reader_type_;
 
 /* ---------- */
 
-/* Hold a pair of  condition function and its argument. */
+/* Hold a pair of condition function and its argument. */
 struct wait_condition_s {
   int (*f)(const void *v);
   const void *v;
@@ -191,18 +191,19 @@ struct wait_condition_s {
     ATM_STORE_REL (&w.waiting, 0);
     nsync_mu_semaphore_v (&w.sem); */
 typedef struct waiter_s {
-  uint32_t tag; /* debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND */
-  int flags;    /* see WAITER_* bits below */
-  nsync_semaphore sem;       /* Thread waits on this semaphore. */
-  struct nsync_waiter_s nw;  /* An embedded nsync_waiter_s. */
-  struct nsync_mu_s_ *cv_mu; /* pointer to nsync_mu associated with a cv wait */
-  lock_type
-      *l_type; /* Lock type of the mu, or nil if not associated with a mu. */
-  nsync_atomic_uint32_ remove_count; /* count of removals from queue */
+  uint32_t tag;                      /* Debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND. */
+  int flags;                         /* See WAITER_* bits below. */
+  nsync_semaphore sem;               /* Thread waits on this semaphore. */
+  struct nsync_waiter_s nw;          /* An embedded nsync_waiter_s. */
+  struct nsync_mu_s_ *cv_mu;         /* Pointer to nsync_mu associated with a cv wait. */
+  lock_type *l_type;                 /* Lock type of the mu, or nil if not associated with a mu. */
+  nsync_atomic_uint32_ remove_count; /* Monotonic count of removals from queue. */
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
-  struct Dll same_condition;         /* Links neighbours in nw.q with same
-                                        non-nil condition. */
+  struct Dll same_condition;         /* Links neighbours in nw.q with same non-nil condition. */
+  struct waiter_s * next_all;
   struct waiter_s * next_free;
+  struct nsync_mu_s_ *wipe_mu;
+  struct nsync_cv_s_ *wipe_cv;
 } waiter;
 static const uint32_t WAITER_TAG = 0x0590239f;
 static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;

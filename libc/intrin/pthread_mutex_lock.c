@@ -69,7 +69,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
                                             uint64_t word, bool is_trylock) {
   uint64_t lock;
   int backoff = 0;
-  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+  int me = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
   bool once = false;
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
@@ -119,7 +119,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
 static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex,
                                                   uint64_t word,
                                                   bool is_trylock) {
-  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+  int me = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
       if (MUTEX_DEPTH(word) < MUTEX_DEPTH_MAX) {

@@ -561,7 +561,7 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
           tib = __tls_enabled ? __get_tls_privileged() : 0;
           if (!(tib && (tib->tib_flags & TIB_FLAG_VFORKED))) {
             if (tib) {
-              x = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
+              x = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
             } else {
               x = __pid;
             }

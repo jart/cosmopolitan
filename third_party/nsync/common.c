@@ -17,21 +17,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/directmap.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/extend.h"
-#include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/pageflags.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdalign.h"
-#include "libc/stdalign.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
@@ -39,8 +36,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.h"
+#include "libc/intrin/cxaatexit.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -139,6 +135,9 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
+// TODO(jart): enforce in dbg mode once off-by-one flake is fixed
+#define DETECT_WAITER_LEAKS 0
+
 #define MASQUE 0x00fffffffffffff8
 #define PTR(x) ((uintptr_t)(x) & MASQUE)
 #define TAG(x) ROL((uintptr_t)(x) & ~MASQUE, 8)
@@ -147,6 +146,54 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 #define ROR(x, n) (((x) >> (n)) | ((x) << (64 - (n))))
 
 static atomic_uintptr_t free_waiters;
+static _Atomic(waiter *) all_waiters;
+
+#if DETECT_WAITER_LEAKS
+static atomic_int all_waiters_count;
+static atomic_int free_waiters_count;
+#endif
+
+static waiter *get_waiter_for_thread (void) {
+	return __get_tls()->tib_nsync;
+}
+
+static bool set_waiter_for_thread (waiter *w) {
+	__get_tls()->tib_nsync = w;
+	return (true);
+}
+
+#if DETECT_WAITER_LEAKS
+__attribute__((__destructor__)) static void reconcile_waiters (void) {
+	// we can't perform this check if using exit() with threads
+	if (!pthread_orphan_np ())
+		return;
+	waiter *w;
+	if ((w = get_waiter_for_thread ())) {
+		nsync_waiter_destroy_ (w);
+		set_waiter_for_thread (0);
+	}
+	if (all_waiters_count != free_waiters_count) {
+		char ibuf[2][12];
+		FormatInt32 (ibuf[0], all_waiters_count);
+		FormatInt32 (ibuf[1], free_waiters_count);
+		tinyprint (2, "error: nsync panic: all_waiter_count (",
+			   ibuf[0], ") != free_waiters_count (", ibuf[1],
+			   ")\n", NULL);
+		_Exit (156);
+	}
+}
+#endif
+
+static void all_waiters_push (waiter *w) {
+	w->next_all = atomic_load_explicit (&all_waiters, memory_order_relaxed);
+	while (!atomic_compare_exchange_weak_explicit (&all_waiters, &w->next_all, w,
+						       memory_order_acq_rel,
+						       memory_order_relaxed))
+		pthread_pause_np ();
+#if DETECT_WAITER_LEAKS
+	++all_waiters_count;
+#endif
+}
 
 static void free_waiters_push (waiter *w) {
 	uintptr_t tip;
@@ -154,14 +201,16 @@ static void free_waiters_push (waiter *w) {
 	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
 	for (;;) {
 		w->next_free = (waiter *) PTR (tip);
-		if (atomic_compare_exchange_weak_explicit (&free_waiters,
-							   &tip,
+		if (atomic_compare_exchange_weak_explicit (&free_waiters, &tip,
 							   ABA (w, TAG (tip) + 1),
 							   memory_order_release,
 							   memory_order_relaxed))
 			break;
 		pthread_pause_np ();
 	}
+#if DETECT_WAITER_LEAKS
+	++free_waiters_count;
+#endif
 }
 
 static waiter *free_waiters_pop (void) {
@@ -169,15 +218,18 @@ static waiter *free_waiters_pop (void) {
 	uintptr_t tip;
 	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
 	while ((w = (waiter *) PTR (tip))) {
-		if (atomic_compare_exchange_weak_explicit (&free_waiters,
-							   &tip,
+		if (atomic_compare_exchange_weak_explicit (&free_waiters, &tip,
 							   ABA (w->next_free, TAG (tip) + 1),
 							   memory_order_acquire,
 							   memory_order_relaxed))
 			break;
 		pthread_pause_np ();
 	}
-	return w;
+#if DETECT_WAITER_LEAKS
+	if (w)
+		--free_waiters_count;
+#endif
+	return (w);
 }
 
 static bool free_waiters_populate (void) {
@@ -193,7 +245,7 @@ static bool free_waiters_populate (void) {
 				MAP_PRIVATE | MAP_ANONYMOUS,
 				-1, 0);
 	if (waiters == MAP_FAILED)
-		return false;
+		return (false);
 	for (size_t i = 0; i < n; ++i) {
 		waiter *w = &waiters[i];
 		w->tag = WAITER_TAG;
@@ -202,7 +254,7 @@ static bool free_waiters_populate (void) {
 			if (!i) {
 				// netbsd can run out of semaphores
 				munmap (waiters, n * sizeof (waiter));
-				return false;
+				return (false);
 			}
 			break;
 		}
@@ -211,47 +263,31 @@ static bool free_waiters_populate (void) {
 		w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
 		dll_init (&w->same_condition);
 		free_waiters_push (w);
+		all_waiters_push (w);
 	}
-	return true;
+	return (true);
 }
 
 /* -------------------------------- */
-
-#define waiter_for_thread __get_tls()->tib_nsync
-
-void nsync_waiter_destroy (void *v) {
-	waiter *w = (waiter *) v;
-	/* Reset waiter_for_thread in case another thread-local variable reuses
-	   the waiter in its destructor while the waiter is taken by the other
-	   thread from free_waiters. This can happen as the destruction order
-	   of thread-local variables can be arbitrary in some platform e.g.
-	   POSIX. */
-	waiter_for_thread = NULL;
-	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
-	w->flags &= ~WAITER_RESERVED;
-	free_waiters_push (w);
-}
 
 /* Return a pointer to an unused waiter struct.
    Ensures that the enclosed timer is stopped and its channel drained. */
 waiter *nsync_waiter_new_ (void) {
 	waiter *w;
 	waiter *tw;
-	unsigned attempts = 0;
 	bool out_of_semaphores = false;
-	tw = waiter_for_thread;
-	w = tw;
+	w = tw = get_waiter_for_thread ();
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
 		while (!(w = free_waiters_pop ())) {
 			if (!out_of_semaphores)
 				if (!free_waiters_populate ())
 					out_of_semaphores = true;
 			if (out_of_semaphores)
-				attempts = pthread_delay_np (&free_waiters, attempts);
+				pthread_yield_np ();
 		}
 		if (tw == NULL) {
-			w->flags |= WAITER_RESERVED;
-			waiter_for_thread = w;
+			if (set_waiter_for_thread (w))
+				w->flags |= WAITER_RESERVED;
 		}
 	}
 	w->flags |= WAITER_IN_USE;
@@ -261,12 +297,65 @@ waiter *nsync_waiter_new_ (void) {
 /* Return an unused waiter struct *w to the free pool. */
 void nsync_waiter_free_ (waiter *w) {
 	ASSERT ((w->flags & WAITER_IN_USE) != 0);
+	w->wipe_mu = NULL;
+	w->wipe_cv = NULL;
 	w->flags &= ~WAITER_IN_USE;
 	if ((w->flags & WAITER_RESERVED) == 0) {
+		if (w == get_waiter_for_thread ())
+			set_waiter_for_thread (0);
 		free_waiters_push (w);
-		if (w == waiter_for_thread)
-			waiter_for_thread = 0;
 	}
+}
+
+/* Destroys waiter associated with dead thread. */
+void nsync_waiter_destroy_ (void *v) {
+	waiter *w = (waiter *) v;
+	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
+	w->flags &= ~WAITER_RESERVED;
+	free_waiters_push (w);
+}
+
+/* Ravages nsync waiters/locks/conds after fork(). */
+void nsync_waiter_wipe_ (void) {
+	int n = 0;
+	waiter *w;
+	waiter *next;
+	waiter *prev = 0;
+	waiter *wall = atomic_load_explicit (&all_waiters, memory_order_relaxed);
+	for (w = wall; w; w = w->next_all)
+		nsync_mu_semaphore_destroy (&w->sem);
+	for (w = wall; w; w = next) {
+		next = w->next_all;
+		w->tag = 0;
+		w->flags = 0;
+		w->nw.tag = 0;
+		w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
+		atomic_init(&w->nw.waiting, 0);
+		w->l_type = 0;
+		bzero (&w->cond, sizeof (w->cond));
+		dll_init (&w->same_condition);
+		if (w->wipe_mu)
+			bzero (w->wipe_mu, sizeof (*w->wipe_mu));
+		if (w->wipe_cv)
+			bzero (w->wipe_cv, sizeof (*w->wipe_cv));
+		if (!nsync_mu_semaphore_init (&w->sem))
+			continue;  /* leak it */
+		w->next_free = prev;
+		w->next_all = prev;
+		prev = w;
+		++n;
+	}
+#if DETECT_WAITER_LEAKS
+	atomic_init (&all_waiters_count, n);
+	atomic_init (&free_waiters_count, n);
+#else
+	(void)n;
+#endif
+	atomic_init (&free_waiters, prev);
+	atomic_init (&all_waiters, prev);
+	for (struct Dll *e = dll_first (_pthread_list); e;
+	     e = dll_next (_pthread_list, e))
+		POSIXTHREAD_CONTAINER (e)->tib->tib_nsync = 0;
 }
 
 /* ====================================================================================== */

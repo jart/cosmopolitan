@@ -59,7 +59,6 @@ extern pthread_mutex_t __sig_worker_lock;
 
 void __dlopen_lock(void);
 void __dlopen_unlock(void);
-void nsync_mu_semaphore_sem_fork_child(void);
 
 // first and last and always
 // it is the lord of all locks
@@ -147,7 +146,6 @@ static void fork_parent(void) {
 }
 
 static void fork_child(void) {
-  nsync_mu_semaphore_sem_fork_child();
   _pthread_mutex_wipe_np(&__dlopen_lock_obj);
   _pthread_mutex_wipe_np(&__rand64_lock_obj);
   _pthread_mutex_wipe_np(&__fds_lock_obj);
@@ -204,8 +202,8 @@ int _fork(uint32_t dwCreationFlags) {
     struct CosmoTib *tib = __get_tls();
     struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
     tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
-    atomic_init(&tib->tib_tid, tid);
-    atomic_init(&pt->ptid, tid);
+    atomic_init(&tib->tib_ctid, tid);
+    atomic_init(&tib->tib_ptid, tid);
 
     // tracing and kisdangerous need this lock wiped a little earlier
     atomic_init(&__maps.lock.word, 0);
@@ -213,6 +211,11 @@ int _fork(uint32_t dwCreationFlags) {
     /*
      * it's now safe to call normal functions again
      */
+
+    // this wipe must happen fast
+    void nsync_waiter_wipe_(void);
+    if (_weaken(nsync_waiter_wipe_))
+      _weaken(nsync_waiter_wipe_)();
 
     // turn other threads into zombies
     // we can't free() them since we're monopolizing all locks

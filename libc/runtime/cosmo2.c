@@ -93,7 +93,8 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
       .tib_sigmask = -1,
       .tib_sigstack_size = 57344,
       .tib_sigstack_addr = (char *)__builtin_frame_address(0) - 57344,
-      .tib_tid = 1,
+      .tib_ptid = 1,
+      .tib_ctid = 1,
   };
   __set_tls(&tib);
 

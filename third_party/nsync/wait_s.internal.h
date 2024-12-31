@@ -20,7 +20,7 @@ struct nsync_waiter_s {
 /* set if waiter is embedded in Mu/CV's internal structures */
 #define NSYNC_WAITER_FLAG_MUCV 0x1
 
-void nsync_waiter_destroy(void *);
+void nsync_waiter_destroy_(void *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_ */

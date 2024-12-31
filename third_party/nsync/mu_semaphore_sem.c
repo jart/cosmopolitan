@@ -43,23 +43,14 @@
 
 struct sem {
 	int64_t id;
-	struct sem *next;
 };
-
-static _Atomic(struct sem *) g_sems;
 
 static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)(1 /
 	(sizeof (struct sem) <= sizeof (*sem_big_enough_for_sem)));
 
-static void sems_push (struct sem *f) {
-	f->next = atomic_load_explicit (&g_sems, memory_order_relaxed);
-	while (!atomic_compare_exchange_weak_explicit (&g_sems, &f->next, f,
-						       memory_order_acq_rel,
-						       memory_order_relaxed))
-		pthread_pause_np ();
-}
-
-static bool nsync_mu_semaphore_sem_create (struct sem *f) {
+/* Initialize *s; the initial value is 0. */
+bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
+	struct sem *f = (struct sem *) s;
 	int rc;
 	int lol;
 	f->id = 0;
@@ -77,23 +68,10 @@ static bool nsync_mu_semaphore_sem_create (struct sem *f) {
 	return true;
 }
 
-void nsync_mu_semaphore_sem_fork_child (void) {
-	struct sem *f;
-	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next) {
-		int rc = sys_close (f->id);
-		STRACE ("close(%ld) → %d", f->id, rc);
-	}
-	for (f = atomic_load_explicit (&g_sems, memory_order_relaxed); f; f = f->next)
-		ASSERT (nsync_mu_semaphore_sem_create (f));
-}
-
-/* Initialize *s; the initial value is 0. */
-bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
+/* Destroys *s. */
+void nsync_mu_semaphore_destroy_sem (nsync_semaphore *s) {
 	struct sem *f = (struct sem *) s;
-	if (!nsync_mu_semaphore_sem_create (f))
-		return false;
-	sems_push (f);
-	return true;
+	sys_close (f->id);
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

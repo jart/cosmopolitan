@@ -75,7 +75,6 @@ struct PosixThread {
   atomic_int pt_canceled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) pt_status;
   _Atomic(atomic_int *) pt_blocker;
-  atomic_int ptid;            // transitions 0 → tid
   atomic_int pt_refs;         // prevents decimation
   void *(*pt_start)(void *);  // creation callback
   void *pt_val;               // start param / return val
@@ -108,7 +107,7 @@ int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
-void _pthread_decimate(void) libcesque;
+void _pthread_decimate(enum PosixThreadStatus) libcesque;
 void _pthread_free(struct PosixThread *) libcesque paramsnonnull();
 void _pthread_lock(void) libcesque;
 void _pthread_onfork_child(void) libcesque;

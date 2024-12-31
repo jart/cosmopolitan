@@ -21,9 +21,25 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
+//
+// - tib_ptid: always guaranteed to be non-zero in thread itself. on
+//             some platforms (e.g. xnu) the parent thread and other
+//             threads may need to wait for this value to be set. this
+//             is generally the value you want to read to get the tid.
+//
+// - tib_ctid: starts off as -1. once thread starts, it's set to the
+//             thread's tid before calling the thread callback. when
+//             thread is done executing, this is set to zero, and then
+//             this address is futex woken, in case the parent thread or
+//             any other thread is waiting on its completion. when a
+//             thread wants to read its own tid, it shouldn't use this,
+//             because the thread might need to do things after clearing
+//             its own tib_ctid (see pthread_exit() for static thread).
+//
 int _pthread_tid(struct PosixThread *pt) {
   int tid = 0;
-  while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire)))
+  while (pt && !(tid = atomic_load_explicit(&pt->tib->tib_ptid,
+                                            memory_order_acquire)))
     pthread_yield_np();
   return tid;
 }

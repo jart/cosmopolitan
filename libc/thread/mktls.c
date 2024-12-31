@@ -40,10 +40,9 @@ static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
   tib->tib_ftrace = old->tib_ftrace;
   tib->tib_strace = old->tib_strace;
   tib->tib_sigmask = old->tib_sigmask;
-  atomic_store_explicit(&tib->tib_tid, -1, memory_order_relaxed);
-  if (out_tib) {
+  atomic_init(&tib->tib_ctid, -1);
+  if (out_tib)
     *out_tib = tib;
-  }
   return mem;
 }
 

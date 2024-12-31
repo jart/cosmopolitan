@@ -465,9 +465,6 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     // re-apply code morphing for function tracing
     if (ftrace_stackdigs)
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
-    // notify pthread join
-    atomic_store_explicit(&_pthread_static.ptid, GetCurrentThreadId(),
-                          memory_order_release);
   }
   if (rc == -1)
     dll_make_first(&__proc.free, &proc->elem);

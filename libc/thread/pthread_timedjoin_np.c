@@ -67,7 +67,7 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
   //  thread argument to pthread_join() refers to the calling thread,
   //  it is recommended that the function should fail and report an
   //  [EDEADLK] error." ──Quoth POSIX.1-2017
-  if (ctid == &__get_tls()->tib_tid)
+  if (ctid == &__get_tls()->tib_ctid)
     return EDEADLK;
 
   // "If the thread calling pthread_join() is canceled, then the target
@@ -134,7 +134,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   // "The results of multiple simultaneous calls to pthread_join()
   //  specifying the same target thread are undefined."
   //                                  ──Quoth POSIX.1-2017
-  if (!(err = _pthread_wait(&pt->tib->tib_tid, abstime))) {
+  if (!(err = _pthread_wait(&pt->tib->tib_ctid, abstime))) {
     if (value_ptr)
       *value_ptr = pt->pt_val;
     if (atomic_load_explicit(&pt->pt_refs, memory_order_acquire)) {

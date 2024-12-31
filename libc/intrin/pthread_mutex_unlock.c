@@ -44,7 +44,7 @@ static void pthread_mutex_unlock_drepper(atomic_int *futex, char pshare) {
 
 static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
                                               uint64_t word) {
-  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+  int me = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
   for (;;) {
 
     // we allow unlocking an initialized lock that wasn't locked, but we
@@ -76,7 +76,7 @@ static errno_t pthread_mutex_unlock_recursive(pthread_mutex_t *mutex,
 #if PTHREAD_USE_NSYNC
 static errno_t pthread_mutex_unlock_recursive_nsync(pthread_mutex_t *mutex,
                                                     uint64_t word) {
-  int me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+  int me = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
   for (;;) {
 
     // we allow unlocking an initialized lock that wasn't locked, but we

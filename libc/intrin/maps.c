@@ -129,7 +129,7 @@ bool __maps_held(void) {
   return __tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_VFORKED) &&
          MUTEX_OWNER(
              atomic_load_explicit(&__maps.lock.word, memory_order_relaxed)) ==
-             atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+             atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
 }
 
 ABI void __maps_lock(void) {
@@ -142,7 +142,7 @@ ABI void __maps_lock(void) {
     return;
   if (tib->tib_flags & TIB_FLAG_VFORKED)
     return;
-  me = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
+  me = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
   if (me <= 0)
     return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
@@ -192,7 +192,7 @@ ABI void __maps_unlock(void) {
     return;
   if (tib->tib_flags & TIB_FLAG_VFORKED)
     return;
-  me = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
+  me = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
   if (me <= 0)
     return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);

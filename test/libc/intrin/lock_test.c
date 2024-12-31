@@ -118,10 +118,15 @@ void TestContendedLock(const char *name, int kind) {
   char *stk;
   double ns;
   errno_t rc;
+  int x, i, n = 10000;
   struct timespec t1, t2;
   pthread_mutexattr_t attr;
-  int tid, x, i, n = 10000;
-  struct CosmoTib tib = {.tib_self = &tib, .tib_self2 = &tib, .tib_tid = -1};
+  struct CosmoTib tib = {
+      .tib_self = &tib,
+      .tib_self2 = &tib,
+      .tib_ctid = -1,
+      .tib_ptid = 0,
+  };
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, kind);
   pthread_mutex_init(&mu, &attr);
@@ -133,7 +138,7 @@ void TestContendedLock(const char *name, int kind) {
              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                  CLONE_SYSVSEM | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                  CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-             0, &tid, &tib, &tib.tib_tid);
+             0, &tib.tib_ptid, &tib, &tib.tib_ctid);
   if (rc) {
     kprintf("clone failed: %s\n", strerror(rc));
     _Exit(1);
@@ -149,7 +154,7 @@ void TestContendedLock(const char *name, int kind) {
     ASSERT_EQ(0, pthread_mutex_unlock(&mu));
   }
   t2 = timespec_real();
-  while (tib.tib_tid)
+  while (tib.tib_ctid)
     donothing;
   ASSERT_EQ(1, atomic_load(&success));
   ASSERT_EQ(0, atomic_load(&counter));

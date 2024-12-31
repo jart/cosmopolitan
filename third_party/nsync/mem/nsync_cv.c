@@ -286,6 +286,8 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 	IGNORE_RACES_START ();
 
 	c.w = nsync_waiter_new_ ();
+	c.w->wipe_cv = pcv;
+	c.w->wipe_mu = pmu;
 	c.clock = clock;
 	c.abs_deadline = abs_deadline;
 	c.cancel_note = cancel_note;

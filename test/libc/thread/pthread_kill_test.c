@@ -259,7 +259,6 @@ void *CpuWorker(void *arg) {
 }
 
 TEST(pthread_kill, canAsynchronouslyRunHandlerInsideTargetThread) {
-  ASSERT_NE(0, __get_tls()->tib_tid);
   pthread_t t;
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnSigAsync};
@@ -273,7 +272,6 @@ TEST(pthread_kill, canAsynchronouslyRunHandlerInsideTargetThread) {
   ASSERT_TRUE(exited_original_loop);
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
   ASSERT_EQ(0, gotsig);
-  ASSERT_NE(0, __get_tls()->tib_tid);
 }
 
 volatile int is_having_fun;
@@ -287,7 +285,6 @@ void *FunWorker(void *arg) {
 }
 
 TEST(pthread_kill, defaultThreadSignalHandlerWillKillWholeProcess) {
-  ASSERT_NE(0, __get_tls()->tib_tid);
   SPAWN(fork);
   pthread_t t;
   ASSERT_EQ(0, pthread_create(&t, 0, FunWorker, 0));
@@ -297,7 +294,6 @@ TEST(pthread_kill, defaultThreadSignalHandlerWillKillWholeProcess) {
   for (;;)
     sched_yield();
   TERMS(SIGKILL);
-  ASSERT_NE(0, __get_tls()->tib_tid);
 }
 
 void *SuspendWorker(void *arg) {
@@ -308,7 +304,6 @@ void *SuspendWorker(void *arg) {
 }
 
 TEST(pthread_kill, canInterruptSigsuspend) {
-  ASSERT_NE(0, __get_tls()->tib_tid);
   int tid;
   void *res;
   pthread_t t;
