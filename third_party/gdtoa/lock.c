@@ -32,8 +32,8 @@
 #include "libc/thread/posixthread.internal.h"
 #include "third_party/gdtoa/lock.h"
 
-pthread_mutex_t __gdtoa_lock_obj = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t __gdtoa_lock1_obj = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t __gdtoa_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t __gdtoa_lock1_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void
 __gdtoa_lock(void)
@@ -48,6 +48,12 @@ __gdtoa_unlock(void)
 }
 
 void
+__gdtoa_wipe(void)
+{
+	_pthread_mutex_wipe_np(&__gdtoa_lock_obj);
+}
+
+void
 __gdtoa_lock1(void)
 {
 	_pthread_mutex_lock(&__gdtoa_lock1_obj);
@@ -57,4 +63,10 @@ void
 __gdtoa_unlock1(void)
 {
 	_pthread_mutex_unlock(&__gdtoa_lock1_obj);
+}
+
+void
+__gdtoa_wipe1(void)
+{
+	_pthread_mutex_wipe_np(&__gdtoa_lock1_obj);
 }

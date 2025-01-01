@@ -47,28 +47,30 @@
  * @asyncsignalsafe
  */
 errno_t pthread_setcancelstate(int state, int *oldstate) {
+  int old;
   errno_t err;
   struct PosixThread *pt;
   if (__tls_enabled && (pt = _pthread_self())) {
+    if (pt->pt_flags & PT_NOCANCEL) {
+      old = PTHREAD_CANCEL_DISABLE;
+    } else if (pt->pt_flags & PT_MASKED) {
+      old = PTHREAD_CANCEL_MASKED;
+    } else {
+      old = PTHREAD_CANCEL_ENABLE;
+    }
     switch (state) {
       case PTHREAD_CANCEL_ENABLE:
-      case PTHREAD_CANCEL_DISABLE:
-      case PTHREAD_CANCEL_MASKED:
-        if (oldstate) {
-          if (pt->pt_flags & PT_NOCANCEL) {
-            *oldstate = PTHREAD_CANCEL_DISABLE;
-          } else if (pt->pt_flags & PT_MASKED) {
-            *oldstate = PTHREAD_CANCEL_MASKED;
-          } else {
-            *oldstate = PTHREAD_CANCEL_ENABLE;
-          }
-        }
         pt->pt_flags &= ~(PT_NOCANCEL | PT_MASKED);
-        if (state == PTHREAD_CANCEL_MASKED) {
-          pt->pt_flags |= PT_MASKED;
-        } else if (state == PTHREAD_CANCEL_DISABLE) {
-          pt->pt_flags |= PT_NOCANCEL;
-        }
+        err = 0;
+        break;
+      case PTHREAD_CANCEL_DISABLE:
+        pt->pt_flags &= ~(PT_NOCANCEL | PT_MASKED);
+        pt->pt_flags |= PT_NOCANCEL;
+        err = 0;
+        break;
+      case PTHREAD_CANCEL_MASKED:
+        pt->pt_flags &= ~(PT_NOCANCEL | PT_MASKED);
+        pt->pt_flags |= PT_MASKED;
         err = 0;
         break;
       default:
@@ -76,11 +78,12 @@ errno_t pthread_setcancelstate(int state, int *oldstate) {
         break;
     }
   } else {
-    if (oldstate) {
-      *oldstate = 0;
-    }
+    old = 0;
     err = 0;
   }
+  if (!err)
+    if (oldstate)
+      *oldstate = old;
 #if IsModeDbg() && 0
   STRACE("pthread_setcancelstate(%s, [%s]) → %s",
          DescribeCancelState(0, &state), DescribeCancelState(err, oldstate),

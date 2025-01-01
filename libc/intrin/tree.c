@@ -54,7 +54,8 @@ struct Tree *tree_prev(struct Tree *node) {
   return parent;
 }
 
-static void tree_rotate_left(struct Tree **root, struct Tree *x) {
+dontinstrument static void tree_rotate_left(struct Tree **root,
+                                            struct Tree *x) {
   struct Tree *y = x->right;
   x->right = tree_get_left(y);
   if (tree_get_left(y))
@@ -71,7 +72,8 @@ static void tree_rotate_left(struct Tree **root, struct Tree *x) {
   x->parent = y;
 }
 
-static void tree_rotate_right(struct Tree **root, struct Tree *y) {
+dontinstrument static void tree_rotate_right(struct Tree **root,
+                                             struct Tree *y) {
   struct Tree *x = tree_get_left(y);
   tree_set_left(y, x->right);
   if (x->right)
@@ -88,7 +90,8 @@ static void tree_rotate_right(struct Tree **root, struct Tree *y) {
   x->right = y;
 }
 
-static void tree_rebalance_insert(struct Tree **root, struct Tree *node) {
+dontinstrument static void tree_rebalance_insert(struct Tree **root,
+                                                 struct Tree *node) {
   struct Tree *uncle;
   tree_set_red(node, 1);
   while (node != *root && tree_get_red(node->parent)) {
@@ -157,8 +160,8 @@ void tree_insert(struct Tree **root, struct Tree *node, tree_cmp_f *cmp) {
   }
 }
 
-static void tree_transplant(struct Tree **root, struct Tree *u,
-                            struct Tree *v) {
+dontinstrument static void tree_transplant(struct Tree **root, struct Tree *u,
+                                           struct Tree *v) {
   if (!u->parent) {
     *root = v;
   } else if (u == tree_get_left(u->parent)) {
@@ -170,8 +173,9 @@ static void tree_transplant(struct Tree **root, struct Tree *u,
     v->parent = u->parent;
 }
 
-static void tree_rebalance_remove(struct Tree **root, struct Tree *node,
-                                  struct Tree *parent) {
+dontinstrument static void tree_rebalance_remove(struct Tree **root,
+                                                 struct Tree *node,
+                                                 struct Tree *parent) {
   struct Tree *sibling;
   while (node != *root && (!node || !tree_get_red(node))) {
     if (node == tree_get_left(parent)) {

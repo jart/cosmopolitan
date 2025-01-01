@@ -23,6 +23,7 @@
 #include "libc/nt/enum/memflags.h"
 #include "libc/nt/memory.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 
 static const struct DescribeFlags kNtMemState[] = {
@@ -46,20 +47,25 @@ const char *DescribeNtMemType(char buf[64], uint32_t x) {
   return _DescribeFlags(buf, 64, kNtMemType, ARRAYLEN(kNtMemType), "kNtMem", x);
 }
 
-void __print_maps_win32(void) {
+void __print_maps_win32(int64_t hProcess, const char *addr, size_t size) {
   char *p, b[5][64];
   struct NtMemoryBasicInformation mi;
   kprintf("%-12s %-12s %10s %16s %16s %32s %32s\n", "Allocation", "BaseAddress",
           "RegionSize", "State", "Type", "AllocationProtect", "Protect");
   for (p = 0;; p = (char *)mi.BaseAddress + mi.RegionSize) {
     bzero(&mi, sizeof(mi));
-    if (!VirtualQuery(p, &mi, sizeof(mi)))
+    if (!VirtualQueryEx(hProcess, p, &mi, sizeof(mi)))
       break;
     sizefmt(b[0], mi.RegionSize, 1024);
-    kprintf("%.12lx %.12lx %10s %16s %16s %32s %32s\n", mi.AllocationBase,
+    kprintf("%.12lx %.12lx %10s %16s %16s %32s %32s%s\n", mi.AllocationBase,
             mi.BaseAddress, b[0], DescribeNtMemState(b[1], mi.State),
             DescribeNtMemType(b[2], mi.Type),
             _DescribeNtPageFlags(b[3], mi.AllocationProtect),
-            _DescribeNtPageFlags(b[4], mi.Protect));
+            _DescribeNtPageFlags(b[4], mi.Protect),
+            (mi.State != kNtMemFree &&
+             MAX(addr, (const char *)mi.BaseAddress) <
+                 MIN(addr + size, (const char *)mi.BaseAddress + mi.RegionSize))
+                ? " [OVERLAPS]"
+                : "");
   }
 }

@@ -16,19 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/thunk/msabi.h"
 
-static pthread_mutex_t __dlopen_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+__msabi extern typeof(WriteProcessMemory) *const __imp_WriteProcessMemory;
 
-void __dlopen_lock(void) {
-  _pthread_mutex_lock(&__dlopen_lock_obj);
-}
-
-void __dlopen_unlock(void) {
-  _pthread_mutex_unlock(&__dlopen_lock_obj);
-}
-
-void __dlopen_wipe(void) {
-  _pthread_mutex_wipe_np(&__dlopen_lock_obj);
+bool32 WriteProcessMemory(int64_t hProcess, void *lpBaseAddress,
+                          const void *lpBuffer, uint64_t nSize,
+                          uint64_t *opt_out_lpNumberOfBytesWritten) {
+  bool32 ok = __imp_WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, nSize,
+                                       opt_out_lpNumberOfBytesWritten);
+  if (!ok)
+    __winerr();
+  NTTRACE("WriteProcessMemory(%ld, %p, %p, %'lu, %p) → %hhhd% m", hProcess,
+          lpBaseAddress, lpBuffer, nSize, opt_out_lpNumberOfBytesWritten, ok);
+  return ok;
 }

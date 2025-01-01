@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/nt/memory.h"
 
-static pthread_mutex_t __dlopen_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+__msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 
-void __dlopen_lock(void) {
-  _pthread_mutex_lock(&__dlopen_lock_obj);
-}
-
-void __dlopen_unlock(void) {
-  _pthread_mutex_unlock(&__dlopen_lock_obj);
-}
-
-void __dlopen_wipe(void) {
-  _pthread_mutex_wipe_np(&__dlopen_lock_obj);
+/**
+ * Protects memory on the New Technology.
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows bool32 VirtualProtectEx(int64_t hProcess, void *lpAddress,
+                                    uint64_t dwSize, uint32_t flNewProtect,
+                                    uint32_t *lpflOldProtect) {
+  bool32 bOk;
+  bOk = __imp_VirtualProtectEx(hProcess, lpAddress, dwSize, flNewProtect,
+                               lpflOldProtect);
+  if (!bOk)
+    __winerr();
+  NTTRACE("VirtualProtectEx(%ld, %p, %'zu, %s, [%s]) → %hhhd% m", hProcess,
+          lpAddress, dwSize, DescribeNtPageFlags(flNewProtect),
+          DescribeNtPageFlags(*lpflOldProtect), bOk);
+  return bOk;
 }

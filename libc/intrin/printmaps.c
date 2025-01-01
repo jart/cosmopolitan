@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bsr.h"
@@ -51,13 +52,14 @@ void __print_maps(size_t limit) {
   char mappingbuf[8];
   struct Map *last = 0;
   int pagesz = __pagesize;
+  int gransz = __gransize;
   int digs = get_address_digits(pagesz);
   for (struct Tree *e = tree_first(__maps.maps); e; e = tree_next(e)) {
     struct Map *map = MAP_TREE_CONTAINER(e);
 
     // show gaps between maps
     if (last) {
-      char *beg = last->addr + ((last->size + pagesz - 1) & -pagesz);
+      char *beg = last->addr + ((last->size + gransz - 1) & -gransz);
       char *end = map->addr;
       if (end > beg) {
         size_t gap = end - beg;
@@ -72,8 +74,21 @@ void __print_maps(size_t limit) {
             _DescribeMapping(mappingbuf, map->prot, map->flags));
     sizefmt(sb, map->size, 1024);
     kprintf(" %!sb", sb);
-    if (map->hand && map->hand != -1)
-      kprintf(" hand=%ld", map->hand);
+    if (IsWindows()) {
+      switch (map->hand) {
+        case MAPS_RESERVATION:
+          kprintf(" reservation");
+          break;
+        case MAPS_SUBREGION:
+          break;
+        case MAPS_VIRTUAL:
+          kprintf(" virtual");
+          break;
+        default:
+          kprintf(" hand=%ld", map->hand);
+          break;
+      }
+    }
     if (map->iscow)
       kprintf(" cow");
     if (map->readonlyfile)

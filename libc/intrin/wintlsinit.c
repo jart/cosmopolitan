@@ -35,8 +35,8 @@ textwindows dontinstrument void __bootstrap_tls(struct CosmoTib *tib,
   tib->tib_self = tib;
   tib->tib_self2 = tib;
   tib->tib_sigmask = -1;
-  tib->tib_strace = __strace;
-  tib->tib_ftrace = __ftrace;
+  tib->tib_strace = -100;
+  tib->tib_ftrace = -100;
   tib->tib_sigstack_size = 57344;
   tib->tib_sigstack_addr = bp - 57344;
   int tid = __imp_GetCurrentThreadId();

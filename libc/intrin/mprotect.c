@@ -108,7 +108,7 @@ int __mprotect(char *addr, size_t size, int prot) {
           leftmap->hand = map->hand;
           map->addr += left;
           map->size = right;
-          map->hand = -1;
+          map->hand = MAPS_SUBREGION;
           if (!(map->flags & MAP_ANONYMOUS))
             map->off += left;
           tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);
@@ -139,7 +139,7 @@ int __mprotect(char *addr, size_t size, int prot) {
           map->addr += left;
           map->size = right;
           map->prot = prot;
-          map->hand = -1;
+          map->hand = MAPS_SUBREGION;
           if (!(map->flags & MAP_ANONYMOUS))
             map->off += left;
           tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);
@@ -175,10 +175,10 @@ int __mprotect(char *addr, size_t size, int prot) {
             midlmap->off = (map->flags & MAP_ANONYMOUS) ? 0 : map->off + left;
             midlmap->prot = prot;
             midlmap->flags = map->flags;
-            midlmap->hand = -1;
+            midlmap->hand = MAPS_SUBREGION;
             map->addr += left + middle;
             map->size = right;
-            map->hand = -1;
+            map->hand = MAPS_SUBREGION;
             if (!(map->flags & MAP_ANONYMOUS))
               map->off += left + middle;
             tree_insert(&__maps.maps, &leftmap->tree, __maps_compare);

@@ -28,6 +28,7 @@
 #include "libc/intrin/strace.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/map.h"

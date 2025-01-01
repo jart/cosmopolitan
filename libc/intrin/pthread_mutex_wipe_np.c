@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/str/str.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
@@ -25,11 +26,13 @@
  * Unlocks mutex from child process after fork.
  */
 int _pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
-  void *edges = mutex->_edges;
-  uint64_t word = mutex->_word;
-  bzero(mutex, sizeof(*mutex));
-  mutex->_word = MUTEX_UNLOCK(word);
-  mutex->_edges = edges;
+  atomic_init(&mutex->_word, MUTEX_UNLOCK(atomic_load_explicit(
+                                 &mutex->_word, memory_order_relaxed)));
+  atomic_init(&mutex->_futex, 0);
+  mutex->_pid = 0;
+  mutex->_nsync[0] = 0;
+  atomic_signal_fence(memory_order_relaxed);  // avoid xmm
+  mutex->_nsync[1] = 0;
   return 0;
 }
 

@@ -39,6 +39,7 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/str/str.h"
@@ -52,13 +53,16 @@
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
 extern pthread_mutex_t __cxa_lock_obj;
-extern pthread_mutex_t __dlopen_lock_obj;
 extern pthread_mutex_t __pthread_lock_obj;
-extern pthread_mutex_t __rand64_lock_obj;
 extern pthread_mutex_t __sig_worker_lock;
+
+void __rand64_lock(void);
+void __rand64_unlock(void);
+void __rand64_wipe(void);
 
 void __dlopen_lock(void);
 void __dlopen_unlock(void);
+void __dlopen_wipe(void);
 
 // first and last and always
 // it is the lord of all locks
@@ -111,34 +115,46 @@ static void fork_prepare(void) {
   if (_weaken(_pthread_onfork_prepare))
     _weaken(_pthread_onfork_prepare)();
   fork_prepare_stdio();
-  __localtime_lock();
-  __dlopen_lock();
+  if (_weaken(__localtime_lock))
+    _weaken(__localtime_lock)();
+  if (_weaken(__dlopen_lock))
+    _weaken(__dlopen_lock)();
   if (_weaken(cosmo_stack_lock))
     _weaken(cosmo_stack_lock)();
   __cxa_lock();
-  __gdtoa_lock1();
-  __gdtoa_lock();
+  if (_weaken(__gdtoa_lock)) {
+    _weaken(__gdtoa_lock1)();
+    _weaken(__gdtoa_lock)();
+  }
   _pthread_lock();
-  dlmalloc_pre_fork();
+  if (_weaken(dlmalloc_pre_fork))
+    _weaken(dlmalloc_pre_fork)();
   __fds_lock();
-  _pthread_mutex_lock(&__rand64_lock_obj);
+  if (_weaken(__rand64_lock))
+    _weaken(__rand64_lock)();
   __maps_lock();
   LOCKTRACE("READY TO LOCK AND ROLL");
 }
 
 static void fork_parent(void) {
   __maps_unlock();
-  _pthread_mutex_unlock(&__rand64_lock_obj);
+  if (_weaken(__rand64_unlock))
+    _weaken(__rand64_unlock)();
   __fds_unlock();
-  dlmalloc_post_fork_parent();
+  if (_weaken(dlmalloc_post_fork_parent))
+    _weaken(dlmalloc_post_fork_parent)();
   _pthread_unlock();
-  __gdtoa_unlock();
-  __gdtoa_unlock1();
+  if (_weaken(__gdtoa_unlock)) {
+    _weaken(__gdtoa_unlock)();
+    _weaken(__gdtoa_unlock1)();
+  }
   __cxa_unlock();
   if (_weaken(cosmo_stack_unlock))
     _weaken(cosmo_stack_unlock)();
-  __dlopen_unlock();
-  __localtime_unlock();
+  if (_weaken(__dlopen_unlock))
+    _weaken(__dlopen_unlock)();
+  if (_weaken(__localtime_unlock))
+    _weaken(__localtime_unlock)();
   fork_parent_stdio();
   if (_weaken(_pthread_onfork_parent))
     _weaken(_pthread_onfork_parent)();
@@ -146,18 +162,23 @@ static void fork_parent(void) {
 }
 
 static void fork_child(void) {
-  _pthread_mutex_wipe_np(&__dlopen_lock_obj);
-  _pthread_mutex_wipe_np(&__rand64_lock_obj);
+  if (_weaken(__rand64_wipe))
+    _weaken(__rand64_wipe)();
   _pthread_mutex_wipe_np(&__fds_lock_obj);
   dlmalloc_post_fork_child();
-  _pthread_mutex_wipe_np(&__gdtoa_lock_obj);
-  _pthread_mutex_wipe_np(&__gdtoa_lock1_obj);
+  if (_weaken(__gdtoa_wipe)) {
+    _weaken(__gdtoa_wipe)();
+    _weaken(__gdtoa_wipe1)();
+  }
   fork_child_stdio();
   _pthread_mutex_wipe_np(&__pthread_lock_obj);
   _pthread_mutex_wipe_np(&__cxa_lock_obj);
   if (_weaken(cosmo_stack_wipe))
     _weaken(cosmo_stack_wipe)();
-  _pthread_mutex_wipe_np(&__localtime_lock_obj);
+  if (_weaken(__dlopen_wipe))
+    _weaken(__dlopen_wipe)();
+  if (_weaken(__localtime_wipe))
+    _weaken(__localtime_wipe)();
   if (IsWindows()) {
     // we don't bother locking the proc/itimer/sig locks above since
     // their state is reset in the forked child. nothing to protect.
@@ -174,12 +195,9 @@ static void fork_child(void) {
 }
 
 int _fork(uint32_t dwCreationFlags) {
-  long micros;
   struct Dll *e;
-  struct timespec started;
   int ax, dx, tid, parent;
   parent = __pid;
-  started = timespec_mono();
   BLOCK_SIGNALS;
   fork_prepare();
   if (!IsWindows()) {
@@ -187,7 +205,6 @@ int _fork(uint32_t dwCreationFlags) {
   } else {
     ax = sys_fork_nt(dwCreationFlags);
   }
-  micros = timespec_tomicros(timespec_sub(timespec_mono(), started));
   if (!ax) {
 
     // get new process id
@@ -237,11 +254,14 @@ int _fork(uint32_t dwCreationFlags) {
     }
     atomic_init(&tib->tib_syshand, syshand);
 
+    // the child's pending signals is initially empty
+    atomic_init(&tib->tib_sigpending, 0);
+
     // we can't be canceled if the canceler no longer exists
     atomic_init(&pt->pt_canceled, false);
 
     // forget locks
-    memset(tib->tib_locks, 0, sizeof(tib->tib_locks));
+    bzero(tib->tib_locks, sizeof(tib->tib_locks));
 
     // run user fork callbacks
     fork_child();
@@ -256,11 +276,11 @@ int _fork(uint32_t dwCreationFlags) {
       }
     }
 
-    STRACE("fork() → 0 (child of %d; took %ld us)", parent, micros);
+    STRACE("fork() → 0 (child of %d)", parent);
   } else {
     // this is the parent process
     fork_parent();
-    STRACE("fork() → %d% m (took %ld us)", ax, micros);
+    STRACE("fork() → %d% m", ax);
   }
   ALLOW_SIGNALS;
   return ax;

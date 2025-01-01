@@ -16,19 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
+#include "libc/macros.h"
+#include "libc/mem/alloca.h"
+#include "libc/nt/enum/memflags.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/thunk/msabi.h"
 
-static pthread_mutex_t __dlopen_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+__msabi extern typeof(VirtualAllocEx) *const __imp_VirtualAllocEx;
 
-void __dlopen_lock(void) {
-  _pthread_mutex_lock(&__dlopen_lock_obj);
+static const char *DescribeAllocationType(char buf[48], uint32_t x) {
+  const struct DescribeFlags kAllocationTypeFlags[] = {
+      {kNtMemCommit, "Commit"},    //
+      {kNtMemReserve, "Reserve"},  //
+      {kNtMemReset, "Reset"},      //
+  };
+  return _DescribeFlags(buf, 48, kAllocationTypeFlags,
+                        ARRAYLEN(kAllocationTypeFlags), "kNtMem", x);
 }
 
-void __dlopen_unlock(void) {
-  _pthread_mutex_unlock(&__dlopen_lock_obj);
-}
-
-void __dlopen_wipe(void) {
-  _pthread_mutex_wipe_np(&__dlopen_lock_obj);
+void *VirtualAllocEx(int64_t hProcess, void *lpAddress, uint64_t dwSize,
+                     uint32_t flAllocationType, uint32_t flProtect) {
+  void *res = __imp_VirtualAllocEx(hProcess, lpAddress, dwSize,
+                                   flAllocationType, flProtect);
+  if (!res)
+    __winerr();
+  NTTRACE("VirtualAllocEx(%ld, %p, %'lu, %s, %s) → %p% m", hProcess, lpAddress,
+          dwSize, DescribeAllocationType(alloca(48), flAllocationType),
+          DescribeNtPageFlags(flProtect), res);
+  return res;
 }

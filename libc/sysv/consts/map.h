@@ -19,7 +19,6 @@ extern const int MAP_JIT;
 extern const int MAP_LOCKED;
 extern const int MAP_NOCACHE;
 extern const int MAP_NOEXTEND;
-extern const int MAP_NOFORK;
 extern const int MAP_NONBLOCK;
 extern const int MAP_NORESERVE;
 extern const int MAP_NOSYNC;

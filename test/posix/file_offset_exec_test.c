@@ -38,10 +38,6 @@ void on_unexpected_death(int sig) {
 
 int main() {
 
-  // TODO(jart): fix flakes
-  if (IsWindows())
-    return 0;
-
   signal(SIGCHLD, on_unexpected_death);
 
   // extract test program

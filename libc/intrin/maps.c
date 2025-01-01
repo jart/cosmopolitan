@@ -30,6 +30,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/tls.h"
@@ -39,10 +40,6 @@ __static_yoink("_init_maps");
 #endif
 
 #define ABI privileged optimizespeed
-
-// take great care if you enable this
-// especially if you're using --ftrace too
-#define DEBUG_MAPS_LOCK 0
 
 struct Maps __maps;
 
@@ -61,14 +58,18 @@ void __maps_stack(char *stackaddr, int pagesz, int guardsize, size_t stacksize,
   __maps.stack.addr = stackaddr + guardsize;
   __maps.stack.size = stacksize - guardsize;
   __maps.stack.prot = stackprot;
-  __maps.stack.hand = -1;
+  __maps.stack.hand = MAPS_SUBREGION;
+  __maps.stack.flags = MAP_PRIVATE | MAP_ANONYMOUS;
   __maps_adder(&__maps.stack, pagesz);
   if (guardsize) {
     __maps.guard.addr = stackaddr;
     __maps.guard.size = guardsize;
-    __maps.guard.prot = PROT_NONE;
+    __maps.guard.prot = PROT_NONE | PROT_GUARD;
     __maps.guard.hand = stackhand;
+    __maps.guard.flags = MAP_PRIVATE | MAP_ANONYMOUS;
     __maps_adder(&__maps.guard, pagesz);
+  } else {
+    __maps.stack.hand = stackhand;
   }
 }
 
@@ -102,28 +103,13 @@ void __maps_init(void) {
   }
 
   // record .text and .data mappings
-  static struct Map text, data;
-  text.addr = (char *)__executable_start;
-  text.size = _etext - __executable_start;
-  text.prot = PROT_READ | PROT_EXEC;
+  __maps_track((char *)__executable_start, _etext - __executable_start,
+               PROT_READ | PROT_EXEC, MAP_NOFORK);
   uintptr_t ds = ((uintptr_t)_etext + pagesz - 1) & -pagesz;
-  if (ds < (uintptr_t)_end) {
-    data.addr = (char *)ds;
-    data.size = (uintptr_t)_end - ds;
-    data.prot = PROT_READ | PROT_WRITE;
-    __maps_adder(&data, pagesz);
-  }
-  __maps_adder(&text, pagesz);
+  if (ds < (uintptr_t)_end)
+    __maps_track((char *)ds, (uintptr_t)_end - ds, PROT_READ | PROT_WRITE,
+                 MAP_NOFORK);
 }
-
-#if DEBUG_MAPS_LOCK
-privileged static void __maps_panic(const char *msg) {
-  // it's only safe to pass a format string. if we use directives such
-  // as %s, %t etc. then kprintf() will recursively call __maps_lock()
-  kprintf(msg);
-  DebugBreak();
-}
-#endif
 
 bool __maps_held(void) {
   return __tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_VFORKED) &&
@@ -143,7 +129,12 @@ ABI void __maps_lock(void) {
   if (tib->tib_flags & TIB_FLAG_VFORKED)
     return;
   me = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
-  if (me <= 0)
+  word = 0;
+  lock = MUTEX_LOCK(word);
+  lock = MUTEX_SET_OWNER(lock, me);
+  if (atomic_compare_exchange_strong_explicit(&__maps.lock.word, &word, lock,
+                                              memory_order_acquire,
+                                              memory_order_relaxed))
     return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
   for (;;) {
@@ -154,24 +145,13 @@ ABI void __maps_lock(void) {
         return;
       continue;
     }
-#if DEBUG_MAPS_LOCK
-    if (__deadlock_tracked(&__maps.lock) == 1)
-      __maps_panic("error: maps lock already held\n");
-    if (__deadlock_check(&__maps.lock, 1))
-      __maps_panic("error: maps lock is cyclic\n");
-#endif
     word = 0;
     lock = MUTEX_LOCK(word);
     lock = MUTEX_SET_OWNER(lock, me);
     if (atomic_compare_exchange_weak_explicit(&__maps.lock.word, &word, lock,
                                               memory_order_acquire,
-                                              memory_order_relaxed)) {
-#if DEBUG_MAPS_LOCK
-      __deadlock_track(&__maps.lock, 0);
-      __deadlock_record(&__maps.lock, 0);
-#endif
+                                              memory_order_relaxed))
       return;
-    }
     for (;;) {
       word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
       if (MUTEX_OWNER(word) == me)
@@ -183,7 +163,6 @@ ABI void __maps_lock(void) {
 }
 
 ABI void __maps_unlock(void) {
-  int me;
   uint64_t word;
   struct CosmoTib *tib;
   if (!__tls_enabled)
@@ -192,28 +171,16 @@ ABI void __maps_unlock(void) {
     return;
   if (tib->tib_flags & TIB_FLAG_VFORKED)
     return;
-  me = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
-  if (me <= 0)
-    return;
   word = atomic_load_explicit(&__maps.lock.word, memory_order_relaxed);
-#if DEBUG_MAPS_LOCK
-  if (__deadlock_tracked(&__maps.lock) == 0)
-    __maps_panic("error: maps lock not owned by caller\n");
-#endif
   for (;;) {
-    if (MUTEX_DEPTH(word)) {
+    if (MUTEX_DEPTH(word))
       if (atomic_compare_exchange_weak_explicit(
               &__maps.lock.word, &word, MUTEX_DEC_DEPTH(word),
               memory_order_relaxed, memory_order_relaxed))
         break;
-    }
     if (atomic_compare_exchange_weak_explicit(&__maps.lock.word, &word, 0,
                                               memory_order_release,
-                                              memory_order_relaxed)) {
-#if DEBUG_MAPS_LOCK
-      __deadlock_untrack(&__maps.lock);
-#endif
+                                              memory_order_relaxed))
       break;
-    }
   }
 }

@@ -29,15 +29,16 @@ TEST_LIBC_PROC_DIRECTDEPS =						\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_NT_KERNEL32						\
-	LIBC_RUNTIME							\
 	LIBC_PROC							\
+	LIBC_RUNTIME							\
+	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	LIBC_TESTLIB							\
 	LIBC_THREAD							\
 	LIBC_X								\
 	THIRD_PARTY_MUSL						\
-	THIRD_PARTY_TR
+	THIRD_PARTY_TR							\
 
 TEST_LIBC_PROC_DEPS :=							\
 	$(call uniq,$(foreach x,$(TEST_LIBC_PROC_DIRECTDEPS),$($(x))))

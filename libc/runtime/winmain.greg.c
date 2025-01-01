@@ -52,6 +52,7 @@
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 #define abi __msabi textwindows dontinstrument
@@ -87,11 +88,15 @@ void __stack_call(int, char **, char **, long (*)[2],
                   void (*)(int, char **, char **, long (*)[2]),
                   intptr_t) wontreturn;
 
+bool __winmain_isfork;
+intptr_t __winmain_jmpbuf[5];
+struct CosmoTib *__winmain_tib;
+
 __funline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
-static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
+abi static char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
   size_t i;
   for (;;) {
     for (i = 0;; ++i) {
@@ -108,13 +113,13 @@ static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
   return 0;
 }
 
-static abi void PrintError(const char *s, size_t n) {
+abi static void PrintError(const char *s, size_t n) {
 #define PrintError(s) PrintError(s, sizeof(s) - 1)
   __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), s, n, 0, 0);
 }
 
 // detect the unholiest of environments
-static abi bool32 IsWslChimera(void) {
+abi static bool32 IsWslChimera(void) {
   char16_t path[PATH_MAX];
   return __imp_GetCurrentDirectoryW(PATH_MAX, path) &&  //
          path[0] == '\\' &&                             //
@@ -125,7 +130,7 @@ static abi bool32 IsWslChimera(void) {
 }
 
 // returns true if utf-8 path is a win32-style path that exists
-static abi bool32 WinFileExists(const char *path) {
+abi static bool32 WinFileExists(const char *path) {
   uint16_t path16[PATH_MAX];
   size_t z = ARRAYLEN(path16);
   size_t n = tprecode8to16(path16, z, path).ax;
@@ -135,7 +140,7 @@ static abi bool32 WinFileExists(const char *path) {
 }
 
 // this ensures close(1) won't accidentally close(2) for example
-static abi void DeduplicateStdioHandles(void) {
+abi static void DeduplicateStdioHandles(void) {
   for (long i = 0; i < 3; ++i) {
     int64_t h1 = __imp_GetStdHandle(kNtStdio[i]);
     for (long j = i + 1; j < 3; ++j) {
@@ -150,19 +155,19 @@ static abi void DeduplicateStdioHandles(void) {
   }
 }
 
-static bool32 HasEnvironmentVariable(const char16_t *name) {
+abi static bool32 HasEnvironmentVariable(const char16_t *name) {
   char16_t buf[4];
   return __imp_GetEnvironmentVariableW(name, buf, ARRAYLEN(buf));
 }
 
-static abi unsigned OnWinCrash(struct NtExceptionPointers *ep) {
+abi static unsigned OnWinCrash(struct NtExceptionPointers *ep) {
   int code, sig = __sig_crash_sig(ep->ExceptionRecord->ExceptionCode, &code);
   TerminateThisProcess(sig);
 }
 
 // main function of windows init process
 // i.e. first process spawned that isn't forked
-static abi wontreturn void WinInit(const char16_t *cmdline) {
+abi wontreturn static void WinInit(const char16_t *cmdline) {
   __oldstack = (intptr_t)__builtin_frame_address(0);
 
   __imp_SetConsoleOutputCP(kNtCpUtf8);
@@ -314,7 +319,7 @@ static int Atoi(const char16_t *str) {
   return x;
 }
 
-static abi int WinGetPid(const char16_t *var, bool *out_is_inherited) {
+abi static int WinGetPid(const char16_t *var, bool *out_is_inherited) {
   uint32_t len;
   char16_t val[12];
   if ((len = __imp_GetEnvironmentVariableW(var, val, ARRAYLEN(val)))) {
@@ -338,6 +343,8 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   extern char os asm("__hostos");
   os = _HOSTWINDOWS;  // madness https://news.ycombinator.com/item?id=21019722
   kStartTsc = rdtsc();
+  __tls_enabled = false;
+  ftrace_enabled(-1);
   if (!IsTiny() && IsWslChimera()) {
     PrintError("error: APE is running on WIN32 inside WSL. You need to run: "
                "sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop'\n");
@@ -351,6 +358,8 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   __pid = WinGetPid(u"_COSMO_PID", &pid_is_inherited);
   if (!(__sig.process = __sig_map_process(__pid, kNtOpenAlways)))
     __sig.process = &fake_process_signals;
+  if (__winmain_isfork)
+    __builtin_longjmp(__winmain_jmpbuf, 1);
   if (!pid_is_inherited)
     atomic_store_explicit(__sig.process, 0, memory_order_release);
   cmdline = __imp_GetCommandLineW();
@@ -359,11 +368,10 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   if (StrStr(cmdline, u"--strace"))
     ++__strace;
 #endif
+  ftrace_enabled(+1);
   if (_weaken(WinSockInit))
     _weaken(WinSockInit)();
   DeduplicateStdioHandles();
-  if (_weaken(WinMainForked))
-    _weaken(WinMainForked)();
   WinInit(cmdline);
 }
 

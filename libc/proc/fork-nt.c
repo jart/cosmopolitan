@@ -16,61 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/sections.internal.h"
-#include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/atomic.h"
 #include "libc/intrin/directmap.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
-#include "libc/intrin/tree.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/macros.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/memflags.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/signals.h"
-#include "libc/nt/struct/ntexceptionpointers.h"
+#include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
-#include "libc/proc/ntspawn.h"
+#include "libc/nt/winsock.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/itimer.h"
-#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 extern long __klog_handle;
-__msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
+extern bool __winmain_isfork;
+extern intptr_t __winmain_jmpbuf[5];
+extern struct CosmoTib *__winmain_tib;
 
-static textwindows wontreturn void AbortFork(const char *func, void *addr) {
+__msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
+__msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
+__msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
+
+textwindows wontreturn static void AbortFork(const char *func, void *addr) {
 #if SYSDEBUG
   kprintf("fork() %!s(%lx) failed with win32 error %u\n", func, addr,
           GetLastError());
@@ -78,93 +70,10 @@ static textwindows wontreturn void AbortFork(const char *func, void *addr) {
   TerminateThisProcess(SIGSTKFLT);
 }
 
-static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
-  *x = 0;
-  while (*p == ' ')
-    p++;
-  while ('0' <= *p && *p <= '9') {
-    *x *= 10;
-    *x += *p++ - '0';
-  }
-  return p;
-}
-
-static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
-                                         bool32 (*f)(int64_t, void *, uint32_t,
-                                                     uint32_t *,
-                                                     struct NtOverlapped *)) {
-  size_t i;
-  uint32_t x;
-  for (i = 0; i < n; i += x) {
-    if (!f(h, p + i, n - i, &x, 0))
-      return __winerr();
-    if (!x)
-      break;
-  }
-  return i;
-}
-
-static dontinline textwindows ssize_t ForkIo2(
-    int64_t h, void *buf, size_t n,
-    bool32 (*fn)(int64_t, void *, uint32_t, uint32_t *, struct NtOverlapped *),
-    const char *sf, bool ischild) {
-  ssize_t rc = ForkIo(h, buf, n, fn);
-  if (ischild) {
-    // prevent crashes
-    __tls_enabled = false;
-    __pid = __imp_GetCurrentProcessId();
-    __klog_handle = 0;
-    __maps.maps = 0;
-  }
-  NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
-  return rc;
-}
-
-static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
-  bool ok;
-  ok = ForkIo2(h, buf, n, (void *)WriteFile, "WriteFile", false) != -1;
-  if (!ok)
-    STRACE("fork() failed in parent due to WriteAll(%ld, %p, %'zu) → %u", h,
-           buf, n, GetLastError());
-  return ok;
-}
-
-static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
-  ssize_t got;
-  if ((got = ForkIo2(h, buf, n, ReadFile, "ReadFile", true)) == -1)
-    AbortFork("ReadFile1", buf);
-  if (got != n)
-    AbortFork("ReadFile2", buf);
-}
-
-static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
-  int64_t h;
-  for (;;) {
-    if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0)))
-      return h;
-    if (GetLastError() == kNtErrorAccessDenied) {
-      switch (prot) {
-        case kNtPageExecuteWritecopy:
-          prot = kNtPageWritecopy;
-          continue;
-        case kNtPageExecuteReadwrite:
-          prot = kNtPageReadwrite;
-          continue;
-        case kNtPageExecuteRead:
-          prot = kNtPageReadonly;
-          continue;
-        default:
-          break;
-      }
-    }
-    AbortFork("MapOrDie", (void *)size);
-  }
-}
-
-static textwindows void ViewOrDie(int64_t h, uint32_t access, size_t pos,
+textwindows static void ViewOrDie(int64_t h, uint32_t access, size_t pos,
                                   size_t size, void *base) {
 TryAgain:
-  if (!MapViewOfFileEx(h, access, pos >> 32, pos, size, base)) {
+  if (!__imp_MapViewOfFileEx(h, access, pos >> 32, pos, size, base)) {
     if ((access & kNtFileMapExecute) &&
         GetLastError() == kNtErrorAccessDenied) {
       access &= ~kNtFileMapExecute;
@@ -174,302 +83,215 @@ TryAgain:
   }
 }
 
-static __msabi textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
-  kprintf("error: fork() child crashed!%n"
-          "\tExceptionCode = %#x%n"
-          "\tRip = %x%n",
-          ep->ExceptionRecord->ExceptionCode,
-          ep->ContextRecord ? ep->ContextRecord->Rip : -1);
-  TerminateThisProcess(SIGSTKFLT);
-}
+textwindows static void sys_fork_nt_child(void) {
 
-static textwindows void *Malloc(size_t size) {
-  return HeapAlloc(GetProcessHeap(), 0, size);
-}
+  // setup runtime
+  __klog_handle = 0;
+  __tls_index = __imp_TlsAlloc();
+  __set_tls_win32(__winmain_tib);
+  __tls_enabled = true;
 
-textwindows void WinMainForked(void) {
-  intptr_t jb[5];
-  int64_t reader;
-  int64_t savetsc;
-  uint32_t varlen;
-  atomic_ulong *sigproc;
-  char16_t fvar[21 + 1 + 21 + 1];
-  struct Fds *fds = __veil("r", &g_fds);
+  // resurrect shared memory mappings
+  struct Map *next;
+  for (struct Map *map = __maps_first(); map; map = next) {
+    next = __maps_next(map);
 
-  // save signal pointer
-  sigproc = __sig.process;
-
-  // check to see if the process was actually forked
-  // this variable should have the pipe handle numba
-  varlen = GetEnvironmentVariable(u"_FORK", fvar, ARRAYLEN(fvar));
-  if (!varlen || varlen >= ARRAYLEN(fvar))
-    return;
-  /* STRACE("WinMainForked()"); */
-  SetEnvironmentVariable(u"_FORK", NULL);
-#if SYSDEBUG
-  int64_t oncrash = AddVectoredExceptionHandler(1, (void *)OnForkCrash);
-#endif
-  ParseInt(fvar, &reader);
-
-  // read the cpu state from the parent process & plus
-  ReadOrDie(reader, jb, sizeof(jb));
-
-  // read memory mappings from parent process
-  struct Tree *maps = 0;
-  for (;;) {
-    struct Map *map = Malloc(sizeof(struct Map));
-    ReadOrDie(reader, map, sizeof(struct Map));
-    if (map->addr == MAP_FAILED)
-      break;
-    tree_insert(&maps, &map->tree, __maps_compare);
-  }
-
-  // map memory into process
-  int granularity = __gransize;
-  for (struct Tree *e = tree_first(maps); e; e = tree_next(e)) {
-    struct Map *map = MAP_TREE_CONTAINER(e);
-    if ((uintptr_t)map->addr & (granularity - 1))
-      continue;
-    // get true length in case mprotect() chopped up actual win32 map
-    size_t size = map->size;
-    for (struct Tree *e2 = tree_next(e); e2; e2 = tree_next(e2)) {
-      struct Map *map2 = MAP_TREE_CONTAINER(e2);
-      if (map2->hand == -1 && map->addr + size == map2->addr) {
-        size += map2->size;
-      } else {
-        break;
+    // cleanup nofork mappings
+    if (map->flags & MAP_NOFORK) {
+      if ((map->flags & MAP_TYPE) != MAP_FILE) {
+        tree_remove(&__maps.maps, &map->tree);
+        __maps.pages -= (map->size + __pagesize - 1) / __pagesize;
+        __maps.count -= 1;
+        __maps_free(map);
       }
+      continue;
     }
-    // obtain the most permissive access possible
-    unsigned prot, access;
-    if (map->readonlyfile) {
-      prot = kNtPageExecuteRead;
-      access = kNtFileMapRead | kNtFileMapExecute;
-    } else {
-      prot = kNtPageExecuteReadwrite;
-      access = kNtFileMapWrite | kNtFileMapExecute;
-    }
+
+    // private maps already copied/protected to child by parent
     if ((map->flags & MAP_TYPE) != MAP_SHARED) {
-      // we don't need to close the map handle because sys_mmap_nt
-      // doesn't mark it inheritable across fork() for MAP_PRIVATE
-      map->hand = MapOrDie(prot, size);
-      ViewOrDie(map->hand, access, 0, size, map->addr);
-      ReadOrDie(reader, map->addr, size);
-    } else {
-      // we can however safely inherit MAP_SHARED with zero copy
-      ViewOrDie(map->hand, access, map->off, size, map->addr);
+      // it's not copy-on-write anymore
+      map->iscow = false;
+      // but it used VirtualAlloc() so munmap() must VirtualFree()
+      if (map->hand > 0) {
+        CloseHandle(map->hand);
+        map->hand = MAPS_VIRTUAL;
+      }
+      continue;
     }
-  }
 
-  // read the .data and .bss program image sections
-  savetsc = kStartTsc;
-  ReadOrDie(reader, __data_start, __data_end - __data_start);
-  ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
-  kStartTsc = savetsc;
-  __tls_enabled = false;
+    // handle granularity aligned shared mapping
+    if (__maps_isalloc(map)) {
 
-  // fixup memory manager
-  __maps.maps = 0;
-  __maps.freed = 0;
-  __maps.count = 0;
-  __maps.pages = 0;
-  for (struct Tree *e = tree_first(maps); e; e = tree_next(e)) {
-    struct Map *map = MAP_TREE_CONTAINER(e);
-    __maps.count += 1;
-    __maps.pages += (map->size + __pagesize - 1) / __pagesize;
+      // get true size of win32 allocation
+      size_t allocsize = map->size;
+      for (struct Map *map2 = next; map2; map2 = __maps_next(map2)) {
+        if (!__maps_isalloc(map2) && map->addr + allocsize == map2->addr) {
+          allocsize += map2->size;
+        } else {
+          break;
+        }
+      }
+
+      // create allocation with most permissive access possible
+      // if we don't create as rwx then we can't mprotect(rwx) later
+      unsigned access;
+      if (map->readonlyfile) {
+        access = kNtFileMapRead | kNtFileMapExecute;
+      } else {
+        access = kNtFileMapWrite | kNtFileMapExecute;
+      }
+
+      // resurrect copyless memory via inherited win32 handle
+      ViewOrDie(map->hand, access, map->off, allocsize, map->addr);
+    }
+
+    // restore memory protection status on pages
     unsigned old_protect;
-    if (!VirtualProtect(map->addr, map->size, __prot2nt(map->prot, map->iscow),
-                        &old_protect))
-      AbortFork("VirtualProtect", map->addr);
+    if (!__imp_VirtualProtectEx(GetCurrentProcess(), map->addr, map->size,
+                                __prot2nt(map->prot, false), &old_protect))
+      AbortFork("VirtualProtectEx", map->addr);
   }
-  __maps.maps = maps;
-  __maps_init();
 
-  // mitosis complete
-  if (!CloseHandle(reader))
-    AbortFork("CloseHandle", (void *)reader);
+  // function tracing is now safe
+  ftrace_enabled(+1);
+
+  // initialize winsock
+  void WinSockFork(void);
+  if (_weaken(WinSockFork))
+    _weaken(WinSockFork)();
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
-  fds->p[0].handle = GetStdHandle(kNtStdInputHandle);
-  fds->p[1].handle = GetStdHandle(kNtStdOutputHandle);
-  fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);
+  g_fds.p[0].handle = GetStdHandle(kNtStdInputHandle);
+  g_fds.p[1].handle = GetStdHandle(kNtStdOutputHandle);
+  g_fds.p[2].handle = GetStdHandle(kNtStdErrorHandle);
+}
 
-  // restore signal pointer
-  __sig.process = sigproc;
+textwindows static int sys_fork_nt_parent(uint32_t dwCreationFlags) {
 
-  // restore the crash reporting stuff
-#if SYSDEBUG
-  RemoveVectoredExceptionHandler(oncrash);
-#endif
+  // allocate process object
+  struct Proc *proc;
+  if (!(proc = __proc_new()))
+    return -1;
 
-  // jump back into function below
-  __builtin_longjmp(jb, 1);
+  // get path of this executable
+  char16_t prog[PATH_MAX];
+  unsigned got = GetModuleFileName(0, prog, ARRAYLEN(prog));
+  if (!got || got >= ARRAYLEN(prog)) {
+    dll_make_first(&__proc.free, &proc->elem);
+    enomem();
+    return -1;
+  }
+
+  // spawn new process in suspended state
+  struct NtProcessInformation procinfo;
+  struct NtStartupInfo startinfo = {
+      .cb = sizeof(struct NtStartupInfo),
+      .dwFlags = kNtStartfUsestdhandles,
+      .hStdInput = g_fds.p[0].handle,
+      .hStdOutput = g_fds.p[1].handle,
+      .hStdError = g_fds.p[2].handle,
+  };
+  if (!CreateProcess(prog, 0, 0, 0, true,
+                     dwCreationFlags | kNtCreateSuspended |
+                         kNtInheritParentAffinity |
+                         kNtCreateUnicodeEnvironment |
+                         GetPriorityClass(GetCurrentProcess()),
+                     0, 0, &startinfo, &procinfo)) {
+    STRACE("fork() %s() failed w/ %m %d", "CreateProcess", GetLastError());
+    dll_make_first(&__proc.free, &proc->elem);
+    if (errno != ENOMEM)
+      eagain();
+    return -1;
+  }
+
+  // ensure process can be signaled before returning
+  UnmapViewOfFile(__sig_map_process(procinfo.dwProcessId, kNtOpenAlways));
+
+  // let's go
+  bool ok = true;
+  uint32_t child_old_protect;
+  uint32_t parent_old_protect;
+
+  // copy memory manager maps
+  for (struct MapSlab *slab =
+           atomic_load_explicit(&__maps.slabs, memory_order_acquire);
+       slab; slab = slab->next) {
+    ok = ok && !!VirtualAllocEx(procinfo.hProcess, slab, MAPS_SIZE,
+                                kNtMemReserve | kNtMemCommit, kNtPageReadwrite);
+    ok =
+        ok && !!WriteProcessMemory(procinfo.hProcess, slab, slab, MAPS_SIZE, 0);
+  }
+
+  // copy private memory maps
+  for (struct Map *map = __maps_first(); map; map = __maps_next(map)) {
+    if ((map->flags & MAP_TYPE) == MAP_SHARED)
+      continue;
+    if ((map->flags & MAP_NOFORK) && (map->flags & MAP_TYPE) != MAP_FILE)
+      continue;
+    if (__maps_isalloc(map)) {
+      size_t allocsize = map->size;
+      for (struct Map *m2 = __maps_next(map); m2; m2 = __maps_next(m2)) {
+        if (!__maps_isalloc(m2) && map->addr + allocsize == m2->addr) {
+          allocsize += m2->size;
+        } else {
+          break;
+        }
+      }
+      if ((map->flags & MAP_NOFORK) && (map->flags & MAP_TYPE) == MAP_FILE) {
+        ok = ok && !!VirtualProtectEx(procinfo.hProcess, map->addr, allocsize,
+                                      kNtPageReadwrite, &child_old_protect);
+      } else {
+        ok = ok && !!VirtualAllocEx(procinfo.hProcess, map->addr, allocsize,
+                                    kNtMemReserve | kNtMemCommit,
+                                    kNtPageExecuteReadwrite);
+      }
+    }
+    if (!(map->prot & PROT_READ))
+      ok = ok && !!VirtualProtect(map->addr, map->size, kNtPageReadwrite,
+                                  &parent_old_protect);
+    ok = ok && !!WriteProcessMemory(procinfo.hProcess, map->addr, map->addr,
+                                    map->size, 0);
+    ok = ok &&
+         !!VirtualProtectEx(procinfo.hProcess, map->addr, map->size,
+                            __prot2nt(map->prot, false), &child_old_protect);
+    if (!(map->prot & PROT_READ))
+      ok = ok && !!VirtualProtect(map->addr, map->size, parent_old_protect,
+                                  &parent_old_protect);
+  }
+
+  // set process loose
+  ok = ok && ResumeThread(procinfo.hThread) != -1u;
+  ok &= !!CloseHandle(procinfo.hThread);
+
+  // return pid of new process
+  if (ok) {
+    proc->wasforked = true;
+    proc->handle = procinfo.hProcess;
+    proc->pid = procinfo.dwProcessId;
+    __proc_add(proc);
+    return procinfo.dwProcessId;
+  } else {
+    if (errno != ENOMEM)
+      eagain();  // posix fork() only specifies two errors
+    TerminateProcess(procinfo.hProcess, SIGKILL);
+    CloseHandle(procinfo.hProcess);
+    dll_make_first(&__proc.free, &proc->elem);
+    return -1;
+  }
 }
 
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
-  char ok;
-  char **args;
-  int rc = -1;
-  intptr_t jb[5];
-  struct Proc *proc;
-  struct CosmoTib *tib;
-  char16_t pipename[64];
-  int64_t reader, writer;
-  struct NtStartupInfo startinfo;
-  struct NtProcessInformation procinfo;
-  char *p, forkvar[6 + 21 + 1 + 21 + 1];
-  tib = __get_tls();
-  if (!(proc = __proc_new()))
-    return -1;
-  ftrace_enabled(-1);
-  strace_enabled(-1);
-  if (!__builtin_setjmp(jb)) {
-    reader = CreateNamedPipe(__create_pipe_name(pipename), kNtPipeAccessInbound,
-                             kNtPipeTypeByte | kNtPipeReadmodeByte, 1, PIPE_BUF,
-                             PIPE_BUF, 0, &kNtIsInheritable);
-    writer = CreateFile(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting, 0, 0);
-    if (reader != -1 && writer != -1) {
-      p = stpcpy(forkvar, "_FORK=");
-      p = FormatUint64(p, reader);
-      bzero(&startinfo, sizeof(startinfo));
-      startinfo.cb = sizeof(struct NtStartupInfo);
-      startinfo.dwFlags = kNtStartfUsestdhandles;
-      startinfo.hStdInput = g_fds.p[0].handle;
-      startinfo.hStdOutput = g_fds.p[1].handle;
-      startinfo.hStdError = g_fds.p[2].handle;
-      args = __argv;
-#if SYSDEBUG
-      int i;
-      // If --strace was passed to this program, then propagate it the
-      // forked process since the flag was removed by __intercept_flag
-      if (strace_enabled(0) > 0) {
-        int n;
-        for (n = 0; args[n];)
-          ++n;
-#pragma GCC push_options
-#pragma GCC diagnostic ignored "-Walloca-larger-than="
-        int nbytes = (n + 2) * sizeof(char *);
-        char **args2 = alloca(nbytes);
-        CheckLargeStackAllocation(args2, nbytes);
-#pragma GCC pop_options
-        for (i = 0; i < n; ++i)
-          args2[i] = args[i];
-        args2[i++] = "--strace";
-        args2[i] = 0;
-        args = args2;
-      }
-#endif
-      NTTRACE("STARTING SPAWN");
-      int spawnrc = ntspawn(&(struct NtSpawnArgs){
-          AT_FDCWD, GetProgramExecutableName(), args, environ,
-          (char *[]){forkvar, 0}, dwCreationFlags, 0, 0, 0, 0, &startinfo,
-          &procinfo});
-      if (spawnrc != -1) {
-        CloseHandle(procinfo.hThread);
-        ok = WriteAll(writer, jb, sizeof(jb));
-        // this list will be populated with the maps we're transferring
-        for (struct Map *map = __maps_first(); ok && map;
-             map = __maps_next(map)) {
-          if (map->flags & MAP_NOFORK)
-            continue;
-          if (MAX((char *)__executable_start, map->addr) <
-              MIN((char *)_end, map->addr + map->size))
-            continue;  // executable image is loaded by windows
-          ok = WriteAll(writer, map, sizeof(*map));
-        }
-        // send a terminating Map struct to child
-        if (ok) {
-          struct Map map;
-          map.addr = MAP_FAILED;
-          ok = WriteAll(writer, &map, sizeof(map));
-        }
-        // now write content of each map to child
-        int granularity = __gransize;
-        for (struct Map *map = __maps_first(); ok && map;
-             map = __maps_next(map)) {
-          if (map->flags & MAP_NOFORK)
-            continue;
-          // we only need to worry about the base mapping
-          if ((uintptr_t)map->addr & (granularity - 1))
-            continue;
-          if (MAX((char *)__executable_start, map->addr) <
-              MIN((char *)_end, map->addr + map->size))
-            continue;  // executable image is loaded by windows
-          // shared mappings don't need to be copied
-          if ((map->flags & MAP_TYPE) == MAP_SHARED)
-            continue;
-          // get true length in case mprotect() chopped up actual win32 map
-          size_t size = map->size;
-          for (struct Map *map2 = __maps_next(map); map2;
-               map2 = __maps_next(map2)) {
-            if (map2->hand == -1 && map->addr + size == map2->addr) {
-              size += map2->size;
-            } else {
-              break;
-            }
-          }
-          for (struct Map *map2 = map; ok && map2; map2 = __maps_next(map2)) {
-            if (!(map2->prot & PROT_READ))
-              if (map->addr >= map2->addr && map->addr < map->addr + size)
-                ok = VirtualProtect(
-                    map2->addr, map2->size,
-                    __prot2nt(map2->prot | PROT_READ, map2->iscow),
-                    &map2->visited);
-          }
-          if (ok)
-            ok = WriteAll(writer, map->addr, size);
-          for (struct Map *map2 = map; ok && map2; map2 = __maps_next(map2)) {
-            if (!(map2->prot & PROT_READ))
-              if (map->addr >= map2->addr && map->addr < map->addr + size)
-                ok = VirtualProtect(map2->addr, map2->size, map2->visited,
-                                    &map2->visited);
-          }
-        }
-        if (ok)
-          ok = WriteAll(writer, __data_start, __data_end - __data_start);
-        if (ok)
-          ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
-        if (ok) {
-          if (!CloseHandle(writer))
-            ok = false;
-          writer = -1;
-        }
-        if (ok) {
-          proc->wasforked = true;
-          proc->handle = procinfo.hProcess;
-          rc = proc->pid = procinfo.dwProcessId;
-          __proc_add(proc);
-        } else {
-          TerminateProcess(procinfo.hProcess, SIGKILL);
-          CloseHandle(procinfo.hProcess);
-          rc = -1;
-        }
-      }
-    }
-    if (reader != -1)
-      CloseHandle(reader);
-    if (writer != -1)
-      CloseHandle(writer);
-    if (rc == -1 && errno != ENOMEM)
-      eagain();  // posix fork() only specifies two errors
+  int rc;
+  __winmain_isfork = true;
+  __winmain_tib = __get_tls();
+  if (!__builtin_setjmp(__winmain_jmpbuf)) {
+    rc = sys_fork_nt_parent(dwCreationFlags);
   } else {
+    sys_fork_nt_child();
     rc = 0;
-    // re-apply code morphing for thread-local storage
-    __tls_index = TlsAlloc();
-    __set_tls_win32(tib);
-    __morph_tls();
-    __tls_enabled = true;
-    // the child's pending signals is initially empty
-    atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
-    // re-apply code morphing for function tracing
-    if (ftrace_stackdigs)
-      _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
   }
-  if (rc == -1)
-    dll_make_first(&__proc.free, &proc->elem);
-  ftrace_enabled(+1);
-  strace_enabled(+1);
+  __winmain_isfork = false;
   return rc;
 }
 

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/maps.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -24,12 +25,13 @@
 static char DescribeMapType(int flags) {
   switch (flags & MAP_TYPE) {
     case MAP_FILE:
+      if (flags & MAP_NOFORK)
+        return 'i';  // executable image
       return '-';
     case MAP_PRIVATE:
       if (flags & MAP_NOFORK)
-        return 'P';
-      else
-        return 'p';
+        return 'w';  // windows memory
+      return 'p';
     case MAP_SHARED:
       return 's';
     default:

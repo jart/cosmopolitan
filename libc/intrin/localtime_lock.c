@@ -19,7 +19,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "third_party/tz/lock.h"
 
-pthread_mutex_t __localtime_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t __localtime_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void __localtime_lock(void) {
   _pthread_mutex_lock(&__localtime_lock_obj);
@@ -27,4 +27,8 @@ void __localtime_lock(void) {
 
 void __localtime_unlock(void) {
   _pthread_mutex_unlock(&__localtime_lock_obj);
+}
+
+void __localtime_wipe(void) {
+  _pthread_mutex_wipe_np(&__localtime_lock_obj);
 }

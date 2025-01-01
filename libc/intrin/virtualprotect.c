@@ -16,13 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/strace.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/nt/memory.h"
-
-__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+#include "libc/nt/runtime.h"
 
 /**
  * Protects memory on the New Technology.
@@ -31,12 +26,6 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 textwindows bool32 VirtualProtect(void *lpAddress, uint64_t dwSize,
                                   uint32_t flNewProtect,
                                   uint32_t *lpflOldProtect) {
-  bool32 bOk;
-  bOk = __imp_VirtualProtect(lpAddress, dwSize, flNewProtect, lpflOldProtect);
-  if (!bOk)
-    __winerr();
-  NTTRACE("VirtualProtect(%p, %'zu, %s, [%s]) → %hhhd% m", lpAddress, dwSize,
-          DescribeNtPageFlags(flNewProtect),
-          DescribeNtPageFlags(*lpflOldProtect), bOk);
-  return bOk;
+  return VirtualProtectEx(GetCurrentProcess(), lpAddress, dwSize, flNewProtect,
+                          lpflOldProtect);
 }

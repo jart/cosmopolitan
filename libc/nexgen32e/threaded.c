@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/tls.h"
 
-#ifdef __x86_64__
-char __tls_enabled;
-#endif
-
+#ifndef __x86_64__
 unsigned __tls_index;
+#endif

@@ -238,7 +238,8 @@ static bool free_waiters_populate (void) {
 		// netbsd semaphores are file descriptors
 		n = 1;
 	} else {
-		n = __pagesize / sizeof(waiter);
+		// don't create too much fork() overhead
+		n = 16;
 	}
 	waiter *waiters = mmap (0, n * sizeof(waiter),
 				PROT_READ | PROT_WRITE,

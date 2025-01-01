@@ -135,7 +135,7 @@ ARCH = aarch64
 HOSTS ?= pi pi5 studio freebsdarm
 else
 ARCH = x86_64
-HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10
+HOSTS ?= freebsd rhel7 xnu openbsd netbsd win10 luna
 endif
 
 ZIPOBJ_FLAGS += -a$(ARCH)

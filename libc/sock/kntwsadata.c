@@ -51,3 +51,7 @@ textwindows void WinSockInit(void) {
     _Exit(1);
   }
 }
+
+textwindows dontinstrument void WinSockFork(void) {
+  WSAStartup(VERSION, &kNtWsaData);
+}

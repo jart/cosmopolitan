@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
@@ -32,6 +33,7 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
@@ -150,6 +152,31 @@ void ForkInSerial(void) {
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
 
-BENCH(fork, bench) {
-  EZBENCH2("fork a", donothing, ForkInSerial());
+void VforkInSerial(void) {
+  int pid, ws;
+  ASSERT_NE(-1, (pid = vfork()));
+  if (!pid)
+    _Exit(0);
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+void SysForkInSerial(void) {
+  int pid, ws;
+  ASSERT_NE(-1, (pid = sys_fork()));
+  if (!pid)
+    _Exit(0);
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(fork, bench) {
+  VforkInSerial();
+  BENCHMARK(10, 1, VforkInSerial());
+  if (!IsWindows())
+    BENCHMARK(10, 1, SysForkInSerial());
+  ForkInSerial();
+  BENCHMARK(10, 1, ForkInSerial());
 }
