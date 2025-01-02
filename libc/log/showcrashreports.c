@@ -82,11 +82,7 @@ void ShowCrashReports(void) {
   ss.ss_sp = crashstack;
   unassert(!sigaltstack(&ss, 0));
   InstallCrashHandler(SIGQUIT, 0);
-#ifdef __x86_64__
   InstallCrashHandler(SIGTRAP, 0);
-#else
-  InstallCrashHandler(SIGTRAP, 0);
-#endif
   InstallCrashHandler(SIGFPE, 0);
   InstallCrashHandler(SIGILL, 0);
   InstallCrashHandler(SIGBUS, 0);

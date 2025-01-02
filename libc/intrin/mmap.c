@@ -49,7 +49,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define MMDEBUG  1
+#define MMDEBUG  0
 #define MAX_SIZE 0x0ff800000000ul
 
 #define MAP_FIXED_NOREPLACE_linux 0x100000
@@ -94,8 +94,11 @@ privileged optimizespeed struct Map *__maps_floor(const char *addr) {
 }
 
 static bool __maps_overlaps(const char *addr, size_t size) {
-  struct Map *map, *floor = __maps_floor(addr);
-  for (map = floor; map && map->addr <= addr + size; map = __maps_next(map))
+  struct Map *map;
+  ASSERT(__maps_held());
+  if (!(map = __maps_floor(addr)))
+    map = __maps_first();
+  for (; map && map->addr <= addr + size; map = __maps_next(map))
     if (MAX(addr, map->addr) <
         MIN(addr + PGUP(size), map->addr + PGUP(map->size)))
       return true;
@@ -105,30 +108,33 @@ static bool __maps_overlaps(const char *addr, size_t size) {
 // returns true if all fragments of all allocations which overlap
 // [addr,addr+size) are completely contained by [addr,addr+size).
 textwindows static bool __maps_envelops(const char *addr, size_t size) {
-  struct Map *map, *next;
+  struct Map *map;
   size = PGUP(size);
+  ASSERT(__maps_held());
   if (!(map = __maps_floor(addr)))
-    if (!(map = __maps_first()))
-      return true;
-  do {
-    if (MAX(addr, map->addr) >= MIN(addr + size, map->addr + map->size))
-      break;  // didn't overlap mapping
-    if (!__maps_isalloc(map))
-      return false;  // didn't include first fragment of alloc
-    if (addr > map->addr)
-      return false;  // excluded leading pages of first fragment
-    // set map to last fragment in allocation
-    for (; (next = __maps_next(map)) && !__maps_isalloc(next); map = next)
-      // fragments within an allocation must be perfectly contiguous
-      ASSERT(map->addr + map->size == next->addr);
-    if (addr + size < map->addr + PGUP(map->size))
-      return false;  // excluded trailing pages of allocation
-  } while ((map = next));
+    map = __maps_first();
+  while (map && map->addr <= addr + size) {
+    if (MAX(addr, map->addr) < MIN(addr + size, map->addr + map->size)) {
+      if (!__maps_isalloc(map))
+        return false;  // didn't include first fragment of alloc
+      if (addr > map->addr)
+        return false;    // excluded leading pages of first fragment
+      struct Map *next;  // set map to last fragment in allocation
+      for (; (next = __maps_next(map)) && !__maps_isalloc(next); map = next)
+        ASSERT(map->addr + map->size == next->addr);  // contiguous
+      if (addr + size < map->addr + PGUP(map->size))
+        return false;  // excluded trailing pages of allocation
+      map = next;
+    } else {
+      map = __maps_next(map);
+    }
+  }
   return true;
 }
 
 void __maps_check(void) {
 #if MMDEBUG
+  ASSERT(__maps_held());
   size_t maps = 0;
   size_t pages = 0;
   static unsigned mono;
@@ -152,6 +158,22 @@ void __maps_check(void) {
 #endif
 }
 
+#if MMDEBUG
+static void __maps_ok(void) {
+  ASSERT(!__maps_reentrant());
+  __maps_lock();
+  __maps_check();
+  __maps_unlock();
+}
+__attribute__((__constructor__)) static void __maps_ctor(void) {
+  atexit(__maps_ok);
+  __maps_ok();
+}
+__attribute__((__destructor__)) static void __maps_dtor(void) {
+  __maps_ok();
+}
+#endif
+
 static int __muntrack(char *addr, size_t size, struct Map **deleted,
                       struct Map **untracked, struct Map temp[2]) {
   int rc = 0;
@@ -159,13 +181,14 @@ static int __muntrack(char *addr, size_t size, struct Map **deleted,
   struct Map *map;
   struct Map *next;
   size = PGUP(size);
+  ASSERT(__maps_held());
   if (!(map = __maps_floor(addr)))
     map = __maps_first();
   for (; map && map->addr <= addr + size; map = next) {
     next = __maps_next(map);
     char *map_addr = map->addr;
     size_t map_size = map->size;
-    if (!(MAX(addr, map_addr) < MIN(addr + size, map_addr + PGUP(map_size))))
+    if (MAX(addr, map_addr) >= MIN(addr + size, map_addr + PGUP(map_size)))
       continue;
     if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
       if (map->hand == MAPS_RESERVATION)
@@ -350,6 +373,7 @@ static bool __maps_mergeable(const struct Map *x, const struct Map *y) {
 void __maps_insert(struct Map *map) {
   struct Map *left, *right;
   ASSERT(map->size);
+  ASSERT(__maps_held());
   ASSERT(!__maps_overlaps(map->addr, map->size));
   __maps.pages += (map->size + __pagesize - 1) / __pagesize;
 
@@ -460,7 +484,7 @@ static int __munmap(char *addr, size_t size) {
     return einval();
 
   // test for signal handler tragedy
-  if (__maps_held())
+  if (__maps_reentrant())
     return edeadlk();
 
   // lock the memory manager
@@ -469,8 +493,10 @@ static int __munmap(char *addr, size_t size) {
 
   // on windows we can only unmap whole allocations
   if (IsWindows())
-    if (!__maps_envelops(addr, size))
+    if (!__maps_envelops(addr, size)) {
+      __maps_unlock();
       return enotsup();
+    }
 
   // untrack mappings
   int rc;
@@ -500,6 +526,7 @@ void *__maps_randaddr(void) {
 }
 
 static void *__maps_pickaddr(size_t size) {
+  ASSERT(__maps_held());
   char *addr = 0;
   struct Map *map, *prev;
   size = GRUP(size);
@@ -569,11 +596,15 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
       noreplace = true;
       sysflags |= MAP_FIXED_NOREPLACE_linux;
     } else if (IsFreebsd() || IsNetbsd()) {
+      // todo: insert a reservation like windows
       sysflags |= MAP_FIXED;
+      __maps_lock();
       if (__maps_overlaps(addr, size)) {
+        __maps_unlock();
         __maps_free(map);
         return (void *)eexist();
       }
+      __maps_unlock();
     } else {
       noreplace = true;
     }
@@ -729,7 +760,7 @@ static void *__mmap(char *addr, size_t size, int prot, int flags, int fd,
     return (void *)enomem();
 
   // test for signal handler reentry
-  if (__maps_held())
+  if (__maps_reentrant())
     return (void *)edeadlk();
 
   // create memory mappping
@@ -874,7 +905,7 @@ static void *__mremap(char *old_addr, size_t old_size, size_t new_size,
       return (void *)enomem();
 
   // test for signal handler reentry
-  if (__maps_held())
+  if (__maps_reentrant())
     return (void *)edeadlk();
 
   // lock the memory manager

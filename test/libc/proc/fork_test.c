@@ -27,6 +27,7 @@
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -38,6 +39,10 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/tls.h"
+
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(fork, testPipes) {
   int a, b;
@@ -142,7 +147,7 @@ TEST(fork, preservesTlsMemory) {
   EXITS(0);
 }
 
-void ForkInSerial(void) {
+void fork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid)
@@ -152,7 +157,19 @@ void ForkInSerial(void) {
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
 
-void VforkInSerial(void) {
+void vfork_execl_wait_in_serial(void) {
+  int pid, ws;
+  ASSERT_NE(-1, (pid = vfork()));
+  if (!pid) {
+    execl("./life", "./life", NULL);
+    _Exit(127);
+  }
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
+void vfork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = vfork()));
   if (!pid)
@@ -162,7 +179,7 @@ void VforkInSerial(void) {
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
 
-void SysForkInSerial(void) {
+void sys_fork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = sys_fork()));
   if (!pid)
@@ -172,11 +189,31 @@ void SysForkInSerial(void) {
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
 
+void posix_spawn_in_serial(void) {
+  int ws, pid;
+  char *prog = "./life";
+  char *args[] = {prog, NULL};
+  char *envs[] = {NULL};
+  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
 TEST(fork, bench) {
-  VforkInSerial();
-  BENCHMARK(10, 1, VforkInSerial());
+  if (IsWindows()) {
+    testlib_extract("/zip/life-pe.ape", "life", 0755);
+  } else {
+    testlib_extract("/zip/life", "life", 0755);
+  }
+  vfork_wait_in_serial();
+  vfork_execl_wait_in_serial();
+  posix_spawn_in_serial();
+  BENCHMARK(10, 1, vfork_wait_in_serial());
   if (!IsWindows())
-    BENCHMARK(10, 1, SysForkInSerial());
-  ForkInSerial();
-  BENCHMARK(10, 1, ForkInSerial());
+    BENCHMARK(10, 1, sys_fork_wait_in_serial());
+  fork_wait_in_serial();
+  BENCHMARK(10, 1, fork_wait_in_serial());
+  BENCHMARK(10, 1, posix_spawn_in_serial());
+  BENCHMARK(10, 1, vfork_execl_wait_in_serial());
 }

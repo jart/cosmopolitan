@@ -94,4 +94,6 @@ o/$(MODE)/tool/hello/wait-pe.ape:			\
 		o/$(MODE)/tool/build/elf2pe
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -R 64kb -S 4kb -o $@ $<
 
+o/$(MODE)/tool/hello/life-pe.ape.zip.o: private ZIPOBJ_FLAGS += -B
+
 $(TOOL_HELLO_OBJS): tool/hello/BUILD.mk

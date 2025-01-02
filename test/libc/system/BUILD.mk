@@ -30,8 +30,8 @@ TEST_LIBC_SYSTEM_DIRECTDEPS =					\
 	LIBC_LOG						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_PROC						\
 	LIBC_RUNTIME						\
-	LIBC_STDIO						\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_SYSTEM						\
@@ -81,6 +81,21 @@ o/$(MODE)/test/libc/system/system_test.dbg:			\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/test/libc/system/trace_test.dbg:			\
+		$(TEST_LIBC_SYSTEM_DEPS)			\
+		o/$(MODE)/test/libc/system/trace_test.o		\
+		o/$(MODE)/test/libc/system/system.pkg		\
+		o/$(MODE)/test/libc/system/popen_test.zip.o	\
+		o/$(MODE)/test/libc/system/popen_test.dbg.zip.o	\
+		o/$(MODE)/tool/build/echo.zip.o			\
+		$(LIBC_TESTMAIN)				\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/system/popen_test.zip.o: private ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/libc/system/popen_test.dbg.zip.o: private ZIPOBJ_FLAGS += -B
 
 $(TEST_LIBC_SYSTEM_OBJS): test/libc/system/BUILD.mk
 

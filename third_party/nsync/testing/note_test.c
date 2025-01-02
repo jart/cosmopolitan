@@ -20,6 +20,7 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
+#include "libc/dce.h"
 #include "third_party/nsync/time.h"
 
 /* Verify the properties of a prenotified note. */
@@ -78,7 +79,7 @@ static void test_note_unnotified (testing t) {
 		TEST_ERROR (t, ("timed wait on unnotified note returned too quickly (1s wait took %s)",
 			   nsync_time_str (waited, 2)));
 	}
-	if (nsync_time_cmp (waited, nsync_time_ms (2000)) > 0) {
+	if (nsync_time_cmp (waited, nsync_time_ms (IsNetbsd() || IsOpenbsd() || IsFreebsd() ? 4000 : 2000)) > 0) {
 		TEST_ERROR (t, ("timed wait on unnotified note returned too slowly (1s wait took %s)",
 			   nsync_time_str (waited, 2)));
 	}

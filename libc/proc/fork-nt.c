@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/directmap.h"

@@ -47,6 +47,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"

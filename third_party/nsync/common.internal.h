@@ -9,14 +9,9 @@
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/time.h"
+#include "third_party/nsync/defs.h"
 #include "third_party/nsync/wait_s.internal.h"
 COSMOPOLITAN_C_START_
-
-#ifdef MODE_DBG
-#define NSYNC_DEBUG 1
-#else
-#define NSYNC_DEBUG 0
-#endif
 
 /* Yield the CPU. Platform specific. */
 void nsync_yield_(void);
@@ -191,13 +186,15 @@ struct wait_condition_s {
     ATM_STORE_REL (&w.waiting, 0);
     nsync_mu_semaphore_v (&w.sem); */
 typedef struct waiter_s {
+#if NSYNC_DEBUG
   uint32_t tag;                      /* Debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND. */
+#endif
   int flags;                         /* See WAITER_* bits below. */
+  nsync_atomic_uint32_ remove_count; /* Monotonic count of removals from queue. */
   nsync_semaphore sem;               /* Thread waits on this semaphore. */
   struct nsync_waiter_s nw;          /* An embedded nsync_waiter_s. */
   struct nsync_mu_s_ *cv_mu;         /* Pointer to nsync_mu associated with a cv wait. */
   lock_type *l_type;                 /* Lock type of the mu, or nil if not associated with a mu. */
-  nsync_atomic_uint32_ remove_count; /* Monotonic count of removals from queue. */
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
   struct Dll same_condition;         /* Links neighbours in nw.q with same non-nil condition. */
   struct waiter_s * next_all;

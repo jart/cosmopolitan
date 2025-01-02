@@ -112,7 +112,7 @@ __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 __msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
 __msabi extern typeof(WakeByAddressAll) *const __imp_WakeByAddressAll;
 
-static textwindows dontinstrument wontreturn void  //
+textwindows dontinstrument wontreturn static void  //
 WinThreadEntry(int rdi,                            // rcx
                int rsi,                            // rdx
                int rdx,                            // r8
@@ -185,7 +185,7 @@ asm("XnuThreadThunk:\n\t"
     ".size\tXnuThreadThunk,.-XnuThreadThunk");
 __attribute__((__used__))
 
-static wontreturn void
+static dontinstrument wontreturn void
 XnuThreadMain(void *pthread,                    // rdi
               int tid,                          // rsi
               int (*func)(void *arg, int tid),  // rdx
@@ -265,7 +265,7 @@ static errno_t CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
 
 // we can't use address sanitizer because:
 //   1. __asan_handle_no_return wipes stack [todo?]
-relegated static wontreturn void OpenbsdThreadMain(void *p) {
+relegated dontinstrument wontreturn static void OpenbsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
   atomic_init(wt->ptid, wt->tid);
   atomic_init(wt->ctid, wt->tid);
@@ -318,11 +318,12 @@ relegated errno_t CloneOpenbsd(int (*func)(void *, int), char *stk,
 ////////////////////////////////////////////////////////////////////////////////
 // NET BESIYATA DISHMAYA
 
-static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
-                                        int (*func)(void *, int),  // rsi
-                                        int flags,                 // rdx
-                                        atomic_int *ctid,          // rcx
-                                        atomic_int *ptid) {        // r8
+wontreturn dontinstrument static void NetbsdThreadMain(
+    void *arg,                 // rdi
+    int (*func)(void *, int),  // rsi
+    int flags,                 // rdx
+    atomic_int *ctid,          // rcx
+    atomic_int *ptid) {        // r8
   int ax, dx;
   static atomic_int clobber;
   atomic_int *ztid = &clobber;
@@ -420,7 +421,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // FREE BESIYATA DISHMAYA
 
-static wontreturn void FreebsdThreadMain(void *p) {
+wontreturn dontinstrument static void FreebsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
 #ifdef __aarch64__
   asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(wt->tls));
@@ -519,7 +520,7 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // APPLE SILICON
 
-static void *SiliconThreadMain(void *arg) {
+dontinstrument static void *SiliconThreadMain(void *arg) {
   struct CloneArgs *wt = arg;
   asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(wt->tls));
   atomic_init(wt->ctid, wt->this);
@@ -595,7 +596,7 @@ int sys_clone_linux(int flags,         // rdi
                     void *func,        // r9
                     void *arg);        // 8(rsp)
 
-static int LinuxThreadEntry(void *arg, int tid) {
+dontinstrument static int LinuxThreadEntry(void *arg, int tid) {
   struct LinuxCloneArgs *wt = arg;
 #if defined(__x86_64__)
   sys_set_tls(ARCH_SET_GS, wt->tls);

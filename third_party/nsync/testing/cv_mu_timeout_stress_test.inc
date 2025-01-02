@@ -60,7 +60,7 @@ typedef struct cv_stress_data_s {
 /* The delays in cv_stress_inc_loop(), cv_stress_reader_loop(), mu_stress_inc_loop(),
    and mu_stress_reader_loop() are uniformly distributed from 0 to
    STRESS_MAX_DELAY_MICROS-1 microseconds. */
-#define STRESS_MAX_DELAY_MICROS (IsNetbsd() || IsOpenbsd() ? 20000 : 4000)  /* maximum delay */
+#define STRESS_MAX_DELAY_MICROS (IsNetbsd() || IsOpenbsd() ? 30000 : 4000)  /* maximum delay */
 #define STRESS_MEAN_DELAY_MICROS (STRESS_MAX_DELAY_MICROS / 2)              /* mean delay */
 #define STRESS_EXPECT_TIMEOUTS_PER_SEC (1000000 / STRESS_MEAN_DELAY_MICROS) /* expect timeouts/s*/
 

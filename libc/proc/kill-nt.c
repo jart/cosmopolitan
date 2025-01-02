@@ -24,7 +24,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -84,6 +83,23 @@ textwindows int sys_kill_nt(int pid, int sig) {
     }
   }
 
+  // attempt to signal via shared memory file
+  //
+  // now that we know the process exists, if it has a shared memory file
+  // then we can be reasonably certain it's a cosmo process which should
+  // be trusted to deliver its signal, unless it's a nine exterminations
+  if (pid > 0 && sig != 9) {
+    atomic_ulong *sigproc;
+    if ((sigproc = __sig_map_process(pid, kNtOpenExisting))) {
+      if (sig > 0)
+        atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
+                                 memory_order_release);
+      UnmapViewOfFile(sigproc);
+      if (sig != 9)
+        return 0;
+    }
+  }
+
   // find existing handle we own for process
   //
   // this step should come first to verify process existence. this is
@@ -91,31 +107,9 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // file exists, the process actually exists.
   int64_t handle, closeme = 0;
   if (!(handle = __proc_handle(pid))) {
-    if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
-      STRACE("warning: kill() using raw win32 pid");
-      closeme = handle;
-    } else {
-      goto OnError;
-    }
-  }
-
-  // attempt to signal via shared memory file
-  //
-  // now that we know the process exists, if it has a shared memory file
-  // then we can be reasonably certain it's a cosmo process which should
-  // be trusted to deliver its signal, unless it's a nine exterminations
-  if (pid > 0) {
-    atomic_ulong *sigproc;
-    if ((sigproc = __sig_map_process(pid, kNtOpenExisting))) {
-      if (sig > 0)
-        atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
-                                 memory_order_release);
-      UnmapViewOfFile(sigproc);
-      if (closeme)
-        CloseHandle(closeme);
-      if (sig != 9)
-        return 0;
-    }
+    if (!(handle = OpenProcess(kNtProcessTerminate, false, pid)))
+      return eperm();
+    closeme = handle;
   }
 
   // perform actual kill
@@ -127,16 +121,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
     CloseHandle(closeme);
   if (ok)
     return 0;
-
-  // handle error
-OnError:
-  switch (GetLastError()) {
-    case kNtErrorInvalidHandle:
-    case kNtErrorInvalidParameter:
-      return esrch();
-    default:
-      return eperm();
-  }
+  return esrch();
 }
 
 #endif /* __x86_64__ */

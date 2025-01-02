@@ -39,7 +39,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/regex/regex.h"
-#ifdef __x86_64__
 
 __static_yoink("zipos");
 __static_yoink("o/" MODE "/test/tool/net/redbean-tester");
@@ -292,5 +291,3 @@ Z\n",
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
-
-#endif /* __x86_64__ */

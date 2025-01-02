@@ -51,7 +51,9 @@ int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 			nw = (struct nsync_waiter_s *) malloc (count * sizeof (nw[0]));
 		}
 		for (i = 0; i != count && enqueued; i++) {
+#if NSYNC_DEBUG
 			nw[i].tag = NSYNC_WAITER_TAG;
+#endif
 			nw[i].sem = &w->sem;
 			dll_init (&nw[i].q);
 			ATM_STORE (&nw[i].waiting, 0);

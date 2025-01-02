@@ -31,32 +31,29 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
 
   if ((uintptr_t)addr & (__pagesize - 1))
     return einval();
-  if (__maps_held())
+  if (__maps_reentrant())
     return edeadlk();
 
   int rc = 0;
   __maps_lock();
-  struct Map *map, *next;
+  struct Map *next, *map;
   if (!(map = __maps_floor(addr)))
-    if (!(map = __maps_first()))
-      return true;
-  for (; map; map = next) {
+    map = __maps_first();
+  for (; map && map->addr <= addr + size; map = next) {
     next = __maps_next(map);
     if (!__maps_isalloc(map))
       continue;
     if (map->flags & MAP_ANONYMOUS)
       continue;
     if (MAX(addr, map->addr) >= MIN(addr + size, map->addr + map->size))
-      break;  // didn't overlap mapping
+      continue;  // didn't overlap mapping
 
     // get true size of win32 allocation
     size_t allocsize = map->size;
-    for (struct Map *map2 = next; map2; map2 = __maps_next(map2)) {
-      if (!__maps_isalloc(map2) && map->addr + allocsize == map2->addr) {
-        allocsize += map2->size;
-      } else {
-        break;
-      }
+    while (next && !__maps_isalloc(next) &&
+           next->addr + allocsize == next->addr) {
+      allocsize += next->size;
+      next = __maps_next(next);
     }
 
     // perform the flush

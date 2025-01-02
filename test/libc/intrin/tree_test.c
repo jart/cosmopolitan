@@ -178,6 +178,9 @@ void search_test(void) {
   //       ↑           ↑               ↑
   //       4           3               8
   //
+  x = tree_floor(tree, (void *)0l, number_search);
+  if (x)
+    exit(4);
   x = tree_floor(tree, (void *)4l, number_search);
   if (!x)
     exit(4);

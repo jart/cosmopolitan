@@ -15,7 +15,7 @@
 // It is expected to invalidate the instruction cache for the
 // specified range.
 
-void __clear_cache(void *start, void *end) {
+privileged void __clear_cache(void *start, void *end) {
 
 #ifdef __aarch64__
   if (IsXnu()) {
@@ -59,6 +59,8 @@ void __clear_cache(void *start, void *end) {
   }
   __asm__ volatile("isync");
 
+#elif defined(__x86_64__)
+  // do nothing
 #else
   compilerrt_abort();
 #endif

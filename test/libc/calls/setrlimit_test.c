@@ -39,8 +39,6 @@
 #include "libc/x/xsigaction.h"
 #include "libc/x/xspawn.h"
 
-#ifdef __x86_64__
-
 #define MEM (64 * 1024 * 1024)
 
 static char tmpname[PATH_MAX];
@@ -104,7 +102,7 @@ TEST(setrlimit, testFileSizeLimit) {
              firstnonnull(getenv("TMPDIR"), "/tmp"),
              firstnonnull(program_invocation_short_name, "unknown"), getpid());
     ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC, 0644)));
-    rngset(junkdata, 512, _rand64, -1);
+    rngset(junkdata, 512, lemur64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {
       ASSERT_EQ(512, write(fd, junkdata, 512));
     }
@@ -143,7 +141,7 @@ TEST(setrlimit, testMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getpagesize(), _rand64, -1);
+      rngset(p, getpagesize(), lemur64, -1);
     }
     _Exit(1);
   }
@@ -160,14 +158,13 @@ TEST(setrlimit, testVirtualMemoryLimit) {
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
     for (i = 0; i < (MEM * 2) / getpagesize(); ++i) {
-      p = sys_mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
-                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
-              .addr;
-      if (p == MAP_FAILED) {
+      if ((p = mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
+                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)) ==
+          MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getpagesize(), _rand64, -1);
+      rngset(p, getpagesize(), lemur64, -1);
     }
     _Exit(1);
   }
@@ -201,7 +198,7 @@ TEST(setrlimit, testDataMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, getpagesize(), _rand64, -1);
+      rngset(p, getpagesize(), lemur64, -1);
     }
     _Exit(1);
   }
@@ -243,5 +240,3 @@ TEST(setrlimit, isVforkSafe) {
   EXPECT_EQ(rlim[0].rlim_cur, rlim[1].rlim_cur);
   EXPECT_EQ(rlim[0].rlim_max, rlim[1].rlim_max);
 }
-
-#endif /* __x86_64__ */

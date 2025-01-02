@@ -118,9 +118,10 @@ int main(int argc, char *argv[]) {
 
   GetOpts(argc, argv);
 
-  for (fd = 3; fd < 100; ++fd) {
+  int oe = errno;
+  for (fd = 3; fd < 100; ++fd)
     close(fd);
-  }
+  errno = oe;
 
 #ifndef TINY
   setenv("GDB", "", true);

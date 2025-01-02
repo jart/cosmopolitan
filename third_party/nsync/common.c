@@ -110,6 +110,8 @@ uint32_t nsync_spin_test_and_set_ (nsync_atomic_uint32_ *w, uint32_t test,
 
 /* ====================================================================================== */
 
+#if NSYNC_DEBUG
+
 struct nsync_waiter_s *nsync_dll_nsync_waiter_ (struct Dll *e) {
 	struct nsync_waiter_s *nw = DLL_CONTAINER(struct nsync_waiter_s, q, e);
 	ASSERT (nw->tag == NSYNC_WAITER_TAG);
@@ -132,6 +134,8 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 	ASSERT (e == &w->same_condition);
 	return (w);
 }
+
+#endif /* NSYNC_DEBUG */
 
 /* -------------------------------- */
 
@@ -249,8 +253,10 @@ static bool free_waiters_populate (void) {
 		return (false);
 	for (size_t i = 0; i < n; ++i) {
 		waiter *w = &waiters[i];
+#if NSYNC_DEBUG
 		w->tag = WAITER_TAG;
 		w->nw.tag = NSYNC_WAITER_TAG;
+#endif
 		if (!nsync_mu_semaphore_init (&w->sem)) {
 			if (!i) {
 				// netbsd can run out of semaphores
@@ -327,18 +333,26 @@ void nsync_waiter_wipe_ (void) {
 		nsync_mu_semaphore_destroy (&w->sem);
 	for (w = wall; w; w = next) {
 		next = w->next_all;
-		w->tag = 0;
 		w->flags = 0;
-		w->nw.tag = 0;
+#if NSYNC_DEBUG
+		w->tag = WAITER_TAG;
+		w->nw.tag = NSYNC_WAITER_TAG;
+#endif
 		w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
 		atomic_init(&w->nw.waiting, 0);
 		w->l_type = 0;
-		bzero (&w->cond, sizeof (w->cond));
+		w->cond.f = 0;
+		w->cond.v = 0;
+		w->cond.eq = 0;
 		dll_init (&w->same_condition);
-		if (w->wipe_mu)
-			bzero (w->wipe_mu, sizeof (*w->wipe_mu));
-		if (w->wipe_cv)
-			bzero (w->wipe_cv, sizeof (*w->wipe_cv));
+		if (w->wipe_mu) {
+			atomic_init(&w->wipe_mu->word, 0);
+			w->wipe_mu->waiters = 0;
+		}
+		if (w->wipe_cv) {
+			atomic_init(&w->wipe_cv->word, 0);
+			w->wipe_cv->waiters = 0;
+		}
 		if (!nsync_mu_semaphore_init (&w->sem))
 			continue;  /* leak it */
 		w->next_free = prev;

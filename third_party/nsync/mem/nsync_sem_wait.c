@@ -40,7 +40,9 @@ int nsync_sem_wait_with_cancel_ (waiter *w, int clock, nsync_time abs_deadline,
 		sem_outcome = ECANCELED;
 		if (nsync_time_cmp (cancel_time, nsync_time_zero) > 0) {
 			struct nsync_waiter_s nw;
+#if NSYNC_DEBUG
 			nw.tag = NSYNC_WAITER_TAG;
+#endif
 			nw.sem = &w->sem;
 			dll_init (&nw.q);
 			ATM_STORE (&nw.waiting, 1);

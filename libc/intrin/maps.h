@@ -84,6 +84,7 @@ void __maps_init(void);
 void __maps_lock(void);
 void __maps_check(void);
 void __maps_unlock(void);
+bool __maps_reentrant(void);
 void *__maps_randaddr(void);
 void __maps_add(struct Map *);
 void __maps_free(struct Map *);
@@ -103,28 +104,28 @@ forceinline optimizespeed int __maps_search(const void *key,
   return (addr > map->addr) - (addr < map->addr);
 }
 
-dontinstrument static inline struct Map *__maps_next(struct Map *map) {
+static inline struct Map *__maps_next(struct Map *map) {
   struct Tree *node;
   if ((node = tree_next(&map->tree)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }
 
-dontinstrument static inline struct Map *__maps_prev(struct Map *map) {
+static inline struct Map *__maps_prev(struct Map *map) {
   struct Tree *node;
   if ((node = tree_prev(&map->tree)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }
 
-dontinstrument static inline struct Map *__maps_first(void) {
+static inline struct Map *__maps_first(void) {
   struct Tree *node;
   if ((node = tree_first(__maps.maps)))
     return MAP_TREE_CONTAINER(node);
   return 0;
 }
 
-dontinstrument static inline struct Map *__maps_last(void) {
+static inline struct Map *__maps_last(void) {
   struct Tree *node;
   if ((node = tree_last(__maps.maps)))
     return MAP_TREE_CONTAINER(node);

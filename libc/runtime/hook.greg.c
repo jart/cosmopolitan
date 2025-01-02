@@ -119,6 +119,7 @@ privileged int __hook(void *dest, struct SymbolTable *st) {
   if (!st)
     return -1;
   __morph_begin();
+  __jit_begin();
   lowest = MAX((intptr_t)__executable_start, (intptr_t)_ereal);
   for (i = 0; i < st->count; ++i) {
     if (st->symbols[i].x < 9)
@@ -138,6 +139,9 @@ privileged int __hook(void *dest, struct SymbolTable *st) {
       // kprintf("can't hook %t at %lx\n", p, p);
     }
   }
+  __clear_cache(MAX((char *)__executable_start, (char *)_ereal),
+                MIN((char *)__privileged_start, (char *)_etext));
+  __jit_end();
   __morph_end();
   return 0;
 }

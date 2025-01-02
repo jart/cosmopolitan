@@ -20,6 +20,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
+#include "third_party/nsync/defs.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -148,15 +149,23 @@ static void emit_waiters (struct emit_buf *b, struct Dll *list) {
                 waiter *w = DLL_WAITER (p);
                 next = NULL;
                 emit_print (b, "   %i", (uintptr_t) w);
+#if NSYNC_DEBUG
                 if (w->tag != WAITER_TAG) {
                         emit_print (b, "bad WAITER_TAG %i",
                                     (uintptr_t) w->tag);
                 } else {
+#else
+		{
+#endif
                         next = dll_next (list, p);
+#if NSYNC_DEBUG
                         if (nw->tag != NSYNC_WAITER_TAG) {
                                 emit_print (b, " bad WAITER_TAG %i",
                                             (uintptr_t) nw->tag);
                         } else {
+#else
+			{
+#endif
                                 emit_print (b, " embedded=%i waiting=%i",
                                             (uintptr_t) (w->flags & NSYNC_WAITER_FLAG_MUCV),
                                             (uintptr_t) ATM_LOAD (&nw->waiting));

@@ -190,7 +190,9 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
                 map->prot = PROT_READ | PROT_WRITE;
                 map->flags = MAP_SHARED | MAP_ANONYMOUS;
                 map->hand = shand;
+                __maps_lock();
                 __maps_insert(map);
+                __maps_unlock();
               }
             }
           }

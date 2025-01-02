@@ -67,16 +67,17 @@ int __mprotect(char *addr, size_t size, int prot) {
   size = (size + pagesz - 1) & -pagesz;
 
   // test for signal handler reentry
-  if (__maps_held())
+  if (__maps_reentrant())
     return edeadlk();
 
   // change mappings
   int rc = 0;
   bool found = false;
   __maps_lock();
-  struct Map *map, *floor;
-  floor = __maps_floor(addr);
-  for (map = floor; map && map->addr <= addr + size; map = __maps_next(map)) {
+  struct Map *map;
+  if (!(map = __maps_floor(addr)))
+    map = __maps_first();
+  for (; map && map->addr <= addr + size; map = __maps_next(map)) {
     char *map_addr = map->addr;
     size_t map_size = map->size;
     char *beg = MAX(addr, map_addr);
@@ -85,7 +86,7 @@ int __mprotect(char *addr, size_t size, int prot) {
       continue;
     found = true;
     if (addr <= map_addr && addr + size >= map_addr + PGUP(map_size)) {
-      // change protection of entire mapping
+      // change protection status of pages
       if (!__mprotect_chunk(map_addr, map_size, prot, map->iscow)) {
         map->prot = prot;
       } else {

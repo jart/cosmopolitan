@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
@@ -44,9 +43,8 @@ ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
 
   // strip trailing slash from search name
   int len = name->len;
-  if (len && name->path[len - 1] == '/') {
+  if (len && name->path[len - 1] == '/')
     --len;
-  }
 
   // empty string means the /zip root directory
   if (!len) {
@@ -91,9 +89,8 @@ ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
       dx = dx < -1 ? -1 : dx;
       for (l += dx; 0 <= l && l < zipos->records; l += dx) {
         ssize_t cf;
-        if ((cf = __zipos_match(zipos, name, len, l)) != -1) {
+        if ((cf = __zipos_match(zipos, name, len, l)) != -1)
           return cf;
-        }
         cfile = zipos->index[l];
         zname = ZIP_CFILE_NAME(zipos->map + cfile);
         zsize = ZIP_CFILE_NAMESIZE(zipos->map + cfile);

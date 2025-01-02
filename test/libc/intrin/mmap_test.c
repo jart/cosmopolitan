@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -27,12 +28,14 @@
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/benchmark.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xspawn.h"
 
@@ -54,6 +57,10 @@ void SetUpOnce(void) {
   gransz = getgransize();
   testlib_enable_tmp_setup_teardown();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
+}
+
+void TearDown(void) {
+  ASSERT_FALSE(__maps_held());
 }
 
 TEST(mmap, zeroSize) {
@@ -329,6 +336,172 @@ TEST(mmap, pml5t) {
     default:
       break;
   }
+}
+
+TEST(mmap, windows) {
+  if (!IsWindows())
+    return;
+  int count = __maps.count;
+  char *base = __maps_randaddr();
+
+  ASSERT_EQ(base, mmap(base, pagesz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // isn't granularity aligned
+  ASSERT_SYS(EINVAL, -1, munmap(base + pagesz, pagesz));
+
+  // doesn't overlap any maps
+  ASSERT_SYS(0, 0, munmap(base + gransz, pagesz));
+  ASSERT_EQ(count, __maps.count);
+
+  // doesn't overlap any maps
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz));
+  ASSERT_EQ(count, __maps.count);
+
+  // partially overlaps map
+  ASSERT_SYS(ENOTSUP, -1, munmap(base, pagesz));
+  ASSERT_EQ(count, __maps.count);
+
+  // envelops map
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz + pagesz * 4));
+  ASSERT_EQ((count -= 1), __maps.count);
+
+  // win32 actually unmapped map
+  ASSERT_EQ(base, mmap(base, pagesz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // change status of middle page results in three fragments
+  ASSERT_SYS(0, 0, mprotect(base + pagesz, pagesz, PROT_NONE));
+  ASSERT_EQ((count += 2), __maps.count);
+
+  // change status back (todo: should reunite fragments)
+  ASSERT_SYS(0, 0, mprotect(base + pagesz, pagesz, PROT_READ | PROT_WRITE));
+  ASSERT_EQ(count, __maps.count);
+
+  // clean up
+  ASSERT_SYS(0, 0, munmap(base, pagesz * 3));
+  ASSERT_EQ((count -= 3), __maps.count);
+}
+
+TEST(mmap, windows_partial_overlap_enotsup) {
+  if (!IsWindows())
+    return;
+  int count = __maps.count;
+  char *base = __maps_randaddr();
+
+  ASSERT_EQ(base, mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // partially overlaps on left
+  ASSERT_SYS(ENOTSUP, -1, munmap(base - gransz, gransz * 2));
+  ASSERT_SYS(ENOTSUP, -1, munmap(base, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // partially overlaps the middle
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 1, gransz));
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 1, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // partially overlaps on right
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 2, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // doesn't overlap any maps
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz));
+  ASSERT_SYS(0, 0, munmap(base + gransz * 3, gransz));
+  ASSERT_EQ(count, __maps.count);
+
+  // unmap envelops
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz * 4));
+  ASSERT_EQ((count -= 1), __maps.count);
+
+  // win32 actually removed the memory
+  ASSERT_EQ(base, mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // clean up
+  ASSERT_SYS(0, 0, munmap(base, gransz * 3));
+  ASSERT_EQ((count -= 1), __maps.count);
+}
+
+TEST(munmap, windows_not_all_fragments_included_enotsup) {
+  if (!IsWindows())
+    return;
+  int count = __maps.count;
+  char *base = __maps_randaddr();
+
+  ASSERT_EQ(base, mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // win32 memory actually exists
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                  MAP_FIXED_NOREPLACE | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(base + gransz * 0, gransz, PROT_READ | PROT_WRITE,
+                  MAP_FIXED_NOREPLACE | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(base + gransz * 1, gransz, PROT_READ | PROT_WRITE,
+                  MAP_FIXED_NOREPLACE | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(base + gransz * 2, gransz, PROT_READ | PROT_WRITE,
+                  MAP_FIXED_NOREPLACE | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+
+  // change status of middle page results in three fragments
+  ASSERT_SYS(0, 0, mprotect(base + gransz, gransz, PROT_NONE));
+  ASSERT_EQ((count += 2), __maps.count);
+
+  // partially overlaps on left
+  ASSERT_SYS(ENOTSUP, -1, munmap(base - gransz, gransz * 2));
+  ASSERT_SYS(ENOTSUP, -1, munmap(base, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // partially overlaps the middle
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 1, gransz));
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 1, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // partially overlaps on right
+  ASSERT_SYS(ENOTSUP, -1, munmap(base + gransz * 2, gransz * 2));
+  ASSERT_EQ(count, __maps.count);
+
+  // doesn't overlap any maps
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz));
+  ASSERT_SYS(0, 0, munmap(base + gransz * 3, gransz));
+  ASSERT_EQ(count, __maps.count);
+
+  // unmap envelops
+  ASSERT_SYS(0, 0, munmap(base - gransz, gransz * 4));
+  ASSERT_EQ((count -= 3), __maps.count);
+
+  // win32 actually removed the memory
+  ASSERT_EQ(base, mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ((count += 1), __maps.count);
+
+  // clean up
+  ASSERT_SYS(0, 0, munmap(base, gransz * 3));
+  ASSERT_EQ((count -= 1), __maps.count);
+}
+
+TEST(mmap, windows_private_memory_fork_uses_virtualfree) {
+  if (IsFreebsd())
+    return;  // freebsd can't take a hint
+  char *base;
+  ASSERT_NE(MAP_FAILED, (base = mmap(0, gransz * 3, PROT_READ | PROT_WRITE,
+                                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, munmap(base, gransz * 3));
+  ASSERT_EQ(base, mmap(base, gransz * 3, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_SYS(0, 0, munmap(base, gransz * 3));
+  EXITS(0);
+  ASSERT_SYS(0, 0, munmap(base, gransz * 3));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

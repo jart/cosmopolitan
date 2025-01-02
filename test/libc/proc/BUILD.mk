@@ -60,6 +60,17 @@ o/$(MODE)/test/libc/proc/%.dbg:						\
 o/$(MODE)/test/libc/proc/posix_spawn_test.runs:				\
 		private QUOTA += -M8192m
 
+o/$(MODE)/test/libc/proc/fork_test.dbg:					\
+		$(TEST_LIBC_PROC_DEPS)					\
+		o/$(MODE)/test/libc/proc/fork_test.o			\
+		o/$(MODE)/test/libc/proc/proc.pkg			\
+		o/$(MODE)/tool/hello/life-pe.ape.zip.o			\
+		o/$(MODE)/test/libc/proc/life.zip.o			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/test/libc/proc/posix_spawn_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/posix_spawn_test.o		\
@@ -99,6 +110,14 @@ o/$(MODE)/test/libc/proc/fexecve_test.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/proc/life.dbg:					\
+		$(TEST_LIBC_PROC_DEPS)					\
+		o/$(MODE)/test/libc/proc/life.o				\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/life.zip.o					\
 o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o			\
 o/$(MODE)/test/libc/proc/life-pe.zip.o: private				\
 		ZIPOBJ_FLAGS +=						\

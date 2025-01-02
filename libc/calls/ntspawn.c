@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/proc/ntspawn.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/strace.h"

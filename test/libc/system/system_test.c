@@ -27,10 +27,9 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#ifdef __x86_64__
 
 #define GETEXITSTATUS(x)                                                \
   ({                                                                    \
@@ -276,15 +275,9 @@ TEST(system, pipelineCanOutputBackToSelf) {
   RestoreStdout();
 }
 
-int system2(const char *);
-
-BENCH(system, bench) {
+TEST(system, bench) {
   testlib_extract("/zip/echo", "echo", 0755);
-  EZBENCH2("system cmd", donothing, system("./echo hi >/dev/null"));
-  EZBENCH2("systemvpe cmd", donothing,
-           systemvpe("./echo", (char *[]){"./echo", "hi", 0}, 0));
-  EZBENCH2("cocmd echo", donothing, system("echo hi >/dev/null"));
-  EZBENCH2("cocmd exit", donothing, system("exit"));
+  BENCHMARK(10, 1, system("./echo hi >/dev/null"));
+  BENCHMARK(10, 1, system("echo hi >/dev/null"));
+  BENCHMARK(10, 1, system("exit"));
 }
-
-#endif /* __x86_64__ */

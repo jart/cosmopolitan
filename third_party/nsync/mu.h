@@ -48,7 +48,6 @@ COSMOPOLITAN_C_START_
 */
 typedef struct nsync_mu_s_ {
   nsync_atomic_uint32_ word; /* internal use only */
-  int _zero;                 /* c pthread_mutex_t */
   struct Dll *waiters;       /* internal use only */
 } nsync_mu;
 
