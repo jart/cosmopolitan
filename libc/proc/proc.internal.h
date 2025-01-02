@@ -41,8 +41,8 @@ struct Procs {
 
 extern struct Procs __proc;
 
-void __proc_lock(void) libcesque;
-void __proc_unlock(void) libcesque;
+void __proc_lock(void) dontthrow;
+void __proc_unlock(void) dontthrow;
 int64_t __proc_handle(int) libcesque;
 int64_t __proc_search(int) libcesque;
 struct Proc *__proc_new(void) libcesque;

@@ -97,30 +97,30 @@ extern atomic_uint _pthread_count;
 extern struct PosixThread _pthread_static;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
-int _pthread_cond_signal(pthread_cond_t *) libcesque paramsnonnull();
-int _pthread_mutex_lock(pthread_mutex_t *) libcesque paramsnonnull();
-int _pthread_mutex_trylock(pthread_mutex_t *) libcesque paramsnonnull();
-int _pthread_mutex_unlock(pthread_mutex_t *) libcesque paramsnonnull();
+int _pthread_cond_signal(pthread_cond_t *) dontthrow paramsnonnull();
+int _pthread_mutex_lock(pthread_mutex_t *) dontthrow paramsnonnull();
+int _pthread_mutex_trylock(pthread_mutex_t *) dontthrow paramsnonnull();
+int _pthread_mutex_unlock(pthread_mutex_t *) dontthrow paramsnonnull();
 int _pthread_mutex_wipe_np(pthread_mutex_t *) libcesque paramsnonnull();
 int _pthread_reschedule(struct PosixThread *) libcesque;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 int _pthread_tid(struct PosixThread *) libcesque;
 intptr_t _pthread_syshand(struct PosixThread *) libcesque;
 long _pthread_cancel_ack(void) libcesque;
-void _pthread_decimate(enum PosixThreadStatus) libcesque;
+void _pthread_decimate(enum PosixThreadStatus) dontthrow;
 void _pthread_free(struct PosixThread *) libcesque paramsnonnull();
-void _pthread_lock(void) libcesque;
-void _pthread_onfork_child(void) libcesque;
-void _pthread_onfork_parent(void) libcesque;
-void _pthread_onfork_prepare(void) libcesque;
-void _pthread_unlock(void) libcesque;
-void _pthread_zombify(struct PosixThread *) libcesque;
+void _pthread_lock(void) dontthrow;
+void _pthread_onfork_child(void) dontthrow;
+void _pthread_onfork_parent(void) dontthrow;
+void _pthread_onfork_prepare(void) dontthrow;
+void _pthread_unlock(void) dontthrow;
+void _pthread_zombify(struct PosixThread *) dontthrow;
 
-int _pthread_cond_wait(pthread_cond_t *, pthread_mutex_t *) libcesque
+int _pthread_cond_wait(pthread_cond_t *, pthread_mutex_t *) dontthrow
     paramsnonnull();
 
 int _pthread_cond_timedwait(pthread_cond_t *, pthread_mutex_t *,
-                            const struct timespec *) libcesque
+                            const struct timespec *) dontthrow
     paramsnonnull((1, 2));
 
 forceinline pureconst struct PosixThread *_pthread_self(void) {

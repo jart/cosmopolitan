@@ -34,10 +34,10 @@ typedef struct {
 
 int sem_init(sem_t *, int, unsigned) libcesque;
 int sem_destroy(sem_t *) libcesque;
-int sem_post(sem_t *) libcesque;
-int sem_wait(sem_t *) libcesque;
-int sem_trywait(sem_t *) libcesque;
-int sem_timedwait(sem_t *, const struct timespec *) libcesque;
+int sem_post(sem_t *) dontthrow;
+int sem_wait(sem_t *) dontthrow;
+int sem_trywait(sem_t *) dontthrow;
+int sem_timedwait(sem_t *, const struct timespec *) dontthrow;
 int sem_getvalue(sem_t *, int *) libcesque;
 sem_t *sem_open(const char *, int, ...) libcesque;
 int sem_close(sem_t *) libcesque;

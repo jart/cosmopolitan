@@ -18,9 +18,9 @@ struct CxaAtexitBlocks {
 
 extern struct CxaAtexitBlocks __cxa_blocks;
 
-void __cxa_lock(void) libcesque;
-void __cxa_unlock(void) libcesque;
-void __cxa_thread_finalize(void) libcesque;
+void __cxa_lock(void) dontthrow;
+void __cxa_unlock(void) dontthrow;
+void __cxa_thread_finalize(void) dontthrow;
 void __cxa_printexits(FILE *, void *) libcesque;
 int __cxa_thread_atexit_impl(void *, void *, void *);
 

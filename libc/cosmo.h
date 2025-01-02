@@ -9,7 +9,7 @@ COSMOPOLITAN_C_START_
 #define _COSMO_ATOMIC(x) x
 #endif
 
-errno_t cosmo_once(_COSMO_ATOMIC(unsigned) *, void (*)(void)) libcesque;
+errno_t cosmo_once(_COSMO_ATOMIC(unsigned) *, void (*)(void));
 int systemvpe(const char *, char *const[], char *const[]) libcesque;
 char *GetProgramExecutableName(void) libcesque;
 void unleaf(void) libcesque;
