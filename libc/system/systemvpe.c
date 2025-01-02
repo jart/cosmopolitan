@@ -52,9 +52,8 @@ int systemvpe(const char *prog, char *const argv[], char *const envp[]) {
   int pid, wstatus;
   char pathbuf[PATH_MAX + 1];
   sigset_t chldmask, savemask;
-  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
+  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf))))
     return -1;
-  }
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGINT);
   sigaddset(&chldmask, SIGQUIT);
@@ -62,7 +61,7 @@ int systemvpe(const char *prog, char *const argv[], char *const envp[]) {
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   if (!(pid = vfork())) {
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    execve(prog, argv, envp);
+    execve(exe, argv, envp);
     _Exit(127);
   } else if (pid == -1) {
     wstatus = -1;

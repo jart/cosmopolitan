@@ -94,6 +94,17 @@ o/$(MODE)/test/libc/system/trace_test.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/system/systemvpe_test.dbg:			\
+		$(TEST_LIBC_SYSTEM_DEPS)			\
+		o/$(MODE)/test/libc/system/systemvpe_test.o	\
+		o/$(MODE)/test/libc/system/system.pkg		\
+		o/$(MODE)/test/libc/proc/life.zip.o		\
+		$(LIBC_TESTMAIN)				\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+
 o/$(MODE)/test/libc/system/popen_test.zip.o: private ZIPOBJ_FLAGS += -B
 o/$(MODE)/test/libc/system/popen_test.dbg.zip.o: private ZIPOBJ_FLAGS += -B
 
