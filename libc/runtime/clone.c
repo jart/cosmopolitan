@@ -118,7 +118,7 @@ textwindows static errno_t CloneWindows(int (*func)(void *), char *stk,
   wt->arg = arg;
   wt->tls = tls;
   wt->sp = tip & -16;
-  if ((h = CreateThread(&kNtIsInheritable, 65536, (void *)WinThreadEntry, wt,
+  if ((h = CreateThread(0, 65536, (void *)WinThreadEntry, wt,
                         kNtStackSizeParamIsAReservation, &utid))) {
     atomic_init(ptid, utid);
     struct CosmoTib *tib = tls;

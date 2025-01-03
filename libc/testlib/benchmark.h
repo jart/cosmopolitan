@@ -71,7 +71,7 @@ static void _print_benchmark_result(double total_nanos, double work_per_run,
     work_unit = " ";
   }
 
-  printf("%8.2f %-2s %8.2f %s/s %6.2f %s %2dx %s\n", time_value, time_unit,
+  printf("%8.2f %-2s %8.2f %s/s %6.2f %s %3dx %s\n", time_value, time_unit,
          throughput, throughput_unit, work_per_run, work_unit, iterations,
          code);
 }

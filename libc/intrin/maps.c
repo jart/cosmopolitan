@@ -24,7 +24,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -92,7 +91,7 @@ void __maps_init(void) {
     // https://lwn.net/Articles/725832/. if we guess too small, then
     // slackmap will create a bunch of zombie stacks in __print_maps
     // to coverup the undisclosed memory but no cost if we guess big
-    size_t guardsize = (__maps.rand % 8 + 1) * 1000 * 1024;
+    size_t guardsize = 1024 * 1024;
     guardsize += __pagesize - 1;
     guardsize &= -__pagesize;
 
