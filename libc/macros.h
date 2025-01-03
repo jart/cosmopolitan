@@ -291,21 +291,6 @@
 	.balign	4
 .endm
 
-//	Loads address of errno into %rcx
-.macro	.errno
-	call	__errno_location
-.endm
-
-//	Post-Initialization Read-Only (PIRO) BSS section.
-//	@param	ss is an optional string, for control image locality
-.macro	.piro	ss
- .ifnb	\ss
-	.section .piro.sort.bss.\ss,"aw",@nobits
- .else
-	.section .piro.bss,"aw",@nobits
- .endif
-.endm
-
 //	Helpers for Cosmopolitan _init() amalgamation magic.
 //	@param	name should be consistent across macros for a module
 //	@see	libc/runtime/_init.S

@@ -35,8 +35,10 @@ errno_t __errno;
 
 /**
  * Returns address of `errno` variable.
+ *
+ * This function promises to not clobber argument registers.
  */
-errno_t *__errno_location(void) {
+nocallersavedregisters errno_t *__errno_location(void) {
   if (__tls_enabled) {
     return &__get_tls()->tib_errno;
   } else {

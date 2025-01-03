@@ -10,7 +10,6 @@ COSMOPOLITAN_C_START_
 
 struct CosmoFtrace {   /* 16 */
   char ft_once;        /*  0 */
-  char ft_noreentry;   /*  1 */
   int ft_skew;         /*  4 */
   int64_t ft_lastaddr; /*  8 */
 };

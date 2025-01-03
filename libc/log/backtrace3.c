@@ -48,9 +48,8 @@
  * @param st is open symbol table for current executable
  * @return -1 w/ errno if error happened
  */
-dontinstrument int PrintBacktraceUsingSymbols(int fd,
-                                              const struct StackFrame *bp,
-                                              struct SymbolTable *st) {
+int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
+                               struct SymbolTable *st) {
   size_t gi;
   char *cxxbuf;
   intptr_t addr;

@@ -71,7 +71,7 @@ struct Procs __proc = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
-static textwindows void __proc_stats(int64_t h, struct rusage *ru) {
+textwindows static void __proc_stats(int64_t h, struct rusage *ru) {
   bzero(ru, sizeof(*ru));
   struct NtProcessMemoryCountersEx memcount = {sizeof(memcount)};
   GetProcessMemoryInfo(h, &memcount, sizeof(memcount));
@@ -137,7 +137,7 @@ textwindows int __proc_harvest(struct Proc *pr, bool iswait4) {
   return sic;
 }
 
-static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
+textwindows dontinstrument static uint32_t __proc_worker(void *arg) {
   struct CosmoTib tls;
   char *sp = __builtin_frame_address(0);
   __bootstrap_tls(&tls, __builtin_frame_address(0));
@@ -246,7 +246,7 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
 /**
  * Lazy initializes process tracker data structures and worker.
  */
-static textwindows void __proc_setup(void) {
+textwindows static void __proc_setup(void) {
   __proc.onbirth = CreateEvent(0, 0, 0, 0);     // auto reset
   __proc.haszombies = CreateEvent(0, 1, 0, 0);  // manual reset
   __proc.thread = CreateThread(0, STACK_SIZE, __proc_worker, 0,

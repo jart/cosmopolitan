@@ -44,7 +44,7 @@
 
 #define STACK_SIZE 65536
 
-static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
+textwindows dontinstrument static uint32_t __itimer_worker(void *arg) {
   struct CosmoTib tls;
   char *sp = __builtin_frame_address(0);
   __bootstrap_tls(&tls, sp);
@@ -87,7 +87,7 @@ static textwindows dontinstrument uint32_t __itimer_worker(void *arg) {
   return 0;
 }
 
-static textwindows void __itimer_setup(void) {
+textwindows static void __itimer_setup(void) {
   __itimer.thread = CreateThread(0, STACK_SIZE, __itimer_worker, 0,
                                  kNtStackSizeParamIsAReservation, 0);
 }

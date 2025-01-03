@@ -36,12 +36,10 @@
 privileged const char *strsignal_r(int sig, char buf[21]) {
   char *p;
   const char *s;
-  if (!sig) {
+  if (!sig)
     return "0";
-  }
-  if ((s = GetMagnumStr(kSignalNames, sig))) {
+  if ((s = GetMagnumStr(kSignalNames, sig)))
     return s;
-  }
   if (SIGRTMIN <= sig && sig <= SIGRTMAX) {
     sig -= SIGRTMIN;
     buf[0] = 'S';

@@ -34,6 +34,8 @@
 #include "libc/nt/thunk/msabi.h"
 #ifdef __x86_64__
 
+#define ABI __msabi textwindows dontinstrument
+
 // cut back on code size and avoid setting errno
 // this code is a mandatory dependency of winmain
 __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
@@ -47,8 +49,8 @@ __msabi extern typeof(GetEnvironmentVariable)
     *const __imp_GetEnvironmentVariableW;
 
 // Generates C:\ProgramData\cosmo\sig\x\y.pid like path
-__msabi textwindows dontinstrument char16_t *__sig_process_path(
-    char16_t *path, uint32_t pid, int create_directories) {
+ABI char16_t *__sig_process_path(char16_t *path, uint32_t pid,
+                                 int create_directories) {
   char16_t buf[3];
   char16_t *p = path;
   uint32_t vlen = __imp_GetEnvironmentVariableW(u"SYSTEMDRIVE", buf, 3);
@@ -100,7 +102,7 @@ __msabi textwindows dontinstrument char16_t *__sig_process_path(
   return path;
 }
 
-__msabi textwindows atomic_ulong *__sig_map_process(int pid, int disposition) {
+ABI atomic_ulong *__sig_map_process(int pid, int disposition) {
   char16_t path[128];
   __sig_process_path(path, pid, disposition == kNtOpenAlways);
   intptr_t hand = __imp_CreateFileW(path, kNtGenericRead | kNtGenericWrite,

@@ -31,11 +31,7 @@
 #include "libc/thread/tls.h"
 
 /**
- * @fileoverview Plain-text function call logging.
- *
- * Able to log ~2 million function calls per second, which is mostly
- * bottlenecked by system call overhead. Log size is reasonable if piped
- * into gzip.
+ * @fileoverview plain-text function call logging
  */
 
 #define MAX_NESTING 512
@@ -49,7 +45,7 @@
 static struct CosmoFtrace g_ftrace;
 
 __funline int GetNestingLevelImpl(struct StackFrame *frame) {
-  int nesting = -2;
+  int nesting = -1;
   while (frame && !kisdangerous(frame)) {
     ++nesting;
     frame = frame->next;
@@ -82,38 +78,63 @@ privileged void ftracer(void) {
   struct StackFrame *sf;
   struct CosmoFtrace *ft;
   struct PosixThread *pt;
+
+  // get interesting values
   sf = __builtin_frame_address(0);
   st = (uintptr_t)__argv - sizeof(uintptr_t);
   if (__ftrace <= 0)
     return;
+
+  // determine top of stack
+  // main thread won't consider kernel provided argblock
   if (__tls_enabled) {
     tib = __get_tls_privileged();
     if (tib->tib_ftrace <= 0)
       return;
     ft = &tib->tib_ftracer;
-    if ((char *)sf >= tib->tib_sigstack_addr &&
-        (char *)sf <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
-      st = (uintptr_t)tib->tib_sigstack_addr + tib->tib_sigstack_size;
-    } else if ((pt = (struct PosixThread *)tib->tib_pthread) &&
-               pt->pt_attr.__stacksize) {
-      st = (uintptr_t)pt->pt_attr.__stackaddr + pt->pt_attr.__stacksize;
+    pt = (struct PosixThread *)tib->tib_pthread;
+    if (pt != &_pthread_static) {
+      if ((char *)sf >= tib->tib_sigstack_addr &&
+          (char *)sf <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
+        st = (uintptr_t)tib->tib_sigstack_addr + tib->tib_sigstack_size;
+      } else if (pt && pt->pt_attr.__stacksize) {
+        st = (uintptr_t)pt->pt_attr.__stackaddr + pt->pt_attr.__stacksize;
+      }
     }
   } else {
     ft = &g_ftrace;
   }
-  stackuse = st - (intptr_t)sf;
-  if (_cmpxchg(&ft->ft_once, false, true)) {
+
+  // estimate stack pointer of hooked function
+  uintptr_t usp = (uintptr_t)sf;
+  usp += sizeof(struct StackFrame);  // overhead of this function
+#if defined(__x86_64__)
+  usp += 8;       // ftrace_hook() stack aligning
+  usp += 8 * 8;   // ftrace_hook() pushed 8x regs
+  usp += 8 * 16;  // ftrace_hook() pushed 8x xmms
+#elif defined(__aarch64__)
+  usp += 384;  // overhead of ftrace_hook()
+#else
+#error "unsupported architecture"
+#endif
+
+  // determine how much stack hooked function is using
+  stackuse = st - usp;
+
+  // log function call
+  //
+  //     FUN $PID $TID $STARTNANOS $STACKUSE $SYMBOL
+  //
+  if (!ft->ft_once) {
     ft->ft_lastaddr = -1;
     ft->ft_skew = GetNestingLevelImpl(sf);
+    ft->ft_once = true;
   }
-  if (_cmpxchg(&ft->ft_noreentry, false, true)) {
-    sf = sf->next;
-    fn = sf->addr + DETOUR_SKEW;
-    if (fn != ft->ft_lastaddr) {
-      kprintf("%rFUN %6P %6H %'18T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
-              GetNestingLevel(ft, sf) * 2, "", fn);
-      ft->ft_lastaddr = fn;
-    }
-    ft->ft_noreentry = false;
+  sf = sf->next;
+  fn = sf->addr + DETOUR_SKEW;
+  if (fn != ft->ft_lastaddr) {
+    kprintf("%rFUN %6P %6H %'18T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
+            GetNestingLevel(ft, sf) * 2, "", fn);
+    ft->ft_lastaddr = fn;
   }
 }

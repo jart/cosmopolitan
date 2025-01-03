@@ -89,14 +89,14 @@ __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 
 extern pthread_mutex_t __sig_worker_lock;
 
-HAIRY static bool __sig_ignored_by_default(int sig) {
+textwindows static bool __sig_ignored_by_default(int sig) {
   return sig == SIGURG ||   //
          sig == SIGCONT ||  //
          sig == SIGCHLD ||  //
          sig == SIGWINCH;
 }
 
-HAIRY bool __sig_ignored(int sig) {
+textwindows bool __sig_ignored(int sig) {
   return __sighandrvas[sig] == (intptr_t)SIG_IGN ||
          (__sighandrvas[sig] == (intptr_t)SIG_DFL &&
           __sig_ignored_by_default(sig));
@@ -532,14 +532,14 @@ textwindows void __sig_generate(int sig, int sic) {
   }
 }
 
-HAIRY static char *__sig_stpcpy(char *d, const char *s) {
+textwindows static char *__sig_stpcpy(char *d, const char *s) {
   size_t i;
   for (i = 0;; ++i)
     if (!(d[i] = s[i]))
       return d + i;
 }
 
-HAIRY wontreturn static void __sig_death(int sig, const char *thing) {
+textwindows wontreturn static void __sig_death(int sig, const char *thing) {
 #ifndef TINY
   intptr_t hStderr;
   char sigbuf[21], s[128], *p;
@@ -810,7 +810,7 @@ HAIRY static uint32_t __sig_worker(void *arg) {
     _pthread_mutex_unlock(&__sig_worker_lock);
     Sleep(POLL_INTERVAL_MS);
   }
-  return 0;
+  __builtin_unreachable();
 }
 
 __attribute__((__constructor__(10))) textstartup void __sig_init(void) {

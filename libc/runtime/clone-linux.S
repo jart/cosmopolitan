@@ -26,7 +26,7 @@
 //	@param	rdx	x2	is ptid
 //	@param	rcx	x3	is ctid
 //	@param	r8	x4	is tls
-//	@param	r9	x5	is func(void*,int)→int
+//	@param	r9	x5	is func(void*)→int
 //	@param	8(rsp)	x6	is arg
 //	@return	tid of child on success, or -errno on error
 sys_clone_linux:
@@ -45,16 +45,10 @@ sys_clone_linux:
 	ret
 2:	xor	%ebp,%ebp		// child thread
 	mov	%rbx,%rdi		// arg
-	mov	%r10,%r15		// experiment
-	mov	(%r10),%esi		// tid
 	call	*%r9			// func(arg,tid)
 	xchg	%eax,%edi		// func(arg,tid) → exitcode
-	mov	(%r15),%eax		// experiment
-	test	%eax,%eax		// experiment
-	jz	1f			// experiment
 	mov	$60,%eax		// __NR_exit(exitcode)
 	syscall
-1:	hlt				// ctid was corrupted by program!
 #elif defined(__aarch64__)
 	stp	x29,x30,[sp,#-16]!
 	mov	x29,sp
@@ -69,7 +63,6 @@ sys_clone_linux:
 2:	mov	x29,#0			// wipe backtrace
 	mov	x28,x3			// set cosmo tls
 	mov	x0,x6			// child thread
-	ldr	w1,[x4]			// arg2 = *ctid
 	blr	x5
 	mov	x8,#93			// __NR_exit
 	svc	#0

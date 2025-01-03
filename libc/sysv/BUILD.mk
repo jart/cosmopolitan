@@ -84,7 +84,8 @@ o/$(MODE)/libc/sysv/sysret.o: private			\
 		CFLAGS +=				\
 			-ffreestanding			\
 			-fno-stack-protector		\
-			-fno-sanitize=all
+			-fno-sanitize=all		\
+			-mgeneral-regs-only
 
 ifeq ($(ARCH),aarch64)
 o/$(MODE)/libc/sysv/sysv.o: private			\

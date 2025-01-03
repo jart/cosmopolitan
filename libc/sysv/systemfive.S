@@ -187,7 +187,7 @@ systemfive_error:
 #endif
 systemfive_errno:
 	xchg	%eax,%ecx
-	.errno
+	call	__errno_location
 	mov	%ecx,(%rax)		// normalize to c library convention
 	push	$-1			// negative one is only error result
 	pop	%rax			// the push pop is to save code size

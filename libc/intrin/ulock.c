@@ -79,7 +79,11 @@ int ulock_wait(uint32_t operation, void *addr, uint64_t value,
 //   it could also mean another thread calling ulock on this address was
 //   configured (via operation) in an inconsistent way.
 //
-int ulock_wake(uint32_t operation, void *addr, uint64_t wake_value) {
+// should be dontinstrument because SiliconThreadMain() calls this from
+// a stack managed by apple libc.
+//
+dontinstrument int ulock_wake(uint32_t operation, void *addr,
+                              uint64_t wake_value) {
   int rc;
   rc = __syscall3i(operation, (long)addr, wake_value, 0x2000000 | 516);
   LOCKTRACE("ulock_wake(%#x, %p, %lx) → %s", operation, addr, wake_value,

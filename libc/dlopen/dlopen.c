@@ -254,7 +254,7 @@ static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
   return true;
 }
 
-static dontinline bool elf_load(struct Loaded *l, const char *file, long pagesz,
+dontinline static bool elf_load(struct Loaded *l, const char *file, long pagesz,
                                 char *interp_path, size_t interp_size) {
   int fd;
   if ((fd = open(file, O_RDONLY | O_CLOEXEC)) == -1)
@@ -280,7 +280,7 @@ static long *push_strs(long *sp, char **list, int count) {
   return sp;
 }
 
-static wontreturn dontinstrument void foreign_helper(void **p) {
+wontreturn dontinstrument static void foreign_helper(void **p) {
   __foreign.dlopen = p[0];
   __foreign.dlsym = p[1];
   __foreign.dlclose = p[2];
@@ -288,7 +288,7 @@ static wontreturn dontinstrument void foreign_helper(void **p) {
   _longjmp(__foreign.jb, 1);
 }
 
-static dontinline void elf_exec(const char *file, char **envp) {
+dontinline static void elf_exec(const char *file, char **envp) {
 
   // get microprocessor page size
   long pagesz = __pagesize;
@@ -412,7 +412,7 @@ static char *dlerror_set(const char *str) {
   return dlerror_buf;
 }
 
-static dontinline char *foreign_alloc_block(void) {
+dontinline static char *foreign_alloc_block(void) {
   char *p = 0;
   size_t sz = 65536;
   if (!IsWindows()) {
@@ -435,7 +435,7 @@ static dontinline char *foreign_alloc_block(void) {
   return p;
 }
 
-static dontinline void *foreign_alloc(size_t n) {
+dontinline static void *foreign_alloc(size_t n) {
   void *res;
   static char *block;
   __dlopen_lock();
@@ -548,7 +548,7 @@ static void *foreign_thunk_nt(void *func) {
   return code;
 }
 
-static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
+dontinline static bool foreign_compile(char exe[hasatleast PATH_MAX]) {
 
   // construct path
   strlcpy(exe, get_tmp_dir(), PATH_MAX);

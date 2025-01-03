@@ -33,14 +33,14 @@ static char __watch_last[4096];
 
 void __watch_hook(void);
 
-static dontinstrument inline void Copy(char *p, char *q, size_t n) {
+dontinstrument static inline void Copy(char *p, char *q, size_t n) {
   size_t i;
   for (i = 0; i < n; ++i) {
     p[i] = q[i];
   }
 }
 
-static dontinstrument inline int Cmp(char *p, char *q, size_t n) {
+dontinstrument static inline int Cmp(char *p, char *q, size_t n) {
   if (n == 8)
     return READ64LE(p) != READ64LE(q);
   if (n == 4)

@@ -22,18 +22,25 @@
 ftrace_hook:
 #ifdef __x86_64__
 
-//	We need to save saved registers because we have some functions
-//	like __errno_location which can be called from an inline asm()
-//	statement. It's nice to have the flexibility anyway.
+//	save argument registers
+//	we save %rax because __gc() takes it as an argument.
+//	we save %r10 because it's used as a syscall argument.
 
 	cmpl	$0,__ftrace(%rip)
 	jle	1f
 	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp
-	sub	$256,%rsp
+	sub	$128,%rsp
+	movdqu	%xmm0,-0x80(%rbp)
+	movdqu	%xmm1,-0x70(%rbp)
+	movdqu	%xmm2,-0x60(%rbp)
+	movdqu	%xmm3,-0x50(%rbp)
+	movdqu	%xmm4,-0x40(%rbp)
+	movdqu	%xmm5,-0x30(%rbp)
+	movdqu	%xmm6,-0x20(%rbp)
+	movdqu	%xmm7,-0x10(%rbp)
 	push	%rax
-	push	%rbx
 	push	%rcx
 	push	%rdx
 	push	%rdi
@@ -41,19 +48,15 @@ ftrace_hook:
 	push	%r8
 	push	%r9
 	push	%r10
-	push	%r11
-	push	%r12
-	push	%r13
-	push	%r14
-	push	%r15
-	call	__xmm_save
 	call	ftracer
-	call	__xmm_load
-	pop	%r15
-	pop	%r14
-	pop	%r13
-	pop	%r12
-	pop	%r11
+	movdqu	-0x80(%rbp),%xmm0
+	movdqu	-0x70(%rbp),%xmm1
+	movdqu	-0x60(%rbp),%xmm2
+	movdqu	-0x50(%rbp),%xmm3
+	movdqu	-0x40(%rbp),%xmm4
+	movdqu	-0x30(%rbp),%xmm5
+	movdqu	-0x20(%rbp),%xmm6
+	movdqu	-0x10(%rbp),%xmm7
 	pop	%r10
 	pop	%r9
 	pop	%r8
@@ -61,7 +64,6 @@ ftrace_hook:
 	pop	%rdi
 	pop	%rdx
 	pop	%rcx
-	pop	%rbx
 	pop	%rax
 	leave
 1:	ret

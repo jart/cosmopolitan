@@ -32,8 +32,7 @@ int sys_sigprocmask(int how, const sigset_t *opt_set,
         how, opt_set ? (sigset_t *)(intptr_t)(uint32_t)*opt_set : 0, 0, 0);
     rc = 0;
   }
-  if (rc != -1 && opt_out_oldset) {
+  if (rc != -1 && opt_out_oldset)
     *opt_out_oldset = old[0];
-  }
   return rc;
 }

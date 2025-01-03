@@ -151,7 +151,7 @@ void _pthread_decimate(enum PosixThreadStatus threshold) {
   }
 }
 
-dontinstrument static int PosixThread(void *arg, int tid) {
+static int PosixThread(void *arg) {
   struct PosixThread *pt = arg;
 
   // setup scheduling
@@ -162,11 +162,11 @@ dontinstrument static int PosixThread(void *arg, int tid) {
 
   // setup signal stack
   if (pt->pt_attr.__sigaltstacksize) {
-    struct sigaltstack ss;
-    ss.ss_sp = pt->pt_attr.__sigaltstackaddr;
-    ss.ss_size = pt->pt_attr.__sigaltstacksize;
-    ss.ss_flags = 0;
-    unassert(!sigaltstack(&ss, 0));
+    struct sigaltstack *ss = alloca(sizeof(struct sigaltstack));
+    ss->ss_sp = pt->pt_attr.__sigaltstackaddr;
+    ss->ss_size = pt->pt_attr.__sigaltstacksize;
+    ss->ss_flags = 0;
+    unassert(!sigaltstack(ss, 0));
   }
 
   // set long jump handler so pthread_exit can bring control back here
