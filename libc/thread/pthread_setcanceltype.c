@@ -76,8 +76,10 @@ errno_t pthread_setcanceltype(int type, int *oldtype) {
       err = EINVAL;
       break;
   }
+#ifdef MODE_DBG
   STRACE("pthread_setcanceltype(%s, [%s]) → %s",
          DescribeCancelType(alloca(12), 0, &type),
          DescribeCancelType(alloca(12), err, oldtype), DescribeErrno(err));
+#endif
   return err;
 }
