@@ -538,7 +538,9 @@ int sys_clone_linux(int flags,         // rdi
 
 dontinstrument static int AmdLinuxThreadEntry(void *arg) {
   struct LinuxCloneArgs *wt = arg;
+#if defined(__x86_64__)
   sys_set_tls(ARCH_SET_GS, wt->tls);
+#endif
   return wt->func(wt->arg);
 }
 
