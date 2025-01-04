@@ -30,6 +30,8 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
+int disable_limit_process_to_single_cpu;
+
 void SetUp(void) {
   if (!IsLinux() && !IsFreebsd() && !IsWindows()) {
     exit(0);
