@@ -37,7 +37,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
@@ -119,6 +119,9 @@ static void fork_prepare(void) {
     _weaken(__localtime_lock)();
   if (_weaken(__dlopen_lock))
     _weaken(__dlopen_lock)();
+  if (IsWindows())
+    if (_weaken(__proc_lock))
+      _weaken(__proc_lock)();
   if (_weaken(cosmo_stack_lock))
     _weaken(cosmo_stack_lock)();
   __cxa_lock();
@@ -151,6 +154,9 @@ static void fork_parent(void) {
   __cxa_unlock();
   if (_weaken(cosmo_stack_unlock))
     _weaken(cosmo_stack_unlock)();
+  if (IsWindows())
+    if (_weaken(__proc_unlock))
+      _weaken(__proc_unlock)();
   if (_weaken(__dlopen_unlock))
     _weaken(__dlopen_unlock)();
   if (_weaken(__localtime_unlock))

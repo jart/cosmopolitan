@@ -24,11 +24,13 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
@@ -38,6 +40,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 void SetUpOnce(void) {
@@ -70,32 +73,27 @@ TEST(fork, testSharedMemory) {
   int *sharedvar;
   int *privatevar;
   EXPECT_NE(MAP_FAILED,
-            (sharedvar = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
+            (sharedvar = mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
                               MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
   EXPECT_NE(MAP_FAILED,
-            (privatevar = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
+            (privatevar = mmap(0, getpagesize(), PROT_READ | PROT_WRITE,
                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   stackvar = 1;
   *sharedvar = 1;
   *privatevar = 1;
   EXPECT_NE(-1, (pid = fork()));
   if (!pid) {
-    EXPECT_EQ(NULL, getenv("_FORK"));
     ++stackvar;
-    ++*sharedvar;
     ++*privatevar;
-    msync((void *)ROUNDDOWN((intptr_t)&stackvar, getpagesize()), getpagesize(),
-          MS_SYNC);
-    EXPECT_NE(-1, msync(privatevar, getpagesize(), MS_SYNC));
-    EXPECT_NE(-1, msync(sharedvar, getpagesize(), MS_SYNC));
+    ++*sharedvar;
     _exit(0);
   }
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_EQ(1, stackvar);
   EXPECT_EQ(2, *sharedvar);
   EXPECT_EQ(1, *privatevar);
-  EXPECT_NE(-1, munmap(sharedvar, getpagesize()));
-  EXPECT_NE(-1, munmap(privatevar, getpagesize()));
+  EXPECT_SYS(0, 0, munmap(sharedvar, getpagesize()));
+  EXPECT_SYS(0, 0, munmap(privatevar, getpagesize()));
 }
 
 static volatile bool gotsigusr1;
@@ -123,14 +121,20 @@ TEST(fork, childToChild) {
   sigprocmask(SIG_BLOCK, &mask, &oldmask);
   ASSERT_NE(-1, (child1 = fork()));
   if (!child1) {
-    kill(parent, SIGUSR2);
-    sigsuspend(0);
+    if (kill(parent, SIGUSR2)) {
+      kprintf("%s:%d: error: failed to kill parent: %m\n", __FILE__, __LINE__);
+      _Exit(1);
+    }
+    ASSERT_SYS(EINTR, -1, sigsuspend(0));
     _Exit(!gotsigusr1);
   }
-  sigsuspend(0);
+  EXPECT_SYS(EINTR, -1, sigsuspend(0));
   ASSERT_NE(-1, (child2 = fork()));
   if (!child2) {
-    kill(child1, SIGUSR1);
+    if (kill(child1, SIGUSR1)) {
+      kprintf("%s:%d: error: failed to kill child1: %m\n", __FILE__, __LINE__);
+      _Exit(1);
+    }
     _Exit(0);
   }
   ASSERT_NE(-1, wait(&ws));
@@ -147,12 +151,20 @@ TEST(fork, preservesTlsMemory) {
   EXITS(0);
 }
 
+#define CHECK_TERMSIG                                                    \
+  if (WIFSIGNALED(ws)) {                                                 \
+    kprintf("%s:%d: error: forked life subprocess terminated with %G\n", \
+            __FILE__, __LINE__, WTERMSIG(ws));                           \
+    exit(1);                                                             \
+  }
+
 void fork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid)
     _Exit(0);
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
@@ -165,6 +177,7 @@ void vfork_execl_wait_in_serial(void) {
     _Exit(127);
   }
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }
@@ -175,6 +188,7 @@ void vfork_wait_in_serial(void) {
   if (!pid)
     _Exit(0);
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
@@ -185,6 +199,7 @@ void sys_fork_wait_in_serial(void) {
   if (!pid)
     _Exit(0);
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
@@ -196,6 +211,7 @@ void posix_spawn_in_serial(void) {
   char *envs[] = {NULL};
   ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }

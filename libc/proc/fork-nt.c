@@ -44,7 +44,7 @@
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/map.h"

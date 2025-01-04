@@ -3,7 +3,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/dce.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/w.h"
 COSMOPOLITAN_C_START_

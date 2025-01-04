@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -27,25 +28,22 @@
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
 
-static textwindows int __proc_reap(struct Proc *pr, int *wstatus,
+textwindows static int __proc_reap(struct Proc *pr, int *wstatus,
                                    struct rusage *opt_out_rusage) {
-  if (wstatus) {
+  if (wstatus)
     *wstatus = pr->wstatus;
-  }
-  if (opt_out_rusage) {
+  if (opt_out_rusage)
     *opt_out_rusage = pr->ru;
-  }
   dll_remove(&__proc.zombies, &pr->elem);
-  if (dll_is_empty(__proc.zombies)) {
+  if (dll_is_empty(__proc.zombies))
     ResetEvent(__proc.haszombies);
-  }
   if (pr->waiters) {
     pr->status = PROC_UNDEAD;
     dll_make_first(&__proc.undead, &pr->elem);
@@ -56,19 +54,18 @@ static textwindows int __proc_reap(struct Proc *pr, int *wstatus,
   return pr->pid;
 }
 
-static textwindows int __proc_check(int pid, int *wstatus,
+textwindows static int __proc_check(int pid, int *wstatus,
                                     struct rusage *opt_out_rusage) {
   struct Dll *e;
   for (e = dll_first(__proc.zombies); e; e = dll_next(__proc.zombies, e)) {
     struct Proc *pr = PROC_CONTAINER(e);
-    if (pid == -1 || pid == pr->pid) {
+    if (pid == -1 || pid == pr->pid)
       return __proc_reap(pr, wstatus, opt_out_rusage);
-    }
   }
   return 0;
 }
 
-static textwindows int __proc_wait(int pid, int *wstatus, int options,
+textwindows static int __proc_wait(int pid, int *wstatus, int options,
                                    struct rusage *rusage, sigset_t waitmask) {
   for (;;) {
 
@@ -159,9 +156,8 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
     // check if killed or win32 error
     if (wi) {
       if (pr) {
-        if (!--pr->waiters && pr->status == PROC_UNDEAD) {
+        if (!--pr->waiters && pr->status == PROC_UNDEAD)
           __proc_free(pr);
-        }
       } else {
         --__proc.waiters;
       }
@@ -178,17 +174,15 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
 
     // handle process exit notification
     --pr->waiters;
-    if (pr->status == PROC_ALIVE) {
+    if (pr->status == PROC_ALIVE)
       __proc_harvest(pr, true);
-    }
     switch (pr->status) {
       case PROC_ALIVE:
         // exit caused by execve() reparenting
-        __proc_unlock();
-        if (!pr->waiters) {
+        if (!pr->waiters)
           // avoid deadlock that could theoretically happen
           SetEvent(__proc.onbirth);
-        }
+        __proc_unlock();
         break;
       case PROC_ZOMBIE:
         // exit happened and we're the first to know
@@ -197,9 +191,8 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
         return rc;
       case PROC_UNDEAD:
         // exit happened but another thread waited first
-        if (!pr->waiters) {
+        if (!pr->waiters)
           __proc_free(pr);
-        }
         __proc_unlock();
         return echild();
       default:

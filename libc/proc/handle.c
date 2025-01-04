@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 
 // retrieves handle of process
 // supports only current process and processes we created

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/proc/proc.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -47,7 +48,6 @@
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
-#include "libc/proc/proc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -67,9 +67,8 @@
 
 #define STACK_SIZE 65536
 
-struct Procs __proc = {
-    .lock = PTHREAD_MUTEX_INITIALIZER,
-};
+struct Procs __proc;
+static pthread_mutex_t __proc_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 textwindows static void __proc_stats(int64_t h, struct rusage *ru) {
   bzero(ru, sizeof(*ru));
@@ -258,14 +257,14 @@ textwindows static void __proc_setup(void) {
  */
 textwindows void __proc_lock(void) {
   cosmo_once(&__proc.once, __proc_setup);
-  _pthread_mutex_lock(&__proc.lock);
+  _pthread_mutex_lock(&__proc_lock_obj);
 }
 
 /**
  * Unlocks process tracker.
  */
 textwindows void __proc_unlock(void) {
-  _pthread_mutex_unlock(&__proc.lock);
+  _pthread_mutex_unlock(&__proc_lock_obj);
 }
 
 /**
@@ -273,10 +272,8 @@ textwindows void __proc_unlock(void) {
  */
 textwindows void __proc_wipe_and_reset(void) {
   // TODO(jart): Should we preserve this state in forked children?
-  pthread_mutex_t lock = __proc.lock;
+  _pthread_mutex_wipe_np(&__proc_lock_obj);
   bzero(&__proc, sizeof(__proc));
-  __proc.lock = lock;
-  _pthread_mutex_wipe_np(&__proc.lock);
 }
 
 /**

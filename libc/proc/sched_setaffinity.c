@@ -24,7 +24,7 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/sysv/errfuns.h"
 
 static dontinline textwindows int sys_sched_setaffinity_nt(

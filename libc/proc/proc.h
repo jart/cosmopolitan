@@ -27,7 +27,6 @@ struct Proc {
 struct Procs {
   int waiters;
   atomic_uint once;
-  pthread_mutex_t lock;
   intptr_t thread;
   intptr_t onbirth;
   intptr_t haszombies;
@@ -41,16 +40,16 @@ struct Procs {
 
 extern struct Procs __proc;
 
-void __proc_lock(void) dontthrow;
-void __proc_unlock(void) dontthrow;
-int64_t __proc_handle(int) libcesque;
-int64_t __proc_search(int) libcesque;
-struct Proc *__proc_new(void) libcesque;
-void __proc_add(struct Proc *) libcesque;
-void __proc_free(struct Proc *) libcesque;
-void __proc_wipe_and_reset(void) libcesque;
-int __proc_harvest(struct Proc *, bool) libcesque;
-int sys_wait4_nt(int, int *, int, struct rusage *) libcesque;
+void __proc_lock(void);
+void __proc_unlock(void);
+int64_t __proc_handle(int);
+int64_t __proc_search(int);
+struct Proc *__proc_new(void);
+void __proc_add(struct Proc *);
+void __proc_free(struct Proc *);
+void __proc_wipe_and_reset(void);
+int __proc_harvest(struct Proc *, bool);
+int sys_wait4_nt(int, int *, int, struct rusage *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_PROC_H_ */

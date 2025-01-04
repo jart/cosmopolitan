@@ -21,7 +21,7 @@
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
-#include "libc/proc/proc.internal.h"
+#include "libc/proc/proc.h"
 #include "libc/sysv/errfuns.h"
 
 /**

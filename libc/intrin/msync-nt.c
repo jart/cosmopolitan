@@ -19,10 +19,8 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/intrin/maps.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/sysparam.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/errfuns.h"
 
@@ -36,28 +34,17 @@ textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
 
   int rc = 0;
   __maps_lock();
-  struct Map *next, *map;
+  struct Map *map;
   if (!(map = __maps_floor(addr)))
     map = __maps_first();
-  for (; map && map->addr <= addr + size; map = next) {
-    next = __maps_next(map);
-    if (!__maps_isalloc(map))
-      continue;
+  for (; map && map->addr <= addr + size; map = __maps_next(map)) {
     if (map->flags & MAP_ANONYMOUS)
-      continue;
-    if (MAX(addr, map->addr) >= MIN(addr + size, map->addr + map->size))
+      continue;  // msync() is about coherency between file and memory
+    char *beg = MAX(addr, map->addr);
+    char *end = MIN(addr + size, map->addr + map->size);
+    if (beg >= end)
       continue;  // didn't overlap mapping
-
-    // get true size of win32 allocation
-    size_t allocsize = map->size;
-    while (next && !__maps_isalloc(next) &&
-           next->addr + allocsize == next->addr) {
-      allocsize += next->size;
-      next = __maps_next(next);
-    }
-
-    // perform the flush
-    if (!FlushViewOfFile(map->addr, allocsize))
+    if (!FlushViewOfFile(beg, end - beg))
       rc = -1;
     // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
   }

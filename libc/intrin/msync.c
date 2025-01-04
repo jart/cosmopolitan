@@ -68,23 +68,19 @@ int msync(void *addr, size_t size, int flags) {
   } else {
     sysflags = MS_ASYNC;
   }
-  if (flags & MS_INVALIDATE) {
+  if (flags & MS_INVALIDATE)
     sysflags |= MS_INVALIDATE;
-  }
 
   // FreeBSD's manual says "The flags argument was both MS_ASYNC and
   // MS_INVALIDATE. Only one of these flags is allowed." which makes
   // following the POSIX recommendation somewhat difficult.
-  if (IsFreebsd()) {
-    if (sysflags == (MS_ASYNC | MS_INVALIDATE)) {
+  if (IsFreebsd())
+    if (sysflags == (MS_ASYNC | MS_INVALIDATE))
       sysflags = MS_INVALIDATE;
-    }
-  }
 
   // FreeBSD specifies MS_SYNC as 0 so we shift the Cosmo constants
-  if (IsFreebsd()) {
+  if (IsFreebsd())
     sysflags >>= 1;
-  }
 
   BEGIN_CANCELATION_POINT;
   if (!IsWindows()) {
