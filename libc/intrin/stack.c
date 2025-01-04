@@ -492,7 +492,7 @@ relegated bool TellOpenbsdThisIsStackMemory(void *addr, size_t size) {
 
 // OpenBSD only permits RSP to occupy memory that's been explicitly
 // defined as stack memory, i.e. `lo <= %rsp < hi` must be the case
-relegated errno_t FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
+relegated bool FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
 
   // get interval
   uintptr_t lo = (uintptr_t)attr->__stackaddr;
@@ -503,15 +503,11 @@ relegated errno_t FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   hi = hi & -__pagesize;
 
   // tell os it's stack memory
-  errno_t olderr = errno;
-  if (!TellOpenbsdThisIsStackMemory((void *)lo, hi - lo)) {
-    errno_t err = errno;
-    errno = olderr;
-    return err;
-  }
+  if (!TellOpenbsdThisIsStackMemory((void *)lo, hi - lo))
+    return false;
 
   // update attributes with usable stack address
   attr->__stackaddr = (void *)lo;
   attr->__stacksize = hi - lo;
-  return 0;
+  return true;
 }

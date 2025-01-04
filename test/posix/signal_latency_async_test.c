@@ -40,11 +40,10 @@ void receiver_signal_handler(int signo) {
 }
 
 void *sender_func(void *arg) {
-
   for (int i = 0; i < ITERATIONS; i++) {
 
     // Wait a bit sometimes
-    if (rand() % 2 == 1) {
+    if (rand() % 2) {
       volatile unsigned v = 0;
       for (;;)
         if (++v == 4000)
@@ -67,32 +66,25 @@ void *sender_func(void *arg) {
 }
 
 void *receiver_func(void *arg) {
-
-  // Wait for asynchronous signals
-  for (;;) {
+  static int iteration = 0;
+  do {
+    // wait for signal handler to be called
     if (atomic_exchange_explicit(&receiver_got_signal, 0,
                                  memory_order_acq_rel)) {
+
+      // record received time
       struct timespec receive_time;
       clock_gettime(CLOCK_MONOTONIC, &receive_time);
-
       long sec_diff = receive_time.tv_sec - send_time.tv_sec;
       long nsec_diff = receive_time.tv_nsec - send_time.tv_nsec;
       double latency_ns = sec_diff * 1e9 + nsec_diff;
+      latencies[iteration++] = latency_ns;
 
-      static int iteration = 0;
-      if (iteration < ITERATIONS)
-        latencies[iteration++] = latency_ns;
-
-      // Pong sender
+      // pong sender
       if (pthread_kill(sender_thread, SIGUSR2))
         exit(2);
-
-      // Exit if done
-      if (iteration >= ITERATIONS)
-        pthread_exit(0);
     }
-  }
-
+  } while (iteration < ITERATIONS);
   return 0;
 }
 
@@ -108,11 +100,7 @@ int compare(const void *a, const void *b) {
 
 int main() {
 
-  // TODO(jart): fix flakes
-  if (1)
-    return 0;
-
-  // Install signal handlers
+  // install handlers
   struct sigaction sa;
   sa.sa_handler = receiver_signal_handler;
   sa.sa_flags = 0;
@@ -121,27 +109,27 @@ int main() {
   sa.sa_handler = sender_signal_handler;
   sigaction(SIGUSR2, &sa, 0);
 
-  // Create receiver thread first
+  // create receiver thread first
   if (pthread_create(&receiver_thread, 0, receiver_func, 0))
     exit(11);
 
-  // Create sender thread
+  // create sender thread
   if (pthread_create(&sender_thread, 0, sender_func, 0))
     exit(12);
 
-  // Wait for threads to finish
+  // wait for threads to finish
   if (pthread_join(sender_thread, 0))
     exit(13);
   if (pthread_join(receiver_thread, 0))
     exit(14);
 
-  // Compute mean latency
+  // compute mean latency
   double total_latency = 0;
   for (int i = 0; i < ITERATIONS; i++)
     total_latency += latencies[i];
   double mean_latency = total_latency / ITERATIONS;
 
-  // Sort latencies to compute percentiles
+  // sort latencies to compute percentiles
   qsort(latencies, ITERATIONS, sizeof(double), compare);
 
   double p50 = latencies[(int)(0.50 * ITERATIONS)];

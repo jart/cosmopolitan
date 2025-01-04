@@ -128,7 +128,7 @@ forceinline pureconst struct PosixThread *_pthread_self(void) {
 }
 
 forceinline void _pthread_ref(struct PosixThread *pt) {
-  atomic_fetch_add_explicit(&pt->pt_refs, 1, memory_order_acq_rel);
+  atomic_fetch_add_explicit(&pt->pt_refs, 1, memory_order_relaxed);
 }
 
 forceinline void _pthread_unref(struct PosixThread *pt) {

@@ -6,17 +6,20 @@ import concurrent.futures
 from collections import Counter
 from typing import List, Dict, Tuple
 
-NUM_PARALLEL = int(os.cpu_count() * 1.5)
+NUM_PARALLEL = int(os.cpu_count() * 20)
 
-def find_test_files(root_dir: str) -> List[str]:
+def find_test_files(root: str) -> List[str]:
     """Find all executable files ending with _test recursively."""
     test_files = []
-    for root, _, files in os.walk(root_dir):
-        for file in files:
-            if file.endswith('_test'):
-                file_path = os.path.join(root, file)
-                if os.access(file_path, os.X_OK):
-                    test_files.append(file_path)
+    if os.path.isdir(root):
+        for root, _, files in os.walk(root):
+            for file in files:
+                if file.endswith('_test'):
+                    file_path = os.path.join(root, file)
+                    if os.access(file_path, os.X_OK):
+                        test_files.append(file_path)
+    elif root.endswith('_test'):
+        test_files.append(root)
     return test_files
 
 def run_single_test(test_path: str) -> int:

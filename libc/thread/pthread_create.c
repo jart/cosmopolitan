@@ -199,14 +199,12 @@ static errno_t pthread_create_impl(pthread_t *thread,
                                    const pthread_attr_t *attr,
                                    void *(*start_routine)(void *), void *arg,
                                    sigset_t oldsigs) {
-  int rc, e = errno;
+  errno_t err;
   struct PosixThread *pt;
 
   // create posix thread object
-  if (!(pt = calloc(1, sizeof(struct PosixThread)))) {
-    errno = e;
+  if (!(pt = calloc(1, sizeof(struct PosixThread))))
     return EAGAIN;
-  }
   dll_init(&pt->list);
   pt->pt_locale = &__global_locale;
   pt->pt_start = start_routine;
@@ -215,7 +213,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
   // create thread local storage memory
   if (!(pt->pt_tls = _mktls(&pt->tib))) {
     free(pt);
-    errno = e;
     return EAGAIN;
   }
 
@@ -232,9 +229,9 @@ static errno_t pthread_create_impl(pthread_t *thread,
     // caller supplied their own stack
     // assume they know what they're doing as much as possible
     if (IsOpenbsd()) {
-      if ((rc = FixupCustomStackOnOpenbsd(&pt->pt_attr))) {
+      if (!FixupCustomStackOnOpenbsd(&pt->pt_attr)) {
         _pthread_free(pt);
-        return rc;
+        return EPERM;
       }
     }
   } else {
@@ -259,7 +256,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
       if (!(pt->pt_attr.__sigaltstackaddr =
                 malloc(pt->pt_attr.__sigaltstacksize))) {
         _pthread_free(pt);
-        return errno;
+        return EAGAIN;
       }
       pt->pt_flags |= PT_OWNSIGALTSTACK;
     }
@@ -282,9 +279,13 @@ static errno_t pthread_create_impl(pthread_t *thread,
                             memory_order_relaxed);
       break;
     default:
-      _pthread_free(pt);
-      return EINVAL;
+      // pthread_attr_setdetachstate() makes this impossible
+      __builtin_unreachable();
   }
+
+  // if pthread_attr_setdetachstate() was used then it's possible for
+  // the `pt` object to be freed before this clone call has returned!
+  atomic_store_explicit(&pt->pt_refs, 1, memory_order_relaxed);
 
   // add thread to global list
   // we add it to the beginning since zombies go at the end
@@ -292,25 +293,27 @@ static errno_t pthread_create_impl(pthread_t *thread,
   dll_make_first(&_pthread_list, &pt->list);
   _pthread_unlock();
 
-  // if pthread_attr_setdetachstate() was used then it's possible for
-  // the `pt` object to be freed before this clone call has returned!
-  _pthread_ref(pt);
+  // we don't normally do this, but it's important to write the result
+  // memory before spawning the thread, so it's visible to the threads
+  *thread = (pthread_t)pt;
 
   // launch PosixThread(pt) in new thread
-  if ((rc = clone(
+  if ((err = clone(
            PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                CLONE_SYSVSEM | CLONE_SETTLS | CLONE_PARENT_SETTID |
                CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
            pt, &pt->tib->tib_ptid, __adj_tls(pt->tib), &pt->tib->tib_ctid))) {
+    *thread = 0;  // posix doesn't require we do this
     _pthread_lock();
     dll_remove(&_pthread_list, &pt->list);
     _pthread_unlock();
     _pthread_free(pt);
-    return rc;
+    if (err == ENOMEM)
+      err = EAGAIN;
+    return err;
   }
 
-  *thread = (pthread_t)pt;
   return 0;
 }
 
@@ -359,7 +362,7 @@ static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
  *                 └──────────────┘
  *
  * @param thread is used to output the thread id upon success, which
- *     must be non-null
+ *     must be non-null; upon failure, its value is undefined
  * @param attr points to launch configuration, or may be null
  *     to use sensible defaults; it must be initialized using
  *     pthread_attr_init()
@@ -375,6 +378,7 @@ static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
   errno_t err;
+  errno_t olderr = errno;
   _pthread_decimate(kPosixThreadZombie);
   BLOCK_SIGNALS;
   err = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
@@ -382,7 +386,10 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   STRACE("pthread_create([%s], %p, %t, %p) → %s",
          DescribeHandle(alloca(12), err, thread), attr, start_routine, arg,
          DescribeErrno(err));
-  if (!err)
+  if (!err) {
     _pthread_unref(*(struct PosixThread **)thread);
+  } else {
+    errno = olderr;
+  }
   return err;
 }
