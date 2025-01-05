@@ -83,7 +83,6 @@ extern uint64_t kStartTsc;
 extern const char kNtSystemDirectory[];
 extern const char kNtWindowsDirectory[];
 extern size_t __virtualmax;
-extern size_t __virtualsize;
 extern size_t __stackmax;
 extern bool32 __isworker;
 /* utilities */

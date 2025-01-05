@@ -151,6 +151,32 @@ TEST(fork, preservesTlsMemory) {
   EXITS(0);
 }
 
+TEST(fork, privateExtraPageData_getsCopiedByFork) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_WRITE | PROT_READ,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  p[0] = 1;
+  p[1] = 2;
+  SPAWN(fork);
+  ASSERT_EQ(1, p[0]);
+  ASSERT_EQ(2, p[1]);
+  EXITS(0);
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(fork, sharedExtraPageData_getsResurrectedByFork) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_WRITE | PROT_READ,
+                                  MAP_ANONYMOUS | MAP_SHARED, -1, 0)));
+  p[0] = 1;
+  p[1] = 2;
+  SPAWN(fork);
+  ASSERT_EQ(1, p[0]);
+  ASSERT_EQ(2, p[1]);
+  EXITS(0);
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
 #define CHECK_TERMSIG                                                    \
   if (WIFSIGNALED(ws)) {                                                 \
     kprintf("%s:%d: error: forked life subprocess terminated with %G\n", \

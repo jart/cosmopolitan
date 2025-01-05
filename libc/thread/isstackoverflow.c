@@ -16,74 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
+#include "libc/macros.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/ss.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 /**
- * stack overflow test #5
- * - make sure fork() preserves sigaltstack()
- * - make sure fork() preserves guard page status
+ * Returns true if signal is caused by stack overflow.
  */
+char __is_stack_overflow(siginfo_t *si, void *arg) {
 
-jmp_buf recover;
+  // sanity check
+  ucontext_t *uc = arg;
+  if (!si || !uc)
+    return false;
+  if (si->si_signo != SIGSEGV &&  //
+      si->si_signo != SIGBUS)
+    return false;
 
-void CrashHandler(int sig, siginfo_t *si, void *ctx) {
-  unassert(__is_stack_overflow(si, ctx));
-  longjmp(recover, 123);
-}
-
-int StackOverflow(int d) {
-  char A[8];
-  for (int i = 0; i < sizeof(A); i++)
-    A[i] = d + i;
-  if (__veil("r", d))
-    return StackOverflow(d + 1) + A[d % sizeof(A)];
-  return 0;
-}
-
-void *MyPosixThread(void *arg) {
-  int pid;
-  unassert(__get_tls()->tib_sigstack_addr);
-  unassert((pid = fork()) != -1);
-  if (!pid) {
-    int jumpcode;
-    if (!(jumpcode = setjmp(recover))) {
-      StackOverflow(1);
-      _Exit(1);
-    }
-    unassert(123 == jumpcode);
-  } else {
-    int ws;
-    unassert(wait(&ws) != -1);
-    unassert(!ws);
-    pthread_exit(0);
-  }
-  return 0;
-}
-
-int main() {
-
-  struct sigaction sa;
-  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_sigaction = CrashHandler;
-  unassert(!sigaction(SIGBUS, &sa, 0));
-  unassert(!sigaction(SIGSEGV, &sa, 0));
-
-  pthread_t th;
+  // get stack information
   pthread_attr_t attr;
-  unassert(!pthread_attr_init(&attr));
-  unassert(!pthread_attr_setguardsize(&attr, getpagesize()));
-  unassert(!pthread_attr_setsigaltstacksize_np(&attr, SIGSTKSZ));
-  unassert(!pthread_create(&th, &attr, MyPosixThread, 0));
-  unassert(!pthread_attr_destroy(&attr));
-  unassert(!pthread_join(th, 0));
+  if (pthread_getattr_np(pthread_self(), &attr))
+    return false;
+  size_t guardsize;
+  if (pthread_attr_getguardsize(&attr, &guardsize))
+    return false;
+  void *stackaddr;
+  size_t stacksize;
+  if (pthread_attr_getstack(&attr, &stackaddr, &stacksize))
+    return false;
+
+  // determine if faulting address is inside guard region
+  char *x = (char *)si->si_addr;
+  char *lo = (char *)stackaddr - guardsize;
+  char *hi = (char *)stackaddr;
+  return lo <= x && x < hi;
 }

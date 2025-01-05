@@ -16,31 +16,78 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/atomic.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.h"
-#include "libc/intrin/directmap.h"
-#include "libc/intrin/strace.h"
+#include "libc/fmt/itoa.h"
+#include "libc/nt/enum/status.h"
+#include "libc/nt/nt/process.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/processbasicinformation.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/syslib.internal.h"
 
-/**
- * Unmaps memory directly with system.
- *
- * This function bypasses memtrack. Therefore it won't work on Windows,
- * but it works on everything else including bare metal.
- *
- * @asyncsignalsafe
- */
-int sys_munmap(void *p, size_t n) {
-  int rc;
-  if (IsXnuSilicon()) {
-    rc = _sysret(__syslib->__munmap(p, n));
-  } else if (IsMetal()) {
-    rc = sys_munmap_metal(p, n);
-  } else {
-    rc = __sys_munmap(p, n);
+int sys_getppid_nt_win32;
+int sys_getppid_nt_cosmo;
+
+textwindows static int sys_getppid_nt_ntdll(void) {
+  struct NtProcessBasicInformation ProcessInformation;
+  uint32_t gotsize = 0;
+  if (!NtError(
+          NtQueryInformationProcess(GetCurrentProcess(), 0, &ProcessInformation,
+                                    sizeof(ProcessInformation), &gotsize)) &&
+      gotsize >= sizeof(ProcessInformation) &&
+      ProcessInformation.InheritedFromUniqueProcessId) {
+    return ProcessInformation.InheritedFromUniqueProcessId;
   }
-  KERNTRACE("sys_munmap(%p, %'zu) → %d", p, n, rc);
-  return rc;
+  return 0;
+}
+
+static void sys_getppid_nt_extract(const char *str) {
+  int c;
+  int win32 = 0;
+  int cosmo = 0;
+  if (str) {
+    for (;;) {
+      c = *str;
+      if (!('0' <= c && c <= '9'))
+        break;
+      win32 *= 10;
+      win32 += c - '0';
+      ++str;
+    }
+    if (win32 && *str++ == ':') {
+      for (;;) {
+        c = *str;
+        if (!('0' <= c && c <= '9'))
+          break;
+        cosmo *= 10;
+        cosmo += c - '0';
+        ++str;
+      }
+      if (win32 == sys_getppid_nt_ntdll()) {
+        sys_getppid_nt_win32 = win32;
+        sys_getppid_nt_cosmo = cosmo;
+      }
+    }
+  }
+}
+
+__attribute__((__constructor__(90))) static void init(void) {
+  if (!IsWindows())
+    return;
+  sys_getppid_nt_extract(getenv("_COSMO_PPID"));
+}
+
+textwindows int sys_getppid_nt(void) {
+  if (sys_getppid_nt_cosmo)
+    return sys_getppid_nt_cosmo;
+  return sys_getppid_nt_ntdll();
+}
+
+textwindows void sys_getppid_nt_wipe(int win32, int cosmo) {
+  sys_getppid_nt_win32 = win32;
+  sys_getppid_nt_cosmo = cosmo;
 }

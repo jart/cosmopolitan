@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
@@ -40,8 +41,9 @@
 
 volatile bool smashed_stack;
 
-void CrashHandler(int sig) {
+void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   smashed_stack = true;
+  unassert(__is_stack_overflow(si, ctx));
   pthread_exit((void *)123L);
 }
 
@@ -63,7 +65,7 @@ void *MyPosixThread(void *arg) {
   ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
   sigemptyset(&sa.sa_mask);
-  sa.sa_handler = CrashHandler;
+  sa.sa_sigaction = CrashHandler;
   sigaction(SIGBUS, &sa, 0);
   sigaction(SIGSEGV, &sa, 0);
   exit(StackOverflow(1));

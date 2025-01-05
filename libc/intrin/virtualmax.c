@@ -19,4 +19,3 @@
 #include "libc/runtime/runtime.h"
 
 size_t __virtualmax = -1;
-size_t __virtualsize = 0;

@@ -167,7 +167,6 @@ void _StartTty(struct Tty *tty, unsigned char type, unsigned short yp,
                unsigned short startx, unsigned char yc, unsigned char xc,
                void *fb, unsigned init_flags) {
   unsigned short yn, xn, xs = xp * sizeof(TtyCanvasColor);
-  struct DirectMap dm;
   bzero(tty, sizeof(struct Tty));
   SetYp(tty, yp);
   SetXp(tty, xp);
@@ -183,9 +182,9 @@ void _StartTty(struct Tty *tty, unsigned char type, unsigned short yp,
       tty->canvas = fb;
       xs = xsfb;
     } else {
-      dm = sys_mmap_metal(NULL, (size_t)yp * xs, PROT_READ | PROT_WRITE,
-                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if (dm.addr == (void *)-1) {
+      void *addr = sys_mmap_metal(NULL, (size_t)yp * xs, PROT_READ | PROT_WRITE,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if (addr == (void *)-1) {
         /*
          * We are a bit low on memory.  Try to go on anyway, & initialize
          * our tty as an emergency console.
@@ -194,7 +193,7 @@ void _StartTty(struct Tty *tty, unsigned char type, unsigned short yp,
         tty->canvas = fb;
         xs = xsfb;
       } else
-        tty->canvas = dm.addr;
+        tty->canvas = addr;
     }
   }
   SetYn(tty, yn);

@@ -116,6 +116,42 @@ TEST(mmap, fixedTaken) {
   EXPECT_SYS(0, 0, munmap(p, 1));
 }
 
+TEST(mmap, anon_rw_to_rx) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_WRITE,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_SYS(0, 0, mprotect(p, 1, PROT_READ | PROT_EXEC));
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(mmap, anon_rw_fork_to_rx) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_WRITE,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mprotect(p, 1, PROT_READ | PROT_EXEC));
+  EXITS(0);
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(mmap, anon_r_to_rw) {
+  char *p;
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_SYS(0, 0, mprotect(p, 1, PROT_READ | PROT_WRITE));
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(mmap, anon_r_fork_to_rw) {
+  char *p;
+  ASSERT_NE(MAP_FAILED,
+            (p = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mprotect(p, 1, PROT_READ | PROT_WRITE));
+  EXITS(0);
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
 TEST(mmap, hint) {
   char *p;
 

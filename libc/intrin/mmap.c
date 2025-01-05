@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
@@ -33,10 +34,14 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/memflags.h"
+#include "libc/nt/enum/pageflags.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/sysparam.h"
@@ -79,6 +84,11 @@
     }                                                                     \
   } while (0)
 #endif
+
+struct DirectMap {
+  void *addr;
+  int64_t hand;
+};
 
 int __maps_compare(const struct Tree *ra, const struct Tree *rb) {
   const struct Map *a = (const struct Map *)MAP_TREE_CONTAINER(ra);
@@ -421,7 +431,7 @@ void __maps_insert(struct Map *map) {
   __maps_check();
 }
 
-// adds interval to rbtree (no sys_mmap)
+// adds interval to rbtree
 bool __maps_track(char *addr, size_t size, int prot, int flags) {
   struct Map *map;
   if (!(map = __maps_alloc()))
@@ -447,6 +457,125 @@ int __maps_untrack(char *addr, size_t size) {
   return rc;
 }
 
+textwindows dontinline static struct DirectMap sys_mmap_nt(
+    void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
+  struct DirectMap dm;
+
+  // it's 5x faster
+  if (IsWindows() && (flags & MAP_ANONYMOUS) &&
+      (flags & MAP_TYPE) != MAP_SHARED) {
+    if (!(dm.addr = VirtualAlloc(addr, size, kNtMemReserve | kNtMemCommit,
+                                 __prot2nt(prot, false)))) {
+      dm.addr = MAP_FAILED;
+    }
+    dm.hand = MAPS_VIRTUAL;
+    return dm;
+  }
+
+  int64_t file_handle;
+  if (flags & MAP_ANONYMOUS) {
+    file_handle = kNtInvalidHandleValue;
+  } else {
+    file_handle = g_fds.p[fd].handle;
+  }
+
+  // mark map handle as inheritable if fork might need it
+  const struct NtSecurityAttributes *mapsec;
+  if ((flags & MAP_TYPE) == MAP_SHARED) {
+    mapsec = &kNtIsInheritable;
+  } else {
+    mapsec = 0;
+  }
+
+  // nt will whine under many circumstances if we change the execute bit
+  // later using mprotect(). the workaround is to always request execute
+  // and then virtualprotect() it away until we actually need it. please
+  // note that open-nt.c always requests an kNtGenericExecute accessmask
+  int iscow = 0;
+  int page_flags;
+  int file_flags;
+  if (file_handle != -1) {
+    if ((flags & MAP_TYPE) != MAP_SHARED) {
+      // windows has cow pages but they can't propagate across fork()
+      // that means we only get copy-on-write for the root process :(
+      page_flags = kNtPageExecuteWritecopy;
+      file_flags = kNtFileMapCopy | kNtFileMapExecute;
+      iscow = 1;
+    } else {
+      if ((g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY) {
+        page_flags = kNtPageExecuteRead;
+        file_flags = kNtFileMapRead | kNtFileMapExecute;
+      } else {
+        page_flags = kNtPageExecuteReadwrite;
+        file_flags = kNtFileMapWrite | kNtFileMapExecute;
+      }
+    }
+  } else {
+    page_flags = kNtPageExecuteReadwrite;
+    file_flags = kNtFileMapWrite | kNtFileMapExecute;
+  }
+
+  int e = errno;
+TryAgain:
+  if ((dm.hand = CreateFileMapping(file_handle, mapsec, page_flags,
+                                   (size + off) >> 32, (size + off), 0))) {
+    if ((dm.addr = MapViewOfFileEx(dm.hand, file_flags, off >> 32, off, size,
+                                   addr))) {
+      uint32_t oldprot;
+      if (VirtualProtect(dm.addr, size, __prot2nt(prot, iscow), &oldprot))
+        return dm;
+      UnmapViewOfFile(dm.addr);
+    }
+    CloseHandle(dm.hand);
+  } else if (!(prot & PROT_EXEC) &&               //
+             (file_flags & kNtFileMapExecute) &&  //
+             GetLastError() == kNtErrorAccessDenied) {
+    // your file needs to have been O_CREAT'd with exec `mode` bits in
+    // order to be mapped with executable permission. we always try to
+    // get execute permission if the kernel will give it to us because
+    // win32 would otherwise forbid mprotect() from elevating later on
+    file_flags &= ~kNtFileMapExecute;
+    switch (page_flags) {
+      case kNtPageExecuteWritecopy:
+        page_flags = kNtPageWritecopy;
+        break;
+      case kNtPageExecuteReadwrite:
+        page_flags = kNtPageReadwrite;
+        break;
+      case kNtPageExecuteRead:
+        page_flags = kNtPageReadonly;
+        break;
+      default:
+        __builtin_unreachable();
+    }
+    errno = e;
+    goto TryAgain;
+  }
+
+  dm.hand = kNtInvalidHandleValue;
+  dm.addr = (void *)(intptr_t)-1;
+  return dm;
+}
+
+static struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
+                                 int fd, int64_t off) {
+  struct DirectMap d;
+  if (IsXnuSilicon()) {
+    long p = _sysret(__syslib->__mmap(addr, size, prot, flags, fd, off));
+    d.hand = kNtInvalidHandleValue;
+    d.addr = (void *)p;
+  } else if (IsWindows()) {
+    d = sys_mmap_nt(addr, size, prot, flags, fd, off);
+  } else if (IsMetal()) {
+    d.addr = sys_mmap_metal(addr, size, prot, flags, fd, off);
+    d.hand = kNtInvalidHandleValue;
+  } else {
+    d.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
+    d.hand = kNtInvalidHandleValue;
+  }
+  return d;
+}
+
 struct Map *__maps_alloc(void) {
   struct Map *map;
   uintptr_t tip = atomic_load_explicit(&__maps.freed, memory_order_relaxed);
@@ -467,7 +596,7 @@ struct Map *__maps_alloc(void) {
   if (sys.addr == MAP_FAILED)
     return 0;
   if (IsWindows())
-    CloseHandle(sys.maphandle);
+    CloseHandle(sys.hand);
   struct MapSlab *slab = sys.addr;
   while (!atomic_compare_exchange_weak(&__maps.slabs, &slab->next, slab)) {
   }
@@ -717,7 +846,7 @@ static void *__mmap_impl(char *addr, size_t size, int prot, int flags, int fd,
   map->off = off;
   map->prot = prot;
   map->flags = flags;
-  map->hand = res.maphandle;
+  map->hand = res.hand;
   if (IsWindows()) {
     map->iscow = (flags & MAP_TYPE) != MAP_SHARED && fd != -1;
     map->readonlyfile = (flags & MAP_TYPE) == MAP_SHARED && fd != -1 &&

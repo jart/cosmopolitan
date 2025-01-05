@@ -29,6 +29,7 @@ const char *_DescribeMapping(char[8], int, int) libcesque;
 const char *_DescribeMremapFlags(char[30], int) libcesque;
 const char *_DescribeMsg(char[16], int) libcesque;
 const char *_DescribeMsyncFlags(char[48], int) libcesque;
+const char *_DescribeNtAllocationType(char[48], uint32_t);
 const char *_DescribeNtConsoleInFlags(char[256], uint32_t) libcesque;
 const char *_DescribeNtConsoleOutFlags(char[128], uint32_t) libcesque;
 const char *_DescribeNtCreationDisposition(uint32_t) libcesque;
@@ -87,6 +88,7 @@ const char *_DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeMremapFlags(x)       _DescribeMremapFlags(alloca(30), x)
 #define DescribeMsg(x)               _DescribeMsg(alloca(16), x)
 #define DescribeMsyncFlags(x)        _DescribeMsyncFlags(alloca(48), x)
+#define DescribeNtAllocationType(x)  _DescribeNtAllocationType(alloca(48), x)
 #define DescribeNtConsoleInFlags(x)  _DescribeNtConsoleInFlags(alloca(256), x)
 #define DescribeNtConsoleOutFlags(x) _DescribeNtConsoleOutFlags(alloca(128), x)
 #define DescribeNtFileAccessFlags(x) _DescribeNtFileAccessFlags(alloca(512), x)

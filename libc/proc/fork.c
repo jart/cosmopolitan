@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -43,6 +44,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ss.h"
 #include "libc/thread/itimer.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -120,8 +122,7 @@ static void fork_prepare(void) {
   if (_weaken(__dlopen_lock))
     _weaken(__dlopen_lock)();
   if (IsWindows())
-    if (_weaken(__proc_lock))
-      _weaken(__proc_lock)();
+    __proc_lock();
   if (_weaken(cosmo_stack_lock))
     _weaken(cosmo_stack_lock)();
   __cxa_lock();
@@ -155,8 +156,7 @@ static void fork_parent(void) {
   if (_weaken(cosmo_stack_unlock))
     _weaken(cosmo_stack_unlock)();
   if (IsWindows())
-    if (_weaken(__proc_unlock))
-      _weaken(__proc_unlock)();
+    __proc_unlock();
   if (_weaken(__dlopen_unlock))
     _weaken(__dlopen_unlock)();
   if (_weaken(__localtime_unlock))
@@ -167,7 +167,7 @@ static void fork_parent(void) {
   _pthread_mutex_unlock(&supreme_lock);
 }
 
-static void fork_child(void) {
+static void fork_child(int ppid_win32, int ppid_cosmo) {
   if (_weaken(__rand64_wipe))
     _weaken(__rand64_wipe)();
   _pthread_mutex_wipe_np(&__fds_lock_obj);
@@ -194,6 +194,8 @@ static void fork_child(void) {
     _pthread_mutex_wipe_np(&__sig_worker_lock);
     if (_weaken(__sig_init))
       _weaken(__sig_init)();
+    if (_weaken(sys_getppid_nt_wipe))
+      _weaken(sys_getppid_nt_wipe)(ppid_win32, ppid_cosmo);
   }
   if (_weaken(_pthread_onfork_child))
     _weaken(_pthread_onfork_child)();
@@ -202,8 +204,9 @@ static void fork_child(void) {
 
 int _fork(uint32_t dwCreationFlags) {
   struct Dll *e;
-  int ax, dx, tid, parent;
-  parent = __pid;
+  int ax, dx, tid, ppid_win32, ppid_cosmo;
+  ppid_win32 = IsWindows() ? GetCurrentProcessId() : 0;
+  ppid_cosmo = __pid;
   BLOCK_SIGNALS;
   fork_prepare();
   if (!IsWindows()) {
@@ -223,7 +226,7 @@ int _fork(uint32_t dwCreationFlags) {
 
     // get new thread id
     struct CosmoTib *tib = __get_tls();
-    struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+    struct PosixThread *me = (struct PosixThread *)tib->tib_pthread;
     tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
     atomic_init(&tib->tib_ctid, tid);
     atomic_init(&tib->tib_ptid, tid);
@@ -243,10 +246,10 @@ int _fork(uint32_t dwCreationFlags) {
     // turn other threads into zombies
     // we can't free() them since we're monopolizing all locks
     // we assume the operating system already reclaimed system handles
-    dll_remove(&_pthread_list, &pt->list);
+    dll_remove(&_pthread_list, &me->list);
     struct Dll *old_threads = _pthread_list;
     _pthread_list = 0;
-    dll_make_first(&_pthread_list, &pt->list);
+    dll_make_first(&_pthread_list, &me->list);
     atomic_init(&_pthread_count, 1);
 
     // get new system thread handle
@@ -264,25 +267,38 @@ int _fork(uint32_t dwCreationFlags) {
     atomic_init(&tib->tib_sigpending, 0);
 
     // we can't be canceled if the canceler no longer exists
-    atomic_init(&pt->pt_canceled, false);
+    atomic_init(&me->pt_canceled, false);
 
     // forget locks
     bzero(tib->tib_locks, sizeof(tib->tib_locks));
 
+    // xnu fork() doesn't preserve sigaltstack()
+    if (IsXnu() && me->tib->tib_sigstack_addr) {
+      struct sigaltstack_bsd ss;
+      ss.ss_sp = me->tib->tib_sigstack_addr;
+      ss.ss_size = me->tib->tib_sigstack_size;
+      ss.ss_flags = me->tib->tib_sigstack_flags;
+      if (IsXnuSilicon()) {
+        __syslib->__sigaltstack(&ss, 0);
+      } else {
+        sys_sigaltstack(&ss, 0);
+      }
+    }
+
     // run user fork callbacks
-    fork_child();
+    fork_child(ppid_win32, ppid_cosmo);
 
     // free threads
     if (_weaken(_pthread_free)) {
       while ((e = dll_first(old_threads))) {
-        pt = POSIXTHREAD_CONTAINER(e);
+        struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
         atomic_init(&pt->tib->tib_syshand, 0);
         dll_remove(&old_threads, e);
         _weaken(_pthread_free)(pt);
       }
     }
 
-    STRACE("fork() → 0 (child of %d)", parent);
+    STRACE("fork() → 0 (child of %d)", ppid_cosmo);
   } else {
     // this is the parent process
     fork_parent();

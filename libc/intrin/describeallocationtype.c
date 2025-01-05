@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/struct/ucontext.internal.h"
-#include "libc/calls/ucontext.h"
+#include "libc/intrin/describeflags.h"
 #include "libc/macros.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/nt/enum/memflags.h"
 
-/**
- * Returns true if signal is most likely a stack overflow.
- */
-char __is_stack_overflow(siginfo_t *si, void *arg) {
-  ucontext_t *uc = arg;
-  if (!si || !uc)
-    return false;
-  if (si->si_signo != SIGSEGV && si->si_signo != SIGBUS)
-    return false;
-  intptr_t sp = uc->uc_mcontext.SP;
-  intptr_t fp = (intptr_t)si->si_addr;
-  return ABS(fp - sp) < __pagesize;
+static const struct DescribeFlags kNtAllocationTypeFlags[] = {
+    {kNtMemCommit, "Commit"},    //
+    {kNtMemReserve, "Reserve"},  //
+    {kNtMemReset, "Reset"},      //
+};
+
+const char *_DescribeNtAllocationType(char buf[48], uint32_t x) {
+  return _DescribeFlags(buf, 48, kNtAllocationTypeFlags,
+                        ARRAYLEN(kNtAllocationTypeFlags), "kNtMem", x);
 }

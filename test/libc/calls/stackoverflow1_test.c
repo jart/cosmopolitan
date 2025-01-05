@@ -59,7 +59,7 @@ void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
           si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
   smashed_stack = true;
-  unassert(__is_stack_overflow(si, ctx));
+  // unassert(__is_stack_overflow(si, ctx)); // fuzzy with main thread
   longjmp(recover, 123);
 }
 

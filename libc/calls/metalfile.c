@@ -67,10 +67,9 @@ textstartup void InitializeMetalFile(void) {
     size_t size = ROUNDUP(_ezip - __executable_start, 4096);
     // TODO(jart): Restore support for ZIPOS on metal.
     void *copied_base;
-    struct DirectMap dm;
-    dm = sys_mmap_metal(NULL, size, PROT_READ | PROT_WRITE,
-                        MAP_SHARED_linux | MAP_ANONYMOUS_linux, -1, 0);
-    copied_base = dm.addr;
+    void *addr = sys_mmap_metal(NULL, size, PROT_READ | PROT_WRITE,
+                                MAP_SHARED_linux | MAP_ANONYMOUS_linux, -1, 0);
+    copied_base = addr;
     npassert(copied_base != (void *)-1);
     memcpy(copied_base, (void *)(BANE + IMAGE_BASE_PHYSICAL), size);
     __ape_com_base = copied_base;

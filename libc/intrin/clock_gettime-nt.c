@@ -59,7 +59,7 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
       //                     —Quoth MSDN § Windows Time
       //
       QueryUnbiasedInterruptTimePrecise(&hectons);
-      *ts = timespec_fromnanos(hectons * 100);
+      *ts = WindowsDurationToTimeSpec(hectons);
       return 0;
     case _CLOCK_MONOTONIC_COARSE:
       //
@@ -83,7 +83,7 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
       //                     —Quoth MSDN § QueryUnbiasedInterruptTimePrecise
       //
       QueryUnbiasedInterruptTime(&hectons);
-      *ts = timespec_fromnanos(hectons * 100);
+      *ts = WindowsDurationToTimeSpec(hectons);
       return 0;
     case _CLOCK_BOOTTIME:
       //
@@ -95,7 +95,7 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
       //                     —Quoth MSDN § Interrupt Time
       //
       QueryInterruptTimePrecise(&hectons);
-      *ts = timespec_fromnanos(hectons * 100);
+      *ts = WindowsDurationToTimeSpec(hectons);
       return 0;
     case _CLOCK_PROCESS_CPUTIME_ID:
       GetProcessTimes(GetCurrentProcess(), &ftCreation, &ftExit, &ftKernel,

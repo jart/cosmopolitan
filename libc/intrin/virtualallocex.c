@@ -19,32 +19,23 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
-#include "libc/macros.h"
-#include "libc/mem/alloca.h"
-#include "libc/nt/enum/memflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(VirtualAllocEx) *const __imp_VirtualAllocEx;
 
-static const char *DescribeAllocationType(char buf[48], uint32_t x) {
-  const struct DescribeFlags kAllocationTypeFlags[] = {
-      {kNtMemCommit, "Commit"},    //
-      {kNtMemReserve, "Reserve"},  //
-      {kNtMemReset, "Reset"},      //
-  };
-  return _DescribeFlags(buf, 48, kAllocationTypeFlags,
-                        ARRAYLEN(kAllocationTypeFlags), "kNtMem", x);
-}
-
-void *VirtualAllocEx(int64_t hProcess, void *lpAddress, uint64_t dwSize,
-                     uint32_t flAllocationType, uint32_t flProtect) {
+/**
+ * Allocates memory on The New Technology.
+ */
+textwindows void *VirtualAllocEx(int64_t hProcess, void *lpAddress,
+                                 uint64_t dwSize, uint32_t flAllocationType,
+                                 uint32_t flProtect) {
   void *res = __imp_VirtualAllocEx(hProcess, lpAddress, dwSize,
                                    flAllocationType, flProtect);
   if (!res)
     __winerr();
   NTTRACE("VirtualAllocEx(%ld, %p, %'lu, %s, %s) → %p% m", hProcess, lpAddress,
-          dwSize, DescribeAllocationType(alloca(48), flAllocationType),
+          dwSize, DescribeNtAllocationType(flAllocationType),
           DescribeNtPageFlags(flProtect), res);
   return res;
 }

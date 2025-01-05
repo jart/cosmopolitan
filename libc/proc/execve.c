@@ -57,11 +57,6 @@
  * compiled by MSVC or Cygwin is launched instead, then only the stdio
  * file descriptors can be passed along.
  *
- * On Windows, the parent process must be a cosmo program. If you're
- * calling execve() from a program that wasn't launched by cosmopolitan
- * bash, or some similar program, then ask yourself if what you really
- * want is to either (a) call fork() first, or (b) use posix_spawn().
- *
  * On Windows, `argv` and `envp` can't contain binary strings. They need
  * to be valid UTF-8 in order to round-trip the WIN32 API, without being
  * corrupted.

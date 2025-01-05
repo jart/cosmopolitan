@@ -83,7 +83,7 @@ struct SignalFrame {
 };
 
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
-__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+__msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 __msabi extern typeof(VirtualQuery) *const __imp_VirtualQuery;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 
@@ -566,8 +566,9 @@ textwindows wontreturn static void __sig_death(int sig, const char *thing) {
 //
 forceinline void __sig_reguard(void *page) {
   uint32_t old_protect;
-  __imp_VirtualProtect((void *)((uintptr_t)page & -__pagesize), __pagesize,
-                       kNtPageReadwrite | kNtPageGuard, &old_protect);
+  __imp_VirtualProtectEx(GetCurrentProcess(),
+                         (void *)((uintptr_t)page & -__pagesize), __pagesize,
+                         kNtPageReadwrite | kNtPageGuard, &old_protect);
 }
 
 // trampoline for calling signal handler when system reports crash

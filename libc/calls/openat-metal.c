@@ -49,11 +49,9 @@ int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   if ((fd = __reservefd(-1)) == -1)
     return -1;
   if (!_weaken(calloc) || !_weaken(free)) {
-    struct DirectMap dm;
-    dm = sys_mmap_metal(NULL, ROUNDUP(sizeof(struct MetalFile), 4096),
-                        PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1,
-                        0);
-    state = dm.addr;
+    state = sys_mmap_metal(NULL, ROUNDUP(sizeof(struct MetalFile), 4096),
+                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
+                           -1, 0);
     if (state == (void *)-1)
       return -1;
   } else {

@@ -58,9 +58,8 @@ textstartup void *_AcpiOsMapUncachedMemory(uintptr_t phy, size_t n) {
 }
 
 textstartup static void *_AcpiOsAllocatePages(size_t n) {
-  struct DirectMap dm = sys_mmap_metal(NULL, n, PROT_READ | PROT_WRITE,
-                                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  void *addr = dm.addr;
+  void *addr = sys_mmap_metal(NULL, n, PROT_READ | PROT_WRITE,
+                              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (addr == (void *)-1)
     addr = NULL;
   return addr;

@@ -24,12 +24,13 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 
-__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+__msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 
 __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
 #ifdef __x86_64__
@@ -54,7 +55,7 @@ __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
     }
 #endif
   } else {
-    __imp_VirtualProtect(addr, size, ntprot, &op);
+    __imp_VirtualProtectEx(GetCurrentProcess(), addr, size, ntprot, &op);
   }
 #elif defined(__aarch64__)
   register long r0 asm("x0") = (long)addr;

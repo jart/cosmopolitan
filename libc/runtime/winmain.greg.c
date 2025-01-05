@@ -79,7 +79,7 @@ __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
 __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
 __msabi extern typeof(SetEnvironmentVariable) *const __imp_SetEnvironmentVariableW;
 __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
-__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+__msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
@@ -206,11 +206,12 @@ abi wontreturn static void WinInit(const char16_t *cmdline) {
   int stackprot = (intptr_t)ape_stack_prot;
   if (~stackprot & PROT_EXEC) {
     uint32_t old;
-    __imp_VirtualProtect(stackaddr, stacksize, kNtPageReadwrite, &old);
+    __imp_VirtualProtectEx(GetCurrentProcess(), stackaddr, stacksize,
+                           kNtPageReadwrite, &old);
   }
   uint32_t oldattr;
-  __imp_VirtualProtect(stackaddr, GetGuardSize(),
-                       kNtPageReadwrite | kNtPageGuard, &oldattr);
+  __imp_VirtualProtectEx(GetCurrentProcess(), stackaddr, GetGuardSize(),
+                         kNtPageReadwrite | kNtPageGuard, &oldattr);
   if (_weaken(__maps_stack)) {
     struct NtSystemInfo si;
     __imp_GetSystemInfo(&si);

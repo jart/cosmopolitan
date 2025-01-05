@@ -2,6 +2,9 @@
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALL_NT_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
+extern int sys_getppid_nt_cosmo;
+extern int sys_getppid_nt_win32;
+
 bool32 sys_isatty(int);
 int sys_chdir_nt(const char *);
 int sys_dup_nt(int, int, int, int);
@@ -37,6 +40,7 @@ int sys_unlinkat_nt(int, const char *, int);
 int64_t sys_lseek_nt(int, int64_t, int);
 ssize_t sys_read_nt_impl(int, void *, size_t, int64_t);
 ssize_t sys_readlinkat_nt(int, const char *, char *, size_t);
+void sys_getppid_nt_wipe(int, int);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_SYSCALL_NT_INTERNAL_H_ */

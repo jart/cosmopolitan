@@ -9,7 +9,6 @@
 # KERNEL32.DLL
 #
 #	Name							Actual							DLL		Arity
-
 imp	''							CreateDirectoryW					kernel32	2
 imp	''							CreateFileA						kernel32	7
 imp	''							CreateFileMappingNumaW					kernel32	7
@@ -303,7 +302,6 @@ imp	'UnlockFile'						UnlockFile						kernel32	5
 imp	'UnmapViewOfFile2'					UnmapViewOfFile2					kernel32	2
 imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					kernel32	3
 imp	'UpdateProcThreadAttribute'				UpdateProcThreadAttribute				kernel32	7
-imp	'VirtualAlloc'						VirtualAlloc						kernel32	4
 imp	'VirtualFree'						VirtualFree						kernel32	3
 imp	'VirtualLock'						VirtualLock						kernel32	2
 imp	'VirtualQuery'						VirtualQuery						kernel32	3

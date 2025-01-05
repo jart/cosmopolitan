@@ -46,6 +46,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/proc/proc.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -211,8 +212,6 @@ textwindows static int sys_fork_nt_parent(uint32_t dwCreationFlags) {
 
   // let's go
   bool ok = true;
-  uint32_t child_old_protect;
-  uint32_t parent_old_protect;
 
   // copy memory manager maps
   for (struct MapSlab *slab =
@@ -225,11 +224,12 @@ textwindows static int sys_fork_nt_parent(uint32_t dwCreationFlags) {
   }
 
   // copy private memory maps
+  int alloc_prot = -1;
   for (struct Map *map = __maps_first(); map; map = __maps_next(map)) {
     if ((map->flags & MAP_TYPE) == MAP_SHARED)
-      continue;
+      continue;  // shared memory doesn't need to be copied to subprocess
     if ((map->flags & MAP_NOFORK) && (map->flags & MAP_TYPE) != MAP_FILE)
-      continue;
+      continue;  // ignore things like signal worker stack memory
     if (__maps_isalloc(map)) {
       size_t allocsize = map->size;
       for (struct Map *m2 = __maps_next(map); m2; m2 = __maps_next(m2)) {
@@ -240,22 +240,41 @@ textwindows static int sys_fork_nt_parent(uint32_t dwCreationFlags) {
         }
       }
       if ((map->flags & MAP_NOFORK) && (map->flags & MAP_TYPE) == MAP_FILE) {
-        ok = ok && !!VirtualProtectEx(procinfo.hProcess, map->addr, allocsize,
-                                      kNtPageReadwrite, &child_old_protect);
+        // portable executable segment
+        if (!(map->prot & PROT_WRITE)) {
+          uint32_t child_old_protect;
+          ok = ok && !!VirtualProtectEx(procinfo.hProcess, map->addr, allocsize,
+                                        kNtPageReadwrite, &child_old_protect);
+          alloc_prot = PROT_READ | PROT_WRITE;
+        } else {
+          alloc_prot = map->prot;
+        }
       } else {
+        // private mapping
+        uint32_t page_flags;
+        if (!(alloc_prot & PROT_WRITE)) {
+          page_flags = kNtPageReadwrite;
+          alloc_prot = PROT_READ | PROT_WRITE;
+        } else {
+          page_flags = __prot2nt(alloc_prot, false);
+        }
         ok = ok && !!VirtualAllocEx(procinfo.hProcess, map->addr, allocsize,
-                                    kNtMemReserve | kNtMemCommit,
-                                    kNtPageExecuteReadwrite);
+                                    kNtMemReserve | kNtMemCommit, page_flags);
       }
     }
+    uint32_t parent_old_protect;
     if (!(map->prot & PROT_READ))
       ok = ok && !!VirtualProtect(map->addr, map->size, kNtPageReadwrite,
                                   &parent_old_protect);
-    ok = ok && !!WriteProcessMemory(procinfo.hProcess, map->addr, map->addr,
-                                    map->size, 0);
     ok = ok &&
-         !!VirtualProtectEx(procinfo.hProcess, map->addr, map->size,
-                            __prot2nt(map->prot, false), &child_old_protect);
+         !!WriteProcessMemory(procinfo.hProcess, map->addr, map->addr,
+                              (map->size + __pagesize - 1) & -__pagesize, 0);
+    if (map->prot != alloc_prot) {
+      uint32_t child_old_protect;
+      ok = ok &&
+           !!VirtualProtectEx(procinfo.hProcess, map->addr, map->size,
+                              __prot2nt(map->prot, false), &child_old_protect);
+    }
     if (!(map->prot & PROT_READ))
       ok = ok && !!VirtualProtect(map->addr, map->size, parent_old_protect,
                                   &parent_old_protect);
