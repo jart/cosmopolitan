@@ -68,6 +68,7 @@ textwindows void __undescribe_fds(int64_t hCreatorProcess,
                                   uint32_t dwExplicitHandleCount) {
   if (lpExplicitHandles) {
     for (uint32_t i = 0; i < dwExplicitHandleCount; ++i) {
+      STRACE("close handle %lx %lx", hCreatorProcess, lpExplicitHandles[i]);
       DuplicateHandle(hCreatorProcess, lpExplicitHandles[i], 0, 0, 0, false,
                       kNtDuplicateCloseSource);
     }
@@ -126,6 +127,7 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     for (uint32_t i = 0; i < 3; ++i)
       if (lpStartupInfo->stdiofds[i] == f->handle)
         lpStartupInfo->stdiofds[i] = handle;
+    STRACE("added handle %lx", handle);
     handles[hi++] = handle;
 
     // get shared memory handle for the file offset pointer
@@ -142,6 +144,7 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
         __winerr();
         goto OnFailure;
       }
+      STRACE("added handle %lx", shand);
       handles[hi++] = shand;
     }
 

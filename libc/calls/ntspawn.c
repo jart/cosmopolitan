@@ -39,11 +39,14 @@
 #include "libc/nt/struct/procthreadattributelist.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/startupinfoex.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/stdalign.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
+
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 
 struct SpawnBlock {
   char16_t path[PATH_MAX];
@@ -64,10 +67,12 @@ static textwindows ssize_t ntspawn_read(intptr_t fh, char *buf, size_t len) {
   bool ok;
   uint32_t got;
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
-  ok = (ReadFile(fh, buf, len, 0, &overlap) ||
+  ok = overlap.hEvent &&
+       (ReadFile(fh, buf, len, 0, &overlap) ||
         GetLastError() == kNtErrorIoPending) &&
        GetOverlappedResult(fh, &overlap, &got, true);
-  CloseHandle(overlap.hEvent);
+  if (overlap.hEvent)
+    __imp_CloseHandle(overlap.hEvent);
   return ok ? got : -1;
 }
 
@@ -87,7 +92,7 @@ static textwindows int ntspawn2(struct NtSpawnArgs *a, struct SpawnBlock *sb) {
   if (fh == -1)
     return -1;
   ssize_t got = ntspawn_read(fh, p, pe - p);
-  CloseHandle(fh);
+  __imp_CloseHandle(fh);
   if (got < 3)
     return enoexec();
   pe = p + got;
