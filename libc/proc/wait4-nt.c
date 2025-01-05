@@ -131,14 +131,18 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
     // perform blocking operation
     uint32_t wi;
     uintptr_t event;
-    struct PosixThread *pt = _pthread_self();
-    pt->pt_blkmask = waitmask;
-    pt->pt_event = event = CreateEvent(0, 0, 0, 0);
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                          memory_order_release);
-    wi = WaitForMultipleObjects(2, (intptr_t[2]){hWaitObject, event}, 0, -1u);
-    atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-    CloseHandle(event);
+    if ((event = CreateEvent(0, 0, 0, 0))) {
+      struct PosixThread *pt = _pthread_self();
+      pt->pt_event = event;
+      pt->pt_blkmask = waitmask;
+      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
+                            memory_order_release);
+      wi = WaitForMultipleObjects(2, (intptr_t[2]){hWaitObject, event}, 0, -1u);
+      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
+      CloseHandle(event);
+    } else {
+      wi = -1u;
+    }
 
     // log warning if handle unexpectedly closed
     if (wi & kNtWaitAbandoned) {

@@ -298,6 +298,11 @@ int _fork(uint32_t dwCreationFlags) {
       }
     }
 
+    // reactivate ftrace
+    /* if (ftrace_stackdigs) */
+    /*   if (_weaken(ftrace_install)) */
+    /*     _weaken(ftrace_install)(); */
+
     STRACE("fork() → 0 (child of %d)", ppid_cosmo);
   } else {
     // this is the parent process

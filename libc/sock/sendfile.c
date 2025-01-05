@@ -92,9 +92,10 @@ textwindows dontinline static ssize_t sys_sendfile_nt(
   }
   struct NtOverlapped ov = {.hEvent = WSACreateEvent(), .Pointer = offset};
   cosmo_once(&g_transmitfile.once, transmitfile_init);
-  if (g_transmitfile.lpTransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0) ||
-      WSAGetLastError() == kNtErrorIoPending ||
-      WSAGetLastError() == WSAEINPROGRESS) {
+  if (ov.hEvent &&
+      (g_transmitfile.lpTransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0) ||
+       WSAGetLastError() == kNtErrorIoPending ||
+       WSAGetLastError() == WSAEINPROGRESS)) {
     if (WSAGetOverlappedResult(oh, &ov, &uptobytes, true, &flags)) {
       rc = uptobytes;
       if (opt_in_out_inoffset) {

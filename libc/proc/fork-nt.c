@@ -90,6 +90,7 @@ textwindows static void sys_fork_nt_child(void) {
   // setup runtime
   __klog_handle = 0;
   __tls_index = __imp_TlsAlloc();
+  __morph_tls();
   __set_tls_win32(__winmain_tib);
   __tls_enabled = true;
 
@@ -241,6 +242,9 @@ textwindows static int sys_fork_nt_parent(uint32_t dwCreationFlags) {
       }
       if ((map->flags & MAP_NOFORK) && (map->flags & MAP_TYPE) == MAP_FILE) {
         // portable executable segment
+        if (map->prot & PROT_EXEC)
+          // TODO(jart): write a __remorph_tls() function
+          continue;
         if (!(map->prot & PROT_WRITE)) {
           uint32_t child_old_protect;
           ok = ok && !!VirtualProtectEx(procinfo.hProcess, map->addr, allocsize,

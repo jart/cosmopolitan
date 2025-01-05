@@ -31,6 +31,7 @@ TEST_LIBC_PROC_DIRECTDEPS =						\
 	LIBC_NT_KERNEL32						\
 	LIBC_PROC							\
 	LIBC_RUNTIME							\
+	LIBC_LOG							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
@@ -90,6 +91,7 @@ o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		o/$(MODE)/test/libc/proc/execve_test.o			\
 		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
 		o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o	\
+		o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o	\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
@@ -119,6 +121,7 @@ o/$(MODE)/test/libc/proc/life.dbg:					\
 
 o/$(MODE)/test/libc/proc/life.zip.o					\
 o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o			\
+o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o			\
 o/$(MODE)/test/libc/proc/life-pe.zip.o: private				\
 		ZIPOBJ_FLAGS +=						\
 			-B

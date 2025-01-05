@@ -80,7 +80,8 @@ textwindows int IsWindowsExecutable(int64_t handle, const char16_t *path) {
   uint32_t got;
   BLOCK_SIGNALS;
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
-  ok = (ReadFile(handle, buf, 2, 0, &overlap) ||
+  ok = overlap.hEvent &&
+       (ReadFile(handle, buf, 2, 0, &overlap) ||
         GetLastError() == kNtErrorIoPending) &&
        GetOverlappedResult(handle, &overlap, &got, true);
   CloseHandle(overlap.hEvent);
