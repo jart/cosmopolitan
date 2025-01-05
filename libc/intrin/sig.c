@@ -87,7 +87,7 @@ __msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 __msabi extern typeof(VirtualQuery) *const __imp_VirtualQuery;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 
-extern pthread_mutex_t __sig_worker_lock;
+atomic_int __sig_worker_state;
 
 textwindows static bool __sig_ignored_by_default(int sig) {
   return sig == SIGURG ||   //
@@ -742,39 +742,21 @@ HAIRY static uint32_t __sig_worker(void *arg) {
                STKSZ, PROT_READ | PROT_WRITE,
                MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
   for (;;) {
-    _pthread_mutex_lock(&__sig_worker_lock);
+    // ok sys_execve_nt() might disable this worker
+    if (~__sig_worker_state & 2) {
 
-    // dequeue all pending signals and fire them off. if there's no
-    // thread that can handle them then __sig_generate will requeue
-    // those signals back to __sig.process; hence the need for xchg
-    unsigned long sigs =
-        atomic_exchange_explicit(__sig.process, 0, memory_order_acq_rel);
-    while (sigs) {
-      int sig = bsfl(sigs) + 1;
-      sigs &= ~(1ull << (sig - 1));
-      __sig_generate(sig, SI_KERNEL);
-    }
+      // dequeue all pending signals and fire them off. if there's no
+      // thread that can handle them then __sig_generate will requeue
+      // those signals back to __sig.process; hence the need for xchg
+      unsigned long sigs =
+          atomic_exchange_explicit(__sig.process, 0, memory_order_acq_rel);
+      while (sigs) {
+        int sig = bsfl(sigs) + 1;
+        sigs &= ~(1ull << (sig - 1));
+        __sig_generate(sig, SI_KERNEL);
+      }
 
-    // unblock stalled i/o signals in threads
-    _pthread_lock();
-    for (struct Dll *e = dll_first(_pthread_list); e;
-         e = dll_next(_pthread_list, e)) {
-      struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
-      if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
-          kPosixThreadTerminated)
-        break;
-      if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
-          (atomic_load_explicit(&pt->tib->tib_sigpending,
-                                memory_order_acquire) &
-           ~atomic_load_explicit(&pt->pt_blkmask, memory_order_acquire)))
-        __sig_wake(pt, 0);
-    }
-    _pthread_unlock();
-
-    // unblock stalled asynchronous signals in threads
-    for (;;) {
-      sigset_t pending, mask;
-      struct PosixThread *mark = 0;
+      // unblock stalled i/o signals in threads
       _pthread_lock();
       for (struct Dll *e = dll_first(_pthread_list); e;
            e = dll_next(_pthread_list, e)) {
@@ -782,34 +764,55 @@ HAIRY static uint32_t __sig_worker(void *arg) {
         if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
             kPosixThreadTerminated)
           break;
-        pending = atomic_load_explicit(&pt->tib->tib_sigpending,
-                                       memory_order_acquire);
-        mask =
-            atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire);
-        if (pending & ~mask) {
-          _pthread_ref(pt);
-          mark = pt;
-          break;
-        }
+        if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
+            (atomic_load_explicit(&pt->tib->tib_sigpending,
+                                  memory_order_acquire) &
+             ~atomic_load_explicit(&pt->pt_blkmask, memory_order_acquire)))
+          __sig_wake(pt, 0);
       }
       _pthread_unlock();
-      if (!mark)
-        break;
-      while (!atomic_compare_exchange_weak_explicit(
-          &mark->tib->tib_sigpending, &pending, pending & ~mask,
-          memory_order_acq_rel, memory_order_relaxed)) {
+
+      // unblock stalled asynchronous signals in threads
+      for (;;) {
+        sigset_t pending, mask;
+        struct PosixThread *mark = 0;
+        _pthread_lock();
+        for (struct Dll *e = dll_first(_pthread_list); e;
+             e = dll_next(_pthread_list, e)) {
+          struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
+          if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
+              kPosixThreadTerminated)
+            break;
+          pending = atomic_load_explicit(&pt->tib->tib_sigpending,
+                                         memory_order_acquire);
+          mask =
+              atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire);
+          if (pending & ~mask) {
+            _pthread_ref(pt);
+            mark = pt;
+            break;
+          }
+        }
+        _pthread_unlock();
+        if (!mark)
+          break;
+        while (!atomic_compare_exchange_weak_explicit(
+            &mark->tib->tib_sigpending, &pending, pending & ~mask,
+            memory_order_acq_rel, memory_order_relaxed)) {
+        }
+        while ((pending = pending & ~mask)) {
+          int sig = bsfl(pending) + 1;
+          pending &= ~(1ull << (sig - 1));
+          __sig_killer(mark, sig, SI_KERNEL);
+        }
+        _pthread_unref(mark);
       }
-      while ((pending = pending & ~mask)) {
-        int sig = bsfl(pending) + 1;
-        pending &= ~(1ull << (sig - 1));
-        __sig_killer(mark, sig, SI_KERNEL);
-      }
-      _pthread_unref(mark);
     }
 
     // wait until next scheduler quantum
-    _pthread_mutex_unlock(&__sig_worker_lock);
+    __sig_worker_state |= 1;
     Sleep(POLL_INTERVAL_MS);
+    __sig_worker_state &= ~1;
   }
   __builtin_unreachable();
 }

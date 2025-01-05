@@ -58,8 +58,7 @@ TEST(execve, testArgPassing) {
     FormatInt32(ibuf, i);
     GenBuf(buf, i);
     SPAWN(vfork);
-    execve(prog, (char *const[]){(char *)prog, "-", ibuf, buf, 0},
-           (char *const[]){0});
+    execl(prog, prog, "-", ibuf, buf, NULL);
     kprintf("execve failed: %m\n");
     EXITS(0);
   }

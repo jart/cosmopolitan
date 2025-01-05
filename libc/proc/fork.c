@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -54,9 +55,9 @@
 
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 
+extern atomic_int __sig_worker_state;
 extern pthread_mutex_t __cxa_lock_obj;
 extern pthread_mutex_t __pthread_lock_obj;
-extern pthread_mutex_t __sig_worker_lock;
 
 void __rand64_lock(void);
 void __rand64_unlock(void);
@@ -191,7 +192,7 @@ static void fork_child(int ppid_win32, int ppid_cosmo) {
     sys_read_nt_wipe_keystrokes();
     __proc_wipe_and_reset();
     __itimer_wipe_and_reset();
-    _pthread_mutex_wipe_np(&__sig_worker_lock);
+    atomic_init(&__sig_worker_state, 0);
     if (_weaken(__sig_init))
       _weaken(__sig_init)();
     if (_weaken(sys_getppid_nt_wipe))
