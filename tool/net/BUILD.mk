@@ -117,7 +117,8 @@ o/$(MODE)/tool/net/redbean.dbg:						\
 
 o/$(MODE)/tool/net/lsqlite3.o: private					\
 		CFLAGS +=						\
-			-DSQLITE_ENABLE_SESSION
+			-DSQLITE_ENABLE_SESSION				\
+			-DSQLITE_ENABLE_DESERIALIZE
 
 # REDBEAN-DEMO
 #
