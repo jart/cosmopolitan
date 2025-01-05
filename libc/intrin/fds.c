@@ -46,14 +46,11 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define OPEN_MAX 16
-
 #ifdef __x86_64__
 __static_yoink("_init_fds");
 #endif
 
 struct Fds g_fds;
-static struct Fd g_fds_static[OPEN_MAX];
 
 static bool TokAtoi(const char **str, long *res) {
   int c, d;
@@ -92,15 +89,9 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   fds = &g_fds;
   fds->n = 4;
   atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
-  if (_weaken(_extend)) {
-    fds->p = fds->e = (void *)kMemtrackFdsStart;
-    fds->e =
-        _weaken(_extend)(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
-                         kMemtrackFdsStart + kMemtrackFdsSize);
-  } else {
-    fds->p = g_fds_static;
-    fds->e = g_fds_static + OPEN_MAX;
-  }
+  fds->p = fds->e = (void *)kMemtrackFdsStart;
+  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
+                   kMemtrackFdsStart + kMemtrackFdsSize);
 
   // inherit standard i/o file descriptors
   if (IsMetal()) {
@@ -154,8 +145,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
           break;
         if (!TokAtoi(&fdspec, &protocol))
           break;
-        if (_weaken(__ensurefds_unlocked))
-          _weaken(__ensurefds_unlocked)(fd);
+        __ensurefds_unlocked(fd);
         struct Fd *f = fds->p + fd;
         if (f->handle && f->handle != -1 && f->handle != handle) {
           CloseHandle(f->handle);
