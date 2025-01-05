@@ -3273,7 +3273,6 @@ static char *ServeIndex(const char *path, size_t pathlen) {
     p = RoutePath(q, n);
     free(q);
   }
-  __print_maps(30);
   return p;
 }
 

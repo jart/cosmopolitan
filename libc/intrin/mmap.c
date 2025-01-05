@@ -294,7 +294,6 @@ void __maps_free(struct Map *map) {
             &__maps.freed, &tip, ABA(map, TAG(tip) + 1), memory_order_release,
             memory_order_relaxed))
       break;
-    pthread_pause_np();
   }
 }
 
@@ -462,8 +461,7 @@ textwindows dontinline static struct DirectMap sys_mmap_nt(
   struct DirectMap dm;
 
   // it's 5x faster
-  if (IsWindows() && (flags & MAP_ANONYMOUS) &&
-      (flags & MAP_TYPE) != MAP_SHARED) {
+  if ((flags & MAP_ANONYMOUS) && (flags & MAP_TYPE) != MAP_SHARED) {
     if (!(dm.addr = VirtualAlloc(addr, size, kNtMemReserve | kNtMemCommit,
                                  __prot2nt(prot, false)))) {
       dm.addr = MAP_FAILED;
@@ -579,13 +577,11 @@ static struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
 struct Map *__maps_alloc(void) {
   struct Map *map;
   uintptr_t tip = atomic_load_explicit(&__maps.freed, memory_order_relaxed);
-  while ((map = (struct Map *)PTR(tip))) {
+  while ((map = (struct Map *)PTR(tip)))
     if (atomic_compare_exchange_weak_explicit(
             &__maps.freed, &tip, ABA(map->freed, TAG(tip) + 1),
             memory_order_acquire, memory_order_relaxed))
       return map;
-    pthread_pause_np();
-  }
   // we're creating sudden surprise memory. the user might be in the
   // middle of carefully planning a fixed memory structure. we don't
   // want the system allocator to put our surprise memory inside it,
@@ -595,8 +591,6 @@ struct Map *__maps_alloc(void) {
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (sys.addr == MAP_FAILED)
     return 0;
-  if (IsWindows())
-    CloseHandle(sys.hand);
   struct MapSlab *slab = sys.addr;
   while (!atomic_compare_exchange_weak(&__maps.slabs, &slab->next, slab)) {
   }
