@@ -40,9 +40,9 @@ done
 }
 local make=$(
   case $MAKE in
-    */*) echo $MAKE ;;
-    ?*)  command -v $MAKE ;;
-    *)   echo .cosmocc/current/bin/make
+    */*)            echo $MAKE                        ;;
+    ?*)             command -v $MAKE                  ;;
+    *)              echo .cosmocc/current/bin/make    ;;
   esac
 )
 if [[ ! -x $make ]]; then
@@ -50,7 +50,7 @@ if [[ ! -x $make ]]; then
     echo
     echo 'https://cosmo.zip/pub/cosmos/bin/make'
     echo
-    echo 'then either put it on your $PATH or point to it with $MAKE.'
+    echo 'then put it on $PATH or point $MAKE to it.'
   } >&2; return 1
 fi
 ( set -x
