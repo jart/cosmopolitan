@@ -10,8 +10,8 @@ if [ ! -f ape/loader.c ]; then
   cd "$COSMO" || exit
 fi
 
-if [ -x build/bootstrap/make ]; then
-  MAKE=build/bootstrap/make
+if [ -x .cosmocc/current/bin/make ]; then
+  MAKE=.cosmocc/current/bin/make
 else
   MAKE=make
 fi

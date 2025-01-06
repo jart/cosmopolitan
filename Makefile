@@ -77,7 +77,8 @@ COMMA := ,
 PWD := $(shell pwd)
 
 # detect wsl2 running cosmopolitan binaries on the host by checking whether:
-# - user ran build/bootstrap/make, in which case make's working directory is in wsl
+# - user ran .cosmocc/current/bin/make, in which case make's working directory
+#   is in wsl
 # - user ran make, in which case cocmd's working directory is in wsl
 ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(PWD)),)
 $(warning wsl2 interop is enabled)
@@ -89,7 +90,7 @@ UNAME_S := $(shell uname -s)
 
 # apple still distributes a 17 year old version of gnu make
 ifeq ($(MAKE_VERSION), 3.81)
-$(error please use build/bootstrap/make)
+$(error please use https://cosmo.zip/pub/cosmos/bin/make)
 endif
 
 LC_ALL = C
