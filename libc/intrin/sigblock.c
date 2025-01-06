@@ -30,7 +30,7 @@
 // usually better that sigprocmask only strace the user is calling it.
 // plus, since we have a very specific use case, this code goes faster
 
-struct Signals __sig;
+extern struct Signals __sig;
 
 sigset_t __sig_block(void) {
   if (IsWindows() || IsMetal()) {
