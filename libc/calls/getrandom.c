@@ -114,7 +114,8 @@ static ssize_t GetDevUrandom(char *p, size_t n, unsigned f) {
 ssize_t __getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;
   if (IsWindows()) {
-    rc = ProcessPrng(p, n) ? n : __winerr();
+    ProcessPrng(p, n);  // never fails
+    rc = n;
   } else if (have_getrandom) {
     if (IsXnu() || IsOpenbsd()) {
       rc = GetRandomBsd(p, n, GetRandomEntropy);
@@ -184,9 +185,7 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
  * @raise EFAULT if the `n` bytes at `p` aren't valid memory
  * @raise EINTR if we needed to block and a signal was delivered instead
  * @cancelationpoint
- * @asyncsignalsafe
  * @restartable
- * @vforksafe
  */
 ssize_t getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;

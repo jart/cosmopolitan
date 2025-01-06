@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/errfuns.h"
 
 int sys_getentropy(void *, size_t) asm("sys_getrandom");
@@ -39,6 +40,8 @@ int getentropy(void *p, size_t n) {
     rc = eio();
   } else if ((!p && n)) {
     rc = efault();
+  } else if (IsXnuSilicon()) {
+    rc = __syslib->__getentropy(p, n);
   } else if (IsXnu() || IsOpenbsd()) {
     rc = sys_getentropy(p, n);
   } else {
