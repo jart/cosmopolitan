@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 // clang-format off
-// sh -c 'build/bootstrap/make -j8 V=1 o//test/posix/sigchld_test.runs'
+// sh -c '.cosmocc/current/bin/make -j8 V=1 o//test/posix/sigchld_test.runs'
 // clang-format on
 
 void Assert(const char *file, int line, bool ok) {
