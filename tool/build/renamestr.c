@@ -84,23 +84,6 @@ static wontreturn void ShowUsage(int rc, int fd) {
   exit(rc);
 }
 
-static wontreturn void DieOom(void) {
-  Die("renamestr", "out of memory");
-}
-
-static void *Malloc(size_t n) {
-  void *p;
-  if (!(p = malloc(n)))
-    DieOom();
-  return p;
-}
-
-static void *Realloc(void *p, size_t n) {
-  if (!(p = realloc(p, n)))
-    DieOom();
-  return p;
-}
-
 static void Pwrite(const void *data, size_t size, uint64_t offset) {
   ssize_t rc;
   const char *p, *e;
@@ -111,11 +94,14 @@ static void Pwrite(const void *data, size_t size, uint64_t offset) {
   }
 }
 
+struct String {
+  const char *str;
+  size_t len;
+};
+
 struct Param {
-  const char *from_string;
-  size_t from_len;
-  const char *to_string;
-  size_t to_len;
+  struct String from;
+  struct String to;
   int count;
   char *roloc;
 };
@@ -143,22 +129,22 @@ static void GetOpts(int argc, char *argv[]) {
         if (!param) {
           Die(prog, "too many replacements provided");
         }
-        if (param->from_string) {
+        if (param->from.str) {
           Die(prog, "from string already provided");
         }
-        param->from_string = optarg;
-        param->from_len = strlen(optarg);
+        param->from.str = optarg;
+        param->from.len = strlen(optarg);
         partial = !partial;
         break;
       case 't':
         if (!param) {
           Die(prog, "too many replacements provided");
         }
-        if (param->to_string) {
+        if (param->to.str) {
           Die(prog, "to string already provided");
         }
-        param->to_string = optarg;
-        param->to_len = strlen(optarg);
+        param->to.str = optarg;
+        param->to.len = strlen(optarg);
         partial = !partial;
         break;
       case 'v':
@@ -169,9 +155,9 @@ static void GetOpts(int argc, char *argv[]) {
       default:
         ShowUsage(1, 2);
     }
-    if (param->from_string && param->to_string) {
-      if (param->from_len < param->to_len) {
-        Die(prog, "to_string longer than from_string, cannot replace");
+    if (param->from.str && param->to.str) {
+      if (param->from.len < param->to.len) {
+        Die(prog, "to.str longer than from.str, cannot replace");
       }
       params.n++;
     }
@@ -181,14 +167,6 @@ static void GetOpts(int argc, char *argv[]) {
   }
   if (partial) {
     Die(prog, "partial replacement provided");
-  }
-  for (int i = 0; i < params.n; ++i) {  // no-op
-    if (!params.p[i].from_string) {
-      Die(prog, "need from_string for replacement");
-    }
-    if (!params.p[i].to_string) {
-      Die(prog, "need to_string for replacement");
-    }
   }
   if (optind == argc) {
     Die(prog, "missing input argument");
@@ -228,17 +206,10 @@ static void OpenInput(const char *path) {
 
 static void ReplaceString(struct Param *param) {
   Elf64_Xword len = strnlen(param->roloc, roend - param->roloc);
-  char *targstr = Malloc(len + 1);
-  for (Elf64_Xword i = 0; i < len + 1; ++i)
-    targstr[i] = 0;
-  strcpy(targstr, param->to_string);
-  strcat(targstr, param->roloc + param->from_len);
-#ifdef MODE_DBG
-  kprintf("'%s' should be '%s'\n", param->roloc, targstr);
-#endif
-  strcpy(param->roloc, targstr);
-  param->roloc += param->to_len;
-  free(targstr);
+  memmove(param->roloc, param->to.str, param->to.len);
+  memmove(param->roloc + param->to.len, param->roloc + param->from.len,
+          len + 1 - param->from.len);
+  param->roloc += param->to.len;
 }
 
 int main(int argc, char *argv[]) {
@@ -273,19 +244,18 @@ int main(int argc, char *argv[]) {
     param->roloc = rostart;
     param->count = 0;
 #ifdef MODE_DBG
-    kprintf("need to replace '%s' with '%s'\n", param->from_string,
-            param->to_string);
+    kprintf("need to replace '%s' with '%s'\n", param->from.str, param->to.str);
 #endif
   }
 
 #define NEXT_ROLOC(z) \
-  memmem((z)->roloc, roend - (z)->roloc, (z)->from_string, (z)->from_len)
+  memmem((z)->roloc, roend - (z)->roloc, (z)->from.str, (z)->from.len)
   for (int i = 0; i < params.n; ++i) {
     struct Param *param = &(params.p[i]);
     for (param->roloc = NEXT_ROLOC(param); param->roloc != NULL;
          param->roloc = NEXT_ROLOC(param)) {
-        ReplaceString(param);
-        param->count++;
+      ReplaceString(param);
+      param->count++;
     }
   }
 #undef NEXT_ROLOC
@@ -297,8 +267,8 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < params.n; ++i) {
     struct Param *param = &(params.p[i]);
-    printf("'%s' -> '%s': %d replacements\n", param->from_string,
-           param->to_string, param->count);
+    printf("'%s' -> '%s': %d replacements\n", param->from.str, param->to.str,
+           param->count);
   }
   return 0;
 }
