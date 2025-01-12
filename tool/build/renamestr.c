@@ -23,6 +23,7 @@
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -205,10 +206,18 @@ static void OpenInput(const char *path) {
 }
 
 static void ReplaceString(struct Param *param) {
-  Elf64_Xword len = strnlen(param->roloc, roend - param->roloc);
+  size_t len;
+  char *x = (char *)memchr(param->roloc, 0, roend - param->roloc);
   memmove(param->roloc, param->to.str, param->to.len);
-  memmove(param->roloc + param->to.len, param->roloc + param->from.len,
-          len + 1 - param->from.len);
+  if (UNLIKELY(x == NULL)) {
+    len = roend - param->roloc;
+    memmove(param->roloc + param->to.len, param->roloc + param->from.len,
+            len - param->from.len);
+  } else {
+    len = x - param->roloc;
+    memmove(param->roloc + param->to.len, param->roloc + param->from.len,
+            len + 1 - param->from.len);
+  }
   param->roloc += param->to.len;
 }
 
