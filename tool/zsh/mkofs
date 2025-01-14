@@ -17,7 +17,12 @@ cut -d' ' -f2 /proc/mounts | while read -r line; do
     return 0
   fi
 done
+if whence doas >/dev/null; then
+  doas=doas
+else
+  doas=sudo
+fi
 ( set -x
-  sudo mount -t tmpfs -o size=10G,noatime,nodiratime /dev/shm "$o"
+  $doas mount -t tmpfs -o size=10G,noatime,nodiratime /dev/shm "$o"
 )
 # vim:ft=zsh
