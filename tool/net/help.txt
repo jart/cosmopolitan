@@ -4864,9 +4864,9 @@ UNIX MODULE
         end
 
     It's possible to accomplish the same thing as unix.mapshared()
-    using files and unix.fcntl() advisory locks. However this goes
-    significantly faster. For example, that's what SQLite does and
-    we recommend using SQLite for IPC in redbean. But, if your app
+    using files and unix.fcntl() advisory locks. For example, that's
+    what SQLite does and we recommend using SQLite for IPC in redbean.
+    However, unix.mapshared is significantly faster and if your app
     has thousands of forked processes fighting for a file lock you
     might need something lower level than file locks, to implement
     things like throttling. Shared memory is a good way to do that
