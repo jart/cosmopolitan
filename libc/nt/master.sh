@@ -129,10 +129,12 @@ imp	'GetFileTime'						GetFileTime						kernel32	4
 imp	'GetFileType'						GetFileType						kernel32	1
 imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	4
 imp	'GetFullPathName'					GetFullPathNameW					kernel32	4
+imp	'GetShortPathName'					GetShortPathNameW					kernel32	3
 imp	'GetHandleInformation'					GetHandleInformation					kernel32	2
 imp	'GetLargestConsoleWindowSize'				GetLargestConsoleWindowSize				kernel32	1
 imp	'GetLastError'						GetLastError						kernel32	0
 imp	'GetLogicalDrives'					GetLogicalDrives					kernel32	0
+imp	'GetLogicalDriveStringsA'				GetLogicalDriveStringsA					kernel32	2
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	1	# Windows 7+
 imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	3
 imp	'GetModuleHandle'					GetModuleHandleA					kernel32	1
@@ -186,6 +188,9 @@ imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	
 imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	3
 imp	'GetWindowsDirectory'					GetWindowsDirectoryW					kernel32	2
 imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					kernel32	2
+imp	'GetOEMCP'						GetOEMCP						kernel32	0
+imp	'GetACP'						GetACP							kernel32	0
+imp	'GetCPInfoEx'						GetCPInfoExW						kernel32	3
 imp	'GlobalAlloc'						GlobalAlloc						kernel32	2
 imp	'GlobalFree'						GlobalFree						kernel32	1
 imp	'GlobalLock'						GlobalLock						kernel32	1
@@ -356,6 +361,7 @@ imp	'RegLoadKey'						RegLoadKeyW						advapi32	3
 imp	'RegNotifyChangeKeyValue'				RegNotifyChangeKeyValue					advapi32	5
 imp	'RegOpenCurrentUser'					RegOpenCurrentUser					advapi32	2
 imp	'RegOpenKeyEx'						RegOpenKeyExW						advapi32	5
+imp	'RegOpenKeyExA'						RegOpenKeyExA						advapi32	5
 imp	'RegOpenUserClassesRoot'				RegOpenUserClassesRoot					advapi32	4
 imp	'RegOverridePredefKey'					RegOverridePredefKey					advapi32	2
 imp	'RegQueryInfoKey'					RegQueryInfoKeyW					advapi32	12
