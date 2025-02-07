@@ -26,6 +26,7 @@ which_make() {
   case $(uname -s) in
     Darwin) echo gmake ;;
     *)      echo make  ;;
+  esac
 }
 
 OUTDIR=${1:-cosmocc}
