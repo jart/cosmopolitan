@@ -1,3 +1,4 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_MAPS_H_
 #define COSMOPOLITAN_MAPS_H_
 #include "libc/intrin/atomic.h"
@@ -138,3 +139,4 @@ static inline bool __maps_isalloc(struct Map *map) {
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_MAPS_H_ */
+#endif /* _COSMO_SOURCE */

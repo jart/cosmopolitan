@@ -1,3 +1,4 @@
+#ifdef _COSMO_SOURCE
 #ifndef COSMOPOLITAN_TREE_H_
 #define COSMOPOLITAN_TREE_H_
 #define tree_first  __tree_first
@@ -132,3 +133,4 @@ void tree_insert(struct Tree **, struct Tree *, tree_cmp_f *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_TREE_H_ */
+#endif /* _COSMO_SOURCE */
