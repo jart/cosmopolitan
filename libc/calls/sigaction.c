@@ -423,7 +423,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  *     }
  *
  *     void ContinueOnCrash(void) {
- *       struct sigaction sa = {.sa_handler = OnSigSegv,
+ *       struct sigaction sa = {.sa_sigaction = OnCrash,
  *                              .sa_flags = SA_SIGINFO | SA_RESETHAND};
  *       sigaction(SIGSEGV, &sa, 0);
  *       sigaction(SIGFPE, &sa, 0);
