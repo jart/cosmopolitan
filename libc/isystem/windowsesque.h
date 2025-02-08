@@ -12,6 +12,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/nls.h"
 #include "libc/nt/paint.h"
 #include "libc/nt/process.h"
 #include "libc/nt/registry.h"

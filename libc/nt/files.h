@@ -49,6 +49,7 @@ COSMOPOLITAN_C_START_
 intptr_t LoadResource(int64_t hModule, int64_t hResInfo);
 uint32_t SetHandleCount(uint32_t uNumber);
 uint32_t GetLogicalDrives(void);
+uint32_t GetLogicalDriveStringsA(uint32_t nBufferLength, char *lpBuffer);
 bool32 FlushFileBuffers(int64_t hFile);
 
 int64_t ReOpenFile(int64_t hOriginalFile, uint32_t dwDesiredAccess,
@@ -205,6 +206,7 @@ uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
 
 uint32_t GetFullPathName(const char16_t *lpFileName, uint32_t nBufferLength,
                          char16_t *lpBuffer, char16_t **lpFilePart);
+uint32_t GetShortPathName(const char16_t *lpszLongPath, char16_t *out_lpszShortPath, uint32_t cchBuffer);
 
 bool32 GetOverlappedResult(int64_t hFile, struct NtOverlapped *lpOverlapped,
                            uint32_t *lpNumberOfBytesTransferred, bool32 bWait);
