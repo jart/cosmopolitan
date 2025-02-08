@@ -54,10 +54,12 @@ ARM64=${3:-aarch64}
 NPROC=$(($(_nproc)/2))
 GCCVER=14.1.0
 MAKE=$(which_make)
-APE=$(which_ape)
 
 $MAKE -j$NPROC m= \
   $APELINK
+
+APE=$(which_ape)
+$APE
 
 $MAKE -j$NPROC m=$AMD64 \
   o/cosmocc.h.txt \
