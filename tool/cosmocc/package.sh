@@ -29,6 +29,23 @@ which_make() {
   esac
 }
 
+TMPDIR=${TMPDIR:-/tmp}
+
+which_ape() {
+  case $(uname -s) in
+    Darwin)
+      case $(mode) in
+        aarch64)
+          cc -O -o "$TMPDIR/ape.$$" .cosmocc/current/bin/ape-m1.c || exit
+          trap 'rm "$TMPDIR/ape.$$"' EXIT
+          echo $TMPDIR/ape.$$
+        ;;
+        *) echo .cosmocc/current/bin/ape-x86_64.macho ;;
+      esac
+      ;;
+    *) echo .cosmocc/current/bin/ape-$(uname -m).elf ;;
+}
+
 OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
@@ -36,6 +53,7 @@ ARM64=${3:-aarch64}
 NPROC=$(($(_nproc)/2))
 GCCVER=14.1.0
 MAKE=$(which_make)
+APE=$(which_ape)
 
 $MAKE -j$NPROC m= \
   $APELINK
@@ -287,7 +305,7 @@ cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj \
          ar chmod cocmd cp echo gzip objbincopy package rm touch mkdir compile sha256sum \
          resymbol; do
-  ape $APELINK \
+  $APE $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
@@ -301,7 +319,7 @@ for x in ar chmod cp echo gzip package rm touch mkdir compile sha256sum; do
 done
 
 for x in make ctags; do
-  ape $APELINK \
+  $APE $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
