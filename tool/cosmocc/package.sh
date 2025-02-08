@@ -31,22 +31,6 @@ which_make() {
 
 TMPDIR=${TMPDIR:-/tmp}
 
-which_ape() {
-  case $(uname -s) in
-    Darwin)
-      case $(mode) in
-        aarch64)
-          cc -O -o "$TMPDIR/ape.$$" .cosmocc/current/bin/ape-m1.c || exit
-          trap 'rm "$TMPDIR/ape.$$"' EXIT
-          echo $TMPDIR/ape.$$
-        ;;
-        *) echo .cosmocc/current/bin/ape-x86_64.macho ;;
-      esac
-      ;;
-    *) echo .cosmocc/current/bin/ape-$(uname -m).elf ;;
-  esac
-}
-
 OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
@@ -58,8 +42,20 @@ MAKE=$(which_make)
 $MAKE -j$NPROC m= \
   $APELINK
 
-APE=$(which_ape)
-$APE
+case $(uname -s) in
+  Darwin)
+    case $(mode) in
+      aarch64)
+        cc -O -o "$TMPDIR/ape.$$" .cosmocc/current/bin/ape-m1.c || exit
+        trap 'rm "$TMPDIR/ape.$$"' EXIT
+        APE=$TMPDIR/ape.$$
+      ;;
+      *) APE=.cosmocc/current/bin/ape-x86_64.macho ;;
+    esac
+    ;;
+  *) APE=.cosmocc/current/bin/ape-$(uname -m).elf ;;
+esac
+stat $APE
 
 $MAKE -j$NPROC m=$AMD64 \
   o/cosmocc.h.txt \
