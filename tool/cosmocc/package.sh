@@ -44,6 +44,7 @@ which_ape() {
       esac
       ;;
     *) echo .cosmocc/current/bin/ape-$(uname -m).elf ;;
+  esac
 }
 
 OUTDIR=${1:-cosmocc}
