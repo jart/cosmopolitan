@@ -51,6 +51,8 @@ int RegOpenKey(int64_t hKey, const char16_t *opt_lpSubKey,
 int RegOpenKeyEx(int64_t hKey, const char16_t *opt_lpSubKey,
                  uint32_t opt_ulOptions, int samDesired, int64_t *out_phkResult)
     paramsnonnull((5));
+int RegOpenKeyExA(int64_t hKey, const char *opt_lpSubKey, uint32_t opt_ulOptions, 
+                  int samDesired, int64_t *out_phkResult) paramsnonnull((5));
 int RegCloseKey(int64_t hKey);
 
 int RegGetValue(int64_t hkey, const char16_t *opt_lpSubKey,
