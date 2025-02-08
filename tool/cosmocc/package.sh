@@ -201,14 +201,52 @@ fetch() {
   else
     curl -LO $1
   fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    # can use system sha256sum
+    true
+  elif command -v shasum >/dev/null 2>&1; then
+    sha256sum() {
+      shasum -a 256 "$@"
+    }
+  else
+    if [ ! -f build/sha256sum.c ]; then
+      printf '%s\n' "$0: fatal error: you need to install sha256sum" >&2
+      printf '%s\n' "please download https://cosmo.zip/pub/cosmos/bin/sha256sum and put it on the system path" >&2
+      abort
+    fi
+    if ! SHA256SUM=$(command -v "$PWD/o/build/sha256sum" 2>/dev/null); then
+      if ! CC=$(command -v "$CC" 2>/dev/null); then
+        if ! CC=$(command -v cc 2>/dev/null); then
+          if ! CC=$(command -v cosmocc 2>/dev/null); then
+            printf '%s\n' "$0: fatal error: you need to install either sha256sum, cc, or cosmocc" >&2
+            printf '%s\n' "please download https://cosmo.zip/pub/cosmos/bin/sha256sum and put it on the system path" >&2
+            abort
+          fi
+        fi
+      fi
+      mkdir -p o/build || abort
+      SHA256SUM="$PWD/o/build/sha256sum"
+      printf '%s\n' "${CC} -w -O2 -o ${SHA256SUM} build/sha256sum.c" >&2
+      "${CC}" -w -O2 -o "${SHA256SUM}.$$" build/sha256sum.c || abort
+      mv -f "${SHA256SUM}.$$" "${SHA256SUM}" || abort
+    fi
+    sha256sum() {
+      "${SHA256SUM}" "$@"
+    }
+  fi
+
+  filename=$(basename $1)
+  printf '%s\n' "$2 $filename" >$filename.sha256sum
+  sha256sum -c $filename.sha256sum || die
 }
 
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/aarch64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/x86_64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/llvm.zip &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/aarch64-gcc.zip 6a07f915ec0296cd33b3142e75c00ed1a7072c75d92c82a0c0b5f5df2cff0dd2 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/x86_64-gcc.zip cbb1659c56a0a4f95a71f59f94693515000d3dd53f79a597acacd53cbad2c7d8 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/llvm.zip d42c2e46204d4332975d2d7464c5df63c898c34f8d9d2b83c168c14705ca8edd &
   wait
   unzip aarch64-gcc.zip &
   unzip x86_64-gcc.zip &
