@@ -40,19 +40,21 @@ fi
 $MAKE -j$NPROC m= \
   $APELINK
 
-case $(uname -s) in
-  Darwin)
-    case $(mode) in
-      aarch64)
-        cc -O -o "$TMPDIR/ape.$$" .cosmocc/current/bin/ape-m1.c || exit
-        trap 'rm "$TMPDIR/ape.$$"' EXIT
-        APE=$TMPDIR/ape.$$
+if ! APE=$(command -v ape); then
+  case $(uname -s) in
+    Darwin)
+      case $(mode) in
+        aarch64)
+          cc -O -o "$TMPDIR/ape.$$" .cosmocc/current/bin/ape-m1.c || exit
+          trap 'rm "$TMPDIR/ape.$$"' EXIT
+          APE=$TMPDIR/ape.$$
+        ;;
+        *) APE=.cosmocc/current/bin/ape-x86_64.macho ;;
+      esac
       ;;
-      *) APE=.cosmocc/current/bin/ape-x86_64.macho ;;
-    esac
-    ;;
-  *) APE=.cosmocc/current/bin/ape-$(uname -m).elf ;;
-esac
+    *) APE=.cosmocc/current/bin/ape-$(uname -m).elf ;;
+  esac
+fi
 stat $APE
 
 $MAKE -j$NPROC m=$AMD64 \
