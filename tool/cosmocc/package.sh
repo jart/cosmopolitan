@@ -22,22 +22,20 @@ _nproc() {
   esac
 }
 
-which_make() {
-  case $(uname -s) in
-    Darwin) echo gmake ;;
-    *)      echo make  ;;
-  esac
-}
-
 TMPDIR=${TMPDIR:-/tmp}
-
 OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
 NPROC=$(($(_nproc)/2))
 GCCVER=14.1.0
-MAKE=$(which_make)
+
+if ! MAKE=$(command -v gmake); then
+  if ! MAKE=$(command -v make); then
+    echo please install gnu make >&2
+    exit 1
+  fi
+fi
 
 $MAKE -j$NPROC m= \
   $APELINK
