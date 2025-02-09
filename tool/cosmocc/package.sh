@@ -209,31 +209,15 @@ fetch() {
     sha256sum() {
       shasum -a 256 "$@"
     }
-  else
-    if [ ! -f build/sha256sum.c ]; then
-      printf '%s\n' "$0: fatal error: you need to install sha256sum" >&2
-      printf '%s\n' "please download https://cosmo.zip/pub/cosmos/bin/sha256sum and put it on the system path" >&2
-      abort
-    fi
-    if ! SHA256SUM=$(command -v "$PWD/o/build/sha256sum" 2>/dev/null); then
-      if ! CC=$(command -v "$CC" 2>/dev/null); then
-        if ! CC=$(command -v cc 2>/dev/null); then
-          if ! CC=$(command -v cosmocc 2>/dev/null); then
-            printf '%s\n' "$0: fatal error: you need to install either sha256sum, cc, or cosmocc" >&2
-            printf '%s\n' "please download https://cosmo.zip/pub/cosmos/bin/sha256sum and put it on the system path" >&2
-            abort
-          fi
-        fi
-      fi
-      mkdir -p o/build || abort
-      SHA256SUM="$PWD/o/build/sha256sum"
-      printf '%s\n' "${CC} -w -O2 -o ${SHA256SUM} build/sha256sum.c" >&2
-      "${CC}" -w -O2 -o "${SHA256SUM}.$$" build/sha256sum.c || abort
-      mv -f "${SHA256SUM}.$$" "${SHA256SUM}" || abort
-    fi
+  elif command -v "$PWD/o/build/sha256sum" >/dev/null 2>&1; then
+    # should have been built by download-cosmocc.sh if a system
+    # sha256sum/shasum does not exist
     sha256sum() {
-      "${SHA256SUM}" "$@"
+      "$PWD/o/build/sha256sum" "$@"
     }
+  else
+    echo please install sha256sum >&2
+    exit 1
   fi
 
   filename=$(basename $1)
