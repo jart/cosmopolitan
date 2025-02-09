@@ -222,7 +222,7 @@ fetch() {
 
   filename=$(basename $1)
   printf '%s\n' "$2 $filename" >$filename.sha256sum
-  sha256sum -c $filename.sha256sum || die
+  sha256sum -c $filename.sha256sum || exit 1
 }
 
 OLD=$PWD
