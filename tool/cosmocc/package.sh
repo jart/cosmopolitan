@@ -201,14 +201,36 @@ fetch() {
   else
     curl -LO $1
   fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    # can use system sha256sum
+    true
+  elif command -v shasum >/dev/null 2>&1; then
+    sha256sum() {
+      shasum -a 256 "$@"
+    }
+  elif command -v "$PWD/o/build/sha256sum" >/dev/null 2>&1; then
+    # should have been built by download-cosmocc.sh if a system
+    # sha256sum/shasum does not exist
+    sha256sum() {
+      "$PWD/o/build/sha256sum" "$@"
+    }
+  else
+    echo please install sha256sum >&2
+    exit 1
+  fi
+
+  filename=$(basename $1)
+  printf '%s\n' "$2 $filename" >$filename.sha256sum
+  sha256sum -c $filename.sha256sum || exit 1
 }
 
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/aarch64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/x86_64-gcc.zip &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/llvm.zip &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/aarch64-gcc.zip 6a07f915ec0296cd33b3142e75c00ed1a7072c75d92c82a0c0b5f5df2cff0dd2 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/x86_64-gcc.zip cbb1659c56a0a4f95a71f59f94693515000d3dd53f79a597acacd53cbad2c7d8 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/llvm.zip d42c2e46204d4332975d2d7464c5df63c898c34f8d9d2b83c168c14705ca8edd &
   wait
   unzip aarch64-gcc.zip &
   unzip x86_64-gcc.zip &
