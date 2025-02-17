@@ -33,7 +33,7 @@ privileged void __morph_tls(void) {
   //     64 48 8b 0R4 25 00 00 00 00   mov %fs:0,%R
   //     64 48 03 0R4 25 00 00 00 00   add %fs:0,%R
   //
-  // Which on Mac we can replace with this:
+  // Which on Mac we can replace with this with fixupobj:
   //
   //     65 48 8b 0R4 25 30 00 00 00   mov %gs:0x30,%R
   //
@@ -82,8 +82,8 @@ privileged void __morph_tls(void) {
       //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
       //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
       //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
-      //   0x30 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
-      //   0000 == p[5] &&           // displacement (von Neumann endian)
+      //   0045 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
+      //   0x30 == p[5] &&           // displacement (von Neumann endian)
       //   0000 == p[6] &&           // displacement
       //   0000 == p[7] &&           // displacement
       //   0000 == p[8]              // displacement
@@ -131,8 +131,8 @@ privileged void __morph_tls(void) {
       //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
       //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
       //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
-      //   0x30 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
-      //   0000 == p[5] &&           // displacement (von Neumann endian)
+      //   0045 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
+      //   0x30 == p[5] &&           // displacement (von Neumann endian)
       //   0000 == p[6] &&           // displacement
       //   0000 == p[7] &&           // displacement
       //   0000 == p[8]              // displacement
