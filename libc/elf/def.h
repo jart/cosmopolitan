@@ -68,6 +68,7 @@
 #define EM_NONE      0
 #define EM_M32       1
 #define EM_386       3
+#define EM_MIPS      8
 #define EM_PPC64     21
 #define EM_S390      22
 #define EM_ARM       40
