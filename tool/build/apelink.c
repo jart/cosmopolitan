@@ -1630,6 +1630,20 @@ static char *GenerateScriptIfMachine(char *p, struct Input *in) {
   }
 }
 
+static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
+  if (loader->machine == EM_NEXGEN32E) {
+    return stpcpy(p, "if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]; then\n");
+  } else if (loader->machine == EM_AARCH64) {
+    return stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]; then\n");
+  } else if (loader->machine == EM_PPC64) {
+    return stpcpy(p, "if [ \"$m\" = ppc64le ]; then\n");
+  } else if (loader->machine == EM_MIPS) {
+    return stpcpy(p, "if [ \"$m\" = mips64 ]; then\n");
+  } else {
+    Die(loader->path, "unsupported cpu architecture");
+  }
+}
+
 static char *FinishGeneratingDosHeader(char *p) {
   p = WRITE16LE(p, 0x1000);  // 10: MZ: lowers upper bound load / 16
   p = WRITE16LE(p, 0xf800);  // 12: MZ: roll greed on bss
@@ -2190,6 +2204,32 @@ int main(int argc, char *argv[]) {
         gotsome = true;
       }
     }
+
+    // extract the ape loader for non-input architectures
+    for (i = 0; i < loaders.n; ++i) {
+      struct Loader *loader = loaders.p + i;
+      if (loader->used) {
+        continue;
+      }
+      loader->used = true;
+      p = GenerateScriptIfLoaderMachine(p, loader);
+      p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
+                    "dd if=\"$o\"");
+      p = stpcpy(p, " skip=");
+      loader->ddarg_skip2 = p;
+      p = GenerateDecimalOffsetRelocation(p);
+      p = stpcpy(p, " count=");
+      loader->ddarg_size2 = p;
+      p = GenerateDecimalOffsetRelocation(p);
+      p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n"
+                    "chmod 755 \"$t.$$\" ||exit\n"
+                    "mv -f \"$t.$$\" \"$t\" ||exit\n");
+      p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
+                    "fi\n");
+      gotsome = true;
+    }
+
+    // close if-statements
     if (inputs.n && (support_vector & _HOSTXNU)) {
       if (!gotsome) {
         p = stpcpy(p, "true\n");
