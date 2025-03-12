@@ -220,7 +220,7 @@ struct Loader {
   char *ddarg_size1;
   char *ddarg_skip2;
   char *ddarg_size2;
-  char kernel[64];
+  const char *kernel;
 };
 
 struct Loaders {
@@ -252,7 +252,7 @@ static struct Inputs inputs;
 static char ape_heredoc[15];
 static enum Strategy strategy;
 static struct Loaders loaders;
-static char loader_kernel[64] = {'\0'};
+static const char *loader_kernel;
 static const char *custom_sh_code;
 static bool force_bypass_binfmt_misc;
 static bool generate_debuggable_binary;
@@ -990,16 +990,11 @@ static void AddLoader(const char *path) {
   }
   struct Loader *loader = &loaders.p[loaders.n++];
   loader->path = path;
-  if (loader_kernel[0] != '\0') {
-    strncpy(loader->kernel, loader_kernel, sizeof(loader->kernel));
-  } else {
-    loader->kernel[0] = '\0';
-  }
+  loader->kernel = loader_kernel;
 }
 
 static void SetLoaderKernel(const char *kernel) {
-  strncpy(loader_kernel, kernel, sizeof(loader_kernel));
-  loader_kernel[sizeof(loader_kernel) - 1] = 0;
+  loader_kernel = kernel;
 }
 
 static void GetOpts(int argc, char *argv[]) {
@@ -1667,7 +1662,7 @@ static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
     Die(loader->path, "unsupported cpu architecture");
   }
 
-  if (loader->kernel[0] != '\0') {
+  if (loader->kernel) {
     p = stpcpy(p, " && [ \"$k\" = ");
     p = stpcpy(p, loader->kernel);
     p = stpcpy(p, " ]");
@@ -1925,8 +1920,7 @@ int main(int argc, char *argv[]) {
     for (j = i + 1; j < loaders.n; ++j) {
       if (loaders.p[i].os == loaders.p[j].os &&
           loaders.p[i].machine == loaders.p[j].machine &&
-          strncmp(loaders.p[i].kernel, loaders.p[j].kernel,
-                  sizeof(loaders.p[i].kernel)) == 0) {
+          strcmp(loaders.p[i].kernel, loaders.p[j].kernel) == 0) {
         Die(prog, "multiple ape loaders specified for the same platform");
       }
     }
@@ -2241,18 +2235,8 @@ int main(int argc, char *argv[]) {
 
     // extract the ape loader for non-input architectures
     // if the user requested a host kernel check, get the host kernel
-    if (loader_kernel[0] != '\0') {
-      bool hasunused = false;
-      for (i = 0; i < loaders.n; ++i) {
-        struct Loader *loader = loaders.p + i;
-        if (!loader->used) {
-          hasunused = true;
-          break;
-        }
-      }
-      if (hasunused) {
-        p = stpcpy(p, "k=$(uname -s 2>/dev/null) || k=unknown\n");
-      }
+    if (loader_kernel) {
+      p = stpcpy(p, "k=$(uname -s 2>/dev/null) || k=unknown\n");
     }
     for (i = 0; i < loaders.n; ++i) {
       struct Loader *loader = loaders.p + i;
