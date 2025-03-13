@@ -1926,7 +1926,8 @@ int main(int argc, char *argv[]) {
         if (loaders.p[i].kernel != NULL &&
             loaders.p[j].kernel != NULL &&
             strcmp(loaders.p[i].kernel, loaders.p[j].kernel) == 0) {
-          Die(prog, "multiple ape loaders specified for the same platform");
+          Die(prog, "multiple ape loaders specified for the same platform "
+                    "with matching kernels");
         }
       }
     }
