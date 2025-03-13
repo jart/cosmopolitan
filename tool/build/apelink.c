@@ -1653,7 +1653,7 @@ static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
   if (loader->machine == EM_NEXGEN32E) {
     p = stpcpy(p, "if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]");
   } else if (loader->machine == EM_AARCH64) {
-    p = stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]");
+    p = stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ] || [ \"$m\" = evbarm ]");
   } else if (loader->machine == EM_PPC64) {
     p = stpcpy(p, "if [ \"$m\" = ppc64le ]");
   } else if (loader->machine == EM_MIPS) {
@@ -1919,9 +1919,15 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < loaders.n; ++i) {
     for (j = i + 1; j < loaders.n; ++j) {
       if (loaders.p[i].os == loaders.p[j].os &&
-          loaders.p[i].machine == loaders.p[j].machine &&
-          strcmp(loaders.p[i].kernel, loaders.p[j].kernel) == 0) {
-        Die(prog, "multiple ape loaders specified for the same platform");
+          loaders.p[i].machine == loaders.p[j].machine) {
+        if (!loaders.p[i].kernel && !loaders.p[j].kernel) {
+          Die(prog, "multiple ape loaders specified for the same platform");
+        }
+        if (loaders.p[i].kernel != NULL &&
+            loaders.p[j].kernel != NULL &&
+            strcmp(loaders.p[i].kernel, loaders.p[j].kernel) == 0) {
+          Die(prog, "multiple ape loaders specified for the same platform");
+        }
       }
     }
   }
