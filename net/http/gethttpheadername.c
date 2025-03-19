@@ -206,7 +206,7 @@ const char *GetHttpHeaderName(int h) {
       return "CDN-Loop";
     case kHttpSecChUaPlatform:
       return "Sec-CH-UA-Platform";
-    case kHttpWebsocketKey:
+    case kHttpWebSocketKey:
       return "Sec-WebSocket-Key";
     default:
       return NULL;

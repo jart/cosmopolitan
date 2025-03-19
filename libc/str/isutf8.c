@@ -45,6 +45,8 @@ static const char kUtf8Dispatch[] = {
  * - Incorrect sequencing of 0300 (FIRST) and 0200 (CONT) chars
  * - Thompson-Pike varint sequence not encodable as UTF-16
  * - Overlong UTF-8 encoding
+ * - any UTF-16 surrogate code points
+ * - last character in a multi-byte UTF-8 sequence exceeds the valid limit
  *
  * @param size if -1 implies strlen
  */

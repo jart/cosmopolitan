@@ -389,7 +389,7 @@ LookupHttpHeader (register const char *str, register size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""},
 #line 107 "gethttpheader.gperf"
-      {"Sec-WebSocket-Key",                kHttpWebsocketKey},
+      {"Sec-WebSocket-Key",                kHttpWebSocketKey},
       {""}, {""},
 #line 22 "gethttpheader.gperf"
       {"X-Forwarded-For",                  kHttpXForwardedFor},
