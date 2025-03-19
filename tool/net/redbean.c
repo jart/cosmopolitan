@@ -5342,13 +5342,16 @@ close:
 }
 
 static int LuaWSWrite(lua_State *L) {
-  int type;
+  int type, retval;
   size_t size;
   const char *data;
 
   OnlyCallDuringRequest(L, "ws.Write");
   if (!cpm.wstype) {
-    LuaWSUpgrade(L);
+    retval = LuaWSUpgrade(L);
+    if (retval != 0) {
+      return retval;
+    }
   }
 
   type = luaL_optinteger(L, 2, -1);
