@@ -5229,12 +5229,12 @@ static int LuaWSRead(lua_State *L) {
 
   // reserved bit set
   if (header[0] & 0x70) goto close;
-  // reserved opcode
-  if ((header[0] & 0x7) > 0x3) goto close;
-  // payload data is unmasked
-  if (!(header[1] | (1 << 7))) goto close;
 
   opcode = header[0] & 0xF;
+  // reserved opcode
+  if ((opcode & 0x7) >= 0x3 || opcode > 0xA) goto close;
+  // payload data is unmasked
+  if (!(header[1] | (1 << 7))) goto close;
   // not in continuation
   if (!wsfragtype && !opcode) goto close;
 
