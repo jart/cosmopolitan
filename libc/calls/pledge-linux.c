@@ -694,6 +694,7 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_sched_getaffinity,  //
     __NR_linux_sched_setaffinity,  //
     __NR_linux_sigtimedwait,       //
+    __NR_linux_getcpu,             //
 };
 
 static const uint16_t kPledgeFlock[] = {
