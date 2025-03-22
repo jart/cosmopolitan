@@ -11,11 +11,12 @@ function OnHttpRequest()
     coroutine.yield()
 
     local fd = GetClientFd()
-    local fds = {[fd] = unix.POLLIN | unix.POLLHUP | unix.POLLRDHUP}
+    local client_exit = unix.POLLHUP | unix.POLLRDHUP | unix.POLLERR
+    local fds = {[fd] = unix.POLLIN | client_exit}
     -- simple echo server
     while true do
       res = unix.poll(fds)
-      if (res[fd] & unix.POLLHUP == unix.POLLHUP) or (res[fd] & unix.POLLRDHUP == unix.POLLRDHUP) then
+      if res[fd] & client_exit > 0 then
         return
       end
       local s, t = ws.Read()
