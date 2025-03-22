@@ -10,10 +10,14 @@ function OnHttpRequest()
     ws.Write(nil) -- upgrade without sending a response
     coroutine.yield()
 
-    local fds = {[GetClientFd()] = unix.POLLIN}
+    local fd = GetClientFd()
+    local fds = {[fd] = unix.POLLIN | unix.POLLHUP | unix.POLLRDHUP}
     -- simple echo server
     while true do
-      unix.poll(fds)
+      res = unix.poll(fds)
+      if (res[fd] & unix.POLLHUP == unix.POLLHUP) or (res[fd] & unix.POLLRDHUP == unix.POLLRDHUP) then
+        return
+      end
       local s, t = ws.Read()
       if t == ws.CLOSE then
         return
