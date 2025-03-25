@@ -349,7 +349,7 @@ class shared_ptr
     template<typename U>
     bool owner_before(const weak_ptr<U>& r) const noexcept
     {
-        return !r.owner_before(*this);
+        return rc < r.rc;
     }
 
   private:
