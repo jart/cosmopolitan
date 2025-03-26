@@ -381,6 +381,9 @@
 #define _FILE_STREAM_INFORMATION NtFileStreamInformation
 #define FILE_STREAM_INFORMATION struct NtFileStreamInformation
 #define PFILE_STREAM_INFORMATION struct NtFileStreamInformation*
+#define _FILE_NOTIFY_INFORMATION NtFileNotifyInformation
+#define FILE_NOTIFY_INFORMATION struct NtFileNotifyInformation
+#define PFILE_NOTIFY_INFORMATION struct NtFileNotifyInformation*
 #define _KERNEL_USER_TIMES NtKernelUserTimes
 #define KERNEL_USER_TIMES struct NtKernelUserTimes
 #define PKERNEL_USER_TIMES struct NtKernelUserTimes*
@@ -1361,6 +1364,9 @@
 
 #define WSAEVENT HANDLE
 #define GROUP uint32_t
+#define _OVERLAPPED NtOverlapped
+#define OVERLAPPED struct NtOverlapped
+#define LOVERLAPPED struct NtOverlapped*
 #define WSAOVERLAPPED OVERLAPPED
 #define INVALID_SOCKET -1ULL
 #define SOCKET_ERROR -1
