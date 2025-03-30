@@ -71,11 +71,17 @@ o/$(MODE)/test/tool/net/%.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+
+o/$(MODE)/tool/net/tester/.init.lua.zip.o: private    \
+        ZIPOBJ_FLAGS += \
+		    -B
+
 .PRECIOUS: o/$(MODE)/test/tool/net/redbean-tester
 o/$(MODE)/test/tool/net/redbean-tester.dbg:			\
 		$(TOOL_NET_DEPS)				\
 		o/$(MODE)/tool/net/redbean.o			\
 		$(TOOL_NET_REDBEAN_LUA_MODULES)			\
+		o/$(MODE)/tool/net/tester/.init.lua.zip.o       \
 		o/$(MODE)/tool/net/demo/seekable.txt.zip.o	\
 		o/$(MODE)/tool/net/net.pkg			\
 		$(CRT)						\
