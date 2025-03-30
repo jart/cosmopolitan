@@ -31,7 +31,9 @@
 //	@noreturn
 	.ftrace1
 gclongjmp:
+	beg
 	.ftrace2
+	pro
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
@@ -65,4 +67,5 @@ gclongjmp:
 #else
 #error "unsupported architecture"
 #endif /* __x86_64__ */
+	end
 	.endfn	gclongjmp,globl

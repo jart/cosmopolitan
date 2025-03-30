@@ -32,8 +32,8 @@
 //	@param	rdx is environ
 //	@param	rcx is auxv
 //	@noreturn
-cosmo:	push	%rbp
-	mov	%rsp,%rbp
+cosmo:	beg
+	pro
 	mov	%edi,%r12d
 	mov	%rsi,%r13
 	mov	%rdx,%r14
@@ -104,7 +104,10 @@ cosmo:	push	%rbp
 	je	2f
 	push	%rax
 	push	%rax
-	call	.Largs
+	mov	%r12d,%edi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
 	call	*(%rax)
 	pop	%rax
 	pop	%rax
@@ -112,17 +115,15 @@ cosmo:	push	%rbp
 	jmp	1b
 
 //	call main()
-2:	call	.Largs
+2:	mov	%r12d,%edi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
 	.weak	main
 	call	main
 	xchg	%eax,%edi
 	call	exit
-
-.Largs:	mov	%r12d,%edi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
-	ret
+	end
 	.endfn	cosmo,weak
 
 //	Enables Thread Local Storage.

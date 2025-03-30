@@ -26,7 +26,9 @@
 //	@see	setcontext()
 	.ftrace1
 getcontext:
+	beg
 	.ftrace2
 #include "libc/intrin/getcontext.inc"
 	jmp	__getcontextsig
+	end
 	.endfn	getcontext,globl

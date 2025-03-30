@@ -30,8 +30,8 @@
 //	@note	slower than __sysv2nt
 //	@see	NT2SYSV() macro
 __nt2sysv:
-	push	%rbp
-	mov	%rsp,%rbp
+	beg
+	pro
 	sub	$256,%rsp
 	push	%rbx
 	push	%rdi
@@ -48,6 +48,7 @@ __nt2sysv:
 	pop	%rsi
 	pop	%rdi
 	pop	%rbx
-	leave
+	epi
 	ret
+	end
 	.endfn	__nt2sysv,globl,hidden

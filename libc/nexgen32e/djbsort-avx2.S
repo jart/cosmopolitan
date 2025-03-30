@@ -7,8 +7,8 @@
 //	@note	public domain
 //	@see	en.wikipedia.org/wiki/Sorting_network
 djbsort_avx2:
-	push	%rbp
-	mov	%rsp,%rbp
+	beg
+	pro
 	push	%r15
 	push	%r14
 	push	%r13
@@ -795,11 +795,13 @@ djbsort_avx2:
 	pop	%r13
 	pop	%r14
 	pop	%r15
-	pop	%rbp
+	epi
 	ret
+	end
 	.endfn	djbsort_avx2,globl,hidden
 
 minmax_vector:
+	beg
 	cmp	$7,%rdx
 	jg	.L13
 .L2:	test	%rdx,%rdx
@@ -838,9 +840,11 @@ minmax_vector:
 	sub	$8,%rdx
 	jne	.L7
 	ret
+	end
 	.endfn	minmax_vector
 
 int32_twostages_32:
+	beg
 	sub	$-128,%rdi
 .L17:	lea	-128(%rdi),%rax
 	test	%rsi,%rsi
@@ -866,13 +870,14 @@ int32_twostages_32:
 	add	$512,%rdi
 	jmp	.L17
 .L21:	ret
+	end
 	.endfn	int32_twostages_32
 
 int32_threestages:
-	push	%rbp
+	beg
+	pro
 	imul	$-24,%rdx,%r8
 	lea	0(,%rdx,8),%rax
-	mov	%rsp,%rbp
 	push	%r15
 	push	%r14
 	push	%r13
@@ -961,11 +966,13 @@ int32_threestages:
 	pop	%r13
 	pop	%r14
 	pop	%r15
-	pop	%rbp
+	epi
 	ret
+	end
 	.endfn	int32_threestages
 
 merge16_finish:
+	beg
 	vpminsd	%ymm1,%ymm0,%ymm3
 	vpmaxsd	%ymm1,%ymm0,%ymm0
 	vperm2i128 $32,%ymm0,%ymm3,%ymm2
@@ -994,9 +1001,11 @@ merge16_finish:
 .L31:	vmovdqu	%ymm2,(%rdi)
 	vmovdqu	%ymm0,32(%rdi)
 	ret
+	end
 	.endfn	merge16_finish
 
 int32_sort_2power:
+	beg
 	push	%r13
 	lea	16(%rsp),%r13
 	andq	$-32,%rsp
@@ -2075,6 +2084,7 @@ int32_sort_2power:
 	lea	-16(%r13),%rsp
 	pop	%r13
 	ret
+	end
 	.endfn	int32_sort_2power
 
 	.rodata.cst32

@@ -158,6 +158,60 @@
 	.weak	\canonical
 .endm
 
+.macro	beg
+	.cfi_startproc
+.endm
+
+.macro	pro
+#if defined(__x86_64__)
+	push	%rbp
+	.cfi_adjust_cfa_offset 8
+	.cfi_rel_offset %rbp,0
+	mov	%rsp,%rbp
+	.cfi_def_cfa_register %rbp
+#elif defined(__aarch64__)
+	stp	x29,x30,[sp,-16]!
+	mov	x29,sp
+	.cfi_adjust_cfa_offset 16
+	.cfi_rel_offset x29,0
+	.cfi_rel_offset x30,8
+#else
+#error "unsupported architecture"
+#endif
+.endm
+
+.macro	epi
+#if defined(__x86_64__)
+	.cfi_def_cfa_register %rsp
+	leave
+	.cfi_adjust_cfa_offset -8
+	.cfi_restore %rbp
+#elif defined(__aarch64__)
+	ldp	x29,x30,[sp],#16
+	.cfi_adjust_cfa_offset -16
+	.cfi_restore x30
+	.cfi_restore x29
+#else
+#error "unsupported architecture"
+#endif
+.endm
+
+.macro	end
+	.cfi_endproc
+.endm
+
+.macro	cpush	reg:req
+	push	\reg
+	.cfi_adjust_cfa_offset 8
+	.cfi_rel_offset \reg,0
+.endm
+
+.macro	cpop	reg:req
+	pop	\reg
+	.cfi_adjust_cfa_offset -8
+	.cfi_restore \reg
+.endm
+
 #ifdef __aarch64__
 .macro	jmp	dest:req
 	b	\dest

@@ -386,6 +386,13 @@ SECTIONS {
     _tbss_end = .;
   } :Tls
 
+  .eh_frame : {
+    __eh_frame_start = .;
+    KEEP(*(.eh_frame))
+    *(.eh_frame.*)
+    __eh_frame_end = .;
+  } :Ram
+
   .data . : {
 /*BEGIN: Read/Write Data */
 #if SupportsWindows()
@@ -426,11 +433,6 @@ SECTIONS {
     KEEP(*(.dtors))
     __fini_array_end = .;
 
-    __eh_frame_start = .;
-    KEEP(*(.eh_frame))
-    *(.eh_frame.*)
-    __eh_frame_end = .;
-
 /*BEGIN: Post-Initialization Read-Only */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
@@ -439,7 +441,6 @@ SECTIONS {
     KEEP(*(.piro.pad.data))
     *(.igot.plt)
     KEEP(*(.dataepilogue))
-
     . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: NT FORK COPYING */
     _edata = .;
@@ -519,6 +520,9 @@ SECTIONS {
   .debug_rnglists    0 : { *(.debug_rnglists) }
   .debug_macro       0 : { *(.debug_macro) }
   .debug_addr        0 : { *(.debug_addr) }
+  .debug_names       0 : { *(.debug_names) }
+  .debug_loclists    0 : { *(.debug_loclists) }
+  .debug_str_offsets 0 : { *(.debug_str_offsets) }
   .gnu.attributes    0 : { KEEP(*(.gnu.attributes)) }
   .GCC.command.line  0 : { *(.GCC.command.line) }
 
@@ -582,11 +586,11 @@ ape_rom_memsz = ape_rom_filesz;
 ape_rom_align = CONSTANT(COMMONPAGESIZE);
 ape_rom_rva = RVA(ape_rom_vaddr);
 
-ape_ram_vaddr = ADDR(.data);
+ape_ram_vaddr = ADDR(.eh_frame);
 ape_ram_offset = ape_ram_vaddr - __executable_start;
-ape_ram_paddr = LOADADDR(.data);
-ape_ram_filesz = ADDR(.bss) - ADDR(.data);
-ape_ram_memsz = _end - ADDR(.data);
+ape_ram_paddr = LOADADDR(.eh_frame);
+ape_ram_filesz = ADDR(.bss) - ADDR(.eh_frame);
+ape_ram_memsz = _end - ADDR(.eh_frame);
 ape_ram_align = CONSTANT(COMMONPAGESIZE);
 ape_ram_rva = RVA(ape_ram_vaddr);
 

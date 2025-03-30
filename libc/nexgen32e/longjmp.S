@@ -26,7 +26,7 @@
 //	@see	gclongjmp()
 //	@see	siglongjmp()
 	.ftrace1
-longjmp:
+longjmp:beg
 	.ftrace2
 _longjmp:
 #ifdef __x86_64__
@@ -61,6 +61,7 @@ _longjmp:
 #else
 #error "unsupported architecture"
 #endif
+	end
 	.endfn	longjmp,globl
 	.endfn	_longjmp,globl
 	.alias	longjmp,siglongjmp

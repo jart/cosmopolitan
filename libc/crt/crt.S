@@ -47,7 +47,14 @@ __oops_win32:
 //	@note	ape.S and ape-loader both set RCX to XNU on Darwin
 //	@noreturn
 _start:
-#ifdef __x86_64__
+	.cfi_startproc
+#if defined(__x86_64__)
+	.cfi_undefined rip
+#elif defined(__aarch64__)
+	.cfi_undefined x30
+#endif /* __x86_64__ */
+
+#if defined(__x86_64__)
 
 #if SupportsFreebsd()
 //	detect free besiyata dishmaya
@@ -159,4 +166,5 @@ _start:
 #else
 #error "architecture unsupported"
 #endif /* __x86_64__ */
+	.cfi_endproc
 	.endfn	_start,weak,hidden

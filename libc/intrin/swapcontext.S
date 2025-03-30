@@ -31,17 +31,17 @@
 //	@returnstwice
 	.ftrace1
 swapcontext:
+	beg
 	.ftrace2
 #include "libc/intrin/getcontext.inc"
 #ifdef __x86_64__
-	push	%rbp
-	mov	%rsp,%rbp
-	push	%rsi
-	push	%rsi
+	pro
+	cpush	%rsi
+	cpush	%rsi
 	call	__swapcontextsig
-	pop	%rdi
-	pop	%rdi
-	pop	%rbp
+	cpop	%rdi
+	cpop	%rdi
+	epi
 	test	%eax,%eax
 	jnz	1f
 #elif defined(__aarch64__)
@@ -56,4 +56,5 @@ swapcontext:
 #endif
 	jmp	__tailcontext
 1:	ret
+	end
 	.endfn	swapcontext,globl

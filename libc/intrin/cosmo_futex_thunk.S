@@ -21,16 +21,15 @@
 .privileged
 
 cosmo_futex_thunk:
+	beg
+	pro
 #ifdef __x86_64__
-	push	%rbp
-	mov	%rsp,%rbp
 	mov	%rcx,%r10
 	mov	__NR_futex,%eax
 	clc
 	syscall
 	jnc	1f
 	neg	%eax
-1:	pop	%rbp
 #elif defined(__aarch64__)
 	ldr	x7,=__hostos
 	ldr	w7,[x7]
@@ -46,5 +45,7 @@ cosmo_futex_thunk:
 #else
 #error "unsupported architecture"
 #endif /* __x86_64__ */
-1:	ret
+1:	epi
+	ret
+	end
 	.endfn	cosmo_futex_thunk,globl,hidden

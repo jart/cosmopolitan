@@ -32,7 +32,8 @@
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
 	.ftrace1
-__gc:	.ftrace2
+__gc:	beg
+	.ftrace2
 
 #ifdef __x86_64__
 
@@ -47,8 +48,7 @@ __gc:	.ftrace2
 	mov	8(%r8),%r9
 	mov	16(%r8),%rdi
 	push	24(%r8)
-	push	%rbp
-	mov	%rsp,%rbp
+	pro
 	sub	$32,%rsp
 	mov	%rax,-8(%rbp)
 	mov	%rdx,-16(%rbp)
@@ -57,7 +57,7 @@ __gc:	.ftrace2
 	movdqa	-32(%rbp),%xmm0
 	mov	-16(%rbp),%rdx
 	mov	-8(%rbp),%rax
-	leave
+	epi
 	ret
 9:	ud2
 	nop
@@ -102,4 +102,5 @@ __gc:	.ftrace2
 
 #endif /* __x86_64__ */
 
+	end
 	.endfn	__gc,globl,hidden

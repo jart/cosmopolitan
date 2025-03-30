@@ -28,8 +28,8 @@
 //	@return	rdi is rdi+edx
 	.text.startup
 __getntsyspath:
-	push	%rbp
-	mov	%rsp,%rbp
+	beg
+	pro
 	push	%rdx
 	movpp	%rdi,%rcx		# call f=%rax(p1=%rcx,p2=%rdx)
 	sub	$40,%rsp
@@ -55,6 +55,7 @@ __getntsyspath:
 	jne	2f
 	movb	$'/',-1(%rdi)
 2:	.loop	1b
-	leave
+	epi
 	ret
+	end
 	.endfn	__getntsyspath,globl,hidden

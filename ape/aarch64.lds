@@ -259,6 +259,9 @@ SECTIONS {
   .debug_ranges       0 : { *(.debug_ranges) }
   .debug_macro        0 : { *(.debug_macro) }
   .debug_addr         0 : { *(.debug_addr) }
+  .debug_names        0 : { *(.debug_names) }
+  .debug_loclists     0 : { *(.debug_loclists) }
+  .debug_str_offsets  0 : { *(.debug_str_offsets) }
   .ARM.attributes     0 : { KEEP(*(.ARM.attributes)) KEEP(*(.gnu.attributes)) }
   .note.gnu.arm.ident 0 : { KEEP(*(.note.gnu.arm.ident)) }
 

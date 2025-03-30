@@ -102,8 +102,8 @@ __pid:	.quad	0
 	.previous
 
 systemfive_cp:
-	push	%rbp
-	mov	%rsp,%rbp		// so backtraces work
+	beg
+	pro
 systemfive_cancellable:			// our pthread_cancel() miracle code
 	cmpb	$0,__tls_enabled(%rip)	// inspired by the musl libc design!
 	je	1f			// we handle linux and bsd together!
@@ -123,7 +123,7 @@ systemfive_cancellable:			// our pthread_cancel() miracle code
 	clc				// no cancellable system calls exist
 	syscall				// that have 7+ args on the bsd OSes
 systemfive_cancellable_end:		// i/o calls park here for long time
-	pop	%rbp
+	epi
 	jnc	2f
 	neg	%rax			// turns bsd errno to system v errno
 2:	cmp	$-4095,%rax		// but we still check again on eintr
@@ -144,11 +144,13 @@ systemfive_cancellable_end:		// i/o calls park here for long time
 	je	systemfive_errno	// we aren't actually cancelled
 	jmp	4f			// now we are in fact cancelled
 systemfive_cancel:			// SIGTHR will jump here too
-	pop	%rbp
+	epi
 4:	jmp	_pthread_cancel_ack	// tail call
 	.weak	_pthread_cancel_ack	// must be linked if we're cancelled
+	end
 #if IsModeDbg()
 not_a_cancellation_point:		// need BEGIN/END_CANCELLATION_POINT
+	beg
 	nop
 	.weak	report_cancellation_point
 5:	ezlea	report_cancellation_point,cx
@@ -157,6 +159,7 @@ not_a_cancellation_point:		// need BEGIN/END_CANCELLATION_POINT
 	call	*%rcx
 6:	ud2
 	nop
+	end
 #endif
 	.globl	systemfive_cancellable_end
 	.globl	systemfive_cancellable
@@ -166,19 +169,20 @@ not_a_cancellation_point:		// need BEGIN/END_CANCELLATION_POINT
 .Lanchorpoint:
 #if SupportsLinux() || SupportsMetal()
 systemfive_linux:
+	beg
 	and	$0xfff,%eax		// remove nonlinux bits from ordinal
 	cmp	$0xfff,%eax		// checks if unsupported by platform
 	je	systemfive_enosys	// never taken branches cost nothing
 	btr	$11,%eax		// 0x800 means a call is cancellable
 	jc	systemfive_cp		// it is handled by the holiest code
 	mov	%rcx,%r10		// syscall instruction clobbers %rcx
-	push	%rbp			// linux never reads args from stack
-	mov	%rsp,%rbp		// having frame will help backtraces
+	pro				// linux never reads args from stack
 	syscall				// this is known as a context switch
-	pop	%rbp			// next we check to see if it failed
+	epi				// next we check to see if it failed
 	cmp	$-4095,%rax		// system five nexgen32e abi § a.2.1
 	jae	systemfive_error	// encodes errno as neg return value
 	ret
+	end
 	.endfn	systemfive_linux,globl,hidden
 systemfive_error:
 	neg	%eax
@@ -186,27 +190,35 @@ systemfive_error:
 	.endfn	systemfive_error,globl,hidden
 #endif
 systemfive_errno:
+	beg
 	xchg	%eax,%ecx
 	call	__errno_location
 	mov	%ecx,(%rax)		// normalize to c library convention
 	push	$-1			// negative one is only error result
 	pop	%rax			// the push pop is to save code size
 	ret
+	end
 	.endfn	systemfive_errno,globl,hidden
 systemfive_enosys:
+	beg
 	mov	ENOSYS(%rip),%eax
 	jmp	systemfive_errno
+	end
 	.endfn	systemfive_enosys,globl,hidden
 #if SupportsNetbsd()
 systemfive_netbsd:
+	beg
 	shr	$4*13,%rax
 	jmp	systemfive_bsdscrub
+	end
 	.endfn	systemfive_netbsd,globl,hidden
 #endif
 #if SupportsOpenbsd()
 systemfive_openbsd:
+	beg
 	shr	$4*10,%rax
 	jmp	systemfive_bsdscrub
+	end
 	.endfn	systemfive_openbsd,globl,hidden
 #endif
 #if SupportsFreebsd()
@@ -222,6 +234,7 @@ systemfive_bsdscrub:
 //	𝑠𝑙𝑖𝑑𝑒
 	.endfn	systemfive_bsdscrub,globl,hidden
 systemfive_bsd:
+	beg
 	cmp	$0xfff,%ax
 	je	systemfive_enosys
 	btr	$11,%eax		// checks/reset the 800 cancellable bit
@@ -230,6 +243,7 @@ systemfive_bsd:
 	syscall				// bsd will need arg on stack sometimes
 	jc	systemfive_errno	// bsd sets carry flag if %rax is errno
 	ret
+	end
 	.endfn	systemfive_bsd
 #endif
 #if SupportsXnu()
