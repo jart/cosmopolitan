@@ -1,5 +1,8 @@
 name: build
 
+env:
+  COSMOCC_VERSION: 3.9.2
+
 on:
   push:
     branches:
@@ -19,10 +22,30 @@ jobs:
       matrix:
         mode: ["", tiny, rel, tinylinux, optlinux]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          # Full checkout needed for git-restore-mtime-bare.
+          fetch-depth: 0
+
+      # TODO(jart): fork this action.
+      - uses: chetan/git-restore-mtime-action@v2
+
+      - uses: actions/cache@v4
+        with:
+          path: .cosmocc/${{ env.COSMOCC_VERSION }}
+          key: cosmocc-${{ env.COSMOCC_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: o
+          key: o-${{ matrix.mode }}-${{ env.COSMOCC_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            o-${{ matrix.mode }}-${{ env.COSMOCC_VERSION }}-
+            o-${{ matrix.mode }}-
+            o-
 
       - name: support ape bins 1
-        run: sudo cp build/bootstrap/ape.elf /usr/bin/ape
+        run: sudo cp -a build/bootstrap/ape.elf /usr/bin/ape
 
       - name: support ape bins 2
         run: sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
