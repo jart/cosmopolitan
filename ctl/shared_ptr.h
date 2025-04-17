@@ -382,6 +382,34 @@ class weak_ptr
             rc->keep_weak();
     }
 
+    weak_ptr(weak_ptr const& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_weak();
+    }
+
+    template<typename U>
+        requires __::shared_ptr_compatible<T, U>
+    weak_ptr(weak_ptr<U> const& r) noexcept : p(r.p), rc(r.rc)
+    {
+        if (rc)
+            rc->keep_weak();
+    }
+
+    weak_ptr(weak_ptr&& r) noexcept : p(r.p), rc(r.rc)
+    {
+        r.p = nullptr;
+        r.rc = nullptr;
+    }
+
+    template<typename U>
+        requires __::shared_ptr_compatible<T, U>
+    weak_ptr(weak_ptr<U>&& r) noexcept : p(r.p), rc(r.rc)
+    {
+        r.p = nullptr;
+        r.rc = nullptr;
+    }
+
     ~weak_ptr()
     {
         if (rc)
@@ -408,6 +436,12 @@ class weak_ptr
         using ctl::swap;
         swap(p, r.p);
         swap(rc, r.rc);
+    }
+
+    weak_ptr& operator=(weak_ptr r) noexcept
+    {
+        swap(r);
+        return *this;
     }
 
     shared_ptr<T> lock() const noexcept
