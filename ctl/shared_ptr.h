@@ -97,12 +97,12 @@ class shared_ref
 
     size_t use_count() const noexcept
     {
-        return shared + 1;
+        return __atomic_load_n(&shared, __ATOMIC_RELAXED) + 1;
     }
 
     size_t weak_count() const noexcept
     {
-        return weak;
+        return __atomic_load_n(&weak, __ATOMIC_RELAXED);
     }
 
   private:
