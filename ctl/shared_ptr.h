@@ -444,6 +444,13 @@ class weak_ptr
         return *this;
     }
 
+    template <typename U>
+        requires __::shared_ptr_compatible<T, U>
+    weak_ptr& operator=(weak_ptr<U> r) noexcept
+    {
+        weak_ptr<T>(move(r)).swap(*this);
+    }
+
     shared_ptr<T> lock() const noexcept
     {
         if (expired())
