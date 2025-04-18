@@ -382,7 +382,7 @@ class weak_ptr
             rc->keep_weak();
     }
 
-    weak_ptr(weak_ptr const& r) noexcept : p(r.p), rc(r.rc)
+    weak_ptr(const weak_ptr& r) noexcept : p(r.p), rc(r.rc)
     {
         if (rc)
             rc->keep_weak();
@@ -390,7 +390,7 @@ class weak_ptr
 
     template<typename U>
         requires __::shared_ptr_compatible<T, U>
-    weak_ptr(weak_ptr<U> const& r) noexcept : p(r.p), rc(r.rc)
+    weak_ptr(const weak_ptr<U>& r) noexcept : p(r.p), rc(r.rc)
     {
         if (rc)
             rc->keep_weak();
