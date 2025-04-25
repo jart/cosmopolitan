@@ -3,7 +3,7 @@
 [![build](https://github.com/jart/cosmopolitan/actions/workflows/build.yml/badge.svg)](https://github.com/jart/cosmopolitan/actions/workflows/build.yml)
 # Cosmopolitan
 
-[Cosmopolitan Libc](https://justine.lol/cosmopolitan/index.html) makes C
+[Cosmopolitan Libc](https://justine.lol/cosmopolitan/index.html) makes C/C++
 a build-once run-anywhere language, like Java, except it doesn't need an
 interpreter or virtual machine. Instead, it reconfigures stock GCC and
 Clang to output a POSIX-approved polyglot format that runs natively on
