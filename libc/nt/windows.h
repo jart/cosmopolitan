@@ -94,6 +94,7 @@ int WideCharToMultiByte(unsigned int CodePage, uint32_t dwFlags,
                         uint16_t *lpWideCharStr, int cchWideChar,
                         char *lpMultiByteStr, int cbMultiByte,
                         uint16_t *lpDefaultChar, int *lpUsedDefaultChar);
+int MutliByteToWideChar(unsigned int CodePage, uint32_t dwFlags, const char *lpMultiByteStr, int cbMultiByte, uint16_t *lpWideCharStr, int cchWideChar);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_NT_WINDOWS_H_ */
