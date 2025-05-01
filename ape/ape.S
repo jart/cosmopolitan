@@ -616,7 +616,10 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 #if SupportsXnu()
 // Add an architecture suffix to the temporary APE Loader
 // name to differentiate between x86_64 and arm64.
-	.ascii    "[ -d /Applications ] && t=\"${t}-$(uname -m 2>/dev/null || printf 'unknown')\"\n"
+	.ascii    "[ -d /Applications ] && "
+	.ascii      "t=\"${t}-$("
+    .ascii	      "uname -m 2>/dev/null || printf 'unknown'"
+    .ascii	    ")\"\n"
 #endif /* SupportsXnu() */
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"

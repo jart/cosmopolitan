@@ -2018,9 +2018,10 @@ int main(int argc, char *argv[]) {
     if (loaders.n) {
       p = stpcpy(p, "t=\"${TMPDIR:-${HOME:-.}}/.ape-" APE_VERSION_STR);
       if (support_vector & _HOSTXNU) {
-        // Add the current architecture to the temporary APE Loader
-        // name to differentiate between x86_64 and arm64 Ape Loaders.
-        p = stpcpy(p, "$([ -d /Applications ] && ( printf '-'; ( uname -m 2>/dev/null || printf 'unknown')))");
+        // Add an architecture suffix to the temporary APE Loader
+        // name to differentiate between x86_64 and arm64.
+        p = stpcpy(p, "$([ -d /Applications ] && ( printf '-'; "
+                      "( uname -m 2>/dev/null || printf 'unknown') ))");
       }
       p = stpcpy(p, "\"\n"
                     "[ x\"$1\" != x--assimilate ] && "
