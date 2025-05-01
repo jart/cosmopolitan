@@ -2020,8 +2020,8 @@ int main(int argc, char *argv[]) {
       if (support_vector & _HOSTXNU) {
         // Add an architecture suffix to the temporary APE Loader
         // name to differentiate between x86_64 and arm64.
-        p = stpcpy(p, "$([ -d /Applications ] && ( printf '-'; "
-                      "( uname -m 2>/dev/null || printf 'unknown') ))");
+        p = stpcpy(p, "$([ -d /Applications ] && ( printf '-'; ( uname -m "
+                      "2>/dev/null || printf 'unknown')))");
       }
       p = stpcpy(p, "\"\n"
                     "[ x\"$1\" != x--assimilate ] && "
