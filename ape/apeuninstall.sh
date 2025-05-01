@@ -60,7 +60,6 @@ for x in .ape \
          .ape-1.8 \
          .ape-1.9 \
          .ape-1.10-arm64 \
-         .ape-1.10-arm64.c \
          .ape-1.10-x86_64 \
          .ape-1.10; do
   rm -f \
@@ -68,4 +67,9 @@ for x in .ape \
      /tmp/$x \
      o/tmp/$x \
      "${TMPDIR:-/tmp}/$x"
+  rm -f \
+     ~/$x \
+     /tmp/$x \
+     o/tmp/$x \
+     "${TMPDIR:-/tmp}/$x.c"
 done
