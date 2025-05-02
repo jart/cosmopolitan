@@ -54,7 +54,7 @@
   (__extension__({                     \
     uint64_t __x;                      \
     __builtin_memcpy(&__x, P, 64 / 8); \
-    __SWAPLE32(__x);                   \
+    __SWAPLE64(__x);                   \
   }))
 
 #define READ64BE(P)                    \
