@@ -53,7 +53,7 @@ void SetUpOnce(void) {
 
 TEST(cachestat, testCachestatOnDevices) {
   const char *const files[] = {
-      "/dev/zero", "/dev/null", "/dev/urandom", "/proc/version", "/proc",
+      "/dev/zero", "/dev/null", "/dev/urandom", "/proc/self/comm",
   };
   struct cachestat_range range = {0, 4 * pagesize};
   struct cachestat cs;
