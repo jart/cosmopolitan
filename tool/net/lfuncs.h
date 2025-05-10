@@ -80,6 +80,7 @@ int LuaRdrand(lua_State *);
 int LuaRdseed(lua_State *);
 int LuaRdtsc(lua_State *);
 int LuaResolveIp(lua_State *);
+int LuaRSA(lua_State *);
 int LuaSetLogLevel(lua_State *);
 int LuaSha1(lua_State *);
 int LuaSha224(lua_State *);
