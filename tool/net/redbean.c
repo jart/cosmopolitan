@@ -5425,6 +5425,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"finger", LuaFinger},           //
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
+    {"rsa", LuaRSA},                 //
     {"unix", LuaUnix},               //
 };
 
