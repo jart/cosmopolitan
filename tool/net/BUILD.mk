@@ -96,6 +96,7 @@ TOOL_NET_REDBEAN_LUA_MODULES =						\
 	o/$(MODE)/tool/net/lpath.o					\
 	o/$(MODE)/tool/net/lfinger.o					\
 	o/$(MODE)/tool/net/lre.o					\
+	o/$(MODE)/tool/net/lrsa.o					\
 	o/$(MODE)/tool/net/ljson.o					\
 	o/$(MODE)/tool/net/lmaxmind.o					\
 	o/$(MODE)/tool/net/lsqlite3.o					\
