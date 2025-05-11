@@ -115,7 +115,7 @@ int LuaGenerateKeyPair(lua_State *L) {
 
   // Call the C function to generate the key pair
   if (!GenerateKeyPair(&private_key, &private_len, &public_key, &public_len,
-                          key_length)) {
+                       key_length)) {
     lua_pushnil(L);
     lua_pushstring(L, "Failed to generate RSA key pair");
     return 2;
@@ -349,7 +349,7 @@ int LuaSign(lua_State *L) {
 
   // Call the C implementation
   signature = (unsigned char *)Sign(key_pem, (const unsigned char *)msg,
-                                       msg_len, hash_algo_str, &sig_len);
+                                    msg_len, hash_algo_str, &sig_len);
 
   if (!signature) {
     return luaL_error(L, "failed to sign message");
@@ -438,7 +438,7 @@ int LuaVerify(lua_State *L) {
 
   // Call the C implementation
   result = Verify(key_pem, (const unsigned char *)msg, msg_len,
-                     (const unsigned char *)signature, sig_len, hash_algo_str);
+                  (const unsigned char *)signature, sig_len, hash_algo_str);
 
   // Return boolean result (0 means valid signature)
   lua_pushboolean(L, result == 0);
@@ -448,11 +448,11 @@ int LuaVerify(lua_State *L) {
 
 static const luaL_Reg kLuaRSA[] = {
     {"GenerateKeyPair", LuaGenerateKeyPair},  //
-    {"Sign", LuaSign},                    //
-    {"Verify", LuaVerify},                //
-    {"Encrypt", LuaEncrypt},              //
-    {"Decrypt", LuaDecrypt},              //
-    {0},                                  //
+    {"Sign", LuaSign},                        //
+    {"Verify", LuaVerify},                    //
+    {"Encrypt", LuaEncrypt},                  //
+    {"Decrypt", LuaDecrypt},                  //
+    {0},                                      //
 };
 
 int LuaRSA(lua_State *L) {

@@ -3116,22 +3116,22 @@ td { padding-right: 3em; }\r\n\
     unassert(!pthread_mutex_unlock(&shared->children_mu));
   }
   appends(&cpm.outbuf, "<td valign=\"top\">\r\n");
-  and = "";
+  and= "";
   x = timespec_sub(timespec_real(), startserver).tv_sec;
   y = ldiv(x, 24L * 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   y = ldiv(y.rem, 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   y = ldiv(y.rem, 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   appendf(&cpm.outbuf, "%s%,ld second%s of operation<br>\r\n", and, y.rem,
           y.rem == 1 ? "" : "s");
