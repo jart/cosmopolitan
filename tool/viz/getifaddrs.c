@@ -33,7 +33,7 @@
    eth0
    addr: 10.10.10.237
    netmask: 255.255.255.0
-   broadcast: 255.255.255.0
+   broadcast: 10.10.10.255
    flags: IFF_UP IFF_BROADCAST IFF_MULTICAST IFF_RUNNING
 
    lo
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
       tinyprint(1, "netmask: ", buf, "\n", NULL);
     }
     if ((ifa->ifa_flags & IFF_BROADCAST) &&
-        sockaddr2str(ifa->ifa_netmask, buf, sizeof(buf))) {
+        sockaddr2str(ifa->ifa_broadaddr, buf, sizeof(buf))) {
       tinyprint(1, "broadcast: ", buf, "\n", NULL);
     } else if ((ifa->ifa_flags & IFF_POINTOPOINT) &&
                sockaddr2str(ifa->ifa_dstaddr, buf, sizeof(buf))) {
