@@ -27,22 +27,23 @@ jobs:
           # Full checkout needed for git-restore-mtime-bare.
           fetch-depth: 0
 
-      # TODO(jart): fork this action.
-      - uses: chetan/git-restore-mtime-action@v2
-
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
+        id: cache
         with:
-          path: .cosmocc/${{ env.COSMOCC_VERSION }}
-          key: cosmocc-${{ env.COSMOCC_VERSION }}
-
-      - uses: actions/cache@v4
-        with:
-          path: o
-          key: o-${{ matrix.mode }}-${{ env.COSMOCC_VERSION }}-${{ github.sha }}
+          path: |
+            .cosmocc/${{ env.COSMOCC_VERSION }}
+            o
+          key: ${{ env.COSMOCC_VERSION }}-${{ matrix.mode }}-${{ github.sha }}
           restore-keys: |
-            o-${{ matrix.mode }}-${{ env.COSMOCC_VERSION }}-
-            o-${{ matrix.mode }}-
-            o-
+            ${{ env.COSMOCC_VERSION }}-${{ matrix.mode }}-
+            ${{ env.COSMOCC_VERSION }}-
+
+      - name: Restore mtimes
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          while read mtime file; do
+            [ -f "$file" ] && touch -d "@$mtime" "$file"
+          done < o/.mtimes
 
       - name: support ape bins 1
         run: sudo cp -a build/bootstrap/ape.elf /usr/bin/ape
@@ -52,3 +53,14 @@ jobs:
 
       - name: make matrix
         run: V=0 make -j2 MODE=${{ matrix.mode }}
+
+      - name: Save mtimes
+        run: |
+          find o -type f -exec stat -c "%Y %n" {} \; > o/.mtimes
+
+      - uses: actions/cache/save@v4
+        with:
+          path: |
+            .cosmocc
+            o
+          key: ${{ env.COSMOCC_VERSION }}-${{ matrix.mode }}-${{ github.sha }}
