@@ -16,25 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/log/check.h"
+
+// lrsa.c - RSA key generation, encryption, decryption, signing, and
+// verification for redbean
+
 #include "libc/log/log.h"
-#include "libc/stdio/rand.h"
-#include "libc/str/str.h"
+#include "net/https/https.h"
 #include "third_party/lua/lauxlib.h"
-#include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/rsa.h"
-
-int GenerateHardRandom(void *ctx, unsigned char *p, size_t n) {
-  size_t i;
-  ssize_t rc;
-  for (i = 0; i < n; i += (size_t)rc) {
-    npassert((rc = getrandom(p + i, n - i, 0)) != -1);
-  }
-  return 0;
-}
 
 static bool GenerateKeyPair(char **private_key_pem, size_t *private_key_len,
                             char **public_key_pem, size_t *public_key_len,
@@ -95,7 +86,7 @@ static bool GenerateKeyPair(char **private_key_pem, size_t *private_key_len,
  * @return 2 on success (private_key, public_key), 2 on failure (nil,
  * error_message)
  */
-int LuaGenerateKeyPair(lua_State *L) {
+static int LuaGenerateKeyPair(lua_State *L) {
   char *private_key, *public_key;
   size_t private_len, public_len;
   int key_length = 2048;  // Default RSA key length
@@ -177,7 +168,7 @@ static char *Encrypt(const char *public_key_pem, const unsigned char *data,
   mbedtls_pk_free(&key);
   return (char *)output;
 }
-int LuaEncrypt(lua_State *L) {
+static int LuaEncrypt(lua_State *L) {
   const char *public_key = luaL_checkstring(L, 1);
   size_t data_len;
   const unsigned char *data =
@@ -242,7 +233,7 @@ static char *Decrypt(const char *private_key_pem,
   mbedtls_pk_free(&key);
   return (char *)output;
 }
-int LuaDecrypt(lua_State *L) {
+static int LuaDecrypt(lua_State *L) {
   const char *private_key = luaL_checkstring(L, 1);
   size_t encrypted_len;
   const unsigned char *encrypted_data =
@@ -321,7 +312,7 @@ static char *Sign(const char *private_key_pem, const unsigned char *data,
 
   // Sign the hash
   if ((rc = mbedtls_pk_sign(&key, hash_algo, hash, hash_len, signature, sig_len,
-                            GenerateHardRandom, NULL)) != 0) {
+                            GenerateHardRandom, 0)) != 0) {
     free(signature);
     mbedtls_pk_free(&key);
     return NULL;
@@ -332,7 +323,7 @@ static char *Sign(const char *private_key_pem, const unsigned char *data,
 
   return (char *)signature;
 }
-int LuaSign(lua_State *L) {
+static int LuaSign(lua_State *L) {
   size_t msg_len, key_len;
   const char *msg, *key_pem, *hash_algo_str = NULL;
   unsigned char *signature;
@@ -421,7 +412,7 @@ static int Verify(const char *public_key_pem, const unsigned char *data,
 
   return rc;  // 0 means success (valid signature)
 }
-int LuaVerify(lua_State *L) {
+static int LuaVerify(lua_State *L) {
   size_t msg_len, key_len, sig_len;
   const char *msg, *key_pem, *signature, *hash_algo_str = NULL;
   int result;
