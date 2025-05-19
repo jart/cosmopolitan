@@ -34,7 +34,7 @@ jobs:
         id: cache
         with:
           path: |
-            .cosmocc/${{ env.COSMOCC_VERSION }}
+            .cosmocc
             o
           key: ${{ env.COSMOCC_VERSION }}-${{ matrix.mode }}-${{ github.sha }}
           restore-keys: |
