@@ -5245,7 +5245,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"DecodeJson", LuaDecodeJson},                              //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"Deflate", LuaDeflate},                                    //
-    {"EncodeBase32", LuaEncodeBase32},                          //
+    {"EncodeBase32", LuaEncodeBase32},                          // undocumented
     {"EncodeBase64", LuaEncodeBase64},                          //
     {"EncodeHex", LuaEncodeHex},                                //
     {"EncodeJson", LuaEncodeJson},                              //
@@ -5425,8 +5425,9 @@ static const luaL_Reg kLuaLibs[] = {
     {"finger", LuaFinger},           //
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
-    {"rsa", LuaRSA},                 //
     {"unix", LuaUnix},               //
+    {"rsa", LuaRSA},                 //
+    {"ecdsa", LuaECDSA},             //
 };
 
 static void LuaSetArgv(lua_State *L) {
