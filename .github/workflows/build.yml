@@ -27,6 +27,9 @@ jobs:
           # Full checkout needed for git-restore-mtime-bare.
           fetch-depth: 0
 
+      # TODO(jart): fork this action.
+      - uses: chetan/git-restore-mtime-action@v2
+
       - uses: actions/cache/restore@v4
         id: cache
         with:
