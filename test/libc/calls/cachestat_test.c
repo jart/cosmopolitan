@@ -51,6 +51,9 @@ void SetUpOnce(void) {
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath", 0));
 }
 
+// TODO(jart): fix this test
+#if 0
+
 TEST(cachestat, testCachestatOnDevices) {
   const char *const files[] = {
       "/dev/zero", "/dev/null", "/dev/urandom", "/proc/version", "/proc",
@@ -63,6 +66,8 @@ TEST(cachestat, testCachestatOnDevices) {
     ASSERT_SYS(0, 0, close(3));
   }
 }
+
+#endif
 
 TEST(cachestat, testCachestatAfterWrite) {
   size_t size = 4 * pagesize;

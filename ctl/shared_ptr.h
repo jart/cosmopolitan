@@ -444,7 +444,7 @@ class weak_ptr
         return *this;
     }
 
-    template <typename U>
+    template<typename U>
         requires __::shared_ptr_compatible<T, U>
     weak_ptr& operator=(weak_ptr<U> r) noexcept
     {
