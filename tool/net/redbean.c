@@ -3116,22 +3116,22 @@ td { padding-right: 3em; }\r\n\
     unassert(!pthread_mutex_unlock(&shared->children_mu));
   }
   appends(&cpm.outbuf, "<td valign=\"top\">\r\n");
-  and = "";
+  and= "";
   x = timespec_sub(timespec_real(), startserver).tv_sec;
   y = ldiv(x, 24L * 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   y = ldiv(y.rem, 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld hour%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   y = ldiv(y.rem, 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld minute%s ", y.quot, y.quot == 1 ? "" : "s");
-    and = "and ";
+    and= "and ";
   }
   appendf(&cpm.outbuf, "%s%,ld second%s of operation<br>\r\n", and, y.rem,
           y.rem == 1 ? "" : "s");
@@ -5245,7 +5245,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"DecodeJson", LuaDecodeJson},                              //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"Deflate", LuaDeflate},                                    //
-    {"EncodeBase32", LuaEncodeBase32},                          //
+    {"EncodeBase32", LuaEncodeBase32},                          // undocumented
     {"EncodeBase64", LuaEncodeBase64},                          //
     {"EncodeHex", LuaEncodeHex},                                //
     {"EncodeJson", LuaEncodeJson},                              //
@@ -5426,6 +5426,8 @@ static const luaL_Reg kLuaLibs[] = {
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
+    {"rsa", LuaRSA},                 //
+    {"ecdsa", LuaECDSA},             //
 };
 
 static void LuaSetArgv(lua_State *L) {
