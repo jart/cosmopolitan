@@ -1439,7 +1439,7 @@ int main(int argc, char **argv) {
   editorSelectSyntaxHighlight(argv[1]);
   editorOpen(argv[1]);
   enableRawMode(STDIN_FILENO);
-  editorSetStatusMessage("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+  editorSetStatusMessage("HELP: C-x C-s = save | C-q = quit | C-x C-c = force quit | C-s = find");
   while (1) {
     editorRefreshScreen();
     editorProcessKeypress(STDIN_FILENO);
