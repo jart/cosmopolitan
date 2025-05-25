@@ -10,4 +10,12 @@
 #define APE_VERSION_STR_(x, y)  APE_VERSION_STR__(x, y)
 #define APE_VERSION_NOTE_(x, y) (100000000 * (x) + 1000000 * (y))
 
+#if defined(__x86_64__)
+#define GetXnuSuffix() "-x86_64"
+#elif defined(__aarch64__)
+#define GetXnuSuffix() "-arm64"
+#else
+#define GetXnuSuffix() "-unknown"
+#endif
+
 #endif /* COSMOPOLITAN_APE_APE_H_ */
