@@ -17,7 +17,7 @@
 #include "tool/net/luacheck.h"
 
 // Updated PemToJwk to parse PEM keys and convert them into JWK format
-static int PemToJwk(lua_State *L) {
+static int convertPemToJwk(lua_State *L) {
     const char *pem_key = luaL_checkstring(L, 1);
 
     mbedtls_pk_context key;
@@ -166,7 +166,7 @@ static int PemToJwk(lua_State *L) {
 }
 
 // CSR Creation Function
-static int CreateCSR(lua_State *L) {
+static int generateCsr(lua_State *L) {
     const char *key_pem = luaL_checkstring(L, 1);
     const char *subject_name = luaL_checkstring(L, 2);
     const char *san_list = luaL_optstring(L, 3, NULL);
@@ -1128,8 +1128,8 @@ static const luaL_Reg kLuaCrypto[] = {
   {"encrypt", LuaCryptoEncrypt},                 //
   {"decrypt", LuaCryptoDecrypt},                 //
   {"generatekeypair", LuaCryptoGenerateKeyPair}, //
-  {"PemToJwk", PemToJwk},                        // 
-  {"csrGenerate", CreateCSR},                    //
+  {"convertPemToJwk", convertPemToJwk},          // 
+  {"generateCsr", generateCsr},                  //
   {0},                                           //
 };
 
