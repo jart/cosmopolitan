@@ -911,76 +911,68 @@ static int LuaECDSAGenerateKeyPair(lua_State *L) {
 static int ECDSASign(const char *priv_key_pem, const char *message,
                 hash_algorithm_t hash_alg, unsigned char **signature,
                 size_t *sig_len) {
-  mbedtls_pk_context key;
-  unsigned char hash[64];  // Max hash size (SHA-512)
-  size_t hash_size;
-  int ret;
+    mbedtls_pk_context key;
+    unsigned char hash[64];  // Max hash size (SHA-512)
+    size_t hash_size;
+    int ret;
 
-  *signature = NULL;
-  *sig_len = 0;
-
-  if (!priv_key_pem) {
-    WARNF("(ecdsa) Private key is NULL");
-    return -1;
-  }
-
-  // Get the length of the PEM string (excluding null terminator)
-  size_t key_len = strlen(priv_key_pem);
-  if (key_len == 0) {
-    WARNF("(ecdsa) Private key is empty");
-    return -1;
-  }
-
-  // Get hash size for the selected algorithm
-  hash_size = get_hash_size(hash_alg);
-
-  mbedtls_pk_init(&key);
-
-  // Parse the private key from PEM directly without creating a copy
-  ret = mbedtls_pk_parse_key(&key, (const unsigned char *)priv_key_pem,
-                             key_len + 1, NULL, 0);
-
-  if (ret != 0) {
-    WARNF("(ecdsa) Failed to parse private key: -0x%04x", -ret);
-    goto cleanup;
-  }
-
-  // Compute hash of the message using the specified algorithm
-  ret = compute_hash(hash_alg, (const unsigned char *)message, strlen(message),
-                     hash, sizeof(hash));
-  if (ret != 0) {
-    WARNF("(ecdsa) Failed to compute message hash");
-    goto cleanup;
-  }
-
-  // Allocate memory for signature (max size for ECDSA)
-  *signature = malloc(MBEDTLS_ECDSA_MAX_LEN);
-  if (*signature == NULL) {
-    WARNF("(ecdsa) Failed to allocate memory for signature");
-    ret = -1;
-    goto cleanup;
-  }
-
-  // Sign the hash using GenerateHardRandom
-  ret = mbedtls_pk_sign(&key, hash_to_md_type(hash_alg), hash, hash_size,
-                        *signature, sig_len, GenerateHardRandom, 0);
-
-  if (ret != 0) {
-    WARNF("(ecdsa) Failed to sign message: -0x%04x", -ret);
-    free(*signature);
     *signature = NULL;
     *sig_len = 0;
-    goto cleanup;
-  }
 
-cleanup:
-  mbedtls_pk_free(&key);
-  return ret;
-}  // Lua binding for signing a message
+    if (!priv_key_pem || strlen(priv_key_pem) == 0) {
+        WARNF("(ecdsa) Private key is NULL or empty");
+        return -1;
+    }
+
+    mbedtls_pk_init(&key);
+
+    // Parse the private key from PEM (PKCS#8 format)
+    ret = mbedtls_pk_parse_key(&key, (const unsigned char *)priv_key_pem,
+                               strlen(priv_key_pem) + 1, NULL, 0);
+    if (ret != 0) {
+        WARNF("(ecdsa) Failed to parse private key: -0x%04x", -ret);
+        mbedtls_pk_free(&key);
+        return -1;
+    }
+
+    // Compute hash of the message
+    hash_size = get_hash_size(hash_alg);
+    ret = compute_hash(hash_alg, (const unsigned char *)message, strlen(message),
+                       hash, sizeof(hash));
+    if (ret != 0) {
+        WARNF("(ecdsa) Failed to compute message hash");
+        mbedtls_pk_free(&key);
+        return -1;
+    }
+
+    // Allocate memory for the signature
+    *signature = malloc(MBEDTLS_PK_SIGNATURE_MAX_SIZE);
+    if (*signature == NULL) {
+        WARNF("(ecdsa) Failed to allocate memory for signature");
+        mbedtls_pk_free(&key);
+        return -1;
+    }
+
+    // Sign the hash
+    ret = mbedtls_pk_sign(&key, hash_to_md_type(hash_alg), hash, hash_size,
+                          *signature, sig_len, GenerateHardRandom, NULL);
+    if (ret != 0) {
+        WARNF("(ecdsa) Failed to sign message: -0x%04x", -ret);
+        free(*signature);
+        *signature = NULL;
+        *sig_len = 0;
+        mbedtls_pk_free(&key);
+        return -1;
+    }
+
+    mbedtls_pk_free(&key);
+    return 0;
+}
+// Lua binding for signing a message
 static int LuaECDSASign(lua_State *L) {
-  const char *hash_name = luaL_optstring(L, 1, "sha256");  // Default to SHA-256
+  const char *hash_name = luaL_optstring(L, 3, "sha256");  // Default to SHA-256
   const char *message = luaL_checkstring(L, 2);
-  const char *priv_key_pem = luaL_checkstring(L, 3);
+  const char *priv_key_pem = luaL_checkstring(L, 1);
 
   hash_algorithm_t hash_alg = string_to_hash_alg(hash_name);
 
@@ -1054,12 +1046,12 @@ cleanup:
   return ret;
 }
 static int LuaECDSAVerify(lua_State *L) {
-  const char *hash_name = luaL_optstring(L, 1, "sha256");  // Default to SHA-256
+  const char *pub_key_pem = luaL_checkstring(L, 1);
   const char *message = luaL_checkstring(L, 2);
-  const char *pub_key_pem = luaL_checkstring(L, 3);
   size_t sig_len;
   const unsigned char *signature =
-      (const unsigned char *)luaL_checklstring(L, 4, &sig_len);
+      (const unsigned char *)luaL_checklstring(L, 3, &sig_len);
+  const char *hash_name = luaL_optstring(L, 4, "sha256");  // Default to SHA-256
 
   hash_algorithm_t hash_alg = string_to_hash_alg(hash_name);
 
