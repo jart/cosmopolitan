@@ -55,14 +55,14 @@ end
 local function test_csr_generation()
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
     local subject_name = "CN=example.com,O=Example Org,C=US"
-    local csr = crypto.csrGenerate(priv_key, subject_name)
+    local csr = crypto.generateCsr(priv_key, subject_name)
     assert_equal(type(csr), "string", "CSR generation")
 end
 
 -- Test PemToJwk conversion
 local function test_pem_to_jwk()
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
-    local jwk = crypto.PemToJwk(pub_key)
+    local jwk = crypto.convertPemToJwk(pub_key)
     assert_equal(type(jwk), "table", "PEM to JWK conversion")
     assert_equal(jwk.kty, "RSA", "JWK key type")
 end
