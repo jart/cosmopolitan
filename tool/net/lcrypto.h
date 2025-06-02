@@ -4,7 +4,6 @@
 COSMOPOLITAN_C_START_
 
 int LuaCrypto(lua_State *L);
-int luaopen_lcrypto(lua_State *L);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_TOOL_NET_LCRYPTO_H_ */
