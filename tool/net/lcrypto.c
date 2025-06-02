@@ -1110,8 +1110,12 @@ static int LuaCryptoDecrypt(lua_State *L) {
 }
 
 static int LuaCryptoGenerateKeyPair(lua_State *L) {
-    const char *key_type = luaL_optstring(L, 1, "rsa"); // Key type (e.g., "rsa", "ecdsa")
-    lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
+    const char *key_type = "rsa"; // Key type (e.g., "rsa", "ecdsa")
+    
+    if (! lua_isinteger(L, 1) && ! lua_isnoneornil(L, 1))  {
+      key_type = luaL_checkstring(L, 1); // Get key type from first argumen
+      lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
+    }
 
     if (strcasecmp(key_type, "rsa") == 0) {
         return LuaRSAGenerateKeyPair(L);
