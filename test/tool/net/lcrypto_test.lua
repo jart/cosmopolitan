@@ -1,17 +1,17 @@
 -- Helper function to print test results
-local function assert_equal(actual, expected, plaintext)
+local function assert_equal(actual, expected, message)
     if actual ~= expected then
-        error(plaintext .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual))
+        error(message .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual))
     else
-        print("PASS: " .. plaintext)
+        print("PASS: " .. message)
     end
 end
 
-local function assert_not_equal(actual, not_expected, plaintext)
+local function assert_not_equal(actual, not_expected, message)
     if actual == not_expected then
-        error(plaintext .. ": did not expect " .. tostring(not_expected))
+        error(message .. ": did not expect " .. tostring(not_expected))
     else
-        print("PASS: " .. plaintext)
+        print("PASS: " .. message)
     end
 end
 
@@ -46,10 +46,10 @@ end
 local function test_rsa_signing_verification()
     print('\n\27[1;7mTest RSA signing and verification                                       \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
-    local plaintext = "Sign this plaintext"
-    local signature = crypto.sign("rsa", priv_key, plaintext, "sha256")
+    local message = "Sign this message"
+    local signature = crypto.sign("rsa", priv_key, message, "sha256")
     assert_equal(type(signature), "string", "RSA signing")
-    local is_valid = crypto.verify("rsa", pub_key, plaintext, signature, "sha256")
+    local is_valid = crypto.verify("rsa", pub_key, message, signature, "sha256")
     assert_equal(is_valid, true, "RSA signature verification")
 end
 
@@ -57,10 +57,10 @@ end
 local function test_ecdsa_signing_verification()
     print('\n\27[1;7mTest ECDSA signing and verification                                     \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("ecdsa", "secp256r1")
-    local plaintext = "Sign this plaintext with ECDSA"
-    local signature = crypto.sign("ecdsa", priv_key, plaintext, "sha256")
+    local message = "Sign this message with ECDSA"
+    local signature = crypto.sign("ecdsa", priv_key, message, "sha256")
     assert_equal(type(signature), "string", "ECDSA signing")
-    local is_valid = crypto.verify("ecdsa", pub_key, plaintext, signature, "sha256")
+    local is_valid = crypto.verify("ecdsa", pub_key, message, signature, "sha256")
     assert_equal(is_valid, true, "ECDSA signature verification")
 end
 
