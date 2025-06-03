@@ -40,9 +40,9 @@
 #define MBEDTLS_GCM_C
 #ifndef TINY
 #define MBEDTLS_CIPHER_MODE_CBC
+#define MBEDTLS_CIPHER_MODE_CTR
 /*#define MBEDTLS_CCM_C*/
 /*#define MBEDTLS_CIPHER_MODE_CFB*/
-/*#define MBEDTLS_CIPHER_MODE_CTR*/
 /*#define MBEDTLS_CIPHER_MODE_OFB*/
 /*#define MBEDTLS_CIPHER_MODE_XTS*/
 #endif
