@@ -69,7 +69,7 @@ local function test_aes_key_generation()
 end
 
 -- Test AES encryption and decryption (CBC mode)
-local function test_aes_encryption_decryption()
+local function test_aes_encryption_decryption_cbc()
     local key = crypto.generatekeypair('aes', 256) -- 256-bit key
     local plaintext = "Hello, AES CBC!"
 
@@ -79,16 +79,16 @@ local function test_aes_encryption_decryption()
     assert_equal(type(iv), "string", "IV type")
 
     -- Decrypt
-    local decrypted = crypto.decrypt("aes", key, encrypted, iv)
+    local decrypted = crypto.decrypt("aes", key, encrypted, {mode="cbc",iv=iv})
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
     local iv2 = GetRandomBytes(16)
-    local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, iv2)
+    local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, {mode="cbc",iv=iv2})
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
 
-    local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2)
+    local decrypted2 = crypto.decrypt("aes", key, encrypted2, {mode="cbc",iv=iv2})
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
@@ -98,48 +98,49 @@ local function test_aes_encryption_decryption_ctr()
     local plaintext = "Hello, AES CTR!"
 
     -- Encrypt without providing IV (should auto-generate IV)
-    local encrypted, iv = crypto.encrypt("aes", key, plaintext, nil, "ctr")
+    local encrypted, iv = crypto.encrypt("aes", key, plaintext, {mode="ctr"})
     assert_equal(type(encrypted), "string", "Ciphertext type")
     assert_equal(type(iv), "string", "IV type")
 
     -- Decrypt
-    local decrypted = crypto.decrypt("aes", key, encrypted, iv, "ctr")
+    local decrypted = crypto.decrypt("aes", key, encrypted, {mode="ctr", iv=iv})
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
     local iv2 = GetRandomBytes(16)
-    local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, iv2, "ctr")
+    local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, {mode="ctr", iv=iv2})
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
 
-    local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2, "ctr")
+    local decrypted2 = crypto.decrypt("aes", key, encrypted2, {mode="ctr", iv=iv2})
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
 -- Test AES encryption and decryption (GCM mode)
 local function test_aes_encryption_decryption_gcm()
     local key = crypto.generatekeypair('aes', 256)
+    assert_equal(type(key), "string", "key type")
     local plaintext = "Hello, AES GCM!"
 
     -- Encrypt without providing IV (should auto-generate IV)
-    local encrypted, iv, tag = crypto.encrypt("aes", key, plaintext, nil, "gcm")
+    local encrypted, iv, tag = crypto.encrypt("aes", key, plaintext, {mode="gcm"})
     assert_equal(#plaintext, #encrypted, "Ciphertext length matches plaintext")
     assert_equal(type(encrypted), "string", "Ciphertext type")
     assert_equal(type(iv), "string", "IV type")
     assert_equal(type(tag), "string", "Tag type")
 
     -- Decrypt
-    local decrypted = crypto.decrypt("aes", key, encrypted, iv, "gcm", nil, tag)
+    local decrypted = crypto.decrypt("aes", key, encrypted, {mode="gcm",iv=iv,tag=tag})
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
     local iv2 = GetRandomBytes(13) -- GCM IV/nonce can be 12-16 bytes, 12 is standard
-    local encrypted2, iv_used, tag2 = crypto.encrypt("aes", key, plaintext, iv2, "gcm")
+    local encrypted2, iv_used, tag2 = crypto.encrypt("aes", key, plaintext, {mode="gcm",iv=iv2})
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
     assert_equal(type(tag2), "string", "Tag type")
 
-    local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2, "gcm", nil, tag2)
+    local decrypted2 = crypto.decrypt("aes", key, encrypted2, {mode="gcm",iv=iv2,tag=tag2})
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
@@ -200,7 +201,7 @@ local function run_tests()
     test_ecdsa_keypair_generation()
     test_ecdsa_signing_verification()
     test_aes_key_generation()
-    test_aes_encryption_decryption()
+    test_aes_encryption_decryption_cbc()
     test_aes_encryption_decryption_ctr()
     test_aes_encryption_decryption_gcm()
     test_pem_to_jwk()

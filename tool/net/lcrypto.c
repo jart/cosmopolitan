@@ -322,6 +322,18 @@ static int LuaRSAGenerateKeyPair(lua_State *L) {
     return 2;
 }
 
+// Helper to get string field from options table for RSA
+// static const char *parse_rsa_options(lua_State *L, int options_idx) {
+//     const char *padding = "pkcs1"; // default
+//     if (lua_istable(L, options_idx)) {
+//         lua_getfield(L, options_idx, "padding");
+//         if (lua_isstring(L, -1)) {
+//             padding = lua_tostring(L, -1);
+//         }
+//         lua_pop(L, 1);
+//     }
+//     return padding;
+// }
 
 static char *RSAEncrypt(const char *public_key_pem, const unsigned char *data,
                      size_t data_len, size_t *out_len) {
@@ -368,23 +380,25 @@ static char *RSAEncrypt(const char *public_key_pem, const unsigned char *data,
   return (char *)output;
 }
 static int LuaRSAEncrypt(lua_State *L) {
-  const char *public_key = luaL_checkstring(L, 1);
-  size_t data_len;
-  const unsigned char *data =
-      (const unsigned char *)luaL_checklstring(L, 2, &data_len);
-  size_t out_len;
+    // Args: key, plaintext, options table
+    size_t keylen, ptlen;
+    const char *key = luaL_checklstring(L, 1, &keylen);
+    const unsigned char *plaintext = (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
+    // int options_idx = 3;
+    // const char *padding = parse_rsa_options(L, options_idx);
+    size_t out_len;
 
-  char *encrypted = RSAEncrypt(public_key, data, data_len, &out_len);
-  if (!encrypted) {
-    lua_pushnil(L);
-    lua_pushstring(L, "Encryption failed");
-    return 2;
-  }
+    char *encrypted = RSAEncrypt(key, plaintext, ptlen, &out_len);
+    if (!encrypted) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Encryption failed");
+        return 2;
+    }
 
-  lua_pushlstring(L, encrypted, out_len);
-  free(encrypted);
+    lua_pushlstring(L, encrypted, out_len);
+    free(encrypted);
 
-  return 1;
+    return 1;
 }
 
 static char *RSADecrypt(const char *private_key_pem,
@@ -433,24 +447,25 @@ static char *RSADecrypt(const char *private_key_pem,
   return (char *)output;
 }
 static int LuaRSADecrypt(lua_State *L) {
-  const char *private_key = luaL_checkstring(L, 1);
-  size_t encrypted_len;
-  const unsigned char *encrypted_data =
-      (const unsigned char *)luaL_checklstring(L, 2, &encrypted_len);
-  size_t out_len;
+    // Args: key, ciphertext, options table
+    size_t keylen, ctlen;
+    const char *key = luaL_checklstring(L, 1, &keylen);
+    const unsigned char *ciphertext = (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
+    // int options_idx = 3;
+    // const char *padding = parse_rsa_options(L, options_idx);
+    size_t out_len;
 
-  char *decrypted =
-      RSADecrypt(private_key, encrypted_data, encrypted_len, &out_len);
-  if (!decrypted) {
-    lua_pushnil(L);
-    lua_pushstring(L, "Decryption failed");
-    return 2;
-  }
+    char *decrypted = RSADecrypt(key, ciphertext, ctlen, &out_len);
+    if (!decrypted) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Decryption failed");
+        return 2;
+    }
 
-  lua_pushlstring(L, decrypted, out_len);
-  free(decrypted);
+    lua_pushlstring(L, decrypted, out_len);
+    free(decrypted);
 
-  return 1;
+    return 1;
 }
 
 // RSA Signing
@@ -1087,6 +1102,7 @@ static int LuaECDSAVerify(lua_State *L) {
 
 
 // AES
+
 // AES key generation helper
 static int LuaAesGenerateKey(lua_State *L) {
     int keybits = 128;
@@ -1125,21 +1141,87 @@ static int LuaAesGenerateKey(lua_State *L) {
     return 1;
 }
 
+// Helper to get string field from options table
+typedef struct {
+    const char *mode;
+    const unsigned char *iv;
+    size_t ivlen;
+} aes_options_t;
+
+static void parse_aes_options(lua_State *L, int options_idx, aes_options_t *opts) {
+    opts->mode = "cbc";
+    opts->iv = NULL;
+    opts->ivlen = 0;
+    if (lua_istable(L, options_idx)) {
+        lua_getfield(L, options_idx, "mode");
+        if (!lua_isnil(L, -1)) opts->mode = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, options_idx, "iv");
+        if (lua_isstring(L, -1)) {
+            opts->iv = (const unsigned char *)lua_tolstring(L, -1, &opts->ivlen);
+        }
+        lua_pop(L, 1);
+    }
+}
+
+// Helper for AES decrypt options
+typedef struct {
+    const char *mode;
+    const unsigned char *iv;
+    size_t ivlen;
+    const unsigned char *tag;
+    size_t taglen;
+    const unsigned char *aad;
+    size_t aadlen;
+} aes_decrypt_options_t;
+
+static void parse_aes_decrypt_options(lua_State *L, int options_idx, aes_decrypt_options_t *opts) {
+    opts->mode = "cbc";
+    opts->iv = NULL;
+    opts->ivlen = 0;
+    opts->tag = NULL;
+    opts->taglen = 0;
+    opts->aad = NULL;
+    opts->aadlen = 0;
+    if (lua_istable(L, options_idx)) {
+        lua_getfield(L, options_idx, "mode");
+        if (!lua_isnil(L, -1)) opts->mode = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, options_idx, "iv");
+        if (lua_isstring(L, -1)) {
+            opts->iv = (const unsigned char *)lua_tolstring(L, -1, &opts->ivlen);
+        }
+        lua_pop(L, 1);
+        lua_getfield(L, options_idx, "tag");
+        if (lua_isstring(L, -1)) {
+            opts->tag = (const unsigned char *)lua_tolstring(L, -1, &opts->taglen);
+        }
+        lua_pop(L, 1);
+        lua_getfield(L, options_idx, "aad");
+        if (lua_isstring(L, -1)) {
+            opts->aad = (const unsigned char *)lua_tolstring(L, -1, &opts->aadlen);
+        }
+        lua_pop(L, 1);
+    }
+}
+
 // AES encryption supporting CBC, GCM, and CTR modes
 static int LuaAesEncrypt(lua_State *L) {
-    // Accept IV as the 3rd argument (after key, plaintext)
-    size_t keylen, ivlen = 0, ptlen;
+    // Args: key, plaintext, options table
+    size_t keylen, ptlen;
     const unsigned char *key = (const unsigned char *)luaL_checklstring(L, 1, &keylen);
     const unsigned char *plaintext = (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
-    const unsigned char *iv = NULL;
+    int options_idx = 3;
+    aes_options_t opts;
+    parse_aes_options(L, options_idx, &opts);
+    const char *mode = opts.mode;
+    const unsigned char *iv = opts.iv;
+    size_t ivlen = opts.ivlen;
     unsigned char *gen_iv = NULL;
     int iv_was_generated = 0;
-
-    const char *mode = luaL_optstring(L, 4, "cbc"); // Default to CBC if not provided
     int ret = 0;
     unsigned char *output = NULL;
     int is_gcm = 0, is_ctr = 0, is_cbc = 0;
-
     if (strcasecmp(mode, "cbc") == 0) {
         is_cbc = 1;
     } else if (strcasecmp(mode, "gcm") == 0) {
@@ -1151,10 +1233,8 @@ static int LuaAesEncrypt(lua_State *L) {
         lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
         return 2;
     }
-
-    // If IV is not provided (arg3 is nil or missing), auto-generate
-    if (lua_isnoneornil(L, 3)) {
-        // For GCM, standard is 12 bytes, but allow 12-16
+    // If IV is not provided, auto-generate
+    if (!iv) {
         if (is_gcm) {
             ivlen = 12;
         } else {
@@ -1176,26 +1256,7 @@ static int LuaAesEncrypt(lua_State *L) {
         mbedtls_entropy_free(&entropy);
         iv = gen_iv;
         iv_was_generated = 1;
-    } else {
-        // IV provided
-        iv = (const unsigned char *)luaL_checklstring(L, 3, &ivlen);
-        // Do not force ivlen to 16 here! Accept actual length for GCM (12-16)
-        if (is_cbc || is_ctr) {
-            if (ivlen != 16) {
-                lua_pushnil(L);
-                lua_pushstring(L, "AES IV must be 16 bytes for CBC/CTR");
-                return 2;
-            }
-        } else if (is_gcm) {
-            if (ivlen < 12 || ivlen > 16) {
-                lua_pushnil(L);
-                lua_pushstring(L, "AES GCM IV/nonce must be 12-16 bytes");
-                return 2;
-            }
-        }
-        iv_was_generated = 0;
     }
-
     if (is_cbc) {
         // PKCS7 padding
         size_t block_size = 16;
@@ -1322,16 +1383,21 @@ static int LuaAesEncrypt(lua_State *L) {
 
 // AES decryption supporting CBC, GCM, and CTR modes
 static int LuaAesDecrypt(lua_State *L) {
-    size_t keylen, ctlen, ivlen;
+    // Args: key, ciphertext, options table
+    size_t keylen, ctlen;
     const unsigned char *key = (const unsigned char *)luaL_checklstring(L, 1, &keylen);
     const unsigned char *ciphertext = (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
-    const unsigned char *iv = (const unsigned char *)luaL_checklstring(L, 3, &ivlen);
-    const char *mode = luaL_optstring(L, 4, "cbc"); // Default to CBC if not provided
-    const unsigned char *aad = NULL;
-    const unsigned char *tag = NULL;
-    size_t aadlen = 0, taglen = 0;
+    int options_idx = 3;
+    aes_decrypt_options_t opts;
+    parse_aes_decrypt_options(L, options_idx, &opts);
+    const char *mode = opts.mode;
+    const unsigned char *iv = opts.iv;
+    size_t ivlen = opts.ivlen;
+    const unsigned char *tag = opts.tag;
+    size_t taglen = opts.taglen;
+    const unsigned char *aad = opts.aad;
+    size_t aadlen = opts.aadlen;
     int is_gcm = 0, is_ctr = 0, is_cbc = 0;
-
     if (strcasecmp(mode, "cbc") == 0) {
         is_cbc = 1;
     } else if (strcasecmp(mode, "gcm") == 0) {
@@ -1343,7 +1409,6 @@ static int LuaAesDecrypt(lua_State *L) {
         lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
         return 2;
     }
-
     // Validate key length (16, 24, 32 bytes)
     if (keylen != 16 && keylen != 24 && keylen != 32) {
         lua_pushnil(L);
@@ -1367,19 +1432,9 @@ static int LuaAesDecrypt(lua_State *L) {
 
     // GCM: require tag and optional AAD
     if (is_gcm) {
-        if (!lua_isnoneornil(L, 5)) {
-            aad = (const unsigned char *)luaL_checklstring(L, 5, &aadlen);
-        }
-        if (!lua_isnoneornil(L, 6)) {
-            tag = (const unsigned char *)luaL_checklstring(L, 6, &taglen);
-            if (taglen < 12 || taglen > 16) {
-                lua_pushnil(L);
-                lua_pushstring(L, "AES GCM tag must be 12-16 bytes");
-                return 2;
-            }
-        } else {
+        if (!tag || taglen < 12 || taglen > 16) {
             lua_pushnil(L);
-            lua_pushstring(L, "AES GCM tag required as 6th argument");
+            lua_pushstring(L, "AES GCM tag must be 12-16 bytes");
             return 2;
         }
     }
@@ -1543,10 +1598,12 @@ static int LuaCryptoVerify(lua_State *L) {
 }
 
 static int LuaCryptoEncrypt(lua_State *L) {
-    const char *cipher = luaL_checkstring(L, 1); // Cipher type (e.g., "rsa", "aes")
-    lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
-
+    // Args: cipher_type, key, msg, options table
+    const char *cipher = luaL_checkstring(L, 1);
+    // Remove cipher_type from stack, so key is at 1, msg at 2, options at 3
+    lua_remove(L, 1);
     if (strcasecmp(cipher, "rsa") == 0) {
+        // Update LuaRSAEncrypt to accept (key, msg, options)
         return LuaRSAEncrypt(L);
     } else if (strcasecmp(cipher, "aes") == 0) {
         return LuaAesEncrypt(L);
@@ -1556,9 +1613,9 @@ static int LuaCryptoEncrypt(lua_State *L) {
 }
 
 static int LuaCryptoDecrypt(lua_State *L) {
-    const char *cipher = luaL_checkstring(L, 1); // Cipher type (e.g., "rsa", "aes")
-    lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
-
+    // Args: cipher_type, key, ciphertext, options table
+    const char *cipher = luaL_checkstring(L, 1);
+    lua_remove(L, 1); // Remove cipher_type, so key is at 1, ciphertext at 2, options at 3
     if (strcasecmp(cipher, "rsa") == 0) {
         return LuaRSADecrypt(L);
     } else if (strcasecmp(cipher, "aes") == 0) {
