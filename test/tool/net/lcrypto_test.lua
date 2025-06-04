@@ -2,22 +2,17 @@
 local function assert_equal(actual, expected, message)
     if actual ~= expected then
         error("FAIL: " .. message .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual))
-    else
-        print("PASS: " .. message)
     end
 end
 
 local function assert_not_equal(actual, not_expected, message)
     if actual == not_expected then
         error(message .. ": did not expect " .. tostring(not_expected))
-    else
-        print("PASS: " .. message)
     end
 end
 
 -- Test RSA key pair generation
 local function test_rsa_keypair_generation()
-    print('\27[1;7mTest RSA key pair generation                                            \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
     assert_equal(type(priv_key), "string", "Private key type")
     assert_equal(type(pub_key), "string", "Public key type")
@@ -25,7 +20,6 @@ end
 
 -- Test ECDSA key pair generation
 local function test_ecdsa_keypair_generation()
-    print('\n\27[1;7mTest ECDSA key pair generation                                          \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("ecdsa", "secp256r1")
     assert_equal(type(priv_key), "string", "Private key type")
     assert_equal(type(pub_key), "string", "Public key type")
@@ -33,7 +27,6 @@ end
 
 -- Test RSA encryption and decryption
 local function test_rsa_encryption_decryption()
-    print('\n\27[1;7mTest RSA encryption and decryption                                      \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
     assert(type(priv_key) == "string", "Private key type")
     assert(type(pub_key) == "string", "Public key type")
@@ -46,7 +39,6 @@ end
 
 -- Test RSA signing and verification
 local function test_rsa_signing_verification()
-    print('\n\27[1;7mTest RSA signing and verification                                       \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("rsa", 2048)
     assert(type(priv_key) == "string", "Private key type")
     assert(type(pub_key) == "string", "Public key type")
@@ -59,7 +51,6 @@ end
 
 -- Test ECDSA signing and verification
 local function test_ecdsa_signing_verification()
-    print('\n\27[1;7mTest ECDSA signing and verification                                     \27[0m')
     local priv_key, pub_key = crypto.generatekeypair("ecdsa", "secp256r1")
     assert(type(priv_key) == "string", "Private key type")
     assert(type(pub_key) == "string", "Public key type")
@@ -72,7 +63,6 @@ end
 
 -- Test AES key generation
 local function test_aes_key_generation()
-    print('\n\27[1;7mTest AES key generation                                                 \27[0m')
     local key = crypto.generatekeypair('aes', 256) -- 256-bit key
     assert_equal(type(key), "string", "Key type")
     assert_equal(#key, 32, "Key length (256 bits)")
@@ -80,70 +70,58 @@ end
 
 -- Test AES encryption and decryption (CBC mode)
 local function test_aes_encryption_decryption()
-    print('\n\27[1;7mTest AES encryption and decryption (CBC mode)                           \27[0m')
     local key = crypto.generatekeypair('aes', 256) -- 256-bit key
     local plaintext = "Hello, AES CBC!"
 
     -- Encrypt without providing IV (should auto-generate IV)
-    print('\27[1mAES encryption (auto IV)\27[0m')
     local encrypted, iv = crypto.encrypt("aes", key, plaintext, nil)
     assert_equal(type(encrypted), "string", "Ciphertext type")
     assert_equal(type(iv), "string", "IV type")
 
     -- Decrypt
-    print('\n\27[1mAES decryption (auto IV)\27[0m')
     local decrypted = crypto.decrypt("aes", key, encrypted, iv)
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
-    print('\n\27[1mAES encryption (explicit IV)\27[0m')
     local iv2 = GetRandomBytes(16)
     local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, iv2)
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
 
-    print('\n\27[1mAES decryption (explicit IV)\27[0m')
     local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2)
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
 -- Test AES encryption and decryption (CTR mode)
 local function test_aes_encryption_decryption_ctr()
-    print('\n\27[1;7mTest AES encryption and decryption (CTR mode)                           \27[0m')
     local key = crypto.generatekeypair('aes', 256)
     local plaintext = "Hello, AES CTR!"
 
     -- Encrypt without providing IV (should auto-generate IV)
-    print('\27[1mAES encryption (auto IV)\27[0m')
     local encrypted, iv = crypto.encrypt("aes", key, plaintext, nil, "ctr")
     assert_equal(type(encrypted), "string", "Ciphertext type")
     assert_equal(type(iv), "string", "IV type")
 
     -- Decrypt
-    print('\n\27[1mAES decryption (auto IV)\27[0m')
     local decrypted = crypto.decrypt("aes", key, encrypted, iv, "ctr")
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
-    print('\n\27[1mAES encryption (explicit IV)\27[0m')
     local iv2 = GetRandomBytes(16)
     local encrypted2, iv_used = crypto.encrypt("aes", key, plaintext, iv2, "ctr")
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
 
-    print('\n\27[1mAES decryption (explicit IV)\27[0m')
     local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2, "ctr")
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
 -- Test AES encryption and decryption (GCM mode)
 local function test_aes_encryption_decryption_gcm()
-    print('\n\27[1;7mTest AES encryption and decryption (GCM mode)                           \27[0m')
     local key = crypto.generatekeypair('aes', 256)
     local plaintext = "Hello, AES GCM!"
 
     -- Encrypt without providing IV (should auto-generate IV)
-    print('\27[1mAES encryption (auto IV)\27[0m')
     local encrypted, iv, tag = crypto.encrypt("aes", key, plaintext, nil, "gcm")
     assert_equal(#plaintext, #encrypted, "Ciphertext length matches plaintext")
     assert_equal(type(encrypted), "string", "Ciphertext type")
@@ -151,45 +129,37 @@ local function test_aes_encryption_decryption_gcm()
     assert_equal(type(tag), "string", "Tag type")
 
     -- Decrypt
-    print('\n\27[1mAES decryption (auto IV)\27[0m')
     local decrypted = crypto.decrypt("aes", key, encrypted, iv, "gcm", nil, tag)
     assert_equal(decrypted, plaintext, "Decrypted ciphertext matches plaintext")
 
     -- Encrypt with explicit IV
-    print('\n\27[1mAES encryption (explicit IV)\27[0m')
     local iv2 = GetRandomBytes(13) -- GCM IV/nonce can be 12-16 bytes, 12 is standard
     local encrypted2, iv_used, tag2 = crypto.encrypt("aes", key, plaintext, iv2, "gcm")
     assert_equal(type(encrypted2), "string", "Ciphertext type")
     assert_equal(iv_used, iv2, "IV match")
     assert_equal(type(tag2), "string", "Tag type")
 
-    print('\n\27[1mAES decryption (explicit IV)\27[0m')
     local decrypted2 = crypto.decrypt("aes", key, encrypted2, iv2, "gcm", nil, tag2)
     assert_equal(decrypted2, plaintext, "Decrypted ciphertext matches plaintext")
 end
 
 -- Test PemToJwk conversion
 local function test_pem_to_jwk()
-    print('\n\27[1;7mTest PEM to JWK conversion                                              \27[0m')
     local priv_key, pub_key = crypto.generatekeypair()
-    print('\27[1mRSA Private key to JWK conversion\27[0m')
     local priv_jwk = crypto.convertPemToJwk(priv_key)
     assert_equal(type(priv_jwk), "table", "JWK type")
     assert_equal(priv_jwk.kty, "RSA", "kty is correct")
 
-    print('\n\27[1mRSA Public key to JWK conversion\27[0m')
     local pub_jwk = crypto.convertPemToJwk(pub_key)
     assert_equal(type(pub_jwk), "table", "JWK type")
     assert_equal(pub_jwk.kty, "RSA", "kty is correct")
 
     -- Test ECDSA keys
     local priv_key, pub_key = crypto.generatekeypair('ecdsa')
-    print('\n\27[1mECDSA Private key to JWK conversion\27[0m')
     local priv_jwk = crypto.convertPemToJwk(priv_key)
     assert_equal(type(priv_jwk), "table", "JWK type")
     assert_equal(priv_jwk.kty, "EC", "kty is correct")
 
-    print('\n\27[1mECDSA Public key to JWK conversion\27[0m')
     local pub_jwk = crypto.convertPemToJwk(pub_key)
     assert_equal(type(pub_jwk), "table", "JWK type")
     assert_equal(pub_jwk.kty, "EC", "kty is correct")
@@ -197,11 +167,10 @@ end
 
 -- Test CSR generation
 local function test_csr_generation()
-    print('\n\27[1;7mTest CSR generation                                                     \27[0m')
     local priv_key, _ = crypto.generatekeypair()
     local subject_name = "CN=example.com,O=Example Org,C=US"
     local san = "DNS:example.com, DNS:www.example.com, IP:192.168.1.1"
-    assert(type(priv_key) == "string", "Private key type")
+    assert_equal(type(priv_key), "string", "Private key type")
 
     local csr = crypto.generateCsr(priv_key, subject_name)
     assert_equal(type(csr), "string", "CSR generation with subject name")
@@ -225,7 +194,6 @@ end
 
 -- Run all tests
 local function run_tests()
-    print("Running tests for lcrypto...")
     test_rsa_keypair_generation()
     test_rsa_signing_verification()
     test_rsa_encryption_decryption()
@@ -237,8 +205,6 @@ local function run_tests()
     test_aes_encryption_decryption_gcm()
     test_pem_to_jwk()
     test_csr_generation()
-    print('')
-    print("All tests passed!")
     EXIT = 0
     return EXIT
 end
