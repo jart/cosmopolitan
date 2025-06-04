@@ -1595,7 +1595,7 @@ static const luaL_Reg kLuaCrypto[] = {
   {"decrypt", LuaCryptoDecrypt},                 //
   {"generatekeypair", LuaCryptoGenerateKeyPair}, //
   {"convertPemToJwk", LuaConvertPemToJwk},       // 
-  {"GenerateCsr", LuaGenerateCSR},               //
+  {"generateCsr", LuaGenerateCSR},               //
   {0},                                           //
 };
 

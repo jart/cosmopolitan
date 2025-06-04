@@ -8048,6 +8048,73 @@ kUrlPlus = nil
 ---@type integer to transcode ISO-8859-1 input into UTF-8. See `ParseUrl`.
 kUrlLatin1 = nil
 
+
+--- This module provides cryptographic operations.
+
+--- The crypto module for cryptographic operations
+crypto = {}
+
+--- Converts a PEM-encoded key to JWK format
+---@param pem string PEM-encoded key
+---@return table?, string? JWK table or nil on error
+---@return string? error message
+function crypto.convertPemToJwk(pem) end
+
+--- Generates a Certificate Signing Request (CSR)
+---@param key_pem string PEM-encoded private key
+---@param subject_name string? X.509 subject name
+---@param san_list string? Subject Alternative Names
+---@return string?, string? CSR in PEM format or nil on error and error message
+function crypto.generateCsr(key_pem, subject_name, san_list) end
+
+--- Signs data using a private key
+---@param key_type string "rsa" or "ecdsa"
+---@param private_key string PEM-encoded private key
+---@param message string Data to sign
+---@param hash_algo string? Hash algorithm (default: SHA-256)
+---@return string?, string? Signature or nil on error and error message
+function crypto.sign(key_type, private_key, message, hash_algo) end
+
+--- Verifies a signature
+---@param key_type string "rsa" or "ecdsa"
+---@param public_key string PEM-encoded public key
+---@param message string Original message
+---@param signature string Signature to verify
+---@param hash_algo string? Hash algorithm (default: SHA-256)
+---@return boolean?, string? True if valid or nil on error and error message
+function crypto.verify(key_type, public_key, message, signature, hash_algo) end
+
+--- Encrypts data
+---@param cipher_type string "rsa" or "aes"
+---@param key string Public key or symmetric key
+---@param plaintext string Data to encrypt
+---@param mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
+---@param iv string? Initialization Vector for AES
+---@param aad string? Additional data for AES-GCM
+---@return string? Encrypted data or nil on error
+---@return string? IV or error message
+---@return string? Authentication tag for GCM mode
+function crypto.encrypt(cipher_type, key, plaintext, mode, iv, aad) end
+
+--- Decrypts data
+---@param cipher_type string "rsa" or "aes"
+---@param key string Private key or symmetric key
+---@param ciphertext string Data to decrypt
+---@param iv string? Initialization Vector for AES
+---@param mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
+---@param tag string? Authentication tag for AES-GCM
+---@param aad string? Additional data for AES-GCM
+---@return string?, string? Decrypted data or nil on error and error message
+function crypto.decrypt(cipher_type, key, ciphertext, iv, mode, tag, aad) end
+
+--- Generates cryptographic keys
+---@param key_type string? "rsa", "ecdsa", or "aes"
+---@param key_size_or_curve number|string? Key size or curve name
+---@return string? Private key or nil on error
+---@return string? Public key (nil for AES) or error message
+function crypto.generatekeypair(key_type, key_size_or_curve) end
+
+
 --[[
 ────────────────────────────────────────────────────────────────────────────────
 LEGAL
