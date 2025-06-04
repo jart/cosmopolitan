@@ -1,18 +1,18 @@
 #include "libc/log/log.h"
 #include "net/https/https.h"
 #include "third_party/lua/lauxlib.h"
+#include "third_party/mbedtls/aes.h"
+#include "third_party/mbedtls/base64.h"
+#include "third_party/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls/ecdsa.h"
+#include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/gcm.h"
+#include "third_party/mbedtls/md.h"
+#include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/rsa.h"
-#include "third_party/mbedtls/ecdsa.h"
 #include "third_party/mbedtls/x509_csr.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/base64.h"
-#include "third_party/mbedtls/aes.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/entropy.h"
-#include "third_party/mbedtls/gcm.h"
 
 // Standard C library and redbean utilities
 #include "libc/errno.h"
@@ -22,217 +22,227 @@
 
 // Parse PEM keys and convert them into JWK format
 static int LuaConvertPemToJwk(lua_State *L) {
-    const char *pem_key = luaL_checkstring(L, 1);
+  const char *pem_key = luaL_checkstring(L, 1);
 
-    mbedtls_pk_context key;
-    mbedtls_pk_init(&key);
-    int ret;
+  mbedtls_pk_context key;
+  mbedtls_pk_init(&key);
+  int ret;
 
-    // Parse the PEM key
-    if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)pem_key, strlen(pem_key) + 1, NULL, 0)) != 0 &&
-        (ret = mbedtls_pk_parse_public_key(&key, (const unsigned char *)pem_key, strlen(pem_key) + 1)) != 0) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "Failed to parse PEM key: -0x%04x", -ret);
-        mbedtls_pk_free(&key);
-        return 2;
-    }
-
-    lua_newtable(L); // Create a new Lua table
-
-    if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_RSA) {
-        // Handle RSA keys
-        const mbedtls_rsa_context *rsa = mbedtls_pk_rsa(key);
-        size_t n_len = mbedtls_mpi_size(&rsa->N);
-        size_t e_len = mbedtls_mpi_size(&rsa->E);
-
-        unsigned char *n = malloc(n_len);
-        unsigned char *e = malloc(e_len);
-
-        if (!n || !e) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            free(n);
-            free(e);
-            mbedtls_pk_free(&key);
-            return 2;
-        }
-
-        mbedtls_mpi_write_binary(&rsa->N, n, n_len);
-        mbedtls_mpi_write_binary(&rsa->E, e, e_len);
-
-        char *n_b64 = NULL, *e_b64 = NULL;
-        size_t n_b64_len, e_b64_len;
-
-        mbedtls_base64_encode(NULL, 0, &n_b64_len, n, n_len);
-        mbedtls_base64_encode(NULL, 0, &e_b64_len, e, e_len);
-
-        n_b64 = malloc(n_b64_len + 1);
-        e_b64 = malloc(e_b64_len + 1);
-
-        if (!n_b64 || !e_b64) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            free(n);
-            free(e);
-            free(n_b64);
-            free(e_b64);
-            mbedtls_pk_free(&key);
-            return 2;
-        }
-
-        mbedtls_base64_encode((unsigned char *)n_b64, n_b64_len, &n_b64_len, n, n_len);
-        mbedtls_base64_encode((unsigned char *)e_b64, e_b64_len, &e_b64_len, e, e_len);
-
-        n_b64[n_b64_len] = '\0';
-        e_b64[e_b64_len] = '\0';
-
-        lua_pushstring(L, "RSA");
-        lua_setfield(L, -2, "kty");
-        lua_pushstring(L, n_b64);
-        lua_setfield(L, -2, "n");
-        lua_pushstring(L, e_b64);
-        lua_setfield(L, -2, "e");
-
-        free(n);
-        free(e);
-        free(n_b64);
-        free(e_b64);
-    } else if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
-        // Handle ECDSA keys
-        const mbedtls_ecp_keypair *ec = mbedtls_pk_ec(key);
-        const mbedtls_ecp_point *Q = &ec->Q;
-        size_t x_len = (ec->grp.pbits + 7) / 8;
-        size_t y_len = (ec->grp.pbits + 7) / 8;
-
-        unsigned char *x = malloc(x_len);
-        unsigned char *y = malloc(y_len);
-
-        if (!x || !y) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            free(x);
-            free(y);
-            mbedtls_pk_free(&key);
-            return 2;
-        }
-
-        mbedtls_mpi_write_binary(&Q->X, x, x_len);
-        mbedtls_mpi_write_binary(&Q->Y, y, y_len);
-
-        char *x_b64 = NULL, *y_b64 = NULL;
-        size_t x_b64_len, y_b64_len;
-
-        mbedtls_base64_encode(NULL, 0, &x_b64_len, x, x_len);
-        mbedtls_base64_encode(NULL, 0, &y_b64_len, y, y_len);
-
-        x_b64 = malloc(x_b64_len + 1);
-        y_b64 = malloc(y_b64_len + 1);
-
-        if (!x_b64 || !y_b64) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            free(x);
-            free(y);
-            free(x_b64);
-            free(y_b64);
-            mbedtls_pk_free(&key);
-            return 2;
-        }
-
-        mbedtls_base64_encode((unsigned char *)x_b64, x_b64_len, &x_b64_len, x, x_len);
-        mbedtls_base64_encode((unsigned char *)y_b64, y_b64_len, &y_b64_len, y, y_len);
-
-        x_b64[x_b64_len] = '\0';
-        y_b64[y_b64_len] = '\0';
-
-        lua_pushstring(L, "EC");
-        lua_setfield(L, -2, "kty");
-        lua_pushstring(L, mbedtls_ecp_curve_info_from_grp_id(ec->grp.id)->name);
-        lua_setfield(L, -2, "crv");
-        lua_pushstring(L, x_b64);
-        lua_setfield(L, -2, "x");
-        lua_pushstring(L, y_b64);
-        lua_setfield(L, -2, "y");
-
-        free(x);
-        free(y);
-        free(x_b64);
-        free(y_b64);
-    } else {
-        lua_pushnil(L);
-        lua_pushstring(L, "Unsupported key type");
-        mbedtls_pk_free(&key);
-        return 2;
-    }
-
+  // Parse the PEM key
+  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)pem_key,
+                                  strlen(pem_key) + 1, NULL, 0)) != 0 &&
+      (ret = mbedtls_pk_parse_public_key(&key, (const unsigned char *)pem_key,
+                                         strlen(pem_key) + 1)) != 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to parse PEM key: -0x%04x", -ret);
     mbedtls_pk_free(&key);
-    return 1;
+    return 2;
+  }
+
+  lua_newtable(L);  // Create a new Lua table
+
+  if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_RSA) {
+    // Handle RSA keys
+    const mbedtls_rsa_context *rsa = mbedtls_pk_rsa(key);
+    size_t n_len = mbedtls_mpi_size(&rsa->N);
+    size_t e_len = mbedtls_mpi_size(&rsa->E);
+
+    unsigned char *n = malloc(n_len);
+    unsigned char *e = malloc(e_len);
+
+    if (!n || !e) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(n);
+      free(e);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+
+    mbedtls_mpi_write_binary(&rsa->N, n, n_len);
+    mbedtls_mpi_write_binary(&rsa->E, e, e_len);
+
+    char *n_b64 = NULL, *e_b64 = NULL;
+    size_t n_b64_len, e_b64_len;
+
+    mbedtls_base64_encode(NULL, 0, &n_b64_len, n, n_len);
+    mbedtls_base64_encode(NULL, 0, &e_b64_len, e, e_len);
+
+    n_b64 = malloc(n_b64_len + 1);
+    e_b64 = malloc(e_b64_len + 1);
+
+    if (!n_b64 || !e_b64) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(n);
+      free(e);
+      free(n_b64);
+      free(e_b64);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+
+    mbedtls_base64_encode((unsigned char *)n_b64, n_b64_len, &n_b64_len, n,
+                          n_len);
+    mbedtls_base64_encode((unsigned char *)e_b64, e_b64_len, &e_b64_len, e,
+                          e_len);
+
+    n_b64[n_b64_len] = '\0';
+    e_b64[e_b64_len] = '\0';
+
+    lua_pushstring(L, "RSA");
+    lua_setfield(L, -2, "kty");
+    lua_pushstring(L, n_b64);
+    lua_setfield(L, -2, "n");
+    lua_pushstring(L, e_b64);
+    lua_setfield(L, -2, "e");
+
+    free(n);
+    free(e);
+    free(n_b64);
+    free(e_b64);
+  } else if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
+    // Handle ECDSA keys
+    const mbedtls_ecp_keypair *ec = mbedtls_pk_ec(key);
+    const mbedtls_ecp_point *Q = &ec->Q;
+    size_t x_len = (ec->grp.pbits + 7) / 8;
+    size_t y_len = (ec->grp.pbits + 7) / 8;
+
+    unsigned char *x = malloc(x_len);
+    unsigned char *y = malloc(y_len);
+
+    if (!x || !y) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(x);
+      free(y);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+
+    mbedtls_mpi_write_binary(&Q->X, x, x_len);
+    mbedtls_mpi_write_binary(&Q->Y, y, y_len);
+
+    char *x_b64 = NULL, *y_b64 = NULL;
+    size_t x_b64_len, y_b64_len;
+
+    mbedtls_base64_encode(NULL, 0, &x_b64_len, x, x_len);
+    mbedtls_base64_encode(NULL, 0, &y_b64_len, y, y_len);
+
+    x_b64 = malloc(x_b64_len + 1);
+    y_b64 = malloc(y_b64_len + 1);
+
+    if (!x_b64 || !y_b64) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(x);
+      free(y);
+      free(x_b64);
+      free(y_b64);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+
+    mbedtls_base64_encode((unsigned char *)x_b64, x_b64_len, &x_b64_len, x,
+                          x_len);
+    mbedtls_base64_encode((unsigned char *)y_b64, y_b64_len, &y_b64_len, y,
+                          y_len);
+
+    x_b64[x_b64_len] = '\0';
+    y_b64[y_b64_len] = '\0';
+
+    lua_pushstring(L, "EC");
+    lua_setfield(L, -2, "kty");
+    lua_pushstring(L, mbedtls_ecp_curve_info_from_grp_id(ec->grp.id)->name);
+    lua_setfield(L, -2, "crv");
+    lua_pushstring(L, x_b64);
+    lua_setfield(L, -2, "x");
+    lua_pushstring(L, y_b64);
+    lua_setfield(L, -2, "y");
+
+    free(x);
+    free(y);
+    free(x_b64);
+    free(y_b64);
+  } else {
+    lua_pushnil(L);
+    lua_pushstring(L, "Unsupported key type");
+    mbedtls_pk_free(&key);
+    return 2;
+  }
+
+  mbedtls_pk_free(&key);
+  return 1;
 }
 
 // CSR Creation Function
 static int LuaGenerateCSR(lua_State *L) {
-    const char *key_pem = luaL_checkstring(L, 1);
-    const char *subject_name;
-    const char *san_list = luaL_optstring(L, 3, NULL);
+  const char *key_pem = luaL_checkstring(L, 1);
+  const char *subject_name;
+  const char *san_list = luaL_optstring(L, 3, NULL);
 
-    if (lua_isnoneornil(L, 2)) {
-        subject_name = "";
-    } else {
-        subject_name = luaL_checkstring(L, 2);
+  if (lua_isnoneornil(L, 2)) {
+    subject_name = "";
+  } else {
+    subject_name = luaL_checkstring(L, 2);
+  }
+
+  if (lua_isnoneornil(L, 3) && subject_name[0] == '\0') {
+    lua_pushnil(L);
+    lua_pushstring(L, "Subject name or SANs are required");
+    return 2;
+  }
+  mbedtls_pk_context key;
+  mbedtls_x509write_csr req;
+  char buf[4096];
+  int ret;
+
+  mbedtls_pk_init(&key);
+  mbedtls_x509write_csr_init(&req);
+
+  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)key_pem,
+                                  strlen(key_pem) + 1, NULL, 0)) != 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to parse key: %d", ret);
+    return 2;
+  }
+
+  mbedtls_x509write_csr_set_subject_name(&req, subject_name);
+  mbedtls_x509write_csr_set_key(&req, &key);
+  mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_SHA256);
+
+  if (san_list) {
+    if ((ret = mbedtls_x509write_csr_set_extension(
+             &req, MBEDTLS_OID_SUBJECT_ALT_NAME,
+             MBEDTLS_OID_SIZE(MBEDTLS_OID_SUBJECT_ALT_NAME),
+             (const unsigned char *)san_list, strlen(san_list))) != 0) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "Failed to set SANs: %d", ret);
+      return 2;
     }
+  }
 
+  if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)buf, sizeof(buf),
+                                       NULL, NULL)) < 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to write CSR: %d", ret);
+    return 2;
+  }
 
-    if (lua_isnoneornil(L, 3) && subject_name[0] == '\0') {
-        lua_pushnil(L);
-        lua_pushstring(L, "Subject name or SANs are required");
-        return 2;
-    }
-    mbedtls_pk_context key;
-    mbedtls_x509write_csr req;
-    char buf[4096];
-    int ret;
+  lua_pushstring(L, buf);
 
-    mbedtls_pk_init(&key);
-    mbedtls_x509write_csr_init(&req);
+  mbedtls_pk_free(&key);
+  mbedtls_x509write_csr_free(&req);
 
-    if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)key_pem, strlen(key_pem) + 1, NULL, 0)) != 0) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "Failed to parse key: %d", ret);
-        return 2;
-    }
-
-    mbedtls_x509write_csr_set_subject_name(&req, subject_name);
-    mbedtls_x509write_csr_set_key(&req, &key);
-    mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_SHA256);
-
-    if (san_list) {
-        if ((ret = mbedtls_x509write_csr_set_extension(&req, MBEDTLS_OID_SUBJECT_ALT_NAME, MBEDTLS_OID_SIZE(MBEDTLS_OID_SUBJECT_ALT_NAME), (const unsigned char *)san_list, strlen(san_list))) != 0) {
-            lua_pushnil(L);
-            lua_pushfstring(L, "Failed to set SANs: %d", ret);
-            return 2;
-        }
-    }
-
-    if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)buf, sizeof(buf), NULL, NULL)) < 0) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "Failed to write CSR: %d", ret);
-        return 2;
-    }
-
-    lua_pushstring(L, buf);
-
-    mbedtls_pk_free(&key);
-    mbedtls_x509write_csr_free(&req);
-
-    return 1;
+  return 1;
 }
 
 // RSA
 
 // Generate RSA Key Pair
 static bool RSAGenerateKeyPair(char **private_key_pem, size_t *private_key_len,
-                            char **public_key_pem, size_t *public_key_len,
-                            unsigned int key_length) {
+                               char **public_key_pem, size_t *public_key_len,
+                               unsigned int key_length) {
   int rc;
   mbedtls_pk_context key;
   mbedtls_pk_init(&key);
@@ -281,45 +291,37 @@ static bool RSAGenerateKeyPair(char **private_key_pem, size_t *private_key_len,
   mbedtls_pk_free(&key);
   return true;
 }
-
-/**
- * Lua wrapper for RSA key pair generation
- *
- * Lua function signature: RSAGenerateKeyPair([key_length])
- * @param L Lua state
- * @return 2 on success (private_key, public_key), 2 on failure (nil,
- * error_message)
- */
 static int LuaRSAGenerateKeyPair(lua_State *L) {
-    int bits = 2048;
-    // If no arguments, or first argument is nil, default to 2048
-    if (lua_gettop(L) == 0 || lua_isnoneornil(L, 1)) {
-        bits = 2048;
-    } else if (lua_gettop(L) == 1 && lua_type(L, 1) == LUA_TNUMBER) {
-        bits = (int)lua_tointeger(L, 1);
-    } else {
-        bits = (int)luaL_optinteger(L, 2, 2048);
-    }
+  int bits = 2048;
+  // If no arguments, or first argument is nil, default to 2048
+  if (lua_gettop(L) == 0 || lua_isnoneornil(L, 1)) {
+    bits = 2048;
+  } else if (lua_gettop(L) == 1 && lua_type(L, 1) == LUA_TNUMBER) {
+    bits = (int)lua_tointeger(L, 1);
+  } else {
+    bits = (int)luaL_optinteger(L, 2, 2048);
+  }
 
-    char *private_key, *public_key;
-    size_t private_len, public_len;
+  char *private_key, *public_key;
+  size_t private_len, public_len;
 
-    // Call the C function to generate the key pair
-    if (!RSAGenerateKeyPair(&private_key, &private_len, &public_key, &public_len, bits)) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Failed to generate RSA key pair");
-        return 2;
-    }
-
-    // Push results to Lua
-    lua_pushstring(L, private_key);
-    lua_pushstring(L, public_key);
-
-    // Clean up
-    free(private_key);
-    free(public_key);
-
+  // Call the C function to generate the key pair
+  if (!RSAGenerateKeyPair(&private_key, &private_len, &public_key, &public_len,
+                          bits)) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Failed to generate RSA key pair");
     return 2;
+  }
+
+  // Push results to Lua
+  lua_pushstring(L, private_key);
+  lua_pushstring(L, public_key);
+
+  // Clean up
+  free(private_key);
+  free(public_key);
+
+  return 2;
 }
 
 // Helper to get string field from options table for RSA
@@ -336,7 +338,7 @@ static int LuaRSAGenerateKeyPair(lua_State *L) {
 // }
 
 static char *RSAEncrypt(const char *public_key_pem, const unsigned char *data,
-                     size_t data_len, size_t *out_len) {
+                        size_t data_len, size_t *out_len) {
   int rc;
 
   // Parse public key
@@ -380,30 +382,31 @@ static char *RSAEncrypt(const char *public_key_pem, const unsigned char *data,
   return (char *)output;
 }
 static int LuaRSAEncrypt(lua_State *L) {
-    // Args: key, plaintext, options table
-    size_t keylen, ptlen;
-    const char *key = luaL_checklstring(L, 1, &keylen);
-    const unsigned char *plaintext = (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
-    // int options_idx = 3;
-    // const char *padding = parse_rsa_options(L, options_idx);
-    size_t out_len;
+  // Args: key, plaintext, options table
+  size_t keylen, ptlen;
+  const char *key = luaL_checklstring(L, 1, &keylen);
+  const unsigned char *plaintext =
+      (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
+  // int options_idx = 3;
+  // const char *padding = parse_rsa_options(L, options_idx);
+  size_t out_len;
 
-    char *encrypted = RSAEncrypt(key, plaintext, ptlen, &out_len);
-    if (!encrypted) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Encryption failed");
-        return 2;
-    }
+  char *encrypted = RSAEncrypt(key, plaintext, ptlen, &out_len);
+  if (!encrypted) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Encryption failed");
+    return 2;
+  }
 
-    lua_pushlstring(L, encrypted, out_len);
-    free(encrypted);
+  lua_pushlstring(L, encrypted, out_len);
+  free(encrypted);
 
-    return 1;
+  return 1;
 }
 
 static char *RSADecrypt(const char *private_key_pem,
-                     const unsigned char *encrypted_data, size_t encrypted_len,
-                     size_t *out_len) {
+                        const unsigned char *encrypted_data,
+                        size_t encrypted_len, size_t *out_len) {
   int rc;
 
   // Parse private key
@@ -447,30 +450,32 @@ static char *RSADecrypt(const char *private_key_pem,
   return (char *)output;
 }
 static int LuaRSADecrypt(lua_State *L) {
-    // Args: key, ciphertext, options table
-    size_t keylen, ctlen;
-    const char *key = luaL_checklstring(L, 1, &keylen);
-    const unsigned char *ciphertext = (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
-    // int options_idx = 3;
-    // const char *padding = parse_rsa_options(L, options_idx);
-    size_t out_len;
+  // Args: key, ciphertext, options table
+  size_t keylen, ctlen;
+  const char *key = luaL_checklstring(L, 1, &keylen);
+  const unsigned char *ciphertext =
+      (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
+  // int options_idx = 3;
+  // const char *padding = parse_rsa_options(L, options_idx);
+  size_t out_len;
 
-    char *decrypted = RSADecrypt(key, ciphertext, ctlen, &out_len);
-    if (!decrypted) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Decryption failed");
-        return 2;
-    }
+  char *decrypted = RSADecrypt(key, ciphertext, ctlen, &out_len);
+  if (!decrypted) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Decryption failed");
+    return 2;
+  }
 
-    lua_pushlstring(L, decrypted, out_len);
-    free(decrypted);
+  lua_pushlstring(L, decrypted, out_len);
+  free(decrypted);
 
-    return 1;
+  return 1;
 }
 
 // RSA Signing
 static char *RSASign(const char *private_key_pem, const unsigned char *data,
-                  size_t data_len, const char *hash_algo_str, size_t *sig_len) {
+                     size_t data_len, const char *hash_algo_str,
+                     size_t *sig_len) {
   int rc;
   unsigned char hash[64];  // Large enough for SHA-512
   size_t hash_len = 32;    // Default for SHA-256
@@ -554,7 +559,7 @@ static int LuaRSASign(lua_State *L) {
 
   // Call the C implementation
   signature = (unsigned char *)RSASign(key_pem, (const unsigned char *)msg,
-                                    msg_len, hash_algo_str, &sig_len);
+                                       msg_len, hash_algo_str, &sig_len);
 
   if (!signature) {
     return luaL_error(L, "failed to sign message");
@@ -570,8 +575,8 @@ static int LuaRSASign(lua_State *L) {
 }
 
 static int RSAVerify(const char *public_key_pem, const unsigned char *data,
-                  size_t data_len, const unsigned char *signature,
-                  size_t sig_len, const char *hash_algo_str) {
+                     size_t data_len, const unsigned char *signature,
+                     size_t sig_len, const char *hash_algo_str) {
   int rc;
   unsigned char hash[64];                           // Large enough for SHA-512
   size_t hash_len = 32;                             // Default for SHA-256
@@ -643,7 +648,7 @@ static int LuaRSAVerify(lua_State *L) {
 
   // Call the C implementation
   result = RSAVerify(key_pem, (const unsigned char *)msg, msg_len,
-                  (const unsigned char *)signature, sig_len, hash_algo_str);
+                     (const unsigned char *)signature, sig_len, hash_algo_str);
 
   // Return boolean result (0 means valid signature)
   lua_pushboolean(L, result == 0);
@@ -822,7 +827,7 @@ static mbedtls_ecp_group_id find_curve_by_name(const char *name) {
 
 // Generate an ECDSA key pair and return in PEM format
 static int ECDSAGenerateKeyPair(const char *curve_name, char **priv_key_pem,
-                           char **pub_key_pem) {
+                                char **pub_key_pem) {
   mbedtls_pk_context key;
   unsigned char output_buf[16000];
   int ret;
@@ -939,8 +944,8 @@ static int LuaECDSAGenerateKeyPair(lua_State *L) {
 
 // Sign a message using an ECDSA private key in PEM format
 static int ECDSASign(const char *priv_key_pem, const char *message,
-                hash_algorithm_t hash_alg, unsigned char **signature,
-                size_t *sig_len) {
+                     hash_algorithm_t hash_alg, unsigned char **signature,
+                     size_t *sig_len) {
   mbedtls_pk_context key;
   unsigned char hash[64];  // Max hash size (SHA-512)
   size_t hash_size;
@@ -1032,8 +1037,8 @@ static int LuaECDSASign(lua_State *L) {
 
 // Verify a signature using an ECDSA public key in PEM format
 static int ECDSAVerify(const char *pub_key_pem, const char *message,
-                  const unsigned char *signature, size_t sig_len,
-                  hash_algorithm_t hash_alg) {
+                       const unsigned char *signature, size_t sig_len,
+                       hash_algorithm_t hash_alg) {
   mbedtls_pk_context key;
   unsigned char hash[64];  // Max hash size (SHA-512)
   size_t hash_size;
@@ -1089,7 +1094,8 @@ static int LuaECDSAVerify(lua_State *L) {
   const char *pub_key_pem = luaL_checkstring(L, 1);
   const char *message = luaL_checkstring(L, 2);
   size_t sig_len;
-  const unsigned char *signature = (const unsigned char *)luaL_checklstring(L, 3, &sig_len);
+  const unsigned char *signature =
+      (const unsigned char *)luaL_checklstring(L, 3, &sig_len);
   const char *hash_name = luaL_optstring(L, 4, "sha256");
 
   hash_algorithm_t hash_alg = string_to_hash_alg(hash_name);
@@ -1100,560 +1106,560 @@ static int LuaECDSAVerify(lua_State *L) {
   return 1;
 }
 
-
 // AES
 
 // AES key generation helper
 static int LuaAesGenerateKey(lua_State *L) {
-    int keybits = 128;
-    if (lua_gettop(L) >= 1 && !lua_isnil(L, 1)) {
-        keybits = luaL_checkinteger(L, 1);
-    }
-    int keylen = keybits / 8;
-    if ((keybits != 128 && keybits != 192 && keybits != 256) || (keylen != 16 && keylen != 24 && keylen != 32)) {
-        lua_pushnil(L);
-        lua_pushstring(L, "AES key length must be 128, 192, or 256 bits");
-        return 2;
-    }
-    unsigned char key[32];
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_init(&entropy);
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    const char *pers = "aes_keygen";
-    int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers));
-    if (ret != 0) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Failed to initialize RNG for AES key");
-        mbedtls_ctr_drbg_free(&ctr_drbg);
-        mbedtls_entropy_free(&entropy);
-        return 2;
-    }
-    ret = mbedtls_ctr_drbg_random(&ctr_drbg, key, keylen);
+  int keybits = 128;
+  if (lua_gettop(L) >= 1 && !lua_isnil(L, 1)) {
+    keybits = luaL_checkinteger(L, 1);
+  }
+  int keylen = keybits / 8;
+  if ((keybits != 128 && keybits != 192 && keybits != 256) ||
+      (keylen != 16 && keylen != 24 && keylen != 32)) {
+    lua_pushnil(L);
+    lua_pushstring(L, "AES key length must be 128, 192, or 256 bits");
+    return 2;
+  }
+  unsigned char key[32];
+  mbedtls_entropy_context entropy;
+  mbedtls_ctr_drbg_context ctr_drbg;
+  mbedtls_entropy_init(&entropy);
+  mbedtls_ctr_drbg_init(&ctr_drbg);
+  const char *pers = "aes_keygen";
+  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                  (const unsigned char *)pers, strlen(pers));
+  if (ret != 0) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Failed to initialize RNG for AES key");
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
-    if (ret != 0) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Failed to generate random AES key");
-        return 2;
-    }
-    lua_pushlstring(L, (const char *)key, keylen);
-    return 1;
+    return 2;
+  }
+  ret = mbedtls_ctr_drbg_random(&ctr_drbg, key, keylen);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  mbedtls_entropy_free(&entropy);
+  if (ret != 0) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Failed to generate random AES key");
+    return 2;
+  }
+  lua_pushlstring(L, (const char *)key, keylen);
+  return 1;
 }
 
 // Helper to get string field from options table
 typedef struct {
-    const char *mode;
-    const unsigned char *iv;
-    size_t ivlen;
+  const char *mode;
+  const unsigned char *iv;
+  size_t ivlen;
+  const unsigned char *tag;
+  size_t taglen;
+  const unsigned char *aad;
+  size_t aadlen;
 } aes_options_t;
 
-static void parse_aes_options(lua_State *L, int options_idx, aes_options_t *opts) {
-    opts->mode = "cbc";
-    opts->iv = NULL;
-    opts->ivlen = 0;
-    if (lua_istable(L, options_idx)) {
-        lua_getfield(L, options_idx, "mode");
-        if (!lua_isnil(L, -1)) opts->mode = lua_tostring(L, -1);
-        lua_pop(L, 1);
-        lua_getfield(L, options_idx, "iv");
-        if (lua_isstring(L, -1)) {
-            opts->iv = (const unsigned char *)lua_tolstring(L, -1, &opts->ivlen);
-        }
-        lua_pop(L, 1);
+static void parse_aes_options(lua_State *L, int options_idx,
+                              aes_options_t *opts) {
+  opts->mode = "cbc";
+  opts->iv = NULL;
+  opts->ivlen = 0;
+  opts->tag = NULL;
+  opts->taglen = 0;
+  opts->aad = NULL;
+  opts->aadlen = 0;
+  if (lua_istable(L, options_idx)) {
+    lua_getfield(L, options_idx, "mode");
+    if (!lua_isnil(L, -1))
+      opts->mode = lua_tostring(L, -1);
+    lua_pop(L, 1);
+    lua_getfield(L, options_idx, "iv");
+    if (lua_isstring(L, -1)) {
+      opts->iv = (const unsigned char *)lua_tolstring(L, -1, &opts->ivlen);
     }
-}
-
-// Helper for AES decrypt options
-typedef struct {
-    const char *mode;
-    const unsigned char *iv;
-    size_t ivlen;
-    const unsigned char *tag;
-    size_t taglen;
-    const unsigned char *aad;
-    size_t aadlen;
-} aes_decrypt_options_t;
-
-static void parse_aes_decrypt_options(lua_State *L, int options_idx, aes_decrypt_options_t *opts) {
-    opts->mode = "cbc";
-    opts->iv = NULL;
-    opts->ivlen = 0;
-    opts->tag = NULL;
-    opts->taglen = 0;
-    opts->aad = NULL;
-    opts->aadlen = 0;
-    if (lua_istable(L, options_idx)) {
-        lua_getfield(L, options_idx, "mode");
-        if (!lua_isnil(L, -1)) opts->mode = lua_tostring(L, -1);
-        lua_pop(L, 1);
-        lua_getfield(L, options_idx, "iv");
-        if (lua_isstring(L, -1)) {
-            opts->iv = (const unsigned char *)lua_tolstring(L, -1, &opts->ivlen);
-        }
-        lua_pop(L, 1);
-        lua_getfield(L, options_idx, "tag");
-        if (lua_isstring(L, -1)) {
-            opts->tag = (const unsigned char *)lua_tolstring(L, -1, &opts->taglen);
-        }
-        lua_pop(L, 1);
-        lua_getfield(L, options_idx, "aad");
-        if (lua_isstring(L, -1)) {
-            opts->aad = (const unsigned char *)lua_tolstring(L, -1, &opts->aadlen);
-        }
-        lua_pop(L, 1);
+    lua_pop(L, 1);
+    lua_getfield(L, options_idx, "tag");
+    if (lua_isstring(L, -1)) {
+      opts->tag = (const unsigned char *)lua_tolstring(L, -1, &opts->taglen);
     }
+    lua_pop(L, 1);
+    lua_getfield(L, options_idx, "aad");
+    if (lua_isstring(L, -1)) {
+      opts->aad = (const unsigned char *)lua_tolstring(L, -1, &opts->aadlen);
+    }
+    lua_pop(L, 1);
+  }
 }
 
 // AES encryption supporting CBC, GCM, and CTR modes
 static int LuaAesEncrypt(lua_State *L) {
-    // Args: key, plaintext, options table
-    size_t keylen, ptlen;
-    const unsigned char *key = (const unsigned char *)luaL_checklstring(L, 1, &keylen);
-    const unsigned char *plaintext = (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
-    int options_idx = 3;
-    aes_options_t opts;
-    parse_aes_options(L, options_idx, &opts);
-    const char *mode = opts.mode;
-    const unsigned char *iv = opts.iv;
-    size_t ivlen = opts.ivlen;
-    unsigned char *gen_iv = NULL;
-    int iv_was_generated = 0;
-    int ret = 0;
-    unsigned char *output = NULL;
-    int is_gcm = 0, is_ctr = 0, is_cbc = 0;
-    if (strcasecmp(mode, "cbc") == 0) {
-        is_cbc = 1;
-    } else if (strcasecmp(mode, "gcm") == 0) {
-        is_gcm = 1;
-    } else if (strcasecmp(mode, "ctr") == 0) {
-        is_ctr = 1;
-    } else {
-        lua_pushnil(L);
-        lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
-        return 2;
-    }
-    // If IV is not provided, auto-generate
-    if (!iv) {
-        if (is_gcm) {
-            ivlen = 12;
-        } else {
-            ivlen = 16;
-        }
-        gen_iv = malloc(ivlen);
-        if (!gen_iv) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to allocate IV");
-            return 2;
-        }
-        mbedtls_entropy_context entropy;
-        mbedtls_ctr_drbg_context ctr_drbg;
-        mbedtls_entropy_init(&entropy);
-        mbedtls_ctr_drbg_init(&ctr_drbg);
-        mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
-        mbedtls_ctr_drbg_random(&ctr_drbg, gen_iv, ivlen);
-        mbedtls_ctr_drbg_free(&ctr_drbg);
-        mbedtls_entropy_free(&entropy);
-        iv = gen_iv;
-        iv_was_generated = 1;
-    }
-    if (is_cbc) {
-        // PKCS7 padding
-        size_t block_size = 16;
-        size_t padlen = block_size - (ptlen % block_size);
-        size_t ctlen = ptlen + padlen;
-        unsigned char *input = malloc(ctlen);
-        if (!input) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        memcpy(input, plaintext, ptlen);
-        memset(input + ptlen, (unsigned char)padlen, padlen);
-        output = malloc(ctlen);
-        if (!output) {
-            free(input);
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_aes_context aes;
-        mbedtls_aes_init(&aes);
-        ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
-        if (ret != 0) {
-            free(input);
-            free(output);
-            mbedtls_aes_free(&aes);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES encryption key");
-            return 2;
-        }
-        unsigned char iv_copy[16];
-        memcpy(iv_copy, iv, 16);
-        ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, ctlen, iv_copy, input, output);
-        mbedtls_aes_free(&aes);
-        free(input);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES CBC encryption failed");
-            return 2;
-        }
-        lua_pushlstring(L, (const char *)output, ctlen);
-        lua_pushlstring(L, (const char *)iv, ivlen);
-        free(output);
-        if (iv_was_generated) free(gen_iv);
-        return 2;
-    } else if (is_ctr) {
-        // CTR mode: no padding
-        output = malloc(ptlen);
-        if (!output) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_aes_context aes;
-        mbedtls_aes_init(&aes);
-        ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
-        if (ret != 0) {
-            free(output);
-            mbedtls_aes_free(&aes);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES encryption key");
-            return 2;
-        }
-        unsigned char nonce_counter[16];
-        unsigned char stream_block[16];
-        size_t nc_off = 0;
-        memcpy(nonce_counter, iv, 16);
-        memset(stream_block, 0, 16);
-        ret = mbedtls_aes_crypt_ctr(&aes, ptlen, &nc_off, nonce_counter, stream_block, plaintext, output);
-        mbedtls_aes_free(&aes);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES CTR encryption failed");
-            return 2;
-        }
-        lua_pushlstring(L, (const char *)output, ptlen);
-        lua_pushlstring(L, (const char *)iv, ivlen);
-        free(output);
-        if (iv_was_generated) free(gen_iv);
-        return 2;
-    } else if (is_gcm) {
-        // GCM mode: authenticated encryption
-        size_t taglen = 16;
-        unsigned char tag[16];
-        output = malloc(ptlen);
-        if (!output) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_gcm_context gcm;
-        mbedtls_gcm_init(&gcm);
-        ret = mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, key, keylen * 8);
-        if (ret != 0) {
-            free(output);
-            mbedtls_gcm_free(&gcm);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES GCM key");
-            return 2;
-        }
-        // Use actual ivlen, not hardcoded 16
-        ret = mbedtls_gcm_crypt_and_tag(&gcm, MBEDTLS_GCM_ENCRYPT, ptlen, iv, ivlen, NULL, 0, plaintext, output, taglen, tag);
-        mbedtls_gcm_free(&gcm);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES GCM encryption failed");
-            return 2;
-        }
-        lua_pushlstring(L, (const char *)output, ptlen);
-        lua_pushlstring(L, (const char *)iv, ivlen);
-        lua_pushlstring(L, (const char *)tag, taglen);
-        free(output);
-        if (iv_was_generated) free(gen_iv);
-        return 3;
-    }
+  // Args: key, plaintext, options table
+  size_t keylen, ptlen;
+  const unsigned char *key =
+      (const unsigned char *)luaL_checklstring(L, 1, &keylen);
+  const unsigned char *plaintext =
+      (const unsigned char *)luaL_checklstring(L, 2, &ptlen);
+  int options_idx = 3;
+  aes_options_t opts;
+  parse_aes_options(L, options_idx, &opts);
+  const char *mode = opts.mode;
+  const unsigned char *iv = opts.iv;
+  size_t ivlen = opts.ivlen;
+  unsigned char *gen_iv = NULL;
+  int iv_was_generated = 0;
+  int ret = 0;
+  unsigned char *output = NULL;
+  int is_gcm = 0, is_ctr = 0, is_cbc = 0;
+  if (strcasecmp(mode, "cbc") == 0) {
+    is_cbc = 1;
+  } else if (strcasecmp(mode, "gcm") == 0) {
+    is_gcm = 1;
+  } else if (strcasecmp(mode, "ctr") == 0) {
+    is_ctr = 1;
+  } else {
     lua_pushnil(L);
-    lua_pushstring(L, "Internal error in AES encrypt");
+    lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
     return 2;
+  }
+  // If IV is not provided, auto-generate
+  if (!iv) {
+    if (is_gcm) {
+      ivlen = 12;
+    } else {
+      ivlen = 16;
+    }
+    gen_iv = malloc(ivlen);
+    if (!gen_iv) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to allocate IV");
+      return 2;
+    }
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+    mbedtls_ctr_drbg_random(&ctr_drbg, gen_iv, ivlen);
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
+    iv = gen_iv;
+    iv_was_generated = 1;
+  }
+  if (is_cbc) {
+    // PKCS7 padding
+    size_t block_size = 16;
+    size_t padlen = block_size - (ptlen % block_size);
+    size_t ctlen = ptlen + padlen;
+    unsigned char *input = malloc(ctlen);
+    if (!input) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    memcpy(input, plaintext, ptlen);
+    memset(input + ptlen, (unsigned char)padlen, padlen);
+    output = malloc(ctlen);
+    if (!output) {
+      free(input);
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
+    if (ret != 0) {
+      free(input);
+      free(output);
+      mbedtls_aes_free(&aes);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES encryption key");
+      return 2;
+    }
+    unsigned char iv_copy[16];
+    memcpy(iv_copy, iv, 16);
+    ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, ctlen, iv_copy,
+                                input, output);
+    mbedtls_aes_free(&aes);
+    free(input);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES CBC encryption failed");
+      return 2;
+    }
+    lua_pushlstring(L, (const char *)output, ctlen);
+    lua_pushlstring(L, (const char *)iv, ivlen);
+    free(output);
+    if (iv_was_generated)
+      free(gen_iv);
+    return 2;
+  } else if (is_ctr) {
+    // CTR mode: no padding
+    output = malloc(ptlen);
+    if (!output) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
+    if (ret != 0) {
+      free(output);
+      mbedtls_aes_free(&aes);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES encryption key");
+      return 2;
+    }
+    unsigned char nonce_counter[16];
+    unsigned char stream_block[16];
+    size_t nc_off = 0;
+    memcpy(nonce_counter, iv, 16);
+    memset(stream_block, 0, 16);
+    ret = mbedtls_aes_crypt_ctr(&aes, ptlen, &nc_off, nonce_counter,
+                                stream_block, plaintext, output);
+    mbedtls_aes_free(&aes);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES CTR encryption failed");
+      return 2;
+    }
+    lua_pushlstring(L, (const char *)output, ptlen);
+    lua_pushlstring(L, (const char *)iv, ivlen);
+    free(output);
+    if (iv_was_generated)
+      free(gen_iv);
+    return 2;
+  } else if (is_gcm) {
+    // GCM mode: authenticated encryption
+    size_t taglen = 16;
+    unsigned char tag[16];
+    output = malloc(ptlen);
+    if (!output) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_gcm_context gcm;
+    mbedtls_gcm_init(&gcm);
+    ret = mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, key, keylen * 8);
+    if (ret != 0) {
+      free(output);
+      mbedtls_gcm_free(&gcm);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES GCM key");
+      return 2;
+    }
+    ret = mbedtls_gcm_crypt_and_tag(&gcm, MBEDTLS_GCM_ENCRYPT, ptlen, iv, ivlen,
+                                    NULL, 0, plaintext, output, taglen, tag);
+    mbedtls_gcm_free(&gcm);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES GCM encryption failed");
+      return 2;
+    }
+    lua_pushlstring(L, (const char *)output, ptlen);
+    lua_pushlstring(L, (const char *)iv, ivlen);
+    lua_pushlstring(L, (const char *)tag, taglen);
+    free(output);
+    if (iv_was_generated)
+      free(gen_iv);
+    return 3;
+  }
+  lua_pushnil(L);
+  lua_pushstring(L, "Internal error in AES encrypt");
+  return 2;
 }
 
 // AES decryption supporting CBC, GCM, and CTR modes
 static int LuaAesDecrypt(lua_State *L) {
-    // Args: key, ciphertext, options table
-    size_t keylen, ctlen;
-    const unsigned char *key = (const unsigned char *)luaL_checklstring(L, 1, &keylen);
-    const unsigned char *ciphertext = (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
-    int options_idx = 3;
-    aes_decrypt_options_t opts;
-    parse_aes_decrypt_options(L, options_idx, &opts);
-    const char *mode = opts.mode;
-    const unsigned char *iv = opts.iv;
-    size_t ivlen = opts.ivlen;
-    const unsigned char *tag = opts.tag;
-    size_t taglen = opts.taglen;
-    const unsigned char *aad = opts.aad;
-    size_t aadlen = opts.aadlen;
-    int is_gcm = 0, is_ctr = 0, is_cbc = 0;
-    if (strcasecmp(mode, "cbc") == 0) {
-        is_cbc = 1;
-    } else if (strcasecmp(mode, "gcm") == 0) {
-        is_gcm = 1;
-    } else if (strcasecmp(mode, "ctr") == 0) {
-        is_ctr = 1;
-    } else {
-        lua_pushnil(L);
-        lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
-        return 2;
-    }
-    // Validate key length (16, 24, 32 bytes)
-    if (keylen != 16 && keylen != 24 && keylen != 32) {
-        lua_pushnil(L);
-        lua_pushstring(L, "AES key must be 16, 24, or 32 bytes");
-        return 2;
-    }
-    // Validate IV/nonce length
-    if (is_cbc || is_ctr) {
-        if (ivlen != 16) {
-            lua_pushnil(L);
-            lua_pushstring(L, "AES IV/nonce must be 16 bytes for CBC/CTR");
-            return 2;
-        }
-    } else if (is_gcm) {
-        if (ivlen < 12 || ivlen > 16) {
-            lua_pushnil(L);
-            lua_pushstring(L, "AES GCM nonce must be 12-16 bytes");
-            return 2;
-        }
-    }
-
-    // GCM: require tag and optional AAD
-    if (is_gcm) {
-        if (!tag || taglen < 12 || taglen > 16) {
-            lua_pushnil(L);
-            lua_pushstring(L, "AES GCM tag must be 12-16 bytes");
-            return 2;
-        }
-    }
-
-    int ret = 0;
-    unsigned char *output = NULL;
-
-    if (is_cbc) {
-        // Ciphertext must be a multiple of block size
-        if (ctlen == 0 || (ctlen % 16) != 0) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Ciphertext length must be a multiple of 16");
-            return 2;
-        }
-        output = malloc(ctlen);
-        if (!output) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_aes_context aes;
-        mbedtls_aes_init(&aes);
-        ret = mbedtls_aes_setkey_dec(&aes, key, keylen * 8);
-        if (ret != 0) {
-            free(output);
-            mbedtls_aes_free(&aes);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES decryption key");
-            return 2;
-        }
-        unsigned char iv_copy[16];
-        memcpy(iv_copy, iv, 16);
-        ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, ctlen, iv_copy, ciphertext, output);
-        mbedtls_aes_free(&aes);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES CBC decryption failed");
-            return 2;
-        }
-        // PKCS7 unpadding
-        if (ctlen == 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "Decrypted data is empty");
-            return 2;
-        }
-        unsigned char pad = output[ctlen - 1];
-        if (pad == 0 || pad > 16) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "Invalid PKCS7 padding");
-            return 2;
-        }
-        for (size_t i = 0; i < pad; ++i) {
-            if (output[ctlen - 1 - i] != pad) {
-                free(output);
-                lua_pushnil(L);
-                lua_pushstring(L, "Invalid PKCS7 padding");
-                return 2;
-            }
-        }
-        size_t ptlen = ctlen - pad;
-        lua_pushlstring(L, (const char *)output, ptlen);
-        free(output);
-        return 1;
-    } else if (is_ctr) {
-        // CTR mode: no padding
-        output = malloc(ctlen);
-        if (!output) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_aes_context aes;
-        mbedtls_aes_init(&aes);
-        ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
-        if (ret != 0) {
-            free(output);
-            mbedtls_aes_free(&aes);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES encryption key");
-            return 2;
-        }
-        unsigned char nonce_counter[16];
-        unsigned char stream_block[16];
-        size_t nc_off = 0;
-        memcpy(nonce_counter, iv, 16);
-        memset(stream_block, 0, 16);
-        ret = mbedtls_aes_crypt_ctr(&aes, ctlen, &nc_off, nonce_counter, stream_block, ciphertext, output);
-        mbedtls_aes_free(&aes);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES CTR decryption failed");
-            return 2;
-        }
-        lua_pushlstring(L, (const char *)output, ctlen);
-        free(output);
-        return 1;
-    } else if (is_gcm) {
-        // GCM mode: authenticated decryption
-        output = malloc(ctlen);
-        if (!output) {
-            lua_pushnil(L);
-            lua_pushstring(L, "Memory allocation failed");
-            return 2;
-        }
-        mbedtls_gcm_context gcm;
-        mbedtls_gcm_init(&gcm);
-        ret = mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, key, keylen * 8);
-        if (ret != 0) {
-            free(output);
-            mbedtls_gcm_free(&gcm);
-            lua_pushnil(L);
-            lua_pushstring(L, "Failed to set AES GCM key");
-            return 2;
-        }
-        ret = mbedtls_gcm_auth_decrypt(&gcm, ctlen, iv, ivlen, aad, aadlen, tag, taglen, ciphertext, output);
-        mbedtls_gcm_free(&gcm);
-        if (ret != 0) {
-            free(output);
-            lua_pushnil(L);
-            lua_pushstring(L, "AES GCM decryption failed or authentication failed");
-            return 2;
-        }
-        lua_pushlstring(L, (const char *)output, ctlen);
-        free(output);
-        return 1;
-    }
+  // Args: key, ciphertext, options table
+  size_t keylen, ctlen;
+  const unsigned char *key =
+      (const unsigned char *)luaL_checklstring(L, 1, &keylen);
+  const unsigned char *ciphertext =
+      (const unsigned char *)luaL_checklstring(L, 2, &ctlen);
+  int options_idx = 3;
+  aes_options_t opts;
+  parse_aes_options(L, options_idx, &opts);
+  const char *mode = opts.mode;
+  const unsigned char *iv = opts.iv;
+  size_t ivlen = opts.ivlen;
+  const unsigned char *tag = opts.tag;
+  size_t taglen = opts.taglen;
+  const unsigned char *aad = opts.aad;
+  size_t aadlen = opts.aadlen;
+  int is_gcm = 0, is_ctr = 0, is_cbc = 0;
+  if (strcasecmp(mode, "cbc") == 0) {
+    is_cbc = 1;
+  } else if (strcasecmp(mode, "gcm") == 0) {
+    is_gcm = 1;
+  } else if (strcasecmp(mode, "ctr") == 0) {
+    is_ctr = 1;
+  } else {
     lua_pushnil(L);
-    lua_pushstring(L, "Internal error in AES decrypt");
+    lua_pushstring(L, "Unsupported AES mode. Use 'cbc', 'gcm', or 'ctr'.");
     return 2;
+  }
+  // Validate key length (16, 24, 32 bytes)
+  if (keylen != 16 && keylen != 24 && keylen != 32) {
+    lua_pushnil(L);
+    lua_pushstring(L, "AES key must be 16, 24, or 32 bytes");
+    return 2;
+  }
+  // Validate IV/nonce length
+  if (is_cbc || is_ctr) {
+    if (ivlen != 16) {
+      lua_pushnil(L);
+      lua_pushstring(L, "AES IV/nonce must be 16 bytes for CBC/CTR");
+      return 2;
+    }
+  } else if (is_gcm) {
+    if (ivlen < 12 || ivlen > 16) {
+      lua_pushnil(L);
+      lua_pushstring(L, "AES GCM nonce must be 12-16 bytes");
+      return 2;
+    }
+  }
+
+  // GCM: require tag and optional AAD
+  if (is_gcm) {
+    if (!tag || taglen < 12 || taglen > 16) {
+      lua_pushnil(L);
+      lua_pushstring(L, "AES GCM tag must be 12-16 bytes");
+      return 2;
+    }
+  }
+
+  int ret = 0;
+  unsigned char *output = NULL;
+
+  if (is_cbc) {
+    // Ciphertext must be a multiple of block size
+    if (ctlen == 0 || (ctlen % 16) != 0) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Ciphertext length must be a multiple of 16");
+      return 2;
+    }
+    output = malloc(ctlen);
+    if (!output) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    ret = mbedtls_aes_setkey_dec(&aes, key, keylen * 8);
+    if (ret != 0) {
+      free(output);
+      mbedtls_aes_free(&aes);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES decryption key");
+      return 2;
+    }
+    unsigned char iv_copy[16];
+    memcpy(iv_copy, iv, 16);
+    ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, ctlen, iv_copy,
+                                ciphertext, output);
+    mbedtls_aes_free(&aes);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES CBC decryption failed");
+      return 2;
+    }
+    // PKCS7 unpadding
+    if (ctlen == 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "Decrypted data is empty");
+      return 2;
+    }
+    unsigned char pad = output[ctlen - 1];
+    if (pad == 0 || pad > 16) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "Invalid PKCS7 padding");
+      return 2;
+    }
+    for (size_t i = 0; i < pad; ++i) {
+      if (output[ctlen - 1 - i] != pad) {
+        free(output);
+        lua_pushnil(L);
+        lua_pushstring(L, "Invalid PKCS7 padding");
+        return 2;
+      }
+    }
+    size_t ptlen = ctlen - pad;
+    lua_pushlstring(L, (const char *)output, ptlen);
+    free(output);
+    return 1;
+  } else if (is_ctr) {
+    // CTR mode: no padding
+    output = malloc(ctlen);
+    if (!output) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    ret = mbedtls_aes_setkey_enc(&aes, key, keylen * 8);
+    if (ret != 0) {
+      free(output);
+      mbedtls_aes_free(&aes);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES encryption key");
+      return 2;
+    }
+    unsigned char nonce_counter[16];
+    unsigned char stream_block[16];
+    size_t nc_off = 0;
+    memcpy(nonce_counter, iv, 16);
+    memset(stream_block, 0, 16);
+    ret = mbedtls_aes_crypt_ctr(&aes, ctlen, &nc_off, nonce_counter,
+                                stream_block, ciphertext, output);
+    mbedtls_aes_free(&aes);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES CTR decryption failed");
+      return 2;
+    }
+    lua_pushlstring(L, (const char *)output, ctlen);
+    free(output);
+    return 1;
+  } else if (is_gcm) {
+    // GCM mode: authenticated decryption
+    output = malloc(ctlen);
+    if (!output) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      return 2;
+    }
+    mbedtls_gcm_context gcm;
+    mbedtls_gcm_init(&gcm);
+    ret = mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, key, keylen * 8);
+    if (ret != 0) {
+      free(output);
+      mbedtls_gcm_free(&gcm);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to set AES GCM key");
+      return 2;
+    }
+    ret = mbedtls_gcm_auth_decrypt(&gcm, ctlen, iv, ivlen, aad, aadlen, tag,
+                                   taglen, ciphertext, output);
+    mbedtls_gcm_free(&gcm);
+    if (ret != 0) {
+      free(output);
+      lua_pushnil(L);
+      lua_pushstring(L, "AES GCM decryption failed or authentication failed");
+      return 2;
+    }
+    lua_pushlstring(L, (const char *)output, ctlen);
+    free(output);
+    return 1;
+  }
+  lua_pushnil(L);
+  lua_pushstring(L, "Internal error in AES decrypt");
+  return 2;
 }
 
 // LuaCrypto compatible API
 static int LuaCryptoSign(lua_State *L) {
-    const char *dtype = luaL_checkstring(L, 1); // Type of signature (e.g., "rsa", "ecdsa")
-    lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
+  const char *dtype =
+      luaL_checkstring(L, 1);  // Type of signature (e.g., "rsa", "ecdsa")
+  lua_remove(L, 1);  // Remove the first argument (key type or cipher type)
+                     // before dispatching
 
-    if (strcasecmp(dtype, "rsa") == 0) {
-        return LuaRSASign(L);
-    } else if (strcasecmp(dtype, "ecdsa") == 0) {
-        return LuaECDSASign(L);
-    } else {
-        return luaL_error(L, "Unsupported signature type: %s", dtype);
-    }
+  if (strcasecmp(dtype, "rsa") == 0) {
+    return LuaRSASign(L);
+  } else if (strcasecmp(dtype, "ecdsa") == 0) {
+    return LuaECDSASign(L);
+  } else {
+    return luaL_error(L, "Unsupported signature type: %s", dtype);
+  }
 }
 
 static int LuaCryptoVerify(lua_State *L) {
-    const char *dtype = luaL_checkstring(L, 1); // Type of signature (e.g., "rsa", "ecdsa")
-    lua_remove(L, 1); // Remove the first argument (key type or cipher type) before dispatching
+  const char *dtype =
+      luaL_checkstring(L, 1);  // Type of signature (e.g., "rsa", "ecdsa")
+  lua_remove(L, 1);  // Remove the first argument (key type or cipher type)
+                     // before dispatching
 
-    if (strcasecmp(dtype, "rsa") == 0) {
-        return LuaRSAVerify(L);
-    } else if (strcasecmp(dtype, "ecdsa") == 0) {
-        return LuaECDSAVerify(L);
-    } else {
-        return luaL_error(L, "Unsupported signature type: %s", dtype);
-    }
+  if (strcasecmp(dtype, "rsa") == 0) {
+    return LuaRSAVerify(L);
+  } else if (strcasecmp(dtype, "ecdsa") == 0) {
+    return LuaECDSAVerify(L);
+  } else {
+    return luaL_error(L, "Unsupported signature type: %s", dtype);
+  }
 }
 
 static int LuaCryptoEncrypt(lua_State *L) {
-    // Args: cipher_type, key, msg, options table
-    const char *cipher = luaL_checkstring(L, 1);
-    // Remove cipher_type from stack, so key is at 1, msg at 2, options at 3
-    lua_remove(L, 1);
-    if (strcasecmp(cipher, "rsa") == 0) {
-        // Update LuaRSAEncrypt to accept (key, msg, options)
-        return LuaRSAEncrypt(L);
-    } else if (strcasecmp(cipher, "aes") == 0) {
-        return LuaAesEncrypt(L);
-    } else {
-        return luaL_error(L, "Unsupported cipher type: %s", cipher);
-    }
+  // Args: cipher_type, key, msg, options table
+  const char *cipher = luaL_checkstring(L, 1);
+  lua_remove(L, 1);  // Remove cipher_type from stack, so key is at 1, msg at 2,
+                     // options at 3
+
+  if (strcasecmp(cipher, "rsa") == 0) {
+    return LuaRSAEncrypt(L);
+  } else if (strcasecmp(cipher, "aes") == 0) {
+    return LuaAesEncrypt(L);
+  } else {
+    return luaL_error(L, "Unsupported cipher type: %s", cipher);
+  }
 }
 
 static int LuaCryptoDecrypt(lua_State *L) {
-    // Args: cipher_type, key, ciphertext, options table
-    const char *cipher = luaL_checkstring(L, 1);
-    lua_remove(L, 1); // Remove cipher_type, so key is at 1, ciphertext at 2, options at 3
-    if (strcasecmp(cipher, "rsa") == 0) {
-        return LuaRSADecrypt(L);
-    } else if (strcasecmp(cipher, "aes") == 0) {
-        return LuaAesDecrypt(L);
-    } else {
-        return luaL_error(L, "Unsupported cipher type: %s", cipher);
-    }
+  // Args: cipher_type, key, ciphertext, options table
+  const char *cipher = luaL_checkstring(L, 1);
+  lua_remove(
+      L,
+      1);  // Remove cipher_type, so key is at 1, ciphertext at 2, options at 3
+
+  if (strcasecmp(cipher, "rsa") == 0) {
+    return LuaRSADecrypt(L);
+  } else if (strcasecmp(cipher, "aes") == 0) {
+    return LuaAesDecrypt(L);
+  } else {
+    return luaL_error(L, "Unsupported cipher type: %s", cipher);
+  }
 }
 
 static int LuaCryptoGenerateKeyPair(lua_State *L) {
-    // If the first argument is a number, treat as RSA key length
-    if (lua_gettop(L) >= 1 && lua_type(L, 1) == LUA_TNUMBER) {
-        // Call LuaRSAGenerateKeyPair with the number as the key length
-        return LuaRSAGenerateKeyPair(L);
-    }
-    // Otherwise, get the key type from the first argument, default to "rsa" if not provided
-    const char *type = luaL_optstring(L, 1, "rsa");
-    lua_remove(L, 1);
-    if (strcasecmp(type, "rsa") == 0) {
-        return LuaRSAGenerateKeyPair(L);
-    } else if (strcasecmp(type, "ecdsa") == 0) {
-        return LuaECDSAGenerateKeyPair(L);
-    } else if (strcasecmp(type, "aes") == 0) {
-        return LuaAesGenerateKey(L);
-    } else {
-        return luaL_error(L, "Unsupported key type: %s", type);
-    }
+  // If the first argument is a number, treat it as RSA key length
+  if (lua_gettop(L) >= 1 && lua_type(L, 1) == LUA_TNUMBER) {
+    // Call LuaRSAGenerateKeyPair with the number as the key length
+    return LuaRSAGenerateKeyPair(L);
+  }
+  // Otherwise, get the key type from the first argument, default to "rsa" if
+  // not provided
+  const char *type = luaL_optstring(L, 1, "rsa");
+  lua_remove(L, 1);
+  if (strcasecmp(type, "rsa") == 0) {
+    return LuaRSAGenerateKeyPair(L);
+  } else if (strcasecmp(type, "ecdsa") == 0) {
+    return LuaECDSAGenerateKeyPair(L);
+  } else if (strcasecmp(type, "aes") == 0) {
+    return LuaAesGenerateKey(L);
+  } else {
+    return luaL_error(L, "Unsupported key type: %s", type);
+  }
 }
 
 static const luaL_Reg kLuaCrypto[] = {
-  {"sign", LuaCryptoSign},                       //
-  {"verify", LuaCryptoVerify},                   //
-  {"encrypt", LuaCryptoEncrypt},                 //
-  {"decrypt", LuaCryptoDecrypt},                 //
-  {"generatekeypair", LuaCryptoGenerateKeyPair}, //
-  {"convertPemToJwk", LuaConvertPemToJwk},       // 
-  {"generateCsr", LuaGenerateCSR},               //
-  {0},                                           //
+    {"sign", LuaCryptoSign},                        //
+    {"verify", LuaCryptoVerify},                    //
+    {"encrypt", LuaCryptoEncrypt},                  //
+    {"decrypt", LuaCryptoDecrypt},                  //
+    {"generatekeypair", LuaCryptoGenerateKeyPair},  //
+    {"convertPemToJwk", LuaConvertPemToJwk},        //
+    {"generateCsr", LuaGenerateCSR},                //
+    {0},                                            //
 };
 
 int LuaCrypto(lua_State *L) {
