@@ -166,6 +166,40 @@ local function test_pem_to_jwk()
     assert_equal(pub_jwk.kty, "EC", "kty is correct")
 end
 
+-- Test JwkToPem conversion
+local function test_jwk_to_pem()
+    local priv_key, pub_key = crypto.generatekeypair()
+    local priv_jwk = crypto.convertPemToJwk(priv_key)
+    local pub_jwk = crypto.convertPemToJwk(pub_key)
+
+    local priv_pem = crypto.convertJwkToPem(priv_jwk)
+    local pub_pem = crypto.convertJwkToPem(pub_jwk)
+    assert_equal(type(priv_pem), "string", "Private PEM type")
+
+    -- Roundtrip
+    assert_equal(priv_key,priv_pem, "Private PEM matches original RSA key")
+    assert_equal(pub_key,pub_pem, "Public PEM matches original RSA key")
+
+    local pub_pem = crypto.convertJwkToPem(pub_jwk)
+    assert_equal(type(pub_pem), "string", "Public PEM type")
+
+    -- Test ECDSA keys
+    local priv_key, pub_key = crypto.generatekeypair('ecdsa')
+    local priv_jwk = crypto.convertPemToJwk(priv_key)
+    local pub_jwk = crypto.convertPemToJwk(pub_key)
+
+    local priv_pem = crypto.convertJwkToPem(priv_jwk)
+    local pub_pem = crypto.convertJwkToPem(pub_jwk)
+    assert_equal(type(priv_pem), "string", "Private PEM type for ECDSA")
+    
+    -- Roundtrip
+    assert_equal(priv_key,priv_pem, "Private PEM matches original ECDSA key")
+    assert_equal(pub_key,pub_pem, "Public PEM matches original ECDSA key")
+
+    local pub_pem = crypto.convertJwkToPem(pub_jwk)
+    assert_equal(type(pub_pem), "string", "Public PEM type for ECDSA")
+end
+
 -- Test CSR generation
 local function test_csr_generation()
     local priv_key, _ = crypto.generatekeypair()
@@ -205,6 +239,7 @@ local function run_tests()
     test_aes_encryption_decryption_ctr()
     test_aes_encryption_decryption_gcm()
     test_pem_to_jwk()
+    test_jwk_to_pem()
     test_csr_generation()
     EXIT = 0
     return EXIT

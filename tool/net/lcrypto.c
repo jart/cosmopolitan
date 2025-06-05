@@ -1,6 +1,24 @@
-#include "libc/log/log.h"
-#include "net/https/https.h"
-#include "third_party/lua/lauxlib.h"
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2025 Miguel Angel Terron                                           │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+
+#include "tool/net/luacheck.h"
+// mbedTLS
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/base64.h"
 #include "third_party/mbedtls/ctr_drbg.h"
@@ -14,227 +32,36 @@
 #include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/x509_csr.h"
 
-// Standard C library and redbean utilities
-#include "libc/errno.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "tool/net/luacheck.h"
-
-// Parse PEM keys and convert them into JWK format
-static int LuaConvertPemToJwk(lua_State *L) {
-  const char *pem_key = luaL_checkstring(L, 1);
-
-  mbedtls_pk_context key;
-  mbedtls_pk_init(&key);
+// Strong RNG using mbedtls_entropy_context and mbedtls_ctr_drbg_context
+int GenerateRandom(void *ctx, unsigned char *output, size_t len) {
+  static mbedtls_entropy_context entropy;
+  static mbedtls_ctr_drbg_context ctr_drbg;
+  static int initialized = 0;
   int ret;
+  const char *pers = "redbean_entropy";
 
-  // Parse the PEM key
-  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)pem_key,
-                                  strlen(pem_key) + 1, NULL, 0)) != 0 &&
-      (ret = mbedtls_pk_parse_public_key(&key, (const unsigned char *)pem_key,
-                                         strlen(pem_key) + 1)) != 0) {
-    lua_pushnil(L);
-    lua_pushfstring(L, "Failed to parse PEM key: -0x%04x", -ret);
-    mbedtls_pk_free(&key);
-    return 2;
-  }
+  if (!initialized) {
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
 
-  lua_newtable(L);  // Create a new Lua table
-
-  if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_RSA) {
-    // Handle RSA keys
-    const mbedtls_rsa_context *rsa = mbedtls_pk_rsa(key);
-    size_t n_len = mbedtls_mpi_size(&rsa->N);
-    size_t e_len = mbedtls_mpi_size(&rsa->E);
-
-    unsigned char *n = malloc(n_len);
-    unsigned char *e = malloc(e_len);
-
-    if (!n || !e) {
-      lua_pushnil(L);
-      lua_pushstring(L, "Memory allocation failed");
-      free(n);
-      free(e);
-      mbedtls_pk_free(&key);
-      return 2;
+    ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                (const unsigned char *)pers, strlen(pers));
+    if (ret != 0) {
+      // Clean up on failure
+      mbedtls_ctr_drbg_free(&ctr_drbg);
+      mbedtls_entropy_free(&entropy);
+      return -1;
     }
-
-    mbedtls_mpi_write_binary(&rsa->N, n, n_len);
-    mbedtls_mpi_write_binary(&rsa->E, e, e_len);
-
-    char *n_b64 = NULL, *e_b64 = NULL;
-    size_t n_b64_len, e_b64_len;
-
-    mbedtls_base64_encode(NULL, 0, &n_b64_len, n, n_len);
-    mbedtls_base64_encode(NULL, 0, &e_b64_len, e, e_len);
-
-    n_b64 = malloc(n_b64_len + 1);
-    e_b64 = malloc(e_b64_len + 1);
-
-    if (!n_b64 || !e_b64) {
-      lua_pushnil(L);
-      lua_pushstring(L, "Memory allocation failed");
-      free(n);
-      free(e);
-      free(n_b64);
-      free(e_b64);
-      mbedtls_pk_free(&key);
-      return 2;
-    }
-
-    mbedtls_base64_encode((unsigned char *)n_b64, n_b64_len, &n_b64_len, n,
-                          n_len);
-    mbedtls_base64_encode((unsigned char *)e_b64, e_b64_len, &e_b64_len, e,
-                          e_len);
-
-    n_b64[n_b64_len] = '\0';
-    e_b64[e_b64_len] = '\0';
-
-    lua_pushstring(L, "RSA");
-    lua_setfield(L, -2, "kty");
-    lua_pushstring(L, n_b64);
-    lua_setfield(L, -2, "n");
-    lua_pushstring(L, e_b64);
-    lua_setfield(L, -2, "e");
-
-    free(n);
-    free(e);
-    free(n_b64);
-    free(e_b64);
-  } else if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
-    // Handle ECDSA keys
-    const mbedtls_ecp_keypair *ec = mbedtls_pk_ec(key);
-    const mbedtls_ecp_point *Q = &ec->Q;
-    size_t x_len = (ec->grp.pbits + 7) / 8;
-    size_t y_len = (ec->grp.pbits + 7) / 8;
-
-    unsigned char *x = malloc(x_len);
-    unsigned char *y = malloc(y_len);
-
-    if (!x || !y) {
-      lua_pushnil(L);
-      lua_pushstring(L, "Memory allocation failed");
-      free(x);
-      free(y);
-      mbedtls_pk_free(&key);
-      return 2;
-    }
-
-    mbedtls_mpi_write_binary(&Q->X, x, x_len);
-    mbedtls_mpi_write_binary(&Q->Y, y, y_len);
-
-    char *x_b64 = NULL, *y_b64 = NULL;
-    size_t x_b64_len, y_b64_len;
-
-    mbedtls_base64_encode(NULL, 0, &x_b64_len, x, x_len);
-    mbedtls_base64_encode(NULL, 0, &y_b64_len, y, y_len);
-
-    x_b64 = malloc(x_b64_len + 1);
-    y_b64 = malloc(y_b64_len + 1);
-
-    if (!x_b64 || !y_b64) {
-      lua_pushnil(L);
-      lua_pushstring(L, "Memory allocation failed");
-      free(x);
-      free(y);
-      free(x_b64);
-      free(y_b64);
-      mbedtls_pk_free(&key);
-      return 2;
-    }
-
-    mbedtls_base64_encode((unsigned char *)x_b64, x_b64_len, &x_b64_len, x,
-                          x_len);
-    mbedtls_base64_encode((unsigned char *)y_b64, y_b64_len, &y_b64_len, y,
-                          y_len);
-
-    x_b64[x_b64_len] = '\0';
-    y_b64[y_b64_len] = '\0';
-
-    lua_pushstring(L, "EC");
-    lua_setfield(L, -2, "kty");
-    lua_pushstring(L, mbedtls_ecp_curve_info_from_grp_id(ec->grp.id)->name);
-    lua_setfield(L, -2, "crv");
-    lua_pushstring(L, x_b64);
-    lua_setfield(L, -2, "x");
-    lua_pushstring(L, y_b64);
-    lua_setfield(L, -2, "y");
-
-    free(x);
-    free(y);
-    free(x_b64);
-    free(y_b64);
-  } else {
-    lua_pushnil(L);
-    lua_pushstring(L, "Unsupported key type");
-    mbedtls_pk_free(&key);
-    return 2;
+    initialized = 1;
   }
-
-  mbedtls_pk_free(&key);
-  return 1;
-}
-
-// CSR Creation Function
-static int LuaGenerateCSR(lua_State *L) {
-  const char *key_pem = luaL_checkstring(L, 1);
-  const char *subject_name;
-  const char *san_list = luaL_optstring(L, 3, NULL);
-
-  if (lua_isnoneornil(L, 2)) {
-    subject_name = "";
-  } else {
-    subject_name = luaL_checkstring(L, 2);
+  // mbedtls_ctr_drbg_random returns 0 on success
+  ret = mbedtls_ctr_drbg_random(&ctr_drbg, output, len);
+  if (ret != 0) {
+    // If DRBG fails, reinitialize on next call
+    initialized = 0;
+    return -1;
   }
-
-  if (lua_isnoneornil(L, 3) && subject_name[0] == '\0') {
-    lua_pushnil(L);
-    lua_pushstring(L, "Subject name or SANs are required");
-    return 2;
-  }
-  mbedtls_pk_context key;
-  mbedtls_x509write_csr req;
-  char buf[4096];
-  int ret;
-
-  mbedtls_pk_init(&key);
-  mbedtls_x509write_csr_init(&req);
-
-  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)key_pem,
-                                  strlen(key_pem) + 1, NULL, 0)) != 0) {
-    lua_pushnil(L);
-    lua_pushfstring(L, "Failed to parse key: %d", ret);
-    return 2;
-  }
-
-  mbedtls_x509write_csr_set_subject_name(&req, subject_name);
-  mbedtls_x509write_csr_set_key(&req, &key);
-  mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_SHA256);
-
-  if (san_list) {
-    if ((ret = mbedtls_x509write_csr_set_extension(
-             &req, MBEDTLS_OID_SUBJECT_ALT_NAME,
-             MBEDTLS_OID_SIZE(MBEDTLS_OID_SUBJECT_ALT_NAME),
-             (const unsigned char *)san_list, strlen(san_list))) != 0) {
-      lua_pushnil(L);
-      lua_pushfstring(L, "Failed to set SANs: %d", ret);
-      return 2;
-    }
-  }
-
-  if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)buf, sizeof(buf),
-                                       NULL, NULL)) < 0) {
-    lua_pushnil(L);
-    lua_pushfstring(L, "Failed to write CSR: %d", ret);
-    return 2;
-  }
-
-  lua_pushstring(L, buf);
-
-  mbedtls_pk_free(&key);
-  mbedtls_x509write_csr_free(&req);
-
-  return 1;
+  return 0;
 }
 
 // RSA
@@ -256,7 +83,7 @@ static bool RSAGenerateKeyPair(char **private_key_pem, size_t *private_key_len,
   }
 
   // Generate RSA key
-  if ((rc = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), GenerateHardRandom, 0,
+  if ((rc = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), GenerateRandom, 0,
                                 key_length, 65537)) != 0) {
     WARNF("Failed to generate key (grep -0x%04x)", -rc);
     mbedtls_pk_free(&key);
@@ -368,8 +195,8 @@ static char *RSAEncrypt(const char *public_key_pem, const unsigned char *data,
   }
 
   // Encrypt data
-  if ((rc = mbedtls_rsa_pkcs1_encrypt(mbedtls_pk_rsa(key), GenerateHardRandom,
-                                      0, MBEDTLS_RSA_PUBLIC, data_len, data,
+  if ((rc = mbedtls_rsa_pkcs1_encrypt(mbedtls_pk_rsa(key), GenerateRandom, 0,
+                                      MBEDTLS_RSA_PUBLIC, data_len, data,
                                       output)) != 0) {
     WARNF("Encryption failed (grep -0x%04x)", -rc);
     free(output);
@@ -436,8 +263,8 @@ static char *RSADecrypt(const char *private_key_pem,
 
   // Decrypt data
   size_t output_len = 0;
-  if ((rc = mbedtls_rsa_pkcs1_decrypt(mbedtls_pk_rsa(key), GenerateHardRandom,
-                                      0, MBEDTLS_RSA_PRIVATE, &output_len,
+  if ((rc = mbedtls_rsa_pkcs1_decrypt(mbedtls_pk_rsa(key), GenerateRandom, 0,
+                                      MBEDTLS_RSA_PRIVATE, &output_len,
                                       encrypted_data, output, key_size)) != 0) {
     WARNF("Decryption failed (grep -0x%04x)", -rc);
     free(output);
@@ -531,7 +358,7 @@ static char *RSASign(const char *private_key_pem, const unsigned char *data,
 
   // Sign the hash
   if ((rc = mbedtls_pk_sign(&key, hash_algo, hash, hash_len, signature, sig_len,
-                            GenerateHardRandom, 0)) != 0) {
+                            GenerateRandom, 0)) != 0) {
     free(signature);
     mbedtls_pk_free(&key);
     return NULL;
@@ -742,6 +569,9 @@ static int LuaListHashAlgorithms(lua_State *L) {
   lua_pushstring(L, "SHA-512");
   lua_rawseti(L, -2, 6);
 
+  lua_pushstring(L, "MD5");
+  lua_rawseti(L, -2, 7);
+
   return 1;
 }
 
@@ -861,8 +691,7 @@ static int ECDSAGenerateKeyPair(const char *curve_name, char **priv_key_pem,
     goto cleanup;
   }
 
-  ret =
-      mbedtls_ecp_gen_key(curve_id, mbedtls_pk_ec(key), GenerateHardRandom, 0);
+  ret = mbedtls_ecp_gen_key(curve_id, mbedtls_pk_ec(key), GenerateRandom, 0);
   if (ret != 0) {
     WARNF("(ecdsa) Failed to generate key: -0x%04x", -ret);
     goto cleanup;
@@ -915,7 +744,6 @@ cleanup:
   }
   return ret;
 }
-// Lua binding for generating ECDSA keys
 static int LuaECDSAGenerateKeyPair(lua_State *L) {
   const char *curve_name = NULL;
   char *priv_key_pem = NULL;
@@ -925,7 +753,6 @@ static int LuaECDSAGenerateKeyPair(lua_State *L) {
   if (lua_gettop(L) >= 1 && !lua_isnil(L, 1)) {
     curve_name = luaL_checkstring(L, 1);
   }
-  // If not provided, generate_key_pem will use the default
 
   int ret = ECDSAGenerateKeyPair(curve_name, &priv_key_pem, &pub_key_pem);
 
@@ -996,9 +823,9 @@ static int ECDSASign(const char *priv_key_pem, const char *message,
     goto cleanup;
   }
 
-  // Sign the hash using GenerateHardRandom
+  // Sign the hash using GenerateRandom
   ret = mbedtls_pk_sign(&key, hash_to_md_type(hash_alg), hash, hash_size,
-                        *signature, sig_len, GenerateHardRandom, 0);
+                        *signature, sig_len, GenerateRandom, 0);
 
   if (ret != 0) {
     WARNF("(ecdsa) Failed to sign message: -0x%04x", -ret);
@@ -1122,26 +949,10 @@ static int LuaAesGenerateKey(lua_State *L) {
     return 2;
   }
   unsigned char key[32];
-  mbedtls_entropy_context entropy;
-  mbedtls_ctr_drbg_context ctr_drbg;
-  mbedtls_entropy_init(&entropy);
-  mbedtls_ctr_drbg_init(&ctr_drbg);
-  const char *pers = "aes_keygen";
-  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                                  (const unsigned char *)pers, strlen(pers));
-  if (ret != 0) {
+  // Generate random key
+  if (GenerateRandom(NULL, key, keylen) != 0) {
     lua_pushnil(L);
-    lua_pushstring(L, "Failed to initialize RNG for AES key");
-    mbedtls_ctr_drbg_free(&ctr_drbg);
-    mbedtls_entropy_free(&entropy);
-    return 2;
-  }
-  ret = mbedtls_ctr_drbg_random(&ctr_drbg, key, keylen);
-  mbedtls_ctr_drbg_free(&ctr_drbg);
-  mbedtls_entropy_free(&entropy);
-  if (ret != 0) {
-    lua_pushnil(L);
-    lua_pushstring(L, "Failed to generate random AES key");
+    lua_pushstring(L, "Failed to generate random key");
     return 2;
   }
   lua_pushlstring(L, (const char *)key, keylen);
@@ -1234,14 +1045,13 @@ static int LuaAesEncrypt(lua_State *L) {
       lua_pushstring(L, "Failed to allocate IV");
       return 2;
     }
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_init(&entropy);
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
-    mbedtls_ctr_drbg_random(&ctr_drbg, gen_iv, ivlen);
-    mbedtls_ctr_drbg_free(&ctr_drbg);
-    mbedtls_entropy_free(&entropy);
+    // Generate random IV
+    if (GenerateRandom(NULL, gen_iv, ivlen) != 0) {
+      free(gen_iv);
+      lua_pushnil(L);
+      lua_pushstring(L, "Failed to generate random IV");
+      return 2;
+    }
     iv = gen_iv;
     iv_was_generated = 1;
   }
@@ -1568,12 +1378,470 @@ static int LuaAesDecrypt(lua_State *L) {
   return 2;
 }
 
+
+// JWK functions
+
+// Convert JWK (Lua table) to PEM key format
+static int LuaConvertJwkToPem(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  const char *kty;
+  lua_getfield(L, 1, "kty");
+  kty = lua_tostring(L, -1);
+  if (!kty) {
+    lua_pushnil(L);
+    lua_pushstring(L, "Missing 'kty' in JWK");
+    return 2;
+  }
+
+  int ret = -1;
+  char *pem = NULL;
+  mbedtls_pk_context pk;
+  mbedtls_pk_init(&pk);
+
+  if (strcasecmp(kty, "RSA") == 0) {
+    // RSA JWK: n, e (base64url), optionally d, p, q, dp, dq, qi
+    lua_getfield(L, 1, "n");
+    lua_getfield(L, 1, "e");
+    const char *n_b64 = lua_tostring(L, -2);
+    const char *e_b64 = lua_tostring(L, -1);
+    // Optional private fields
+    lua_getfield(L, 1, "d");
+    lua_getfield(L, 1, "p");
+    lua_getfield(L, 1, "q");
+    lua_getfield(L, 1, "dp");
+    lua_getfield(L, 1, "dq");
+    lua_getfield(L, 1, "qi");
+    const char *d_b64 = lua_tostring(L, -6);
+    const char *p_b64 = lua_tostring(L, -5);
+    const char *q_b64 = lua_tostring(L, -4);
+    const char *dp_b64 = lua_tostring(L, -3);
+    const char *dq_b64 = lua_tostring(L, -2);
+    const char *qi_b64 = lua_tostring(L, -1);
+    int has_private = d_b64 && *d_b64;
+    // Decode base64url to binary
+    size_t n_len, e_len;
+    unsigned char n_bin[1024], e_bin[16];
+    char *n_b64_std = strdup(n_b64), *e_b64_std = strdup(e_b64);
+    for (char *p = n_b64_std; *p; ++p) if (*p == '-') *p = '+'; else if (*p == '_') *p = '/';
+    for (char *p = e_b64_std; *p; ++p) if (*p == '-') *p = '+'; else if (*p == '_') *p = '/';
+    int n_mod = strlen(n_b64_std) % 4;
+    int e_mod = strlen(e_b64_std) % 4;
+    if (n_mod) for (int i = 0; i < 4 - n_mod; ++i) strcat(n_b64_std, "=");
+    if (e_mod) for (int i = 0; i < 4 - e_mod; ++i) strcat(e_b64_std, "=");
+    if (mbedtls_base64_decode(n_bin, sizeof(n_bin), &n_len, (const unsigned char *)n_b64_std, strlen(n_b64_std)) != 0 ||
+        mbedtls_base64_decode(e_bin, sizeof(e_bin), &e_len, (const unsigned char *)e_b64_std, strlen(e_b64_std)) != 0) {
+      free(n_b64_std); free(e_b64_std);
+      lua_pushnil(L);
+      lua_pushstring(L, "Base64 decode failed");
+      return 2;
+    }
+    free(n_b64_std); free(e_b64_std);
+    // Build RSA context in pk
+    if ((ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))) != 0) {
+      lua_pushnil(L); lua_pushstring(L, "mbedtls_pk_setup failed"); return 2;
+    }
+    mbedtls_rsa_context *rsa = mbedtls_pk_rsa(pk);
+    mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15, 0);
+    mbedtls_mpi_read_binary(&rsa->N, n_bin, n_len);
+    mbedtls_mpi_read_binary(&rsa->E, e_bin, e_len);
+    rsa->len = n_len;
+    if (has_private) {
+      // Decode and set private fields
+      size_t d_len, p_len, q_len, dp_len, dq_len, qi_len;
+      unsigned char d_bin[1024], p_bin[512], q_bin[512], dp_bin[512], dq_bin[512], qi_bin[512];
+      // Decode all private fields (skip if NULL)
+      #define DECODE_B64URL(var, b64, bin, binlen) \
+        if (b64 && *b64) { \
+          char *b64_std = strdup(b64); \
+          for (char *p = b64_std; *p; ++p) if (*p == '-') *p = '+'; else if (*p == '_') *p = '/'; \
+          int mod = strlen(b64_std) % 4; \
+          if (mod) for (int i = 0; i < 4 - mod; ++i) strcat(b64_std, "="); \
+          mbedtls_base64_decode(bin, sizeof(bin), &binlen, (const unsigned char *)b64_std, strlen(b64_std)); \
+          free(b64_std); \
+        }
+      DECODE_B64URL(d, d_b64, d_bin, d_len);
+      DECODE_B64URL(p, p_b64, p_bin, p_len);
+      DECODE_B64URL(q, q_b64, q_bin, q_len);
+      DECODE_B64URL(dp, dp_b64, dp_bin, dp_len);
+      DECODE_B64URL(dq, dq_b64, dq_bin, dq_len);
+      DECODE_B64URL(qi, qi_b64, qi_bin, qi_len);
+      mbedtls_mpi_read_binary(&rsa->D, d_bin, d_len);
+      mbedtls_mpi_read_binary(&rsa->P, p_bin, p_len);
+      mbedtls_mpi_read_binary(&rsa->Q, q_bin, q_len);
+      mbedtls_mpi_read_binary(&rsa->DP, dp_bin, dp_len);
+      mbedtls_mpi_read_binary(&rsa->DQ, dq_bin, dq_len);
+      mbedtls_mpi_read_binary(&rsa->QP, qi_bin, qi_len);
+    }
+    // Write PEM
+    unsigned char buf[4096];
+    if (has_private) {
+      ret = mbedtls_pk_write_key_pem(&pk, buf, sizeof(buf));
+    } else {
+      ret = mbedtls_pk_write_pubkey_pem(&pk, buf, sizeof(buf));
+    }
+    if (ret != 0) {
+      mbedtls_pk_free(&pk);
+      lua_pushnil(L); lua_pushstring(L, "PEM write failed"); return 2;
+    }
+    pem = strdup((char *)buf);
+    mbedtls_pk_free(&pk);
+    lua_pushstring(L, pem);
+    free(pem);
+    return 1;
+  } else if (strcasecmp(kty, "EC") == 0) {
+    // EC JWK: crv, x, y (base64url), optionally d
+    lua_getfield(L, 1, "crv");
+    lua_getfield(L, 1, "x");
+    lua_getfield(L, 1, "y");
+    lua_getfield(L, 1, "d");
+    const char *crv = lua_tostring(L, -4);
+    const char *x_b64 = lua_tostring(L, -3);
+    const char *y_b64 = lua_tostring(L, -2);
+    const char *d_b64 = lua_tostring(L, -1);
+    int has_private = d_b64 && *d_b64;
+    mbedtls_ecp_group_id gid = find_curve_by_name(crv);
+    if (gid == MBEDTLS_ECP_DP_NONE) {
+      lua_pushnil(L); lua_pushstring(L, "Unknown curve"); return 2;
+    }
+    size_t x_len, y_len;
+    unsigned char x_bin[72], y_bin[72];
+    char *x_b64_std = strdup(x_b64), *y_b64_std = strdup(y_b64);
+    for (char *p = x_b64_std; *p; ++p) if (*p == '-') *p = '+'; else if (*p == '_') *p = '/';
+    for (char *p = y_b64_std; *p; ++p) if (*p == '-') *p = '+'; else if (*p == '_') *p = '/';
+    int x_mod = strlen(x_b64_std) % 4;
+    int y_mod = strlen(y_b64_std) % 4;
+    if (x_mod) for (int i = 0; i < 4 - x_mod; ++i) strcat(x_b64_std, "=");
+    if (y_mod) for (int i = 0; i < 4 - y_mod; ++i) strcat(y_b64_std, "=");
+    if (mbedtls_base64_decode(x_bin, sizeof(x_bin), &x_len, (const unsigned char *)x_b64_std, strlen(x_b64_std)) != 0 ||
+        mbedtls_base64_decode(y_bin, sizeof(y_bin), &y_len, (const unsigned char *)y_b64_std, strlen(y_b64_std)) != 0) {
+      free(x_b64_std); free(y_b64_std);
+      lua_pushnil(L); lua_pushstring(L, "Base64 decode failed"); return 2;
+    }
+    free(x_b64_std); free(y_b64_std);
+    if ((ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
+      lua_pushnil(L); lua_pushstring(L, "mbedtls_pk_setup failed"); return 2;
+    }
+    mbedtls_ecp_keypair *ec = mbedtls_pk_ec(pk);
+    mbedtls_ecp_keypair_init(ec);
+    mbedtls_ecp_group_load(&ec->grp, gid);
+    mbedtls_mpi_read_binary(&ec->Q.X, x_bin, x_len);
+    mbedtls_mpi_read_binary(&ec->Q.Y, y_bin, y_len);
+    mbedtls_mpi_lset(&ec->Q.Z, 1);
+    if (has_private) {
+      size_t d_len;
+      unsigned char d_bin[72];
+      DECODE_B64URL(d, d_b64, d_bin, d_len);
+      mbedtls_mpi_read_binary(&ec->d, d_bin, d_len);
+    }
+    unsigned char buf[4096];
+    if (has_private) {
+      ret = mbedtls_pk_write_key_pem(&pk, buf, sizeof(buf));
+    } else {
+      ret = mbedtls_pk_write_pubkey_pem(&pk, buf, sizeof(buf));
+    }
+    if (ret != 0) {
+      mbedtls_pk_free(&pk);
+      lua_pushnil(L); lua_pushstring(L, "PEM write failed"); return 2;
+    }
+    pem = strdup((char *)buf);
+    mbedtls_pk_free(&pk);
+    lua_pushstring(L, pem);
+    free(pem);
+    return 1;
+  } else {
+    lua_pushnil(L);
+    lua_pushstring(L, "Unsupported kty");
+    return 2;
+  }
+}
+
+// Convert PEM key to JWK (Lua table) format
+static int LuaConvertPemToJwk(lua_State *L) {
+  const char *pem_key = luaL_checkstring(L, 1);
+
+  mbedtls_pk_context key;
+  mbedtls_pk_init(&key);
+  int ret;
+
+  // Parse the PEM key
+  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)pem_key,
+                                  strlen(pem_key) + 1, NULL, 0)) != 0 &&
+      (ret = mbedtls_pk_parse_public_key(&key, (const unsigned char *)pem_key,
+                                         strlen(pem_key) + 1)) != 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to parse PEM key: -0x%04x", -ret);
+    mbedtls_pk_free(&key);
+    return 2;
+  }
+
+  lua_newtable(L);
+
+  if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_RSA) {
+    lua_pushstring(L, "RSA");
+    lua_setfield(L, -2, "kty");
+    const mbedtls_rsa_context *rsa = mbedtls_pk_rsa(key);
+    size_t n_len = mbedtls_mpi_size(&rsa->N);
+    size_t e_len = mbedtls_mpi_size(&rsa->E);
+    unsigned char *n = malloc(n_len);
+    unsigned char *e = malloc(e_len);
+    if (!n || !e) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(n);
+      free(e);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+    mbedtls_mpi_write_binary(&rsa->N, n, n_len);
+    mbedtls_mpi_write_binary(&rsa->E, e, e_len);
+    char *n_b64 = NULL, *e_b64 = NULL;
+    size_t n_b64_len, e_b64_len;
+    mbedtls_base64_encode(NULL, 0, &n_b64_len, n, n_len);
+    mbedtls_base64_encode(NULL, 0, &e_b64_len, e, e_len);
+    n_b64 = malloc(n_b64_len + 1);
+    e_b64 = malloc(e_b64_len + 1);
+    mbedtls_base64_encode((unsigned char *)n_b64, n_b64_len, &n_b64_len, n,
+                          n_len);
+    mbedtls_base64_encode((unsigned char *)e_b64, e_b64_len, &e_b64_len, e,
+                          e_len);
+    n_b64[n_b64_len] = '\0';
+    e_b64[e_b64_len] = '\0';
+    lua_pushstring(L, n_b64);
+    lua_setfield(L, -2, "n");
+    lua_pushstring(L, e_b64);
+    lua_setfield(L, -2, "e");
+    // If private key, add private fields
+    if (mbedtls_rsa_check_privkey(rsa) == 0 && rsa->D.p) {
+      size_t d_len = mbedtls_mpi_size(&rsa->D);
+      size_t p_len = mbedtls_mpi_size(&rsa->P);
+      size_t q_len = mbedtls_mpi_size(&rsa->Q);
+      size_t dp_len = mbedtls_mpi_size(&rsa->DP);
+      size_t dq_len = mbedtls_mpi_size(&rsa->DQ);
+      size_t qi_len = mbedtls_mpi_size(&rsa->QP);
+      unsigned char *d = malloc(d_len), *p = malloc(p_len), *q = malloc(q_len),
+                    *dp = malloc(dp_len), *dq = malloc(dq_len),
+                    *qi = malloc(qi_len);
+      if (!d || !p || !q || !dp || !dq || !qi) {
+        free(d);
+        free(p);
+        free(q);
+        free(dp);
+        free(dq);
+        free(qi);
+        lua_pushnil(L);
+        lua_pushstring(L, "Memory allocation failed");
+        mbedtls_pk_free(&key);
+        return 2;
+      }
+      mbedtls_mpi_write_binary(&rsa->D, d, d_len);
+      mbedtls_mpi_write_binary(&rsa->P, p, p_len);
+      mbedtls_mpi_write_binary(&rsa->Q, q, q_len);
+      mbedtls_mpi_write_binary(&rsa->DP, dp, dp_len);
+      mbedtls_mpi_write_binary(&rsa->DQ, dq, dq_len);
+      mbedtls_mpi_write_binary(&rsa->QP, qi, qi_len);
+      char *d_b64 = NULL, *p_b64 = NULL, *q_b64 = NULL, *dp_b64 = NULL,
+           *dq_b64 = NULL, *qi_b64 = NULL;
+      size_t d_b64_len, p_b64_len, q_b64_len, dp_b64_len, dq_b64_len,
+          qi_b64_len;
+      mbedtls_base64_encode(NULL, 0, &d_b64_len, d, d_len);
+      mbedtls_base64_encode(NULL, 0, &p_b64_len, p, p_len);
+      mbedtls_base64_encode(NULL, 0, &q_b64_len, q, q_len);
+      mbedtls_base64_encode(NULL, 0, &dp_b64_len, dp, dp_len);
+      mbedtls_base64_encode(NULL, 0, &dq_b64_len, dq, dq_len);
+      mbedtls_base64_encode(NULL, 0, &qi_b64_len, qi, qi_len);
+      d_b64 = malloc(d_b64_len + 1);
+      p_b64 = malloc(p_b64_len + 1);
+      q_b64 = malloc(q_b64_len + 1);
+      dp_b64 = malloc(dp_b64_len + 1);
+      dq_b64 = malloc(dq_b64_len + 1);
+      qi_b64 = malloc(qi_b64_len + 1);
+      mbedtls_base64_encode((unsigned char *)d_b64, d_b64_len, &d_b64_len, d,
+                            d_len);
+      mbedtls_base64_encode((unsigned char *)p_b64, p_b64_len, &p_b64_len, p,
+                            p_len);
+      mbedtls_base64_encode((unsigned char *)q_b64, q_b64_len, &q_b64_len, q,
+                            q_len);
+      mbedtls_base64_encode((unsigned char *)dp_b64, dp_b64_len, &dp_b64_len,
+                            dp, dp_len);
+      mbedtls_base64_encode((unsigned char *)dq_b64, dq_b64_len, &dq_b64_len,
+                            dq, dq_len);
+      mbedtls_base64_encode((unsigned char *)qi_b64, qi_b64_len, &qi_b64_len,
+                            qi, qi_len);
+      d_b64[d_b64_len] = '\0';
+      p_b64[p_b64_len] = '\0';
+      q_b64[q_b64_len] = '\0';
+      dp_b64[dp_b64_len] = '\0';
+      dq_b64[dq_b64_len] = '\0';
+      qi_b64[qi_b64_len] = '\0';
+      lua_pushstring(L, d_b64);
+      lua_setfield(L, -2, "d");
+      lua_pushstring(L, p_b64);
+      lua_setfield(L, -2, "p");
+      lua_pushstring(L, q_b64);
+      lua_setfield(L, -2, "q");
+      lua_pushstring(L, dp_b64);
+      lua_setfield(L, -2, "dp");
+      lua_pushstring(L, dq_b64);
+      lua_setfield(L, -2, "dq");
+      lua_pushstring(L, qi_b64);
+      lua_setfield(L, -2, "qi");
+      free(d);
+      free(p);
+      free(q);
+      free(dp);
+      free(dq);
+      free(qi);
+      free(d_b64);
+      free(p_b64);
+      free(q_b64);
+      free(dp_b64);
+      free(dq_b64);
+      free(qi_b64);
+    }
+    free(n);
+    free(e);
+    free(n_b64);
+    free(e_b64);
+  } else if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
+    // Handle ECDSA keys
+    const mbedtls_ecp_keypair *ec = mbedtls_pk_ec(key);
+    const mbedtls_ecp_point *Q = &ec->Q;
+    size_t x_len = (ec->grp.pbits + 7) / 8;
+    size_t y_len = (ec->grp.pbits + 7) / 8;
+    unsigned char *x = malloc(x_len);
+    unsigned char *y = malloc(y_len);
+    if (!x || !y) {
+      lua_pushnil(L);
+      lua_pushstring(L, "Memory allocation failed");
+      free(x);
+      free(y);
+      mbedtls_pk_free(&key);
+      return 2;
+    }
+    mbedtls_mpi_write_binary(&Q->X, x, x_len);
+    mbedtls_mpi_write_binary(&Q->Y, y, y_len);
+    char *x_b64 = NULL, *y_b64 = NULL;
+    size_t x_b64_len, y_b64_len;
+    mbedtls_base64_encode(NULL, 0, &x_b64_len, x, x_len);
+    mbedtls_base64_encode(NULL, 0, &y_b64_len, y, y_len);
+    x_b64 = malloc(x_b64_len + 1);
+    y_b64 = malloc(y_b64_len + 1);
+    mbedtls_base64_encode((unsigned char *)x_b64, x_b64_len, &x_b64_len, x, x_len);
+    mbedtls_base64_encode((unsigned char *)y_b64, y_b64_len, &y_b64_len, y, y_len);
+    x_b64[x_b64_len] = '\0';
+    y_b64[y_b64_len] = '\0';
+    // Set kty and crv for EC keys
+    lua_pushstring(L, "EC");
+    lua_setfield(L, -2, "kty");
+    const mbedtls_ecp_curve_info *curve_info = mbedtls_ecp_curve_info_from_grp_id(ec->grp.id);
+    if (curve_info && curve_info->name) {
+      lua_pushstring(L, curve_info->name);
+      lua_setfield(L, -2, "crv");
+    } else {
+      lua_pushstring(L, "unknown");
+      lua_setfield(L, -2, "crv");
+    }
+    lua_pushstring(L, x_b64);
+    lua_setfield(L, -2, "x");
+    lua_pushstring(L, y_b64);
+    lua_setfield(L, -2, "y");
+    // If private key, add 'd'
+    if (mbedtls_ecp_check_privkey(&ec->grp, &ec->d) == 0 && ec->d.p) {
+      size_t d_len = mbedtls_mpi_size(&ec->d);
+      unsigned char *d = malloc(d_len);
+      if (!d) { free(x); free(y); free(x_b64); free(y_b64); lua_pushnil(L); lua_pushstring(L, "Memory allocation failed"); mbedtls_pk_free(&key); return 2; }
+      mbedtls_mpi_write_binary(&ec->d, d, d_len);
+      char *d_b64 = NULL;
+      size_t d_b64_len;
+      mbedtls_base64_encode(NULL, 0, &d_b64_len, d, d_len);
+      d_b64 = malloc(d_b64_len + 1);
+      mbedtls_base64_encode((unsigned char *)d_b64, d_b64_len, &d_b64_len, d, d_len);
+      d_b64[d_b64_len] = '\0';
+      lua_pushstring(L, d_b64); lua_setfield(L, -2, "d");
+      free(d); free(d_b64);
+    }
+    free(x); free(y); free(x_b64); free(y_b64);
+  } else {
+    lua_pushnil(L);
+    lua_pushstring(L, "Unsupported key type");
+    mbedtls_pk_free(&key);
+    return 2;
+  }
+
+  mbedtls_pk_free(&key);
+  return 1;
+}
+
+
+// CSR creation Function
+static int LuaGenerateCSR(lua_State *L) {
+  const char *key_pem = luaL_checkstring(L, 1);
+  const char *subject_name;
+  const char *san_list = luaL_optstring(L, 3, NULL);
+
+  if (lua_isnoneornil(L, 2)) {
+    subject_name = "";
+  } else {
+    subject_name = luaL_checkstring(L, 2);
+  }
+
+  if (lua_isnoneornil(L, 3) && subject_name[0] == '\0') {
+    lua_pushnil(L);
+    lua_pushstring(L, "Subject name or SANs are required");
+    return 2;
+  }
+  mbedtls_pk_context key;
+  mbedtls_x509write_csr req;
+  char buf[4096];
+  int ret;
+
+  mbedtls_pk_init(&key);
+  mbedtls_x509write_csr_init(&req);
+
+  if ((ret = mbedtls_pk_parse_key(&key, (const unsigned char *)key_pem,
+                                  strlen(key_pem) + 1, NULL, 0)) != 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to parse key: %d", ret);
+    return 2;
+  }
+
+  mbedtls_x509write_csr_set_subject_name(&req, subject_name);
+  mbedtls_x509write_csr_set_key(&req, &key);
+  mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_SHA256);
+
+  if (san_list) {
+    if ((ret = mbedtls_x509write_csr_set_extension(
+             &req, MBEDTLS_OID_SUBJECT_ALT_NAME,
+             MBEDTLS_OID_SIZE(MBEDTLS_OID_SUBJECT_ALT_NAME),
+             (const unsigned char *)san_list, strlen(san_list))) != 0) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "Failed to set SANs: %d", ret);
+      return 2;
+    }
+  }
+
+  if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)buf, sizeof(buf),
+                                       NULL, NULL)) < 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "Failed to write CSR: %d", ret);
+    return 2;
+  }
+
+  lua_pushstring(L, buf);
+
+  mbedtls_pk_free(&key);
+  mbedtls_x509write_csr_free(&req);
+
+  return 1;
+}
+
+
 // LuaCrypto compatible API
 static int LuaCryptoSign(lua_State *L) {
-  const char *dtype =
-      luaL_checkstring(L, 1);  // Type of signature (e.g., "rsa", "ecdsa")
-  lua_remove(L, 1);  // Remove the first argument (key type or cipher type)
-                     // before dispatching
+  // Type of signature (e.g., "rsa", "ecdsa")
+  const char *dtype = luaL_checkstring(L, 1);
+  // Remove the first argument (key type or cipher type) before dispatching
+  lua_remove(L, 1);
 
   if (strcasecmp(dtype, "rsa") == 0) {
     return LuaRSASign(L);
@@ -1585,10 +1853,10 @@ static int LuaCryptoSign(lua_State *L) {
 }
 
 static int LuaCryptoVerify(lua_State *L) {
-  const char *dtype =
-      luaL_checkstring(L, 1);  // Type of signature (e.g., "rsa", "ecdsa")
-  lua_remove(L, 1);  // Remove the first argument (key type or cipher type)
-                     // before dispatching
+  // Type of signature (e.g., "rsa", "ecdsa")
+  const char *dtype = luaL_checkstring(L, 1);
+  // Remove the first argument (key type or cipher type) before dispatching
+  lua_remove(L, 1);
 
   if (strcasecmp(dtype, "rsa") == 0) {
     return LuaRSAVerify(L);
@@ -1602,8 +1870,8 @@ static int LuaCryptoVerify(lua_State *L) {
 static int LuaCryptoEncrypt(lua_State *L) {
   // Args: cipher_type, key, msg, options table
   const char *cipher = luaL_checkstring(L, 1);
-  lua_remove(L, 1);  // Remove cipher_type from stack, so key is at 1, msg at 2,
-                     // options at 3
+  // Remove cipher_type from stack, so key is at 1, msg at 2, options at 3
+  lua_remove(L, 1);
 
   if (strcasecmp(cipher, "rsa") == 0) {
     return LuaRSAEncrypt(L);
@@ -1617,9 +1885,8 @@ static int LuaCryptoEncrypt(lua_State *L) {
 static int LuaCryptoDecrypt(lua_State *L) {
   // Args: cipher_type, key, ciphertext, options table
   const char *cipher = luaL_checkstring(L, 1);
-  lua_remove(
-      L,
-      1);  // Remove cipher_type, so key is at 1, ciphertext at 2, options at 3
+  // Remove cipher_type, so key is at 1, ciphertext at 2, options at 3
+  lua_remove(L, 1);
 
   if (strcasecmp(cipher, "rsa") == 0) {
     return LuaRSADecrypt(L);
@@ -1636,10 +1903,10 @@ static int LuaCryptoGenerateKeyPair(lua_State *L) {
     // Call LuaRSAGenerateKeyPair with the number as the key length
     return LuaRSAGenerateKeyPair(L);
   }
-  // Otherwise, get the key type from the first argument, default to "rsa" if
-  // not provided
+  // Otherwise, get the key type from the first argument, default to "rsa"
   const char *type = luaL_optstring(L, 1, "rsa");
   lua_remove(L, 1);
+
   if (strcasecmp(type, "rsa") == 0) {
     return LuaRSAGenerateKeyPair(L);
   } else if (strcasecmp(type, "ecdsa") == 0) {
@@ -1651,12 +1918,15 @@ static int LuaCryptoGenerateKeyPair(lua_State *L) {
   }
 }
 
+
+
 static const luaL_Reg kLuaCrypto[] = {
     {"sign", LuaCryptoSign},                        //
     {"verify", LuaCryptoVerify},                    //
     {"encrypt", LuaCryptoEncrypt},                  //
     {"decrypt", LuaCryptoDecrypt},                  //
     {"generatekeypair", LuaCryptoGenerateKeyPair},  //
+    {"convertJwkToPem", LuaConvertJwkToPem},        //
     {"convertPemToJwk", LuaConvertPemToJwk},        //
     {"generateCsr", LuaGenerateCSR},                //
     {0},                                            //
