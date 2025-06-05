@@ -8,6 +8,7 @@ int LuaMaxmind(lua_State *);
 int LuaRe(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
+int LuaCrypto(lua_State *);
 
 int LuaBarf(lua_State *);
 int LuaBenchmark(lua_State *);
