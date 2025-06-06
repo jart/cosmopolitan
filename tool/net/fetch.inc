@@ -9,6 +9,223 @@
 #define kaKEEP  2
 #define kaCLOSE 3
 
+/*
+ * Check if a host should bypass the proxy based on NO_PROXY env var
+ * Format can be comma-separated list of hostnames, domains (.example.com),
+ * or IP address patterns. If '*' is specified, all hosts bypass the proxy.
+ */
+static bool ShouldBypassProxy(const char *host) {
+  const char *no_proxy = NULL;
+  const char *p, *end;
+  size_t hostlen, entrylen;
+  
+  if (!host) return false;
+  
+  // Get NO_PROXY or no_proxy environment variable
+  no_proxy = getenv("NO_PROXY");
+  if (!no_proxy) no_proxy = getenv("no_proxy");
+
+  // If no_proxy is not set OR is empty
+  if (!no_proxy || !*no_proxy) return false;
+  
+  // Special case: '*' matches all hosts
+  if (no_proxy[0] == '*' && no_proxy[1] == '\0') return true;
+  
+  
+  // Split NO_PROXY by commas and check each entry
+  hostlen = strlen(host);
+  p = no_proxy;
+  while (p && *p) {
+    // Find end of current entry (comma or end of string)
+    end = strchr(p, ',');
+    if (end) {
+      entrylen = end - p;
+    } else {
+      entrylen = strlen(p);
+    }
+    
+    // Skip leading spaces
+    while (entrylen > 0 && isspace(*p)) {
+      p++;
+      entrylen--;
+    }
+    
+    // Skip trailing spaces
+    while (entrylen > 0 && isspace(p[entrylen - 1])) {
+      entrylen--;
+    }
+    
+    if (entrylen > 0) {
+      // Handle domain suffix match (.example.com)
+      if (*p == '.' && entrylen < hostlen) {
+        const char *domain = host + (hostlen - entrylen);
+        if (strncasecmp(domain, p, entrylen) == 0) {
+          return true;
+        }
+      }
+      // Handle full host match, ignoring port
+      else {
+        const char *colon = strchr(host, ':');
+        size_t host_no_port = colon ? (colon - host) : hostlen;
+        
+        if ((entrylen == host_no_port) && 
+            (strncasecmp(host, p, entrylen) == 0)) {
+          return true;
+        }
+      }
+    }
+    
+    // Move to next entry
+    if (end) {
+      p = end + 1;
+    } else {
+      break;
+    }
+  }
+  
+  return false;
+}
+
+/*
+ * Parse a proxy URL from environment variable into components
+ * Returns true if proxy should be used, false otherwise
+ */
+static bool GetProxySettings(bool usingssl, const char *host, 
+                            char **proxy_host, char **proxy_port) {
+  const char *proxy_url = NULL;
+  struct Url proxy = {0};
+  
+  if (!proxy_host || !proxy_port)  {
+    DEBUGF("(ftch) proxy_host or proxy_port is NULL");
+    return false;
+  }
+
+  // Return early if we should bypass proxy for this host
+  if (ShouldBypassProxy(host)) {
+    DEBUGF("(ftch) bypassing proxy for %s", host);
+    return false;
+  }
+
+  // Prevent proxy recursion: do not use proxy for the proxy host itself
+  if (proxy_host && *proxy_host && host && strcmp(host, *proxy_host) == 0) {
+    DEBUGF("(ftch) not using proxy for proxy host itself: %s", host);
+    return false;
+  }
+
+  // Get appropriate proxy environment variable
+  if (usingssl) {
+    proxy_url = getenv("HTTPS_PROXY");
+    if (!proxy_url) proxy_url = getenv("https_proxy");
+  } else {
+    proxy_url = getenv("HTTP_PROXY");
+    if (!proxy_url) proxy_url = getenv("http_proxy");
+  }
+  
+  if (!proxy_url || !*proxy_url) return false;
+  
+  // Parse the proxy URL
+  ParseUrl(proxy_url, strlen(proxy_url), &proxy, true);
+
+  // Extract host and port from proxy URL
+  if (proxy.host.n > 0) {
+    *proxy_host = strndup(proxy.host.p, proxy.host.n);
+    if (proxy.port.n > 0) {
+      *proxy_port = strndup(proxy.port.p, proxy.port.n);
+    } else {
+      *proxy_port = "3128"; // Default proxy port
+    }
+    DEBUGF("(ftch) using proxy %s:%s for %s", *proxy_host, *proxy_port, host);
+    
+    return true;
+  }
+  else {
+    // If proxy URL is invalid, log an error
+    WARNF("(ftch) invalid proxy URL: %s", proxy_url);
+    return false;
+  }
+  
+  // Clean up
+  if (proxy.params.p) gc(proxy.params.p);
+  
+  return false;
+}
+
+/**
+ * Establishes an HTTP CONNECT tunnel through a proxy for HTTPS connections.
+ * This sends a CONNECT request to the proxy and waits for a successful response.
+ * 
+ * @param sock The socket connected to the proxy server
+ * @param target_host The hostname of the target server to connect to
+ * @param target_port The port of the target server to connect to
+ * @param proxy_host The hostname of the proxy server (for logging)
+ * @return true if tunnel was successfully established, false otherwise
+ */
+static bool EstablishProxyTunnel(int sock, const char *target_host, 
+                              const char *target_port, const char *proxy_host) {
+  char *request;
+  char buffer[8192];
+  int rc, total_read = 0;
+  bool success = false;
+  size_t request_len;
+  
+  // Craft the CONNECT request
+  request = gc(xasprintf(
+    "CONNECT %s:%s HTTP/1.1\r\n"
+    "Host: %s:%s\r\n"
+    "Connection: keep-alive\r\n"
+    "Proxy-Connection: keep-alive\r\n"
+    "\r\n",
+    target_host, target_port, target_host, target_port));
+  request_len = strlen(request);
+  
+  DEBUGF("(ftch) sending CONNECT request to proxy %s for %s:%s",
+         proxy_host, target_host, target_port);
+  
+  // Send the CONNECT request to the proxy
+  if (write(sock, request, request_len) != (ssize_t)request_len) {
+    WARNF("(ftch) failed to send CONNECT request to proxy");
+    return false;
+  }
+  
+  // Read the response headers
+  while (total_read < (sizeof(buffer) - 1)) {
+    rc = read(sock, buffer + total_read, sizeof(buffer) - total_read - 1);
+    if (rc <= 0) {
+      WARNF("(ftch) failed to read proxy response: %s", 
+            rc == 0 ? "connection closed" : "socket error");
+      return false;
+    }
+    
+    total_read += rc;
+    buffer[total_read] = '\0';
+    
+    // Check if we've received the end of headers marker
+    if (strstr(buffer, "\r\n\r\n")) {
+      break;
+    }
+    
+    // If buffer is nearly full but no header end found, it's probably not a valid response
+    if (total_read >= (sizeof(buffer) - 128)) {
+      WARNF("(ftch) proxy response too large or invalid");
+      return false;
+    }
+  }
+  
+  // Check for 200 OK response
+  if (strncmp(buffer, "HTTP/1.", 7) == 0 && strstr(buffer, " 200 ")) {
+    DEBUGF("(ftch) proxy tunnel established successfully to %s:%s", 
+           target_host, target_port);
+    success = true;
+  } else {
+    // Log the error response
+    char *status_line_end = strstr(buffer, "\r\n");
+    if (status_line_end) *status_line_end = '\0';
+    WARNF("(ftch) proxy tunnel failed: %s", buffer);
+  }
+  
+  return success;
+}
+
 static int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   ssize_t rc;
@@ -195,6 +412,32 @@ static int LuaFetch(lua_State *L) {
   if (!hosthdr)
     hosthdr = gc(xasprintf("%s:%s", host, port));
 
+  // Determine if a proxy is needed
+  char *proxy_host = NULL;
+  char *proxy_port = NULL;
+  const char *original_host = NULL;
+  const char *original_port = NULL;
+  bool using_proxy = false;
+  
+  if (GetProxySettings(usingssl, host, &proxy_host, &proxy_port)) {
+    // Save the original host and port for later use
+    original_host = host;
+    original_port = port;
+    
+    // Update host and port to use the proxy
+    host = proxy_host;
+    port = proxy_port;
+    using_proxy = true;
+
+    // Add the original host as the HTTP 'Host' header
+    if (!hosthdr) {
+      hosthdr = gc(xasprintf("%s:%s", original_host, original_port));
+    }
+    
+    DEBUGF("(ftch) using %s proxy %s:%s for destination %s:%s", 
+           usingssl ? "HTTPS" : "HTTP", host, port, original_host, original_port);
+  }
+
   // check if hosthdr is in keepalive table
   if (keepalive && lua_istable(L, 2)) {
     lua_getfield(L, 2, "keepalive");
@@ -273,6 +516,19 @@ static int LuaFetch(lua_State *L) {
       return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
                          strerror(errno));
     }
+  }
+
+  // Establish proxy tunnel for HTTPS connections
+  if (usingssl && using_proxy) {
+    if (!EstablishProxyTunnel(sock, original_host, original_port, host)) {
+      close(sock);
+      return LuaNilError(L, "failed to establish proxy tunnel");
+    }
+    
+    // For TLS, we need to perform the handshake with the original destination
+    // hostname (for SNI), not the proxy's hostname
+    host = original_host;
+    port = original_port;
   }
 
   (void)bio;
