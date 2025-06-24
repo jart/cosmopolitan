@@ -8051,68 +8051,85 @@ kUrlLatin1 = nil
 
 --- This module provides cryptographic operations.
 
---- The crypto module for cryptographic operations
 crypto = {}
 
---- Converts a PEM-encoded key to JWK format
----@param pem string PEM-encoded key
----@return table?, string? JWK table or nil on error
----@return string? error message
-function crypto.convertPemToJwk(pem) end
+--- Signs a message using the specified key type.
+--- Supported types: "rsa", "rsa-pss", "ecdsa"
+---@param type "rsa"|"rsa-pss"|"rsapss"|"ecdsa"
+---@param key string PEM-encoded private key
+---@param message string
+---@param hash? string Hash algorithm ("sha256", "sha384", "sha512"). Default: "sha256"
+---@return string signature
+---@overload fun(type: string, key: string, message: string, hash?: string): nil, error: string
+function crypto.sign(type, key, message, hash) end
 
---- Generates a Certificate Signing Request (CSR)
----@param key_pem string PEM-encoded private key
----@param subject_name string? X.509 subject name
----@param san_list string? Subject Alternative Names
----@return string?, string? CSR in PEM format or nil on error and error message
-function crypto.generateCsr(key_pem, subject_name, san_list) end
+--- Verifies a signature using the specified key type.
+--- Supported types: "rsa", "rsa-pss", "ecdsa"
+---@param type "rsa"|"rsa-pss"|"rsapss"|"ecdsa"
+---@param key string PEM-encoded public key
+---@param message string
+---@param signature string
+---@param hash? string Hash algorithm ("sha256", "sha384", "sha512"). Default: "sha256"
+---@return boolean valid
+function crypto.verify(type, key, message, signature, hash) end
 
---- Signs data using a private key
----@param key_type string "rsa" or "ecdsa"
----@param private_key string PEM-encoded private key
----@param message string Data to sign
----@param hash_algo string? Hash algorithm (default: SHA-256)
----@return string?, string? Signature or nil on error and error message
-function crypto.sign(key_type, private_key, message, hash_algo) end
+--- Encrypts data using the specified cipher.
+--- Supported ciphers: "rsa", "aes"
+---@param cipher "rsa"|"aes"
+---@param key string PEM-encoded public key (RSA) or raw key (AES)
+---@param plaintext string
+---@param options? table Options for AES: { mode="cbc"|"gcm"|"ctr", iv=string, aad=string }
+---@return string ciphertext, string? iv, string? tag
+---@overload fun(cipher: string, key: string, plaintext: string, options?: table): nil, error: string
+function crypto.encrypt(cipher, key, plaintext, options) end
 
---- Verifies a signature
----@param key_type string "rsa" or "ecdsa"
----@param public_key string PEM-encoded public key
----@param message string Original message
----@param signature string Signature to verify
----@param hash_algo string? Hash algorithm (default: SHA-256)
----@return boolean?, string? True if valid or nil on error and error message
-function crypto.verify(key_type, public_key, message, signature, hash_algo) end
+--- Decrypts data using the specified cipher.
+--- Supported ciphers: "rsa", "aes"
+---@param cipher "rsa"|"aes"
+---@param key string PEM-encoded private key (RSA) or raw key (AES)
+---@param ciphertext string
+---@param options? table Options for AES: { mode="cbc"|"gcm"|"ctr", iv=string, tag=string, aad=string }
+---@return string plaintext
+---@overload fun(cipher: string, key: string, ciphertext: string, options?: table): nil, error: string
+function crypto.decrypt(cipher, key, ciphertext, options) end
 
---- Encrypts data
----@param cipher_type string "rsa" or "aes"
----@param key string Public key or symmetric key
----@param plaintext string Data to encrypt
----@param mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
----@param iv string? Initialization Vector for AES
----@param aad string? Additional data for AES-GCM
----@return string? Encrypted data or nil on error
----@return string? IV or error message
----@return string? Authentication tag for GCM mode
-function crypto.encrypt(cipher_type, key, plaintext, mode, iv, aad) end
+--- Generates a key pair.
+--- For RSA: bits = 2048 or 4096.
+--- For ECDSA: curve = "secp256r1", "secp384r1", "secp521r1", "curve25519"
+--- For AES: bits = 128, 192, or 256.
+---@param type "rsa"|"ecdsa"|"aes"
+---@param param? integer|string For RSA: bits; for ECDSA: curve name; for AES: bits
+---@return string private_key, string public_key|nil
+---@overload fun(type: string, param?: integer|string): nil, error: string
+function crypto.generateKeyPair(type, param) end
 
---- Decrypts data
----@param cipher_type string "rsa" or "aes"
----@param key string Private key or symmetric key
----@param ciphertext string Data to decrypt
----@param iv string? Initialization Vector for AES
----@param mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
----@param tag string? Authentication tag for AES-GCM
----@param aad string? Additional data for AES-GCM
----@return string?, string? Decrypted data or nil on error and error message
-function crypto.decrypt(cipher_type, key, ciphertext, iv, mode, tag, aad) end
+--- Converts a JWK (JSON Web Key, as a Lua table) to PEM format.
+---@param jwk table
+---@return string pem
+---@overload fun(jwk: table): nil, error: string
+function crypto.convertJwkToPem(jwk) end
 
---- Generates cryptographic keys
----@param key_type string? "rsa", "ecdsa", or "aes"
----@param key_size_or_curve number|string? Key size or curve name
----@return string? Private key or nil on error
----@return string? Public key (nil for AES) or error message
-function crypto.generatekeypair(key_type, key_size_or_curve) end
+--- Converts a PEM key to JWK (JSON Web Key, as a Lua table).
+---@param pem string
+---@param claims? table Additional claims to merge (RFC7517 fields)
+---@return table jwk
+---@overload fun(pem: string, claims?: table): nil, error: string
+function crypto.convertPemToJwk(pem, claims) end
+
+--- Generates a Certificate Signing Request (CSR) from a PEM key.
+---@param key string PEM-encoded private key
+---@param subject string Subject name (e.g., "CN=example.com")
+---@param sans? string Subject Alternative Names (SANs) as a comma-separated string
+---@return string csr_pem
+---@overload fun(key: string, subject: string, sans?: string): nil, error: string
+function crypto.generateCsr(key, subject, sans) end
+
+-- AES options table for encrypt/decrypt:
+---@class CryptoAesOptions
+---@field mode? "cbc"|"gcm"|"ctr"
+---@field iv? string
+---@field tag? string
+---@field aad? string
 
 
 --[[
