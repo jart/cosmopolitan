@@ -32,6 +32,7 @@
 #include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/x509_csr.h"
 
+// Elliptic curves
 // Supported curves mapping
 typedef struct {
   const char *name;
@@ -39,23 +40,25 @@ typedef struct {
 } curve_map_t;
 
 static const curve_map_t supported_curves[] = {
-    {"secp256r1", MBEDTLS_ECP_DP_SECP256R1},
-    {"P256", MBEDTLS_ECP_DP_SECP256R1},
-    {"P-256", MBEDTLS_ECP_DP_SECP256R1},
-    {"secp384r1", MBEDTLS_ECP_DP_SECP384R1},
-    {"P384", MBEDTLS_ECP_DP_SECP384R1},
-    {"P-384", MBEDTLS_ECP_DP_SECP384R1},
-    {"secp521r1", MBEDTLS_ECP_DP_SECP521R1},
-    {"P521", MBEDTLS_ECP_DP_SECP521R1},
-    {"P-521", MBEDTLS_ECP_DP_SECP521R1},
-    {"curve25519", MBEDTLS_ECP_DP_CURVE25519},
+    {"secp256r1", MBEDTLS_ECP_DP_SECP256R1},    //
+    {"P256", MBEDTLS_ECP_DP_SECP256R1},         //
+    {"P-256", MBEDTLS_ECP_DP_SECP256R1},        //
+    {"secp384r1", MBEDTLS_ECP_DP_SECP384R1},    //
+    {"P384", MBEDTLS_ECP_DP_SECP384R1},         //
+    {"P-384", MBEDTLS_ECP_DP_SECP384R1},        //
+    {"secp521r1", MBEDTLS_ECP_DP_SECP521R1},    //
+    {"P521", MBEDTLS_ECP_DP_SECP521R1},         //
+    {"P-521", MBEDTLS_ECP_DP_SECP521R1},        //
+    {"curve25519", MBEDTLS_ECP_DP_CURVE25519},  //
+#ifndef TINY
+    {"curve448", MBEDTLS_ECP_DP_CURVE448},  //
+#endif
     {NULL, 0}};
 
 // List available curves
 static int LuaListCurves(lua_State *L) {
   const curve_map_t *curve = supported_curves;
   int i = 1;
-
   lua_newtable(L);
 
   while (curve->name != NULL) {
@@ -63,28 +66,68 @@ static int LuaListCurves(lua_State *L) {
     lua_rawseti(L, -2, i++);
     curve++;
   }
-
   return 1;
 }
 
-// Remove hash_algorithm_t and hash_to_md_type indirection
-static mbedtls_md_type_t string_to_md_type(const char *hash_name) {
-  if (!hash_name || !*hash_name) {
-    return MBEDTLS_MD_SHA256;  // Default to SHA-256 if no name provided
+// Find curve ID by name
+static mbedtls_ecp_group_id find_curve_by_name(const char *name) {
+  const curve_map_t *curve = supported_curves;
+
+  while (curve->name != NULL) {
+    if (strcasecmp(curve->name, name) == 0) {
+      return curve->id;
+    }
+    curve++;
   }
-  if (strcasecmp(hash_name, "sha256") == 0 ||
-      strcasecmp(hash_name, "sha-256") == 0) {
-    return MBEDTLS_MD_SHA256;
-  } else if (strcasecmp(hash_name, "sha384") == 0 ||
-             strcasecmp(hash_name, "sha-384") == 0) {
-    return MBEDTLS_MD_SHA384;
-  } else if (strcasecmp(hash_name, "sha512") == 0 ||
-             strcasecmp(hash_name, "sha-512") == 0) {
-    return MBEDTLS_MD_SHA512;
-  } else {
-    WARNF("(crypto) Unknown hash algorithm '%s'", hash_name);
-    return -1;
+  return MBEDTLS_ECP_DP_NONE;
+}
+
+// Message digests
+// Supported digests mapping
+typedef struct {
+  const char *name;
+  mbedtls_md_type_t id;
+} digest_map_t;
+
+static const digest_map_t supported_digests[] = {
+    {"MD5", MBEDTLS_MD_MD5},         //
+    {"SHA1", MBEDTLS_MD_SHA1},       //
+    {"SHA-1", MBEDTLS_MD_SHA1},      //
+    {"SHA224", MBEDTLS_MD_SHA224},   //
+    {"SHA-224", MBEDTLS_MD_SHA224},  //
+    {"SHA256", MBEDTLS_MD_SHA256},   //
+    {"SHA-256", MBEDTLS_MD_SHA256},  //
+    {"SHA384", MBEDTLS_MD_SHA384},   //
+    {"SHA-384", MBEDTLS_MD_SHA384},  //
+    {"SHA512", MBEDTLS_MD_SHA512},   //
+    {"SHA-512", MBEDTLS_MD_SHA512},  //
+    {NULL, 0}};
+
+// List available digests
+static int LuaListDigests(lua_State *L) {
+  const digest_map_t *digest = supported_digests;
+  int i = 1;
+  lua_newtable(L);
+
+  while (digest->name != NULL) {
+    lua_pushstring(L, digest->name);
+    lua_rawseti(L, -2, i++);
+    digest++;
   }
+  return 1;
+}
+
+// Find digest ID by name
+static mbedtls_md_type_t find_digest_by_name(const char *name) {
+  const digest_map_t *digest = supported_digests;
+
+  while (digest->name != NULL) {
+    if (strcasecmp(digest->name, name) == 0) {
+      return digest->id;
+    }
+    digest++;
+  }
+  return MBEDTLS_MD_NONE;
 }
 
 // Get the size of the hash output based on the mbedtls_md_type_t
@@ -96,43 +139,16 @@ static size_t get_hash_size_from_md_type(mbedtls_md_type_t md_type) {
       return 48;
     case MBEDTLS_MD_SHA512:
       return 64;
+    case MBEDTLS_MD_SHA1:
+      return 20;
+    case MBEDTLS_MD_MD5:
+      return 16;
     default:
       return 32;
   }
 }
 
-// List available hash algorithms
-static int LuaListHashAlgorithms(lua_State *L) {
-  lua_newtable(L);
-
-  lua_pushstring(L, "SHA256");
-  lua_rawseti(L, -2, 1);
-
-  lua_pushstring(L, "SHA384");
-  lua_rawseti(L, -2, 2);
-
-  lua_pushstring(L, "SHA512");
-  lua_rawseti(L, -2, 3);
-
-  // Add hyphenated versions
-  lua_pushstring(L, "SHA-256");
-  lua_rawseti(L, -2, 4);
-
-  lua_pushstring(L, "SHA-384");
-  lua_rawseti(L, -2, 5);
-
-  lua_pushstring(L, "SHA-512");
-  lua_rawseti(L, -2, 6);
-
-  lua_pushstring(L, "SHA1");
-  lua_rawseti(L, -2, 7);
-
-  lua_pushstring(L, "MD5");
-  lua_rawseti(L, -2, 8);
-
-  return 1;
-}
-
+// Compute hash using mbedtls
 static int compute_hash(mbedtls_md_type_t md_type, const unsigned char *input,
                         size_t input_len, unsigned char *output,
                         size_t output_size) {
@@ -180,20 +196,6 @@ static int compute_hash(mbedtls_md_type_t md_type, const unsigned char *input,
 cleanup:
   mbedtls_md_free(&md_ctx);
   return ret;
-}
-
-// Find curve ID by name
-static mbedtls_ecp_group_id find_curve_by_name(const char *name) {
-  const curve_map_t *curve = supported_curves;
-
-  while (curve->name != NULL) {
-    if (strcasecmp(curve->name, name) == 0) {
-      return curve->id;
-    }
-    curve++;
-  }
-
-  return MBEDTLS_ECP_DP_NONE;
 }
 
 // Strong RNG using mbedtls_entropy_context and mbedtls_ctr_drbg_context
@@ -499,18 +501,26 @@ static int LuaRSADecrypt(lua_State *L) {
 
 // RSA Signing
 static char *RSASign(const char *private_key_pem, const unsigned char *data,
-                     size_t data_len, const char *hash_algo_str,
-                     size_t *sig_len) {
+                     size_t data_len, const char *hash_name, size_t *sig_len) {
   int rc;
   unsigned char hash[64];  // Large enough for SHA-512
-  size_t hash_len = 32;    // Default for SHA-256
+  size_t hash_len = 0;
+  mbedtls_md_type_t hash_algo;
   unsigned char *signature;
-  mbedtls_md_type_t hash_algo = MBEDTLS_MD_SHA256;  // Default
 
   // Determine hash algorithm
-  if (hash_algo_str) {
-    hash_algo = string_to_md_type(hash_algo_str);
-    hash_len = get_hash_size_from_md_type(hash_algo);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      return NULL;
+    } else {
+      hash_len = get_hash_size_from_md_type(hash_algo);
+    }
   }
 
   // Parse private key
@@ -559,7 +569,7 @@ static char *RSASign(const char *private_key_pem, const unsigned char *data,
 }
 static int LuaRSASign(lua_State *L) {
   size_t msg_len, key_len;
-  const char *msg, *key_pem, *hash_algo_str = NULL;
+  const char *msg, *key_pem, *hash_name = NULL;
   unsigned char *signature;
   size_t sig_len = 0;
 
@@ -570,7 +580,6 @@ static int LuaRSASign(lua_State *L) {
     return 2;
   }
   if (lua_type(L, 1) == LUA_TTABLE) {
-    DEBUGF("(crypto) Detected table type for parameter 1");
     lua_pushnil(L);
     lua_pushstring(L, "Key must be a string, got a table instead");
     return 2;
@@ -587,12 +596,12 @@ static int LuaRSASign(lua_State *L) {
 
   // Optional hash algorithm parameter
   if (!lua_isnoneornil(L, 3)) {
-    hash_algo_str = luaL_checkstring(L, 3);
+    hash_name = luaL_checkstring(L, 3);
   }
 
   // Call the C implementation
   signature = (unsigned char *)RSASign(key_pem, (const unsigned char *)msg,
-                                       msg_len, hash_algo_str, &sig_len);
+                                       msg_len, hash_name, &sig_len);
 
   if (!signature) {
     return luaL_error(L, "failed to sign message");
@@ -609,18 +618,27 @@ static int LuaRSASign(lua_State *L) {
 
 // RSA PSS Signing
 static char *RSAPSSSign(const char *private_key_pem, const unsigned char *data,
-                        size_t data_len, const char *hash_algo_str,
-                        size_t *sig_len, int salt_len) {
+                        size_t data_len, const char *hash_name, size_t *sig_len,
+                        int salt_len) {
   int rc;
   unsigned char hash[64];  // Large enough for SHA-512
-  size_t hash_len = 32;    // Default for SHA-256
+  size_t hash_len = 0;
+  mbedtls_md_type_t hash_algo;
   unsigned char *signature;
-  mbedtls_md_type_t hash_algo = MBEDTLS_MD_SHA256;  // Default
 
   // Determine hash algorithm
-  if (hash_algo_str) {
-    hash_algo = string_to_md_type(hash_algo_str);
-    hash_len = get_hash_size_from_md_type(hash_algo);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      return NULL;
+    } else {
+      hash_len = get_hash_size_from_md_type(hash_algo);
+    }
   }
 
   // Parse private key
@@ -723,16 +741,25 @@ static int LuaRSAPSSSign(lua_State *L) {
 
 static int RSAVerify(const char *public_key_pem, const unsigned char *data,
                      size_t data_len, const unsigned char *signature,
-                     size_t sig_len, const char *hash_algo_str) {
+                     size_t sig_len, const char *hash_name) {
   int rc;
-  unsigned char hash[64];                           // Large enough for SHA-512
-  size_t hash_len = 32;                             // Default for SHA-256
-  mbedtls_md_type_t hash_algo = MBEDTLS_MD_SHA256;  // Default
+  unsigned char hash[64];  // Large enough for SHA-512
+  size_t hash_len = 0;
+  mbedtls_md_type_t hash_algo;
 
   // Determine hash algorithm
-  if (hash_algo_str) {
-    hash_algo = string_to_md_type(hash_algo_str);
-    hash_len = get_hash_size_from_md_type(hash_algo);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      return -1;
+    } else {
+      hash_len = get_hash_size_from_md_type(hash_algo);
+    }
   }
 
   // Parse public key
@@ -770,7 +797,7 @@ static int RSAVerify(const char *public_key_pem, const unsigned char *data,
 }
 static int LuaRSAVerify(lua_State *L) {
   size_t msg_len, key_len, sig_len;
-  const char *msg, *key_pem, *signature, *hash_algo_str = NULL;
+  const char *msg, *key_pem, *signature, *hash_name = NULL;
   int result;
 
   // Get parameters from Lua
@@ -791,12 +818,12 @@ static int LuaRSAVerify(lua_State *L) {
 
   // Optional hash algorithm parameter
   if (!lua_isnoneornil(L, 4)) {
-    hash_algo_str = luaL_checkstring(L, 4);
+    hash_name = luaL_checkstring(L, 4);
   }
 
   // Call the C implementation
   result = RSAVerify(key_pem, (const unsigned char *)msg, msg_len,
-                     (const unsigned char *)signature, sig_len, hash_algo_str);
+                     (const unsigned char *)signature, sig_len, hash_name);
 
   // Return boolean result (0 means valid signature)
   lua_pushboolean(L, result == 0);
@@ -807,17 +834,26 @@ static int LuaRSAVerify(lua_State *L) {
 // RSA PSS Verification
 static int RSAPSSVerify(const char *public_key_pem, const unsigned char *data,
                         size_t data_len, const unsigned char *signature,
-                        size_t sig_len, const char *hash_algo_str,
+                        size_t sig_len, const char *hash_name,
                         int expected_salt_len) {
   int rc;
-  unsigned char hash[64];                           // Large enough for SHA-512
-  size_t hash_len = 32;                             // Default for SHA-256
-  mbedtls_md_type_t hash_algo = MBEDTLS_MD_SHA256;  // Default
+  unsigned char hash[64];  // Large enough for SHA-512
+  size_t hash_len = 0;
+  mbedtls_md_type_t hash_algo;
 
   // Determine hash algorithm
-  if (hash_algo_str) {
-    hash_algo = string_to_md_type(hash_algo_str);
-    hash_len = get_hash_size_from_md_type(hash_algo);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      return -1;
+    } else {
+      hash_len = get_hash_size_from_md_type(hash_algo);
+    }
   }
 
   // Parse public key
@@ -864,7 +900,7 @@ static int LuaRSAPSSVerify(lua_State *L) {
   // crypto.verify('rsapss', key, msg, signature, hash_algo, salt_len)
   size_t msg_len, key_len, sig_len;
   const char *msg, *key_pem, *signature;
-  const char *hash_algo_str = NULL;  // Default to SHA-256
+  const char *hash_name = NULL;  // Default to SHA-256
   int expected_salt_len = -1;
   int result;
 
@@ -892,24 +928,17 @@ static int LuaRSAPSSVerify(lua_State *L) {
   signature = luaL_checklstring(L, 3, &sig_len);
   // Optional hash algorithm parameter
   if (lua_isstring(L, 4)) {
-    hash_algo_str = luaL_checkstring(L, 4);
+    hash_name = luaL_checkstring(L, 4);
     // Optional salt length parameter
     expected_salt_len = luaL_optinteger(L, 5, 32);
   } else if (lua_isnumber(L, 4)) {
     // If it's a number, treat it as the expected salt length
     expected_salt_len = (int)lua_tointeger(L, 4);
   }
-  DEBUGF("(DEBUG) Key PEM: %s", key_pem);
-  DEBUGF("(DEBUG) Message length: %zu", msg_len);
-  DEBUGF("(DEBUG) Signature length: %zu", sig_len);
-  DEBUGF("(DEBUG) Hash algorithm: %s",
-         hash_algo_str ? hash_algo_str : "SHA-256");
-  DEBUGF("(DEBUG) Expected salt length: %d", expected_salt_len);
-  DEBUGF("(DEBUG) Signature: %.*s", (int)sig_len, signature);
   // Call the C implementation
   result = RSAPSSVerify(key_pem, (const unsigned char *)msg, msg_len,
-                        (const unsigned char *)signature, sig_len,
-                        hash_algo_str, expected_salt_len);
+                        (const unsigned char *)signature, sig_len, hash_name,
+                        expected_salt_len);
 
   // Return boolean result (0 means valid signature)
   lua_pushboolean(L, result == 0);
@@ -1108,13 +1137,24 @@ static int LuaECDSASign(lua_State *L) {
   const char *priv_key_pem = luaL_checkstring(L, 1);
   const char *message = luaL_checkstring(L, 2);
   const char *hash_name = luaL_optstring(L, 3, "sha256");
+  mbedtls_md_type_t hash_algo;
 
-  mbedtls_md_type_t hash_alg = string_to_md_type(hash_name);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      return -1;
+    }
+  }
 
   unsigned char *signature = NULL;
   size_t sig_len = 0;
 
-  int ret = ECDSASign(priv_key_pem, message, hash_alg, &signature, &sig_len);
+  int ret = ECDSASign(priv_key_pem, message, hash_algo, &signature, &sig_len);
 
   if (ret == 0) {
     lua_pushlstring(L, (const char *)signature, sig_len);
@@ -1187,10 +1227,21 @@ static int LuaECDSAVerify(lua_State *L) {
   const unsigned char *signature =
       (const unsigned char *)luaL_checklstring(L, 3, &sig_len);
   const char *hash_name = luaL_optstring(L, 4, "sha256");
+  mbedtls_md_type_t hash_algo;
 
-  mbedtls_md_type_t hash_alg = string_to_md_type(hash_name);
+  if (hash_name == NULL || hash_name[0] == '\0') {
+    hash_algo = MBEDTLS_MD_SHA256;
+    VERBOSEF("(crypto) No digest specified, using default: SHA256");
+  } else {
+    // Find the digest by name
+    hash_algo = find_digest_by_name(hash_name);
+    if (hash_algo == MBEDTLS_MD_NONE) {
+      WARNF("(crypto) Unknown digest: '%s'", hash_name);
+      lua_pushboolean(L, false);
+    }
+  }
 
-  int ret = ECDSAVerify(pub_key_pem, message, signature, sig_len, hash_alg);
+  int ret = ECDSAVerify(pub_key_pem, message, signature, sig_len, hash_algo);
 
   lua_pushboolean(L, ret == 0);
   return 1;
@@ -1739,8 +1790,59 @@ static int LuaAesDecrypt(lua_State *L) {
 }
 
 // JWK functions
+// Helper: convert base64url to standard base64 (in-place)
+static void base64url_to_base64(char *input) {
+  if (!input)
+    return;
+  // Replace URL-safe characters with standard base64 characters
+  for (char *p = input; *p; ++p) {
+    if (*p == '-')
+      *p = '+';
+    else if (*p == '_')
+      *p = '/';
+  }
+  // Add padding if necessary
+  size_t len = strlen(input);
+  int mod = len % 4;
+  if (mod) {
+    for (int i = 0; i < 4 - mod; ++i)
+      input[len + i] = '=';
+    input[len + 4 - mod] = '\0';
+  }
+}
 
-// Convert JWK (Lua table) to PEM key format
+// Helper: convert standard base64 to base64url (in-place)
+static void base64_to_base64url(char *input) {
+  if (!input)
+    return;
+  size_t len = strlen(input);
+  // Replace standard base64 characters with URL-safe characters
+  for (size_t i = 0; i < len; i++) {
+    if (input[i] == '+')
+      input[i] = '-';
+    else if (input[i] == '/')
+      input[i] = '_';
+  }
+  // Remove padding
+  while (len > 0 && input[len - 1] == '=') {
+    input[--len] = '\0';
+  }
+}
+
+// Helper: encode binary to base64url
+static char *b64url_encode(const unsigned char *data, size_t len) {
+  size_t b64_len;
+  mbedtls_base64_encode(NULL, 0, &b64_len, data, len);
+  char *b64 = malloc(b64_len + 1);
+  if (!b64)
+    return NULL;
+  mbedtls_base64_encode((unsigned char *)b64, b64_len, &b64_len, data, len);
+  b64[b64_len] = '\0';
+  base64_to_base64url(b64);
+  return b64;
+}
+
+// Convert JWK key to PEM (string) format
 static int LuaConvertJwkToPem(lua_State *L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   const char *kty;
@@ -1797,25 +1899,10 @@ static int LuaConvertJwkToPem(lua_State *L) {
     // Decode base64url to binary
     size_t n_len, e_len;
     unsigned char n_bin[1024], e_bin[16];
-    char *n_b64_std = strdup(n_b64), *e_b64_std = strdup(e_b64);
-    for (char *p = n_b64_std; *p; ++p)
-      if (*p == '-')
-        *p = '+';
-      else if (*p == '_')
-        *p = '/';
-    for (char *p = e_b64_std; *p; ++p)
-      if (*p == '-')
-        *p = '+';
-      else if (*p == '_')
-        *p = '/';
-    int n_mod = strlen(n_b64_std) % 4;
-    int e_mod = strlen(e_b64_std) % 4;
-    if (n_mod)
-      for (int i = 0; i < 4 - n_mod; ++i)
-        strcat(n_b64_std, "=");
-    if (e_mod)
-      for (int i = 0; i < 4 - e_mod; ++i)
-        strcat(e_b64_std, "=");
+    char *n_b64_std = strdup(n_b64);
+    char *e_b64_std = strdup(e_b64);
+    base64url_to_base64(n_b64_std);
+    base64url_to_base64(e_b64_std);
     if (mbedtls_base64_decode(n_bin, sizeof(n_bin), &n_len,
                               (const unsigned char *)n_b64_std,
                               strlen(n_b64_std)) != 0 ||
@@ -1832,6 +1919,7 @@ static int LuaConvertJwkToPem(lua_State *L) {
     free(e_b64_std);
     // Build RSA context in pk
     if ((ret = mbedtls_pk_setup(
+
              &pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))) != 0) {
       lua_pushnil(L);
       lua_pushstring(L, "mbedtls_pk_setup failed");
@@ -1851,15 +1939,7 @@ static int LuaConvertJwkToPem(lua_State *L) {
 #define DECODE_B64URL(var, b64, bin, binlen)                                \
   if (b64 && *b64) {                                                        \
     char *b64_std = strdup(b64);                                            \
-    for (char *p = b64_std; *p; ++p)                                        \
-      if (*p == '-')                                                        \
-        *p = '+';                                                           \
-      else if (*p == '_')                                                   \
-        *p = '/';                                                           \
-    int mod = strlen(b64_std) % 4;                                          \
-    if (mod)                                                                \
-      for (int i = 0; i < 4 - mod; ++i)                                     \
-        strcat(b64_std, "=");                                               \
+    base64url_to_base64(b64_std);                                           \
     mbedtls_base64_decode(bin, sizeof(bin), &binlen,                        \
                           (const unsigned char *)b64_std, strlen(b64_std)); \
     free(b64_std);                                                          \
@@ -1929,25 +2009,10 @@ static int LuaConvertJwkToPem(lua_State *L) {
     }
     size_t x_len, y_len;
     unsigned char x_bin[72], y_bin[72];
-    char *x_b64_std = strdup(x_b64), *y_b64_std = strdup(y_b64);
-    for (char *p = x_b64_std; *p; ++p)
-      if (*p == '-')
-        *p = '+';
-      else if (*p == '_')
-        *p = '/';
-    for (char *p = y_b64_std; *p; ++p)
-      if (*p == '-')
-        *p = '+';
-      else if (*p == '_')
-        *p = '/';
-    int x_mod = strlen(x_b64_std) % 4;
-    int y_mod = strlen(y_b64_std) % 4;
-    if (x_mod)
-      for (int i = 0; i < 4 - x_mod; ++i)
-        strcat(x_b64_std, "=");
-    if (y_mod)
-      for (int i = 0; i < 4 - y_mod; ++i)
-        strcat(y_b64_std, "=");
+    char *x_b64_std = strdup(x_b64);
+    char *y_b64_std = strdup(y_b64);
+    base64url_to_base64(x_b64_std);
+    base64url_to_base64(y_b64_std);
     if (mbedtls_base64_decode(x_bin, sizeof(x_bin), &x_len,
                               (const unsigned char *)x_b64_std,
                               strlen(x_b64_std)) != 0 ||
@@ -2004,23 +2069,6 @@ static int LuaConvertJwkToPem(lua_State *L) {
   }
 }
 
-// Convert PEM key to JWK (Lua table) format
-static void base64_to_base64url(char *str) {
-  if (!str)
-    return;
-  for (char *p = str; *p; p++) {
-    if (*p == '+')
-      *p = '-';
-    else if (*p == '/')
-      *p = '_';
-  }
-  // Remove padding
-  size_t len = strlen(str);
-  while (len > 0 && str[len - 1] == '=') {
-    str[--len] = '\0';
-  }
-}
-
 static int LuaConvertPemToJwk(lua_State *L) {
   const char *pem_key = luaL_checkstring(L, 1);
   int has_claims = 0;
@@ -2063,20 +2111,8 @@ static int LuaConvertPemToJwk(lua_State *L) {
     }
     mbedtls_mpi_write_binary(&rsa->N, n, n_len);
     mbedtls_mpi_write_binary(&rsa->E, e, e_len);
-    char *n_b64 = NULL, *e_b64 = NULL;
-    size_t n_b64_len, e_b64_len;
-    mbedtls_base64_encode(NULL, 0, &n_b64_len, n, n_len);
-    mbedtls_base64_encode(NULL, 0, &e_b64_len, e, e_len);
-    n_b64 = malloc(n_b64_len + 1);
-    e_b64 = malloc(e_b64_len + 1);
-    mbedtls_base64_encode((unsigned char *)n_b64, n_b64_len, &n_b64_len, n,
-                          n_len);
-    n_b64[n_b64_len] = '\0';
-    base64_to_base64url(n_b64);
-    mbedtls_base64_encode((unsigned char *)e_b64, e_b64_len, &e_b64_len, e,
-                          e_len);
-    e_b64[e_b64_len] = '\0';
-    base64_to_base64url(e_b64);
+    char *n_b64 = b64url_encode(n, n_len);
+    char *e_b64 = b64url_encode(e, e_len);
     lua_pushstring(L, n_b64);
     lua_setfield(L, -2, "n");
     lua_pushstring(L, e_b64);
@@ -2110,47 +2146,12 @@ static int LuaConvertPemToJwk(lua_State *L) {
       mbedtls_mpi_write_binary(&rsa->DP, dp, dp_len);
       mbedtls_mpi_write_binary(&rsa->DQ, dq, dq_len);
       mbedtls_mpi_write_binary(&rsa->QP, qi, qi_len);
-      char *d_b64 = NULL, *p_b64 = NULL, *q_b64 = NULL, *dp_b64 = NULL,
-           *dq_b64 = NULL, *qi_b64 = NULL;
-      size_t d_b64_len, p_b64_len, q_b64_len, dp_b64_len, dq_b64_len,
-          qi_b64_len;
-      mbedtls_base64_encode(NULL, 0, &d_b64_len, d, d_len);
-      mbedtls_base64_encode(NULL, 0, &p_b64_len, p, p_len);
-      mbedtls_base64_encode(NULL, 0, &q_b64_len, q, q_len);
-      mbedtls_base64_encode(NULL, 0, &dp_b64_len, dp, dp_len);
-      mbedtls_base64_encode(NULL, 0, &dq_b64_len, dq, dq_len);
-      mbedtls_base64_encode(NULL, 0, &qi_b64_len, qi, qi_len);
-      d_b64 = malloc(d_b64_len + 1);
-      p_b64 = malloc(p_b64_len + 1);
-      q_b64 = malloc(q_b64_len + 1);
-      dp_b64 = malloc(dp_b64_len + 1);
-      dq_b64 = malloc(dq_b64_len + 1);
-      qi_b64 = malloc(qi_b64_len + 1);
-      mbedtls_base64_encode((unsigned char *)d_b64, d_b64_len, &d_b64_len, d,
-                            d_len);
-      mbedtls_base64_encode((unsigned char *)p_b64, p_b64_len, &p_b64_len, p,
-                            p_len);
-      mbedtls_base64_encode((unsigned char *)q_b64, q_b64_len, &q_b64_len, q,
-                            q_len);
-      mbedtls_base64_encode((unsigned char *)dp_b64, dp_b64_len, &dp_b64_len,
-                            dp, dp_len);
-      mbedtls_base64_encode((unsigned char *)dq_b64, dq_b64_len, &dq_b64_len,
-                            dq, dq_len);
-      mbedtls_base64_encode((unsigned char *)qi_b64, qi_b64_len, &qi_b64_len,
-                            qi, qi_len);
-      d_b64[d_b64_len] = '\0';
-      p_b64[p_b64_len] = '\0';
-      q_b64[q_b64_len] = '\0';
-      dp_b64[dp_b64_len] = '\0';
-      dq_b64[dq_b64_len] = '\0';
-      qi_b64[qi_b64_len] = '\0';
-      // Convert all private components to base64url
-      base64_to_base64url(d_b64);
-      base64_to_base64url(p_b64);
-      base64_to_base64url(q_b64);
-      base64_to_base64url(dp_b64);
-      base64_to_base64url(dq_b64);
-      base64_to_base64url(qi_b64);
+      char *d_b64 = b64url_encode(d, d_len);
+      char *p_b64 = b64url_encode(p, p_len);
+      char *q_b64 = b64url_encode(q, q_len);
+      char *dp_b64 = b64url_encode(dp, dp_len);
+      char *dq_b64 = b64url_encode(dq, dq_len);
+      char *qi_b64 = b64url_encode(qi, qi_len);
       lua_pushstring(L, d_b64);
       lua_setfield(L, -2, "d");
       lua_pushstring(L, p_b64);
@@ -2198,20 +2199,8 @@ static int LuaConvertPemToJwk(lua_State *L) {
     }
     mbedtls_mpi_write_binary(&Q->X, x, x_len);
     mbedtls_mpi_write_binary(&Q->Y, y, y_len);
-    char *x_b64 = NULL, *y_b64 = NULL;
-    size_t x_b64_len, y_b64_len;
-    mbedtls_base64_encode(NULL, 0, &x_b64_len, x, x_len);
-    mbedtls_base64_encode(NULL, 0, &y_b64_len, y, y_len);
-    x_b64 = malloc(x_b64_len + 1);
-    y_b64 = malloc(y_b64_len + 1);
-    mbedtls_base64_encode((unsigned char *)x_b64, x_b64_len, &x_b64_len, x,
-                          x_len);
-    x_b64[x_b64_len] = '\0';
-    base64_to_base64url(x_b64);
-    mbedtls_base64_encode((unsigned char *)y_b64, y_b64_len, &y_b64_len, y,
-                          y_len);
-    y_b64[y_b64_len] = '\0';
-    base64_to_base64url(y_b64);
+    char *x_b64 = b64url_encode(x, x_len);
+    char *y_b64 = b64url_encode(y, y_len);
     // Set kty and crv for EC keys
     lua_pushstring(L, "EC");
     lua_setfield(L, -2, "kty");
@@ -2243,14 +2232,7 @@ static int LuaConvertPemToJwk(lua_State *L) {
         return 2;
       }
       mbedtls_mpi_write_binary(&ec->d, d, d_len);
-      char *d_b64 = NULL;
-      size_t d_b64_len;
-      mbedtls_base64_encode(NULL, 0, &d_b64_len, d, d_len);
-      d_b64 = malloc(d_b64_len + 1);
-      mbedtls_base64_encode((unsigned char *)d_b64, d_b64_len, &d_b64_len, d,
-                            d_len);
-      d_b64[d_b64_len] = '\0';
-      base64_to_base64url(d_b64);
+      char *d_b64 = b64url_encode(d, d_len);
       lua_pushstring(L, d_b64);
       lua_setfield(L, -2, "d");
       free(d);
@@ -2368,10 +2350,14 @@ static int LuaCryptoSign(lua_State *L) {
 
   if (strcasecmp(dtype, "rsa") == 0) {
     return LuaRSASign(L);
-  } else if (strcasecmp(dtype, "rsa-pss") == 0 ||
-             strcasecmp(dtype, "rsapss") == 0) {
+  }
+#ifndef TINY
+  else if (strcasecmp(dtype, "rsa-pss") == 0 ||
+           strcasecmp(dtype, "rsapss") == 0) {
     return LuaRSAPSSSign(L);
-  } else if (strcasecmp(dtype, "ecdsa") == 0) {
+  }
+#endif
+  else if (strcasecmp(dtype, "ecdsa") == 0) {
     return LuaECDSASign(L);
   } else {
     return luaL_error(L, "Unsupported signature type: %s", dtype);
