@@ -50,9 +50,7 @@ static const curve_map_t supported_curves[] = {
     {"P521", MBEDTLS_ECP_DP_SECP521R1},         //
     {"P-521", MBEDTLS_ECP_DP_SECP521R1},        //
     {"curve25519", MBEDTLS_ECP_DP_CURVE25519},  //
-#ifndef TINY
-    {"curve448", MBEDTLS_ECP_DP_CURVE448},  //
-#endif
+    {"curve448", MBEDTLS_ECP_DP_CURVE448},      //
     {NULL, 0}};
 
 // List available curves
@@ -197,6 +195,24 @@ cleanup:
   mbedtls_md_free(&md_ctx);
   return ret;
 }
+
+// Ciphers
+typedef struct {
+  const char *name;
+  mbedtls_cipher_id_t id;
+} ciphers_map_t;
+
+static const ciphers_map_t supported_ciphers[] = {
+    {"AES-128-CBC", MBEDTLS_CIPHER_AES_128_CBC},  //
+    {"AES-192-CBC", MBEDTLS_CIPHER_AES_192_CBC},  //
+    {"AES-256-CBC", MBEDTLS_CIPHER_AES_256_CBC},  //
+    {"AES-128-CTR", MBEDTLS_CIPHER_AES_128_CTR},  //
+    {"AES-192-CTR", MBEDTLS_CIPHER_AES_192_CTR},  //
+    {"AES-256-CTR", MBEDTLS_CIPHER_AES_256_CTR},  //
+    {"AES-128-GCM", MBEDTLS_CIPHER_AES_128_GCM},  //
+    {"AES-192-GCM", MBEDTLS_CIPHER_AES_192_GCM},  //
+    {"AES-256-GCM", MBEDTLS_CIPHER_AES_256_GCM},  //
+    {NULL, 0}};
 
 // Strong RNG using mbedtls_entropy_context and mbedtls_ctr_drbg_context
 int GenerateRandom(void *ctx, unsigned char *output, size_t len) {
@@ -2350,14 +2366,10 @@ static int LuaCryptoSign(lua_State *L) {
 
   if (strcasecmp(dtype, "rsa") == 0) {
     return LuaRSASign(L);
-  }
-#ifndef TINY
-  else if (strcasecmp(dtype, "rsa-pss") == 0 ||
-           strcasecmp(dtype, "rsapss") == 0) {
+  } else if (strcasecmp(dtype, "rsa-pss") == 0 ||
+             strcasecmp(dtype, "rsapss") == 0) {
     return LuaRSAPSSSign(L);
-  }
-#endif
-  else if (strcasecmp(dtype, "ecdsa") == 0) {
+  } else if (strcasecmp(dtype, "ecdsa") == 0) {
     return LuaECDSASign(L);
   } else {
     return luaL_error(L, "Unsupported signature type: %s", dtype);
@@ -2433,6 +2445,99 @@ static int LuaCryptoGenerateKeyPair(lua_State *L) {
   }
 }
 
+// Returns a Lua table array of supported digests and ciphers (strings),
+// depending on the type argument:
+//    "ciphers" - returns list of ciphers supported by crypto.encrypt and
+//    crypto.decrypt "digests" - returns list of digests in supported_digests
+//    "curves"  - returns list of curves in supported_curves
+//    If no argument is provided, returns a table with all three types
+static int LuaList(lua_State *L) {
+  // Create a new table to hold the result
+  lua_newtable(L);
+
+  // No argument provided - return all types in a structured table
+  if (lua_isnoneornil(L, 1)) {
+    // Create subtable for digests
+    lua_pushstring(L, "digests");
+    lua_newtable(L);
+    const digest_map_t *digest = supported_digests;
+    int i = 1;
+    while (digest->name != NULL) {
+      lua_pushstring(L, digest->name);
+      lua_rawseti(L, -2, i++);
+      digest++;
+    }
+    lua_settable(L, -3);
+
+    // Create subtable for curves
+    lua_pushstring(L, "curves");
+    lua_newtable(L);
+    const curve_map_t *curve = supported_curves;
+    i = 1;
+    while (curve->name != NULL) {
+      lua_pushstring(L, curve->name);
+      lua_rawseti(L, -2, i++);
+      curve++;
+    }
+    lua_settable(L, -3);
+
+    // Create subtable for ciphers
+    lua_pushstring(L, "ciphers");
+    lua_newtable(L);
+    const ciphers_map_t *cipher = supported_ciphers;
+    i = 1;
+    while (cipher->name != NULL) {
+      lua_pushstring(L, cipher->name);
+      lua_rawseti(L, -2, i++);
+      cipher++;
+    }
+    lua_settable(L, -3);
+
+    return 1;
+  }
+
+  // Argument provided - handle specific type
+  const char *type = luaL_checkstring(L, 1);
+
+  if (strcasecmp(type, "curves") == 0) {
+    // List all available curves
+    const curve_map_t *curve = supported_curves;
+    int i = 1;
+
+    while (curve->name != NULL) {
+      lua_pushstring(L, curve->name);
+      lua_rawseti(L, -2, i++);
+      curve++;
+    }
+  } else if (strcasecmp(type, "digests") == 0) {
+    // List all available digests
+    const digest_map_t *digest = supported_digests;
+    int i = 1;
+
+    while (digest->name != NULL) {
+      lua_pushstring(L, digest->name);
+      lua_rawseti(L, -2, i++);
+      digest++;
+    }
+  } else if (strcasecmp(type, "ciphers") == 0) {
+    // List all available ciphers
+    const ciphers_map_t *cipher = supported_ciphers;
+    int i = 1;
+
+    while (cipher->name != NULL) {
+      lua_pushstring(L, cipher->name);
+      lua_rawseti(L, -2, i++);
+      cipher++;
+    }
+  } else {
+    // Invalid type, return empty table
+    lua_pushstring(L, "Invalid type. Use 'ciphers', 'digests', or 'curves'");
+    lua_setfield(L, -2, "error");
+  }
+
+  return 1;  // Return the table
+}
+
 static const luaL_Reg kLuaCrypto[] = {
     {"sign", LuaCryptoSign},                        //
     {"verify", LuaCryptoVerify},                    //
@@ -2442,6 +2547,7 @@ static const luaL_Reg kLuaCrypto[] = {
     {"convertJwkToPem", LuaConvertJwkToPem},        //
     {"convertPemToJwk", LuaConvertPemToJwk},        //
     {"generateCsr", LuaGenerateCSR},                //
+    {"list", LuaList},                              //
     {0},                                            //
 };
 

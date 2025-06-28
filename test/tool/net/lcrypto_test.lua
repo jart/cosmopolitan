@@ -1,4 +1,3 @@
----@diagnostic disable: lowercase-global
 -- Test RSA key pair generation
 local function test_rsa_keypair_generation()
     local priv_key, pub_key = crypto.generateKeyPair("rsa", 2048)
@@ -678,14 +677,14 @@ end
 local function run_tests()
     Log(kLogVerbose,"Testing RSA keypair generation...")
     test_rsa_keypair_generation()
-    Log(kLogVerbose,"Testing RSA signing and verification...")
-    test_rsa_signing_verification()
-    Log(kLogVerbose,"Testing RSA-PSS signing and verification...")
-    test_rsapss_signing_verification()
-    Log(kLogVerbose,"Testing RSA encryption and decryption...")
-    test_rsa_encryption_decryption()
     Log(kLogVerbose,"Testing RSA key size variations...")
     test_rsa_key_sizes()
+    Log(kLogVerbose,"Testing RSA signing and verification...")
+    test_rsa_signing_verification()
+    Log(kLogVerbose,"Testing RSA encryption and decryption...")
+    test_rsa_encryption_decryption()
+    Log(kLogVerbose,"Testing RSA-PSS signing and verification...")
+    test_rsapss_signing_verification()
 
     Log(kLogVerbose,"Testing ECDSA keypair generation...")
     test_ecdsa_keypair_generation()
@@ -753,4 +752,5 @@ local function run_tests()
 end
 
 EXIT = 70
+
 os.exit(run_tests())
