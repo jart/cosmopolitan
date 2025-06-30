@@ -2986,7 +2986,7 @@ function Database:db_filename(name) end
 function Database:deserialize(s) end
 
 ---@return integer error the numerical result code (or extended result code) for the most recent failed call associated with database db.
---- See http://lua.sqlite.org/index.cgi/doc/tip/doc/lsqlite3.wiki#numerical_error_and_result_codes for details.
+--- See https://lua.sqlite.org/home/doc/tip/doc/lsqlite3.wiki#numerical_error_and_result_codes for details.
 ---@nodiscard
 function Database:error_code() end
 
@@ -3103,7 +3103,7 @@ function Database:nrows(sql) end
 --- representation and returns this as userdata. The returned object should be
 --- used for all further method calls in connection with this specific SQL
 --- statement.
---- See http://lua.sqlite.org/index.cgi/doc/tip/doc/lsqlite3.wiki#methods_for_prepared_statements.
+--- See https://lua.sqlite.org/home/doc/tip/doc/lsqlite3.wiki#methods_for_prepared_statements for details.
 ---@param sql string
 ---@return lsqlite3.Statement
 ---@nodiscard
