@@ -93,7 +93,8 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
 
     // initiate asynchronous i/o operation with win32
     struct NtOverlapped overlap = {.hEvent = event, .Pointer = offset};
-    bool32 ok = ReadOrWriteFile(handle, data, size, 0, &overlap);
+    uint32_t exchanged = 0;
+    bool32 ok = ReadOrWriteFile(handle, data, size, &exchanged, &overlap);
     if (!ok && GetLastError() == kNtErrorIoPending) {
       if (f->flags & _O_NONBLOCK) {
         // immediately back out of blocking i/o if non-blocking
@@ -135,11 +136,8 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
           CancelIoEx(handle, &overlap);
         }
       }
-      ok = true;
-    }
-    uint32_t exchanged = 0;
-    if (ok)
       ok = GetOverlappedResult(handle, &overlap, &exchanged, true);
+    }
     uint32_t io_error = GetLastError();
     CloseHandle(event);
 

@@ -68,7 +68,7 @@ static textwindows ssize_t ntspawn_read(intptr_t fh, char *buf, size_t len) {
   uint32_t got;
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
   ok = overlap.hEvent &&
-       (ReadFile(fh, buf, len, 0, &overlap) ||
+       (ReadFile(fh, buf, len, &got, &overlap) ||
         GetLastError() == kNtErrorIoPending) &&
        GetOverlappedResult(fh, &overlap, &got, true);
   if (overlap.hEvent)
