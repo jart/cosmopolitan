@@ -147,7 +147,7 @@ abi static void DeduplicateStdioHandles(void) {
       int64_t h2 = __imp_GetStdHandle(kNtStdio[j]);
       if (h1 == h2) {
         int64_t h3;
-        __imp_DuplicateHandle(-1, h2, -1, &h3, 0, false,
+        __imp_DuplicateHandle(-1, h2, -1, &h3, 0, true,
                               kNtDuplicateSameAccess);
         __imp_SetStdHandle(kNtStdio[j], h3);
       }
