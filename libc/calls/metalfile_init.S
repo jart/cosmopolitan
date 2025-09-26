@@ -31,6 +31,7 @@
 	push	%rdi
 	push	%rsi
 	call	InitializeMetalFile
+	call	SetMetalPid
 	pop	%rsi
 	pop	%rdi
 	.init.end 203,_init_metalfile

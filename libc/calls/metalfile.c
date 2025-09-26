@@ -34,6 +34,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -78,6 +79,11 @@ textstartup void InitializeMetalFile(void) {
     //               to its functions need to be weak
     // KINFOF("%s @ %p,+%#zx", APE_COM_NAME, copied_base, size);
   }
+}
+
+textstartup void SetMetalPid(void) {
+  if (IsMetal())
+    __pid = 1;
 }
 
 #endif /* __x86_64__ */
