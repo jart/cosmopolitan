@@ -665,6 +665,16 @@
 #define FILE_SHARE_WRITE kNtFileShareWrite
 #define FILE_SHARE_DELETE kNtFileShareDelete
 
+#include "libc/nt/enum/filenotify.h"
+#define FILE_NOTIFY_CHANGE_FILE_NAME kNtFileNotifyChangeFileName
+#define FILE_NOTIFY_CHANGE_DIR_NAME kNtFileNotifyChangeDirName
+#define FILE_NOTIFY_CHANGE_ATTRIBUTES kNtFileNotifyChangeAttributes
+#define FILE_NOTIFY_CHANGE_SIZE kNtFileNotifyChangeSize
+#define FILE_NOTIFY_CHANGE_LAST_WRITE kNtFileNotifyChangeLastWrite
+#define FILE_NOTIFY_CHANGE_LAST_ACCESS kNtFileNotifyChangeLastAccess
+#define FILE_NOTIFY_CHANGE_CREATION kNtFileNotifyChangeCreation
+#define FILE_NOTIFY_CHANGE_SECURITY kNtFileNotifyChangeSecurity
+
 #include "libc/nt/runtime.h"
 #define INVALID_HANDLE_VALUE kNtInvalidHandleValue
 #define STD_INPUT_HANDLE kNtStdInputHandle
