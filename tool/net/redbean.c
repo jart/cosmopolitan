@@ -256,7 +256,7 @@ struct Strings {
   struct String {
     size_t n;
     const char *s;
-  } *p;
+  } * p;
 };
 
 struct DeflateGenerator {
@@ -284,7 +284,7 @@ static struct Servers {
   struct Server {
     int fd;
     struct sockaddr_in addr;
-  } *p;
+  } * p;
 } servers;
 
 static struct Freelist {
@@ -298,7 +298,7 @@ static struct Unmaplist {
     int f;
     void *p;
     size_t n;
-  } *p;
+  } * p;
 } unmaplist;
 
 static struct Psks {
@@ -309,7 +309,7 @@ static struct Psks {
     char *identity;
     size_t identity_len;
     char *s;
-  } *p;
+  } * p;
 } psks;
 
 static struct Suites {
@@ -328,7 +328,7 @@ static struct Redirects {
     int code;
     struct String path;
     struct String location;
-  } *p;
+  } * p;
 } redirects;
 
 static struct Assets {
@@ -343,8 +343,8 @@ static struct Assets {
     struct File {
       struct String path;
       struct stat st;
-    } *file;
-  } *p;
+    } * file;
+  } * p;
 } assets;
 
 static struct TrustedIps {
@@ -352,7 +352,7 @@ static struct TrustedIps {
   struct TrustedIp {
     uint32_t ip;
     uint32_t mask;
-  } *p;
+  } * p;
 } trustedips;
 
 struct TokenBucket {
@@ -388,7 +388,7 @@ static struct Shared {
   pthread_mutex_t server_mu;
   pthread_mutex_t children_mu;
   pthread_mutex_t lastmeltdown_mu;
-} *shared;
+} * shared;
 
 static const char kCounterNames[] =
 #define C(x) #x "\0"
@@ -7033,8 +7033,10 @@ static void Listen(void) {
   size_t i, j, n;
   uint32_t ip, port, addrsize, *ifp;
   bool hasonserverlisten = IsHookDefined("OnServerListen");
+  bool is_default_port = false;
   if (!ports.n) {
     ProgramPort(8080);
+    is_default_port = true;
   }
   if (!ips.n) {
     if (interfaces && *interfaces) {
@@ -7064,11 +7066,33 @@ static void Listen(void) {
         n--;  // skip this server instance
         continue;
       }
-
-      if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
-               sizeof(servers.p[n].addr)) == -1) {
-        DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
-             ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
+      // Try binding with port auto-increment for default port
+      int max_attempts = (is_default_port && ports.p[j] < 8100) ? 20 : 1;
+      int attempt;
+      bool bind_success = false;
+      for (attempt = 0; attempt < max_attempts; attempt++) {
+        servers.p[n].addr.sin_port = htons(ports.p[j]);
+        if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
+                 sizeof(servers.p[n].addr)) == 0) {
+          bind_success = true;
+          break;
+        }
+        if (errno == EADDRINUSE && is_default_port && ports.p[j] < 8099) {
+          WARNF("(srvr) port %hu in use, trying %hu...", ports.p[j], ports.p[j] + 1);
+          ports.p[j]++;
+        } else {
+          break;  // Different error or explicit port - fail immediately
+        }
+      }
+      if (!bind_success) {
+        if (errno == EADDRINUSE) {
+          DIEF("(srvr) bind error: Port %hu is already in use on %hhu.%hhu.%hhu.%hhu\n"
+               "       Try a different port with: redbean -p <port>",
+               ports.p[j], ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i]);
+        } else {
+          DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
+               ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
+        }
       }
       if (listen(servers.p[n].fd, 10) == -1) {
         DIEF("(srvr) listen error: %m");
