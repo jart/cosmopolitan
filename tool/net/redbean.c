@@ -256,7 +256,7 @@ struct Strings {
   struct String {
     size_t n;
     const char *s;
-  } *p;
+  } * p;
 };
 
 struct DeflateGenerator {
@@ -284,7 +284,7 @@ static struct Servers {
   struct Server {
     int fd;
     struct sockaddr_in addr;
-  } *p;
+  } * p;
 } servers;
 
 static struct Freelist {
@@ -298,7 +298,7 @@ static struct Unmaplist {
     int f;
     void *p;
     size_t n;
-  } *p;
+  } * p;
 } unmaplist;
 
 static struct Psks {
@@ -309,7 +309,7 @@ static struct Psks {
     char *identity;
     size_t identity_len;
     char *s;
-  } *p;
+  } * p;
 } psks;
 
 static struct Suites {
@@ -328,7 +328,7 @@ static struct Redirects {
     int code;
     struct String path;
     struct String location;
-  } *p;
+  } * p;
 } redirects;
 
 static struct Assets {
@@ -343,8 +343,8 @@ static struct Assets {
     struct File {
       struct String path;
       struct stat st;
-    } *file;
-  } *p;
+    } * file;
+  } * p;
 } assets;
 
 static struct TrustedIps {
@@ -352,7 +352,7 @@ static struct TrustedIps {
   struct TrustedIp {
     uint32_t ip;
     uint32_t mask;
-  } *p;
+  } * p;
 } trustedips;
 
 struct TokenBucket {
@@ -388,7 +388,7 @@ static struct Shared {
   pthread_mutex_t server_mu;
   pthread_mutex_t children_mu;
   pthread_mutex_t lastmeltdown_mu;
-} *shared;
+} * shared;
 
 static const char kCounterNames[] =
 #define C(x) #x "\0"
@@ -7044,7 +7044,8 @@ static void Listen(void) {
       test_addr.sin_port = htons(test_port);
       test_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-      if (bind(test_fd, (struct sockaddr *)&test_addr, sizeof(test_addr)) == 0) {
+      if (bind(test_fd, (struct sockaddr *)&test_addr, sizeof(test_addr)) ==
+          0) {
         close(test_fd);
         ProgramPort(test_port);  // Use this port
         break;
