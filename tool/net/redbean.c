@@ -7033,26 +7033,10 @@ static void Listen(void) {
   size_t i, j, n;
   uint32_t ip, port, addrsize, *ifp;
   bool hasonserverlisten = IsHookDefined("OnServerListen");
-  if (!ports.n) {  // If using default port
-    // Find an available port (only if using default)
-    uint16_t test_port = 8080;
-    int test_fd;
-    while (test_port < 8100) {
-      test_fd = socket(AF_INET, SOCK_STREAM, 0);
-      struct sockaddr_in test_addr = {0};
-      test_addr.sin_family = AF_INET;
-      test_addr.sin_port = htons(test_port);
-      test_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-      if (bind(test_fd, (struct sockaddr *)&test_addr, sizeof(test_addr)) ==
-          0) {
-        close(test_fd);
-        ProgramPort(test_port);  // Use this port
-        break;
-      }
-      close(test_fd);
-      test_port++;
-    }
+  bool is_default_port = false;
+  if (!ports.n) {
+    ProgramPort(8080);
+    is_default_port = true;
   }
   if (!ips.n) {
     if (interfaces && *interfaces) {
@@ -7082,11 +7066,33 @@ static void Listen(void) {
         n--;  // skip this server instance
         continue;
       }
-
-      if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
-               sizeof(servers.p[n].addr)) == -1) {
-        DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
-             ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
+      // Try binding with port auto-increment for default port
+      int max_attempts = (is_default_port && ports.p[j] < 8100) ? 20 : 1;
+      int attempt;
+      bool bind_success = false;
+      for (attempt = 0; attempt < max_attempts; attempt++) {
+        servers.p[n].addr.sin_port = htons(ports.p[j]);
+        if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
+                 sizeof(servers.p[n].addr)) == 0) {
+          bind_success = true;
+          break;
+        }
+        if (errno == EADDRINUSE && is_default_port && ports.p[j] < 8099) {
+          WARNF("(srvr) port %hu in use, trying %hu...", ports.p[j], ports.p[j] + 1);
+          ports.p[j]++;
+        } else {
+          break;  // Different error or explicit port - fail immediately
+        }
+      }
+      if (!bind_success) {
+        if (errno == EADDRINUSE) {
+          DIEF("(srvr) bind error: Port %hu is already in use on %hhu.%hhu.%hhu.%hhu\n"
+               "       Try a different port with: redbean -p <port>",
+               ports.p[j], ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i]);
+        } else {
+          DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
+               ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
+        }
       }
       if (listen(servers.p[n].fd, 10) == -1) {
         DIEF("(srvr) listen error: %m");
