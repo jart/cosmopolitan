@@ -7033,8 +7033,25 @@ static void Listen(void) {
   size_t i, j, n;
   uint32_t ip, port, addrsize, *ifp;
   bool hasonserverlisten = IsHookDefined("OnServerListen");
-  if (!ports.n) {
-    ProgramPort(8080);
+  if (!ports.n) {  // If using default port
+    // Find an available port (only if using default)
+    uint16_t test_port = 8080;
+    int test_fd;
+    while (test_port < 8100) {
+      test_fd = socket(AF_INET, SOCK_STREAM, 0);
+      struct sockaddr_in test_addr = {0};
+      test_addr.sin_family = AF_INET;
+      test_addr.sin_port = htons(test_port);
+      test_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+      if (bind(test_fd, (struct sockaddr *)&test_addr, sizeof(test_addr)) == 0) {
+        close(test_fd);
+        ProgramPort(test_port);  // Use this port
+        break;
+      }
+      close(test_fd);
+      test_port++;
+    }
   }
   if (!ips.n) {
     if (interfaces && *interfaces) {
