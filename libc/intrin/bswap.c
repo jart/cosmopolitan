@@ -45,3 +45,8 @@ uint64_t(bswap_64)(uint64_t x) {
          (0x00ff000000000000ull & x) >> 050 |
          (0xff00000000000000ull & x) >> 070;
 }
+
+uint128_t(bswap_128)(uint128_t x) {
+  return ((uint128_t)bswap_64((uint64_t)x) << 64) |
+         (uint128_t)bswap_64((uint64_t)(x >> 64));
+}
