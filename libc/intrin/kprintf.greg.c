@@ -362,8 +362,7 @@ ABI void klog(const char *b, size_t n) {
       struct NtOverlapped overlap = {.hEvent = ev};
       ok = !!__imp_WriteFile(h, b, n, 0, &overlap);
       if (!ok && __imp_GetLastError() == kNtErrorIoPending)
-        ok = true;
-      ok &= !!__imp_GetOverlappedResult(h, &overlap, &wrote, true);
+        ok = !!__imp_GetOverlappedResult(h, &overlap, &wrote, true);
       if (!ok)
         __klog_handle = 0;
       __imp_CloseHandle(ev);
