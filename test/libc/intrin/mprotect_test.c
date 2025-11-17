@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -151,6 +152,7 @@ TEST(mprotect, testExecOnly_canExecute) {
   char *p = _mapanon(getpagesize());
   void (*f)(void) = (void *)p;
   memcpy(p, kRet31337, sizeof(kRet31337));
+  __clear_cache(p, p + sizeof(kRet31337));
   ASSERT_SYS(0, 0, mprotect(p, getpagesize(), PROT_EXEC | PROT_READ));
   f();
   // On all supported platforms, PROT_EXEC implies PROT_READ. There is
@@ -174,6 +176,7 @@ TEST(mprotect, testProtNone_cantEvenRead) {
 TEST(mprotect, testExecJit_actuallyWorks) {
   int (*p)(void) = gc(memalign(getpagesize(), getpagesize()));
   memcpy(p, kRet31337, sizeof(kRet31337));
+  __clear_cache(p, p + sizeof(kRet31337));
   EXPECT_NE(-1, mprotect(p, getpagesize(), PROT_EXEC));
   EXPECT_EQ(31337, p());
   EXPECT_FALSE(gotsegv);
@@ -188,6 +191,7 @@ TEST(mprotect, testRwxMap_vonNeumannRules) {
     return;  // boo
   int (*p)(void) = gc(memalign(getpagesize(), getpagesize()));
   memcpy(p, kRet31337, sizeof(kRet31337));
+  __clear_cache(p, p + sizeof(kRet31337));
   EXPECT_NE(-1, mprotect(p, getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC));
   EXPECT_EQ(31337, p());
   EXPECT_FALSE(gotsegv);
@@ -255,8 +259,11 @@ TEST(mprotect, weirdSize) {
   char *p;
   EXPECT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_EXEC,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  EXPECT_FALSE(kisdangerous(p));
   EXPECT_SYS(0, 0, mprotect(p, 2, PROT_NONE));
+  EXPECT_TRUE(kisdangerous(p));
   EXPECT_SYS(0, 0, munmap(p, 1));
+  EXPECT_TRUE(kisdangerous(p));
 }
 
 TEST(mprotect, outerOverlap) {

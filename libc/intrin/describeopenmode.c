@@ -21,11 +21,8 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/sysv/consts/o.h"
 
-#define O_TMPFILE_LINUX 0x00410000
-
 static bool IsCreatingFile(int flags) {
-  return (flags & O_CREAT) ||
-         (IsLinux() && (flags & O_TMPFILE_LINUX) == O_TMPFILE_LINUX);
+  return flags & (O_CREAT | _O_TMPFILE);
 }
 
 const char *_DescribeOpenMode(char buf[15], int flags, int mode) {

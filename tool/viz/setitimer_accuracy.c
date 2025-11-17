@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 #include "libc/fmt/itoa.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sig.h"

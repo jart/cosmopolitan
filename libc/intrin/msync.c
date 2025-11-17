@@ -29,10 +29,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Synchronize memory mapping changes to disk.
- *
- * Without this, there's no guarantee memory is written back to disk.
- * Particularly on RHEL5, OpenBSD, and Windows NT.
+ * Synchronizes memory mapping.
  *
  * @param addr needs to be 4096-byte page aligned
  * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE

@@ -2,6 +2,7 @@
 Tests common to genericpath, macpath, ntpath and posixpath
 """
 
+import cosmo
 import genericpath
 import os
 import sys
@@ -540,9 +541,13 @@ class PathLikeTests(unittest.TestCase):
     def test_path_getsize(self):
         self.assertPathEqual(os.path.getsize)
 
+    @unittest.skipIf(cosmo.kernel == 'nt',
+                     "cosmo stat() changes access time on Windows :(")
     def test_path_getmtime(self):
         self.assertPathEqual(os.path.getatime)
 
+    @unittest.skipIf(cosmo.kernel == 'nt',
+                     "cosmo stat() changes access time on Windows :(")
     def test_path_getctime(self):
         self.assertPathEqual(os.path.getctime)
 

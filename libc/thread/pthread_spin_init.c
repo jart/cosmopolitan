@@ -29,6 +29,6 @@
  * @see pthread_spin_lock
  */
 errno_t pthread_spin_init(pthread_spinlock_t *spin, int pshared) {
-  atomic_store_explicit(&spin->_lock, 0, memory_order_relaxed);
+  atomic_init(&spin->_lock, 0);
   return 0;
 }

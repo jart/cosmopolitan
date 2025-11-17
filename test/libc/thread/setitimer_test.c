@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/itimer.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
@@ -25,10 +24,12 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"

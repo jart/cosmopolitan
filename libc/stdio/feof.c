@@ -16,18 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Returns true if stream is in end-of-file state.
  *
  * @param f is file object stream pointer
+ * @return nonzero if end-of-file indicator is set on stream
  * @see feof_unlocked()
  */
 int feof(FILE *f) {
   int rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = feof_unlocked(f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }

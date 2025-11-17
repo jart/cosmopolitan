@@ -27,8 +27,40 @@ int32_t sys_pipe2(int pipefd[hasatleast 2], unsigned flags) {
   int e, rc;
   if (!flags)
     goto OldSkool;
+
+  int flags2 = 0;
+  if (IsLinux()) {
+    flags2 = flags;
+  } else {
+    flags2 = flags & O_ACCMODE;
+    if (flags & O_NONBLOCK)
+      flags2 |= 4;
+    if (flags & O_DIRECT) {
+      if (IsFreebsd()) {
+        flags2 |= 0x00010000;
+      } else if (IsNetbsd()) {
+        flags2 |= 0x00080000;
+      } else {
+        return einval();
+      }
+    }
+    if (flags & O_CLOEXEC) {
+      if (IsXnu()) {
+        flags2 |= 0x01000000;
+      } else if (IsFreebsd()) {
+        flags2 |= 0x00100000;
+      } else if (IsOpenbsd()) {
+        flags2 |= 0x00010000;
+      } else if (IsNetbsd()) {
+        flags2 |= 0x00400000;
+      } else {
+        return einval();
+      }
+    }
+  }
+
   e = errno;
-  rc = __sys_pipe2(pipefd, flags);
+  rc = __sys_pipe2(pipefd, flags2);
   if (rc == -1 && errno == ENOSYS) {
     errno = e;
   OldSkool:

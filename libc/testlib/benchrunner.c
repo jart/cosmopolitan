@@ -60,7 +60,7 @@ void EnableCruiseControlForCool(void) {
   if ((fd = __sys_openat(AT_FDCWD, "/dev/cpu_dma_latency", O_WRONLY, 0)) !=
       -1) {
     sys_write(fd, &micros, sizeof(micros));
-    sys_fcntl(fd, F_DUPFD_CLOEXEC, 123, __sys_fcntl);
+    fcntl(fd, F_DUPFD_CLOEXEC, 123);
     sys_close(fd);
   }
   ALLOW_CANCELATION;

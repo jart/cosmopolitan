@@ -20,7 +20,7 @@ THIRD_PARTY_NSYNC_MEM_A_DIRECTDEPS =		\
 	LIBC_NEXGEN32E				\
 	LIBC_MEM				\
 	LIBC_SYSV				\
-	THIRD_PARTY_NSYNC
+	THIRD_PARTY_NSYNC			\
 
 THIRD_PARTY_NSYNC_MEM_A_DEPS :=			\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_NSYNC_MEM_A_DIRECTDEPS),$($(x))))
@@ -51,9 +51,7 @@ $(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
 
 # avoid the legacy sse decoding penalty on avx systems
 ifeq ($(MODE),)
-$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
-		COPTS +=				\
-			-mgeneral-regs-only
+$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private COPTS += -mgeneral-regs-only
 endif
 
 THIRD_PARTY_NSYNC_MEM_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)))

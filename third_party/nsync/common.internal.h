@@ -26,7 +26,7 @@ uint32_t nsync_spin_test_and_set_(nsync_atomic_uint32_ *w, uint32_t test,
                                   uint32_t set, uint32_t clear, void *symbol);
 
 /* Abort after printing the nul-temrinated string s[]. */
-void nsync_panic_(const char *s) wontreturn;
+void nsync_panic_(const char *s) wontreturn relegated;
 
 /* ---------- */
 
@@ -208,8 +208,6 @@ static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
 #define WAITER_RESERVED \
   0x1 /* waiter reserved by a thread, even when not in use */
 #define WAITER_IN_USE 0x2 /* waiter in use by a thread */
-
-#define ASSERT(x) unassert(x)
 
 /* Return a pointer to the nsync_waiter_s containing struct Dll *e. */
 #define DLL_NSYNC_WAITER(e)                 \

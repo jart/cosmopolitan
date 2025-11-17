@@ -1,0 +1,13 @@
+DESCRIPTION
+
+  the debian almquist shell from the linux kernel developers
+
+ORIGIN
+
+  git://git.kernel.org/pub/scm/utils/dash/dash.git
+  commit fd725b7a75836fdc52deeab5c7bb6c72b57ccd76
+  Date:   Tue Apr 29 23:47:32 2025 +0200
+
+LOCAL CHANGES
+
+  - Add `#undef GLOB_ALTDIRFUNC` to expand.c

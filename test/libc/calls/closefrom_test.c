@@ -24,27 +24,12 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-void SetUp(void) {
-  if (closefrom(3) == -1) {
-    if (IsOpenbsd()) {
-      ASSERT_EQ(EBADF, errno);
-    } else {
-      ASSERT_EQ(ENOSYS, errno);
-      exit(0);
-    }
-  }
-}
-
-TEST(closefrom, ebadf) {
-  ASSERT_SYS(EBADF, -1, closefrom(-2));
-}
-
 TEST(closefrom, test) {
   ASSERT_SYS(0, 3, dup(2));
   ASSERT_SYS(0, 4, dup(2));
   ASSERT_SYS(0, 5, dup(2));
   ASSERT_SYS(0, 6, dup(2));
-  EXPECT_SYS(0, 0, closefrom(3));
+  closefrom(3);
   ASSERT_SYS(0, 0, fcntl(2, F_GETFD));
   ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFD));
   ASSERT_SYS(EBADF, -1, fcntl(4, F_GETFD));

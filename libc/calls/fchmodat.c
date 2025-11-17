@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
@@ -43,15 +44,33 @@ int sys_fchmodat2(int, const char *, unsigned, int);
  * @param flags can have `AT_SYMLINK_NOFOLLOW`
  * @raise EROFS if `dirfd` or `path` use zip file system
  * @raise EOPNOTSUP on Linux if `path` is a symbolic link, `AT_SYMLINK_NOFOLLOW`
- * is set in `flags`, and filesystem does not support setting the mode of
- * symbolic links.
- * @errors ENOENT, ENOTDIR, ENOSYS
+ *     is set in `flags`, and filesystem does not support setting the mode of
+ *     symbolic links.
+ * @raise EACCES if denied access to component in path prefix
+ * @raise EIO if i/o error occurred while reading from filesystem
+ * @raise ELOOP if a symbolic link loop exists in `path`
+ * @raise ENAMETOOLONG if a component in `path` exceeds `NAME_MAX`
+ * @raise EPERM if geteuid() doesn't match owner of file and not root
+ * @raise ENOENT on empty string or if component in path doesn't exist
+ * @raise ENOTDIR if a parent component existed that wasn't a directory
+ * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
+ * @raise ENOMEM if insufficient memory was available to the implementation
+ * @raise EILSEQ on Windows if `path` has bad utf-8 of control characters
+ * @raise EROFS if `path` points to the `/zip/...` synthetic filesystem
+ * @raise ELOOP may ahappen if `SYMLOOP_MAX` symlinks were dereferenced
+ * @raise ENAMETOOLONG if resolved `path` exceeded `PATH_MAX`
+ * @raise EROFS if `path` resides on a real-only filesystem
+ * @raise EFAULT if `path` points to invalid memory
+ * @raise EINVAL if `flags` has unsupported bits
  * @asyncsignalsafe
  * @see fchmod()
  */
 int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
   int rc;
-  if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+  if (kisdangerous(path)) {
+    rc = efault();
+  } else if (_weaken(__zipos_notat) &&
+             (rc = __zipos_notat(dirfd, path)) == -1) {
     rc = erofs();
   } else if (!IsWindows()) {
     if (IsLinux() && flags) {

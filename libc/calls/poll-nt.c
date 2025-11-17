@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -24,6 +25,8 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
 #include "libc/intrin/weaken.h"
@@ -38,6 +41,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/time.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -45,8 +49,9 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 // <sync libc/sysv/consts.sh>
 #define POLLERR_    0x0001  // implied in events
@@ -60,6 +65,9 @@
 #define POLLWRBAND_ 0x0020  // MSDN undocumented
 #define POLLPRI_    0x0400  // MSDN unsupported
 // </sync libc/sysv/consts.sh>
+
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
 
 textwindows static uint32_t sys_poll_nt_waitms(struct timespec deadline) {
   struct timespec now = sys_clock_gettime_monotonic_nt();
@@ -84,7 +92,6 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
   int fileindices[64];
   int sockindices[64];
   int64_t filehands[64];
-  struct PosixThread *pt;
   int i, rc, ev, kind, gotsocks;
   struct sys_pollfd_nt sockfds[64];
   uint32_t cm, fi, sn, pn, avail, waitfor, already_slept;
@@ -100,33 +107,23 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
     if (fds[i].fd < 0)
       continue;
     if (__isfdopen(fds[i].fd)) {
-      kind = g_fds.p[fds[i].fd].kind;
+      kind = __get_pib()->fds.p[fds[i].fd].kind;
       if (kind == kFdSocket) {
         // we can use WSAPoll() for these fds
-        if (sn < ARRAYLEN(sockfds)) {
-          // WSAPoll whines if we pass POLLNVAL, POLLHUP, or POLLERR.
-          sockindices[sn] = i;
-          sockfds[sn].handle = g_fds.p[fds[i].fd].handle;
-          sockfds[sn].events =
-              fds[i].events & (POLLRDNORM_ | POLLRDBAND_ | POLLWRNORM_);
-          sockfds[sn].revents = 0;
-          ++sn;
-        } else {
-          // too many sockets
-          rc = einval();
-          break;
-        }
+        unassert(sn < ARRAYLEN(sockfds));
+        // WSAPoll whines if we pass POLLNVAL, POLLHUP, or POLLERR.
+        sockindices[sn] = i;
+        sockfds[sn].handle = __get_pib()->fds.p[fds[i].fd].handle;
+        sockfds[sn].events =
+            fds[i].events & (POLLRDNORM_ | POLLRDBAND_ | POLLWRNORM_);
+        sockfds[sn].revents = 0;
+        ++sn;
       } else if (kind == kFdFile || kind == kFdConsole) {
         // we can use WaitForMultipleObjects() for these fds
-        if (pn < ARRAYLEN(fileindices) - 1) {  // last slot for signal event
-          fileindices[pn] = i;
-          filehands[pn] = g_fds.p[fds[i].fd].handle;
-          ++pn;
-        } else {
-          // too many files
-          rc = einval();
-          break;
-        }
+        unassert(pn < ARRAYLEN(fileindices) - 1);  // last slot for signal event
+        fileindices[pn] = i;
+        filehands[pn] = __get_pib()->fds.p[fds[i].fd].handle;
+        ++pn;
       } else if (kind == kFdDevNull || kind == kFdDevRandom || kind == kFdZip) {
         // we can't wait on these kinds via win32
         if (fds[i].events & (POLLRDNORM_ | POLLWRNORM_)) {
@@ -157,9 +154,9 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
       fi = fileindices[i];
       ev = fds[fi].events;
       ev &= POLLRDNORM_ | POLLWRNORM_;
-      if ((g_fds.p[fds[fi].fd].flags & O_ACCMODE) == O_RDONLY)
+      if ((__get_pib()->fds.p[fds[fi].fd].flags & O_ACCMODE) == O_RDONLY)
         ev &= ~POLLWRNORM_;
-      if ((g_fds.p[fds[fi].fd].flags & O_ACCMODE) == O_WRONLY)
+      if ((__get_pib()->fds.p[fds[fi].fd].flags & O_ACCMODE) == O_WRONLY)
         ev &= ~POLLRDNORM_;
       if ((ev & POLLWRNORM_) && !(ev & POLLRDNORM_)) {
         fds[fi].revents = fds[fi].events & (POLLRDNORM_ | POLLWRNORM_);
@@ -231,24 +228,16 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
     // this ensures low latency for apps like emacs which with no sock
     // here we shall actually report that something can be written too
     if (!already_slept) {
-      intptr_t sigev;
-      if (!(sigev = CreateEvent(0, 0, 0, 0)))
+      if (!(filehands[pn] = __interruptible_start(waitmask)))
         return __winerr();
-      filehands[pn] = sigev;
-      pt = _pthread_self();
-      pt->pt_event = sigev;
-      pt->pt_blkmask = waitmask;
-      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                            memory_order_release);
       //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
       int sig = 0;
       uint32_t wi = pn;
       if (!_is_canceled() &&
           !(_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))))
-        wi = WaitForMultipleObjects(pn + 1, filehands, 0, waitfor);
+        wi = __imp_WaitForMultipleObjects(pn + 1, filehands, 0, waitfor);
       //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
-      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      CloseHandle(sigev);
+      __interruptible_end();
       if (wi == -1u)
         // win32 wait failure
         return __winerr();
@@ -285,7 +274,7 @@ textwindows static int sys_poll_nt_actual(struct pollfd *fds, uint64_t nfds,
           }
         } else if (GetFileType(filehands[wi]) == kNtFileTypePipe) {
           if ((fds[fi].events & POLLRDNORM_) &&
-              (g_fds.p[fds[fi].fd].flags & O_ACCMODE) != O_WRONLY) {
+              (__get_pib()->fds.p[fds[fi].fd].flags & O_ACCMODE) != O_WRONLY) {
             if (PeekNamedPipe(filehands[wi], 0, 0, 0, &avail, 0)) {
               fds[fi].revents = fds[fi].events & (POLLRDNORM_ | POLLWRNORM_);
             } else if (GetLastError() == kNtErrorHandleEof ||
@@ -334,9 +323,9 @@ textwindows static int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
 
   // clumsy path
   for (;;) {
-    for (i = 0; i < nfds; i += 64) {
+    for (i = 0; i < nfds; i += 63) {
       n = nfds - i;
-      n = n > 64 ? 64 : n;
+      n = n > 63 ? 63 : n;
       rc = sys_poll_nt_actual(fds + i, n, timespec_zero, waitmask);
       if (rc == -1)
         return -1;

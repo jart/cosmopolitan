@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
 textwindows int sys_fdatasync_nt(int fd, bool fake) {
   struct NtByHandleFileInformation wst;
@@ -31,9 +33,9 @@ textwindows int sys_fdatasync_nt(int fd, bool fake) {
     return ebadf();
   if (!__isfdkind(fd, kFdFile))
     return einval();
-  if (GetFileType(g_fds.p[fd].handle) != kNtFileTypeDisk)
+  if (GetFileType(__get_pib()->fds.p[fd].handle) != kNtFileTypeDisk)
     return einval();
-  if (!GetFileInformationByHandle(g_fds.p[fd].handle, &wst))
+  if (!GetFileInformationByHandle(__get_pib()->fds.p[fd].handle, &wst))
     return __winerr();
   if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
     // Flushing a directory handle is possible, but it needs
@@ -42,9 +44,9 @@ textwindows int sys_fdatasync_nt(int fd, bool fake) {
   }
   if (fake)
     return 0;
-  if (_check_signal(false) == -1)
-    return -1;
-  return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : __winerr();
+  // TODO(jart): Call FlushViewOfFile() on memory maps?
+  //             See also msync() call added to SQLite.
+  return FlushFileBuffers(__get_pib()->fds.p[fd].handle) ? 0 : __winerr();
 }
 
 #endif /* __x86_64__ */

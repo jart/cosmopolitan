@@ -16,17 +16,10 @@
 #ifndef UTIL
 #define UTIL
 #endif
-#include "third_party/zip/zip.h"
+#include "zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/zip/revision.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/sigtimedwait.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/ss.h"
+#include "revision.h"
+#include <signal.h>
 
 /* Calculate size of static line buffer used in write (-w) mode. */
 #define WRBUFSIZ 2047
@@ -70,6 +63,10 @@ struct option_struct far options[] = {
 
 void zipnoteerr(int c, ZCONST char *h);
 void zipnotewarn(ZCONST char *a, ZCONST char *b);
+#endif
+
+#ifdef QDOS
+#define exit(p1) QDOSexit()
 #endif
 
 int set_filetype(out_path)
@@ -664,7 +661,7 @@ char **argv;            /* command line tokens */
     if ((r = zipcopy(z)) != ZE_OK)
       ziperr(r, "was copying an entry");
   }
-  fclose(x);
+  fclose(in_file);
 
   /* Write central directory and end of central directory with new comments */
   if ((c = zftello(y)) == (zoff_t)-1)    /* get start of central */

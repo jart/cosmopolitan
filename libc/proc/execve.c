@@ -23,6 +23,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/promises.h"
 #include "libc/intrin/strace.h"
@@ -57,9 +58,31 @@
  * compiled by MSVC or Cygwin is launched instead, then only the stdio
  * file descriptors can be passed along.
  *
+ * You may launch non-cosmo console programs on Windows using this
+ * function. However that program will only be able to use your first
+ * three standard i/o file descriptors. This is generally safe with
+ * console handles and pipes. However if you use open() and dup() to try
+ * to redirect the input or output of your normal win32 program to
+ * files, then this is generally unsafe and can result in corruption.
+ * Cosmo opens file handles in overlapped mode, so your program needs to
+ * be written in such a way that it passes an OVERLAPPED structure to
+ * WriteFile() and ReadFile(). Otherwise weird things can happen. When
+ * used correctly, OVERLAPPED requires a file position pointer. Cosmo
+ * manages its own file positions using shared memory mapping so that
+ * different processes can collectively write to the same file. But your
+ * WIN32 program would have to maintain its own pointer which might
+ * disagree. One way to make this safe is to open the file in append
+ * mode, in which case Windows doesn't care about the pointer. Another
+ * example of a time this can be safe, is if the child is only doing
+ * pread()-like operations for specific file content. In addition to
+ * non-cosmo win32 programs, cosmo uses the STARTUP_INFO stderr for
+ * kprintf() unless a $KPRINT_LOG filename is passed. Generally that's
+ * safest if you use kprintf(), `--strace`, or `--ftrace` while
+ * expecting to open() non-append files to the first three fds.
+ *
  * On Windows, `argv` and `envp` can't contain binary strings. They need
- * to be valid UTF-8 in order to round-trip the WIN32 API, without being
- * corrupted.
+ * to be valid UTF-8 in order to round-trip the WIN32 API. This function
+ * will raise EILSEQ if they can't be encoded properly to ensure safety.
  *
  * On Windows, cosmo execve uses parent spoofing to implement the UNIX
  * behavior of replacing the current process. Since POSIX.1 also needs
@@ -93,6 +116,8 @@
  * @param envp[0,n-2] specifies "foo=bar" environment variables
  * @param envp[n-1] is NULL
  * @return doesn't return, or -1 w/ errno
+ * @raise EILSEQ if `prog`, `argv` or `envp` had bad utf-8 sequences
+ * @raise EFAULT if `prog`, `argv`, or `envp` pointed to bad memory
  * @raise ETXTBSY if another process has `prog` open in write mode
  * @raise ENOEXEC if file is executable but not a valid format
  * @raise ENOMEM if remaining stack memory is insufficient
@@ -103,31 +128,26 @@
 int execve(const char *prog, char *const argv[], char *const envp[]) {
   int rc;
   struct ZiposUri uri;
-  if (!prog || !argv || !envp) {
-    rc = efault();
-  } else {
-    STRACE("execve(%#s, %s, %s)", prog, DescribeStringList(argv),
-           DescribeStringList(envp));
-    rc = 0;
-    if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {
-      rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
-    }
-    if (!rc) {
-      if (0 && _weaken(__zipos_parseuri) &&
-          (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
-        rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
-        if (rc != -1) {
-          const int zipFD = rc;
-          strace_enabled(-1);
-          rc = fexecve(zipFD, argv, envp);
-          close(zipFD);
-          strace_enabled(+1);
-        }
-      } else if (!IsWindows()) {
-        rc = sys_execve(prog, argv, envp);
-      } else {
-        rc = sys_execve_nt(prog, argv, envp);
+  STRACE("execve(%#s, %s, %s)", prog, DescribeStringList(argv),
+         DescribeStringList(envp));
+  rc = 0;
+  if (IsLinux() && __execpromises && _weaken(sys_pledge_linux))
+    rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
+  if (!rc) {
+    if (0 && _weaken(__zipos_parseuri) &&
+        (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
+      rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
+      if (rc != -1) {
+        const int zipFD = rc;
+        strace_enabled(-1);
+        rc = fexecve(zipFD, argv, envp);
+        close(zipFD);
+        strace_enabled(+1);
       }
+    } else if (!IsWindows()) {
+      rc = sys_execve(prog, argv, envp);
+    } else {
+      rc = sys_execve_nt(prog, argv, envp);
     }
   }
   STRACE("execve(%#s) failed %d% m", prog, rc);

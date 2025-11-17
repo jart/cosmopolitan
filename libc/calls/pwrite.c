@@ -20,11 +20,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/stdio/sysparam.h"
@@ -59,7 +59,7 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
 
   if (offset < 0) {
     rc = einval();
-  } else if (fd == -1) {
+  } else if (fd < 0) {
     rc = ebadf();
   } else if (__isfdkind(fd, kFdZip)) {
     rc = ebadf();

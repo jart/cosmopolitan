@@ -19,26 +19,27 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 #define FIODGNAME 0x80106678  // freebsd
 
 static textwindows errno_t sys_ttyname_nt(int fd, char *buf, size_t size) {
-  if (fd + 0u >= g_fds.n)
+  if (fd + 0u >= __get_pib()->fds.n)
     return EBADF;
-  if (g_fds.p[fd].kind != kFdConsole)
+  if (__get_pib()->fds.p[fd].kind != kFdConsole)
     return ENOTTY;
   if (strlcpy(buf, "/dev/tty", size) >= size)
     return ERANGE;

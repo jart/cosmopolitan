@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cxaatexit.h"
@@ -60,7 +61,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
 CTOR static textstartup void sys_getloadavg_nt_init(void) {
   if (IsWindows()) {
     load = 1;
-    cpus = __get_cpu_count() / 2;
+    cpus = cosmo_cpu_count() / 2;
     cpus = MAX(1, cpus);
     GetSystemTimes(&idle1, &kern1, &user1);
   }

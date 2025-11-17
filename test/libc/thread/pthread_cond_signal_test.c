@@ -26,9 +26,9 @@ int pos;
 int count;
 int limit;
 long data[1000];
-pthread_mutex_t mu;
-pthread_cond_t non_full;
-pthread_cond_t non_empty;
+pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t non_full = PTHREAD_COND_INITIALIZER;
+pthread_cond_t non_empty = PTHREAD_COND_INITIALIZER;
 
 int Put(long v, struct timespec *abs_deadline) {
   int err, added = 0, wake = 0;

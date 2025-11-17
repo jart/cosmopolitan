@@ -48,6 +48,7 @@ TEST_LIBC_THREAD_DIRECTDEPS =				\
 	LIBC_THREAD					\
 	LIBC_X						\
 	THIRD_PARTY_LIBCXXABI				\
+	THIRD_PARTY_LIBUNWIND				\
 	THIRD_PARTY_NSYNC				\
 	THIRD_PARTY_NSYNC_MEM				\
 	THIRD_PARTY_TZ					\
@@ -69,7 +70,7 @@ o/$(MODE)/test/libc/thread/%.dbg:			\
 	@$(APELINK)
 
 o/$(MODE)/test/libc/thread/pthread_kill_test.runs:	\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+		private .PLEDGE = inet
 
 .PHONY: o/$(MODE)/test/libc/thread
 o/$(MODE)/test/libc/thread:				\

@@ -106,7 +106,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 			/* wait until awoken. */
 			while (ATM_LOAD_ACQ (&w->nw.waiting) != 0) { /* acquire load */
 				/* This can only return 0 or ECANCELED. */
-				ASSERT (nsync_mu_semaphore_p (&w->sem) == 0);
+				unassert (nsync_mu_semaphore_p (&w->sem) == 0);
 			}
 			wait_count++;
 			/* If the thread has been woken more than this many
@@ -154,7 +154,7 @@ int nsync_mu_trylock (nsync_mu *mu) {
 }
 
 /* Block until *mu is free and then acquire it in writer mode. */
-void nsync_mu_lock (nsync_mu *mu) {
+int nsync_mu_lock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	uint32_t old_word = 0;
 	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_WADD_TO_ACQUIRE,
@@ -170,6 +170,7 @@ void nsync_mu_lock (nsync_mu *mu) {
 		}
 	}
 	IGNORE_RACES_END ();
+	return 0;
 }
 
 /* Attempt to acquire *mu in reader mode without blocking, and return non-zero
@@ -194,7 +195,7 @@ int nsync_mu_rtrylock (nsync_mu *mu) {
 }
 
 /* Block until *mu can be acquired in reader mode and then acquire it. */
-void nsync_mu_rlock (nsync_mu *mu) {
+int nsync_mu_rlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	uint32_t old_word = 0;
 	if (!atomic_compare_exchange_strong_explicit (&mu->word, &old_word, MU_RADD_TO_ACQUIRE,
@@ -210,6 +211,7 @@ void nsync_mu_rlock (nsync_mu *mu) {
 		}
 	}
 	IGNORE_RACES_END ();
+	return 0;
 }
 
 /* Invoke the condition associated with *p, which is an element of
@@ -471,7 +473,7 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 }
 
 /* Unlock *mu, which must be held in write mode, and wake waiters, if appropriate. */
-void nsync_mu_unlock (nsync_mu *mu) {
+int nsync_mu_unlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	/* C is not a garbage-collected language, so we cannot release until we
 	   can be sure that we will not have to touch the mutex again to wake a
@@ -503,10 +505,11 @@ void nsync_mu_unlock (nsync_mu *mu) {
 		}
 	}
 	IGNORE_RACES_END ();
+	return 0;
 }
 
 /* Unlock *mu, which must be held in read mode, and wake waiters, if appropriate. */
-void nsync_mu_runlock (nsync_mu *mu) {
+int nsync_mu_runlock (nsync_mu *mu) {
 	IGNORE_RACES_START ();
 	/* See comment in nsync_mu_unlock(). */
 	uint32_t old_word = MU_RLOCK;
@@ -536,6 +539,7 @@ void nsync_mu_runlock (nsync_mu *mu) {
 		}
 	}
 	IGNORE_RACES_END ();
+	return 0;
 }
 
 /* Abort if *mu is not held in write mode. */

@@ -176,7 +176,7 @@ TEST(pledge, tgkill) {
   ASSERT_SYS(0, 0, pthread_create(&worker, 0, TgkillWorker, 0));
   ASSERT_SYS(0, 0,
              sys_tgkill(getpid(), _pthread_tid((struct PosixThread *)worker),
-                        SIGUSR1));
+                        __linux2sig(SIGUSR1)));
   ASSERT_SYS(0, 0, pthread_join(worker, 0));
   EXITS(0);
 }
@@ -277,7 +277,6 @@ TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
     ASSERT_SYS(EPERM, 0, isatty(0));
     ASSERT_SYS(EPERM, -1, fcntl(0, 777));
     ASSERT_SYS(EPERM, -1, fcntl(0, F_GETLK, &lk));
-    ASSERT_SYS(EPERM, -1, fcntl(0, F_NOTIFY));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
     _Exit(0);
   }
@@ -479,7 +478,7 @@ TEST(pledge, open_rpath) {
     ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
     ASSERT_SYS(0, 3, open("foo", O_RDONLY));
     ASSERT_SYS(EINVAL, -1, open("foo", O_RDONLY | O_TRUNC));
-    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | O_TMPFILE));
+    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | 0x00410000));
     ASSERT_SYS(EPERM, -1, open("foo", O_RDWR | O_TRUNC | O_CREAT, 0644));
     ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
     _Exit(0);
@@ -496,7 +495,7 @@ TEST(pledge, open_wpath) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio wpath", 0));
-    ASSERT_SYS(EPERM, -1, open(".", O_RDWR | O_TMPFILE, 07644));
+    ASSERT_SYS(EPERM, -1, open(".", O_RDWR | 0x00410000, 07644));
     ASSERT_SYS(0, 3, open("foo", O_WRONLY | O_TRUNC));
     ASSERT_SYS(0, 4, open("foo", O_RDWR));
     ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));

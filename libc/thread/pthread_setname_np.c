@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
+#include "libc/sysv/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -96,7 +97,7 @@ static errno_t pthread_setname_impl(struct PosixThread *pt, const char *name) {
                  : "+a"(ax), "+D"(tid), "+S"(name)
                  : /* no inputs */
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-    return ax;
+    return __errno_host2linux(ax);
 #endif
 
 #ifdef __aarch64__
@@ -105,7 +106,7 @@ static errno_t pthread_setname_impl(struct PosixThread *pt, const char *name) {
     register long x1 asm("x1") = (long)name;
     register int x8 asm("x8") = 464;  // thr_set_name
     asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
-    return x0;
+    return __errno_host2linux(x0);
 #endif
 
   } else {

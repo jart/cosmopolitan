@@ -19,6 +19,14 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/threads.h"
 
+/**
+ * Waits for thread to terminate.
+ *
+ * This API is part of the C11 standard, and it is designed to be nearly
+ * identical to pthread_join() which has further documentation.
+ *
+ * @return `thrd_success` on success, or `thrd_error` on error
+ */
 int thrd_join(thrd_t th, int *res) {
   void *pres;
   if (pthread_join(th, &pres))

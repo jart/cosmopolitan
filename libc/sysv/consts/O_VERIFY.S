@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_VERIFY,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0x00200000,0xffffffff,0xffffffff,0xffffffff

@@ -45,14 +45,12 @@
  * @asyncsignalsafe
  */
 void *memccpy(void *dst, const void *src, int c, size_t n) {
-  const char *p;
-  // this memchr() call is only correct if your memchr() implementation
-  // offers the same readahead safety guarantees as cosmopolitan's does
-  if ((p = memchr(src, c, n))) {
-    size_t m = p + 1 - (const char *)src;
-    memmove(dst, src, m);
-    return (char *)dst + m;
+  size_t i;
+  unsigned char *x;
+  const unsigned char *y;
+  for (c &= 255, x = dst, y = src, i = 0; i < n; ++i) {
+    if ((x[i] = y[i]) == c)
+      return x + i + 1;
   }
-  memmove(dst, src, n);
   return 0;
 }

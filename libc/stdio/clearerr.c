@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -25,7 +26,9 @@
  * @see clearerr_unlocked()
  */
 void clearerr(FILE *f) {
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   clearerr_unlocked(f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
 }

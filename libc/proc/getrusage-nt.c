@@ -20,6 +20,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/nt/accounting.h"
@@ -33,7 +34,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   int64_t me;

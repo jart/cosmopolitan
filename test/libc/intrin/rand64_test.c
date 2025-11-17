@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2025 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,87 +17,69 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/macros.h"
-#include "libc/runtime/internal.h"
+#include "libc/mem/alg.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-#define THREADS 8
-#define ENTRIES 100
+#define THREADS    4
+#define ITERATIONS 1000
 
-volatile uint64_t A[THREADS * ENTRIES];
 pthread_barrier_t barrier;
+int64_t numbers[THREADS * ITERATIONS];
+int64_t numbers2[THREADS * ITERATIONS];
 
-void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
-}
-
-void OnChld(int sig) {
-  // do nothing
-}
-
-dontinline void Generate(int i) {
-  A[i] = _rand64();
-}
-
-void *Thrasher(void *arg) {
-  int i, id = (intptr_t)arg;
+void *worker(void *arg) {
+  long id = (long)arg;
   pthread_barrier_wait(&barrier);
-  for (i = 0; i < ENTRIES; ++i) {
-    Generate(id * ENTRIES + i);
-  }
+  for (long i = 0; i < ITERATIONS; ++i)
+    numbers[id * ITERATIONS + i] = _rand64();
   return 0;
 }
 
-TEST(_rand64, testLcg_doesntProduceIdenticalValues) {
-  int i, j;
-  bzero((void *)A, sizeof(A));
-  for (i = 0; i < ARRAYLEN(A); ++i) {
-    A[i] = _rand64();
-  }
-  for (i = 0; i < ARRAYLEN(A); ++i) {
-    EXPECT_NE(0, A[i], "i=%d", i);
-    for (j = 0; j < ARRAYLEN(A); ++j) {
-      if (i == j)
-        continue;
-      EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
-    }
-  }
+TEST(_rand64, threadSafety) {
+  pthread_barrier_init(&barrier, 0, THREADS);
+  pthread_t th[THREADS];
+  for (long i = 0; i < THREADS; ++i)
+    ASSERT_EQ(0, pthread_create(&th[i], 0, worker, (void *)i));
+  for (long i = 0; i < THREADS; ++i)
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+  pthread_barrier_destroy(&barrier);
+  radix_sort_int64(numbers, ARRAYLEN(numbers));
+  for (long i = 1; i < ARRAYLEN(numbers); ++i)
+    ASSERT_NE(numbers[i - 1], numbers[i]);
 }
 
-TEST(_rand64, testThreadSafety_doesntProduceIdenticalValues) {
-  int i, j;
-  sigset_t ss, oldss;
-  pthread_t th[THREADS];
-  struct sigaction oldsa;
-  struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
-  EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
-  bzero((void *)A, sizeof(A));
-  sigemptyset(&ss);
-  sigaddset(&ss, SIGCHLD);
-  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
-  ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, THREADS));
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_EQ(0, pthread_create(th + i, 0, Thrasher, (void *)(intptr_t)i));
+TEST(_rand64, forkSafety) {
+  int64_t *theirs = _mapshared(sizeof(int64_t));
+  int pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    *theirs = _rand64();
+    _Exit(0);
   }
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_EQ(0, pthread_join(th[i], 0));
+  int64_t mine = _rand64();
+  int ws;
+  ASSERT_EQ(pid, wait(&ws));
+  ASSERT_EQ(0, ws);
+  ASSERT_NE(mine, theirs);
+}
+
+TEST(_rand64, reseedSafety) {
+  _rand64_threadSafety();
+  memcpy(numbers2, numbers, sizeof(numbers));
+  long v1 = _rand64();
+  long *v2 = _mapshared(8);
+  if (!fork()) {
+    *v2 = _rand64();
+    _Exit(0);
   }
-  sigaction(SIGCHLD, &oldsa, 0);
-  sigprocmask(SIG_BLOCK, &oldss, 0);
-  for (i = 0; i < ARRAYLEN(A); ++i) {
-    EXPECT_NE(0, A[i], "i=%d", i);
-    for (j = 0; j < ARRAYLEN(A); ++j) {
-      if (i == j)
-        continue;
-      EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
-    }
-  }
-  ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
+  int ws;
+  ASSERT_NE(-1, wait(&ws));
+  ASSERT_EQ(0, ws);
+  ASSERT_NE(v1, *v2);
+  ASSERT_NE(_rand64(), *v2);
 }

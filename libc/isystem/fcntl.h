@@ -5,7 +5,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"

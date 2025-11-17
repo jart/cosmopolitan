@@ -9,7 +9,5 @@
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/endian.h"
 #include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 #endif /* COSMOPOLITAN_LIBC_ISYSTEM_SYS_PARAM_H_ */

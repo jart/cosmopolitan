@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rlimit.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/_posix.h"
 #include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/rlimit.h"
 
 #define CTL_KERN    1
 #define KERN_ARGMAX 8
@@ -58,9 +59,10 @@ int __get_arg_max(void) {
     //
     // So let's resign ourselves to tracking what the kernel actually
     // does. Right now (2019, Linux 5.3) that amounts to:
-    uint64_t stacksz;
-    stacksz = __get_rlimit(RLIMIT_STACK);
-    res = MAX(MIN(stacksz / 4, 3 * (8 * 1024 * 1024) / 4), _ARG_MAX);
+    struct rlimit rlim;
+    if (sys_getrlimit(RLIMIT_STACK, &rlim) == -1)
+      return -1;
+    res = MAX(MIN(rlim.rlim_cur / 4, 3 * (8 * 1024 * 1024) / 4), _ARG_MAX);
   } else if (IsBsd()) {
     res = __get_sysctl(CTL_KERN, KERN_ARGMAX);
   } else {

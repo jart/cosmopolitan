@@ -17,7 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/set.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <set>
 // #define ctl std

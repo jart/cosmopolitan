@@ -16,59 +16,70 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/fmt/itoa.h"
-#include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/sol.h"
 
-#define N (4096 / 2 / sizeof(struct DescribeFlags))
+#define N 128
+
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+static const struct thatispacked {
+  int flag;
+  const char name[10];
+} kOpenFlags[] = {
+    {O_CREAT, "CREAT"},          //
+    {O_EXCL, "EXCL"},            //
+    {O_SYNC, "SYNC"},            //
+    {O_NOCTTY, "NOCTTY"},        //
+    {O_TRUNC, "TRUNC"},          //
+    {O_APPEND, "APPEND"},        //
+    {O_NONBLOCK, "NONBLOCK"},    //
+    {O_DSYNC, "DSYNC"},          //
+    {O_DIRECT, "DIRECT"},        //
+    {O_LARGEFILE, "LARGEFILE"},  //
+    {O_DIRECTORY, "DIRECTORY"},  //
+    {O_NOFOLLOW, "NOFOLLOW"},    //
+    {O_NOATIME, "NOATIME"},      //
+    {O_CLOEXEC, "CLOEXEC"},      //
+    {_O_PATH, "PATH"},           //
+    {O_UNLINK, "UNLINK"},        //
+};
 
 /**
- * Describes clock_gettime() clock argument.
+ * Describes openat() flags argument.
  */
-const char *_DescribeOpenFlags(char buf[128], int x) {
-  char *p;
-  int i, n;
-  const char *pipe;
-  struct DescribeFlags d[N];
+const char *_DescribeOpenFlags(char buf[N], int x) {
+  int o = 0;
   if (x == -1)
     return "-1";
-  p = buf;
+
   switch (x & O_ACCMODE) {
     case O_RDONLY:
-      p = stpcpy(p, "O_RDONLY");
-      x &= ~O_ACCMODE;
-      pipe = "|";
+      append("O_RDONLY");
       break;
     case O_WRONLY:
-      p = stpcpy(p, "O_WRONLY");
-      x &= ~O_ACCMODE;
-      pipe = "|";
+      append("O_WRONLY");
       break;
     case O_RDWR:
-      p = stpcpy(p, "O_RDWR");
-      x &= ~O_ACCMODE;
-      pipe = "|";
+      append("O_RDWR");
       break;
     default:
-      pipe = "";
+      append("%d", x & O_ACCMODE);
       break;
   }
-  if (x) {
-    p = stpcpy(p, pipe);
-    for (n = 0; kOpenFlags[n].x != MAGNUM_TERMINATOR; ++n) {
-      if (n == N)
-        notpossible;
+  x &= ~O_ACCMODE;
+
+  for (int i = 0; i < ARRAYLEN(kOpenFlags); ++i) {
+    if ((x & kOpenFlags[i].flag) == kOpenFlags[i].flag) {
+      append("|O_%s", kOpenFlags[i].name);
+      x &= ~kOpenFlags[i].flag;
     }
-    for (i = 0; i < n; ++i) {
-      d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);
-      d[i].name = MAGNUM_STRING(kOpenFlags, i);
-    }
-    _DescribeFlags(p, 128 - (p - buf), d, n, "O_", x);
   }
+
+  if (x)
+    append("|%#x", x);
+
   return buf;
 }

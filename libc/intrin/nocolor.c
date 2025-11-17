@@ -16,19 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/getenv.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 
-bool __nocolor;
+#ifdef __x86_64__
+__static_yoink("_init_nocolor");
+#endif
 
-__attribute__((__constructor__(20))) optimizesize textstartup void
-__nocolor_init(int argc, char **argv, char **envp, intptr_t *auxv) {
+bool __nocolor = true;
+
+optimizesize dontinstrument textstartup void __nocolor_init(void) {
+  bool res = false;
   char *s;
-  if ((s = getenv("TERM")))
-    if (s[0] == 'd' &&  //
-        s[1] == 'u' &&  //
-        s[2] == 'm' &&  //
-        s[3] == 'b' &&  //
-        s[4] == '\0')
-      __nocolor = true;
+  if (environ)
+    if ((s = __getenv(environ, "TERM").s))
+      if (s[0] == 'd' &&  //
+          s[1] == 'u' &&  //
+          s[2] == 'm' &&  //
+          s[3] == 'b' &&  //
+          s[4] == '\0')
+        res = true;
+  __nocolor = res;
 }

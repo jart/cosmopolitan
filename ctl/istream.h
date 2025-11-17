@@ -6,7 +6,7 @@
 
 namespace ctl {
 
-struct string;
+class string;
 
 class istream : public ios
 {

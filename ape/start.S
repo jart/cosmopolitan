@@ -61,6 +61,16 @@ netbsd.ident:
 4:	.size	netbsd.ident,.-netbsd.ident
 	.type	netbsd.ident,@object
 	.balign	4
+freebsd.ident:
+	.long	2f-1f
+	.long	4f-3f
+	.long	1 // NT_FREEBSD_ABI_TAG
+1:	.asciz	"FreeBSD"
+2:	.balign	4
+3:	.long	1300000 // v13.0+ c. 2020
+4:	.size	freebsd.ident,.-freebsd.ident
+	.type	freebsd.ident,@object
+	.balign	4
 ape.ident:
 	.long	2f-1f
 	.long	4f-3f

@@ -4,7 +4,7 @@
 #include "libc/str/str.h"
 COSMOPOLITAN_C_START_
 
-/* TODO(jart): Fully develop these better macros. */
+/* TODO(jart): DELETE */
 
 #define APPEND(LIST_P, LIST_I, LIST_N, ITEM) \
   CONCAT(LIST_P, LIST_I, LIST_N, ITEM, 1)

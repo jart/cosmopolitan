@@ -124,7 +124,10 @@ static void AppendType(char **b, struct Type *ty, int i) {
       appends(b, "void");
       break;
     case TY_BOOL:
-      appends(b, "_Bool");
+      appends(b, "bool");
+      break;
+    case TY_NULLPTR_T:
+      appends(b, "nullptr_t");
       break;
     case TY_CHAR:
       AppendScalar(b, ty, "char", i);
@@ -189,6 +192,7 @@ static bool IsSupportedReturnType(struct Type *ty) {
     case TY_LONG:
     case TY_FLOAT:
     case TY_DOUBLE:
+    case TY_NULLPTR_T:
       return true;
     case TY_PTR:
       if (ty->base->kind == TY_CHAR) {
@@ -210,6 +214,7 @@ static bool IsSupportedParameterType(struct Type *ty) {
     case TY_LONG:
     case TY_FLOAT:
     case TY_DOUBLE:
+    case TY_NULLPTR_T:
       return true;
     case TY_PTR:
       if (ty->base->kind == TY_CHAR) {

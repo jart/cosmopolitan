@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/runtime/runtime.h"
 #ifndef __x86_64__
 
-int __argc;
+__rarechange int __argc;
 
 #endif /* __x86_64__ */

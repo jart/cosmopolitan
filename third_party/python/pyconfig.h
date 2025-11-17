@@ -319,7 +319,9 @@
 #define HAVE_WAITPID          1
 #define HAVE_STATVFS          1
 #define HAVE_STD_ATOMIC       1
-#define HAVE_MREMAP           1
+
+// tests fail because cosmo wants mremap sizes to be granular
+// #define HAVE_MREMAP           1
 
 /* #undef HAVE_PLOCK */
 /* #undef HAVE_POSIX_FALLOCATE */

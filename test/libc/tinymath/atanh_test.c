@@ -43,8 +43,10 @@ TEST(atanh, test) {
 TEST(atanhl, test) {
   EXPECT_STREQ("0", gc(xdtoal(_atanhl(0))));
   EXPECT_STREQ("-0", gc(xdtoal(_atanhl(-0.))));
+#ifndef NOX87
   EXPECT_STREQ(".5493061443340548", gc(xdtoal(_atanhl(.5))));
   EXPECT_STREQ("-.5493061443340548", gc(xdtoal(_atanhl(-.5))));
+#endif
   EXPECT_STREQ("INFINITY", gc(xdtoal(_atanhl(+1))));
   EXPECT_STREQ("-INFINITY", gc(xdtoal(_atanhl(-1))));
   EXPECT_TRUE(isnan(_atanhl(+1.1)));

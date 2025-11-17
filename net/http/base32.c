@@ -45,12 +45,13 @@ int tobits(int b) {
  * @param ol if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char *EncodeBase32(const char *s, size_t sl, const char *a, size_t al,
+char *EncodeBase32(const void *s, size_t sl, const char *a, size_t al,
                    size_t *ol) {
+  const char *sc = s;
   size_t count = 0;
   char *r = NULL;
   if (sl == -1)
-    sl = s ? strlen(s) : 0;
+    sl = sc ? strlen(sc) : 0;
   if (al == 0) {
     a = base32def;
     al = sizeof(base32def) / sizeof(a[0]);
@@ -60,14 +61,14 @@ char *EncodeBase32(const char *s, size_t sl, const char *a, size_t al,
   int mask = (1 << bl) - 1;
   size_t n = (sl * 8 + bl - 1) / bl;  // calculate output length
   if ((r = malloc(n + 1))) {
-    int buffer = s[0];
+    int buffer = sc[0];
     size_t next = 1;
     int bitsLeft = 8;
     while (count < n && (bitsLeft > 0 || next < sl)) {
       if (bitsLeft < bl) {
         if (next < sl) {
           buffer <<= 8;
-          buffer |= s[next++] & 0xFF;
+          buffer |= sc[next++] & 0xFF;
           bitsLeft += 8;
         } else {
           int pad = bl - bitsLeft;

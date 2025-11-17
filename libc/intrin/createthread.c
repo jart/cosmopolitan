@@ -22,6 +22,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/runtime.h"
 
 __msabi extern typeof(CreateThread) *const __imp_CreateThread;
 __msabi extern typeof(GetLastError) *const __imp_GetLastError;
@@ -41,6 +42,8 @@ CreateThread(const struct NtSecurityAttributes *lpThreadAttributes,
              size_t dwStackSize, void *lpStartAddress, void *lpParameter,
              uint32_t dwCreationFlags, uint32_t *opt_lpThreadId) {
   int64_t hHandle;
+  if (!__isthreaded)
+    __isthreaded = 1;
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);
   NTTRACE("CreateThread(%s, %'zu, %t, %p, %s, %p) → {%ld, %d}",

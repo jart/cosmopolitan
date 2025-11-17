@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Changes size of open file.
@@ -52,10 +53,10 @@
  * @raise EINTR if signal was delivered instead
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EIO if a low-level i/o error happened
- * @raise EFBIG or EINVAL if `length` is too huge
  * @raise EBADF if `fd` isn't an open file descriptor
  * @raise EINVAL if `fd` is a non-file, e.g. pipe, socket
  * @raise EINVAL if `fd` wasn't opened in a writeable mode
+ * @raise EFBIG or EINVAL if `length` exceeds `RLIMIT_FSIZE`
  * @raise EROFS if `fd` is on a read-only filesystem (e.g. zipos)
  * @raise ENOSYS on bare metal
  * @cancelationpoint
@@ -73,11 +74,10 @@ int ftruncate(int fd, int64_t length) {
     rc = enosys();
   } else if (!IsWindows()) {
     rc = sys_ftruncate(fd, length, length);
-    if (IsNetbsd() && rc == -1 && errno == ENOSPC) {
+    if (IsNetbsd() && rc == -1 && errno == ENOSPC)
       errno = EFBIG;  // POSIX doesn't specify ENOSPC for ftruncate()
-    }
   } else if (__isfdopen(fd)) {
-    rc = sys_ftruncate_nt(g_fds.p[fd].handle, length);
+    rc = sys_ftruncate_nt(__get_pib()->fds.p[fd].handle, length);
   } else {
     rc = ebadf();
   }

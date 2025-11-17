@@ -39,7 +39,6 @@ TEST_LIBC_PROC_DIRECTDEPS =						\
 	LIBC_THREAD							\
 	LIBC_X								\
 	THIRD_PARTY_MUSL						\
-	THIRD_PARTY_TR							\
 
 TEST_LIBC_PROC_DEPS :=							\
 	$(call uniq,$(foreach x,$(TEST_LIBC_PROC_DIRECTDEPS),$($(x))))
@@ -66,6 +65,16 @@ o/$(MODE)/test/libc/proc/fork_test.dbg:					\
 		o/$(MODE)/test/libc/proc/fork_test.o			\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
 		o/$(MODE)/tool/hello/life-pe.ape.zip.o			\
+		o/$(MODE)/test/libc/proc/life.zip.o			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/dope_test.dbg:					\
+		$(TEST_LIBC_PROC_DEPS)					\
+		o/$(MODE)/test/libc/proc/dope_test.o			\
+		o/$(MODE)/test/libc/proc/proc.pkg			\
 		o/$(MODE)/test/libc/proc/life.zip.o			\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
@@ -125,6 +134,9 @@ o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o			\
 o/$(MODE)/test/libc/proc/life-pe.zip.o: private				\
 		ZIPOBJ_FLAGS +=						\
 			-B
+
+o/$(MODE)/test/libc/proc/vfork_test.runs:				\
+		private .UNVEIL = r:/dev/random r:/dev/urandom
 
 $(TEST_LIBC_PROC_OBJS): test/libc/proc/BUILD.mk
 

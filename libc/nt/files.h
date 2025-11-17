@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_NT_FILES_H_
 #define COSMOPOLITAN_LIBC_NT_FILES_H_
+#include "libc/nt/struct/acl.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
+#include "libc/nt/struct/explicitaccess.h"
 #include "libc/nt/struct/filesegmentelement.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/genericmapping.h"
@@ -8,6 +10,8 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/privilegeset.h"
 #include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/struct/securitydescriptor.h"
+#include "libc/nt/struct/sid.h"
 #include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/thunk/msabi.h"
 /*                            ░░░░
@@ -206,7 +210,8 @@ uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
 
 uint32_t GetFullPathName(const char16_t *lpFileName, uint32_t nBufferLength,
                          char16_t *lpBuffer, char16_t **lpFilePart);
-uint32_t GetShortPathName(const char16_t *lpszLongPath, char16_t *out_lpszShortPath, uint32_t cchBuffer);
+uint32_t GetShortPathName(const char16_t *lpszLongPath,
+                          char16_t *out_lpszShortPath, uint32_t cchBuffer);
 
 bool32 GetOverlappedResult(int64_t hFile, struct NtOverlapped *lpOverlapped,
                            uint32_t *lpNumberOfBytesTransferred, bool32 bWait);
@@ -227,9 +232,48 @@ bool32 GetVolumeInformationByHandle(int64_t hFile,
                                     char16_t *opt_out_lpFileSystemNameBuffer,
                                     uint32_t nFileSystemNameSize);
 
-uint32_t SetFilePointer(intptr_t hFile, int32_t lDistanceToMove,
-                        long *opt_inout_lpDistanceToMoveHigh,
-                        uint32_t dwMoveMethod);
+uint32_t SetFilePointerEx(intptr_t hFile, int64_t lDistanceToMove,
+                          int64_t *opt_out_lpNewFilePointer,
+                          uint32_t dwMoveMethod);
+
+uint32_t GetSecurityInfo(
+    intptr_t handle, uint32_t ObjectType, uint32_t SecurityInfo,
+    struct NtSid **opt_out_ppsidOwner, struct NtSid **opt_out_ppsidGroup,
+    struct NtAcl **opt_out_ppDacl, struct NtAcl **opt_out_ppSacl,
+    struct NtSecurityDescriptor **opt_out_ppSecurityDescriptor);
+
+uint32_t SetSecurityInfo(intptr_t handle, uint32_t ObjectType,
+                         uint32_t SecurityInfo, struct NtSid *opt_psidOwner,
+                         struct NtSid *opt_psidGroup, struct NtAcl *opt_pDacl,
+                         struct NtAcl *opt_pSacl);
+
+uint32_t SetEntriesInAcl(uint32_t cCountOfExplicitEntries,
+                         struct NtExplicitAccess *opt_pListOfExplicitEntries,
+                         struct NtAcl *opt_OldAcl, struct NtAcl **out_NewAcl);
+
+bool32 AllocateAndInitializeSid(
+    struct NtSidIdentifierAuthority *pIdentifierAuthority,
+    uint8_t nSubAuthorityCount, uint32_t nSubAuthority0,
+    uint32_t nSubAuthority1, uint32_t nSubAuthority2, uint32_t nSubAuthority3,
+    uint32_t nSubAuthority4, uint32_t nSubAuthority5, uint32_t nSubAuthority6,
+    uint32_t nSubAuthority7, struct NtSid **out_pSid);
+
+bool32 GetAclInformation(struct NtAcl *pAcl, void *out_pAclInformation,
+                         uint32_t nAclInformationLength,
+                         uint32_t dwAclInformationClass);
+
+bool32 InitializeAcl(struct NtAcl *out_pAcl, uint32_t nAclLength,
+                     uint32_t dwAclRevision);
+
+bool32 GetAce(struct NtAcl *pAcl, uint32_t dwAceIndex, void **out_pAce);
+
+bool32 AddAce(struct NtAcl *inout_pAcl, uint32_t dwAceRevision,
+              uint32_t dwStartingAceIndex, void *pAceList,
+              uint32_t nAceListLength);
+
+bool32 EqualSid(struct NtSid *pSid1, struct NtSid *pSid2);
+
+void *FreeSid(struct NtSid *pSid);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
@@ -24,10 +25,11 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/temp.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time.h"
 
@@ -144,7 +146,7 @@ void MeatyReadWriteTest(void) {
   char *mem, *buf;
   n = 8 * 1024 * 1024;
   buf = gc(malloc(n));
-  mem = rngset(gc(malloc(n)), n, _rand64, -1);
+  arc4random_buf((mem = gc(malloc(n))), n);
   ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
   setbuffer(f, gc(malloc(4 * 1000 * 1000)), 4 * 1000 * 1000);
   EXPECT_EQ(n, fwrite(mem, 1, n, f));
@@ -162,8 +164,6 @@ void OnSigInt(int sig) {
 }
 
 TEST(fwrite, signalStorm) {
-  if (IsWindows())
-    return;
   int pid;
   struct sigaction oldchld, oldint;
   struct sigaction sachld = {.sa_handler = SIG_IGN};

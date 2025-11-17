@@ -37,23 +37,28 @@
 
 static size_t pagesize;
 
+int sys_cachestat(int, struct cachestat_range *, struct cachestat *, uint32_t);
+
 bool HasCachestatSupport(void) {
-  return IsLinux() && cachestat(-1, 0, 0, 0) == -1 && errno == EBADF;
+  if (!IsLinux()) {
+    errno = ENOSYS;
+    return false;
+  }
+  return sys_cachestat(-1, 0, 0, 0) == -1 && errno == EBADF;
 }
 
 void SetUpOnce(void) {
   if (!HasCachestatSupport()) {
-    kprintf("warning: cachestat not supported on this systemL %m\n");
+    kprintf("warning: cachestat not supported on this system: %m\n");
     exit(0);
   }
+  errno = 0;
   testlib_enable_tmp_setup_teardown();
   pagesize = (size_t)getpagesize();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath", 0));
 }
 
-// TODO(jart): fix this test
-#if 0
-
+#if 0  // TODO: raises ENOTSUP on Linux pi5 6.12.20+rpt-rpi-2712
 TEST(cachestat, testCachestatOnDevices) {
   const char *const files[] = {
       "/dev/zero", "/dev/null", "/dev/urandom", "/proc/version", "/proc",
@@ -66,7 +71,6 @@ TEST(cachestat, testCachestatOnDevices) {
     ASSERT_SYS(0, 0, close(3));
   }
 }
-
 #endif
 
 TEST(cachestat, testCachestatAfterWrite) {

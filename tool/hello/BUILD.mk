@@ -12,10 +12,11 @@ TOOL_HELLO_OBJS = $(TOOL_HELLO_SRCS_C:%.c=o/$(MODE)/%.o) $(TOOL_HELLO_SRCS_S:%.S
 TOOL_HELLO_BINS = $(TOOL_HELLO_COMS) $(TOOL_HELLO_COMS:%=%.dbg)
 
 TOOL_HELLO_COMS =					\
+	o/$(MODE)/tool/hello/launch			\
 	o/$(MODE)/tool/hello/hello			\
 	o/$(MODE)/tool/hello/hello-pe			\
 	o/$(MODE)/tool/hello/hello-elf			\
-	o/$(MODE)/tool/hello/hello-unix
+	o/$(MODE)/tool/hello/hello-unix			\
 
 TOOL_HELLO_DIRECTDEPS =					\
 	LIBC_CALLS					\
@@ -70,7 +71,7 @@ o/$(MODE)/tool/hello/hello-unix.ape:			\
 # doesn't depend on ape or the cosmopolitan c library
 o/$(MODE)/tool/hello/hello-pe.dbg:			\
 		o/$(MODE)/tool/hello/hello-pe.o
-	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x4200000
 o/$(MODE)/tool/hello/hello-pe.ape:			\
 		o/$(MODE)/tool/hello/hello-pe.dbg	\
 		o/$(MODE)/tool/build/elf2pe
@@ -88,11 +89,21 @@ o/$(MODE)/tool/hello/life-pe.ape:			\
 # demonstrates in process monitor the lowest resource usage a win32 app can have
 o/$(MODE)/tool/hello/wait-pe.dbg:			\
 		o/$(MODE)/tool/hello/wait-pe.o
-	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x4200000
 o/$(MODE)/tool/hello/wait-pe.ape:			\
 		o/$(MODE)/tool/hello/wait-pe.dbg	\
 		o/$(MODE)/tool/build/elf2pe
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -R 64kb -S 4kb -o $@ $<
+
+# our new ape loader for windows
+o/$(MODE)/tool/hello/launch.o: private CFLAGS += $(NO_MAGIC) -fno-asynchronous-unwind-tables
+o/$(MODE)/tool/hello/launch.dbg:			\
+		o/$(MODE)/tool/hello/launch.o
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x7f000000
+o/$(MODE)/tool/hello/launch:				\
+		o/$(MODE)/tool/hello/launch.dbg		\
+		o/$(MODE)/tool/build/elf2pe
+	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -o $@ $<
 
 o/$(MODE)/tool/hello/life-pe.ape.zip.o: private ZIPOBJ_FLAGS += -B
 

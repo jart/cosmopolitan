@@ -50,8 +50,8 @@ two letters:
 		and software emulations of Motorola 68xxx chips
 		that do not pad the way the 68xxx does, but
 		only store 80 bits
-	xL	IEEE extended precision, as on Motorola 68xxx chips [jart: removed]
-	Q	quad precision, as on Sun Sparc chips [jart: removed]
+	xL	IEEE extended precision, as on Motorola 68xxx chips
+	Q	quad precision, as on Sun Sparc chips
 	dd	double double, pairs of IEEE double numbers
 		whose sum is the desired value
 

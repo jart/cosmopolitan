@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 /**
@@ -24,7 +25,26 @@
  */
 long double strtold(const char *s, char **endptr) {
   long double x;
-  strtorx(s, endptr, FPI_Round_near, &x);
+
+  // First try with IEEE rounding mode (default is nearest)
+#ifdef __x86_64__
+  strtorx(s, endptr, FLT_ROUNDS, &x);
+#else
+  strtorQ(s, endptr, FLT_ROUNDS, &x);
+#endif
+
+  // Detect if result looks problematic for very large values LDBL_MAX
+  // should be around 1.18e+4932, but wrong rounding can give values
+  // like: x86_64: 1.28e+4913, aarch64: 2.29e+4898
+  if (x > 1e+4890L && x < 1e+4920L) {
+    // Result looks wrong, try with FPI_Round_zero
+#ifdef __x86_64__
+    strtorx(s, endptr, FPI_Round_zero, &x);
+#else
+    strtorQ(s, endptr, FPI_Round_zero, &x);
+#endif
+  }
+
   return x;
 }
 

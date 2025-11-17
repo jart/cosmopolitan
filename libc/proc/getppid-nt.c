@@ -28,9 +28,7 @@
 #include "libc/nt/struct/processbasicinformation.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-
-int sys_getppid_nt_win32;
-int sys_getppid_nt_cosmo;
+#include "libc/sysv/pib.h"
 
 textwindows static int sys_getppid_nt_ntdll(void) {
   struct NtProcessBasicInformation ProcessInformation;
@@ -68,26 +66,32 @@ static void sys_getppid_nt_extract(const char *str) {
         ++str;
       }
       if (win32 == sys_getppid_nt_ntdll()) {
-        sys_getppid_nt_win32 = win32;
-        sys_getppid_nt_cosmo = cosmo;
+        __get_pib()->ppid_win32 = win32;
+        __get_pib()->ppid_cosmo = cosmo;
       }
     }
   }
 }
 
-__attribute__((__constructor__(90))) static void init(void) {
-  if (!IsWindows())
-    return;
-  sys_getppid_nt_extract(getenv("_COSMO_PPID"));
+textwindows int sys_getppid_nt(void) {
+  if (__get_pib()->ppid_cosmo)
+    return __get_pib()->ppid_cosmo;
+  return sys_getppid_nt_ntdll();
 }
 
-textwindows int sys_getppid_nt(void) {
-  if (sys_getppid_nt_cosmo)
-    return sys_getppid_nt_cosmo;
+textwindows int sys_getppid_nt_win32(void) {
+  if (__get_pib()->ppid_win32)
+    return __get_pib()->ppid_win32;
   return sys_getppid_nt_ntdll();
 }
 
 textwindows void sys_getppid_nt_wipe(int win32, int cosmo) {
-  sys_getppid_nt_win32 = win32;
-  sys_getppid_nt_cosmo = cosmo;
+  __get_pib()->ppid_win32 = win32;
+  __get_pib()->ppid_cosmo = cosmo;
+}
+
+__attribute__((__constructor__(90))) static void sys_getppid_nt_init(void) {
+  if (!IsWindows())
+    return;
+  sys_getppid_nt_extract(getenv("_COSMO_PPID"));
 }

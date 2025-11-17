@@ -22,19 +22,27 @@
 
 /**
  * Pushes byte back to stream.
+ *
+ * The byte specified by `c` will be cast to an unsigned char. If `c` is
+ * equal to `EOF` then this function will fail by returning EOF and the
+ * state of `f` is left unchanged.
+ *
+ * @return byte pushed back to stream, otherwise EOF
  */
 int ungetc_unlocked(int c, FILE *f) {
-  if (c == -1)
-    return -1;
+  if (c == EOF)
+    return EOF;
+  c &= 255;
   if (f->beg) {
-    if (c != f->buf[--f->beg]) {
+    if (c != f->buf[--f->beg])
       f->buf[f->beg] = c;
-    }
   } else if (f->end < f->size) {
-    memmove(f->buf + 1, f->buf, f->end++);
+    if (f->end)
+      memmove(f->buf + 1, f->buf, f->end);
     f->buf[0] = c;
+    ++f->end;
   } else {
-    return -1;
+    return EOF;
   }
-  return c & 255;
+  return c;
 }

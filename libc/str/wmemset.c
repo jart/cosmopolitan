@@ -22,10 +22,8 @@
  * Sets wide memory.
  * @asyncsignalsafe
  */
-wchar_t *wmemset(wchar_t *p, wchar_t c, size_t n) {
-  size_t i;
-  for (i = 0; i < n; ++i) {
+optimizespeed wchar_t *wmemset(wchar_t *p, wchar_t c, size_t n) {
+  for (size_t i = 0; i < n; ++i)
     p[i] = c;
-  }
   return p;
 }

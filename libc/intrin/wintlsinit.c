@@ -22,7 +22,6 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
-#ifdef __x86_64__
 
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
@@ -35,7 +34,7 @@ textwindows dontinstrument void __bootstrap_tls(struct CosmoTib *tib,
   tib->tib_self = tib;
   tib->tib_self2 = tib;
   tib->tib_sigmask = -1;
-  tib->tib_strace = -100;
+  tib->tib_strace = __strace;
   tib->tib_ftrace = -100;
   tib->tib_sigstack_size = 57344;
   tib->tib_sigstack_addr = bp - 57344;
@@ -44,5 +43,3 @@ textwindows dontinstrument void __bootstrap_tls(struct CosmoTib *tib,
   atomic_init(&tib->tib_ctid, tid);
   __set_tls_win32(tib);
 }
-
-#endif /* __x86_64__ */

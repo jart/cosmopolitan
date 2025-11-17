@@ -6,6 +6,7 @@ import os
 import signal
 import sys
 import re
+import cosmo
 import warnings
 import contextlib
 import weakref
@@ -439,6 +440,7 @@ class TestMkstempInner(TestBadTempdir, BaseTestCase):
             os.rmdir(dir)
 
     @unittest.skipUnless(has_stat, 'os.stat not available')
+    @unittest.skipIf(cosmo.kernel == 'nt', 'mode bits are weird on windows')
     def test_file_mode(self):
         # _mkstemp_inner creates files with the proper mode
 
@@ -744,6 +746,7 @@ class TestMkdtemp(TestBadTempdir, BaseTestCase):
             os.rmdir(dir)
 
     @unittest.skipUnless(has_stat, 'os.stat not available')
+    @unittest.skipIf(cosmo.kernel == 'nt', 'mode bits are weird on windows')
     def test_mode(self):
         # mkdtemp creates directories with the proper mode
 

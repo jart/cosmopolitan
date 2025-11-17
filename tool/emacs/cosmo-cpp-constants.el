@@ -264,10 +264,8 @@
    "__PG__"
    "__MFENTRY__"
    "__MNO_VZEROUPPER__"
-   "__MNO_RED_ZONE__"
    "__MNOP_MCOUNT__"
-   "__MRECORD_MCOUNT__"
-   "__FNO_OMIT_FRAME_POINTER__"))
+   "__MRECORD_MCOUNT__"))
 
 (defconst cosmo-cpp-constants-clang
   '("__llvm__"

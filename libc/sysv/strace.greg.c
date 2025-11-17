@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/atomic.h"
 #include "libc/runtime/runtime.h"
 
@@ -41,4 +42,4 @@
  * under normal circumstances, `__strace` should only be either zero or
  * one.
  */
-int __strace;
+__rarechange int __strace;

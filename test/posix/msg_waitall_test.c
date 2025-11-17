@@ -14,13 +14,13 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include <arpa/inet.h>
-#include <cosmo.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

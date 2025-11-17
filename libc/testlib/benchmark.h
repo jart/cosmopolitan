@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_BENCHMARK_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_BENCHMARK_H_
-#include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/stdio/stdio.h"
 COSMOPOLITAN_C_START_
 

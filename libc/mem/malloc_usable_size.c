@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
@@ -38,6 +39,11 @@
  * @see dlmalloc_usable_size()
  */
 size_t malloc_usable_size(void *p) {
+#ifdef COSMO_MEM_DEBUG
+  npassert(((ssize_t *)p)[-1] < 0);
+  npassert(((ssize_t *)p)[-2] < 0);
+  return -((size_t *)p)[-1];
+#else
   return dlmalloc_usable_size(p);
+#endif
 }
-

@@ -58,19 +58,6 @@ $(LIBC_SYSTEM_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
-o/$(MODE)/libc/system/fputc.o: private			\
-		CFLAGS +=				\
-			-O3
-
-o//libc/system/appendw.o: private			\
-		CFLAGS +=				\
-			-Os
-
-o/$(MODE)/libc/system/dirstream.o			\
-o/$(MODE)/libc/system/mt19937.o: private			\
-		CFLAGS +=				\
-			-ffunction-sections
-
 LIBC_SYSTEM_LIBS = $(foreach x,$(LIBC_SYSTEM_ARTIFACTS),$($(x)))
 LIBC_SYSTEM_SRCS = $(foreach x,$(LIBC_SYSTEM_ARTIFACTS),$($(x)_SRCS))
 LIBC_SYSTEM_HDRS = $(foreach x,$(LIBC_SYSTEM_ARTIFACTS),$($(x)_HDRS))

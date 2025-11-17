@@ -23,15 +23,14 @@
 /**
  * Allocates aligned memory, the POSIX way.
  *
- * Allocates a chunk of n bytes, aligned in accord with the alignment
- * argument. Differs from memalign() only in that it:
- *
- * 1. Assigns the allocated memory to *pp rather than returning it
- * 2. Fails and returns EINVAL if the alignment is not a power of two
- * 3. Fails and returns ENOMEM if memory cannot be allocated
+ * The posix_memalign() function allocates a block of memory of size
+ * bytes, ensuring that the block is aligned to a boundary specified by
+ * alignment. It returns a pointer to the allocated memory in memptr.
+ * The alignment value must be a power of two, and a multiple of the
+ * size of a void pointer.
  *
  * @param pp receives pointer, only on success
- * @param alignment must be 2-power multiple of sizeof(void *)
+ * @param alignment must be 2-power multiple of `sizeof(void *)`
  * @param bytes is number of bytes to allocate
  * @return return 0 or EINVAL or ENOMEM w/o setting errno
  * @see memalign()
@@ -45,7 +44,11 @@ errno_t posix_memalign(void **pp, size_t alignment, size_t bytes) {
   r = alignment % sizeof(void *);
   if (!r && q && IS2POW(q)) {
     e = errno;
-    m = memalign(alignment, bytes);
+    if (alignment <= sizeof(max_align_t)) {
+      m = malloc(bytes);
+    } else {
+      m = memalign(alignment, bytes);
+    }
     if (m) {
       *pp = m;
       return 0;

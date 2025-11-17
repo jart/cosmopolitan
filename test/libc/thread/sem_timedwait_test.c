@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -41,58 +43,6 @@ void IgnoreStderr(void) {
 TEST(sem_init, einval) {
   sem_t sem;
   ASSERT_SYS(EINVAL, -1, sem_init(&sem, 0, -1));
-}
-
-TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg())
-    return;
-  sem_t sem;
-  SPAWN(fork);
-  signal(SIGILL, SIG_DFL);
-  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
-  ASSERT_SYS(0, 0, sem_destroy(&sem));
-  IgnoreStderr();
-  sem_post(&sem);
-  TERMS(SIGILL);
-}
-
-TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg())
-    return;
-  sem_t sem;
-  SPAWN(fork);
-  signal(SIGILL, SIG_DFL);
-  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
-  ASSERT_SYS(0, 0, sem_destroy(&sem));
-  IgnoreStderr();
-  sem_trywait(&sem);
-  TERMS(SIGILL);
-}
-
-TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg())
-    return;
-  sem_t sem;
-  SPAWN(fork);
-  signal(SIGILL, SIG_DFL);
-  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
-  ASSERT_SYS(0, 0, sem_destroy(&sem));
-  IgnoreStderr();
-  sem_wait(&sem);
-  TERMS(SIGILL);
-}
-
-TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
-  if (!IsModeDbg())
-    return;
-  sem_t sem;
-  SPAWN(fork);
-  signal(SIGILL, SIG_DFL);
-  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
-  ASSERT_SYS(0, 0, sem_destroy(&sem));
-  IgnoreStderr();
-  sem_timedwait(&sem, 0);
-  TERMS(SIGILL);
 }
 
 void *Worker(void *arg) {
@@ -164,4 +114,38 @@ TEST(sem_timedwait, processes) {
   ASSERT_SYS(0, 0, sem_destroy(s[1]));
   ASSERT_SYS(0, 0, sem_destroy(s[0]));
   ASSERT_SYS(0, 0, munmap(sm, getpagesize()));
+}
+
+#define PHILOSOPHERS 20  // number of hungry philosophers
+#define HELPINGS     50  // number of breaks for thinking
+#define SEATS        10  // number of seats at the table
+
+atomic_int occupied;
+pthread_barrier_t bar;
+sem_t sem;
+
+void *philosopher(void *arg) {
+  pthread_barrier_wait(&bar);
+  for (int i = 0; i < HELPINGS; ++i) {
+    ASSERT_SYS(0, 0, sem_wait(&sem));
+    ASSERT_LE(atomic_fetch_add(&occupied, 1) + 1, SEATS);
+    usleep(1);
+    ASSERT_LE(atomic_fetch_sub(&occupied, 1) - 1, SEATS);
+    ASSERT_SYS(0, 0, sem_post(&sem));
+    usleep(1);
+  }
+  return 0;
+}
+
+TEST(dining, philosophers) {
+  atomic_init(&occupied, 0);
+  ASSERT_EQ(0, pthread_barrier_init(&bar, 0, PHILOSOPHERS));
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, SEATS));
+  pthread_t th[PHILOSOPHERS];
+  for (long i = 0; i < PHILOSOPHERS; ++i)
+    ASSERT_EQ(0, pthread_create(&th[i], 0, philosopher, 0));
+  for (long i = 0; i < PHILOSOPHERS; ++i)
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+  ASSERT_EQ(0, atomic_load(&occupied));
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
 }

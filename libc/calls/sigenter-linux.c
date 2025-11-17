@@ -28,14 +28,16 @@
 #include "libc/math.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/pib.h"
 
 #ifdef __x86_64__
 
-privileged void __sigenter_wsl(int sig, siginfo_t *info, ucontext_t *ctx) {
+__privileged void __sigenter_wsl(int sig, siginfo_t *info, ucontext_t *ctx) {
   int rva, flags;
-  rva = __sighandrvas[sig];
+  struct CosmoPib *pib = __get_pib();
+  rva = pib->sighandrvas[sig - 1];
   if (rva >= kSigactionMinRva) {
-    flags = __sighandflags[sig];
+    flags = pib->sighandflags[sig - 1];
     // WSL1 doesn't set the fpregs field.
     // https://github.com/microsoft/WSL/issues/2555
     if ((flags & SA_SIGINFO) && UNLIKELY(!ctx->uc_mcontext.fpregs)) {

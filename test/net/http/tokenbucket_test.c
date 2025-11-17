@@ -20,6 +20,7 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"

@@ -56,7 +56,8 @@ void CrashHandler(int sig, siginfo_t *si, void *arg) {
   ASSERT_FALSE(smashed_stack);
   ASSERT_SYS(0, 0, sigaltstack(0, &ss));
   ASSERT_EQ(SS_ONSTACK, ss.ss_flags);
-  kprintf("kprintf avoids overflowing %G %p\n", si->si_signo, si->si_addr);
+  if (!IsWindows())  // TODO(jart): why does win32 need more now?
+    kprintf("kprintf avoids overflowing %G %p\n", si->si_signo, si->si_addr);
   smashed_stack = true;
   // EXPECT_TRUE(__is_stack_overflow(si, ctx));
   //

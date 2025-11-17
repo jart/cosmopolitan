@@ -25,6 +25,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -248,7 +249,7 @@ static void Setup(void) {
   sigaction(SIGWINCH, &(struct sigaction){.sa_sigaction = OnSigWinch}, NULL);
 }
 
-static wontreturn void FailPath(const char *s, int rc) {
+[[noreturn]] static void FailPath(const char *s, int rc) {
   Write("error: ");
   Write(s);
   Write(": ");
@@ -902,7 +903,7 @@ static void MemZoom(void) {
   } while (!(action & INTERRUPTED));
 }
 
-static wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] static void PrintUsage(int rc, int fd) {
   tinyprint(fd, "SYNOPSIS\n\n ", program_invocation_name, USAGE, NULL);
   exit(rc);
 }

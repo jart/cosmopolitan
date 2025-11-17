@@ -574,6 +574,7 @@ frame_size = frame_GPRSAVE + GPRSAVE_SIZE
 ########################################################################
 	.ftrace1
 sha512_transform_rorx:
+	beg
 	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
@@ -690,6 +691,7 @@ sha512_transform_rorx:
 	mov	frame_RSPSAVE(%rsp), %rsp
 	pop	%rbp
 	ret
+	end
 	.endfn	sha512_transform_rorx,globl
 
 ########################################################################

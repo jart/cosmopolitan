@@ -77,6 +77,13 @@ TEST(select, pipe_hasInputFromSameProcess) {
   EXPECT_SYS(0, 0, close(pipefds[1]));
 }
 
+TEST(select, badfd) {
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(3, &fds);
+  EXPECT_SYS(EBADF, -1, select(4, &fds, 0, 0, 0));
+}
+
 #if 0  // flaky
 TEST(select, testSleep) {
   int64_t e;

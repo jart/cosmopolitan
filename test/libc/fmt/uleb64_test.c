@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/fmt/leb128.h"
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
-char p[10];
+char p[9];
 uint64_t x;
 
 TEST(uleb64, testZero) {
@@ -55,7 +56,7 @@ TEST(uleb64, testFFFF) {
 }
 
 TEST(uleb64, testMax) {
-  EXPECT_EQ(10, uleb64(p, UINT64_MAX) - p);
+  EXPECT_EQ(9, uleb64(p, UINT64_MAX) - p);
   EXPECT_EQ(255, p[0x00] & 255);
   EXPECT_EQ(255, p[0x01] & 255);
   EXPECT_EQ(255, p[0x02] & 255);
@@ -65,8 +66,27 @@ TEST(uleb64, testMax) {
   EXPECT_EQ(255, p[0x06] & 255);
   EXPECT_EQ(255, p[0x07] & 255);
   EXPECT_EQ(255, p[0x08] & 255);
-  EXPECT_EQ(001, p[0x09] & 255);
-  EXPECT_EQ(10, unuleb64(p, 10, &x));
+  EXPECT_EQ(9, unuleb64(p, 9, &x));
   EXPECT_EQ(UINT64_MAX, x);
   EXPECT_EQ(-1, unuleb64(p, 7, &x));
+}
+
+TEST(uleb64, smoke) {
+  char buf[9];
+  for (int i = 0; i < 1000; ++i) {
+    uint64_t res;
+    unuleb64(buf, uleb64(buf, UINT64_MAX - i) - buf, &res);
+    ASSERT_EQ(UINT64_MAX - i, res);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    uint64_t res;
+    unuleb64(buf, uleb64(buf, UINT64_MIN + i) - buf, &res);
+    ASSERT_EQ(UINT64_MIN + i, res);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    uint64_t want, res;
+    arc4random_buf(&want, sizeof(want));
+    unuleb64(buf, uleb64(buf, want) - buf, &res);
+    ASSERT_EQ(want, res);
+  }
 }

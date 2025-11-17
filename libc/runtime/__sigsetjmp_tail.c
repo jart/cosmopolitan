@@ -23,7 +23,7 @@
 
 // kudos rich felker for the brilliant design
 int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
-  _Static_assert(
+  static_assert(
       sizeof(sigjmp_buf) == sizeof(jmp_buf) + 8 + 8 + sizeof(sigset_t),
       "please recompute sigjmp_buf w.r.t. sigset_t");
   void *p = (char *)jb + sizeof(jmp_buf) + 8 + 8;

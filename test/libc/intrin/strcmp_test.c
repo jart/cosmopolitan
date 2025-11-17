@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bsdstdlib.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
+#include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -33,6 +35,21 @@
 #include "libc/testlib/testlib.h"
 
 int (*memcmpi)(const void *, const void *, size_t) = memcmp;
+
+TEST(wcscmp, overflow) {
+  wchar_t A[] = {0};
+  wchar_t B[] = {INT_MIN};
+#if WCHAR_MIN
+  unassert(wcscmp(A, B) > 0);
+#else
+  unassert(wcscmp(A, B) < 0);
+#endif
+#if WINT_MIN
+  unassert(wcscasecmp(A, B) > 0);
+#else
+  unassert(wcscasecmp(A, B) < 0);
+#endif
+}
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ test/libc/str/strcmp_test.c § emptiness                                  ─╬─│┼
@@ -461,11 +478,19 @@ TEST(wcscmp, testTwosComplementBane) {
   EXPECT_EQ(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                    memcpy(B2, "\x00\x00\x00\x80", 4)),
             0);
+#if WCHAR_MIN
   EXPECT_LT(0, wcscmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
                       memcpy(B2, "\x00\x00\x00\x80", 4)));
   EXPECT_LT(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                    memcpy(B2, "\xff\xff\xff\x7f", 4)),
             0);
+#else
+  EXPECT_GT(0, wcscmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
+                      memcpy(B2, "\x00\x00\x00\x80", 4)));
+  EXPECT_GT(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
+                   memcpy(B2, "\xff\xff\xff\x7f", 4)),
+            0);
+#endif
   free(B2);
   free(B1);
 }
@@ -476,12 +501,21 @@ TEST(wcsncmp, testTwosComplementBane) {
   EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
             0);
+#if WCHAR_MIN
   EXPECT_GT(wcsncmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
             0);
   EXPECT_LT(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\xff\xff\xff\x7f", 4), 1),
             0);
+#else
+  EXPECT_LT(wcsncmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
+                    memcpy(B2, "\x00\x00\x00\x80", 4), 1),
+            0);
+  EXPECT_GT(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
+                    memcpy(B2, "\xff\xff\xff\x7f", 4), 1),
+            0);
+#endif
   free(B2);
   free(B1);
 }
@@ -509,7 +543,7 @@ dontinline int strcasecmp_pure(const char *a, const char *b) {
 
 char *randomize_buf2str(size_t size, char *data) {
   assert(data);
-  rngset(data, size, _rand64, -1);
+  arc4random_buf(data, size);
   data[size - 1] = '\0';
   return data;
 }

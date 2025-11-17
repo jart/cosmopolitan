@@ -2,7 +2,12 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/fenv.h"
 #include "libc/str/str.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/gdtoa/gdtoa.h"
+
+#ifdef MODE_DBG
+#define DEBUG
+#endif
 
 __static_yoink("gdtoa_notice");
 
@@ -182,10 +187,10 @@ typedef unsigned short UShort;
 #endif /* const */
 
 #ifdef DEBUG
-#define Bug(x)                  \
-  {                             \
-    fprintf(stderr, "%s\n", x); \
-    exit(1);                    \
+#define Bug(x)                   \
+  {                              \
+    kprintf("%s\n", x);          \
+    _Exit(1);                    \
   }
 #endif
 
@@ -335,13 +340,10 @@ struct Bigint {
 
 typedef struct Bigint Bigint;
 
-typedef struct ThInfo {
-  Bigint *Freelist[Kmax + 1];
-  Bigint *P5s;
-} ThInfo;
-
-#define Bcopy(x, y) \
+#define __gdtoa_Bcopy(x, y) \
   memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
+
+#define __gdtoa_Bfree(b) free(b)
 
 extern const double __gdtoa_tens[];
 extern const double __gdtoa_bigtens[];
@@ -351,23 +353,21 @@ extern const char *const __gdtoa_InfName[6];
 extern const char *const __gdtoa_NanName[3];
 extern const ULong __gdtoa_NanDflt_Q[4];
 
-Bigint *__gdtoa_Balloc(int, ThInfo **);
-void __gdtoa_Bfree(Bigint *, ThInfo **);
-Bigint *__gdtoa_d2b(double, int *, int *, ThInfo **);
-Bigint *__gdtoa_diff(Bigint *, Bigint *, ThInfo **);
-int __gdtoa_gethex(const char **, const FPI *, int *, Bigint **, int,
-                   ThInfo **);
-Bigint *__gdtoa_i2b(int, ThInfo **);
-Bigint *__gdtoa_increment(Bigint *, ThInfo **);
-Bigint *__gdtoa_lshift(Bigint *, int, ThInfo **);
-Bigint *__gdtoa_mult(Bigint *, Bigint *, ThInfo **);
-Bigint *__gdtoa_multadd(Bigint *, int, int, ThInfo **);
-char *__gdtoa_nrv_alloc(char *, char **, int, ThInfo **);
-char *__gdtoa_rv_alloc(int, ThInfo **);
-Bigint *__gdtoa_pow5mult(Bigint *, int, ThInfo **);
-Bigint *__gdtoa_s2b(const char *, int, int, ULong, int, ThInfo **);
-Bigint *__gdtoa_set_ones(Bigint *, int, ThInfo **);
-Bigint *__gdtoa_sum(Bigint *, Bigint *, ThInfo **);
+Bigint *__gdtoa_Balloc(int);
+Bigint *__gdtoa_d2b(double, int *, int *);
+Bigint *__gdtoa_diff(Bigint *, Bigint *);
+int __gdtoa_gethex(const char **, const FPI *, int *, Bigint **, int);
+Bigint *__gdtoa_i2b(int);
+Bigint *__gdtoa_increment(Bigint *);
+Bigint *__gdtoa_lshift(Bigint *, int);
+Bigint *__gdtoa_mult(Bigint *, Bigint *);
+Bigint *__gdtoa_multadd(Bigint *, int, int);
+char *__gdtoa_nrv_alloc(char *, char **, int);
+char *__gdtoa_rv_alloc(int);
+Bigint *__gdtoa_pow5mult(Bigint *, int);
+Bigint *__gdtoa_s2b(const char *, int, int, ULong, int);
+Bigint *__gdtoa_set_ones(Bigint *, int);
+Bigint *__gdtoa_sum(Bigint *, Bigint *);
 
 ULong __gdtoa_any_on(Bigint *, int);
 char *__gdtoa_add_nanbits(char *, size_t, ULong *, int);

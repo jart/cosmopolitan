@@ -20,9 +20,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.h"
 
-//	Relinquishes scheduled quantum.
-//
-//	@return	0 on success, or -1 w/ errno
+//	use pthread_yield_np() instead
 sys_sched_yield:
 	beg
 #ifdef __x86_64__
@@ -88,6 +86,8 @@ sys_sched_yield:
 	ret
 
 #elif defined(__aarch64__)
+
+//	todo: might be broken on xnu silicon
 
 	stp	x29,x30,[sp,-32]!
 	mov	x29,sp

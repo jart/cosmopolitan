@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -24,17 +23,8 @@
  * @asyncsignalsafe
  */
 wchar_t *wcspbrk(const wchar_t *s, const wchar_t *accept) {
-  size_t i;
-  if (accept[0]) {
-    if (!accept[1]) {
-      return wcschr(s, accept[0]);
-    } else {
-      for (i = 0; s[i]; ++i) {
-        if (HasCharacterWide(s[i], accept)) {
-          return (/*unconst*/ wchar_t *)&s[i];
-        }
-      }
-    }
-  }
-  return NULL;
+  s += wcscspn(s, accept);
+  if (*s)
+    return (wchar_t *)s;
+  return 0;
 }

@@ -21,7 +21,6 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 
 /**
@@ -41,7 +40,8 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
   FILE *res;
   int fd, fd2;
   unsigned flags;
-  flags = fopenflags(mode);
+  if ((flags = fopenflags(mode)) == -1)
+    return NULL;
   flockfile(stream);
   fflush_unlocked(stream);
   if (pathname) {

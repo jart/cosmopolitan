@@ -24,11 +24,7 @@ class SelectTestCase(unittest.TestCase):
         self.assertRaises(TypeError, select.select, [], [], [], "not a number")
         self.assertRaises(ValueError, select.select, [], [], [], -1)
 
-    # Issue #12367: http://www.freebsd.org/cgi/query-pr.cgi?pr=kern/155606
-    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
-                     "fails on missing .py file in rel mode")
-    @unittest.skipIf(sys.platform.startswith('freebsd'),
-                     'skip because of a FreeBSD bug: kern/155606')
+    # [jart] this test is fine
     def test_errno(self):
         with open(__file__, 'rb') as fp:
             fd = fp.fileno()
@@ -47,9 +43,8 @@ class SelectTestCase(unittest.TestCase):
         self.assertIsNot(r, x)
         self.assertIsNot(w, x)
 
-    @unittest.skip("[jart] this test sucks")
     def test_select(self):
-        cmd = 'for i in 0 1 2 3 4 5 6 7 8 9; do echo testing...; sleep 1; done'
+        cmd = 'for i in 0 1 2 3 4 5 6 7 8 9; do echo testing...; sleep .01; done'
         p = os.popen(cmd, 'r')
         for tout in (0, 1, 2, 4, 8, 16) + (None,)*10:
             if support.verbose:

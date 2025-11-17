@@ -32,7 +32,7 @@
 #include "third_party/gdtoa/gdtoa.internal.h"
 
 Bigint *
-__gdtoa_sum(Bigint *a, Bigint *b, ThInfo **PTI)
+__gdtoa_sum(Bigint *a, Bigint *b)
 {
 	Bigint *c;
 	ULong carry, *xc, *xa, *xb, *xe, y;
@@ -40,7 +40,8 @@ __gdtoa_sum(Bigint *a, Bigint *b, ThInfo **PTI)
 	if (a->wds < b->wds) {
 		c = b; b = a; a = c;
 	}
-	c = __gdtoa_Balloc(a->k, PTI);
+	if (!(c = __gdtoa_Balloc(a->k)))
+		return 0;
 	c->wds = a->wds;
 	carry = 0;
 	xa = a->x;
@@ -65,9 +66,12 @@ __gdtoa_sum(Bigint *a, Bigint *b, ThInfo **PTI)
 	}
 	if (carry) {
 		if (c->wds == c->maxwds) {
-			b = __gdtoa_Balloc(c->k + 1, PTI);
-			Bcopy(b, c);
-			__gdtoa_Bfree(c, PTI);
+			if (!(b = __gdtoa_Balloc(c->k + 1))) {
+				__gdtoa_Bfree(c);
+				return 0;
+			}
+			__gdtoa_Bcopy(b, c);
+			__gdtoa_Bfree(c);
 			c = b;
 		}
 		c->x[c->wds++] = 1;

@@ -16,17 +16,10 @@
 #ifndef UTIL
 #define UTIL
 #endif
-#include "third_party/zip/zip.h"
+#include "zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/zip/revision.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/sigtimedwait.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/ss.h"
+#include "revision.h"
+#include <signal.h>
 
 #define DEFSIZ 36000L   /* Default split size (change in help() too) */
 #ifdef MSDOS
@@ -45,6 +38,7 @@
 #  define INDEX "zipsplit_idx"    /* Name of index file */
 #  define TEMPL_FMT "%%0%dld_zip"
 #  define TEMPL_SIZ 17
+#  define exit(p1) QDOSexit()
 #else
 #ifdef VM_CMS
 #  define INDEX "zipsplit.idx"    /* Name of index file */

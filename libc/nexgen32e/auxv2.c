@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/runtime/runtime.h"
 
 #ifdef __aarch64__
-unsigned long *__auxv;
+__rarechange unsigned long *__auxv;
 #endif

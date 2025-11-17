@@ -31,7 +31,7 @@ __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 textwindows uint32_t GetFileAttributes(const char16_t *lpPathName) {
   uint32_t flags;
   flags = __imp_GetFileAttributesW(lpPathName);
-  NTTRACE("GetFileAttributes(%#hs) → {%s, %d}", lpPathName,
+  NTTRACE("GetFileAttributes(%#!hs) → {%s, %d}", lpPathName,
           DescribeNtFileFlagAttr(flags), GetLastError());
   return flags;
 }

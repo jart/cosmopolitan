@@ -19,16 +19,28 @@
 #include "libc/calls/makedev.h"
 #include "libc/dce.h"
 
-uint32_t(minor)(uint64_t x) {
-  if (IsXnu()) {
-    return x & 0x00ffffff;
+/**
+ * Identifies specific instance of device.
+ *
+ *     struct stat st;
+ *     stat("/", &st);
+ *     printf("%u,%u\n", major(st.st_dev), minor(st.st_dev));
+ *
+ * @param dev is `st_dev` field returned by stat(), fstatat(), etc.
+ * @see major(), makedev()
+ */
+uint32_t minor(uint64_t dev) {
+  if (IsWindows()) {
+    return dev;
+  } else if (IsXnu()) {
+    return dev & 0x00ffffff;
   } else if (IsNetbsd()) {
-    return (x & 0x000000ff) | (x & 0xfff00000) >> 12;
+    return (dev & 0x000000ff) | (dev & 0xfff00000) >> 12;
   } else if (IsOpenbsd()) {
-    return (x & 0x000000ff) | (x & 0x0ffff000) >> 8;
+    return (dev & 0x000000ff) | (dev & 0x0ffff000) >> 8;
   } else if (IsFreebsd()) {
-    return ((x >> 24) & 0x0000ff00) | (x & 0xffff00ff);
+    return ((dev >> 24) & 0x0000ff00) | (dev & 0xffff00ff);
   } else {
-    return ((x >> 12) & 0xffffff00) | (x & 0x000000ff);
+    return ((dev >> 12) & 0xffffff00) | (dev & 0x000000ff);
   }
 }

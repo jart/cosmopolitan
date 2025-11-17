@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ttydefaults.h"
 #include "libc/intrin/nomultics.h"
+#include "libc/calls/ttydefaults.h"
 
 struct TtyConf __ttyconf = {
     .vmin = 1,
@@ -29,4 +29,7 @@ struct TtyConf __ttyconf = {
     .vkill = CTRL('U'),
     .vreprint = CTRL('R'),
     .vlnext = CTRL('V'),
+    .vsusp = CTRL('Z'),
+    .vstop = CTRL('S'),
+    .vstart = CTRL('Q'),
 };

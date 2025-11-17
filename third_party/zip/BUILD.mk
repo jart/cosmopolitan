@@ -32,6 +32,7 @@ THIRD_PARTY_ZIP_UTIL_OBJS1 =			\
 	o/$(MODE)/third_party/zip/globals.o	\
 	o/$(MODE)/third_party/zip/unix_.o	\
 	o/$(MODE)/third_party/zip/zipfile_.o	\
+	o/$(MODE)/third_party/zip/crc32.o	\
 	o/$(MODE)/third_party/zip/fileio_.o	\
 	o/$(MODE)/third_party/zip/util_.o
 
@@ -157,14 +158,20 @@ o/$(MODE)/third_party/zip/zipup.o: private	\
 	CPPFLAGS +=				\
 		-w				\
 		-DUNIX				\
-		-DMMAP				\
 		-DUNICODE_SUPPORT		\
-		-DUSE_EF_UT_TIME		\
+		-DUIDGID_NOT_16BIT		\
 		-DLARGE_FILE_SUPPORT		\
 		-DHAVE_DIRENT_H			\
 		-DHAVE_TERMIOS_H		\
 		-DZIP64_SUPPORT			\
 		-DBZIP2_SUPPORT
+
+$(THIRD_PARTY_ZIP_UTIL_OBJS): third_party/zip/BUILD.mk
+$(THIRD_PARTY_ZIP_ZIP_OBJS): third_party/zip/BUILD.mk
+$(THIRD_PARTY_ZIPSPLIT_OBJS): third_party/zip/BUILD.mk
+$(THIRD_PARTY_ZIPNOTE_OBJS): third_party/zip/BUILD.mk
+$(THIRD_PARTY_ZIPCLOAK_OBJS): third_party/zip/BUILD.mk
+$(THIRD_PARTY_ZIP_LARGE_OBJS): third_party/zip/BUILD.mk
 
 .PHONY: o/$(MODE)/third_party/zip
 o/$(MODE)/third_party/zip:			\

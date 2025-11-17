@@ -24,7 +24,7 @@
  *
  * @param n if -1 implies strlen
  */
-bool IsValidHttpToken(const char *s, size_t n) {
+bool32 IsValidHttpToken(const char *s, size_t n) {
   size_t i;
   if (!n)
     return false;

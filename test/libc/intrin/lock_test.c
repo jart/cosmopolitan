@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
@@ -134,11 +135,11 @@ void TestContendedLock(const char *name, int kind) {
   atomic_store(&ready, 0);
   atomic_store(&success, 0);
   stk = NewCosmoStack();
-  rc = clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
-             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                 CLONE_SYSVSEM | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
-                 CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-             0, &tib.tib_ptid, &tib, &tib.tib_ctid);
+  rc = __clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
+               CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
+                   CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_PARENT_SETTID |
+                   CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+               0, &tib.tib_ptid, &tib, &tib.tib_ctid);
   if (rc) {
     kprintf("clone failed: %s\n", strerror(rc));
     _Exit(1);

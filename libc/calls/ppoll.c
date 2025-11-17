@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
@@ -35,14 +37,16 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 static int ppoll_impl(struct pollfd *fds, size_t nfds,
                       const struct timespec *timeout, const sigset_t *sigmask) {
   int e, fdcount;
-  sigset_t oldmask;
   struct timespec ts, *tsp;
 
-  // validate timeout
+  // validate args
+  if (nfds > ~__get_pib()->rlimit[RLIMIT_NOFILE].rlim_cur)
+    return einval();
   if (timeout && timeout->tv_nsec >= 1000000000ull)
     return einval();
 
@@ -68,6 +72,15 @@ static int ppoll_impl(struct pollfd *fds, size_t nfds,
   }
 
   if (!IsWindows()) {
+    sigset_t oldmask;
+    sigset_t sigmask2;
+    sigset_t *sigmask2p;
+    if (sigmask) {
+      sigmask2 = __linux2mask(*sigmask);
+      sigmask2p = &sigmask2;
+    } else {
+      sigmask2p = 0;
+    }
     e = errno;
     if (timeout) {
       ts = *timeout;
@@ -75,7 +88,7 @@ static int ppoll_impl(struct pollfd *fds, size_t nfds,
     } else {
       tsp = 0;
     }
-    fdcount = sys_ppoll(fds, nfds, tsp, sigmask, 8);
+    fdcount = sys_ppoll(fds, nfds, tsp, sigmask2p, 8);
     if (fdcount == -1 && errno == ENOSYS) {
       int64_t ms;
       errno = e;
@@ -86,10 +99,10 @@ static int ppoll_impl(struct pollfd *fds, size_t nfds,
       } else {
         ms = -1;
       }
-      if (sigmask)
-        sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      if (sigmask2p)
+        sys_sigprocmask(SIG_SETMASK, sigmask2p, &oldmask);
       fdcount = sys_poll(fds, nfds, ms);
-      if (sigmask)
+      if (sigmask2p)
         sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {

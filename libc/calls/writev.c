@@ -23,6 +23,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
@@ -31,6 +32,7 @@
 #include "libc/sock/internal.h"
 #include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/vga/vga.internal.h"
 
 static size_t SumIovecBytes(const struct iovec *iov, int iovlen) {
@@ -46,8 +48,16 @@ static ssize_t writev_impl(int fd, const struct iovec *iov, int iovlen) {
     return ebadf();
   if (iovlen < 0)
     return einval();
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)
+  if (__isfdkind(fd, kFdZip))
     return ebadf();  // posix specifies this when not open()'d for writing
+
+  if (iovlen) {
+    if (kisdangerous(iov))
+      return efault();
+    for (int i = 0; i < iovlen; ++i)
+      if (iov[i].iov_len && kisdangerous(iov[i].iov_base))
+        return efault();
+  }
 
   // XNU and BSDs will EINVAL if requested bytes exceeds INT_MAX
   // this is inconsistent with Linux which ignores huge requests
@@ -80,10 +90,10 @@ static ssize_t writev_impl(int fd, const struct iovec *iov, int iovlen) {
     } else {
       return sys_writev(fd, iov, iovlen);
     }
-  } else if (fd >= g_fds.n) {
+  } else if (fd >= __get_pib()->fds.n) {
     return ebadf();
   } else if (IsMetal()) {
-    return sys_writev_metal(g_fds.p + fd, iov, iovlen);
+    return sys_writev_metal(__get_pib()->fds.p + fd, iov, iovlen);
   } else if (IsWindows()) {
     return sys_writev_nt(fd, iov, iovlen);
   } else {

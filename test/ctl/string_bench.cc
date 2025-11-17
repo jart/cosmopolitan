@@ -18,8 +18,8 @@
 
 #include "ctl/string.h"
 #include "ctl/utility.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
-#include "libc/mem/leaks.h"
 #include "libc/testlib/benchmark.h"
 
 #include "libc/calls/struct/timespec.h"

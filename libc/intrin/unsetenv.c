@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/getenv.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -25,22 +23,31 @@
 /**
  * Removes environment variable.
  *
- * @param s is non-empty environment key which can't contain `'='`
+ * @param name is non-empty environment key which can't contain `'='`
  * @return 0 on success, or -1 w/ errno and environment is unchanged
- * @raise EINVAL if `s` is an empty string or has a `'='` character
+ * @raise EINVAL if `name` is an empty string or has a `'='` character
  * @threadunsafe
  */
-int unsetenv(const char *s) {
-  char **p;
-  struct Env e;
-  if (!s || !*s || strchr(s, '='))
+int unsetenv(const char *name) {
+
+  if (!name || !*name || strchr(name, '='))
     return einval();
-  if ((p = environ)) {
-    e = __getenv(p, s);
-    while (p[e.i]) {
-      p[e.i] = p[e.i + 1];
-      ++e.i;
+
+  long k = 0;
+  for (long i = 0; environ[i]; ++i) {
+    bool matches = false;
+    for (long j = 0;; ++j) {
+      if (!name[j]) {
+        matches = !environ[i][j] || environ[i][j] == '=';
+        break;
+      }
+      if (name[j] != environ[i][j])
+        break;
     }
+    if (!matches)
+      environ[k++] = environ[i];
   }
+  environ[k] = 0;
+
   return 0;
 }

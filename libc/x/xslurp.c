@@ -17,56 +17,53 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 
 /**
  * Reads entire file into memory.
- *
  * @return NUL-terminated malloc'd contents, or NULL w/ errno
- * @note this is uninterruptible
  */
 void *xslurp(const char *path, size_t *opt_out_size) {
+
+  // open file
   int fd;
-  char *res;
-  size_t i, got;
-  ssize_t rc, size;
-  res = NULL;
-  if ((fd = open(path, O_RDONLY)) != -1) {
-    if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-        (res = memalign(4096, size + 1))) {
-      if (size > 2 * 1024 * 1024) {
-        fadvise(fd, 0, size, MADV_SEQUENTIAL);
+  if ((fd = open(path, O_RDONLY)) == -1)
+    return 0;
+
+  // setup growable array
+  char *data = 0;
+  size_t size = 0;
+  size_t capacity = 0;
+  size_t granularity = 4096;
+
+  // read from fd until eof
+  for (;;) {
+    if (capacity - size < granularity) {
+      capacity += granularity;
+      char *p = realloc(data, capacity + 1);
+      if (!p) {
+        free(data);
+        close(fd);
+        return 0;
       }
-      for (i = 0; i < size; i += got) {
-      TryAgain:
-        if ((rc = pread(fd, res + i, size - i, i)) != -1) {
-          if (!(got = rc)) {
-            if (lseek(fd, 0, SEEK_CUR) == -1) {
-              abort();  // TODO(jart): what is this
-            }
-          }
-        } else if (errno == EINTR) {
-          goto TryAgain;
-        } else {
-          free(res);
-          res = NULL;
-          break;
-        }
-      }
-      if (res) {
-        if (opt_out_size) {
-          *opt_out_size = size;
-        }
-        res[i] = '\0';
-      }
+      data = p;
     }
-    close(fd);
+    ssize_t rc = read(fd, data + size, capacity - size);
+    if (rc == -1) {
+      free(data);
+      close(fd);
+      return 0;
+    }
+    if (!rc) {
+      realloc_in_place(data, size + 1);
+      data[size] = 0;
+      close(fd);
+      if (opt_out_size)
+        *opt_out_size = size;
+      return data;
+    }
+    size += rc;
   }
-  return res;
 }

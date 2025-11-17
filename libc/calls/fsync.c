@@ -29,6 +29,12 @@
 /**
  * Blocks until kernel flushes buffers for fd to disk.
  *
+ * On MacOS what the kernel calls fsync doesn't do much, so this wrapper
+ * uses `fcntl(F_FULLFSYNC)` and only falls back to fsync on filesystems
+ * that don't support full syncing.
+ *
+ * You should expect this function to take milliseconds to complete.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EROFS if `fd` is on a read-only filesystem e.g. /zip
@@ -48,14 +54,14 @@ int fsync(int fd) {
   BEGIN_CANCELATION_POINT;
   if (__isfdkind(fd, kFdZip)) {
     rc = erofs();
-  } else if (!IsWindows()) {
-    if (!fake) {
-      rc = sys_fsync(fd);
-    } else {
-      rc = sys_fsync_fake(fd);
-    }
-  } else {
+  } else if (IsWindows()) {
     rc = sys_fdatasync_nt(fd, fake);
+  } else if (fake) {
+    rc = sys_fsync_fake(fd);
+  } else if (IsXnu()) {
+    rc = sys_fsync_xnu(fd);
+  } else {
+    rc = sys_fsync(fd);
   }
   END_CANCELATION_POINT;
   STRACE("fsync%s(%d) → %d% m", fake ? "_fake" : "", fd, rc);

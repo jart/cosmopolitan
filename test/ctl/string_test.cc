@@ -18,7 +18,7 @@
 
 #include "ctl/is_same.h"
 #include "ctl/string.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 #include "libc/str/str.h"
 

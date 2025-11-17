@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -100,8 +100,6 @@ void *Worker(void *arg) {
 }
 
 TEST(pthread_atfork, fork_exit_torture) {
-  if (!IsFreebsd())
-    return;
   mu_wipe();
   pthread_atfork(mu_lock, mu_unlock, mu_wipe);
   int i, n = 4;

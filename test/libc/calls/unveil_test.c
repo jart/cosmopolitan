@@ -88,8 +88,8 @@ TEST(unveil, api_differences) {
   ASSERT_SYS(EACCES_OR_ENOENT, -1, open("/", O_RDONLY | O_DIRECTORY));
   // wut
   if (IsLinux()) {
-    ASSERT_SYS(0, 3, open("/", O_PATH));  // wut
-    ASSERT_SYS(0, 0, stat("/", &st));     // wut
+    ASSERT_SYS(0, 3, open("/", _O_PATH));  // wut
+    ASSERT_SYS(0, 0, stat("/", &st));      // wut
   }
   EXITS(0);
 }
@@ -272,7 +272,7 @@ TEST(unveil, ftruncate_isForbidden) {
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(0, 3, open("garden/secret.txt", O_PATH));
+  ASSERT_SYS(0, 3, open("garden/secret.txt", _O_PATH));
   ASSERT_SYS(EBADF, -1, ftruncate(3, 0));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));

@@ -21,35 +21,15 @@
 #ifndef UTIL
 # define UTIL
 #endif
-#include "third_party/zip/zip.h"
+#include "zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/zip/revision.h"
-#include "third_party/zip/crc32.h"
-#include "third_party/zip/crypt.h"
-#include "third_party/zip/ttyio.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/sigtimedwait.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/ss.h"
+#include "revision.h"
+#include "crc32.h"
+#include "crypt.h"
+#include "ttyio.h"
+#include <signal.h>
 #ifndef NO_STDLIB_H
-#include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
-#include "libc/calls/termios.h"
-#include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/mem/alg.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/rand.h"
-#include "libc/temp.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/gdtoa/gdtoa.h"
-#include "third_party/musl/crypt.h"
-#include "third_party/musl/rand48.h"
+#  include <stdlib.h>
 #endif
 
 #if CRYPT       /* defined (as TRUE or FALSE) in crypt.h */

@@ -75,7 +75,7 @@
 
 #define IsSpace(c) ((255 & (c)) <= ' ')
 
-static wontreturn void getargs_fail(const char *path, const char *reason) {
+[[noreturn]] static void getargs_fail(const char *path, const char *reason) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno)))
     errstr = "Unknown error";

@@ -18,47 +18,32 @@
    is 8 bytes while off_t here is 4 bytes, and this makes the zlist struct
    different sizes and needless to say leads to segmentation faults.  Putting
    zip.h first seems to fix this.  8/14/04 EG */
-#include "third_party/zip/zip.h"
-#include "libc/str/str.h"
-#include "third_party/zip/zipup.h"
-#include "third_party/bzip2/bzlib.h"
-#include "libc/calls/typedef/u.h"
-#include "libc/runtime/sysconf.h"
-#include "libc/runtime/runtime.h"
-#include "libc/errno.h"
+#include "zip.h"
+#include <ctype.h>
+#include <errno.h>
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
 
-#include "third_party/zip/revision.h"
-#include "third_party/zip/crc32.h"
-#include "third_party/zip/crypt.h"
+#include "revision.h"
+#include "crc32.h"
+#include "crypt.h"
 #ifdef USE_ZLIB
-// MISSING #include "zlib.h"
+#  include "third_party/zlib/zlib.h"
 #endif
 #ifdef BZIP2_SUPPORT
 #  ifdef BZIP2_USEBZIP2DIR
-// MISSING #include "bzip2/bzlib.h"
+#    include "third_party/bzip2/bzlib.h"
 #  else
-// MISSING #include "bzlib.h"
+#    include "third_party/bzip2/bzlib.h"
 #  endif
 #endif
 
 #ifdef OS2
-// MISSING #include "os2/os2zip.h"
+// [jart] #  include "os2/os2zip.h"
 #endif
 
 #if defined(MMAP)
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/mlock.h"
-#include "libc/sysv/consts/msync.h"
-#include "libc/sysv/consts/posix.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/madv.h"
-#include "libc/sysv/consts/mfd.h"
-#include "libc/sysv/consts/mremap.h"
+#  include <sys/mman.h>
 #  ifndef PAGESIZE   /* used to be SYSV, what about pagesize on SVR3 ? */
 #    define PAGESIZE getpagesize()
 #  endif
@@ -72,80 +57,80 @@
  */
 
 #ifdef AMIGA
-// MISSING #include "amiga/zipup.h"
+// [jart] #  include "amiga/zipup.h"
 #endif /* AMIGA */
 
 #ifdef AOSVS
-// MISSING #include "aosvs/zipup.h"
+// [jart] #  include "aosvs/zipup.h"
 #endif /* AOSVS */
 
 #ifdef ATARI
-// MISSING #include "atari/zipup.h"
+// [jart] #  include "atari/zipup.h"
 #endif
 
 #ifdef __BEOS__
-// MISSING #include "beos/zipup.h"
+// [jart] #  include "beos/zipup.h"
 #endif
 
 #ifdef __ATHEOS__
-// MISSING #include "atheos/zipup.h"
+// [jart] #  include "atheos/zipup.h"
 #endif /* __ATHEOS__ */
 
 #ifdef __human68k__
-// MISSING #include "human68k/zipup.h"
+// [jart] #  include "human68k/zipup.h"
 #endif /* __human68k__ */
 
 #ifdef MACOS
-// MISSING #include "macos/zipup.h"
+// [jart] #  include "macos/zipup.h"
 #endif
 
 #ifdef DOS
-// MISSING #include "msdos/zipup.h"
+// [jart] #  include "msdos/zipup.h"
 #endif /* DOS */
 
 #ifdef NLM
-// MISSING #include "novell/zipup.h"
-// MISSING #include <nwfattr.h>
+// [jart] #  include "novell/zipup.h"
+// [jart] #  include <nwfattr.h>
 #endif
 
 #ifdef OS2
-// MISSING #include "os2/zipup.h"
+// [jart] #  include "os2/zipup.h"
 #endif /* OS2 */
 
 #ifdef RISCOS
-// MISSING #include "acorn/zipup.h"
+// [jart] #  include "acorn/zipup.h"
 #endif
 
 #ifdef TOPS20
-// MISSING #include "tops20/zipup.h"
+// [jart] #  include "tops20/zipup.h"
 #endif
 
 #ifdef UNIX
-// MISSING #include "unix/zipup.h"
+#  include "zipup.h"
 #endif
 
 #ifdef CMS_MVS
-#include "third_party/zip/zipup.h"
+// [jart] #  include "zipup.h"
 #endif /* CMS_MVS */
 
 #ifdef TANDEM
-#include "third_party/zip/zipup.h"
+// [jart] #  include "zipup.h"
 #endif /* TANDEM */
 
 #ifdef VMS
-// MISSING #include "vms/zipup.h"
+// [jart] #  include "vms/zipup.h"
 #endif /* VMS */
 
 #ifdef QDOS
-// MISSING #include "qdos/zipup.h"
+// [jart] #  include "qdos/zipup.h"
 #endif /* QDOS */
 
 #ifdef WIN32
-// MISSING #include "win32/zipup.h"
+// [jart] #  include "win32/zipup.h"
 #endif
 
 #ifdef THEOS
-// MISSING #include "theos/zipup.h"
+// [jart] #  include "theos/zipup.h"
 #endif
 
 /* Local functions */
@@ -415,7 +400,7 @@ struct zlist far *z;    /* zip entry to compress */
   int l = 0;            /* true if this file is a symbolic link */
   int m;                /* method for this entry */
 
-  zoff_t o = 0;      /* offsets in zip file */
+  zoff_t o = 0, p;      /* offsets in zip file */
   zoff_t q = (zoff_t) -3; /* size returned by filetime */
   uzoff_t uq;           /* unsigned q */
   zoff_t s = 0;         /* size of compressed data */
@@ -949,6 +934,7 @@ struct zlist far *z;    /* zip entry to compress */
 #endif /*MMAP */
 
   tempzn += s;
+  p = tempzn; /* save for future fseek() */
 
 #if (!defined(MSDOS) || defined(OS2))
 #if !defined(VMS) && !defined(CMS_MVS) && !defined(__mpexl)
@@ -1685,6 +1671,9 @@ int pack_level;
 {
     int err = BZ_OK;
     int zp_err = ZE_OK;
+    const char *bzlibVer;
+
+    bzlibVer = BZ2_bzlibVersion();
 
     /* $TODO - Check BZIP2 LIB version? */
 
@@ -1774,7 +1763,7 @@ int *cmpr_method;
 
 #if defined(MMAP) || defined(BIG_MEM)
     if (remain != (ulg)-1L) {
-        bstrm.next_in = (void *)window;
+        bstrm.next_in = (Bytef *)window;
         ibuf_sz = (unsigned)WSIZE;
     } else
 #endif /* MMAP || BIG_MEM */

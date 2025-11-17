@@ -14,8 +14,8 @@
 #define LIBUNWIND_CONFIG_H
 
 #include "libc/isystem/assert.h"
-#include "libc/stdio/stdio.h"
 #include "libc/isystem/stdint.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/isystem/stdlib.h"
 
 #include "third_party/libunwind/include/__libunwind_config.h"
@@ -152,8 +152,7 @@
 #else
 #define _LIBUNWIND_ABORT(msg)                                                  \
   do {                                                                         \
-    fprintf(stderr, "libunwind: %s - %s\n", __func__, msg);                    \
-    fflush(stderr);                                                            \
+    kprintf("libunwind: %s - %s\n", __func__, msg);                            \
     abort();                                                                   \
   } while (0)
 #endif
@@ -163,12 +162,10 @@
 #define _LIBUNWIND_LOG(msg, ...)
 #else
 #define _LIBUNWIND_LOG0(msg) do {                                              \
-    fprintf(stderr, "libunwind: " msg "\n");                                   \
-    fflush(stderr);                                                            \
+    kprintf("libunwind: " msg "\n");                                           \
   } while (0)
 #define _LIBUNWIND_LOG(msg, ...) do {                                          \
-    fprintf(stderr, "libunwind: " msg "\n", __VA_ARGS__);                      \
-    fflush(stderr);                                                            \
+    kprintf("libunwind: " msg "\n", __VA_ARGS__);                              \
   } while (0)
 #endif
 
@@ -217,7 +214,7 @@
   #define _LIBUNWIND_TRACE_DWARF(...)                                          \
     do {                                                                       \
       if (logDWARF())                                                          \
-        fprintf(stderr, __VA_ARGS__);                                          \
+        kprintf(__VA_ARGS__);                                                  \
     } while (0)
 #endif
 

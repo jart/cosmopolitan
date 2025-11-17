@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Timestamp of process start.
@@ -23,4 +25,4 @@
  * @see libc/runtime/winmain.greg.h
  * @see libc/crt/crt.S
  */
-uint64_t kStartTsc;
+__rarechange uint64_t kStartTsc;

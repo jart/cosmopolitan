@@ -41,6 +41,7 @@ cosmo:	beg
 
 #if SYSDEBUG
 	call	__strace_init
+	.yoink	kprintf_crash_ctor
 	mov	%eax,%r12d
 #endif /* SYSDEBUG */
 
@@ -70,27 +71,6 @@ cosmo:	beg
 //	                          d││││rr││││││
 1:	.short	0b00000000000000000001101111111
 	.previous
-#endif
-
-#ifdef __FAST_MATH__
-	push	%rax
-	stmxcsr	(%rsp)
-//
-//	Enable hardware optimizations in violation of the IEEE standard.
-//
-//	- 0x0040 enables "DAZ: Denormals Are Zeros" in MXCSR. This causes the
-//	  processor to turn denormal inputs into zero, before computing them.
-//	  See Intel Manual Vol. 1 §10.2.3.4
-//
-//	- 0x8000 enables "FTZ: Flush To Zero" in MXCSR. This means a floating
-//	  point operation that results in underflow will be set to zero, with
-//	  the same sign, rather than producing a denormalized output. It will
-//	  happen only if underflow trapping hasnt been enabled. See the Intel
-//	  Manual Vol. 1 §10.2.3.3.
-//
-	orl	$0x8040,(%rsp)
-	ldmxcsr	(%rsp)
-	pop	%rax
 #endif
 
 //	run assembly init
@@ -134,6 +114,14 @@ cosmo:	beg
 	pop	%rsi
 	pop	%rdi
 	.init.end 304,_init_tls
+
+	.init.start 305,_init_fds
+	push	%rdi
+	push	%rsi
+	call	__init_fds
+	pop	%rsi
+	pop	%rdi
+	.init.end 305,_init_fds
 
 #ifdef FTRACE
 	.init.start 306,_init_ftrace

@@ -16,13 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cosmo.h"
 #include "libc/intrin/getenv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/mem/internal.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 static char **expected;
@@ -42,47 +44,38 @@ static char **__growenv(char **a) {
     a = environ;
   n = a ? __lenenv(a) : 0;
   c = MAX(8ul, n) << 1;
-  if ((b = may_leak(malloc(c * sizeof(char *))))) {
-    if (a) {
-      for (p = b; *a;) {
-        *p++ = *a++;
-      }
-    } else {
-      b[0] = 0;
-    }
-    environ = b;
-    expected = b;
-    capacity = c;
-    return b;
-  } else {
+  if (!(b = cosmo_permalloc(c * sizeof(char *))))
     return 0;
+  if (a) {
+    for (p = b; *a;)
+      *p++ = *a++;
+  } else {
+    b[0] = 0;
   }
+  environ = b;
+  expected = b;
+  capacity = c;
+  return b;
 }
 
 int __putenv(char *s, bool overwrite) {
   char **p;
   struct Env e;
-  if (!(p = environ)) {
-    if (!(p = __growenv(0))) {
+  if (!(p = environ))
+    if (!(p = __growenv(0)))
       return -1;
-    }
-  }
   e = __getenv(p, s);
-  if (e.s && !overwrite) {
+  if (e.s && !overwrite)
     return 0;
-  }
   if (e.s) {
     p[e.i] = s;
     return 0;
   }
-  if (p != expected) {
+  if (p != expected)
     capacity = e.i;
-  }
-  if (e.i + 1 >= capacity) {
-    if (!(p = __growenv(p))) {
+  if (e.i + 1 >= capacity)
+    if (!(p = __growenv(p)))
       return -1;
-    }
-  }
   p[e.i + 1] = 0;
   p[e.i] = s;
   return 0;
@@ -91,17 +84,22 @@ int __putenv(char *s, bool overwrite) {
 /**
  * Emplaces environment key=value.
  *
- * @param s should be a string that looks like `"name=value"` and it'll
- *     become part of the environment; changes to its memory will change
- *     the environment too
+ * The memory at `s` will become part of the environment.
+ *
+ * @param s looks like `"name=value"`
  * @return 0 on success, or non-zero w/ errno on error
+ * @raise EINVAL if `=` wasn't in `s` or name was empty
  * @raise ENOMEM if out of memory
  * @see setenv(), getenv()
  * @threadunsafe
  */
 int putenv(char *s) {
   int rc;
-  rc = __putenv(s, true);
+  if (s && *s != '=' && strchr(s, '=')) {
+    rc = __putenv(s, true);
+  } else {
+    rc = einval();
+  }
   STRACE("putenv(%#s) → %d% m", s, rc);
   return rc;
 }

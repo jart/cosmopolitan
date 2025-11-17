@@ -20,7 +20,6 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/locale.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/lambda/lib/blc.h"
 

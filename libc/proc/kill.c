@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
@@ -61,7 +62,7 @@
 int kill(int pid, int sig) {
   int rc;
   if (!IsWindows()) {
-    rc = sys_kill(pid, sig, 1);
+    rc = sys_kill(pid, __linux2sig(sig), 1);
   } else {
     rc = sys_kill_nt(pid, sig);
   }

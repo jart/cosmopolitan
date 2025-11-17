@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8-*-│
+│ vi: set et ft=c++ ts=2 sts=2 sw=2 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,45 +16,71 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/cosmo.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
-#include "libc/testlib/testlib.h"
-#include "libc/thread/thread.h"
+#include <assert.h>
+#include <cosmo.h>
+#include <pthread.h>
+#include <stdatomic.h>
+#include <stdio.h>
+#include <sys/resource.h>
+#include <time.h>
 
 #define N 32
 
-int i, n;
-struct spawn *t;
-atomic_int x, y;
+int y;
+atomic_int x;
+cosmo_once_t once;
 pthread_barrier_t b;
-static _Atomic(uint32_t) once;
 
 void InitFactory(void) {
-  ASSERT_EQ(0, atomic_load(&x));
-  atomic_fetch_add(&y, 1);
+  npassert(!atomic_load_explicit(&x, memory_order_relaxed));
+  npassert(!y++);
+  usleep(10000);
 }
 
 void *Worker(void *arg) {
   pthread_barrier_wait(&b);
-  ASSERT_EQ(0, cosmo_once(&once, InitFactory));
-  ASSERT_EQ(1, atomic_load(&y));
-  atomic_fetch_add(&x, 1);
+  npassert(!cosmo_once(&once, InitFactory));
+  npassert(y == 1);
+  atomic_fetch_add_explicit(&x, 1, memory_order_relaxed);
   return 0;
 }
 
-TEST(cosmo_once, test) {
+void test_torture() {
   pthread_t th[N];
+  once = 0;
   x = y = 0;
-  ASSERT_EQ(0, pthread_barrier_init(&b, 0, N));
-  for (i = 0; i < N; ++i)
-    ASSERT_EQ(0, pthread_create(th + i, 0, Worker, 0));
-  for (i = 0; i < N; ++i)
-    ASSERT_EQ(0, pthread_join(th[i], 0));
-  ASSERT_EQ(N, atomic_load(&x));
-  ASSERT_EQ(1, atomic_load(&y));
-  ASSERT_EQ(0, pthread_barrier_destroy(&b));
+  npassert(!pthread_barrier_init(&b, 0, N));
+  for (int i = 0; i < N; ++i)
+    npassert(!pthread_create(th + i, 0, Worker, 0));
+  for (int i = 0; i < N; ++i)
+    npassert(!pthread_join(th[i], 0));
+  npassert(y == 1);
+  npassert(atomic_load_explicit(&x, memory_order_relaxed) == N);
+  npassert(!pthread_barrier_destroy(&b));
+}
+
+int main() {
+  struct timeval start;
+  gettimeofday(&start, 0);
+  cosmo_stack_setmaxstacks(N);
+
+  // todo(jart): why does setrlimit() in compile.ape cause mmap() to
+  //             fail for no good reason in qemu-aarch64?
+  int omg = 32;
+  if (IsQemuUser())
+    omg = 8;
+
+  for (int i = 0; i < omg; ++i)
+    test_torture();
+
+  struct rusage ru;
+  struct timeval end;
+  gettimeofday(&end, 0);
+  getrusage(RUSAGE_SELF, &ru);
+  printf("%16ld us real\n"
+         "%16ld us user\n"
+         "%16ld us sys\n",
+         timeval_tomicros(timeval_sub(end, start)),  //
+         timeval_tomicros(ru.ru_utime),              //
+         timeval_tomicros(ru.ru_stime));
 }

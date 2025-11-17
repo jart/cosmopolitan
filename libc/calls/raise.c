@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/runtime/syslib.internal.h"
@@ -46,7 +47,7 @@
 int raise(int sig) {
   int rc;
   if (IsXnuSilicon()) {
-    rc = _sysret(__syslib->__raise(sig));
+    rc = _sysret(__syslib->__raise(__linux2sig(sig)));
   } else if (IsWindows()) {
     if (0 <= sig && sig <= 64) {
       __sig_raise(sig, SI_TKILL);
@@ -55,7 +56,7 @@ int raise(int sig) {
       rc = einval();
     }
   } else {
-    rc = sys_tkill(gettid(), sig, 0);
+    rc = sys_tkill(gettid(), __linux2sig(sig), 0);
   }
   STRACE("raise(%G) → %d% m", sig, rc);
   return rc;

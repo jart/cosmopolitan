@@ -16,23 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Writes string to stream.
  *
  * Writing stops at the NUL-terminator, which isn't included in output.
  * This function blocks until the full string is written, unless an
- * unrecoverable error happens.
+ * unrecoverable error happens. No newline character is appended.
  *
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
- * @return bytes written, or -1 w/ errno
+ * @return non-negative number on success, or EOF w/ errno
+ * @cancelationpoint
  */
 int fputs(const char *s, FILE *f) {
   int rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fputs_unlocked(s, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

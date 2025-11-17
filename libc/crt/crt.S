@@ -30,15 +30,6 @@ _apple:	mov	$_HOSTXNU,%cl
 	.endfn	_apple,weak,hidden
 #endif
 
-#if SupportsWindows() && defined(__x86_64__) && !IsTiny()
-//	implements all win32 apis on non-windows hosts
-//	it is just enough code to get a good backtrace
-__oops_win32:
-	ud2
-	nop
-	.endfn	__oops_win32
-#endif
-
 //	System Five userspace program entrypoint.
 //
 //	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
@@ -77,6 +68,33 @@ _start:
 	mov	%eax,(%rbx)
 	mov	%edx,4(%rbx)
 
+#ifdef __FAST_MATH__
+	push	%rax
+	stmxcsr	(%rsp)
+//
+//	Enable hardware optimizations in violation of the IEEE standard.
+//
+//	- 0x0040 enables "DAZ: Denormals Are Zeros" in MXCSR. This causes the
+//	  processor to turn denormal inputs into zero, before computing them.
+//	  See Intel Manual Vol. 1 §10.2.3.4. It can be extremely impactful if
+//	  your code encounters a lot of denormals at runtime, since denormals
+//	  can make a flop take 20x or even 200x longer in the worst case with
+//	  very cheap and/or very old microprocessors particularly with divide
+//
+//	- 0x8000 enables "FTZ: Flush To Zero" in MXCSR. This means a floating
+//	  point operation that results in underflow will be set to zero, with
+//	  the same sign, rather than producing a denormalized output. It will
+//	  happen only if underflow trapping hasnt been enabled. See the Intel
+//	  Manual Vol. 1 §10.2.3.3.
+//
+//	This code path is used in crtfastmath.o which is used by cosmocc when
+//	a rube passes -ffast-math or -funsafe-math-optimizations at link time
+//
+	orl	$0x8040,(%rsp)
+	ldmxcsr	(%rsp)
+	pop	%rax
+#endif
+
 //	translates arguments from old stack abi
 	mov	(%rsp),%ebx			// argc
 	lea	8(%rsp),%rsi			// argv
@@ -87,18 +105,6 @@ _start:
 //	setup stack
 	xor	%ebp,%ebp
 	and	$-16,%rsp
-
-#if SupportsWindows() && !IsTiny()
-//	make win32 imps crash
-	.weak	ape_idata_iat
-	.weak	ape_idata_iatend
-	ezlea	__oops_win32,ax
-	ezlea	ape_idata_iat,di
-	ezlea	ape_idata_iatend,cx
-	sub	%rdi,%rcx
-	shr	$3,%ecx
-	rep stosq
-#endif
 
 //	scan through environment varis
 //	find start of auxiliary values
@@ -133,6 +139,13 @@ _start:
 #if SupportsFreebsd()
 //	save first arg
 	mov	x4,x0
+#endif
+
+#ifdef __FAST_MATH__
+//	Enable hardware optimizations in violation of the IEEE standard.
+//	Bit 24 is FZ which means Flush denormals to Zero.
+	mov	w0,#0x1000000
+	msr	fpcr,x0
 #endif
 
 //	save original stack pointer

@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/serialize.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
@@ -100,6 +102,8 @@
 int openatemp(int dirfd, char *template, int suffixlen, int flags, int mode) {
   flags &= ~O_ACCMODE;
   flags |= O_RDWR | O_CREAT | O_EXCL;
+  if (IsWindows())
+    flags |= _O_TMPFILE;
   int len = strlen(template);
   if (6 + suffixlen < 6 || 6 + suffixlen > len ||
       READ32LE(template + len - suffixlen - 6) != READ32LE("XXXX") ||

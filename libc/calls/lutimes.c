@@ -16,8 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 

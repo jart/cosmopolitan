@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 eusers:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EUSERS(%rip),%ecx
+	push	$EUSERS
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EUSERS
-	ldrsw	x0,[x1,#:lo12:EUSERS]
+	mov	x0,#EUSERS
 	b	__errfun
 #else
 #error "unsupported architecture"

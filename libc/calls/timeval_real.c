@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 
 /**
  * Returns current time w/ microsecond precision.

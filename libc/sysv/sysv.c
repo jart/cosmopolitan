@@ -21,6 +21,8 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/sysv/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #ifndef __x86_64__
@@ -54,14 +56,12 @@ dontinline long systemfive_cancellable(void) {
       (pth = _pthread_self())) {
     // check if cancelation is already pending
     if (!(pth->pt_flags & PT_NOCANCEL) &&
-        atomic_load_explicit(&pth->pt_canceled, memory_order_acquire)) {
+        atomic_load_explicit(&pth->pt_canceled, memory_order_acquire))
       return systemfive_cancel();
-    }
 #if IsModeDbg()
     if (!(pth->pt_flags & PT_INCANCEL) && !(pth->pt_flags & PT_NOCANCEL)) {
-      if (_weaken(report_cancelation_point)) {
+      if (_weaken(report_cancelation_point))
         _weaken(report_cancelation_point)(sysv_ordinal, xnu_ordinal);
-      }
       __builtin_trap();
     }
 #endif
@@ -82,18 +82,20 @@ dontinline long systemfive_cancellable(void) {
                : "x9", "memory");
 
   // if it succeeded then we're done
-  if (x0 < -4095ul) {
+  if (x0 < -4095ul)
     return x0;
-  }
+
+  // error handling path
+  errno_t err = __errno_host2linux(-x0);
 
   // check if i/o call was interrupted by sigthr
-  if (pth && x0 == -EINTR && !(pth->pt_flags & PT_NOCANCEL) &&
-      atomic_load_explicit(&pth->pt_canceled, memory_order_acquire)) {
+  if (pth && err == EINTR && !(pth->pt_flags & PT_NOCANCEL) &&
+      atomic_load_explicit(&pth->pt_canceled, memory_order_acquire))
     return systemfive_cancel();
-  }
 
   // otherwise go down error path
-  return _sysret(x0);
+  errno = err;
+  return -1;
 }
 
 /**
@@ -116,21 +118,18 @@ long systemfive(void) {
 
   // handle special cases
   if (IsLinux() || IsFreebsd()) {
-    if (IsFreebsd()) {
+    if (IsFreebsd())
       sysv_ordinal = freebsd_ordinal;
-    }
-    if (sysv_ordinal == 0xfff) {
-      return _sysret(-ENOSYS);
-    }
+    if (sysv_ordinal == 0xfff)
+      return enosys();
     if (sysv_ordinal & 0x800) {
       sysv_ordinal &= ~0x800;
       return systemfive_cancellable();
     }
   }
   if (IsXnu()) {
-    if (xnu_ordinal == 0xfff) {
-      return _sysret(-ENOSYS);
-    }
+    if (xnu_ordinal == 0xfff)
+      return enosys();
     if (xnu_ordinal & 0x800) {
       xnu_ordinal &= ~0x800;
       return systemfive_cancellable();
@@ -148,11 +147,12 @@ long systemfive(void) {
                : "x9", "memory");
 
   // check result
-  if (x0 < -4095ul) {
+  if (x0 < -4095ul)
     return x0;
-  } else {
-    return _sysret(x0);
-  }
+
+  // error handling path
+  errno = __errno_host2linux(-x0);
+  return -1;
 }
 
 #endif /* __x86_64__ */

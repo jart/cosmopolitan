@@ -26,8 +26,9 @@
 int vscanf(const char *fmt, va_list ap) {
   int rc;
   flockfile(stdin);
-  rc = __vcscanf((void *)fgetc_unlocked,   //
-                 (void *)ungetc_unlocked,  //
+  rc = __vcscanf((void *)fgetc_unlocked,    //
+                 (void *)ungetc_unlocked,   //
+                 (void *)ungetwc_unlocked,  //
                  stdin, fmt, ap);
   flockfile(stdout);
   return rc;

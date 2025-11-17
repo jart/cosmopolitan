@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/log/check.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
@@ -28,7 +29,7 @@ char o[128];
 
 char *MyDescribeSyn(const char *p, size_t n) {
   char *q;
-  rngset(o, sizeof(o), lemur64, -1);
+  arc4random_buf(o, sizeof(o));
   q = DescribeSyn(o, sizeof(o), p, n);
   CHECK_NOTNULL(q);
   CHECK_EQ(strlen(o), q - o);

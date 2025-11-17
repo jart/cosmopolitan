@@ -44,6 +44,12 @@
 
 #define __STDC_VERSION_STDCKDINT_H__ 202311L
 
+#ifdef __has_include
+#define __ckd_has_include(x) __has_include(x)
+#else
+#define __ckd_has_include(x) 0
+#endif
+
 #if (!defined(__STRICT_ANSI__) && defined(__SIZEOF_INT128__))
 #define __ckd_have_int128
 #define __ckd_intmax __int128

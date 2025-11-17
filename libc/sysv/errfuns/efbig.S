@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 efbig:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EFBIG(%rip),%ecx
+	push	$EFBIG
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EFBIG
-	ldrsw	x0,[x1,#:lo12:EFBIG]
+	mov	x0,#EFBIG
 	b	__errfun
 #else
 #error "unsupported architecture"

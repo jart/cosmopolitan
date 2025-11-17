@@ -30,7 +30,7 @@
 #define HW_NCPUONLINE_NETBSD  16
 #define ALL_PROCESSOR_GROUPS  0xffff
 
-static int __get_cpu_count_linux(void) {
+static int cosmo_cpu_count_linux(void) {
   cpu_set_t cs = {0};
   if (sys_sched_getaffinity(0, sizeof(cs), &cs) != -1) {
     return CPU_COUNT(&cs);
@@ -39,7 +39,7 @@ static int __get_cpu_count_linux(void) {
   }
 }
 
-static int __get_cpu_count_bsd(void) {
+static int cosmo_cpu_count_bsd(void) {
   size_t n;
   int c, cmd[2];
   n = sizeof(c);
@@ -58,7 +58,7 @@ static int __get_cpu_count_bsd(void) {
   }
 }
 
-static textwindows int __get_cpu_count_nt(void) {
+static textwindows int cosmo_cpu_count_nt(void) {
   uint32_t res;
   if ((res = GetMaximumProcessorCount(ALL_PROCESSOR_GROUPS))) {
     return res;
@@ -80,14 +80,14 @@ static textwindows int __get_cpu_count_nt(void) {
  *
  * @return cpu count, or -1 w/ errno
  */
-int __get_cpu_count(void) {
+int cosmo_cpu_count(void) {
   if (!IsWindows()) {
     if (!IsBsd()) {
-      return __get_cpu_count_linux();
+      return cosmo_cpu_count_linux();
     } else {
-      return __get_cpu_count_bsd();
+      return cosmo_cpu_count_bsd();
     }
   } else {
-    return __get_cpu_count_nt();
+    return cosmo_cpu_count_nt();
   }
 }

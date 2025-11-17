@@ -16,20 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/str/str.h"
+#include "third_party/intel/immintrin.internal.h"
 #ifndef __aarch64__
 
 static __vex size_t __strlen(const char *s) {
-#if defined(__x86_64__) && !defined(__chibicc__)
-  typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-  xmm_t z = {0};
-  unsigned m, k = (uintptr_t)s & 15;
-  const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
-  m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
+#if defined(__AVX2__)
+  __m256i zv = _mm256_setzero_si256();
+  __m256i *v = (__m256i *)((intptr_t)s & -32);
+  int skew = (intptr_t)s & 31;
+  unsigned m =
+      _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(v), zv));
+  m >>= skew;
+  m <<= skew;
   while (!m)
-    m = __builtin_ia32_pmovmskb128(*++p == z);
-  return (const char *)p + __builtin_ctzl(m) - s;
+    m = _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256(++v), zv));
+  const char *e = (const char *)v;
+  e += __builtin_ctz(m);
+  return e - s;
+#elif defined(__x86_64__) && !defined(__chibicc__)
+  __m128i zv = _mm_setzero_si128();
+  __m128i *v = (__m128i *)((intptr_t)s & -16);
+  int skew = (intptr_t)s & 15;
+  unsigned m = _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(v), zv));
+  m >>= skew;
+  m <<= skew;
+  while (!m)
+    m = _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_loadu_si128(++v), zv));
+  const char *e = (const char *)v;
+  e += __builtin_ctz(m);
+  return e - s;
 #else
 #define ONES ((word) - 1 / 255)
 #define BANE (ONES * (255 / 2 + 1))

@@ -48,7 +48,7 @@ nsync_counter nsync_counter_new (uint32_t value) {
 
 void nsync_counter_free (nsync_counter c) {
 	nsync_mu_lock (&c->counter_mu);
-	ASSERT (dll_is_empty (c->waiters));
+	unassert (dll_is_empty (c->waiters));
 	nsync_mu_unlock (&c->counter_mu);
 	free (c);
 }
@@ -67,10 +67,10 @@ uint32_t nsync_counter_add (nsync_counter c, int32_t delta) {
 		if (delta > 0) {
 			/* It's illegal to increase the count from zero if
 			   there has been a waiter. */
-			ASSERT (value != (uint32_t) delta || !ATM_LOAD (&c->waited));
-			ASSERT (value > value - delta); /* Crash on overflow. */
+			unassert (value != (uint32_t) delta || !ATM_LOAD (&c->waited));
+			unassert (value > value - delta); /* Crash on overflow. */
 		} else {
-			ASSERT (value < value - delta); /* Crash on overflow. */
+			unassert (value < value - delta); /* Crash on overflow. */
 		}
 		if (value == 0) {
 			struct Dll *p;

@@ -128,7 +128,8 @@
  * - "dpath" (create special path ops) allows mknod, mknodat, mkfifo.
  *
  * - "flock" allows flock, fcntl(F_GETLK), fcntl(F_SETLK),
- *   fcntl(F_SETLKW).
+ *   fcntl(F_SETLKW), fcntl(F_OFD_GETLK), fcntl(F_OFD_SETLK), and
+ *   fcntl(F_OFD_SETLKW).
  *
  * - "tty" allows ioctl(TIOCGWINSZ), ioctl(TCGETS), ioctl(TCSETS),
  *   ioctl(TCSETSW), ioctl(TCSETSF).

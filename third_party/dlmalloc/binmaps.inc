@@ -23,44 +23,9 @@
 #define same_or_left_bits(x) ((x) | -(x))
 
 /* index corresponding to given bit. Use x86 asm if possible */
-
-#ifdef __GNUC__
 #define compute_bit2idx(X, I)\
 {\
   unsigned int J;\
   J = __builtin_ctz(X); \
   I = (bindex_t)J;\
 }
-
-#elif defined (__INTEL_COMPILER)
-#define compute_bit2idx(X, I)\
-{\
-  unsigned int J;\
-  J = _bit_scan_forward (X); \
-  I = (bindex_t)J;\
-}
-
-#elif defined(_MSC_VER) && _MSC_VER>=1300
-#define compute_bit2idx(X, I)\
-{\
-  unsigned int J;\
-  _BitScanForward((DWORD *) &J, X);\
-  I = (bindex_t)J;\
-}
-
-#elif USE_BUILTIN_FFS
-#define compute_bit2idx(X, I) I = ffs(X)-1
-
-#else
-#define compute_bit2idx(X, I)\
-{\
-  unsigned int Y = X - 1;\
-  unsigned int K = Y >> (16-4) & 16;\
-  unsigned int N = K;        Y >>= K;\
-  N += K = Y >> (8-3) &  8;  Y >>= K;\
-  N += K = Y >> (4-2) &  4;  Y >>= K;\
-  N += K = Y >> (2-1) &  2;  Y >>= K;\
-  N += K = Y >> (1-0) &  1;  Y >>= K;\
-  I = (bindex_t)(N + Y);\
-}
-#endif /* GNUC */

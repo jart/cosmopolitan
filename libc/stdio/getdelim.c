@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads string from stream, e.g.
@@ -38,11 +38,12 @@
  * @note this function will ignore EINTR if it occurs mid-line
  * @raises EBADF if stream isn't open for reading
  * @see fgetln(), getline(), chomp(), gettok_r()
+ * @cancelationpoint
  */
 ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
   ssize_t rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = getdelim_unlocked(s, n, delim, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

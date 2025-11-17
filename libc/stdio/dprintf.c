@@ -20,6 +20,10 @@
 
 /**
  * Formats string directly to file descriptor.
+ *
+ * @cancelationpoint
+ * @asyncsignalsafe
+ * @vforksafe
  */
 int dprintf(int fd, const char *fmt, ...) {
   int rc;

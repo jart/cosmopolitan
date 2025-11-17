@@ -24,15 +24,24 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.h"
 #include "libc/runtime/internal.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/lock.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
+
+static_assert(sizeof(pthread_mutex_t) == 64,
+              "we share mutex memory across execve");
+
+static errno_t pthread_mutex_lock_nsync(pthread_mutex_t *mutex) {
+  return _weaken(nsync_mu_lock)((nsync_mu *)mutex->_nsync);
+}
 
 static errno_t pthread_mutex_lock_normal_success(pthread_mutex_t *mutex,
                                                  uint64_t word) {
@@ -95,7 +104,7 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
         __deadlock_track(mutex, 0);
         __deadlock_record(mutex, 0);
       }
-      mutex->_pid = __pid;
+      mutex->_pid = __get_pib()->pid;
       return 0;
     }
     if (is_trylock)
@@ -116,9 +125,9 @@ static errno_t pthread_mutex_lock_recursive(pthread_mutex_t *mutex,
 }
 
 #if PTHREAD_USE_NSYNC
-static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex,
-                                                  uint64_t word,
-                                                  bool is_trylock) {
+static inline errno_t pthread_mutex_lock_recursive_nsync_impl(
+    pthread_mutex_t *mutex, bool is_trylock) {
+  uint64_t word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
   int me = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
   for (;;) {
     if (MUTEX_OWNER(word) == me) {
@@ -148,14 +157,20 @@ static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex,
     word = MUTEX_LOCK(word);
     word = MUTEX_SET_OWNER(word, me);
     mutex->_word = word;
-    mutex->_pid = __pid;
+    mutex->_pid = __get_pib()->pid;
     return 0;
   }
 }
+static errno_t pthread_mutex_lock_recursive_nsync(pthread_mutex_t *mutex) {
+  return pthread_mutex_lock_recursive_nsync_impl(mutex, false);
+}
+static errno_t pthread_mutex_trylock_recursive_nsync(pthread_mutex_t *mutex) {
+  return pthread_mutex_lock_recursive_nsync_impl(mutex, true);
+}
 #endif
 
-static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
-                                       bool is_trylock) {
+dontinline static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
+                                                  bool is_trylock) {
   uint64_t word = atomic_load_explicit(&mutex->_word, memory_order_relaxed);
 
   // handle recursive mutexes
@@ -163,7 +178,14 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
 #if PTHREAD_USE_NSYNC
     if (_weaken(nsync_mu_lock) &&
         MUTEX_PSHARED(word) == PTHREAD_PROCESS_PRIVATE) {
-      return pthread_mutex_lock_recursive_nsync(mutex, word, is_trylock);
+      if (!is_trylock) {
+        // common case no. 2
+        // - recursive private nsync mutex lock
+        mutex->_lock = pthread_mutex_lock_recursive_nsync;
+        return pthread_mutex_lock_recursive_nsync(mutex);
+      } else {
+        return pthread_mutex_trylock_recursive_nsync(mutex);
+      }
     } else {
       return pthread_mutex_lock_recursive(mutex, word, is_trylock);
     }
@@ -201,6 +223,11 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
     if (!IsXnuSilicon()) {
       if (!is_trylock) {
         _weaken(nsync_mu_lock)((nsync_mu *)mutex->_nsync);
+        if (!IsModeDbg() && MUTEX_TYPE(word) != PTHREAD_MUTEX_ERRORCHECK)
+          // common case no. 1
+          // - non-debug non-xnu normal private nsync lock
+          // - non-debug non-xnu default private nsync lock
+          mutex->_lock = pthread_mutex_lock_nsync;
         return pthread_mutex_lock_normal_success(mutex, word);
       } else {
         if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex->_nsync))
@@ -289,25 +316,23 @@ static errno_t pthread_mutex_lock_impl(pthread_mutex_t *mutex,
  * behavior will happen unless you use `PTHREAD_PROCESS_SHARED` mode, if
  * the lock is used by multiple processes.
  *
- * This function does nothing when the process is in vfork() mode.
- *
  * @return 0 on success, or error number on failure
  * @raise EDEADLK if mutex is recursive and locked by another thread
  * @raise EDEADLK if mutex is non-recursive and locked by current thread
  * @raise EDEADLK if cycle is detected in global nested lock graph
  * @raise EAGAIN if maximum recursive locks is exceeded
  * @see pthread_spin_lock()
- * @vforksafe
  */
-errno_t _pthread_mutex_lock(pthread_mutex_t *mutex) {
-  if (__tls_enabled && !__vforked) {
-    errno_t err = pthread_mutex_lock_impl(mutex, false);
-    LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
-    return err;
+errno_t pthread_mutex_lock(pthread_mutex_t *mutex) {
+  errno_t err;
+  FORBIDDEN_IN_POSIX_SPAWN;
+  if (LIKELY(mutex->_lock)) {
+    err = mutex->_lock(mutex);
   } else {
-    LOCKTRACE("skipping pthread_mutex_lock(%t) due to runtime state", mutex);
-    return 0;
+    err = pthread_mutex_lock_impl(mutex, false);
   }
+  LOCKTRACE("pthread_mutex_lock(%t) → %s", mutex, DescribeErrno(err));
+  return err;
 }
 
 /**
@@ -322,16 +347,9 @@ errno_t _pthread_mutex_lock(pthread_mutex_t *mutex) {
  * @raise EDEADLK if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the
  *     current thread already holds this mutex
  */
-errno_t _pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  if (__tls_enabled && !__vforked) {
-    errno_t err = pthread_mutex_lock_impl(mutex, true);
-    LOCKTRACE("pthread_mutex_trylock(%t) → %s", mutex, DescribeErrno(err));
-    return err;
-  } else {
-    LOCKTRACE("skipping pthread_mutex_trylock(%t) due to runtime state", mutex);
-    return 0;
-  }
+errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
+  FORBIDDEN_IN_POSIX_SPAWN;
+  errno_t err = pthread_mutex_lock_impl(mutex, true);
+  LOCKTRACE("pthread_mutex_trylock(%t) → %s", mutex, DescribeErrno(err));
+  return err;
 }
-
-__weak_reference(_pthread_mutex_lock, pthread_mutex_lock);
-__weak_reference(_pthread_mutex_trylock, pthread_mutex_trylock);

@@ -42,10 +42,6 @@ typedef __CHAR32_TYPE__ char32_t;
 #endif
 #endif /* __cplusplus */
 
-#ifndef __COSMOCC__
-#include "libc/stdbool.h"
-#endif
-
 typedef int errno_t;
 typedef __SIZE_TYPE__ size_t;
 typedef __PTRDIFF_TYPE__ ssize_t;
@@ -119,7 +115,6 @@ typedef struct {
   libcesque __wur returnsaligned((65536)) returnspointerwithnoaliases
 #define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
-#define interruptfn  nocallersavedregisters forcealignargpointer
 
 #ifndef pureconst
 #define pureconst __attribute__((__const__))
@@ -134,8 +129,8 @@ typedef struct {
 #define scanfesque(n)    __attribute__((__format__(__gnu_scanf__, n, n + 1)))
 #define strftimeesque(n) __attribute__((__format__(__strftime__, n, 0)))
 
-#ifndef privileged
-#define privileged _Section(".privileged") dontinstrument dontubsan
+#ifndef __privileged
+#define __privileged _Section(".privileged") dontinstrument dontubsan
 #endif
 
 #ifndef wontreturn

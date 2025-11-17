@@ -26,12 +26,14 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -45,6 +47,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -55,6 +58,7 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
   void *handler;
   uint64_t flags;
   void *restorer;
+  sigset_t mask;
   uint32_t masklo;
   uint32_t maskhi;
   if (!sa)
@@ -62,8 +66,9 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
   flags = sa->cosmo.sa_flags;
   handler = sa->cosmo.sa_handler;
   restorer = sa->cosmo.sa_restorer;
-  masklo = sa->cosmo.sa_mask;
-  maskhi = sa->cosmo.sa_mask >> 32;
+  mask = __linux2mask(sa->cosmo.sa_mask);
+  masklo = mask;
+  maskhi = mask >> 32;
   if (IsLinux()) {
     sa->linux.sa_flags = flags;
     sa->linux.sa_handler = handler;
@@ -142,24 +147,24 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
   sa->cosmo.sa_flags = flags;
   sa->cosmo.sa_handler = handler;
   sa->cosmo.sa_restorer = restorer;
-  sa->cosmo.sa_mask = masklo | (uint64_t)maskhi << 32;
+  sa->cosmo.sa_mask = __mask2linux(masklo | (uint64_t)maskhi << 32);
 }
 
 static int __sigaction(int sig, const struct sigaction *act,
                        struct sigaction *oldact) {
-  _Static_assert(
-      (sizeof(struct sigaction) >= sizeof(struct sigaction_linux) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_in) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_out) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_silicon) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_freebsd) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_openbsd) &&
-       sizeof(struct sigaction) >= sizeof(struct sigaction_netbsd)),
-      "sigaction cosmo abi needs tuning");
+  static_assert((sizeof(struct sigaction) >= sizeof(struct sigaction_linux) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_in) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_out) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_silicon) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_freebsd) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_openbsd) &&
+                 sizeof(struct sigaction) >= sizeof(struct sigaction_netbsd)),
+                "sigaction cosmo abi needs tuning");
   int64_t arg4, arg5;
   int rc, rva, oldrva;
   sigaction_f sigenter;
   struct sigaction *ap, copy;
+  struct CosmoPib *pib = __get_pib();
   if (IsMetal())
     return enosys(); /* TODO: Signals on Metal */
   if (!(1 <= sig && sig <= _NSIG))
@@ -178,9 +183,8 @@ static int __sigaction(int sig, const struct sigaction *act,
   } else {
     return efault();
   }
-  if (__vforked && rva != (intptr_t)SIG_DFL && rva != (intptr_t)SIG_IGN) {
+  if (__vforked && rva != (intptr_t)SIG_DFL && rva != (intptr_t)SIG_IGN)
     return einval();
-  }
   if (!IsWindows()) {
     if (act) {
       memcpy(&copy, act, sizeof(copy));
@@ -244,9 +248,9 @@ static int __sigaction(int sig, const struct sigaction *act,
       arg5 = 0;
     }
     if (!IsXnuSilicon()) {
-      rc = sys_sigaction(sig, ap, oldact, arg4, arg5);
+      rc = sys_sigaction(__linux2sig(sig), ap, oldact, arg4, arg5);
     } else {
-      rc = _sysret(__syslib->__sigaction(sig, ap, oldact));
+      rc = _sysret(__syslib->__sigaction(__linux2sig(sig), ap, oldact));
       // xnu silicon claims to support sa_resethand but it does nothing
       // this can be tested, since it clears the bit from flags as well
       if (!rc && oldact &&
@@ -260,16 +264,16 @@ static int __sigaction(int sig, const struct sigaction *act,
           oldact->sa_handler != SIG_DFL &&  //
           oldact->sa_handler != SIG_IGN &&  //
           (IsFreebsd() || IsOpenbsd() || IsNetbsd() || IsXnu())) {
-        oldact->sa_handler =
-            (sighandler_t)((uintptr_t)__executable_start + __sighandrvas[sig]);
+        oldact->sa_handler = (sighandler_t)((uintptr_t)__executable_start +
+                                            pib->sighandrvas[sig - 1]);
       }
     }
   } else {
     if (oldact) {
       bzero(oldact, sizeof(*oldact));
-      oldrva = __sighandrvas[sig];
-      oldact->sa_mask = __sighandmask[sig];
-      oldact->sa_flags = __sighandflags[sig];
+      oldrva = pib->sighandrvas[sig - 1];
+      oldact->sa_mask = pib->sighandmask[sig - 1];
+      oldact->sa_flags = pib->sighandflags[sig - 1];
       oldact->sa_sigaction =
           (sigaction_f)(oldrva < kSigactionMinRva
                             ? oldrva
@@ -277,14 +281,13 @@ static int __sigaction(int sig, const struct sigaction *act,
     }
     rc = 0;
   }
-  if (rc != -1 && !__vforked) {
+  if (rc != -1 && (!__vforked || IsWindows() || IsMetal())) {
     if (act) {
-      __sighandrvas[sig] = rva;
-      __sighandmask[sig] = act->sa_mask;
-      __sighandflags[sig] = act->sa_flags;
-      if (IsWindows() && __sig_ignored(sig)) {
+      pib->sighandrvas[sig - 1] = rva;
+      pib->sighandmask[sig - 1] = act->sa_mask;
+      pib->sighandflags[sig - 1] = act->sa_flags;
+      if (IsWindows() && __sig_ignored(sig))
         __sig_delete(sig);
-      }
     }
   }
   return rc;
@@ -510,6 +513,10 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   int rc;
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
+  } else if (kprintf_crash &&
+             (sig == SIGABRT || sig == SIGSEGV || sig == SIGBUS ||
+              sig == SIGFPE || sig == SIGILL)) {
+    rc = 0;
   } else {
     rc = __sigaction(sig, act, oldact);
   }

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <time.h>
 
 /**
@@ -62,7 +63,6 @@ const char *DescribeFileType(unsigned mode) {
 
 void PrintFileMetadata(const char *pathname, struct stat *st) {
   int fd;
-  printf("\n%s:", pathname);
   if (numeric) {
     fd = atoi(pathname);
     if (fstat(fd, st)) {
@@ -70,15 +70,16 @@ void PrintFileMetadata(const char *pathname, struct stat *st) {
       exit(1);
     }
   } else {
-    if (stat(pathname, st)) {
+    if (lstat(pathname, st)) {
       perror(pathname);
       exit(1);
     }
   }
   printf("\n"
-         "%-32s%,ld\n"
-         "%-32s%,ld\n"
-         "%-32s%#lx\n"
+         "%s:\n"
+         "%-32s%,ld\n"   // bytes in file
+         "%-32s%,ld\n"   // physical bytes
+         "%-32s%u,%u\n"  // device id
          "%-32s%#lx\n"
          "%-32s%ld\n"
          "%-32s%#o (%s)\n"
@@ -92,11 +93,13 @@ void PrintFileMetadata(const char *pathname, struct stat *st) {
          "%-32s%s\n"
          "%-32s%s\n"
          "%-32s%s\n",
-         "bytes in file:", st->st_size, "physical bytes:", st->st_blocks * 512,
-         "device id w/ file:", st->st_dev, "inode:", st->st_ino,
-         "hard link count:", st->st_nlink, "mode / permissions:", st->st_mode,
-         DescribeFileType(st->st_mode), "owner id:", st->st_uid,
-         "group id:", st->st_gid, "flags:", st->st_flags, "gen:", st->st_gen,
+         pathname, "bytes in file:", st->st_size,
+         "physical bytes:", st->st_blocks * 512,
+         "device id w/ file:", major(st->st_dev), minor(st->st_dev),
+         "inode:", st->st_ino, "hard link count:", st->st_nlink,
+         "mode / permissions:", st->st_mode, DescribeFileType(st->st_mode),
+         "owner id:", st->st_uid, "group id:", st->st_gid,
+         "flags:", st->st_flags, "gen:", st->st_gen,
          "device id (if special):", st->st_rdev, "block size:", st->st_blksize,
          "access time:", gc(xiso8601(st->st_atim)),
          "modified time:", gc(xiso8601(st->st_mtim)),

@@ -19,19 +19,29 @@
 #include "libc/calls/makedev.h"
 #include "libc/dce.h"
 
-uint64_t(makedev)(uint32_t x, uint32_t y) {
-  if (IsXnu()) {
-    return x << 24 | y;
+/**
+ * Creates device id.
+ *
+ * @param major identifies device driver
+ * @param major identifies instance of device
+ * @return your `st_dev` value
+ * @see major(), minor()
+ */
+uint64_t makedev(uint32_t major, uint32_t minor) {
+  if (IsWindows()) {
+    return (uint64_t)major << 32 | minor;
+  } else if (IsXnu()) {
+    return major << 24 | minor;
   } else if (IsNetbsd()) {
-    return ((x << 8) & 0x000fff00) | ((y << 12) & 0xfff00000) |
-           (y & 0x000000ff);
+    return ((major << 8) & 0x000fff00) | ((minor << 12) & 0xfff00000) |
+           (minor & 0x000000ff);
   } else if (IsOpenbsd()) {
-    return (x & 0xff) << 8 | (y & 0xff) | (y & 0xffff00) << 8;
+    return (major & 0xff) << 8 | (minor & 0xff) | (minor & 0xffff00) << 8;
   } else if (IsFreebsd()) {
-    return (uint64_t)(x & 0xffffff00) << 32 | (x & 0x000000ff) << 8 |
-           (y & 0x0000ff00) << 24 | (y & 0xffff00ff);
+    return (uint64_t)(major & 0xffffff00) << 32 | (major & 0x000000ff) << 8 |
+           (minor & 0x0000ff00) << 24 | (minor & 0xffff00ff);
   } else {
-    return (uint64_t)(x & 0xfffff000) << 32 | (x & 0x00000fff) << 8 |
-           (y & 0xffffff00) << 12 | (y & 0x000000ff);
+    return (uint64_t)(major & 0xfffff000) << 32 | (major & 0x00000fff) << 8 |
+           (minor & 0xffffff00) << 12 | (minor & 0x000000ff);
   }
 }

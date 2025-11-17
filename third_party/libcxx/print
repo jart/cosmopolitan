@@ -66,7 +66,7 @@ _LIBCPP_EXPORTED_FROM_ABI bool __is_windows_terminal(FILE* __stream);
 // Note the function is only implemented on the Windows platform.
 _LIBCPP_EXPORTED_FROM_ABI void __write_to_windows_console(FILE* __stream, wstring_view __view);
 #  endif // _LIBCPP_HAS_NO_WIDE_CHARACTERS
-#elif __has_include(<unistd.h>)
+#  elif 1 // __has_include(<unistd.h>) // [jart] don't trigger landlock make
 _LIBCPP_EXPORTED_FROM_ABI bool __is_posix_terminal(FILE* __stream);
 #endif // _LIBCPP_WIN32API
 
@@ -203,7 +203,7 @@ _LIBCPP_HIDE_FROM_ABI inline bool __is_terminal([[maybe_unused]] FILE* __stream)
   return false;
 #  elif defined(_LIBCPP_WIN32API)
   return std::__is_windows_terminal(__stream);
-#  elif __has_include(<unistd.h>)
+#  elif 1 // __has_include(<unistd.h>) // [jart] don't trigger landlock make
   return std::__is_posix_terminal(__stream);
 #  else
 #    error "Provide a way to determine whether a FILE* is a terminal"

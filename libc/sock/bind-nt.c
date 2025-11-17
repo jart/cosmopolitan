@@ -16,20 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 __msabi extern typeof(__sys_bind_nt) *const __imp_bind;
 
 textwindows int sys_bind_nt(struct Fd *f, const void *addr, uint32_t addrsize) {
-  if (__imp_bind(f->handle, addr, addrsize) != -1) {
-    f->isbound = true;
-    return 0;
-  } else {
+
+  // normalize unix socket filenames
+  struct sockaddr_un sun;
+  if (__fixsunpath(&sun, &addr, &addrsize) == -1)
+    return -1;
+
+  // bind socket
+  if (__imp_bind(f->handle, addr, addrsize) == -1)
     return __winsockerr();
-  }
+
+  // finish up
+  f->isbound = true;
+  return 0;
 }
 
 #endif /* __x86_64__ */

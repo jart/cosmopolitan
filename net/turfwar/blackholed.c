@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -30,7 +31,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/mem/mem.h"
-#include "libc/mem/sortedints.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/sock/sock.h"
@@ -129,6 +129,12 @@ Administration Notes:\n\
 \n\
 "
 
+struct SortedInts {
+  int n;
+  int c;
+  int *p;
+};
+
 int g_logfd;
 int g_sockmode;
 bool g_daemonize;
@@ -139,7 +145,7 @@ const char *g_pfctl;
 const char *g_logname;
 const char *g_pidname;
 const char *g_sockname;
-const char *g_iptables;
+const char *g_ipset;
 sig_atomic_t g_shutdown;
 struct SortedInts g_blocked;
 struct SortedInts g_whitelisted;
@@ -165,6 +171,63 @@ char *GetTimestamp(void) {
   }
   iso8601us(str, &tm, ts.tv_nsec);
   return str;
+}
+
+bool ContainsInt(const struct SortedInts *t, int k) {
+  int l, m, r;
+  l = 0;
+  r = t->n - 1;
+  while (l <= r) {
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
+    if (t->p[m] < k) {
+      l = m + 1;
+    } else if (t->p[m] > k) {
+      r = m - 1;
+    } else {
+      return true;
+    }
+  }
+  return false;
+}
+
+int LeftmostInt(const struct SortedInts *t, int k) {
+  int l, m, r;
+  l = 0;
+  r = t->n;
+  while (l < r) {
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
+    if (t->p[m] < k) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  unassert(l == 0 || k >= t->p[l - 1]);
+  unassert(l == t->n || k <= t->p[l]);
+  return l;
+}
+
+bool InsertInt(struct SortedInts *t, int k, bool u) {
+  int l;
+  unassert(t->n >= 0);
+  unassert(t->n <= t->c);
+  if (t->n == t->c) {
+    ++t->c;
+    if (!IsModeDbg()) {
+      t->c += t->c >> 1;
+    }
+    t->p = realloc(t->p, t->c * sizeof(*t->p));
+  }
+  l = LeftmostInt(t, k);
+  if (l < t->n) {
+    if (u && t->p[l] == k) {
+      return false;
+    }
+    memmove(t->p + l + 1, t->p + l, (t->n - l) * sizeof(*t->p));
+  }
+  t->p[l] = k;
+  t->n++;
+  return true;
 }
 
 void GetOpts(int argc, char *argv[]) {
@@ -217,8 +280,7 @@ void GetOpts(int argc, char *argv[]) {
 }
 
 void OnTerm(int sig) {
-  char tmp[21];
-  LOG("got %s", strsignal_r(sig, tmp));
+  LOG("got %s", strsignal(sig));
   g_shutdown = sig;
 }
 
@@ -231,15 +293,14 @@ char *FormatIp(uint32_t ip) {
 
 void BlockIp(uint32_t ip) {
   if (!vfork()) {
-    if (g_iptables) {
-      execve(g_iptables,
+    if (g_ipset) {
+      execve(g_ipset,
              (char *const[]){
-                 "iptables",             //
-                 "-t", "raw",            //
-                 "-I", (char *)g_chain,  //
-                 "-s", FormatIp(ip),     //
-                 "-j", "DROP",           //
-                 0,                      //
+                 "ipset",       //
+                 "add",         //
+                 "blacklist",   //
+                 FormatIp(ip),  //
+                 0,             //
              },
              (char *const[]){0});
     } else if (g_pfctl) {
@@ -277,14 +338,12 @@ void AutomaticallyHarvestZombies(void) {
 }
 
 void FindFirewall(void) {
-  if (!access("/sbin/iptables", X_OK)) {
-    g_iptables = "/sbin/iptables";
-  } else if (!access("/usr/sbin/iptables", X_OK)) {
-    g_iptables = "/usr/sbin/iptables";
+  if (!access("/usr/sbin/ipset", X_OK)) {
+    g_ipset = "/usr/sbin/ipset";
   } else if (!access("/sbin/pfctl", X_OK)) {
     g_pfctl = "/sbin/pfctl";
   } else {
-    kprintf("error: could not find `iptables` or `pfctl` command\n");
+    kprintf("error: could not find `ipset` or `pfctl` command\n");
     ShowUsage(2, 3);
   }
   errno = 0;
@@ -383,10 +442,7 @@ bool IsMyIp(uint32_t ip) {
 
 int main(int argc, char *argv[]) {
 
-  if (closefrom(3))
-    for (int i = 3; i < 256; ++i)  //
-      close(i);
-
+  closefrom(3);
   GetOpts(argc, argv);
   RequireRoot();
   FindFirewall();

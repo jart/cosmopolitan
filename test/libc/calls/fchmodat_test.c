@@ -33,9 +33,91 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
+TEST(chmod, unreadable) {
+  if (getuid() == 0)
+    return;
+
+  // create file
+  ASSERT_SYS(0, 3, creat("reg", 0644));
+  ASSERT_SYS(0, 2, write(3, "hi", 2));
+  ASSERT_SYS(0, 0, close(3));
+
+  // make file unreadable
+  ASSERT_SYS(0, 0, chmod("reg", 0));
+
+  // verify we can't open it with read access
+  ASSERT_SYS(EACCES, -1, open("reg", O_RDONLY));
+
+  // verify stat() shows it's non-readable
+  struct stat st;
+  ASSERT_SYS(0, 0, stat("reg", &st));
+  ASSERT_EQ(0000, st.st_mode & 0700);
+
+  // make file readable
+  ASSERT_SYS(0, 0, chmod("reg", 0400));
+
+  // verify we can open it with read access
+  ASSERT_SYS(0, 3, open("reg", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(chmod, creat_unreadable) {
+  if (getuid() == 0)
+    return;
+  ASSERT_SYS(0, 3, creat("reg", 0));
+  ASSERT_SYS(0, 2, write(3, "hi", 2));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(EACCES, -1, open("reg", O_RDONLY));
+  struct stat st;
+  ASSERT_SYS(0, 0, stat("reg", &st));
+  ASSERT_EQ(0000, st.st_mode & 0700);
+}
+
+TEST(chmod, unreadable_dir) {
+  if (getuid() == 0)
+    return;
+
+  // create dir
+  ASSERT_SYS(0, 0, mkdir("dir", 0700));
+
+  // verify we can open it with read access
+  ASSERT_SYS(0, 3, open("dir", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+
+  // make dir unreadable
+  ASSERT_SYS(0, 0, chmod("dir", 0100));
+
+  // verify we can't open it with read access
+  ASSERT_SYS(EACCES, -1, open("dir", O_RDONLY));
+
+  // verify stat() shows it's non-readable
+  struct stat st;
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  ASSERT_EQ(0100, st.st_mode & 0700);
+
+  // make dir readable
+  ASSERT_SYS(0, 0, chmod("dir", 0500));
+
+  // verify stat() shows it's readable
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  ASSERT_EQ(0500, st.st_mode & 0700);
+
+  // verify we can open it with read access
+  ASSERT_SYS(0, 3, open("dir", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(chmod, mkdir_unreadable) {
+  if (getuid() == 0)
+    return;
+  ASSERT_SYS(0, 0, mkdir("dir", 0100));
+  ASSERT_SYS(EACCES, -1, open("dir", O_RDONLY));
+  struct stat st;
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  ASSERT_EQ(0100, st.st_mode & 0700);
+}
+
 TEST(fchmodat, testFchmodat) {
-  if (IsWindows())
-    return;  // not advanced enough yet
   struct stat st;
   umask(022);
   ASSERT_SYS(0, 3,
@@ -43,18 +125,18 @@ TEST(fchmodat, testFchmodat) {
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 0, symlink("regfile", "symlink"));
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "regfile", &st, AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(0644, st.st_mode & 0777);
+  ASSERT_EQ(0600, st.st_mode & 0700);
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "symlink", &st, AT_SYMLINK_NOFOLLOW));
   uint32_t sym_mode = st.st_mode & 0777;
   ASSERT_SYS(0, 0, fchmodat(AT_FDCWD, "regfile", 0640, 0));
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "regfile", &st, AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(0640, st.st_mode & 0777);
+  ASSERT_EQ(0600, st.st_mode & 0700);
   ASSERT_SYS(0, 0, fchmodat(AT_FDCWD, "regfile", 0600, AT_SYMLINK_NOFOLLOW));
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "regfile", &st, AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(0600, st.st_mode & 0777);
+  ASSERT_EQ(0600, st.st_mode & 0700);
   ASSERT_SYS(0, 0, fchmodat(AT_FDCWD, "symlink", 0640, 0));
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "regfile", &st, AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(0640, st.st_mode & 0777);
+  ASSERT_EQ(0600, st.st_mode & 0700);
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "symlink", &st, AT_SYMLINK_NOFOLLOW));
   ASSERT_EQ(sym_mode, st.st_mode & 0777);
   int rc = fchmodat(AT_FDCWD, "symlink", 0600, AT_SYMLINK_NOFOLLOW);
@@ -63,8 +145,8 @@ TEST(fchmodat, testFchmodat) {
     errno = 0;
   } else {
     ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "symlink", &st, AT_SYMLINK_NOFOLLOW));
-    ASSERT_EQ(0600, st.st_mode & 0777);
+    ASSERT_EQ(0600, st.st_mode & 0700);
   }
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "regfile", &st, AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(0640, st.st_mode & 0777);
+  ASSERT_EQ(0600, st.st_mode & 0700);
 }

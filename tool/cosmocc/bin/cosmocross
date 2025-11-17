@@ -60,7 +60,10 @@ if [ x"$ARCH" = x"$PROG" ]; then
 fi
 
 X=
+CRT=crt
 NEED_X=
+REDZONE=-mno-red-zone
+TLSFLAG=-mno-tls-direct-seg-refs
 for x; do
   if [ -n "$NEED_X" ]; then
     NEED_X=
@@ -71,19 +74,36 @@ for x; do
     X=${x#-x}
   elif [ x"$x" = x"-mtiny" ]; then
     MODE=tiny
+  elif [ x"$x" = x"-msysv" ]; then
+    MODE=sysv
   elif [ x"$x" = x"-mdbg" ]; then
     MODE=dbg
   elif [ x"$x" = x"-moptlinux" ]; then
     MODE=optlinux
+  elif [ x"$x" = x"-mtinylinux" ]; then
+    MODE=tinylinux
+  elif [ x"$x" = x"-ffast-math" ] ||
+       [ x"$x" = x"-funsafe-math-optimizations" ]; then
+    CRT=crtfastmath
   fi
 done
+
+if [ x"$MODE" = x"optlinux" ] ||
+   [ x"$MODE" = x"tinylinux" ]; then
+  REDZONE=
+  TLSFLAG=
+fi
 
 if [ x"$MODE" = x"dbg" ]; then
   LIB="$BIN/../$ARCH-linux-cosmo/lib/dbg"
 elif [ x"$MODE" = x"tiny" ]; then
   LIB="$BIN/../$ARCH-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"sysv" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/sysv"
 elif [ x"$MODE" = x"optlinux" ]; then
   LIB="$BIN/../$ARCH-linux-cosmo/lib/optlinux"
+elif [ x"$MODE" = x"tinylinux" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/tinylinux"
 else
   LIB="$BIN/../$ARCH-linux-cosmo/lib"
 fi
@@ -99,7 +119,7 @@ else
 fi
 
 CC="$BIN/$ARCH-linux-cosmo-gcc"
-CRT="$LIB/crt.o"
+CRT="$LIB/$CRT.o"
 LDLIBS="-lcosmo"
 if [ -z "$COSMOS" ]; then
   LDFLAGS="$LDFLAGS -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
@@ -109,23 +129,20 @@ else
 fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
+  CFLAGS="$CFLAGS -std=gnu++23"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
   LDLIBS="-lcxx $LDLIBS"
 else
-  CFLAGS="$CFLAGS -Wno-implicit-int"
+  CFLAGS="$CFLAGS -std=gnu23 -Wno-implicit-int"
 fi
 
 PAGESZ=4096
 if [ x"$ARCH" = x"x86_64" ]; then
   OBJCOPYFLAGS="-S -O binary"
   CRT="$LIB/ape-no-modify-self.o $CRT"
-  CFLAGS="$CFLAGS -mno-tls-direct-seg-refs"
+  CFLAGS="$CFLAGS $TLSFLAG"
   LDFLAGS="$LDFLAGS -Wl,-T,$LIB/ape.lds"
-  if [ x"$MODE" = x"optlinux" ]; then
-    CPPFLAGS="$CPPFLAGS -mred-zone"
-  else
-    CPPFLAGS="$CPPFLAGS -mno-red-zone"
-  fi
+  CPPFLAGS="$CPPFLAGS $REDZONE"
 elif [ x"$ARCH" = x"aarch64" ]; then
   OBJCOPYFLAGS="-S"
   PAGESZ=16384
@@ -188,7 +205,11 @@ for x; do
     continue
   elif [ x"$x" = x"-mtiny" ]; then
     continue
+  elif [ x"$x" = x"-msysv" ]; then
+    continue
   elif [ x"$x" = x"-moptlinux" ]; then
+    continue
+  elif [ x"$x" = x"-mtinylinux" ]; then
     continue
   elif [ x"$x" = x"-m64" ]; then
     continue
@@ -261,6 +282,7 @@ fi
 # support --ftrace unless optimizing for size
 if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
    [ x"$MODE" != x"optlinux" ] &&          # $MODE not optlinux
+   [ x"$MODE" != x"tinylinux" ] &&         # $MODE not tinylinux
    [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   if [ x"$ARCH" = x"x86_64" ]; then
     CFLAGS="$CFLAGS -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
@@ -272,15 +294,22 @@ fi
 # maximize frame pointers unless optimizing for size
 if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
    [ x"$MODE" != x"optlinux" ] &&         # $MODE not optlinux
+   [ x"$MODE" != x"tinylinux" ] &&        # $MODE not tinylinux
    [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
-if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
+if [ x"$OPT" != x"-O3" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
   CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
 if [ $INTENT = cpp ]; then
   set -- "$CC" $PLATFORM $CPPFLAGS "$@"
+elif [ $INTENT = s ] && [ x"$ARCH" = x"x86_64" ] && [ -n "$TLSFLAG" ]; then
+  set -- "$BIN/tlscc" "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
+elif [ $INTENT = cc ] && [ x"$ARCH" = x"x86_64" ] && [ -n "$TLSFLAG" ]; then
+  set -- "$BIN/tlscc" "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
 elif [ $INTENT = cc ] || [ $INTENT = s ] || [ $INTENT = h ]; then
   set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
 else

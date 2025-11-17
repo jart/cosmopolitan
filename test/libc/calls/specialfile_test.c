@@ -33,6 +33,9 @@ void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
   // qemu-aarch64 defines o_largefile wrong
   allowMask = ~(O_LARGEFILE | 0x00008000);
+  if (IsXnu())
+    // todo: think more about this
+    allowMask &= ~0x10000;  // fs specific things
 }
 
 void CaptureStdout(void) {

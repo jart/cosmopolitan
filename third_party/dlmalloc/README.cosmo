@@ -9,11 +9,22 @@ LICENSE
 
 LOCAL CHANGES
 
-  - Fix MT-safety bugs in DEBUG mode
-  - Fix bug in dlmalloc_inspect_all()
-  - Define dlmalloc_requires_more_vespene_gas()
-  - Make dlmalloc scalable using sched_getcpu()
+  - Fix MT-safety bugs in DEBUG mode that Intel discovered
+
+  - Fix bug in dlmalloc_inspect_all(). It basically didn't work before
+    when you use mspaces with mmap(). Now we can have a leak detector.
+
+  - Remove the normal allocation code. We only want mspaces. Not brk!
+
+  - Introduce threaded.inc and rseq.inc which make dlmalloc scalable on
+    multiprocessor systems.
+
+  - Remove "independent malloc" and "bulk free". They probably existed
+    as a way to avoid lock contention. Since we have a better solution
+    we don't need these non-standard APIs that aren't very good.
+
   - Use faster two power roundup for memalign()
-  - Implemented the locking functions dlmalloc wants
-  - Use assembly _init() rather than ensure_initialization()
-  - Rather than calling mmap() 96 times from _start() just use .bss
+
+  - Use ckd_mul() for faster realloc multiplication
+
+  - Implement malloc locks using nsync. In MODE=tiny we use spin locks.

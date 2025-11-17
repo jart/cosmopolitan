@@ -351,19 +351,4 @@ _LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
 
-#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 20
-#  include <atomic>
-#  include <concepts>
-#  include <cstdint>
-#  include <cstdlib>
-#  include <cstring>
-#  include <initializer_list>
-#  include <iosfwd>
-#  include <new>
-#  include <stdexcept>
-#  include <system_error>
-#  include <type_traits>
-#  include <typeinfo>
-#endif
-
 #endif // _LIBCPP_CONDITION_VARIABLE

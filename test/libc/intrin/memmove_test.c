@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -54,7 +55,7 @@ TEST(memmove, hug) {
   for (o1 = 0; o1 < 48; ++o1) {
     for (o2 = 0; o2 < 48; ++o2) {
       for (i = 0; i < ARRAYLEN(N); ++i) {
-        rngset(a, 1104, 0, 0);
+        arc4random_buf(a, 1104);
         memcpy(b, a, 1104);
         ASSERT_EQ(a + o2, golden(a + o2, a + o1, N[i]));
         ASSERT_EQ(b + o2, memmove(b + o2, b + o1, N[i]));
@@ -73,7 +74,7 @@ TEST(memmove, bighug) {
   for (o1 = 0; o1 < 40; o1 += 20) {
     for (o2 = 0; o2 < 40; o2 += 20) {
       for (i = 0; i < ARRAYLEN(N); ++i) {
-        rngset(a, 6291456, 0, 0);
+        arc4random_buf(a, 6291456);
         memcpy(b, a, 6291456);
         ASSERT_EQ(a + o2, golden(a + o2, a + o1, N[i]));
         ASSERT_EQ(b + o2, memmove(b + o2, b + o1, N[i]), "%d", N[i]);

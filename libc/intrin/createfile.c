@@ -30,13 +30,10 @@
 
 __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(GetLastError) *const __imp_GetLastError;
-__msabi extern typeof(Sleep) *const __imp_Sleep;
+__msabi extern typeof(SleepEx) *const __imp_SleepEx;
 
 /**
  * Opens file on the New Technology.
- *
- * @return handle, or -1 on failure w/ `errno` set appropriately
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows int64_t
 CreateFile(const char16_t *lpFileName,                         //
@@ -63,32 +60,31 @@ TryAgain:
           _DescribeNtCreationDisposition(dwCreationDisposition),
           _DescribeNtFileFlagAttr(buf_flagattr, dwFlagsAndAttributes),
           opt_hTemplateFile, hHandle, __imp_GetLastError());
-  if (hHandle == -1) {
-    switch (__imp_GetLastError()) {
-      case kNtErrorPipeBusy:
-        if (micros >= 1024)
-          __imp_Sleep(micros / 1024);
-        if (micros < 1024 * 1024)
-          micros <<= 1;
+  if (hHandle != -1)
+    return hHandle;
+  switch (__imp_GetLastError()) {
+    case kNtErrorPipeBusy:
+      if (micros >= 1024)
+        __imp_SleepEx(micros / 1024, 0);
+      if (micros < 1024 * 1024)
+        micros <<= 1;
+      goto TryAgain;
+    case kNtErrorAccessDenied:
+      // GetNtOpenFlags() always greedily requests execute permissions
+      // because the POSIX flag O_EXEC doesn't mean the same thing. It
+      // seems however this causes the opening of certain files to not
+      // work, possibly due to Windows Defender or some security thing
+      // In that case, we'll cross our fingers the file isn't a binary
+      if ((dwDesiredAccess & kNtGenericExecute) &&
+          (dwCreationDisposition == kNtOpenExisting ||
+           dwCreationDisposition == kNtTruncateExisting)) {
+        NTTRACE("CreateFile removed kNtGenericExecute");
+        dwDesiredAccess &= ~kNtGenericExecute;
         goto TryAgain;
-      case kNtErrorAccessDenied:
-        // GetNtOpenFlags() always greedily requests execute permissions
-        // because the POSIX flag O_EXEC doesn't mean the same thing. It
-        // seems however this causes the opening of certain files to not
-        // work, possibly due to Windows Defender or some security thing
-        // In that case, we'll cross our fingers the file isn't a binary
-        if ((dwDesiredAccess & kNtGenericExecute) &&
-            (dwCreationDisposition == kNtOpenExisting ||
-             dwCreationDisposition == kNtTruncateExisting)) {
-          NTTRACE("CreateFile removed kNtGenericExecute");
-          dwDesiredAccess &= ~kNtGenericExecute;
-          goto TryAgain;
-        }
-        break;
-      default:
-        break;
-    }
-    __winerr();
+      }
+      break;
+    default:
+      break;
   }
-  return hHandle;
+  return -1;
 }

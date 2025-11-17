@@ -77,7 +77,6 @@ PYTHON_PROVIDE("_testcapi.UINT_MAX");
 PYTHON_PROVIDE("_testcapi.ULLONG_MAX");
 PYTHON_PROVIDE("_testcapi.ULONG_MAX");
 PYTHON_PROVIDE("_testcapi.USHRT_MAX");
-PYTHON_PROVIDE("_testcapi.W_STOPCODE");
 PYTHON_PROVIDE("_testcapi._test_structmembersType");
 PYTHON_PROVIDE("_testcapi.argparsing");
 PYTHON_PROVIDE("_testcapi.awaitType");

@@ -89,7 +89,7 @@ TEST(tmpfile, renameToRealFile) {
     return;  // need non-ancient linux
   FILE *f;
   f = tmpfile();
-  ASSERT_EQ(2, fputs("hi", f));
+  ASSERT_TRUE(fputs("hi", f) >= 0);
   ASSERT_SYS(0, 0,
              linkat(AT_FDCWD, gc(xasprintf("/proc/self/fd/%d", fileno(f))),
                     AT_FDCWD, "real", AT_SYMLINK_FOLLOW));

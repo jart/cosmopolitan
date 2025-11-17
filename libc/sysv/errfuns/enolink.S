@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 enolink:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ENOLINK(%rip),%ecx
+	push	$ENOLINK
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ENOLINK
-	ldrsw	x0,[x1,#:lo12:ENOLINK]
+	mov	x0,#ENOLINK
 	b	__errfun
 #else
 #error "unsupported architecture"

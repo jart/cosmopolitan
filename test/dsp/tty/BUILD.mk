@@ -21,6 +21,7 @@ TEST_DSP_TTY_CHECKS =					\
 
 TEST_DSP_TTY_DIRECTDEPS =				\
 	DSP_TTY						\
+	LIBC_CALLS					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
 	LIBC_MEM					\
@@ -28,8 +29,8 @@ TEST_DSP_TTY_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
+	LIBC_TESTLIB					\
 	LIBC_TINYMATH					\
-	LIBC_TESTLIB
 
 TEST_DSP_TTY_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_DSP_TTY_DIRECTDEPS),$($(x))))

@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/semaphore.h"
 
@@ -29,6 +27,6 @@
  * @return 0 on success, or -1 w/ errno
  */
 int sem_getvalue(sem_t *sem, int *sval) {
-  *sval = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
+  *sval = atomic_load(&sem->sem_value);
   return 0;
 }

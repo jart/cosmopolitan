@@ -22,12 +22,14 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Writes data to file descriptor.
@@ -75,14 +77,17 @@ ssize_t write(int fd, const void *buf, size_t size) {
 
   if (fd < 0) {
     rc = ebadf();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  } else if (size && kisdangerous(buf)) {
+    rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = ebadf();  // posix specifies this when not open()'d for writing
   } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_write(fd, buf, size);
-  } else if (fd >= g_fds.n) {
+  } else if (fd >= __get_pib()->fds.n) {
     rc = ebadf();
   } else if (IsMetal()) {
-    rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){(void *)buf, size}, 1);
+    rc = sys_writev_metal(__get_pib()->fds.p + fd,
+                          &(struct iovec){(void *)buf, size}, 1);
   } else if (IsWindows()) {
     rc = sys_writev_nt(fd, &(struct iovec){(void *)buf, size}, 1);
   } else {

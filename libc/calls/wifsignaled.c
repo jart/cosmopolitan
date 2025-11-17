@@ -23,11 +23,11 @@ int __wifsignaled(int x) {
   if (IsLinux() || IsMetal() || IsWindows()) {
     return (x & 0xffff) - 1U < 0xffu;
   } else if (IsXnu() || IsOpenbsd()) {
-    return (x & 0177) != 0177 && (x & 0177) != 0;
+    return (x & 0x7f) != 0x7f && (x & 0x7f) != 0;
   } else if (IsFreebsd()) {
-    return (x & 0177) != 0177 && (x & 0177) != 0 && x != 0x13;  // SIGCONT
+    return (x & 0x7f) != 0x7f && (x & 0x7f) != 0 && x != 0x13;  // SIGCONT
   } else if (IsNetbsd()) {
-    return !((x & 0177) == 0177 && !(x == 0177777)) && !(x == 0177777) &&
+    return !((x & 0x7f) == 0x7f && !(x == 0177777)) && !(x == 0177777) &&
            !!(127 & x);
   } else {
     __builtin_unreachable();

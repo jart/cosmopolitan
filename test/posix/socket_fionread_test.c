@@ -1,5 +1,4 @@
 #include <arpa/inet.h>
-#include <cosmo.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -64,6 +63,4 @@ int main() {
     return 13;
   if (close(server_fd))
     return 14;
-
-  CheckForMemoryLeaks();
 }

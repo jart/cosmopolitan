@@ -20,7 +20,9 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#ifdef __x86_64__
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
+#if SupportsWindows()
 
 textwindows int sys_pause_nt(void) {
   // we don't strictly need to block signals, but it reduces signal

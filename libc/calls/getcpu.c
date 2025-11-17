@@ -17,27 +17,48 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/cpuset.h"
+#include "libc/calls/struct/rseq.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/struct/processornumber.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_getcpu(unsigned *opt_cpu, unsigned *opt_node, void *tcache);
+static int getcpu_ia32_tsc_aux(unsigned *cpu, unsigned *node, long aux) {
+  if (cpu)
+    *cpu = aux & 4095;
+  if (node)
+    *node = (aux >> 12) & 4095;
+  return 0;
+}
 
 /**
- * Determines ID of CPU on which thread is currently scheduled.
+ * Determines cpu and/or node on which thread is currently scheduled.
  *
- * This is the same as sched_getcpu(), except it also supports returning
- * the ID of the current NUMA node. On some platforms this functionality
- * isn't available, in which case `out_opt_node` is always be set to 0.
+ * If you don't need the node, consider just calling sched_getcpu(). If
+ * you use this function as a generalized solution, then it's important
+ * to set `out_opt_node` to NULL when it's not desired, since there's a
+ * nontrivial cost for fetching the node id on some OSes, e.g. Windows.
+ *
+ * @return 0 on success, or -1 w/ errno
  */
 int getcpu(unsigned *out_opt_cpu, unsigned *out_opt_node) {
+
+  // Linux 4.18+ (c. 2018)
+  if (IsLinux()) {
+    int cpu_id;
+    struct rseq *rseq;
+    if ((cpu_id = (rseq = __get_rseq())->cpu_id) >= 0) {
+      if (out_opt_cpu)
+        *out_opt_cpu = cpu_id;
+      if (out_opt_node)
+        *out_opt_node = rseq->node_id;
+      return 0;
+    }
+  }
 
   if (IsWindows()) {
     struct NtProcessorNumber pn;
@@ -46,6 +67,7 @@ int getcpu(unsigned *out_opt_cpu, unsigned *out_opt_node) {
       *out_opt_cpu = 64 * pn.Group + pn.Number;
     }
     if (out_opt_node) {
+      // using this api costs ~70ns
       unsigned short node16;
       if (GetNumaProcessorNodeEx(&pn, &node16)) {
         *out_opt_node = node16;
@@ -56,37 +78,78 @@ int getcpu(unsigned *out_opt_cpu, unsigned *out_opt_node) {
     return 0;
   }
 
+  if (IsXnuSilicon()) {
+    if (__syslib && __syslib->__version >= 9) {
+      errno_t err;
+      size_t out = 0;
+      if ((err = __syslib->__pthread_cpu_number_np(&out))) {
+        errno = err;
+        return -1;
+      }
+      if (out_opt_cpu)
+        *out_opt_cpu = out;
+      if (out_opt_node)
+        *out_opt_node = 0;
+      return 0;
+    }
+  }
+
 #ifdef __x86_64__
-  if (X86_HAVE(RDTSCP) && (IsLinux() || IsFreebsd())) {
-    unsigned tsc_aux;
-    rdtscp(&tsc_aux);
-    if (out_opt_cpu)
-      *out_opt_cpu = TSC_AUX_CORE(tsc_aux);
-    if (out_opt_node)
-      *out_opt_node = TSC_AUX_NODE(tsc_aux);
+
+  if (IsLinux() || IsFreebsd()) {
+    // Linux and FreeBSD both stuff TSC_AUX in the GDT so we can use this
+    // ancient i8086 instruction to quickly retrieve the cpu id and node!
+    bool ok;
+    long aux;
+    asm("lsl\t%2,%1" : "=@ccz"(ok), "=r"(aux) : "r"(0x7bl) : "memory");
+    if (ok)
+      return getcpu_ia32_tsc_aux(out_opt_cpu, out_opt_node, aux);
+  }
+
+  if (IsLinux() || IsFreebsd() || IsWindows()) {
+    // Only the Linux, FreeBSD, and Windows kernels can be counted upon
+    // to populate the TSC_AUX register with cpu id / node information.
+    if (X86_HAVE(RDPID)) {
+      long aux;
+      asm("rdpid\t%0" : "=r"(aux));
+      return getcpu_ia32_tsc_aux(out_opt_cpu, out_opt_node, aux);
+    }
+    if (X86_HAVE(RDTSCP)) {
+      unsigned hi, lo, aux;
+      asm("rdtscp" : "=d"(hi), "=a"(lo), "=c"(aux));
+      return getcpu_ia32_tsc_aux(out_opt_cpu, out_opt_node, aux);
+    }
+  }
+
+#elifdef __aarch64__
+
+  if (IsLinux()) {
+    // old linux or qemu-aarch64
+    // issuing a system call takes like, forever
+    register unsigned *x0 asm("x0") = out_opt_cpu;
+    register unsigned *x1 asm("x1") = out_opt_node;
+    register int x8 asm("x8") = 168;  // getcpu
+    asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
+    if ((long)x0 < 0) {
+      errno = -(long)x0;
+      return -1;
+    }
     return 0;
   }
-#endif
 
-  if (IsXnu() || IsOpenbsd() || IsNetbsd() || IsFreebsd()) {
-    if (out_opt_cpu) {
-      int rc = sched_getcpu();
-      if (rc == -1)
-        return -1;
-      *out_opt_cpu = rc;
-    }
+  if (IsFreebsd()) {
+    // issuing a system call takes like, forever
+    register int x0 asm("x0");
+    register int x8 asm("x8") = 581;  // sched_getcpu
+    asm volatile("svc\t0" : "=r"(x0) : "r"(x8) : "memory");
+    if (out_opt_cpu)
+      *out_opt_cpu = x0;
     if (out_opt_node)
       *out_opt_node = 0;
     return 0;
   }
 
-  unsigned cpu, node;
-  int rc = sys_getcpu(&cpu, &node, 0);
-  if (rc == -1)
-    return -1;
-  if (out_opt_cpu)
-    *out_opt_cpu = cpu;
-  if (out_opt_node)
-    *out_opt_node = node;
-  return 0;
+#endif
+
+  return enosys();
 }

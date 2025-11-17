@@ -60,10 +60,10 @@ struct List {
   int count;
 };
 
-atomic_uintptr_t list;
+_Atomic(struct List*) list;
 
 void push(struct List* elem) {
-  uintptr_t tip;
+  struct List* tip;
   assert(!TAG(elem));
   for (tip = atomic_load_explicit(&list, memory_order_relaxed);;) {
     elem->next = (struct List*)PTR(tip);
@@ -76,7 +76,7 @@ void push(struct List* elem) {
 }
 
 struct List* pop(void) {
-  uintptr_t tip;
+  struct List* tip;
   struct List* elem;
   tip = atomic_load_explicit(&list, memory_order_relaxed);
   while ((elem = (struct List*)PTR(tip))) {

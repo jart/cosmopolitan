@@ -16,19 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Formats and writes text to stream.
  * @see printf() for further documentation
+ * @cancelationpoint
  */
 int fprintf(FILE *f, const char *fmt, ...) {
   int rc;
   va_list va;
-  flockfile(f);
+  FLOCKFILE(f);
   va_start(va, fmt);
   rc = vfprintf_unlocked(f, fmt, va);
   va_end(va);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

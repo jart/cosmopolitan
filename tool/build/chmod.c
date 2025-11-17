@@ -39,7 +39,7 @@ FLAGS\n\
 
 const char *prog;
 
-static wontreturn void PrintUsage(int fd, int rc) {
+[[noreturn]] static void PrintUsage(int fd, int rc) {
   tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }

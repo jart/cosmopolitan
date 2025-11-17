@@ -107,8 +107,8 @@ fetestexcept:
 	pop	%rsi
 	fnstsw	%ax
 	or	%esi,%eax
-	and	%edi,%eax
 #endif
+	and	%edi,%eax
 	ret
 #elif defined(__aarch64__)
 	and	w0,w0,#0x1f

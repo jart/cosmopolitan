@@ -27,36 +27,42 @@
    ▒▀  ▒██▒░▄█▓▀        VARIABLE LENGTH INTEGER DECODING        ▓█░  ▐▓▄ ░  ▓
        ░███▓▀                                                    ▀▓▓██▀▀░
         ░▀░                                                         */
+
 #include "libc/fmt/leb128.h"
-#include "libc/macros.h"
 
 /**
  * Decodes array to signed integer w/ zig-zag encoding.
  *
+ * This function is the reverse operation of zleb64().
+ *
+ * Zig-zag encoding is the same thing as unsigned LEB encoding (which we
+ * implement in uleb64() and unuleb64()) except it moves the sign bit to
+ * the lowest order position.
+ *
  * @param p is array
  * @param n is byte length of array
- * @param o optionally receives decoded integer
- * @return bytes decoded or -1 on error
- * @see zleb64()
+ * @param x optionally receives decoded integer
+ * @return bytes decoded, or negative number on error
  */
-int unzleb64(const char *p, size_t n, int64_t *o) {
-  int c;
+int unzleb64(const char *p, size_t n, int64_t *x) {
+  int k;
   size_t i;
-  uint64_t u, t;
-  i = 0;
-  u = 0;
-  do {
-    if (i == n)
-      return -1;
-    c = p[i] & 255;
-    t = c & 127;
-    if (i < 10) {
-      t <<= i * 7;
-      u |= t;
+  uint64_t t;
+  if (n > 9)
+    n = 9;
+#pragma GCC unroll 1000
+  for (k = t = i = 0; i < n; ++i, k += 7) {
+    if (i == 8) {
+      t |= (uint64_t)(p[i] & 255) << k;
+      *x = (t >> 1) ^ -(t & 1);
+      return 9;
+    } else {
+      t |= (uint64_t)(p[i] & 127) << k;
+      if (~p[i] & 128) {
+        *x = (t >> 1) ^ -(t & 1);
+        return i + 1;
+      }
     }
-    ++i;
-  } while (c & 128);
-  if (o)
-    *o = (u >> 1) ^ -(u & 1);
-  return i;
+  }
+  return -1;
 }

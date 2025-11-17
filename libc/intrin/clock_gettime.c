@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -40,6 +41,8 @@ static clock_gettime_f *__clock_gettime_get(void) {
     return cgt;
   } else if (__syslib) {
     return (void *)__syslib->__clock_gettime;
+  } else if (IsFreebsd()) {
+    return sys_clock_gettime_freebsd;
 #ifdef __x86_64__
   } else if (IsWindows()) {
     return sys_clock_gettime_nt;
@@ -52,7 +55,8 @@ static clock_gettime_f *__clock_gettime_get(void) {
 }
 
 static int __clock_gettime_init(int, struct timespec *);
-static clock_gettime_f *__clock_gettime = __clock_gettime_init;
+__data_rarechange static clock_gettime_f *__clock_gettime =
+    __clock_gettime_init;
 static int __clock_gettime_init(int clockid, struct timespec *ts) {
   clock_gettime_f *cgt;
   __clock_gettime = cgt = __clock_gettime_get();
@@ -145,10 +149,8 @@ static int clock_gettime_impl(int clock, struct timespec *ts) {
  *
  * @param ts is where the result is stored (or null to do clock check)
  * @return 0 on success, or -1 w/ errno
- * @raise EFAULT if `ts` points to invalid memory
  * @error EINVAL if `clock` isn't supported on this system
  * @error EPERM if pledge() is in play without stdio promise
- * @error ESRCH on NetBSD if PID/TID OR'd into `clock` wasn't found
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  * @vforksafe

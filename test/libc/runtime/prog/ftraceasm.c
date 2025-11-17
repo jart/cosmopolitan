@@ -19,6 +19,6 @@
 
 void ftrace_hook(void);
 
-privileged void _start(void) {
+__privileged void _start(void) {
   ftrace_hook();
 }

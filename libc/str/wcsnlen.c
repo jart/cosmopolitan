@@ -27,10 +27,9 @@
  * @asyncsignalsafe
  */
 size_t wcsnlen(const wchar_t *s, size_t n) {
-  wchar_t *p;
-  if ((p = wmemchr(s, 0, n))) {
-    return p - s;
-  } else {
-    return n;
-  }
+  size_t i;
+  for (i = 0; i < n; ++i)
+    if (!s[i])
+      break;
+  return i;
 }

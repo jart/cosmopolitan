@@ -40,7 +40,7 @@ this program lets you launch linux commands in a filesystem sandbox\n\
 inspired by the design of openbsd's unveil() system call.\n\
 "
 
-wontreturn void usage(void) {
+[[noreturn]] void usage(void) {
   write(2, USAGE, sizeof(USAGE) - 1);
   exit(1);
 }

@@ -16,21 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/fds.h"
 #include "libc/fmt/internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Standard input decoder.
- * @see libc/fmt/vcscanf.h
  */
 int scanf(const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
   flockfile(stdin);
-  rc = __vcscanf((void *)fgetc_unlocked,   //
-                 (void *)ungetc_unlocked,  //
+  rc = __vcscanf((void *)fgetc_unlocked,    //
+                 (void *)ungetc_unlocked,   //
+                 (void *)ungetwc_unlocked,  //
                  stdin, fmt, va);
   funlockfile(stdin);
   va_end(va);

@@ -20,6 +20,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time.h"

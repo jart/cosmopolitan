@@ -19,6 +19,7 @@
 #include "libc/sysv/consts/mremap.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
@@ -30,53 +31,44 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
-void SetUpOnce(void) {
-  if (!IsLinux() && !IsNetbsd()) {
-    tinyprint(2, "warning: skipping mremap() tests on this os\n", NULL);
-    exit(0);
-  }
-}
-
-TEST(mremap, dontMove_hasRoom_itMoves) {
-  if (IsNetbsd())
-    return;  // NetBSD requires MREMAP_MAYMOVE
+TEST(cosmo_mremap, dontMove_hasRoom_itMoves) {
   char *p;
-  int pagesz = getpagesize();
+  int gransz = getgransize();
   ASSERT_NE(MAP_FAILED,
-            (p = mmap(__maps_randaddr(), pagesz, PROT_READ | PROT_EXEC,
+            (p = mmap(__maps_randaddr(), gransz, PROT_READ | PROT_EXEC,
                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   EXPECT_TRUE(testlib_memoryexists(p));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz));
-  ASSERT_SYS(0, p, mremap(p, pagesz, pagesz * 2, 0));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz));
+  ASSERT_SYS(0, p, cosmo_mremap(p, gransz, gransz * 2, 0));
   EXPECT_TRUE(testlib_memoryexists(p));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz));
-  ASSERT_SYS(0, 0, munmap(p, pagesz * 2));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz));
+  ASSERT_SYS(0, 0, munmap(p, gransz * 2));
   EXPECT_FALSE(testlib_memoryexists(p));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz));
 }
 
-TEST(mremap, dontMove_noRoom_itFailsWithEnomem) {
-  if (IsNetbsd())
-    return;  // NetBSD requires MREMAP_MAYMOVE
+TEST(cosmo_mremap, dontMove_noRoom_itFailsWithEnomem) {
   char *p;
-  int pagesz = getpagesize();
+  int gransz = getgransize();
   ASSERT_NE(MAP_FAILED,
-            (p = mmap(__maps_randaddr(), pagesz * 2, PROT_READ | PROT_EXEC,
+            (p = mmap(__maps_randaddr(), gransz * 2, PROT_READ | PROT_EXEC,
                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz * 0));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
-  ASSERT_SYS(ENOMEM, MAP_FAILED, mremap(p, pagesz, pagesz * 3, 0));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz * 0));
-  EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
-  ASSERT_SYS(0, 0, munmap(p, pagesz * 2));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz * 0));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz * 1));
-  EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  ASSERT_SYS(ENOMEM, MAP_FAILED, cosmo_mremap(p, gransz, gransz * 3, 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_TRUE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
+  ASSERT_SYS(0, 0, munmap(p, gransz * 2));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 0));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 1));
+  EXPECT_FALSE(testlib_memoryexists(p + gransz * 2));
 }
 
-TEST(mremap, mayMove_noRoom_itRelocates) {
+TEST(cosmo_mremap, mayMove_noRoom_itRelocates) {
+  if (!IsLinux() && !IsNetbsd())
+    return;
   char *p, *p2;
   int pagesz = getpagesize();
   ASSERT_NE(MAP_FAILED,
@@ -85,7 +77,8 @@ TEST(mremap, mayMove_noRoom_itRelocates) {
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 0));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
   EXPECT_FALSE(testlib_memoryexists(p + pagesz * 2));
-  ASSERT_NE(MAP_FAILED, (p2 = mremap(p, pagesz, pagesz * 3, MREMAP_MAYMOVE)));
+  ASSERT_NE(MAP_FAILED,
+            (p2 = cosmo_mremap(p, pagesz, pagesz * 3, MREMAP_MAYMOVE)));
   ASSERT_NE(p, p2);
   EXPECT_FALSE(testlib_memoryexists(p + pagesz * 0));
   EXPECT_TRUE(testlib_memoryexists(p + pagesz * 1));
@@ -103,16 +96,16 @@ TEST(mremap, mayMove_noRoom_itRelocates) {
   EXPECT_FALSE(testlib_memoryexists(p2 + pagesz * 2));
 }
 
-// demonstrate value of mremap() system call
+// demonstrate value of cosmo_mremap() system call
 //
 //       mmap(1'048'576) took 1'130 ns
-//     mremap(1'048'576 -> 2'097'152) took 3'117 ns
-//     mremap(2'097'152 -> 1'048'576) took 3'596 ns
-//     mremap(1'048'576 -> 2'097'152) took 796'381 ns [simulated]
+//     cosmo_mremap(1'048'576 -> 2'097'152) took 3'117 ns
+//     cosmo_mremap(2'097'152 -> 1'048'576) took 3'596 ns
+//     cosmo_mremap(1'048'576 -> 2'097'152) took 796'381 ns [simulated]
 //     munmap(2'097'152) took 50'020 ns
 //
 
-TEST(mremap, bench) {
+TEST(cosmo_mremap, bench) {
 #define N 10
   long size = 1024 * 1024;
   char *rollo = __maps_randaddr();
@@ -121,61 +114,62 @@ TEST(mremap, bench) {
   // create mappings
   struct timespec ts1 = timespec_real();
   for (long i = 0; i < N; ++i)
-    if ((addr[i] = mmap((rollo += size), size, PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)) == MAP_FAILED) {
-      kprintf("first mmap failed: %m\n");
-      exit(1);
-    }
-  kprintf("mmap(%'zu) took %'ld ns\n", size,
-          timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
-
-  // use mremap to grow mappings
-  ts1 = timespec_real();
-  for (long i = 0; i < N; ++i)
-    if ((addr[i] = mremap(addr[i], size, size * 2, MREMAP_MAYMOVE)) ==
+    if ((addr[i] = mmap((rollo += size * 2), size, PROT_READ | PROT_WRITE,
+                        MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0)) ==
         MAP_FAILED) {
-      kprintf("grow mremap failed: %m\n");
+      kprintf("  first mmap failed: %m\n");
       exit(1);
     }
-  kprintf("mremap(%'zu -> %'zu) took %'ld ns\n", size, size * 2,
+  kprintf("  mmap(%'zu) took %'ld ns\n", size,
           timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
 
-  // use mremap to shrink mappings
+  // use cosmo_mremap to grow mappings
   ts1 = timespec_real();
   for (long i = 0; i < N; ++i)
-    if (mremap(addr[i], size * 2, size, 0) != addr[i]) {
-      kprintf("shrink mremap failed: %m\n");
+    if ((addr[i] = cosmo_mremap(addr[i], size, size * 2, MREMAP_MAYMOVE)) ==
+        MAP_FAILED) {
+      kprintf("  grow cosmo_mremap failed: %m\n");
       exit(1);
     }
-  kprintf("mremap(%'zu -> %'zu) took %'ld ns\n", size * 2, size,
+  kprintf("  cosmo_mremap(%'zu -> %'zu) took %'ld ns\n", size, size * 2,
           timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
 
-  // do the thing that mremap is trying to optimize
+  // use cosmo_mremap to shrink mappings
+  ts1 = timespec_real();
+  for (long i = 0; i < N; ++i)
+    if (cosmo_mremap(addr[i], size * 2, size, 0) != addr[i]) {
+      kprintf("  shrink cosmo_mremap failed: %m\n");
+      exit(1);
+    }
+  kprintf("  cosmo_mremap(%'zu -> %'zu) took %'ld ns\n", size * 2, size,
+          timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
+
+  // do the thing that cosmo_mremap is trying to optimize
   ts1 = timespec_real();
   for (long i = 0; i < N; ++i) {
     char *addr2;
     if ((addr2 = mmap(0, size * 2, PROT_READ | PROT_WRITE,
                       MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)) == MAP_FAILED) {
-      kprintf("simulated mmap failed: %m\n");
+      kprintf("  simulated mmap failed: %m\n");
       exit(1);
     }
     memmove(addr2, addr[i], size);
     if (munmap(addr[i], size)) {
-      kprintf("simulated munmap failed: %m\n");
+      kprintf("  simulated munmap failed: %m\n");
       exit(1);
     }
     addr[i] = addr2;
   }
-  kprintf("mremap(%'zu -> %'zu) took %'ld ns [simulated]\n", size, size * 2,
-          timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
+  kprintf("  cosmo_mremap(%'zu -> %'zu) took %'ld ns [simulated]\n", size,
+          size * 2, timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
 
   // unmap mappings
   ts1 = timespec_real();
   for (long i = 0; i < N; ++i)
     if (munmap(addr[i], size * 2)) {
-      kprintf("munmap failed: %m\n");
+      kprintf("  munmap failed: %m\n");
       exit(1);
     }
-  kprintf("munmap(%'zu) took %'ld ns\n", size * 2,
+  kprintf("  munmap(%'zu) took %'ld ns\n", size * 2,
           timespec_tonanos(timespec_sub(timespec_real(), ts1)) / N);
 }

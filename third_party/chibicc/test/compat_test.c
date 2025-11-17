@@ -1,6 +1,22 @@
 #include "third_party/chibicc/test/test.h"
 
-_Noreturn noreturn_fn(int restrict x) {
+[[noreturn]] noreturn_fn1(int restrict x) {
+  exit(0);
+}
+
+_Noreturn noreturn_fn2(int restrict x) {
+  exit(0);
+}
+
+[[_Noreturn]] noreturn_fn3(int restrict x) {
+  exit(0);
+}
+
+__attribute__((noreturn)) noreturn_fn4(int restrict x) {
+  exit(0);
+}
+
+__attribute__((__noreturn__)) noreturn_fn5(int restrict x) {
   exit(0);
 }
 

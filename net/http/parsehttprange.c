@@ -33,8 +33,8 @@
  *     Range: bytes=0-0,-1             (first and last and always)
  *     Range: bytes=500-600,601-999    (overlong but legal)
  */
-bool ParseHttpRange(const char *p, size_t n, long resourcelength,
-                    long *out_start, long *out_length) {
+bool32 ParseHttpRange(const char *p, size_t n, long resourcelength,
+                      long *out_start, long *out_length) {
   long start, length, ending;
   *out_start = 0;
   *out_length = 0;

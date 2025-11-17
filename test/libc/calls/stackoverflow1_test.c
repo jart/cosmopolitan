@@ -26,7 +26,9 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/maps.h"
 #include "libc/limits.h"
+#include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -36,19 +38,29 @@
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/thread.h"
 
 /**
- * stack overflow recovery technique #1
- * overflow the gigantic main process stack
- * simple but it can upset kernels / libraries
+ * STACK OVERFLOW RECOVERY TECHNIQUE NO. 1
+ *
+ * To handle a stack overflow error, you must:
+ *
+ * 1. Install a SIGSEGV signal handler using sigaction() that has
+ *    SA_ONSTACK in its sa_flags. This applies process-wide.
+ *
+ * 2. Define a sigaltstack() which may be created using malloc(). This
+ *    applies on a per-thread basis.
+ *
+ * Once you've detected a stack overflow, usually the smart thing is to
+ * call pthread_exit(). Now if you actually want to rehabilitate your
+ * thread and recover execution, there are a variety of strategies you
+ * can use. The simplest is to use sigsetjmp() and siglongjmp().
  */
 
-jmp_buf recover;
+sigjmp_buf recover;
 atomic_bool g_isdone;
 atomic_bool smashed_stack;
 
@@ -56,11 +68,11 @@ void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   struct sigaltstack ss;
   unassert(!sigaltstack(0, &ss));
   unassert(SS_ONSTACK == ss.ss_flags);
-  kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
-          si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
+  if (!IsWindows())  // TODO(jart): why does win32 need more now?
+    kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
+            si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
   smashed_stack = true;
-  // unassert(__is_stack_overflow(si, ctx)); // fuzzy with main thread
-  longjmp(recover, 123);
+  siglongjmp(recover, 123);
 }
 
 void SetUp(void) {
@@ -89,13 +101,8 @@ void SetUp(void) {
   sigaction(SIGSEGV, &sa, 0);
 }
 
-int StackOverflow(int d) {
-  char A[8];
-  for (int i = 0; i < sizeof(A); i++)
-    A[i] = d + i;
-  if (__veil("r", d))
-    return StackOverflow(d + 1) + A[d % sizeof(A)];
-  return 0;
+int StackOverflow(volatile int x) {
+  return x ? StackOverflow(x) + StackOverflow(x + 1) : 0;
 }
 
 void *innocent_thread(void *arg) {
@@ -105,18 +112,18 @@ void *innocent_thread(void *arg) {
   return 0;
 }
 
-int main() {
-
+void RunTest() {
   // libc/intrin/stack.c is designed so that this thread's stack should
   // be allocated right beneath the main thread's stack. our goal is to
   // make sure overflowing the main stack won't clobber our poor thread
   pthread_t th;
   unassert(!pthread_create(&th, 0, innocent_thread, 0));
 
-  SetUp();
+  g_isdone = false;
+  smashed_stack = false;
 
   int jumpcode;
-  if (!(jumpcode = setjmp(recover)))
+  if (!(jumpcode = sigsetjmp(recover, 1)))
     exit(StackOverflow(1));
   unassert(123 == jumpcode);
   unassert(smashed_stack);
@@ -125,12 +132,15 @@ int main() {
   g_isdone = true;
   unassert(!pthread_join(th, 0));
 
-  // here's where longjmp() gets us into trouble
+  // make sure kernel knows we're no longer on alt stack. it took
+  // various heroics to make this happen on xnu and netbsd.
   struct sigaltstack ss;
   unassert(!sigaltstack(0, &ss));
-  if (IsXnu() || IsNetbsd()) {
-    unassert(SS_ONSTACK == ss.ss_flags);  // wut
-  } else {
-    unassert(0 == ss.ss_flags);
-  }
+  unassert(!ss.ss_flags);
+}
+
+int main() {
+  SetUp();
+  RunTest();
+  RunTest();
 }

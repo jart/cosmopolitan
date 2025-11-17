@@ -16,11 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/stdio/rand.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/bignum.h"
 
+static uint64_t arc4random64(void) {
+  uint64_t val;
+  arc4random_buf(&val, sizeof(val));
+  return val;
+}
+
 void GenerateCertificateSerial(mbedtls_x509write_cert *wcert) {
   mbedtls_x509write_crt_set_serial(
-      wcert, &(mbedtls_mpi){1, 2, (uint64_t[]){rdrand(), rdrand()}});
+      wcert,
+      &(mbedtls_mpi){1, 2, (uint64_t[]){arc4random64(), arc4random64()}});
 }

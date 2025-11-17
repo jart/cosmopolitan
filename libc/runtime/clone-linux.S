@@ -43,7 +43,10 @@ sys_clone_linux:
 0:	cpop	%rbx
 	epi
 	ret
-2:	xor	%ebp,%ebp		// child thread
+	end
+2:	beg
+	.cfi_undefined rip
+	xor	%ebp,%ebp		// child thread
 	mov	%rbx,%rdi		// arg
 	call	*%r9			// func(arg,tid)
 	xchg	%eax,%edi		// func(arg,tid) → exitcode
@@ -58,7 +61,10 @@ sys_clone_linux:
 	cbz	x0,2f
 	epi
 	ret
-2:	mov	x29,#0			// wipe backtrace
+	end
+2:	beg
+	.cfi_undefined x30
+	mov	x29,#0			// wipe backtrace
 	mov	x28,x3			// set cosmo tls
 	mov	x0,x6			// child thread
 	blr	x5

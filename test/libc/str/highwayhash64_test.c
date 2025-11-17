@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/highwayhash64.h"
+#include "libc/bsdstdlib.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/inttypes.h"
 #include "libc/nexgen32e/crc32.h"
@@ -100,7 +101,7 @@ TEST(highwayhash64, test) {
 
 BENCH(highwayhash64, newbench) {
   char fun[256];
-  rngset(fun, 256, _rand64, -1);
+  arc4random_buf(fun, 256);
   BENCHMARK(10, 0, HighwayHash64(0, 0, kTestKey1));
   BENCHMARK(10, 8, HighwayHash64("helloooo", 8, kTestKey1));
   BENCHMARK(10, 31, HighwayHash64(fun, 31, kTestKey1));

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
@@ -25,6 +26,7 @@
  * Flushes all line-buffered streams.
  */
 void _flushlbf(void) {
+  BLOCK_CANCELATION;
   __stdio_lock();
   struct Dll *e, *e2;
   for (e = dll_last(__stdio.files); e; e = e2) {
@@ -39,4 +41,5 @@ void _flushlbf(void) {
     }
   }
   __stdio_unlock();
+  ALLOW_CANCELATION;
 }

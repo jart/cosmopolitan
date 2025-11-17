@@ -17,12 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
 
 /**
  * @fileoverview file timestamp update command
  */
+
+static int touch(const char *file, uint32_t mode) {
+  int rc, fd, olderr;
+  olderr = errno;
+  if ((rc = utimes(file, 0)) == -1 && errno == ENOENT) {
+    errno = olderr;
+    fd = open(file, O_CREAT | O_WRONLY, mode);
+    if (fd == -1)
+      return -1;
+    return close(fd);
+  }
+  return rc;
+}
 
 int main(int argc, char *argv[]) {
   int i;

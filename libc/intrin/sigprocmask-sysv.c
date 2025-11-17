@@ -26,13 +26,16 @@ int sys_sigprocmask(int how, const sigset_t *opt_set,
   int rc;
   uint64_t old[2] = {0};
   if (!IsOpenbsd()) {
-    rc = __sys_sigprocmask(how, opt_set ? (uint64_t[2]){*opt_set} : 0, old, 8);
+    rc = __sys_sigprocmask(
+        how, opt_set ? (uint64_t[2]){__linux2mask(*opt_set)} : 0, old, 8);
   } else {
     old[0] = (uint32_t)(uintptr_t)__sys_sigprocmask(
-        how, opt_set ? (sigset_t *)(intptr_t)(uint32_t)*opt_set : 0, 0, 0);
+        how,
+        opt_set ? (sigset_t *)(intptr_t)(uint32_t)__linux2mask(*opt_set) : 0, 0,
+        0);
     rc = 0;
   }
   if (rc != -1 && opt_out_oldset)
-    *opt_out_oldset = old[0];
+    *opt_out_oldset = __mask2linux(old[0]);
   return rc;
 }

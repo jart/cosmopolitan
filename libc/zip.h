@@ -60,11 +60,13 @@
 #define kZipEra1993 20 /* PKZIP 2.0: deflate/subdir/etc. support */
 #define kZipEra2001 45 /* PKZIP 4.5: kZipExtraZip64 support */
 
-#define kZipIattrBinary 0 /* first bit not set */
-#define kZipIattrText   1 /* first bit set */
+#define kZipIattrText 1 /* first bit set */
 
 #define kZipCompressionNone    0
+#define kZipCompressionShrunk  1
+#define kZipCompressionImplode 6
 #define kZipCompressionDeflate 8
+#define kZipCompressionZstd    93
 
 #define kZipCdirHdrMagic            ZM_(0x06054b50) /* PK♣♠ "PK\5\6" */
 #define kZipCdirHdrMagicTodo        ZM_(0x19184b50) /* PK♣♠ "PK\30\31" */
@@ -110,7 +112,8 @@
 #define kZipLfileOffsetCompressedsize    18
 #define kZipLfileOffsetUncompressedsize  22
 
-#define kZipGflagUtf8 0x800
+#define kZipGflagTrailingCrc 0x008
+#define kZipGflagUtf8        0x800
 
 #define kZipExtraHdrSize             4
 #define kZipExtraZip64               0x0001

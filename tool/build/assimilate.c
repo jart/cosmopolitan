@@ -78,7 +78,7 @@ static const char *outpath;
 static bool got_format_flag;
 static char bakpath[PATH_MAX];
 
-static wontreturn void Die(const char *thing, const char *reason) {
+[[noreturn]] static void Die(const char *thing, const char *reason) {
   const char *native_explainer;
   if (got_format_flag) {
     native_explainer = "";
@@ -93,7 +93,7 @@ static wontreturn void Die(const char *thing, const char *reason) {
   exit(1);
 }
 
-static wontreturn void DieSys(const char *thing) {
+[[noreturn]] static void DieSys(const char *thing) {
   perror(thing);
   exit(1);
 }
@@ -450,7 +450,7 @@ static void Assimilate(void) {
   int oflags;
   ssize_t size;
   oflags = outpath ? O_RDONLY : O_RDWR;
-  if ((fd = open(path, oflags)) == -1)
+  if ((fd = open(path, oflags, 0755)) == -1)
     DieSys(path);
   if ((size = lseek(fd, 0, SEEK_END)) == -1)
     DieSys(path);

@@ -18,10 +18,6 @@
 #  include <unistd.h> // for sysconf
 #endif
 
-#if defined(__NetBSD__)
-#  pragma weak pthread_create // Do not create libpthread dependency
-#endif
-
 #if defined(_LIBCPP_WIN32API)
 #  include <windows.h>
 #endif

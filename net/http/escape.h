@@ -34,11 +34,11 @@ char *EncodeLatin1(const char *, size_t, size_t *, int) libcesque;
 char *EncodeHttpHeaderValue(const char *, size_t, size_t *) libcesque;
 char *VisualizeControlCodes(const char *, size_t, size_t *) libcesque;
 char *IndentLines(const char *, size_t, size_t *, size_t) libcesque;
-char *EncodeBase32(const char *, size_t, const char *, size_t,
+char *EncodeBase32(const void *, size_t, const char *, size_t,
                    size_t *) libcesque;
 char *DecodeBase32(const char *, size_t, const char *, size_t,
                    size_t *) libcesque;
-char *EncodeBase64(const char *, size_t, size_t *) libcesque;
+char *EncodeBase64(const void *, size_t, size_t *) libcesque;
 char *DecodeBase64(const char *, size_t, size_t *) libcesque;
 
 COSMOPOLITAN_C_END_

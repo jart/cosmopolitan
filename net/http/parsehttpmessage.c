@@ -20,7 +20,6 @@
 #include "libc/ctype.h"
 #include "libc/limits.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/serialize.h"
 #include "libc/stdio/stdio.h"

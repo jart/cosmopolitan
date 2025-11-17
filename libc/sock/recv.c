@@ -68,7 +68,7 @@ ssize_t recv(int fd, void *buf, size_t size, int flags) {
     // this is possible on some OSes like Linux but it breaks FreeBSD
     // and Windows will raise EOPNOTSUPP when it gets passed together
     return einval();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_recvfrom(fd, buf, size, flags, 0, 0);

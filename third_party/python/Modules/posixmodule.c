@@ -90,6 +90,7 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 #include "libc/unistd.h"
+#include "libc/cosmo.h"
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("posix");
@@ -3411,7 +3412,7 @@ os__getfinalpathname_impl(PyObject *module, PyObject *path)
         kNtFileFlagBackupSemantics,
         0);
     Py_END_ALLOW_THREADS
-    if(hFile == kNtInvalidHandleValue)
+    if(hFile == -1)
         return win32_error_object("CreateFile", path);
     /* We have a good handle to the target, use it to determine the
        target path name. */
@@ -4062,15 +4063,7 @@ os_uname_impl(PyObject *module)
     PyObject *value;
 
     Py_BEGIN_ALLOW_THREADS
-    if(!IsWindows()) res = uname(&u);
-    else {
-        strcpy(u.sysname, "Linux");
-        strcpy(u.machine, "x86_64");
-        strcpy(u.nodename, "");
-        strcpy(u.release, "");
-        strcpy(u.version, "");
-        res = 0;
-    }
+    res = uname(&u);
     Py_END_ALLOW_THREADS
     if (res < 0)
         return posix_error();
@@ -7671,7 +7664,7 @@ sendfile(out, in, offset, count[, headers][, trailers], flags=0)\n\
             -> byteswritten\n\
 Copy count bytes from file descriptor in to file descriptor out.");
 
-/* AC 3.5: don't bother converting, has optional group*/
+/* [jart] simplify simplify simplify */
 static PyObject *
 posix_sendfile(PyObject *self, PyObject *args, PyObject *kwdict)
 {
@@ -7679,152 +7672,14 @@ posix_sendfile(PyObject *self, PyObject *args, PyObject *kwdict)
     Py_ssize_t ret;
     int async_err = 0;
     off_t offset;
-
-    if (IsFreebsd() || IsXnu()) {
-    Py_ssize_t len;
-    PyObject *headers = NULL, *trailers = NULL;
-    Py_buffer *hbuf, *tbuf;
-    off_t sbytes;
-    struct sf_hdtr sf;
-    int flags = 0;
-    /* Beware that "in" clashes with Python's own "in" operator keyword */
-    static char *keywords[] = {"out", "in",
-                                "offset", "count",
-                                "headers", "trailers", "flags", NULL};
-
-    sf.headers = NULL;
-    sf.trailers = NULL;
-
-    if (IsXnu()) {
-    if (!PyArg_ParseTupleAndKeywords(args, kwdict, "iiO&O&|OOi:sendfile",
-        keywords, &out, &in, Py_off_t_converter, &offset, Py_off_t_converter, &sbytes,
-                &headers, &trailers, &flags))
-            return NULL;
-    } else {
-    if (!PyArg_ParseTupleAndKeywords(args, kwdict, "iiO&n|OOi:sendfile",
-        keywords, &out, &in, Py_off_t_converter, &offset, &len,
-                &headers, &trailers, &flags))
-            return NULL;
-    }
-
-    if (headers != NULL) {
-        if (!PySequence_Check(headers)) {
-            PyErr_SetString(PyExc_TypeError,
-                "sendfile() headers must be a sequence");
-            return NULL;
-        } else {
-            Py_ssize_t i = PySequence_Size(headers);
-            if (i < 0)
-                return NULL;
-            if (i > INT_MAX) {
-                PyErr_SetString(PyExc_OverflowError,
-                    "sendfile() header is too large");
-                return NULL;
-            }
-            if (i > 0) {
-                sf.hdr_cnt = (int)i;
-                if (iov_setup(&(sf.headers), &hbuf,
-                              headers, sf.hdr_cnt, PyBUF_SIMPLE) < 0)
-                    return NULL;
-              if (IsXnu()) {
-                for (i = 0; i < sf.hdr_cnt; i++) {
-                    Py_ssize_t blen = sf.headers[i].iov_len;
-                    if (sbytes >= 0x7fffffffffffffff - blen) {
-                        PyErr_SetString(PyExc_OverflowError,
-                            "sendfile() header is too large");
-                        return NULL;
-                    }
-                    sbytes += blen;
-                }
-              }
-            }
-        }
-    }
-    if (trailers != NULL) {
-        if (!PySequence_Check(trailers)) {
-            PyErr_SetString(PyExc_TypeError,
-                "sendfile() trailers must be a sequence");
-            return NULL;
-        } else {
-            Py_ssize_t i = PySequence_Size(trailers);
-            if (i < 0)
-                return NULL;
-            if (i > INT_MAX) {
-                PyErr_SetString(PyExc_OverflowError,
-                    "sendfile() trailer is too large");
-                return NULL;
-            }
-            if (i > 0) {
-                sf.trl_cnt = (int)i;
-                if (iov_setup(&(sf.trailers), &tbuf,
-                              trailers, sf.trl_cnt, PyBUF_SIMPLE) < 0)
-                    return NULL;
-            }
-        }
-    }
-
-    _Py_BEGIN_SUPPRESS_IPH
-    do {
-        Py_BEGIN_ALLOW_THREADS
-        if (IsXnu()) {
-            ret = sys_sendfile_xnu(in, out, offset, &sbytes, &sf, flags);
-        } else {
-            ret = sys_sendfile_freebsd(in, out, offset, len, &sf, &sbytes, flags);
-        }
-        Py_END_ALLOW_THREADS
-    } while (ret < 0 && errno == EINTR && !(async_err = PyErr_CheckSignals()));
-    _Py_END_SUPPRESS_IPH
-
-    if (sf.headers != NULL)
-        iov_cleanup(sf.headers, hbuf, sf.hdr_cnt);
-    if (sf.trailers != NULL)
-        iov_cleanup(sf.trailers, tbuf, sf.trl_cnt);
-
-    if (ret < 0) {
-        if ((errno == EAGAIN) || (errno == EBUSY)) {
-            if (sbytes != 0) {
-                // some data has been sent
-                goto done;
-            }
-            else {
-                // no data has been sent; upper application is supposed
-                // to retry on EAGAIN or EBUSY
-                return posix_error();
-            }
-        }
-        return (!async_err) ? posix_error() : NULL;
-    }
-    goto done;
-
-done:
-    #if !defined(HAVE_LARGEFILE_SUPPORT)
-        return Py_BuildValue("l", sbytes);
-    #else
-        return Py_BuildValue("L", sbytes);
-    #endif
-                                     } else {
     Py_ssize_t count;
     PyObject *offobj;
-    static char *keywords[] = {"out", "in",
-                                "offset", "count", NULL};
+    static char *keywords[] = {"out", "in", "offset", "count", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwdict, "iiOn:sendfile",
             keywords, &out, &in, &offobj, &count))
         return NULL;
-    if (IsLinux()) {
-        if (offobj == Py_None) {
-            do {
-                Py_BEGIN_ALLOW_THREADS
-                ret = sys_sendfile(out, in, NULL, count);
-                Py_END_ALLOW_THREADS
-            } while (ret < 0 && errno == EINTR && !(async_err = PyErr_CheckSignals()));
-            if (ret < 0)
-                return (!async_err) ? posix_error() : NULL;
-            return Py_BuildValue("n", ret);
-        }
-    }
     if (!Py_off_t_converter(offobj, &offset))
         return NULL;
-
     do {
         Py_BEGIN_ALLOW_THREADS
         ret = sendfile(out, in, &offset, count);
@@ -7833,7 +7688,6 @@ done:
     if (ret < 0)
         return (!async_err) ? posix_error() : NULL;
     return Py_BuildValue("n", ret);
-    }
 }
 #endif /* HAVE_SENDFILE */
 
@@ -10509,7 +10363,7 @@ os_cpu_count_impl(PyObject *module)
 /*[clinic end generated code: output=5fc29463c3936a9c input=e7c8f4ba6dbbadd3]*/
 {
     int ncpu;
-    ncpu = __get_cpu_count();
+    ncpu = cosmo_cpu_count();
     if (ncpu >= 1)
         return PyLong_FromLong(ncpu);
     else
@@ -11789,40 +11643,17 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, O_DIRECTORY)) return -1;
     if (PyModule_AddIntMacro(m, O_LARGEFILE)) return -1;
     if (PyModule_AddIntMacro(m, O_EXCL)) return -1;
-    if (O_DSYNC && PyModule_AddIntMacro(m, O_DSYNC)) return -1;
-    if (O_RSYNC && PyModule_AddIntMacro(m, O_RSYNC)) return -1;
-    if (O_SYNC && PyModule_AddIntMacro(m, O_SYNC)) return -1;
-    if (O_NOCTTY && PyModule_AddIntMacro(m, O_NOCTTY)) return -1;
-    if (O_TRUNC && PyModule_AddIntMacro(m, O_TRUNC)) return -1;
-    if (O_EXEC && PyModule_AddIntMacro(m, O_EXEC)) return -1;
-    if (O_SEARCH && PyModule_AddIntMacro(m, O_SEARCH)) return -1;
-    if (O_SHLOCK && PyModule_AddIntMacro(m, O_SHLOCK)) return -1;
-    if (O_EXLOCK && PyModule_AddIntMacro(m, O_EXLOCK)) return -1;
-    if (O_TTY_INIT && PyModule_AddIntMacro(m, O_TTY_INIT)) return -1;
-    if (O_TMPFILE && PyModule_AddIntMacro(m, O_TMPFILE)) return -1;
-    if (O_PATH && PyModule_AddIntMacro(m, O_PATH)) return -1;
-    if (O_RANDOM && PyModule_AddIntMacro(m, O_RANDOM)) return -1;
-    if (O_SEQUENTIAL && PyModule_AddIntMacro(m, O_SEQUENTIAL)) return -1;
-    if (O_ASYNC && PyModule_AddIntMacro(m, O_ASYNC)) return -1;
-    if (O_DIRECT && PyModule_AddIntMacro(m, O_DIRECT)) return -1;
-    if (O_NOFOLLOW && PyModule_AddIntMacro(m, O_NOFOLLOW)) return -1;
-    if (O_NOFOLLOW_ANY && PyModule_AddIntMacro(m, O_NOFOLLOW_ANY)) return -1;
-    if (O_NOATIME && PyModule_AddIntMacro(m, O_NOATIME)) return -1;
-    if (O_VERIFY && PyModule_AddIntMacro(m, O_VERIFY)) return -1;
-    if (IsWindows() && PyModule_AddIntConstant(m, "O_SHORT_LIVED", kNtFileAttributeTemporary)) return -1;
-    if (IsWindows() && PyModule_AddIntConstant(m, "O_TEMPORARY", kNtFileFlagDeleteOnClose)) return -1;
-#ifdef O_BINARY
-    if (PyModule_AddIntMacro(m, O_BINARY)) return -1;
+    if (PyModule_AddIntMacro(m, O_DSYNC)) return -1;
+    if (PyModule_AddIntMacro(m, O_RSYNC)) return -1;
+    if (PyModule_AddIntMacro(m, O_SYNC)) return -1;
+    if (PyModule_AddIntMacro(m, O_NOCTTY)) return -1;
+    if (PyModule_AddIntMacro(m, O_TRUNC)) return -1;
+#ifdef O_ASYNC
+    if (PyModule_AddIntMacro(m, O_ASYNC)) return -1;
 #endif
-#ifdef O_TEXT
-    if (PyModule_AddIntMacro(m, O_TEXT)) return -1;
-#endif
-#ifdef O_XATTR
-    if (PyModule_AddIntMacro(m, O_XATTR)) return -1;
-#endif
-#ifdef O_NOINHERIT
-    if (PyModule_AddIntMacro(m, O_NOINHERIT)) return -1;
-#endif
+    if (!IsXnu() && PyModule_AddIntMacro(m, O_DIRECT)) return -1;
+    if (PyModule_AddIntMacro(m, O_NOFOLLOW)) return -1;
+    if (PyModule_AddIntMacro(m, O_NOATIME)) return -1;
 
     if (PyModule_AddIntMacro(m, PRIO_PROCESS)) return -1;
     if (PyModule_AddIntMacro(m, PRIO_PGRP)) return -1;

@@ -26,6 +26,7 @@
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Creates client socket file descriptor for incoming connection.
@@ -57,14 +58,14 @@ int accept4(int fd, struct sockaddr *opt_out_addr, uint32_t *opt_inout_addrsize,
   struct sockaddr_storage ss = {0};
   BEGIN_CANCELATION_POINT;
 
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_accept4(fd, &ss, flags);
   } else if (!__isfdopen(fd)) {
     rc = ebadf();
   } else if (__isfdkind(fd, kFdSocket)) {
-    rc = sys_accept_nt(g_fds.p + fd, &ss, flags);
+    rc = sys_accept_nt(__get_pib()->fds.p + fd, &ss, flags);
   } else {
     rc = enotsock();
   }

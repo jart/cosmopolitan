@@ -157,7 +157,10 @@ static int getTypeId(Type *ty) {
 
 void gen_cast(Type *from, Type *to) {
   bool skew;
-  if (to->kind == TY_VOID) return;
+  if (to->kind == TY_VOID)
+    return;
+  if (to->kind == TY_NULLPTR_T && from->kind != TY_NULLPTR_T)
+    error_tok(to->name, "cast to nullptr_t");
   if (to->kind == TY_BOOL) {
     cmp_zero(from);
     println("\tsetne\t%%al");

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/cpuset.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -53,7 +54,7 @@ TEST(sched_getaffinity, firstOnly) {
 }
 
 TEST(sched_getaffinity, secondOnly) {
-  if (__get_cpu_count() < 2)
+  if (cosmo_cpu_count() < 2)
     return;
   cpu_set_t x, y;
   CPU_ZERO(&x);

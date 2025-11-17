@@ -130,8 +130,12 @@ void *memccpy(void *, const void *, int, size_t) memcpyesque;
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 char *strsep(char **, const char *) libcesque paramsnonnull();
 void explicit_bzero(void *, size_t);
-size_t strlcpy(char *, const char *, size_t) libcesque;
-size_t strlcat(char *, const char *, size_t) libcesque;
+size_t strlcpy(char *, const char *, size_t);
+size_t wcslcpy(wchar_t *, const wchar_t *, size_t);
+size_t strlcpy16(char16_t *, const char16_t *, size_t);
+size_t strlcat(char *, const char *, size_t);
+size_t wcslcat(wchar_t *, const wchar_t *, size_t);
+size_t strlcat16(char16_t *, const char16_t *, size_t);
 #endif
 
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE)
@@ -155,14 +159,15 @@ bool32 endswith(const char *, const char *) strlenesque;
 bool32 istext(const void *, size_t) libcesque;
 bool32 isutf8(const void *, size_t) libcesque;
 void *wmemrchr(const wchar_t *, wchar_t, size_t) strlenesque;
-const char *strsignal_r(int, char[21]) returnsnonnull libcesque __wur;
+char *strcasechr(const char *, int) strlenesque;
 char16_t *chomp16(char16_t *) libcesque;
 size_t strlen16(const char16_t *) strlenesque;
 size_t strnlen16(const char16_t *, size_t) strlenesque;
-char16_t *strchr16(const char16_t *, int) strlenesque;
-void *memchr16(const void *, int, size_t) strlenesque;
-char16_t *strchrnul16(const char16_t *, int) strlenesque returnsnonnull;
-void *rawmemchr16(const void *, int) strlenesque returnsnonnull;
+char16_t *strchr16(const char16_t *, char16_t) strlenesque;
+char16_t *memchr16(const char16_t *, char16_t, size_t) strlenesque;
+char16_t *strchrnul16(const char16_t *, char16_t) strlenesque returnsnonnull;
+char16_t *rawmemchr16(const char16_t *, char16_t) strlenesque returnsnonnull;
+char32_t *rawmemchr32(const char32_t *, char32_t) strlenesque returnsnonnull;
 char16_t *strstr16(const char16_t *, const char16_t *) strlenesque;
 int memcasecmp(const void *, const void *, size_t) strlenesque;
 int strcmp16(const char16_t *, const char16_t *) strlenesque;
@@ -185,7 +190,6 @@ axdx_t tprecode16to8(char *, size_t, const char16_t *) libcesque;
 bool32 wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool32 wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 char *__join_paths(char *, size_t, const char *, const char *) libcesque __wur;
-int __mkntpathat(int, const char *, int, char16_t[hasatleast 1024]);
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_

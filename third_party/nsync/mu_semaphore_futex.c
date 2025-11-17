@@ -30,8 +30,6 @@
  * @fileoverview Semaphores w/ Linux Futexes API.
  */
 
-#define ASSERT(x) unassert(x)
-
 /* Check that atomic operations on nsync_atomic_uint32_ can be applied to int. */
 static const int assert_int_size = 1 /
 	(sizeof (assert_int_size) == sizeof (uint32_t) &&
@@ -69,11 +67,11 @@ errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
 			futex_result = -cosmo_futex_wait (
 				(atomic_int *)&f->i, i,
 				PTHREAD_PROCESS_PRIVATE, 0, 0);
-			ASSERT (futex_result == 0 ||
-				futex_result == EINTR ||
-				futex_result == EAGAIN ||
-				futex_result == ECANCELED ||
-				futex_result == EWOULDBLOCK);
+			unassert (futex_result == 0 ||
+				  futex_result == EINTR ||
+				  futex_result == EAGAIN ||
+				  futex_result == ECANCELED ||
+				  futex_result == EWOULDBLOCK);
 			if (futex_result == ECANCELED) {
 				result = ECANCELED;
 			}
@@ -108,12 +106,12 @@ errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, int clock,
 			futex_result = cosmo_futex_wait ((atomic_int *)&f->i, i,
 							 PTHREAD_PROCESS_PRIVATE,
 							 clock, ts);
-			ASSERT (futex_result == 0 ||
-				futex_result == -EINTR ||
-				futex_result == -EAGAIN ||
-				futex_result == -ECANCELED ||
-				futex_result == -ETIMEDOUT ||
-				futex_result == -EWOULDBLOCK);
+			unassert (futex_result == 0 ||
+				  futex_result == -EINTR ||
+				  futex_result == -EAGAIN ||
+				  futex_result == -ECANCELED ||
+				  futex_result == -ETIMEDOUT ||
+				  futex_result == -EWOULDBLOCK);
 			/* Some systems don't wait as long as they are told. */
 			if (futex_result == -ETIMEDOUT) {
 				nsync_time now;
@@ -141,5 +139,5 @@ void nsync_mu_semaphore_v_futex (nsync_semaphore *s) {
 		       (nsync_atomic_uint32_ *) &f->i, &old_value, old_value+1,
 		       memory_order_release, memory_order_relaxed)) {
 	}
-	ASSERT (cosmo_futex_wake ((atomic_int *)&f->i, 1, PTHREAD_PROCESS_PRIVATE) >= 0);
+	unassert (cosmo_futex_wake ((atomic_int *) &f->i, 1, PTHREAD_PROCESS_PRIVATE) >= 0);
 }

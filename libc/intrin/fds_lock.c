@@ -21,9 +21,9 @@
 #include "libc/thread/thread.h"
 
 void __fds_lock(void) {
-  _pthread_mutex_lock(&__fds_lock_obj);
+  pthread_mutex_lock(&__fds_lock_obj);
 }
 
 void __fds_unlock(void) {
-  _pthread_mutex_unlock(&__fds_lock_obj);
+  pthread_mutex_unlock(&__fds_lock_obj);
 }

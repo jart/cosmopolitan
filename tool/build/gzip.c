@@ -71,7 +71,7 @@ const char *prog;
 char databuf[32768];
 char pathbuf[PATH_MAX];
 
-wontreturn void PrintUsage(int rc, FILE *f) {
+[[noreturn]] void PrintUsage(int rc, FILE *f) {
   fputs("usage: ", f);
   fputs(prog, f);
   fputs(USAGE, f);

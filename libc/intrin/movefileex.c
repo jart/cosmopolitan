@@ -35,7 +35,7 @@ textwindows bool32 MoveFileEx(const char16_t *lpExistingFileName,
   ok = __imp_MoveFileExW(lpExistingFileName, lpNewFileName, dwFlags);
   if (!ok)
     __winerr();
-  NTTRACE("MoveFileEx(%#hs, %#hs, %s) → %hhhd% m", lpExistingFileName,
+  NTTRACE("MoveFileEx(%#!hs, %#!hs, %s) → %hhhd% m", lpExistingFileName,
           lpNewFileName, DescribeNtMovFileInpFlags(dwFlags), ok);
   return ok;
 }

@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
@@ -28,14 +30,28 @@
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nt/accounting.h"
+#include "libc/nt/enum/processcreationflags.h"
+#include "libc/nt/enum/startf.h"
+#include "libc/nt/files.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/startupinfo.h"
+#include "libc/nt/synchronization.h"
+#include "libc/proc/describefds.internal.h"
+#include "libc/proc/ntspawn.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/pib.h"
 #include "libc/testlib/benchmark.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
@@ -184,6 +200,32 @@ TEST(fork, sharedExtraPageData_getsResurrectedByFork) {
     exit(1);                                                             \
   }
 
+#ifdef __x86_64__
+static void CreateProcess_in_serial(void) {
+  uint32_t status;
+  char16_t cwd[PATH_MAX];
+  char16_t prog[PATH_MAX];
+  struct NtStartupInfo si = {
+      .cb = sizeof(struct NtStartupInfo),
+      .dwFlags = kNtStartfUsestdhandles,
+      .hStdInput = -1,
+      .hStdOutput = -1,
+      .hStdError = -1,
+  };
+  struct NtProcessInformation pi;
+  GetCurrentDirectory(PATH_MAX, cwd);
+  strcpy16(prog, cwd);
+  strcat16(prog, u"\\life");
+  ASSERT_TRUE(CreateProcess(prog, prog, 0, 0, true, kNtCreateUnicodeEnvironment,
+                            0, cwd, &si, &pi));
+  ASSERT_TRUE(CloseHandle(pi.hThread));
+  ASSERT_EQ(0, WaitForSingleObject(pi.hProcess, -1u));
+  ASSERT_TRUE(GetExitCodeProcess(pi.hProcess, &status));
+  ASSERT_EQ(42 << 8, status);
+  ASSERT_TRUE(CloseHandle(pi.hProcess));
+}
+#endif
+
 void fork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = fork()));
@@ -222,15 +264,16 @@ void vfork_wait_in_serial(void) {
 void sys_fork_wait_in_serial(void) {
   int pid, ws;
   ASSERT_NE(-1, (pid = sys_fork()));
-  if (!pid)
+  if (!pid) {
     _Exit(0);
+  }
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
   CHECK_TERMSIG;
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
 
-void posix_spawn_in_serial(void) {
+void posix_spawn_fork_in_serial(void) {
   int ws, pid;
   char *prog = "./life";
   char *args[] = {prog, NULL};
@@ -242,20 +285,104 @@ void posix_spawn_in_serial(void) {
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }
 
-TEST(fork, bench) {
-  if (IsWindows()) {
+void posix_spawn_vfork_in_serial(void) {
+  int ws, pid;
+  char *prog = "./life";
+  char *args[] = {prog, NULL};
+  char *envs[] = {NULL};
+  posix_spawnattr_t spawnattr;
+  ASSERT_EQ(0, posix_spawnattr_init(&spawnattr));
+  ASSERT_EQ(0, posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_USEVFORK));
+  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, &spawnattr, args, envs));
+  ASSERT_EQ(0, posix_spawnattr_destroy(&spawnattr));
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  CHECK_TERMSIG;
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
+#define OPS     80
+#define THREADS 8
+
+void *do_in_threads_worker(void *arg) {
+  void (*func)(void) = arg;
+  for (int i = 0; i < OPS / THREADS; ++i)
+    func();
+  return 0;
+}
+
+void do_in_threads(void func(void)) {
+  pthread_t th[THREADS];
+  for (int i = 0; i < THREADS; ++i)
+    ASSERT_EQ(0, pthread_create(&th[i], 0, do_in_threads_worker, func));
+  for (int i = 0; i < THREADS; ++i)
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+}
+
+// NOTE: we leak a lot of signal delivery files because we're spawning
+//       non-cosmo processes.
+BENCH(fork, bench) {
+  if (0 && IsWindows()) {
     testlib_extract("/zip/life-pe.ape", "life", 0755);
   } else {
     testlib_extract("/zip/life", "life", 0755);
   }
+
   vfork_wait_in_serial();
   vfork_execl_wait_in_serial();
-  posix_spawn_in_serial();
-  BENCHMARK(10, 1, vfork_wait_in_serial());
-  if (!IsWindows())
-    BENCHMARK(10, 1, sys_fork_wait_in_serial());
+  posix_spawn_fork_in_serial();
   fork_wait_in_serial();
-  BENCHMARK(10, 1, fork_wait_in_serial());
-  BENCHMARK(10, 1, posix_spawn_in_serial());
-  BENCHMARK(10, 1, vfork_execl_wait_in_serial());
+
+  fprintf(stderr,
+          "\nwill %dx fork() calls go faster if we divide it among %d "
+          "threads?\n",
+          OPS, THREADS);
+  BENCHMARK(OPS, 1, fork_wait_in_serial());
+  BENCHMARK(1, OPS, do_in_threads(fork_wait_in_serial));
+
+  if (IsWindows()) {
+#ifdef __x86_64__
+    fprintf(stderr,
+            "\nwill %dx CreateProcess() calls go faster if we divide "
+            "it among %d threads?\n",
+            OPS, THREADS);
+    BENCHMARK(OPS, 1, CreateProcess_in_serial());
+    BENCHMARK(1, OPS, do_in_threads(CreateProcess_in_serial));
+#endif
+  } else {
+    fprintf(stderr,
+            "\nwill %dx sys_fork() calls go faster if we divide it "
+            "among %d threads? (if yes, blame mutexes)\n",
+            OPS, THREADS);
+    BENCHMARK(OPS, 1, sys_fork_wait_in_serial());
+    BENCHMARK(1, OPS, do_in_threads(sys_fork_wait_in_serial));
+  }
+
+  fprintf(stderr,
+          "\nwill %dx vfork() calls go faster if we divide it among %d "
+          "threads?\n",
+          OPS, THREADS);
+  BENCHMARK(OPS, 1, vfork_wait_in_serial());
+  BENCHMARK(1, OPS, do_in_threads(vfork_wait_in_serial));
+
+  fprintf(stderr,
+          "\nwill %dx posix_spawn(fork)s go faster if we divide it "
+          "among %d threads?\n",
+          OPS, THREADS);
+  BENCHMARK(OPS, 1, posix_spawn_fork_in_serial());
+  BENCHMARK(1, OPS, do_in_threads(posix_spawn_fork_in_serial));
+
+  fprintf(stderr,
+          "\nwill %dx posix_spawn(vfork)s go faster if we divide it "
+          "among %d threads?\n",
+          OPS, THREADS);
+  BENCHMARK(OPS, 1, posix_spawn_vfork_in_serial());
+  BENCHMARK(1, OPS, do_in_threads(posix_spawn_vfork_in_serial));
+
+  fprintf(stderr,
+          "\nwill %dx vfork() spawns faster if we divide it among %d "
+          "threads?\n",
+          OPS, THREADS);
+  BENCHMARK(OPS, 1, vfork_execl_wait_in_serial());
+  BENCHMARK(1, OPS, do_in_threads(vfork_execl_wait_in_serial));
 }

@@ -123,11 +123,15 @@ const char *_DescribeTermios(char buf[N], ssize_t rc,
          ".c_lflag=%s, "
          ".c_cc[VMIN]=%d, "
          ".c_cc[VTIME]=%d, "
+         ".c_cc[VSUSP]=CTRL(%#c), "
+         ".c_cc[VSTOP]=CTRL(%#c), "
+         ".c_cc[VSTART]=CTRL(%#c), "
          ".c_cc[VINTR]=CTRL(%#c), "
          ".c_cc[VQUIT]=CTRL(%#c)",
          _DescribeFlags(b128, 128, kLocal, ARRAYLEN(kLocal), "", tio->c_lflag),
-         tio->c_cc[VMIN], tio->c_cc[VTIME], CTRL(tio->c_cc[VINTR]),
-         CTRL(tio->c_cc[VQUIT]));
+         tio->c_cc[VMIN], tio->c_cc[VTIME], CTRL(tio->c_cc[VSUSP]),
+         CTRL(tio->c_cc[VSTOP]), CTRL(tio->c_cc[VSTART]),
+         CTRL(tio->c_cc[VINTR]), CTRL(tio->c_cc[VQUIT]));
 
   append("}");
 

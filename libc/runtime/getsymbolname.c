@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/symbols.internal.h"
 
-privileged char *__get_symbol_name(struct SymbolTable *t, int s) {
+__privileged char *__get_symbol_name(struct SymbolTable *t, int s) {
   /* asan runtime depends on this function */
   if (t && s != -1) {
     return t->name_base + t->names[s];

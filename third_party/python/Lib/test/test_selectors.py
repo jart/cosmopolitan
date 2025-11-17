@@ -373,9 +373,9 @@ class BaseSelectorTestCase(unittest.TestCase):
         self.addCleanup(signal.signal, signal.SIGALRM, orig_alrm_handler)
 
         try:
-            # [jart] sleep(1) isn't acceptable
-            signal.setitimer(signal.ITIMER_REAL, 0.01)
+            # [jart] make this go faster
             # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.1)
 
             s.register(rd, selectors.EVENT_READ)
             t = time()
@@ -387,7 +387,6 @@ class BaseSelectorTestCase(unittest.TestCase):
         finally:
             signal.alarm(0)
 
-    @unittest.skip("[jart] unacceptable test")
     @unittest.skipUnless(hasattr(signal, "alarm"),
                          "signal.alarm() required for this test")
     def test_select_interrupt_noraise(self):
@@ -397,16 +396,16 @@ class BaseSelectorTestCase(unittest.TestCase):
         orig_alrm_handler = signal.signal(signal.SIGALRM, lambda *args: None)
         self.addCleanup(signal.signal, signal.SIGALRM, orig_alrm_handler)
         try:
-            # [jart] sleep(1) isn't acceptable
-            # signal.setitimer(signal.ITIMER_REAL, 0.01)
+            # [jart] make this go faster
             # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.2)
             s.register(rd, selectors.EVENT_READ)
             t = time()
             # select() is interrupted by a signal, but the signal handler doesn't
             # raise an exception, so select() should by retries with a recomputed
             # timeout
-            self.assertFalse(s.select(1.5))
-            self.assertGreaterEqual(time() - t, 1.0)
+            self.assertFalse(s.select(.4))
+            self.assertGreaterEqual(time() - t, .2)
         finally:
             signal.alarm(0)
 
@@ -426,6 +425,7 @@ class ScalableSelectorMixIn:
             self.addCleanup(resource.setrlimit, resource.RLIMIT_NOFILE,
                             (soft, hard))
             NUM_FDS = min(hard, 2**16)
+            NUM_FDS = min(hard, 1024) # [jart] let's be real
         except (OSError, ValueError):
             NUM_FDS = soft
 

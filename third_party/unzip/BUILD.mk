@@ -54,6 +54,7 @@ $(THIRD_PARTY_UNZIP_A_OBJS): private						\
 			-w							\
 			-DUSE_BZIP2						\
 			-DUNICODE_SUPPORT					\
+			-DUTF8_MAYBE_NATIVE					\
 			-DHAVE_UNLINK						\
 			-DLARGE_FILE_SUPPORT					\
 			-DHAVE_TERMIOS_H					\

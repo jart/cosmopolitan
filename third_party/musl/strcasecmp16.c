@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/macros.h"
 #include "libc/wctype.h"
 
 /**
@@ -24,13 +25,22 @@
  *
  * @param a is first non-null NUL-terminated char16 string pointer
  * @param b is second non-null NUL-terminated char16 string pointer
- * @return is <0, 0, or >0 based on uint16_t comparison
+ * @return is <0, 0, or >0 based on wint_t comparison
  * @asyncsignalsafe
  */
-int strcasecmp16(const char16_t *l, const char16_t *r) {
-  int x, y;
-  size_t i = 0;
-  while ((x = towlower(l[i])) == (y = towlower(r[i])) && r[i])
+int strcasecmp16(const char16_t *a, const char16_t *b) {
+  if (a == b)
+    return 0;
+  wint_t x, y;
+  size_t i = -1;
+  do {
     ++i;
+    x = towlower(a[i]);
+    y = towlower(b[i]);
+  } while (x == y && x);
+#if !TYPE_SIGNED(wint_t)
   return x - y;
+#else
+  return (x > y) - (x < y);
+#endif
 }

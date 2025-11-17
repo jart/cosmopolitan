@@ -33,7 +33,6 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
@@ -66,6 +65,20 @@ TEST(write, readOnlyFd_ebadf) {
 
 TEST(write, badMemory_efault) {
   ASSERT_SYS(EFAULT, -1, write(1, 0, 1));
+}
+
+TEST(open_directory, eisdir) {
+  ASSERT_SYS(0, 0, mkdir("boop", 0755));
+  ASSERT_SYS(EISDIR, -1, open("boop", O_RDWR));
+  ASSERT_SYS(EISDIR, -1, open("boop", O_WRONLY));
+}
+
+TEST(write_directory, ebadf_due_to_rdonly_open) {
+  char buf[512];
+  ASSERT_SYS(0, 0, mkdir("boop", 0755));
+  ASSERT_SYS(0, 3, open("boop", O_RDONLY));
+  ASSERT_SYS(EBADF, -1, write(3, buf, 512));
+  ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(write, brokenPipe_raisesSigpipe) {
@@ -129,14 +142,16 @@ TEST(pwrite, testWritePastEof_extendsFile) {
   EXPECT_SYS(0, 0, close(3));
 }
 
-BENCH(write, bench) {
+TEST(write, bench) {
   ASSERT_SYS(0, 3, open("/dev/null", O_WRONLY));
   EZBENCH2("write", donothing, write(3, "hello", 5));
   EZBENCH2("writev", donothing, writev(3, &(struct iovec){"hello", 5}, 1));
-  BEGIN_CANCELATION_POINT;
-  EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
-  EZBENCH2("sys_writev", donothing,
-           sys_writev(3, &(struct iovec){"hello", 5}, 1));
-  END_CANCELATION_POINT;
+  if (!IsWindows()) {
+    BEGIN_CANCELATION_POINT;
+    EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
+    EZBENCH2("sys_writev", donothing,
+             sys_writev(3, &(struct iovec){"hello", 5}, 1));
+    END_CANCELATION_POINT;
+  }
   ASSERT_SYS(0, 0, close(3));
 }

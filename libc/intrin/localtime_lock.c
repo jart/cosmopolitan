@@ -16,19 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "third_party/tz/lock.h"
 
-static pthread_mutex_t __localtime_lock_obj = PTHREAD_MUTEX_INITIALIZER;
+alignas(64) static pthread_mutex_t __localtime_lock_obj =
+    PTHREAD_MUTEX_INITIALIZER;
 
 void __localtime_lock(void) {
-  _pthread_mutex_lock(&__localtime_lock_obj);
+  if (__isthreaded >= 2)
+    pthread_mutex_lock(&__localtime_lock_obj);
 }
 
 void __localtime_unlock(void) {
-  _pthread_mutex_unlock(&__localtime_lock_obj);
+  if (__isthreaded >= 2)
+    pthread_mutex_unlock(&__localtime_lock_obj);
 }
 
 void __localtime_wipe(void) {
-  _pthread_mutex_wipe_np(&__localtime_lock_obj);
+  pthread_mutex_wipe_np(&__localtime_lock_obj);
 }

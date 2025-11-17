@@ -19,12 +19,11 @@
 #include "libc/assert.h"
 #include "libc/stdio/internal.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 
 /**
  * Acquires reentrant lock on stdio object, blocking if needed.
  */
 void flockfile(FILE *f) {
   unassert(f != NULL);
-  _pthread_mutex_lock(&f->lock);
+  pthread_mutex_lock(&f->lock);
 }

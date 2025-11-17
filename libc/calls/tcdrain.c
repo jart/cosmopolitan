@@ -18,16 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 #define TCSBRK    0x5409      // linux
 #define TIOCDRAIN 0x2000745e  // xnu, freebsd, openbsd, netbsd
@@ -57,7 +58,7 @@ static dontinline textwindows int sys_tcdrain_nt(int fd) {
 int tcdrain(int fd) {
   int rc;
   BEGIN_CANCELATION_POINT;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotty();
   } else if (IsLinux()) {
     rc = sys_ioctl_cp(fd, TCSBRK, (uintptr_t)1);

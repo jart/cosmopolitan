@@ -24,7 +24,9 @@
 #include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo-openbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/ucontext-openbsd.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.h"
@@ -32,11 +34,13 @@
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/pib.h"
 
 #ifdef __x86_64__
 
-privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
-                                   struct ucontext_openbsd *ctx) {
+__privileged void __sigenter_openbsd(int sig,
+                                     struct siginfo_openbsd *openbsdinfo,
+                                     struct ucontext_openbsd *ctx) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Goodies {
@@ -46,16 +50,18 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
   CheckLargeStackAllocation(&g, sizeof(g));
 #pragma GCC pop_options
   int rva, flags;
-  rva = __sighandrvas[sig];
+  struct CosmoPib *pib = __get_pib();
+  sig = __sig2linux(sig);
+  rva = pib->sighandrvas[sig - 1];
   if (rva >= kSigactionMinRva) {
-    flags = __sighandflags[sig];
+    flags = pib->sighandflags[sig - 1];
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {
       __repstosb(&g.uc, 0, sizeof(g.uc));
       __siginfo2cosmo(&g.si, (void *)openbsdinfo);
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
-      g.uc.uc_sigmask = ctx->sc_mask;
+      g.uc.uc_sigmask = __mask2linux(ctx->sc_mask);
       g.uc.uc_mcontext.rdi = ctx->sc_rdi;
       g.uc.uc_mcontext.rsi = ctx->sc_rsi;
       g.uc.uc_mcontext.rdx = ctx->sc_rdx;
@@ -82,7 +88,7 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
                    sizeof(*ctx->sc_fpstate));
       }
       ((sigaction_f)(__executable_start + rva))(sig, &g.si, &g.uc);
-      ctx->sc_mask = g.uc.uc_sigmask;
+      ctx->sc_mask = __linux2mask(g.uc.uc_sigmask);
       ctx->sc_rdi = g.uc.uc_mcontext.rdi;
       ctx->sc_rsi = g.uc.uc_mcontext.rsi;
       ctx->sc_rdx = g.uc.uc_mcontext.rdx;

@@ -37,10 +37,12 @@ TEST(fmodl, test) {
   EXPECT_TRUE(isnan(fmodl(1, 0)));
   EXPECT_STREQ("8", gc(xdtoal(fmodl(8, 32))));
   EXPECT_STREQ("8e+100", gc(xdtoal(fmodl(8e100, 32e100))));
+#ifndef NOX87
   EXPECT_STREQ("5.319372648326541e+255",
                gc(xdtoal(ldexpl(6381956970095103, 797))));
   EXPECT_STREQ(".09287409360354737",
                gc(xdtoal(fmodl(ldexpl(6381956970095103, 797), M_2_PI))));
+#endif
 }
 
 TEST(fmod, test) {

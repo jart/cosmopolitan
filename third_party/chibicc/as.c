@@ -39,6 +39,7 @@
 #include "third_party/gdtoa/gdtoa.h"
 #include "libc/serialize.h"
 #include "libc/ctype.h"
+#include "libc/errno.h"
 #include "tool/build/lib/elfwriter.h"
 
 #define OSZ  0x66
@@ -577,6 +578,15 @@ static char *FindInclude(struct As *a, const char *file) {
     free(path);
   }
   return NULL;
+}
+
+static bool fileexists(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!stat(path, &st))
+    return true;
+  errno = e;
+  return false;
 }
 
 static void Tokenize(struct As *a, int path) {

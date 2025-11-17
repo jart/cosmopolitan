@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describebacktrace.h"
+#include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
@@ -32,8 +33,9 @@ void __assert_fail(const char *expr, const char *file, int line) {
   char ibuf[12];
   sigset_t m = __sig_block();
   FormatInt32(ibuf, line);
-  tinyprint(2, file, ":", ibuf, ": \e[31;1massert(", expr,
-            ") failed\e[0m (cosmoaddr2line ", FindDebugBinary(), " ",
+  tinyprint(2, file, ":", ibuf, ": ", __nocolor ? "" : "\e[31;1m", "assert(",
+            expr, ") failed", __nocolor ? "" : "\e[0m", " (cosmoaddr2line ",
+            FindDebugBinary(), " ",
             DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
   __sig_unblock(m);
   abort();

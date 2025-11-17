@@ -40,6 +40,7 @@ TEST(atan2, testSpecialCases) {
   ASSERT_STREQ("0", gc(xdtoa(atan2(+0., +1.))));
   ASSERT_STREQ("0", gc(xdtoa(atan2(+0., +2.))));
   ASSERT_STREQ("0", gc(xdtoa(atan2(1, INFINITY))));
+#ifndef NOX87
   ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -0.))));
   ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -1.))));
   ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -2.))));
@@ -56,4 +57,5 @@ TEST(atan2, testSpecialCases) {
   ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(1, -INFINITY))));
   ASSERT_STREQ("2.356194490192345", gc(xdtoal(atan2(INFINITY, -INFINITY))));
   ASSERT_STREQ(".7853981633974483", gc(xdtoal(atan2(INFINITY, INFINITY))));
+#endif
 }

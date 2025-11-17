@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/fds.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/thunk/msabi.h"
@@ -30,27 +31,56 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 __msabi extern typeof(__sys_getsockname_nt) *const __imp_getsockname;
 __msabi extern typeof(__sys_getpeername_nt) *const __imp_getpeername;
 
+textwindows static int getsockname_nt_thunk(uint64_t x, void *y, uint32_t *z) {
+  return __imp_getsockname(x, y, z);
+}
+
+textwindows static int getpeername_nt_thunk(uint64_t x, void *y, uint32_t *z) {
+  return __imp_getpeername(x, y, z);
+}
+
+textwindows static int getname_nt(uint64_t x, void *y, uint32_t *z,
+                                  int impl(uint64_t, void *, uint32_t *)) {
+  uint32_t addrcapacity = *z;
+  if (impl(x, y, z) == -1)
+    return -1;
+  __unfixsunpath(y, z, addrcapacity);
+  return 0;
+}
+
+textwindows dontinline static int getsockname_nt(uint64_t x, void *y,
+                                                 uint32_t *z) {
+  return getname_nt(x, y, z, getsockname_nt_thunk);
+}
+
+textwindows dontinline static int getpeername_nt(uint64_t x, void *y,
+                                                 uint32_t *z) {
+  return getname_nt(x, y, z, getpeername_nt_thunk);
+}
+
 static int __getsockpeername(int fd, struct sockaddr *out_addr,
                              uint32_t *inout_addrsize, const char *name,
                              int impl_sysv(int, void *, uint32_t *),
-                             int (*__msabi impl_win32)(uint64_t, void *,
-                                                       uint32_t *)) {
+                             int impl_win32(uint64_t, void *, uint32_t *)) {
   int rc;
   struct sockaddr_storage ss = {0};
   uint32_t size = sizeof(ss);
 
-  if (IsWindows()) {
+  if (kisdangerous(out_addr) || kisdangerous(inout_addrsize)) {
+    rc = efault();
+  } else if (IsWindows()) {
     if (__isfdkind(fd, kFdSocket)) {
-      if ((rc = impl_win32(g_fds.p[fd].handle, &ss, &size))) {
-        if (impl_win32 == __imp_getsockname && WSAGetLastError() == WSAEINVAL) {
+      if ((rc = impl_win32(__get_pib()->fds.p[fd].handle, &ss, &size))) {
+        if (impl_win32 == getsockname_nt && WSAGetLastError() == WSAEINVAL) {
           // The socket has not been bound to an address with bind, or
           // ADDR_ANY is specified in bind but connection has not yet
           // occurred. -MSDN
-          ss.ss_family = g_fds.p[fd].family;
+          ss.ss_family = __get_pib()->fds.p[fd].family;
           rc = 0;
         } else {
           rc = __winsockerr();
@@ -64,9 +94,8 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
   }
 
   if (!rc) {
-    if (IsBsd()) {
+    if (IsBsd())
       __convert_bsd_to_sockaddr(&ss);
-    }
     __write_sockaddr(&ss, out_addr, inout_addrsize);
   }
 
@@ -82,7 +111,8 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
  */
 int getsockname(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
   return __getsockpeername(fd, out_addr, inout_addrsize, "getsockname",
-                           __sys_getsockname, __imp_getsockname);
+                           __sys_getsockname,
+                           SupportsWindows() ? getsockname_nt : 0);
 }
 
 /**
@@ -92,5 +122,6 @@ int getsockname(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
  */
 int getpeername(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
   return __getsockpeername(fd, out_addr, inout_addrsize, "getpeername",
-                           __sys_getpeername, __imp_getpeername);
+                           __sys_getpeername,
+                           SupportsWindows() ? getpeername_nt : 0);
 }

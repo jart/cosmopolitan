@@ -80,7 +80,8 @@ void free_childbase (struct childbase* child);
 char **construct_command_argv (char *line, char **restp, struct file *file,
                                int cmd_flags, char** batch_file);
 
-pid_t child_execute_job (struct childbase *child, int good_stdin, char **argv);
+pid_t child_execute_job (struct childbase *child, int good_stdin,
+                         char **argv, bool is_build_rule);
 
 #ifdef _AMIGA
 void exec_command (char **argv) NORETURN;

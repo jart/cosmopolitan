@@ -37,12 +37,12 @@ $(THIRD_PARTY_ZLIB_A).pkg:				\
 
 ifeq ($(ARCH), x86_64)
 o/$(MODE)/third_party/zlib/adler32_simd.o: private	\
-		TARGET_ARCH +=				\
+		TARGET_ARCH =				\
 			-O3				\
 			-mssse3
 o/$(MODE)/third_party/zlib/crc_folding.o		\
 o/$(MODE)/third_party/zlib/crc32_simd_sse42.o: private	\
-		TARGET_ARCH +=				\
+		TARGET_ARCH =				\
 			-O3				\
 			-msse4.2			\
 			-mpclmul			\
@@ -50,7 +50,7 @@ o/$(MODE)/third_party/zlib/crc32_simd_sse42.o: private	\
 			-DCRC32_SIMD_SSE42_PCLMUL	\
 			-DBUILD_SSE42
 o/$(MODE)/third_party/zlib/crc32_simd_avx512.o: private	\
-		TARGET_ARCH +=				\
+		TARGET_ARCH =				\
 			-O3				\
 			-mpclmul			\
 			-mavx512f			\
@@ -71,7 +71,7 @@ endif
 ifeq ($(ARCH), aarch64)
 o/$(MODE)/third_party/zlib/deflate.o			\
 o/$(MODE)/third_party/zlib/crc32_simd_neon.o: private	\
-		TARGET_ARCH +=				\
+		TARGET_ARCH =				\
 			-O3				\
 			-DBUILD_NEON			\
 			-march=armv8-a+aes+crc

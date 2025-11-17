@@ -60,7 +60,6 @@ int __zipos_stat_impl(struct Zipos *, size_t, struct stat *);
 ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
                      ssize_t);
 int64_t __zipos_seek(struct ZiposHandle *, int64_t, unsigned);
-int __zipos_fcntl(int, int, uintptr_t);
 int __zipos_notat(int, const char *);
 void *__zipos_mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
                    int64_t);

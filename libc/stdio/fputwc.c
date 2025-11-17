@@ -16,20 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Writes wide character to stream.
  *
  * @param wc has wide character
  * @param f is file object stream pointer
- * @return wide character if written or -1 w/ errno
+ * @return character that was written, or WEOF w/ errno
+ * @cancelationpoint
  */
 wint_t fputwc(wchar_t wc, FILE *f) {
   wint_t rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fputwc_unlocked(wc, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }
 

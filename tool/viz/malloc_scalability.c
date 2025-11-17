@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -48,7 +50,7 @@ void test(int n) {
 }
 
 int main(int argc, char *argv[]) {
-  int n = __get_cpu_count();
+  int n = cosmo_cpu_count();
   if (n < 8)
     n = 8;
   for (int i = 1; i <= n; ++i)

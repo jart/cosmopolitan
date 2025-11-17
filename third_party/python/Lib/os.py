@@ -42,7 +42,7 @@ def _get_exports_list(module):
 
 name = 'posix'
 linesep = '\n'
-realname = "nt" if cosmo.kernel == "nt" else "posix"
+realname = 'posix'
 from posix import *
 from posix import _exit
 __all__.append('_exit')
@@ -1082,7 +1082,6 @@ if __name__ == 'PYOBJ':
     MS_WINDOWS = 0
     O_ACCMODE = 0
     O_APPEND = 0
-    O_ASYNC = 0
     O_CLOEXEC = 0
     O_CREAT = 0
     O_DIRECT = 0
@@ -1097,19 +1096,12 @@ if __name__ == 'PYOBJ':
     O_NOCTTY = 0
     O_NOFOLLOW = 0
     O_NOFOLLOW = 0
-    O_NOFOLLOW_ANY = 0
     O_NONBLOCK = 0
-    O_PATH = 0
-    O_RANDOM = 0
     O_RDONLY = 0
     O_RDWR = 0
     O_RSYNC = 0
-    O_SEQUENTIAL = 0
-    O_SHLOCK = 0
     O_SYNC = 0
-    O_TMPFILE = 0
     O_TRUNC = 0
-    O_TTY_INIT = 0
     O_WRONLY = 0
     POSIX_FADV_DONTNEED = 0
     POSIX_FADV_NOREUSE = 0

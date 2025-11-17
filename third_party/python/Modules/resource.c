@@ -10,8 +10,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/floatobject.h"
@@ -25,22 +24,16 @@
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("resource");
-PYTHON_PROVIDE("resource.RLIMIT_AS");
-PYTHON_PROVIDE("resource.RLIMIT_CORE");
 PYTHON_PROVIDE("resource.RLIMIT_CPU");
-PYTHON_PROVIDE("resource.RLIMIT_DATA");
 PYTHON_PROVIDE("resource.RLIMIT_FSIZE");
-PYTHON_PROVIDE("resource.RLIMIT_MEMLOCK");
-PYTHON_PROVIDE("resource.RLIMIT_MSGQUEUE");
-PYTHON_PROVIDE("resource.RLIMIT_NICE");
-PYTHON_PROVIDE("resource.RLIMIT_NOFILE");
-PYTHON_PROVIDE("resource.RLIMIT_NPROC");
-PYTHON_PROVIDE("resource.RLIMIT_RSS");
-PYTHON_PROVIDE("resource.RLIMIT_RTPRIO");
-PYTHON_PROVIDE("resource.RLIMIT_RTTIME");
-PYTHON_PROVIDE("resource.RLIMIT_SIGPENDING");
+PYTHON_PROVIDE("resource.RLIMIT_DATA");
 PYTHON_PROVIDE("resource.RLIMIT_STACK");
-PYTHON_PROVIDE("resource.RLIMIT_VMEM");
+PYTHON_PROVIDE("resource.RLIMIT_CORE");
+PYTHON_PROVIDE("resource.RLIMIT_RSS");
+PYTHON_PROVIDE("resource.RLIMIT_NPROC");
+PYTHON_PROVIDE("resource.RLIMIT_NOFILE");
+PYTHON_PROVIDE("resource.RLIMIT_MEMLOCK");
+PYTHON_PROVIDE("resource.RLIMIT_AS");
 PYTHON_PROVIDE("resource.RLIM_INFINITY");
 PYTHON_PROVIDE("resource.RUSAGE_BOTH");
 PYTHON_PROVIDE("resource.RUSAGE_CHILDREN");
@@ -165,11 +158,12 @@ py2rlimit(PyObject *limits, struct rlimit *rl_out)
     if (rl_out->rlim_max == (rlim_t)-1 && PyErr_Occurred())
         goto error;
 #else
+    /* [jart] fix types */
     /* The limits are probably bigger than a long */
-    rl_out->rlim_cur = PyLong_AsLongLong(curobj);
+    rl_out->rlim_cur = PyLong_AsUnsignedLongLong(curobj);
     if (rl_out->rlim_cur == (rlim_t)-1 && PyErr_Occurred())
         goto error;
-    rl_out->rlim_max = PyLong_AsLongLong(maxobj);
+    rl_out->rlim_max = PyLong_AsUnsignedLongLong(maxobj);
     if (rl_out->rlim_max == (rlim_t)-1 && PyErr_Occurred())
         goto error;
 #endif
@@ -185,12 +179,10 @@ error:
 static PyObject*
 rlimit2py(struct rlimit rl)
 {
-    if (sizeof(rl.rlim_cur) > sizeof(long)) {
-        return Py_BuildValue("LL",
-                             (long long) rl.rlim_cur,
-                             (long long) rl.rlim_max);
-    }
-    return Py_BuildValue("ll", (long) rl.rlim_cur, (long) rl.rlim_max);
+    // [jart] deal with type
+    return Py_BuildValue("kk",
+                         (unsigned long) rl.rlim_cur,
+                         (unsigned long) rl.rlim_max);
 }
 
 static PyObject *
@@ -345,30 +337,16 @@ PyInit_resource(void)
                        (PyObject*) &StructRUsageType);
 
     /* insert constants */
-    if (RLIMIT_CPU!=127) PyModule_AddIntMacro(m, RLIMIT_CPU);
-    if (RLIMIT_FSIZE!=127) PyModule_AddIntMacro(m, RLIMIT_FSIZE);
-    if (RLIMIT_DATA!=127) PyModule_AddIntMacro(m, RLIMIT_DATA);
-    if (RLIMIT_STACK!=127) PyModule_AddIntMacro(m, RLIMIT_STACK);
-    if (RLIMIT_CORE!=127) PyModule_AddIntMacro(m, RLIMIT_CORE);
-    if (RLIMIT_NOFILE!=127) PyModule_AddIntMacro(m, RLIMIT_NOFILE);
-    if (RLIMIT_VMEM!=127) PyModule_AddIntMacro(m, RLIMIT_VMEM);
-    if (RLIMIT_AS!=127) PyModule_AddIntMacro(m, RLIMIT_AS);
-    if (RLIMIT_RSS!=127) PyModule_AddIntMacro(m, RLIMIT_RSS);
-    if (RLIMIT_NPROC!=127) PyModule_AddIntMacro(m, RLIMIT_NPROC);
-    if (RLIMIT_MEMLOCK!=127) PyModule_AddIntMacro(m, RLIMIT_MEMLOCK);
-    if (RLIMIT_SBSIZE!=127) PyModule_AddIntMacro(m, RLIMIT_SBSIZE);
-    
-    /* Linux specific */
-    if (RLIMIT_MSGQUEUE!=127) PyModule_AddIntMacro(m, RLIMIT_MSGQUEUE);
-    if (RLIMIT_NICE!=127) PyModule_AddIntMacro(m, RLIMIT_NICE);
-    if (RLIMIT_RTPRIO!=127) PyModule_AddIntMacro(m, RLIMIT_RTPRIO);
-    if (RLIMIT_RTTIME!=127) PyModule_AddIntMacro(m, RLIMIT_RTTIME);
-    if (RLIMIT_SIGPENDING!=127) PyModule_AddIntMacro(m, RLIMIT_SIGPENDING);
-
-    /* FreeBSD specific */
-    if (RLIMIT_SWAP!=127) PyModule_AddIntMacro(m, RLIMIT_SWAP);
-    if (RLIMIT_SBSIZE!=127) PyModule_AddIntMacro(m, RLIMIT_SBSIZE);
-    if (RLIMIT_NPTS!=127) PyModule_AddIntMacro(m, RLIMIT_NPTS);
+    PyModule_AddIntMacro(m, RLIMIT_CPU);
+    PyModule_AddIntMacro(m, RLIMIT_FSIZE);
+    PyModule_AddIntMacro(m, RLIMIT_DATA);
+    PyModule_AddIntMacro(m, RLIMIT_STACK);
+    PyModule_AddIntMacro(m, RLIMIT_CORE);
+    PyModule_AddIntMacro(m, RLIMIT_NOFILE);
+    PyModule_AddIntMacro(m, RLIMIT_AS);
+    PyModule_AddIntMacro(m, RLIMIT_RSS);
+    PyModule_AddIntMacro(m, RLIMIT_NPROC);
+    PyModule_AddIntMacro(m, RLIMIT_MEMLOCK);
 
     /* target */
     PyModule_AddIntMacro(m, RUSAGE_SELF);

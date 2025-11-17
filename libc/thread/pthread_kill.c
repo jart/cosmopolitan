@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -27,6 +28,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
@@ -63,15 +65,15 @@ errno_t pthread_kill(pthread_t thread, int sig) {
     err = __sig_kill(pt, sig, SI_TKILL);
   } else {
     if (IsXnuSilicon()) {
-      err = __syslib->__pthread_kill(_pthread_syshand(pt), sig);
+      err = __syslib->__pthread_kill(_pthread_syshand(pt), __linux2sig(sig));
     } else {
       int r = 0;
       int e = errno;
       int tid = _pthread_tid(pt);
       if (IsLinux() || IsFreebsd()) {
-        r = sys_tgkill(__pid, tid, sig);
+        r = sys_tgkill(__get_pib()->pid, tid, __linux2sig(sig));
       } else {
-        r = sys_tkill(tid, sig, pt->tib);
+        r = sys_tkill(tid, __linux2sig(sig), pt->tib);
       }
       if (r) {
         err = errno;

@@ -477,7 +477,6 @@ static void
 calculate_path(void)
 {
     static wchar_t delimiter[2] = {DELIM, '\0'};
-    static wchar_t separator[2] = {SEP, '\0'};
     /* ignore PYTHONPATH/PYTHONHOME for now */
     // char *_rtpypath = Py_GETENV("PYTHONPATH");
     /* XXX use wide version on Windows */
@@ -498,10 +497,6 @@ calculate_path(void)
     wchar_t *ape_exec_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
     wchar_t *package_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
     wchar_t *ape_package_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
-    if (IsWindows()) {
-        delimiter[0] = L';';
-        separator[0] = L'\\';
-    }
     if (_path) {
         path_buffer = Py_DecodeLocale(_path, NULL);
         path = path_buffer;

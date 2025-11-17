@@ -20,9 +20,16 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
+#include "libc/nt/enum/processcreationflags.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Creates session and sets the process group id.
+ *
+ * On Windows, this operation won't take effect until fork() or execve()
+ * is called, which use CreateProcess(CREATE_NO_WINDOW|DETACHED_PROCESS)
+ * to ensure the process won't be killed when the terminal closes. It is
+ * meant primarily to be used by daemon() which is the api that you want
  *
  * @return new session id, or -1 w/ errno
  * @raise EPERM if already the leader
@@ -32,6 +39,9 @@ int setsid(void) {
   if (!IsWindows() && !IsMetal()) {
     rc = sys_setsid();
   } else {
+    // this ensures that second fork() call in daemon() will create a
+    // process that will not be killed when the console window closes
+    __get_pib()->dwCreationFlags |= kNtCreateNoWindow | kNtDetachedProcess;
     rc = getpid();
   }
   STRACE("setsid() → %d% m", rc);

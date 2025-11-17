@@ -29,7 +29,8 @@ cosmo_futex_thunk:
 	clc
 	syscall
 	jnc	1f
-	neg	%eax
+	neg	%rax
+1:	xchg	%rax,%rdi
 #elif defined(__aarch64__)
 	ldr	x7,=__hostos
 	ldr	w7,[x7]
@@ -46,6 +47,6 @@ cosmo_futex_thunk:
 #error "unsupported architecture"
 #endif /* __x86_64__ */
 1:	epi
-	ret
+	jmp	_linret
 	end
 	.endfn	cosmo_futex_thunk,globl,hidden

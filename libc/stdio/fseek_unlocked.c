@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
 /**
@@ -40,21 +42,21 @@ int fseek_unlocked(FILE *f, int64_t offset, int whence) {
   int res;
   int64_t pos;
   if (f->fd != -1) {
+    // handle file streams
     if (fflush_unlocked(f) == EOF)
       return -1;
-    if (whence == SEEK_CUR && f->beg < f->end) {
+    if (whence == SEEK_CUR && f->beg < f->end)
       offset -= f->end - f->beg;
-    }
     if (lseek(f->fd, offset, whence) != -1) {
       f->beg = 0;
       f->end = 0;
-      f->state = 0;
       res = 0;
     } else {
       f->state = errno == ESPIPE ? EBADF : errno;
       res = -1;
     }
   } else {
+    // resolve absolute position
     switch (whence) {
       case SEEK_SET:
         pos = offset;
@@ -69,15 +71,47 @@ int fseek_unlocked(FILE *f, int64_t offset, int whence) {
         pos = -1;
         break;
     }
-    f->end = MAX(f->beg, f->end);
-    if (0 <= pos && pos <= f->end) {
-      f->beg = pos;
-      f->state = 0;
-      res = 0;
-    } else {
+    if (pos < 0) {
+      // can't seek before file
       f->state = errno = EINVAL;
       res = -1;
+    } else if (f->memstream_bufp) {
+      // handle open_memstream() streams
+      if (pos + 1 > f->size) {
+        char *buf2;
+        size_t size2;
+        size2 = f->size;
+        do {
+          size2 += size2 >> 1;
+        } while (pos + 1 > size2);
+        if (!(buf2 = realloc(f->buf, size2)))
+          return EOF;
+        memset(f->buf + f->size, 0, size2 - f->size);
+        *f->memstream_bufp = f->buf = buf2;
+        f->size = size2;
+      }
+      f->end = MAX(pos, f->end);
+      f->beg = pos;
+      res = 0;
+    } else {
+      // handle fmemopen() streams
+      f->end = MAX(f->beg, f->end);
+      if (0 <= pos && pos <= f->size) {
+        f->beg = pos;
+        res = 0;
+      } else {
+        f->state = errno = EINVAL;
+        res = -1;
+      }
     }
   }
+
+  // A successful call to fseek() shall clear the end-of-file
+  // indicator for the stream and undo any effects of ungetc() and
+  // ungetwc() on the same stream. After an fseek() call, the next
+  // operation on an update stream may be either input or output.
+  if (!res)
+    f->state = 0;
+
   return res;
 }

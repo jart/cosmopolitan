@@ -32,7 +32,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/arraylist.internal.h"
+#include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -151,12 +151,29 @@ struct Relas {
   } *p;
 } prtu;
 
-static wontreturn void Die(const char *path, const char *reason) {
+#define append(ARRAYLIST, ITEM) concat((ARRAYLIST), (ITEM), 1)
+#define concat(ARRAYLIST, ITEM, COUNT)                                      \
+  ({                                                                        \
+    autotype(ARRAYLIST) List = (ARRAYLIST);                                 \
+    autotype(&List->p[0]) Item = (ITEM);                                    \
+    size_t SizE = sizeof(*Item);                                            \
+    size_t Count = (COUNT);                                                 \
+    size_t Idx = List->i;                                                   \
+    if (Idx + Count < List->n || __grow(&List->p, &List->n, SizE, Count)) { \
+      memcpy(&List->p[Idx], Item, SizE *Count);                             \
+      List->i = Idx + Count;                                                \
+    } else {                                                                \
+      Idx = -1UL;                                                           \
+    }                                                                       \
+    (ssize_t)(Idx);                                                         \
+  })
+
+[[noreturn]] static void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void SysExit(const char *path, const char *func) {
+[[noreturn]] static void SysExit(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerrno(errno)))
     errstr = "EUNKNOWN";
@@ -307,7 +324,7 @@ static void WritePackage(struct Package *pkg) {
   }
 }
 
-static wontreturn void PrintUsage(int fd, int exitcode) {
+[[noreturn]] static void PrintUsage(int fd, int exitcode) {
   tinyprint(fd, "\n\
 NAME\n\
 \n\

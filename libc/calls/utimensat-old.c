@@ -23,6 +23,7 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"

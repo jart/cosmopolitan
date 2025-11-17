@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 edom:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EDOM(%rip),%ecx
+	push	$EDOM
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EDOM
-	ldrsw	x0,[x1,#:lo12:EDOM]
+	mov	x0,#EDOM
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -16,6 +16,8 @@
 
 COSMOPOLITAN_C_START_
 
+extern int kprintf_crash;
+
 void kprintf(const char *, ...) libcesque;
 size_t ksnprintf(char *, size_t, const char *, ...) libcesque;
 void kvprintf(const char *, va_list) libcesque;

@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/sig.h"
 
-privileged void __siginfo2cosmo(siginfo_t *si, const union siginfo_meta *m) {
+__privileged void __siginfo2cosmo(siginfo_t *si, const union siginfo_meta *m) {
   void *si_addr;
   int32_t si_signo;
   int32_t si_errno;
@@ -84,13 +85,14 @@ privileged void __siginfo2cosmo(siginfo_t *si, const union siginfo_meta *m) {
     notpossible;
   }
 
+  // translate signal magic number
+  si_signo = __sig2linux(si_signo);
+
   // Turn BUS_OBJERR into BUS_ADRERR for consistency with Linux.
   // See test/libc/calls/sigbus_test.c
-  if (IsFreebsd() || IsOpenbsd()) {
-    if (si_signo == 10 && si_code == 3) {
+  if (IsFreebsd() || IsOpenbsd())
+    if (si_signo == SIGBUS && si_code == 3)
       si_code = 2;
-    }
-  }
 
   *si = (siginfo_t){0};
   si->si_signo = si_signo;

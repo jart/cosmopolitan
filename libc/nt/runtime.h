@@ -12,11 +12,10 @@
  * bloating binaries with debug information the user doesn't need.
  */
 
-#define kNtCpUtf8             65001
-#define kNtInvalidHandleValue -1L
-#define kNtStdInputHandle     -10u
-#define kNtStdOutputHandle    -11u
-#define kNtStdErrorHandle     -12u
+#define kNtCpUtf8          65001
+#define kNtStdInputHandle  -10u
+#define kNtStdOutputHandle -11u
+#define kNtStdErrorHandle  -12u
 
 #define GetCurrentProcess() -1
 

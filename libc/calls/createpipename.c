@@ -20,15 +20,16 @@
 #include "libc/fmt/internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/runtime/internal.h"
+#include "libc/sysv/pib.h"
 
 // This function is called very early by WinMain().
 textwindows char16_t *__create_pipe_name(char16_t *a) {
   char16_t *p = a;
-  const char *q = "\\\\?\\pipe\\cosmo\\";
+  const char *q = "\\\\.\\pipe\\cosmo\\";
   static atomic_uint x;
   while (*q)
     *p++ = *q++;
-  p = __itoa16(p, __pid);
+  p = __itoa16(p, __get_pib()->pid);
   *p++ = '-';
   p = __itoa16(p, atomic_fetch_add(&x, 1));
   *p = 0;

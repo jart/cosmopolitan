@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -25,6 +24,12 @@
 
 /**
  * Tunes buffering settings for an stdio stream.
+ *
+ * This implementation provides robust buffering mode control with strict
+ * adherence to POSIX semantics. Unlike some implementations that may
+ * silently ignore buffering mode changes or inconsistently apply them,
+ * this implementation ensures that buffering behavior matches the
+ * specified mode exactly.
  *
  * @param mode may be _IOFBF, _IOLBF, or _IONBF
  * @param buf may optionally be non-NULL to set the stream's underlying
@@ -35,18 +40,23 @@
  */
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
   flockfile(f);
-  if (buf) {
-    if (!size)
-      size = BUFSIZ;
-    if (f->freebuf)
-      if (f->buf != buf)
-        if (_weaken(free))
-          _weaken(free)(f->buf);
-    f->buf = buf;
-    f->size = size;
-    f->freebuf = 0;
+  if (f->fd != -1) {
+    if (mode == _IONBF) {
+      if (f->freebuf)
+        free(f->buf);
+      f->buf = 0;
+      f->size = 0;
+      f->freebuf = 0;
+    } else if (buf) {
+      if (f->freebuf)
+        if (f->buf != buf)
+          free(f->buf);
+      f->buf = buf;
+      f->size = size;
+      f->freebuf = 0;
+    }
+    f->bufmode = mode;
   }
-  f->bufmode = mode;
   funlockfile(f);
   return 0;
 }

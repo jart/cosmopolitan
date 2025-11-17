@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 etoomanyrefs:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ETOOMANYREFS(%rip),%ecx
+	push	$ETOOMANYREFS
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ETOOMANYREFS
-	ldrsw	x0,[x1,#:lo12:ETOOMANYREFS]
+	mov	x0,#ETOOMANYREFS
 	b	__errfun
 #else
 #error "unsupported architecture"

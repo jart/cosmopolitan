@@ -21,6 +21,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/fds.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -56,11 +57,11 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
   if (startswith(path, "/dev/")) {
     int fd;
     if (!strcmp(path + 5, "tty")) {
-      return sys_fstat_nt_special(kFdConsole, st);
+      return sys_fstat_nt_char(kFdConsole, st);
     } else if (!strcmp(path + 5, "null")) {
-      return sys_fstat_nt_special(kFdDevNull, st);
+      return sys_fstat_nt_char(kFdDevNull, st);
     } else if (!strcmp(path + 5, "random") || !strcmp(path + 5, "urandom")) {
-      return sys_fstat_nt_special(kFdDevRandom, st);
+      return sys_fstat_nt_char(kFdDevRandom, st);
     } else if (!strcmp(path + 5, "stdin")) {
       return sys_fstat_nt(STDIN_FILENO, st);
     } else if (!strcmp(path + 5, "stdout")) {
@@ -69,21 +70,20 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
       return sys_fstat_nt(STDERR_FILENO, st);
     } else if (startswith(path + 5, "fd/") && (fd = Atoi(path + 8)) != -1) {
       return sys_fstat_nt(fd, st);
-    } else {
-      return enoent();
     }
   }
 
   // convert path from utf-8 to utf-16
   uint16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) {
+  if (__mkntpathat(dirfd, path, path16) == -1)
     return -1;
-  }
 
-  // open an actual file
+  // open the file. we optimistically request read access because (a) we
+  // want to know if the file is readable, and (b) we'll need to read
+  // the first two bytes later to determine if it's an executable.
   int rc;
   int64_t fh;
-  int e = errno;
+  int mode = 0444;
   uint32_t dwDesiredAccess = kNtFileGenericRead;
   BLOCK_SIGNALS;
 TryAgain:
@@ -95,15 +95,15 @@ TryAgain:
                ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
                                               : 0),
            0)) != -1) {
-    rc = st ? sys_fstat_nt_handle(fh, path16, st) : 0;
+    rc = sys_fstat_nt_handle(fh, path16, st, mode);
     CloseHandle(fh);
   } else {
     uint32_t dwErrorCode = GetLastError();
     if (dwDesiredAccess == kNtFileGenericRead &&
         (dwErrorCode == kNtErrorAccessDenied ||
          dwErrorCode == kNtErrorSharingViolation)) {
+      mode = 0;
       dwDesiredAccess = kNtFileReadAttributes;
-      errno = e;
       goto TryAgain;
     } else if (!(flags & AT_SYMLINK_NOFOLLOW) &&
                dwErrorCode == kNtErrorCantAccessFile) {
@@ -113,7 +113,6 @@ TryAgain:
       // details of the link itself is better than providing nothing. It
       // should never be like this on UNIX but Windows gets a bit screwy
       flags |= AT_SYMLINK_NOFOLLOW;
-      errno = e;
       goto TryAgain;
     } else {
       rc = __winerr();

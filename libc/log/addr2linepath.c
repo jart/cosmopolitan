@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
 
 #ifdef __x86_64__
 #define ADDR2LINE "cosmocc/3.2/bin/x86_64-linux-musl-addr2line"
@@ -35,6 +38,13 @@ static struct {
   char *res;
   char buf[PATH_MAX];
 } g_addr2line;
+
+static bool isexecutable(const char *path) {
+  struct stat st;
+  if (fstatat(AT_FDCWD, path, &st, 0))
+    return 0;
+  return !S_ISDIR(st.st_mode) && !!(st.st_mode & 0111);
+}
 
 void GetAddr2linePathInit(void) {
   char *res;

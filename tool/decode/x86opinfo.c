@@ -43,7 +43,7 @@ const struct IdName kXedModeNames[] = {
 int g_mode;
 struct XedDecodedInst g_xedd;
 
-wontreturn void ShowUsage(int rc, FILE *f) {
+[[noreturn]] void ShowUsage(int rc, FILE *f) {
   size_t i;
   fputs("Usage: ", f);
   fputs(program_invocation_name, f);

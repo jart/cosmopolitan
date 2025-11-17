@@ -16,7 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/stdckdint.h"
+#include "libc/str/str.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 __static_yoink("free");
@@ -31,5 +34,18 @@ __static_yoink("free");
  * @see dlcalloc()
  */
 void *calloc(size_t n, size_t itemsize) {
+#ifdef COSMO_MEM_DEBUG
+  if (ckd_mul(&n, n, itemsize)) {
+    errno = ENOMEM;
+    return 0;
+  }
+  void *p = malloc(n);
+  if (!p)
+    return 0;
+  if (n)
+    memset(p, 0, n);
+  return p;
+#else
   return dlcalloc(n, itemsize);
+#endif
 }

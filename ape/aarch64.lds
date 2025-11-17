@@ -4,6 +4,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
 
+#define CACHELINE 64
+
 ENTRY(_start)
 OUTPUT_ARCH(aarch64)
 OUTPUT_FORMAT("elf64-littleaarch64",
@@ -73,12 +75,15 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
-  . += CONSTANT(MAXPAGESIZE);
+  . = ALIGN(CONSTANT(MAXPAGESIZE));
+  __privileged_start = .;
 
   .privileged : {
-    __privileged_start = ABSOLUTE(.) & -CONSTANT(MAXPAGESIZE);
     *(.privileged*)
   } =0x1f2003d6
+
+  . = ALIGN(CONSTANT(MAXPAGESIZE));
+  _rodata = .;
 
   .rodata : {
     KEEP(*(.rodata.pytab.0));
@@ -200,6 +205,9 @@ SECTIONS {
   .data : {
     __data_start = .;
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
+    . = ALIGN(CACHELINE);
+    *(.data.rarechange)
+    . = ALIGN(CACHELINE);
     *(.data .data.* .gnu.linkonce.d.*)
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     SORT(CONSTRUCTORS)
@@ -214,6 +222,9 @@ SECTIONS {
 
   .bss : {
     *(.dynbss)
+    . = ALIGN(CACHELINE);
+    *(.bss.rarechange)
+    . = ALIGN(CACHELINE);
     *(.bss .bss.* .gnu.linkonce.b.*)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
     *(COMMON)

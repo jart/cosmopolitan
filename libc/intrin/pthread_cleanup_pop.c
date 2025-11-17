@@ -21,13 +21,18 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-void(pthread_cleanup_pop)(struct _pthread_cleanup_buffer *cb, int execute) {
+#define _PTHREAD_CLEANUP_TOMBSTONE \
+  (struct _pthread_cleanup_buffer *)(intptr_t)-1
+
+void __pthread_cleanup_pop(struct _pthread_cleanup_buffer *cb, int execute) {
   struct PosixThread *pt;
-  if (__tls_enabled && (pt = _pthread_self())) {
-    unassert(cb == pt->pt_cleanup);
-    pt->pt_cleanup = cb->__prev;
-  }
-  if (execute) {
-    cb->__routine(cb->__arg);
+  if (cb->__prev != _PTHREAD_CLEANUP_TOMBSTONE) {
+    if (__tls_enabled && (pt = _pthread_self())) {
+      unassert(cb == pt->pt_cleanup);
+      pt->pt_cleanup = cb->__prev;
+    }
+    cb->__prev = _PTHREAD_CLEANUP_TOMBSTONE;
+    if (execute)
+      cb->__routine(cb->__arg);
   }
 }

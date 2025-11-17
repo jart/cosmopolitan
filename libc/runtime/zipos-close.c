@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Closes compressed object.
@@ -38,7 +39,7 @@ int __zipos_close(int fd) {
   }
   if (!__vforked) {
     struct ZiposHandle *h;
-    h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+    h = (struct ZiposHandle *)(intptr_t)__get_pib()->fds.p[fd].handle;
     __zipos_drop(h);
   }
   return rc;

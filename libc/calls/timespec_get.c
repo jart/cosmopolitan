@@ -29,9 +29,17 @@
  * @see timespec_real()
  */
 int timespec_get(struct timespec *ts, int base) {
-  if (base == TIME_UTC && !clock_gettime(CLOCK_REALTIME, ts)) {
-    return base;
-  } else {
-    return 0;
+  switch (base) {
+    case TIME_UTC:
+      if (clock_gettime(CLOCK_REALTIME, ts) == -1)
+        return 0;
+      break;
+    case TIME_MONOTONIC:
+      if (clock_gettime(CLOCK_MONOTONIC, ts) == -1)
+        return 0;
+      break;
+    default:
+      return 0;
   }
+  return base;
 }

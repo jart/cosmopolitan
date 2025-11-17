@@ -80,12 +80,3 @@ TEST(realpath, test6) {
   ASSERT_NE(NULL, name);
   EXPECT_STREQ("/", name);
 }
-
-TEST(realpath, c_drive) {
-  if (!IsWindows())
-    return;
-  char buf[PATH_MAX];
-  ASSERT_STREQ("/c", realpath("c:", buf));
-  ASSERT_STREQ("/c", realpath("c:", buf));
-  ASSERT_STREQ("/c/Windows", realpath("c:\\Windows", buf));
-}

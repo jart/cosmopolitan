@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
 #include "libc/stdckdint.h"
@@ -78,6 +79,7 @@ static ssize_t readvall(FILE *f, struct iovec *iov, int iovlen, size_t need) {
  * @param stride specifies the size of individual items
  * @param count is the number of strides to fetch
  * @return count on success, [0,count) on eof, or 0 on error or count==0
+ * @cancelationpoint
  */
 size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
   char *p;
@@ -85,15 +87,29 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
   struct iovec iov[2];
   size_t n, m, got, need;
 
-  // check state and parameters
+  // check state
+  if (f->state == EOF)
+    return 0;
   if ((f->oflags & O_ACCMODE) == O_WRONLY) {
     f->state = errno = EBADF;
     return 0;
   }
+
+  // flush buffered output
   if (f->beg > f->end) {
-    f->state = errno = EINVAL;
-    return 0;
+    if (IsModeDbg())
+      // the application shall ensure that output is not directly
+      // followed by input without an intervening call to fflush() or to
+      // a file positioning function (fseek(), fsetpos(), or rewind()),
+      // and input is not directly followed by output without an
+      // intervening call to a file positioning function, unless the
+      // input operation encounters end-of-file. -Quoth POSIX.1-2024
+      unassert(!"posix requires fflush between stdio reads and writes");
+    if (fflush_unlocked(f))
+      return 0;
   }
+
+  // compute size
   if (ckd_mul(&n, stride, count)) {
     f->state = errno = EOVERFLOW;
     return 0;
@@ -119,11 +135,8 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
     m *= stride;
     if (m)
       memcpy(p, f->buf + f->beg, m);
-    if ((f->beg += m) == f->end) {
+    if ((f->beg += m) == f->end)
       f->state = EOF;
-      f->beg = 0;
-      f->end = 0;
-    }
     return m / stride;
   }
 

@@ -26,6 +26,7 @@
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/errno.h"
 
 /**
  * Returns nice value of thing.
@@ -70,7 +71,7 @@ int getpriority(int which, unsigned who) {
                  : "1"((IsXnu() ? 0x2000000 : 0) | 100), "D"(which), "S"(who)
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
     if (cf) {
-      errno = rc;
+      errno = __errno_host2linux(rc);
       rc = -1;
     }
   } else if (IsWindows()) {

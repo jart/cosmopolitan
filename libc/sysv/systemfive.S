@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/pt.internal.h"
 
 #define SIG_IGN 1
@@ -97,8 +99,6 @@
 __systemfive:
 	.quad	0
 	.endobj	__systemfive,globl,hidden
-__pid:	.quad	0
-	.endobj	__pid,globl,hidden
 	.previous
 
 systemfive_cp:
@@ -107,7 +107,11 @@ systemfive_cp:
 systemfive_cancellable:			// our pthread_cancel() miracle code
 	cmpb	$0,__tls_enabled(%rip)	// inspired by the musl libc design!
 	je	1f			// we handle linux and bsd together!
-	mov	%gs:0x30,%r10		// CosmoTib::tib_self
+#if SupportsXnu() || SupportsWindows()
+	call	__get_tls_r10		// CosmoTib::tib_self
+#else
+	mov	%fs:0x30,%r10		// CosmoTib::tib_self
+#endif
 	mov	0x28(%r10),%r10		// CosmoTib::tib_pthread
 	test	%r10,%r10		// is it a posix thread?
 	jz	1f			// it's spawn() probably
@@ -129,12 +133,15 @@ systemfive_cancellable_end:		// i/o calls park here for long time
 2:	cmp	$-4095,%rax		// but we still check again on eintr
 	jae	3f			// branch because system call failed
 	ret				// done if the system call succeeded
-3:	neg	%eax			// now examine the nature of failure
-	cmp	EINTR(%rip),%eax	// did the SIGTHR cancel our IO call
+3:	cmp	$-EINTR,%eax		// did the SIGTHR cancel our IO call
 	jne	systemfive_errno	// werent interrupted by OnSigCancel
 	cmpb	$0,__tls_enabled(%rip)	// make sure it's safe to grab %fs:0
 	je	systemfive_errno	// tls is disabled we can't continue
-	mov	%gs:0x30,%rcx		// CosmoTib::tib_self
+#if SupportsXnu() || SupportsWindows()
+	call	__get_tls_rcx		// CosmoTib::tib_self
+#else
+	mov	%fs:0x30,%rcx		// CosmoTib::tib_self
+#endif
 	mov	0x28(%rcx),%rcx		// CosmoTib::tib_pthread
 	test	%rcx,%rcx		// is it a posix thread?
 	jz	systemfive_errno	// it's spawn() probably
@@ -180,45 +187,28 @@ systemfive_linux:
 	syscall				// this is known as a context switch
 	epi				// next we check to see if it failed
 	cmp	$-4095,%rax		// system five nexgen32e abi § a.2.1
-	jae	systemfive_error	// encodes errno as neg return value
+	jae	systemfive_errno	// encodes errno as neg return value
 	ret
 	end
 	.endfn	systemfive_linux,globl,hidden
-systemfive_error:
-	neg	%eax
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	systemfive_error,globl,hidden
 #endif
 systemfive_errno:
-	beg
-	xchg	%eax,%ecx
-	call	__errno_location
-	mov	%ecx,(%rax)		// normalize to c library convention
-	push	$-1			// negative one is only error result
-	pop	%rax			// the push pop is to save code size
-	ret
-	end
+	xchg	%rax,%rdi
+	jmp	_sysret
 	.endfn	systemfive_errno,globl,hidden
 systemfive_enosys:
-	beg
-	mov	ENOSYS(%rip),%eax
-	jmp	systemfive_errno
-	end
+	jmp	enosys
 	.endfn	systemfive_enosys,globl,hidden
 #if SupportsNetbsd()
 systemfive_netbsd:
-	beg
 	shr	$4*13,%rax
 	jmp	systemfive_bsdscrub
-	end
 	.endfn	systemfive_netbsd,globl,hidden
 #endif
 #if SupportsOpenbsd()
 systemfive_openbsd:
-	beg
 	shr	$4*10,%rax
 	jmp	systemfive_bsdscrub
-	end
 	.endfn	systemfive_openbsd,globl,hidden
 #endif
 #if SupportsFreebsd()
@@ -241,10 +231,13 @@ systemfive_bsd:
 	jc	systemfive_cp
 	mov	%rcx,%r10
 	syscall				// bsd will need arg on stack sometimes
-	jc	systemfive_errno	// bsd sets carry flag if %rax is errno
+	jc	systemfive_errno_bsd	// bsd sets carry flag if %rax is errno
 	ret
 	end
 	.endfn	systemfive_bsd
+systemfive_errno_bsd:
+	neg	%rax
+	jmp	systemfive_errno
 #endif
 #if SupportsXnu()
 systemfive_xnu:
@@ -407,8 +400,8 @@ _init_systemfive_pid:
 	jnz	1f
 	mov	__NR_getpid(%rip),%eax
 	syscall
-1:	stosq
-	.endfn	_init_systemfive_pid
+	mov	%eax,__pib(%rip)
+1:	.endfn	_init_systemfive_pid
 #endif
 #if SupportsBsd() && !defined(TINY)
 _init_systemfive_sigsys:
@@ -424,7 +417,7 @@ _init_systemfive_sigsys:
 	push	%rax
 	push	$SIG_IGN				// sigaction_meta size 48
 	mov	__NR_sigaction(%rip),%eax		// mag
-	mov	SIGSYS(%rip),%edi			// sig
+	mov	$12,%edi				// SIGSYS
 	mov	%rsp,%rsi				// new
 	xor	%edx,%edx				// old
 	mov	$8,%r10d				// for linux

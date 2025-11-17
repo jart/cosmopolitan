@@ -28,6 +28,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -36,17 +37,26 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
+TEST(readlink, einval) {
+  char buf[32];
+  ASSERT_SYS(0, 0, touch("notalink", 0644));
+  ASSERT_SYS(EINVAL, -1, readlink("notalink", buf, 32));
+  ASSERT_SYS(0, 0, symlink("linko", "linko"));
+  ASSERT_SYS(0, 0, readlink("linko", 0, 0));  // not an EINVAL like Linux
+}
+
 TEST(readlink, enoent) {
   char buf[32];
   ASSERT_SYS(ENOENT, -1, readlink("doesnotexist", buf, 32));
   ASSERT_SYS(ENOENT, -1, readlink("o/doesnotexist", buf, 32));
+  ASSERT_SYS(ENOENT, -1, readlink("doesnotexist/", buf, 32));
 }
 
 TEST(readlink, enotdir) {
   char buf[32];
   ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(EINVAL, -1, readlink("o", buf, 32));
   ASSERT_SYS(ENOTDIR, -1, readlink("o/", buf, 32));
-  ASSERT_SYS(ENOTDIR, -1, readlink("o/o/..", buf, 32));
   ASSERT_SYS(ENOTDIR, -1, readlink("o/doesnotexist", buf, 32));
 }
 
@@ -88,8 +98,8 @@ TEST(readlinkat, frootloop) {
   ASSERT_SYS(ELOOP, -1, readlink("froot/loop", buf, sizeof(buf)));
   if (O_NOFOLLOW) {
     ASSERT_SYS(ELOOP, -1, open("froot", O_RDONLY | O_NOFOLLOW));
-    if (0 && O_PATH) { /* need rhel5 test */
-      ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | O_PATH)));
+    if (0 && _O_PATH) { /* need rhel5 test */
+      ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | _O_PATH)));
       ASSERT_NE(-1, close(fd));
     }
   }
@@ -120,7 +130,17 @@ TEST(readlinkat, c_drive) {
     return;
   ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "/c/", buf, PATH_MAX));
   ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "/c", buf, PATH_MAX));
-  ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:", buf, PATH_MAX));
+  ASSERT_SYS(ENOTSUP, -1, readlinkat(AT_FDCWD, "c:", buf, PATH_MAX));
   ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:/", buf, PATH_MAX));
   ASSERT_SYS(EINVAL, -1, readlinkat(AT_FDCWD, "c:\\", buf, PATH_MAX));
+}
+
+void CallReadlinkat(void) {
+  char buf[32];
+  ASSERT_SYS(0, 5, readlinkat(AT_FDCWD, "froot", buf, 32));
+}
+
+TEST(readlinkat, bench) {
+  ASSERT_SYS(0, 0, symlink("froot", "froot"));
+  BENCHMARK(100, 1, CallReadlinkat());
 }

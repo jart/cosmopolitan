@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/dce.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -24,7 +25,7 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/fio.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 __msabi extern typeof(__sys_listen_nt) *const __imp_listen;
 

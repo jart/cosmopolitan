@@ -23,8 +23,7 @@
 #   - tool/build/runitd.c
 
 .PRECIOUS: o/$(MODE)/%.ok
-o/$(MODE)/%.ok: private .PLEDGE = stdio rpath wpath cpath proc fattr inet dns
-o/$(MODE)/%.ok: private .UNVEIL += r:/etc/resolv.conf
+o/$(MODE)/%.ok: private .PLEDGE = fattr inet dns
 o/$(MODE)/%.ok:					\
 		o/$(MODE)/tool/build/runit	\
 		o/$(MODE)/tool/build/runitd	\

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads line from stream.
@@ -34,11 +34,12 @@
  * @return s on success, NULL on error, or NULL if EOF happens when
  *     zero characters have been read
  * @see fgets_unlocked()
+ * @cancelationpoint
  */
 char *fgets(char *s, int size, FILE *f) {
   char *res;
-  flockfile(f);
+  FLOCKFILE(f);
   res = fgets_unlocked(s, size, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return res;
 }

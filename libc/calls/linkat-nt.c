@@ -35,15 +35,15 @@ textwindows int sys_linkat_nt(int olddirfd, const char *oldpath,  //
   } M;
   CheckLargeStackAllocation(&M, sizeof(M));
 #pragma GCC pop_options
-  if (__mkntpathat(olddirfd, oldpath, 0, M.oldpath16) != -1 &&
-      __mkntpathat(newdirfd, newpath, 0, M.newpath16) != -1) {
+  if (__mkntpathat(olddirfd, oldpath, M.oldpath16) != -1 &&
+      __mkntpathat(newdirfd, newpath, M.newpath16) != -1) {
     bool32 ok = CreateHardLink(M.newpath16, M.oldpath16, NULL);
     NTTRACE("CreateHardLink(%#hs, %#hs, NULL) → {%hhhd, %d}", M.newpath16,
             M.oldpath16, ok, GetLastError());
     if (ok) {
       return 0;
     } else {
-      return __fix_enotdir3(__winerr(), M.newpath16, M.oldpath16);
+      return __fix_enotdir2(__winerr(), M.newpath16, M.oldpath16);
     }
   } else {
     return -1;

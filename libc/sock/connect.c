@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/fds.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -27,6 +28,7 @@
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Connects socket to remote end.
@@ -61,20 +63,20 @@ int connect(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   int rc;
   BEGIN_CANCELATION_POINT;
 
-  if (addr) {
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = enotsock();
-    } else if (!IsWindows()) {
-      rc = sys_connect(fd, addr, addrsize);
-    } else if (!__isfdopen(fd)) {
-      rc = ebadf();
-    } else if (__isfdkind(fd, kFdSocket)) {
-      rc = sys_connect_nt(&g_fds.p[fd], addr, addrsize);
-    } else {
-      rc = enotsock();
-    }
-  } else {
+  if (addrsize < sizeof(struct sockaddr)) {
+    rc = einval();
+  } else if (kisdangerous(addr)) {
     rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
+    rc = enotsock();
+  } else if (!IsWindows()) {
+    rc = sys_connect(fd, addr, addrsize);
+  } else if (!__isfdopen(fd)) {
+    rc = ebadf();
+  } else if (__isfdkind(fd, kFdSocket)) {
+    rc = sys_connect_nt(&__get_pib()->fds.p[fd], addr, addrsize);
+  } else {
+    rc = enotsock();
   }
 
   END_CANCELATION_POINT;

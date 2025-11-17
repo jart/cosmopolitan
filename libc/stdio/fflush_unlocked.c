@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
@@ -28,6 +29,7 @@
  *
  * @param f is the stream handle, which must not be null
  * @return is 0 on success or EOF on error
+ * @cancelationpoint
  */
 int fflush_unlocked(FILE *f) {
   size_t i;
@@ -48,14 +50,20 @@ int fflush_unlocked(FILE *f) {
       f->beg = 0;
     }
     if (f->beg < f->end && (f->oflags & O_ACCMODE) != O_WRONLY) {
+      int e = errno;
       if (lseek(f->fd, -(int)(f->end - f->beg), SEEK_CUR) == -1) {
-        f->state = errno;
-        return EOF;
+        if (errno == EINVAL) {
+          // chances are it's due to pushback without reading first
+          errno = e;
+        } else {
+          f->state = errno;
+          return EOF;
+        }
       }
-      f->end = f->beg;
     }
+    f->end = f->beg;
+  } else if (f->memstream_sizep) {
+    *f->memstream_sizep = f->beg;
   }
-  if (f->buf && f->beg && f->beg < f->size)
-    f->buf[f->beg] = 0;
   return 0;
 }

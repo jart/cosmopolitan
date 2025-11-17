@@ -37,7 +37,7 @@
  * @param size if -1 implies strlen
  * @see IsReasonablePath()
  */
-bool IsAcceptablePath(const char *data, size_t size) {
+bool32 IsAcceptablePath(const char *data, size_t size) {
   const char *p, *e;
   int x, y, a, b, t, i, n;
   if (size == -1)

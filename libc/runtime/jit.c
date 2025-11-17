@@ -20,7 +20,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 
-privileged void __jit_begin(void) {
+__privileged void __jit_begin(void) {
   if (IsXnuSilicon()) {
     if (__syslib->__pthread_jit_write_protect_supported_np()) {
       __syslib->__pthread_jit_write_protect_np(false);
@@ -28,7 +28,7 @@ privileged void __jit_begin(void) {
   }
 }
 
-privileged void __jit_end(void) {
+__privileged void __jit_end(void) {
   if (IsXnuSilicon()) {
     if (__syslib->__pthread_jit_write_protect_supported_np()) {
       __syslib->__pthread_jit_write_protect_np(true);

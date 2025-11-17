@@ -17,7 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/mutex.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <mutex>
 // #define ctl std

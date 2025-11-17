@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rusage.h"
+#include "libc/cosmotime.h"
 #include "libc/macros.h"
 
 /**

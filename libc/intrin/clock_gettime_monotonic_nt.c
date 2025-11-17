@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/nt/time.h"
 
 textwindows struct timespec sys_clock_gettime_monotonic_nt(void) {

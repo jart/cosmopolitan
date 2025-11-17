@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -37,9 +38,9 @@ void SetUpOnce(void) {
 }
 
 void Make(const char *path, int mode) {
-  int fd, n = lemur64() & 0xfffff;
+  int fd, n = arc4random_uniform(0x100000);
   char *data = gc(malloc(n));
-  rngset(data, n, lemur64, -1);
+  arc4random_buf(data, n);
   ASSERT_NE(-1, (fd = creat(path, mode)));
   ASSERT_SYS(0, n, write(fd, data, n));
   ASSERT_SYS(0, 0, close(fd));

@@ -131,7 +131,7 @@
 #define kNtErrorTooManyTcbs                                         155
 #define kNtErrorSignalRefused                                       156
 #define kNtErrorDiscarded                                           157
-#define kNtErrorNotLocked                                           158 /* ENOLCK */
+#define kNtErrorNotLocked                                           158
 #define kNtErrorBadThreadidAddr                                     159
 #define kNtErrorBadArguments                                        160
 #define kNtErrorBadPathname                                         161

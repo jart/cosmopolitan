@@ -21,12 +21,15 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
@@ -62,20 +65,27 @@
  *     // run `zip program.com hi.txt` beforehand
  *     openat(AT_FDCWD, "/zip/hi.txt", O_RDONLY);
  *
- * Cosmopolitan's general approach on Windows to path translation is to
+ * Cosmopolitan uses tricks like `/C/Windows` to make UNIX-like
+ * filesystem paths possible on Windows. To understand better how this
+ * works, read the documentation for __mkntpath() and __getcosmosdrive().
  *
- *   - replace `/' with `\`
- *   - normalize `.' and `..`
- *   - translate utf-8 into utf-16
- *   - turn `"\X\foo"` into `"\\?\X:\foo"`
- *   - turn `"\X"` into `"\\?\X:\"`
- *   - turn `"X:\foo"` into `"\\?\X:\foo"`
- *   - turn `"\\?\X:\foo"` back into `X:\foo` if less than 260 chars
+ * On Windows, Cosmopolitan emulates the following device files, which
+ * must be specified as an absolute case-sensitive UNIX style path:
  *
- * On Windows, opening files in `/tmp` will open them in GetTempPath(),
- * which is a secure per-user directory. Opening `/dev/tty` will open a
- * special console file descriptor holding both `CONIN$` and `CONOUT$`,
- * which can't be fully closed. Opening `/dev/null` will open up `NUL`.
+ * - `/dev/null` using `CreateFile(u"NUL")`
+ * - `/dev/random` using ProcessPrng()
+ * - `/dev/urandom` using ProcessPrng()
+ * - `/dev/stdin` using `dup(0)`
+ * - `/dev/stdout` using `dup(1)`
+ * - `/dev/stderr` using `dup(2)`
+ * - `/dev/fd/x` using `dup(x)`
+ *
+ * To prevent the most outrageously evil kinds of files from being
+ * created, this wrapper may raise `EILSEQ` in some cases when When
+ * `O_CREAT` is used, and the file doesn't currently exist. You're not
+ * allowed to create a file with a newline character. You're also not
+ * allowed to create a filename that has malformed or overlong utf-8
+ * sequences. However you can still operate on ones that do exist.
  *
  * @param dirfd is normally `AT_FDCWD` but if it's an open directory and
  *     `path` names a relative path then it's opened relative to `dirfd`
@@ -93,22 +103,13 @@
  *     - `O_NOFOLLOW`   fail with ELOOP if it's a symlink
  *     - `O_NONBLOCK`   asks read/write to fail with `EAGAIN` rather than block
  *     - `O_UNLINK`     delete file automatically on close
- *     - `O_EXEC`       open file for execution only; see fexecve()
  *     - `O_NOCTTY`     prevents `path` from becoming the controlling terminal
  *     - `O_DIRECTORY`  advisory feature for avoiding accidentally opening files
- *     - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
- *     - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
- *     - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
- *     - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
- *     - `O_SHLOCK`     it's complicated (zero on non-BSD)
- *     - `O_EXLOCK`     it's complicated (zero on non-BSD)
- *     - `O_PATH`       open only for metadata (Linux 2.6.39+ otherwise zero)
+ *     - `O_SYNC`       makes file operations synchronize appropriately
+ *     - `O_DSYNC`      makes write() flush data asap (10x-1000x slower!)
+ *     - `O_RSYNC`      makes read() flush data asap (10x-1000x slower!)
+ *     - `O_DIRECT`     bypass kernel cache when doing read/write (10x slower!)
  *     - `O_NOATIME`    don't record access time (zero on non-Linux)
- *     - `O_RANDOM`     hint random access intent (zero on non-Windows)
- *     - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
- *     - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
- *     - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
- *     - `O_TMPFILE`    EINVALs on non-Linux; please use tmpfd() / tmpfile()
  *     There are three regular combinations for the above flags:
  *     - `O_RDONLY`: Opens existing file for reading. If it doesn't
  *       exist then nil is returned and errno will be `ENOENT` (or in
@@ -128,6 +129,7 @@
  *     the executable bit is set thrice too
  * @return file descriptor (which needs to be close()'d), or -1 w/ errno
  * @raise EPERM if pledge() is in play w/o appropriate rpath/wpath/cpath
+ * @raise EPERM if `mode & 07000` is not authorized or nonzero on Windows
  * @raise EACCES if unveil() is in play and didn't unveil your `path` path
  * @raise EACCES if we don't have permission to search a component of `path`
  * @raise EACCES if file exists but requested `flags & O_ACCMODE` was denied
@@ -139,11 +141,12 @@
  * @raise ENOTDIR if `path` ends with a trailing slash and refers to a file
  * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
  * @raise ENOTDIR if `path` isn't a directory and `O_DIRECTORY` was passed
- * @raise EILSEQ if `path` contains illegal UTF-8 sequences (Windows/MacOS)
+ * @raise EILSEQ if creating file and last component of `path` had newline
+ * @raise EILSEQ if creating and last component had trailing dots or spaces
+ * @raise EILSEQ on Windows if `path` has bad utf-8 of control characters
  * @raise EROFS when writing is requested w/ `path` on read-only filesystem
  * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
  * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
- * @raise ENAMETOOLONG if `path` is relative and longer than 260 characters
  * @raise ENOTSUP if `path` is on zip file system and process is vfork()'d
  * @raise ENOSPC if file system is full when `path` would be `O_CREAT`ed
  * @raise EINTR if we needed to block and a signal was delivered instead
@@ -155,7 +158,7 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOENT if `path` doesn't exist when `O_CREAT` isn't in `flags`
  * @raise ENOENT if `path` points to a string that's empty
- * @raise ENOMEM if insufficient memory was available
+ * @raise ENOMEM if insufficient memory was available to implementation
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
  * @raise ENFILE if system-wide file limit has been reached
  * @raise EOPNOTSUPP if `path` names a named socket
@@ -173,14 +176,18 @@ int openat(int dirfd, const char *path, int flags, ...) {
   int rc;
   va_list va;
   unsigned mode;
+  struct stat st;
   struct ZiposUri zipname;
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
   BEGIN_CANCELATION_POINT;
 
-  if (!path) {
+  if (kisdangerous(path)) {
     rc = efault();
+  } else if ((flags & O_CREAT) && __is_evil_path(path) &&
+             fstatat(dirfd, path, &st, AT_SYMLINK_NOFOLLOW)) {
+    rc = eilseq();
   } else if ((flags & O_UNLINK) &&
              (flags & (O_CREAT | O_EXCL)) != (O_CREAT | O_EXCL)) {
     // O_UNLINK is a non-standard cosmo extension; we've chosen bits for

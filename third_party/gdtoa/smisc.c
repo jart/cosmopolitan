@@ -32,27 +32,38 @@
 #include "third_party/gdtoa/gdtoa.internal.h"
 
 Bigint *
-__gdtoa_s2b(const char *s, int nd0, int nd, ULong y9, int dplen, ThInfo **PTI)
+__gdtoa_s2b(const char *s, int nd0, int nd, ULong y9, int dplen)
 {
-	Bigint *b;
 	int i, k;
 	Long x, y;
+	Bigint *b, *t;
 	x = (nd + 8) / 9;
 	for(k = 0, y = 1; x > y; y <<= 1, k++) ;
-	b = __gdtoa_Balloc(k, PTI);
+	if (!(b = __gdtoa_Balloc(k)))
+		return 0;
 	b->x[0] = y9;
 	b->wds = 1;
 	i = 9;
 	if (9 < nd0) {
 		s += 9;
-		do b = __gdtoa_multadd(b, 10, *s++ - '0', PTI);
-		while(++i < nd0);
+		do {
+			if (!(t = __gdtoa_multadd(b, 10, *s++ - '0'))) {
+				__gdtoa_Bfree(b);
+				return 0;
+			}
+			b = t;
+		} while(++i < nd0);
 		s += dplen;
 	}
 	else
 		s += dplen + 9;
-	for(; i < nd; i++)
-		b = __gdtoa_multadd(b, 10, *s++ - '0', PTI);
+	for(; i < nd; i++) {
+		if (!(t = __gdtoa_multadd(b, 10, *s++ - '0'))) {
+			__gdtoa_Bfree(b);
+			return 0;
+		}
+		b = t;
+	}
 	return b;
 }
 

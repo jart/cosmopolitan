@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
@@ -28,19 +29,27 @@
 /**
  * Creates symbolic link.
  *
- * This is like link() but adds a tiny indirection to make the fact that
- * the file is a link obvious. It also enables certain other features,
- * like the ability to be broken.
+ * Normal users can't create symbolic links on Windows. You need to
+ * either (1) enable "Developer Mode" in your settings, or (2) use "Run
+ * as administrator" when launching either your cosmo program, or when
+ * launching the terminal program which will run your cosmo program
+ * (since administrator mode is inherited across processes).
  *
  * @param target can be relative and needn't exist
  * @param linkpath is what gets created
  * @return 0 on success, or -1 w/ errno
- * @raise EPERM if a non-admin on Windows NT tries to use this
+ * @raise EPERM on Windows if lacking SeCreateSymbolicLinkPrivilege
+ * @raise EFAULT if `target` or `linkpath` point to bad memory
+ * @raise ENOENT if `target` or `linkpath` is an empty string
  * @asyncsignalsafe
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
   int rc;
-  if (!IsWindows()) {
+  if (kisdangerous(target) || kisdangerous(linkpath)) {
+    rc = efault();
+  } else if (!*target || !*linkpath) {
+    rc = enoent();
+  } else if (!IsWindows()) {
     rc = sys_symlinkat(target, newdirfd, linkpath);
   } else {
     rc = sys_symlinkat_nt(target, newdirfd, linkpath);

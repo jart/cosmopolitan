@@ -19,7 +19,7 @@
 #include "libc/serialize.h"
 #include "net/https/https.h"
 
-bool CertHasIp(const mbedtls_x509_crt *cert, uint32_t ip) {
+bool32 CertHasIp(const mbedtls_x509_crt *cert, uint32_t ip) {
   const mbedtls_x509_sequence *cur;
   for (cur = &cert->subject_alt_names; cur; cur = cur->next) {
     if ((cur->buf.tag & MBEDTLS_ASN1_TAG_VALUE_MASK) ==

@@ -451,6 +451,7 @@ typedef enum {
   TY_VLA,  // variable-length array
   TY_STRUCT,
   TY_UNION,
+  TY_NULLPTR_T,
 } TypeKind;
 
 struct Type {

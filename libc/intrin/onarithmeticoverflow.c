@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Arithmetic overflow handler.
@@ -32,5 +33,5 @@
  */
 __attribute__((__weak__)) void __on_arithmetic_overflow(void) {
   kprintf("error: -ftrapv caught arithmetic overflow\n");
-  abort();
+  notpossible;
 }

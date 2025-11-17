@@ -18,9 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows int _check_signal(bool restartable) {
   int status;

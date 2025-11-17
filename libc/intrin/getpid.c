@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/internal.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Returns process id.
@@ -42,10 +43,8 @@
  */
 int getpid(void) {
   int rc;
-  if (IsMetal()) {
-    rc = 1;
-  } else if (!__vforked) {
-    rc = __pid;
+  if (!__vforked || IsWindows() || IsMetal()) {
+    rc = __get_pib()->pid;
   } else {
     rc = sys_getpid().ax;
   }

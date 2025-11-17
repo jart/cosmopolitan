@@ -18,15 +18,15 @@
 
 #include "ctl/is_same.h"
 #include "ctl/unique_ptr.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <memory>
 // #include <type_traits>
 // #define ctl std
 
-using ctl::unique_ptr;
 using ctl::make_unique;
 using ctl::make_unique_for_overwrite;
+using ctl::unique_ptr;
 
 #undef ctl
 

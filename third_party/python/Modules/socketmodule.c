@@ -685,6 +685,7 @@ internal_setblocking(PySocketSockObject *s, int block)
 #endif
 #if !defined(MS_WINDOWS) \
     && !((defined(HAVE_SYS_IOCTL_H) && defined(FIONBIO)))
+    int delay_flag, new_delay_flag;
 #endif
 #ifdef SOCK_NONBLOCK
     if (block)
@@ -694,9 +695,29 @@ internal_setblocking(PySocketSockObject *s, int block)
 #endif
 
     Py_BEGIN_ALLOW_THREADS
+#ifndef MS_WINDOWS
+#if (defined(HAVE_SYS_IOCTL_H) && defined(FIONBIO))
     block = !block;
     if (ioctl(s->sock_fd, FIONBIO, (unsigned int *)&block) == -1)
         goto done;
+#else
+    delay_flag = fcntl(s->sock_fd, F_GETFL, 0);
+    if (delay_flag == -1)
+        goto done;
+    if (block)
+        new_delay_flag = delay_flag & (~O_NONBLOCK);
+    else
+        new_delay_flag = delay_flag | O_NONBLOCK;
+    if (new_delay_flag != delay_flag)
+        if (fcntl(s->sock_fd, F_SETFL, new_delay_flag) == -1)
+            goto done;
+#endif
+#else /* MS_WINDOWS */
+    arg = !block;
+    if (ioctlsocket(s->sock_fd, FIONBIO, &arg) != 0)
+        goto done;
+#endif /* MS_WINDOWS */
+
     result = 0;
 
   done:
@@ -2563,18 +2584,13 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
     Py_buffer optval;
     int flag;
     unsigned int optlen;
-    int backup_optname;
 
     PyObject *none;
-
-    backup_optname = SO_REUSEADDR;
-    if(IsWindows() && SO_REUSEADDR != 1) 
-        backup_optname = 1;
 
     /* setsockopt(level, opt, flag) */
     if (PyArg_ParseTuple(args, "iii:setsockopt",
                          &level, &optname, &flag)) {
-        res = setsockopt(s->sock_fd, level, IsWindows() ? backup_optname : optname,
+        res = setsockopt(s->sock_fd, level, optname,
                          (char*)&flag, sizeof flag);
         goto done;
     }

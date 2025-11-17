@@ -30,7 +30,7 @@ static void regenerate_cases(void) {
   for (int i = 0; i < ARRAYLEN(demangle_cases); ++i) {
     const char *input = demangle_cases[i][0];
     const char *want = demangle_cases[i][1];
-    if (__demangle(got, input, sizeof(got)) == -1) {
+    if (cosmo_demangle(got, input, sizeof(got)) == -1) {
       fprintf(f, "\n    // {%`'s,\n    //  %`'s},\n    // got error\n\n", input,
               want);
     } else if (!strcmp(want, got)) {
@@ -50,7 +50,7 @@ static int test_cases_success(void) {
   for (int i = 0; i < ARRAYLEN(demangle_cases); ++i) {
     const char *input = demangle_cases[i][0];
     const char *want = demangle_cases[i][1];
-    if (__demangle(got, input, sizeof(got)) == -1) {
+    if (cosmo_demangle(got, input, sizeof(got)) == -1) {
       fprintf(stderr, "%s:%d: error: demangle failed\n", __FILE__, __LINE__);
       fprintf(stderr, "\tinput %`'s\n", input);
       fprintf(stderr, "\t want %`'s\n", want);
@@ -68,15 +68,15 @@ static int test_cases_success(void) {
 }
 
 static int test_is_mangled(void) {
-  if (__is_mangled(0))
+  if (cosmo_is_mangled(0))
     return 3;
-  if (__is_mangled(""))
+  if (cosmo_is_mangled(""))
     return 4;
-  if (__is_mangled("__dlmalloc"))
+  if (cosmo_is_mangled("__dlmalloc"))
     return 5;
-  if (!__is_mangled("_ZN4dyld18getCoalescedImagesEPP11ImageLoader"))
+  if (!cosmo_is_mangled("_ZN4dyld18getCoalescedImagesEPP11ImageLoader"))
     return 6;
-  if (!__is_mangled("_GLOBAL__I_lol"))
+  if (!cosmo_is_mangled("_GLOBAL__I_lol"))
     return 7;
   return 0;
 }
@@ -87,7 +87,7 @@ static int test_oom(void) {
                     "11LibcppMutexENS0_13LibcppCondVarEL_ZNS0_"
                     "12GlobalStaticIS2_E8instanceEEL_ZNS4_IS3_E8instanceEEXadL_"
                     "ZNS0_16PlatformThreadIDEvEEE9LockGuardC2EPKc";
-  if (__demangle(got, sym, sizeof(got)) != -1)
+  if (cosmo_demangle(got, sym, sizeof(got)) != -1)
     return 8;
   return 0;
 }
@@ -96,7 +96,7 @@ static int test_compiler_suffixes(void) {
   char got[1400];
   const char *sym = "_ZN12_GLOBAL__N_18tinyBLASILi6ELi8EDv8_fS1_"
                     "fffE4gemmILi1ELi1ELi0EEEvllll.constprop.0";
-  if (__demangle(got, sym, sizeof(got)) == -1)
+  if (cosmo_demangle(got, sym, sizeof(got)) == -1)
     return 9;
   return 0;
 }
@@ -104,7 +104,7 @@ static int test_compiler_suffixes(void) {
 static int test_weird_destructors(void) {
   char got[216];
   const char *sym = "_ZN13AutoEncoderKLD5Ev";
-  if (__demangle(got, sym, sizeof(got)) == -1)
+  if (cosmo_demangle(got, sym, sizeof(got)) == -1)
     return 10;
   if (strcmp(got, "AutoEncoderKL::~AutoEncoderKL()"))
     return 11;
@@ -114,7 +114,7 @@ static int test_weird_destructors(void) {
 static int test_guard_variable(void) {
   char got[250];
   const char *sym = "_ZGVZ23llama_print_system_infoE1s";
-  if (__demangle(got, sym, sizeof(got)) == -1)
+  if (cosmo_demangle(got, sym, sizeof(got)) == -1)
     return 10;
   if (strcmp(got, "guard variable for llama_print_system_info::s"))
     return 11;

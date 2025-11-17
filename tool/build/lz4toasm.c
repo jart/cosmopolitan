@@ -48,7 +48,7 @@
 struct stat st_;
 size_t extractedsize;
 
-wontreturn void usage(char *argv[], FILE *f, int rc) {
+[[noreturn]] void usage(char *argv[], FILE *f, int rc) {
   fprintf(f, "%s: %s [-o %s] [-s %s] %s\n", "Usage", argv[0], "PATH", "SYMBOL",
           "FILE");
   exit(rc);

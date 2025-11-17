@@ -29,6 +29,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/intrin/bsr.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -167,7 +169,7 @@ void YCbCrInit(struct YCbCr **ycbcr, bool yonly, int swing, double gamma,
   if (!*ycbcr)
     *ycbcr = xcalloc(1, sizeof(struct YCbCr));
   (*ycbcr)->yonly = yonly;
-  (*ycbcr)->cpu_count = __get_cpu_count();
+  (*ycbcr)->cpu_count = cosmo_cpu_count();
   bzero((*ycbcr)->magnums, sizeof((*ycbcr)->magnums));
   bzero((*ycbcr)->lighting, sizeof((*ycbcr)->lighting));
   YCbCrComputeCoefficients(swing, gamma, gamut, illuminant, (*ycbcr)->magnums,
@@ -192,9 +194,8 @@ void *YCbCrReallocPlane(long ys, long xs, const unsigned char p[ys][xs],
   long y;
   unsigned char(*res)[yn][xn];
   res = xmemalign(32, yn * xn);
-  for (y = 0; y < yn; ++y) {
-    memcpy((*res)[y], p[y], xn);
-  }
+  for (y = 0; y < MIN(yn, ys); ++y)
+    memcpy((*res)[y], p[y], MIN(xn, xs));
   return res;
 }
 

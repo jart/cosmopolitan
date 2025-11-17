@@ -39,9 +39,9 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
   if (IsWindows()) {
     __set_tls_win32(tib);
   } else if (IsLinux()) {
-    sys_set_tls(ARCH_SET_GS, tib);
+    sys_set_tls(ARCH_SET_FS, tib);
   } else if (IsFreebsd()) {
-    sys_set_tls(AMD64_SET_GSBASE, tib);
+    sys_set_tls(AMD64_SET_FSBASE, tib);
   } else if (IsNetbsd()) {
     // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
     // signal handlers will cause it to be reset due to not setting the

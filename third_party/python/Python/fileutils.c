@@ -13,7 +13,6 @@
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/bytesobject.h"

@@ -18,6 +18,7 @@ TEST_LIBC_FMT_CHECKS =				\
 	$(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.runs)
 
 TEST_LIBC_FMT_DIRECTDEPS =			\
+	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\
 	LIBC_LOG				\
@@ -30,7 +31,7 @@ TEST_LIBC_FMT_DIRECTDEPS =			\
 	LIBC_TESTLIB				\
 	LIBC_TINYMATH				\
 	LIBC_X					\
-	THIRD_PARTY_GDTOA
+	THIRD_PARTY_GDTOA			\
 
 TEST_LIBC_FMT_DEPS :=				\
 	$(call uniq,$(foreach x,$(TEST_LIBC_FMT_DIRECTDEPS),$($(x))))

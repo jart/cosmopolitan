@@ -27,8 +27,10 @@ float _coshf(float) asm("coshf");
 long double _coshl(long double) asm("coshl");
 
 TEST(coshl, test) {
+#ifndef NOX87
   EXPECT_STREQ("1.127625965206381", gc(xdtoal(_coshl(+.5))));
   EXPECT_STREQ("1.127625965206381", gc(xdtoal(_coshl(-.5))));
+#endif
   EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(30000))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(-30000))));
   EXPECT_STREQ("1", gc(xdtoal(_coshl(+0.))));

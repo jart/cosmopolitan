@@ -39,8 +39,9 @@ int fscanf(FILE *stream, const char *fmt, ...) {
   va_list va;
   va_start(va, fmt);
   flockfile(stream);
-  rc = __vcscanf((void *)fgetc_unlocked,   //
-                 (void *)ungetc_unlocked,  //
+  rc = __vcscanf((void *)fgetc_unlocked,    //
+                 (void *)ungetc_unlocked,   //
+                 (void *)ungetwc_unlocked,  //
                  stream, fmt, va);
   funlockfile(stream);
   va_end(va);

@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/time.h"
 
 static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
@@ -44,7 +45,7 @@ static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
   struct NtFileTime ft[2], *ftp[2];
 
   if (path) {
-    if (__mkntpathat(dirfd, path, 0, path16) == -1)
+    if (__mkntpathat(dirfd, path, path16) == -1)
       return -1;
     if ((fh = CreateFile(
              path16, kNtFileWriteAttributes,
@@ -59,7 +60,7 @@ static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
       return __winerr();
     }
   } else if (__isfdkind(dirfd, kFdFile)) {
-    fh = g_fds.p[dirfd].handle;
+    fh = __get_pib()->fds.p[dirfd].handle;
     closeme = -1;
   } else {
     return ebadf();

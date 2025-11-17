@@ -17,29 +17,131 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/fds.h"
 #include "libc/intrin/maps.h"
-#include "libc/mem/mem.h"
+#include "libc/nt/enum/heap.h"
 #include "libc/nt/files.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/startupinfo.h"
+#include "libc/proc/describefds.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 #define FDS_VAR "_COSMO_FDS_V2="
-
-#define MAX_ENTRY_BYTES 256
 
 /**
  * @fileoverview fd/handle inheritance for execve() and posix_spawn()
  */
 
-struct StringBuilder {
+struct String {
+  long n;
+  long c;
   char *p;
-  int i, n;
 };
+
+struct Longs {
+  long n;
+  long c;
+  long *p;
+};
+
+textwindows static void *Malloc(size_t size) {
+  return HeapAlloc(GetProcessHeap(), 0, size);
+}
+
+textwindows static void *Calloc(size_t nmemb, size_t size) {
+  return HeapAlloc(GetProcessHeap(), kNtHeapZeroMemory, nmemb * size);
+}
+
+textwindows static void *Realloc(void *addr, size_t size) {
+  return HeapReAlloc(GetProcessHeap(), 0, addr, size);
+}
+
+textwindows static void Free(void *addr) {
+  HeapFree(GetProcessHeap(), 0, addr);
+}
+
+textwindows static int InitString(struct String *sb) {
+  if (!(sb->p = Malloc(16)))
+    return enomem();
+  sb->p[0] = 0;
+  sb->n = 0;
+  sb->c = 16;
+  return 0;
+}
+
+textwindows static int InitLongs(struct Longs *hl) {
+  if (!(hl->p = Malloc(sizeof(long) * 2)))
+    return enomem();
+  hl->p[0] = 0;
+  hl->n = 0;
+  hl->c = 2;
+  return 0;
+}
+
+textwindows static int AppendString(struct String *sb, const char *s) {
+  long n = strlen(s);
+  if (sb->n + n + 1 > sb->c) {
+    long c2 = sb->c;
+    do {
+      c2 += 1;
+      c2 += c2 >> 1;
+    } while (sb->n + n + 1 > c2);
+    char *p2 = Realloc(sb->p, c2);
+    if (!p2)
+      return enomem();
+    sb->p = p2;
+    sb->c = c2;
+  }
+  memcpy(sb->p + sb->n, s, n + 1);
+  sb->n += n;
+  return 0;
+}
+
+textwindows static int AppendLongToString(struct String *sb, long x) {
+  char buf[21];
+  FormatInt64(buf, x);
+  return AppendString(sb, buf);
+}
+
+textwindows static int AppendLong(struct Longs *hl, long h) {
+  if (hl->n + 2 > hl->c) {
+    long c2 = hl->c;
+    c2 += 2;
+    c2 += c2 >> 1;
+    long *p2 = Realloc(hl->p, c2 * sizeof(long));
+    if (!p2)
+      return enomem();
+    hl->p = p2;
+    hl->c = c2;
+  }
+  hl->p[hl->n++] = h;
+  hl->p[hl->n] = 0;
+  return 0;
+}
+
+textwindows static int AppendHandle(struct Longs *hl, long hObject,
+                                    long hProcess,
+                                    long *opt_out_hDuplicateObject) {
+  long hDuplicateObject;
+  if (!DuplicateHandle(GetCurrentProcess(), hObject, hProcess,
+                       &hDuplicateObject, 0, true, kNtDuplicateSameAccess))
+    return __winerr();
+  if (AppendLong(hl, hDuplicateObject) == -1) {
+    CloseHandle(hDuplicateObject);
+    return -1;
+  }
+  if (opt_out_hDuplicateObject)
+    *opt_out_hDuplicateObject = hDuplicateObject;
+  return 0;
+}
 
 // returns true if fd can't be inherited by anything
 textwindows bool __is_cloexec(const struct Fd *f) {
@@ -62,52 +164,46 @@ textwindows bool __is_cloexec(const struct Fd *f) {
 
 // this must be called after ntspawn() returns
 // we perform critical cleanup that _exit() can't do
-textwindows void __undescribe_fds(int64_t hCreatorProcess,
-                                  int64_t *lpExplicitHandles,
+textwindows void __undescribe_fds(char *fdSpecEnvVariable, long hCreatorProcess,
+                                  long *lpExplicitHandles,
                                   uint32_t dwExplicitHandleCount) {
   if (lpExplicitHandles) {
-    for (uint32_t i = 0; i < dwExplicitHandleCount; ++i) {
+    for (uint32_t i = 0; i < dwExplicitHandleCount; ++i)
       DuplicateHandle(hCreatorProcess, lpExplicitHandles[i], 0, 0, 0, false,
                       kNtDuplicateCloseSource);
-    }
-    free(lpExplicitHandles);
+    Free(lpExplicitHandles);
   }
+  Free(fdSpecEnvVariable);
 }
 
 // serializes file descriptors and generates child handle array
 // 1. serialize file descriptor table to environment variable str
 // 2. generate array that'll tell CreateProcess() what to inherit
 textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
+                                 long *opt_inout_lpExtraHandles,
                                  struct NtStartupInfo *lpStartupInfo,
-                                 int64_t hCreatorProcess,
-                                 int64_t **out_lpExplicitHandles,
+                                 long hCreatorProcess,
+                                 long **out_lpExplicitHandles,
                                  uint32_t *out_lpExplicitHandleCount) {
-  char *b, *p;
-  uint32_t hi = 0;
-  struct StringBuilder sb;
-  int64_t *handles, handle;
-  uint32_t handlecount = 0;
+  long handle;
+  struct Longs handles = {0};
+  struct String envstr = {0};
 
-  // setup memory for environment variable
-  if (!(sb.p = strdup(FDS_VAR)))
-    return 0;
-  sb.i = sizeof(FDS_VAR) - 1;
-  sb.n = sizeof(FDS_VAR);
+  if (InitLongs(&handles))
+    goto OnError;
+  if (InitString(&envstr))
+    goto OnError;
+  if (AppendString(&envstr, FDS_VAR))
+    goto OnError;
 
-  // setup memory for explicitly inherited handle list
-  for (int fd = 0; fd < fdslen; ++fd) {
-    const struct Fd *f = fds + fd;
-    if (__is_cloexec(f))
-      continue;
-    ++handlecount;
-    if (f->cursor)
-      ++handlecount;
-  }
-  if (!(handles = calloc(handlecount, sizeof(*handles)))) {
-  OnFailure:
-    __undescribe_fds(hCreatorProcess, handles, hi);
-    free(sb.p);
-    return 0;
+  // misc handles to inherit
+  if (opt_inout_lpExtraHandles) {
+    while (*opt_inout_lpExtraHandles) {
+      if (AppendHandle(&handles, *opt_inout_lpExtraHandles, hCreatorProcess,
+                       &handle))
+        goto OnError;
+      *opt_inout_lpExtraHandles++ = handle;
+    }
   }
 
   // serialize file descriptors
@@ -115,17 +211,16 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
     const struct Fd *f = fds + fd;
     if (__is_cloexec(f))
       continue;
+    if (f->cursor)
+      // taint cursor so it can't be cached when freed
+      f->cursor->is_multiprocess = true;
 
     // make inheritable version of handle exist in creator process
-    if (!DuplicateHandle(GetCurrentProcess(), f->handle, hCreatorProcess,
-                         &handle, 0, true, kNtDuplicateSameAccess)) {
-      __winerr();
-      goto OnFailure;
-    }
+    if (AppendHandle(&handles, f->handle, hCreatorProcess, &handle))
+      goto OnError;
     for (uint32_t i = 0; i < 3; ++i)
       if (lpStartupInfo->stdiofds[i] == f->handle)
         lpStartupInfo->stdiofds[i] = handle;
-    handles[hi++] = handle;
 
     // get shared memory handle for the file offset pointer
     intptr_t shand = 0;
@@ -134,56 +229,57 @@ textwindows char *__describe_fds(const struct Fd *fds, size_t fdslen,
       if (!(map = __maps_floor((const char *)f->cursor->shared)) ||
           map->addr != (const char *)f->cursor->shared) {
         errno = EFAULT;
-        goto OnFailure;
+        goto OnError;
       }
-      if (!DuplicateHandle(GetCurrentProcess(), map->hand, hCreatorProcess,
-                           &shand, 0, true, kNtDuplicateSameAccess)) {
-        __winerr();
-        goto OnFailure;
-      }
-      handles[hi++] = shand;
+      if (AppendHandle(&handles, map->hand, hCreatorProcess, &shand))
+        goto OnError;
     }
 
-    // ensure output string has enough space for new entry
-    if (sb.i + MAX_ENTRY_BYTES > sb.n) {
-      char *p2;
-      sb.n += sb.n >> 1;
-      sb.n += MAX_ENTRY_BYTES;
-      if ((p2 = realloc(sb.p, sb.n))) {
-        sb.p = p2;
-      } else {
-        goto OnFailure;
-      }
-    }
-
-    // serialize file descriptor
-    p = b = sb.p + sb.i;
-    p = FormatInt64(p, fd);
-    *p++ = '_';
-    p = FormatInt64(p, handle);
-    *p++ = '_';
-    p = FormatInt64(p, f->kind);
-    *p++ = '_';
-    p = FormatInt64(p, f->flags);
-    *p++ = '_';
-    p = FormatInt64(p, f->mode);
-    *p++ = '_';
-    p = FormatInt64(p, shand);
-    *p++ = '_';
-    p = FormatInt64(p, f->type);
-    *p++ = '_';
-    p = FormatInt64(p, f->family);
-    *p++ = '_';
-    p = FormatInt64(p, f->protocol);
-    *p++ = ';';
-    unassert(p - b < MAX_ENTRY_BYTES);
-    sb.i += p - b;
-    *p = 0;
+    // serialize file descriptors
+    if (AppendLongToString(&envstr, fd))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, handle))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->kind))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->flags))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->mode))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, shand))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->type))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->family))
+      goto OnError;
+    if (AppendString(&envstr, "_"))
+      goto OnError;
+    if (AppendLongToString(&envstr, f->protocol))
+      goto OnError;
+    if (AppendString(&envstr, ";"))
+      goto OnError;
   }
 
   // return result
-  *out_lpExplicitHandles = handles;
-  *out_lpExplicitHandleCount = hi;
-  unassert(hi == handlecount);
-  return sb.p;
+  *out_lpExplicitHandles = handles.p;
+  *out_lpExplicitHandleCount = handles.n;
+  return envstr.p;
+
+OnError:
+  __undescribe_fds(envstr.p, hCreatorProcess, handles.p, handles.n);
+  return 0;
 }

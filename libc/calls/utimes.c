@@ -20,6 +20,8 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
@@ -36,7 +38,7 @@
 int utimes(const char *path, const struct timeval tv[2]) {
   int rc;
   struct timespec ts[2];
-  if (!path) {
+  if (kisdangerous(path) || (tv && kisdangerous(tv))) {
     rc = efault();
   } else if (tv) {
     ts[0] = timeval_totimespec(tv[0]);

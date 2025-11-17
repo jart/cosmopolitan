@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 eisdir:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EISDIR(%rip),%ecx
+	push	$EISDIR
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EISDIR
-	ldrsw	x0,[x1,#:lo12:EISDIR]
+	mov	x0,#EISDIR
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -44,7 +44,7 @@
  * better yet print helpful information when using `cosmocc -mdbg`.
  */
 
-#define ABI privileged optimizesize
+#define ABI __privileged optimizesize
 
 // building our visitor function using this optimizesize keyword shrinks
 // the stack memory requirement from 7168 to 2048 bytes. totally amazing
@@ -64,7 +64,6 @@
 
 // supported lock objects must define `void *_edges`
 #define LOCK_EDGES_OFFSET 0
-static_assert(offsetof(struct MapLock, edges) == LOCK_EDGES_OFFSET);
 static_assert(offsetof(pthread_mutex_t, _edges) == LOCK_EDGES_OFFSET);
 
 struct LockEdge {
@@ -97,7 +96,13 @@ forceinline struct LockEdge *load_lock_edges(LockEdges *edges) {
 }
 
 ABI static int is_static_memory(void *lock) {
-  return _etext <= (unsigned char *)lock && (unsigned char *)lock < _end;
+  if (!(_etext <= (unsigned char *)lock && (unsigned char *)lock < _end))
+    return false;
+  bool __is_g_heaps(void *) __attribute__((__weak__));
+  if (__is_g_heaps)
+    if (__is_g_heaps(lock))
+      return false;
+  return true;
 }
 
 ABI static struct LockEdge *__deadlock_alloc(void) {

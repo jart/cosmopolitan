@@ -23,7 +23,6 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdalign.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 

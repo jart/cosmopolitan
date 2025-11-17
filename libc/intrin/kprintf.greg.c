@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
-#include "ape/sections.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -31,6 +30,7 @@
 #include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
@@ -47,7 +47,6 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -59,16 +58,17 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errno.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/tls.h"
 #include "libc/vga/vga.internal.h"
 #include "libc/wctype.h"
 
-#define ABI privileged optimizesize
+#define ABI __privileged optimizesize
 
 #define STACK_ERROR "kprintf error: stack is about to overflow\n"
 
@@ -131,6 +131,27 @@ __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 extern long __klog_handle;
 extern struct SymbolTable *__symtab;
 
+#ifdef __x86_64__
+static long __klog_pointer;
+#endif
+
+__funline unsigned murmur3(unsigned h) {
+  /* It's important that we hash the thread id. For example, on Windows,
+     the lowest two bits of the tid will always be zero. On Linux thread
+     ids are usually sequential, like many other platforms. Simpler hash
+     functions like Knuth's help with Windows but do bad when sequential */
+  h ^= h >> 16;
+  h *= 0x85ebca6b;
+  h ^= h >> 13;
+  h *= 0xc2b2ae35;
+  h ^= h >> 16;
+  return h;
+}
+
+__privileged static int kcolor(int x) {
+  return murmur3(x) & 7;
+}
+
 __funline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
   if (ckd_add(&t, t, n))
@@ -186,7 +207,7 @@ ABI static long klogfcntl(long fd, long cmd, long arg) {
                : /* inputs already specified */
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (cf)
-    ax = -ax;
+    ax = __errno_host2linux(-ax);
   return ax;
 #elif defined(__aarch64__)
   register long x0 asm("x0") = fd;
@@ -223,7 +244,7 @@ ABI static long klogopen(const char *path) {
                : /* inputs already specified */
                : "rcx", "r8", "r9", "r11", "memory");
   if (cf)
-    ax = -ax;
+    ax = __errno_host2linux(-ax);
   return ax;
 #elif defined(__aarch64__)
   register long x0 asm("x0") = dirfd;
@@ -273,7 +294,7 @@ ABI long kloghandle(void) {
         hand = __imp_CreateFileW(
             path, kNtFileAppendData,
             kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
-            kNtOpenAlways, kNtFileAttributeNormal | kNtFileFlagOverlapped, 0);
+            kNtOpenAlways, kNtFileAttributeNormal, 0);
       } else {
         hand = -1;  // KPRINTF_LOG was empty string or too long
       }
@@ -359,11 +380,14 @@ ABI void klog(const char *b, size_t n) {
     intptr_t ev;
     int e = __imp_GetLastError();
     if ((ev = __imp_CreateEventW(0, 0, 0, 0))) {
-      struct NtOverlapped overlap = {.hEvent = ev};
+      struct NtOverlapped overlap = {.hEvent = ev, .Pointer = __klog_pointer};
       ok = !!__imp_WriteFile(h, b, n, 0, &overlap);
       if (!ok && __imp_GetLastError() == kNtErrorIoPending)
         ok = true;
-      ok &= !!__imp_GetOverlappedResult(h, &overlap, &wrote, true);
+      if (ok)
+        ok = !!__imp_GetOverlappedResult(h, &overlap, &wrote, true);
+      if (ok)
+        __klog_pointer += wrote;
       if (!ok)
         __klog_handle = 0;
       __imp_CloseHandle(ev);
@@ -379,9 +403,8 @@ ABI void klog(const char *b, size_t n) {
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
                  : "0"(__NR_write), "1"(h), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    if (rax < 0) {
+    if (rax < 0)
       __klog_handle = 0;
-    }
   }
 #elif defined(__aarch64__)
   // this isn't a cancelation point because we don't acknowledge eintr
@@ -396,9 +419,8 @@ ABI void klog(const char *b, size_t n) {
                : "=r"(res_x0)
                : "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
-  if (res_x0 < 0) {
+  if (res_x0 < 0)
     __klog_handle = 0;
-  }
 #else
 #error "unsupported architecture"
 #endif
@@ -533,8 +555,9 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
 
         case 'P':
           tib = __tls_enabled ? __get_tls_privileged() : 0;
-          if (!(tib && (tib->tib_flags & TIB_FLAG_VFORKED))) {
-            x = __pid;
+          if (tib && (!(tib->tib_flags & TIB_FLAG_VFORKED) ||  //
+                      IsWindows() || IsMetal())) {
+            x = __get_pib()->pid;
 #ifdef __x86_64__
           } else if (IsLinux()) {
             asm volatile("syscall"
@@ -551,7 +574,7 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
             *p++ = '1';
             *p++ = ';';
             *p++ = '3';
-            *p++ = '0' + x % 7;
+            *p++ = '0' + kcolor(x);
             *p++ = 'm';
             ansi = 1;
           }
@@ -559,19 +582,8 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
 
         case 'H':
           tib = __tls_enabled ? __get_tls_privileged() : 0;
-          if (!(tib && (tib->tib_flags & TIB_FLAG_VFORKED))) {
-            if (tib) {
-              x = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
-            } else {
-              x = __pid;
-            }
-#ifdef __x86_64__
-          } else if (IsLinux()) {
-            asm volatile("syscall"
-                         : "=a"(x)
-                         : "0"(__NR_getpid)
-                         : "rcx", "rdx", "r11", "memory");
-#endif
+          if (tib) {
+            x = atomic_load_explicit(&tib->tib_ptid, memory_order_relaxed);
           } else {
             x = 666;
           }
@@ -582,7 +594,7 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
             *p++ = '1';
             *p++ = ';';
             *p++ = '3';
-            *p++ = '0' + x % 7;
+            *p++ = '0' + kcolor(x);
             *p++ = 'm';
             ansi = 1;
           }
@@ -741,7 +753,7 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
 
         case 'G':
           x = va_arg(va, int);
-          s = strsignal_r(x, z);
+          s = strsignal(x);
           goto FormatString;
 
         case 't': {
@@ -761,16 +773,16 @@ ABI static size_t kformat(char *b, size_t n, const char *fmt, va_list va) {
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
             // decipher c++ symbols if there's enough stack memory
             // stack size requirement assumes max_depth's still 20
-            if (_weaken(__demangle) &&    //
-                _weaken(__is_mangled) &&  //
-                _weaken(__is_mangled)(s)) {
+            if (_weaken(cosmo_demangle) &&    //
+                _weaken(cosmo_is_mangled) &&  //
+                _weaken(cosmo_is_mangled)(s)) {
               if (!cxxbufsize)
                 if ((cxxbufsize = __get_safe_size(8192, 8192)) >= 512) {
                   cxxbuf = alloca(cxxbufsize);
                   CheckLargeStackAllocation(cxxbuf, sizeof(cxxbufsize));
                 }
               if (cxxbufsize >= 512)
-                if (_weaken(__demangle)(cxxbuf, s, cxxbufsize) != -1)
+                if (_weaken(cosmo_demangle)(cxxbuf, s, cxxbufsize) != -1)
                   s = cxxbuf;
             }
 #pragma GCC pop_options

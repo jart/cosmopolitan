@@ -25,10 +25,14 @@
 //	@returnstwice
 //	@assume	system five nexgen32e abi conformant
 //	@note	code built w/ microsoft abi compiler can't call this
-//	@see	longjmp(), gclongjmp()
+//	@see	longjmp()
 	.ftrace1
 setjmp:
 	.ftrace2
+	jmp	_setjmp
+	.endfn	setjmp,globl
+
+	.privileged
 _setjmp:
 #ifdef __x86_64__
 	lea	8(%rsp),%rax
@@ -62,4 +66,3 @@ _setjmp:
 #error "unsupported architecture"
 #endif
 	.endfn	_setjmp,globl
-	.endfn	setjmp,globl

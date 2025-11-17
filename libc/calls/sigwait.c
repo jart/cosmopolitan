@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sigtimedwait.h"
 
+// TODO(jart): sigwait() should not EINTR (see P_OSREL_SIGWAIT)
+
 /**
  * Waits for signal synchronously.
  *

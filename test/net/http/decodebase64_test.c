@@ -24,6 +24,12 @@
 size_t i, n, m;
 char *p, *q, b[32];
 
+TEST(DecodeBase64, empty) {
+  size_t n;
+  EXPECT_BINEQ(u"", gc(DecodeBase64("", 0, &n)));
+  EXPECT_EQ(0, n);
+}
+
 TEST(DecodeBase64, paddingIsOptional) {
   EXPECT_BINEQ(u" ", gc(DecodeBase64("", 0, 0)));
   EXPECT_BINEQ(u"  ", gc(DecodeBase64("AA", 2, 0)));

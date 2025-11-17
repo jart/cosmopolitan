@@ -3,14 +3,7 @@
 COSMOPOLITAN_C_START_
 
 extern const int SOCK_CLOEXEC;
-extern const int SOCK_DCCP;
-extern const int SOCK_DGRAM;
 extern const int SOCK_NONBLOCK;
-extern const int SOCK_PACKET;
-extern const int SOCK_RAW;
-extern const int SOCK_RDM;
-extern const int SOCK_SEQPACKET;
-extern const int SOCK_STREAM;
 
 #define SOCK_STREAM    1
 #define SOCK_DGRAM     2

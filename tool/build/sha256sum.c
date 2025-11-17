@@ -57,7 +57,7 @@ static bool g_check;
 static int g_mismatches;
 static const char *prog;
 
-static wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] static void PrintUsage(int rc, int fd) {
   tinyprint(fd, "Usage: ", prog, USAGE, NULL);
   exit(rc);
 }
@@ -118,7 +118,7 @@ static bool IsSupportedPath(const char *path) {
 
 static bool GetDigest(const char *path, FILE *f, unsigned char digest[32]) {
   size_t got;
-  unsigned char buf[512];
+  unsigned char buf[65536];
   mbedtls_sha256_context ctx;
   mbedtls_sha256_init(&ctx);
   unassert(!mbedtls_sha256_starts_ret(&ctx, false));

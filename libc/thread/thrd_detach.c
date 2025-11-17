@@ -19,6 +19,14 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/threads.h"
 
+/**
+ * Asks thread to free itself automatically upon termination.
+ *
+ * This API is part of the C11 standard, and it is designed to be nearly
+ * identical to pthread_detach() which has further documentation.
+ *
+ * @return `thrd_success` on success, or `thrd_error` on error
+ */
 int thrd_detach(thrd_t th) {
   if (pthread_detach(th))
     return thrd_error;

@@ -16,14 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/rlimit.h"
+#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.h"
 
 /**
  * Describes setrlimit() / getrlimit() argument.
  */
-const char *_DescribeRlimitName(char buf[20], int x) {
-  if (x == 127)
-    return "n/a";
-  return _DescribeMagnum(buf, kRlimitNames, "RLIMIT_", x);
+const char *_DescribeRlimitName(char buf[20], int resource) {
+  switch (resource) {
+    case RLIMIT_CPU:
+      return "RLIMIT_CPU";
+    case RLIMIT_FSIZE:
+      return "RLIMIT_FSIZE";
+    case RLIMIT_DATA:
+      return "RLIMIT_DATA";
+    case RLIMIT_STACK:
+      return "RLIMIT_STACK";
+    case RLIMIT_CORE:
+      return "RLIMIT_CORE";
+    case RLIMIT_RSS:
+      return "RLIMIT_RSS";
+    case RLIMIT_NPROC:
+      return "RLIMIT_NPROC";
+    case RLIMIT_NOFILE:
+      return "RLIMIT_NOFILE";
+    case RLIMIT_MEMLOCK:
+      return "RLIMIT_MEMLOCK";
+    case RLIMIT_AS:
+      return "RLIMIT_AS";
+    default:
+      FormatInt32(buf, resource);
+      return buf;
+  }
 }

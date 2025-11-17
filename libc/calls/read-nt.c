@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -27,7 +26,9 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.h"
@@ -52,6 +53,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/inputrecord.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/limits.h"
@@ -59,10 +61,11 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 /**
  * @fileoverview Cosmopolitan Standard Input
@@ -87,6 +90,9 @@ struct VirtualKey {
 
 #define S(s) W(s "\0\0")
 #define W(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
+
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
 
 static struct VirtualKey kVirtualKey[] = {
     {kNtVkUp, S("A"), S("1;2A"), S("1;5A"), S("1;6A")},     // order matters
@@ -136,11 +142,11 @@ struct Keystrokes {
 };
 
 static struct Keystrokes __keystroke;
-static pthread_mutex_t __keystroke_lock = PTHREAD_MUTEX_INITIALIZER;
+alignas(64) static pthread_mutex_t __keystroke_lock = PTHREAD_MUTEX_INITIALIZER;
 
 textwindows void sys_read_nt_wipe_keystrokes(void) {
   bzero(&__keystroke, sizeof(__keystroke));
-  _pthread_mutex_wipe_np(&__keystroke_lock);
+  pthread_mutex_wipe_np(&__keystroke_lock);
 }
 
 textwindows static void FreeKeystrokeImpl(struct Dll *key) {
@@ -202,8 +208,8 @@ textwindows static void OpenConsole(void) {
 }
 
 textwindows static int AddSignal(int sig) {
-  atomic_fetch_or_explicit(&__get_tls()->tib_sigpending, 1ull << (sig - 1),
-                           memory_order_relaxed);
+  atomic_fetch_or_explicit(&__get_tls_win32()->tib_sigpending,
+                           1ull << (sig - 1), memory_order_relaxed);
   return 0;
 }
 
@@ -212,11 +218,11 @@ textwindows static void InitConsole(void) {
 }
 
 textwindows static void LockKeystrokes(void) {
-  _pthread_mutex_lock(&__keystroke_lock);
+  pthread_mutex_lock(&__keystroke_lock);
 }
 
 textwindows static void UnlockKeystrokes(void) {
-  _pthread_mutex_unlock(&__keystroke_lock);
+  pthread_mutex_unlock(&__keystroke_lock);
 }
 
 textwindows int64_t GetConsoleInputHandle(void) {
@@ -348,6 +354,9 @@ textwindows static int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
     } else if (c == __ttyconf.vquit) {
       EchoConsoleNt(b, 1, false);
       return AddSignal(SIGQUIT);
+    } else if (c == __ttyconf.vsusp) {
+      EchoConsoleNt(b, 1, false);
+      return AddSignal(SIGTSTP);
     }
   }
 
@@ -371,6 +380,14 @@ textwindows static int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
   if ((cks & (kNtLeftAltPressed | kNtRightAltPressed)) &&
       r->Event.KeyEvent.bKeyDown) {
     p[n++] = 033;
+  }
+
+  // shift+tab is \e[Z
+  if (c == '\t' && (cks & kNtShiftPressed)) {
+    p[n++] = 033;
+    p[n++] = '[';
+    p[n++] = 'Z';
+    return n;
   }
 
   // finally apply thompson-pike varint encoding
@@ -867,21 +884,14 @@ textwindows static int CountConsoleInputBytesBlockingImpl(uint32_t ms,
   for (;;) {
     int sig = 0;
     intptr_t sev;
-    if (!(sev = CreateEvent(0, 0, 0, 0)))
+    if (!(sev = __interruptible_start(waitmask)))
       return __winerr();
-    struct PosixThread *pt = _pthread_self();
-    pt->pt_event = sev;
-    pt->pt_blkmask = waitmask;
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                          memory_order_release);
     if (_check_cancel() == -1) {
-      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      CloseHandle(sev);
+      __interruptible_end();
       return -1;
     }
     if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
-      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      CloseHandle(sev);
+      __interruptible_end();
       goto DeliverSignal;
     }
     struct timespec now = sys_clock_gettime_monotonic_nt();
@@ -889,9 +899,8 @@ textwindows static int CountConsoleInputBytesBlockingImpl(uint32_t ms,
     int64_t millis = timespec_tomillis(remain);
     uint32_t waitms = MIN(millis, 0xffffffffu);
     intptr_t hands[] = {__keystroke.cin, sev};
-    uint32_t wi = WaitForMultipleObjects(2, hands, 0, waitms);
-    atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-    CloseHandle(sev);
+    uint32_t wi = __imp_WaitForMultipleObjects(2, hands, 0, waitms);
+    __interruptible_end();
     if (wi == -1u)
       return __winerr();
 
@@ -959,7 +968,7 @@ textwindows static int WaitToReadFromConsole(struct Fd *f, sigset_t waitmask) {
       ms = __ttyconf.vtime * 100;
     }
   }
-  if (f->flags & _O_NONBLOCK)
+  if (f->flags & O_NONBLOCK)
     return eagain();
   int olderr = errno;
   int rc = CountConsoleInputBytesBlockingImpl(ms, waitmask, true);
@@ -988,11 +997,14 @@ textwindows static ssize_t ReadFromConsole(struct Fd *f, void *data,
   return rc;
 }
 
-textwindows ssize_t ReadBuffer(int fd, void *data, size_t size, int64_t offset,
-                               sigset_t waitmask) {
+textwindows static ssize_t ReadBuffer(int fd, void *data, size_t size,
+                                      int64_t offset, sigset_t waitmask) {
 
   // switch to terminal polyfill if reading from win32 console
-  struct Fd *f = g_fds.p + fd;
+  struct Fd *f = __get_pib()->fds.p + fd;
+
+  if ((f->flags & O_ACCMODE) == O_WRONLY)
+    return ebadf();
 
   if (f->kind == kFdDevNull)
     return 0;
@@ -1013,12 +1025,17 @@ textwindows ssize_t ReadBuffer(int fd, void *data, size_t size, int64_t offset,
 
   // mops up win32 errors
   switch (GetLastError()) {
-    case kNtErrorBrokenPipe:    // broken pipe
-    case kNtErrorNoData:        // closing named pipe
-    case kNtErrorHandleEof:     // pread read past EOF
-      return 0;                 //
-    case kNtErrorAccessDenied:  // read doesn't return EACCESS
-      return ebadf();           //
+    case kNtErrorBrokenPipe:  // broken pipe
+    case kNtErrorNoData:      // closing named pipe
+    case kNtErrorHandleEof:   // pread read past EOF
+      return 0;
+    case kNtErrorAccessDenied:
+      // read doesn't return EACCESS
+      return ebadf();
+    case kNtErrorInvalidFunction:
+      // read doesn't return ENOSYS
+      // this can happen when reading a directory
+      return eisdir();
     default:
       return __winerr();
   }

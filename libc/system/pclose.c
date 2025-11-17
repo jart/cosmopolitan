@@ -17,55 +17,46 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/errno.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Closes stream created by popen().
  *
- * This function may be interrupted or cancelled, however it won't
- * actually return until the child process has terminated. Thus we
- * always release the resource, and errors are purely advisory.
+ * This function is not a cancelation point and does not raise EINTR. It
+ * is undefined behavior to pass a stream not created by popen(). If the
+ * stream had a write error while flushing then `errno` may be clobbered
  *
- * @return termination status of subprocess, or -1 w/ ECHILD
- * @raise ECANCELED if thread was cancelled in masked mode
+ * @return wait status of subprocess, or -1 w/ wait errno
  * @raise ECHILD if child pid didn't exist
- * @raise EINTR if signal was delivered
- * @cancelationpoint
  */
 int pclose(FILE *f) {
-  int e, rc, ws, pid;
-  bool iscancelled, wasinterrupted;
-  pid = f->pid;
+
+  // "If the argument stream to pclose() is not a pointer to a stream
+  //  created by popen(), the result of pclose() is undefined."
+  //                                —Quoth POSIX.1-2024
+  int pid = f->pid;
+  unassert(pid > 0);
+
+  int ws;
+  BLOCK_CANCELATION;
   fclose(f);
-  if (!pid)
-    return 0;
-  iscancelled = false;
-  wasinterrupted = false;
-  for (e = errno;;) {
-    if (wait4(pid, &ws, 0, 0) != -1) {
-      rc = ws;
-      break;
-    } else if (errno == ECANCELED) {
-      iscancelled = true;
-      errno = e;
-    } else if (errno == EINTR) {
-      wasinterrupted = true;
-      errno = e;
-    } else {
-      rc = echild();
-      break;
+  for (;;) {
+    int e = errno;
+    int rc = wait4(pid, &ws, 0, 0);
+    if (rc == -1) {
+      if (errno == EINTR) {
+        errno = e;
+        continue;
+      }
+      ws = -1;
     }
+    break;
   }
-  if (iscancelled) {
-    return ecanceled();
-  } else if (wasinterrupted) {
-    return eintr();
-  } else {
-    return rc;
-  }
+  ALLOW_CANCELATION;
+
+  return ws;
 }

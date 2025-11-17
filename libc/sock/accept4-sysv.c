@@ -24,7 +24,6 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
@@ -47,9 +46,10 @@ int sys_accept4(int server, struct sockaddr_storage *addr, int flags) {
                             ((file_mode & ~FD_CLOEXEC) |
                              (flags & SOCK_CLOEXEC ? FD_CLOEXEC : 0))));
       unassert((file_mode = __sys_fcntl(client, F_GETFL)) != -1);
-      unassert(!__sys_fcntl(client, F_SETFL,
-                            ((file_mode & ~O_NONBLOCK) |
-                             (flags & SOCK_NONBLOCK ? O_NONBLOCK : 0))));
+      unassert(!__sys_fcntl(
+          client, F_SETFL,
+          ((file_mode & ~O_NONBLOCK) |
+           (flags & SOCK_NONBLOCK ? (IsLinux() ? O_NONBLOCK : 4) : 0))));
     }
   }
   return client;

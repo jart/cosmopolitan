@@ -17,24 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 static textwindows int sockatmark_nt(int fd, unsigned long magnum) {
   bool32 res;
   int64_t hand;
   uint32_t bytes;
-  if (fd >= g_fds.n)
+  if (fd >= __get_pib()->fds.n)
     return ebadf();
-  if (g_fds.p[fd].kind != kFdSocket)
+  if (__get_pib()->fds.p[fd].kind != kFdSocket)
     return einval();
-  hand = g_fds.p[fd].handle;
+  hand = __get_pib()->fds.p[fd].handle;
   if (WSAIoctl(hand, magnum, 0, 0, &res, sizeof(res), &bytes, 0, 0) == -1) {
     return __winsockerr();
   }
@@ -56,7 +57,7 @@ int sockatmark(int fd) {
   } else {                //
     magnum = 0x40047307;  // SIOCATMARK (BSD, Windows)
   }
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     if (sys_ioctl(fd, magnum, &rc) == -1) {

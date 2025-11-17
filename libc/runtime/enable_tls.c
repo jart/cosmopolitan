@@ -17,13 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/struct/rseq.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/bsf.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/getenv.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.h"
@@ -35,12 +39,12 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
-#include "libc/stdalign.h"
 #include "libc/str/locale.h"
 #include "libc/str/locale.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -54,6 +58,8 @@ extern unsigned char __tls_add_nt_rax[];
 alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 
 static unsigned long ParseMask(const char *str) {
+  if (!str)
+    return 0;
   int c;
   unsigned long x = 0;
   if (str) {
@@ -225,11 +231,19 @@ textstartup void __enable_tls(void) {
     tib->tib_syshand = __syslib->__pthread_self();
   }
 
+  static_assert(!(offsetof(struct CosmoTib, tib_rseq) & 31));
+  static_assert(sizeof(struct CosmoTib) - offsetof(struct CosmoTib, tib_rseq) ==
+                32);
+  struct rseq *rseq = (struct rseq *)tib->tib_rseq;
+  rseq->cpu_id = RSEQ_CPU_ID_UNINITIALIZED;
+  if (IsLinux())
+    sys_rseq(rseq, 32, 0, RSEQ_SIG);  // Linux 4.18+ (c. 2018)
+
   int tid;
   if (IsLinux() || IsXnuSilicon()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
-    tid = __pid;
+    tid = __get_pib()->pid;
   } else {
     tid = sys_gettid();
   }
@@ -237,9 +251,18 @@ textstartup void __enable_tls(void) {
   atomic_init(&tib->tib_ctid, tid);
   // TODO(jart): set_tid_address?
 
-  // inherit signal mask
-  if (IsWindows())
+  // inherit signal stuff passed by execve
+  if (IsWindows()) {
     atomic_init(&tib->tib_sigmask, ParseMask(__getenv(environ, "_MASK").s));
+    atomic_init(__get_pib()->sigpending,
+                ParseMask(__getenv(environ, "_SIGS").s));
+    sigset_t igns = ParseMask(__getenv(environ, "_IGNS").s);
+    while (igns) {
+      int sig = bsfl(igns) + 1;
+      igns &= ~(1ull << (sig - 1));
+      __get_pib()->sighandrvas[sig - 1] = (intptr_t)SIG_IGN;
+    }
+  }
 
   // initialize posix threads
   _pthread_static.tib = tib;
@@ -254,12 +277,6 @@ textstartup void __enable_tls(void) {
   if (IsWindows())
     __tls_index = TlsAlloc();
   __set_tls(tib);
-
-#ifdef __x86_64__
-  // rewrite the executable tls opcodes in memory
-  if (IsWindows() || IsOpenbsd() || IsNetbsd())
-    __morph_tls();
-#endif
 
   // we are now allowed to use tls
   __tls_enabled_set(true);

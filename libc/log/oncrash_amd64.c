@@ -54,6 +54,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
@@ -243,9 +244,9 @@ static relegated void ShowCrashReport(int err, int sig, siginfo_t *si,
   }
   kprintf("\n");
   __print_maps(15);
-  if (g_fds.n)
+  if (__get_pib()->fds.n)
     kprintf("\n");
-  __printfds(g_fds.p, g_fds.n);
+  __printfds(__get_pib()->fds.p, __get_pib()->fds.n);
   kprintf("\n");
   if (__argv)
     for (i = 0; i < __argc; ++i)

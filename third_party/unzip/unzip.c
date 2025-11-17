@@ -72,6 +72,8 @@
 #include "libc/mem/mem.h"
 #include "libc/mem/gc.h"
 #include "third_party/unzip/unzvers.h"
+#include "libc/str/locale.internal.h"
+#include "libc/str/langinfo.h"
 #include "third_party/unzip/globals.h"
 
 #if __GNUC__ >= 11 /* [jart] worth looking into */

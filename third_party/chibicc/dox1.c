@@ -89,7 +89,9 @@ static char *DescribeType(struct Type *ty) {
     case TY_VOID:
       return strdup("void");
     case TY_BOOL:
-      return strdup("_Bool");
+      return strdup("bool");
+    case TY_NULLPTR_T:
+      return strdup("nullptr_t");
     case TY_CHAR:
       return DescribeScalar(ty, "char");
     case TY_SHORT:

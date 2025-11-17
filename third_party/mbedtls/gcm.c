@@ -28,6 +28,7 @@
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
+#include "libc/serialize.h"
 #include "third_party/mbedtls/platform.h"
 __static_yoink("mbedtls_notice");
 
@@ -471,8 +472,8 @@ int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
     memcpy( tag, ctx->base_ectr, tag_len );
     if( orig_len || orig_add_len ) {
-        Write64be( ctx->buf + 0, READ64BE( ctx->buf + 0 ) ^ orig_add_len );
-        Write64be( ctx->buf + 8, READ64BE( ctx->buf + 8 ) ^ orig_len     );
+        WRITE64BE( ctx->buf + 0, READ64BE( ctx->buf + 0 ) ^ orig_add_len );
+        WRITE64BE( ctx->buf + 8, READ64BE( ctx->buf + 8 ) ^ orig_len     );
         gcm_mult( ctx, ctx->buf );
         for( i = 0; i < tag_len; i++ ) tag[i] ^= ctx->buf[i];
     }

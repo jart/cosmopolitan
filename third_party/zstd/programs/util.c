@@ -75,7 +75,6 @@ extern "C" {
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"
@@ -1633,8 +1632,6 @@ failed:
 #include "libc/limits.h"
 #include "libc/sysv/consts/endian.h"
 #include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 // MISSING #include <sys/sysctl.h>
 

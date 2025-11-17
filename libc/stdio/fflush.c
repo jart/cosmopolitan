@@ -17,28 +17,43 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/cxxabi.h"
+#include "libc/errno.h"
 #include "libc/stdio/internal.h"
+#include "libc/thread/thread.h"
 
 /**
  * Blocks until data from stream buffer is written out.
  *
+ * This implementation provides strict POSIX compliance for buffering
+ * semantics. Unlike implementations that may silently ignore flush
+ * operations or perform them inconsistently, this implementation
+ * guarantees that buffered data is written to the underlying file.
+ *
  * @param f is the stream handle, or 0 for all streams
  * @return is 0 on success or EOF on error
+ * @cancelationpoint
  */
 int fflush(FILE *f) {
   int rc;
   if (f) {
-    flockfile(f);
+    FLOCKFILE(f);
     rc = fflush_unlocked(f);
-    funlockfile(f);
+    FUNLOCKFILE(f);
   } else {
     __stdio_lock();
     struct Dll *e, *e2;
-    for (rc = 0, e = dll_last(__stdio.files); e; e = e2) {
+    bool stop_trying = false;
+    for (rc = 0, e = dll_last(__stdio.files); e && !stop_trying; e = e2) {
       f = FILE_CONTAINER(e);
       __stdio_ref(f);
       __stdio_unlock();
-      rc |= fflush(FILE_CONTAINER(e));
+      pthread_cleanup_push((void *)__stdio_unref, f);
+      if (fflush(FILE_CONTAINER(e)) == EOF) {
+        if (errno == ECANCELED)
+          stop_trying = true;
+        rc = EOF;
+      }
+      pthread_cleanup_pop(0);
       __stdio_lock();
       e2 = dll_prev(__stdio.files, e);
       __stdio_unref_unlocked(f);

@@ -43,4 +43,7 @@ int main(int argc, char *argv[]) {
     ;
 }
 
+#else
+int main(int argc, char *argv[]) {
+}
 #endif /* __x86_64__ */

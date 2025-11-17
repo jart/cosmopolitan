@@ -106,8 +106,6 @@ extern "C" {
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h" /* setpriority */
 #    define SET_REALTIME_PRIORITY setpriority(PRIO_PROCESS, 0, -20)
 #  else

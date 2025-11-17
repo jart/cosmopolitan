@@ -16,62 +16,62 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/ctype.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
 
-static int IsAlpha(int c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
-  char16_t *p;
-  uint32_t attrs;
-  while ((p = strrchr16(path, '\\'))) {
-    if (p == path)
-      // don't bother checking GetFileAttributes(u"\\")
+textwindows bool __hasregularparent(char16_t *p) {
+  bool first = true;
+  char16_t *e = p + strlen16(p);
+  while (e > p) {
+    if (e[-1] == '\\')
       break;
-    if (p == path + 2 && IsAlpha(path[0]) && path[1] == ':')
-      // don't bother checking GetFileAttributes(u"C:\\")
+    if (e - p >= 2 && e[-1] == '?' && e[-2] == '\\')
       break;
-    *p = u'\0';
-    if ((attrs = GetFileAttributes(path)) != -1u &&
-        !(attrs & kNtFileAttributeDirectory)) {
-      return true;
+    if (e - p >= 3 && e[-1] == '?' && e[-2] == '?' && e[-3] == '\\')
+      break;
+    if (e - p >= 3 && e[-1] == ':' && isalpha(e[-2]) && e[-3] == '\\')
+      break;
+    if (first) {
+      first = false;
+    } else {
+      uint32_t dwFileAttrs;
+      if ((dwFileAttrs = GetFileAttributes(p)) != -1u)
+        return !(dwFileAttrs & kNtFileAttributeDirectory);
+    }
+    while (e > p) {
+      int c = e[-1];
+      *--e = 0;
+      if (c == '\\')
+        break;
     }
   }
   return false;
 }
 
-textwindows dontinline int64_t __fix_enotdir3(int64_t rc, char16_t *path1,
-                                              char16_t *path2) {
-  if (rc == -1 && (errno == kNtErrorPathNotFound ||  // Windows returns ENOTDIR
-                   errno == kNtErrorInvalidName)) {  // e.g. has trailing slash
-    bool isdir = false;
-    if ((!path1 || !(isdir |= SubpathExistsThatsNotDirectory(path1))) &&
-        (!path2 || !(isdir |= SubpathExistsThatsNotDirectory(path2)))) {
-      errno = kNtErrorFileNotFound;  // ENOENT
-    } else if (isdir) {
-      errno = kNtErrorPathNotFound;  // ENOTDIR
+// When files don't exist, normally UNIX systems raise ENOENT, except if
+// one of the parent directory components in the path exists, but is not
+// actually a dirctory, in which case ENOTDIR is raised instead. Example
+// would be stat("/etc/passwd/lol") raising ENOTDIR since /etc/passwd is
+// obviously a regular file.
+textwindows int64_t __fix_enotdir(int64_t rc, char16_t *path) {
+  if (rc == -1) {
+    switch (errno) {
+      case ENOTDIR:
+        if (!__hasregularparent(path))
+          errno = ENOENT;
+        break;
+      case ENOENT:
+        if (__hasregularparent(path))
+          errno = ENOTDIR;
+        break;
+      default:
+        break;
     }
   }
   return rc;
-}
-
-// WIN32 doesn't distinguish between ENOTDIR and ENOENT. UNIX strictly
-// requires that a directory component *exists* but is not a directory
-// whereas WIN32 will return ENOTDIR if a dir label simply isn't found
-//
-// - ENOTDIR: A component used as a directory in pathname is not, in
-//   fact, a directory. -or- pathname is relative and dirfd is a file
-//   descriptor referring to a file other than a directory.
-//
-// - ENOENT: A directory component in pathname does not exist or is a
-//   dangling symbolic link.
-//
-textwindows int64_t __fix_enotdir(int64_t rc, char16_t *path) {
-  return __fix_enotdir3(rc, path, 0);
 }

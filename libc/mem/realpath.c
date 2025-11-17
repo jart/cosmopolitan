@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/safemacros.h"
@@ -41,11 +42,6 @@ __static_yoink("musl_libc_notice");
 #define SYMLOOP_MAX 40
 
 // clang-format off
-
-static inline int IsAlpha(int c)
-{
-	return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
 
 static size_t GetSlashLen(const char *s)
 {
@@ -74,7 +70,6 @@ static char *ResolvePath(char *d, const char *s, size_t n)
  * This implementation is consistent with glibc, in that `"//"` becomes
  * `"/"` unlike Musl Libc, which considers that special (not sure why?)
  * This is the only change Cosmopolitan Libc made vs. Musl's realpath()
- * aside from also being permissive about backslashes, to help Windows.
  *
  * @param filename is the path that needs to be resolved
  * @param resolved needs PATH_MAX bytes, or NULL to use malloc()
@@ -98,31 +93,6 @@ char *realpath(const char *filename, char *resolved)
 	if (!filename) {
 		einval();
 		return 0;
-	}
-
-	/* Normalize windows paths before proceeding. */
-	if (IsWindows()) {
-		int c, i = 0;
-
-		/* Turn backslash into slash. */
-		while ((c = *filename++)) {
-			if (i == PATH_MAX - 1)
-				goto toolong;
-			if (c == '\\')
-				c = '/';
-			output[i++] = c;
-		}
-		output[i] = 0;
-
-		/* Turn paths like "C:" into "/C"
-		 * Turn paths like "C:/..." into "/C/..." */
-		if (IsAlpha(output[0]) && output[1] == ':' &&
-		    (!output[2] || output[2] == '/')) {
-			output[1] = output[0];
-			output[0] = '/';
-		}
-
-		filename = output;
 	}
 
 	/* Copy the path and handle ZipOS. */

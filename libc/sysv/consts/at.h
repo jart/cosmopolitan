@@ -12,7 +12,6 @@ extern const int AT_SYMLINK_FOLLOW;
 extern const int AT_SYMLINK_NOFOLLOW;
 extern const int AT_REMOVEDIR;
 extern const int AT_EACCESS;
-extern const int AT_EMPTY_PATH;
 
 COSMOPOLITAN_C_END_
 

@@ -16,45 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nt/enum/status.h"
-#include "libc/nt/ntdll.h"
-#include "libc/stdio/sysparam.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/timer.h"
-#include "libc/thread/tls.h"
-#ifdef __x86_64__
-
-static atomic_int usingRes;
-static atomic_bool changedRes;
+#include "libc/nt/thunk/msabi.h"
+#include "libc/nt/winmm.h"
+#if SupportsWindows()
 
 static textwindows int sys_clock_nanosleep_nt_impl(int clock,
                                                    struct timespec abs,
                                                    sigset_t waitmask) {
   struct timespec now, wall;
-  uint32_t minRes, maxRes, oldRes;
   sys_clock_gettime_nt(0, &wall);
   if (sys_clock_gettime_nt(clock, &now))
     return -1;
-  bool wantRes = clock == CLOCK_REALTIME ||   //
-                 clock == CLOCK_MONOTONIC ||  //
-                 clock == CLOCK_BOOTTIME;
-  if (wantRes && !atomic_fetch_add(&usingRes, 1))
-    changedRes = NtSuccess(NtQueryTimerResolution(&minRes, &maxRes, &oldRes)) &&
-                 NtSuccess(NtSetTimerResolution(maxRes, true, &oldRes));
   if (timespec_cmp(abs, now) > 0)
     wall = timespec_add(wall, timespec_sub(abs, now));
-  int rc = _park_norestart(wall, waitmask);
-  if (wantRes && atomic_fetch_sub(&usingRes, 1) == 1 && changedRes)
-    NtSetTimerResolution(0, false, &minRes);
-  return rc;
+  return _park_norestart(wall, waitmask);
 }
 
 textwindows int sys_clock_nanosleep_nt(int clock, int flags,
@@ -80,6 +64,11 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
 BailOut:
   __sig_unblock(m);
   return rc;
+}
+
+// called by WinMain() if clock_nanosleep() is linked
+__msabi textwindows dontinstrument void sys_clock_nanosleep_nt_init(void) {
+  __imp_timeBeginPeriod(1);  // make sleep(1ms) not take 15ms
 }
 
 #endif /* __x86_64__ */

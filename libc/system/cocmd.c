@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -88,7 +89,7 @@ static ssize_t Write(int fd, const char *s) {
   return write(fd, s, strlen(s));
 }
 
-static wontreturn void UnsupportedSyntax(unsigned char c) {
+[[noreturn]] static void UnsupportedSyntax(unsigned char c) {
   char ibuf[13], cbuf[2] = {c};
   FormatOctal32(ibuf, c, true);
   tinyprint(2, prog, ": unsupported syntax '", cbuf, "' (", ibuf, "): ", cmd,
@@ -113,17 +114,71 @@ static void Open(const char *path, int fd, int flags) {
 }
 
 static int SystemExec(void) {
-  execvpe(args[0], args, envs);
-  perror(args[0]);
-  return (n = 0), 127;
+  if (!IsWindows()) {
+    execvpe(args[0], args, envs);
+    perror(args[0]);
+    return (n = 0), 127;
+  } else {
+    // execve isn't safe currently on windows due to the depth-first way
+    // pipelines are built by cocmd. on windows, the previous process in
+    // the pipeline might die before the next element in the pipeline is
+    // execve()d in which case the parent win32 pid spoofing breaks down
+    // this is sort of the same thing as adding an implicit `; exit $?`.
+    int pid = fork();
+    if (pid == -1) {
+      perror(args[0]);
+      return (n = 0), 127;
+    }
+    if (!pid) {
+      execvpe(args[0], args, envs);
+      _Exit(127);
+    }
+    int ws;
+    int rc = waitpid(pid, &ws, 0);
+    if (rc == -1) {
+      perror(args[0]);
+      return (n = 0), 127;
+    }
+    if (WIFEXITED(ws))
+      return (n = 0), WEXITSTATUS(ws);
+    return (n = 0), 128 + WTERMSIG(ws);
+  }
 }
 
 static int GetSignalByName(const char *s) {
-  for (int i = 0; kSignalNames[i].x != MAGNUM_TERMINATOR; ++i) {
-    if (!strcmp(s, MAGNUM_STRING(kSignalNames, i) + 3)) {
-      return MAGNUM_NUMBER(kSignalNames, i);
-    }
-  }
+  static const char map[32][7] = {
+      [SIGHUP] = "HUP",        //
+      [SIGINT] = "INT",        //
+      [SIGQUIT] = "QUIT",      //
+      [SIGILL] = "ILL",        //
+      [SIGTRAP] = "TRAP",      //
+      [SIGABRT] = "ABRT",      //
+      [SIGBUS] = "BUS",        //
+      [SIGFPE] = "FPE",        //
+      [SIGKILL] = "KILL",      //
+      [SIGUSR1] = "USR1",      //
+      [SIGSEGV] = "SEGV",      //
+      [SIGUSR2] = "USR2",      //
+      [SIGPIPE] = "PIPE",      //
+      [SIGALRM] = "ALRM",      //
+      [SIGTERM] = "TERM",      //
+      [SIGCHLD] = "CHLD",      //
+      [SIGCONT] = "CONT",      //
+      [SIGSTOP] = "STOP",      //
+      [SIGTSTP] = "TSTP",      //
+      [SIGTTIN] = "TTIN",      //
+      [SIGTTOU] = "TTOU",      //
+      [SIGURG] = "URG",        //
+      [SIGXCPU] = "XCPU",      //
+      [SIGXFSZ] = "XFSZ",      //
+      [SIGVTALRM] = "VTALRM",  //
+      [SIGPROF] = "PROF",      //
+      [SIGWINCH] = "WINCH",    //
+      [SIGSYS] = "SYS",        //
+  };
+  for (int sig = 1; sig < 32; ++sig)
+    if (!strcmp(s, map[sig]))
+      return sig;
   return 0;
 }
 
@@ -178,7 +233,7 @@ static int False(void) {
   return 1;
 }
 
-static wontreturn void Exit(void) {
+[[noreturn]] static void Exit(void) {
   _Exit(n > 1 ? atoi(args[1]) : 0);
 }
 
@@ -595,6 +650,19 @@ static int Rmdir(void) {
   return 0;
 }
 
+static int touch(const char *file, uint32_t mode) {
+  int rc, fd, olderr;
+  olderr = errno;
+  if ((rc = utimes(file, 0)) == -1 && errno == ENOENT) {
+    errno = olderr;
+    fd = open(file, O_CREAT | O_WRONLY, mode);
+    if (fd == -1)
+      return -1;
+    return close(fd);
+  }
+  return rc;
+}
+
 static int Touch(void) {
   int i;
   if (n > 1 && args[1][0] != '-') {
@@ -682,7 +750,7 @@ static int Env(void) {
   return 0;
 }
 
-static wontreturn void Exec(void) {
+[[noreturn]] static void Exec(void) {
   Shift(1);
   if (!ShellExec()) {
     _Exit(0);  // can happen for builtins

@@ -20,6 +20,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/dprintf.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
   dprintf(*(int *)arg, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
@@ -32,5 +33,5 @@ static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
 void _meminfo(int fd) {
   _memsummary(fd);
   dprintf(fd, "%12s   %12s   %8s   %8s\n", "start", "end", "used", "size");
-  malloc_inspect_all(onmemchunk, &fd);
+  dlmalloc_inspect_all(onmemchunk, &fd);
 }

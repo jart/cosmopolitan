@@ -27,6 +27,8 @@ LOCAL CHANGES
 
   - Support Apple's ulock futexes which are internal but nicer than GCD
 
+  - Have mutex functions return zero so POSIX mutexes can tail call it.
+
   - Ensure resources such as POSIX semaphores are are released on fork.
 
   - Make contended mutexes go 30% faster by using C11 atomics API. This

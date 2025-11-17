@@ -16,32 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/movefileexflags.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows bool StripTrailingSlash(char16_t *path) {
-  size_t n = strlen16(path);
-  bool had_trailing_slash = false;
-  if (n > 1 && path[n - 1] == '\\') {
-    had_trailing_slash = true;
-    path[--n] = 0;
-  }
-  return had_trailing_slash;
+textwindows static bool IsDirectory(uint32_t dwFileAttrs) {
+  return (dwFileAttrs & kNtFileAttributeDirectory) &&
+         !(dwFileAttrs & kNtFileAttributeReparsePoint);
 }
 
 textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
                                 const char *newpath) {
 
-  // translate unix to windows paths
+  // allocate memory
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct {
@@ -50,48 +45,47 @@ textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
   } M;
   CheckLargeStackAllocation(&M, sizeof(M));
 #pragma GCC pop_options
-  if (__mkntpathat(olddirfd, oldpath, 0, M.oldpath16) == -1 ||
-      __mkntpathat(newdirfd, newpath, 0, M.newpath16) == -1) {
+
+  // translate unix to windows paths
+  int n;
+  if (((n = __mkntpathat(olddirfd, oldpath, M.oldpath16)) == -1) ||
+      __mkntpathat(newdirfd, newpath, M.newpath16) == -1)
     return -1;
+
+  // similar to unlinkat() we need to explicitly check if we have
+  // permission to delete an entry from a directory
+  if (n && M.oldpath16[n - 1] != '\\') {
+    while (n && M.oldpath16[n - 1] != '\\')
+      --n;
+    while (n && M.oldpath16[n - 1] == '\\')
+      --n;
+    char16_t save = M.oldpath16[n];
+    M.oldpath16[n] = 0;
+    uint32_t attr;
+    if ((attr = GetFileAttributes(M.oldpath16)) != -1u)
+      if (attr & kNtFileAttributeReadonly)
+        return eacces();
+    M.oldpath16[n] = save;
   }
 
-  // strip trailing slash
-  // win32 will einval otherwise
-  // normally this is handled by __fix_enotdir()
-  bool old_must_be_dir = StripTrailingSlash(M.oldpath16);
-  bool new_must_be_dir = StripTrailingSlash(M.newpath16);
-
-  // test for some known error conditions ahead of time
-  // the enotdir check can't be done reactively
-  // ideally we should resolve symlinks first
+  // simulate unix directory status errors
   uint32_t oldattr = GetFileAttributes(M.oldpath16);
   uint32_t newattr = GetFileAttributes(M.newpath16);
-  if ((old_must_be_dir && oldattr != -1u &&
-       !(oldattr & kNtFileAttributeDirectory)) ||
-      (new_must_be_dir && newattr != -1u &&
-       !(newattr & kNtFileAttributeDirectory))) {
-    return enotdir();
-  }
   if (oldattr != -1u && newattr != -1u) {
-    if (!(oldattr & kNtFileAttributeDirectory) &&
-        (newattr & kNtFileAttributeDirectory)) {
-      return eisdir();  // new is directory, but old isn't a directory
-    } else if ((oldattr & kNtFileAttributeDirectory) &&
-               !(newattr & kNtFileAttributeDirectory)) {
-      return enotdir();  // old is directory, but new isn't a directory
-    } else if ((oldattr & kNtFileAttributeDirectory) &&
-               (newattr & kNtFileAttributeDirectory)) {
-      // both old and new are directories
+    if (!IsDirectory(oldattr) && IsDirectory(newattr))
+      return eisdir();
+    if (IsDirectory(oldattr) && !IsDirectory(newattr))
+      return enotdir();
+    if (IsDirectory(oldattr) && IsDirectory(newattr))
       if (!RemoveDirectory(M.newpath16) &&
-          GetLastError() == kNtErrorDirNotEmpty) {
+          GetLastError() == kNtErrorDirNotEmpty)
         return enotempty();
-      }
-    }
   }
 
-  if (MoveFileEx(M.oldpath16, M.newpath16, kNtMovefileReplaceExisting)) {
-    return 0;
-  } else {
-    return __fix_enotdir3(-1, M.oldpath16, M.newpath16);
-  }
+  // rename the file
+  if (!MoveFileEx(M.oldpath16, M.newpath16, kNtMovefileReplaceExisting))
+    return __fix_enotdir2(-1, M.oldpath16, M.newpath16);
+
+  // we're done
+  return 0;
 }

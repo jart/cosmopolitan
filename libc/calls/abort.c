@@ -17,10 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
+
+alignas(64) static struct {
+  pthread_mutex_t lock;
+  int phase;
+} __abort = {
+    PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP,
+};
 
 /**
  * Terminates program abnormally.
@@ -33,10 +43,36 @@
  * @noreturn
  */
 wontreturn void abort(void) {
-  sigset_t m = 1ull << (SIGABRT - 1);
-  sigprocmask(SIG_UNBLOCK, &m, 0);
-  raise(SIGABRT);
-  signal(SIGABRT, SIG_DFL);
-  raise(SIGABRT);
-  _Exit(128 + SIGABRT);
+  sigset_t mask;
+  if (!__spawned)
+    pthread_mutex_lock(&__abort.lock);
+  switch (__abort.phase) {
+    case 0:
+      mask = 1ull << (SIGABRT - 1);
+      sigprocmask(SIG_UNBLOCK, &mask, 0);
+      __abort.phase = 1;
+      // fallthrough
+    case 1:
+      __abort.phase = 0;
+      if (!__spawned)
+        pthread_mutex_unlock(&__abort.lock);
+      raise(SIGABRT);
+      if (!__spawned)
+        pthread_mutex_lock(&__abort.lock);
+      __abort.phase = 2;
+      // fallthrough
+    case 2:
+      __abort.phase = 3;
+      signal(SIGABRT, SIG_DFL);
+      // fallthrough
+    case 3:
+      __abort.phase = 4;
+      raise(SIGABRT);
+      // fallthrough
+    case 4:
+      __abort.phase = 5;
+      _Exit(128 + SIGABRT);
+  }
+  for (;;)
+    notpossible;
 }

@@ -19,15 +19,17 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
+#include "libc/nt/memory.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 // <sync libc/sysv/consts.sh>
 #define POLLERR_    0x0001  // implied in events
@@ -42,13 +44,29 @@
 #define POLLPRI_    0x0400  // MSDN unsupported
 // </sync libc/sysv/consts.sh>
 
-int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
-                  fd_set *exceptfds, const struct timespec *timeout,
-                  const sigset_t *sigmask) {
-  int pfds = 0;
+textwindows static void *sys_select_nt_malloc(size_t size) {
+  return HeapAlloc(GetProcessHeap(), 0, size);
+}
 
-  // convert bitsets to pollfd
-  struct pollfd fds[128];
+textwindows static void sys_select_nt_free(void *ptr) {
+  HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+textwindows int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
+                              fd_set *exceptfds, const struct timespec *timeout,
+                              const sigset_t *sigmask) {
+
+  // handle special zero case
+  if (!nfds)
+    return sys_poll_nt(0, 0, timeout, sigmask);
+
+  // allocate memory for pollfds
+  struct pollfd *fds;
+  if (!(fds = sys_select_nt_malloc(nfds * sizeof(*fds))))
+    return enomem();
+
+  // convert bitsets to pollfds
+  size_t pfds = 0;
   for (int fd = 0; fd < nfds; ++fd) {
     int events = 0;
     if (readfds && FD_ISSET(fd, readfds))
@@ -58,8 +76,11 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
     if (exceptfds && FD_ISSET(fd, exceptfds))
       events |= POLLPRI_;
     if (events) {
-      if (pfds == ARRAYLEN(fds))
-        return e2big();
+      if (!__isfdopen(fd)) {
+        // otherwise poll() will succeed with POLLNVAL in revents
+        sys_select_nt_free(fds);
+        return ebadf();
+      }
       fds[pfds].fd = fd;
       fds[pfds].events = events;
       fds[pfds].revents = 0;
@@ -69,8 +90,10 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
 
   // call our nt poll implementation
   int fdcount = sys_poll_nt(fds, pfds, timeout, sigmask);
-  if (fdcount == -1)
+  if (fdcount == -1) {
+    sys_select_nt_free(fds);
     return -1;
+  }
 
   // convert pollfd back to bitsets
   if (readfds)
@@ -80,7 +103,7 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   if (exceptfds)
     FD_ZERO(exceptfds);
   int bits = 0;
-  for (int i = 0; i < pfds; ++i) {
+  for (size_t i = 0; i < pfds; ++i) {
     if (fds[i].revents & (POLLIN_ | POLLHUP_ | POLLERR_ | POLLNVAL_)) {
       if (readfds) {
         FD_SET(fds[i].fd, readfds);
@@ -101,6 +124,7 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
     }
   }
 
+  sys_select_nt_free(fds);
   return bits;
 }
 

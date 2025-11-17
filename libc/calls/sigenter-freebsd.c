@@ -25,7 +25,9 @@
 #include "libc/calls/struct/siginfo-freebsd.internal.h"
 #include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/ucontext-freebsd.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.h"
@@ -33,9 +35,11 @@
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/pib.h"
 
-privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
-                                   struct ucontext_freebsd *ctx) {
+__privileged void __sigenter_freebsd(int sig,
+                                     struct siginfo_freebsd *freebsdinfo,
+                                     struct ucontext_freebsd *ctx) {
 
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
@@ -47,9 +51,11 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
 #pragma GCC pop_options
 
   int rva, flags;
-  rva = __sighandrvas[sig];
+  struct CosmoPib *pib = __get_pib();
+  sig = __sig2linux(sig);
+  rva = pib->sighandrvas[sig - 1];
   if (rva >= kSigactionMinRva) {
-    flags = __sighandflags[sig];
+    flags = pib->sighandflags[sig - 1];
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {
@@ -63,7 +69,8 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       g.uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
-      g.uc.uc_sigmask = ctx->uc_sigmask[0] | (uint64_t)ctx->uc_sigmask[0] << 32;
+      g.uc.uc_sigmask =
+          __mask2linux(ctx->uc_sigmask[0] | (uint64_t)ctx->uc_sigmask[1] << 32);
 
 #ifdef __x86_64__
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
@@ -119,8 +126,9 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       ctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
       ctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
       ctx->uc_flags = g.uc.uc_flags;
-      ctx->uc_sigmask[0] = g.uc.uc_sigmask;
-      ctx->uc_sigmask[1] = g.uc.uc_sigmask >> 32;
+      sigset_t mask2 = __linux2mask(g.uc.uc_sigmask);
+      ctx->uc_sigmask[0] = mask2;
+      ctx->uc_sigmask[1] = mask2 >> 32;
 
 #ifdef __x86_64__
       ctx->uc_mcontext.mc_rdi = g.uc.uc_mcontext.rdi;

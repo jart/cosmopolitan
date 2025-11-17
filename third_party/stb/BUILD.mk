@@ -26,6 +26,7 @@ THIRD_PARTY_STB_A_OBJS =				\
 
 THIRD_PARTY_STB_A_DIRECTDEPS =				\
 	DSP_CORE					\
+	LIBC_CALLS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
@@ -36,7 +37,7 @@ THIRD_PARTY_STB_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_TINYMATH					\
 	LIBC_X						\
-	THIRD_PARTY_ZLIB
+	THIRD_PARTY_ZLIB				\
 
 THIRD_PARTY_STB_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_STB_A_DIRECTDEPS),$($(x))))

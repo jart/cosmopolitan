@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -36,7 +37,8 @@
 
 #define PGUP(x) (((x) + pagesz - 1) & -pagesz)
 
-static int __mprotect_chunk(char *addr, size_t size, int prot, bool iscow) {
+static int __mprotect_chunk_impl(char *addr, size_t size, int prot,
+                                 bool iscow) {
 
   if (!IsWindows())
     return sys_mprotect(addr, size, prot);
@@ -46,6 +48,18 @@ static int __mprotect_chunk(char *addr, size_t size, int prot, bool iscow) {
     return -1;
 
   return 0;
+}
+
+static int __mprotect_chunk(char *addr, size_t size, int prot, bool iscow) {
+  int rc = __mprotect_chunk_impl(addr, size, prot, iscow);
+  if (rc != -1) {
+    if (prot & (PROT_READ | PROT_WRITE)) {
+      __maps_mark(addr, size);
+    } else {
+      __maps_unmark(addr, size);
+    }
+  }
+  return rc;
 }
 
 int __mprotect(char *addr, size_t size, int prot) {
@@ -65,10 +79,6 @@ int __mprotect(char *addr, size_t size, int prot) {
 
   // normalize size
   size = (size + pagesz - 1) & -pagesz;
-
-  // test for signal handler reentry
-  if (__maps_reentrant())
-    return edeadlk();
 
   // change mappings
   int rc = 0;

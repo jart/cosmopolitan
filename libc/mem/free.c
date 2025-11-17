@@ -16,7 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 /**
@@ -30,6 +33,20 @@
  * @see dlfree()
  */
 void free(void *p) {
+#ifdef COSMO_MEM_DEBUG
+  size_t *ptr = (size_t *)p;
+  if (ptr) {
+    npassert(((ssize_t *)p)[-1] < 0);
+    npassert(((ssize_t *)p)[-2] < 0);
+    npassert(!((uintptr_t)ptr & 15));
+    npassert(
+        !munmap((void *)-ptr[-2], (char *)p - (char *)-ptr[-2] + -ptr[-1]));
+  }
+#elifdef MODE_DBG
+  if (p)
+    memset(p, 0xa4, dlmalloc_usable_size(p));
   dlfree(p);
+#else
+  dlfree(p);
+#endif
 }
-

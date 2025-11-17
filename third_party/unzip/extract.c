@@ -39,6 +39,8 @@
 #include "third_party/unzip/crc32.h"
 #include "libc/mem/alg.h"
 #include "libc/log/log.h"
+#include "libc/str/locale.internal.h"
+#include "libc/wctype.h"
 #include "third_party/unzip/crypt.h"
 
 #define GRRDUMP(buf,len) { \

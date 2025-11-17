@@ -13,12 +13,17 @@ libc/isystem/arm_fp16.h \
 libc/isystem/arm_neon.h \
 libc/isystem/arpa/inet.h \
 libc/isystem/arpa/nameser.h \
+libc/isystem/arpa/telnet.h \
 libc/isystem/assert.h \
+libc/isystem/bsd/readpassphrase.h \
+libc/isystem/bsd/stdlib.h \
+libc/isystem/bsd/string.h \
 libc/isystem/byteswap.h \
 libc/isystem/clzerointrin.h \
 libc/isystem/complex.h \
 libc/isystem/cosmo.h \
 libc/isystem/cosmoaudio.h \
+libc/isystem/cosmotime.h \
 libc/isystem/cpio.h \
 libc/isystem/cpuid.h \
 libc/isystem/crypt.h \
@@ -49,9 +54,12 @@ libc/isystem/langinfo.h \
 libc/isystem/libgen.h \
 libc/isystem/limits.h \
 libc/isystem/link.h \
+libc/isystem/linux/f2fs.h \
 libc/isystem/linux/futex.h \
+libc/isystem/linux/ioctl.h \
 libc/isystem/linux/limits.h \
 libc/isystem/linux/param.h \
+libc/isystem/linux/rseq.h \
 libc/isystem/linux/types.h \
 libc/isystem/locale.h \
 libc/isystem/malloc.h \
@@ -68,6 +76,7 @@ libc/isystem/net/if.h \
 libc/isystem/net/if_arp.h \
 libc/isystem/netdb.h \
 libc/isystem/netinet/in.h \
+libc/isystem/netinet/in_systm.h \
 libc/isystem/netinet/ip.h \
 libc/isystem/netinet/tcp.h \
 libc/isystem/netinet/udp.h \
@@ -94,6 +103,7 @@ libc/isystem/popcntintrin.h \
 libc/isystem/pthread.h \
 libc/isystem/pty.h \
 libc/isystem/pwd.h \
+libc/isystem/readpassphrase.h \
 libc/isystem/regex.h \
 libc/isystem/resolv.h \
 libc/isystem/sched.h \
@@ -135,7 +145,6 @@ libc/isystem/sys/param.h \
 libc/isystem/sys/poll.h \
 libc/isystem/sys/prctl.h \
 libc/isystem/sys/procfs.h \
-libc/isystem/sys/ptrace.h \
 libc/isystem/sys/random.h \
 libc/isystem/sys/reboot.h \
 libc/isystem/sys/resource.h \

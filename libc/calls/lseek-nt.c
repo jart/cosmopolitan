@@ -25,19 +25,21 @@
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/thread.h"
 
-static textwindows int64_t GetPosition(struct Fd *f, int whence) {
+textwindows static int64_t GetPosition(struct Fd *f, int whence) {
   switch (whence) {
     case SEEK_SET:
       return 0;
     case SEEK_CUR:
-      return f->cursor->shared->pointer;
+      if (f->cursor)
+        return f->cursor->shared->pointer;
+      // fallthrough
     case SEEK_END: {
       struct NtByHandleFileInformation wst;
-      if (!GetFileInformationByHandle(f->handle, &wst)) {
+      if (!GetFileInformationByHandle(f->handle, &wst))
         return __winerr();
-      }
       return (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
     }
     default:
@@ -45,7 +47,7 @@ static textwindows int64_t GetPosition(struct Fd *f, int whence) {
   }
 }
 
-static textwindows int64_t Seek(struct Fd *f, int64_t offset, int whence) {
+textwindows static int64_t Seek(struct Fd *f, int64_t offset, int whence) {
   int64_t pos;
   if ((pos = GetPosition(f, whence)) != -1) {
     if (!ckd_add(&pos, pos, offset)) {
@@ -66,20 +68,23 @@ textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
   if (__isfdkind(fd, kFdDevNull) || __isfdkind(fd, kFdDevRandom)) {
     return offset;
   } else if (__isfdkind(fd, kFdFile)) {
-    struct Fd *f = g_fds.p + fd;
-    int filetype = GetFileType(f->handle);
-    if (filetype != kNtFileTypePipe &&  //
-        filetype != kNtFileTypeChar &&  //
-        f->cursor->shared) {
-      int64_t res;
-      __cursor_lock(f->cursor);
-      if ((res = Seek(f, offset, whence)) != -1)
-        f->cursor->shared->pointer = res;
-      __cursor_unlock(f->cursor);
-      return res;
-    } else {
-      return espipe();
+    struct Fd *f = __get_pib()->fds.p + fd;
+    switch (GetFileType(f->handle)) {
+      case kNtFileTypeChar:
+      case kNtFileTypePipe:
+        return espipe();
+      default:
+        break;
     }
+    int64_t res;
+    if (f->cursor)
+      __cursor_lock(f->cursor);
+    if ((res = Seek(f, offset, whence)) != -1)
+      if (f->cursor)
+        f->cursor->shared->pointer = res;
+    if (f->cursor)
+      __cursor_unlock(f->cursor);
+    return res;
   } else if (__isfdkind(fd, kFdSocket)) {
     return espipe();
   } else {

@@ -16,22 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
-textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
-  if (SetFileInformationByHandle(handle, kNtFileAllocationInfo, &length,
-                                 sizeof(length))) {
-    return 0;
-  } else if (GetLastError() == kNtErrorAccessDenied) {
-    return einval();  // ftruncate() doesn't raise EACCES
+static inline void RaiseSignal(int sig) {
+  if (_weaken(__sig_raise)) {
+    _weaken(__sig_raise)(sig, SI_KERNEL);
   } else {
-    return __winerr();
+    TerminateThisProcess(sig);
   }
 }
+
+textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
+
+  // check file size limit
+  if (length > ~__get_pib()->rlimit[RLIMIT_FSIZE].rlim_cur) {
+    RaiseSignal(SIGXFSZ);
+    return efbig();
+  }
+
+  // ask operating system to extend file
+  if (!SetFileInformationByHandle(handle, kNtFileAllocationInfo, &length,
+                                  sizeof(length))) {
+    switch (GetLastError()) {
+      case kNtErrorAccessDenied:
+        return einval();  // ftruncate() doesn't raise EACCES
+      default:
+        return __winerr();
+    }
+  }
+
+  // return success
+  return 0;
+}
+
+#endif

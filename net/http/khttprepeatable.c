@@ -54,7 +54,7 @@
  * @note `grep ':.*#' rfc2616`
  * @see RFC7230 § 4.2
  */
-const bool kHttpRepeatable[kHttpHeadersMax] = {
+const char kHttpRepeatable[kHttpHeadersMax] = {
     [kHttpAcceptCharset] = true,
     [kHttpAcceptEncoding] = true,
     [kHttpAcceptLanguage] = true,

@@ -15,4 +15,10 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/temp.h"
 #include "third_party/musl/rand48.h"
+
+#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || \
+    defined(_COSMO_SOURCE)
+#include "libc/bsdstdlib.h"
+#endif
+
 #endif /* _STDLIB_H */

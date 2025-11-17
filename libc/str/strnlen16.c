@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/str/str.h"
 
 /**
@@ -29,10 +28,8 @@
  */
 size_t strnlen16(const char16_t *s, size_t n) {
   size_t i;
-  for (i = 0;; ++i) {
-    if (i == n || !s[i])
+  for (i = 0; i < n; ++i)
+    if (!s[i])
       break;
-  }
-  unassert(i == n || (i < n && !s[i]));
   return i;
 }

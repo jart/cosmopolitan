@@ -64,6 +64,9 @@ int64_t CreateEventEx(const struct NtSecurityAttributes *lpEventAttributes,
                       const char16_t *lpName, uint32_t dwFlags,
                       uint32_t dwDesiredAccess);
 
+intptr_t CreateEventTls(void);
+void CloseEventTls(intptr_t);
+
 int32_t SetEvent(int64_t hEvent);
 int32_t ResetEvent(int64_t hEvent);
 int32_t PulseEvent(int64_t hEvent);

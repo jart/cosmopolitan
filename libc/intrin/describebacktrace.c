@@ -22,9 +22,9 @@
 #include "libc/intrin/weaken.h"
 #include "libc/nexgen32e/stackframe.h"
 
-#define N 160
+#define N 280
 
-#define ABI privileged optimizesize
+#define ABI __privileged optimizesize
 
 ABI static bool IsDangerous(const void *ptr) {
   if (_weaken(kisdangerous))

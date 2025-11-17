@@ -41,9 +41,8 @@
  */
 int socket(int family, int type, int protocol) {
   int rc;
-  if (family == AF_UNSPEC) {
+  if (family == AF_UNSPEC)
     family = AF_INET;
-  }
   if (family == -1) {
     rc = eafnosupport();
   } else if (!IsWindows()) {

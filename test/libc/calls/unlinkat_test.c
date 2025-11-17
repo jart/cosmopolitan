@@ -41,6 +41,14 @@ TEST(unlink, enoent) {
 TEST(unlink, enotdir) {
   ASSERT_SYS(0, 0, touch("o", 0644));
   ASSERT_SYS(ENOTDIR, -1, unlink("o/doesnotexist"));
+  ASSERT_SYS(ENOTDIR, -1, rmdir("o"));
+  ASSERT_SYS(ENOTDIR, -1, unlinkat(AT_FDCWD, "o", AT_REMOVEDIR));
+}
+
+TEST(unlink, eisdir) {
+  ASSERT_SYS(0, 0, mkdir("o", 0755));
+  ASSERT_SYS(EISDIR, -1, unlink("o"));
+  ASSERT_SYS(EISDIR, -1, unlinkat(AT_FDCWD, "o", 0));
 }
 
 TEST(rmdir, willDeleteRegardlessOfAccessBits) {
@@ -50,6 +58,16 @@ TEST(rmdir, willDeleteRegardlessOfAccessBits) {
 
 TEST(unlink, willDeleteRegardlessOfAccessBits) {
   ASSERT_SYS(0, 0, touch("foo", 0));
+  ASSERT_SYS(0, 0, unlink("foo"));
+}
+
+TEST(rmdir, readonly) {
+  ASSERT_SYS(0, 0, mkdir("foo", 0500));
+  ASSERT_SYS(0, 0, rmdir("foo"));
+}
+
+TEST(unlink, readonly) {
+  ASSERT_SYS(0, 0, touch("foo", 0400));
   ASSERT_SYS(0, 0, unlink("foo"));
 }
 

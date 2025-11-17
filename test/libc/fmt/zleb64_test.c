@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/fmt/leb128.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
 
 TEST(zleb64, testZero) {
@@ -51,8 +53,8 @@ TEST(zleb64, testOne) {
 
 TEST(zleb64, testMax) {
   int64_t x;
-  char *p = gc(malloc(10));
-  EXPECT_EQ(10, zleb64(p, INT64_MAX) - p);
+  char *p = gc(malloc(9));
+  EXPECT_EQ(9, zleb64(p, INT64_MAX) - p);
   EXPECT_EQ(254, p[0] & 255);
   EXPECT_EQ(255, p[1] & 255);
   EXPECT_EQ(255, p[2] & 255);
@@ -62,7 +64,37 @@ TEST(zleb64, testMax) {
   EXPECT_EQ(255, p[6] & 255);
   EXPECT_EQ(255, p[7] & 255);
   EXPECT_EQ(255, p[8] & 255);
-  EXPECT_EQ(1, p[9] & 255);
-  EXPECT_EQ(10, unzleb64(p, 10, &x));
+  EXPECT_EQ(9, unzleb64(p, 9, &x));
   EXPECT_EQ(INT64_MAX, x);
+}
+
+TEST(zleb64, smoke) {
+  char buf[9];
+  for (int i = 0; i < 1000; ++i) {
+    int64_t res;
+    unzleb64(buf, zleb64(buf, i) - buf, &res);
+    ASSERT_EQ(i, res);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    int64_t res;
+    unzleb64(buf, zleb64(buf, INT64_MAX - i) - buf, &res);
+    ASSERT_EQ(INT64_MAX - i, res);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    int64_t res;
+    unzleb64(buf, zleb64(buf, INT64_MIN + i) - buf, &res);
+    ASSERT_EQ(INT64_MIN + i, res);
+  }
+  for (int i = 0; i < 1000; ++i) {
+    int64_t want, res;
+    arc4random_buf(&want, sizeof(want));
+    unzleb64(buf, zleb64(buf, want) - buf, &res);
+    ASSERT_EQ(want, res);
+  }
+}
+
+BENCH(unzleb64, bench) {
+  int64_t x;
+  BENCHMARK(1000, 10,
+            unzleb64("\377\377\377\377\377\377\377\377\377\1", 10, &x));
 }

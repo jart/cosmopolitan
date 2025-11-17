@@ -23,9 +23,18 @@
 /**
  * Sets posix_spawn() flags.
  *
+ * Using the `POSIX_SPAWN_USEVFORK` flag is recommended, since it offers
+ * a significant performance boost on platforms that support vfork() and
+ * falls back to sys_fork() on other systems. The only way this can have
+ * an impact on behavior that we know, is if you're doing something like
+ * writing executables to disk and executing them from multiple threads,
+ * because another thread might have the executable file descriptor open
+ * which will cause execve() to raise ETXTBSY. Since posix_spawn() shall
+ * return the execve() error to the calling process via shared memory or
+ * a pipe the simplest thing to do is to retry with exponential backoff.
+ *
  * @param attr was initialized by posix_spawnattr_init()
  * @param flags may have any of the following
- *     - `POSIX_SPAWN_USEFORK`
  *     - `POSIX_SPAWN_USEVFORK`
  *     - `POSIX_SPAWN_RESETIDS`
  *     - `POSIX_SPAWN_SETPGROUP`
@@ -39,8 +48,7 @@
  * @raise EINVAL if `flags` has invalid bits
  */
 int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
-  if (flags & ~(POSIX_SPAWN_USEFORK |        //
-                POSIX_SPAWN_USEVFORK |       //
+  if (flags & ~(POSIX_SPAWN_USEVFORK |       //
                 POSIX_SPAWN_RESETIDS |       //
                 POSIX_SPAWN_SETPGROUP |      //
                 POSIX_SPAWN_SETSIGDEF |      //

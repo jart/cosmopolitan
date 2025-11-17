@@ -22,7 +22,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/rlim.h"
 
 const char *_DescribeRlimit(char buf[64], int rc, const struct rlimit *rlim) {
   if (rc == -1)

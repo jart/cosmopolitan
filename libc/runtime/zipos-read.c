@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/limits.h"
 #include "libc/runtime/zipos.internal.h"
@@ -71,5 +72,12 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
 ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
                      size_t iovlen, ssize_t opt_offset) {
   unassert(opt_offset >= 0 || opt_offset == -1);
+  if (iovlen) {
+    if (kisdangerous(iov))
+      return efault();
+    for (int i = 0; i < iovlen; ++i)
+      if (iov[i].iov_len && kisdangerous(iov[i].iov_base))
+        return efault();
+  }
   return __zipos_read_impl(h, iov, iovlen, opt_offset);
 }

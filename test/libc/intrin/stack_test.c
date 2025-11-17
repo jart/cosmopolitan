@@ -37,11 +37,10 @@ bool readable(void *addr) {
 bool occupied(void *addr) {
   int olde = errno;
   char *want = (char *)((uintptr_t)addr & -__pagesize);
-  char *got =
-      __sys_mmap(want, __pagesize, PROT_READ | PROT_WRITE,
-                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0, 0);
+  char *got = __sys_mmap(want, __pagesize, PROT_READ | PROT_WRITE,
+                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
   if (got == MAP_FAILED) {
-    unassert(errno == IsFreebsd() ? EINVAL : EEXIST);
+    unassert(errno == (IsFreebsd() ? EINVAL : EEXIST));
     errno = olde;
     return true;
   }

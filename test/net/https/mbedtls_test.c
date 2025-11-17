@@ -25,12 +25,15 @@
 #include "libc/nt/typedef/imagetlscallback.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
+#include "libc/stdlib.h"
 #include "libc/str/blake2.h"
 #include "libc/str/highwayhash64.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
+#include "third_party/haclstar/haclstar.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/base64.h"
 #include "third_party/mbedtls/bignum.h"
@@ -65,12 +68,12 @@ uint64_t rng[12];
 mbedtls_ecp_group grp;
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, _rand64, -1);
+  arc4random_buf(p, n);
   return 0;
 }
 
 void SetUp(void) {
-  rngset(rng, sizeof(rng), _rand64, -1);
+  arc4random_buf(rng, sizeof(rng));
 }
 
 #ifdef MBEDTLS_SELF_TEST
@@ -169,7 +172,7 @@ BENCH(p256, bench) {
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
   mbedtls_mpi x = {1, 8, gc(calloc(8, 8))};
-  rngset(x.p, 8 * 8, _rand64, -1);
+  arc4random_buf(x.p, 8 * 8);
   EZBENCH2("P-256 modulus MbedTLS MPI lib", donothing, P256_MPI(&x));
   EZBENCH2("P-256 modulus Justine rewrite", donothing, P256_JUSTINE(&x));
   mbedtls_ecp_group_free(&grp);
@@ -282,11 +285,15 @@ BENCH(mbedtls, bench) {
             mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 1));
   EZBENCH_N("sha512", kHyperionSize,
             mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 0));
-  EZBENCH_N("blake2b256", kHyperionSize,
-            BLAKE2B256(kHyperion, kHyperionSize, d));
+  EZBENCH_N(
+      "hacl*blake2b", kHyperionSize,
+      Hacl_Hash_Blake2b_hash_with_key(d, 32, kHyperion, kHyperionSize, 0, 0));
+  EZBENCH_N("hacl*sha256", kHyperionSize,
+            Hacl_Hash_SHA2_hash_256(d, kHyperion, kHyperionSize));
   EZBENCH_N("crc32_z", kHyperionSize, crc32_z(0, kHyperion, kHyperionSize));
   EZBENCH_N("highwayhash64", kHyperionSize,
             HighwayHash64(kHyperion, kHyperionSize, kTestKey1));
+  BENCHMARK(100, 1, mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 1));
 }
 
 char *mpi2str(mbedtls_mpi *m) {
@@ -819,7 +826,7 @@ BENCH(ShiftRight, bench) {
   if (!X86_HAVE(AVX))
     return;
   uint64_t x[64];
-  rngset(x, sizeof(x), _rand64, -1);
+  arc4random_buf(x, sizeof(x));
   EZBENCH2("ShiftRight", donothing, ShiftRight(x, 64, 1));
   EZBENCH2("ShiftRightAvx", donothing, ShiftRightAvx(x, 64, 1));
   EZBENCH2("ShiftRightPure", donothing, ShiftRightPure(x, 64, 1));
@@ -827,7 +834,7 @@ BENCH(ShiftRight, bench) {
 
 BENCH(Zeroize, bench) {
   uint64_t x[64];
-  rngset(x, sizeof(x), _rand64, -1);
+  arc4random_buf(x, sizeof(x));
   EZBENCH2("memset (64)", donothing, memset(x, 0, sizeof(x)));
   EZBENCH2("Zeroize (64)", donothing, mbedtls_platform_zeroize(x, 64));
 }

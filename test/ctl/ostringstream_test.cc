@@ -17,7 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/ostringstream.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <sstream>
 // #define ctl std

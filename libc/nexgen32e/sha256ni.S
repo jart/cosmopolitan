@@ -83,8 +83,8 @@ Tim Chen <tim.c.chen@linux.intel.com>"
 //	@see	X86_HAVE(SHA)
 	.ftrace1
 sha256_transform_ni:
+	beg
 	.ftrace2
-	.leafprologue
 	shl	$6,NUM_BLKS			# convert to bytes
 	jz	.Ldone_hash
 	add	DATA_PTR,NUM_BLKS		# pointer to end of data
@@ -310,7 +310,8 @@ sha256_transform_ni:
 	movdqu		STATE1,1*16(DIGEST_PTR)
 
 .Ldone_hash:
-	.leafepilogue
+	ret
+	end
 	.endfn	sha256_transform_ni,globl
 
 .section .rodata.cst16.PSHUFFLE_BYTE_FLIP_MASK,"aM",@progbits,16

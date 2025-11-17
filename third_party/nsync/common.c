@@ -24,7 +24,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdalign.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -37,6 +36,7 @@
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
 #include "libc/intrin/cxaatexit.h"
+#include "libc/intrin/maps.h"
 #include "third_party/nsync/wait_s.internal.h"
 __static_yoink("nsync_notice");
 
@@ -114,24 +114,24 @@ uint32_t nsync_spin_test_and_set_ (nsync_atomic_uint32_ *w, uint32_t test,
 
 struct nsync_waiter_s *nsync_dll_nsync_waiter_ (struct Dll *e) {
 	struct nsync_waiter_s *nw = DLL_CONTAINER(struct nsync_waiter_s, q, e);
-	ASSERT (nw->tag == NSYNC_WAITER_TAG);
-	ASSERT (e == &nw->q);
+	unassert (nw->tag == NSYNC_WAITER_TAG);
+	unassert (e == &nw->q);
 	return (nw);
 }
 
 waiter *nsync_dll_waiter_ (struct Dll *e) {
 	struct nsync_waiter_s *nw = DLL_NSYNC_WAITER (e);
 	waiter *w = DLL_CONTAINER (waiter, nw, nw);
-	ASSERT ((nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0);
-	ASSERT (w->tag == WAITER_TAG);
-	ASSERT (e == &w->nw.q);
+	unassert ((nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0);
+	unassert (w->tag == WAITER_TAG);
+	unassert (e == &w->nw.q);
 	return (w);
 }
 
 waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 	waiter *w = DLL_CONTAINER (struct waiter_s, same_condition, e);
-	ASSERT (w->tag == WAITER_TAG);
-	ASSERT (e == &w->same_condition);
+	unassert (w->tag == WAITER_TAG);
+	unassert (e == &w->same_condition);
 	return (w);
 }
 
@@ -149,8 +149,8 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 #define ROL(x, n) (((x) << (n)) | ((x) >> (64 - (n))))
 #define ROR(x, n) (((x) >> (n)) | ((x) << (64 - (n))))
 
-static atomic_uintptr_t free_waiters;
-static _Atomic(waiter *) all_waiters;
+alignas(64) static _Atomic(waiter *) free_waiters;
+alignas(64) static _Atomic(waiter *) all_waiters;
 
 #if DETECT_WAITER_LEAKS
 static atomic_int all_waiters_count;
@@ -191,17 +191,17 @@ __attribute__((__destructor__)) static void reconcile_waiters (void) {
 static void all_waiters_push (waiter *w) {
 	w->next_all = atomic_load_explicit (&all_waiters, memory_order_relaxed);
 	while (!atomic_compare_exchange_weak_explicit (&all_waiters, &w->next_all, w,
-						       memory_order_acq_rel,
+						       memory_order_release,
 						       memory_order_relaxed))
-		pthread_pause_np ();
+		pthread_yield_np ();
 #if DETECT_WAITER_LEAKS
 	++all_waiters_count;
 #endif
 }
 
 static void free_waiters_push (waiter *w) {
-	uintptr_t tip;
-	ASSERT (!TAG(w));
+	waiter *tip;
+	unassert (!TAG(w));
 	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
 	for (;;) {
 		w->next_free = (waiter *) PTR (tip);
@@ -210,7 +210,7 @@ static void free_waiters_push (waiter *w) {
 							   memory_order_release,
 							   memory_order_relaxed))
 			break;
-		pthread_pause_np ();
+		pthread_yield_np ();
 	}
 #if DETECT_WAITER_LEAKS
 	++free_waiters_count;
@@ -218,8 +218,7 @@ static void free_waiters_push (waiter *w) {
 }
 
 static waiter *free_waiters_pop (void) {
-	waiter *w;
-	uintptr_t tip;
+	waiter *w, *tip;
 	tip = atomic_load_explicit (&free_waiters, memory_order_relaxed);
 	while ((w = (waiter *) PTR (tip))) {
 		if (atomic_compare_exchange_weak_explicit (&free_waiters, &tip,
@@ -227,7 +226,7 @@ static waiter *free_waiters_pop (void) {
 							   memory_order_acquire,
 							   memory_order_relaxed))
 			break;
-		pthread_pause_np ();
+		pthread_yield_np ();
 	}
 #if DETECT_WAITER_LEAKS
 	if (w)
@@ -237,21 +236,10 @@ static waiter *free_waiters_pop (void) {
 }
 
 static bool free_waiters_populate (void) {
-	int n;
-	if (IsNetbsd ()) {
-		// netbsd semaphores are file descriptors
-		n = 1;
-	} else {
-		// don't create too much fork() overhead
-		n = 16;
-	}
-	waiter *waiters = mmap (0, n * sizeof(waiter),
-				PROT_READ | PROT_WRITE,
-				MAP_PRIVATE | MAP_ANONYMOUS,
-				-1, 0);
-	if (waiters == MAP_FAILED)
+	waiter *waiters = __maps_balloc (sizeof(waiter));
+	if (!waiters)
 		return (false);
-	for (size_t i = 0; i < n; ++i) {
+	for (size_t i = 0; i < 1; ++i) {
 		waiter *w = &waiters[i];
 #if NSYNC_DEBUG
 		w->tag = WAITER_TAG;
@@ -260,7 +248,6 @@ static bool free_waiters_populate (void) {
 		if (!nsync_mu_semaphore_init (&w->sem)) {
 			if (!i) {
 				// netbsd can run out of semaphores
-				munmap (waiters, n * sizeof (waiter));
 				return (false);
 			}
 			break;
@@ -303,7 +290,7 @@ waiter *nsync_waiter_new_ (void) {
 
 /* Return an unused waiter struct *w to the free pool. */
 void nsync_waiter_free_ (waiter *w) {
-	ASSERT ((w->flags & WAITER_IN_USE) != 0);
+	unassert ((w->flags & WAITER_IN_USE) != 0);
 	w->wipe_mu = NULL;
 	w->wipe_cv = NULL;
 	w->flags &= ~WAITER_IN_USE;
@@ -317,7 +304,7 @@ void nsync_waiter_free_ (waiter *w) {
 /* Destroys waiter associated with dead thread. */
 void nsync_waiter_destroy_ (void *v) {
 	waiter *w = (waiter *) v;
-	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
+	unassert ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
 	w->flags &= ~WAITER_RESERVED;
 	free_waiters_push (w);
 }
@@ -328,7 +315,7 @@ void nsync_waiter_wipe_ (void) {
 	waiter *w;
 	waiter *next;
 	waiter *prev = 0;
-	waiter *wall = atomic_load_explicit (&all_waiters, memory_order_relaxed);
+	waiter *wall = atomic_load_explicit (&all_waiters, memory_order_acquire);
 	for (w = wall; w; w = w->next_all)
 		nsync_mu_semaphore_destroy (&w->sem);
 	for (w = wall; w; w = next) {
@@ -345,6 +332,7 @@ void nsync_waiter_wipe_ (void) {
 		w->cond.v = 0;
 		w->cond.eq = 0;
 		dll_init (&w->same_condition);
+		dll_init (&w->nw.q);
 		if (w->wipe_mu) {
 			atomic_init(&w->wipe_mu->word, 0);
 			w->wipe_mu->waiters = 0;

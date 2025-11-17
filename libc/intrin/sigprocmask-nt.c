@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/sig.h"
@@ -29,7 +30,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
   if (how != SIG_BLOCK && how != SIG_UNBLOCK && how != SIG_SETMASK)
     return einval();
   sigset_t oldmask;
-  atomic_ulong *mask = &__get_tls()->tib_sigmask;
+  atomic_ulong *mask = &__get_tls_win32()->tib_sigmask;
   if (neu) {
     if (how == SIG_BLOCK) {
       oldmask = atomic_fetch_or(mask, *neu);

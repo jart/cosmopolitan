@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/dce.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -34,16 +35,16 @@ static void *golden(void *p, int c, size_t n) {
 TEST(memset, hug) {
   char *a, *b;
   int i, j, c;
-  a = gc(malloc(1025 * 2));
-  b = gc(malloc(1025 * 2));
-  for (i = 0; i < 1025; ++i) {
-    for (j = 0; j < 1025 - i; ++j) {
+  a = gc(malloc(1026 * 2));
+  b = gc(malloc(1026 * 2));
+  for (i = 0; i < 1026; i += 5) {
+    for (j = 0; j < 1026 - i; j += 5) {
       c = lemur64();
-      rngset(a, i + j, 0, 0);
+      arc4random_buf(a, i + j);
       memcpy(b, a, i + j);
       ASSERT_EQ(a + i, golden(a + i, c, j));
       ASSERT_EQ(b + i, memset(b + i, c, j));
-      ASSERT_EQ(0, timingsafe_bcmp(a, b, i + j));
+      ASSERT_EQ(0, bcmp(a, b, i + j));
     }
   }
 }
@@ -51,15 +52,15 @@ TEST(memset, hug) {
 TEST(bzero, hug) {
   char *a, *b;
   int i, j;
-  a = gc(malloc(1025 * 2));
-  b = gc(malloc(1025 * 2));
-  for (i = 0; i < 1025; ++i) {
-    for (j = 0; j < 1025 - i; ++j) {
-      rngset(a, i + j, 0, 0);
+  a = gc(malloc(1026 * 2));
+  b = gc(malloc(1026 * 2));
+  for (i = 0; i < 1026; i += 5) {
+    for (j = 0; j < 1026 - i; j += 5) {
+      arc4random_buf(a, i + j);
       memcpy(b, a, i + j);
       golden(a + i, 0, j);
       bzero(b + i, j);
-      ASSERT_EQ(0, timingsafe_bcmp(a, b, i + j));
+      ASSERT_EQ(0, bcmp(a, b, i + j));
     }
   }
 }

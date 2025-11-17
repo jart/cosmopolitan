@@ -10,6 +10,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/magnumstrs.internal.h"

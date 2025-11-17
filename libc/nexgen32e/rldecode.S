@@ -26,6 +26,7 @@
 //	@mode	long,legacy,real
 	.ftrace1
 rldecode:
+	beg
 	.ftrace2
 	.leafprologue
 	xor	%ecx,%ecx
@@ -36,4 +37,5 @@ rldecode:
 	rep stosb
 	jmp	0b
 2:	.leafepilogue
+	end
 	.endfn	rldecode,globl

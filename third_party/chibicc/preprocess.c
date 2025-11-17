@@ -28,6 +28,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
+#include "libc/assert.h"
 #include "third_party/chibicc/kw.h"
 
 typedef struct CondIncl CondIncl;
@@ -73,6 +74,15 @@ static Macro *find_macro(Token *);
 
 static inline bool is_hash(Token *tok) {
   return tok->at_bol && tok->len == 1 && tok->loc[0] == '#';
+}
+
+static bool fileexists(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!stat(path, &st))
+    return true;
+  errno = e;
+  return false;
 }
 
 // Some preprocessor directives such as #include allow extraneous
@@ -160,7 +170,9 @@ static Token *skip_cond_incl2(Token *tok) {
   unsigned char kw;
   while (tok->kind != TK_EOF) {
     if (is_hash(tok) && (kw = GetKw(tok->next->loc, tok->next->len))) {
-      if (kw == KW_IF || kw == KW_IFDEF || kw == KW_IFNDEF) {
+      if (kw == KW_IF ||
+          kw == KW_IFDEF ||
+          kw == KW_IFNDEF) {
         tok = skip_cond_incl2(tok->next->next);
         continue;
       }
@@ -179,11 +191,16 @@ static Token *skip_cond_incl(Token *tok) {
   unsigned char kw;
   while (tok->kind != TK_EOF) {
     if (is_hash(tok) && (kw = GetKw(tok->next->loc, tok->next->len))) {
-      if (kw == KW_IF || kw == KW_IFDEF || kw == KW_IFNDEF) {
+      if (kw == KW_IF ||
+          kw == KW_IFDEF ||
+          kw == KW_IFNDEF) {
         tok = skip_cond_incl2(tok->next->next);
         continue;
       }
-      if (kw == KW_ELIF || kw == KW_ELSE || kw == KW_ENDIF) {
+      if (kw == KW_ELIF ||
+          kw == KW_ELIFDEF ||
+          kw == KW_ELSE ||
+          kw == KW_ENDIF) {
         break;
       }
     }
@@ -755,6 +772,19 @@ static void read_line_marker(Token **rest, Token *tok) {
   start->file->display_name = tok->str;
 }
 
+static Token *warning_directive(const char *kind, Token *tok) {
+  fprintf(stderr, "%s:%d: %s:", tok->file->name, tok->line_no, kind);
+  for (;;) {
+    tok = tok->next;
+    if (tok->at_bol)
+      break;
+    fputc(' ', stderr);
+    fwrite(tok->loc, 1, tok->len, stderr);
+  }
+  fprintf(stderr, "\n");
+  return tok;
+}
+
 // Visit all tokens in `tok` while evaluating preprocessing
 // macros and directives.
 static Token *preprocess2(Token *tok) {
@@ -849,12 +879,26 @@ static Token *preprocess2(Token *tok) {
           tok = skip_cond_incl(tok);
         continue;
       }
+      if (kw == KW_ELIFDEF) {
+        if (!cond_incl || cond_incl->ctx == IN_ELSE)
+          error_tok(start, "stray #elifdef");
+        cond_incl->ctx = IN_ELIF;
+        bool should_include = !cond_incl->included && find_macro(tok->next);
+        tok = skip_line(tok->next->next);
+        if (should_include) {
+          cond_incl->included = true;
+        } else {
+          tok = skip_cond_incl(tok);
+        }
+        continue;
+      }
       if (kw == KW_ELSE) {
         if (!cond_incl || cond_incl->ctx == IN_ELSE)
           error_tok(start, "stray #else");
         cond_incl->ctx = IN_ELSE;
         tok = skip_line(tok->next);
-        if (cond_incl->included) tok = skip_cond_incl(tok);
+        if (cond_incl->included)
+          tok = skip_cond_incl(tok);
         continue;
       }
       if (kw == KW_ENDIF) {
@@ -884,7 +928,12 @@ static Token *preprocess2(Token *tok) {
       continue;
     }
     if (kw == KW_ERROR) {
-      error_tok(tok, "error");
+      tok = warning_directive("error", tok);
+      exit(1);
+    }
+    if (kw == KW_WARNING) {
+      tok = warning_directive("warning", tok);
+      continue;
     }
     // `#`-only line is legal. It's called a null directive.
     if (tok->at_bol) continue;
@@ -1002,7 +1051,7 @@ __STDC_UTF_16__\000\
 __STDC_UTF_32__\000\
 1\000\
 __STDC_VERSION__\000\
-201112L\000\
+202311L\000\
 __USER_LABEL_PREFIX__\000\
 \000\
 __alignof__\000\

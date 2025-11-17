@@ -19,11 +19,16 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
+#include "libc/nt/enum/memflags.h"
+#include "libc/nt/enum/pageflags.h"
+#include "libc/nt/memory.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
@@ -37,6 +42,7 @@
 #include "libc/testlib/benchmark.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/x/xspawn.h"
 
 // this is also a good torture test for mmap
@@ -52,15 +58,19 @@ __static_yoink("zipos");
 int pagesz;
 int gransz;
 
+void *noop(void *arg) {
+  return 0;
+}
+
 void SetUpOnce(void) {
   pagesz = getpagesize();
   gransz = getgransize();
   testlib_enable_tmp_setup_teardown();
-  // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
-}
 
-void TearDown(void) {
-  ASSERT_FALSE(__maps_held());
+  // spawn thread so locks get used
+  pthread_t th;
+  unassert(!pthread_create(&th, 0, noop, 0));
+  unassert(!pthread_join(th, 0));
 }
 
 TEST(mmap, zeroSize) {
@@ -170,9 +180,8 @@ TEST(mmap, hint) {
   // - posix doesn't mandate this behavior (but should)
   // - freebsd always chooses for you (which has no acceptable workaround)
   // - netbsd manual claims it'll be like freebsd, but is actually like openbsd
-  if (!IsFreebsd())
-    ASSERT_EQ(p + pagesz, mmap(p + pagesz, pagesz, PROT_READ,
-                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  ASSERT_EQ(p + pagesz, mmap(p + pagesz, pagesz, PROT_READ,
+                             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
 
   // test UNAVAILABLE nonfixed nonzero addr picks something nearby
   // - posix actually does require this, but doesn't say how close
@@ -526,8 +535,6 @@ TEST(munmap, windows_not_all_fragments_included_enotsup) {
 }
 
 TEST(mmap, windows_private_memory_fork_uses_virtualfree) {
-  if (IsFreebsd())
-    return;  // freebsd can't take a hint
   char *base;
   ASSERT_NE(MAP_FAILED, (base = mmap(0, gransz * 3, PROT_READ | PROT_WRITE,
                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
@@ -728,6 +735,75 @@ TEST(mmap, sharedFileMapFork) {
   EXPECT_NE(-1, munmap(p, 6));
   EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, unlink(path));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MAP_FIXED_NOREPLACE
+
+TEST(MAP_FIXED_NOREPLACE, nullPage_notAllowed) {
+  ASSERT_SYS(EPERM, MAP_FAILED,
+             mmap(0, 1, PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0));
+}
+
+TEST(MAP_FIXED_NOREPLACE, alreadyExists_raisesEexist) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_WRITE,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(p, 1, PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0));
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+TEST(MAP_FIXED_NOREPLACE, doesntExist_getsCreated) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, 1, PROT_READ | PROT_WRITE,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_SYS(0, 0, munmap(p, 1));
+  ASSERT_SYS(0, p,
+             mmap(p, 1, PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0));
+  ASSERT_SYS(0, 0, munmap(p, 1));
+}
+
+char *CreateSecretPage(void) {
+  char *p;
+  if (IsWindows()) {
+    p = VirtualAlloc(0, 1, kNtMemReserve | kNtMemCommit, kNtPageReadwrite);
+    ASSERT_NE(NULL, p);
+  } else {
+    p = __sys_mmap(0, 1, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                   -1, 0, 0);
+    ASSERT_NE(MAP_FAILED, p);
+  }
+  return p;
+}
+
+void FreeSecretPage(char *p) {
+  if (IsWindows()) {
+    ASSERT_NE(false, VirtualFree(p, 0, kNtMemRelease));
+  } else {
+    ASSERT_SYS(0, 0, __sys_munmap(p, 1));
+  }
+}
+
+TEST(MAP_FIXED_NOREPLACE, secretlyExists_raisesEexist) {
+  char *p = CreateSecretPage();
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(p, 1, PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0));
+  FreeSecretPage(p);
+}
+
+TEST(mmap, addrSecretlyExists_choosesAnotherAddress) {
+  char *p = CreateSecretPage();
+  char *q =
+      mmap(p, 1, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  ASSERT_NE(MAP_FAILED, q);
+  ASSERT_NE(p, q);
+  ASSERT_SYS(0, 0, munmap(q, 1));
+  FreeSecretPage(p);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

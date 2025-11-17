@@ -45,7 +45,7 @@ textwindows int sys_statfs_nt(const char *path, struct statfs *sf) {
     rc = sys_fstatfs_nt(h, sf);
     CloseHandle(h);
   } else {
-    rc = -1;
+    rc = __winerr();
   }
   ALLOW_SIGNALS;
   return rc;

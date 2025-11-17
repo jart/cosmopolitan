@@ -19,18 +19,24 @@
 #include "libc/str/str.h"
 
 /**
- * Compares NUL-terminated UCS-2 strings w/ limit.
+ * Compares UCS-2 strings w/ limit.
  *
- * @param a is first non-null NUL-terminated char16 string pointer
- * @param b is second non-null NUL-terminated char16 string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first non-null char16 string pointer
+ * @param b is second non-null char16 string pointer
+ * @return is <0, 0, or >0 based on char16_t comparison
  * @asyncsignalsafe
  */
 int strncmp16(const char16_t *a, const char16_t *b, size_t n) {
-  size_t i = 0;
-  if (!n-- || a == b)
+  if (a == b)
     return 0;
-  while (i < n && a[i] == b[i] && b[i])
+  char16_t x, y;
+  size_t i = -1;
+  do {
     ++i;
-  return a[i] - b[i];
+    if (i == n)
+      return 0;
+    x = a[i];
+    y = b[i];
+  } while (x == y && x);
+  return x - y;
 }

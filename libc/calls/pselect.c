@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/itimerval.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
@@ -30,6 +31,7 @@
 #include "libc/sock/select.internal.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Checks status on multiple file descriptors at once.
@@ -58,7 +60,12 @@
  *     in the revents of poll()
  * @param timeout if null will block indefinitely
  * @param sigmask may be null in which case no mask change happens
+ * @raise ENOMEM if memory for internal data structures was unavailable
+ * @raise EBADF if an invalid file descriptor existed in an fd_set
  * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINVAL if `nfds` exceeded `RLIMIT_NOFILE`
+ * @raise EINVAL if `nfds` exceeded `FD_SETSIZE`
+ * @raise EINVAL if `nfds` was negative
  * @raise EINTR if signal was delivered
  * @cancelationpoint
  * @asyncsignalsafe
@@ -81,7 +88,9 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   fd_set *old_exceptfds_ptr = 0;
 
   BEGIN_CANCELATION_POINT;
-  if (nfds < 0 || nfds > FD_SETSIZE) {
+  if (nfds < 0 ||           //
+      nfds > FD_SETSIZE ||  //
+      nfds > ~__get_pib()->rlimit[RLIMIT_NOFILE].rlim_cur) {
     rc = einval();
   } else {
     if (readfds) {
@@ -107,8 +116,16 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       ss.n = 8;
       rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, &ss);
     } else if (!IsWindows()) {
+      sigset_t sigmask2;
+      sigset_t *sigmask2p;
+      if (sigmask) {
+        sigmask2 = __linux2mask(*sigmask);
+        sigmask2p = &sigmask2;
+      } else {
+        sigmask2p = 0;
+      }
       rc = sys_pselect(nfds, readfds, writefds, exceptfds,
-                       (struct timespec *)timeout, sigmask);
+                       (struct timespec *)timeout, sigmask2p);
     } else {
       rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, sigmask);
     }

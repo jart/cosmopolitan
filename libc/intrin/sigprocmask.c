@@ -42,6 +42,9 @@
  * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
+  // WARNING: jart@ has noticed that Linux 6.8.0-58-generic #60-Ubuntu
+  //          has a bug where sigprocmask() isn't scalable across many
+  //          threads when opt_set is specified.
   int rc;
   sigset_t old = {0};
   if (IsMetal() || IsWindows()) {

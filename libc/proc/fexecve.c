@@ -36,7 +36,6 @@
 #include "libc/proc/execve.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/o.h"

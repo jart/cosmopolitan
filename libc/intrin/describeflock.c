@@ -51,7 +51,7 @@ const char *_DescribeFlock(char buf[N], int cmd, const struct flock *l) {
     append(", .l_len=%'ld", l->l_len);
   }
 
-  if (l->l_pid && (cmd == F_GETLK || cmd == F_OFD_GETLK)) {
+  if (l->l_pid && (cmd == F_GETLK)) {
     append(", .l_pid=%d", l->l_pid);
   }
 

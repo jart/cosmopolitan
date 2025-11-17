@@ -90,7 +90,7 @@ bool IsSymlink(const char *path) {
   return res;
 }
 
-wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] void PrintUsage(int rc, int fd) {
   tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }

@@ -59,7 +59,7 @@ int sys_fchmodat_linux(int fd, const char *path, unsigned mode, int flag) {
 		return -1;
 	if (S_ISLNK(st.st_mode))
 		return eopnotsupp();
-	if ((fd2 = sys_openat(fd, path, (O_RDONLY | O_PATH | O_NOFOLLOW |
+	if ((fd2 = sys_openat(fd, path, (O_RDONLY | _O_PATH | O_NOFOLLOW |
 					 O_NOCTTY | O_CLOEXEC), 0)) < 0) {
 		if (fd2 == -ELOOP)
 			return eopnotsupp();

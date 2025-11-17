@@ -1,0 +1,62 @@
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>                │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
+// clang-format off
+// $OpenBSD: strlcat.c,v 1.19 2019/01/25 00:19:25 millert Exp $
+__static_yoink("openbsd_strings_notice");
+
+/**
+ * Appends wide string, the BSD way.
+ * 
+ * Appends `src` to string `dst` of size `dsize` (unlike strncat,
+ * `dsize` is the full size of `dst`, not space left). At most `dsize-1`
+ * characters will be copied. Always NUL terminates (unless `dsize <=
+ * strlen(dst)`). Returns `strlen(src) + MIN(dsize, strlen(initial
+ * dst))`. If `retval >= dsize`, truncation occurred.
+ *
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+size_t
+wcslcat(wchar_t *dst, const wchar_t *src, size_t dsize)
+{
+	const wchar_t *odst = dst;
+	const wchar_t *osrc = src;
+	size_t n = dsize;
+	size_t dlen;
+
+	/* Find the end of dst and adjust bytes left but don't go past end. */
+	while (n-- != 0 && *dst != '\0')
+		dst++;
+	dlen = dst - odst;
+	n = dsize - dlen;
+
+	if (n-- == 0)
+		return(dlen + wcslen(src));
+	while (*src != '\0') {
+		if (n != 0) {
+			*dst++ = *src;
+			n--;
+		}
+		src++;
+	}
+	*dst = '\0';
+
+	return(dlen + (src - osrc));	/* count does not include NUL */
+}

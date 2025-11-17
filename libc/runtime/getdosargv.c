@@ -45,7 +45,7 @@ textwindows void DecodeDosArgv(int ignore, struct DosArgv *st) {
   st->wc = x;
 }
 
-static textwindows void AppendDosArgv(wint_t wc, struct DosArgv *st) {
+textwindows static void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   uint64_t w;
   w = tpenc(wc);
   do {
@@ -55,7 +55,7 @@ static textwindows void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   } while (w >>= 8);
 }
 
-static textwindows int Count(int c, struct DosArgv *st) {
+textwindows static int Count(int c, struct DosArgv *st) {
   int ignore, n = 0;
   asm("" : "=g"(ignore));
   while (st->wc == c) {

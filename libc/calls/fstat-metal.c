@@ -21,14 +21,15 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 int sys_fstat_metal(int fd, struct stat *st) {
   if (fd < 0)
     return einval();
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
+  if (__isfdkind(fd, kFdSerial)) {
     bzero(st, sizeof(*st));
-    st->st_dev = g_fds.p[fd].handle;
-    st->st_rdev = g_fds.p[fd].handle;
+    st->st_dev = __get_pib()->fds.p[fd].handle;
+    st->st_rdev = __get_pib()->fds.p[fd].handle;
     st->st_nlink = 1;
     st->st_mode = S_IFCHR | 0600;
     st->st_blksize = 1;

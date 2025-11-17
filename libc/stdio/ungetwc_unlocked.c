@@ -16,33 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/bswap.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /**
  * Pushes wide character back to stream.
+ *
+ * If `c` is equal to `WEOF` then this function will fail by returning
+ * WEOF and the state of `f` is left unchanged.
+ *
+ * @return byte pushed back to stream, otherwise WEOF
  */
 wint_t ungetwc_unlocked(wint_t c, FILE *f) {
-  char b[6];
-  unsigned n;
   uint64_t w;
-  if (c == -1)
-    return -1;
-  n = 0;
-  w = tpenc(c);
-  do {
-    b[n++] = w;
-  } while ((w >>= 8));
-  if (f->beg >= n) {
-    f->beg -= n;
-    memcpy(f->buf + f->beg, b, n);
-  } else if (f->beg + f->end + n <= f->size) {
-    memmove(f->buf + f->beg + n, f->buf + f->beg, f->end - f->beg);
-    memcpy(f->buf + f->beg, b, n);
-    f->end += n;
+  if (c == WEOF)
+    return WEOF;
+  if (!c) {
+    ungetc_unlocked(c, f);
   } else {
-    return -1;
+    w = bswap_64(tpenc(c));
+    while (!(w & 255))
+      w >>= 8;
+    do {
+      ungetc_unlocked(w & 255, f);
+    } while ((w >>= 8));
   }
   return c;
 }

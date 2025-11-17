@@ -22,11 +22,11 @@
 /**
  * Moves file the Unix way.
  *
- * This is generally an atomic operation with the file system, since all
- * it's doing is changing a name associated with an inode. However, that
- * means rename() doesn't permit your `oldpathname` and `newpathname` to
- * be on separate file systems, in which case this returns EXDEV. That's
- * also the case on Windows.
+ * This function is equivalent to:
+ *
+ *     renameat(AT_FDCWD, oldpathname, AT_FDCWD, newpathname)
+ *
+ * Please see renameat() for further documentation.
  *
  * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe

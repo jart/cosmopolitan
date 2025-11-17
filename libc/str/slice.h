@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STR_SLICE_H_
 #define COSMOPOLITAN_LIBC_STR_SLICE_H_
-#include "libc/stdbool.h"
 #include "libc/str/str.h"
 COSMOPOLITAN_C_START_
 

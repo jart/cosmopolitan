@@ -26,7 +26,7 @@
  * @param u NUL-terminated string
  * @note h/t djb and agl
  */
-bool critbit0_contains(struct critbit0 *t, const char *u) {
+bool32 critbit0_contains(struct critbit0 *t, const char *u) {
   const unsigned char *ubytes = (void *)u;
   const size_t ulen = strlen(u);
   unsigned char *p = t->root;

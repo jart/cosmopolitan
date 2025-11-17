@@ -226,16 +226,16 @@ int deflateInit(z_streamp strm, int level);
  * of the following actions:
  *
  * - Compress more input starting at next_in and update next_in and
- *  avail_in accordingly. If not all input can be processed (because
- *  there is not enough room in the output buffer), next_in and avail_in
- *  are updated and processing will resume at this point for the next
- *  call of deflate().
+ *   avail_in accordingly. If not all input can be processed (because
+ *   there is not enough room in the output buffer), next_in and
+ *   avail_in are updated and processing will resume at this point for
+ *   the next call of deflate().
  *
  * - Generate more output starting at next_out and update next_out and
- *  avail_out accordingly. This action is forced if the parameter flush
- *  is non zero. Forcing flush frequently degrades the compression
- *  ratio, so this parameter should be set only when necessary. Some
- *  output may be provided even if flush is zero.
+ *   avail_out accordingly. This action is forced if the parameter flush
+ *   is non zero. Forcing flush frequently degrades the compression
+ *   ratio, so this parameter should be set only when necessary. Some
+ *   output may be provided even if flush is zero.
  *
  * Before the call of deflate(), the application should ensure that at
  * least one of the actions is possible, by providing more input and/or

@@ -30,8 +30,8 @@
  * @param n is byte length of s where -1 implies strlen
  * @return true if substring present
  */
-bool HeaderHas(struct HttpMessage *m, const char *b, int h, const char *s,
-               size_t n) {
+bool32 HeaderHas(struct HttpMessage *m, const char *b, int h, const char *s,
+                 size_t n) {
   size_t i;
   unassert(0 <= h && h < kHttpHeadersMax);
   if (n == -1)

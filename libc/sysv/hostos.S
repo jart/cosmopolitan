@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.h"
 
-	.bss
+	.section .bss.rarechange,"aw",@nobits
 	.balign	8
 __hostos:
 	.quad	0

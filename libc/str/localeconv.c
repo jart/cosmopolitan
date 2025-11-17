@@ -19,7 +19,7 @@
 #include "libc/limits.h"
 #include "libc/str/unicode.h"
 
-static const struct lconv kLocaleConv = {
+static struct lconv kLocaleConv = {
     .decimal_point = ".",
     .thousands_sep = "",
     .grouping = "",

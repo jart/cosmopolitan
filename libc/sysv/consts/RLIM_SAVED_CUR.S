@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon rlim,RLIM_SAVED_CUR,0xffffffffffffffff,0xffffffffffffffff,0x7fffffffffffffff,0x7fffffffffffffff,0x7fffffffffffffff,0x7fffffffffffffff,0x7fffffffffffffff,0xffffffffffffffff

@@ -23,7 +23,6 @@
 	.globl	zipos
 
 	.yoink	__zipos_close
-	.yoink	__zipos_fcntl
 	.yoink	__zipos_fstat
 	.yoink	__zipos_access
 	.yoink	__zipos_seek

@@ -28,6 +28,7 @@ struct SymbolTable {
 struct SymbolTable *GetSymbolTable(void);
 const char *FindComBinary(void);
 const char *FindDebugBinary(void);
+const char *FindDebugBinaryFor(const char *, char *, size_t);
 struct SymbolTable *OpenSymbolTable(const char *);
 int CloseSymbolTable(struct SymbolTable **);
 int __hook(void *, struct SymbolTable *);

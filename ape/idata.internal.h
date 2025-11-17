@@ -107,7 +107,7 @@
 	*/.section ".piro.data.sort.iat.2.\name\().3","awG",@progbits,"\name",comdat
 	.quad	0
   .previous
-  .section .rodata.str1.1,"aSM",@progbits,1
+  .section .dllstr,"aSM",@progbits,1
 ".Lidata.str.\name":
 	.asciz	"\name\().dll"
   .previous

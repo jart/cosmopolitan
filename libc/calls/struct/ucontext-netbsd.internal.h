@@ -20,10 +20,6 @@ union sigval_netbsd {
   void *sival_ptr;
 };
 
-struct sigset_netbsd {
-  uint32_t __bits[4];
-};
-
 struct stack_netbsd {
   void *ss_sp;
   size_t ss_size;
@@ -71,7 +67,7 @@ struct ucontext_netbsd {
     struct {
       uint32_t uc_flags; /* see _UC_* above */
       struct ucontext_netbsd *uc_link;
-      struct sigset_netbsd uc_sigmask;
+      uint32_t uc_sigmask[4];
       struct stack_netbsd uc_stack;
       struct mcontext_netbsd uc_mcontext;
     };

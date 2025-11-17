@@ -73,6 +73,9 @@ $(TEST_LIBC_STDIO_OBJS): private				\
 
 $(TEST_LIBC_STDIO_OBJS): test/libc/stdio/BUILD.mk
 
+o/$(MODE)/test/libc/stdio/dirstream_test.runs:			\
+		private .UNVEIL = r:/etc r:/
+
 .PHONY: o/$(MODE)/test/libc/stdio
 o/$(MODE)/test/libc/stdio:					\
 		$(TEST_LIBC_STDIO_BINS)				\

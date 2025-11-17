@@ -19,12 +19,14 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/runtime.h"
+#if SupportsWindows()
 
 textwindows int sys_truncate_nt(const char *path, uint64_t length) {
   int rc;
@@ -40,8 +42,10 @@ textwindows int sys_truncate_nt(const char *path, uint64_t length) {
     rc = sys_ftruncate_nt(fh, length);
     CloseHandle(fh);
   } else {
-    rc = -1;
+    rc = __winerr();
   }
   ALLOW_SIGNALS;
   return __fix_enotdir(rc, path16);
 }
+
+#endif

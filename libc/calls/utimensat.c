@@ -19,11 +19,16 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sets access/modified time on file, the modern way.
+ *
+ * The `tv_nsec` field of your timestamps may be set to `UTIME_NOW` to
+ * have that timestamp set to the current time, or `UTIME_OMIT` to have
+ * that timestamp not be modified.
  *
  * XNU only has microsecond (1e-6) accuracy and there's no
  * `dirfd`-relative support. Windows only has hectonanosecond (1e-7)
@@ -55,8 +60,8 @@
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
   int rc;
-  if (!path) {
-    rc = efault();  // linux kernel abi behavior isn't supported
+  if (kisdangerous(path) || (ts && kisdangerous(ts))) {
+    rc = efault();
   } else {
     rc = __utimens(dirfd, path, ts, flags);
   }

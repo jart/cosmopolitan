@@ -32,9 +32,13 @@
  * @param mode can be, for example, 0755
  * @return 0 on success or -1 w/ errno
  * @raise EEXIST if named file already exists
+ * @raise EPERM if pledge() is in play w/o `cpath` promise
+ * @raise EPERM if `mode & 07000` is not authorized or nonzero on Windows
  * @raise ENOTDIR if directory component in `path` existed as non-directory
  * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
  * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EILSEQ if creating file and last component of `path` was evil
+ * @raise EILSEQ if last component had trailing dots or spaces
  * @raise EROFS if parent directory is on read-only filesystem
  * @raise ENOSPC if file system or parent directory is full
  * @raise EACCES if write permission was denied on parent directory

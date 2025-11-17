@@ -24,6 +24,7 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -92,7 +93,7 @@ int tcgetattr(int fd, struct termios *tio) {
     rc = einval();
   } else if (!tio) {
     rc = efault();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = enotty();
   } else if (IsLinux()) {
     rc = sys_ioctl(fd, TCGETS, tio);

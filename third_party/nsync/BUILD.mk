@@ -11,25 +11,16 @@ THIRD_PARTY_NSYNC = $(THIRD_PARTY_NSYNC_A_DEPS) $(THIRD_PARTY_NSYNC_A)
 THIRD_PARTY_NSYNC_A = o/$(MODE)/third_party/nsync/nsync.a
 THIRD_PARTY_NSYNC_A_FILES := $(wildcard third_party/nsync/*)
 THIRD_PARTY_NSYNC_A_HDRS = $(filter %.h,$(THIRD_PARTY_NSYNC_A_FILES))
-THIRD_PARTY_NSYNC_A_SRCS_C = $(filter %.c,$(THIRD_PARTY_NSYNC_A_FILES))
-THIRD_PARTY_NSYNC_A_SRCS_S = $(filter %.S,$(THIRD_PARTY_NSYNC_A_FILES))
-
-THIRD_PARTY_NSYNC_A_SRCS =				\
-	$(THIRD_PARTY_NSYNC_A_SRCS_S)			\
-	$(THIRD_PARTY_NSYNC_A_SRCS_C)
-
-THIRD_PARTY_NSYNC_A_OBJS =				\
-	$(THIRD_PARTY_NSYNC_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
-	$(THIRD_PARTY_NSYNC_A_SRCS_S:%.S=o/$(MODE)/%.o)
+THIRD_PARTY_NSYNC_A_SRCS = $(filter %.c,$(THIRD_PARTY_NSYNC_A_FILES))
+THIRD_PARTY_NSYNC_A_OBJS = $(THIRD_PARTY_NSYNC_A_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_NSYNC_A_DIRECTDEPS =			\
 	LIBC_CALLS					\
 	LIBC_INTRIN					\
 	LIBC_NEXGEN32E					\
-	LIBC_NT_KERNEL32				\
 	LIBC_STR					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS					\
 
 THIRD_PARTY_NSYNC_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_NSYNC_A_DIRECTDEPS),$($(x))))
@@ -57,14 +48,11 @@ $(THIRD_PARTY_NSYNC_A_OBJS): private			\
 
 # avoid the legacy sse decoding penalty on avx systems
 ifeq ($(MODE),)
-$(THIRD_PARTY_NSYNC_A_OBJS): private			\
-		COPTS +=				\
-			-mgeneral-regs-only
+$(THIRD_PARTY_NSYNC_A_OBJS): private COPTS += -mgeneral-regs-only
 endif
 
-# these assembly files are safe to build on aarch64
-o/$(MODE)/third_party/nsync/compat.o: third_party/nsync/compat.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+# TODO(jart): Why does mu2_test trigger nsync_dll_waiter_ failure on Windows in -O0?
+$(THIRD_PARTY_NSYNC_A_OBJS): private COPTS += -O
 
 THIRD_PARTY_NSYNC_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)))
 THIRD_PARTY_NSYNC_SRCS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)_SRCS))

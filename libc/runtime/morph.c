@@ -29,6 +29,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errno.h"
 
 __msabi extern typeof(VirtualProtectEx) *const __imp_VirtualProtectEx;
 
@@ -45,14 +46,12 @@ __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory");
 #ifndef NDEBUG
     if (cf)
-      ax = -ax;
-    if (ax == -EPERM) {
+      ax = __errno_host2linux(-ax);
+    if (ax == -EPERM)
       kprintf("error: need pledge(prot_exec) permission to code morph\n");
-    }
-    if (ax < 0) {
+    if (ax < 0)
       kprintf("error: __morph_mprotect(%p, %#zx, %d) failed: errno=%d\n", addr,
               size, prot, -ax);
-    }
 #endif
   } else {
     __imp_VirtualProtectEx(GetCurrentProcess(), addr, size, ntprot, &op);
@@ -95,7 +94,7 @@ __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
  * is only possible to code morph from privileged functions. Privileged
  * functions are also only allowed to call other privileged functions.
  */
-privileged void __morph_begin(void) {
+__privileged void __morph_begin(void) {
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_WRITE, kNtPageWritecopy);
 }
@@ -103,7 +102,7 @@ privileged void __morph_begin(void) {
 /**
  * Finishes code morphing executable.
  */
-privileged void __morph_end(void) {
+__privileged void __morph_end(void) {
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_EXEC, kNtPageExecuteRead);
 }

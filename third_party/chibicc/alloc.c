@@ -25,18 +25,14 @@ long alloc_token_count;
 long alloc_obj_count;
 long alloc_type_count;
 
-wontreturn void __oom_hook(size_t request) {
-  tinyprint(2, "error: chibicc ran out of memory\n", NULL);
-  exit(1);
-}
-
 static void *alloc(size_t n, long *c) {
   void *r;
   if ((r = calloc(1, n))) {
     ++*c;
     return r;
   } else {
-    __oom_hook(n);
+    fprintf(stderr, "error: chibicc ran out of memory\n");
+    exit(1);
   }
 }
 

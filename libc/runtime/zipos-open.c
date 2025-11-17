@@ -16,15 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
@@ -37,6 +38,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/zip.h"
 
 struct ZiposHandle *__zipos_keep(struct ZiposHandle *h) {
@@ -60,13 +62,27 @@ static struct ZiposHandle *__zipos_alloc(struct Zipos *zipos, size_t size) {
     h->size = size;
     h->zipos = zipos;
     h->mapsize = mapsize;
+  } else {
+    h = 0;
   }
   return h;
 }
 
 static int __zipos_mkfd(int minfd) {
+  int cmd;
+  if (IsXnu()) {
+    cmd = 67;
+  } else if (IsFreebsd()) {
+    cmd = 17;
+  } else if (IsOpenbsd()) {
+    cmd = 10;
+  } else if (IsNetbsd()) {
+    cmd = 12;
+  } else {
+    cmd = F_DUPFD_CLOEXEC;
+  }
   int fd, e = errno;
-  if ((fd = __sys_fcntl(2, F_DUPFD_CLOEXEC, minfd)) != -1) {
+  if ((fd = __sys_fcntl(2, cmd, minfd)) != -1) {
     return fd;
   } else if (errno == EINVAL) {
     errno = e;
@@ -78,11 +94,12 @@ static int __zipos_mkfd(int minfd) {
 
 static int __zipos_setfd(int fd, struct ZiposHandle *h, unsigned flags) {
   int want = fd;
-  atomic_compare_exchange_strong_explicit(
-      &g_fds.f, &want, fd + 1, memory_order_release, memory_order_relaxed);
-  g_fds.p[fd].kind = kFdZip;
-  g_fds.p[fd].handle = (intptr_t)h;
-  g_fds.p[fd].flags = flags | O_CLOEXEC;
+  atomic_compare_exchange_strong_explicit(&__get_pib()->fds.f, &want, fd + 1,
+                                          memory_order_release,
+                                          memory_order_relaxed);
+  __get_pib()->fds.p[fd].kind = kFdZip;
+  __get_pib()->fds.p[fd].handle = (intptr_t)h;
+  __get_pib()->fds.p[fd].flags = flags | O_CLOEXEC;
   __fds_unlock();
   return fd;
 }
@@ -139,7 +156,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
         return __zipos_setfd(fd, h, flags);
     } else if ((fd = __zipos_mkfd(minfd)) != -1) {
       if (__ensurefds_unlocked(fd) != -1) {
-        if (g_fds.p[fd].kind) {
+        if (__get_pib()->fds.p[fd].kind) {
           sys_close(fd);
           minfd = fd + 1;
           goto TryAgain;
@@ -161,14 +178,16 @@ void __zipos_postdup(int oldfd, int newfd) {
   BLOCK_CANCELATION;
   __fds_lock();
   if (__isfdkind(newfd, kFdZip)) {
-    __zipos_drop((struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
+    __zipos_drop(
+        (struct ZiposHandle *)(intptr_t)__get_pib()->fds.p[newfd].handle);
     if (!__isfdkind(oldfd, kFdZip))
-      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+      bzero(__get_pib()->fds.p + newfd, sizeof(*__get_pib()->fds.p));
   }
   if (__isfdkind(oldfd, kFdZip)) {
-    __zipos_keep((struct ZiposHandle *)(intptr_t)g_fds.p[oldfd].handle);
+    __zipos_keep(
+        (struct ZiposHandle *)(intptr_t)__get_pib()->fds.p[oldfd].handle);
     __ensurefds_unlocked(newfd);
-    g_fds.p[newfd] = g_fds.p[oldfd];
+    __get_pib()->fds.p[newfd] = __get_pib()->fds.p[oldfd];
   }
   __fds_unlock();
   ALLOW_CANCELATION;
@@ -192,8 +211,9 @@ int __zipos_open(struct ZiposUri *name, int flags) {
   }
 
   // validate api usage
-  if ((flags & O_CREAT) ||  //
-      (flags & O_TRUNC) ||  //
+  if ((flags & O_CREAT) ||   //
+      (flags & O_TRUNC) ||   //
+      (flags & O_APPEND) ||  //
       (flags & O_ACCMODE) != O_RDONLY)
     return erofs();
 

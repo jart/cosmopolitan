@@ -66,8 +66,7 @@ $(THIRD_PARTY_MAKE_OBJS): private			\
 		CFLAGS +=				\
 			-fportcosmo			\
 			-DNO_ARCHIVES			\
-			-DHAVE_CONFIG_H			\
-			-DSET_STACK_SIZE
+			-DHAVE_CONFIG_H
 
 $(THIRD_PARTY_MAKE_OBJS): third_party/make/BUILD.mk
 

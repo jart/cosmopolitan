@@ -8,9 +8,6 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/weirdtypes.h"
 
 /* Some compiler distributions for Win32/i386 systems try to emulate
  * a Unix (POSIX-compatible) environment.
@@ -93,7 +90,7 @@
 #endif
 
 #ifdef UNIX
-// MISSING #include "unix/osdep.h"
+#include "osdep.h"
 #endif
 
 #if defined(__COMPILER_KCC__) || defined(TOPS20)
@@ -219,69 +216,28 @@
 #endif /* USE_CASE_MAP */
 
 /* Define void, zvoid, and extent (size_t) */
-#include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/stdio/stdio.h"
-#include "libc/temp.h"
-#include "third_party/musl/tempnam.h"
+#include <stdio.h>
 
 #ifndef NO_STDDEF_H
-
+#  include <stddef.h>
 #endif /* !NO_STDDEF_H */
 
 #ifndef NO_STDLIB_H
-#include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
-#include "libc/calls/termios.h"
-#include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/mem/alg.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/rand.h"
-#include "libc/temp.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/gdtoa/gdtoa.h"
-#include "third_party/musl/crypt.h"
-#include "third_party/musl/rand48.h"
+#  include <stdlib.h>
 #endif /* !NO_STDLIB_H */
 
 #ifndef NO_UNISTD_H
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/runtime/pathconf.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/ok.h"
-#include "libc/time.h"
-#include "third_party/musl/crypt.h"
-#include "third_party/musl/lockf.h" /* usually defines _POSIX_VERSION */
+#  include <unistd.h> /* usually defines _POSIX_VERSION */
 #endif /* !NO_UNISTD_H */
 
 #ifndef NO_FCNTL_H
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/flock.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/posix.h"
-#include "libc/sysv/consts/s.h"
+#  include <fcntl.h>
 #endif /* !NO_FNCTL_H */
 
 #ifndef NO_STRING_H
-#include "libc/mem/alg.h"
-#include "libc/str/str.h"
+#  include <string.h>
 #else
-#include "libc/str/locale.h"
-#include "libc/str/str.h"
-#include "libc/nexgen32e/ffs.h"
+#  include <strings.h>
 #endif /* NO_STRING_H */
 
 #ifdef NO_VOID
@@ -375,22 +331,14 @@ IZ_IMP char *mktemp();
  */
 #ifdef UNICODE_SUPPORT
 # if defined( UNIX) || defined( VMS)
-#include "libc/str/locale.h"
-#include "libc/str/unicode.h"
+#   include <locale.h>
 # endif /* defined( UNIX) || defined( VMS) */
-#include "libc/fmt/conv.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/str/unicode.h"
-#include "libc/time.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
+# include <wchar.h>
+# include <wctype.h>
 #endif /* def UNICODE_SUPPORT */
 
 #ifdef _MBCS
-#include "libc/str/locale.h"
-#include "libc/str/unicode.h"
+#   include <locale.h>
 
     /* Multi Byte Character Set */
     extern char *___tmp_ptr;

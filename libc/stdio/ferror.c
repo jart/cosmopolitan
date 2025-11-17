@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -28,8 +29,10 @@
  */
 errno_t ferror(FILE *f) {
   int rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = ferror_unlocked(f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }

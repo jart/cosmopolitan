@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/stat.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -29,6 +30,8 @@
 int __zipos_stat(struct ZiposUri *name, struct stat *st) {
   ssize_t cf;
   struct Zipos *zipos;
+  if (kisdangerous(st))
+    return efault();
   if (!(zipos = __zipos_get()))
     return enoexec();
   if ((cf = __zipos_find(zipos, name)) == -1)

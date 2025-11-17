@@ -20,7 +20,7 @@
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/oid.h"
 
-bool IsServerCert(const struct Cert *cert, mbedtls_pk_type_t type) {
+bool32 IsServerCert(const struct Cert *cert, mbedtls_pk_type_t type) {
   return cert->cert && cert->key && !cert->cert->ca_istrue &&
          mbedtls_pk_get_type(cert->key) == type &&
          !mbedtls_x509_crt_check_extended_key_usage(

@@ -20,11 +20,13 @@
 #include "libc/sysv/consts/at.h"
 
 /**
- * Checks if effective user can access path in particular ways.
+ * Checks if file can be accessed in particular way.
  *
- * This is equivalent to saying:
+ * This function is equivalent to:
  *
  *     faccessat(AT_FDCWD, path, mode, 0);
+ *
+ * Please see faccessat() for further documentation.
  *
  * @param path is a filename or directory
  * @param mode can be R_OK, W_OK, X_OK, F_OK

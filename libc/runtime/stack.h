@@ -73,6 +73,8 @@ forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
     ((volatile char *)p)[n - 1] = 0;
 }
 
+void NeedStackMemory(size_t);
+
 void *NewCosmoStack(void) vallocesque;
 int FreeCosmoStack(void *) libcesque;
 

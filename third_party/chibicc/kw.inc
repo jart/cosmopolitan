@@ -36,44 +36,51 @@
 #line 10 "kw.gperf"
 struct thatispacked KwSlot { char *name; unsigned char code; };
 
-#define TOTAL_KEYWORDS 124
+#define TOTAL_KEYWORDS 135
 #define MIN_WORD_LENGTH 1
 #define MAX_WORD_LENGTH 28
 #define MIN_HASH_VALUE 1
-#define MAX_HASH_VALUE 256
-/* maximum key range = 256, duplicates = 0 */
+#define MAX_HASH_VALUE 271
+/* maximum key range = 271, duplicates = 0 */
 
-static inline unsigned int
+#ifdef __GNUC__
+__inline
+#else
+#ifdef __cplusplus
+inline
+#endif
+#endif
+static unsigned int
 hash (register const char *str, register size_t len)
 {
   static const unsigned short asso_values[] =
     {
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 100, 257, 257, 257, 257,  25, 257,
-       95,  90,  85,   5, 257,   0,  80, 257, 257, 257,
-        0, 257, 257, 257, 257, 257,  10, 257, 257, 257,
-      257, 257,  35, 257, 257, 257,   0, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257,   5, 257,  15, 120,   5,
-       25,   0,   0,  45,  85, 115,  65,   0,  25,  90,
-       40,  50,   5,  15,  25,  10,   0,   0,  10,   5,
-       20,   5,  90,  75,  20,  70,  65, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257, 257, 257, 257,
-      257, 257, 257, 257, 257, 257, 257
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 115, 272, 272, 272, 272,  75, 272,
+      105, 100,  95,  70, 272,   0,  90, 272, 272, 272,
+        0, 272, 272, 272, 272, 272,  10, 272, 272, 272,
+      272, 272,   5, 272, 272, 272,   5, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272,   5, 272,  40,  90,  25,
+       60,   0,   0,  60,  30, 125,  90,  15,  15,  95,
+       55,  40,  10,   0,   0,  10,   5,   0,  10,  10,
+        0,   5,  45,  85,  20,  80,  50, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272, 272, 272, 272,
+      272, 272, 272, 272, 272, 272, 272
     };
   register unsigned int hval = len;
 
@@ -110,311 +117,330 @@ hash (register const char *str, register size_t len)
   return hval + asso_values[(unsigned char)str[len - 1]];
 }
 
-static inline const struct thatispacked KwSlot *
+const struct thatispacked KwSlot *
 LookupKw (register const char *str, register size_t len)
 {
   static const struct thatispacked KwSlot wordlist[] =
     {
       {""},
-#line 108 "kw.gperf"
-      {"-",                              KW_MINUS},
-#line 114 "kw.gperf"
-      {"--",                             KW_DECREMENT},
-      {""},
-#line 19 "kw.gperf"
-      {"else",                             KW_ELSE},
-#line 64 "kw.gperf"
-      {"undef",                            KW_UNDEF},
-#line 63 "kw.gperf"
-      {"typeof",                           KW_TYPEOF},
-#line 62 "kw.gperf"
-      {"typedef",                          KW_TYPEDEF},
-      {""},
-#line 15 "kw.gperf"
-      {"case",                             KW_CASE},
-#line 29 "kw.gperf"
-      {"const",                            KW_CONST},
-#line 107 "kw.gperf"
-      {"+",                              KW_PLUS},
-#line 113 "kw.gperf"
-      {"++",                             KW_INCREMENT},
-#line 35 "kw.gperf"
-      {"continue",                         KW_CONTINUE},
-      {""},
-#line 78 "kw.gperf"
-      {"__restrict",                       KW_RESTRICT},
-#line 22 "kw.gperf"
-      {"sizeof",                           KW_SIZEOF},
-#line 75 "kw.gperf"
-      {"__asm__",                          KW___ASM__},
-      {""},
-#line 121 "kw.gperf"
-      {"__atomic_store",                   KW___ATOMIC_STORE},
-#line 73 "kw.gperf"
-      {"__VA_OPT__",                       KW___VA_OPT__},
-#line 16 "kw.gperf"
-      {"static",                           KW_STATIC},
-#line 68 "kw.gperf"
-      {"_Atomic",                          KW__ATOMIC},
-#line 45 "kw.gperf"
-      {"__attribute__",                    KW___ATTRIBUTE__},
-      {""},
-#line 31 "kw.gperf"
-      {"short",                            KW_SHORT},
-#line 13 "kw.gperf"
-      {"struct",                           KW_STRUCT},
-#line 79 "kw.gperf"
-      {"__restrict__",                     KW_RESTRICT},
 #line 20 "kw.gperf"
+      {"-",                              KW_MINUS},
+#line 21 "kw.gperf"
+      {"--",                             KW_DECREMENT},
+#line 108 "kw.gperf"
       {"for",                              KW_FOR},
-#line 55 "kw.gperf"
-      {"line",                             KW_LINE},
+#line 101 "kw.gperf"
+      {"else",                             KW_ELSE},
+#line 140 "kw.gperf"
+      {"undef",                            KW_UNDEF},
       {""},
-#line 85 "kw.gperf"
-      {"__builtin_expect",                 KW___BUILTIN_EXPECT},
-#line 60 "kw.gperf"
-      {"strpbrk",                          KW_STRPBRK},
-#line 57 "kw.gperf"
+#line 22 "kw.gperf"
+      {"->",                             KW_ARROW},
+      {""},
+#line 137 "kw.gperf"
+      {"true",                             KW_TRUE},
+#line 106 "kw.gperf"
+      {"false",                            KW_FALSE},
+#line 139 "kw.gperf"
+      {"typeof",                           KW_TYPEOF},
+#line 138 "kw.gperf"
+      {"typedef",                          KW_TYPEDEF},
+#line 123 "kw.gperf"
       {"restrict",                         KW_RESTRICT},
       {""},
-#line 49 "kw.gperf"
+#line 104 "kw.gperf"
       {"error",                            KW_ERROR},
-#line 28 "kw.gperf"
-      {"double",                           KW_DOUBLE},
+#line 127 "kw.gperf"
+      {"sizeof",                           KW_SIZEOF},
+      {""}, {""},
 #line 117 "kw.gperf"
-      {"->",                             KW_ARROW},
-#line 86 "kw.gperf"
-      {"__builtin_ffs",                    KW___BUILTIN_FFS},
-#line 17 "kw.gperf"
-      {"void",                             KW_VOID},
-#line 69 "kw.gperf"
-      {"_Bool",                            KW__BOOL},
-#line 61 "kw.gperf"
+      {"line",                             KW_LINE},
+#line 78 "kw.gperf"
+      {"__restrict",                       KW_RESTRICT},
+#line 133 "kw.gperf"
       {"strstr",                           KW_STRSTR},
-#line 116 "kw.gperf"
-      {"||",                             KW_LOGOR},
+#line 38 "kw.gperf"
+      {"__asm__",                          KW___ASM__},
+#line 52 "kw.gperf"
+      {"__attribute__",                    KW___ATTRIBUTE__},
+#line 49 "kw.gperf"
+      {"__atomic_store",                   KW___ATOMIC_STORE},
+#line 36 "kw.gperf"
+      {"__VA_OPT__",                       KW___VA_OPT__},
       {""},
-#line 18 "kw.gperf"
-      {"char",                             KW_CHAR},
-      {""},
-#line 50 "kw.gperf"
-      {"extern",                           KW_EXTERN},
-#line 99 "kw.gperf"
-      {"__builtin_strpbrk",                KW___BUILTIN_STRPBRK},
-      {""},
-#line 47 "kw.gperf"
-      {"elif",                             KW_ELIF},
-#line 26 "kw.gperf"
-      {"union",                            KW_UNION},
-#line 109 "kw.gperf"
-      {"&",                              KW_AMP},
-#line 115 "kw.gperf"
-      {"&&",                             KW_LOGAND},
-#line 102 "kw.gperf"
-      {"__builtin_types_compatible_p",     KW___BUILTIN_TYPES_COMPATIBLE_P},
-      {""}, {""},
+#line 79 "kw.gperf"
+      {"__restrict__",                     KW_RESTRICT},
 #line 129 "kw.gperf"
-      {"__atomic_test_and_set",            KW___ATOMIC_TEST_AND_SET},
-#line 101 "kw.gperf"
-      {"__builtin_sub_overflow",           KW___BUILTIN_SUB_OVERFLOW},
-#line 72 "kw.gperf"
-      {"_Thread_local",                    KW__THREAD_LOCAL},
-      {""}, {""},
-#line 122 "kw.gperf"
-      {"__atomic_store_n",                 KW___ATOMIC_STORE_N},
-#line 82 "kw.gperf"
-      {"__builtin_add_overflow",           KW___BUILTIN_ADD_OVERFLOW},
+      {"static_assert",                    KW_STATIC_ASSERT},
+#line 90 "kw.gperf"
+      {"case",                             KW_CASE},
+#line 125 "kw.gperf"
+      {"short",                            KW_SHORT},
+#line 134 "kw.gperf"
+      {"struct",                           KW_STRUCT},
+#line 132 "kw.gperf"
+      {"strpbrk",                          KW_STRPBRK},
+#line 93 "kw.gperf"
+      {"continue",                         KW_CONTINUE},
+#line 39 "kw.gperf"
+      {"__atomic_clear",                   KW___ATOMIC_CLEAR},
+#line 31 "kw.gperf"
+      {"_Bool",                            KW_BOOL},
+#line 56 "kw.gperf"
+      {"__builtin_expect",                 KW___BUILTIN_EXPECT},
+      {""},
+#line 57 "kw.gperf"
+      {"__builtin_ffs",                    KW___BUILTIN_FFS},
+#line 91 "kw.gperf"
+      {"char",                             KW_CHAR},
+#line 92 "kw.gperf"
+      {"const",                            KW_CONST},
+#line 128 "kw.gperf"
+      {"static",                           KW_STATIC},
+#line 25 "kw.gperf"
+      {"||",                             KW_LOGOR},
+      {""}, {""}, {""},
+#line 135 "kw.gperf"
+      {"switch",                           KW_SWITCH},
+#line 30 "kw.gperf"
+      {"_Atomic",                          KW__ATOMIC},
+      {""}, {""}, {""},
+#line 73 "kw.gperf"
+      {"__builtin_strstr",                 KW___BUILTIN_STRSTR},
+#line 44 "kw.gperf"
+      {"__atomic_fetch_or",                KW___ATOMIC_FETCH_OR},
 #line 76 "kw.gperf"
       {"__inline",                         KW_INLINE},
-#line 46 "kw.gperf"
-      {"_Noreturn",                        KW__NORETURN},
-      {""},
+      {""}, {""}, {""}, {""},
+#line 83 "kw.gperf"
+      {"__typeof",                         KW_TYPEOF},
 #line 58 "kw.gperf"
-      {"strchr",                           KW_STRCHR},
-      {""},
-#line 70 "kw.gperf"
-      {"_Generic",                         KW__GENERIC},
-      {""},
-#line 48 "kw.gperf"
-      {"endif",                            KW_ENDIF},
-#line 97 "kw.gperf"
-      {"__builtin_strchr",                 KW___BUILTIN_STRCHR},
-      {""},
+      {"__builtin_ffsl",                   KW___BUILTIN_FFSL},
+#line 59 "kw.gperf"
+      {"__builtin_ffsll",                  KW___BUILTIN_FFSLL},
+#line 105 "kw.gperf"
+      {"extern",                           KW_EXTERN},
+#line 74 "kw.gperf"
+      {"__builtin_sub_overflow",           KW___BUILTIN_SUB_OVERFLOW},
 #line 77 "kw.gperf"
       {"__int128",                         KW___INT128},
-#line 43 "kw.gperf"
-      {"auto",                             KW_AUTO},
-#line 89 "kw.gperf"
+#line 99 "kw.gperf"
+      {"elif",                             KW_ELIF},
+#line 60 "kw.gperf"
       {"__builtin_fpclassify",             KW___BUILTIN_FPCLASSIFY},
+#line 70 "kw.gperf"
+      {"__builtin_strchr",                 KW___BUILTIN_STRCHR},
 #line 100 "kw.gperf"
-      {"__builtin_strstr",                 KW___BUILTIN_STRSTR},
-#line 21 "kw.gperf"
-      {"do",                               KW_DO},
-#line 67 "kw.gperf"
-      {"_Alignof",                         KW__ALIGNOF},
-#line 87 "kw.gperf"
-      {"__builtin_ffsl",                   KW___BUILTIN_FFSL},
-#line 88 "kw.gperf"
-      {"__builtin_ffsll",                  KW___BUILTIN_FFSLL},
-#line 14 "kw.gperf"
-      {"return",                           KW_RETURN},
+      {"elifdef",                          KW_ELIFDEF},
+#line 35 "kw.gperf"
+      {"_Thread_local",                    KW_THREAD_LOCAL},
       {""},
-#line 93 "kw.gperf"
-      {"__builtin_popcount",               KW___BUILTIN_POPCOUNT},
-#line 83 "kw.gperf"
-      {"__builtin_assume_aligned",         KW___BUILTIN_ASSUME_ALIGNED},
+#line 141 "kw.gperf"
+      {"union",                            KW_UNION},
+#line 124 "kw.gperf"
+      {"return",                           KW_RETURN},
+#line 136 "kw.gperf"
+      {"thread_local",                     KW_THREAD_LOCAL},
+      {""},
+#line 143 "kw.gperf"
+      {"void",                             KW_VOID},
+      {""},
+#line 130 "kw.gperf"
+      {"strchr",                           KW_STRCHR},
+#line 85 "kw.gperf"
+      {"alignof",                          KW_ALIGNOF},
+#line 32 "kw.gperf"
+      {"_Generic",                         KW__GENERIC},
+#line 33 "kw.gperf"
+      {"_Noreturn",                        KW_NORETURN},
+      {""},
+#line 50 "kw.gperf"
+      {"__atomic_store_n",                 KW___ATOMIC_STORE_N},
+#line 72 "kw.gperf"
+      {"__builtin_strpbrk",                KW___BUILTIN_STRPBRK},
+#line 75 "kw.gperf"
+      {"__builtin_types_compatible_p",     KW___BUILTIN_TYPES_COMPATIBLE_P},
       {""}, {""},
-#line 91 "kw.gperf"
-      {"__builtin_neg_overflow",           KW___BUILTIN_NEG_OVERFLOW},
-#line 66 "kw.gperf"
-      {"_Alignas",                         KW__ALIGNAS},
-#line 96 "kw.gperf"
+#line 121 "kw.gperf"
+      {"pragma",                           KW_PRAGMA},
+#line 84 "kw.gperf"
+      {"alignas",                          KW_ALIGNAS},
+      {""},
+#line 69 "kw.gperf"
       {"__builtin_reg_class",              KW___BUILTIN_REG_CLASS},
       {""},
-#line 32 "kw.gperf"
-      {"signed",                           KW_SIGNED},
-      {""},
-#line 119 "kw.gperf"
-      {"__atomic_load",                    KW___ATOMIC_LOAD},
-#line 123 "kw.gperf"
-      {"__atomic_clear",                   KW___ATOMIC_CLEAR},
-#line 84 "kw.gperf"
-      {"__builtin_constant_p",             KW___BUILTIN_CONSTANT_P},
-#line 39 "kw.gperf"
-      {"define",                           KW_DEFINE},
-      {""},
-#line 23 "kw.gperf"
-      {"unsigned",                         KW_UNSIGNED},
-#line 135 "kw.gperf"
-      {"__atomic_exchange_n",              KW___ATOMIC_EXCHANGE_N},
-#line 25 "kw.gperf"
-      {"while",                            KW_WHILE},
-#line 27 "kw.gperf"
-      {"switch",                           KW_SWITCH},
-      {""},
-#line 81 "kw.gperf"
-      {"__typeof",                         KW_TYPEOF},
-#line 51 "kw.gperf"
-      {"goto",                             KW_GOTO},
-      {""},
 #line 98 "kw.gperf"
+      {"double",                           KW_DOUBLE},
+#line 53 "kw.gperf"
+      {"__builtin_add_overflow",           KW___BUILTIN_ADD_OVERFLOW},
+#line 46 "kw.gperf"
+      {"__atomic_fetch_xor",               KW___ATOMIC_FETCH_XOR},
+#line 87 "kw.gperf"
+      {"auto",                             KW_AUTO},
+#line 102 "kw.gperf"
+      {"endif",                            KW_ENDIF},
+#line 51 "kw.gperf"
+      {"__atomic_test_and_set",            KW___ATOMIC_TEST_AND_SET},
+      {""},
+#line 122 "kw.gperf"
+      {"register",                         KW_REGISTER},
+#line 81 "kw.gperf"
+      {"__sync_lock_test_and_set",         KW___SYNC_LOCK_TEST_AND_SET},
+#line 107 "kw.gperf"
+      {"float",                            KW_FLOAT},
+#line 27 "kw.gperf"
+      {"~",                              KW_TILDE},
+#line 97 "kw.gperf"
+      {"do",                               KW_DO},
+#line 29 "kw.gperf"
+      {"_Alignof",                         KW_ALIGNOF},
+      {""}, {""}, {""},
+#line 64 "kw.gperf"
+      {"__builtin_neg_overflow",           KW___BUILTIN_NEG_OVERFLOW},
+#line 144 "kw.gperf"
+      {"volatile",                         KW_VOLATILE},
+#line 118 "kw.gperf"
+      {"long",                             KW_LONG},
+#line 146 "kw.gperf"
+      {"while",                            KW_WHILE},
+#line 71 "kw.gperf"
       {"__builtin_strlen",                 KW___BUILTIN_STRLEN},
       {""},
-#line 41 "kw.gperf"
-      {"asm",                              KW_ASM},
-#line 94 "kw.gperf"
-      {"__builtin_popcountl",              KW___BUILTIN_POPCOUNTL},
-#line 95 "kw.gperf"
-      {"__builtin_popcountll",             KW___BUILTIN_POPCOUNTLL},
-#line 56 "kw.gperf"
-      {"pragma",                           KW_PRAGMA},
-      {""}, {""}, {""},
-#line 120 "kw.gperf"
-      {"__atomic_load_n",                  KW___ATOMIC_LOAD_N},
-#line 74 "kw.gperf"
-      {"__alignof__",                      KW___ALIGNOF__},
-#line 12 "kw.gperf"
-      {"if",                               KW_IF},
-#line 54 "kw.gperf"
-      {"int",                              KW_INT},
-      {""},
-#line 37 "kw.gperf"
-      {"ifdef",                            KW_IFDEF},
-#line 38 "kw.gperf"
-      {"ifndef",                           KW_IFNDEF},
-#line 40 "kw.gperf"
-      {"defined",                          KW_DEFINED},
-#line 44 "kw.gperf"
-      {"register",                         KW_REGISTER},
-#line 130 "kw.gperf"
-      {"__sync_lock_test_and_set",         KW___SYNC_LOCK_TEST_AND_SET},
-#line 30 "kw.gperf"
-      {"float",                            KW_FLOAT},
-      {""}, {""}, {""},
-#line 131 "kw.gperf"
-      {"__sync_lock_release",              KW___SYNC_LOCK_RELEASE},
-      {""},
-#line 112 "kw.gperf"
-      {"~",                              KW_TILDE},
-      {""}, {""},
-#line 34 "kw.gperf"
-      {"enum",                             KW_ENUM},
-      {""}, {""},
-#line 90 "kw.gperf"
-      {"__builtin_mul_overflow",           KW___BUILTIN_MUL_OVERFLOW},
-#line 65 "kw.gperf"
-      {"volatile",                         KW_VOLATILE},
-      {""}, {""},
-#line 106 "kw.gperf"
-      {"}",                              KW_RB},
-#line 134 "kw.gperf"
-      {"__atomic_compare_exchange_n",      KW___ATOMIC_COMPARE_EXCHANGE_N},
-#line 92 "kw.gperf"
-      {"__builtin_offsetof",               KW___BUILTIN_OFFSETOF},
-      {""}, {""},
-#line 59 "kw.gperf"
-      {"strlen",                           KW_STRLEN},
-      {""}, {""},
-#line 71 "kw.gperf"
-      {"_Static_assert",                   KW__STATIC_ASSERT},
-      {""},
-#line 105 "kw.gperf"
-      {"{",                              KW_LB},
-#line 42 "kw.gperf"
-      {"default",                          KW_DEFAULT},
-#line 80 "kw.gperf"
-      {"__thread",                         KW__THREAD_LOCAL},
-      {""}, {""}, {""},
-#line 128 "kw.gperf"
-      {"__atomic_fetch_or",                KW___ATOMIC_FETCH_OR},
-#line 124 "kw.gperf"
-      {"__atomic_fetch_add",               KW___ATOMIC_FETCH_ADD},
-#line 24 "kw.gperf"
-      {"long",                             KW_LONG},
-      {""},
-#line 118 "kw.gperf"
-      {".",                              KW_DOT},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 110 "kw.gperf"
-      {"*",                              KW_STAR},
+#line 28 "kw.gperf"
+      {"_Alignas",                         KW_ALIGNAS},
+#line 109 "kw.gperf"
+      {"goto",                             KW_GOTO},
       {""},
 #line 126 "kw.gperf"
-      {"__atomic_fetch_and",               KW___ATOMIC_FETCH_AND},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 104 "kw.gperf"
-      {")",                              KW_RP},
+      {"signed",                           KW_SIGNED},
+#line 145 "kw.gperf"
+      {"warning",                          KW_WARNING},
+#line 47 "kw.gperf"
+      {"__atomic_load",                    KW___ATOMIC_LOAD},
+#line 41 "kw.gperf"
+      {"__atomic_exchange_n",              KW___ATOMIC_EXCHANGE_N},
+#line 48 "kw.gperf"
+      {"__atomic_load_n",                  KW___ATOMIC_LOAD_N},
+#line 37 "kw.gperf"
+      {"__alignof__",                      KW___ALIGNOF__},
       {""},
-#line 127 "kw.gperf"
-      {"__atomic_fetch_xor",               KW___ATOMIC_FETCH_XOR},
+#line 65 "kw.gperf"
+      {"__builtin_offsetof",               KW___BUILTIN_OFFSETOF},
+#line 80 "kw.gperf"
+      {"__sync_lock_release",              KW___SYNC_LOCK_RELEASE},
       {""}, {""},
-#line 53 "kw.gperf"
-      {"inline",                           KW_INLINE},
-      {""}, {""}, {""}, {""},
-#line 103 "kw.gperf"
-      {"(",                              KW_LP},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 110 "kw.gperf"
+      {"if",                               KW_IF},
+#line 66 "kw.gperf"
+      {"__builtin_popcount",               KW___BUILTIN_POPCOUNT},
+#line 34 "kw.gperf"
+      {"_Static_assert",                   KW_STATIC_ASSERT},
 #line 111 "kw.gperf"
-      {"!",                              KW_EXCLAIM},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"ifdef",                            KW_IFDEF},
+#line 112 "kw.gperf"
+      {"ifndef",                           KW_IFNDEF},
       {""},
-#line 36 "kw.gperf"
-      {"include",                          KW_INCLUDE},
-      {""}, {""}, {""}, {""},
-#line 132 "kw.gperf"
-      {"__builtin_ia32_movntdq",           KW___BUILTIN_IA32_MOVNTDQ},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 116 "kw.gperf"
+      {"int",                              KW_INT},
       {""},
-#line 125 "kw.gperf"
+#line 55 "kw.gperf"
+      {"__builtin_constant_p",             KW___BUILTIN_CONSTANT_P},
+      {""}, {""},
+#line 86 "kw.gperf"
+      {"asm",                              KW_ASM},
+#line 67 "kw.gperf"
+      {"__builtin_popcountl",              KW___BUILTIN_POPCOUNTL},
+#line 68 "kw.gperf"
+      {"__builtin_popcountll",             KW___BUILTIN_POPCOUNTLL},
+#line 18 "kw.gperf"
+      {"+",                              KW_PLUS},
+#line 19 "kw.gperf"
+      {"++",                             KW_INCREMENT},
+#line 45 "kw.gperf"
       {"__atomic_fetch_sub",               KW___ATOMIC_FETCH_SUB},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 52 "kw.gperf"
-      {"include_next",                     KW_INCLUDE_NEXT},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 33 "kw.gperf"
-      {"break",                            KW_BREAK},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 54 "kw.gperf"
+      {"__builtin_assume_aligned",         KW___BUILTIN_ASSUME_ALIGNED},
+      {""}, {""},
+#line 63 "kw.gperf"
+      {"__builtin_mul_overflow",           KW___BUILTIN_MUL_OVERFLOW},
+      {""}, {""}, {""},
+#line 13 "kw.gperf"
+      {"&",                              KW_AMP},
+#line 14 "kw.gperf"
+      {"&&",                             KW_LOGAND},
       {""},
-#line 133 "kw.gperf"
+#line 103 "kw.gperf"
+      {"enum",                             KW_ENUM},
+      {""},
+#line 95 "kw.gperf"
+      {"define",                           KW_DEFINE},
+#line 119 "kw.gperf"
+      {"nullptr",                          KW_NULLPTR},
+#line 142 "kw.gperf"
+      {"unsigned",                         KW_UNSIGNED},
+      {""}, {""},
+#line 26 "kw.gperf"
+      {"}",                              KW_RB},
+#line 94 "kw.gperf"
+      {"default",                          KW_DEFAULT},
+      {""},
+#line 120 "kw.gperf"
+      {"nullptr_t",                        KW_NULLPTR_T},
+      {""},
+#line 131 "kw.gperf"
+      {"strlen",                           KW_STRLEN},
+      {""},
+#line 43 "kw.gperf"
+      {"__atomic_fetch_and",               KW___ATOMIC_FETCH_AND},
+      {""}, {""},
+#line 24 "kw.gperf"
+      {"{",                              KW_LB},
+#line 40 "kw.gperf"
+      {"__atomic_compare_exchange_n",      KW___ATOMIC_COMPARE_EXCHANGE_N},
+#line 42 "kw.gperf"
+      {"__atomic_fetch_add",               KW___ATOMIC_FETCH_ADD},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 23 "kw.gperf"
+      {".",                              KW_DOT},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 17 "kw.gperf"
+      {"*",                              KW_STAR},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 82 "kw.gperf"
+      {"__thread",                         KW_THREAD_LOCAL},
+      {""},
+#line 89 "kw.gperf"
+      {"break",                            KW_BREAK},
+#line 16 "kw.gperf"
+      {")",                              KW_RP},
+#line 61 "kw.gperf"
+      {"__builtin_ia32_movntdq",           KW___BUILTIN_IA32_MOVNTDQ},
+      {""},
+#line 88 "kw.gperf"
+      {"bool",                             KW_BOOL},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 15 "kw.gperf"
+      {"(",                              KW_LP},
+      {""}, {""}, {""}, {""}, {""},
+#line 96 "kw.gperf"
+      {"defined",                          KW_DEFINED},
+      {""}, {""}, {""},
+#line 115 "kw.gperf"
+      {"inline",                           KW_INLINE},
+      {""}, {""}, {""}, {""}, {""},
+#line 113 "kw.gperf"
+      {"include",                          KW_INCLUDE},
+      {""}, {""}, {""},
+#line 12 "kw.gperf"
+      {"!",                              KW_EXCLAIM},
+      {""}, {""}, {""}, {""}, {""},
+#line 114 "kw.gperf"
+      {"include_next",                     KW_INCLUDE_NEXT},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 62 "kw.gperf"
       {"__builtin_ia32_pmovmskb128",       KW___BUILTIN_IA32_PMOVMSKB128}
     };
 

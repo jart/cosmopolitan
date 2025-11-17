@@ -20,6 +20,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
 #include "libc/nt/errors.h"
@@ -31,13 +32,15 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/errno.h"
+#if SupportsWindows()
 
 #define UNCONNECTED 0
 #define CONNECTING  1
@@ -50,6 +53,11 @@ __msabi extern typeof(__sys_select_nt) *const __imp_select;
 textwindows static int sys_connect_nt_impl(struct Fd *f, const void *addr,
                                            uint32_t addrsize,
                                            sigset_t waitmask) {
+
+  // normalize unix socket filenames
+  struct sockaddr_un sun;
+  if (__fixsunpath(&sun, &addr, &addrsize) == -1)
+    return -1;
 
   // check if already connected
   if (f->connecting == 2)
@@ -160,7 +168,7 @@ textwindows static int sys_connect_nt_impl(struct Fd *f, const void *addr,
         return __winsockerr();
       if (!err)
         return eio();  // should be impossible
-      errno = __dos2errno(err);
+      errno = __errno_windows2linux(err);
       return -1;
     }
 

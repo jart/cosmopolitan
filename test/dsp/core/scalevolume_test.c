@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
+#include "libc/bsdstdlib.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
@@ -144,7 +145,7 @@ TEST(scalevolume, testSmallestScale_justSaturates) {
 //   - ~200ns w/ -O3 -march=skylake MODE=rel
 
 void randomizeaudio(void) {
-  rngset(pcm, sizeof(pcm), _rand64, -1);
+  arc4random_buf(pcm, sizeof(pcm));
 }
 
 void scalevolume_pure(int amt) {

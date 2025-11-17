@@ -58,8 +58,9 @@ o/$(MODE)/test/libc/sock/%.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/test/libc/sock/unix_test.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc unix
+		private .PLEDGE = unix
 
+o/$(MODE)/test/libc/sock/ipv4v6poll_test.runs		\
 o/$(MODE)/test/libc/sock/connect_test.runs		\
 o/$(MODE)/test/libc/sock/recvfrom_test.runs		\
 o/$(MODE)/test/libc/sock/nonblock_test.runs		\
@@ -70,18 +71,13 @@ o/$(MODE)/test/libc/sock/sendfile_test.runs		\
 o/$(MODE)/test/libc/sock/poll_test.runs			\
 o/$(MODE)/test/libc/sock/pollfd_test.runs		\
 o/$(MODE)/test/libc/sock/getpeername_test.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+		private .PLEDGE = inet
 
 o/$(MODE)/test/libc/sock/sendrecvmsg_test.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
-
-o/$(MODE)/test/libc/sock/socket_test.runs:		\
-		private .INTERNET = 1  # todo: ipv6 filtering
+		private .PLEDGE = inet recvfd sendfd
 
 o/$(MODE)/test/libc/sock/recvmsg_test.runs:		\
-		private .INTERNET = 1  # need to bind to 0.0.0.0
-o/$(MODE)/test/libc/sock/recvmsg_test.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
+		private .PLEDGE = inet recvfd sendfd
 
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/BUILD.mk
 

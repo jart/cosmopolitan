@@ -573,6 +573,8 @@ class ItimerTest(unittest.TestCase):
         self.assertEqual(self.hndl_called, True)
 
     # Issue 3864, unknown if this affects earlier versions of freebsd also
+    @unittest.skipIf(cosmo.kernel=='nt',
+        'ITIMER_VIRTUAL not supported yet')
     @unittest.skipIf(sys.platform in ('freebsd6', 'netbsd5'),
         'itimer not reliable (does not mix well with threading) on some BSDs.')
     def test_itimer_virtual(self):
@@ -594,6 +596,8 @@ class ItimerTest(unittest.TestCase):
         self.assertEqual(self.hndl_called, True)
 
     # Issue 3864, unknown if this affects earlier versions of freebsd also
+    @unittest.skipIf(cosmo.kernel=='nt',
+        'ITIMER_PROF not supported yet')
     @unittest.skipIf(sys.platform=='freebsd6',
         'itimer not reliable (does not mix well with threading) on freebsd6')
     def test_itimer_prof(self):

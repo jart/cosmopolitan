@@ -44,6 +44,8 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/thread/thread.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/kprintf.h"
 #include "lookup.internal.h"
 __static_yoink("musl_libc_notice");
 
@@ -241,7 +243,12 @@ int __res_msend_rc(int nqueries, const unsigned char *const *queries,
 				}
 			};
 			rlen = recvmsg(fd, &mh, 0);
-			if (rlen < 0) break;
+			if (rlen < 0) {
+				/* [jart] handle pledge() not having dns promise */
+				if (errno == EPERM)
+					return -1;
+				break;
+			}
 
 			/* Ignore non-identifiable packets */
 			if (rlen < 4) continue;

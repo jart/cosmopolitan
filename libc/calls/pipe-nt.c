@@ -31,8 +31,9 @@
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
-static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
+textwindows static int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
   uint32_t mode;
   int64_t hin, hout;
   int reader, writer;
@@ -55,25 +56,28 @@ static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
   }
   __fds_unlock();
   hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
-                        mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
+                        mode, 1, 65536, 65536, 0, &kNtIsInheritable);
   if (hin != -1) {
     if ((hout = CreateFile(
              pipename, kNtGenericWrite,
              kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
              &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0)) !=
         -1) {
-      g_fds.p[reader].kind = kFdFile;
-      g_fds.p[reader].flags = O_RDONLY | flags;
-      g_fds.p[reader].mode = 0010444;
-      g_fds.p[reader].handle = hin;
-      g_fds.p[writer].kind = kFdFile;
-      g_fds.p[writer].flags = O_WRONLY | flags;
-      g_fds.p[writer].mode = 0010222;
-      g_fds.p[writer].handle = hout;
+      __get_pib()->fds.p[reader].kind = kFdFile;
+      __get_pib()->fds.p[reader].flags = O_RDONLY | flags;
+      __get_pib()->fds.p[reader].mode = 0010444;
+      __get_pib()->fds.p[reader].handle = hin;
+      __get_pib()->fds.p[reader].was_created_during_vfork = __vforked;
+      __get_pib()->fds.p[writer].kind = kFdFile;
+      __get_pib()->fds.p[writer].flags = O_WRONLY | flags;
+      __get_pib()->fds.p[writer].mode = 0010222;
+      __get_pib()->fds.p[writer].handle = hout;
+      __get_pib()->fds.p[writer].was_created_during_vfork = __vforked;
       pipefd[0] = reader;
       pipefd[1] = writer;
       return 0;
     } else {
+      __winerr();
       CloseHandle(hin);
     }
   }

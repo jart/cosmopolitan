@@ -31,6 +31,10 @@ int main() {
            sizeof(x);
          }));
 
+  ASSERT(false, ({
+           bool x = false;
+           x;
+         }));
   ASSERT(0, ({
            _Bool x = 0;
            x;

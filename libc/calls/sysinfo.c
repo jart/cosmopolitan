@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"

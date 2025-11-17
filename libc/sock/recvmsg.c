@@ -19,11 +19,11 @@
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/runtime/runtime.h"
@@ -57,7 +57,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   union sockaddr_storage_bsd bsd;
 
   BEGIN_CANCELATION_POINT;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     if (IsBsd() && msg->msg_name) {

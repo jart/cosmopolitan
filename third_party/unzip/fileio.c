@@ -62,6 +62,7 @@
 #include "third_party/unzip/unzip.h"
 #include "third_party/unzip/crc32.h"
 #include "third_party/unzip/crypt.h"
+#include "libc/str/locale.internal.h"
 #include "third_party/unzip/ttyio.h"
 
 #define st_mtime st_mtim.tv_sec

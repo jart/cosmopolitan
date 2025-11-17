@@ -17,22 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Returns true if process is running under qemu-x86_64 or qemu-aarch64.
  */
 int IsQemuUser(void) {
-  static char rplus1;
-  if (!rplus1) {
-    // qemu doesn't validate the advice argument
-    // we could also check if __getcwd(0, 0) raises efault
-    int e = errno;
-    int r = !sys_madvise(__executable_start, 16384, 127);
-    errno = e;
-    rplus1 = r + 1;
+  static char res;
+  if (!res) {
+    if (IsLinux()) {
+      // qemu doesn't validate the advice argument
+      // we could also check if __getcwd(0, 0) raises efault
+      int e = errno;
+      int r = !sys_madvise(__executable_start, 16384, 127);
+      errno = e;
+      if (r) {
+        res = 2;  // this is probably qemu user
+      } else {
+        res = 1;
+      }
+    } else {
+      res = 1;
+    }
   }
-  return rplus1 - 1;
+  return res - 1;
 }

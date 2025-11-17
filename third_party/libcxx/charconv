@@ -94,22 +94,4 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 _LIBCPP_END_NAMESPACE_STD
 
-#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 14
-#  include <cerrno>
-#  include <cstddef>
-#  include <initializer_list>
-#  include <new>
-#endif
-
-#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 20
-#  include <cmath>
-#  include <concepts>
-#  include <cstdint>
-#  include <cstdlib>
-#  include <cstring>
-#  include <iosfwd>
-#  include <limits>
-#  include <type_traits>
-#endif
-
 #endif // _LIBCPP_CHARCONV

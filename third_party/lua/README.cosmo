@@ -103,11 +103,9 @@ NOTES
   by converting the files — you also have to change various expected 
   results.)
 
-  The modifications listed way up above are really only the 
-  *user-visible* modifications. There are many that aren't 
-  user-visible. For example, `_longjmp` was replaced with 
-  `gclongjmp`, and `abort` was replaced, ultimately, with a 
-  call to `_Exit`.
+  The modifications listed way up above are really only the
+  *user-visible* modifications. There are many that aren't user-visible.
+  For example, `abort` was replaced, ultimately, with a call to `_Exit`.
 
   To update Cosmo's Lua, you'll need to diff the latest Lua against
   the previous Lua, and Cosmo's Lua against the latest Lua. As you
@@ -122,10 +120,6 @@ NOTES
   might (now) show:
 
     #define LUAI_THROW(L,c)		_longjmp((c)->b, 1)
-
-  while the other side might (now) show:
-
-    #define LUAI_THROW(L,c)		gclongjmp((c)->b, 1)  // [jart]
 
   The presence of the `[jart]` tag makes it easy to see that the
   Cosmo change was intentional.

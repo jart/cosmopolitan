@@ -16,18 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
 #include "libc/fmt/internal.h"
-#include "libc/limits.h"
-#include "libc/macros.h"
-#include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
 struct SprintfStr {
   char *p;
-  int i;
-  int n;
+  size_t n;
+  size_t i;
 };
 
 static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
@@ -57,11 +56,13 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
  * @vforksafe
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list va) {
-  struct SprintfStr str = {buf, 0, size};
-  int rc = __fmt(vsnprintfputchar, &str, fmt, va, &str.i);
-  if (rc < 0)
-    return rc;
+  int res;
+  struct SprintfStr str = {buf, size};
+  if ((res = __fmt(vsnprintfputchar, &str, fmt, va, &str.i)) < 0)
+    return res;
   if (str.n)
     str.p[MIN(str.i, str.n - 1)] = '\0';
-  return str.i;
+  if (ckd_add(&res, str.i, 0))
+    return eoverflow();
+  return res;
 }

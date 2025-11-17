@@ -19,11 +19,12 @@
 #include "libc/errno.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sysv/errno.h"
 
 /**
  * Error return path for winsock wrappers.
  */
 textwindows int64_t __winsockerr(void) {
-  errno = __dos2errno(WSAGetLastError());
+  errno = __errno_windows2linux(WSAGetLastError());
   return -1;
 }

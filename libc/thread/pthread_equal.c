@@ -19,7 +19,7 @@
 #include "libc/thread/thread.h"
 
 /**
- * Compares thread ids;
+ * Compares thread ids.
  *
  * @return nonzero if equal, otherwise zero
  */

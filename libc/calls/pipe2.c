@@ -19,6 +19,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -41,9 +42,9 @@
  */
 int pipe2(int pipefd[2], int flags) {
   int rc;
-  if (flags & ~(O_CLOEXEC | O_NONBLOCK | (O_DIRECT != -1u ? O_DIRECT : 0))) {
-    return einval();
-  } else if (!pipefd) {
+  if (flags & ~(O_CLOEXEC | O_NONBLOCK | O_DIRECT)) {
+    rc = einval();
+  } else if (kisdangerous(pipefd)) {
     rc = efault();
   } else if (!IsWindows()) {
     rc = sys_pipe2(pipefd, flags);

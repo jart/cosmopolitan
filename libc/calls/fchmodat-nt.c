@@ -18,25 +18,47 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/limits.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_fchmodat_nt(int dirfd, const char *path, uint32_t mode,
                                 int flags) {
-  uint32_t attr;
+
+  if (flags & ~AT_SYMLINK_NOFOLLOW)
+    return einval();
+
+  // translate path
   uint16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1)
+  if (__mkntpathat(dirfd, path, path16) == -1)
     return -1;
-  if ((attr = GetFileAttributes(path16)) != -1u) {
-    if (mode & 0222) {
-      attr &= ~kNtFileAttributeReadonly;
-    } else {
-      attr |= kNtFileAttributeReadonly;
-    }
-    if (SetFileAttributes(path16, attr)) {
-      return 0;
-    }
+
+  // open file
+  intptr_t hFile;
+  if ((hFile = CreateFile(
+           path16,
+           kNtFileReadAttributes | kNtFileWriteAttributes | kNtReadControl |
+               kNtWriteDac,
+           kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+           kNtOpenExisting,
+           kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
+               ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
+                                              : 0),
+           0)) == -1)
+    return __winerr();
+
+  if (!sys_fchmod_nt_handle(hFile, mode)) {
+    CloseHandle(hFile);
+    return __winerr();
   }
-  return __winerr();
+
+  CloseHandle(hFile);
+  return 0;
 }

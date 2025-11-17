@@ -212,8 +212,7 @@ static uintptr_t __ubsan_extend(struct UbsanTypeDescriptor *t, uintptr_t x) {
 }
 
 static wontreturn void __ubsan_unreachable(void) {
-  for (;;)
-    abort();
+  notpossible;
 }
 
 static void __ubsan_exit(void) {

@@ -54,8 +54,10 @@ TEST(expm1, test) {
 }
 
 TEST(expm1l, test) {
+#ifndef NOX87
   EXPECT_STREQ("1.718281828459045", gc(xdtoal(_expm1l(1))));
   EXPECT_STREQ("1.718281828459045", gc(xdtoal(expl(1) - 1)));
+#endif
   EXPECT_STREQ("0", gc(xdtoal(_expm1l(0))));
   EXPECT_STREQ("-0", gc(xdtoal(_expm1l(-0.))));
   EXPECT_STREQ("NAN", gc(xdtoal(_expm1l(NAN))));

@@ -259,7 +259,7 @@ int main(int argc, char *argv[]) {
   unassert(!sigaction(SIGTERM, &sa, 0));
 
   // you can pass the number of threads you want as the first command arg
-  threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
+  threads = argc > 1 ? atoi(argv[1]) : cosmo_cpu_count();
   if (!(1 <= threads && threads <= 100000)) {
     tinyprint(2, "error: invalid number of threads\n", NULL);
     exit(1);

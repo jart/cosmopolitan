@@ -9,15 +9,18 @@ LIBC_THREAD_A = o/$(MODE)/libc/thread/thread.a
 LIBC_THREAD_A_FILES := $(wildcard libc/thread/*)
 LIBC_THREAD_A_HDRS = $(filter %.h,$(LIBC_THREAD_A_FILES))
 LIBC_THREAD_A_SRCS_C = $(filter %.c,$(LIBC_THREAD_A_FILES))
+LIBC_THREAD_A_SRCS_CC = $(filter %.cc,$(LIBC_THREAD_A_FILES))
 LIBC_THREAD_A_SRCS_S = $(filter %.S,$(LIBC_THREAD_A_FILES))
 
 LIBC_THREAD_A_SRCS =					\
 	$(LIBC_THREAD_A_SRCS_S)				\
-	$(LIBC_THREAD_A_SRCS_C)
+	$(LIBC_THREAD_A_SRCS_C)				\
+	$(LIBC_THREAD_A_SRCS_CC)			\
 
 LIBC_THREAD_A_OBJS =					\
 	$(LIBC_THREAD_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(LIBC_THREAD_A_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(LIBC_THREAD_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(LIBC_THREAD_A_SRCS_CC:%.cc=o/$(MODE)/%.o)	\
 
 LIBC_THREAD_A_CHECKS =					\
 	$(LIBC_THREAD_A).pkg				\
@@ -36,8 +39,9 @@ LIBC_THREAD_A_DIRECTDEPS =				\
 	LIBC_SYSV_CALLS					\
 	LIBC_TINYMATH					\
 	THIRD_PARTY_DLMALLOC				\
+	THIRD_PARTY_LIBUNWIND				\
 	THIRD_PARTY_NSYNC				\
-	THIRD_PARTY_NSYNC_MEM
+	THIRD_PARTY_NSYNC_MEM				\
 
 LIBC_THREAD_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_THREAD_A_DIRECTDEPS),$($(x))))

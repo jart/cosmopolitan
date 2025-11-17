@@ -173,7 +173,7 @@ def _candidate_tempdir_list():
         if dirname: dirlist.append(dirname)
 
     # Failing that, try OS-specific locations.
-    if _os.name == 'nt' or cosmo.kernel == 'nt':
+    if _os.name == 'nt':
         dirlist.extend([ _os.path.expanduser(r'~\AppData\Local\Temp'),
                          _os.path.expandvars(r'%SYSTEMROOT%\Temp'),
                          r'c:\temp', r'c:\tmp', r'\temp', r'\tmp' ])
@@ -223,7 +223,7 @@ def _get_default_tempdir():
             except PermissionError:
                 # This exception is thrown when a directory with the chosen name
                 # already exists on windows.
-                if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+                if (_os.name == 'nt' and
                     _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                     continue
                 break   # no point trying more names in this directory
@@ -266,7 +266,7 @@ def _mkstemp_inner(dir, pre, suf, flags, output_type):
         except PermissionError:
             # This exception is thrown when a directory with the chosen name
             # already exists on windows.
-            if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+            if (_os.name == 'nt' and
                 _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                 continue
             else:
@@ -374,7 +374,7 @@ def mkdtemp(suffix=None, prefix=None, dir=None):
         except PermissionError:
             # This exception is thrown when a directory with the chosen name
             # already exists on windows.
-            if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+            if (_os.name == 'nt' and
                 _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                 continue
             else:
@@ -560,7 +560,7 @@ def NamedTemporaryFile(mode='w+b', buffering=-1, encoding=None,
         _os.close(fd)
         raise
 
-if _os.name != 'posix' or _os.sys.platform == 'cygwin' or cosmo.kernel == 'nt':
+if _os.name != 'posix' or _os.sys.platform == 'cygwin':
     # On non-POSIX and Cygwin systems, assume that we cannot unlink a file
     # while it is open.
     TemporaryFile = NamedTemporaryFile

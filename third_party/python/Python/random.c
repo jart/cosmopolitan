@@ -24,6 +24,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pymacro.h"
+#include "libc/stdlib.h"
 #include "third_party/python/pyconfig.h"
 
 #ifdef Py_DEBUG
@@ -428,31 +429,11 @@ _PyRandom_Init(void)
         }
     }
     else {
-        uint64_t x;
-        int i, j;
         /* _PyRandom_Init() is called very early in the Python initialization
            and so exceptions cannot be used (use raise=0).
            _PyRandom_Init() must not block Python initialization: call
            pyurandom() is non-blocking mode (blocking=0): see the PEP 524. */
-#if 1
-        /* 
-         * [jart] modified to be more efficient
-         */
-        for (i = 0; i < secret_size;) {
-            x = rdrand(); // will failover to getrandom() etc.
-            for (j = 0; j < 8; ++j) {
-                if (i < secret_size) {
-                    secret[i++] = x;
-                    x >>= 8;
-                }
-            }
-        }
-#else
-        res = pyurandom(secret, secret_size, 0, 0);
-        if (res < 0) {
-            Py_FatalError("failed to get random numbers to initialize Python");
-        }
-#endif
+        arc4random_buf(secret, secret_size);
         Py_HashRandomizationFlag = 1;
     }
 }

@@ -16,76 +16,78 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
+#include "libc/intrin/maps.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/nexgen32e/x86feature.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/zlib/zlib.h"
 
-#define FANATICS "Fanatics"
-
-static const char hyperion[] =
-    FANATICS " have their dreams, wherewith they weave / "
-             "A paradise for a sect; the savage too / "
-             "From forth the loftiest fashion of his sleep / "
-             "...";
-
-TEST(crc32c, test) {
-  EXPECT_EQ(0, crc32c(0, "", 0));
-  EXPECT_EQ(crc32c(0, "hello", 5), crc32c(0, "hello", 5));
-  EXPECT_EQ(0xe3069283, crc32c(0, "123456789", 9));
-  EXPECT_EQ(0x6d6eefba, crc32c(0, hyperion, strlen(hyperion)));
-  EXPECT_EQ(0x6d6eefba, crc32c(crc32c(0, FANATICS, strlen(FANATICS)),
-                               hyperion + strlen(FANATICS),
-                               strlen(hyperion) - strlen(FANATICS)));
-  EXPECT_EQ(0xf372f045, crc32c(0, hyperion + 1, strlen(hyperion) - 1));
-  EXPECT_EQ(0x5aaad5f8, crc32c(0, hyperion + 7, strlen(hyperion) - 7));
-  EXPECT_EQ(0xf8e51ea6, crc32c(0, hyperion + 7, strlen(hyperion) - 8));
-  EXPECT_EQ(0xecc9871d, crc32c(0, kHyperion, kHyperionSize));
+uint32_t crc32c_reference(uint32_t init, const void *data, size_t size) {
+  uint32_t hash = ~init;
+  for (size_t i = 0; i < size; ++i) {
+    hash ^= ((const uint8_t *)data)[i];
+    for (int j = 0; j < 8; ++j) {
+      if (hash & 1) {
+        hash >>= 1;
+        hash ^= 0x82f63b78u;
+      } else {
+        hash >>= 1;
+      }
+    }
+  }
+  return ~hash;
 }
 
-dontinline uint64_t fnv_hash(char *s, int len) {
+TEST(crc32c, test) {
+  char data[4000];
+  for (int i = 0; i < 4000; ++i)
+    data[i] = rand();
+  for (int size = 0; size < 4000; ++size) {
+    uint32_t seed = lemur64();
+    uint32_t got = crc32c(seed, data, size);
+    uint32_t want = crc32c_reference(seed, data, size);
+    ASSERT_EQ(want, got);
+  }
+}
+
+dontinline uint64_t fnv(char *s, size_t len) {
   uint64_t hash = 0xcbf29ce484222325;
-  for (int i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     hash *= 0x100000001b3;
-    hash ^= (unsigned char)s[i];
+    hash ^= ((const uint8_t *)s)[i];
   }
   return hash;
 }
 
-static unsigned KMH(const void *p, unsigned long n) {
-  unsigned h, i;
-  for (h = i = 0; i < n; i++) {
-    h += ((unsigned char *)p)[i];
+dontinline unsigned kmh(const void *p, size_t n) {
+  unsigned h = 0;
+  for (size_t i = 0; i < n; i++) {
+    h += ((const uint8_t *)p)[i];
     h *= 0x9e3779b1;
   }
-  return MAX(1, h);
+  return h;
 }
 
-BENCH(crc32c, bench) {
-  for (int i = 1; i < 256; i *= 2) {
-    EZBENCH_N("crc32c", i, __expropriate(crc32c(0, kHyperion, i)));
-    EZBENCH_N("crc32_z", i, __expropriate(crc32_z(0, kHyperion, i)));
-    EZBENCH_N("fnv_hash", i,
-              __expropriate(fnv_hash(__veil("r", kHyperion), __veil("r", i))));
-    EZBENCH_N("KMH", i,
-              __expropriate(KMH(__veil("r", kHyperion), __veil("r", i))));
-    fprintf(stderr, "\n");
-  }
-  EZBENCH_N("crc32c", kHyperionSize,
-            __expropriate(crc32c(0, kHyperion, kHyperionSize)));
-  EZBENCH_N("crc32_z", kHyperionSize,
-            __expropriate(crc32_z(0, kHyperion, kHyperionSize)));
-  EZBENCH_N("fnv_hash", kHyperionSize,
-            __expropriate(
-                fnv_hash(__veil("r", kHyperion), __veil("r", kHyperionSize))));
-  EZBENCH_N(
-      "KMH", kHyperionSize,
-      __expropriate(KMH(__veil("r", kHyperion), __veil("r", kHyperionSize))));
+TEST(crc32c, bench) {
+
+  printf("small\n");
+  BENCHMARK(100, 5, X(crc32c(0, "hello", 5)));
+  BENCHMARK(100, 5, X(crc32_z(0, "hello", 5)));
+  BENCHMARK(100, 5, X(fnv("hello", 5)));
+  BENCHMARK(100, 5, X(kmh("hello", 5)));
+
+  printf("medium\n");
+  BENCHMARK(100, 64, X(crc32c(0, kHyperion, 64)));
+  BENCHMARK(100, 64, X(crc32_z(0, kHyperion, 64)));
+  BENCHMARK(100, 64, X(fnv(kHyperion, 64)));
+  BENCHMARK(100, 64, X(kmh(kHyperion, 64)));
+
+  printf("enormous\n");
+  BENCHMARK(100, kHyperionSize, X(crc32c(0, kHyperion, kHyperionSize)));
+  BENCHMARK(100, kHyperionSize, X(crc32_z(0, kHyperion, kHyperionSize)));
+  BENCHMARK(100, kHyperionSize, X(fnv(kHyperion, kHyperionSize)));
+  BENCHMARK(100, kHyperionSize, X(kmh(kHyperion, kHyperionSize)));
 }

@@ -28,8 +28,8 @@
 
 #define __TTYIO_C       /* identifies this source module */
 
-#include "third_party/zip/zip.h"
-#include "third_party/zip/crypt.h"
+#include "zip.h"
+#include "crypt.h"
 
 #if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /* Non-echo console/keyboard input is needed for (en/de)cryption's password
@@ -37,7 +37,7 @@
  * (The corresponding #endif is found at the end of this module.)
  */
 
-#include "third_party/zip/ttyio.h"
+#include "ttyio.h"
 
 #ifndef PUTC
 #  define PUTC putc
@@ -108,14 +108,7 @@
 #endif
 
 #if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/winsize.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/fio.h"
-#include "libc/sysv/consts/modem.h"
-#include "libc/sysv/consts/pty.h"
-#include "libc/sysv/consts/sio.h"
-#include "libc/sysv/consts/termios.h"
+#  include <sys/ioctl.h>
 #  define GOT_IOCTL_H
    /* int ioctl OF((int, int, zvoid *));   GRR: may need for some systems */
 #endif
@@ -123,17 +116,14 @@
 #ifndef HAVE_WORKING_GETCH
    /* include system support for switching of console echo */
 #  ifdef VMS
-// MISSING #include <descrip.h>
-// MISSING #include <iodef.h>
-// MISSING #include <ttdef.h>
-// MISSING #include <starlet.h>
-// MISSING #include <ssdef.h>
+#    include <descrip.h>
+#    include <iodef.h>
+#    include <ttdef.h>
+#    include <starlet.h>
+#    include <ssdef.h>
 #  else /* !VMS */
 #    ifdef HAVE_TERMIOS_H
-#include "libc/calls/termios.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/baud.internal.h"
-#include "libc/sysv/consts/termios.h"
+#      include <termios.h>
 #      define sgttyb termios
 #      define sg_flags c_lflag
 #      define GTTY(f, s) tcgetattr(f, (zvoid *) s)
@@ -141,14 +131,14 @@
 #    else /* !HAVE_TERMIOS_H */
 #      ifdef USE_SYSV_TERMIO           /* Amdahl, Cray, all SysV? */
 #        ifdef HAVE_TERMIO_H
-// MISSING #include <termio.h>
+#          include <termio.h>
 #        endif
 #        ifdef HAVE_SYS_TERMIO_H
-// MISSING #include <sys/termio.h>
+#          include <sys/termio.h>
 #        endif
 #        ifdef NEED_PTEM
-// MISSING #include <sys/stream.h>
-// MISSING #include <sys/ptem.h>
+#          include <sys/stream.h>
+#          include <sys/ptem.h>
 #        endif
 #        define sgttyb termio
 #        define sg_flags c_lflag
@@ -157,16 +147,9 @@
 #      else /* !USE_SYSV_TERMIO */
 #        ifndef CMS_MVS
 #          if (!defined(MINIX) && !defined(GOT_IOCTL_H))
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/winsize.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/fio.h"
-#include "libc/sysv/consts/modem.h"
-#include "libc/sysv/consts/pty.h"
-#include "libc/sysv/consts/sio.h"
-#include "libc/sysv/consts/termios.h"
+#            include <sys/ioctl.h>
 #          endif
-// MISSING #include <sgtty.h>
+#          include <sgtty.h>
 #          define GTTY gtty
 #          define STTY stty
 #          ifdef UNZIP
@@ -184,15 +167,7 @@
 #    endif /* ?HAVE_TERMIOS_H */
 #    ifndef NO_FCNTL_H
 #      ifndef UNZIP
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/flock.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/posix.h"
-#include "libc/sysv/consts/s.h"
+#        include <fcntl.h>
 #      endif
 #    else
        char *ttyname OF((int));

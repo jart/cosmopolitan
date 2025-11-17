@@ -17,12 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/thread/thread.h"
-
-void sys_sched_yield(void);
 
 /**
  * Yields current thread's remaining timeslice to operating system.

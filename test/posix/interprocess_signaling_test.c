@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 atomic_int *got;

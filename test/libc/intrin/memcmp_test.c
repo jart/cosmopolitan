@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -81,8 +82,8 @@ static int coerce(int result) {
 TEST(memcmp, fuzz) {
   int i, o, n, g;
   char a[256], b[256];
-  for (i = 0; i < 100000; ++i) {
-    rngset(a, sizeof(a), _rand64, -1);
+  for (i = 0; i < 100000; i += 5) {
+    arc4random_buf(a, sizeof(a));
     memcpy(b, a, sizeof(a));
     if (rand() & 1) {
       a[rand() % sizeof(a)] += rand();
@@ -148,17 +149,17 @@ BENCH(memcmp, bench) {
   EZBENCH_N("memcmp", 256, __expropriate(funcmp(a, b, 256)));
   a = gc(malloc(16 * 1024));
   b = gc(malloc(16 * 1024));
-  rngset(a, 16 * 1024, lemur64, -1);
+  arc4random_buf(a, 16 * 1024);
   memcpy(b, a, 16 * 1024);
   EZBENCH_N("memcmp", 16384, __expropriate(funcmp(a, b, 16384)));
   a = gc(malloc(32 * 1024));
   b = gc(malloc(32 * 1024));
-  rngset(a, 32 * 1024, lemur64, -1);
+  arc4random_buf(a, 32 * 1024);
   memcpy(b, a, 32 * 1024);
   EZBENCH_N("memcmp", 32768, __expropriate(funcmp(a, b, 32768)));
   a = gc(malloc(128 * 1024));
   b = gc(malloc(128 * 1024));
-  rngset(a, 128 * 1024, lemur64, -1);
+  arc4random_buf(a, 128 * 1024);
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("memcmp", 131072, __expropriate(funcmp(a, b, 131072)));
 }
@@ -195,17 +196,17 @@ BENCH(timingsafe_memcmp, bench) {
   EZBENCH_N("timingsafe_memcmp", 256, v = timingsafe_memcmp(a, b, 256));
   a = gc(malloc(16 * 1024));
   b = gc(malloc(16 * 1024));
-  rngset(a, 16 * 1024, lemur64, -1);
+  arc4random_buf(a, 16 * 1024);
   memcpy(b, a, 16 * 1024);
   EZBENCH_N("timingsafe_memcmp", 16384, v = timingsafe_memcmp(a, b, 16384));
   a = gc(malloc(32 * 1024));
   b = gc(malloc(32 * 1024));
-  rngset(a, 32 * 1024, lemur64, -1);
+  arc4random_buf(a, 32 * 1024);
   memcpy(b, a, 32 * 1024);
   EZBENCH_N("timingsafe_memcmp", 32768, v = timingsafe_memcmp(a, b, 32768));
   a = gc(malloc(128 * 1024));
   b = gc(malloc(128 * 1024));
-  rngset(a, 128 * 1024, lemur64, -1);
+  arc4random_buf(a, 128 * 1024);
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("timingsafe_memcmp", 131072, v = timingsafe_memcmp(a, b, 131072));
 }
@@ -242,17 +243,17 @@ BENCH(memcasecmp, bench) {
   EZBENCH_N("memcasecmp", 256, v = memcasecmp(a, b, 256));
   a = gc(malloc(16 * 1024));
   b = gc(malloc(16 * 1024));
-  rngset(a, 16 * 1024, lemur64, -1);
+  arc4random_buf(a, 16 * 1024);
   memcpy(b, a, 16 * 1024);
   EZBENCH_N("memcasecmp", 16384, v = memcasecmp(a, b, 16384));
   a = gc(malloc(32 * 1024));
   b = gc(malloc(32 * 1024));
-  rngset(a, 32 * 1024, lemur64, -1);
+  arc4random_buf(a, 32 * 1024);
   memcpy(b, a, 32 * 1024);
   EZBENCH_N("memcasecmp", 32768, v = memcasecmp(a, b, 32768));
   a = gc(malloc(128 * 1024));
   b = gc(malloc(128 * 1024));
-  rngset(a, 128 * 1024, lemur64, -1);
+  arc4random_buf(a, 128 * 1024);
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("memcasecmp", 131072, v = memcasecmp(a, b, 131072));
 }
@@ -263,7 +264,7 @@ BENCH(timingsafe_memcmp, demonstration) {
   int bcmp_(const void *, const void *, size_t) asm("bcmp");
   int memcmp_(const void *, const void *, size_t) asm("memcmp");
   char a[256], b[256];
-  rngset(a, 256, lemur64, -1);
+  arc4random_buf(a, 256);
   memcpy(b, a, 256);
   ++a[0];
   EZBENCH_N("bcmp ne", 256, bcmp_(a, b, 256));

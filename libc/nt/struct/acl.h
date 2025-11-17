@@ -9,4 +9,7 @@ struct NtAcl {
   uint16_t Sbz2;
 };
 
+#define kNtAclRevision   2
+#define kNtAclRevisionDs 4
+
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_ACL_H_ */

@@ -40,6 +40,8 @@
 #include "third_party/musl/lookup.internal.h"
 #include "third_party/musl/netdb.h"
 #include "libc/ctype.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/dce.h"
 #include "third_party/musl/resolv.internal.h"
 __static_yoink("musl_libc_notice");
 
@@ -61,6 +63,29 @@ static int name_from_null(struct address buf[static 2], const char *name, int fa
 		if (family != AF_INET)
 			buf[cnt++] = (struct address){ .family = AF_INET6 };
 	} else {
+		if (family != AF_INET6)
+			buf[cnt++] = (struct address){ .family = AF_INET, .addr = { 127,0,0,1 } };
+		if (family != AF_INET)
+			buf[cnt++] = (struct address){ .family = AF_INET6, .addr = { [15] = 1 } };
+	}
+	return cnt;
+}
+
+static int name_from_builtin(struct address buf[static 2], const char *name, int family, int flags)
+{
+	int cnt = 0;
+	if (!name) return 0;
+	//
+	// UNIX OSes always configure HOSTS.TXT to define "localhost".
+	// However the HOSTS.TXT file on Windows doesn't do this.
+	//
+	//     "localhost name resolution is handled within DNS itself."
+	//           —Quoth /c/Windows/System32/drivers/etc/hosts
+	//
+	// Therefore we most implement this as part of DNS itself.
+	//
+	if (!IsWindows()) return 0;
+	if (!strcasecmp(name, "localhost")) {
 		if (family != AF_INET6)
 			buf[cnt++] = (struct address){ .family = AF_INET, .addr = { 127,0,0,1 } };
 		if (family != AF_INET)
@@ -374,6 +399,7 @@ int __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], c
 
 	/* Try each backend until there's at least one result. */
 	cnt = name_from_null(buf, name, family, flags);
+	if (!cnt) cnt = name_from_builtin(buf, name, family, flags);
 	if (!cnt) cnt = name_from_numeric(buf, name, family);
 	if (!cnt && !(flags & AI_NUMERICHOST)) {
 		cnt = name_from_hosts(buf, canon, name, family);

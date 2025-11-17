@@ -20,12 +20,29 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
+
+  mode &= ~__get_pib()->umask;
+  if (mode & 07000)
+    return eperm();
+
   char16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1)
+  if (__mkntpathat(dirfd, path, path16) == -1)
     return -1;
-  if (CreateDirectory(path16, 0))
-    return 0;
-  return __fix_enotdir(-1, path16);
+
+  if (!CreateDirectory(path16, 0))
+    return __fix_enotdir(__winerr(), path16);
+
+  // just in case anyone wants to make a read-only directory
+  if (~mode & 0200) {
+    if (sys_fchmodat_nt(dirfd, path, mode, 0) == -1) {
+      RemoveDirectory(path16);
+      return -1;
+    }
+  }
+
+  return 0;
 }

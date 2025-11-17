@@ -16,13 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_fork(void) {
+static int sys_fork_impl(void) {
 #ifdef __x86_64__
 
   axdx_t ad;
@@ -72,4 +74,10 @@ int sys_fork(void) {
   return enosys();
 
 #endif
+}
+
+int sys_fork(void) {
+  int rc = sys_fork_impl();
+  // STRACE("sys_fork() → %d% m", rc);
+  return rc;
 }

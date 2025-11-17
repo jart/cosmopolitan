@@ -76,6 +76,10 @@ o/$(MODE)/libc/fmt/wcstoumax.o: private		\
 		CFLAGS +=			\
 			-Os
 
+o/$(MODE)/libc/fmt/zleb64.o: private		\
+		CFLAGS +=			\
+			-foptimize-sibling-calls
+
 LIBC_FMT_LIBS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)))
 LIBC_FMT_SRCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_SRCS))
 LIBC_FMT_HDRS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_HDRS))

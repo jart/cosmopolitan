@@ -18,111 +18,75 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
+#include "libc/limits.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/io.h"
-#include "libc/nt/enum/movefileexflags.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/win32fileattributedata.h"
-#include "libc/nt/struct/win32finddata.h"
-#include "libc/nt/synchronization.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-
-static textwindows bool IsDirectorySymlink(const char16_t *path) {
-  int e;
-  int64_t h;
-  struct NtWin32FindData data;
-  struct NtWin32FileAttributeData info;
-  e = errno;
-  if (GetFileAttributesEx(path, 0, &info) &&
-      ((info.dwFileAttributes & kNtFileAttributeDirectory) &&
-       (info.dwFileAttributes & kNtFileAttributeReparsePoint)) &&
-      (h = FindFirstFile(path, &data)) != -1) {
-    FindClose(h);
-    return data.dwReserved0 == kNtIoReparseTagSymlink ||
-           data.dwReserved0 == kNtIoReparseTagMountPoint;
-  } else {
-    errno = e;
-    return false;
-  }
-}
-
-static textwindows int sys_rmdir_nt(const char16_t *path) {
-  int ms;
-  for (ms = 1;; ms *= 2) {
-    if (RemoveDirectory(path))
-      return 0;
-    // Files can linger, for absolutely no reason.
-    // Possibly some Windows Defender bug on Win7.
-    // Sleep for up to one second w/ expo backoff.
-    // Alternative is use Microsoft internal APIs.
-    // Never could have imagined it'd be this bad.
-    if (GetLastError() == kNtErrorDirNotEmpty && ms <= 1024) {
-      Sleep(ms);
-      continue;
-    } else {
-      break;
-    }
-  }
-  return __winerr();
-}
-
-static textwindows int sys_unlink_nt(const char16_t *path) {
-  if (IsDirectorySymlink(path)) {
-    return sys_rmdir_nt(path);
-  } else if (DeleteFile(path)) {
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-textwindows int sys_unlinkat_nt_impl(const char16_t *path, int flags) {
-  if (flags & AT_REMOVEDIR) {
-    return sys_rmdir_nt(path);
-  } else {
-    return sys_unlink_nt(path);
-  }
-}
+#include "libc/sysv/errno.h"
 
 textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {
-  char16_t path16[PATH_MAX];
 
-  // check validity of flags
-  if (flags & ~AT_REMOVEDIR) {
+  // validate flags
+  if (flags & ~AT_REMOVEDIR)
     return einval();
-  }
 
   // translate unix to windows path
   int n;
-  if ((n = __mkntpathat(dirfd, path, 0, path16)) == -1) {
+  char16_t path16[PATH_MAX];
+  if ((n = __mkntpathat(dirfd, path, path16)) == -1)
     return -1;
+
+  // get info about file (not following symlinks)
+  uint32_t dwFileAttrs;
+  if ((dwFileAttrs = GetFileAttributes(path16)) == -1u)
+    return __fix_enotdir(__winerr(), path16);
+  bool bIsActuallyDirectory = (dwFileAttrs & kNtFileAttributeDirectory) &&
+                              !(dwFileAttrs & kNtFileAttributeReparsePoint);
+
+  // check for mismatch between intention and file status
+  if (flags & AT_REMOVEDIR) {
+    if (!bIsActuallyDirectory)
+      return enotdir();
+  } else {
+    if (bIsActuallyDirectory)
+      return eisdir();
   }
 
-  // optimistic first attempt
-  int e = errno;
-  int rc = sys_unlinkat_nt_impl(path16, flags);
+  // check if containing directory is read only
+  while (n && path16[n - 1] != '\\')
+    --n;
+  while (n && path16[n - 1] == '\\')
+    --n;
+  char16_t save = path16[n];
+  path16[n] = 0;
+  uint32_t dwParentAttrs;
+  if ((dwParentAttrs = GetFileAttributes(path16)) != -1u)
+    if (dwParentAttrs & kNtFileAttributeReadonly)
+      return eacces();
+  path16[n] = save;
 
-  // reactively ensure unlink() deletes read-only files
-  if (rc == -1 && errno == kNtErrorAccessDenied) {
-    uint32_t attr;
-    if ((attr = GetFileAttributes(path16)) != -1u &&
-        (attr & kNtFileAttributeReadonly) &&
-        SetFileAttributes(path16, attr & ~kNtFileAttributeReadonly)) {
-      errno = e;
-      rc = sys_unlinkat_nt_impl(path16, flags);
-    } else {
-      errno = kNtErrorAccessDenied;
-    }
+  // unix unlink() is designed to delete read-only files
+  // we need to explicitly clear the read-only status on win32
+  if (dwFileAttrs & kNtFileAttributeReadonly)
+    if (!SetFileAttributes(path16, dwFileAttrs & ~kNtFileAttributeReadonly))
+      return eacces();
+
+  // now delete the file
+  bool32 ok;
+  if (dwFileAttrs & kNtFileAttributeDirectory) {
+    ok = RemoveDirectory(path16);
+  } else {
+    ok = DeleteFile(path16);
   }
-
-  // return status
-  return __fix_enotdir(rc, path16);
+  if (!ok) {
+    uint32_t dwErrorCode = GetLastError();
+    if (dwFileAttrs & kNtFileAttributeReadonly)
+      SetFileAttributes(path16, dwFileAttrs);
+    errno = __errno_windows2linux(dwErrorCode);
+    return __fix_enotdir(-1, path16);
+  }
+  return 0;
 }

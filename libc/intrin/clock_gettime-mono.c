@@ -21,8 +21,11 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nexgen32e/rdtsc.h"
+#ifdef __x86_64__
 
 /**
  * @fileoverview Monotonic clock polyfill.
@@ -46,22 +49,22 @@ static struct {
   struct timespec boot;
 } g_mono;
 
-static struct timespec get_boot_time_xnu(void) {
-  struct timeval t;
-  size_t n = sizeof(t);
+static struct timespec get_uptime_xnu(void) {
+  struct timeval booted;
+  size_t n = sizeof(booted);
   int mib[] = {1 /* CTL_KERN */, 21 /* KERN_BOOTTIME */};
-  if (sys_sysctl(mib, 2, &t, &n, 0, 0) == -1)
+  if (sys_sysctl(mib, 2, &booted, &n, 0, 0) == -1)
     __builtin_trap();
-  return timeval_totimespec(t);
+  struct timespec now;
+  if (sys_clock_gettime_xnu(0, &now))
+    __builtin_trap();
+  return timespec_sub(now, timeval_totimespec(booted));
 }
 
 static void sys_clock_gettime_mono_init(void) {
+  if (IsXnu())
+    g_mono.boot = get_uptime_xnu();
   g_mono.base = rdtsc();
-  if (IsXnu()) {
-    g_mono.boot = get_boot_time_xnu();
-  } else {
-    __builtin_trap();
-  }
 }
 
 int sys_clock_gettime_mono(struct timespec *time) {
@@ -78,3 +81,5 @@ int sys_clock_gettime_mono(struct timespec *time) {
   *time = timespec_add(g_mono.boot, timespec_fromnanos(nanos));
   return 0;
 }
+
+#endif

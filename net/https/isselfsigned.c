@@ -18,6 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/https/https.h"
 
-bool IsSelfSigned(mbedtls_x509_crt *cert) {
+bool32 IsSelfSigned(mbedtls_x509_crt *cert) {
   return !mbedtls_x509_name_cmp(&cert->issuer, &cert->subject);
 }

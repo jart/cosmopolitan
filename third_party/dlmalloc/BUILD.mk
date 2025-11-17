@@ -19,14 +19,11 @@ THIRD_PARTY_DLMALLOC_A_CHECKS =					\
 THIRD_PARTY_DLMALLOC_A_DIRECTDEPS =				\
 	LIBC_CALLS						\
 	LIBC_INTRIN						\
-	LIBC_FMT						\
 	LIBC_NEXGEN32E						\
-	LIBC_RUNTIME						\
 	LIBC_STR						\
 	LIBC_SYSV						\
 	LIBC_SYSV_CALLS						\
-	THIRD_PARTY_COMPILER_RT					\
-	THIRD_PARTY_NSYNC
+	THIRD_PARTY_NSYNC					\
 
 THIRD_PARTY_DLMALLOC_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x))))
@@ -42,11 +39,13 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 
 ifneq ($(MODE),tiny)
 ifneq ($(MODE),tinylinux)
+ifneq ($(MODE),aarch64-tiny)
 # README file recommends -O3
 # It does double performance in default mode
 o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
 		CFLAGS +=					\
 			-O3
+endif
 endif
 endif
 
@@ -55,8 +54,9 @@ $(THIRD_PARTY_DLMALLOC_A_OBJS): private				\
 			-ffreestanding				\
 			-fdata-sections				\
 			-ffunction-sections			\
+			-foptimize-sibling-calls		\
 			-Wframe-larger-than=4096		\
-			-Walloca-larger-than=4096
+			-Walloca-larger-than=4096		\
 
 # avoid the legacy sse decoding penalty on avx systems
 ifeq ($(MODE),)

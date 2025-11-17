@@ -28,7 +28,6 @@
 #include "libc/mem/alloca.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -98,16 +97,16 @@ int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
     // decipher c++ symbols if there's enough stack memory
     // stack size requirement assumes max_depth's still 20
-    if (_weaken(__demangle) &&    //
-        _weaken(__is_mangled) &&  //
-        _weaken(__is_mangled)(name)) {
+    if (_weaken(cosmo_demangle) &&    //
+        _weaken(cosmo_is_mangled) &&  //
+        _weaken(cosmo_is_mangled)(name)) {
       if (!cxxbufsize)
         if ((cxxbufsize = __get_safe_size(8192, 8192)) >= 512) {
           cxxbuf = alloca(cxxbufsize);
           CheckLargeStackAllocation(cxxbuf, sizeof(cxxbufsize));
         }
       if (cxxbufsize >= 512)
-        if (_weaken(__demangle)(cxxbuf, name, cxxbufsize) != -1)
+        if (_weaken(cosmo_demangle)(cxxbuf, name, cxxbufsize) != -1)
           name = cxxbuf;
     }
 #pragma GCC pop_options

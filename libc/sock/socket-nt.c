@@ -21,8 +21,11 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
-#ifdef __x86_64__
+#if SupportsWindows()
+#include "libc/calls/state.internal.h"
+#include "libc/dce.h"
 #include "libc/sock/yoink.inc"
+#include "libc/sysv/pib.h"
 
 // ioctl(SIOCGIFCONFIG) for Windows need to access the following
 // functions through weak reference. This ensure those symbols are not
@@ -44,13 +47,14 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
       oflags |= O_CLOEXEC;
     if (type & SOCK_NONBLOCK)
       oflags |= O_NONBLOCK;
-    g_fds.p[fd].family = family;
-    g_fds.p[fd].type = truetype;
-    g_fds.p[fd].protocol = protocol;
-    g_fds.p[fd].kind = kFdSocket;
-    g_fds.p[fd].flags = oflags;
-    g_fds.p[fd].mode = 0140666;
-    g_fds.p[fd].handle = h;
+    __get_pib()->fds.p[fd].family = family;
+    __get_pib()->fds.p[fd].type = truetype;
+    __get_pib()->fds.p[fd].protocol = protocol;
+    __get_pib()->fds.p[fd].kind = kFdSocket;
+    __get_pib()->fds.p[fd].flags = oflags;
+    __get_pib()->fds.p[fd].mode = 0140666;
+    __get_pib()->fds.p[fd].handle = h;
+    __get_pib()->fds.p[fd].was_created_during_vfork = __vforked;
     return fd;
   } else {
     __releasefd(fd);

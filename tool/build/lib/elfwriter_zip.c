@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cosmo.h"
 #include "libc/dos.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/wintime.internal.h"
@@ -44,7 +45,7 @@ static bool ShouldCompress(const char *name, size_t namesize,
                            const unsigned char *data, size_t datasize,
                            bool nocompress) {
   return !nocompress && datasize >= 64 && !IsNoCompressExt(name, namesize) &&
-         (datasize < 1000 || MeasureEntropy((void *)data, 1000) < 7);
+         (datasize < 1000 || cosmo_entropy((void *)data, 1000) < 7);
 }
 
 static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,

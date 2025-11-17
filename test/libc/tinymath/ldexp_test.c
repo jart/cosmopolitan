@@ -45,14 +45,18 @@ TEST(ldexpl, test) {
   EXPECT_STREQ("-NAN", gc(xdtoal(_ldexpl(-NAN, 1))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(_ldexpl(INFINITY, 1))));
   EXPECT_STREQ("-INFINITY", gc(xdtoal(_ldexpl(-INFINITY, 1))));
+#ifndef NOX87
   EXPECT_STREQ("16384", gc(xdtoal(log2l(LDBL_MAX))));
+#endif
   EXPECT_STREQ(".00390625", gc(xdtoal(_ldexpl(1, -8))));
   EXPECT_STREQ("0", gc(xdtoal(_ldexpl(0, -8))));
   EXPECT_STREQ("0", gc(xdtoal(_ldexpl(0, 8))));
   EXPECT_STREQ("256", gc(xdtoal(_ldexpl(1, 8))));
   EXPECT_STREQ("512", gc(xdtoal(_ldexpl(2, 8))));
   EXPECT_STREQ("768", gc(xdtoal(_ldexpl(3, 8))));
+#ifndef NOX87
   EXPECT_STREQ("6.997616471358197e+3461", gc(xdtoal(_ldexpl(1, 11500))));
+#endif
   EXPECT_STREQ("INFINITY", gc(xdtoal(_ldexpl(1, 999999))));
   // EXPECT_STREQ("0", gc(xdtoal(_ldexpl(1, -999999))));
 }
@@ -67,7 +71,11 @@ TEST(ldexp, test) {
   EXPECT_STREQ("-NAN", gc(xdtoa(_ldexp(-NAN, 1))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(_ldexp(INFINITY, 1))));
   EXPECT_STREQ("-INFINITY", gc(xdtoa(_ldexp(-INFINITY, 1))));
+#ifndef NOX87
   EXPECT_STREQ("16384", gc(xdtoa(log2l(LDBL_MAX))));
+#else
+  EXPECT_STREQ("1024", gc(xdtoa(log2l(LDBL_MAX))));
+#endif
   EXPECT_STREQ(".00390625", gc(xdtoa(_ldexp(1, -8))));
   EXPECT_STREQ("0", gc(xdtoa(_ldexp(0, -8))));
   EXPECT_STREQ("0", gc(xdtoa(_ldexp(0, 8))));
@@ -88,7 +96,9 @@ TEST(ldexpf, test) {
   EXPECT_STREQ("-NAN", gc(xdtoaf(_ldexpf(-NAN, 1))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(_ldexpf(INFINITY, 1))));
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(_ldexpf(-INFINITY, 1))));
+#ifndef NOX87
   EXPECT_STREQ("16384", gc(xdtoaf(log2l(LDBL_MAX))));
+#endif
   EXPECT_STREQ(".00390625", gc(xdtoaf(_ldexpf(1, -8))));
   EXPECT_STREQ("0", gc(xdtoaf(_ldexpf(0, -8))));
   EXPECT_STREQ("0", gc(xdtoaf(_ldexpf(0, 8))));

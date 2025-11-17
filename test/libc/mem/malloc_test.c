@@ -16,31 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/cxaatexit.h"
-#include "libc/intrin/safemacros.h"
-#include "libc/macros.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/testlib/benchmark.h"
 #include "libc/testlib/ezbench.h"
-#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-#include "libc/time.h"
 
 #define N 1024
 #define M 20
@@ -57,20 +47,25 @@ TEST(realloc, bothAreZero_createsMinimalAllocation) {
   free(p);
 }
 
+#ifndef COSMO_MEM_DEBUG
 TEST(realloc, ptrIsZero_createsAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = realloc(0, 1)));
   ASSERT_EQ(p, realloc(p, 0));
   free(p);
 }
+#endif
 
+#ifndef COSMO_MEM_DEBUG
 TEST(realloc, sizeIsZero_shrinksAllocation) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(1)));
   ASSERT_EQ(p, realloc(p, 0));
   free(p);
 }
+#endif
 
+#ifndef COSMO_MEM_DEBUG
 TEST(realloc_in_place, test) {
   char *x = malloc(16);
   EXPECT_EQ(x, realloc_in_place(x, 0));
@@ -78,6 +73,7 @@ TEST(realloc_in_place, test) {
   *x = 2;
   free(x);
 }
+#endif
 
 BENCH(realloc_in_place, bench) {
   volatile int i = 1000;
@@ -93,7 +89,7 @@ BENCH(realloc_in_place, bench) {
 void AppendStuff(char **p, size_t *n) {
   char buf[512];
   ASSERT_NE(NULL, (*p = realloc(*p, (*n += 512))));
-  rngset(buf, sizeof(buf), 0, 0);
+  arc4random_buf(buf, sizeof(buf));
   memcpy(*p + *n - sizeof(buf), buf, sizeof(buf));
 }
 
@@ -135,8 +131,9 @@ TEST(malloc, test) {
         ASSERT_NE(MAP_FAILED, (maps[k] = mmap(NULL, mapsizes[k], PROT_READ,
                                               MAP_SHARED, fds[k], 0)));
       } else {
-        ASSERT_NE(-1, munmap(maps[k], mapsizes[k]));
-        ASSERT_NE(-1, close(fds[k]));
+        ASSERT_SYS(0, 0, munmap(maps[k], mapsizes[k]));
+        maps[k] = MAP_FAILED;
+        ASSERT_SYS(0, 0, close(fds[k]));
         fds[k] = -1;
       }
     }
@@ -145,9 +142,12 @@ TEST(malloc, test) {
   for (i = 0; i < ARRAYLEN(A); ++i)
     free(A[i]);
   for (i = 0; i < ARRAYLEN(maps); ++i)
-    munmap(maps[i], mapsizes[i]);
+    if (maps[i] != MAP_FAILED)
+      ASSERT_SYS(0, 0, munmap(maps[i], mapsizes[i]));
   for (i = 0; i < ARRAYLEN(fds); ++i)
-    close(fds[i]);
+    if (fds[i] != -1)
+      ASSERT_SYS(0, 0, close(fds[i]));
+  ASSERT_EQ(0, errno);
 }
 
 TEST(memalign, roundsUpAlignmentToTwoPower) {
@@ -178,15 +178,24 @@ void MallocFree(void) {
   free(p);
 }
 
-void eat(void *p) {
+void *worker(void *arg) {
+  return 0;
 }
 
-void (*pEat)(void *) = eat;
+TEST(again, dlmalloc) {
 
-BENCH(bulk_free, bench) {
-  /* pEat(pthread_create); */
-  EZBENCH2("free() bulk", BulkFreeBenchSetup(), FreeBulk());
-  EZBENCH2("bulk_free()", BulkFreeBenchSetup(),
-           bulk_free(bulk, ARRAYLEN(bulk)));
-  EZBENCH2("free(malloc(16))", donothing, MallocFree());
+  /* // force __isthreaded to 2 */
+  /* pthread_t th; */
+  /* pthread_create(&th, 0, worker, 0); */
+  /* pthread_join(th, 0); */
+
+  volatile int i = 1;
+  char *volatile x = malloc(10000);
+  BENCHMARK(10000, 1, free(malloc(i)));
+  BENCHMARK(10000, 1, free(memalign(16, i)));
+  BENCHMARK(10000, 1, free(memalign(32, i)));
+  i = 10000;
+  BENCHMARK(10000, 1, x = realloc(x, --i));
+  BENCHMARK(10000, 1, realloc_in_place(x, --i));
+  free(x);
 }

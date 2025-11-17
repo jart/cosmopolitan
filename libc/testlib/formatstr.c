@@ -20,6 +20,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/serialize.h"
 #include "libc/str/str.h"
+#include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 #include "libc/testlib/testlib.h"
 
@@ -71,8 +72,25 @@ char *testlib_formatstr(size_t cw, const void *p, int n) {
         n = s ? strlen(s) : 0;
       const char *se = s + n;
       APPEND('"');
+      wint_t x, a, b;
       while (s < se) {
-        j = AppendWide(*s++ & 255, i, j);
+        x = *s++ & 255;
+        if (x >= 0300) {
+          a = ThomPikeByte(x);
+          n = ThomPikeLen(x) - 1;
+          for (int k = 0; s + k < se;) {
+            b = s[k] & 255;
+            if (!ThomPikeCont(b))
+              break;
+            a = ThomPikeMerge(a, b);
+            if (++k == n) {
+              x = a;
+              s += k;
+              break;
+            }
+          }
+        }
+        j = AppendWide(x, i, j);
       }
       break;
     }

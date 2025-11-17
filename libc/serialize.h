@@ -1,6 +1,27 @@
 #ifndef COSMOPOLITAN_SERIALIZE_H_
 #define COSMOPOLITAN_SERIALIZE_H_
-#ifdef _COSMO_SOURCE
+
+/*
+  Integer Serialization For GNU C
+
+  We would ideally like to implement this in ANSI C, e.g.
+
+      #define READ32LE(p) \
+        (((u32)((p)[0])      ) | \
+         ((u32)((p)[1]) <<  8) | \
+         ((u32)((p)[2]) << 16) | \
+         ((u32)((p)[3]) << 24))
+
+      #define WRITE32LE(p, v) \
+        do { \
+          (p)[0] = (v)      ; \
+          (p)[1] = (v) >>  8; \
+          (p)[2] = (v) >> 16; \
+          (p)[3] = (v) >> 24; \
+        } while (0)
+
+  Unfortunately, GCC's optimizer doesn't recognize those patterns.
+*/
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define __SWAPBE16(x) (x)
@@ -112,5 +133,4 @@
     __p + 64 / 8;                        \
   }))
 
-#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_SERIALIZE_H_ */

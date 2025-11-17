@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "libc/assert.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/status.h"
@@ -51,7 +52,7 @@ void TestSleepRelative(int clock) {
   printf("\n");
   printf("testing: clock_nanosleep(%s) with relative timeout\n",
          MyDescribeClockName(clock));
-  for (long nanos = 1; nanos < (long)MAXIMUM; nanos *= 4) {
+  for (long nanos = 0; nanos < (long)MAXIMUM; nanos = nanos ? nanos * 4 : 1) {
     struct timespec t1, t2, wf;
     wf = timespec_fromnanos(nanos);
     if (clock_gettime(clock, &t1))

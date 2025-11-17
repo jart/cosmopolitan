@@ -33,8 +33,7 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   st->st_dev = zipos->dev;
   st->st_blksize = __pagesize;
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
-    st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
-                                        &__umask, memory_order_acquire));
+    st->st_mode = S_IFDIR | 0755;
   } else {
     lf = GetZipCfileOffset(zipos->map + cf);
     st->st_mode = GetZipCfileMode(zipos->map + cf);

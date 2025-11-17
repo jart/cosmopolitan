@@ -16,51 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/immintrin.internal.h"
 #ifndef __aarch64__
-
-static inline const unsigned char *memchr_pure(const unsigned char *s,
-                                               unsigned char c, size_t n) {
-  size_t i;
-  for (i = 0; i < n; ++i) {
-    if (s[i] == c) {
-      return s + i;
-    }
-  }
-  return 0;
-}
-
-#if defined(__x86_64__) && !defined(__chibicc__)
-static const char *memchr_sse(const char *s, char c, size_t n) {
-  const char *e = s + n;
-  __m128i t = _mm_set1_epi8(c);
-  unsigned m, k = (uintptr_t)s & 15;
-  m = _mm_movemask_epi8(
-      _mm_cmpeq_epi8(_mm_load_si128((const __m128i *)((uintptr_t)s & -16)), t));
-  m >>= k;
-  if (m) {
-    s += __builtin_ctz(m);
-    if (s < e)
-      return s;
-    return 0;
-  }
-  for (s += 16 - k; s < e; s += 16) {
-    m = _mm_movemask_epi8(
-        _mm_cmpeq_epi8(_mm_load_si128((const __m128i *)s), t));
-    if (m) {
-      s += __builtin_ctz(m);
-      if (s < e)
-        return s;
-      return 0;
-    }
-  }
-  return 0;
-}
-#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -72,10 +31,48 @@ static const char *memchr_sse(const char *s, char c, size_t n) {
  * @asyncsignalsafe
  */
 void *memchr(const void *s, int c, size_t n) {
-#if defined(__x86_64__) && !defined(__chibicc__)
-  return (void *)memchr_sse(s, c, n);
+  if (!n)
+    return 0;
+  char *p = (char *)s;
+#if defined(__AVX2__)
+  __m256i nv = _mm256_set1_epi8(c);
+  long skew = (intptr_t)p & 31;
+  unsigned m = _mm256_movemask_epi8(
+      _mm256_cmpeq_epi8(_mm256_load_si256((__m256i *)((intptr_t)p & -32)), nv));
+  m >>= skew;
+  m <<= skew;
+  ssize_t i = -skew;
+  while (!m) {
+    i += 32;
+    if (i >= n)
+      return 0;
+    m = _mm256_movemask_epi8(
+        _mm256_cmpeq_epi8(_mm256_load_si256((__m256i *)(p + i)), nv));
+  }
+  i += __builtin_ctz(m);
+  return i < n ? p + i : 0;
+#elif defined(__x86_64__) && !defined(__chibicc__)
+  __m128i nv = _mm_set1_epi8(c);
+  long skew = (intptr_t)p & 15;
+  unsigned m = _mm_movemask_epi8(
+      _mm_cmpeq_epi8(_mm_load_si128((__m128i *)((intptr_t)p & -16)), nv));
+  m >>= skew;
+  m <<= skew;
+  ssize_t i = -skew;
+  while (!m) {
+    i += 16;
+    if (i >= n)
+      return 0;
+    m = _mm_movemask_epi8(
+        _mm_cmpeq_epi8(_mm_load_si128((__m128i *)(p + i)), nv));
+  }
+  i += __builtin_ctz(m);
+  return i < n ? p + i : 0;
 #else
-  return (void *)memchr_pure(s, c, n);
+  for (size_t i = 0; i < n; ++i)
+    if ((p[i] & 255) == (c & 255))
+      return p + i;
+  return 0;
 #endif
 }
 

@@ -17,22 +17,32 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/macros.h"
 #include "libc/wctype.h"
 
 /**
- * Compares NUL-terminated UCS-2 strings case-insensitively w/ limit.
+ * Compares UCS-2 strings case-insensitively w/ limit.
  *
- * @param a is first non-null NUL-terminated char16 string pointer
- * @param b is second non-null NUL-terminated char16 string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first non-null char16 string pointer
+ * @param b is second non-null char16 string pointer
+ * @return is <0, 0, or >0 based on wint_t comparison
  * @asyncsignalsafe
  */
 int strncasecmp16(const char16_t *a, const char16_t *b, size_t n) {
-  int x, y;
-  size_t i = 0;
-  if (!n-- || a == b)
+  if (a == b)
     return 0;
-  while ((x = towlower(a[i])) == (y = towlower(b[i])) && b[i] && i < n)
+  wint_t x, y;
+  size_t i = -1;
+  do {
     ++i;
+    if (i == n)
+      return 0;
+    x = towlower(a[i]);
+    y = towlower(b[i]);
+  } while (x == y && x);
+#if !TYPE_SIGNED(wint_t)
   return x - y;
+#else
+  return (x > y) - (x < y);
+#endif
 }

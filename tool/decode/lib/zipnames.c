@@ -36,7 +36,6 @@ const struct IdName kZipExtraNames[] = {
 };
 
 const struct IdName kZipIattrNames[] = {
-    {kZipIattrBinary, "kZipIattrBinary"},
     {kZipIattrText, "kZipIattrText"},
     {0, 0},
 };

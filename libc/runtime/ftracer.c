@@ -71,7 +71,7 @@ __funline int GetNestingLevel(struct CosmoFtrace *ft, struct StackFrame *sf) {
  *
  * @see ftrace_install()
  */
-privileged void ftracer(void) {
+__privileged void ftracer(void) {
   long stackuse;
   uintptr_t fn, st;
   struct CosmoTib *tib;
@@ -133,7 +133,7 @@ privileged void ftracer(void) {
   sf = sf->next;
   fn = sf->addr + DETOUR_SKEW;
   if (fn != ft->ft_lastaddr) {
-    kprintf("%rFUN %6P %6H %'18T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
+    kprintf("%rFUN %7P %7H %'18T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
             GetNestingLevel(ft, sf) * 2, "", fn);
     ft->ft_lastaddr = fn;
   }

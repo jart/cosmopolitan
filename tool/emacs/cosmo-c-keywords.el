@@ -87,7 +87,6 @@
            "nostackprotector"
            "mayalias"
            "dontinstrument"
-           "interruptfn"
            "dontcallback"
            "textstartup"
            "warnifused"

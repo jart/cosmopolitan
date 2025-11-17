@@ -62,7 +62,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"
@@ -804,7 +803,6 @@ static size_t FIO_setDictBufferMalloc(FIO_Dict_t* dict, const char* fileName, FI
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/mremap.h"
 static void FIO_munmap(FIO_Dict_t* dict)

@@ -9,7 +9,9 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ucontext.h>
+#include <unistd.h>
 
 /**
  * @fileoverview swapcontext() and makecontext() example
@@ -20,7 +22,7 @@ static ucontext_t uctx_main;
 static ucontext_t uctx_func1;
 static ucontext_t uctx_func2;
 
-#define say(s) write(1, s, strlen(s))
+#define say(s) (void)!write(1, s, strlen(s))
 #define handle_error(msg) \
   do {                    \
     perror(msg);          \

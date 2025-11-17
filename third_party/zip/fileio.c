@@ -13,26 +13,18 @@
  */
 #define __FILEIO_C
 
-#include "third_party/zip/zip.h"
-#include "libc/ctype.h"
-#include "libc/wctype.h"
-#include "third_party/zip/crc32.h"
+#include "zip.h"
+#include "crc32.h"
 
 #ifdef MACOS
-// MISSING #include "helpers.h"
+// [jart] #  include "helpers.h"
 #endif
 
 #ifdef VMS
-// MISSING #include "vms/vms.h"
+// [jart] #  include "vms/vms.h"
 #endif /* def VMS */
 
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/sched.h"
-#include "libc/sysv/consts/timer.h"
-#include "libc/time.h"
+#include <time.h>
 
 #ifdef NO_MKTIME
 time_t mktime OF((struct tm *));
@@ -41,7 +33,7 @@ time_t mktime OF((struct tm *));
 #ifdef OSF
 #define EXDEV 18   /* avoid a bug in the DEC OSF/1 header files. */
 #else
-#include "libc/errno.h"
+#include <errno.h>
 #endif
 
 #ifdef NO_ERRNO
@@ -51,7 +43,7 @@ extern int errno;
 /* -----------------------
    For long option support
    ----------------------- */
-#include "libc/str/str.h"
+#include <ctype.h>
 
 
 #if defined(VMS) || defined(TOPS20)
@@ -1934,6 +1926,88 @@ int bfcopy(n)
   return ZE_OK;
 }
 
+
+
+#ifdef NO_RENAME
+int rename(from, to)
+ZCONST char *from;
+ZCONST char *to;
+{
+    unlink(to);
+    if (link(from, to) == -1)
+        return -1;
+    if (unlink(from) == -1)
+        return -1;
+    return 0;
+}
+
+#endif /* NO_RENAME */
+
+
+#ifdef ZMEM
+
+/************************/
+/*  Function memset()   */
+/************************/
+
+/*
+ * memset - for systems without it
+ *  bill davidsen - March 1990
+ */
+
+char *
+memset(buf, init, len)
+register char *buf;     /* buffer loc */
+register int init;      /* initializer */
+register unsigned int len;   /* length of the buffer */
+{
+    char *start;
+
+    start = buf;
+    while (len--) *(buf++) = init;
+    return(start);
+}
+
+
+/************************/
+/*  Function memcpy()   */
+/************************/
+
+char *
+memcpy(dst,src,len)             /* v2.0f */
+register char *dst, *src;
+register unsigned int len;
+{
+    char *start;
+
+    start = dst;
+    while (len--)
+        *dst++ = *src++;
+    return(start);
+}
+
+
+/************************/
+/*  Function memcmp()   */
+/************************/
+
+int
+memcmp(b1,b2,len)                     /* jpd@usl.edu -- 11/16/90 */
+register char *b1, *b2;
+register unsigned int len;
+{
+
+    if (len) do {       /* examine each byte (if any) */
+      if (*b1++ != *b2++)
+        return (*((uch *)b1-1) - *((uch *)b2-1));  /* exit when miscompare */
+    } while (--len);
+
+    return(0);          /* no miscompares, yield 0 result */
+}
+
+#endif  /* ZMEM */
+
+
 /*------------------------------------------------------------------
  * Split archives
  */
@@ -2941,7 +3015,7 @@ local int ucs4_string_to_utf8(ucs4, utf8buf, buflen)
     if (mbl < c)
       c = mbl;
     if (utf8buf && count < buflen)
-      strlcpy(utf8buf + count, mb, c);
+      strncpy(utf8buf + count, mb, c);
     if (mbl == 1 && !mb[0])
       return count;           /* terminating nul */
     count += mbl;
@@ -3204,6 +3278,7 @@ char *wide_to_local_string(wide_string)
   int i;
   wchar_t wc;
   int b;
+  int state_dependent;
   int wsize = 0;
   int max_bytes = MB_CUR_MAX;
   char buf[9];
@@ -3224,6 +3299,10 @@ char *wide_to_local_string(wide_string)
   /* set initial state if state-dependent encoding */
   wc = (wchar_t)'a';
   b = wctomb(NULL, wc);
+  if (b == 0)
+    state_dependent = 0;
+  else
+    state_dependent = 1;
   for (i = 0; i < wsize; i++) {
     if (sizeof(wchar_t) < 4 && wide_string[i] > 0xFFFF) {
       /* wchar_t probably 2 bytes */
@@ -3423,7 +3502,7 @@ zwchar *local_to_wide_string(local_string)
   if ((wc_string = (wchar_t *)malloc((wsize + 1) * sizeof(wchar_t))) == NULL) {
     ZIPERR(ZE_MEM, "local_to_wide_string");
   }
-  wsize = mbstowcs(wc_string, local_string, strlen(local_string) + 1);
+  wsize = mbstowcs(wc_string, local_string, wsize + 1);
   wc_string[wsize] = (wchar_t) 0;
 
   /* in case wchar_t is not zwchar */

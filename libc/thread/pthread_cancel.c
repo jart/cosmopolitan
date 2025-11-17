@@ -30,7 +30,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -155,7 +154,8 @@ static errno_t _pthread_cancel_everyone(void) {
     other = POSIXTHREAD_CONTAINER(e);
     if (other != _pthread_self() &&
         atomic_load_explicit(&other->pt_status, memory_order_acquire) <
-            kPosixThreadTerminated) {
+            kPosixThreadTerminated &&
+        !(other->tib->tib_flags & TIB_FLAG_VFORKED)) {
       _pthread_cancel_single(other);
       err = 0;
     }

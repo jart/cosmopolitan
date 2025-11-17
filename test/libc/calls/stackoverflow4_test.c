@@ -22,7 +22,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -33,6 +32,7 @@
 #include "libc/sysv/consts/ss.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * stack overflow recovery technique #4
@@ -58,11 +58,6 @@ int StackOverflow(int d) {
 
 void *MyPosixThread(void *arg) {
   struct sigaction sa;
-  struct sigaltstack ss;
-  ss.ss_flags = 0;
-  ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 1024;
-  ss.ss_sp = gc(malloc(ss.ss_size));
-  ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
   sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
   sigemptyset(&sa.sa_mask);
   sa.sa_sigaction = CrashHandler;
@@ -77,7 +72,11 @@ TEST(stackoverflow, standardStack_altStack_thread_teleport) {
   pthread_t th;
   struct sigaltstack ss;
   smashed_stack = false;
-  pthread_create(&th, 0, MyPosixThread, 0);
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setsigaltstacksize_np(&attr, sysconf(_SC_MINSIGSTKSZ) + 1024);
+  pthread_create(&th, &attr, MyPosixThread, 0);
+  pthread_attr_destroy(&attr);
   pthread_join(th, &res);
   ASSERT_EQ((void *)123L, res);
   ASSERT_TRUE(smashed_stack);

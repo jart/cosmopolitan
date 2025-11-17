@@ -29,7 +29,7 @@
 
 __msabi extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW;
 __msabi extern typeof(GetLastError) *const __imp_GetLastError;
-__msabi extern typeof(Sleep) *const __imp_Sleep;
+__msabi extern typeof(SleepEx) *const __imp_SleepEx;
 
 /**
  * Creates pipe.
@@ -50,14 +50,14 @@ TryAgain:
                                    nDefaultTimeOutMs, opt_lpSecurityAttributes);
   if (hServer == -1 && __imp_GetLastError() == kNtErrorPipeBusy) {
     if (micros >= 1024)
-      __imp_Sleep(micros / 1024);
+      __imp_SleepEx(micros / 1024, 0);
     if (micros < 1024 * 1024)
       micros <<= 1;
     goto TryAgain;
   }
   if (hServer == -1)
     __winerr();
-  NTTRACE("CreateNamedPipe(%#hs, %s, %s, %u, %'u, %'u, %'u, %s) → %ld% m",
+  NTTRACE("CreateNamedPipe(%#!hs, %s, %s, %u, %'u, %'u, %'u, %s) → %ld% m",
           lpName, DescribeNtPipeOpenFlags(dwOpenMode),
           DescribeNtPipeModeFlags(dwPipeMode), nMaxInstances, nOutBufferSize,
           nInBufferSize, nDefaultTimeOutMs,

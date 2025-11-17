@@ -58,7 +58,7 @@ scall	sys_writev		0x8798798792879814	0x842	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	0x03b	globl hidden # NOTE: pipe2() on FreeBSD and Linux Aarch64; XNU is pipe(void)→eax:edx
 scall	sys_select		0x9a184785d285d817	0xfff	globl hidden
 scall	sys_pselect		0x9b486ea0a298a90e	0x848	globl hidden # pselect6() on gnu/systemd
-scall	sys_sched_yield		0x15e12a14bf25d018	0x07c	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
+#scall	sys_sched_yield		0x15e12a14bf25d018	0x07c	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
 scall	sys_mremap		0x19bffffffffff019	0x0d8	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	0x0e8	globl hidden
 scall	sys_madvise		0x04b04b04b204b01c	0x0e9	globl hidden
@@ -349,7 +349,7 @@ scall	sys_pkey_alloc		0xfffffffffffff14a	0x121	globl # no wrapper
 scall	sys_pkey_free		0xfffffffffffff14b	0x122	globl # no wrapper
 scall	sys_statx		0xfffffffffffff14c	0x123	globl # no wrapper; lool https://lkml.org/lkml/2010/7/22/249
 scall	sys_io_pgetevents	0xfffffffffffff14d	0x124	globl # no wrapper
-scall	sys_rseq		0xfffffffffffff14e	0x125	globl # no wrapper; Linux 4.18+ (c. 2018)
+#scall	sys_rseq		0xfffffffffffff14e	0x125	globl # Linux 4.18+ (c. 2018) and has custom impl
 #──────────────────────LINUX 4.18 LIMIT────────────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
 scall	sys_pidfd_send_signal	0xfffffffffffff1a8	0x1a8	globl #  ├─ linux conferences ban linux founder linus torvalds
 scall	sys_io_uring_setup	0xfffffffffffff1a9	0x1a9	globl #  └─ gnu founder richard stallman publicly disgraced

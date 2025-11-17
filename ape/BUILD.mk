@@ -49,6 +49,8 @@ o/$(MODE)/ape/aarch64.lds:			\
 	libc/thread/tls.h			\
 	libc/calls/struct/timespec.h		\
 	libc/macros.h				\
+	libc/sysv/consts/prot.h			\
+	libc/dce.h				\
 	libc/str/str.h
 
 APE_LOADER_LDFLAGS =				\

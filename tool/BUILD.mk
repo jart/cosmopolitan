@@ -5,6 +5,7 @@
 o/$(MODE)/tool:			\
 	o/$(MODE)/tool/args	\
 	o/$(MODE)/tool/build	\
+	o/$(MODE)/tool/chat	\
 	o/$(MODE)/tool/curl	\
 	o/$(MODE)/tool/decode	\
 	o/$(MODE)/tool/lambda	\

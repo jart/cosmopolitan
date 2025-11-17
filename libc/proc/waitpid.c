@@ -25,7 +25,7 @@
  *     -1 means any child process, <-1 means any proc in specific group
  * @param opt_out_wstatus optionally returns status code, and *wstatus
  *     may be inspected using WEXITSTATUS(), etc.
- * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
+ * @param options can have WNOHANG, WUNTRACED, etc.
  * @return process id of terminated child or -1 w/ errno
  * @cancelationpoint
  * @asyncsignalsafe

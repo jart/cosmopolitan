@@ -16,28 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
 #include "libc/str/str.h"
 
-static size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
-  uint64_t w;
-  for (; i + 8 < n; i += 8) {
-    w = *(uint64_t *)(s + i);
-    if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
-      i += (unsigned)__builtin_ctzll(w) >> 3;
-      break;
-    }
-  }
-  return i;
-}
-
 /**
- * Returns length of NUL-terminated string... securely.
+ * Returns length of NUL-terminated wide string w/ limit securely.
  *
- * This is like strnlen() except it'll return 0 if `s` is null. We also
- * make the assumption for the purposes of ASAN that `n` is the size of
- * the buffer if `s` is non-null.
+ * This is like strnlen() except it'll return 0 if `s` is null.
  *
  * @param s is string
  * @param n is max length
@@ -45,18 +29,7 @@ static size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
  * @asyncsignalsafe
  */
 size_t strnlen_s(const char *s, size_t n) {
-  size_t i;
   if (!s)
     return 0;
-  for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
-    if (i == n || !s[i])
-      return i;
-  }
-  i = strnlen_s_x64(s, n, i);
-  for (;; ++i) {
-    if (i == n || !s[i])
-      break;
-  }
-  unassert(i == n || (i < n && !s[i]));
-  return i;
+  return strnlen(s, n);
 }

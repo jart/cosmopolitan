@@ -5,6 +5,7 @@
 -Wa,-msse2avx
 -Werror=maybe-uninitialized
 -Wno-literal-suffix
+-Wno-prio-ctor-dtor
 -Wno-unused-but-set-variable
 -Wunsafe-loop-optimizations
 -fbranch-target-load-optimize

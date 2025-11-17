@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/thunk/msabi.h"
@@ -32,16 +35,17 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/errno.h"
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
+__msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 __msabi extern typeof(__sys_ioctlsocket_nt) *const __imp_ioctlsocket;
 
 textwindows static int sys_accept_nt_impl(struct Fd *f,
                                           struct sockaddr_storage *addr,
                                           int accept4_flags,
                                           sigset_t waitmask) {
-  int64_t handle;
-  int client = -1;
 
   // accepting sockets must always be non-blocking at the os level. this
   // is because WSAAccept doesn't support overlapped i/o operations. the
@@ -52,6 +56,8 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
   if (__imp_ioctlsocket(f->handle, FIONBIO, &mode))
     return __winsockerr();
 
+  // get win32 handle of client
+  int64_t handle;
   for (;;) {
 
     // perform non-blocking accept
@@ -63,7 +69,7 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
     // return on genuine errors
     uint32_t err = WSAGetLastError();
     if (err != WSAEWOULDBLOCK) {
-      errno = __dos2errno(err);
+      errno = __errno_windows2linux(err);
       if (errno == ECONNRESET)
         errno = ECONNABORTED;
       return -1;
@@ -84,6 +90,14 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
       return __winsockerr();
   }
 
+  // allocate file descriptor
+  int client;
+  if ((client = __reservefd(-1)) == -1) {
+    STRACE("warning: dropping accepted client due to error");
+    __imp_closesocket(handle);
+    return -1;
+  }
+
   // create file descriptor for new socket
   // don't inherit the file open mode bits
   int oflags = 0;
@@ -91,16 +105,16 @@ textwindows static int sys_accept_nt_impl(struct Fd *f,
     oflags |= O_CLOEXEC;
   if (accept4_flags & SOCK_NONBLOCK)
     oflags |= O_NONBLOCK;
-  client = __reservefd(-1);
-  g_fds.p[client].flags = oflags;
-  g_fds.p[client].mode = 0140666;
-  g_fds.p[client].family = f->family;
-  g_fds.p[client].type = f->type;
-  g_fds.p[client].protocol = f->protocol;
-  g_fds.p[client].sndtimeo = f->sndtimeo;
-  g_fds.p[client].rcvtimeo = f->rcvtimeo;
-  g_fds.p[client].handle = handle;
-  g_fds.p[client].kind = kFdSocket;
+  __get_pib()->fds.p[client].flags = oflags;
+  __get_pib()->fds.p[client].mode = 0140666;
+  __get_pib()->fds.p[client].family = f->family;
+  __get_pib()->fds.p[client].type = f->type;
+  __get_pib()->fds.p[client].protocol = f->protocol;
+  __get_pib()->fds.p[client].sndtimeo = f->sndtimeo;
+  __get_pib()->fds.p[client].rcvtimeo = f->rcvtimeo;
+  __get_pib()->fds.p[client].handle = handle;
+  __get_pib()->fds.p[client].kind = kFdSocket;
+  __get_pib()->fds.p[client].was_created_during_vfork = __vforked;
   return client;
 }
 

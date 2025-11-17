@@ -68,7 +68,6 @@ endif
 o/$(MODE)/third_party/mbedtls/zeroize.o: private			\
 			CFLAGS +=					\
 				-O3					\
-				-x-no-pg				\
 				-fomit-frame-pointer			\
 				-foptimize-sibling-calls
 

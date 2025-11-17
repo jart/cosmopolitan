@@ -412,7 +412,7 @@ static const struct XedDenseMagnums {
         },
 };
 
-privileged static void xed_too_short(struct XedDecodedInst *d) {
+__privileged static void xed_too_short(struct XedDecodedInst *d) {
   d->op.out_of_bytes = 1;
   if (d->op.max_bytes >= 15) {
     d->op.error = XED_ERROR_INSTR_TOO_LONG;
@@ -421,36 +421,36 @@ privileged static void xed_too_short(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_bad_map(struct XedDecodedInst *d) {
+__privileged static void xed_bad_map(struct XedDecodedInst *d) {
   d->op.map = XED_ILD_MAP_INVALID;
   d->op.error = XED_ERROR_BAD_MAP;
 }
 
-privileged static void xed_bad_v4(struct XedDecodedInst *d) {
+__privileged static void xed_bad_v4(struct XedDecodedInst *d) {
   d->op.error = XED_ERROR_BAD_EVEX_V_PRIME;
 }
 
-privileged static void xed_bad_z_aaa(struct XedDecodedInst *d) {
+__privileged static void xed_bad_z_aaa(struct XedDecodedInst *d) {
   d->op.error = XED_ERROR_BAD_EVEX_Z_NO_MASKING;
 }
 
-privileged static xed_bits_t xed_get_prefix_table_bit(xed_bits_t a) {
+__privileged static xed_bits_t xed_get_prefix_table_bit(xed_bits_t a) {
   return (xed_prefix_table_bit[a >> 5] >> (a & 0x1F)) & 1;
 }
 
-privileged static size_t xed_bits2bytes(unsigned bits) {
+__privileged static size_t xed_bits2bytes(unsigned bits) {
   return bits >> 3;
 }
 
-privileged static size_t xed_bytes2bits(unsigned bytes) {
+__privileged static size_t xed_bytes2bits(unsigned bytes) {
   return bytes << 3;
 }
 
-privileged static bool xed3_mode_64b(struct XedDecodedInst *d) {
+__privileged static bool xed3_mode_64b(struct XedDecodedInst *d) {
   return d->op.mode == XED_MODE_LONG;
 }
 
-privileged static void xed_set_hint(char b, struct XedDecodedInst *d) {
+__privileged static void xed_set_hint(char b, struct XedDecodedInst *d) {
   switch (b) {
     case 0x2e:
       d->op.hint = XED_HINT_NTAKEN;
@@ -463,50 +463,50 @@ privileged static void xed_set_hint(char b, struct XedDecodedInst *d) {
   }
 }
 
-privileged static void XED_LF_SIMM8_IMM_WIDTH_CONST_l2(
+__privileged static void XED_LF_SIMM8_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 8;
   x->op.imm_signed = true;
 }
 
-privileged static void XED_LF_UIMM16_IMM_WIDTH_CONST_l2(
+__privileged static void XED_LF_UIMM16_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 16;
 }
 
-privileged static void XED_LF_SE_IMM8_IMM_WIDTH_CONST_l2(
+__privileged static void XED_LF_SE_IMM8_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 8;
 }
 
-privileged static void XED_LF_UIMM32_IMM_WIDTH_CONST_l2(
+__privileged static void XED_LF_UIMM32_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 32;
 }
 
-privileged static void xed_set_simmz_imm_width_eosz(
+__privileged static void xed_set_simmz_imm_width_eosz(
     struct XedDecodedInst *x, const xed_bits_t eosz[2][2][3]) {
   x->op.imm_width =
       kXed.SIMMz_IMM_WIDTH[eosz[x->op.rexw][x->op.osz][x->op.mode]];
   x->op.imm_signed = true;
 }
 
-privileged static void xed_set_uimmv_imm_width_eosz(
+__privileged static void xed_set_uimmv_imm_width_eosz(
     struct XedDecodedInst *x, const xed_bits_t eosz[2][2][3]) {
   x->op.imm_width =
       kXed.UIMMv_IMM_WIDTH[eosz[x->op.rexw][x->op.osz][x->op.mode]];
 }
 
-privileged static void XED_LF_UIMM8_IMM_WIDTH_CONST_l2(
+__privileged static void XED_LF_UIMM8_IMM_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.imm_width = 8;
 }
 
-privileged static void XED_LF_0_IMM_WIDTH_CONST_l2(struct XedDecodedInst *x) {
+__privileged static void XED_LF_0_IMM_WIDTH_CONST_l2(struct XedDecodedInst *x) {
   x->op.imm_width = 0;
 }
 
-privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xc7_l1(
+__privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xc7_l1(
     struct XedDecodedInst *x) {
   switch (x->op.reg) {
     case 0:
@@ -520,7 +520,7 @@ privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xc7_l1(
   }
 }
 
-privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf6_l1(
+__privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf6_l1(
     struct XedDecodedInst *x) {
   if (x->op.reg <= 1) {
     XED_LF_SIMM8_IMM_WIDTH_CONST_l2(x);
@@ -529,7 +529,7 @@ privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf6_l1(
   }
 }
 
-privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf7_l1(
+__privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf7_l1(
     struct XedDecodedInst *x) {
   if (x->op.reg <= 1) {
     XED_LF_SIMMz_IMM_WIDTH_OSZ_NONTERM_EOSZ_l2(x);
@@ -538,7 +538,7 @@ privileged static void XED_LF_RESOLVE_BYREG_IMM_WIDTH_map0x0_op0xf7_l1(
   }
 }
 
-privileged static void xed_ild_hasimm_map0x0F_op0x78_l1(
+__privileged static void xed_ild_hasimm_map0x0F_op0x78_l1(
     struct XedDecodedInst *x) {
   if (x->op.osz || x->op.ild_f2) {
     x->op.imm_width = xed_bytes2bits(1);
@@ -546,13 +546,13 @@ privileged static void xed_ild_hasimm_map0x0F_op0x78_l1(
   }
 }
 
-privileged static void xed_ild_hasimm_map0x0_op0xc8_l1(
+__privileged static void xed_ild_hasimm_map0x0_op0xc8_l1(
     struct XedDecodedInst *x) {
   x->op.imm_width = xed_bytes2bits(2);
   x->op.imm1_bytes = 1;
 }
 
-privileged static void xed_set_imm_bytes(struct XedDecodedInst *d) {
+__privileged static void xed_set_imm_bytes(struct XedDecodedInst *d) {
   if (!d->op.imm_width && d->op.map < XED_ILD_MAP2) {
     switch (xed_imm_bits_2d[d->op.map][d->op.opcode]) {
       case XED_I_LF_0_IMM_WIDTH_CONST_l2:
@@ -598,7 +598,7 @@ privileged static void xed_set_imm_bytes(struct XedDecodedInst *d) {
   }
 }
 
-privileged static int xed_consume_byte(struct XedDecodedInst *d) {
+__privileged static int xed_consume_byte(struct XedDecodedInst *d) {
   if (d->length < d->op.max_bytes) {
     return d->bytes[d->length++];
   } else {
@@ -607,7 +607,7 @@ privileged static int xed_consume_byte(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_prefix_scanner(struct XedDecodedInst *d) {
   xed_bits_t first_f2f3, last_f2f3, seg;
   xed_bits_t b, max_bytes, length, nprefixes, nseg_prefixes, nrexes, rex;
   seg = 0;
@@ -719,7 +719,7 @@ out:
   }
 }
 
-privileged static void xed_get_next_as_opcode(struct XedDecodedInst *d) {
+__privileged static void xed_get_next_as_opcode(struct XedDecodedInst *d) {
   xed_bits_t b, length;
   length = d->length;
   if (length < d->op.max_bytes) {
@@ -731,7 +731,7 @@ privileged static void xed_get_next_as_opcode(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_catch_invalid_rex_or_legacy_prefixes(
+__privileged static void xed_catch_invalid_rex_or_legacy_prefixes(
     struct XedDecodedInst *d) {
   if (xed3_mode_64b(d) && d->op.rex) {
     d->op.error = XED_ERROR_BAD_REX_PREFIX;
@@ -740,20 +740,20 @@ privileged static void xed_catch_invalid_rex_or_legacy_prefixes(
   }
 }
 
-privileged static void xed_catch_invalid_mode(struct XedDecodedInst *d) {
+__privileged static void xed_catch_invalid_mode(struct XedDecodedInst *d) {
   if (d->op.realmode) {
     d->op.error = XED_ERROR_INVALID_MODE;
   }
 }
 
-privileged static void xed_evex_vex_opcode_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_evex_vex_opcode_scanner(struct XedDecodedInst *d) {
   d->op.opcode = d->bytes[d->length];
   d->op.pos_opcode = d->length++;
   xed_catch_invalid_rex_or_legacy_prefixes(d);
   xed_catch_invalid_mode(d);
 }
 
-privileged static void xed_opcode_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_opcode_scanner(struct XedDecodedInst *d) {
   xed_bits_t b, length;
   length = d->length;
   if ((b = d->bytes[length]) != 0x0F) {
@@ -816,12 +816,12 @@ privileged static void xed_opcode_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static bool xed_is_bound_instruction(struct XedDecodedInst *d) {
+__privileged static bool xed_is_bound_instruction(struct XedDecodedInst *d) {
   return !xed3_mode_64b(d) && d->length + 1 < d->op.max_bytes &&
          (d->bytes[d->length + 1] & 0xC0) != 0xC0;
 }
 
-privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
   xed_bits_t length, max_bytes;
   union XedAvx512Payload1 evex1;
   union XedAvx512Payload2 evex2;
@@ -877,7 +877,7 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
+__privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
   switch (s << 2 | bsr(n)) {
     case 0b000:
       return *p;
@@ -899,7 +899,7 @@ privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
   }
 }
 
-privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
   uint8_t *itext, *imm_ptr;
   xed_bits_t length, imm_bytes, imm1_bytes, max_bytes;
   imm_ptr = 0;
@@ -947,7 +947,7 @@ privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_vex_c4_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_vex_c4_scanner(struct XedDecodedInst *d) {
   unsigned length, b1, b2;
   if (xed_is_bound_instruction(d)) return;
   length = d->length;
@@ -986,7 +986,7 @@ privileged static void xed_vex_c4_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_vex_c5_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_vex_c5_scanner(struct XedDecodedInst *d) {
   unsigned length, b;
   length = d->length;
   if (xed_is_bound_instruction(d)) return;
@@ -1014,7 +1014,7 @@ privileged static void xed_vex_c5_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_vex_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_vex_scanner(struct XedDecodedInst *d) {
   if (!d->op.out_of_bytes) {
     switch (d->bytes[d->length]) {
       case 0xC5:
@@ -1029,11 +1029,11 @@ privileged static void xed_vex_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_bad_ll(struct XedDecodedInst *d) {
+__privileged static void xed_bad_ll(struct XedDecodedInst *d) {
   d->op.error = XED_ERROR_BAD_EVEX_LL;
 }
 
-privileged static void xed_bad_ll_check(struct XedDecodedInst *d) {
+__privileged static void xed_bad_ll_check(struct XedDecodedInst *d) {
   if (d->op.llrc == 3) {
     if (d->op.mod != 3) {
       xed_bad_ll(d);
@@ -1043,7 +1043,7 @@ privileged static void xed_bad_ll_check(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_set_has_modrm(struct XedDecodedInst *d) {
+__privileged static void xed_set_has_modrm(struct XedDecodedInst *d) {
   if (d->op.map < ARRAYLEN(xed_has_modrm_2d)) {
     d->op.has_modrm = xed_has_modrm_2d[d->op.map][d->op.opcode];
   } else {
@@ -1051,7 +1051,7 @@ privileged static void xed_set_has_modrm(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
   uint8_t b;
   xed_bits_t eamode, mod, rm, asz, mode, length, has_modrm;
   xed_set_has_modrm(d);
@@ -1083,7 +1083,7 @@ privileged static void xed_modrm_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_sib_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_sib_scanner(struct XedDecodedInst *d) {
   uint8_t b;
   xed_bits_t length;
   if (d->op.has_sib) {
@@ -1104,19 +1104,19 @@ privileged static void xed_sib_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void XED_LF_EMPTY_DISP_CONST_l2(struct XedDecodedInst *x) {
+__privileged static void XED_LF_EMPTY_DISP_CONST_l2(struct XedDecodedInst *x) {
   /* This function does nothing for map-opcodes whose
    * disp_bytes value is set earlier in xed-ild.c
    * (regular displacement resolution by modrm/sib)*/
   (void)x;
 }
 
-privileged static void XED_LF_BRDISP8_BRDISP_WIDTH_CONST_l2(
+__privileged static void XED_LF_BRDISP8_BRDISP_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.disp_width = 0x8;
 }
 
-privileged static void XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(
+__privileged static void XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(
     struct XedDecodedInst *x) {
   x->op.disp_width =
       kXed.BRDISPz_BRDISP_WIDTH[kXed.OSZ_NONTERM_EOSZ[x->op.rexw][x->op.osz]
@@ -1124,7 +1124,7 @@ privileged static void XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(
   x->op.disp_unsigned = true;
 }
 
-privileged static void XED_LF_RESOLVE_BYREG_DISP_map0x0_op0xc7_l1(
+__privileged static void XED_LF_RESOLVE_BYREG_DISP_map0x0_op0xc7_l1(
     struct XedDecodedInst *x) {
   switch (x->op.reg) {
     case 0:
@@ -1138,19 +1138,19 @@ privileged static void XED_LF_RESOLVE_BYREG_DISP_map0x0_op0xc7_l1(
   }
 }
 
-privileged static void XED_LF_MEMDISPv_DISP_WIDTH_ASZ_NONTERM_EASZ_l2(
+__privileged static void XED_LF_MEMDISPv_DISP_WIDTH_ASZ_NONTERM_EASZ_l2(
     struct XedDecodedInst *x) {
   x->op.disp_width =
       kXed.MEMDISPv_DISP_WIDTH[kXed.ASZ_NONTERM_EASZ[x->op.asz][x->op.mode]];
   x->op.disp_unsigned = true;
 }
 
-privileged static void XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(
+__privileged static void XED_LF_BRDISP32_BRDISP_WIDTH_CONST_l2(
     struct XedDecodedInst *x) {
   x->op.disp_width = 0x20;
 }
 
-privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
+__privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
   if (x->op.mode <= XED_MODE_LEGACY) {
     XED_LF_BRDISPz_BRDISP_WIDTH_OSZ_NONTERM_EOSZ_l2(x);
     x->op.disp_unsigned = false;
@@ -1159,7 +1159,7 @@ privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
   }
 }
 
-privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
+__privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
   xed_bits_t length, disp_bytes, max_bytes;
   length = d->length;
   if (d->op.map < XED_ILD_MAP2) {
@@ -1201,7 +1201,7 @@ privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
   }
 }
 
-privileged static void xed_decode_instruction_length(
+__privileged static void xed_decode_instruction_length(
     struct XedDecodedInst *ild) {
   xed_prefix_scanner(ild);
   if (!ild->op.out_of_bytes) {
@@ -1224,7 +1224,7 @@ privileged static void xed_decode_instruction_length(
 /**
  * Clears instruction decoder state.
  */
-privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
+__privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
     struct XedDecodedInst *p, int mmode) {
   __memset(p, 0, sizeof(*p));
   xed_operands_set_mode(&p->op, mmode);
@@ -1241,7 +1241,7 @@ privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
  * @note binary footprint increases ~4kb if this is used
  * @see biggest code in gdb/clang/tensorflow binaries
  */
-privileged int xed_instruction_length_decode(struct XedDecodedInst *xedd,
+__privileged int xed_instruction_length_decode(struct XedDecodedInst *xedd,
                                              const void *itext, size_t bytes) {
   __memcpy(xedd->bytes, itext, MIN(15, bytes));
   xedd->op.max_bytes = MIN(15, bytes);

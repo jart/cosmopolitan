@@ -27,36 +27,35 @@
    ▒▀  ▒██▒░▄█▓▀        VARIABLE LENGTH INTEGER ENCODING        ▓█░  ▐▓▄ ░  ▓
        ░███▓▀                                                    ▀▓▓██▀▀░
         ░▀░                                                         */
+
 #include "libc/fmt/leb128.h"
 
 /**
  * Encodes signed integer to array w/ zig-zag encoding.
  *
- *     uleb64 INT64_MAX    l:        10𝑐         3𝑛𝑠
- *     zleb64 INT64_MAX    l:        13𝑐         4𝑛𝑠
- *     sleb64 INT64_MAX    l:        16𝑐         5𝑛𝑠
- *     uleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     zleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     sleb128 INT64_MAX   l:        24𝑐         8𝑛𝑠
+ * This function is the reverse operation of unzleb64().
  *
- * @param p is output array which should have 10 items
+ * Zig-zag encoding is the same thing as unsigned LEB encoding (which we
+ * implement in uleb64() and unuleb64()) except it moves the sign bit to
+ * the lowest order position.
+ *
+ * The maximum number of bytes that'll be serialized to `p` is 9. The
+ * ninth byte is special. Normally with LEB encoding, the highest bit of
+ * each byte indicates if we should consume additional bytes. That means
+ * each byte has 7 bits of content, and 8*7=56 which means by the time
+ * we hit the ninth byte, there's exactly 8 bits of content remaining in
+ * the 64-bit integer we're decoding. So we don't use LEB on the ninth
+ * byte and treat all eight bits of it as content.
+ *
+ * @param p is output array which should have 9 items
  * @param x is number
  * @return p + i
  * @see unzleb64()
  */
-char *zleb64(char p[hasatleast 10], int64_t x) {
-  int c;
+char *zleb64(char p[hasatleast 9], int64_t x) {
   uint64_t u;
   u = x;
   u <<= 1;
   u ^= x >> 63;
-  for (;;) {
-    c = u & 127;
-    if (!(u >>= 7)) {
-      *p++ = c;
-      return p;
-    } else {
-      *p++ = c | 128;
-    }
-  }
+  return uleb64(p, u);
 }

@@ -21,6 +21,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
@@ -36,7 +37,7 @@
 #include "libc/proc/proc.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows int sys_kill_nt(int pid, int sig) {
 
@@ -70,8 +71,9 @@ textwindows int sys_kill_nt(int pid, int sig) {
           if (sig != 9 && (sigproc = __sig_map_process(pid, kNtOpenExisting))) {
             atomic_fetch_or_explicit(sigproc, 1ull << (sig - 1),
                                      memory_order_release);
+            UnmapViewOfFile(sigproc);
           } else {
-            TerminateProcess(pr->handle, sig);
+            TerminateProcess(pr->hProcess, sig);
           }
         }
         __proc_unlock();
@@ -108,7 +110,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   int64_t handle, closeme = 0;
   if (!(handle = __proc_handle(pid))) {
     if (!(handle = OpenProcess(kNtProcessTerminate, false, pid)))
-      return eperm();
+      return esrch();
     closeme = handle;
   }
 

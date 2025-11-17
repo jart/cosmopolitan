@@ -73,6 +73,7 @@ COSMOPOLITAN_C_START_
 
 int feclearexcept(int);
 int fegetenv(fenv_t *);
+int fegetexcept(void);
 int fegetexceptflag(fexcept_t *, int);
 int fegetround(void);
 int feholdexcept(fenv_t *);

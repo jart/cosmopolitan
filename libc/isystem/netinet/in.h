@@ -16,7 +16,6 @@
 #include "libc/sysv/consts/ipport.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/ipv6.h"
-#include "libc/sysv/consts/mcast.h"
 #include "libc/sysv/consts/pf.h"
 #include "libc/sysv/consts/sock.h"
 #endif /* COSMOPOLITAN_LIBC_ISYSTEM_NETINET_IN_H_ */

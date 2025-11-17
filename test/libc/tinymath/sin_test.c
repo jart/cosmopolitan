@@ -33,7 +33,9 @@ TEST(sinl, test) {
   EXPECT_TRUE(isnan(_sinl(-INFINITY)));
   EXPECT_STREQ(".479425538604203", gc(xdtoal(_sinl(.5))));
   EXPECT_STREQ("-.479425538604203", gc(xdtoal(_sinl(-.5))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ(".8414709794048734", gc(xdtoal(_sinl(.99999999))));
+#endif
   /* EXPECT_STREQ("-.998836772397", gc(xdtoal(_sinl(555555555555)))); */
   /* EXPECT_STREQ("1", gc(xdtoal(_sinl(5.319372648326541e+255L)))); */
 }

@@ -78,7 +78,7 @@ static void LoadFlags(int argc, char *argv[]) {
   }
 }
 
-wontreturn static void Error(int rc, const char *s, ...) {
+[[noreturn]] static void Error(int rc, const char *s, ...) {
   va_list va;
   fflush(stdout);
   fputs("\33[1;31merror\33[37m: ", stderr);

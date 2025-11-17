@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/cosmo.h"
@@ -35,7 +36,7 @@
 
 __static_yoink("__get_symbol");
 
-struct SymbolTable *__symtab;  // for kprintf
+__rarechange struct SymbolTable *__symtab;  // for kprintf
 
 static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
   size_t i, n, c, z;

@@ -9,7 +9,3 @@ ORIGIN
   Date:   Mon Jul 22 10:22:23 2024 -0400
 
 LOCAL CHANGES
-
-  - Wrote __config_site
-  - Add special handling for cosmo errno
-  - Shaped and molded directory structure

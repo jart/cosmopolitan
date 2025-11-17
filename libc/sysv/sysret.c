@@ -18,13 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
+#include "libc/sysv/errno.h"
 
 /**
  * Handles return path of system call on Linux.
  */
 unsigned long _sysret(unsigned long res) {
   if (res > -4096) {
-    errno = -res;
+    errno = __errno_host2linux(-res);
     res = -1;
   }
   return res;

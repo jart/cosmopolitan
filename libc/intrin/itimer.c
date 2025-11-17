@@ -20,23 +20,23 @@
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 
-struct IntervalTimer __itimer = {
+alignas(64) struct IntervalTimer __itimer = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
     .cond = PTHREAD_COND_INITIALIZER,
 };
 
 textwindows void __itimer_lock(void) {
-  _pthread_mutex_lock(&__itimer.lock);
+  pthread_mutex_lock(&__itimer.lock);
 }
 
 textwindows void __itimer_unlock(void) {
-  _pthread_mutex_unlock(&__itimer.lock);
+  pthread_mutex_unlock(&__itimer.lock);
 }
 
 textwindows void __itimer_wipe_and_reset(void) {
   // timers aren't inherited by forked subprocesses
   bzero(&__itimer.it, sizeof(__itimer.it));
-  _pthread_mutex_wipe_np(&__itimer.lock);
+  pthread_mutex_wipe_np(&__itimer.lock);
   bzero(&__itimer.cond, sizeof(__itimer.cond));
   __itimer.thread = 0;
   __itimer.once = 0;

@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/log/color.internal.h"
@@ -37,6 +39,15 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
+
+static bool fileexists(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!stat(path, &st))
+    return true;
+  errno = e;
+  return false;
+}
 
 /**
  * Launches GDB debugger GUI for current process.

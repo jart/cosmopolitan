@@ -2,6 +2,7 @@
 # Most tests are executed with environment variables ignored
 # See test_cmd_line_script.py for testing of script execution
 
+import cosmo
 import test.support, unittest
 import os
 import shutil
@@ -147,7 +148,7 @@ class CmdLineTest(unittest.TestCase):
     # command line, but how subprocess does decode bytes to unicode. Python
     # doesn't decode the command line because Windows provides directly the
     # arguments as unicode (using wmain() instead of main()).
-    @unittest.skipIf(sys.platform == 'win32',
+    @unittest.skipIf(sys.platform == 'win32' or cosmo.kernel == 'nt',
                      'Windows has a native unicode API')
     def test_undecodable_code(self):
         undecodable = b"\xff"

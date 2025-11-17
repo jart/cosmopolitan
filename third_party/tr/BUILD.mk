@@ -7,10 +7,15 @@ THIRD_PARTY_TR_ARTIFACTS += THIRD_PARTY_TR_A
 THIRD_PARTY_TR = $(THIRD_PARTY_TR_DEPS) $(THIRD_PARTY_TR_A)
 THIRD_PARTY_TR_A = o/$(MODE)/third_party/tr/tr.a
 THIRD_PARTY_TR_FILES := $(wildcard third_party/tr/*)
-THIRD_PARTY_TR_HDRS = $(filter %.h,$(THIRD_PARTY_TR_FILES))
-THIRD_PARTY_TR_INCS = $(filter %.inc,$(THIRD_PARTY_TR_FILES))
-THIRD_PARTY_TR_SRCS = $(filter %.c,$(THIRD_PARTY_TR_FILES))
 THIRD_PARTY_TR_OBJS = $(THIRD_PARTY_TR_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_TR_HDRS =				\
+	third_party/tr/cmd.h			\
+	third_party/tr/extern.h			\
+
+THIRD_PARTY_TR_SRCS =				\
+	third_party/tr/next.c			\
+	third_party/tr/tr.c			\
 
 THIRD_PARTY_TR_DIRECTDEPS =			\
 	LIBC_CALLS				\
@@ -47,6 +52,10 @@ o/$(MODE)/third_party/tr/tr.dbg:		\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/third_party/tr/cmd.o:			\
+		third_party/tr/cmd.c		\
+		third_party/tr/cmd.h		\
 
 THIRD_PARTY_TR_LIBS = $(THIRD_PARTY_TR_A)
 THIRD_PARTY_TR_BINS = $(THIRD_PARTY_TR_COMS) $(THIRD_PARTY_TR_COMS:%=%.dbg)

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -34,9 +35,9 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/pib.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/tls.h"
@@ -62,7 +63,7 @@ void PullSomeZipFilesIntoLinkage(void) {
 TEST(reservefd, testGrowthOfFdsDataStructure) {
   int i, n;
   struct rlimit rlim;
-  n = 1700;  // pe '2**16/40' → 1638 (likely value of g_fds.n)
+  n = 1700;  // pe '2**16/40' → 1638 (likely value of __get_pib()->fds.n)
   if (!getrlimit(RLIMIT_NOFILE, &rlim)) {
     n = MIN(n, rlim.rlim_cur - 3);
   } else {
@@ -71,7 +72,7 @@ TEST(reservefd, testGrowthOfFdsDataStructure) {
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, i + 3, open("/zip/usr/share/zoneinfo/GMT", O_RDONLY));
   }
-  ASSERT_GT(g_fds.n, 16);
+  ASSERT_GT(__get_pib()->fds.n, 16);
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, 0, close(i + 3));
   }
@@ -100,7 +101,7 @@ int Worker(void *p, int tid) {
   int i, rc, fd;
   for (i = 0; i < 64; ++i) {
     ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
-    usleep(_rand64() % 100);
+    usleep(arc4random_uniform(100));
     for (;;) {
       rc = read(fd, buf, 64);
       if (rc != -1) {

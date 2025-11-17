@@ -19,9 +19,11 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/mem/gc.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -29,12 +31,14 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time.h"
+#include "libc/x/xasprintf.h"
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
@@ -73,15 +77,23 @@ TEST(unix, datagram) {
 
 void StreamServer(atomic_bool *ready) {
   char buf[256] = {0};
+  // the windows polyfill converts sun_path into an absoulte path so we
+  // need to resolve the path here, or else the getsockname check fails
+  char *path = gc(xasprintf("%s/foo.sock", gc(getcwd(0, 0))));
   uint32_t len = sizeof(struct sockaddr_un);
-  struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
+  struct sockaddr_un addr;
+  addr.sun_family = AF_UNIX;
+  strlcpy(addr.sun_path, path, sizeof(addr.sun_path));
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
+  struct stat st;
+  ASSERT_SYS(0, 0, stat(path, &st));
+  ASSERT_TRUE(S_ISSOCK(st.st_mode));
   bzero(&addr, sizeof(addr));
   ASSERT_SYS(0, 0, getsockname(3, (void *)&addr, &len));
-  ASSERT_EQ(2 + 8 + 1, len);
+  ASSERT_EQ(2 + strlen(path) + 1, len);
   ASSERT_EQ(AF_UNIX, addr.sun_family);
-  ASSERT_STREQ("foo.sock", addr.sun_path);
+  ASSERT_STREQ(path, addr.sun_path);
   ASSERT_SYS(0, 0, listen(3, 10));
   bzero(&addr, sizeof(addr));
   len = sizeof(addr);

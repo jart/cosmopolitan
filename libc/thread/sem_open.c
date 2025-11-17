@@ -57,15 +57,15 @@ static struct Semaphores {
 };
 
 static void sem_open_lock(void) {
-  _pthread_mutex_lock(&g_semaphores.lock);
+  pthread_mutex_lock(&g_semaphores.lock);
 }
 
 static void sem_open_unlock(void) {
-  _pthread_mutex_unlock(&g_semaphores.lock);
+  pthread_mutex_unlock(&g_semaphores.lock);
 }
 
 static void sem_open_wipe(void) {
-  _pthread_mutex_wipe_np(&g_semaphores.lock);
+  pthread_mutex_wipe_np(&g_semaphores.lock);
 }
 
 static void sem_open_setup(void) {
@@ -178,28 +178,10 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   char path[78];
   struct Semaphore *s;
   unsigned mode = 0, value = 0;
-
   va_start(va, oflag);
   mode = va_arg(va, unsigned);
   value = va_arg(va, unsigned);
   va_end(va);
-
-#if 0
-  if (IsXnuSilicon()) {
-    long kernel;
-    if (!(sem = calloc(1, sizeof(sem_t))))
-      return SEM_FAILED;
-    sem->sem_magic = SEM_MAGIC_KERNEL;
-    kernel = _sysret(__syslib->__sem_open(name, oflag, mode, value));
-    if (kernel == -1) {
-      free(sem);
-      return SEM_FAILED;
-    }
-    sem->sem_magic = SEM_MAGIC_KERNEL;
-    sem->sem_kernel = (int *)kernel;
-  }
-#endif
-
   if (oflag & ~(O_CREAT | O_EXCL)) {
     einval();
     return SEM_FAILED;
@@ -271,14 +253,6 @@ int sem_close(sem_t *sem) {
   int prefs;
   bool unmap, delete;
   struct Semaphore *s, **p;
-
-#if 0
-  if (IsXnuSilicon()) {
-    npassert(sem->sem_magic == SEM_MAGIC_KERNEL);
-    return _sysret(__syslib->__sem_close(sem->sem_kernel));
-  }
-#endif
-
   npassert(sem->sem_magic == SEM_MAGIC_NAMED);
   sem_open_init();
   sem_open_lock();
@@ -326,13 +300,6 @@ int sem_unlink(const char *name) {
   char path[78];
   int rc, e = errno;
   struct Semaphore *s;
-
-#if 0
-  if (IsXnuSilicon()) {
-    return _sysret(__syslib->__sem_unlink(name));
-  }
-#endif
-
   shm_path_np(name, path);
   if ((rc = unlink(path)) == -1 && IsWindows() && errno == EACCES) {
     sem_open_init();

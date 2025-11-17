@@ -15,7 +15,7 @@
 // It is expected to invalidate the instruction cache for the
 // specified range.
 
-privileged void __clear_cache(void *start, void *end) {
+__privileged void __clear_cache(void *start, void *end) {
 
 #ifdef __aarch64__
   if (IsXnu()) {

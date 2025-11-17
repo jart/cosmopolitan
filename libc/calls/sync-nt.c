@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -25,27 +26,85 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/enum/securityimpersonationlevel.h"
+#include "libc/nt/enum/securityinformation.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/genericmapping.h"
+#include "libc/nt/struct/privilegeset.h"
+#include "libc/nt/struct/securitydescriptor.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/pib.h"
+
+// https://blog.aaronballman.com/2011/08/how-to-check-access-rights/
+textwindows static bool32 MyAccessCheck(const char16_t *pathname,
+                                        uint32_t accessmask) {
+
+  intptr_t buffer[1024 / sizeof(intptr_t)];
+  uint32_t secsize = sizeof(buffer);
+  struct NtSecurityDescriptor *s = (struct NtSecurityDescriptor *)buffer;
+  if (!GetFileSecurity(pathname,
+                       kNtOwnerSecurityInformation |
+                           kNtGroupSecurityInformation |
+                           kNtDaclSecurityInformation,
+                       s, secsize, &secsize))
+    return false;
+
+  intptr_t hToken;
+  if (!OpenProcessToken(GetCurrentProcess(),
+                        kNtTokenImpersonate | kNtTokenQuery |
+                            kNtTokenDuplicate | kNtStandardRightsRead,
+                        &hToken))
+    return false;
+
+  intptr_t hImpersonatedToken;
+  if (!DuplicateToken(hToken, kNtSecurityImpersonation, &hImpersonatedToken)) {
+    CloseHandle(hToken);
+    return false;
+  }
+
+  uint32_t granted = 0;
+  bool32 result = false;
+  struct NtPrivilegeSet privileges = {0};
+  uint32_t privsize = sizeof(privileges);
+  struct NtGenericMapping mapping = {
+      .GenericRead = kNtFileGenericRead,
+      .GenericWrite = kNtFileGenericWrite,
+      .GenericExecute = kNtFileGenericExecute,
+      .GenericAll = kNtFileAllAccess,
+  };
+  MapGenericMask(&accessmask, &mapping);
+  if (!AccessCheck(s, hImpersonatedToken, accessmask, &mapping, &privileges,
+                   &privsize, &granted, &result)) {
+    CloseHandle(hImpersonatedToken);
+    CloseHandle(hToken);
+    return false;
+  }
+
+  CloseHandle(hImpersonatedToken);
+  CloseHandle(hToken);
+  return result;
+}
 
 // Flushes all open file handles and, if possible, all disk drives.
 textwindows int sys_sync_nt(void) {
-  unsigned i;
-  int64_t volume;
-  uint32_t drives;
+
+  // flush handles
+  __fds_lock();
+  for (int i = 0; i < __get_pib()->fds.n; ++i)
+    if (__get_pib()->fds.p[i].kind == kFdFile)
+      FlushFileBuffers(__get_pib()->fds.p[i].handle);
+  __fds_unlock();
+
+  // flush drives
   char16_t path[] = u"\\\\.\\C:";
-  for (i = 0; i < g_fds.n; ++i) {
-    if (g_fds.p[i].kind == kFdFile) {
-      FlushFileBuffers(g_fds.p[i].handle);
-    }
-  }
-  for (drives = GetLogicalDrives(), i = 0; i <= 'Z' - 'A'; ++i) {
+  uint32_t drives = GetLogicalDrives();
+  for (int i = 0; i <= 'Z' - 'A'; ++i) {
     if (!(drives & (1 << i)))
       continue;
     path[4] = 'A' + i;
-    if (ntaccesscheck(path, R_OK | W_OK) != -1) {
-      BLOCK_SIGNALS;
+    if (MyAccessCheck(path, kNtGenericRead | kNtGenericWrite)) {
+      intptr_t volume;
       if ((volume = CreateFile(
                path, kNtFileReadAttributes,
                kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
@@ -53,8 +112,8 @@ textwindows int sys_sync_nt(void) {
         FlushFileBuffers(volume);
         CloseHandle(volume);
       }
-      ALLOW_SIGNALS;
     }
   }
+
   return 0;
 }

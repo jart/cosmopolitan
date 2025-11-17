@@ -24,6 +24,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/pib.h"
 #ifdef __x86_64__
 
 int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {
@@ -47,14 +48,16 @@ int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {
       fds[i].revents = 0;
       if (fds[i].fd >= 0) {
         if (__isfdopen(fds[i].fd)) {
-          switch (g_fds.p[fds[i].fd].kind) {
+          switch (__get_pib()->fds.p[fds[i].fd].kind) {
             case kFdSerial:
               if ((fds[i].events & POLLIN) &&
-                  (inb(g_fds.p[fds[i].fd].handle + UART_LSR) & UART_TTYDA)) {
+                  (inb(__get_pib()->fds.p[fds[i].fd].handle + UART_LSR) &
+                   UART_TTYDA)) {
                 fds[i].revents |= POLLIN;
               }
               if ((fds[i].events & POLLOUT) &&
-                  (inb(g_fds.p[fds[i].fd].handle + UART_LSR) & UART_TTYTXR)) {
+                  (inb(__get_pib()->fds.p[fds[i].fd].handle + UART_LSR) &
+                   UART_TTYTXR)) {
                 fds[i].revents |= POLLOUT;
               }
               break;

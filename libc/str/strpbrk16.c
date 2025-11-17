@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -24,17 +23,8 @@
  * @asyncsignalsafe
  */
 char16_t *strpbrk16(const char16_t *s, const char16_t *accept) {
-  size_t i;
-  if (accept[0]) {
-    if (!accept[1]) {
-      return strchr16(s, accept[0]);
-    } else {
-      for (i = 0; s[i]; ++i) {
-        if (HasCharacter16(s[i], accept)) {
-          return (/*unconst*/ char16_t *)&s[i];
-        }
-      }
-    }
-  }
-  return NULL;
+  s += strcspn16(s, accept);
+  if (*s)
+    return (char16_t *)s;
+  return 0;
 }

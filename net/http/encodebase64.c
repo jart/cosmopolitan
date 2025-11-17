@@ -30,7 +30,7 @@
  * @param out_size if non-NULL receives output length
  * @return allocated NUL-terminated buffer, or NULL w/ errno
  */
-char *EncodeBase64(const char *data, size_t size, size_t *out_size) {
+char *EncodeBase64(const void *data, size_t size, size_t *out_size) {
   size_t n;
   unsigned w;
   char *r, *q;

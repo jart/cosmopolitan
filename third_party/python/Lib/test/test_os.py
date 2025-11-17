@@ -2,6 +2,7 @@
 # does add tests for a few functions which have been determined to be more
 # portable than they had been thought to be.
 
+import cosmo
 import asynchat
 import asyncore
 import codecs
@@ -1791,6 +1792,7 @@ class LinkTests(unittest.TestCase):
         self._test_link(self.file1, self.file2)
 
 @unittest.skipIf(sys.platform == "win32", "Posix specific tests")
+@unittest.skipIf(cosmo.kernel == 'nt', 'unavailable on the new technology')
 class PosixUidGidTests(unittest.TestCase):
     @unittest.skipUnless(hasattr(os, 'setuid'), 'test needs os.setuid()')
     def test_setuid(self):
@@ -1973,6 +1975,7 @@ class DeviceEncodingTests(unittest.TestCase):
         # Return None when an fd doesn't actually exist.
         self.assertIsNone(os.device_encoding(123456))
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'unavailable on the new technology')
     @unittest.skipUnless(os.isatty(0) and (sys.platform.startswith('win') or
             (hasattr(locale, 'nl_langinfo') and hasattr(locale, 'CODESET'))),
             'test requires a tty and either Windows or nl_langinfo(CODESET)')
@@ -2311,9 +2314,7 @@ if threading is not None:
 class TestSendfile(unittest.TestCase):
 
     DATA = b"12345abcde" * 16 * 1024  # 160 KB
-    SUPPORT_HEADERS_TRAILERS = not sys.platform.startswith("linux") and \
-                               not sys.platform.startswith("solaris") and \
-                               not sys.platform.startswith("sunos")
+    SUPPORT_HEADERS_TRAILERS = False  # [jart] nope
     requires_headers_trailers = unittest.skipUnless(SUPPORT_HEADERS_TRAILERS,
             'requires headers and trailers support')
     requires_32b = unittest.skipUnless(sys.maxsize < 2**32,

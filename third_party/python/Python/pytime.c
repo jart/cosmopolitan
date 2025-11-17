@@ -537,84 +537,10 @@ _PyTime_AsTimevalTime_t(_PyTime_t t, time_t *p_secs, int *us,
     return 0;
 }
 
-static int
-win_perf_counter_frequency(uint64_t *pfrequency, int raise)
-{
-    uint64_t frequency;
-    if (!QueryPerformanceFrequency(&frequency)) {
-        if (raise) {
-            PyErr_SetFromWindowsErr(0);
-        }
-        return -1;
-    }
-    /* Sanity check: should never occur in practice */
-    if (frequency < 1) {
-        if (raise) {
-            PyErr_SetString(PyExc_RuntimeError,
-                            "invalid QueryPerformanceFrequency");
-        }
-        return -1;
-    }
-    /* Check that frequency can be casted to _PyTime_t.
-     *
-     * Make also sure that (ticks * SEC_TO_NS) cannot overflow in
-     * _PyTime_MulDiv(), with ticks < frequency.
-     *
-     * Known QueryPerformanceFrequency() values:
-     *
-     * - 10,000,000 (10 MHz): 100 ns resolution
-     * - 3,579,545 Hz (3.6 MHz): 279 ns resolution
-     *
-     * None of these frequencies can overflow with 64-bit _PyTime_t, but
-     * check for overflow, just in case.
-     */
-    if (frequency > _PyTime_MAX
-        || frequency > (int64_t)_PyTime_MAX / (int64_t)SEC_TO_NS)
-    {
-        if (raise) {
-            PyErr_SetString(PyExc_OverflowError,
-                            "QueryPerformanceFrequency is too large");
-        }
-        return -1;
-    }
-    *pfrequency = frequency;
-    return 0;
-}
-
-static int
-py_get_win_perf_counter(_PyTime_t *tp, _Py_clock_info_t *info, int raise)
-{
-    static uint64_t frequency;
-    if (!frequency) {
-        if (win_perf_counter_frequency(&frequency, raise) < 0) {
-            return -1;
-        }
-    }
-    if (info) {
-        info->implementation = "QueryPerformanceCounter()";
-        info->resolution = 1 / (double)frequency;
-        info->monotonic = 1;
-        info->adjustable = 0;
-    }
-    uint64_t ticksll;
-    QueryPerformanceCounter(&ticksll);
-    /* Make sure that casting int64_t to _PyTime_t cannot overflow,
-       both types are signed */
-    _PyTime_t ticks;
-    Py_BUILD_ASSERT(sizeof(ticksll) <= sizeof(ticks));
-    ticks = (_PyTime_t)ticksll;
-    *tp = _PyTime_MulDiv(ticks, SEC_TO_NS, (_PyTime_t)frequency);
-    return 0;
-}
-
 int
 _PyTime_GetPerfCounterWithInfo(_PyTime_t *t, _Py_clock_info_t *info)
 {
-    if (!IsWindows()) {
-        return _PyTime_GetMonotonicClockWithInfo(t, info);
-    } else {
-        return py_get_win_perf_counter(t, info, 1);
-    }
+    return _PyTime_GetMonotonicClockWithInfo(t, info);
 }
 
 int
@@ -640,53 +566,26 @@ _PyTime_AsTimespec(_PyTime_t t, struct timespec *ts)
 static int
 pygettimeofday(_PyTime_t *tp, _Py_clock_info_t *info, int raise)
 {
-    if (IsWindows()) {
-        uint64_t large;
-        struct NtFileTime system_time;
-        assert(info == NULL || raise);
-        GetSystemTimeAsFileTime(&system_time);
-        large = system_time.dwHighDateTime;
-        large <<= 32;
-        large |= system_time.dwLowDateTime;
-        /* 11,644,473,600,000,000,000: number of nanoseconds between
-           the 1st january 1601 and the 1st january 1970 (369 years + 89 leap
-           days). */
-        *tp = large * 100 - 11644473600000000000ull;
-        if (info) {
-            bool32 isTimeAdjustmentDisabled;
-            uint32_t timeAdjustment, timeIncrement;
-            info->implementation = "GetSystemTimeAsFileTime()";
-            info->monotonic = 0;
-            if (!GetSystemTimeAdjustment(&timeAdjustment, &timeIncrement,
-                                         &isTimeAdjustmentDisabled)) {
-                PyErr_SetFromWindowsErr(0);
-                return -1;
-            }
-            info->resolution = timeIncrement * 1e-7;
-            info->adjustable = 1;
-        }
-    } else {
-        int err;
-        struct timespec ts;
-        assert(info == NULL || raise);
-        err = clock_gettime(CLOCK_REALTIME, &ts);
-        if (err) {
-            if (raise)
-                PyErr_SetFromErrno(PyExc_OSError);
-            return -1;
-        }
-        if (pytime_fromtimespec(tp, &ts, raise) < 0)
-            return -1;
-        if (info) {
-            struct timespec res;
-            info->implementation = "clock_gettime(CLOCK_REALTIME)";
-            info->monotonic = 0;
-            info->adjustable = 1;
-            if (clock_getres(CLOCK_REALTIME, &res) == 0)
-                info->resolution = res.tv_sec + res.tv_nsec * 1e-9;
-            else
-                info->resolution = 1e-9;
-        }
+    int err;
+    struct timespec ts;
+    assert(info == NULL || raise);
+    err = clock_gettime(CLOCK_REALTIME, &ts);
+    if (err) {
+        if (raise)
+            PyErr_SetFromErrno(PyExc_OSError);
+        return -1;
+    }
+    if (pytime_fromtimespec(tp, &ts, raise) < 0)
+        return -1;
+    if (info) {
+        struct timespec res;
+        info->implementation = "clock_gettime(CLOCK_REALTIME)";
+        info->monotonic = 0;
+        info->adjustable = 1;
+        if (clock_getres(CLOCK_REALTIME, &res) == 0)
+            info->resolution = res.tv_sec + res.tv_nsec * 1e-9;
+        else
+            info->resolution = 1e-9;
     }
     return 0;
 }
@@ -713,38 +612,6 @@ _PyTime_GetSystemClockWithInfo(_PyTime_t *t, _Py_clock_info_t *info)
 static int
 pymonotonic(_PyTime_t *tp, _Py_clock_info_t *info, int raise)
 {
-    if (IsWindows()) {
-        uint64_t ticks;
-        _PyTime_t t;
-        assert(info == NULL || raise);
-        ticks = GetTickCount64();
-        Py_BUILD_ASSERT(sizeof(ticks) <= sizeof(_PyTime_t));
-        t = (_PyTime_t)ticks;
-        if (__builtin_mul_overflow(t, MS_TO_NS, &t)) {
-            if (raise) {
-                _PyTime_overflow();
-                return -1;
-            }
-            /* Hello, time traveler! */
-            assert(0);
-        }
-        *tp = t * MS_TO_NS;
-        if (info) {
-            uint32_t timeAdjustment, timeIncrement;
-            bool32 isTimeAdjustmentDisabled, ok;
-            info->implementation = "GetTickCount64()";
-            info->monotonic = 1;
-            ok = GetSystemTimeAdjustment(&timeAdjustment, &timeIncrement,
-                                         &isTimeAdjustmentDisabled);
-            if (!ok) {
-                PyErr_SetFromWindowsErr(0);
-                return -1;
-            }
-            info->resolution = timeIncrement * 1e-7;
-            info->adjustable = 0;
-        }
-        return 0;
-    }
 #ifdef __APPLE__
     static mach_timebase_info_data_t timebase;
     uint64_t time;

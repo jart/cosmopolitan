@@ -112,6 +112,27 @@ $(LIBC_NT_SHELL32_A).pkg:					\
 
 #───────────────────────────────────────────────────────────────────────────────
 
+LIBC_NT_ARTIFACTS += LIBC_NT_OLE32_A
+LIBC_NT_OLE32 = $(LIBC_NT_OLE32_A_DEPS) $(LIBC_NT_OLE32_A)
+LIBC_NT_OLE32_A = o/$(MODE)/libc/nt/ole32.a
+LIBC_NT_OLE32_A_SRCS := $(wildcard libc/nt/ole32/*.S)
+LIBC_NT_OLE32_A_OBJS = $(LIBC_NT_OLE32_A_SRCS:%.S=o/$(MODE)/%.o)
+LIBC_NT_OLE32_A_CHECKS = $(LIBC_NT_OLE32_A).pkg
+LIBC_NT_OLE32_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_OLE32_A_DEPS :=			\
+	$(call uniq,$(foreach x,$(LIBC_NT_OLE32_A_DIRECTDEPS),$($(x))))
+
+$(LIBC_NT_OLE32_A):			\
+		libc/nt/ole32/		\
+		$(LIBC_NT_OLE32_A).pkg	\
+		$(LIBC_NT_OLE32_A_OBJS)
+
+$(LIBC_NT_OLE32_A).pkg:			\
+		$(LIBC_NT_OLE32_A_OBJS)	\
+		$(foreach x,$(LIBC_NT_OLE32_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
 LIBC_NT_ARTIFACTS += LIBC_NT_GDI32_A
 LIBC_NT_GDI32 = $(LIBC_NT_GDI32_A_DEPS) $(LIBC_NT_GDI32_A)
 LIBC_NT_GDI32_A = o/$(MODE)/libc/nt/gdi32.a
@@ -375,6 +396,24 @@ $(LIBC_NT_BCRYPTPRIMITIVES_A):				\
 $(LIBC_NT_BCRYPTPRIMITIVES_A).pkg:			\
 		$(LIBC_NT_BCRYPTPRIMITIVES_A_OBJS)	\
 		$(foreach x,$(LIBC_NT_BCRYPTPRIMITIVES_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
+LIBC_NT_ARTIFACTS += LIBC_NT_WINMM_A
+LIBC_NT_WINMM = $(LIBC_NT_WINMM_A_DEPS) $(LIBC_NT_WINMM_A)
+LIBC_NT_WINMM_A = o/$(MODE)/libc/nt/winmm.a
+LIBC_NT_WINMM_A_SRCS := $(wildcard libc/nt/winmm/*.S)
+LIBC_NT_WINMM_A_OBJS = $(LIBC_NT_WINMM_A_SRCS:%.S=o/$(MODE)/%.o)
+LIBC_NT_WINMM_A_CHECKS = $(LIBC_NT_WINMM_A).pkg
+LIBC_NT_WINMM_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_WINMM_A_DEPS := $(call uniq,$(foreach x,$(LIBC_NT_WINMM_A_DIRECTDEPS),$($(x))))
+$(LIBC_NT_WINMM_A):			\
+		libc/nt/winmm/		\
+		$(LIBC_NT_WINMM_A).pkg	\
+		$(LIBC_NT_WINMM_A_OBJS)
+$(LIBC_NT_WINMM_A).pkg:			\
+		$(LIBC_NT_WINMM_A_OBJS)	\
+		$(foreach x,$(LIBC_NT_WINMM_A_DIRECTDEPS),$($(x)_A).pkg)
 
 #───────────────────────────────────────────────────────────────────────────────
 

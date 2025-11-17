@@ -23,6 +23,7 @@
  * Returns true if stream is in end-of-file state.
  *
  * @param f is file object stream pointer
+ * @return nonzero if end-of-file indicator is set on stream
  * @see feof()
  */
 int feof_unlocked(FILE *f) {

@@ -695,6 +695,7 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_sched_setaffinity,  //
     __NR_linux_sigtimedwait,       //
     __NR_linux_getcpu,             //
+    __NR_linux_rseq,               //
 };
 
 static const uint16_t kPledgeFlock[] = {
@@ -863,6 +864,10 @@ static const uint16_t kPledgeDns[] = {
     __NR_linux_openat | READONLY,      //
     __NR_linux_read,                   //
     __NR_linux_close,                  //
+
+    // TODO(jart): modfify musl dns to not use recvmsg/sendmsg
+    __NR_linux_recvmsg,  //
+    __NR_linux_sendmsg,  //
 };
 
 static const uint16_t kPledgeTty[] = {
@@ -1008,12 +1013,11 @@ static const struct sock_filter kPledgeStart[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
 #ifdef __NR_linux_memfd_secret
     // forbid some system calls with ENOSYS (rather than EPERM)
-    BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, __NR_linux_memfd_secret, 4, 0),
+    BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, __NR_linux_memfd_secret, 3, 0),
 #else
     BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, __NR_linux_landlock_restrict_self + 1,
-             4, 0),
+             3, 0),
 #endif
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_rseq, 3, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_memfd_create, 2, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat2, 1, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone3, 0, 1),
@@ -1025,32 +1029,32 @@ static const struct sock_filter kFilterIgnoreExitGroup[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (Eperm & SECCOMP_RET_DATA)),
 };
 
-static privileged unsigned long StrLen(const char *s) {
+__privileged static unsigned long StrLen(const char *s) {
   unsigned long n = 0;
   while (*s++)
     ++n;
   return n;
 }
 
-static privileged void *MemCpy(void *d, const void *s, unsigned long n) {
+__privileged static void *MemCpy(void *d, const void *s, unsigned long n) {
   unsigned long i = 0;
   for (; i < n; ++i)
     ((char *)d)[i] = ((char *)s)[i];
   return (char *)d + n;
 }
 
-static privileged char *FixCpy(char p[17], uint64_t x, int k) {
+__privileged static char *FixCpy(char p[17], uint64_t x, int k) {
   while (k > 0)
     *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
 }
 
-static privileged char *HexCpy(char p[17], uint64_t x) {
+__privileged static char *HexCpy(char p[17], uint64_t x) {
   return FixCpy(p, x, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
 }
 
-static privileged int GetPid(void) {
+__privileged static int GetPid(void) {
   int res;
 #ifdef __x86_64__
   asm volatile("syscall"
@@ -1069,7 +1073,7 @@ static privileged int GetPid(void) {
   return res;
 }
 
-static privileged int GetTid(void) {
+__privileged static int GetTid(void) {
   int res;
 #ifdef __x86_64__
   asm volatile("syscall"
@@ -1088,7 +1092,7 @@ static privileged int GetTid(void) {
   return res;
 }
 
-static privileged long Write(int fd, const void *p, unsigned long n) {
+__privileged static long Write(int fd, const void *p, unsigned long n) {
 #ifdef __x86_64__
   long res;
   asm volatile("syscall"
@@ -1106,7 +1110,7 @@ static privileged long Write(int fd, const void *p, unsigned long n) {
 #endif
 }
 
-static privileged void Log(const char *s, ...) {
+__privileged static void Log(const char *s, ...) {
   va_list va;
   va_start(va, s);
   do {
@@ -1115,8 +1119,8 @@ static privileged void Log(const char *s, ...) {
   va_end(va);
 }
 
-static privileged int SigAction(int sig, struct sigaction *act,
-                                struct sigaction *old) {
+__privileged static int SigAction(int sig, struct sigaction *act,
+                                  struct sigaction *old) {
   act->sa_flags |= Sa_Restorer;
   act->sa_restorer = &__restore_rt;
 #ifdef __x86_64__
@@ -1141,7 +1145,7 @@ static privileged int SigAction(int sig, struct sigaction *act,
 #endif
 }
 
-static privileged int SigProcMask(int how, int64_t set, int64_t *old) {
+__privileged static int SigProcMask(int how, int64_t set, int64_t *old) {
 #ifdef __x86_64__
   int res;
   asm volatile("mov\t%5,%%r10\n\t"
@@ -1165,7 +1169,7 @@ static privileged int SigProcMask(int how, int64_t set, int64_t *old) {
 #endif
 }
 
-static privileged void KillThisProcess(void) {
+__privileged static void KillThisProcess(void) {
   SigAction(Sigabrt, &(struct sigaction){0}, 0);
   SigProcMask(Sig_Setmask, -1, 0);
 #ifdef __x86_64__
@@ -1205,7 +1209,7 @@ static privileged void KillThisProcess(void) {
 #endif
 }
 
-static privileged void KillThisThread(void) {
+__privileged static void KillThisThread(void) {
   SigAction(Sigabrt, &(struct sigaction){0}, 0);
   SigProcMask(Sig_Setmask, -1, 0);
 #ifdef __x86_64__
@@ -1243,7 +1247,7 @@ static privileged void KillThisThread(void) {
 #endif
 }
 
-static privileged const char *GetSyscallName(uint16_t n) {
+__privileged static const char *GetSyscallName(uint16_t n) {
   int i;
   for (i = 0; i < ARRAYLEN(kSyscallName); ++i) {
     if (kSyscallName[i].n == n) {
@@ -1253,7 +1257,7 @@ static privileged const char *GetSyscallName(uint16_t n) {
   return "unknown";
 }
 
-static privileged int HasSyscall(const struct Pledges *p, uint16_t n) {
+__privileged static int HasSyscall(const struct Pledges *p, uint16_t n) {
   int i;
   for (i = 0; i < p->len; ++i) {
     if (p->syscalls[i] == n) {
@@ -1266,7 +1270,7 @@ static privileged int HasSyscall(const struct Pledges *p, uint16_t n) {
   return 0;
 }
 
-static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
+__privileged static void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   bool found;
   char ord[17];
   int i, mode = si->si_errno;
@@ -1298,7 +1302,7 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   }
 }
 
-static privileged void MonitorSigSys(void) {
+__privileged static void MonitorSigSys(void) {
   struct sigaction sa = {
       .sa_sigaction = OnSigSys,
       .sa_flags = Sa_Siginfo | Sa_Restart,
@@ -1310,8 +1314,8 @@ static privileged void MonitorSigSys(void) {
   }
 }
 
-static privileged void AppendFilter(struct Filter *f,
-                                    const struct sock_filter *p, size_t n) {
+__privileged static void AppendFilter(struct Filter *f,
+                                      const struct sock_filter *p, size_t n) {
   if (UNLIKELY(f->n + n > ARRAYLEN(f->p)))
     notpossible;
   MemCpy(f->p + f->n, p, n * sizeof(*f->p));
@@ -1322,7 +1326,7 @@ static privileged void AppendFilter(struct Filter *f,
 //
 //   - getpid()
 //
-static privileged void AllowKillSelf(struct Filter *f) {
+__privileged static void AllowKillSelf(struct Filter *f) {
   struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_kill, 0, 4),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1337,7 +1341,7 @@ static privileged void AllowKillSelf(struct Filter *f) {
 //
 //   - getpid()
 //
-static privileged void AllowTgkillSelf(struct Filter *f) {
+__privileged static void AllowTgkillSelf(struct Filter *f) {
   struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_tgkill, 0, 4),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1357,7 +1361,7 @@ static privileged void AllowTgkillSelf(struct Filter *f) {
 //   - sigreturn() to return from signal handler
 //   - sigprocmask() to force signal delivery
 //
-static privileged void AllowMonitor(struct Filter *f) {
+__privileged static void AllowMonitor(struct Filter *f) {
   struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_write, 0, 4),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1396,7 +1400,7 @@ static privileged void AllowMonitor(struct Filter *f) {
 //   - CLONE_PTRACE   (0x00002000)
 //   - CLONE_UNTRACED (0x00800000)
 //
-static privileged void AllowCloneRestrict(struct Filter *f) {
+__privileged static void AllowCloneRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1423,7 +1427,7 @@ static privileged void AllowCloneRestrict(struct Filter *f) {
 //   - CLONE_PTRACE   (0x00002000)
 //   - CLONE_UNTRACED (0x00800000)
 //
-static privileged void AllowCloneThread(struct Filter *f) {
+__privileged static void AllowCloneThread(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1446,7 +1450,7 @@ static privileged void AllowCloneThread(struct Filter *f) {
 //   - FIOCLEX  (0x5451)
 //   - FIONCLEX (0x5450)
 //
-static privileged void AllowIoctlStdio(struct Filter *f) {
+__privileged static void AllowIoctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 7),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1465,7 +1469,7 @@ static privileged void AllowIoctlStdio(struct Filter *f) {
 //
 //   - SIOCATMARK (0x8905)
 //
-static privileged void AllowIoctlInet(struct Filter *f) {
+__privileged static void AllowIoctlInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 4),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1492,7 +1496,7 @@ static privileged void AllowIoctlInet(struct Filter *f) {
 //   - TCSBRK     (0x5409)
 //   - TIOCSBRK   (0x5427)
 //
-static privileged void AllowIoctlTty(struct Filter *f) {
+__privileged static void AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 15),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1544,7 +1548,7 @@ static privileged void AllowIoctlTty(struct Filter *f) {
 //   - IPV6_V6ONLY          (0x1a)
 //   - TCP_QUICKACK         (0x0c)
 //
-static privileged void AllowSetsockoptRestrict(struct Filter *f) {
+__privileged static void AllowSetsockoptRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 25),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1592,7 +1596,7 @@ static privileged void AllowSetsockoptRestrict(struct Filter *f) {
 //   - SO_RCVTIMEO  (0x14)
 //   - SO_SNDTIMEO  (0x15)
 //
-static privileged void AllowGetsockoptRestrict(struct Filter *f) {
+__privileged static void AllowGetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_getsockopt;
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13),
@@ -1620,7 +1624,7 @@ static privileged void AllowGetsockoptRestrict(struct Filter *f) {
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //
-static privileged void AllowMmapExec(struct Filter *f) {
+__privileged static void AllowMmapExec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
@@ -1644,7 +1648,7 @@ static privileged void AllowMmapExec(struct Filter *f) {
 //   - MAP_LOCKED   (0x02000)
 //   - MAP_NONBLOCK (0x10000)
 //
-static privileged void AllowMmapNoexec(struct Filter *f) {
+__privileged static void AllowMmapNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
@@ -1666,7 +1670,7 @@ static privileged void AllowMmapNoexec(struct Filter *f) {
 //   - PROT_READ  (1)
 //   - PROT_WRITE (2)
 //
-static privileged void AllowMprotectNoexec(struct Filter *f) {
+__privileged static void AllowMprotectNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mprotect, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
@@ -1689,7 +1693,7 @@ static privileged void AllowMprotectNoexec(struct Filter *f) {
 //   - O_TRUNC     (000001000)
 //   - __O_TMPFILE (020000000)
 //
-static privileged void AllowOpenReadonly(struct Filter *f) {
+__privileged static void AllowOpenReadonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1715,7 +1719,7 @@ static privileged void AllowOpenReadonly(struct Filter *f) {
 //   - O_TRUNC     (000001000)
 //   - __O_TMPFILE (020000000)
 //
-static privileged void AllowOpenatReadonly(struct Filter *f) {
+__privileged static void AllowOpenatReadonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -1741,7 +1745,7 @@ static privileged void AllowOpenatReadonly(struct Filter *f) {
 //   - O_CREAT     (000000100)
 //   - __O_TMPFILE (020000000)
 //
-static privileged void AllowOpenWriteonly(struct Filter *f) {
+__privileged static void AllowOpenWriteonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 10 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1768,7 +1772,7 @@ static privileged void AllowOpenWriteonly(struct Filter *f) {
 //   - O_CREAT     (000000100)
 //   - __O_TMPFILE (020000000)
 //
-static privileged void AllowOpenatWriteonly(struct Filter *f) {
+__privileged static void AllowOpenatWriteonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 10 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -1796,7 +1800,7 @@ static privileged void AllowOpenatWriteonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowOpenCreatonly(struct Filter *f) {
+__privileged static void AllowOpenCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1826,7 +1830,7 @@ static privileged void AllowOpenCreatonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowOpenatCreatonly(struct Filter *f) {
+__privileged static void AllowOpenatCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -1852,7 +1856,7 @@ static privileged void AllowOpenatCreatonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowCreatRestrict(struct Filter *f) {
+__privileged static void AllowCreatRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_creat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1875,7 +1879,7 @@ static privileged void AllowCreatRestrict(struct Filter *f) {
 //   - F_GETFL (3)
 //   - F_SETFL (4)
 //
-static privileged void AllowFcntlStdio(struct Filter *f) {
+__privileged static void AllowFcntlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1897,7 +1901,7 @@ static privileged void AllowFcntlStdio(struct Filter *f) {
 //   - F_OFD_SETLK (0x25)
 //   - F_OFD_SETLKW (0x26)
 //
-static privileged void AllowFcntlLock(struct Filter *f) {
+__privileged static void AllowFcntlLock(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 9),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1918,7 +1922,7 @@ static privileged void AllowFcntlLock(struct Filter *f) {
 //
 //   - NULL
 //
-static privileged void AllowSendtoAddrless(struct Filter *f) {
+__privileged static void AllowSendtoAddrless(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sendto, 0, 7 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 0),
@@ -1954,7 +1958,7 @@ static privileged void AllowSendtoAddrless(struct Filter *f) {
 //   - IPPROTO_TCP  (0x06)
 //   - IPPROTO_UDP  (0x11)
 //
-static privileged void AllowSocketInet(struct Filter *f) {
+__privileged static void AllowSocketInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 15 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1996,7 +2000,7 @@ static privileged void AllowSocketInet(struct Filter *f) {
 //   - IPPROTO_ICMP (0x01)
 //   - IPPROTO_TCP  (0x06)
 //
-static privileged void AllowSocketAnet(struct Filter *f) {
+__privileged static void AllowSocketAnet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 12),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -2034,7 +2038,7 @@ static privileged void AllowSocketAnet(struct Filter *f) {
 //
 //   - 0
 //
-static privileged void AllowSocketUnix(struct Filter *f) {
+__privileged static void AllowSocketUnix(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 11 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -2062,7 +2066,7 @@ static privileged void AllowSocketUnix(struct Filter *f) {
 //   - PR_CAPBSET_READ     (23)
 //   - PR_CAPBSET_DROP     (24)
 //
-static privileged void AllowPrctlStdio(struct Filter *f) {
+__privileged static void AllowPrctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 11 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -2087,7 +2091,7 @@ static privileged void AllowPrctlStdio(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowChmodNobits(struct Filter *f) {
+__privileged static void AllowChmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_chmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -2107,7 +2111,7 @@ static privileged void AllowChmodNobits(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowFchmodNobits(struct Filter *f) {
+__privileged static void AllowFchmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -2126,7 +2130,7 @@ static privileged void AllowFchmodNobits(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static privileged void AllowFchmodatNobits(struct Filter *f) {
+__privileged static void AllowFchmodatNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmodat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -2143,7 +2147,7 @@ static privileged void AllowFchmodatNobits(struct Filter *f) {
 //
 //   - NULL (0)
 //
-static privileged void AllowPrlimitStdio(struct Filter *f) {
+__privileged static void AllowPrlimitStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prlimit, 0, 7 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -2157,7 +2161,7 @@ static privileged void AllowPrlimitStdio(struct Filter *f) {
   AppendFilter(f, PLEDGE(fragment));
 }
 
-static privileged int CountUnspecial(const uint16_t *p, size_t len) {
+__privileged static int CountUnspecial(const uint16_t *p, size_t len) {
   int i, count;
   for (count = i = 0; i < len; ++i) {
     if (!(p[i] & SPECIAL)) {
@@ -2167,9 +2171,9 @@ static privileged int CountUnspecial(const uint16_t *p, size_t len) {
   return count;
 }
 
-static privileged void AppendPledge(struct Filter *f,   //
-                                    const uint16_t *p,  //
-                                    size_t len) {       //
+__privileged static void AppendPledge(struct Filter *f,   //
+                                      const uint16_t *p,  //
+                                      size_t len) {       //
   int i, j, count;
 
   // handle ordinals which allow syscalls regardless of args
@@ -2311,7 +2315,7 @@ static privileged void AppendPledge(struct Filter *f,   //
  * @asyncsignalsafe
  * @vforksafe
  */
-privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
+__privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Filter f;

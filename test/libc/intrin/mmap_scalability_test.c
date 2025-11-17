@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
@@ -49,6 +50,11 @@ void map_unmap_one_page(void) {
 }
 
 int main() {
+
+  // mmap debugger makes mmap O(n)
+  if (MMAP_DEBUG)
+    return 0;
+
   kprintf("\n");
   BENCH(1000, 1, map_unmap_one_page());
 

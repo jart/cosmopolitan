@@ -16,28 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/fds.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/sock/internal.h"
 #include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/errno.h"
+#include "libc/sysv/pib.h"
+#include "libc/thread/tls.h"
+#if SupportsWindows()
+
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
+
+static inline void RaiseSignal(int sig) {
+  if (_weaken(__sig_raise)) {
+    _weaken(__sig_raise)(sig, SI_KERNEL);
+  } else {
+    TerminateThisProcess(sig);
+  }
+}
 
 /**
  * Runs code that's common to read/write/pread/pwrite/etc on Windows.
@@ -50,13 +70,17 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
                  int64_t handle, sigset_t waitmask,
                  bool32 ReadOrWriteFile(int64_t, void *, uint32_t, uint32_t *,
                                         struct NtOverlapped *)) {
-  struct Fd *f = g_fds.p + fd;
+
+  // note: caller is responsible for size not exceeding 0x7ffff000
+  struct Fd *f = __get_pib()->fds.p + fd;
 
   // pread() and pwrite() perform an implicit lseek() operation, so
   // similar to the lseek() system call, they too raise ESPIPE when
   // operating on a non-seekable file.
-  bool pwriting = offset != -1;
   bool isdisk = f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk;
+  bool appending = isdisk && ReadOrWriteFile == (void *)WriteFile &&
+                   (f->flags & O_APPEND) && f->cursor;
+  bool pwriting = offset != -1;
   bool seekable = isdisk || f->kind == kFdDevNull || f->kind == kFdDevRandom;
   if (pwriting && !seekable)
     return espipe();
@@ -71,19 +95,30 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
 
     // create event handle for overlapped i/o
     intptr_t event;
-    if (!(event = CreateEvent(0, 1, 0, 0)))
+    if (!(event = CreateEventTls()))
       return __winerr();
 
     // ensure iops are ordered across threads and processes if seeking
     if (locked)
       __cursor_lock(f->cursor);
 
+    // "If the O_APPEND flag of the file status flags is set, the file
+    //  offset shall be set to the end of the file prior to each write
+    //  and no intervening file modification operation shall occur
+    //  between changing the file offset and the write operation."
+    //                             ──Quoth POSIX.1-2024
+    if (appending && !pwriting) {
+      struct NtByHandleFileInformation wst;
+      if (GetFileInformationByHandle(f->handle, &wst))
+        offset = (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
+    }
+
     // when a file is opened in overlapped mode win32 requires that we
     // take over full responsibility for managing our own file pointer
     // which is fine, because the one win32 has was never very good in
     // the sense that it behaves so differently from linux, that using
     // win32 i/o required more compatibilty toil than doing it by hand
-    if (!pwriting) {
+    if (!pwriting && !appending) {
       if (seekable && f->cursor) {
         offset = f->cursor->shared->pointer;
       } else {
@@ -91,11 +126,21 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
       }
     }
 
+    // check file size limit
+    if (isdisk && ReadOrWriteFile == (void *)WriteFile &&
+        offset + size > ~__get_pib()->rlimit[RLIMIT_FSIZE].rlim_cur) {
+      if (locked)
+        __cursor_unlock(f->cursor);
+      CloseEventTls(event);
+      RaiseSignal(SIGXFSZ);
+      return efbig();
+    }
+
     // initiate asynchronous i/o operation with win32
     struct NtOverlapped overlap = {.hEvent = event, .Pointer = offset};
     bool32 ok = ReadOrWriteFile(handle, data, size, 0, &overlap);
     if (!ok && GetLastError() == kNtErrorIoPending) {
-      if (f->flags & _O_NONBLOCK) {
+      if (f->flags & O_NONBLOCK) {
         // immediately back out of blocking i/o if non-blocking
         CancelIoEx(handle, &overlap);
         got_eagain = true;
@@ -104,13 +149,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
         // it's not safe to acknowledge cancelation from here
         // it's not safe to call any signal handlers from here
         intptr_t sigev;
-        if ((sigev = CreateEvent(0, 0, 0, 0))) {
-          // installing semaphore before sig get makes wait atomic
-          struct PosixThread *pt = _pthread_self();
-          pt->pt_event = sigev;
-          pt->pt_blkmask = waitmask;
-          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                                memory_order_release);
+        if ((sigev = __interruptible_start(waitmask))) {
           if (_is_canceled()) {
             CancelIoEx(handle, &overlap);
           } else if (_weaken(__sig_get) &&
@@ -118,7 +157,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
             CancelIoEx(handle, &overlap);
           } else {
             intptr_t hands[] = {event, sigev};
-            uint32_t wi = WaitForMultipleObjects(2, hands, 0, -1u);
+            uint32_t wi = __imp_WaitForMultipleObjects(2, hands, 0, -1u);
             if (wi == 1) {  // event was signaled by signal enqueue
               CancelIoEx(handle, &overlap);
               if (_weaken(__sig_get))
@@ -128,8 +167,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
               CancelIoEx(handle, &overlap);
             }
           }
-          atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-          CloseHandle(sigev);
+          __interruptible_end();
         } else {
           other_error = GetLastError();
           CancelIoEx(handle, &overlap);
@@ -141,12 +179,20 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     if (ok)
       ok = GetOverlappedResult(handle, &overlap, &exchanged, true);
     uint32_t io_error = GetLastError();
-    CloseHandle(event);
+    CloseEventTls(event);
 
     // check if i/o completed
     // this could forseeably happen even if CancelIoEx was called
     if (ok) {
-      if (!pwriting && seekable && f->cursor)
+      // "The pwrite() function shall be equivalent to write(), except
+      //  that it writes into a given position and does not change the
+      //  file offset (regardless of whether O_APPEND is set). The first
+      //  three arguments to pwrite() are the same as write() with the
+      //  addition of a fourth argument offset for the desired position
+      //  inside the file. An attempt to perform a pwrite() on a file
+      //  that is incapable of seeking shall result in an error."
+      //                             ──Quoth POSIX.1-2018
+      if (locked && seekable)
         f->cursor->shared->pointer = offset + exchanged;
       if (locked)
         __cursor_unlock(f->cursor);
@@ -174,7 +220,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
 
     // it's now reasonable to report semaphore creation error
     if (other_error) {
-      errno = __dos2errno(other_error);
+      errno = __errno_windows2linux(other_error);
       return -1;
     }
 

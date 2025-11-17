@@ -9,7 +9,6 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/lock.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -29,7 +28,6 @@ PYTHON_PROVIDE("fcntl.FD_CLOEXEC");
 PYTHON_PROVIDE("fcntl.F_DUPFD");
 PYTHON_PROVIDE("fcntl.F_DUPFD_CLOEXEC");
 PYTHON_PROVIDE("fcntl.F_EXLCK");
-PYTHON_PROVIDE("fcntl.F_FULLFSYNC");
 PYTHON_PROVIDE("fcntl.F_GETFD");
 PYTHON_PROVIDE("fcntl.F_GETFL");
 PYTHON_PROVIDE("fcntl.F_GETLEASE");

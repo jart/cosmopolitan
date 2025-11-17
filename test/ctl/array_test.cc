@@ -18,7 +18,7 @@
 
 #include "ctl/array.h"
 #include "ctl/string.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <array>
 // #include <string>

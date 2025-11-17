@@ -38,7 +38,7 @@
  */
 int gettid(void) {
   int tid;
-  if (VERY_LIKELY(__tls_enabled && !__vforked)) {
+  if (VERY_LIKELY(__tls_enabled)) {
     tid = atomic_load_explicit(&__get_tls()->tib_ptid, memory_order_relaxed);
     if (VERY_LIKELY(tid > 0))
       return tid;

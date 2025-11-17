@@ -67,8 +67,10 @@ TEST(tanhf, test) {
 }
 
 TEST(tanhl, test) {
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ(".09966799462495582", gc(xdtoal(_tanhl(+.1))));
   EXPECT_STREQ("-.09966799462495582", gc(xdtoal(_tanhl(-.1))));
+#endif
   EXPECT_STREQ("0", gc(xdtoal(_tanhl(0))));
   EXPECT_STREQ("-0", gc(xdtoal(_tanhl(-0.))));
   EXPECT_TRUE(isnan(_tanhl(NAN)));

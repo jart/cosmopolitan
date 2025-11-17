@@ -1,7 +1,3 @@
-#include "libc/cosmo.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/maps.h"
-#include "libc/thread/thread.h"
 
 /* --------------------------- Lock preliminaries ------------------------ */
 
@@ -37,21 +33,21 @@
 
 #define MLOCK_T atomic_uint
 
-static int malloc_inlk(MLOCK_T *lk) {
+static inline int malloc_inlk(MLOCK_T *lk) {
   atomic_store_explicit(lk, 0, memory_order_relaxed);
   return 0;
 }
 
-static int malloc_wipe(MLOCK_T *lk) {
+static inline int malloc_wipe(MLOCK_T *lk) {
   atomic_store_explicit(lk, 0, memory_order_relaxed);
   return 0;
 }
 
-static int malloc_kilk(MLOCK_T *lk) {
+static inline int malloc_kilk(MLOCK_T *lk) {
   return 0;
 }
 
-static int malloc_lock(MLOCK_T *lk) {
+static inline int malloc_lock(MLOCK_T *lk) {
   for (;;) {
     if (!atomic_exchange_explicit(lk, 1, memory_order_acquire))
       break;
@@ -62,64 +58,44 @@ static int malloc_lock(MLOCK_T *lk) {
   return 0;
 }
 
-static int malloc_unlk(MLOCK_T *lk) {
+static inline int malloc_unlk(MLOCK_T *lk) {
   atomic_store_explicit(lk, 0, memory_order_release);
   return 0;
 }
 
 #else
 
-#define MLOCK_T struct MallocLock
+#define MLOCK_T nsync_mu
 
-struct MallocLock {
-#if DEBUG
-  void *edges;
-#endif
-  nsync_mu mu;
-};
-
-static int malloc_inlk(MLOCK_T *lk) {
-  bzero(lk, sizeof(*lk));
+static inline int malloc_inlk(MLOCK_T *lk) {
+  atomic_store_explicit(&lk->word, 0, memory_order_relaxed);
+  lk->waiters = 0;
   return 0;
 }
 
-static int malloc_wipe(MLOCK_T *lk) {
-  bzero(&lk->mu, sizeof(lk->mu));
+static inline int malloc_wipe(MLOCK_T *lk) {
+  return malloc_inlk(lk);
+}
+
+static inline int malloc_kilk(MLOCK_T *lk) {
   return 0;
 }
 
-static int malloc_kilk(MLOCK_T *lk) {
+static inline int malloc_lock(MLOCK_T *lk) {
+  if (__isthreaded >= 2)
+    nsync_mu_lock(lk);
   return 0;
 }
 
-static int malloc_lock(MLOCK_T *lk) {
-#if DEBUG
-  __deadlock_check(lk, 0);
-#endif
-  nsync_mu_lock(&lk->mu);
-#if DEBUG
-  __deadlock_record(lk, 0);
-  __deadlock_track(lk, 0);
-#endif
-  return 0;
-}
-
-static int malloc_unlk(MLOCK_T *lk) {
-#if DEBUG
-  if (__deadlock_tracked(lk) == 0) {
-    kprintf("error: unlock malloc mutex not owned by caller: %t\n", lk);
-    DebugBreak();
-  }
-#endif
-  nsync_mu_unlock(&lk->mu);
-#if DEBUG
-  __deadlock_untrack(lk);
-#endif
+static inline int malloc_unlk(MLOCK_T *lk) {
+  if (__isthreaded >= 2)
+    nsync_mu_unlock(lk);
   return 0;
 }
 
 #endif
 
+#pragma GCC diagnostic ignored "-Wunused-value"
 #define ACQUIRE_LOCK(lk) malloc_lock(lk)
 #define RELEASE_LOCK(lk) malloc_unlk(lk)
 #define INITIAL_LOCK(lk) malloc_inlk(lk)

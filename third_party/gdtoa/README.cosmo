@@ -1,0 +1,15 @@
+DESCRIPTION
+
+  gdtoa is a library for generalized decimal to ascii. it's used by
+  cosmopolitan's printf() and sprintf() functions to format doubles
+  we're also using it to implement atof(), strtod(), and more funcs
+
+LICENSE
+
+  Modified BSD License
+
+LOCAL CHANGES
+
+  - Add `__gdtoa_` prefix to symbols
+  - Remove clever allocation code and just use malloc
+  - Make subroutines handle the out-of-memory condition

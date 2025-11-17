@@ -17,6 +17,8 @@
 #include "third_party/libcxxabi/cxa_handlers.h"
 #include "third_party/libcxxabi/cxa_exception.h"
 #include "third_party/libcxxabi/private_typeinfo.h"
+#include "libc/intrin/weaken.h"
+#include "libc/cosmo.h"
 #include "third_party/libcxx/atomic_support.h" // from libc++
 
 #if !defined(LIBCXXABI_SILENT_TERMINATE)
@@ -61,7 +63,15 @@ static void demangling_terminate_handler()
             exception_header + 1;
     const __shim_type_info* thrown_type =
         static_cast<const __shim_type_info*>(exception_header->exceptionType);
-    auto name = demangle(thrown_type->name());
+
+    // [jart] don't use malloc on terminate
+    // auto name = demangle(thrown_type->name());
+    const char *name = thrown_type->name();
+    char namebuf[3500];
+    if (_weaken(cosmo_demangle))
+        if (_weaken(cosmo_demangle)(namebuf, name, sizeof(namebuf)) != -1)
+            name = namebuf;
+
     // If the uncaught exception can be caught with std::exception&
     const __shim_type_info* catch_type =
         static_cast<const __shim_type_info*>(&typeid(std::exception));
@@ -69,12 +79,12 @@ static void demangling_terminate_handler()
     {
         // Include the what() message from the exception
         const std::exception* e = static_cast<const std::exception*>(thrown_object);
-        abort_message("terminating due to %s exception of type %s: %s", cause, name.get(), e->what());
+        abort_message("terminating due to %s exception of type %s: %s", cause, name, e->what());
     }
     else
     {
         // Else just note that we're terminating due to an exception
-        abort_message("terminating due to %s exception of type %s", cause, name.get());
+        abort_message("terminating due to %s exception of type %s", cause, name);
     }
 }
 #else // !_LIBCXXABI_NO_EXCEPTIONS

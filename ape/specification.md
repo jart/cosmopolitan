@@ -361,13 +361,13 @@ Here's the TLS memory layout on x86_64:
 ```
                           __get_tls()
                               │
-                             %fs OpenBSD/NetBSD
+                             %fs Linux/FreeBSD/NetBSD/OpenBSD
            _Thread_local      │
     ┌───┬──────────┬──────────┼───┐
     │pad│  .tdata  │  .tbss   │tib│
     └───┴──────────┴──────────┼───┘
                               │
-   Linux/FreeBSD/Windows/Mac %gs
+                 Windows/Mac %gs
 ```
 
 Quite possibly the greatest challenge in Actually Portable Executable
@@ -401,80 +401,56 @@ arises in the fact that our Linux-flavored GCC and Clang toolchains
 (which are used to produce cross-OS binaries) are also only capable of
 producing TLS instructions that use the %fs convention.
 
-To solve these challenges, the `cosmocc` compiler will rewrite binary
-objects after they've been compiled by GCC, so that the `%gs` register
-is used, rather than `%fs`. Morphing x86-64 binaries after they've been
-compiled is normally difficult, due to the complexity of the machine
-instruction language. However GCC provides `-mno-tls-direct-seg-refs`
-which greatly reduces the complexity of this task. This flag forgoes
-some optimizations to make the generated code simpler. Rather than doing
-clever arithmetic with `%fs` prefixes, the compiler will always generate
-the thread information block address load as a separate instruction.
+To solve these challenges, the `cosmocc` compiler rewrites GCC generated
+assembly so that the `%fs` referencing instructions created by GCC when
+using the `-mno-tls-direct-seg-refs` flag are replaced by calls to the
+following functions:
 
-```c
-// Change AMD code to use %gs:0x30 instead of %fs:0
-// We assume -mno-tls-direct-seg-refs has been used
-static void ChangeTlsFsToGs(unsigned char *p, size_t n) {
-  unsigned char *e = p + n - 9;
-  while (p <= e) {
-    // we're checking for the following expression:
-    //   0144 == p[0] &&           // %fs
-    //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
-    //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
-    //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
-    //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
-    //   0045 == p[4] &&           // sib (5,4,0) → (rbp,rsp,0) → disp32
-    //   0000 == p[5] &&           // displacement (von Neumann endian)
-    //   0000 == p[6] &&           // displacement
-    //   0000 == p[7] &&           // displacement
-    //   0000 == p[8]              // displacement
-    uint64_t w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
-    if ((w == READ64LE("\144\110\213\004\045\000\000\000") ||
-         w == READ64LE("\144\110\003\004\045\000\000\000")) &&
-        !p[8]) {
-      p[0] = 0145;  // change %fs to %gs
-      p[5] = 0x30;  // change 0 to 0x30
-      p += 9;
-    } else {
-      ++p;
-    }
-  }
-}
-```
+- `__get_tls_rax`
+- `__get_tls_rbx`
+- `__get_tls_rcx`
+- `__get_tls_rdx`
+- `__get_tls_rdi`
+- `__get_tls_rsi`
+- `__get_tls_rbp`
+- `__get_tls_r8`
+- `__get_tls_r9`
+- `__get_tls_r10`
+- `__get_tls_r11`
+- `__get_tls_r12`
+- `__get_tls_r13`
+- `__get_tls_r14`
+- `__get_tls_r15`
+- `__add_tls_rax`
+- `__add_tls_rbx`
+- `__add_tls_rcx`
+- `__add_tls_rdx`
+- `__add_tls_rdi`
+- `__add_tls_rsi`
+- `__add_tls_rbp`
+- `__add_tls_r8`
+- `__add_tls_r9`
+- `__add_tls_r10`
+- `__add_tls_r11`
+- `__add_tls_r12`
+- `__add_tls_r13`
+- `__add_tls_r14`
+- `__add_tls_r15`
 
-By favoring `%gs` we've now ensured friction-free compatibility for the
-APE runtime on MacOS, Linux, and FreeBSD which are all able to conform
-easily to this convention. However additional work needs to be done at
-runtime when an APE program is started on Windows, OpenBSD, and NetBSD.
-On these platforms, all executable pages must be faulted and morphed to
-fixup the TLS instructions.
+The `cosmocc` script internally uses a tool named `tlscc` which wraps a
+gcc or clang compilation so it generates intermediate assembly code that
+it can modify to call the above functions. In the process, it also adds
+the `-mno-tls-direct-seg-refs` and `-mno-red-zone` flags to the compile
+command to ensure the compiler only generates TLS assembly instructions
+that are understood by the tool.
 
-On OpenBSD and NetBSD, this is as simple as undoing the example
-operation above. Earlier at compile-time we turned `%fs` into `%gs`.
-Now, at runtime, `%gs` must be turned back into `%fs`. Since the
-executable is morphing itself, this is easier said than done.
+The above functions do not clobber any registers. The function name
+specifies the register to which the result is stored or added. The only
+above function that can be called by C code is `__get_tls_rax`.
 
-OpenBSD for example enforces a `W^X` invariant. Code that's executing
-can't modify itself at the same time. The way Cosmopolitan solves this
-is by defining a special part of the binary called `.text.privileged`.
-This section is aligned to page boundaries. A GNU ld linker script is
-used to ensure that code which morphs code is placed into this section,
-through the use of a header-defined cosmo-specific keyword `privileged`.
-Additionally, the `fixupobj` program is used by the Cosmo build system
-to ensure that compiled objects don't contain privileged functions that
-call non-privileged functions. Needless to say, `mprotect()` needs to be
-a privileged function, so that it can be used to disable the execute bit
-on all other parts of the executable except for the privileged section,
-thereby making it writable. Once this has been done, code can change.
-
-On Windows the displacement bytes of the TLS instruction are changed to
-use the `%gs:0x1480+i*8` ABI where `i` is a number assigned by the WIN32
-`TlsAlloc()` API. This avoids the need to call `TlsGetValue()` which is
-implemented this exact same way under the hood. Even though 0x1480 isn't
-explicitly documented by MSDN, this ABI is believed to be stable because
-MSVC generates binaries that use this offset directly. The only caveat
-is that `TlsAlloc()` must be called as early in the runtime init as
-possible, to ensure an index less than 64 is returned.
+When Windows and MacOS aren't in the support vector, then the above
+assembly rewriting pass can be avoided entirely, and the binary can
+simply use the TLS opcodes that GCC and Clang generate for Linux.
 
 ### Thread Information Block (TIB)
 

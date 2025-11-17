@@ -19,6 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"

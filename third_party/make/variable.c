@@ -865,6 +865,8 @@ define_automatic_variables (void)
            ? "" : "-",
            (remote_description == 0 || remote_description[0] == '\0')
            ? "" : remote_description);
+  define_variable_cname ("COSMO_MAKE_VERSION",
+                         COSMO_MAKE_VERSION, o_default, 0);
   define_variable_cname ("MAKE_VERSION", buf, o_default, 0);
   define_variable_cname ("MAKE_HOST", make_host, o_default, 0);
 

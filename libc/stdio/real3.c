@@ -23,7 +23,7 @@
  *
  *     double x = _real3(lemur64())
  *
- * @see lemur64(), mt19937()
+ * @see lemur64()
  */
 double _real3(uint64_t x) {
   return 1. / 4503599627370496. * ((x >> 12) + .5);

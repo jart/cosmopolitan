@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
@@ -75,7 +76,7 @@ TEST(EncodeBase64, testOom_returnsNullAndSetsSizeToZero) {
 TEST(Base64, RoundTrip) {
   for (i = 0; i < 1000; ++i) {
     n = rand() % 32;
-    rngset(b, n, _rand64, -1);
+    arc4random_buf(b, n);
     p = EncodeBase64(b, n, &m);
     q = DecodeBase64(p, m, &m);
     ASSERT_EQ(n, m);
@@ -88,7 +89,7 @@ TEST(Base64, RoundTrip) {
 TEST(Base64, Fuzz) {
   for (i = 0; i < 1000; ++i) {
     n = rand() % 32;
-    rngset(b, n, _rand64, -1);
+    arc4random_buf(b, n);
     free(DecodeBase64(p, m, 0));
   }
 }

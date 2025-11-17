@@ -14,8 +14,10 @@ LICENSE
 LOCAL CHANGES
 
   - Added `/zip/.args` file support to SQLite shell
+  - See [jart] comments in os_unix.c regarding f2fs support
   - Added `--strace` system call tracing flag to SQLite shell
   - Added `--strace` function call logging flag to SQLite shell
   - Configured fsync() using runtime magnums rather than ifdefs
+  - Added msync() call to unixSync() for FlushViewOfFile() call
   - Modify preprocessor macro for enabling pread() and pwrite()
   - Save and restore errno in some places to avoid log pollution

@@ -19,7 +19,8 @@
 #include "ctl/set.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/testlib/benchmark.h"
@@ -27,6 +28,8 @@
 // #include <set>
 // #define ctl std
 // #define check() size()
+
+#include "libc/mem/tinymalloc.inc"
 
 int
 rand32(void)
@@ -54,7 +57,7 @@ main()
     {
         long x = 0;
         ctl::set<long> s;
-        BENCHMARK(1000000, 1, s.insert(rand32() % 1000000));
+        BENCHMARK(100000, 1, s.insert(rand32() % 1000000));
         // s.check();
         BENCHMARK(1000000, 1, {
             auto i = s.find(rand32() % 1000000);
@@ -66,13 +69,15 @@ main()
             if (i != s.end())
                 x += *i;
         });
-        BENCHMARK(1000000, 1, s.erase(rand32() % 1000000));
+        BENCHMARK(100000, 1, s.erase(rand32() % 1000000));
         eat(x);
     }
 
     struct rusage ru;
     getrusage(RUSAGE_SELF, &ru);
     printf("%,10d kb peak rss\n", ru.ru_maxrss);
+
+    malloc_trim(0);
 
     CheckForMemoryLeaks();
 }

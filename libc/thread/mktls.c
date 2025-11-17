@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/calls/struct/rseq.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/macros.h"
@@ -27,6 +28,9 @@
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
+#include "third_party/dlmalloc/dlmalloc.h"
+
+static_assert(sizeof(struct CosmoTib) == 1024);
 
 #define I(x) ((uintptr_t)x)
 
@@ -40,6 +44,7 @@ static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
   tib->tib_ftrace = old->tib_ftrace;
   tib->tib_strace = old->tib_strace;
   tib->tib_sigmask = old->tib_sigmask;
+  ((struct rseq *)tib->tib_rseq)->cpu_id = RSEQ_CPU_ID_UNINITIALIZED;
   atomic_init(&tib->tib_ctid, -1);
   if (out_tib)
     *out_tib = tib;
@@ -67,14 +72,16 @@ static char *_mktls_below(struct CosmoTib **out_tib) {
   siz = ROUNDUP(I(_tls_size) + sizeof(*tib), _Alignof(struct CosmoTib));
   siz = ROUNDUP(siz, _Alignof(struct CosmoTib));
   mem = memalign(_Alignof(struct CosmoTib), siz);
+  if (!mem) {
+    return 0;
+  }
 
   tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
   tls = mem + siz - sizeof(*tib) - I(_tls_size);
 
   // copy in initialized data section
-  if (I(_tdata_size)) {
+  if (I(_tdata_size))
     memcpy(tls, _tdata_start, I(_tdata_size));
-  }
 
   // clear .tbss
   if (I(_tbss_size))
@@ -105,8 +112,9 @@ static char *_mktls_above(struct CosmoTib **out_tib) {
                 I(_tbss_size);
 
   char *mem = memalign(I(_tls_align), size);
-  if (!mem)
+  if (!mem) {
     return 0;
+  }
 
   struct CosmoTib *tib =
       (struct CosmoTib *)(mem +
@@ -117,14 +125,12 @@ static char *_mktls_above(struct CosmoTib **out_tib) {
   size_t dtv_size = sizeof(uintptr_t) * 2;
 
   char *tdata = (char *)dtv + ROUNDUP(dtv_size, I(_tdata_align));
-  if (I(_tdata_size)) {
+  if (I(_tdata_size))
     memmove(tdata, _tdata_start, I(_tdata_size));
-  }
 
   char *tbss = tdata + ROUNDUP(I(_tdata_size), I(_tbss_align));
-  if (I(_tbss_size)) {
+  if (I(_tbss_size))
     bzero(tbss, I(_tbss_size));
-  }
 
   dtv[0] = 1;
   dtv[1] = (uintptr_t)tdata;

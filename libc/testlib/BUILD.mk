@@ -57,6 +57,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/ezbenchcontrol.c				\
 	libc/testlib/ezbenchreport.c				\
 	libc/testlib/ezbenchwarn.c				\
+	libc/testlib/fileexists.c				\
 	libc/testlib/fixturerunner.c				\
 	libc/testlib/formatbinaryasglyphs.c			\
 	libc/testlib/formatbinaryashex.c			\
@@ -71,18 +72,26 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/globals.c					\
 	libc/testlib/hexequals.c				\
 	libc/testlib/incrementfailed.c				\
+	libc/testlib/ischardev.c				\
+	libc/testlib/isdirectory.c				\
+	libc/testlib/isexecutable.c				\
+	libc/testlib/isregularfile.c				\
+	libc/testlib/issymlink.c				\
 	libc/testlib/manystack.c				\
 	libc/testlib/memoryexists.c				\
 	libc/testlib/seterrno.c					\
 	libc/testlib/shoulddebugbreak.c				\
 	libc/testlib/showerror.c				\
+	libc/testlib/startparent.c				\
 	libc/testlib/startswith.c				\
 	libc/testlib/strcaseequals.c				\
 	libc/testlib/strequals.c				\
 	libc/testlib/strerror.c					\
 	libc/testlib/testrunner.c				\
+	libc/testlib/threadify.c				\
 	libc/testlib/thunks.c					\
 	libc/testlib/tmptest.c					\
+	libc/testlib/touch.c					\
 	libc/testlib/trace.c					\
 	libc/testlib/waitforexit.c				\
 	libc/testlib/waitforterm.c				\

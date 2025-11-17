@@ -26,6 +26,8 @@ __static_yoink("fflush");
 /**
  * Allocates stream object for already-opened file descriptor.
  *
+ * The file descriptor will be closed by fclose().
+ *
  * @param fd existing file descriptor or -1 for plain old buffer
  * @param mode is passed to fopenflags()
  * @return new stream or NULL w/ errno
@@ -33,18 +35,22 @@ __static_yoink("fflush");
  */
 FILE *fdopen(int fd, const char *mode) {
   FILE *f;
+  int oflags;
   struct stat st;
+  if ((oflags = fopenflags(mode)) == -1)
+    return NULL;
   if (fstat(fd, &st))
     return 0;
   if (!(f = __stdio_alloc()))
     return 0;
   f->bufmode = S_ISCHR(st.st_mode) ? _IONBF : _IOFBF;
-  f->oflags = fopenflags(mode);
+  f->oflags = oflags;
   f->size = BUFSIZ;
-  if (!(f->buf = malloc(f->size))) {
+  if (!(f->buf = malloc(f->size + 1))) {
     __stdio_unref(f);
     return 0;
   }
+  f->buf[f->size] = 0;
   f->freebuf = 1;
   f->fd = fd;
   return f;

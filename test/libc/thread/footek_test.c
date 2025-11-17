@@ -9,13 +9,16 @@
 #define POSIX_RECURSIVE 5
 #define RWLOCK          6
 #define RWLOCK_SHARED   7
+#define SEM             8
 
 #ifdef __COSMOPOLITAN__
 #include <cosmo.h>
+#include "third_party/nsync/mu.h"
 #endif
 
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <sys/resource.h>
@@ -302,10 +305,15 @@ void unlock(atomic_int *futex) {
   }
 }
 
+sem_t g_sem;
 int g_chores;
 atomic_int g_lock;
 pthread_mutex_t g_locker;
 pthread_rwlock_t g_rwlocker;
+
+#if defined(__COSMOPOLITAN__)
+nsync_mu g_nsync;
+#endif
 
 void *worker(void *arg) {
   for (int i = 0; i < ITERATIONS; ++i) {
@@ -317,6 +325,14 @@ void *worker(void *arg) {
     pthread_rwlock_wrlock(&g_rwlocker);
     ++g_chores;
     pthread_rwlock_unlock(&g_rwlocker);
+#elif USE == NSYNC
+    nsync_mu_lock(&g_nsync);
+    ++g_chores;
+    nsync_mu_unlock(&g_nsync);
+#elif USE == SEM
+    sem_wait(&g_sem);
+    ++g_chores;
+    sem_post(&g_sem);
 #else
     lock(&g_lock);
     ++g_chores;
@@ -343,6 +359,8 @@ long tomicros(struct timeval x) {
 int main() {
   struct timeval start;
   gettimeofday(&start, 0);
+
+  sem_init(&g_sem, 0, 1);
 
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);

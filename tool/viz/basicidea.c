@@ -112,7 +112,7 @@ void Reblinterlace(int zn, int yn, int xn, unsigned char dst[yn][xn][zn],
         dst[y][x][z] = src[z][y][x];
 }
 
-wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] void PrintUsage(int rc, int fd) {
   tinyprint(fd, "usage: ", prog, USAGE, NULL);
   exit(rc);
 }

@@ -23,6 +23,7 @@
  * Deletes empty directory.
  *
  * @return 0 on success, or -1 w/ errno
+ * @raise EACCES on Windows if someone in chdir()'d into directory
  */
 int rmdir(const char *path) {
   return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);

@@ -17,7 +17,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 
 #include "ctl/optional.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 #include "ctl/string.h"
 

@@ -43,7 +43,7 @@ __static_yoink("nsync_mu_trylock");
  * @see pthread_cond_broadcast
  * @see pthread_cond_wait
  */
-errno_t _pthread_cond_signal(pthread_cond_t *cond) {
+errno_t pthread_cond_signal(pthread_cond_t *cond) {
 
 #if PTHREAD_USE_NSYNC
   // do nothing if pthread_cond_timedwait() hasn't been called yet
@@ -65,5 +65,3 @@ errno_t _pthread_cond_signal(pthread_cond_t *cond) {
     cosmo_futex_wake((atomic_int *)&cond->_sequence, 1, cond->_pshared);
   return 0;
 }
-
-__weak_reference(_pthread_cond_signal, pthread_cond_signal);

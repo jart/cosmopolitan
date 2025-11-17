@@ -263,7 +263,7 @@
 	ud2		// crash if contract is broken
 #elif !defined(NDEBUG) && defined(__aarch64__)
 	brk	#1000
-#elif defined(__FNO_OMIT_FRAME_POINTER__) && defined(__x86_64__)
+#elif defined(__x86_64__)
 	nop		// avoid noreturn tail call backtrace ambiguity
 #endif
 .endm
@@ -285,7 +285,7 @@
 	nop
 	.endr
 #elif defined(__aarch64__)
-	.rept	6
+	.rept	8
 	nop
 	.endr
 #endif /* __x86_64__ */

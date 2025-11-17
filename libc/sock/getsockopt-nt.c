@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/nt/struct/linger.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -29,7 +32,8 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/errno.h"
+#if SupportsWindows()
 
 __msabi extern typeof(__sys_getsockopt_nt) *const __imp_getsockopt;
 
@@ -53,7 +57,7 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
     uint32_t len = sizeof(err);
     if (__imp_getsockopt(fd->handle, SOL_SOCKET, SO_ERROR, &err, &len) == -1)
       return __winsockerr();
-    *(int *)out_opt_optval = __dos2errno(err);
+    *(int *)out_opt_optval = __errno_windows2linux(err);
     *inout_optlen = sizeof(int);
   }
 

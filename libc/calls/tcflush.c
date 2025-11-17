@@ -52,7 +52,7 @@ static const char *DescribeFlush(char buf[12], int action) {
 }
 
 static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
-#ifdef __x86_64__
+#if SupportsWindows()
   if (!sys_isatty(fd)) {
     return -1;  // ebadf, enotty
   }
@@ -85,7 +85,7 @@ int tcflush(int fd, int queue) {
   int rc;
   if (queue != TCIFLUSH && queue != TCOFLUSH && queue != TCIOFLUSH) {
     rc = einval();
-  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = enotty();
   } else if (IsLinux()) {
     rc = sys_ioctl(fd, TCFLSH, queue);

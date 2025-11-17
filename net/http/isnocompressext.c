@@ -55,7 +55,7 @@ static bool BisectNoCompressExts(uint64_t ext) {
   return false;
 }
 
-bool IsNoCompressExt(const char *p, size_t n) {
+bool32 IsNoCompressExt(const char *p, size_t n) {
   int c, i;
   uint64_t w;
   if (n == -1)

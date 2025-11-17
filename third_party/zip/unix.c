@@ -8,18 +8,11 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
-#include "third_party/zip/osdep.h"
-#include "third_party/zip/zip.h"
+#include "zip.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/sched.h"
-#include "libc/sysv/consts/timer.h"
-#include "libc/time.h"
+#include <time.h>
 
 #if defined(MINIX) || defined(__mpexl)
 #  ifdef S_IWRITE
@@ -33,20 +26,16 @@
 #endif
 
 #if defined(HAVE_DIRENT_H) || defined(_POSIX_VERSION)
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/dt.h"
+#  include <dirent.h>
 #else /* !HAVE_DIRENT_H */
 #  ifdef HAVE_NDIR_H
-// MISSING #include <ndir.h>
+// [jart] #    include <ndir.h>
 #  endif /* HAVE_NDIR_H */
 #  ifdef HAVE_SYS_NDIR_H
-// MISSING #include <sys/ndir.h>
+// [jart] #    include <sys/ndir.h>
 #  endif /* HAVE_SYS_NDIR_H */
 #  ifdef HAVE_SYS_DIR_H
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/dt.h"
+#    include <sys/dir.h>
 #  endif /* HAVE_SYS_DIR_H */
 #  ifndef dirent
 #    define dirent direct
@@ -59,7 +48,7 @@
 /* Library functions not in (most) header files */
 
 #ifdef _POSIX_VERSION
-#include "libc/utime.h"
+#  include <utime.h>
 #else
    int utime OF((char *, time_t *));
 #endif
@@ -71,6 +60,38 @@ local time_t label_utim = 0;
 
 /* Local functions */
 local char *readd OF((DIR *));
+
+
+#ifdef NO_DIR                    /* for AT&T 3B1 */
+#include <sys/dir.h>
+#ifndef dirent
+#  define dirent direct
+#endif
+typedef FILE DIR;
+/*
+**  Apparently originally by Rich Salz.
+**  Cleaned up and modified by James W. Birdsall.
+*/
+
+#define opendir(path) fopen(path, "r")
+
+struct dirent *readdir(dirp)
+DIR *dirp;
+{
+  static struct dirent entry;
+
+  if (dirp == NULL)
+    return NULL;
+  for (;;)
+    if (fread (&entry, sizeof (struct dirent), 1, dirp) == 0)
+      return NULL;
+    else if (entry.d_ino)
+      return (&entry);
+} /* end of readdir() */
+
+#define closedir(dirp) fclose(dirp)
+#endif /* NO_DIR */
+
 
 local char *readd(d)
 DIR *d;                 /* directory stream to read from */
@@ -698,21 +719,11 @@ char *d;                /* directory to delete */
 /******************************/
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__386BSD__) || \
-    defined(__OpenBSD__) || defined(__bsdi__)
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/rlimit.h"
-#include "libc/calls/struct/rusage.h"
-#include "libc/stdio/sysparam.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/limits.h"
-#include "libc/sysv/consts/endian.h"
-#include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
-#include "libc/sysv/consts/rusage.h" /* for the BSD define */
+  defined(__OpenBSD__) || defined(__bsdi__)
+#include <sys/param.h> /* for the BSD define */
 /* if we have something newer than NET/2 we'll use uname(3) */
 #if (BSD > 199103)
-#include "libc/calls/struct/utsname.h"
+#include <sys/utsname.h>
 #endif /* BSD > 199103 */
 #endif /* __{Net,Free,Open,386}BSD__ || __bsdi__ */
 
@@ -873,6 +884,8 @@ void version_local()
 #  else
 #    define OS_NAME "Linux a.out"
 #  endif
+#elifdef __COSMOPOLITAN__
+#  define OS_NAME "Cosmopolitan"
 #else
 #ifdef MINIX
 #  define OS_NAME "Minix"
@@ -1009,7 +1022,7 @@ void version_local()
 
 
 /* Define the compile date string */
-#ifdef __DATE__
+#if 0
 #  define COMPILE_DATE " on " __DATE__
 #else
 #  define COMPILE_DATE ""
@@ -1020,3 +1033,70 @@ void version_local()
 
 } /* end function version_local() */
 
+
+/* 2006-03-23 SMS.
+ * Emergency replacement for strerror().  (Useful on SunOS 4.*.)
+ * Enable by specifying "LOCAL_UNZIP=-DNEED_STRERROR=1" on the "make"
+ * command line.
+ */
+
+#ifdef NEED_STRERROR
+
+char *strerror( err)
+  int err;
+{
+    extern char *sys_errlist[];
+    extern int sys_nerr;
+
+    static char no_msg[ 64];
+
+    if ((err >= 0) && (err < sys_nerr))
+    {
+        return sys_errlist[ err];
+    }
+    else
+    {
+        sprintf( no_msg, "(no message, code = %d.)", err);
+        return no_msg;
+    }
+}
+
+#endif /* def NEED_STRERROR */
+
+
+/* 2006-03-23 SMS.
+ * Emergency replacement for memmove().  (Useful on SunOS 4.*.)
+ * Enable by specifying "LOCAL_UNZIP=-DNEED_MEMMOVE=1" on the "make"
+ * command line.
+ */
+
+#ifdef NEED_MEMMOVE
+
+/* memmove.c -- copy memory.
+   Copy LENGTH bytes from SOURCE to DEST.  Does not null-terminate.
+   In the public domain.
+   By David MacKenzie <djm@gnu.ai.mit.edu>.
+   Adjusted by SMS.
+*/
+
+void *memmove(dest0, source0, length)
+  void *dest0;
+  void const *source0;
+  size_t length;
+{
+    char *dest = dest0;
+    char const *source = source0;
+    if (source < dest)
+        /* Moving from low mem to hi mem; start at end.  */
+        for (source += length, dest += length; length; --length)
+            *--dest = *--source;
+    else if (source != dest)
+    {
+        /* Moving from hi mem to low mem; start at beginning.  */
+        for (; length; --length)
+            *dest++ = *source++;
+    }
+    return dest0;
+}
+
+#endif /* def NEED_MEMMOVE */

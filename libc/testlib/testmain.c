@@ -24,6 +24,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/dll.h"
@@ -35,7 +36,6 @@
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
@@ -46,7 +46,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/aspect.internal.h"
 #include "libc/testlib/testlib.h"
@@ -191,6 +190,11 @@ int main(int argc, char *argv[]) {
   CheckStackIsAligned();
   testlib_runalltests();
 
+  // torture tests with threads
+  void _testlib_threadify_run(void);
+  if (_weaken(_testlib_threadify_run))
+    _weaken(_testlib_threadify_run)();
+
   // run benchmarks
   if (!g_testlib_failed && runbenchmarks_ &&
       _weaken(testlib_runallbenchmarks)) {
@@ -214,7 +218,7 @@ int main(int argc, char *argv[]) {
     _weaken(_pthread_decimate)(kPosixThreadZombie);
   if (_weaken(pthread_orphan_np) && !_weaken(pthread_orphan_np)()) {
     tinyprint(2, "error: tests ended with threads still active\n", NULL);
-    _Exit(1);
+    exit(1);
   }
 
   // check for memory leaks

@@ -102,6 +102,7 @@ use_clang() {
 use_gcc
 
 X=
+CRT=crt
 OPT=
 ARGS=
 FLAGS=
@@ -119,6 +120,9 @@ FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
 DEPENDENCY_OUTPUT=
 NEED_DEPENDENCY_OUTPUT=
+REDZONE=-mno-red-zone
+TLSFLAG=-mno-tls-direct-seg-refs
+SUPPORT_VECTOR=-1
 
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
@@ -209,8 +213,14 @@ EOF
   elif [ x"$x" = x"-mtiny" ]; then
     MODE=tiny
     continue
+  elif [ x"$x" = x"-msysv" ]; then
+    MODE=sysv
+    continue
   elif [ x"$x" = x"-moptlinux" ]; then
     MODE=optlinux
+    continue
+  elif [ x"$x" = x"-mtinylinux" ]; then
+    MODE=tinylinux
     continue
   elif [ x"$x" = x"-mclang" ]; then
     use_clang
@@ -227,6 +237,8 @@ EOF
     # result, stack traces are always meaningful, even without debug
     # information."
     x="-momit-leaf-frame-pointer -foptimize-sibling-calls -fschedule-insns2"
+  elif [ x"$x" = x"-S" ]; then
+    fatal_error "assembly generation only supported with ARCH-unknown-cosmo-cc compilers"
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-S" ] ||
        [ x"$x" = x"-pie" ] ||
@@ -290,6 +302,9 @@ EOF
   elif [ x"$x" = x"-MD" ] ||
        [ x"$x" = x"-MMD" ]; then
     MDFLAG=1
+  elif [ x"$x" = x"-ffast-math" ] ||
+       [ x"$x" = x"-funsafe-math-optimizations" ]; then
+    CRT=crtfastmath
   fi
   FLAGS="$FLAGS $x"
   ARGS="$ARGS $x"
@@ -332,6 +347,15 @@ if [ $INTENT = ld ]; then
   use_gcc
 fi
 
+if [ x"$MODE" = x"sysv" ]; then
+  SUPPORT_VECTOR=linux+mac+bsd
+elif [ x"$MODE" = x"optlinux" ] ||
+     [ x"$MODE" = x"tinylinux" ]; then
+  REDZONE=
+  TLSFLAG=
+  SUPPORT_VECTOR=linux
+fi
+
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
@@ -340,10 +364,15 @@ LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelr
 PRECIOUS="-fno-omit-frame-pointer"
 
 # these features screw with backtraces so avoid them
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
+if [ x"$OPT" != x"-Os" ] &&
+   [ x"$MODE" != x"tiny" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
-if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
+if [ x"$OPT" != x"-O3" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
   if [ $CLANG -eq 0 ]; then
     CFLAGS="$CFLAGS -fno-schedule-insns2"
   fi
@@ -362,9 +391,10 @@ fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC_X86_64=$CXX_X86_64
   CC_AARCH64=$CXX_AARCH64
+  CFLAGS="$CFLAGS -std=gnu++23"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 else
-  CFLAGS="$CFLAGS -Wno-implicit-int"
+  CFLAGS="$CFLAGS -std=gnu23 -Wno-implicit-int"
 fi
 
 if [ x"$MODE" = x"dbg" ]; then
@@ -373,33 +403,36 @@ if [ x"$MODE" = x"dbg" ]; then
 elif [ x"$MODE" = x"tiny" ]; then
   LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/tiny"
   LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"sysv" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/sysv"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/sysv"
 elif [ x"$MODE" = x"optlinux" ]; then
   LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/optlinux"
   LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/optlinux"
+elif [ x"$MODE" = x"tinylinux" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/tinylinux"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/tinylinux"
 else
   LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib"
   LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib"
 fi
 
-CRT_X86_64="$LIB_X86_64/ape.o $LIB_X86_64/crt.o"
-CPPFLAGS_X86_64="$CPPFLAGS"
-CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
+CRT_X86_64="$LIB_X86_64/ape.o $LIB_X86_64/$CRT.o"
+CPPFLAGS_X86_64="$CPPFLAGS $REDZONE"
+CFLAGS_X86_64="$CFLAGS $TLSFLAG"
 LDFLAGS_X86_64="$LDFLAGS -L$LIB_X86_64 -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$LIB_X86_64/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
 LDLIBS_X86_64="-lcosmo"
 
-CRT_AARCH64="$LIB_AARCH64/crt.o"
+CRT_AARCH64="$LIB_AARCH64/$CRT.o"
 CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
 CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28"
 LDFLAGS_AARCH64="$LDFLAGS -L$LIB_AARCH64 -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$LIB_AARCH64/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"
 
-SUPPORT_VECTOR=-1
-if [ x"$MODE" = x"optlinux" ]; then
-  CPPFLAGS_X86_64="$CPPFLAGS_X86_64 -mno-red-zone"
-  SUPPORT_VECTOR=linux
-fi
-
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
+if [ x"$OPT" != x"-Os" ] &&
+   [ x"$MODE" != x"tiny" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
   CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
   CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
 fi
@@ -493,18 +526,34 @@ build_object() {
   out2=$(mktemper .txt) || Exit
   TEMP_FILES="${TEMP_FILES} $out2"
   (
-    set -- \
-        "$CC_X86_64" \
-        $TARGET_X86_64 \
-        -o"$OUTPUT_X86_64" \
-        $PLATFORM \
-        $PREDEF \
-        $CFLAGS_X86_64 \
-        $CPPFLAGS_X86_64 \
-        "$@" \
-        $DEPENDENCY_FLAGS_x86_64 \
-        $FLAGS_X86_64 \
-        $PRECIOUS
+    if [ -n "$TLSFLAG" ]; then
+      set -- \
+          "$BIN/tlscc" \
+          "$CC_X86_64" \
+          $TARGET_X86_64 \
+          -o"$OUTPUT_X86_64" \
+          $PLATFORM \
+          $PREDEF \
+          $CFLAGS_X86_64 \
+          $CPPFLAGS_X86_64 \
+          "$@" \
+          $DEPENDENCY_FLAGS_x86_64 \
+          $FLAGS_X86_64 \
+          $PRECIOUS
+    else
+      set -- \
+          "$CC_X86_64" \
+          $TARGET_X86_64 \
+          -o"$OUTPUT_X86_64" \
+          $PLATFORM \
+          $PREDEF \
+          $CFLAGS_X86_64 \
+          $CPPFLAGS_X86_64 \
+          "$@" \
+          $DEPENDENCY_FLAGS_x86_64 \
+          $FLAGS_X86_64 \
+          $PRECIOUS
+    fi
     log_command "$@"
     "$@" || exit
     set -- \
@@ -681,7 +730,9 @@ set -- \
 log_command "$@"
 "$@" || Exit
 
-if [ x"$MODE" != "optlinux" ]; then
+if [ x"$MODE" != x"sysv" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
   set -- \
   "$BIN/pecheck" "$OUTPUT"
   log_command "$@"

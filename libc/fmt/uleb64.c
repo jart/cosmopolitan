@@ -21,24 +21,24 @@
 /**
  * Encodes unsigned integer to array.
  *
- *     uleb64 INT64_MAX    l:        10𝑐         3𝑛𝑠
- *     zleb64 INT64_MAX    l:        13𝑐         4𝑛𝑠
- *     sleb64 INT64_MAX    l:        16𝑐         5𝑛𝑠
- *     uleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     zleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     sleb128 INT64_MAX   l:        24𝑐         8𝑛𝑠
- *     zleb64 INT64_MIN    l:        13𝑐         4𝑛𝑠
- *     sleb64 INT64_MIN    l:        16𝑐         5𝑛𝑠
- *     zleb128 INT64_MIN   l:        19𝑐         6𝑛𝑠
- *     sleb128 INT64_MIN   l:        24𝑐         8𝑛𝑠
+ * This function is the reverse operation of unuleb64().
+ *
+ * The maximum number of bytes that'll be serialized to `p` is 9. The
+ * ninth byte is special. Normally with LEB encoding, the highest bit of
+ * each byte indicates if we should consume additional bytes. That means
+ * each byte has 7 bits of content, and 8*7=56 which means by the time
+ * we hit the ninth byte, there's exactly 8 bits of content remaining in
+ * the 64-bit integer we're decoding. So we don't use LEB on the ninth
+ * byte and treat all eight bits of it as content.
  *
  * @param p is output array
  * @param x is number
  * @return p + i
  */
-char *uleb64(char p[hasatleast 10], uint64_t x) {
+char *uleb64(char p[hasatleast 9], uint64_t x) {
   int c;
-  for (;;) {
+#pragma GCC unroll 1000
+  for (int i = 0; i < 8; ++i) {
     c = x & 127;
     if (!(x >>= 7)) {
       *p++ = c;
@@ -47,4 +47,6 @@ char *uleb64(char p[hasatleast 10], uint64_t x) {
       *p++ = c | 128;
     }
   }
+  *p++ = x;
+  return p;
 }

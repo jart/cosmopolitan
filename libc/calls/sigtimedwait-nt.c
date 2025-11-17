@@ -23,6 +23,8 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/macros.h"
 #include "libc/nt/events.h"
@@ -33,7 +35,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows static int sys_sigtimedwait_nt_check(sigset_t syncsigs,
                                                  siginfo_t *opt_info,
@@ -48,6 +50,7 @@ textwindows static int sys_sigtimedwait_nt_check(sigset_t syncsigs,
         opt_info->si_signo = sig;
         opt_info->si_code = SI_TKILL;
         opt_info->si_uid = sys_getuid_nt();
+        opt_info->si_pid = getpid();
       }
       return sig;
     }
@@ -87,7 +90,6 @@ textwindows int sys_sigtimedwait_nt(const sigset_t *set, siginfo_t *opt_info,
                                     const struct timespec *opt_timeout) {
   int rc;
   intptr_t sev;
-  struct PosixThread *pt;
   struct timespec deadline;
   sigset_t syncsigs, waitmask;
   BLOCK_SIGNALS;
@@ -96,17 +98,11 @@ textwindows int sys_sigtimedwait_nt(const sigset_t *set, siginfo_t *opt_info,
   } else {
     deadline = timespec_max;
   }
-  if ((sev = CreateEvent(0, 0, 0, 0))) {
-    syncsigs = *set & ~(1ull << (SIGTHR - 1));  // internal to pthreads
-    waitmask = ~syncsigs & _SigMask;
-    pt = _pthread_self();
-    pt->pt_event = sev;
-    pt->pt_blkmask = waitmask;
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                          memory_order_release);
+  syncsigs = *set & ~(1ull << (SIGTHR - 1));  // internal to pthreads
+  waitmask = ~syncsigs & _SigMask;
+  if ((sev = __interruptible_start(waitmask))) {
     rc = sys_sigtimedwait_nt_impl(syncsigs, opt_info, deadline, waitmask, sev);
-    atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-    CloseHandle(sev);
+    __interruptible_end();
   } else {
     rc = __winerr();
   }

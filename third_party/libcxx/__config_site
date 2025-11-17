@@ -13,7 +13,7 @@
 // therefore we schlep in 28k of code needed to print c++ symbols
 // however c programs should never include *any* stl headers ever
 #ifndef TINY
-__static_yoink("__demangle");
+__static_yoink("cosmo_demangle");
 #endif
 
 // We get a million `error: ‘always_inline’ function might not be
@@ -28,13 +28,11 @@ __static_yoink("__demangle");
 #define _LIBCPP_NO_ABI_TAG
 #define _LIBCPP_ABI_VERSION 1
 #define _LIBCPP_ABI_NAMESPACE __1
-#define _LIBCPP_USING_GETENTROPY
 #define _LIBCPP_DISABLE_AVAILABILITY
 #define _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 #define _LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS
 #define _LIBCPP_NO_VCRUNTIME
 #define _LIBCPP_TYPEINFO_COMPARISON_IMPLEMENTATION 1
-#define _LIBCPP_REMOVE_TRANSITIVE_INCLUDES
 #define _LIBCPP_HAS_THREAD_API_PTHREAD
 #define _LIBCPP_NO_VCRUNTIME
 #define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE

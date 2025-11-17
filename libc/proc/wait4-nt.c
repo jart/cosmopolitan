@@ -16,51 +16,116 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
+#include "libc/nt/enum/status.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/events.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/proc/proc.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
-textwindows static int __proc_reap(struct Proc *pr, int *wstatus,
-                                   struct rusage *opt_out_rusage) {
-  if (wstatus)
-    *wstatus = pr->wstatus;
-  if (opt_out_rusage)
-    *opt_out_rusage = pr->ru;
-  dll_remove(&__proc.zombies, &pr->elem);
-  if (dll_is_empty(__proc.zombies))
-    ResetEvent(__proc.haszombies);
-  if (pr->waiters) {
-    pr->status = PROC_UNDEAD;
-    dll_make_first(&__proc.undead, &pr->elem);
-  } else {
-    dll_make_first(&__proc.free, &pr->elem);
-    CloseHandle(pr->handle);
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
+
+// turns some win32 wait statuses into unix style ones
+textwindows static int __proc_wstatus(uint32_t dwExitCode) {
+  switch (dwExitCode) {
+    case kNtStatusControlCExit:
+      return SIGINT;
+    case kNtStatusStackOverflow:
+    case kNtStatusAccessViolation:
+    case kNtStatusGuardPageViolation:
+      return SIGSEGV;
+    case kNtStatusInPageError:
+      return SIGBUS;
+    case kNtStatusIllegalInstruction:
+    case kNtStatusPrivilegedInstruction:
+      return SIGILL;
+    case kNtStatusBreakpoint:
+      return SIGTRAP;
+    case kNtStatusIntegerOverflow:
+    case kNtStatusFloatDivideByZero:
+    case kNtStatusFloatOverflow:
+    case kNtStatusFloatUnderflow:
+    case kNtStatusFloatInexactResult:
+    case kNtStatusFloatDenormalOperand:
+    case kNtStatusFloatInvalidOperation:
+    case kNtStatusFloatStackCheck:
+    case kNtStatusIntegerDivideBYZero:
+      return SIGFPE;
+    case kNtStatusDllNotFound:
+    case kNtStatusDllInitFailed:
+    case kNtStatusOrdinalNotFound:
+    case kNtStatusEntrypointNotFound:
+      return SIGSYS;
+    case kNtStatusAssertionFailure:
+      return SIGABRT;
+    default:
+      return dwExitCode;
   }
+}
+
+textwindows static int __proc_unstop(struct Proc *pr, int *wstatus,
+                                     struct rusage *opt_out_rusage) {
+  if (wstatus)
+    *wstatus = __proc_wstatus(pr->dwExitCode);
+  if (opt_out_rusage)
+    *opt_out_rusage = (struct rusage){0};
+  dll_remove(&__proc.stopped, &pr->stopelem);
+  if (dll_is_empty(__proc.stopped))
+    ResetEvent(__proc.hasstopped);
+  ResetEvent(pr->hStopEvent);
+  pr->status = PROC_ALIVE;
   return pr->pid;
 }
 
-textwindows static int __proc_check(int pid, int *wstatus,
+textwindows static int __proc_reap_zombie(struct Proc *pr, int *wstatus,
+                                          struct rusage *opt_out_rusage) {
+  if (wstatus)
+    *wstatus = __proc_wstatus(pr->dwExitCode);
+  if (opt_out_rusage)
+    *opt_out_rusage = pr->ru;
+  dll_remove(&__proc.zombies, &pr->elem);
+  pr->status = PROC_UNDEAD;
+  dll_make_first(&__proc.undead, &pr->elem);
+  SetEvent(__proc.hLifeChurn);
+  return pr->pid;
+}
+
+textwindows static int __proc_check(int pid, int *wstatus, int options,
                                     struct rusage *opt_out_rusage) {
   struct Dll *e;
+  if (options & WUNTRACED) {
+    for (e = dll_first(__proc.stopped); e; e = dll_next(__proc.stopped, e)) {
+      struct Proc *pr = STOP_PROC_CONTAINER(e);
+      if (pid == -1 || pid == pr->pid)
+        return __proc_unstop(pr, wstatus, opt_out_rusage);
+    }
+  }
   for (e = dll_first(__proc.zombies); e; e = dll_next(__proc.zombies, e)) {
     struct Proc *pr = PROC_CONTAINER(e);
-    if (pid == -1 || pid == pr->pid)
-      return __proc_reap(pr, wstatus, opt_out_rusage);
+    if (pid == -1 || pid == pr->pid) {
+      int rc = __proc_reap_zombie(pr, wstatus, opt_out_rusage);
+      if (!(__get_pib()->sighandrvas[SIGCHLD - 1] == (uintptr_t)SIG_IGN ||
+            (__get_pib()->sighandflags[SIGCHLD - 1] & SA_NOCLDWAIT)))
+        return rc;
+    }
   }
   return 0;
 }
@@ -84,7 +149,7 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
     // check for zombie to harvest
     __proc_lock();
   CheckForZombies:
-    int rc = __proc_check(pid, wstatus, rusage);
+    int rc = __proc_check(pid, wstatus, options, rusage);
 
     // if there's no zombies left
     // check if there's any living processes
@@ -101,12 +166,17 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
 
     // get appropriate wait object
     // register ourself as waiting
+    int handcount = 2;
+    intptr_t hands[3];
     struct Proc *pr = 0;
-    uintptr_t hWaitObject;
     if (pid == -1) {
       // wait for any status change
-      hWaitObject = __proc.haszombies;
+      hands[0] = __proc.haszombies;
       ++__proc.waiters;
+      if (options & WUNTRACED) {
+        ++__proc.stopwaiters;
+        hands[handcount++] = __proc.hasstopped;
+      }
     } else {
       // wait on specific child
       for (struct Dll *e = dll_first(__proc.list); e;
@@ -120,7 +190,11 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
         // being obligated to monitor this process. this means we may
         // need to assume responsibility later on for zombifying this
         ++pr->waiters;
-        hWaitObject = pr->handle;
+        hands[0] = pr->hProcess;
+        if (options & WUNTRACED) {
+          ++pr->stopwaiters;
+          hands[handcount++] = pr->hStopEvent;
+        }
       } else {
         __proc_unlock();
         return echild();
@@ -130,16 +204,9 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
 
     // perform blocking operation
     uint32_t wi;
-    uintptr_t event;
-    if ((event = CreateEvent(0, 0, 0, 0))) {
-      struct PosixThread *pt = _pthread_self();
-      pt->pt_event = event;
-      pt->pt_blkmask = waitmask;
-      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                            memory_order_release);
-      wi = WaitForMultipleObjects(2, (intptr_t[2]){hWaitObject, event}, 0, -1u);
-      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      CloseHandle(event);
+    if ((hands[1] = __interruptible_start(waitmask))) {
+      wi = __imp_WaitForMultipleObjects(handcount, hands, 0, -1u);
+      __interruptible_end();
     } else {
       wi = -1u;
     }
@@ -150,21 +217,36 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
       STRACE("wait4 abandoned %u", wi);
     }
 
-    // check for wait() style wakeup
+    // lock again
     __proc_lock();
-    if (!wi && !pr) {
+
+    // clear our waiter status
+    if (pr) {
+      --pr->waiters;
+      if (options & WUNTRACED)
+        --pr->stopwaiters;
+    } else {
       --__proc.waiters;
-      goto CheckForZombies;
+      if (options & WUNTRACED)
+        --__proc.stopwaiters;
     }
 
-    // check if killed or win32 error
-    if (wi) {
-      if (pr) {
-        if (!--pr->waiters && pr->status == PROC_UNDEAD)
-          __proc_free(pr);
-      } else {
-        --__proc.waiters;
+    // handle weird case that can happen with auto zombie reaping
+    if (wi == 0) {
+      if (dll_is_empty(__proc.zombies))
+        ResetEvent(__proc.haszombies);
+      if (pr && pr->status == PROC_UNDEAD) {
+        __proc_unlock();
+        return echild();
       }
+    }
+
+    // check for wait() style wakeup
+    if (!pr && (wi == 0 || wi == 2))
+      goto CheckForZombies;
+
+    // check if killed or win32 error
+    if (wi == 1 || wi == -1u) {
       __proc_unlock();
       if (wi == 1) {
         // __sig_wake() woke our semaphore
@@ -177,28 +259,30 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
     }
 
     // handle process exit notification
-    --pr->waiters;
-    if (pr->status == PROC_ALIVE)
+    if (pr->status == PROC_ALIVE || pr->status == PROC_STOPPED)
       __proc_harvest(pr, true);
     switch (pr->status) {
       case PROC_ALIVE:
         // exit caused by execve() reparenting
-        if (!pr->waiters)
-          // avoid deadlock that could theoretically happen
-          SetEvent(__proc.onbirth);
         __proc_unlock();
         break;
       case PROC_ZOMBIE:
         // exit happened and we're the first to know
-        rc = __proc_reap(pr, wstatus, rusage);
+        rc = __proc_reap_zombie(pr, wstatus, rusage);
         __proc_unlock();
         return rc;
       case PROC_UNDEAD:
-        // exit happened but another thread waited first
-        if (!pr->waiters)
-          __proc_free(pr);
+        // this could happen because (1) exit happened but another
+        // thread waited first, or (2) SIG_IGN SIGCHLD or SA_NOCLDSTOP
+        // is in play and __proc_harvest() refiled the process as undead
         __proc_unlock();
         return echild();
+      case PROC_STOPPED:
+        rc = __proc_unstop(pr, wstatus, rusage);
+        __proc_unlock();
+        if (options & WUNTRACED)
+          return rc;
+        break;
       default:
         __builtin_unreachable();
     }
@@ -207,8 +291,8 @@ textwindows static int __proc_wait(int pid, int *wstatus, int options,
 
 textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
                              struct rusage *opt_out_rusage) {
-  // no support for WCONTINUED and WUNTRACED yet
-  if (options & ~WNOHANG)
+  // no support for WCONTINUED yet
+  if (options & ~(WNOHANG | WUNTRACED))
     return einval();
   // XXX: NT doesn't really have process groups. For instance the
   //      CreateProcess() flag for starting a process group actually

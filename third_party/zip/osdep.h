@@ -27,21 +27,8 @@
 # define _LARGE_FILES           /* some OSes need this for 64-bit off_t */
 #endif
 
-#include "libc/calls/makedev.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/thread/thread.h"
-#include "libc/calls/typedef/u.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sock/select.h"
-#include "libc/sysv/consts/endian.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/utime.h"
-#include "libc/time.h"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /* printf format size prefix for zoff_t values */
 #ifdef LARGE_FILE_SUPPORT

@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
@@ -49,6 +50,9 @@ int makedirs(const char *path, unsigned mode) {
   int c, e, i, n;
   struct stat st;
   char buf[PATH_MAX];
+
+  if (kisdangerous(path))
+    return efault();
 
   e = errno;
   n = strlen(path);

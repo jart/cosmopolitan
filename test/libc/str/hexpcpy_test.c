@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/macros.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
@@ -24,7 +25,7 @@
 TEST(hexpcpy, test) {
   char buf[] = {0x00, 0x02, 0x20, 0x80, 0xf5, 0xff};
   char str[ARRAYLEN(buf) * 2 + 1];
-  rngset(str, sizeof(str), _rand64, -1);
+  arc4random_buf(str, sizeof(str));
   EXPECT_EQ(str + ARRAYLEN(buf) * 2, hexpcpy(str, buf, ARRAYLEN(buf)));
   EXPECT_STREQ("00022080f5ff", str);
 }
@@ -32,7 +33,7 @@ TEST(hexpcpy, test) {
 TEST(hexpcpy, emptyBuf_writesNulTerminator) {
   char buf[1];
   char str[1];
-  rngset(str, sizeof(str), _rand64, -1);
+  arc4random_buf(str, sizeof(str));
   EXPECT_EQ(str, hexpcpy(str, buf, 0));
   EXPECT_STREQ("", str);
 }

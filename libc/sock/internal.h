@@ -26,8 +26,6 @@ COSMOPOLITAN_C_START_
 
 #define SOCKFD_OVERLAP_BUFSIZ 128
 
-errno_t __dos2errno(uint32_t);
-
 int32_t __sys_accept(int32_t, void *, uint32_t *, int) __wur;
 int32_t __sys_accept4(int32_t, void *, uint32_t *, int) __wur;
 int32_t __sys_bind(int32_t, const void *, uint32_t);
@@ -76,6 +74,9 @@ int64_t __winsockerr(void);
 int __fixupnewsockfd(int, int);
 int64_t GetNtBaseSocket(int64_t);
 int sys_close_epoll(int);
+
+int __fixsunpath(struct sockaddr_un *, const void **, uint32_t *);
+void __unfixsunpath(void *, uint32_t *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_ */

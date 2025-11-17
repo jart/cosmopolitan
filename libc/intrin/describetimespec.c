@@ -17,13 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 
 const char *_DescribeTimespec(char buf[45], int rc, const struct timespec *ts) {
-  if (rc == -1)
+  if (rc < 0)
     return "n/a";
   if (!ts)
     return "NULL";

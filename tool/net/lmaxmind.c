@@ -81,9 +81,9 @@ static int LuaMaxmindOpen(lua_State *L) {
   return 1;
 }
 
-static wontreturn void LuaThrowMaxmindIpError(lua_State *L,
-                                              const char *function_name,
-                                              uint32_t ip, int err) {
+[[noreturn]] static void LuaThrowMaxmindIpError(lua_State *L,
+                                                const char *function_name,
+                                                uint32_t ip, int err) {
   luaL_error(L, "%s(%d.%d.%d.%d) → MMDB_%s", function_name,
              (ip & 0xff000000) >> 030, (ip & 0x00ff0000) >> 020,
              (ip & 0x0000ff00) >> 010, (ip & 0x000000ff) >> 000,

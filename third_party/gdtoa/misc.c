@@ -29,100 +29,44 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/macros.h"
-#include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-#include "third_party/gdtoa/lock.h"
 
-static ThInfo TI0;
-
-static void
-__gdtoa_Brelease(Bigint *rv)
-{
-	if (!rv) return;
-	__gdtoa_Brelease(rv->next);
-	free(rv);
-}
+static pthread_key_t P5s;
 
 static void
-__gdtoa_Bclear(void)
+__gdtoa_Bdtor(void *p)
 {
-	int i;
-	__gdtoa_lock1();
-	for (i = 0; i < ARRAYLEN(TI0.Freelist); ++i)
-		__gdtoa_Brelease(TI0.Freelist[i]);
-	__gdtoa_lock();
-	__gdtoa_Brelease(TI0.P5s);
-	__gdtoa_unlock();
-	bzero(&TI0, sizeof(TI0));
-	__gdtoa_unlock1();
+	Bigint *e, *e2;
+	for (e = (Bigint *)p; e; e = e2) {
+		e2 = e->next;
+		free(e);
+	}
 }
 
 __attribute__((__constructor__(60))) static void
 __gdtoa_Binit(void)
 {
-	atexit(__gdtoa_Bclear);
-}
-
-static ThInfo *
-__gdtoa_get_TI(void)
-{
-	return &TI0;
+	pthread_key_create(&P5s, __gdtoa_Bdtor);
 }
 
 Bigint *
-__gdtoa_Balloc(int k, ThInfo **PTI)
+__gdtoa_Balloc(int k)
 {
 	int x;
-	Bigint *rv;
-	ThInfo *TI;
-	if (!(TI = *PTI))
-		*PTI = TI = __gdtoa_get_TI();
-	if (TI == &TI0)
-		__gdtoa_lock();
-	if (k <= Kmax && (rv = TI->Freelist[k]) != 0) {
-		TI->Freelist[k] = rv->next;
-	} else {
-		x = 1 << k;
-		rv = malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
-		if (rv == NULL)
-			goto ret;
-		rv->k = k;
-		rv->maxwds = x;
-	}
-	rv->sign = rv->wds = 0;
-
-ret:
-	if (TI == &TI0)
-		__gdtoa_unlock();
-	return rv;
-}
-
-void
-__gdtoa_Bfree(Bigint *v, ThInfo **PTI)
-{
-	ThInfo *TI;
-	if (v) {
-		if (v->k > Kmax)
-			free((void *)v);
-		else {
-			if (!(TI = *PTI))
-				*PTI = TI = __gdtoa_get_TI();
-			if (TI == &TI0)
-				__gdtoa_lock();
-			v->next = TI->Freelist[v->k];
-			TI->Freelist[v->k] = v;
-			if (TI == &TI0)
-				__gdtoa_unlock();
-		}
-	}
+	Bigint *b;
+	x = 1 << k;
+	if (!(b = (Bigint *)malloc(sizeof(Bigint) + (x-1)*sizeof(ULong))))
+		return 0;
+	b->k = k;
+	b->maxwds = x;
+	b->sign = 0;
+	b->wds = 0;
+	return b;
 }
 
 Bigint *
-__gdtoa_multadd(Bigint *b, int m, int a, ThInfo **PTI)
+__gdtoa_multadd(Bigint *b, int m, int a)
 {
 	int i, wds;
 	ULong *x;
@@ -139,9 +83,10 @@ __gdtoa_multadd(Bigint *b, int m, int a, ThInfo **PTI)
 	} while (++i < wds);
 	if (carry) {
 		if (wds >= b->maxwds) {
-			b1 = __gdtoa_Balloc(b->k + 1, PTI);
+			if (!(b1 = __gdtoa_Balloc(b->k + 1)))
+				return 0;
 			memcpy(&b1->sign, &b->sign, b->wds * sizeof(ULong) + 2 * sizeof(int));
-			__gdtoa_Bfree(b, PTI);
+			__gdtoa_Bfree(b);
 			b = b1;
 		}
 		b->x[wds++] = carry;
@@ -151,17 +96,18 @@ __gdtoa_multadd(Bigint *b, int m, int a, ThInfo **PTI)
 }
 
 Bigint *
-__gdtoa_i2b(int i, ThInfo **PTI)
+__gdtoa_i2b(int i)
 {
 	Bigint *b;
-	b = __gdtoa_Balloc(1, PTI);
+	if (!(b = __gdtoa_Balloc(1)))
+		return 0;
 	b->x[0] = i;
 	b->wds = 1;
 	return b;
 }
 
 Bigint *
-__gdtoa_mult(Bigint *a, Bigint *b, ThInfo **PTI)
+__gdtoa_mult(Bigint *a, Bigint *b)
 {
 	Bigint *c;
 	int k, wa, wb, wc;
@@ -179,7 +125,8 @@ __gdtoa_mult(Bigint *a, Bigint *b, ThInfo **PTI)
 	wc = wa + wb;
 	if (wc > a->maxwds)
 		k++;
-	c = __gdtoa_Balloc(k, PTI);
+	if (!(c = __gdtoa_Balloc(k)))
+		return 0;
 	for (x = c->x, xa = x + wc; x < xa; x++)
 		*x = 0;
 	xa = a->x;
@@ -207,49 +154,45 @@ __gdtoa_mult(Bigint *a, Bigint *b, ThInfo **PTI)
 }
 
 Bigint *
-__gdtoa_pow5mult(Bigint *b, int k, ThInfo **PTI)
+__gdtoa_pow5mult(Bigint *b, int k)
 {
 	Bigint *b1, *p5, *p51;
-	ThInfo *TI;
+	Bigint *freeme = 0;
 	int i;
 	static int p05[3] = {5, 25, 125};
 	if ((i = k & 3) != 0)
-		b = __gdtoa_multadd(b, p05[i - 1], 0, PTI);
+		if (!(freeme = b = __gdtoa_multadd(b, p05[i - 1], 0)))
+			return 0;
 	if (!(k >>= 2))
 		return b;
-	if (!(TI = *PTI))
-		*PTI = TI = __gdtoa_get_TI();
-	if ((p5 = TI->P5s) == 0) {
-		if (!(TI = *PTI))
-			*PTI = TI = __gdtoa_get_TI();
-		if (TI == &TI0)
-			__gdtoa_lock1();
-		if (!(p5 = TI->P5s)) {
-			p5 = TI->P5s = __gdtoa_i2b(625, PTI);
-			p5->next = 0;
+	if (!(p5 = pthread_getspecific(P5s))) {
+		if (!(p5 = __gdtoa_i2b(625))) {
+			__gdtoa_Bfree(freeme);
+			return 0;
 		}
-		if (TI == &TI0)
-			__gdtoa_unlock1();
+		pthread_setspecific(P5s, p5);
+		p5->next = 0;
 	}
 	for (;;) {
 		if (k & 1) {
-			b1 = __gdtoa_mult(b, p5, PTI);
-			__gdtoa_Bfree(b, PTI);
+			if (!(b1 = __gdtoa_mult(b, p5))) {
+				__gdtoa_Bfree(freeme);
+				return 0;
+			}
+			freeme = b1;
+			__gdtoa_Bfree(b);
 			b = b1;
 		}
 		if (!(k >>= 1))
 			break;
 		if ((p51 = p5->next) == 0) {
-			if (!TI && !(TI = *PTI))
-				*PTI = TI = __gdtoa_get_TI();
-			if (TI == &TI0)
-				__gdtoa_lock1();
 			if (!(p51 = p5->next)) {
-				p51 = p5->next = __gdtoa_mult(p5, p5, PTI);
+				if (!(p51 = p5->next = __gdtoa_mult(p5, p5))) {
+					__gdtoa_Bfree(freeme);
+					return 0;
+				}
 				p51->next = 0;
 			}
-			if (TI == &TI0)
-				__gdtoa_unlock1();
 		}
 		p5 = p51;
 	}
@@ -257,7 +200,7 @@ __gdtoa_pow5mult(Bigint *b, int k, ThInfo **PTI)
 }
 
 Bigint *
-__gdtoa_lshift(Bigint *b, int k, ThInfo **PTI)
+__gdtoa_lshift(Bigint *b, int k)
 {
 	int i, k1, n, n1;
 	Bigint *b1;
@@ -267,7 +210,8 @@ __gdtoa_lshift(Bigint *b, int k, ThInfo **PTI)
 	n1 = n + b->wds + 1;
 	for (i = b->maxwds; n1 > i; i <<= 1)
 		k1++;
-	b1 = __gdtoa_Balloc(k1, PTI);
+	if (!(b1 = __gdtoa_Balloc(k1)))
+		return 0;
 	x1 = b1->x;
 	for (i = 0; i < n; i++)
 		*x1++ = 0;
@@ -287,7 +231,7 @@ __gdtoa_lshift(Bigint *b, int k, ThInfo **PTI)
 			*x1++ = *x++;
 		while (x < xe);
 	b1->wds = n1 - 1;
-	__gdtoa_Bfree(b, PTI);
+	__gdtoa_Bfree(b);
 	return b1;
 }
 
@@ -314,7 +258,7 @@ __gdtoa_cmp(Bigint *a, Bigint *b)
 }
 
 Bigint *
-__gdtoa_diff(Bigint *a, Bigint *b, ThInfo **PTI)
+__gdtoa_diff(Bigint *a, Bigint *b)
 {
 	Bigint *c;
 	int i, wa, wb;
@@ -322,7 +266,8 @@ __gdtoa_diff(Bigint *a, Bigint *b, ThInfo **PTI)
 	uint64_t borrow, y;
 	i = __gdtoa_cmp(a, b);
 	if (!i) {
-		c = __gdtoa_Balloc(0, PTI);
+		if (!(c = __gdtoa_Balloc(0)))
+			return 0;
 		c->wds = 1;
 		c->x[0] = 0;
 		return c;
@@ -334,7 +279,8 @@ __gdtoa_diff(Bigint *a, Bigint *b, ThInfo **PTI)
 		i = 1;
 	} else
 		i = 0;
-	c = __gdtoa_Balloc(a->k, PTI);
+	if (!(c = __gdtoa_Balloc(a->k)))
+		return 0;
 	c->sign = i;
 	wa = a->wds;
 	xa = a->x;
@@ -391,7 +337,7 @@ ret_d:
 }
 
 Bigint *
-__gdtoa_d2b(double dd, int *e, int *bits, ThInfo **PTI)
+__gdtoa_d2b(double dd, int *e, int *bits)
 {
 	Bigint *b;
 	U d;
@@ -399,7 +345,8 @@ __gdtoa_d2b(double dd, int *e, int *bits, ThInfo **PTI)
 	int de, k;
 	ULong *x, y, z;
 	d.d = dd;
-	b = __gdtoa_Balloc(1, PTI);
+	if (!(b = __gdtoa_Balloc(1)))
+		return 0;
 	x = b->x;
 	z = (&d)->L[1] & 0xfffff;
 	(&d)->L[1] &= 0x7fffffff;

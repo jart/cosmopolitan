@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(fgetwc, testAscii_oneChar) {
@@ -58,21 +61,50 @@ TEST(fgetwc, testUnicode_oneChar_writtenAsRawUtf8) {
   fclose(f);
 }
 
-TEST(fgetwc, testUnicode_undecodableSequences_fallsBackToBinary) {
-  FILE *f = fmemopen(NULL, BUFSIZ, "r+");
-  EXPECT_EQ(0200, fputc(0200, f));
-  EXPECT_EQ(0220, fputc(0220, f));
-  EXPECT_EQ(0xF0, fputc(0xF0, f));
-  EXPECT_EQ(0x90, fputc(0x90, f));
-  EXPECT_EQ(0x8C, fputc(0x8C, f));
-  EXPECT_EQ(0xB0, fputc(0xB0, f));
-  EXPECT_EQ(0304, fputc(0304, f));
-  EXPECT_EQ('a', fputc('a', f));
+TEST(fgetwc, strayContBytes) {
+  FILE *f = fmemopen(NULL, 2, "r+");
+  ASSERT_EQ(0, ftell(f));
+  ASSERT_SYS(0, 0200, fputc(0200, f));
+  ASSERT_EQ(1, ftell(f));
+  ASSERT_SYS(0, 'x', fputc('x', f));
   rewind(f);
-  EXPECT_EQ(0200, fgetwc(f));
-  EXPECT_EQ(0220, fgetwc(f));
-  EXPECT_EQ(L'𐌰', fgetwc(f));
-  EXPECT_EQ(0304, fgetwc(f));
-  EXPECT_EQ('a', fgetwc(f));
+  ASSERT_SYS(EILSEQ, WEOF, fgetwc(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_FALSE(feof(f));
+  ASSERT_EQ(1, ftell(f));
+  ASSERT_SYS(0, 'x', fgetwc(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_FALSE(feof(f));
+  ASSERT_SYS(0, WEOF, fgetwc(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_TRUE(feof(f));
   fclose(f);
+}
+
+TEST(fgetwc, incompleteSequence_failsButDoesntErrorStream) {
+#ifndef __GLIBC__  // wut
+  FILE *f;
+  ASSERT_TRUE(!!(f = fmemopen(NULL, 100, "r+")));
+  ASSERT_SYS(0, 0300, fputc(0300, f));
+  ASSERT_SYS(0, 'x', fputc('x', f));
+  ASSERT_SYS(0, 2, ftell(f));
+  ASSERT_SYS(0, 0, fflush(f));
+  ASSERT_SYS(0, 2, ftell(f));
+  rewind(f);
+  ASSERT_SYS(EILSEQ, WEOF, fgetwc(f));
+  ASSERT_SYS(0, 1, ftell(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_FALSE(feof(f));
+  errno = 0;
+  ASSERT_SYS(0, 'x', fgetwc(f));
+  ASSERT_SYS(0, 2, ftell(f));
+  ASSERT_SYS(0, 0, fseek(f, 0, SEEK_END));
+  ASSERT_SYS(0, 100, ftell(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_FALSE(feof(f));
+  ASSERT_SYS(0, WEOF, fgetwc(f));
+  ASSERT_FALSE(ferror(f));
+  ASSERT_TRUE(feof(f));
+  ASSERT_SYS(0, 0, fclose(f));
+#endif
 }

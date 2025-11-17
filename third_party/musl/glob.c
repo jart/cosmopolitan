@@ -261,7 +261,15 @@ static int expand_tilde(char **pat, char *buf, size_t *pos)
 /**
  * Finds pathnames matching pattern.
  *
- * For example:
+ * Here's an example:
+ *
+ *     glob_t gl;
+ *     glob("*", 0, 0, &gl);
+ *     for (int i = 0; i < gl.gl_pathc; ++i)
+ *       printf("%s\n", gl.gl_pathv[i]);
+ *     globfree(&gl);
+ *
+ * Here's another example:
  *
  *     glob_t g = {.gl_offs = 2};
  *     glob("*.*", GLOB_DOOFFS, NULL, &g);
@@ -269,7 +277,6 @@ static int expand_tilde(char **pat, char *buf, size_t *pos)
  *     g.gl_pathv[0] = "ls";
  *     g.gl_pathv[1] = "-l";
  *     execvp("ls", &g.gl_pathv[0]);
- *     globfree(g);
  *
  * @param pat can have star wildcard see fnmatch()
  * @param g will receive matching entries and needs globfree()

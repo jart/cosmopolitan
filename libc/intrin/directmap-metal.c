@@ -24,6 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #ifdef __x86_64__
 
 #define MAP_ANONYMOUS_linux 0x00000020
@@ -44,9 +45,9 @@ void *sys_mmap_metal(void *vaddr, size_t size, int prot, int flags, int fd,
   if (!(flags & MAP_ANONYMOUS_linux)) {
     struct Fd *sfd;
     struct MetalFile *file;
-    if (off < 0 || fd < 0 || fd >= g_fds.n)
+    if (off < 0 || fd >= __get_pib()->fds.n)
       return MAP_FAILED;
-    sfd = &g_fds.p[fd];
+    sfd = &__get_pib()->fds.p[fd];
     if (sfd->kind != kFdFile)
       return MAP_FAILED;
     file = (struct MetalFile *)sfd->handle;

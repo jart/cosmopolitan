@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -24,7 +25,6 @@
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/serialize.h"
@@ -189,7 +189,7 @@ static const struct {
 TEST(ksnprintf, test) {
   char b[48], g[48];
   size_t i, j, n, rc;
-  rngset(g, sizeof(g), 0, 0);
+  arc4random_buf(g, sizeof(g));
   for (i = 0; i < ARRAYLEN(V); ++i) {
     bzero(b, 48);
     n = strlen(V[i].want);
@@ -380,27 +380,27 @@ TEST(ksnprintf, negativeOverflowIdiom_isSafe) {
 
 TEST(ksnprintf, truncation) {
   char buf[16] = {0};
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(0, 0, "%s", "xxxxx");
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 1, "%s", "xxxxx");
   EXPECT_STREQ("", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 2, "%s", "xxxxx");
   EXPECT_STREQ(".", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 3, "%s", "xxxxx");
   EXPECT_STREQ("..", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 4, "%s", "xxxxx");
   EXPECT_STREQ("...", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 5, "%s", "xxxxx");
   EXPECT_STREQ("x...", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 6, "%s", "xxxxxxxxxxx");
   EXPECT_STREQ("xx...", buf);
-  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  arc4random_buf(buf, sizeof(buf) - 1);
   ksnprintf(buf, 7, "%s", "xxxxxxxxx");
   EXPECT_STREQ("xxx...", buf);
 }

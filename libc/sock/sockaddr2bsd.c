@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/struct/sockaddr6-bsd.internal.h"
@@ -30,6 +31,8 @@
  */
 int sockaddr2bsd(const void *addr, uint32_t addrsize,
                  union sockaddr_storage_bsd *out_addr, uint32_t *out_addrsize) {
+  if (addrsize && kisdangerous(addr))
+    return efault();
   uint32_t len, famsize;
   if (addrsize >= sizeof(((struct sockaddr *)addr)->sa_family)) {
     if (((struct sockaddr *)addr)->sa_family == AF_INET) {

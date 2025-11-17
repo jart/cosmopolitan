@@ -79,11 +79,11 @@ int dup2(int oldfd, int newfd) {
       if (!IsWindows()) {
     if (__isfdkind(oldfd, kFdZip) || __isfdkind(newfd, kFdZip)) {
       if (__vforked) {
-        return enotsup();
-      }
-      rc = sys_dup2(oldfd, newfd, 0);
-      if (rc != -1) {
-        _weaken(__zipos_postdup)(oldfd, newfd);
+        rc = enotsup();
+      } else {
+        rc = sys_dup2(oldfd, newfd, 0);
+        if (rc != -1)
+          _weaken(__zipos_postdup)(oldfd, newfd);
       }
     } else {
       rc = sys_dup2(oldfd, newfd, 0);

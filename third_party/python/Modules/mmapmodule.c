@@ -29,6 +29,8 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/python/Include/yoink.h"
 
 PYTHON_PROVIDE("mmap");
@@ -70,19 +72,6 @@ PYTHON_PROVIDE("mmap.mmap");
 */
 
 #define UNIX
-
-#ifdef UNIX
-#if defined(HAVE_SYSCONF) && defined(_SC_PAGESIZE)
-static int
-my_getpagesize(void)
-{
-    return sysconf(_SC_PAGESIZE);
-}
-#define my_getallocationgranularity my_getpagesize
-#else
-#define my_getpagesize getpagesize
-#endif
-#endif /* UNIX */
 
 typedef enum
 {
@@ -1484,9 +1473,8 @@ PyInit_mmap(void)
     setint(dict, "MAP_ANONYMOUS", MAP_ANONYMOUS);
 #endif
 
-    setint(dict, "PAGESIZE", (long)my_getpagesize());
-
-    setint(dict, "ALLOCATIONGRANULARITY", (long)my_getallocationgranularity());
+    setint(dict, "PAGESIZE", (long)getpagesize()); // [jart]
+    setint(dict, "ALLOCATIONGRANULARITY", (long)getgransize()); // [jart]
 
     setint(dict, "ACCESS_READ", ACCESS_READ);
     setint(dict, "ACCESS_WRITE", ACCESS_WRITE);

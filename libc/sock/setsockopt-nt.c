@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/intrin/fds.h"
 #include "libc/nt/struct/linger.h"
 #include "libc/nt/thunk/msabi.h"
@@ -28,7 +30,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 

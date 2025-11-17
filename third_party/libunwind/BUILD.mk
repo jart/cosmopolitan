@@ -61,9 +61,7 @@ THIRD_PARTY_LIBUNWIND_A_CHECKS =					\
 THIRD_PARTY_LIBUNWIND_A_DIRECTDEPS =					\
 	LIBC_CALLS							\
 	LIBC_INTRIN							\
-	LIBC_STDIO							\
 	LIBC_MEM							\
-	LIBC_THREAD							\
 
 THIRD_PARTY_LIBUNWIND_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LIBUNWIND_A_DIRECTDEPS),$($(x))))

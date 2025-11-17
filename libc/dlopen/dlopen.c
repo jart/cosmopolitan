@@ -26,6 +26,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/dlopen/dlfcn.h"
 #include "libc/elf/def.h"

@@ -52,7 +52,11 @@ $(THIRD_PARTY_DOUBLECONVERSION_A).pkg:						\
 $(THIRD_PARTY_DOUBLECONVERSION_A_OBJS): private					\
 		CXXFLAGS +=							\
 			-ffunction-sections					\
-			-fdata-sections
+			-fdata-sections						\
+
+o//third_party/double-conversion/string-to-double.o: private			\
+		CXXFLAGS +=							\
+			-O3							\
 
 THIRD_PARTY_DOUBLECONVERSION_LIBS = $(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_ARTIFACTS),$($(x)))
 THIRD_PARTY_DOUBLECONVERSION_SRCS = $(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_ARTIFACTS),$($(x)_SRCS))

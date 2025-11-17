@@ -23,21 +23,8 @@
  * @asyncsignalsafe
  */
 char *strpbrk(const char *s, const char *accept) {
-  bool lut[256];
-  if (accept[0]) {
-    if (!accept[1]) {
-      return strchr(s, accept[0]);
-    } else {
-      bzero(lut, sizeof(lut));
-      while (*accept) {
-        lut[*accept++ & 255] = true;
-      }
-      for (; *s; ++s) {
-        if (lut[*s & 255]) {
-          return (/*unconst*/ char *)s;
-        }
-      }
-    }
-  }
+  s += strcspn(s, accept);
+  if (*s)
+    return (char *)s;
   return 0;
 }

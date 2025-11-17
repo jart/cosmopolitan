@@ -17,12 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 static char g_tmpnam[L_tmpnam];
+
+static bool fileexists(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!stat(path, &st))
+    return true;
+  errno = e;
+  return false;
+}
 
 /**
  * Generates temporary file name.
@@ -42,9 +53,8 @@ char *tmpnam(char *buf) {
           "0123456789abcdefghikmnpqrstvwxyz"[w & 31];
       w >>= 5;
     }
-    if (!fileexists(path)) {
+    if (!fileexists(path))
       return strcpy(buf ? buf : g_tmpnam, path);
-    }
   }
   return 0;
 }

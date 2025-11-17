@@ -21,6 +21,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 #include "libc/thread/posixthread.internal.h"
 
@@ -32,11 +33,13 @@ struct Stdio __stdio = {
 };
 
 void __stdio_lock(void) {
-  _pthread_mutex_lock(&__stdio.lock);
+  if (__isthreaded >= 2)
+    pthread_mutex_lock(&__stdio.lock);
 }
 
 void __stdio_unlock(void) {
-  _pthread_mutex_unlock(&__stdio.lock);
+  if (__isthreaded >= 2)
+    pthread_mutex_unlock(&__stdio.lock);
 }
 
 static int refchk(int refs) {
@@ -81,7 +84,8 @@ static void __stdio_unref_impl(FILE *f, bool should_lock) {
   if (_weaken(free)) {
     _weaken(free)(f->getln);
     if (f->freebuf)
-      _weaken(free)(f->buf);
+      if (!f->memstream_bufp)
+        _weaken(free)(f->buf);
     if (f->freethis)
       _weaken(free)(f);
   }

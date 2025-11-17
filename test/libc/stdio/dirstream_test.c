@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
@@ -256,11 +257,9 @@ TEST(dirstream, seeky) {
   ASSERT_EQ(1, critbit0_insert(&tree, "."));
   ASSERT_EQ(1, critbit0_insert(&tree, ".."));
   for (i = 0; i < n; ++i) {
-    for (j = 0; j < 255; ++j) {
+    for (j = 0; j < 255; ++j)
       name[j] = '0' + rand() % 10;
-    }
-    // TODO(jart): why does Windows croak with 255
-    name[100] = 0;
+    name[255] = 0;
     strcpy(path, "boop/");
     strcat(path, name);
     path[255] = 0;
@@ -436,4 +435,62 @@ TEST(dirstream, walk) {
                b);
   free(b);
   b = 0;
+}
+
+static char *cosmosdrive(void) {
+  static char s[3];
+  s[0] = '/';
+  s[1] = __getcosmosdrive();
+  return s;
+}
+
+bool exists(const char *path) {
+  struct stat st;
+  int e = errno;
+  bool res = !stat(path, &st);
+  errno = e;
+  return res;
+}
+
+uint64_t ino(const char *path) {
+  struct stat st;
+  ASSERT_SYS(0, 0, stat(path, &st));
+  return st.st_ino;
+}
+
+uint64_t dev(const char *path) {
+  struct stat st;
+  ASSERT_SYS(0, 0, stat(path, &st));
+  return st.st_dev;
+}
+
+bool hasname(const char *path, const char *name, const char *resolved) {
+  bool res = false;
+  ASSERT_NE(NULL, (dir = opendir(path)), "oh no %s", path);
+  while ((ent = readdir(dir))) {
+    if (!strcmp(ent->d_name, name)) {
+      if (resolved)
+        ASSERT_EQ(ino(resolved), ent->d_ino, "oh no %s and %s", path, name);
+      res = true;
+    }
+  }
+  ASSERT_SYS(0, 0, closedir(dir), "oh no %s and %s", path, name);
+  return res;
+}
+
+TEST(dirstream, dot) {
+  if (IsWindows() && exists("/c/users")) {
+    ASSERT_TRUE(hasname("/c/users", ".", "/c/users"));
+    ASSERT_TRUE(hasname("/c/users", "..", "/c"));
+    ASSERT_TRUE(hasname("/c", ".", "/c"));
+    ASSERT_TRUE(hasname("/c", "..", cosmosdrive()));
+    ASSERT_TRUE(hasname("/", ".", "/"));
+    ASSERT_TRUE(hasname("/", "..", "/"));
+  } else if (exists("/etc")) {
+    ASSERT_TRUE(hasname("/etc", ".", "/etc"));
+    ASSERT_TRUE(
+        hasname("/etc", "..", !IsXnu() && dev("/etc") == dev("/") ? "/" : 0));
+    ASSERT_TRUE(hasname("/", ".", "/"));
+    ASSERT_TRUE(hasname("/", "..", "/"));
+  }
 }

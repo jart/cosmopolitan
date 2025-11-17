@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/fds.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/nt/console.h"
@@ -28,7 +29,7 @@
 #include "libc/sysv/consts/baud.internal.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   int64_t hInput, hOutput;

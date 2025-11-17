@@ -57,7 +57,7 @@ static int outfd;
 static const char *prog;
 static const char *outpath;
 
-static wontreturn void PrintUsage(int fd, int rc) {
+[[noreturn]] static void PrintUsage(int fd, int rc) {
   tinyprint(fd, "usage: ", prog, " [-iksvV] URL\n", NULL);
   exit(rc);
 }

@@ -1441,9 +1441,9 @@ def getpager():
             return lambda text: pipepager(text, use_pager)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
         return plainpager
-    if platform == 'win32':
-        return lambda text: tempfilepager(plain(text), 'more <')
-    if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
+    # if platform == 'win32':
+    #     return lambda text: tempfilepager(plain(text), 'more <')
+    if hasattr(os, 'system') and os.system('less 2>/dev/null') == 0:
         return lambda text: pipepager(text, 'less')
 
     import tempfile

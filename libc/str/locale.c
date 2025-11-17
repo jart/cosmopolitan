@@ -36,4 +36,4 @@ const struct __locale_struct __c_dot_utf8_locale = {
 
 struct __locale_struct __global_locale;
 
-pthread_mutex_t __locale_lock = PTHREAD_MUTEX_INITIALIZER;
+alignas(64) pthread_mutex_t __locale_lock = PTHREAD_MUTEX_INITIALIZER;

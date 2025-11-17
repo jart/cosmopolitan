@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 
@@ -23,12 +24,14 @@
  * Returns file descriptor associated with stream.
  *
  * @param f is file stream object pointer
- * @return fd on success or -1 w/ errno;
+ * @return fd on success or -1 w/ errno
  */
 int fileno(FILE *f) {
   int rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = fileno_unlocked(f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }

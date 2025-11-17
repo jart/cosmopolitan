@@ -20,6 +20,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
@@ -33,14 +34,19 @@
  * The current directory is shared by all threads in a process. This
  * does not update the `PWD` environment variable.
  *
+ * On Windows it's important to consider that when you chdir() into a
+ * directory, any attempt to rmdir() that directory will raise EACCES.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ELOOP if a loop was detected resolving components of `path`
  * @raise EACCES if search permission was denied on directory
- * @raise ENOTDIR if component of `path` isn't a directory
+ * @raise ENOTDIR if parent of `path` exists as non-directory
+ * @raise ENOTDIR if `path` is a regular file that exists
  * @raise ENOMEM if insufficient memory was available
  * @raise EFAULT if `path` points to invalid memory
  * @raise ENOTSUP if `path` is a `/zip/...` file
  * @raise ENAMETOOLONG if `path` was too long
+ * @raise ENOENT if `path` is empty string
  * @raise ENOENT if `path` doesn't exist
  * @raise EIO if an i/o error happened
  * @asyncsignalsafe
@@ -49,16 +55,13 @@
 int chdir(const char *path) {
   int rc;
   struct ZiposUri zipname;
-  if (_weaken(__get_tmpdir)) {
+  if (_weaken(__get_tmpdir))
     _weaken(__get_tmpdir)();
-  }
-  if (_weaken(GetAddr2linePath)) {
+  if (_weaken(GetAddr2linePath))
     _weaken(GetAddr2linePath)();
-  }
-  if (_weaken(GetProgramExecutableName)) {
+  if (_weaken(GetProgramExecutableName))
     _weaken(GetProgramExecutableName)();
-  }
-  if (!path) {
+  if (kisdangerous(path)) {
     rc = efault();
   } else if (_weaken(__zipos_parseuri) &&
              _weaken(__zipos_parseuri)(path, &zipname) != -1) {

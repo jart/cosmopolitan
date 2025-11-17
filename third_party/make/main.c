@@ -25,14 +25,15 @@ this program.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "rule.h"
 #include "debug.h"
 #include "getopt.h"
-#include "libc/runtime/runtime.h"
 #include "shuffle.h"
+#include "libc/dce.h"
 #include "timelog.h"
 
 #include <assert.h>
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
+#include <cosmo.h>
 
 #ifdef _AMIGA
 int __stack = 20000; /* Make sure we have 20K of stack space */
@@ -1163,7 +1164,11 @@ int
 main (int argc, char **argv, char **envp)
 #endif
 {
+#if IsModeDbg()
   ShowCrashReports ();
+#endif
+
+  cosmo_warmup_directory (".", 1);
 
   int makefile_status = MAKE_SUCCESS;
   struct goaldep *read_files;
@@ -3712,7 +3717,8 @@ print_version (void)
     /* Do it only once.  */
     return;
 
-  printf ("%sGNU Make %s\n", precede, version_string);
+  printf ("%sCosmopolitan Make " COSMO_MAKE_VERSION " (GNU Make %s)\n",
+          precede, version_string);
 
   if (!remote_description || *remote_description == '\0')
     printf (_("%sBuilt for %s\n"), precede, make_host);
@@ -3725,6 +3731,8 @@ print_version (void)
      year, and none of the rest of it should be translated (including the
      word "Copyright"), so it hardly seems worth it.  */
 
+  printf ("%sCopyright (C) 2022-2025 Justine Alexandra Roberts Tunney\n",
+          precede);
   printf ("%sCopyright (C) 1988-2023 Free Software Foundation, Inc.\n",
           precede);
 

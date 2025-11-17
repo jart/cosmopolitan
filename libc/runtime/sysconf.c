@@ -21,6 +21,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/sysinfo.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/intrin/maps.h"
 #include "libc/limits.h"
@@ -31,10 +32,16 @@
 #include "libc/sysv/consts/_posix.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
+
+static long sysconf_getrlimit(int resource) {
+  struct rlimit rl;
+  if (getrlimit(resource, &rl) == -1)
+    return -1;
+  return MIN(rl.rlim_cur, LONG_MAX);
+}
 
 /**
  * Returns configuration value about system.
@@ -71,12 +78,12 @@ long sysconf(int name) {
     case _SC_MINSIGSTKSZ:
       return __get_minsigstksz();
     case _SC_CHILD_MAX:
-      return __get_rlimit(RLIMIT_NPROC);
+      return sysconf_getrlimit(RLIMIT_NPROC);
     case _SC_OPEN_MAX:
-      return __get_rlimit(RLIMIT_NOFILE);
+      return sysconf_getrlimit(RLIMIT_NOFILE);
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
-      return __get_cpu_count();
+      return cosmo_cpu_count();
     case _SC_PHYS_PAGES:
       return __get_phys_pages();
     case _SC_AVPHYS_PAGES:

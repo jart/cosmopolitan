@@ -23,29 +23,24 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Closes inclusive range of file descriptors, e.g.
+ * Closes inclusive range of file descriptors.
  *
- *     // close all non-stdio file descriptors
- *     if (close_range(3, -1, 0) == -1) {
- *       for (int i = 3; i < 256; ++i) {
- *         close(i);
- *       }
- *     }
+ * This system call is only supported on Linux 5.9+ and FreeBSD 13+.
+ * Consider using closefrom() which will work on all platforms.
  *
  * The following flags are available:
  *
- * - `CLOSE_RANGE_UNSHARE` (Linux-only)
- * - `CLOSE_RANGE_CLOEXEC` (Linux-only)
+ * - `CLOSE_RANGE_CLOEXEC` to mark file descriptors as close-on-exec
+ *   instead of actually closing them.
  *
- * This is only supported on Linux 5.9+ and FreeBSD 13+. Consider using
- * closefrom() which will work on OpenBSD too.
+ * - `CLOSE_RANGE_UNSHARE` (Linux only) can improve performance in
+ *   situations where threads are in play.
  *
  * @return 0 on success, or -1 w/ errno
  * @error EINVAL if flags are bad or first is greater than last
  * @error EMFILE if a weird race condition happens on Linux
  * @error ENOSYS if not Linux 5.9+ or FreeBSD 13+
  * @error ENOMEM on Linux maybe
- * @see closefrom()
  */
 int close_range(unsigned int first, unsigned int last, unsigned int flags) {
   int rc;

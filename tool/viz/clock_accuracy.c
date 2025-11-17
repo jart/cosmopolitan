@@ -9,6 +9,7 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 

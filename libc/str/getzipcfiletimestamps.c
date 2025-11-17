@@ -28,7 +28,7 @@ static inline int pop(int x) {
  *
  * @param cf is pointer to central directory header for file
  * @param mtim optionally receives last modified timestamp
- * @param atim optionally receives modified timestamp
+ * @param atim optionally receives accessed timestamp
  * @param ctim optionally receives creation timestamp
  * @param gmtoff is seconds adjustment for legacy dos timestamps
  */

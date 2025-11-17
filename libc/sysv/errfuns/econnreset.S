@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 econnreset:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ECONNRESET(%rip),%ecx
+	push	$ECONNRESET
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ECONNRESET
-	ldrsw	x0,[x1,#:lo12:ECONNRESET]
+	mov	x0,#ECONNRESET
 	b	__errfun
 #else
 #error "unsupported architecture"

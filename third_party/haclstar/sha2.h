@@ -1,0 +1,28 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_HACLSTAR_SHA2_H_
+#define COSMOPOLITAN_THIRD_PARTY_HACLSTAR_SHA2_H_
+COSMOPOLITAN_C_START_
+
+static const uint32_t Hacl_Hash_SHA2_h224[8U] = {
+    0xc1059ed8U, 0x367cd507U, 0x3070dd17U, 0xf70e5939U,
+    0xffc00b31U, 0x68581511U, 0x64f98fa7U, 0xbefa4fa4U,
+};
+
+static const uint32_t Hacl_Hash_SHA2_h256[8U] = {
+    0x6a09e667U, 0xbb67ae85U, 0x3c6ef372U, 0xa54ff53aU,
+    0x510e527fU, 0x9b05688cU, 0x1f83d9abU, 0x5be0cd19U,
+};
+
+static const uint64_t Hacl_Hash_SHA2_h384[8U] = {
+    0xcbbb9d5dc1059ed8ULL, 0x629a292a367cd507ULL, 0x9159015a3070dd17ULL,
+    0x152fecd8f70e5939ULL, 0x67332667ffc00b31ULL, 0x8eb44a8768581511ULL,
+    0xdb0c2e0d64f98fa7ULL, 0x47b5481dbefa4fa4ULL,
+};
+
+static const uint64_t Hacl_Hash_SHA2_h512[8U] = {
+    0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL, 0x3c6ef372fe94f82bULL,
+    0xa54ff53a5f1d36f1ULL, 0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
+    0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL,
+};
+
+COSMOPOLITAN_C_END_
+#endif /* COSMOPOLITAN_THIRD_PARTY_HACLSTAR_SHA2_H_ */

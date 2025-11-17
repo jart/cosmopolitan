@@ -23,9 +23,11 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/fds.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
@@ -35,8 +37,9 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/tls.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 static inline void RaiseSignal(int sig) {
   if (_weaken(__sig_raise)) {
@@ -46,15 +49,26 @@ static inline void RaiseSignal(int sig) {
   }
 }
 
-static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
+textwindows static ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset,
                                              uint64_t waitmask) {
-  struct Fd *f = g_fds.p + fd;
-  bool isconsole = f->kind == kFdConsole;
+  bool isconsole;
+  struct Fd *f = __get_pib()->fds.p + fd;
 
-  // not implemented, XNU returns eperm();
-  if (f->kind == kFdDevRandom)
-    return eperm();
+  switch (f->kind) {
+    case kFdFile:
+    case kFdDevNull:
+      isconsole = false;
+      break;
+    case kFdConsole:
+      isconsole = true;
+      break;
+    case kFdDevRandom:
+      // not implemented, XNU returns eperm();
+      return eperm();
+    default:
+      return ebadf();
+  }
 
   // determine win32 handle for writing
   int64_t handle = f->handle;
@@ -89,7 +103,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   }
 }
 
-static textwindows ssize_t sys_write_nt2(int fd, const struct iovec *iov,
+textwindows static ssize_t sys_write_nt2(int fd, const struct iovec *iov,
                                          size_t iovlen, ssize_t opt_offset,
                                          uint64_t waitmask) {
   ssize_t rc;

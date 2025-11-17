@@ -7,10 +7,24 @@ THIRD_PARTY_AWK_ARTIFACTS += THIRD_PARTY_AWK_A
 THIRD_PARTY_AWK = $(THIRD_PARTY_AWK_A_DEPS) $(THIRD_PARTY_AWK_A)
 THIRD_PARTY_AWK_A = o/$(MODE)/third_party/awk/awk.a
 THIRD_PARTY_AWK_FILES := $(wildcard third_party/awk/*)
-THIRD_PARTY_AWK_HDRS = $(filter %.h,$(THIRD_PARTY_AWK_FILES))
-THIRD_PARTY_AWK_INCS = $(filter %.inc,$(THIRD_PARTY_AWK_FILES))
-THIRD_PARTY_AWK_SRCS = $(filter %.c,$(THIRD_PARTY_AWK_FILES))
 THIRD_PARTY_AWK_OBJS = $(THIRD_PARTY_AWK_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_AWK_HDRS =					\
+	third_party/awk/awkgram.tab.h			\
+	third_party/awk/awk.h				\
+	third_party/awk/cmd.h				\
+	third_party/awk/proto.h				\
+
+THIRD_PARTY_AWK_SRCS =					\
+	third_party/awk/awkgram.tab.c			\
+	third_party/awk/b.c				\
+	third_party/awk/lex.c				\
+	third_party/awk/lib.c				\
+	third_party/awk/main.c				\
+	third_party/awk/parse.c				\
+	third_party/awk/proctab.c			\
+	third_party/awk/run.c				\
+	third_party/awk/tran.c				\
 
 THIRD_PARTY_AWK_A_DIRECTDEPS =				\
 	LIBC_CALLS					\
@@ -55,6 +69,12 @@ o/$(MODE)/third_party/awk/awk.dbg:			\
 o/$(MODE)/third_party/awk/README.zip.o:			\
 		ZIPOBJ_FLAGS +=				\
 			-B
+
+o/$(MODE)/third_party/awk/cmd.o:			\
+		third_party/awk/cmd.c			\
+		third_party/awk/cmd.h			\
+		libc/cosmo.h				\
+		libc/calls/struct/timespec.h		\
 
 $(THIRD_PARTY_AWK_OBJS): private CFLAGS += -Wno-use-after-free
 

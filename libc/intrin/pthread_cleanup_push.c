@@ -20,8 +20,8 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-void(pthread_cleanup_push)(struct _pthread_cleanup_buffer *cb,
-                           void (*routine)(void *), void *arg) {
+void __pthread_cleanup_push(struct _pthread_cleanup_buffer *cb,
+                            void (*routine)(void *), void *arg) {
   struct PosixThread *pt;
   cb->__routine = routine;
   cb->__arg = arg;

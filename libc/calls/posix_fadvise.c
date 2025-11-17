@@ -19,15 +19,16 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 int sys_fadvise_netbsd(int, int, int64_t, int64_t, int) asm("sys_fadvise");
 
@@ -49,7 +50,7 @@ int sys_fadvise_netbsd(int, int, int64_t, int64_t, int) asm("sys_fadvise");
  */
 errno_t posix_fadvise(int fd, int64_t offset, int64_t len, int advice) {
   int rc, e = errno;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsup();
   } else if (IsLinux()) {
     rc = sys_fadvise(fd, offset, len, advice);
@@ -60,7 +61,7 @@ errno_t posix_fadvise(int fd, int64_t offset, int64_t len, int advice) {
     rc = sys_fadvise_netbsd(fd, offset, offset, len, advice);
     unassert(rc >= 0);
   } else if (IsWindows()) {
-    rc = sys_fadvise_nt(fd, offset, len, advice);
+    rc = sys_posix_fadvise_nt(fd, offset, len, advice);
   } else {
     rc = enosys();
   }

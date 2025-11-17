@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
@@ -16,7 +17,7 @@
 int main() {
   int nproc;
   char ibuf[12];
-  nproc = __get_cpu_count();
+  nproc = cosmo_cpu_count();
   nproc = MAX(1, nproc);
   FormatInt32(ibuf, nproc);
   tinyprint(1, ibuf, "\n", NULL);

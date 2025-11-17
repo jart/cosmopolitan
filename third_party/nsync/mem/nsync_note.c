@@ -201,7 +201,7 @@ void nsync_note_free (nsync_note n) {
 	struct Dll *next;
 	nsync_mu_lock (&n->note_mu);
 	n->disconnecting++;
-	ASSERT (dll_is_empty (n->waiters));
+	unassert (dll_is_empty (n->waiters));
 	parent = n->parent;
 	if (parent != NULL && !nsync_mu_trylock (&parent->note_mu)) {
 		nsync_mu_unlock (&n->note_mu);

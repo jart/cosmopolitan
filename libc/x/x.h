@@ -29,7 +29,6 @@
 #define xbasename     __xbasename
 #define xdirname      __xdirname
 #define xjoinpaths    __xjoinpaths
-#define xfixpath      __xfixpath
 #define xslurp        __xslurp
 #define xbarf         __xbarf
 
@@ -89,7 +88,6 @@ char *xdirname(const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow dontcallback __wur returnsnonnull;
 char *xjoinpaths(const char *, const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow dontcallback __wur returnsnonnull;
-void xfixpath(void);
 void *xslurp(const char *, size_t *)
     paramsnonnull((1)) returnspointerwithnoaliases returnsaligned((4096)) __wur;
 int xbarf(const char *, const void *, size_t);

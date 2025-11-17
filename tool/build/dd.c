@@ -29,12 +29,12 @@
 char buf[65536];
 const char *prog;
 
-static wontreturn void Die(const char *reason) {
+[[noreturn]] static void Die(const char *reason) {
   tinyprint(2, prog, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void DieSys(const char *thing) {
+[[noreturn]] static void DieSys(const char *thing) {
   perror(thing);
   exit(1);
 }

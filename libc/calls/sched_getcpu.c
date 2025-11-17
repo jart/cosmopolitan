@@ -17,40 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/rseq.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/struct/processornumber.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_getcpu(unsigned *opt_cpu, unsigned *opt_node, void *tcache);
-
 /**
  * Returns ID of CPU on which thread is currently scheduled.
  *
  * This function is supported on the following platforms:
  *
- * - x86-64
- *
- *   - Linux: rdtsc
- *   - FreeBSD: rdtsc
- *   - Windows: win32
- *   - OpenBSD: unsupported
- *   - NetBSD: unsupported
- *   - MacOS: unsupported
- *
  * - aarch64
  *
- *   - Linux: syscall
- *   - FreeBSD: syscall
- *   - MacOS: supported
+ *   - Linux: via rseq shared memory, otherwise SYS_getcpu
+ *   - MacOS: via Apple pthread_cpu_number_np() DSO API
+ *   - FreeBSD: via SYS_sched_getcpu
+ *
+ * - x86-64
+ *
+ *   - Linux: via rseq, otherwise lsl msr, or rdpid, or rdtscp
+ *   - FreeBSD: via lsl msr, or rdpid, or rdtscp
+ *   - Windows: win32 vdso
+ *   - OpenBSD: enosys
+ *   - NetBSD: enosys
+ *   - MacOS: enosys
  *
  * @return cpu number on success, or -1 w/ errno
  */
 int sched_getcpu(void) {
+
+  // Linux 4.18+ (c. 2018)
+  if (IsLinux()) {
+    int scpu = __get_rseq()->cpu_id;
+    if (scpu >= 0)
+      return scpu;
+  }
 
   if (IsWindows()) {
     struct NtProcessorNumber pn;
@@ -58,20 +63,7 @@ int sched_getcpu(void) {
     return 64 * pn.Group + pn.Number;
   }
 
-#ifdef __x86_64__
-  if (X86_HAVE(RDTSCP) && (IsLinux() || IsFreebsd())) {
-    // Only the Linux, FreeBSD, and Windows kernels can be counted upon
-    // to populate the TSC_AUX register with the current thread number.
-    unsigned tsc_aux;
-    rdtscp(&tsc_aux);
-    return TSC_AUX_CORE(tsc_aux);
-  }
-#endif
-
-#ifdef __aarch64__
-  if (IsXnu()) {
-    // pthread_cpu_number_np() is defined by MacOS 11.0+ (Big Sur) in
-    // the SDK pthread.h header file, even though there's no man page
+  if (IsXnuSilicon()) {
     if (__syslib && __syslib->__version >= 9) {
       errno_t err;
       size_t out = 0;
@@ -80,25 +72,58 @@ int sched_getcpu(void) {
         return -1;
       }
       return out;
-    } else {
-      errno = ENOSYS;  // upgrade your ape loader
-      return -1;       // cc -o /usr/local/bin/ape ape/ape-m1.c
     }
   }
-#endif
 
-#ifdef __aarch64__
+#ifdef __x86_64__
+
+  if (IsLinux() || IsFreebsd()) {
+    // Linux and FreeBSD both stuff TSC_AUX in the GDT so we can use this
+    // ancient i8086 instruction to quickly retrieve the cpu id and node.
+    bool ok;
+    long aux;
+    asm("lsl\t%2,%1" : "=@ccz"(ok), "=r"(aux) : "r"(0x7bl) : "memory");
+    if (ok)
+      return aux & 4095;
+  }
+
+  if (IsLinux() || IsFreebsd() || IsWindows()) {
+    // Only the Linux, FreeBSD, and Windows kernels can be counted upon
+    // to populate the TSC_AUX register with cpu id / node information.
+    if (X86_HAVE(RDPID)) {
+      long aux;
+      asm("rdpid\t%0" : "=r"(aux));
+      return aux & 4095;
+    }
+    if (X86_HAVE(RDTSCP)) {
+      unsigned hi, lo, aux;
+      asm("rdtscp" : "=d"(hi), "=a"(lo), "=c"(aux));
+      return aux & 4095;
+    }
+  }
+
+#elifdef __aarch64__
+
+  if (IsLinux()) {
+    // old linux or qemu-aarch64
+    // issuing a system call takes like, forever
+    unsigned res;
+    register unsigned *x0 asm("x0") = &res;
+    register unsigned *x1 asm("x1") = 0;
+    register int x8 asm("x8") = 168;  // getcpu
+    asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
+    return res;
+  }
+
   if (IsFreebsd()) {
+    // issuing a system call takes like, forever
     register int x0 asm("x0");
     register int x8 asm("x8") = 581;  // sched_getcpu
     asm volatile("svc\t0" : "=r"(x0) : "r"(x8) : "memory");
     return x0;
   }
+
 #endif
 
-  unsigned cpu = 0;
-  int rc = sys_getcpu(&cpu, 0, 0);
-  if (rc == -1)
-    return -1;
-  return cpu;
+  return enosys();
 }

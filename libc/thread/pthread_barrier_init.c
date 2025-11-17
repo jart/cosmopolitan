@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/limits.h"
+#include "libc/thread/barrier.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -30,16 +30,15 @@
  * @return 0 on success, or error number on failure
  * @raise EINVAL if `count` isn't greater than zero
  */
-errno_t pthread_barrier_init(pthread_barrier_t *barrier,
+errno_t pthread_barrier_init(pthread_barrier_t *b,
                              const pthread_barrierattr_t *attr,
                              unsigned count) {
-  if (!count)
+  if (!count || count >= BARRIER_MAX)
     return EINVAL;
-  if (count > INT_MAX)
-    return EINVAL;
-  barrier->_count = count;
-  barrier->_pshared = attr ? *attr : PTHREAD_PROCESS_PRIVATE;
-  atomic_store_explicit(&barrier->_counter, count, memory_order_relaxed);
-  atomic_store_explicit(&barrier->_waiters, 0, memory_order_relaxed);
+  b->_count = count;
+  b->_pshared = attr ? *attr : PTHREAD_PROCESS_PRIVATE;
+  atomic_init(&b->_entered, 0);
+  atomic_init(&b->_exited, 0);
+  atomic_init(&b->_round, 0);
   return 0;
 }

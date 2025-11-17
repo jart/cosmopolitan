@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Writes wide character string to stream.
@@ -25,14 +25,15 @@
  * This function blocks until the full string is written, unless an
  * unrecoverable error happens.
  *
- * @param s is a NUL-terminated string that's non-NULL
+ * @param s is a NUL-terminated wide string that's non-NULL
  * @param f is an open stream
- * @return strlen(s), or -1 w/ errno
+ * @return non-negative integer on success, or -1 w/ errno
+ * @cancelationpoint
  */
 int fputws(const wchar_t *s, FILE *f) {
   int rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fputws_unlocked(s, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

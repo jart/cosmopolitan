@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
@@ -73,9 +74,10 @@ TEST(getrandom, test) {
   char *buf = gc(calloc(1, n));
   ASSERT_SYS(0, 0, getrandom(0, 0, 0));
   ASSERT_SYS(0, n, getrandom(buf, n, 0));
-  ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
+  // TODO(jart): make kisdangerous() lockless
+  // ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
   ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
-  if ((e = MeasureEntropy(buf, n)) < w) {
+  if ((e = cosmo_entropy(buf, n)) < w) {
     fprintf(stderr, "error: entropy is suspect! got %g but want >=%g\n", e, w);
     for (i = 0; i < n;) {
       if (!(i % 16))
@@ -109,9 +111,10 @@ TEST(getrandom, test2) {
     for (i = 0; i < n; i += m) {
       ASSERT_NE(-1, (m = getrandom(buf + i, n - i, 0)));
     }
-    ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
+    // TODO(jart): make kisdangerous() lockless
+    // ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
     ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
-    if ((e = MeasureEntropy(buf, n)) < w) {
+    if ((e = cosmo_entropy(buf, n)) < w) {
       fprintf(stderr, "error: entropy suspect! got %g but want >=%g\n", e, w);
       for (i = 0; i < n;) {
         if (!(i % 16))

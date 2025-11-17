@@ -29,6 +29,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
+#include "libc/sysv/errno.h"
 #include "libc/thread/posixthread.internal.h"
 
 static errno_t pthread_getname_impl(struct PosixThread *pt, char *name,
@@ -69,12 +70,10 @@ static errno_t pthread_getname_impl(struct PosixThread *pt, char *name,
       }
       chomp(buf);
     }
-    if ((len = strlen(buf))) {
+    if ((len = strlen(buf)))
       memcpy(name, buf, MIN(len, size - 1));
-    }
-    if (len > size - 1) {
+    if (len > size - 1)
       return ERANGE;
-    }
     return 0;
 
   } else if (IsNetbsd() || IsOpenbsd()) {
@@ -103,7 +102,7 @@ static errno_t pthread_getname_impl(struct PosixThread *pt, char *name,
         return ERANGE;
       }
     } else {
-      return ax;
+      return __errno_host2linux(ax);
     }
 
   } else {

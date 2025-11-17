@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/net/lfuncs.h"
 #include "dsp/scale/cdecimate2xuint8x8.h"
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
@@ -135,7 +138,7 @@ int LuaGetCpuCore(lua_State *L) {
 }
 
 int LuaGetCpuCount(lua_State *L) {
-  lua_pushinteger(L, __get_cpu_count());
+  lua_pushinteger(L, cosmo_cpu_count());
   return 1;
 }
 
@@ -154,6 +157,12 @@ static int LuaRand(lua_State *L, uint64_t impl(void)) {
   return 1;
 }
 
+static uint64_t arc4random64(void) {
+  uint64_t val;
+  arc4random_buf(&val, sizeof(val));
+  return val;
+}
+
 int LuaLemur64(lua_State *L) {
   return LuaRand(L, lemur64);
 }
@@ -163,11 +172,11 @@ int LuaRand64(lua_State *L) {
 }
 
 int LuaRdrand(lua_State *L) {
-  return LuaRand(L, rdrand);
+  return LuaRand(L, arc4random64);
 }
 
 int LuaRdseed(lua_State *L) {
-  return LuaRand(L, rdseed);
+  return LuaRand(L, arc4random64);
 }
 
 int LuaDecimate(lua_State *L) {
@@ -190,7 +199,7 @@ int LuaMeasureEntropy(lua_State *L) {
   size_t n;
   const char *s;
   s = luaL_checklstring(L, 1, &n);
-  lua_pushnumber(L, MeasureEntropy(s, n));
+  lua_pushnumber(L, cosmo_entropy(s, n));
   return 1;
 }
 
@@ -448,7 +457,7 @@ int LuaSlurp(lua_State *L) {
     j = luaL_checkinteger(L, 3);
   }
   luaL_buffinit(L, &b);
-  if ((fd = open(luaL_checkstring(L, 1), O_RDONLY | O_SEQUENTIAL)) == -1) {
+  if ((fd = open(luaL_checkstring(L, 1), O_RDONLY)) == -1) {
     return LuaUnixSysretErrno(L, "open", olderr);
   }
   if (i < 0 || j < 0) {
@@ -515,7 +524,7 @@ int LuaBarf(lua_State *L) {
     --offset;
   }
   mode = luaL_optinteger(L, 3, 0644);
-  flags = O_WRONLY | O_SEQUENTIAL | luaL_optinteger(L, 4, O_TRUNC | O_CREAT);
+  flags = O_WRONLY | luaL_optinteger(L, 4, O_TRUNC | O_CREAT);
   if (flags & O_NONBLOCK) {
     luaL_error(L, "O_NONBLOCK not allowed");
     __builtin_unreachable();
@@ -609,7 +618,7 @@ int LuaEncodeLatin1(lua_State *L) {
 }
 
 dontinline int LuaBase32Impl(lua_State *L,
-                             char *B32(const char *, size_t, const char *,
+                             char *B32(const void *, size_t, const char *,
                                        size_t, size_t *)) {
   char *p;
   size_t sl, al;  // source/output and alphabet lengths
@@ -630,7 +639,7 @@ int LuaEncodeBase32(lua_State *L) {
 }
 
 int LuaDecodeBase32(lua_State *L) {
-  return LuaBase32Impl(L, DecodeBase32);
+  return LuaBase32Impl(L, (void *)DecodeBase32);
 }
 
 int LuaEncodeHex(lua_State *L) {
@@ -709,7 +718,7 @@ int LuaGetCryptoHash(lua_State *L) {
   return 1;
 }
 
-static dontinline int LuaIsValid(lua_State *L, bool V(const char *, size_t)) {
+static dontinline int LuaIsValid(lua_State *L, bool32 V(const char *, size_t)) {
   size_t size;
   const char *data;
   data = luaL_checklstring(L, 1, &size);
@@ -767,7 +776,7 @@ int LuaUnderlong(lua_State *L) {
 }
 
 int LuaEncodeBase64(lua_State *L) {
-  return LuaCoder(L, EncodeBase64);
+  return LuaCoder(L, (void *)EncodeBase64);
 }
 
 int LuaDecodeBase64(lua_State *L) {
@@ -859,67 +868,76 @@ int LuaUuidV4(lua_State *L) {
 }
 
 int LuaUuidV7(lua_State *L) {
-  //See https://www.rfc-editor.org/rfc/rfc9562.html
+  // See https://www.rfc-editor.org/rfc/rfc9562.html
   char bin[16], uuid_str[37];
   struct timespec ts = timespec_real();
   uint64_t unix_ts_ms = (uint64_t)((ts.tv_sec * 1000) + (ts.tv_nsec / 1000000));
-  int fractional_ms = (int)floor((double)((double)(ts.tv_nsec - (ts.tv_nsec / 1000000) * 1000000)/1000000) * 4096) <<4;
+  int fractional_ms =
+      (int)floor(
+          (double)((double)(ts.tv_nsec - (ts.tv_nsec / 1000000) * 1000000) /
+                   1000000) *
+          4096)
+      << 4;
   uint64_t rand_b = _rand64();
-  int rand_a = fractional_ms | (rand_b & 0x000000000000000f); //use the last 4 bits of rand_b
+  int rand_a = fractional_ms |
+               (rand_b & 0x000000000000000f);  // use the last 4 bits of rand_b
 
-  bin[0]  = unix_ts_ms >> 050;
-  bin[1]  = unix_ts_ms >> 040;
-  bin[2]  = unix_ts_ms >> 030;
-  bin[3]  = unix_ts_ms >> 020;
-  bin[4]  = unix_ts_ms >> 010;
-  bin[5]  = unix_ts_ms >> 000;
-  bin[6]  = rand_a     >> 010;
-  bin[7]  = rand_a     >> 000;
-  bin[8]  = rand_b     >> 070;
-  bin[9]  = rand_b     >> 060;
-  bin[10] = rand_b     >> 050;
-  bin[11] = rand_b     >> 040;
-  bin[12] = rand_b     >> 030;
-  bin[13] = rand_b     >> 020;
-  bin[14] = rand_b     >> 010;
-  bin[15] = rand_b     >> 000;
+  bin[0] = unix_ts_ms >> 050;
+  bin[1] = unix_ts_ms >> 040;
+  bin[2] = unix_ts_ms >> 030;
+  bin[3] = unix_ts_ms >> 020;
+  bin[4] = unix_ts_ms >> 010;
+  bin[5] = unix_ts_ms >> 000;
+  bin[6] = rand_a >> 010;
+  bin[7] = rand_a >> 000;
+  bin[8] = rand_b >> 070;
+  bin[9] = rand_b >> 060;
+  bin[10] = rand_b >> 050;
+  bin[11] = rand_b >> 040;
+  bin[12] = rand_b >> 030;
+  bin[13] = rand_b >> 020;
+  bin[14] = rand_b >> 010;
+  bin[15] = rand_b >> 000;
 
-  uuid_str[0]  = "0123456789abcdef"[(bin[0] & 0xf0) >>4];
-  uuid_str[1]  = "0123456789abcdef"[(bin[0] & 0x0f)];
-  uuid_str[2]  = "0123456789abcdef"[(bin[1] & 0xf0) >>4];
-  uuid_str[3]  = "0123456789abcdef"[(bin[1] & 0x0f)];
-  uuid_str[4]  = "0123456789abcdef"[(bin[2] & 0xf0) >>4];
-  uuid_str[5]  = "0123456789abcdef"[(bin[2] & 0x0f)];
-  uuid_str[6]  = "0123456789abcdef"[(bin[3] & 0xf0) >>4];
-  uuid_str[7]  = "0123456789abcdef"[(bin[3] & 0x0f)];
-  uuid_str[8]  = '-';
-  uuid_str[9]  = "0123456789abcdef"[(bin[4] & 0xf0) >>4];
+  uuid_str[0] = "0123456789abcdef"[(bin[0] & 0xf0) >> 4];
+  uuid_str[1] = "0123456789abcdef"[(bin[0] & 0x0f)];
+  uuid_str[2] = "0123456789abcdef"[(bin[1] & 0xf0) >> 4];
+  uuid_str[3] = "0123456789abcdef"[(bin[1] & 0x0f)];
+  uuid_str[4] = "0123456789abcdef"[(bin[2] & 0xf0) >> 4];
+  uuid_str[5] = "0123456789abcdef"[(bin[2] & 0x0f)];
+  uuid_str[6] = "0123456789abcdef"[(bin[3] & 0xf0) >> 4];
+  uuid_str[7] = "0123456789abcdef"[(bin[3] & 0x0f)];
+  uuid_str[8] = '-';
+  uuid_str[9] = "0123456789abcdef"[(bin[4] & 0xf0) >> 4];
   uuid_str[10] = "0123456789abcdef"[(bin[4] & 0x0f)];
-  uuid_str[11] = "0123456789abcdef"[(bin[5] & 0xf0) >>4];
+  uuid_str[11] = "0123456789abcdef"[(bin[5] & 0xf0) >> 4];
   uuid_str[12] = "0123456789abcdef"[(bin[5] & 0x0f)];
   uuid_str[13] = '-';
   uuid_str[14] = '7';
-  uuid_str[15] = "0123456789abcdef"[(bin[6] & 0xf0) >>4];
+  uuid_str[15] = "0123456789abcdef"[(bin[6] & 0xf0) >> 4];
   uuid_str[16] = "0123456789abcdef"[(bin[6] & 0x0f)];
-  uuid_str[17] = "0123456789abcdef"[(bin[7] & 0xf0) >>4];
+  uuid_str[17] = "0123456789abcdef"[(bin[7] & 0xf0) >> 4];
   uuid_str[18] = '-';
-  uuid_str[19] = "0123456789abcdef"[(0x8 | ((bin[7] & 0x0f) >>2))];
-  uuid_str[20] = "0123456789abcdef"[(bin[7] & 0x03) | (bin[8] & 0xf0) >>6]; //See https://www.rfc-editor.org/rfc/rfc9562.html#version_field
+  uuid_str[19] = "0123456789abcdef"[(0x8 | ((bin[7] & 0x0f) >> 2))];
+  uuid_str[20] = "0123456789abcdef"
+      [(bin[7] & 0x03) |
+       (bin[8] & 0xf0) >>
+           6];  // See https://www.rfc-editor.org/rfc/rfc9562.html#version_field
   uuid_str[21] = "0123456789abcdef"[(bin[8] & 0x0f)];
-  uuid_str[22] = "0123456789abcdef"[(bin[9] & 0xf0) >>4];
+  uuid_str[22] = "0123456789abcdef"[(bin[9] & 0xf0) >> 4];
   uuid_str[23] = '-';
-  uuid_str[24] = "0123456789abcdef"[(bin[9]  & 0x0f)];
-  uuid_str[25] = "0123456789abcdef"[(bin[10] & 0xf0) >>4];
+  uuid_str[24] = "0123456789abcdef"[(bin[9] & 0x0f)];
+  uuid_str[25] = "0123456789abcdef"[(bin[10] & 0xf0) >> 4];
   uuid_str[26] = "0123456789abcdef"[(bin[10] & 0x0f)];
-  uuid_str[27] = "0123456789abcdef"[(bin[11] & 0xf0) >>4];
+  uuid_str[27] = "0123456789abcdef"[(bin[11] & 0xf0) >> 4];
   uuid_str[28] = "0123456789abcdef"[(bin[11] & 0x0f)];
-  uuid_str[29] = "0123456789abcdef"[(bin[12] & 0xf0) >>4];
+  uuid_str[29] = "0123456789abcdef"[(bin[12] & 0xf0) >> 4];
   uuid_str[30] = "0123456789abcdef"[(bin[12] & 0x0f)];
-  uuid_str[31] = "0123456789abcdef"[(bin[13] & 0xf0) >>4];
+  uuid_str[31] = "0123456789abcdef"[(bin[13] & 0xf0) >> 4];
   uuid_str[32] = "0123456789abcdef"[(bin[13] & 0x0f)];
-  uuid_str[33] = "0123456789abcdef"[(bin[14] & 0xf0) >>4];
+  uuid_str[33] = "0123456789abcdef"[(bin[14] & 0xf0) >> 4];
   uuid_str[34] = "0123456789abcdef"[(bin[14] & 0x0f)];
-  uuid_str[35] = "0123456789abcdef"[(bin[15] & 0xf0) >>4];
+  uuid_str[35] = "0123456789abcdef"[(bin[15] & 0xf0) >> 4];
   uuid_str[36] = '\0';
 
   lua_pushfstring(L, uuid_str);
@@ -1015,7 +1033,6 @@ int LuaBenchmark(lua_State *L) {
   luaL_checktype(L, 1, LUA_TFUNCTION);
   count = luaL_optinteger(L, 2, 100);
   maxattempts = luaL_optinteger(L, 3, 10);
-  __warn_if_powersave();
   lua_gc(L, LUA_GCSTOP);
 
   for (attempts = 0;;) {
@@ -1249,15 +1266,32 @@ static void GetCurve25519Arg(lua_State *L, int arg, uint8_t buf[static 32]) {
 }
 
 /*
- * Example usage:
+ * Computes elliptic curve no. 25519
  *
- *     >: secret1 = "\1"
- *     >: secret2 = "\2"
- *     >: public1 = Curve25519(secret1, "\9")
- *     >: public2 = Curve25519(secret2, "\9")
- *     >: Curve25519(secret1, public2)
+ * Let's say Alice and Bob want to have a private conversation. They
+ * would start by randomly generating secret keys (better than this)
+ *
+ *     >: alice_secret = "\1"
+ *     >: bob_secret = "\2"
+ *
+ * They would multiply them against the magic basepoint "\9" to derive
+ * public keys they can share with each other:
+ *
+ *     >: alice_public = Curve25519(alice_secret, "\9")
+ *     >: bob_public = Curve25519(bob_secret, "\9")
+ *
+ * When Alice gets Bob's public key, she multiplies it against her own
+ * private key, to derive a "shared private key" that can be used for a
+ * symmetric cipher like chacha20, which is what would actually encrypt
+ * the conversation text.
+ *
+ *     >: Curve25519(alice_secret, bob_public)
  *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
- *     >: Curve25519(secret2, public1)
+ *
+ * Notice how Bob derives the exact same symmetric cipher key when he
+ * multiplies the private key for his exchange against Alice's public.
+ *
+ *     >: Curve25519(bob_secret, alice_public)
  *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
  *
  */

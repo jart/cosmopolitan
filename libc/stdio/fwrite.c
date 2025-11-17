@@ -23,16 +23,29 @@
 /**
  * Writes data to stream.
  *
+ * This implementation strictly enforces POSIX buffering semantics for
+ * mixed read/write operations. When switching from read to write
+ * operations on the same stream, the stream's position is properly
+ * maintained according to POSIX requirements.
+ *
+ * POSIX.1 specifies that for update streams (opened with "+"),
+ * operations that change between reading and writing must include an
+ * intervening call to fflush(), fseek(), fsetpos(), or rewind(). This
+ * implementation correctly maintains stream positioning and buffering
+ * state during such transitions, providing better reliability than
+ * implementations that allow unsafe mixed operations.
+ *
  * @param stride specifies the size of individual items
  * @param count is the number of strides to write
- * @return count on success, [0,count) on EOF, 0 on error or count==0
+ * @return count on success, [0,count) on EOF or error, or count==0
+ * @cancelationpoint
  */
 size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
   size_t rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fwrite_unlocked(data, stride, count, f);
   STDIOTRACE("fwrite(%p, %'zu, %'zu, %p) → %'zu %s", data, stride, count, f, rc,
              DescribeStdioState(f->state));
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

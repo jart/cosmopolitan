@@ -24,6 +24,7 @@
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/stack.h"
@@ -37,7 +38,7 @@
  * The `struct statfs` returned has the following fields:
  *
  * - `f_fstypename` holds a NUL-terminated string identifying the file
- *   system type. On Linux, this will usually be "nfs". On FreeBSD, it
+ *   system type. On Linux, this will usually be "ext". On FreeBSD, it
  *   will usually be "zfs". On OpenBSD and NetBSD, it's usually "ffs".
  *   On MacOS it's usually "apfs", and on Windows it's usually "NTFS".
  *
@@ -108,8 +109,10 @@ int statfs(const char *path, struct statfs *sf) {
   BEGIN_CANCELATION_POINT;
 
   CheckLargeStackAllocation(&m, sizeof(m));
-  if (_weaken(__zipos_parseuri) &&
-      _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (kisdangerous(path) || kisdangerous(sf)) {
+    rc = efault();
+  } else if (_weaken(__zipos_parseuri) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     rc = enotsup();
   } else if (!IsWindows()) {
     if ((rc = sys_statfs(path, &m)) != -1) {

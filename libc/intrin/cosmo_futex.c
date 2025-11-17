@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/cp.internal.h"
@@ -26,14 +27,19 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describebacktrace.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/mem/alloca.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
@@ -47,11 +53,11 @@
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
 
-errno_t cosmo_futex_thunk (atomic_int *, int, int, const struct timespec *, int *, int);
-errno_t _futex_wake (atomic_int *, int, int) asm ("cosmo_futex_thunk");
+long cosmo_futex_thunk (atomic_int *, int, int, const struct timespec *, int *, int);
+long _futex_wake (atomic_int *, int, int) asm ("cosmo_futex_thunk");
 int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
-static struct CosmoFutex {
+__rarechange static struct CosmoFutex {
 	atomic_uint once;
 	int FUTEX_WAIT_;
 	int FUTEX_PRIVATE_FLAG_;
@@ -60,8 +66,19 @@ static struct CosmoFutex {
 	bool timeout_is_relative;
 } g_cosmo_futex;
 
+static const char *cosmo_futex_describe_pshare (char buf[12], int x) {
+	switch (x) {
+	case PTHREAD_PROCESS_PRIVATE:
+		return "PTHREAD_PROCESS_PRIVATE";
+	case PTHREAD_PROCESS_SHARED:
+		return "PTHREAD_PROCESS_SHARED";
+	default:
+		FormatInt32 (buf, x);
+		return buf;
+	}
+}
+
 static void cosmo_futex_init (void) {
-	int e;
 	atomic_int x;
 
 	g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT;
@@ -96,8 +113,7 @@ static void cosmo_futex_init (void) {
 	// configuring any time synchronization mechanism (like ntp) to
 	// adjust for leap seconds by adjusting the rate, rather than
 	// with a backwards step.
-	e = errno;
-	atomic_store_explicit (&x, 0, memory_order_relaxed);
+	atomic_init (&x, 0);
 	if (IsLinux () &&
 	    cosmo_futex_thunk (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
 			       1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
@@ -114,7 +130,6 @@ static void cosmo_futex_init (void) {
 		g_cosmo_futex.FUTEX_WAIT_ = FUTEX_WAIT;
 		g_cosmo_futex.timeout_is_relative = true;
 	}
-	errno = e;
 }
 
 static uint32_t cosmo_time_64to32u (uint64_t duration) {
@@ -175,10 +190,12 @@ static int cosmo_futex_wait_win32 (atomic_int *w, int expect, char pshare,
 			pt->pt_blkmask = waitmask;
 			atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
 		}
-		ok = WaitOnAddress (w, &expect, sizeof(int), cosmo_time_64to32u (timespec_tomillis (wait)));
+		ok = WaitOnAddress (w, &expect, sizeof (int), cosmo_time_64to32u (timespec_tomillis (wait)));
 		if (pt) {
 			/* __sig_wake wakes our futex without changing `w` after enqueing signals */
-			atomic_store_explicit (&pt->pt_blocker, 0, memory_order_release);
+			for (;;)
+				if (atomic_exchange (&pt->pt_blocker, 0))
+					break;
 			if (ok && atomic_load_explicit (w, memory_order_acquire) == expect && (sig = __sig_get (waitmask))) {
 				__sig_relay (sig, SI_KERNEL, waitmask);
 				if (_check_cancel () == -1)
@@ -189,7 +206,7 @@ static int cosmo_futex_wait_win32 (atomic_int *w, int expect, char pshare,
 		if (ok) {
 			return 0;
 		} else {
-			unassert (GetLastError () == ETIMEDOUT);
+			unassert (GetLastError () == kNtErrorTimeout);
 		}
 	}
 #else
@@ -266,15 +283,15 @@ int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 	if ((rc = cosmo_futex_fix_timeout (&tsmem, clock, abstime, &timeout)))
 		goto Finished;
 
-	LOCKTRACE ("futex(%t [%d], %s, %#x, %s) → ...",
+	LOCKTRACE ("futex(%t [%d], %!s, %#x, %!s) → ...",
 		   w, atomic_load_explicit (w, memory_order_relaxed),
 		   DescribeFutexOp (op), expect,
 		   DescribeTimespec (0, timeout));
 
-	tib = __get_tls();
+	tib = __get_tls ();
 	pt = (struct PosixThread *)tib->tib_pthread;
 
-	if (g_cosmo_futex.is_supported) {
+	if (!SupportsNetbsd() || g_cosmo_futex.is_supported) {
 		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
@@ -313,7 +330,7 @@ int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (w, expect, pshare, clock, timeout);
 		} else {
-			if (IsOpenbsd()) {
+			if (IsOpenbsd ()) {
 				// OpenBSD 6.8 futex() returns errors as
 				// positive numbers, without setting CF.
 				// This irregularity is fixed in 7.2 but
@@ -323,7 +340,7 @@ int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 				if (pt) pt->pt_flags &= ~PT_OPENBSD_KLUDGE;
 			}
 			rc = sys_futex_cp (w, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
-			if (IsOpenbsd()) {
+			if (IsOpenbsd ()) {
 				// Handle the OpenBSD 6.x irregularity.
 				if (rc > 0) {
 					errno = rc;
@@ -348,10 +365,11 @@ int cosmo_futex_wait (atomic_int *w, int expect, char pshare,
 	}
 
 Finished:
-	STRACE ("futex(%t [%d], %s, %#x, %s) → %s",
+	STRACE ("cosmo_futex_wait(%t [%d], %d, %!s, %!s, %!s) → %!s",
 		w, atomic_load_explicit (w, memory_order_relaxed),
-		DescribeFutexOp (op), expect,
-		DescribeTimespec (0, abstime),
+		expect, cosmo_futex_describe_pshare (alloca(12), pshare),
+		DescribeClockName (clock),
+		DescribeTimespec (rc, abstime),
 		DescribeErrno (rc));
 
 	END_CANCELATION_POINT;
@@ -375,7 +393,7 @@ int cosmo_futex_wake (atomic_int *w, int count, char pshare) {
 	if (pshare == PTHREAD_PROCESS_PRIVATE)
 		op |= g_cosmo_futex.FUTEX_PRIVATE_FLAG_;
 
-	if (g_cosmo_futex.is_supported) {
+	if (!SupportsNetbsd() || g_cosmo_futex.is_supported) {
 		if (IsWindows ()) {
 			if (pshare) {
 				goto Polyfill;
@@ -419,9 +437,9 @@ int cosmo_futex_wake (atomic_int *w, int count, char pshare) {
 		rc = 0;
 	}
 
-	STRACE ("futex(%t [%d], %s, %d) → %d woken",
+	STRACE ("cosmo_futex_wake(%t [%d], %d, %!s) → %d",
 		w, atomic_load_explicit (w, memory_order_relaxed),
-		DescribeFutexOp (op), count, rc);
+		count, cosmo_futex_describe_pshare (alloca(12), pshare), rc);
 
 	return rc;
 }

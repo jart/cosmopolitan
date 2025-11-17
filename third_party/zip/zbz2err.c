@@ -29,18 +29,18 @@
 
 #define __ZBZ2ERR_C     /* identifies this source module */
 
-#include "third_party/zip/zip.h"
+#include "zip.h"
 
 #ifdef BZIP2_SUPPORT
 # ifdef BZIP2_USEBZIP2DIR
-// MISSING #include "bzip2/bzlib.h"
+#   include "third_party/bzip2/bzlib.h"
 # else
     /* If IZ_BZIP2 is defined as the location of the bzip2 files then
        assume the location has been added to include path.  For Unix
        this is done by the configure script. */
     /* Also do not need path for bzip2 include if OS includes support
        for bzip2 library. */
-// MISSING #include "bzlib.h"
+#   include "third_party/bzip2/bzlib.h"
 # endif
 
 /**********************************/

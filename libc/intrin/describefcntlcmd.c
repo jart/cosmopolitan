@@ -17,18 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
 
 const char *_DescribeFcntlCmd(char buf[20], int x) {
-  const char *s;
-  if (x >= 0 && (s = GetMagnumStr(kFcntlCmds, x))) {
-    buf[0] = 'F';
-    buf[1] = '_';
-    strcpy(buf + 2, s);
-  } else {
-    FormatInt32(buf, x);
-  }
+  if (x == F_GETFL)
+    return "F_GETFL";
+  if (x == F_SETFL)
+    return "F_SETFL";
+  if (x == F_GETFD)
+    return "F_GETFD";
+  if (x == F_SETFD)
+    return "F_SETFD";
+  if (x == F_DUPFD)
+    return "F_DUPFD";
+  if (x == F_DUPFD_CLOEXEC)
+    return "F_DUPFD_CLOEXEC";
+  if (x == F_GETLK)
+    return "F_GETLK";
+  if (x == F_SETLK)
+    return "F_SETLK";
+  if (x == F_SETLKW)
+    return "F_SETLKW";
+  FormatInt32(buf, x);
   return buf;
 }

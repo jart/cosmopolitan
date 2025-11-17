@@ -17,43 +17,61 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/fds.h"
+#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/filebasicinfo.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
-textwindows int sys_fchmod_nt(int fd, uint32_t mode) {
-
-  // validate file descriptor
-  if (fd + 0u >= g_fds.n)
-    return ebadf();
-  if (g_fds.p[fd].kind == kFdEmpty)
-    return ebadf();
+textwindows bool32 sys_fchmod_nt_handle(intptr_t handle, uint32_t mode) {
 
   // get current information
   struct NtFileBasicInfo fbi;
-  if (!GetFileInformationByHandleEx(g_fds.p[fd].handle, kNtFileBasicInfo, &fbi,
-                                    sizeof(fbi))) {
-    return __winerr();
-  }
+  if (!GetFileInformationByHandleEx(handle, kNtFileBasicInfo, &fbi,
+                                    sizeof(fbi)))
+    return false;
 
   // change attributes
-  if (mode & 0222) {
+  if (mode & 0200) {
     fbi.FileAttributes &= ~kNtFileAttributeReadonly;
   } else {
     fbi.FileAttributes |= kNtFileAttributeReadonly;
   }
 
   // set new attributes
-  if (!SetFileInformationByHandle(g_fds.p[fd].handle, kNtFileBasicInfo, &fbi,
-                                  sizeof(fbi))) {
-    return __winerr();
-  }
+  if (!SetFileInformationByHandle(handle, kNtFileBasicInfo, &fbi, sizeof(fbi)))
+    return false;
+
+  // on unix saying `chmod -w dir` prevents writing files in that dir.
+  // however on windows, setting kNtFileAttributeReadonly on a directory
+  // doesn't prevent us from creating files within that directory. so we
+  // need to do something special to make the expected behavior happen.
+  unsigned dwDenyMask = 0;
+  if (fbi.FileAttributes & kNtFileAttributeDirectory)
+    if (fbi.FileAttributes & kNtFileAttributeReadonly)
+      dwDenyMask |=
+          kNtFileAddFile | kNtFileAddSubdirectory | kNtFileDeleteChild;
+  if (~mode & 0400)
+    dwDenyMask |= kNtFileReadData;
+  if (!RestrictFileWin32(handle, 0))
+    return false;
+  if (dwDenyMask)
+    if (!RestrictFileWin32(handle, dwDenyMask))
+      return false;
 
   // all good
+  return true;
+}
+
+textwindows int sys_fchmod_nt(int fd, uint32_t mode) {
+  if (!__isfdkind(fd, kFdFile))
+    return ebadf();
+  if (!sys_fchmod_nt_handle(__get_pib()->fds.p[fd].handle, mode))
+    return __winerr();
   return 0;
 }

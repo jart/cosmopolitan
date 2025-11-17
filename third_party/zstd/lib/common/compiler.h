@@ -288,7 +288,6 @@
 
 # elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 /* C11 support */
-#include "libc/stdalign.h"
 #  define ZSTD_ALIGNOF(T) alignof(T)
 
 # else

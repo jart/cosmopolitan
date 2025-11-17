@@ -19,36 +19,53 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
+  if (!IsWindows())
+    exit(0);
   testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
+char *badmem = (char *)7;
 TEST(chdir, efault) {
-  ASSERT_SYS(EFAULT, -1, chdir(0));
+  EXPECT_SYS(EFAULT, -1, chdir(0));
+  EXPECT_SYS(EFAULT, -1, chdir(badmem));
 }
 
 TEST(chdir, enoent) {
-  ASSERT_SYS(ENOENT, -1, chdir(""));
-  ASSERT_SYS(ENOENT, -1, chdir("doesnotexist"));
-  ASSERT_SYS(ENOENT, -1, chdir("o/doesnotexist"));
+  EXPECT_SYS(ENOENT, -1, chdir(""));
+  EXPECT_SYS(ENOENT, -1, chdir("doesnotexist"));
+  EXPECT_SYS(ENOENT, -1, chdir("o/doesnotexist"));
+  EXPECT_SYS(0, 0, mkdir("o", 0700));
+  EXPECT_SYS(ENOENT, -1, chdir("o/doesnotexist"));
 }
 
 TEST(chdir, enotdir) {
-  ASSERT_SYS(0, 0, touch("o", 0644));
-  ASSERT_SYS(ENOTDIR, -1, chdir("o/doesnotexist"));
+  EXPECT_SYS(0, 0, touch("o", 0644));
+  EXPECT_SYS(ENOTDIR, -1, chdir("o"));
+  EXPECT_SYS(ENOTDIR, -1, chdir("o/doesnotexist"));
+}
+
+TEST(chdir, eloop) {
+  EXPECT_SYS(0, 0, symlink("lnk/", "lnk"));
+  if (IsWindows())
+    return;  // meh not worth polyfilling this behavior
+  EXPECT_SYS(ELOOP, -1, chdir("lnk"));
+  EXPECT_SYS(0, 0, symlink("lnk", "lnk"));
+  EXPECT_SYS(ELOOP, -1, chdir("lnk"));
 }
 
 TEST(chdir, test) {
-  ASSERT_SYS(0, 0, mkdir("o", 0755));
-  ASSERT_SYS(0, 0, touch("o/file", 0644));
-  ASSERT_SYS(0, 3, open("o/file", O_RDONLY));
-  ASSERT_SYS(0, 0, close(3));
-  ASSERT_SYS(0, 0, chdir("o"));
-  ASSERT_SYS(0, 3, open("file", O_RDONLY));
-  ASSERT_SYS(0, 0, close(3));
-  ASSERT_SYS(ENOENT, -1, open("o/file", O_RDONLY));
+  EXPECT_SYS(0, 0, mkdir("o", 0755));
+  EXPECT_SYS(0, 0, touch("o/file", 0644));
+  EXPECT_SYS(0, 3, open("o/file", O_RDONLY));
+  EXPECT_SYS(0, 0, close(3));
+  EXPECT_SYS(0, 0, chdir("o"));
+  EXPECT_SYS(0, 3, open("file", O_RDONLY));
+  EXPECT_SYS(0, 0, close(3));
+  EXPECT_SYS(ENOENT, -1, open("o/file", O_RDONLY));
 }

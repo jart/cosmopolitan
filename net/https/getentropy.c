@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/log/check.h"
 #include "libc/stdio/rand.h"
 #include "net/https/https.h"
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, rdrand, 0);
+  arc4random_buf(p, n);
   return 0;
 }

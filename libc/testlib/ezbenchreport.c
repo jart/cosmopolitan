@@ -22,7 +22,6 @@
 #include "libc/runtime/runtime.h"
 
 void __testlib_ezbenchreport(const char *form, double c1, double c2) {
-  __warn_if_powersave();
   kprintf(" *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n", form,
           lrint(c1), lrint(c1 / 3), lrint(c2), lrint(c2 / 3));
 }
@@ -31,7 +30,6 @@ void __testlib_ezbenchreport_n(const char *form, char z, size_t n, double c) {
   long cn, lat;
   uint64_t bps;
   char msg[128];
-  __warn_if_powersave();
   ksnprintf(msg, sizeof(msg), "%s %c=%d", form, z, n);
   cn = max(lrint(c / 3), 1);
   if (!n) {

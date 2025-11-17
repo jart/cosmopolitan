@@ -19,8 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
 #include "libc/x/x.h"
 
 /**
@@ -28,39 +28,32 @@
  *
  * @param size can be -1 to strlen(data)
  * @return 0 on success or -1 w/ errno
- * @note this is uninterruptible
  */
 int xbarf(const char *path, const void *data, size_t size) {
-  ssize_t rc;
-  int fd, res;
-  const char *p;
-  size_t i, wrote;
-  res = 0;
-  p = data;
+
+  // handle arguments
   if (size == -1)
     size = data ? strlen(data) : 0;
-  if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) != -1) {
-    if (ftruncate(fd, size) != -1) {
-      if (size > 2 * 1024 * 1024) {
-        fadvise(fd, 0, size, MADV_SEQUENTIAL);
-      }
-      for (i = 0; i < size; i += wrote) {
-      TryAgain:
-        if ((rc = pwrite(fd, p + i, size - i, i)) != -1) {
-          wrote = rc;
-        } else if (errno == EINTR) {
-          goto TryAgain;
-        } else {
-          res = -1;
-          break;
-        }
-      }
-    } else {
-      res = -1;
+
+  // create file
+  int fd;
+  if ((fd = creat(path, 0644)) == -1)
+    return -1;
+
+  // write data
+  ssize_t rc;
+  for (size_t i = 0; i < size; i += rc) {
+    rc = write(fd, (char *)data + i, size - i);
+    if (rc <= 0) {
+      close(fd);
+      return -1;
     }
-    close(fd);
-  } else {
-    res = -1;
   }
-  return res;
+
+  // close file
+  if (close(fd))
+    return -1;
+
+  // success
+  return 0;
 }

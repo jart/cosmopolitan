@@ -21,20 +21,39 @@
 /**
  * Decodes unsigned integer from array.
  *
+ * This function is the reverse operation of uleb64().
+ *
+ * The maximum number of bytes that'll be consumed from `p` is 9. The
+ * ninth byte is special. Normally with LEB encoding, the highest bit of
+ * each byte indicates if we should consume additional bytes. That means
+ * each byte has 7 bits of content, and 8*7=56 which means by the time
+ * we hit the ninth byte, there's exactly 8 bits of content remaining in
+ * the 64-bit integer we're decoding. So we don't use LEB on the ninth
+ * byte and treat all eight bits of it as content.
+ *
  * @param p is input array
  * @param n is capacity of p
  * @param x receives number number
- * @return bytes decoded or -1 on error
+ * @return bytes decoded, or negative number on error
  */
 int unuleb64(const char *p, size_t n, uint64_t *x) {
   int k;
   size_t i;
   uint64_t t;
+  if (n > 9)
+    n = 9;
+#pragma GCC unroll 1000
   for (k = t = i = 0; i < n; ++i, k += 7) {
-    t |= (uint64_t)(p[i] & 127) << k;
-    if (~p[i] & 128) {
+    if (i == 8) {
+      t |= (uint64_t)(p[i] & 255) << k;
       *x = t;
-      return i + 1;
+      return 9;
+    } else {
+      t |= (uint64_t)(p[i] & 127) << k;
+      if (~p[i] & 128) {
+        *x = t;
+        return i + 1;
+      }
     }
   }
   return -1;

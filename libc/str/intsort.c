@@ -32,7 +32,11 @@ static inline void InsertionSort(int *A, long n) {
   }
 }
 
-static void IntSort(int *A, long n) {
+/**
+ * Tiny and reasonably fast sorting for ints.
+ * @see djbsort
+ */
+void _intsort(int *A, size_t n) {
   int t, p;
   long i, j;
   if (n <= 32) {
@@ -49,18 +53,7 @@ static void IntSort(int *A, long n) {
       A[i] = A[j];
       A[j] = t;
     }
-    IntSort(A, i);
-    IntSort(A + i, n - i);
-  }
-}
-
-/**
- * Tiny and reasonably fast sorting for ints.
- * @see djbsort
- */
-void _intsort(int *A, size_t n) {
-  IntSort(A, n);
-  if (n > 1000) {
-    STRACE("_intsort(%p, %'zu)", A, n);
+    _intsort(A, i);
+    _intsort(A + i, n - i);
   }
 }

@@ -2144,7 +2144,6 @@ PySys_SetPath(const wchar_t *path)
 {
     PyObject *v;
     int delim = DELIM;
-    if(IsWindows()) delim = L';';
     if ((v = makepathobject(path, delim)) == NULL)
         Py_FatalError("can't create sys.path");
     if (_PySys_SetObjectId(&PyId_path, v) != 0)
@@ -2267,7 +2266,7 @@ sys_update_path(int argc, wchar_t **argv)
     if (p != NULL) {
         n = p + 1 - argv0;
 #if SEP == '/' /* Special case for Unix filename syntax */
-        if (n > 1 && (!IsWindows() || p[-1] != ':'))
+        if (n > 1)
             n--; /* Drop trailing separator */
 #endif /* Unix */
     }

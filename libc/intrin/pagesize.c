@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/struct/systeminfo.h"
@@ -27,8 +28,8 @@
 __static_yoink("_init_pagesize");
 #endif
 
-int __pagesize;
-int __gransize;
+__rarechange int __pagesize;
+__rarechange int __gransize;
 
 textstartup static int __pagesize_get(unsigned long *auxv) {
   for (; auxv && auxv[0]; auxv += 2)

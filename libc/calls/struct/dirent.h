@@ -27,5 +27,13 @@ int versionsort(const struct dirent **, const struct dirent **) libcesque;
 int scandir(const char *, struct dirent ***, int (*)(const struct dirent *),
             int (*)(const struct dirent **, const struct dirent **)) libcesque;
 
+#if defined(_GNU_SOURCE) || defined(_COSMO_SOURCE)
+DIR *__opendirat(int, const char *) libcesque __wur;
+int scandirat(int, const char *, struct dirent ***,
+              int (*)(const struct dirent *),
+              int (*)(const struct dirent **,
+                      const struct dirent **)) libcesque;
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

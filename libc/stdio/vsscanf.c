@@ -18,33 +18,57 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/fmt/internal.h"
+#include "libc/intrin/bswap.h"
+#include "libc/str/str.h"
 
 struct StringScannerState {
-  const unsigned char *s;
-  size_t i;
+  const char *s;
+  char u[8];
+  int n;
 };
 
-static int vsscanfcb(void *arg) {
-  int res;
-  struct StringScannerState *state;
-  state = arg;
-  if ((res = state->s[state->i])) {
-    state->i++;
+static int vsscanf_getc(void *arg) {
+  int c;
+  struct StringScannerState *state = arg;
+  if (state->n) {
+    c = state->u[--state->n] & 255;
+  } else if ((c = *state->s & 255)) {
+    ++state->s;
   } else {
-    res = -1;
+    c = -1;
   }
-  return res;
+  return c;
+}
+
+static int vsscanf_ungetc(int c, void *arg) {
+  struct StringScannerState *state = arg;
+  if (state->n < sizeof(state->u))
+    state->u[state->n++] = c;
+  return c;
+}
+
+static wint_t vsscanf_ungetwc(wint_t c, void *arg) {
+  uint64_t w;
+  if (!c) {
+    vsscanf_ungetc(c, arg);
+  } else {
+    w = bswap_64(tpenc(c));
+    while (!(w & 255))
+      w >>= 8;
+    do {
+      vsscanf_ungetc(w, arg);
+    } while ((w >>= 8));
+  }
+  return c;
 }
 
 /**
  * Decodes string.
- *
- * @see libc/fmt/vcscanf.h (for docs and implementation)
- * @note to offer the best performance, we assume small codebases
- *     needing vsscanf() won't need sscanf() too; and as such, there's
- *     a small code size penalty to using both
  */
 int vsscanf(const char *str, const char *fmt, va_list va) {
-  struct StringScannerState state = {(const unsigned char *)str, 0};
-  return __vcscanf(vsscanfcb, NULL, &state, fmt, va);
+  struct StringScannerState state = {str};
+  return __vcscanf(vsscanf_getc,     //
+                   vsscanf_ungetc,   //
+                   vsscanf_ungetwc,  //
+                   &state, fmt, va);
 }

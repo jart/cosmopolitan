@@ -14,6 +14,20 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#include "libc/intrin/safemacros.h"
+#include "libc/calls/pledge.internal.h"
+#include "libc/nexgen32e/kcpuids.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/math.h"
+#include "libc/dce.h"
+#include "libc/calls/struct/sysinfo.h"
+#include "libc/fmt/libgen.h"
+#include "libc/serialize.h"
+#include "libc/calls/pledge.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/runtime.h"
+
 #include "makeint.h"
 
 #include <assert.h>
@@ -585,6 +599,205 @@ child_error (struct child *child,
 }
 
 
+/* [jart] Helper functions.  */
+
+static bool
+parse_bool (const char *s)
+{
+  while (isspace (*s))
+    ++s;
+  if (isdigit (*s))
+    return !! atoi (s);
+  return _startswithi (s, "true");
+}
+
+static const char *
+get_target_variable (const char *name,
+                     size_t length,
+                     struct file *file,
+                     const char *dflt)
+{
+  const struct variable *var;
+  if ((file &&
+       ((var = lookup_variable_in_set (name, length,
+                                       file->variables->set)) ||
+        (file->pat_variables &&
+         (var = lookup_variable_in_set (name, length,
+                                        file->pat_variables->set))))) ||
+      (var = lookup_variable (name, length)))
+    return var->value;
+  else
+    return dflt;
+}
+
+static bool
+get_perm_prefix (const char *path, char out_perm[5], const char **out_path)
+{
+  int c, n;
+  for (n = 0;;)
+    switch ((c = *path++)) {
+    case 'r':
+    case 'w':
+    case 'c':
+    case 'x':
+      out_perm[n++] = c;
+      out_perm[n] = 0;
+      break;
+    case ':':
+      if (n)
+        {
+          *out_path = path;
+          return true;
+        }
+      else
+        return false;
+    default:
+      return false;
+    }
+}
+
+/* Adds path to sandbox, returning -1 if serious error occurs.  */
+static void
+unveil_or_die (const char *path, const char *perm)
+{
+  int e;
+  char *buf;
+  char permprefix[5];
+
+  if (path)
+    {
+      /* if path is like `rwcx:o/tmp` then `rwcx` will override perm */
+      if (get_perm_prefix (path, permprefix, &path))
+        perm = permprefix;
+
+      /* expand tilde without using malloc */
+      if (!strcmp(path, "~"))
+        path = getenv ("HOME");
+      else if (path[0] == '~' && path[1] == '/')
+        {
+          buf = alloca (PATH_MAX);
+          strlcpy (buf, getenv("HOME"), PATH_MAX);
+          strlcat (buf, path + 1, PATH_MAX);
+          path = buf;
+        }
+    }
+
+  DB (DB_JOBS, (_("Unveil %s with permissions %s\n"), path, perm));
+
+  e = errno;
+  if (unveil (path, perm) != -1)
+    return;
+
+  /* path not found isn't really much of an error */
+  if (errno == ENOENT)
+    {
+      errno = e;
+      return;
+    }
+
+  /* otherwise fail */
+  OSS (error, NILF, "%s: unveil() failed: %s", path, strerror (errno));
+  _Exit (127);
+}
+
+static void
+unveil_ext_or_die (const char *path, const char *ext, const char *perm)
+{
+  char buf[PATH_MAX];
+  strlcpy (buf, path, PATH_MAX);
+  strlcat (buf, ext, PATH_MAX);
+  unveil_or_die (buf, perm);
+}
+
+static void
+unveil_variable (const struct variable *var)
+{
+  char *p;
+  char path[PATH_MAX];
+  if (!var)
+    return;
+  for (p = var->value;;)
+    {
+      while (*p && isspace (*p))
+        ++p;
+      if (!*p)
+        break;
+      size_t i = 0;
+      while (*p && !isspace (*p))
+        if (i + 1 < PATH_MAX)
+          path[i++] = *p++;
+      path[i] = 0;
+      unveil_or_die (path, "r");
+    }
+}
+
+/* Returns true if path starts with "o/" and ends dotless.  */
+static bool
+path_looks_like_ape_executable (const char *s)
+{
+  const char *p;
+  if (s[0] != 'o')
+    return false;
+  if (s[1] != '/')
+    return false;
+  if ((p = strrchr (s, '/')))
+    s = p + 1;
+  return !strchr (s, '.');
+}
+
+static int
+get_base_cpu_freq_mhz (void)
+{
+#ifdef __x86_64__
+  return KCPUIDS (16H, EAX) & 0x7fff;
+#else
+  return 0;
+#endif
+}
+
+static int
+set_limit (int resource, rlim_t cur)
+{
+  struct rlimit lim, old;
+  lim.rlim_cur = cur;
+  lim.rlim_max = RLIM_INFINITY;
+  if (!setrlimit (resource, &lim))
+    return 0;
+  if (getrlimit (resource, &old))
+    return -1;
+  lim.rlim_cur = MIN (lim.rlim_cur, old.rlim_max);
+  lim.rlim_max = old.rlim_max;
+  return setrlimit (resource, &lim);
+}
+
+static int
+set_cpu_limit (int secs)
+{
+  int mhz, lim;
+  if (secs <= 0)
+    return 0;
+  if (!(mhz = get_base_cpu_freq_mhz ()))
+    return eopnotsupp();
+  lim = ceil (3100. / mhz * secs);
+  return set_limit (RLIMIT_CPU, lim);
+}
+
+static struct sysinfo *
+get_sysinfo (void)
+{
+  static char once;
+  static struct sysinfo si;
+  if (!once)
+    {
+      int e = errno;
+      sysinfo (&si);
+      errno = e;
+      once = 1;
+    }
+  return &si;
+}
+
+
 /* Handle a dead child.  This handler may or may not ever be installed.
 
    If we're using the jobserver feature without pselect(), we need it.
@@ -1468,7 +1681,7 @@ start_job_command (struct child *child)
 
       child->timelog = timelog_begin (argv);
       child->pid = child_execute_job ((struct childbase *)child,
-                                      child->good_stdin, argv);
+                                      child->good_stdin, argv, true);
 
       jobserver_post_child (ANY_SET (flags, COMMANDS_RECURSE));
 
@@ -2303,7 +2516,8 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
    Create a child process executing the command in ARGV.
    Returns the PID or -1.  */
 pid_t
-child_execute_job (struct childbase *child, int good_stdin, char **argv)
+child_execute_job (struct childbase *child, int good_stdin,
+                   char **argv, bool is_build_rule)
 {
   const int fdin = good_stdin ? FD_STDIN : get_bad_stdin ();
   int fdout = FD_STDOUT;
@@ -2328,6 +2542,60 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
 #if !defined(USE_POSIX_SPAWN)
 
+  /* Tell build rules apart from $(shell foo).  */
+  struct child *c;
+  if (is_build_rule) {
+    c = (struct child *)child;
+  } else {
+    c = 0;
+  }
+
+  /* Determine if hermetic enforcement should be activated.  */
+  bool sandboxed = (c && IsLinux () &&
+                    parse_bool (get_target_variable
+                                (STRING_SIZE_TUPLE (".SANDBOXED"),
+                                 c->file, "0")));
+
+  /* Get pledge() promises without using malloc().  */
+  char *promises = NULL;
+  unsigned long ipromises = -1;
+  if (sandboxed)
+    {
+      char *buf = alloca (200);
+      const struct variable *var;
+      strcpy (buf, "prot_exec exec");
+      if (c->file)
+        {
+          if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE (".PLEDGE"),
+                                             c->file->variables->set)))
+            {
+              promises = buf;
+              strlcat (promises, " ", 200);
+              strlcat (promises, var->value, 200);
+            }
+          if (c->file->pat_variables)
+            if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE (".PLEDGE"),
+                                               c->file->pat_variables->set)))
+              {
+                promises = buf;
+                strlcat (promises, " ", 200);
+                strlcat (promises, var->value, 200);
+              }
+        }
+      if ((var = lookup_variable (STRING_SIZE_TUPLE (".PLEDGE"))))
+        {
+          promises = buf;
+          strlcat (promises, " ", 200);
+          strlcat (promises, var->value, 200);
+        }
+      if (ParsePromises (promises, &ipromises, ipromises))
+        {
+          OSS (error, NILF, "%s: invalid .PLEDGE promises: %s",
+               argv[0], promises);
+          _Exit (127);
+        }
+    }
+
   {
     /* The child may clobber environ so remember ours and restore it.  */
     char **parent_env = environ;
@@ -2348,6 +2616,189 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
     setrlimit (RLIMIT_STACK, &stack_limit);
 #endif
 
+  DB (DB_JOBS, 
+      (_("Executing %s for %s%s\n"),
+       argv[0], c ? c->file->name : "$(shell)",
+       sandboxed ? " with sandboxing" : " without sandboxing"));
+
+  /* Set CPU resource limit, without using malloc().  */
+  const char *s;
+  if ((s = get_target_variable (STRING_SIZE_TUPLE (".CPU"),
+                                c ? c->file : 0, 0)))
+    {
+      rlim_t secs;
+      secs = strtoul (s, 0, 0);
+      if (!set_cpu_limit (secs))
+        DB (DB_JOBS, (_("Set cpu limit of %d seconds\n"), secs));
+      else
+        DB (DB_JOBS, (_("Failed to set CPU limit: %s\n"), strerror (errno)));
+    }
+
+  /* Set virtual memory resource limit, without using malloc().  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE (".MEMORY"),
+                                c ? c->file : 0, 0)))
+    {
+      char buf[16];
+      rlim_t bytes;
+      errno = 0;
+      bytes = sizetol (s, 1024);
+      if (bytes > 0)
+        {
+          if (!set_limit (RLIMIT_AS, bytes))
+            DB (DB_JOBS, (_("Set virtual memory limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1024), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set virtual memory: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .MEMORY invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
+    }
+
+  /* Set file size resource limit, without using malloc().  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE (".FSIZE"),
+                                c ? c->file : 0, 0)))
+    {
+      char buf[16];
+      rlim_t bytes;
+      errno = 0;
+      if ((bytes = sizetol (s, 1000)) > 0)
+        {
+          if (!set_limit (RLIMIT_FSIZE, bytes))
+            DB (DB_JOBS, (_("Set file size limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1000), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set file size limit: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .FSIZE invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
+    }
+
+  /* Set process count resource limit, without using malloc().  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE (".NPROC"),
+                                c ? c->file : 0, 0)))
+    {
+      rlim_t procs;
+      if ((procs = strtoul (s, 0, 0)) > 0)
+        {
+          if (!set_limit (RLIMIT_NPROC, procs + get_sysinfo ()->procs))
+            DB (DB_JOBS, (_("Set process limit to %d + %d preexisting\n"),
+                          procs, get_sysinfo ()->procs));
+          else
+            DB (DB_JOBS, (_("Failed to set process limit: %s\n"),
+                          strerror (errno)));
+        }
+    }
+
+  /* Set open file descriptor resource limit, without using malloc().  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE (".NOFILE"),
+                                c ? c->file : 0, 0)))
+    {
+      rlim_t fds;
+      if ((fds = strtoul (s, 0, 0)) > 0)
+        {
+          if (!set_limit (RLIMIT_NOFILE, fds))
+            DB (DB_JOBS, (_("Set file descriptor limit to %d\n"), fds));
+          else
+            DB (DB_JOBS, (_("Failed to set process limit: %s\n"),
+                          strerror (errno)));
+        }
+    }
+
+  /* Apply Landlock LSM sandboxing, without using malloc().  */
+  if (sandboxed)
+    {
+      /* Unveil executable.  */
+      unveil_or_die (argv[0], "rx");
+
+      /* Unveil .PLEDGE = vminfo.  */
+      if (~ipromises & (1ul << PROMISE_VMINFO))
+        {
+          unveil_or_die ("/proc/stat", "r");
+          unveil_or_die ("/proc/meminfo", "r");
+          unveil_or_die ("/proc/cpuinfo", "r");
+          unveil_or_die ("/proc/diskstats", "r");
+          unveil_or_die ("/proc/self/maps", "r");
+          unveil_or_die ("/sys/devices/system/cpu", "r");
+        }
+
+      /* Unveil .PLEDGE = tty.  */
+      if (~ipromises & (1ul << PROMISE_TTY))
+        {
+          unveil_or_die (ttyname(0), "rw");
+          unveil_or_die ("/dev/tty", "rw");
+          unveil_or_die ("/dev/console", "rw");
+          unveil_or_die ("/etc/terminfo", "r");
+          unveil_or_die ("/usr/lib/terminfo", "r");
+          unveil_or_die ("/usr/share/terminfo", "r");
+        }
+
+      /* Unveil .PLEDGE = dns.  */
+      if (~ipromises & (1ul << PROMISE_DNS))
+        {
+          unveil_or_die ("/etc/hosts", "r");
+          unveil_or_die ("/etc/hostname", "r");
+          unveil_or_die ("/etc/services", "r");
+          unveil_or_die ("/etc/protocols", "r");
+          unveil_or_die ("/etc/resolv.conf", "r");
+        }
+
+      /* Unveil .PLEDGE = inet.  */
+      if (~ipromises & (1ul << PROMISE_INET))
+        unveil_or_die ("/etc/ssl/certs/ca-certificates.crt", "r");
+
+      /* Unveil .PLEDGE = rpath.  */
+      if (~ipromises & (1ul << PROMISE_RPATH))
+        unveil_or_die ("/proc/filesystems", "r");
+
+      /* Unveil target prerequisites.
+         Directories get special treatment:
+           - libc/nt
+             Shall unveil everything beneath dir.
+           - libc/nt/
+             No sandboxing due to trailing slash.
+             Intended to be timestamp check only.  */
+      for (struct dep *d = c->file->deps; d; d = d->next)
+        {
+          size_t n;
+          n = strlen (d->file->name);
+          if (n && d->file->name[n - 1] == '/')
+            continue;
+          unveil_or_die (d->file->name, "rx");
+
+          /* Ensure APE binaries can access their debug info.  */
+          if (path_looks_like_ape_executable (d->file->name))
+            {
+              unveil_ext_or_die (d->file->name, ".dbg", "rx");
+#ifdef __aarch64__
+              unveil_ext_or_die (d->file->name, ".aarch64.elf", "rx");
+#else
+              unveil_ext_or_die (d->file->name, ".com.dbg", "rx");
+#endif
+            }
+        }
+
+      /* Unveil explicit .UNVEIL entries.  */
+      unveil_variable (lookup_variable (STRING_SIZE_TUPLE (".UNVEIL")));
+      unveil_variable (lookup_variable_in_set (STRING_SIZE_TUPLE (".UNVEIL"),
+                                               c->file->variables->set));
+      if (c->file->pat_variables)
+        unveil_variable (lookup_variable_in_set (STRING_SIZE_TUPLE (".UNVEIL"),
+                                                 c->file->pat_variables->set));
+
+      /* Commit sandbox.  */
+      unveil_or_die (0, 0);
+    }
+
   /* For any redirected FD, dup2() it to the standard FD.
      They are all marked close-on-exec already.  */
   if (fdin >= 0 && fdin != FD_STDIN)
@@ -2357,9 +2808,21 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (fderr != FD_STDERR)
     EINTRLOOP (r, dup2 (fderr, FD_STDERR));
 
+  /* Restrict system calls.  */
+  if (promises)
+    {
+      DB (DB_JOBS, (_("Pledging %s\n"), promises));
+      if (pledge (promises, promises))
+        {
+          OSS (error, NILF, "pledge(%s) failed: %s",
+               promises, strerror (errno));
+          _Exit (127);
+        }
+    }
+
   /* Run the command.  */
   exec_command (argv, child->environment);
-  _exit (127);
+  _Exit (127);
 
 #else /* USE_POSIX_SPAWN */
 

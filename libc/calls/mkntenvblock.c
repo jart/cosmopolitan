@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/ctype.h"
 #include "libc/intrin/getenv.h"
 #include "libc/mem/alloca.h"
 #include "libc/proc/ntspawn.h"
@@ -25,18 +26,12 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-#define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
-
 struct EnvBuilder {
   char *buf;
   char **var;
   int bufi;
   int vari;
 };
-
-static inline int IsAlpha(int c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
 
 static textwindows int Compare(const char *l, const char *r) {
   int a, b;
@@ -69,7 +64,7 @@ static textwindows int InsertString(struct EnvBuilder *env, const char *str) {
     if (env->bufi + 2 > 32767)
       return e2big();
     env->buf[env->bufi++] = c;
-    if (c == '=' && str[0] == '/' && IsAlpha(str[1]) && str[2] == '/') {
+    if (c == '=' && str[0] == '/' && isalpha(str[1]) && str[2] == '/') {
       path = env->buf + env->bufi;
     }
   } while (c);

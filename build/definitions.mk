@@ -53,11 +53,7 @@
 #     OVERRIDE_FOO set ~/.cosmo.mk and target-specific (use rarely)
 #
 
-ifeq ($(LANDLOCKMAKE_VERSION),)
 TMPSAFE = $(join $(TMPDIR)/,$(subst /,_,$@)).tmp
-else
-TMPSAFE = $(TMPDIR)/
-endif
 
 BACKTRACES =								\
 	-fno-schedule-insns2						\
@@ -94,6 +90,7 @@ DEFAULT_COPTS ?=							\
 	-fstrict-overflow						\
 	-fno-semantic-interposition
 
+ifneq ($(TLSCC),)
 ifeq ($(ARCH), x86_64)
 # Microsoft says "[a]ny memory below the stack beyond the red zone
 # [note: Windows defines the x64 red zone size as 0] is considered
@@ -102,6 +99,7 @@ ifeq ($(ARCH), x86_64)
 DEFAULT_COPTS +=							\
 	-mno-red-zone							\
 	-mno-tls-direct-seg-refs
+endif
 endif
 
 ifeq ($(ARCH), aarch64)

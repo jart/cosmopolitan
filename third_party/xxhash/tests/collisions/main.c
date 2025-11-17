@@ -869,12 +869,10 @@ static size_t search_collisions(
 #if defined(__MACH__) || defined(__linux__)
 
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 static size_t getProcessMemUsage(int children)
 {

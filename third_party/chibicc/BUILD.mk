@@ -18,7 +18,7 @@ CHIBICC_FLAGS =								\
 	-include libc/integral/normalize.inc				\
 	-DMODE='"$(MODE)"'
 
-o/$(MODE)/%.chibicc.o: private .UNSANDBOXED = true
+o/$(MODE)/%.chibicc.o: private .SANDBOXED = 0
 o/$(MODE)/%.chibicc.o: %.c $(CHIBICC)
 	@$(COMPILE) $(CHIBICC) $(OBJECTIFY.c.flags) -c $< $(OUTPUT_OPTION)
 

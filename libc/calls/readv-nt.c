@@ -18,14 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
 textwindows ssize_t sys_readv_nt(int fd, const struct iovec *iov, int iovlen) {
-  switch (g_fds.p[fd].kind) {
+  switch (__get_pib()->fds.p[fd].kind) {
     case kFdFile:
     case kFdConsole:
     case kFdDevNull:

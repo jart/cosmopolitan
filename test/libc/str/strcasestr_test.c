@@ -19,6 +19,7 @@
 #include "libc/str/str.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/mem/alg.h"
@@ -48,7 +49,7 @@ char *strcasestr_naive(const char *haystack, const char *needle) {
         return (/*unconst*/ char *)haystack;
       if (!haystack[i])
         break;
-      if (kToLower[needle[i] & 255] != kToLower[haystack[i] & 255])
+      if (tolower(needle[i]) != tolower(haystack[i]))
         break;
     }
     if (!*haystack++)
@@ -146,14 +147,14 @@ TEST(strcasestr, test) {
  *     strstr torture 16   l:     4,559c     1,473ns   m:     3,614c     1,167ns
  *     strstr torture 32   l:     5,324c     1,720ns   m:     5,577c     1,801ns
  *
- *     strcasestr naive    l:   129,908c    41,959ns   m:   155,420c    50,200ns
- *     strcasestr          l:    33,464c    10,809ns   m:    31,636c    10,218ns
- *     strcasestr tort 1   l:        38c        12ns   m:        69c        22ns
- *     strcasestr tort 2   l:     2,544c       822ns   m:     2,580c       833ns
- *     strcasestr tort 4   l:     2,745c       887ns   m:     2,767c       894ns
- *     strcasestr tort 8   l:     4,198c     1,356ns   m:     4,216c     1,362ns
- *     strcasestr tort 16  l:     7,402c     2,391ns   m:     7,487c     2,418ns
- *     strcasestr tort 32  l:    13,772c     4,448ns   m:    12,945c     4,181ns
+ *     strcasestr naive    l:   181,732c    60,577ns   m:   185,100c    61,700ns
+ *     strcasestr          l:     9,870c     3,290ns   m:     9,871c     3,290ns
+ *     strcasestr tort 1   l:        93c        31ns   m:       138c        46ns
+ *     strcasestr tort 2   l:        21c         7ns   m:        81c        27ns
+ *     strcasestr tort 4   l:       606c       202ns   m:       676c       225ns
+ *     strcasestr tort 8   l:       602c       201ns   m:       658c       219ns
+ *     strcasestr tort 16  l:       614c       205ns   m:       671c       224ns
+ *     strcasestr tort 32  l:       674c       225ns   m:       715c       238ns
  */
 BENCH(strcasestr, bench) {
   EZBENCH2("strcasestr naive", donothing,

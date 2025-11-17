@@ -11,14 +11,17 @@ LIBC_STDIO_A_HDRS = $(filter %.h,$(LIBC_STDIO_A_FILES))
 LIBC_STDIO_A_INCS = $(filter %.inc,$(LIBC_STDIO_A_FILES))
 LIBC_STDIO_A_SRCS_S = $(filter %.S,$(LIBC_STDIO_A_FILES))
 LIBC_STDIO_A_SRCS_C = $(filter %.c,$(LIBC_STDIO_A_FILES))
+LIBC_STDIO_A_SRCS_CC = $(filter %.cc,$(LIBC_STDIO_A_FILES))
 
 LIBC_STDIO_A_SRCS =					\
 	$(LIBC_STDIO_A_SRCS_S)				\
-	$(LIBC_STDIO_A_SRCS_C)
+	$(LIBC_STDIO_A_SRCS_C)				\
+	$(LIBC_STDIO_A_SRCS_CC)				\
 
 LIBC_STDIO_A_OBJS =					\
 	$(LIBC_STDIO_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(LIBC_STDIO_A_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(LIBC_STDIO_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(LIBC_STDIO_A_SRCS_CC:%.cc=o/$(MODE)/%.o)	\
 
 LIBC_STDIO_A_CHECKS =					\
 	$(LIBC_STDIO_A).pkg				\
@@ -37,8 +40,10 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
+	THIRD_PARTY_COMPILER_RT				\
 	THIRD_PARTY_DLMALLOC				\
 	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_LIBUNWIND				\
 
 LIBC_STDIO_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x))))
@@ -60,18 +65,13 @@ $(LIBC_STDIO_A_OBJS): private				\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096
 
-o/$(MODE)/libc/stdio/fputc.o: private			\
+o/$(MODE)/libc/stdio/vcscanf.o: private			\
 		CFLAGS +=				\
-			-O3
+			-fpie
 
-o//libc/stdio/appendw.o: private			\
-		CFLAGS +=				\
-			-Os
-
-o/$(MODE)/libc/stdio/dirstream.o			\
-o/$(MODE)/libc/stdio/mt19937.o: private			\
-		CFLAGS +=				\
-			-ffunction-sections
+o//libc/stdio/appendw.o: private CFLAGS += -Os
+o/$(MODE)/libc/stdio/fputc.o: private CFLAGS += -O3
+o/$(MODE)/libc/stdio/dirstream.o: private CFLAGS += -ffunction-sections
 
 LIBC_STDIO_LIBS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)))
 LIBC_STDIO_SRCS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)_SRCS))

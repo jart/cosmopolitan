@@ -17,20 +17,34 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath cpath fattr", 0));
+}
+
+char *badmem = (char *)7;
+TEST(__getcwd, efault) {
+  if (IsQemuUser())
+    return;
+  ASSERT_SYS(EFAULT, -1, __getcwd(0, 1));
+  ASSERT_SYS(EFAULT, -1, __getcwd(badmem, 1));
 }
 
 TEST(__getcwd, zero) {
@@ -84,11 +98,50 @@ TEST(getcwd, testNullBuf_allocatesResult) {
   EXPECT_STREQ("subdir", basename(gc(getcwd(0, 0))));
 }
 
-TEST(getcwd, testWindows_addsFunnyPrefix) {
+TEST(getcwd, magic) {
   if (!IsWindows())
     return;
-  char path[PATH_MAX];
-  ASSERT_NE(0, getcwd(path, sizeof(path)));
-  path[1] = tolower(path[1]);
-  EXPECT_STARTSWITH("/c/", path);
+  uint64_t r = _rand64();
+  char c = __getcosmosdrive();
+  char short_path[128];
+  snprintf(short_path, 128, "/getcwd_test.%lx", r);
+  char qualified_path[128];
+  snprintf(qualified_path, 128, "/%c/getcwd_test.%lx", c, r);
+  if (!mkdir(qualified_path, 0700)) {
+    EXPECT_SYS(0, 0, chdir(qualified_path));
+    char buf[128];
+    EXPECT_NE(-1, __getcwd(buf, 128));
+    int rc = strcmp(buf, short_path);
+    chdir("/");
+    rmdir(qualified_path);
+    if (rc) {
+      fprintf(stderr, "getcwd magic test failed\n");
+      fprintf(stderr, "__getcwd said %s\n", buf);
+      fprintf(stderr, "but we wanted %s\n", short_path);
+      exit(1);
+    }
+  }
 }
+
+#if 0  // test test should be manually run
+TEST(getcwd, whenMagicShouldntHappen) {
+  if (!IsWindows())
+    return;
+  char c = __getcosmosdrive();
+  char qualified_path[128];
+  snprintf(qualified_path, 128, "/%c/x", c);
+  if (!mkdir(qualified_path, 0700)) {
+    EXPECT_SYS(0, 0, chdir(qualified_path));
+    char buf[128];
+    EXPECT_NE(-1, __getcwd(buf, 128));
+    int rc = strcmp(buf, qualified_path);
+    rmdir(qualified_path);
+    if (rc) {
+      fprintf(stderr, "getcwd magic test failed\n");
+      fprintf(stderr, "__getcwd said %s\n", buf);
+      fprintf(stderr, "but we wanted %s\n", qualified_path);
+      exit(1);
+    }
+  }
+}
+#endif

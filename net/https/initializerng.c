@@ -16,7 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/check.h"
+#include "libc/assert.h"
+#include "libc/bsdstdlib.h"
 #include "libc/stdio/rand.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/ctr_drbg.h"
@@ -24,7 +25,7 @@
 void InitializeRng(mbedtls_ctr_drbg_context *r) {
   unsigned char b[64];
   mbedtls_ctr_drbg_init(r);
-  getrandom(b, 64, 0);
-  mbedtls_ctr_drbg_seed(r, GetEntropy, 0, b, 64);
+  arc4random_buf(b, 64);
+  npassert(!mbedtls_ctr_drbg_seed(r, GetEntropy, 0, b, 64));
   mbedtls_platform_zeroize(b, 64);
 }

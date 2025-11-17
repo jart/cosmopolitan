@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_STDIO_INTERNAL_H_
 #include "libc/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/thread/thread.h"
 
@@ -21,13 +22,15 @@ struct FILE {
   int fd;        /* ≥0=fd, -1=closed|buffer */
   int pid;
   atomic_int refs;
-  unsigned size;
-  unsigned beg;
-  unsigned end;
+  size_t size;
+  size_t beg;
+  size_t end;
   char *buf;
+  char **memstream_bufp;
   pthread_mutex_t lock;
   struct Dll elem;
   char *getln;
+  size_t *memstream_sizep;
 };
 
 struct Stdio {
@@ -44,6 +47,17 @@ void __stdio_unref(FILE *);
 void __stdio_unref_unlocked(FILE *);
 bool __stdio_isok(FILE *);
 FILE *__stdio_alloc(void);
+
+/* use these in stdio wrapper functions that are cancelation points */
+#define FLOCKFILE(f)                                     \
+  struct _pthread_cleanup_buffer cb;                     \
+  if (__isthreaded >= 2) {                               \
+    flockfile(f);                                        \
+    __pthread_cleanup_push(&cb, (void *)funlockfile, f); \
+  }
+#define FUNLOCKFILE(f)   \
+  if (__isthreaded >= 2) \
+  __pthread_cleanup_pop(&cb, 1)
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STDIO_INTERNAL_H_ */

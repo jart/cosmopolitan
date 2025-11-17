@@ -30,16 +30,20 @@ TEST_POSIX_DIRECTDEPS =							\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
-	LIBC_MEM							\
-	LIBC_PROC							\
 	LIBC_LOG							\
+	LIBC_MEM							\
+	LIBC_NEXGEN32E							\
+	LIBC_PROC							\
 	LIBC_RUNTIME							\
 	LIBC_SOCK							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	LIBC_THREAD							\
+	LIBC_TINYMATH							\
+	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_MUSL						\
+	THIRD_PARTY_TZ							\
 
 TEST_POSIX_DEPS :=							\
 	$(call uniq,$(foreach x,$(TEST_POSIX_DIRECTDEPS),$($(x))))
@@ -68,6 +72,30 @@ o/$(MODE)/test/posix/file_offset_exec_test.dbg:				\
 o/$(MODE)/test/posix/file_offset_exec_prog.zip.o: private		\
 		ZIPOBJ_FLAGS +=						\
 			-B
+
+o/$(MODE)/test/posix/socket_basic_test.runs				\
+o/$(MODE)/test/posix/msg_nosignal_test.runs				\
+o/$(MODE)/test/posix/writev_test.runs					\
+o/$(MODE)/test/posix/socket_timeout_signal_test.runs			\
+o/$(MODE)/test/posix/socket_fionread_test.runs				\
+o/$(MODE)/test/posix/msg_waitall_test.runs				\
+o/$(MODE)/test/posix/connect_nonblock_test.runs				\
+o/$(MODE)/test/posix/listen_timeout_test.runs				\
+o/$(MODE)/test/posix/accept_poll_test.runs				\
+o/$(MODE)/test/posix/accept_inherit_nonblock_test.runs			\
+o/$(MODE)/test/posix/accept4_nonblock_test.runs:			\
+		private .PLEDGE = inet
+
+o/$(MODE)/test/posix/fcntl_advisory_locks_test.runs			\
+o/$(MODE)/test/posix/fcntl_lock_test.runs				\
+o/$(MODE)/test/posix/fcntl_eintr_test.runs:				\
+		private .PLEDGE = flock
+
+o/$(MODE)/test/posix/lowest_fd_test.runs:				\
+		private .UNVEIL = r:/dev/urandom
+
+o/$(MODE)/test/posix/open_test.runs:					\
+		private .UNVEIL = r:/
 
 o/$(MODE)/test/posix/fread3gb_test.runs:				\
 		private QUOTA += -F5gb -M5gb

@@ -51,11 +51,9 @@ const char *_DescribeSigset(char buf[N], int rc, const sigset_t *ss) {
   if (sigcountset(ss) > 16) {
     append("~");
     sigemptyset(&sigset);
-    for (sig = 1; sig <= _NSIG; ++sig) {
-      if (!sigismember(ss, sig)) {
+    for (sig = 1; sig <= _NSIG; ++sig)
+      if (!sigismember(ss, sig))
         sigaddset(&sigset, sig);
-      }
-    }
   } else {
     sigset = *ss;
   }
@@ -70,9 +68,8 @@ const char *_DescribeSigset(char buf[N], int rc, const sigset_t *ss) {
         gotsome = true;
       }
       s = strsignal(sig);
-      if (s[0] == 'S' && s[1] == 'I' && s[2] == 'G') {
+      if (s[0] == 'S' && s[1] == 'I' && s[2] == 'G')
         s += 3;
-      }
       append("%s", s);
     }
   }

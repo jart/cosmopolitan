@@ -25,7 +25,6 @@
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
@@ -116,7 +115,7 @@ TEST(fcntl, getfd) {
   ASSERT_SYS(0, 0, close(3));
 }
 
-TEST(fcntl, F_DUPFD_CLOEXEC) {
+TEST(fcntl, f_dupfd_cloexec) {
   ASSERT_SYS(0, 3, open("/dev/null", O_RDWR));
   ASSERT_SYS(0, 5, fcntl(3, F_DUPFD_CLOEXEC, 5));
   ASSERT_SYS(0, FD_CLOEXEC, fcntl(5, F_GETFD));

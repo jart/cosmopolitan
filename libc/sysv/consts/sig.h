@@ -1,82 +1,59 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_
-COSMOPOLITAN_C_START_
-
-extern const int SIGBUS;
-extern const int SIGTHR;
-extern const int SIGCHLD;
-extern const int SIGCONT;
-extern const int SIGEMT;
-extern const int SIGINFO;
-extern const int SIGIO;
-extern const int SIGPOLL;
-extern const int SIGPWR;
-extern const int SIGRTMAX;
-extern const int SIGRTMIN;
-extern const int SIGSTKFLT;
-extern const int SIGSTOP;
-extern const int SIGSYS;
-extern const int SIGTSTP;
-extern const int SIGUNUSED;
-extern const int SIGURG;
-extern const int SIGUSR1;
-extern const int SIGUSR2;
-
-extern const int SIG_BLOCK;
-extern const int SIG_SETMASK;
-extern const int SIG_UNBLOCK;
-
-COSMOPOLITAN_C_END_
-
-#define SIGABRT   6
-#define SIGALRM   14
-#define SIGFPE    8
-#define SIGHUP    1
-#define SIGILL    4
-#define SIGINT    2
-#define SIGIOT    6
-#define SIGKILL   9
-#define SIGPIPE   13
-#define SIGPROF   27
-#define SIGQUIT   3
-#define SIGSEGV   11
-#define SIGTERM   15
-#define SIGTRAP   5
-#define SIGTTIN   21
-#define SIGTTOU   22
-#define SIGVTALRM 26
-#define SIGWINCH  28
-#define SIGXCPU   24
-#define SIGXFSZ   25
 
 /*
- * - No macro is define for SIGIO and SIGPOLL in order to persuade
+ * - No macro is defined for SIGIO and SIGPOLL in order to persuade
  *   ./configure scripts to favor using poll() or select() instead of
  *   interrupt-based i/o.
  *
  * - No macros are defined for SIGRTMIN and SIGRTMAX because the project
  *   hasn't fleshed them out yet.
  *
- * - SIGTHR doesn't have a macro since it's internal to posix threads.
- *
- * - SIGSTKFLT is Linux-only so no macro is defined.
+ * - SIGSTKFLT is Linux-only, intended for the x87 coprocessor stack,
+ *   and Linux doesn't actually use it for that so no macro is defined.
  */
 
-#define SIGBUS  SIGBUS
-#define SIGCHLD SIGCHLD
-#define SIGCONT SIGCONT
-#define SIGEMT  SIGEMT
-#define SIGINFO SIGINFO
-#define SIGPWR  SIGPWR
-#define SIGSTOP SIGSTOP
-#define SIGSYS  SIGSYS
-#define SIGTSTP SIGTSTP
-#define SIGURG  SIGURG
-#define SIGUSR1 SIGUSR1
-#define SIGUSR2 SIGUSR2
+#define SIGHUP    1  /* hangup */
+#define SIGINT    2  /* interrupt */
+#define SIGQUIT   3  /* quit */
+#define SIGILL    4  /* illegal instruction */
+#define SIGTRAP   5  /* trap trace */
+#define SIGABRT   6  /* abort */
+#define SIGBUS    7  /* bus error */
+#define SIGFPE    8  /* floating point exception */
+#define SIGKILL   9  /* kill */
+#define SIGUSR1   10 /* user defined signal 1 */
+#define SIGSEGV   11 /* segmentation fault */
+#define SIGUSR2   12 /* user defined signal 2 */
+#define SIGPIPE   13 /* write on a pipe with no one to read it */
+#define SIGALRM   14 /* alarm clock */
+#define SIGTERM   15 /* software termination signal from kill */
+#define SIGCHLD   17 /* to parent on child stop or exit */
+#define SIGCONT   18 /* continue a stopped process */
+#define SIGSTOP   19 /* sendable stop signal not from tty */
+#define SIGTSTP   20 /* stop signal from tty */
+#define SIGTTIN   21 /* to readers pgrp upon background tty read */
+#define SIGTTOU   22 /* like TTIN for output if (tp->t_local&LTOSTOP) */
+#define SIGURG    23 /* urgent condition on IO channel */
+#define SIGXCPU   24 /* exceeded CPU time limit */
+#define SIGXFSZ   25 /* exceeded file size limit */
+#define SIGVTALRM 26 /* virtual time alarm */
+#define SIGPROF   27 /* profiling time alarm */
+#define SIGWINCH  28 /* window size changes */
+#define SIGSYS    31 /* bad argument to system call */
+#define SIGTHR    32 /* internal to pthreads */
 
 #define SIG_BLOCK   SIG_BLOCK
 #define SIG_SETMASK SIG_SETMASK
 #define SIG_UNBLOCK SIG_UNBLOCK
 
+#ifndef __ASSEMBLER__
+COSMOPOLITAN_C_START_
+
+extern const int SIG_BLOCK;
+extern const int SIG_SETMASK;
+extern const int SIG_UNBLOCK;
+
+COSMOPOLITAN_C_END_
+#endif /* __ASSEMBLER__ */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_ */

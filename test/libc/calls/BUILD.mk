@@ -37,6 +37,7 @@ TEST_LIBC_CALLS_DIRECTDEPS =						\
 	LIBC_LOG							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
+	LIBC_NT_BCRYPTPRIMITIVES					\
 	LIBC_NT_KERNEL32						\
 	LIBC_PROC							\
 	LIBC_RUNTIME							\
@@ -123,38 +124,45 @@ o/$(MODE)/test/libc/calls/zipread.zip.o: private			\
 		ZIPOBJ_FLAGS +=						\
 			-B
 
-# TODO(jart): Have pledge() support SIOCGIFCONF
 o/$(MODE)/test/libc/calls/ioctl_test.runs:				\
-		private .PLEDGE =
+		private .SANDBOXED = 0
 
 o/$(MODE)/test/libc/calls/lseek_test.runs				\
+o/$(MODE)/test/libc/calls/poll_latency_test.runs			\
 o/$(MODE)/test/libc/calls/poll_test.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+		private .PLEDGE = inet
 
 o/$(MODE)/test/libc/calls/fcntl_test.runs				\
 o/$(MODE)/test/libc/calls/lock_test.runs				\
 o/$(MODE)/test/libc/calls/lock2_test.runs				\
 o/$(MODE)/test/libc/calls/lock_ofd_test.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
+		private .PLEDGE = flock
 
 o/$(MODE)/test/libc/calls/unveil_test.runs				\
 o/$(MODE)/test/libc/calls/openbsd_test.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc unveil
+		private .PLEDGE = unveil
+
+o/$(MODE)/test/libc/calls/flocks_test.runs:				\
+		private .PLEDGE = flock
+
+o/$(MODE)/test/libc/calls/setrlimit_test.runs:				\
+		private .PLEDGE = inet
+
+o/$(MODE)/test/libc/calls/specialfile_test.runs:			\
+		private .UNVEIL = r:/dev/random r:/dev/urandom
 
 o/$(MODE)/test/libc/calls/fexecve_test.runs:				\
-		private .UNSANDBOXED = 1  # for memfd_create()
+		private .SANDBOXED = 0  # for memfd_create()
 
 o/$(MODE)/test/libc/calls/execve_test.runs:				\
-		private .UNSANDBOXED = 1  # for memfd_create()
+		private .SANDBOXED = 0  # for memfd_create()
 
 o/$(MODE)/test/libc/calls/read_test.runs:				\
 		private .UNVEIL += /dev/zero
 
 # TODO(jart): Update nointernet() to allow AF_INET6
 o/$(MODE)/test/libc/calls/pledge_test.runs:				\
-		private .INTERNET = 1
-o/$(MODE)/test/libc/calls/pledge_test.runs:				\
-		private .PLEDGE =
+		private .SANDBOXED = 0
 
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\

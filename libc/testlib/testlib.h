@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
-#include "libc/stdbool.h"
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library                                           ─╬─│┼
@@ -98,6 +97,8 @@ COSMOPOLITAN_C_START_
 void testlib_enable_tmp_setup_teardown(void);
 void testlib_enable_tmp_setup_teardown_once(void);
 
+void testlib_threadify(int, int);
+
 /**
  * User-defined test setup function.
  *
@@ -146,6 +147,8 @@ void TearDownOnce(void);
   assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, true)
 #define ASSERT_STREQ(WANT, GOT) \
   assertStringEquals(FILIFU sizeof(*(WANT)), WANT, GOT, #GOT, true)
+#define ASSERT_WCSEQ(WANT, GOT) \
+  assertStringEquals(FILIFU sizeof(wchar_t), WANT, GOT, #GOT, true)
 #define ASSERT_STRNE(NOPE, GOT) \
   assertStringNotEquals(FILIFU sizeof(*(NOPE)), NOPE, GOT, #GOT, true)
 #define ASSERT_STREQN(WANT, GOT, N) \
@@ -229,6 +232,8 @@ void TearDownOnce(void);
   assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, false)
 #define EXPECT_STREQ(WANT, GOT) \
   assertStringEquals(FILIFU sizeof(*(WANT)), WANT, GOT, #GOT, false)
+#define EXPECT_WCSEQ(WANT, GOT) \
+  assertStringEquals(FILIFU sizeof(wchar_t), WANT, GOT, #GOT, false)
 #define EXPECT_STRNE(NOPE, GOT) \
   assertStringNotEquals(FILIFU sizeof(*(NOPE)), NOPE, GOT, #GOT, false)
 #define EXPECT_STREQN(WANT, GOT, N) \
@@ -421,6 +426,14 @@ bool testlib_almostequallongdouble(long double, long double);
 bool testlib_exactlyequallongdouble(long double, long double);
 void testlib_incrementfailed(void);
 void testlib_clearxmmregisters(void);
+
+bool fileexists(const char *) libcesque __read_only(1);
+bool ischardev(int) libcesque;
+bool isdirectory(const char *) libcesque __read_only(1);
+bool isexecutable(const char *) libcesque __read_only(1);
+bool isregularfile(const char *) libcesque __read_only(1);
+bool issymlink(const char *) libcesque __read_only(1);
+int touch(const char *, unsigned) libcesque __read_only(1);
 
 forceinline void testlib_ontest() {
   ++g_testlib_ran;

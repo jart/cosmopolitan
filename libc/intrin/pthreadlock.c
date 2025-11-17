@@ -16,15 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdalign.h"
 #include "libc/thread/posixthread.internal.h"
 
 alignas(64) pthread_mutex_t __pthread_lock_obj = PTHREAD_MUTEX_INITIALIZER;
 
 void _pthread_lock(void) {
-  _pthread_mutex_lock(&__pthread_lock_obj);
+  pthread_mutex_lock(&__pthread_lock_obj);
 }
 
 void _pthread_unlock(void) {
-  _pthread_mutex_unlock(&__pthread_lock_obj);
+  pthread_mutex_unlock(&__pthread_lock_obj);
 }

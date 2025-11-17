@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_TMPFILE,0x00410000,0x00404000,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff

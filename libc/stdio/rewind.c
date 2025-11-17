@@ -29,6 +29,6 @@
 void rewind(FILE *f) {
   flockfile(f);
   fseek_unlocked(f, 0, SEEK_SET);
-  f->state = 0;
+  clearerr_unlocked(f);
   funlockfile(f);
 }

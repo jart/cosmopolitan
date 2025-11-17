@@ -16,15 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Pushes byte back to stream.
+ *
+ * The byte specified by `c` will be cast to an unsigned char. If `c` is
+ * equal to `EOF` then this function will fail by returning EOF and the
+ * state of `f` is left unchanged.
+ *
+ * @return byte pushed back to stream, otherwise EOF
  */
 int ungetc(int c, FILE *f) {
   int rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = ungetc_unlocked(c, f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }

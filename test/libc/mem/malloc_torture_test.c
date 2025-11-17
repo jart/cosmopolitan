@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"

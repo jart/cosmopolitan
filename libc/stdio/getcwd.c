@@ -27,6 +27,12 @@
  *     const char *dirname = gc(getcwd(0,0)); // if malloc is linked
  *     const char *dirname = getcwd(alloca(PATH_MAX),PATH_MAX);
  *
+ * The Cosmopolitan authors don't like getcwd() as an API because we
+ * believe that system call functions should be simple and shouldn't
+ * pull heavyweight APIs like malloc() into linkage. So we provide a
+ * better API called __getcwd() that you're encouraged to use, which
+ * provides further documentation.
+ *
  * @param buf is where UTF-8 NUL-terminated path string gets written,
  *     which may be NULL to ask this function to malloc a buffer
  * @param size is number of bytes available in buf, e.g. PATH_MAX+1,

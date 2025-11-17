@@ -16,20 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads UTF-8 character from stream.
  *
  * @param f is non-null file object stream pointer
- * @return wide character or -1 on EOF or error
+ * @return wide character, otherwise WEOF
+ * @raise EAGAIN on `O_NONBLOCK` file descriptors when char isn't ready
+ * @raise EILSEQ on malformed utf-8 sequence
+ * @raise EINTR if signal handler was called
  * @see fgetwc_unlocked()
+ * @cancelationpoint
  */
 wint_t fgetwc(FILE *f) {
   wint_t wc;
-  flockfile(f);
+  FLOCKFILE(f);
   wc = fgetwc_unlocked(f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return wc;
 }
 

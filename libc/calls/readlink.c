@@ -22,10 +22,12 @@
 /**
  * Reads symbolic link.
  *
+ * This does *not* nul-terminate the buffer.
+ *
  * @param path must be a symbolic link pathname
- * @param buf will receive symbolic link contents, and won't be modified
- *     unless the function succeeds (with the exception of no-malloc nt)
- *     and this buffer will *not* be nul-terminated
+ * @param buf will receive symbolic link contents; it won't be modified
+ *     unless the function succeeds; this buffer is never nul-terminated
+ * @param bufsiz specifies how many bytes are available at `buf`
  * @return number of bytes written to buf, or -1 w/ errno; if the
  *     return is equal to bufsiz then truncation may have occurred
  * @see readlinkat(AT_FDCWD, ...) for modern version of this

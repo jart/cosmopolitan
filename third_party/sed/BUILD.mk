@@ -6,10 +6,19 @@ PKGS += THIRD_PARTY_SED
 THIRD_PARTY_SED = $(THIRD_PARTY_SED_A_DEPS) $(THIRD_PARTY_SED_A)
 THIRD_PARTY_SED_A = o/$(MODE)/third_party/sed/sed.a
 THIRD_PARTY_SED_FILES := $(wildcard third_party/sed/*)
-THIRD_PARTY_SED_HDRS = $(filter %.h,$(THIRD_PARTY_SED_FILES))
-THIRD_PARTY_SED_INCS = $(filter %.inc,$(THIRD_PARTY_SED_FILES))
-THIRD_PARTY_SED_SRCS = $(filter %.c,$(THIRD_PARTY_SED_FILES))
 THIRD_PARTY_SED_OBJS = $(THIRD_PARTY_SED_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_SED_HDRS =					\
+	third_party/sed/cmd.h				\
+	third_party/sed/defs.h				\
+	third_party/sed/extern.h			\
+	third_party/sed/shade.h				\
+
+THIRD_PARTY_SED_SRCS =					\
+	third_party/sed/compile.c			\
+	third_party/sed/main.c				\
+	third_party/sed/misc.c				\
+	third_party/sed/process.c			\
 
 THIRD_PARTY_SED_A_DIRECTDEPS =				\
 	LIBC_FMT					\
@@ -48,6 +57,10 @@ o/$(MODE)/third_party/sed/sed.dbg:			\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/third_party/sed/cmd.o:			\
+		third_party/sed/cmd.c			\
+		third_party/sed/cmd.h			\
 
 THIRD_PARTY_SED_BINS = $(THIRD_PARTY_SED_COMS) $(THIRD_PARTY_SED_COMS:%=%.dbg)
 THIRD_PARTY_SED_COMS = o/$(MODE)/third_party/sed/sed

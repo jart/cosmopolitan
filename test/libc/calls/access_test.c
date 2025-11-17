@@ -19,10 +19,14 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/testlib/testlib.h"
@@ -56,8 +60,8 @@ TEST(access, test) {
 }
 
 TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
-  if (1)
-    return;  // TODO(jart): maybe we need root to help?
+  if (!getuid())
+    return;
   ASSERT_SYS(ENOENT, -1, access("file", F_OK));
   ASSERT_SYS(0, 0, close(creat("file", 0444)));
   ASSERT_SYS(0, 0, access("file", F_OK));
@@ -76,4 +80,32 @@ TEST(access, runThisExecutable) {
 TEST(access, textFileIsntExecutable) {
   ASSERT_SYS(0, 0, touch("foo.txt", 0644));
   ASSERT_SYS(EACCES, -1, access("foo.txt", R_OK | X_OK));
+}
+
+TEST(access, longPath) {
+  char path[PATH_MAX] = {0};  // going to be about 512 chars
+  for (int i = 0; i < 32; ++i)
+    strlcat(path, "xxxxxxxxxxxxxxx/", PATH_MAX);
+  ASSERT_SYS(0, 0, makedirs(path, 0755));
+  ASSERT_SYS(0, 0, access(path, R_OK));
+  ASSERT_SYS(0, 0, access(path, W_OK));
+  ASSERT_SYS(0, 0, access(path, X_OK));
+}
+
+TEST(access, longPathTmp) {
+  // create random base 10 number that's 15 digits long
+  uint64_t r = _rand64() & 0x7fffffffffffffff;
+  uint64_t i = 100000000000000;
+  i = i + r % i;
+  char comp[17];
+  sprintf(comp, "/%ld", i);
+  char path[PATH_MAX] = "/tmp";  // going to be about 512 chars
+  for (int i = 0; i < 32; ++i)
+    strlcat(path, "/xxxxxxxxxxxxxxx", PATH_MAX);
+  ASSERT_SYS(0, 0, makedirs(path, 0755));
+  ASSERT_SYS(0, 0, access(path, R_OK));
+  ASSERT_SYS(0, 0, access(path, W_OK));
+  ASSERT_SYS(0, 0, access(path, X_OK));
+  sprintf(path, "/tmp/%ld", i);
+  rmrf(path);
 }

@@ -1,0 +1,57 @@
+DESCRIPTION
+
+  HACL* is a high-assurance cryptographic library. The code for these
+  algorithms is formally verified using the F* verification framework
+  for memory safety, functional correctness, and secret independence
+  (resistance to some types of timing side-channels).
+
+LICENSE
+
+  MIT or Apache 2.0
+
+DOCUMENTATION
+
+  Public APIs are defined in haclstar.h
+
+  Ed25519 can be used for digital signing and verification.
+
+  HPKE can be used to add TLS v1.3 quality security to your TCP and UDP
+  berkeley sockets. You use HPKE to perform a zero roundtrip handshake,
+  and then use Chacha20Poly1305 to perform symmetric encryption of data.
+  The performance you should expect is about twenty gigabits/s per core.
+  Curve25519, HKDF, and HMAC are used by HPKE as implementation details.
+
+  BLAKE2B is the strongest fastest hashing function. By default it has a
+  512 bit (or 64 byte) digest length, which offers 256 bits of collision
+  resistance, but you can tune the output size to be anything smaller.
+  Performance has been measured at 1500 mbyte/sec on Threadripper PRO.
+
+  SHA1 and SHA2 are also provided for hashing. However they go slower
+  (about 500 mbyte/sec) and are less timing resistant since we don't
+  have hardware acceleration implemented for the SHA subroutines. The
+  exception is SHA2-256 and SHA2-224 on x86 which goes 2300 mbyte/sec.
+
+LOCAL MODIFICATIONS
+
+  - Remove unused int128 params from curve25519 helpers. It allows us to
+    link these functions externally without making ed25519 33% slower
+
+  - Pull sha256_update() and sha512_update() out into their own modules
+    and make they're compiled at -Os (adds at least 33% performance) and
+    that ubsan isn't used (since it makes them take minutes to compile)
+
+  - Simplify Hacl_Impl_HPKE_context_s to not store all those pointers.
+
+  - Use `cc -E -fdirective-only` on hacl/dist/ to escape header hell
+
+  - Reduce stack consumption in ed25519
+
+  - Use cosmopolitan endianness macros
+
+  - Write documentation for Frodo
+
+  - Map throwaway stack for Frodo
+
+  - Add const keywords
+
+  - Ran clang-format

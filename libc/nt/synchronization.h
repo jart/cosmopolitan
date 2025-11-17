@@ -53,7 +53,6 @@ void WakeByAddressSingle(void *Address);
 bool32 WaitOnAddress(const volatile void *Address, void *CompareAddress,
                      size_t AddressSize, uint32_t opt_dwMilliseconds);
 
-void Sleep(uint32_t dwMilliseconds);
 uint32_t SleepEx(uint32_t dwMilliseconds, bool32 bAlertable);
 
 void GetSystemTime(struct NtSystemTime *lpSystemTime);

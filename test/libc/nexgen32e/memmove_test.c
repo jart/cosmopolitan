@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/macros.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
@@ -41,7 +42,7 @@ TEST(MemMove, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
-        b0 = rngset(malloc(N), N, _rand64, -1);
+        arc4random_buf((b0 = malloc(N)), N);
         b1 = memcpy(malloc(N), b0, N);
         b2 = memcpy(malloc(N), b0, N);
         ASSERT_EQ(b1 + j, memmove(b1 + j, b1 + i, n));
@@ -65,7 +66,7 @@ TEST(MemCpy, overlapping) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
         if (j <= i) {
-          b0 = rngset(malloc(N), N, _rand64, -1);
+          arc4random_buf((b0 = malloc(N)), N);
           b1 = memcpy(malloc(N), b0, N);
           b2 = memcpy(malloc(N), b0, N);
           ASSERT_EQ(b1 + j, memcpy(b1 + j, b1 + i, n));
@@ -89,7 +90,7 @@ TEST(MemMove, overlappingDirect) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
-        b0 = rngset(malloc(N), N, _rand64, -1);
+        arc4random_buf((b0 = malloc(N)), N);
         b1 = memcpy(malloc(N), b0, N);
         b2 = memcpy(malloc(N), b0, N);
         ASSERT_EQ(b1 + j, (memmove)(b1 + j, b1 + i, n));

@@ -59,7 +59,7 @@ Copyright (c) 2024 Justine Tunney <jtunney@gmail.com>");
  * - We ensured slightly better conformance to libcxxabi test suites.
  *
  * - We renovated this module to not use malloc(). Our modified version
- *   uses a new __demangle() API we defined with an strlcpy()-style. The
+ *   uses a new cosmo_demangle() API we defined with an strlcpy()-style. The
  *   output buffer provided by the caller is used internally as a heap.
  *
  * - This is now the only C++ demangler that's asynchronous signal safe.
@@ -91,9 +91,15 @@ Copyright (c) 2024 Justine Tunney <jtunney@gmail.com>");
  *
  */
 
-#define ABI privileged optimizesize
+#define ABI __privileged optimizesize
+
+#define COMPILER_FENCE __asm__("")
 
 #define DEMANGLE_NO_FLOATING_POINT
+
+typedef intptr_t jmp_buf[5];
+#define longjmp __builtin_longjmp
+#define setjmp __builtin_setjmp
 
 #define ASSERT(x)	    (void)0
 
@@ -194,7 +200,7 @@ struct demangle_data {
 	int depth;
 	const char *cur;	/* current mangled name ptr */
 	const char *last_sname; /* last source name */
-	intptr_t jmpbuf[5];
+	jmp_buf jmpbuf;
 };
 
 struct type_delimit {
@@ -229,7 +235,7 @@ demangle_strlen(const char *s)
 {
 	size_t n = 0;
 	while (*s++) {
-		asm volatile("" ::: "memory");
+		COMPILER_FENCE;
 		++n;
 	}
 	return n;
@@ -240,6 +246,7 @@ demangle_stpcpy(char *d, const char *s)
 {
 	size_t i = 0;
 	for (;;) {
+		COMPILER_FENCE;
 		if (!(d[i] = s[i]))
 			return d + i;
 		++i;
@@ -251,8 +258,10 @@ demangle_mempcpy(void *a, const void *b, size_t n)
 {
 	char *d = a;
 	const char *s = b;
-	while (n--)
+	while (n--) {
+		COMPILER_FENCE;
 		*d++ = *s++;
+	}
 	return d;
 }
 
@@ -395,7 +404,7 @@ demangle_malloc(struct demangle_data *h, long a, long n)
 	long b = sizeof(index_t);
 
 	if (n < 0 || n >= 32768)
-		__builtin_longjmp(h->jmpbuf, 1);
+		longjmp(h->jmpbuf, 1);
 
 	/* Roundup size. */
 	n += a - 1;
@@ -438,7 +447,7 @@ demangle_malloc(struct demangle_data *h, long a, long n)
 		((index_t *)ptr)[-1] = n;
 		return (void *)ptr;
 	} else {
-		__builtin_longjmp(h->jmpbuf, 1);
+		longjmp(h->jmpbuf, 1);
 	}
 }
 
@@ -2552,7 +2561,7 @@ ABI static int
 demangle_read_expression(struct demangle_data *ddata)
 {
 	if (ddata->depth == MAX_DEPTH)
-		__builtin_longjmp(ddata->jmpbuf, 1);
+		longjmp(ddata->jmpbuf, 1);
 	++ddata->depth;
 	int res = demangle_read_expression_impl(ddata);
 	--ddata->depth;
@@ -2881,7 +2890,7 @@ demangle_read_number(struct demangle_data *ddata, long *rtn)
 
 	len = demangle_strtol(ddata->cur, 10);
 	if (len < 0)
-		__builtin_longjmp(ddata->jmpbuf, 1);
+		longjmp(ddata->jmpbuf, 1);
 
 	while (ELFTC_ISDIGIT(*ddata->cur))
 		++ddata->cur;
@@ -3121,7 +3130,7 @@ ABI static int
 demangle_read_encoding(struct demangle_data *ddata)
 {
 	if (ddata->depth == MAX_DEPTH)
-		__builtin_longjmp(ddata->jmpbuf, 1);
+		longjmp(ddata->jmpbuf, 1);
 	++ddata->depth;
 	int res = demangle_read_encoding_impl(ddata);
 	--ddata->depth;
@@ -3363,7 +3372,7 @@ ABI static int
 demangle_read_name(struct demangle_data *ddata)
 {
 	if (ddata->depth == MAX_DEPTH)
-		__builtin_longjmp(ddata->jmpbuf, 1);
+		longjmp(ddata->jmpbuf, 1);
 	++ddata->depth;
 	int res = demangle_read_name_impl(ddata);
 	--ddata->depth;
@@ -4262,7 +4271,7 @@ ABI static int
 demangle_read_type(struct demangle_data *ddata, struct type_delimit *td)
 {
 	if (ddata->depth == MAX_DEPTH)
-		__builtin_longjmp(ddata->jmpbuf, 1);
+		longjmp(ddata->jmpbuf, 1);
 	++ddata->depth;
 	int res = demangle_read_type_impl(ddata, td);
 	--ddata->depth;
@@ -4438,7 +4447,7 @@ demangle(struct demangle_data *ddata, char *buf, const char *org, size_t buflen)
  * successfully cover nearly all the test cases from libcxxabi use 65536
  * and to be able to print 99% of the symbols LLVM's libcxx.a, use 5632.
  *
- * It's important to call __is_mangled() before this, since some symbols
+ * Be sure to call cosmo_is_mangled() before this one since some symbols
  * have a special meaning; for example, "g" will return "__float128". It
  * should be noted that this routine won't decode c++ symbols containing
  * floating point numbers.
@@ -4452,10 +4461,10 @@ demangle(struct demangle_data *ddata, char *buf, const char *org, size_t buflen)
  * @asyncsignalsafe
  */
 ABI int
-__demangle(char *buf, const char *org, size_t buflen)
+cosmo_demangle(char *buf, const char *org, size_t buflen)
 {
 	struct demangle_data ddata[1];
-	if (!__builtin_setjmp(ddata->jmpbuf))
+	if (!setjmp(ddata->jmpbuf))
 		return demangle(ddata, buf, org, buflen);
 	return demangle_failure(buf, org, buflen);
 }
@@ -4466,7 +4475,7 @@ __demangle(char *buf, const char *org, size_t buflen)
  * This means it starts with either "_Z" or "_GLOBAL__I_".
  */
 ABI int
-__is_mangled(const char *org)
+cosmo_is_mangled(const char *org)
 {
 	if (!org)
 		return false;

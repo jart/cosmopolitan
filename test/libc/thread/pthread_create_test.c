@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
@@ -51,25 +52,11 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
-// test ability of user to override pthread mutex api
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  abort();
-}
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  abort();
-}
-int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  abort();
-}
-int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
-  abort();
-}
-
 void OnUsr1(int sig, siginfo_t *si, void *vctx) {
 }
 
 void SetUpOnce(void) {
-  cosmo_stack_setmaxstacks((_rand64() & 7) - 1);
+  cosmo_stack_setmaxstacks(arc4random_uniform(8) - 1);
 }
 
 void SetUp(void) {

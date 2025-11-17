@@ -13,87 +13,48 @@
  */
 #define __ZIP_C
 
-#include "third_party/zip/zip.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/sched.h"
-#include "libc/sysv/consts/timer.h"
-#include "libc/time.h"       /* for tzset() declaration */
+#include "zip.h"
+#include <time.h>       /* for tzset() declaration */
 #if defined(WIN32) || defined(WINDLL)
 #  define WIN32_LEAN_AND_MEAN
-#include "libc/nt/accounting.h"
-#include "libc/nt/automation.h"
-#include "libc/nt/console.h"
-#include "libc/nt/debug.h"
-#include "libc/nt/dll.h"
-#include "libc/nt/enum/keyaccess.h"
-#include "libc/nt/enum/regtype.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/events.h"
-#include "libc/nt/files.h"
-#include "libc/nt/ipc.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/paint.h"
-#include "libc/nt/process.h"
-#include "libc/nt/registry.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/windows.h"
-#include "libc/nt/winsock.h"
+#  include <windows.h>
 #endif
 #ifdef WINDLL
-#include "libc/runtime/runtime.h"
-// MISSING #include "windll/windll.h"
+#  include <setjmp.h>
+// [jart] #  include "windll/windll.h"
 #endif
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/zip/revision.h"
-#include "third_party/zip/crc32.h"
-#include "third_party/zip/crypt.h"
-#include "third_party/zip/ttyio.h"
-#include "libc/str/str.h"
-#include "libc/errno.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/ctype.h"
-#include "third_party/bzip2/bzlib.h"
-
+#include "revision.h"
+#include "crc32.h"
+#include "crypt.h"
+#include "ttyio.h"
+#include <ctype.h>
+#include <errno.h>
 #ifdef VMS
-// MISSING #include <stsdef.h>
-// MISSING #include "vms/vmsmunch.h"
-// MISSING #include "vms/vms.h"
+// [jart] #  include <stsdef.h>
+// [jart] #  include "vms/vmsmunch.h"
+// [jart] #  include "vms/vms.h"
 #endif
 
 #ifdef MACOS
-// MISSING #include "macglob.h"
+// [jart] #  include "macglob.h"
    extern MacZipGlobals MacZip;
    extern int error_level;
 #endif
 
 #if (defined(MSDOS) && !defined(__GO32__)) || defined(__human68k__)
-// MISSING #include <process.h>
+#  include <process.h>
 #  if (!defined(P_WAIT) && defined(_P_WAIT))
 #    define P_WAIT _P_WAIT
 #  endif
 #endif
 
-#include "libc/calls/calls.h"
-#include "libc/calls/sigtimedwait.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/ss.h"
-#include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/stdio/stdio.h"
-#include "libc/temp.h"
-#include "third_party/musl/tempnam.h"
+#include <signal.h>
+#include <stdio.h>
 
 #ifdef UNICODE_TEST
 # ifdef WIN32
-// MISSING #include <direct.h>
+#  include <direct.h>
 # endif
 #endif
 
@@ -103,7 +64,7 @@
      this is done by the configure script. */
   /* Also do not need path for bzip2 include if OS includes support
      for bzip2 library. */
-// MISSING #include "bzlib.h"
+# include "third_party/bzip2/bzlib.h"
 #endif
 
 #define MAXCOM 256      /* Maximum one-line comment size */
@@ -1067,7 +1028,7 @@ local void help_extended()
 
   for (i = 0; i < sizeof(text)/sizeof(char *); i++)
   {
-    printf(text[i]);
+    printf("%s", text[i]);
     putchar('\n');
   }
 #ifdef DOS
@@ -1264,7 +1225,7 @@ local void version_info()
             CR_MAJORVER, CR_MINORVER, CR_BETA_VER, CR_VERSION_DATE);
   for (i = 0; i < sizeof(cryptnote)/sizeof(char *); i++)
   {
-    printf(cryptnote[i]);
+    printf("%s", cryptnote[i]);
     putchar('\n');
   }
   ++i;  /* crypt support means there IS at least one compilation option */
@@ -1476,7 +1437,7 @@ local void check_zipfile(zipname, zippath)
     /* Replace first {} with archive name.  If no {} append name to string. */
     here = strstr(unzip_path, "{}");
 
-    if ((cmd = malloc(strlen(unzip_path) + strlen(zipname) + 3)) == NULL) {
+    if ((cmd = malloc(strlen(unzip_path) + strlen(zipname) + 4)) == NULL) {
       ziperr(ZE_MEM, "building command string for testing archive");
     }
 

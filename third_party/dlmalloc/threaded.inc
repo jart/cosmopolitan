@@ -1,51 +1,162 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
-╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/magicu.h"
-#include "libc/intrin/strace.h"
-#include "libc/intrin/weaken.h"
-#include "libc/macros.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/threads.h"
-#include "libc/errno.h"
-#include "libc/calls/struct/cpuset.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+// Cosmopolitan Threaded Memory Allocator
+//
+// This file provides functions named dlX_threaded() which implement the
+// dlmalloc api for multithreaded environments. This implementation goes
+// fast for a variety of use cases, and it's fully portable across OSes.
+//
+// We use two strategies for making multi-threaded malloc() go fast. Our
+// first preference is to give each thread its own heap. The thread will
+// store a pointer to its mspace in thread-local storage. We recycle the
+// heaps we assign. This is very fast because it provides good assurance
+// that the mutex on each heap will be uncontended. The only time a lock
+// contention should happen, is if a thread shares its malloc'd pointer.
+// The downside to assigning each thread its own mspace is if we want to
+// have 10,000 threads, it becomes incredibly wasteful. So what we'll do
+// is switch to sharding allocations over a fixed number of heaps, based
+// on the cpu index, once we have a large number of simultaneous threads
 
 #if !FOOTERS || !MSPACES
 #error "threaded dlmalloc needs footers and mspaces"
 #endif
 
-static struct magicu magiu;
-static unsigned g_cpucount;
-static unsigned g_heapslen;
-static mstate g_heaps[128];
+static_assert(COSMO_SHARDS == 32);
+static_assert(sizeof(unsigned) * 8 == 32);
 
-void dlfree(void *p) {
+// bss memory to initialize our heaps which avoids mmapping upon startup
+// more critically having this be static ensures pick_heap() never fails
+static union {
+  alignas(16) char memory[16384];
+  struct {
+    char foot[16];
+    struct malloc_state state;
+  };
+} g_heaps[COSMO_SHARDS];
+
+static unsigned g_assigned;
+static MLOCK_T g_gil;
+
+// tls stores a function pointer to one of these which avoid mispredicts
+static void *tmspace_get   (void) { return &g_heaps[cosmo_shard()].state; }
+static void *tmspace_get_0 (void) { return &g_heaps[ 0].state; }
+static void *tmspace_get_1 (void) { return &g_heaps[ 1].state; }
+static void *tmspace_get_2 (void) { return &g_heaps[ 2].state; }
+static void *tmspace_get_3 (void) { return &g_heaps[ 3].state; }
+static void *tmspace_get_4 (void) { return &g_heaps[ 4].state; }
+static void *tmspace_get_5 (void) { return &g_heaps[ 5].state; }
+static void *tmspace_get_6 (void) { return &g_heaps[ 6].state; }
+static void *tmspace_get_7 (void) { return &g_heaps[ 7].state; }
+static void *tmspace_get_8 (void) { return &g_heaps[ 8].state; }
+static void *tmspace_get_9 (void) { return &g_heaps[ 9].state; }
+static void *tmspace_get_10(void) { return &g_heaps[10].state; }
+static void *tmspace_get_11(void) { return &g_heaps[11].state; }
+static void *tmspace_get_12(void) { return &g_heaps[12].state; }
+static void *tmspace_get_13(void) { return &g_heaps[13].state; }
+static void *tmspace_get_14(void) { return &g_heaps[14].state; }
+static void *tmspace_get_15(void) { return &g_heaps[15].state; }
+static void *tmspace_get_16(void) { return &g_heaps[16].state; }
+static void *tmspace_get_17(void) { return &g_heaps[17].state; }
+static void *tmspace_get_18(void) { return &g_heaps[18].state; }
+static void *tmspace_get_19(void) { return &g_heaps[19].state; }
+static void *tmspace_get_20(void) { return &g_heaps[20].state; }
+static void *tmspace_get_21(void) { return &g_heaps[21].state; }
+static void *tmspace_get_22(void) { return &g_heaps[22].state; }
+static void *tmspace_get_23(void) { return &g_heaps[23].state; }
+static void *tmspace_get_24(void) { return &g_heaps[24].state; }
+static void *tmspace_get_25(void) { return &g_heaps[25].state; }
+static void *tmspace_get_26(void) { return &g_heaps[26].state; }
+static void *tmspace_get_27(void) { return &g_heaps[27].state; }
+static void *tmspace_get_28(void) { return &g_heaps[28].state; }
+static void *tmspace_get_29(void) { return &g_heaps[29].state; }
+static void *tmspace_get_30(void) { return &g_heaps[30].state; }
+static void *tmspace_get_31(void) { return &g_heaps[31].state; }
+
+static const tmspace_get_f kTmspaceGetter[COSMO_SHARDS] = {
+    tmspace_get_0,
+    tmspace_get_1,
+    tmspace_get_2,
+    tmspace_get_3,
+    tmspace_get_4,
+    tmspace_get_5,
+    tmspace_get_6,
+    tmspace_get_7,
+    tmspace_get_8,
+    tmspace_get_9,
+    tmspace_get_10,
+    tmspace_get_11,
+    tmspace_get_12,
+    tmspace_get_13,
+    tmspace_get_14,
+    tmspace_get_15,
+    tmspace_get_16,
+    tmspace_get_17,
+    tmspace_get_18,
+    tmspace_get_19,
+    tmspace_get_20,
+    tmspace_get_21,
+    tmspace_get_22,
+    tmspace_get_23,
+    tmspace_get_24,
+    tmspace_get_25,
+    tmspace_get_26,
+    tmspace_get_27,
+    tmspace_get_28,
+    tmspace_get_29,
+    tmspace_get_30,
+    tmspace_get_31,
+};
+
+tmspace_get_f tmspace_acquire(void) {
+  tmspace_get_f res = &tmspace_get;
+  if (~g_assigned) {
+    bool switch_to_cpu_shard = false;
+    ACQUIRE_LOCK(&g_gil);
+    if (~g_assigned) {
+      unsigned index = bsf(~g_assigned);
+      g_assigned |= 1u << index;
+      if (!g_heaps[index].state.magic)
+        create_mspace_with_base(&g_heaps[index], sizeof(g_heaps[index]), true);
+      if (~g_assigned) {
+        res = kTmspaceGetter[index];
+      } else {
+        switch_to_cpu_shard = true;
+      }
+    }
+    RELEASE_LOCK(&g_gil);
+    if (switch_to_cpu_shard) {
+      // permanently transition malloc runtime to always use cpuid
+      // sharding once the process reaches 32 simultaneous threads
+      _pthread_lock();
+      for (struct Dll *e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e))
+        POSIXTHREAD_CONTAINER(e)->tib->tib_malloc = &tmspace_get;
+      _pthread_unlock();
+    }
+  }
+  return res;
+}
+
+void tmspace_release(tmspace_get_f getter) {
+  if (~g_assigned && getter != &tmspace_get) {
+    mspace_trim(getter(), 0);
+    ACQUIRE_LOCK(&g_gil);
+    if (~g_assigned)
+      for (unsigned index = 0; index < COSMO_SHARDS; ++index)
+        if (getter == kTmspaceGetter[index])
+          g_assigned &= ~(1u << index);
+    RELEASE_LOCK(&g_gil);
+  }
+}
+
+static void dlfree_threaded(void *p) {
+  // we configured dlmalloc to store the mpsace pointer in the footer to
+  // ensure we free on the old heap if the kernel reschedules our thread
   return mspace_free(0, p);
 }
 
-size_t dlmalloc_usable_size(void* mem) {
+static size_t dlmalloc_usable_size_threaded(void *mem) {
   return mspace_usable_size(mem);
 }
 
-void* dlrealloc_in_place(void *p, size_t n) {
+static void *dlrealloc_in_place_threaded(void *p, size_t n) {
   return mspace_realloc_in_place(0, p, n);
 }
 
@@ -53,32 +164,11 @@ int dlmallopt(int param_number, int value) {
   return mspace_mallopt(param_number, value);
 }
 
-int dlmalloc_trim(size_t pad) {
+static int dlmalloc_trim_threaded(size_t pad) {
   int got_some = 0;
-  for (unsigned i = 0; i < g_heapslen; ++i)
-    got_some |= mspace_trim(g_heaps[i], pad);
+  for (long i = 0; i < COSMO_SHARDS && g_heaps[i].state.magic; ++i)
+    got_some |= mspace_trim(&g_heaps[i].state, pad);
   return got_some;
-}
-
-size_t dlbulk_free(void *array[], size_t nelem) {
-  size_t j = 0;
-  mstate msp = (mstate)-1;
-  for (size_t i = 0; i < nelem; ++i) {
-    mstate next;
-    if (array[i]) {
-      next = get_mstate_for(mem2chunk(array[i]));
-      if (next != msp) {
-        if (j)
-          mspace_bulk_free(msp, array, j);
-        msp = next;
-        j = 0;
-      }
-      array[j++] = array[i];
-    }
-  }
-  if (j)
-    mspace_bulk_free(msp, array, j);
-  return 0;
 }
 
 struct ThreadedMallocVisitor {
@@ -96,147 +186,70 @@ static void threaded_malloc_visitor(void *start, void *end,
   tmv->handler(start, end, used_bytes, tmv->arg);
 }
 
-void dlmalloc_inspect_all(void handler(void *start, void *end,
-                                       size_t used_bytes, void *arg),
-                          void *arg) {
-  for (unsigned i = 0; i < g_heapslen; ++i) {
-    struct ThreadedMallocVisitor tmv = {g_heaps[i], handler, arg};
-    mspace_inspect_all(g_heaps[i], threaded_malloc_visitor, &tmv);
+static void dlmalloc_inspect_all_threaded(void handler(void *start, void *end,
+                                                       size_t used_bytes, void *arg),
+                                          void *arg) {
+  for (long i = 0; i < COSMO_SHARDS && g_heaps[i].state.magic; ++i) {
+    struct ThreadedMallocVisitor tmv = {&g_heaps[i].state, handler, arg};
+    mspace_inspect_all(&g_heaps[i].state, threaded_malloc_visitor, &tmv);
   }
 }
 
-// we make malloc() scalable basically by
-//
-//     return g_heaps[sched_getcpu() / 2];
-//
-// except we cache the syscall result using thread-local storage. on
-// some platforms, it's not possible to use sched_getcpu() so we use
-// arbitrary assignments to help scalability, but may not be optimal
-static mstate get_arena(void) {
-  static atomic_uint assign;
-  static thread_local unsigned i;
-  static thread_local unsigned n;
-  if (n == 50)
-    n = 0;
-  if (!n) {
-    int e = errno;
-    i = sched_getcpu();
-    if (i == -1) {
-      errno = e;
-      i = atomic_fetch_add_explicit(&assign, 1, memory_order_relaxed);
-      i %= g_cpucount;
-    }
-    i = __magicu_div(i, magiu) % g_heapslen;
-  }
-  ++n;
-  return g_heaps[i];
-}
-
-static void *dlmalloc_single(size_t n) {
-  return mspace_malloc(g_heaps[0], n);
+static inline mspace pick_heap(void) {
+  tmspace_get_f getter = __get_tls()->tib_malloc;
+  return getter();
 }
 
 static void *dlmalloc_threaded(size_t n) {
-  return mspace_malloc(get_arena(), n);
-}
-
-static void *dlcalloc_single(size_t n, size_t z) {
-  return mspace_calloc(g_heaps[0], n, z);
+  return mspace_malloc(pick_heap(), n);
 }
 
 static void *dlcalloc_threaded(size_t n, size_t z) {
-  return mspace_calloc(get_arena(), n, z);
-}
-
-static void *dlrealloc_single(void *p, size_t n) {
-  return mspace_realloc(g_heaps[0], p, n);
+  return mspace_calloc(pick_heap(), n, z);
 }
 
 static void *dlrealloc_threaded(void *p, size_t n) {
   if (p)
     return mspace_realloc(0, p, n);
-  else
-    return mspace_malloc(get_arena(), n);
-}
-
-static void *dlmemalign_single(size_t a, size_t n) {
-  return mspace_memalign(g_heaps[0], a, n);
+  return dlmalloc_threaded(n);
 }
 
 static void *dlmemalign_threaded(size_t a, size_t n) {
-  return mspace_memalign(get_arena(), a, n);
-}
-
-static struct mallinfo dlmallinfo_single(void) {
-  return mspace_mallinfo(g_heaps[0]);
+  return mspace_memalign(pick_heap(), a, n);
 }
 
 static struct mallinfo dlmallinfo_threaded(void) {
-  return mspace_mallinfo(get_arena());
-}
-
-static int dlmalloc_atoi(const char *s) {
-  int c, x = 0;
-  while ((c = *s++)) {
-    x *= 10;
-    x += c - '0';
+  struct mallinfo res = {0};
+  for (long i = 0; i < COSMO_SHARDS && g_heaps[i].state.magic; ++i) {
+    struct mallinfo mi = mspace_mallinfo(&g_heaps[i].state);
+    res.arena += mi.arena;
+    res.ordblks += mi.ordblks;
+    res.hblkhd += mi.hblkhd;
+    res.usmblks += mi.usmblks;
+    res.uordblks += mi.uordblks;
+    res.fordblks += mi.fordblks;
+    res.keepcost += mi.keepcost;
   }
-  return x;
+  return res;
 }
 
-static void use_single_heap(bool uses_locks) {
-  g_heapslen = 1;
-  dlmalloc = dlmalloc_single;
-  dlcalloc = dlcalloc_single;
-  dlrealloc = dlrealloc_single;
-  dlmemalign = dlmemalign_single;
-  dlmallinfo = dlmallinfo_single;
-  if (!(g_heaps[0] = create_mspace(0, uses_locks)))
-    __builtin_trap();
+// b/c it's possible for malloc() to return memory inside .bss lool
+bool __is_g_heaps(void *ptr) {
+  char *p = ptr;
+  char *a = (char *)g_heaps;
+  char *b = (char *)g_heaps + sizeof(g_heaps);
+  return a <= p && p < b;
 }
 
-static void threaded_dlmalloc(void) {
-  int heaps, cpus;
-  const char *var;
-
-  if (!_weaken(pthread_create))
-    return use_single_heap(false);
-
-  // determine how many independent heaps we should install
-  // by default we do an approximation of one heap per core
-  // this code makes the c++ stl go 164x faster on my ryzen
-  g_cpucount = cpus = __get_cpu_count();
-  if (cpus == -1) {
-    heaps = 1;
-    g_cpucount = 1;
-  } else if ((var = getenv("COSMOPOLITAN_HEAP_COUNT"))) {
-    heaps = dlmalloc_atoi(var);
-  } else {
-    heaps = cpus >> 1;
-  }
-  if (heaps <= 1)
-    return use_single_heap(true);
-  if (heaps > ARRAYLEN(g_heaps))
-    heaps = ARRAYLEN(g_heaps);
-
-  // find 𝑑 such that sched_getcpu() / 𝑑 is within [0,heaps)
-  // turn 𝑑 into a fast magic that can divide by multiplying
-  magiu = __magicu_get(cpus / heaps);
-
-  // we need this too due to linux's cpu count affinity hack
-  g_heapslen = heaps;
-
-  // create the arenas
-  for (size_t i = 0; i < g_heapslen; ++i)
-    if (!(g_heaps[i] = create_mspace(0, true)))
-      __builtin_trap();
-
-  // install function pointers
+dontinline static void use_threaded_allocator(void) {
   dlmalloc = dlmalloc_threaded;
+  dlfree = dlfree_threaded;
   dlcalloc = dlcalloc_threaded;
   dlrealloc = dlrealloc_threaded;
+  dlrealloc_in_place = dlrealloc_in_place_threaded;
   dlmemalign = dlmemalign_threaded;
+  dlmalloc_usable_size = dlmalloc_usable_size_threaded;
+  dlmalloc_inspect_all = dlmalloc_inspect_all_threaded;
   dlmallinfo = dlmallinfo_threaded;
-
-  STRACE("created %d dlmalloc arenas for %d cpus", heaps, cpus);
+  dlmalloc_trim = dlmalloc_trim_threaded;
 }

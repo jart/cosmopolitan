@@ -862,7 +862,7 @@ os_anontmp ()
 
       if (tmpfile_works)
         {
-          EINTRLOOP (fd, open (tdir, O_RDWR | O_TMPFILE | O_EXCL, 0600));
+          EINTRLOOP (fd, open (tdir, O_RDWR | _O_TMPFILE | O_DIRECTORY | O_EXCL, 0600));
           if (fd >= 0)
             return fd;
     

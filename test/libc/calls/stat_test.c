@@ -98,7 +98,7 @@ TEST(stat, zipos) {
   EXPECT_SYS(0, 0, stat("/zip/.python/", &st));
 }
 
-BENCH(fstat, bench) {
+TEST(fstat, bench) {
   struct stat st;
   ASSERT_SYS(0, 3, creat("foo.sh", 0777));
   ASSERT_SYS(0, 2, write(3, "#!", 2));
@@ -106,7 +106,7 @@ BENCH(fstat, bench) {
   ASSERT_SYS(0, 0, close(3));
 }
 
-BENCH(stat, bench) {
+TEST(stat, bench) {
   char path[PATH_MAX];
   struct stat st;
   union metastat ms;
@@ -119,6 +119,9 @@ BENCH(stat, bench) {
            stat(".python/test/"
                 "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
                 &st));
+  EZBENCH2("stat(/) fs", donothing, stat("/", &st));
+  EZBENCH2("stat(/nope) fs", donothing, stat("/nope", &st));
+  EZBENCH2("stat(.) fs", donothing, stat(".", &st));
   EZBENCH2("stat() zipos", donothing,
            stat("/zip/.python/test/"
                 "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",

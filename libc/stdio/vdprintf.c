@@ -16,62 +16,70 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/iovec.h"
-#include "libc/dce.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/fmt/internal.h"
-#include "libc/limits.h"
-#include "libc/macros.h"
-#include "libc/nt/files.h"
-#include "libc/sock/sock.h"
-#include "libc/str/str.h"
+#include "libc/stdckdint.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
 
-struct VdprintfState {
-  int n, t, fd;
-  char b[1024];
+struct state {
+  int fd;
+  size_t count;
+  size_t wrote;
+  size_t pending;
+  char buf[512];
 };
 
-static int vdprintf_putc(const char *s, struct VdprintfState *t, size_t n) {
-  struct iovec iov[2];
-  if (n) {
-    if (t->n + n < sizeof(t->b)) {
-      memcpy(t->b + t->n, s, n);
-      t->n += n;
-    } else {
-      iov[0].iov_base = t->b;
-      iov[0].iov_len = t->n;
-      iov[1].iov_base = (void *)s;
-      iov[1].iov_len = n;
-      if (writev(t->fd, iov, 2) == -1) {
-        return -1;
+static int vdprintf_buffer(const char *s, struct state *t, size_t n) {
+  ssize_t rc;
+  size_t i, j, copy;
+  t->count += n;
+  for (i = 0; i < n; i += copy) {
+    copy = MIN(n - i, sizeof(t->buf) - t->pending);
+    memcpy(t->buf + t->pending, s + i, copy);
+    if ((t->pending += copy) == sizeof(t->buf)) {
+      for (j = 0; j < sizeof(t->buf); j += rc) {
+        if ((rc = write(t->fd, t->buf + j, sizeof(t->buf) - j)) == -1)
+          return -1;
+        t->wrote += rc;
       }
-      t->t += t->n;
-      t->n = 0;
+      t->pending = 0;
     }
   }
   return 0;
 }
 
 /**
- * Formats string directly to system i/o device.
+ * Formats string directly to file descriptor.
+ *
+ * @cancelationpoint
  * @asyncsignalsafe
  * @vforksafe
  */
 int vdprintf(int fd, const char *fmt, va_list va) {
-  struct iovec iov[1];
-  struct VdprintfState t;
-  t.n = 0;
-  t.t = 0;
-  t.fd = fd;
-  if (__fmt(vdprintf_putc, &t, fmt, va, &t.t) == -1)
+  int res;
+  size_t i;
+  ssize_t rc;
+  struct state st;
+  st.fd = fd;
+  st.count = 0;
+  st.pending = 0;
+  st.wrote = 0;
+  if (__fmt(vdprintf_buffer, &st, fmt, va, &st.count) == -1) {
+  OnError:
+    if (st.wrote)
+      if (errno != ECANCELED)
+        return st.wrote;
     return -1;
-  if (t.n) {
-    iov[0].iov_base = t.b;
-    iov[0].iov_len = t.n;
-    if (writev(t.fd, iov, 1) == -1) {
-      return -1;
-    }
-    t.t += t.n;
   }
-  return t.t;
+  for (i = 0; i < st.pending; i += rc) {
+    if ((rc = write(fd, st.buf + i, st.pending - i)) == -1)
+      goto OnError;
+    st.wrote += rc;
+  }
+  if (ckd_add(&res, st.wrote, 0))
+    return eoverflow();
+  return res;
 }

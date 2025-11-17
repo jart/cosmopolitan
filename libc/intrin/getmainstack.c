@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rlimit.internal.h"
 #include "libc/intrin/getauxval.h"
 #include "libc/intrin/maps.h"
-#include "libc/intrin/rlimit.h"
 #include "libc/macros.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/sysparam.h"
@@ -88,7 +88,7 @@ static uintptr_t __get_main_top(int pagesz) {
 }
 
 static size_t __get_stack_size(int pagesz, uintptr_t start, uintptr_t top) {
-  size_t stacksz = __rlimit_stack_get().rlim_cur;
+  size_t stacksz = __rlimit_stack_get();
   stacksz = MIN(stacksz, 1024ul * 1024 * 1024 * 1024);
   return MAX(ROUNDDOWN(stacksz, pagesz), ROUNDUP(top - start, pagesz));
 }

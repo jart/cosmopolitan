@@ -24,17 +24,19 @@
  *
  * Writing stops at the NUL-terminator, which isn't included in output.
  * This function blocks until the full string is written, unless an
- * unrecoverable error happens.
+ * unrecoverable error happens. No newline character is appended.
  *
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
- * @return bytes written, or -1 w/ errno
+ * @return non-negative number on success, or EOF w/ errno
+ * @cancelationpoint
  */
 int fputs_unlocked(const char *s, FILE *f) {
   size_t n, r;
-  n = strlen(s);
+  if (!(n = strlen(s)))
+    return 0;
   r = fwrite_unlocked(s, 1, n, f);
-  if (!r && n)
-    return -1;
-  return r;
+  if (!r)
+    return EOF;
+  return 0;
 }

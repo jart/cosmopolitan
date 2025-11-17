@@ -154,17 +154,5 @@
 
 /* Relays to internal calls to malloc/free from realloc, memalign etc */
 
-#if ONLY_MSPACES
 #define internal_malloc(m, b) mspace_malloc(m, b)
 #define internal_free(m, mem) mspace_free(m,mem);
-#else /* ONLY_MSPACES */
-#if MSPACES
-#define internal_malloc(m, b)\
-  ((m == gm)? dlmalloc(b) : mspace_malloc(m, b))
-#define internal_free(m, mem)\
-   if (m == gm) dlfree(mem); else mspace_free(m,mem);
-#else /* MSPACES */
-#define internal_malloc(m, b) dlmalloc(b)
-#define internal_free(m, mem) dlfree(mem)
-#endif /* MSPACES */
-#endif /* ONLY_MSPACES */

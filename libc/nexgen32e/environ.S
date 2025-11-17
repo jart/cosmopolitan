@@ -19,7 +19,7 @@
 #include "libc/macros.h"
 
 //	Environment variable pointer list.
-	.bss
+	.section .bss.rarechange,"aw",@nobits
 	.balign	8
 environ:
 	.quad	0

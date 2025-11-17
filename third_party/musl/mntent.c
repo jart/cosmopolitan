@@ -110,7 +110,7 @@ struct mntent *getmntent_r(FILE *f, struct mntent *mnt, char *linebuf, int bufle
 		len = strlen(linebuf);
 		if (len > INT_MAX) continue;
 		for (i = 0; i < sizeof n / sizeof *n; i++) n[i] = len;
-		sscanf(linebuf, " %n%*[^ \t]%n %n%*[^ \t]%n %n%*[^ \t]%n %n%*[^ \t]%n %d %d",
+		sscanf(linebuf, " %n%*[^ \t\n]%n %n%*[^ \t\n]%n %n%*[^ \t\n]%n %n%*[^ \t\n]%n %d %d",
 			n, n+1, n+2, n+3, n+4, n+5, n+6, n+7,
 			&mnt->mnt_freq, &mnt->mnt_passno);
 	} while (linebuf[n[0]] == '#' || n[1]==len);

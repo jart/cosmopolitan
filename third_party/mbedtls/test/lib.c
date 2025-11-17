@@ -49,6 +49,7 @@
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
 #include "libc/serialize.h"
+#include "libc/cosmotime.h"
 #include "third_party/mbedtls/platform.h"
 __static_yoink("mbedtls_notice");
 

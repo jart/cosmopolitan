@@ -18,47 +18,54 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
-#include "libc/limits.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
- * Closes extra file descriptors, e.g.
+ * Closes extra file descriptors.
  *
- *     if (closefrom(3))
- *       for (int i = 3; i < 256; ++i)
- *         close(i);
- *
- * @return 0 on success, or -1 w/ errno
- * @raise EBADF if `first` is negative
- * @raise ENOSYS if not Linux 5.9+, FreeBSD 8+, OpenBSD, or NetBSD
- * @raise EBADF on OpenBSD if `first` is greater than highest fd
- * @raise EINVAL if flags are bad or first is greater than last
- * @raise EMFILE if a weird race condition happens on Linux
- * @raise EINTR possibly on OpenBSD
- * @raise ENOMEM on Linux maybe
+ * This system call is always successful.
  */
-int closefrom(int first) {
-  int rc;
+void closefrom(int minfd) {
   BLOCK_CANCELATION;
-  if (first < 0) {
-    // consistent with openbsd
-    // freebsd allows this but it's dangerous
-    // necessary on linux due to type signature
-    rc = ebadf();
-  } else if (IsFreebsd() || IsOpenbsd()) {
-    rc = sys_closefrom(first);
+
+  // fix arg
+  if (minfd < 0)
+    minfd = 0;
+
+  // try syscall
+  int rc;
+  int olderr = errno;
+  if (IsFreebsd() || IsOpenbsd()) {
+    rc = sys_closefrom(minfd);
   } else if (IsLinux()) {
-    rc = sys_close_range(first, 0xffffffffu, 0);
+    rc = sys_close_range(minfd, 0xffffffffu, 0);
   } else if (IsNetbsd()) {
-    rc = __sys_fcntl(first, 10 /*F_CLOSEM*/, first);
+    rc = __sys_fcntl(minfd, 10 /*F_CLOSEM*/, minfd);
   } else {
-    rc = enosys();
+    rc = -1;
   }
+
+  // try polyfill
+  if (rc == -1) {
+    long maxfd = 1024;
+    if (IsWindows() || IsMetal()) {
+      maxfd = __get_pib()->fds.n;
+    } else {
+      struct rlimit rl;
+      if (!getrlimit(RLIMIT_NOFILE, &rl))
+        if (rl.rlim_cur <= 0x7fffffffu)
+          maxfd = rl.rlim_cur;
+    }
+    for (long fd = minfd; fd < maxfd; ++fd)
+      close(fd);
+    errno = olderr;
+  }
+
   ALLOW_CANCELATION;
-  STRACE("closefrom(%d) → %d% m", first, rc);
-  return rc;
+  STRACE("closefrom(%d)", minfd);
 }

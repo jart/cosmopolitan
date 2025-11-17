@@ -134,6 +134,18 @@ TEST(__zipos_normpath, emptyBuf_wontNulTerminate) {
   __zipos_normpath(0, "hello", 0);
 }
 
+TEST(__zipos_normpath, leadingSlash_isRemoved) {
+  char d[16];
+  ASSERT_EQ(5, __zipos_normpath(d, "/hello", 16));
+  ASSERT_STREQ("hello", d);
+}
+
+TEST(__zipos_normpath, trailingSlash_isNotRemoved) {
+  char d[16];
+  ASSERT_EQ(6, __zipos_normpath(d, "hello/", 16));
+  ASSERT_STREQ("hello/", d);
+}
+
 TEST(__zipos_normpath, overflows_willNulTerminate) {
   char buf[2];
   ASSERT_EQ(2, __zipos_normpath(buf, "hello", 2));

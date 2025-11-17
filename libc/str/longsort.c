@@ -32,7 +32,14 @@ static inline void InsertionSort(long *A, long n) {
   }
 }
 
-static void LongSort(long *A, long n) {
+/**
+ * Sorting algorithm for longs that doesn't take long.
+ *
+ *     "What disorder is this? Give me my long sort!"
+ *                               -Lord Capulet
+ *
+ */
+void _longsort(long *A, size_t n) {
   long t, p, i, j;
   if (n <= 32) {
     InsertionSort(A, n);
@@ -48,21 +55,7 @@ static void LongSort(long *A, long n) {
       A[i] = A[j];
       A[j] = t;
     }
-    LongSort(A, i);
-    LongSort(A + i, n - i);
-  }
-}
-
-/**
- * Sorting algorithm for longs that doesn't take long.
- *
- *     "What disorder is this? Give me my long sort!"
- *                               -Lord Capulet
- *
- */
-void _longsort(long *A, size_t n) {
-  LongSort(A, n);
-  if (n > 1000) {
-    STRACE("_longsort(%p, %'zu)", A, n);
+    _longsort(A, i);
+    _longsort(A + i, n - i);
   }
 }

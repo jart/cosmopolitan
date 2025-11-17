@@ -52,7 +52,7 @@ extern const char kHostChars[256];  // -_0-9A-Za-z
  *
  * @param n if -1 implies strlen
  */
-bool IsAcceptableHost(const char *s, size_t n) {
+bool32 IsAcceptableHost(const char *s, size_t n) {
   size_t i;
   int c, b, j;
   if (n == -1)

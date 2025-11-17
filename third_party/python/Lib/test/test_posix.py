@@ -5,6 +5,7 @@ from test import support
 # Skip these tests if there is no posix module.
 posix = support.import_module('posix')
 
+import cosmo
 import errno
 import sys
 import time
@@ -65,6 +66,7 @@ class PosixTester(unittest.TestCase):
                 posix_func()
                 self.assertRaises(TypeError, posix_func, 1)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'getresuid'),
                          'test needs posix.getresuid()')
     def test_getresuid(self):
@@ -73,6 +75,7 @@ class PosixTester(unittest.TestCase):
         for val in user_ids:
             self.assertGreaterEqual(val, 0)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'getresgid'),
                          'test needs posix.getresgid()')
     def test_getresgid(self):
@@ -81,6 +84,7 @@ class PosixTester(unittest.TestCase):
         for val in group_ids:
             self.assertGreaterEqual(val, 0)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'setresuid'),
                          'test needs posix.setresuid()')
     def test_setresuid(self):
@@ -89,6 +93,7 @@ class PosixTester(unittest.TestCase):
         # -1 means don't change that value.
         self.assertIsNone(posix.setresuid(-1, -1, -1))
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'setresuid'),
                          'test needs posix.setresuid()')
     def test_setresuid_exception(self):
@@ -98,6 +103,7 @@ class PosixTester(unittest.TestCase):
             new_user_ids = (current_user_ids[0]+1, -1, -1)
             self.assertRaises(OSError, posix.setresuid, *new_user_ids)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'setresgid'),
                          'test needs posix.setresgid()')
     def test_setresgid(self):
@@ -106,6 +112,7 @@ class PosixTester(unittest.TestCase):
         # -1 means don't change that value.
         self.assertIsNone(posix.setresgid(-1, -1, -1))
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'setresgid'),
                          'test needs posix.setresgid()')
     def test_setresgid_exception(self):
@@ -115,6 +122,7 @@ class PosixTester(unittest.TestCase):
             new_group_ids = (current_group_ids[0]+1, -1, -1)
             self.assertRaises(OSError, posix.setresgid, *new_group_ids)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, 'initgroups'),
                          "test needs os.initgroups()")
     def test_initgroups(self):
@@ -552,6 +560,7 @@ class PosixTester(unittest.TestCase):
         self.assertRaises(TypeError, posix.makedev, major)
         self.assertRaises(TypeError, posix.makedev)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', "nope")
     def _test_all_chown_common(self, chown_func, first_param, stat_func):
         """Common code for chown, fchown and lchown tests."""
         def check_stat(uid, gid):
@@ -609,6 +618,7 @@ class PosixTester(unittest.TestCase):
             self.assertRaises(TypeError, chown_func, first_param, uid, t(gid))
             check_stat(uid, gid)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', "nope")
     @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'chown'), "test needs os.chown()")
     def test_chown(self):
@@ -620,6 +630,7 @@ class PosixTester(unittest.TestCase):
         self._test_all_chown_common(posix.chown, support.TESTFN,
                                     getattr(posix, 'stat', None))
 
+    @unittest.skipIf(cosmo.kernel == 'nt', "nope")
     @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'fchown'), "test needs os.fchown()")
     def test_fchown(self):
@@ -633,6 +644,7 @@ class PosixTester(unittest.TestCase):
         finally:
             test_file.close()
 
+    @unittest.skipIf(cosmo.kernel == 'nt', "nope")
     @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'lchown'), "test needs os.lchown()")
     def test_lchown(self):
@@ -943,7 +955,7 @@ class PosixTester(unittest.TestCase):
         finally:
             posix.close(f)
 
-    @unittest.skipUnless(os.chown in os.supports_dir_fd, "test needs dir_fd support in os.chown()")
+    @unittest.skipUnless(hasattr(os, 'chown') and os.chown in os.supports_dir_fd, "test needs dir_fd support in os.chown()")
     def test_chown_dir_fd(self):
         support.unlink(support.TESTFN)
         support.create_empty_file(support.TESTFN)
@@ -1031,7 +1043,7 @@ class PosixTester(unittest.TestCase):
             posix.close(f)
             support.rmtree(support.TESTFN + 'dir')
 
-    @unittest.skipUnless((os.mknod in os.supports_dir_fd) and hasattr(stat, 'S_IFIFO'),
+    @unittest.skipUnless(hasattr(os, 'mknod') and (os.mknod in os.supports_dir_fd) and hasattr(stat, 'S_IFIFO'),
                          "test requires both stat.S_IFIFO and dir_fd support for os.mknod()")
     def test_mknod_dir_fd(self):
         # Test using mknodat() to create a FIFO (the only use specified
@@ -1115,8 +1127,7 @@ class PosixTester(unittest.TestCase):
         finally:
             posix.close(f)
 
-    @unittest.skipIf(sys.platform == "cosmo", "")
-    @unittest.skipUnless(os.mkfifo in os.supports_dir_fd, "test needs dir_fd support in os.mkfifo()")
+    @unittest.skipUnless(hasattr(os, 'mkfifo') and os.mkfifo in os.supports_dir_fd, "test needs dir_fd support in os.mkfifo()")
     def test_mkfifo_dir_fd(self):
         support.unlink(support.TESTFN)
         f = posix.open(posix.getcwd(), posix.O_RDONLY)
@@ -1130,9 +1141,9 @@ class PosixTester(unittest.TestCase):
         finally:
             posix.close(f)
 
-    requires_sched_h = unittest.skipUnless(hasattr(posix, 'sched_yield'),
+    requires_sched_h = unittest.skipUnless(cosmo.kernel != 'nt' and hasattr(posix, 'sched_yield'),
                                            "don't have scheduling support")
-    requires_sched_affinity = unittest.skipUnless(hasattr(posix, 'sched_setaffinity'),
+    requires_sched_affinity = unittest.skipUnless(cosmo.kernel != 'nt' and hasattr(posix, 'sched_setaffinity'),
                                                   "don't have sched affinity support")
 
     @requires_sched_h
@@ -1197,6 +1208,7 @@ class PosixTester(unittest.TestCase):
         param = posix.sched_param(sched_priority=-large)
         self.assertRaises(OverflowError, posix.sched_setparam, 0, param)
 
+    @unittest.skipIf(cosmo.kernel == 'nt', 'nope')
     @unittest.skipUnless(hasattr(posix, "sched_rr_get_interval"), "no function")
     def test_sched_rr_get_interval(self):
         try:

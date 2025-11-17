@@ -15,9 +15,7 @@ COSMOPOLITAN_C_START_
 #define IsUtf16Cont(wc)     IsLowSurrogate(wc) /* TODO: DELETE */
 #define MergeUtf16(hi, lo)  ((((hi) - 0xD800) << 10) + ((lo) - 0xDC00) + 0x10000)
 #define EncodeUtf16(wc)                                         \
-  (LIKELY((0x0000 <= (wc) && (wc) <= 0xFFFF) ||                 \
-          (0xE000 <= (wc) && (wc) <= 0xFFFF))                   \
-       ? (wc)                                                   \
+  (LIKELY((unsigned)(wc) < 0x10000u) ? (wc)                     \
    : 0x10000 <= (wc) && (wc) <= 0x10FFFF                        \
        ? (((((wc) - 0x10000) >> 10) + 0xD800) |                 \
           (unsigned)((((wc) - 0x10000) & 1023) + 0xDC00) << 16) \

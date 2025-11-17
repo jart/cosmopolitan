@@ -28,7 +28,7 @@
 
 int column_;
 
-wontreturn void usage(int rc, FILE *f) {
+[[noreturn]] void usage(int rc, FILE *f) {
   fputs("Usage: ", f);
   fputs(program_invocation_name, f);
   fputs(" [-w COLS] [FILE...]\n", f);

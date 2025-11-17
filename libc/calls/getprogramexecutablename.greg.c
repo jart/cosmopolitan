@@ -20,7 +20,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
@@ -58,10 +60,6 @@ static struct {
     char16_t buf16[PATH_MAX / 2];
   } u;
 } g_prog;
-
-static inline int IsAlpha(int c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
 
 static inline int AllNumDot(const char *s) {
   while (true) {
@@ -138,25 +136,12 @@ static inline void InitProgramExecutableNameImpl(void) {
   ssize_t got;
   char c, *q, *b;
 
-  if (IsWindows()) {
-    int n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16));
-    for (int i = 0; i < n; ++i) {
-      // turn c:\foo\bar into c:/foo/bar
-      if (g_prog.u.buf16[i] == '\\') {
-        g_prog.u.buf16[i] = '/';
-      }
-    }
-    if (IsAlpha(g_prog.u.buf16[0]) &&  //
-        g_prog.u.buf16[1] == ':' &&    //
-        g_prog.u.buf16[2] == '/') {
-      // turn c:/... into /c/...
-      g_prog.u.buf16[1] = g_prog.u.buf16[0];
-      g_prog.u.buf16[0] = '/';
-      g_prog.u.buf16[2] = '/';
-    }
-    tprecode16to8(g_prog.u.buf, sizeof(g_prog.u.buf), g_prog.u.buf16);
-    goto UseBuf;
-  }
+  if (IsWindows())
+    if ((n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16))))
+      if (n < ARRAYLEN(g_prog.u.buf16))
+        if (__mkunixpath(g_prog.u.buf16, g_prog.u.buf) != -1)
+          goto UseBuf;
+
   if (IsMetal()) {
     __program_executable_name = APE_COM_NAME;
     return;
@@ -165,11 +150,12 @@ static inline void InitProgramExecutableNameImpl(void) {
   // see if the loader passed us a path.
   if (__program_executable_name) {
     if (issetugid()) {
-      /* we are running as a set-id interpreter script. this is highly unusual.
-         it means either someone installed their ape loader set-id, or they are
-         running a system that supports secure set-id interpreter scripts via a
-         /dev/fd/ path. check for the latter and allow that. otherwise, use the
-         empty string to obviate the TOCTOU problem between loader and binary.
+      /* we are running as a set-id interpreter script. this is highly
+         unusual. it means either someone installed their ape loader set-id,
+         or they are running a system that supports secure set-id
+         interpreter scripts via a /dev/fd/ path. check for the latter and
+         allow that. otherwise, use the empty string to obviate the TOCTOU
+         problem between loader and binary.
        */
       if (!(b = DevFd()) ||
           0 != strncmp(b, __program_executable_name, (n = StrlenDevFd())) ||

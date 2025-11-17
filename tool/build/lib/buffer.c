@@ -20,7 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

@@ -16,32 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Turns stdio flags description string into bitmask.
  */
 int fopenflags(const char *mode) {
-  unsigned omode, flags;
-  omode = flags = 0;
-  do {
-    if (*mode == 'r') {
-      omode = O_RDONLY;
-    } else if (*mode == 'w') {
-      omode = O_WRONLY;
-      flags |= O_CREAT | O_TRUNC;
-    } else if (*mode == 'a') {
-      omode = O_WRONLY;
-      flags |= O_CREAT | O_APPEND;
-    } else if (*mode == '+') {
-      omode = O_RDWR;
-    } else if (*mode == 'x') {
-      flags |= O_EXCL;
-    } else if (*mode == 'e') {
-      flags |= O_CLOEXEC;
+  int oflags;
+
+  switch (*mode++) {
+    case 'r':
+      oflags = O_RDONLY;
+      break;
+    case 'w':
+      oflags = O_WRONLY | O_CREAT | O_TRUNC;
+      break;
+    case 'a':
+      oflags = O_WRONLY | O_CREAT | O_APPEND;
+      break;
+    default:
+      return einval();
+  }
+
+  for (;;) {
+    switch (*mode++) {
+      case 0:
+        return oflags;
+      case '+':
+        oflags &= ~O_ACCMODE;
+        oflags |= O_RDWR;
+        break;
+      case 'x':
+        oflags |= O_EXCL;
+        break;
+      case 'e':
+        oflags |= O_CLOEXEC;
+        break;
+      case 'b':
+        break;
+      default:
+        if (IsModeDbg())
+          unassert(!"stdio mode character not defined by posix");
+        break;
     }
-  } while (*mode++);
-  return omode | flags;
+  }
 }

@@ -34,6 +34,7 @@
 
 COSMOPOLITAN_C_START_
 
+void *LocalAlloc(uint32_t uFlags, size_t uBytes);
 void *LocalFree(void *hMem);
 
 int64_t CreateFileMapping(

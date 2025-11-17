@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"

@@ -30,24 +30,17 @@ size_t strspn(const char *s, const char *accept) {
   size_t i;
   bool lut[256];
 #ifndef TINY
-  if (!accept[0]) {
+  if (!accept[0])
     return 0;
-  }
-  if (!accept[1]) {
-    for (i = 0;; i++) {
-      if (s[i] != accept[0]) {
+  if (!accept[1])
+    for (i = 0;; i++)
+      if (s[i] != accept[0])
         return i;
-      }
-    }
-  }
 #endif
   bzero(lut, sizeof(lut));
-  while ((c = *accept++ & 255)) {
+  while ((c = *accept++ & 255))
     lut[c] = true;
-  }
-  for (i = 0;; i++) {
-    if (!lut[s[i] & 255]) {
+  for (i = 0;; i++)
+    if (!lut[s[i] & 255])
       return i;
-    }
-  }
 }

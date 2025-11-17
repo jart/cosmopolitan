@@ -23,7 +23,7 @@ struct _posix_spawna {
   struct sched_param schedparam;
   sigset_t sigmask;
   sigset_t sigdefault;
-  struct rlimit rlim[16];
+  struct rlimit rlim[RLIM_NLIMITS];
 };
 
 struct _posix_faction {

@@ -42,7 +42,7 @@
  */
 errno_t pthread_attr_setsigmask_np(pthread_attr_t *attr,
                                    const sigset_t *sigmask) {
-  _Static_assert(sizeof(attr->__sigmask) == sizeof(*sigmask), "");
+  static_assert(sizeof(attr->__sigmask) == sizeof(*sigmask));
   if (sigmask) {
     attr->__havesigmask = true;
     attr->__sigmask = *sigmask;

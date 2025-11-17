@@ -62,11 +62,12 @@ THIRD_PARTY_LIBCXXABI_A_DIRECTDEPS =					\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
-	LIBC_RUNTIME							\
+	LIBC_MEM							\
 	LIBC_STDIO							\
 	LIBC_STR							\
+	LIBC_SYSV							\
 	LIBC_THREAD							\
-	THIRD_PARTY_LIBUNWIND
+	THIRD_PARTY_LIBUNWIND						\
 
 THIRD_PARTY_LIBCXXABI_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LIBCXXABI_A_DIRECTDEPS),$($(x))))
@@ -90,6 +91,7 @@ $(THIRD_PARTY_LIBCXXABI_A_OBJS): private				\
 			-frtti						\
 			-D_LIBCXXABI_BUILDING_LIBRARY			\
 			-D_LIBCPP_BUILDING_LIBRARY			\
+			-DHAVE___CXA_THREAD_ATEXIT_IMPL			\
 
 # ttypeIndex is initialized and used only when native_old_exception is true.
 # GCC does not seem to allow this.

@@ -19,7 +19,7 @@
 #define _STDIOTRACE 0               /* not configurable w/ flag yet */
 #define _TIMETRACE  0               /* not configurable w/ flag yet */
 
-#define STRACE_PROLOGUE "%rSYS %6P %6H %'18T "
+#define STRACE_PROLOGUE "%rSYS %7P %7H %'18T "
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

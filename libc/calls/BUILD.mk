@@ -50,6 +50,7 @@ LIBC_CALLS_A_DIRECTDEPS =				\
 	LIBC_NT_PSAPI					\
 	LIBC_NT_REALTIME				\
 	LIBC_NT_SYNCHRONIZATION				\
+	LIBC_NT_WINMM					\
 	LIBC_NT_WS2_32					\
 	LIBC_STR					\
 	LIBC_SYSV					\
@@ -111,7 +112,7 @@ o//libc/calls/prctl.o:					\
 
 # we always want -Os because:
 #   it's early runtime mandatory and quite huge without it
-o//libc/calls/getcwd.greg.o				\
+o//libc/calls/getcwd.o					\
 o//libc/calls/statfs2cosmo.o: private			\
 		CFLAGS +=				\
 			-Os
@@ -174,7 +175,6 @@ o//libc/calls/gettimeofday.o				\
 o//libc/calls/ioctl.o					\
 o//libc/calls/lutimes.o					\
 o//libc/calls/metaflock.o				\
-o//libc/calls/ntaccesscheck.o				\
 o//libc/calls/ntspawn.o					\
 o//libc/calls/open-nt.o					\
 o//libc/calls/pledge-linux.o				\
@@ -214,6 +214,11 @@ o//libc/calls/winexec.o					\
 o//libc/calls/writev.o: private				\
 		COPTS +=				\
 			-mgeneral-regs-only
+
+# it's too early to use memmove() due to __vex and WinMain	
+o/$(MODE)/libc/calls/mkunixpath.o: private		\
+		CFLAGS +=				\
+			-ffreestanding
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/stackjump.o: libc/calls/stackjump.S

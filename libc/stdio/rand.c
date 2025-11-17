@@ -43,7 +43,7 @@ void srand(unsigned seed) {
  *
  * @note this function does well on bigcrush and practrand
  * @note this function is not intended for cryptography
- * @see lemur64(), _rand64(), rdrand()
+ * @see arc4random_uniform(), lemur64(), _rand64()
  * @threadunsafe
  */
 int rand(void) {

@@ -1,0 +1,264 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2024 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/nt/errors.h"
+
+__privileged int __errno_windows2linux(int e) {
+  switch (e) {
+    case kNtErrorInvalidFunction:
+    case kNtErrorModNotFound:
+    case WSAVERNOTSUPPORTED:
+      return ENOSYS;
+    case kNtErrorInvalidAccess:
+      return EPERM;
+    case kNtErrorFileNotFound:
+    case kNtErrorBadNetpath:
+    case kNtErrorBadNetName:
+    case kNtErrorBadPathname:
+    case kNtErrorNotFound:
+    case kNtErrorNoMoreFiles:
+      return ENOENT;
+    case kNtErrorThreadNotInProcess:
+      return ESRCH;
+    case WSAEINTR:
+    case kNtErrorOperationAborted:
+    case kNtErrorRequestAborted:
+      return EINTR;
+    case kNtErrorIoDevice:
+    case kNtErrorFunctionNotCalled:
+    case kNtErrorFunctionFailed:
+    case kNtErrorReplyMessageMismatch:
+    case kNtErrorDeviceHardwareError:
+      return EIO;
+    case kNtErrorNoMediaInDrive:
+      return ENXIO;
+    case kNtErrorInvalidCommandLine:
+      return E2BIG;
+    case kNtErrorBadExeFormat:
+    case kNtErrorExeMarkedInvalid:
+    case kNtErrorExeMachineTypeMismatch:
+      return ENOEXEC;
+    case kNtErrorInvalidHandle:
+    case kNtErrorInvalidTargetHandle:
+    case kNtErrorDirectAccessHandle:
+    case kNtErrorBadFileType:
+      return EBADF;
+    case kNtErrorWaitNoChildren:
+      return ECHILD;
+    case WSAEPROCLIM:
+    case WSAEWOULDBLOCK:
+    case kNtErrorLockViolation:
+    case kNtErrorOperationInProgress:
+      return EAGAIN;
+    case kNtErrorOutofmemory:
+    case kNtErrorCommitmentLimit:
+    case kNtErrorNonpagedSystemResources:
+    case kNtErrorNotEnoughMemory:
+    case kNtErrorNoSystemResources:
+    case kNtErrorPagedSystemResources:
+    case kNtErrorPagefileQuota:
+    case kNtErrorTooManyNames:
+    case kNtErrorWorkingSetQuota:
+      return ENOMEM;
+    case kNtErrorNotAllAssigned:
+      return EPERM;
+    case kNtErrorAccessDenied:
+    case kNtErrorBadCommand:
+    case kNtErrorBadLength:
+    case kNtErrorCannotMake:
+    case kNtErrorCrc:
+    case kNtErrorGenFailure:
+    case kNtErrorNetworkAccessDenied:
+    case kNtErrorNotReady:
+    case kNtErrorOutOfPaper:
+    case kNtErrorSectorNotFound:
+    case kNtErrorSharingViolation:
+    case kNtErrorWriteProtect:
+    case kNtErrorWrongDisk:
+    case WSAEACCES:
+      return EACCES;
+    case WSAEFAULT:
+    case kNtErrorNoaccess:
+    case kNtErrorInvalidAddress:
+      return EFAULT;
+    case kNtErrorNotDosDisk:
+      return ENOTBLK;
+    case kNtErrorBusy:
+      return EBUSY;
+    case kNtErrorAlreadyExists:
+    case kNtErrorFileExists:
+      return EEXIST;
+    case kNtErrorNotSameDevice:
+      return EXDEV;
+    case kNtErrorBadDevice:
+      return ENODEV;
+    case kNtErrorPathNotFound:
+      return ENOTDIR;
+    case kNtErrorDirectory:
+      return EISDIR;
+    case WSAEINVAL:
+    case kNtErrorInvalidName:  // maybe enoent (e.g. stat("//?/c:"))
+    case kNtErrorNegativeSeek:
+    case kNtErrorNotAReparsePoint:
+    case kNtErrorInvalidParameter:
+      return EINVAL;
+    case kNtErrorTooManyDescriptors:
+      return ENFILE;
+    case kNtErrorTooManyOpenFiles:
+      return EMFILE;
+    case kNtErrorSerialNoDevice:
+      return ENOTTY;
+    case kNtErrorPathBusy:
+      return ETXTBSY;
+    case kNtErrorFileTooLarge:
+      return EFBIG;
+    case kNtErrorHandleDiskFull:
+      return ENOSPC;
+    case kNtErrorNotEnoughQuota:
+    case WSAEDQUOT:
+      return EDQUOT;
+    case kNtErrorSeek:
+      return ESPIPE;
+    case kNtErrorFileReadOnly:
+      return EROFS;
+    case kNtErrorTooManyLinks:
+      return EMLINK;
+    case kNtErrorBrokenPipe:
+    case kNtErrorGracefulDisconnect:
+    case kNtErrorPipeNotConnected:
+    case WSAEDISCON:
+      return EPIPE;
+    case kNtErrorLogInvalidRange:
+      return ERANGE;
+    case kNtErrorPossibleDeadlock:
+      return EDEADLK;
+    case WSAENAMETOOLONG:
+    case kNtErrorFilenameExcedRange:
+      return ENAMETOOLONG;
+    case kNtErrorDirNotEmpty:
+      return ENOTEMPTY;
+    case kNtErrorCantResolveFilename:
+      return ELOOP;
+    case kNtErrorEmpty:
+      return ENOMSG;
+    case kNtErrorUnidentifiedError:
+      return EIDRM;
+    case kNtErrorRdpProtocolError:
+      return EPROTO;
+    case kNtErrorArithmeticOverflow:
+      return EOVERFLOW;
+    case kNtErrorIllegalCharacter:
+      return EILSEQ;
+    case WSAEUSERS:
+      return EUSERS;
+    case WSAENOTSOCK:
+      return ENOTSOCK;
+    case WSAEDESTADDRREQ:
+      return EDESTADDRREQ;
+    case WSAEMSGSIZE:
+    case kNtErrorInvalidUserBuffer:
+    case kNtErrorMoreData:
+      return EMSGSIZE;
+    case WSAEPROTOTYPE:
+      return EPROTOTYPE;
+    case WSAENOPROTOOPT:
+      return ENOPROTOOPT;
+    case WSAEPROTONOSUPPORT:
+      return EPROTONOSUPPORT;
+    case WSAESOCKTNOSUPPORT:
+      return ESOCKTNOSUPPORT;
+    case WSAEOPNOTSUPP:
+    case kNtErrorNotSupported:
+      return ENOTSUP;
+    case WSAEPFNOSUPPORT:
+      return EPFNOSUPPORT;
+    case WSAEAFNOSUPPORT:
+      return EAFNOSUPPORT;
+    case WSAEADDRINUSE:
+    case kNtErrorDupName:
+      return EADDRINUSE;
+    case WSAEADDRNOTAVAIL:
+    case kNtErrorInvalidNetname:
+      return EADDRNOTAVAIL;
+    case WSAENETDOWN:
+    case kNtErrorBadNetResp:
+    case kNtErrorNetworkBusy:
+    case WSANOTINITIALISED:
+    case WSASYSNOTREADY:
+      return ENETDOWN;
+    case WSAENETUNREACH:
+    case kNtErrorNetworkUnreachable:
+    case kNtErrorProtocolUnreachable:
+      return ENETUNREACH;
+    case WSAENETRESET:
+      return ENETRESET;
+    case WSAECONNABORTED:
+    case kNtErrorConnectionAborted:
+    case kNtErrorNetnameDeleted:
+    case kNtErrorUnexpNetErr:
+      return ECONNABORTED;
+    case WSAECONNRESET:
+    case kNtErrorPortUnreachable:
+      return ECONNRESET;
+    case WSAENOBUFS:
+    case kNtErrorInsufficientBuffer:
+      return ENOBUFS;
+    case WSAEISCONN:
+    case kNtErrorConnectionActive:
+      return EISCONN;
+    case WSAENOTCONN:
+      return ENOTCONN;
+    case WSAESHUTDOWN:
+      return ESHUTDOWN;
+    case WSAETOOMANYREFS:
+      return ETOOMANYREFS;
+    case kNtErrorTimeout:
+      return ETIMEDOUT;
+    case WSAECONNREFUSED:
+    case kNtErrorConnectionRefused:
+    case kNtErrorRemNotList:
+      return ECONNREFUSED;
+    case WSAEHOSTDOWN:
+      return EHOSTDOWN;
+    case WSAEHOSTUNREACH:
+    case kNtErrorHostDown:
+    case kNtErrorHostUnreachable:
+      return EHOSTUNREACH;
+    case WSAEALREADY:
+      return EALREADY;
+    case WSAEINPROGRESS:
+    case kNtErrorIoPending:
+      return EINPROGRESS;
+    case WSAESTALE:
+      return ESTALE;
+    case WSAEREMOTE:
+      return EREMOTE;
+    case kNtErrorCancelled:
+      return ECANCELED;
+    case kNtErrorSemOwnerDied:
+      return EOWNERDEAD;
+    case kNtErrorNoData:
+      return ENODATA;
+    case kNtErrorSemTimeout:
+    case WSAETIMEDOUT:
+      return ETIMEDOUT;
+    default:
+      return e;
+  }
+}

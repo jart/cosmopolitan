@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/strace.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
@@ -30,26 +31,13 @@ struct AtFork {
 };
 
 struct AtForks {
-  atomic_uint once;
   pthread_mutex_t lock;
   struct AtFork *list;
 };
 
-static struct AtForks _atforks = {
+alignas(64) static struct AtForks _atforks = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
-
-static void pthread_atfork_clear(void) {
-  struct AtFork *a, *b;
-  for (a = _atforks.list; a; a = b) {
-    b = a->p[0];
-    free(a);
-  }
-}
-
-static void pthread_atfork_init(void) {
-  atexit(pthread_atfork_clear);
-}
 
 static void _pthread_onfork(int i, const char *op) {
   struct AtFork *a;
@@ -63,17 +51,17 @@ static void _pthread_onfork(int i, const char *op) {
 }
 
 void _pthread_onfork_prepare(void) {
-  _pthread_mutex_lock(&_atforks.lock);
+  pthread_mutex_lock(&_atforks.lock);
   _pthread_onfork(0, "prepare");
 }
 
 void _pthread_onfork_parent(void) {
   _pthread_onfork(1, "parent");
-  _pthread_mutex_unlock(&_atforks.lock);
+  pthread_mutex_unlock(&_atforks.lock);
 }
 
 void _pthread_onfork_child(void) {
-  _pthread_mutex_wipe_np(&_atforks.lock);
+  pthread_mutex_wipe_np(&_atforks.lock);
   _pthread_onfork(2, "child");
 }
 
@@ -164,19 +152,19 @@ void _pthread_onfork_child(void) {
  * @raise ENOMEM if we require more vespene gas
  */
 int pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
-  cosmo_once(&_atforks.once, pthread_atfork_init);
   struct AtFork *a;
-  if (!(a = calloc(1, sizeof(struct AtFork))))
+  if (!(a = cosmo_permalloc(sizeof(struct AtFork))))
     return ENOMEM;
+  bzero(a, sizeof(*a));
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;
-  _pthread_mutex_lock(&_atforks.lock);
+  pthread_mutex_lock(&_atforks.lock);
   a->p[0] = 0;
   a->p[1] = _atforks.list;
   if (_atforks.list)
     _atforks.list->p[0] = a;
   _atforks.list = a;
-  _pthread_mutex_unlock(&_atforks.lock);
+  pthread_mutex_unlock(&_atforks.lock);
   return 0;
 }

@@ -59,9 +59,9 @@ textstartup void _AcpiFadtInit(void) {
     }
     length = fadt->Header.Length;
     KINFOF("FADT @ %p,+%#zx", fadt, length);
-    _Static_assert(offsetof(AcpiTableFadt, Dsdt) == 40);
-    _Static_assert(offsetof(AcpiTableFadt, BootFlags) == 109);
-    _Static_assert(offsetof(AcpiTableFadt, XDsdt) == 140);
+    static_assert(offsetof(AcpiTableFadt, Dsdt) == 40);
+    static_assert(offsetof(AcpiTableFadt, BootFlags) == 109);
+    static_assert(offsetof(AcpiTableFadt, XDsdt) == 140);
     if (length >=
         offsetof(AcpiTableFadt, BootFlags) + sizeof(fadt->BootFlags)) {
       _AcpiBootFlags = flags = fadt->BootFlags;

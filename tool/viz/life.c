@@ -22,6 +22,7 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -687,7 +688,7 @@ static int Write(const char *s) {
   return write(out, s, strlen(s));
 }
 
-static wontreturn void PrintUsage(int rc) {
+[[noreturn]] static void PrintUsage(int rc) {
   Write("SYNOPSIS\n\n  ");
   Write(program_invocation_name);
   Write(USAGE);

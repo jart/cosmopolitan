@@ -17,22 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/pib.h"
 
 /**
- * Sets file mode creation mask.
+ * Sets process-wide file mode creation mask.
  *
- * On Windows, the value of umask() determines how Cosmopolitan goes
- * about creating synthetic `st_mode` bits. The default umask is 077
- * which is based on the assumption that Windows is being used for a
- * single user. Don't assume that Cosmopolitan Libc will help you to
- * secure a multitenant Windows computer.
+ * This value is used by functions like openat() and mkdirat() that make
+ * new files. For example, if you say `mkdir("foo", 0777)` then it might
+ * not actually create a file with rwxrwxrwx permission because the bits
+ * were manipulated by the process-wide umask value. UNIX systems set it
+ * to 022 usually, which means 0777 becomes 0755 (due to `0777 & ~0222`)
  *
+ * @param newmask is new mask bits (only bits 0777 are considered)
  * @return previous mask
  * @note always succeeds
  */
@@ -41,8 +40,10 @@ unsigned umask(unsigned newmask) {
   if (!IsWindows()) {
     oldmask = sys_umask(newmask);
   } else {
-    oldmask = atomic_exchange(&__umask, newmask);
+    struct CosmoPib *pib = __get_pib();
+    oldmask = pib->umask;
+    pib->umask = newmask & 0777;
   }
-  STRACE("umask(%#o) → %#o", oldmask);
+  STRACE("umask(%#o) → %#o", newmask, oldmask);
   return oldmask;
 }

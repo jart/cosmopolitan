@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bsdstdlib.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/benchmark.h"
 #include "libc/testlib/testlib.h"
@@ -36,14 +37,10 @@ uint64_t getentropy64(void) {
 TEST(lemur64, test) {
   EXPECT_EQ(1819718037028923529, lemur64());
   EXPECT_EQ(-3120132252617434764, lemur64());
-}
-
-BENCH(lemur64, bench) {
   BENCHMARK(10000, 8, X(lemur64()));
   BENCHMARK(10000, 4, X(rand()));
   BENCHMARK(10000, 8, X(_rand64()));
-  BENCHMARK(10000, 8, X(rdrand()));
-  BENCHMARK(10000, 8, X(rdseed()));
+  BENCHMARK(10000, 4, X(arc4random()));
   BENCHMARK(10000, 8, X(getrandom64()));
   BENCHMARK(10000, 8, X(getentropy64()));
 }

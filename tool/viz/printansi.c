@@ -43,9 +43,9 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/x.h"
@@ -71,7 +71,7 @@ static struct Flags {
   enum TtyQuantizationAlgorithm quant;
 } g_flags;
 
-static wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] static void PrintUsage(int rc, int fd) {
   tinyprint(fd, "Usage: ", program_invocation_name, "\
  [FLAGS] [PATH]\n\
 \n\
@@ -331,7 +331,7 @@ void WithImageFile(const char *path,
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
   CHECK_LE(st.st_size, INT_MAX);
-  fadvise(fd, 0, 0, MADV_WILLNEED | MADV_SEQUENTIAL);
+  posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
   CHECK_NE(MAP_FAILED,
            (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_NOTNULL(

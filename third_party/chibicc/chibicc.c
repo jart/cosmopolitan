@@ -570,6 +570,15 @@ static FileType get_file_type(const char *filename) {
   error("<command line>: unknown file extension: %s", filename);
 }
 
+static bool fileexists(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!stat(path, &st))
+    return true;
+  errno = e;
+  return false;
+}
+
 static void cc1(void) {
   FileType ft;
   Token *tok = NULL;

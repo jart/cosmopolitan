@@ -17,138 +17,72 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/ctype.h"
-#include "libc/intrin/strace.h"
-#include "libc/mem/alloca.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/filetype.h"
-#include "libc/nt/enum/fsctl.h"
-#include "libc/nt/enum/io.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/reparsedatabuffer.h"
-#include "libc/runtime/stack.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
-#include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows ssize_t sys_readlinkat_nt_impl(int dirfd, const char *path,
-                                                  char *buf, size_t bufsiz) {
+textwindows static ssize_t sys_readlinkat_nt_impl(int dirfd, const char *path,
+                                                  char *buf, size_t bufsiz,
+                                                  char16_t path16[PATH_MAX],
+                                                  char path8[PATH_MAX]) {
 
-  char16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1)
+  // convert link path to win32 style
+  if (__mkntpathat(dirfd, path, path16) == -1)
     return -1;
-  size_t len = strlen16(path16);
-  bool must_be_directory = len > 1 && path16[len - 1] == '\\';
-  if (must_be_directory)
-    path16[--len] = 0;
 
+  // check this is a symbolic link, however we want to punt the
+  // existence check to CreateFile() which can spot loop errors
+  uint32_t dwFileAttrs;
+  if ((dwFileAttrs = GetFileAttributes(path16)) != -1u)
+    if (!(dwFileAttrs & kNtFileAttributeReparsePoint))
+      return einval();
+
+  // open file
   int64_t h;
-  ssize_t rc;
-#pragma GCC push_options
-#pragma GCC diagnostic ignored "-Walloca-larger-than="
-#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
-  uint32_t mem = 6000;
-  volatile char *memory = alloca(mem);
-  CheckLargeStackAllocation((char *)memory, mem);
-#pragma GCC pop_options
-  struct NtReparseDataBuffer *rdb = (struct NtReparseDataBuffer *)memory;
   if ((h = CreateFile(path16, kNtFileReadAttributes,
                       kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
                       0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,
-                      0)) != -1) {
+                      0)) == -1)
+    return __fix_enotdir(__winerr(), path16);
 
-    // if path had trailing slash, assert last component is directory
-    if (must_be_directory) {
-      struct NtByHandleFileInformation wst;
-      if (GetFileType(h) != kNtFileTypeDisk ||
-          (GetFileInformationByHandle(h, &wst) &&
-           !(wst.dwFileAttributes & kNtFileAttributeDirectory))) {
-        return enotdir();
-      }
-    }
-
-    uint32_t bc;
-    if (DeviceIoControl(h, kNtFsctlGetReparsePoint, 0, 0, rdb, mem, &bc, 0)) {
-      if (rdb->ReparseTag == kNtIoReparseTagSymlink) {
-
-        uint32_t i = 0;
-        uint32_t j = 0;
-        uint32_t n =
-            rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
-        char16_t *p =
-            (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
-                         rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
-        if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
-          p[1] = p[0];
-          p[0] = '/';
-          p[2] = '/';
-        }
-        while (i < n) {
-
-          wint_t x = p[i++] & 0xffff;
-          if (!IsUcs2(x)) {
-            if (i < n) {
-              wint_t y = p[i++] & 0xffff;
-              x = MergeUtf16(x, y);
-            } else {
-              x = 0xfffd;
-            }
-          }
-
-          uint64_t w;
-          if (x < 0200) {
-            if (x == '\\') {
-              x = '/';
-            }
-            w = x;
-          } else {
-            w = tpenc(x);
-          }
-          do {
-            if (j < bufsiz) {
-              buf[j++] = w;
-            }
-            w >>= 8;
-          } while (w);
-        }
-        rc = j;
-      } else {
-        // e.g. 0xA000001D means IO_REPARSE_TAG_LX_SYMLINK
-        //
-        //     "WSL symlinks can't be opened from Windows, only from
-        //      within WSL, so if we identify them as fs.ModeSymlink,
-        //      then functions like filepath.Walk would fail when trying
-        //      to follow the link."
-        //
-        //            —Quoth Quim Muntal (dev on Go team at Microsoft)
-        //
-        // See also MSDN Learn § 2.1.2.1 Reparse Tags
-        NTTRACE("reparse tag %#x != kNtIoReparseTagSymlink", rdb->ReparseTag);
-        rc = einval();
-      }
-    } else {
-      rc = -1;
-    }
-
+  // read symlink as utf-8 unix path
+  // otherwise enomem or eacces could happen here
+  int path8len;
+  if ((path8len = __readntsym(h, path8, 0)) == -1) {
     CloseHandle(h);
-  } else {
-    rc = __fix_enotdir(-1, path16);
+    return -1;
   }
-  return rc;
+
+  // copy result without nul termination
+  CloseHandle(h);
+  int copied = MIN(path8len, bufsiz);
+  if (copied)
+    memcpy(buf, path8, copied);
+  return copied;
 }
 
 textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
                                       size_t bufsiz) {
+  if (bufsiz && kisdangerous(buf))
+    return efault();
   ssize_t rc;
+  union {
+    char path8[PATH_MAX];
+    char16_t path16[PATH_MAX];
+  } u;
   BLOCK_SIGNALS;
-  rc = sys_readlinkat_nt_impl(dirfd, path, buf, bufsiz);
+  rc = sys_readlinkat_nt_impl(dirfd, path, buf, bufsiz, u.path16, u.path8);
   ALLOW_SIGNALS;
   return rc;
 }

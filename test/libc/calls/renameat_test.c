@@ -59,7 +59,7 @@ TEST(rename, enotdir) {
 }
 
 TEST(rename, eisdir_again) {
-  // old is a directory but new is not a directory
+  // trailing slash necessitates directory
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_SYS(0, 0, touch("bar", 0644));
   ASSERT_SYS(ENOTDIR, -1, rename("foo/", "bar"));
@@ -72,6 +72,26 @@ TEST(rename, moveDirectoryOverDirectory_replacesOldDirectory) {
   ASSERT_SYS(0, 0, rename("lol", "foo"));
   ASSERT_TRUE(fileexists("foo"));
   ASSERT_FALSE(fileexists("lol"));
+}
+
+TEST(rename, replaceDirectory) {
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 0, mkdir("bar", 0755));
+  ASSERT_SYS(0, 0, rename("bar", "foo"));
+}
+
+TEST(rename, replaceNonEmptyDirectory) {
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 0, mkdir("foo/lol", 0755));
+  ASSERT_SYS(0, 0, mkdir("bar", 0755));
+  ASSERT_SYS(ENOTEMPTY, -1, rename("bar", "foo"));
+}
+
+TEST(rename, moveDirectoryOverDirectorySymlink_wontReplace) {
+  ASSERT_SYS(0, 0, mkdir("foo//", 0755));
+  ASSERT_SYS(0, 0, mkdir("lol", 0755));
+  ASSERT_SYS(0, 0, symlink("lol", "sym"));
+  ASSERT_SYS(ENOTDIR, -1, rename("lol", "sym"));
 }
 
 TEST(rename, enotempty) {
@@ -88,20 +108,8 @@ TEST(rename, enotempty) {
 }
 
 TEST(rename, moveIntoNonWritableDirectory_raisesEacces) {
-  // old versions of linux allow this
-  // new versions of linux report exdev?!
-  if (IsLinux())
+  if (getuid() == 0)
     return;
-  // netbsd and openbsd allow this
-  if (IsNetbsd() || IsOpenbsd())
-    return;
-  // windows doesn't really have permissions
-  if (IsWindows())
-    return;
-  // looks like a freebsd kernel bug
-  if (IsAarch64() && IsFreebsd())
-    return;
-  // posix specifies this behavior
   ASSERT_SYS(0, 0, mkdir("foo", 0111));
   ASSERT_SYS(0, 0, touch("lol", 0644));
   ASSERT_SYS(EACCES, -1, rename("lol", "foo/bar"));

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/macros.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
@@ -55,7 +56,7 @@ bool IsStableSort(void sort(void *, size_t, size_t,
   int n = 256;
   int *A = gc(malloc(n * sizeof(int)));
   int *B = gc(malloc(n * sizeof(int)));
-  rngset(A, n * sizeof(int), 0, 0);
+  arc4random_buf(A, n * sizeof(int));
   memcpy(B, A, n * sizeof(int));
   InsertionSortLow(A, n);
   sort(B, n, sizeof(int), CompareLow);
@@ -220,7 +221,7 @@ BENCH(qsort, bench) {
            _longsort(p2, n));
 
   printf("\n");
-  rngset(p1, n * sizeof(long), 0, 0);
+  arc4random_buf(p1, n * sizeof(long));
   EZBENCH2("qsort random", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("qsort_r random", memcpy(p2, p1, n * sizeof(long)),

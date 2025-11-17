@@ -26,13 +26,7 @@
 TEST(DescribeSigset, full) {
   sigset_t ss;
   sigfillset(&ss);
-  if (IsXnu()) {
-    EXPECT_STREQ("~{ABRT,THR,KILL,STOP}", DescribeSigset(0, &ss));
-  } else if (IsOpenbsd()) {
-    EXPECT_STREQ("~{ABRT,KILL,STOP,THR}", DescribeSigset(0, &ss));
-  } else {
-    EXPECT_STREQ("~{ABRT,KILL,STOP,THR}", DescribeSigset(0, &ss));
-  }
+  EXPECT_STREQ("~{ABRT,KILL,STOP,THR}", DescribeSigset(0, &ss));
 }
 
 TEST(DescribeSigset, present) {
@@ -48,11 +42,5 @@ TEST(DescribeSigset, absent) {
   sigfillset(&ss);
   sigdelset(&ss, SIGINT);
   sigdelset(&ss, SIGUSR1);
-  if (IsXnu()) {
-    EXPECT_STREQ("~{INT,ABRT,THR,KILL,STOP,USR1}", DescribeSigset(0, &ss));
-  } else if (IsBsd()) {
-    EXPECT_STREQ("~{INT,ABRT,KILL,STOP,USR1,THR}", DescribeSigset(0, &ss));
-  } else {
-    EXPECT_STREQ("~{INT,ABRT,KILL,USR1,STOP,THR}", DescribeSigset(0, &ss));
-  }
+  EXPECT_STREQ("~{INT,ABRT,KILL,USR1,STOP,THR}", DescribeSigset(0, &ss));
 }

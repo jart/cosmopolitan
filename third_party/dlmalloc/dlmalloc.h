@@ -1,11 +1,8 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_
 #define COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_
 
-#define dlbulk_free                  __dlbulk_free
 #define dlcalloc                     __dlcalloc
 #define dlfree                       __dlfree
-#define dlindependent_calloc         __dlindependent_calloc
-#define dlindependent_comalloc       __dlindependent_comalloc
 #define dlmallinfo                   __dlmallinfo
 #define dlmalloc                     __dlmalloc
 #define dlmalloc_abort               __dlmalloc_abort
@@ -14,7 +11,6 @@
 #define dlmalloc_inspect_all         __dlmalloc_inspect_all
 #define dlmalloc_max_footprint       __dlmalloc_max_footprint
 #define dlmalloc_set_footprint_limit __dlmalloc_set_footprint_limit
-#define dlmalloc_stats               __dlmalloc_stats
 #define dlmalloc_trim                __dlmalloc_trim
 #define dlmalloc_usable_size         __dlmalloc_usable_size
 #define dlmallopt                    __dlmallopt
@@ -25,17 +21,13 @@
 #define dlrealloc_in_place           __dlrealloc_in_place
 
 #define create_mspace_with_base      __create_mspace_with_base
-#define mspace_bulk_free             __mspace_bulk_free
 #define mspace_calloc                __mspace_calloc
 #define mspace_footprint             __mspace_footprint
 #define mspace_footprint_limit       __mspace_footprint_limit
 #define mspace_free                  __mspace_free
-#define mspace_independent_calloc    __mspace_independent_calloc
-#define mspace_independent_comalloc  __mspace_independent_comalloc
 #define mspace_inspect_all           __mspace_inspect_all
 #define mspace_mallinfo              __mspace_mallinfo
 #define mspace_malloc                __mspace_malloc
-#define mspace_malloc_stats          __mspace_malloc_stats
 #define mspace_mallopt               __mspace_mallopt
 #define mspace_max_footprint         __mspace_max_footprint
 #define mspace_memalign              __mspace_memalign
@@ -71,7 +63,7 @@ extern void* (*dlmalloc)(size_t);
   It has no effect if p is null. If p was not malloced or already
   freed, free(p) will by default cuase the current program to abort.
 */
-void dlfree(void*);
+extern void (*dlfree)(void*);
 
 /*
   calloc(size_t n_elements, size_t element_size);
@@ -117,7 +109,7 @@ extern void* (*dlrealloc)(void*, size_t);
 
   Returns p if successful; otherwise null.
 */
-void* dlrealloc_in_place(void*, size_t);
+extern void* (*dlrealloc_in_place)(void*, size_t);
 
 /*
   memalign(size_t alignment, size_t n);
@@ -228,8 +220,7 @@ size_t dlmalloc_set_footprint_limit(size_t bytes);
 
   malloc_inspect_all is compiled only if MALLOC_INSPECT_ALL is defined.
 */
-void dlmalloc_inspect_all(void (*handler)(void*, void*, size_t, void*),
-                          void* arg);
+extern void (*dlmalloc_inspect_all)(void (*)(void*, void*, size_t, void*), void*);
 
 /*
   mallinfo()
@@ -253,128 +244,7 @@ void dlmalloc_inspect_all(void (*handler)(void*, void*, size_t, void*),
   be kept as longs, the reported values may wrap around zero and
   thus be inaccurate.
 */
-
 extern struct mallinfo (*dlmallinfo)(void);
-
-/*
-  independent_calloc(size_t n_elements, size_t element_size, void* chunks[]);
-
-  independent_calloc is similar to calloc, but instead of returning a
-  single cleared space, it returns an array of pointers to n_elements
-  independent elements that can hold contents of size elem_size, each
-  of which starts out cleared, and can be independently freed,
-  realloc'ed etc. The elements are guaranteed to be adjacently
-  allocated (this is not guaranteed to occur with multiple callocs or
-  mallocs), which may also improve cache locality in some
-  applications.
-
-  The "chunks" argument is optional (i.e., may be null, which is
-  probably the most typical usage). If it is null, the returned array
-  is itself dynamically allocated and should also be freed when it is
-  no longer needed. Otherwise, the chunks array must be of at least
-  n_elements in length. It is filled in with the pointers to the
-  chunks.
-
-  In either case, independent_calloc returns this pointer array, or
-  null if the allocation failed.  If n_elements is zero and "chunks"
-  is null, it returns a chunk representing an array with zero elements
-  (which should be freed if not wanted).
-
-  Each element must be freed when it is no longer needed. This can be
-  done all at once using bulk_free.
-
-  independent_calloc simplifies and speeds up implementations of many
-  kinds of pools.  It may also be useful when constructing large data
-  structures that initially have a fixed number of fixed-sized nodes,
-  but the number is not known at compile time, and some of the nodes
-  may later need to be freed. For example:
-
-  struct Node { int item; struct Node* next; };
-
-  struct Node* build_list() {
-    struct Node** pool;
-    int n = read_number_of_nodes_needed();
-    if (n <= 0) return 0;
-    pool = (struct Node**)(independent_calloc(n, sizeof(struct Node), 0);
-    if (pool == 0) die();
-    // organize into a linked list...
-    struct Node* first = pool[0];
-    for (i = 0; i < n-1; ++i)
-      pool[i]->next = pool[i+1];
-    free(pool);     // Can now free the array (or not, if it is needed later)
-    return first;
-  }
-*/
-void** dlindependent_calloc(size_t, size_t, void**);
-
-/*
-  independent_comalloc(size_t n_elements, size_t sizes[], void* chunks[]);
-
-  independent_comalloc allocates, all at once, a set of n_elements
-  chunks with sizes indicated in the "sizes" array.    It returns
-  an array of pointers to these elements, each of which can be
-  independently freed, realloc'ed etc. The elements are guaranteed to
-  be adjacently allocated (this is not guaranteed to occur with
-  multiple callocs or mallocs), which may also improve cache locality
-  in some applications.
-
-  The "chunks" argument is optional (i.e., may be null). If it is null
-  the returned array is itself dynamically allocated and should also
-  be freed when it is no longer needed. Otherwise, the chunks array
-  must be of at least n_elements in length. It is filled in with the
-  pointers to the chunks.
-
-  In either case, independent_comalloc returns this pointer array, or
-  null if the allocation failed.  If n_elements is zero and chunks is
-  null, it returns a chunk representing an array with zero elements
-  (which should be freed if not wanted).
-
-  Each element must be freed when it is no longer needed. This can be
-  done all at once using bulk_free.
-
-  independent_comallac differs from independent_calloc in that each
-  element may have a different size, and also that it does not
-  automatically clear elements.
-
-  independent_comalloc can be used to speed up allocation in cases
-  where several structs or objects must always be allocated at the
-  same time.  For example:
-
-  struct Head { ... }
-  struct Foot { ... }
-
-  void send_message(char* msg) {
-    int msglen = strlen(msg);
-    size_t sizes[3] = { sizeof(struct Head), msglen, sizeof(struct Foot) };
-    void* chunks[3];
-    if (independent_comalloc(3, sizes, chunks) == 0)
-      die();
-    struct Head* head = (struct Head*)(chunks[0]);
-    char*        body = (char*)(chunks[1]);
-    struct Foot* foot = (struct Foot*)(chunks[2]);
-    // ...
-  }
-
-  In general though, independent_comalloc is worth using only for
-  larger values of n_elements. For small values, you probably won't
-  detect enough difference from series of malloc calls to bother.
-
-  Overuse of independent_comalloc can increase overall memory usage,
-  since it cannot reuse existing noncontiguous small chunks that
-  might be available for some of the elements.
-*/
-void** dlindependent_comalloc(size_t, size_t*, void**);
-
-/*
-  bulk_free(void* array[], size_t n_elements)
-  Frees and clears (sets to null) each non-null pointer in the given
-  array.  This is likely to be faster than freeing them one-by-one.
-  If footers are used, pointers that have been allocated in different
-  mspaces are not freed or cleared, and the count of all such pointers
-  is returned.  For large arrays of pointers with poor locality, it
-  may be worthwhile to sort this array before calling bulk_free.
-*/
-size_t dlbulk_free(void**, size_t n_elements);
 
 /*
   malloc_trim(size_t pad);
@@ -397,30 +267,7 @@ size_t dlbulk_free(void**, size_t n_elements);
 
   Malloc_trim returns 1 if it actually released any memory, else 0.
 */
-int dlmalloc_trim(size_t);
-
-/*
-  malloc_stats();
-  Prints on stderr the amount of space obtained from the system (both
-  via sbrk and mmap), the maximum amount (which may be more than
-  current if malloc_trim and/or munmap got called), and the current
-  number of bytes allocated via malloc (or realloc, etc) but not yet
-  freed. Note that this is the number of bytes allocated, not the
-  number requested. It will be larger than the number requested
-  because of alignment and bookkeeping overhead. Because it includes
-  alignment wastage as being in use, this figure may be greater than
-  zero even when no user-level chunks are allocated.
-
-  The reported current and maximum system memory can be inaccurate if
-  a program makes other calls to system memory allocation functions
-  (normally sbrk) outside of malloc.
-
-  malloc_stats prints only the most commonly interesting statistics.
-  More information can be obtained by calling mallinfo.
-
-  malloc_stats is not compiled if NO_MALLOC_STATS is defined.
-*/
-void dlmalloc_stats(void);
+extern int (*dlmalloc_trim)(size_t);
 
 /*
   malloc_usable_size(void* p);
@@ -436,7 +283,7 @@ void dlmalloc_stats(void);
   p = malloc(n);
   assert(malloc_usable_size(p) >= 256);
 */
-size_t dlmalloc_usable_size(void*);
+extern size_t (*dlmalloc_usable_size)(void*);
 
 /*
   mspace is an opaque type representing an independent
@@ -510,13 +357,7 @@ void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
 void* mspace_realloc(mspace msp, void* mem, size_t newsize);
 void* mspace_realloc_in_place(mspace msp, void* mem, size_t newsize);
 void* mspace_memalign(mspace msp, size_t alignment, size_t bytes);
-void** mspace_independent_calloc(mspace msp, size_t n_elements,
-                                 size_t elem_size, void* chunks[]);
-void** mspace_independent_comalloc(mspace msp, size_t n_elements,
-                                   size_t sizes[], void* chunks[]);
-size_t mspace_bulk_free(mspace msp, void**, size_t n_elements);
 size_t mspace_usable_size(const void* mem);
-void mspace_malloc_stats(mspace msp);
 int mspace_trim(mspace msp, size_t pad);
 size_t mspace_footprint(mspace msp);
 size_t mspace_max_footprint(mspace msp);
@@ -531,6 +372,10 @@ void dlmalloc_post_fork_parent(void) libcesque;
 void dlmalloc_post_fork_child(void) libcesque;
 
 void dlmalloc_abort(void) relegated wontreturn;
+
+typedef void *(*tmspace_get_f)(void);
+tmspace_get_f tmspace_acquire(void);
+void tmspace_release(tmspace_get_f);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_ */

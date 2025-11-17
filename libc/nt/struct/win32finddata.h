@@ -13,9 +13,9 @@ struct NtWin32FindData {
   uint32_t dwReserved1;
   char16_t cFileName[260];
   char16_t cAlternateFileName[14];
-  uint32_t dwFileType;    /* obsolete */
-  uint32_t dwCreatorType; /* obsolete */
-  uint16_t wFinderFlags;  /* obsolete */
+  uint32_t __dwFileType;    /* obsolete */
+  uint32_t __dwCreatorType; /* obsolete */
+  uint16_t __wFinderFlags;  /* obsolete */
 };
 
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_WIN32FINDDATA_H_ */

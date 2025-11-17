@@ -6,6 +6,7 @@ extern const char __notices[] __attribute__((__weak__));
 extern unsigned char __executable_start[] __attribute__((__weak__));
 extern unsigned char __privileged_start[] __attribute__((__weak__));
 extern unsigned char _ehead[] __attribute__((__weak__));
+extern unsigned char _rodata[] __attribute__((__weak__));
 extern unsigned char _etext[] __attribute__((__weak__));
 extern unsigned char _edata[] __attribute__((__weak__));
 extern unsigned char _ezip[] __attribute__((__weak__));
@@ -27,6 +28,9 @@ extern unsigned char __bss_end[] __attribute__((__weak__));
 extern unsigned long __got_start[] __attribute__((__weak__));
 extern unsigned long __got_end[] __attribute__((__weak__));
 extern unsigned char ape_phdrs[] __attribute__((__weak__));
+
+#define __rarechange      _Section(".bss.rarechange")
+#define __data_rarechange _Section(".data.rarechange")
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_APE_SECTIONS_INTERNAL_H_ */

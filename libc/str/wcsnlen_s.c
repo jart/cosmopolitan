@@ -19,7 +19,9 @@
 #include "libc/str/str.h"
 
 /**
- * Returns length of NUL-terminated wide string w/ limit & blankets.
+ * Returns length of NUL-terminated wide string w/ limit securely.
+ *
+ * This is like wcsnlen() except it'll return 0 if `s` is null.
  *
  * @param s is wide string
  * @param n is max length (a count of wide characters, not bytes)

@@ -26,7 +26,6 @@ import os
 import sys
 import stat
 import cosmo
-import ntpath
 import genericpath
 from genericpath import *
 
@@ -66,8 +65,6 @@ def normcase(s):
 
 def isabs(s):
     """Test whether a path is absolute"""
-    if cosmo.kernel == 'nt' and '\\' in s:
-        return ntpath.isabs(s)
     s = os.fspath(s)
     sep = _get_sep(s)
     return s.startswith(sep)
@@ -82,8 +79,6 @@ def join(a, *p):
     If any component is an absolute path, all previous path components
     will be discarded.  An empty last part will result in a path that
     ends with a separator."""
-    if cosmo.kernel == 'nt' and '\\' in a:
-        return ntpath.join(a, *p)
     a = os.fspath(a)
     sep = _get_sep(a)
     path = a
@@ -239,8 +234,6 @@ def ismount(path):
 def expanduser(path):
     """Expand ~ and ~user constructions.  If user or $HOME is unknown,
     do nothing."""
-    if cosmo.kernel == 'nt' and '\\' in path:
-        return ntpath.expanduser(path)
     path = os.fspath(path)
     if isinstance(path, bytes):
         tilde = b'~'

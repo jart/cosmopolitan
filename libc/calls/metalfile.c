@@ -41,7 +41,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-
 #ifdef __x86_64__
 
 #define MAP_ANONYMOUS_linux 0x00000020

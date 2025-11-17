@@ -16,47 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
-
-static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
-                                                  unsigned char c) {
-  for (;; ++s) {
-    if (*s == c) {
-      return s;
-    }
-  }
-}
-
-#if defined(__x86_64__) && !defined(__chibicc__)
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
-  unsigned k;
-  unsigned m;
-  const xmm_t *p;
-  xmm_t v, n = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  k = (uintptr_t)s & 15;
-  p = (const xmm_t *)((uintptr_t)s & -16);
-  v = *p;
-  m = __builtin_ia32_pmovmskb128(v == n);
-  m >>= k;
-  m <<= k;
-  while (!m) {
-    v = *++p;
-    m = __builtin_ia32_pmovmskb128(v == n);
-  }
-  m = __builtin_ctzll(m);
-  return (const char *)p + m;
-}
-#endif
-
-static inline uint64_t UncheckedAlignedRead64(const unsigned char *p) {
-  return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-         (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-         (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
-}
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/intel/immintrin.internal.h"
 
 /**
  * Returns pointer to first instance of character.
@@ -65,33 +27,69 @@ static inline uint64_t UncheckedAlignedRead64(const unsigned char *p) {
  * @param c is search byte which is masked with 255
  * @return is pointer to first instance of c
  */
-__vex void *rawmemchr(const void *s, int c) {
-#if defined(__x86_64__) && !defined(__chibicc__)
-  const void *r;
-  if (X86_HAVE(SSE)) {
-    r = rawmemchr_sse(s, c);
-  } else {
-    r = rawmemchr_pure(s, c);
+void *rawmemchr(const void *s, int c) {
+#if defined(__AVX2__)
+  __m256i nv = _mm256_set1_epi8(c);
+  __m256i *v = (__m256i *)((intptr_t)s & -32);
+  int skew = (intptr_t)s & 31;
+  unsigned m =
+      _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_load_si256(v), nv));
+  m >>= skew;
+  m <<= skew;
+  while (!m)
+    m = _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_load_si256(++v), nv));
+  s = (const char *)v;
+  s += __builtin_ctz(m);
+  return (void *)s;
+#elif defined(__x86_64__) && !defined(__chibicc__)
+  __m128i nv = _mm_set1_epi8(c);
+  __m128i *v = (__m128i *)((intptr_t)s & -16);
+  int skew = (intptr_t)s & 15;
+  unsigned m = _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128(v), nv));
+  m >>= skew;
+  m <<= skew;
+  while (!m)
+    m = _mm_movemask_epi8(_mm_cmpeq_epi8(_mm_load_si128(++v), nv));
+  s = (const char *)v;
+  s += __builtin_ctz(m);
+  return (void *)s;
+#elif defined(__aarch64__) && defined(__ARM_NEON)
+  uint8x16_t nv = vdupq_n_u8(c);
+  uint8_t *v = (uint8_t *)((intptr_t)s & -16);
+  int skew = (intptr_t)s & 15;
+  uint64_t m =
+      vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(
+                        vreinterpretq_u16_u8(vceqq_u8(vld1q_u8(v), nv)), 4)),
+                    0);
+  m >>= skew * 4;
+  m <<= skew * 4;
+  while (!m) {
+    v += 16;
+    m = vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(
+                          vreinterpretq_u16_u8(vceqq_u8(vld1q_u8(v), nv)), 4)),
+                      0);
   }
-  return (void *)r;
+  s = (const char *)v;
+  s += __builtin_ctzll(m) >> 2;
+  return (void *)s;
 #else
   uint64_t v, w;
   const unsigned char *p;
   p = s;
   c &= 255;
   v = 0x0101010101010101ul * c;
-  for (; (uintptr_t)p & 7; ++p) {
+  for (; (uintptr_t)p & 7; ++p)
     if (*p == c)
       return (void *)p;
-  }
   for (;; p += 8) {
-    w = UncheckedAlignedRead64(p);
+    w = (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
+        (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
+        (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
     if ((w = ~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080)) {
       p += (unsigned)__builtin_ctzll(w) >> 3;
       break;
     }
   }
-  assert(*p == c);
   return (void *)p;
 #endif
 }

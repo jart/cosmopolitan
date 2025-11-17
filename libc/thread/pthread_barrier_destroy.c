@@ -16,20 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
+#include "libc/calls/blockcancel.internal.h"
+#include "libc/cosmo.h"
 #include "libc/intrin/atomic.h"
-#include "libc/str/str.h"
+#include "libc/thread/barrier.h"
 #include "libc/thread/thread.h"
 
 /**
  * Destroys barrier.
  *
- * @return 0 on success, or error on failure
- * @raise EINVAL if threads are still inside the barrier
+ * Cosmopolitan barriers do not internally allocate memory or resources.
+ * So the world is unlikely to end if you don't call this function. When
+ * you need to do this is if your barrier object is on the stack and you
+ * aren't synchronizing teardown using some function like pthread_join()
+ *
+ * This implementation does not fail. Rather than returning EBUSY if the
+ * barrier has waiters, this will block until completion. This operation
+ * can not be canceled in deferred mode. If there is a bug in your code,
+ * then this function might deadlock; that is the worst that can happen.
+ *
+ * @return always zero
  */
-errno_t pthread_barrier_destroy(pthread_barrier_t *barrier) {
-  if (atomic_load_explicit(&barrier->_waiters, memory_order_relaxed))
-    return EINVAL;
-  memset(barrier, -1, sizeof(*barrier));
+errno_t pthread_barrier_destroy(pthread_barrier_t *b) {
+  unsigned max = BARRIER_MAX - BARRIER_MAX % b->_count;
+  unsigned entered = atomic_load_explicit(&b->_entered, memory_order_relaxed);
+  if (atomic_fetch_add_explicit(&b->_exited, max - entered,
+                                memory_order_relaxed) < entered) {
+    while (entered) {
+      BLOCK_CANCELATION;
+      cosmo_futex_wait((atomic_int *)&b->_entered, entered, b->_pshared, 0, 0);
+      ALLOW_CANCELATION;
+      entered = atomic_load_explicit(&b->_entered, memory_order_relaxed);
+    }
+  }
+  atomic_thread_fence(memory_order_acquire);
   return 0;
 }

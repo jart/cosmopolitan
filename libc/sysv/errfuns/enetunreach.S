@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 enetunreach:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ENETUNREACH(%rip),%ecx
+	push	$ENETUNREACH
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ENETUNREACH
-	ldrsw	x0,[x1,#:lo12:ENETUNREACH]
+	mov	x0,#ENETUNREACH
 	b	__errfun
 #else
 #error "unsupported architecture"

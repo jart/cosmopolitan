@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2025 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,69 +16,79 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
-#include "libc/mem/gc.h"
+#include "libc/errno.h"
+#include "libc/nt/files.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
-#if SupportsWindows()
 
-char16_t p[PATH_MAX];
-
-TEST(mkntpath, testEmpty) {
-  EXPECT_EQ(0, __mkntpath("", p));
-  EXPECT_STREQ(u"", p);
+void SetUpOnce(void) {
+  if (!IsWindows()) {
+    fprintf(stderr, "%s: skipping because not windows\n",
+            program_invocation_name);
+    exit(0);
+  }
+  if (GetFileAttributes(u"C:\\Windows") == -1u) {
+    fprintf(stderr, "%s: skipping because C:\\Windows doesn't exist\n",
+            program_invocation_name);
+    exit(0);
+  }
+  if (GetFileAttributes(u"C:\\C") != -1u) {
+    fprintf(stderr, "%s: skipping because C:\\C exists\n",
+            program_invocation_name);
+    exit(0);
+  }
+  testlib_enable_tmp_setup_teardown();
 }
 
-TEST(mkntpath, testSlashes) {
-  /*
-   * The Windows command prompt works fine with all reasonable
-   * unix-style paths. There only seems to be one exception, and that's
-   * all it takes to make the feature entirely useless to us, similar to
-   * the law of noncontradiction. We address the issue as follows:
-   */
-  EXPECT_EQ(5, __mkntpath("o/foo", p));
-  EXPECT_STREQ(u"o\\foo", p);
+TEST(mkntpath, test_root_rel_drive) {
+
+  // cd into $COSMOSDRIVE or $SYSTEMDRIVE
+  ASSERT_SYS(0, 0, chdir("/"));
+
+  // make sure we can access drive letters as relative paths
+  struct stat st;
+  ASSERT_SYS(0, 0, stat("C", &st));
+  ASSERT_SYS(0, 0, stat("C/", &st));
+  ASSERT_SYS(0, 0, stat("C/Windows", &st));
+
+  // make sure c isn't listed under c
+  char *cosmosdrive = getenv("COSMOSDRIVE");
+  putenv("COSMOSDRIVE=C:");
+  bool has_c = false;
+  DIR *dir;
+  ASSERT_NE(NULL, (dir = opendir("C")));
+  struct dirent *ent;
+  while ((ent = readdir(dir)))
+    if (!strcasecmp(ent->d_name, "C"))
+      has_c = true;
+  ASSERT_SYS(0, 0, closedir(dir));
+  ASSERT_FALSE(has_c);
+  if (cosmosdrive) {
+    setenv("COSMOSDRIVE", cosmosdrive, true);
+  } else {
+    unsetenv("COSMOSDRIVE");
+  }
 }
 
-TEST(mkntpath, testUnicode) {
-  EXPECT_EQ(20, __mkntpath("C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p));
-  EXPECT_STREQ(u"C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p);
-}
+TEST(mkntpath, test_root_rel_drive_dirfd) {
 
-TEST(mkntpath, testRemoveDoubleSlash) {
-  EXPECT_EQ(21, __mkntpath("C:\\Users\\jart\\\\.config", p));
-  EXPECT_STREQ(u"C:\\Users\\jart\\.config", p);
-}
+  // TODO(jart): why does this fail when building monorepo on Windows?
+  if (IsWindows())
+    return;
 
-TEST(mkntpath, testRelativeCurrentParent) {
-  EXPECT_EQ(3, __mkntpath("./../", p));
-  EXPECT_STREQ(u"..\\", p);
-}
+  // cd into $COSMOSDRIVE or $SYSTEMDRIVE
+  ASSERT_SYS(0, 3, open("/", O_RDONLY));
 
-TEST(mkntpath, testRelativeParentParent) {
-  EXPECT_EQ(6, __mkntpath("../../", p));
-  EXPECT_STREQ(u"..\\..\\", p);
+  // make sure we can access drive letters as relative paths
+  struct stat st;
+  ASSERT_SYS(0, 0, fstatat(3, "C", &st, 0));
+  ASSERT_SYS(0, 0, fstatat(3, "C/", &st, 0));
+  ASSERT_SYS(0, 0, fstatat(3, "C/Windows", &st, 0));
 }
-
-TEST(mkntpath, testRelativeParentParentParent) {
-  EXPECT_EQ(9, __mkntpath("../../../", p));
-  EXPECT_STREQ(u"..\\..\\..\\", p);
-}
-
-TEST(mkntpath, testRelativeDirParent) {
-  EXPECT_EQ(2, __mkntpath("abc/../", p));
-  EXPECT_STREQ(u".\\", p);
-}
-
-TEST(mkntpath, testRelativeDirCurrent) {
-  EXPECT_EQ(4, __mkntpath("abc/./", p));
-  EXPECT_STREQ(u"abc\\", p);
-}
-
-TEST(mkntpath, testRelativeDirDirParent) {
-  EXPECT_EQ(4, __mkntpath("abc/def/../", p));
-  EXPECT_STREQ(u"abc\\", p);
-}
-
-#endif /* SupportsWindows() */

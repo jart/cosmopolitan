@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_SHLOCK,0xffffffff,0xffffffff,0x00000010,0x00000010,0x00000010,0x00000010,0x00000010,0xffffffff

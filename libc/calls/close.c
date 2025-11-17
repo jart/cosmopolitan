@@ -16,54 +16,100 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/flocks.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/fds.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
-
-// for performance reasons we want to avoid holding __fds_lock()
-// while sys_close() is happening. this leaves the kernel / libc
-// having a temporarily inconsistent state. routines that obtain
-// file descriptors the way __zipos_open() does need to retry if
-// there's indication this race condition happened.
+#include "libc/sysv/pib.h"
 
 static int close_impl(int fd) {
 
-  if (fd < 0) {
+  // handle obvious case
+  if (fd < 0)
     return ebadf();
-  }
 
   // give kprintf() the opportunity to dup() stderr
-  if (fd == 2 && _weaken(kloghandle)) {
+  if (fd == 2 && !__vforked && _weaken(kloghandle))
     _weaken(kloghandle)();
-  }
 
-  if (__isfdkind(fd, kFdZip)) {
-    unassert(_weaken(__zipos_close));
-    return _weaken(__zipos_close)(fd);
-  }
-
-  if (!IsWindows() && !IsMetal()) {
+  // unix isn't required to track fds
+  if (fd >= __get_pib()->fds.n) {
+    if (IsWindows() || IsMetal())
+      return ebadf();
     return sys_close(fd);
   }
 
-  if (IsWindows()) {
-    return sys_close_nt(fd, fd);
+  // if we're vforked on unix then we can't even modify f->kind
+  if (__vforked && !(IsWindows() || IsMetal()))
+    return sys_close(fd);
+
+  // atomically close file descriptor table entry
+  int rc = 0;
+  struct Fd *f = __get_pib()->fds.p + fd;
+  switch (atomic_exchange(&f->kind, kFdReserved)) {
+    case kFdEmpty:
+      if (IsWindows() || IsMetal()) {
+        rc = ebadf();
+      } else {
+        rc = sys_close(fd);
+      }
+      break;
+    case kFdReserved:
+      return ebadf();
+    case kFdZip:
+      if (_weaken(__zipos_close))
+        rc = _weaken(__zipos_close)(fd);
+      break;
+#if SupportsMetal()
+    case kFdSerial:
+      break;
+#endif
+#if SupportsWindows()
+    case kFdDevRandom:
+      break;
+    case kFdFile:
+      if (!__vforked)
+        if (_weaken(__flocks_close))
+          _weaken(__flocks_close)(f);
+      if (!__vforked || f->was_created_during_vfork) {
+        if (f->cursor)
+          __cursor_unref(f->cursor);
+        if (!CloseHandle(f->handle))
+          rc = __winerr();
+      }
+      break;
+    case kFdDevNull:
+    case kFdConsole:
+      if (!__vforked || f->was_created_during_vfork)
+        if (!CloseHandle(f->handle))
+          rc = __winerr();
+      break;
+    case kFdSocket:
+      if (!__vforked || f->was_created_during_vfork)
+        if (_weaken(sys_closesocket_nt))
+          rc = _weaken(sys_closesocket_nt)(f);
+      break;
+#endif
+    default:
+      rc = ebadf();
+      break;
   }
 
-  return 0;
+  // wipe fd and update lowest file descriptor number
+  // we do this even if there was an underlying os error
+  __releasefd(fd);
+
+  return rc;
 }
 
 /**
@@ -74,6 +120,8 @@ static int close_impl(int fd) {
  * - openat()
  * - socket()
  * - accept()
+ * - pipe()
+ * - socketpair()
  * - landlock_create_ruleset()
  *
  * This function should never be reattempted if an error is returned;
@@ -82,29 +130,13 @@ static int close_impl(int fd) {
  *
  * @return 0 on success, or -1 w/ errno
  * @raise EINTR if signal was delivered; do *not* retry
- * @raise EBADF if `fd` is negative or not open; however, an exception
- *     is made by Cosmopolitan Libc for `close(-1)` which returns zero
- *     and does nothing, in order to assist with code that may wish to
- *     close the same resource multiple times without dirtying `errno`
+ * @raise EBADF if `fd` is negative or not open
  * @raise EIO if a low-level i/o error occurred
  * @asyncsignalsafe
  * @vforksafe
  */
 int close(int fd) {
-  int rc;
-  if (__isfdkind(fd, kFdZip)) {  // XXX IsWindows()?
-    BLOCK_SIGNALS;
-    __fds_lock();
-    rc = close_impl(fd);
-    if (!__vforked)
-      __releasefd(fd);
-    __fds_unlock();
-    ALLOW_SIGNALS;
-  } else {
-    rc = close_impl(fd);
-    if (!__vforked)
-      __releasefd(fd);
-  }
+  int rc = close_impl(fd);
   STRACE("close(%d) → %d% m", fd, rc);
   return rc;
 }

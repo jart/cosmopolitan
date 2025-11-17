@@ -22,13 +22,4 @@ static struct malloc_params mparams;
 /* Ensure mparams initialized */
 #define ensure_initialization() (void)0
 
-#if !ONLY_MSPACES
-
-/* The global malloc_state used for all non-"mspace" calls */
-static struct malloc_state _gm_;
-#define gm                 (&_gm_)
-#define is_global(M)       ((M) == &_gm_)
-
-#endif /* !ONLY_MSPACES */
-
 #define is_initialized(M)  ((M)->top != 0)

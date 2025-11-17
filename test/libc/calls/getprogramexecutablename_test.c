@@ -34,7 +34,7 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-static char *self;
+char *self;
 static bool loaded, skiptests, skiparg0;
 
 void SetUpOnce(void) {

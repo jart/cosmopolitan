@@ -30,7 +30,7 @@
 
 const char *prog;
 
-static wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] static void PrintUsage(int rc, int fd) {
   tinyprint(fd, "Usage: ", prog, " COMMAND...\n", NULL);
   exit(rc);
 }

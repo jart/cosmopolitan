@@ -1,0 +1,11 @@
+DESCRIPTION
+
+  Debian OpenBSD netcat
+
+LICENSE
+
+  BSD-3, BSD-2
+
+ORIGIN
+
+  `apt-get source netcat-openbsd` on ubuntu 24.04

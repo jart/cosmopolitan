@@ -27,11 +27,12 @@ __static_yoink("fflush");
  * @param pathname is a utf-8 ideally relative filename
  * @param mode is the string mode/flag DSL see fopenflags()
  * @return new object to be free'd by fclose() or NULL w/ errno
- * @note microsoft unilaterally deprecated this function lool
  */
 FILE *fopen(const char *pathname, const char *mode) {
-  int fd;
-  if ((fd = open(pathname, fopenflags(mode), 0666)) == -1)
+  int fd, oflags;
+  if ((oflags = fopenflags(mode)) == -1)
+    return NULL;
+  if ((fd = open(pathname, oflags, 0666)) == -1)
     return 0;
   FILE *f;
   if (!(f = fdopen(fd, mode))) {

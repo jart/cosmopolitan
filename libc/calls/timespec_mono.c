@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/sysv/consts/clock.h"
 
 /**

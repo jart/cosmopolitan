@@ -34,6 +34,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
@@ -52,7 +53,6 @@
 #include "libc/macros.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -75,7 +75,6 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
@@ -86,6 +85,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
@@ -1398,6 +1398,15 @@ static void TryToOpenFrameBuffer(void) {
   }
 }
 
+bool IsCharDev(int fd) {
+  int e = errno;
+  struct stat st;
+  if (!fstat(fd, &st))
+    return S_ISCHR(st.st_mode);
+  errno = e;
+  return false;
+}
+
 int main(int argc, char *argv[]) {
   sigset_t wut;
   ShowCrashReports();
@@ -1431,7 +1440,7 @@ int main(int argc, char *argv[]) {
       ttymode_ = true;
     __cxa_atexit((void *)OnExit, NULL, NULL);
     __log_file = fopen(logpath_, "a");
-    if (ischardev(infd_) && ischardev(outfd_)) {
+    if (IsCharDev(infd_) && IsCharDev(outfd_)) {
       /* CHECK_NE(-1, fcntl(outfd_, F_SETFL, O_NONBLOCK)); */
     } else if (infd_ != outfd_) {
       infd_ = -1;

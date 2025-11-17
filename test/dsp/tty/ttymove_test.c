@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/tty.h"
+#include "libc/bsdstdlib.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -26,7 +27,7 @@ char p[16];
 struct TtyCursor c;
 
 void SetUp(void) {
-  rngset(p, sizeof(p), _rand64, -1);
+  arc4random_buf(p, sizeof(p));
 }
 
 TEST(ttymove, sameCoord_doesNothing) {

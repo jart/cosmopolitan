@@ -13,7 +13,9 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
     prog = "rusage";
 
   if (argc < 2) {
-    tinyprint(2, prog, ": missing command\n", NULL);
+    fprintf(stderr, "%s: missing command\n", prog);
     exit(1);
   }
 
@@ -42,7 +44,7 @@ int main(int argc, char *argv[]) {
   struct timespec started = timespec_real();
 
   // launch subprocess
-  int child = fork();
+  int child = vfork();
   if (child == -1) {
     perror(prog);
     exit(1);

@@ -11,5 +11,5 @@
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
-  printf("%d\n", __get_cpu_count());
+  printf("%d\n", cosmo_cpu_count());
 }

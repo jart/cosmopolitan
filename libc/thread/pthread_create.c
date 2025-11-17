@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/rseq.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -57,6 +58,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/nsync/wait_s.internal.h"
 
 __static_yoink("nsync_mu_lock");
@@ -64,6 +66,7 @@ __static_yoink("nsync_mu_unlock");
 __static_yoink("nsync_mu_trylock");
 __static_yoink("nsync_mu_rlock");
 __static_yoink("nsync_mu_runlock");
+__static_yoink("nsync_mu_rtrylock");
 __static_yoink("_pthread_onfork_prepare");
 __static_yoink("_pthread_onfork_parent");
 __static_yoink("_pthread_onfork_child");
@@ -98,13 +101,12 @@ void _pthread_free(struct PosixThread *pt) {
   }
 
   // free heap memory associated with thread
-  bulk_free(
-      (void *[]){
-          pt->pt_flags & PT_OWNSIGALTSTACK ? pt->pt_attr.__sigaltstackaddr : 0,
-          pt->pt_tls,
-          pt,
-      },
-      3);
+  tmspace_release(pt->tib->tib_malloc);
+  if (pt->pt_flags & PT_OWNSIGALTSTACK)
+    free(pt->pt_attr.__sigaltstackaddr);
+  free(pt->tib->tib_keys_dynamic);
+  free(pt->pt_tls);
+  free(pt);
 }
 
 void _pthread_decimate(enum PosixThreadStatus threshold) {
@@ -154,6 +156,10 @@ void _pthread_decimate(enum PosixThreadStatus threshold) {
 static int PosixThread(void *arg) {
   struct PosixThread *pt = arg;
 
+  // setup sched_getcpu()
+  if (IsLinux())
+    sys_rseq(__get_tls()->tib_rseq, 32, 0, RSEQ_SIG);
+
   // setup scheduling
   if (pt->pt_attr.__inheritsched == PTHREAD_EXPLICIT_SCHED) {
     unassert(_weaken(_pthread_reschedule));
@@ -199,22 +205,29 @@ static errno_t pthread_create_impl(pthread_t *thread,
                                    const pthread_attr_t *attr,
                                    void *(*start_routine)(void *), void *arg,
                                    sigset_t oldsigs) {
+  void *tls;
   errno_t err;
+  struct CosmoTib *tib;
   struct PosixThread *pt;
 
-  // create posix thread object
-  if (!(pt = calloc(1, sizeof(struct PosixThread))))
+  // create thread local storage memory
+  if (!(tls = _mktls(&tib)))
     return EAGAIN;
+
+  // create posix thread object
+  if (!(pt = calloc(1, sizeof(struct PosixThread)))) {
+    free(tls);
+    return EAGAIN;
+  }
   dll_init(&pt->list);
   pt->pt_locale = &__global_locale;
   pt->pt_start = start_routine;
   pt->pt_val = arg;
+  pt->pt_tls = tls;
+  pt->tib = tib;
 
-  // create thread local storage memory
-  if (!(pt->pt_tls = _mktls(&pt->tib))) {
-    free(pt);
-    return EAGAIN;
-  }
+  // pin a heap if there's a small number of threads
+  tib->tib_malloc = tmspace_acquire();
 
   // setup attributes
   if (attr) {
@@ -264,19 +277,17 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // set initial status
   pt->tib->tib_pthread = (pthread_t)pt;
-  atomic_store_explicit(&pt->tib->tib_sigmask, -1, memory_order_relaxed);
+  atomic_init(&pt->tib->tib_sigmask, -1);
   if (!pt->pt_attr.__havesigmask) {
     pt->pt_attr.__havesigmask = true;
     pt->pt_attr.__sigmask = oldsigs;
   }
   switch (pt->pt_attr.__detachstate) {
     case PTHREAD_CREATE_JOINABLE:
-      atomic_store_explicit(&pt->pt_status, kPosixThreadJoinable,
-                            memory_order_relaxed);
+      atomic_init(&pt->pt_status, kPosixThreadJoinable);
       break;
     case PTHREAD_CREATE_DETACHED:
-      atomic_store_explicit(&pt->pt_status, kPosixThreadDetached,
-                            memory_order_relaxed);
+      atomic_init(&pt->pt_status, kPosixThreadDetached);
       break;
     default:
       // pthread_attr_setdetachstate() makes this impossible
@@ -285,20 +296,26 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // if pthread_attr_setdetachstate() was used then it's possible for
   // the `pt` object to be freed before this clone call has returned!
-  atomic_store_explicit(&pt->pt_refs, 1, memory_order_relaxed);
+  atomic_init(&pt->pt_refs, 1);
 
   // add thread to global list
   // we add it to the beginning since zombies go at the end
   _pthread_lock();
   dll_make_first(&_pthread_list, &pt->list);
+  atomic_fetch_add_explicit(&_pthread_count, 1, memory_order_relaxed);
   _pthread_unlock();
 
   // we don't normally do this, but it's important to write the result
   // memory before spawning the thread, so it's visible to the threads
   *thread = (pthread_t)pt;
 
+  // this crosses the thread rubicon after which most runtime locks
+  // shall become permanently activated
+  if (__isthreaded < 2)
+    __isthreaded = 2;
+
   // launch PosixThread(pt) in new thread
-  if ((err = clone(
+  if ((err = __clone(
            PosixThread, pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize,
            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                CLONE_SYSVSEM | CLONE_SETTLS | CLONE_PARENT_SETTID |
@@ -307,6 +324,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     *thread = 0;  // posix doesn't require we do this
     _pthread_lock();
     dll_remove(&_pthread_list, &pt->list);
+    atomic_fetch_sub_explicit(&_pthread_count, 1, memory_order_relaxed);
     _pthread_unlock();
     _pthread_free(pt);
     if (err == ENOMEM)

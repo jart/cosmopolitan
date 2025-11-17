@@ -16,12 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/likely.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
@@ -35,18 +34,23 @@
  */
 bool __iswsl1(void) {
   static char res;
-  if (res)
-    return res & 1;
-  if (!IsLinux())
-    return res = 2, false;
-  int e = errno;
-  unassert(__sys_mmap((void *)1, 4096, PROT_READ | PROT_WRITE,
-                      MAP_FIXED | MAP_PRIVATE | ANONYMOUS | GROWSDOWN, -1, 0,
-                      0) == MAP_FAILED);
-  bool tmp = errno == ENOTSUP;
-  errno = e;
-  res = 2 | tmp;
-  return tmp;
+  if (!res) {
+    if (IsLinux()) {
+      int e = errno;
+      void *p =
+          __sys_mmap((void *)1, 4096, PROT_READ | PROT_WRITE,
+                     MAP_FIXED | MAP_PRIVATE | ANONYMOUS | GROWSDOWN, -1, 0, 0);
+      errno = e;
+      if (p == MAP_FAILED && errno == ENOTSUP) {
+        res = 2;  // this is probably wsl1
+      } else {
+        res = 1;
+      }
+    } else {
+      res = 1;
+    }
+  }
+  return res - 1;
 }
 
 #endif /* __x86_64__ */

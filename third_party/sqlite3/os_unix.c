@@ -48,6 +48,8 @@
 #include "third_party/sqlite3/sqliteInt.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/dce.h"
+#include "libc/bsdstdlib.h"
+#include <linux/f2fs.h>
 #if SQLITE_OS_UNIX /* This file is used on unix only */
 
 /*
@@ -116,7 +118,6 @@
 
 #if SQLITE_ENABLE_LOCKING_STYLE
 #include "libc/calls/struct/winsize.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/sysv/consts/l.h"
@@ -351,19 +352,8 @@ static pid_t randomnessPid = 0;
 #endif
 #endif
 
-#ifdef __linux__
-/*
-** Linux-specific IOCTL magic numbers used for controlling F2FS
-*/
-#define F2FS_IOCTL_MAGIC        0xf5
-#define F2FS_IOC_START_ATOMIC_WRITE     _IO(F2FS_IOCTL_MAGIC, 1)
-#define F2FS_IOC_COMMIT_ATOMIC_WRITE    _IO(F2FS_IOCTL_MAGIC, 2)
-#define F2FS_IOC_START_VOLATILE_WRITE   _IO(F2FS_IOCTL_MAGIC, 3)
-#define F2FS_IOC_ABORT_VOLATILE_WRITE   _IO(F2FS_IOCTL_MAGIC, 5)
-#define F2FS_IOC_GET_FEATURES           _IOR(F2FS_IOCTL_MAGIC, 12, u32)
-#define F2FS_FEATURE_ATOMIC_WRITE 0x0004
-#endif /* __linux__ */
-
+// [jart] remove most f2fs magnum definitions (since we define linux/f2fs.h)
+#define F2FS_FEATURE_ATOMIC_WRITE 4
 
 /*
 ** Different Unix systems declare open() in different ways.  Same use
@@ -514,7 +504,7 @@ static struct unix_syscall {
 #define osMunmap ((int(*)(void*,size_t))aSyscall[23].pCurrent)
 
 #if HAVE_MREMAP && (!defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE>0)
-  { "mremap",       (sqlite3_syscall_ptr)mremap,          0 },
+  { "mremap",       (sqlite3_syscall_ptr)cosmo_mremap,    0 },
 #else
   { "mremap",       (sqlite3_syscall_ptr)0,               0 },
 #endif
@@ -541,7 +531,7 @@ static struct unix_syscall {
 #endif
 #define osLstat      ((int(*)(const char*,struct stat*))aSyscall[27].pCurrent)
 
-#if defined(__linux__) && defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
+#if defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)  // [jart] remove __linux__
 # ifdef __ANDROID__
   { "ioctl", (sqlite3_syscall_ptr)(int(*)(int, int, ...))ioctl, 0 },
 #define osIoctl ((int(*)(int,int,...))aSyscall[28].pCurrent)
@@ -3637,7 +3627,7 @@ static int full_fsync(int fd, int fullSync, int dataOnly){
     struct stat buf;
     rc = osFstat(fd, &buf);
   }
-#elif HAVE_FULLFSYNC || defined(__COSMOPOLITAN__)
+#elif HAVE_FULLFSYNC
   /* [jart] use runtime os detection */
   if( fullSync && F_FULLFSYNC != -1 ){
     rc = osFcntl(fd, F_FULLFSYNC, 0);
@@ -3756,6 +3746,24 @@ static int unixSync(sqlite3_file *id, int flags){
   ** line is to test that doing so does not cause any problems.
   */
   SimulateDiskfullError( return SQLITE_FULL );
+
+#if SQLITE_MAX_MMAP_SIZE>0
+  /* [jart] os_win.c calls FlushViewOfFile() here so let's use msync()
+  **        to ensure that happens here too. The SQLite authors don't
+  **        think this is needed on UNIX. It might be needed on OpenBSD
+  **        which is the only UNIX OS I've seen where msync() actually
+  **        does something, which is ensure pread() is coherent with
+  **        memory content, due to OpenBSD's lack of a coherent page
+  **        cache. When it comes to Windows the MSDN documentation says
+  **        "To flush all the dirty pages plus the metadata for the file
+  **        and ensure that they are physically written to disk, call
+  **        FlushViewOfFile and then call the FlushFileBuffers
+  **        function." so this is definitely warranted.
+  */
+  if( pFile->pMapRegion ){
+    msync(pFile->pMapRegion, pFile->mmapSizeActual, 0);
+  }
+#endif
 
   assert( pFile );
   OSTRACE(("SYNC    %-3d\n", pFile->h));
@@ -3969,17 +3977,24 @@ static int unixGetTempname(int nBuf, char *zBuf);
 static int unixFileControl(sqlite3_file *id, int op, void *pArg){
   unixFile *pFile = (unixFile*)id;
   switch( op ){
-#if defined(__linux__) && defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
+#if defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
+    // [jart] important modifications here for runtime dispatching
     case SQLITE_FCNTL_BEGIN_ATOMIC_WRITE: {
+      if (!IsLinux())
+        return SQLITE_NOTFOUND;
       int rc = osIoctl(pFile->h, F2FS_IOC_START_ATOMIC_WRITE);
       return rc ? SQLITE_IOERR_BEGIN_ATOMIC : SQLITE_OK;
     }
     case SQLITE_FCNTL_COMMIT_ATOMIC_WRITE: {
+      if (!IsLinux())
+        return SQLITE_NOTFOUND;
       int rc = osIoctl(pFile->h, F2FS_IOC_COMMIT_ATOMIC_WRITE);
       return rc ? SQLITE_IOERR_COMMIT_ATOMIC : SQLITE_OK;
     }
     case SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE: {
-      int rc = osIoctl(pFile->h, F2FS_IOC_ABORT_VOLATILE_WRITE);
+      if (!IsLinux())
+        return SQLITE_NOTFOUND;
+      int rc = osIoctl(pFile->h, F2FS_IOC_ABORT_ATOMIC_WRITE); // [jart] fix name
       return rc ? SQLITE_IOERR_ROLLBACK_ATOMIC : SQLITE_OK;
     }
 #endif /* __linux__ && SQLITE_ENABLE_BATCH_ATOMIC_WRITE */
@@ -4104,14 +4119,17 @@ static int unixFileControl(sqlite3_file *id, int op, void *pArg){
 static void setDeviceCharacteristics(unixFile *pFd){
   assert( pFd->deviceCharacteristics==0 || pFd->sectorSize!=0 );
   if( pFd->sectorSize==0 ){
-#if defined(__linux__) && defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
-    int res;
-    u32 f = 0;
+#if defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
+    // [jart] important modifications here for runtime dispatching
+    if (IsLinux()) {
+      int res;
+      u32 f = 0;
 
-    /* Check for support for F2FS atomic batch writes. */
-    res = osIoctl(pFd->h, F2FS_IOC_GET_FEATURES, &f);
-    if( res==0 && (f & F2FS_FEATURE_ATOMIC_WRITE) ){
-      pFd->deviceCharacteristics = SQLITE_IOCAP_BATCH_ATOMIC;
+      /* Check for support for F2FS atomic batch writes. */
+      res = osIoctl(pFd->h, F2FS_IOC_GET_FEATURES, &f);
+      if( res==0 && (f & F2FS_FEATURE_ATOMIC_WRITE) ){
+        pFd->deviceCharacteristics = SQLITE_IOCAP_BATCH_ATOMIC;
+      }
     }
 #endif /* __linux__ && SQLITE_ENABLE_BATCH_ATOMIC_WRITE */
 
@@ -6643,7 +6661,7 @@ static int unixRandomness(sqlite3_vfs *NotUsed, int nBuf, char *zBuf){
   UNUSED_PARAMETER(NotUsed);
   assert((size_t)nBuf>=(sizeof(time_t)+sizeof(int)));
   randomnessPid = osGetpid(0);  
-  rngset(zBuf, nBuf, rdseed, -1);
+  arc4random_buf(zBuf, nBuf);
   return nBuf;
 }
 

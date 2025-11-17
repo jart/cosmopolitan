@@ -26,7 +26,9 @@
 
 /**
  * Reads string from unlocked stream.
+ *
  * @see getdelim() for documentation
+ * @cancelationpoint
  */
 ssize_t getdelim_unlocked(char **s, size_t *n, int delim, FILE *f) {
   ssize_t rc;

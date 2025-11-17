@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/zip.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
@@ -39,7 +40,6 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/time.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/disassemblehex.h"
 #include "tool/decode/lib/flagger.h"
@@ -66,7 +66,7 @@ static __wur char *FormatDosTime(uint16_t dostime) {
 
 char *xiso8601(struct timespec ts) {
   struct tm tm;
-  if (!localtime_r(&ts.tv_sec, &tm))
+  if (!gmtime_r(&ts.tv_sec, &tm))
     return 0;
   int len = 128;
   char *res = malloc(len);
@@ -75,7 +75,7 @@ char *xiso8601(struct timespec ts) {
   if (!res)
     return 0;
   ptr += strftime(ptr, end - ptr, "%Y-%m-%dT%H:%M:%S", &tm);
-  ptr += snprintf(ptr, end - ptr, "%09ld", ts.tv_nsec);
+  ptr += snprintf(ptr, end - ptr, ".%09ld", ts.tv_nsec);
   ptr += strftime(ptr, end - ptr, "%z", &tm);
   unassert(ptr + 1 <= end);
   unassert(realloc_in_place(res, ptr + 1 - res) == res);
@@ -118,22 +118,33 @@ void ShowCompressionMethod(uint16_t compressmethod) {
 }
 
 void ShowNtfs(uint8_t *ntfs, size_t n) {
-  struct timespec mtime, atime, ctime;
-  mtime = WindowsTimeToTimeSpec(READ64LE(ntfs + 8));
-  atime = WindowsTimeToTimeSpec(READ64LE(ntfs + 16));
-  ctime = WindowsTimeToTimeSpec(READ64LE(ntfs + 24));
+  struct timespec mtime = {0};
+  struct timespec atime = {0};
+  struct timespec ctime = {0};
+  npassert(READ16LE(ntfs + 4) == 1);
+  int attrsize = READ16LE(ntfs + 6);
+  npassert(attrsize == 8 || attrsize == 16 || attrsize == 24);
+  if (attrsize >= 8)
+    mtime = WindowsTimeToTimeSpec(READ64LE(ntfs + 8));
+  if (attrsize >= 16)
+    atime = WindowsTimeToTimeSpec(READ64LE(ntfs + 16));
+  if (attrsize >= 24)
+    ctime = WindowsTimeToTimeSpec(READ64LE(ntfs + 24));
   show(".long", gc(xasprintf("%d", READ32LE(ntfs))), "ntfs reserved");
   show(".short", gc(xasprintf("0x%04x", READ16LE(ntfs + 4))),
        "ntfs attribute tag value #1");
-  show(".short", gc(xasprintf("%hu", READ16LE(ntfs + 6))),
-       "ntfs attribute tag size");
-  show(
-      ".quad", gc(xasprintf("%lu", READ64LE(ntfs + 8))),
-      gc(xasprintf("%s (%s)", "ntfs last modified time", gc(xiso8601(mtime)))));
-  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 16))),
-       gc(xasprintf("%s (%s)", "ntfs last access time", gc(xiso8601(atime)))));
-  show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 24))),
-       gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(ctime)))));
+  show(".short", gc(xasprintf("%hu", attrsize)), "ntfs attribute tag size");
+  if (attrsize >= 8)
+    show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 8))),
+         gc(xasprintf("%s (%s)", "ntfs last modified time",
+                      gc(xiso8601(mtime)))));
+  if (attrsize >= 16)
+    show(
+        ".quad", gc(xasprintf("%lu", READ64LE(ntfs + 16))),
+        gc(xasprintf("%s (%s)", "ntfs last access time", gc(xiso8601(atime)))));
+  if (attrsize >= 24)
+    show(".quad", gc(xasprintf("%lu", READ64LE(ntfs + 24))),
+         gc(xasprintf("%s (%s)", "ntfs creation time", gc(xiso8601(ctime)))));
 }
 
 void ShowExtendedTimestamp(uint8_t *p, size_t n, bool islocal) {
@@ -474,34 +485,26 @@ void ShowCentralDirHeader64(uint8_t *cd) {
 
 int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
   size_t offset;
-  if (i > n || n - i < kZipCdirHdrMinSize) {
+  if (i > n || n - i < kZipCdirHdrMinSize)
     return kZipErrorEocdOffsetOverflow;
-  }
-  if (READ32LE(p + i) != kZipCdirHdrMagic) {
+  if (READ32LE(p + i) != kZipCdirHdrMagic)
     return kZipErrorEocdMagicNotFound;
-  }
-  if (i + ZIP_CDIR_HDRSIZE(p + i) > n) {
+  if (i + ZIP_CDIR_HDRSIZE(p + i) > n)
     return kZipErrorEocdSizeOverflow;
-  }
-  if (ZIP_CDIR_DISK(p + i) != ZIP_CDIR_STARTINGDISK(p + i)) {
+  if (ZIP_CDIR_DISK(p + i) != ZIP_CDIR_STARTINGDISK(p + i))
     return kZipErrorEocdDiskMismatch;
-  }
-  if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i)) {
+  if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i))
     return kZipErrorEocdRecordsMismatch;
-  }
-  if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i)) {
+  if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i))
     return kZipErrorEocdRecordsOverflow;
-  }
-  if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i))) {
+  if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i)))
     return kZipErrorEocdOffsetSizeOverflow;
-  }
-  if (offset > i) {
+  if (offset > i)
     return kZipErrorCdirOffsetPastEocd;
-  }
   return kZipOk;
 }
 
-uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
+uint8_t *GetZipCdir32(const uint8_t *p, long n) {
   int64_t i, e, err;
   if (n >= kZipCdirHdrMinSize) {
     i = n - kZipCdirHdrMinSize;
@@ -520,7 +523,7 @@ uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
   return NULL;
 }
 
-uint8_t *GetZipCdir64(const uint8_t *p, size_t n) {
+uint8_t *GetZipCdir64(const uint8_t *p, long n) {
   int64_t e, i, j;
   if (n >= kZipCdir64LocatorSize) {
     i = n - kZipCdir64LocatorSize;

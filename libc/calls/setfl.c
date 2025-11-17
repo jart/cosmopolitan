@@ -16,39 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/fds.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
-textwindows int sys_fcntl_nt_setfl(int fd, unsigned flags) {
+textwindows int sys_fcntl_nt_setfl(struct Fd *fd, unsigned flags) {
 
   // you may change the following:
   //
   // - O_NONBLOCK     make read() raise EAGAIN
   // - O_APPEND       for toggling append mode
-  // - O_RANDOM       alt. for posix_fadvise()
-  // - O_SEQUENTIAL   alt. for posix_fadvise()
   // - O_DIRECT       works but haven't tested
   //
   // the other bits are ignored.
-  unsigned allowed =
-      _O_APPEND | _O_SEQUENTIAL | _O_RANDOM | _O_DIRECT | _O_NONBLOCK;
-  unsigned needreo = _O_APPEND | _O_SEQUENTIAL | _O_RANDOM | _O_DIRECT;
-  unsigned newflag = (g_fds.p[fd].flags & ~allowed) | (flags & allowed);
+  unsigned allowed = O_APPEND | O_DIRECT | O_DSYNC | O_NONBLOCK;
+  unsigned needreo = O_APPEND | O_DIRECT | O_DSYNC;
+  unsigned newflag = (fd->flags & ~allowed) | (flags & allowed);
 
-  if (g_fds.p[fd].kind == kFdFile &&
-      ((g_fds.p[fd].flags & needreo) ^ (flags & needreo))) {
+  if (fd->kind == kFdFile && ((fd->flags & needreo) ^ (flags & needreo))) {
     unsigned perm, share, attr;
-    if (GetNtOpenFlags(newflag, g_fds.p[fd].mode, &perm, &share, 0, &attr) ==
-        -1) {
+    if (GetNtOpenFlags(newflag, fd->mode, &perm, &share, 0, &attr) == -1)
       return -1;
-    }
     // MSDN says only these are allowed, otherwise it returns EINVAL.
     attr &= kNtFileFlagBackupSemantics | kNtFileFlagDeleteOnClose |
             kNtFileFlagNoBuffering | kNtFileFlagOpenNoRecall |
@@ -56,10 +49,10 @@ textwindows int sys_fcntl_nt_setfl(int fd, unsigned flags) {
             kNtFileFlagPosixSemantics | kNtFileFlagRandomAccess |
             kNtFileFlagSequentialScan | kNtFileFlagWriteThrough;
     intptr_t hand;
-    if ((hand = ReOpenFile(g_fds.p[fd].handle, perm, share, attr)) != -1) {
-      if (hand != g_fds.p[fd].handle) {
-        CloseHandle(g_fds.p[fd].handle);
-        g_fds.p[fd].handle = hand;
+    if ((hand = ReOpenFile(fd->handle, perm, share, attr)) != -1) {
+      if (hand != fd->handle) {
+        CloseHandle(fd->handle);
+        fd->handle = hand;
       }
     } else {
       return __winerr();
@@ -68,6 +61,6 @@ textwindows int sys_fcntl_nt_setfl(int fd, unsigned flags) {
 
   // 1. ignore flags that aren't access mode flags
   // 2. return zero if nothing's changed
-  g_fds.p[fd].flags = newflag;
+  fd->flags = newflag;
   return 0;
 }

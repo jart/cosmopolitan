@@ -22,23 +22,19 @@
 /**
  * Writes wide character to stream.
  *
- * @param wc has wide character
+ * @param c has wide character
  * @param f is file object stream pointer
- * @return wide character if written or -1 w/ errno
+ * @return character that was written, or WEOF w/ errno
+ * @cancelationpoint
  */
-wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
+wint_t fputwc_unlocked(wchar_t c, FILE *f) {
   uint64_t w;
-  if (wc != -1) {
-    w = tpenc(wc);
-    do {
-      if (fputc_unlocked(w, f) == -1) {
-        return -1;
-      }
-    } while ((w >>= 8));
-    return wc;
-  } else {
-    return -1;
-  }
+  w = tpenc(c);
+  do {
+    if (fputc_unlocked(w, f) == -1)
+      return WEOF;
+  } while ((w >>= 8));
+  return c;
 }
 
 __strong_reference(fputwc_unlocked, putwc_unlocked);

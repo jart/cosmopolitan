@@ -25,8 +25,7 @@
 void *memfrob(void *buf, size_t size) {
   size_t i;
   unsigned char *p;
-  for (p = buf, i = 0; i < size; ++i) {
+  for (p = buf, i = 0; i < size; ++i)
     p[i] ^= '*';
-  }
   return buf;
 }

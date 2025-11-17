@@ -4,7 +4,7 @@
 #define COSMOPOLITAN_CTL_NEW_H_
 
 #ifndef TINY
-__static_yoink("__demangle");
+__static_yoink("cosmo_demangle");
 #endif
 
 namespace ctl {

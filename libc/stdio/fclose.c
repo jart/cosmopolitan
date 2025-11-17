@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 
 /**
@@ -27,14 +29,20 @@
 int fclose(FILE *f) {
   int rc = 0;
   if (f) {
-    flockfile(f);
-    rc |= fflush(f);
+    if (__isthreaded >= 2)
+      flockfile(f);
+    rc |= fflush_unlocked(f);
+    if (f->memstream_bufp) {
+      realloc_in_place(f->buf, f->beg + 1);
+      f->buf[f->beg] = 0;
+    }
     int fd = f->fd;
     f->fd = -1;
     f->state = EOF;
     if (fd != -1)
       rc |= close(fd);
-    funlockfile(f);
+    if (__isthreaded >= 2)
+      funlockfile(f);
     __stdio_unref(f);
   }
   return rc;

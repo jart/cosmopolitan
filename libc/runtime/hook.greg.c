@@ -31,7 +31,7 @@ typedef uint32_t code_t;
 #error "unsupported architecture"
 #endif
 
-static privileged bool IsVirginFunction(const code_t *func) {
+__privileged static bool IsVirginFunction(const code_t *func) {
 #ifdef __x86_64__
   long i;
   // function must be preceeded by 9 nops
@@ -57,7 +57,7 @@ static privileged bool IsVirginFunction(const code_t *func) {
 #endif
 }
 
-static privileged void HookFunction(code_t *func, void *dest) {
+__privileged static void HookFunction(code_t *func, void *dest) {
   long dp;
 #ifdef __x86_64__
   dp = (intptr_t)dest - (intptr_t)(func - 7 + 5);
@@ -112,7 +112,7 @@ static privileged void HookFunction(code_t *func, void *dest) {
  * @param st can be obtained using `GetSymbolTable()`
  * @see ape/ape.lds
  */
-privileged int __hook(void *dest, struct SymbolTable *st) {
+__privileged int __hook(void *dest, struct SymbolTable *st) {
   long i;
   code_t *p, *pe;
   intptr_t lowest;

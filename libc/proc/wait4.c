@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/proc/proc.h"
@@ -31,7 +32,7 @@
  *     -1 means any child process, <-1 means any proc in specific group
  * @param opt_out_wstatus optionally returns status code, and *wstatus
  *     may be inspected using WEEXITSTATUS(), etc.
- * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
+ * @param options can have WNOHANG, WUNTRACED, etc.
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
  * @cancelationpoint
@@ -42,16 +43,13 @@ int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
   int rc, ws = 0;
   BEGIN_CANCELATION_POINT;
-
   if (!IsWindows()) {
     rc = sys_wait4(pid, &ws, options, opt_out_rusage);
   } else {
     rc = sys_wait4_nt(pid, &ws, options, opt_out_rusage);
   }
-  if (rc != -1 && opt_out_wstatus) {
+  if (rc != -1 && opt_out_wstatus)
     *opt_out_wstatus = ws;
-  }
-
   END_CANCELATION_POINT;
   STRACE("wait4(%d, [%#x], %d, %p) → %d% m", pid, ws, options, opt_out_rusage,
          rc);

@@ -56,45 +56,48 @@ typedef struct nsync_mu_s_ {
    the entire structure to all zeroes, or using nsync_mu_init(). */
 #define NSYNC_MU_INIT \
   { NSYNC_ATOMIC_UINT32_INIT_, 0 }
-void nsync_mu_init(nsync_mu *mu);
+void nsync_mu_init(nsync_mu *);
 
 /* Block until *mu is free and then acquire it in writer mode. Requires
-   that the calling thread not already hold *mu in any mode. */
-void nsync_mu_lock(nsync_mu *mu);
+   that the calling thread not already hold *mu in any mode. The return
+   value is always zero. */
+int nsync_mu_lock(nsync_mu *);
 
 /* Unlock *mu, which must have been acquired in write mode by the
-   calling thread, and wake waiters, if appropriate. */
-void nsync_mu_unlock(nsync_mu *mu);
+   calling thread, and wake waiters, if appropriate. Zero will be
+   returned every time. */
+int nsync_mu_unlock(nsync_mu *);
 
 /* Attempt to acquire *mu in writer mode without blocking, and return
    non-zero iff successful. Return non-zero with high probability if *mu
    was free on entry. */
-int nsync_mu_trylock(nsync_mu *mu);
+int nsync_mu_trylock(nsync_mu *);
 
 /* Block until *mu can be acquired in reader mode and then acquire it.
-   Requires that the calling thread not already hold *mu in any mode. */
-void nsync_mu_rlock(nsync_mu *mu);
+   Requires that the calling thread not already hold *mu in any mode.
+   This always returns zero. */
+int nsync_mu_rlock(nsync_mu *);
 
 /* Unlock *mu, which must have been acquired in read mode by the calling
-   thread, and wake waiters, if appropriate. */
-void nsync_mu_runlock(nsync_mu *mu);
+   thread, and wake waiters, if appropriate. This always returns zero. */
+int nsync_mu_runlock(nsync_mu *);
 
 /* Attempt to acquire *mu in reader mode without blocking, and return
    non-zero iff successful. Return non-zero with high probability if *mu
    was free on entry. Perhaps fail to acquire if a writer is waiting, to
    avoid starvation. */
-int nsync_mu_rtrylock(nsync_mu *mu);
+int nsync_mu_rtrylock(nsync_mu *);
 
 /* May abort if *mu is not held in write mode by the calling thread. */
-void nsync_mu_assert_held(const nsync_mu *mu);
+void nsync_mu_assert_held(const nsync_mu *);
 
 /* May abort if *mu is not held in read or write mode
    by the calling thread.  */
-void nsync_mu_rassert_held(const nsync_mu *mu);
+void nsync_mu_rassert_held(const nsync_mu *);
 
 /* Return whether *mu is held in read mode.
    Requires that the calling thread holds *mu in some mode. */
-int nsync_mu_is_reader(const nsync_mu *mu);
+int nsync_mu_is_reader(const nsync_mu *);
 
 COSMOPOLITAN_C_END_
 #endif /* NSYNC_MU_H_ */

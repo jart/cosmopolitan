@@ -1281,21 +1281,4 @@ _LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
 
-#if !defined(_LIBCPP_REMOVE_TRANSITIVE_INCLUDES) && _LIBCPP_STD_VER <= 20
-#  include <atomic>
-#  include <climits>
-#  include <concepts>
-#  include <ctime>
-#  include <iterator>
-#  include <limits>
-#  include <memory>
-#  include <ratio>
-#  include <stdexcept>
-#  include <tuple>
-#  include <type_traits>
-#  include <typeinfo>
-#  include <utility>
-#  include <variant>
-#endif
-
 #endif // _LIBCPP_OPTIONAL

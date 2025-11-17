@@ -23,6 +23,7 @@ const char *_DescribeFlockType(char[12], int) libcesque;
 const char *_DescribeFutexOp(char[64], int) libcesque;
 const char *_DescribeHow(char[12], int) libcesque;
 const char *_DescribeInOutInt64(char[23], ssize_t, int64_t *) libcesque;
+const char *_DescribeIoctlRequest(char[21], unsigned long) libcesque;
 const char *_DescribeItimer(char[12], int) libcesque;
 const char *_DescribeMapFlags(char[64], int) libcesque;
 const char *_DescribeMapping(char[8], int, int) libcesque;
@@ -51,8 +52,6 @@ const char *_DescribeOpenMode(char[15], int, int) libcesque;
 const char *_DescribePersonalityFlags(char[128], int) libcesque;
 const char *_DescribePollFlags(char[64], int) libcesque;
 const char *_DescribeProtFlags(char[48], int) libcesque;
-const char *_DescribePtrace(char[12], int) libcesque;
-const char *_DescribePtraceEvent(char[32], int) libcesque;
 const char *_DescribeRlimitName(char[20], int) libcesque;
 const char *_DescribeSchedPolicy(char[48], int) libcesque;
 const char *_DescribeSeccompOperation(int) libcesque;
@@ -82,6 +81,7 @@ const char *_DescribeWhichPrio(char[12], int) libcesque;
 #define DescribeFutexOp(x)           _DescribeFutexOp(alloca(64), x)
 #define DescribeHow(x)               _DescribeHow(alloca(12), x)
 #define DescribeInOutInt64(rc, x)    _DescribeInOutInt64(alloca(23), rc, x)
+#define DescribeIoctlRequest(x)      _DescribeIoctlRequest(alloca(21), x)
 #define DescribeItimer(x)            _DescribeItimer(alloca(12), x)
 #define DescribeMapFlags(x)          _DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        _DescribeMapping(alloca(8), x, y)
@@ -109,8 +109,6 @@ const char *_DescribeWhichPrio(char[12], int) libcesque;
 #define DescribePersonalityFlags(p)  _DescribePersonalityFlags(alloca(128), p)
 #define DescribePollFlags(p)         _DescribePollFlags(alloca(64), p)
 #define DescribeProtFlags(x)         _DescribeProtFlags(alloca(48), x)
-#define DescribePtrace(i)            _DescribePtrace(alloca(12), i)
-#define DescribePtraceEvent(x)       _DescribePtraceEvent(alloca(32), x)
 #define DescribeRlimitName(rl)       _DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       _DescribeSchedPolicy(alloca(48), x)
 #define DescribeSiCode(x, y)         _DescribeSiCode(alloca(20), x, y)

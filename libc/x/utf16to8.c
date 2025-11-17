@@ -72,7 +72,7 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
       } else {
         w = tpenc(x);
         WRITE64LE(q, w);
-        q += bsr(w) >> 3;
+        q += bsrl(w) >> 3;
         q += 1;
       }
     }

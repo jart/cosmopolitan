@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
@@ -39,6 +40,10 @@ void SetUp(void) {
   errno = 0;
 }
 
+TEST(mkdir, emptyString) {
+  EXPECT_SYS(ENOENT, -1, mkdir("", 0755));
+}
+
 TEST(mkdir, testNothingExists_ENOENT) {
   EXPECT_SYS(ENOENT, -1, mkdir("yo/yo/yo", 0755));
 }
@@ -52,12 +57,20 @@ TEST(mkdir, testPathIsFile_EEXIST) {
   EXPECT_SYS(0, 0, mkdir("yo", 0755));
   EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
   EXPECT_SYS(0, 0, touch("yo/yo/yo", 0644));
-  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/", 0755));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo", 0755));
 }
 
 TEST(mkdir, remove) {
   EXPECT_SYS(0, 0, mkdir("yo", 0777));
   EXPECT_SYS(0, 0, remove("yo"));
+}
+
+TEST(mkdir, parentNotWritable) {
+  if (getuid() == 0)
+    return;
+  EXPECT_SYS(0, 0, mkdir("yo", 0500));
+  EXPECT_SYS(EACCES, -1, mkdir("yo/yo", 0500));
 }
 
 TEST(mkdir, testPathIsDirectory_EEXIST) {
@@ -109,4 +122,20 @@ TEST(mkdir, longname) {
   memcpy(s, d, strlen(d));
   s[strlen(d)] = '/';
   ASSERT_SYS(0, 0, mkdir(s, 0644));
+}
+
+#define C " "
+
+TEST(mkdir, trailingSpace) {
+  ASSERT_SYS(0, 0, mkdir("lol" C, 0700));
+  struct dirent **list;
+  int n = scandir(".", &list, NULL, alphasort);
+  ASSERT_EQ(3, n);
+  ASSERT_STREQ(".", list[0]->d_name);
+  ASSERT_STREQ("..", list[1]->d_name);
+  ASSERT_STREQ("lol" C, list[2]->d_name);
+  while (n)
+    free(list[--n]);
+  free(list);
+  ASSERT_SYS(0, 0, rmdir("lol" C));
 }

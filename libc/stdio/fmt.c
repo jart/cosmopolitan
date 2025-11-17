@@ -864,7 +864,7 @@ static int __fmt_noop(const char *, void *, size_t) {
  * @asyncsignalsafe if floating point isn't used
  * @vforksafe if floating point isn't used
  */
-int __fmt(void *fn, void *arg, const char *format, va_list va, int *wrote) {
+int __fmt(void *fn, void *arg, const char *format, va_list va, size_t *wrote) {
   long ld;
   void *p;
   double x;

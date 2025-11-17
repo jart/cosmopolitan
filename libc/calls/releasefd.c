@@ -20,17 +20,18 @@
 #include "libc/intrin/atomic.h"
 #include "libc/macros.h"
 #include "libc/str/str.h"
+#include "libc/sysv/pib.h"
 
-// really want to avoid locking here so close() needn't block signals
 void __releasefd(int fd) {
   int f1, f2;
-  if (!(0 <= fd && fd < g_fds.n))
-    return;
-  g_fds.p[fd].kind = kFdEmpty;
-  bzero(g_fds.p + fd, sizeof(*g_fds.p));
-  f1 = atomic_load_explicit(&g_fds.f, memory_order_relaxed);
-  do {
-    f2 = MIN(fd, f1);
-  } while (!atomic_compare_exchange_weak_explicit(
-      &g_fds.f, &f1, f2, memory_order_release, memory_order_relaxed));
+  if (fd < __get_pib()->fds.n) {
+    __get_pib()->fds.p[fd].kind = kFdReserved;
+    bzero((char *)(__get_pib()->fds.p + fd) + 1,
+          sizeof(*__get_pib()->fds.p) - 1);
+    __get_pib()->fds.p[fd].kind = kFdEmpty;
+    f1 = atomic_load_explicit(&__get_pib()->fds.f, memory_order_relaxed);
+    do {
+      f2 = MIN(fd, f1);
+    } while (!atomic_compare_exchange_weak(&__get_pib()->fds.f, &f1, f2));
+  }
 }

@@ -13,7 +13,6 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#include <cosmo.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -25,12 +24,6 @@ void ignore_signal(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-
-#ifdef MODE_DBG
-  GetSymbolTable();
-  signal(SIGTRAP, ignore_signal);
-  kprintf("running %s\n", argv[0]);
-#endif
 
   pthread_mutexattr_t attr;
   if (pthread_mutexattr_init(&attr))

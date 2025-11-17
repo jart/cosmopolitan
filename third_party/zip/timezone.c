@@ -37,10 +37,10 @@
 #define __timezone_c
 
 
-#include "third_party/zip/zip.h"
-#include "third_party/zip/timezone.h"
-#include "libc/str/str.h"
-#include "libc/errno.h"
+#include "zip.h"
+#include "timezone.h"
+#include <ctype.h>
+#include <errno.h>
 
 #ifdef IZTZ_DEFINESTDGLOBALS
 long timezone = 0;

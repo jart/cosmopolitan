@@ -4,16 +4,15 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
 
-#define POSIX_SPAWN_USEVFORK      0
-#define POSIX_SPAWN_RESETIDS      1
-#define POSIX_SPAWN_SETPGROUP     2
-#define POSIX_SPAWN_SETSIGDEF     4
-#define POSIX_SPAWN_SETSIGMASK    8
-#define POSIX_SPAWN_SETSCHEDPARAM 16
-#define POSIX_SPAWN_SETSCHEDULER  32
+#define POSIX_SPAWN_USEVFORK      1
+#define POSIX_SPAWN_RESETIDS      2
+#define POSIX_SPAWN_SETPGROUP     4
+#define POSIX_SPAWN_SETSIGDEF     8
+#define POSIX_SPAWN_SETSIGMASK    16
+#define POSIX_SPAWN_SETSCHEDPARAM 32
+#define POSIX_SPAWN_SETSCHEDULER  64
 #define POSIX_SPAWN_SETSID        128
 #define POSIX_SPAWN_SETRLIMIT_NP  256
-#define POSIX_SPAWN_USEFORK       512
 
 COSMOPOLITAN_C_START_
 

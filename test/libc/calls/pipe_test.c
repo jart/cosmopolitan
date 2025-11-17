@@ -22,7 +22,6 @@
 #include "libc/errno.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/testlib.h"
 
 int ws, pid, f[2];

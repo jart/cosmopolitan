@@ -21,18 +21,23 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
+#if SupportsWindows()
 
-#ifdef __x86_64__
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
 
 // returns 0 if deadline is reached
 // raises EINTR if a signal delivery interrupted wait operation
@@ -44,10 +49,8 @@ textwindows static int _park_thread(struct timespec deadline, sigset_t waitmask,
     intptr_t hands[2];
 
     // create event object
-    intptr_t sigev;
-    if (!(sigev = CreateEvent(0, 0, 0, 0)))
+    if (!(hands[handl++] = __interruptible_start(waitmask)))
       return __winerr();
-    hands[handl++] = sigev;
 
     // create high precision timer if needed
     if (memcmp(&deadline, &timespec_max, sizeof(struct timespec))) {
@@ -63,20 +66,13 @@ textwindows static int _park_thread(struct timespec deadline, sigset_t waitmask,
     }
 
     // perform wait operation
-    struct PosixThread *pt = _pthread_self();
-    pt->pt_event = sigev;
-    pt->pt_blkmask = waitmask;
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                          memory_order_release);
-    //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
     int sig = 0;
     uint32_t wi = 0;
     if (!_is_canceled() &&
         !(_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))))
-      wi = WaitForMultipleObjects(handl, hands, false, -1u);
-    //!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!/!//
-    atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-    for (int i = 0; i < handl; ++i)
+      wi = __imp_WaitForMultipleObjects(handl, hands, false, -1u);
+    __interruptible_end();
+    for (int i = 1; i < handl; ++i)
       CloseHandle(hands[i]);
 
     // recursion is now safe

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
@@ -27,8 +28,8 @@
  */
 int puts(const char *s) {
   int bytes;
-  flockfile(stdout);
+  FLOCKFILE(stdout);
   bytes = puts_unlocked(s);
-  funlockfile(stdout);
+  FUNLOCKFILE(stdout);
   return bytes;
 }

@@ -186,6 +186,8 @@
 /* uncomment if .com.dbg won't execute on your kernel (will break .com file) */
 /* #define APE_FIX_COM_DBG */
 
+#define CACHELINE 64
+
 #ifdef __x86__
 #define CODE_GRANULE 1
 #else
@@ -199,7 +201,7 @@
 #endif
 
 #ifndef IMAGE_BASE_VIRTUAL
-#define IMAGE_BASE_VIRTUAL 0x400000
+#define IMAGE_BASE_VIRTUAL 0x4200000
 #endif
 
 #if IMAGE_BASE_VIRTUAL > 0xffffffff
@@ -237,11 +239,10 @@ SECTIONS {
     KEEP(*(.elf.phdrs))
     ape_phdrs_end = .;
 
-    /* OpenBSD */
+    /* ELF PT_NOTE data structures */
     . = ALIGN(. != 0 ? __SIZEOF_POINTER__ : 0);
     ape_note = .;
-    KEEP(*(.note.openbsd.ident))
-    KEEP(*(.note.netbsd.ident))
+    KEEP(*(.note.*))
     ape_note_end = .;
 
     /* Portable Executable */
@@ -321,6 +322,7 @@ SECTIONS {
 /*BEGIN: Read Only Data */
 
   .rodata ALIGN(CONSTANT(COMMONPAGESIZE)) : {
+    _rodata = .;
     KEEP(*(.rodata.pytab.0));
     KEEP(*(.rodata.pytab.1));
     KEEP(*(.rodata.pytab.2));
@@ -341,12 +343,6 @@ SECTIONS {
     BYTE(10);
 
 /*BEGIN: read-only data that's only needed for initialization */
-
-#if SupportsWindows()
-    /* Windows DLL Import Directory */
-    KEEP(*(.idata.ro));
-    KEEP(*(SORT_BY_NAME(.idata.ro.*)))
-#endif
 
     /* Encoded Data Structures w/ Linear Initialization Order */
     KEEP(*(.initroprologue))
@@ -386,6 +382,17 @@ SECTIONS {
     _tbss_end = .;
   } :Tls
 
+  .idata : {
+#if SupportsWindows()
+    KEEP(*(.dllstr));
+    KEEP(*(.idata.ro));
+    KEEP(*(SORT_BY_NAME(.idata.ro.*)));
+    KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)));
+    KEEP(*(.data.nt.*));
+#endif
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
+  } :Ram
+
   .eh_frame : {
     __eh_frame_start = .;
     KEEP(*(.eh_frame))
@@ -395,11 +402,14 @@ SECTIONS {
 
   .data . : {
 /*BEGIN: Read/Write Data */
-#if SupportsWindows()
-    KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
-#endif
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
+
+    /* Precious Runtime Constants */
+    . = ALIGN(CACHELINE);
+    *(.data.rarechange)
+    . = ALIGN(CACHELINE);
+
     *(.data .data.*)
     *(.gnu_extab)
     *(.gcc_except_table .gcc_except_table.*)
@@ -463,6 +473,11 @@ SECTIONS {
     __piro_end = .;
     . += . > 0 ? CODE_GRANULE : 0;
 /*END: Post-Initialization Read-Only */
+
+    /* Precious Runtime Constants */
+    . = ALIGN(CACHELINE);
+    *(.bss.rarechange)
+    . = ALIGN(CACHELINE);
 
     /* Statically Allocated Empty Space */
     *(SORT_BY_ALIGNMENT(.bss))
@@ -549,7 +564,7 @@ SECTIONS {
   }
 }
 
-ape_pe_filealignment = 512;
+ape_pe_filealignment = 4096;
 ape_pe_sectionalignment = 4096;
 ape_pe_sizeofheaders = SIZEOF(.head);
 ape_pe_sizeofimage = ROUNDUP(_end - __executable_start, ape_pe_sectionalignment);
@@ -586,6 +601,14 @@ ape_rom_memsz = ape_rom_filesz;
 ape_rom_align = CONSTANT(COMMONPAGESIZE);
 ape_rom_rva = RVA(ape_rom_vaddr);
 
+ape_idt_vaddr = ADDR(.idata);
+ape_idt_offset = ape_idt_vaddr - __executable_start;
+ape_idt_paddr = LOADADDR(.idata);
+ape_idt_filesz = ADDR(.eh_frame) - ADDR(.idata);
+ape_idt_memsz = ape_idt_filesz;
+ape_idt_align = CONSTANT(COMMONPAGESIZE);
+ape_idt_rva = RVA(ape_idt_vaddr);
+
 ape_ram_vaddr = ADDR(.eh_frame);
 ape_ram_offset = ape_ram_vaddr - __executable_start;
 ape_ram_paddr = LOADADDR(.eh_frame);
@@ -600,7 +623,7 @@ ape_stack_offset = 0;
 ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000;
 ape_stack_paddr = ape_ram_paddr + ape_ram_filesz;
 ape_stack_filesz = 0;
-ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : 4 * 1024 * 1024;
+ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : 8 * 1024 * 1024;  /* for gnu make */
 
 ape_note_offset = ape_cod_offset + (ape_note - ape_cod_vaddr);
 ape_note_filesz = ape_note_end - ape_note;
@@ -714,8 +737,10 @@ CHURN(ape_pe_sections);
 CHURN(ape_pe_sections_end);
 CHURN(ape_pe_shnum);
 CHURN(ape_phdrs_end);
-CHURN(WinMain);
 #endif /* SupportsWindows() */
+#if SupportsWindows()
+CHURN(WinMain);
+#endif
 #endif /* SupportsXnu() */
 
 #if SupportsWindows() || SupportsMetal()

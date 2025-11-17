@@ -77,18 +77,12 @@ static ssize_t GetRandomCpu(char *p, size_t n, int f, bool impl(uint64_t *)) {
 }
 
 ssize_t sys_getrandom_metal(char *p, size_t n, int f) {
-  if (f & GRND_RANDOM) {
-    if (X86_HAVE(RDSEED)) {
-      return GetRandomCpu(p, n, f, GetRandomRdseed);
-    } else {
-      return enosys();
-    }
+  if (X86_HAVE(RDSEED)) {
+    return GetRandomCpu(p, n, f, GetRandomRdseed);
+  } else if (X86_HAVE(RDRND)) {
+    return GetRandomCpu(p, n, f, GetRandomRdrand);
   } else {
-    if (X86_HAVE(RDRND)) {
-      return GetRandomCpu(p, n, f, GetRandomRdrand);
-    } else {
-      return enosys();
-    }
+    return enosys();
   }
 }
 

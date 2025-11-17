@@ -18,7 +18,7 @@
 
 #include "ctl/accumulate.h"
 #include "ctl/array.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 
 // #include <array>
 // #include <numeric>

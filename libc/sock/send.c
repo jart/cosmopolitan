@@ -58,7 +58,7 @@ ssize_t send(int fd, const void *buf, size_t size, int flags) {
   ssize_t rc;
   BEGIN_CANCELATION_POINT;
 
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_sendto(fd, buf, size, flags, 0, 0);

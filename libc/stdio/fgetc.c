@@ -16,20 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads byte from stream.
  *
  * @param f is non-null file object stream pointer
- * @return byte in range 0..255, or -1 w/ errno
+ * @return byte in range 0..255, otherwise EOF
  * @see fgetc_unlocked()
+ * @cancelationpoint
  */
 int fgetc(FILE *f) {
   int rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fgetc_unlocked(f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }
 

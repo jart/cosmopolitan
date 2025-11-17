@@ -332,6 +332,24 @@ static int fnmatch_internal(const char *pat, size_t m, const char *str, size_t n
  *   - `[!abc]` to match character not within set
  *   - `\*\?\[\]` for escaping above special syntax
  *
+ * You may pass the following flags:
+ *
+ * - `FNM_PATHNAME` prevents `*` and `?` from matching `/`. For example,
+ *   the pattern `"*"` will normally match `"dir/file"` but with this
+ *   flag enabled, you'd need a pattern like `"*r/f*"` instead.
+ *
+ * - `FNM_NOESCAPE` disables backslash being used as an escape
+ *
+ * - `FNM_PERIOD` means you can't glob a leading period. This is useful
+ *   when matching hidden filenames. For example, `"*"` would normally
+ *   match `".hidden"`, but with this flag, you'd need to specify a
+ *   pattern like `".*"` instead.
+ *
+ * - `FNM_CASEFOLD` enables case-insensitive matching. This will support
+ *   unicode folding if you put `setlocale(LC_ALL, "C.UTF-8");` at the
+ *   top of your main() function.
+ *
+ * @return 0 if matched, otherwise `FNM_NOMATCH`
  * @see glob()
  */
 int fnmatch(const char *pat, const char *str, int flags)

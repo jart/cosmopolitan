@@ -28,5 +28,5 @@ void dlmalloc_abort(void) {
             "cosmoaddr2line ",
             program_invocation_name, " ",
             DescribeBacktrace(__builtin_frame_address(0)), "\n", NULL);
-  _Exit(44);
+  notpossible;
 }

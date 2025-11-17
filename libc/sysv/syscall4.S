@@ -29,6 +29,7 @@
 //
 //	This helper should not be used to do cancelation points.
 __syscall4:
+	beg
 #ifdef __aarch64__
 	mov	x8,x4				// syscall number (linux)
 	mov	x16,x4				// syscall number (xnu)
@@ -36,9 +37,8 @@ __syscall4:
 	adds	x9,x9,0				// clear carry flag
 	svc	0
 	bcs	1f
-	ret
+	jmp	_linret
 1:	neg	x0,x0
-	ret
 #elif defined(__x86_64__)
 	mov	%rcx,%r10			// avoid intel cx clobber
 	mov	%r8d,%eax			// arg5 -> syscall number
@@ -46,8 +46,10 @@ __syscall4:
 	syscall					// bsds set carry on errs
 	jnc	1f
 	neg	%rax				// normalizes to system v
-1:	ret
+1:	xchg	%rax,%rdi
 #else
 #error "unsupported architecture"
 #endif
+	jmp	_linret
+	end
 	.endfn	__syscall4,globl

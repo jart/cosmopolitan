@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/ulock.h"
@@ -34,6 +36,7 @@
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/arch.h"
+#include "libc/sysv/errno.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/openbsd.internal.h"
 #include "libc/thread/posixthread.internal.h"
@@ -125,7 +128,7 @@ textwindows static errno_t CloneWindows(int (*func)(void *), char *stk,
     atomic_store_explicit(&tib->tib_syshand, h, memory_order_release);
     return 0;
   } else {
-    return __dos2errno(GetLastError());
+    return __errno_host2linux(GetLastError());
   }
 }
 
@@ -266,7 +269,7 @@ relegated static errno_t CloneOpenbsd(int (*func)(void *), char *stk,
     atomic_init(ptid, rc);
     return 0;
   } else {
-    return -rc;
+    return __errno_host2linux(-rc);
   }
 }
 
@@ -331,6 +334,8 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, void *arg,
   // pass parameters in process state
   memcpy(ctx, &netbsd_clone_template, sizeof(*ctx));
   ctx->uc_link = 0;
+  ctx->uc_sigmask[0] = -1;
+  ctx->uc_sigmask[1] = -1;
   ctx->uc_mcontext.rbp = 0;
   ctx->uc_mcontext.rsp = sp;
   ctx->uc_mcontext.rip = (intptr_t)NetbsdThreadMain;
@@ -355,7 +360,7 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, void *arg,
     atomic_init(ptid, tid);
     return 0;
   } else {
-    return ax;
+    return __errno_host2linux(ax);
   }
 }
 
@@ -434,26 +439,21 @@ static errno_t CloneFreebsd(int (*func)(void *), char *stk, size_t stksz,
       .parent_tid = &tid64,
   };
 #ifdef __x86_64__
-  int ax;
-  bool failed;
-  asm volatile(CFLAG_ASM("syscall")
-               : CFLAG_CONSTRAINT(failed), "=a"(ax)
-               : "1"(__NR_thr_new), "D"(&params), "S"(sizeof(params))
+  errno_t res;
+  asm volatile("syscall"
+               : "=a"(res)
+               : "0"(__NR_thr_new), "D"(&params), "S"(sizeof(params))
                : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-  if (failed)
-    return ax;
 #elif defined(__aarch64__)
-  register long x0 asm("x0") = (long)&params;
+  register long res asm("x0") = (long)&params;
   register long x1 asm("x1") = sizeof(params);
   register int x8 asm("x8") = 0x1c7;  // thr_new
-  asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
-  if (x0)
-    return x0;
+  asm volatile("svc\t0" : "+r"(res) : "r"(x1), "r"(x8) : "memory");
 #else
 #error "unsupported architecture"
 #endif
   atomic_init(ptid, tid64);
-  return 0;
+  return __errno_host2linux(res);
 }
 
 #ifdef __aarch64__
@@ -522,12 +522,6 @@ static errno_t CloneSilicon(int (*fn)(void *), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // GNU/SYSTEMD
 
-struct LinuxCloneArgs {
-  int (*func)(void *);
-  void *arg;
-  char *tls;
-};
-
 int sys_clone_linux(int flags,         // rdi
                     long sp,           // rsi
                     atomic_int *ptid,  // rdx
@@ -536,33 +530,15 @@ int sys_clone_linux(int flags,         // rdi
                     void *func,        // r9
                     void *arg);        // 8(rsp)
 
-dontinstrument static int AmdLinuxThreadEntry(void *arg) {
-  struct LinuxCloneArgs *wt = arg;
-#if defined(__x86_64__)
-  sys_set_tls(ARCH_SET_GS, wt->tls);
-#endif
-  return wt->func(wt->arg);
-}
-
 static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
                       void *arg, void *tls, atomic_int *ptid,
                       atomic_int *ctid) {
   long sp = (intptr_t)stk + stksz;
-
 #if defined(__x86_64__)
-  sp -= sizeof(struct LinuxCloneArgs);
-  sp &= -alignof(struct LinuxCloneArgs);
-  struct LinuxCloneArgs *wt = (struct LinuxCloneArgs *)sp;
   sp &= -16;  // align the stack
-  wt->arg = arg;
-  wt->tls = tls;
-  wt->func = func;
-  func = AmdLinuxThreadEntry;
-  arg = wt;
 #elif defined(__aarch64__)
   sp &= -128;  // for kernels <=4.6
 #endif
-
   int rc;
   if ((rc = sys_clone_linux(flags, sp, ptid, ctid, tls, func, arg)) >= 0) {
     // clone() is documented as setting ptid before return
@@ -580,11 +556,12 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
  *
  * If you use clone() you're on your own.
  */
-errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
-              void *ptid, void *tls, void *ctid) {
+errno_t __clone(void *func, void *stk, size_t stksz, int flags, void *arg,
+                void *ptid, void *tls, void *ctid) {
   errno_t err;
 
-  atomic_fetch_add(&_pthread_count, 1);
+  if (!__isthreaded)
+    __isthreaded = 1;
 
   if (IsLinux()) {
     err = CloneLinux(func, stk, stksz, flags, arg, tls, ptid, ctid);
@@ -609,12 +586,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
   } else {
     err = ENOSYS;
   }
-
-  if (SupportsBsd() && err == EPROCLIM)
-    err = EAGAIN;
-
-  if (err)
-    atomic_fetch_sub(&_pthread_count, 1);
 
   return err;
 }

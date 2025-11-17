@@ -20,7 +20,9 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
@@ -29,8 +31,9 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/vga/vga.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 #define _MSG_OOB       1
 #define _MSG_DONTROUTE 4
@@ -54,10 +57,20 @@ textwindows static int sys_send_nt_start(int64_t handle,
 
 textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
+
   if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_DONTROUTE | _MSG_NOSIGNAL))
     return einval();
+
+  if (iovlen) {
+    if (kisdangerous(iov))
+      return efault();
+    for (int i = 0; i < iovlen; ++i)
+      if (iov[i].iov_len && kisdangerous(iov[i].iov_base))
+        return efault();
+  }
+
   ssize_t rc;
-  struct Fd *f = g_fds.p + fd;
+  struct Fd *f = __get_pib()->fds.p + fd;
   sigset_t waitmask = __sig_block();
 
   rc = __winsock_block(f->handle, flags & ~(_MSG_DONTWAIT | _MSG_NOSIGNAL),
@@ -66,9 +79,9 @@ textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
 
   __sig_unblock(waitmask);
 
-  if (rc == -1 && (errno == WSAESHUTDOWN ||      // ESHUTDOWN
-                   errno == WSAECONNABORTED)) {  // ECONNABORTED
-    errno = kNtErrorBrokenPipe;                  // EPIPE
+  if (rc == -1 && (errno == ESHUTDOWN ||      // WSAESHUTDOWN
+                   errno == ECONNABORTED)) {  // WSAECONNABORTED
+    errno = EPIPE;
     if (!(flags & _MSG_NOSIGNAL))
       __sig_raise(SIGPIPE, SI_KERNEL);
   }

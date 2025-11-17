@@ -20,7 +20,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/testlib/testlib.h"
+#include "libc/testlib/subprocess.h"
 
 __static_yoink("strsignal");
 
@@ -29,6 +29,7 @@ void testlib_waitforterm(const char *file, int line, const char *code, int sig,
   int ws;
   char host[64];
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  testlib_stopsparent();
   if (WIFSIGNALED(ws)) {
     if (WTERMSIG(ws) == sig) {
       return;

@@ -17,12 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
+
+static int sys_openat_impl(int dirfd, const char *file, int flags,
+                           unsigned mode) {
+  if ((flags = __xoflags(flags)) == -1)
+    return -1;
+  return __sys_openat(dirfd, file, flags, mode);
+}
 
 int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
   static bool once, modernize;
@@ -31,9 +40,9 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
   // Sometimes the system call succeeds and it just doesn't set the
   // flag. Other times, it return -530 which makes no sense.
   if (!IsLinux() || !(flags & O_CLOEXEC) || modernize) {
-    d = __sys_openat(dirfd, file, flags, mode);
+    d = sys_openat_impl(dirfd, file, flags, mode);
   } else if (once) {
-    if ((d = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode)) != -1) {
+    if ((d = sys_openat_impl(dirfd, file, flags & ~O_CLOEXEC, mode)) != -1) {
       e = errno;
       if (__sys_fcntl(d, F_SETFD, FD_CLOEXEC) == -1) {
         errno = e;
@@ -41,7 +50,7 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
     }
   } else {
     e = errno;
-    if ((d = __sys_openat(dirfd, file, flags, mode)) != -1) {
+    if ((d = sys_openat_impl(dirfd, file, flags, mode)) != -1) {
       if ((f = __sys_fcntl(d, F_GETFD)) != -1) {
         if (f & FD_CLOEXEC) {
           modernize = true;

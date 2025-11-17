@@ -12,6 +12,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -62,7 +63,7 @@ static atomic_int a_termsig;
 static atomic_long a_requests;
 static atomic_bool a_finished;
 
-static wontreturn void PrintUsage(int fd, int rc) {
+[[noreturn]] static void PrintUsage(int fd, int rc) {
   tinyprint(fd, "Usage: ", prog, " -H HOST -P PORT\n", NULL);
   exit(rc);
 }

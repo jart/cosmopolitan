@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 
 /**
@@ -28,6 +29,15 @@
  * is in the EOF state, this function can be used to restore it without
  * needing to reopen the file.
  *
+ * This implementation provides stricter POSIX compliance than some
+ * implementations by ensuring proper handling of mixed read/write
+ * operations. POSIX.1 states: "After an fseek() call, the next
+ * operation on an update stream may be either input or output" and "if
+ * the stream is writable and has unflushed buffered data, fseek() shall
+ * cause the unwritten data to be written to the file." This
+ * implementation rigorously enforces these semantics, preventing data
+ * corruption that can occur with looser implementations.
+ *
  * @param f is a non-null stream handle
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
@@ -35,11 +45,13 @@
  */
 int fseek(FILE *f, int64_t offset, int whence) {
   int rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = fseek_unlocked(f, offset, whence);
   STDIOTRACE("fseek(%p, %'ld, %s) → %d %s", f, offset, DescribeWhence(whence),
              rc, DescribeStdioState(f->state));
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }
 

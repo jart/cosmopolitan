@@ -62,12 +62,12 @@ char linkbuf[PATH_MAX];
 
 void Mv(char *, char *);
 
-wontreturn void Die(const char *path, const char *reason) {
+[[noreturn]] void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-wontreturn void SysDie(const char *path, const char *func) {
+[[noreturn]] void SysDie(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno)))
     errstr = "EUNKNOWN";
@@ -96,7 +96,7 @@ bool IsSymlink(const char *path) {
   return res;
 }
 
-wontreturn void PrintUsage(int rc, int fd) {
+[[noreturn]] void PrintUsage(int rc, int fd) {
   tinyprint(fd, "usage: ", prog, USAGE, NULL);
   exit(rc);
 }

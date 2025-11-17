@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cosmo.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 

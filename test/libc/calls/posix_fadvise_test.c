@@ -21,7 +21,6 @@
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -35,75 +34,42 @@ void SetUp(void) {
     exit(0);
 }
 
-TEST(fadvise, ebadf) {
-  ASSERT_SYS(EBADF, -1, fadvise(-1, 0, 0, MADV_SEQUENTIAL));
-}
-
 TEST(posix_fadvise, ebadf) {
   ASSERT_SYS(0, EBADF, posix_fadvise(-1, 0, 0, POSIX_FADV_SEQUENTIAL));
-}
-
-TEST(fadvise, test) {
-  ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
-  ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(0, 0, fadvise(3, 0, 0, MADV_SEQUENTIAL));
-  ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(posix_fadvise, test) {
   ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
   ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(0, 0, posix_fadvise(3, 0, 0, POSIX_FADV_SEQUENTIAL));
-  ASSERT_SYS(0, 0, close(3));
-}
-
-TEST(fadvise, testBadAdvice) {
-  ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
-  ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(EINVAL, -1, fadvise(3, 0, 0, 127));
+  ASSERT_EQ(0, posix_fadvise(3, 0, 0, POSIX_FADV_SEQUENTIAL));
   ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(posix_fadvise, testBadAdvice) {
   ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
   ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(0, EINVAL, posix_fadvise(3, 0, 0, 127));
+  ASSERT_EQ(EINVAL, posix_fadvise(3, 0, 0, 127));
   ASSERT_SYS(0, 0, close(3));
 }
 
-TEST(fadvise, testPastEof_isFine) {
+TEST(posix_fadvise, testPastEof_isFine) {
   ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
   ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(0, 0, fadvise(3, 100, 100, MADV_SEQUENTIAL));
-  ASSERT_SYS(0, 0, close(3));
-}
-
-TEST(fadvise, testNegativeLen_isInvalid) {
-  ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
-  ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(EINVAL, -1, fadvise(3, 0, INT64_MIN, MADV_SEQUENTIAL));
+  ASSERT_EQ(0, posix_fadvise(3, 100, 100, POSIX_FADV_SEQUENTIAL));
   ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(posix_fadvise, testNegativeLen_isInvalid) {
   ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
   ASSERT_SYS(0, 3, open("foo", 0));
-  ASSERT_SYS(0, EINVAL, posix_fadvise(3, 0, INT64_MIN, POSIX_FADV_SEQUENTIAL));
-  ASSERT_SYS(0, 0, close(3));
-}
-
-TEST(fadvise, espipe) {
-  int fds[2];
-  ASSERT_SYS(0, 0, pipe(fds));
-  ASSERT_SYS(ESPIPE, -1, fadvise(3, 0, 0, MADV_SEQUENTIAL));
-  ASSERT_SYS(0, 0, close(4));
+  ASSERT_EQ(EINVAL, posix_fadvise(3, 0, INT64_MIN, POSIX_FADV_SEQUENTIAL));
   ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(posix_fadvise, espipe) {
   int fds[2];
   ASSERT_SYS(0, 0, pipe(fds));
-  ASSERT_SYS(0, ESPIPE, posix_fadvise(3, 0, 0, POSIX_FADV_SEQUENTIAL));
+  ASSERT_EQ(ESPIPE, posix_fadvise(3, 0, 0, POSIX_FADV_SEQUENTIAL));
   ASSERT_SYS(0, 0, close(4));
   ASSERT_SYS(0, 0, close(3));
 }

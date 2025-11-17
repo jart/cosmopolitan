@@ -22,6 +22,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/mbedtls/config.h"
+#include "libc/stdlib.h"
+#include "libc/stdlib.h"
+#include "libc/serialize.h"
 #include "third_party/mbedtls/endian.h"
 
 void Hacl_Curve25519_crypto_scalarmult(uint8_t *, uint8_t *, uint8_t *);
@@ -47,21 +50,21 @@ TEST(everest, tinierVersionBehavesTheSame) {
   size_t i;
   uint8_t secret[32], bpoint[32], public[2][32];
   for (i = 0; i < 500; ++i) {
-    rngset(secret, sizeof(secret), _rand64, -1);
-    rngset(bpoint, sizeof(bpoint), _rand64, -1);
+    arc4random_buf(secret, sizeof(secret));
+    arc4random_buf(bpoint, sizeof(bpoint));
     Hacl_Curve25519_crypto_scalarmult(public[0], secret, bpoint);
     curve25519(public[1], secret, bpoint);
     ASSERT_EQ(0, memcmp(public[0], public[1], sizeof(public[0])));
   }
   for (i = 0; i < 500; ++i) {
-    Write64le(secret + 000, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(secret + 010, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(secret + 020, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(secret + 030, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(bpoint + 000, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(bpoint + 010, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(bpoint + 020, kNumbers[rand() % ARRAYLEN(kNumbers)]);
-    Write64le(bpoint + 030, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(secret + 000, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(secret + 010, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(secret + 020, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(secret + 030, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(bpoint + 000, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(bpoint + 010, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(bpoint + 020, kNumbers[rand() % ARRAYLEN(kNumbers)]);
+    WRITE64LE(bpoint + 030, kNumbers[rand() % ARRAYLEN(kNumbers)]);
     Hacl_Curve25519_crypto_scalarmult(public[0], secret, bpoint);
     curve25519(public[1], secret, bpoint);
     ASSERT_EQ(0, memcmp(public[0], public[1], sizeof(public[0])));
@@ -70,8 +73,8 @@ TEST(everest, tinierVersionBehavesTheSame) {
 
 BENCH(everest, bench) {
   uint8_t secret[32], bpoint[32], public[32];
-  rngset(secret, sizeof(secret), _rand64, -1);
-  rngset(bpoint, sizeof(bpoint), _rand64, -1);
+  arc4random_buf(secret, sizeof(secret));
+  arc4random_buf(bpoint, sizeof(bpoint));
   EZBENCH2("everest", donothing,
            Hacl_Curve25519_crypto_scalarmult(public, secret, bpoint));
   EZBENCH2("mariana", donothing, curve25519(public, secret, bpoint));

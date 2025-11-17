@@ -80,6 +80,7 @@ int setvbuf(FILE *, char *, int, size_t) libcesque __read_write(1);
 int pclose(FILE *) libcesque __read_write(1);
 char *ctermid(char *) libcesque __write_only(1);
 void perror(const char *) libcesque relegated __read_only(1);
+FILE *open_memstream(char **, size_t *);
 
 typedef uint64_t fpos_t;
 char *gets(char *) libcesque paramsnonnull() __write_only(1);

@@ -8,17 +8,20 @@ from typing import List, Dict, Tuple
 
 NUM_PARALLEL = int(os.cpu_count() * 20)
 
+def is_test_executable(path: str) -> bool:
+    return os.path.splitext(path)[0].endswith('_test')
+
 def find_test_files(root: str) -> List[str]:
     """Find all executable files ending with _test recursively."""
     test_files = []
     if os.path.isdir(root):
         for root, _, files in os.walk(root):
             for file in files:
-                if file.endswith('_test'):
+                if is_test_executable(file):
                     file_path = os.path.join(root, file)
                     if os.access(file_path, os.X_OK):
                         test_files.append(file_path)
-    elif root.endswith('_test'):
+    elif is_test_executable(root):
         test_files.append(root)
     return test_files
 

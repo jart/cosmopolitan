@@ -25,9 +25,9 @@
 
 long z = 2;
 pthread_t t;
-_Thread_local long x;
-_Thread_local long y[1] = {40};
-_Alignas(A) _Thread_local long a;
+thread_local long x;
+thread_local long y[1] = {40};
+alignas(A) thread_local long a;
 
 dontubsan void *Worker(void *arg) {
   ASSERT_EQ(A, _Alignof(a));

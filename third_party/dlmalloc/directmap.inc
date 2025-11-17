@@ -18,7 +18,7 @@ static void* mmap_alloc(mstate m, size_t nb) {
       return 0;
   }
   if (mmsize > nb) {     /* Check for wrap around 0 */
-    char* mm = (char*)(dlmalloc_requires_more_vespene_gas(mmsize));
+    char* mm = (char*)_mapanon(mmsize);
     if (mm != CMFAIL) {
       size_t offset = align_offset(chunk2mem(mm));
       size_t psize = mmsize - offset - MMAP_FOOT_PAD;
@@ -52,6 +52,7 @@ static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
       (oldsize - nb) <= (mparams.granularity << 1))
     return oldp;
   else {
+    int olderr = errno;
     size_t offset = oldp->prev_foot;
     size_t oldmmsize = oldsize + offset + MMAP_FOOT_PAD;
     size_t newmmsize = mmap_align(nb + SIX_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
@@ -71,6 +72,8 @@ static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
         m->max_footprint = m->footprint;
       check_mmapped_chunk(m, newp);
       return newp;
+    } else {
+      errno = olderr;
     }
   }
   return 0;

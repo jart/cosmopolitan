@@ -636,8 +636,8 @@ static void transfer_set (nsync_mu *mu, int *pi, int x) {
 
 /* Lock and unlock routines for writers (index 0), and readers (index 1).  */
 static const struct {
-	void (*lock) (nsync_mu *);
-	void (*unlock) (nsync_mu *);
+	int (*lock) (nsync_mu *);
+	int (*unlock) (nsync_mu *);
 } lock_type[2] = {
 	{ &nsync_mu_lock, &nsync_mu_unlock },
 	{ &nsync_mu_rlock, &nsync_mu_runlock },

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
@@ -37,7 +38,7 @@
     ++k;              \
   } while (0)
 
-static textwindows bool NeedsQuotes(const char *s) {
+textwindows static bool NeedsQuotes(const char *s) {
   if (!*s)
     return true;
   do {
@@ -55,13 +56,9 @@ static textwindows bool NeedsQuotes(const char *s) {
   return false;
 }
 
-static inline int IsAlpha(int c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-static textwindows bool LooksLikeCosmoDrivePath(const char *s) {
+textwindows static bool LooksLikeCosmoDrivePath(const char *s) {
   return s[0] == '/' &&    //
-         IsAlpha(s[1]) &&  //
+         isalpha(s[1]) &&  //
          s[2] == '/';
 }
 

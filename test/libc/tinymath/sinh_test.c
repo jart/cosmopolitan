@@ -39,8 +39,10 @@ TEST(sinh, test) {
 }
 
 TEST(sinhl, test) {
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ(".5210953054937474", gc(xdtoal(_sinhl(+.5))));
   EXPECT_STREQ("-.5210953054937474", gc(xdtoal(_sinhl(-.5))));
+#endif
   EXPECT_STREQ("INFINITY", gc(xdtoal(_sinhl(30000))));
   EXPECT_STREQ("-INFINITY", gc(xdtoal(_sinhl(-30000))));
   EXPECT_STREQ("0", gc(xdtoal(_sinhl(0))));

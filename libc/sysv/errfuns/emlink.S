@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 emlink:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EMLINK(%rip),%ecx
+	push	$EMLINK
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EMLINK
-	ldrsw	x0,[x1,#:lo12:EMLINK]
+	mov	x0,#EMLINK
 	b	__errfun
 #else
 #error "unsupported architecture"

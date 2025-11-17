@@ -789,6 +789,33 @@ ape.ident:
 	.type	ape.ident,@object
 	.previous
 
+#if SupportsFreebsd()
+//
+//	This PT_NOTE enables the following kernel behaviors:
+//
+//	- P_OSREL_SIGSEGV ensures SIGEGV signals aren't misdelivered as
+//	  as SIGBUS with invalid siginfo fields.
+//
+//	- P_OSREL_SHUTDOWN_ENOTCONN is probably a good thing
+//
+//	- P_OSREL_SIGWAIT prevents sigwait() from raising EINTR
+//
+//	- P_OSREL_MAP_FSTRICT (basically MAP_SHARED_VALIDATE?)
+//
+	.section .note.freebsd.ident,"a",@progbits
+	.balign	4
+freebsd.ident:
+	.long	2f-1f
+	.long	4f-3f
+	.long	1 // NT_FREEBSD_ABI_TAG
+1:	.asciz	"FreeBSD"
+2:	.balign	4
+3:	.long	1300000 // v13.0+ c. 2020
+4:	.size	freebsd.ident,.-freebsd.ident
+	.type	freebsd.ident,@object
+	.previous
+#endif /* SupportsFreebsd() */
+
 #if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
 	.balign	4
@@ -1084,6 +1111,19 @@ ape_pe:	.ascin	"PE",4
 	.short	0			// Relocation Count
 	.short	0			// Line Number Count
 	.long	PERDAT			// Flags
+	.previous
+
+	.section .pe.sections,"a",@progbits
+	.ascin	".idata",8		// Section Name
+	.long	ape_idt_memsz		// Virtual Size or Physical Address
+	.long	ape_idt_rva		// Relative Virtual Address
+	.long	ape_idt_filesz		// Physical Size
+	.long	ape_idt_offset		// Physical Offset
+	.long	0			// Relocation Table Offset
+	.long	0			// Line Number Table Offset
+	.short	0			// Relocation Count
+	.short	0			// Line Number Count
+	.long	PEIMPS			// Flags
 	.previous
 
 	.section .pe.sections,"a",@progbits
@@ -1711,6 +1751,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	mov	$0x79000,%esi
 	mov	$0x7f000,%edx
 	call	__reclaim_boot_pages
+	movl	$1,__pib(%rip)
 	push	$_HOSTMETAL			// sets __hostos in crt.S
 	pop	%rcx
 	pushq	.Lenv0(%rip)			// envp[0][0]
@@ -1828,7 +1869,7 @@ __bss_end:
 	.section .notice,"aR",@progbits
 	.asciz	"\n\n\
 Cosmopolitan\n\
-Copyright 2024 Justine Alexandra Roberts Tunney\n\
+Copyright 2025 Justine Alexandra Roberts Tunney\n\
 \n\
 Permission to use, copy, modify, and/or distribute this software for\n\
 any purpose with or without fee is hereby granted, provided that the\n\

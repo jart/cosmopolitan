@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/mem/mem.h"
@@ -99,7 +100,7 @@ TEST(memccpy, memcpy) {
     b1 = calloc(1, n);
     b2 = calloc(1, n);
     b3 = calloc(1, n);
-    rngset(b1, n, _rand64, -1);
+    arc4random_buf(b1, n);
     e1 = memccpy_pure(b2, b1, 31337, n);
     e2 = memccpy(b3, b1, 31337, n);
     n1 = e1 ? e1 - b2 : n;

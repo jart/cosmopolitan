@@ -29,10 +29,11 @@
 /**
  * Blocks until kernel flushes non-metadata buffers for fd to disk.
  *
- * NOTE: For `IsXnu()` it's recommended that `fcntl(F_FULLFSYNC)` be
- * favored instead of this function, and if that fails, the fallback
- * path should call `fsync()` see the SQLite codebase. In the future
- * Cosmopolitan might do this automatically.
+ * MacOS doesn't officially have fdatasync. XNU claims to have fsync but
+ * it doesn't do much. So this wrapper calls `fcntl(F_FULLFSYNC)` and if
+ * it fails (due to lack of filesystem support) this falls back to fsync
+ *
+ * You should expect this function to take milliseconds to complete.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
@@ -53,14 +54,14 @@ int fdatasync(int fd) {
   BEGIN_CANCELATION_POINT;
   if (__isfdkind(fd, kFdZip)) {
     rc = erofs();
-  } else if (!IsWindows()) {
-    if (!fake) {
-      rc = sys_fdatasync(fd);
-    } else {
-      rc = sys_fsync_fake(fd);
-    }
-  } else {
+  } else if (IsWindows()) {
     rc = sys_fdatasync_nt(fd, fake);
+  } else if (fake) {
+    rc = sys_fsync_fake(fd);
+  } else if (IsXnu()) {
+    rc = sys_fsync_xnu(fd);
+  } else {
+    rc = sys_fdatasync(fd);
   }
   END_CANCELATION_POINT;
   STRACE("fdatasync%s(%d) → %d% m", fake ? "_fake" : "", fd, rc);

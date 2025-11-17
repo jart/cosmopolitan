@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/describentoverlapped.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
 __msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
@@ -39,11 +39,9 @@ bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
   bool32 ok;
   ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
                           nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok)
-    __winerr();
   NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
+      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → {%hhhd, %d}", hFile, dwReserved,
       (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
+      DescribeNtOverlapped(lpOverlapped), ok, GetLastError());
   return ok;
 }

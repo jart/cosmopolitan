@@ -33,7 +33,7 @@ const char *FLAG_prefix;
 const char *FLAG_suffix;
 const char *path;
 
-wontreturn void PrintUsage(int fd, int exitcode) {
+[[noreturn]] void PrintUsage(int fd, int exitcode) {
   tinyprint(fd, "\n\
 NAME\n\
 \n\
@@ -61,17 +61,17 @@ FLAGS\n\
   exit(exitcode);
 }
 
-wontreturn void Die(const char *reason) {
+[[noreturn]] void Die(const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-wontreturn void DieSys(const char *func) {
+[[noreturn]] void DieSys(const char *func) {
   tinyprint(2, path, ": ", func, " failed with ", strerror(errno), "\n", NULL);
   exit(1);
 }
 
-wontreturn void DieOom(void) {
+[[noreturn]] void DieOom(void) {
   Die("out of memory");
 }
 

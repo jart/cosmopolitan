@@ -21,13 +21,15 @@
 #include "libc/testlib/testlib.h"
 
 TEST(fscanf, test_readAfterFloat) {
+  int n;
   FILE *f = fmemopen("infDEAD-.125e-2BEEF", 19, "r");
   float f1 = 666.666f, f2 = f1;
   int i1 = 666, i2 = i1;
-  EXPECT_EQ(4, fscanf(f, "%f%x%f%x", &f1, &i1, &f2, &i2));
-  EXPECT_TRUE(isinf(f1));
-  EXPECT_EQ(0xDEAD, i1);
-  EXPECT_FLOAT_EXACTLY_EQ(-0.125e-2f, f2);
-  EXPECT_EQ(0xBEEF, i2);
+  ASSERT_EQ(4, fscanf(f, "%f%x%f%x%n", &f1, &i1, &f2, &i2, &n));
+  ASSERT_TRUE(isinf(f1));
+  ASSERT_EQ(0xDEAD, i1);
+  ASSERT_EQ(-0.125e-2f, f2);
+  ASSERT_EQ(0xBEEF, i2);
+  ASSERT_EQ(19, n);
   fclose(f);
 }

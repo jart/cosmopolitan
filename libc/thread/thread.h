@@ -1,12 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 #define COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 
-#define PTHREAD_KEYS_MAX              46
+#define PTHREAD_KEYS_MAX              128
 #define PTHREAD_STACK_MIN             32768
 #define PTHREAD_USE_NSYNC             1
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
-#define PTHREAD_BARRIER_SERIAL_THREAD 31337
+#define PTHREAD_BARRIER_SERIAL_THREAD -1
 
 #define PTHREAD_MUTEX_DEFAULT    0
 #define PTHREAD_MUTEX_NORMAL     1
@@ -65,8 +65,10 @@ typedef char pthread_barrierattr_t;
 typedef unsigned pthread_key_t;
 typedef void (*pthread_key_dtor)(void *);
 
+struct _pthread_cleanup_buffer;
+
 typedef struct pthread_once_s {
-  _PTHREAD_ATOMIC(uint32_t) _lock;
+  _PTHREAD_ATOMIC(unsigned) _lock;
 } pthread_once_t;
 
 typedef struct pthread_spinlock_s {
@@ -79,6 +81,9 @@ typedef struct pthread_mutex_s {
   _PTHREAD_ATOMIC(int) _futex;
   int _pid;
   void *_nsync[2];
+  int (*_lock)(struct pthread_mutex_s *);
+  int (*_unlock)(struct pthread_mutex_s *);
+  void *_extra;
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
@@ -114,10 +119,11 @@ typedef struct pthread_rwlock_s {
 } pthread_rwlock_t;
 
 typedef struct pthread_barrier_s {
-  int _count;
-  char _pshared;
-  _PTHREAD_ATOMIC(int) _counter;
-  _PTHREAD_ATOMIC(int) _waiters;
+  _PTHREAD_ATOMIC(unsigned) _entered;
+  _PTHREAD_ATOMIC(unsigned) _exited;
+  _PTHREAD_ATOMIC(unsigned) _round;
+  unsigned _count;
+  int _pshared;
 } pthread_barrier_t;
 
 typedef struct pthread_attr_s {
@@ -134,13 +140,6 @@ typedef struct pthread_attr_s {
   void *__stackaddr;
   void *__sigaltstackaddr;
 } pthread_attr_t;
-
-struct _pthread_cleanup_buffer {
-  void (*__routine)(void *);
-  void *__arg;
-  int __canceltype;
-  struct _pthread_cleanup_buffer *__prev;
-};
 
 /* clang-format off */
 
@@ -193,11 +192,12 @@ int pthread_getattr_np(pthread_t, pthread_attr_t *) libcesque paramsnonnull();
 int pthread_getname_np(pthread_t, char *, size_t) libcesque paramsnonnull();
 int pthread_getunique_np(pthread_t, pthread_id_np_t *) libcesque paramsnonnull();
 int pthread_join(pthread_t, void **) dontthrow;
-int pthread_key_create(pthread_key_t *, pthread_key_dtor) libcesque paramsnonnull((1));
-int pthread_key_delete(pthread_key_t) libcesque;
+int pthread_key_create(pthread_key_t *, pthread_key_dtor) dontthrow paramsnonnull((1));
+int pthread_key_delete(pthread_key_t) dontthrow;
 int pthread_kill(pthread_t, int) dontthrow;
 int pthread_mutex_consistent(pthread_mutex_t *) dontthrow paramsnonnull();
 int pthread_mutex_destroy(pthread_mutex_t *) libcesque paramsnonnull();
+int pthread_mutex_held_np(pthread_mutex_t *, int *) libcesque paramsnonnull();
 int pthread_mutex_init(pthread_mutex_t *, const pthread_mutexattr_t *) libcesque paramsnonnull((1));
 int pthread_mutex_lock(pthread_mutex_t *) dontthrow paramsnonnull();
 int pthread_mutex_trylock(pthread_mutex_t *) dontthrow paramsnonnull();
@@ -211,8 +211,8 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int) libcesque paramsnon
 int pthread_mutexattr_settype(pthread_mutexattr_t *, int) libcesque paramsnonnull();
 int pthread_once(pthread_once_t *, void (*)(void)) paramsnonnull();
 int pthread_orphan_np(void) libcesque;
-int pthread_rwlock_destroy(pthread_rwlock_t *) libcesque paramsnonnull();
-int pthread_rwlock_init(pthread_rwlock_t *, const pthread_rwlockattr_t *) libcesque paramsnonnull((1));
+int pthread_rwlock_destroy(pthread_rwlock_t *) dontthrow paramsnonnull();
+int pthread_rwlock_init(pthread_rwlock_t *, const pthread_rwlockattr_t *) dontthrow paramsnonnull((1));
 int pthread_rwlock_rdlock(pthread_rwlock_t *) dontthrow paramsnonnull();
 int pthread_rwlock_tryrdlock(pthread_rwlock_t *) dontthrow paramsnonnull();
 int pthread_rwlock_trywrlock(pthread_rwlock_t *) dontthrow paramsnonnull();
@@ -226,9 +226,9 @@ int pthread_setcancelstate(int, int *) libcesque;
 int pthread_setcanceltype(int, int *) libcesque;
 int pthread_setname_np(pthread_t, const char *) libcesque paramsnonnull();
 int pthread_setschedprio(pthread_t, int) libcesque;
-int pthread_setspecific(pthread_key_t, const void *) libcesque;
-int pthread_spin_destroy(pthread_spinlock_t *) libcesque paramsnonnull();
-int pthread_spin_init(pthread_spinlock_t *, int) libcesque paramsnonnull();
+int pthread_setspecific(pthread_key_t, const void *) dontthrow;
+int pthread_spin_destroy(pthread_spinlock_t *) dontthrow paramsnonnull();
+int pthread_spin_init(pthread_spinlock_t *, int) dontthrow paramsnonnull();
 int pthread_spin_lock(pthread_spinlock_t *) dontthrow paramsnonnull();
 int pthread_spin_trylock(pthread_spinlock_t *) dontthrow paramsnonnull();
 int pthread_spin_unlock(pthread_spinlock_t *) dontthrow paramsnonnull();
@@ -238,22 +238,41 @@ int pthread_yield(void) dontthrow;
 int pthread_yield_np(void) dontthrow;
 pthread_id_np_t pthread_getthreadid_np(void) libcesque;
 pthread_t pthread_self(void) libcesque pureconst;
-void *pthread_getspecific(pthread_key_t) libcesque;
-void pthread_cleanup_pop(struct _pthread_cleanup_buffer *, int) dontthrow paramsnonnull();
-void pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *), void *) dontthrow paramsnonnull((1));
+void *pthread_getspecific(pthread_key_t) dontthrow;
+void __pthread_cleanup_pop(struct _pthread_cleanup_buffer *, int) dontthrow paramsnonnull();
+void __pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *), void *) dontthrow paramsnonnull((1));
+void __pthread_cleanup_unwind(struct _pthread_cleanup_buffer *) dontthrow paramsnonnull();
 void pthread_exit(void *) wontreturn;
 void pthread_pause_np(void) dontthrow;
 void pthread_testcancel(void) dontthrow;
 
 /* clang-format on */
 
-#define pthread_cleanup_push(routine, arg)  \
-  {                                         \
-    struct _pthread_cleanup_buffer _buffer; \
-    pthread_cleanup_push(&_buffer, (routine), (arg));
+#ifdef __cplusplus
+#define _PTHREAD_CLEANUP(unwind)
+#else
+#define _PTHREAD_CLEANUP(unwind) __attribute__((__cleanup__(unwind)))
+#endif
 
-#define pthread_cleanup_pop(execute)        \
-  pthread_cleanup_pop(&_buffer, (execute)); \
+struct _pthread_cleanup_buffer {
+  void (*__routine)(void *);
+  void *__arg;
+  struct _pthread_cleanup_buffer *__prev;
+#ifdef __cplusplus
+  ~_pthread_cleanup_buffer() {
+    __pthread_cleanup_pop(this, 1);
+  }
+#endif
+};
+
+#define pthread_cleanup_push(routine, arg)                   \
+  {                                                          \
+    struct _pthread_cleanup_buffer _buffer _PTHREAD_CLEANUP( \
+        __pthread_cleanup_unwind);                           \
+    __pthread_cleanup_push(&_buffer, (routine), (arg));
+
+#define pthread_cleanup_pop(execute)          \
+  __pthread_cleanup_pop(&_buffer, (execute)); \
   }
 
 COSMOPOLITAN_C_END_

@@ -17,8 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -26,6 +27,7 @@
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Assigns local address and port number to socket, e.g.
@@ -47,22 +49,20 @@
  */
 int bind(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   int rc;
-  if (!addr) {
-    rc = efault();
-  } else if (addrsize >= sizeof(struct sockaddr_in)) {
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = enotsock();
-    } else if (!IsWindows()) {
-      rc = sys_bind(fd, addr, addrsize);
-    } else if (!__isfdopen(fd)) {
-      rc = ebadf();
-    } else if (__isfdkind(fd, kFdSocket)) {
-      rc = sys_bind_nt(&g_fds.p[fd], addr, addrsize);
-    } else {
-      rc = enotsock();
-    }
-  } else {
+  if (addrsize < sizeof(struct sockaddr)) {
     rc = einval();
+  } else if (kisdangerous(addr)) {
+    rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
+    rc = enotsock();
+  } else if (!IsWindows()) {
+    rc = sys_bind(fd, addr, addrsize);
+  } else if (!__isfdopen(fd)) {
+    rc = ebadf();
+  } else if (__isfdkind(fd, kFdSocket)) {
+    rc = sys_bind_nt(&__get_pib()->fds.p[fd], addr, addrsize);
+  } else {
+    rc = enotsock();
   }
   STRACE("bind(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
   return rc;

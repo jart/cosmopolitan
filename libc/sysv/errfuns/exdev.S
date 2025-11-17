@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 exdev:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	EXDEV(%rip),%ecx
+	push	$EXDEV
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,EXDEV
-	ldrsw	x0,[x1,#:lo12:EXDEV]
+	mov	x0,#EXDEV
 	b	__errfun
 #else
 #error "unsupported architecture"

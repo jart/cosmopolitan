@@ -1273,7 +1273,7 @@ static int panicback (lua_State *L) {
   b = (struct Aux *)lua_touserdata(L, -1);
   lua_pop(L, 1);  /* remove 'Aux' struct */
   runC(b->L, L, b->paniccode);  /* run optional panic code */
-  gclongjmp(b->jb, 1);  // [jart]
+  longjmp(b->jb, 1);
   return 1;  /* to avoid warnings */
 }
 

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 
 /**
@@ -27,4 +28,4 @@
  * things like Python unit tests go faster because fsync is extremely
  * slow and using tmpfs requires root privileges.
  */
-uint64_t __nosync;
+__rarechange uint64_t __nosync;

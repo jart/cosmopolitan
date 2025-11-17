@@ -1,84 +1,94 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
-╚─────────────────────────────────────────────────────────────────────────────*/
+// Copyright 2025 Justine Alexandra Roberts Tunney
+//
+// Permission to use, copy, modify, and/or distribute this software for
+// any purpose with or without fee is hereby granted, provided that the
+// above copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+// DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+// PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+// TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
+
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/macros.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-static struct {
-  atomic_uint once;
+static void __get_tmpdir_impl(char dest[static PATH_MAX]) {
+  char *s;
+  int m, n = 0;
   union {
-    char path[PATH_MAX];
-    char16_t path16[PATH_MAX / 2];
-  };
-} __tmpdir;
+    char buf8[PATH_MAX];
+    char16_t buf16[PATH_MAX];
+  } U;
 
-static inline int IsAlpha(int c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+  // we prefer the POSIX-specified $TMPDIR variable
+  if ((s = getenv("TMPDIR")))
+    if ((n = strlcpy(dest, s, PATH_MAX)) >= PATH_MAX)
+      n = 0;
+
+  // on windows we'll also try %TMP% and %TEMP%
+  if (n <= 0)
+    if (IsWindows())
+      if ((n = GetTempPath(PATH_MAX, U.buf16)))
+        n = __mkunixpath(U.buf16, dest);
+
+  // resolve relative tmp dir against current directory
+  if (n > 0) {
+    if (dest[0] != '/') {
+      if ((m = __getcwd(U.buf8, PATH_MAX)) != -1) {
+        --m;  // __getcwd() includes nul terminator in length
+        while (m && U.buf8[m - 1] == '/')
+          U.buf8[--m] = 0;
+        if (m + 1 + n < PATH_MAX) {
+          memmove(dest + m + 1, dest, n + 1);
+          memcpy(dest, U.buf8, m);
+          dest[m] = '/';
+          n = m + 1 + n;
+        }
+      }
+    }
+  }
+
+  // ensure there's room for user to append another path component
+  if (n > 0 && n + NAME_MAX + 2 > PATH_MAX)
+    n = 0;
+
+  // recursively ensure tmp dir exists
+  if (n > 0)
+    if (makedirs(dest, 0755))
+      n = 0;
+
+  // ensure resulting path has trailing slash
+  if (n > 0)
+    if (dest[n - 1] != '/')
+      if (strlcat(dest, "/", PATH_MAX) >= PATH_MAX)
+        n = 0;
+
+  // if all else fails, return /tmp/
+  if (n <= 0)
+    n = strlcpy(dest, "/tmp/", PATH_MAX);
 }
 
+static struct {
+  atomic_uint once;
+  char path[PATH_MAX];
+} __tmpdir;
+
 static void __tmpdir_init(void) {
-  int i;
-  char *s;
-  uint32_t n;
-
-  if ((s = getenv("TMPDIR"))) {
-    if (*s != '/') {
-      if (__getcwd(__tmpdir.path, PATH_MAX) == -1) {
-        goto GiveUp;
-      }
-      strlcat(__tmpdir.path, "/", sizeof(__tmpdir.path));
-    }
-    strlcat(__tmpdir.path, s, sizeof(__tmpdir.path));
-    if (strlcat(__tmpdir.path, "/", sizeof(__tmpdir.path)) <
-        PATH_MAX - NAME_MAX) {
-      return;
-    }
-  }
-
-GiveUp:
-  if (IsWindows() &&
-      ((n = GetTempPath(ARRAYLEN(__tmpdir.path16), __tmpdir.path16)) &&
-       n < ARRAYLEN(__tmpdir.path16))) {
-    // turn c:\foo\bar\ into c:/foo/bar/
-    for (i = 0; i < n; ++i) {
-      if (__tmpdir.path16[i] == '\\') {
-        __tmpdir.path16[i] = '/';
-      }
-    }
-    // turn c:/... into /c/...
-    if (IsAlpha(__tmpdir.path16[0]) && __tmpdir.path16[1] == ':' &&
-        __tmpdir.path16[2] == '/') {
-      __tmpdir.path16[1] = __tmpdir.path16[0];
-      __tmpdir.path16[0] = '/';
-      __tmpdir.path16[2] = '/';
-    }
-    tprecode16to8(__tmpdir.path, sizeof(__tmpdir.path), __tmpdir.path16);
-    return;
-  }
-
-  strcpy(__tmpdir.path, "/tmp/");
+  int e = errno;
+  __get_tmpdir_impl(__tmpdir.path);
+  errno = e;
 }
 
 /**
@@ -90,10 +100,16 @@ GiveUp:
  *   - GetTempPath(), for the New Technology
  *   - /tmp/ to make security scene go crazy
  *
- * This guarantees an absolute path with a trailing slash. The returned
- * value points to static memory with `PATH_MAX` bytes. The string will
- * be short enough that at least `NAME_MAX` bytes remain. This function
- * is thread safe so long as callers don't modified the returned memory
+ * This always succeeds. This routine always guarantees a trailing slash
+ * will exist at the end of the returned path. The returned path will
+ * also have at least NAME_MAX bytes available before you'll encounter
+ * the PATH_MAX limit.
+ *
+ * Since the paths we choose come from environment variables, they can
+ * be relative, and if that happens, we resolve the path against the
+ * current directory. This requires i/o and it only happens once, since
+ * the result of this function is memoized. We further ensure the temp
+ * directory that's been selected actually exists, using makedirs().
  */
 char *__get_tmpdir(void) {
   cosmo_once(&__tmpdir.once, __tmpdir_init);

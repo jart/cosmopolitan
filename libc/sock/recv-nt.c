@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
@@ -27,8 +29,9 @@
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 #include "libc/vga/vga.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 #define _MSG_OOB      1
 #define _MSG_PEEK     2
@@ -54,10 +57,20 @@ textwindows static int sys_recv_nt_start(int64_t handle,
 
 textwindows ssize_t sys_recv_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
+
   if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_PEEK | _MSG_WAITALL))
     return einval();
+
+  if (iovlen) {
+    if (kisdangerous(iov))
+      return efault();
+    for (int i = 0; i < iovlen; ++i)
+      if (iov[i].iov_len && kisdangerous(iov[i].iov_base))
+        return efault();
+  }
+
   ssize_t rc;
-  struct Fd *f = g_fds.p + fd;
+  struct Fd *f = __get_pib()->fds.p + fd;
   sigset_t waitmask = __sig_block();
 
   // "Be aware that if the underlying transport provider does not

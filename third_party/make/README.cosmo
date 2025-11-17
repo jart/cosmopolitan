@@ -1,7 +1,8 @@
 DESCRIPTION
 
-  Landlock Make is a fork of GNU Make that adds support for automatic
-  sandboxing, resource limits, and network access restrictions.
+  Cosmopolitan Make is a fork of GNU Make that adds support for
+  automatic sandboxing, resource limits, and network access
+  restrictions.
 
 ORIGIN
 
@@ -18,17 +19,11 @@ LOCAL CHANGES
   - Introduce -T FILE, --time-log=FILE flag
   - Introduce $(uniq token...) native function
   - Remove code that forces slow path if not using /bin/sh
-
-TODO
-
+  - .SANDBOXED variable to enable pleddge / unveil sandboxing
   - .PLEDGE variable which restricts system calls
   - .UNVEIL variable which controls Landlock LSM
-  - .STRICT variable to disable implicit unveiling
-  - .UNSANDBOXED variable to disable pledge / unveil
   - .CPU variable which tunes CPU rlimit in seconds
   - .MEMORY variable for virtual memory limit, e.g. 512m
-  - .RSS variable for resident memory limit, e.g. 512m
   - .FSIZE variable which tunes max file size, e.g. 1g
   - .NPROC variable which tunes fork() / clone() limit
   - .NOFILE variable which tunes file descriptor limit
-  - .MAXCORE variable to set upper limit on core dumps

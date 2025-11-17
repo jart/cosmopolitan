@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
@@ -30,7 +31,7 @@ TEST(bzero, test) {
   a = gc(malloc(128));
   b = gc(malloc(128));
   for (n = 0; n < 128; ++n) {
-    rngset(a, 128, _rand64, -1);
+    arc4random_buf(a, 128);
     memcpy(b, a, 128);
     bzero(a, n);
     memset(b, 0, n);

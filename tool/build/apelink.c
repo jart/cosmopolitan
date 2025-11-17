@@ -41,16 +41,16 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/serialize.h"
-#include "libc/stdalign.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/blake2.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/zip.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/haclstar/haclstar.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/lib.h"
 
@@ -157,6 +157,8 @@
   "             shall be merged into a single output file\n"   \
   "\n"
 
+#define BLAKE2B256_DIGEST_LENGTH 32
+
 #define ALIGN(p, a) (char *)ROUNDUP((uintptr_t)(p), (a))
 
 enum Strategy {
@@ -241,7 +243,7 @@ struct Assets {
 };
 
 static int outfd;
-static int hashes;
+static long hashes;
 static const char *prog;
 static bool want_stripped;
 static int support_vector;
@@ -257,8 +259,8 @@ static const char *custom_sh_code;
 static bool force_bypass_binfmt_misc;
 static bool generate_debuggable_binary;
 static bool dont_path_lookup_ape_loader;
+static Hacl_Hash_Blake2b_state_t *hasher;
 _Alignas(4096) static char prologue[1048576];
-static uint8_t hashpool[BLAKE2B256_DIGEST_LENGTH];
 static const char *macos_silicon_loader_source_path;
 static const char *macos_silicon_loader_source_text;
 static char *macos_silicon_loader_source_ddarg_skip;
@@ -269,22 +271,22 @@ static Elf64_Xword notesize;
 
 static char *r_off32_e_lfanew;
 
-static wontreturn void Die(const char *thing, const char *reason) {
+[[noreturn]] static void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void DieSys(const char *thing) {
+[[noreturn]] static void DieSys(const char *thing) {
   perror(thing);
   exit(1);
 }
 
-static wontreturn void ShowUsage(int rc, int fd) {
+[[noreturn]] static void ShowUsage(int rc, int fd) {
   tinyprint(fd, "USAGE\n\n  ", prog, MANUAL, NULL);
   exit(rc);
 }
 
-static wontreturn void DieOom(void) {
+[[noreturn]] static void DieOom(void) {
   Die("apelink", "out of memory");
 }
 
@@ -356,20 +358,15 @@ static bool IsBinary(const char *p, size_t n) {
   return false;
 }
 
-static void BlendHashes(uint8_t out[static BLAKE2B256_DIGEST_LENGTH],
-                        uint8_t inp[static BLAKE2B256_DIGEST_LENGTH]) {
-  int i;
-  for (i = 0; i < BLAKE2B256_DIGEST_LENGTH; ++i) {
-    out[i] ^= inp[i];
-  }
-}
-
 static void HashInput(const void *data, size_t size) {
-  uint8_t digest[BLAKE2B256_DIGEST_LENGTH];
-  uint32_t hash = crc32_z(hashes, data, size);  // 30 GB/s
-  BLAKE2B256(&hash, sizeof(hash), digest);      // .6 GB/s
-  BlendHashes(hashpool, digest);
-  ++hashes;
+  const uint8_t *bytes = data;
+  uint32_t amt, chunk_size = 0x7ffff000;
+  Hacl_Hash_Blake2b_update(hasher, &size, sizeof(size));
+  for (size_t i = 0; i < size; i += amt) {
+    amt = MIN(size - i, chunk_size);
+    Hacl_Hash_Blake2b_update(hasher, bytes + i, amt);
+    ++hashes;
+  }
 }
 
 static void HashInputString(const char *str) {
@@ -1292,7 +1289,9 @@ static char *DefineMachoUuid(char *p) {
   load->size = sizeof(*load);
   if (!hashes)
     Die(outpath, "won't generate macho uuid");
-  memcpy(load->uuid, hashpool, sizeof(load->uuid));
+  uint8_t digest[32];
+  Hacl_Hash_Blake2b_digest(hasher, digest);
+  memcpy(load->uuid, digest, sizeof(load->uuid));
   return p + sizeof(*load);
 }
 
@@ -1653,7 +1652,9 @@ static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
   if (loader->machine == EM_NEXGEN32E) {
     p = stpcpy(p, "if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]");
   } else if (loader->machine == EM_AARCH64) {
-    p = stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ] || [ \"$m\" = evbarm ]");
+    p = stpcpy(
+        p,
+        "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ] || [ \"$m\" = evbarm ]");
   } else if (loader->machine == EM_PPC64) {
     p = stpcpy(p, "if [ \"$m\" = ppc64le ]");
   } else if (loader->machine == EM_MIPS) {
@@ -1699,7 +1700,9 @@ static char *FinishGeneratingDosHeader(char *p) {
   // scanning over the actually portable executable mz stub can use that
   char *q = ape_heredoc;
   q = stpcpy(q, "justine");
-  uint64_t w = READ64LE(hashpool);
+  uint8_t digest[32];
+  Hacl_Hash_Blake2b_digest(hasher, digest);
+  uint64_t w = READ64LE(digest);
   for (int i = 0; i < 6; ++i) {
     *q++ = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
     w /= 36;
@@ -1890,6 +1893,10 @@ int main(int argc, char *argv[]) {
   if (!prog)
     prog = "apelink";
 
+  // setup objs
+  if (!(hasher = Hacl_Hash_Blake2b_malloc_256()))
+    DieOom();
+
   // process flags
   GetOpts(argc, argv);
 
@@ -1923,8 +1930,7 @@ int main(int argc, char *argv[]) {
         if (!loaders.p[i].kernel && !loaders.p[j].kernel) {
           Die(prog, "multiple ape loaders specified for the same platform");
         }
-        if (loaders.p[i].kernel != NULL &&
-            loaders.p[j].kernel != NULL &&
+        if (loaders.p[i].kernel != NULL && loaders.p[j].kernel != NULL &&
             strcmp(loaders.p[i].kernel, loaders.p[j].kernel) == 0) {
           Die(prog, "multiple ape loaders specified for the same platform "
                     "with matching kernels");
@@ -1986,9 +1992,11 @@ int main(int argc, char *argv[]) {
       p = stpcpy(p, "MZqFpD='\n\n");
       p = FinishGeneratingDosHeader(p);
     } else {
-      p = stpcpy(p, "jartsr='\n\n");
       if (support_vector & _HOSTMETAL) {
+        p = stpcpy(p, "jartsr='\n\n");
         p = FinishGeneratingDosHeader(p);
+      } else {
+        p = stpcpy(p, "jartsr=\n");
       }
     }
     if (support_vector & _HOSTMETAL) {
@@ -2344,7 +2352,10 @@ int main(int argc, char *argv[]) {
   // write the header
   Pwrite(prologue, prologue_bytes, 0);
 
-  if (close(outfd)) {
+  // finish output
+  if (close(outfd))
     DieSys(outpath);
-  }
+
+  // free memory
+  Hacl_Hash_Blake2b_free(hasher);
 }

@@ -23,15 +23,16 @@
 #include "libc/str/str.h"
 
 textwindows uint32_t sys_getuid_nt(void) {
-  char16_t buf[257];
-  static atomic_uint uid;
-  uint32_t tmp, size = ARRAYLEN(buf);
-  if (!(tmp = atomic_load_explicit(&uid, memory_order_acquire))) {
+  uint32_t tmp;
+  static unsigned uid;
+  if (!(tmp = uid)) {
+    char16_t buf[257];
+    uint32_t size = ARRAYLEN(buf);
     GetUserName(&buf, &size);
     tmp = __fnv(buf, size >> 1) & 32767;
     if (!tmp)
       ++tmp;
-    atomic_store_explicit(&uid, tmp, memory_order_release);
+    uid = tmp;
   }
   return tmp;
 }

@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
+#include "libc/serialize.h"
 #include "third_party/mbedtls/chk.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/config.h"
@@ -5941,7 +5942,7 @@ static int ssl_session_save( const mbedtls_ssl_session *session,
 #if defined(MBEDTLS_HAVE_TIME)
     used += 8;
     if( used <= buf_len )
-        p = Write64be(p, session->start);
+        p = WRITE64BE(p, session->start);
 #endif /* MBEDTLS_HAVE_TIME */
     /*
      * Basic mandatory fields
@@ -6133,7 +6134,7 @@ static int ssl_session_load( mbedtls_ssl_session *session,
     if( 8 > (size_t)( end - p ) )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
-    start = Read64be(p);
+    start = READ64BE(p);
     p += 8;
 
     session->start = (int64_t) start;
@@ -6157,7 +6158,7 @@ static int ssl_session_load( mbedtls_ssl_session *session,
     memcpy( session->master, p, 48 );
     p += 48;
 
-    session->verify_result = Read32be(p);
+    session->verify_result = READ32BE(p);
     p += 4;
 
     /* Immediately clear invalid pointer values that have been read, in case
@@ -6268,7 +6269,7 @@ static int ssl_session_load( mbedtls_ssl_session *session,
     if( 4 > (size_t)( end - p ) )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
-    session->ticket_lifetime = Read32be(p);
+    session->ticket_lifetime = READ32BE(p);
     p += 4;
 #endif /* MBEDTLS_SSL_SESSION_TICKETS && MBEDTLS_SSL_CLI_C */
 
@@ -6976,7 +6977,7 @@ int mbedtls_ssl_context_save( mbedtls_ssl_context *ssl,
     used += 4 + session_len;
     if( used <= buf_len )
     {
-        p = Write32be(p, session_len);
+        p = WRITE32BE(p, session_len);
         ret = ssl_session_save( ssl->session, 1,
                                 p, session_len, &session_len );
         if( ret != 0 )
@@ -7016,7 +7017,7 @@ int mbedtls_ssl_context_save( mbedtls_ssl_context *ssl,
     used += 4;
     if( used <= buf_len )
     {
-        p = Write32be(p, ssl->badmac_seen);
+        p = WRITE32BE(p, ssl->badmac_seen);
     }
 #endif /* MBEDTLS_SSL_DTLS_BADMAC_LIMIT */
 
@@ -7024,8 +7025,8 @@ int mbedtls_ssl_context_save( mbedtls_ssl_context *ssl,
     used += 16;
     if( used <= buf_len )
     {
-        p = Write64be(p, ssl->in_window_top);
-        p = Write64be(p, ssl->in_window);
+        p = WRITE64BE(p, ssl->in_window_top);
+        p = WRITE64BE(p, ssl->in_window);
     }
 #endif /* MBEDTLS_SSL_DTLS_ANTI_REPLAY */
 

@@ -4617,39 +4617,23 @@ unix = {
     O_TMPFILE = nil,
     --- @type integer fail if it's a symlink (zero on Windows)
     O_NOFOLLOW = nil,
+    --- @type integer automatically delete file upon close()
+    O_UNLINK = nil,
     --- @type integer it's complicated (zero on non-Linux/Apple)
     O_DSYNC = nil,
     --- @type integer it's complicated (zero on non-Linux/Apple)
     O_RSYNC = nil,
-    --- @type integer it's complicated (zero on non-Linux)
-    O_PATH = nil,
-    --- @type integer it's complicated (zero on non-FreeBSD)
-    O_VERIFY = nil,
-    --- @type integer it's complicated (zero on non-BSD)
-    O_SHLOCK = nil,
-    --- @type integer it's complicated (zero on non-BSD)
-    O_EXLOCK = nil,
+    --- @type integer synchronize i/o operations appropriately
+    O_SYNC = nil,
     --- @type integer don't record access time (zero on non-Linux)
     O_NOATIME = nil,
-    --- @type integer hint random access intent (zero on non-Windows)
-    O_RANDOM = nil,
-    --- @type integer hint sequential access intent (zero on non-Windows)
-    O_SEQUENTIAL = nil,
-    --- @type integer ask fs to abstract compression (zero on non-Windows)
-    O_COMPRESSED = nil,
-    --- @type integer turns on that slow performance (zero on non-Windows)
-    O_INDEXED = nil,
 
     --- @type integer
     O_ACCMODE = nil,
     --- @type integer
-    O_ASYNC = nil,
-    --- @type integer
     O_EXEC = nil,
     --- @type integer
     O_NOCTTY = nil,
-    --- @type integer
-    O_SEARCH = nil,
     --- @type integer
     O_SYNC = nil,
 
@@ -4958,6 +4942,8 @@ unix = {
 
     --- @type integer
     WNOHANG = nil,
+    --- @type integer
+    WUNTRACED = nil,
 
     --- @type integer
     W_OK = nil,
@@ -4988,21 +4974,14 @@ unix = {
 ---  - `O_EXCL`       exclusive access (see below)
 ---  - `O_APPEND`     open file for append only
 ---  - `O_NONBLOCK`   asks read/write to fail with EAGAIN rather than block
----  - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
 ---  - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
----  - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
 ---  - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
----  - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
----  - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
----  - `O_PATH`       it's complicated (zero on non-Linux)
----  - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
----  - `O_SHLOCK`     it's complicated (zero on non-BSD)
----  - `O_EXLOCK`     it's complicated (zero on non-BSD)
+---  - `O_UNLINK`     automatically delete file upon close()
+---  - `O_SYNC`       makes file operations synchronize appropriately
+---  - `O_RSYNC`      synchronize read() operations
+---  - `O_DSYNC`      synchronize write() operations
+---  - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
 ---  - `O_NOATIME`    don't record access time (zero on non-Linux)
----  - `O_RANDOM`     hint random access intent (zero on non-Windows)
----  - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
----  - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
----  - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
 ---
 ---  There are three regular combinations for the above flags:
 ---
@@ -5761,10 +5740,7 @@ function unix.rmrf(path) end
 ---   - `O_NONBLOCK`
 ---   - `O_APPEND`
 ---   - `O_SYNC`
----   - `O_ASYNC`
 ---   - `O_NOATIME` on Linux
----   - `O_RANDOM` on Windows
----   - `O_SEQUENTIAL` on Windows
 ---   - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
 ---
 ---   Examples of values `flags & ~unix.O_ACCMODE` won't include:
@@ -5787,10 +5763,7 @@ function unix.rmrf(path) end
 ---   - `O_NONBLOCK`
 ---   - `O_APPEND`
 ---   - `O_SYNC`
----   - `O_ASYNC`
 ---   - `O_NOATIME` on Linux
----   - `O_RANDOM` on Windows
----   - `O_SEQUENTIAL` on Windows
 ---   - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
 ---
 ---   These values should be ignored:
@@ -7872,18 +7845,6 @@ function unix.Stat:ctim() end
 --- This provides some indication of how much physical storage a file
 --- actually consumes. For example, for small file systems, your system
 --- might report this number as being 8, which means 4096 bytes.
----
---- On Windows NT, if `O_COMPRESSED` is used for a file, then this
---- number will reflect the size *after* compression. you can use:
----
----     st = assert(unix.stat("moby.txt"))
----     print('file size is %d bytes' % {st:size()})
----     print('file takes up %d bytes of space' % {st:blocks() * 512})
----     if GetHostOs() == 'WINDOWS' and st:flags() & 0x800 then
----        print('thanks to file system compression')
----     end
----
---- To tell whether or not compression is being used on a file,
 function unix.Stat:blocks() end
 
 ---@return integer bytes Block size that underlying device uses.

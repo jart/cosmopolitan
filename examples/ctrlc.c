@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     // not the case when you use sigprocmask() to block signals which is
     // useful for kicking the can down the road.
     WRITE("doing cpu task...\n");
-    for (volatile int i = 0; i < INT_MAX / 3; ++i) {
+    for (volatile int i = 0; i < (int)(INT_MAX * .4); ++i) {
       if (gotsig) {
         WRITE("\rgot ctrl+c asynchronously\n");
         exit(0);

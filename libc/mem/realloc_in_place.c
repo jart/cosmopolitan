@@ -35,6 +35,9 @@
  * @see dlrealloc_in_place()
  */
 void *realloc_in_place(void *p, size_t n) {
+#ifdef COSMO_MEM_DEBUG
+  return 0;
+#else
   return dlrealloc_in_place(p, n);
+#endif
 }
-

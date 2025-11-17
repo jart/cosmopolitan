@@ -59,7 +59,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"
@@ -90,15 +89,6 @@
  */
 #if !defined(HAVE_TRUNCATE) && !defined(HAVE_FTRUNCATE) && !defined(HAVE_CHSIZE)
 # define USE_REPLACEMENT_TRUNCATE
-#endif
-
-/*  Hack for rediculous practice of Microsoft Visual C++.
- */
-#if defined (WIN32) && defined (_MSC_VER)
-# define chsize         _chsize
-# define open           _open
-# define close          _close
-# define O_RDWR         _O_RDWR
 #endif
 
 /*

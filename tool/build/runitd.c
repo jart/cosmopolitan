@@ -25,6 +25,8 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -35,7 +37,6 @@
 #include "libc/log/check.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/proc/posix_spawn.h"
@@ -57,7 +58,6 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
@@ -78,6 +78,7 @@
 #include "libc/x/xsigaction.h"
 #include "net/http/escape.h"
 #include "net/https/https.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/ssl.h"
@@ -185,7 +186,7 @@ void Close(int *fd) {
   }
 }
 
-wontreturn void ShowUsage(FILE *f, int rc) {
+[[noreturn]] void ShowUsage(FILE *f, int rc) {
   fprintf(f, "%s: %s %s\n", "Usage", program_invocation_name,
           "[-d] [-r] [-l LISTENIP] [-p PORT] [-t TIMEOUTMS]");
   exit(rc);
@@ -577,8 +578,9 @@ RetryOnEtxtbsyRaceCondition:
   started = timespec_mono();
   pipe2(client->pipe, O_CLOEXEC);
   posix_spawnattr_init(&spawnattr);
-  posix_spawnattr_setflags(&spawnattr,
-                           POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETPGROUP);
+  posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_USEVFORK |
+                                           POSIX_SPAWN_SETSIGMASK |
+                                           POSIX_SPAWN_SETPGROUP);
   posix_spawnattr_setsigmask(&spawnattr, &sigmask);
   posix_spawn_file_actions_init(&spawnfila);
   posix_spawn_file_actions_adddup2(&spawnfila, g_bogusfd, 0);
@@ -589,16 +591,15 @@ RetryOnEtxtbsyRaceCondition:
                     args, environ);
   DEBUF("it took %'zu us to call posix_spawn",
         timespec_tomicros(timespec_sub(timespec_mono(), ts1)));
+  posix_spawn_file_actions_destroy(&spawnfila);
+  posix_spawnattr_destroy(&spawnattr);
   if (err) {
-    if (err == ETXTBSY) {
+    if (err == ETXTBSY)
       goto RetryOnEtxtbsyRaceCondition;
-    }
     WARNF("%s failed to spawn on %s due to %s", client->tmpexepath, g_hostname,
           strerror(err));
     pthread_exit(0);
   }
-  posix_spawn_file_actions_destroy(&spawnfila);
-  posix_spawnattr_destroy(&spawnattr);
   Close(&client->pipe[1]);
 
   DEBUF("communicating %s[%d]", origname, client->pid);
@@ -734,9 +735,8 @@ WaitAgain:
       client->output = 0;
       goto RetryOnEtxtbsyRaceCondition;
     }
-    char sigbuf[21];
     WARNF("%s on %s terminated after %'ldµs with %s", origname, g_hostname,
-          micros, strsignal_r(WTERMSIG(wstatus), sigbuf));
+          micros, strsignal(WTERMSIG(wstatus)));
     exitcode = 128 + WTERMSIG(wstatus);
     appendf(&client->output, "------ %s %s $?=%s (0x%08x) %,ldµs ------\n",
             g_hostname, origname, strsignal(WTERMSIG(wstatus)), wstatus,
@@ -777,7 +777,8 @@ void HandleClient(void) {
       return;
     }
     // poll() because we use SA_RESTART and accept() is @restartable
-    if (poll(&(struct pollfd){g_servfd, POLLIN}, 1, -1) > 0) {
+    int events = poll(&(struct pollfd){g_servfd, POLLIN}, 1, 5000);
+    if (events > 0) {
       client->fd = accept4(g_servfd, (struct sockaddr *)&client->addr,
                            &client->addrsize, SOCK_CLOEXEC);
       if (client->fd != -1) {
@@ -786,6 +787,8 @@ void HandleClient(void) {
       } else if (errno != EINTR && errno != EAGAIN) {
         WARNF("accept4 failed %m");
       }
+    } else if (!events) {
+      malloc_trim(0);
     } else if (errno != EINTR && errno != EAGAIN) {
       WARNF("poll failed %m");
     }
@@ -798,6 +801,8 @@ void HandleClient(void) {
   sigfillset(&mask);
   pthread_attr_init(&attr);
   pthread_attr_setsigmask_np(&attr, &mask);
+  pthread_attr_setguardsize(&attr, getpagesize());
+  pthread_attr_setstacksize(&attr, 65536 - getpagesize());
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&client->th, &attr, ClientWorker, client);
   pthread_attr_destroy(&attr);
@@ -840,6 +845,7 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
+  putenv("TERM=dumb");
   GetOpts(argc, argv);
   g_psk = GetRunitPsk();
   signal(SIGPIPE, SIG_IGN);

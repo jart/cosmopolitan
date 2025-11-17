@@ -16,190 +16,157 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/bsr.h"
 #include "libc/intrin/fds.h"
-#include "libc/intrin/strace.h"
 #include "libc/macros.h"
-#include "libc/mem/alloca.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/enum/filetype.h"
-#include "libc/nt/enum/fsctl.h"
+#include "libc/nt/enum/io.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
-#include "libc/nt/struct/filecompressioninfo.h"
-#include "libc/nt/struct/reparsedatabuffer.h"
 #include "libc/str/str.h"
-#include "libc/str/utf16.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
-static textwindows long GetSizeOfReparsePoint(int64_t fh) {
-  uint32_t mem =
-      sizeof(struct NtReparseDataBuffer) + PATH_MAX * sizeof(char16_t);
-  void *buf = alloca(mem);
-  uint32_t dwBytesReturned;
-  struct NtReparseDataBuffer *rdb = (struct NtReparseDataBuffer *)buf;
-  if (!DeviceIoControl(fh, kNtFsctlGetReparsePoint, 0, 0, rdb, mem,
-                       &dwBytesReturned, 0)) {
-    return -1;
-  }
-  const char16_t *p =
-      (const char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
-                         rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
-  uint32_t n =
-      rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
-  uint32_t i = 0;
-  uint32_t z = 0;
-  while (i < n) {
-    wint_t x = p[i++] & 0xffff;
-    if (!IsUcs2(x)) {
-      if (i < n) {
-        wint_t y = p[i++] & 0xffff;
-        x = MergeUtf16(x, y);
-      } else {
-        x = 0xfffd;
-      }
-    }
-    if (x >= 0200) {
-      z += bsrl(tpenc(x)) >> 3;
-    }
-    ++z;
-  }
-  return z;
+#define MAKEDEV(major, minor) ((uint64_t)(major) << 32 | (minor))
+
+textwindows dontinline static int sys_fstat_nt_symsize(
+    int64_t hSymlink, uint32_t *opt_out_ReparseTag) {
+  char path8[PATH_MAX];
+  return __readntsym(hSymlink, path8, opt_out_ReparseTag);
 }
 
-static textwindows int sys_fstat_nt_socket(int kind, struct stat *st) {
-  bzero(st, sizeof(*st));
-  st->st_blksize = 512;
-  st->st_mode = S_IFSOCK | 0666;
-  st->st_dev = 0x44444444;
-  st->st_ino = kind;
-  return 0;
-}
-
-textwindows int sys_fstat_nt_special(int kind, struct stat *st) {
+textwindows int sys_fstat_nt_char(int kind, struct stat *st) {
   bzero(st, sizeof(*st));
   st->st_blksize = 512;
   st->st_mode = S_IFCHR | 0666;
-  st->st_dev = 0x77777777;
-  st->st_ino = kind;
+  st->st_dev = MAKEDEV(kind, 0);
+  st->st_ino = 0;
   return 0;
 }
 
 textwindows int sys_fstat_nt(int fd, struct stat *st) {
-  if (fd + 0u >= g_fds.n)
+  if (fd + 0u >= __get_pib()->fds.n)
     return ebadf();
-  switch (g_fds.p[fd].kind) {
+  switch (__get_pib()->fds.p[fd].kind) {
     case kFdEmpty:
       return ebadf();
     case kFdConsole:
     case kFdDevNull:
     case kFdDevRandom:
-      return sys_fstat_nt_special(g_fds.p[fd].kind, st);
+      return sys_fstat_nt_char(__get_pib()->fds.p[fd].kind, st);
     case kFdSocket:
-      return sys_fstat_nt_socket(g_fds.p[fd].kind, st);
+      bzero(st, sizeof(*st));
+      st->st_blksize = 512;
+      st->st_mode = S_IFSOCK | 0666;
+      st->st_dev = MAKEDEV(kFdSocket, 0);
+      st->st_ino = fd;
+      return 0;
     default:
-      return sys_fstat_nt_handle(g_fds.p[fd].handle, 0, st);
+      // if the file was opened, then we know it's at least readable
+      return sys_fstat_nt_handle(__get_pib()->fds.p[fd].handle, 0, st, 0444);
   }
 }
 
 textwindows int sys_fstat_nt_handle(int64_t handle, const char16_t *path,
-                                    struct stat *out_st) {
-  struct stat st = {0};
+                                    struct stat *out_st, int mode) {
 
   // Always set st_blksize to avoid divide by zero issues.
   // The Linux kernel sets this for /dev/tty and similar too.
+  struct stat st = {0};
   st.st_blksize = 4096;
   st.st_gid = st.st_uid = sys_getuid_nt();
 
-  switch (GetFileType(handle)) {
-    case kNtFileTypeUnknown:
-      break;
-    case kNtFileTypeChar:
-      st.st_mode = S_IFCHR | 0664;
-      st.st_dev = 0x66666666;
-      st.st_ino = handle;
-      break;
-    case kNtFileTypePipe:
-      st.st_mode = S_IFIFO | 0664;
-      st.st_dev = 0x55555555;
-      st.st_ino = handle;
-      break;
-    case kNtFileTypeDisk: {
-      struct NtByHandleFileInformation wst;
-      if (GetFileInformationByHandle(handle, &wst)) {
-        st.st_mode = 0444;
-        if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
-            IsWindowsExecutable(handle, path))
-          st.st_mode |= 0111;
-        st.st_flags = wst.dwFileAttributes;
-        if (!(wst.dwFileAttributes & kNtFileAttributeReadonly))
-          st.st_mode |= 0220;
-        if (wst.dwFileAttributes & kNtFileAttributeReparsePoint) {
-          st.st_mode |= S_IFLNK;
-        } else if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
-          st.st_mode |= S_IFDIR;
+  // get file type
+  uint32_t ft = GetFileType(handle);
+
+  // get file information
+  struct NtByHandleFileInformation wst;
+  if (GetFileInformationByHandle(handle, &wst)) {
+    st.st_mode = mode;
+    if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
+        (ft == kNtFileTypeDisk && IsWindowsExecutable(handle, path)))
+      st.st_mode |= 0111;
+    st.st_flags = wst.dwFileAttributes;
+    if (!(wst.dwFileAttributes & kNtFileAttributeReadonly))
+      st.st_mode |= 0220;
+    if (wst.dwFileAttributes & kNtFileAttributeReparsePoint) {
+      st.st_mode |= S_IFLNK;
+    } else if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
+      st.st_mode |= S_IFDIR;
+    } else if (ft == kNtFileTypeDisk) {
+      st.st_mode |= S_IFREG;
+    } else if (ft == kNtFileTypeChar) {
+      st.st_mode |= S_IFCHR;
+    } else if (ft == kNtFileTypePipe) {
+      st.st_mode |= S_IFIFO;
+    }
+    st.st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
+    st.st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
+    st.st_birthtim = FileTimeToTimeSpec(wst.ftCreationFileTime);
+    // compute time of last status change
+    if (timespec_cmp(st.st_atim, st.st_mtim) > 0) {
+      st.st_ctim = st.st_atim;
+    } else {
+      st.st_ctim = st.st_mtim;
+    }
+    st.st_size = (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
+    st.st_dev = MAKEDEV(0, wst.dwVolumeSerialNumber);
+    st.st_ino = (wst.nFileIndexHigh + 0ull) << 32 | wst.nFileIndexLow;
+    st.st_nlink = wst.nNumberOfLinks;
+
+    // if it's a symbolic link, then calculate the utf-8 length of its
+    // content in a way that's consistent with readlinkat()
+    if (S_ISLNK(st.st_mode) && !st.st_size) {
+      int e = errno;
+      uint32_t ReparseTag;
+      int size = sys_fstat_nt_symsize(handle, &ReparseTag);
+      if (size != -1) {
+        st.st_size = size;
+      } else if (errno == ENOLINK) {
+        errno = e;
+        if (ReparseTag == kNtIoReparseTagAfUnix) {
+          // surprise! it's a unix domain named socket
+          st.st_mode &= ~S_IFMT;
+          st.st_mode |= S_IFSOCK;
         } else {
+          // there's many other reparse tags. for example, ones exist
+          // that let wsl create blk/fifo/chr files. but cosmopolitan
+          // doesn't know how to use those and treats them as regular
+          st.st_mode &= ~S_IFMT;
           st.st_mode |= S_IFREG;
         }
-        st.st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
-        st.st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
-        st.st_birthtim = FileTimeToTimeSpec(wst.ftCreationFileTime);
-        // compute time of last status change
-        if (timespec_cmp(st.st_atim, st.st_mtim) > 0) {
-          st.st_ctim = st.st_atim;
-        } else {
-          st.st_ctim = st.st_mtim;
-        }
-        st.st_size = (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
-        st.st_dev = wst.dwVolumeSerialNumber;
-        st.st_ino = (wst.nFileIndexHigh + 0ull) << 32 | wst.nFileIndexLow;
-        st.st_nlink = wst.nNumberOfLinks;
-        if (S_ISLNK(st.st_mode)) {
-          if (!st.st_size) {
-            long size = GetSizeOfReparsePoint(handle);
-            if (size == -1)
-              return -1;
-            st.st_size = size;
-          }
-        } else {
-          // st_size       = uncompressed size
-          // st_blocks*512 = physical size
-          uint64_t physicalsize;
-          struct NtFileCompressionInfo fci;
-          if (!(wst.dwFileAttributes &
-                (kNtFileAttributeDirectory | kNtFileAttributeReparsePoint)) &&
-              GetFileInformationByHandleEx(handle, kNtFileCompressionInfo, &fci,
-                                           sizeof(fci))) {
-            physicalsize = fci.CompressedFileSize;
-          } else {
-            physicalsize = st.st_size;
-          }
-          st.st_blocks = ROUNDUP(physicalsize, st.st_blksize) / 512;
-        }
-      } else if (GetVolumeInformationByHandle(
-                     handle, 0, 0, &wst.dwVolumeSerialNumber, 0, 0, 0, 0)) {
-        st.st_dev = wst.dwVolumeSerialNumber;
-        st.st_mode = S_IFDIR | 0555;
       } else {
-        // both GetFileInformationByHandle and
-        // GetVolumeInformationByHandle failed
-        return __winerr();
+        return -1;
       }
-      break;
     }
-    default:
-      __builtin_unreachable();
+
+    st.st_blocks = ROUNDUP(st.st_size, st.st_blksize) / 512;
+  } else if (GetVolumeInformationByHandle(
+                 handle, 0, 0, &wst.dwVolumeSerialNumber, 0, 0, 0, 0)) {
+    st.st_dev = MAKEDEV(0, wst.dwVolumeSerialNumber);
+    st.st_mode = S_IFDIR | 0555;
+  } else if (ft == kNtFileTypeChar) {
+    st.st_blksize = 512;
+    st.st_mode = S_IFCHR | 0666;
+    st.st_dev = 0x66666666;
+    st.st_ino = handle;
+  } else if (ft == kNtFileTypePipe) {
+    st.st_blksize = 512;
+    st.st_mode = S_IFIFO | 0666;
+    st.st_dev = 0x55555555;
+    st.st_ino = handle;
+  } else {
+    return __winerr();
   }
 
   memcpy(out_st, &st, sizeof(st));

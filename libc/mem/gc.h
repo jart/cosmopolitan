@@ -5,7 +5,6 @@ COSMOPOLITAN_C_START_
 
 libcesque void _gc_free(void *);
 libcesque void __defer(void *, void *, void *);
-libcesque void gclongjmp(void *, int) wontreturn;
 #define gc(THING)  defer((void *)_gc_free, (void *)(THING))
 #define _gc(THING) defer((void *)_gc_free, (void *)(THING))
 #define defer(FN, ARG)                             \

@@ -23,7 +23,8 @@ void unassert(const char *, const char *, int) libcesque;
 #define assert(x) ((void)((x) || (__assert_fail(#x, __FILE__, __LINE__), 0)))
 #endif
 
-#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
+#if !defined(__cplusplus) && defined(__STDC_VERSION__) && \
+    __STDC_VERSION__ >= 201112L && __STDC_VERSION__ <= 201710L
 #undef static_assert
 #define static_assert _Static_assert
 #endif

@@ -25,6 +25,7 @@ except ImportError:
     _testcapi = None
 
 TIMEOUT = 0.5
+TIMEOUT = 0.05  # [jart] too slow
 MS_WINDOWS = (os.name == 'nt')
 
 def expected_traceback(lineno1, lineno2, header, min_count=1):

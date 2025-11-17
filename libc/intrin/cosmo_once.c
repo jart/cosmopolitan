@@ -17,49 +17,57 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
-#define INIT     0
-#define CALLING  1
-#define FINISHED 2
+enum {
+  INIT,
+  FINISHED,
+  CALLING,
+};
+
+dontinline static errno_t cosmo_once_impl(atomic_uint *once, void init(void)) {
+  unsigned word;
+  for (;;)
+    switch ((word = atomic_load_explicit(once, memory_order_acquire))) {
+      case INIT:
+        if (atomic_compare_exchange_strong_explicit(once, &word, CALLING,
+                                                    memory_order_acquire,
+                                                    memory_order_relaxed)) {
+          init();
+          atomic_store_explicit(once, FINISHED, memory_order_release);
+          return 0;
+        }
+        // fallthrough
+      case CALLING:
+        pthread_yield_np();
+        continue;
+      case FINISHED:
+        return 0;
+      default:
+        return EINVAL;
+    }
+}
 
 /**
  * Ensures initialization function is called exactly once.
  *
- * This is the same as `pthread_once` except that it always uses a tiny
- * spinlock implementation and won't make any system calls. It's needed
+ * This is the same as pthread_once() except that it always uses a tiny
+ * spinlock implementation, and won't do heavyweight calls. It's needed
  * since this function is an upstream dependency of both pthread_once()
- * and nsync_once(). Most code should favor calling those functions.
+ * and nsync_once(). Most code should favor calling those functions. If
+ * you use this, your callback can't throw exceptions and it should not
+ * call pthread_exit() or be asynchronously canceled; it will deadlock.
+ *
+ * This implementation is process shared.
  *
  * @return 0 on success, or errno on error
  */
 errno_t cosmo_once(atomic_uint *once, void init(void)) {
-  uint32_t old;
-  switch ((old = atomic_load_explicit(once, memory_order_acquire))) {
-    case INIT:
-      if (atomic_compare_exchange_strong_explicit(once, &old, CALLING,
-                                                  memory_order_acquire,
-                                                  memory_order_relaxed)) {
-        init();
-        atomic_store_explicit(once, FINISHED, memory_order_release);
-        return 0;
-      }
-      // fallthrough
-    case CALLING:
-      for (;;) {
-        if (atomic_load_explicit(once, memory_order_acquire) != CALLING) {
-          break;
-        }
-      }
-      return 0;
-    case FINISHED:
-      return 0;
-    default:
-      return EINVAL;
-  }
+  if (atomic_load_explicit(once, memory_order_acquire) == FINISHED)
+    return 0;
+  return cosmo_once_impl(once, init);
 }
-
-__weak_reference(cosmo_once, call_once);

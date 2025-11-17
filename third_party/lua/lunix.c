@@ -71,7 +71,6 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/ip.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
@@ -84,8 +83,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sa.h"
@@ -112,6 +110,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/cosmo.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "tool/net/luacheck.h"
 
 #define DNS_NAME_MAX  253
@@ -222,9 +221,8 @@ int LuaUnixSysretErrno(lua_State *L, const char *call, int olderr) {
 }
 
 static int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
-  if (!IsTiny() && (rc != 0 && rc != -1)) {
+  if (!IsTiny() && (rc != 0 && rc != -1))
     WARNF("syscall supposed to return 0 / -1 but got %d", rc);
-  }
   if (rc != -1) {
     lua_pushboolean(L, true);
     return 1;
@@ -3364,19 +3362,158 @@ int LuaUnix(lua_State *L) {
   lua_newtable(L);
   lua_setglobal(L, "__signal_handlers");
 
-  LoadMagnums(L, kErrnoNames, "");
-  LoadMagnums(L, kSignalNames, "");
   LoadMagnums(L, kIpOptnames, "IP_");
   LoadMagnums(L, kTcpOptnames, "TCP_");
   LoadMagnums(L, kSockOptnames, "SO_");
   LoadMagnums(L, kClockNames, "CLOCK_");
+
+  // errno
+  LuaSetIntField(L, "EPERM", EPERM);
+  LuaSetIntField(L, "ENOENT", ENOENT);
+  LuaSetIntField(L, "ESRCH", ESRCH);
+  LuaSetIntField(L, "EINTR", EINTR);
+  LuaSetIntField(L, "EIO", EIO);
+  LuaSetIntField(L, "ENXIO", ENXIO);
+  LuaSetIntField(L, "E2BIG", E2BIG);
+  LuaSetIntField(L, "ENOEXEC", ENOEXEC);
+  LuaSetIntField(L, "EBADF", EBADF);
+  LuaSetIntField(L, "ECHILD", ECHILD);
+  LuaSetIntField(L, "EAGAIN", EAGAIN);
+  LuaSetIntField(L, "ENOMEM", ENOMEM);
+  LuaSetIntField(L, "EACCES", EACCES);
+  LuaSetIntField(L, "EFAULT", EFAULT);
+  LuaSetIntField(L, "ENOTBLK", ENOTBLK);
+  LuaSetIntField(L, "EBUSY", EBUSY);
+  LuaSetIntField(L, "EEXIST", EEXIST);
+  LuaSetIntField(L, "EXDEV", EXDEV);
+  LuaSetIntField(L, "ENODEV", ENODEV);
+  LuaSetIntField(L, "ENOTDIR", ENOTDIR);
+  LuaSetIntField(L, "EISDIR", EISDIR);
+  LuaSetIntField(L, "EINVAL", EINVAL);
+  LuaSetIntField(L, "ENFILE", ENFILE);
+  LuaSetIntField(L, "EMFILE", EMFILE);
+  LuaSetIntField(L, "ENOTTY", ENOTTY);
+  LuaSetIntField(L, "ETXTBSY", ETXTBSY);
+  LuaSetIntField(L, "EFBIG", EFBIG);
+  LuaSetIntField(L, "ENOSPC", ENOSPC);
+  LuaSetIntField(L, "ESPIPE", ESPIPE);
+  LuaSetIntField(L, "EROFS", EROFS);
+  LuaSetIntField(L, "EMLINK", EMLINK);
+  LuaSetIntField(L, "EPIPE", EPIPE);
+  LuaSetIntField(L, "EDOM", EDOM);
+  LuaSetIntField(L, "ERANGE", ERANGE);
+  LuaSetIntField(L, "EDEADLK", EDEADLK);
+  LuaSetIntField(L, "ENAMETOOLONG", ENAMETOOLONG);
+  LuaSetIntField(L, "ENOLCK", ENOLCK);
+  LuaSetIntField(L, "ENOSYS", ENOSYS);
+  LuaSetIntField(L, "ENOTEMPTY", ENOTEMPTY);
+  LuaSetIntField(L, "ELOOP", ELOOP);
+  LuaSetIntField(L, "ENOMSG", ENOMSG);
+  LuaSetIntField(L, "EIDRM", EIDRM);
+  LuaSetIntField(L, "ENOTSUP", ENOTSUP);
+  LuaSetIntField(L, "ENOSTR", ENOSTR);
+  LuaSetIntField(L, "ENODATA", ENODATA);
+  LuaSetIntField(L, "ETIME", ETIME);
+  LuaSetIntField(L, "ENOSR", ENOSR);
+  LuaSetIntField(L, "ENONET", ENONET);
+  LuaSetIntField(L, "EREMOTE", EREMOTE);
+  LuaSetIntField(L, "ENOLINK", ENOLINK);
+  LuaSetIntField(L, "EPROTO", EPROTO);
+  LuaSetIntField(L, "EMULTIHOP", EMULTIHOP);
+  LuaSetIntField(L, "EBADMSG", EBADMSG);
+  LuaSetIntField(L, "EOVERFLOW", EOVERFLOW);
+  LuaSetIntField(L, "EBADFD", EBADFD);
+  LuaSetIntField(L, "EFTYPE", EFTYPE);
+  LuaSetIntField(L, "EILSEQ", EILSEQ);
+  LuaSetIntField(L, "ERESTART", ERESTART);
+  LuaSetIntField(L, "EUSERS", EUSERS);
+  LuaSetIntField(L, "ENOTSOCK", ENOTSOCK);
+  LuaSetIntField(L, "EDESTADDRREQ", EDESTADDRREQ);
+  LuaSetIntField(L, "EMSGSIZE", EMSGSIZE);
+  LuaSetIntField(L, "EPROTOTYPE", EPROTOTYPE);
+  LuaSetIntField(L, "ENOPROTOOPT", ENOPROTOOPT);
+  LuaSetIntField(L, "EPROTONOSUPPORT", EPROTONOSUPPORT);
+  LuaSetIntField(L, "ESOCKTNOSUPPORT", ESOCKTNOSUPPORT);
+  LuaSetIntField(L, "EOPNOTSUPP", EOPNOTSUPP);
+  LuaSetIntField(L, "EPFNOSUPPORT", EPFNOSUPPORT);
+  LuaSetIntField(L, "EAFNOSUPPORT", EAFNOSUPPORT);
+  LuaSetIntField(L, "EADDRINUSE", EADDRINUSE);
+  LuaSetIntField(L, "EADDRNOTAVAIL", EADDRNOTAVAIL);
+  LuaSetIntField(L, "ENETDOWN", ENETDOWN);
+  LuaSetIntField(L, "ENETUNREACH", ENETUNREACH);
+  LuaSetIntField(L, "ENETRESET", ENETRESET);
+  LuaSetIntField(L, "ECONNABORTED", ECONNABORTED);
+  LuaSetIntField(L, "ECONNRESET", ECONNRESET);
+  LuaSetIntField(L, "ENOBUFS", ENOBUFS);
+  LuaSetIntField(L, "EISCONN", EISCONN);
+  LuaSetIntField(L, "ENOTCONN", ENOTCONN);
+  LuaSetIntField(L, "ESHUTDOWN", ESHUTDOWN);
+  LuaSetIntField(L, "ETOOMANYREFS", ETOOMANYREFS);
+  LuaSetIntField(L, "ETIMEDOUT", ETIMEDOUT);
+  LuaSetIntField(L, "ECONNREFUSED", ECONNREFUSED);
+  LuaSetIntField(L, "EHOSTDOWN", EHOSTDOWN);
+  LuaSetIntField(L, "EHOSTUNREACH", EHOSTUNREACH);
+  LuaSetIntField(L, "EALREADY", EALREADY);
+  LuaSetIntField(L, "EINPROGRESS", EINPROGRESS);
+  LuaSetIntField(L, "ESTALE", ESTALE);
+  LuaSetIntField(L, "EDQUOT", EDQUOT);
+  LuaSetIntField(L, "ENOMEDIUM", ENOMEDIUM);
+  LuaSetIntField(L, "EMEDIUMTYPE", EMEDIUMTYPE);
+  LuaSetIntField(L, "ECANCELED", ECANCELED);
+  LuaSetIntField(L, "EOWNERDEAD", EOWNERDEAD);
+  LuaSetIntField(L, "ENOTRECOVERABLE", ENOTRECOVERABLE);
+  LuaSetIntField(L, "ERFKILL", ERFKILL);
+  LuaSetIntField(L, "EHWPOISON", EHWPOISON);
+
+  // signals
+  LuaSetIntField(L, "SIGHUP", SIGHUP);
+  LuaSetIntField(L, "SIGINT", SIGINT);
+  LuaSetIntField(L, "SIGQUIT", SIGQUIT);
+  LuaSetIntField(L, "SIGILL", SIGILL);
+  LuaSetIntField(L, "SIGTRAP", SIGTRAP);
+  LuaSetIntField(L, "SIGABRT", SIGABRT);
+  LuaSetIntField(L, "SIGBUS", SIGBUS);
+  LuaSetIntField(L, "SIGFPE", SIGFPE);
+  LuaSetIntField(L, "SIGKILL", SIGKILL);
+  LuaSetIntField(L, "SIGUSR1", SIGUSR1);
+  LuaSetIntField(L, "SIGSEGV", SIGSEGV);
+  LuaSetIntField(L, "SIGUSR2", SIGUSR2);
+  LuaSetIntField(L, "SIGPIPE", SIGPIPE);
+  LuaSetIntField(L, "SIGALRM", SIGALRM);
+  LuaSetIntField(L, "SIGTERM", SIGTERM);
+  LuaSetIntField(L, "SIGCHLD", SIGCHLD);
+  LuaSetIntField(L, "SIGCONT", SIGCONT);
+  LuaSetIntField(L, "SIGSTOP", SIGSTOP);
+  LuaSetIntField(L, "SIGTSTP", SIGTSTP);
+  LuaSetIntField(L, "SIGTTIN", SIGTTIN);
+  LuaSetIntField(L, "SIGTTOU", SIGTTOU);
+  LuaSetIntField(L, "SIGURG", SIGURG);
+  LuaSetIntField(L, "SIGXCPU", SIGXCPU);
+  LuaSetIntField(L, "SIGXFSZ", SIGXFSZ);
+  LuaSetIntField(L, "SIGVTALRM", SIGVTALRM);
+  LuaSetIntField(L, "SIGPROF", SIGPROF);
+  LuaSetIntField(L, "SIGWINCH", SIGWINCH);
+  LuaSetIntField(L, "SIGSYS", SIGSYS);
 
   // open()
   LuaSetIntField(L, "O_RDONLY", O_RDONLY);
   LuaSetIntField(L, "O_WRONLY", O_WRONLY);
   LuaSetIntField(L, "O_RDWR", O_RDWR);
   LuaSetIntField(L, "O_ACCMODE", O_ACCMODE);
-  LoadMagnums(L, kOpenFlags, "O_");
+  LuaSetIntField(L, "O_CREAT", O_CREAT);
+  LuaSetIntField(L, "O_EXCL", O_EXCL);
+  LuaSetIntField(L, "O_NOCTTY", O_NOCTTY);
+  LuaSetIntField(L, "O_TRUNC", O_TRUNC);
+  LuaSetIntField(L, "O_APPEND", O_APPEND);
+  LuaSetIntField(L, "O_NONBLOCK", O_NONBLOCK);
+  LuaSetIntField(L, "O_SYNC", O_SYNC);
+  LuaSetIntField(L, "O_DSYNC", O_DSYNC);
+  LuaSetIntField(L, "O_DIRECT", O_DIRECT);
+  LuaSetIntField(L, "O_DIRECTORY", O_DIRECTORY);
+  LuaSetIntField(L, "O_NOFOLLOW", O_NOFOLLOW);
+  LuaSetIntField(L, "O_NOATIME", O_NOATIME);
+  LuaSetIntField(L, "O_CLOEXEC", O_CLOEXEC);
+  LuaSetIntField(L, "O_UNLINK", O_UNLINK);
 
   // seek() whence
   LuaSetIntField(L, "SEEK_SET", SEEK_SET);
@@ -3412,6 +3549,7 @@ int LuaUnix(lua_State *L) {
 
   // wait() options
   LuaSetIntField(L, "WNOHANG", WNOHANG);
+  LuaSetIntField(L, "WUNTRACED", WUNTRACED);
 
   // socket() family
   LuaSetIntField(L, "AF_UNSPEC", AF_UNSPEC);
@@ -3524,6 +3662,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "RUSAGE_CHILDREN", RUSAGE_CHILDREN);
   LuaSetIntField(L, "RUSAGE_BOTH", RUSAGE_BOTH);
 
+  // more stuff
   LuaSetIntField(L, "ARG_MAX", __get_arg_max());
   LuaSetIntField(L, "BUFSIZ", BUFSIZ);
   LuaSetIntField(L, "CLK_TCK", CLK_TCK);

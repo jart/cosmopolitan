@@ -19,8 +19,6 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/testlib.h"
 
 static void limit_memory_to_1mb() {

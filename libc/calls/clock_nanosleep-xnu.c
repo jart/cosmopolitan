@@ -21,6 +21,7 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/errno.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/syslib.internal.h"

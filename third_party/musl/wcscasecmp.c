@@ -17,22 +17,30 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/macros.h"
 #include "libc/wctype.h"
 
 /**
- * Compares NUL-terminated wide strings case-insensitively.
+ * Compares wide strings case insensitively.
  *
- * @param a is first non-null NUL-terminated string pointer
- * @param b is second non-null NUL-terminated string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first non-null string pointer
+ * @param b is second non-null string pointer
+ * @return is <0, 0, or >0 based on wint_t comparison
  * @asyncsignalsafe
  */
 int wcscasecmp(const wchar_t *a, const wchar_t *b) {
-  size_t i = 0;
-  unsigned x, y;
   if (a == b)
     return 0;
-  while ((x = towlower(a[i])) == (y = towlower(b[i])) && b[i])
+  wint_t x, y;
+  size_t i = -1;
+  do {
     ++i;
+    x = towlower(a[i]);
+    y = towlower(b[i]);
+  } while (x == y && x);
+#if !TYPE_SIGNED(wint_t)
   return x - y;
+#else
+  return (x > y) - (x < y);
+#endif
 }

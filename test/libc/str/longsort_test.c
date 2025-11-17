@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bsdstdlib.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -53,7 +54,7 @@ TEST(_longsort, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   _longsort(b, n);
@@ -68,7 +69,7 @@ TEST(vqsort_int64_avx2, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   vqsort_int64_avx2(b, n);
@@ -81,7 +82,7 @@ TEST(vqsort_int64_sse4, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   vqsort_int64_sse4(b, n);
@@ -94,7 +95,7 @@ TEST(vqsort_int64_ssse3, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   vqsort_int64_ssse3(b, n);
@@ -105,7 +106,7 @@ TEST(vqsort_int64_sse2, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   vqsort_int64_sse2(b, n);
@@ -118,7 +119,7 @@ TEST(radix_sort_int64, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
-  rngset(a, n * sizeof(long), 0, 0);
+  arc4random_buf(a, n * sizeof(long));
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
   radix_sort_int64(b, n);
@@ -130,7 +131,7 @@ BENCH(_longsort, bench) {
   size_t n = 5000;
   long *p1 = gc(malloc(n * sizeof(long)));
   long *p2 = gc(malloc(n * sizeof(long)));
-  rngset(p1, n * sizeof(long), 0, 0);
+  arc4random_buf(p1, n * sizeof(long));
   EZBENCH2("_longsort", memcpy(p2, p1, n * sizeof(long)), _longsort(p2, n));
 #ifdef __x86_64__
   if (X86_HAVE(AVX2)) {
@@ -168,7 +169,7 @@ TEST(InsertionSort, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   InsertionSort(b, n);
@@ -183,7 +184,7 @@ TEST(vqsort_int32_avx2, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   vqsort_int32_avx2(b, n);
@@ -196,7 +197,7 @@ TEST(vqsort_int32_sse4, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   vqsort_int32_sse4(b, n);
@@ -209,7 +210,7 @@ TEST(vqsort_int32_ssse3, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   vqsort_int32_ssse3(b, n);
@@ -220,7 +221,7 @@ TEST(vqsort_int32_sse2, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   vqsort_int32_sse2(b, n);
@@ -233,7 +234,7 @@ TEST(radix_sort_int32, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
-  rngset(a, n * sizeof(int), 0, 0);
+  arc4random_buf(a, n * sizeof(int));
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
   radix_sort_int32(b, n);
@@ -245,7 +246,7 @@ BENCH(InsertionSort, bench) {
   size_t n = 10000;
   int *p1 = gc(malloc(n * sizeof(int)));
   int *p2 = gc(malloc(n * sizeof(int)));
-  rngset(p1, n * sizeof(int), 0, 0);
+  arc4random_buf(p1, n * sizeof(int));
   EZBENCH2("InsertionSort", memcpy(p2, p1, n * sizeof(int)),
            InsertionSort(p2, n));
 #ifdef __x86_64__

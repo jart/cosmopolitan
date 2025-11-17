@@ -32,6 +32,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/termios.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/dos.h"
@@ -51,7 +52,6 @@
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/leaks.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -60,7 +60,6 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/serialize.h"
@@ -77,6 +76,7 @@
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/clone.h"
@@ -87,7 +87,6 @@
 #include "libc/sysv/consts/hwcap.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
@@ -317,11 +316,6 @@ static struct Suites {
   uint16_t *p;
 } suites;
 
-static struct Certs {
-  size_t n;
-  struct Cert *p;
-} certs;
-
 static struct Redirects {
   size_t n;
   struct Redirect {
@@ -489,6 +483,7 @@ static reader_f reader;
 static writer_f writer;
 static char *extrahdrs;
 static const char *zpath;
+static struct Certs certs;
 static char *serverheader;
 static char gzip_footer[8];
 static long maxpayloadsize;
@@ -669,15 +664,13 @@ static long FindRedirect(const char *s, size_t n) {
   return -1;
 }
 
-static mbedtls_x509_crt *GetTrustedCertificate(mbedtls_x509_name *name) {
-  size_t i;
-  for (i = 0; i < certs.n; ++i) {
-    if (certs.p[i].cert &&
-        !mbedtls_x509_name_cmp(name, &certs.p[i].cert->subject)) {
-      return certs.p[i].cert;
-    }
-  }
-  return 0;
+static bool IsDirectory(const char *path) {
+  int e = errno;
+  struct stat st;
+  if (!fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW))
+    return S_ISDIR(st.st_mode);
+  errno = e;
+  return false;
 }
 
 static void UseCertificate(mbedtls_ssl_config *c, struct Cert *kp,
@@ -688,123 +681,13 @@ static void UseCertificate(mbedtls_ssl_config *c, struct Cert *kp,
   CHECK_EQ(0, mbedtls_ssl_conf_own_cert(c, kp->cert, kp->key));
 }
 
-static void AppendCert(mbedtls_x509_crt *cert, mbedtls_pk_context *key) {
-  certs.p = realloc(certs.p, ++certs.n * sizeof(*certs.p));
-  certs.p[certs.n - 1].cert = cert;
-  certs.p[certs.n - 1].key = key;
-}
-
-static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
-  int r;
-  size_t i;
-  if (cert->next)
-    InternCertificate(cert->next, cert);
-  if (prev) {
-    if (mbedtls_x509_crt_check_parent(prev, cert, 1)) {
-      DEBUGF("(ssl) unbundling %`'s from %`'s",
-             gc(FormatX509Name(&prev->subject)),
-             gc(FormatX509Name(&cert->subject)));
-      prev->next = 0;
-    } else if ((r = mbedtls_x509_crt_check_signature(prev, cert, 0))) {
-      WARNF("(ssl) invalid signature for %`'s -> %`'s (-0x%04x)",
-            gc(FormatX509Name(&prev->subject)),
-            gc(FormatX509Name(&cert->subject)), -r);
-    }
-  }
-  if (mbedtls_x509_time_is_past(&cert->valid_to)) {
-    WARNF("(ssl) certificate %`'s is expired",
-          gc(FormatX509Name(&cert->subject)));
-  } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
-    WARNF("(ssl) certificate %`'s is from the future",
-          gc(FormatX509Name(&cert->subject)));
-  }
-  for (i = 0; i < certs.n; ++i) {
-    if (!certs.p[i].cert && certs.p[i].key &&
-        !mbedtls_pk_check_pair(&cert->pk, certs.p[i].key)) {
-      certs.p[i].cert = cert;
-      return;
-    }
-  }
-  LogCertificate("loaded certificate", cert);
-  if (!cert->next && !IsSelfSigned(cert) && cert->max_pathlen) {
-    for (i = 0; i < certs.n; ++i) {
-      if (!certs.p[i].cert)
-        continue;
-      if (mbedtls_pk_can_do(&cert->pk, certs.p[i].cert->sig_pk) &&
-          !mbedtls_x509_crt_check_parent(cert, certs.p[i].cert, 1) &&
-          !IsSelfSigned(certs.p[i].cert)) {
-        if (ChainCertificate(cert, certs.p[i].cert))
-          break;
-      }
-    }
-  }
-  if (!IsSelfSigned(cert)) {
-    for (i = 0; i < certs.n; ++i) {
-      if (!certs.p[i].cert)
-        continue;
-      if (certs.p[i].cert->next)
-        continue;
-      if (certs.p[i].cert->max_pathlen &&
-          mbedtls_pk_can_do(&certs.p[i].cert->pk, cert->sig_pk) &&
-          !mbedtls_x509_crt_check_parent(certs.p[i].cert, cert, 1)) {
-        ChainCertificate(certs.p[i].cert, cert);
-      }
-    }
-  }
-  AppendCert(cert, 0);
-}
-
-static void ProgramCertificate(const char *p, size_t n) {
-  int rc;
-  unsigned char *waqapi;
-  mbedtls_x509_crt *cert;
-  waqapi = malloc(n + 1);
-  memcpy(waqapi, p, n);
-  waqapi[n] = 0;
-  cert = calloc(1, sizeof(mbedtls_x509_crt));
-  rc = mbedtls_x509_crt_parse(cert, waqapi, n + 1);
-  mbedtls_platform_zeroize(waqapi, n);
-  free(waqapi);
-  if (rc < 0) {
-    WARNF("(ssl) failed to load certificate (grep -0x%04x)", rc);
-    return;
-  } else if (rc > 0) {
-    VERBOSEF("(ssl) certificate bundle partially loaded");
-  }
-  InternCertificate(cert, 0);
-}
-
-static void ProgramPrivateKey(const char *p, size_t n) {
-  int rc;
-  size_t i;
-  unsigned char *waqapi;
-  mbedtls_pk_context *key;
-  waqapi = malloc(n + 1);
-  memcpy(waqapi, p, n);
-  waqapi[n] = 0;
-  key = calloc(1, sizeof(mbedtls_pk_context));
-  rc = mbedtls_pk_parse_key(key, waqapi, n + 1, 0, 0);
-  mbedtls_platform_zeroize(waqapi, n);
-  free(waqapi);
-  if (rc != 0)
-    FATALF("(ssl) error: load key (grep -0x%04x)", -rc);
-  for (i = 0; i < certs.n; ++i) {
-    if (certs.p[i].cert && !certs.p[i].key &&
-        !mbedtls_pk_check_pair(&certs.p[i].cert->pk, key)) {
-      certs.p[i].key = key;
-      return;
-    }
-  }
-  VERBOSEF("(ssl) loaded private key");
-  AppendCert(0, key);
-}
-
-static void ProgramFile(const char *path, void program(const char *, size_t)) {
+static void ProgramFile(const char *path,
+                        void program(struct Certs *, const char *, size_t)) {
   char *p;
   size_t n;
   DEBUGF("(srvr) ProgramFile(%`'s)", path);
   if ((p = xslurp(path, &n))) {
-    program(p, n);
+    program(&certs, p, n);
     mbedtls_platform_zeroize(p, n);
     free(p);
   } else {
@@ -1701,112 +1584,13 @@ static void PsksDestroy(void) {
   psks.n = 0;
 }
 
-static void CertsDestroy(void) {
-  size_t i;
-  // break up certificate chains to prevent double free
-  for (i = 0; i < certs.n; ++i) {
-    if (certs.p[i].cert) {
-      certs.p[i].cert->next = 0;
-    }
-  }
-  for (i = 0; i < certs.n; ++i) {
-    mbedtls_x509_crt_free(certs.p[i].cert);
-    free(certs.p[i].cert);
-    mbedtls_pk_free(certs.p[i].key);
-    free(certs.p[i].key);
-  }
-  Free(&certs.p);
-  certs.n = 0;
-}
-
 static void WipeServingKeys(void) {
   if (uniprocess)
     return;
   mbedtls_ssl_ticket_free(&ssltick);
   mbedtls_ssl_key_cert_free(conf.key_cert), conf.key_cert = 0;
-  CertsDestroy();
+  CertsDestroy(&certs);
   PsksDestroy();
-}
-
-static bool CertHasCommonName(const mbedtls_x509_crt *cert, const void *s,
-                              size_t n) {
-  const mbedtls_x509_name *name;
-  for (name = &cert->subject; name; name = name->next) {
-    if (!MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &name->oid)) {
-      if (SlicesEqualCase(s, n, name->val.p, name->val.len)) {
-        return true;
-      }
-      break;
-    }
-  }
-  return false;
-}
-
-static bool TlsRouteFind(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl,
-                         const unsigned char *host, size_t size, int64_t ip) {
-  int i;
-  for (i = 0; i < certs.n; ++i) {
-    if (IsServerCert(certs.p + i, type) &&
-        (((certs.p[i].cert->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME) &&
-          (ip == -1 ? CertHasHost(certs.p[i].cert, host, size)
-                    : CertHasIp(certs.p[i].cert, ip))) ||
-         CertHasCommonName(certs.p[i].cert, host, size))) {
-      CHECK_EQ(
-          0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
-      DEBUGF("(ssl) TlsRoute(%s, %`'.*s) %s %`'s", mbedtls_pk_type_name(type),
-             size, host, mbedtls_pk_get_name(&certs.p[i].cert->pk),
-             gc(FormatX509Name(&certs.p[i].cert->subject)));
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool TlsRouteFirst(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl) {
-  int i;
-  for (i = 0; i < certs.n; ++i) {
-    if (IsServerCert(certs.p + i, type)) {
-      CHECK_EQ(
-          0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
-      DEBUGF("(ssl) TlsRoute(%s) %s %`'s", mbedtls_pk_type_name(type),
-             mbedtls_pk_get_name(&certs.p[i].cert->pk),
-             gc(FormatX509Name(&certs.p[i].cert->subject)));
-      return true;
-    }
-  }
-  return false;
-}
-
-static int TlsRoute(void *ctx, mbedtls_ssl_context *ssl,
-                    const unsigned char *host, size_t size) {
-  int64_t ip;
-  bool ok1, ok2;
-  ip = ParseIp((const char *)host, size);
-  ok1 = TlsRouteFind(MBEDTLS_PK_ECKEY, ssl, host, size, ip);
-  ok2 = TlsRouteFind(MBEDTLS_PK_RSA, ssl, host, size, ip);
-  if (!ok1 && !ok2) {
-    WARNF("(ssl) TlsRoute(%`'.*s) not found", size, host);
-    ok1 = TlsRouteFirst(MBEDTLS_PK_ECKEY, ssl);
-    ok2 = TlsRouteFirst(MBEDTLS_PK_RSA, ssl);
-  }
-  return ok1 || ok2 ? 0 : -1;
-}
-
-static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
-                       const unsigned char *identity, size_t identity_len) {
-  size_t i;
-  for (i = 0; i < psks.n; ++i) {
-    if (SlicesEqual((void *)identity, identity_len, psks.p[i].identity,
-                    psks.p[i].identity_len)) {
-      DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
-      mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
-      // keep track of selected psk to report its identity
-      sslpskindex = i + 1;  // use index+1 to check against 0 (when not set)
-      return 0;
-    }
-  }
-  WARNF("(ssl) TlsRoutePsk(%`'.*s) not found", identity_len, identity);
-  return -1;
 }
 
 static bool TlsSetup(void) {
@@ -2096,7 +1880,7 @@ static void LoadCertificates(void) {
     if (!haveclientcert && ksk.key) {
       UseCertificate(&confcli, &ecp, "client");
     }
-    AppendCert(ecp.cert, ecp.key);
+    AppendCert(&certs, ecp.cert, ecp.key);
 #endif
 #ifdef MBEDTLS_RSA_C
     if (!norsagen) {
@@ -2106,7 +1890,7 @@ static void LoadCertificates(void) {
       if (!haveclientcert && ksk.key) {
         UseCertificate(&confcli, &rsa, "client");
       }
-      AppendCert(rsa.cert, rsa.key);
+      AppendCert(&certs, rsa.cert, rsa.key);
     }
 #endif
   }
@@ -2460,7 +2244,7 @@ static void *LoadAsset(struct Asset *a, size_t *out_size) {
   }
 }
 
-static wontreturn void PrintUsage(int fd, int rc) {
+[[noreturn]] static void PrintUsage(int fd, int rc) {
   size_t n;
   const char *p;
   struct Asset *a;
@@ -3903,7 +3687,7 @@ static void StorePath(const char *dirpath) {
   DIR *d;
   char *path;
   struct dirent *e;
-  if (!isdirectory(dirpath) && !endswith(dirpath, "/")) {
+  if (!IsDirectory(dirpath) && !endswith(dirpath, "/")) {
     return StoreFile(dirpath);
   }
   if (!(d = opendir(dirpath)))
@@ -4726,7 +4510,7 @@ static int LuaProgramPrivateKey(lua_State *L) {
   const char *p;
   OnlyCallFromInitLua(L, "ProgramPrivateKey");
   p = luaL_checklstring(L, 1, &n);
-  ProgramPrivateKey(p, n);
+  ProgramPrivateKey(&certs, p, n);
   return 0;
 }
 
@@ -4735,7 +4519,7 @@ static int LuaProgramCertificate(lua_State *L) {
   const char *p;
   OnlyCallFromInitLua(L, "ProgramCertificate");
   p = luaL_checklstring(L, 1, &n);
-  ProgramCertificate(p, n);
+  ProgramCertificate(&certs, p, n);
   return 0;
 }
 
@@ -4923,7 +4707,7 @@ static int LuaBlackhole(lua_State *L) {
 static void BlockSignals(void) {
 }
 
-wontreturn static void Replenisher(void) {
+[[noreturn]] static void Replenisher(void) {
   struct timespec ts;
   VERBOSEF("(token) replenish worker started");
   strace_enabled(-1);
@@ -6324,7 +6108,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
                  IsNoCompressExt(a->file->path.s, a->file->path.n)) &&
                ((cpm.contentlength >= 100 && startswithi(ct, "text/")) ||
                 (cpm.contentlength >= 1000 &&
-                 MeasureEntropy(cpm.content, 1000) < 7))) {
+                 cosmo_entropy(cpm.content, 1000) < 7))) {
       VERBOSEF("serving compressed asset");
       p = ServeAssetCompressed(a);
     } else {
@@ -7202,6 +6986,23 @@ static void SigInit(void) {
   InstallSignalHandler(SIGPIPE, SIG_IGN);
 }
 
+static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
+                       const unsigned char *identity, size_t identity_len) {
+  size_t i;
+  for (i = 0; i < psks.n; ++i) {
+    if (SlicesEqual((void *)identity, identity_len, psks.p[i].identity,
+                    psks.p[i].identity_len)) {
+      DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
+      mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
+      // keep track of selected psk to report its identity
+      sslpskindex = i + 1;  // use index+1 to check against 0 (when not set)
+      return 0;
+    }
+  }
+  WARNF("(ssl) TlsRoutePsk(%`'.*s) not found", identity_len, identity);
+  return -1;
+}
+
 static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
@@ -7280,7 +7081,7 @@ static void TlsDestroy(void) {
   mbedtls_ssl_config_free(&conf);
   mbedtls_ssl_config_free(&confcli);
   mbedtls_ssl_ticket_free(&ssltick);
-  CertsDestroy();
+  CertsDestroy(&certs);
   PsksDestroy();
   Free(&suites.p), suites.n = 0;
 #endif

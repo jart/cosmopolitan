@@ -1,6 +1,8 @@
 /* src/config.h.  Generated from config.h.in by configure.  */
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+#define COSMO_MAKE_VERSION "2.0"
+
 /* CPU and C ABI indicator */
 #ifndef __i386__
 #define __i386__ 1
@@ -587,7 +589,7 @@
 /* #undef UMAX4_3 */
 
 /* Define to 1 to use posix_spawn(). */
-#define USE_POSIX_SPAWN 1
+/* #undef USE_POSIX_SPAWN */
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE

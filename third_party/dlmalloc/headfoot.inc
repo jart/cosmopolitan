@@ -59,11 +59,7 @@
  (is_mmapped(p)? MMAP_CHUNK_OVERHEAD : CHUNK_OVERHEAD)
 
 /* Return true if malloced space is not necessarily cleared */
-#if MMAP_CLEARS
 #define calloc_must_clear(p) (!is_mmapped(p))
-#else /* MMAP_CLEARS */
-#define calloc_must_clear(p) (1)
-#endif /* MMAP_CLEARS */
 
 
 struct malloc_tree_chunk {

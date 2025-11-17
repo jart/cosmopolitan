@@ -42,28 +42,15 @@
 
 #define MAP_FAILED ((void *)-1)
 
-#define WTERMSIG(x)     (127 & (x))
-#define WCOREDUMP(x)    (128 & (x))
-#define WIFEXITED(x)    (!WTERMSIG(x))
-#define WEXITSTATUS(x)  ((x) >> 8)
-#define WSTOPSIG(x)     ((0xff00 & (x)) >> 8)
-#define WIFSTOPPED(x)   __wifstopped(x)
-#define WIFSIGNALED(x)  __wifsignaled(x)
-#define WIFCONTINUED(x) __wifcontinued(x)
-#define W_STOPCODE(x)   ((x) << 8 | 0177)
-
-#ifdef _COSMO_SOURCE
-#define clone         __clone
-#define commandv      __commandv
-#define fileexists    __fileexists
-#define ischardev     __ischardev
-#define isdirectory   __isdirectory
-#define isexecutable  __isexecutable
-#define isregularfile __isregularfile
-#define issymlink     __issymlink
-#define makedirs      __makedirs
-#define tmpfd         __tmpfd
-#endif
+#define WEXITSTATUS(s)  ((s) >> 8)
+#define WTERMSIG(s)     ((s) & 0x7f)
+#define WSTOPSIG(s)     (((s) & 0xff00) >> 8)
+#define WIFEXITED(s)    (!WTERMSIG(s))
+#define WIFSTOPPED(s)   (((s) & 0xff) == 0x7f)
+#define WIFSIGNALED(s)  (((signed char)(((s) & 0x7f) + 1) >> 1) > 0)
+#define WCOREDUMP(s)    ((s) & 0x80)
+#define WIFCONTINUED(s) (((s) & 0xffff) == 0xffff)
+#define W_STOPCODE(s)   ((s) << 8 | 0x7f)
 
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -83,8 +70,6 @@ int chmod(const char *, unsigned) libcesque __read_only(1);
 int chown(const char *, unsigned, unsigned) libcesque __read_only(1);
 int chroot(const char *) libcesque __read_only(1);
 int close(int) libcesque;
-int close_range(unsigned, unsigned, unsigned) libcesque;
-int closefrom(int) libcesque;
 int creat(const char *, unsigned) libcesque __read_only(1);
 int dup(int) libcesque;
 int dup2(int, int) libcesque;
@@ -101,7 +86,6 @@ int fchmod(int, unsigned) libcesque;
 int fchmodat(int, const char *, unsigned, int) libcesque __read_only(2);
 int fchown(int, unsigned, unsigned) libcesque;
 int fchownat(int, const char *, unsigned, unsigned, int) libcesque __read_only(2);
-int fcntl(int, int, ...) libcesque;
 int fdatasync(int) libcesque;
 int fexecve(int, char *const[], char *const[]) libcesque __read_only(2) __read_only(3);
 int flock(int, int) libcesque;
@@ -171,7 +155,7 @@ int ttyname_r(int, char *, size_t) libcesque __write_only(2, 3);
 int unlink(const char *) libcesque __read_only(1);
 int unlinkat(int, const char *, int) libcesque __read_only(2);
 int usleep(uint64_t) libcesque;
-int vfork(void) libcesque returnstwice;
+int vfork(void) dontthrow returnstwice;
 int wait(int *) libcesque __write_only(1);
 int waitpid(int, int *, int) libcesque __write_only(2);
 int64_t clock(void) libcesque;
@@ -194,6 +178,11 @@ unsigned ualarm(unsigned, unsigned) libcesque;
 unsigned umask(unsigned) libcesque;
 void sync(void) libcesque;
 
+#if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+int madvise(void *, size_t, int);
+void closefrom(int) libcesque;
+#endif
+
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE)
 int syncfs(int) libcesque;
 int prctl(int, ...) libcesque;
@@ -204,26 +193,21 @@ int getresgid(unsigned *, unsigned *, unsigned *) libcesque __write_only(1) __wr
 int getresuid(unsigned *, unsigned *, unsigned *) libcesque __write_only(1) __write_only(2) __write_only(3);
 char *get_current_dir_name(void) libcesque __wur;
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned) libcesque __read_write(2) __read_write(4);
-int memfd_create(const char *, unsigned int) libcesque __read_only(1);
 int execvpe(const char *, char *const[], char *const[]) libcesque __read_only(1) __read_only(2) __read_only(3);
 int euidaccess(const char *, int) libcesque __read_only(1);
 int eaccess(const char *, int) libcesque __read_only(1);
-int madvise(void *, uint64_t, int) libcesque __read_write(1);
 int getcpu(unsigned *, unsigned *) libcesque __write_only(1) __write_only(2);
+int close_range(unsigned, unsigned, unsigned) libcesque;
 #endif
 
-#ifdef _COSMO_SOURCE
-bool32 fdexists(int) libcesque;
-bool32 fileexists(const char *) libcesque __read_only(1);
-bool32 ischardev(int) libcesque;
-bool32 isdirectory(const char *) libcesque __read_only(1);
-bool32 isexecutable(const char *) libcesque __read_only(1);
-bool32 isregularfile(const char *) libcesque __read_only(1);
-bool32 issymlink(const char *) libcesque __read_only(1);
+#if defined(_COSMO_SOURCE) || defined(_BSD_SOURCE)
+#define commandv __commandv
+#define copyfd   __copyfd
+#define makedirs __makedirs
+#define tmpfd    __tmpfd
 char *commandv(const char *, char *, size_t) libcesque __read_only(1) __write_only(2, 3);
-int __getcwd(char *, size_t) libcesque __write_only(1, 2);
-int clone(void *, void *, size_t, int, void *, void *, void *, void *);
-int fadvise(int, uint64_t, uint64_t, int) libcesque;
+int __clone(void *, void *, size_t, int, void *, void *, void *, void *);
+int __getcwd(char *, size_t) libcesque;
 int makedirs(const char *, unsigned) libcesque __read_only(1);
 int pivot_root(const char *, const char *) libcesque __read_only(1) __read_only(2);
 int pledge(const char *, const char *) libcesque __read_only(1) __read_only(2);
@@ -237,25 +221,18 @@ int sys_mlockall(int) libcesque;
 int sys_munlock(const void *, size_t) libcesque __read_only(1);
 int sys_munlockall(void) libcesque;
 int sys_personality(uint64_t) libcesque;
-int sys_ptrace(int, ...) libcesque;
 int sysctl(int *, unsigned, void *, size_t *, void *, size_t) libcesque __read_write(1) __read_write(4) __read_write(5);
 int sysctlbyname(const char *, void *, size_t *, void *, size_t) libcesque __read_only(1) __write_only(2) __read_write(3) __read_only(4);
 int sysctlnametomib(const char *, int *, size_t *) libcesque __read_only(1) __write_only(2) __read_write(3);
 int tmpfd(void) libcesque;
-int touch(const char *, unsigned) libcesque __read_only(1);
 int unveil(const char *, const char *) libcesque __read_only(1);
-long ptrace(int, ...) libcesque;
 ssize_t copyfd(int, int, size_t) libcesque;
 ssize_t readansi(int, char *, size_t) libcesque;
 ssize_t tinyprint(int, const char *, ...) libcesque nullterminated();
 void shm_path_np(const char *, char[hasatleast 78]) libcesque;
-#endif /* _COSMO_SOURCE */
+#endif
 
 int system(const char *) libcesque;
-
-int __wifstopped(int) libcesque pureconst;
-int __wifcontinued(int) libcesque pureconst;
-int __wifsignaled(int) libcesque pureconst;
 
 #if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
 #define lseek64     lseek

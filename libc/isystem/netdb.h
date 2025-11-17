@@ -15,7 +15,6 @@
 #include "libc/sysv/consts/ipport.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/ipv6.h"
-#include "libc/sysv/consts/mcast.h"
 #include "libc/sysv/consts/pf.h"
 #include "libc/sysv/consts/sock.h"
 #include "third_party/musl/netdb.h"

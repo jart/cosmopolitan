@@ -808,8 +808,8 @@ __attribute__((__constructor__(1))) textstartup int __cpu_indicator_init(void) {
   unsigned Vendor;
   unsigned Model, Family;
   unsigned Features[(CPU_FEATURE_MAX + 31) / 32] = {0};
-  _Static_assert(sizeof(Features) / sizeof(Features[0]) == 4, "");
-  _Static_assert(sizeof(__cpu_features2) / sizeof(__cpu_features2[0]) == 3, "");
+  static_assert(sizeof(Features) / sizeof(Features[0]) == 4);
+  static_assert(sizeof(__cpu_features2) / sizeof(__cpu_features2[0]) == 3);
 
   // This function needs to run just once.
   if (__cpu_model.__cpu_vendor)

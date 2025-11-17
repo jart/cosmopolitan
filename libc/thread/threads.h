@@ -2,11 +2,12 @@
 #define COSMOPOLITAN_LIBC_THREAD_THREADS_H_
 COSMOPOLITAN_C_START_
 
-#if !defined(__cplusplus) &&                   \
-    (!(defined(__GNUC__) && __GNUC__ >= 13) || \
-     !(defined(__STDC_VERSION__) && __STDC_VERSION__ > 201710L))
+#if !defined(__cplusplus) && defined(__STDC_VERSION__) && \
+    __STDC_VERSION__ >= 201112L && __STDC_VERSION__ <= 201710L
 #define thread_local _Thread_local
 #endif
+
+#define ONCE_FLAG_INIT 0
 
 #define TSS_DTOR_ITERATIONS 4
 
@@ -27,16 +28,21 @@ enum {
 typedef uintptr_t thrd_t;
 typedef void (*tss_dtor_t)(void *);
 typedef int (*thrd_start_t)(void *);
-typedef uint32_t once_flag;
+typedef unsigned once_flag;
+typedef unsigned tss_t;
 
-void call_once(once_flag *, void (*)(void));
 int thrd_create(thrd_t *, thrd_start_t, void *);
-void thrd_exit(int) wontreturn;
-int thrd_join(thrd_t, int *);
 int thrd_detach(thrd_t);
 int thrd_equal(thrd_t, thrd_t);
+int thrd_join(thrd_t, int *);
+int tss_create(tss_t *, tss_dtor_t);
+int tss_set(tss_t, void *);
 thrd_t thrd_current(void);
+void *tss_get(tss_t);
+void call_once(once_flag *, void (*)(void));
+void thrd_exit(int) wontreturn;
 void thrd_yield(void);
+void tss_delete(tss_t);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_THREAD_THREADS_H_ */

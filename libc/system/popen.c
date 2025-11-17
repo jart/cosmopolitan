@@ -25,7 +25,6 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
@@ -46,15 +45,12 @@
  * @raise EINVAL if `mode` is invalid or specifies read+write
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
  * @raise ENFILE if system-wide file limit has been reached
- * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOMEM if we require more vespene gas
  * @raise EAGAIN if `RLIMIT_NPROC` was exceeded
- * @raise EINTR if signal was delivered
- * @cancelationpoint
  */
 FILE *popen(const char *cmdline, const char *mode) {
   FILE *f;
-  int e, rc, pid, dir, flags, pipefds[2];
+  int e, pid, dir, flags, pipefds[2];
   flags = fopenflags(mode);
   if ((flags & O_ACCMODE) == O_RDONLY) {
     dir = 0;
@@ -63,11 +59,6 @@ FILE *popen(const char *cmdline, const char *mode) {
   } else {
     einval();
     return NULL;
-  }
-  if (_weaken(pthread_testcancel_np) &&
-      (rc = _weaken(pthread_testcancel_np)())) {
-    errno = rc;
-    return 0;
   }
   if (pipe2(pipefds, O_CLOEXEC) == -1)
     return NULL;

@@ -121,8 +121,8 @@
    defines off_t and then while other files are using an 8-byte off_t this
    file gets a 4-byte off_t.  Once zip.h sets the large file defines can
    then include ctype.h and get 8-byte off_t.  8/14/04 EG */
-#include "third_party/zip/zip.h"
-#include "libc/str/str.h"
+#include "zip.h"
+#include <ctype.h>
 
 #ifndef USE_ZLIB
 

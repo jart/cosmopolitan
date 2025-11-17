@@ -16,15 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Pushes wide character back to stream.
+ *
+ * If `c` is equal to `WEOF` then this function will fail by returning
+ * WEOF and the state of `f` is left unchanged.
+ *
+ * @return byte pushed back to stream, otherwise WEOF
  */
 wint_t ungetwc(wint_t c, FILE *f) {
   wint_t rc;
-  flockfile(f);
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = ungetwc_unlocked(c, f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }

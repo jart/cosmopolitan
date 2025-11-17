@@ -21,14 +21,16 @@ PKGS += CRT
 
 CRT_ARTIFACTS += CRT
 CRT = o/$(MODE)/libc/crt/crt.o
-CRT_FILES = libc/crt/crt.S
-CRT_SRCS = libc/crt/crt.S
-CRT_OBJS = o/$(MODE)/libc/crt/crt.o
+CRT_FILES = $(CRT_SRCS)
+CRT_SRCS = libc/crt/crt.S libc/crt/crtfastmath.S
+CRT_OBJS = o/$(MODE)/libc/crt/crt.o o/$(MODE)/libc/crt/crtfastmath.o
 $(CRT_OBJS): $(BUILD_FILES) libc/crt/BUILD.mk
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/crt/crt.o: libc/crt/crt.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/crt/crtfastmath.o: libc/crt/crtfastmath.S libc/crt/crt.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 .PHONY: o/$(MODE)/libc/crt
-o/$(MODE)/libc/crt: $(CRT)
+o/$(MODE)/libc/crt: $(CRT_OBJS)

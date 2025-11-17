@@ -23,6 +23,7 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -34,16 +35,9 @@
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
 
-static void sem_delay(int n) {
-  volatile int i;
-  for (i = 0; i != 1 << n; i++)
-    donothing;
-}
-
 static void sem_timedwait_cleanup(void *arg) {
   sem_t *sem = arg;
-  unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
-                                     memory_order_acq_rel) > 0);
+  unassert(atomic_fetch_add(&sem->sem_waiters, -1) > 0);
 }
 
 /**
@@ -61,48 +55,6 @@ static void sem_timedwait_cleanup(void *arg) {
 int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   int v, rc, e = errno;
 
-#if 0
-  if (IsXnuSilicon() && sem->sem_magic == SEM_MAGIC_KERNEL) {
-    if (!abstime) {
-      if (_weaken(pthread_testcancel_np) &&  //
-          _weaken(pthread_testcancel_np)()) {
-        return ecanceled();
-      }
-      rc = _sysret(__syslib->__sem_wait(sem->sem_kernel));
-      if (rc == -1 && errno == EINTR &&      //
-          _weaken(pthread_testcancel_np) &&  //
-          _weaken(pthread_testcancel_np)()) {
-        return ecanceled();
-      }
-      return rc;
-    }
-    for (;;) {
-      if (_weaken(pthread_testcancel_np) &&  //
-          _weaken(pthread_testcancel_np)()) {
-        return ecanceled();
-      }
-      rc = _sysret(__syslib->__sem_trywait(sem->sem_kernel));
-      if (!rc)
-        return 0;
-      if (errno == EINTR &&                  //
-          _weaken(pthread_testcancel_np) &&  //
-          _weaken(pthread_testcancel_np)()) {
-        return ecanceled();
-      }
-      if (errno != EAGAIN)
-        return -1;
-      errno = e;
-      struct timespec now = timespec_real();
-      if (timespec_cmp(*abstime, now) >= 0) {
-        return etimedout();
-      }
-      if (usleep(10 * 1000) == -1) {
-        return -1;
-      }
-    }
-  }
-#endif
-
   rc = sem_trywait(sem);
   if (!rc) {
     return rc;
@@ -113,8 +65,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   }
 
   BEGIN_CANCELATION_POINT;
-  unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
-                                     memory_order_acq_rel) >= 0);
+  unassert(atomic_fetch_add(&sem->sem_waiters, +1) >= 0);
   pthread_cleanup_push(sem_timedwait_cleanup, sem);
 
   do {
@@ -143,9 +94,8 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
       unassert(v > INT_MIN);
       rc = einval();
     }
-  } while (!rc && (!v || !atomic_compare_exchange_weak_explicit(
-                             &sem->sem_value, &v, v - 1, memory_order_acquire,
-                             memory_order_relaxed)));
+  } while (!rc &&
+           (!v || !atomic_compare_exchange_weak(&sem->sem_value, &v, v - 1)));
 
   pthread_cleanup_pop(1);
   END_CANCELATION_POINT;

@@ -16,27 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/str/str.h"
-
-static char g_strsignal[21];
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Returns string describing signal code.
- *
- * This returns `"0"` for 0 which is the empty value. Symbolic names
- * should be available for signals 1 through 32. If the system supports
- * real-time signals, they're returned as `SIGRTMIN+%d`. For all other
- * 32-bit signed integer, a plain integer representation is returned.
- *
- * This function is thread safe when `sig` is a known signal magnum.
- * Otherwise a pointer to static memory is returned which is unsafe.
- *
- * @param sig is signal number which should be in range 1 through 128
- * @return string which is valid code describing signal
- * @see strsignal_r()
- * @see sigaction()
- * @threadunsafe
  */
-char *strsignal(int sig) {
-  return (char *)strsignal_r(sig, g_strsignal);
+__privileged char *strsignal(int sig) {
+  static const char kSignalNames[33][10] = {
+      [0] = "0",                  // 0
+      [SIGHUP] = "SIGHUP",        // 1
+      [SIGINT] = "SIGINT",        // 2
+      [SIGQUIT] = "SIGQUIT",      // 3
+      [SIGILL] = "SIGILL",        // 4
+      [SIGTRAP] = "SIGTRAP",      // 5
+      [SIGABRT] = "SIGABRT",      // 6
+      [SIGBUS] = "SIGBUS",        // 7
+      [SIGFPE] = "SIGFPE",        // 8
+      [SIGKILL] = "SIGKILL",      // 9
+      [SIGUSR1] = "SIGUSR1",      // 10
+      [SIGSEGV] = "SIGSEGV",      // 11
+      [SIGUSR2] = "SIGUSR2",      // 12
+      [SIGPIPE] = "SIGPIPE",      // 13
+      [SIGALRM] = "SIGALRM",      // 14
+      [SIGTERM] = "SIGTERM",      // 15
+      [16] = "SIG16",             // 16 SIGSTKFLT
+      [SIGCHLD] = "SIGCHLD",      // 17
+      [SIGCONT] = "SIGCONT",      // 18
+      [SIGSTOP] = "SIGSTOP",      // 19
+      [SIGTSTP] = "SIGTSTP",      // 20
+      [SIGTTIN] = "SIGTTIN",      // 21
+      [SIGTTOU] = "SIGTTOU",      // 22
+      [SIGURG] = "SIGURG",        // 23
+      [SIGXCPU] = "SIGXCPU",      // 24
+      [SIGXFSZ] = "SIGXFSZ",      // 25
+      [SIGVTALRM] = "SIGVTALRM",  // 26
+      [SIGPROF] = "SIGPROF",      // 27
+      [SIGWINCH] = "SIGWINCH",    // 28
+      [29] = "SIG29",             // 29 SIGPOLL
+      [30] = "SIG30",             // 30 SIGPWR
+      [SIGSYS] = "SIGSYS",        // 31
+      [SIGTHR] = "SIGTHR",        // 32
+  };
+  if (0 <= sig && sig <= 32)
+    return (char *)kSignalNames[sig];
+  return "SIG???";
 }

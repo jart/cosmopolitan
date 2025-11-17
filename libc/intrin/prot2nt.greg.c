@@ -20,7 +20,7 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/sysv/consts/prot.h"
 
-privileged int __prot2nt(int prot, int iscow) {
+__privileged int __prot2nt(int prot, int iscow) {
   switch (prot & (PROT_READ | PROT_WRITE | PROT_EXEC)) {
     case PROT_READ:
       return kNtPageReadonly;

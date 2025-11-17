@@ -56,7 +56,7 @@
 #define INTMAX_MIN    (-INTMAX_MAX - 1)
 #define INTPTR_MIN    (-INTPTR_MAX - 1)
 #define WINT_MIN      __WINT_MIN__
-#define WCHAR_MIN     (-WCHAR_MAX - 1)
+#define WCHAR_MIN     __WCHAR_MIN__
 #define PTRDIFF_MIN   (-PTRDIFF_MAX - 1)
 
 #define USHRT_MAX 65535

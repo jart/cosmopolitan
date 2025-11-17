@@ -16,23 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.h"
 #include "libc/str/str.h"
 
 /**
- * Compares NUL-terminated wide strings.
+ * Compares wide strings.
  *
- * @param a is first non-null NUL-terminated string pointer
- * @param b is second non-null NUL-terminated string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first non-null string pointer
+ * @param b is second non-null string pointer
+ * @return is <0, 0, or >0 based on wchar_t comparison
  * @asyncsignalsafe
  */
 int wcscmp(const wchar_t *a, const wchar_t *b) {
-  size_t i = 0;
   if (a == b)
     return 0;
-  while (a[i] == b[i] && b[i])
+  wchar_t x, y;
+  size_t i = -1;
+  do {
     ++i;
-  return (int)a[i] < (int)b[i] ? -1 : (int)a[i] > (int)b[i];
+    x = a[i];
+    y = b[i];
+  } while (x == y && x);
+  if (!TYPE_SIGNED(wchar_t))
+    return x - y;
+  return (x > y) - (x < y);
 }
 
 __weak_reference(wcscmp, wcscoll);

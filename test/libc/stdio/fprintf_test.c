@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/mem/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
@@ -26,14 +27,11 @@ TEST(fprintf, testWriteError) {
   // Only Linux, NetBSD and FreeBSD are known to have /dev/full
   if (!IsLinux() && !IsNetbsd() && !IsFreebsd())
     return;
-
   FILE *fp = fopen("/dev/full", "w");
   ASSERT_NE(fp, NULL);
-
   setbuf(fp, NULL);
-  ASSERT_LT(fprintf(fp, "test"), 0);
-
-  ASSERT_EQ(fclose(fp), 0);
+  ASSERT_SYS(ENOSPC, -1, fprintf(fp, "test"));
+  ASSERT_SYS(0, 0, fclose(fp));
 }
 
 TEST(fun, test) {

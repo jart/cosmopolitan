@@ -19,13 +19,14 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/fds.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/fds.h"
 #include "libc/intrin/strace.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Returns information about filesystem.
@@ -43,14 +44,14 @@ int fstatfs(int fd, struct statfs *sf) {
   int rc;
   BEGIN_CANCELATION_POINT;
 
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotsup();
   } else if (!IsWindows()) {
     if ((rc = sys_fstatfs(fd, &m)) != -1) {
       statfs2cosmo(sf, &m);
     }
   } else if (__isfdopen(fd)) {
-    rc = sys_fstatfs_nt(g_fds.p[fd].handle, sf);
+    rc = sys_fstatfs_nt(__get_pib()->fds.p[fd].handle, sf);
   } else {
     rc = ebadf();
   }

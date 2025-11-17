@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/atomic.h"
 #include "libc/runtime/runtime.h"
 
@@ -40,4 +41,4 @@
  * though under normal circumstances, `__ftrace` should only be either
  * zero or one.
  */
-int __ftrace;
+__rarechange int __ftrace;

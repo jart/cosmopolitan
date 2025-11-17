@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 enosys:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ENOSYS(%rip),%ecx
+	push	$ENOSYS
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ENOSYS
-	ldrsw	x0,[x1,#:lo12:ENOSYS]
+	mov	x0,#ENOSYS
 	b	__errfun
 #else
 #error "unsupported architecture"

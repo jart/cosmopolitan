@@ -31,7 +31,7 @@ static inline bool IsCookieOctet(unsigned char i) {
  *
  * @param n if -1 implies strlen
  */
-bool IsValidCookieValue(const char *s, size_t n) {
+bool32 IsValidCookieValue(const char *s, size_t n) {
   size_t i;
   if (n == -1)
     n = s ? strlen(s) : 0;

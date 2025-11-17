@@ -47,7 +47,7 @@
  * @fileoverview cosmopolitan ar
  */
 
-static wontreturn void ShowUsage(int rc, int fd) {
+[[noreturn]] static void ShowUsage(int rc, int fd) {
   tinyprint(  //
       fd,
       "USAGE\n"
@@ -139,12 +139,12 @@ static void SortChars(char *A, long n) {
   }
 }
 
-static wontreturn void Die(const char *path, const char *reason) {
+[[noreturn]] static void Die(const char *path, const char *reason) {
   tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void SysDie(const char *path, const char *func) {
+[[noreturn]] static void SysDie(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno)))
     errstr = "Unknown error";
@@ -222,7 +222,8 @@ static char *StrCat(const char *a, const char *b) {
   n = strlen(a);
   m = strlen(b);
   p = balloc(n + m + 1, 1);
-  memcpy(p, a, n);
+  if (n)
+    memcpy(p, a, n);
   memcpy(p + n, b, m + 1);
   return p;
 }

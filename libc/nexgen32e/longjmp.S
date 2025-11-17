@@ -23,7 +23,6 @@
 //	@param	rdi points to the jmp_buf
 //	@param	esi is returned by setjmp() invocation (coerced nonzero)
 //	@noreturn
-//	@see	gclongjmp()
 //	@see	siglongjmp()
 	.ftrace1
 longjmp:beg
@@ -51,7 +50,7 @@ _longjmp:
 	ldp	x19,x20,[x0,#80]
 	ldr	x21,[x0,#104]
 	mov	sp,x2
-	ldp	d8 ,d9,[x0,#112]
+	ldp	d8,d9,[x0,#112]
 	ldp	d10,d11,[x0,#128]
 	ldp	d12,d13,[x0,#144]
 	ldp	d14,d15,[x0,#160]
@@ -64,4 +63,3 @@ _longjmp:
 	end
 	.endfn	longjmp,globl
 	.endfn	_longjmp,globl
-	.alias	longjmp,siglongjmp

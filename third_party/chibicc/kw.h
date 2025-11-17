@@ -16,7 +16,7 @@
 #define KW_ENUM                         13 /* keyword typename */
 #define KW_AUTO                         14 /* keyword typename */
 #define KW_REGISTER                     15 /* keyword typename */
-#define KW__NORETURN                    16 /* keyword typename */
+#define KW_NORETURN                     16 /* keyword typename */
 #define KW_EXTERN                       17 /* keyword typename */
 #define KW_INLINE                       18 /* keyword typename */
 #define KW_INT                          19 /* keyword typename */
@@ -24,11 +24,12 @@
 #define KW_TYPEDEF                      21 /* keyword typename */
 #define KW_TYPEOF                       22 /* keyword typename */
 #define KW_VOLATILE                     23 /* keyword typename */
-#define KW__ALIGNAS                     24 /* keyword typename */
+#define KW_ALIGNAS                      24 /* keyword typename */
 #define KW__ATOMIC                      25 /* keyword typename */
-#define KW__BOOL                        26 /* keyword typename */
-#define KW__THREAD_LOCAL                27 /* keyword typename */
+#define KW_BOOL                         26 /* keyword typename */
+#define KW_THREAD_LOCAL                 27 /* keyword typename */
 #define KW___INT128                     28 /* keyword typename */
+#define KW_NULLPTR_T                    29 /* keyword typename */
 #define KW_IF                           33 /* keyword */
 #define KW_RETURN                       34 /* keyword */
 #define KW_CASE                         35 /* keyword */
@@ -44,7 +45,10 @@
 #define KW_DEFAULT                      45 /* keyword */
 #define KW___ATTRIBUTE__                46 /* keyword */
 #define KW_GOTO                         47 /* keyword */
-#define KW__ALIGNOF                     48 /* keyword */
+#define KW_ALIGNOF                      48 /* keyword */
+#define KW_TRUE                         49 /* keyword */
+#define KW_FALSE                        50 /* keyword */
+#define KW_NULLPTR                      51 /* keyword */
 #define KW_INCLUDE                      64
 #define KW_IFDEF                        65
 #define KW_IFNDEF                       66
@@ -62,7 +66,7 @@
 #define KW_STRSTR                       78
 #define KW_UNDEF                        79
 #define KW__GENERIC                     80
-#define KW__STATIC_ASSERT               81
+#define KW_STATIC_ASSERT                81
 #define KW___VA_OPT__                   82
 #define KW___ALIGNOF__                  83
 #define KW___ASM__                      84
@@ -120,6 +124,8 @@
 #define KW___ATOMIC_FETCH_XOR           136
 #define KW___ATOMIC_COMPARE_EXCHANGE_N  137
 #define KW___ATOMIC_EXCHANGE_N          138
+#define KW_ELIFDEF                      143
+#define KW_WARNING                      144
 
 COSMOPOLITAN_C_START_
 

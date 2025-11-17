@@ -37,6 +37,11 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
+#include "libc/nt/shell32.h"
+#include "libc/nt/enum/knownfolder.h"
+#include "libc/nt/enum/e.h"
+#include "libc/str/str.h"
+#include "third_party/miniaudio/miniaudio.h"
 #include "third_party/musl/passwd.h"
 __static_yoink("musl_libc_notice");
 
@@ -50,10 +55,36 @@ __static_yoink("_Cz_inflate");
 __static_yoink("_Cz_inflateEnd");
 #endif
 
+// stores home directory without trailing slash
+// returns strlen(path) on success or -1 on error/truncation
+static int
+GetUserHomeDirectory(char *path, size_t size)
+{
+	int i, len;
+	int32_t hResult;
+	char16_t *path16;
+	if (size < 8)
+		return -1;
+	hResult = SHGetKnownFolderPath(&FOLDERID_Profile, 0, 0, &path16);
+	if (!SUCCEEDED(hResult))
+		return -1;
+	path16[1] = path16[0];
+	path16[0] = '/';
+	for (i = 0; path16[i]; ++i)
+		if (path16[i] == '\\')
+			path16[i] = '/';
+	len = tprecode16to8(path, size, path16).ax;
+	if (len >= size - 1)
+		len = -1;
+	CoTaskMemFree(path16);
+	return len;
+}
+
 static char *
 __create_synthetic_passwd_file(void)
 {
 	int uid, gid;
+	char homebuf[PATH_MAX];
 	char login[256], cwd[PATH_MAX];
 	char *user, *home, *shell, *res = 0;
 	uid = getuid();
@@ -71,7 +102,9 @@ __create_synthetic_passwd_file(void)
 		shell = _PATH_BSHELL;
 	if (!user && getlogin_r(login, sizeof(login)) != -1)
 		user = login;
-	if (!home && getcwd(cwd, sizeof(cwd))) {
+	if (IsWindows() && GetUserHomeDirectory(homebuf, sizeof(homebuf)) > 0) {
+		home = homebuf;
+	} else if (!home && getcwd(cwd, sizeof(cwd))) {
 		if (!strchr(cwd, ':'))
 			home = cwd;
 		else
@@ -231,6 +264,17 @@ static struct GetpwentState {
 	struct passwd pw;
 	size_t size;
 } g_getpwent;
+
+/* [jart] free memory at exit */
+static void pwd_atexit(void) {
+	if (g_getpwent.f)
+		fclose(g_getpwent.f);
+	free(g_getpwent.line);
+	memset(&g_getpwent, 0, sizeof(g_getpwent));
+}
+__attribute__((__constructor__)) static void pwd_ctor(void) {
+	atexit(pwd_atexit);
+}
 
 /**
  * Closes global handle to password database.

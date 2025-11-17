@@ -17,28 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
 
-static inline int64_t ftell_unlocked(FILE *f) {
-  int64_t pos;
-  if (f->fd != -1) {
-    if (fflush_unlocked(f) == EOF)
-      return -1;
-    if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
-      if (f->beg < f->end)
-        pos -= f->end - f->beg;
-      return pos;
-    } else {
-      f->state = errno == ESPIPE ? EBADF : errno;
-      return -1;
-    }
-  } else {
+static long ftell_unlocked(FILE *f) {
+  long pos;
+
+  // handle memory streams
+  if (f->fd == -1)
     return f->beg;
-  }
+
+  // get position from operating system
+  if ((pos = lseek(f->fd, 0, SEEK_CUR)) == -1)
+    return -1;
+
+  // adjust for unread/unwritten content
+  pos += (long)f->beg - (long)f->end;
+
+  return pos;
 }
 
 /**
@@ -46,12 +42,16 @@ static inline int64_t ftell_unlocked(FILE *f) {
  *
  * @param stream is a non-null stream handle
  * @returns current byte offset from beginning, or -1 w/ errno
+ * @raise EBADF if underlying file descriptor isn't open
+ * @raise ESPIPE if underlying file descriptor is a pipe
  */
-int64_t ftell(FILE *f) {
-  int64_t rc;
-  flockfile(f);
+long ftell(FILE *f) {
+  long rc;
+  if (__isthreaded >= 2)
+    flockfile(f);
   rc = ftell_unlocked(f);
-  funlockfile(f);
+  if (__isthreaded >= 2)
+    funlockfile(f);
   return rc;
 }
 

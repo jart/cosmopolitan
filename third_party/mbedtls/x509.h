@@ -3,6 +3,7 @@
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/pk.h"
+#include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/rsa.h"
 COSMOPOLITAN_C_START_
  

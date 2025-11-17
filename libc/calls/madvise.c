@@ -20,50 +20,52 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/errfuns.h"
 
-static int __madvise(void *addr, size_t length, int advice) {
+/**
+ * Advises kernel about memory intentions.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `advice` isn't valid
+ * @raise EINVAL if `len` is negative
+ * @raise EINVAL if `addr` isn't multiple of `sysconf(_SC_PAGESIZE)`
+ * @raise ENOMEM if interval overlaps unmapped pages (on some OSes)
+ */
+int madvise(void *addr, size_t len, int advice) {
 
-  // simulate linux behavior of validating alignment
+  switch (advice) {
+    case MADV_NORMAL:
+    case MADV_RANDOM:
+    case MADV_WILLNEED:
+    case MADV_SEQUENTIAL:
+    case MADV_DONTNEED:
+      break;
+    default:
+      return einval();
+  }
+
+  if (!len)
+    return 0;
+
+  if ((int64_t)len < 0)
+    return einval();
+
   if ((uintptr_t)addr & (__pagesize - 1))
     return einval();
 
-  // simulate linux behavior of checking for negative length
-  if ((ssize_t)length < 0)
-    return einval();
+  int rc = 0;
+  if (!IsWindows()) {
+    rc = sys_madvise(addr, len, advice);
+  } else {
+    errno_t err = sys_posix_madvise_nt(addr, len, advice);
+    if (err) {
+      errno = err;
+      rc = -1;
+    }
+  }
 
-  // madvise(0, 0, advice) may be used to validate advice
-  if (!length && (IsFreebsd() || IsNetbsd()))
-    addr = (void *)65536l;
-
-  if (!IsWindows())
-    return sys_madvise(addr, length, advice);
-  return sys_madvise_nt(addr, length, advice);
-}
-
-/**
- * Declares intent to OS on how memory region will be used.
- *
- * `madvise(0, 0, advice)` is recommended for validating `advise` and it
- * will always be the case that a `length` of zero is a no-op otherwise.
- *
- * Having the interval overlap unmapped pages has undefined behavior. On
- * Linux, this can be counted upon to raise ENOMEM. Other OSes vary much
- * in behavior here; they'll might ignore unmapped regions or they might
- * raise EINVAL, EFAULT, or ENOMEM.
- *
- * @param advice can be MADV_WILLNEED, MADV_SEQUENTIAL, MADV_FREE, etc.
- * @return 0 on success, or -1 w/ errno
- * @raise EINVAL if `advice` isn't valid or supported by system
- * @raise EINVAL if `addr` isn't getpagesize() aligned
- * @raise EINVAL if `length` is negative
- * @see libc/sysv/consts.sh
- * @see fadvise()
- */
-int madvise(void *addr, size_t length, int advice) {
-  int rc = __madvise(addr, length, advice);
-  STRACE("madvise(%p, %'zu, %d) → %d% m", addr, length, advice, rc);
   return rc;
 }

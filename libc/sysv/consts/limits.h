@@ -3,7 +3,6 @@
 COSMOPOLITAN_C_START_
 
 extern const int NGROUPS_MAX;
-extern const int PIPE_BUF;
 extern const int SOMAXCONN;
 extern const int _ARG_MAX;
 extern const int _NAME_MAX;
@@ -13,8 +12,9 @@ extern const int LINK_MAX;
 extern const int MAX_CANON;
 extern const int MAX_INPUT;
 
+#define PIPE_BUF 512 /* is 4096 on linux and windows */
+
 #define NGROUPS_MAX NGROUPS_MAX
-#define PIPE_BUF    PIPE_BUF
 #define SOMAXCONN   SOMAXCONN
 #define _ARG_MAX    _ARG_MAX
 #define _NAME_MAX   _NAME_MAX

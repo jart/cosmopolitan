@@ -22,10 +22,8 @@
  * Sets wide memory.
  * @asyncsignalsafe
  */
-char16_t *memset16(char16_t *p, char16_t c, size_t n) {
-  size_t i;
-  for (i = 0; i < n; ++i) {
+optimizespeed char16_t *memset16(char16_t *p, char16_t c, size_t n) {
+  for (size_t i = 0; i < n; ++i)
     p[i] = c;
-  }
   return p;
 }

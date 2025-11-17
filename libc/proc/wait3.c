@@ -24,7 +24,7 @@
  *
  * @param opt_out_wstatus optionally returns status code, and *wstatus
  *     may be inspected using WEEXITSTATUS(), etc.
- * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
+ * @param options can have WNOHANG, WUNTRACED, etc.
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
  * @cancelationpoint

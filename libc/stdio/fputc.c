@@ -16,19 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Writes byte to stream.
  *
  * @param c is byte to buffer or write, which is masked
- * @return c as unsigned char if written or -1 w/ errno
+ * @return c as unsigned char if written or EOF w/ errno
+ * @cancelationpoint
  */
 int fputc(int c, FILE *f) {
   int rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fputc_unlocked(c, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }
 

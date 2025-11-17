@@ -43,7 +43,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -185,9 +184,9 @@ static relegated char *GetSymbolName(struct SymbolTable *st, int symbol) {
   static char buf[8192];
   if (!(str = __get_symbol_name(st, symbol)))
     return str;
-  if (!__is_mangled(str))
+  if (!cosmo_is_mangled(str))
     return str;
-  __demangle(buf, str, sizeof(buf));
+  cosmo_demangle(buf, str, sizeof(buf));
   return buf;
 }
 

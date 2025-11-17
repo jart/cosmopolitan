@@ -13,8 +13,12 @@ ORIGIN
 
 LOCAL CHANGES
 
-  - Add <__memory/aligned_alloc.h> (contains a few inline functions) from
-  upstream libcxx.
-  - Add <test/support/make_test_thread.hh> and <test/support/test_macros.hh>
-  from upstream libcxx.
+  - Add <__memory/aligned_alloc.h> (contains a few inline functions)
+    from upstream libcxx.
+
+  - Add <test/support/make_test_thread.hh> and
+    <test/support/test_macros.hh> from upstream libcxx.
+
   - Enable __cxa_thread_atexit for Cosmopolitan.
+
+  - Fix std::terminate() to not use malloc().

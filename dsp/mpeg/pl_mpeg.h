@@ -167,6 +167,7 @@ See below for detailed the API documentation.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <cosmotime.h>
 #include <time.h>
 
 

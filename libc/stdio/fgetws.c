@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads UTF-8 content from stream into UTF-32 buffer.
@@ -28,12 +28,13 @@
  * @param s is is nul-terminated string that's non-null
  * @param size is byte length of `s`
  * @param f is file stream object pointer
- * @see fgetws()
+ * @return pointer to read line, or NULL w/ errno
+ * @cancelationpoint
  */
 wchar_t *fgetws(wchar_t *s, int size, FILE *f) {
   wchar_t *rc;
-  flockfile(f);
+  FLOCKFILE(f);
   rc = fgetws_unlocked(s, size, f);
-  funlockfile(f);
+  FUNLOCKFILE(f);
   return rc;
 }

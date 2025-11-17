@@ -13,7 +13,6 @@
 // TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 // PERFORMANCE OF THIS SOFTWARE.
 
-#include <cosmo.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
@@ -32,11 +31,13 @@ atomic_int receiver_got_signal;
 double latencies[ITERATIONS];
 
 void sender_signal_handler(int signo) {
-  sender_got_signal = 1;
+  if (atomic_exchange(&sender_got_signal, 1))
+    exit(20);
 }
 
 void receiver_signal_handler(int signo) {
-  receiver_got_signal = 1;
+  if (atomic_exchange(&receiver_got_signal, 1))
+    exit(21);
 }
 
 void *sender_func(void *arg) {
@@ -57,9 +58,8 @@ void *sender_func(void *arg) {
 
     // Wait for pong
     for (;;)
-      if (atomic_load_explicit(&sender_got_signal, memory_order_relaxed))
+      if (atomic_exchange(&sender_got_signal, 0))
         break;
-    sender_got_signal = 0;
   }
 
   return 0;
@@ -69,8 +69,7 @@ void *receiver_func(void *arg) {
   static int iteration = 0;
   do {
     // wait for signal handler to be called
-    if (atomic_exchange_explicit(&receiver_got_signal, 0,
-                                 memory_order_acq_rel)) {
+    if (atomic_exchange(&receiver_got_signal, 0)) {
 
       // record received time
       struct timespec receive_time;

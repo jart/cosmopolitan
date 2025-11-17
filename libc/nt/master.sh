@@ -27,8 +27,10 @@ imp	''							FindNextFileW						kernel32	2
 imp	''							FlushFileBuffers					kernel32	1
 imp	''							FlushViewOfFile						kernel32	2
 imp	''							GenerateConsoleCtrlEvent				kernel32	2
+imp	''							GetCurrentDirectoryW					kernel32	2
 imp	''							GetExitCodeProcess					kernel32	2
 imp	''							GetFileAttributesW					kernel32	1
+imp	''							GetPriorityClass					kernel32	1
 imp	''							LockFileEx						kernel32	6
 imp	''							MapViewOfFileEx						kernel32	6
 imp	''							MapViewOfFileExNuma					kernel32	7
@@ -37,6 +39,7 @@ imp	''							OpenProcess						kernel32	3
 imp	''							ReOpenFile						kernel32	4	# TODO(jart): 6.2 and higher
 imp	''							RemoveDirectoryW					kernel32	1
 imp	''							SetCurrentDirectoryW					kernel32	1
+imp	''							SetPriorityClass					kernel32	2
 imp	''							TerminateProcess					kernel32	2
 imp	''							UnlockFileEx						kernel32	5
 imp	''							UnmapViewOfFile						kernel32	1
@@ -99,6 +102,8 @@ imp	'FreeConsole'						FreeConsole						kernel32	0
 imp	'FreeEnvironmentStrings'				FreeEnvironmentStringsW					kernel32	1
 imp	'FreeLibrary'						FreeLibrary						kernel32	1
 imp	'FreeResource'						FreeResource						kernel32	1
+imp	'GetACP'						GetACP							kernel32	0
+imp	'GetCPInfoEx'						GetCPInfoExW						kernel32	3
 imp	'GetCommandLine'					GetCommandLineW						kernel32	0
 imp	'GetCompressedFileSize'					GetCompressedFileSizeW					kernel32	2
 imp	'GetComputerNameEx'					GetComputerNameExW					kernel32	3
@@ -111,7 +116,6 @@ imp	'GetConsoleScreenBufferInfoEx'				GetConsoleScreenBufferInfoEx				kernel32	2
 imp	'GetConsoleSelectionInfo'				GetConsoleSelectionInfo					kernel32	1
 imp	'GetConsoleTitle'					GetConsoleTitleW					kernel32	2
 imp	'GetConsoleWindow'					GetConsoleWindow					kernel32	0
-imp	'GetCurrentDirectory'					GetCurrentDirectoryW					kernel32	2
 imp	'GetCurrentProcessId'					GetCurrentProcessId					kernel32	0
 imp	'GetCurrentProcessorNumberEx'				GetCurrentProcessorNumberEx				kernel32	1
 imp	'GetCurrentThread'					GetCurrentThread					kernel32	0
@@ -129,12 +133,11 @@ imp	'GetFileTime'						GetFileTime						kernel32	4
 imp	'GetFileType'						GetFileType						kernel32	1
 imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	4
 imp	'GetFullPathName'					GetFullPathNameW					kernel32	4
-imp	'GetShortPathName'					GetShortPathNameW					kernel32	3
 imp	'GetHandleInformation'					GetHandleInformation					kernel32	2
 imp	'GetLargestConsoleWindowSize'				GetLargestConsoleWindowSize				kernel32	1
 imp	'GetLastError'						GetLastError						kernel32	0
-imp	'GetLogicalDrives'					GetLogicalDrives					kernel32	0
 imp	'GetLogicalDriveStringsA'				GetLogicalDriveStringsA					kernel32	2
+imp	'GetLogicalDrives'					GetLogicalDrives					kernel32	0
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	1	# Windows 7+
 imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	3
 imp	'GetModuleHandle'					GetModuleHandleA					kernel32	1
@@ -144,9 +147,9 @@ imp	'GetNamedPipeInfo'					GetNamedPipeInfo					kernel32	5
 imp	'GetNumaProcessorNodeEx'				GetNumaProcessorNodeEx					kernel32	2
 imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				kernel32	2
 imp	'GetNumberOfConsoleMouseButtons'			GetNumberOfConsoleMouseButtons				kernel32	1
+imp	'GetOEMCP'						GetOEMCP						kernel32	0
 imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	4
 imp	'GetOverlappedResultEx'					GetOverlappedResultEx					kernel32	5
-imp	'GetPriorityClass'					GetPriorityClass					kernel32	1
 imp	'GetProcAddress'					GetProcAddress						kernel32	2
 imp	'GetProcessAffinityMask'				GetProcessAffinityMask					kernel32	3
 imp	'GetProcessHandleCount'					GetProcessHandleCount					kernel32	2
@@ -162,6 +165,7 @@ imp	'GetProcessWorkingSetSize'				GetProcessWorkingSetSize				kernel32	3
 imp	'GetProcessWorkingSetSizeEx'				GetProcessWorkingSetSizeEx				kernel32	4
 imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				kernel32	5
 imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				kernel32	6
+imp	'GetShortPathName'					GetShortPathNameW					kernel32	3
 imp	'GetStartupInfo'					GetStartupInfoW						kernel32	1
 imp	'GetStdHandle'						GetStdHandle						kernel32	1
 imp	'GetSystemDirectory'					GetSystemDirectoryW					kernel32	2
@@ -188,9 +192,6 @@ imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	
 imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	3
 imp	'GetWindowsDirectory'					GetWindowsDirectoryW					kernel32	2
 imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					kernel32	2
-imp	'GetOEMCP'						GetOEMCP						kernel32	0
-imp	'GetACP'						GetACP							kernel32	0
-imp	'GetCPInfoEx'						GetCPInfoExW						kernel32	3
 imp	'GlobalAlloc'						GlobalAlloc						kernel32	2
 imp	'GlobalFree'						GlobalFree						kernel32	1
 imp	'GlobalLock'						GlobalLock						kernel32	1
@@ -213,6 +214,7 @@ imp	'LoadLibrary'						LoadLibraryW						kernel32	1
 imp	'LoadLibraryA'						LoadLibraryA						kernel32	1
 imp	'LoadLibraryEx'						LoadLibraryExW						kernel32	3
 imp	'LoadResource'						LoadResource						kernel32	2
+imp	'LocalAlloc'						LocalAlloc						kernel32	2
 imp	'LocalFree'						LocalFree						kernel32	1
 imp	'LockFile'						LockFile						kernel32	5
 imp	'LockResource'						LockResource						kernel32	1
@@ -269,14 +271,13 @@ imp	'SetEvent'						SetEvent						kernel32	1
 imp	'SetFileAttributes'					SetFileAttributesW					kernel32	2
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	2
 imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	4
-imp	'SetFilePointer'					SetFilePointer						kernel32	4
+imp	'SetFilePointerEx'					SetFilePointerEx					kernel32	4
 imp	'SetFileTime'						SetFileTime						kernel32	4
 imp	'SetFileValidData'					SetFileValidData					kernel32	2
 imp	'SetHandleCount'					SetHandleCount						kernel32	1
 imp	'SetHandleInformation'					SetHandleInformation					kernel32	3
 imp	'SetLastError'						SetLastError						kernel32	1
 imp	'SetNamedPipeHandleState'				SetNamedPipeHandleState					kernel32	4
-imp	'SetPriorityClass'					SetPriorityClass					kernel32	2
 imp	'SetProcessAffinityMask'				SetProcessAffinityMask					kernel32	2
 imp	'SetProcessPriorityBoost'				SetProcessPriorityBoost					kernel32	2
 imp	'SetProcessWorkingSetSize'				SetProcessWorkingSetSize				kernel32	3
@@ -289,7 +290,6 @@ imp	'SetThreadPriority'					SetThreadPriority					kernel32	2
 imp	'SetThreadPriorityBoost'				SetThreadPriorityBoost					kernel32	2
 imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				kernel32	1
 imp	'SetWaitableTimer'					SetWaitableTimer					kernel32	6
-imp	'Sleep'							Sleep							kernel32	1
 imp	'SleepEx'						SleepEx							kernel32	2
 imp	'SuspendThread'						SuspendThread						kernel32	1
 imp	'SystemTimeToFileTime'					SystemTimeToFileTime					kernel32	2
@@ -325,16 +325,24 @@ imp	'WriteFileGather'					WriteFileGather						kernel32	5
 
 # ADVAPI32.DLL
 #
-#	Name							Actual							DLL		Hint	Arity
+#	Name							Actual							DLL		Arity
 imp	'AccessCheck'						AccessCheck						advapi32	8
+imp	'AddAce'						AddAce							advapi32	5
 imp	'AdjustTokenPrivileges'					AdjustTokenPrivileges					advapi32	6
+imp	'AllocateAndInitializeSid'				AllocateAndInitializeSid				advapi32	11
 imp	'CreateProcessAsUser'					CreateProcessAsUserW					advapi32	11
 imp	'DeregisterEventSource'					DeregisterEventSource					advapi32	1
 imp	'DuplicateToken'					DuplicateToken						advapi32	3
 imp	'DuplicateTokenEx'					DuplicateTokenEx					advapi32	6
+imp	'EqualSid'						EqualSid						advapi32	2
+imp	'FreeSid'						FreeSid							advapi32	1
+imp	'GetAce'						GetAce							advapi32	3
+imp	'GetAclInformation'					GetAclInformation					advapi32	4
 imp	'GetFileSecurity'					GetFileSecurityW					advapi32	5
+imp	'GetSecurityInfo'					GetSecurityInfo						advapi32	8
 imp	'GetUserName'						GetUserNameW						advapi32	2
 imp	'ImpersonateSelf'					ImpersonateSelf						advapi32	1
+imp	'InitializeAcl'						InitializeAcl						advapi32	3
 imp	'InitiateShutdown'					InitiateShutdownW					advapi32	5
 imp	'LookupPrivilegeValue'					LookupPrivilegeValueW					advapi32	3
 imp	'MapGenericMask'					MapGenericMask						advapi32	2
@@ -380,6 +388,8 @@ imp	'RegisterEventSource'					RegisterEventSourceW					advapi32	2
 imp	'ReportEvent'						ReportEventW						advapi32	9
 imp	'ReportEventA'						ReportEventA						advapi32	9
 imp	'RevertToSelf'						RevertToSelf						advapi32	0
+imp	'SetEntriesInAcl'					SetEntriesInAclW					advapi32	4
+imp	'SetSecurityInfo'					SetSecurityInfo						advapi32	7
 imp	'TraceSetInformation'					TraceSetInformation					advapi32 # Windows 7+
 
 # USER32.DLL
@@ -501,6 +511,18 @@ imp	'CommandLineToArgv'					CommandLineToArgvW					shell32		2
 imp	'DragAcceptFiles'					DragAcceptFiles						shell32		2
 imp	'DragFinish'						DragFinish						shell32		1
 imp	'DragQueryFile'						DragQueryFileW						shell32		4
+imp	'SHGetKnownFolderPath'					SHGetKnownFolderPath					shell32		4
+
+# OLE32.DLL
+#
+#	Name							Actual							DLL		Arity
+imp	'CoTaskMemFree'						CoTaskMemFree						ole32		1
+
+# WINMM.dll
+#
+#	Name							Actual							DLL					Arity
+imp	''							timeBeginPeriod						winmm					1
+imp	''							timeEndPeriod						winmm					1
 
 # GDI32.DLL
 #

@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 etxtbsy:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ETXTBSY(%rip),%ecx
+	push	$ETXTBSY
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ETXTBSY
-	ldrsw	x0,[x1,#:lo12:ETXTBSY]
+	mov	x0,#ETXTBSY
 	b	__errfun
 #else
 #error "unsupported architecture"

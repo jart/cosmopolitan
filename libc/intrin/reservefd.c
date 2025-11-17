@@ -18,14 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/extend.h"
 #include "libc/intrin/fds.h"
 #include "libc/macros.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Grows file descriptor array memory if needed.
@@ -35,24 +37,18 @@
  * @asyncsignalsafe
  */
 int __ensurefds_unlocked(int fd) {
-  size_t n;
-  if (fd < g_fds.n)
+  struct CosmoPib *pib = __get_pib();
+  if (fd < pib->fds.n)
     return fd;
-  n = fd + 1;
-  g_fds.e = _extend(g_fds.p, n * sizeof(*g_fds.p), g_fds.e, MAP_PRIVATE,
-                    kMemtrackFdsStart + kMemtrackFdsSize);
-  g_fds.n = n;
-  return fd;
-}
-
-/**
- * Grows file descriptor array memory if needed.
- * @asyncsignalsafe if signals are blocked
- */
-int __ensurefds(int fd) {
-  __fds_lock();
-  fd = __ensurefds_unlocked(fd);
-  __fds_unlock();
+  while (fd >= pib->fds.c / sizeof(struct Fd)) {
+    if (mmap((char *)pib->fds.p + pib->fds.c, __gransize,
+             PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1,
+             0) == MAP_FAILED)
+      return emfile();
+    pib->fds.c += __gransize;
+  }
+  pib->fds.n = fd + 1;
   return fd;
 }
 
@@ -63,18 +59,21 @@ int __ensurefds(int fd) {
 int __reservefd_unlocked(int start) {
   int fd, f1, f2;
   for (;;) {
-    f1 = atomic_load_explicit(&g_fds.f, memory_order_acquire);
-    for (fd = MAX(start, f1); fd < g_fds.n; ++fd)
-      if (!g_fds.p[fd].kind)
+    f1 = atomic_load(&__get_pib()->fds.f);
+    for (fd = MAX(start, f1); fd < __get_pib()->fds.n; ++fd)
+      if (__get_pib()->fds.p[fd].kind == kFdEmpty)
         break;
     fd = __ensurefds_unlocked(fd);
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
-      // g_fds.f isn't guarded by our mutex
+    if (fd >= ~__get_pib()->rlimit[RLIMIT_NOFILE].rlim_cur)
+      return emfile();
+    bzero(__get_pib()->fds.p + fd, sizeof(*__get_pib()->fds.p));
+    char oldkind = kFdEmpty;
+    if (atomic_compare_exchange_strong(&__get_pib()->fds.p[fd].kind, &oldkind,
+                                       kFdReserved)) {
+      // __get_pib()->fds.f isn't guarded by our mutex
       do {
         f2 = MIN(fd + 1, f1);
-      } while (!atomic_compare_exchange_weak_explicit(
-          &g_fds.f, &f1, f2, memory_order_release, memory_order_relaxed));
+      } while (!atomic_compare_exchange_weak(&__get_pib()->fds.f, &f1, f2));
       return fd;
     }
   }

@@ -22,6 +22,8 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmotime.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
@@ -38,8 +40,9 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/errno.h"
 #include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows ssize_t
 __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
@@ -64,9 +67,22 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     uint32_t other_error = 0;
 
     // create event handle for overlapped i/o
+    //
+    // we don't need to use WSACreateEvent() because
+    //
+    //     "Windows Sockets 2 event objects are system objects in
+    //      Windows environments. Therefore, if a Windows application
+    //      wants to use an auto-reset event rather than a manual-reset
+    //      event, the application can call the CreateEvent function
+    //      directly. The scope of an event object is limited to the
+    //      process in which it is created." —Quoth MSDN
+    //
+    // unlike ReadFile() and WriteFile(), functions like WSARecv() don't
+    // explicitly document that they'll reset the signalled state of the
+    // event object before performing the i/o operation.
     intptr_t event;
-    if (!(event = WSACreateEvent()))
-      return __winsockerr();
+    if (!(event = CreateEventTls()))
+      return __winerr();
 
     struct NtOverlapped overlap = {.hEvent = event};
     bool32 ok = !StartSocketOp(handle, &overlap, &flags, arg);
@@ -82,13 +98,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
         // it's not safe to acknowledge cancelation from here
         // it's not safe to call any signal handlers from here
         intptr_t sev;
-        if ((sev = CreateEvent(0, 0, 0, 0))) {
-          // installing semaphore before sig get makes wait atomic
-          struct PosixThread *pt = _pthread_self();
-          pt->pt_event = sev;
-          pt->pt_blkmask = waitmask;
-          atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_EVENT,
-                                memory_order_release);
+        if ((sev = __interruptible_start(waitmask))) {
           if (_is_canceled()) {
             got_cancel = true;
             CancelIoEx(handle, &overlap);
@@ -114,8 +124,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
               CancelIoEx(handle, &overlap);
             }
           }
-          atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-          CloseHandle(sev);
+          __interruptible_end();
         } else {
           other_error = GetLastError();
           CancelIoEx(handle, &overlap);
@@ -127,7 +136,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     if (ok)
       ok = WSAGetOverlappedResult(handle, &overlap, &exchanged, true, &flags);
     uint32_t io_error = WSAGetLastError();
-    WSACloseEvent(event);
+    CloseEventTls(event);
 
     // check if i/o completed
     // this could forseeably happen even if CancelIoEx was called
@@ -141,14 +150,14 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     if (io_error != kNtErrorOperationAborted) {
       if (got_sig)  // swallow dequeued signal
         _weaken(__sig_relay)(got_sig, SI_KERNEL, waitmask);
-      errno = __dos2errno(io_error);
+      errno = __errno_windows2linux(io_error);
       return -1;
     }
 
     // it's now reasonable to report semaphore creation error
     if (other_error) {
       unassert(!got_sig);
-      errno = __dos2errno(other_error);
+      errno = __errno_windows2linux(other_error);
       return -1;
     }
 

@@ -23,6 +23,7 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
 #include "libc/sock/internal.h"
@@ -61,7 +62,11 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
   union sockaddr_storage_bsd bsd;
   BEGIN_CANCELATION_POINT;
 
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (addrsize && addrsize < sizeof(struct sockaddr)) {
+    rc = einval();
+  } else if (addrsize && kisdangerous(opt_addr)) {
+    rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = enotsock();
   } else if (!IsWindows()) {
     if (!IsBsd() || !opt_addr) {

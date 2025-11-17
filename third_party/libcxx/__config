@@ -295,7 +295,7 @@ _LIBCPP_HARDENING_MODE_DEBUG
 #  if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||                     \
       defined(__DragonFly__)
 #    define _LIBCPP_USING_ARC4_RANDOM
-#  elif defined(__wasi__) || defined(__EMSCRIPTEN__)
+#  elif defined(__wasi__) || defined(__COSMOPOLITAN__) || defined(__EMSCRIPTEN__)
 #    define _LIBCPP_USING_GETENTROPY
 #  elif defined(__Fuchsia__)
 #    define _LIBCPP_USING_FUCHSIA_CPRNG
@@ -817,6 +817,7 @@ typedef __char32_t char32_t;
         defined(__APPLE__) ||                                                                                          \
         defined(__MVS__) ||                                                                                            \
         defined(_AIX) ||                                                                                               \
+        defined(__COSMOPOLITAN__) ||                                                                                   \
         defined(__EMSCRIPTEN__)
 // clang-format on
 #      define _LIBCPP_HAS_THREAD_API_PTHREAD

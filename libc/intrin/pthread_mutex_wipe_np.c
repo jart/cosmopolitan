@@ -25,7 +25,7 @@
 /**
  * Unlocks mutex from child process after fork.
  */
-int _pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
+int pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
   atomic_init(&mutex->_word, MUTEX_UNLOCK(atomic_load_explicit(
                                  &mutex->_word, memory_order_relaxed)));
   atomic_init(&mutex->_futex, 0);
@@ -35,5 +35,3 @@ int _pthread_mutex_wipe_np(pthread_mutex_t *mutex) {
   mutex->_nsync[1] = 0;
   return 0;
 }
-
-__weak_reference(_pthread_mutex_wipe_np, pthread_mutex_wipe_np);

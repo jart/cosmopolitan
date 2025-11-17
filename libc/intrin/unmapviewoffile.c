@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/memory.h"
 
@@ -29,8 +28,6 @@ __msabi extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile;
 textwindows bool32 UnmapViewOfFile(const void *lpBaseAddress) {
   bool32 ok;
   ok = __imp_UnmapViewOfFile(lpBaseAddress);
-  if (!ok)
-    __winerr();
   NTTRACE("UnmapViewOfFile(%p) → %hhhd% m", lpBaseAddress, ok);
   return ok;
 }

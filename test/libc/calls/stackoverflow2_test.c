@@ -53,8 +53,9 @@ void CrashHandler(int sig, siginfo_t *si, void *ctx) {
   struct sigaltstack ss;
   unassert(!sigaltstack(0, &ss));
   unassert(SS_ONSTACK == ss.ss_flags);
-  kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
-          si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
+  if (!IsWindows())  // TODO(jart): why does win32 need more now?
+    kprintf("kprintf avoids overflowing %G si_addr=%lx sp=%lx\n", si->si_signo,
+            si->si_addr, ((ucontext_t *)ctx)->uc_mcontext.SP);
   smashed_stack = true;
   unassert(__is_stack_overflow(si, ctx));
   siglongjmp(recover, 123);
@@ -87,13 +88,8 @@ void *MyPosixThread(void *arg) {
   unassert(123 == jumpcode);
   sigaction(SIGSEGV, &o2, 0);
   sigaction(SIGBUS, &o1, 0);
-  // here's where longjmp() gets us into trouble
   unassert(!sigaltstack(0, &ss));
-  if (IsXnu() || IsNetbsd()) {
-    unassert(SS_ONSTACK == ss.ss_flags);  // wut
-  } else {
-    unassert(!ss.ss_flags);
-  }
+  unassert(!ss.ss_flags);
   return 0;
 }
 

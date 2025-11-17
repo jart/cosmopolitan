@@ -11,6 +11,7 @@
 #define kTtyNoEchoe  128
 #define kTtyNoEchok  256
 #define kTtyNoEchoke 512
+#define kTtyNoFlow   1024
 
 COSMOPOLITAN_C_START_
 

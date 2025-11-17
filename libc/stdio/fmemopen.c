@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -26,32 +28,53 @@
 #include "libc/thread/thread.h"
 
 /**
- * Opens buffer as stream.
+ * Opens fixed length buffer stream.
  *
  * @param buf becomes owned by this function, and is allocated if NULL
  * @return new stream or NULL w/ errno
  * @raise ENOMEM if `buf` is NULL and we failed to allocate it
  * @raise ENOMEM if `buf` is NULL and malloc() wasn't linked
  * @raise EINVAL if `buf` is NULL when `+` isn't in `mode`
+ * @see open_memstream()
  */
-FILE *fmemopen(void *buf, size_t size, const char *mode) {
+FILE *fmemopen(void *buf, size_t max_size, const char *mode) {
   FILE *f;
   char *p;
   int oflags;
-  oflags = fopenflags(mode);
-  if ((size && size > 0x7ffff000) ||  //
-      (!buf && (oflags & O_ACCMODE) != O_RDWR)) {
-    einval();
+  size_t size;
+
+  if ((oflags = fopenflags(mode)) == -1)
+    return NULL;
+
+  // Because this feature is only useful when the stream is opened for
+  // updating (because there is no way to get a pointer to the buffer)
+  // the fmemopen() call may fail if the mode argument does not include
+  // a '+'. -Quoth POSIX.1-2024
+  if (!buf && (oflags & O_ACCMODE) != O_RDWR) {
+    errno = EINVAL;
     return NULL;
   }
+
   if (!(f = __stdio_alloc()))
     return NULL;
+
+  // If a null pointer is specified as the buf argument, fmemopen()
+  // shall allocate max_size bytes of memory as if by a call to
+  // malloc(). This buffer shall be automatically freed when the stream
+  // is closed. Because this feature is only useful when the stream is
+  // opened for updating (because there is no way to get a pointer to
+  // the buffer) the fmemopen() call may fail if the mode argument does
+  // not include a '+'. -Quoth POSIX.1-2024
+  size = max_size;
   if (!buf) {
-    if (!size)
-      size = BUFSIZ;
-    if (!(buf = malloc(size))) {
+    size_t need;
+    if (ckd_add(&need, size, 1)) {
+      errno = ENOMEM;
       __stdio_unref(f);
-      enomem();
+      return NULL;
+    }
+    if (!(buf = calloc(1, need))) {
+      __stdio_unref(f);
       return NULL;
     }
     f->freebuf = 1;
@@ -61,12 +84,32 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
     f->end = size;
   f->size = size;
   f->oflags = oflags;
-  if (oflags & O_APPEND) {
-    if ((p = memchr(buf, '\0', size))) {
-      f->beg = p - (char *)buf;
-    } else {
-      f->beg = f->end;
+
+  // If buf is a null pointer, the initial position shall always be set
+  // to the beginning of the buffer. -Quoth POSIX.1-2024
+  //
+  // The stream shall maintain a current position in the buffer. This
+  // position shall be initially set to either the beginning of the
+  // buffer (for r and w modes) or to the first null byte in the buffer
+  // (for a modes). If no null byte is found in append mode, the initial
+  // position shall be set to one byte after the end of the buffer.
+  //                                 -Quoth POSIX.1-2024
+  if (!f->freebuf) {
+    if (oflags & O_APPEND) {
+      if ((p = memchr(buf, '\0', size))) {
+        f->end = f->beg = p - (char *)buf;
+      } else {
+        f->beg = f->end;
+      }
     }
   }
+
+  // If the mode argument begins with 'w' and max_size is not zero, the
+  // buffer contents shall be truncated by writing a null byte at the
+  // beginning. If the mode argument includes 'b', the results are
+  // implementation-defined. -Quoth POSIX.1-2024
+  if (*mode == 'w' && max_size > 0)
+    ((char *)buf)[0] = 0;
+
   return f;
 }

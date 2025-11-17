@@ -45,15 +45,11 @@ static const char kWcTypeNames[][8] = {
 wctype_t wctype(const char *s) {
   int i;
   char b[8];
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < 8; ++i)
     b[i] = *s ? *s++ : 0;
-  }
-  if (!*s) {
-    for (i = 0; i < ARRAYLEN(kWcTypeNames); ++i) {
-      if (READ64LE(b) == READ64LE(kWcTypeNames[i])) {
+  if (!*s)
+    for (i = 0; i < ARRAYLEN(kWcTypeNames); ++i)
+      if (READ64LE(b) == READ64LE(kWcTypeNames[i]))
         return i + 1;
-      }
-    }
-  }
   return 0;
 }

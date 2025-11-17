@@ -34,7 +34,6 @@ char *strndup(const char *s, size_t n) {
     if (len)
       memcpy(s2, s, len);
     s2[len] = '\0';
-    return s2;
   }
   return s2;
 }

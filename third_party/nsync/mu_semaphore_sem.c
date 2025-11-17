@@ -28,18 +28,16 @@
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/time.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/nsync/time.h"
 
 /**
  * @fileoverview Semaphores w/ POSIX Semaphores API.
  */
-
-#define ASSERT(x) unassert(x)
 
 struct sem {
 	int64_t id;
@@ -51,27 +49,39 @@ static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)
 /* Initialize *s; the initial value is 0. */
 bool nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
 	struct sem *f = (struct sem *) s;
-	int rc;
-	int lol;
-	f->id = 0;
-	rc = sys_sem_init (0, &f->id);
-	STRACE ("sem_init(0, [%ld]) → %d", f->id, rc);
-	if (rc != 0)
+	int e = errno;
+	int64_t id = 0;
+	int rc = sys_sem_init (0, &id);
+	STRACE ("sem_init(0, [%ld]) → %d", id, rc);
+	if (rc != 0) {
+		errno = e;
 		return false;
-	lol = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 50);
-	STRACE ("fcntl(%ld, F_DUPFD_CLOEXEC, 50) → %d", f->id, lol);
-	if (lol >= 50) {
-		rc = sys_close (f->id);
-		STRACE ("close(%ld) → %d", f->id, rc);
-		f->id = lol;
 	}
+	if (id >= 50) {
+		f->id = id;
+		return true;
+	}
+	int lol = __sys_fcntl (id, 12 /* F_DUPFD_CLOEXEC */, 50);
+	STRACE ("fcntl(%ld, F_DUPFD_CLOEXEC, 50) → %d", id, lol);
+	rc = sys_close (id);
+	STRACE ("close(%ld) → %d", id, rc);
+	if (lol == -1) {
+		errno = e;
+		return false;
+	}
+	f->id = lol;
+	errno = e;
 	return true;
 }
 
 /* Destroys *s. */
 void nsync_mu_semaphore_destroy_sem (nsync_semaphore *s) {
+	/* TODO: Why is it possible for this to fail with EBADF? */
 	struct sem *f = (struct sem *) s;
+	int e = errno;
 	sys_close (f->id);
+	f->id = -1;
+	errno = e;
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations
@@ -90,7 +100,7 @@ errno_t nsync_mu_semaphore_p_sem (nsync_semaphore *s) {
 	} else {
 		result = errno;
 		errno = e;
-		ASSERT (result == ECANCELED);
+		unassert (result == ECANCELED);
 	}
 	return result;
 }
@@ -124,8 +134,8 @@ errno_t nsync_mu_semaphore_p_with_deadline_sem (nsync_semaphore *s, int clock,
 	} else {
 		result = errno;
 		errno = e;
-		ASSERT (result == ETIMEDOUT ||
-			result == ECANCELED);
+		unassert (result == ETIMEDOUT ||
+			  result == ECANCELED);
 	}
 	return result;
 }
@@ -133,6 +143,6 @@ errno_t nsync_mu_semaphore_p_with_deadline_sem (nsync_semaphore *s, int clock,
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v_sem (nsync_semaphore *s) {
 	struct sem *f = (struct sem *) s;
-	ASSERT (!sys_sem_post (f->id));
+	unassert (!sys_sem_post (f->id));
 	STRACE ("sem_post(%ld) → 0% m", f->id);
 }

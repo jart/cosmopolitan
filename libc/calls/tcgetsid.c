@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 #define TIOCGSID (IsLinux() ? 0x5429 : 0x40047463)
 
@@ -30,7 +31,7 @@
  */
 int tcgetsid(int fd) {
   int rc, sid;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     rc = enotty();
   } else {
     rc = sys_ioctl(fd, TIOCGSID, &sid);

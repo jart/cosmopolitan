@@ -1950,7 +1950,7 @@ func_shell_base (char *o, char **argv, int trim_newlines)
   child.output.err = errfd;
 
   child.timelog = timelog_begin (command_argv);
-  pid = child_execute_job (&child, 1, command_argv);
+  pid = child_execute_job (&child, 1, command_argv, false);
 
   if (pid < 0)
     {

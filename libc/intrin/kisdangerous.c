@@ -16,23 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/runtime/runtime.h"
 
-privileged optimizesize bool32 kisdangerous(const void *addr) {
-  bool32 res = true;
-  __maps_lock();
-  if (__maps.maps) {
-    struct Map *map;
-    if ((map = __maps_floor(addr)))
-      if ((const char *)addr >= map->addr &&
-          (const char *)addr <
-              map->addr + ((map->size + __pagesize - 1) & -__pagesize))
-        res = false;
-  } else {
-    res = false;
-  }
-  __maps_unlock();
-  return res;
+/**
+ * Returns true if memory address doesn't officially exist.
+ *
+ * This function is lockless. It uses a five layer atomic radix trie for
+ * validating memory addresses. Ideally we would find a way to crawl the
+ * rbtree without locking. Not locking is important, since we don't want
+ * to affect the scalability of functions like read() and write(), which
+ * consult this function in order to raise EFAULT.
+ *
+ * This function supports address spaces up to 56 bits. The highest byte
+ * in `addr` is ignored. Your page size much be at least 4096 bytes, and
+ * rounded to a two power.
+ *
+ * @see https://en.wikipedia.org/wiki/Intel_5-level_paging
+ */
+__privileged bool32 kisdangerous(const void *addr) {
+  uintptr_t w = (uintptr_t)addr & -__pagesize;
+  struct MapPageDirectory *pd;
+  struct MapPageTable *pt;
+  if (!(pd = atomic_load_explicit(&__maps.alive, memory_order_relaxed)))
+    return true;
+  size_t i = (w >> 48) & 511;
+  if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed)))
+    return true;
+  i = (w >> 39) & 511;
+  if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed)))
+    return true;
+  i = (w >> 30) & 511;
+  if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed)))
+    return true;
+  i = (w >> 21) & 511;
+  if (!(pt = atomic_load_explicit(&pd->p[i].pt, memory_order_relaxed)))
+    return true;
+  i = (w >> 12) & 511;
+  return !(atomic_load_explicit(&pt->p[i / 64], memory_order_acquire) &
+           (1ull << (i & 63)));
 }

@@ -45,6 +45,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "libc/serialize.h"
+#include "libc/cosmotime.h"
 #include "third_party/python/Include/yoink.h"
 
 PYTHON_PROVIDE("tokenbucket");

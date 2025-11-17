@@ -20,11 +20,10 @@
 
 uint64_t __fnv(const void *data, size_t size) {
   const unsigned char *p = data;
-  const unsigned char *pe = p + size;
   uint64_t hash = 0xcbf29ce484222325;
-  while (p < pe) {
+  for (size_t i = 0; i < size; ++i) {
     hash *= 0x100000001b3;
-    hash ^= *p++;
+    hash ^= p[i];
   }
   return hash;
 }

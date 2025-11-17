@@ -21,7 +21,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/stdalign.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"

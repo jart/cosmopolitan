@@ -43,26 +43,24 @@ $(LIBC_MEM_A_OBJS): private				\
 			-fno-sanitize=all		\
 			-Wframe-larger-than=4096	\
 			-Walloca-larger-than=4096	\
-			-fexceptions
+			-fexceptions			\
 
-o/$(MODE)/libc/mem/asan.o: private			\
-		CFLAGS +=				\
-			-O2				\
-			-finline			\
-			-finline-functions		\
-			-x-no-pg			\
-			-ffreestanding			\
-			-fno-sanitize=all		\
-			-fno-stack-protector		\
-			-Wframe-larger-than=4096	\
-			-Walloca-larger-than=4096
+o/$(MODE)/libc/mem/malloc_usable_size.o			\
+o/$(MODE)/libc/mem/realloc_in_place.o			\
+o/$(MODE)/libc/mem/aligned_alloc.o			\
+o/$(MODE)/libc/mem/memalign.o				\
+o/$(MODE)/libc/mem/_gc_free.o				\
+o/$(MODE)/libc/mem/realloc.o				\
+o/$(MODE)/libc/mem/pvalloc.o				\
+o/$(MODE)/libc/mem/valloc.o				\
+o/$(MODE)/libc/mem/calloc.o				\
+o/$(MODE)/libc/mem/malloc.o				\
+o/$(MODE)/libc/mem/free.o: private			\
+		COPTS +=				\
+			-foptimize-sibling-calls	\
 
-# make asan stack traces shorter
-o/$(MODE)/libc/mem/asanthunk.o: private			\
-		CFLAGS +=				\
-			-Os				\
-			$(NO_MAGIC)			\
-			-foptimize-sibling-calls
+# yes gcc is smart enough to optimize malloc+memset into calloc
+o/$(MODE)/libc/mem/calloc.o: private COPTS += -ffreestanding
 
 LIBC_MEM_LIBS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)))
 LIBC_MEM_SRCS = $(foreach x,$(LIBC_MEM_ARTIFACTS),$($(x)_SRCS))

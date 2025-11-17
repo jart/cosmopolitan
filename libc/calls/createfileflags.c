@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/createfileflags.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -33,19 +32,10 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   bool is_creating_file;
   uint32_t perm, share, disp, attr;
 
-  if (flags &
-      ~(O_ACCMODE | _O_APPEND | _O_CREAT | _O_EXCL | _O_TRUNC | _O_DIRECTORY |
-        _O_UNLINK | _O_NONBLOCK | _O_RANDOM | _O_SEQUENTIAL | _O_COMPRESSED |
-        _O_INDEXED | _O_CLOEXEC | _O_DIRECT)) {
+  if (flags & ~(O_ACCMODE | O_APPEND | O_CREAT | O_EXCL | O_TRUNC | O_NOCTTY |
+                O_DIRECTORY | O_UNLINK | O_NONBLOCK | O_CLOEXEC | O_DIRECT |
+                _O_TMPFILE | O_DSYNC | O_LARGEFILE))
     return einval();
-  }
-
-  // "Some of these flags should not be combined. For instance,
-  //  combining kNtFileFlagRandomAccess with kNtFileFlagSequentialScan
-  //  is self-defeating." -Quoth MSDN § CreateFileW
-  if ((flags & _O_SEQUENTIAL) && (flags & _O_RANDOM)) {
-    return einval();
-  }
 
   switch (flags & O_ACCMODE) {
     case O_RDONLY:
@@ -53,14 +43,13 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
       break;
     case O_WRONLY:
       perm = kNtFileGenericWrite;
-      if (flags & _O_APPEND) {
+      if (flags & O_APPEND)
         // kNtFileAppendData is already present in kNtFileGenericWrite.
         // WIN32 wont act on append access when write is already there.
         perm = kNtFileAppendData;
-      }
       break;
     case O_RDWR:
-      if (flags & _O_APPEND) {
+      if (flags & O_APPEND) {
         perm = kNtFileGenericRead | kNtFileAppendData;
       } else {
         perm = kNtFileGenericRead | kNtFileGenericWrite;
@@ -71,7 +60,7 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   }
 
   attr = 0;
-  is_creating_file = !!(flags & _O_CREAT);
+  is_creating_file = !!(flags & O_CREAT);
 
   // POSIX O_EXEC doesn't mean the same thing as kNtGenericExecute. We
   // request execute access when we can determine it from mode's bits.
@@ -79,12 +68,10 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   // mmap() won't fail. If it causes CreateFile() to fail, our wrapper
   // will try calling CreateFile a second time without execute access.
   if (is_creating_file) {
-    if (mode & 0111) {
+    if (mode & 0100)
       perm |= kNtGenericExecute;
-    }
-    if (~mode & 0200) {
+    if (~mode & 0200)
       attr |= kNtFileAttributeReadonly;  // not sure why anyone would
-    }
   } else {
     perm |= kNtGenericExecute;
   }
@@ -96,37 +83,25 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   share = kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
 
   // These POSIX to WIN32 mappings are relatively straightforward.
-  if (flags & _O_EXCL) {
+  if (flags & O_EXCL) {
     if (is_creating_file) {
       disp = kNtCreateNew;
     } else {
       return einval();
     }
   } else if (is_creating_file) {
-    if (flags & _O_TRUNC) {
+    if (flags & O_TRUNC) {
       disp = kNtCreateAlways;
     } else {
       disp = kNtOpenAlways;
     }
-  } else if (flags & _O_TRUNC) {
+  } else if (flags & O_TRUNC) {
     disp = kNtTruncateExisting;
   } else {
     disp = kNtOpenExisting;
   }
 
-  if (~flags & _O_INDEXED) {
-    // The Windows content indexing service ravages performance similar to
-    // Windows Defender. Please pass O_INDEXED to openat() to enable this.
-    attr |= kNtFileAttributeNotContentIndexed;
-  }
-
-  if (flags & _O_COMPRESSED) {
-    // Windows' transparent filesystem compression is really cool, as such
-    // we've introduced a nonstandard O_COMPRESSED flag to help you use it
-    attr |= kNtFileAttributeCompressed;
-  }
-
-  if (flags & kNtFileAttributeTemporary) {  // subset of _O_UNLINK
+  if (flags & _O_TMPFILE)
     // "Specifying the kNtFileAttributeTemporary attribute causes file
     //  systems to avoid writing data back to mass storage if sufficient
     //  cache memory is available, because an application deletes a
@@ -139,29 +114,29 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
     //  hold as much as possible in the system cache without writing and
     //  therefore may be of concern for certain applications." -MSDN
     attr |= kNtFileAttributeTemporary;
-  }
 
-  if (!attr) {
+  if (!attr)
     // "All other file attributes override kNtFileAttributeNormal [...]
     //  [which] is valid only if used alone." -Quoth MSDN § CreateFileW
     attr |= kNtFileAttributeNormal;
-  }
 
-  attr |= flags & kNtFileFlagDeleteOnClose;  // subset of _O_UNLINK
+  if (flags & O_UNLINK)
+    attr |= kNtFileFlagDeleteOnClose;
 
-  if (flags & _O_DIRECTORY) {
+  if (flags & O_DIRECTORY)
     // "You must set this flag to obtain a handle to a directory."
     // -Quoth MSDN § CreateFileW
     attr |= kNtFileFlagBackupSemantics;
-  }
 
-  // Not certain yet what benefit these flags offer.
-  if (flags & _O_SEQUENTIAL)
-    attr |= kNtFileFlagSequentialScan;
-  if (flags & _O_RANDOM)
-    attr |= kNtFileFlagRandomAccess;
-  if (flags & _O_DIRECT)
+  // flags for slowing down performance
+  if (flags & O_DSYNC)
+    attr |= kNtFileFlagWriteThrough;
+  if (flags & O_DIRECT) {
+    if (flags & O_APPEND)
+      return einval();
     attr |= kNtFileFlagNoBuffering;
+    perm &= ~kNtFileAppendData;  // ∈ kNtFileGenericWrite
+  }
 
   // TODO(jart): Should we *always* open with write permission if the
   //             kernel will give it to us? We'd then deny write access

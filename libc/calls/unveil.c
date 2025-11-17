@@ -31,6 +31,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
 #include "libc/macros.h"
@@ -42,7 +43,6 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
@@ -286,7 +286,7 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 
   // now we can open the path
   BLOCK_CANCELATION;
-  rc = sys_openat(AT_FDCWD, path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
+  rc = sys_openat(AT_FDCWD, path, _O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
   ALLOW_CANCELATION;
   if (rc == -1)
     return rc;
@@ -429,7 +429,10 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 int unveil(const char *path, const char *permissions) {
   int e, rc;
   e = errno;
-  if (path && !*path) {
+  if ((path && kisdangerous(path)) ||
+      (permissions && kisdangerous(permissions))) {
+    rc = efault();
+  } else if (path && !*path) {
     // OpenBSD will always fail on both unveil("",0) and unveil("",""),
     // since an empty `path` is invalid and `permissions` is mandatory.
     // Cosmopolitan Libc uses it as a feature check convention, to test

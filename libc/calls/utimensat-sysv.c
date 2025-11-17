@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.internal.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"

@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
@@ -47,7 +49,11 @@ int mknod(const char *path, uint32_t mode, uint64_t dev) {
     return mkdir(path, mode & ~S_IFDIR);
   if (mode & S_IFIFO)
     return enosys();  // no named pipes!
-  if (!IsWindows()) {
+  if (kisdangerous(path)) {
+    rc = efault();
+  } else if (__is_evil_path(path)) {
+    rc = eilseq();
+  } else if (!IsWindows()) {
     // TODO(jart): Whys there code out there w/ S_xxx passed via dev?
     e = errno;
     rc = sys_mknod(path, mode, dev);

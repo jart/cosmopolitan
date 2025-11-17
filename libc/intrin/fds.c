@@ -17,16 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/fds.h"
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/extend.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -37,20 +39,14 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/pib.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
-#ifdef __x86_64__
-__static_yoink("_init_fds");
-#endif
-
-struct Fds g_fds;
 
 static bool TokAtoi(const char **str, long *res) {
   int c, d;
@@ -83,15 +79,18 @@ static textwindows void SetupWinStd(struct Fds *fds, int i, uint32_t x) {
   atomic_store_explicit(&fds->f, i + 1, memory_order_relaxed);
 }
 
-textstartup void __init_fds(int argc, char **argv, char **envp) {
+textstartup void __init_fds(void) {
 
   struct Fds *fds;
-  fds = &g_fds;
-  fds->n = 4;
-  atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
-  fds->p = fds->e = (void *)kMemtrackFdsStart;
-  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
-                   kMemtrackFdsStart + kMemtrackFdsSize);
+  fds = &__get_pib()->fds;
+  atomic_init(&fds->f, 3);
+  size_t fds_map_size = ROUNDUP(sizeof(struct Fd) * 20000, __gransize);
+  fds->p = mmap(0, fds_map_size, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (fds->p == MAP_FAILED)
+    _Exit(97);
+  fds->c = fds_map_size;
+  fds->n = 3;
 
   // inherit standard i/o file descriptors
   if (IsMetal()) {
@@ -115,8 +114,8 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
     }
   }
   fds->p[0].flags = O_RDONLY;
-  fds->p[1].flags = O_WRONLY | O_APPEND;
-  fds->p[2].flags = O_WRONLY | O_APPEND;
+  fds->p[1].flags = O_WRONLY;
+  fds->p[2].flags = O_WRONLY;
 
   // inherit file descriptors from cosmo parent process
   if (IsWindows()) {

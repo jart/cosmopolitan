@@ -27,8 +27,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/temp.h"
 
-#define O_TMPFILE_LINUX 0x00410000
-
 int _mkstemp(char *, int);
 
 /**
@@ -79,7 +77,8 @@ int tmpfd(void) {
   char path[PATH_MAX + 1];
   if (IsLinux()) {
     e = errno;
-    if ((fd = open(__get_tmpdir(), O_RDWR | O_TMPFILE_LINUX, 0600)) != -1) {
+    if ((fd = open(__get_tmpdir(), O_RDWR | _O_TMPFILE | O_DIRECTORY, 0600)) !=
+        -1) {
       return fd;
     } else {
       errno = e;

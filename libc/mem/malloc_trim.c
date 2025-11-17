@@ -26,6 +26,9 @@
  * @return 1 if it actually released any memory, else 0
  */
 int malloc_trim(size_t n) {
+#ifdef COSMO_MEM_DEBUG
+  return 0;
+#else
   return dlmalloc_trim(n);
+#endif
 }
-

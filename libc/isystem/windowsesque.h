@@ -663,7 +663,7 @@
 #define FILE_SHARE_DELETE kNtFileShareDelete
 
 #include "libc/nt/runtime.h"
-#define INVALID_HANDLE_VALUE kNtInvalidHandleValue
+#define INVALID_HANDLE_VALUE -1l
 #define STD_INPUT_HANDLE kNtStdInputHandle
 #define STD_OUTPUT_HANDLE kNtStdOutputHandle
 #define STD_ERROR_HANDLE kNtStdErrorHandle

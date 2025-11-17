@@ -31,20 +31,16 @@ size_t strcspn(const char *s, const char *reject) {
   size_t i;
   bool lut[256];
 #ifndef TINY
-  if (!reject[0]) {
+  if (!reject[0])
     return strlen(s);
-  }
-  if (!reject[1]) {
+  if (!reject[1])
     return strchrnul(s, reject[0]) - s;
-  }
 #endif
   bzero(lut, sizeof(lut));
-  do {
+  do
     lut[(c = *reject++ & 255)] = true;
-  } while (c);
-  for (i = 0;; i++) {
-    if (lut[s[i] & 255]) {
+  while (c);
+  for (i = 0;; i++)
+    if (lut[s[i] & 255])
       return i;
-    }
-  }
 }

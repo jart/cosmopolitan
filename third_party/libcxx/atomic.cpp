@@ -61,6 +61,19 @@ static void __libcpp_platform_wake_by_address(__cxx_atomic_contention_t const vo
   _LIBCPP_FUTEX(__ptr, FUTEX_WAKE_PRIVATE, __notify_one ? 1 : INT_MAX, 0, 0, 0);
 }
 
+#elif defined(__COSMOPOLITAN__)
+#include <cosmo.h>
+
+static void
+__libcpp_platform_wait_on_address(__cxx_atomic_contention_t const volatile* __ptr, __cxx_contention_t __val) {
+  static constexpr timespec __timeout = {2, 0};
+  cosmo_futex_wait((__cxx_contention_t *)__ptr, __val, PTHREAD_PROCESS_PRIVATE, CLOCK_REALTIME, &__timeout);
+}
+
+static void __libcpp_platform_wake_by_address(__cxx_atomic_contention_t const volatile* __ptr, bool __notify_one) {
+  cosmo_futex_wake((__cxx_contention_t *)__ptr, __notify_one ? 1 : INT_MAX, PTHREAD_PROCESS_PRIVATE);
+}
+
 #elif defined(__APPLE__) && defined(_LIBCPP_USE_ULOCK)
 
 extern "C" int __ulock_wait(

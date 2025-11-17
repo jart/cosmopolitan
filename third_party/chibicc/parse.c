@@ -238,6 +238,12 @@ static Node *new_bool(int64_t val, Token *tok) {
   return node;
 }
 
+static Node *new_nullptr(Token *tok) {
+  Node *node = new_num(0, tok);
+  node->ty = pointer_to(ty_void);
+  return node;
+}
+
 static Node *new_long(int64_t val, Token *tok) {
   Node *node = new_num(val, tok);
   node->ty = ty_long;
@@ -391,6 +397,7 @@ static bool consume_attribute(Token **rest, Token *tok, char *name) {
 
 static Token *attribute_list(Token *tok, void *arg,
                              Token *(*f)(Token *, void *)) {
+  // handle gnu style __attribute__((foo, bar))
   while (CONSUME(&tok, tok, "__attribute__")) {
     tok = skip(tok, '(');
     tok = skip(tok, '(');
@@ -401,6 +408,13 @@ static Token *attribute_list(Token *tok, void *arg,
       tok = f(tok, arg);
     }
     tok = skip(tok, ')');
+  }
+  // handle c23/c++ style [[attr]] pretty much the same way
+  while (EQUAL(tok, "[") && EQUAL(tok->next, "[")) {
+    tok = tok->next->next;
+    tok = f(tok, arg);
+    tok = skip(tok, ']');
+    tok = skip(tok, ']');
   }
   return tok;
 }
@@ -482,7 +496,8 @@ static Token *thing_attributes(Token *tok, void *arg) {
     attr->section = ConsumeStringLiteral(&tok, tok);
     return skip(tok, ')');
   }
-  if (consume_attribute(&tok, tok, "noreturn")) {
+  if (consume_attribute(&tok, tok, "noreturn") ||
+      consume_attribute(&tok, tok, "_Noreturn")) {
     attr->is_noreturn = true;
     return tok;
   }
@@ -627,14 +642,14 @@ static Token *thing_attributes(Token *tok, void *arg) {
   error_tok(tok, "unknown function attribute");
 }
 
-// declspec = ("void" | "_Bool" | "char" | "short" | "int" | "long"
-//             | "typedef" | "static" | "extern" | "inline"
-//             | "_Thread_local" | "__thread"
+// declspec = ("void" | "bool" | "_Bool" | "char" | "short" | "int" |
+//             | "long" | "typedef" | "static" | "extern" | "inline"
+//             | "nullptr_t" | "thread_local" | "_Thread_local" | "__thread"
 //             | "signed" | "unsigned"
 //             | struct-decl | union-decl | typedef-name
 //             | enum-specifier | typeof-specifier
 //             | "const" | "volatile" | "auto" | "register" | "restrict"
-//             | "__restrict" | "__restrict__" | "_Noreturn")+
+//             | "__restrict" | "__restrict__" | "_Noreturn" | "noreturn")+
 //
 // The order of typenames in a type-specifier doesn't matter. For
 // example, `int long static` means the same as `static long int`.
@@ -665,6 +680,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     SIGNED = 1 << 17,
     UNSIGNED = 1 << 18,
     INT128 = 1 << 19,
+    NULLPTR_T = 1 << 20,
   };
   unsigned char kw;
   Type *ty = copy_type(ty_long);  // [jart] use long as implicit type
@@ -675,7 +691,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     if ((kw = GetKw(tok->loc, tok->len))) {
       // Handle storage class specifiers.
       if (kw == KW_TYPEDEF || kw == KW_STATIC || kw == KW_EXTERN ||
-          kw == KW_INLINE || kw == KW__THREAD_LOCAL) {
+          kw == KW_INLINE || kw == KW_THREAD_LOCAL) {
         if (!attr)
           error_tok(tok,
                     "storage class specifier is not allowed in this context");
@@ -699,7 +715,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
         tok = tok->next;
         goto Continue;
       }
-      if (kw == KW__NORETURN) {
+      if (kw == KW_NORETURN) {
         if (attr) attr->is_noreturn = true;
         tok = tok->next;
         goto Continue;
@@ -724,7 +740,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
         is_atomic = true;
         goto Continue;
       }
-      if (kw == KW__ALIGNAS) {
+      if (kw == KW_ALIGNAS) {
         if (!attr) error_tok(tok, "_Alignas is not allowed in this context");
         tok = skip(tok->next, '(');
         if (is_typename(tok)) {
@@ -763,8 +779,10 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     // Handle built-in types.
     if (kw == KW_VOID) {
       counter += VOID;
-    } else if (kw == KW__BOOL) {
+    } else if (kw == KW_BOOL) {
       counter += BOOL;
+    } else if (kw == KW_NULLPTR_T) {
+      counter += NULLPTR_T;
     } else if (kw == KW_CHAR) {
       counter += CHAR;
     } else if (kw == KW_SHORT) {
@@ -792,6 +810,9 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
         break;
       case BOOL:
         ty = copy_type(ty_bool);
+        break;
+      case NULLPTR_T:
+        ty = pointer_to(ty_void);
         break;
       case CHAR:
       case SIGNED + CHAR:
@@ -3142,6 +3163,9 @@ static Node *ParseAtomic3(NodeKind kind, Token *tok, Token **rest) {
 //         | ident
 //         | str
 //         | num
+//         | "true"
+//         | "false"
+//         | "nullptr"
 static Node *primary(Token **rest, Token *tok) {
   Token *start;
   unsigned char kw;
@@ -3181,16 +3205,28 @@ static Node *primary(Token **rest, Token *tok) {
       }
       return new_ulong(node->ty->size, tok);
     }
-    if ((kw == KW__ALIGNOF || kw == KW___ALIGNOF__) && EQUAL(tok->next, "(") &&
+    if ((kw == KW_ALIGNOF || kw == KW___ALIGNOF__) && EQUAL(tok->next, "(") &&
         is_typename(tok->next->next)) {
       Type *ty = typename(&tok, tok->next->next);
       *rest = skip(tok, ')');
       return new_ulong(ty->align, tok);
     }
-    if ((kw == KW__ALIGNOF || kw == KW___ALIGNOF__)) {
+    if ((kw == KW_ALIGNOF || kw == KW___ALIGNOF__)) {
       Node *node = unary(rest, tok->next);
       add_type(node);
       return new_ulong(node->ty->align, tok);
+    }
+    if (kw == KW_TRUE) {
+      *rest = tok->next;
+      return new_bool(true, tok);
+    }
+    if (kw == KW_FALSE) {
+      *rest = tok->next;
+      return new_bool(false, tok);
+    }
+    if (kw == KW_NULLPTR) {
+      *rest = tok->next;
+      return new_nullptr(tok);
     }
     if (kw == KW__GENERIC) {
       return generic_selection(rest, tok->next);

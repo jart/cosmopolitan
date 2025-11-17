@@ -20,7 +20,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/testlib/testlib.h"
+#include "libc/testlib/subprocess.h"
 
 __static_yoink("strsignal");
 
@@ -29,6 +29,7 @@ void testlib_waitforexit(const char *file, int line, const char *code, int rc,
   int ws;
   char host[64];
   ASSERT_NE(-1, wait(&ws));
+  testlib_stopsparent();
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws) == rc) {
       return;

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/sigval.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
@@ -48,10 +49,10 @@
 int sigqueue(int pid, int sig, const union sigval value) {
   siginfo_t info;
   if (IsFreebsd()) {
-    return sys_sigqueue(pid, sig, value);
+    return sys_sigqueue(pid, __linux2sig(sig), value);
   } else {
     bzero(&info, sizeof(info));
-    info.si_signo = sig;
+    info.si_signo = __linux2sig(sig);
     info.si_code = SI_QUEUE;
     info.si_pid = getpid();
     info.si_uid = geteuid();

@@ -1,11 +1,9 @@
 #ifndef _STDNORETURN_H
 #define _STDNORETURN_H
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112
+#ifndef __cplusplus
+/* note: this is a c11 language feature that was deprecated in c23
+         where you're encouraged to use [[noreturn]] just like c++
+         in which case you don't need to bother including this hdr */
 #define noreturn _Noreturn
-#elif (defined(__has_attribute) && __has_attribute(__noreturn__)) || \
-    (defined(__GNUC__) && __GNUC__ * 100 + __GNUC_MINOR__ >= 208)
-#define noreturn __attribute__((__noreturn__))
-#else
-#define noreturn
 #endif
 #endif /* _STDNORETURN_H */

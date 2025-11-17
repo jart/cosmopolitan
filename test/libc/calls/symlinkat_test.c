@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
@@ -25,6 +26,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 
@@ -37,6 +39,7 @@ void SetUpOnce(void) {
 }
 
 TEST(symlink, enoent) {
+  ASSERT_SYS(ENOENT, -1, symlink("", "foo"));
   ASSERT_SYS(ENOENT, -1, symlink("o/foo", ""));
   ASSERT_SYS(ENOENT, -1, symlink("o/foo", "o/bar"));
 }
@@ -44,6 +47,81 @@ TEST(symlink, enoent) {
 TEST(symlinkat, enotdir) {
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
   ASSERT_SYS(ENOTDIR, -1, symlink("hrcue", "yo/there"));
+}
+
+TEST(symlinkat, eexist) {
+  ASSERT_SYS(0, 0, touch("foo", 0600));
+  ASSERT_SYS(0, 0, touch("bar", 0600));
+  ASSERT_SYS(EEXIST, -1, symlink("foo", "bar"));
+  ASSERT_SYS(0, 0, symlink("bar", "sym"));
+  ASSERT_SYS(EEXIST, -1, symlink("bar", "sym"));
+}
+
+TEST(symlinkat, presentReg) {
+  char buf[3] = {0};
+  char name[128] = {0};
+  ASSERT_SYS(0, 0, mkdir("a", 0700));
+  ASSERT_SYS(0, 0, mkdir("a/b", 0700));
+  ASSERT_SYS(0, 3, creat("a/b/reg", 0600));
+  ASSERT_SYS(0, 2, write(3, "hi", 2));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, symlink("b/reg", "a/lnk"));
+  ASSERT_SYS(0, 3, open("a/lnk", O_RDONLY));
+  ASSERT_SYS(0, 2, read(3, buf, 2));
+  ASSERT_STREQ("hi", buf);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 5, readlink("a/lnk", name, 128));
+  ASSERT_STREQ("b/reg", name);
+}
+
+TEST(symlinkat, presentDir) {
+  char buf[3] = {0};
+  char name[128] = {0};
+  ASSERT_SYS(0, 0, mkdir("a", 0700));
+  ASSERT_SYS(0, 0, mkdir("a/b", 0700));
+  ASSERT_SYS(0, 3, creat("a/b/reg", 0600));
+  ASSERT_SYS(0, 2, write(3, "hi", 2));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, symlink("b/", "a/lnk"));
+  ASSERT_SYS(0, 3, open("a/lnk/reg", O_RDONLY));
+  ASSERT_SYS(0, 2, read(3, buf, 2));
+  ASSERT_STREQ("hi", buf);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 2, readlink("a/lnk", name, 128));
+  ASSERT_STREQ("b/", name);
+}
+
+TEST(symlinkat, broken) {
+  char name[128] = {0};
+  ASSERT_SYS(0, 0, mkdir("a", 0700));
+  ASSERT_SYS(0, 0, mkdir("a/b", 0700));
+  ASSERT_SYS(0, 0, symlink("b/mis", "a/lnk"));
+  ASSERT_SYS(ENOENT, -1, open("a/lnk", O_RDONLY));
+  ASSERT_SYS(0, 5, readlink("a/lnk", name, 128));
+  ASSERT_STREQ("b/mis", name);
+}
+
+TEST(symlinkat, broken2) {
+  char name[128] = {0};
+  ASSERT_SYS(0, 0, mkdir("a", 0700));
+  ASSERT_SYS(0, 0, mkdir("a/b", 0700));
+  ASSERT_SYS(0, 0, symlink("b/mis/", "a/lnk"));
+  ASSERT_SYS(ENOENT, -1, open("a/lnk", O_RDONLY));
+  ASSERT_NE(-1, readlink("a/lnk", name, 128));
+  ASSERT_STREQ("b/mis/", name);
+}
+
+TEST(symlinkat, presentButBroken) {
+  char name[128] = {0};
+  ASSERT_SYS(0, 0, mkdir("a", 0700));
+  ASSERT_SYS(0, 0, mkdir("a/b", 0700));
+  ASSERT_SYS(0, 0, touch("a/b/reg", 0600));
+  ASSERT_SYS(0, 0, symlink("b/reg/", "a/lnk"));
+  // TODO(jart): Could we make this raise ENOTDIR on Windows?
+  //             We must understand what Windows does here better.
+  ASSERT_SYS(IsWindows() ? EISDIR : ENOTDIR, -1, open("a/lnk", O_RDONLY));
+  ASSERT_SYS(0, 6, readlink("a/lnk", name, 128));
+  ASSERT_STREQ("b/reg/", name);
 }
 
 TEST(symlinkat, test) {

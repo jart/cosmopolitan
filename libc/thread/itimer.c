@@ -24,6 +24,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
+#include "libc/cosmotime.h"
 #include "libc/intrin/maps.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/enum/processcreationflags.h"
@@ -48,10 +49,13 @@ textwindows dontinstrument static uint32_t __itimer_worker(void *arg) {
   struct CosmoTib tls;
   char *sp = __builtin_frame_address(0);
   __bootstrap_tls(&tls, sp);
+  STRACE("__itimer_worker() started");
+  __maps_lock();
   __maps_track(
       (char *)(((uintptr_t)sp + __pagesize - 1) & -__pagesize) - STACK_SIZE,
       STACK_SIZE, PROT_READ | PROT_WRITE,
       MAP_PRIVATE | MAP_ANONYMOUS | MAP_NOFORK);
+  __maps_unlock();
   for (;;) {
     bool dosignal = false;
     struct timeval now, waituntil;
@@ -81,7 +85,7 @@ textwindows dontinstrument static uint32_t __itimer_worker(void *arg) {
       __sig_generate(SIGALRM, SI_TIMER);
     __itimer_lock();
     struct timespec deadline = timeval_totimespec(waituntil);
-    _pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
+    pthread_cond_timedwait(&__itimer.cond, &__itimer.lock, &deadline);
     __itimer_unlock();
   }
   return 0;
@@ -90,6 +94,11 @@ textwindows dontinstrument static uint32_t __itimer_worker(void *arg) {
 textwindows static void __itimer_setup(void) {
   __itimer.thread = CreateThread(0, STACK_SIZE, __itimer_worker, 0,
                                  kNtStackSizeParamIsAReservation, 0);
+}
+
+textwindows intptr_t __itimer_worker_handle(void) {
+  cosmo_once(&__itimer.once, __itimer_setup);
+  return __itimer.thread;
 }
 
 textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
@@ -113,7 +122,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
     if (!timeval_iszero(config.it_value))
       config.it_value = timeval_add(config.it_value, timeval_real());
     __itimer.it = config;
-    _pthread_cond_signal(&__itimer.cond);
+    pthread_cond_signal(&__itimer.cond);
   }
   __itimer_unlock();
   ALLOW_SIGNALS;

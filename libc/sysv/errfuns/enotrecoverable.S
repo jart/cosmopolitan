@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 enotrecoverable:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ENOTRECOVERABLE(%rip),%ecx
+	push	$ENOTRECOVERABLE
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ENOTRECOVERABLE
-	ldrsw	x0,[x1,#:lo12:ENOTRECOVERABLE]
+	mov	x0,#ENOTRECOVERABLE
 	b	__errfun
 #else
 #error "unsupported architecture"

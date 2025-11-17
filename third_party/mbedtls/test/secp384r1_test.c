@@ -24,6 +24,7 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/ecp_internal.h"
+#include "libc/stdlib.h"
 #include "third_party/mbedtls/math.h"
 #ifdef MBEDTLS_ECP_C
 
@@ -32,7 +33,7 @@
 int ecp_mod_p384_old(mbedtls_mpi *);
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, _rand64, -1);
+  arc4random_buf(p, n);
   return 0;
 }
 

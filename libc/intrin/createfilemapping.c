@@ -44,7 +44,7 @@ textwindows int64_t CreateFileMapping(
                                      dwMaximumSizeLow, opt_lpName);
   if (!hHandle)
     __winerr();
-  NTTRACE("CreateFileMapping(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
+  NTTRACE("CreateFileMapping(%ld, %s, %s, %'zu, %#!hs) → %ld% m", opt_hFile,
           DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
           DescribeNtPageFlags(flProtect),
           (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,

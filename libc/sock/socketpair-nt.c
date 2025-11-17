@@ -20,6 +20,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -32,7 +33,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/sysv/pib.h"
+#if SupportsWindows()
 
 textwindows static int sys_socketpair_nt_impl(int family, int type, int proto,
                                               int sv[2]) {
@@ -87,21 +89,24 @@ textwindows static int sys_socketpair_nt_impl(int family, int type, int proto,
 
   if (h1 != -1) {
 
-    g_fds.p[reader].kind = kFdFile;
-    g_fds.p[reader].flags = O_RDWR | oflags;
-    g_fds.p[reader].mode = 0140444;
-    g_fds.p[reader].handle = hpipe;
+    __get_pib()->fds.p[reader].kind = kFdFile;
+    __get_pib()->fds.p[reader].flags = O_RDWR | oflags;
+    __get_pib()->fds.p[reader].mode = 0140444;
+    __get_pib()->fds.p[reader].handle = hpipe;
+    __get_pib()->fds.p[reader].was_created_during_vfork = __vforked;
 
-    g_fds.p[writer].kind = kFdFile;
-    g_fds.p[writer].flags = O_RDWR | oflags;
-    g_fds.p[writer].mode = 0140222;
-    g_fds.p[writer].handle = h1;
+    __get_pib()->fds.p[writer].kind = kFdFile;
+    __get_pib()->fds.p[writer].flags = O_RDWR | oflags;
+    __get_pib()->fds.p[writer].mode = 0140222;
+    __get_pib()->fds.p[writer].handle = h1;
+    __get_pib()->fds.p[writer].was_created_during_vfork = __vforked;
 
     sv[0] = reader;
     sv[1] = writer;
 
     rc = 0;
   } else {
+    __winerr();
     CloseHandle(hpipe);
     __releasefd(writer);
     __releasefd(reader);

@@ -21,6 +21,7 @@
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.h"
@@ -294,6 +295,12 @@ TEST(poll, file_rdwr_pollinoutpri) {
   else
     EXPECT_TRUE(!(fds[0].revents & POLLPRI));
   EXPECT_SYS(0, 0, close(fd));
+}
+
+TEST(poll, ebadf) {
+  struct pollfd fds[] = {{3, POLLIN}};
+  EXPECT_SYS(0, 1, poll(fds, 1, -1));
+  ASSERT_EQ(POLLNVAL, fds[0].revents);
 }
 
 TEST(poll, pipein_pollout_blocks) {

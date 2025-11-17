@@ -22,29 +22,65 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
+#include "libc/mem/alloca.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+
+static const char *DescribeUnlinkatFlags(char buf[12], int flags) {
+  if (!flags)
+    return "0";
+  if (flags & AT_REMOVEDIR)
+    return "AT_REMOVEDIR";
+  FormatInt32(buf, flags);
+  return buf;
+}
 
 /**
  * Deletes inode and maybe the file too.
  *
  * This may be used to delete files and directories and symlinks.
  *
+ * You can call unlink before calling close, in which case the file will
+ * continue to exist except it'll have no name. This is even the case on
+ * Windows because Cosmopolitan always opens files w/ delete permission.
+ * However Windows has a quirk where files can't be deleted before close
+ * if they have memory mappings.
+ *
  * @param dirfd is normally AT_FDCWD but if it's an open directory and
  *     path is relative, then path becomes relative to dirfd
  * @param path is the thing to delete
  * @param flags can have AT_REMOVEDIR
  * @return 0 on success, or -1 w/ errno
+ * @raise ENOENT if `path` is empty
+ * @raise ENOENT if `path` doesn't exist
  * @raise EROFS if either path is under /zip/...
+ * @raise EFAULT if `path` points to invalid memory
+ * @raise EISDIR if `path` is a dir when `flags` is zero
+ * @raise EINVAL if `flags` has unsupported or unknown flags
+ * @raise EACCES on Windows if someone in chdir()'d into directory
+ * @raise ENOTDIR if `path` isn't a dir when `flags` has `AT_REMOVEDIR`
+ * @raise ENOTDIR if a directory component in `path` exists as non-directory
+ * @raise ENOTDIR if `path` ends with a trailing slash and refers to a file
+ * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
+ * @raise ENOTDIR if `path` isn't a directory and `O_DIRECTORY` was passed
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EILSEQ if `path` contains illegal UTF-8 sequences (Windows/MacOS)
  */
 int unlinkat(int dirfd, const char *path, int flags) {
   int rc;
 
-  if (_weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+  if (kisdangerous(path)) {
+    rc = efault();
+  } else if (_weaken(__zipos_notat) &&
+             (rc = __zipos_notat(dirfd, path)) == -1) {
     rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_unlinkat(dirfd, path, flags);
@@ -55,7 +91,8 @@ int unlinkat(int dirfd, const char *path, int flags) {
   // POSIX.1 says unlink(directory) raises EPERM but on Linux
   // it always raises EISDIR, which is so much less ambiguous
   int e = errno;
-  if (!IsLinux() && rc == -1 && !flags && (e == EPERM || e == EACCES)) {
+  if (!IsLinux() && !IsWindows() && rc == -1 && !flags &&
+      (e == EPERM || e == EACCES)) {
     struct stat st;
     if (!fstatat(dirfd, path, &st, 0) && S_ISDIR(st.st_mode)) {
       errno = EISDIR;
@@ -64,7 +101,7 @@ int unlinkat(int dirfd, const char *path, int flags) {
     }
   }
 
-  STRACE("unlinkat(%s, %#s, %#b) → %d% m", DescribeDirfd(dirfd), path, flags,
-         rc);
+  STRACE("unlinkat(%s, %#s, %s) → %d% m", DescribeDirfd(dirfd), path,
+         DescribeUnlinkatFlags(alloca(12), flags), rc);
   return rc;
 }

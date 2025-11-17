@@ -15,23 +15,17 @@
 #define _XOPEN_SOURCE 700
 #endif
 
-#if __STDC_VERSION__ >= 199901L
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define __restrict restrict
-#elif !defined(__GNUC__)
+#else
 #define __restrict
 #endif
 
-#if __STDC_VERSION__ >= 199901L || defined(__cplusplus)
+#if (defined(__cplusplus) || \
+     (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L))
 #define __inline inline
-#elif !defined(__GNUC__)
-#define __inline
-#endif
-
-#if __STDC_VERSION__ >= 201112L
-#elif defined(__GNUC__)
-#define _Noreturn __attribute__((__noreturn__))
 #else
-#define _Noreturn
+#define __inline
 #endif
 
 #endif /* _FEATURES_H */

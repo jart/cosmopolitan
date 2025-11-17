@@ -1,77 +1,53 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
-╚──────────────────────────────────────────────────────────────────────────────╝
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2025 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
 │                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
-│                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
-│                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
-│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/dirent.h"
-#include "libc/errno.h"
-#include "libc/limits.h"
-#include "libc/mem/alg.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-__static_yoink("musl_libc_notice");
+#include "libc/sysv/consts/at.h"
 
-// clang-format off
-
-int scandir(const char *path, struct dirent ***res,
-	int (*sel)(const struct dirent *),
-	int (*cmp)(const struct dirent **, const struct dirent **))
-{
-	DIR *d = opendir(path);
-	struct dirent *de, **names=0, **tmp;
-	size_t cnt=0, len=0;
-	int old_errno = errno;
-
-	if (!d) return -1;
-
-	while ((errno=0), (de = readdir(d))) {
-		if (sel && !sel(de)) continue;
-		if (cnt >= len) {
-			len = 2*len+1;
-			if (len > SIZE_MAX/sizeof *names) break;
-			tmp = realloc(names, len * sizeof *names);
-			if (!tmp) break;
-			names = tmp;
-		}
-		names[cnt] = malloc(de->d_reclen);
-		if (!names[cnt]) break;
-		memcpy(names[cnt++], de, de->d_reclen);
-	}
-
-	closedir(d);
-
-	if (errno) {
-		if (names) while (cnt-->0) free(names[cnt]);
-		free(names);
-		return -1;
-	}
-	errno = old_errno;
-
-	if (cmp && names) {
-		qsort(names, cnt, sizeof *names, (int (*)(const void *, const void *))cmp);
-	}
-	*res = names;
-	return cnt;
+/**
+ * Scans directory for matching entries.
+ *
+ * This function opens a directory, filters entries using `sel`, sorts
+ * them using `cmp`, and then saves them to `res`, which is created by
+ * malloc() and each element is made by malloc() too. For example:
+ *
+ *     int n;
+ *     struct dirent **list;
+ *     const char *path = ".";
+ *     if ((n = scandir(path, &list, NULL, alphasort)) == -1) {
+ *       perror(path);
+ *       exit(1);
+ *     }
+ *     for (int i = 0; i < n; ++i)
+ *       printf("%s\n", list[i]->d_name);
+ *     for (int i = 0; i < n; ++i)
+ *       free(list[i]);
+ *     free(list);
+ *
+ * @param path is a UTF-8 string naming a filesystem entity
+ * @param list is used to return pointer to list of dirent pointers
+ * @param sel if not null returns zero if entry should be ignored
+ * @param cmp is sorting comparator, or null to not sort
+ * @return number of elements stored to `list`, or -1 w/ errno
+ * @cancelationpoint
+ */
+int scandir(const char *path, struct dirent ***list,
+            int sel(const struct dirent *),
+            int cmp(const struct dirent **, const struct dirent **)) {
+  return scandirat(AT_FDCWD, path, list, sel, cmp);
 }

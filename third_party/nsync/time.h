@@ -1,7 +1,7 @@
 #ifndef NSYNC_TIME_H_
 #define NSYNC_TIME_H_
 #include "libc/sysv/consts/clock.h"
-#include "libc/calls/struct/timespec.h"
+#include "libc/cosmotime.h"
 COSMOPOLITAN_C_START_
 
 #define NSYNC_CLOCK CLOCK_REALTIME

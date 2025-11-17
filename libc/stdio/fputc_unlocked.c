@@ -16,27 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
 
 /**
  * Writes byte to stream.
  *
  * @param c is byte to buffer or write, which is masked
- * @return c as unsigned char if written or -1 w/ errno
+ * @return c as unsigned char if written or EOF w/ errno
+ * @cancelationpoint
  */
 int fputc_unlocked(int c, FILE *f) {
   unsigned char b;
-  if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
-    f->buf[f->beg++] = c;
-    return c & 255;
-  } else {
-    b = c;
-    if (!fwrite_unlocked(&b, 1, 1, f))
-      return -1;
-    return b;
-  }
+  b = c;
+  if (!fwrite_unlocked(&b, 1, 1, f))
+    return EOF;
+  return b;
 }
 
 __strong_reference(fputc_unlocked, putc_unlocked);

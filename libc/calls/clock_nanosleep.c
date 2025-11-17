@@ -17,10 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.h"
+#include "libc/intrin/strace.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
+
+int sys_clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 
 /**
  * Sleeps for particular amount of time.
@@ -99,5 +104,8 @@ errno_t clock_nanosleep(int clock, int flags,        //
   rc = sys_clock_nanosleep(clock, flags, req, rem);
   err = !rc ? 0 : errno;
   errno = old;
+  STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
+         DescribeSleepFlags(flags), DescribeTimespec(0, req),
+         DescribeTimespec(rc, rem), DescribeErrno(err));
   return err;
 }

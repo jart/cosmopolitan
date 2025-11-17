@@ -17,13 +17,15 @@ TOOL_NET_BINS =								\
 
 TOOL_NET_COMS =								\
 	o/$(MODE)/tool/net/dig						\
+	o/$(MODE)/tool/net/drift					\
+	o/$(MODE)/tool/net/stampd					\
 	o/$(MODE)/tool/net/winbench					\
 	o/$(MODE)/tool/net/redbean					\
 	o/$(MODE)/tool/net/redbean-demo					\
 	o/$(MODE)/tool/net/redbean-static				\
 	o/$(MODE)/tool/net/libresolv_query				\
 	o/$(MODE)/tool/net/redbean-unsecure				\
-	o/$(MODE)/tool/net/redbean-original
+	o/$(MODE)/tool/net/redbean-original				\
 
 TOOL_NET_CHECKS =							\
 	o/$(MODE)/tool/net/net.pkg					\

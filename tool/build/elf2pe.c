@@ -159,22 +159,22 @@ static const char *stubpath;
 static long FLAG_SizeOfStackCommit = 64 * 1024;
 static long FLAG_SizeOfStackReserve = 8 * 1024 * 1024;
 
-static wontreturn void Die(const char *thing, const char *reason) {
+[[noreturn]] static void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void DieSys(const char *thing) {
+[[noreturn]] static void DieSys(const char *thing) {
   perror(thing);
   exit(1);
 }
 
-static wontreturn void ShowUsage(int rc, int fd) {
+[[noreturn]] static void ShowUsage(int rc, int fd) {
   tinyprint(fd, VERSION, "\nUSAGE\n\n  ", prog, MANUAL, NULL);
   exit(rc);
 }
 
-static wontreturn void DieOom(void) {
+[[noreturn]] static void DieOom(void) {
   Die("makepe", "out of memory");
 }
 
@@ -1135,7 +1135,8 @@ int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
   // translate executable
   struct Elf *elf = OpenElf(argv[optind]);
-  char *buf = Memalign(MAX_ALIGN, 134217728);
+  char *buf = mmap(0, 134217728, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   struct ImagePointer ip = GeneratePe(elf, buf);
   if (creat(outpath, 0755) == -1)
     DieSys(elf->path);

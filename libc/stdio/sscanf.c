@@ -16,12 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * String decoder.
- * @see libc/fmt/vcscanf.h (for docs and implementation)
  */
 int sscanf(const char *str, const char *fmt, ...) {
   int rc;

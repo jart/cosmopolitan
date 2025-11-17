@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 esocktnosupport:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ESOCKTNOSUPPORT(%rip),%ecx
+	push	$ESOCKTNOSUPPORT
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ESOCKTNOSUPPORT
-	ldrsw	x0,[x1,#:lo12:ESOCKTNOSUPPORT]
+	mov	x0,#ESOCKTNOSUPPORT
 	b	__errfun
 #else
 #error "unsupported architecture"

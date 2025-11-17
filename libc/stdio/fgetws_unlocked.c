@@ -30,7 +30,8 @@
  * @param s is is nul-terminated string that's non-null
  * @param size is byte length of `s`
  * @param f is file stream object pointer
- * @see fgetws()
+ * @return pointer to read line, or NULL w/ errno
+ * @cancelationpoint
  */
 wchar_t *fgetws_unlocked(wchar_t *s, int size, FILE *f) {
   wint_t c;

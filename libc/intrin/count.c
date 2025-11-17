@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
-#include "libc/stdalign.h"
 #include "libc/thread/thread.h"
 
 // this counter is important because pthread_exit() needs to know if

@@ -19,16 +19,28 @@
 #include "libc/calls/makedev.h"
 #include "libc/dce.h"
 
-uint32_t(major)(uint64_t x) {
-  if (IsXnu()) {
-    return (x >> 24) & 0xff;
+/**
+ * Identifies device driver.
+ *
+ *     struct stat st;
+ *     stat("/", &st);
+ *     printf("%u,%u\n", major(st.st_dev), minor(st.st_dev));
+ *
+ * @param dev is `st_dev` field returned by stat(), fstatat(), etc.
+ * @see minor(), makedev()
+ */
+uint32_t major(uint64_t dev) {
+  if (IsWindows()) {
+    return dev >> 32;
+  } else if (IsXnu()) {
+    return (dev >> 24) & 0xff;
   } else if (IsNetbsd()) {
-    return (x & 0x000fff00) >> 8;
+    return (dev & 0x000fff00) >> 8;
   } else if (IsOpenbsd()) {
-    return (x >> 8) & 0xff;
+    return (dev >> 8) & 0xff;
   } else if (IsFreebsd()) {
-    return ((x >> 32) & 0xffffff00) | ((x >> 8) & 0x000000ff);
+    return ((dev >> 32) & 0xffffff00) | ((dev >> 8) & 0x000000ff);
   } else {
-    return ((x >> 32) & 0xfffff000) | ((x >> 8) & 0x00000fff);
+    return ((dev >> 32) & 0xfffff000) | ((dev >> 8) & 0x00000fff);
   }
 }

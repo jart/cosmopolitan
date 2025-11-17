@@ -20,10 +20,11 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/struct/winsize.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/nt/console.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#if SupportsWindows()
 
 textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
 

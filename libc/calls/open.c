@@ -22,9 +22,11 @@
 /**
  * Opens file.
  *
- * This is equivalent to saying:
+ * This function is equivalent to:
  *
  *     int fd = openat(AT_FDCWD, file, flags, ...);
+ *
+ * Please see openat() for further documentation.
  *
  * @param file specifies filesystem path to open
  * @return file descriptor, or -1 w/ errno

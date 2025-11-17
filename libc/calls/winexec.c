@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
@@ -25,7 +26,6 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.h"
-#include "third_party/linenoise/linenoise.h"
 
 #define Read32(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
 #define EXT(s)    Read32(s "\0\0")
@@ -75,20 +75,21 @@ textwindows int IsWindowsExecutable(int64_t handle, const char16_t *path) {
 
   // read first two bytes of file
   // access() and stat() aren't cancelation points
-  bool ok;
-  char buf[2];
-  uint32_t got;
+  char buf[2] = {0};
   BLOCK_SIGNALS;
-  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
-  ok = overlap.hEvent &&
-       (ReadFile(handle, buf, 2, 0, &overlap) ||
-        GetLastError() == kNtErrorIoPending) &&
-       GetOverlappedResult(handle, &overlap, &got, true);
-  CloseHandle(overlap.hEvent);
+  intptr_t hEvent;
+  if ((hEvent = CreateEventTls())) {
+    uint32_t got;
+    struct NtOverlapped overlap = {.hEvent = hEvent};
+    if (!ReadFile(handle, buf, 2, &got, &overlap) &&
+        GetLastError() == kNtErrorIoPending) {
+      GetOverlappedResult(handle, &overlap, &got, true);
+    }
+    CloseEventTls(hEvent);
+  }
   ALLOW_SIGNALS;
 
   // it's an executable if it starts with `MZ` or `#!`
-  return ok && got == 2 &&                     //
-         ((buf[0] == 'M' && buf[1] == 'Z') ||  //
-          (buf[0] == '#' && buf[1] == '!'));
+  return (buf[0] == 'M' && buf[1] == 'Z') ||  //
+         (buf[0] == '#' && buf[1] == '!');
 }

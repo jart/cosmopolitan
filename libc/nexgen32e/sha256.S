@@ -533,6 +533,7 @@ STACK_SIZE	= _RSP      + _RSP_SIZE
 .balign 32
 	.ftrace1
 sha256_transform_rorx:
+	beg
 	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
@@ -721,6 +722,7 @@ sha256_transform_rorx:
 	popq	%rbx
 	pop	%rbp
 	ret
+	end
 	.endfn	sha256_transform_rorx,globl
 
 	.rodata.cst32

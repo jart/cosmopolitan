@@ -36,7 +36,7 @@
  *
  * @param n if -1 implies strlen
  */
-bool IsAcceptablePort(const char *s, size_t n) {
+bool32 IsAcceptablePort(const char *s, size_t n) {
   int p, c;
   size_t i;
   if (n == -1)

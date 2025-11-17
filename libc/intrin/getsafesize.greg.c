@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/thread/posixthread.internal.h"
@@ -31,7 +30,7 @@
  * @return number of bytes to use for your buffer, or negative if the
  *     allocation would likely cause a stack overflow
  */
-privileged optimizesize long __get_safe_size(long want, long extraspace) {
+__privileged optimizesize long __get_safe_size(long want, long extraspace) {
   if (!__tls_enabled)
     return want;
   struct PosixThread *pt;

@@ -58,10 +58,19 @@ __gdtoa_sulp(U *x, int scale)
 	return rv * u.d;
 }
 
+/**
+ * Converts string to double.
+ *
+ * If `se` is non-NULL, then it'll be used to return a pointer to end of
+ * of the parsed string.
+ * 
+ * This function can fail, due to ERANGE or ENOMEM. It's recommended for
+ * code that cares about these conditions to set `errno` to 0 beforehand
+ * and then check to see if it changed after strtod() returns.
+ */
 double
 strtod(const char *s00, char **se)
 {
-	ThInfo *TI = 0;
 	int scale;
 	int bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, decpt, dsign,
 		e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
@@ -70,7 +79,7 @@ strtod(const char *s00, char **se)
 	Long L;
 	U adj, aadj1, rv, rv0;
 	ULong y, z;
-	Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
+	Bigint *bb=0, *bb1, *bd=0, *bd0=0, *bs=0, *delta=0, *t;
 	ULong Lsb, Lsb1;
 	int Rounding;
 	Rounding = FLT_ROUNDS;
@@ -108,7 +117,7 @@ break2:
 			{
 				FPI fpi1 = fpi;
 				fpi1.rounding = Rounding;
-				switch((i = __gdtoa_gethex(&s, &fpi1, &exp, &bb, sign, &TI)) & STRTOG_Retmask) {
+				switch((i = __gdtoa_gethex(&s, &fpi1, &exp, &bb, sign)) & STRTOG_Retmask) {
 				case STRTOG_NoNumber:
 					s = s00;
 					sign = 0;
@@ -117,7 +126,8 @@ break2:
 				default:
 					if (bb) {
 						__gdtoa_copybits(bits, fpi.nbits, bb);
-						__gdtoa_Bfree(bb, &TI);
+						__gdtoa_Bfree(bb);
+						bb = 0;
 					}
 					__gdtoa_ULtod(((U*)&rv)->L, bits, exp, i);
 				}}
@@ -329,11 +339,11 @@ dig_done:
 				}
 			range_err:
 				if (bd0) {
-					__gdtoa_Bfree(bb, &TI);
-					__gdtoa_Bfree(bd, &TI);
-					__gdtoa_Bfree(bs, &TI);
-					__gdtoa_Bfree(bd0, &TI);
-					__gdtoa_Bfree(delta, &TI);
+					__gdtoa_Bfree(bb);
+					__gdtoa_Bfree(bd);
+					__gdtoa_Bfree(bs);
+					__gdtoa_Bfree(bd0);
+					__gdtoa_Bfree(delta);
 				}
 				errno = ERANGE;
 				goto ret;
@@ -394,12 +404,17 @@ dig_done:
 	}
 	/* Now the hard part -- adjusting rv to the correct value.*/
 	/* Put digits into bd: true value = bd * 10^e */
-	bd0 = __gdtoa_s2b(s0, nd0, nd, y, dplen, &TI);
+	if (!(bd0 = __gdtoa_s2b(s0, nd0, nd, y, dplen)))
+		goto oom;
 	for(;;) {
-		bd = __gdtoa_Balloc(bd0->k, &TI);
-		Bcopy(bd, bd0);
-		bb = __gdtoa_d2b(dval(&rv), &bbe, &bbbits, &TI);	/* rv = bb * 2^bbe */
-		bs = __gdtoa_i2b(1, &TI);
+		if (!(t = __gdtoa_Balloc(bd0->k)))
+			goto oom;
+		bd = t;
+		__gdtoa_Bcopy(bd, bd0);
+		if (!(bb = __gdtoa_d2b(dval(&rv), &bbe, &bbbits)))	/* rv = bb * 2^bbe */
+			goto oom;
+		if (!(bs = __gdtoa_i2b(1)))
+			goto oom;
 		if (e >= 0) {
 			bb2 = bb5 = 0;
 			bd2 = bd5 = e;
@@ -425,7 +440,8 @@ dig_done:
 			j -= i;
 			if (i < 32)
 				Lsb <<= i;
-			else
+			else if (i < 64)
+				/* [jart] ubsan shift too big bug */
 				Lsb1 = Lsb << (i-32);
 		}
 		bb2 += j;
@@ -440,20 +456,36 @@ dig_done:
 			bs2 -= i;
 		}
 		if (bb5 > 0) {
-			bs = __gdtoa_pow5mult(bs, bb5, &TI);
-			bb1 = __gdtoa_mult(bs, bb, &TI);
-			__gdtoa_Bfree(bb, &TI);
+			if (!(t = __gdtoa_pow5mult(bs, bb5)))
+				goto oom;
+			bs = t;
+			if (!(bb1 = __gdtoa_mult(bs, bb)))
+				goto oom;
+			__gdtoa_Bfree(bb);
 			bb = bb1;
 		}
-		if (bb2 > 0)
-			bb = __gdtoa_lshift(bb, bb2, &TI);
-		if (bd5 > 0)
-			bd = __gdtoa_pow5mult(bd, bd5, &TI);
-		if (bd2 > 0)
-			bd = __gdtoa_lshift(bd, bd2, &TI);
-		if (bs2 > 0)
-			bs = __gdtoa_lshift(bs, bs2, &TI);
-		delta = __gdtoa_diff(bb, bd, &TI);
+		if (bb2 > 0) {
+			if (!(t = __gdtoa_lshift(bb, bb2)))
+				goto oom;
+			bb = t;
+		}
+		if (bd5 > 0) {
+			if (!(t = __gdtoa_pow5mult(bd, bd5)))
+				goto oom;
+			bd = t;
+		}
+		if (bd2 > 0) {
+			if (!(t = __gdtoa_lshift(bd, bd2)))
+				goto oom;
+			bd = t;
+		}
+		if (bs2 > 0) {
+			if (!(t = __gdtoa_lshift(bs, bs2)))
+				goto oom;
+			bs = t;
+		}
+		if (!(delta = __gdtoa_diff(bb, bd)))
+			goto oom;
 		dsign = delta->sign;
 		delta->sign = 0;
 		i = __gdtoa_cmp(delta, bs);
@@ -477,7 +509,9 @@ dig_done:
 						y = word0(&rv) & Exp_mask;
 						if (!scale || y > 2*P*Exp_msk1)
 						{
-							delta = __gdtoa_lshift(delta,Log2P,&TI);
+							if (!(t = __gdtoa_lshift(delta,Log2P)))
+								goto oom;
+							delta = t;
 							if (__gdtoa_cmp(delta, bs) <= 0)
 								dval(&adj) = -0.5;
 						}
@@ -526,7 +560,9 @@ dig_done:
 				/* exact result */
 				break;
 			}
-			delta = __gdtoa_lshift(delta,Log2P,&TI);
+			if (!(t = __gdtoa_lshift(delta,Log2P)))
+				goto oom;
+			delta = t;
 			if (__gdtoa_cmp(delta, bs) > 0)
 				goto drop_down;
 			break;
@@ -662,16 +698,16 @@ dig_done:
 					break;
 			}
 	cont:
-		__gdtoa_Bfree(bb, &TI);
-		__gdtoa_Bfree(bd, &TI);
-		__gdtoa_Bfree(bs, &TI);
-		__gdtoa_Bfree(delta, &TI);
+		__gdtoa_Bfree(bb), bb=0;
+		__gdtoa_Bfree(bd), bd=0;
+		__gdtoa_Bfree(bs), bs=0;
+		__gdtoa_Bfree(delta), delta=0;
 	}
-	__gdtoa_Bfree(bb, &TI);
-	__gdtoa_Bfree(bd, &TI);
-	__gdtoa_Bfree(bs, &TI);
-	__gdtoa_Bfree(bd0, &TI);
-	__gdtoa_Bfree(delta, &TI);
+	__gdtoa_Bfree(bb);
+	__gdtoa_Bfree(bd);
+	__gdtoa_Bfree(bs);
+	__gdtoa_Bfree(bd0);
+	__gdtoa_Bfree(delta);
 	if (scale) {
 		word0(&rv0) = Exp_1 - 2*P*Exp_msk1;
 		word1(&rv0) = 0;
@@ -684,6 +720,13 @@ ret:
 	if (se)
 		*se = (char *)s;
 	return sign ? -dval(&rv) : dval(&rv);
+oom:
+	__gdtoa_Bfree(bb);
+	__gdtoa_Bfree(bd);
+	__gdtoa_Bfree(bs);
+	__gdtoa_Bfree(bd0);
+	__gdtoa_Bfree(delta);
+	goto ret;
 }
 
 __weak_reference(strtod, strtod_l);

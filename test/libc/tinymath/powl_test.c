@@ -57,11 +57,15 @@ static char *fmtf(float x) {
 TEST(powl, test) {
   EXPECT_STREQ("27", gc(xdtoal(powl(3, 3))));
   EXPECT_STREQ("-27", gc(xdtoal(powl(-3, 3))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ("1e+4932", gc(xdtoal(powl(10, 4932))));
+#endif
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(10, 4933))));
   // EXPECT_STREQ("0", gc(xdtoal(powl(10, -5000))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ("1.063382396627933e+37", gc(xdtoal(powl(2, 123))));
   EXPECT_STARTSWITH(".4248496805467504", gc(xdtoal(powl(.7, 2.4))));
+#endif
   EXPECT_STREQ("1", gc(xdtoal(powl(1, NAN))));
   EXPECT_STREQ("1", gc(xdtoal(powl(1, rando))));
   EXPECT_STREQ("1", gc(xdtoal(powl(NAN, 0))));
@@ -102,8 +106,10 @@ TEST(powl, test) {
   EXPECT_STREQ("INFINITY", gc(xdtoal(powl(-0., -(rando & -2)))));
   EXPECT_TRUE(isnan(powl(-3, 1. / MAX(rando, 2))));
   EXPECT_TRUE(isnan(powl(-3, -(1. / MAX(rando, 2)))));
+#if LDBL_MANT_DIG > 64
   EXPECT_STREQ("-.3333333333333333", gc(xdtoal(powl(-3, -1))));
   EXPECT_STREQ(".1111111111111111", gc(xdtoal(powl(-3, -2))));
+#endif
   EXPECT_STREQ("-0", gc(xdtoal(powl(-0., MAX(1, rando) | 1))));
   EXPECT_STREQ("0", gc(xdtoal(powl(-0., MAX(1, rando) & ~1))));
 }

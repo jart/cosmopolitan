@@ -20,6 +20,7 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
@@ -28,7 +29,6 @@
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/maps.h"
-#include "libc/intrin/rlimit.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -36,6 +36,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -62,8 +63,8 @@ struct CosmoStack {
 };
 
 struct CosmoStacks {
-  atomic_uint once;
   pthread_mutex_t lock;
+  atomic_uint once;
   struct Dll *stacks;
   struct Dll *objects;
   unsigned count;
@@ -73,7 +74,7 @@ struct CosmoStacksConfig {
   unsigned maxstacks;
 };
 
-static struct CosmoStacks cosmo_stacks = {
+alignas(64) static struct CosmoStacks cosmo_stacks = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
@@ -82,20 +83,20 @@ static struct CosmoStacksConfig cosmo_stacks_config = {
 };
 
 void cosmo_stack_lock(void) {
-  _pthread_mutex_lock(&cosmo_stacks.lock);
+  pthread_mutex_lock(&cosmo_stacks.lock);
 }
 
 void cosmo_stack_unlock(void) {
-  _pthread_mutex_unlock(&cosmo_stacks.lock);
+  pthread_mutex_unlock(&cosmo_stacks.lock);
 }
 
 void cosmo_stack_wipe(void) {
-  _pthread_mutex_wipe_np(&cosmo_stacks.lock);
+  pthread_mutex_wipe_np(&cosmo_stacks.lock);
 }
 
 // map_growsdown will not grow more than rlimit_stack
 static size_t cosmo_stack_maxgrow(void) {
-  return __rlimit_stack_get().rlim_cur & -__pagesize;
+  return __rlimit_stack_get() & -__pagesize;
 }
 
 // allocates private anonymous fixed noreplace memory on linux
@@ -182,7 +183,9 @@ static void *slackmap(size_t stacksize, size_t guardsize) {
     RecoverFromMmapFailure:
       if (errno != EEXIST) {
         // mmap() probably raised enomem due to rlimit_as etc.
+        __maps_lock();
         __maps_untrack(region, need);
+        __maps_unlock();
         return 0;
       } else {
         // we've encountered a mystery mapping. it's hard to imagine
@@ -453,6 +456,7 @@ errno_t cosmo_stack_free(void *stackaddr, size_t stacksize, size_t guardsize) {
     return EINVAL;
   if ((uintptr_t)stackaddr & (__pagesize - 1))
     return EINVAL;
+  posix_madvise(stackaddr, stacksize, POSIX_MADV_DONTNEED);
   cosmo_stack_lock();
   struct Dll *surplus = 0;
   if (cosmo_stacks_config.maxstacks) {

@@ -21,36 +21,49 @@
 #include "libc/thread/tls.h"
 #include "libc/macros.h"
 
-//	Forks process without copying page tables.
+//	Forks process the fast way.
 //
-//	This function lets a process spawn another process without
-//	copying the page tables. The parent process gets suspended
-//	until the child calls either execve() or _Exit(), and they
-//	share memory during that time. That's at least how we want
-//	vfork() to work. Support for these behaviors is patchy. It
-//	is also error-prone to use this function in an environment
-//	with signal handlers and threads. The best way to use this
-//	is by calling posix_spawn() which works around the dangers
-//	and determines at runtime the best way to pass error codes
+//	The vfork() function creates a new child process that shares the same
+//	address space as the parent. The goal's to let you spawn a process in
+//	a way that's scalable across threads.
 //
-//	@return	pid of child process or 0 if forked process
-//	@returnstwice
-//	@vforksafe
+//	MacOS, OpenBSD, QEMU, and WSL v1 do not support a true vfork() system
+//	call. On such systems, this wrapper will call sys_fork() and the user
+//	shouldn't assume the shared memory trick will always be available and
+//	should just rely on vfork() for its performance benefits.
+//
+//	@return process id of child, 0 if child, or -1 w/ errno
 	.ftrace1
 vfork:
 	.ftrace2
 
-#ifdef __SANITIZE_ADDRESS__
-	jmp	fork
-#endif
-
 #ifdef __x86_64__
 
 #if SupportsWindows()
-//	these platforms disagree with vfork
-	testb	$_HOSTXNU|_HOSTOPENBSD|_HOSTWINDOWS,__hostos(%rip)
-	jnz	fork
+	testb	IsWindows()
+	jz	1f
+	mov	%rbp,%rdx
+	mov	(%rsp),%rcx
+	lea	8(%rsp),%rax
+	push	%rbp
+	mov	%rsp,%rbp
+	sub	$64,%rsp
+	mov	%rsp,%rdi
+	mov	%rax,(%rdi)
+	mov	%rbx,8(%rdi)
+	mov	%rdx,16(%rdi)
+	mov	%r12,24(%rdi)
+	mov	%r13,32(%rdi)
+	mov	%r14,40(%rdi)
+	mov	%r15,48(%rdi)
+	mov	%rcx,56(%rdi)
+	call	sys_vfork_nt
+1:
 #endif
+
+	call	__has_vfork
+	test	%eax,%eax
+	jz	sys_fork
 
 #if !IsTiny()
 	push	%rbp
@@ -61,7 +74,7 @@ vfork:
 #endif
 	pop	%rbp
 #endif
-	mov	%gs:0x30,%r9		// get thread information block
+	mov	%fs:0x30,%r9		// get thread information block
 	mov	0x3c(%r9),%r8d		// avoid question of @vforksafe errno
 	pop	%rsi			// saves return address in a register
 	mov	__NR_vfork(%rip),%eax
@@ -76,7 +89,7 @@ vfork:
 #endif
 	push	%rsi			// note it happens twice in same page
 	cmp	$-4095,%eax
-	jae	systemfive_error
+	jae	systemfive_errno
 	mov	%r8d,0x3c(%r9)		// restore errno
 1:	test	%eax,%eax
 	jnz	.Lpar
@@ -87,10 +100,11 @@ vfork:
 
 #elif defined(__aarch64__)
 
-	adrp	x8,__hostos
-	ldr	w8,[x8,#:lo12:__hostos]
-	tbz	x8,3,1f			// bit 3 is xnu
-	b	fork			// which doesn't support vfork()
+	stp	x29,x30,[sp,-16]!
+	bl	__has_vfork
+	ldp	x29,x30,[sp],16
+	cbnz	w0,1f
+	b	sys_fork
 1:
 
 #if SYSDEBUG
@@ -102,6 +116,8 @@ vfork:
 	ldp	x29,x30,[sp],16
 #endif
 
+	adrp	x8,__hostos
+	ldr	w8,[x8,#:lo12:__hostos]
 	tbnz	w8,5,1f			// bit 5 is freebsd
 
 	mov	x8,#220			// clone (linux)

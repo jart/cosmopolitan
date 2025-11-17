@@ -29,6 +29,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/ctype.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
@@ -62,8 +63,6 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
@@ -224,9 +223,9 @@ void GetOpts(int argc, char *argv[]) {
   g_fszquota = 256 * 1000 * 1000;
   if (!sysinfo(&si)) {
     g_memquota = si.totalram;
-    g_proquota = __get_cpu_count() + si.procs;
+    g_proquota = cosmo_cpu_count() + si.procs;
   } else {
-    g_proquota = __get_cpu_count() * 100;
+    g_proquota = cosmo_cpu_count() * 100;
     g_memquota = 4L * 1024 * 1024 * 1024;
   }
   while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:O:v:")) != -1) {

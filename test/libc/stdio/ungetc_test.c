@@ -34,7 +34,7 @@ void SetUpOnce(void) {
 
 TEST(ungetc, testGetChar_canBeUndoneWithinReason) {
   ASSERT_NE(NULL, (f = fopen("hog", "wb")));
-  EXPECT_EQ(12, fputs("hello world\n", f));
+  EXPECT_NE(-1, fputs("hello world\n", f));
   EXPECT_NE(-1, fputs(kHyperion, f));
   EXPECT_EQ(0, fclose(f));
   ASSERT_NE(NULL, (f = fopen("hog", "r")));
@@ -49,7 +49,7 @@ TEST(ungetc, testGetChar_canBeUndoneWithinReason) {
 
 TEST(ungetc, testRead_canBeUndoneWithinReason) {
   ASSERT_NE(NULL, (f = fopen("hog", "wb")));
-  EXPECT_EQ(12, fputs("hello world\n", f));
+  EXPECT_NE(-1, fputs("hello world\n", f));
   EXPECT_EQ(0, fclose(f));
   ASSERT_NE(NULL, (f = fopen("hog", "r")));
   EXPECT_EQ(3, fread(buf, 1, 3, f));

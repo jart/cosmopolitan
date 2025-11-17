@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/strace.h"
 #include "libc/nt/files.h"
@@ -26,17 +25,12 @@ __msabi extern typeof(CreateDirectory) *const __imp_CreateDirectoryW;
 
 /**
  * Creates directory on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows bool32 CreateDirectory(const char16_t *lpPathName,
                                    const struct NtSecurityAttributes *lpSec) {
   bool32 ok;
   ok = __imp_CreateDirectoryW(lpPathName, lpSec);
-  if (!ok)
-    __winerr();
-  NTTRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
+  NTTRACE("CreateDirectory(%#!hs, %s) → %hhhd% m", lpPathName,
           DescribeNtSecurityAttributes(lpSec), ok);
   return ok;
 }

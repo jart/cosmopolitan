@@ -91,20 +91,56 @@ static textwindows int sigaltstack_cosmo(const struct sigaltstack *neu,
 static int sigaltstack_bsd(const struct sigaltstack *neu,
                            struct sigaltstack *old) {
   int rc;
-  struct sigaltstack_bsd oldbsd, neubsd, *neup = 0;
-  if (neu)
-    sigaltstack2bsd(&neubsd, neu), neup = &neubsd;
-  if (IsXnuSilicon()) {
-    rc = _sysret(__syslib->__sigaltstack(neup, &oldbsd));
-  } else {
-    rc = sys_sigaltstack(neup, &oldbsd);
-  }
-  if (rc == -1) {
-    return -1;
+  struct sigaltstack_bsd neubsd;
+  struct sigaltstack_bsd *neup = 0;
+  struct sigaltstack_bsd oldbsd;
+  struct sigaltstack_bsd *oldp = 0;
+  if (neu) {
+    neup = &neubsd;
+    sigaltstack2bsd(neup, neu);
   }
   if (old)
-    sigaltstack2linux(old, &oldbsd);
+    oldp = &oldbsd;
+  if (IsXnuSilicon()) {
+    rc = _sysret(__syslib->__sigaltstack(neup, oldp));
+  } else {
+    rc = sys_sigaltstack(neup, oldp);
+  }
+  if (rc == -1)
+    return -1;
+  if (old)
+    sigaltstack2linux(old, oldp);
   return 0;
+}
+
+static int sigaltstack_impl(const struct sigaltstack *neu,
+                            struct sigaltstack *old) {
+  if (neu && ((neu->ss_size >> 32) ||  //
+              (neu->ss_flags & ~(SS_ONSTACK | SS_DISABLE))))
+    return einval();
+  if (neu && !(neu->ss_flags & SS_DISABLE) &&
+      neu->ss_size < __get_minsigstksz())
+    return enomem();
+  if (neu && (SupportsWindows() || SupportsNetbsd())) {
+    struct CosmoTib *tib = __get_tls();
+    char *bp = __builtin_frame_address(0);
+    if (tib->tib_sigstack_addr <= bp &&
+        bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size)
+      return eperm();
+  }
+  if (IsLinux()) {
+    int rc = sys_sigaltstack(neu, old);
+    if (!rc)
+      sigaltstack_setnew(neu);
+    return rc;
+  } else if (IsBsd()) {
+    int rc = sigaltstack_bsd(neu, old);
+    if (!rc)
+      sigaltstack_setnew(neu);
+    return rc;
+  } else {
+    return sigaltstack_cosmo(neu, old);
+  }
 }
 
 /**
@@ -131,26 +167,10 @@ static int sigaltstack_bsd(const struct sigaltstack *neu,
  * @return 0 on success, or -1 w/ errno
  * @raise EFAULT if bad memory was supplied
  * @raise ENOMEM if `neu->ss_size` is beneath `sysconf(_SC_MINSIGSTKSZ)`
+ * @raise EPERM if attempting to change alt stack while it's being used
  */
 int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
-  int rc;
-  if (neu && ((neu->ss_size >> 32) ||  //
-              (neu->ss_flags & ~(SS_ONSTACK | SS_DISABLE)))) {
-    rc = einval();
-  } else if (neu && !(neu->ss_flags & SS_DISABLE) &&
-             neu->ss_size < __get_minsigstksz()) {
-    rc = enomem();
-  } else if (IsLinux()) {
-    rc = sys_sigaltstack(neu, old);
-    if (!rc)
-      sigaltstack_setnew(neu);
-  } else if (IsBsd()) {
-    rc = sigaltstack_bsd(neu, old);
-    if (!rc)
-      sigaltstack_setnew(neu);
-  } else {
-    rc = sigaltstack_cosmo(neu, old);
-  }
+  int rc = sigaltstack_impl(neu, old);
   STRACE("sigaltstack(%s, [%s]) → %d% m", DescribeSigaltstack(0, neu),
          DescribeSigaltstack(0, old), rc);
   return rc;

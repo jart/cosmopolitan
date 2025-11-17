@@ -1,6 +1,7 @@
 import unittest
 import os
 import sys
+import cosmo
 from test.support import TESTFN, import_fresh_module
 
 c_stat = import_fresh_module('stat', fresh=['_stat'])
@@ -109,6 +110,8 @@ class TestFilemode:
             else:
                 self.assertFalse(func(mode))
 
+    @unittest.skipIf(cosmo.kernel == 'nt',
+                     'mode bits are weird on windows')
     def test_mode(self):
         with open(TESTFN, 'w'):
             pass
@@ -147,6 +150,8 @@ class TestFilemode:
             self.assertEqual(self.statmod.S_IFMT(st_mode),
                              self.statmod.S_IFREG)
 
+    @unittest.skipIf(cosmo.kernel == 'nt',
+                     'mode bits are weird on windows')
     def test_directory(self):
         os.mkdir(TESTFN)
         os.chmod(TESTFN, 0o700)

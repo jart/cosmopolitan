@@ -17,21 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/dprintf.h"
 
 void _memsummary(int fd) {
   struct mallinfo mi;
   mi = mallinfo();
-  dprintf(fd,
-          "arena\t\t%,-12zu\t# space allocated from system\n"
-          "ordblks\t\t%,-12zu\t# number of free chunks\n"
-          "hblkhd\t\t%,-12zu\t# space in mmapped regions\n"
-          "usmblks\t\t%,-12zu\t# maximum total allocated space\n"
-          "uordblks\t%,-12zu\t# total allocated space\n"
-          "fordblks\t%,-12zu\t# total free space\n"
-          "keepcost\t%,-12zu\t# releasable (via malloc_trim) space\n\n",
-          mi.arena, mi.ordblks, mi.hblkhd, mi.usmblks, mi.uordblks, mi.fordblks,
-          mi.keepcost);
+  kprintf("arena\t\t%,-12zu\t# non-mmaped space allocated (bytes)\n"
+          "ordblks\t\t%,-12zu\t# number of free ordinary chunks\n"
+          "smblks\t\t%,-12zu\t# number of free rseq chunks\n"
+          "hblks\t\t%,-12zu\t# number of mapped regions\n"
+          "hblkhd\t\t%,-12zu\t# space in mmapped regions (bytes)\n"
+          "usmblks\t\t%,-12zu\t# peak space allocated from system (bytes)\n"
+          "fsmblks\t\t%,-12zu\t# space in freed rseq chunks (bytes)\n"
+          "uordblks\t%,-12zu\t# total allocated space (bytes)\n"
+          "fordblks\t%,-12zu\t# total free space (bytes)\n"
+          "keepcost\t%,-12zu\t# releasable (via malloc_trim) space (bytes)\n\n",
+          mi.arena, mi.ordblks, mi.smblks, mi.hblks, mi.hblkhd, mi.usmblks,
+          mi.fsmblks, mi.uordblks, mi.fordblks, mi.keepcost);
 }

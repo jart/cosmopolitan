@@ -19,8 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 
 // Applies file descriptor fixups on XNU or old Linux.
@@ -34,7 +34,8 @@ int __fixupnewfd(int fd, int flags) {
     }
     if (flags & O_NONBLOCK) {
       unassert((file_mode = __sys_fcntl(fd, F_GETFL)) != -1);
-      unassert(!__sys_fcntl(fd, F_SETFL, file_mode | O_NONBLOCK));
+      unassert(
+          !__sys_fcntl(fd, F_SETFL, file_mode | (IsLinux() ? O_NONBLOCK : 4)));
     }
   }
   return fd;

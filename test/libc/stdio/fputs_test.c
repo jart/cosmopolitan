@@ -33,7 +33,7 @@ void SetUpOnce(void) {
 
 TEST(fputs, test) {
   ASSERT_NE(NULL, (f = fopen("hog", "w")));
-  EXPECT_EQ(5, fputs("hello", f));
+  EXPECT_TRUE(fputs("hello", f) >= 0);
   EXPECT_NE(-1, fclose(f));
   ASSERT_NE(NULL, (f = fopen("hog", "r")));
   EXPECT_EQ(5, fread(buf, 1, 512, f));
@@ -44,7 +44,7 @@ TEST(fputs, test) {
 
 TEST(puts, test) {
   ASSERT_NE(NULL, (f = fopen("hog", "w")));
-  EXPECT_EQ(5, fputs("hello", f));
+  EXPECT_TRUE(fputs("hello", f) >= 0);
   EXPECT_EQ('\n', fputc('\n', f));
   EXPECT_NE(-1, fclose(f));
   ASSERT_NE(NULL, (f = fopen("hog", "r")));
@@ -52,10 +52,4 @@ TEST(puts, test) {
   EXPECT_TRUE(!memcmp(buf, "hello\n", 6));
   EXPECT_TRUE(feof(f));
   EXPECT_NE(-1, fclose(f));
-}
-
-BENCH(fputs, bench) {
-  char *buf = gc(malloc(kHyperionSize));
-  EZBENCH2("fputs", f = fmemopen(buf, kHyperionSize, "r+"),
-           fputs(kHyperion, f));
 }

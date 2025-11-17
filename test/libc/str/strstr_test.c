@@ -28,7 +28,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
-#include "libc/stdalign.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/sysparam.h"

@@ -8,7 +8,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/errno.h"
-#include "libc/sysv/consts/rlimit.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"

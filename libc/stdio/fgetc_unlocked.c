@@ -23,17 +23,18 @@
  * Reads byte from stream.
  *
  * @param f is file object stream pointer
- * @return byte in range 0..255, or -1 w/ errno
+ * @return byte in range 0..255, otherwise EOF
+ * @cancelationpoint
  * @see fgetc()
  */
 int fgetc_unlocked(FILE *f) {
-  unsigned char b[1];
   if (f->beg < f->end) {
     return f->buf[f->beg++] & 255;
   } else {
-    if (!fread_unlocked(b, 1, 1, f))
-      return -1;
-    return b[0];
+    unsigned char b;
+    if (!fread_unlocked(&b, 1, 1, f))
+      return EOF;
+    return b;
   }
 }
 

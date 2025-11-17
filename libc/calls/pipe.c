@@ -17,11 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-nt.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/strace.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Creates file-less file descriptors for interprocess communication.
@@ -34,20 +29,5 @@
  * @see pipe2()
  */
 int pipe(int pipefd[2]) {
-  int rc;
-  if (!pipefd) {
-    // needed for windows which is polyfilled
-    // needed for xnu and netbsd which don't take an argument
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_pipe(pipefd);
-  } else {
-    rc = sys_pipe_nt(pipefd, 0);
-  }
-  if (!rc) {
-    STRACE("pipe([{%d, %d}]) → %d% m", pipefd[0], pipefd[1], rc);
-  } else {
-    STRACE("pipe(%p) → %d% m", pipefd, rc);
-  }
-  return rc;
+  return pipe2(pipefd, 0);
 }

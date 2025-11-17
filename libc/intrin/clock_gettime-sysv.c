@@ -18,8 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/nr.h"
 
 int sys_clock_gettime(int clock, struct timespec *ts) {
+
+  // avoid esrch on netbsd
+  if (IsNetbsd()) {
+    if ((clock & (0x20000000 | 0x40000000)) == (0x20000000 | 0x40000000))
+      return -EINVAL;
+    if (clock & 0x20000000)
+      clock = 0x20000000;
+    if (clock & 0x40000000)
+      clock = 0x40000000;
+  }
+
   return __syscall2i(clock, (long)ts, __NR_clock_gettime);
 }

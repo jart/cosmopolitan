@@ -22,17 +22,13 @@
  * Returns uncompressed size in bytes from zip local file header.
  */
 int64_t GetZipLfileUncompressedSize(const uint8_t *z) {
-  if (ZIP_LFILE_UNCOMPRESSEDSIZE(z) != 0xFFFFFFFFu) {
+  if (ZIP_LFILE_UNCOMPRESSEDSIZE(z) != 0xFFFFFFFFu)
     return ZIP_LFILE_UNCOMPRESSEDSIZE(z);
-  }
   const uint8_t *p = ZIP_LFILE_EXTRA(z);
   const uint8_t *pe = p + ZIP_LFILE_EXTRASIZE(z);
-  for (; p + ZIP_EXTRA_SIZE(p) <= pe; p += ZIP_EXTRA_SIZE(p)) {
-    if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64) {
-      if (8 <= ZIP_EXTRA_CONTENTSIZE(p)) {
+  for (; p + ZIP_EXTRA_SIZE(p) <= pe; p += ZIP_EXTRA_SIZE(p))
+    if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64)
+      if (8 <= ZIP_EXTRA_CONTENTSIZE(p))
         return ZIP_READ64(ZIP_EXTRA_CONTENT(p));
-      }
-    }
-  }
   return -1;
 }

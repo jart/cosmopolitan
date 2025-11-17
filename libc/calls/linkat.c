@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
@@ -40,9 +41,11 @@
 int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
            int flags) {
   int rc;
-  if (_weaken(__zipos_notat) &&
-      ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
-       (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+  if (kisdangerous(oldpath) || kisdangerous(newpath)) {
+    rc = efault();
+  } else if (_weaken(__zipos_notat) &&
+             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
     rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);

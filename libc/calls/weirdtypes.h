@@ -36,6 +36,7 @@ typedef void *timer_t;
 typedef uint32_t uid_t;
 typedef uint64_t rlim_t; /* int64_t on bsd */
 typedef int32_t clockid_t;
+typedef char *caddr_t;
 
 #ifdef __x86_64__
 typedef int64_t blksize_t; /* int32_t on xnu */

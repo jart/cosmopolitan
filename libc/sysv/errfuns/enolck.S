@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "libc/macros.h"
 .text.unlikely
 
@@ -5,12 +6,11 @@
 enolck:
 	.ftrace2
 #ifdef __x86_64__
-	.leafprologue
-	mov	ENOLCK(%rip),%ecx
+	push	$ENOLCK
+	pop	%rdi
 	jmp	__errfun
 #elif defined(__aarch64__)
-	adrp	x1,ENOLCK
-	ldrsw	x0,[x1,#:lo12:ENOLCK]
+	mov	x0,#ENOLCK
 	b	__errfun
 #else
 #error "unsupported architecture"

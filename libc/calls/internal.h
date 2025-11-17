@@ -7,7 +7,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/fds.h"
 #include "libc/macros.h"
-#include "libc/stdbool.h"
+#include "libc/sysv/pib.h"
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
 
@@ -15,14 +15,11 @@ COSMOPOLITAN_C_START_
 
 #define kIoMotion ((const int8_t[3]){1, 0, 0})
 
-extern struct Fds g_fds;
-extern atomic_int __umask;
 extern const struct Fd kEmptyFd;
 
 int __reservefd(int);
 int __reservefd_unlocked(int);
 void __releasefd(int);
-int __ensurefds(int);
 uint32_t sys_getuid_nt(void);
 int __ensurefds_unlocked(int);
 void __printfds(struct Fd *, size_t);
@@ -35,13 +32,19 @@ void EchoConsoleNt(const char *, size_t, bool);
 int IsWindowsExecutable(int64_t, const char16_t *);
 void InterceptTerminalCommands(const char *, size_t);
 void sys_read_nt_wipe_keystrokes(void);
+int __generate_pid(atomic_ulong **);
 
 forceinline bool __isfdopen(int fd) {
-  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
+  if (fd < __get_pib()->fds.n) {
+    char kind = __get_pib()->fds.p[fd].kind;
+    return kind != kFdEmpty && kind != kFdReserved;
+  } else {
+    return false;
+  }
 }
 
 forceinline bool __isfdkind(int fd, int kind) {
-  return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
+  return fd < __get_pib()->fds.n && __get_pib()->fds.p[fd].kind == kind;
 }
 
 int _check_signal(bool);

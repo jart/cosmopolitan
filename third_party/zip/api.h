@@ -12,7 +12,7 @@
 #ifndef _ZIPAPI_H
 #define _ZIPAPI_H
 
-#include "third_party/zip/zip.h"
+#include "zip.h"
 
 #ifdef WIN32
 #   ifndef PATH_MAX
@@ -25,25 +25,7 @@
 #endif
 
 #if defined(WINDLL) || defined(API)
-#include "libc/nt/accounting.h"
-#include "libc/nt/automation.h"
-#include "libc/nt/console.h"
-#include "libc/nt/debug.h"
-#include "libc/nt/dll.h"
-#include "libc/nt/enum/keyaccess.h"
-#include "libc/nt/enum/regtype.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/events.h"
-#include "libc/nt/files.h"
-#include "libc/nt/ipc.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/paint.h"
-#include "libc/nt/process.h"
-#include "libc/nt/registry.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/windows.h"
-#include "libc/nt/winsock.h"
+// [jart] #include <windows.h>
 /* Porting definations between Win 3.1x and Win32 */
 #ifdef WIN32
 #  define far

@@ -145,16 +145,7 @@ o/%.zip.o: o/%
 o/$(MODE)/%.zip.o: %
 	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%.zip.o: %
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
-
-# an issue with sandboxing arises when creating directory entries in the
-# zip file. we need the trailing slash (e.g. o//foo/.zip.o) but Landlock
-# Make avoids sandboxing directory names that have a trailing slash (so
-# they can be used to watch for deleted files, without creating overly
-# broad unveiling). such rules need to be written more explicitly.
-o/$(MODE)%/.zip.o: %
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.zip.o: private .SANDBOXED = 0
 
 ################################################################################
 # STRICT HEADER CHECKING
@@ -163,43 +154,43 @@ o/$(MODE)%/.zip.o: %
 # and it would be too costly in terms of make latency to have every
 # header file depend on $(HDRS) and $(INCS).
 
-o/%.h.ok: private .UNSANDBOXED = 1
+o/%.h.ok: private .SANDBOXED = 0
 o/%.h.ok: %.h
 	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 
-o/$(MODE)/%.h.ok: private .UNSANDBOXED = 1
+o/$(MODE)/%.h.ok: private .SANDBOXED = 0
 o/$(MODE)/%.h.ok: %.h
 	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 
-o/$(MODE)/%.hh.ok: private .UNSANDBOXED = 1
+o/$(MODE)/%.hh.ok: private .SANDBOXED = 0
 o/$(MODE)/%.hh.ok: %.hh
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
-o/%.okk: .UNSANDBOXED = 1
+o/%.okk: .SANDBOXED = 0
 o/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
-o/$(MODE)/%.okk: private .UNSANDBOXED = 1
+o/$(MODE)/%.okk: private .SANDBOXED = 0
 o/$(MODE)/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
 ################################################################################
 # EMACS ASSEMBLY GENERATION
 
-o/$(MODE)/%-gcc.asm: private .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: private .SANDBOXED = 0
 o/$(MODE)/%-gcc.asm: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-gcc.asm: private .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: private .SANDBOXED = 0
 o/$(MODE)/%-gcc.asm: %.cc
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-clang.asm: private .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: private .SANDBOXED = 0
 o/$(MODE)/%-clang.asm: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 
 # TODO(jart): Make intrinsics support Clang.
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
-o/$(MODE)/%-clang.asm: private .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: private .SANDBOXED = 0
 o/$(MODE)/%-clang.asm: %.cc
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<

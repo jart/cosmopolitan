@@ -22,6 +22,7 @@
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.h"
 #include "libc/str/str.h"
@@ -55,22 +56,24 @@ int sys_sigtimedwait_nt(const sigset_t *, siginfo_t *, const struct timespec *);
 int sigtimedwait(const sigset_t *set, siginfo_t *opt_info,
                  const struct timespec *opt_timeout) {
   int rc;
-  char strsig[21];
   struct timespec ts;
   union siginfo_meta si = {0};
   BEGIN_CANCELATION_POINT;
 
   // validate timeout
-  if (opt_timeout && opt_timeout->tv_nsec >= 1000000000ull) {
+  if (!set) {
+    rc = efault();
+  } else if (opt_timeout && opt_timeout->tv_nsec >= 1000000000ull) {
     rc = einval();
   } else if (IsLinux() || IsFreebsd() || IsNetbsd()) {
+    sigset_t set2 = __linux2mask(*set);
     if (opt_timeout) {
       // 1. Linux needs its size parameter
       // 2. NetBSD modifies timeout argument
       ts = *opt_timeout;
-      rc = sys_sigtimedwait(set, &si, &ts, 8);
+      rc = sys_sigtimedwait(&set2, &si, &ts, 8);
     } else {
-      rc = sys_sigtimedwait(set, &si, 0, 8);
+      rc = sys_sigtimedwait(&set2, &si, 0, 8);
     }
     if (rc != -1 && opt_info)
       __siginfo2cosmo(opt_info, &si);
@@ -79,10 +82,11 @@ int sigtimedwait(const sigset_t *set, siginfo_t *opt_info,
   } else {
     rc = enosys();
   }
+  rc = __sig2linux(rc);
 
   END_CANCELATION_POINT;
   STRACE("sigtimedwait(%s, [%s], %s) → %s% m", DescribeSigset(0, set),
          DescribeSiginfo(rc, opt_info), DescribeTimespec(0, opt_timeout),
-         strsignal_r(rc, strsig));
+         strsignal(rc));
   return rc;
 }

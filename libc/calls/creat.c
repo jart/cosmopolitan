@@ -23,9 +23,11 @@
 /**
  * Creates file.
  *
- * This is equivalent to saying:
+ * This function is equivalent to:
  *
  *     int fd = openat(AT_FDCWD, file, O_CREAT | O_WRONLY | O_TRUNC, mode);
+ *
+ * Please see openat() for further documentation.
  *
  * @param file specifies filesystem path to create
  * @param mode is octal bits, e.g. 0644 usually

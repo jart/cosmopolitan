@@ -597,26 +597,10 @@ static PyObject*
 signal_set_wakeup_fd(PyObject *self, PyObject *args)
 {
     struct _Py_stat_struct status;
-#ifdef MS_WINDOWS
-    PyObject *fdobj;
-    SOCKET_T sockfd, old_sockfd;
-    int res;
-    int res_size = sizeof res;
-    PyObject *mod;
-    int is_socket;
-
-    if (!PyArg_ParseTuple(args, "O:set_wakeup_fd", &fdobj))
-        return NULL;
-
-    sockfd = PyLong_AsSocket_t(fdobj);
-    if (sockfd == (SOCKET_T)(-1) && PyErr_Occurred())
-        return NULL;
-#else
     int fd, old_fd;
 
     if (!PyArg_ParseTuple(args, "i:set_wakeup_fd", &fd))
         return NULL;
-#endif
 
 #ifdef WITH_THREAD
     if (PyThread_get_thread_ident() != main_thread) {
@@ -626,54 +610,6 @@ signal_set_wakeup_fd(PyObject *self, PyObject *args)
     }
 #endif
 
-#ifdef MS_WINDOWS
-    is_socket = 0;
-    if (sockfd != INVALID_FD) {
-        /* Import the _socket module to call WSAStartup() */
-        mod = PyImport_ImportModuleNoBlock("_socket");
-        if (mod == NULL)
-            return NULL;
-        Py_DECREF(mod);
-
-        /* test the socket */
-        if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR,
-                       (char *)&res, &res_size) != 0) {
-            int fd, err;
-
-            err = WSAGetLastError();
-            if (err != WSAENOTSOCK) {
-                PyErr_SetExcFromWindowsErr(PyExc_OSError, err);
-                return NULL;
-            }
-
-            fd = (int)sockfd;
-            if ((SOCKET_T)fd != sockfd) {
-                PyErr_SetString(PyExc_ValueError, "invalid fd");
-                return NULL;
-            }
-
-            if (_Py_fstat(fd, &status) != 0)
-                return NULL;
-
-            /* on Windows, a file cannot be set to non-blocking mode */
-        }
-        else {
-            is_socket = 1;
-
-            /* Windows does not provide a function to test if a socket
-               is in non-blocking mode */
-        }
-    }
-
-    old_sockfd = wakeup.fd;
-    wakeup.fd = sockfd;
-    wakeup.use_send = is_socket;
-
-    if (old_sockfd != INVALID_FD)
-        return PyLong_FromSocket_t(old_sockfd);
-    else
-        return PyLong_FromLong(-1);
-#else
     if (fd != -1) {
         int blocking;
 
@@ -695,7 +631,6 @@ signal_set_wakeup_fd(PyObject *self, PyObject *args)
     wakeup_fd = fd;
 
     return PyLong_FromLong(old_fd);
-#endif
 }
 
 PyDoc_STRVAR(set_wakeup_fd_doc,
@@ -1331,7 +1266,6 @@ PyInit__signal(void)
     if (PyModule_AddIntMacro(m, SIGQUIT)) goto finally;
     if (PyModule_AddIntMacro(m, SIGILL)) goto finally;
     if (PyModule_AddIntMacro(m, SIGTRAP)) goto finally;
-    if (PyModule_AddIntMacro(m, SIGIOT)) goto finally;
     if (PyModule_AddIntMacro(m, SIGABRT)) goto finally;
     if (PyModule_AddIntMacro(m, SIGFPE)) goto finally;
     if (PyModule_AddIntMacro(m, SIGKILL)) goto finally;
@@ -1344,11 +1278,8 @@ PyInit__signal(void)
     if (PyModule_AddIntMacro(m, SIGUSR1)) goto finally;
     if (PyModule_AddIntMacro(m, SIGUSR2)) goto finally;
     if (PyModule_AddIntMacro(m, SIGCHLD)) goto finally;
-    if (PyModule_AddIntMacro(m, SIGPWR)) goto finally;
-    if (PyModule_AddIntMacro(m, SIGIO)) goto finally;
     if (PyModule_AddIntMacro(m, SIGURG)) goto finally;
     if (PyModule_AddIntMacro(m, SIGWINCH)) goto finally;
-    if (PyModule_AddIntMacro(m, SIGPOLL)) goto finally;
     if (PyModule_AddIntMacro(m, SIGSTOP)) goto finally;
     if (PyModule_AddIntMacro(m, SIGTSTP)) goto finally;
     if (PyModule_AddIntMacro(m, SIGCONT)) goto finally;
@@ -1358,10 +1289,6 @@ PyInit__signal(void)
     if (PyModule_AddIntMacro(m, SIGPROF)) goto finally;
     if (PyModule_AddIntMacro(m, SIGXCPU)) goto finally;
     if (PyModule_AddIntMacro(m, SIGXFSZ)) goto finally;
-    if (SIGEMT && PyModule_AddIntMacro(m, SIGEMT)) goto finally;
-    if (SIGINFO && PyModule_AddIntMacro(m, SIGINFO)) goto finally;
-    if (SIGRTMIN && PyModule_AddIntMacro(m, SIGRTMIN)) goto finally;
-    if (SIGRTMAX && PyModule_AddIntMacro(m, SIGRTMAX)) goto finally;
 
 #if defined (HAVE_SETITIMER) || defined (HAVE_GETITIMER)
     if (PyModule_AddIntMacro(m, ITIMER_REAL)) goto finally;

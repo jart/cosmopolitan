@@ -41,10 +41,15 @@ void *Worker(void *arg) {
   int i, fd;
   char *data;
   for (i = 0; i < 20; ++i) {
+    ASSERT_EQ(0, errno);
     ASSERT_NE(-1, (fd = open("/zip//./libc/testlib//hyperion.txt", O_RDONLY)));
+    ASSERT_EQ(0, errno);
     data = malloc(kHyperionSize);
+    ASSERT_EQ(0, errno);
     ASSERT_EQ(kHyperionSize, read(fd, data, kHyperionSize));
+    ASSERT_EQ(0, errno);
     ASSERT_EQ(0, memcmp(data, kHyperion, kHyperionSize));
+    ASSERT_EQ(0, errno);
     ASSERT_SYS(0, 0, close(fd));
     free(data);
   }
@@ -54,6 +59,7 @@ void *Worker(void *arg) {
 TEST(zipos, test) {
   int i, n = 16;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
+  ASSERT_EQ(0, errno);
   for (i = 0; i < n; ++i)
     ASSERT_SYS(0, 0, pthread_create(t + i, 0, Worker, 0));
   for (i = 0; i < n; ++i)

@@ -33,6 +33,16 @@ LIBC_SYSV_A_DIRECTDEPS =				\
 LIBC_SYSV_A_FILES :=					\
 	libc/sysv/macros.internal.h			\
 	libc/sysv/errfuns.h				\
+	libc/sysv/errno.h				\
+	libc/sysv/errno-bsd.c				\
+	libc/sysv/errno.c				\
+	libc/sysv/errno-freebsd.c			\
+	libc/sysv/errno-netbsd.c			\
+	libc/sysv/errno-openbsd.c			\
+	libc/sysv/errno.sh				\
+	libc/sysv/errno-windows.c			\
+	libc/sysv/errno-xnu.c				\
+	libc/sysv/gc.S					\
 	libc/sysv/hostos.S				\
 	libc/sysv/syscon.S				\
 	libc/sysv/syslib.S				\
@@ -42,16 +52,19 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/syscall3.S				\
 	libc/sysv/syscall4.S				\
 	libc/sysv/systemfive.S				\
+	libc/sysv/enosys.c				\
 	libc/sysv/sysret.c				\
+	libc/sysv/linret.c				\
+	libc/sysv/pib.c					\
+	libc/sysv/pib.h					\
 	libc/sysv/sysv.c				\
-	libc/sysv/errno.c				\
-	libc/sysv/errfun.S				\
-	libc/sysv/errfun2.c				\
+	libc/sysv/tlsasm.S				\
+	libc/sysv/errloc.c				\
+	libc/sysv/errfun.c				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
 	$(wildcard libc/sysv/errfuns/*)			\
-	$(wildcard libc/sysv/dos2errno/*)
 
 LIBC_SYSV_A_SRCS =					\
 	$(LIBC_SYSV_A_SRCS_A)				\
@@ -77,15 +90,27 @@ $(LIBC_SYSV_A).pkg:					\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/sysv/sysv.o				\
-o/$(MODE)/libc/sysv/errno.o				\
-o/$(MODE)/libc/sysv/sysret.o				\
-o/$(MODE)/libc/sysv/errfun2.o				\
+o/$(MODE)/libc/sysv/errloc.o				\
+o/$(MODE)/libc/sysv/linret.o				\
+o/$(MODE)/libc/sysv/errfun.o				\
+o/$(MODE)/libc/sysv/enosys.o				\
 o/$(MODE)/libc/sysv/sysret.o: private			\
 		CFLAGS +=				\
 			-ffreestanding			\
 			-fno-stack-protector		\
 			-fno-sanitize=all		\
 			-mgeneral-regs-only
+
+# this shaves 6kb off code size
+o/$(MODE)/libc/sysv/errno.o				\
+o/$(MODE)/libc/sysv/errno-windows.o			\
+o/$(MODE)/libc/sysv/errno-freebsd.o			\
+o/$(MODE)/libc/sysv/errno-openbsd.o			\
+o/$(MODE)/libc/sysv/errno-netbsd.o			\
+o/$(MODE)/libc/sysv/errno-xnu.o: private		\
+		CFLAGS +=				\
+			-fpie				\
+			-Os				\
 
 ifeq ($(ARCH),aarch64)
 o/$(MODE)/libc/sysv/sysv.o: private			\
@@ -161,6 +186,8 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 #───────────────────────────────────────────────────────────────────────────────
 
 # let aarch64 compile these
+o/$(MODE)/libc/sysv/gc.o: libc/sysv/gc.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/syscon.o: libc/sysv/syscon.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/hostos.o: libc/sysv/hostos.S
@@ -182,8 +209,6 @@ o/$(MODE)/libc/sysv/calls/%.o: libc/sysv/calls/%.S
 o/$(MODE)/libc/sysv/consts/%.o: libc/sysv/consts/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/errfuns/%.o: libc/sysv/errfuns/%.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
-o/$(MODE)/libc/sysv/dos2errno/%.o: libc/sysv/dos2errno/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 
 #───────────────────────────────────────────────────────────────────────────────

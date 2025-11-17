@@ -87,7 +87,7 @@ static void emit_print (struct emit_buf *b, const char *fmt, ...) {
                                         emit_c (b, "0123456789abcdef"[(n >> i) & 0xf]);
                                 }
                         } else {
-                                ASSERT (0);
+                                unassert (0);
                         }
                 }
         }

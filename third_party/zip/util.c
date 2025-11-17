@@ -13,10 +13,9 @@
  */
 #define __UTIL_C
 
-#include "third_party/zip/zip.h"
-// MISSING #include "ebcdic.h"
-#include "libc/ctype.h"
-#include "libc/str/str.h"
+#include "zip.h"
+#include "ebcdic.h"
+#include <ctype.h>
 
 #ifdef MSDOS16
 // MISSING #include <dos.h>
@@ -26,7 +25,7 @@
 #  ifndef IZ_MKTIME_ONLY
 #    define IZ_MKTIME_ONLY      /* only mktime() related code is pulled in */
 #  endif
-#include "third_party/zip/timezone.c"
+#  include "timezone.c"
 #endif
 
 uch upper[256], lower[256];
@@ -646,7 +645,7 @@ void init_upper()
 {
   unsigned int c;
 #if defined(ATARI) || defined(CMS_MVS)
-#include "libc/str/str.h"
+#include <ctype.h>
 /* this should be valid for all other platforms too.   (HD 11/11/95) */
   for (c = 0; c< sizeof(upper); c++) {
     upper[c] = islower(c) ? toupper(c) : c;

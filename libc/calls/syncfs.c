@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/pib.h"
 
 /**
  * Syncs filesystem associated with file descriptor.
@@ -36,7 +37,7 @@
  * @raise ENOSYS on non-Linux
  */
 int syncfs(int fd) {
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (__isfdkind(fd, kFdZip)) {
     return erofs();
   } else {
     return sys_syncfs(fd);

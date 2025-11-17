@@ -142,21 +142,6 @@ const char *_DescribeSiCode(char b[20], int sig, int si_code) {
     } else if (si_code == BUS_MCEERR_AO) {
       strcpy(b + 4, "MCEERR_AO"); /* Linux 2.6.32+ */
     }
-  } else if (sig == SIGIO) {
-    NameIt(b, "POLL_", si_code);
-    if (si_code == POLL_IN) {
-      strcpy(b + 5, "IN"); /* data input available */
-    } else if (si_code == POLL_OUT) {
-      strcpy(b + 5, "OUT"); /* output buffer available */
-    } else if (si_code == POLL_MSG) {
-      strcpy(b + 5, "MSG"); /* input message available */
-    } else if (si_code == POLL_ERR) {
-      strcpy(b + 5, "ERR"); /* i/o error */
-    } else if (si_code == POLL_PRI) {
-      strcpy(b + 5, "PRI"); /* high priority input available */
-    } else if (si_code == POLL_HUP) {
-      strcpy(b + 5, "HUP"); /* device disconnected */
-    }
   } else if (sig == SIGSYS) {
     NameIt(b, "SYS_", si_code);
     if (si_code == SYS_SECCOMP) {

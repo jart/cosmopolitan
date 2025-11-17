@@ -2599,7 +2599,7 @@ class SuppressCrashReport:
                     self.old_modes[report_type] = old_mode, old_file
 
         else:
-            if resource is not None:
+            if resource is not None and hasattr(resource, 'RLIMIT_CORE'):
                 try:
                     self.old_value = resource.getrlimit(resource.RLIMIT_CORE)
                     resource.setrlimit(resource.RLIMIT_CORE,

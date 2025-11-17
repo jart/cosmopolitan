@@ -20,7 +20,7 @@
 #include "ctl/sort.h"
 #include "ctl/string.h"
 #include "ctl/vector.h"
-#include "libc/mem/leaks.h"
+#include "libc/cosmo.h"
 #include "libc/stdio/rand.h"
 
 // #include <algorithm>

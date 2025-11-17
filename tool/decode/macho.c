@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macho.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.h"
-#include "libc/macho.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -52,12 +52,10 @@ static void startfile(void) {
 }
 
 static void showmachoheader(void) {
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if (sizeof(struct MachoHeader) > machosize) {
     fprintf(stderr, "error: %'s: MachoHeader overruns eof\n", path);
     exit(1);
   }
-#endif
   showtitle(basename(gc(strdup(path))), "macho", "header", NULL, NULL);
   printf("\n");
   showinthex(macho->magic);
@@ -101,13 +99,11 @@ static void showmacholoadsegment(unsigned i, struct MachoLoadSegment *loadseg) {
   assert(loadseg->size ==
          sizeof(struct MachoLoadSegment) +
              loadseg->sectioncount * sizeof(struct MachoSection));
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if ((intptr_t)loadseg + sizeof(struct MachoLoadSegment) +
           loadseg->sectioncount * sizeof(struct MachoSection) >
       (intptr_t)macho + machosize) {
     abort();
   }
-#endif
   show(".ascin", format(b1, "%`'s,16", loadseg->name), "loadseg->name");
   showint64hex(loadseg->vaddr);
   showint64hex(loadseg->memsz);
@@ -136,12 +132,10 @@ static void showmacholoadsegment(unsigned i, struct MachoLoadSegment *loadseg) {
 
 static void showmacholoadsymtabshowall(struct MachoLoadSymtab *ls) {
   assert(ls->size == sizeof(struct MachoLoadSymtab));
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if ((intptr_t)ls + sizeof(struct MachoLoadSymtab) >
       (intptr_t)macho + machosize) {
     abort();
   }
-#endif
   showinthex(ls->offset);
   showinthex(ls->count);
   showinthex(ls->stroff);
@@ -150,12 +144,10 @@ static void showmacholoadsymtabshowall(struct MachoLoadSymtab *ls) {
 
 static void showmacholoaduuid(struct MachoLoadUuid *lu) {
   assert(lu->size == sizeof(struct MachoLoadUuid));
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if ((intptr_t)lu + sizeof(struct MachoLoadUuid) >
       (intptr_t)macho + machosize) {
     abort();
   }
-#endif
   printf("\t.byte\t");
   for (unsigned i = 0; i < 16; ++i) {
     if (i) {
@@ -204,12 +196,10 @@ static void showmacholoadgeneric(struct MachoLoadCommand *lc) {
 static void showmacholoadsourceversion(
     struct MachoLoadSourceVersionCommand *sv) {
   assert(sv->size == sizeof(struct MachoLoadSourceVersionCommand));
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if ((intptr_t)sv + sizeof(struct MachoLoadSourceVersionCommand) >
       (intptr_t)macho + machosize) {
     abort();
   }
-#endif
   showint64hex(sv->version);
 }
 
@@ -223,12 +213,10 @@ static void showmacholoadunixthread(struct MachoLoadThreadCommand *lc) {
 }
 
 static void showmacholoadcommand(struct MachoLoadCommand *lc, unsigned i) {
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if ((intptr_t)lc > (intptr_t)macho + machosize ||
       (intptr_t)lc + lc->size > (intptr_t)macho + machosize) {
     abort();
   }
-#endif
   showorg((intptr_t)lc - (intptr_t)macho);
   printf("%d:", (i + 1) * 10);
   char buf[256];
@@ -311,12 +299,10 @@ static void showmacholoadcommand(struct MachoLoadCommand *lc, unsigned i) {
 }
 
 static void showmacholoadcommands(void) {
-#if !defined(TRUSTWORTHY) && !defined(MACHO_TRUSTWORTHY)
   if (sizeof(struct MachoHeader) + macho->loadsize > machosize) {
     fprintf(stderr, "error: %'s: macho->loadsize overruns eof\n", path);
     exit(1);
   }
-#endif
   unsigned i = 0;
   const unsigned count = macho->loadcount;
   for (struct MachoLoadCommand *lc =

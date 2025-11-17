@@ -51,12 +51,12 @@ struct Exe {
   uint32_t section_count;
 };
 
-static wontreturn void Die(const char *thing, const char *reason) {
+[[noreturn]] static void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void DieSys(const char *thing) {
+[[noreturn]] static void DieSys(const char *thing) {
   perror(thing);
   exit(1);
 }

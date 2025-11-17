@@ -54,8 +54,5 @@ int sys_clock_nanosleep(int clock, int flags,  //
     rc = ecanceled();
   }
   END_CANCELATION_POINT;
-  STRACE("sys_clock_nanosleep(%s, %s, %s, [%s]) → %d% m",
-         DescribeClockName(clock), DescribeSleepFlags(flags),
-         DescribeTimespec(0, req), DescribeTimespec(rc, rem), rc);
   return rc;
 }

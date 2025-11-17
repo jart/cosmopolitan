@@ -18,7 +18,7 @@
 #define UTIL            /* do not declare the read_buf variable */
 #endif
 
-#include "third_party/zip/zip.h"
+#include "zip.h"
 
 
 /* Handy place to build error messages */

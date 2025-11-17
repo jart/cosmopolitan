@@ -16,37 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/sig.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/macros.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
+#include "libc/sysv/consts/sicode.h"
 
 // this is all a mandatory dependency of winmain
 // so, we trade away maintanibility for tininess
 // see libc/sysv/consts.sh for canonical magnums
 
-#define SIGILL_  4
-#define SIGTRAP_ 5
-#define SIGABRT_ 6
-#define SIGFPE_  8
-#define SIGSEGV_ 11
-#define SIGSYS_  31
-
-#define TRAP_BRKPT_  1
-#define ILL_ILLOPC_  1
-#define ILL_PRVOPC_  5
-#define SEGV_MAPERR_ 1
-#define SEGV_ACCERR_ 2
-#define SI_USER_     0
-#define FPE_FLTDIV_  3
-#define FPE_FLTOVF_  4
-#define FPE_INTOVF_  2
-#define FPE_FLTUND_  5
-#define FPE_FLTRES_  6
-#define FPE_FLTINV_  7
-#define SI_KERNEL_   128
+#define ILL_ILLOPC_ 1
+#define ILL_PRVOPC_ 5
+#define SI_USER_    0
+#define FPE_FLTDIV_ 3
+#define FPE_FLTOVF_ 4
+#define FPE_INTOVF_ 2
+#define FPE_FLTUND_ 5
+#define FPE_FLTRES_ 6
+#define FPE_FLTINV_ 7
+#define SI_KERNEL_  128
 
 #define LO(x) (x & 255)
 #define HI(x) ((x >> 24) / !(x & 0x00ffff00u))
@@ -72,31 +64,31 @@ struct CrashSig {
 };
 
 static const struct CrashSig kNtCrashSigs[] = {
-    ROW(kNtSignalBreakpoint, TRAP_BRKPT_, SIGTRAP_),          //
-    ROW(kNtSignalIllegalInstruction, ILL_ILLOPC_, SIGILL_),   //
-    ROW(kNtSignalPrivInstruction, ILL_PRVOPC_, SIGILL_),      //
-    ROW(kNtSignalInPageError, SEGV_MAPERR_, SIGSEGV_),        //
-    ROW(kNtStatusStackOverflow, SEGV_MAPERR_, SIGSEGV_),      //
-    ROW(kNtSignalGuardPage, SEGV_ACCERR_, SIGSEGV_),          //
-    ROW(kNtSignalAccessViolation, SEGV_ACCERR_, SIGSEGV_),    //
-    ROW(kNtSignalInvalidHandle, SI_USER_, SIGABRT_),          //
-    ROW(kNtSignalInvalidParameter, SI_USER_, SIGABRT_),       //
-    ROW(kNtStatusIntegerOverflow, FPE_INTOVF_, SIGFPE_),      //
-    ROW(kNtSignalFltDivideByZero, FPE_FLTDIV_, SIGFPE_),      //
-    ROW(kNtSignalFltOverflow, FPE_FLTOVF_, SIGFPE_),          //
-    ROW(kNtSignalFltUnderflow, FPE_FLTUND_, SIGFPE_),         //
-    ROW(kNtSignalFltInexactResult, FPE_FLTRES_, SIGFPE_),     //
-    ROW(kNtSignalFltDenormalOperand, FPE_FLTINV_, SIGFPE_),   //
-    ROW(kNtSignalFltInvalidOperation, FPE_FLTINV_, SIGFPE_),  //
-    ROW(kNtSignalFltStackCheck, FPE_FLTINV_, SIGFPE_),        //
-    ROW(kNtSignalIntegerDivideByZero, FPE_FLTINV_, SIGFPE_),  //
-    // ROW(kNtSignalAssertionFailure, SI_USER_, SIGABRT_),
-    // ROW(kNtSignalFloatMultipleTraps, FPE_FLTINV_, SIGFPE_),
-    // ROW(kNtSignalFloatMultipleFaults, FPE_FLTINV_, SIGFPE_),
-    // ROW(kNtSignalDllNotFound, SI_KERNEL_, SIGSYS_),
-    // ROW(kNtSignalOrdinalNotFound, SI_KERNEL_, SIGSYS_),
-    // ROW(kNtSignalEntrypointNotFound, SI_KERNEL_, SIGSYS_),
-    // ROW(kNtSignalDllInitFailed, SI_KERNEL_, SIGSYS_),
+    ROW(kNtStatusBreakpoint, TRAP_BRKPT, SIGTRAP),             //
+    ROW(kNtStatusIllegalInstruction, ILL_ILLOPC_, SIGILL),     //
+    ROW(kNtStatusPrivilegedInstruction, ILL_PRVOPC_, SIGILL),  //
+    ROW(kNtStatusInPageError, BUS_ADRERR, SIGBUS),             //
+    ROW(kNtStatusStackOverflow, SEGV_MAPERR, SIGSEGV),         //
+    ROW(kNtStatusGuardPageViolation, SEGV_ACCERR, SIGSEGV),    //
+    ROW(kNtStatusAccessViolation, SEGV_ACCERR, SIGSEGV),       //
+    ROW(kNtStatusInvalidHandle, SI_USER_, SIGABRT),            //
+    ROW(kNtStatusInvalidParameter, SI_USER_, SIGABRT),         //
+    ROW(kNtStatusIntegerOverflow, FPE_INTOVF_, SIGFPE),        //
+    ROW(kNtStatusFloatDivideByZero, FPE_FLTDIV_, SIGFPE),      //
+    ROW(kNtStatusFloatOverflow, FPE_FLTOVF_, SIGFPE),          //
+    ROW(kNtStatusFloatUnderflow, FPE_FLTUND_, SIGFPE),         //
+    ROW(kNtStatusFloatInexactResult, FPE_FLTRES_, SIGFPE),     //
+    ROW(kNtStatusFloatDenormalOperand, FPE_FLTINV_, SIGFPE),   //
+    ROW(kNtStatusFloatInvalidOperation, FPE_FLTINV_, SIGFPE),  //
+    ROW(kNtStatusFloatStackCheck, FPE_FLTINV_, SIGFPE),        //
+    ROW(kNtStatusIntegerDivideBYZero, FPE_FLTINV_, SIGFPE),    //
+    // ROW(kNtSignalAssertionFailure, SI_USER_, SIGABRT),
+    // ROW(kNtSignalFloatMultipleTraps, FPE_FLTINV_, SIGFPE),
+    // ROW(kNtSignalFloatMultipleFaults, FPE_FLTINV_, SIGFPE),
+    // ROW(kNtSignalDllNotFound, SI_KERNEL_, SIGSYS),
+    // ROW(kNtSignalOrdinalNotFound, SI_KERNEL_, SIGSYS),
+    // ROW(kNtSignalEntrypointNotFound, SI_KERNEL_, SIGSYS),
+    // ROW(kNtSignalDllInitFailed, SI_KERNEL_, SIGSYS),
 };
 
 textwindows dontinstrument int __sig_crash_sig(unsigned exception, int *code) {
@@ -112,5 +104,5 @@ textwindows dontinstrument int __sig_crash_sig(unsigned exception, int *code) {
     }
   }
   *code = exception;
-  return SIGSEGV_;
+  return SIGSEGV;
 }
