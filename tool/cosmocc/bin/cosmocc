@@ -391,10 +391,10 @@ fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC_X86_64=$CXX_X86_64
   CC_AARCH64=$CXX_AARCH64
-  CFLAGS="$CFLAGS -std=gnu++23"
+  CFLAGS="$CFLAGS -std=gnu++17"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 else
-  CFLAGS="$CFLAGS -std=gnu23 -Wno-implicit-int"
+  CFLAGS="$CFLAGS -std=gnu17 -Wno-implicit-int"
 fi
 
 if [ x"$MODE" = x"dbg" ]; then

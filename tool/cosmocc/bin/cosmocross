@@ -129,11 +129,11 @@ else
 fi
 if [ $CPLUSPLUS -eq 1 ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
-  CFLAGS="$CFLAGS -std=gnu++23"
+  CFLAGS="$CFLAGS -std=gnu++17"
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
   LDLIBS="-lcxx $LDLIBS"
 else
-  CFLAGS="$CFLAGS -std=gnu23 -Wno-implicit-int"
+  CFLAGS="$CFLAGS -std=gnu17 -Wno-implicit-int"
 fi
 
 PAGESZ=4096
