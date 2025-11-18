@@ -1,0 +1,27 @@
+DESCRIPTION
+
+  miniaudio is an enormous audio library rolled into one file.
+
+  cosmopolitan uses this for two things:
+
+    1. we build miniaudio as part of the cosmopolitan monorepo, but only
+       for its audio encoding / decoding features. this lets us
+       statically link support for mp3/wav/etc.
+
+    2. we bundle miniaudio.h as a zip file inside actually portable
+       executables, so that programs which link our cosmoaudio wrapper
+       can extract it and build a dso with the host compiler. we then
+       dynamically link that dso at runtime. this is how we interface
+       with the microphone and speaker.
+
+ORIGIN
+
+  https://raw.githubusercontent.com/mackron/miniaudio/refs/tags/0.11.23/miniaudio.h
+
+LICENSE
+
+  "unlicense" or "mit no attribution"
+
+LOCAL CHANGES
+
+  - Remove __COSMOPOLITAN__ ifdef from upstream source code.
