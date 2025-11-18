@@ -101,7 +101,7 @@ CONFIG_OFLAGS ?= -g -ggdb
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
-CONFIG_TARGET_ARCH ?= -march=native
+CONFIG_TARGET_ARCH ?= -mavx
 endif
 ifeq ($(MODE), x86_64-optlinux)
 TLSCC =
