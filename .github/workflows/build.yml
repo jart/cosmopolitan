@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mode: ["", tiny, rel, tinylinux, optlinux]
+        mode: ["", tiny, rel, tinylinux]
     steps:
       - uses: actions/checkout@v4
         with:
