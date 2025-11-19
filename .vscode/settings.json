@@ -1,15 +1,4 @@
 {
-    "C_Cpp.default.compilerPath": ".cosmocc/3.9.2/bin/aarch64-linux-cosmo-c++",
-    "C_Cpp.default.compilerArgs": [
-        "-nostdinc",
-        "-nostdlib",
-        "-iquote.",
-        "-isystemlibc/isystem",
-        "-isystemthird_party/libcxx",
-        "-includelibc/integral/normalize.inc",
-        "-D_COSMO_SOURCE",
-        "-D__aarch64__"
-    ],
     "[c]": {
         "editor.tabSize": 2,
         "editor.insertSpaces": true

@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "Cosmopolitan",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/libc/isystem"
+            ],
+            "defines": [
+                "_COSMO_SOURCE",
+                "MODE=\"aarch64\""
+            ],
+            "compilerPath": "${workspaceFolder}/.cosmocc/3.9.2/bin/aarch64-linux-cosmo-gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm64",
+            "compilerArgs": [
+                "-nostdinc",
+                "-iquote",
+                "${workspaceFolder}",
+                "-isystem",
+                "${workspaceFolder}/libc/isystem",
+                "-include",
+                "libc/integral/normalize.inc"
+            ]
+        }
+    ],
+    "version": 4
+}

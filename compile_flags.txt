@@ -1,0 +1,10 @@
+-nostdinc
+-iquote
+.
+-isystem
+libc/isystem
+-include
+libc/integral/normalize.inc
+-D_COSMO_SOURCE
+-DMODE="aarch64"
+-Wno-unknown-pragmas
