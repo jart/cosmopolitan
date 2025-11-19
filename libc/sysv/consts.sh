@@ -593,7 +593,7 @@ syscon	pf	PF_APPLETALK				5			5			0x10			0x10			0x10			0x10			0x10			0x10			# bs
 syscon	pf	PF_SNA					22			22			11			11			11			11			11			11			# bsd consensus
 syscon	pf	PF_INET6				10			10			30			30			28			24			24			23
 syscon	pf	PF_MAX					42			42			40			40			42			36			36			35
-syscon	pf	PF_INET					2			2			2			2			2			2			2			0			# unix consensus
+syscon	pf	PF_INET					2			2			2			2			2			2			2			2			# unix consensus
 syscon	pf	PF_LOCAL				1			1			1			1			1			1			1			0			# unix consensus
 syscon	pf	PF_IPX					4			4			23			23			23			23			23			0			# bsd consensus
 syscon	pf	PF_ROUTE				0x10			0x10			17			17			17			17			17			0			# bsd consensus
