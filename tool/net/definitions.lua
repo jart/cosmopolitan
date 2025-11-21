@@ -557,7 +557,8 @@ function OnHttpRequest() end
 ---
 ---@param status uint16
 ---@param message string
-function OnError(status, message) end
+---@param details string
+function OnError(status, message, details) end
 
 --- Hooks client connection creation.
 ---
