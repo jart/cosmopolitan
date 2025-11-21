@@ -381,6 +381,9 @@
 #define _FILE_STREAM_INFORMATION NtFileStreamInformation
 #define FILE_STREAM_INFORMATION struct NtFileStreamInformation
 #define PFILE_STREAM_INFORMATION struct NtFileStreamInformation*
+#define _FILE_NOTIFY_INFORMATION NtFileNotifyInformation
+#define FILE_NOTIFY_INFORMATION struct NtFileNotifyInformation
+#define PFILE_NOTIFY_INFORMATION struct NtFileNotifyInformation*
 #define _KERNEL_USER_TIMES NtKernelUserTimes
 #define KERNEL_USER_TIMES struct NtKernelUserTimes
 #define PKERNEL_USER_TIMES struct NtKernelUserTimes*
@@ -661,6 +664,16 @@
 #define FILE_SHARE_READ kNtFileShareRead
 #define FILE_SHARE_WRITE kNtFileShareWrite
 #define FILE_SHARE_DELETE kNtFileShareDelete
+
+#include "libc/nt/enum/filenotify.h"
+#define FILE_NOTIFY_CHANGE_FILE_NAME kNtFileNotifyChangeFileName
+#define FILE_NOTIFY_CHANGE_DIR_NAME kNtFileNotifyChangeDirName
+#define FILE_NOTIFY_CHANGE_ATTRIBUTES kNtFileNotifyChangeAttributes
+#define FILE_NOTIFY_CHANGE_SIZE kNtFileNotifyChangeSize
+#define FILE_NOTIFY_CHANGE_LAST_WRITE kNtFileNotifyChangeLastWrite
+#define FILE_NOTIFY_CHANGE_LAST_ACCESS kNtFileNotifyChangeLastAccess
+#define FILE_NOTIFY_CHANGE_CREATION kNtFileNotifyChangeCreation
+#define FILE_NOTIFY_CHANGE_SECURITY kNtFileNotifyChangeSecurity
 
 #include "libc/nt/runtime.h"
 #define INVALID_HANDLE_VALUE -1l
@@ -1361,6 +1374,9 @@
 
 #define WSAEVENT HANDLE
 #define GROUP uint32_t
+#define _OVERLAPPED NtOverlapped
+#define OVERLAPPED struct NtOverlapped
+#define LOVERLAPPED struct NtOverlapped*
 #define WSAOVERLAPPED OVERLAPPED
 #define INVALID_SOCKET -1ULL
 #define SOCKET_ERROR -1
