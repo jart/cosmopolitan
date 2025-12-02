@@ -41,7 +41,7 @@ char16_t *strchr16(const char16_t *s, char16_t c) {
   }
   s = (const char16_t *)v;
   s += __builtin_ctz(m) >> 1;
-  return (char16_t *)(*s ? s : 0);
+  return (char16_t *)(*s == c ? s : 0);
 #elif defined(__aarch64__) && defined(__ARM_NEON)
   uint16x8_t zv = vdupq_n_u16(0);
   uint16x8_t nv = vdupq_n_u16(c);
@@ -61,7 +61,7 @@ char16_t *strchr16(const char16_t *s, char16_t c) {
   }
   s = (const char16_t *)v;
   s += __builtin_ctzll(m) >> 3;
-  return (char16_t *)(*s ? s : 0);
+  return (char16_t *)(*s == c ? s : 0);
 #else
   for (;; ++s) {
     if (*s == c)

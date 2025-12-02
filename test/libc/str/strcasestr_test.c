@@ -29,6 +29,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/tab.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -63,6 +64,35 @@ TEST(strcasestr, tester) {
   ASSERT_STREQ(haystack, strcasestr(haystack, "win"));
 }
 
+void print_char_array(const char *s, const char *name) {
+  printf("char %s[] = {\n", name);
+  int len = 0;
+  while (s[len])
+    len++;
+  len++;  // include null terminator
+  for (int i = 0; i < len; i++) {
+    unsigned char c = s[i];
+    if (i % 8 == 0)
+      printf("    ");
+    if (c == 0) {
+      printf("0");
+    } else if (isprint(c) && c != '\'' && c != '\\') {
+      printf("'%c'", c);
+    } else if (c == '\'' || c == '\\') {
+      printf("'\\%c'", c);
+    } else {
+      printf("%d", c);
+    }
+    if (i < len - 1)
+      printf(",");
+    if (i % 8 == 7 || i == len - 1) {
+      int start = i - (i % 8);
+      printf(" // 0x%x\n", start);
+    }
+  }
+  printf("};\n");
+}
+
 TEST(strcasestr, safety) {
   int pagesz = sysconf(_SC_PAGESIZE);
   char *map = (char *)mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
@@ -76,6 +106,14 @@ TEST(strcasestr, safety) {
     hay[haylen] = 0;
     for (int neelen = 1; neelen < haylen; ++neelen) {
       char *nee = hay + (haylen + 1) - (neelen + 1);
+      if (strcasestr_naive(hay, nee) != strcasestr(hay, nee)) {
+        print_char_array(hay, "hay");
+        print_char_array(nee, "nee");
+        printf("wut hay  = %`'s\n", hay);
+        printf("wut nee  = %`'s\n", nee);
+        printf("wut res1 = %`'s\n", strcasestr_naive(hay, nee));
+        printf("wut res2 = %`'s\n", strcasestr(hay, nee));
+      }
       ASSERT_EQ(strcasestr_naive(hay, nee), strcasestr(hay, nee));
     }
   }

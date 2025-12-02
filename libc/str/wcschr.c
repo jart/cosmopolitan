@@ -41,7 +41,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c) {
   }
   s = (const wchar_t *)v;
   s += __builtin_ctz(m) >> 2;
-  return (wchar_t *)(*s ? s : 0);
+  return (wchar_t *)(*s == c ? s : 0);
 #elif defined(__aarch64__) && defined(__ARM_NEON)
   uint32x4_t zv = vdupq_n_u32(0);
   uint32x4_t nv = vdupq_n_u32(c);
@@ -66,7 +66,7 @@ wchar_t *wcschr(const wchar_t *s, wchar_t c) {
   }
   s = (const wchar_t *)v;
   s += __builtin_ctzll(m) >> 4;
-  return (wchar_t *)(*s ? s : 0);
+  return (wchar_t *)(*s == c ? s : 0);
 #else
   for (;; ++s) {
     if (*s == c)

@@ -46,7 +46,7 @@ char *strcasechr(const char *s, int c) {
   }
   s = (const char *)v;
   s += __builtin_ctz(m);
-  return (void *)(*s ? s : 0);
+  return (void *)(*s || (!*s && !c) ? s : 0);
 #elif defined(__x86_64__) && !defined(__chibicc__)
   __m128i nz = _mm_setzero_si128();
   __m128i nvl = _mm_set1_epi8(kToLower[c & 255]);
@@ -68,7 +68,7 @@ char *strcasechr(const char *s, int c) {
   }
   s = (const char *)v;
   s += __builtin_ctz(m);
-  return (void *)(*s ? s : 0);
+  return (void *)(*s || (!*s && !c) ? s : 0);
 #elif defined(__aarch64__) && defined(__ARM_NEON)
   uint8x16_t nz = vdupq_n_u8(0);
   uint8x16_t nvl = vdupq_n_u8(kToLower[c & 255]);
@@ -96,7 +96,7 @@ char *strcasechr(const char *s, int c) {
   }
   s = (const char *)v;
   s += __builtin_ctzll(m) >> 2;
-  return (void *)(*s ? s : 0);
+  return (void *)(*s || (!*s && !c) ? s : 0);
 #else
   for (;; ++s) {
     if (kToLower[*s & 255] == kToLower[c & 255])
