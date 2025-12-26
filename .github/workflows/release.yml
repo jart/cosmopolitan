@@ -27,23 +27,8 @@ jobs:
           sudo cp build/bootstrap/ape.elf /usr/bin/ape
           sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: Build utilities
-        run: |
-          make -j$(nproc) MODE=rel \
-            o/rel/third_party/make/make.dbg \
-            o/rel/third_party/zip/zip.dbg \
-            o/rel/third_party/unzip/unzip.dbg \
-            o/rel/tool/lua/lua.dbg \
-            o/rel/tool/lua/test
-
-      - name: Prepare utilities
-        run: |
-          mkdir -p release/bin
-          objcopy -S -O binary o/rel/third_party/make/make.dbg release/bin/make
-          objcopy -S -O binary o/rel/third_party/zip/zip.dbg release/bin/zip
-          objcopy -S -O binary o/rel/third_party/unzip/unzip.dbg release/bin/unzip
-          objcopy -S -O binary o/rel/tool/lua/lua.dbg release/bin/lua
-          chmod +x release/bin/*
+      - name: Build and verify utilities
+        run: make -j$(nproc) MODE=rel o/rel/tool/lua/test o/rel/tool/release
 
       - name: Build cosmocc
         run: tool/cosmocc/package.sh cosmocc-build
@@ -56,10 +41,10 @@ jobs:
 
       - name: Create checksums
         run: |
-          cd release/bin
+          cd o/rel/tool/release/bin
           sha256sum make zip unzip lua > SHA256SUMS
-          cd ../..
-          sha256sum cosmocc.zip >> release/bin/SHA256SUMS
+          cd ../../../../..
+          sha256sum cosmocc.zip >> o/rel/tool/release/bin/SHA256SUMS
 
       - name: Create release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.0
@@ -68,10 +53,10 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           files: |
             cosmocc.zip
-            release/bin/make
-            release/bin/zip
-            release/bin/unzip
-            release/bin/lua
-            release/bin/SHA256SUMS
+            o/rel/tool/release/bin/make
+            o/rel/tool/release/bin/zip
+            o/rel/tool/release/bin/unzip
+            o/rel/tool/release/bin/lua
+            o/rel/tool/release/bin/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -361,6 +361,7 @@ include tool/plinko/BUILD.mk
 include test/tool/plinko/BUILD.mk
 include tool/net/BUILD.mk
 include tool/lua/BUILD.mk
+include tool/release/BUILD.mk
 include tool/viz/BUILD.mk
 include tool/BUILD.mk
 include net/turfwar/BUILD.mk
