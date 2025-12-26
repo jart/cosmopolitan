@@ -17,5 +17,5 @@ jobs:
           sudo cp build/bootstrap/ape.elf /usr/bin/ape
           sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: Build
-        run: make -j$(nproc)
+      - name: Build lua
+        run: make -j$(nproc) MODE=rel o/rel/tool/lua/lua.dbg
