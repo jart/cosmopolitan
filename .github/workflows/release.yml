@@ -33,7 +33,8 @@ jobs:
             o/rel/third_party/make/make.dbg \
             o/rel/third_party/zip/zip.dbg \
             o/rel/third_party/unzip/unzip.dbg \
-            o/rel/tool/lua/lua.dbg
+            o/rel/tool/lua/lua.dbg \
+            o/rel/tool/lua/test
 
       - name: Prepare utilities
         run: |

@@ -82,7 +82,18 @@ o/$(MODE)/tool/lua/lua.dbg:						\
 
 $(TOOL_LUA_OBJS): tool/lua/BUILD.mk
 
+o/$(MODE)/tool/lua/test_cosmo.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_cosmo.lua
+	$< tool/lua/test_cosmo.lua
+	@touch $@
+
+TOOL_LUA_TESTS =							\
+	o/$(MODE)/tool/lua/test_cosmo.ok
+
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\
 		$(TOOL_LUA_BINS)					\
 		$(TOOL_LUA_CHECKS)
+
+.PHONY: o/$(MODE)/tool/lua/test
+o/$(MODE)/tool/lua/test:						\
+		$(TOOL_LUA_TESTS)
