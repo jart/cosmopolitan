@@ -1,4 +1,4 @@
-name: Release
+name: Release cosmocc
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       - name: Generate release tag
         id: tag
         run: |
-          TAG="$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)"
+          TAG="cosmocc-$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Setup APE support
@@ -27,13 +27,17 @@ jobs:
           sudo cp build/bootstrap/ape.elf /usr/bin/ape
           sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: Build and verify utilities
-        run: make -j$(nproc) MODE=rel o/rel/tool/lua/test o/rel/tool/release
+      - name: Build cosmocc
+        run: tool/cosmocc/package.sh cosmocc-build
+
+      - name: Package cosmocc
+        run: |
+          cd cosmocc-build
+          zip -ry9 ../cosmocc.zip .
+          cd ..
 
       - name: Create checksums
-        run: |
-          cd o/rel/tool/release/bin
-          sha256sum make zip unzip lua > SHA256SUMS
+        run: sha256sum cosmocc.zip > SHA256SUMS
 
       - name: Create release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.0
@@ -41,10 +45,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           files: |
-            o/rel/tool/release/bin/make
-            o/rel/tool/release/bin/zip
-            o/rel/tool/release/bin/unzip
-            o/rel/tool/release/bin/lua
-            o/rel/tool/release/bin/SHA256SUMS
+            cosmocc.zip
+            SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
