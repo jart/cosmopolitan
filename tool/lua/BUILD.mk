@@ -76,6 +76,7 @@ o/$(MODE)/tool/lua/lua.dbg:						\
 		$(TOOL_LUA_DEPS)					\
 		$(TOOL_LUA_LUA_MODULES)					\
 		o/$(MODE)/tool/lua/lua.main.o				\
+		o/$(MODE)/tool/lua/.args.zip.o				\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
