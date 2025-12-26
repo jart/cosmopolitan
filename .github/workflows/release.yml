@@ -32,7 +32,8 @@ jobs:
           make -j$(nproc) MODE=rel \
             o/rel/third_party/make/make.dbg \
             o/rel/third_party/zip/zip.dbg \
-            o/rel/third_party/unzip/unzip.dbg
+            o/rel/third_party/unzip/unzip.dbg \
+            o/rel/tool/lua/lua.dbg
 
       - name: Prepare utilities
         run: |
@@ -40,6 +41,7 @@ jobs:
           objcopy -S -O binary o/rel/third_party/make/make.dbg release/bin/make
           objcopy -S -O binary o/rel/third_party/zip/zip.dbg release/bin/zip
           objcopy -S -O binary o/rel/third_party/unzip/unzip.dbg release/bin/unzip
+          objcopy -S -O binary o/rel/tool/lua/lua.dbg release/bin/lua
           chmod +x release/bin/*
 
       - name: Build cosmocc
@@ -54,7 +56,7 @@ jobs:
       - name: Create checksums
         run: |
           cd release/bin
-          sha256sum make zip unzip > SHA256SUMS
+          sha256sum make zip unzip lua > SHA256SUMS
           cd ../..
           sha256sum cosmocc.zip >> release/bin/SHA256SUMS
 
@@ -68,6 +70,7 @@ jobs:
             release/bin/make
             release/bin/zip
             release/bin/unzip
+            release/bin/lua
             release/bin/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

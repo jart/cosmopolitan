@@ -1,0 +1,9 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_LUA_LCOSMO_H_
+#define COSMOPOLITAN_THIRD_PARTY_LUA_LCOSMO_H_
+#include "third_party/lua/lauxlib.h"
+COSMOPOLITAN_C_START_
+
+int luaopen_cosmo(lua_State *);
+
+COSMOPOLITAN_C_END_
+#endif /* COSMOPOLITAN_THIRD_PARTY_LUA_LCOSMO_H_ */

@@ -34,6 +34,7 @@ THIRD_PARTY_LUA_A =						\
 THIRD_PARTY_LUA_A_HDRS =					\
 	third_party/lua/cosmo.h					\
 	third_party/lua/lapi.h					\
+	third_party/lua/lcosmo.h				\
 	third_party/lua/lauxlib.h				\
 	third_party/lua/lcode.h					\
 	third_party/lua/lctype.h				\
