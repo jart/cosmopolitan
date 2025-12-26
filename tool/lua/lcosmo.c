@@ -23,8 +23,17 @@
 #include "tool/net/lfuncs.h"
 #include "tool/net/lpath.h"
 #include "tool/net/ljson.h"
+#include "net/http/http.h"
 #include <stdlib.h>
 #include <limits.h>
+#include <time.h>
+
+char *FormatUnixHttpDateTime(char *s, int64_t t) {
+  struct tm tm;
+  gmtime_r(&t, &tm);
+  FormatHttpDateTime(s, &tm);
+  return s;
+}
 
 static int LuaDecodeJson(lua_State *L) {
   size_t n;
@@ -174,7 +183,6 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"UuidV4", LuaUuidV4},
     {"UuidV7", LuaUuidV7},
     {"VisualizeControlCodes", LuaVisualizeControlCodes},
-#ifndef LFUNCS_LITE
     {"Decimate", LuaDecimate},
     {"FormatHttpDateTime", LuaFormatHttpDateTime},
     {"GetCryptoHash", LuaGetCryptoHash},
@@ -185,7 +193,6 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"Sha384", LuaSha384},
     {"Sha512", LuaSha512},
     {"Curve25519", LuaCurve25519},
-#endif
     {NULL, NULL}
 };
 // clang-format on

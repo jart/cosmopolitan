@@ -25,7 +25,7 @@ TOOL_LUA_CHECKS =							\
 
 TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/lua/lcosmo.o					\
-	o/$(MODE)/tool/net/lfuncs.lite.o				\
+	o/$(MODE)/tool/net/lfuncs.o					\
 	o/$(MODE)/tool/net/lpath.o					\
 	o/$(MODE)/tool/net/lre.o					\
 	o/$(MODE)/tool/net/ljson.o					\
@@ -33,6 +33,7 @@ TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/net/largon2.o
 
 TOOL_LUA_DIRECTDEPS =							\
+	DSP_SCALE							\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
@@ -57,6 +58,7 @@ TOOL_LUA_DIRECTDEPS =							\
 	THIRD_PARTY_LINENOISE						\
 	THIRD_PARTY_LUA							\
 	THIRD_PARTY_LUA_UNIX						\
+	THIRD_PARTY_MBEDTLS						\
 	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_SQLITE3						\
@@ -74,11 +76,6 @@ o/$(MODE)/tool/lua/lua.dbg:						\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-o/$(MODE)/tool/net/lfuncs.lite.o: tool/net/lfuncs.c
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DLFUNCS_LITE $<
-
-o/$(MODE)/tool/lua/lcosmo.o: private CFLAGS += -DLFUNCS_LITE
 
 $(TOOL_LUA_OBJS): tool/lua/BUILD.mk
 
