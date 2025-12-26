@@ -27,12 +27,61 @@ jobs:
           sudo cp build/bootstrap/ape.elf /usr/bin/ape
           sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: Build and verify utilities
-        run: make -j$(nproc) MODE=rel o/rel/tool/lua/test o/rel/tool/release
+      - name: Build x86_64 binaries
+        run: |
+          make -j$(nproc) m=x86_64 \
+            o/x86_64/ape/ape.elf \
+            o/x86_64/tool/lua/lua.dbg \
+            o/x86_64/tool/lua/test \
+            o/x86_64/third_party/make/make.dbg \
+            o/x86_64/third_party/zip/zip.dbg \
+            o/x86_64/third_party/unzip/unzip.dbg
+
+      - name: Build aarch64 binaries
+        run: |
+          make -j$(nproc) m=aarch64 \
+            o/aarch64/ape/ape.elf \
+            o/aarch64/tool/lua/lua.dbg \
+            o/aarch64/third_party/make/make.dbg \
+            o/aarch64/third_party/zip/zip.dbg \
+            o/aarch64/third_party/unzip/unzip.dbg
+
+      - name: Build apelink
+        run: make -j$(nproc) m= o/tool/build/apelink
+
+      - name: Create fat APE binaries
+        run: |
+          mkdir -p o/fat/bin
+          o/tool/build/apelink \
+            -l o/x86_64/ape/ape.elf \
+            -l o/aarch64/ape/ape.elf \
+            -M ape/ape-m1.c \
+            -o o/fat/bin/lua \
+            o/x86_64/tool/lua/lua.dbg \
+            o/aarch64/tool/lua/lua.dbg
+          for bin in make zip unzip; do
+            o/tool/build/apelink \
+              -l o/x86_64/ape/ape.elf \
+              -l o/aarch64/ape/ape.elf \
+              -M ape/ape-m1.c \
+              -o o/fat/bin/$bin \
+              o/x86_64/third_party/$bin/$bin.dbg \
+              o/aarch64/third_party/$bin/$bin.dbg
+          done
+
+      - name: Verify fat binaries
+        run: |
+          for bin in lua make zip unzip; do
+            grep -q MZqFpD o/fat/bin/$bin
+          done
+          o/fat/bin/lua -v
+          o/fat/bin/make --version
+          o/fat/bin/zip -v
+          o/fat/bin/unzip -v
 
       - name: Create checksums
         run: |
-          cd o/rel/tool/release/bin
+          cd o/fat/bin
           sha256sum make zip unzip lua > SHA256SUMS
 
       - name: Create release
@@ -41,10 +90,10 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           files: |
-            o/rel/tool/release/bin/make
-            o/rel/tool/release/bin/zip
-            o/rel/tool/release/bin/unzip
-            o/rel/tool/release/bin/lua
-            o/rel/tool/release/bin/SHA256SUMS
+            o/fat/bin/make
+            o/fat/bin/zip
+            o/fat/bin/unzip
+            o/fat/bin/lua
+            o/fat/bin/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
