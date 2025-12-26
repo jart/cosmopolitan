@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  COSMOCC_VERSION: 3.9.2
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup APE support
+        run: |
+          sudo cp build/bootstrap/ape.elf /usr/bin/ape
+          sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+
+      - name: Build utilities (make, zip, unzip)
+        run: |
+          make -j$(nproc) MODE=rel \
+            o/rel/third_party/make/make.dbg \
+            o/rel/third_party/zip/zip.dbg \
+            o/rel/third_party/unzip/unzip.dbg
+
+      - name: Prepare utilities for release
+        run: |
+          mkdir -p release/bin
+          # Copy and strip debug symbols
+          objcopy -S -O binary o/rel/third_party/make/make.dbg release/bin/make
+          objcopy -S -O binary o/rel/third_party/zip/zip.dbg release/bin/zip
+          objcopy -S -O binary o/rel/third_party/unzip/unzip.dbg release/bin/unzip
+          # Make executable
+          chmod +x release/bin/*
+          # Verify binaries work
+          ./release/bin/make --version
+          ./release/bin/zip --version || true
+          ./release/bin/unzip -v || true
+
+      - name: Build cosmocc toolchain
+        run: |
+          tool/cosmocc/package.sh cosmocc-build
+
+      - name: Package cosmocc toolchain
+        run: |
+          cd cosmocc-build
+          zip -ry9 ../cosmocc.zip .
+          cd ..
+
+      - name: Create checksums
+        run: |
+          cd release/bin
+          sha256sum make zip unzip > SHA256SUMS
+          cat SHA256SUMS
+          cd ../..
+          sha256sum cosmocc.zip >> release/bin/SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.0
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: false
+          files: |
+            cosmocc.zip
+            release/bin/make
+            release/bin/zip
+            release/bin/unzip
+            release/bin/SHA256SUMS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.5.0
+        with:
+          name: release-artifacts
+          path: |
+            cosmocc.zip
+            release/bin/*
+          compression-level: 9
