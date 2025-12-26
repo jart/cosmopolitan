@@ -31,6 +31,7 @@ jobs:
         run: |
           make -j$(nproc) m=x86_64 \
             o/x86_64/ape/ape.elf \
+            o/x86_64/tool/build/apelink \
             o/x86_64/tool/lua/lua.dbg \
             o/x86_64/tool/lua/test \
             o/x86_64/third_party/make/make.dbg \
@@ -46,13 +47,10 @@ jobs:
             o/aarch64/third_party/zip/zip.dbg \
             o/aarch64/third_party/unzip/unzip.dbg
 
-      - name: Build apelink
-        run: make -j$(nproc) m= o/tool/build/apelink
-
       - name: Create fat APE binaries
         run: |
           mkdir -p o/fat/bin
-          o/tool/build/apelink \
+          o/x86_64/tool/build/apelink \
             -l o/x86_64/ape/ape.elf \
             -l o/aarch64/ape/ape.elf \
             -M ape/ape-m1.c \
@@ -60,7 +58,7 @@ jobs:
             o/x86_64/tool/lua/lua.dbg \
             o/aarch64/tool/lua/lua.dbg
           for bin in make zip unzip; do
-            o/tool/build/apelink \
+            o/x86_64/tool/build/apelink \
               -l o/x86_64/ape/ape.elf \
               -l o/aarch64/ape/ape.elf \
               -M ape/ape-m1.c \
