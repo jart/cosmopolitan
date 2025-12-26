@@ -17,9 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/net/lfuncs.h"
-#ifndef LFUNCS_LITE
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#endif
 #include "libc/bsdstdlib.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
@@ -68,7 +66,6 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/lunix.h"
-#ifndef LFUNCS_LITE
 #include "third_party/mbedtls/everest.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
@@ -76,7 +73,6 @@
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
-#endif
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 
@@ -183,7 +179,6 @@ int LuaRdseed(lua_State *L) {
   return LuaRand(L, arc4random64);
 }
 
-#ifndef LFUNCS_LITE
 int LuaDecimate(lua_State *L) {
   char *p;
   size_t n, m;
@@ -199,7 +194,6 @@ int LuaDecimate(lua_State *L) {
   luaL_pushresultsize(&buf, (n + 1) >> 1);
   return 1;
 }
-#endif
 
 int LuaMeasureEntropy(lua_State *L) {
   size_t n;
@@ -290,13 +284,11 @@ int LuaCategorizeIp(lua_State *L) {
   return 1;
 }
 
-#ifndef LFUNCS_LITE
 int LuaFormatHttpDateTime(lua_State *L) {
   char buf[30];
   lua_pushstring(L, FormatUnixHttpDateTime(buf, luaL_checkinteger(L, 1)));
   return 1;
 }
-#endif
 
 int LuaParseHttpDateTime(lua_State *L) {
   size_t n;
@@ -704,7 +696,6 @@ int LuaGetHttpReason(lua_State *L) {
   return 1;
 }
 
-#ifndef LFUNCS_LITE
 int LuaGetCryptoHash(lua_State *L) {
   size_t hl, pl, kl;
   uint8_t d[64];
@@ -726,7 +717,6 @@ int LuaGetCryptoHash(lua_State *L) {
   mbedtls_platform_zeroize(d, sizeof(d));
   return 1;
 }
-#endif
 
 static dontinline int LuaIsValid(lua_State *L, bool32 V(const char *, size_t)) {
   size_t size;
@@ -954,7 +944,6 @@ int LuaUuidV7(lua_State *L) {
   return 1;
 }
 
-#ifndef LFUNCS_LITE
 static dontinline int LuaHasherImpl(lua_State *L, size_t k,
                                     int H(const void *, size_t, uint8_t *)) {
   size_t n;
@@ -999,7 +988,6 @@ int LuaSha384(lua_State *L) {
 int LuaSha512(lua_State *L) {
   return LuaHasher(L, 64, mbedtls_sha512_ret_512);
 }
-#endif
 
 int LuaIsHeaderRepeatable(lua_State *L) {
   int h;
@@ -1264,7 +1252,6 @@ int LuaInflate(lua_State *L) {
   return 1;
 }
 
-#ifndef LFUNCS_LITE
 static void GetCurve25519Arg(lua_State *L, int arg, uint8_t buf[static 32]) {
   size_t len;
   const char *val;
@@ -1316,4 +1303,3 @@ int LuaCurve25519(lua_State *L) {
   lua_pushlstring(L, (const char *)mypublic, 32);
   return 1;
 }
-#endif

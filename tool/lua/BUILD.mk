@@ -69,6 +69,9 @@ TOOL_LUA_DIRECTDEPS =							\
 TOOL_LUA_DEPS :=							\
 	$(call uniq,$(foreach x,$(TOOL_LUA_DIRECTDEPS),$($(x))))
 
+o/$(MODE)/tool/lua/lua.main.o: third_party/lua/lua.main.c
+	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DLUA_COSMO $<
+
 o/$(MODE)/tool/lua/lua.dbg:						\
 		$(TOOL_LUA_DEPS)					\
 		$(TOOL_LUA_LUA_MODULES)					\
