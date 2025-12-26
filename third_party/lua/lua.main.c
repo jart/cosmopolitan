@@ -50,6 +50,9 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
+#ifdef LUA_COSMO
+#include "third_party/lua/lcosmo.h"
+#endif
 #include "libc/cosmo.h"
 __static_yoink("lua_notice");
 
@@ -373,7 +376,11 @@ static int pmain (lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   }
   luaL_openlibs(L);  /* open standard libraries */
+#ifdef LUA_COSMO
+  luaL_requiref(L, "cosmo", luaopen_cosmo, 1);
+#else
   luaL_requiref(L, "unix", LuaUnix, 1);
+#endif
   lua_pop(L, 1);
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
