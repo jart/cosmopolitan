@@ -39,6 +39,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
@@ -50,6 +51,7 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/musl/netdb.h"
 #include "net/https/https.h"
 
@@ -67,6 +69,12 @@ struct TlsBio {
   size_t b;
   int c;
   char buf[1400];
+};
+
+// Buffer for response data
+struct Buffer {
+  size_t n, c;
+  char *p;
 };
 
 // Shared state structure (minimal version)
@@ -89,11 +97,7 @@ static bool evadedragnetsurveillance;
 static bool logmessages;
 static bool logbodies;
 
-// Logging macros (simplified versions for standalone build)
-#define DEBUGF(...) ((void)0)
-#define VERBOSEF(...) ((void)0)
-#define NOISEF(...) ((void)0)
-#define WARNF(...) LOGF(kLogWarn, __VA_ARGS__)
+// Logging macros are provided by libc/log/log.h
 
 // I/O macros
 #define READ read
@@ -105,7 +109,7 @@ static int LuaNilTlsError(lua_State *, const char *, int);
 static void LuaPushHeaders(lua_State *, struct HttpMessage *, const char *);
 static void LogMessage(const char *, const char *, size_t);
 static void LogBody(const char *, const char *, size_t);
-static char *DescribeSslVerifyFailure(uint32_t);
+// DescribeSslVerifyFailure is declared in net/https/https.h
 static int TlsSend(void *, const unsigned char *, size_t);
 static int TlsRecvImpl(void *, unsigned char *, size_t, uint32_t);
 static void TlsInit(void);
@@ -219,13 +223,7 @@ static void LogBody(const char *prefix, const char *body, size_t len) {
   (void)len;
 }
 
-static char *DescribeSslVerifyFailure(uint32_t flags) {
-  char *buf = malloc(512);
-  if (buf) {
-    mbedtls_x509_crt_verify_info(buf, 512, "", flags);
-  }
-  return buf;
-}
+// DescribeSslVerifyFailure is provided by net/https/describesslverifyfailure.c
 
 static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
   struct TlsBio *bio = ctx;

@@ -52,6 +52,7 @@ TOOL_LUA_DIRECTDEPS =							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
 	NET_HTTP							\
+	NET_HTTPS							\
 	THIRD_PARTY_ARGON2						\
 	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\

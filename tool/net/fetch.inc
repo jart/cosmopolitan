@@ -9,7 +9,7 @@
 #define kaKEEP  2
 #define kaCLOSE 3
 
-static int LuaFetch(lua_State *L) {
+int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   ssize_t rc;
   bool usingssl;
