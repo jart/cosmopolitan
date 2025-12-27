@@ -223,8 +223,10 @@ static void LogBody(const char *prefix, const char *body, size_t len) {
 }
 
 static char *DescribeSslVerifyFailure(uint32_t flags) {
-  static char buf[512];
-  mbedtls_x509_crt_verify_info(buf, sizeof(buf), "", flags);
+  char *buf = malloc(512);
+  if (buf) {
+    mbedtls_x509_crt_verify_info(buf, 512, "", flags);
+  }
   return buf;
 }
 
