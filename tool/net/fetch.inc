@@ -19,6 +19,8 @@ static int LuaFetch(lua_State *L) {
   const char *host, *port;
   char *request;
   struct TlsBio *bio;
+  mbedtls_ssl_context sslctx;
+  bool sslctx_initialized = false;
   struct addrinfo *addr;
   struct Buffer inbuf;     // shadowing intentional
   struct HttpMessage msg;  // shadowing intentional
@@ -289,37 +291,40 @@ static int LuaFetch(lua_State *L) {
   (void)bio;
 #ifndef UNSECURE
   if (usingssl) {
-    if (sslcliused) {
-      mbedtls_ssl_session_reset(&sslcli);
-    } else {
-      ReseedRng(&rngcli, "child");
+    // Create per-connection SSL context for thread safety
+    mbedtls_ssl_init(&sslctx);
+    sslctx_initialized = true;
+    if ((ret = mbedtls_ssl_setup(&sslctx, &confcli)) != 0) {
+      mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilTlsError(L, "ssl_setup", ret);
     }
-    sslcliused = true;
     DEBUGF("(ftch) client handshaking %`'s", host);
     if (!evadedragnetsurveillance) {
-      mbedtls_ssl_set_hostname(&sslcli, host);
+      mbedtls_ssl_set_hostname(&sslctx, host);
     }
     bio = gc(malloc(sizeof(struct TlsBio)));
     bio->fd = sock;
     bio->a = 0;
     bio->b = 0;
     bio->c = -1;
-    mbedtls_ssl_set_bio(&sslcli, bio, TlsSend, 0, TlsRecvImpl);
-    while ((ret = mbedtls_ssl_handshake(&sslcli))) {
+    mbedtls_ssl_set_bio(&sslctx, bio, TlsSend, 0, TlsRecvImpl);
+    while ((ret = mbedtls_ssl_handshake(&sslctx))) {
       switch (ret) {
         case MBEDTLS_ERR_SSL_WANT_READ:
           break;
         case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
           goto VerifyFailed;
         default:
+          mbedtls_ssl_free(&sslctx);
           close(sock);
           return LuaNilTlsError(L, "handshake", ret);
       }
     }
     LockInc(&shared->c.sslhandshakes);
     VERBOSEF("(ftch) shaken %s:%s %s %s", host, port,
-             mbedtls_ssl_get_ciphersuite(&sslcli),
-             mbedtls_ssl_get_version(&sslcli));
+             mbedtls_ssl_get_ciphersuite(&sslctx),
+             mbedtls_ssl_get_version(&sslctx));
   }
 #endif /* UNSECURE */
 
@@ -330,10 +335,11 @@ static int LuaFetch(lua_State *L) {
   for (i = 0; i < requestlen; i += rc) {
 #ifndef UNSECURE
     if (usingssl) {
-      rc = mbedtls_ssl_write(&sslcli, request + i, requestlen - i);
+      rc = mbedtls_ssl_write(&sslctx, request + i, requestlen - i);
       if (rc <= 0) {
         if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED)
           goto VerifyFailed;
+        mbedtls_ssl_free(&sslctx);
         close(sock);
         return LuaNilTlsError(L, "write", rc);
       }
@@ -369,11 +375,12 @@ static int LuaFetch(lua_State *L) {
     NOISEF("(ftch) client reading");
 #ifndef UNSECURE
     if (usingssl) {
-      if ((rc = mbedtls_ssl_read(&sslcli, inbuf.p + inbuf.n,
+      if ((rc = mbedtls_ssl_read(&sslctx, inbuf.p + inbuf.n,
                                  inbuf.c - inbuf.n)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
         } else {
+          mbedtls_ssl_free(&sslctx);
           close(sock);
           free(inbuf.p);
           DestroyHttpMessage(&msg);
@@ -576,6 +583,10 @@ Finished:
 
     DestroyHttpMessage(&msg);
     free(inbuf.p);
+#ifndef UNSECURE
+    if (sslctx_initialized)
+      mbedtls_ssl_free(&sslctx);
+#endif
     if (!keepalive || keepalive == kaCLOSE)
       close(sock);
     return LuaFetch(L);
@@ -585,6 +596,10 @@ Finished:
     lua_pushlstring(L, inbuf.p + hdrsize, paylen);
     DestroyHttpMessage(&msg);
     free(inbuf.p);
+#ifndef UNSECURE
+    if (sslctx_initialized)
+      mbedtls_ssl_free(&sslctx);
+#endif
     if (!keepalive || keepalive == kaCLOSE)
       close(sock);
     return 3;
@@ -592,14 +607,19 @@ Finished:
 TransportError:
   DestroyHttpMessage(&msg);
   free(inbuf.p);
+#ifndef UNSECURE
+  if (sslctx_initialized)
+    mbedtls_ssl_free(&sslctx);
+#endif
   close(sock);
   return LuaNilError(L, "transport error");
 #ifndef UNSECURE
 VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
+  mbedtls_ssl_free(&sslctx);
   close(sock);
   return LuaNilTlsError(
-      L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
+      L, gc(DescribeSslVerifyFailure(sslctx.session_negotiate->verify_result)),
       ret);
 #endif
 #undef ssl

@@ -53,14 +53,12 @@
 #include "third_party/musl/netdb.h"
 #include "net/https/https.h"
 
-// Global state for SSL client
-static pthread_mutex_t g_ssl_mu;
+// Global state for SSL client (config is shared, contexts are per-connection)
+static pthread_mutex_t g_ssl_mu = PTHREAD_MUTEX_INITIALIZER;
 static bool g_ssl_initialized;
 static mbedtls_ssl_config confcli;
 static mbedtls_ctr_drbg_context rngcli;
 static mbedtls_entropy_context g_ssl_entropy;
-static mbedtls_x509_crt g_ssl_cacerts;
-static mbedtls_ssl_context sslcli;
 
 // TLS I/O structure
 struct TlsBio {
@@ -86,7 +84,6 @@ static struct SharedState *shared = &g_shared;
 static const char *brand = "cosmo-fetch/1.0";
 static struct timeval timeout = {.tv_sec = 60};
 static bool sslinitialized;
-static bool sslcliused;
 static bool unsecure;
 static bool evadedragnetsurveillance;
 static bool logmessages;
@@ -109,7 +106,6 @@ static void LuaPushHeaders(lua_State *, struct HttpMessage *, const char *);
 static void LogMessage(const char *, const char *, size_t);
 static void LogBody(const char *, const char *, size_t);
 static char *DescribeSslVerifyFailure(uint32_t);
-static void ReseedRng(mbedtls_ctr_drbg_context *, const char *);
 static int TlsSend(void *, const unsigned char *, size_t);
 static int TlsRecvImpl(void *, unsigned char *, size_t, uint32_t);
 static void TlsInit(void);
@@ -231,15 +227,6 @@ static char *DescribeSslVerifyFailure(uint32_t flags) {
   return buf;
 }
 
-static void ReseedRng(mbedtls_ctr_drbg_context *ctx, const char *label) {
-  unsigned char seed[32];
-  int i;
-  for (i = 0; i < sizeof(seed); ++i) {
-    seed[i] = rand();
-  }
-  mbedtls_ctr_drbg_reseed(ctx, seed, sizeof(seed));
-}
-
 static int TlsSend(void *ctx, const unsigned char *buf, size_t len) {
   struct TlsBio *bio = ctx;
   ssize_t rc;
@@ -291,10 +278,8 @@ static void TlsInit(void) {
   }
 
   mbedtls_ssl_config_init(&confcli);
-  mbedtls_ssl_init(&sslcli);
   mbedtls_ctr_drbg_init(&rngcli);
   mbedtls_entropy_init(&g_ssl_entropy);
-  mbedtls_x509_crt_init(&g_ssl_cacerts);
 
   if ((rc = mbedtls_ctr_drbg_seed(&rngcli, mbedtls_entropy_func,
                                    &g_ssl_entropy, NULL, 0)) != 0) {
@@ -313,17 +298,15 @@ static void TlsInit(void) {
   mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_REQUIRED);
   mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
 
-  if ((rc = mbedtls_ssl_setup(&sslcli, &confcli)) != 0) {
-    WARNF("mbedtls_ssl_setup failed: %d", rc);
-    goto fail;
-  }
-
   g_ssl_initialized = true;
   sslinitialized = true;
   pthread_mutex_unlock(&g_ssl_mu);
   return;
 
 fail:
+  mbedtls_ctr_drbg_free(&rngcli);
+  mbedtls_entropy_free(&g_ssl_entropy);
+  mbedtls_ssl_config_free(&confcli);
   pthread_mutex_unlock(&g_ssl_mu);
 }
 
@@ -331,10 +314,6 @@ fail:
 #include "tool/net/fetch.inc"
 
 void LuaInitFetch(void) {
-  static pthread_mutex_t init_mu = PTHREAD_MUTEX_INITIALIZER;
-  pthread_mutex_lock(&init_mu);
-  if (!g_ssl_initialized) {
-    pthread_mutex_init(&g_ssl_mu, NULL);
-  }
-  pthread_mutex_unlock(&init_mu);
+  // SSL mutex is now statically initialized, nothing else needed here
+  // TlsInit() will be called on first HTTPS request
 }
