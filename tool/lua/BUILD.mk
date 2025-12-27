@@ -30,7 +30,8 @@ TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/net/lre.o					\
 	o/$(MODE)/tool/net/ljson.o					\
 	o/$(MODE)/tool/net/lsqlite3.o					\
-	o/$(MODE)/tool/net/largon2.o
+	o/$(MODE)/tool/net/largon2.o					\
+	o/$(MODE)/tool/net/lfetch.o
 
 TOOL_LUA_DIRECTDEPS =							\
 	DSP_SCALE							\

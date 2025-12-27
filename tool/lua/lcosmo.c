@@ -23,6 +23,7 @@
 #include "tool/net/lfuncs.h"
 #include "tool/net/lpath.h"
 #include "tool/net/ljson.h"
+#include "tool/net/lfetch.h"
 #include "net/http/http.h"
 #include <stdlib.h>
 #include <limits.h>
@@ -193,11 +194,15 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"Sha384", LuaSha384},
     {"Sha512", LuaSha512},
     {"Curve25519", LuaCurve25519},
+    {"Fetch", LuaFetch},
     {NULL, NULL}
 };
 // clang-format on
 
 int luaopen_cosmo(lua_State *L) {
+  /* initialize fetch SSL state */
+  LuaInitFetch();
+
   luaL_newlib(L, kCosmoFuncs);
 
   /* add unix submodule */
