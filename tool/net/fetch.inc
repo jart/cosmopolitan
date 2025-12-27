@@ -573,7 +573,7 @@ Finished:
              FetchHeaderLength(kHttpLocation), FetchHeaderData(kHttpLocation),
              url.scheme.n, url.scheme.p, url.host.n, url.host.p, url.port.n,
              url.port.p, url.path.n, url.path.p);
-    // Security: strip Authorization header on cross-origin redirect
+    // Security: strip Authorization and Cookie headers on cross-origin redirect
     // to prevent credential leakage to different hosts
     if (url.host.n && url.scheme.n && lua_istable(L, 2)) {
       lua_getfield(L, 2, "headers");
@@ -582,6 +582,10 @@ Finished:
         lua_setfield(L, -2, "Authorization");
         lua_pushnil(L);
         lua_setfield(L, -2, "authorization");
+        lua_pushnil(L);
+        lua_setfield(L, -2, "Cookie");
+        lua_pushnil(L);
+        lua_setfield(L, -2, "cookie");
       }
       lua_pop(L, 1);
     }
