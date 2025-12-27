@@ -308,6 +308,11 @@ static int LuaFetch(lua_State *L) {
       mbedtls_ssl_set_hostname(&sslctx, host);
     }
     bio = gc(malloc(sizeof(struct TlsBio)));
+    if (!bio) {
+      mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilError(L, "out of memory");
+    }
     bio->fd = sock;
     bio->a = 0;
     bio->b = 0;
@@ -647,11 +652,13 @@ TransportError:
 #ifndef UNSECURE
 VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
-  mbedtls_ssl_free(&sslctx);
-  close(sock);
-  return LuaNilTlsError(
-      L, gc(DescribeSslVerifyFailure(sslctx.session_negotiate->verify_result)),
-      ret);
+  {
+    // Must capture verify_result before freeing SSL context
+    uint32_t verify_result = sslctx.session_negotiate->verify_result;
+    mbedtls_ssl_free(&sslctx);
+    close(sock);
+    return LuaNilTlsError(L, gc(DescribeSslVerifyFailure(verify_result)), ret);
+  }
 #endif
 #undef ssl
 }
