@@ -598,7 +598,8 @@ Finished:
       url.fragment.p = 0, url.fragment.n = 0;
       url.user.p = 0, url.user.n = 0;
       url.pass.p = 0, url.pass.n = 0;
-      if (FetchHeaderData(kHttpLocation)[0] == '/') {
+      if (FetchHeaderLength(kHttpLocation) > 0 &&
+          FetchHeaderData(kHttpLocation)[0] == '/') {
         // if the path is absolute, then use it
         // so `/redir/more` -> `/less` becomes `/less`
         url.path.n = 0;  // replace the path
