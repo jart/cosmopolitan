@@ -40,6 +40,7 @@ static int LuaFetch(lua_State *L) {
   uint64_t imethod;
   int numredirects = 0, maxredirects = 5;
   bool followredirect = true;
+  size_t maxresponse = 100 * 1024 * 1024;  // 100MB default limit
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
@@ -72,6 +73,9 @@ static int LuaFetch(lua_State *L) {
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
     numredirects = luaL_optinteger(L, -1, numredirects);
+    lua_getfield(L, 2, "maxresponse");
+    if (lua_isinteger(L, -1))
+      maxresponse = lua_tointeger(L, -1);
     lua_getfield(L, 2, "keepalive");
     if (!lua_isnil(L, -1)) {
       if (lua_istable(L, -1)) {
@@ -364,7 +368,22 @@ static int LuaFetch(lua_State *L) {
       char *newp;
       inbuf.c += 1000;
       inbuf.c += inbuf.c >> 1;
+      // Enforce maximum response size to prevent memory exhaustion
+      if (inbuf.c > maxresponse) {
+#ifndef UNSECURE
+        if (sslctx_initialized)
+          mbedtls_ssl_free(&sslctx);
+#endif
+        close(sock);
+        free(inbuf.p);
+        DestroyHttpMessage(&msg);
+        return LuaNilError(L, "response too large (max %zu bytes)", maxresponse);
+      }
       if (!(newp = realloc(inbuf.p, inbuf.c))) {
+#ifndef UNSECURE
+        if (sslctx_initialized)
+          mbedtls_ssl_free(&sslctx);
+#endif
         close(sock);
         free(inbuf.p);
         DestroyHttpMessage(&msg);
