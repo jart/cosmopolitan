@@ -9,7 +9,7 @@
 #define kaKEEP  2
 #define kaCLOSE 3
 
-static int LuaFetch(lua_State *L) {
+int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   ssize_t rc;
   bool usingssl;
@@ -19,6 +19,8 @@ static int LuaFetch(lua_State *L) {
   const char *host, *port;
   char *request;
   struct TlsBio *bio;
+  mbedtls_ssl_context sslctx;
+  bool sslctx_initialized = false;
   struct addrinfo *addr;
   struct Buffer inbuf;     // shadowing intentional
   struct HttpMessage msg;  // shadowing intentional
@@ -38,6 +40,7 @@ static int LuaFetch(lua_State *L) {
   uint64_t imethod;
   int numredirects = 0, maxredirects = 5;
   bool followredirect = true;
+  size_t maxresponse = 100 * 1024 * 1024;  // 100MB default limit
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
@@ -70,6 +73,9 @@ static int LuaFetch(lua_State *L) {
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
     numredirects = luaL_optinteger(L, -1, numredirects);
+    lua_getfield(L, 2, "maxresponse");
+    if (lua_isinteger(L, -1))
+      maxresponse = lua_tointeger(L, -1);
     lua_getfield(L, 2, "keepalive");
     if (!lua_isnil(L, -1)) {
       if (lua_istable(L, -1)) {
@@ -123,6 +129,8 @@ static int LuaFetch(lua_State *L) {
         lua_pop(L, 1);  // pop the value, keep the key for the next iteration
       }
     }
+    if (headers)
+      gc(headers);
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
@@ -264,8 +272,17 @@ static int LuaFetch(lua_State *L) {
     DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
            ip >> 16, ip >> 8, ip,
            ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
-    CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
-                                    addr->ai_protocol, false, &timeout)));
+    // Prevent SSRF by blocking requests to private/internal networks
+    if (IsLoopbackIp(ip) || IsPrivateIp(ip)) {
+      freeaddrinfo(addr);
+      return LuaNilError(L, "request to private network blocked (SSRF protection)");
+    }
+    if ((sock = GoodSocket(addr->ai_family, addr->ai_socktype,
+                           addr->ai_protocol, false, &timeout)) == -1) {
+      freeaddrinfo(addr);
+      return LuaNilError(L, "socket(%s:%s) error: %s", host, port,
+                         strerror(errno));
+    }
     rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
     freeaddrinfo(addr), addr = 0;
     if (rc == -1) {
@@ -278,37 +295,45 @@ static int LuaFetch(lua_State *L) {
   (void)bio;
 #ifndef UNSECURE
   if (usingssl) {
-    if (sslcliused) {
-      mbedtls_ssl_session_reset(&sslcli);
-    } else {
-      ReseedRng(&rngcli, "child");
+    // Create per-connection SSL context for thread safety
+    mbedtls_ssl_init(&sslctx);
+    sslctx_initialized = true;
+    if ((ret = mbedtls_ssl_setup(&sslctx, &confcli)) != 0) {
+      mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilTlsError(L, "ssl_setup", ret);
     }
-    sslcliused = true;
     DEBUGF("(ftch) client handshaking %`'s", host);
     if (!evadedragnetsurveillance) {
-      mbedtls_ssl_set_hostname(&sslcli, host);
+      mbedtls_ssl_set_hostname(&sslctx, host);
     }
     bio = gc(malloc(sizeof(struct TlsBio)));
+    if (!bio) {
+      mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilError(L, "out of memory");
+    }
     bio->fd = sock;
     bio->a = 0;
     bio->b = 0;
     bio->c = -1;
-    mbedtls_ssl_set_bio(&sslcli, bio, TlsSend, 0, TlsRecvImpl);
-    while ((ret = mbedtls_ssl_handshake(&sslcli))) {
+    mbedtls_ssl_set_bio(&sslctx, bio, TlsSend, 0, TlsRecvImpl);
+    while ((ret = mbedtls_ssl_handshake(&sslctx))) {
       switch (ret) {
         case MBEDTLS_ERR_SSL_WANT_READ:
           break;
         case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
           goto VerifyFailed;
         default:
+          mbedtls_ssl_free(&sslctx);
           close(sock);
           return LuaNilTlsError(L, "handshake", ret);
       }
     }
     LockInc(&shared->c.sslhandshakes);
     VERBOSEF("(ftch) shaken %s:%s %s %s", host, port,
-             mbedtls_ssl_get_ciphersuite(&sslcli),
-             mbedtls_ssl_get_version(&sslcli));
+             mbedtls_ssl_get_ciphersuite(&sslctx),
+             mbedtls_ssl_get_version(&sslctx));
   }
 #endif /* UNSECURE */
 
@@ -319,10 +344,11 @@ static int LuaFetch(lua_State *L) {
   for (i = 0; i < requestlen; i += rc) {
 #ifndef UNSECURE
     if (usingssl) {
-      rc = mbedtls_ssl_write(&sslcli, request + i, requestlen - i);
+      rc = mbedtls_ssl_write(&sslctx, request + i, requestlen - i);
       if (rc <= 0) {
         if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED)
           goto VerifyFailed;
+        mbedtls_ssl_free(&sslctx);
         close(sock);
         return LuaNilTlsError(L, "write", rc);
       }
@@ -344,18 +370,41 @@ static int LuaFetch(lua_State *L) {
   InitHttpMessage(&msg, kHttpResponse);
   for (hdrsize = paylen = t = 0;;) {
     if (inbuf.n == inbuf.c) {
+      char *newp;
       inbuf.c += 1000;
       inbuf.c += inbuf.c >> 1;
-      inbuf.p = realloc(inbuf.p, inbuf.c);
+      // Enforce maximum response size to prevent memory exhaustion
+      if (inbuf.c > maxresponse) {
+#ifndef UNSECURE
+        if (sslctx_initialized)
+          mbedtls_ssl_free(&sslctx);
+#endif
+        close(sock);
+        free(inbuf.p);
+        DestroyHttpMessage(&msg);
+        return LuaNilError(L, "response too large (max %zu bytes)", maxresponse);
+      }
+      if (!(newp = realloc(inbuf.p, inbuf.c))) {
+#ifndef UNSECURE
+        if (sslctx_initialized)
+          mbedtls_ssl_free(&sslctx);
+#endif
+        close(sock);
+        free(inbuf.p);
+        DestroyHttpMessage(&msg);
+        return LuaNilError(L, "out of memory");
+      }
+      inbuf.p = newp;
     }
     NOISEF("(ftch) client reading");
 #ifndef UNSECURE
     if (usingssl) {
-      if ((rc = mbedtls_ssl_read(&sslcli, inbuf.p + inbuf.n,
+      if ((rc = mbedtls_ssl_read(&sslctx, inbuf.p + inbuf.n,
                                  inbuf.c - inbuf.n)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
         } else {
+          mbedtls_ssl_free(&sslctx);
           close(sock);
           free(inbuf.p);
           DestroyHttpMessage(&msg);
@@ -519,11 +568,38 @@ Finished:
     gc(ParseUrl(FetchHeaderData(kHttpLocation),
                 FetchHeaderLength(kHttpLocation), &url, true));
     free(url.params.p);
+#ifndef UNSECURE
+    // Security: prevent HTTPS to HTTP downgrade
+    if (usingssl && url.scheme.n == 4 && !memcasecmp(url.scheme.p, "http", 4)) {
+      DestroyHttpMessage(&msg);
+      free(inbuf.p);
+      if (sslctx_initialized)
+        mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilError(L, "refusing HTTPS to HTTP redirect downgrade");
+    }
+#endif
     VERBOSEF("(ftch) client redirecting %`'.*s "
              "(scheme=%`'.*s, host=%`'.*s, port=%.*s, path=%`'.*s)",
              FetchHeaderLength(kHttpLocation), FetchHeaderData(kHttpLocation),
              url.scheme.n, url.scheme.p, url.host.n, url.host.p, url.port.n,
              url.port.p, url.path.n, url.path.p);
+    // Security: strip Authorization and Cookie headers on cross-origin redirect
+    // to prevent credential leakage to different hosts
+    if (url.host.n && url.scheme.n && lua_istable(L, 2)) {
+      lua_getfield(L, 2, "headers");
+      if (lua_istable(L, -1)) {
+        lua_pushnil(L);
+        lua_setfield(L, -2, "Authorization");
+        lua_pushnil(L);
+        lua_setfield(L, -2, "authorization");
+        lua_pushnil(L);
+        lua_setfield(L, -2, "Cookie");
+        lua_pushnil(L);
+        lua_setfield(L, -2, "cookie");
+      }
+      lua_pop(L, 1);
+    }
     // while it's possible to check for IsAcceptableHost/IsAcceptablePort
     // it's not clear what to do if they are not;
     // if they are invalid, redirect returns "invalid host" message
@@ -537,7 +613,8 @@ Finished:
       url.fragment.p = 0, url.fragment.n = 0;
       url.user.p = 0, url.user.n = 0;
       url.pass.p = 0, url.pass.n = 0;
-      if (FetchHeaderData(kHttpLocation)[0] == '/') {
+      if (FetchHeaderLength(kHttpLocation) > 0 &&
+          FetchHeaderData(kHttpLocation)[0] == '/') {
         // if the path is absolute, then use it
         // so `/redir/more` -> `/less` becomes `/less`
         url.path.n = 0;  // replace the path
@@ -558,6 +635,10 @@ Finished:
 
     DestroyHttpMessage(&msg);
     free(inbuf.p);
+#ifndef UNSECURE
+    if (sslctx_initialized)
+      mbedtls_ssl_free(&sslctx);
+#endif
     if (!keepalive || keepalive == kaCLOSE)
       close(sock);
     return LuaFetch(L);
@@ -567,6 +648,10 @@ Finished:
     lua_pushlstring(L, inbuf.p + hdrsize, paylen);
     DestroyHttpMessage(&msg);
     free(inbuf.p);
+#ifndef UNSECURE
+    if (sslctx_initialized)
+      mbedtls_ssl_free(&sslctx);
+#endif
     if (!keepalive || keepalive == kaCLOSE)
       close(sock);
     return 3;
@@ -574,15 +659,22 @@ Finished:
 TransportError:
   DestroyHttpMessage(&msg);
   free(inbuf.p);
+#ifndef UNSECURE
+  if (sslctx_initialized)
+    mbedtls_ssl_free(&sslctx);
+#endif
   close(sock);
   return LuaNilError(L, "transport error");
 #ifndef UNSECURE
 VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
-  close(sock);
-  return LuaNilTlsError(
-      L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
-      ret);
+  {
+    // Must capture verify_result before freeing SSL context
+    uint32_t verify_result = sslctx.session_negotiate->verify_result;
+    mbedtls_ssl_free(&sslctx);
+    close(sock);
+    return LuaNilTlsError(L, gc(DescribeSslVerifyFailure(verify_result)), ret);
+  }
 #endif
 #undef ssl
 }

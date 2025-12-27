@@ -30,7 +30,8 @@ TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/net/lre.o					\
 	o/$(MODE)/tool/net/ljson.o					\
 	o/$(MODE)/tool/net/lsqlite3.o					\
-	o/$(MODE)/tool/net/largon2.o
+	o/$(MODE)/tool/net/largon2.o					\
+	o/$(MODE)/tool/net/lfetch.o
 
 TOOL_LUA_DIRECTDEPS =							\
 	DSP_SCALE							\
@@ -51,6 +52,7 @@ TOOL_LUA_DIRECTDEPS =							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
 	NET_HTTP							\
+	NET_HTTPS							\
 	THIRD_PARTY_ARGON2						\
 	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\
