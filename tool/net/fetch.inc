@@ -123,6 +123,8 @@ static int LuaFetch(lua_State *L) {
         lua_pop(L, 1);  // pop the value, keep the key for the next iteration
       }
     }
+    if (headers)
+      gc(headers);
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
