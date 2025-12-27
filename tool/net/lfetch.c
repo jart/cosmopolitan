@@ -51,6 +51,7 @@
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/musl/netdb.h"
+#include "net/https/https.h"
 
 // Global state for SSL client
 static pthread_mutex_t g_ssl_mu;
@@ -308,7 +309,8 @@ static void TlsInit(void) {
     goto fail;
   }
 
-  mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_OPTIONAL);
+  mbedtls_ssl_conf_ca_chain(&confcli, GetSslRoots(), 0);
+  mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_REQUIRED);
   mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
 
   if ((rc = mbedtls_ssl_setup(&sslcli, &confcli)) != 0) {
