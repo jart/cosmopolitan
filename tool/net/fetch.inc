@@ -264,8 +264,12 @@ static int LuaFetch(lua_State *L) {
     DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
            ip >> 16, ip >> 8, ip,
            ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
-    CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
-                                    addr->ai_protocol, false, &timeout)));
+    if ((sock = GoodSocket(addr->ai_family, addr->ai_socktype,
+                           addr->ai_protocol, false, &timeout)) == -1) {
+      freeaddrinfo(addr);
+      return LuaNilError(L, "socket(%s:%s) error: %s", host, port,
+                         strerror(errno));
+    }
     rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
     freeaddrinfo(addr), addr = 0;
     if (rc == -1) {
