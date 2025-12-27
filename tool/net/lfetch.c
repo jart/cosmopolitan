@@ -47,7 +47,6 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/entropy.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509.h"
@@ -59,7 +58,6 @@
 static pthread_mutex_t g_ssl_mu = PTHREAD_MUTEX_INITIALIZER;
 static mbedtls_ssl_config confcli;
 static mbedtls_ctr_drbg_context rngcli;
-static mbedtls_entropy_context g_ssl_entropy;
 
 // TLS I/O structure
 struct TlsBio {
@@ -275,14 +273,7 @@ static void TlsInit(void) {
   }
 
   mbedtls_ssl_config_init(&confcli);
-  mbedtls_ctr_drbg_init(&rngcli);
-  mbedtls_entropy_init(&g_ssl_entropy);
-
-  if ((rc = mbedtls_ctr_drbg_seed(&rngcli, mbedtls_entropy_func,
-                                   &g_ssl_entropy, NULL, 0)) != 0) {
-    WARNF("mbedtls_ctr_drbg_seed failed: %d", rc);
-    goto fail;
-  }
+  InitializeRng(&rngcli);  // Uses arc4random - fork-safe
 
   if ((rc = mbedtls_ssl_config_defaults(
            &confcli, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
@@ -301,19 +292,17 @@ static void TlsInit(void) {
 
 fail:
   mbedtls_ctr_drbg_free(&rngcli);
-  mbedtls_entropy_free(&g_ssl_entropy);
   mbedtls_ssl_config_free(&confcli);
   pthread_mutex_unlock(&g_ssl_mu);
 }
 
 // Reset TLS state after fork so child processes get fresh entropy/DRBG
 // Called automatically by Fetch() when resettls=true (the default)
-// lfetch.c needs its own version due to g_ssl_entropy and mutex
+// lfetch.c needs its own version due to mutex
 static void LuaResetFetchTlsState(void) {
   pthread_mutex_lock(&g_ssl_mu);
   if (sslinitialized) {
     mbedtls_ctr_drbg_free(&rngcli);
-    mbedtls_entropy_free(&g_ssl_entropy);
     mbedtls_ssl_config_free(&confcli);
     sslinitialized = false;
   }
