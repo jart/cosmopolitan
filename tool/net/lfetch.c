@@ -27,8 +27,11 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/append.h"
+#include "libc/str/slice.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ai.h"
@@ -119,6 +122,14 @@ static void LockInc(atomic_int *);
 // Helper functions
 static void LockInc(atomic_int *p) {
   atomic_fetch_add(p, 1);
+}
+
+static bool IsRepeatable(const char *s, size_t n) {
+  int h;
+  if ((h = GetHttpHeader(s, n)) != -1) {
+    return kHttpRepeatable[h];
+  }
+  return false;
 }
 
 static int LuaNilError(lua_State *L, const char *fmt, ...) {
