@@ -56,11 +56,11 @@
 // Global state for SSL client
 static pthread_mutex_t g_ssl_mu;
 static bool g_ssl_initialized;
-static mbedtls_ssl_config g_ssl_conf;
-static mbedtls_ssl_context g_ssl;
-static mbedtls_ctr_drbg_context g_ssl_rng;
+static mbedtls_ssl_config confcli;
+static mbedtls_ctr_drbg_context rngcli;
 static mbedtls_entropy_context g_ssl_entropy;
 static mbedtls_x509_crt g_ssl_cacerts;
+static mbedtls_ssl_context sslcli;
 
 // TLS I/O structure
 struct TlsBio {
@@ -101,10 +101,6 @@ static bool logbodies;
 // I/O macros
 #define READ read
 #define WRITE write
-
-// SSL references
-static mbedtls_ssl_context *sslcli = &g_ssl;
-static mbedtls_ctr_drbg_context *rngcli = &g_ssl_rng;
 
 // Forward declarations
 static int LuaNilError(lua_State *, const char *, ...);
@@ -292,29 +288,29 @@ static void TlsInit(void) {
     return;
   }
 
-  mbedtls_ssl_config_init(&g_ssl_conf);
-  mbedtls_ssl_init(&g_ssl);
-  mbedtls_ctr_drbg_init(&g_ssl_rng);
+  mbedtls_ssl_config_init(&confcli);
+  mbedtls_ssl_init(&sslcli);
+  mbedtls_ctr_drbg_init(&rngcli);
   mbedtls_entropy_init(&g_ssl_entropy);
   mbedtls_x509_crt_init(&g_ssl_cacerts);
 
-  if ((rc = mbedtls_ctr_drbg_seed(&g_ssl_rng, mbedtls_entropy_func,
+  if ((rc = mbedtls_ctr_drbg_seed(&rngcli, mbedtls_entropy_func,
                                    &g_ssl_entropy, NULL, 0)) != 0) {
     WARNF("mbedtls_ctr_drbg_seed failed: %d", rc);
     goto fail;
   }
 
   if ((rc = mbedtls_ssl_config_defaults(
-           &g_ssl_conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
+           &confcli, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM,
            MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
     WARNF("mbedtls_ssl_config_defaults failed: %d", rc);
     goto fail;
   }
 
-  mbedtls_ssl_conf_authmode(&g_ssl_conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
-  mbedtls_ssl_conf_rng(&g_ssl_conf, mbedtls_ctr_drbg_random, &g_ssl_rng);
+  mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_OPTIONAL);
+  mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
 
-  if ((rc = mbedtls_ssl_setup(&g_ssl, &g_ssl_conf)) != 0) {
+  if ((rc = mbedtls_ssl_setup(&sslcli, &confcli)) != 0) {
     WARNF("mbedtls_ssl_setup failed: %d", rc);
     goto fail;
   }
