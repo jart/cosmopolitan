@@ -350,9 +350,16 @@ static int LuaFetch(lua_State *L) {
   InitHttpMessage(&msg, kHttpResponse);
   for (hdrsize = paylen = t = 0;;) {
     if (inbuf.n == inbuf.c) {
+      char *newp;
       inbuf.c += 1000;
       inbuf.c += inbuf.c >> 1;
-      inbuf.p = realloc(inbuf.p, inbuf.c);
+      if (!(newp = realloc(inbuf.p, inbuf.c))) {
+        close(sock);
+        free(inbuf.p);
+        DestroyHttpMessage(&msg);
+        return LuaNilError(L, "out of memory");
+      }
+      inbuf.p = newp;
     }
     NOISEF("(ftch) client reading");
 #ifndef UNSECURE
