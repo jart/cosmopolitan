@@ -85,6 +85,9 @@ o/$(MODE)/test/tool/net/redbean-tester.dbg:			\
 o/$(MODE)/test/tool/net/redbean_test.runs:			\
 		private .PLEDGE = inet
 
+o/$(MODE)/test/tool/net/lfetch_test.lua.runs:			\
+		private .PLEDGE = stdio rpath inet proc
+
 o/$(MODE)/test/tool/net/sqlite_test.runs:			\
 		private .PLEDGE = flock
 
