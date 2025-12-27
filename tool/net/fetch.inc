@@ -266,6 +266,11 @@ static int LuaFetch(lua_State *L) {
     DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
            ip >> 16, ip >> 8, ip,
            ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
+    // Prevent SSRF by blocking requests to private/internal networks
+    if (IsLoopbackIp(ip) || IsPrivateIp(ip)) {
+      freeaddrinfo(addr);
+      return LuaNilError(L, "request to private network blocked (SSRF protection)");
+    }
     if ((sock = GoodSocket(addr->ai_family, addr->ai_socktype,
                            addr->ai_protocol, false, &timeout)) == -1) {
       freeaddrinfo(addr);
