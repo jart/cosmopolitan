@@ -568,6 +568,17 @@ Finished:
     gc(ParseUrl(FetchHeaderData(kHttpLocation),
                 FetchHeaderLength(kHttpLocation), &url, true));
     free(url.params.p);
+#ifndef UNSECURE
+    // Security: prevent HTTPS to HTTP downgrade
+    if (usingssl && url.scheme.n == 4 && !memcasecmp(url.scheme.p, "http", 4)) {
+      DestroyHttpMessage(&msg);
+      free(inbuf.p);
+      if (sslctx_initialized)
+        mbedtls_ssl_free(&sslctx);
+      close(sock);
+      return LuaNilError(L, "refusing HTTPS to HTTP redirect downgrade");
+    }
+#endif
     VERBOSEF("(ftch) client redirecting %`'.*s "
              "(scheme=%`'.*s, host=%`'.*s, port=%.*s, path=%`'.*s)",
              FetchHeaderLength(kHttpLocation), FetchHeaderData(kHttpLocation),
