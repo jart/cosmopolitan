@@ -9,6 +9,19 @@
 #define kaKEEP  2
 #define kaCLOSE 3
 
+// Reset TLS state after fork so child processes get fresh entropy/DRBG
+// Called automatically by Fetch() when resettls=true (the default)
+// Includers can define HAVE_LUA_RESET_FETCH_TLS_STATE to provide their own
+#if !defined(HAVE_LUA_RESET_FETCH_TLS_STATE) && !defined(UNSECURE)
+static void LuaResetFetchTlsState(void) {
+  if (sslinitialized) {
+    mbedtls_ctr_drbg_free(&rngcli);
+    mbedtls_ssl_config_free(&confcli);
+    sslinitialized = false;
+  }
+}
+#endif
+
 int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   ssize_t rc;
@@ -40,6 +53,9 @@ int LuaFetch(lua_State *L) {
   uint64_t imethod;
   int numredirects = 0, maxredirects = 5;
   bool followredirect = true;
+#ifndef UNSECURE
+  bool resettls = true;
+#endif
   size_t maxresponse = 100 * 1024 * 1024;  // 100MB default limit
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
@@ -76,6 +92,11 @@ int LuaFetch(lua_State *L) {
     lua_getfield(L, 2, "maxresponse");
     if (lua_isinteger(L, -1))
       maxresponse = lua_tointeger(L, -1);
+#ifndef UNSECURE
+    lua_getfield(L, 2, "resettls");
+    if (lua_isboolean(L, -1))
+      resettls = lua_toboolean(L, -1);
+#endif
     lua_getfield(L, 2, "keepalive");
     if (!lua_isnil(L, -1)) {
       if (lua_istable(L, -1)) {
@@ -173,6 +194,8 @@ int LuaFetch(lua_State *L) {
 #ifndef UNSECURE
   if (usingssl)
     keepalive = kaNONE;
+  if (usingssl && resettls)
+    LuaResetFetchTlsState();
   if (usingssl && !sslinitialized)
     TlsInit();
 #endif

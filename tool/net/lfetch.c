@@ -57,7 +57,6 @@
 
 // Global state for SSL client (config is shared, contexts are per-connection)
 static pthread_mutex_t g_ssl_mu = PTHREAD_MUTEX_INITIALIZER;
-static bool g_ssl_initialized;
 static mbedtls_ssl_config confcli;
 static mbedtls_ctr_drbg_context rngcli;
 static mbedtls_entropy_context g_ssl_entropy;
@@ -270,7 +269,7 @@ static void TlsInit(void) {
   int rc;
 
   pthread_mutex_lock(&g_ssl_mu);
-  if (g_ssl_initialized) {
+  if (sslinitialized) {
     pthread_mutex_unlock(&g_ssl_mu);
     return;
   }
@@ -296,7 +295,6 @@ static void TlsInit(void) {
   mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_REQUIRED);
   mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
 
-  g_ssl_initialized = true;
   sslinitialized = true;
   pthread_mutex_unlock(&g_ssl_mu);
   return;
@@ -307,6 +305,21 @@ fail:
   mbedtls_ssl_config_free(&confcli);
   pthread_mutex_unlock(&g_ssl_mu);
 }
+
+// Reset TLS state after fork so child processes get fresh entropy/DRBG
+// Called automatically by Fetch() when resettls=true (the default)
+// lfetch.c needs its own version due to g_ssl_entropy and mutex
+static void LuaResetFetchTlsState(void) {
+  pthread_mutex_lock(&g_ssl_mu);
+  if (sslinitialized) {
+    mbedtls_ctr_drbg_free(&rngcli);
+    mbedtls_entropy_free(&g_ssl_entropy);
+    mbedtls_ssl_config_free(&confcli);
+    sslinitialized = false;
+  }
+  pthread_mutex_unlock(&g_ssl_mu);
+}
+#define HAVE_LUA_RESET_FETCH_TLS_STATE
 
 // Include the actual Fetch implementation
 #include "tool/net/fetch.inc"
