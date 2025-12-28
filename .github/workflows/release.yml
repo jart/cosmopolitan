@@ -31,40 +31,40 @@ jobs:
         run: |
           make -j$(nproc) m=x86_64 \
             o/x86_64/ape/ape.elf \
-            o/x86_64/tool/build/apelink \
-            o/x86_64/tool/lua/lua \
+            o/x86_64/tool/build/apelink.dbg \
+            o/x86_64/tool/lua/lua.dbg \
             o/x86_64/tool/lua/test \
-            o/x86_64/third_party/make/make \
-            o/x86_64/third_party/zip/zip \
-            o/x86_64/third_party/unzip/unzip
+            o/x86_64/third_party/make/make.dbg \
+            o/x86_64/third_party/zip/zip.dbg \
+            o/x86_64/third_party/unzip/unzip.dbg
 
       - name: Build aarch64 binaries
         run: |
           make -j$(nproc) m=aarch64 \
             o/aarch64/ape/ape.elf \
-            o/aarch64/tool/lua/lua \
-            o/aarch64/third_party/make/make \
-            o/aarch64/third_party/zip/zip \
-            o/aarch64/third_party/unzip/unzip
+            o/aarch64/tool/lua/lua.dbg \
+            o/aarch64/third_party/make/make.dbg \
+            o/aarch64/third_party/zip/zip.dbg \
+            o/aarch64/third_party/unzip/unzip.dbg
 
       - name: Create fat APE binaries
         run: |
           mkdir -p o/fat/bin
-          o/x86_64/tool/build/apelink \
+          o/x86_64/tool/build/apelink.dbg -s \
             -l o/x86_64/ape/ape.elf \
             -l o/aarch64/ape/ape.elf \
             -M ape/ape-m1.c \
             -o o/fat/bin/lua \
-            o/x86_64/tool/lua/lua \
-            o/aarch64/tool/lua/lua
+            o/x86_64/tool/lua/lua.dbg \
+            o/aarch64/tool/lua/lua.dbg
           for bin in make zip unzip; do
-            o/x86_64/tool/build/apelink \
+            o/x86_64/tool/build/apelink.dbg -s \
               -l o/x86_64/ape/ape.elf \
               -l o/aarch64/ape/ape.elf \
               -M ape/ape-m1.c \
               -o o/fat/bin/$bin \
-              o/x86_64/third_party/$bin/$bin \
-              o/aarch64/third_party/$bin/$bin
+              o/x86_64/third_party/$bin/$bin.dbg \
+              o/aarch64/third_party/$bin/$bin.dbg
           done
 
       - name: Verify fat binaries

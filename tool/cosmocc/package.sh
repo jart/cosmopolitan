@@ -70,32 +70,32 @@ $MAKE -j$NPROC m=$AMD64 \
   o/$AMD64/ape/ape-no-modify-self.o \
   o/$AMD64/cosmopolitan.a \
   o/$AMD64/third_party/libcxx/libcxx.a \
-  o/$AMD64/tool/build/assimilate \
-  o/$AMD64/tool/build/march-native \
-  o/$AMD64/tool/build/mktemper \
-  o/$AMD64/tool/build/fixupobj \
-  o/$AMD64/tool/build/tlscc \
-  o/$AMD64/tool/build/zipcopy \
-  o/$AMD64/tool/build/mkdeps \
-  o/$AMD64/tool/build/zipobj \
-  o/$AMD64/tool/build/apelink \
-  o/$AMD64/tool/build/pecheck \
-  o/$AMD64/tool/build/ar \
-  o/$AMD64/tool/build/chmod \
-  o/$AMD64/tool/build/cocmd \
-  o/$AMD64/tool/build/compile \
-  o/$AMD64/tool/build/mkdir \
-  o/$AMD64/tool/build/cp \
-  o/$AMD64/tool/build/echo \
-  o/$AMD64/tool/build/gzip \
-  o/$AMD64/tool/build/objbincopy \
-  o/$AMD64/tool/build/package \
-  o/$AMD64/tool/build/rm \
-  o/$AMD64/tool/build/touch \
-  o/$AMD64/tool/build/sha256sum \
-  o/$AMD64/tool/build/resymbol \
-  o/$AMD64/third_party/make/make \
-  o/$AMD64/third_party/ctags/ctags
+  o/$AMD64/tool/build/assimilate.dbg \
+  o/$AMD64/tool/build/march-native.dbg \
+  o/$AMD64/tool/build/mktemper.dbg \
+  o/$AMD64/tool/build/fixupobj.dbg \
+  o/$AMD64/tool/build/tlscc.dbg \
+  o/$AMD64/tool/build/zipcopy.dbg \
+  o/$AMD64/tool/build/mkdeps.dbg \
+  o/$AMD64/tool/build/zipobj.dbg \
+  o/$AMD64/tool/build/apelink.dbg \
+  o/$AMD64/tool/build/pecheck.dbg \
+  o/$AMD64/tool/build/ar.dbg \
+  o/$AMD64/tool/build/chmod.dbg \
+  o/$AMD64/tool/build/cocmd.dbg \
+  o/$AMD64/tool/build/compile.dbg \
+  o/$AMD64/tool/build/mkdir.dbg \
+  o/$AMD64/tool/build/cp.dbg \
+  o/$AMD64/tool/build/echo.dbg \
+  o/$AMD64/tool/build/gzip.dbg \
+  o/$AMD64/tool/build/objbincopy.dbg \
+  o/$AMD64/tool/build/package.dbg \
+  o/$AMD64/tool/build/rm.dbg \
+  o/$AMD64/tool/build/touch.dbg \
+  o/$AMD64/tool/build/sha256sum.dbg \
+  o/$AMD64/tool/build/resymbol.dbg \
+  o/$AMD64/third_party/make/make.dbg \
+  o/$AMD64/third_party/ctags/ctags.dbg
 
 $MAKE -j$NPROC m=$AMD64-tiny \
   o/cosmocc.h.txt \
@@ -169,32 +169,32 @@ $MAKE -j$NPROC m=$ARM64 \
   o/$ARM64/libc/crt/crtfastmath.o \
   o/$ARM64/cosmopolitan.a \
   o/$ARM64/third_party/libcxx/libcxx.a \
-  o/$ARM64/tool/build/assimilate \
-  o/$ARM64/tool/build/march-native \
-  o/$ARM64/tool/build/mktemper \
-  o/$ARM64/tool/build/fixupobj \
-  o/$ARM64/tool/build/tlscc \
-  o/$ARM64/tool/build/zipcopy \
-  o/$ARM64/tool/build/mkdeps \
-  o/$ARM64/tool/build/zipobj \
-  o/$ARM64/tool/build/apelink \
-  o/$ARM64/tool/build/pecheck \
-  o/$ARM64/tool/build/ar \
-  o/$ARM64/tool/build/chmod \
-  o/$ARM64/tool/build/cocmd \
-  o/$ARM64/tool/build/compile \
-  o/$ARM64/tool/build/cp \
-  o/$ARM64/tool/build/echo \
-  o/$ARM64/tool/build/gzip \
-  o/$ARM64/tool/build/objbincopy \
-  o/$ARM64/tool/build/package \
-  o/$ARM64/tool/build/rm \
-  o/$ARM64/tool/build/touch \
-  o/$ARM64/tool/build/mkdir \
-  o/$ARM64/tool/build/sha256sum \
-  o/$ARM64/tool/build/resymbol \
-  o/$ARM64/third_party/make/make \
-  o/$ARM64/third_party/ctags/ctags
+  o/$ARM64/tool/build/assimilate.dbg \
+  o/$ARM64/tool/build/march-native.dbg \
+  o/$ARM64/tool/build/mktemper.dbg \
+  o/$ARM64/tool/build/fixupobj.dbg \
+  o/$ARM64/tool/build/tlscc.dbg \
+  o/$ARM64/tool/build/zipcopy.dbg \
+  o/$ARM64/tool/build/mkdeps.dbg \
+  o/$ARM64/tool/build/zipobj.dbg \
+  o/$ARM64/tool/build/apelink.dbg \
+  o/$ARM64/tool/build/pecheck.dbg \
+  o/$ARM64/tool/build/ar.dbg \
+  o/$ARM64/tool/build/chmod.dbg \
+  o/$ARM64/tool/build/cocmd.dbg \
+  o/$ARM64/tool/build/compile.dbg \
+  o/$ARM64/tool/build/cp.dbg \
+  o/$ARM64/tool/build/echo.dbg \
+  o/$ARM64/tool/build/gzip.dbg \
+  o/$ARM64/tool/build/objbincopy.dbg \
+  o/$ARM64/tool/build/package.dbg \
+  o/$ARM64/tool/build/rm.dbg \
+  o/$ARM64/tool/build/touch.dbg \
+  o/$ARM64/tool/build/mkdir.dbg \
+  o/$ARM64/tool/build/sha256sum.dbg \
+  o/$ARM64/tool/build/resymbol.dbg \
+  o/$ARM64/third_party/make/make.dbg \
+  o/$ARM64/third_party/ctags/ctags.dbg
 
 $MAKE -j$NPROC m=$ARM64-tiny \
   o/$ARM64-tiny/ape/ape.elf \
@@ -383,13 +383,13 @@ cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj \
          ar chmod cocmd cp echo gzip objbincopy package rm touch mkdir compile sha256sum \
          resymbol tlscc; do
-  $APE $APELINK \
+  $APE $APELINK -s \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/$AMD64/tool/build/$x \
-    o/$ARM64/tool/build/$x
+    o/$AMD64/tool/build/$x.dbg \
+    o/$ARM64/tool/build/$x.dbg
 done
 
 for x in ar chmod cp echo gzip package rm touch mkdir compile sha256sum; do
@@ -397,11 +397,11 @@ for x in ar chmod cp echo gzip package rm touch mkdir compile sha256sum; do
 done
 
 for x in make ctags; do
-  $APE $APELINK \
+  $APE $APELINK -s \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/$AMD64/third_party/$x/$x \
-    o/$ARM64/third_party/$x/$x
+    o/$AMD64/third_party/$x/$x.dbg \
+    o/$ARM64/third_party/$x/$x.dbg
 done
