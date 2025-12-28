@@ -405,7 +405,7 @@ int LuaFetch(lua_State *L) {
         close(sock);
         free(inbuf.p);
         DestroyHttpMessage(&msg);
-        return LuaNilError(L, "response too large (max %zu bytes)", maxresponse);
+        return LuaNilError(L, "response too large (max %I bytes)", (lua_Integer)maxresponse);
       }
       if (!(newp = realloc(inbuf.p, inbuf.c))) {
 #ifndef UNSECURE
