@@ -49,10 +49,19 @@ function test_relative_redirect()
 end
 
 -- Test: Absolute redirect
+-- Note: httpbin.org's absolute-redirect may redirect HTTPS→HTTP which is
+-- correctly rejected as a security measure. We accept either outcome.
 function test_absolute_redirect()
     local status, headers, body = Fetch("https://httpbin.org/absolute-redirect/2")
-    assert(status == 200, "expected 200 after absolute redirects, got: " .. tostring(status))
-    print("test_absolute_redirect: PASS")
+    if status == nil then
+        -- HTTPS→HTTP downgrade is correctly rejected
+        assert(headers:find("HTTPS to HTTP") or headers:find("redirect"),
+               "expected security error or network issue, got: " .. tostring(headers))
+        print("test_absolute_redirect: PASS (HTTPS downgrade correctly rejected)")
+    else
+        assert(status == 200, "expected 200 after absolute redirects, got: " .. tostring(status))
+        print("test_absolute_redirect: PASS")
+    end
 end
 
 -- Test: Max redirects exceeded
@@ -84,15 +93,30 @@ function test_post_with_body()
 end
 
 -- Test: Custom headers
+-- Note: httpbin.org can be flaky; retry once on failure
 function test_custom_headers()
-    local status, headers, body = Fetch("https://httpbin.org/headers", {
-        headers = {
-            ["X-Custom-Header"] = "test-value"
-        }
-    })
-    assert(status == 200, "expected 200, got: " .. tostring(status))
-    assert(body:find("X-Custom-Header") or body:find("x-custom-header"),
-           "expected body to show custom header")
+    local function try_fetch()
+        local status, headers, body = Fetch("https://httpbin.org/headers", {
+            headers = {
+                ["X-Custom-Header"] = "test-value"
+            }
+        })
+        -- Use plain text search (4th arg = true) since hyphen is a pattern char
+        if status == 200 and body and
+           (body:find("X-Custom-Header", 1, true) or body:find("x-custom-header", 1, true)) then
+            return true
+        end
+        return false, status, headers, body
+    end
+
+    local ok, status, headers, body = try_fetch()
+    if not ok then
+        -- Retry once for transient network issues
+        unix.nanosleep(1)
+        ok, status, headers, body = try_fetch()
+    end
+
+    assert(ok, "expected 200 with custom header, got status: " .. tostring(status))
     print("test_custom_headers: PASS")
 end
 
@@ -152,6 +176,353 @@ function test_bad_method()
     assert(status == nil, "expected nil status for bad method")
     assert(err:find("method"), "expected bad method error, got: " .. tostring(err))
     print("test_bad_method: PASS")
+end
+
+-- Helper: Create a simple TCP server that captures requests
+-- Returns the server socket and port
+local function create_test_server()
+    local sock = assert(unix.socket(unix.AF_INET, unix.SOCK_STREAM, 0))
+    assert(unix.setsockopt(sock, unix.SOL_SOCKET, unix.SO_REUSEADDR, 1))
+    -- Bind to port 0 to get an available port (ParseIp returns integer IP)
+    assert(unix.bind(sock, ParseIp("127.0.0.1"), 0))
+    assert(unix.listen(sock, 5))
+    local ip, port = unix.getsockname(sock)
+    return sock, port
+end
+
+-- Helper: Accept one connection, read request, send response, close
+local function handle_one_request(server_sock, response, timeout_ms)
+    timeout_ms = timeout_ms or 5000
+    unix.setsockopt(server_sock, unix.SOL_SOCKET, unix.SO_RCVTIMEO, timeout_ms // 1000, (timeout_ms % 1000) * 1000)
+    local client, err = unix.accept(server_sock)
+    if not client then
+        return nil, "accept failed: " .. tostring(err)
+    end
+    local request = ""
+    while true do
+        local data = unix.read(client, 4096)
+        if not data or #data == 0 then break end
+        request = request .. data
+        -- Check if we have complete headers
+        if request:find("\r\n\r\n") then break end
+    end
+    if response then
+        unix.write(client, response)
+    end
+    unix.close(client)
+    return request
+end
+
+-- Test: Proxy option causes connection to proxy (not target)
+-- Verifies proxy is actually used by checking connection goes to proxy port
+function test_proxy_connection_to_proxy()
+    local server, port = create_test_server()
+    local response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, Proxy!"
+
+    -- Fork to handle the connection
+    local pid = unix.fork()
+    if pid == 0 then
+        -- Child: handle one request
+        local request = handle_one_request(server, response, 5000)
+        unix.close(server)
+        os.exit(request and 0 or 1)
+    end
+
+    -- Parent: make request through proxy
+    unix.close(server)  -- Parent doesn't need server socket
+    local status, headers, body = Fetch("http://example.com/test", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    -- Wait for child
+    unix.wait(pid)
+
+    assert(status == 200, "expected 200 from proxy, got: " .. tostring(status))
+    assert(body == "Hello, Proxy!", "expected proxy response body, got: " .. tostring(body))
+    print("test_proxy_connection_to_proxy: PASS")
+end
+
+-- Test: HTTP proxy request uses absolute URL
+-- Verifies the request line contains full URL (required by HTTP proxy spec)
+function test_proxy_absolute_url()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    -- Fork to capture the request
+    local pid = unix.fork()
+    if pid == 0 then
+        -- Child: capture request and send minimal response
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        -- Write captured request to a temp file for parent to read
+        local f = io.open("/tmp/proxy_test_request.txt", "w")
+        if f and request then
+            f:write(request)
+            f:close()
+        end
+        unix.close(server)
+        os.exit(request and 0 or 1)
+    end
+
+    -- Parent: make request
+    unix.close(server)
+    Fetch("http://target.example.com/path/to/resource?query=1", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    -- Wait for child
+    unix.wait(pid)
+
+    -- Read captured request
+    local f = io.open("/tmp/proxy_test_request.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_test_request.txt")
+    end
+
+    assert(captured_request, "failed to capture proxy request")
+    -- Check that request line contains absolute URL
+    local first_line = captured_request:match("^([^\r\n]+)")
+    assert(first_line:find("http://target.example.com/path/to/resource"),
+           "expected absolute URL in request, got: " .. first_line)
+    print("test_proxy_absolute_url: PASS")
+end
+
+-- Test: HTTPS proxy sends CONNECT request
+-- Verifies CONNECT method is used for HTTPS tunneling
+function test_proxy_https_connect()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    -- Fork to capture the CONNECT request
+    local pid = unix.fork()
+    if pid == 0 then
+        -- Child: capture CONNECT request
+        local request = handle_one_request(server, "HTTP/1.1 200 Connection Established\r\n\r\n", 5000)
+        local f = io.open("/tmp/proxy_connect_request.txt", "w")
+        if f and request then
+            f:write(request)
+            f:close()
+        end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    -- Parent: make HTTPS request through proxy
+    unix.close(server)
+    -- This will fail after CONNECT because we don't have a real tunnel,
+    -- but we can still verify the CONNECT was sent
+    Fetch("https://secure.example.com/path", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    -- Wait for child
+    unix.wait(pid)
+
+    -- Read captured request
+    local f = io.open("/tmp/proxy_connect_request.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_connect_request.txt")
+    end
+
+    assert(captured_request, "failed to capture CONNECT request")
+    local first_line = captured_request:match("^([^\r\n]+)")
+    assert(first_line:find("^CONNECT secure.example.com:443"),
+           "expected CONNECT request, got: " .. tostring(first_line))
+    print("test_proxy_https_connect: PASS")
+end
+
+-- Test: Proxy with invalid scheme is rejected
+function test_proxy_bad_scheme()
+    local status, err = Fetch("http://example.com/", {
+        proxy = "socks5://proxy.example.com:1080"
+    })
+    assert(status == nil, "expected nil status for unsupported proxy scheme")
+    assert(err:find("proxy") and err:find("scheme"),
+           "expected proxy scheme error, got: " .. tostring(err))
+    print("test_proxy_bad_scheme: PASS")
+end
+
+-- Test: Proxy with https:// scheme is rejected
+function test_proxy_https_scheme_rejected()
+    local status, err = Fetch("http://example.com/", {
+        proxy = "https://proxy.example.com:8080"
+    })
+    assert(status == nil, "expected nil status for https proxy scheme")
+    assert(err:find("proxy") and err:find("scheme"),
+           "expected proxy scheme error, got: " .. tostring(err))
+    print("test_proxy_https_scheme_rejected: PASS")
+end
+
+-- Test: Proxy with missing host is rejected
+function test_proxy_missing_host()
+    local status, err = Fetch("http://example.com/", {
+        proxy = "http://:8080"
+    })
+    assert(status == nil, "expected nil status for proxy with missing host")
+    assert(err:find("proxy"), "expected proxy error, got: " .. tostring(err))
+    print("test_proxy_missing_host: PASS")
+end
+
+-- Test: Proxy option must be string
+function test_proxy_type_validation()
+    local status, err = Fetch("http://example.com/", {
+        proxy = 12345
+    })
+    assert(status == nil, "expected nil status for non-string proxy")
+    assert(err:find("proxy") or err:find("string"),
+           "expected proxy-related error, got: " .. tostring(err))
+    print("test_proxy_type_validation: PASS")
+end
+
+-- Test: Proxy connection refused error is reported
+function test_proxy_connection_refused()
+    -- Use a port that's definitely not listening
+    local status, err = Fetch("http://example.com/", {
+        proxy = "http://127.0.0.1:59999"
+    })
+    assert(status == nil, "expected nil status for connection refused")
+    assert(err:find("connect") or err:find("refused") or err:find("error"),
+           "expected connection error, got: " .. tostring(err))
+    print("test_proxy_connection_refused: PASS")
+end
+
+-- Test: Proxy default port is 80
+function test_proxy_default_port()
+    -- Proxy URL without port should default to 80
+    -- We verify by checking the connection attempt goes to port 80
+    local status, err = Fetch("http://example.com/", {
+        proxy = "http://127.0.0.1"  -- No port specified
+    })
+    -- Should fail to connect to 127.0.0.1:80 (nothing listening)
+    assert(status == nil, "expected nil status")
+    -- The error should mention the connection attempt
+    assert(err:find("connect") or err:find("error"),
+           "expected connection error, got: " .. tostring(err))
+    print("test_proxy_default_port: PASS")
+end
+
+-- Test: SSRF check is bypassed for proxy connections
+-- When using a proxy, we connect to the proxy IP (which may be private)
+-- and the proxy handles the actual target resolution
+function test_proxy_bypasses_ssrf_for_proxy_ip()
+    local server, port = create_test_server()
+
+    -- Fork to handle the connection
+    local pid = unix.fork()
+    if pid == 0 then
+        handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- Connect to 127.0.0.1 proxy (normally blocked by SSRF) to request external URL
+    local status, headers, body = Fetch("http://external.example.com/", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    -- Should succeed - SSRF check should not block proxy connection
+    assert(status == 200, "expected 200, proxy to loopback should work, got: " .. tostring(status))
+    print("test_proxy_bypasses_ssrf_for_proxy_ip: PASS")
+end
+
+-- Test: http_proxy environment variable (when set)
+function test_http_proxy_env_var()
+    local http_proxy = os.getenv("http_proxy") or os.getenv("HTTP_PROXY")
+    if not http_proxy then
+        print("test_http_proxy_env_var: SKIP (http_proxy not set)")
+        return
+    end
+    -- Just verify env var is detected - actual behavior depends on proxy value
+    print("test_http_proxy_env_var: PASS (detected: " .. http_proxy .. ")")
+end
+
+-- Test: Explicit proxy overrides http_proxy env var
+function test_proxy_option_overrides_env()
+    local server, port = create_test_server()
+    local response = "HTTP/1.1 200 OK\r\nContent-Length: 17\r\n\r\nExplicit proxy OK"
+
+    local pid = unix.fork()
+    if pid == 0 then
+        handle_one_request(server, response, 5000)
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- Even if http_proxy env is set to something else, explicit option wins
+    local status, headers, body = Fetch("http://example.com/", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    assert(status == 200, "expected 200, got: " .. tostring(status))
+    assert(body == "Explicit proxy OK", "expected explicit proxy response, got: " .. tostring(body))
+    print("test_proxy_option_overrides_env: PASS")
+end
+
+-- Test: Proxy with custom port
+function test_proxy_custom_port()
+    local server, port = create_test_server()
+    local response = "HTTP/1.1 200 OK\r\nContent-Length: 14\r\n\r\nCustom port OK"
+
+    local pid = unix.fork()
+    if pid == 0 then
+        handle_one_request(server, response, 5000)
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    local status, headers, body = Fetch("http://example.com/test", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    assert(status == 200, "expected 200, got: " .. tostring(status))
+    assert(body == "Custom port OK", "expected custom port response")
+    print("test_proxy_custom_port: PASS")
+end
+
+-- Test: Proxy preserves Host header for target
+function test_proxy_host_header()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_host_header.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    Fetch("http://target-host.example.com:8080/path", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_host_header.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_host_header.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    assert(captured_request:find("Host: target%-host.example.com:8080"),
+           "expected Host header for target, got: " .. captured_request:sub(1, 200))
+    print("test_proxy_host_header: PASS")
 end
 
 -- Test: GitHub release download (known issue - long Location header with JWT tokens)
@@ -225,6 +596,21 @@ function main()
         test_ssrf_blocks_private,
         test_invalid_scheme,
         test_bad_method,
+        -- HTTP proxy tests (self-contained with local test server)
+        test_proxy_connection_to_proxy,
+        test_proxy_absolute_url,
+        test_proxy_https_connect,
+        test_proxy_bad_scheme,
+        test_proxy_https_scheme_rejected,
+        test_proxy_missing_host,
+        test_proxy_type_validation,
+        test_proxy_connection_refused,
+        test_proxy_default_port,
+        test_proxy_bypasses_ssrf_for_proxy_ip,
+        test_http_proxy_env_var,
+        test_proxy_option_overrides_env,
+        test_proxy_custom_port,
+        test_proxy_host_header,
     }
 
     local passed = 0

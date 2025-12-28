@@ -28,8 +28,12 @@ int LuaFetch(lua_State *L) {
   bool usingssl;
   uint32_t ip;
   struct Url url;
+  struct Url proxyurl;
   int t, ret, sock = -1, hdridx;
   const char *host, *port;
+  const char *proxyhost = 0, *proxyport = 0;
+  const char *proxyarg = 0;
+  size_t proxyarglen = 0;
   char *request;
   struct TlsBio *bio;
   mbedtls_ssl_context sslctx;
@@ -152,6 +156,12 @@ int LuaFetch(lua_State *L) {
     }
     if (headers)
       gc(headers);
+    lua_getfield(L, 2, "proxy");
+    if (!lua_isnil(L, -1)) {
+      if (!lua_isstring(L, -1))
+        return LuaNilError(L, "bad proxy; string expected");
+      proxyarg = lua_tolstring(L, -1, &proxyarglen);
+    }
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
@@ -200,6 +210,46 @@ int LuaFetch(lua_State *L) {
     TlsInit();
 #endif
 
+  /*
+   * Parse and validate proxy URL if specified.
+   * Check environment variables if no explicit proxy option given.
+   */
+  if (!proxyarg) {
+    // Check http_proxy and HTTP_PROXY environment variables
+    proxyarg = getenv("http_proxy");
+    if (!proxyarg)
+      proxyarg = getenv("HTTP_PROXY");
+    if (proxyarg)
+      proxyarglen = strlen(proxyarg);
+  }
+  if (proxyarg && proxyarglen) {
+    gc(ParseUrl(proxyarg, proxyarglen, &proxyurl, true));
+    gc(proxyurl.params.p);
+    // Proxy must use http:// scheme (not https, socks, etc.)
+    if (!(proxyurl.scheme.n == 4 &&
+          !memcasecmp(proxyurl.scheme.p, "http", 4))) {
+      return LuaNilError(L, "bad proxy scheme; only http:// proxies supported");
+    }
+    if (!proxyurl.host.n) {
+      return LuaNilError(L, "bad proxy; missing host");
+    }
+    proxyhost = gc(strndup(proxyurl.host.p, proxyurl.host.n));
+    if (proxyurl.port.n) {
+      proxyport = gc(strndup(proxyurl.port.p, proxyurl.port.n));
+    } else {
+      proxyport = "80";
+    }
+    if (!IsAcceptableHost(proxyhost, -1)) {
+      return LuaNilError(L, "bad proxy; invalid host");
+    }
+    if (!IsAcceptablePort(proxyport, -1)) {
+      return LuaNilError(L, "bad proxy; invalid port");
+    }
+    DEBUGF("(ftch) using proxy %s:%s", proxyhost, proxyport);
+    // Disable keepalive when using proxy for simplicity
+    keepalive = kaNONE;
+  }
+
   if (url.host.n) {
     host = gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
@@ -246,11 +296,15 @@ int LuaFetch(lua_State *L) {
   }
 
   url.fragment.p = 0, url.fragment.n = 0;
-  url.scheme.p = 0, url.scheme.n = 0;
   url.user.p = 0, url.user.n = 0;
   url.pass.p = 0, url.pass.n = 0;
-  url.host.p = 0, url.host.n = 0;
-  url.port.p = 0, url.port.n = 0;
+  // For HTTP proxy requests, keep scheme/host/port for absolute URL
+  // For direct or HTTPS-through-proxy, clear them
+  if (!proxyhost || usingssl) {
+    url.scheme.p = 0, url.scheme.n = 0;
+    url.host.p = 0, url.host.n = 0;
+    url.port.p = 0, url.port.n = 0;
+  }
   if (!url.path.n || url.path.p[0] != '/') {
     void *p = gc(xmalloc(1 + url.path.n));
     mempcpy(mempcpy(p, "/", 1), url.path.p, url.path.n);
@@ -281,42 +335,83 @@ int LuaFetch(lua_State *L) {
   if (keepalive == kaNONE || keepalive == kaOPEN) {
     /*
      * Perform DNS lookup.
+     * When using a proxy, resolve the proxy host instead of target.
      */
-    DEBUGF("(ftch) client resolving %s", host);
-    if ((rc = getaddrinfo(host, port, &hints, &addr)) != 0) {
-      return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
-                         gai_strerror(rc), strerror(errno));
+    const char *connecthost = proxyhost ? proxyhost : host;
+    const char *connectport = proxyhost ? proxyport : port;
+    DEBUGF("(ftch) client resolving %s", connecthost);
+    if ((rc = getaddrinfo(connecthost, connectport, &hints, &addr)) != 0) {
+      return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", connecthost,
+                         connectport, gai_strerror(rc), strerror(errno));
     }
 
     /*
-     * Connect to server.
+     * Connect to server (or proxy).
      */
     ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
     DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
            ip >> 16, ip >> 8, ip,
            ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
     // Prevent SSRF by blocking requests to private/internal networks
-    if (IsLoopbackIp(ip) || IsPrivateIp(ip)) {
+    // Skip SSRF check for proxy connections (proxy handles target resolution)
+    if (!proxyhost && (IsLoopbackIp(ip) || IsPrivateIp(ip))) {
       freeaddrinfo(addr);
       return LuaNilError(L, "request to private network blocked (SSRF protection)");
     }
     if ((sock = GoodSocket(addr->ai_family, addr->ai_socktype,
                            addr->ai_protocol, false, &timeout)) == -1) {
       freeaddrinfo(addr);
-      return LuaNilError(L, "socket(%s:%s) error: %s", host, port,
+      return LuaNilError(L, "socket(%s:%s) error: %s", connecthost, connectport,
                          strerror(errno));
     }
     rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
     freeaddrinfo(addr), addr = 0;
     if (rc == -1) {
       close(sock);
-      return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
+      return LuaNilError(L, "connect(%s:%s) error: %s", connecthost, connectport,
                          strerror(errno));
     }
   }
 
   (void)bio;
 #ifndef UNSECURE
+  /*
+   * For HTTPS through proxy, establish CONNECT tunnel first.
+   */
+  if (usingssl && proxyhost) {
+    char *connectreq = 0;
+    char connectbuf[1024];
+    ssize_t connectrc;
+    appendf(&connectreq,
+            "CONNECT %s:%s HTTP/1.1\r\n"
+            "Host: %s:%s\r\n"
+            "User-Agent: %s\r\n"
+            "Proxy-Connection: keep-alive\r\n"
+            "\r\n",
+            host, port, host, port, agenthdr);
+    size_t connectreqlen = appendz(connectreq).i;
+    gc(connectreq);
+    DEBUGF("(ftch) sending CONNECT %s:%s to proxy", host, port);
+    for (i = 0; i < connectreqlen; i += connectrc) {
+      if ((connectrc = WRITE(sock, connectreq + i, connectreqlen - i)) <= 0) {
+        close(sock);
+        return LuaNilError(L, "proxy CONNECT write error: %s", strerror(errno));
+      }
+    }
+    // Read proxy response (simple parsing - just check for "200")
+    if ((connectrc = READ(sock, connectbuf, sizeof(connectbuf) - 1)) <= 0) {
+      close(sock);
+      return LuaNilError(L, "proxy CONNECT read error: %s", strerror(errno));
+    }
+    connectbuf[connectrc] = '\0';
+    // Check for successful tunnel establishment (HTTP/1.x 200)
+    if (!strstr(connectbuf, " 200 ")) {
+      close(sock);
+      return LuaNilError(L, "proxy CONNECT failed: %.64s", connectbuf);
+    }
+    DEBUGF("(ftch) CONNECT tunnel established through proxy");
+  }
+
   if (usingssl) {
     // Create per-connection SSL context for thread safety
     mbedtls_ssl_init(&sslctx);
