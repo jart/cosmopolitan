@@ -34,6 +34,7 @@ int LuaFetch(lua_State *L) {
   const char *proxyhost = 0, *proxyport = 0;
   const char *proxyarg = 0;
   size_t proxyarglen = 0;
+  char *proxyauthhdr = 0;
   char *request;
   struct TlsBio *bio;
   mbedtls_ssl_context sslctx;
@@ -248,6 +249,18 @@ int LuaFetch(lua_State *L) {
     DEBUGF("(ftch) using proxy %s:%s", proxyhost, proxyport);
     // Disable keepalive when using proxy for simplicity
     keepalive = kaNONE;
+    // Build Proxy-Authorization header if credentials present
+    if (proxyurl.user.n) {
+      char *creds = gc(xasprintf("%.*s:%.*s",
+                                 (int)proxyurl.user.n, proxyurl.user.p,
+                                 (int)proxyurl.pass.n, proxyurl.pass.p));
+      size_t credslen = strlen(creds);
+      char *b64 = gc(EncodeBase64(creds, credslen, 0));
+      if (b64) {
+        proxyauthhdr = gc(xasprintf("Proxy-Authorization: Basic %s\r\n", b64));
+        DEBUGF("(ftch) using proxy authentication");
+      }
+    }
   }
 
   if (url.host.n) {
@@ -321,13 +334,15 @@ int LuaFetch(lua_State *L) {
           "Host: %s\r\n"
           "Connection: %s\r\n"
           "User-Agent: %s\r\n"
-          "%s%s"
+          "%s%s%s"
           "\r\n",
           method, gc(EncodeUrl(&url, 0)), hosthdr,
           (keepalive == kaNONE || keepalive == kaCLOSE)
               ? "close"
               : (connhdr ? connhdr : "keep-alive"),
-          agenthdr, conlenhdr, headers ? headers : "");
+          agenthdr, conlenhdr,
+          (proxyhost && !usingssl && proxyauthhdr) ? proxyauthhdr : "",
+          headers ? headers : "");
   appendd(&request, body, bodylen);
   requestlen = appendz(request).i;
   gc(request);
@@ -387,8 +402,10 @@ int LuaFetch(lua_State *L) {
             "Host: %s:%s\r\n"
             "User-Agent: %s\r\n"
             "Proxy-Connection: keep-alive\r\n"
+            "%s"
             "\r\n",
-            host, port, host, port, agenthdr);
+            host, port, host, port, agenthdr,
+            proxyauthhdr ? proxyauthhdr : "");
     size_t connectreqlen = appendz(connectreq).i;
     gc(connectreq);
     DEBUGF("(ftch) sending CONNECT %s:%s to proxy", host, port);

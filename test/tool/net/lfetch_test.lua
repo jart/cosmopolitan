@@ -525,6 +525,298 @@ function test_proxy_host_header()
     print("test_proxy_host_header: PASS")
 end
 
+--------------------------------------------------------------------------------
+-- Proxy Authentication Tests
+-- These tests verify that Fetch correctly handles authenticated proxy URLs
+-- in the format: http://username:password@host:port
+--------------------------------------------------------------------------------
+
+-- Helper: Base64 encode (for verifying Proxy-Authorization header)
+local function base64_encode(data)
+    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    return ((data:gsub('.', function(x)
+        local r, b = '', x:byte()
+        for i = 8, 1, -1 do r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0') end
+        return r
+    end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+        if #x < 6 then return '' end
+        local c = 0
+        for i = 1, 6 do c = c + (x:sub(i, i) == '1' and 2 ^ (6 - i) or 0) end
+        return b:sub(c + 1, c + 1)
+    end) .. ({ '', '==', '=' })[#data % 3 + 1])
+end
+
+-- Test: HTTP proxy with Basic auth sends Proxy-Authorization header
+function test_proxy_basic_auth_http()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_auth_http.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    Fetch("http://example.com/test", {
+        proxy = "http://testuser:testpass@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_http.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_http.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    -- Expected: Proxy-Authorization: Basic dGVzdHVzZXI6dGVzdHBhc3M=
+    local expected_auth = "Basic " .. base64_encode("testuser:testpass")
+    assert(captured_request:find("Proxy%-Authorization: " .. expected_auth, 1, false),
+           "expected Proxy-Authorization header with Basic auth, got:\n" .. captured_request:sub(1, 500))
+    print("test_proxy_basic_auth_http: PASS")
+end
+
+-- Test: HTTPS proxy with Basic auth sends Proxy-Authorization in CONNECT
+function test_proxy_basic_auth_https_connect()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        -- Send 200 Connection Established to allow CONNECT to succeed
+        local request = handle_one_request(server, "HTTP/1.1 200 Connection Established\r\n\r\n", 5000)
+        local f = io.open("/tmp/proxy_auth_connect.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- This will fail after CONNECT (no real TLS), but we can verify auth header
+    Fetch("https://secure.example.com/path", {
+        proxy = "http://proxyuser:proxypass@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_connect.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_connect.txt")
+    end
+
+    assert(captured_request, "failed to capture CONNECT request")
+    -- Verify CONNECT request contains Proxy-Authorization
+    local expected_auth = "Basic " .. base64_encode("proxyuser:proxypass")
+    assert(captured_request:find("^CONNECT "),
+           "expected CONNECT request, got:\n" .. captured_request:sub(1, 200))
+    assert(captured_request:find("Proxy%-Authorization: " .. expected_auth, 1, false),
+           "expected Proxy-Authorization in CONNECT request, got:\n" .. captured_request:sub(1, 500))
+    print("test_proxy_basic_auth_https_connect: PASS")
+end
+
+-- Test: Proxy auth with special characters in password
+function test_proxy_auth_special_chars()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_auth_special.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- Password with special chars that need URL encoding: p@ss:word/test
+    -- In URL: p%40ss%3Aword%2Ftest
+    Fetch("http://example.com/test", {
+        proxy = "http://user:p%40ss%3Aword%2Ftest@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_special.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_special.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    -- The decoded credentials should be: user:p@ss:word/test
+    local expected_auth = "Basic " .. base64_encode("user:p@ss:word/test")
+    assert(captured_request:find("Proxy%-Authorization: " .. expected_auth, 1, false),
+           "expected Proxy-Authorization with decoded special chars, got:\n" .. captured_request:sub(1, 500))
+    print("test_proxy_auth_special_chars: PASS")
+end
+
+-- Test: Proxy auth with long JWT-style password (400+ chars)
+function test_proxy_auth_long_jwt_password()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    -- Simulate a JWT-like token (400+ chars)
+    local jwt_password = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9." ..
+        string.rep("abcdefghijklmnopqrstuvwxyz0123456789", 12) ..
+        ".signature_part_here"
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_auth_jwt.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    Fetch("http://example.com/test", {
+        proxy = "http://container_id:" .. jwt_password .. "@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_jwt.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_jwt.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    local expected_auth = "Basic " .. base64_encode("container_id:" .. jwt_password)
+    assert(captured_request:find("Proxy-Authorization:", 1, true),
+           "expected Proxy-Authorization header, got:\n" .. captured_request:sub(1, 500))
+    -- Verify the full auth value is present
+    assert(captured_request:find(expected_auth, 1, true),
+           "expected correct Base64-encoded JWT credentials")
+    print("test_proxy_auth_long_jwt_password: PASS")
+end
+
+-- Test: Proxy URL with username but no password
+function test_proxy_auth_username_only()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_auth_useronly.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- Username with no password: http://onlyuser@host:port
+    Fetch("http://example.com/test", {
+        proxy = "http://onlyuser@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_useronly.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_useronly.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    -- Even with no password, should send auth header with "onlyuser:"
+    local expected_auth = "Basic " .. base64_encode("onlyuser:")
+    assert(captured_request:find("Proxy%-Authorization: " .. expected_auth, 1, false),
+           "expected Proxy-Authorization with username only, got:\n" .. captured_request:sub(1, 500))
+    print("test_proxy_auth_username_only: PASS")
+end
+
+-- Test: Proxy URL without credentials should NOT send Proxy-Authorization
+function test_proxy_no_auth_no_header()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_no_auth.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    -- No credentials in proxy URL
+    Fetch("http://example.com/test", {
+        proxy = "http://127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_no_auth.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_no_auth.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    -- Should NOT contain Proxy-Authorization header
+    assert(not captured_request:find("Proxy-Authorization:", 1, true),
+           "expected NO Proxy-Authorization header for unauthenticated proxy, got:\n" .. captured_request:sub(1, 500))
+    print("test_proxy_no_auth_no_header: PASS")
+end
+
+-- Test: Proxy auth credentials are NOT sent to target server (security)
+function test_proxy_auth_not_leaked_to_target()
+    local server, port = create_test_server()
+    local captured_request = nil
+
+    local pid = unix.fork()
+    if pid == 0 then
+        local request = handle_one_request(server, "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK", 5000)
+        local f = io.open("/tmp/proxy_auth_leak.txt", "w")
+        if f and request then f:write(request); f:close() end
+        unix.close(server)
+        os.exit(0)
+    end
+
+    unix.close(server)
+    Fetch("http://example.com/test", {
+        proxy = "http://secretuser:secretpass@127.0.0.1:" .. port
+    })
+
+    unix.wait(pid)
+
+    local f = io.open("/tmp/proxy_auth_leak.txt", "r")
+    if f then
+        captured_request = f:read("*a")
+        f:close()
+        os.remove("/tmp/proxy_auth_leak.txt")
+    end
+
+    assert(captured_request, "failed to capture request")
+    -- The proxy URL credentials should appear in Proxy-Authorization, NOT in Authorization
+    -- Check that there's no standalone "Authorization:" header (not Proxy-Authorization:)
+    local has_plain_auth = captured_request:find("\nAuthorization:", 1, true)
+    local has_proxy_auth = captured_request:find("Proxy-Authorization:", 1, true)
+    assert(not has_plain_auth or has_proxy_auth,
+           "credentials should only appear in Proxy-Authorization, not Authorization")
+    -- The raw credentials should not appear anywhere in the request
+    assert(not captured_request:find("secretuser:secretpass", 1, true),
+           "raw credentials should not appear in request")
+    print("test_proxy_auth_not_leaked_to_target: PASS")
+end
+
 -- Test: GitHub release download (known issue - long Location header with JWT tokens)
 -- This URL redirects with a ~968 byte Location header containing signed URLs
 function test_github_release_download()
@@ -611,6 +903,14 @@ function main()
         test_proxy_option_overrides_env,
         test_proxy_custom_port,
         test_proxy_host_header,
+        -- Proxy authentication tests
+        test_proxy_basic_auth_http,
+        test_proxy_basic_auth_https_connect,
+        test_proxy_auth_special_chars,
+        test_proxy_auth_long_jwt_password,
+        test_proxy_auth_username_only,
+        test_proxy_no_auth_no_header,
+        test_proxy_auth_not_leaked_to_target,
     }
 
     local passed = 0
