@@ -288,19 +288,19 @@ function help.show(what)
 Cosmo Lua Help System
 
 Modules:
-  cosmo           - Encoding, hashing, compression, networking
-  unix            - POSIX system calls
-  path            - Path manipulation
-  re              - Regular expressions
-  lsqlite3        - SQLite database
-  argon2          - Password hashing
+  cosmo            - Encoding, hashing, compression, networking
+  cosmo.unix       - POSIX system calls
+  cosmo.path       - Path manipulation
+  cosmo.re         - Regular expressions
+  cosmo.lsqlite3   - SQLite database
+  cosmo.argon2     - Password hashing
 
 Usage:
-  help()                 - This overview
-  help("cosmo")          - List top-level functions
-  help("unix")           - List module contents
-  help("Fetch")          - Show function documentation
-  help.search("base64")  - Search for matching functions
+  help()                      - This overview
+  help("cosmo")               - List top-level functions
+  help("cosmo.unix")          - List module contents
+  help("cosmo.Fetch")         - Show function documentation
+  help.search("base64")       - Search for matching functions
 ]]
     print(overview)
     return

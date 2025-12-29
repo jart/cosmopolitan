@@ -1,199 +1,197 @@
 -- skill module for cosmo lua
--- Generates and installs a Claude Code skill with documentation
-
-local unix = require("cosmo.unix")
-local path = require("cosmo.path")
+-- Installs a Claude Code skill
 
 local skill = {}
 
 local SKILL_NAME = "cosmo-lua"
 
-local SKILL_MD_HEADER = [[---
+local SKILL_CONTENT = [[---
 name: cosmo-lua
-description: Use cosmopolitan Lua (cosmo-lua) for portable scripts. Download from whilp/cosmopolitan releases. Includes unix syscalls, path utils, regex, sqlite, argon2.
-allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, WebFetch]
+description: Use cosmopolitan Lua (cosmo-lua) for portable scripts. Includes HTTP, JSON, unix syscalls, path utils, regex, sqlite, argon2.
+allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
 ---
 
 # Cosmo Lua
 
-Portable Lua with batteries included from [whilp/cosmopolitan](https://github.com/whilp/cosmopolitan).
+Portable Lua 5.4 with batteries included. Single binary runs on Linux, macOS, Windows, FreeBSD, OpenBSD, NetBSD.
 
 ## Installation
 
-Download the latest `lua` binary from [releases](https://github.com/whilp/cosmopolitan/releases):
-
 ```bash
 curl -L -o lua https://github.com/whilp/cosmopolitan/releases/latest/download/lua
 chmod +x lua
+./lua --skill  # install this skill
 ```
 
-The binary runs on Linux, macOS, Windows, FreeBSD, OpenBSD, and NetBSD without dependencies.
+## Getting Help
 
-## Update
-
-Download the latest release and reinstall the skill:
+The executable has built-in documentation. `help` is a global function:
 
 ```bash
-curl -L -o lua https://github.com/whilp/cosmopolitan/releases/latest/download/lua
-chmod +x lua
-./lua --skill
+./lua -e 'help("cosmo.Fetch")'         # look up a function
+./lua -e 'help("cosmo.unix")'          # list module functions
+./lua -e 'help.search("socket")'       # search by keyword
 ```
 
-## Built-in help
+In the REPL:
+```lua
+help()                -- overview of all modules
+help("cosmo.Fetch")   -- function docs
+help("cosmo.unix")    -- module functions
+```
 
-Use the interactive help system:
+## Quick Reference
+
+Top-level functions: `local cosmo = require("cosmo")`
+Submodules: `local unix = require("cosmo.unix")`
+
+### HTTP & Networking (replaces curl, luasocket)
+
+| Function | Purpose |
+|----------|---------|
+| `Fetch(url)` | HTTP GET/POST with redirects, TLS, proxy support |
+| `ResolveIp(host)` | DNS lookup |
+| `ParseUrl(url)` | Parse URL into components |
+| `FormatIp(ip)` | Format IP address |
+| `IsPublicIp(ip)` | Check if IP is public |
+
+### JSON (replaces dkjson, cjson)
+
+| Function | Purpose |
+|----------|---------|
+| `DecodeJson(str)` | Parse JSON string to Lua table |
+| `EncodeJson(tbl)` | Encode Lua table to JSON string |
+
+### Encoding & Hashing
+
+| Function | Purpose |
+|----------|---------|
+| `EncodeBase64(s)` | Base64 encode |
+| `DecodeBase64(s)` | Base64 decode |
+| `EncodeHex(s)` | Hex encode |
+| `DecodeHex(s)` | Hex decode |
+| `Sha256(s)` | SHA-256 hash |
+| `Sha1(s)` | SHA-1 hash |
+| `Md5(s)` | MD5 hash |
+| `GetRandomBytes(n)` | Cryptographic random bytes |
+
+### Compression
+
+| Function | Purpose |
+|----------|---------|
+| `Deflate(s)` | Compress with zlib |
+| `Inflate(s)` | Decompress zlib |
+
+### Path Utilities: `require("cosmo.path")`
+
+| Function | Purpose |
+|----------|---------|
+| `path.join(...)` | Join path components |
+| `path.basename(p)` | Get filename from path |
+| `path.dirname(p)` | Get directory from path |
+| `path.exists(p)` | Check if path exists |
+| `path.isfile(p)` | Check if path is file |
+| `path.isdir(p)` | Check if path is directory |
+
+### POSIX/Unix: `require("cosmo.unix")`
+
+| Function | Purpose |
+|----------|---------|
+| `unix.open(path, flags, mode)` | Open fd |
+| `unix.read(fd)` | Read from fd |
+| `unix.write(fd, data)` | Write to fd |
+| `unix.close(fd)` | Close fd |
+| `unix.chmod(path, mode)` | Change file mode |
+| `unix.mkdir(path, mode)` | Create directory |
+| `unix.makedirs(path, mode)` | Create directory tree |
+| `unix.stat(path)` | Get file metadata |
+| `unix.fork()` | Fork process |
+| `unix.execve(prog, args)` | Execute program |
+| `unix.environ()` | Get environment |
+| `unix.getpid()` | Get process ID |
+| `unix.sleep(secs)` | Sleep |
+| `unix.clock_gettime()` | High-resolution time |
+
+**Octal modes**: Lua has no octal literals. Use `tonumber("755", 8)` for modes.
+
+See `help("unix")` for 100+ additional syscall wrappers.
+
+### Regular Expressions: `require("cosmo.re")`
+
+| Function | Purpose |
+|----------|---------|
+| `re.search(pattern, str)` | Search for pattern |
+| `re.compile(pattern)` | Compile regex for reuse |
+| `regex:search(str)` | Search with compiled regex |
+
+### SQLite: `require("cosmo.lsqlite3")`
+
+| Function | Purpose |
+|----------|---------|
+| `sqlite.open(path)` | Open database |
+| `sqlite.open_memory()` | Open in-memory database |
+| `db:exec(sql)` | Execute SQL |
+| `db:prepare(sql)` | Prepare statement |
+| `stmt:step()` | Execute prepared statement |
+| `db:close()` | Close database |
+
+### Password Hashing: `require("cosmo.argon2")`
+
+| Function | Purpose |
+|----------|---------|
+| `argon2.hash_encoded(pw, salt)` | Hash password |
+| `argon2.verify(encoded, pw)` | Verify password |
+
+## Example
 
 ```lua
-local help = require("cosmo.help")
-help()                    -- overview
-help("cosmo")             -- list module
-help("cosmo.Fetch")       -- function docs
-help.search("base64")     -- search
+local cosmo = require("cosmo")
+local path = require("cosmo.path")
+
+-- Fetch JSON from an API
+local status, headers, body = cosmo.Fetch("https://api.example.com/data")
+if status == 200 then
+  local data = cosmo.DecodeJson(body)
+  print(data.message)
+end
+
+-- Work with files
+local configpath = path.join(os.getenv("HOME"), ".config", "app.json")
+if path.exists(configpath) then
+  local f = io.open(configpath)
+  local config = cosmo.DecodeJson(f:read("*a"))
+  f:close()
+end
 ```
 
-## Modules
+## More Information
 
+Use `help.search(keyword)` to find functions. The help system has complete documentation for all functions including parameters, return values, and examples.
 ]]
 
--- Format a documentation entry for markdown
-local function format_doc_md(name, doc)
-  local lines = {}
+local unix = require("cosmo.unix")
+local path = require("cosmo.path")
 
-  -- Function name as header
-  local short_name = name:match("([^%.]+)$") or name
-  table.insert(lines, "### " .. short_name)
-  table.insert(lines, "")
-
-  -- Signature in code block
-  table.insert(lines, "```lua")
-  table.insert(lines, doc.signature)
-  table.insert(lines, "```")
-  table.insert(lines, "")
-
-  -- Description
-  if doc.desc and doc.desc ~= "" then
-    for desc_line in doc.desc:gmatch("[^\n]+") do
-      table.insert(lines, desc_line:match("^%s*(.*)$"))
-    end
-    table.insert(lines, "")
-  end
-
-  -- Parameters
-  if #doc.params > 0 then
-    table.insert(lines, "**Parameters:**")
-    table.insert(lines, "")
-    for _, param in ipairs(doc.params) do
-      local optional = param.name:match("%?$") and " *(optional)*" or ""
-      local clean_name = param.name:gsub("%?$", "")
-      if param.desc ~= "" then
-        table.insert(lines, string.format("- `%s` (%s)%s: %s", clean_name, param.type, optional, param.desc))
-      else
-        table.insert(lines, string.format("- `%s` (%s)%s", clean_name, param.type, optional))
-      end
-    end
-    table.insert(lines, "")
-  end
-
-  -- Returns
-  if #doc.returns > 0 then
-    table.insert(lines, "**Returns:**")
-    table.insert(lines, "")
-    for _, ret in ipairs(doc.returns) do
-      if ret.desc ~= "" then
-        table.insert(lines, string.format("- `%s`: %s", ret.type, ret.desc))
-      else
-        table.insert(lines, string.format("- `%s`", ret.type))
-      end
-    end
-    table.insert(lines, "")
-  end
-
-  return table.concat(lines, "\n")
-end
-
--- Discover modules from help._docs
--- Returns table of {prefix = {funcs}, ...} where prefix is "" for top-level
-local function discover_modules(help_docs)
-  local modules = {}
-
-  for name, doc in pairs(help_docs) do
-    local prefix = name:match("^([^%.]+)%.") or ""
-    if not modules[prefix] then
-      modules[prefix] = {}
-    end
-    table.insert(modules[prefix], {name = name, doc = doc})
-  end
-
-  -- Sort functions within each module
-  for prefix, funcs in pairs(modules) do
-    table.sort(funcs, function(a, b)
-      local a_short = a.name:match("([^%.]+)$") or a.name
-      local b_short = b.name:match("([^%.]+)$") or b.name
-      return a_short < b_short
-    end)
-  end
-
-  return modules
-end
-
--- Get module display name and file name
-local function module_info(prefix)
-  if prefix == "" then
-    return "cosmo", "cosmo.md"
-  else
-    return "cosmo." .. prefix, "cosmo-" .. prefix .. ".md"
-  end
-end
-
--- Generate markdown for a module
-local function generate_module_md(module_name, funcs)
-  local lines = {"# " .. module_name, ""}
-
-  for _, item in ipairs(funcs) do
-    table.insert(lines, format_doc_md(item.name, item.doc))
-  end
-
-  return table.concat(lines, "\n")
-end
-
--- Create directory and parents (like mkdir -p)
-local function mkdir_p(dir)
-  local is_absolute = dir:sub(1, 1) == "/"
-  local parts = {}
-  for part in dir:gmatch("[^/]+") do
-    table.insert(parts, part)
-    local current = (is_absolute and "/" or "") .. table.concat(parts, "/")
-    local stat = unix.stat(current)
-    if not stat then
-      local ok, err = unix.mkdir(current, 0755)
-      if not ok and err:errno() ~= unix.EEXIST then
-        return nil, "mkdir " .. current .. ": " .. tostring(err)
-      end
-    end
-  end
-  return true
-end
-
--- Write a file, creating parent directories as needed
 local function write_file(filepath, content)
   local dir = path.dirname(filepath)
   if dir and dir ~= "" and dir ~= "." then
-    local ok, err = mkdir_p(dir)
-    if not ok then
-      return nil, err
+    local ok, err = unix.makedirs(dir, tonumber("755", 8))
+    if not ok and err:errno() ~= unix.EEXIST then
+      return nil, "makedirs failed: " .. tostring(err)
     end
   end
-
-  local f = io.open(filepath, "w")
-  if not f then
-    return nil, "failed to open file: " .. filepath
+  local fd, err = unix.open(filepath, unix.O_WRONLY | unix.O_CREAT | unix.O_TRUNC, tonumber("644", 8))
+  if not fd then
+    return nil, "open failed: " .. tostring(err)
   end
-  f:write(content)
-  f:close()
+  local ok, werr = unix.write(fd, content)
+  unix.close(fd)
+  if not ok then
+    return nil, "write failed: " .. tostring(werr)
+  end
   return true
 end
 
--- Get the default skill installation path
 local function default_path()
   local home = os.getenv("HOME")
   if not home then
@@ -202,90 +200,23 @@ local function default_path()
   return path.join(home, ".claude", "skills")
 end
 
--- Generate SKILL.md content with module links (dynamic)
-function skill.generate_skill_md(modules)
-  local content = SKILL_MD_HEADER
-
-  -- Sort prefixes for consistent output
-  local prefixes = {}
-  for prefix in pairs(modules) do
-    table.insert(prefixes, prefix)
-  end
-  table.sort(prefixes)
-
-  -- Add module links
-  for _, prefix in ipairs(prefixes) do
-    local display_name, filename = module_info(prefix)
-    local desc = ""
-    if prefix == "" then
-      desc = "Encoding, hashing, compression, networking"
-    elseif prefix == "unix" then
-      desc = "POSIX system calls"
-    elseif prefix == "path" then
-      desc = "Path manipulation"
-    elseif prefix == "re" then
-      desc = "Regular expressions"
-    elseif prefix == "sqlite3" then
-      desc = "SQLite database"
-    elseif prefix == "argon2" then
-      desc = "Password hashing"
-    else
-      desc = prefix .. " module"
-    end
-    content = content .. string.format("- [%s](%s) - %s\n", display_name, filename, desc)
-  end
-
-  return content
-end
-
--- Generate all reference docs from help system
-function skill.generate_docs()
-  local help = require("cosmo.help")
-  help.load()
-
-  local modules = discover_modules(help._docs)
-  local docs = {}
-
-  for prefix, funcs in pairs(modules) do
-    local display_name, filename = module_info(prefix)
-    docs[filename] = generate_module_md(display_name, funcs)
-  end
-
-  return docs, modules
-end
-
--- Install skill to a directory
--- target: target directory (default: ~/.claude/skills)
-function skill.install(target)
-  if not target then
+function skill.install(dest)
+  if not dest then
     local default, err = default_path()
     if not default then
       return nil, err
     end
-    target = default
-  elseif target:sub(-1) ~= "/" then
-    -- If target doesn't end with /, assume it's a project root
-    target = path.join(target, ".claude", "skills")
+    dest = default
+  elseif dest:sub(-1) ~= "/" then
+    dest = path.join(dest, ".claude", "skills")
   end
 
-  local skill_dir = path.join(target, SKILL_NAME)
+  local skill_dir = path.join(dest, SKILL_NAME)
+  local skill_file = path.join(skill_dir, "SKILL.md")
 
-  -- Generate reference docs (also returns discovered modules)
-  local docs, modules = skill.generate_docs()
-
-  -- Generate and write SKILL.md
-  local skill_content = skill.generate_skill_md(modules)
-  local ok, err = write_file(path.join(skill_dir, "SKILL.md"), skill_content)
+  local ok, err = write_file(skill_file, SKILL_CONTENT)
   if not ok then
     return nil, "failed to write SKILL.md: " .. err
-  end
-
-  -- Write reference docs
-  for filename, content in pairs(docs) do
-    ok, err = write_file(path.join(skill_dir, filename), content)
-    if not ok then
-      return nil, "failed to write " .. filename .. ": " .. err
-    end
   end
 
   io.write("installed skill to: " .. skill_dir .. "\n")
