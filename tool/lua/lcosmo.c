@@ -235,5 +235,8 @@ int luaopen_cosmo(lua_State *L) {
   register_submodule(L, "cosmo.lsqlite3");
   lua_pop(L, 1);
 
+  /* make help() global for convenience */
+  (void)luaL_dostring(L, "_G.help = require('cosmo.help')");
+
   return 1;
 }
