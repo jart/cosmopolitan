@@ -3765,6 +3765,47 @@ function re.search(regex, text, flags) end
 ---@overload fun(regex: string, flags?: integer): nil, error: re.Errno
 function re.compile(regex, flags) end
 
+--- The getopt module provides command-line argument parsing using getopt_long.
+---
+--- This wraps the standard GNU getopt_long(3) function for parsing command-line
+--- options with both short (-h) and long (--help) option support.
+---
+--- NOTE: This module uses global getopt state and is NOT thread-safe.
+--- Do not call from multiple threads or coroutines concurrently.
+getopt = {}
+
+--- Parse command-line arguments using getopt_long.
+---
+--- The optstring uses standard getopt format:
+--- - A letter means that option takes no argument
+--- - A letter followed by : means it requires an argument
+--- - A letter followed by :: means it takes an optional argument
+---
+--- The longopts table contains entries like {"name", "has_arg", "short"}:
+--- - name: the long option name (e.g., "help" for --help)
+--- - has_arg: "none", "required", or "optional"
+--- - short: the equivalent short option character (e.g., "h")
+---
+--- Example:
+---
+---     local opts, args, unknown = getopt.parse(arg, "hvo:", {
+---       {"help",    "none",     "h"},
+---       {"verbose", "none",     "v"},
+---       {"output",  "required", "o"},
+---     })
+---     -- opts.h, opts.help = true if -h or --help was passed
+---     -- opts.o, opts.output = "file.txt" if -o file.txt or --output=file.txt
+---     -- args contains remaining non-option arguments
+---     -- unknown contains any unrecognized options
+---
+---@param args string[] Command-line arguments (typically `arg`)
+---@param optstring string Short options string (e.g., "hvo:")
+---@param longopts? table[] Long option definitions: {{name, has_arg, short}, ...}
+---@return table opts Parsed options with both short and long names as keys
+---@return string[] remaining Non-option arguments
+---@return string[] unknown Unrecognized options encountered during parsing
+function getopt.parse(args, optstring, longopts) end
+
 --- The path module may be used to manipulate unix paths.
 ---
 --- Note that we use unix paths on Windows. For example, if you have a

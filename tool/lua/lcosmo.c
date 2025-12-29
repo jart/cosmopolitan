@@ -24,6 +24,7 @@
 #include "tool/net/lpath.h"
 #include "tool/net/ljson.h"
 #include "tool/net/lfetch.h"
+#include "tool/net/lgetopt.h"
 #include "net/http/http.h"
 #include <stdlib.h>
 #include <limits.h>
@@ -233,6 +234,10 @@ int luaopen_cosmo(lua_State *L) {
 
   luaopen_lsqlite3(L);
   register_submodule(L, "cosmo.lsqlite3");
+  lua_pop(L, 1);
+
+  LuaGetopt(L);
+  register_submodule(L, "cosmo.getopt");
   lua_pop(L, 1);
 
   /* make help() global for convenience */
