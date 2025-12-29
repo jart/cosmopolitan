@@ -436,7 +436,7 @@ if ok and cosmo then
 end
 
 -- Register submodules (they're separate requires now)
-for _, submod in ipairs({"unix", "path", "re", "argon2", "sqlite3"}) do
+for _, submod in ipairs({"unix", "path", "re", "argon2", "lsqlite3"}) do
   local ok, mod = pcall(require, "cosmo." .. submod)
   if ok and mod then
     help.register(mod, "cosmo." .. submod)

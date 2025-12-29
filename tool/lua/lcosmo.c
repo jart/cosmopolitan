@@ -232,7 +232,7 @@ int luaopen_cosmo(lua_State *L) {
   lua_pop(L, 1);
 
   luaopen_lsqlite3(L);
-  register_submodule(L, "cosmo.sqlite3");
+  register_submodule(L, "cosmo.lsqlite3");
   lua_pop(L, 1);
 
   return 1;
