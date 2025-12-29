@@ -74,11 +74,25 @@ TOOL_LUA_DEPS :=							\
 o/$(MODE)/tool/lua/lua.main.o: third_party/lua/lua.main.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DLUA_COSMO $<
 
+TOOL_LUA_ASSETS =							\
+	o/$(MODE)/tool/lua/.lua/definitions.lua.zip.o			\
+	o/$(MODE)/tool/lua/.lua/cosmo/help/init.lua.zip.o
+
+# Strip tool/lua/ prefix so files end up at /zip/.lua/
+$(TOOL_LUA_ASSETS): private ZIPOBJ_FLAGS += -C2
+
+# Copy base definitions.lua to .lua/ for embedding
+tool/lua/.lua/definitions.lua: tool/net/definitions.lua
+	@cp $< $@
+
+o/$(MODE)/tool/lua/.lua/definitions.lua.zip.o: tool/lua/.lua/definitions.lua
+
 o/$(MODE)/tool/lua/lua.dbg:						\
 		$(TOOL_LUA_DEPS)					\
 		$(TOOL_LUA_LUA_MODULES)					\
 		o/$(MODE)/tool/lua/lua.main.o				\
 		o/$(MODE)/tool/lua/.args.zip.o				\
+		$(TOOL_LUA_ASSETS)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -89,8 +103,13 @@ o/$(MODE)/tool/lua/test_cosmo.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_cosmo
 	$< tool/lua/test_cosmo.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_help.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_help.lua
+	$< tool/lua/test_help.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
-	o/$(MODE)/tool/lua/test_cosmo.ok
+	o/$(MODE)/tool/lua/test_cosmo.ok				\
+	o/$(MODE)/tool/lua/test_help.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\

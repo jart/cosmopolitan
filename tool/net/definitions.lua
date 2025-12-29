@@ -1120,6 +1120,21 @@ function EvadeDragnetSurveillance(bool) end
 ---   If the table includes the `close` field set to a true value,
 ---   then the connection is closed after the request is made and the
 ---   host is removed from the mapping table.
+--- - `proxy` (string): HTTP proxy URL, e.g. `"http://proxy:8080"`.
+---   Supports Basic authentication: `"http://user:pass@proxy:8080"`.
+--- - `maxresponse` (default: `104857600`): maximum response size in bytes.
+---   Protects against memory exhaustion from large responses.
+--- - `resettls` (default: `true`): reset TLS state after fork.
+---   Ensures child processes get fresh DRBG entropy.
+---
+--- Environment variables:
+---
+--- - `http_proxy` / `HTTP_PROXY`: default proxy URL when `proxy` option
+---   is not specified. Supports same format as the option.
+--- - `SSL_CERT_FILE`: path to CA certificate bundle file for TLS verification.
+---   Overrides default system CA locations.
+--- - `SSL_NO_SYSTEM_CERTS`: if set, skip loading system CA certificates.
+---   Only embedded certificates will be used.
 ---
 --- When the redirect is being followed, the same method and body values are being
 --- sent in all cases except when 303 status is returned. In that case the method
@@ -1127,10 +1142,10 @@ function EvadeDragnetSurveillance(bool) end
 --- that if these (method/body) values are provided as table fields, they will be
 --- modified in place.
 ---@param url string
----@param body? string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects: integer?, keepalive: boolean? }
----@return integer status, table<string,string> headers, string body/
+---@param body? string|{ headers: table<string,string>, method: string, body: string, maxredirects: integer?, keepalive: boolean?, proxy: string?, maxresponse: integer?, resettls: boolean? }
+---@return integer status, table<string,string> headers, string body
 ---@nodiscard
----@overload fun(url:string, body?: string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects?: integer, keepalive: boolean? }): nil, error: string
+---@overload fun(url:string, body?: string|{ headers: table<string,string>, method: string, body: string, maxredirects?: integer, keepalive: boolean?, proxy: string?, maxresponse: integer?, resettls: boolean? }): nil, error: string
 function Fetch(url, body) end
 
 --- Converts UNIX timestamp to an RFC1123 string that looks like this:
