@@ -112,10 +112,15 @@ o/$(MODE)/tool/lua/test_skill.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_skill
 	$< tool/lua/test_skill.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_docs.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_docs.lua
+	$< tool/lua/test_docs.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
 	o/$(MODE)/tool/lua/test_help.ok					\
-	o/$(MODE)/tool/lua/test_skill.ok
+	o/$(MODE)/tool/lua/test_skill.ok				\
+	o/$(MODE)/tool/lua/test_docs.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\
