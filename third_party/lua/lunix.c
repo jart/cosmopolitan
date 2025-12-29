@@ -66,6 +66,7 @@
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/temp.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/clock.h"
@@ -1016,6 +1017,53 @@ static int LuaUnixOpen(lua_State *L) {
 static int LuaUnixTmpfd(lua_State *L) {
   int olderr = errno;
   return SysretInteger(L, "tmpfd", olderr, tmpfd());
+}
+
+// unix.mkdtemp(template:str)
+//     ├─→ path:str
+//     └─→ nil, unix.Errno
+static int LuaUnixMkdtemp(lua_State *L) {
+  char *path;
+  int olderr = errno;
+  const char *template = luaL_checkstring(L, 1);
+  size_t len = strlen(template);
+  path = malloc(len + 1);
+  if (!path) {
+    return LuaUnixSysretErrno(L, "mkdtemp", olderr);
+  }
+  memcpy(path, template, len + 1);
+  if (mkdtemp(path)) {
+    lua_pushstring(L, path);
+    free(path);
+    return 1;
+  } else {
+    free(path);
+    return LuaUnixSysretErrno(L, "mkdtemp", olderr);
+  }
+}
+
+// unix.mkstemp(template:str)
+//     ├─→ fd:int, path:str
+//     └─→ nil, unix.Errno
+static int LuaUnixMkstemp(lua_State *L) {
+  char *path;
+  int fd, olderr = errno;
+  const char *template = luaL_checkstring(L, 1);
+  size_t len = strlen(template);
+  path = malloc(len + 1);
+  if (!path) {
+    return LuaUnixSysretErrno(L, "mkstemp", olderr);
+  }
+  memcpy(path, template, len + 1);
+  if ((fd = mkstemp(path)) != -1) {
+    lua_pushinteger(L, fd);
+    lua_pushstring(L, path);
+    free(path);
+    return 2;
+  } else {
+    free(path);
+    return LuaUnixSysretErrno(L, "mkstemp", olderr);
+  }
 }
 
 // unix.close(fd:int)
@@ -3281,6 +3329,8 @@ static const luaL_Reg kLuaUnix[] = {
     {"mapshared", LuaUnixMapshared},      // mmap(MAP_SHARED) w/ mutex+atomics
     {"minor", LuaUnixMinor},              // extract device info
     {"mkdir", LuaUnixMkdir},              // make directory
+    {"mkdtemp", LuaUnixMkdtemp},          // create temporary directory
+    {"mkstemp", LuaUnixMkstemp},          // create temporary file
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
     {"open", LuaUnixOpen},                // open file fd at lowest slot
     {"opendir", LuaUnixOpendir},          // read directory entry list

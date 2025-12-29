@@ -5488,6 +5488,43 @@ function unix.mkdir(path, mode, dirfd) end
 ---@overload fun(path: string, mode?: integer): nil, error: unix.Errno
 function unix.makedirs(path, mode) end
 
+--- Creates a temporary directory with a unique name.
+---
+--- `template` must end with "XXXXXX" which will be replaced with random
+--- characters to create a unique directory name.
+---
+--- Returns the path of the created directory.
+---
+--- Example:
+---
+---     local tmpdir = unix.mkdtemp("/tmp/myapp_XXXXXX")
+---     -- tmpdir is now something like "/tmp/myapp_a3b2c1"
+---
+---@param template string template path ending in XXXXXX
+---@return string path
+---@overload fun(template: string): nil, error: unix.Errno
+function unix.mkdtemp(template) end
+
+--- Creates a temporary file with a unique name.
+---
+--- `template` must end with "XXXXXX" which will be replaced with random
+--- characters to create a unique filename.
+---
+--- Returns both the file descriptor and the path of the created file.
+--- The file is opened for reading and writing.
+---
+--- Example:
+---
+---     local fd, path = unix.mkstemp("/tmp/myapp_XXXXXX")
+---     unix.write(fd, "hello")
+---     unix.close(fd)
+---     unix.unlink(path)
+---
+---@param template string template path ending in XXXXXX
+---@return integer fd, string path
+---@overload fun(template: string): nil, error: unix.Errno
+function unix.mkstemp(template) end
+
 --- Changes current directory to `path`.
 ---@param path string
 ---@return true
