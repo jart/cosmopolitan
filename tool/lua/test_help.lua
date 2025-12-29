@@ -67,10 +67,29 @@ assert(fetch_doc.desc:match("proxy") or fetch_doc.desc:match("Proxy"),
        "Fetch docs should mention proxy support")
 
 -- Test 10: Check unix module has many functions documented
-local unix_count = 0
-for name in pairs(help._docs) do
-  if name:match("^unix%.") then unix_count = unix_count + 1 end
+local unix_func_count = 0
+for name, doc in pairs(help._docs) do
+  if name:match("^unix%.") and not doc.signature:match("%(constant%)$") then
+    unix_func_count = unix_func_count + 1
+  end
 end
-assert(unix_count >= 20, "should have at least 20 unix functions documented, got " .. unix_count)
+assert(unix_func_count >= 20, "should have at least 20 unix functions documented, got " .. unix_func_count)
+
+-- Test 11: Constants are documented
+assert(help._docs["unix.EEXIST"], "unix.EEXIST should be documented")
+assert(help._docs["unix.O_RDONLY"], "unix.O_RDONLY should be documented")
+local eexist_doc = help._docs["unix.EEXIST"]
+assert(eexist_doc.signature:match("%(constant%)$"), "constant signature should end with (constant)")
+assert(eexist_doc.desc:match("File exists") or eexist_doc.desc:match("exists"),
+       "EEXIST should describe file exists error")
+
+-- Test 12: Unix module has many constants
+local unix_const_count = 0
+for name, doc in pairs(help._docs) do
+  if name:match("^unix%.") and doc.signature:match("%(constant%)$") then
+    unix_const_count = unix_const_count + 1
+  end
+end
+assert(unix_const_count >= 50, "should have at least 50 unix constants documented, got " .. unix_const_count)
 
 print("all help tests passed")

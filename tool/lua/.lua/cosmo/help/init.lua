@@ -14,6 +14,8 @@ local function parse_definitions(content)
   local current_params = {}
   local current_returns = {}
   local in_multiline_comment = false
+  local current_table = nil  -- tracks table context like "unix"
+  local current_type = nil   -- tracks @type annotation
 
   for line in content:gmatch("[^\n]+") do
     -- Skip the meta marker and error line
@@ -34,15 +36,35 @@ local function parse_definitions(content)
       goto continue
     end
 
-    -- Description line (--- comment without @)
-    local desc_text = line:match("^%-%-%-(.*)$")
-    if desc_text and not desc_text:match("^@") then
+    -- Track table context (e.g., "unix = {")
+    local table_name = line:match("^([%w_]+)%s*=%s*{")
+    if table_name then
+      current_table = table_name
+      goto continue
+    end
+
+    -- End of table
+    if line:match("^}") and current_table then
+      current_table = nil
+      goto continue
+    end
+
+    -- Parse @type annotations for constants (may be indented inside tables)
+    local type_desc = line:match("^%s*%-%-%-%s*@type%s+%S+%s*(.*)")
+    if type_desc then
+      current_type = type_desc ~= "" and type_desc or nil
+      goto continue
+    end
+
+    -- Description line (--- comment without @, handle indented too)
+    local desc_text = line:match("^%s*%-%-%-(.*)$")
+    if desc_text and not desc_text:match("^%s*@") then
       table.insert(current_desc, desc_text)
       goto continue
     end
 
     -- @param annotation
-    local param_name, param_type, param_desc = line:match("^%-%-%-@param%s+([%w_]+%??)%s+([^%s]+)%s*(.*)")
+    local param_name, param_type, param_desc = line:match("^%s*%-%-%-@param%s+([%w_]+%??)%s+([^%s]+)%s*(.*)")
     if param_name then
       table.insert(current_params, {
         name = param_name,
@@ -53,7 +75,7 @@ local function parse_definitions(content)
     end
 
     -- @return annotation
-    local ret_type, ret_desc = line:match("^%-%-%-@return%s+([^%s]+)%s*(.*)")
+    local ret_type, ret_desc = line:match("^%s*%-%-%-@return%s+([^%s]+)%s*(.*)")
     if ret_type then
       table.insert(current_returns, {
         type = ret_type,
@@ -63,7 +85,7 @@ local function parse_definitions(content)
     end
 
     -- Skip other annotations (@nodiscard, @class, @overload, etc)
-    if line:match("^%-%-%-@") then
+    if line:match("^%s*%-%-%-@") then
       goto continue
     end
 
@@ -85,6 +107,7 @@ local function parse_definitions(content)
       current_desc = {}
       current_params = {}
       current_returns = {}
+      current_type = nil
     end
 
     -- Variable/constant declaration (for things like unix.O_RDONLY)
@@ -99,6 +122,30 @@ local function parse_definitions(content)
       current_desc = {}
       current_params = {}
       current_returns = {}
+      current_type = nil
+    end
+
+    -- Parse constants inside tables (e.g., "    EEXIST = nil,")
+    if current_table then
+      local const_name = line:match("^%s+([A-Z][A-Z0-9_]*)%s*=")
+      if const_name and (current_type or #current_desc > 0) then
+        local full_name = current_table .. "." .. const_name
+        local desc = current_type or ""
+        if #current_desc > 0 then
+          if desc ~= "" then desc = desc .. "\n" end
+          desc = desc .. table.concat(current_desc, "\n")
+        end
+        docs[full_name] = {
+          desc = desc,
+          params = {},
+          returns = {},
+          signature = full_name .. " (constant)"
+        }
+        current_desc = {}
+        current_params = {}
+        current_returns = {}
+        current_type = nil
+      end
     end
 
     ::continue::
@@ -196,20 +243,27 @@ end
 local function list_module(prefix)
   load_definitions()
 
-  local items = {}
+  local functions = {}
+  local constants = {}
   local submodules = {}
 
   for name, doc in pairs(help._docs) do
+    local is_const = doc.signature:match("%(constant%)$")
     if name:match("^" .. prefix:gsub("%.", "%%.") .. "%.([^%.]+)$") then
       local short = name:match("([^%.]+)$")
-      table.insert(items, {name = short, signature = doc.signature})
+      if is_const then
+        table.insert(constants, {name = short, signature = doc.signature})
+      else
+        table.insert(functions, {name = short, signature = doc.signature})
+      end
     elseif name:match("^" .. prefix:gsub("%.", "%%.") .. "%.([^%.]+)%.") then
       local submod = name:match("^" .. prefix:gsub("%.", "%%.") .. "%.([^%.]+)")
       submodules[submod] = true
     end
   end
 
-  table.sort(items, function(a, b) return a.name < b.name end)
+  table.sort(functions, function(a, b) return a.name < b.name end)
+  table.sort(constants, function(a, b) return a.name < b.name end)
 
   local lines = {prefix, ""}
 
@@ -228,10 +282,19 @@ local function list_module(prefix)
   end
 
   -- Show functions
-  if #items > 0 then
+  if #functions > 0 then
     table.insert(lines, "Functions:")
-    for _, item in ipairs(items) do
+    for _, item in ipairs(functions) do
       table.insert(lines, "  " .. item.signature)
+    end
+    table.insert(lines, "")
+  end
+
+  -- Show constants
+  if #constants > 0 then
+    table.insert(lines, "Constants:")
+    for _, item in ipairs(constants) do
+      table.insert(lines, "  " .. item.name)
     end
   end
 
