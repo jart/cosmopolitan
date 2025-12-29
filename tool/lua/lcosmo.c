@@ -180,6 +180,8 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"ResolveIp", LuaResolveIp},
     {"Sleep", LuaSleep},
     {"Slurp", LuaSlurp},
+    {"Strftime", LuaStrftime},
+    {"Strptime", LuaStrptime},
     {"Uncompress", LuaUncompress},
     {"Underlong", LuaUnderlong},
     {"UuidV4", LuaUuidV4},

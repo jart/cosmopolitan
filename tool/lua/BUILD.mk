@@ -117,6 +117,10 @@ o/$(MODE)/tool/lua/test_docs.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_docs.l
 	$< tool/lua/test_docs.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_strftime.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_strftime.lua
+	$< tool/lua/test_strftime.lua
+	@touch $@
+
 o/$(MODE)/tool/lua/test_getopt.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_getopt.lua
 	$< tool/lua/test_getopt.lua
 	@touch $@
@@ -126,7 +130,8 @@ TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_help.ok					\
 	o/$(MODE)/tool/lua/test_skill.ok				\
 	o/$(MODE)/tool/lua/test_docs.ok					\
-	o/$(MODE)/tool/lua/test_getopt.ok
+	o/$(MODE)/tool/lua/test_getopt.ok				\
+	o/$(MODE)/tool/lua/test_strftime.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\

@@ -298,6 +298,66 @@ int LuaParseHttpDateTime(lua_State *L) {
   return 1;
 }
 
+int LuaStrftime(lua_State *L) {
+  char buf[256];
+  size_t len;
+  struct tm tm;
+  const char *fmt;
+  int64_t t;
+  fmt = luaL_checkstring(L, 1);
+  t = luaL_optinteger(L, 2, time(0));
+  if (lua_toboolean(L, 3)) {
+    localtime_r(&t, &tm);
+  } else {
+    gmtime_r(&t, &tm);
+  }
+  len = strftime(buf, sizeof(buf), fmt, &tm);
+  if (len > 0) {
+    lua_pushlstring(L, buf, len);
+  } else {
+    lua_pushnil(L);
+  }
+  return 1;
+}
+
+int LuaStrptime(lua_State *L) {
+  struct tm tm;
+  const char *s, *fmt, *rest;
+  s = luaL_checkstring(L, 1);
+  fmt = luaL_checkstring(L, 2);
+  bzero(&tm, sizeof(tm));
+  tm.tm_mday = 1;  // default to 1st of month
+  rest = strptime(s, fmt, &tm);
+  if (rest) {
+    lua_newtable(L);
+    lua_pushinteger(L, tm.tm_sec);
+    lua_setfield(L, -2, "sec");
+    lua_pushinteger(L, tm.tm_min);
+    lua_setfield(L, -2, "min");
+    lua_pushinteger(L, tm.tm_hour);
+    lua_setfield(L, -2, "hour");
+    lua_pushinteger(L, tm.tm_mday);
+    lua_setfield(L, -2, "day");
+    lua_pushinteger(L, tm.tm_mon + 1);
+    lua_setfield(L, -2, "month");
+    lua_pushinteger(L, tm.tm_year + 1900);
+    lua_setfield(L, -2, "year");
+    lua_pushinteger(L, tm.tm_wday);
+    lua_setfield(L, -2, "wday");
+    lua_pushinteger(L, tm.tm_yday);
+    lua_setfield(L, -2, "yday");
+    lua_pushinteger(L, tm.tm_isdst);
+    lua_setfield(L, -2, "isdst");
+    lua_pushstring(L, rest);
+    lua_setfield(L, -2, "rest");
+    return 1;
+  } else {
+    lua_pushnil(L);
+    lua_pushstring(L, "parse failed");
+    return 2;
+  }
+}
+
 int LuaParseParams(lua_State *L) {
   void *m;
   size_t size;

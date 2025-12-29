@@ -1922,6 +1922,57 @@ function Barf(filename, data, mode, flags, offset) end
 ---@param seconds number
 function Sleep(seconds) end
 
+--- Formats a timestamp using strftime(3) format specifiers.
+---
+--- Common format specifiers:
+--- - `%Y` four-digit year
+--- - `%m` two-digit month (01-12)
+--- - `%d` two-digit day (01-31)
+--- - `%H` two-digit hour (00-23)
+--- - `%M` two-digit minute (00-59)
+--- - `%S` two-digit second (00-59)
+--- - `%F` equivalent to `%Y-%m-%d`
+--- - `%T` equivalent to `%H:%M:%S`
+--- - `%a` abbreviated weekday name
+--- - `%b` abbreviated month name
+---
+--- Example:
+---
+---     Strftime("%Y-%m-%d %H:%M:%S")           -- "2024-12-29 15:30:00"
+---     Strftime("%F %T", os.time())            -- "2024-12-29 15:30:00"
+---     Strftime("%a, %d %b %Y", 0)             -- "Thu, 01 Jan 1970"
+---     Strftime("%F %T", os.time(), true)      -- local time instead of UTC
+---
+---@param format string strftime format string
+---@param timestamp? integer UNIX timestamp (defaults to current time)
+---@param localtime? boolean use local time instead of UTC (default false)
+---@return string? formatted datetime string, or nil if buffer too small
+---@nodiscard
+function Strftime(format, timestamp, localtime) end
+
+--- Parses a datetime string using strptime(3) format specifiers.
+---
+--- Returns a table with parsed components and any unparsed remainder.
+--- Uses the same format specifiers as `Strftime`.
+---
+--- Example:
+---
+---     local t = Strptime("2024-12-29", "%Y-%m-%d")
+---     -- t = {year=2024, month=12, day=29, hour=0, min=0, sec=0, ...}
+---
+---     local t = Strptime("2024-12-29 15:30", "%Y-%m-%d %H:%M")
+---     -- t.rest = "" (nothing unparsed)
+---
+---     local t = Strptime("2024-12-29 extra", "%Y-%m-%d")
+---     -- t.rest = " extra"
+---
+---@param str string datetime string to parse
+---@param format string strptime format string
+---@return table? result {year, month, day, hour, min, sec, wday, yday, isdst, rest}
+---@return string? error error message if parsing failed
+---@nodiscard
+function Strptime(str, format) end
+
 --- Instructs redbean to follow the normal HTTP serving path. This function is
 --- useful when writing an OnHttpRequest handler, since that overrides the
 --- serving path entirely. So if the handler decides it doesn't want to do

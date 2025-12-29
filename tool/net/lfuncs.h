@@ -88,6 +88,8 @@ int LuaSha384(lua_State *);
 int LuaSha512(lua_State *);
 int LuaSleep(lua_State *);
 int LuaSlurp(lua_State *);
+int LuaStrftime(lua_State *);
+int LuaStrptime(lua_State *);
 int LuaUncompress(lua_State *);
 int LuaUnderlong(lua_State *);
 int LuaUuidV4(lua_State *);
