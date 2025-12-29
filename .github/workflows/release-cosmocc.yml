@@ -44,6 +44,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
+          prerelease: true
           files: |
             cosmocc.zip
             SHA256SUMS
