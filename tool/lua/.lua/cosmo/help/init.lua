@@ -173,6 +173,11 @@ local function load_definitions()
   help._loaded = true
 end
 
+-- Public function to ensure definitions are loaded (for programmatic access)
+function help.load()
+  load_definitions()
+end
+
 -- Register function->name mappings for help(func) support
 function help.register(tbl, prefix)
   if type(tbl) ~= "table" then return end

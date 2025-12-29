@@ -81,15 +81,16 @@ static void print_usage (const char *badoption) {
   lua_writestringerror(
   "usage: %s [options] [script [args]]\n"
   "Available options are:\n"
-  "  -e stat  execute string 'stat'\n"
-  "  -i       enter interactive mode after executing 'script'\n"
+  "  -e stat   execute string 'stat'\n"
+  "  -i        enter interactive mode after executing 'script'\n"
   "  -l mod    require library 'mod' into global 'mod'\n"
   "  -l g=mod  require library 'mod' into global 'g'\n"
-  "  -v       show version information\n"
-  "  -E       ignore environment variables\n"
-  "  -W       turn warnings on\n"
-  "  --       stop handling options\n"
-  "  -        stop handling options and execute stdin\n"
+  "  -v        show version information\n"
+  "  -E        ignore environment variables\n"
+  "  -W        turn warnings on\n"
+  "  --skill [path]  install Claude Code skill\n"
+  "  --        stop handling options\n"
+  "  -         stop handling options and execute stdin\n"
   ,
   lua_progname);
 }
@@ -196,6 +197,9 @@ static int handle_script (lua_State *L, char **argv) {
 #define has_v		4	/* -v */
 #define has_e		8	/* -e */
 #define has_E		16	/* -E */
+#define has_skill	32	/* --skill */
+
+static const char *skill_path = NULL;  /* optional path for --skill */
 
 
 /*
@@ -221,11 +225,20 @@ static int collectargs (char **argv, int *first) {
     if (argv[i][0] != '-')  /* not an option? */
         return args;  /* stop handling options */
     switch (argv[i][1]) {  /* else check option */
-      case '-':  /* '--' */
-        if (argv[i][2] != '\0')  /* extra characters after '--'? */
-          return has_error;  /* invalid option */
-        *first = i + 1;
-        return args;
+      case '-':  /* '--' or '--skill' */
+        if (argv[i][2] == '\0') {  /* bare '--' */
+          *first = i + 1;
+          return args;
+        }
+        if (strcmp(argv[i], "--skill") == 0) {  /* --skill [path] */
+          args |= has_skill;
+          /* check for optional path argument */
+          if (argv[i + 1] != NULL && argv[i + 1][0] != '-') {
+            skill_path = argv[++i];
+          }
+          break;
+        }
+        return has_error;  /* unknown long option */
       case '\0':  /* '-' */
         return args;  /* script "name" is '-' */
       case 'E':
@@ -382,6 +395,26 @@ static int pmain (lua_State *L) {
   luaL_requiref(L, "unix", LuaUnix, 1);
 #endif
   lua_pop(L, 1);
+  /* handle --skill option */
+  if (args & has_skill) {
+    lua_getglobal(L, "require");
+    lua_pushliteral(L, "cosmo.skill");
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+      lua_report(L, LUA_ERRRUN);
+      return 0;
+    }
+    lua_getfield(L, -1, "install");
+    if (skill_path)
+      lua_pushstring(L, skill_path);
+    else
+      lua_pushnil(L);
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+      lua_report(L, LUA_ERRRUN);
+      return 0;
+    }
+    lua_pushboolean(L, lua_toboolean(L, -1));
+    return 1;  /* exit after installing skill */
+  }
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* ...in generational mode */
