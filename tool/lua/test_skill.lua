@@ -1,6 +1,8 @@
 -- test skill module
 
 local skill = require("cosmo.skill")
+local unix = require("cosmo.unix")
+local path = require("cosmo.path")
 
 -- Test that module loads
 assert(skill, "skill module should load")
@@ -38,5 +40,22 @@ assert(skill_content:match("name: cosmo%-lua"), "SKILL.md should have correct na
 assert(skill_content:match("whilp/cosmopolitan"), "SKILL.md should reference whilp/cosmopolitan")
 assert(skill_content:match("cosmo%.md"), "SKILL.md should reference cosmo.md")
 assert(skill_content:match("cosmo%-unix%.md"), "SKILL.md should reference cosmo-unix.md")
+
+-- Test actual install to temp directory
+local tmpdir = unix.mkdtemp(path.join(os.getenv("TMPDIR") or "/tmp", "lua_skill_test_XXXXXX"))
+assert(tmpdir, "mkdtemp should create temp directory")
+local ok, err = skill.install(tmpdir .. "/")
+assert(ok, "skill.install failed: " .. (err or ""))
+
+-- Verify SKILL.md was created
+local skill_file = path.join(tmpdir, "cosmo-lua", "SKILL.md")
+local f = io.open(skill_file)
+assert(f, "SKILL.md should exist at " .. skill_file)
+local content = f:read("*a")
+f:close()
+assert(content:match("cosmo%-lua"), "SKILL.md should contain skill name")
+
+-- Cleanup
+unix.rmrf(tmpdir)
 
 print("all skill tests passed")

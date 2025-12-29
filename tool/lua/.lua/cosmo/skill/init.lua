@@ -158,10 +158,11 @@ end
 
 -- Create directory and parents (like mkdir -p)
 local function mkdir_p(dir)
+  local is_absolute = dir:sub(1, 1) == "/"
   local parts = {}
   for part in dir:gmatch("[^/]+") do
     table.insert(parts, part)
-    local current = "/" .. table.concat(parts, "/")
+    local current = (is_absolute and "/" or "") .. table.concat(parts, "/")
     local stat = unix.stat(current)
     if not stat then
       local ok, err = unix.mkdir(current, 0755)
