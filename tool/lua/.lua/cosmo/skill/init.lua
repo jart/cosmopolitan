@@ -1,6 +1,9 @@
 -- skill module for cosmo lua
 -- Generates and installs a Claude Code skill with documentation
 
+local unix = require("cosmo.unix")
+local path = require("cosmo.path")
+
 local skill = {}
 
 local SKILL_NAME = "cosmo-lua"
@@ -153,16 +156,36 @@ local function generate_module_md(module_name, funcs)
   return table.concat(lines, "\n")
 end
 
+-- Create directory and parents (like mkdir -p)
+local function mkdir_p(dir)
+  local parts = {}
+  for part in dir:gmatch("[^/]+") do
+    table.insert(parts, part)
+    local current = "/" .. table.concat(parts, "/")
+    local stat = unix.stat(current)
+    if not stat then
+      local ok, err = unix.mkdir(current, 0755)
+      if not ok and err:errno() ~= unix.EEXIST then
+        return nil, "mkdir " .. current .. ": " .. tostring(err)
+      end
+    end
+  end
+  return true
+end
+
 -- Write a file, creating parent directories as needed
-local function write_file(path, content)
-  local dir = path:match("(.+)/[^/]+$")
-  if dir then
-    os.execute('mkdir -p "' .. dir .. '"')
+local function write_file(filepath, content)
+  local dir = path.dirname(filepath)
+  if dir and dir ~= "" and dir ~= "." then
+    local ok, err = mkdir_p(dir)
+    if not ok then
+      return nil, err
+    end
   end
 
-  local f = io.open(path, "w")
+  local f = io.open(filepath, "w")
   if not f then
-    return nil, "failed to open file: " .. path
+    return nil, "failed to open file: " .. filepath
   end
   f:write(content)
   f:close()
@@ -175,7 +198,7 @@ local function default_path()
   if not home then
     return nil, "HOME environment variable not set"
   end
-  return home .. "/.claude/skills"
+  return path.join(home, ".claude", "skills")
 end
 
 -- Generate SKILL.md content with module links (dynamic)
@@ -231,34 +254,34 @@ function skill.generate_docs()
 end
 
 -- Install skill to a directory
--- path: target directory (default: ~/.claude/skills)
-function skill.install(path)
-  if not path then
+-- target: target directory (default: ~/.claude/skills)
+function skill.install(target)
+  if not target then
     local default, err = default_path()
     if not default then
       return nil, err
     end
-    path = default
-  elseif path:sub(-1) ~= "/" then
-    -- If path doesn't end with /, assume it's a project root
-    path = path .. "/.claude/skills"
+    target = default
+  elseif target:sub(-1) ~= "/" then
+    -- If target doesn't end with /, assume it's a project root
+    target = path.join(target, ".claude", "skills")
   end
 
-  local skill_dir = path .. "/" .. SKILL_NAME
+  local skill_dir = path.join(target, SKILL_NAME)
 
   -- Generate reference docs (also returns discovered modules)
   local docs, modules = skill.generate_docs()
 
   -- Generate and write SKILL.md
   local skill_content = skill.generate_skill_md(modules)
-  local ok, err = write_file(skill_dir .. "/SKILL.md", skill_content)
+  local ok, err = write_file(path.join(skill_dir, "SKILL.md"), skill_content)
   if not ok then
     return nil, "failed to write SKILL.md: " .. err
   end
 
   -- Write reference docs
   for filename, content in pairs(docs) do
-    ok, err = write_file(skill_dir .. "/" .. filename, content)
+    ok, err = write_file(path.join(skill_dir, filename), content)
     if not ok then
       return nil, "failed to write " .. filename .. ": " .. err
     end
