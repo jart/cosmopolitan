@@ -429,11 +429,18 @@ setmetatable(help, {
   end
 })
 
--- Auto-register cosmo module when help is loaded
--- (cosmo is already loaded since help is called via cosmo.help)
+-- Auto-register cosmo module and submodules when help is loaded
 local ok, cosmo = pcall(require, "cosmo")
 if ok and cosmo then
   help.register(cosmo, "cosmo")
+end
+
+-- Register submodules (they're separate requires now)
+for _, submod in ipairs({"unix", "path", "re", "argon2", "sqlite3"}) do
+  local ok, mod = pcall(require, "cosmo." .. submod)
+  if ok and mod then
+    help.register(mod, "cosmo." .. submod)
+  end
 end
 
 return help

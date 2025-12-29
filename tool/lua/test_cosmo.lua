@@ -7,12 +7,17 @@ assert(type(cosmo.DecodeJson) == "function", "DecodeJson should be a function")
 assert(type(cosmo.EncodeJson) == "function", "EncodeJson should be a function")
 assert(type(cosmo.Sha256) == "function", "Sha256 should be a function")
 
--- test submodules exist
-assert(type(cosmo.unix) == "table", "cosmo.unix should be a table")
-assert(type(cosmo.path) == "table", "cosmo.path should be a table")
-assert(type(cosmo.re) == "table", "cosmo.re should be a table")
-assert(type(cosmo.argon2) == "table", "cosmo.argon2 should be a table")
-assert(type(cosmo.sqlite3) == "table", "cosmo.sqlite3 should be a table")
+-- test submodules via require("cosmo.xxx")
+local unix = require("cosmo.unix")
+local path = require("cosmo.path")
+local re = require("cosmo.re")
+local argon2 = require("cosmo.argon2")
+local sqlite3 = require("cosmo.sqlite3")
+assert(type(unix) == "table", "require('cosmo.unix') should return a table")
+assert(type(path) == "table", "require('cosmo.path') should return a table")
+assert(type(re) == "table", "require('cosmo.re') should return a table")
+assert(type(argon2) == "table", "require('cosmo.argon2') should return a table")
+assert(type(sqlite3) == "table", "require('cosmo.sqlite3') should return a table")
 
 -- test a function actually works
 local json = cosmo.EncodeJson({foo = "bar"})
@@ -21,8 +26,7 @@ assert(json == '{"foo":"bar"}', "EncodeJson should produce valid JSON")
 local decoded = cosmo.DecodeJson('{"x":1}')
 assert(decoded.x == 1, "DecodeJson should parse JSON")
 
--- test unix.mkdtemp
-local unix = cosmo.unix
+-- test unix.mkdtemp (unix already defined above via require)
 local tmpdir = unix.mkdtemp((os.getenv("TMPDIR") or "/tmp") .. "/test_XXXXXX")
 assert(tmpdir, "mkdtemp should return a path")
 assert(not tmpdir:match("XXXXXX"), "mkdtemp should replace XXXXXX")

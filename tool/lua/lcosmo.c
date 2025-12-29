@@ -199,31 +199,41 @@ static const luaL_Reg kCosmoFuncs[] = {
 };
 // clang-format on
 
+/* Register submodule in package.loaded for direct require() support */
+static void register_submodule(lua_State *L, const char *name) {
+  /* stack: cosmo, submodule */
+  lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
+  lua_pushvalue(L, -2);              /* copy submodule */
+  lua_setfield(L, -2, name);         /* package.loaded[name] = submodule */
+  lua_pop(L, 1);                     /* pop package.loaded */
+}
+
 int luaopen_cosmo(lua_State *L) {
   /* initialize fetch SSL state */
   LuaInitFetch();
 
   luaL_newlib(L, kCosmoFuncs);
 
-  /* add unix submodule */
+  /* register submodules for direct require("cosmo.xxx") */
   LuaUnix(L);
-  lua_setfield(L, -2, "unix");
+  register_submodule(L, "cosmo.unix");
+  lua_pop(L, 1);
 
-  /* add path submodule */
   LuaPath(L);
-  lua_setfield(L, -2, "path");
+  register_submodule(L, "cosmo.path");
+  lua_pop(L, 1);
 
-  /* add re submodule */
   LuaRe(L);
-  lua_setfield(L, -2, "re");
+  register_submodule(L, "cosmo.re");
+  lua_pop(L, 1);
 
-  /* add argon2 submodule */
   luaopen_argon2(L);
-  lua_setfield(L, -2, "argon2");
+  register_submodule(L, "cosmo.argon2");
+  lua_pop(L, 1);
 
-  /* add sqlite3 submodule */
   luaopen_lsqlite3(L);
-  lua_setfield(L, -2, "sqlite3");
+  register_submodule(L, "cosmo.sqlite3");
+  lua_pop(L, 1);
 
   return 1;
 }

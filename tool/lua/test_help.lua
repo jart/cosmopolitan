@@ -1,6 +1,7 @@
 -- Tests for the help module parser and functionality
 
 local cosmo = require("cosmo")
+local unix = require("cosmo.unix")
 local help = require("cosmo.help")
 
 -- Test 1: help module loaded correctly
@@ -32,8 +33,8 @@ assert(type(doc.returns) == "table", "doc.returns should be a table")
 -- Test 6: Function registration works (with cosmo. prefix)
 assert(help._funcs[cosmo.EncodeBase64] == "cosmo.EncodeBase64",
        "cosmo.EncodeBase64 should be registered")
-assert(help._funcs[cosmo.unix.fork] == "cosmo.unix.fork",
-       "cosmo.unix.fork should be registered")
+assert(help._funcs[unix.fork] == "cosmo.unix.fork",
+       "unix.fork should be registered")
 
 -- Test 7: help(func) works - finds doc via prefix stripping
 local output = {}
