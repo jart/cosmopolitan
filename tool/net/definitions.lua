@@ -4213,6 +4213,75 @@ function argon2.hash_encoded(pass, salt, config) end
 ---@overload fun(encoded: string, pass: string): nil, error: string
 function argon2.verify(encoded, pass) end
 
+--- This module provides optimized socket creation with modern TCP features.
+--- It wraps the GoodSocket() C function which enables TCP Fast Open, Quick ACK,
+--- and other performance optimizations automatically.
+goodsocket = {
+    --- @type integer IPv4 address family
+    AF_INET = nil,
+    --- @type integer IPv6 address family
+    AF_INET6 = nil,
+    --- @type integer Unix domain socket address family
+    AF_UNIX = nil,
+    --- @type integer Unspecified address family
+    AF_UNSPEC = nil,
+
+    --- @type integer Stream socket (TCP)
+    SOCK_STREAM = nil,
+    --- @type integer Datagram socket (UDP)
+    SOCK_DGRAM = nil,
+    --- @type integer Raw socket
+    SOCK_RAW = nil,
+    --- @type integer Reliable datagram socket
+    SOCK_RDM = nil,
+    --- @type integer Sequenced packet socket
+    SOCK_SEQPACKET = nil,
+
+    --- @type integer Default IP protocol
+    IPPROTO_IP = nil,
+    --- @type integer TCP protocol
+    IPPROTO_TCP = nil,
+    --- @type integer UDP protocol
+    IPPROTO_UDP = nil,
+    --- @type integer ICMP protocol
+    IPPROTO_ICMP = nil,
+    --- @type integer IPv6 protocol
+    IPPROTO_IPV6 = nil,
+    --- @type integer ICMPv6 protocol
+    IPPROTO_ICMPV6 = nil,
+    --- @type integer Raw IP protocol
+    IPPROTO_RAW = nil,
+}
+
+--- Creates a socket with modern TCP optimizations enabled.
+---
+--- This function wraps GoodSocket() which automatically enables performance
+--- features like TCP Fast Open, Quick ACK, and other optimizations based on
+--- whether you're creating a client or server socket.
+---
+--- Example:
+---
+---     local gs = require("cosmo.goodsocket")
+---     local unix = require("cosmo.unix")
+---
+---     -- Create a TCP client socket
+---     local fd = assert(gs.socket(gs.AF_INET, gs.SOCK_STREAM, gs.IPPROTO_TCP, false))
+---     unix.close(fd)
+---
+---     -- Create a TCP server socket with 30 second timeout
+---     local fd = assert(gs.socket(gs.AF_INET, gs.SOCK_STREAM, gs.IPPROTO_TCP, true, 30))
+---     unix.close(fd)
+---
+---@param family integer Socket family (AF_INET, AF_INET6, AF_UNIX, etc.)
+---@param type integer Socket type (SOCK_STREAM, SOCK_DGRAM, etc.)
+---@param protocol integer Protocol (IPPROTO_TCP, IPPROTO_UDP, 0 for default)
+---@param isserver boolean True for server sockets, false for client sockets
+---@param timeout? number Optional timeout in seconds. Positive values set SO_RCVTIMEO/SO_SNDTIMEO. Negative values enable SO_KEEPALIVE.
+---@return integer fd File descriptor on success
+---@nodiscard
+---@overload fun(family: integer, type: integer, protocol: integer, isserver: boolean, timeout?: number): nil, error: string
+function goodsocket.socket(family, type, protocol, isserver, timeout) end
+
 --- This module exposes the low-level System Five system call interface.
 --- This module works on all supported platforms, including Windows NT.
 unix = {

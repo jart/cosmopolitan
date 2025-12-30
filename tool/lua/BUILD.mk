@@ -35,6 +35,7 @@ TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/net/lfetch.o					\
 	o/$(MODE)/tool/net/lgetopt.o					\
 	o/$(MODE)/tool/net/lzip.o					\
+	o/$(MODE)/tool/net/lgoodsocket.o				\
 	o/$(MODE)/third_party/lz4cli/lz4.o
 
 TOOL_LUA_DIRECTDEPS =							\
@@ -154,6 +155,10 @@ o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok: o/$(MODE)/tool/lua/lua.db
 	$< tool/lua/cosmo/http/test_server_security.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_goodsocket.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_goodsocket.lua
+	$< tool/lua/test_goodsocket.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
 	o/$(MODE)/tool/lua/cosmo/help/test.ok				\
@@ -166,7 +171,8 @@ TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/cosmo/http/test.ok				\
 	o/$(MODE)/tool/lua/cosmo/http/test_server.ok			\
 	o/$(MODE)/tool/lua/cosmo/http/test_security.ok			\
-	o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok
+	o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok		\
+	o/$(MODE)/tool/lua/test_goodsocket.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\

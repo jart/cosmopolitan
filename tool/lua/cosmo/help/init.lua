@@ -309,6 +309,7 @@ Modules:
   cosmo.lsqlite3   - SQLite database
   cosmo.argon2     - Password hashing
   cosmo.http       - HTTP parsing, formatting, and server
+  cosmo.goodsocket - Optimized socket creation
 
 Usage:
   help()                      - This overview

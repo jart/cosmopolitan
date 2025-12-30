@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/serialize.h"
+#include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -457,7 +458,6 @@ static int ParseAddr(const char *addr, uint32_t *ip, uint16_t *port) {
 static int LuaHttpServe(lua_State *L) {
   uint32_t ip = 0;
   uint16_t port = 0;
-  int reuseaddr = 1;
   int backlog = 128;
   int timeout_sec = 30;
   int handler_idx;
@@ -472,11 +472,8 @@ static int LuaHttpServe(lua_State *L) {
     }
     lua_pop(L, 1);
 
-    lua_getfield(L, 1, "reuseaddr");
-    if (!lua_isnil(L, -1)) {
-      reuseaddr = lua_toboolean(L, -1);
-    }
-    lua_pop(L, 1);
+    // Note: reuseaddr option is ignored; GoodSocket always sets SO_REUSEADDR
+    // for server sockets along with TCP Fast Open and Quick ACK
 
     lua_getfield(L, 1, "backlog");
     if (!lua_isnil(L, -1)) {
@@ -506,16 +503,11 @@ static int LuaHttpServe(lua_State *L) {
     handler_idx = 2;
   }
 
-  // Create socket
-  int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  // Create socket with modern TCP optimizations (TCP Fast Open, Quick ACK, etc.)
+  // GoodSocket sets SO_REUSEADDR automatically for server sockets
+  int fd = GoodSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, true, NULL);
   if (fd == -1) {
     return luaL_error(L, "socket: %s", strerror(errno));
-  }
-
-  // Set SO_REUSEADDR
-  if (reuseaddr) {
-    int optval = 1;
-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
   }
 
   // Bind
