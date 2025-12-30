@@ -2173,6 +2173,33 @@ function Deflate(uncompressed, level) end
 ---@overload fun(compressed: string, maxoutsize: integer): nil, error: string
 function Inflate(compressed, maxoutsize) end
 
+--- Compresses data using LZ4.
+---
+--- LZ4 is an extremely fast compression algorithm, trading compression ratio
+--- for speed. It's particularly well-suited for real-time compression scenarios.
+--- The compressed output is not compatible with other compression formats (use
+--- Deflate/Inflate for standard zlib compatibility).
+---
+---@param data string the data to compress
+---@param acceleration integer? acceleration factor (default 1). Higher values
+--- produce faster compression but with worse compression ratio. Range is 1-65537.
+---@return string compressed
+---@nodiscard
+---@overload fun(data: string, acceleration?: integer): nil, error: string
+function Lz4Compress(data, acceleration) end
+
+--- Decompresses LZ4-compressed data.
+---
+--- You must know the maximum size of the decompressed output beforehand.
+--- This is a limitation of the LZ4 format which doesn't store the original size.
+---
+---@param compressed string the LZ4-compressed data
+---@param maxoutsize integer the maximum size of the decompressed output
+---@return string decompressed
+---@nodiscard
+---@overload fun(compressed: string, maxoutsize: integer): nil, error: string
+function Lz4Decompress(compressed, maxoutsize) end
+
 --- Performs microbenchmark. Nanoseconds are computed from RDTSC tick counts,
 --- using an approximation that's measured beforehand with the
 --- unix.`clock_gettime()` function. The `ticks` result is the canonical average

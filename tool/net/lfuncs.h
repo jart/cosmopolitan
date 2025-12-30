@@ -67,6 +67,8 @@ int LuaIsPublicIp(lua_State *);
 int LuaIsReasonablePath(lua_State *);
 int LuaIsValidHttpToken(lua_State *);
 int LuaLemur64(lua_State *);
+int LuaLz4Compress(lua_State *);
+int LuaLz4Decompress(lua_State *);
 int LuaMd5(lua_State *);
 int LuaMeasureEntropy(lua_State *);
 int LuaOct(lua_State *);

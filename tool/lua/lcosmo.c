@@ -168,6 +168,8 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"IsReasonablePath", LuaIsReasonablePath},
     {"IsValidHttpToken", LuaIsValidHttpToken},
     {"Lemur64", LuaLemur64},
+    {"Lz4Compress", LuaLz4Compress},
+    {"Lz4Decompress", LuaLz4Decompress},
     {"MeasureEntropy", LuaMeasureEntropy},
     {"oct", LuaOct},
     {"ParseHost", LuaParseHost},

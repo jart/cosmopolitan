@@ -32,7 +32,8 @@ TOOL_LUA_LUA_MODULES =							\
 	o/$(MODE)/tool/net/lsqlite3.o					\
 	o/$(MODE)/tool/net/largon2.o					\
 	o/$(MODE)/tool/net/lfetch.o					\
-	o/$(MODE)/tool/net/lgetopt.o
+	o/$(MODE)/tool/net/lgetopt.o					\
+	o/$(MODE)/third_party/lz4cli/lz4.o
 
 TOOL_LUA_DIRECTDEPS =							\
 	DSP_SCALE							\
@@ -125,12 +126,17 @@ o/$(MODE)/tool/lua/test_getopt.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_geto
 	$< tool/lua/test_getopt.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_lz4.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_lz4.lua
+	$< tool/lua/test_lz4.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
 	o/$(MODE)/tool/lua/test_help.ok					\
 	o/$(MODE)/tool/lua/test_skill.ok				\
 	o/$(MODE)/tool/lua/test_docs.ok					\
 	o/$(MODE)/tool/lua/test_getopt.ok				\
+	o/$(MODE)/tool/lua/test_lz4.ok					\
 	o/$(MODE)/tool/lua/test_strftime.ok
 
 .PHONY: o/$(MODE)/tool/lua

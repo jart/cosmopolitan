@@ -75,6 +75,7 @@
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
+#include "third_party/lz4cli/lz4.h"
 
 static int Rdpid(void) {
 #ifdef __x86_64__
@@ -1309,6 +1310,61 @@ int LuaInflate(lua_State *L) {
   }
 
   luaL_pushresultsize(&buf, actualoutsize);
+  return 1;
+}
+
+// Lz4Compress(data:str[, level:int])
+//     ├─→ compressed:str
+//     └─→ nil, error:str
+int LuaLz4Compress(lua_State *L) {
+  size_t srcsize;
+  int dstcap, compsize, accel;
+  const char *src;
+  char *dst;
+  luaL_Buffer buf;
+  src = luaL_checklstring(L, 1, &srcsize);
+  accel = luaL_optinteger(L, 2, 1);  // 1 = default, higher = faster but less compression
+  if (srcsize > LZ4_MAX_INPUT_SIZE) {
+    lua_pushnil(L);
+    lua_pushstring(L, "input too large for LZ4");
+    return 2;
+  }
+  dstcap = LZ4_compressBound(srcsize);
+  dst = luaL_buffinitsize(L, &buf, dstcap);
+  compsize = LZ4_compress_fast(src, dst, srcsize, dstcap, accel);
+  if (compsize <= 0) {
+    lua_pushnil(L);
+    lua_pushstring(L, "LZ4 compression failed");
+    return 2;
+  }
+  luaL_pushresultsize(&buf, compsize);
+  return 1;
+}
+
+// Lz4Decompress(data:str, maxoutsize:int)
+//     ├─→ decompressed:str
+//     └─→ nil, error:str
+int LuaLz4Decompress(lua_State *L) {
+  size_t srcsize;
+  int dstcap, decompsize;
+  const char *src;
+  char *dst;
+  luaL_Buffer buf;
+  src = luaL_checklstring(L, 1, &srcsize);
+  dstcap = luaL_checkinteger(L, 2);
+  if (dstcap <= 0) {
+    lua_pushnil(L);
+    lua_pushstring(L, "maxoutsize must be positive");
+    return 2;
+  }
+  dst = luaL_buffinitsize(L, &buf, dstcap);
+  decompsize = LZ4_decompress_safe(src, dst, srcsize, dstcap);
+  if (decompsize < 0) {
+    lua_pushnil(L);
+    lua_pushstring(L, "LZ4 decompression failed");
+    return 2;
+  }
+  luaL_pushresultsize(&buf, decompsize);
   return 1;
 }
 
