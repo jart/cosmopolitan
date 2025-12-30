@@ -96,6 +96,7 @@ o/$(MODE)/tool/net/%.dbg:						\
 TOOL_NET_REDBEAN_LUA_MODULES =						\
 	o/$(MODE)/tool/net/lfuncs.o					\
 	o/$(MODE)/tool/net/lpath.o					\
+	o/$(MODE)/tool/net/lhttp.o					\
 	o/$(MODE)/tool/net/lfinger.o					\
 	o/$(MODE)/tool/net/lre.o					\
 	o/$(MODE)/tool/net/ljson.o					\

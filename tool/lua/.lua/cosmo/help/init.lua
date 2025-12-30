@@ -194,6 +194,20 @@ end
 local function load_definitions()
   if help._loaded then return end
   help._docs = load_defs("definitions") or {}
+
+  -- Also load cosmo module documentation
+  local module_docs = {
+    "cosmo.http",
+  }
+  for _, modname in ipairs(module_docs) do
+    local mod_docs = load_defs(modname)
+    if mod_docs then
+      for name, doc in pairs(mod_docs) do
+        help._docs[name] = doc
+      end
+    end
+  end
+
   help._loaded = true
 end
 
@@ -294,6 +308,7 @@ Modules:
   cosmo.re         - Regular expressions
   cosmo.lsqlite3   - SQLite database
   cosmo.argon2     - Password hashing
+  cosmo.http       - HTTP parsing, formatting, and server
 
 Usage:
   help()                      - This overview
