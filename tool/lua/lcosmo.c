@@ -25,6 +25,7 @@
 #include "tool/net/ljson.h"
 #include "tool/net/lfetch.h"
 #include "tool/net/lgetopt.h"
+#include "tool/net/lzip.h"
 #include "net/http/http.h"
 #include <stdlib.h>
 #include <limits.h>
@@ -242,6 +243,10 @@ int luaopen_cosmo(lua_State *L) {
 
   LuaGetopt(L);
   register_submodule(L, "cosmo.getopt");
+  lua_pop(L, 1);
+
+  LuaZip(L);
+  register_submodule(L, "cosmo.zip");
   lua_pop(L, 1);
 
   /* make help() global for convenience */
