@@ -283,9 +283,9 @@ fetch() {
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/aarch64-gcc.zip 6a07f915ec0296cd33b3142e75c00ed1a7072c75d92c82a0c0b5f5df2cff0dd2 &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/x86_64-gcc.zip cbb1659c56a0a4f95a71f59f94693515000d3dd53f79a597acacd53cbad2c7d8 &
-  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.60/llvm.zip d42c2e46204d4332975d2d7464c5df63c898c34f8d9d2b83c168c14705ca8edd &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.65/aarch64-gcc.zip 61038c275c9e7ae638d1b92548086e705eff0bda880e358459d94b0b4ee28f36 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.65/x86_64-gcc.zip 660a70b24d78c63afbe35f9ec7a06730614e882b464d464b817b007bd412f211 &
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.65/llvm.zip 30ac89aecc43f9206c0c2ad0f55fee939ac54ae438964fe5a554fd1881a7a8b0 &
   wait
   unzip aarch64-gcc.zip &
   unzip x86_64-gcc.zip &
