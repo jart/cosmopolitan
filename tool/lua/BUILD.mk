@@ -79,19 +79,20 @@ o/$(MODE)/tool/lua/lua.main.o: third_party/lua/lua.main.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DLUA_COSMO $<
 
 TOOL_LUA_ASSETS =							\
-	o/$(MODE)/tool/lua/.lua/definitions.lua.zip.o			\
-	o/$(MODE)/tool/lua/.lua/cosmo/help/init.lua.zip.o		\
-	o/$(MODE)/tool/lua/.lua/cosmo/skill/init.lua.zip.o		\
-	o/$(MODE)/tool/lua/.lua/cosmo/http.lua.zip.o
+	o/$(MODE)/tool/lua/definitions.lua.zip.o			\
+	o/$(MODE)/tool/lua/cosmo/help/init.lua.zip.o			\
+	o/$(MODE)/tool/lua/cosmo/skill/init.lua.zip.o			\
+	o/$(MODE)/tool/lua/cosmo/http/init.lua.zip.o
 
-# Strip tool/lua/ prefix so files end up at /zip/.lua/
-$(TOOL_LUA_ASSETS): private ZIPOBJ_FLAGS += -C2
+# Strip tool/lua/ prefix and prepend .lua/ so files end up at /zip/.lua/
+o/$(MODE)/tool/lua/definitions.lua.zip.o: private ZIPOBJ_FLAGS += -C2 -P.lua
+o/$(MODE)/tool/lua/cosmo/%.zip.o: private ZIPOBJ_FLAGS += -C2 -P.lua
 
-# Copy base definitions.lua to .lua/ for embedding
-tool/lua/.lua/definitions.lua: tool/net/definitions.lua
+# Copy base definitions.lua for embedding
+tool/lua/definitions.lua: tool/net/definitions.lua
 	@cp $< $@
 
-o/$(MODE)/tool/lua/.lua/definitions.lua.zip.o: tool/lua/.lua/definitions.lua
+o/$(MODE)/tool/lua/definitions.lua.zip.o: tool/lua/definitions.lua
 
 o/$(MODE)/tool/lua/lua.dbg:						\
 		$(TOOL_LUA_DEPS)					\
@@ -109,12 +110,12 @@ o/$(MODE)/tool/lua/test_cosmo.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_cosmo
 	$< tool/lua/test_cosmo.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_help.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_help.lua
-	$< tool/lua/test_help.lua
+o/$(MODE)/tool/lua/cosmo/help/test.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/help/test.lua
+	$< tool/lua/cosmo/help/test.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_skill.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_skill.lua
-	$< tool/lua/test_skill.lua
+o/$(MODE)/tool/lua/cosmo/skill/test.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/skill/test.lua
+	$< tool/lua/cosmo/skill/test.lua
 	@touch $@
 
 o/$(MODE)/tool/lua/test_docs.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_docs.lua
@@ -137,35 +138,35 @@ o/$(MODE)/tool/lua/test_zip.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_zip.lua
 	$< tool/lua/test_zip.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_http.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_http.lua
-	$< tool/lua/test_http.lua
+o/$(MODE)/tool/lua/cosmo/http/test.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/http/test.lua
+	$< tool/lua/cosmo/http/test.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_http_server.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_http_server.lua
-	$< tool/lua/test_http_server.lua
+o/$(MODE)/tool/lua/cosmo/http/test_server.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/http/test_server.lua
+	$< tool/lua/cosmo/http/test_server.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_http_security.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_http_security.lua
-	$< tool/lua/test_http_security.lua
+o/$(MODE)/tool/lua/cosmo/http/test_security.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/http/test_security.lua
+	$< tool/lua/cosmo/http/test_security.lua
 	@touch $@
 
-o/$(MODE)/tool/lua/test_http_server_security.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_http_server_security.lua
-	$< tool/lua/test_http_server_security.lua
+o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/cosmo/http/test_server_security.lua
+	$< tool/lua/cosmo/http/test_server_security.lua
 	@touch $@
 
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
-	o/$(MODE)/tool/lua/test_help.ok					\
-	o/$(MODE)/tool/lua/test_skill.ok				\
+	o/$(MODE)/tool/lua/cosmo/help/test.ok				\
+	o/$(MODE)/tool/lua/cosmo/skill/test.ok				\
 	o/$(MODE)/tool/lua/test_docs.ok					\
 	o/$(MODE)/tool/lua/test_getopt.ok				\
 	o/$(MODE)/tool/lua/test_lz4.ok					\
 	o/$(MODE)/tool/lua/test_strftime.ok				\
 	o/$(MODE)/tool/lua/test_zip.ok					\
-	o/$(MODE)/tool/lua/test_http.ok					\
-	o/$(MODE)/tool/lua/test_http_server.ok				\
-	o/$(MODE)/tool/lua/test_http_security.ok			\
-	o/$(MODE)/tool/lua/test_http_server_security.ok
+	o/$(MODE)/tool/lua/cosmo/http/test.ok				\
+	o/$(MODE)/tool/lua/cosmo/http/test_server.ok			\
+	o/$(MODE)/tool/lua/cosmo/http/test_security.ok			\
+	o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\
