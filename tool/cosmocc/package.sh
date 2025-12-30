@@ -289,12 +289,12 @@ if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
   wait
   unzip aarch64-gcc.zip &
   unzip x86_64-gcc.zip &
-  unzip llvm.zip bin/clang-19 bin/clang-format &
+  unzip llvm.zip bin/clang-20 bin/clang-format &
   wait
   rm -f aarch64-gcc.zip
   rm -f x86_64-gcc.zip
   rm -f llvm.zip
-  mv bin/clang-19 libexec/clang  # use `cosmocc -mclang` instead
+  mv bin/clang-20 libexec/clang  # use `cosmocc -mclang` instead
 fi
 rm -f bin/*-cpp
 rm -f bin/*-gcc-*
