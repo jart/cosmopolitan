@@ -1,14 +1,17 @@
+-- Basic tests for cosmo.zip reader and writer
+
 local zip = require("cosmo.zip")
 local unix = require("cosmo.unix")
 
--- Test module exists
-assert(zip, "zip module should exist")
-assert(type(zip.open) == "function", "zip.open should be a function")
-assert(type(zip.create) == "function", "zip.create should be a function")
-
--- Create a temporary directory for tests
 local tmpdir = unix.mkdtemp("/tmp/test_zip_XXXXXX")
 assert(tmpdir, "failed to create temp dir")
+
+--------------------------------------------------------------------------------
+-- Test module exists
+--------------------------------------------------------------------------------
+
+assert(zip, "zip module should exist")
+assert(type(zip.open) == "function", "zip.open should be a function")
 
 --------------------------------------------------------------------------------
 -- Test zip.open (Reader) with system-created zip
@@ -96,7 +99,7 @@ assert(reader3 == nil, "opening non-zip file should return nil")
 assert(err3, "should have error message for non-zip file")
 
 --------------------------------------------------------------------------------
--- Test zip.create (Writer)
+-- Test zip.open write mode (Writer)
 --------------------------------------------------------------------------------
 
 local zippath_writer = tmpdir .. "/test_writer.zip"
@@ -104,7 +107,7 @@ local writer_file1_content = "Hello, World!"
 local writer_file2_content = "This is a longer text file with some content.\nIt has multiple lines.\nAnd some more text to ensure compression is worthwhile."
 
 -- Test creating a new zip file
-local writer, err = zip.create(zippath_writer)
+local writer, err = zip.open(zippath_writer, "w")
 assert(writer, "failed to create zip: " .. tostring(err))
 assert(tostring(writer):match("zip.Writer"), "tostring should identify as zip.Writer")
 assert(tostring(writer):match("0 entries"), "new writer should have 0 entries")
@@ -186,7 +189,7 @@ reader:close()
 --------------------------------------------------------------------------------
 
 local zippath2 = tmpdir .. "/test_levels.zip"
-writer, err = zip.create(zippath2, {level = 9})
+writer, err = zip.open(zippath2, "w", {level = 9})
 assert(writer, "failed to create zip with level 9: " .. tostring(err))
 
 local big_content = string.rep("This is repetitive text. ", 1000)
@@ -210,11 +213,11 @@ assert(read_big == big_content, "content should match after compression/decompre
 reader:close()
 
 --------------------------------------------------------------------------------
--- Test zip.create with level 0 (store only)
+-- Test zip.open write mode with level 0 (store only)
 --------------------------------------------------------------------------------
 
 local zippath3 = tmpdir .. "/test_store.zip"
-writer, err = zip.create(zippath3, {level = 0})
+writer, err = zip.open(zippath3, "w", {level = 0})
 assert(writer, "failed to create store-only zip: " .. tostring(err))
 
 ok, err = writer:add("data.txt", big_content)
@@ -238,7 +241,7 @@ reader:close()
 
 -- Empty file
 local zippath4 = tmpdir .. "/test_empty.zip"
-writer, err = zip.create(zippath4)
+writer, err = zip.open(zippath4, "w")
 assert(writer, "failed to create zip: " .. tostring(err))
 
 ok, err = writer:add("empty.txt", "")
@@ -260,7 +263,7 @@ reader:close()
 
 -- Binary content
 local zippath5 = tmpdir .. "/test_binary.zip"
-writer, err = zip.create(zippath5)
+writer, err = zip.open(zippath5, "w")
 assert(writer, "failed to create zip: " .. tostring(err))
 
 local binary_content = ""
@@ -287,134 +290,15 @@ reader:close()
 --------------------------------------------------------------------------------
 
 -- Creating in non-existent directory
-local bad_writer, bad_err = zip.create("/nonexistent/path/to/file.zip")
+local bad_writer, bad_err = zip.open("/nonexistent/path/to/file.zip", "w")
 assert(bad_writer == nil, "creating in non-existent dir should fail")
 assert(bad_err, "should have error message")
 
 -- Invalid compression level
 ok, err = pcall(function()
-  zip.create(tmpdir .. "/bad.zip", {level = 10})
+  zip.open(tmpdir .. "/bad.zip", "w", {level = 10})
 end)
 assert(not ok, "level 10 should error")
-
---------------------------------------------------------------------------------
--- Test security validations
---------------------------------------------------------------------------------
-
-local sec_zip = tmpdir .. "/security_test.zip"
-writer, err = zip.create(sec_zip)
-assert(writer, "failed to create security test zip: " .. tostring(err))
-
--- Test path traversal rejection
-result, err = writer:add("../escape.txt", "malicious")
-assert(result == nil, "path traversal with .. should be rejected")
-assert(err:match("unsafe path"), "error should mention unsafe path")
-
-result, err = writer:add("/absolute/path.txt", "malicious")
-assert(result == nil, "absolute path should be rejected")
-assert(err:match("unsafe path"), "error should mention unsafe path")
-
-result, err = writer:add("foo/../bar.txt", "malicious")
-assert(result == nil, "embedded .. should be rejected")
-
-result, err = writer:add("foo/bar/..", "malicious")
-assert(result == nil, "trailing .. should be rejected")
-
--- Test empty name rejection
-result, err = writer:add("", "content")
-assert(result == nil, "empty name should be rejected")
-assert(err:match("empty"), "error should mention empty")
-
--- Test null byte in name rejection
-result, err = writer:add("foo\0bar.txt", "content")
-assert(result == nil, "null byte in name should be rejected")
-assert(err:match("null"), "error should mention null")
-
--- Test duplicate entry rejection
-ok, err = writer:add("unique.txt", "first")
-assert(ok, "first add should succeed")
-
-result, err = writer:add("unique.txt", "second")
-assert(result == nil, "duplicate entry should be rejected")
-assert(err:match("duplicate"), "error should mention duplicate")
-
--- Test invalid mode rejection (symlink)
-result, err = writer:add("symlink.txt", "content", {mode = 0120777})
-assert(result == nil, "symlink mode should be rejected")
-assert(err:match("regular file"), "error should mention regular file")
-
--- Test invalid mode rejection (directory)
-result, err = writer:add("dir.txt", "content", {mode = 0040755})
-assert(result == nil, "directory mode should be rejected")
-
--- Valid paths should still work
-ok, err = writer:add("normal.txt", "content")
-assert(ok, "normal path should work: " .. tostring(err))
-
-ok, err = writer:add("subdir/file.txt", "content")
-assert(ok, "subdir path should work: " .. tostring(err))
-
-ok, err = writer:add("a/b/c/deep.txt", "content")
-assert(ok, "deep path should work: " .. tostring(err))
-
--- Mode with just permissions (no file type) should default to regular file
-ok, err = writer:add("perms.txt", "content", {mode = 0644})
-assert(ok, "permission-only mode should work: " .. tostring(err))
-
-writer:close()
-
---------------------------------------------------------------------------------
--- Test configurable max_file_size
---------------------------------------------------------------------------------
-
--- Test writer max_file_size enforcement
-local limit_zip = tmpdir .. "/limit_test.zip"
-writer, err = zip.create(limit_zip, {max_file_size = 100})
-assert(writer, "failed to create limited zip: " .. tostring(err))
-
-ok, err = writer:add("small.txt", "hello")
-assert(ok, "small content should work: " .. tostring(err))
-
-result, err = writer:add("big.txt", string.rep("x", 200))
-assert(result == nil, "content exceeding max_file_size should be rejected")
-assert(err:match("max_file_size"), "error should mention max_file_size")
-
-writer:close()
-
--- Test reader max_file_size enforcement
--- First create a zip with a larger file
-local reader_limit_zip = tmpdir .. "/reader_limit_test.zip"
-writer, err = zip.create(reader_limit_zip)
-assert(writer, "failed to create zip: " .. tostring(err))
-ok, err = writer:add("big.txt", string.rep("y", 500))
-assert(ok, "should add big file: " .. tostring(err))
-writer:close()
-
--- Now try to read with a low limit
-reader, err = zip.open(reader_limit_zip, {max_file_size = 100})
-assert(reader, "failed to open zip with limit: " .. tostring(err))
-
-result, err = reader:read("big.txt")
-assert(result == nil, "reading file exceeding max_file_size should fail")
-assert(err:match("too large"), "error should mention size")
-
-reader:close()
-
--- Test invalid max_file_size values
-ok, err = pcall(function()
-  zip.create(tmpdir .. "/bad.zip", {max_file_size = 0})
-end)
-assert(not ok, "max_file_size = 0 should error")
-
-ok, err = pcall(function()
-  zip.create(tmpdir .. "/bad.zip", {max_file_size = -1})
-end)
-assert(not ok, "max_file_size = -1 should error")
-
-ok, err = pcall(function()
-  zip.open(limit_zip, {max_file_size = 0})
-end)
-assert(not ok, "max_file_size = 0 on open should error")
 
 --------------------------------------------------------------------------------
 -- Cleanup

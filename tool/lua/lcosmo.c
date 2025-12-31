@@ -248,8 +248,9 @@ int luaopen_cosmo(lua_State *L) {
   lua_pop(L, 1);
 
   LuaZip(L);
-  register_submodule(L, "cosmo.zip");
+  register_submodule(L, "cosmo.zip.c");
   lua_pop(L, 1);
+  /* cosmo.zip Lua wrapper is loaded on first require("cosmo.zip") */
 
   LuaHttp(L);
   register_submodule(L, "cosmo.http");

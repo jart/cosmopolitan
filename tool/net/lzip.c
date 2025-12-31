@@ -38,6 +38,7 @@
 
 struct LuaZipReader {
   int fd;
+  int owns_fd;
   uint8_t *cdir;
   int64_t cdir_size;
   int64_t count;
@@ -60,6 +61,7 @@ struct LuaZipCdirEntry {
 
 struct LuaZipWriter {
   int fd;
+  int owns_fd;
   char *path;
   int64_t offset;
   struct LuaZipCdirEntry *entries;
@@ -124,38 +126,46 @@ static uint8_t *FindEntry(struct LuaZipReader *z, const char *name,
 // Reader Implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-// zip.open(path, [options]) -> reader, nil | nil, error
+// zip.open(path|fd, [options]) -> reader, nil | nil, error
 static int LuaZipOpen(lua_State *L) {
-  const char *path;
+  const char *path = NULL;
   struct LuaZipReader *z;
   int64_t zsize, off, amt;
   int64_t cnt, cdir_off, cdir_size;
   int64_t max_file_size = MAX_FILE_SIZE;
   char last64[65536];
   ssize_t rc;
+  int fd;
+  int owns_fd;
 
-  path = luaL_checkstring(L, 1);
+  if (lua_isinteger(L, 1)) {
+    fd = lua_tointeger(L, 1);
+    owns_fd = 0;
+  } else {
+    path = luaL_checkstring(L, 1);
+    fd = open(path, O_RDONLY);
+    if (fd == -1)
+      return SysError(L, path);
+    owns_fd = 1;
+  }
 
   if (lua_istable(L, 2)) {
     lua_getfield(L, 2, "max_file_size");
     if (!lua_isnil(L, -1)) {
       max_file_size = luaL_checkinteger(L, -1);
-      if (max_file_size <= 0)
+      if (max_file_size <= 0) {
+        if (owns_fd) close(fd);
         return luaL_error(L, "max_file_size must be positive");
+      }
     }
     lua_pop(L, 1);
   }
 
-  // open file
-  int fd = open(path, O_RDONLY);
-  if (fd == -1)
-    return SysError(L, path);
-
   // get file size
   zsize = lseek(fd, 0, SEEK_END);
   if (zsize == -1) {
-    close(fd);
-    return SysError(L, path);
+    if (owns_fd) close(fd);
+    return SysError(L, path ? path : "fd");
   }
 
   // read last 64kb
@@ -167,8 +177,8 @@ static int LuaZipOpen(lua_State *L) {
     amt = zsize - off;
   }
   if (pread(fd, last64, amt, off) != amt) {
-    close(fd);
-    return SysError(L, path);
+    if (owns_fd) close(fd);
+    return SysError(L, path ? path : "fd");
   }
 
   // find end of central directory
@@ -201,32 +211,32 @@ static int LuaZipOpen(lua_State *L) {
   }
 
   if (cnt < 0) {
-    close(fd);
+    if (owns_fd) close(fd);
     return ZipError(L, "not a zip file");
   }
 
   if (cdir_size > MAX_CDIR_SIZE) {
-    close(fd);
+    if (owns_fd) close(fd);
     return ZipError(L, "central directory too large");
   }
 
   if (cdir_off < 0 || cdir_off + cdir_size > zsize) {
-    close(fd);
+    if (owns_fd) close(fd);
     return ZipError(L, "central directory offset out of bounds");
   }
 
   // read central directory
   uint8_t *cdir = malloc(cdir_size);
   if (!cdir) {
-    close(fd);
+    if (owns_fd) close(fd);
     return SysError(L, "malloc");
   }
   for (int64_t i = 0; i < cdir_size; i += rc) {
     rc = pread(fd, cdir + i, cdir_size - i, cdir_off + i);
     if (rc <= 0) {
       free(cdir);
-      close(fd);
-      return SysError(L, path);
+      if (owns_fd) close(fd);
+      return SysError(L, path ? path : "fd");
     }
   }
 
@@ -234,6 +244,7 @@ static int LuaZipOpen(lua_State *L) {
   z = lua_newuserdatauv(L, sizeof(*z), 0);
   luaL_setmetatable(L, LUA_ZIP_READER);
   z->fd = fd;
+  z->owns_fd = owns_fd;
   z->cdir = cdir;
   z->cdir_size = cdir_size;
   z->count = cnt;
@@ -247,7 +258,7 @@ static int LuaZipOpen(lua_State *L) {
 static int LuaZipReaderClose(lua_State *L) {
   struct LuaZipReader *z = GetZipReader(L);
   if (z->fd != -1) {
-    close(z->fd);
+    if (z->owns_fd) close(z->fd);
     z->fd = -1;
   }
   if (z->cdir) {
@@ -480,6 +491,19 @@ static bool IsUnsafePath(const char *name, size_t namelen) {
   return false;
 }
 
+// Returns NULL if name is valid, or an error message if invalid
+static const char *ValidateEntryName(const char *name, size_t namelen) {
+  if (namelen == 0)
+    return "name cannot be empty";
+  if (namelen > 65535)
+    return "name too long";
+  if (memchr(name, '\0', namelen))
+    return "name contains null byte";
+  if (IsUnsafePath(name, namelen))
+    return "unsafe path (contains '..' or starts with '/')";
+  return NULL;
+}
+
 static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
                             uint16_t *out_date) {
   struct tm tm;
@@ -488,11 +512,22 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
   *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 }
 
-// zip.create(path, [options]) -> writer | nil, error
+// zip.create(path|fd, [options]) -> writer | nil, error
 static int LuaZipCreate(lua_State *L) {
-  const char *path = luaL_checkstring(L, 1);
+  const char *path = NULL;
   int level = Z_DEFAULT_COMPRESSION;
   int64_t max_file_size = MAX_FILE_SIZE;
+  int fd;
+  int owns_fd;
+  char *pathcopy = NULL;
+
+  if (lua_isinteger(L, 1)) {
+    fd = lua_tointeger(L, 1);
+    owns_fd = 0;
+  } else {
+    path = luaL_checkstring(L, 1);
+    owns_fd = 1;
+  }
 
   if (lua_istable(L, 2)) {
     lua_getfield(L, 2, "level");
@@ -512,19 +547,21 @@ static int LuaZipCreate(lua_State *L) {
     lua_pop(L, 1);
   }
 
-  int fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-  if (fd == -1)
-    return SysError(L, path);
-
-  char *pathcopy = strdup(path);
-  if (!pathcopy) {
-    close(fd);
-    return SysError(L, "strdup");
+  if (owns_fd) {
+    fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd == -1)
+      return SysError(L, path);
+    pathcopy = strdup(path);
+    if (!pathcopy) {
+      close(fd);
+      return SysError(L, "strdup");
+    }
   }
 
   struct LuaZipWriter *w = lua_newuserdatauv(L, sizeof(*w), 0);
   luaL_setmetatable(L, LUA_ZIP_WRITER);
   w->fd = fd;
+  w->owns_fd = owns_fd;
   w->path = pathcopy;
   w->offset = 0;
   w->entries = NULL;
@@ -580,17 +617,9 @@ static int LuaZipWriterAdd(lua_State *L) {
   if (w->fd == -1)
     return ZipError(L, "zip writer is closed");
 
-  if (namelen == 0)
-    return ZipError(L, "name cannot be empty");
-
-  if (namelen > 65535)
-    return ZipError(L, "name too long");
-
-  if (memchr(name, '\0', namelen))
-    return ZipError(L, "name contains null byte");
-
-  if (IsUnsafePath(name, namelen))
-    return ZipError(L, "unsafe path (contains '..' or starts with '/')");
+  const char *name_err = ValidateEntryName(name, namelen);
+  if (name_err)
+    return ZipError(L, name_err);
 
   if (HasDuplicateEntry(w, name, namelen))
     return ZipError(L, "duplicate entry name");
@@ -883,7 +912,7 @@ static int LuaZipWriterClose(lua_State *L) {
   // cleanup - set fd to -1 before close to prevent double-close in GC
   int fd = w->fd;
   w->fd = -1;
-  if (close(fd) == -1)
+  if (w->owns_fd && close(fd) == -1)
     return SysError(L, "close");
 
   for (size_t i = 0; i < w->entry_count; i++)
@@ -906,7 +935,7 @@ static int LuaZipWriterClose(lua_State *L) {
 static int LuaZipWriterGc(lua_State *L) {
   struct LuaZipWriter *w = GetZipWriter(L);
   if (w->fd != -1) {
-    close(w->fd);
+    if (w->owns_fd) close(w->fd);
     w->fd = -1;
   }
   for (size_t i = 0; i < w->entry_count; i++)
@@ -963,9 +992,25 @@ static const luaL_Reg kLuaZipWriterMethods[] = {
     {0},
 };
 
+// zip.validate_name(name) -> true | nil, error
+// Validates a zip entry name without adding it to an archive
+static int LuaZipValidateName(lua_State *L) {
+  size_t namelen;
+  const char *name = luaL_checklstring(L, 1, &namelen);
+  const char *err = ValidateEntryName(name, namelen);
+  if (err) {
+    lua_pushnil(L);
+    lua_pushstring(L, err);
+    return 2;
+  }
+  lua_pushboolean(L, 1);
+  return 1;
+}
+
 static const luaL_Reg kLuaZip[] = {
     {"open", LuaZipOpen},
     {"create", LuaZipCreate},
+    {"validate_name", LuaZipValidateName},
     {0},
 };
 
