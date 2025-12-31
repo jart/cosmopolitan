@@ -57,22 +57,23 @@ TOOL_NET_DIRECTDEPS =							\
 	NET_HTTPS							\
 	THIRD_PARTY_ARGON2						\
 	THIRD_PARTY_COMPILER_RT						\
+	THIRD_PARTY_DOUBLECONVERSION					\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_LINENOISE						\
 	THIRD_PARTY_LUA							\
 	THIRD_PARTY_LUA_UNIX						\
+	THIRD_PARTY_LZ4CLI						\
 	THIRD_PARTY_MAXMIND						\
-	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_MBEDTLS						\
+	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_SQLITE3						\
 	THIRD_PARTY_TZ							\
 	THIRD_PARTY_ZLIB						\
 	TOOL_ARGS							\
 	TOOL_BUILD_LIB							\
-	TOOL_DECODE_LIB							\
-	THIRD_PARTY_DOUBLECONVERSION
+	TOOL_DECODE_LIB
 
 TOOL_NET_DEPS :=							\
 	$(call uniq,$(foreach x,$(TOOL_NET_DIRECTDEPS),$($(x))))
@@ -103,7 +104,8 @@ TOOL_NET_REDBEAN_LUA_MODULES =						\
 	o/$(MODE)/tool/net/lmaxmind.o					\
 	o/$(MODE)/tool/net/lsqlite3.o					\
 	o/$(MODE)/tool/net/largon2.o					\
-	o/$(MODE)/tool/net/launch.o
+	o/$(MODE)/tool/net/launch.o					\
+	o/$(MODE)/third_party/lz4cli/lz4.o
 
 o/$(MODE)/tool/net/redbean.dbg:						\
 		$(TOOL_NET_DEPS)					\

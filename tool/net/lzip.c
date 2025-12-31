@@ -50,6 +50,7 @@ struct LuaZipReader {
   int64_t count;
   int64_t file_size;
   int64_t max_file_size;
+  const uint8_t *data;  // non-NULL when reading from buffer (uservalue 1)
 };
 
 struct LuaZipCdirEntry {
@@ -147,6 +148,25 @@ static uint8_t *FindEntry(struct LuaZipReader *z, const char *name,
   return NULL;
 }
 
+// Read from either fd or in-memory buffer
+// Returns bytes read, or -1 on error (sets errno)
+static ssize_t ReaderPread(struct LuaZipReader *z, void *buf, size_t count,
+                           int64_t offset) {
+  if (z->data) {
+    // reading from buffer
+    if (offset < 0 || offset >= z->file_size)
+      return 0;
+    size_t avail = z->file_size - offset;
+    if (count > avail)
+      count = avail;
+    memcpy(buf, z->data + offset, count);
+    return count;
+  } else {
+    // reading from file descriptor
+    return pread(z->fd, buf, count, offset);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Reader Implementation
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,17 +242,28 @@ static int LuaZipOpen(lua_State *L) {
     return ZipError(L, "central directory too large");
   }
 
-  if (cdir_off < 0 || cdir_off + cdir_size > zsize) {
+  if (cdir_off < 0 || cdir_off > zsize || cdir_size > zsize - cdir_off) {
     munmap(map, zsize);
     if (owns_fd) close(fd);
     return ZipError(L, "central directory offset out of bounds");
   }
 
-  // copy central directory from mmap
+  // create userdata first with safe defaults so __gc handles cleanup on error
+  z = lua_newuserdatauv(L, sizeof(*z), 0);
+  luaL_setmetatable(L, LUA_ZIP_READER);
+  z->fd = fd;
+  z->owns_fd = owns_fd;
+  z->cdir = NULL;
+  z->cdir_size = 0;
+  z->count = 0;
+  z->file_size = 0;
+  z->max_file_size = 0;
+  z->data = NULL;
+
+  // allocate and copy central directory
   uint8_t *cdir = malloc(cdir_size ? cdir_size : 1);
   if (!cdir) {
     munmap(map, zsize);
-    if (owns_fd) close(fd);
     return SysError(L, "malloc");
   }
   if (cdir_size > 0) {
@@ -241,16 +272,92 @@ static int LuaZipOpen(lua_State *L) {
 
   munmap(map, zsize);
 
-  // create userdata
-  z = lua_newuserdatauv(L, sizeof(*z), 0);
-  luaL_setmetatable(L, LUA_ZIP_READER);
-  z->fd = fd;
-  z->owns_fd = owns_fd;
   z->cdir = cdir;
   z->cdir_size = cdir_size;
   z->count = cnt;
   z->file_size = zsize;
   z->max_file_size = max_file_size;
+
+  return 1;
+}
+
+// zip.from(data, [options]) -> reader | nil, error
+// Creates a zip reader from an in-memory string
+static int LuaZipFrom(lua_State *L) {
+  size_t zsize;
+  const char *data = luaL_checklstring(L, 1, &zsize);
+  struct LuaZipReader *z;
+  int64_t cnt, cdir_off, cdir_size;
+  int64_t max_file_size = MAX_FILE_SIZE;
+
+  if (lua_istable(L, 2)) {
+    lua_getfield(L, 2, "max_file_size");
+    if (!lua_isnil(L, -1)) {
+      max_file_size = luaL_checkinteger(L, -1);
+      if (max_file_size <= 0) {
+        return luaL_error(L, "max_file_size must be positive");
+      }
+    }
+    lua_pop(L, 1);
+  }
+
+  if (zsize == 0) {
+    return ZipError(L, "not a zip file");
+  }
+
+  // find end of central directory
+  int ziperr;
+  uint8_t *eocd = GetZipEocd((uint8_t *)data, zsize, &ziperr);
+  if (!eocd) {
+    return ZipError(L, "not a zip file");
+  }
+
+  // extract cdir info (handles ZIP64 transparently)
+  cnt = GetZipCdirRecords(eocd);
+  cdir_off = GetZipCdirOffset(eocd);
+  cdir_size = GetZipCdirSize(eocd);
+
+  if (cdir_size > MAX_CDIR_SIZE) {
+    return ZipError(L, "central directory too large");
+  }
+
+  if (cdir_off < 0 || cdir_off > (int64_t)zsize ||
+      cdir_size > (int64_t)zsize - cdir_off) {
+    return ZipError(L, "central directory offset out of bounds");
+  }
+
+  // create userdata first with safe defaults so __gc handles cleanup on error
+  z = lua_newuserdatauv(L, sizeof(*z), 1);
+  luaL_setmetatable(L, LUA_ZIP_READER);
+
+  // store reference to the input string so it doesn't get GC'd
+  lua_pushvalue(L, 1);
+  lua_setiuservalue(L, -2, 1);
+
+  z->fd = -1;
+  z->owns_fd = 0;
+  z->cdir = NULL;
+  z->cdir_size = 0;
+  z->count = 0;
+  z->file_size = 0;
+  z->max_file_size = 0;
+  z->data = NULL;
+
+  // allocate and copy central directory
+  uint8_t *cdir = malloc(cdir_size ? cdir_size : 1);
+  if (!cdir) {
+    return SysError(L, "malloc");
+  }
+  if (cdir_size > 0) {
+    memcpy(cdir, data + cdir_off, cdir_size);
+  }
+
+  z->cdir = cdir;
+  z->cdir_size = cdir_size;
+  z->count = cnt;
+  z->file_size = zsize;
+  z->max_file_size = max_file_size;
+  z->data = (const uint8_t *)data;
 
   return 1;
 }
@@ -266,6 +373,7 @@ static int LuaZipReaderClose(lua_State *L) {
     free(z->cdir);
     z->cdir = NULL;
   }
+  z->data = NULL;  // uservalue will be GC'd
   return 0;
 }
 
@@ -277,7 +385,7 @@ static int LuaZipReaderGc(lua_State *L) {
 // reader:list() -> {name, ...}
 static int LuaZipReaderList(lua_State *L) {
   struct LuaZipReader *z = GetZipReader(L);
-  if (z->fd == -1)
+  if (z->fd == -1 && !z->data)
     return ZipError(L, "zip reader is closed");
 
   lua_newtable(L);
@@ -305,7 +413,7 @@ static int LuaZipReaderStat(lua_State *L) {
   size_t namelen;
   const char *name = luaL_checklstring(L, 2, &namelen);
 
-  if (z->fd == -1)
+  if (z->fd == -1 && !z->data)
     return ZipError(L, "zip reader is closed");
 
   uint8_t *cfile = FindEntry(z, name, namelen);
@@ -345,7 +453,7 @@ static int LuaZipReaderRead(lua_State *L) {
   size_t namelen;
   const char *name = luaL_checklstring(L, 2, &namelen);
 
-  if (z->fd == -1)
+  if (z->fd == -1 && !z->data)
     return ZipError(L, "zip reader is closed");
 
   uint8_t *cfile = FindEntry(z, name, namelen);
@@ -367,9 +475,9 @@ static int LuaZipReaderRead(lua_State *L) {
 
   // read local file header to get data offset
   uint8_t lfile_hdr[kZipLfileHdrMinSize];
-  if (pread(z->fd, lfile_hdr, kZipLfileHdrMinSize, lfile_off) !=
+  if (ReaderPread(z, lfile_hdr, kZipLfileHdrMinSize, lfile_off) !=
       kZipLfileHdrMinSize)
-    return SysError(L, "pread lfile");
+    return SysError(L, "read lfile");
   if (ZIP_LFILE_MAGIC(lfile_hdr) != kZipLfileHdrMagic)
     return ZipError(L, "bad local file header");
   int64_t data_off = lfile_off + ZIP_LFILE_HDRSIZE(lfile_hdr);
@@ -384,10 +492,10 @@ static int LuaZipReaderRead(lua_State *L) {
 
   ssize_t rc;
   for (int64_t i = 0; i < compressed_size; i += rc) {
-    rc = pread(z->fd, compressed + i, compressed_size - i, data_off + i);
+    rc = ReaderPread(z, compressed + i, compressed_size - i, data_off + i);
     if (rc <= 0) {
       free(compressed);
-      return SysError(L, "pread data");
+      return SysError(L, "read data");
     }
   }
 
@@ -450,7 +558,7 @@ static int LuaZipReaderRead(lua_State *L) {
 // reader:__tostring()
 static int LuaZipReaderTostring(lua_State *L) {
   struct LuaZipReader *z = GetZipReader(L);
-  if (z->fd == -1) {
+  if (z->fd == -1 && !z->data) {
     lua_pushliteral(L, "zip.Reader (closed)");
   } else {
     lua_pushfstring(L, "zip.Reader (%d entries)", (int)z->count);
@@ -1598,6 +1706,7 @@ static int LuaZipValidateName(lua_State *L) {
 
 static const luaL_Reg kLuaZip[] = {
     {"open", LuaZipOpen},
+    {"from", LuaZipFrom},
     {"create", LuaZipCreate},
     {"append", LuaZipAppend},
     {"validate_name", LuaZipValidateName},

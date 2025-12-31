@@ -13,11 +13,16 @@
 
 PKGS += THIRD_PARTY_LZ4CLI
 
+THIRD_PARTY_LZ4CLI_ARTIFACTS += THIRD_PARTY_LZ4CLI_A
+THIRD_PARTY_LZ4CLI_A = o/$(MODE)/third_party/lz4cli/lz4.a
+THIRD_PARTY_LZ4CLI_A_OBJS = o/$(MODE)/third_party/lz4cli/lz4.o
+THIRD_PARTY_LZ4CLI = $(THIRD_PARTY_LZ4CLI_A_DEPS) $(THIRD_PARTY_LZ4CLI_A)
+
 THIRD_PARTY_LZ4CLI_FILES := $(wildcard third_party/lz4cli/*)
 THIRD_PARTY_LZ4CLI_SRCS = $(filter %.c,$(THIRD_PARTY_LZ4CLI_FILES))
 THIRD_PARTY_LZ4CLI_HDRS = $(filter %.h,$(THIRD_PARTY_LZ4CLI_FILES))
 
-THIRD_PARTY_LZ4CLI =					\
+THIRD_PARTY_LZ4CLI_BINS =				\
 	o/$(MODE)/third_party/lz4cli/lz4cli
 
 THIRD_PARTY_LZ4CLI_OBJS =				\
@@ -38,6 +43,14 @@ o/$(MODE)/third_party/lz4cli/datagen.o: private		\
 	DEFAULT_CPPFLAGS +=				\
 		-DSTACK_FRAME_UNLIMITED
 
+THIRD_PARTY_LZ4CLI_A_DIRECTDEPS =			\
+	LIBC_INTRIN					\
+	LIBC_MEM					\
+	LIBC_STR
+
+THIRD_PARTY_LZ4CLI_A_DEPS :=				\
+	$(call uniq,$(foreach x,$(THIRD_PARTY_LZ4CLI_A_DIRECTDEPS),$($(x))))
+
 THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
@@ -45,6 +58,15 @@ THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 
 THIRD_PARTY_LZ4CLI_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LZ4CLI_DIRECTDEPS),$($(x))))
+
+$(THIRD_PARTY_LZ4CLI_A):				\
+		third_party/lz4cli/			\
+		$(THIRD_PARTY_LZ4CLI_A).pkg		\
+		$(THIRD_PARTY_LZ4CLI_A_OBJS)
+
+$(THIRD_PARTY_LZ4CLI_A).pkg:				\
+		$(THIRD_PARTY_LZ4CLI_A_OBJS)		\
+		$(foreach x,$(THIRD_PARTY_LZ4CLI_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_LZ4CLI_OBJS): private			\
 	DEFAULT_CPPFLAGS +=				\
@@ -62,4 +84,4 @@ $(THIRD_PARTY_LZ4CLI_OBJS):				\
 		third_party/lz4cli/BUILD.mk
 
 .PHONY: o/$(MODE)/third_party/lz4cli
-o/$(MODE)/third_party/lz4cli: $(THIRD_PARTY_LZ4CLI)
+o/$(MODE)/third_party/lz4cli: $(THIRD_PARTY_LZ4CLI) $(THIRD_PARTY_LZ4CLI_BINS)
