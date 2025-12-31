@@ -23,8 +23,11 @@
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/time.h"
 #include "libc/zip.h"
 #include "third_party/lua/lauxlib.h"
@@ -150,11 +153,9 @@ static uint8_t *FindEntry(struct LuaZipReader *z, const char *name,
 static int LuaZipOpen(lua_State *L) {
   const char *path = NULL;
   struct LuaZipReader *z;
-  int64_t zsize, off, amt;
+  int64_t zsize;
   int64_t cnt, cdir_off, cdir_size;
   int64_t max_file_size = MAX_FILE_SIZE;
-  char last64[65536];
-  ssize_t rc;
   int fd;
   int owns_fd;
 
@@ -188,77 +189,55 @@ static int LuaZipOpen(lua_State *L) {
     return SysError(L, path ? path : "fd");
   }
 
-  // read last 64kb
-  if (zsize <= 65536) {
-    off = 0;
-    amt = zsize;
-  } else {
-    off = zsize - 65536;
-    amt = zsize - off;
-  }
-  if (pread(fd, last64, amt, off) != amt) {
-    if (owns_fd) close(fd);
-    return SysError(L, path ? path : "fd");
-  }
-
-  // find end of central directory
-  cnt = -1;
-  cdir_off = 0;
-  cdir_size = 0;
-  for (int i = amt - kZipCdirHdrMinSize; i >= 0; --i) {
-    uint32_t magic = ZIP_READ32(last64 + i);
-    if (magic == kZipCdir64LocatorMagic &&
-        i + (int)kZipCdir64LocatorSize <= amt) {
-      char hdr[kZipCdir64HdrMinSize];
-      if (pread(fd, hdr, kZipCdir64HdrMinSize,
-                ZIP_LOCATE64_OFFSET(last64 + i)) == (long)kZipCdir64HdrMinSize &&
-          ZIP_READ32(hdr) == kZipCdir64HdrMagic &&
-          ZIP_CDIR64_RECORDS(hdr) == ZIP_CDIR64_RECORDSONDISK(hdr)) {
-        cnt = ZIP_CDIR64_RECORDS(hdr);
-        cdir_off = ZIP_CDIR64_OFFSET(hdr);
-        cdir_size = ZIP_CDIR64_SIZE(hdr);
-        break;
-      }
-    }
-    if (magic == kZipCdirHdrMagic && i + (int)kZipCdirHdrMinSize <= amt &&
-        ZIP_CDIR_RECORDS(last64 + i) == ZIP_CDIR_RECORDSONDISK(last64 + i) &&
-        ZIP_CDIR_OFFSET(last64 + i) != 0xffffffffu) {
-      cnt = ZIP_CDIR_RECORDS(last64 + i);
-      cdir_off = ZIP_CDIR_OFFSET(last64 + i);
-      cdir_size = ZIP_CDIR_SIZE(last64 + i);
-      break;
-    }
-  }
-
-  if (cnt < 0) {
+  if (zsize == 0) {
     if (owns_fd) close(fd);
     return ZipError(L, "not a zip file");
   }
 
+  // mmap file and use GetZipEocd to find end of central directory
+  uint8_t *map = mmap(NULL, zsize, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (map == MAP_FAILED) {
+    if (owns_fd) close(fd);
+    return SysError(L, path ? path : "mmap");
+  }
+
+  int ziperr;
+  uint8_t *eocd = GetZipEocd(map, zsize, &ziperr);
+  if (!eocd) {
+    munmap(map, zsize);
+    if (owns_fd) close(fd);
+    return ZipError(L, "not a zip file");
+  }
+
+  // use existing utilities to extract cdir info (handles ZIP64 transparently)
+  cnt = GetZipCdirRecords(eocd);
+  cdir_off = GetZipCdirOffset(eocd);
+  cdir_size = GetZipCdirSize(eocd);
+
   if (cdir_size > MAX_CDIR_SIZE) {
+    munmap(map, zsize);
     if (owns_fd) close(fd);
     return ZipError(L, "central directory too large");
   }
 
   if (cdir_off < 0 || cdir_off + cdir_size > zsize) {
+    munmap(map, zsize);
     if (owns_fd) close(fd);
     return ZipError(L, "central directory offset out of bounds");
   }
 
-  // read central directory
-  uint8_t *cdir = malloc(cdir_size);
+  // copy central directory from mmap
+  uint8_t *cdir = malloc(cdir_size ? cdir_size : 1);
   if (!cdir) {
+    munmap(map, zsize);
     if (owns_fd) close(fd);
     return SysError(L, "malloc");
   }
-  for (int64_t i = 0; i < cdir_size; i += rc) {
-    rc = pread(fd, cdir + i, cdir_size - i, cdir_off + i);
-    if (rc <= 0) {
-      free(cdir);
-      if (owns_fd) close(fd);
-      return SysError(L, path ? path : "fd");
-    }
+  if (cdir_size > 0) {
+    memcpy(cdir, map + cdir_off, cdir_size);
   }
+
+  munmap(map, zsize);
 
   // create userdata
   z = lua_newuserdatauv(L, sizeof(*z), 0);
@@ -1101,85 +1080,47 @@ static int LuaZipAppend(lua_State *L) {
     return 1;
   }
 
-  // Read last 64kb to find EOCD
-  char last64[65536];
-  int64_t off, amt;
-  if (zsize <= 65536) {
-    off = 0;
-    amt = zsize;
-  } else {
-    off = zsize - 65536;
-    amt = zsize - off;
-  }
-  if (pread(fd, last64, amt, off) != amt) {
+  // mmap file and use GetZipEocd to find end of central directory
+  uint8_t *map = mmap(NULL, zsize, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (map == MAP_FAILED) {
     AppenderCleanup(a);
-    return SysError(L, path);
+    return SysError(L, "mmap");
   }
 
-  // Find end of central directory
-  int64_t cnt = -1;
-  int64_t cdir_off = 0;
-  int64_t cdir_size = 0;
-  for (int i = amt - kZipCdirHdrMinSize; i >= 0; --i) {
-    uint32_t magic = ZIP_READ32(last64 + i);
-    if (magic == kZipCdir64LocatorMagic &&
-        i + (int)kZipCdir64LocatorSize <= amt) {
-      char hdr[kZipCdir64HdrMinSize];
-      if (pread(fd, hdr, kZipCdir64HdrMinSize,
-                ZIP_LOCATE64_OFFSET(last64 + i)) == (long)kZipCdir64HdrMinSize &&
-          ZIP_READ32(hdr) == kZipCdir64HdrMagic &&
-          ZIP_CDIR64_RECORDS(hdr) == ZIP_CDIR64_RECORDSONDISK(hdr)) {
-        cnt = ZIP_CDIR64_RECORDS(hdr);
-        cdir_off = ZIP_CDIR64_OFFSET(hdr);
-        cdir_size = ZIP_CDIR64_SIZE(hdr);
-        break;
-      }
-    }
-    if (magic == kZipCdirHdrMagic && i + (int)kZipCdirHdrMinSize <= amt &&
-        ZIP_CDIR_RECORDS(last64 + i) == ZIP_CDIR_RECORDSONDISK(last64 + i) &&
-        ZIP_CDIR_OFFSET(last64 + i) != 0xffffffffu) {
-      cnt = ZIP_CDIR_RECORDS(last64 + i);
-      cdir_off = ZIP_CDIR_OFFSET(last64 + i);
-      cdir_size = ZIP_CDIR_SIZE(last64 + i);
-      break;
-    }
-  }
-
-  if (cnt < 0) {
+  int ziperr;
+  uint8_t *eocd = GetZipEocd(map, zsize, &ziperr);
+  if (!eocd) {
+    munmap(map, zsize);
     AppenderCleanup(a);
     return ZipError(L, "not a zip file");
   }
 
+  // use existing utilities to extract cdir info (handles ZIP64 transparently)
+  int64_t cnt = GetZipCdirRecords(eocd);
+  int64_t cdir_off = GetZipCdirOffset(eocd);
+  int64_t cdir_size = GetZipCdirSize(eocd);
+
   if (cdir_size > MAX_CDIR_SIZE) {
+    munmap(map, zsize);
     AppenderCleanup(a);
     return ZipError(L, "central directory too large");
   }
 
-  // Read central directory
-  uint8_t *cdir = malloc(cdir_size ? cdir_size : 1);
-  if (!cdir) {
+  if (cdir_off < 0 || cdir_off + cdir_size > zsize) {
+    munmap(map, zsize);
     AppenderCleanup(a);
-    return SysError(L, "malloc");
+    return ZipError(L, "central directory offset out of bounds");
   }
 
-  ssize_t rc;
-  for (int64_t i = 0; i < cdir_size; i += rc) {
-    rc = pread(fd, cdir + i, cdir_size - i, cdir_off + i);
-    if (rc <= 0) {
-      free(cdir);
-      AppenderCleanup(a);
-      return SysError(L, path);
-    }
-  }
-
-  // Parse central directory entries
+  // Parse central directory entries directly from mmap
   a->existing = malloc(cnt * sizeof(*a->existing));
   if (!a->existing) {
-    free(cdir);
+    munmap(map, zsize);
     AppenderCleanup(a);
     return SysError(L, "malloc");
   }
 
+  uint8_t *cdir = map + cdir_off;
   int64_t min_lfile_off = INT64_MAX;
   int64_t max_data_end = 0;
   int64_t i, got, hdrsize;
@@ -1187,13 +1128,13 @@ static int LuaZipAppend(lua_State *L) {
        i + kZipCfileHdrMinSize <= cdir_size && got < cnt;
        i += hdrsize, ++got) {
     if (ZIP_CFILE_MAGIC(cdir + i) != kZipCfileHdrMagic) {
-      free(cdir);
+      munmap(map, zsize);
       AppenderCleanup(a);
       return ZipError(L, "corrupted central directory");
     }
     hdrsize = ZIP_CFILE_HDRSIZE(cdir + i);
     if (hdrsize < kZipCfileHdrMinSize || i + hdrsize > cdir_size) {
-      free(cdir);
+      munmap(map, zsize);
       AppenderCleanup(a);
       return ZipError(L, "corrupted central directory");
     }
@@ -1209,7 +1150,7 @@ static int LuaZipAppend(lua_State *L) {
     int namelen = ZIP_CFILE_NAMESIZE(cdir + i);
     e->name = malloc(namelen + 1);
     if (!e->name) {
-      free(cdir);
+      munmap(map, zsize);
       AppenderCleanup(a);
       return SysError(L, "malloc");
     }
@@ -1228,30 +1169,24 @@ static int LuaZipAppend(lua_State *L) {
     if ((int64_t)e->offset < min_lfile_off)
       min_lfile_off = e->offset;
 
-    // Read local file header to get actual data end
-    // Validate offset is within file bounds first
-    if ((int64_t)e->offset >= 0 && (int64_t)e->offset < zsize) {
-      uint8_t lfile_hdr[kZipLfileHdrMinSize];
-      if (pread(fd, lfile_hdr, kZipLfileHdrMinSize, e->offset) ==
-          kZipLfileHdrMinSize) {
-        if (ZIP_LFILE_MAGIC(lfile_hdr) == kZipLfileHdrMagic) {
-          int64_t hdr_size = ZIP_LFILE_HDRSIZE(lfile_hdr);
-          // Check for overflow and bounds before computing data_end
-          // data_off = e->offset + hdr_size, this_end = data_off + e->compsize
-          // Ensure: e->offset + hdr_size + e->compsize <= zsize (no overflow)
-          if (hdr_size >= 0 && (int64_t)e->compsize >= 0 &&
-              (int64_t)e->offset <= zsize - hdr_size &&
-              (int64_t)e->offset + hdr_size <= zsize - (int64_t)e->compsize) {
-            int64_t this_end = e->offset + hdr_size + e->compsize;
-            if (this_end > max_data_end)
-              max_data_end = this_end;
-          }
+    // Read local file header from mmap to get actual data end
+    if ((int64_t)e->offset >= 0 &&
+        (int64_t)e->offset + kZipLfileHdrMinSize <= zsize) {
+      uint8_t *lfile = map + e->offset;
+      if (ZIP_LFILE_MAGIC(lfile) == kZipLfileHdrMagic) {
+        int64_t hdr_size = ZIP_LFILE_HDRSIZE(lfile);
+        if (hdr_size >= 0 && (int64_t)e->compsize >= 0 &&
+            (int64_t)e->offset <= zsize - hdr_size &&
+            (int64_t)e->offset + hdr_size <= zsize - (int64_t)e->compsize) {
+          int64_t this_end = e->offset + hdr_size + e->compsize;
+          if (this_end > max_data_end)
+            max_data_end = this_end;
         }
       }
     }
   }
 
-  free(cdir);
+  munmap(map, zsize);
 
   a->prefix_size = (min_lfile_off == INT64_MAX) ? 0 : min_lfile_off;
   a->data_end = max_data_end;
