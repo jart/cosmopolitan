@@ -19,6 +19,8 @@
 #include "third_party/lua/lunix_internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 

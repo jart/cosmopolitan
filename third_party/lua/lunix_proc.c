@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/lua/lunix_internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/proc/posix_spawn.h"

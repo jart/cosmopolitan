@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/lua/lunix_internal.h"
+#include "libc/calls/calls.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/serialize.h"
