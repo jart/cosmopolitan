@@ -12,6 +12,7 @@ assert(tmpdir, "failed to create temp dir")
 
 assert(zip, "zip module should exist")
 assert(type(zip.open) == "function", "zip.open should be a function")
+assert(type(zip.from) == "function", "zip.from should be a function")
 
 --------------------------------------------------------------------------------
 -- Test zip.open (Reader) with system-created zip
@@ -299,6 +300,74 @@ ok, err = pcall(function()
   zip.open(tmpdir .. "/bad.zip", "w", {level = 10})
 end)
 assert(not ok, "level 10 should error")
+
+--------------------------------------------------------------------------------
+-- Test zip.from (Reader from in-memory buffer)
+--------------------------------------------------------------------------------
+
+-- First create a zip file to read
+local zippath_from = tmpdir .. "/test_from.zip"
+writer, err = zip.open(zippath_from, "w")
+assert(writer, "failed to create zip: " .. tostring(err))
+
+local from_content1 = "Content for file 1"
+local from_content2 = "Content for file 2 with more data"
+ok, err = writer:add("from1.txt", from_content1)
+assert(ok, "failed to add from1.txt: " .. tostring(err))
+ok, err = writer:add("from2.txt", from_content2)
+assert(ok, "failed to add from2.txt: " .. tostring(err))
+ok, err = writer:close()
+assert(ok, "failed to close: " .. tostring(err))
+
+-- Read the entire zip file into memory
+fd = unix.open(zippath_from, unix.O_RDONLY)
+assert(fd, "failed to open zip for reading")
+local stat_result = unix.fstat(fd)
+assert(stat_result, "failed to stat zip file")
+local zip_data = unix.read(fd, stat_result:size())
+assert(zip_data, "failed to read zip data")
+unix.close(fd)
+
+-- Create reader from in-memory data
+local from_reader, err = zip.from(zip_data)
+assert(from_reader, "failed to create reader from buffer: " .. tostring(err))
+assert(tostring(from_reader):match("zip.Reader"), "tostring should identify as zip.Reader")
+assert(tostring(from_reader):match("2 entries"), "should have 2 entries")
+
+-- Test listing entries
+entries = from_reader:list()
+assert(entries, "list should return a table")
+assert(#entries == 2, "should have 2 entries, got " .. #entries)
+
+-- Test reading content
+local from_read1 = from_reader:read("from1.txt")
+assert(from_read1 == from_content1, "from1.txt content should match")
+
+local from_read2 = from_reader:read("from2.txt")
+assert(from_read2 == from_content2, "from2.txt content should match")
+
+-- Test stat
+local from_stat = from_reader:stat("from1.txt")
+assert(from_stat, "stat should work")
+assert(from_stat.size == #from_content1, "size should match")
+
+-- Test close
+from_reader:close()
+assert(tostring(from_reader):match("closed"), "should be closed after close()")
+
+-- Test operations on closed reader
+local from_entries2, from_err2 = from_reader:list()
+assert(from_entries2 == nil, "list on closed reader should return nil")
+assert(from_err2, "should have error message")
+
+-- Test error cases for zip.from
+local bad_from, bad_from_err = zip.from("")
+assert(bad_from == nil, "empty data should fail")
+assert(bad_from_err, "should have error message")
+
+local bad_from2, bad_from_err2 = zip.from("not a zip file")
+assert(bad_from2 == nil, "non-zip data should fail")
+assert(bad_from_err2, "should have error message")
 
 --------------------------------------------------------------------------------
 -- Cleanup
