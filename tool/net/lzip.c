@@ -1335,13 +1335,8 @@ static int LuaZipAppend(lua_State *L) {
       return ZipError(L, "corrupted central directory");
     }
 
-    // Skip directory entries
-    uint32_t mode = GetZipCfileMode(cdir + i);
-    if ((mode & 0xF000) == 0x4000) {
-      continue;
-    }
-
     struct LuaZipCdirEntry *e = &a->existing[a->existing_count++];
+    uint32_t mode = GetZipCfileMode(cdir + i);
     const char *name = ZIP_CFILE_NAME(cdir + i);
     int namelen = ZIP_CFILE_NAMESIZE(cdir + i);
     e->name = malloc(namelen + 1);
@@ -1554,7 +1549,7 @@ static int LuaZipAppenderClose(lua_State *L) {
   // Write new local file entries
   for (size_t i = 0; i < a->pending_count; i++) {
     struct LuaZipCdirEntry *e = &a->pending[i];
-    e->offset = write_offset - a->prefix_size;  // relative to zip start
+    e->offset = write_offset;  // absolute file offset
 
     size_t hdrlen = GetLfileHdrSize(e->namelen, e->compsize, e->uncompsize);
     uint8_t *lochdr = malloc(hdrlen);
@@ -1583,7 +1578,7 @@ static int LuaZipAppenderClose(lua_State *L) {
   }
 
   // Write central directory
-  int64_t cdir_offset = write_offset - a->prefix_size;
+  int64_t cdir_offset = write_offset;  // absolute file offset
   int64_t cdir_size = 0;
   size_t total_entries = a->existing_count + a->pending_count;
 

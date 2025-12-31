@@ -370,6 +370,80 @@ assert(bad_from2 == nil, "non-zip data should fail")
 assert(bad_from_err2, "should have error message")
 
 --------------------------------------------------------------------------------
+-- Test zip.open append mode on APE executable (has binary prefix)
+--------------------------------------------------------------------------------
+
+-- Copy the lua executable (an APE with binary prefix) to temp file
+local exe_path = arg[-1]  -- the lua interpreter itself
+local ape_copy = tmpdir .. "/test_ape_append.com"
+
+-- Read the executable
+fd = unix.open(exe_path, unix.O_RDONLY)
+assert(fd, "failed to open lua executable")
+local exe_stat = unix.fstat(fd)
+assert(exe_stat, "failed to stat lua executable")
+local exe_data = unix.read(fd, exe_stat:size())
+assert(exe_data, "failed to read lua executable")
+unix.close(fd)
+
+-- Write the copy
+fd = unix.open(ape_copy, unix.O_CREAT | unix.O_WRONLY, 0755)
+assert(fd, "failed to create APE copy")
+unix.write(fd, exe_data)
+unix.close(fd)
+
+-- Get initial entry count
+local initial_reader = zip.open(ape_copy)
+assert(initial_reader, "failed to open APE copy for reading")
+local initial_entries = initial_reader:list()
+assert(initial_entries, "failed to list initial entries")
+local initial_count = #initial_entries
+initial_reader:close()
+
+-- Append a new entry
+local appender, err = zip.open(ape_copy, "a")
+assert(appender, "failed to open APE for append: " .. tostring(err))
+local test_content = "-- test module\nreturn {}"
+ok, err = appender:add(".lua/test_append.lua", test_content)
+assert(ok, "failed to add entry: " .. tostring(err))
+ok, err = appender:close()
+assert(ok, "failed to close appender: " .. tostring(err))
+
+-- Read it back - this is where the bug manifests
+local final_reader, err = zip.open(ape_copy)
+assert(final_reader, "failed to open APE after append: " .. tostring(err))
+
+-- list() should work after append (bug: returns nil, "corrupted central directory")
+local final_entries, list_err = final_reader:list()
+assert(final_entries, "list() failed after append: " .. tostring(list_err))
+
+-- Should have one more entry than before
+local expected_count = initial_count + 1
+assert(#final_entries == expected_count,
+       "should have " .. expected_count .. " entries, got " .. #final_entries)
+
+-- Verify the new entry exists and can be read
+local found_new_entry = false
+for _, name in ipairs(final_entries) do
+  if name == ".lua/test_append.lua" then
+    found_new_entry = true
+    break
+  end
+end
+assert(found_new_entry, "new entry .lua/test_append.lua not found in list")
+
+local read_content = final_reader:read(".lua/test_append.lua")
+assert(read_content == test_content,
+       "content mismatch: expected '" .. test_content .. "', got '" .. tostring(read_content) .. "'")
+
+final_reader:close()
+
+-- Also verify we can append again
+local appender2, err = zip.open(ape_copy, "a")
+assert(appender2, "failed to reopen APE for append: " .. tostring(err))
+appender2:close()
+
+--------------------------------------------------------------------------------
 -- Cleanup
 --------------------------------------------------------------------------------
 
