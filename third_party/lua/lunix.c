@@ -96,8 +96,10 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/st.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/utime.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
@@ -302,6 +304,7 @@ static void FreeStringList(char **p) {
 static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
   int j, n;
   char **p, *s;
+  const char *str;
   luaL_checktype(L, i, LUA_TTABLE);
   lua_len(L, i);
   n = lua_tointeger(L, -1);
@@ -309,7 +312,11 @@ static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
   if ((p = LuaAlloc(L, (n + 1) * sizeof(*p)))) {
     for (j = 1; j <= n; ++j) {
       lua_geti(L, i, j);
-      s = strdup(lua_tostring(L, -1));
+      if ((str = lua_tostring(L, -1))) {
+        s = strdup(str);
+      } else {
+        s = 0;
+      }
       lua_pop(L, 1);
       if (s) {
         p[j - 1] = s;
@@ -319,7 +326,8 @@ static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
         break;
       }
     }
-    p[j - 1] = 0;
+    if (p)
+      p[j - 1] = 0;
   }
   return p;
 }
@@ -604,6 +612,175 @@ static int LuaUnixExecve(lua_State *L) {
   return LuaUnixSysretErrno(L, "execve", olderr);
 }
 
+// unix.execvp(prog:str[, argv:table])
+//     ├─→ ⊥
+//     └─→ nil, unix.Errno
+static int LuaUnixExecvp(lua_State *L) {
+  int olderr;
+  const char *prog;
+  char **argv, **freeme, *ezargs[2];
+  olderr = errno;
+  prog = luaL_checkstring(L, 1);
+  if (!lua_isnoneornil(L, 2)) {
+    if ((argv = ConvertLuaArrayToStringList(L, 2))) {
+      freeme = argv;
+    } else {
+      return LuaUnixSysretErrno(L, "execvp", olderr);
+    }
+  } else {
+    ezargs[0] = (char *)prog;
+    ezargs[1] = 0;
+    argv = ezargs;
+    freeme = 0;
+  }
+  execvp(prog, argv);
+  FreeStringList(freeme);
+  return LuaUnixSysretErrno(L, "execvp", olderr);
+}
+
+// unix.execvpe(prog:str, argv:table[, envp:table])
+//     ├─→ ⊥
+//     └─→ nil, unix.Errno
+static int LuaUnixExecvpe(lua_State *L) {
+  int olderr;
+  const char *prog;
+  char **argv, **envp, **freeme1, **freeme2;
+  olderr = errno;
+  prog = luaL_checkstring(L, 1);
+  if ((argv = ConvertLuaArrayToStringList(L, 2))) {
+    freeme1 = argv;
+    if (!lua_isnoneornil(L, 3)) {
+      if ((envp = ConvertLuaArrayToStringList(L, 3))) {
+        freeme2 = envp;
+      } else {
+        FreeStringList(argv);
+        return LuaUnixSysretErrno(L, "execvpe", olderr);
+      }
+    } else {
+      envp = environ;
+      freeme2 = 0;
+    }
+  } else {
+    return LuaUnixSysretErrno(L, "execvpe", olderr);
+  }
+  execvpe(prog, argv, envp);
+  FreeStringList(freeme1);
+  FreeStringList(freeme2);
+  return LuaUnixSysretErrno(L, "execvpe", olderr);
+}
+
+// unix.fexecve(fd:int, argv:table[, envp:table])
+//     ├─→ ⊥
+//     └─→ nil, unix.Errno
+static int LuaUnixFexecve(lua_State *L) {
+  int olderr, fd;
+  char **argv, **envp, **freeme1, **freeme2;
+  olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  if ((argv = ConvertLuaArrayToStringList(L, 2))) {
+    freeme1 = argv;
+    if (!lua_isnoneornil(L, 3)) {
+      if ((envp = ConvertLuaArrayToStringList(L, 3))) {
+        freeme2 = envp;
+      } else {
+        FreeStringList(argv);
+        return LuaUnixSysretErrno(L, "fexecve", olderr);
+      }
+    } else {
+      envp = environ;
+      freeme2 = 0;
+    }
+  } else {
+    return LuaUnixSysretErrno(L, "fexecve", olderr);
+  }
+  fexecve(fd, argv, envp);
+  FreeStringList(freeme1);
+  FreeStringList(freeme2);
+  return LuaUnixSysretErrno(L, "fexecve", olderr);
+}
+
+// unix.spawn(prog:str, argv:table[, envp:table])
+//     ├─→ pid:int
+//     └─→ nil, unix.Errno
+static int LuaUnixSpawn(lua_State *L) {
+  int olderr, rc;
+  pid_t pid;
+  const char *prog;
+  char **argv, **envp, **freeme1, **freeme2;
+  posix_spawn_file_actions_t fa;
+  olderr = errno;
+  prog = luaL_checkstring(L, 1);
+  if ((argv = ConvertLuaArrayToStringList(L, 2))) {
+    freeme1 = argv;
+    if (!lua_isnoneornil(L, 3)) {
+      if ((envp = ConvertLuaArrayToStringList(L, 3))) {
+        freeme2 = envp;
+      } else {
+        FreeStringList(argv);
+        return LuaUnixSysretErrno(L, "spawn", olderr);
+      }
+    } else {
+      envp = environ;
+      freeme2 = 0;
+    }
+  } else {
+    return LuaUnixSysretErrno(L, "spawn", olderr);
+  }
+  posix_spawn_file_actions_init(&fa);
+  rc = posix_spawn(&pid, prog, &fa, NULL, argv, envp);
+  posix_spawn_file_actions_destroy(&fa);
+  FreeStringList(freeme1);
+  FreeStringList(freeme2);
+  if (rc == 0) {
+    lua_pushinteger(L, pid);
+    return 1;
+  } else {
+    errno = rc;
+    return LuaUnixSysretErrno(L, "spawn", olderr);
+  }
+}
+
+// unix.spawnp(prog:str, argv:table[, envp:table])
+//     ├─→ pid:int
+//     └─→ nil, unix.Errno
+static int LuaUnixSpawnp(lua_State *L) {
+  int olderr, rc;
+  pid_t pid;
+  const char *prog;
+  char **argv, **envp, **freeme1, **freeme2;
+  posix_spawn_file_actions_t fa;
+  olderr = errno;
+  prog = luaL_checkstring(L, 1);
+  if ((argv = ConvertLuaArrayToStringList(L, 2))) {
+    freeme1 = argv;
+    if (!lua_isnoneornil(L, 3)) {
+      if ((envp = ConvertLuaArrayToStringList(L, 3))) {
+        freeme2 = envp;
+      } else {
+        FreeStringList(argv);
+        return LuaUnixSysretErrno(L, "spawnp", olderr);
+      }
+    } else {
+      envp = environ;
+      freeme2 = 0;
+    }
+  } else {
+    return LuaUnixSysretErrno(L, "spawnp", olderr);
+  }
+  posix_spawn_file_actions_init(&fa);
+  rc = posix_spawnp(&pid, prog, &fa, NULL, argv, envp);
+  posix_spawn_file_actions_destroy(&fa);
+  FreeStringList(freeme1);
+  FreeStringList(freeme2);
+  if (rc == 0) {
+    lua_pushinteger(L, pid);
+    return 1;
+  } else {
+    errno = rc;
+    return LuaUnixSysretErrno(L, "spawnp", olderr);
+  }
+}
+
 // unix.commandv(prog:str)
 //     ├─→ path:str
 //     └─→ nil, unix.Errno
@@ -704,6 +881,15 @@ static int LuaUnixKill(lua_State *L) {
   int olderr = errno;
   return SysretBool(L, "kill", olderr,
                     kill(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2)));
+}
+
+// unix.killpg(pgrp:int, sig:int)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixKillpg(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "killpg", olderr,
+                    killpg(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2)));
 }
 
 // unix.raise(sig:int)
@@ -2066,6 +2252,82 @@ static int LuaUnixSchedYield(lua_State *L) {
   return 0;
 }
 
+// unix.daemon([nochdir:bool[, noclose:bool]])
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixDaemon(lua_State *L) {
+  int olderr = errno;
+  int nochdir = lua_toboolean(L, 1);
+  int noclose = lua_toboolean(L, 2);
+  int rc = daemon(nochdir, noclose);
+  if (rc != -1) {
+    lua_pushboolean(L, 1);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "daemon", olderr);
+  }
+}
+
+// unix.nice(inc:int)
+//     ├─→ priority:int
+//     └─→ nil, unix.Errno
+static int LuaUnixNice(lua_State *L) {
+  int olderr = errno;
+  int inc = luaL_checkinteger(L, 1);
+  errno = 0;
+  int rc = nice(inc);
+  if (rc == -1 && errno != 0) {
+    return LuaUnixSysretErrno(L, "nice", olderr);
+  }
+  errno = olderr;
+  lua_pushinteger(L, rc);
+  return 1;
+}
+
+// unix.getpriority(which:int, who:int)
+//     ├─→ priority:int
+//     └─→ nil, unix.Errno
+//
+// which can be:
+//   - unix.PRIO_PROCESS (0) - who is process id (0 = calling process)
+//   - unix.PRIO_PGRP (1) - who is process group id (0 = calling process group)
+//   - unix.PRIO_USER (2) - who is user id (0 = calling user)
+static int LuaUnixGetpriority(lua_State *L) {
+  int olderr = errno;
+  int which = luaL_checkinteger(L, 1);
+  int who = luaL_checkinteger(L, 2);
+  errno = 0;
+  int rc = getpriority(which, who);
+  if (rc == -1 && errno != 0) {
+    return LuaUnixSysretErrno(L, "getpriority", olderr);
+  }
+  errno = olderr;
+  lua_pushinteger(L, rc);
+  return 1;
+}
+
+// unix.setpriority(which:int, who:int, prio:int)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+//
+// which can be:
+//   - unix.PRIO_PROCESS (0) - who is process id (0 = calling process)
+//   - unix.PRIO_PGRP (1) - who is process group id (0 = calling process group)
+//   - unix.PRIO_USER (2) - who is user id (0 = calling user)
+static int LuaUnixSetpriority(lua_State *L) {
+  int olderr = errno;
+  int which = luaL_checkinteger(L, 1);
+  int who = luaL_checkinteger(L, 2);
+  int prio = luaL_checkinteger(L, 3);
+  int rc = setpriority(which, who, prio);
+  if (rc != -1) {
+    lua_pushboolean(L, 1);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "setpriority", olderr);
+  }
+}
+
 // unix.verynice()
 static int LuaUnixVerynice(lua_State *L) {
   verynice();
@@ -3288,13 +3550,17 @@ static const luaL_Reg kLuaUnix[] = {
     {"close", LuaUnixClose},              // close file or socket
     {"commandv", LuaUnixCommandv},        // resolve program on $PATH
     {"connect", LuaUnixConnect},          // connect to remote address
+    {"daemon", LuaUnixDaemon},            // daemonize process
     {"dup", LuaUnixDup},                  // copy fd to lowest empty slot
     {"environ", LuaUnixEnviron},          // get environment variables
     {"execve", LuaUnixExecve},            // replace process with program
+    {"execvp", LuaUnixExecvp},            // exec program using PATH
+    {"execvpe", LuaUnixExecvpe},          // exec program using PATH with env
     {"exit", LuaUnixExit},                // exit w/o atexit
     {"fcntl", LuaUnixFcntl},              // manipulate file descriptor
     {"fdatasync", LuaUnixFdatasync},      // flush open file w/o metadata
     {"fdopendir", LuaUnixFdopendir},      // read directory entry list
+    {"fexecve", LuaUnixFexecve},          // exec program from fd
     {"fork", LuaUnixFork},                // make child process via mitosis
     {"fstat", LuaUnixFstat},              // get file info from fd
     {"fstatfs", LuaUnixFstatfs},          // get filesystem info from fd
@@ -3311,6 +3577,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"getpgrp", LuaUnixGetpgrp},          // get process group id
     {"getpid", LuaUnixGetpid},            // get id of this process
     {"getppid", LuaUnixGetppid},          // get parent process id
+    {"getpriority", LuaUnixGetpriority},  // get process priority
     {"getrlimit", LuaUnixGetrlimit},      // query resource limits
     {"getrusage", LuaUnixGetrusage},      // query resource usages
     {"getsid", LuaUnixGetsid},            // get session id of pid
@@ -3320,6 +3587,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
     {"isatty", LuaUnixIsatty},            // detects pseudoteletypewriters
     {"kill", LuaUnixKill},                // signal child process
+    {"killpg", LuaUnixKillpg},            // signal process group
     {"link", LuaUnixLink},                // create hard link
     {"listen", LuaUnixListen},            // begin listening for clients
     {"localtime", LuaUnixLocaltime},      // localize unix timestamp
@@ -3332,6 +3600,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"mkdtemp", LuaUnixMkdtemp},          // create temporary directory
     {"mkstemp", LuaUnixMkstemp},          // create temporary file
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
+    {"nice", LuaUnixNice},                // adjust process priority
     {"open", LuaUnixOpen},                // open file fd at lowest slot
     {"opendir", LuaUnixOpendir},          // read directory entry list
     {"pipe", LuaUnixPipe},                // create two anon fifo fds
@@ -3355,6 +3624,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"setitimer", LuaUnixSetitimer},      // set alarm clock
     {"setpgid", LuaUnixSetpgid},          // set process group id for pid
     {"setpgrp", LuaUnixSetpgrp},          // sets process group id
+    {"setpriority", LuaUnixSetpriority},  // set process priority
     {"setresgid", LuaUnixSetresgid},      // sets real/effective/saved gids
     {"setresuid", LuaUnixSetresuid},      // sets real/effective/saved uids
     {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
@@ -3369,6 +3639,8 @@ static const luaL_Reg kLuaUnix[] = {
     {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
     {"socket", LuaUnixSocket},            // create network communication fd
     {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
+    {"spawn", LuaUnixSpawn},              // spawn process
+    {"spawnp", LuaUnixSpawnp},            // spawn process using PATH
     {"stat", LuaUnixStat},                // get file info from path
     {"statfs", LuaUnixStatfs},            // get filesystem info from path
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
@@ -3597,9 +3869,17 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "RLIMIT_NPROC", RLIMIT_NPROC);
   LuaSetIntField(L, "RLIMIT_NOFILE", RLIMIT_NOFILE);
 
+  // getpriority()/setpriority() which
+  LuaSetIntField(L, "PRIO_PROCESS", PRIO_PROCESS);
+  LuaSetIntField(L, "PRIO_PGRP", PRIO_PGRP);
+  LuaSetIntField(L, "PRIO_USER", PRIO_USER);
+
   // wait() options
   LuaSetIntField(L, "WNOHANG", WNOHANG);
   LuaSetIntField(L, "WUNTRACED", WUNTRACED);
+#ifdef WCONTINUED
+  LuaSetIntField(L, "WCONTINUED", WCONTINUED);
+#endif
 
   // socket() family
   LuaSetIntField(L, "AF_UNSPEC", AF_UNSPEC);

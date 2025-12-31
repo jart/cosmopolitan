@@ -4929,6 +4929,13 @@ unix = {
     --- @type integer
     RLIMIT_RSS = nil,
 
+    --- @type integer getpriority/setpriority: target is a process id
+    PRIO_PROCESS = nil,
+    --- @type integer getpriority/setpriority: target is a process group id
+    PRIO_PGRP = nil,
+    --- @type integer getpriority/setpriority: target is a user id
+    PRIO_USER = nil,
+
     --- @type integer
     RUSAGE_BOTH = nil,
     --- @type integer
@@ -5147,6 +5154,8 @@ unix = {
     WNOHANG = nil,
     --- @type integer
     WUNTRACED = nil,
+    --- @type integer Report continued child processes.
+    WCONTINUED = nil,
 
     --- @type integer
     W_OK = nil,
@@ -5421,6 +5430,96 @@ function unix.commandv(prog) end
 ---@overload fun(prog: string): nil, error: unix.Errno
 function unix.execve(prog, args, env) end
 
+--- Executes program with PATH search.
+---
+--- Unlike `execve()`, this function searches for `prog` in the
+--- directories listed in the `PATH` environment variable.
+---
+--- If `argv` is not provided, it defaults to `{prog}`.
+---
+--- This function never returns on success.
+---
+---@param prog string
+---@param argv? string[]
+---@return nil, unix.Errno error
+---@overload fun(prog: string, argv?: string[]): nil, error: unix.Errno
+function unix.execvp(prog, argv) end
+
+--- Executes program with PATH search and custom environment.
+---
+--- Like `execvp()` but also allows specifying a custom environment.
+---
+--- `envp` is a string list table where each string is typically
+--- in the form `"KEY=value"`. If not specified, inherits the
+--- current environment.
+---
+--- This function never returns on success.
+---
+---@param prog string
+---@param argv string[]
+---@param envp? string[]
+---@return nil, unix.Errno error
+---@overload fun(prog: string, argv: string[], envp?: string[]): nil, error: unix.Errno
+function unix.execvpe(prog, argv, envp) end
+
+--- Executes program from file descriptor.
+---
+--- This allows executing a program that has already been opened,
+--- which can be useful for executing programs that have been
+--- verified or for executing APE (Actually Portable Executable)
+--- binaries.
+---
+--- `fd` is an open file descriptor pointing to an executable.
+---
+--- `argv` is the argument vector passed to the program.
+---
+--- `envp` is the environment. If not specified, inherits the
+--- current environment.
+---
+--- This function never returns on success.
+---
+---@param fd integer
+---@param argv string[]
+---@param envp? string[]
+---@return nil, unix.Errno error
+---@overload fun(fd: integer, argv: string[], envp?: string[]): nil, error: unix.Errno
+function unix.fexecve(fd, argv, envp) end
+
+--- Spawns a new process.
+---
+--- Unlike `fork()` + `execve()`, this uses `posix_spawn()` which
+--- can be more efficient on some platforms.
+---
+--- `prog` must be an explicit path to the executable.
+---
+--- `argv` is the argument vector passed to the program.
+---
+--- `envp` is the environment. If not specified, inherits the
+--- current environment.
+---
+--- Returns the child process id on success.
+---
+---@param prog string
+---@param argv string[]
+---@param envp? string[]
+---@return integer pid
+---@overload fun(prog: string, argv: string[], envp?: string[]): nil, error: unix.Errno
+function unix.spawn(prog, argv, envp) end
+
+--- Spawns a new process with PATH search.
+---
+--- Like `spawn()` but searches for `prog` in the directories
+--- listed in the `PATH` environment variable.
+---
+--- Returns the child process id on success.
+---
+---@param prog string
+---@param argv string[]
+---@param envp? string[]
+---@return integer pid
+---@overload fun(prog: string, argv: string[], envp?: string[]): nil, error: unix.Errno
+function unix.spawnp(prog, argv, envp) end
+
 --- Duplicates file descriptor.
 ---
 --- `newfd` may be specified to choose a specific number for the new
@@ -5614,6 +5713,22 @@ function unix.getppid() end
 ---@return true
 ---@overload fun(pid: integer, sid: integer): nil, error: unix.Errno
 function unix.kill(pid, sig) end
+
+--- Sends signal to process group.
+---
+--- This is similar to `kill()` but sends the signal to all processes
+--- in the specified process group.
+---
+--- `pgrp` is the process group id. If 0, sends to the calling process's
+--- process group.
+---
+--- `sig` can be any signal value (e.g., `SIGTERM`, `SIGKILL`, etc.).
+---
+---@param pgrp integer
+---@param sig integer
+---@return true
+---@overload fun(pgrp: integer, sig: integer): nil, error: unix.Errno
+function unix.killpg(pgrp, sig) end
 
 --- Triggers signal in current process.
 ---
@@ -6134,6 +6249,27 @@ function unix.getpgid(pid) end
 ---@return integer sid
 ---@overload fun(): nil, error: unix.Errno
 function unix.setsid() end
+
+--- Daemonizes the current process.
+---
+--- This function performs the standard Unix daemonization steps:
+--- forks, creates a new session, and optionally changes directory
+--- and redirects standard file descriptors.
+---
+--- `nochdir` if true, the current working directory is not changed
+--- to `/`. Defaults to false (will change to `/`).
+---
+--- `noclose` if true, stdin/stdout/stderr are not redirected to
+--- `/dev/null`. Defaults to false (will redirect to `/dev/null`).
+---
+--- This is a convenience wrapper that combines `fork()`, `setsid()`,
+--- and related operations.
+---
+---@param nochdir? boolean
+---@param noclose? boolean
+---@return true
+---@overload fun(nochdir?: boolean, noclose?: boolean): nil, error: unix.Errno
+function unix.daemon(nochdir, noclose) end
 
 --- Gets real user id.
 ---
@@ -7119,6 +7255,59 @@ function unix.setrlimit(resource, soft, hard) end
 ---@nodiscard
 ---@overload fun(resource: integer): nil, error: unix.Errno
 function unix.getrlimit(resource) end
+
+--- Adjusts the nice value (scheduling priority) of the calling process.
+---
+--- The nice value ranges from -20 (highest priority) to 19 (lowest priority).
+--- Only privileged processes can lower the nice value (increase priority).
+---
+--- `inc` is added to the current nice value. Positive values decrease
+--- priority, negative values increase it.
+---
+--- Returns the new nice value on success. Note that -1 is a valid return
+--- value, so errors must be detected by checking the second return value.
+---
+---@param inc integer
+---@return integer priority
+---@overload fun(inc: integer): nil, error: unix.Errno
+function unix.nice(inc) end
+
+--- Gets the scheduling priority of a process, process group, or user.
+---
+--- `which` specifies what `who` refers to:
+---
+--- - `PRIO_PROCESS`: `who` is a process id (0 = calling process)
+--- - `PRIO_PGRP`: `who` is a process group id (0 = calling process group)
+--- - `PRIO_USER`: `who` is a user id (0 = calling user)
+---
+--- Returns the priority value (nice value) which ranges from -20 to 19.
+--- Note that -1 is a valid return value, so errors must be detected by
+--- checking the second return value.
+---
+---@param which integer
+---@param who integer
+---@return integer priority
+---@overload fun(which: integer, who: integer): nil, error: unix.Errno
+function unix.getpriority(which, who) end
+
+--- Sets the scheduling priority of a process, process group, or user.
+---
+--- `which` specifies what `who` refers to:
+---
+--- - `PRIO_PROCESS`: `who` is a process id (0 = calling process)
+--- - `PRIO_PGRP`: `who` is a process group id (0 = calling process group)
+--- - `PRIO_USER`: `who` is a user id (0 = calling user)
+---
+--- `prio` is the new priority value (nice value), ranging from -20
+--- (highest priority) to 19 (lowest priority). Only privileged processes
+--- can set negative priority values.
+---
+---@param which integer
+---@param who integer
+---@param prio integer
+---@return true
+---@overload fun(which: integer, who: integer, prio: integer): nil, error: unix.Errno
+function unix.setpriority(which, who, prio) end
 
 --- Returns information about resource usage for current process, e.g.
 ---
