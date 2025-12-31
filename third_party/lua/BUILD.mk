@@ -184,10 +184,19 @@ THIRD_PARTY_LUA_UNIX_A =					\
 	o/$(MODE)/third_party/lua/lunix.a
 
 THIRD_PARTY_LUA_UNIX_HDRS =					\
-	third_party/lua/lunix.h
+	third_party/lua/lunix.h					\
+	third_party/lua/lunix_internal.h
 
 THIRD_PARTY_LUA_UNIX_SRCS =					\
-	third_party/lua/lunix.c
+	third_party/lua/lunix.c					\
+	third_party/lua/lunix_dir.c				\
+	third_party/lua/lunix_errno.c				\
+	third_party/lua/lunix_memory.c				\
+	third_party/lua/lunix_proc.c				\
+	third_party/lua/lunix_rusage.c				\
+	third_party/lua/lunix_sigset.c				\
+	third_party/lua/lunix_stat.c				\
+	third_party/lua/lunix_statfs.c
 
 THIRD_PARTY_LUA_UNIX_OBJS =					\
 	$(THIRD_PARTY_LUA_UNIX_SRCS:%.c=o/$(MODE)/%.o)
