@@ -11,6 +11,21 @@ COSMOPOLITAN_C_START_
 
 extern lua_State *GL;
 
+static inline int ReturnInteger(lua_State *L, lua_Integer x) {
+  lua_pushinteger(L, x);
+  return 1;
+}
+
+static inline int ReturnBoolean(lua_State *L, int x) {
+  lua_pushboolean(L, !!x);
+  return 1;
+}
+
+static inline int ReturnString(lua_State *L, const char *x) {
+  lua_pushstring(L, x);
+  return 1;
+}
+
 void LuaSetIntField(lua_State *, const char *, lua_Integer);
 void LuaPushSigset(lua_State *, sigset_t);
 void LuaPushStat(lua_State *, struct stat *);
