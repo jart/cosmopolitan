@@ -33,6 +33,13 @@ local function open(path_or_fd, mode_or_opts, opts)
   end
 end
 
+-- Create reader from in-memory zip data
+-- from(data, [opts]) -> reader | nil, error
+local function from(data, opts)
+  return czip.from(data, opts)
+end
+
 return {
   open = open,
+  from = from,
 }
