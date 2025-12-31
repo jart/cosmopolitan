@@ -7,7 +7,7 @@
 OUTPUT_DIR=${1:?OUTPUT_DIR}
 COSMOCC_VERSION=${2:?COSMOCC_VERSION}
 COSMOCC_SHA256SUM=${3:?COSMOCC_SHA256SUM}
-URL1="https://github.com/jart/cosmopolitan/releases/download/${COSMOCC_VERSION}/cosmocc-${COSMOCC_VERSION}.zip"
+URL1="https://github.com/whilp/cosmopolitan/releases/download/${COSMOCC_VERSION}/cosmocc.zip"
 URL2="https://cosmo.zip/pub/cosmocc/cosmocc-${COSMOCC_VERSION}.zip"
 
 # helper function
