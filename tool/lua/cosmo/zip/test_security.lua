@@ -175,6 +175,77 @@ assert(err:match("duplicate"), "error should mention duplicate")
 appender:close()
 
 --------------------------------------------------------------------------------
+-- Test name length limits
+--------------------------------------------------------------------------------
+
+local name_limit_zip = tmpdir .. "/name_limit_test.zip"
+writer = zip.open(name_limit_zip, "w")
+
+-- Name at exactly 65535 bytes should work
+local long_name = string.rep("a", 65535)
+ok, err = writer:add(long_name, "content")
+assert(ok, "65535 byte name should work: " .. tostring(err))
+
+-- Name exceeding 65535 bytes should be rejected
+local too_long_name = string.rep("b", 65536)
+result, err = writer:add(too_long_name, "content")
+assert(result == nil, "65536 byte name should be rejected")
+assert(err:match("too long"), "error should mention too long")
+
+writer:close()
+
+--------------------------------------------------------------------------------
+-- Test appender realloc safety (exercises internal array growth)
+--------------------------------------------------------------------------------
+
+local realloc_zip = tmpdir .. "/realloc_test.zip"
+writer = zip.open(realloc_zip, "w")
+writer:add("initial.txt", "initial")
+writer:close()
+
+appender = zip.open(realloc_zip, "a")
+
+-- Add many entries to trigger multiple reallocs (initial capacity is 16)
+for i = 1, 50 do
+  ok, err = appender:add("file_" .. i .. ".txt", "content " .. i)
+  assert(ok, "add " .. i .. " should succeed: " .. tostring(err))
+end
+
+ok, err = appender:close()
+assert(ok, "close after many adds should succeed: " .. tostring(err))
+
+-- Verify all entries are present
+local reader = zip.open(realloc_zip)
+local entries = reader:list()
+assert(#entries == 51, "should have 51 entries (1 initial + 50 appended), got " .. #entries)
+reader:close()
+
+--------------------------------------------------------------------------------
+-- Test handling of truncated/corrupted zip files
+--------------------------------------------------------------------------------
+
+-- Create a valid zip then truncate it
+local truncated_zip = tmpdir .. "/truncated.zip"
+writer = zip.open(truncated_zip, "w")
+writer:add("test.txt", "test content here")
+writer:close()
+
+-- Read original size
+local f = io.open(truncated_zip, "rb")
+local original = f:read("*a")
+f:close()
+
+-- Write truncated version (remove last 10 bytes, breaking the EOCD)
+f = io.open(truncated_zip, "wb")
+f:write(original:sub(1, #original - 10))
+f:close()
+
+-- Opening truncated zip for append should fail gracefully
+result, err = zip.open(truncated_zip, "a")
+assert(result == nil, "truncated zip should fail to open for append")
+assert(err:match("not a zip"), "error should indicate invalid zip")
+
+--------------------------------------------------------------------------------
 -- Cleanup
 --------------------------------------------------------------------------------
 
