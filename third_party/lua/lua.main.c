@@ -89,6 +89,7 @@ static void print_usage (const char *badoption) {
   "  -E        ignore environment variables\n"
   "  -W        turn warnings on\n"
   "  --skill [path]  install Claude Code skill\n"
+  "  --embed <package> [output]  embed Lua library into executable\n"
   "  --        stop handling options\n"
   "  -         stop handling options and execute stdin\n"
   ,
@@ -198,8 +199,11 @@ static int handle_script (lua_State *L, char **argv) {
 #define has_e		8	/* -e */
 #define has_E		16	/* -E */
 #define has_skill	32	/* --skill */
+#define has_embed	64	/* --embed */
 
 static const char *skill_path = NULL;  /* optional path for --skill */
+static const char *embed_package = NULL;  /* required package for --embed */
+static const char *embed_output = NULL;  /* optional output path for --embed */
 
 
 /*
@@ -235,6 +239,19 @@ static int collectargs (char **argv, int *first) {
           /* check for optional path argument */
           if (argv[i + 1] != NULL && argv[i + 1][0] != '-') {
             skill_path = argv[++i];
+          }
+          break;
+        }
+        if (strcmp(argv[i], "--embed") == 0) {  /* --embed <package> [output] */
+          args |= has_embed;
+          /* package name is required */
+          if (argv[i + 1] == NULL || argv[i + 1][0] == '-') {
+            return has_error;  /* missing package name */
+          }
+          embed_package = argv[++i];
+          /* check for optional output path */
+          if (argv[i + 1] != NULL && argv[i + 1][0] != '-') {
+            embed_output = argv[++i];
           }
           break;
         }
@@ -414,6 +431,27 @@ static int pmain (lua_State *L) {
     }
     lua_pushboolean(L, lua_toboolean(L, -1));
     return 1;  /* exit after installing skill */
+  }
+  /* handle --embed option */
+  if (args & has_embed) {
+    lua_getglobal(L, "require");
+    lua_pushliteral(L, "cosmo.embed");
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+      lua_report(L, LUA_ERRRUN);
+      return 0;
+    }
+    lua_getfield(L, -1, "install");
+    lua_pushstring(L, embed_package);
+    if (embed_output)
+      lua_pushstring(L, embed_output);
+    else
+      lua_pushnil(L);
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+      lua_report(L, LUA_ERRRUN);
+      return 0;
+    }
+    lua_pushboolean(L, lua_toboolean(L, -1));
+    return 1;  /* exit after embedding library */
   }
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */

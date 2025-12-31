@@ -84,7 +84,9 @@ TOOL_LUA_ASSETS =							\
 	o/$(MODE)/tool/lua/cosmo/help/init.lua.zip.o			\
 	o/$(MODE)/tool/lua/cosmo/skill/init.lua.zip.o			\
 	o/$(MODE)/tool/lua/cosmo/zip/init.lua.zip.o			\
-	o/$(MODE)/tool/lua/cosmo/http/init.lua.zip.o
+	o/$(MODE)/tool/lua/cosmo/http/init.lua.zip.o			\
+	o/$(MODE)/tool/lua/cosmo/embed/init.lua.zip.o			\
+	o/$(MODE)/tool/lua/cosmo/embed/luarocks.lua.zip.o
 
 # Strip tool/lua/ prefix and prepend .lua/ so files end up at /zip/.lua/
 o/$(MODE)/tool/lua/cosmo/%.zip.o: private ZIPOBJ_FLAGS += -C2 -P.lua
@@ -170,6 +172,14 @@ o/$(MODE)/tool/lua/test_goodsocket.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_
 	$< tool/lua/test_goodsocket.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_embed.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_embed.lua
+	$< tool/lua/test_embed.lua
+	@touch $@
+
+o/$(MODE)/tool/lua/test_embed_integration.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_embed_integration.lua
+	$< tool/lua/test_embed_integration.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
 	o/$(MODE)/tool/lua/cosmo/help/test.ok				\
@@ -185,7 +195,9 @@ TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/cosmo/http/test_server.ok			\
 	o/$(MODE)/tool/lua/cosmo/http/test_security.ok			\
 	o/$(MODE)/tool/lua/cosmo/http/test_server_security.ok		\
-	o/$(MODE)/tool/lua/test_goodsocket.ok
+	o/$(MODE)/tool/lua/test_goodsocket.ok				\
+	o/$(MODE)/tool/lua/test_embed.ok				\
+	o/$(MODE)/tool/lua/test_embed_integration.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\
