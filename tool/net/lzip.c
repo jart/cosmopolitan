@@ -19,6 +19,7 @@
 #include "tool/net/lzip.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/cosmo.h"
 #include "libc/dos.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
@@ -30,6 +31,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/time.h"
 #include "libc/zip.h"
+#include "net/http/http.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/zlib/zlib.h"
@@ -511,6 +513,258 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
   *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ZIP Helper Functions
+////////////////////////////////////////////////////////////////////////////////
+
+// Decide whether to attempt compression based on file extension and entropy.
+// Returns true if compression should be attempted.
+static bool ShouldCompress(const char *name, size_t namesize,
+                           const void *data, size_t datasize, int level) {
+  if (level <= 0)
+    return false;
+  if (datasize < 64)
+    return false;
+  if (IsNoCompressExt(name, namesize))
+    return false;
+  if (datasize >= 1000 && cosmo_entropy(data, 1000) >= 7)
+    return false;
+  return true;
+}
+
+// Compress data using deflate. Returns 0 on success, -1 on error.
+// If compression doesn't help, *out will be NULL and *outlen unchanged.
+// Caller must free(*out) if non-NULL.
+static int ZipDeflate(const void *in, size_t inlen, void **out, size_t *outlen,
+                      int level) {
+  *out = NULL;
+  if (inlen == 0)
+    return 0;
+
+  z_stream strm = {0};
+  int ret = deflateInit2(&strm, level, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL,
+                         Z_DEFAULT_STRATEGY);
+  if (ret != Z_OK)
+    return -1;
+
+  size_t bound = deflateBound(&strm, inlen);
+  uint8_t *compdata = malloc(bound);
+  if (!compdata) {
+    deflateEnd(&strm);
+    return -1;
+  }
+
+  strm.next_in = (uint8_t *)in;
+  strm.avail_in = inlen;
+  strm.next_out = compdata;
+  strm.avail_out = bound;
+
+  ret = deflate(&strm, Z_FINISH);
+  if (ret != Z_STREAM_END) {
+    deflateEnd(&strm);
+    free(compdata);
+    return -1;
+  }
+
+  size_t compsize = strm.total_out;
+  deflateEnd(&strm);
+
+  // If compressed is larger or equal, don't use it
+  if (compsize >= inlen) {
+    free(compdata);
+    return 0;
+  }
+
+  *out = compdata;
+  *outlen = compsize;
+  return 0;
+}
+
+// Build a ZIP local file header. Returns pointer past end of header.
+// Buffer must be at least kZipLfileHdrMinSize + namelen + 20 bytes.
+static uint8_t *EmitZipLfileHdr(uint8_t *p, const char *name, size_t namelen,
+                                uint32_t crc, uint16_t method, uint16_t mtime,
+                                uint16_t mdate, uint64_t compsize,
+                                uint64_t uncompsize) {
+  bool needzip64 =
+      (uncompsize >= 0xffffffffu || compsize >= 0xffffffffu);
+  size_t extlen = needzip64 ? (2 + 2 + 8 + 8) : 0;
+
+  p = ZIP_WRITE32(p, kZipLfileHdrMagic);
+  p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993);
+  p = ZIP_WRITE16(p, kZipGflagUtf8);
+  p = ZIP_WRITE16(p, method);
+  p = ZIP_WRITE16(p, mtime);
+  p = ZIP_WRITE16(p, mdate);
+  p = ZIP_WRITE32(p, crc);
+  if (needzip64) {
+    p = ZIP_WRITE32(p, 0xffffffffu);
+    p = ZIP_WRITE32(p, 0xffffffffu);
+  } else {
+    p = ZIP_WRITE32(p, compsize);
+    p = ZIP_WRITE32(p, uncompsize);
+  }
+  p = ZIP_WRITE16(p, namelen);
+  p = ZIP_WRITE16(p, extlen);
+  memcpy(p, name, namelen);
+  p += namelen;
+
+  if (needzip64) {
+    p = ZIP_WRITE16(p, kZipExtraZip64);
+    p = ZIP_WRITE16(p, 8 + 8);
+    p = ZIP_WRITE64(p, uncompsize);
+    p = ZIP_WRITE64(p, compsize);
+  }
+
+  return p;
+}
+
+// Calculate size of local file header
+static size_t GetLfileHdrSize(size_t namelen, uint64_t compsize,
+                              uint64_t uncompsize) {
+  bool needzip64 = (uncompsize >= 0xffffffffu || compsize >= 0xffffffffu);
+  size_t extlen = needzip64 ? (2 + 2 + 8 + 8) : 0;
+  return kZipLfileHdrMinSize + namelen + extlen;
+}
+
+// Build a ZIP central directory file header. Returns pointer past end.
+// Buffer must be at least kZipCfileHdrMinSize + namelen + 28 bytes.
+static uint8_t *EmitZipCfileHdr(uint8_t *p, const char *name, size_t namelen,
+                                uint32_t crc, uint16_t method, uint16_t mtime,
+                                uint16_t mdate, uint32_t mode, uint64_t offset,
+                                uint64_t compsize, uint64_t uncompsize) {
+  bool needzip64 = (uncompsize >= 0xffffffffu || compsize >= 0xffffffffu ||
+                    offset >= 0xffffffffu);
+  size_t extlen = needzip64 ? (2 + 2 + 8 + 8 + 8) : 0;
+
+  p = ZIP_WRITE32(p, kZipCfileHdrMagic);
+  p = ZIP_WRITE16(p, kZipOsUnix << 8 | (needzip64 ? kZipEra2001 : kZipEra1993));
+  p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993);
+  p = ZIP_WRITE16(p, kZipGflagUtf8);
+  p = ZIP_WRITE16(p, method);
+  p = ZIP_WRITE16(p, mtime);
+  p = ZIP_WRITE16(p, mdate);
+  p = ZIP_WRITE32(p, crc);
+  if (needzip64) {
+    p = ZIP_WRITE32(p, 0xffffffffu);
+    p = ZIP_WRITE32(p, 0xffffffffu);
+  } else {
+    p = ZIP_WRITE32(p, compsize);
+    p = ZIP_WRITE32(p, uncompsize);
+  }
+  p = ZIP_WRITE16(p, namelen);
+  p = ZIP_WRITE16(p, extlen);
+  p = ZIP_WRITE16(p, 0);  // comment length
+  p = ZIP_WRITE16(p, 0);  // disk number start
+  p = ZIP_WRITE16(p, 0);  // internal file attributes
+  p = ZIP_WRITE32(p, mode << 16);  // external file attributes
+  if (needzip64) {
+    p = ZIP_WRITE32(p, 0xffffffffu);
+  } else {
+    p = ZIP_WRITE32(p, offset);
+  }
+  memcpy(p, name, namelen);
+  p += namelen;
+
+  if (needzip64) {
+    p = ZIP_WRITE16(p, kZipExtraZip64);
+    p = ZIP_WRITE16(p, 8 + 8 + 8);
+    p = ZIP_WRITE64(p, uncompsize);
+    p = ZIP_WRITE64(p, compsize);
+    p = ZIP_WRITE64(p, offset);
+  }
+
+  return p;
+}
+
+// Calculate size of central directory file header
+static size_t GetCfileHdrSize(size_t namelen, uint64_t offset, uint64_t compsize,
+                              uint64_t uncompsize) {
+  bool needzip64 = (uncompsize >= 0xffffffffu || compsize >= 0xffffffffu ||
+                    offset >= 0xffffffffu);
+  size_t extlen = needzip64 ? (2 + 2 + 8 + 8 + 8) : 0;
+  return kZipCfileHdrMinSize + namelen + extlen;
+}
+
+// Write end of central directory (handles ZIP64 automatically).
+// Returns 0 on success, -1 on error.
+static int WriteZipEocd(int fd, size_t entry_count, int64_t cdir_offset,
+                        int64_t cdir_size) {
+  bool needzip64 = (entry_count >= 0xffff || cdir_size >= 0xffffffffu ||
+                    cdir_offset >= 0xffffffffu);
+
+  if (needzip64) {
+    // Write ZIP64 end of central directory record
+    uint8_t eocd64[kZipCdir64HdrMinSize];
+    uint8_t *p = eocd64;
+    p = ZIP_WRITE32(p, kZipCdir64HdrMagic);
+    p = ZIP_WRITE64(p, kZipCdir64HdrMinSize - 12);
+    p = ZIP_WRITE16(p, kZipOsUnix << 8 | kZipEra2001);
+    p = ZIP_WRITE16(p, kZipEra2001);
+    p = ZIP_WRITE32(p, 0);  // disk number
+    p = ZIP_WRITE32(p, 0);  // disk with cdir
+    p = ZIP_WRITE64(p, entry_count);
+    p = ZIP_WRITE64(p, entry_count);
+    p = ZIP_WRITE64(p, cdir_size);
+    p = ZIP_WRITE64(p, cdir_offset);
+
+    if (write(fd, eocd64, sizeof(eocd64)) != sizeof(eocd64))
+      return -1;
+
+    // Write ZIP64 end of central directory locator
+    uint8_t loc64[kZipCdir64LocatorSize];
+    p = loc64;
+    p = ZIP_WRITE32(p, kZipCdir64LocatorMagic);
+    p = ZIP_WRITE32(p, 0);  // disk with eocd64
+    p = ZIP_WRITE64(p, cdir_offset + cdir_size);
+    p = ZIP_WRITE32(p, 1);  // total disks
+
+    if (write(fd, loc64, sizeof(loc64)) != sizeof(loc64))
+      return -1;
+  }
+
+  // Write end of central directory record
+  uint8_t eocd[kZipCdirHdrMinSize];
+  uint8_t *p = eocd;
+  p = ZIP_WRITE32(p, kZipCdirHdrMagic);
+  p = ZIP_WRITE16(p, 0);  // disk number
+  p = ZIP_WRITE16(p, 0);  // disk with cdir
+  p = ZIP_WRITE16(p, entry_count >= 0xffff ? 0xffff : entry_count);
+  p = ZIP_WRITE16(p, entry_count >= 0xffff ? 0xffff : entry_count);
+  p = ZIP_WRITE32(p, cdir_size >= 0xffffffffu ? 0xffffffffu : cdir_size);
+  p = ZIP_WRITE32(p, cdir_offset >= 0xffffffffu ? 0xffffffffu : cdir_offset);
+  p = ZIP_WRITE16(p, 0);  // comment length
+
+  if (write(fd, eocd, sizeof(eocd)) != sizeof(eocd))
+    return -1;
+
+  return 0;
+}
+
+// Write a central directory entry to fd. Returns bytes written or -1 on error.
+static ssize_t WriteCdirEntry(int fd, const struct LuaZipCdirEntry *e,
+                              uint64_t offset) {
+  size_t hdrlen = GetCfileHdrSize(e->namelen, offset, e->compsize, e->uncompsize);
+  uint8_t *buf = malloc(hdrlen);
+  if (!buf)
+    return -1;
+
+  EmitZipCfileHdr(buf, e->name, e->namelen, e->crc32, e->method, e->mtime,
+                  e->mdate, e->mode, offset, e->compsize, e->uncompsize);
+
+  ssize_t written = write(fd, buf, hdrlen);
+  free(buf);
+
+  if (written != (ssize_t)hdrlen)
+    return -1;
+
+  return hdrlen;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Writer Implementation
+////////////////////////////////////////////////////////////////////////////////
+
 // zip.create(path|fd, [options]) -> writer | nil, error
 static int LuaZipCreate(lua_State *L) {
   const char *path = NULL;
@@ -630,18 +884,19 @@ static int LuaZipWriterAdd(lua_State *L) {
     return ZipError(L, "content exceeds max_file_size limit");
 
   // parse options
-  int method = w->level > 0 ? kZipCompressionDeflate : kZipCompressionNone;
+  bool force_store = false;
+  bool force_deflate = false;
   int64_t mtime_unix = time(NULL);
-  uint32_t mode = 0100644;  // regular file with 644 permissions
+  uint32_t mode = 0100644;
 
   if (lua_istable(L, 4)) {
     lua_getfield(L, 4, "method");
     if (!lua_isnil(L, -1)) {
       const char *m = luaL_checkstring(L, -1);
       if (!strcmp(m, "store"))
-        method = kZipCompressionNone;
+        force_store = true;
       else if (!strcmp(m, "deflate"))
-        method = kZipCompressionDeflate;
+        force_deflate = true;
       else
         return luaL_error(L, "unknown method: %s", m);
     }
@@ -658,124 +913,54 @@ static int LuaZipWriterAdd(lua_State *L) {
     lua_pop(L, 1);
   }
 
-  // validate mode is a regular file (reject symlinks, devices, etc.)
+  // validate mode is a regular file
   if ((mode & 0170000) != 0100000 && (mode & 0170000) != 0)
     return ZipError(L, "mode must be a regular file");
-
-  // ensure regular file bit is set
   if ((mode & 0170000) == 0)
     mode |= 0100000;
 
-  // compute CRC32 of uncompressed data
+  // compute CRC32
   uint32_t crc = crc32_z(0, (const uint8_t *)content, contentlen);
 
   // convert mtime
   uint16_t mtime, mdate;
   GetDosLocalTime(mtime_unix, &mtime, &mdate);
 
-  // compress if needed
-  uint8_t *compdata = NULL;
+  // decide compression method and compress if needed
+  uint16_t method = kZipCompressionNone;
+  void *compdata = NULL;
   size_t compsize = contentlen;
 
-  if (method == kZipCompressionDeflate && contentlen > 0) {
-    z_stream strm = {0};
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-
-    int ret = deflateInit2(&strm, w->level, Z_DEFLATED, -MAX_WBITS,
-                           DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
-    if (ret != Z_OK)
-      return ZipError(L, "deflateInit2 failed");
-
-    size_t bound = deflateBound(&strm, contentlen);
-    compdata = malloc(bound);
-    if (!compdata) {
-      deflateEnd(&strm);
-      return SysError(L, "malloc");
-    }
-
-    strm.next_in = (uint8_t *)content;
-    strm.avail_in = contentlen;
-    strm.next_out = compdata;
-    strm.avail_out = bound;
-
-    ret = deflate(&strm, Z_FINISH);
-    if (ret != Z_STREAM_END) {
-      deflateEnd(&strm);
-      free(compdata);
+  if (!force_store &&
+      (force_deflate || ShouldCompress(name, namelen, content, contentlen, w->level))) {
+    if (ZipDeflate(content, contentlen, &compdata, &compsize, w->level) < 0)
       return ZipError(L, "deflate failed");
-    }
-
-    compsize = strm.total_out;
-    deflateEnd(&strm);
-
-    // if compressed is larger, store instead
-    if (compsize >= contentlen) {
-      free(compdata);
-      compdata = NULL;
-      compsize = contentlen;
-      method = kZipCompressionNone;
-    }
-  } else {
-    method = kZipCompressionNone;
+    if (compdata)
+      method = kZipCompressionDeflate;
   }
 
-  // determine if we need zip64 extra field
-  bool needzip64 = (contentlen >= 0xffffffffu || compsize >= 0xffffffffu ||
-                    w->offset >= 0xffffffffu);
-  size_t extlen = needzip64 ? (2 + 2 + 8 + 8) : 0;
-  size_t hdrlen = kZipLfileHdrMinSize + namelen + extlen;
-
-  // build local file header
+  // build and write local file header
+  size_t hdrlen = GetLfileHdrSize(namelen, compsize, contentlen);
   uint8_t *lochdr = malloc(hdrlen);
   if (!lochdr) {
-    if (compdata)
-      free(compdata);
+    free(compdata);
     return SysError(L, "malloc");
   }
 
-  uint8_t *p = lochdr;
-  p = ZIP_WRITE32(p, kZipLfileHdrMagic);
-  p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993);
-  p = ZIP_WRITE16(p, kZipGflagUtf8);
-  p = ZIP_WRITE16(p, method);
-  p = ZIP_WRITE16(p, mtime);
-  p = ZIP_WRITE16(p, mdate);
-  p = ZIP_WRITE32(p, crc);
-  if (needzip64) {
-    p = ZIP_WRITE32(p, 0xffffffffu);
-    p = ZIP_WRITE32(p, 0xffffffffu);
-  } else {
-    p = ZIP_WRITE32(p, compsize);
-    p = ZIP_WRITE32(p, contentlen);
-  }
-  p = ZIP_WRITE16(p, namelen);
-  p = ZIP_WRITE16(p, extlen);
-  memcpy(p, name, namelen);
-  p += namelen;
+  EmitZipLfileHdr(lochdr, name, namelen, crc, method, mtime, mdate, compsize,
+                  contentlen);
 
-  if (needzip64) {
-    p = ZIP_WRITE16(p, kZipExtraZip64);
-    p = ZIP_WRITE16(p, 8 + 8);
-    p = ZIP_WRITE64(p, contentlen);
-    p = ZIP_WRITE64(p, compsize);
-  }
-
-  // write local file header
   ssize_t written = write(w->fd, lochdr, hdrlen);
   free(lochdr);
   if (written != (ssize_t)hdrlen) {
-    if (compdata)
-      free(compdata);
+    free(compdata);
     return WriterSysError(L, w, "write header");
   }
 
   // write file data
-  const void *writedata = compdata ? (const void *)compdata : (const void *)content;
+  const void *writedata = compdata ? compdata : content;
   written = write(w->fd, writedata, compsize);
-  if (compdata)
-    free(compdata);
+  free(compdata);
   if (written != (ssize_t)compsize)
     return WriterSysError(L, w, "write data");
 
@@ -801,111 +986,14 @@ static int LuaZipWriterClose(lua_State *L) {
   int64_t cdir_size = 0;
 
   for (size_t i = 0; i < w->entry_count; i++) {
-    struct LuaZipCdirEntry *e = &w->entries[i];
-
-    bool needzip64 = (e->uncompsize >= 0xffffffffu ||
-                      e->compsize >= 0xffffffffu || e->offset >= 0xffffffffu);
-    size_t extlen = needzip64 ? (2 + 2 + 8 + 8 + 8) : 0;
-    size_t hdrlen = kZipCfileHdrMinSize + e->namelen + extlen;
-
-    uint8_t *cdirhdr = malloc(hdrlen);
-    if (!cdirhdr)
-      return SysError(L, "malloc");
-
-    uint8_t *p = cdirhdr;
-    p = ZIP_WRITE32(p, kZipCfileHdrMagic);
-    p = ZIP_WRITE16(p, kZipOsUnix << 8 | (needzip64 ? kZipEra2001 : kZipEra1993));
-    p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993);
-    p = ZIP_WRITE16(p, kZipGflagUtf8);
-    p = ZIP_WRITE16(p, e->method);
-    p = ZIP_WRITE16(p, e->mtime);
-    p = ZIP_WRITE16(p, e->mdate);
-    p = ZIP_WRITE32(p, e->crc32);
-    if (needzip64) {
-      p = ZIP_WRITE32(p, 0xffffffffu);
-      p = ZIP_WRITE32(p, 0xffffffffu);
-    } else {
-      p = ZIP_WRITE32(p, e->compsize);
-      p = ZIP_WRITE32(p, e->uncompsize);
-    }
-    p = ZIP_WRITE16(p, e->namelen);
-    p = ZIP_WRITE16(p, extlen);
-    p = ZIP_WRITE16(p, 0);  // comment length
-    p = ZIP_WRITE16(p, 0);  // disk number start
-    p = ZIP_WRITE16(p, 0);  // internal file attributes
-    p = ZIP_WRITE32(p, e->mode << 16);  // external file attributes
-    if (needzip64) {
-      p = ZIP_WRITE32(p, 0xffffffffu);
-    } else {
-      p = ZIP_WRITE32(p, e->offset);
-    }
-    memcpy(p, e->name, e->namelen);
-    p += e->namelen;
-
-    if (needzip64) {
-      p = ZIP_WRITE16(p, kZipExtraZip64);
-      p = ZIP_WRITE16(p, 8 + 8 + 8);
-      p = ZIP_WRITE64(p, e->uncompsize);
-      p = ZIP_WRITE64(p, e->compsize);
-      p = ZIP_WRITE64(p, e->offset);
-    }
-
-    ssize_t written = write(w->fd, cdirhdr, hdrlen);
-    free(cdirhdr);
-    if (written != (ssize_t)hdrlen)
+    ssize_t written = WriteCdirEntry(w->fd, &w->entries[i], w->entries[i].offset);
+    if (written < 0)
       return WriterSysError(L, w, "write cdir entry");
-
-    cdir_size += hdrlen;
+    cdir_size += written;
   }
 
-  // determine if we need zip64 end of central directory
-  bool needzip64 =
-      (w->entry_count >= 0xffff || cdir_size >= 0xffffffffu ||
-       cdir_offset >= 0xffffffffu);
-
-  if (needzip64) {
-    // write zip64 end of central directory record
-    uint8_t eocd64[kZipCdir64HdrMinSize];
-    uint8_t *p = eocd64;
-    p = ZIP_WRITE32(p, kZipCdir64HdrMagic);
-    p = ZIP_WRITE64(p, kZipCdir64HdrMinSize - 12);
-    p = ZIP_WRITE16(p, kZipOsUnix << 8 | kZipEra2001);
-    p = ZIP_WRITE16(p, kZipEra2001);
-    p = ZIP_WRITE32(p, 0);  // disk number
-    p = ZIP_WRITE32(p, 0);  // disk with cdir
-    p = ZIP_WRITE64(p, w->entry_count);
-    p = ZIP_WRITE64(p, w->entry_count);
-    p = ZIP_WRITE64(p, cdir_size);
-    p = ZIP_WRITE64(p, cdir_offset);
-
-    if (write(w->fd, eocd64, sizeof(eocd64)) != sizeof(eocd64))
-      return WriterSysError(L, w, "write eocd64");
-
-    // write zip64 end of central directory locator
-    uint8_t loc64[kZipCdir64LocatorSize];
-    p = loc64;
-    p = ZIP_WRITE32(p, kZipCdir64LocatorMagic);
-    p = ZIP_WRITE32(p, 0);  // disk with eocd64
-    p = ZIP_WRITE64(p, cdir_offset + cdir_size);
-    p = ZIP_WRITE32(p, 1);  // total disks
-
-    if (write(w->fd, loc64, sizeof(loc64)) != sizeof(loc64))
-      return WriterSysError(L, w, "write loc64");
-  }
-
-  // write end of central directory record
-  uint8_t eocd[kZipCdirHdrMinSize];
-  uint8_t *p = eocd;
-  p = ZIP_WRITE32(p, kZipCdirHdrMagic);
-  p = ZIP_WRITE16(p, 0);  // disk number
-  p = ZIP_WRITE16(p, 0);  // disk with cdir
-  p = ZIP_WRITE16(p, w->entry_count >= 0xffff ? 0xffff : w->entry_count);
-  p = ZIP_WRITE16(p, w->entry_count >= 0xffff ? 0xffff : w->entry_count);
-  p = ZIP_WRITE32(p, cdir_size >= 0xffffffffu ? 0xffffffffu : cdir_size);
-  p = ZIP_WRITE32(p, cdir_offset >= 0xffffffffu ? 0xffffffffu : cdir_offset);
-  p = ZIP_WRITE16(p, 0);  // comment length
-
-  if (write(w->fd, eocd, sizeof(eocd)) != sizeof(eocd))
+  // write end of central directory
+  if (WriteZipEocd(w->fd, w->entry_count, cdir_offset, cdir_size) < 0)
     return WriterSysError(L, w, "write eocd");
 
   // cleanup - set fd to -1 before close to prevent double-close in GC
@@ -1218,7 +1306,8 @@ static int LuaZipAppenderAdd(lua_State *L) {
     return ZipError(L, "content exceeds max_file_size limit");
 
   // Parse options
-  int method = a->level > 0 ? kZipCompressionDeflate : kZipCompressionNone;
+  bool force_store = false;
+  bool force_deflate = false;
   int64_t mtime_unix = time(NULL);
   uint32_t mode = 0100644;
 
@@ -1227,9 +1316,9 @@ static int LuaZipAppenderAdd(lua_State *L) {
     if (!lua_isnil(L, -1)) {
       const char *m = luaL_checkstring(L, -1);
       if (!strcmp(m, "store"))
-        method = kZipCompressionNone;
+        force_store = true;
       else if (!strcmp(m, "deflate"))
-        method = kZipCompressionDeflate;
+        force_deflate = true;
       else
         return ZipError(L, "unknown method");
     }
@@ -1259,56 +1348,29 @@ static int LuaZipAppenderAdd(lua_State *L) {
   uint16_t mtime, mdate;
   GetDosLocalTime(mtime_unix, &mtime, &mdate);
 
-  // Compress if needed
-  uint8_t *compdata = NULL;
+  // Decide compression and compress if needed
+  uint16_t method = kZipCompressionNone;
+  void *compdata = NULL;
   size_t compsize = contentlen;
 
-  if (method == kZipCompressionDeflate && contentlen > 0) {
-    z_stream strm = {0};
-    int ret = deflateInit2(&strm, a->level, Z_DEFLATED, -MAX_WBITS,
-                           DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
-    if (ret != Z_OK)
-      return ZipError(L, "deflateInit2 failed");
-
-    size_t bound = deflateBound(&strm, contentlen);
-    compdata = malloc(bound);
-    if (!compdata) {
-      deflateEnd(&strm);
-      return SysError(L, "malloc");
-    }
-
-    strm.next_in = (uint8_t *)content;
-    strm.avail_in = contentlen;
-    strm.next_out = compdata;
-    strm.avail_out = bound;
-
-    ret = deflate(&strm, Z_FINISH);
-    if (ret != Z_STREAM_END) {
-      deflateEnd(&strm);
-      free(compdata);
+  if (!force_store &&
+      (force_deflate || ShouldCompress(name, namelen, content, contentlen, a->level))) {
+    if (ZipDeflate(content, contentlen, &compdata, &compsize, a->level) < 0)
       return ZipError(L, "deflate failed");
-    }
+    if (compdata)
+      method = kZipCompressionDeflate;
+  }
 
-    compsize = strm.total_out;
-    deflateEnd(&strm);
-
-    // If compressed is larger, store instead
-    if (compsize >= contentlen) {
-      free(compdata);
-      compdata = malloc(contentlen);
-      if (!compdata)
-        return SysError(L, "malloc");
-      memcpy(compdata, content, contentlen);
-      compsize = contentlen;
-      method = kZipCompressionNone;
-    }
+  // Appender needs to store compressed data for later writing
+  uint8_t *stored_data;
+  if (compdata) {
+    stored_data = compdata;
   } else {
-    method = kZipCompressionNone;
-    compdata = malloc(contentlen ? contentlen : 1);
-    if (!compdata)
+    stored_data = malloc(contentlen ? contentlen : 1);
+    if (!stored_data)
       return SysError(L, "malloc");
     if (contentlen > 0)
-      memcpy(compdata, content, contentlen);
+      memcpy(stored_data, content, contentlen);
   }
 
   // Grow pending arrays if needed
@@ -1317,14 +1379,13 @@ static int LuaZipAppenderAdd(lua_State *L) {
     struct LuaZipCdirEntry *newpending =
         realloc(a->pending, newcap * sizeof(*newpending));
     if (!newpending) {
-      free(compdata);
+      free(stored_data);
       return SysError(L, "malloc");
     }
-    // Update immediately to prevent dangling pointer if next realloc fails
     a->pending = newpending;
     uint8_t **newdata = realloc(a->pending_data, newcap * sizeof(*newdata));
     if (!newdata) {
-      free(compdata);
+      free(stored_data);
       return SysError(L, "malloc");
     }
     a->pending_data = newdata;
@@ -1335,7 +1396,7 @@ static int LuaZipAppenderAdd(lua_State *L) {
   struct LuaZipCdirEntry *e = &a->pending[a->pending_count];
   e->name = malloc(namelen + 1);
   if (!e->name) {
-    free(compdata);
+    free(stored_data);
     return SysError(L, "malloc");
   }
   memcpy(e->name, name, namelen);
@@ -1350,7 +1411,7 @@ static int LuaZipAppenderAdd(lua_State *L) {
   e->mdate = mdate;
   e->mode = mode;
 
-  a->pending_data[a->pending_count] = compdata;
+  a->pending_data[a->pending_count] = stored_data;
   a->pending_count++;
 
   lua_pushboolean(L, 1);
@@ -1387,44 +1448,15 @@ static int LuaZipAppenderClose(lua_State *L) {
     struct LuaZipCdirEntry *e = &a->pending[i];
     e->offset = write_offset - a->prefix_size;  // relative to zip start
 
-    bool needzip64 = (e->uncompsize >= 0xffffffffu ||
-                      e->compsize >= 0xffffffffu ||
-                      e->offset >= 0xffffffffu);
-    size_t extlen = needzip64 ? (2 + 2 + 8 + 8) : 0;
-    size_t hdrlen = kZipLfileHdrMinSize + e->namelen + extlen;
-
+    size_t hdrlen = GetLfileHdrSize(e->namelen, e->compsize, e->uncompsize);
     uint8_t *lochdr = malloc(hdrlen);
     if (!lochdr) {
       AppenderCleanup(a);
       return SysError(L, "malloc");
     }
 
-    uint8_t *p = lochdr;
-    p = ZIP_WRITE32(p, kZipLfileHdrMagic);
-    p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993);
-    p = ZIP_WRITE16(p, kZipGflagUtf8);
-    p = ZIP_WRITE16(p, e->method);
-    p = ZIP_WRITE16(p, e->mtime);
-    p = ZIP_WRITE16(p, e->mdate);
-    p = ZIP_WRITE32(p, e->crc32);
-    if (needzip64) {
-      p = ZIP_WRITE32(p, 0xffffffffu);
-      p = ZIP_WRITE32(p, 0xffffffffu);
-    } else {
-      p = ZIP_WRITE32(p, e->compsize);
-      p = ZIP_WRITE32(p, e->uncompsize);
-    }
-    p = ZIP_WRITE16(p, e->namelen);
-    p = ZIP_WRITE16(p, extlen);
-    memcpy(p, e->name, e->namelen);
-    p += e->namelen;
-
-    if (needzip64) {
-      p = ZIP_WRITE16(p, kZipExtraZip64);
-      p = ZIP_WRITE16(p, 8 + 8);
-      p = ZIP_WRITE64(p, e->uncompsize);
-      p = ZIP_WRITE64(p, e->compsize);
-    }
+    EmitZipLfileHdr(lochdr, e->name, e->namelen, e->crc32, e->method, e->mtime,
+                    e->mdate, e->compsize, e->uncompsize);
 
     ssize_t written = write(fd, lochdr, hdrlen);
     free(lochdr);
@@ -1447,127 +1479,28 @@ static int LuaZipAppenderClose(lua_State *L) {
   int64_t cdir_size = 0;
   size_t total_entries = a->existing_count + a->pending_count;
 
-  // Helper to write cdir entry
-  #define WRITE_CDIR_ENTRY(e, offset_val) do { \
-    bool needzip64 = ((e)->uncompsize >= 0xffffffffu || \
-                      (e)->compsize >= 0xffffffffu || \
-                      (offset_val) >= 0xffffffffu); \
-    size_t extlen = needzip64 ? (2 + 2 + 8 + 8 + 8) : 0; \
-    size_t hdrlen = kZipCfileHdrMinSize + (e)->namelen + extlen; \
-    uint8_t *cdirhdr = malloc(hdrlen); \
-    if (!cdirhdr) { \
-      AppenderCleanup(a); \
-      return SysError(L, "malloc"); \
-    } \
-    uint8_t *p = cdirhdr; \
-    p = ZIP_WRITE32(p, kZipCfileHdrMagic); \
-    p = ZIP_WRITE16(p, kZipOsUnix << 8 | (needzip64 ? kZipEra2001 : kZipEra1993)); \
-    p = ZIP_WRITE16(p, needzip64 ? kZipEra2001 : kZipEra1993); \
-    p = ZIP_WRITE16(p, kZipGflagUtf8); \
-    p = ZIP_WRITE16(p, (e)->method); \
-    p = ZIP_WRITE16(p, (e)->mtime); \
-    p = ZIP_WRITE16(p, (e)->mdate); \
-    p = ZIP_WRITE32(p, (e)->crc32); \
-    if (needzip64) { \
-      p = ZIP_WRITE32(p, 0xffffffffu); \
-      p = ZIP_WRITE32(p, 0xffffffffu); \
-    } else { \
-      p = ZIP_WRITE32(p, (e)->compsize); \
-      p = ZIP_WRITE32(p, (e)->uncompsize); \
-    } \
-    p = ZIP_WRITE16(p, (e)->namelen); \
-    p = ZIP_WRITE16(p, extlen); \
-    p = ZIP_WRITE16(p, 0); \
-    p = ZIP_WRITE16(p, 0); \
-    p = ZIP_WRITE16(p, 0); \
-    p = ZIP_WRITE32(p, (e)->mode << 16); \
-    if (needzip64) { \
-      p = ZIP_WRITE32(p, 0xffffffffu); \
-    } else { \
-      p = ZIP_WRITE32(p, (offset_val)); \
-    } \
-    memcpy(p, (e)->name, (e)->namelen); \
-    p += (e)->namelen; \
-    if (needzip64) { \
-      p = ZIP_WRITE16(p, kZipExtraZip64); \
-      p = ZIP_WRITE16(p, 8 + 8 + 8); \
-      p = ZIP_WRITE64(p, (e)->uncompsize); \
-      p = ZIP_WRITE64(p, (e)->compsize); \
-      p = ZIP_WRITE64(p, (offset_val)); \
-    } \
-    ssize_t written = write(fd, cdirhdr, hdrlen); \
-    free(cdirhdr); \
-    if (written != (ssize_t)hdrlen) { \
-      AppenderCleanup(a); \
-      return SysError(L, "write cdir"); \
-    } \
-    cdir_size += hdrlen; \
-  } while (0)
-
   // Write existing entries
   for (size_t i = 0; i < a->existing_count; i++) {
-    WRITE_CDIR_ENTRY(&a->existing[i], a->existing[i].offset);
+    ssize_t written = WriteCdirEntry(fd, &a->existing[i], a->existing[i].offset);
+    if (written < 0) {
+      AppenderCleanup(a);
+      return SysError(L, "write cdir");
+    }
+    cdir_size += written;
   }
 
   // Write pending entries
   for (size_t i = 0; i < a->pending_count; i++) {
-    WRITE_CDIR_ENTRY(&a->pending[i], a->pending[i].offset);
-  }
-
-  #undef WRITE_CDIR_ENTRY
-
-  // Determine if we need zip64
-  bool needzip64 = (total_entries >= 0xffff ||
-                    cdir_size >= 0xffffffffu ||
-                    cdir_offset >= 0xffffffffu);
-
-  if (needzip64) {
-    // Write zip64 end of central directory record
-    uint8_t eocd64[kZipCdir64HdrMinSize];
-    uint8_t *p = eocd64;
-    p = ZIP_WRITE32(p, kZipCdir64HdrMagic);
-    p = ZIP_WRITE64(p, kZipCdir64HdrMinSize - 12);
-    p = ZIP_WRITE16(p, kZipOsUnix << 8 | kZipEra2001);
-    p = ZIP_WRITE16(p, kZipEra2001);
-    p = ZIP_WRITE32(p, 0);
-    p = ZIP_WRITE32(p, 0);
-    p = ZIP_WRITE64(p, total_entries);
-    p = ZIP_WRITE64(p, total_entries);
-    p = ZIP_WRITE64(p, cdir_size);
-    p = ZIP_WRITE64(p, cdir_offset);
-
-    if (write(fd, eocd64, sizeof(eocd64)) != sizeof(eocd64)) {
+    ssize_t written = WriteCdirEntry(fd, &a->pending[i], a->pending[i].offset);
+    if (written < 0) {
       AppenderCleanup(a);
-      return SysError(L, "write eocd64");
+      return SysError(L, "write cdir");
     }
-
-    // Write zip64 locator
-    uint8_t loc64[kZipCdir64LocatorSize];
-    p = loc64;
-    p = ZIP_WRITE32(p, kZipCdir64LocatorMagic);
-    p = ZIP_WRITE32(p, 0);
-    p = ZIP_WRITE64(p, cdir_offset + cdir_size);
-    p = ZIP_WRITE32(p, 1);
-
-    if (write(fd, loc64, sizeof(loc64)) != sizeof(loc64)) {
-      AppenderCleanup(a);
-      return SysError(L, "write loc64");
-    }
+    cdir_size += written;
   }
 
   // Write end of central directory
-  uint8_t eocd[kZipCdirHdrMinSize];
-  uint8_t *p = eocd;
-  p = ZIP_WRITE32(p, kZipCdirHdrMagic);
-  p = ZIP_WRITE16(p, 0);
-  p = ZIP_WRITE16(p, 0);
-  p = ZIP_WRITE16(p, total_entries >= 0xffff ? 0xffff : total_entries);
-  p = ZIP_WRITE16(p, total_entries >= 0xffff ? 0xffff : total_entries);
-  p = ZIP_WRITE32(p, cdir_size >= 0xffffffffu ? 0xffffffffu : cdir_size);
-  p = ZIP_WRITE32(p, cdir_offset >= 0xffffffffu ? 0xffffffffu : cdir_offset);
-  p = ZIP_WRITE16(p, 0);
-
-  if (write(fd, eocd, sizeof(eocd)) != sizeof(eocd)) {
+  if (WriteZipEocd(fd, total_entries, cdir_offset, cdir_size) < 0) {
     AppenderCleanup(a);
     return SysError(L, "write eocd");
   }
