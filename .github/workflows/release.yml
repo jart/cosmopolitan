@@ -82,6 +82,11 @@ jobs:
           cd o/fat/bin
           sha256sum make zip unzip lua > SHA256SUMS
 
+      - name: Create cosmos.zip
+        run: |
+          cd o/fat/bin
+          zip cosmos.zip lua make unzip zip
+
       - name: Create release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.0
         with:
@@ -92,6 +97,7 @@ jobs:
             o/fat/bin/zip
             o/fat/bin/unzip
             o/fat/bin/lua
+            o/fat/bin/cosmos.zip
             o/fat/bin/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
