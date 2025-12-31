@@ -26,6 +26,11 @@ static inline int ReturnString(lua_State *L, const char *x) {
   return 1;
 }
 
+void *LuaRealloc(lua_State *, void *, size_t);
+void *LuaAlloc(lua_State *, size_t);
+void FreeStringList(char **);
+char **ConvertLuaArrayToStringList(lua_State *, int);
+
 void LuaSetIntField(lua_State *, const char *, lua_Integer);
 void LuaPushSigset(lua_State *, sigset_t);
 void LuaPushStat(lua_State *, struct stat *);
@@ -47,6 +52,19 @@ int LuaUnixSigset(lua_State *);
 int LuaUnixOpendir(lua_State *);
 int LuaUnixFdopendir(lua_State *);
 int LuaUnixMapshared(lua_State *);
+
+int LuaUnixExecvp(lua_State *);
+int LuaUnixExecvpe(lua_State *);
+int LuaUnixFexecve(lua_State *);
+int LuaUnixSpawn(lua_State *);
+int LuaUnixSpawnp(lua_State *);
+int LuaUnixKillpg(lua_State *);
+int LuaUnixDaemon(lua_State *);
+int LuaUnixNice(lua_State *);
+int LuaUnixGetpriority(lua_State *);
+int LuaUnixSetpriority(lua_State *);
+int LuaUnixMkdtemp(lua_State *);
+int LuaUnixMkstemp(lua_State *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_LUA_LUNIX_INTERNAL_H_ */
