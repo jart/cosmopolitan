@@ -46,6 +46,7 @@ void LuaUnixDirObj(lua_State *);
 int LuaUnixSigset(lua_State *);
 int LuaUnixOpendir(lua_State *);
 int LuaUnixFdopendir(lua_State *);
+int LuaUnixMapshared(lua_State *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_LUA_LUNIX_INTERNAL_H_ */
