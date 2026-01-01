@@ -4141,6 +4141,18 @@ UNIX MODULE
     - `MSG_DONTROUTE`
     - `MSG_NOSIGNAL`
 
+  unix.setenv(name:str, value:str[, overwrite:bool])
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Sets environment variable.
+
+    This wraps the C `setenv()` function to allow Lua scripts to set
+    environment variables.
+
+    `overwrite` defaults to true. If false, won't overwrite existing
+    variables.
+
   unix.shutdown(fd:int, how:int)
       ├─→ true
       └─→ nil, unix.Errno

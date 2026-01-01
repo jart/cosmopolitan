@@ -5302,6 +5302,18 @@ function unix.exit(exitcode) end
 ---@nodiscard
 function unix.environ() end
 
+--- Sets environment variable.
+---
+--- This wraps the C `setenv()` function to allow Lua scripts to set
+--- environment variables.
+---
+--- @param name string environment variable name
+--- @param value string value to set
+--- @param overwrite? boolean if false, won't overwrite existing variables (defaults to true)
+--- @return true
+--- @overload fun(name: string, value: string, overwrite?: boolean): nil, error: unix.Errno
+function unix.setenv(name, value, overwrite) end
+
 --- Creates a new process mitosis style.
 ---
 --- This system call returns twice. The parent process gets the nonzero

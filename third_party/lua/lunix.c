@@ -573,6 +573,17 @@ static int LuaUnixEnviron(lua_State *L) {
   return 1;
 }
 
+// unix.setenv(name:str, value:str[, overwrite:bool])
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixSetenv(lua_State *L) {
+  int olderr = errno;
+  const char *name = luaL_checkstring(L, 1);
+  const char *value = luaL_checkstring(L, 2);
+  int overwrite = lua_isnoneornil(L, 3) ? 1 : lua_toboolean(L, 3);
+  return SysretBool(L, "setenv", olderr, setenv(name, value, overwrite));
+}
+
 // unix.execve(prog:str[, args:List<*>, env:List<*>])
 //     └─→ nil, unix.Errno
 static int LuaUnixExecve(lua_State *L) {
@@ -3618,6 +3629,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"sched_yield", LuaUnixSchedYield},   // relinquish scheduled quantum
     {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
+    {"setenv", LuaUnixSetenv},            // set environment variable
     {"setfsgid", LuaUnixSetfsgid},        // set/get group id for fs ops
     {"setfsuid", LuaUnixSetfsuid},        // set/get user id for fs ops
     {"setgid", LuaUnixSetgid},            // set real group id of process
