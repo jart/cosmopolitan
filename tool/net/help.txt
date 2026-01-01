@@ -4153,6 +4153,33 @@ UNIX MODULE
     `overwrite` defaults to true. If false, won't overwrite existing
     variables.
 
+  unix.unsetenv(name:str)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Unsets environment variable.
+
+    This wraps the C `unsetenv()` function to allow Lua scripts to remove
+    environment variables.
+
+  unix.clearenv()
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Clears all environment variables.
+
+    This wraps the C `clearenv()` function to allow Lua scripts to remove
+    all environment variables at once.
+
+  unix.getlogin()
+      ├─→ str
+      └─→ nil, unix.Errno
+
+    Gets login name of current user.
+
+    This wraps the C `getlogin()` function to retrieve the login name
+    associated with the current session.
+
   unix.shutdown(fd:int, how:int)
       ├─→ true
       └─→ nil, unix.Errno

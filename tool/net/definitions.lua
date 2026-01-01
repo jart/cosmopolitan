@@ -5314,6 +5314,34 @@ function unix.environ() end
 --- @overload fun(name: string, value: string, overwrite?: boolean): nil, error: unix.Errno
 function unix.setenv(name, value, overwrite) end
 
+--- Unsets environment variable.
+---
+--- This wraps the C `unsetenv()` function to allow Lua scripts to remove
+--- environment variables.
+---
+--- @param name string environment variable name to unset
+--- @return true
+--- @overload fun(name: string): nil, error: unix.Errno
+function unix.unsetenv(name) end
+
+--- Clears all environment variables.
+---
+--- This wraps the C `clearenv()` function to allow Lua scripts to remove
+--- all environment variables at once.
+---
+--- @return true
+--- @overload fun(): nil, error: unix.Errno
+function unix.clearenv() end
+
+--- Gets login name of current user.
+---
+--- This wraps the C `getlogin()` function to retrieve the login name
+--- associated with the current session.
+---
+--- @return string login name
+--- @overload fun(): nil, error: unix.Errno
+function unix.getlogin() end
+
 --- Creates a new process mitosis style.
 ---
 --- This system call returns twice. The parent process gets the nonzero

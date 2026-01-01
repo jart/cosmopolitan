@@ -566,9 +566,11 @@ static int LuaUnixEnviron(lua_State *L) {
   int i;
   char **e;
   lua_newtable(L);
-  for (i = 0, e = environ; *e; ++e) {
-    lua_pushstring(L, *e);
-    lua_rawseti(L, -2, ++i);
+  if (environ) {
+    for (i = 0, e = environ; *e; ++e) {
+      lua_pushstring(L, *e);
+      lua_rawseti(L, -2, ++i);
+    }
   }
   return 1;
 }
@@ -582,6 +584,37 @@ static int LuaUnixSetenv(lua_State *L) {
   const char *value = luaL_checkstring(L, 2);
   int overwrite = lua_isnoneornil(L, 3) ? 1 : lua_toboolean(L, 3);
   return SysretBool(L, "setenv", olderr, setenv(name, value, overwrite));
+}
+
+// unix.unsetenv(name:str)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixUnsetenv(lua_State *L) {
+  int olderr = errno;
+  const char *name = luaL_checkstring(L, 1);
+  return SysretBool(L, "unsetenv", olderr, unsetenv(name));
+}
+
+// unix.clearenv()
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixClearenv(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "clearenv", olderr, clearenv());
+}
+
+// unix.getlogin()
+//     ├─→ str
+//     └─→ nil, unix.Errno
+static int LuaUnixGetlogin(lua_State *L) {
+  int olderr = errno;
+  char *login = getlogin();
+  if (login) {
+    lua_pushstring(L, login);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "getlogin", olderr);
+  }
 }
 
 // unix.execve(prog:str[, args:List<*>, env:List<*>])
@@ -3557,6 +3590,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"chmod", LuaUnixChmod},              // change mode of file
     {"chown", LuaUnixChown},              // change owner of file
     {"chroot", LuaUnixChroot},            // change root directory
+    {"clearenv", LuaUnixClearenv},        // clear all environment variables
     {"clock_gettime", LuaUnixGettime},    // get timestamp w/ nano precision
     {"close", LuaUnixClose},              // close file or socket
     {"commandv", LuaUnixCommandv},        // resolve program on $PATH
@@ -3583,6 +3617,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"geteuid", LuaUnixGeteuid},          // get effective user id of process
     {"getgid", LuaUnixGetgid},            // get real group id of process
     {"gethostname", LuaUnixGethostname},  // get hostname of this machine
+    {"getlogin", LuaUnixGetlogin},        // get login name of current user
     {"getpeername", LuaUnixGetpeername},  // get address of remote end
     {"getpgid", LuaUnixGetpgid},          // get process group id of pid
     {"getpgrp", LuaUnixGetpgrp},          // get process group id
@@ -3664,6 +3699,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file
+    {"unsetenv", LuaUnixUnsetenv},        // unset environment variable
     {"unveil", LuaUnixUnveil},            // filesystem sandboxing
     {"utimensat", LuaUnixUtimensat},      // change access/modified time
     {"verynice", LuaUnixVerynice},        // lowest priority
