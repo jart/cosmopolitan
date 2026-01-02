@@ -8478,6 +8478,30 @@ kUrlPlus = nil
 ---@type integer to transcode ISO-8859-1 input into UTF-8. See `ParseUrl`.
 kUrlLatin1 = nil
 
+--- Check if the calling script is being run directly (not require'd).
+---
+--- This function provides a Python-like `if __name__ == "__main__"` idiom
+--- for Lua scripts. It returns true when the script is executed directly
+--- from the command line, and false when the script is loaded via require().
+---
+--- Example usage:
+---
+---     local M = {}
+---
+---     function M.main(args)
+---       print("Hello, " .. (args[1] or "world"))
+---     end
+---
+---     if is_main() then
+---       M.main(arg)
+---     end
+---
+---     return M
+---
+---@return boolean is_main true if script is run directly, false if require'd
+---@nodiscard
+function is_main() end
+
 --[[
 ────────────────────────────────────────────────────────────────────────────────
 LEGAL

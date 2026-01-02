@@ -30,6 +30,7 @@
 #include "tool/net/lgoodsocket.h"
 #include "net/http/http.h"
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <time.h>
 
@@ -113,6 +114,60 @@ static int LuaEncodeLua(lua_State *L) {
   return LuaEncodeSmth(L, LuaEncodeLuaData);
 }
 
+// is_main() - check if calling script is the main script (not require'd)
+// Returns true if the caller's source file matches arg[0]
+static int LuaIsMain(lua_State *L) {
+  lua_Debug ar;
+  const char *src;
+  const char *arg0;
+  char *real_src = NULL;
+  char *real_arg = NULL;
+  int result = 0;
+
+  // Get caller's source file (level 1 = caller of is_main)
+  if (!lua_getstack(L, 1, &ar) || !lua_getinfo(L, "S", &ar)) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  src = ar.source;
+  if (!src || src[0] != '@') {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  src++;  // skip '@' prefix
+
+  // Get arg[0]
+  if (lua_getglobal(L, "arg") != LUA_TTABLE) {
+    lua_pop(L, 1);
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  lua_rawgeti(L, -1, 0);
+  arg0 = lua_tostring(L, -1);
+  if (!arg0) {
+    lua_pop(L, 2);
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+
+  // Compare paths (try direct first, then realpath)
+  if (strcmp(src, arg0) == 0) {
+    result = 1;
+  } else {
+    real_src = realpath(src, NULL);
+    real_arg = realpath(arg0, NULL);
+    if (real_src && real_arg && strcmp(real_src, real_arg) == 0) {
+      result = 1;
+    }
+    free(real_src);
+    free(real_arg);
+  }
+
+  lua_pop(L, 2);  // pop arg table and arg[0]
+  lua_pushboolean(L, result);
+  return 1;
+}
+
 // clang-format off
 static const luaL_Reg kCosmoFuncs[] = {
     {"Barf", LuaBarf},
@@ -166,6 +221,7 @@ static const luaL_Reg kCosmoFuncs[] = {
     {"IsAcceptablePort", LuaIsAcceptablePort},
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},
     {"IsLoopbackIp", LuaIsLoopbackIp},
+    {"is_main", LuaIsMain},
     {"IsPrivateIp", LuaIsPrivateIp},
     {"IsPublicIp", LuaIsPublicIp},
     {"IsReasonablePath", LuaIsReasonablePath},
