@@ -26,6 +26,19 @@
 
 #define MAX_ARGC    10000
 #define MAX_LONGOPTS 1000
+#define PARSER_MT "getopt.parser"
+
+typedef struct {
+  char **argv;
+  struct option *longopts;
+  int argc;
+  int nlong;
+  int refs_idx;        // Lua registry index for string references
+  int unknown_idx;     // Lua registry index for unknown options table
+  int unknown_count;   // Count of unknown options
+  const char *optstring;
+  int done;            // Flag indicating parsing is complete
+} GetoptParser;
 
 static int ParseHasArg(const char *s) {
   if (!strcmp(s, "none"))
@@ -37,19 +50,17 @@ static int ParseHasArg(const char *s) {
   return -1;
 }
 
-// getopt.parse(args, optstring, longopts) -> opts, remaining, unknown
+// getopt.new(args, optstring, longopts) -> parser
 //
-// NOTE: This function uses global getopt state and is NOT thread-safe.
-// Do not call from multiple threads or coroutines concurrently.
-static int LuaGetoptParse(lua_State *L) {
+// Creates a new getopt parser that can be iterated to parse options.
+// NOTE: Uses global getopt state and is NOT thread-safe.
+static int LuaGetoptNew(lua_State *L) {
   lua_Integer argc_raw, nlong_raw;
-  int argc, nlong, opt, longidx, has_arg;
+  int argc, nlong, has_arg;
   const char *optstring;
   char **argv = NULL;
   struct option *longopts = NULL;
-  const char *longname;
-  char shortopt[2];
-  int refs_idx, opts_idx, remaining_idx, unknown_idx;
+  GetoptParser *parser;
 
   luaL_checktype(L, 1, LUA_TTABLE);
   optstring = luaL_checkstring(L, 2);
@@ -67,15 +78,7 @@ static int LuaGetoptParse(lua_State *L) {
     return luaL_error(L, "longopts table too large (max %d)", MAX_LONGOPTS);
   nlong = (int)nlong_raw;
 
-  // Create a table to hold references to all Lua strings we extract.
-  // This prevents the strings from being garbage collected while we
-  // hold raw pointers to them in argv[] and longopts[].name.
-  lua_newtable(L);
-  refs_idx = lua_gettop(L);
-  int ref_count = 0;
-
-  // Validate all longopts entries BEFORE allocating C memory.
-  // This ensures luaL_error won't leak memory.
+  // Validate all longopts entries BEFORE allocating C memory
   for (int i = 0; i < nlong; i++) {
     lua_rawgeti(L, 3, i + 1);
     if (!lua_istable(L, -1)) {
@@ -117,7 +120,7 @@ static int LuaGetoptParse(lua_State *L) {
     lua_pop(L, 1);
   }
 
-  // Now allocate C memory - all validation passed
+  // Allocate C memory
   argv = calloc(argc + 2, sizeof(char *));
   if (!argv)
     return luaL_error(L, "out of memory");
@@ -128,130 +131,222 @@ static int LuaGetoptParse(lua_State *L) {
     return luaL_error(L, "out of memory");
   }
 
+  // Create parser userdata
+  parser = lua_newuserdata(L, sizeof(GetoptParser));
+  luaL_setmetatable(L, PARSER_MT);
+
+  parser->argv = argv;
+  parser->longopts = longopts;
+  parser->argc = argc + 1;
+  parser->nlong = nlong;
+  parser->optstring = optstring;
+  parser->done = 0;
+  parser->unknown_count = 0;
+
+  // Create a table to hold references to all Lua strings
+  lua_newtable(L);
+  parser->refs_idx = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  // Create unknown options table
+  lua_newtable(L);
+  parser->unknown_idx = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  int ref_count = 0;
+
   // Extract argv strings, keeping them rooted in refs table
+  lua_rawgeti(L, LUA_REGISTRYINDEX, parser->refs_idx);
+  int refs_stack = lua_gettop(L);
+
   argv[0] = "lua";
   for (int i = 1; i <= argc; i++) {
     lua_rawgeti(L, 1, i);
     argv[i] = (char *)lua_tostring(L, -1);
-    // Store in refs table to prevent GC
-    lua_rawseti(L, refs_idx, ++ref_count);
+    lua_rawseti(L, refs_stack, ++ref_count);
   }
   argv[argc + 1] = NULL;
-  argc++;
+
+  lua_pop(L, 1);  // pop refs table
 
   // Extract longopts, keeping strings rooted
-  for (int i = 0; i < nlong; i++) {
-    lua_rawgeti(L, 3, i + 1);
+  if (nlong > 0) {
+    lua_rawgeti(L, LUA_REGISTRYINDEX, parser->refs_idx);
+    refs_stack = lua_gettop(L);
 
-    lua_rawgeti(L, -1, 1);
-    longopts[i].name = lua_tostring(L, -1);
-    lua_rawseti(L, refs_idx, ++ref_count);  // keep rooted
+    for (int i = 0; i < nlong; i++) {
+      lua_rawgeti(L, 3, i + 1);
 
-    lua_rawgeti(L, -1, 2);
-    longopts[i].has_arg = ParseHasArg(lua_tostring(L, -1));
-    lua_pop(L, 1);
+      lua_rawgeti(L, -1, 1);
+      longopts[i].name = lua_tostring(L, -1);
+      lua_rawseti(L, refs_stack, ++ref_count);
 
-    lua_rawgeti(L, -1, 3);
-    if (lua_isstring(L, -1)) {
-      const char *s = lua_tostring(L, -1);
-      longopts[i].val = s[0];
-    } else {
-      longopts[i].val = 0;
+      lua_rawgeti(L, -1, 2);
+      longopts[i].has_arg = ParseHasArg(lua_tostring(L, -1));
+      lua_pop(L, 1);
+
+      lua_rawgeti(L, -1, 3);
+      if (lua_isstring(L, -1)) {
+        const char *s = lua_tostring(L, -1);
+        longopts[i].val = s[0];
+      } else {
+        longopts[i].val = 0;
+      }
+      lua_pop(L, 1);
+
+      longopts[i].flag = NULL;
+      lua_pop(L, 1);  // pop longopt entry
     }
-    lua_pop(L, 1);
 
-    longopts[i].flag = NULL;
-    lua_pop(L, 1);  // pop longopt entry
+    lua_pop(L, 1);  // pop refs table
   }
 
   // Reset getopt state
   optind = 1;
   opterr = 0;
 
-  // Create result tables
-  lua_newtable(L);  // opts
-  opts_idx = lua_gettop(L);
-
-  lua_newtable(L);  // unknown options
-  unknown_idx = lua_gettop(L);
-  int unknown_count = 0;
-
-  // Parse options
-  shortopt[1] = '\0';
-  while ((opt = getopt_long(argc, argv, optstring, longopts, &longidx)) != -1) {
-    if (opt == '?') {
-      // Record unknown option
-      if (optopt) {
-        shortopt[0] = optopt;
-        lua_pushstring(L, shortopt);
-      } else if (argv[optind - 1]) {
-        lua_pushstring(L, argv[optind - 1]);
-      } else {
-        continue;
-      }
-      lua_rawseti(L, unknown_idx, ++unknown_count);
-      continue;
-    }
-    if (opt == 0) {
-      // Long option with flag set
-      longname = longopts[longidx].name;
-      if (optarg) {
-        lua_pushstring(L, optarg);
-      } else {
-        lua_pushboolean(L, 1);
-      }
-      lua_setfield(L, opts_idx, longname);
-    } else {
-      // Short option (or long option returning val)
-      shortopt[0] = opt;
-      if (optarg) {
-        lua_pushstring(L, optarg);
-      } else {
-        lua_pushboolean(L, 1);
-      }
-      lua_setfield(L, opts_idx, shortopt);
-
-      // Also set long name if this came from a long option
-      for (int i = 0; i < nlong; i++) {
-        if (longopts[i].val == opt) {
-          if (optarg) {
-            lua_pushstring(L, optarg);
-          } else {
-            lua_pushboolean(L, 1);
-          }
-          lua_setfield(L, opts_idx, longopts[i].name);
-          break;
-        }
-      }
-    }
-  }
-
-  // Create remaining args table
-  lua_newtable(L);
-  remaining_idx = lua_gettop(L);
-  int j = 1;
-  for (int i = optind; i < argc; i++) {
-    lua_pushstring(L, argv[i]);
-    lua_rawseti(L, remaining_idx, j++);
-  }
-
-  free(argv);
-  free(longopts);
-
-  // Return opts, remaining, unknown
-  lua_pushvalue(L, opts_idx);
-  lua_pushvalue(L, remaining_idx);
-  lua_pushvalue(L, unknown_idx);
-
-  return 3;
+  // Return parser (already on stack)
+  return 1;
 }
 
+// parser:next() -> opt, arg
+//
+// Returns the next option and its argument (if any).
+// Returns nil when no more options.
+static int LuaGetoptNext(lua_State *L) {
+  GetoptParser *parser = luaL_checkudata(L, 1, PARSER_MT);
+
+  if (parser->done) {
+    lua_pushnil(L);
+    return 1;
+  }
+
+  int opt, longidx;
+  char shortopt[2];
+  shortopt[1] = '\0';
+
+  opt = getopt_long(parser->argc, parser->argv, parser->optstring,
+                    parser->longopts, &longidx);
+
+  if (opt == -1) {
+    parser->done = 1;
+    lua_pushnil(L);
+    return 1;
+  }
+
+  if (opt == '?') {
+    // Unknown option - record it and return "?" with the option name
+    lua_rawgeti(L, LUA_REGISTRYINDEX, parser->unknown_idx);
+    if (optopt) {
+      shortopt[0] = optopt;
+      lua_pushstring(L, shortopt);
+    } else if (parser->argv[optind - 1]) {
+      lua_pushstring(L, parser->argv[optind - 1]);
+    } else {
+      lua_pop(L, 1);  // pop unknown table
+      // Skip this unknown option and try next
+      return LuaGetoptNext(L);
+    }
+    lua_rawseti(L, -2, ++parser->unknown_count);
+    lua_pop(L, 1);  // pop unknown table
+
+    // Return "?" and the unknown option name
+    lua_pushstring(L, "?");
+    if (optopt) {
+      shortopt[0] = optopt;
+      lua_pushstring(L, shortopt);
+    } else if (parser->argv[optind - 1]) {
+      lua_pushstring(L, parser->argv[optind - 1]);
+    }
+    return 2;
+  }
+
+  if (opt == 0) {
+    // Long option with flag set
+    const char *longname = parser->longopts[longidx].name;
+    lua_pushstring(L, longname);
+    if (optarg) {
+      lua_pushstring(L, optarg);
+      return 2;
+    }
+    return 1;
+  }
+
+  // Short option (or long option returning val)
+  shortopt[0] = opt;
+  lua_pushstring(L, shortopt);
+  if (optarg) {
+    lua_pushstring(L, optarg);
+    return 2;
+  }
+  return 1;
+}
+
+// parser:remaining() -> table
+//
+// Returns a table of remaining non-option arguments.
+static int LuaGetoptRemaining(lua_State *L) {
+  GetoptParser *parser = luaL_checkudata(L, 1, PARSER_MT);
+
+  lua_newtable(L);
+  int j = 1;
+  for (int i = optind; i < parser->argc; i++) {
+    lua_pushstring(L, parser->argv[i]);
+    lua_rawseti(L, -2, j++);
+  }
+  return 1;
+}
+
+// parser:unknown() -> table
+//
+// Returns a table of unknown options encountered.
+static int LuaGetoptUnknown(lua_State *L) {
+  GetoptParser *parser = luaL_checkudata(L, 1, PARSER_MT);
+  lua_rawgeti(L, LUA_REGISTRYINDEX, parser->unknown_idx);
+  return 1;
+}
+
+// Garbage collection for parser
+static int LuaGetoptParserGC(lua_State *L) {
+  GetoptParser *parser = luaL_checkudata(L, 1, PARSER_MT);
+
+  if (parser->argv) {
+    free(parser->argv);
+    parser->argv = NULL;
+  }
+  if (parser->longopts) {
+    free(parser->longopts);
+    parser->longopts = NULL;
+  }
+
+  // Unref the tables
+  luaL_unref(L, LUA_REGISTRYINDEX, parser->refs_idx);
+  luaL_unref(L, LUA_REGISTRYINDEX, parser->unknown_idx);
+
+  return 0;
+}
+
+static const luaL_Reg kLuaGetoptParserMethods[] = {
+    {"next", LuaGetoptNext},
+    {"remaining", LuaGetoptRemaining},
+    {"unknown", LuaGetoptUnknown},
+    {0},
+};
+
 static const luaL_Reg kLuaGetopt[] = {
-    {"parse", LuaGetoptParse},
+    {"new", LuaGetoptNew},
     {0},
 };
 
 int LuaGetopt(lua_State *L) {
+  // Create parser metatable
+  luaL_newmetatable(L, PARSER_MT);
+  lua_pushvalue(L, -1);
+  lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, LuaGetoptParserGC);
+  lua_setfield(L, -2, "__gc");
+  luaL_setfuncs(L, kLuaGetoptParserMethods, 0);
+  lua_pop(L, 1);
+
+  // Create getopt module table
   luaL_newlib(L, kLuaGetopt);
   return 1;
 }

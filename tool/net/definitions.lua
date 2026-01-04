@@ -3852,7 +3852,7 @@ function re.compile(regex, flags) end
 --- Do not call from multiple threads or coroutines concurrently.
 getopt = {}
 
---- Parse command-line arguments using getopt_long.
+--- Create a new getopt parser for iterating through command-line options.
 ---
 --- The optstring uses standard getopt format:
 --- - A letter means that option takes no argument
@@ -3864,25 +3864,70 @@ getopt = {}
 --- - has_arg: "none", "required", or "optional"
 --- - short: the equivalent short option character (e.g., "h")
 ---
---- Example:
+--- Example - Basic usage:
 ---
----     local opts, args, unknown = getopt.parse(arg, "hvo:", {
+---     local parser = getopt.new(arg, "hvo:", {
 ---       {"help",    "none",     "h"},
 ---       {"verbose", "none",     "v"},
 ---       {"output",  "required", "o"},
 ---     })
----     -- opts.h, opts.help = true if -h or --help was passed
----     -- opts.o, opts.output = "file.txt" if -o file.txt or --output=file.txt
----     -- args contains remaining non-option arguments
----     -- unknown contains any unrecognized options
+---
+---     while true do
+---       local opt, arg = parser:next()
+---       if not opt then break end
+---
+---       if opt == "h" or opt == "help" then
+---         print("Usage: ...")
+---       elseif opt == "v" or opt == "verbose" then
+---         verbose = true
+---       elseif opt == "o" or opt == "output" then
+---         output = arg
+---       end
+---     end
+---
+---     local remaining = parser:remaining()  -- non-option args
+---     local unknown = parser:unknown()      -- unrecognized options
+---
+--- Example - Handling repeated options:
+---
+---     local parser = getopt.new(arg, "e:", {})
+---     local excludes = {}
+---     while true do
+---       local opt, arg = parser:next()
+---       if not opt then break end
+---       if opt == "e" then
+---         table.insert(excludes, arg)
+---       end
+---     end
+---     -- Now excludes contains all -e values: {"foo", "bar", "spam"}
 ---
 ---@param args string[] Command-line arguments (typically `arg`)
 ---@param optstring string Short options string (e.g., "hvo:")
 ---@param longopts? table[] Long option definitions: {{name, has_arg, short}, ...}
----@return table opts Parsed options with both short and long names as keys
+---@return table parser Parser object with next(), remaining(), and unknown() methods
+function getopt.new(args, optstring, longopts) end
+
+--- Get the next option from the parser.
+---
+--- Returns the next option character or long name, along with its argument
+--- if the option takes one. Returns nil when no more options remain.
+---
+--- If the option is unknown, returns "?" as the option name and the unknown
+--- option string as the argument.
+---
+---@return string? opt Option character or long name, or "?" for unknown, or nil when done
+---@return string? arg Option argument (for options that take arguments), or nil
+function getopt.parser:next() end
+
+--- Get remaining non-option arguments after all options have been parsed.
+---
 ---@return string[] remaining Non-option arguments
----@return string[] unknown Unrecognized options encountered during parsing
-function getopt.parse(args, optstring, longopts) end
+function getopt.parser:remaining() end
+
+--- Get any unknown options that were encountered during parsing.
+---
+---@return string[] unknown Unrecognized option strings
+function getopt.parser:unknown() end
 
 --- The path module may be used to manipulate unix paths.
 ---
