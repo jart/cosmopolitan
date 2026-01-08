@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "make --no-print-directory -C \"$CLAUDE_PROJECT_DIR\" bootstrap"
+            "command": "\"$CLAUDE_PROJECT_DIR/bin/cosmic\" --skill bootstrap"
           }
         ]
       }
