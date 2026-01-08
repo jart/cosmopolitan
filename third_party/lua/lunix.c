@@ -516,7 +516,7 @@ static int LuaUnixChmod(lua_State *L) {
                luaL_checkinteger(L, 2), luaL_optinteger(L, 3, 0)));
 }
 
-// unix.readlink(path:str[, dirfd:int])
+// unix.readlink(path:str[, bufsiz:int])
 //     ├─→ content:str
 //     └─→ nil, unix.Errno
 static int LuaUnixReadlink(lua_State *L) {
@@ -524,9 +524,10 @@ static int LuaUnixReadlink(lua_State *L) {
   ssize_t rc;
   luaL_Buffer lb;
   int olderr = errno;
-  if ((rc = readlinkat(luaL_optinteger(L, 2, AT_FDCWD), luaL_checkstring(L, 1),
-                       luaL_buffinitsize(L, &lb, BUFSIZ), BUFSIZ)) != -1) {
-    if ((got = rc) < BUFSIZ) {
+  size_t bufsiz = luaL_optinteger(L, 2, BUFSIZ);
+  if ((rc = readlinkat(AT_FDCWD, luaL_checkstring(L, 1),
+                       luaL_buffinitsize(L, &lb, bufsiz), bufsiz)) != -1) {
+    if ((got = rc) < bufsiz) {
       luaL_pushresultsize(&lb, got);
       return 1;
     } else {
