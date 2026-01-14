@@ -36,12 +36,8 @@
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/sock/sock.h"
-#include "libc/sock/struct/pollfd.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/sa.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
@@ -338,49 +334,6 @@ static int handle_luainit (lua_State *L) {
 }
 
 
-/*
-** Do the REPL: repeatedly read (load) a line, evaluate (call) it, and
-** print any results.
-*/
-static void doREPL (lua_State *L) {
-  int status;
-  const char *oldprogname = lua_progname;
-  lua_progname = NULL;  /* no 'progname' on errors in interactive mode */
-  lua_initrepl(L);
-  for (;;) {
-    if (lua_repl_isterminal)
-      linenoiseEnableRawMode(0);
- TryAgain:
-    status = lua_loadline(L);
-    if (status == -2 && errno == EAGAIN) {
-      errno = 0;
-      poll(&(struct pollfd){0, POLLIN}, 1, -1);
-      goto TryAgain;
-    }
-    if (lua_repl_isterminal)
-      linenoiseDisableRawMode();
-    if (status == -1) {
-      break;
-    } else if (status == -2) {
-      lua_pushfstring(L, "read error: %s", strerror(errno));
-      lua_report(L, status);
-      lua_freerepl();
-      lua_progname = oldprogname;
-      return;
-    }
-    if (status == LUA_OK)
-      status = lua_runchunk(L, 0, LUA_MULTRET);
-    if (status == LUA_OK) {
-      lua_l_print(L);
-    } else {
-      lua_report(L, status);
-    }
-  }
-  lua_freerepl();
-  lua_settop(L, 0);  /* clear stack */
-  lua_progname = oldprogname;
-}
-
 /* }================================================================== */
 
 
@@ -467,11 +420,11 @@ static int pmain (lua_State *L) {
       return 0;  /* interrupt in case of error */
   }
   if (args & has_i)  /* -i option? */
-    doREPL(L);  /* do read-eval-print loop */
+    lua_doREPL(L);  /* do read-eval-print loop */
   else if (script < 1 && !(args & (has_e | has_v))) { /* no active option? */
     if (lua_stdin_is_tty()) {  /* running in interactive mode? */
       print_version();
-      doREPL(L);  /* do read-eval-print loop */
+      lua_doREPL(L);  /* do read-eval-print loop */
     }
     else dofile(L, NULL);  /* executes stdin as a file */
   }

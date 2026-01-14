@@ -50,6 +50,7 @@ THIRD_PARTY_LUA_A_HDRS =					\
 	third_party/lua/lparser.h				\
 	third_party/lua/lprefix.h				\
 	third_party/lua/lrepl.h					\
+	third_party/lua/lreplmod.h				\
 	third_party/lua/lstate.h				\
 	third_party/lua/lstring.h				\
 	third_party/lua/ltable.h				\
@@ -93,6 +94,7 @@ THIRD_PARTY_LUA_A_SRCS =					\
 	third_party/lua/loslib.c				\
 	third_party/lua/lparser.c				\
 	third_party/lua/lrepl.c					\
+	third_party/lua/lreplmod.c				\
 	third_party/lua/lstate.c				\
 	third_party/lua/lstring.c				\
 	third_party/lua/lstrlib.c				\

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lcosmo.h"
+#include "third_party/lua/lreplmod.h"
 #include "third_party/lua/lunix.h"
 #include "third_party/lua/cosmo.h"
 #include "tool/net/lfuncs.h"
@@ -314,6 +315,10 @@ int luaopen_cosmo(lua_State *L) {
 
   LuaGoodSocket(L);
   register_submodule(L, "cosmo.goodsocket");
+  lua_pop(L, 1);
+
+  luaopen_repl(L);
+  register_submodule(L, "cosmo.repl");
   lua_pop(L, 1);
 
   /* make help() global for convenience */

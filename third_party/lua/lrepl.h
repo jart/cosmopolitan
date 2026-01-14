@@ -17,6 +17,7 @@ void lua_repl_unlock(void);
 int lua_loadline(lua_State *);
 void lua_l_print(lua_State *);
 void lua_initrepl(lua_State *);
+void lua_doREPL(lua_State *);
 void lua_sigint(lua_State *, int);
 int lua_report(lua_State *, int);
 int lua_runchunk(lua_State *, int, int);

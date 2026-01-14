@@ -30,6 +30,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/log/check.h"
 #include "libc/macros.h"
@@ -485,4 +487,48 @@ int lua_report (lua_State *L, int status) {
     lua_pop(L, 1);  /* remove message */
   }
   return status;
+}
+
+
+/*
+** Do the REPL: repeatedly read (load) a line, evaluate (call) it, and
+** print any results.
+*/
+void lua_doREPL (lua_State *L) {
+  int status;
+  const char *oldprogname = lua_progname;
+  lua_progname = NULL;  /* no 'progname' on errors in interactive mode */
+  lua_initrepl(L);
+  for (;;) {
+    if (lua_repl_isterminal)
+      linenoiseEnableRawMode(0);
+ TryAgain:
+    status = lua_loadline(L);
+    if (status == -2 && errno == EAGAIN) {
+      errno = 0;
+      poll(&(struct pollfd){0, POLLIN}, 1, -1);
+      goto TryAgain;
+    }
+    if (lua_repl_isterminal)
+      linenoiseDisableRawMode();
+    if (status == -1) {
+      break;
+    } else if (status == -2) {
+      lua_pushfstring(L, "read error: %s", strerror(errno));
+      lua_report(L, status);
+      lua_freerepl();
+      lua_progname = oldprogname;
+      return;
+    }
+    if (status == LUA_OK)
+      status = lua_runchunk(L, 0, LUA_MULTRET);
+    if (status == LUA_OK) {
+      lua_l_print(L);
+    } else {
+      lua_report(L, status);
+    }
+  }
+  lua_freerepl();
+  lua_settop(L, 0);  /* clear stack */
+  lua_progname = oldprogname;
 }

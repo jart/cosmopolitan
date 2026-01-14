@@ -310,6 +310,7 @@ Modules:
   cosmo.argon2     - Password hashing
   cosmo.http       - HTTP parsing, formatting, and server
   cosmo.goodsocket - Optimized socket creation
+  cosmo.repl       - Interactive REPL with completion and history
 
 Usage:
   help()                      - This overview
