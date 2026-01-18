@@ -178,6 +178,24 @@ function test_bad_method()
     print("test_bad_method: PASS")
 end
 
+-- Test: Response too large error message formatting
+-- Verifies that the error message displays the numeric byte limit correctly
+-- This is a regression test for a bug where %I format specifier would print
+-- literal "I" instead of the number when using wrong cast type
+function test_response_too_large_error_message()
+    local maxbytes = 100
+    local status, err = Fetch("https://httpbin.org/get", {maxresponse = maxbytes})
+    assert(status == nil, "expected nil status for response exceeding limit")
+    assert(err:find("response too large"), "expected 'response too large' error, got: " .. tostring(err))
+    -- Verify the error message contains the actual number, not literal "I"
+    assert(err:match("max %d+ bytes"),
+           "expected numeric byte limit in error message, got: " .. tostring(err))
+    -- Verify it shows the correct limit
+    assert(err:find(tostring(maxbytes)),
+           "expected error to mention " .. maxbytes .. " bytes, got: " .. tostring(err))
+    print("test_response_too_large_error_message: PASS")
+end
+
 -- Helper: Create a simple TCP server that captures requests
 -- Returns the server socket and port
 local function create_test_server()
@@ -888,6 +906,7 @@ function main()
         test_ssrf_blocks_private,
         test_invalid_scheme,
         test_bad_method,
+        test_response_too_large_error_message,
         -- HTTP proxy tests (self-contained with local test server)
         test_proxy_connection_to_proxy,
         test_proxy_absolute_url,
