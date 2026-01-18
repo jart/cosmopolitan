@@ -184,6 +184,10 @@ o/$(MODE)/tool/lua/test_unix_proc.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_u
 	$< tool/lua/test_unix_proc.lua
 	@touch $@
 
+o/$(MODE)/tool/lua/test_isatty.ok: o/$(MODE)/tool/lua/lua.dbg tool/lua/test_isatty.lua
+	$< tool/lua/test_isatty.lua
+	@touch $@
+
 TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_cosmo.ok				\
 	o/$(MODE)/tool/lua/cosmo/help/test.ok				\
@@ -202,7 +206,8 @@ TOOL_LUA_TESTS =							\
 	o/$(MODE)/tool/lua/test_goodsocket.ok				\
 	o/$(MODE)/tool/lua/test_embed.ok				\
 	o/$(MODE)/tool/lua/test_embed_integration.ok			\
-	o/$(MODE)/tool/lua/test_unix_proc.ok
+	o/$(MODE)/tool/lua/test_unix_proc.ok				\
+	o/$(MODE)/tool/lua/test_isatty.ok
 
 .PHONY: o/$(MODE)/tool/lua
 o/$(MODE)/tool/lua:							\
