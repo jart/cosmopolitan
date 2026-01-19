@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/newbie.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
@@ -33,6 +34,9 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/sock.h"
+
+#define SIOCGIFAFLAG_IN6   3240126793  // bsd
+#define SIOCGIFNETMASK_IN6 3240126757  // bsd
 
 struct IfAddr {
   struct ifaddrs ifaddrs;
@@ -142,27 +146,27 @@ static int getifaddrs_linux_ip6(struct ifconf *conf) {
  * @see tool/viz/getifaddrs.c for example code
  */
 int getifaddrs(struct ifaddrs **out_ifpp) {
-  // printf("%d\n", sizeof(struct ifreq));
-  int rc = -1;
-  int fd;
+  int rc = 0;
+  int fd, fd6 = -1;
   if ((fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0)) != -1) {
     char *data;
     size_t size;
     if ((data = malloc((size = 16384)))) {
-      struct ifconf conf;
+      struct ifconf conf, confl6;
       conf.ifc_buf = data;
       conf.ifc_len = size;
       if (!ioctl(fd, SIOCGIFCONF, &conf)) {
+        confl6.ifc_buf = data + conf.ifc_len;
+        confl6.ifc_len = size - conf.ifc_len;
         if (IsLinux()) {
-          struct ifconf confl6;
-          confl6.ifc_buf = data + conf.ifc_len;
-          confl6.ifc_len = size - conf.ifc_len;
-          if ((rc = getifaddrs_linux_ip6(&confl6)))
-            return rc;
-          conf.ifc_len += confl6.ifc_len;
+          rc = getifaddrs_linux_ip6(&confl6);
         }
+        if (rc)
+          return rc;
+        conf.ifc_len += confl6.ifc_len;
 
         struct ifaddrs *res = 0;
+        rc = -1;
         for (struct ifreq *ifr = (struct ifreq *)data;
              (char *)ifr < data + conf.ifc_len; ++ifr) {
           uint16_t family = ifr->ifr_addr.sa_family;
@@ -207,9 +211,10 @@ int getifaddrs(struct ifaddrs **out_ifpp) {
               addr6->ifaddrs.ifa_broadaddr = (struct sockaddr *)&addr6->bstaddr;
               addr6->ifaddrs.ifa_data = (void *)&addr6->info;
 
-              memcpy(&addr6->name, &ifr->ifr_name, IFNAMSIZ);
-              addr6->info.addr_flags = ifr->ifr6_flags;
               addr6->info.addr_scope = ifr->ifr6_scope;
+              addr6->info.addr_flags = ifr->ifr6_flags;
+
+              memcpy(&addr6->name, &ifr->ifr_name, IFNAMSIZ);
 
               addr6->addr.sin6_family = AF_INET6;
               addr6->addr.sin6_port = 0;
@@ -222,10 +227,33 @@ int getifaddrs(struct ifaddrs **out_ifpp) {
               addr6->netmask.sin6_port = 0;
               addr6->netmask.sin6_flowinfo = 0;
               addr6->addr.sin6_scope_id = ifr->ifr6_ifindex;
-              memcpy(&addr6->netmask.sin6_addr, &ifr->ifr6_addr,
-                     sizeof(struct in6_addr));
-              *((uint128_t *)&(addr6->netmask.sin6_addr)) &=
-                  (UINT128_MAX >> ifr->ifr6_prefixlen);
+
+              if (IsBsd()) {  // on bsd we miss prefixlen and addr flags
+                if (fd6 == -1) {
+                  fd6 = socket(AF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+                }
+                uint8_t in6req[288];  // BSD struct in6_ifreq
+                bzero(&in6req, sizeof(in6req));
+                memcpy(&in6req, &ifr->ifr_name, IFNAMSIZ);
+                in6req[16] = 28;  // sin6_len sizeof(struct sockaddr_in6_bsd)
+                in6req[17] = AF_INET6;  // sin6_family
+                memcpy(&in6req[24], &addr6->addr.sin6_addr,
+                       sizeof(struct in6_addr));  // sin6_addr
+                if (!ioctl(fd6, SIOCGIFAFLAG_IN6, &in6req)) {
+                  addr6->info.addr_flags =
+                      *(int *)(&in6req[16]);  // ifru_flags6
+                }
+                in6req[16] = 28;        // sin6_len
+                in6req[17] = AF_INET6;  // sin6_family
+                if (!ioctl(fd6, SIOCGIFNETMASK_IN6, &in6req)) {
+                  memcpy(&(addr6->netmask.sin6_addr), &in6req[24],
+                         sizeof(struct in6_addr));
+                }
+              } else {
+                int prefixlen = ifr->ifr6_prefixlen;
+                *((uint128_t *)&(addr6->netmask.sin6_addr)) = htobe128(
+                    prefixlen == 0 ? 0 : (UINT128_MAX << (128 - prefixlen)));
+              }
 
               if (!ioctl(fd, SIOCGIFFLAGS, ifr)) {
                 addr6->ifaddrs.ifa_flags = ifr->ifr_flags;
@@ -243,6 +271,9 @@ int getifaddrs(struct ifaddrs **out_ifpp) {
       free(data);
     }
     close(fd);
+    if (fd6 != -1) {
+      close(fd6);
+    }
   }
   return rc;
 }
