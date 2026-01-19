@@ -32,6 +32,7 @@ jobs:
           make -j$(nproc) m=x86_64 \
             o/x86_64/ape/ape.elf \
             o/x86_64/tool/build/apelink.dbg \
+            o/x86_64/tool/build/assimilate.dbg \
             o/x86_64/tool/lua/lua.dbg \
             o/x86_64/tool/lua/test \
             o/x86_64/third_party/make/make.dbg \
@@ -42,6 +43,7 @@ jobs:
         run: |
           make -j$(nproc) m=aarch64 \
             o/aarch64/ape/ape.elf \
+            o/aarch64/tool/build/assimilate.dbg \
             o/aarch64/tool/lua/lua.dbg \
             o/aarch64/third_party/make/make.dbg \
             o/aarch64/third_party/zip/zip.dbg \
@@ -57,6 +59,13 @@ jobs:
             -o o/fat/bin/lua \
             o/x86_64/tool/lua/lua.dbg \
             o/aarch64/tool/lua/lua.dbg
+          o/x86_64/tool/build/apelink.dbg -s \
+            -l o/x86_64/ape/ape.elf \
+            -l o/aarch64/ape/ape.elf \
+            -M ape/ape-m1.c \
+            -o o/fat/bin/assimilate \
+            o/x86_64/tool/build/assimilate.dbg \
+            o/aarch64/tool/build/assimilate.dbg
           for bin in make zip unzip; do
             o/x86_64/tool/build/apelink.dbg -s \
               -l o/x86_64/ape/ape.elf \
@@ -69,10 +78,11 @@ jobs:
 
       - name: Verify fat binaries
         run: |
-          for bin in lua make zip unzip; do
+          for bin in lua assimilate make zip unzip; do
             grep -q MZqFpD o/fat/bin/$bin
           done
           o/fat/bin/lua -v
+          o/fat/bin/assimilate -v
           o/fat/bin/make --version
           o/fat/bin/zip -v
           o/fat/bin/unzip -v
@@ -80,12 +90,12 @@ jobs:
       - name: Create cosmos.zip
         run: |
           cd o/fat/bin
-          zip cosmos.zip lua make unzip zip
+          zip cosmos.zip lua assimilate make unzip zip
 
       - name: Create checksums
         run: |
           cd o/fat/bin
-          sha256sum make zip unzip lua cosmos.zip > SHA256SUMS
+          sha256sum assimilate make zip unzip lua cosmos.zip > SHA256SUMS
 
       - name: Create release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.2.0
@@ -93,6 +103,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           files: |
+            o/fat/bin/assimilate
             o/fat/bin/make
             o/fat/bin/zip
             o/fat/bin/unzip
