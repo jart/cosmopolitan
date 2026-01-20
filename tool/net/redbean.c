@@ -5210,6 +5210,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
+    {"crypto", LuaCrypto},           //
 };
 
 static void LuaSetArgv(lua_State *L) {

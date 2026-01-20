@@ -747,7 +747,7 @@ function EscapeHtml(str) end
 ---@param path string?
 function LaunchBrowser(path) end
 
----@param ip uint32
+---@param ip integer|string
 ---@return string # a string describing the IP address. This is currently Class A granular. It can tell you if traffic originated from private networks, ARIN, APNIC, DOD, etc.
 ---@nodiscard
 function CategorizeIp(ip) end
@@ -1143,10 +1143,10 @@ function FormatHttpDateTime(seconds) end
 
 --- Turns integer like `0x01020304` into a string like `"1.2.3.4"`. See also
 --- `ParseIp` for the inverse operation.
----@param uint32 integer
+---@param ip integer
 ---@return string
 ---@nodiscard
-function FormatIp(uint32) end
+function FormatIp(ip) end
 
 --- Returns client ip4 address and port, e.g. `0x01020304`,`31337` would represent
 --- `1.2.3.4:31337`. This is the same as `GetClientAddr` except it will use the
@@ -1364,25 +1364,25 @@ function HidePath(prefix) end
 ---@nodiscard
 function IsHiddenPath(path) end
 
----@param uint32 integer
+---@param ip integer|string|string
 ---@return boolean # `true` if IP address is not a private network (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) and is not localhost (`127.0.0.0/8`).
 --- Note: we intentionally regard TEST-NET IPs as public.
 ---@nodiscard
-function IsPublicIp(uint32) end
+function IsPublicIp(ip) end
 
----@param uint32 integer
+---@param ip integer|string|string
 ---@return boolean # `true` if IP address is part of a private network (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
 ---@nodiscard
-function IsPrivateIp(uint32) end
+function IsPrivateIp(ip) end
 
 ---@return boolean # `true` if the client IP address (returned by GetRemoteAddr) is part of the localhost network (127.0.0.0/8).
 ---@nodiscard
 function IsLoopbackClient() end
 
----@param uint32 integer
+---@param ip integer|string|string
 ---@return boolean # true if IP address is part of the localhost network (127.0.0.0/8).
 ---@nodiscard
-function IsLoopbackIp(uint32) end
+function IsLoopbackIp(ip) end
 
 ---@param path string
 ---@return boolean # `true` if ZIP artifact at path is stored on disk using DEFLATE compression.
@@ -1616,7 +1616,7 @@ function GetCryptoHash(name, payload, key) end
 --- to the system-configured DNS resolution service. Please note that in MODE=tiny
 --- the HOSTS.TXT and DNS resolution isn't included, and therefore an IP must be
 --- provided.
----@param ip integer
+---@param ip integer|string|string
 ---@overload fun(host:string)
 function ProgramAddr(ip) end
 
@@ -1670,8 +1670,8 @@ function ProgramTimeout(milliseconds) end
 --- Hard-codes the port number on which to listen, which can be any number in the
 --- range `1..65535`, or alternatively `0` to ask the operating system to choose a
 --- port, which may be revealed later on by `GetServerAddr` or the `-z` flag to stdout.
----@param uint16 integer
-function ProgramPort(uint16) end
+---@param port integer
+function ProgramPort(port) end
 
 --- Sets the maximum HTTP message payload size in bytes. The
 --- default is very conservatively set to 65536 so this is
@@ -2170,7 +2170,7 @@ function bin(int) end
 --- unspecified format describing the error. Calls to this function may be wrapped
 --- in `assert()` if an exception is desired.
 ---@param hostname string
----@return uint32 ip uint32
+---@return string
 ---@nodiscard
 ---@overload fun(hostname: string): nil, error: string
 function ResolveIp(hostname) end
@@ -2184,7 +2184,7 @@ function ResolveIp(hostname) end
 --- The network interface addresses used by the host machine are always
 --- considered trustworthy, e.g. 127.0.0.1. This may change soon, if we
 --- decide to export a `GetHostIps()` API which queries your NIC devices.
----@param ip integer
+---@param ip integer|string
 ---@return boolean
 function IsTrustedIp(ip) end
 
@@ -2214,7 +2214,7 @@ function IsTrustedIp(ip) end
 ---
 --- Although you might want consider trusting redbean's open source
 --- freedom embracing solution to DDOS protection instead!
----@param ip integer
+---@param ip integer|string
 ---@param cidr integer?
 function ProgramTrustedIp(ip, cidr) end
 
@@ -8009,6 +8009,75 @@ kUrlPlus = nil
 
 ---@type integer to transcode ISO-8859-1 input into UTF-8. See `ParseUrl`.
 kUrlLatin1 = nil
+
+
+--- This module provides cryptographic operations.
+
+--- The crypto module for cryptographic operations
+crypto = {}
+
+--- Converts a PEM-encoded key to JWK format
+---@param pem string PEM-encoded key
+---@return table?, string? JWK table or nil on error
+---@return string? error message
+function crypto.convertPemToJwk(pem) end
+
+--- Generates a Certificate Signing Request (CSR)
+---@param key_pem string PEM-encoded private key
+---@param subject_name string? X.509 subject name
+---@param san_list string? Subject Alternative Names
+---@return string?, string? CSR in PEM format or nil on error and error message
+function crypto.generateCsr(key_pem, subject_name, san_list) end
+
+--- Signs data using a private key
+---@param key_type string "rsa" or "ecdsa"
+---@param private_key string PEM-encoded private key
+---@param message string Data to sign
+---@param hash_algo string? Hash algorithm (default: SHA-256)
+---@return string?, string? Signature or nil on error and error message
+function crypto.sign(key_type, private_key, message, hash_algo) end
+
+--- Verifies a signature
+---@param key_type string "rsa" or "ecdsa"
+---@param public_key string PEM-encoded public key
+---@param message string Original message
+---@param signature string Signature to verify
+---@param hash_algo string? Hash algorithm (default: SHA-256)
+---@return boolean?, string? True if valid or nil on error and error message
+function crypto.verify(key_type, public_key, message, signature, hash_algo) end
+
+--- Encrypts data
+---@param cipher_type string "rsa" or "aes"
+---@param key string Public key or symmetric key
+---@param plaintext string Data to encrypt
+---@param options table Table with optional parameters:
+--- options.mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
+--- options.iv string? Initialization Vector for AES
+--- options.aad string? Additional data for AES-GCM
+---@return string? Encrypted data or nil on error
+---@return string? IV or error message
+---@return string? Authentication tag for GCM mode
+function crypto.encrypt(cipher_type, key, plaintext, options) end
+
+--- Decrypts data
+---@param cipher_type string "rsa" or "aes"
+---@param key string Private key or symmetric key
+---@param ciphertext string Data to decrypt
+---@param options table Table with optional parameters:
+--- options.iv string? Initialization Vector for AES
+--- options.mode string? AES mode: "cbc", "gcm", "ctr" (default: "cbc")
+--- options.tag string? Authentication tag for AES-GCM
+--- options.aad string? Additional data for AES-GCM
+---@return string?, string? Decrypted data or nil on error and error message
+function crypto.decrypt(cipher_type, key, ciphertext, options) end
+
+--- Generates cryptographic keys
+---@param key_type string? "rsa", "ecdsa", or "aes"
+---@param key_size_or_curve number|string? Key size or curve name
+---@return string? Private key or nil on error
+---@return string? Public key (nil for AES) or error message
+function crypto.generatekeypair(key_type, key_size_or_curve) end
+
 
 --[[
 ────────────────────────────────────────────────────────────────────────────────

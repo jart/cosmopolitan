@@ -38,11 +38,11 @@
 
 /* block modes */
 #define MBEDTLS_GCM_C
-#ifndef TINY
 #define MBEDTLS_CIPHER_MODE_CBC
+#define MBEDTLS_CIPHER_MODE_CTR
+#ifndef TINY
 /*#define MBEDTLS_CCM_C*/
 /*#define MBEDTLS_CIPHER_MODE_CFB*/
-/*#define MBEDTLS_CIPHER_MODE_CTR*/
 /*#define MBEDTLS_CIPHER_MODE_OFB*/
 /*#define MBEDTLS_CIPHER_MODE_XTS*/
 #endif
@@ -71,10 +71,10 @@
 /* eliptic curves */
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
 #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
 #ifndef TINY
 #define MBEDTLS_ECP_DP_CURVE448_ENABLED
-/*#define MBEDTLS_ECP_DP_SECP521R1_ENABLED*/
 /*#define MBEDTLS_ECP_DP_BP384R1_ENABLED*/
 /*#define MBEDTLS_ECP_DP_SECP192R1_ENABLED*/
 /*#define MBEDTLS_ECP_DP_SECP224R1_ENABLED*/
@@ -395,7 +395,9 @@
  *
  * This enables support for RSAES-OAEP and RSASSA-PSS operations.
  */
-/*#define MBEDTLS_PKCS1_V21*/
+#ifndef TINY
+#define MBEDTLS_PKCS1_V21
+#endif
 
 /**
  * \def MBEDTLS_RSA_NO_CRT
