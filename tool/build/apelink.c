@@ -1085,7 +1085,12 @@ static void OpenLoader(struct Loader *ldr) {
   close(fd);
   if (IsElf64Binary((elf = ldr->map), ldr->size)) {
     ValidateElfImage(ldr->map, ldr->size, ldr->path, true);
-    ldr->os = _HOSTLINUX | _HOSTFREEBSD | _HOSTNETBSD | _HOSTOPENBSD;
+    if (ldr->kernel) {
+      // Don't make any assumptions about the loader's OS
+      ldr->os = 0;
+    } else {
+      ldr->os = _HOSTLINUX | _HOSTFREEBSD | _HOSTNETBSD | _HOSTOPENBSD;
+    }
     ldr->machine = elf->e_machine;
     if (ldr->machine == EM_NEXGEN32E && FindLoaderEmbeddedMachoHeader(ldr)) {
       ldr->os |= _HOSTXNU;
@@ -2220,11 +2225,45 @@ int main(int argc, char *argv[]) {
       macos_silicon_loader_source_path = 0;
     }
 
-    // extract the ape loader for open platforms
     bool gotsome = false;
     if (inputs.n && (support_vector & _HOSTXNU)) {
       p = stpcpy(p, "if [ ! -d /Applications ]; then\n");
     }
+
+    // extract the ape loader for non-input architectures
+    // if the user requested a host kernel check, get the host kernel
+    if (loader_kernel) {
+      p = stpcpy(p, "k=$(uname -s 2>/dev/null) || k=unknown\n");
+    }
+    for (i = 0; i < loaders.n; ++i) {
+      struct Loader *loader = loaders.p + i;
+      if (loader->used) {
+        continue;
+      }
+      if (loader->os) {
+        // if the os field is set, this is a multi-OS ape loader or a
+        // mach-o loader
+        continue;
+      }
+      loader->used = true;
+      p = GenerateScriptIfLoaderMachine(p, loader);
+      p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
+                    "dd if=\"$o\"");
+      p = stpcpy(p, " skip=");
+      loader->ddarg_skip2 = p;
+      p = GenerateDecimalOffsetRelocation(p);
+      p = stpcpy(p, " count=");
+      loader->ddarg_size2 = p;
+      p = GenerateDecimalOffsetRelocation(p);
+      p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n"
+                    "chmod 755 \"$t.$$\" ||exit\n"
+                    "mv -f \"$t.$$\" \"$t\" ||exit\n");
+      p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
+                    "fi\n");
+      gotsome = true;
+    }
+
+    // extract the ape loader for open platforms
     for (i = 0; i < inputs.n; ++i) {
       struct Loader *loader;
       struct Input *in = inputs.p + i;
@@ -2246,34 +2285,6 @@ int main(int argc, char *argv[]) {
                       "fi\n");
         gotsome = true;
       }
-    }
-
-    // extract the ape loader for non-input architectures
-    // if the user requested a host kernel check, get the host kernel
-    if (loader_kernel) {
-      p = stpcpy(p, "k=$(uname -s 2>/dev/null) || k=unknown\n");
-    }
-    for (i = 0; i < loaders.n; ++i) {
-      struct Loader *loader = loaders.p + i;
-      if (loader->used) {
-        continue;
-      }
-      loader->used = true;
-      p = GenerateScriptIfLoaderMachine(p, loader);
-      p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
-                    "dd if=\"$o\"");
-      p = stpcpy(p, " skip=");
-      loader->ddarg_skip2 = p;
-      p = GenerateDecimalOffsetRelocation(p);
-      p = stpcpy(p, " count=");
-      loader->ddarg_size2 = p;
-      p = GenerateDecimalOffsetRelocation(p);
-      p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n"
-                    "chmod 755 \"$t.$$\" ||exit\n"
-                    "mv -f \"$t.$$\" \"$t\" ||exit\n");
-      p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
-                    "fi\n");
-      gotsome = true;
     }
 
     // close if-statements
