@@ -173,6 +173,11 @@ o/$(MODE)/tool/net/demo/seekable.txt.zip.o: private			\
 			-B						\
 			-0
 
+o/$(MODE)/tool/net/demo/seekable.txt.br.zip.o: private			\
+		ZIPOBJ_FLAGS +=						\
+			-B						\
+			-0
+
 o/$(MODE)/tool/net/redbean-demo.dbg:					\
 		$(TOOL_NET_DEPS)					\
 		o/$(MODE)/tool/net/redbean.o				\

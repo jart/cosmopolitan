@@ -77,6 +77,7 @@ o/$(MODE)/test/tool/net/redbean-tester.dbg:			\
 		o/$(MODE)/tool/net/redbean.o			\
 		$(TOOL_NET_REDBEAN_LUA_MODULES)			\
 		o/$(MODE)/tool/net/demo/seekable.txt.zip.o	\
+		o/$(MODE)/tool/net/demo/seekable.txt.br.zip.o	\
 		o/$(MODE)/tool/net/net.pkg			\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)

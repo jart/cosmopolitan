@@ -291,3 +291,124 @@ Z\n",
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
+
+TEST(redbean, testBrotliPreference) {
+  if (IsWindows())
+    return;
+  char portbuf[16];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  sigaddset(&chldmask, SIGCHLD);
+  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    setpgrp();
+    close(0);
+    open("/dev/null", O_RDWR);
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l127.0.0.1",
+                          __strace > 0 ? "--strace" : 0, 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+
+  // Test: when client accepts br, should get brotli if .br variant exists
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 200 OK\r\n\
+Content-Encoding: br\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 36\r\n\
+\r\n",
+                      gc(SendHttpRequest("HEAD /seekable.txt HTTP/1.1\r\n"
+                                         "Accept-Encoding: gzip, br\r\n"
+                                         "\r\n"))));
+
+  // Test: when client only accepts gzip, should not get brotli
+  // (since seekable.txt is stored uncompressed, no Content-Encoding expected)
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 200 OK\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+Accept-Ranges: bytes\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 52\r\n\
+\r\n",
+                      gc(SendHttpRequest("HEAD /seekable.txt HTTP/1.1\r\n"
+                                         "Accept-Encoding: gzip\r\n"
+                                         "\r\n"))));
+
+  EXPECT_EQ(0, close(pipefds[0]));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
+}
+
+TEST(redbean, testRangeForcesIdentity) {
+  if (IsWindows())
+    return;
+  char portbuf[16];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  sigaddset(&chldmask, SIGCHLD);
+  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    setpgrp();
+    close(0);
+    open("/dev/null", O_RDWR);
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l127.0.0.1",
+                          __strace > 0 ? "--strace" : 0, 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+
+  // Test: Range request should force identity encoding, even if client accepts br
+  // Should NOT get Content-Encoding: br despite Accept-Encoding: br
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 206 Partial Content\r\n\
+Content-Range: bytes 0-9/52\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+Accept-Ranges: bytes\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 10\r\n\
+\r\n\
+A\n\
+B\n\
+C\n\
+D\n\
+E\n",
+                      gc(SendHttpRequest("GET /seekable.txt HTTP/1.1\r\n"
+                                         "Accept-Encoding: gzip, br\r\n"
+                                         "Range: bytes=0-9\r\n"
+                                         "\r\n"))));
+
+  EXPECT_EQ(0, close(pipefds[0]));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
+}

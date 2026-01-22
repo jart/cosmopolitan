@@ -393,6 +393,12 @@ static const char kCounterNames[] =
 typedef ssize_t (*reader_f)(int, void *, size_t);
 typedef ssize_t (*writer_f)(int, struct iovec *, int);
 
+enum {
+  kEncodingIdentity = 0,
+  kEncodingGzip,
+  kEncodingBrotli,
+};
+
 struct ClearedPerMessage {
   bool istext;
   bool branded;
@@ -412,6 +418,7 @@ struct ClearedPerMessage {
   ssize_t (*generator)(struct iovec[3]);
   struct Strings loops;
   struct HttpMessage msg;
+  int8_t encoding;
 } cpm;
 
 static bool suiteb;
@@ -1902,6 +1909,11 @@ static bool ClientAcceptsGzip(void) {
          HeaderHas(&cpm.msg, inbuf.p, kHttpAcceptEncoding, "gzip", 4);
 }
 
+static bool ClientAcceptsBrotli(void) {
+  return cpm.msg.version >= 10 && /* RFC1945 § 3.5 */
+         HeaderHas(&cpm.msg, inbuf.p, kHttpAcceptEncoding, "br", 2);
+}
+
 char *FormatUnixHttpDateTime(char *s, int64_t t) {
   struct tm tm;
   gmtime_r(&t, &tm);
@@ -2107,6 +2119,20 @@ static struct Asset *GetAsset(const char *path, size_t pathlen) {
     }
   }
   return a;
+}
+
+static struct Asset *GetBrotliVariantAsset(const char *path, size_t pathlen) {
+  char *brpath;
+  size_t brpathlen;
+  struct Asset *a;
+  brpathlen = pathlen + 3;
+  brpath = FreeLater(xmalloc(brpathlen + 1));
+  memcpy(brpath, path, pathlen);
+  memcpy(brpath + pathlen, ".br", 4);
+  if ((a = GetAsset(brpath, brpathlen))) {
+    return a;
+  }
+  return NULL;
 }
 
 static char *AppendHeader(char *p, const char *k, const char *v) {
@@ -2575,13 +2601,13 @@ static char *ServeAssetCompressed(struct Asset *a) {
     dg.z = 65536;
   }
   cpm.gzipped = -1;  // signal generator usage with the exact size unknown
+  cpm.encoding = kEncodingGzip;
   cpm.generator = DeflateGenerator;
   bzero(&dg.s, sizeof(dg.s));
   CHECK_EQ(Z_OK, deflateInit2(&dg.s, 4, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL,
                               Z_DEFAULT_STRATEGY));
   dg.b = FreeLater(malloc(dg.z));
   p = SetStatus(200, "OK");
-  p = stpcpy(p, "Content-Encoding: gzip\r\n");
   return p;
 }
 
@@ -6074,7 +6100,24 @@ static bool IsNotModified(struct Asset *a) {
 static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   char *p;
   const char *ct;
+  struct Asset *bra;
+  bool hasrange;
+
+  // Get Content-Type based on original path (not .br variant)
   ct = GetContentType(a, path, pathlen);
+
+  // Check for Range header - force identity encoding if present
+  hasrange = cpm.msg.version >= 11 && HasHeader(kHttpRange);
+
+  // Try brotli variant if client accepts br and no Range request
+  if (!hasrange && ClientAcceptsBrotli()) {
+    if ((bra = GetBrotliVariantAsset(path, pathlen))) {
+      DEBUGF("(srvr) using brotli variant for %`'.*s", (int)pathlen, path);
+      a = bra;
+      cpm.encoding = kEncodingBrotli;
+    }
+  }
+
   if (IsNotModified(a)) {
     LockInc(&shared->c.notmodifieds);
     p = SetStatus(304, "Not Modified");
@@ -6085,13 +6128,18 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
     } else if ((p = OpenAsset(a))) {
       return p;
     }
-    if (IsCompressed(a)) {
+    if (cpm.encoding == kEncodingBrotli) {
+      // Serve brotli sidecar file directly
+      LockInc(&shared->c.precompressedresponses);
+      DEBUGF("(srvr) ServeAssetBrotli()");
+      p = SetStatus(200, "OK");
+    } else if (IsCompressed(a)) {
       if (ClientAcceptsGzip()) {
         p = ServeAssetPrecompressed(a);
       } else {
         p = ServeAssetDecompressed(a);
       }
-    } else if (cpm.msg.version >= 11 && HasHeader(kHttpRange)) {
+    } else if (hasrange) {
       p = ServeAssetRange(a);
     } else if (!a->file) {
       LockInc(&shared->c.identityresponses);
@@ -6122,7 +6170,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
     if (!cpm.gotcachecontrol) {
       p = AppendCache(p, cacheseconds, cachedirective);
     }
-    if (!IsCompressed(a)) {
+    if (cpm.encoding == kEncodingIdentity && !IsCompressed(a)) {
       p = stpcpy(p, "Accept-Ranges: bytes\r\n");
     }
   }
@@ -6169,7 +6217,11 @@ static bool TransmitResponse(char *p) {
     actualcontentlength = cpm.contentlength;
     if (cpm.gzipped) {
       actualcontentlength += sizeof(kGzipHeader) + sizeof(gzip_footer);
+    }
+    if (cpm.encoding == kEncodingGzip || cpm.gzipped) {
       p = stpcpy(p, "Content-Encoding: gzip\r\n");
+    } else if (cpm.encoding == kEncodingBrotli) {
+      p = stpcpy(p, "Content-Encoding: br\r\n");
     }
     p = AppendContentLength(p, actualcontentlength);
     p = AppendCrlf(p);
@@ -6211,6 +6263,11 @@ static bool StreamResponse(char *p) {
   struct iovec iov[6];
   char *s, chunkbuf[23];
   assert(!MustNotIncludeMessageBody());
+  if (cpm.encoding == kEncodingGzip) {
+    p = stpcpy(p, "Content-Encoding: gzip\r\n");
+  } else if (cpm.encoding == kEncodingBrotli) {
+    p = stpcpy(p, "Content-Encoding: br\r\n");
+  }
   if (cpm.msg.version >= 11) {
     p = stpcpy(p, "Transfer-Encoding: chunked\r\n");
   } else {
