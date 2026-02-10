@@ -82,6 +82,10 @@ static const char *prog;
 static char argbuf[ARG_MAX];
 static bool unsupported[256];
 
+static int (*builtin_pointers[16])(void);
+static const char *builtin_names[16];
+static int builtin_index = 0;
+
 static int ShellSpawn(void);
 static int ShellExec(void);
 
@@ -820,6 +824,12 @@ static int TryBuiltin(bool wantexec) {
   if (_weaken(_curl) && !strcmp(args[0], "curl")) {
     return Fake(_weaken(_curl), wantexec);
   }
+
+  for (int i = 0; i < builtin_index; ++i) {
+    if (strcmp(args[0], builtin_names[i])) continue;
+    return builtin_pointers[i]();
+  }
+  
   return -1;
 }
 
@@ -1098,6 +1108,15 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
     tinyprint(2, prog, ": error: redirect missing path\n", NULL);
     _Exit(14);
   }
+}
+
+bool _cocmd_builtin(const char *name, int (*program)(void)) {
+  if (builtin_index >= ARRAYLEN(builtin_pointers)) return false;
+
+  builtin_names[builtin_index] = name;
+  builtin_pointers[builtin_index] = program;
+  builtin_index++;
+  return true;
 }
 
 int _cocmd(int argc, char **argv, char **envp) {
