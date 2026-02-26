@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 
@@ -29,7 +29,7 @@ errno_t pthread_getschedparam(pthread_t thread, int *policy,
   struct PosixThread *pt = (struct PosixThread *)thread;
   if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
       kPosixThreadTerminated) {
-    return esrch();
+    return ESRCH;
   }
   *policy = pt->pt_attr.__schedpolicy;
   *param = (struct sched_param){pt->pt_attr.__schedparam};
