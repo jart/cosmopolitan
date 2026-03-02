@@ -7,6 +7,7 @@
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/l.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time.h"

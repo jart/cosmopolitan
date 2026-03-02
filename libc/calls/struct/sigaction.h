@@ -12,7 +12,7 @@ struct sigaction {
     sighandler_t sa_handler;
     sigaction_f sa_sigaction;
   };
-  uint64_t sa_flags;
+  uint32_t sa_flags;
   void (*sa_restorer)(void);
   sigset_t sa_mask;
 };

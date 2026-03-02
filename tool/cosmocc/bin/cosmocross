@@ -155,6 +155,11 @@ fi
 
 LDFLAGS="$LDFLAGS -Wl,-z,common-page-size=$PAGESZ -Wl,-z,max-page-size=16384"
 
+if [ x"$x" = x"-v" ]; then
+    "$CC" -v
+    exit 1
+fi
+
 OPT=
 FIRST=1
 OUTPUT=
