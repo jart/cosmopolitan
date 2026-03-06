@@ -42,6 +42,7 @@
 #define SIGWINCH  28 /* window size changes */
 #define SIGSYS    31 /* bad argument to system call */
 #define SIGTHR    32 /* internal to pthreads */
+#define SIGIOT    SIGABRT
 
 #define SIG_BLOCK   SIG_BLOCK
 #define SIG_SETMASK SIG_SETMASK
