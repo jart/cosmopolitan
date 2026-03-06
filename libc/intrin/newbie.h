@@ -26,6 +26,18 @@
 #define htole64(x) (uint64_t)(x)
 #define le64toh(x) (uint64_t)(x)
 #define letoh64(x) (uint64_t)(x)
+
+#ifdef _COSMO_SOURCE
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__)
+#define htobe128(x) bswap_128(x)
+#define be128toh(x) bswap_128(x)
+#define betoh128(x) bswap_128(x)
+#define htole128(x) (uint128_t)(x)
+#define le128toh(x) (uint128_t)(x)
+#define letoh128(x) (uint128_t)(x)
+#endif /* GCC 4.6+ or LLVM */
+#endif /* _COSMO_SOURCE */
+
 #else
 #define htobe16(x) (uint16_t)(x)
 #define be16toh(x) (uint16_t)(x)
@@ -45,6 +57,18 @@
 #define htole64(x) bswap_64(x)
 #define le64toh(x) bswap_64(x)
 #define letoh64(x) bswap_64(x)
+
+#ifdef _COSMO_SOURCE
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__)
+#define htobe128(x) (uint128_t)(x)
+#define be128toh(x) (uint128_t)(x)
+#define betoh128(x) (uint128_t)(x)
+#define htole128(x) bswap_128(x)
+#define le128toh(x) bswap_128(x)
+#define letoh128(x) bswap_128(x)
+#endif /* GCC 4.6+ or LLVM */
+#endif /* _COSMO_SOURCE */
+
 #endif
 
 #endif /* COSMOPOLITAN_LIBC_BITS_NEWBIE_H_ */

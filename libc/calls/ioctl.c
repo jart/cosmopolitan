@@ -44,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/serialize.h"
+#include "libc/sock/in.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/ifreq.h"
@@ -533,15 +534,34 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
     for (p = b, e = p + MIN(bufMax, READ32LE(ifcBsd)); p + 16 + 16 <= e;
          p += IsBsd() ? 16 + MAX(16, p[16] & 255) : 40) {
       fam = p[IsBsd() ? 17 : 16] & 255;
-      if (fam != AF_INET)
-        continue;
-      ip = READ32BE(p + 20);
-      bzero(req, sizeof(*req));
-      memcpy(req->ifr_name, p, 16);
-      memcpy(&req->ifr_addr, p + 16, 16);
-      req->ifr_addr.sa_family = fam;
-      ((struct sockaddr_in *)&req->ifr_addr)->sin_addr.s_addr = htonl(ip);
-      ++req;
+      if (fam == AF_INET) {
+        ip = READ32BE(p + 20);
+        bzero(req, sizeof(*req));
+        memcpy(req->ifr_name, p, 16);
+        memcpy(&req->ifr_addr, p + 16, 16);
+        req->ifr_addr.sa_family = fam;
+        ((struct sockaddr_in *)&req->ifr_addr)->sin_addr.s_addr = htonl(ip);
+        ++req;
+      } else if (fam == AF_INET6) {
+        // Only BSD systems returns AF_INET6 addresses with SIOCGIFCONF
+        // BSD don't return flags or prefix length, need to get them later
+        bzero(req, sizeof(*req));
+        memcpy(req->ifr_name, p, 16);
+        void *addr6 = p + 24;
+        if (IN6_IS_ADDR_LINKLOCAL(addr6)) {
+          // link-local bsd special https://stackoverflow.com/q/5888359/2838914
+          req->ifr6_ifindex = ntohs(*((uint16_t *)(p + 26)));
+          *((uint16_t *)(p + 26)) = 0x0;
+          req->ifr6_scope = 0x20;  // link
+        } else if (IN6_IS_ADDR_SITELOCAL(addr6)) {
+          req->ifr6_scope = 0x40;  // site
+        } else if (IN6_IS_ADDR_LOOPBACK(addr6)) {
+          req->ifr6_scope = 0x10;  // host
+        }
+        memcpy(&req->ifr6_addr, addr6, 16);
+        req->ifr_addr.sa_family = fam;
+        ++req;
+      }
     }
     ifc->ifc_len = (char *)req - ifc->ifc_buf; /* Adjust len */
   }
