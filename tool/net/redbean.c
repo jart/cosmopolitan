@@ -43,6 +43,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/newbie.h"
 #include "libc/intrin/nomultics.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/log/appendresourcereport.internal.h"
@@ -124,6 +125,7 @@
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/san.h"
+#include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
@@ -399,6 +401,7 @@ struct ClearedPerMessage {
   bool hascontenttype;
   bool gotcachecontrol;
   bool gotxcontenttypeoptions;
+  char wstype;
   int frags;
   int statuscode;
   int isyielding;
@@ -479,6 +482,8 @@ static uint8_t *zmap;
 static uint8_t *zcdir;
 static size_t hdrsize;
 static size_t amtread;
+static size_t wsfragread;
+static char wsfragtype;
 static reader_f reader;
 static writer_f writer;
 static char *extrahdrs;
@@ -4943,6 +4948,228 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   return !!a;
 }
 
+static int LuaWSUpgrade(lua_State *L) {
+  mbedtls_sha1_context ctx;
+  unsigned char hash[20];
+  char *accept, *p, *q;
+  if (cpm.generator) {
+    return luaL_error(L, "Cannot upgrade to websocket after yielding normally");
+  }
+
+  if (!HasHeader(kHttpWebSocketKey)) {
+    return luaL_error(L, "No Sec-WebSocket-Key header");
+  }
+  // Prepare Sec-WebSocket-Accept response header (See RFC6455 1.3)
+  mbedtls_sha1_init(&ctx);
+  mbedtls_sha1_starts_ret(&ctx);
+  mbedtls_sha1_update_ret(&ctx,
+                          (unsigned char*)HeaderData(kHttpWebSocketKey),
+                          HeaderLength(kHttpWebSocketKey));
+  mbedtls_sha1_update_ret(&ctx,
+                          (unsigned char*)"258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+                          36);
+  mbedtls_sha1_finish_ret(&ctx, hash);
+  accept = EncodeBase64((char *)hash, 20, NULL);
+
+  // prepare response
+  p = SetStatus(101, "Switching Protocols");
+  // make enough space for the handshake message:
+  // "Upgrade: websocket\r\n" (20 bytes)
+  // "Connection: Upgrade\r\n" (21 bytes)
+  // "Sec-WebSocket-Accept: <accept>\r\n" (54 bytes)
+  // <accept> will always be 28 bytes, as len(b64(hash)) = 4*ceil(20/3) = 28
+  while (p - hdrbuf.p + 95 + 512 > hdrbuf.n) {
+    hdrbuf.n += hdrbuf.n >> 1;
+    q = xrealloc(hdrbuf.p, hdrbuf.n);
+    cpm.luaheaderp = p = q + (p - hdrbuf.p);
+    hdrbuf.p = q;
+  }
+  p = stpcpy(p, "Upgrade: websocket\r\n");
+  p = stpcpy(p, "Connection: Upgrade\r\n");
+  p = AppendHeader(p, "Sec-WebSocket-Accept", accept);
+  cpm.luaheaderp = p;
+  cpm.wstype = 1;
+
+  return 0;
+}
+
+// see RFC6455 5.2 for details on the websocket data frame structure
+static int LuaWSRead(lua_State *L) {
+  ssize_t rc;
+  size_t i, got, amt, bufsize;
+  unsigned char header[10], headerlen, opcode, *extlen, *mask;
+  char *bufstart;
+  uint64_t len;
+  struct iovec iov[2];
+  OnlyCallDuringRequest(L, "ws.Read");
+
+  got = 0;
+  // read 2 bytes of the frame header
+  do {
+    if ((rc = reader(client, header + got, 2 - got)) == -1) {
+      return luaL_error(L, "Could not read WS header");
+    }
+  } while ((got += rc) < 2);
+
+  // reserved bit set
+  if (header[0] & 0x70) goto close;
+
+  opcode = header[0] & 0xF;
+  // reserved opcode
+  if ((opcode & 0x7) >= 0x3 || opcode > 0xA) goto close;
+  // payload data is unmasked
+  if (!(header[1] | (1 << 7))) goto close;
+  // not in continuation
+  if (!wsfragtype && !opcode) goto close;
+
+  len = header[1] & ~(1 << 7);
+  if (header[0] & 0x8) {
+    // control frame is fragmented or too long
+    if (!(header[0] & 0x80) || len >= 126) goto close;
+  } else {
+    // control frame during fragmented sequence
+    if (opcode && wsfragtype)  goto close;
+  }
+
+  headerlen = 6;
+  if (len == 126) {
+    headerlen = 8;
+  } else if (len == 127) {
+    headerlen = 14;
+  }
+
+  // read rest of header, if necessary
+  while (got < headerlen) {
+    if ((rc = reader(client, header + got, headerlen - got)) == -1) {
+      return luaL_error(L, "Could not read WS extended length");
+    }
+    got += rc;
+  }
+
+  extlen = &header[2];
+  mask = &header[headerlen - 4];
+  // multibyte length quantities are expressed in network byte order
+  if (len == 126) {
+    len = be16toh(*(uint16_t *)extlen);
+  } else if (len == 127) {
+    len = be64toh(*(uint64_t *)extlen);
+  }
+
+  if (len >= inbuf.n - wsfragread) {
+    return luaL_error(L,
+                      "Required %d bytes to read WS frame, %d bytes available",
+                      len,
+                      inbuf.n - wsfragread);
+  }
+
+  // read in frame data
+  for (got = 0, amt = wsfragread; got < len; got += rc, amt += rc) {
+    if ((rc = reader(client, inbuf.p + amt, len - got)) == -1) {
+      return luaL_error(L, "Could not read WS data");
+    }
+  }
+
+  // unmask data
+  for (i = 0, amt = wsfragread; i < got; ++i, ++amt) {
+    inbuf.p[amt] ^= mask[i & 0x3];
+  }
+
+  // ping received, respond with pong
+  if (opcode == 0x9) {
+    header[0] = (header[0] & ~0xF) | 0xA;
+    header[1] = header[1] & ~0x80;
+    // pong data must be identical to ping
+    iov[0].iov_base = header;
+    iov[0].iov_len = headerlen - 4;
+    iov[1].iov_base = inbuf.p + wsfragread;
+    iov[1].iov_len = got;
+    Send(iov, 2);
+  }
+
+  // final fragment
+  if (header[0] & 0x80) {
+    // non-continuation frame
+    if (opcode) {
+      bufstart = inbuf.p + wsfragread;
+      bufsize = got;
+
+      // text frame with invalid text
+      if (opcode == 0x1 && !isutf8(bufstart, bufsize)) goto close;
+      lua_pushlstring(L, bufstart, bufsize);
+      lua_pushinteger(L, opcode);
+    } else {
+      bufstart = inbuf.p + amtread;
+      bufsize = (wsfragread - amtread) + got;
+
+      // text frame with invalid text
+      if (wsfragtype == 0x1 && !isutf8(bufstart, bufsize)) goto close;
+      lua_pushlstring(L, bufstart, bufsize);
+      lua_pushinteger(L, wsfragtype);
+
+      wsfragread = amtread;
+      wsfragtype = 0;
+    }
+  } else {
+    lua_pushnil(L);
+    lua_pushinteger(L, 0);
+
+    if (!wsfragtype) wsfragtype = opcode;
+    wsfragread += got;
+  }
+
+  return 2;
+
+close:
+  lua_pushnil(L);
+  lua_pushinteger(L, 0x08);
+  return 2;
+}
+
+static int LuaWSWrite(lua_State *L) {
+  int type, retval;
+  size_t size;
+  const char *data;
+
+  OnlyCallDuringRequest(L, "ws.Write");
+  if (!cpm.wstype) {
+    retval = LuaWSUpgrade(L);
+    if (retval != 0) {
+      return retval;
+    }
+  }
+
+  type = luaL_optinteger(L, 2, -1);
+  if (type == 1 || type == 2) {
+    cpm.wstype = type;
+  } else if (type != -1) {
+    return luaL_error(L, "Invalid WS type");
+  }
+
+  if (!lua_isnil(L, 1)) {
+    data = luaL_checklstring(L, 1, &size);
+    appendd(&cpm.outbuf, data, size);
+  }
+
+  return 0;
+}
+
+static const luaL_Reg kLuaWS[] = {
+  {"Read", LuaWSRead},            //
+  {"Write", LuaWSWrite},          //
+  {0}                             //
+};
+
+int LuaWS(lua_State *L) {
+  luaL_newlib(L, kLuaWS);
+  lua_pushinteger(L,  0); lua_setfield(L, -2, "CONT");
+  lua_pushinteger(L,  1); lua_setfield(L, -2, "TEXT");
+  lua_pushinteger(L,  2); lua_setfield(L, -2, "BIN");
+  lua_pushinteger(L,  8); lua_setfield(L, -2, "CLOSE");
+  lua_pushinteger(L,  9); lua_setfield(L, -2, "PING");
+  lua_pushinteger(L, 10); lua_setfield(L, -2, "PONG");
+  return 1;
+}
+
 // <SORTED>
 // list of functions that can't be run from the repl
 static const char *const kDontAutoComplete[] = {
@@ -5210,6 +5437,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
+    {"ws", LuaWS},                   //
 };
 
 static void LuaSetArgv(lua_State *L) {
@@ -6263,6 +6491,80 @@ static bool StreamResponse(char *p) {
   return true;
 }
 
+static bool StreamWS(char *p) {
+  ssize_t rc;
+  struct iovec iov[2];
+  char header[10], *s, *extlen;
+  int nresults, status;
+
+  p = AppendCrlf(p);
+  CHECK_LE(p - hdrbuf.p, hdrbuf.n);
+  if (logmessages) {
+    LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
+  }
+  iov[0].iov_base = hdrbuf.p;
+  iov[0].iov_len = p - hdrbuf.p;
+  Send(iov, 1);
+
+  bzero(iov, sizeof(iov));
+  iov[0].iov_base = header;
+
+  extlen = &header[2];
+  wsfragread = amtread;
+  wsfragtype = 0;
+
+  for (;;) {
+    // done yielding
+    if (!YL || lua_status(YL) != LUA_YIELD) {
+      break;
+    }
+    cpm.contentlength = 0;
+    status = lua_resume(YL, NULL, 0, &nresults);
+    if (status == LUA_OK) {
+      lua_pop(YL, nresults);
+      break;
+    } else if (status != LUA_YIELD) {
+      LogLuaError("resume", lua_tostring(YL, -1));
+      lua_pop(YL, 1);
+      break;
+    }
+    lua_pop(YL, nresults);
+    if (!cpm.contentlength) {
+      UseOutput();
+    }
+
+    DEBUGF("(lua) ws yielded with %ld bytes generated", cpm.contentlength);
+
+    iov[1].iov_base = cpm.content;
+    iov[1].iov_len = rc = cpm.contentlength;
+
+    if (rc < 126) {
+      header[1] = rc;
+      iov[0].iov_len = 2;
+    } else if (rc <= 0xFFFF) {
+      header[1] = 126;
+      *(uint16_t *)extlen = htobe16(rc);
+      iov[0].iov_len = 4;
+    } else {
+      header[1] = 127;
+      *(uint64_t *)extlen = htobe64(rc);
+      iov[0].iov_len = 10;
+    }
+    header[0] = cpm.wstype | (1 << 7);
+    if (Send(iov, 2) == -1) {
+      break;
+    }
+  }
+
+  header[0] = 0x8 | (1 << 7);
+  header[1] = 0;
+  iov[0].iov_len = 2;
+  Send(iov, 1);
+  connectionclose = true;
+
+  return true;
+}
+
 static bool HandleMessageActual(void) {
   int rc;
   long reqtime, contime;
@@ -6327,6 +6629,8 @@ static bool HandleMessageActual(void) {
   }
   if (!cpm.generator) {
     return TransmitResponse(p);
+  } else if (cpm.wstype) {
+    return StreamWS(p);
   } else {
     return StreamResponse(p);
   }
