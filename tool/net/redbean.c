@@ -3679,7 +3679,7 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
   *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday + 1);
 }
 
-static void StoreAsset(const char *path, size_t pathlen, const char *data,
+static bool StoreAsset(const char *path, size_t pathlen, const char *data,
                        size_t datalen, int mode) {
   int64_t ft;
   uint32_t crc;
@@ -3693,7 +3693,15 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   size_t oldcdirsize, oldcdiroffset, records, cdiroffset, cdirsize, complen,
       uselen;
   if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
-    FATALF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
+    errno = ENOSYS;
+    WARNF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
+    return false;
+  }
+  if ((fcntl(zfd, F_GETFL) & O_ACCMODE) == O_RDONLY) {
+    errno = EBADF;
+    WARNF("(srvr) StoreAsset() needs an O_RDWR zfd; start redbean with -* or "
+          "-A to enable self-modifying assets");
+    return false;
   }
   INFOF("(srvr) storing asset %`'s", path);
   disk = gflags = iattrs = 0;
@@ -3724,9 +3732,11 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   }
   //////////////////////////////////////////////////////////////////////////////
   if (-1 == fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK})) {
+    int rc = errno;
     WARNF("(srvr) can't place write lock on file descriptor %d: %s", zfd,
-          strerror(errno));
-    return;
+          strerror(rc));
+    errno = rc;
+    return false;
   }
   OpenZip(false);
   now = timespec_real();
@@ -3761,8 +3771,8 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   p = WRITE16LE(p, mtime);
   p = WRITE16LE(p, mdate);
   p = WRITE32LE(p, crc);
-  p = WRITE32LE(p, 0xffffffffu);
-  p = WRITE32LE(p, 0xffffffffu);
+  p = WRITE32LE(p, MIN(uselen, 0xffffffff));
+  p = WRITE32LE(p, MIN(datalen, 0xffffffff));
   p = WRITE16LE(p, pathlen);
   p = WRITE16LE(p, v[2].iov_len);
   v[1].iov_len = pathlen;
@@ -3821,8 +3831,8 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   p = WRITE16LE(p, mtime);
   p = WRITE16LE(p, mdate);
   p = WRITE32LE(p, crc);
-  p = WRITE32LE(p, 0xffffffffu);
-  p = WRITE32LE(p, 0xffffffffu);
+  p = WRITE32LE(p, MIN(uselen, 0xffffffff));
+  p = WRITE32LE(p, MIN(datalen, 0xffffffff));
   p = WRITE16LE(p, pathlen);
   p = WRITE16LE(p, v[8].iov_len + v[9].iov_len);
   p = WRITE16LE(p, 0);
@@ -3830,7 +3840,7 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   p = WRITE16LE(p, iattrs);
   p = WRITE16LE(p, dosmode);
   p = WRITE16LE(p, mode);
-  p = WRITE32LE(p, 0xffffffffu);
+  p = WRITE32LE(p, MIN(zsize, 0xffffffff));
   v[7].iov_len = pathlen;
   v[7].iov_base = (void *)path;
   // zip64 end of central directory
@@ -3878,6 +3888,7 @@ static void StoreAsset(const char *path, size_t pathlen, const char *data,
   //////////////////////////////////////////////////////////////////////////////
   OpenZip(false);
   free(comp);
+  return true;
 }
 
 static void StoreFile(const char *path) {
@@ -3895,7 +3906,8 @@ static void StoreFile(const char *path) {
     FATALF("(cfg) error: can't stat %`'s: %m", path);
   if (!(p = xslurp(path, &plen)))
     FATALF("(cfg) error: can't read %`'s: %m", path);
-  StoreAsset(target, tlen, p, plen, st.st_mode & 0777);
+  if (!StoreAsset(target, tlen, p, plen, st.st_mode & 0777))
+    FATALF("(cfg) error: can't store %`'s: %m", target);
   free(p);
 }
 
@@ -3926,15 +3938,22 @@ static void StorePath(const char *dirpath) {
 static int LuaStoreAsset(lua_State *L) {
   const char *path, *data;
   size_t pathlen, datalen;
-  int mode;
+  int mode, olderr;
   path = LuaCheckPath(L, 1, &pathlen);
   if (pathlen > 0xffff) {
     return luaL_argerror(L, 1, "path too long");
   }
   data = luaL_checklstring(L, 2, &datalen);
   mode = luaL_optinteger(L, 3, 0);
-  StoreAsset(path, pathlen, data, datalen, mode);
-  return 0;
+  olderr = errno;
+  if (!StoreAsset(path, pathlen, data, datalen, mode)) {
+    lua_pushnil(L);
+    lua_pushstring(L, strerror(errno));
+    errno = olderr;
+    return 2;
+  }
+  lua_pushboolean(L, 1);
+  return 1;
 }
 
 static void ReseedRng(mbedtls_ctr_drbg_context *r, const char *s) {
@@ -6905,10 +6924,11 @@ static int HandleConnection(size_t i) {
 }
 
 static void MakeExecutableModifiable(void) {
-#ifdef __x86_64__
   int ft;
+#ifdef __x86_64__
   if (!(SUPPORT_VECTOR & (_HOSTMETAL | _HOSTWINDOWS | _HOSTXNU)))
     return;
+#endif
   if (IsWindows())
     return;  // TODO
   if (IsOpenbsd())
@@ -6927,9 +6947,6 @@ static void MakeExecutableModifiable(void) {
     ftrace_install();
     ftrace_enabled(ft);
   }
-#else
-  // TODO
-#endif
 }
 
 static int HandleReadline(void) {
