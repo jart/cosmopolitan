@@ -94,7 +94,7 @@ void __printargs(const char *) libcesque;
 /* builtin sh-like system/popen dsl */
 int _cocmd(int, char **, char **) libcesque;
 /* register builtin program for the sh-like dsl */
-bool _cocmd_builtin(const char *, int (*)(void));
+bool _cocmd_builtin(const char *, int (*)(void)) libcesque;
 /* executable program */
 char *GetProgramExecutableName(void) libcesque;
 char *GetInterpreterExecutableName(char *, size_t) libcesque;
