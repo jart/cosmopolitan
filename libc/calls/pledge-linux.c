@@ -1543,6 +1543,7 @@ __privileged static void AllowIoctlTty(struct Filter *f) {
 //   - SO_SNDTIMEO          (0x15)
 //   - IP_RECVTTL           (0x0c)
 //   - IP_RECVERR           (0x0b)
+//   - IP_MTU_DISCOVER      (0x0e)
 //   - TCP_FASTOPEN         (0x17)
 //   - TCP_FASTOPEN_CONNECT (0x1e)
 //   - IPV6_V6ONLY          (0x1a)
@@ -1550,30 +1551,31 @@ __privileged static void AllowIoctlTty(struct Filter *f) {
 //
 __privileged static void AllowSetsockoptRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 25),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 26),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 41, 3, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 2, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 19),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 20),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 16, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1a, 15, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 14, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 13, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 12, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 11, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 10, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 9, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 8, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 7, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 6, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0b, 5, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 4, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 3, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x17, 2, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1e, 1, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 17, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1a, 16, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 15, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 14, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 13, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 12, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 11, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 10, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 9, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 8, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 7, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0b, 6, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 5, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 4, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x17, 3, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1e, 2, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 1, 1),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0e, 0, 1),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /* next filter */
