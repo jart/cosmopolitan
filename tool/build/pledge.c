@@ -537,6 +537,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/etc/services", "r");
     UnveilIfExists("/etc/protocols", "r");
     UnveilIfExists("/etc/resolv.conf", "r");
+    UnveilIfExists("/etc/nsswitch.conf", "r");
   }
 
   if (HasPromise(ipromises, PROMISE_TTY)) {
