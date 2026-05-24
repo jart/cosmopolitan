@@ -228,7 +228,7 @@ void GetOpts(int argc, char *argv[]) {
     g_proquota = cosmo_cpu_count() * 100;
     g_memquota = 4L * 1024 * 1024 * 1024;
   }
-  while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:O:v:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnqkNDVT:p:u:g:c:C:P:M:F:O:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
