@@ -18,7 +18,13 @@ NET_HTTPS_A_OBJS =				\
 
 NET_HTTPS_A_CHECKS =				\
 	$(NET_HTTPS_A).pkg			\
-	$(NET_HTTPS_A_HDRS:%=o/$(MODE)/%.ok)
+	$(filter-out o/$(MODE)/net/https/https.h.ok,$(NET_HTTPS_A_HDRS:%=o/$(MODE)/%.ok))
+
+o/$(MODE)/net/https/https.h.ok: private	\
+		CPPFLAGS +=			\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 NET_HTTPS_A_DIRECTDEPS =			\
 	LIBC_CALLS				\
@@ -36,7 +42,7 @@ NET_HTTPS_A_DIRECTDEPS =			\
 	LIBC_X					\
 	NET_HTTP				\
 	THIRD_PARTY_COMPILER_RT			\
-	THIRD_PARTY_MBEDTLS			\
+	THIRD_PARTY_MBEDTLS4			\
 	THIRD_PARTY_MUSL			\
 	THIRD_PARTY_TZ				\
 
@@ -53,6 +59,12 @@ $(NET_HTTPS_A).pkg:				\
 
 o/$(MODE)/usr/share/ssl/root/.zip.o:		\
 		usr/share/ssl/root
+
+$(NET_HTTPS_A_OBJS): private			\
+		CPPFLAGS +=			\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 NET_HTTPS_LIBS = $(foreach x,$(NET_HTTPS_ARTIFACTS),$($(x)))
 NET_HTTPS_SRCS = $(foreach x,$(NET_HTTPS_ARTIFACTS),$($(x)_SRCS))

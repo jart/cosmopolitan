@@ -54,7 +54,7 @@ TOOL_BUILD_DIRECTDEPS =							\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_HACLSTAR						\
-	THIRD_PARTY_MBEDTLS						\
+	THIRD_PARTY_MBEDTLS4						\
 	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_STB							\
@@ -70,6 +70,14 @@ TOOL_BUILD_DEPS :=							\
 o/$(MODE)/tool/build/build.pkg:						\
 		$(TOOL_BUILD_OBJS)					\
 		$(foreach x,$(TOOL_BUILD_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/tool/build/sha256sum.o				\
+o/$(MODE)/tool/build/runit.o				\
+o/$(MODE)/tool/build/runitd.o: private				\
+		CPPFLAGS +=						\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 o/$(MODE)/tool/build/%.dbg:						\
 		$(TOOL_BUILD_DEPS)					\

@@ -51,7 +51,7 @@ TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	NET_HTTP					\
 	NET_HTTPS					\
 	THIRD_PARTY_COMPILER_RT				\
-	THIRD_PARTY_MBEDTLS				\
+	THIRD_PARTY_MBEDTLS4				\
 	THIRD_PARTY_XED					\
 	THIRD_PARTY_ZLIB				\
 	THIRD_PARTY_TZ
@@ -67,6 +67,13 @@ $(TOOL_BUILD_LIB_A):					\
 $(TOOL_BUILD_LIB_A).pkg:				\
 		$(TOOL_BUILD_LIB_A_OBJS)		\
 		$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/tool/build/lib/eztls.o			\
+o/$(MODE)/tool/build/lib/eztls.h.ok: private		\
+		CPPFLAGS +=				\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 ifeq ($(ARCH), x86_64)
 o/$(MODE)/tool/build/lib/ssefloat.o: private		\

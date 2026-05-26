@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "net/https/https.h"
 
 char *FormatX509Name(const mbedtls_x509_name *name) {

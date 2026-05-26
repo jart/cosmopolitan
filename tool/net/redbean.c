@@ -118,16 +118,15 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/iana.h"
-#include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/san.h"
-#include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/ssl_ticket.h"
-#include "third_party/mbedtls/x509.h"
-#include "third_party/mbedtls/x509_crt.h"
+#include "third_party/mbedtls4/include/mbedtls/build_info.h"
+#include "third_party/mbedtls4/include/mbedtls/debug.h"
+#include "third_party/mbedtls4/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls4/include/mbedtls/oid.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl_ciphersuites.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl_ticket.h"
+#include "third_party/mbedtls4/include/mbedtls/x509.h"
+#include "third_party/mbedtls4/include/mbedtls/x509_crt.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
@@ -313,7 +312,7 @@ static struct Psks {
 
 static struct Suites {
   size_t n;
-  uint16_t *p;
+  int *p;
 } suites;
 
 static struct Redirects {
@@ -446,6 +445,7 @@ static bool hasonworkerstop;
 static bool isexitingworker;
 static bool hasonworkerstart;
 static bool leakcrashreports;
+static int ssldebugthreshold;
 static bool hasonhttprequest;
 static bool hasonerror;
 static bool ishandlingrequest;
@@ -521,12 +521,10 @@ static struct sockaddr_in *serveraddr;
 
 static mbedtls_ssl_config conf;
 static mbedtls_ssl_context ssl;
-static mbedtls_ctr_drbg_context rng;
 static mbedtls_ssl_ticket_context ssltick;
 
 static mbedtls_ssl_config confcli;
 static mbedtls_ssl_context sslcli;
-static mbedtls_ctr_drbg_context rngcli;
 
 static struct TlsBio g_bio;
 static char slashpath[PATH_MAX];
@@ -673,10 +671,41 @@ static bool IsDirectory(const char *path) {
   return false;
 }
 
+static const char *PkTypeName(psa_key_type_t t) {
+  if (PSA_KEY_TYPE_IS_RSA(t))
+    return "RSA";
+  if (PSA_KEY_TYPE_IS_ECC(t))
+    return "ECC";
+  return "unknown";
+}
+
+#define S32(S) ((S)[0] << 24 | (S)[1] << 16 | (S)[2] << 8 | (S)[3])
+
+static const mbedtls_ssl_ciphersuite_t *GetCipherSuite(const char *s) {
+  int i, j;
+  char b[50];
+  uint32_t w;
+  unsigned char c;
+  for (i = j = w = 0; (c = s[i++]);) {
+    if (c == '_') c = '-';
+    if ('a' <= c && c <= 'z') c -= 'a' - 'A';
+    if (c == '-' && w == S32("WITH")) j -= 5;
+    if (w == S32("TLS-")) j -= 4;
+    w = w << 8 | c;
+    if (w == S32("AES-")) continue;
+    if (w == S32("SHA1")) continue;
+    if (!(0 <= j && j + 1 < sizeof(b)))
+      return 0;
+    b[j++] = c;
+  }
+  b[j++] = 0;
+  return mbedtls_ssl_ciphersuite_from_string(b);
+}
+
 static void UseCertificate(mbedtls_ssl_config *c, struct Cert *kp,
                            const char *role) {
   VERBOSEF("(ssl) using %s certificate %`'s for HTTPS %s",
-           mbedtls_pk_get_name(&kp->cert->pk),
+           PkTypeName(mbedtls_pk_get_key_type(&kp->cert->pk)),
            gc(FormatX509Name(&kp->cert->subject)), role);
   CHECK_EQ(0, mbedtls_ssl_conf_own_cert(c, kp->cert, kp->key));
 }
@@ -1566,7 +1595,7 @@ static void WipeSigningKeys(void) {
       continue;
     if (!certs.p[i].cert)
       continue;
-    if (!certs.p[i].cert->ca_istrue)
+    if (!mbedtls_x509_crt_get_ca_istrue(certs.p[i].cert))
       continue;
     mbedtls_pk_free(certs.p[i].key);
     Free(&certs.p[i].key);
@@ -1588,7 +1617,8 @@ static void WipeServingKeys(void) {
   if (uniprocess)
     return;
   mbedtls_ssl_ticket_free(&ssltick);
-  mbedtls_ssl_key_cert_free(conf.key_cert), conf.key_cert = 0;
+  CHECK_EQ(0, mbedtls_ssl_conf_own_cert(&conf, 0, 0));
+  CHECK_EQ(0, mbedtls_ssl_conf_own_cert(&confcli, 0, 0));
   CertsDestroy(&certs);
   PsksDestroy();
 }
@@ -1614,12 +1644,9 @@ static bool TlsSetup(void) {
       reader = SslRead;
       writer = SslWrite;
       WipeServingKeys();
-      VERBOSEF("(ssl) shaken %s %s %s%s %s", DescribeClient(),
-               mbedtls_ssl_get_ciphersuite(&ssl), mbedtls_ssl_get_version(&ssl),
-               ssl.session->compression ? " COMPRESSED" : "",
-               ssl.curve ? ssl.curve->name : "uncurved");
-      DEBUGF("(ssl) client ciphersuite preference was %s",
-             gc(FormatSslClientCiphers(&ssl)));
+      VERBOSEF("(ssl) shaken %s %s %s", DescribeClient(),
+               mbedtls_ssl_get_ciphersuite(&ssl),
+               mbedtls_ssl_get_version(&ssl));
       return true;
     } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
       LockInc(&shared->c.handshakeinterrupts);
@@ -1640,17 +1667,11 @@ static bool TlsSetup(void) {
           LockInc(&shared->c.ssltimeouts);
           DEBUGF("(ssl) %s %s", DescribeClient(), "ssltimeouts");
           return false;
-        case MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN:
-          LockInc(&shared->c.sslnociphers);
-          WARNF("(ssl) %s %s %s", DescribeClient(), "sslnociphers",
-                gc(FormatSslClientCiphers(&ssl)));
-          return false;
-        case MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE:
+        case MBEDTLS_ERR_SSL_HANDSHAKE_FAILURE:
           LockInc(&shared->c.sslcantciphers);
-          WARNF("(ssl) %s %s %s", DescribeClient(), "sslcantciphers",
-                gc(FormatSslClientCiphers(&ssl)));
+          WARNF("(ssl) %s %s", DescribeClient(), "sslcantciphers");
           return false;
-        case MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION:
+        case MBEDTLS_ERR_SSL_BAD_PROTOCOL_VERSION:
           LockInc(&shared->c.sslnoversion);
           WARNF("(ssl) %s %s %s", DescribeClient(), "sslnoversion",
                 mbedtls_ssl_get_version(&ssl));
@@ -1668,10 +1689,11 @@ static bool TlsSetup(void) {
           LockInc(&shared->c.sslverifyfailed);
           WARNF("(ssl) %s SSL %s", DescribeClient(),
                 gc(DescribeSslVerifyFailure(
-                    ssl.session_negotiate->verify_result)));
+                    mbedtls_ssl_get_verify_result(&ssl))));
           return false;
-        case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-          switch (ssl.fatal_alert) {
+        case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE: {
+          int alert = mbedtls_ssl_get_fatal_alert(&ssl);
+          switch (alert) {
             case MBEDTLS_SSL_ALERT_MSG_CERT_UNKNOWN:
               LockInc(&shared->c.sslunknowncert);
               DEBUGF("(ssl) %s %s", DescribeClient(), "sslunknowncert");
@@ -1681,10 +1703,10 @@ static bool TlsSetup(void) {
               DEBUGF("(ssl) %s %s", DescribeClient(), "sslunknownca");
               return false;
             default:
-              WARNF("(ssl) %s SSL shakealert %s", DescribeClient(),
-                    GetAlertDescription(ssl.fatal_alert));
+              WARNF("(ssl) %s SSL shakealert %d", DescribeClient(), alert);
               return false;
           }
+        }
         default:
           WARNF("(ssl) %s SSL handshake failed -0x%04x", DescribeClient(), -r);
           return false;
@@ -1693,18 +1715,98 @@ static bool TlsSetup(void) {
   }
 }
 
+static mbedtls_x509_san_list *AppendSan(mbedtls_x509_san_list **head,
+                                        mbedtls_x509_san_list **tail,
+                                        int type) {
+  mbedtls_x509_san_list *node;
+  node = calloc(1, sizeof(*node));
+  CHECK(node);
+  node->node.type = type;
+  if (*tail) {
+    (*tail)->next = node;
+  } else {
+    *head = node;
+  }
+  *tail = node;
+  return node;
+}
+
+static void AppendSanDns(mbedtls_x509_san_list **head,
+                         mbedtls_x509_san_list **tail, char *s) {
+  mbedtls_x509_san_list *node;
+  node = AppendSan(head, tail, MBEDTLS_X509_SAN_DNS_NAME);
+  node->node.san.unstructured_name.tag = MBEDTLS_ASN1_IA5_STRING;
+  node->node.san.unstructured_name.p = (unsigned char *)s;
+  node->node.san.unstructured_name.len = strlen(s);
+}
+
+static void AppendSanIp(mbedtls_x509_san_list **head,
+                        mbedtls_x509_san_list **tail, uint32_t ip) {
+  uint32_t x;
+  unsigned char *p;
+  mbedtls_x509_san_list *node;
+  node = AppendSan(head, tail, MBEDTLS_X509_SAN_IP_ADDRESS);
+  p = malloc(4);
+  CHECK(p);
+  x = htonl(ip);
+  memcpy(p, &x, 4);
+  node->node.san.unstructured_name.tag = MBEDTLS_ASN1_OCTET_STRING;
+  node->node.san.unstructured_name.p = p;
+  node->node.san.unstructured_name.len = 4;
+}
+
+static void FreeSans(mbedtls_x509_san_list *san) {
+  mbedtls_x509_san_list *next;
+  while (san) {
+    next = san->next;
+    if (san->node.type == MBEDTLS_X509_SAN_IP_ADDRESS)
+      free(san->node.san.unstructured_name.p);
+    free(san);
+    san = next;
+  }
+}
+
+static const mbedtls_asn1_sequence *BuildExtKeyUsages(int type,
+                                                      mbedtls_asn1_sequence eku[3]) {
+  int n = 0;
+  memset(eku, 0, 3 * sizeof(*eku));
+  if (type & MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER) {
+    eku[n].buf.tag = MBEDTLS_ASN1_OID;
+    eku[n].buf.p = (unsigned char *)MBEDTLS_OID_SERVER_AUTH;
+    eku[n].buf.len = MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH);
+    if (n)
+      eku[n - 1].next = &eku[n];
+    ++n;
+  }
+  if (type & MBEDTLS_X509_NS_CERT_TYPE_SSL_CLIENT) {
+    eku[n].buf.tag = MBEDTLS_ASN1_OID;
+    eku[n].buf.p = (unsigned char *)MBEDTLS_OID_CLIENT_AUTH;
+    eku[n].buf.len = MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH);
+    if (n)
+      eku[n - 1].next = &eku[n];
+    ++n;
+  }
+  if (type & MBEDTLS_X509_NS_CERT_TYPE_EMAIL) {
+    eku[n].buf.tag = MBEDTLS_ASN1_OID;
+    eku[n].buf.p = (unsigned char *)MBEDTLS_OID_EMAIL_PROTECTION;
+    eku[n].buf.len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EMAIL_PROTECTION);
+    if (n)
+      eku[n - 1].next = &eku[n];
+    ++n;
+  }
+  return n ? eku : 0;
+}
+
 static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
                                  int usage, int type) {
-  int nsan = 0;
   char *name = 0;
-  struct mbedtls_san *san = 0;
+  char hbuf[256];
+  int r;
+  mbedtls_asn1_sequence eku[3];
+  mbedtls_x509_san_list *san = 0;
+  mbedtls_x509_san_list *tail = 0;
+  const mbedtls_asn1_sequence *exts = BuildExtKeyUsages(type, eku);
 
-  // for each ip address owned by this system
-  //
-  //   1. determine its full-qualified domain name
-  //   2. add subject alt name (san) entry to cert for hostname
-  //   3. add subject alt name (san) entry to cert for *.hostname
-  //
   for (int i = 0; i < ips.n; ++i) {
     uint32_t ip = ips.p[i];
     if (IsLoopbackIp(ip))
@@ -1713,41 +1815,48 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
     struct sockaddr_in addr4 = {AF_INET, 0, {htonl(ip)}};
     if (getnameinfo((struct sockaddr *)&addr4, sizeof(addr4), rname,
                     sizeof(rname), 0, 0, NI_NAMEREQD) == 0) {
-      char *s = gc(strdup(rname));
+      size_t n;
+      bool isduplicate;
+      char *s;
+      s = gc(strdup(rname));
       if (!name)
         name = s;
-      bool isduplicate = false;
-      for (int j = 0; j < nsan; ++j) {
-        if (san[j].tag == MBEDTLS_X509_SAN_DNS_NAME &&
-            !strcasecmp(s, san[j].val)) {
+      n = strlen(s);
+      isduplicate = false;
+      for (mbedtls_x509_san_list *node = san; node; node = node->next) {
+        if (node->node.type == MBEDTLS_X509_SAN_DNS_NAME &&
+            node->node.san.unstructured_name.len == n &&
+            !strncasecmp((char *)node->node.san.unstructured_name.p, s, n)) {
           isduplicate = true;
           break;
         }
       }
       if (!isduplicate) {
-        san = realloc(san, (nsan += 2) * sizeof(*san));
-        san[nsan - 2].tag = MBEDTLS_X509_SAN_DNS_NAME;
-        san[nsan - 2].val = s;
-        san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
-        san[nsan - 1].val = gc(xasprintf("*.%s", s));
+        AppendSanDns(&san, &tail, s);
+        AppendSanDns(&san, &tail, gc(xasprintf("*.%s", s)));
       }
     }
   }
 
-  // add san entry to cert for each ip address owned by system
   for (int i = 0; i < ips.n; ++i) {
     uint32_t ip = ips.p[i];
     if (IsLoopbackIp(ip))
       continue;
-    san = realloc(san, ++nsan * sizeof(*san));
-    san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
-    san[nsan - 1].ip4 = ip;
+    AppendSanIp(&san, &tail, ip);
+  }
+
+  // If any bound IP is loopback, cover the standard loopback names so that
+  // clients connecting to localhost get a matching certificate.
+  for (int i = 0; i < ips.n; ++i) {
+    if (IsLoopbackIp(ips.p[i])) {
+      AppendSanDns(&san, &tail, "localhost");
+      AppendSanIp(&san, &tail, INADDR_LOOPBACK);  // 127.0.0.1
+      break;
+    }
   }
   char notbefore[16], notafter[16];
   ChooseCertificateLifetime(notbefore, notafter);
 
-  // pick common name for certificate
-  char hbuf[256];
   if (!name) {
     strcpy(hbuf, "localhost");
     gethostname(hbuf, sizeof(hbuf));
@@ -1755,7 +1864,6 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
   }
   char *subject = xasprintf("CN=%s", name);
 
-  // pick issuer name for certificate
   char *issuer;
   if (ca) {
     issuer = calloc(1, 1000);
@@ -1764,9 +1872,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
     issuer = strdup(subject);
   }
 
-  // call the mbedtls apis
-  int r;
-  if ((r = mbedtls_x509write_crt_set_subject_alternative_name(cw, san, nsan)) ||
+  if ((r = san ? mbedtls_x509write_crt_set_subject_alternative_name(cw, san) : 0) ||
       (r = mbedtls_x509write_crt_set_validity(cw, notbefore, notafter)) ||
       (r = mbedtls_x509write_crt_set_basic_constraints(cw, false, -1)) ||
 #if defined(MBEDTLS_SHA1_C)
@@ -1774,14 +1880,14 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
       (r = mbedtls_x509write_crt_set_authority_key_identifier(cw)) ||
 #endif
       (r = mbedtls_x509write_crt_set_key_usage(cw, usage)) ||
-      (r = mbedtls_x509write_crt_set_ext_key_usage(cw, type)) ||
+      (r = exts ? mbedtls_x509write_crt_set_ext_key_usage(cw, exts) : 0) ||
       (r = mbedtls_x509write_crt_set_subject_name(cw, subject)) ||
       (r = mbedtls_x509write_crt_set_issuer_name(cw, issuer))) {
     FATALF("(ssl) configure certificate (grep -0x%04x)", -r);
   }
   free(subject);
   free(issuer);
-  free(san);
+  FreeSans(san);
 }
 
 static struct Cert GetKeySigningKey(void) {
@@ -1791,7 +1897,7 @@ static struct Cert GetKeySigningKey(void) {
       continue;
     if (!certs.p[i].cert)
       continue;
-    if (!certs.p[i].cert->ca_istrue)
+    if (!mbedtls_x509_crt_get_ca_istrue(certs.p[i].cert))
       continue;
     if (mbedtls_x509_crt_check_key_usage(certs.p[i].cert,
                                          MBEDTLS_X509_KU_KEY_CERT_SIGN)) {
@@ -1807,10 +1913,8 @@ static struct Cert GenerateEcpCertificate(struct Cert *ca) {
   mbedtls_md_type_t md_alg;
   mbedtls_x509write_cert wcert;
   md_alg = suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256;
-  key = InitializeKey(ca, &wcert, md_alg, MBEDTLS_PK_ECKEY);
-  CHECK_EQ(0, mbedtls_ecp_gen_key(
-                  suiteb ? MBEDTLS_ECP_DP_SECP384R1 : MBEDTLS_ECP_DP_SECP256R1,
-                  mbedtls_pk_ec(*key), GenerateHardRandom, 0));
+  key = GenerateECPKey(ca, &wcert, md_alg, PSA_ECC_FAMILY_SECP_R1,
+                       suiteb ? 384 : 256);
   GenerateCertificateSerial(&wcert);
   ConfigureCertificate(&wcert, ca, MBEDTLS_X509_KU_DIGITAL_SIGNATURE,
                        MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER |
@@ -1823,9 +1927,7 @@ static struct Cert GenerateRsaCertificate(struct Cert *ca) {
   mbedtls_md_type_t md_alg;
   mbedtls_x509write_cert wcert;
   md_alg = suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256;
-  key = InitializeKey(ca, &wcert, md_alg, MBEDTLS_PK_RSA);
-  CHECK_EQ(0, mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), GenerateHardRandom, 0,
-                                  suiteb ? 4096 : 2048, 65537));
+  key = GenerateRSAKey(ca, &wcert, md_alg, suiteb ? 4096 : 2048);
   GenerateCertificateSerial(&wcert);
   ConfigureCertificate(
       &wcert, ca,
@@ -1842,7 +1944,8 @@ static void LoadCertificates(void) {
   havecert = false;
   haveclientcert = false;
   for (i = 0; i < certs.n; ++i) {
-    if (certs.p[i].key && certs.p[i].cert && !certs.p[i].cert->ca_istrue &&
+    if (certs.p[i].key && certs.p[i].cert &&
+        !mbedtls_x509_crt_get_ca_istrue(certs.p[i].cert) &&
         !mbedtls_x509_crt_check_key_usage(certs.p[i].cert,
                                           MBEDTLS_X509_KU_DIGITAL_SIGNATURE)) {
       if (!mbedtls_x509_crt_check_extended_key_usage(
@@ -2299,7 +2402,7 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
 }
 
 static bool IsSslCompressed(void) {
-  return usingssl && ssl.session->compression;
+  return false;
 }
 
 static char *CommitOutput(char *p) {
@@ -3721,11 +3824,11 @@ static int LuaStoreAsset(lua_State *L) {
   return 0;
 }
 
-static void ReseedRng(mbedtls_ctr_drbg_context *r, const char *s) {
+static void ReseedRng(void) {
 #ifndef UNSECURE
   if (unsecure)
     return;
-  CHECK_EQ(0, mbedtls_ctr_drbg_reseed(r, (void *)s, strlen(s)));
+  CHECK_EQ(PSA_SUCCESS, psa_crypto_init());
 #endif
 }
 
@@ -4500,7 +4603,7 @@ static int LuaProgramSslCiphersuite(lua_State *L) {
     __builtin_unreachable();
   }
   suites.p = realloc(suites.p, (++suites.n + 1) * sizeof(*suites.p));
-  suites.p[suites.n - 1] = suite->id;
+  suites.p[suites.n - 1] = mbedtls_ssl_ciphersuite_get_id(suite);
   suites.p[suites.n - 0] = 0;
   return 0;
 }
@@ -6605,7 +6708,7 @@ static int HandleConnection(size_t i) {
         default:
           LockInc(&shared->workers);
           close(client);
-          ReseedRng(&rng, "parent");
+          ReseedRng();
           if (hasonprocesscreate) {
             LuaOnProcessCreate(pid);
           }
@@ -6993,7 +7096,8 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
     if (SlicesEqual((void *)identity, identity_len, psks.p[i].identity,
                     psks.p[i].identity_len)) {
       DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
-      mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
+      mbedtls_ssl_set_hs_psk(ssl, (const unsigned char *)psks.p[i].key,
+                             psks.p[i].key_len);
       // keep track of selected psk to report its identity
       sslpskindex = i + 1;  // use index+1 to check against 0 (when not set)
       return 0;
@@ -7009,18 +7113,24 @@ static void TlsInit(void) {
   if (unsecure)
     return;
 
-  if (suiteb && !mbedtls_aes_uses_hardware()) {
+  if (suiteb && !X86_HAVE(AES)) {
     WARNF("(srvr) requested suiteb crypto, but hardware aes not present");
   }
 
   if (!sslinitialized) {
-    InitializeRng(&rng);
-    InitializeRng(&rngcli);
-    suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
+    InitializeRng();
+    mbedtls_ssl_ticket_init(&ssltick);
+    suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_DEFAULT;
     mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
                                 MBEDTLS_SSL_TRANSPORT_STREAM, suite);
     mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
                                 MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+
+    // Cap outbound (Fetch) at TLS 1.2 for now. The old mbedTLS v2 was
+    // TLS 1.2-only, and some servers violate RFC 8446 §4.2.1 by echoing
+    // TLS 1.2 in the supported_versions extension of a ServerHello, which
+    // mbedTLS 4's strict TLS 1.3 client rejects with ILLEGAL_PARAMETER.
+    mbedtls_ssl_conf_max_tls_version(&confcli, MBEDTLS_SSL_VERSION_TLS1_2);
   }
 
   // the following setting can be re-applied even when SSL/TLS is initialized
@@ -7031,12 +7141,20 @@ static void TlsInit(void) {
   if (psks.n) {
     mbedtls_ssl_conf_psk_cb(&conf, TlsRoutePsk, 0);
     DCHECK_EQ(0,
-              mbedtls_ssl_conf_psk(&confcli, psks.p[0].key, psks.p[0].key_len,
-                                   psks.p[0].identity, psks.p[0].identity_len));
+              mbedtls_ssl_conf_psk(&confcli,
+                                   (const unsigned char *)psks.p[0].key,
+                                   psks.p[0].key_len,
+                                   (const unsigned char *)psks.p[0].identity,
+                                   psks.p[0].identity_len));
   }
   if (sslticketlifetime > 0) {
-    mbedtls_ssl_ticket_setup(&ssltick, mbedtls_ctr_drbg_random, &rng,
-                             MBEDTLS_CIPHER_AES_256_GCM, sslticketlifetime);
+    if (sslinitialized) {
+      mbedtls_ssl_ticket_free(&ssltick);
+      mbedtls_ssl_ticket_init(&ssltick);
+    }
+    DCHECK_EQ(0, mbedtls_ssl_ticket_setup(&ssltick, PSA_ALG_GCM,
+                                          PSA_KEY_TYPE_AES, 256,
+                                          sslticketlifetime));
     mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write,
                                         mbedtls_ssl_ticket_parse, &ssltick);
   }
@@ -7046,11 +7164,9 @@ static void TlsInit(void) {
   sslinitialized = true;
 
   LoadCertificates();
-  mbedtls_ssl_conf_sni(&conf, TlsRoute, 0);
+  mbedtls_ssl_conf_sni(&conf, TlsRoute, &certs);
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
   mbedtls_ssl_conf_dbg(&confcli, TlsDebug, 0);
-  mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
-  mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
   if (sslclientverify) {
     mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_REQUIRED);
@@ -7061,8 +7177,10 @@ static void TlsInit(void) {
   } else {
     mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_NONE);
   }
+#ifdef MBEDTLS_DEBUG_C
+  mbedtls_debug_set_threshold(ssldebugthreshold);
+#endif
   mbedtls_ssl_set_bio(&ssl, &g_bio, TlsSend, 0, TlsRecv);
-  conf.disable_compression = confcli.disable_compression = true;
   DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&conf, (void *)kAlpn));
   DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&confcli, (void *)kAlpn));
   DCHECK_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
@@ -7076,8 +7194,6 @@ static void TlsDestroy(void) {
     return;
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_free(&sslcli);
-  mbedtls_ctr_drbg_free(&rng);
-  mbedtls_ctr_drbg_free(&rngcli);
   mbedtls_ssl_config_free(&conf);
   mbedtls_ssl_config_free(&confcli);
   mbedtls_ssl_ticket_free(&ssltick);
@@ -7155,7 +7271,12 @@ static void GetOpts(int argc, char *argv[]) {
 #endif
 #ifndef UNSECURE
         CASE('B', suiteb = true);
-        CASE('V', ++mbedtls_debug_threshold);
+        case 'V':
+          ++ssldebugthreshold;
+#ifdef MBEDTLS_DEBUG_C
+          mbedtls_debug_set_threshold(ssldebugthreshold);
+#endif
+          break;
         CASE('k', sslfetchverify = false);
         CASE('j', sslclientverify = true);
         CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
@@ -7235,6 +7356,20 @@ void RedBean(int argc, char *argv[]) {
     MakeExecutableModifiable();
   }
 #endif
+  InitializeRng();
+
+  // Print build information
+  VERBOSEF(gc(xasprintf("%s %hhd.%hhd.%hhd - built with Cosmopolitan %d.%d.%d, Mbed TLS %s, %s, and zlib %s",     
+    REDBEAN, 
+    VERSION >> 020,
+    VERSION >> 010, VERSION >> 000,
+    __COSMOPOLITAN_MAJOR__,
+    __COSMOPOLITAN_MINOR__,
+    __COSMOPOLITAN_PATCH__,
+    MBEDTLS_VERSION_STRING,
+    LUA_RELEASE,
+    ZLIB_VERSION)));
+
   LuaInit();
   oldloglevel = __log_level;
   if (uniprocess) {
@@ -7247,6 +7382,7 @@ void RedBean(int argc, char *argv[]) {
   }
   SigInit();
   Listen();
+  InitializeRng();
   TlsInit();
   if (launchbrowser) {
     LaunchBrowser(launchbrowser);

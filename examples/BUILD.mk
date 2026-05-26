@@ -86,7 +86,7 @@ EXAMPLES_DIRECTDEPS =						\
 	THIRD_PARTY_LIBUNWIND					\
 	THIRD_PARTY_LINENOISE					\
 	THIRD_PARTY_LUA						\
-	THIRD_PARTY_MBEDTLS					\
+	THIRD_PARTY_MBEDTLS4					\
 	THIRD_PARTY_MINIAUDIO					\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_NSYNC					\
@@ -155,6 +155,7 @@ o/$(MODE)/examples/picol.o: private				\
 o/$(MODE)/examples/nesemu1.o: private				\
 		CPPFLAGS +=					\
 			-O3
+
 
 o/$(MODE)/examples/picol.dbg:					\
 		$(EXAMPLES_DEPS)				\

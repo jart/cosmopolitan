@@ -18,9 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/xasprintf.h"
 #include "net/https/https.h"
+
+static const char *PkTypeName(psa_key_type_t t) {
+  if (PSA_KEY_TYPE_IS_RSA(t)) return "RSA";
+  if (PSA_KEY_TYPE_IS_ECC(t)) return "EC";
+  return "unknown";
+}
 
 struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
                               mbedtls_pk_context *key) {
@@ -28,7 +35,7 @@ struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
   unsigned char *p;
   mbedtls_x509_crt *cert;
   p = malloc((n = getgransize()));
-  i = mbedtls_x509write_crt_der(wcert, p, n, GenerateHardRandom, 0);
+  i = mbedtls_x509write_crt_der(wcert, p, n);
   if (i < 0)
     FATALF("write key (grep -0x%04x)", -i);
   cert = calloc(1, sizeof(mbedtls_x509_crt));
@@ -41,7 +48,8 @@ struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
     FATALF("generate key (grep -0x%04x)", -rc);
   }
   LogCertificate(
-      gc(xasprintf("generated %s certificate", mbedtls_pk_get_name(&cert->pk))),
+      gc(xasprintf("generated %s certificate",
+                   PkTypeName(mbedtls_pk_get_key_type(&cert->pk)))),
       cert);
   return (struct Cert){cert, key};
 }

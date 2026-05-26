@@ -602,6 +602,18 @@ static void LoadRelationships(int argc, char *argv[]) {
             dependency = GetSourceId(final);
           }
           if (dependency == -1) {
+            // also try system paths for quote includes (e.g. third-party
+            // libraries that use short include paths like "mbedtls/ssl.h")
+            for (long i = 0; i < systempaths.n; ++i) {
+              char juf2[PATH_MAX];
+              if (!(final = __join_paths(juf2, PATH_MAX,
+                                         systempaths.p[i].path, incpath)))
+                DiePathTooLong(incpath);
+              if ((dependency = GetSourceId(final)) != -1)
+                break;
+            }
+          }
+          if (dependency == -1) {
             if (startswith(final, genroot)) {
               dependency = CreateSourceId(src);
             } else {

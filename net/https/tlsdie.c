@@ -16,6 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "net/https/https.h"
 
 void TlsDie(const char *s, int r) {

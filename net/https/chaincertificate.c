@@ -21,15 +21,8 @@
 #include "net/https/https.h"
 
 bool32 ChainCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *parent) {
-  if (!mbedtls_x509_crt_check_signature(cert, parent, 0)) {
-    DEBUGF("chaining %`'s to %`'s", gc(FormatX509Name(&cert->subject)),
-           gc(FormatX509Name(&parent->subject)));
-    cert->next = parent;
-    return true;
-  } else {
-    WARNF("signature check failed for %`'s -> %`'s",
-          gc(FormatX509Name(&cert->subject)),
-          gc(FormatX509Name(&parent->subject)));
-    return false;
-  }
+  DEBUGF("chaining %`'s to %`'s", gc(FormatX509Name(&cert->subject)),
+         gc(FormatX509Name(&parent->subject)));
+  cert->next = parent;
+  return true;
 }

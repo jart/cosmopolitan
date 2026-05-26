@@ -29,7 +29,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/haclstar/haclstar.h"
-#include "third_party/mbedtls/sha256.h"
+#include "third_party/mbedtls4/tf-psa-crypto/drivers/builtin/include/mbedtls/private/sha256.h"
 
 #define BLAKE2B256_DIGEST_LENGTH 32
 
@@ -129,7 +129,7 @@ BENCH(blake2, benchmark) {
   BENCHMARK(1000, kHyperionSize,
             Hacl_Hash_SHA2_hash_256(dig, kHyperion, kHyperionSize));
   BENCHMARK(1000, kHyperionSize,
-            mbedtls_sha256_ret(kHyperion, kHyperionSize, dig, 0));
+            mbedtls_sha256((const unsigned char *)kHyperion, kHyperionSize, dig, 0));
   BENCHMARK(1000, kHyperionSize,
             Hacl_Hash_SHA1_hash(dig, kHyperion, kHyperionSize));
 }

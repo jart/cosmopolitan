@@ -27,7 +27,7 @@
 #include "libc/str/str.h"
 #include "libc/str/tab.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/mbedtls/sha256.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/psa/crypto.h"
 
 #define USAGE \
   "[-?hbctw] [PATH...]\n\
@@ -117,20 +117,20 @@ static bool IsSupportedPath(const char *path) {
 }
 
 static bool GetDigest(const char *path, FILE *f, unsigned char digest[32]) {
-  size_t got;
+  size_t got, digest_len;
   unsigned char buf[65536];
-  mbedtls_sha256_context ctx;
-  mbedtls_sha256_init(&ctx);
-  unassert(!mbedtls_sha256_starts_ret(&ctx, false));
+  psa_hash_operation_t op = PSA_HASH_OPERATION_INIT;
+  psa_crypto_init();
+  psa_hash_setup(&op, PSA_ALG_SHA_256);
   while ((got = fread(buf, 1, sizeof(buf), f))) {
-    unassert(!mbedtls_sha256_update_ret(&ctx, buf, got));
+    psa_hash_update(&op, buf, got);
   }
   if (ferror(f)) {
     tinyprint(2, prog, ": ", path, ": ", strerror(errno), "\n", NULL);
+    psa_hash_abort(&op);
     return false;
   }
-  unassert(!mbedtls_sha256_finish_ret(&ctx, digest));
-  mbedtls_sha256_free(&ctx);
+  psa_hash_finish(&op, digest, 32, &digest_len);
   return true;
 }
 

@@ -1,1 +1,350 @@
-cosmocross
+#!/bin/sh
+# cosmopolitan c/c++ cross compiler
+# https://github.com/jart/cosmopolitan
+# https://cosmo.zip/
+
+BIN=${0%/*}
+PROG=${0##*/}
+GCC_VERSION=14.1.0
+
+if [ "$1" = "--version" ]; then
+cat <<EOF
+$PROG (GCC) $GCC_VERSION
+Copyright (c) 2024 Justine Alexandra Roberts Tunney
+Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
+notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
+our copyright notices. This toolchain is configured to do so default.
+Cosmopolitan comes with absolutely NO WARRANTY of any kind.
+For more information, see the Cosmopolitan LICENSE files.
+Copyright (C) 2022 Free Software Foundation, Inc.
+This launches GNU GCC/Binutils subprocesses, which is free software; see
+cosmocc's LICENSE files for source code and copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+EOF
+exit
+fi
+
+if [ "$1" = "--help" ]; then
+  if [ -t 1 ]; then
+    exec less "$BIN/../README.md"
+  else
+    exec cat "$BIN/../README.md"
+  fi
+fi
+
+fatal_error() {
+  echo "$PROG: fatal error: $1" >&2
+  echo "compilation terminated." >&2
+  exit 1
+}
+
+log_command() {
+  if [ -n "$BUILDLOG" ]; then
+    printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"$BUILDLOG"
+  fi
+}
+
+ORIGINAL="$0 $*"
+PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
+PREDEF="-include libc/integral/normalize.inc"
+CFLAGS="-fportcosmo -fno-semantic-interposition"
+CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-z,noexecstack"
+APEFLAGS="-Wl,--gc-sections"
+PRECIOUS="-fno-omit-frame-pointer"
+
+CROSS=1
+ARCH=${PROG%%-*}
+if [ x"$ARCH" = x"$PROG" ]; then
+  fatal_error "cosmocross must be run via cross compiler"
+fi
+
+X=
+CRT=crt
+NEED_X=
+REDZONE=-mno-red-zone
+TLSFLAG=-mno-tls-direct-seg-refs
+for x; do
+  if [ -n "$NEED_X" ]; then
+    NEED_X=
+    X=$x
+  elif [ x"$x" = x"-x" ]; then
+    NEED_X=1
+  elif [ x"$x" != x"${x#-x}" ]; then
+    X=${x#-x}
+  elif [ x"$x" = x"-mtiny" ]; then
+    MODE=tiny
+  elif [ x"$x" = x"-msysv" ]; then
+    MODE=sysv
+  elif [ x"$x" = x"-mdbg" ]; then
+    MODE=dbg
+  elif [ x"$x" = x"-moptlinux" ]; then
+    MODE=optlinux
+  elif [ x"$x" = x"-mtinylinux" ]; then
+    MODE=tinylinux
+  elif [ x"$x" = x"-ffast-math" ] ||
+       [ x"$x" = x"-funsafe-math-optimizations" ]; then
+    CRT=crtfastmath
+  fi
+done
+
+if [ x"$MODE" = x"optlinux" ] ||
+   [ x"$MODE" = x"tinylinux" ]; then
+  REDZONE=
+  TLSFLAG=
+fi
+
+if [ x"$MODE" = x"dbg" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/dbg"
+elif [ x"$MODE" = x"tiny" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"sysv" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/sysv"
+elif [ x"$MODE" = x"optlinux" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/optlinux"
+elif [ x"$MODE" = x"tinylinux" ]; then
+  LIB="$BIN/../$ARCH-linux-cosmo/lib/tinylinux"
+else
+  LIB="$BIN/../$ARCH-linux-cosmo/lib"
+fi
+
+if [ x"$X" = x"c" ] || [ x"$X" = x"c-header" ]; then
+  CPLUSPLUS=0
+elif [ x"$X" = x"c++" ] || [ x"$X" = x"c++-header" ]; then
+  CPLUSPLUS=1
+elif [ x"$PROG" != x"${PROG%++}" ]; then
+  CPLUSPLUS=1
+else
+  CPLUSPLUS=0
+fi
+
+CC="$BIN/$ARCH-linux-cosmo-gcc"
+CRT="$LIB/$CRT.o"
+LDLIBS="-lcosmo"
+if [ -z "$COSMOS" ]; then
+  LDFLAGS="$LDFLAGS -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
+else
+  LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$LIB -L$BIN/../$ARCH-linux-cosmo/lib"
+  CPPFLAGS="$CPPFLAGS -I$COSMOS/include"
+fi
+if [ $CPLUSPLUS -eq 1 ]; then
+  CC="$BIN/$ARCH-linux-cosmo-g++"
+  CFLAGS="$CFLAGS -std=gnu++17"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
+  LDLIBS="-lcxx $LDLIBS"
+else
+  CFLAGS="$CFLAGS -std=gnu17 -Wno-implicit-int"
+fi
+
+PAGESZ=4096
+if [ x"$ARCH" = x"x86_64" ]; then
+  OBJCOPYFLAGS="-S -O binary"
+  CRT="$LIB/ape-no-modify-self.o $CRT"
+  CFLAGS="$CFLAGS $TLSFLAG"
+  LDFLAGS="$LDFLAGS -Wl,-T,$LIB/ape.lds"
+  CPPFLAGS="$CPPFLAGS $REDZONE"
+elif [ x"$ARCH" = x"aarch64" ]; then
+  OBJCOPYFLAGS="-S"
+  PAGESZ=16384
+  CPPFLAGS="$CPPFLAGS -fsigned-char"
+  CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28"
+  LDFLAGS="$LDFLAGS -Wl,-T,$LIB/aarch64.lds"
+else
+  fatal_error "$ARCH: unsupported architecture"
+fi
+
+LDFLAGS="$LDFLAGS -Wl,-z,common-page-size=$PAGESZ -Wl,-z,max-page-size=16384"
+
+if [ x"$x" = x"-v" ]; then
+    "$CC" -v
+    exit 1
+fi
+
+OPT=
+FIRST=1
+OUTPUT=
+SFLAG=0
+INTENT=ld
+GOT_SOME=0
+NEED_OUTPUT=
+RELOCATABLE=0
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ -n "$NEED_OUTPUT" ]; then
+    NEED_OUTPUT=
+    OUTPUT=$x
+    set -- "$@" "$x"
+    continue
+  fi
+  if [ x"$x" = x"-" ] ||           # is an argument
+     [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
+    GOT_SOME=1
+  elif [ x"$x" = x"-static-libstdc++" ]; then
+    continue
+  elif [ x"$x" = x"-static-libgcc" ]; then
+    continue
+  elif [ x"$x" != x"${x#-O}" ]; then
+    OPT=$x
+  elif [ x"$x" = x"-c" ]; then
+    INTENT=cc
+  elif [ x"$x" = x"-S" ]; then
+    INTENT=s
+  elif [ x"$x" = x"-s" ]; then
+    SFLAG=1
+    continue
+  elif [ x"$x" = x"-r" ]; then
+    RELOCATABLE=1
+  elif [ x"$x" = x"-E" ] ||
+       [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ]; then
+    INTENT=cpp
+  elif [ x"$x" = x"-o" ]; then
+    NEED_OUTPUT=1
+  elif [ x"$x" = x"-mcosmo" ]; then
+    CPPFLAGS="$CPPFLAGS -D_COSMO_SOURCE"
+    continue
+  elif [ x"$x" = x"-mdbg" ]; then
+    continue
+  elif [ x"$x" = x"-mtiny" ]; then
+    continue
+  elif [ x"$x" = x"-msysv" ]; then
+    continue
+  elif [ x"$x" = x"-moptlinux" ]; then
+    continue
+  elif [ x"$x" = x"-mtinylinux" ]; then
+    continue
+  elif [ x"$x" = x"-m64" ]; then
+    continue
+  elif [ x"$x" != x"${x#-o}" ]; then
+    OUTPUT=${x#-o}
+  elif [ x"$x" = x"-fpic" ]; then
+    continue
+  elif [ x"$x" = x"-fPIC" ]; then
+    continue
+  elif [ x"$x" = x"-fpie" ] || [ x"$x" = x"-pie" ]; then
+    # no support for position independent executables
+    # https://github.com/jart/cosmopolitan/issues/1126
+    continue
+  elif [ x"$x" = x"-r" ] ||
+       [ x"$x" = x"-pie" ] ||
+       [ x"$x" = x"-shared" ] ||
+       [ x"$x" = x"-nostdlib" ] ||
+       [ x"$x" = x"-mred-zone" ] ||
+       [ x"$x" = x"-fsanitize=thread" ]; then
+    echo "$PROG: $x not supported" >&2
+    exit 1
+  elif [ x"$x" = x"-fomit-frame-pointer" ]; then
+    # Quoth Apple "The frame pointer register must always address a
+    # valid frame record. Some functions — such as leaf functions or
+    # tail calls — may opt not to create an entry in this list. As a
+    # result, stack traces are always meaningful, even without debug
+    # information."
+    set -- "$@" -momit-leaf-frame-pointer -foptimize-sibling-calls
+    continue
+  elif [ x"$x" = x"-dumpversion" ]; then
+    echo $GCC_VERSION
+    exit 0
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    GOT_SOME=1
+  elif [ x"$x" = x"-dumpmachine" ]; then
+    GOT_SOME=1
+  fi
+  set -- "$@" "$x"
+done
+
+if [ "$GOT_SOME" -eq 0 ]; then
+  fatal_error "no input files"
+fi
+
+if [ $RELOCATABLE -eq 1 ]; then
+  LDFLAGS="$LDFLAGS -r"
+fi
+
+# precompiled header mode
+if [ $INTENT != cpp ]; then
+  if [ -z "$X" ]; then
+    ONLY_HEADER_INPUTS=1
+    for x; do
+      if [ x"$x" = x"${x#-*}" ] &&       # !startswith(x, "-")
+         [ x"$x" = x"${x%.h}" ] &&       # !endswith(x, ".h")
+         [ x"$x" = x"${x%.hpp}" ]; then  # !endswith(x, ".hpp")
+        ONLY_HEADER_INPUTS=0
+        break
+      fi
+    done
+    if [ $ONLY_HEADER_INPUTS -eq 1 ]; then
+      INTENT=h
+    fi
+  elif [ x"$X" = x"c-header" ] ||
+       [ x"$X" = x"c++-header" ]; then
+    INTENT=h
+  fi
+fi
+
+# support --ftrace unless optimizing for size
+if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"$MODE" != x"optlinux" ] &&          # $MODE not optlinux
+   [ x"$MODE" != x"tinylinux" ] &&         # $MODE not tinylinux
+   [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
+  if [ x"$ARCH" = x"x86_64" ]; then
+    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16 -fno-inline-functions-called-once"
+  elif [ x"$ARCH" = x"aarch64" ]; then
+    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6 -fno-inline-functions-called-once"
+  fi
+fi
+
+# maximize frame pointers unless optimizing for size
+if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
+   [ x"$MODE" != x"optlinux" ] &&         # $MODE not optlinux
+   [ x"$MODE" != x"tinylinux" ] &&        # $MODE not tinylinux
+   [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
+  CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+if [ x"$OPT" != x"-O3" ] &&
+   [ x"$MODE" != x"optlinux" ] &&
+   [ x"$MODE" != x"tinylinux" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
+fi
+
+if [ $INTENT = cpp ]; then
+  set -- "$CC" $PLATFORM $CPPFLAGS "$@"
+elif [ $INTENT = s ] && [ x"$ARCH" = x"x86_64" ] && [ -n "$TLSFLAG" ]; then
+  set -- "$BIN/tlscc" "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
+elif [ $INTENT = cc ] && [ x"$ARCH" = x"x86_64" ] && [ -n "$TLSFLAG" ]; then
+  set -- "$BIN/tlscc" "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
+elif [ $INTENT = cc ] || [ $INTENT = s ] || [ $INTENT = h ]; then
+  set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
+else
+  set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS $CRT "$@" $LDFLAGS $LDLIBS $PRECIOUS
+fi
+
+log_command "$@"
+"$@" || exit
+
+if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
+  if [ $INTENT = cc ] || [ $INTENT = ld ]; then
+    "$BIN/fixupobj" "$OUTPUT" || exit
+  fi
+  if [ $INTENT = ld ]; then
+    if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
+       [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
+      # cosmocc -o foo.com ...
+      # -> foo.com (ape)
+      # -> foo.com.dbg (elf)
+      mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
+      "$BIN/$ARCH-linux-cosmo-objcopy" \
+        $OBJCOPYFLAGS \
+        "$OUTPUT.dbg" \
+        "$OUTPUT" || exit
+      "$BIN/zipcopy" \
+        "$OUTPUT.dbg" \
+        "$OUTPUT" || exit
+    elif [ $SFLAG -eq 1 ]; then
+      "$BIN/$ARCH-linux-cosmo-strip" \
+        "$OUTPUT" || exit
+    fi
+  fi
+fi

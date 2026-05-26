@@ -52,8 +52,8 @@
 #include "libc/temp.h"
 #include "libc/x/xasprintf.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
@@ -268,7 +268,7 @@ void RelayRequest(void) {
       break;
     transferred += have;
     for (i = 0; i < have; i += rc) {
-      rc = mbedtls_ssl_write(&ezssl, buf + i, have - i);
+      rc = mbedtls_ssl_write(&ezssl, (unsigned char *)buf + i, have - i);
       if (rc <= 0) {
         EzTlsDie("relay request failed", rc);
       }
@@ -286,7 +286,7 @@ bool Recv(char *p, int n) {
   int i, rc;
   for (i = 0; i < n; i += rc) {
     do
-      rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
+      rc = mbedtls_ssl_read(&ezssl, (unsigned char *)p + i, n - i);
     while (rc == MBEDTLS_ERR_SSL_WANT_READ);
     if (!rc)
       return false;

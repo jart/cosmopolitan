@@ -66,13 +66,10 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/lunix.h"
-#include "third_party/mbedtls/everest.h"
-#include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/md5.h"
-#include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/sha1.h"
-#include "third_party/mbedtls/sha256.h"
-#include "third_party/mbedtls/sha512.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/md.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/platform.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/psa_util.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/psa/crypto.h"
 #include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 
@@ -696,6 +693,26 @@ int LuaGetHttpReason(lua_State *L) {
   return 1;
 }
 
+static const mbedtls_md_info_t *LocalMdInfoFromString(const char *name) {
+  static const struct {
+    const char *name;
+    mbedtls_md_type_t type;
+  } kMdNames[] = {
+      {"MD5", MBEDTLS_MD_MD5},
+      {"SHA1", MBEDTLS_MD_SHA1},   {"SHA-1", MBEDTLS_MD_SHA1},
+      {"SHA224", MBEDTLS_MD_SHA224}, {"SHA-224", MBEDTLS_MD_SHA224},
+      {"SHA256", MBEDTLS_MD_SHA256}, {"SHA-256", MBEDTLS_MD_SHA256},
+      {"SHA384", MBEDTLS_MD_SHA384}, {"SHA-384", MBEDTLS_MD_SHA384},
+      {"SHA512", MBEDTLS_MD_SHA512}, {"SHA-512", MBEDTLS_MD_SHA512},
+      {0, 0},
+  };
+  int i;
+  for (i = 0; kMdNames[i].name; ++i)
+    if (!strcasecmp(name, kMdNames[i].name))
+      return mbedtls_md_info_from_type(kMdNames[i].type);
+  return NULL;
+}
+
 int LuaGetCryptoHash(lua_State *L) {
   size_t hl, pl, kl;
   uint8_t d[64];
@@ -703,17 +720,33 @@ int LuaGetCryptoHash(lua_State *L) {
   const void *h = luaL_checklstring(L, 1, &hl);
   const void *p = luaL_checklstring(L, 2, &pl);
   const void *k = luaL_optlstring(L, 3, "", &kl);
-  const mbedtls_md_info_t *digest = mbedtls_md_info_from_string(h);
+  const mbedtls_md_info_t *digest = LocalMdInfoFromString(h);
   if (!digest)
     return luaL_argerror(L, 1, "unknown hash type");
   if (kl == 0) {
-    // no key provided, run generic hash function
-    if ((digest->f_md)(p, pl, d))
+    if (mbedtls_md(digest, p, pl, d))
       return luaL_error(L, "bad input data");
-  } else if (mbedtls_md_hmac(digest, k, kl, p, pl, d)) {
-    return luaL_error(L, "bad input data");
+  } else {
+    psa_algorithm_t psa_alg;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    size_t mac_len = 0;
+    psa_alg =
+        PSA_ALG_HMAC(mbedtls_md_psa_alg_from_type(mbedtls_md_get_type(digest)));
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+    psa_set_key_algorithm(&key_attr, psa_alg);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_HMAC);
+    if (psa_import_key(&key_attr, (const unsigned char *)k, kl, &key_id) !=
+            PSA_SUCCESS ||
+        psa_mac_compute(key_id, psa_alg, (const unsigned char *)p, pl, d,
+                        sizeof(d), &mac_len) != PSA_SUCCESS) {
+      if (key_id)
+        psa_destroy_key(key_id);
+      return luaL_error(L, "bad input data");
+    }
+    psa_destroy_key(key_id);
   }
-  lua_pushlstring(L, (void *)d, digest->size);
+  lua_pushlstring(L, (void *)d, mbedtls_md_get_size(digest));
   mbedtls_platform_zeroize(d, sizeof(d));
   return 1;
 }
@@ -944,15 +977,16 @@ int LuaUuidV7(lua_State *L) {
   return 1;
 }
 
-static dontinline int LuaHasherImpl(lua_State *L, size_t k,
-                                    int H(const void *, size_t, uint8_t *)) {
+static dontinline int LuaHasherImpl(lua_State *L,
+                                    const mbedtls_md_info_t *digest) {
   size_t n;
-  uint8_t d[64];
+  uint8_t d[MBEDTLS_MD_MAX_SIZE];
   const void *p;
   if (!lua_isnoneornil(L, 1)) {
     p = luaL_checklstring(L, 1, &n);
-    H(p, n, d);
-    lua_pushlstring(L, (void *)d, k);
+    if (mbedtls_md(digest, p, n, d))
+      return luaL_error(L, "bad input data");
+    lua_pushlstring(L, (void *)d, mbedtls_md_get_size(digest));
     mbedtls_platform_zeroize(d, sizeof(d));
     return 1;
   } else {
@@ -960,33 +994,35 @@ static dontinline int LuaHasherImpl(lua_State *L, size_t k,
   }
 }
 
-static dontinline int LuaHasher(lua_State *L, size_t k,
-                                int H(const void *, size_t, uint8_t *)) {
-  return LuaHasherImpl(L, k, H);
+static dontinline int LuaHasher(lua_State *L, mbedtls_md_type_t type) {
+  const mbedtls_md_info_t *digest;
+  digest = mbedtls_md_info_from_type(type);
+  CHECK(digest);
+  return LuaHasherImpl(L, digest);
 }
 
 int LuaMd5(lua_State *L) {
-  return LuaHasher(L, 16, mbedtls_md5_ret);
+  return LuaHasher(L, MBEDTLS_MD_MD5);
 }
 
 int LuaSha1(lua_State *L) {
-  return LuaHasher(L, 20, mbedtls_sha1_ret);
+  return LuaHasher(L, MBEDTLS_MD_SHA1);
 }
 
 int LuaSha224(lua_State *L) {
-  return LuaHasher(L, 28, mbedtls_sha256_ret_224);
+  return LuaHasher(L, MBEDTLS_MD_SHA224);
 }
 
 int LuaSha256(lua_State *L) {
-  return LuaHasher(L, 32, mbedtls_sha256_ret_256);
+  return LuaHasher(L, MBEDTLS_MD_SHA256);
 }
 
 int LuaSha384(lua_State *L) {
-  return LuaHasher(L, 48, mbedtls_sha512_ret_384);
+  return LuaHasher(L, MBEDTLS_MD_SHA384);
 }
 
 int LuaSha512(lua_State *L) {
-  return LuaHasher(L, 64, mbedtls_sha512_ret_512);
+  return LuaHasher(L, MBEDTLS_MD_SHA512);
 }
 
 int LuaIsHeaderRepeatable(lua_State *L) {
@@ -1297,9 +1333,26 @@ static void GetCurve25519Arg(lua_State *L, int arg, uint8_t buf[static 32]) {
  */
 int LuaCurve25519(lua_State *L) {
   uint8_t mypublic[32], secret[32], basepoint[32];
+  psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+  psa_key_id_t key_id = 0;
+  size_t out_len = 0;
   GetCurve25519Arg(L, 1, secret);
   GetCurve25519Arg(L, 2, basepoint);
-  curve25519(mypublic, secret, basepoint);
+  psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
+  psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
+  psa_set_key_type(&attr,
+                   PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY));
+  psa_set_key_bits(&attr, 255);
+  if (psa_import_key(&attr, secret, sizeof(secret), &key_id) != PSA_SUCCESS ||
+      psa_raw_key_agreement(PSA_ALG_ECDH, key_id, basepoint,
+                            sizeof(basepoint), mypublic, sizeof(mypublic),
+                            &out_len) != PSA_SUCCESS ||
+      out_len != sizeof(mypublic)) {
+    if (key_id)
+      psa_destroy_key(key_id);
+    return luaL_error(L, "bad curve25519 input");
+  }
+  psa_destroy_key(key_id);
   lua_pushlstring(L, (const char *)mypublic, 32);
   return 1;
 }

@@ -17,15 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bsdstdlib.h"
-#include "libc/stdio/rand.h"
+#include "libc/log/check.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/ctr_drbg.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/psa/crypto.h"
 
-void InitializeRng(mbedtls_ctr_drbg_context *r) {
-  unsigned char b[64];
-  mbedtls_ctr_drbg_init(r);
-  arc4random_buf(b, 64);
-  npassert(!mbedtls_ctr_drbg_seed(r, GetEntropy, 0, b, 64));
-  mbedtls_platform_zeroize(b, 64);
+void InitializeRng(void) {
+  CHECK_EQ(PSA_SUCCESS, psa_crypto_init());
 }

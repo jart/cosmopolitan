@@ -20,13 +20,11 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.h"
-#include "libc/mem/gc.h"
 #include "libc/str/str.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/debug.h"
+#include "third_party/mbedtls4/include/mbedtls/error.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
@@ -56,7 +54,6 @@ struct Tls {
     PyObject *todo;
     mbedtls_ssl_config conf;
     mbedtls_ssl_context ssl;
-    mbedtls_ctr_drbg_context rng;
 };
 
 static PyObject *TlsError;
@@ -120,17 +117,16 @@ tls_new(int fd, const char *host, PyObject *todo)
         self->fd = fd;
         self->todo = todo;
         Py_INCREF(todo);
-        InitializeRng(&self->rng);
+        InitializeRng();
         mbedtls_ssl_init(&self->ssl);
         mbedtls_ssl_config_init(&self->conf);
         mbedtls_ssl_config_defaults(&self->conf,
                                     MBEDTLS_SSL_IS_CLIENT,
                                     MBEDTLS_SSL_TRANSPORT_STREAM,
                                     MBEDTLS_SSL_PRESET_DEFAULT);
-        mbedtls_ssl_conf_rng(&self->conf, mbedtls_ctr_drbg_random, &self->rng);
         mbedtls_ssl_conf_ca_chain(&self->conf, GetSslRoots(), 0);
         /* mbedtls_ssl_conf_dbg(&self->conf, TlsDebug, 0); */
-        /* mbedtls_debug_threshold = 5; */
+        /* mbedtls_debug_set_threshold(5); */
         if (host && *host) {
             mbedtls_ssl_conf_authmode(&self->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
             mbedtls_ssl_set_hostname(&self->ssl, host);
@@ -139,7 +135,6 @@ tls_new(int fd, const char *host, PyObject *todo)
         }
         mbedtls_ssl_set_bio(&self->ssl, self, TlsSend, 0, TlsRecv);
         mbedtls_ssl_setup(&self->ssl, &self->conf);
-        self->conf.disable_compression = true;
     }
     return self;
 }
@@ -157,7 +152,6 @@ tls_dealloc(struct Tls *self)
         PyErr_Clear();
     }
     mbedtls_ssl_free(&self->ssl);
-    mbedtls_ctr_drbg_free(&self->rng);
     mbedtls_ssl_config_free(&self->conf);
     PyObject_Del(self);
 }
@@ -176,7 +170,7 @@ tls_send(struct Tls *self, PyObject *args)
     Py_buffer data;
     LOG("TLS.send\n");
     if (!PyArg_ParseTuple(args, "y*:send", &data)) return 0;
-    rc = mbedtls_ssl_write(&self->ssl, data.buf, data.len);
+    rc = mbedtls_ssl_write(&self->ssl, (unsigned char *)data.buf, data.len);
     if (rc != -1) {
         if (rc >= 0) {
             res = PyLong_FromLong(rc);
@@ -210,7 +204,7 @@ tls_sendall(struct Tls *self, PyObject *args)
     Py_buffer data;
     if (!PyArg_ParseTuple(args, "y*:sendall", &data)) return 0;
     for (i = 0;;) {
-        rc = mbedtls_ssl_write(&self->ssl, (char *)data.buf + i, data.len - i);
+        rc = mbedtls_ssl_write(&self->ssl, (unsigned char *)data.buf + i, data.len - i);
         if (rc > 0) {
             if ((i += rc) == data.len) {
                 res = Py_None;
@@ -252,7 +246,7 @@ tls_recv(struct Tls *self, PyObject *args)
         return NULL;
     }
     if (!(buf = PyBytes_FromStringAndSize(0, n))) return 0;
-    rc = mbedtls_ssl_read(&self->ssl, PyBytes_AS_STRING(buf), n);
+    rc = mbedtls_ssl_read(&self->ssl, (unsigned char *)PyBytes_AS_STRING(buf), n);
     if (rc != -1) {
         if (rc >= 0) {
             if (rc != n) {
@@ -287,7 +281,7 @@ tls_recv_into(struct Tls *self, PyObject *args)
     PyObject *res;
     Py_buffer buf;
     if (!PyArg_ParseTuple(args, "w*:recv_into", &buf)) return 0;
-    rc = mbedtls_ssl_read(&self->ssl, buf.buf, buf.len);
+    rc = mbedtls_ssl_read(&self->ssl, (unsigned char *)buf.buf, buf.len);
     if (rc != -1) {
         if (rc >= 0) {
             res = PyLong_FromLong(rc);
@@ -379,7 +373,7 @@ tls_handshake(struct Tls *self, PyObject *unused)
         self->fd = -1;
         if (rc != -1) {
             if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
-                PyErr_SetString(TlsError, gc(DescribeSslVerifyFailure(self->ssl.session_negotiate->verify_result)));
+                PyErr_SetString(TlsError, DescribeSslVerifyFailure(mbedtls_ssl_get_verify_result(&self->ssl)));
             } else {
                 SetTlsError(rc);
             }

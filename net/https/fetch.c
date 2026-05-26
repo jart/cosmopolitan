@@ -22,11 +22,13 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/slice.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
@@ -35,9 +37,8 @@
 #include "net/http/http.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/aes.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/psa/crypto.h"
 #include "third_party/musl/netdb.h"
 
 #define FAILNEG1(x)          \
@@ -124,9 +125,7 @@ static int PerformFetch(char **response_data, const char *urlarg, int tries) {
 
   mbedtls_ssl_config conf;
   mbedtls_ssl_context ssl;
-  mbedtls_ctr_drbg_context drbg;
   mbedtls_ssl_init(&ssl);
-  mbedtls_ctr_drbg_init(&drbg);
   mbedtls_ssl_config_init(&conf);
 
   if (!(urldata = ParseUrl(urlarg, -1, &url, kUrlPlus)))
@@ -186,14 +185,13 @@ static int PerformFetch(char **response_data, const char *urlarg, int tries) {
 
   // initialize crypto
   if (usessl) {
-    if (mbedtls_ctr_drbg_seed(&drbg, GetSslEntropy, 0, "justine", 7))
+    if (psa_crypto_init() != PSA_SUCCESS)
       goto OutOfMemory;
     mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
                                 MBEDTLS_SSL_TRANSPORT_STREAM,
                                 MBEDTLS_SSL_PRESET_DEFAULT);
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_REQUIRED);
     mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
-    mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
     if (mbedtls_ssl_setup(&ssl, &conf))
       goto OutOfMemory;
     if (mbedtls_ssl_set_hostname(&ssl, host))
@@ -233,7 +231,8 @@ static int PerformFetch(char **response_data, const char *urlarg, int tries) {
   n = appendz(request).i;
   for (i = 0; i < n; i += rc) {
     if (usessl) {
-      rc = mbedtls_ssl_write(&ssl, request + i, n - i);
+      rc = mbedtls_ssl_write(&ssl, (const unsigned char *)(request + i),
+                             n - i);
       if (rc <= 0)
         goto OnFailure;
     } else {
@@ -256,7 +255,7 @@ static int PerformFetch(char **response_data, const char *urlarg, int tries) {
       p = p2;
     }
     if (usessl) {
-      if ((rc = mbedtls_ssl_read(&ssl, p + i, n - i)) < 0) {
+      if ((rc = mbedtls_ssl_read(&ssl, (unsigned char *)(p + i), n - i)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
         } else {
@@ -380,7 +379,6 @@ OnReturn:
   free(url.params.p);
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_config_free(&conf);
-  mbedtls_ctr_drbg_free(&drbg);
   DestroyHttpMessage(&msg);
   return retcode;
 OnFailure:

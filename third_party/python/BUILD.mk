@@ -1190,7 +1190,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	THIRD_PARTY_BZIP2						\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_LINENOISE						\
-	THIRD_PARTY_MBEDTLS						\
+	THIRD_PARTY_MBEDTLS4						\
 	THIRD_PARTY_MUSL						\
 	THIRD_PARTY_PYTHON_STAGE1					\
 	THIRD_PARTY_SQLITE3						\
@@ -4204,6 +4204,13 @@ o/$(MODE)/third_party/python/Objects/.zip.o:				\
 		third_party/python/Objects
 o/$(MODE)/third_party/python/Lib/test/.zip.o:				\
 		third_party/python/Lib/test
+
+o/$(MODE)/third_party/python/Modules/_hashmbedtls.o		\
+o/$(MODE)/third_party/python/Modules/tlsmodule.o: private		\
+		CPPFLAGS +=						\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 ################################################################################
 

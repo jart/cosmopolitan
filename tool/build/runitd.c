@@ -80,8 +80,8 @@
 #include "net/https/https.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/debug.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
@@ -222,7 +222,7 @@ void GetOpts(int argc, char *argv[]) {
         ++g_log_level;
         break;
       case 'V':
-        ++mbedtls_debug_threshold;
+        mbedtls_debug_set_threshold(1);
         break;
       case 'd':
         g_daemonize = true;
@@ -314,7 +314,7 @@ void SendOutputFragmentMessage(enum RunitCommand kind, char *buf, size_t size) {
     EzTlsDie("SendOutputFragmentMessage mbedtls_ssl_write failed", rc);
   }
   while (size) {
-    if ((rc = mbedtls_ssl_write(&ezssl, buf, size)) <= 0) {
+    if ((rc = mbedtls_ssl_write(&ezssl, (unsigned char *)buf, size)) <= 0) {
       EzTlsDie("SendOutputFragmentMessage mbedtls_ssl_write #2 failed", rc);
     }
     size -= rc;
@@ -353,7 +353,7 @@ void Recv(struct Client *client, void *output, size_t outputsize) {
     // get another fixed-size data packet from network
     // pass along error conditions to caller
     // pass along eof condition to zlib
-    received = mbedtls_ssl_read(&ezssl, client->buf, sizeof(client->buf));
+    received = mbedtls_ssl_read(&ezssl, (unsigned char *)client->buf, sizeof(client->buf));
     if (!received) {
       EzTlsDie("got unexpected eof", received);
     }
@@ -647,7 +647,7 @@ RetryOnEtxtbsyRaceCondition:
         int received;
         char buf[512];
         ts1 = timespec_mono();
-        received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
+        received = mbedtls_ssl_read(&ezssl, (unsigned char *)buf, sizeof(buf));
         DEBUF("it took %'zu us to call mbedtls_ssl_read",
               timespec_tomicros(timespec_sub(timespec_mono(), ts1)));
         if (!received) {
@@ -663,10 +663,6 @@ RetryOnEtxtbsyRaceCondition:
           WARNF("%s (pid %d) is taking a really long time", origname,
                 client->pid);
           continue;
-        }
-        if (received == MBEDTLS_ERR_SSL_CANCELED) {  // EAGAIN SO_RCVTIMEO
-          WARNF("%s (pid %d) is is canceling job", origname, client->pid);
-          goto HangupClientAndTerminateJob;
         }
         WARNF("client ssl read failed with -0x%04x (%s) so killing %s",
               -received, GetTlsError(received), origname);

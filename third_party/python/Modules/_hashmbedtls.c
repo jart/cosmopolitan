@@ -19,12 +19,14 @@
 #include "libc/calls/calls.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/pkcs5.h"
+#include "third_party/mbedtls4/include/mbedtls/error.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/md.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/psa_util.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/psa/crypto.h"
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/object.h"
@@ -55,11 +57,40 @@ PYTHON_PROVIDE("_hashlib.mbedtls_sha512");
 struct Hasher {
     PyObject_HEAD
     const PyObject       *name;
+    const mbedtls_md_info_t *md_info;
     mbedtls_md_context_t  ctx;
 #ifdef WITH_THREAD
     PyThread_type_lock    lock;
 #endif
 };
+
+/* mbedtls_md_info_from_string and mbedtls_md_list are private in v4. */
+static const struct {
+    const char *name;
+    mbedtls_md_type_t type;
+} kMdNameTable[] = {
+    {"md5",     MBEDTLS_MD_MD5},
+    {"sha1",    MBEDTLS_MD_SHA1},
+    {"sha224",  MBEDTLS_MD_SHA224},
+    {"sha256",  MBEDTLS_MD_SHA256},
+    {"sha384",  MBEDTLS_MD_SHA384},
+    {"sha512",  MBEDTLS_MD_SHA512},
+    {NULL,      MBEDTLS_MD_NONE},
+};
+
+static const mbedtls_md_info_t *
+local_md_info_from_string(const char *name)
+{
+    char lower[64];
+    int i;
+    for (i = 0; i < 63 && name[i]; ++i) lower[i] = tolower(name[i]);
+    lower[i] = '\0';
+    for (i = 0; kMdNameTable[i].name; ++i) {
+        if (!strcmp(lower, kMdNameTable[i].name))
+            return mbedtls_md_info_from_type(kMdNameTable[i].type);
+    }
+    return NULL;
+}
 
 static PyTypeObject hasher_type;
 static const PyObject *CONST_MD5_name_obj;
@@ -68,7 +99,6 @@ static const PyObject *CONST_SHA224_name_obj;
 static const PyObject *CONST_SHA256_name_obj;
 static const PyObject *CONST_SHA384_name_obj;
 static const PyObject *CONST_SHA512_name_obj;
-static const PyObject *CONST_BLAKE2B256_name_obj;
 
 static PyObject *
 SetMbedtlsError(PyObject *exc, int rc)
@@ -118,7 +148,7 @@ mbedtls_md_clone_locked(mbedtls_md_context_t *new_ctx_p, struct Hasher *self)
 {
     int rc;
     ENTER_HASHLIB(self);
-    if (!(rc = mbedtls_md_setup(new_ctx_p, self->ctx.md_info, 0))) {
+    if (!(rc = mbedtls_md_setup(new_ctx_p, self->md_info, 0))) {
         rc = mbedtls_md_clone(new_ctx_p, &self->ctx);
     }
     LEAVE_HASHLIB(self);
@@ -161,7 +191,7 @@ hashlib_digest(struct Hasher *self, PyObject *unused)
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_init(&temp_ctx);
     if (!(rc = mbedtls_md_clone_locked(&temp_ctx, self))) {
-        digest_size = mbedtls_md_get_size(temp_ctx.md_info);
+        digest_size = mbedtls_md_get_size(self->md_info);
         if (!(rc = mbedtls_md_finish(&temp_ctx, digest))) {
             retval = PyBytes_FromStringAndSize((const char *)digest, digest_size);
         } else {
@@ -190,7 +220,7 @@ hashlib_hexdigest(struct Hasher *self, PyObject *unused)
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_init(&temp_ctx);
     if (!(rc = mbedtls_md_clone_locked(&temp_ctx, self))) {
-        digest_size = mbedtls_md_get_size(temp_ctx.md_info);
+        digest_size = mbedtls_md_get_size(self->md_info);
         if (!(rc = mbedtls_md_finish(&temp_ctx, digest))) {
             retval = _Py_strhex((const char *)digest, digest_size);
         } else {
@@ -230,13 +260,14 @@ static PyMethodDef hashlib_methods[] = {
 static PyObject *
 hashlib_get_block_size(struct Hasher *self, void *closure)
 {
-    return PyLong_FromLong(mbedtls_md_get_block_size(self->ctx.md_info));
+    psa_algorithm_t alg = mbedtls_md_psa_alg_from_type(mbedtls_md_get_type(self->md_info));
+    return PyLong_FromLong(PSA_HASH_BLOCK_LENGTH(alg));
 }
 
 static PyObject *
 hashlib_get_digest_size(struct Hasher *self, void *closure)
 {
-    return PyLong_FromLong(mbedtls_md_get_size(self->ctx.md_info));
+    return PyLong_FromLong(mbedtls_md_get_size(self->md_info));
 }
 
 static PyMemberDef hashlib_members[] = {
@@ -315,6 +346,7 @@ NewHasher(const PyObject *name_obj,
         return NULL;
     }
     if (!(self = hasher_new(name_obj))) return 0;
+    self->md_info = digest;
     if ((rc = mbedtls_md_setup(&self->ctx, digest, 0)) ||
         (rc = mbedtls_md_starts(&self->ctx))) {
         SetMbedtlsError(PyExc_ValueError, rc);
@@ -360,7 +392,7 @@ hashlib_new(PyObject *self, PyObject *args, PyObject *kwdict)
         PyBuffer_Release(&data);
         return NULL;
     }
-    res = NewHasher(name_obj, mbedtls_md_info_from_string(name),
+    res = NewHasher(name_obj, local_md_info_from_string(name),
                     data.buf, data.len);
     PyBuffer_Release(&data);
     return res;
@@ -372,15 +404,25 @@ pbkdf2(const mbedtls_md_info_t *digest,
        const void *salt, size_t saltlen,
        size_t c, size_t dklen, void *dk)
 {
-    int rc;
-    mbedtls_md_context_t ctx;
-    mbedtls_md_init(&ctx);
-    if (!(rc = mbedtls_md_setup(&ctx, digest, 1))) {
-        rc = mbedtls_pkcs5_pbkdf2_hmac(
-            &ctx, pass, passlen, salt, saltlen, c, dklen, dk);
-    }
-    mbedtls_md_free(&ctx);
-    return rc;
+    psa_algorithm_t md_alg = mbedtls_md_psa_alg_from_type(mbedtls_md_get_type(digest));
+    psa_algorithm_t kdf_alg = PSA_ALG_PBKDF2_HMAC(md_alg);
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_PASSWORD);
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&key_attr, kdf_alg);
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_status_t st = psa_import_key(&key_attr, (const unsigned char *)pass, passlen, &key_id);
+    if (st != PSA_SUCCESS) return MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE;
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    st = psa_key_derivation_setup(&op, kdf_alg);
+    if (st == PSA_SUCCESS) st = psa_key_derivation_input_integer(&op, PSA_KEY_DERIVATION_INPUT_COST, c);
+    if (st == PSA_SUCCESS) st = psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SALT,
+                                                                (const unsigned char *)salt, saltlen);
+    if (st == PSA_SUCCESS) st = psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_PASSWORD, key_id);
+    if (st == PSA_SUCCESS) st = psa_key_derivation_output_bytes(&op, (unsigned char *)dk, dklen);
+    psa_key_derivation_abort(&op);
+    psa_destroy_key(key_id);
+    return st == PSA_SUCCESS ? 0 : MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE;
 }
 
 PyDoc_STRVAR(pbkdf2_hmac__doc__,
@@ -413,7 +455,7 @@ pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
                                      &iterations, &dklen_obj)) {
         return NULL;
     }
-    digest = mbedtls_md_info_from_string(name);
+    digest = local_md_info_from_string(name);
     if (digest == NULL) {
         PyErr_SetString(PyExc_ValueError, "unsupported hash type");
         goto end;
@@ -481,17 +523,12 @@ static PyObject *
 GenerateHashNameList(void)
 {
     int i;
-    char *s;
-    const uint8_t *p;
     PyObject *set, *name;
     if ((set = PyFrozenSet_New(0))) {
-        for (p = mbedtls_md_list(); *p != MBEDTLS_MD_NONE; ++p) {
-            s = strdup(mbedtls_md_info_from_type(*p)->name);
-            for (i = 0; s[i]; ++i) s[i] = tolower(s[i]);
-            name = PyUnicode_FromString(s);
+        for (i = 0; kMdNameTable[i].name; ++i) {
+            name = PyUnicode_FromString(kMdNameTable[i].name);
             PySet_Add(set, name);
             Py_DECREF(name);
-            free(s);
         }
     }
     return set;
@@ -528,7 +565,6 @@ GEN_CONSTRUCTOR(SHA224, "sha224")
 GEN_CONSTRUCTOR(SHA256, "sha256")
 GEN_CONSTRUCTOR(SHA384, "sha384")
 GEN_CONSTRUCTOR(SHA512, "sha512")
-GEN_CONSTRUCTOR(BLAKE2B256, "blake2b256")
 
 static struct PyMethodDef hashlib_functions[] = {
     {"new",         (PyCFunction)hashlib_new, METH_VARARGS|METH_KEYWORDS, hashlib_new__doc__},
@@ -539,7 +575,6 @@ static struct PyMethodDef hashlib_functions[] = {
     CONSTRUCTOR_METH_DEF(SHA256, "sha256"),
     CONSTRUCTOR_METH_DEF(SHA384, "sha384"),
     CONSTRUCTOR_METH_DEF(SHA512, "sha512"),
-    CONSTRUCTOR_METH_DEF(BLAKE2B256, "blake2b256"),
     {0}
 };
 
@@ -578,7 +613,6 @@ PyInit__hashlib(void)
     INIT_CONSTRUCTOR_CONSTANTS(SHA256, "sha256")
     INIT_CONSTRUCTOR_CONSTANTS(SHA384, "sha384")
     INIT_CONSTRUCTOR_CONSTANTS(SHA512, "sha512")
-    INIT_CONSTRUCTOR_CONSTANTS(BLAKE2B256, "blake2b256")
     return m;
 }
 

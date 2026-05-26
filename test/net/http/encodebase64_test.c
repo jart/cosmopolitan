@@ -25,7 +25,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/escape.h"
-#include "third_party/mbedtls/base64.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/base64.h"
 
 size_t i, n, m;
 char *p, *q, b[32];

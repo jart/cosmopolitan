@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "net/https/https.h"
 
 void LogCertificate(const char *msg, mbedtls_x509_crt *cert) {
