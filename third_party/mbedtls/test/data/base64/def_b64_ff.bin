@@ -1,5 +1,0 @@
-// Ensure that the b64 parser continues after encountering a 0xFF
-// character.  Note that this byte is invalid UTF-8, making this
-// entire file invalid UTF-8.  Use care when editing.
-// -> ÿ <-
-AhUAAH8AAA4AAABtAAAAAF6HQx3MqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACG2QbHbUj8eGpdx5KVIebiwk0jvRj9/3m6BOSzpA7qBXeEunhqr3D11NE7ciGjeHMAAACAAAAAAAAAAAAAAAAAAV6HQx248L77RH0Z973tSYNQ8zBsz861CZG5/T09TJz3XodDHe/iJ+cgXb5An3zTdnTBtw3EWAb68T+gCE33GN8AAAAAAAAAAAAAAAEAAAAAAAAAAwAAAQAAAAAAAgAAAA==
