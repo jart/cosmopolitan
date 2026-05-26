@@ -1,0 +1,11 @@
+PSA import PSA_KEY_TYPE_NONE never supported
+import_not_supported:PSA_KEY_TYPE_NONE:"1234"
+
+PSA generate PSA_KEY_TYPE_NONE never supported
+generate_not_supported:PSA_KEY_TYPE_NONE:16
+
+PSA import PSA_KEY_TYPE_CATEGORY_SYMMETRIC never supported
+import_not_supported:PSA_KEY_TYPE_CATEGORY_SYMMETRIC:"1234"
+
+PSA generate PSA_KEY_TYPE_CATEGORY_SYMMETRIC never supported
+generate_not_supported:PSA_KEY_TYPE_CATEGORY_SYMMETRIC:16

@@ -1,0 +1,424 @@
+ASN.1 Write NULL
+mbedtls_asn1_write_null:"0500"
+
+ASN.1 Write BOOLEAN FALSE
+mbedtls_asn1_write_bool:0:"010100"
+
+ASN.1 Write BOOLEAN TRUE
+mbedtls_asn1_write_bool:1:"0101ff"
+
+ASN.1 Write int 0
+mbedtls_asn1_write_int:0:"020100"
+
+ASN.1 Write int 1
+mbedtls_asn1_write_int:1:"020101"
+
+ASN.1 Write int 127
+mbedtls_asn1_write_int:0x7f:"02017f"
+
+ASN.1 Write int 128
+mbedtls_asn1_write_int:0x80:"02020080"
+
+ASN.1 Write int 255
+mbedtls_asn1_write_int:0xff:"020200ff"
+
+ASN.1 Write int 256
+mbedtls_asn1_write_int:0x100:"02020100"
+
+ASN.1 Write int 32767
+mbedtls_asn1_write_int:0x7fff:"02027fff"
+
+ASN.1 Write int 32768
+mbedtls_asn1_write_int:0x8000:"0203008000"
+
+ASN.1 Write int 65535
+mbedtls_asn1_write_int:0xffff:"020300ffff"
+
+ASN.1 Write int 65536
+mbedtls_asn1_write_int:0x10000:"0203010000"
+
+ASN.1 Write int 8388607
+mbedtls_asn1_write_int:0x7fffff:"02037fffff"
+
+ASN.1 Write int 8388608
+mbedtls_asn1_write_int:0x800000:"020400800000"
+
+ASN.1 Write int 0x12345678
+mbedtls_asn1_write_int:0x12345678:"020412345678"
+
+ASN.1 Write int 2147483647
+mbedtls_asn1_write_int:0x7fffffff:"02047fffffff"
+
+ASN.1 Write enum 0
+mbedtls_asn1_write_enum:0:"0A0100"
+
+ASN.1 Write enum 1
+mbedtls_asn1_write_enum:1:"0A0101"
+
+ASN.1 Write enum 127
+mbedtls_asn1_write_enum:0x7f:"0A017f"
+
+ASN.1 Write enum 128
+mbedtls_asn1_write_enum:0x80:"0A020080"
+
+ASN.1 Write enum 255
+mbedtls_asn1_write_enum:0xff:"0A0200ff"
+
+ASN.1 Write enum 256
+mbedtls_asn1_write_enum:0x100:"0A020100"
+
+ASN.1 Write enum 32767
+mbedtls_asn1_write_enum:0x7fff:"0A027fff"
+
+ASN.1 Write enum 32768
+mbedtls_asn1_write_enum:0x8000:"0A03008000"
+
+ASN.1 Write enum 65535
+mbedtls_asn1_write_enum:0xffff:"0A0300ffff"
+
+ASN.1 Write enum 65536
+mbedtls_asn1_write_enum:0x10000:"0A03010000"
+
+ASN.1 Write enum 8388607
+mbedtls_asn1_write_enum:0x7fffff:"0A037fffff"
+
+ASN.1 Write enum 8388608
+mbedtls_asn1_write_enum:0x800000:"0A0400800000"
+
+ASN.1 Write enum 0x12345678
+mbedtls_asn1_write_enum:0x12345678:"0A0412345678"
+
+ASN.1 Write enum 2147483647
+mbedtls_asn1_write_enum:0x7fffffff:"0A047fffffff"
+
+ASN.1 Write mpi 0 (null)
+mbedtls_asn1_write_mpi:"":"020100"
+
+ASN.1 Write mpi 0 (1 limb)
+mbedtls_asn1_write_mpi:"00":"020100"
+
+ASN.1 Write mpi 1
+mbedtls_asn1_write_mpi:"01":"020101"
+
+ASN.1 Write mpi 0x7f
+mbedtls_asn1_write_mpi:"7f":"02017f"
+
+ASN.1 Write mpi 0x7f with leading 0 limb
+mbedtls_asn1_write_mpi:"00000000000000007f":"02017f"
+
+ASN.1 Write mpi 0x80
+mbedtls_asn1_write_mpi:"80":"02020080"
+
+ASN.1 Write mpi 0x80 with leading 0 limb
+mbedtls_asn1_write_mpi:"000000000000000080":"02020080"
+
+ASN.1 Write mpi 0xff
+mbedtls_asn1_write_mpi:"ff":"020200ff"
+
+ASN.1 Write mpi 0x100
+mbedtls_asn1_write_mpi:"0100":"02020100"
+
+ASN.1 Write mpi, 127*8-1 bits
+mbedtls_asn1_write_mpi:"7f7b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8":"027f7f7b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8"
+
+ASN.1 Write mpi, 127*8 bits
+mbedtls_asn1_write_mpi:"e77b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8":"02818000e77b16e05c1537de7c41cef1a0985d6a3ced98aec28e091874cbad6b5e40a5c956258f18861c28bed8ba808259339ee34b2e509c4080149474d5d5b86093f90c475a6443fc87e1a293d4151be625d652f1c32a00a018bba10c8a2ae5b2b0ee4be64e053dce9d07ec7919526c9dfcf2ec9fc3db485caa8e5a68a2cd0a427de8"
+
+ASN.1 Write mpi, 127*8+1 bits
+mbedtls_asn1_write_mpi:"018446d68934cc1af23c4cd909884d4bd737a1890e12f5ef8bf3d807d72feffa63c0bf2633345f8b8418d144617c871a7a0277ac0150eed4b3db7f9dff21114cd0d7f282400f03c931cb00c367550e374a1ed3762a1801ca714cfc8d5aac69707ca81e0661400ed0014d97cba48f94d835dd681fc3053c51958afbf7583cf49c":"028180018446d68934cc1af23c4cd909884d4bd737a1890e12f5ef8bf3d807d72feffa63c0bf2633345f8b8418d144617c871a7a0277ac0150eed4b3db7f9dff21114cd0d7f282400f03c931cb00c367550e374a1ed3762a1801ca714cfc8d5aac69707ca81e0661400ed0014d97cba48f94d835dd681fc3053c51958afbf7583cf49c"
+
+ASN.1 Write mpi, 255*8-1 bits
+mbedtls_asn1_write_mpi:"7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c":"0281ff7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c"
+
+ASN.1 Write mpi, 255*8 bits
+mbedtls_asn1_write_mpi:"fbd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c":"0282010000fbd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c"
+
+ASN.1 Write mpi, 256*8-1 bits
+mbedtls_asn1_write_mpi:"7bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c89":"028201007bd1913fcfb652896209ad3e62f5d04a8dfc71eb1698543c52200bd7bbf3c11dd9ff57c299a2f4da172b3d5bd7e29affddf8859be7d50a45537a0df15b17af603d18803fd17134847cba78d83e64bf9fee58364d6124add0541da7bad331cd35fb48186a74bc502ddb967602401c0db02b19e5d38f09e8618fa7f6a1a3f738629baffdc63d9d70d396007d943fd64ae696e5b7e88f2c6d6ec322b461dbddd36efa91d990343b66419cf4832a22dc9ad13021185a1bf007989a50ba3bfd1152b8db899482d3ed498d1b9fae243a3cdae9530d8b29fdb684f70cdc0c9b8527265312603b405e67d59d4b1d654ddc3b7fd5515acb32440dc80903c8474a2c136c89"
+
+ASN.1 Write OCTET STRING: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"":"0400"
+
+ASN.1 Write OCTET STRING: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"41":"040141"
+
+ASN.1 Write OCTET STRING: length=2
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"4142":"04024142"
+
+ASN.1 Write OCTET STRING: length=127
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"99a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"047f99a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OCTET STRING: length=128
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"0481800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OCTET STRING: length=255
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d":"0481ff633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d"
+
+ASN.1 Write OCTET STRING: length=256
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OCTET_STRING:"5a633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d":"048201005a633ed2cb0a2915dc4438a4c063017eb336cd9571d2a0585522c5073ca22a30ca7b8c9bd167d89ba1827bc6fb5d6ef6dcc52ee6eecc47e84ee0dd18fa3ebbdb6edfc679f037160d48d46a0d7e571335b24a28c8fd29b7f4a93d013b74e522bc1f5f605096bb99d438814b77b54d6dde608417b0a0ce9a8cb507fbeb95e9926b4bb6eec725599493d4b156ef3a5fd701426456029111c20f1d03c5d8999d2c042277ef91c5114a6c06218c1ba28d41ef08e4870d0cef260cba9de16d7d11ed5889b88fb93073746ebb158a4246cdb8a4ce403a5d1d598a0d11548f22070f833c1344d15e7a1445c133d19b8295b7c071bf2227178938031249d22d21c6f8e53d"
+
+ASN.1 Write UTF8 STRING: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_UTF8_STRING:"":"0c00"
+
+ASN.1 Write UTF8 STRING: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_UTF8_STRING:"41":"0c0141"
+
+ASN.1 Write UTF8 STRING: length=128
+mbedtls_asn1_write_string:MBEDTLS_ASN1_UTF8_STRING:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"0c81800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write PRINTABLE STRING: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_PRINTABLE_STRING:"":"1300"
+
+ASN.1 Write PRINTABLE STRING: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_PRINTABLE_STRING:"41":"130141"
+
+ASN.1 Write PRINTABLE STRING: length=128
+mbedtls_asn1_write_string:MBEDTLS_ASN1_PRINTABLE_STRING:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"1381800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write IA5 STRING: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING:"":"1600"
+
+ASN.1 Write IA5 STRING: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING:"41":"160141"
+
+ASN.1 Write IA5 STRING: length=128
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"1681800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write tagged string: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING | MBEDTLS_ASN1_CONTEXT_SPECIFIC:"":"9600"
+
+ASN.1 Write tagged string: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING | MBEDTLS_ASN1_CONTEXT_SPECIFIC:"41":"960141"
+
+ASN.1 Write tagged string: length=128
+mbedtls_asn1_write_string:MBEDTLS_ASN1_IA5_STRING | MBEDTLS_ASN1_CONTEXT_SPECIFIC:"0199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38":"9681800199a66790856f7199641f55cadabb660aaed6aa0d9ef8cef4417118c6e8c6e15becbaa21c63faf48726e92357a38b3079a0b9d60be7457ec6552f900dd032577167c91e829927343c3a769b362db4de0ad2ffb8f13cc2eeca9e52dc557118baa88b857477595622bc301a1ae2150030d652c4a482cf88d0ded85d6731ff2d38"
+
+ASN.1 Write OID: length=0
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OID:"":"0600"
+
+ASN.1 Write OID: length=1
+mbedtls_asn1_write_string:MBEDTLS_ASN1_OID:"41":"060141"
+
+ASN.1 Write AlgorithmIdentifier, null parameters no_param
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0:"300506034f4944":0
+
+ASN.1 Write AlgorithmIdentifier, null parameters
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0:"300706034f49440500":1
+
+ASN.1 Write AlgorithmIdentifier, parameters (8 bytes)
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":8:"300d06034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0x7f
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0x7a:"307f06034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0x80
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0x7b:"30818006034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0xff
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfa:"3081ff06034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0x100
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfb:"3082010006034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0xffff
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffa:"3082ffff06034f4944":1
+ASN.1 Write AlgorithmIdentifier, total length=0x10000
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffb:"308301000006034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0xffffff
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffffa:"3083ffffff06034f4944":1
+
+ASN.1 Write AlgorithmIdentifier, total length=0x1000000
+mbedtls_asn1_write_algorithm_identifier_ext:"4f4944":0xfffffb:"30840100000006034f4944":1
+
+ASN.1 Write / Read Length #0 (Len = 0, short form)
+mbedtls_asn1_write_len:0:"00":1:1
+
+ASN.1 Write / Read Length #1 (Len = 127, short form)
+mbedtls_asn1_write_len:127:"7F":1:1
+
+ASN.1 Write / Read Length #2 (Len = 127, buffer too small)
+mbedtls_asn1_write_len:127:"7F":0:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+ASN.1 Write / Read Length #3 (Len = 128, long form)
+mbedtls_asn1_write_len:128:"8180":2:2
+
+ASN.1 Write / Read Length #4 (Len = 255, long form)
+mbedtls_asn1_write_len:255:"81FF":2:2
+
+ASN.1 Write / Read Length #5 (Len = 255, buffer too small)
+mbedtls_asn1_write_len:255:"81FF":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+ASN.1 Write / Read Length #6 (Len = 258, byte order)
+mbedtls_asn1_write_len:258:"820102":3:3
+
+ASN.1 Write / Read Length #7 (Len = 65535, long form)
+mbedtls_asn1_write_len:65535:"82FFFF":3:3
+
+ASN.1 Write / Read Length #8 (Len = 65535, buffer too small)
+mbedtls_asn1_write_len:65535:"82FFFF":2:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+ASN.1 Write / Read Length #9 (Len = 66051, byte order)
+mbedtls_asn1_write_len:66051:"83010203":4:4
+
+ASN.1 Write / Read Length #10 (Len = 16777215, long form)
+mbedtls_asn1_write_len:16777215:"83FFFFFF":4:4
+
+ASN.1 Write / Read Length #11 (Len = 16777215, buffer too small)
+mbedtls_asn1_write_len:16777215:"83FFFFFF":3:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+ASN.1 Write / Read Length #12 (Len = 16909060, byte order)
+mbedtls_asn1_write_len:16909060:"8401020304":5:5
+
+ASN.1 Write / Read Length #12 (Len = 16909060, buffer too small)
+mbedtls_asn1_write_len:16909060:"8401020304":4:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+ASN.1 Write Named Bitstring / Unused bits #0
+test_asn1_write_bitstrings:"FF":8:"030200FF":1
+
+ASN.1 Write Named Bitstring / Unused bits #1
+test_asn1_write_bitstrings:"FE":8:"030201FE":1
+
+ASN.1 Write Named Bitstring / Unused bits #2
+test_asn1_write_bitstrings:"FC":7:"030202FC":1
+
+ASN.1 Write Named Bitstring / Unused bits #3
+test_asn1_write_bitstrings:"F8":8:"030203F8":1
+
+ASN.1 Write Named Bitstring / Unused bits #4
+test_asn1_write_bitstrings:"F0":6:"030204F0":1
+
+ASN.1 Write Named Bitstring / Unused bits #5
+test_asn1_write_bitstrings:"E0":6:"030205E0":1
+
+ASN.1 Write Named Bitstring / Unused bits #6
+test_asn1_write_bitstrings:"C0":8:"030206C0":1
+
+ASN.1 Write Named Bitstring / Unused bits #7
+test_asn1_write_bitstrings:"80":8:"03020780":1
+
+ASN.1 Write Named Bitstring / Empty bitstring
+test_asn1_write_bitstrings:"00":7:"030100":1
+
+ASN.1 Write Named Bitstring / Empty bitstring (bits = 16)
+test_asn1_write_bitstrings:"0000":16:"030100":1
+
+ASN.1 Write Named Bitstring / Empty bitstring (bits = 24)
+test_asn1_write_bitstrings:"FFFFFF":0:"030100":1
+
+ASN.1 Write Named Bitstring / 15 trailing bits all unset
+test_asn1_write_bitstrings:"F88000":24:"030307F880":1
+
+ASN.1 Write Named Bitstring / 15 trailing bits all set
+test_asn1_write_bitstrings:"F8FFFF":9:"030307F880":1
+
+ASN.1 Write Bitstring / Unused bits #0
+test_asn1_write_bitstrings:"FF":8:"030200FF":0
+
+ASN.1 Write Bitstring / Unused bits #1
+test_asn1_write_bitstrings:"FF":7:"030201FE":0
+
+ASN.1 Write Bitstring / Unused bits #2
+test_asn1_write_bitstrings:"FF":6:"030202FC":0
+
+ASN.1 Write Bitstring / Unused bits #3
+test_asn1_write_bitstrings:"FF":5:"030203F8":0
+
+ASN.1 Write Bitstring / Unused bits #4
+test_asn1_write_bitstrings:"FF":4:"030204F0":0
+
+ASN.1 Write Bitstring / Unused bits #5
+test_asn1_write_bitstrings:"FF":3:"030205E0":0
+
+ASN.1 Write Bitstring / Unused bits #6
+test_asn1_write_bitstrings:"FF":2:"030206C0":0
+
+ASN.1 Write Bitstring / Unused bits #7
+test_asn1_write_bitstrings:"FF":1:"03020780":0
+
+ASN.1 Write Bitstring / 1 trailing bit (bits 15)
+test_asn1_write_bitstrings:"0003":15:"0303010002":0
+
+ASN.1 Write Bitstring / 0 bits
+test_asn1_write_bitstrings:"":0:"030100":0
+
+ASN.1 Write Bitstring / long string all bits unset except trailing bits
+test_asn1_write_bitstrings:"000000000007":45:"030703000000000000":0
+
+Store named data: not found
+store_named_data_find:"414141":"424242":"434343":"444444":"7f7f7f":0:-1
+
+Store named data: empty haystack
+store_named_data_find:"414141":"424242":"434343":"444444":"7f7f7f":4:-1
+
+Store named data: first
+store_named_data_find:"414141":"424242":"434343":"444444":"414141":0:0
+
+Store named data: last
+store_named_data_find:"414141":"424242":"434343":"444444":"444444":0:3
+
+Store named data: skip suffix
+store_named_data_find:"41414141":"414141":"434343":"444444":"414141":0:1
+
+Store named data: skip prefix
+store_named_data_find:"4141":"414141":"434343":"444444":"414141":0:1
+
+Store named data: first match
+store_named_data_find:"414141":"414141":"434343":"444444":"414141":0:0
+
+Store named data: found, null to zero
+store_named_data_val_found:0:0
+
+Store named data: found, null to data
+store_named_data_val_found:0:9
+
+Store named data: found, data to zero
+store_named_data_val_found:9:0
+
+Store named data: found, smaller data
+store_named_data_val_found:9:2
+
+Store named data: found, same-size data
+store_named_data_val_found:9:9
+
+Store named data: found, larger data
+store_named_data_val_found:4:9
+
+Store named data: new, val_len=0
+store_named_data_val_new:0:1
+
+Stored named data: new, val_len=0, val=NULL
+store_named_data_val_new:0:0
+
+Store named data: new, val_len=4
+store_named_data_val_new:4:1
+
+Store named data: new, val_len=4, val=NULL
+store_named_data_val_new:4:0
+
+ASN.1 write integer: Basic encode
+mbedtls_asn1_write_integer_positive:"0123":"02020123"
+
+ASN.1 write integer: Leading zeroes
+mbedtls_asn1_write_integer_positive:"000123":"02020123"
+
+ASN.1 write integer: Many leading zeroes (input longer than output)
+mbedtls_asn1_write_integer_positive:"000000000123":"02020123"
+
+ASN.1 write integer: Most significant bit is 1
+mbedtls_asn1_write_integer_positive:"800123":"020400800123"
+
+ASN.1 write integer: Leading zeroes and MSb of first byte is 1
+mbedtls_asn1_write_integer_positive:"000000800123":"020400800123"
+
+ASN.1 write integer: Multibyte length (> 255)
+mbedtls_asn1_write_integer_positive:"0123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF0000000000000000":"028201000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF00000000000000000123456789ABCDEF0000000000000000"
+
+ASN.1 write integer: Zero (single-byte)
+mbedtls_asn1_write_integer_positive:"00":"020100"
+
+ASN.1 write integer: Zero (multi-byte)
+mbedtls_asn1_write_integer_positive:"000000":"020100"
+
+ASN.1 write integer: Zero (empty)
+mbedtls_asn1_write_integer_positive:"":"020100"

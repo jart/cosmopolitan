@@ -1,0 +1,23 @@
+Mutex usage: init, free
+mutex_usage_nominal:0
+
+Mutex usage: lock 1
+mutex_usage_nominal:1
+
+Mutex usage: lock 2
+mutex_usage_nominal:2
+
+Mutex usage: no init
+mutex_usage_no_init:
+
+Mutex usage: double free
+mutex_usage_double_free:
+
+Condition variable usage: init, free
+condition_usage_nominal:0
+
+Condition variable usage: signal
+condition_usage_nominal:1
+
+Condition variable usage: broadcast
+condition_usage_nominal:2

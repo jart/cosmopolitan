@@ -1,0 +1,65 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/sha256.h"
+/* END_HEADER */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SHA256_C */
+void sha256_invalid_param()
+{
+    mbedtls_sha256_context ctx;
+    unsigned char buf[64] = { 0 };
+    size_t const buflen = sizeof(buf);
+    int invalid_type = 42;
+
+    TEST_EQUAL(MBEDTLS_ERR_SHA256_BAD_INPUT_DATA,
+               mbedtls_sha256_starts(&ctx, invalid_type));
+
+    TEST_EQUAL(MBEDTLS_ERR_SHA256_BAD_INPUT_DATA,
+               mbedtls_sha256(buf, buflen,
+                              buf, invalid_type));
+
+exit:
+    return;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SHA224_C */
+void sha224(data_t *src_str, data_t *hash)
+{
+    unsigned char output[57];
+
+    memset(output, 0x00, 57);
+
+
+    TEST_EQUAL(mbedtls_sha256(src_str->x, src_str->len, output, 1), 0);
+
+    TEST_EQUAL(mbedtls_test_hexcmp(output, hash->x, 28, hash->len), 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SHA256_C */
+void mbedtls_sha256(data_t *src_str, data_t *hash)
+{
+    unsigned char output[65];
+
+    memset(output, 0x00, 65);
+
+
+    TEST_EQUAL(mbedtls_sha256(src_str->x, src_str->len, output, 0), 0);
+
+    TEST_EQUAL(mbedtls_test_hexcmp(output, hash->x, 32, hash->len), 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SHA224_C:MBEDTLS_SELF_TEST */
+void sha224_selftest()
+{
+    TEST_EQUAL(mbedtls_sha224_self_test(1), 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SHA256_C:MBEDTLS_SELF_TEST */
+void sha256_selftest()
+{
+    TEST_EQUAL(mbedtls_sha256_self_test(1), 0);
+}
+/* END_CASE */

@@ -1,0 +1,307 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/sha3.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_SHA3_C
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE */
+void mbedtls_sha3(int family, data_t *in, data_t *hash)
+{
+    unsigned char *output = NULL;
+
+    TEST_CALLOC(output, hash->len);
+
+    TEST_ASSERT(mbedtls_sha3(family, in->x, in->len, output, hash->len) == 0);
+
+    TEST_MEMORY_COMPARE(output, hash->len, hash->x, hash->len);
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_ALG_SHA3_256 */
+void sha3_invalid_param()
+{
+    unsigned char output[32];
+    mbedtls_sha3_context ctx;
+
+    mbedtls_sha3_init(&ctx);
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, MBEDTLS_SHA3_NONE), MBEDTLS_ERR_SHA3_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, MBEDTLS_SHA3_256), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output, 0), MBEDTLS_ERR_SHA3_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, MBEDTLS_SHA3_256), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output, 31), MBEDTLS_ERR_SHA3_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, MBEDTLS_SHA3_256), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output, 32), 0);
+
+exit:
+    return;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_sha3_multi(int family, data_t *in, data_t *hash)
+{
+    unsigned char *output = NULL;
+    mbedtls_sha3_context ctx;
+    const unsigned int block_size = 256;
+
+    TEST_CALLOC(output, hash->len);
+
+    mbedtls_sha3_init(&ctx);
+    mbedtls_sha3_starts(&ctx, family);
+
+    for (size_t l = 0; l < in->len; l += block_size) {
+        TEST_ASSERT(mbedtls_sha3_update(&ctx, in->x + l, MIN(in->len - l, block_size)) == 0);
+    }
+
+    TEST_ASSERT(mbedtls_sha3_finish(&ctx, output, hash->len) == 0);
+
+    TEST_MEMORY_COMPARE(output, hash->len, hash->x, hash->len);
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void sha3_streaming(int type, data_t *input)
+{
+    mbedtls_sha3_context ctx;
+    unsigned char reference_hash[64];
+    unsigned char hash[64];
+    size_t chunk_size;
+    size_t hash_length = (type == MBEDTLS_SHA3_224 ? 28 :
+                          type == MBEDTLS_SHA3_256 ? 32 :
+                          type == MBEDTLS_SHA3_384 ? 48 :
+                          type == MBEDTLS_SHA3_512 ? 64 :
+                          0);
+
+    mbedtls_sha3_init(&ctx);
+    memset(reference_hash, 0, sizeof(reference_hash));
+    memset(hash, 0, sizeof(hash));
+    TEST_ASSERT(hash_length != 0);
+
+    /* Generate a reference hash */
+    mbedtls_sha3(type, input->x, input->len, reference_hash, hash_length);
+
+    /* Repeat each test with increasingly-sized data chunks
+     * E.g. start by processing bytes individual bytes, then 2-byte chunks,
+     * then 3-byte chunks, and so on...
+     * At each test ensure that the same hash is generated.
+     */
+    for (chunk_size = 1; chunk_size < input->len; chunk_size++) {
+        size_t i;
+        size_t remaining = input->len;
+
+        mbedtls_sha3_init(&ctx);
+        TEST_ASSERT(mbedtls_sha3_starts(&ctx, type) == 0);
+
+        for (i = 0; i < input->len; i += chunk_size) {
+            size_t len = remaining >= chunk_size ? chunk_size : remaining;
+            TEST_ASSERT(mbedtls_sha3_update(&ctx, input->x + i, len) == 0);
+            remaining -= len;
+        }
+
+        mbedtls_sha3_finish(&ctx, hash, hash_length);
+        mbedtls_sha3_free(&ctx);
+
+        TEST_MEMORY_COMPARE(hash, hash_length, reference_hash, hash_length);
+    }
+
+exit:
+    mbedtls_sha3_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Test an empty input with or without an update() call.
+ * This function only tests that the outputs are identical.
+ * Test cases for mbedtls_sha3_multi() and shake_input() check that the
+ * output is correct for one particular way of passing the empty input. */
+void sha3_empty(int type, int len)
+{
+    mbedtls_sha3_context ctx;
+    mbedtls_sha3_init(&ctx);
+    uint8_t *output_no_update = NULL;
+    uint8_t *output_update_null = NULL;
+    uint8_t *output_update_nonnull = NULL;
+    uint8_t *output_update_twice = NULL;
+    uint8_t byte = 'b';
+
+    TEST_CALLOC(output_no_update, len);
+    TEST_CALLOC(output_update_null, len);
+    TEST_CALLOC(output_update_nonnull, len);
+    TEST_CALLOC(output_update_twice, len);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_no_update, len), 0);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, NULL, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_null, len), 0);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_nonnull, len), 0);
+
+    TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_update(&ctx, &byte, 0), 0);
+    TEST_EQUAL(mbedtls_sha3_finish(&ctx, output_update_twice, len), 0);
+
+    TEST_MEMORY_COMPARE(output_no_update, 0, output_update_null, 0);
+    TEST_MEMORY_COMPARE(output_no_update, 0, output_update_nonnull, 0);
+    TEST_MEMORY_COMPARE(output_no_update, 0, output_update_twice, 0);
+
+exit:
+    mbedtls_sha3_free(&ctx);
+    mbedtls_free(output_no_update);
+    mbedtls_free(output_update_null);
+    mbedtls_free(output_update_nonnull);
+    mbedtls_free(output_update_twice);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void sha3_reuse(data_t *input1, data_t *hash1,
+                data_t *input2, data_t *hash2)
+{
+    unsigned char output[64];
+    mbedtls_sha3_context ctx;
+    mbedtls_sha3_id type1, type2;
+
+    mbedtls_sha3_init(&ctx);
+    switch (hash1->len) {
+        case 28: type1 = MBEDTLS_SHA3_224; break;
+        case 32: type1 = MBEDTLS_SHA3_256; break;
+        case 48: type1 = MBEDTLS_SHA3_384; break;
+        case 64: type1 = MBEDTLS_SHA3_512; break;
+        default: TEST_FAIL("hash1->len validity"); break;
+    }
+    switch (hash2->len) {
+        case 28: type2 = MBEDTLS_SHA3_224; break;
+        case 32: type2 = MBEDTLS_SHA3_256; break;
+        case 48: type2 = MBEDTLS_SHA3_384; break;
+        case 64: type2 = MBEDTLS_SHA3_512; break;
+        default: TEST_FAIL("hash2->len validity"); break;
+    }
+
+    /* Round 1 */
+    TEST_ASSERT(mbedtls_sha3_starts(&ctx, type1) == 0);
+    TEST_ASSERT(mbedtls_sha3_update(&ctx, input1->x, input1->len) == 0);
+    TEST_ASSERT(mbedtls_sha3_finish(&ctx, output, sizeof(output)) == 0);
+    TEST_MEMORY_COMPARE(output, hash1->len, hash1->x, hash1->len);
+
+    /* Round 2 */
+    TEST_ASSERT(mbedtls_sha3_starts(&ctx, type2) == 0);
+    TEST_ASSERT(mbedtls_sha3_update(&ctx, input2->x, input2->len) == 0);
+    TEST_ASSERT(mbedtls_sha3_finish(&ctx, output, sizeof(output)) == 0);
+    TEST_MEMORY_COMPARE(output, hash2->len, hash2->x, hash2->len);
+
+exit:
+    mbedtls_sha3_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void shake_input(int type, data_t *input, data_t *expected_output)
+{
+    mbedtls_sha3_context ctx;
+    mbedtls_sha3_init(&ctx);
+    uint8_t *input1 = NULL;
+    uint8_t *input2 = NULL;
+    uint8_t *input3 = NULL;
+    uint8_t *actual_output = NULL;
+    size_t output_len = expected_output->len;
+
+    TEST_CALLOC(actual_output, output_len);
+
+    for (size_t n1 = 0; n1 <= input->len; n1++) {
+        TEST_CALLOC(input1, n1);
+        if (n1 != 0) {
+            memcpy(input1, input->x, n1);
+        }
+        for (size_t n2 = 0; n2 <= input->len - n1; n2++) {
+            size_t n3 = input->len - n1 - n2;
+            mbedtls_test_set_step(n1 * 1000000 + n2 * 1000 + n3);
+            TEST_CALLOC(input2, n2);
+            if (n2 != 0) {
+                memcpy(input2, input->x + n1, n2);
+            }
+            TEST_CALLOC(input3, n3);
+            if (n3 != 0) {
+                memcpy(input3, input->x + n1 + n2, n3);
+            }
+            TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+            TEST_EQUAL(mbedtls_sha3_update(&ctx, input1, n1), 0);
+            TEST_EQUAL(mbedtls_sha3_update(&ctx, input2, n2), 0);
+            TEST_EQUAL(mbedtls_sha3_update(&ctx, input3, n3), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, actual_output, output_len), 0);
+            TEST_MEMORY_COMPARE(actual_output, output_len,
+                                expected_output->x, expected_output->len);
+            mbedtls_free(input2);
+            input2 = NULL;
+            mbedtls_free(input3);
+            input3 = NULL;
+        }
+        mbedtls_free(input1);
+        input1 = NULL;
+    }
+
+exit:
+    mbedtls_sha3_free(&ctx);
+    mbedtls_free(input1);
+    mbedtls_free(input2);
+    mbedtls_free(input3);
+    mbedtls_free(actual_output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void shake_output(int type, data_t *input, data_t *expected_output)
+{
+    mbedtls_sha3_context ctx;
+    mbedtls_sha3_init(&ctx);
+    uint8_t *output1 = NULL;
+    uint8_t *output2 = NULL;
+
+    for (size_t n1 = 0; n1 <= expected_output->len; n1++) {
+        TEST_CALLOC(output1, n1);
+        for (size_t n2 = 0; n2 <= expected_output->len - n1; n2++) {
+            TEST_CALLOC(output2, n2);
+            mbedtls_test_set_step(n1 * 1000 + n2);
+            TEST_EQUAL(mbedtls_sha3_starts(&ctx, type), 0);
+            TEST_EQUAL(mbedtls_sha3_update(&ctx, input->x, input->len), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, output1, n1), 0);
+            TEST_EQUAL(mbedtls_sha3_finish(&ctx, output2, n2), 0);
+            TEST_MEMORY_COMPARE(output1, n1,
+                                expected_output->x, n1);
+            TEST_MEMORY_COMPARE(output2, n2,
+                                expected_output->x + n1, n2);
+            mbedtls_free(output2);
+            output2 = NULL;
+        }
+        mbedtls_free(output1);
+        output1 = NULL;
+    }
+
+exit:
+    mbedtls_sha3_free(&ctx);
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void sha3_selftest()
+{
+    TEST_ASSERT(mbedtls_sha3_self_test(0) == 0);
+}
+/* END_CASE */

@@ -1,0 +1,14 @@
+GCM - Invalid parameters
+gcm_invalid_param:
+
+GCM - Invalid IV length
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_invalid_iv_len:
+
+GCM - Additional data length too long
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_add_len_too_long:
+
+GCM - Input length too long
+depends_on:MBEDTLS_GCM_C:MBEDTLS_CCM_GCM_CAN_AES
+gcm_input_len_too_long:

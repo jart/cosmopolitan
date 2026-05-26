@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "_comment": {
+      "type": "string"
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^[A-Z_a-z][0-9A-Z_a-z]*$"
+    },
+    "type": {
+      "type": "string",
+      "const": "opaque"
+    },
+    "location": {
+      "type": ["integer","string"],
+      "pattern": "^(0x|0X)?[a-fA-F0-9]+$"
+    },
+    "mbedtls/h_condition": {
+      "type": "string"
+    },
+    "headers": {
+      "type": "array",
+      "items": {
+          "type": "string"
+        },
+        "default": []
+    },
+    "capabilities": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "_comment": {
+              "type": "string"
+            },
+            "mbedtls/c_condition": {
+              "type": "string"
+            },
+            "entry_points": {
+              "type": "array",
+              "items": {
+                  "type": "string"
+                }
+            },
+            "names": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Z_a-z][0-9A-Z_a-z]*$": {
+                  "type": "string",
+                  "pattern": "^[A-Z_a-z][0-9A-Z_a-z]*$"
+                }
+              }
+            }
+          },
+          "required": [
+            "entry_points"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "prefix",
+    "type",
+    "location",
+    "capabilities"
+  ]
+}

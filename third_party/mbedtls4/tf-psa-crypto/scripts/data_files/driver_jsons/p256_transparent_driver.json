@@ -1,0 +1,20 @@
+{
+    "prefix":       "p256",
+    "type":         "transparent",
+    "mbedtls/h_condition":   "defined(MBEDTLS_PSA_P256M_DRIVER_ENABLED)",
+    "headers":      ["../drivers/p256-m/p256-m_driver_entrypoints.h"],
+    "capabilities": [
+        {
+            "mbedtls/c_condition": "defined(MBEDTLS_PSA_P256M_DRIVER_ENABLED)",
+            "_comment_entry_points": "This is not the complete list of entry points supported by this driver, only those that are currently supported in JSON. See docs/psa-driver-example-and-guide.md",
+            "entry_points": ["import_key", "export_public_key"],
+            "algorithms": ["PSA_ALG_ECDH", "PSA_ALG_ECDSA(PSA_ALG_ANY_HASH)"],
+            "key_types": [
+                "PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)",
+                "PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1)"
+            ],
+            "key_sizes": [256],
+            "fallback": false
+        }
+    ]
+}

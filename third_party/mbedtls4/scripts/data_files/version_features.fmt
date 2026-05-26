@@ -1,0 +1,50 @@
+/* -*-c-*-
+ *  Version feature information
+ *
+ *  Copyright The Mbed TLS Contributors
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ */
+
+#include "mbedtls_common.h"
+
+#if defined(MBEDTLS_VERSION_C)
+
+#include "mbedtls/version.h"
+
+#include <string.h>
+
+static const char * const features[] = {
+#if defined(MBEDTLS_VERSION_FEATURES)
+    FEATURE_DEFINES
+#endif /* MBEDTLS_VERSION_FEATURES */
+    NULL
+};
+
+int mbedtls_version_check_feature(const char *feature)
+{
+    const char * const *idx = features;
+
+    if (*idx == NULL) {
+        return -2;
+    }
+
+    if (feature == NULL) {
+        return -1;
+    }
+
+    if (strncmp(feature, "MBEDTLS_", 8)) {
+        return -1;
+    }
+
+    feature += 8;
+
+    while (*idx != NULL) {
+        if (!strcmp(*idx, feature)) {
+            return 0;
+        }
+        idx++;
+    }
+    return -1;
+}
+
+#endif /* MBEDTLS_VERSION_C */

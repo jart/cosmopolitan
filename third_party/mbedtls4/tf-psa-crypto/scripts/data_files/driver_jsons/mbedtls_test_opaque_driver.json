@@ -1,0 +1,20 @@
+{
+    "prefix":       "mbedtls_test",
+    "type":         "opaque",
+    "location":     "0x7fffff",
+    "mbedtls/h_condition":   "defined(PSA_CRYPTO_DRIVER_TEST)",
+    "headers":      ["test/drivers/test_driver.h"],
+    "capabilities": [
+        {
+            "_comment":     "The Mbed TLS opaque driver supports import key/export key/export_public key",
+            "mbedtls/c_condition":    "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["import_key", "export_key", "export_public_key"]
+        },
+        {
+            "_comment":     "The Mbed TLS opaque driver supports copy key/ get builtin key",
+            "mbedtls/c_condition":    "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["copy_key", "get_builtin_key"],
+            "names":         {"copy_key":"mbedtls_test_opaque_copy_key", "get_builtin_key":"mbedtls_test_opaque_get_builtin_key"}
+        }
+     ]
+}

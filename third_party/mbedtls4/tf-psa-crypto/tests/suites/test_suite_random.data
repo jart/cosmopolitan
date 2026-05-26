@@ -1,0 +1,55 @@
+Generate random twice with CTR_DRBG
+random_twice_with_ctr_drbg:
+
+Generate random twice with HMAC_DRBG(SHA-1)
+depends_on:PSA_WANT_ALG_SHA_1
+random_twice_with_hmac_drbg:MBEDTLS_MD_SHA1
+
+Generate random twice with HMAC_DRBG(SHA-256)
+depends_on:PSA_WANT_ALG_SHA_256
+random_twice_with_hmac_drbg:MBEDTLS_MD_SHA256
+
+Generate random twice with HMAC_DRBG(SHA-512)
+depends_on:PSA_WANT_ALG_SHA_512
+random_twice_with_hmac_drbg:MBEDTLS_MD_SHA512
+
+Generate random twice with PSA classic wrapper
+random_twice_with_psa_from_classic:
+
+Generate random twice with PSA API
+random_twice_with_psa_from_psa:
+
+# This bad-usage test case currently crashes in the default configuration
+# because CTR_DRBG crashes when given an unseeded context. This is arguably
+# a good thing because it prevents misuse of mbedtls_psa_get_random().
+#PSA classic wrapper: PSA not active
+#mbedtls_psa_get_random_no_init:
+
+PSA classic wrapper: 0 bytes
+mbedtls_psa_get_random_length:0
+
+PSA classic wrapper: 1 byte
+mbedtls_psa_get_random_length:1
+
+PSA classic wrapper: 256 bytes
+mbedtls_psa_get_random_length:256
+
+# An external RNG is supposed to handle arbitrary request lengths. Test it
+# with something larger than any RNG call made by Mbed TLS itself expects.
+# CTR_DRBG and HMAC_DRBG have their own maximum request lengths which may
+# be lower than the value chosen here and are tested separately.
+PSA classic wrapper: external RNG large
+depends_on:MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+mbedtls_psa_get_random_length:1024
+
+PSA classic wrapper: CTR_DRBG max
+depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:MBEDTLS_CTR_DRBG_C
+mbedtls_psa_get_random_length:MBEDTLS_CTR_DRBG_MAX_REQUEST
+
+PSA classic wrapper: HMAC_DRBG max
+depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:!MBEDTLS_CTR_DRBG_C:MBEDTLS_HMAC_DRBG_C
+mbedtls_psa_get_random_length:MBEDTLS_HMAC_DRBG_MAX_REQUEST
+
+PSA classic wrapper: ECDSA signature (SECP256R1)
+depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
+mbedtls_psa_get_random_ecdsa_sign:MBEDTLS_ECP_DP_SECP256R1

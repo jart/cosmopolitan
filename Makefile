@@ -295,7 +295,7 @@ include dsp/tty/BUILD.mk			# │
 include dsp/audio/BUILD.mk			# │
 include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
-include third_party/mbedtls/BUILD.mk		# │
+include third_party/mbedtls4/BUILD.mk		# │
 include third_party/ncurses/BUILD.mk		# │
 include third_party/readline/BUILD.mk		# │
 include third_party/libcxxabi/BUILD.mk		# |
@@ -338,7 +338,6 @@ include third_party/finger/BUILD.mk
 include third_party/argon2/BUILD.mk
 include third_party/smallz4/BUILD.mk
 include third_party/sqlite3/BUILD.mk
-include third_party/mbedtls/test/BUILD.mk
 include third_party/lz4cli/BUILD.mk
 include third_party/zip/BUILD.mk
 include third_party/xxhash/BUILD.mk
@@ -427,7 +426,7 @@ o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(
 o/$(MODE)/incs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(INCS) $(INCS),$(dir $(x)))) $(INCS) $(INCS)
 	$(file >$@,$(INCS))
 o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt o/$(MODE)/incs.txt $(SRCS) $(HDRS) $(INCS)
-	$(COMPILE) -AMKDEPS -L320 $(MKDEPS) -o $@ -s -r o/$(MODE)/ -S c++:third_party/libcxx/ -S libc/isystem/ @o/$(MODE)/srcs.txt @o/$(MODE)/hdrs.txt @o/$(MODE)/incs.txt
+	$(COMPILE) -AMKDEPS -L320 $(MKDEPS) -o $@ -s -r o/$(MODE)/ -S c++:third_party/libcxx/ -S libc/isystem/ -S third_party/mbedtls4/generated/ -S third_party/mbedtls4/include/ -S third_party/mbedtls4/library/ -S third_party/mbedtls4/tf-psa-crypto/include/ -S third_party/mbedtls4/tf-psa-crypto/core/ -S third_party/mbedtls4/tf-psa-crypto/drivers/builtin/include/ -S third_party/mbedtls4/tf-psa-crypto/drivers/builtin/src/ @o/$(MODE)/srcs.txt @o/$(MODE)/hdrs.txt @o/$(MODE)/incs.txt
 
 o/$(MODE)/srcs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
@@ -632,6 +631,7 @@ aarch64:
 	$(MAKE) m=aarch64
 
 clean:
+	@python3 build/mkmbedtls4wrappers.py --clean >/dev/null 2>&1 || true
 	$(RM) -r o
 
 # UNSPECIFIED PREREQUISITES TUTORIAL

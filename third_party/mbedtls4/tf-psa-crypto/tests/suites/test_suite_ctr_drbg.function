@@ -1,0 +1,527 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/entropy.h"
+#include "mbedtls/private/ctr_drbg.h"
+#include "string.h"
+#include "ctr.h"
+
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#include "mbedtls/threading.h"
+#endif
+
+/* Modes for ctr_drbg_validate */
+enum reseed_mode {
+    RESEED_NEVER, /* never reseed */
+    RESEED_FIRST, /* instantiate, reseed, generate, generate */
+    RESEED_SECOND, /* instantiate, generate, reseed, generate */
+    RESEED_ALWAYS /* prediction resistance, no explicit reseed */
+};
+
+static size_t test_offset_idx = 0;
+static size_t test_max_idx  = 0;
+static int mbedtls_test_entropy_func(void *data, unsigned char *buf, size_t len)
+{
+    const unsigned char *p = (unsigned char *) data;
+    if (test_offset_idx + len > test_max_idx) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+    memcpy(buf, p + test_offset_idx, len);
+    test_offset_idx += len;
+    return 0;
+}
+
+static void ctr_drbg_validate_internal(int reseed_mode, data_t *nonce,
+                                       int entropy_len_arg, data_t *entropy,
+                                       data_t *reseed,
+                                       data_t *add1, data_t *add2,
+                                       data_t *result)
+{
+    mbedtls_ctr_drbg_context ctx;
+    mbedtls_ctr_drbg_init(&ctx);
+    unsigned char buf[64];
+
+    size_t entropy_chunk_len = (size_t) entropy_len_arg;
+    TEST_ASSERT(entropy_chunk_len <= sizeof(buf));
+
+    test_offset_idx = 0;
+    test_max_idx = entropy->len;
+
+    /* CTR_DRBG_Instantiate(entropy[:entropy->len], nonce, perso, <ignored>)
+     * where nonce||perso = nonce[nonce->len] */
+    mbedtls_ctr_drbg_set_entropy_len(&ctx, entropy_chunk_len);
+    mbedtls_ctr_drbg_set_nonce_len(&ctx, 0);
+    TEST_ASSERT(mbedtls_ctr_drbg_seed(
+                    &ctx,
+                    mbedtls_test_entropy_func, entropy->x,
+                    nonce->x, nonce->len) == 0);
+    if (reseed_mode == RESEED_ALWAYS) {
+        mbedtls_ctr_drbg_set_prediction_resistance(
+            &ctx,
+            MBEDTLS_CTR_DRBG_PR_ON);
+    }
+
+    if (reseed_mode == RESEED_FIRST) {
+        /* CTR_DRBG_Reseed(entropy[idx:idx+entropy->len],
+         *                 reseed[:reseed->len]) */
+        TEST_ASSERT(mbedtls_ctr_drbg_reseed(
+                        &ctx,
+                        reseed->x, reseed->len) == 0);
+    }
+
+    /* CTR_DRBG_Generate(result->len * 8 bits, add1[:add1->len]) -> buf */
+    /* Then reseed if prediction resistance is enabled. */
+    TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(
+                    &ctx,
+                    buf, result->len,
+                    add1->x, add1->len) == 0);
+
+
+    if (reseed_mode == RESEED_SECOND) {
+        /* CTR_DRBG_Reseed(entropy[idx:idx+entropy->len],
+         *                 reseed[:reseed->len]) */
+        TEST_ASSERT(mbedtls_ctr_drbg_reseed(
+                        &ctx,
+                        reseed->x, reseed->len) == 0);
+    }
+
+    /* CTR_DRBG_Generate(result->len * 8 bits, add2->x[:add2->len]) -> buf */
+    /* Then reseed if prediction resistance is enabled. */
+    TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(
+                    &ctx,
+                    buf, result->len,
+                    add2->x, add2->len) == 0);
+    TEST_ASSERT(memcmp(buf, result->x, result->len) == 0);
+
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+}
+
+static const int thread_random_reps = 10;
+void *thread_random_function(void *ctx); /* only used conditionally in ctr_drbg_threads */
+void *thread_random_function(void *ctx)
+{
+    unsigned char out[16];
+    memset(out, 0, sizeof(out));
+
+    for (int i = 0; i < thread_random_reps; i++) {
+        TEST_EQUAL(mbedtls_ctr_drbg_random((mbedtls_ctr_drbg_context *) ctx, out, sizeof(out)), 0);
+    }
+
+exit:
+    return NULL;
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CTR_DRBG_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void ctr_drbg_special_behaviours()
+{
+    mbedtls_ctr_drbg_context ctx;
+    unsigned char output[512];
+    unsigned char additional[512];
+
+    mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
+    memset(output, 0, sizeof(output));
+    memset(additional, 0, sizeof(additional));
+
+    TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(&ctx,
+                                                 output, MBEDTLS_CTR_DRBG_MAX_REQUEST + 1,
+                                                 additional, 16) ==
+                MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG);
+    TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(&ctx,
+                                                 output, 16,
+                                                 additional, MBEDTLS_CTR_DRBG_MAX_INPUT + 1) ==
+                MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG);
+
+    TEST_ASSERT(mbedtls_ctr_drbg_reseed(&ctx, additional,
+                                        MBEDTLS_CTR_DRBG_MAX_SEED_INPUT + 1) ==
+                MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG);
+
+    mbedtls_ctr_drbg_set_entropy_len(&ctx, ~0);
+    TEST_ASSERT(mbedtls_ctr_drbg_reseed(&ctx, additional,
+                                        MBEDTLS_CTR_DRBG_MAX_SEED_INPUT) ==
+                MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG);
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void ctr_drbg_validate_no_reseed(data_t *add_init, data_t *entropy,
+                                 data_t *add1, data_t *add2,
+                                 data_t *result_string)
+{
+    data_t empty = { 0, 0 };
+    AES_PSA_INIT();
+    ctr_drbg_validate_internal(RESEED_NEVER, add_init,
+                               entropy->len, entropy,
+                               &empty, add1, add2,
+                               result_string);
+    AES_PSA_DONE();
+    goto exit; // goto is needed to avoid warning ( no test assertions in func)
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_drbg_validate_pr(data_t *add_init, data_t *entropy,
+                          data_t *add1, data_t *add2,
+                          data_t *result_string)
+{
+    data_t empty = { 0, 0 };
+    AES_PSA_INIT();
+    ctr_drbg_validate_internal(RESEED_ALWAYS, add_init,
+                               entropy->len / 3, entropy,
+                               &empty, add1, add2,
+                               result_string);
+    AES_PSA_DONE();
+    goto exit; // goto is needed to avoid warning ( no test assertions in func)
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_drbg_validate_reseed_between(data_t *add_init, data_t *entropy,
+                                      data_t *add1, data_t *add_reseed,
+                                      data_t *add2, data_t *result_string)
+{
+    AES_PSA_INIT();
+    ctr_drbg_validate_internal(RESEED_SECOND, add_init,
+                               entropy->len / 2, entropy,
+                               add_reseed, add1, add2,
+                               result_string);
+    AES_PSA_DONE();
+    goto exit; // goto is needed to avoid warning ( no test assertions in func)
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_drbg_validate_reseed_first(data_t *add_init, data_t *entropy,
+                                    data_t *add1, data_t *add_reseed,
+                                    data_t *add2, data_t *result_string)
+{
+    AES_PSA_INIT();
+    ctr_drbg_validate_internal(RESEED_FIRST, add_init,
+                               entropy->len / 2, entropy,
+                               add_reseed, add1, add2,
+                               result_string);
+    AES_PSA_DONE();
+    goto exit; // goto is needed to avoid warning ( no test assertions in func)
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_drbg_entropy_strength(int expected_bit_strength)
+{
+    unsigned char entropy[/*initial entropy*/ MBEDTLS_CTR_DRBG_ENTROPY_LEN +
+                          /*nonce*/ MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN +
+                          /*reseed*/ MBEDTLS_CTR_DRBG_ENTROPY_LEN];
+    mbedtls_ctr_drbg_context ctx;
+    size_t last_idx;
+    size_t byte_strength = expected_bit_strength / 8;
+
+    mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
+    test_offset_idx = 0;
+    test_max_idx = sizeof(entropy);
+    memset(entropy, 0, sizeof(entropy));
+
+    /* The initial seeding must grab at least byte_strength bytes of entropy
+     * for the entropy input and byte_strength/2 bytes for a nonce. */
+    TEST_ASSERT(mbedtls_ctr_drbg_seed(&ctx,
+                                      mbedtls_test_entropy_func, entropy,
+                                      NULL, 0) == 0);
+    TEST_ASSERT(test_offset_idx >= (byte_strength * 3 + 1) / 2);
+    last_idx = test_offset_idx;
+
+    /* A reseed must grab at least byte_strength bytes of entropy. */
+    TEST_ASSERT(mbedtls_ctr_drbg_reseed(&ctx, NULL, 0) == 0);
+    TEST_ASSERT(test_offset_idx - last_idx >= byte_strength);
+
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_drbg_entropy_usage(int entropy_nonce_len)
+{
+    unsigned char out[16];
+    unsigned char add[16];
+    unsigned char entropy[1024];
+    mbedtls_ctr_drbg_context ctx;
+    size_t i, reps = 10;
+    size_t expected_idx = 0;
+
+    mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
+
+    test_offset_idx = 0;
+    test_max_idx = sizeof(entropy);
+    memset(entropy, 0, sizeof(entropy));
+    memset(out, 0, sizeof(out));
+    memset(add, 0, sizeof(add));
+
+    if (entropy_nonce_len >= 0) {
+        TEST_ASSERT(mbedtls_ctr_drbg_set_nonce_len(&ctx, entropy_nonce_len) == 0);
+    }
+
+    /* Set reseed interval before seed */
+    mbedtls_ctr_drbg_set_reseed_interval(&ctx, 2 * reps);
+
+    /* Init must use entropy */
+    TEST_ASSERT(mbedtls_ctr_drbg_seed(&ctx, mbedtls_test_entropy_func, entropy, NULL, 0) == 0);
+    expected_idx += MBEDTLS_CTR_DRBG_ENTROPY_LEN;
+    if (entropy_nonce_len >= 0) {
+        expected_idx += entropy_nonce_len;
+    } else {
+        expected_idx += MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN;
+    }
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    /* By default, PR is off, and reseed interval was set to
+     * 2 * reps so the next few calls should not use entropy */
+    for (i = 0; i < reps; i++) {
+        TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out) - 4) == 0);
+        TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(&ctx, out, sizeof(out) - 4,
+                                                     add, sizeof(add)) == 0);
+    }
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    /* While at it, make sure we didn't write past the requested length */
+    TEST_ASSERT(out[sizeof(out) - 4] == 0);
+    TEST_ASSERT(out[sizeof(out) - 3] == 0);
+    TEST_ASSERT(out[sizeof(out) - 2] == 0);
+    TEST_ASSERT(out[sizeof(out) - 1] == 0);
+
+    /* There have been 2 * reps calls to random. The next call should reseed */
+    TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)) == 0);
+    expected_idx += MBEDTLS_CTR_DRBG_ENTROPY_LEN;
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    /* Set reseed interval after seed */
+    mbedtls_ctr_drbg_set_reseed_interval(&ctx, 4 * reps + 1);
+
+    /* The next few calls should not reseed */
+    for (i = 0; i < (2 * reps); i++) {
+        TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)) == 0);
+        TEST_ASSERT(mbedtls_ctr_drbg_random_with_add(&ctx, out, sizeof(out),
+                                                     add, sizeof(add)) == 0);
+    }
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    /* Call update with too much data (sizeof(entropy) > MAX(_SEED)_INPUT).
+     * Make sure it's detected as an error and doesn't cause memory
+     * corruption. */
+    TEST_ASSERT(mbedtls_ctr_drbg_update(
+                    &ctx, entropy, sizeof(entropy)) != 0);
+
+    /* Now enable PR, so the next few calls should all reseed */
+    mbedtls_ctr_drbg_set_prediction_resistance(&ctx, MBEDTLS_CTR_DRBG_PR_ON);
+    TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)) == 0);
+    expected_idx += MBEDTLS_CTR_DRBG_ENTROPY_LEN;
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    /* Finally, check setting entropy_len */
+    mbedtls_ctr_drbg_set_entropy_len(&ctx, 42);
+    TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)) == 0);
+    expected_idx += 42;
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+    mbedtls_ctr_drbg_set_entropy_len(&ctx, 13);
+    TEST_ASSERT(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)) == 0);
+    expected_idx += 13;
+    TEST_EQUAL(test_offset_idx, expected_idx);
+
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD:!MBEDTLS_CTR_DRBG_USE_128_BIT_KEY:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
+void ctr_drbg_threads(data_t *expected_result, int reseed, int arg_thread_count)
+{
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+
+    unsigned char out[16];
+    unsigned char *entropy = NULL;
+
+    const size_t n_random_calls = thread_count * thread_random_reps + 1;
+
+    /* This is a known-answer test, and although tests use a mock entropy
+     * function the input entropy length will still affect the output.
+     * We therefore need to pick a fixed entropy length, rather than using the
+     * default entropy length (MBEDTLS_CTR_DRBG_ENTROPY_LEN). We've chosen to
+     * use the default value of MBEDTLS_CTR_DRBG_ENTROPY_LEN for SHA-512,
+     * as this was the value used when the expected answers were calculated. */
+    const size_t entropy_len = 48;
+
+    mbedtls_ctr_drbg_context ctx;
+    mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+    memset(out, 0, sizeof(out));
+
+    test_offset_idx = 0;
+
+    /* Need to set a non-default fixed entropy len, to ensure same output across
+     * all configs - see above for details. */
+    mbedtls_ctr_drbg_set_entropy_len(&ctx, entropy_len);
+
+    if (reseed == 0) {
+        mbedtls_ctr_drbg_set_prediction_resistance(&ctx, MBEDTLS_CTR_DRBG_PR_OFF);
+        mbedtls_ctr_drbg_set_reseed_interval(&ctx, n_random_calls + 1);
+
+        TEST_CALLOC(entropy, entropy_len + MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN);
+        test_max_idx = entropy_len + MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN;
+    } else {
+        const size_t entropy_size = ((n_random_calls + 1) * entropy_len)
+                                    + MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN;
+
+        mbedtls_ctr_drbg_set_prediction_resistance(&ctx, MBEDTLS_CTR_DRBG_PR_ON);
+
+        TEST_CALLOC(entropy, entropy_size);
+        test_max_idx = entropy_size;
+    }
+
+    TEST_EQUAL(
+        mbedtls_ctr_drbg_seed(&ctx, mbedtls_test_entropy_func, entropy, NULL, 0),
+        0);
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i],
+                                       thread_random_function, (void *) &ctx),
+            0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    /* Take a last output for comparing and thus verifying the DRBG state */
+    TEST_EQUAL(mbedtls_ctr_drbg_random(&ctx, out, sizeof(out)), 0);
+
+    TEST_MEMORY_COMPARE(out, sizeof(out), expected_result->x, expected_result->len);
+
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+    mbedtls_free(entropy);
+    mbedtls_free(threads);
+
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_FS_IO */
+void ctr_drbg_seed_file(char *path, int ret)
+{
+    mbedtls_ctr_drbg_context ctx;
+
+    mbedtls_ctr_drbg_init(&ctx);
+
+    AES_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_ctr_drbg_seed(&ctx, mbedtls_test_rnd_std_rand,
+                                      NULL, NULL, 0) == 0);
+    TEST_ASSERT(mbedtls_ctr_drbg_write_seed_file(&ctx, path) == ret);
+    TEST_ASSERT(mbedtls_ctr_drbg_update_seed_file(&ctx, path) == ret);
+
+exit:
+    mbedtls_ctr_drbg_free(&ctx);
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void ctr_drbg_selftest()
+{
+    AES_PSA_INIT();
+    TEST_ASSERT(mbedtls_ctr_drbg_self_test(1) == 0);
+    AES_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_increment_rollover()
+{
+    uint8_t c[16];
+    uint8_t r[16];
+
+    // test all increments from 2^n - 1 to 2^n (i.e. where we roll over into the next bit)
+    for (int n = 0; n <= 128; n++) {
+        memset(c, 0, 16);
+        memset(r, 0, 16);
+
+        // set least significant (highest address) n bits to 1, i.e. generate (2^n - 1)
+        for (int i = 0; i < n; i++) {
+            int bit = i % 8;
+            int byte = (i / 8);
+            c[15 - byte] |= 1 << bit;
+        }
+        // increment to get 2^n
+        mbedtls_ctr_increment_counter(c);
+
+        // now generate a reference result equal to 2^n - i.e. set only bit (n + 1)
+        // if n == 127, this will not set any bits (i.e. wraps to 0).
+        int bit = n % 8;
+        int byte = n / 8;
+        if (byte < 16) {
+            r[15 - byte] = 1 << bit;
+        }
+
+        TEST_MEMORY_COMPARE(c, 16, r, 16);
+    }
+
+    uint64_t lsb = 10, msb = 20;
+    MBEDTLS_PUT_UINT64_BE(msb, c, 0);
+    MBEDTLS_PUT_UINT64_BE(lsb, c, 8);
+    memcpy(r, c, 16);
+    mbedtls_ctr_increment_counter(c);
+    for (int i = 15; i >= 0; i--) {
+        r[i] += 1;
+        if (r[i] != 0) {
+            break;
+        }
+    }
+    TEST_MEMORY_COMPARE(c, 16, r, 16);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void ctr_increment(data_t *x)
+{
+    uint8_t c[16];
+    uint8_t r[16];
+
+    // initialise c and r from test argument
+    memset(c, 0, 16);
+    memcpy(c, x->x, x->len);
+    memcpy(r, c, 16);
+
+    // increment c
+    mbedtls_ctr_increment_counter(c);
+    // increment reference
+    for (int i = 15; i >= 0; i--) {
+        r[i] += 1;
+        if (r[i] != 0) {
+            break;
+        }
+    }
+
+    // test that mbedtls_ctr_increment_counter behaviour matches reference
+    TEST_MEMORY_COMPARE(c, 16, r, 16);
+}
+/* END_CASE */

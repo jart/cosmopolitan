@@ -1,0 +1,479 @@
+/* BEGIN_HEADER */
+/* Dedicated test suite for mbedtls_mpi_core_random() and the upper-layer
+ * functions. Due to the complexity of how these functions are tested,
+ * we test all the layers in a single test suite, unlike the way other
+ * functions are tested with each layer in its own test suite.
+ *
+ * Test strategy
+ * =============
+ *
+ * There are three main goals for testing random() functions:
+ * - Parameter validation.
+ * - Correctness of outputs (well-formed, in range).
+ * - Distribution of outputs.
+ *
+ * We test parameter validation in a standard way, with unit tests with
+ * positive and negative cases:
+ * - mbedtls_mpi_core_random(): negative cases for mpi_core_random_basic.
+ * - mbedtls_mpi_mod_raw_random(),  mbedtls_mpi_mod_random(): negative
+ *   cases for mpi_mod_random_validation.
+ * - mbedtls_mpi_random(): mpi_random_fail.
+ *
+ * We test the correctness of outputs in positive tests:
+ * - mbedtls_mpi_core_random(): positive cases for mpi_core_random_basic,
+ *   and mpi_random_many.
+ * - mbedtls_mpi_mod_raw_random(), mbedtls_mpi_mod_random(): tested indirectly
+ *   via mpi_mod_random_values.
+ * - mbedtls_mpi_random(): mpi_random_sizes, plus indirectly via
+ *   mpi_random_values.
+ *
+ * We test the distribution of outputs only for mbedtls_mpi_core_random(),
+ * in mpi_random_many, which runs the function multiple times. This also
+ * helps in validating the output range, through test cases with a small
+ * range where any output out of range would be very likely to lead to a
+ * test failure. For the other functions, we validate the distribution
+ * indirectly by testing that these functions consume the random generator
+ * in the same way as mbedtls_mpi_core_random(). This is done in
+ * mpi_mod_random_values and mpi_legacy_random_values.
+ */
+
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/private/entropy.h"
+#include "bignum_core.h"
+#include "bignum_mod_raw.h"
+#include "constant_time_internal.h"
+
+/* This test suite only manipulates non-negative bignums. */
+static int sign_is_valid(const mbedtls_mpi *X)
+{
+    return X->s == 1;
+}
+
+/* A common initializer for test functions that should generate the same
+ * sequences for reproducibility and good coverage. */
+const mbedtls_test_rnd_pseudo_info rnd_pseudo_seed = {
+    /* 16-word key */
+    { 'T', 'h', 'i', 's', ' ', 'i', 's', ' ',
+      'a', ' ', 's', 'e', 'e', 'd', '!', 0 },
+    /* 2-word initial state, should be zero */
+    0, 0
+};
+
+/* Test whether bytes represents (in big-endian base 256) a number b that
+ * is significantly above a power of 2. That is, b must not have a long run
+ * of unset bits after the most significant bit.
+ *
+ * Let n be the bit-size of b, i.e. the integer such that 2^n <= b < 2^{n+1}.
+ * This function returns 1 if, when drawing a number between 0 and b,
+ * the probability that this number is at least 2^n is not negligible.
+ * This probability is (b - 2^n) / b and this function checks that this
+ * number is above some threshold A. The threshold value is heuristic and
+ * based on the needs of mpi_random_many().
+ */
+static int is_significantly_above_a_power_of_2(data_t *bytes)
+{
+    const uint8_t *p = bytes->x;
+    size_t len = bytes->len;
+    unsigned x;
+
+    /* Skip leading null bytes */
+    while (len > 0 && p[0] == 0) {
+        ++p;
+        --len;
+    }
+    /* 0 is not significantly above a power of 2 */
+    if (len == 0) {
+        return 0;
+    }
+    /* Extract the (up to) 2 most significant bytes */
+    if (len == 1) {
+        x = p[0];
+    } else {
+        x = (p[0] << 8) | p[1];
+    }
+
+    /* Shift the most significant bit of x to position 8 and mask it out */
+    while ((x & 0xfe00) != 0) {
+        x >>= 1;
+    }
+    x &= 0x00ff;
+
+    /* At this point, x = floor((b - 2^n) / 2^(n-8)). b is significantly above
+     * a power of 2 iff x is significantly above 0 compared to 2^8.
+     * Testing x >= 2^4 amounts to picking A = 1/16 in the function
+     * description above. */
+    return x >= 0x10;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_BIGNUM_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mpi_core_random_basic(int min, char *bound_bytes, int expected_ret)
+{
+    /* Same RNG as in mpi_random_values */
+    mbedtls_test_rnd_pseudo_info rnd = rnd_pseudo_seed;
+    size_t limbs;
+    mbedtls_mpi_uint *lower_bound = NULL;
+    mbedtls_mpi_uint *upper_bound = NULL;
+    mbedtls_mpi_uint *result = NULL;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&upper_bound, &limbs,
+                                             bound_bytes));
+    TEST_CALLOC(lower_bound, limbs);
+    lower_bound[0] = min;
+    TEST_CALLOC(result, limbs);
+
+    TEST_EQUAL(expected_ret,
+               mbedtls_mpi_core_random(result, min, upper_bound, limbs,
+                                       mbedtls_test_rnd_pseudo_rand, &rnd));
+
+    if (expected_ret == 0) {
+        TEST_EQUAL(0, mbedtls_mpi_core_lt_ct(result, lower_bound, limbs));
+        TEST_ASSERT(0 != mbedtls_mpi_core_lt_ct(result, upper_bound, limbs));
+    }
+
+exit:
+    mbedtls_free(lower_bound);
+    mbedtls_free(upper_bound);
+    mbedtls_free(result);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_legacy_random_values(int min, char *max_hex)
+{
+    /* Same RNG as in mpi_core_random_basic */
+    mbedtls_test_rnd_pseudo_info rnd_core = rnd_pseudo_seed;
+    mbedtls_test_rnd_pseudo_info rnd_legacy;
+    memcpy(&rnd_legacy, &rnd_core, sizeof(rnd_core));
+    mbedtls_mpi max_legacy;
+    mbedtls_mpi_init(&max_legacy);
+    mbedtls_mpi_uint *R_core = NULL;
+    mbedtls_mpi R_legacy;
+    mbedtls_mpi_init(&R_legacy);
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&max_legacy, max_hex));
+    size_t limbs = max_legacy.n;
+    TEST_CALLOC(R_core, limbs);
+
+    /* Call the legacy function and the core function with the same random
+     * stream. */
+    int core_ret = mbedtls_mpi_core_random(R_core, min, max_legacy.p, limbs,
+                                           mbedtls_test_rnd_pseudo_rand,
+                                           &rnd_core);
+    int legacy_ret = mbedtls_mpi_random(&R_legacy, min, &max_legacy,
+                                        mbedtls_test_rnd_pseudo_rand,
+                                        &rnd_legacy);
+
+    /* They must return the same status, and, on success, output the
+     * same number, with the same limb count. */
+    TEST_EQUAL(core_ret, legacy_ret);
+    if (core_ret == 0) {
+        TEST_MEMORY_COMPARE(R_core, limbs * ciL,
+                            R_legacy.p, R_legacy.n * ciL);
+    }
+
+    /* Also check that they have consumed the RNG in the same way. */
+    /* This may theoretically fail on rare platforms with padding in
+     * the structure! If this is a problem in practice, change to a
+     * field-by-field comparison. */
+    TEST_MEMORY_COMPARE(&rnd_core, sizeof(rnd_core),
+                        &rnd_legacy, sizeof(rnd_legacy));
+
+exit:
+    mbedtls_mpi_free(&max_legacy);
+    mbedtls_free(R_core);
+    mbedtls_mpi_free(&R_legacy);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_WITH_MPI_UINT */
+void mpi_mod_random_values(int min, char *max_hex, int rep)
+{
+    /* Same RNG as in mpi_core_random_basic */
+    mbedtls_test_rnd_pseudo_info rnd_core = rnd_pseudo_seed;
+    mbedtls_test_rnd_pseudo_info rnd_mod_raw;
+    memcpy(&rnd_mod_raw, &rnd_core, sizeof(rnd_core));
+    mbedtls_test_rnd_pseudo_info rnd_mod;
+    memcpy(&rnd_mod, &rnd_core, sizeof(rnd_core));
+    mbedtls_mpi_uint *R_core = NULL;
+    mbedtls_mpi_uint *R_mod_raw = NULL;
+    mbedtls_mpi_uint *R_mod_digits = NULL;
+    mbedtls_mpi_mod_residue R_mod;
+    mbedtls_mpi_mod_modulus N;
+    mbedtls_mpi_mod_modulus_init(&N);
+
+    TEST_EQUAL(mbedtls_test_read_mpi_modulus(&N, max_hex, rep), 0);
+    TEST_CALLOC(R_core, N.limbs);
+    TEST_CALLOC(R_mod_raw, N.limbs);
+    TEST_CALLOC(R_mod_digits, N.limbs);
+    TEST_EQUAL(mbedtls_mpi_mod_residue_setup(&R_mod, &N,
+                                             R_mod_digits, N.limbs),
+               0);
+
+    /* Call the core and mod random() functions with the same random stream. */
+    int core_ret = mbedtls_mpi_core_random(R_core,
+                                           min, N.p, N.limbs,
+                                           mbedtls_test_rnd_pseudo_rand,
+                                           &rnd_core);
+    int mod_raw_ret = mbedtls_mpi_mod_raw_random(R_mod_raw,
+                                                 min, &N,
+                                                 mbedtls_test_rnd_pseudo_rand,
+                                                 &rnd_mod_raw);
+    int mod_ret = mbedtls_mpi_mod_random(&R_mod,
+                                         min, &N,
+                                         mbedtls_test_rnd_pseudo_rand,
+                                         &rnd_mod);
+
+    /* They must return the same status, and, on success, output the
+     * same number, with the same limb count. */
+    TEST_EQUAL(core_ret, mod_raw_ret);
+    TEST_EQUAL(core_ret, mod_ret);
+    if (core_ret == 0) {
+        TEST_EQUAL(mbedtls_mpi_mod_raw_modulus_to_canonical_rep(R_mod_raw, &N),
+                   0);
+        TEST_MEMORY_COMPARE(R_core, N.limbs * ciL,
+                            R_mod_raw, N.limbs * ciL);
+        TEST_EQUAL(mbedtls_mpi_mod_raw_modulus_to_canonical_rep(R_mod_digits, &N),
+                   0);
+        TEST_MEMORY_COMPARE(R_core, N.limbs * ciL,
+                            R_mod_digits, N.limbs * ciL);
+    }
+
+    /* Also check that they have consumed the RNG in the same way. */
+    /* This may theoretically fail on rare platforms with padding in
+     * the structure! If this is a problem in practice, change to a
+     * field-by-field comparison. */
+    TEST_MEMORY_COMPARE(&rnd_core, sizeof(rnd_core),
+                        &rnd_mod_raw, sizeof(rnd_mod_raw));
+    TEST_MEMORY_COMPARE(&rnd_core, sizeof(rnd_core),
+                        &rnd_mod, sizeof(rnd_mod));
+
+exit:
+    mbedtls_test_mpi_mod_modulus_free_with_limbs(&N);
+    mbedtls_free(R_core);
+    mbedtls_free(R_mod_raw);
+    mbedtls_free(R_mod_digits);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_random_many(int min, char *bound_hex, int iterations)
+{
+    /* Generate numbers in the range 1..bound-1. Do it iterations times.
+     * This function assumes that the value of bound is at least 2 and
+     * that iterations is large enough that a one-in-2^iterations chance
+     * effectively never occurs.
+     */
+
+    data_t bound_bytes = { NULL, 0 };
+    mbedtls_mpi_uint *upper_bound = NULL;
+    size_t limbs;
+    size_t n_bits;
+    mbedtls_mpi_uint *result = NULL;
+    size_t b;
+    /* If upper_bound is small, stats[b] is the number of times the value b
+     * has been generated. Otherwise stats[b] is the number of times a
+     * value with bit b set has been generated. */
+    size_t *stats = NULL;
+    size_t stats_len;
+    int full_stats;
+    size_t i;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&upper_bound, &limbs,
+                                             bound_hex));
+    TEST_CALLOC(result, limbs);
+
+    n_bits = mbedtls_mpi_core_bitlen(upper_bound, limbs);
+    /* Consider a bound "small" if it's less than 2^5. This value is chosen
+     * to be small enough that the probability of missing one value is
+     * negligible given the number of iterations. It must be less than
+     * 256 because some of the code below assumes that "small" values
+     * fit in a byte. */
+    if (n_bits <= 5) {
+        full_stats = 1;
+        stats_len = (uint8_t) upper_bound[0];
+    } else {
+        full_stats = 0;
+        stats_len = n_bits;
+    }
+    TEST_CALLOC(stats, stats_len);
+
+    for (i = 0; i < (size_t) iterations; i++) {
+        mbedtls_test_set_step(i);
+        TEST_EQUAL(0, mbedtls_mpi_core_random(result,
+                                              min, upper_bound, limbs,
+                                              mbedtls_test_rnd_std_rand, NULL));
+
+        /* Temporarily use a legacy MPI for analysis, because the
+         * necessary auxiliary functions don't exist yet in core. */
+        mbedtls_mpi B = { .s = 1, .n = limbs, .p = upper_bound };
+        mbedtls_mpi R = { .s = 1, .n = limbs, .p = result };
+
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R, &B) < 0);
+        TEST_ASSERT(mbedtls_mpi_cmp_int(&R, min) >= 0);
+        if (full_stats) {
+            uint8_t value;
+            TEST_EQUAL(0, mbedtls_mpi_write_binary(&R, &value, 1));
+            TEST_ASSERT(value < stats_len);
+            ++stats[value];
+        } else {
+            for (b = 0; b < n_bits; b++) {
+                stats[b] += mbedtls_mpi_get_bit(&R, b);
+            }
+        }
+    }
+
+    if (full_stats) {
+        for (b = min; b < stats_len; b++) {
+            mbedtls_test_set_step(1000000 + b);
+            /* Assert that each value has been reached at least once.
+             * This is almost guaranteed if the iteration count is large
+             * enough. This is a very crude way of checking the distribution.
+             */
+            TEST_ASSERT(stats[b] > 0);
+        }
+    } else {
+        bound_bytes.len = limbs * sizeof(mbedtls_mpi_uint);
+        TEST_CALLOC(bound_bytes.x, bound_bytes.len);
+        mbedtls_mpi_core_write_be(upper_bound, limbs,
+                                  bound_bytes.x, bound_bytes.len);
+        int statistically_safe_all_the_way =
+            is_significantly_above_a_power_of_2(&bound_bytes);
+        for (b = 0; b < n_bits; b++) {
+            mbedtls_test_set_step(1000000 + b);
+            /* Assert that each bit has been set in at least one result and
+             * clear in at least one result. Provided that iterations is not
+             * too small, it would be extremely unlikely for this not to be
+             * the case if the results are uniformly distributed.
+             *
+             * As an exception, the top bit may legitimately never be set
+             * if bound is a power of 2 or only slightly above.
+             */
+            if (statistically_safe_all_the_way || b != n_bits - 1) {
+                TEST_ASSERT(stats[b] > 0);
+            }
+            TEST_ASSERT(stats[b] < (size_t) iterations);
+        }
+    }
+
+exit:
+    mbedtls_free(bound_bytes.x);
+    mbedtls_free(upper_bound);
+    mbedtls_free(result);
+    mbedtls_free(stats);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_random_sizes(int min, data_t *bound_bytes, int nlimbs, int before)
+{
+    mbedtls_mpi upper_bound;
+    mbedtls_mpi result;
+
+    mbedtls_mpi_init(&upper_bound);
+    mbedtls_mpi_init(&result);
+
+    if (before != 0) {
+        /* Set result to sign(before) * 2^(|before|-1) */
+        TEST_ASSERT(mbedtls_mpi_lset(&result, before > 0 ? 1 : -1) == 0);
+        if (before < 0) {
+            before = -before;
+        }
+        TEST_ASSERT(mbedtls_mpi_shift_l(&result, before - 1) == 0);
+    }
+
+    TEST_EQUAL(0, mbedtls_mpi_grow(&result, nlimbs));
+    TEST_EQUAL(0, mbedtls_mpi_read_binary(&upper_bound,
+                                          bound_bytes->x, bound_bytes->len));
+    TEST_EQUAL(0, mbedtls_mpi_random(&result, min, &upper_bound,
+                                     mbedtls_test_rnd_std_rand, NULL));
+    TEST_ASSERT(sign_is_valid(&result));
+    TEST_ASSERT(mbedtls_mpi_cmp_mpi(&result, &upper_bound) < 0);
+    TEST_ASSERT(mbedtls_mpi_cmp_int(&result, min) >= 0);
+
+exit:
+    mbedtls_mpi_free(&upper_bound);
+    mbedtls_mpi_free(&result);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ECP_WITH_MPI_UINT */
+void mpi_mod_random_validation(int min, char *bound_hex,
+                               int result_limbs_delta,
+                               int expected_ret)
+{
+    mbedtls_mpi_uint *result_digits = NULL;
+    mbedtls_mpi_mod_modulus N;
+    mbedtls_mpi_mod_modulus_init(&N);
+
+    TEST_EQUAL(mbedtls_test_read_mpi_modulus(&N, bound_hex,
+                                             MBEDTLS_MPI_MOD_REP_OPT_RED),
+               0);
+    size_t result_limbs = N.limbs + result_limbs_delta;
+    TEST_CALLOC(result_digits, result_limbs);
+    /* Build a reside that might not match the modulus, to test that
+     * the library function rejects that as expected. */
+    mbedtls_mpi_mod_residue result = { result_digits, result_limbs };
+
+    TEST_EQUAL(mbedtls_mpi_mod_random(&result, min, &N,
+                                      mbedtls_test_rnd_std_rand, NULL),
+               expected_ret);
+    if (expected_ret == 0) {
+        /* Success should only be expected when the result has the same
+         * size as the modulus, otherwise it's a mistake in the test data. */
+        TEST_EQUAL(result_limbs, N.limbs);
+        /* Sanity check: check that the result is in range */
+        TEST_ASSERT(0 != mbedtls_mpi_core_lt_ct(result_digits, N.p, N.limbs));
+        /* Check result >= min (changes result) */
+        TEST_EQUAL(mbedtls_mpi_core_sub_int(result_digits, result_digits, min,
+                                            result_limbs),
+                   0);
+    }
+
+    /* When the result has the right number of limbs, also test mod_raw
+     * (for which this is an unchecked precondition). */
+    if (result_limbs_delta == 0) {
+        TEST_EQUAL(mbedtls_mpi_mod_raw_random(result_digits, min, &N,
+                                              mbedtls_test_rnd_std_rand, NULL),
+                   expected_ret);
+        if (expected_ret == 0) {
+            TEST_ASSERT(0 != mbedtls_mpi_core_lt_ct(result_digits, N.p, N.limbs));
+            TEST_EQUAL(mbedtls_mpi_core_sub_int(result_digits, result.p, min,
+                                                result_limbs),
+                       0);
+        }
+    }
+
+exit:
+    mbedtls_test_mpi_mod_modulus_free_with_limbs(&N);
+    mbedtls_free(result_digits);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_random_fail(int min, data_t *bound_bytes, int expected_ret)
+{
+    mbedtls_mpi upper_bound;
+    mbedtls_mpi result;
+    int actual_ret;
+
+    mbedtls_mpi_init(&upper_bound);
+    mbedtls_mpi_init(&result);
+
+    TEST_EQUAL(0, mbedtls_mpi_read_binary(&upper_bound,
+                                          bound_bytes->x, bound_bytes->len));
+    actual_ret = mbedtls_mpi_random(&result, min, &upper_bound,
+                                    mbedtls_test_rnd_std_rand, NULL);
+    TEST_EQUAL(expected_ret, actual_ret);
+
+exit:
+    mbedtls_mpi_free(&upper_bound);
+    mbedtls_mpi_free(&result);
+}
+/* END_CASE */

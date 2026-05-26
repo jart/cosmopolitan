@@ -1,0 +1,92 @@
+# Copyright (c) The mldsa-native project authors
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+CFLAGS = /nologo /O2 /Imldsa /Imldsa/src/ /Imlmdsa/src/fips202 /Imldsa/src/fips202/native /Imldsa/src/native
+
+OBJ_FILES = .\mldsa\*.obj \
+            .\mldsa\fips202\*.obj
+
+BUILD_DIR = test\build
+MLDSA44_BUILD_DIR = $(BUILD_DIR)\mldsa44
+MLDSA65_BUILD_DIR = $(BUILD_DIR)\mldsa65
+MLDSA87_BUILD_DIR = $(BUILD_DIR)\mldsa87
+
+OBJ_FILES_44 = $(MLDSA44_BUILD_DIR)\mldsa\*.obj \
+                $(MLDSA44_BUILD_DIR)\mldsa\fips202\*.obj
+OBJ_FILES_65 = $(MLDSA65_BUILD_DIR)\mldsa\*.obj \
+                $(MLDSA65_BUILD_DIR)\mldsa\fips202\*.obj
+OBJ_FILES_87 = $(MLDSA87_BUILD_DIR)\mldsa\*.obj \
+                 $(MLDSA87_BUILD_DIR)\mldsa\fips202\*.obj
+
+# NOTE: We currently only build code for non-opt code, as we haven't yet made the assembly compatible on Windows
+!IFNDEF OPT
+OPT = 0
+!ENDIF
+
+{test/notrandombytes}.c{$(BUILD_DIR)\randombytes}.obj::
+	@if NOT EXIST $(BUILD_DIR)\randombytes mkdir $(BUILD_DIR)\randombytes
+    $(CC) $(CFLAGS) /c /Fo$(BUILD_DIR)\randombytes\ $<
+
+# compilation for mldsa44
+{mldsa\src}.c{$(MLDSA44_BUILD_DIR)\mldsa}.obj::
+    @if NOT EXIST $(MLDSA44_BUILD_DIR)\mldsa mkdir $(MLDSA44_BUILD_DIR)\mldsa
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=44 /c /Fo$(MLDSA44_BUILD_DIR)\mldsa\ $<
+
+{mldsa\src\fips202}.c{$(MLDSA44_BUILD_DIR)\mldsa\fips202}.obj::
+    @if NOT EXIST $(MLDSA44_BUILD_DIR)\mldsa\fips202 mkdir $(MLDSA44_BUILD_DIR)\mldsa\fips202
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=44 /c /Fo$(MLDSA44_BUILD_DIR)\mldsa\fips202\ $<
+
+{test\src}.c{$(MLDSA44_BUILD_DIR)\test}.obj::
+    @if NOT EXIST $(MLDSA44_BUILD_DIR)\test mkdir $(MLDSA44_BUILD_DIR)\test
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=44 /c /Fo$(MLDSA44_BUILD_DIR)\test\ $<
+
+# compilation for mldsa65
+{mldsa\src}.c{$(MLDSA65_BUILD_DIR)\mldsa}.obj::
+    @if NOT EXIST $(MLDSA65_BUILD_DIR)\mldsa mkdir $(MLDSA65_BUILD_DIR)\mldsa
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=65 /c /Fo$(MLDSA65_BUILD_DIR)\mldsa\ $<
+
+{mldsa\src\fips202}.c{$(MLDSA65_BUILD_DIR)\mldsa\fips202}.obj::
+    @if NOT EXIST $(MLDSA65_BUILD_DIR)\mldsa\fips202 mkdir $(MLDSA65_BUILD_DIR)\mldsa\fips202
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=65 /c /Fo$(MLDSA65_BUILD_DIR)\mldsa\fips202\ $<
+
+{test\src}.c{$(MLDSA65_BUILD_DIR)\test}.obj::
+    @if NOT EXIST $(MLDSA65_BUILD_DIR)\test mkdir $(MLDSA65_BUILD_DIR)\test
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=65 /c /Fo$(MLDSA65_BUILD_DIR)\test\ $<
+
+# compilation for mldsa87
+{mldsa\src}.c{$(MLDSA87_BUILD_DIR)\mldsa}.obj::
+    @if NOT EXIST $(MLDSA87_BUILD_DIR)\mldsa mkdir $(MLDSA87_BUILD_DIR)\mldsa
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=87 /c /Fo$(MLDSA87_BUILD_DIR)\mldsa\ $<
+
+{mldsa\src\fips202}.c{$(MLDSA87_BUILD_DIR)\mldsa\fips202}.obj::
+    @if NOT EXIST $(MLDSA87_BUILD_DIR)\mldsa\fips202 mkdir $(MLDSA87_BUILD_DIR)\mldsa\fips202
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=87 /c /Fo$(MLDSA87_BUILD_DIR)\mldsa\fips202\ $<
+
+{test\src}.c{$(MLDSA87_BUILD_DIR)\test}.obj::
+    @if NOT EXIST $(MLDSA87_BUILD_DIR)\test mkdir $(MLDSA87_BUILD_DIR)\test
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=87 /c /Fo$(MLDSA87_BUILD_DIR)\test\ $<
+
+
+# compile functional test for mldsa44
+test_mldsa44: $(OBJ_FILES_44) $(MLDSA44_BUILD_DIR)\test\test_mldsa.obj $(BUILD_DIR)\randombytes\notrandombytes.obj
+    @if NOT EXIST $(MLDSA44_BUILD_DIR)\bin mkdir $(MLDSA44_BUILD_DIR)\bin
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=44 /Fe$(MLDSA44_BUILD_DIR)\bin\test_mldsa44 $** /link
+
+# compile functional test for mldsa65
+test_mldsa65: $(OBJ_FILES_65) $(MLDSA65_BUILD_DIR)\test\test_mldsa.obj $(BUILD_DIR)\randombytes\notrandombytes.obj
+    @if NOT EXIST $(MLDSA65_BUILD_DIR)\bin mkdir $(MLDSA65_BUILD_DIR)\bin
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=65 /Fe$(MLDSA65_BUILD_DIR)\bin\test_mldsa65 $** /link
+
+# compile functional test for mldsa87
+test_mldsa87: $(OBJ_FILES_87) $(MLDSA87_BUILD_DIR)\test\test_mldsa.obj $(BUILD_DIR)\randombytes\notrandombytes.obj
+    @if NOT EXIST $(MLDSA87_BUILD_DIR)\bin mkdir $(MLDSA87_BUILD_DIR)\bin
+    $(CC) $(CFLAGS) /D MLD_CONFIG_PARAMETER_SET=87 /Fe$(MLDSA87_BUILD_DIR)\bin\test_mldsa87 $** /link
+
+quickcheck: test_mldsa44 test_mldsa65 test_mldsa87
+    $(MLDSA44_BUILD_DIR)\bin\test_mldsa44.exe
+	$(MLDSA65_BUILD_DIR)\bin\test_mldsa65.exe
+	$(MLDSA87_BUILD_DIR)\bin\test_mldsa87.exe
+
+clean:
+    -DEL $(BUILD_DIR)

@@ -1,0 +1,126 @@
+/* BEGIN_HEADER */
+
+/* The printf test functions take a format argument from the test data
+ * for several reasons:
+ * - For some tests, it makes sense to vary the format.
+ * - For all tests, it means we're testing the actual printf function
+ *   that parses the format at runtime, and not a compiler optimization.
+ *   (It may be useful to add tests that allow compiler optimizations.
+ *   There aren't any yet at the time of writing.)
+ */
+
+#include "mbedtls/platform.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if SIZE_MAX >= 0xffffffffffffffff
+#define SIZE_T_AT_LEAST_64_BIT
+#endif
+
+typedef enum {
+    PRINTF_CAST_INT,
+    PRINTF_CAST_UNSIGNED,
+    PRINTF_CAST_SIZE_T,
+    PRINTF_CAST_LONG,
+    PRINTF_CAST_UNSIGNED_LONG,
+    PRINTF_CAST_LONG_LONG,
+    PRINTF_CAST_UNSIGNED_LONG_LONG,
+} printf_cast_type_t;
+
+#define NEWLINE_CHAR '\n'
+#define SPACE_CHAR ' '
+#define DOUBLE_QUOTE_CHAR '"'
+#define COLON_CHAR ':'
+#define QUESTION_CHAR '?'
+#define BACKSLASH_CHAR '\\'
+#define LOWERCASE_N_CHAR 'n'
+
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void printf_integer(char *format, /* format expecting one foo_t argument */
+                    int type,     /* enum value from printf_cast_type_t */
+                    intmax_t value,
+                    char *result)
+{
+    char *output = NULL;
+    const size_t n = strlen(result);
+    int ret = 0;
+
+    /* Nominal case: buffer just large enough */
+    TEST_CALLOC(output, n + 1);
+    switch (type) {
+        case PRINTF_CAST_INT:
+            ret = mbedtls_snprintf(output, n + 1, format, (int) value);
+            break;
+        case PRINTF_CAST_UNSIGNED:
+            ret = mbedtls_snprintf(output, n + 1, format, (unsigned) value);
+            break;
+        case PRINTF_CAST_SIZE_T:
+            ret = mbedtls_snprintf(output, n + 1, format, (size_t) value);
+            break;
+        case PRINTF_CAST_LONG_LONG:
+            ret = mbedtls_snprintf(output, n + 1, format, (long long) value);
+            break;
+        case PRINTF_CAST_UNSIGNED_LONG_LONG:
+            ret = mbedtls_snprintf(output, n + 1, format, (unsigned long long) value);
+            break;
+        default:
+            TEST_FAIL("Unsupported type");
+    }
+    TEST_EQUAL(n, ret);
+    TEST_MEMORY_COMPARE(result, n + 1, output, n + 1);
+    mbedtls_free(output);
+    output = NULL;
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void printf_long_max(const char *format, /* "%lx" or longer type */
+                     long value)
+{
+    char *expected = NULL;
+    char *output = NULL;
+    /* 2 hex digits per byte */
+    const size_t n = sizeof(value) * 2;
+
+    /* We assume that long has no padding bits! */
+    TEST_CALLOC(expected, n + 1);
+    expected[0] = '7';
+    memset(expected + 1, 'f', sizeof(value) * 2 - 1);
+
+    TEST_CALLOC(output, n + 1);
+    TEST_EQUAL(n, mbedtls_snprintf(output, n + 1, format, value));
+    TEST_MEMORY_COMPARE(expected, n + 1, output, n + 1);
+    mbedtls_free(output);
+    output = NULL;
+
+exit:
+    mbedtls_free(output);
+    mbedtls_free(expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void printf_char2(char *format, /* "%c%c" */
+                  int arg1, int arg2, char *result)
+{
+    char *output = NULL;
+    const size_t n = strlen(result);
+
+    /* Nominal case: buffer just large enough */
+    TEST_CALLOC(output, n + 1);
+    TEST_EQUAL(n, mbedtls_snprintf(output, n + 1, format, arg1, arg2));
+    TEST_MEMORY_COMPARE(result, n + 1, output, n + 1);
+    mbedtls_free(output);
+    output = NULL;
+
+exit:
+    mbedtls_free(output);
+}
+/* END_CASE */

@@ -1,0 +1,137 @@
+# Test vectors from NIST Special Publication 800-38A 2001 Edition
+# Recommendation for Block Edition Cipher Modes of Operation
+
+# as below, but corrupt the key to check the test catches it
+AES-CTR NIST 128 bad
+aes_ctr:"00000000000000000000000000000000":"f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff":"6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710":"874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee":1
+
+AES-CTR NIST 128
+aes_ctr:"2b7e151628aed2a6abf7158809cf4f3c":"f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff":"6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710":"874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee":0
+
+AES-CTR NIST 192
+depends_on:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+aes_ctr:"8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b":"f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff":"6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710":"1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050":0
+
+AES-CTR NIST 256
+depends_on:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+aes_ctr:"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4":"f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff":"6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710":"601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6":0
+
+AES-CTR aes_encrypt_ctr_multipart 1 1
+aes_encrypt_ctr_multipart:1:1
+
+AES-CTR aes_encrypt_ctr_multipart 2 1
+aes_encrypt_ctr_multipart:2:1
+
+AES-CTR aes_encrypt_ctr_multipart 2 2
+aes_encrypt_ctr_multipart:2:2
+
+AES-CTR aes_encrypt_ctr_multipart 4 1
+aes_encrypt_ctr_multipart:4:1
+
+AES-CTR aes_encrypt_ctr_multipart 4 2
+aes_encrypt_ctr_multipart:4:2
+
+AES-CTR aes_encrypt_ctr_multipart 15 1
+aes_encrypt_ctr_multipart:15:1
+
+AES-CTR aes_encrypt_ctr_multipart 15 2
+aes_encrypt_ctr_multipart:15:2
+
+AES-CTR aes_encrypt_ctr_multipart 15 8
+aes_encrypt_ctr_multipart:15:8
+
+AES-CTR aes_encrypt_ctr_multipart 15 15
+aes_encrypt_ctr_multipart:15:15
+
+AES-CTR aes_encrypt_ctr_multipart 16 1
+aes_encrypt_ctr_multipart:16:1
+
+AES-CTR aes_encrypt_ctr_multipart 16 2
+aes_encrypt_ctr_multipart:16:2
+
+AES-CTR aes_encrypt_ctr_multipart 16 8
+aes_encrypt_ctr_multipart:16:8
+
+AES-CTR aes_encrypt_ctr_multipart 16 15
+aes_encrypt_ctr_multipart:16:15
+
+AES-CTR aes_encrypt_ctr_multipart 16 16
+aes_encrypt_ctr_multipart:16:16
+
+AES-CTR aes_encrypt_ctr_multipart 17 1
+aes_encrypt_ctr_multipart:17:1
+
+AES-CTR aes_encrypt_ctr_multipart 17 2
+aes_encrypt_ctr_multipart:17:2
+
+AES-CTR aes_encrypt_ctr_multipart 17 8
+aes_encrypt_ctr_multipart:17:8
+
+AES-CTR aes_encrypt_ctr_multipart 17 15
+aes_encrypt_ctr_multipart:17:15
+
+AES-CTR aes_encrypt_ctr_multipart 17 16
+aes_encrypt_ctr_multipart:17:16
+
+AES-CTR aes_encrypt_ctr_multipart 63 1
+aes_encrypt_ctr_multipart:63:1
+
+AES-CTR aes_encrypt_ctr_multipart 63 2
+aes_encrypt_ctr_multipart:63:2
+
+AES-CTR aes_encrypt_ctr_multipart 63 8
+aes_encrypt_ctr_multipart:63:8
+
+AES-CTR aes_encrypt_ctr_multipart 63 15
+aes_encrypt_ctr_multipart:63:15
+
+AES-CTR aes_encrypt_ctr_multipart 63 16
+aes_encrypt_ctr_multipart:63:16
+
+AES-CTR aes_encrypt_ctr_multipart 63 17
+aes_encrypt_ctr_multipart:63:17
+
+AES-CTR aes_encrypt_ctr_multipart 64 1
+aes_encrypt_ctr_multipart:64:1
+
+AES-CTR aes_encrypt_ctr_multipart 64 2
+aes_encrypt_ctr_multipart:64:2
+
+AES-CTR aes_encrypt_ctr_multipart 64 8
+aes_encrypt_ctr_multipart:64:8
+
+AES-CTR aes_encrypt_ctr_multipart 64 15
+aes_encrypt_ctr_multipart:64:15
+
+AES-CTR aes_encrypt_ctr_multipart 64 16
+aes_encrypt_ctr_multipart:64:16
+
+AES-CTR aes_encrypt_ctr_multipart 64 17
+aes_encrypt_ctr_multipart:64:17
+
+AES-CTR aes_encrypt_ctr_multipart 1024 1
+aes_encrypt_ctr_multipart:1024:1
+
+AES-CTR aes_encrypt_ctr_multipart 1024 10
+aes_encrypt_ctr_multipart:1024:10
+
+AES-CTR aes_encrypt_ctr_multipart 1024 15
+aes_encrypt_ctr_multipart:1024:15
+
+AES-CTR aes_encrypt_ctr_multipart 1024 16
+aes_encrypt_ctr_multipart:1024:16
+
+AES-CTR aes_encrypt_ctr_multipart 1024 63
+aes_encrypt_ctr_multipart:1024:63
+
+AES-CTR aes_encrypt_ctr_multipart 1024 64
+aes_encrypt_ctr_multipart:1024:64
+
+AES-CTR aes_encrypt_ctr_multipart 1024 65
+aes_encrypt_ctr_multipart:1024:65
+
+AES-CTR aes_encrypt_ctr_multipart 1024 1023
+aes_encrypt_ctr_multipart:1024:1023
+
+AES-CTR aes_encrypt_ctr_multipart 1024 1024
+aes_encrypt_ctr_multipart:1024:1024

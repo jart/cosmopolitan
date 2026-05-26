@@ -1,0 +1,92 @@
+/* BEGIN_HEADER */
+/* Basic tests for the threading interface.
+ */
+
+#include "mbedtls/threading.h"
+
+#include "test/threading_helpers.h"
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_THREADING_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mutex_usage_nominal(int lock_cycles)
+{
+    mbedtls_threading_mutex_t mutex;
+
+    mbedtls_mutex_init(&mutex);
+
+    for (int i = 0; i < lock_cycles; i++) {
+        mbedtls_test_set_step(i);
+        TEST_EQUAL(mbedtls_mutex_lock(&mutex), 0);
+        TEST_EQUAL(mbedtls_mutex_unlock(&mutex), 0);
+    }
+
+exit:
+    mbedtls_mutex_free(&mutex);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mutex_usage_no_init()
+{
+    mbedtls_threading_mutex_t mutex;
+    memset(&mutex, 0, sizeof(mutex));
+
+    TEST_EQUAL(mbedtls_mutex_lock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    TEST_EQUAL(mbedtls_mutex_unlock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    mbedtls_mutex_free(&mutex);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mutex_usage_double_free()
+{
+    mbedtls_threading_mutex_t mutex;
+
+    mbedtls_mutex_init(&mutex);
+    mbedtls_mutex_free(&mutex);
+
+    TEST_EQUAL(mbedtls_mutex_lock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    TEST_EQUAL(mbedtls_mutex_unlock(&mutex), MBEDTLS_ERR_THREADING_USAGE_ERROR);
+    mbedtls_mutex_free(&mutex);
+
+exit:
+    mbedtls_mutex_free(&mutex);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* There is no single-threaded test for wait() on a condition variable
+ * because that can't work: wait() blocks until another thread signals,
+ * so a minimum of two threads are necessary. */
+void condition_usage_nominal(int what)
+{
+    mbedtls_threading_condition_variable_t cond;
+
+    mbedtls_condition_variable_init(&cond);
+
+    switch (what) {
+        case 0:
+            break;
+
+        case 1:
+            TEST_EQUAL(mbedtls_condition_variable_signal(&cond), 0);
+            break;
+
+        case 2:
+            TEST_EQUAL(mbedtls_condition_variable_broadcast(&cond), 0);
+            break;
+
+        default:
+            TEST_FAIL("Unknown thing to do");
+    }
+
+exit:
+    mbedtls_condition_variable_free(&cond);
+}
+/* END_CASE */

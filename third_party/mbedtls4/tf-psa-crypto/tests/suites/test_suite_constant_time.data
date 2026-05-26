@@ -1,0 +1,866 @@
+# these are the numbers we'd get with an empty plaintext and truncated HMAC
+Constant-flow memcpy from offset: small
+mbedtls_ct_memcpy_offset:0:5:10
+
+# we could get this with 255-bytes plaintext and untruncated SHA-256
+Constant-flow memcpy from offset: medium
+mbedtls_ct_memcpy_offset:0:255:32
+
+# we could get this with 255-bytes plaintext and untruncated SHA-384
+Constant-flow memcpy from offset: large
+mbedtls_ct_memcpy_offset:100:339:48
+
+mbedtls_ct_memcmp NULL
+mbedtls_ct_memcmp_null
+
+mbedtls_ct_memcmp len 1
+mbedtls_ct_memcmp:-1:1:0
+
+mbedtls_ct_memcmp len 3
+mbedtls_ct_memcmp:-1:3:0
+
+mbedtls_ct_memcmp len 4
+mbedtls_ct_memcmp:-1:4:0
+
+mbedtls_ct_memcmp len 5
+mbedtls_ct_memcmp:-1:5:0
+
+mbedtls_ct_memcmp len 15
+mbedtls_ct_memcmp:-1:15:0
+
+mbedtls_ct_memcmp len 16
+mbedtls_ct_memcmp:-1:16:0
+
+mbedtls_ct_memcmp len 17
+mbedtls_ct_memcmp:-1:17:0
+
+mbedtls_ct_memcmp len 1 different
+mbedtls_ct_memcmp:0:1:0
+
+mbedtls_ct_memcmp len 17 different
+mbedtls_ct_memcmp:0:17:0
+
+mbedtls_ct_memcmp len 17 different 1
+mbedtls_ct_memcmp:1:17:0
+
+mbedtls_ct_memcmp len 17 different 4
+mbedtls_ct_memcmp:4:17:0
+
+mbedtls_ct_memcmp len 17 different 10
+mbedtls_ct_memcmp:10:17:0
+
+mbedtls_ct_memcmp len 17 different 16
+mbedtls_ct_memcmp:16:17:0
+
+mbedtls_ct_memcmp len 1 offset 1 different
+mbedtls_ct_memcmp:0:1:1
+
+mbedtls_ct_memcmp len 17 offset 1 different
+mbedtls_ct_memcmp:0:17:1
+
+mbedtls_ct_memcmp len 17 offset 1 different 1
+mbedtls_ct_memcmp:1:17:1
+
+mbedtls_ct_memcmp len 17 offset 1 different 5
+mbedtls_ct_memcmp:5:17:1
+
+mbedtls_ct_memcmp len 1 offset 1
+mbedtls_ct_memcmp:-1:1:1
+
+mbedtls_ct_memcmp len 1 offset 2
+mbedtls_ct_memcmp:-1:1:2
+
+mbedtls_ct_memcmp len 1 offset 3
+mbedtls_ct_memcmp:-1:1:3
+
+mbedtls_ct_memcmp len 5 offset 1
+mbedtls_ct_memcmp:-1:5:1
+
+mbedtls_ct_memcmp len 5 offset 2
+mbedtls_ct_memcmp:-1:5:2
+
+mbedtls_ct_memcmp len 5 offset 3
+mbedtls_ct_memcmp:-1:5:3
+
+mbedtls_ct_memcmp len 17 offset 1
+mbedtls_ct_memcmp:-1:17:1
+
+mbedtls_ct_memcmp len 17 offset 2
+mbedtls_ct_memcmp:-1:17:2
+
+mbedtls_ct_memcmp len 17 offset 3
+mbedtls_ct_memcmp:-1:17:3
+
+mbedtls_ct_memcmp_single_bit_diff
+mbedtls_ct_memcmp_single_bit_diff:
+
+mbedtls_ct_memcpy_if len 1 offset 0
+mbedtls_ct_memcpy_if:1:1:0
+
+mbedtls_ct_memcpy_if len 1 offset 1
+mbedtls_ct_memcpy_if:1:1:1
+
+mbedtls_ct_memcpy_if len 4 offset 0
+mbedtls_ct_memcpy_if:1:1:0
+
+mbedtls_ct_memcpy_if len 4 offset 1
+mbedtls_ct_memcpy_if:1:1:1
+
+mbedtls_ct_memcpy_if len 4 offset 2
+mbedtls_ct_memcpy_if:1:1:2
+
+mbedtls_ct_memcpy_if len 4 offset 3
+mbedtls_ct_memcpy_if:1:1:3
+
+mbedtls_ct_memcpy_if len 15 offset 0
+mbedtls_ct_memcpy_if:1:15:0
+
+mbedtls_ct_memcpy_if len 15 offset 1
+mbedtls_ct_memcpy_if:1:15:1
+
+mbedtls_ct_memcpy_if len 16 offset 0
+mbedtls_ct_memcpy_if:1:16:0
+
+mbedtls_ct_memcpy_if len 16 offset 1
+mbedtls_ct_memcpy_if:1:16:1
+
+mbedtls_ct_memcpy_if len 17 offset 0
+mbedtls_ct_memcpy_if:1:17:0
+
+mbedtls_ct_memcpy_if len 17 offset 1
+mbedtls_ct_memcpy_if:1:17:1
+
+mbedtls_ct_memcpy_if len 0 not eq
+mbedtls_ct_memcpy_if:0:17:0
+
+mbedtls_ct_memcpy_if len 5 offset 1 not eq
+mbedtls_ct_memcpy_if:0:5:1
+
+mbedtls_ct_memcpy_if len 17 offset 3 not eq
+mbedtls_ct_memcpy_if:0:17:3
+
+mbedtls_ct_bool 0
+mbedtls_ct_bool:"0x0"
+
+mbedtls_ct_bool 1
+mbedtls_ct_bool:"0x1"
+
+mbedtls_ct_bool 4
+mbedtls_ct_bool:"0x4"
+
+mbedtls_ct_bool 0xfffffff
+mbedtls_ct_bool:"0xfffffff"
+
+mbedtls_ct_bool 0x7fffffff
+mbedtls_ct_bool:"0x7fffffff"
+
+mbedtls_ct_bool 0xfffffffe
+mbedtls_ct_bool:"0xfffffffe"
+
+mbedtls_ct_bool 0xffffffff
+mbedtls_ct_bool:"0xffffffff"
+
+mbedtls_ct_bool 0x0fffffffffffffff
+mbedtls_ct_bool:"0x0fffffffffffffff"
+
+mbedtls_ct_bool 0x7fffffffffffffff
+mbedtls_ct_bool:"0x7fffffffffffffff"
+
+mbedtls_ct_bool 0xffffffffffffffff
+mbedtls_ct_bool:"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x0 0x0
+mbedtls_ct_bool_xxx:"0x0":"0x0"
+
+mbedtls_ct_bool_xxx 0x0 0x1
+mbedtls_ct_bool_xxx:"0x0":"0x1"
+
+mbedtls_ct_bool_xxx 0x0 0x7fffffff
+mbedtls_ct_bool_xxx:"0x0":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0x0 0xffffffff
+mbedtls_ct_bool_xxx:"0x0":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0x0 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0x0":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x0 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0x0":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x1 0x0
+mbedtls_ct_bool_xxx:"0x1":"0x0"
+
+mbedtls_ct_bool_xxx 0x1 0x1
+mbedtls_ct_bool_xxx:"0x1":"0x1"
+
+mbedtls_ct_bool_xxx 0x1 0x7fffffff
+mbedtls_ct_bool_xxx:"0x1":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0x1 0xffffffff
+mbedtls_ct_bool_xxx:"0x1":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0x1 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0x1":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x1 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0x1":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0x0
+mbedtls_ct_bool_xxx:"0x7fffffff":"0x0"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0x1
+mbedtls_ct_bool_xxx:"0x7fffffff":"0x1"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0x7fffffff
+mbedtls_ct_bool_xxx:"0x7fffffff":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0xffffffff
+mbedtls_ct_bool_xxx:"0x7fffffff":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0x7fffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffff 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0x7fffffff":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffff 0x0
+mbedtls_ct_bool_xxx:"0xffffffff":"0x0"
+
+mbedtls_ct_bool_xxx 0xffffffff 0x1
+mbedtls_ct_bool_xxx:"0xffffffff":"0x1"
+
+mbedtls_ct_bool_xxx 0xffffffff 0x7fffffff
+mbedtls_ct_bool_xxx:"0xffffffff":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0xffffffff 0xffffffff
+mbedtls_ct_bool_xxx:"0xffffffff":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffff 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0xffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffff 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0xffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0x0
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0x0"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0x1
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0x1"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0x7fffffff
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0xffffffff
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0x7fffffffffffffff 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0x7fffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0x0
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0x0"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0x1
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0x1"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0x7fffffff
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0xffffffff
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0xffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_bool_xxx 0xffffffffffffffff 0xffffffffffffffff
+mbedtls_ct_bool_xxx:"0xffffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_bool_xxx 138 256
+mbedtls_ct_bool_xxx:"138":"256"
+
+mbedtls_ct_bool_xxx 256 138
+mbedtls_ct_bool_xxx:"256":"138"
+
+mbedtls_ct_bool_xxx 6 6
+mbedtls_ct_bool_xxx:"0x6":"0x6"
+
+mbedtls_ct_uchar_in_range_if 0 0 0
+mbedtls_ct_uchar_in_range_if:0:0:0
+
+mbedtls_ct_uchar_in_range_if 0 0 100
+mbedtls_ct_uchar_in_range_if:0:0:100
+
+mbedtls_ct_uchar_in_range_if 0 0 255
+mbedtls_ct_uchar_in_range_if:0:0:255
+
+mbedtls_ct_uchar_in_range_if 0 65 0
+mbedtls_ct_uchar_in_range_if:0:65:0
+
+mbedtls_ct_uchar_in_range_if 0 65 100
+mbedtls_ct_uchar_in_range_if:0:65:100
+
+mbedtls_ct_uchar_in_range_if 0 65 255
+mbedtls_ct_uchar_in_range_if:0:65:255
+
+mbedtls_ct_uchar_in_range_if 0 90 0
+mbedtls_ct_uchar_in_range_if:0:90:0
+
+mbedtls_ct_uchar_in_range_if 0 90 100
+mbedtls_ct_uchar_in_range_if:0:90:100
+
+mbedtls_ct_uchar_in_range_if 0 90 255
+mbedtls_ct_uchar_in_range_if:0:90:255
+
+mbedtls_ct_uchar_in_range_if 0 255 0
+mbedtls_ct_uchar_in_range_if:0:255:0
+
+mbedtls_ct_uchar_in_range_if 0 255 100
+mbedtls_ct_uchar_in_range_if:0:255:100
+
+mbedtls_ct_uchar_in_range_if 0 255 255
+mbedtls_ct_uchar_in_range_if:0:255:255
+
+mbedtls_ct_uchar_in_range_if 65 0 0
+mbedtls_ct_uchar_in_range_if:65:0:0
+
+mbedtls_ct_uchar_in_range_if 65 0 100
+mbedtls_ct_uchar_in_range_if:65:0:100
+
+mbedtls_ct_uchar_in_range_if 65 0 255
+mbedtls_ct_uchar_in_range_if:65:0:255
+
+mbedtls_ct_uchar_in_range_if 65 65 0
+mbedtls_ct_uchar_in_range_if:65:65:0
+
+mbedtls_ct_uchar_in_range_if 65 65 100
+mbedtls_ct_uchar_in_range_if:65:65:100
+
+mbedtls_ct_uchar_in_range_if 65 65 255
+mbedtls_ct_uchar_in_range_if:65:65:255
+
+mbedtls_ct_uchar_in_range_if 65 90 0
+mbedtls_ct_uchar_in_range_if:65:90:0
+
+mbedtls_ct_uchar_in_range_if 65 90 100
+mbedtls_ct_uchar_in_range_if:65:90:100
+
+mbedtls_ct_uchar_in_range_if 65 90 255
+mbedtls_ct_uchar_in_range_if:65:90:255
+
+mbedtls_ct_uchar_in_range_if 65 255 0
+mbedtls_ct_uchar_in_range_if:65:255:0
+
+mbedtls_ct_uchar_in_range_if 65 255 100
+mbedtls_ct_uchar_in_range_if:65:255:100
+
+mbedtls_ct_uchar_in_range_if 65 255 255
+mbedtls_ct_uchar_in_range_if:65:255:255
+
+mbedtls_ct_uchar_in_range_if 90 0 0
+mbedtls_ct_uchar_in_range_if:90:0:0
+
+mbedtls_ct_uchar_in_range_if 90 0 100
+mbedtls_ct_uchar_in_range_if:90:0:100
+
+mbedtls_ct_uchar_in_range_if 90 0 255
+mbedtls_ct_uchar_in_range_if:90:0:255
+
+mbedtls_ct_uchar_in_range_if 90 65 0
+mbedtls_ct_uchar_in_range_if:90:65:0
+
+mbedtls_ct_uchar_in_range_if 90 65 100
+mbedtls_ct_uchar_in_range_if:90:65:100
+
+mbedtls_ct_uchar_in_range_if 90 65 255
+mbedtls_ct_uchar_in_range_if:90:65:255
+
+mbedtls_ct_uchar_in_range_if 90 90 0
+mbedtls_ct_uchar_in_range_if:90:90:0
+
+mbedtls_ct_uchar_in_range_if 90 90 100
+mbedtls_ct_uchar_in_range_if:90:90:100
+
+mbedtls_ct_uchar_in_range_if 90 90 255
+mbedtls_ct_uchar_in_range_if:90:90:255
+
+mbedtls_ct_uchar_in_range_if 90 255 0
+mbedtls_ct_uchar_in_range_if:90:255:0
+
+mbedtls_ct_uchar_in_range_if 90 255 100
+mbedtls_ct_uchar_in_range_if:90:255:100
+
+mbedtls_ct_uchar_in_range_if 90 255 255
+mbedtls_ct_uchar_in_range_if:90:255:255
+
+mbedtls_ct_uchar_in_range_if 255 0 0
+mbedtls_ct_uchar_in_range_if:255:0:0
+
+mbedtls_ct_uchar_in_range_if 255 0 100
+mbedtls_ct_uchar_in_range_if:255:0:100
+
+mbedtls_ct_uchar_in_range_if 255 0 255
+mbedtls_ct_uchar_in_range_if:255:0:255
+
+mbedtls_ct_uchar_in_range_if 255 65 0
+mbedtls_ct_uchar_in_range_if:255:65:0
+
+mbedtls_ct_uchar_in_range_if 255 65 100
+mbedtls_ct_uchar_in_range_if:255:65:100
+
+mbedtls_ct_uchar_in_range_if 255 65 255
+mbedtls_ct_uchar_in_range_if:255:65:255
+
+mbedtls_ct_uchar_in_range_if 255 90 0
+mbedtls_ct_uchar_in_range_if:255:90:0
+
+mbedtls_ct_uchar_in_range_if 255 90 100
+mbedtls_ct_uchar_in_range_if:255:90:100
+
+mbedtls_ct_uchar_in_range_if 255 90 255
+mbedtls_ct_uchar_in_range_if:255:90:255
+
+mbedtls_ct_uchar_in_range_if 255 255 0
+mbedtls_ct_uchar_in_range_if:255:255:0
+
+mbedtls_ct_uchar_in_range_if 255 255 100
+mbedtls_ct_uchar_in_range_if:255:255:100
+
+mbedtls_ct_uchar_in_range_if 255 255 255
+mbedtls_ct_uchar_in_range_if:255:255:255
+
+mbedtls_ct_if 0x0 0x0 0x0
+mbedtls_ct_if:"0x0":"0x0":"0x0"
+
+mbedtls_ct_if 0x0 0x0 0x1
+mbedtls_ct_if:"0x0":"0x0":"0x1"
+
+mbedtls_ct_if 0x0 0x0 0x7fffffff
+mbedtls_ct_if:"0x0":"0x0":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0x0 0xffffffff
+mbedtls_ct_if:"0x0":"0x0":"0xffffffff"
+
+mbedtls_ct_if 0x0 0x0 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0x0":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0x0 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0x0":"0xffffffffffffffff"
+
+mbedtls_ct_if 0x0 0x1 0x0
+mbedtls_ct_if:"0x0":"0x1":"0x0"
+
+mbedtls_ct_if 0x0 0x1 0x1
+mbedtls_ct_if:"0x0":"0x1":"0x1"
+
+mbedtls_ct_if 0x0 0x1 0x7fffffff
+mbedtls_ct_if:"0x0":"0x1":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0x1 0xffffffff
+mbedtls_ct_if:"0x0":"0x1":"0xffffffff"
+
+mbedtls_ct_if 0x0 0x1 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0x1":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0x1 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0x1":"0xffffffffffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffff 0x0
+mbedtls_ct_if:"0x0":"0x7fffffff":"0x0"
+
+mbedtls_ct_if 0x0 0x7fffffff 0x1
+mbedtls_ct_if:"0x0":"0x7fffffff":"0x1"
+
+mbedtls_ct_if 0x0 0x7fffffff 0x7fffffff
+mbedtls_ct_if:"0x0":"0x7fffffff":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0x7fffffff 0xffffffff
+mbedtls_ct_if:"0x0":"0x7fffffff":"0xffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0x7fffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffff 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0x7fffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0x0 0xffffffff 0x0
+mbedtls_ct_if:"0x0":"0xffffffff":"0x0"
+
+mbedtls_ct_if 0x0 0xffffffff 0x1
+mbedtls_ct_if:"0x0":"0xffffffff":"0x1"
+
+mbedtls_ct_if 0x0 0xffffffff 0x7fffffff
+mbedtls_ct_if:"0x0":"0xffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0xffffffff 0xffffffff
+mbedtls_ct_if:"0x0":"0xffffffff":"0xffffffff"
+
+mbedtls_ct_if 0x0 0xffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0xffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0xffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0xffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0x0
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0x0"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0x1
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0x1"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0x7fffffff
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0xffffffff
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0xffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0x7fffffffffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0x7fffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0x0
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0x0"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0x1
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0x1"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0x7fffffff
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0xffffffff
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0xffffffff"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0x0 0xffffffffffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0x0":"0xffffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x0 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x0":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x1 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x1":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffff 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0x7fffffffffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0x7fffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0x0
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0x0"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0x1
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0x1"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0x7fffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0x7fffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0xffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0xffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0x7fffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0x7fffffffffffffff"
+
+mbedtls_ct_if 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff
+mbedtls_ct_if:"0xffffffffffffffff":"0xffffffffffffffff":"0xffffffffffffffff"
+
+mbedtls_ct_error_if 0 0 0
+mbedtls_ct_error_if:0:0:0
+
+mbedtls_ct_error_if 0 0 -1
+mbedtls_ct_error_if:0:0:-1
+
+mbedtls_ct_error_if 0 0 -32766
+mbedtls_ct_error_if:0:0:-32766
+
+mbedtls_ct_error_if 0 0 -32767
+mbedtls_ct_error_if:0:0:-32767
+
+mbedtls_ct_error_if 0 -1 0
+mbedtls_ct_error_if:0:-1:0
+
+mbedtls_ct_error_if 0 -1 -1
+mbedtls_ct_error_if:0:-1:-1
+
+mbedtls_ct_error_if 0 -1 -32766
+mbedtls_ct_error_if:0:-1:-32766
+
+mbedtls_ct_error_if 0 -1 -32767
+mbedtls_ct_error_if:0:-1:-32767
+
+mbedtls_ct_error_if 0 -32766 0
+mbedtls_ct_error_if:0:-32766:0
+
+mbedtls_ct_error_if 0 -32766 -1
+mbedtls_ct_error_if:0:-32766:-1
+
+mbedtls_ct_error_if 0 -32766 -32766
+mbedtls_ct_error_if:0:-32766:-32766
+
+mbedtls_ct_error_if 0 -32766 -32767
+mbedtls_ct_error_if:0:-32766:-32767
+
+mbedtls_ct_error_if 0 -32767 0
+mbedtls_ct_error_if:0:-32767:0
+
+mbedtls_ct_error_if 0 -32767 -1
+mbedtls_ct_error_if:0:-32767:-1
+
+mbedtls_ct_error_if 0 -32767 -32766
+mbedtls_ct_error_if:0:-32767:-32766
+
+mbedtls_ct_error_if 0 -32767 -32767
+mbedtls_ct_error_if:0:-32767:-32767
+
+mbedtls_ct_error_if 1 0 0
+mbedtls_ct_error_if:1:0:0
+
+mbedtls_ct_error_if 1 0 -1
+mbedtls_ct_error_if:1:0:-1
+
+mbedtls_ct_error_if 1 0 -32766
+mbedtls_ct_error_if:1:0:-32766
+
+mbedtls_ct_error_if 1 0 -32767
+mbedtls_ct_error_if:1:0:-32767
+
+mbedtls_ct_error_if 1 -1 0
+mbedtls_ct_error_if:1:-1:0
+
+mbedtls_ct_error_if 1 -1 -1
+mbedtls_ct_error_if:1:-1:-1
+
+mbedtls_ct_error_if 1 -1 -32766
+mbedtls_ct_error_if:1:-1:-32766
+
+mbedtls_ct_error_if 1 -1 -32767
+mbedtls_ct_error_if:1:-1:-32767
+
+mbedtls_ct_error_if 1 -32766 0
+mbedtls_ct_error_if:1:-32766:0
+
+mbedtls_ct_error_if 1 -32766 -1
+mbedtls_ct_error_if:1:-32766:-1
+
+mbedtls_ct_error_if 1 -32766 -32766
+mbedtls_ct_error_if:1:-32766:-32766
+
+mbedtls_ct_error_if 1 -32766 -32767
+mbedtls_ct_error_if:1:-32766:-32767
+
+mbedtls_ct_error_if 1 -32767 0
+mbedtls_ct_error_if:1:-32767:0
+
+mbedtls_ct_error_if 1 -32767 -1
+mbedtls_ct_error_if:1:-32767:-1
+
+mbedtls_ct_error_if 1 -32767 -32766
+mbedtls_ct_error_if:1:-32767:-32766
+
+mbedtls_ct_error_if 1 -32767 -32767
+mbedtls_ct_error_if:1:-32767:-32767
+
+mbedtls_ct_zeroize_if 0x0 0
+mbedtls_ct_zeroize_if:"0x0":0
+
+mbedtls_ct_zeroize_if 0x0 1
+mbedtls_ct_zeroize_if:"0x0":1
+
+mbedtls_ct_zeroize_if 0x0 1024
+mbedtls_ct_zeroize_if:"0x0":1024
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 0
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":0
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 1
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":1
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 4
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":4
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 5
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":5
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 7
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":7
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 8
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":8
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 9
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":9
+
+mbedtls_ct_zeroize_if 0xffffffffffffffff 1024
+mbedtls_ct_zeroize_if:"0xffffffffffffffff":1024
+
+mbedtls_ct_memmove_left 0 0
+mbedtls_ct_memmove_left:0:0
+
+mbedtls_ct_memmove_left 1 0
+mbedtls_ct_memmove_left:1:0
+
+mbedtls_ct_memmove_left 1 1
+mbedtls_ct_memmove_left:1:1
+
+mbedtls_ct_memmove_left 16 0
+mbedtls_ct_memmove_left:16:0
+
+mbedtls_ct_memmove_left 16 1
+mbedtls_ct_memmove_left:16:1
+
+mbedtls_ct_memmove_left 16 4
+mbedtls_ct_memmove_left:16:4
+
+mbedtls_ct_memmove_left 16 15
+mbedtls_ct_memmove_left:16:15
+
+mbedtls_ct_memmove_left 16 16
+mbedtls_ct_memmove_left:16:16
+
+mbedtls_ct_memcmp_partial -1 0 0 0
+mbedtls_ct_memcmp_partial:-1:0:0:0
+
+mbedtls_ct_memcmp_partial 0 1 0 0
+mbedtls_ct_memcmp_partial:0:1:0:0
+
+mbedtls_ct_memcmp_partial 0 1 1 0
+mbedtls_ct_memcmp_partial:0:1:1:0
+
+mbedtls_ct_memcmp_partial 0 1 0 1
+mbedtls_ct_memcmp_partial:0:1:0:1
+
+mbedtls_ct_memcmp_partial -1 1 0 0
+mbedtls_ct_memcmp_partial:-1:1:0:0
+
+mbedtls_ct_memcmp_partial 0 2 0 1
+mbedtls_ct_memcmp_partial:0:2:0:1
+
+mbedtls_ct_memcmp_partial 0 2 1 0
+mbedtls_ct_memcmp_partial:0:2:1:0
+
+mbedtls_ct_memcmp_partial 0 16 4 4
+mbedtls_ct_memcmp_partial:0:16:4:4
+
+mbedtls_ct_memcmp_partial 2 16 4 4
+mbedtls_ct_memcmp_partial:2:16:4:4
+
+mbedtls_ct_memcmp_partial 3 16 4 4
+mbedtls_ct_memcmp_partial:3:16:4:4
+
+mbedtls_ct_memcmp_partial 4 16 4 4
+mbedtls_ct_memcmp_partial:4:16:4:4
+
+mbedtls_ct_memcmp_partial 7 16 4 4
+mbedtls_ct_memcmp_partial:7:16:4:4
+
+mbedtls_ct_memcmp_partial 11 16 4 4
+mbedtls_ct_memcmp_partial:11:16:4:4
+
+mbedtls_ct_memcmp_partial 12 16 4 4
+mbedtls_ct_memcmp_partial:12:16:4:4
+
+mbedtls_ct_memcmp_partial 15 16 4 4
+mbedtls_ct_memcmp_partial:15:16:4:4
+
+mbedtls_ct_memcmp_partial 15 16 4 0
+mbedtls_ct_memcmp_partial:15:16:4:0
+
+mbedtls_ct_memcmp_partial 15 16 0 4
+mbedtls_ct_memcmp_partial:15:16:0:4
+
+mbedtls_ct_memcmp_partial 0 16 0 0
+mbedtls_ct_memcmp_partial:0:16:0:0
+
+mbedtls_ct_memcmp_partial 15 16 0 0
+mbedtls_ct_memcmp_partial:15:16:0:0
+
+mbedtls_ct_memcmp_partial -1 16 0 0
+mbedtls_ct_memcmp_partial:-1:16:0:0
+
+mbedtls_ct_memcmp_partial -1 16 12 4
+mbedtls_ct_memcmp_partial:-1:16:12:4
+
+mbedtls_ct_memcmp_partial -1 16 8 8
+mbedtls_ct_memcmp_partial:-1:16:8:8

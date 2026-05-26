@@ -1,0 +1,215 @@
+# (Minimal) ClientHello breakdown:
+# 160303rlrl - record header, 2-byte record contents len
+# 01hlhlhl - handshake header, 3-byte handshake message len
+# 0303 - protocol version: 1.2
+# 0123456789abcdef (repeated, 4 times total) - 32-byte "random"
+# 00 - session ID (empty)
+# 0002cvcv - ciphersuite list: 2-byte len + list of 2-byte values (see below)
+# 0100 - compression methods: 1-byte len then "null" (only legal value now)
+# [then end, or extensions, see notes below]
+# elel - 2-byte extensions length
+# ...
+# 000a - elliptic_curves aka supported_groups
+# 0004 - extension length
+# 0002 - length of named_curve_list / named_group_list
+# 0017 - secp256r1 aka NIST P-256
+# ...
+# 002b - supported version (for TLS 1.3)
+# 0003 - extension length
+# 02   - length of versions
+# 0304 - TLS 1.3 ("SSL 3.4")
+# ...
+# 000d - signature algorithms
+# 0004 - extension length
+# 0002 - SignatureSchemeList length
+# 0403 - ecdsa_secp256r1_sha256
+# ...
+# 0033 - key share
+# 0002 - extension length
+# 0000 - length of client_shares (empty is valid)
+#
+# Note: currently our TLS "1.3 or 1.2" code requires extension length to be
+# present even it it's 0. This is not strictly compliant but doesn't matter
+# much in practice as these days everyone wants to use signature_algorithms
+# (for hashes better than SHA-1), secure_renego (even if you have renego
+# disabled), and most people want either ECC or PSK related extensions.
+# See https://github.com/Mbed-TLS/mbedtls/issues/9963
+#
+# Also, currently we won't negotiate ECC ciphersuites unless at least the
+# supported_groups extension is present, see
+# https://github.com/Mbed-TLS/mbedtls/issues/7458
+#
+# For TLS 1.3 with ephemeral key exchange, mandatory extensions are:
+# - supported versions (as for all of TLS 1.3)
+# - supported groups
+# - key share
+# - signature algorithms
+# (see ssl_tls13_client_hello_has_exts_for_ephemeral_key_exchange()).
+#
+# Note: cccc is currently not assigned, so can be used get a consistent
+# "no matching ciphersuite" behaviour regardless of the configuration.
+# c02b is MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 (1.2)
+# 1301 is MBEDTLS_TLS1_3_AES_128_GCM_SHA256 (1.3)
+
+# See "ClientHello breakdown" above
+# MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 with secp256r1
+Inject ClientHello - TLS 1.2 good (for reference)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ALG_SHA_1
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"16030300370100003303030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef000002c02b01000008000a000400020017":"<= parse client hello":0
+
+# See "ClientHello breakdown" above
+# Same as the above test with s/c02b/cccc/ as the ciphersuite
+Inject ClientHello - TLS 1.2 unknown ciphersuite (for reference)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ALG_SHA_1
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303002f0100002b03030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef000002cccc01000000":"got no ciphersuites in common":MBEDTLS_ERR_SSL_HANDSHAKE_FAILURE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 good (for reference)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303004c0100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# Same as the above test with s/1301/cccc/ as the ciphersuite
+Inject ClientHello - TLS 1.3 unknown ciphersuite (for reference)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303004c0100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef000002cccc0100001d000a000400020017002b0003020304000d000400020403003300020000":"No matched ciphersuite":MBEDTLS_ERR_SSL_HANDSHAKE_FAILURE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+# The purpose of this test case is to ensure nothing bad happens when the
+# connection is closed while we're waiting for more fragments.
+Inject ClientHello - TLS 1.3 4 + 71 then EOF (missing 1 byte)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000401000048160303004703030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d0004000204030033000200":"waiting for more handshake fragments":MBEDTLS_ERR_SSL_WANT_READ
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+# The purpose of this test case is to ensure nothing bad happens when the
+# connection is closed while we're waiting for more fragments.
+Inject ClientHello - TLS 1.3 4 then EOF (missing 72 bytes)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000401000048":"waiting for more handshake fragments":MBEDTLS_ERR_SSL_WANT_READ
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + 72 OK
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000401000048160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 3 + 73 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000301000016030300494803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"handshake message too short":MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 2 + 74 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"16030300020100160303004a004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"handshake message too short":MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 1 + 75 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000101160303004b00004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"handshake message too short":MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 0 + 76 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"1603030000160303004c0100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"ssl_get_next_record() returned":MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 72 + 4 OK
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"16030300480100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d0004000204030033160303000400020000":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 73 + 3 OK
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"16030300490100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d0004000204030033001603030003020000":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 74 + 2 OK
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303004a0100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d0004000204030033000216030300020000":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 73 + 1 OK
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303004b0100004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d0004000204030033000200160303000100":"key exchange mode\: ephemeral":0
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + appdata + 72 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"16030300040100004817030300020102160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"non-handshake message in the middle of a fragmented handshake message":MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + alert(warn) + 72 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"1603030004010000481503030002015a160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"non-handshake message in the middle of a fragmented handshake message":MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + alert(fatal) + 72 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"1603030004010000481503030002025a160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"non-handshake message in the middle of a fragmented handshake message":MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + CCS + 72 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"160303000401000048140303000101160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"non-handshake message in the middle of a fragmented handshake message":MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+# See "ClientHello breakdown" above
+# ephemeral with secp256r1 + MBEDTLS_TLS1_3_AES_128_GCM_SHA256
+Inject ClientHello - TLS 1.3 fragmented 4 + invalid type + 72 rejected
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_KEY_TYPE_AES:PSA_WANT_ALG_SHA_256:PSA_WANT_ALG_GCM:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_ALG_ECDSA_ANY
+inject_client_content_on_the_wire:MBEDTLS_PK_ECDSA:MBEDTLS_SSL_CLIENT_HELLO:"1603030004010000481003030002015a160303004803030123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef00000213010100001d000a000400020017002b0003020304000d000400020403003300020000":"unknown record type":MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# The buffer is actually larger than IN_CONTENT_LEN as we leave room for
+# record protection overhead (IV, MAC/tag, padding (up to 256 bytes)), CID...
+# The maximum size for an unencrypted (and without CID which is DTLS only)
+# handshake message we can hold in the buffer is
+#   MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 4
+# (the 4 is for the handshake header).
+# However, due to overhead, fragmented messages need to be 5 bytes shorter in
+# order to actually fit (leave room for an extra record header).
+Send large fragmented ClientHello: reassembled 1 byte larger than the buffer
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 3:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+Send large fragmented ClientHello: would just fit except for overhead
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 4:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+Send large fragmented ClientHello: would fit except for overhead (1)
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 5:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+Send large fragmented ClientHello: would fit except for overhead (2)
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 6:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+Send large fragmented ClientHello: would fit except for overhead (3)
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 7:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+Send large fragmented ClientHello: would fit except for overhead (4)
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 8:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA
+
+# Since we're sending dummy contents (all 0x2a) for the ClientHello,
+# the first thing that's going to fail is the version check. The fact that we
+# got around to checking it confirms reassembly completed sucessfully.
+Send large fragmented ClientHello: just fits
+send_large_fragmented_hello:MBEDTLS_SSL_IN_BUFFER_LEN - MBEDTLS_SSL_HEADER_LEN - 9:0:"Unsupported version of TLS":MBEDTLS_ERR_SSL_BAD_PROTOCOL_VERSION
+
+# We're generating a virtual record header for the reassembled HS message,
+# which requires that the length fits in two bytes. Of course we won't get
+# there because if the length doesn't fit in two bytes then the message won't
+# fit in the buffer, but still add a test just in case.
+Send large fragmented ClientHello: length doesn't fit in two bytes
+send_large_fragmented_hello:0x10000:0:"requesting more data than fits":MBEDTLS_ERR_SSL_BAD_INPUT_DATA

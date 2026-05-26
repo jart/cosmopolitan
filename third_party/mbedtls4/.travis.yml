@@ -1,0 +1,28 @@
+# Declare python as our language. This way we get our chosen Python version,
+# and pip is available. Gcc and clang are available anyway.
+dist: jammy
+os: linux
+language: python
+python: 3.10
+
+cache: ccache
+
+branches:
+  only:
+    coverity_scan
+
+install:
+  - $PYTHON scripts/min_requirements.py
+
+env:
+  global:
+    - SEED=1
+    - secure: "GF/Fde5fkm15T/RNykrjrPV5Uh1KJ70cP308igL6Xkk3eJmqkkmWCe9JqRH12J3TeWw2fu9PYPHt6iFSg6jasgqysfUyg+W03knRT5QNn3h5eHgt36cQJiJr6t3whPrRaiM6U9omE0evm+c0cAwlkA3GGSMw8Z+na4EnKI6OFCo="
+addons:
+  coverity_scan:
+    project:
+      name: "ARMmbed/mbedtls"
+    notification_email: support-mbedtls@arm.com
+    build_command_prepend:
+    build_command: make
+    branch_pattern: coverity_scan

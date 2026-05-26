@@ -1,0 +1,39 @@
+# .readthedocs.yaml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Include all submodules in the build
+submodules:
+  include: all
+  recursive: true
+
+# Set the version of Python and other tools you might need
+build:
+  os: ubuntu-20.04
+  apt_packages:
+    - cmake
+  tools:
+    python: "3.9"
+  jobs:
+    pre_build:
+    - ./framework/scripts/apidoc_full.sh
+    - breathe-apidoc -o docs/api apidoc/xml
+    post_build:
+    - |
+      # Work around Readthedocs bug: Command parsing fails if the 'if' statement is on the first line
+      if [ "$READTHEDOCS_VERSION" = "development" ]; then
+        "$READTHEDOCS_VIRTUALENV_PATH/bin/rtd" projects "Mbed TLS API" redirects sync --wet-run -f docs/redirects.yaml
+      fi
+
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+  builder: dirhtml
+  configuration: docs/conf.py
+
+# Optionally declare the Python requirements required to build your docs
+python:
+  install:
+  - requirements: docs/requirements.txt

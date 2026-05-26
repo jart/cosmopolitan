@@ -1,0 +1,59 @@
+/* BEGIN_HEADER */
+#include "tf-psa-crypto/version.h"
+#include "mbedtls/platform.h"
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void check_compiletime_version(char *version_str)
+{
+    char build_str[100];
+    char build_str_full[100];
+    unsigned int build_int;
+
+    memset(build_str, 0, 100);
+    memset(build_str_full, 0, 100);
+
+    mbedtls_snprintf(build_str, 100, "%d.%d.%d", TF_PSA_CRYPTO_VERSION_MAJOR,
+                     TF_PSA_CRYPTO_VERSION_MINOR, TF_PSA_CRYPTO_VERSION_PATCH);
+
+    mbedtls_snprintf(build_str_full, 100, "TF-PSA-Crypto %d.%d.%d", TF_PSA_CRYPTO_VERSION_MAJOR,
+                     TF_PSA_CRYPTO_VERSION_MINOR, TF_PSA_CRYPTO_VERSION_PATCH);
+
+    build_int = TF_PSA_CRYPTO_VERSION_MAJOR << 24 |
+                TF_PSA_CRYPTO_VERSION_MINOR << 16 |
+                TF_PSA_CRYPTO_VERSION_PATCH << 8;
+
+    TEST_ASSERT(build_int == TF_PSA_CRYPTO_VERSION_NUMBER);
+    TEST_ASSERT(strcmp(build_str, TF_PSA_CRYPTO_VERSION_STRING) == 0);
+    TEST_ASSERT(strcmp(build_str_full, TF_PSA_CRYPTO_VERSION_STRING_FULL) == 0);
+    TEST_ASSERT(strcmp(version_str, TF_PSA_CRYPTO_VERSION_STRING) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_VERSION */
+void check_runtime_version(char *version_str)
+{
+    char build_str[100];
+    const char *get_str;
+    char build_str_full[100];
+    const char *get_str_full;
+    unsigned int get_int;
+
+    memset(build_str, 0, 100);
+    memset(build_str_full, 0, 100);
+
+    get_int = tf_psa_crypto_version_get_number();
+    get_str = tf_psa_crypto_version_get_string();
+    get_str_full = tf_psa_crypto_version_get_string_full();
+
+    mbedtls_snprintf(build_str, 100, "%u.%u.%u",
+                     (get_int >> 24) & 0xFF,
+                     (get_int >> 16) & 0xFF,
+                     (get_int >> 8) & 0xFF);
+    mbedtls_snprintf(build_str_full, 100, "TF-PSA-Crypto %s", version_str);
+
+    TEST_ASSERT(strcmp(build_str, version_str) == 0);
+    TEST_ASSERT(strcmp(build_str_full, get_str_full) == 0);
+    TEST_ASSERT(strcmp(version_str, get_str) == 0);
+}
+/* END_CASE */

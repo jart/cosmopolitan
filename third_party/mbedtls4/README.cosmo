@@ -1,0 +1,123 @@
+MBEDTLS 4 IN COSMOPOLITAN
+=========================
+
+This directory contains mbedTLS 4.1.0, vendored into the Cosmopolitan
+repository. The upstream project is developed by the Mbed TLS contributors
+and hosted at:
+
+  https://github.com/Mbed-TLS/mbedtls
+
+The tf-psa-crypto/ subtree is the PSA Crypto API implementation, split from
+the main mbedTLS repo upstream and re-integrated here as a git subtree:
+
+  https://github.com/Mbed-TLS/TF-PSA-Crypto
+
+License: Apache 2.0 (see LICENSE)
+
+
+COSMOPOLITAN-SPECIFIC FILES
+----------------------------
+
+The following files are written and maintained by Cosmopolitan and are NOT
+part of the mbedTLS upstream source. Do not delete them when updating the
+upstream snapshot.
+
+  BUILD.mk
+      Cosmopolitan build system integration. Defines build targets,
+      source lists, per-file CPPFLAGS, and dependency graph.
+
+  README.txt  (this file)
+      This document.
+
+  clean.sh
+      Script to remove all upstream mbedTLS source files, leaving only
+      the Cosmopolitan-specific files listed here.
+
+  include/mbedtls/mbedtls_config.h
+      Cosmopolitan's configuration of mbedTLS features. This file
+      overrides the upstream default config. It is NOT the upstream
+      default; it has been customised to match what Cosmopolitan needs
+      (e.g. MBEDTLS_DEBUG_C enabled, specific cipher suites).
+      The canonical copy is embedded as a heredoc in update.sh — edit
+      it there so it survives future upstream updates.
+
+  include/mbedtls/platform.h
+  include/mbedtls/private_access.h
+      Cosmopolitan shim headers. These forward double-quote includes
+      (e.g. #include "mbedtls/platform.h" in library sources) to the
+      correct tf-psa-crypto paths, allowing mkdeps to resolve them via
+      the -S third_party/mbedtls4/include/ search path. They are not
+      upstream files — do not overwrite them with upstream content.
+      update.sh recreates them if missing.
+
+
+UPSTREAM MBEDTLS SOURCE DIRECTORIES
+-------------------------------------
+
+Everything below is unmodified upstream mbedTLS source. Use update.sh
+to refresh these to a new version.
+
+  generated/          Header wrappers generated automatically by the build
+                      via build/mkmbedtls4wrappers.py. Safe to delete —
+                      recreated on the next make run.
+
+  3rdparty/           Third-party code bundled by mbedTLS upstream
+  BRANCHES.md         Upstream branch policy
+  BUGS.md             Upstream bug reporting guide
+  ChangeLog           Upstream changelog
+  ChangeLog.d/        Upstream per-PR changelog fragments
+  cmake/              CMake build system files (not used by Cosmopolitan)
+  CMakeLists.txt      CMake entry point (not used by Cosmopolitan)
+  configs/            Alternate mbedTLS configuration presets
+  CONTRIBUTING.md     Upstream contribution guide
+  DartConfiguration.tcl  CTest configuration (not used by Cosmopolitan)
+  dco.txt             Developer Certificate of Origin
+  docs/               Upstream architecture and design documentation
+  doxygen/            Doxygen configuration for API docs
+  framework/          Upstream test infrastructure (mbedtls-framework submodule).
+                      Not downloaded by update.sh — only needed for mbedtls's
+                      own test suite, which Cosmopolitan does not build.
+  include/mbedtls/    Public mbedTLS SSL/X.509 headers
+                      (except mbedtls_config.h — see above)
+  library/            SSL and X.509 C implementation files
+  LICENSE             Apache 2.0 license
+  pkgconfig/          pkg-config templates (not used by Cosmopolitan)
+  programs/           Upstream example and utility programs
+                      (not built by Cosmopolitan)
+  README.md           Upstream README
+  scripts/            Upstream helper scripts (code generation, etc.)
+  SECURITY.md         Upstream security policy
+  SUPPORT.md          Upstream support policy
+  tests/              Upstream test suite (not built by Cosmopolitan)
+  tf-psa-crypto/      PSA Crypto API implementation subtree
+    ChangeLog.d/
+    cmake/
+    configs/
+    core/             PSA crypto core C sources
+    dispatch/
+    docs/
+    drivers/          Builtin PSA driver (the main crypto implementation)
+      builtin/include/mbedtls/  Internal/private headers
+      builtin/src/              C implementation files
+    doxygen/
+    extras/           Optional PSA extras (e.g. Everest / Curve25519)
+    framework/
+    include/mbedtls/  PSA-era public mbedTLS headers (md.h, pk.h, etc.)
+    include/psa/      PSA Crypto API public headers
+    pkgconfig/
+    platform/         Platform abstraction layer
+    programs/
+    scripts/
+    tests/
+    utilities/        PSA utility sources
+
+
+UPDATING THE UPSTREAM SNAPSHOT
+--------------------------------
+
+1. Run: ./third_party/mbedtls4/update.sh <version>
+   This removes old upstream files, downloads and unpacks the new tarball,
+   and restores mbedtls_config.h from the embedded heredoc.
+2. Review include/mbedtls/mbedtls_config.h for any new upstream config options.
+3. Run a full clean build — generated/ wrappers are recreated automatically:
+     make clean && make -j$(nproc)

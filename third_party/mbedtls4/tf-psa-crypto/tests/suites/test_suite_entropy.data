@@ -1,0 +1,92 @@
+Entropy init-free-free
+entropy_init_free:0
+
+Entropy init-free-init-free
+entropy_init_free:1
+
+Entropy: count default sources
+entropy_count_sources:
+
+Create NV seed_file
+nv_seed_file_create:
+
+Entropy write/update seed file: good
+entropy_seed_file:"../framework/data_files/entropy_seed":0
+
+Entropy write/update seed file: nonexistent
+entropy_seed_file:"no_such_dir/file":MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR
+
+Entropy write/update seed file: base NV seed file
+entropy_write_base_seed_file:0
+
+Entropy no sources
+entropy_no_sources:
+
+Entropy too many sources
+entropy_too_many_sources:
+
+Entropy output length: 0
+entropy_func_len:0:0
+
+Entropy output length: 1
+entropy_func_len:1:0
+
+Entropy output length: 2
+entropy_func_len:2:0
+
+Entropy output length: 31
+entropy_func_len:31:0
+
+Entropy output length: 65 > BLOCK_SIZE
+entropy_func_len:65:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Entropy failing source
+entropy_source_fail:"../framework/data_files/entropy_seed"
+
+Entropy threshold: 16=2*8
+entropy_threshold:16:2:8
+
+Entropy threshold: 32=1*32
+entropy_threshold:32:1:32
+
+Entropy threshold: 0* never reaches the threshold
+entropy_threshold:16:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Entropy threshold: 1024 never reached
+entropy_threshold:1024:1:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Entropy calls: no strong
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_WEAK:MBEDTLS_ENTROPY_SOURCE_WEAK:1:MBEDTLS_ENTROPY_BLOCK_SIZE:MBEDTLS_ERR_ENTROPY_NO_STRONG_SOURCE
+
+Entropy calls: 1 strong, 1*BLOCK_SIZE
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_STRONG:MBEDTLS_ENTROPY_SOURCE_WEAK:1:MBEDTLS_ENTROPY_BLOCK_SIZE:1
+
+Entropy calls: 1 strong, 2*(BLOCK_SIZE/2)
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_STRONG:MBEDTLS_ENTROPY_SOURCE_WEAK:1:(MBEDTLS_ENTROPY_BLOCK_SIZE+1)/2:2
+
+Entropy calls: 1 strong, BLOCK_SIZE*1
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_STRONG:MBEDTLS_ENTROPY_SOURCE_WEAK:1:1:MBEDTLS_ENTROPY_BLOCK_SIZE
+
+Entropy calls: 1 strong, 2*BLOCK_SIZE to reach threshold
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_STRONG:MBEDTLS_ENTROPY_SOURCE_WEAK:MBEDTLS_ENTROPY_BLOCK_SIZE+1:MBEDTLS_ENTROPY_BLOCK_SIZE:2
+
+Entropy calls: 2 strong, BLOCK_SIZE/2 each
+entropy_calls:MBEDTLS_ENTROPY_SOURCE_STRONG:MBEDTLS_ENTROPY_SOURCE_WEAK:(MBEDTLS_ENTROPY_BLOCK_SIZE+1)/2:(MBEDTLS_ENTROPY_BLOCK_SIZE+1)/2:2
+
+Check NV seed standard IO
+entropy_nv_seed_std_io:
+
+Check NV seed manually #1
+entropy_nv_seed:"00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF"
+
+Check NV seed manually #2
+entropy_nv_seed:"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+
+Check NV seed manually #3
+entropy_nv_seed:"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
+Entropy self test
+entropy_selftest:0
+
+Test get_entropy driver callback
+entropy_test_driver_callback:

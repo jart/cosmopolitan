@@ -1,0 +1,418 @@
+/* BEGIN_HEADER */
+#include "mbedtls/md.h"
+#include "mbedtls/psa_util.h"
+
+#include "crypto_oid.h"
+#include "mbedtls/asn1.h"
+
+#define MD_PSA(md, psa) \
+    TEST_EQUAL(mbedtls_md_psa_alg_from_type(md), psa);  \
+    TEST_EQUAL(mbedtls_md_type_from_psa_alg(psa), md);
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_MD_LIGHT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_MD_C */
+void mbedtls_md_list()
+{
+    const int *md_type_ptr;
+    const mbedtls_md_info_t *info;
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+    unsigned char out[MBEDTLS_MD_MAX_SIZE] = { 0 };
+
+    MD_PSA_INIT();
+
+    /*
+     * Test that mbedtls_md_list() only returns valid MDs.
+     */
+    for (md_type_ptr = mbedtls_md_list(); *md_type_ptr != 0; md_type_ptr++) {
+        info = mbedtls_md_info_from_type(*md_type_ptr);
+        TEST_ASSERT(info != NULL);
+        TEST_EQUAL(0, mbedtls_md_setup(&ctx, info, 0));
+        TEST_EQUAL(0, mbedtls_md_starts(&ctx));
+        TEST_EQUAL(0, mbedtls_md_finish(&ctx, out));
+        mbedtls_md_free(&ctx);
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+        /* Ensure that we can convert to and from a psa_algorithm_t */
+        psa_algorithm_t p = mbedtls_md_psa_alg_from_type(*md_type_ptr);
+        TEST_ASSERT(p != PSA_ALG_NONE);
+        TEST_EQUAL(*md_type_ptr, mbedtls_md_type_from_psa_alg(p));
+#endif
+
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15)
+        mbedtls_asn1_buf asn1;
+        /* Check that we have an OID definition */
+        TEST_EQUAL(mbedtls_oid_get_oid_by_md((mbedtls_md_type_t) *md_type_ptr,
+                                             (const char **) &asn1.p, &asn1.len), 0);
+#endif /* MBEDTLS_RSA_C && MBEDTLS_PKCS1_V15 */
+    }
+
+exit:
+    mbedtls_md_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C */
+void md_to_from_psa()
+{
+    /* We use a simplified implementation that relies on numerical values
+     * being aligned, so make sure they remain so. */
+    MD_PSA(MBEDTLS_MD_MD5, PSA_ALG_MD5);
+    MD_PSA(MBEDTLS_MD_RIPEMD160, PSA_ALG_RIPEMD160);
+    MD_PSA(MBEDTLS_MD_SHA1, PSA_ALG_SHA_1);
+    MD_PSA(MBEDTLS_MD_SHA224, PSA_ALG_SHA_224);
+    MD_PSA(MBEDTLS_MD_SHA256, PSA_ALG_SHA_256);
+    MD_PSA(MBEDTLS_MD_SHA384, PSA_ALG_SHA_384);
+    MD_PSA(MBEDTLS_MD_SHA512, PSA_ALG_SHA_512);
+    MD_PSA(MBEDTLS_MD_SHA3_224, PSA_ALG_SHA3_224);
+    MD_PSA(MBEDTLS_MD_SHA3_256, PSA_ALG_SHA3_256);
+    MD_PSA(MBEDTLS_MD_SHA3_384, PSA_ALG_SHA3_384);
+    MD_PSA(MBEDTLS_MD_SHA3_512, PSA_ALG_SHA3_512);
+
+    /* Don't test for NONE<->NONE as this is not guaranteed */
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_null_args()
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+#if defined(MBEDTLS_MD_C)
+    const mbedtls_md_info_t *info = mbedtls_md_info_from_type(*(mbedtls_md_list()));
+#endif
+    unsigned char buf[1] = { 0 };
+
+    MD_PSA_INIT();
+
+    TEST_EQUAL(0, mbedtls_md_get_size(NULL));
+#if defined(MBEDTLS_MD_C)
+    TEST_EQUAL(mbedtls_md_get_type(NULL), MBEDTLS_MD_NONE);
+    TEST_ASSERT(mbedtls_md_get_name(NULL) == NULL);
+
+    TEST_ASSERT(mbedtls_md_info_from_string(NULL) == NULL);
+    TEST_ASSERT(mbedtls_md_info_from_ctx(NULL) == NULL);
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx) == NULL);
+#endif /* MBEDTLS_MD_C */
+
+    TEST_EQUAL(mbedtls_md_setup(&ctx, NULL, 0), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+#if defined(MBEDTLS_MD_C)
+    TEST_EQUAL(mbedtls_md_setup(NULL, info, 0), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_starts(NULL), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_starts(&ctx), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_update(NULL, buf, 1), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_update(&ctx, buf, 1), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_finish(NULL, buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_finish(&ctx, buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+#endif
+
+    TEST_EQUAL(mbedtls_md(NULL, buf, 1, buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+#if defined(MBEDTLS_MD_C)
+#if defined(MBEDTLS_FS_IO)
+    TEST_EQUAL(mbedtls_md_file(NULL, "", buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+#endif
+
+    TEST_EQUAL(mbedtls_md_hmac_starts(NULL, buf, 1),
+               MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_hmac_starts(&ctx, buf, 1),
+               MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_hmac_update(NULL, buf, 1),
+               MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_hmac_update(&ctx, buf, 1),
+               MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_hmac_finish(NULL, buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_hmac_finish(&ctx, buf), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_hmac_reset(NULL), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+    TEST_EQUAL(mbedtls_md_hmac_reset(&ctx), MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_md_hmac(NULL, buf, 1, buf, 1, buf),
+               MBEDTLS_ERR_MD_BAD_INPUT_DATA);
+#endif /* MBEDTLS_MD_C */
+
+    /* Ok, this is not NULL arg but NULL return... */
+    TEST_ASSERT(mbedtls_md_info_from_type(MBEDTLS_MD_NONE) == NULL);
+#if defined(MBEDTLS_MD_C)
+    TEST_ASSERT(mbedtls_md_info_from_string("no such md") == NULL);
+#endif
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_info(int md_type, char *md_name, int md_size)
+{
+    const mbedtls_md_info_t *md_info;
+#if defined(MBEDTLS_MD_C)
+    const int *md_type_ptr;
+#else
+    (void) md_name;
+#endif
+
+    /* Note: PSA Crypto init not needed for info functions */
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+#if defined(MBEDTLS_MD_C)
+    TEST_ASSERT(md_info == mbedtls_md_info_from_string(md_name));
+#endif
+
+    TEST_EQUAL(mbedtls_md_get_type(md_info), (mbedtls_md_type_t) md_type);
+    TEST_EQUAL(mbedtls_md_get_size(md_info), (unsigned char) md_size);
+#if defined(MBEDTLS_MD_C)
+    TEST_EQUAL(0, strcmp(mbedtls_md_get_name(md_info), md_name));
+
+    int found = 0;
+    for (md_type_ptr = mbedtls_md_list(); *md_type_ptr != 0; md_type_ptr++) {
+        if (*md_type_ptr == md_type) {
+            found = 1;
+        }
+    }
+    TEST_EQUAL(found, 1);
+#endif /* MBEDTLS_MD_C */
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_text(int md_type, char *text_src_string, data_t *hash)
+{
+    unsigned char *src = (unsigned char *) text_src_string;
+    size_t src_len = strlen(text_src_string);
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+
+    TEST_EQUAL(0, mbedtls_md(md_info, src, src_len, output));
+
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_hex(int md_type, data_t *src_str, data_t *hash)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+
+    TEST_EQUAL(0, mbedtls_md(md_info, src_str->x, src_str->len, output));
+
+
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_text_multi(int md_type, char *text_src_string,
+                   data_t *hash)
+{
+    unsigned char *src = (unsigned char *) text_src_string;
+    size_t src_len = strlen(text_src_string);
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    size_t halfway;
+
+    const mbedtls_md_info_t *md_info = NULL;
+    mbedtls_md_context_t ctx, ctx_copy;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_init(&ctx_copy);
+
+    MD_PSA_INIT();
+
+    halfway = src_len / 2;
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx, md_info, 0));
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx_copy, md_info, 0));
+#if defined(MBEDTLS_MD_C)
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx) == md_info);
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx_copy) == md_info);
+#endif /* MBEDTLS_MD_C */
+
+    TEST_EQUAL(0, mbedtls_md_starts(&ctx));
+    TEST_ASSERT(ctx.md_ctx != NULL);
+    TEST_EQUAL(0, mbedtls_md_update(&ctx, src, halfway));
+    TEST_EQUAL(0, mbedtls_md_clone(&ctx_copy, &ctx));
+
+    TEST_EQUAL(0, mbedtls_md_update(&ctx, src + halfway, src_len - halfway));
+    TEST_EQUAL(0, mbedtls_md_finish(&ctx, output));
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+    /* Test clone */
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(0, mbedtls_md_update(&ctx_copy, src + halfway, src_len - halfway));
+    TEST_EQUAL(0, mbedtls_md_finish(&ctx_copy, output));
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+exit:
+    mbedtls_md_free(&ctx);
+    mbedtls_md_free(&ctx_copy);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_hex_multi(int md_type, data_t *src_str, data_t *hash)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+    mbedtls_md_context_t ctx, ctx_copy;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_init(&ctx_copy);
+    int halfway;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx, md_info, 0));
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx_copy, md_info, 0));
+#if defined(MBEDTLS_MD_C)
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx) == md_info);
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx_copy) == md_info);
+#endif /* MBEDTLS_MD_C */
+
+    halfway = src_str->len / 2;
+
+    TEST_EQUAL(0, mbedtls_md_starts(&ctx));
+    TEST_ASSERT(ctx.md_ctx != NULL);
+    TEST_EQUAL(0, mbedtls_md_update(&ctx, src_str->x, halfway));
+    TEST_EQUAL(0, mbedtls_md_clone(&ctx_copy, &ctx));
+
+    TEST_EQUAL(0, mbedtls_md_update(&ctx, src_str->x + halfway, src_str->len - halfway));
+    TEST_EQUAL(0, mbedtls_md_finish(&ctx, output));
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+    /* Test clone */
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(0, mbedtls_md_update(&ctx_copy, src_str->x + halfway, src_str->len - halfway));
+    TEST_EQUAL(0, mbedtls_md_finish(&ctx_copy, output));
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+exit:
+    mbedtls_md_free(&ctx);
+    mbedtls_md_free(&ctx_copy);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_MD_C */
+void mbedtls_md_hmac(int md_type, int trunc_size,
+                     data_t *key_str, data_t *src_str,
+                     data_t *hash)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+
+
+    TEST_EQUAL(0, mbedtls_md_hmac(md_info, key_str->x, key_str->len,
+                                  src_str->x, src_str->len, output));
+
+    TEST_MEMORY_COMPARE(output, trunc_size, hash->x, hash->len);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_MD_C */
+void md_hmac_multi(int md_type, int trunc_size, data_t *key_str,
+                   data_t *src_str, data_t *hash)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+    int halfway;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+    TEST_EQUAL(0, mbedtls_md_setup(&ctx, md_info, 0));
+    TEST_EQUAL(0, mbedtls_md_hmac_setup(&ctx, md_info));
+#if defined(MBEDTLS_MD_C)
+    TEST_ASSERT(mbedtls_md_info_from_ctx(&ctx) == md_info);
+#endif
+
+    halfway = src_str->len / 2;
+
+    TEST_EQUAL(0, mbedtls_md_hmac_starts(&ctx, key_str->x, key_str->len));
+    TEST_ASSERT(ctx.md_ctx != NULL);
+    TEST_EQUAL(0, mbedtls_md_hmac_update(&ctx, src_str->x, halfway));
+    TEST_EQUAL(0, mbedtls_md_hmac_update(&ctx, src_str->x + halfway, src_str->len - halfway));
+    TEST_EQUAL(0, mbedtls_md_hmac_finish(&ctx, output));
+
+    TEST_MEMORY_COMPARE(output, trunc_size, hash->x, hash->len);
+
+    /* Test again, for reset() */
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(0, mbedtls_md_hmac_reset(&ctx));
+    TEST_EQUAL(0, mbedtls_md_hmac_update(&ctx, src_str->x, halfway));
+    TEST_EQUAL(0, mbedtls_md_hmac_update(&ctx, src_str->x + halfway, src_str->len - halfway));
+    TEST_EQUAL(0, mbedtls_md_hmac_finish(&ctx, output));
+
+    TEST_MEMORY_COMPARE(output, trunc_size, hash->x, hash->len);
+
+exit:
+    mbedtls_md_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_MD_C */
+void mbedtls_md_file(int md_type, char *filename,
+                     data_t *hash)
+{
+    unsigned char output[MBEDTLS_MD_MAX_SIZE] = { 0 };
+    const mbedtls_md_info_t *md_info = NULL;
+
+    MD_PSA_INIT();
+
+    md_info = mbedtls_md_info_from_type(md_type);
+    TEST_ASSERT(md_info != NULL);
+
+    TEST_EQUAL(0, mbedtls_md_file(md_info, filename, output));
+
+    TEST_MEMORY_COMPARE(output, mbedtls_md_get_size(md_info), hash->x, hash->len);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */

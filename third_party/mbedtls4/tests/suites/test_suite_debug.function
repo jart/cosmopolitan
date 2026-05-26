@@ -1,0 +1,285 @@
+/* BEGIN_HEADER */
+#include "debug_internal.h"
+#include "string.h"
+#include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
+#include <test/ssl_helpers.h>
+
+#if defined(_WIN32)
+#   include <stdlib.h>
+#   include <crtdbg.h>
+#endif
+
+// Dummy type for builds without MBEDTLS_HAVE_TIME
+#if !defined(MBEDTLS_HAVE_TIME)
+typedef int64_t mbedtls_ms_time_t;
+#endif
+
+typedef enum {
+    PRINTF_SIZET,
+    PRINTF_LONGLONG,
+    PRINTF_MS_TIME,
+} printf_format_indicator_t;
+
+const char *const printf_formats[] = {
+    [PRINTF_SIZET]    = "%" MBEDTLS_PRINTF_SIZET,
+    [PRINTF_LONGLONG] = "%" MBEDTLS_PRINTF_LONGLONG,
+    [PRINTF_MS_TIME]  = "%" MBEDTLS_PRINTF_MS_TIME,
+};
+
+struct buffer_data {
+    char buf[2000];
+    char *ptr;
+};
+
+#if defined(MBEDTLS_SSL_TLS_C)
+static void string_debug(void *data, int level, const char *file, int line, const char *str)
+{
+    struct buffer_data *buffer = (struct buffer_data *) data;
+    char *p = buffer->ptr;
+    ((void) level);
+
+    memcpy(p, file, strlen(file));
+    p += strlen(file);
+
+    *p++ = '(';
+    *p++ = '0' + (line / 1000) % 10;
+    *p++ = '0' + (line / 100) % 10;
+    *p++ = '0' + (line / 10) % 10;
+    *p++ = '0' + (line / 1) % 10;
+    *p++ = ')';
+    *p++ = ':';
+    *p++ = ' ';
+
+#if defined(MBEDTLS_THREADING_C)
+    /* Skip "thread ID" (up to the first space) as it is not predictable */
+    while (*str++ != ' ') {
+        ;
+    }
+#endif
+
+    memcpy(p, str, strlen(str));
+    p += strlen(str);
+
+    /* Detect if debug messages output partial lines and mark them */
+    if (p[-1] != '\n') {
+        *p++ = '*';
+    }
+
+    buffer->ptr = p;
+}
+#endif /* MBEDTLS_SSL_TLS_C */
+
+#if defined(_WIN32)
+static void noop_invalid_parameter_handler(
+    const wchar_t *expression,
+    const wchar_t *function,
+    const wchar_t *file,
+    unsigned int line,
+    uintptr_t pReserved)
+{
+    (void) expression;
+    (void) function;
+    (void) file;
+    (void) line;
+    (void) pReserved;
+}
+#endif /* _WIN32 */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_DEBUG_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void printf_int_expr(int format_indicator, intmax_t sizeof_x, intmax_t x, char *result)
+{
+#if defined(_WIN32)
+    /* Windows treats any invalid format specifiers passsed to the CRT as fatal assertion failures.
+       Disable this behaviour temporarily, so the rest of the test cases can complete. */
+    _invalid_parameter_handler saved_handler =
+        _set_invalid_parameter_handler(noop_invalid_parameter_handler);
+
+    // Disable assertion pop-up window in Debug builds
+    int saved_report_mode = _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_REPORT_MODE);
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+#endif
+
+    const char *format = printf_formats[format_indicator];
+    char *output = NULL;
+    const size_t n = strlen(result);
+
+    /* Nominal case: buffer just large enough */
+    TEST_CALLOC(output, n + 1);
+    if ((size_t) sizeof_x <= sizeof(int)) { // Any smaller integers would be promoted to an int due to calling a vararg function
+        TEST_EQUAL(n, mbedtls_debug_snprintf(output, n + 1, format, (int) x));
+    } else if (sizeof_x == sizeof(long)) {
+        TEST_EQUAL(n, mbedtls_debug_snprintf(output, n + 1, format, (long) x));
+    } else if (sizeof_x == sizeof(long long)) {
+        TEST_EQUAL(n, mbedtls_debug_snprintf(output, n + 1, format, (long long) x));
+    } else {
+        TEST_FAIL(
+            "sizeof_x <= sizeof(int) || sizeof_x == sizeof(long) || sizeof_x == sizeof(long long)");
+    }
+    TEST_MEMORY_COMPARE(result, n + 1, output, n + 1);
+
+exit:
+    mbedtls_free(output);
+    output = NULL;
+
+#if defined(_WIN32)
+    // Restore default Windows behaviour
+    _set_invalid_parameter_handler(saved_handler);
+    _CrtSetReportMode(_CRT_ASSERT, saved_report_mode);
+    (void) saved_report_mode;
+#endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_TLS_C */
+void debug_print_msg_threshold(int threshold, int level, char *file,
+                               int line, char *result_str)
+{
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    struct buffer_data buffer;
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_config_init(&conf);
+    MD_OR_USE_PSA_INIT();
+    memset(buffer.buf, 0, 2000);
+    buffer.ptr = buffer.buf;
+
+    TEST_EQUAL(mbedtls_ssl_config_defaults(&conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT),
+               0);
+    mbedtls_ssl_conf_dbg(&conf, string_debug, &buffer);
+
+    TEST_ASSERT(mbedtls_ssl_setup(&ssl, &conf) == 0);
+
+    mbedtls_debug_set_threshold(threshold);
+
+    mbedtls_debug_print_msg(&ssl, level, file, line,
+                            "Text message, 2 == %d", 2);
+
+    TEST_ASSERT(strcmp(buffer.buf, result_str) == 0);
+
+exit:
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_TLS_C */
+void mbedtls_debug_print_ret(char *file, int line, char *text, int value,
+                             char *result_str)
+{
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    struct buffer_data buffer;
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_config_init(&conf);
+    MD_OR_USE_PSA_INIT();
+    memset(buffer.buf, 0, 2000);
+    buffer.ptr = buffer.buf;
+
+    TEST_EQUAL(mbedtls_ssl_config_defaults(&conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT),
+               0);
+    mbedtls_ssl_conf_dbg(&conf, string_debug, &buffer);
+
+    TEST_ASSERT(mbedtls_ssl_setup(&ssl, &conf) == 0);
+
+    mbedtls_debug_print_ret(&ssl, 0, file, line, text, value);
+
+    TEST_ASSERT(strcmp(buffer.buf, result_str) == 0);
+
+exit:
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_TLS_C */
+void mbedtls_debug_print_buf(char *file, int line, char *text,
+                             data_t *data, char *result_str)
+{
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    struct buffer_data buffer;
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_config_init(&conf);
+    MD_OR_USE_PSA_INIT();
+    memset(buffer.buf, 0, 2000);
+    buffer.ptr = buffer.buf;
+
+    TEST_EQUAL(mbedtls_ssl_config_defaults(&conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT),
+               0);
+    mbedtls_ssl_conf_dbg(&conf, string_debug, &buffer);
+
+    TEST_ASSERT(mbedtls_ssl_setup(&ssl, &conf) == 0);
+
+    mbedtls_debug_print_buf(&ssl, 0, file, line, text, data->x, data->len);
+
+    TEST_ASSERT(strcmp(buffer.buf, result_str) == 0);
+
+exit:
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_TLS_C:MBEDTLS_FS_IO:MBEDTLS_X509_CRT_PARSE_C:!MBEDTLS_X509_REMOVE_INFO */
+void mbedtls_debug_print_crt(char *crt_file, char *file, int line,
+                             char *prefix, char *result_str)
+{
+    mbedtls_x509_crt   crt;
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    struct buffer_data buffer;
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_config_init(&conf);
+    mbedtls_x509_crt_init(&crt);
+    MD_OR_USE_PSA_INIT();
+
+    memset(buffer.buf, 0, 2000);
+    buffer.ptr = buffer.buf;
+
+    TEST_EQUAL(mbedtls_ssl_config_defaults(&conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT),
+               0);
+    mbedtls_ssl_conf_dbg(&conf, string_debug, &buffer);
+
+    TEST_ASSERT(mbedtls_ssl_setup(&ssl, &conf) == 0);
+
+    TEST_ASSERT(mbedtls_x509_crt_parse_file(&crt, crt_file) == 0);
+    mbedtls_debug_print_crt(&ssl, 0, file, line, prefix, &crt);
+
+    TEST_ASSERT(strcmp(buffer.buf, result_str) == 0);
+
+exit:
+    mbedtls_x509_crt_free(&crt);
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */

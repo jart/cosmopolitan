@@ -1,0 +1,4 @@
+The documents in this directory are proposed specifications for Mbed
+TLS features. They are not implemented yet, or only partially
+implemented. Please follow activity on the `development` branch of
+Mbed TLS if you are interested in these features.

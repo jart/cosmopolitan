@@ -1,0 +1,10 @@
+# Python packages that are only useful to Mbed TLS maintainers.
+
+-r ci.requirements.txt
+
+# For source code analyses
+clang
+
+# For building some test vectors
+pycryptodomex
+pycryptodome-test-vectors

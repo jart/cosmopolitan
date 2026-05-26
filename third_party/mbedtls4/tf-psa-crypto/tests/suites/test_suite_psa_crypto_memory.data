@@ -1,0 +1,62 @@
+PSA input buffer copy: straightforward copy
+copy_input:20:20:PSA_SUCCESS
+
+PSA input buffer copy: copy buffer larger than required
+copy_input:10:20:PSA_SUCCESS
+
+PSA input buffer copy: copy buffer too small
+copy_input:20:10:PSA_ERROR_CORRUPTION_DETECTED
+
+PSA input buffer copy: zero-length source buffer
+copy_input:0:10:PSA_SUCCESS
+
+PSA input buffer copy: zero-length both buffers
+copy_input:0:0:PSA_SUCCESS
+
+PSA output buffer copy: straightforward copy
+copy_output:20:20:PSA_SUCCESS
+
+PSA output buffer copy: output buffer larger than required
+copy_output:10:20:PSA_SUCCESS
+
+PSA output buffer copy: output buffer too small
+copy_output:20:10:PSA_ERROR_BUFFER_TOO_SMALL
+
+PSA output buffer copy: zero-length source buffer
+copy_output:0:10:PSA_SUCCESS
+
+PSA output buffer copy: zero-length both buffers
+copy_output:0:0:PSA_SUCCESS
+
+PSA crypto local input alloc
+local_input_alloc:200:PSA_SUCCESS
+
+PSA crypto local input alloc, NULL buffer
+local_input_alloc:0:PSA_SUCCESS
+
+PSA crypto local input free
+local_input_free:200
+
+PSA crypto local input free, NULL buffer
+local_input_free:0
+
+PSA crypto local input round-trip
+local_input_round_trip
+
+PSA crypto local output alloc
+local_output_alloc:200:PSA_SUCCESS
+
+PSA crypto local output alloc, NULL buffer
+local_output_alloc:0:PSA_SUCCESS
+
+PSA crypto local output free
+local_output_free:200:0:PSA_SUCCESS
+
+PSA crypto local output free, NULL buffer
+local_output_free:0:0:PSA_SUCCESS
+
+PSA crypto local output free, NULL original buffer
+local_output_free:200:1:PSA_ERROR_CORRUPTION_DETECTED
+
+PSA crypto local output round-trip
+local_output_round_trip

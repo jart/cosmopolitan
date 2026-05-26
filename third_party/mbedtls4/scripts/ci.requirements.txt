@@ -1,0 +1,28 @@
+# Python package requirements for Mbed TLS testing.
+
+-r driver.requirements.txt
+
+# The dependencies below are only used in scripts that we run on the Linux CI.
+
+# Use a known version of Pylint, because new versions tend to add warnings
+# that could start rejecting our code.
+# 2.4.4 is the version in Ubuntu 20.04. It supports Python >=3.5.
+pylint == 2.4.4; platform_system == 'Linux'
+
+# Use a version of mypy that is compatible with our code base.
+# mypy <0.940 is known not to work: see commit
+#  :/Upgrade mypy to the last version supporting Python 3.6
+# mypy >=0.960 is known not to work:
+#   https://github.com/Mbed-TLS/mbedtls-framework/issues/50
+# mypy 0.942 is the version in Ubuntu 22.04.
+mypy == 0.942; platform_system == 'Linux'
+
+# At the time of writing, only needed for tests/scripts/audit-validity-dates.py.
+# It needs >=35.0.0 for correct operation, and that requires Python >=3.6.
+# >=35.0.0 also requires Rust to build from source, which we are forced to do on
+# FreeBSD, since PyPI doesn't carry binary wheels for the BSDs.
+cryptography >= 35.0.0; platform_system == 'Linux'
+
+# For building `framework/data_files/server9-bad-saltlen.crt` and check python
+# files.
+asn1crypto; platform_system == 'Linux'

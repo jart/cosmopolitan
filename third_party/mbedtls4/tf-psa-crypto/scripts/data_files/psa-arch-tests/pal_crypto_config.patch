@@ -1,0 +1,83 @@
+diff --git a/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h b/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
+index dad40ec..8d19699 100644
+--- a/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
++++ b/api-tests/platform/targets/tgt_dev_apis_stdc/nspe/pal_crypto_config.h
+@@ -53,7 +53,7 @@
+  */
+ #define ARCH_TEST_ECC
+ #define ARCH_TEST_ECC_CURVE_SECP192R1
+-#define ARCH_TEST_ECC_CURVE_SECP224R1
++//#define ARCH_TEST_ECC_CURVE_SECP224R1
+ #define ARCH_TEST_ECC_CURVE_SECP256R1
+ #define ARCH_TEST_ECC_CURVE_SECP384R1
+ 
+@@ -105,7 +105,7 @@
+  *
+  * Enable the ARC4 key type.
+  */
+-#define ARCH_TEST_ARC4
++//#define ARCH_TEST_ARC4
+ 
+ /**
+  * \def ARCH_TEST_CHACHA20
+@@ -251,8 +251,8 @@
+  */
+ // #define ARCH_TEST_MD2
+ // #define ARCH_TEST_MD4
+-//#define ARCH_TEST_MD5
+-//#define ARCH_TEST_RIPEMD160
++#define ARCH_TEST_MD5
++#define ARCH_TEST_RIPEMD160
+ #define ARCH_TEST_SHA1
+ #define ARCH_TEST_SHA224
+ #define ARCH_TEST_SHA256
+@@ -260,10 +260,10 @@
+ #define ARCH_TEST_SHA512
+ // #define ARCH_TEST_SHA512_224
+ // #define ARCH_TEST_SHA512_256
+-// #define ARCH_TEST_SHA3_224
+-// #define ARCH_TEST_SHA3_256
+-// #define ARCH_TEST_SHA3_384
+-// #define ARCH_TEST_SHA3_512
++#define ARCH_TEST_SHA3_224
++#define ARCH_TEST_SHA3_256
++#define ARCH_TEST_SHA3_384
++#define ARCH_TEST_SHA3_512
+ 
+ /**
+  * \def ARCH_TEST_HKDF
+@@ -291,8 +291,8 @@
+  * Enable the NIST SP800-108 Counter mode KDF algorithm
+  *
+ */
+-#define ARCH_TEST_SP800_108_COUNTER_HMAC
+-#define ARCH_TEST_SP800_108_COUNTER_CMAC
++//#define ARCH_TEST_SP800_108_COUNTER_HMAC
++//#define ARCH_TEST_SP800_108_COUNTER_CMAC
+ 
+ /**
+  * \def ARCH_TEST_xMAC
+@@ -369,7 +369,7 @@
+  * Enable deterministic ECDSA (RFC 6979).
+ */
+ #define ARCH_TEST_DETERMINISTIC_ECDSA
+-#define ARCH_TEST_TWISTED_EDWARDS
++//#define ARCH_TEST_TWISTED_EDWARDS
+ 
+ /**
+  * \def ARCH_TEST_ECC_ASYMMETRIC_API_SUPPORT
+@@ -397,10 +397,10 @@
+  *
+  * Enable support for augmented PAKE: SPAKE2P algorithm
+  */
+-#define ARCH_TEST_SPAKE2P
+-#define ARCH_TEST_SPAKE2P_HMAC
+-#define ARCH_TEST_SPAKE2P_CMAC
+-#define ARCH_TEST_SPAKE2P_MATTER
++//#define ARCH_TEST_SPAKE2P
++//#define ARCH_TEST_SPAKE2P_HMAC
++//#define ARCH_TEST_SPAKE2P_CMAC
++//#define ARCH_TEST_SPAKE2P_MATTER
+ 
+ #include "pal_crypto_config_check.h"
+ 

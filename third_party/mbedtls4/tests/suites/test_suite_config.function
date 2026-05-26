@@ -1,0 +1,14 @@
+/* BEGIN_HEADER */
+
+/* END_HEADER */
+
+/* BEGIN_CASE */
+/* This test case always passes. It is intended solely for configuration
+ * reporting in the outcome file. Write test cases using this function
+ * with dependencies to record in which configurations the dependencies
+ * are met. */
+void pass()
+{
+    goto exit;
+}
+/* END_CASE */

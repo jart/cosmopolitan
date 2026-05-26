@@ -1,0 +1,61 @@
+/* BEGIN_HEADER */
+#include "mbedtls/platform_util.h"
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void mbedtls_platform_zeroize(int len, int null)
+{
+    char buf[130];
+    char *p = NULL;
+
+    TEST_ASSERT(len <= 128);
+
+    /* Write sentinel values */
+    buf[0] = 2;
+    buf[len + 1] = 2;
+
+    /* Write non-zero content */
+    if (!null) {
+        p = &buf[1];
+        for (int i = 0; i < len; i++) {
+            p[i] = 1;
+        }
+    }
+
+    /* Check content is non-zero */
+    TEST_EQUAL(buf[0], 2);
+    for (int i = 0; i < len; i++) {
+        TEST_ASSERT(p[i] == 1);
+    }
+    TEST_EQUAL(buf[len + 1], 2);
+
+    mbedtls_platform_zeroize(p, len);
+
+    /* Check content is zero and sentinels un-changed */
+    TEST_EQUAL(buf[0], 2);
+    for (int i = 0; i < len; i++) {
+        TEST_ASSERT(p[i] == 0);
+    }
+    TEST_EQUAL(buf[len + 1], 2);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_platform_zeroize_uninitialised(int len, int p)
+{
+    /*
+     * As per #7301: on some platforms, including modern Linux, Clang with Msan
+     * does not recognize that explicit_bzero() writes well-defined content to
+     * its output buffer. For us, this causes CMAC operations to fail in Msan
+     * builds when mbedtls_platform_zeroize() is implemented over
+     * explicit_bzero().
+     *
+     * This test ensures we have a simple/obvious MSan test rather than
+     * spurious errors in crypto code that are hard to track down.
+     */
+    char buf[128];
+    mbedtls_platform_zeroize(buf, len);
+
+    TEST_EQUAL(buf[p], 0);
+}
+/* END_CASE */

@@ -1,0 +1,5 @@
+# Python modules required to build Mbed TLS in ordinary conditions.
+
+# Required to (re-)generate source files. Not needed if the generated source
+# files are already present and up-to-date.
+-r driver.requirements.txt

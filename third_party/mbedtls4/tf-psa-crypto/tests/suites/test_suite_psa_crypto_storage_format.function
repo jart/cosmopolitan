@@ -1,0 +1,410 @@
+/* BEGIN_HEADER */
+
+#include <psa/crypto.h>
+#include <psa_crypto_storage.h>
+
+#include <test/psa_crypto_helpers.h>
+#include <test/psa_exercise_key.h>
+
+#include <psa_crypto_its.h>
+
+#define TEST_FLAG_EXERCISE              0x00000001
+#define TEST_FLAG_READ_ONLY             0x00000002
+#define TEST_FLAG_OVERSIZED_KEY         0x00000004
+
+/** Write a key with the given attributes and key material to storage.
+ * Test that it has the expected representation.
+ *
+ * On error, including if the key representation in storage differs,
+ * mark the test case as failed and return 0. On success, return 1.
+ */
+static int test_written_key(const psa_key_attributes_t *attributes,
+                            const data_t *material,
+                            psa_storage_uid_t uid,
+                            const data_t *expected_representation)
+{
+    mbedtls_svc_key_id_t created_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t *actual_representation = NULL;
+    size_t length;
+    struct psa_storage_info_t storage_info;
+    int ok = 0;
+
+    /* Create a key with the given parameters. */
+    PSA_ASSERT(psa_import_key(attributes, material->x, material->len,
+                              &created_key_id));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(psa_get_key_id(attributes),
+                                         created_key_id));
+
+    /* Check that the key is represented as expected. */
+    PSA_ASSERT(psa_its_get_info(uid, &storage_info));
+    TEST_EQUAL(storage_info.size, expected_representation->len);
+    TEST_CALLOC(actual_representation, storage_info.size);
+    PSA_ASSERT(psa_its_get(uid, 0, storage_info.size,
+                           actual_representation, &length));
+    TEST_MEMORY_COMPARE(expected_representation->x, expected_representation->len,
+                        actual_representation, length);
+
+    ok = 1;
+
+exit:
+    mbedtls_free(actual_representation);
+    return ok;
+}
+
+/** Check if a key is exportable. */
+static int can_export(const psa_key_attributes_t *attributes)
+{
+    if (psa_get_key_usage_flags(attributes) & PSA_KEY_USAGE_EXPORT) {
+        return 1;
+    } else if (PSA_KEY_TYPE_IS_PUBLIC_KEY(psa_get_key_type(attributes))) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+#if defined(MBEDTLS_TEST_LIBTESTDRIVER1)
+static int is_accelerated_rsa(psa_algorithm_t alg)
+{
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_PKCS1V15_SIGN)
+    if (PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg)) {
+        return 1;
+    }
+#endif
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_PSS)
+    if (PSA_ALG_IS_RSA_PSS(alg)) {
+        return 1;
+    }
+#endif
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_OAEP)
+    if (PSA_ALG_IS_RSA_OAEP(alg)) {
+        return 1;
+    }
+#endif
+    (void) alg;
+    return 0;
+}
+#endif
+
+/* Mbed TLS doesn't support certain combinations of key type and algorithm
+ * in certain configurations. */
+static int can_exercise(const psa_key_attributes_t *attributes)
+{
+    psa_key_type_t key_type = psa_get_key_type(attributes);
+    psa_algorithm_t alg = psa_get_key_algorithm(attributes);
+    psa_algorithm_t hash_alg =
+        PSA_ALG_IS_HASH_AND_SIGN(alg) ? PSA_ALG_SIGN_GET_HASH(alg) :
+        PSA_ALG_IS_RSA_OAEP(alg) ? PSA_ALG_RSA_OAEP_GET_HASH(alg) :
+        PSA_ALG_NONE;
+    psa_key_usage_t usage = psa_get_key_usage_flags(attributes);
+
+#if defined(MBEDTLS_TEST_LIBTESTDRIVER1)
+    /* We test some configurations using drivers where the driver doesn't
+     * support certain hash algorithms, but declares that it supports
+     * compound algorithms that use those hashes. Until this is fixed,
+     * in those configurations, don't try to actually perform operations.
+     *
+     * Hash-and-sign algorithms where the asymmetric part doesn't use
+     * a hash operation are ok. So randomized ECDSA signature is fine,
+     * ECDSA verification is fine, but deterministic ECDSA signature is
+     * affected. All RSA signatures are affected except raw PKCS#1v1.5.
+     * OAEP is also affected.
+     */
+    if (PSA_ALG_IS_DETERMINISTIC_ECDSA(alg) &&
+        !(usage & (PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE))) {
+        /* Verification only. Verification doesn't use the hash algorithm. */
+        return 1;
+    }
+
+#if defined(MBEDTLS_PSA_ACCEL_ALG_DETERMINISTIC_ECDSA)
+    if (PSA_ALG_IS_DETERMINISTIC_ECDSA(alg) &&
+        (hash_alg == PSA_ALG_MD5 ||
+         hash_alg == PSA_ALG_RIPEMD160 ||
+         hash_alg == PSA_ALG_SHA_1)) {
+        return 0;
+    }
+#endif
+
+    if (is_accelerated_rsa(alg) &&
+        (hash_alg == PSA_ALG_RIPEMD160 || hash_alg == PSA_ALG_SHA_384)) {
+        return 0;
+    }
+#endif /* MBEDTLS_TEST_LIBTESTDRIVER1 */
+
+    if (PSA_ALG_IS_JPAKE(alg)) {
+        /* psa_exercise_key() does not support JPAKE at this time. */
+        return 0;
+    }
+
+    (void) key_type;
+    (void) alg;
+    (void) hash_alg;
+    (void) usage;
+    return 1;
+}
+
+#if defined(PSA_WANT_ALG_JPAKE)
+/* We currently only support one specific primitive for JPAKE.
+ * https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/503
+ */
+#  if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && \
+    defined(PSA_WANT_ECC_SECP_R1_256)
+#    define CAN_EXERCISE_JPAKE
+#  endif
+
+static int exercise_pake_key(mbedtls_svc_key_id_t key_id,
+                             psa_algorithm_t policy_alg)
+{
+    psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
+    const uint8_t client_name[6] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "client";
+    const uint8_t server_name[6] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "server";
+    uint8_t output[PSA_PAKE_OUTPUT_MAX_SIZE];
+    size_t output_size = sizeof(output);
+    size_t output_len;
+    int ok = 0;
+
+    /* At the time of writing, psa_exercise_key() does not yet support JPAKE.
+     * To get things going quickly, perform a basic check here.
+     *
+     * We use one particular cipher suite (picking the
+     * hash algorithm from the key policy), so test cases must depend on
+     * CAN_EXERCISE_JPAKE or else setup will fail.
+     */
+
+    psa_algorithm_t setup_alg = policy_alg;
+    if (policy_alg == PSA_ALG_JPAKE_BASE) {
+        setup_alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
+    }
+    psa_pake_primitive_t primitive =
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+                           PSA_ECC_FAMILY_SECP_R1, 256);
+    psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
+    psa_pake_cs_set_algorithm(&cipher_suite, setup_alg);
+    psa_pake_cs_set_primitive(&cipher_suite, primitive);
+
+    PSA_ASSERT(psa_pake_setup(&client, key_id, &cipher_suite));
+    PSA_ASSERT(psa_pake_set_user(&client, client_name, sizeof(client_name)));
+    PSA_ASSERT(psa_pake_set_peer(&client, server_name, sizeof(server_name)));
+
+    /* Output the first public key and the first ZKP. Outputting a public key
+     * guarantees that the primitive set in the cipher suite has been
+     * exercised. Outputting a ZKP guarantees that the hash set in the cipher
+     * suite has been exercised. */
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_KEY_SHARE,
+                               output, output_size, &output_len));
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_ZK_PUBLIC,
+                               output, output_size, &output_len));
+    PSA_ASSERT(psa_pake_output(&client, PSA_PAKE_STEP_ZK_PROOF,
+                               output, output_size, &output_len));
+
+    ok = 1;
+
+exit:
+    psa_pake_abort(&client);
+    return ok;
+}
+#endif /* PSA_WANT_ALG_JPAKE */
+
+/** Write a key with the given representation to storage, then check
+ * that it has the given attributes and (if exportable) key material.
+ *
+ * On error, including if the key representation in storage differs,
+ * mark the test case as failed and return 0. On success, return 1.
+ */
+static int test_read_key(const psa_key_attributes_t *expected_attributes,
+                         const data_t *expected_material,
+                         psa_storage_uid_t uid,
+                         const data_t *representation,
+                         int flags)
+{
+    psa_key_attributes_t actual_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key_id = psa_get_key_id(expected_attributes);
+    struct psa_storage_info_t storage_info;
+    int ok = 0;
+    uint8_t *exported_material = NULL;
+    size_t length;
+
+    /* Prime the storage with a key file. */
+    PSA_ASSERT(psa_its_set(uid, representation->len, representation->x, 0));
+
+    if (flags & TEST_FLAG_OVERSIZED_KEY) {
+        TEST_EQUAL(psa_get_key_attributes(key_id, &actual_attributes), PSA_ERROR_DATA_INVALID);
+        ok = 1;
+        goto exit;
+    }
+
+    /* Check that the injected key exists and looks as expected. */
+    PSA_ASSERT(psa_get_key_attributes(key_id, &actual_attributes));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(key_id,
+                                         psa_get_key_id(&actual_attributes)));
+    TEST_EQUAL(psa_get_key_lifetime(expected_attributes),
+               psa_get_key_lifetime(&actual_attributes));
+    TEST_EQUAL(psa_get_key_type(expected_attributes),
+               psa_get_key_type(&actual_attributes));
+    TEST_EQUAL(psa_get_key_bits(expected_attributes),
+               psa_get_key_bits(&actual_attributes));
+    TEST_EQUAL(psa_get_key_usage_flags(expected_attributes),
+               psa_get_key_usage_flags(&actual_attributes));
+    TEST_EQUAL(psa_get_key_algorithm(expected_attributes),
+               psa_get_key_algorithm(&actual_attributes));
+    TEST_EQUAL(psa_get_key_enrollment_algorithm(expected_attributes),
+               psa_get_key_enrollment_algorithm(&actual_attributes));
+    if (can_export(expected_attributes)) {
+        TEST_CALLOC(exported_material, expected_material->len);
+        PSA_ASSERT(psa_export_key(key_id,
+                                  exported_material, expected_material->len,
+                                  &length));
+        TEST_MEMORY_COMPARE(expected_material->x, expected_material->len,
+                            exported_material, length);
+    }
+
+    if ((flags & TEST_FLAG_EXERCISE) != 0) {
+        if (can_exercise(&actual_attributes)) {
+            TEST_ASSERT(mbedtls_test_psa_exercise_key(
+                            key_id,
+                            psa_get_key_usage_flags(expected_attributes),
+                            psa_get_key_algorithm(expected_attributes), 0));
+        }
+
+#if defined(PSA_WANT_ALG_JPAKE)
+        if (PSA_ALG_IS_JPAKE(psa_get_key_algorithm(expected_attributes))) {
+            TEST_ASSERT(exercise_pake_key(
+                            key_id,
+                            psa_get_key_algorithm(expected_attributes)));
+        }
+#endif
+    }
+
+    if (flags & TEST_FLAG_READ_ONLY) {
+        /* Read-only keys cannot be removed through the API.
+         * The key will be removed through ITS in the cleanup code below. */
+        TEST_EQUAL(PSA_ERROR_NOT_PERMITTED, psa_destroy_key(key_id));
+    } else {
+        /* Destroy the key. Confirm through direct access to the storage. */
+        PSA_ASSERT(psa_destroy_key(key_id));
+        TEST_EQUAL(PSA_ERROR_DOES_NOT_EXIST,
+                   psa_its_get_info(uid, &storage_info));
+    }
+
+    ok = 1;
+
+exit:
+    psa_reset_key_attributes(&actual_attributes);
+    psa_its_remove(uid);
+    mbedtls_free(exported_material);
+    return ok;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_PSA_CRYPTO_STORAGE_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void key_storage_save(int lifetime_arg, int type_arg, int bits_arg,
+                      int usage_arg, int alg_arg, int alg2_arg,
+                      data_t *material,
+                      data_t *representation)
+{
+    /* Forward compatibility: save a key in the current format and
+     * check that it has the expected format so that future versions
+     * will still be able to read it. */
+
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_type_t type = type_arg;
+    size_t bits = bits_arg;
+    psa_key_usage_t usage = usage_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t alg2 = alg2_arg;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(0, 1);
+    psa_storage_uid_t uid = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+    TEST_USES_KEY_ID(key_id);
+
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_enrollment_algorithm(&attributes, alg2);
+
+    /* This is the current storage format. Test that we know exactly how
+     * the key is stored. The stability of the test data in future
+     * versions of Mbed TLS will guarantee that future versions
+     * can read back what this version wrote. */
+    TEST_ASSERT(test_written_key(&attributes, material,
+                                 uid, representation));
+
+exit:
+    psa_reset_key_attributes(&attributes);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
+                      int usage_arg, int alg_arg, int alg2_arg,
+                      data_t *material,
+                      data_t *representation, int flags)
+{
+    /* Backward compatibility: read a key in the format of a past version
+     * and check that this version can use it. */
+
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_type_t type = type_arg;
+    size_t bits = bits_arg;
+    psa_key_usage_t usage = usage_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t alg2 = alg2_arg;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(0, 1);
+    psa_storage_uid_t uid = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *custom_key_data = NULL, *custom_storage_data = NULL;
+
+    PSA_INIT();
+    TEST_USES_KEY_ID(key_id);
+
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_enrollment_algorithm(&attributes, alg2);
+
+    /* Create a persistent key which is intentionally larger than the specified
+     * bit size. */
+    if (flags & TEST_FLAG_OVERSIZED_KEY) {
+        TEST_CALLOC(custom_key_data, PSA_BITS_TO_BYTES(bits));
+        memset(custom_key_data, 0xAA, PSA_BITS_TO_BYTES(bits));
+        material->len = PSA_BITS_TO_BYTES(bits);
+        material->x = custom_key_data;
+
+        /* 36 bytes are the overhead of psa_persistent_key_storage_format */
+        TEST_CALLOC(custom_storage_data, PSA_BITS_TO_BYTES(bits) + 36);
+        representation->len = PSA_BITS_TO_BYTES(bits) + 36;
+        representation->x = custom_storage_data;
+
+        psa_format_key_data_for_storage(custom_key_data, PSA_BITS_TO_BYTES(bits),
+                                        &attributes, custom_storage_data);
+    }
+
+    /* Test that we can use a key with the given representation. This
+     * guarantees backward compatibility with keys that were stored by
+     * past versions of Mbed TLS. */
+    TEST_ASSERT(test_read_key(&attributes, material,
+                              uid, representation, flags));
+
+exit:
+    mbedtls_free(custom_key_data);
+    mbedtls_free(custom_storage_data);
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+}
+/* END_CASE */

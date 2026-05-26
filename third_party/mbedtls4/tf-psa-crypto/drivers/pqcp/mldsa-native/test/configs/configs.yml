@@ -1,0 +1,435 @@
+# Copyright (c) The mlkem-native project authors
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+# Metadata for test configuration files
+# Each entry describes how a test config differs from mldsa/mldsa_native_config.h
+
+configs:
+  - path: test/configs/no_asm_config.h
+    description: "Test configuration with no assembly code"
+    defines:
+      MLD_CONFIG_NO_ASM: true
+      MLD_CONFIG_CUSTOM_ZEROIZE:
+        content: |
+          #define MLD_CONFIG_CUSTOM_ZEROIZE
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include <string.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void mld_zeroize(void *ptr, size_t len)
+          {
+            explicit_bzero(ptr, len);
+          }
+          #endif
+
+  - path: test/configs/serial_fips202_config.h
+    description: "Test configuration with serial FIPS202 only"
+    defines:
+      MLD_CONFIG_SERIAL_FIPS202_ONLY: true
+
+  - path: test/configs/custom_randombytes_config.h
+    description: "Test configuration with custom randombytes"
+    defines:
+      MLD_CONFIG_CUSTOM_RANDOMBYTES:
+        content: |
+          #define MLD_CONFIG_CUSTOM_RANDOMBYTES
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+          #include "notrandombytes/notrandombytes.h"
+          static MLD_INLINE int mld_randombytes(uint8_t *ptr, size_t len)
+          {
+            return randombytes(ptr, len);
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: test/configs/custom_zeroize_config.h
+    description: "Test configuration with custom zeroize"
+    defines:
+      MLD_CONFIG_CUSTOM_ZEROIZE:
+        content: |
+          #define MLD_CONFIG_CUSTOM_ZEROIZE
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include <string.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void mld_zeroize(void *ptr, size_t len)
+          {
+            explicit_bzero(ptr, len);
+          }
+          #endif
+
+  - path: test/configs/custom_memcpy_config.h
+    description: "Test configuration with custom memcpy"
+    defines:
+      MLD_CONFIG_CUSTOM_MEMCPY:
+        content: |
+          #define MLD_CONFIG_CUSTOM_MEMCPY
+          #if !defined(__ASSEMBLER__)
+          #include <stddef.h>
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void *mld_memcpy(void *dest, const void *src, size_t n)
+          {
+            /* Simple byte-by-byte copy implementation for testing */
+            unsigned char *d = (unsigned char *)dest;
+            const unsigned char *s = (const unsigned char *)src;
+            for (size_t i = 0; i < n; i++)
+            {
+              d[i] = s[i];
+            }
+            return dest;
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: test/configs/custom_memset_config.h
+    description: "Test configuration with custom memset"
+    defines:
+      MLD_CONFIG_CUSTOM_MEMSET:
+        content: |
+          #define MLD_CONFIG_CUSTOM_MEMSET
+          #if !defined(__ASSEMBLER__)
+          #include <stddef.h>
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void *mld_memset(void *s, int c, size_t n)
+          {
+            /* Simple byte-by-byte set implementation for testing */
+            unsigned char *ptr = (unsigned char *)s;
+            for (size_t i = 0; i < n; i++)
+            {
+              ptr[i] = (unsigned char)c;
+            }
+            return s;
+          }
+          #endif
+
+  - path: test/configs/custom_stdlib_config.h
+    description: "Test configuration with custom stdlib functions"
+    defines:
+      MLD_CONFIG_CUSTOM_MEMCPY:
+        content: |
+          #define MLD_CONFIG_CUSTOM_MEMCPY
+          #if !defined(__ASSEMBLER__)
+          #include <stddef.h>
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void *mld_memcpy(void *dest, const void *src, size_t n)
+          {
+            /* Simple byte-by-byte copy implementation for testing */
+            unsigned char *d = (unsigned char *)dest;
+            const unsigned char *s = (const unsigned char *)src;
+            for (size_t i = 0; i < n; i++)
+            {
+              d[i] = s[i];
+            }
+            return dest;
+          }
+          #endif /* !__ASSEMBLER__ */
+      MLD_CONFIG_CUSTOM_MEMSET:
+        content: |
+          #define MLD_CONFIG_CUSTOM_MEMSET
+          #if !defined(__ASSEMBLER__)
+          #include <stddef.h>
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE void *mld_memset(void *s, int c, size_t n)
+          {
+            /* Simple byte-by-byte set implementation for testing */
+            unsigned char *ptr = (unsigned char *)s;
+            for (size_t i = 0; i < n; i++)
+            {
+              ptr[i] = (unsigned char)c;
+            }
+            return s;
+          }
+          #endif
+
+  - path: test/configs/break_pct_config.h
+    description: "Test configuration for PCT breakage testing"
+    defines:
+      MLD_CONFIG_KEYGEN_PCT: true
+      MLD_CONFIG_KEYGEN_PCT_BREAKAGE_TEST:
+        content: |
+          #define MLD_CONFIG_KEYGEN_PCT_BREAKAGE_TEST
+          #if !defined(__ASSEMBLER__)
+          #include <stdlib.h>
+          #include <string.h>
+          #include "../mldsa/src/sys.h"
+          static MLD_INLINE int mld_break_pct(void)
+          {
+            /* Break PCT if and only if MLD_BREAK_PCT is set to 1 */
+            const char *val = getenv("MLD_BREAK_PCT");
+            return val != NULL && strcmp(val, "1") == 0;
+          }
+          #endif
+
+  - path: test/configs/custom_native_capability_config_0.h
+    description: "Test configuration with custom capability function returning 0"
+    defines:
+      MLD_CONFIG_CUSTOM_CAPABILITY_FUNC:
+        content: |
+          #define MLD_CONFIG_CUSTOM_CAPABILITY_FUNC
+          #if !defined(__ASSEMBLER__)
+          #include "../mldsa/src/sys.h"
+          /* System capability enumeration */
+
+          static MLD_INLINE int mld_sys_check_capability(mld_sys_cap cap)
+          {
+            (void)cap; /* Ignore parameter */
+            return 0;
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: test/configs/custom_native_capability_config_1.h
+    description: "Test configuration with custom capability function returning 1"
+    defines:
+      MLD_CONFIG_CUSTOM_CAPABILITY_FUNC:
+        content: |
+          #define MLD_CONFIG_CUSTOM_CAPABILITY_FUNC
+          #if !defined(__ASSEMBLER__)
+          #include "../mldsa/src/sys.h"
+
+          static MLD_INLINE int mld_sys_check_capability(mld_sys_cap cap)
+          {
+            (void)cap; /* Ignore parameter */
+            return 1;
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: test/configs/custom_native_capability_config_CPUID_AVX2.h
+    description: "Test configuration with CPUID-based AVX2 capability detection"
+    defines:
+      MLD_CONFIG_CUSTOM_CAPABILITY_FUNC:
+        content: |
+          #define MLD_CONFIG_CUSTOM_CAPABILITY_FUNC
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+
+          /* Assert this config is only used on Linux/x86_64 systems */
+          #if !defined(MLD_SYS_X86_64) || !defined(MLD_SYS_LINUX)
+          #error "This configuration is only supported on Linux/x86_64 systems"
+          #endif
+
+          static MLD_INLINE int mld_sys_check_capability(mld_sys_cap cap)
+          {
+            if (cap == MLD_SYS_CAP_AVX2)
+            {
+              uint32_t eax, ebx, ecx, edx;
+
+              /* AVX2 support is queried using `cpuid` with EAX=7, ECX=0.
+               * Check first if `cpuid` supports EAX=7 by calling it with
+               * EAX=0, which gives the maximum supported value of EAX in
+               * EAX. */
+
+              __asm__ volatile("cpuid"
+                               : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+                               : "a"(0));
+
+              if (eax < 7)
+              {
+                return 0; /* Extended features not supported */
+              }
+
+              __asm__ volatile("cpuid"
+                               : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+                               : "a"(7), "c"(0));
+
+              /* AVX2 is bit 5 in EBX */
+              return (ebx & (1 << 5)) ? 1 : 0;
+            }
+
+            /* Default to 0 (conservative) for unknown capabilities */
+            return 0;
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: test/configs/custom_native_capability_config_ID_AA64PFR1_EL1.h
+    description: "Test configuration with ARM system register capability detection"
+    defines:
+      MLD_CONFIG_CUSTOM_CAPABILITY_FUNC:
+        content: |
+          #define MLD_CONFIG_CUSTOM_CAPABILITY_FUNC
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include "../mldsa/src/sys.h"
+
+          #if !defined(MLD_SYS_AARCH64) || !defined(MLD_SYS_LINUX)
+          #error This configuration is only suitable for Linux/AArch64 systems
+          #endif
+
+          static MLD_INLINE int mld_sys_check_capability(mld_sys_cap cap)
+          {
+            if (cap == MLD_SYS_CAP_SHA3)
+            {
+              uint64_t id_aa64pfr1_el1;
+
+              /* Read ID_AA64PFR1_EL1 system register */
+              __asm__ volatile("mrs %0, id_aa64pfr1_el1" : "=r"(id_aa64pfr1_el1));
+
+              /* Extract SHA3 field (bits 35:32) and check if SHA3 is supported */
+              /* SHA3 field: 0b0000 = not implemented, 0b0001 = SHA3 implemented */
+              uint64_t sha3_field = (id_aa64pfr1_el1 >> 32) & 0xF;
+
+              return (sha3_field == 1) ? 1 : 0;
+            }
+
+            /* Default to 0 (conservative) for unknown capabilities */
+            return 0;
+          }
+          #endif /* !__ASSEMBLER__ */
+
+
+  # Example configs
+  - path: examples/monolithic_build/mldsa_native/mldsa_native_config.h
+    description: "Monolithic build config"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_INTERNAL_API_QUALIFIER: static
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/monolithic_build_native/mldsa_native/mldsa_native_config.h
+    description: "Monolithic build config (native backends disabled)"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_INTERNAL_API_QUALIFIER: static
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/monolithic_build_multilevel/mldsa_native/mldsa_native_config.h
+    description: "Multilevel monolithic build config"
+    defines:
+      MLD_CONFIG_NO_SUPERCOP: true
+      MLD_CONFIG_MULTILEVEL_BUILD: true
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_INTERNAL_API_QUALIFIER: static
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/multilevel_build/mldsa_native/mldsa_native_config.h
+    description: "Multilevel build config"
+    defines:
+      MLD_CONFIG_NO_SUPERCOP: true
+      MLD_CONFIG_MULTILEVEL_BUILD: true
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/multilevel_build_native/mldsa_native/mldsa_native_config.h
+    description: "Multilevel build config"
+    defines:
+      MLD_CONFIG_NO_SUPERCOP: true
+      MLD_CONFIG_MULTILEVEL_BUILD: true
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_USE_NATIVE_BACKEND_ARITH: true
+      MLD_CONFIG_USE_NATIVE_BACKEND_FIPS202: true
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/monolithic_build_multilevel_native/mldsa_native/mldsa_native_config.h
+    description: "Multilevel monolithic build config with native backends"
+    defines:
+      MLD_CONFIG_NO_SUPERCOP: true
+      MLD_CONFIG_MULTILEVEL_BUILD: true
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_USE_NATIVE_BACKEND_ARITH: true
+      MLD_CONFIG_USE_NATIVE_BACKEND_FIPS202: true
+      MLD_CONFIG_INTERNAL_API_QUALIFIER: static
+      MLD_CONFIG_EXTERNAL_API_QUALIFIER: static
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+      MLD_CONFIG_CUSTOM_RANDOMBYTES:
+        comment: |
+          /* Even though we use the default randombytes signature here, registering it
+           * as a custom implementation avoids double-declaration of randombytes via
+           * mldsa/src/randombytes.h and test_only_rng/notrandombytes.h: The former is by
+           * default included by mldsa-native, and the latter is needed for this example
+           * since we rely on the additional randombytes_reset() API. */
+        content: |
+          #define MLD_CONFIG_CUSTOM_RANDOMBYTES
+          #if !defined(__ASSEMBLER__)
+          #include <stdint.h>
+          #include "src/sys.h"
+          #include "test_only_rng/notrandombytes.h"
+          static MLD_INLINE int mld_randombytes(uint8_t *ptr, size_t len)
+          {
+            return randombytes(ptr, len);
+          }
+          #endif /* !__ASSEMBLER__ */
+
+  - path: examples/custom_backend/mldsa_native/mldsa_native_config.h
+    description: "Custom backend config with tiny SHA3"
+    defines:
+      MLD_CONFIG_PARAMETER_SET:
+        comment: "/* This is set on the command line */"
+      MLD_CONFIG_USE_NATIVE_BACKEND_ARITH:
+        comment: "/* No native arithmetic backend */"
+        value: false
+      MLD_CONFIG_NAMESPACE_PREFIX: CUSTOM_TINY_SHA3
+      MLD_CONFIG_USE_NATIVE_BACKEND_FIPS202: true
+      MLD_CONFIG_FIPS202_BACKEND_FILE: '"fips202/native/custom/custom.h"'
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/bring_your_own_fips202/mldsa_native/mldsa_native_config.h
+    description: "Configuration for custom FIPS202 implementation"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_FIPS202_CUSTOM_HEADER: "\"../custom_fips202/fips202.h\""
+      MLD_CONFIG_FIPS202X4_CUSTOM_HEADER: "\"../custom_fips202/fips202x4.h\""
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/bring_your_own_fips202_static/mldsa_native/mldsa_native_config.h
+    description: "Configuration for custom serial FIPS202 implementation"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_SERIAL_FIPS202_ONLY: true
+      MLD_CONFIG_FIPS202_CUSTOM_HEADER: "\"../custom_fips202/fips202.h\""
+      MLD_CONFIG_FIPS202X4_CUSTOM_HEADER: "\"../custom_fips202/fips202x4.h\""
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/basic_deterministic/mldsa_native/mldsa_native_config.h
+    description: "Configuration for deterministic-only build of mldsa-native"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_NO_RANDOMIZED_API: true
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: examples/basic_lowram/mldsa_native/mldsa_native_config.h
+    description: "Configuration for low RAM build of mldsa-native"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mldsa
+      MLD_CONFIG_REDUCE_RAM:
+        content: |
+          #if !defined(MLD_CONFIG_REDUCE_RAM)
+          #define MLD_CONFIG_REDUCE_RAM
+          #endif
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+
+  - path: test/configs/test_alloc_config.h
+    description: "Using custom allocation that can be made fail at specific invocation"
+    defines:
+      MLD_CONFIG_NAMESPACE_PREFIX: mld
+      MLD_CONFIG_CONTEXT_PARAMETER: true
+      MLD_CONFIG_CONTEXT_PARAMETER_TYPE: struct test_ctx_t *
+      MLD_CONFIG_CUSTOM_ALLOC_FREE:
+        content: |
+          #define MLD_CONFIG_CUSTOM_ALLOC_FREE
+          #if !defined(__ASSEMBLER__)
+          #include <stdlib.h>
+          struct test_ctx_t; /* Forward declaration */
+          void * custom_alloc(struct test_ctx_t *ctx, size_t sz, const char *file, int line, const char *var, const char *type);
+          void custom_free(struct test_ctx_t *ctx, void *p, size_t sz, const char *file, int line, const char *var, const char *type);
+          #define MLD_CUSTOM_ALLOC(v, T, N, ctx) T *v = custom_alloc(ctx, sizeof(T)*(N), __FILE__, __LINE__, #v, #T)
+          #define MLD_CUSTOM_FREE(v, T, N, ctx) custom_free(ctx, v, sizeof(T)*(N), __FILE__, __LINE__, #v, #T)
+          #endif /* !__ASSEMBLER__ */
+      MLD_CONFIG_FILE:
+        comment: "/* No need to set this -- we _are_ already in a custom config */"
+

@@ -1,0 +1,23 @@
+Memory poison+unpoison: offset=0 len=42
+memory_poison_unpoison:0:42
+
+Memory poison+unpoison: offset=0 len=1
+memory_poison_unpoison:0:1
+
+Memory poison+unpoison: offset=0 len=2
+memory_poison_unpoison:0:2
+
+Memory poison+unpoison: offset=1 len=1
+memory_poison_unpoison:1:1
+
+Memory poison+unpoison: offset=1 len=2
+memory_poison_unpoison:1:2
+
+Memory poison+unpoison: offset=7 len=1
+memory_poison_unpoison:7:1
+
+Memory poison+unpoison: offset=7 len=2
+memory_poison_unpoison:7:2
+
+Memory poison+unpoison: offset=0 len=0
+memory_poison_unpoison:0:0

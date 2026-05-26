@@ -1,0 +1,51 @@
+# Test MD5 and RIPEMD160
+mbedtls_md5 Test vector RFC1321 #1
+md5_text:"":"d41d8cd98f00b204e9800998ecf8427e"
+
+mbedtls_md5 Test vector RFC1321 #2
+md5_text:"a":"0cc175b9c0f1b6a831c399e269772661"
+
+mbedtls_md5 Test vector RFC1321 #3
+md5_text:"abc":"900150983cd24fb0d6963f7d28e17f72"
+
+mbedtls_md5 Test vector RFC1321 #4
+md5_text:"message digest":"f96b697d7cb7938d525a2f31aaf161d0"
+
+mbedtls_md5 Test vector RFC1321 #5
+md5_text:"abcdefghijklmnopqrstuvwxyz":"c3fcd3d76192e4007dfb496cca67e13b"
+
+mbedtls_md5 Test vector RFC1321 #6
+md5_text:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":"d174ab98d277d9f5a5611c2c9f419d9f"
+
+mbedtls_md5 Test vector RFC1321 #7
+md5_text:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":"57edf4a22be3c955ac49da2e2107b67a"
+
+mbedtls_ripemd160 Test vector from paper #1
+ripemd160_text:"":"9c1185a5c5e9fc54612808977ee8f548b2258d31"
+
+mbedtls_ripemd160 Test vector from paper #2
+ripemd160_text:"a":"0bdc9d2d256b3ee9daae347be6f4dc835a467ffe"
+
+mbedtls_ripemd160 Test vector from paper #3
+ripemd160_text:"abc":"8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"
+
+mbedtls_ripemd160 Test vector from paper #4
+ripemd160_text:"message digest":"5d0689ef49d2fae572b881b123a85ffa21595f36"
+
+mbedtls_ripemd160 Test vector from paper #5
+ripemd160_text:"abcdefghijklmnopqrstuvwxyz":"f71c27109c692c1b56bbdceb5b9d2865b3708dbc"
+
+mbedtls_ripemd160 Test vector from paper #6
+ripemd160_text:"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq":"12a053384a9c0c88e405a06c27dcf49ada62eb2b"
+
+mbedtls_ripemd160 Test vector from paper #7
+ripemd160_text:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":"b0e20b6e3116640286ed3a87a5713079b21f5189"
+
+mbedtls_ripemd160 Test vector from paper #8
+ripemd160_text:"12345678901234567890123456789012345678901234567890123456789012345678901234567890":"9b752e45573d4b39f4dbd3323cab82bf63326bfb"
+
+MD5 Selftest
+md5_selftest:
+
+RIPEMD160 Selftest
+ripemd160_selftest:

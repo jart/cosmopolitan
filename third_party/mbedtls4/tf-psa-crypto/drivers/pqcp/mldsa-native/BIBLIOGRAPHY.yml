@@ -1,0 +1,167 @@
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+- id: ACVP
+  name: Automated Cryptographic Validation Protocol (ACVP) Server
+  author: National Institute of Standards and Technology
+  url: https://github.com/usnistgov/ACVP-Server
+
+- id: FIPS204
+  short: FIPS 204
+  name: "FIPS 204 Module-Lattice-Based Digital Signature Standard"
+  author: National Institute of Standards and Technology
+  url: https://csrc.nist.gov/pubs/fips/204/final
+
+- id: FIPS202
+  short: FIPS 202
+  name: "FIPS202 SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"
+  author: National Institute of Standards and Technology
+  url: https://csrc.nist.gov/pubs/fips/202/final
+
+- id: NIST_FAQ
+  name: "Post-Quantum Cryptography FAQs" 
+  author: National Institute of Standards and Technology
+  url: https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs#Rdc7
+
+- id: NIST_FIPS204_SEC6
+  name: "FIPS 204 Section 6 Guidance" 
+  author: National Institute of Standards and Technology
+  url: https://csrc.nist.gov/csrc/media/Projects/post-quantum-cryptography/documents/faq/fips204-sec6-03192025.pdf
+
+- id: REF
+  name: "CRYSTALS-Dilithium reference implementation"
+  author:
+  - Bai, Shi  
+  - Ducas, Léo
+  - Kiltz, Eike
+  - Lepoint, Tancrède
+  - Lyubashevsky, Vadim
+  - Schwabe, Peter
+  - Seiler, Gregor
+  - Stehlé, Damien
+  url: https://github.com/pq-crystals/dilithium/tree/master/ref
+
+- id: REF_AVX2
+  name: "CRYSTALS-Dilithium optimized AVX2 implementation"
+  author:
+  - Bai, Shi
+  - Ducas, Léo
+  - Kiltz, Eike
+  - Lepoint, Tancrède
+  - Lyubashevsky, Vadim
+  - Schwabe, Peter
+  - Seiler, Gregor
+  - Stehlé, Damien
+  url: https://github.com/pq-crystals/dilithium/tree/master/avx2
+
+- id: KyberSlash
+  short: KyberSlash
+  name: "KyberSlash: Exploiting secret-dependent division timings in Kyber implementations"
+  author:
+  - Bernstein, Daniel J.
+  - Bhargavan, Karthikeyan
+  - Bhasin, Shivam
+  - Chattopadhyay, Anupam
+  - Chia, Tee Kiah
+  - Kannwischer, Matthias J.
+  - Kiefer, Franziskus
+  - Paiva, Thales
+  - Ravi, Prasanna
+  - Tamvada, Goutam
+  url: https://kyberslash.cr.yp.to/papers.html
+
+- id: FIPS140_3_IG
+  short: FIPS 140-3 IG
+  name: "Implementation Guidance for FIPS 140-3 and the Cryptographic Module Validation Program"
+  author: National Institute of Standards and Technology
+  url: https://csrc.nist.gov/projects/cryptographic-module-validation-program/fips-140-3-ig-announcements
+
+- id: Round3_Spec
+  name: "CRYSTALS-Dilithium Algorithm Specifications and Supporting Documentation (Version 3.1)"
+  author:
+  - Bai, Shi  
+  - Ducas, Léo 
+  - Kiltz, Eike 
+  - Lepoint, Tancrède 
+  - Lyubashevsky, Vadim 
+  - Schwabe, Peter
+  - Seiler, Gregor 
+  - Stehlé, Damien
+  url: https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+
+- id: SLOTHY_Paper
+  name: "Fast and Clean: Auditable high-performance assembly via constraint solving"
+  short: SLOTHY paper
+  author:
+  - Abdulrahman, Amin
+  - Becker, Hanno
+  - Kannwischer, Matthias J.
+  - Klein, Fabien
+  url: https://eprint.iacr.org/2022/1303
+
+- id: NeonNTT
+  name: "Neon NTT: Faster Dilithium, Kyber, and Saber on Cortex-A72 and Apple M1"
+  year: 2022
+  url: https://eprint.iacr.org/2021/986
+  author:
+  - Becker, Hanno
+  - Hwang, Vincent
+  - Kannwischer, Matthias J.
+  - Yang, Bo-Yin
+  - Yang, Shang-Yi
+- id: mupq
+  name: Common files for pqm4, pqm3, pqriscv
+  author: 
+  - Kannwischer, Matthias J. 
+  - Petri, Richard
+  - Rijneveld, Joost
+  - Schwabe, Peter 
+  - Stoffelen, Ko
+  url: https://github.com/mupq/mupq
+
+- id: supercop
+  name: SUPERCOP benchmarking framework
+  author: Bernstein, Daniel J.
+  url: http://bench.cr.yp.to/supercop.html
+
+- id: tweetfips
+  name: "'tweetfips202' FIPS202 implementation"
+  author:
+  - Van Assche, Gilles
+  - Bernstein, Daniel J.
+  - Schwabe, Peter
+  url: https://keccak.team/2015/tweetfips202.html
+
+- id: tiny_sha3
+  name: tiny_sha3
+  author: Saarinen, Markku-Juhani O.
+  url: https://github.com/mjosaarinen/tiny_sha3
+
+- id: libmceliece
+  name: libmceliece implementation of Classic McEliece
+  author:
+  - Bernstein, Daniel J.
+  - Chou, Tung
+  url: https://lib.mceliece.org/
+
+- id: optblocker
+  name: PQC forum post on opt-blockers using volatile globals
+  author: Bernstein, Daniel J.
+  url: https://groups.google.com/a/list.nist.gov/g/pqc-forum/c/hqbtIGFKIpU/m/H14H0wOlBgAJ
+
+- id: HYBRID
+  name: "Hybrid scalar/vector implementations of Keccak and SPHINCS+ on AArch64"
+  author:
+  - Becker, Hanno
+  - Kannwischer, Matthias J.
+  url: https://eprint.iacr.org/2022/1243
+
+- id: surf
+  name: "SURF: Simple Unpredictable Random Function"
+  author: Bernstein, Daniel J.
+  url: https://cr.yp.to/papers.html#surf
+
+- id: m1cycles
+  name: Cycle counting on Apple M1
+  author: Johnson, Dougall
+  url: https://gist.github.com/dougallj/5bafb113492047c865c0c8cfbc930155#file-m1_robsize-c-L390

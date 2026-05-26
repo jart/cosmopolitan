@@ -1,0 +1,339 @@
+Certificate Request check Server1 SHA1
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha1":MBEDTLS_MD_SHA1:0:0:0:0:0
+
+Certificate Request check Server1 SHA224
+depends_on:PSA_WANT_ALG_SHA_224:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha224":MBEDTLS_MD_SHA224:0:0:0:0:0
+
+Certificate Request check Server1 SHA256
+depends_on:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha256":MBEDTLS_MD_SHA256:0:0:0:0:0
+
+Certificate Request check Server1 SHA384
+depends_on:PSA_WANT_ALG_SHA_384:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha384":MBEDTLS_MD_SHA384:0:0:0:0:0
+
+Certificate Request check Server1 SHA512
+depends_on:PSA_WANT_ALG_SHA_512:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha512":MBEDTLS_MD_SHA512:0:0:0:0:0
+
+Certificate Request check Server1 MD5
+depends_on:PSA_WANT_ALG_MD5:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.md5":MBEDTLS_MD_MD5:0:0:0:0:0
+
+Certificate Request check Server1 key_usage
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.key_usage":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION | MBEDTLS_X509_KU_KEY_ENCIPHERMENT:1:0:0:0
+
+Certificate Request check opaque Server1 key_usage
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check_opaque:"../framework/data_files/server1.key":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION:0
+
+Certificate Request check Server1 key_usage empty
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.key_usage_empty":MBEDTLS_MD_SHA1:0:1:0:0:0
+
+Certificate Request check Server1 ns_cert_type
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.cert_type":MBEDTLS_MD_SHA1:0:0:MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER:1:0
+
+Certificate Request check Server1 ns_cert_type empty
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.cert_type_empty":MBEDTLS_MD_SHA1:0:0:0:1:0
+
+Certificate Request check Server1 key_usage + ns_cert_type
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.ku-ct":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION | MBEDTLS_X509_KU_KEY_ENCIPHERMENT:1:MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER:1:0
+
+Certificate Request check Server5 ECDSA, key_usage
+depends_on:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_256
+x509_csr_check:"../framework/data_files/server5.key":"../framework/data_files/server5.req.ku.sha1":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION:1:0:0:0
+
+Certificate Request check Server1, set_extension
+depends_on:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN
+x509_csr_check:"../framework/data_files/server1.key":"../framework/data_files/server1.req.sha256.ext":MBEDTLS_MD_SHA256:0:0:0:0:1
+
+Certificate Request check opaque Server5 ECDSA, key_usage
+depends_on:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ECC_SECP_R1_256
+x509_csr_check_opaque:"../framework/data_files/server5.key":MBEDTLS_MD_SHA256:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION:0
+
+Certificate write check Server1 SHA1
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, not before 1970
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"19700210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, not after 2050
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20500210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, not before 1970, not after 2050
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"19700210144406":"20500210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, not before 2050, not after 2059
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20500210144406":"20590210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, key_usage
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION | MBEDTLS_X509_KU_KEY_ENCIPHERMENT:1:"NULL":0:0:1:-1:"../framework/data_files/server1.key_usage.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, one ext_key_usage
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20110212144406":"20210212144406":MBEDTLS_MD_SHA1:0:0:"serverAuth":0:0:1:-1:"../framework/data_files/server1.key_ext_usage.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, two ext_key_usages
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20110212144406":"20210212144406":MBEDTLS_MD_SHA1:0:0:"codeSigning,timeStamping":0:0:1:-1:"../framework/data_files/server1.key_ext_usages.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, ns_cert_type
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER:1:1:-1:"../framework/data_files/server1.cert_type.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, version 1
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:MBEDTLS_X509_CRT_VERSION_1:"../framework/data_files/server1.v1.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, CA
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.ca.crt":0:1:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, RSA_ALT
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:0:-1:"../framework/data_files/server1.noauthid.crt":1:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, RSA_ALT, key_usage
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION | MBEDTLS_X509_KU_KEY_ENCIPHERMENT:1:"NULL":0:0:0:-1:"../framework/data_files/server1.key_usage_noauthid.crt":1:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, RSA_ALT, ns_cert_type
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER:1:0:-1:"../framework/data_files/server1.cert_type_noauthid.crt":1:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, RSA_ALT, version 1
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:0:MBEDTLS_X509_CRT_VERSION_1:"../framework/data_files/server1.v1.crt":1:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, RSA_ALT, CA
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:0:-1:"../framework/data_files/server1.ca_noauthid.crt":1:1:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Opaque
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.crt":2:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Opaque, key_usage
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_NON_REPUDIATION | MBEDTLS_X509_KU_KEY_ENCIPHERMENT:1:"NULL":0:0:1:-1:"../framework/data_files/server1.key_usage.crt":2:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Opaque, ns_cert_type
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER:1:1:-1:"../framework/data_files/server1.cert_type.crt":2:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Opaque, version 1
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:MBEDTLS_X509_CRT_VERSION_1:"../framework/data_files/server1.v1.crt":2:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Opaque, CA
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.ca.crt":2:1:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Full length serial
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"112233445566778899aabbccddeeff0011223344":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.long_serial.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, Serial starting with 0x80
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"8011223344":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.80serial.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server1 SHA1, All 0xFF full length serial
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"ffffffffffffffffffffffffffffffff":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.long_serial_FF.crt":0:0:"../framework/data_files/test-ca.crt":0
+
+Certificate write check Server5 ECDSA
+depends_on:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ECC_SECP_R1_256
+x509_crt_check:"../framework/data_files/server5.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca2.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=Polarssl Test EC CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA256:0:0:"NULL":0:0:1:-1:"../framework/data_files/server5.crt":0:0:"../framework/data_files/test-ca2.crt":0
+
+Certificate write check Server5 ECDSA, Opaque
+depends_on:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_SIGN:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ECC_SECP_R1_256
+x509_crt_check:"../framework/data_files/server5.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca2.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=Polarssl Test EC CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA256:0:0:"NULL":0:0:1:-1:"":2:0:"../framework/data_files/test-ca2.crt":0
+
+Certificate write check Server1 SHA1, SubjectAltNames
+depends_on:PSA_HAVE_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_ALG_MD5
+x509_crt_check:"../framework/data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"../framework/data_files/test-ca_unenc.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"01":"20190210144406":"20290210144406":MBEDTLS_MD_SHA1:0:0:"NULL":0:0:1:-1:"../framework/data_files/server1.allSubjectAltNames.crt":0:0:"../framework/data_files/test-ca.crt":1
+
+X509 String to Names #1
+mbedtls_x509_string_to_names:"C=NL,O=Offspark\\, Inc., OU=PolarSSL":"C=NL, O=Offspark\\, Inc., OU=PolarSSL":0:0
+
+X509 String to Names #2
+mbedtls_x509_string_to_names:"C=NL, O=Offspark, Inc., OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #3 (Name precisely 255 bytes)
+mbedtls_x509_string_to_names:"C=NL, O=123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345,OU=PolarSSL":"C=NL, O=123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345, OU=PolarSSL":0:0
+
+X509 String to Names #4 (Name larger than 255 bytes)
+mbedtls_x509_string_to_names:"C=NL, O=1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #5 (Escape non-allowed characters)
+mbedtls_x509_string_to_names:"C=NL, O=Offspark\\a Inc., OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #6 (Escape at end)
+mbedtls_x509_string_to_names:"C=NL, O=Offspark\\":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #7 (Invalid, no '=' or ',')
+mbedtls_x509_string_to_names:"ABC123":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #8 (Escaped valid characters)
+mbedtls_x509_string_to_names:"C=NL, O=Offspark\\+ \\> \\=, OU=PolarSSL":"C=NL, O=Offspark\\+ \\> \\=, OU=PolarSSL":0:0
+
+X509 String to Names #9 (Escaped ascii hexpairs uppercase encoded)
+mbedtls_x509_string_to_names:"C=NL, O=\\4F\\66\\66\\73\\70\\61\\72\\6B, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":0:0
+
+X509 String to Names #10 (Escaped ascii hexpairs lowercase encoded)
+mbedtls_x509_string_to_names:"C=NL, O=\\4f\\66\\66\\73\\70\\61\\72\\6b, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":0:0
+
+X509 String to Names #11 (Invalid hexpair escape at end of string)
+mbedtls_x509_string_to_names:"C=NL, O=\\4f\\66\\66\\73\\70\\61\\72\\6, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #12 (Reject escaped null hexpair)
+mbedtls_x509_string_to_names:"C=NL, O=Of\\00spark, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #13 (Invalid hexpairs)
+mbedtls_x509_string_to_names:"C=NL, O=Of\\flspark, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #14 (Accept numercoid/hexstring)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C084F6666737061726B, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":0:0
+
+# TODO: Should the trailing garbage be ignored?
+X509 String to Names (hexstring: trailing garbage after DER is ignored)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C084F6666737061726Baa, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":0:0
+
+X509 String to Names: long hexstring (payload=256 bytes)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C82010041414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141, OU=PolarSSL":"C=NL, O=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA, OU=PolarSSL":0:MAY_FAIL_DN_GETS
+
+X509 String to Names: long hexstring (payload=257 bytes)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C820101aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #15 (Odd length DER hexstring)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C084F6666737061726, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names (empty DER hexstring)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names (empty DER hexstring at end)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names (1-byte DER hexstring)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names (1-byte DER hexstring at end)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #16 (hexstring: DER length exceeds available data)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#0C0B4F6666737061726B, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #17 (hexstring: Invalid OID)
+mbedtls_x509_string_to_names:"C=NL, 10.5.4.10=#0C084F6666737061726B, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names #18 (short name and hexstring)
+mbedtls_x509_string_to_names:"C=NL, O=#0C084F6666737061726B, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":0:0
+
+X509 String to Names (null byte in hexstring with string type)
+mbedtls_x509_string_to_names:"C=NL, O=#0C0100, OU=PolarSSL":"C=NL, O=Offspark, OU=PolarSSL":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+X509 String to Names (null byte in hexstring with non-string type)
+mbedtls_x509_string_to_names:"C=NL, O=#040100, OU=PolarSSL":"C=NL, O=\\x00, OU=PolarSSL":0:MAY_FAIL_GET_NAME
+
+X509 String to Names #19 (Accept non-ascii hexpairs)
+mbedtls_x509_string_to_names:"C=NL, O=Of\\CCspark, OU=PolarSSL":"C=NL, O=Of\\CCspark, OU=PolarSSL":0:0
+
+X509 String to Names #20 (Reject empty AttributeValue)
+mbedtls_x509_string_to_names:"C=NL, O=, OU=PolarSSL":"":MBEDTLS_ERR_X509_INVALID_NAME:0
+
+# Note: the behaviour is incorrect, output from string->names->string should be
+# the same as the input, rather than just the last component, see
+# https://github.com/Mbed-TLS/mbedtls/issues/10189
+# Still including tests for the current incorrect behaviour because of the
+# variants below where we want to ensure at least that no memory corruption
+# happens (which would be a lot worse than just a functional bug).
+X509 String to Names (repeated OID)
+mbedtls_x509_string_to_names:"CN=ab,CN=cd,CN=ef":"CN=ef":0:0
+
+# Note: when a value starts with a # sign, it's treated as the hex encoding of
+# the DER encoding of the value. Here, 0400 is a zero-length OCTET STRING.
+# The tag actually doesn't matter for our purposes, only the length.
+X509 String to Names (repeated OID, 1st is zero-length)
+mbedtls_x509_string_to_names:"CN=#0400,CN=cd,CN=ef":"CN=ef":0:0
+
+X509 String to Names (repeated OID, middle is zero-length)
+mbedtls_x509_string_to_names:"CN=ab,CN=#0400,CN=ef":"CN=ef":0:0
+
+X509 String to Names (repeated OID, last is zero-length)
+mbedtls_x509_string_to_names:"CN=ab,CN=cd,CN=#0400":"CN=#0000":0:MAY_FAIL_GET_NAME
+
+X509 Round trip test (Escaped characters)
+mbedtls_x509_string_to_names:"CN=Lu\\C4\\8Di\\C4\\87, O=Offspark, OU=PolarSSL":"CN=Lu\\C4\\8Di\\C4\\87, O=Offspark, OU=PolarSSL":0:0
+
+X509 Round trip test (hexstring output for non string input)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10=#03084F6666737061726B, OU=PolarSSL":"C=NL, O=#03084F6666737061726B, OU=PolarSSL":0:0
+
+X509 Round trip test (numercoid hexstring output for unknown OID)
+mbedtls_x509_string_to_names:"C=NL, 2.5.4.10.234.532=#0C084F6666737061726B, OU=PolarSSL":"C=NL, 2.5.4.10.234.532=#0C084F6666737061726B, OU=PolarSSL":0:0
+
+Check max serial length
+x509_set_serial_check:
+
+Check max extension length
+x509_set_extension_length_check:
+
+OID from numeric string - hardware module name
+oid_from_numeric_string:"1.3.6.1.5.5.7.8.4":0:"2B06010505070804"
+
+OID from numeric string - multi-byte subidentifier
+oid_from_numeric_string:"1.1.2108":0:"29903C"
+
+OID from numeric string - second component greater than 39
+oid_from_numeric_string:"2.49.0.0.826.0":0:"81010000863A00"
+
+OID from numeric string - multi-byte first subidentifier
+oid_from_numeric_string:"2.999":0:"8837"
+
+OID from numeric string - empty string input
+oid_from_numeric_string:"":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - first component not a number
+oid_from_numeric_string:"abc.1.2":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - second component not a number
+oid_from_numeric_string:"1.abc.2":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - first component too large
+oid_from_numeric_string:"3.1":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - first component < 2, second > 39
+oid_from_numeric_string:"1.40":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - third component not a number
+oid_from_numeric_string:"1.2.abc":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - non-'.' separator between first and second
+oid_from_numeric_string:"1/2.3.4":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - non-'.' separator between second and third
+oid_from_numeric_string:"1.2/3.4":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - non-'.' separator between third and fourth
+oid_from_numeric_string:"1.2.3/4":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - OID greater than max length (129 components)
+oid_from_numeric_string:"1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1.2.3.4.5.6.7.8.1":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+OID from numeric string - OID with maximum subidentifier
+oid_from_numeric_string:"2.4294967215":0:"8FFFFFFF7F"
+
+OID from numeric string - OID with overflowing subidentifier
+oid_from_numeric_string:"2.4294967216":MBEDTLS_ERR_ASN1_INVALID_DATA:""

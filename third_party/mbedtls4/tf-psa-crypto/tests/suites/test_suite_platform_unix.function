@@ -1,0 +1,56 @@
+/* BEGIN_HEADER */
+/* Test access to the Unix primitives used in platform_util.c and elsewhere.
+ * We aren't testing that they work, just getting an easy-to-understand
+ * diagnostic if they aren't available.
+ * (There is a separate test suite for the platform_util.h interfacces.)
+ */
+
+#include <mbedtls/platform_util.h>
+#include <mbedtls/platform.h>
+#include "tf_psa_crypto_common.h"
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+
+#include <time.h>
+#include <unistd.h>
+
+#else /* defined(MBEDTLS_PLATFORM_IS_UNIXLIKE) */
+
+/* Constants used in the test data need to be defined even if no test
+ * functions that use them are enabled.
+ * Undefine the macros first in case a system header does define them
+ * even though we haven't recognized the platform as Unix-like. */
+#undef CLOCK_REALTIME
+#define CLOCK_REALTIME 0
+#undef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 0
+
+#endif /* defined(MBEDTLS_PLATFORM_IS_UNIXLIKE) */
+
+/* END_HEADER */
+
+/* Note: we can't make the whole test suite depend on
+ * MBEDTLS_PLATFORM_IS_UNIXLIKE, because file-level dependencies can only
+ * come from build_info.h, platform.h or some test helper headers, not
+ * from internal macros. */
+/* BEGIN_DEPENDENCIES
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void unistd_available()
+{
+    pid_t pid = getpid();
+    TEST_LE_S(1, pid);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void clock_gettime_available(int clockid)
+{
+    struct timespec ts = { 0, 0 };
+    memset(&ts, 0, sizeof(ts));
+    int ret = clock_gettime(clockid, &ts);
+    TEST_ASSERT_ERRNO(ret == 0);
+    TEST_ASSERT(ts.tv_sec != 0 || ts.tv_nsec != 0);
+}
+/* END_CASE */

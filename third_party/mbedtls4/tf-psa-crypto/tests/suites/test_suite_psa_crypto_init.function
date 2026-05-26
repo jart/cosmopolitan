@@ -1,0 +1,212 @@
+/* BEGIN_HEADER */
+#include <stdint.h>
+
+#include "psa_crypto_core.h"
+/* For mbedtls_psa_crypto_configure_entropy_sources() */
+#include "psa_crypto_invasive.h"
+
+static int check_stats(void)
+{
+    mbedtls_psa_stats_t stats;
+    mbedtls_psa_get_stats(&stats);
+
+    TEST_EQUAL(stats.volatile_slots, MBEDTLS_TEST_PSA_INTERNAL_KEYS);
+    TEST_EQUAL(stats.persistent_slots, 0);
+    TEST_EQUAL(stats.external_slots, 0);
+    TEST_EQUAL(stats.half_filled_slots, 0);
+    TEST_EQUAL(stats.locked_slots, 0);
+
+    return 1;
+
+exit:
+    return 0;
+}
+
+#if defined MBEDTLS_THREADING_PTHREAD
+
+typedef struct {
+    int do_init;
+} thread_psa_init_ctx_t;
+
+static void *thread_psa_init_function(void *ctx)
+{
+    thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    uint8_t random[10] = { 0 };
+
+    if (init_context->do_init) {
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* If this is a test only thread, then we can assume PSA is being started
+     * up on another thread and thus we cannot know whether the following tests
+     * will be successful or not. These checks are still useful, however even
+     * without checking the return codes as they may show up race conditions on
+     * the flags they check under TSAN.*/
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+
+    /* Test getting global_data.rng_state. */
+    status = mbedtls_psa_crypto_configure_entropy_sources(NULL, NULL);
+
+    if (init_context->do_init) {
+        /* Bad state due to entropy sources already being setup in
+         * psa_crypto_init() */
+        TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    }
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+    /* Test using the PSA RNG ony if we know PSA is up and running. */
+    if (init_context->do_init) {
+        status = psa_generate_random(random, sizeof(random));
+
+        TEST_EQUAL(status, PSA_SUCCESS);
+    }
+
+exit:
+    return NULL;
+}
+#endif /* defined MBEDTLS_THREADING_PTHREAD */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void init_deinit(int count)
+{
+    psa_status_t status;
+    int i;
+    for (i = 0; i < count; i++) {
+        mbedtls_test_set_step(2 * i);
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
+
+        mbedtls_test_set_step(2 * i);
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
+        PSA_DONE();
+    }
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void deinit_without_init(int count)
+{
+    int i;
+    for (i = 0; i < count; i++) {
+        PSA_ASSERT(psa_crypto_init());
+        PSA_DONE();
+    }
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_THREADING_PTHREAD */
+void psa_threaded_init(int arg_thread_count)
+{
+    thread_psa_init_ctx_t init_context;
+    thread_psa_init_ctx_t init_context_2;
+
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    init_context.do_init = 1;
+
+    /* Test initialising PSA and testing certain protected globals on multiple
+     * threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i],
+                                       thread_psa_init_function,
+                                       (void *) &init_context),
+            0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    PSA_DONE();
+
+    init_context_2.do_init = 0;
+
+    /* Test initialising PSA whilst also testing flags on other threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+
+        if (i & 1) {
+
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context),
+                0);
+        } else {
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context_2),
+                0);
+        }
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+exit:
+
+    PSA_DONE();
+
+    mbedtls_free(threads);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void validate_module_init_generate_random(int count)
+{
+    psa_status_t status;
+    uint8_t random[10] = { 0 };
+    int i;
+    for (i = 0; i < count; i++) {
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        PSA_DONE();
+    }
+    status = psa_generate_random(random, sizeof(random));
+    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void validate_module_init_key_based(int count)
+{
+    psa_status_t status;
+    uint8_t data[10] = { 0 };
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = mbedtls_svc_key_id_make(0xdead, 0xdead);
+    int i;
+
+    for (i = 0; i < count; i++) {
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        PSA_DONE();
+    }
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+    status = psa_import_key(&attributes, data, sizeof(data), &key);
+    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(key));
+}
+/* END_CASE */

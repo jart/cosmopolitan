@@ -1,0 +1,204 @@
+/* BEGIN_HEADER */
+#include "mbedtls/lms.h"
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_LMS_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_LMS_PRIVATE */
+void lms_sign_verify_test(data_t *msg, data_t *seed)
+{
+    mbedtls_lms_public_t pub_ctx;
+    mbedtls_lms_private_t priv_ctx;
+    unsigned char sig[MBEDTLS_LMS_SIG_LEN(MBEDTLS_LMS_SHA256_M32_H10, MBEDTLS_LMOTS_SHA256_N32_W8)];
+
+    mbedtls_lms_public_init(&pub_ctx);
+    mbedtls_lms_private_init(&priv_ctx);
+    USE_PSA_INIT();
+
+    /* Allocation failure isn't a test failure, since it likely just means
+     * there's not enough memory to run the test.
+     */
+    TEST_EQUAL(mbedtls_lms_generate_private_key(&priv_ctx, MBEDTLS_LMS_SHA256_M32_H10,
+                                                MBEDTLS_LMOTS_SHA256_N32_W8,
+                                                seed->x, seed->len), 0);
+
+    TEST_EQUAL(mbedtls_lms_calculate_public_key(&pub_ctx, &priv_ctx), 0);
+
+    TEST_EQUAL(mbedtls_lms_sign(&priv_ctx,
+                                msg->x, msg->len, sig, sizeof(sig),
+                                NULL), 0);
+
+    TEST_EQUAL(mbedtls_lms_verify(&pub_ctx, msg->x, msg->len, sig,
+                                  sizeof(sig)), 0);
+
+exit:
+    mbedtls_lms_public_free(&pub_ctx);
+    mbedtls_lms_private_free(&priv_ctx);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_LMS_PRIVATE */
+void lms_sign_verify_null_msg_test(data_t *seed)
+{
+    mbedtls_lms_public_t pub_ctx;
+    mbedtls_lms_private_t priv_ctx;
+    unsigned char sig[MBEDTLS_LMS_SIG_LEN(MBEDTLS_LMS_SHA256_M32_H10, MBEDTLS_LMOTS_SHA256_N32_W8)];
+
+    mbedtls_lms_public_init(&pub_ctx);
+    mbedtls_lms_private_init(&priv_ctx);
+    USE_PSA_INIT();
+
+    /* Allocation failure isn't a test failure, since it likely just means
+     * there's not enough memory to run the test.
+     */
+    TEST_EQUAL(mbedtls_lms_generate_private_key(&priv_ctx, MBEDTLS_LMS_SHA256_M32_H10,
+                                                MBEDTLS_LMOTS_SHA256_N32_W8,
+                                                seed->x, seed->len), 0);
+
+    TEST_EQUAL(mbedtls_lms_calculate_public_key(&pub_ctx, &priv_ctx), 0);
+
+    TEST_EQUAL(mbedtls_lms_sign(&priv_ctx,
+                                NULL, 0, sig, sizeof(sig),
+                                NULL), 0);
+
+    TEST_EQUAL(mbedtls_lms_verify(&pub_ctx, NULL, 0, sig,
+                                  sizeof(sig)), 0);
+
+exit:
+    mbedtls_lms_public_free(&pub_ctx);
+    mbedtls_lms_private_free(&priv_ctx);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void lms_verify_test(data_t *msg, data_t *sig, data_t *pub_key,
+                     int expected_rc)
+{
+    mbedtls_lms_public_t ctx;
+    unsigned int size;
+    unsigned char *tmp_sig = NULL;
+
+    mbedtls_lms_public_init(&ctx);
+    USE_PSA_INIT();
+
+    TEST_EQUAL(mbedtls_lms_import_public_key(&ctx, pub_key->x, pub_key->len), 0);
+
+    TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, sig->x, sig->len), expected_rc);
+
+    /* Test negative cases if the input data is valid */
+    if (expected_rc == 0) {
+        if (msg->len >= 1) {
+            /* Altering first message byte must cause verification failure */
+            msg->x[0] ^= 1;
+            TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, sig->x, sig->len),
+                       MBEDTLS_ERR_LMS_VERIFY_FAILED);
+            msg->x[0] ^= 1;
+
+            /* Altering last message byte must cause verification failure */
+            msg->x[msg->len - 1] ^= 1;
+            TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, sig->x, sig->len),
+                       MBEDTLS_ERR_LMS_VERIFY_FAILED);
+            msg->x[msg->len - 1] ^= 1;
+        }
+
+        if (sig->len >= 1) {
+            /* Altering first signature byte must cause verification failure */
+            sig->x[0] ^= 1;
+            TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, sig->x, sig->len),
+                       MBEDTLS_ERR_LMS_VERIFY_FAILED);
+            sig->x[0] ^= 1;
+
+            /* Altering last signature byte must cause verification failure */
+            sig->x[sig->len - 1] ^= 1;
+            TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, sig->x, sig->len),
+                       MBEDTLS_ERR_LMS_VERIFY_FAILED);
+            sig->x[sig->len - 1] ^= 1;
+        }
+
+        /* Signatures of all sizes must not verify, whether shorter or longer */
+        for (size = 0; size < sig->len; size++) {
+            if (size == sig->len) {
+                continue;
+            }
+
+            TEST_CALLOC(tmp_sig, size);
+            if (tmp_sig != NULL) {
+                memcpy(tmp_sig, sig->x, MIN(size, sig->len));
+            }
+
+            TEST_EQUAL(mbedtls_lms_verify(&ctx, msg->x, msg->len, tmp_sig, size),
+                       MBEDTLS_ERR_LMS_VERIFY_FAILED);
+            mbedtls_free(tmp_sig);
+            tmp_sig = NULL;
+        }
+    }
+
+exit:
+    mbedtls_free(tmp_sig);
+    mbedtls_lms_public_free(&ctx);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void lms_import_export_test(data_t *pub_key, int expected_import_rc)
+{
+    mbedtls_lms_public_t ctx;
+    size_t exported_pub_key_buf_size = 0;
+    size_t exported_pub_key_size = 0;
+    unsigned char *exported_pub_key = NULL;
+
+    mbedtls_lms_public_init(&ctx);
+    USE_PSA_INIT();
+    TEST_EQUAL(mbedtls_lms_import_public_key(&ctx, pub_key->x, pub_key->len),
+               expected_import_rc);
+
+    if (expected_import_rc == 0) {
+        exported_pub_key_buf_size = MBEDTLS_LMS_PUBLIC_KEY_LEN(MBEDTLS_LMS_SHA256_M32_H10);
+        TEST_CALLOC(exported_pub_key, exported_pub_key_buf_size);
+
+        TEST_EQUAL(mbedtls_lms_export_public_key(&ctx, exported_pub_key,
+                                                 exported_pub_key_buf_size,
+                                                 &exported_pub_key_size), 0);
+
+        TEST_EQUAL(exported_pub_key_size,
+                   MBEDTLS_LMS_PUBLIC_KEY_LEN(MBEDTLS_LMS_SHA256_M32_H10));
+        TEST_MEMORY_COMPARE(pub_key->x, pub_key->len,
+                            exported_pub_key, exported_pub_key_size);
+        mbedtls_free(exported_pub_key);
+        exported_pub_key = NULL;
+
+        /* Export into too-small buffer should fail */
+        exported_pub_key_buf_size = MBEDTLS_LMS_PUBLIC_KEY_LEN(MBEDTLS_LMS_SHA256_M32_H10) - 1;
+        TEST_CALLOC(exported_pub_key, exported_pub_key_buf_size);
+        TEST_EQUAL(mbedtls_lms_export_public_key(&ctx, exported_pub_key,
+                                                 exported_pub_key_buf_size, NULL),
+                   MBEDTLS_ERR_LMS_BUFFER_TOO_SMALL);
+        mbedtls_free(exported_pub_key);
+        exported_pub_key = NULL;
+
+        /* Export into too-large buffer should succeed */
+        exported_pub_key_buf_size = MBEDTLS_LMS_PUBLIC_KEY_LEN(MBEDTLS_LMS_SHA256_M32_H10) + 1;
+        TEST_CALLOC(exported_pub_key, exported_pub_key_buf_size);
+        TEST_EQUAL(mbedtls_lms_export_public_key(&ctx, exported_pub_key,
+                                                 exported_pub_key_buf_size,
+                                                 &exported_pub_key_size),
+                   0);
+        TEST_MEMORY_COMPARE(pub_key->x, pub_key->len,
+                            exported_pub_key, exported_pub_key_size);
+        mbedtls_free(exported_pub_key);
+        exported_pub_key = NULL;
+    }
+
+exit:
+    mbedtls_free(exported_pub_key);
+    mbedtls_lms_public_free(&ctx);
+    USE_PSA_DONE();
+}
+/* END_CASE */

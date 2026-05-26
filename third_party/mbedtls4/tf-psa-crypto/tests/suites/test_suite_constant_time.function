@@ -1,0 +1,500 @@
+/* BEGIN_HEADER */
+/** \file test_suite_constant_time.function
+ *
+ * Functional testing of functions in the constant_time module.
+ *
+ * The tests are instrumented with #TEST_CF_SECRET and #TEST_CF_PUBLIC
+ * (see framework/tests/include/test/constant_flow.h) so that running the tests
+ * under MSan or Valgrind will detect a non-constant-time implementation.
+ */
+
+#include <stdio.h>
+
+#include <limits.h>
+#include <stdlib.h>
+#include <errno.h>
+
+#include <mbedtls/private/bignum.h>
+#include <mbedtls/constant_time.h>
+#include <bignum_internal.h>
+#include <constant_time_internal.h>
+
+#include <test/constant_flow.h>
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void mbedtls_ct_memcmp_null()
+{
+    uint32_t x = 0;
+    TEST_ASSERT(mbedtls_ct_memcmp(&x, NULL, 0) == 0);
+    TEST_ASSERT(mbedtls_ct_memcmp(NULL, &x, 0) == 0);
+    TEST_ASSERT(mbedtls_ct_memcmp(NULL, NULL, 0) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_bool(char *input)
+{
+    mbedtls_ct_uint_t v = (mbedtls_ct_uint_t) strtoull(input, NULL, 16);
+    TEST_ASSERT(errno == 0);
+
+    mbedtls_ct_condition_t expected = (v != 0) ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_CF_SECRET(&v, sizeof(v));
+    TEST_EQUAL(mbedtls_ct_bool(v), expected);
+    TEST_CF_PUBLIC(&v, sizeof(v));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_bool_xxx(char *x_str, char *y_str)
+{
+    mbedtls_ct_uint_t x = strtoull(x_str, NULL, 0);
+    mbedtls_ct_uint_t y = strtoull(y_str, NULL, 0);
+
+    mbedtls_ct_uint_t x1 = x;
+    mbedtls_ct_uint_t y1 = y;
+
+    TEST_CF_SECRET(&x, sizeof(x));
+    TEST_CF_SECRET(&y, sizeof(y));
+
+    mbedtls_ct_condition_t expected = x1 ? MBEDTLS_CT_FALSE : MBEDTLS_CT_TRUE;
+    TEST_EQUAL(mbedtls_ct_bool_not(mbedtls_ct_bool(x)), expected);
+
+    expected = x1 != y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_ne(x, y), expected);
+
+    expected = x1 == y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_eq(x, y), expected);
+
+    expected = x1 > y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_gt(x, y), expected);
+
+    expected = x1 < y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_lt(x, y), expected);
+
+    expected = x1 >= y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_ge(x, y), expected);
+
+    expected = x1 <= y1 ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_uint_le(x, y), expected);
+
+    expected = (!!x1) != (!!y1) ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_bool_ne(mbedtls_ct_bool(x), mbedtls_ct_bool(y)), expected);
+
+    expected = (!!x1) && (!!y1) ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_bool_and(mbedtls_ct_bool(x), mbedtls_ct_bool(y)), expected);
+
+    expected = (!!x1) || (!!y1) ? MBEDTLS_CT_TRUE : MBEDTLS_CT_FALSE;
+    TEST_EQUAL(mbedtls_ct_bool_or(mbedtls_ct_bool(x), mbedtls_ct_bool(y)), expected);
+
+    TEST_CF_PUBLIC(&x, sizeof(x));
+    TEST_CF_PUBLIC(&y, sizeof(y));
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_BASE64_C */
+void mbedtls_ct_uchar_in_range_if(int li, int hi, int ti)
+{
+    unsigned char l = li, h = hi, t = ti;
+
+    for (unsigned x = 0; x <= 255; x++) {
+        unsigned char expected = (x >= l) && (x <= h) ? t : 0;
+
+        TEST_CF_SECRET(&x, sizeof(x));
+        TEST_CF_SECRET(&l, sizeof(l));
+        TEST_CF_SECRET(&h, sizeof(h));
+        TEST_CF_SECRET(&t, sizeof(t));
+
+        TEST_EQUAL(mbedtls_ct_uchar_in_range_if(l, h, (unsigned char) x, t), expected);
+
+        TEST_CF_PUBLIC(&x, sizeof(x));
+        TEST_CF_PUBLIC(&l, sizeof(l));
+        TEST_CF_PUBLIC(&h, sizeof(h));
+        TEST_CF_PUBLIC(&t, sizeof(t));
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_error_if(int cond, int t, int f)
+{
+    mbedtls_ct_condition_t c = mbedtls_ct_bool(cond);
+
+    int expected = c ? t : f;
+    int expected0 = c ? t : 0;
+
+    TEST_CF_SECRET(&c, sizeof(c));
+    TEST_CF_SECRET(&t, sizeof(t));
+    TEST_CF_SECRET(&f, sizeof(f));
+
+    TEST_EQUAL(mbedtls_ct_error_if(c, t, f), expected);
+    TEST_EQUAL(mbedtls_ct_error_if_else_0(c, t), expected0);
+
+    TEST_CF_PUBLIC(&c, sizeof(c));
+    TEST_CF_PUBLIC(&t, sizeof(t));
+    TEST_CF_PUBLIC(&f, sizeof(f));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_if(char *c_str, char *t_str, char *f_str)
+{
+    mbedtls_ct_condition_t c = mbedtls_ct_bool(strtoull(c_str, NULL, 16));
+    mbedtls_ct_uint_t t = (mbedtls_ct_uint_t) strtoull(t_str, NULL, 16);
+    mbedtls_ct_uint_t f = (mbedtls_ct_uint_t) strtoull(f_str, NULL, 16);
+
+    mbedtls_ct_uint_t expected = c ? t : f;
+    mbedtls_ct_uint_t expected0 = c ? t : 0;
+
+    TEST_CF_SECRET(&c, sizeof(c));
+    TEST_CF_SECRET(&t, sizeof(t));
+    TEST_CF_SECRET(&f, sizeof(f));
+
+    TEST_EQUAL(mbedtls_ct_if(c, t, f), expected);
+    TEST_EQUAL(mbedtls_ct_size_if(c, t, f), (size_t) expected);
+    TEST_EQUAL(mbedtls_ct_uint_if(c, t, f), (unsigned) expected);
+    TEST_EQUAL(mbedtls_ct_bool_if(c, mbedtls_ct_bool(t), mbedtls_ct_bool(f)),
+               mbedtls_ct_bool(expected));
+#if defined(MBEDTLS_BIGNUM_C)
+    TEST_EQUAL(mbedtls_ct_mpi_uint_if(c, t, f), (mbedtls_mpi_uint) expected);
+#endif
+
+    TEST_EQUAL(mbedtls_ct_uint_if_else_0(c, t), (unsigned) expected0);
+    TEST_EQUAL(mbedtls_ct_size_if_else_0(c, (size_t) t), (size_t) expected0);
+    TEST_EQUAL(mbedtls_ct_bool_if_else_0(c, mbedtls_ct_bool(t)), mbedtls_ct_bool(expected0));
+#if defined(MBEDTLS_BIGNUM_C)
+    TEST_EQUAL(mbedtls_ct_mpi_uint_if_else_0(c, t), (mbedtls_mpi_uint) expected0);
+#endif
+
+    TEST_CF_PUBLIC(&c, sizeof(c));
+    TEST_CF_PUBLIC(&t, sizeof(t));
+    TEST_CF_PUBLIC(&f, sizeof(f));
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15:MBEDTLS_RSA_C */
+void mbedtls_ct_zeroize_if(char *c_str, int len)
+{
+    uint8_t *buf = NULL;
+    mbedtls_ct_condition_t c = mbedtls_ct_bool(strtoull(c_str, NULL, 16));
+
+    TEST_CALLOC(buf, len);
+    for (size_t i = 0; i < (size_t) len; i++) {
+        buf[i] = 1;
+    }
+
+    TEST_CF_SECRET(&c, sizeof(c));
+    TEST_CF_SECRET(buf, len);
+    mbedtls_ct_zeroize_if(c, buf, len);
+    TEST_CF_PUBLIC(&c, sizeof(c));
+    TEST_CF_PUBLIC(buf, len);
+
+    for (size_t i = 0; i < (size_t) len; i++) {
+        TEST_EQUAL(buf[i], c != 0 ? 0 : 1);
+    }
+exit:
+    mbedtls_free(buf);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_memcmp_single_bit_diff()
+{
+    uint8_t *a = NULL, *b = NULL;
+    size_t size = 32;
+    TEST_CALLOC(a, size);
+    TEST_CALLOC(b, size);
+
+    TEST_CF_SECRET(a, size);
+    TEST_CF_SECRET(b, size);
+    int result = mbedtls_ct_memcmp(a, b, size);
+    TEST_CF_PUBLIC(a, size);
+    TEST_CF_PUBLIC(b, size);
+    TEST_CF_PUBLIC(&result, sizeof(result));
+
+    TEST_EQUAL(result, 0);
+
+    for (size_t offset = 0; offset < size; offset++) {
+        for (size_t bit_offset = 0; bit_offset < 8; bit_offset++) {
+            /* Set a single bit to be different at given offset, to test that we
+               detect single-bit differences */
+            a[offset] = 1 << bit_offset;
+
+            TEST_CF_SECRET(a, size);
+            TEST_CF_SECRET(b, size);
+            result = mbedtls_ct_memcmp(a, b, size);
+            TEST_CF_PUBLIC(a, size);
+            TEST_CF_PUBLIC(b, size);
+            TEST_CF_PUBLIC(&result, sizeof(result));
+
+            TEST_ASSERT(result != 0);
+
+            a[offset] = 0;
+        }
+    }
+
+
+exit:
+    mbedtls_free(a);
+    mbedtls_free(b);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_memcmp(int same, int size, int offset)
+{
+    uint8_t *a = NULL, *b = NULL;
+    TEST_CALLOC(a, size + offset);
+    TEST_CALLOC(b, size + offset);
+
+    /* Construct data that matches, if same == -1, otherwise
+     * same gives the number of bytes (after the initial offset)
+     * that will match; after that it will differ.
+     */
+    for (int i = 0; i < size + offset; i++) {
+        a[i] = i & 0xff;
+        if (same == -1 || (i - offset) < same) {
+            b[i] = a[i];
+        } else {
+            b[i] = (i + 1) & 0xff;
+        }
+    }
+
+    int reference = memcmp(a + offset, b + offset, size);
+
+    TEST_CF_SECRET(a, size + offset);
+    TEST_CF_SECRET(b, size + offset);
+
+    int actual = mbedtls_ct_memcmp(a + offset, b + offset, size);
+
+    TEST_CF_PUBLIC(a, size + offset);
+    TEST_CF_PUBLIC(b, size + offset);
+    TEST_CF_PUBLIC(&actual, sizeof(actual));
+
+    if (same == -1 || same >= size) {
+        TEST_ASSERT(reference == 0);
+        TEST_ASSERT(actual == 0);
+    } else {
+        TEST_ASSERT(reference != 0);
+        TEST_ASSERT(actual != 0);
+    }
+exit:
+    mbedtls_free(a);
+    mbedtls_free(b);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_NIST_KW_C */
+
+/**
+ * Generate two arrays of the given size, and test mbedtls_ct_memcmp_partial
+ * over them. The arrays will be identical, except that one byte may be specified
+ * to be different.
+ *
+ * \p diff      Index of byte that differs (if out of range, the arrays will match).
+ * \p size      Size of arrays to compare
+ * \p skip_head Leading bytes to skip, as per mbedtls_ct_memcmp_partial
+ * \p skip_tail Trailing bytes to skip, as per mbedtls_ct_memcmp_partial
+ */
+void mbedtls_ct_memcmp_partial(int diff, int size, int skip_head, int skip_tail)
+{
+    uint8_t *a = NULL, *b = NULL;
+
+    TEST_CALLOC_NONNULL(a, size);
+    TEST_CALLOC_NONNULL(b, size);
+
+    TEST_ASSERT((skip_head + skip_tail) <= size);
+
+    /* Construct data that matches, except for specified byte (if in range). */
+    for (int i = 0; i < size; i++) {
+        a[i] = i & 0xff;
+        b[i] = a[i];
+        if (i == diff) {
+            // modify the specified byte
+            b[i] ^= 1;
+        }
+    }
+
+    int reference = memcmp(a + skip_head, b + skip_head, size - skip_head - skip_tail);
+
+    TEST_CF_SECRET(a, size);
+    TEST_CF_SECRET(b, size);
+
+    int actual = mbedtls_ct_memcmp_partial(a, b, size, skip_head, skip_tail);
+
+    TEST_CF_PUBLIC(a, size);
+    TEST_CF_PUBLIC(b, size);
+    TEST_CF_PUBLIC(&actual, sizeof(actual));
+
+    TEST_EQUAL(!!reference, !!actual);
+exit:
+    mbedtls_free(a);
+    mbedtls_free(b);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_memcpy_if(int eq, int size, int offset)
+{
+    uint8_t *src = NULL, *src2 = NULL, *result = NULL, *expected = NULL;
+    TEST_CALLOC(src, size + offset);
+    TEST_CALLOC(src2, size + offset);
+    TEST_CALLOC(result, size + offset);
+    TEST_CALLOC(expected, size + offset);
+
+    /* Apply offset to result only */
+    for (int i = 0; i < size + offset; i++) {
+        src[i]      = 1;
+        result[i]   = 0xff;
+        expected[i] = eq ? 1 : 0xff;
+    }
+
+    int secret_eq = eq;
+    TEST_CF_SECRET(&secret_eq, sizeof(secret_eq));
+    TEST_CF_SECRET(src, size + offset);
+    TEST_CF_SECRET(result, size + offset);
+
+    mbedtls_ct_memcpy_if(mbedtls_ct_bool(secret_eq), result + offset, src, NULL, size);
+
+    TEST_CF_PUBLIC(&secret_eq, sizeof(secret_eq));
+    TEST_CF_PUBLIC(src, size + offset);
+    TEST_CF_PUBLIC(result, size + offset);
+
+    TEST_MEMORY_COMPARE(expected, size, result + offset, size);
+
+
+    /* Apply offset to src only */
+    for (int i = 0; i < size + offset; i++) {
+        src[i]    = 1;
+        result[i] = 0xff;
+        expected[i] = eq ? 1 : 0xff;
+    }
+
+    TEST_CF_SECRET(&secret_eq, sizeof(secret_eq));
+    TEST_CF_SECRET(src, size + offset);
+    TEST_CF_SECRET(result, size + offset);
+
+    mbedtls_ct_memcpy_if(mbedtls_ct_bool(secret_eq), result, src + offset, NULL, size);
+
+    TEST_CF_PUBLIC(&secret_eq, sizeof(secret_eq));
+    TEST_CF_PUBLIC(src, size + offset);
+    TEST_CF_PUBLIC(result, size + offset);
+
+    TEST_MEMORY_COMPARE(expected, size, result, size);
+
+
+    /* Apply offset to src and src2 */
+    for (int i = 0; i < size + offset; i++) {
+        src[i]      = 1;
+        src2[i]     = 2;
+        result[i]   = 0xff;
+        expected[i] = eq ? 1 : 2;
+    }
+
+    TEST_CF_SECRET(&secret_eq, sizeof(secret_eq));
+    TEST_CF_SECRET(src, size + offset);
+    TEST_CF_SECRET(src2, size + offset);
+    TEST_CF_SECRET(result, size + offset);
+
+    mbedtls_ct_memcpy_if(mbedtls_ct_bool(secret_eq), result, src + offset, src2 + offset, size);
+
+    TEST_CF_PUBLIC(&secret_eq, sizeof(secret_eq));
+    TEST_CF_PUBLIC(src, size + offset);
+    TEST_CF_SECRET(src2, size + offset);
+    TEST_CF_PUBLIC(result, size + offset);
+
+    TEST_MEMORY_COMPARE(expected, size, result, size);
+
+
+    /* result == src == dest */
+    for (int i = 0; i < size + offset; i++) {
+        src[i]      = 2;
+        expected[i] = 2;
+    }
+
+    TEST_CF_SECRET(&secret_eq, sizeof(secret_eq));
+    TEST_CF_SECRET(src, size + offset);
+    TEST_CF_SECRET(result, size + offset);
+
+    mbedtls_ct_memcpy_if(mbedtls_ct_bool(secret_eq), src + offset, src + offset, src + offset,
+                         size);
+
+    TEST_CF_PUBLIC(&secret_eq, sizeof(secret_eq));
+    TEST_CF_PUBLIC(src, size + offset);
+    TEST_CF_PUBLIC(result, size + offset);
+
+    TEST_MEMORY_COMPARE(expected, size, src + offset, size);
+exit:
+    mbedtls_free(src);
+    mbedtls_free(src2);
+    mbedtls_free(result);
+    mbedtls_free(expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15:MBEDTLS_RSA_C */
+void mbedtls_ct_memmove_left(int len, int offset)
+{
+    size_t l = (size_t) len;
+    size_t o = (size_t) offset;
+
+    uint8_t *buf = NULL, *buf_expected = NULL;
+    TEST_CALLOC(buf, l);
+    TEST_CALLOC(buf_expected, l);
+
+    for (size_t i = 0; i < l; i++) {
+        buf[i] = (uint8_t) i;
+        buf_expected[i] = buf[i];
+    }
+
+    TEST_CF_SECRET(&o, sizeof(o));
+    TEST_CF_SECRET(buf, l);
+    mbedtls_ct_memmove_left(buf, l, o);
+    TEST_CF_PUBLIC(&o, sizeof(o));
+    TEST_CF_PUBLIC(buf, l);
+
+    if (l > 0) {
+        memmove(buf_expected, buf_expected + o, l - o);
+        memset(buf_expected + (l - o), 0, o);
+        TEST_ASSERT(memcmp(buf, buf_expected, l) == 0);
+    }
+exit:
+    mbedtls_free(buf);
+    mbedtls_free(buf_expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_ct_memcpy_offset(int offset_min, int offset_max, int len)
+{
+    unsigned char *dst = NULL;
+    unsigned char *src = NULL;
+    size_t src_len = offset_max + len;
+    size_t secret;
+
+    TEST_CALLOC(dst, len);
+    TEST_CALLOC(src, src_len);
+
+    /* Fill src in a way that we can detect if we copied the right bytes */
+    mbedtls_test_rnd_std_rand(NULL, src, src_len);
+
+    for (secret = offset_min; secret <= (size_t) offset_max; secret++) {
+        mbedtls_test_set_step((int) secret);
+
+        TEST_CF_SECRET(&secret, sizeof(secret));
+        TEST_CF_SECRET(src, len);
+        TEST_CF_SECRET(dst, len);
+        mbedtls_ct_memcpy_offset(dst, src, secret,
+                                 offset_min, offset_max, len);
+        TEST_CF_PUBLIC(&secret, sizeof(secret));
+        TEST_CF_PUBLIC(src, len);
+        TEST_CF_PUBLIC(dst, len);
+
+        TEST_MEMORY_COMPARE(dst, len, src + secret, len);
+    }
+
+exit:
+    mbedtls_free(dst);
+    mbedtls_free(src);
+}
+/* END_CASE */

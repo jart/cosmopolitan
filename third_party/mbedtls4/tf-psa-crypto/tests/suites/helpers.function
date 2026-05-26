@@ -1,0 +1,101 @@
+#line 2 "suites/helpers.function"
+/*----------------------------------------------------------------------------*/
+/* Headers */
+
+#include <test/arguments.h>
+#include <test/helpers.h>
+#include <test/macros.h>
+#include <test/random.h>
+#include <test/bignum_helpers.h>
+#include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
+
+#include <errno.h>
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/platform.h"
+
+#if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
+#include "mbedtls/memory_buffer_alloc.h"
+#endif
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#include <unistd.h>
+#endif
+
+/*----------------------------------------------------------------------------*/
+/* Status and error constants */
+
+#define DEPENDENCY_SUPPORTED            0   /* Dependency supported by build */
+#define KEY_VALUE_MAPPING_FOUND         0   /* Integer expression found */
+#define DISPATCH_TEST_SUCCESS           0   /* Test dispatch successful */
+
+#define KEY_VALUE_MAPPING_NOT_FOUND     -1  /* Integer expression not found */
+#define DEPENDENCY_NOT_SUPPORTED        -2  /* Dependency not supported */
+#define DISPATCH_TEST_FN_NOT_FOUND      -3  /* Test function not found */
+#define DISPATCH_INVALID_TEST_DATA      -4  /* Invalid test parameter type.
+                                               Only int, string, binary data
+                                               and integer expressions are
+                                               allowed */
+#define DISPATCH_UNSUPPORTED_SUITE      -5  /* Test suite not supported by the
+                                               build */
+
+/*----------------------------------------------------------------------------*/
+/* Global variables */
+
+/*----------------------------------------------------------------------------*/
+/* Helper flags for complex dependencies */
+
+
+/*----------------------------------------------------------------------------*/
+/* Helper Functions */
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+static int redirect_output(FILE *out_stream, const char *path)
+{
+    int out_fd, dup_fd;
+    FILE *path_stream;
+
+    out_fd = fileno(out_stream);
+    dup_fd = dup(out_fd);
+
+    if (dup_fd == -1) {
+        return -1;
+    }
+
+    path_stream = fopen(path, "w");
+    if (path_stream == NULL) {
+        close(dup_fd);
+        return -1;
+    }
+
+    fflush(out_stream);
+    if (dup2(fileno(path_stream), out_fd) == -1) {
+        close(dup_fd);
+        fclose(path_stream);
+        return -1;
+    }
+
+    fclose(path_stream);
+    return dup_fd;
+}
+
+static int restore_output(FILE *out_stream, int dup_fd)
+{
+    int out_fd = fileno(out_stream);
+
+    fflush(out_stream);
+    if (dup2(dup_fd, out_fd) == -1) {
+        close(out_fd);
+        close(dup_fd);
+        return -1;
+    }
+
+    close(dup_fd);
+    return 0;
+}
+#endif /* __unix__ || __APPLE__ __MACH__ */

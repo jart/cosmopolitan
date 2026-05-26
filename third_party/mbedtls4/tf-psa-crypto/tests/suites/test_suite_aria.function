@@ -1,0 +1,278 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/aria.h"
+
+/* Maximum size of data used by test vectors
+ * WARNING: to be adapted if and when adding larger test cases */
+#define ARIA_MAX_DATASIZE  160
+
+/* Maximum sizes of hexified things */
+#define ARIA_MAX_KEY_STR    (2 * MBEDTLS_ARIA_MAX_KEYSIZE + 1)
+#define ARIA_BLOCK_STR      (2 * MBEDTLS_ARIA_BLOCKSIZE + 1)
+#define ARIA_MAX_DATA_STR   (2 * ARIA_MAX_DATASIZE + 1)
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_ARIA_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void aria_invalid_param()
+{
+    mbedtls_aria_context ctx;
+    unsigned char input[MBEDTLS_ARIA_BLOCKSIZE] = { 0 };
+    unsigned char output[MBEDTLS_ARIA_BLOCKSIZE] = { 0 };
+    unsigned char iv[MBEDTLS_ARIA_BLOCKSIZE] = { 0 };
+    size_t iv_off = 0;
+
+    ((void) iv_off);
+    ((void) iv);
+    ((void) ctx);
+    ((void) input);
+    ((void) output);
+
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
+    TEST_EQUAL(MBEDTLS_ERR_ARIA_BAD_INPUT_DATA,
+               mbedtls_aria_crypt_cbc(&ctx,
+                                      42 /* invalid mode */,
+                                      sizeof(input),
+                                      iv,
+                                      input,
+                                      output));
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
+
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+    TEST_EQUAL(MBEDTLS_ERR_ARIA_BAD_INPUT_DATA,
+               mbedtls_aria_crypt_cfb128(&ctx,
+                                         42,            /* invalid mode */
+                                         sizeof(input),
+                                         &iv_off,
+                                         iv,
+                                         input,
+                                         output));
+#endif /* MBEDTLS_CIPHER_MODE_CFB */
+
+#if defined(MBEDTLS_CIPHER_MODE_CBC) || defined(MBEDTLS_CIPHER_MODE_CFB)
+exit:
+    return;
+#endif
+
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void aria_encrypt_ecb(data_t *key_str, data_t *src_str,
+                      data_t *expected_output, int setkey_result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+    size_t i;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    TEST_ASSERT(mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8)
+                == setkey_result);
+    if (setkey_result == 0) {
+        for (i = 0; i < src_str->len; i += MBEDTLS_ARIA_BLOCKSIZE) {
+            TEST_ASSERT(mbedtls_aria_crypt_ecb(&ctx, src_str->x + i,
+                                               output + i) == 0);
+        }
+
+        TEST_MEMORY_COMPARE(output, expected_output->len,
+                            expected_output->x, expected_output->len);
+    }
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
+void aria_decrypt_ecb(data_t *key_str, data_t *src_str,
+                      data_t *expected_output, int setkey_result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+    size_t i;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    TEST_ASSERT(mbedtls_aria_setkey_dec(&ctx, key_str->x, key_str->len * 8)
+                == setkey_result);
+    if (setkey_result == 0) {
+        for (i = 0; i < src_str->len; i += MBEDTLS_ARIA_BLOCKSIZE) {
+            TEST_ASSERT(mbedtls_aria_crypt_ecb(&ctx, src_str->x + i,
+                                               output + i) == 0);
+        }
+
+        TEST_MEMORY_COMPARE(output, expected_output->len,
+                            expected_output->x, expected_output->len);
+    }
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CBC */
+void aria_encrypt_cbc(data_t *key_str, data_t *iv_str,
+                      data_t *src_str, data_t *expected_output,
+                      int cbc_result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_cbc(&ctx, MBEDTLS_ARIA_ENCRYPT,
+                                       src_str->len, iv_str->x, src_str->x,
+                                       output) == cbc_result);
+    if (cbc_result == 0) {
+        TEST_MEMORY_COMPARE(output, expected_output->len,
+                            expected_output->x, expected_output->len);
+    }
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CBC */
+void aria_decrypt_cbc(data_t *key_str, data_t *iv_str,
+                      data_t *src_str, data_t *expected_output,
+                      int cbc_result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_dec(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_cbc(&ctx, MBEDTLS_ARIA_DECRYPT,
+                                       src_str->len, iv_str->x, src_str->x,
+                                       output) == cbc_result);
+    if (cbc_result == 0) {
+        TEST_MEMORY_COMPARE(output, expected_output->len,
+                            expected_output->x, expected_output->len);
+    }
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CFB */
+void aria_encrypt_cfb128(data_t *key_str, data_t *iv_str,
+                         data_t *src_str, data_t *expected_output,
+                         int result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_cfb128(&ctx, MBEDTLS_ARIA_ENCRYPT,
+                                          src_str->len, &iv_offset,
+                                          iv_str->x, src_str->x, output)
+                == result);
+
+    TEST_MEMORY_COMPARE(output, expected_output->len,
+                        expected_output->x, expected_output->len);
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CFB */
+void aria_decrypt_cfb128(data_t *key_str, data_t *iv_str,
+                         data_t *src_str, data_t *expected_output,
+                         int result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    mbedtls_aria_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_cfb128(&ctx, MBEDTLS_ARIA_DECRYPT,
+                                          src_str->len, &iv_offset,
+                                          iv_str->x, src_str->x, output)
+                == result);
+
+    TEST_MEMORY_COMPARE(output, expected_output->len,
+                        expected_output->x, expected_output->len);
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
+void aria_encrypt_ctr(data_t *key_str, data_t *iv_str,
+                      data_t *src_str, data_t *expected_output,
+                      int result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    unsigned char blk[MBEDTLS_ARIA_BLOCKSIZE];
+    mbedtls_aria_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_ctr(&ctx, src_str->len, &iv_offset,
+                                       iv_str->x, blk, src_str->x, output)
+                == result);
+
+    TEST_MEMORY_COMPARE(output, expected_output->len,
+                        expected_output->x, expected_output->len);
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
+void aria_decrypt_ctr(data_t *key_str, data_t *iv_str,
+                      data_t *src_str, data_t *expected_output,
+                      int result)
+{
+    unsigned char output[ARIA_MAX_DATASIZE];
+    unsigned char blk[MBEDTLS_ARIA_BLOCKSIZE];
+    mbedtls_aria_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, sizeof(output));
+    mbedtls_aria_init(&ctx);
+
+    mbedtls_aria_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_aria_crypt_ctr(&ctx, src_str->len, &iv_offset,
+                                       iv_str->x, blk, src_str->x, output)
+                == result);
+
+    TEST_MEMORY_COMPARE(output, expected_output->len,
+                        expected_output->x, expected_output->len);
+
+exit:
+    mbedtls_aria_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void aria_selftest()
+{
+    TEST_ASSERT(mbedtls_aria_self_test(1) == 0);
+}
+/* END_CASE */

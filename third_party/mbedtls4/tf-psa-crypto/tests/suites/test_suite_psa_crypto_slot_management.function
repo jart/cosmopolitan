@@ -1,0 +1,1029 @@
+/* BEGIN_HEADER */
+#include <stdint.h>
+
+#include "psa_crypto_slot_management.h"
+#include "psa_crypto_storage.h"
+
+typedef enum {
+    /** Destroy key(s) */
+    INVALIDATE_BY_DESTROYING,
+
+    /** Purge key(s) */
+    INVALIDATE_BY_PURGING,
+
+    /** Terminate and reinitialize without closing/destroying keys */
+    INVALIDATE_BY_SHUTDOWN,
+
+    /** Destroy key(s) then terminate and re-initialize */
+    INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN,
+
+    /** Purge key(s) then terminate and re-initialize */
+    INVALIDATE_BY_PURGING_WITH_SHUTDOWN,
+} invalidate_method_t;
+
+typedef enum {
+    KEEP_OPEN,
+    PURGE_BEFORE,
+    PURGE_AFTER,
+} purge_policy_t;
+
+/** Apply \p invalidate_method to invalidate the specified key:
+ * close it, destroy it, or do nothing;
+ */
+static int invalidate_key(invalidate_method_t invalidate_method,
+                          mbedtls_svc_key_id_t key)
+{
+    switch (invalidate_method) {
+        /* Closing the key invalidate only volatile keys, not persistent ones. */
+        case INVALIDATE_BY_DESTROYING:
+        case INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN:
+            PSA_ASSERT(psa_destroy_key(key));
+            break;
+        /* Purging the key just purges RAM data of persistent keys. */
+        case INVALIDATE_BY_PURGING:
+        case INVALIDATE_BY_PURGING_WITH_SHUTDOWN:
+            PSA_ASSERT(psa_purge_key(key));
+            break;
+        case INVALIDATE_BY_SHUTDOWN:
+            break;
+    }
+    return 1;
+exit:
+    return 0;
+}
+
+/** Restart the PSA subsystem if \p invalidate_method says so. */
+static int invalidate_psa(invalidate_method_t invalidate_method)
+{
+    switch (invalidate_method) {
+        case INVALIDATE_BY_DESTROYING:
+        case INVALIDATE_BY_PURGING:
+            return 1;
+        case INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN:
+        case INVALIDATE_BY_PURGING_WITH_SHUTDOWN:
+            /* All keys must have been closed. */
+            PSA_SESSION_DONE();
+            break;
+        case INVALIDATE_BY_SHUTDOWN:
+            /* Some keys may remain behind, and we're testing that this
+             * properly closes them. */
+            mbedtls_psa_crypto_free();
+            break;
+    }
+
+    PSA_ASSERT(psa_crypto_init());
+    ASSERT_PSA_PRISTINE();
+    return 1;
+
+exit:
+    return 0;
+}
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#if defined(MBEDTLS_TEST_HOOKS)
+/* Artificially restrictable dynamic key store */
+#define KEY_SLICE_1_LENGTH 4
+#define KEY_SLICE_2_LENGTH 10
+static size_t tiny_key_slice_length(size_t slice_idx)
+{
+    switch (slice_idx) {
+        case 1: return KEY_SLICE_1_LENGTH;
+        case 2: return KEY_SLICE_2_LENGTH;
+        default: return 1;
+    }
+}
+#define MAX_VOLATILE_KEYS                       \
+    (KEY_SLICE_1_LENGTH + KEY_SLICE_2_LENGTH +  \
+     psa_key_slot_volatile_slice_count() - 2)
+
+#else  /* Effectively unbounded dynamic key store */
+#undef MAX_VOLATILE_KEYS
+#endif
+
+#else  /* Static key store */
+#define MAX_VOLATILE_KEYS MBEDTLS_PSA_KEY_SLOT_COUNT
+#endif
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void transient_slot_lifecycle(int owner_id_arg,
+                              int usage_arg, int alg_arg,
+                              int type_arg, data_t *key_data,
+                              int invalidate_method_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_key_usage_t usage_flags = usage_arg;
+    psa_key_type_t type = type_arg;
+    invalidate_method_t invalidate_method = invalidate_method_arg;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    mbedtls_test_set_step(1);
+    PSA_ASSERT(psa_crypto_init());
+
+    /* Import a key. */
+#if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+    mbedtls_key_owner_id_t owner_id = owner_id_arg;
+
+    mbedtls_set_key_owner_id(&attributes, owner_id);
+#else
+    (void) owner_id_arg;
+#endif
+
+    psa_set_key_usage_flags(&attributes, usage_flags);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, type);
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
+                              &key));
+    TEST_ASSERT(!mbedtls_svc_key_id_is_null(key));
+    PSA_ASSERT(psa_get_key_attributes(key, &attributes));
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+    psa_reset_key_attributes(&attributes);
+
+#if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+    {
+        mbedtls_svc_key_id_t key_with_invalid_owner =
+            mbedtls_svc_key_id_make(owner_id + 1,
+                                    MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key));
+
+        TEST_ASSERT(mbedtls_key_owner_id_equal(
+                        owner_id,
+                        MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(key)));
+        TEST_EQUAL(psa_get_key_attributes(key_with_invalid_owner, &attributes),
+                   PSA_ERROR_INVALID_HANDLE);
+    }
+#endif
+
+    /*
+     * Purge the key and make sure that it is still valid, as purging a
+     * volatile key shouldn't invalidate/destroy it.
+     */
+    PSA_ASSERT(psa_purge_key(key));
+    PSA_ASSERT(psa_get_key_attributes(key, &attributes));
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+    psa_reset_key_attributes(&attributes);
+
+    /* Do something that invalidates the key. */
+    mbedtls_test_set_step(2);
+    if (!invalidate_key(invalidate_method, key)) {
+        goto exit;
+    }
+    if (!invalidate_psa(invalidate_method)) {
+        goto exit;
+    }
+
+    /* Test that the key is now invalid. */
+    TEST_EQUAL(psa_get_key_attributes(key, &attributes),
+               PSA_ERROR_INVALID_HANDLE);
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C */
+void persistent_slot_lifecycle(int lifetime_arg, int owner_id_arg, int id_arg,
+                               int usage_arg, int alg_arg, int alg2_arg,
+                               int type_arg, data_t *key_data,
+                               int invalidate_method_arg)
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t alg2 = alg2_arg;
+    psa_key_usage_t usage_flags = usage_arg;
+    psa_key_type_t type = type_arg;
+    invalidate_method_t invalidate_method = invalidate_method_arg;
+    mbedtls_svc_key_id_t returned_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t read_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *reexported = NULL;
+    size_t reexported_length = -1;
+
+    TEST_USES_KEY_ID(id);
+
+    mbedtls_test_set_step(1);
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, id);
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_type(&attributes, type);
+    psa_set_key_usage_flags(&attributes, usage_flags);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_enrollment_algorithm(&attributes, alg2);
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
+                              &returned_id));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(id, returned_id));
+
+    PSA_ASSERT(psa_get_key_attributes(id, &attributes));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), lifetime);
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), id));
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes),
+               mbedtls_test_update_key_usage_flags(usage_flags));
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
+    TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), alg2);
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+
+    PSA_ASSERT(psa_get_key_attributes(id, &attributes));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), lifetime);
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), id));
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes),
+               mbedtls_test_update_key_usage_flags(usage_flags));
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
+    TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), alg2);
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+
+    /*
+     * Do something that wipes key data in volatile memory or destroy the
+     * key.
+     */
+    mbedtls_test_set_step(2);
+    if (!invalidate_key(invalidate_method, id)) {
+        goto exit;
+    }
+    if (!invalidate_psa(invalidate_method)) {
+        goto exit;
+    }
+
+    /* Try to reaccess the key. If we destroyed it, check that it doesn't
+     * exist. Otherwise check that it still exists and has the expected
+     * content. */
+    switch (invalidate_method) {
+        case INVALIDATE_BY_PURGING:
+        case INVALIDATE_BY_PURGING_WITH_SHUTDOWN:
+        case INVALIDATE_BY_SHUTDOWN:
+            PSA_ASSERT(psa_get_key_attributes(id, &read_attributes));
+            TEST_EQUAL(psa_get_key_lifetime(&attributes),
+                       psa_get_key_lifetime(&read_attributes));
+            TEST_ASSERT(mbedtls_svc_key_id_equal(
+                            psa_get_key_id(&attributes),
+                            psa_get_key_id(&read_attributes)));
+            TEST_EQUAL(psa_get_key_usage_flags(&attributes),
+                       mbedtls_test_update_key_usage_flags(usage_flags));
+            TEST_EQUAL(psa_get_key_algorithm(&attributes),
+                       psa_get_key_algorithm(&read_attributes));
+            TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes),
+                       psa_get_key_enrollment_algorithm(&read_attributes));
+            TEST_EQUAL(psa_get_key_type(&attributes),
+                       psa_get_key_type(&read_attributes));
+            TEST_EQUAL(psa_get_key_bits(&attributes),
+                       psa_get_key_bits(&read_attributes));
+            TEST_CALLOC(reexported, key_data->len);
+            if (usage_flags & PSA_KEY_USAGE_EXPORT) {
+                PSA_ASSERT(psa_export_key(id, reexported, key_data->len,
+                                          &reexported_length));
+                TEST_MEMORY_COMPARE(key_data->x, key_data->len,
+                                    reexported, reexported_length);
+            } else {
+                TEST_EQUAL(psa_export_key(id, reexported,
+                                          key_data->len, &reexported_length),
+                           PSA_ERROR_NOT_PERMITTED);
+            }
+            break;
+
+        case INVALIDATE_BY_DESTROYING:
+        case INVALIDATE_BY_DESTROYING_WITH_SHUTDOWN:
+            TEST_EQUAL(psa_get_key_attributes(id, &read_attributes),
+                       PSA_ERROR_INVALID_HANDLE);
+            break;
+    }
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+    psa_reset_key_attributes(&read_attributes);
+
+    psa_destroy_key(id);
+    PSA_DONE();
+    mbedtls_free(reexported);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C */
+void create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
+                     int purge_policy_arg)
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
+    mbedtls_svc_key_id_t returned_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_type_t type1 = PSA_KEY_TYPE_RAW_DATA;
+    /* We need to tell the compiler that we meant to leave out the null character. */
+    const uint8_t material1[5] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "a key";
+    const uint8_t material2[5] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "b key";
+    size_t bits1 = PSA_BYTES_TO_BITS(sizeof(material1));
+    uint8_t reexported[sizeof(material1)];
+    size_t reexported_length;
+    purge_policy_t purge_policy = purge_policy_arg;
+
+    TEST_USES_KEY_ID(id);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    /* Create a key. */
+    psa_set_key_id(&attributes, id);
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_type(&attributes, type1);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, 0);
+    PSA_ASSERT(psa_import_key(&attributes, material1, sizeof(material1),
+                              &returned_id));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(id, returned_id));
+
+    if (purge_policy == PURGE_BEFORE) {
+        PSA_ASSERT(psa_purge_key(id));
+    }
+
+    /* Attempt to create a new key in the same slot. */
+    TEST_EQUAL(psa_import_key(&attributes, material2, sizeof(material2),
+                              &returned_id),
+               PSA_ERROR_ALREADY_EXISTS);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(returned_id));
+
+    if (purge_policy == PURGE_AFTER) {
+        PSA_ASSERT(psa_purge_key(id));
+    }
+
+    /* Check that the original key hasn't changed. */
+    psa_reset_key_attributes(&attributes);
+    PSA_ASSERT(psa_get_key_attributes(id, &attributes));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), id));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), lifetime);
+    TEST_EQUAL(psa_get_key_type(&attributes), type1);
+    TEST_EQUAL(psa_get_key_bits(&attributes), bits1);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), PSA_KEY_USAGE_EXPORT);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+
+    PSA_ASSERT(psa_export_key(id,
+                              reexported, sizeof(reexported),
+                              &reexported_length));
+    TEST_MEMORY_COMPARE(material1, sizeof(material1),
+                        reexported, reexported_length);
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+    psa_destroy_key(id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void create_fail(int lifetime_arg, int id_arg,
+                 int expected_status_arg)
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(1, id_arg);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected_status = expected_status_arg;
+    mbedtls_svc_key_id_t returned_id =
+        mbedtls_svc_key_id_make(0xdead, 0xdead);
+    uint8_t material[1] = { 'k' };
+
+    TEST_USES_KEY_ID(id);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_lifetime(&attributes, lifetime);
+    if (PSA_KEY_LIFETIME_IS_VOLATILE(lifetime)) {
+        /*
+         * Not possible to set a key identifier different from 0 through
+         * PSA key attributes APIs thus accessing to the attributes
+         * directly.
+         */
+        attributes.id = id;
+    } else {
+        psa_set_key_id(&attributes, id);
+    }
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+    TEST_EQUAL(psa_import_key(&attributes, material, sizeof(material),
+                              &returned_id),
+               expected_status);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(returned_id));
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void copy_across_lifetimes(int source_lifetime_arg, int source_owner_id_arg,
+                           int source_id_arg, int source_usage_arg,
+                           int source_alg_arg, int source_alg2_arg,
+                           int type_arg, data_t *material,
+                           int target_lifetime_arg, int target_owner_id_arg,
+                           int target_id_arg, int target_usage_arg,
+                           int target_alg_arg, int target_alg2_arg,
+                           int expected_usage_arg,
+                           int expected_alg_arg, int expected_alg2_arg)
+{
+    psa_key_lifetime_t source_lifetime = source_lifetime_arg;
+    mbedtls_svc_key_id_t source_id =
+        mbedtls_svc_key_id_make(source_owner_id_arg, source_id_arg);
+    psa_key_usage_t source_usage = source_usage_arg;
+    psa_algorithm_t source_alg = source_alg_arg;
+    psa_key_attributes_t source_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_type_t source_type = type_arg;
+    mbedtls_svc_key_id_t returned_source_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_lifetime_t target_lifetime = target_lifetime_arg;
+    mbedtls_svc_key_id_t target_id =
+        mbedtls_svc_key_id_make(target_owner_id_arg, target_id_arg);
+    psa_key_usage_t target_usage = target_usage_arg;
+    psa_algorithm_t target_alg = target_alg_arg;
+    psa_key_attributes_t target_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t returned_target_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_usage_t expected_usage = expected_usage_arg;
+    psa_algorithm_t expected_alg = expected_alg_arg;
+    psa_algorithm_t expected_alg2 = expected_alg2_arg;
+    uint8_t *export_buffer = NULL;
+
+    TEST_USES_KEY_ID(source_id);
+    TEST_USES_KEY_ID(target_id);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    /* Populate the source slot. */
+    psa_set_key_id(&source_attributes, source_id);
+    psa_set_key_lifetime(&source_attributes, source_lifetime);
+
+    psa_set_key_type(&source_attributes, source_type);
+    psa_set_key_usage_flags(&source_attributes, source_usage);
+    psa_set_key_algorithm(&source_attributes, source_alg);
+    psa_set_key_enrollment_algorithm(&source_attributes, source_alg2_arg);
+    PSA_ASSERT(psa_import_key(&source_attributes,
+                              material->x, material->len,
+                              &returned_source_id));
+    /* Update the attributes with the bit size. */
+    PSA_ASSERT(psa_get_key_attributes(returned_source_id,
+                                      &source_attributes));
+
+    /* Prepare the target slot. */
+    psa_set_key_id(&target_attributes, target_id);
+    psa_set_key_lifetime(&target_attributes, target_lifetime);
+
+    psa_set_key_usage_flags(&target_attributes, target_usage);
+    psa_set_key_algorithm(&target_attributes, target_alg);
+    psa_set_key_enrollment_algorithm(&target_attributes, target_alg2_arg);
+
+    /* Copy the key. */
+    PSA_ASSERT(psa_copy_key(returned_source_id,
+                            &target_attributes, &returned_target_id));
+
+    /* Destroy the source to ensure that this doesn't affect the target. */
+    PSA_ASSERT(psa_destroy_key(returned_source_id));
+
+    /* If the target key is persistent, restart the system to make
+     * sure that the material is still alive. */
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(target_lifetime)) {
+        mbedtls_psa_crypto_free();
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* Test that the target slot has the expected content. */
+    psa_reset_key_attributes(&target_attributes);
+    PSA_ASSERT(psa_get_key_attributes(returned_target_id,
+                                      &target_attributes));
+
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(target_lifetime)) {
+        TEST_ASSERT(mbedtls_svc_key_id_equal(
+                        target_id, psa_get_key_id(&target_attributes)));
+    } else {
+#if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+        TEST_EQUAL(MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(returned_target_id),
+                   target_owner_id_arg);
+#endif
+    }
+
+    TEST_EQUAL(target_lifetime, psa_get_key_lifetime(&target_attributes));
+    TEST_EQUAL(source_type, psa_get_key_type(&target_attributes));
+    TEST_EQUAL(psa_get_key_bits(&source_attributes),
+               psa_get_key_bits(&target_attributes));
+    TEST_EQUAL(expected_usage, psa_get_key_usage_flags(&target_attributes));
+    TEST_EQUAL(expected_alg, psa_get_key_algorithm(&target_attributes));
+    TEST_EQUAL(expected_alg2,
+               psa_get_key_enrollment_algorithm(&target_attributes));
+    if (expected_usage & PSA_KEY_USAGE_EXPORT) {
+        size_t length;
+        TEST_CALLOC(export_buffer, material->len);
+        PSA_ASSERT(psa_export_key(returned_target_id, export_buffer,
+                                  material->len, &length));
+        TEST_MEMORY_COMPARE(material->x, material->len,
+                            export_buffer, length);
+    } else {
+        size_t length;
+        /* Check that the key is actually non-exportable. */
+        TEST_EQUAL(psa_export_key(returned_target_id, export_buffer,
+                                  material->len, &length),
+                   PSA_ERROR_NOT_PERMITTED);
+    }
+
+    PSA_ASSERT(psa_destroy_key(returned_target_id));
+
+exit:
+    /*
+     * Source and target key attributes may have been returned by
+     * psa_get_key_attributes() thus reset them as required.
+     */
+    psa_reset_key_attributes(&source_attributes);
+    psa_reset_key_attributes(&target_attributes);
+
+    PSA_DONE();
+    mbedtls_free(export_buffer);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void copy_to_occupied(int source_lifetime_arg, int source_id_arg,
+                      int source_usage_arg, int source_alg_arg,
+                      int source_type_arg, data_t *source_material,
+                      int target_lifetime_arg, int target_id_arg,
+                      int target_usage_arg, int target_alg_arg,
+                      int target_type_arg, data_t *target_material)
+{
+    psa_key_lifetime_t source_lifetime = source_lifetime_arg;
+    mbedtls_svc_key_id_t source_id =
+        mbedtls_svc_key_id_make(1, source_id_arg);
+    psa_key_usage_t source_usage = source_usage_arg;
+    psa_algorithm_t source_alg = source_alg_arg;
+    psa_key_type_t source_type = source_type_arg;
+    mbedtls_svc_key_id_t returned_source_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_lifetime_t target_lifetime = target_lifetime_arg;
+    mbedtls_svc_key_id_t target_id =
+        mbedtls_svc_key_id_make(1, target_id_arg);
+    psa_key_usage_t target_usage = target_usage_arg;
+    psa_algorithm_t target_alg = target_alg_arg;
+    psa_key_type_t target_type = target_type_arg;
+    mbedtls_svc_key_id_t returned_target_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t new_key = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t *export_buffer = NULL;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t attributes1 = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t attributes2 = PSA_KEY_ATTRIBUTES_INIT;
+
+    TEST_USES_KEY_ID(source_id);
+    TEST_USES_KEY_ID(target_id);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    /* Populate the source slot. */
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(source_lifetime)) {
+        psa_set_key_id(&attributes, source_id);
+        psa_set_key_lifetime(&attributes, source_lifetime);
+    }
+    psa_set_key_type(&attributes, source_type);
+    psa_set_key_usage_flags(&attributes, source_usage);
+    psa_set_key_algorithm(&attributes, source_alg);
+    PSA_ASSERT(psa_import_key(&attributes,
+                              source_material->x, source_material->len,
+                              &returned_source_id));
+
+    /* Populate the target slot. */
+    if (mbedtls_svc_key_id_equal(target_id, source_id)) {
+        returned_target_id = returned_source_id;
+    } else {
+        psa_set_key_id(&attributes1, target_id);
+        psa_set_key_lifetime(&attributes1, target_lifetime);
+        psa_set_key_type(&attributes1, target_type);
+        psa_set_key_usage_flags(&attributes1, target_usage);
+        psa_set_key_algorithm(&attributes1, target_alg);
+        PSA_ASSERT(psa_import_key(&attributes1,
+                                  target_material->x, target_material->len,
+                                  &returned_target_id));
+    }
+
+    PSA_ASSERT(psa_get_key_attributes(returned_target_id, &attributes1));
+
+    /* Make a copy attempt. */
+    psa_set_key_id(&attributes, target_id);
+    psa_set_key_lifetime(&attributes, target_lifetime);
+    TEST_EQUAL(psa_copy_key(returned_source_id,
+                            &attributes, &new_key),
+               PSA_ERROR_ALREADY_EXISTS);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(new_key));
+
+    /* Test that the target slot is unaffected. */
+    PSA_ASSERT(psa_get_key_attributes(returned_target_id, &attributes2));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes1),
+                    psa_get_key_id(&attributes2)));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes1),
+               psa_get_key_lifetime(&attributes2));
+    TEST_EQUAL(psa_get_key_type(&attributes1),
+               psa_get_key_type(&attributes2));
+    TEST_EQUAL(psa_get_key_bits(&attributes1),
+               psa_get_key_bits(&attributes2));
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes1),
+               psa_get_key_usage_flags(&attributes2));
+    TEST_EQUAL(psa_get_key_algorithm(&attributes1),
+               psa_get_key_algorithm(&attributes2));
+    if (target_usage & PSA_KEY_USAGE_EXPORT) {
+        size_t length;
+        TEST_CALLOC(export_buffer, target_material->len);
+        PSA_ASSERT(psa_export_key(returned_target_id, export_buffer,
+                                  target_material->len, &length));
+        TEST_MEMORY_COMPARE(target_material->x, target_material->len,
+                            export_buffer, length);
+    }
+
+    PSA_ASSERT(psa_destroy_key(returned_source_id));
+    if (!mbedtls_svc_key_id_equal(target_id, source_id)) {
+        PSA_ASSERT(psa_destroy_key(returned_target_id));
+    }
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes1);
+    psa_reset_key_attributes(&attributes2);
+
+    PSA_DONE();
+    mbedtls_free(export_buffer);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void many_transient_keys(int max_keys_arg)
+{
+    mbedtls_svc_key_id_t *keys = NULL;
+    size_t max_keys = max_keys_arg;
+    size_t i, j;
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t exported[sizeof(size_t)];
+    size_t exported_length;
+
+    TEST_CALLOC(keys, max_keys);
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, 0);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        status = psa_import_key(&attributes,
+                                (uint8_t *) &i, sizeof(i),
+                                &keys[i]);
+        PSA_ASSERT(status);
+        TEST_ASSERT(!mbedtls_svc_key_id_is_null(keys[i]));
+        for (j = 0; j < i; j++) {
+            TEST_ASSERT(!mbedtls_svc_key_id_equal(keys[i], keys[j]));
+        }
+    }
+
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        TEST_MEMORY_COMPARE(exported, exported_length,
+                            (uint8_t *) &i, sizeof(i));
+        psa_destroy_key(keys[i]);
+    }
+
+exit:
+    PSA_DONE();
+    mbedtls_free(keys);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MAX_VOLATILE_KEYS */
+/*
+ * 1. Fill the key store with volatile keys.
+ * 2. Check that attempting to create another volatile key fails without
+ *    corrupting the key store.
+ * 3. Destroy the key specified by key_to_destroy. This is the number of the
+ *    key in creation order (e.g. 0 means the first key that was created).
+ *    It can also  be a negative value to count in reverse order (e.g.
+ *    -1 means to destroy the last key that was created).
+ * 4. Check that creating another volatile key succeeds.
+ */
+void fill_key_store(int key_to_destroy_arg)
+{
+    mbedtls_svc_key_id_t *keys = NULL;
+    size_t max_keys = MAX_VOLATILE_KEYS;
+    size_t i, j;
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t exported[sizeof(size_t)];
+    size_t exported_length;
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC) && defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_test_hook_psa_volatile_key_slice_length = &tiny_key_slice_length;
+#endif
+
+    PSA_ASSERT(psa_crypto_init());
+
+    mbedtls_psa_stats_t stats;
+    mbedtls_psa_get_stats(&stats);
+    /* Account for any system-created volatile key, e.g. for the RNG. */
+    max_keys -= stats.volatile_slots;
+    TEST_CALLOC(keys, max_keys + 1);
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, 0);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    /* Fill the key store. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        status = psa_import_key(&attributes,
+                                (uint8_t *) &i, sizeof(i),
+                                &keys[i]);
+        PSA_ASSERT(status);
+        TEST_ASSERT(!mbedtls_svc_key_id_is_null(keys[i]));
+        for (j = 0; j < i; j++) {
+            TEST_ASSERT(!mbedtls_svc_key_id_equal(keys[i], keys[j]));
+        }
+    }
+
+    /* Attempt to overfill. */
+    mbedtls_test_set_step(max_keys);
+    status = psa_import_key(&attributes,
+                            (uint8_t *) &max_keys, sizeof(max_keys),
+                            &keys[max_keys]);
+    TEST_EQUAL(status, PSA_ERROR_INSUFFICIENT_MEMORY);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(keys[max_keys]));
+
+    /* Check that the keys are not corrupted. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        TEST_MEMORY_COMPARE(exported, exported_length,
+                            (uint8_t *) &i, sizeof(i));
+    }
+
+    /* Destroy one key and try again. */
+    size_t key_to_destroy = (key_to_destroy_arg >= 0 ?
+                             (size_t) key_to_destroy_arg :
+                             max_keys + key_to_destroy_arg);
+    mbedtls_svc_key_id_t reused_id = keys[key_to_destroy];
+    const uint8_t replacement_value[1] = { 0x64 };
+    PSA_ASSERT(psa_destroy_key(keys[key_to_destroy]));
+    keys[key_to_destroy] = MBEDTLS_SVC_KEY_ID_INIT;
+    status = psa_import_key(&attributes,
+                            replacement_value, sizeof(replacement_value),
+                            &keys[key_to_destroy]);
+    PSA_ASSERT(status);
+    /* Since the key store was full except for one key, the new key must be
+     * in the same slot in the key store as the destroyed key.
+     * Since volatile keys IDs are assigned based on which slot contains
+     * the key, the new key should have the same ID as the destroyed key.
+     */
+    TEST_ASSERT(mbedtls_svc_key_id_equal(reused_id, keys[key_to_destroy]));
+
+    /* Check that the keys are not corrupted and destroy them. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        if (i == key_to_destroy) {
+            TEST_MEMORY_COMPARE(exported, exported_length,
+                                replacement_value, sizeof(replacement_value));
+        } else {
+            TEST_MEMORY_COMPARE(exported, exported_length,
+                                (uint8_t *) &i, sizeof(i));
+        }
+        PSA_ASSERT(psa_destroy_key(keys[i]));
+        keys[i] = MBEDTLS_SVC_KEY_ID_INIT;
+    }
+
+exit:
+    PSA_DONE();
+    mbedtls_free(keys);
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC) && defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_test_hook_psa_volatile_key_slice_length = NULL;
+#endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C */
+void key_slot_eviction_to_import_new_key(int lifetime_arg)
+{
+    psa_key_lifetime_t lifetime = (psa_key_lifetime_t) lifetime_arg;
+    size_t i;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t exported[sizeof(size_t)];
+    size_t exported_length;
+    mbedtls_svc_key_id_t key, returned_key_id;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, 0);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    /*
+     * Create MBEDTLS_PSA_KEY_SLOT_COUNT persistent keys.
+     */
+    for (i = 0; i < MBEDTLS_PSA_KEY_SLOT_COUNT; i++) {
+        key = mbedtls_svc_key_id_make(i, i + 1);
+        psa_set_key_id(&attributes, key);
+        PSA_ASSERT(psa_import_key(&attributes,
+                                  (uint8_t *) &i, sizeof(i),
+                                  &returned_key_id));
+        TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, key));
+    }
+
+    /*
+     * Create a new persistent or volatile key. When creating the key,
+     * one of the descriptions of the previously created persistent keys
+     * is removed from the RAM key slots. This makes room to store its
+     * description in RAM.
+     */
+    i = MBEDTLS_PSA_KEY_SLOT_COUNT;
+    key = mbedtls_svc_key_id_make(i, i + 1);
+    psa_set_key_id(&attributes, key);
+    psa_set_key_lifetime(&attributes, lifetime);
+
+    PSA_ASSERT(psa_import_key(&attributes,
+                              (uint8_t *) &i, sizeof(i),
+                              &returned_key_id));
+    if (lifetime != PSA_KEY_LIFETIME_VOLATILE) {
+        TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, key));
+    } else {
+        TEST_ASSERT(psa_key_id_is_volatile(
+                        MBEDTLS_SVC_KEY_ID_GET_KEY_ID(returned_key_id)));
+    }
+
+    /*
+     * Check that we can export all ( MBEDTLS_PSA_KEY_SLOT_COUNT + 1 ) keys,
+     * that they have the expected value and destroy them. In that process,
+     * the description of the persistent key that was evicted from the RAM
+     * slots when creating the last key is restored in a RAM slot to export
+     * its value.
+     */
+    for (i = 0; i <= MBEDTLS_PSA_KEY_SLOT_COUNT; i++) {
+        if (i < MBEDTLS_PSA_KEY_SLOT_COUNT) {
+            key = mbedtls_svc_key_id_make(i, i + 1);
+        } else {
+            key = returned_key_id;
+        }
+
+        PSA_ASSERT(psa_export_key(key,
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        TEST_MEMORY_COMPARE(exported, exported_length,
+                            (uint8_t *) &i, sizeof(i));
+        PSA_ASSERT(psa_destroy_key(key));
+    }
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_STORAGE_C:!MBEDTLS_PSA_KEY_STORE_DYNAMIC */
+void non_reusable_key_slots_integrity_in_case_of_key_slot_starvation()
+{
+    psa_status_t status;
+    size_t i;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t exported[sizeof(size_t)];
+    size_t exported_length;
+    mbedtls_svc_key_id_t persistent_key = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t persistent_key2 = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t returned_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t *keys = NULL;
+    mbedtls_psa_stats_t psa_key_slots_stats;
+    size_t available_key_slots = 0;
+
+    TEST_ASSERT(MBEDTLS_PSA_KEY_SLOT_COUNT >= 1);
+
+    PSA_ASSERT(psa_crypto_init());
+    mbedtls_psa_get_stats(&psa_key_slots_stats);
+    available_key_slots = psa_key_slots_stats.empty_slots;
+
+    TEST_CALLOC(keys, available_key_slots);
+
+    psa_set_key_usage_flags(&attributes,
+                            PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY);
+    psa_set_key_algorithm(&attributes, 0);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    /*
+     * Create a persistent key
+     */
+    persistent_key = mbedtls_svc_key_id_make(0x100, 0x205);
+    psa_set_key_id(&attributes, persistent_key);
+    PSA_ASSERT(psa_import_key(&attributes,
+                              (uint8_t *) &persistent_key,
+                              sizeof(persistent_key),
+                              &returned_key_id));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, persistent_key));
+
+    /*
+     * Create the maximum available number of keys that are locked in
+     * memory. This can be:
+     * - volatile keys, when MBEDTLS_PSA_KEY_STORE_DYNAMIC is disabled;
+     * - opened persistent keys (could work, but not currently implemented
+     *   in this test function);
+     * - keys in use by another thread (we don't do this because it would
+     *   be hard to arrange and we can't control how long the keys are
+     *   locked anyway).
+     */
+    psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
+    for (i = 0; i < available_key_slots; i++) {
+        PSA_ASSERT(psa_import_key(&attributes,
+                                  (uint8_t *) &i, sizeof(i),
+                                  &keys[i]));
+    }
+    psa_reset_key_attributes(&attributes);
+
+    /*
+     * Check that we cannot access the persistent key as all slots are
+     * occupied by volatile keys and the implementation needs to load the
+     * persistent key description in a slot to be able to access it.
+     */
+    status = psa_get_key_attributes(persistent_key, &attributes);
+    TEST_EQUAL(status, PSA_ERROR_INSUFFICIENT_MEMORY);
+
+    /*
+     * Check we can export the volatile key created last and that it has the
+     * expected value. Then, destroy it.
+     */
+    PSA_ASSERT(psa_export_key(keys[available_key_slots - 1],
+                              exported, sizeof(exported),
+                              &exported_length));
+    i = available_key_slots - 1;
+    TEST_MEMORY_COMPARE(exported, exported_length, (uint8_t *) &i, sizeof(i));
+    PSA_ASSERT(psa_destroy_key(keys[available_key_slots - 1]));
+
+    /*
+     * Check that we can now access the persistent key again.
+     */
+    PSA_ASSERT(psa_get_key_attributes(persistent_key, &attributes));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(attributes.id,
+                                         persistent_key));
+
+    /*
+     * Check that we cannot copy the persistent key as all slots are occupied
+     * by the persistent key and the volatile keys and the slot containing the
+     * persistent key cannot be reclaimed as it contains the key to copy.
+     */
+    persistent_key2 = mbedtls_svc_key_id_make(0x100, 0x204);
+    psa_set_key_id(&attributes, persistent_key2);
+    status = psa_copy_key(persistent_key, &attributes, &returned_key_id);
+    TEST_EQUAL(status, PSA_ERROR_INSUFFICIENT_MEMORY);
+
+    /*
+     * Check we can export the remaining volatile keys and that they have the
+     * expected values.
+     */
+    for (i = 0; i < (available_key_slots - 1); i++) {
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        TEST_MEMORY_COMPARE(exported, exported_length,
+                            (uint8_t *) &i, sizeof(i));
+        PSA_ASSERT(psa_destroy_key(keys[i]));
+    }
+
+    /*
+     * Check we can export the persistent key and that it have the expected
+     * value.
+     */
+
+    PSA_ASSERT(psa_export_key(persistent_key, exported, sizeof(exported),
+                              &exported_length));
+    TEST_MEMORY_COMPARE(exported, exported_length,
+                        (uint8_t *) &persistent_key, sizeof(persistent_key));
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+
+    psa_destroy_key(persistent_key);
+    PSA_DONE();
+    mbedtls_free(keys);
+}
+/* END_CASE */

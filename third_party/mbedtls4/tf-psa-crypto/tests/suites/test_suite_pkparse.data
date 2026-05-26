@@ -1,0 +1,1435 @@
+Parse RSA Key #1 (No password when required)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_AES_C
+pk_parse_keyfile_rsa:"../framework/data_files/test-ca.key":"NULL":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #2 (Correct password)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_AES_C
+pk_parse_keyfile_rsa:"../framework/data_files/test-ca.key":"PolarSSLTest":0
+
+Parse RSA Key #3 (Wrong password)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_AES_C
+pk_parse_keyfile_rsa:"../framework/data_files/test-ca.key":"PolarSSLWRONG":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #6 (AES-128 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_1024_aes128.pem":"testkey":0
+
+Parse RSA Key #7 (AES-192 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_1024_aes192.pem":"testkey":0
+
+Parse RSA Key #8 (AES-256 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_1024_aes256.pem":"testkey":0
+
+Parse RSA Key #11 (2048-bit, AES-128 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_2048_aes128.pem":"testkey":0
+
+Parse RSA Key #12 (2048-bit, AES-192 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_2048_aes192.pem":"testkey":0
+
+Parse RSA Key #13 (2048-bit, AES-256 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_2048_aes256.pem":"testkey":0
+
+Parse RSA Key #16 (4096-bit, AES-128 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_4096_aes128.pem":"testkey":0
+
+Parse RSA Key #17 (4096-bit, AES-192 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_4096_aes192.pem":"testkey":0
+
+Parse RSA Key #18 (4096-bit, AES-256 Encrypted)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_4096_aes256.pem":"testkey":0
+
+Parse RSA Key #19 (PKCS#8 wrapped)
+depends_on:PSA_WANT_ALG_MD5:MBEDTLS_PEM_PARSE_C
+pk_parse_keyfile_rsa:"../framework/data_files/format_gen.key":"":0
+
+Parse RSA Key #38.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #38.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #38.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #38.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #38.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #38.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #38.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #38.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #38.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #39.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #39.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #39.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #39.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #39.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #39.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #39.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #39.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #39.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #40.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #40.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #40.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.pem":"PolarSSLTest":0
+
+Parse RSA Key #40.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #40.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #40.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #40.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #40.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #40.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #41.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #41.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #41.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #41.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #41.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #41.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #41.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #41.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #41.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #42.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #42.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #42.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #42.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #42.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #42.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #42.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #42.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #42.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #43.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #43.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #43.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.der":"PolarSSLTest":0
+
+Parse RSA Key #43.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #43.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #43.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #43.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #43.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #43.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #50.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #50.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #50.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #50.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #50.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #50.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #50.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #50.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #50.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #51.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #51.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #51.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #51.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #51.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #51.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #51.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #51.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #51.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #52.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #52.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #52.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.pem":"PolarSSLTest":0
+
+Parse RSA Key #52.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #52.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #52.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #52.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #52.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #52.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #53.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #53.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #53.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #53.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #53.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #53.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #53.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #53.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #53.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #54.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #54.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #54.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #54.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #54.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #54.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #54.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #54.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #54.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #55.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #55.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #55.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.der":"PolarSSLTest":0
+
+Parse RSA Key #55.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #55.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #55.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #55.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA224 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #55.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA224 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #55.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA224 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_224:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha224.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #62.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #62.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #62.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #62.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #62.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #62.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #62.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #62.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #62.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #63.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #63.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #63.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #63.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #63.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #63.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #63.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #63.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #63.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #64.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #64.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #64.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.pem":"PolarSSLTest":0
+
+Parse RSA Key #64.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #64.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #64.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #64.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #64.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #64.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #65.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #65.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #65.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #65.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #65.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #65.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #65.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #65.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #65.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #66.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #66.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #66.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #66.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #66.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #66.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #66.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #66.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #66.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #67.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #67.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #67.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.der":"PolarSSLTest":0
+
+Parse RSA Key #68.2 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #68.3 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #68.4 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #68.5 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA256 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #68.6 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA256 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #68.7 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA256 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_256:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha256.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #75.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #75.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #75.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #75.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #75.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #75.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #75.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #75.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #75.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #76.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #76.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #76.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #76.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #76.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #76.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #76.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #76.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #76.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #77.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #77.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #77.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.pem":"PolarSSLTest":0
+
+Parse RSA Key #77.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #77.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #77.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #77.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #77.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #77.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #78.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #78.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #78.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #78.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #78.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #78.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #78.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #78.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #78.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #79.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #79.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #79.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #79.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #79.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #79.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #79.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #79.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #79.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #80.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #80.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #80.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.der":"PolarSSLTest":0
+
+Parse RSA Key #80.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #80.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #80.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #80.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA384 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #80.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA384 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #80.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA384 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_384:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha384.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #88.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #88.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #88.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #88.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #88.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #88.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #88.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #88.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #88.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #89.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #89.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #89.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #89.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #89.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #89.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #89.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #89.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #89.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #90.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #90.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #90.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.pem":"PolarSSLTest":0
+
+Parse RSA Key #90.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #90.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #90.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.pem":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #90.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #90.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #90.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PEM_PARSE_C:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.pem":"":MBEDTLS_ERR_PK_PASSWORD_REQUIRED
+
+Parse RSA Key #91.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #91.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #91.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #91.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #91.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #91.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #91.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes128cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #91.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes192cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #91.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_1024_aes256cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #92.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #92.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #92.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 2048-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #92.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #92.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #92.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 2048-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #92.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes128cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #92.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes192cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #92.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 2048-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_2048_aes256cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #93.1 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #93.2 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #93.3 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 4096-bit)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.der":"PolarSSLTest":0
+
+Parse RSA Key #93.4 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #93.5 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #93.6 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 4096-bit, wrong PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_CIPHER_PADDING_PKCS7:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.der":"PolarSSLTes":MBEDTLS_ERR_PK_PASSWORD_MISMATCH
+
+Parse RSA Key #93.7 (PKCS#8 encrypted v2 PBKDF2 AES-128-CBC hmacWithSHA512 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes128cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #93.8 (PKCS#8 encrypted v2 PBKDF2 AES-192-CBC hmacWithSHA512 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes192cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #93.9 (PKCS#8 encrypted v2 PBKDF2 AES-256-CBC hmacWithSHA512 DER, 4096-bit, no PW)
+depends_on:MBEDTLS_AES_C:PSA_WANT_ALG_SHA_512:MBEDTLS_PKCS5_C:MBEDTLS_CIPHER_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs8_pbes2_pbkdf2_4096_aes256cbc_sha512.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+# Test keys with non-word-aligned sizes.
+# We use sizes that are large enough to exercise PKCS#1 v1.5 signature with
+# the largest supported hashes (SHA-512 and SHA3-512.)
+Parse RSA Key #100 (768-bit)
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_768_clear.der":"":0
+
+# Key bit length is not multiple of 8
+Parse RSA Key #100 (769-bit)
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_769_clear.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+# Key bit length is not multiple of 8
+Parse RSA Key #100 (770-bit)
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_770_clear.der":"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Parse RSA Key #100 (776-bit)
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_776_clear.der":"":0
+
+Parse RSA Key #100 (784-bit)
+pk_parse_keyfile_rsa:"../framework/data_files/rsa_pkcs1_784_clear.der":"":0
+
+Parse Public RSA Key #1 (PKCS#8 wrapped)
+depends_on:MBEDTLS_PEM_PARSE_C
+pk_parse_public_keyfile_rsa:"../framework/data_files/rsa_pkcs8_2048_public.pem":0
+
+Parse Public RSA Key #1 (PKCS#8 wrapped, DER)
+pk_parse_public_keyfile_rsa:"../framework/data_files/rsa_pkcs8_2048_public.der":0
+
+Parse Public RSA Key #3 (PKCS#1 wrapped)
+depends_on:MBEDTLS_PEM_PARSE_C
+pk_parse_public_keyfile_rsa:"../framework/data_files/rsa_pkcs1_2048_public.pem":0
+
+Parse Public RSA Key #4 (PKCS#1 wrapped, DER)
+pk_parse_public_keyfile_rsa:"../framework/data_files/rsa_pkcs1_2048_public.der":0
+
+# Test "Parse Public EC Key #1 (RFC 5480, DER)" was removed because secp192r1
+# curves are no more supported. Test #4b was added to keep a case with RFC 5480
+# and DER format.
+
+# Test "Parse Public EC Key #2 (RFC 5480, PEM)" was removed because it was
+# using curve secp192r1 whose support has been removed. Other curves with
+# RFC 5480 and PEM format are tested below, so there is no need for transition.
+
+# Test "Parse Public EC Key #2a (RFC 5480, PEM, secp192r1, compressed)" was
+# removed because it was using curve secp192r1 whose support has been removed.
+# Testing of curves with compressed points and with RFC 5480 format is also present
+# below so no need for transitioning this test.
+
+# Test case #3 was removed because it was using curve secp224r1 which has been removed
+
+Parse Public EC Key #4 (RFC 5480, secp256r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.pem":0
+
+Parse Public EC Key #4a (RFC 5480, secp256r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP256R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.comp.pem":0
+
+Parse Public EC Key #4b (RFC 5480, secp256r1, DER)
+depends_on:PSA_WANT_ECC_SECP_R1_256
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_256_pub.der":0
+
+Parse Public EC Key #5 (RFC 5480, secp384r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_384
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.pem":0
+
+Parse Public EC Key #5a (RFC 5480, secp384r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP384R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_384_pub.comp.pem":0
+
+Parse Public EC Key #6 (RFC 5480, secp521r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_521
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_521_pub.pem":0
+
+Parse Public EC Key #6a (RFC 5480, secp521r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP521R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_521_pub.comp.pem":0
+
+Parse Public EC Key #7 (RFC 5480, brainpoolP256r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_256
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.pem":0
+
+Parse Public EC Key #7a (RFC 5480, brainpoolP256r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP256R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp256_pub.comp.pem":0
+
+Parse Public EC Key #8 (RFC 5480, brainpoolP384r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_384
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp384_pub.pem":0
+
+Parse Public EC Key #8a (RFC 5480, brainpoolP384r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP384R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp384_pub.comp.pem":0
+
+Parse Public EC Key #9 (RFC 5480, brainpoolP512r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.pem":0
+
+Parse Public EC Key #9a (RFC 5480, brainpoolP512r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP512R1_ENABLED
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_bp512_pub.comp.pem":0
+
+Parse Public EC Key #10 (RFC 8410, DER, X25519)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_x25519_pub.der":0
+
+Parse Public EC Key #11 (RFC 8410, DER, X448)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_448
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_x448_pub.der":0
+
+Parse Public EC Key #12 (RFC 8410, PEM, X25519)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_x25519_pub.pem":0
+
+Parse Public EC Key #13 (RFC 8410, PEM, X448)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_448
+pk_parse_public_keyfile_ec:"../framework/data_files/ec_x448_pub.pem":0
+
+Parse EC Key #1 (SEC1 DER, secp256r1)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.der":"NULL":0
+
+Parse EC Key #2 (SEC1 PEM, secp256r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.pem":"NULL":0
+
+Parse EC Key #2a (SEC1 PEM, secp256r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP256R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.comp.pem":"NULL":0
+
+Parse EC Key #3.1 (SEC1 PEM encrypted, AES)
+depends_on:MBEDTLS_AES_C:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256:MBEDTLS_CIPHER_MODE_CBC:PSA_WANT_ALG_MD5:!MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
+pk_parse_keyfile_ec:"../framework/data_files/server5.key.enc":"PolarSSLTest":0
+
+Parse EC Key #4 (PKCS8 DER)
+depends_on:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.pk8.der":"NULL":0
+
+Parse EC Key #4a (PKCS8 DER, no public key)
+depends_on:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8nopub.der":"NULL":0
+
+Parse EC Key #4b (PKCS8 DER, no public key, with parameters)
+depends_on:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8nopubparam.der":"NULL":0
+
+Parse EC Key #4c (PKCS8 DER, with parameters)
+depends_on:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8param.der":"NULL":0
+
+Parse EC Key #5 (PKCS8 PEM)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.pk8.pem":"NULL":0
+
+Parse EC Key #5a (PKCS8 PEM, no public key)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8nopub.pem":"NULL":0
+
+Parse EC Key #5b (PKCS8 PEM, no public key, with parameters)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8nopubparam.pem":"NULL":0
+
+Parse EC Key #5c (PKCS8 PEM, with parameters)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.pk8param.pem":"NULL":0
+
+# Test case #8 was removed because it was using curve secp224r1 which has been removed
+
+Parse EC Key #9 (SEC1 PEM, secp256r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.pem":"NULL":0
+
+Parse EC Key #9a (SEC1 PEM, secp256r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP256R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_256_prv.comp.pem":"NULL":0
+
+Parse EC Key #10 (SEC1 PEM, secp384r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_384
+pk_parse_keyfile_ec:"../framework/data_files/ec_384_prv.pem":"NULL":0
+
+Parse EC Key #10a (SEC1 PEM, secp384r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP384R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_384_prv.comp.pem":"NULL":0
+
+Parse EC Key #11 (SEC1 PEM, secp521r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_SECP_R1_521
+pk_parse_keyfile_ec:"../framework/data_files/ec_521_prv.pem":"NULL":0
+
+Parse EC Key #11a (SEC1 PEM, secp521r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_SECP521R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_521_prv.comp.pem":"NULL":0
+
+Parse EC Key #12 (SEC1 PEM, bp256r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_256
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp256_prv.pem":"NULL":0
+
+Parse EC Key #12a (SEC1 PEM, bp256r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP256R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp256_prv.comp.pem":"NULL":0
+
+Parse EC Key #13 (SEC1 PEM, bp384r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_384
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp384_prv.pem":"NULL":0
+
+Parse EC Key #13a (SEC1 PEM, bp384r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP384R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp384_prv.comp.pem":"NULL":0
+
+Parse EC Key #14 (SEC1 PEM, bp512r1)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp512_prv.pem":"NULL":0
+
+Parse EC Key #14a (SEC1 PEM, bp512r1, compressed)
+depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_PK_PARSE_EC_COMPRESSED:MBEDTLS_ECP_DP_BP512R1_ENABLED
+pk_parse_keyfile_ec:"../framework/data_files/ec_bp512_prv.comp.pem":"NULL":0
+
+Parse EC Key #15 (SEC1 DER, secp256k1, SpecifiedECDomain)
+depends_on:MBEDTLS_ECP_DP_SECP256K1_ENABLED:MBEDTLS_PK_PARSE_EC_EXTENDED
+pk_parse_keyfile_ec:"../framework/data_files/ec_prv.specdom.der":"NULL":0
+
+Parse EC Key #16 (RFC 8410, DER, X25519)
+depends_on:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_keyfile_ec:"../framework/data_files/ec_x25519_prv.der":"NULL":0
+
+Parse EC Key #17 (RFC 8410, DER, X448)
+depends_on:PSA_WANT_ECC_MONTGOMERY_448
+pk_parse_keyfile_ec:"../framework/data_files/ec_x448_prv.der":"NULL":0
+
+Parse EC Key #18 (RFC 8410, PEM, X25519)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_keyfile_ec:"../framework/data_files/ec_x25519_prv.pem":"NULL":0
+
+Parse EC Key #19 (RFC 8410, PEM, X448)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ECC_MONTGOMERY_448
+pk_parse_keyfile_ec:"../framework/data_files/ec_x448_prv.pem":"NULL":0
+
+Key ASN1 (No data)
+pk_parse_key:"":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (First tag not Sequence)
+pk_parse_key:"020100":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (ECPrivateKey, empty parameters)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY
+pk_parse_key:"30070201010400a000":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey X25519, with invalid optional AlgorithIdentifier parameters)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_key:"3030020100300706032b656e050004220420b06d829655543a51cba36e53522bc0acfd60af59466555fb3e1e796872ab1a59":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey X25519, with NULL private key)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_key:"300e020100300506032b656e04020500":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey with invalid AlgorithIdentifier)
+pk_parse_key:"3013020100300a06082b0601040181fd5904020500":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey X25519, with unsupported attributes)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_key:"304f020100300506032b656e04220420b06d829655543a51cba36e53522bc0acfd60af59466555fb3e1e796872ab1a59a01f301d060a2a864886f70d01090914310f0c0d437572646c6520436861697273":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey X25519, unsupported version 2 with public key)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_key:"3051020101300506032b656e04220420b06d829655543a51cba36e53522bc0acfd60af59466555fb3e1e796872ab1a598121009bc3b0e93d8233fe6a8ba6138948cc12a91362d5c2ed81584db05ab5419c9d11":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+Key ASN1 (OneAsymmetricKey X25519, unsupported version 2 with public key and unsupported attributes)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_key:"3072020101300506032b656e04220420b06d829655543a51cba36e53522bc0acfd60af59466555fb3e1e796872ab1a59a01f301d060a2a864886f70d01090914310f0c0d437572646c65204368616972738121009bc3b0e93d8233fe6a8ba6138948cc12a91362d5c2ed81584db05ab5419c9d11":MBEDTLS_ERR_PK_KEY_INVALID_FORMAT
+
+# Generated with:
+# openssl genpkey -out keyfile.der -outform DER -algorithm RSA
+# openssl pkcs8 -topk8 -inform DER -outform DER -in keyfile.der -out testcase.der -nocrypt
+Key ASN1 (Unencrypted key PKCS8)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_parse_key_unencrypted:"308204BD020100300D06092A864886F70D0101010500048204A7308204A30201000282010100B8C5660951AF330995DC792325863EFF67EF2C6E52B44180BC9B569FEFE674AD32707E033DBC9F4E6C2D2E73952F37E40C2F5643BB3F7F973086ACC953D27BCB2EF79D306B8CF9B447DFC53E59DAE5FC00DFDE6AF4D3F2788A9BD3C82E79FDAC94D43C13BDE6514FE73097D31711846B69F21E2D0D2B40C12760D7EAFA58B7EA3F618FAFFB6CE9264B08C363E71A1FB1CE94CB6AB92ABB37EFB051845F89742ED12D876AFF0E0BC6E3A5C83DC9085ACE5BDD9771C50B0DACD8E31E13B239B0803FB91A96CDD88AD141599746FFA610D5F2D8ED40AE38669C0078F88B87E57EBBF17ED2C5B481E7C268876C4FE791F7BA1298A4F156C1205F9BECC0760AA472110203010001028201002C05F65382979676B272DB16ED6E20ACEC57CF5382D78962D1AD4634A9AD543FDEEC700DB8242CA5BBFF00DA0FA1B6349AD59D7D5A4C1D0B8A07907C10816E36E13C2482E0A1306E8C906B97B9437F37ED8269653CEB91D2381E3C15AE43291679485EFF0A2829D7FA9AB895D62179963922339FE2CB1B2CDA43C7F627CB43183F3978BF0A2788A69E30066067A243FF62733E4E3C4894A700C0C162D1083830282E1895D8F75D7B24CFF3DBCE2E78DA790C5EF508E0819F98FEA4A4FF15033BA723706852B8B2ACF861E37DE77B2EA8D0A23DB7D7F45A7AF0E1E4E9BEA37ADCFD78E47A99B5542FC03F15D7561E5A6486FA271FECEB604693FEAC5096C219B502818100FE01513B52083B8DFE6EDFD2E136499709FB1E2503212C3F650BB92D74C86265B9DFC20F30FB6CC00D091C8DB0551F784186AFBA0BA9B7A4C25D221B72AADB5086F0B99AC07CF9EE74574C04258DF7CC77F567F90C6DF20275D84406EF4A36C829A8C0204B7333943CA771C9CE5625EA755B6C048BDB28203842E3962603F6E502818100BA38E27E4549235B1FF5C07551DE6208057C0B112A183FCDA67D4304146AB0AA3E0B679B2B7B82F8962356A5ED4E8E1C3A17298934ED2362F111D87B21D0489D75469C08C07C8673B79A9427D681A0E78DF25D499ACFC7DE358785A5AD0086DF29AD8DD2FB0AA5D99BBC236397A57BCC416380A04B3E6A8D77036F3F2B84CFBD02818100D660263EFAAD18166F770450E6E2FA990F4371DDAB168451BCE67813754CEA3F10F158C7997F99F93D0743A21200C5DEA8EF13C0E1B70BD77273482602515168557B362AF5EA84C64C4AA14D9EA4834F7EAF106191ABF9653A309CB97D9C15403A68C23E7F6F6B48E1283151316463FBCDB0AB29EB1FBC6DF50DFF26EA4ECE4102818051EDAEF000C991AD889D152448757F49AA280DB26A83AAA66E861392DAECA976ECBF15C0F5DB6C1EB3E72E3AE7F1B4A20488A634803D88610250689E9B9CC825C62FDF7C163B72E7BC325CD63E105FDB1FDF2E5DB0A7937656B49DFEEAE31D735721CD10B273D7CDAA2F969E3D5C87DFB030F7A90E1192CD543C0598942BE53D0281803D811799414AE51EAB867F26BD5B23DB29170C20D07F9F48D81ED1BCBA4B56EF4227266B449D6DF9D2C1E8720F8FF0BD260984AF61E26F8709AD1D3BE09F82BDADA6B1B4761E40E5B207F6034318A176A7653050EB998664EC9F36FB20BD066A7310455447997EF65072064E4D0D524520B35DD9E9329630901E2E37ECDEA657":0
+
+# The previous testcase with 2 alterations:
+# 1. Add 16 bytes of garbage data at the end.
+# 2. Increment the length of the outer ASN.1 SEQUENCE by 16 ('s/308204BD/308204CD/').
+Key ASN1 (Unencrypted key PKCS8, trailing garbage data)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_parse_key_unencrypted:"308204CD020100300D06092A864886F70D0101010500048204A7308204A30201000282010100B8C5660951AF330995DC792325863EFF67EF2C6E52B44180BC9B569FEFE674AD32707E033DBC9F4E6C2D2E73952F37E40C2F5643BB3F7F973086ACC953D27BCB2EF79D306B8CF9B447DFC53E59DAE5FC00DFDE6AF4D3F2788A9BD3C82E79FDAC94D43C13BDE6514FE73097D31711846B69F21E2D0D2B40C12760D7EAFA58B7EA3F618FAFFB6CE9264B08C363E71A1FB1CE94CB6AB92ABB37EFB051845F89742ED12D876AFF0E0BC6E3A5C83DC9085ACE5BDD9771C50B0DACD8E31E13B239B0803FB91A96CDD88AD141599746FFA610D5F2D8ED40AE38669C0078F88B87E57EBBF17ED2C5B481E7C268876C4FE791F7BA1298A4F156C1205F9BECC0760AA472110203010001028201002C05F65382979676B272DB16ED6E20ACEC57CF5382D78962D1AD4634A9AD543FDEEC700DB8242CA5BBFF00DA0FA1B6349AD59D7D5A4C1D0B8A07907C10816E36E13C2482E0A1306E8C906B97B9437F37ED8269653CEB91D2381E3C15AE43291679485EFF0A2829D7FA9AB895D62179963922339FE2CB1B2CDA43C7F627CB43183F3978BF0A2788A69E30066067A243FF62733E4E3C4894A700C0C162D1083830282E1895D8F75D7B24CFF3DBCE2E78DA790C5EF508E0819F98FEA4A4FF15033BA723706852B8B2ACF861E37DE77B2EA8D0A23DB7D7F45A7AF0E1E4E9BEA37ADCFD78E47A99B5542FC03F15D7561E5A6486FA271FECEB604693FEAC5096C219B502818100FE01513B52083B8DFE6EDFD2E136499709FB1E2503212C3F650BB92D74C86265B9DFC20F30FB6CC00D091C8DB0551F784186AFBA0BA9B7A4C25D221B72AADB5086F0B99AC07CF9EE74574C04258DF7CC77F567F90C6DF20275D84406EF4A36C829A8C0204B7333943CA771C9CE5625EA755B6C048BDB28203842E3962603F6E502818100BA38E27E4549235B1FF5C07551DE6208057C0B112A183FCDA67D4304146AB0AA3E0B679B2B7B82F8962356A5ED4E8E1C3A17298934ED2362F111D87B21D0489D75469C08C07C8673B79A9427D681A0E78DF25D499ACFC7DE358785A5AD0086DF29AD8DD2FB0AA5D99BBC236397A57BCC416380A04B3E6A8D77036F3F2B84CFBD02818100D660263EFAAD18166F770450E6E2FA990F4371DDAB168451BCE67813754CEA3F10F158C7997F99F93D0743A21200C5DEA8EF13C0E1B70BD77273482602515168557B362AF5EA84C64C4AA14D9EA4834F7EAF106191ABF9653A309CB97D9C15403A68C23E7F6F6B48E1283151316463FBCDB0AB29EB1FBC6DF50DFF26EA4ECE4102818051EDAEF000C991AD889D152448757F49AA280DB26A83AAA66E861392DAECA976ECBF15C0F5DB6C1EB3E72E3AE7F1B4A20488A634803D88610250689E9B9CC825C62FDF7C163B72E7BC325CD63E105FDB1FDF2E5DB0A7937656B49DFEEAE31D735721CD10B273D7CDAA2F969E3D5C87DFB030F7A90E1192CD543C0598942BE53D0281803D811799414AE51EAB867F26BD5B23DB29170C20D07F9F48D81ED1BCBA4B56EF4227266B449D6DF9D2C1E8720F8FF0BD260984AF61E26F8709AD1D3BE09F82BDADA6B1B4761E40E5B207F6034318A176A7653050EB998664EC9F36FB20BD066A7310455447997EF65072064E4D0D524520B35DD9E9329630901E2E37ECDEA65700112233445566778899AABBCCDDEEFF":MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_KEY_INVALID_FORMAT, MBEDTLS_ERR_ASN1_LENGTH_MISMATCH)
+
+# From RFC8410 Appendix A but made into version 0
+OneAsymmetricKey X25519, doesn't match masking requirements #1
+depends_on:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_fix_montgomery:"302e020100300506032b656e04220420f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3f":"302e020100300506032b656e04220420f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"
+
+# Full inverse of the expected x25519 pattern:
+# - 3 LSb to 1
+# - 1st MSb to 1
+# - 2nd MSb to 0
+# Note: Montgomery keys are written in Little endian format.
+OneAsymmetricKey X25519, doesn't match masking requirements #2
+depends_on:PSA_WANT_ECC_MONTGOMERY_255
+pk_parse_fix_montgomery:"302e020100300506032b656e04220420ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbf":"302e020100300506032b656e04220420f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f"
+
+# Full inverse of the expected x448 pattern:
+# - 2 LSb to 1
+# - MSb to 0
+# Note: Montgomery keys are written in Little endian format.
+OneAsymmetricKey X448, doesn't match masking requirements #3
+depends_on:PSA_WANT_ECC_MONTGOMERY_448
+pk_parse_fix_montgomery:"3046020100300506032b656f043a0438ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f":"3046020100300506032b656f043a0438fcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"

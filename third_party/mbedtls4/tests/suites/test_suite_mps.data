@@ -1,0 +1,125 @@
+MPS Reader: Single step, single round, pausing disabled
+mbedtls_mps_reader_no_pausing_single_step_single_round:0
+
+MPS Reader: Single step, single round, pausing enabled but unused
+mbedtls_mps_reader_no_pausing_single_step_single_round:1
+
+MPS Reader: Single step, multiple rounds, pausing disabled
+mbedtls_mps_reader_no_pausing_single_step_multiple_rounds:0
+
+MPS Reader: Single step, multiple rounds, pausing enabled but unused
+mbedtls_mps_reader_no_pausing_single_step_multiple_rounds:1
+
+MPS Reader: Multiple steps, single round, pausing disabled
+mbedtls_mps_reader_no_pausing_multiple_steps_single_round:0
+
+MPS Reader: Multiple steps, single round, pausing enabled but unused
+mbedtls_mps_reader_no_pausing_multiple_steps_single_round:1
+
+MPS Reader: Multiple steps, multiple rounds, pausing disabled
+mbedtls_mps_reader_no_pausing_multiple_steps_multiple_rounds:0
+
+MPS Reader: Multiple steps, multiple rounds, pausing enabled but unused
+mbedtls_mps_reader_no_pausing_multiple_steps_multiple_rounds:1
+
+MPS Reader: Pausing needed but disabled
+mbedtls_mps_reader_pausing_needed_disabled:
+
+MPS Reader: Pausing needed + enabled, but buffer too small
+mbedtls_mps_reader_pausing_needed_buffer_too_small:
+
+MPS Reader: Pausing, repeat single call without commit
+mbedtls_mps_reader_pausing:0
+
+MPS Reader: Pausing, repeat single call with commit
+mbedtls_mps_reader_pausing:1
+
+MPS Reader: Pausing, repeat multiple calls without commit
+mbedtls_mps_reader_pausing:2
+
+MPS Reader: Pausing, repeat multiple calls with commit #0
+mbedtls_mps_reader_pausing:3
+
+MPS Reader: Pausing, repeat multiple calls with commit #1
+mbedtls_mps_reader_pausing:4
+
+MPS Reader: Pausing, repeat multiple calls with commit #2
+mbedtls_mps_reader_pausing:5
+
+MPS Reader: Pausing, feed 50 bytes in 10b + 10b + 80b
+mbedtls_mps_reader_pausing_multiple_feeds:0
+
+MPS Reader: Pausing, feed 50 bytes in 50x1b
+mbedtls_mps_reader_pausing_multiple_feeds:1
+
+MPS Reader: Pausing, feed 50 bytes in 49x1b + 51b
+mbedtls_mps_reader_pausing_multiple_feeds:2
+
+MPS Reader: Reclaim with data remaining #0
+mbedtls_mps_reader_reclaim_data_left:0
+
+MPS Reader: Reclaim with data remaining #1
+mbedtls_mps_reader_reclaim_data_left:1
+
+MPS Reader: Reclaim with data remaining #2
+mbedtls_mps_reader_reclaim_data_left:2
+
+MPS Reader: Reclaim with data remaining, continue fetching
+mbedtls_mps_reader_reclaim_data_left_retry:
+
+MPS Reader: Pausing several times, #0
+mbedtls_mps_reader_multiple_pausing:0
+
+MPS Reader: Pausing several times, #1
+mbedtls_mps_reader_multiple_pausing:1
+
+MPS Reader: Pausing several times, #2
+mbedtls_mps_reader_multiple_pausing:2
+
+MPS Reader: Pausing several times, #3
+mbedtls_mps_reader_multiple_pausing:3
+
+MPS Reader: Random usage, 20 rds, feed 100, get 200, acc 50
+mbedtls_mps_reader_random_usage:20:100:200:50
+
+MPS Reader: Random usage, 1000 rds, feed 10, get 100, acc 80
+mbedtls_mps_reader_random_usage:1000:10:100:80
+
+MPS Reader: Random usage, 10000 rds, feed 1, get 100, acc 80
+mbedtls_mps_reader_random_usage:10000:1:100:80
+
+MPS Reader: Random usage, 100 rds, feed 100, get 1000, acc 500
+mbedtls_mps_reader_random_usage:100:100:1000:500
+
+MPS Reader: Pausing, inconsistent continuation, #0
+mbedtls_reader_inconsistent_usage:0
+
+MPS Reader: Pausing, inconsistent continuation, #1
+mbedtls_reader_inconsistent_usage:1
+
+MPS Reader: Pausing, inconsistent continuation, #2
+mbedtls_reader_inconsistent_usage:2
+
+MPS Reader: Pausing, inconsistent continuation, #3
+mbedtls_reader_inconsistent_usage:3
+
+MPS Reader: Pausing, inconsistent continuation, #4
+mbedtls_reader_inconsistent_usage:4
+
+MPS Reader: Pausing, inconsistent continuation, #5
+mbedtls_reader_inconsistent_usage:5
+
+MPS Reader: Pausing, inconsistent continuation, #6
+mbedtls_reader_inconsistent_usage:6
+
+MPS Reader: Pausing, inconsistent continuation, #7
+mbedtls_reader_inconsistent_usage:7
+
+MPS Reader: Pausing, inconsistent continuation, #8
+mbedtls_reader_inconsistent_usage:8
+
+MPS Reader: Feed with invalid buffer (NULL)
+mbedtls_mps_reader_feed_empty:
+
+MPS Reader: Excess request leading to integer overflow
+mbedtls_mps_reader_reclaim_overflow:

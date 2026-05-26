@@ -1,0 +1,365 @@
+/* BEGIN_HEADER */
+#include "pk_internal.h"
+#include "mbedtls/pem.h"
+#include "crypto_oid.h"
+#include "mbedtls/base64.h"
+#include "psa/crypto_sizes.h"
+#include "test/pk_helpers.h"
+
+typedef enum {
+    TEST_PEM,
+    TEST_DER
+} pkwrite_file_format_t;
+
+typedef enum {
+    TEST_PUBLIC_KEY,
+    TEST_PRIVATE_KEY,
+} pkwrite_key_type_t;
+
+/* Helper function for removing "\r" chars from a buffer. */
+static void fix_new_lines(unsigned char *in_str, size_t *len)
+{
+    size_t chars_left;
+    unsigned int i;
+
+    for (i = 0; (i < *len) && (*len > 0); i++) {
+        if (in_str[i] == '\r') {
+            if (i < (*len - 1)) {
+                chars_left = *len - i - 1;
+                memmove(&in_str[i], &in_str[i+1], chars_left);
+            } else {
+                in_str[i] = '\0';
+            }
+            *len = *len - 1;
+        }
+    }
+}
+
+static int pk_write_any_key(mbedtls_pk_context *pk, unsigned char **p,
+                            size_t *buf_len, int is_public_key, int is_der)
+{
+    int ret = 0;
+
+    if (is_der) {
+        if (is_public_key) {
+            ret = mbedtls_pk_write_pubkey_der(pk, *p, *buf_len);
+        } else {
+            ret = mbedtls_pk_write_key_der(pk, *p, *buf_len);
+        }
+        if (ret <= 0) {
+            return ret;
+        }
+
+        *p = *p + *buf_len - ret;
+        *buf_len = ret;
+    } else {
+#if defined(MBEDTLS_PEM_WRITE_C)
+        if (is_public_key) {
+            ret = mbedtls_pk_write_pubkey_pem(pk, *p, *buf_len);
+        } else {
+            ret = mbedtls_pk_write_key_pem(pk, *p, *buf_len);
+        }
+        if (ret != 0) {
+            return ret;
+        }
+
+        *buf_len = strlen((char *) *p) + 1; /* +1 takes the string terminator into account */
+#else
+        return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
+#endif
+    }
+
+    return 0;
+}
+
+static int pk_write_check_context(mbedtls_pk_context *key,
+                                  int is_public_key, int is_der,
+                                  unsigned char *check_buf, size_t check_buf_len)
+{
+    int ret = -1;
+    unsigned char *buf = NULL;
+    int expected_error = PSA_ERROR_BUFFER_TOO_SMALL;
+
+    /* Test with:
+     * - buffer too small (all sizes)
+     * - buffer exactly the right size
+     * - buffer a bit larger - DER functions should write to the end of the
+     *   buffer, and we can only tell the difference with a larger buffer
+     */
+    for (size_t buf_size = 1; buf_size <= check_buf_len + 2; buf_size++) {
+        mbedtls_free(buf);
+        buf = NULL;
+        TEST_CALLOC(buf, buf_size);
+
+        unsigned char *start_buf = buf;
+        size_t out_len = buf_size;
+        int expected_result = buf_size < check_buf_len ? expected_error : 0;
+        mbedtls_test_set_step(buf_size);
+
+        TEST_EQUAL(pk_write_any_key(key, &start_buf, &out_len, is_public_key,
+                                    is_der), expected_result);
+
+        if (expected_result == 0) {
+            TEST_MEMORY_COMPARE(start_buf, out_len, check_buf, check_buf_len);
+
+            if (is_der) {
+                /* Data should be at the end of the buffer */
+                TEST_ASSERT(start_buf + out_len == buf + buf_size);
+            }
+        }
+    }
+
+    ret = 0;
+
+exit:
+    mbedtls_free(buf);
+    return ret;
+}
+
+
+static void pk_write_check_common(char *key_file, int is_public_key, int is_der)
+{
+    mbedtls_pk_context key;
+    mbedtls_pk_init(&key);
+    unsigned char *check_buf = NULL;
+    size_t check_buf_len;
+    mbedtls_svc_key_id_t opaque_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+
+    USE_PSA_INIT();
+
+    /* Note: if mbedtls_pk_load_file() successfully reads the file, then
+       it also allocates check_buf, which should be freed on exit */
+    TEST_EQUAL(mbedtls_pk_load_file(key_file, &check_buf, &check_buf_len), 0);
+    TEST_ASSERT(check_buf_len > 0);
+
+    /* Windows' line ending is different from the Linux's one ("\r\n" vs "\n").
+     * Git treats PEM files as text, so when on Windows, it replaces new lines
+     * with "\r\n" on checkout.
+     * Unfortunately mbedtls_pk_load_file() loads files in binary format,
+     * while mbedtls_pk_write_pubkey_pem() goes through the I/O layer which
+     * uses "\n" for newlines in both Windows and Linux.
+     * Here we remove the extra "\r" so that "buf" and "check_buf" can be
+     * easily compared later. */
+    if (!is_der) {
+        fix_new_lines(check_buf, &check_buf_len);
+    }
+    TEST_ASSERT(check_buf_len > 0);
+
+    if (is_public_key) {
+        TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&key, key_file), 0);
+    } else {
+        TEST_EQUAL(mbedtls_pk_parse_keyfile(&key, key_file, NULL), 0);
+    }
+
+    if (pk_write_check_context(&key, is_public_key, is_der,
+                               check_buf, check_buf_len) != 0) {
+        goto exit;
+    }
+
+    /* Verify that pk_write works also for opaque private keys */
+    if (!is_public_key) {
+        /* Turn the key PK context into an opaque one.
+         * Note: set some practical usage for the key to make get_psa_attributes() happy. */
+        TEST_EQUAL(mbedtls_pk_get_psa_attributes(&key, PSA_KEY_USAGE_SIGN_MESSAGE, &key_attr), 0);
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&key, &key_attr, &opaque_id), 0);
+        mbedtls_pk_free(&key);
+        mbedtls_pk_init(&key);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&key, opaque_id), 0);
+
+        if (pk_write_check_context(&key, is_public_key, is_der,
+                                   check_buf, check_buf_len) != 0) {
+            goto exit;
+        }
+    }
+
+exit:
+    psa_destroy_key(opaque_id);
+    mbedtls_free(check_buf);
+    mbedtls_pk_free(&key);
+    USE_PSA_DONE();
+}
+
+static void test_pk_write_pubkey_psa(mbedtls_pk_context *pk)
+{
+    uint8_t buf[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE + 1];
+    size_t buf_len, cur_size, safe_export_size;
+    int expected_ret;
+    int is_ec = PSA_KEY_TYPE_IS_ECC(mbedtls_pk_get_key_type(pk));
+
+    /* Compute the minimum buffer size that allows the export to be successful for
+     * the given key. */
+    if (is_ec) {
+        safe_export_size = PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(mbedtls_pk_get_bitlen(pk));
+    } else {
+        safe_export_size = PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(mbedtls_pk_get_bitlen(pk));
+    }
+
+    for (cur_size = 0; cur_size < sizeof(buf); cur_size++) {
+        mbedtls_test_set_step(cur_size);
+        if (cur_size >= safe_export_size) {
+            /* If the buffer size is at least the safe length, then export must succeed. */
+            expected_ret = 0;
+        } else if ((cur_size >= pk->pub_raw_len) && (pk->pub_raw_len > 0)) {
+            /* If it's less than the safe length it might still succeed, but it depends
+             * on the real length of the data stored in the PK context. In this case
+             * "pk->pub_raw_len" must be set, of course. */
+            expected_ret = 0;
+        } else {
+            expected_ret = MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
+        }
+
+        TEST_EQUAL(mbedtls_pk_write_pubkey_psa(pk, buf, cur_size, &buf_len), expected_ret);
+        if (expected_ret == 0) {
+            TEST_EQUAL(buf_len, pk->pub_raw_len);
+        }
+    }
+
+exit:; /* The ";" is intentional: we need the "exit" label, but we don't have any action to
+        * to do, so the compiler would complain for that. */
+}
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PK_PARSE_C:MBEDTLS_PK_WRITE_C:MBEDTLS_FS_IO
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void pk_write_pubkey_check(char *key_file, int is_der)
+{
+    pk_write_check_common(key_file, 1, is_der);
+    goto exit; /* make the compiler happy */
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pk_write_key_check(char *key_file, int is_der)
+{
+    pk_write_check_common(key_file, 0, is_der);
+    goto exit; /* make the compiler happy */
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pk_write_public_from_private(char *priv_key_file, char *pub_key_file)
+{
+    mbedtls_pk_context priv_key;
+    uint8_t *derived_key_raw = NULL;
+    size_t derived_key_len = 0;
+    uint8_t *pub_key_raw = NULL;
+    size_t pub_key_len = 0;
+    mbedtls_svc_key_id_t opaque_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+
+    mbedtls_pk_init(&priv_key);
+    USE_PSA_INIT();
+
+    TEST_EQUAL(mbedtls_pk_parse_keyfile(&priv_key, priv_key_file, NULL), 0);
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    if (mbedtls_pk_get_type(&priv_key) == MBEDTLS_PK_RSA) {
+        TEST_EQUAL(mbedtls_pk_set_pubkey_from_prv(&priv_key), 0);
+    }
+#endif /* PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY */
+    TEST_EQUAL(mbedtls_pk_load_file(pub_key_file, &pub_key_raw,
+                                    &pub_key_len), 0);
+
+    derived_key_len = pub_key_len;
+    TEST_CALLOC(derived_key_raw, derived_key_len);
+
+    TEST_EQUAL(mbedtls_pk_write_pubkey_der(&priv_key, derived_key_raw,
+                                           derived_key_len), pub_key_len);
+
+    TEST_MEMORY_COMPARE(derived_key_raw, derived_key_len,
+                        pub_key_raw, pub_key_len);
+
+    mbedtls_platform_zeroize(derived_key_raw, derived_key_len);
+
+    /* Turn the priv_key PK context into an opaque one. */
+    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&priv_key, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&priv_key, &key_attr, &opaque_key_id), 0);
+    mbedtls_pk_free(&priv_key);
+    mbedtls_pk_init(&priv_key);
+    TEST_EQUAL(mbedtls_pk_wrap_psa(&priv_key, opaque_key_id), 0);
+
+    TEST_EQUAL(mbedtls_pk_write_pubkey_der(&priv_key, derived_key_raw,
+                                           derived_key_len), pub_key_len);
+
+    TEST_MEMORY_COMPARE(derived_key_raw, derived_key_len,
+                        pub_key_raw, pub_key_len);
+
+exit:
+    psa_destroy_key(opaque_key_id);
+    mbedtls_free(derived_key_raw);
+    mbedtls_free(pub_key_raw);
+    mbedtls_pk_free(&priv_key);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pk_write_pubkey_psa_from_file(char *key_file, int is_private)
+{
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init(&pk);
+
+    PSA_INIT();
+
+    if (is_private) {
+        TEST_EQUAL(mbedtls_pk_parse_keyfile(&pk, key_file, NULL), 0);
+    } else {
+        TEST_EQUAL(mbedtls_pk_parse_public_keyfile(&pk, key_file), 0);
+    }
+
+    /* No need to check for return value here: TEST_EQUAL() macros are used in this function */
+    test_pk_write_pubkey_psa(&pk);
+
+exit:
+    mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pk_write_pubkey_psa_from_psa(int key_type, int key_bits, int pk_gen_method)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init(&pk);
+
+    PSA_INIT();
+
+    key_id = mbedtls_pk_helpers_make_psa_key_from_predefined(key_type, key_bits, PSA_ALG_NONE,
+                                                             PSA_ALG_NONE, PSA_KEY_USAGE_EXPORT);
+
+    /* No need to check for return value here: TEST_EQUAL() macros are used in these functions */
+    mbedtls_pk_helpers_populate_context(&pk, key_id, pk_gen_method);
+    test_pk_write_pubkey_psa(&pk);
+
+exit:
+    mbedtls_pk_free(&pk);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pk_write_pubkey_psa_unpopulated(void)
+{
+    unsigned char buf[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
+    size_t buf_len;
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init(&pk);
+    PSA_INIT();
+
+    TEST_EQUAL(MBEDTLS_ERR_PK_BAD_INPUT_DATA,
+               mbedtls_pk_write_pubkey_psa(&pk, buf, sizeof(buf), &buf_len));
+
+exit:
+    mbedtls_pk_free(&pk);
+    PSA_DONE();
+}
+/* END_CASE */

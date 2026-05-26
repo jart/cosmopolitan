@@ -1,0 +1,932 @@
+# SPDX-License-Identifier: LicenseRef-PD-hp OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT
+diff --git a/memcheck/mc_errors.c b/memcheck/mc_errors.c
+index a708b3f85..8d163cd90 100644
+--- a/memcheck/mc_errors.c
++++ b/memcheck/mc_errors.c
+@@ -94,11 +94,14 @@ struct _MC_Error {
+       // Use of an undefined value:
+       // - as a pointer in a load or store
+       // - as a jump target
++      // - (VARLAT mode) as an operand in a variable-latency instruction
+       struct {
+          SizeT szB;   // size of value in bytes
+          // Origin info
+          UInt        otag;      // origin tag
+          ExeContext* origin_ec; // filled in later
++         // VARLAT mode
++         Bool        isLatency; // if issue is variable-latency instruction
+       } Value;
+ 
+       // Use of an undefined value in a conditional branch or move.
+@@ -489,8 +492,13 @@ void MC_(pp_Error) ( const Error* err )
+          MC_(any_value_errors) = True;
+          if (xml) {
+             emit( "  <kind>UninitValue</kind>\n" );
+-            emit( "  <what>Use of uninitialised value of size %lu</what>\n",
+-                  extra->Err.Value.szB );
++            if (extra->Err.Value.isLatency)
++               emit( "  <what>Variable-latency instruction operand"
++                     " of size %lu is secret/uninitialised</what>\n",
++                     extra->Err.Value.szB );
++            else
++               emit( "  <what>Use of uninitialised value of size %lu</what>\n",
++                     extra->Err.Value.szB );
+             VG_(pp_ExeContext)( VG_(get_error_where)(err) );
+             if (extra->Err.Value.origin_ec)
+                mc_pp_origin( extra->Err.Value.origin_ec,
+@@ -498,8 +506,13 @@ void MC_(pp_Error) ( const Error* err )
+          } else {
+             /* Could also show extra->Err.Cond.otag if debugging origin
+                tracking */
+-            emit( "Use of uninitialised value of size %lu\n",
+-                  extra->Err.Value.szB );
++            if (extra->Err.Value.isLatency)
++               emit( "Variable-latency instruction operand"
++                     " of size %lu is secret/uninitialised\n",
++                     extra->Err.Value.szB );
++            else
++               emit( "Use of uninitialised value of size %lu\n",
++                     extra->Err.Value.szB );
+             VG_(pp_ExeContext)( VG_(get_error_where)(err) );
+             if (extra->Err.Value.origin_ec)
+                mc_pp_origin( extra->Err.Value.origin_ec,
+@@ -926,6 +939,20 @@ void MC_(record_value_error) ( ThreadId tid, Int szB, UInt otag )
+    extra.Err.Value.szB       = szB;
+    extra.Err.Value.otag      = otag;
+    extra.Err.Value.origin_ec = NULL;  /* Filled in later */
++   extra.Err.Value.isLatency = False;
++   VG_(maybe_record_error)( tid, Err_Value, /*addr*/0, /*s*/NULL, &extra );
++}
++
++void MC_(record_varlat_value_error) ( ThreadId tid, Int szB, UInt otag )
++{
++   MC_Error extra;
++   tl_assert( MC_(clo_mc_level) >= 2 );
++   if (otag > 0)
++      tl_assert( MC_(clo_mc_level) == 3 );
++   extra.Err.Value.szB       = szB;
++   extra.Err.Value.otag      = otag;
++   extra.Err.Value.origin_ec = NULL;  /* Filled in later */
++   extra.Err.Value.isLatency = True;
+    VG_(maybe_record_error)( tid, Err_Value, /*addr*/0, /*s*/NULL, &extra );
+ }
+ 
+diff --git a/memcheck/mc_include.h b/memcheck/mc_include.h
+index acc595a74..2578cccb0 100644
+--- a/memcheck/mc_include.h
++++ b/memcheck/mc_include.h
+@@ -525,6 +525,10 @@ void MC_(pp_LossRecord)(UInt n_this_record, UInt n_total_records,
+    rerun with --track-origins=yes might help. */
+ extern Bool MC_(any_value_errors);
+ 
++/* Are we running in VARLAT mode, where variable-latency operations
++   on uninitialised (or secret) values are considered as errors ? */
++extern Bool MC_(clo_variable_latency_errors);
++
+ /* Standard functions for error and suppressions as required by the
+    core/tool iface */
+ Bool MC_(eq_Error)           ( VgRes res, const Error* e1, const Error* e2 );
+@@ -552,6 +556,7 @@ void MC_(record_address_error) ( ThreadId tid, Addr a, Int szB,
+                                  Bool isWrite );
+ void MC_(record_cond_error)    ( ThreadId tid, UInt otag );
+ void MC_(record_value_error)   ( ThreadId tid, Int szB, UInt otag );
++void MC_(record_varlat_value_error) ( ThreadId tid, Int szB, UInt otag );
+ void MC_(record_jump_error)    ( ThreadId tid, Addr a );
+ 
+ void MC_(record_free_error)            ( ThreadId tid, Addr a ); 
+@@ -773,6 +778,10 @@ VG_REGPARM(1) void MC_(helperc_value_check8_fail_w_o) ( UWord );
+ VG_REGPARM(1) void MC_(helperc_value_check4_fail_w_o) ( UWord );
+ VG_REGPARM(1) void MC_(helperc_value_check1_fail_w_o) ( UWord );
+ VG_REGPARM(1) void MC_(helperc_value_check0_fail_w_o) ( UWord );
++VG_REGPARM(2) void MC_(helperc_value_checkN_varlat_fail_w_o) ( HWord, UWord );
++VG_REGPARM(1) void MC_(helperc_value_check8_varlat_fail_w_o) ( UWord );
++VG_REGPARM(1) void MC_(helperc_value_check4_varlat_fail_w_o) ( UWord );
++VG_REGPARM(1) void MC_(helperc_value_check1_varlat_fail_w_o) ( UWord );
+ 
+ /* And call these ones instead to report an uninitialised value error
+    but with no origin available. */
+@@ -781,6 +790,10 @@ VG_REGPARM(0) void MC_(helperc_value_check8_fail_no_o) ( void );
+ VG_REGPARM(0) void MC_(helperc_value_check4_fail_no_o) ( void );
+ VG_REGPARM(0) void MC_(helperc_value_check1_fail_no_o) ( void );
+ VG_REGPARM(0) void MC_(helperc_value_check0_fail_no_o) ( void );
++VG_REGPARM(1) void MC_(helperc_value_checkN_varlat_fail_no_o) ( HWord );
++VG_REGPARM(0) void MC_(helperc_value_check8_varlat_fail_no_o) ( void );
++VG_REGPARM(0) void MC_(helperc_value_check4_varlat_fail_no_o) ( void );
++VG_REGPARM(0) void MC_(helperc_value_check1_varlat_fail_no_o) ( void );
+ 
+ /* V-bits load/store helpers */
+ VG_REGPARM(1) void MC_(helperc_STOREV64be) ( Addr, ULong );
+diff --git a/memcheck/mc_main.c b/memcheck/mc_main.c
+index abd5d6888..f29524d2a 100644
+--- a/memcheck/mc_main.c
++++ b/memcheck/mc_main.c
+@@ -37,6 +37,7 @@
+ #include "pub_tool_libcbase.h"
+ #include "pub_tool_libcassert.h"
+ #include "pub_tool_libcprint.h"
++#include "pub_tool_libcproc.h" // for VG_(getenv)
+ #include "pub_tool_machine.h"
+ #include "pub_tool_mallocfree.h"
+ #include "pub_tool_options.h"
+@@ -5770,6 +5771,27 @@ void MC_(helperc_value_checkN_fail_w_o) ( HWord sz, UWord origin ) {
+    MC_(record_value_error) ( VG_(get_running_tid)(), (Int)sz, (UInt)origin );
+ }
+ 
++VG_REGPARM(1)
++void MC_(helperc_value_check1_varlat_fail_w_o) ( UWord origin ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 1, (UInt)origin );
++}
++
++VG_REGPARM(1)
++void MC_(helperc_value_check4_varlat_fail_w_o) ( UWord origin ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 4, (UInt)origin );
++}
++
++VG_REGPARM(1)
++void MC_(helperc_value_check8_varlat_fail_w_o) ( UWord origin ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 8, (UInt)origin );
++}
++
++VG_REGPARM(2)
++void MC_(helperc_value_checkN_varlat_fail_w_o) ( HWord sz, UWord origin ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), (Int)sz,
++                                     (UInt)origin );
++}
++
+ /* ... and these when an origin isn't available. */
+ 
+ VG_REGPARM(0)
+@@ -5797,6 +5819,27 @@ void MC_(helperc_value_checkN_fail_no_o) ( HWord sz ) {
+    MC_(record_value_error) ( VG_(get_running_tid)(), (Int)sz, 0/*origin*/ );
+ }
+ 
++VG_REGPARM(0)
++void MC_(helperc_value_check1_varlat_fail_no_o) ( void ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 1, 0/*origin*/ );
++}
++
++VG_REGPARM(0)
++void MC_(helperc_value_check4_varlat_fail_no_o) ( void ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 4, 0/*origin*/ );
++}
++
++VG_REGPARM(0)
++void MC_(helperc_value_check8_varlat_fail_no_o) ( void ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), 8, 0/*origin*/ );
++}
++
++VG_REGPARM(1)
++void MC_(helperc_value_checkN_varlat_fail_no_o) ( HWord sz ) {
++   MC_(record_varlat_value_error) ( VG_(get_running_tid)(), (Int)sz,
++                                     0/*origin*/ );
++}
++
+ 
+ /*------------------------------------------------------------*/
+ /*--- Metadata get/set functions, for client requests.     ---*/
+@@ -6064,6 +6107,7 @@ UInt          MC_(clo_leak_check_heuristics)  =   H2S(LchStdString)
+                                                 | H2S( LchMultipleInheritance);
+ Bool          MC_(clo_xtree_leak)             = False;
+ const HChar*  MC_(clo_xtree_leak_file) = "xtleak.kcg.%p";
++Bool          MC_(clo_variable_latency_errors) = False;
+ Bool          MC_(clo_workaround_gcc296_bugs) = False;
+ Int           MC_(clo_malloc_fill)            = -1;
+ Int           MC_(clo_free_fill)              = -1;
+@@ -6135,6 +6179,8 @@ static Bool mc_process_cmd_line_options(const HChar* arg)
+    else if VG_USET_CLOM(cloPD, arg, "--leak-check-heuristics",
+                         MC_(parse_leak_heuristics_tokens),
+                         MC_(clo_leak_check_heuristics)) {}
++   else if VG_BOOL_CLOM(cloPD, arg, "--variable-latency-errors",
++                        MC_(clo_variable_latency_errors)) {}
+    else if (VG_BOOL_CLOM(cloPD, arg, "--show-reachable", tmp_show)) {
+       if (tmp_show) {
+          MC_(clo_show_leak_kinds) = MC_(all_Reachedness)();
+@@ -6313,6 +6359,7 @@ static void mc_print_usage(void)
+ "    --xtree-leak=no|yes              output leak result in xtree format? [no]\n"
+ "    --xtree-leak-file=<file>         xtree leak report file [xtleak.kcg.%%p]\n"
+ "    --undef-value-errors=no|yes      check for undefined value errors [yes]\n"
++"    --variable-latency-errors=no|yes check for variable latency errors [no]\n"
+ "    --track-origins=no|yes           show origins of undefined values? [no]\n"
+ "    --partial-loads-ok=no|yes        too hard to explain here; see manual [yes]\n"
+ "    --expensive-definedness-checks=no|auto|yes\n"
+@@ -6340,6 +6387,15 @@ static void mc_print_debug_usage(void)
+    );
+ }
+ 
++// VALGRIND_BESTEFFORT_* environment variables
++// are set by programs that are hoping for the features
++// but would like to proceed in any case,
++// even with valgrind versions not having the features.
++static void mc_besteffort_init(void)
++{
++   if (VG_(getenv)("VALGRIND_BESTEFFORT_VARIABLE_LATENCY_ERRORS") != NULL)
++      MC_(clo_variable_latency_errors) = True;
++}
+ 
+ /*------------------------------------------------------------*/
+ /*--- Client blocks                                        ---*/
+@@ -8551,6 +8607,10 @@ static Bool mc_mark_unaddressable_for_watchpoint (PointKind kind, Bool insert,
+ 
+ static void mc_pre_clo_init(void)
+ {
++   // Handle best-effort environment variables early
++   // so that they can influence handling of everything else.
++   mc_besteffort_init();
++
+    VG_(details_name)            ("Memcheck");
+    VG_(details_version)         (NULL);
+    VG_(details_description)     ("a memory error detector");
+diff --git a/memcheck/mc_translate.c b/memcheck/mc_translate.c
+index 05e6d59af..4e3f83770 100644
+--- a/memcheck/mc_translate.c
++++ b/memcheck/mc_translate.c
+@@ -1593,8 +1593,13 @@ static void setHelperAnns ( MCEnv* mce, IRDirty* di ) {
+ 
+    This routine does not generate code to check the definedness of
+    |guard|.  The caller is assumed to have taken care of that already.
++
++   If varlatLatency is set, then this function emits complaints for
++   VARLAT mode rather than for the usual branches etc.
+ */
+-static void complainIfUndefined ( MCEnv* mce, IRAtom* atom, IRExpr *guard )
++static void complainIfUndefinedOrVariableLatency ( MCEnv* mce, IRAtom* atom,
++                                                     IRExpr *guard,
++                                                     Bool varlatLatency )
+ {
+    IRAtom*  vatom;
+    IRType   ty;
+@@ -1664,39 +1669,69 @@ static void complainIfUndefined ( MCEnv* mce, IRAtom* atom, IRExpr *guard )
+          break;
+       case 1:
+          if (origin) {
+-            fn    = &MC_(helperc_value_check1_fail_w_o);
+-            nm    = "MC_(helperc_value_check1_fail_w_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_check1_fail_w_o);
++               nm = "MC_(helperc_value_check1_fail_w_o)";
++            } else {
++               fn = &MC_(helperc_value_check1_varlat_fail_w_o);
++               nm = "MC_(helperc_value_check1_varlat_fail_w_o)";
++            }
+             args  = mkIRExprVec_1(origin);
+             nargs = 1;
+          } else {
+-            fn    = &MC_(helperc_value_check1_fail_no_o);
+-            nm    = "MC_(helperc_value_check1_fail_no_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_check1_fail_no_o);
++               nm = "MC_(helperc_value_check1_fail_no_o)";
++            } else {
++               fn = &MC_(helperc_value_check1_varlat_fail_no_o);
++               nm = "MC_(helperc_value_check1_varlat_fail_no_o)";
++            }
+             args  = mkIRExprVec_0();
+             nargs = 0;
+          }
+          break;
+       case 4:
+          if (origin) {
+-            fn    = &MC_(helperc_value_check4_fail_w_o);
+-            nm    = "MC_(helperc_value_check4_fail_w_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_check4_fail_w_o);
++               nm = "MC_(helperc_value_check4_fail_w_o)";
++            } else {
++               fn = &MC_(helperc_value_check4_varlat_fail_w_o);
++               nm = "MC_(helperc_value_check4_varlat_fail_w_o)";
++            }
+             args  = mkIRExprVec_1(origin);
+             nargs = 1;
+          } else {
+-            fn    = &MC_(helperc_value_check4_fail_no_o);
+-            nm    = "MC_(helperc_value_check4_fail_no_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_check4_fail_no_o);
++               nm = "MC_(helperc_value_check4_fail_no_o)";
++            } else {
++               fn = &MC_(helperc_value_check4_varlat_fail_no_o);
++               nm = "MC_(helperc_value_check4_varlat_fail_no_o)";
++            }
+             args  = mkIRExprVec_0();
+             nargs = 0;
+          }
+          break;
+       case 8:
+          if (origin) {
+-            fn    = &MC_(helperc_value_check8_fail_w_o);
+-            nm    = "MC_(helperc_value_check8_fail_w_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_check8_fail_w_o);
++               nm = "MC_(helperc_value_check8_fail_w_o)";
++            } else {
++               fn = &MC_(helperc_value_check8_varlat_fail_w_o);
++               nm = "MC_(helperc_value_check8_varlat_fail_w_o)";
++            }
+             args  = mkIRExprVec_1(origin);
+             nargs = 1;
+          } else {
+-            fn    = &MC_(helperc_value_check8_fail_no_o);
+-            nm    = "MC_(helperc_value_check8_fail_no_o)";
++            if (!varlatLatency) {
++                fn = &MC_(helperc_value_check8_fail_no_o);
++                nm = "MC_(helperc_value_check8_fail_no_o)";
++            } else {
++                fn = &MC_(helperc_value_check8_varlat_fail_no_o);
++                nm = "MC_(helperc_value_check8_varlat_fail_no_o)";
++            }
+             args  = mkIRExprVec_0();
+             nargs = 0;
+          }
+@@ -1704,13 +1739,23 @@ static void complainIfUndefined ( MCEnv* mce, IRAtom* atom, IRExpr *guard )
+       case 2:
+       case 16:
+          if (origin) {
+-            fn    = &MC_(helperc_value_checkN_fail_w_o);
+-            nm    = "MC_(helperc_value_checkN_fail_w_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_checkN_fail_w_o);
++               nm = "MC_(helperc_value_checkN_fail_w_o)";
++            } else {
++               fn = &MC_(helperc_value_checkN_varlat_fail_w_o);
++               nm = "MC_(helperc_value_checkN_varlat_fail_w_o)";
++            }
+             args  = mkIRExprVec_2( mkIRExpr_HWord( sz ), origin);
+             nargs = 2;
+          } else {
+-            fn    = &MC_(helperc_value_checkN_fail_no_o);
+-            nm    = "MC_(helperc_value_checkN_fail_no_o)";
++            if (!varlatLatency) {
++               fn = &MC_(helperc_value_checkN_fail_no_o);
++               nm = "MC_(helperc_value_checkN_fail_no_o)";
++            } else {
++               fn = &MC_(helperc_value_checkN_varlat_fail_no_o);
++               nm = "MC_(helperc_value_checkN_varlat_fail_no_o)";
++            }
+             args  = mkIRExprVec_1( mkIRExpr_HWord( sz ) );
+             nargs = 1;
+          }
+@@ -1771,6 +1816,17 @@ static void complainIfUndefined ( MCEnv* mce, IRAtom* atom, IRExpr *guard )
+    }
+ }
+ 
++static void complainIfUndefined ( MCEnv* mce, IRAtom* atom, IRExpr *guard )
++{
++   complainIfUndefinedOrVariableLatency(mce, atom, guard, False);
++}
++
++static void complainIfVariableLatency ( MCEnv* mce, IRAtom* atom )
++{
++   if (MC_(clo_variable_latency_errors))
++      complainIfUndefinedOrVariableLatency(mce, atom, NULL, True);
++}
++
+ 
+ /*------------------------------------------------------------*/
+ /*--- Shadowing PUTs/GETs, and indexed variants thereof    ---*/
+@@ -3511,14 +3567,19 @@ IRAtom* expr2vbits_Triop ( MCEnv* mce,
+       case Iop_Yl2xF64:
+       case Iop_Yl2xp1F64:
+       case Iop_AtanF64:
+-      case Iop_PRemF64:
+-      case Iop_PRem1F64:
+       case Iop_QuantizeD64:
+          /* I32(rm) x F64/D64 x F64/D64 -> F64/D64 */
+          return mkLazy3(mce, Ity_I64, vatom1, vatom2, vatom3);
++      case Iop_PRemF64:
++      case Iop_PRem1F64:
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
++         return mkLazy3(mce, Ity_I64, vatom1, vatom2, vatom3);
+       case Iop_PRemC3210F64:
+       case Iop_PRem1C3210F64:
+          /* I32(rm) x F64 x F64 -> I32 */
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
+          return mkLazy3(mce, Ity_I32, vatom1, vatom2, vatom3);
+       case Iop_AddF32:
+       case Iop_SubF32:
+@@ -3572,21 +3633,33 @@ IRAtom* expr2vbits_Triop ( MCEnv* mce,
+       case Iop_Add64Fx2:
+       case Iop_Sub64Fx2:
+       case Iop_Mul64Fx2:
+-      case Iop_Div64Fx2:
+       case Iop_Scale2_64Fx2:
+          return binary64Fx2_w_rm(mce, vatom1, vatom2, vatom3);
+ 
++      case Iop_Div64Fx2:
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
++         return binary64Fx2_w_rm(mce, vatom1, vatom2, vatom3);
++
+       case Iop_Add32Fx4:
+       case Iop_Sub32Fx4:
+       case Iop_Mul32Fx4:
+-      case Iop_Div32Fx4:
+       case Iop_Scale2_32Fx4:
+-        return binary32Fx4_w_rm(mce, vatom1, vatom2, vatom3);
++         return binary32Fx4_w_rm(mce, vatom1, vatom2, vatom3);
++
++      case Iop_Div32Fx4:
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
++         return binary32Fx4_w_rm(mce, vatom1, vatom2, vatom3);
+ 
+       case Iop_Add64Fx4:
+       case Iop_Sub64Fx4:
+       case Iop_Mul64Fx4:
++         return binary64Fx4_w_rm(mce, vatom1, vatom2, vatom3);
++
+       case Iop_Div64Fx4:
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
+          return binary64Fx4_w_rm(mce, vatom1, vatom2, vatom3);
+ 
+       /* TODO: remaining versions of 16x4 FP ops when more of the half-precision
+@@ -3594,12 +3667,16 @@ IRAtom* expr2vbits_Triop ( MCEnv* mce,
+       */
+       case Iop_Add16Fx8:
+       case Iop_Sub16Fx8:
+-        return binary16Fx8_w_rm(mce, vatom1, vatom2, vatom3);
++         return binary16Fx8_w_rm(mce, vatom1, vatom2, vatom3);
+ 
+       case Iop_Add32Fx8:
+       case Iop_Sub32Fx8:
+       case Iop_Mul32Fx8:
++         return binary32Fx8_w_rm(mce, vatom1, vatom2, vatom3);
++
+       case Iop_Div32Fx8:
++         complainIfVariableLatency(mce, atom2);
++         complainIfVariableLatency(mce, atom3);
+          return binary32Fx8_w_rm(mce, vatom1, vatom2, vatom3);
+ 
+       case Iop_F32x4_2toQ16x8:
+@@ -3913,11 +3990,15 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+ 
+       case Iop_I32StoF32x4:
+       case Iop_F32toI32Sx4:
++         return unary16Fx8_w_rm(mce, vatom1, vatom2);
+       case Iop_Sqrt16Fx8:
++         complainIfVariableLatency(mce, atom2);
+          return unary16Fx8_w_rm(mce, vatom1, vatom2);
+       case Iop_Sqrt32Fx4:
++         complainIfVariableLatency(mce, atom2);
+          return unary32Fx4_w_rm(mce, vatom1, vatom2);
+       case Iop_Sqrt64Fx2:
++         complainIfVariableLatency(mce, atom2);
+          return unary64Fx2_w_rm(mce, vatom1, vatom2);
+ 
+       case Iop_ShrN8x16:
+@@ -4153,6 +4234,8 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_ModU128:
+       case Iop_ModS128:
+          /* I128 x I128 -> I128 */
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_V128, vatom1, vatom2);
+ 
+       case Iop_QNarrowBin64Sto32Sx4:
+@@ -4184,7 +4267,6 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_Mul64F0x2:
+       case Iop_Min64F0x2:
+       case Iop_Max64F0x2:
+-      case Iop_Div64F0x2:
+       case Iop_CmpLT64F0x2:
+       case Iop_CmpLE64F0x2:
+       case Iop_CmpEQ64F0x2:
+@@ -4192,6 +4274,11 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_Add64F0x2:
+          return binary64F0x2(mce, vatom1, vatom2);      
+ 
++      case Iop_Div64F0x2:
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
++         return binary64F0x2(mce, vatom1, vatom2);
++
+       case Iop_Min32Fx4:
+       case Iop_Max32Fx4:
+       case Iop_CmpLT32Fx4:
+@@ -4220,7 +4307,6 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_Mul32F0x4:
+       case Iop_Min32F0x4:
+       case Iop_Max32F0x4:
+-      case Iop_Div32F0x4:
+       case Iop_CmpLT32F0x4:
+       case Iop_CmpLE32F0x4:
+       case Iop_CmpEQ32F0x4:
+@@ -4228,6 +4314,11 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_Add32F0x4:
+          return binary32F0x4(mce, vatom1, vatom2);      
+ 
++      case Iop_Div32F0x4:
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
++         return binary32F0x4(mce, vatom1, vatom2);
++
+       case Iop_QShlNsatSU8x16:
+       case Iop_QShlNsatUU8x16:
+       case Iop_QShlNsatSS8x16:
+@@ -4531,11 +4622,14 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       case Iop_CosF64:
+       case Iop_TanF64:
+       case Iop_2xm1F64:
+-      case Iop_SqrtF64:
+       case Iop_RecpExpF64:
+          /* I32(rm) x I64/F64 -> I64/F64 */
+          return mkLazy2(mce, Ity_I64, vatom1, vatom2);
+ 
++      case Iop_SqrtF64:
++         complainIfVariableLatency(mce, atom2);
++         return mkLazy2(mce, Ity_I64, vatom1, vatom2);
++
+       case Iop_ShlD64:
+       case Iop_ShrD64:
+       case Iop_RoundD64toInt:
+@@ -4589,16 +4683,21 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+ 
+       case Iop_SqrtF16:
+          /* I32(rm) x F16 -> F16 */
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I16, vatom1, vatom2);
+ 
+       case Iop_RoundF32toInt:
+-      case Iop_SqrtF32:
+       case Iop_RecpExpF32:
+          /* I32(rm) x I32/F32 -> I32/F32 */
+          return mkLazy2(mce, Ity_I32, vatom1, vatom2);
+ 
++      case Iop_SqrtF32:
++         complainIfVariableLatency(mce, atom2);
++         return mkLazy2(mce, Ity_I32, vatom1, vatom2);
++
+       case Iop_SqrtF128:
+          /* I32(rm) x F128 -> F128 */
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I128, vatom1, vatom2);
+ 
+       case Iop_I32StoF32:
+@@ -4687,10 +4786,14 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+ 
+       case Iop_DivModU64to32:
+       case Iop_DivModS64to32:
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I64, vatom1, vatom2);
+ 
+       case Iop_DivModU128to64:
+       case Iop_DivModS128to64:
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I128, vatom1, vatom2);
+ 
+       case Iop_8HLto16:
+@@ -4702,6 +4805,8 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+ 
+       case Iop_DivModU64to64:
+       case Iop_DivModS64to64: {
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          IRAtom* vTmp64 = mkLazy2(mce, Ity_I64, vatom1, vatom2);
+          return assignNew('V', mce, Ity_I128,
+                           binop(Iop_64HLto128, vTmp64, vTmp64));
+@@ -4717,6 +4822,8 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+ 
+       case Iop_DivModU32to32:
+       case Iop_DivModS32to32: {
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          IRAtom* vTmp32 = mkLazy2(mce, Ity_I32, vatom1, vatom2);
+          return assignNew('V', mce, Ity_I64,
+                           binop(Iop_32HLto64, vTmp32, vTmp32));
+@@ -4746,18 +4853,24 @@ IRAtom* expr2vbits_Binop ( MCEnv* mce,
+       }
+ 
+       case Iop_Sad8Ux4: /* maybe we could do better?  ftm, do mkLazy2. */
++      case Iop_QAdd32S: /* could probably do better */
++      case Iop_QSub32S: /* could probably do better */
++         return mkLazy2(mce, Ity_I32, vatom1, vatom2);
++
+       case Iop_DivS32:
+       case Iop_DivU32:
+       case Iop_DivU32E:
+       case Iop_DivS32E:
+-      case Iop_QAdd32S: /* could probably do better */
+-      case Iop_QSub32S: /* could probably do better */
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I32, vatom1, vatom2);
+ 
+       case Iop_DivS64:
+       case Iop_DivU64:
+       case Iop_DivS64E:
+       case Iop_DivU64E:
++         complainIfVariableLatency(mce, atom1);
++         complainIfVariableLatency(mce, atom2);
+          return mkLazy2(mce, Ity_I64, vatom1, vatom2);
+ 
+       case Iop_Add32:
+@@ -5163,14 +5276,19 @@ IRExpr* expr2vbits_Unop ( MCEnv* mce, IROp op, IRAtom* atom )
+          return unary64Fx2(mce, vatom);
+ 
+       case Iop_Sqrt64F0x2:
++         complainIfVariableLatency(mce, atom);
+          return unary64F0x2(mce, vatom);
+ 
+       case Iop_Sqrt32Fx8:
++         complainIfVariableLatency(mce, atom);
++         return unary32Fx8(mce, vatom);
++
+       case Iop_RSqrtEst32Fx8:
+       case Iop_RecipEst32Fx8:
+          return unary32Fx8(mce, vatom);
+ 
+       case Iop_Sqrt64Fx4:
++         complainIfVariableLatency(mce, atom);
+          return unary64Fx4(mce, vatom);
+ 
+       case Iop_RecipEst32Fx4:
+@@ -5200,6 +5318,9 @@ IRExpr* expr2vbits_Unop ( MCEnv* mce, IROp op, IRAtom* atom )
+          return unary32Fx2(mce, vatom);
+ 
+       case Iop_Sqrt32F0x4:
++         complainIfVariableLatency(mce, atom);
++         return unary32F0x4(mce, vatom);
++
+       case Iop_RSqrtEst32F0x4:
+       case Iop_RecipEst32F0x4:
+          return unary32F0x4(mce, vatom);
+@@ -8044,19 +8165,25 @@ Bool check_or_add ( Pairs* tidyingEnv, IRExpr* guard, void* entry )
+ static Bool is_helperc_value_checkN_fail ( const HChar* name )
+ {
+    /* This is expensive because it happens a lot.  We are checking to
+-      see whether |name| is one of the following 8 strings:
++      see whether |name| is one of the following 14 strings:
+ 
+          MC_(helperc_value_check8_fail_no_o)
+          MC_(helperc_value_check4_fail_no_o)
+          MC_(helperc_value_check0_fail_no_o)
+          MC_(helperc_value_check1_fail_no_o)
+          MC_(helperc_value_check8_fail_w_o)
++         MC_(helperc_value_check4_fail_w_o)
+          MC_(helperc_value_check0_fail_w_o)
+          MC_(helperc_value_check1_fail_w_o)
+-         MC_(helperc_value_check4_fail_w_o)
++         MC_(helperc_value_check8_varlat_fail_no_o)
++         MC_(helperc_value_check4_varlat_fail_no_o)
++         MC_(helperc_value_check1_varlat_fail_no_o)
++         MC_(helperc_value_check8_varlat_fail_w_o)
++         MC_(helperc_value_check4_varlat_fail_w_o)
++         MC_(helperc_value_check1_varlat_fail_w_o)
+ 
+       To speed it up, check the common prefix just once, rather than
+-      all 8 times.
++      all 14 times.
+    */
+    const HChar* prefix = "MC_(helperc_value_check";
+ 
+@@ -8081,7 +8208,13 @@ static Bool is_helperc_value_checkN_fail ( const HChar* name )
+           || 0==VG_(strcmp)(name, "8_fail_w_o)")
+           || 0==VG_(strcmp)(name, "4_fail_w_o)")
+           || 0==VG_(strcmp)(name, "0_fail_w_o)")
+-          || 0==VG_(strcmp)(name, "1_fail_w_o)");
++          || 0==VG_(strcmp)(name, "1_fail_w_o)")
++          || 0==VG_(strcmp)(name, "8_varlat_fail_no_o)")
++          || 0==VG_(strcmp)(name, "4_varlat_fail_no_o)")
++          || 0==VG_(strcmp)(name, "1_varlat_fail_no_o)")
++          || 0==VG_(strcmp)(name, "8_varlat_fail_w_o)")
++          || 0==VG_(strcmp)(name, "4_varlat_fail_w_o)")
++          || 0==VG_(strcmp)(name, "1_varlat_fail_w_o)");
+ }
+ 
+ IRSB* MC_(final_tidy) ( IRSB* sb_in )
+@@ -8147,7 +8280,7 @@ void MC_(do_instrumentation_startup_checks)( void )
+ #  define CHECK(_expected, _string) \
+       tl_assert((_expected) == is_helperc_value_checkN_fail(_string))
+ 
+-   /* It should identify these 8, and no others, as targets. */
++   /* It should identify these 14, and no others, as targets. */
+    CHECK(True, "MC_(helperc_value_check8_fail_no_o)");
+    CHECK(True, "MC_(helperc_value_check4_fail_no_o)");
+    CHECK(True, "MC_(helperc_value_check0_fail_no_o)");
+@@ -8156,6 +8289,12 @@ void MC_(do_instrumentation_startup_checks)( void )
+    CHECK(True, "MC_(helperc_value_check0_fail_w_o)");
+    CHECK(True, "MC_(helperc_value_check1_fail_w_o)");
+    CHECK(True, "MC_(helperc_value_check4_fail_w_o)");
++   CHECK(True, "MC_(helperc_value_check8_varlat_fail_no_o)");
++   CHECK(True, "MC_(helperc_value_check4_varlat_fail_no_o)");
++   CHECK(True, "MC_(helperc_value_check1_varlat_fail_no_o)");
++   CHECK(True, "MC_(helperc_value_check8_varlat_fail_w_o)");
++   CHECK(True, "MC_(helperc_value_check1_varlat_fail_w_o)");
++   CHECK(True, "MC_(helperc_value_check4_varlat_fail_w_o)");
+ 
+    /* Ad-hoc selection of other strings gathered via a quick test. */
+    CHECK(False, "amd64g_dirtyhelper_CPUID_avx2");
+diff --git a/memcheck/tests/Makefile.am b/memcheck/tests/Makefile.am
+index 19ac76730..2012be681 100644
+--- a/memcheck/tests/Makefile.am
++++ b/memcheck/tests/Makefile.am
+@@ -437,6 +437,14 @@ EXTRA_DIST = \
+ 	varinfo6.vgtest varinfo6.stdout.exp varinfo6.stderr.exp \
+ 		varinfo6.stderr.exp-ppc64 \
+ 	varinforestrict.vgtest varinforestrict.stderr.exp \
++	varlat.vgtest varlat.stderr.exp \
++	varlat-env.vgtest varlat-env.stderr.exp \
++	varlat-no.vgtest varlat-no.stderr.exp \
++	varlat-yes.vgtest varlat-yes.stderr.exp \
++	varlat2.vgtest varlat2.stderr.exp \
++	varlat2-env.vgtest varlat2-env.stderr.exp \
++	varlat2-no.vgtest varlat2-no.stderr.exp \
++	varlat2-yes.vgtest varlat2-yes.stderr.exp \
+ 	vcpu_bz2.stdout.exp vcpu_bz2.stderr.exp vcpu_bz2.vgtest \
+ 	vcpu_fbench.stdout.exp vcpu_fbench.stderr.exp vcpu_fbench.vgtest \
+ 	vcpu_fnfns.stdout.exp vcpu_fnfns.stdout.exp-glibc28-amd64 \
+@@ -547,6 +555,7 @@ check_PROGRAMS = \
+ 	varinfo1 varinfo2 varinfo3 varinfo4 \
+ 	varinfo5 varinfo5so.so varinfo6 \
+ 	varinforestrict \
++	varlat varlat2 \
+ 	vcpu_fbench vcpu_fnfns \
+ 	wcs \
+ 	xml1 \
+@@ -855,6 +864,9 @@ else
+ endif
+ varinforestrict_CFLAGS	= $(AM_CFLAGS) -O0 -g @FLAG_W_NO_MAYBE_UNINITIALIZED@
+ 
++varlat_CFLAGS		= $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
++varlat2_CFLAGS		= $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
++
+ # Build shared object for wrap7
+ wrap7_SOURCES           = wrap7.c
+ wrap7_DEPENDENCIES      = wrap7so.so
+diff --git a/memcheck/tests/varlat-env.stderr.exp b/memcheck/tests/varlat-env.stderr.exp
+new file mode 100644
+index 000000000..5393cd2dc
+--- /dev/null
++++ b/memcheck/tests/varlat-env.stderr.exp
+@@ -0,0 +1,3 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   ...
++
+diff --git a/memcheck/tests/varlat-env.vgtest b/memcheck/tests/varlat-env.vgtest
+new file mode 100644
+index 000000000..945670ac3
+--- /dev/null
++++ b/memcheck/tests/varlat-env.vgtest
+@@ -0,0 +1,3 @@
++prog: varlat
++vgopts: -q
++env: VALGRIND_BESTEFFORT_VARIABLE_LATENCY_ERRORS=1
+diff --git a/memcheck/tests/varlat-no.stderr.exp b/memcheck/tests/varlat-no.stderr.exp
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/memcheck/tests/varlat-no.vgtest b/memcheck/tests/varlat-no.vgtest
+new file mode 100644
+index 000000000..ed5fe4495
+--- /dev/null
++++ b/memcheck/tests/varlat-no.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat
++vgopts: -q
+diff --git a/memcheck/tests/varlat-yes.stderr.exp b/memcheck/tests/varlat-yes.stderr.exp
+new file mode 100644
+index 000000000..5393cd2dc
+--- /dev/null
++++ b/memcheck/tests/varlat-yes.stderr.exp
+@@ -0,0 +1,3 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   ...
++
+diff --git a/memcheck/tests/varlat-yes.vgtest b/memcheck/tests/varlat-yes.vgtest
+new file mode 100644
+index 000000000..57a4d9d8e
+--- /dev/null
++++ b/memcheck/tests/varlat-yes.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat
++vgopts: -q --variable-latency-errors=yes
+diff --git a/memcheck/tests/varlat.c b/memcheck/tests/varlat.c
+new file mode 100644
+index 000000000..80fa2e688
+--- /dev/null
++++ b/memcheck/tests/varlat.c
+@@ -0,0 +1,16 @@
++#include <stdlib.h>
++
++volatile int storage;
++
++void storage_init(char c)
++{
++  storage = 100/(1|c);
++}
++
++int main()
++{
++  char *x = malloc(1);
++  storage_init(x[0]);
++  free(x);
++  return 0;
++}
+diff --git a/memcheck/tests/varlat.stderr.exp b/memcheck/tests/varlat.stderr.exp
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/memcheck/tests/varlat.vgtest b/memcheck/tests/varlat.vgtest
+new file mode 100644
+index 000000000..6b55ac8f8
+--- /dev/null
++++ b/memcheck/tests/varlat.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat
++vgopts: -q --variable-latency-errors=no
+diff --git a/memcheck/tests/varlat2-env.stderr.exp b/memcheck/tests/varlat2-env.stderr.exp
+new file mode 100644
+index 000000000..5393cd2dc
+--- /dev/null
++++ b/memcheck/tests/varlat2-env.stderr.exp
+@@ -0,0 +1,3 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   ...
++
+diff --git a/memcheck/tests/varlat2-env.vgtest b/memcheck/tests/varlat2-env.vgtest
+new file mode 100644
+index 000000000..6fa74525c
+--- /dev/null
++++ b/memcheck/tests/varlat2-env.vgtest
+@@ -0,0 +1,3 @@
++prog: varlat2
++vgopts: -q
++env: VALGRIND_BESTEFFORT_VARIABLE_LATENCY_ERRORS=1
+diff --git a/memcheck/tests/varlat2-no.stderr.exp b/memcheck/tests/varlat2-no.stderr.exp
+new file mode 100644
+index 000000000..5393cd2dc
+--- /dev/null
++++ b/memcheck/tests/varlat2-no.stderr.exp
+@@ -0,0 +1,3 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   ...
++
+diff --git a/memcheck/tests/varlat2-no.vgtest b/memcheck/tests/varlat2-no.vgtest
+new file mode 100644
+index 000000000..e608f987c
+--- /dev/null
++++ b/memcheck/tests/varlat2-no.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat2
++vgopts: -q
+diff --git a/memcheck/tests/varlat2-yes.stderr.exp b/memcheck/tests/varlat2-yes.stderr.exp
+new file mode 100644
+index 000000000..5393cd2dc
+--- /dev/null
++++ b/memcheck/tests/varlat2-yes.stderr.exp
+@@ -0,0 +1,3 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   ...
++
+diff --git a/memcheck/tests/varlat2-yes.vgtest b/memcheck/tests/varlat2-yes.vgtest
+new file mode 100644
+index 000000000..d4c908305
+--- /dev/null
++++ b/memcheck/tests/varlat2-yes.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat2
++vgopts: -q --variable-latency-errors=yes
+diff --git a/memcheck/tests/varlat2.c b/memcheck/tests/varlat2.c
+new file mode 100644
+index 000000000..689260a2b
+--- /dev/null
++++ b/memcheck/tests/varlat2.c
+@@ -0,0 +1,18 @@
++#include <stdlib.h>
++#include "valgrind.h"
++
++volatile int storage;
++
++void storage_init(char c)
++{
++  storage = 100/(1|c);
++}
++
++int main()
++{
++  char *x = malloc(1);
++  VALGRIND_CLO_CHANGE("--variable-latency-errors=yes");
++  storage_init(x[0]);
++  free(x);
++  return 0;
++}
+diff --git a/memcheck/tests/varlat2.stderr.exp b/memcheck/tests/varlat2.stderr.exp
+new file mode 100644
+index 000000000..1e7a51a5d
+--- /dev/null
++++ b/memcheck/tests/varlat2.stderr.exp
+@@ -0,0 +1,4 @@
++Variable-latency instruction operand of size 4 is secret/uninitialised
++   at 0x........: storage_init (varlat2.c:8)
++   by 0x........: main (varlat2.c:15)
++
+diff --git a/memcheck/tests/varlat2.vgtest b/memcheck/tests/varlat2.vgtest
+new file mode 100644
+index 000000000..4ef2fad30
+--- /dev/null
++++ b/memcheck/tests/varlat2.vgtest
+@@ -0,0 +1,2 @@
++prog: varlat2
++vgopts: -q --variable-latency-errors=no

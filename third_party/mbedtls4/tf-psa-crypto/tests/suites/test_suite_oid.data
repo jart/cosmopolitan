@@ -1,0 +1,39 @@
+mbedtls_oid_get_md_hmac - RIPEMD160
+depends_on:PSA_WANT_ALG_RIPEMD160
+mbedtls_oid_get_md_hmac:"2B06010505080104":MBEDTLS_MD_RIPEMD160
+
+mbedtls_oid_get_md_hmac - SHA1
+depends_on:PSA_WANT_ALG_SHA_1
+mbedtls_oid_get_md_hmac:"2A864886F70D0207":MBEDTLS_MD_SHA1
+
+mbedtls_oid_get_md_hmac - SHA224
+depends_on:PSA_WANT_ALG_SHA_224
+mbedtls_oid_get_md_hmac:"2A864886F70D0208":MBEDTLS_MD_SHA224
+
+mbedtls_oid_get_md_hmac - SHA256
+depends_on:PSA_WANT_ALG_SHA_256
+mbedtls_oid_get_md_hmac:"2A864886F70D0209":MBEDTLS_MD_SHA256
+
+mbedtls_oid_get_md_hmac - SHA384
+depends_on:PSA_WANT_ALG_SHA_384
+mbedtls_oid_get_md_hmac:"2A864886F70D020A":MBEDTLS_MD_SHA384
+
+mbedtls_oid_get_md_hmac - SHA512
+depends_on:PSA_WANT_ALG_SHA_512
+mbedtls_oid_get_md_hmac:"2A864886F70D020B":MBEDTLS_MD_SHA512
+
+mbedtls_oid_get_md_hmac - SHA3_224
+depends_on:PSA_WANT_ALG_SHA3_224
+mbedtls_oid_get_md_hmac:"60864801650304020D":MBEDTLS_MD_SHA3_224
+
+mbedtls_oid_get_md_hmac - SHA3_256
+depends_on:PSA_WANT_ALG_SHA3_256
+mbedtls_oid_get_md_hmac:"60864801650304020E":MBEDTLS_MD_SHA3_256
+
+mbedtls_oid_get_md_hmac - SHA3_384
+depends_on:PSA_WANT_ALG_SHA3_384
+mbedtls_oid_get_md_hmac:"60864801650304020F":MBEDTLS_MD_SHA3_384
+
+mbedtls_oid_get_md_hmac - SHA3_512
+depends_on:PSA_WANT_ALG_SHA3_512
+mbedtls_oid_get_md_hmac:"608648016503040210":MBEDTLS_MD_SHA3_512

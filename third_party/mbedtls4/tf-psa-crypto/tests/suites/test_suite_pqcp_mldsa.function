@@ -1,0 +1,191 @@
+/* BEGIN_HEADER */
+
+/* Basic tests for the mldsa-native from the pqcp driver.
+ * We generally assume that mldsa-native is functionally correct.
+ * The objective of this test suite is to validate that it's configured
+ * and built as intended.
+ *
+ * In particular:
+ * - We only test the mldsa-native functions that TF-PSA-Crypto uses.
+ * - We don't test inputs that we won't use.
+ * - We don't assert properties that we don't rely on.
+ * - We don't try to test algorithmic edge cases.
+ */
+
+#include <wrap_mldsa_native.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void smoke_87(data_t *seed)
+{
+    uint8_t *secret_key = NULL;
+    const size_t secret_key_length = MLDSA_SECRETKEYBYTES(87);
+    uint8_t *public_key = NULL;
+    const size_t public_key_length = MLDSA_PUBLICKEYBYTES(87);
+    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
+    const size_t prefix_length = sizeof(prefix);
+    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
+    uint8_t *signature = NULL;
+    const size_t signature_size = MLDSA_BYTES(87);
+    size_t signature_length = SIZE_MAX;
+    uint8_t message[14] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "This is a test";
+    const size_t message_length = sizeof(message);
+
+    /* Sanity checks on the test data */
+    TEST_EQUAL(seed->len, MLDSA_SEEDBYTES);
+
+    TEST_CALLOC(secret_key, secret_key_length);
+    TEST_CALLOC(public_key, public_key_length);
+    TEST_CALLOC(signature, signature_size);
+
+    /* Calculate the expanded key pair from the seed */
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(
+                   public_key, secret_key,
+                   seed->x), 0);
+
+    /* Calculate a deterministic signature */
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_signature_internal(
+                   signature, &signature_length,
+                   message, message_length,
+                   prefix, prefix_length, rnd, secret_key, 0), 0);
+    TEST_EQUAL(signature_length, MLDSA_BYTES(87));
+
+    /* Verify the signature */
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(
+                   signature, signature_length,
+                   message, message_length,
+                   NULL, 0, public_key), 0);
+
+exit:
+    mbedtls_free(secret_key);
+    mbedtls_free(public_key);
+    mbedtls_free(signature);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void key_pair_from_seed_87(data_t *seed,
+                           data_t *expected_secret_key,
+                           data_t *expected_public_key)
+{
+    uint8_t *secret_key = NULL;
+    const size_t secret_key_length = MLDSA_SECRETKEYBYTES(87);
+    uint8_t *public_key = NULL;
+    const size_t public_key_length = MLDSA_PUBLICKEYBYTES(87);
+
+    /* Sanity checks on the test data that we pass to the function under test */
+    TEST_EQUAL(seed->len, MLDSA_SEEDBYTES);
+
+    TEST_CALLOC(secret_key, secret_key_length);
+    TEST_CALLOC(public_key, public_key_length);
+
+    /* Calculate the expanded key pair from the seed */
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_keypair_internal(public_key,
+                                                           secret_key,
+                                                           seed->x), 0);
+    TEST_MEMORY_COMPARE(secret_key, secret_key_length,
+                        expected_secret_key->x, expected_secret_key->len);
+    TEST_MEMORY_COMPARE(public_key, public_key_length,
+                        expected_public_key->x, expected_public_key->len);
+
+
+exit:
+    mbedtls_free(secret_key);
+    mbedtls_free(public_key);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void sign_deterministic_pure_87(data_t *private_key,
+                                data_t *message,
+                                data_t *expected_signature)
+{
+    uint8_t *signature = NULL;
+    size_t signature_size = expected_signature->len;
+    const uint8_t prefix[2] = { 0, 0 }; // pure ML-DSA with empty context
+    const size_t prefix_length = sizeof(prefix);
+    const uint8_t rnd[MLDSA_RNDBYTES] = { 0 };
+
+    TEST_CALLOC(signature, signature_size);
+
+    /* Sanity checks on the test data that we pass to the function under test */
+    TEST_EQUAL(private_key->len, MLDSA_SECRETKEYBYTES(87));
+    TEST_EQUAL(signature_size, MLDSA_BYTES(87));
+
+    /* Calculate and check the deterministic signature */
+    size_t signature_length = SIZE_MAX;
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_signature_internal(signature,
+                                                             &signature_length,
+                                                             message->x, message->len,
+                                                             prefix, prefix_length,
+                                                             rnd,
+                                                             private_key->x,
+                                                             0), 0);
+    TEST_EQUAL(signature_length, MLDSA_BYTES(87));
+    TEST_MEMORY_COMPARE(signature, signature_length,
+                        expected_signature->x, expected_signature->len);
+
+exit:
+    mbedtls_free(signature);
+
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_87_ENABLED */
+void verify_pure_87(data_t *public_key, data_t *message, data_t *signature)
+{
+    size_t candidate_size = signature->len;
+    uint8_t *candidate = NULL;
+
+    /* Sanity checks on the test data that we pass to the function under test */
+    TEST_EQUAL(public_key->len, MLDSA_PUBLICKEYBYTES(87));
+    TEST_EQUAL(signature->len, MLDSA_BYTES(87));
+
+    /* Verify the signature */
+    TEST_CALLOC(candidate, candidate_size);
+    memcpy(candidate, signature->x, signature->len);
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(candidate, candidate_size,
+                                                 message->x, message->len,
+                                                 NULL, 0,
+                                                 public_key->x), 0);
+
+    /* Verify that a one-bit-off signature is wrong */
+    candidate[candidate_size - 1] ^= 1;
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(candidate, candidate_size,
+                                                 message->x, message->len,
+                                                 NULL, 0,
+                                                 public_key->x), MLD_ERR_FAIL);
+    mbedtls_free(candidate);
+    candidate = NULL;
+
+    /* Verify that a shorter signature is rejected */
+    candidate_size = signature->len - 1;
+    TEST_CALLOC(candidate, candidate_size);
+    memcpy(candidate, signature->x, signature->len - 1);
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(candidate, candidate_size,
+                                                 message->x, message->len,
+                                                 NULL, 0,
+                                                 public_key->x), MLD_ERR_FAIL);
+    mbedtls_free(candidate);
+    candidate = NULL;
+
+    /* Verify that a longer signature is rejected */
+    candidate_size = signature->len + 1;
+    TEST_CALLOC(candidate, candidate_size);
+    memcpy(candidate, signature->x, signature->len);
+    TEST_EQUAL(tf_psa_crypto_pqcp_mldsa87_verify(candidate, candidate_size,
+                                                 message->x, message->len,
+                                                 NULL, 0,
+                                                 public_key->x), MLD_ERR_FAIL);
+    mbedtls_free(candidate);
+    candidate = NULL;
+
+exit:
+    mbedtls_free(candidate);
+}
+/* END_CASE */

@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+#
+# Copyright The Mbed TLS Contributors
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+#
+# This swallows the output of the wrapped tool, unless there is an error.
+# This helps reduce excess logging in the CI.
+
+# If you are debugging a build / CI issue, you can get complete unsilenced logs
+# by un-commenting the following line (or setting VERBOSE_LOGS in your environment):
+
+# export VERBOSE_LOGS=1
+
+# don't silence invocations containing these arguments
+NO_SILENCE=" --version | test "
+
+TOOL="make"
+
+. "$(dirname "$0")/quiet.sh"

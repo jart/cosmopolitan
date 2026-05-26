@@ -1,0 +1,82 @@
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+name: ML-DSA-65
+type: signature
+claimed-nist-level: 3
+claimed-security: SUF-CMA
+length-public-key: 1952
+length-secret-key: 4032
+length-signature: 3309
+nistkat-sha256: 7cb96242eac9907a55b5c84c202f0ebd552419c50b2e986dc2e28f07ecebf072
+testvectors-sha256: 14bf84918ee90e7afbd580191d3eb890d4557e0900b1145e39a8399ef7dd3fba
+principal-submitters:
+- Vadim Lyubashevsky
+auxiliary-submitters:
+- Shi Bai
+- Léo Ducas
+- Eike Kiltz
+- Tancrède Lepoint
+- Peter Schwabe
+- Gregor Seiler
+- Damien Stehlé
+implementations:
+- name: ref
+  version: FIPS204
+  folder_name: .
+  compile_opts: -DMLD_CONFIG_PARAMETER_SET=65 -DMLD_CONFIG_FILE="../../integration/liboqs/config_c.h"
+  signature_keypair: PQCP_MLDSA_NATIVE_MLDSA65_C_keypair
+  signature_signature: PQCP_MLDSA_NATIVE_MLDSA65_C_signature
+  signature_verify: PQCP_MLDSA_NATIVE_MLDSA65_C_verify
+  api-with-context-string: true
+  sources: integration/liboqs/config_c.h integration/liboqs/fips202_glue.h integration/liboqs/fips202x4_glue.h
+    mldsa/src/cbmc.h mldsa/src/common.h mldsa/src/ct.c mldsa/src/ct.h mldsa/src/debug.c
+    mldsa/src/debug.h mldsa/src/packing.c mldsa/src/packing.h mldsa/src/params.h mldsa/src/poly.c
+    mldsa/src/poly.h mldsa/src/poly_kl.c mldsa/src/poly_kl.h mldsa/src/polyvec.c mldsa/src/polyvec.h
+    mldsa/src/randombytes.h mldsa/src/reduce.h mldsa/src/rounding.h mldsa/src/sign.c
+    mldsa/src/sign.h mldsa/src/symmetric.h mldsa/src/sys.h mldsa/src/zetas.inc
+- name: x86_64
+  version: FIPS204
+  folder_name: .
+  compile_opts: -DMLD_CONFIG_PARAMETER_SET=65 -DMLD_CONFIG_FILE="../../integration/liboqs/config_x86_64.h"
+  signature_keypair: PQCP_MLDSA_NATIVE_MLDSA65_X86_64_keypair
+  signature_signature: PQCP_MLDSA_NATIVE_MLDSA65_X86_64_signature
+  signature_verify: PQCP_MLDSA_NATIVE_MLDSA65_X86_64_verify
+  api-with-context-string: true
+  sources: integration/liboqs/config_x86_64.h integration/liboqs/fips202_glue.h integration/liboqs/fips202x4_glue.h
+    mldsa/src/cbmc.h mldsa/src/common.h mldsa/src/ct.c mldsa/src/ct.h mldsa/src/debug.c
+    mldsa/src/debug.h mldsa/src/native/api.h mldsa/src/native/meta.h mldsa/src/packing.c
+    mldsa/src/packing.h mldsa/src/params.h mldsa/src/poly.c mldsa/src/poly.h mldsa/src/poly_kl.c
+    mldsa/src/poly_kl.h mldsa/src/polyvec.c mldsa/src/polyvec.h mldsa/src/randombytes.h
+    mldsa/src/reduce.h mldsa/src/rounding.h mldsa/src/sign.c mldsa/src/sign.h mldsa/src/symmetric.h
+    mldsa/src/sys.h mldsa/src/zetas.inc mldsa/src/native/x86_64
+  supported_platforms:
+  - architecture: x86_64
+    operating_systems:
+    - Darwin
+    - Linux
+    required_flags:
+    - avx2
+    - bmi2
+    - popcnt
+- name: aarch64
+  version: FIPS204
+  folder_name: .
+  compile_opts: -DMLD_CONFIG_PARAMETER_SET=65 -DMLD_CONFIG_FILE="../../integration/liboqs/config_aarch64.h"
+  signature_keypair: PQCP_MLDSA_NATIVE_MLDSA65_AARCH64_keypair
+  signature_signature: PQCP_MLDSA_NATIVE_MLDSA65_AARCH64_signature
+  signature_verify: PQCP_MLDSA_NATIVE_MLDSA65_AARCH64_verify
+  api-with-context-string: true
+  sources: integration/liboqs/config_aarch64.h integration/liboqs/fips202_glue.h integration/liboqs/fips202x4_glue.h
+    mldsa/src/cbmc.h mldsa/src/common.h mldsa/src/ct.c mldsa/src/ct.h mldsa/src/debug.c
+    mldsa/src/debug.h mldsa/src/native/api.h mldsa/src/native/meta.h mldsa/src/packing.c
+    mldsa/src/packing.h mldsa/src/params.h mldsa/src/poly.c mldsa/src/poly.h mldsa/src/poly_kl.c
+    mldsa/src/poly_kl.h mldsa/src/polyvec.c mldsa/src/polyvec.h mldsa/src/randombytes.h
+    mldsa/src/reduce.h mldsa/src/rounding.h mldsa/src/sign.c mldsa/src/sign.h mldsa/src/symmetric.h
+    mldsa/src/sys.h mldsa/src/zetas.inc mldsa/src/native/aarch64
+  supported_platforms:
+  - architecture: arm_8
+    operating_systems:
+    - Linux
+    - Darwin
+    required_flags:
+    - asimd

@@ -1,0 +1,25 @@
+ [ ca ]
+ default_ca             = test-ca
+
+ [ test-ca ]
+ certificate            = test-ca.crt
+ private_key            = test-ca.key
+ serial                 = test-ca.server1.tmp.serial
+ default_md             = sha1
+ default_startdate      = 20190210144406Z
+ default_enddate        = 20290210144406Z
+ x509_extensions        = v3_ca
+ new_certs_dir          = ./
+ database               = ./test-ca.server1.db
+ policy                 = policy_match
+ unique_subject         = no
+
+ [v3_ca]
+ basicConstraints = CA:false
+ subjectKeyIdentifier=hash
+ authorityKeyIdentifier=keyid:always
+
+ [policy_match]
+ countryName            = supplied
+ organizationName       = supplied
+ commonName             = supplied

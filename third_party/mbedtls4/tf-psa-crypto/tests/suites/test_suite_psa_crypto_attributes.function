@@ -1,0 +1,96 @@
+/* BEGIN_HEADER */
+#include "psa/crypto.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_CLIENT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void attributes_set_get(int owner_id_arg, int id_arg, int lifetime_arg,
+                        int usage_flags_arg, int alg_arg,
+                        int type_arg, int bits_arg)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_usage_t usage_flags = usage_flags_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_key_type_t type = type_arg;
+    size_t bits = bits_arg;
+
+    USE_PSA_INIT();
+
+    TEST_EQUAL(
+        MBEDTLS_SVC_KEY_ID_GET_KEY_ID(psa_get_key_id(&attributes)), 0);
+    TEST_EQUAL(
+        MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(psa_get_key_id(&attributes)), 0);
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), 0);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), 0);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+    TEST_EQUAL(psa_get_key_type(&attributes), 0);
+    TEST_EQUAL(psa_get_key_bits(&attributes), 0);
+
+    psa_set_key_id(&attributes, id);
+    psa_set_key_lifetime(&attributes, lifetime);
+    psa_set_key_usage_flags(&attributes, usage_flags);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, type);
+    psa_set_key_bits(&attributes, bits);
+
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), id));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), lifetime);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), usage_flags);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+    TEST_EQUAL(psa_get_key_bits(&attributes), bits);
+
+    psa_reset_key_attributes(&attributes);
+
+    TEST_EQUAL(
+        MBEDTLS_SVC_KEY_ID_GET_KEY_ID(psa_get_key_id(&attributes)), 0);
+    TEST_EQUAL(
+        MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(psa_get_key_id(&attributes)), 0);
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), 0);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), 0);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+    TEST_EQUAL(psa_get_key_type(&attributes), 0);
+    TEST_EQUAL(psa_get_key_bits(&attributes), 0);
+
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void persistence_attributes(int id1_arg, int owner_id1_arg, int lifetime_arg,
+                            int id2_arg, int owner_id2_arg,
+                            int expected_id_arg, int expected_owner_id_arg,
+                            int expected_lifetime_arg)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t id1 =
+        mbedtls_svc_key_id_make(owner_id1_arg, id1_arg);
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    mbedtls_svc_key_id_t id2 =
+        mbedtls_svc_key_id_make(owner_id2_arg, id2_arg);
+    mbedtls_svc_key_id_t expected_id =
+        mbedtls_svc_key_id_make(expected_owner_id_arg, expected_id_arg);
+    psa_key_lifetime_t expected_lifetime = expected_lifetime_arg;
+
+    if (id1_arg != -1) {
+        psa_set_key_id(&attributes, id1);
+    }
+    if (lifetime_arg != -1) {
+        psa_set_key_lifetime(&attributes, lifetime);
+    }
+    if (id2_arg != -1) {
+        psa_set_key_id(&attributes, id2);
+    }
+
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), expected_id));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes), expected_lifetime);
+}
+/* END_CASE */

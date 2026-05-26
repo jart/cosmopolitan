@@ -1,0 +1,33 @@
+# Interesting combinations of low-level crypto options
+
+Config: entropy: built-in only
+depends_on:MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:!MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: driver only
+depends_on:!MBEDTLS_PSA_BUILTIN_GET_ENTROPY:MBEDTLS_PSA_DRIVER_GET_ENTROPY:!MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: NV seed only
+depends_on:!MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: entropy: built-in + NV seed
+depends_on:MBEDTLS_PSA_BUILTIN_GET_ENTROPY:!MBEDTLS_PSA_DRIVER_GET_ENTROPY:MBEDTLS_ENTROPY_NV_SEED
+pass:
+
+Config: ECC: Weierstrass curves only
+depends_on:MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED:!MBEDTLS_ECP_MONTGOMERY_ENABLED
+pass:
+
+Config: ECC: Montgomery curves only
+depends_on:!MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED:MBEDTLS_ECP_MONTGOMERY_ENABLED
+pass:
+
+Config: PK export keys on the stack (ECC is the only PK key type)
+depends_on:PK_EXPORT_KEYS_ON_THE_STACK
+pass:
+
+Config: PK export keys on the heap (ECC is not the only PK key type)
+depends_on:!PK_EXPORT_KEYS_ON_THE_STACK
+pass:

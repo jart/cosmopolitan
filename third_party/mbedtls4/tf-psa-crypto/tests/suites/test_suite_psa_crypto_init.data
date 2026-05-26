@@ -1,0 +1,23 @@
+PSA init/deinit
+init_deinit:2
+
+PSA deinit without init
+deinit_without_init:0
+
+PSA deinit twice
+deinit_without_init:1
+
+PSA threaded init checks
+psa_threaded_init:100
+
+No random without init
+validate_module_init_generate_random:0
+
+No key slot access without init
+validate_module_init_key_based:0
+
+No random after deinit
+validate_module_init_generate_random:1
+
+No key slot access after deinit
+validate_module_init_key_based:1
