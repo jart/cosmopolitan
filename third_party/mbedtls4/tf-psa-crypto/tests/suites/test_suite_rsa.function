@@ -1,0 +1,1493 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/private/rsa.h"
+#include "bignum_core.h"
+#include "rsa_alt_helpers.h"
+#include "rsa_internal.h"
+#include "test/bignum_codepath_check.h"
+
+#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_BIGNUM_C)
+
+static int mbedtls_rsa_test_fill_context(mbedtls_rsa_context *rsa,
+                                         data_t *N_data, data_t *E_data,
+                                         data_t *D_data, data_t *P_data,
+                                         data_t *Q_data)
+{
+    int ret = MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+
+    mbedtls_mpi_init(&rsa->N); mbedtls_mpi_init(&rsa->P); mbedtls_mpi_init(&rsa->Q);
+    mbedtls_mpi_init(&rsa->E); mbedtls_mpi_init(&rsa->D);
+
+    if (P_data != NULL) {
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->P, P_data->x, P_data->len));
+    }
+    if (Q_data != NULL) {
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->Q, Q_data->x, Q_data->len));
+    }
+    if (N_data != NULL) {
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->N, N_data->x, N_data->len));
+        rsa->len = mbedtls_mpi_size(&rsa->N);
+    }
+    if (E_data != NULL) {
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->E, E_data->x, E_data->len));
+    }
+    if (D_data != NULL) {
+        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->D, D_data->x, D_data->len));
+    }
+
+    if (mbedtls_mpi_size(&rsa->D) == 0) {
+        if ((mbedtls_mpi_size(&rsa->P) != 0) &&
+            (mbedtls_mpi_size(&rsa->Q) != 0) &&
+            (mbedtls_mpi_size(&rsa->E) != 0)) {
+            MBEDTLS_MPI_CHK(mbedtls_rsa_deduce_private_exponent(&rsa->P, &rsa->Q, &rsa->E,
+                                                                &rsa->D));
+        }
+    }
+
+#if !defined(MBEDTLS_RSA_NO_CRT)
+    if ((mbedtls_mpi_size(&rsa->P) != 0) &&
+        (mbedtls_mpi_size(&rsa->Q) != 0) &&
+        (mbedtls_mpi_size(&rsa->D) != 0)) {
+        MBEDTLS_MPI_CHK(mbedtls_rsa_deduce_crt(&rsa->P, &rsa->Q, &rsa->D, &rsa->DP, &rsa->DQ,
+                                               &rsa->QP));
+    }
+#endif /* !MBEDTLS_RSA_NO_CRT */
+
+cleanup:
+    if (ret != 0) {
+        mbedtls_rsa_free(rsa);
+    }
+
+    return ret;
+}
+
+#endif /* MBEDTLS_RSA_C && MBEDTLS_BIGNUM_C */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_RSA_C:MBEDTLS_BIGNUM_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void rsa_invalid_param()
+{
+    mbedtls_rsa_context ctx;
+    const int invalid_padding = 42;
+    const int invalid_hash_id = 0xff;
+    unsigned char buf[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+    size_t buf_len = sizeof(buf);
+
+    mbedtls_rsa_init(&ctx);
+
+    TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
+                                       invalid_padding,
+                                       MBEDTLS_MD_NONE),
+               MBEDTLS_ERR_RSA_INVALID_PADDING);
+
+    TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
+                                       MBEDTLS_RSA_PKCS_V21,
+                                       invalid_hash_id),
+               MBEDTLS_ERR_RSA_INVALID_PADDING);
+
+    TEST_EQUAL(mbedtls_rsa_pkcs1_sign(&ctx, NULL,
+                                      NULL, MBEDTLS_MD_NONE,
+                                      buf_len,
+                                      NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_pkcs1_sign(&ctx, NULL,
+                                      NULL, MBEDTLS_MD_SHA256,
+                                      0,
+                                      NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_pkcs1_verify(&ctx, MBEDTLS_MD_NONE,
+                                        buf_len,
+                                        NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_pkcs1_verify(&ctx, MBEDTLS_MD_SHA256,
+                                        0,
+                                        NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+#if !defined(MBEDTLS_PKCS1_V15)
+    TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
+                                       MBEDTLS_RSA_PKCS_V15,
+                                       MBEDTLS_MD_NONE),
+               MBEDTLS_ERR_RSA_INVALID_PADDING);
+#endif
+
+#if defined(MBEDTLS_PKCS1_V15)
+    TEST_EQUAL(mbedtls_rsa_rsassa_pkcs1_v15_sign(&ctx, NULL,
+                                                 NULL, MBEDTLS_MD_NONE,
+                                                 buf_len,
+                                                 NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pkcs1_v15_sign(&ctx, NULL,
+                                                 NULL, MBEDTLS_MD_SHA256,
+                                                 0,
+                                                 NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pkcs1_v15_verify(&ctx, MBEDTLS_MD_NONE,
+                                                   buf_len,
+                                                   NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pkcs1_v15_verify(&ctx, MBEDTLS_MD_SHA256,
+                                                   0,
+                                                   NULL, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+
+#endif
+
+#if !defined(MBEDTLS_PKCS1_V21)
+    TEST_EQUAL(mbedtls_rsa_set_padding(&ctx,
+                                       MBEDTLS_RSA_PKCS_V21,
+                                       MBEDTLS_MD_NONE),
+               MBEDTLS_ERR_RSA_INVALID_PADDING);
+#endif
+
+#if defined(MBEDTLS_PKCS1_V21)
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_sign_ext(&ctx, NULL, NULL,
+                                               MBEDTLS_MD_NONE, buf_len,
+                                               NULL, buf_len,
+                                               buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_sign_ext(&ctx, NULL, NULL,
+                                               MBEDTLS_MD_SHA256, 0,
+                                               NULL, buf_len,
+                                               buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify_ext(&ctx, MBEDTLS_MD_NONE,
+                                                 buf_len, NULL,
+                                                 MBEDTLS_MD_NONE,
+                                                 buf_len, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+
+    TEST_EQUAL(mbedtls_rsa_rsassa_pss_verify_ext(&ctx, MBEDTLS_MD_SHA256,
+                                                 0, NULL,
+                                                 MBEDTLS_MD_NONE,
+                                                 buf_len, buf),
+               MBEDTLS_ERR_RSA_BAD_INPUT_DATA);
+#endif
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_init_free(int reinit)
+{
+    mbedtls_rsa_context ctx;
+
+    /* Double free is not explicitly documented to work, but we rely on it
+     * even inside the library so that you can call mbedtls_rsa_free()
+     * unconditionally on an error path without checking whether it has
+     * already been called in the success path. */
+
+    mbedtls_rsa_init(&ctx);
+    mbedtls_rsa_free(&ctx);
+
+    if (reinit) {
+        mbedtls_rsa_init(&ctx);
+    }
+    mbedtls_rsa_free(&ctx);
+
+    /* This test case always succeeds, functionally speaking. A plausible
+     * bug might trigger an invalid pointer dereference or a memory leak. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_pkcs1_sign(data_t *message_str, int padding_mode,
+                            int digest, int mod, data_t *input_P,
+                            data_t *input_Q, data_t *input_N, data_t *input_E,
+                            data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_sign(
+                    &ctx, &mbedtls_test_rnd_pseudo_rand, &rnd_info,
+                    digest, message_str->len, message_str->x,
+                    output) == result);
+    if (result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_pkcs1_verify(data_t *message_str, int padding_mode,
+                              int digest, int mod,
+                              data_t *input_N, data_t *input_E,
+                              data_t *result_str, int result)
+{
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL), 0);
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_verify(&ctx, digest, message_str->len, message_str->x,
+                                         result_str->x) == result);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void rsa_pkcs1_sign_raw(data_t *hash_result,
+                        int padding_mode, int mod,
+                        data_t *input_P, data_t *input_Q,
+                        data_t *input_N, data_t *input_E,
+                        data_t *result_str)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+
+    mbedtls_rsa_init(&ctx);
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_sign(&ctx, &mbedtls_test_rnd_pseudo_rand,
+                                       &rnd_info, MBEDTLS_MD_NONE,
+                                       hash_result->len,
+                                       hash_result->x, output) == 0);
+
+
+    TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                    ctx.len, result_str->len) == 0);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_pkcs1_verify_raw(data_t *hash_result,
+                          int padding_mode, int mod,
+                          data_t *input_N, data_t *input_E,
+                          data_t *result_str, int correct)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_verify(&ctx, MBEDTLS_MD_NONE, hash_result->len, hash_result->x,
+                                         result_str->x) == correct);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_pkcs1_encrypt(data_t *message_str, int padding_mode,
+                               int mod, data_t *input_N, data_t *input_E,
+                               data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_encrypt(&ctx,
+                                          &mbedtls_test_rnd_pseudo_rand,
+                                          &rnd_info, message_str->len,
+                                          message_str->x,
+                                          output) == result);
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_pkcs1_encrypt_bad_rng(data_t *message_str, int padding_mode,
+                               int mod, data_t *input_N, data_t *input_E,
+                               data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_encrypt(&ctx, &mbedtls_test_rnd_zero_rand,
+                                          NULL, message_str->len,
+                                          message_str->x,
+                                          output) == result);
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_pkcs1_decrypt(data_t *message_str, int padding_mode,
+                               int mod, data_t *input_P,
+                               data_t *input_Q, data_t *input_N,
+                               data_t *input_E, int max_output,
+                               data_t *result_str, int result)
+{
+    unsigned char output[32];
+    mbedtls_rsa_context ctx;
+    size_t output_len;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx, padding_mode,
+                                        MBEDTLS_MD_NONE) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    output_len = 0;
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx, mbedtls_test_rnd_pseudo_rand,
+                                          &rnd_info,
+                                          &output_len, message_str->x, output,
+                                          max_output) == result);
+    if (result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        output_len,
+                                        result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_public(data_t *message_str, int mod,
+                        data_t *input_N, data_t *input_E,
+                        data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx, ctx2; /* Also test mbedtls_rsa_copy() while at it */
+
+    mbedtls_rsa_init(&ctx);
+    mbedtls_rsa_init(&ctx2);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+
+    /* Check test data consistency */
+    TEST_EQUAL(message_str->len, (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    mbedtls_codepath_reset();
+#endif
+    TEST_ASSERT(mbedtls_rsa_public(&ctx, message_str->x, output) == result);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+    ASSERT_RSA_CODEPATH(MBEDTLS_MPI_IS_PUBLIC, result);
+#endif
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+    /* And now with the copy */
+    TEST_ASSERT(mbedtls_rsa_copy(&ctx2, &ctx) == 0);
+    /* clear the original to be sure */
+    mbedtls_rsa_free(&ctx);
+
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx2) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    TEST_ASSERT(mbedtls_rsa_public(&ctx2, message_str->x, output) == result);
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    mbedtls_rsa_free(&ctx2);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_private(data_t *message_str, int mod,
+                         data_t *input_P, data_t *input_Q,
+                         data_t *input_N, data_t *input_E,
+                         data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx, ctx2; /* Also test mbedtls_rsa_copy() while at it */
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    int i;
+
+    mbedtls_rsa_init(&ctx);
+    mbedtls_rsa_init(&ctx2);
+
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    /* Check test data consistency */
+    TEST_EQUAL(message_str->len, (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_len(&ctx), (size_t) ((mod + 7) / 8));
+    TEST_EQUAL(mbedtls_rsa_get_bitlen(&ctx), (size_t) mod);
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    /* repeat three times to test updating of blinding values */
+    for (i = 0; i < 3; i++) {
+        memset(output, 0x00, sizeof(output));
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+        mbedtls_codepath_reset();
+#endif
+        TEST_ASSERT(mbedtls_rsa_private(&ctx, mbedtls_test_rnd_pseudo_rand,
+                                        &rnd_info, message_str->x,
+                                        output) == result);
+#if defined(MBEDTLS_TEST_HOOKS) && !defined(MBEDTLS_THREADING_C)
+        ASSERT_RSA_CODEPATH(MBEDTLS_MPI_IS_SECRET, result);
+#endif
+        if (result == 0) {
+
+            TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                            ctx.len,
+                                            result_str->len) == 0);
+        }
+    }
+
+    /* And now one more time with the copy */
+    TEST_ASSERT(mbedtls_rsa_copy(&ctx2, &ctx) == 0);
+    /* clear the original to be sure */
+    mbedtls_rsa_free(&ctx);
+
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx2) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    TEST_ASSERT(mbedtls_rsa_private(&ctx2, mbedtls_test_rnd_pseudo_rand,
+                                    &rnd_info, message_str->x,
+                                    output) == result);
+    if (result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx2.len,
+                                        result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx); mbedtls_rsa_free(&ctx2);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_check_privkey_null()
+{
+    mbedtls_rsa_context ctx;
+    memset(&ctx, 0x00, sizeof(mbedtls_rsa_context));
+
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == MBEDTLS_ERR_RSA_KEY_CHECK_FAILED);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_check_pubkey(data_t *input_N, data_t *input_E, int result)
+{
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == result);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_check_privkey(int mod, char *input_P, char *input_Q,
+                               char *input_N, char *input_E, char *input_D,
+                               char *input_DP, char *input_DQ, char *input_QP,
+                               int result)
+{
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+
+    ctx.len = mod / 8;
+    if (strlen(input_P)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.P, input_P) == 0);
+    }
+    if (strlen(input_Q)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.Q, input_Q) == 0);
+    }
+    if (strlen(input_N)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.N, input_N) == 0);
+    }
+    if (strlen(input_E)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.E, input_E) == 0);
+    }
+    if (strlen(input_D)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.D, input_D) == 0);
+    }
+#if !defined(MBEDTLS_RSA_NO_CRT)
+    if (strlen(input_DP)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.DP, input_DP) == 0);
+    }
+    if (strlen(input_DQ)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.DQ, input_DQ) == 0);
+    }
+    if (strlen(input_QP)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&ctx.QP, input_QP) == 0);
+    }
+#else
+    ((void) input_DP);
+    ((void) input_DQ);
+    ((void) input_QP);
+#endif
+
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == result);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_check_pubpriv(int mod, char *input_Npub, char *input_Epub,
+                       char *input_P, char *input_Q, char *input_N,
+                       char *input_E, char *input_D, char *input_DP,
+                       char *input_DQ, char *input_QP, int result)
+{
+    mbedtls_rsa_context pub, prv;
+
+    mbedtls_rsa_init(&pub);
+    mbedtls_rsa_init(&prv);
+
+    pub.len = mod / 8;
+    prv.len = mod / 8;
+
+    if (strlen(input_Npub)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&pub.N, input_Npub) == 0);
+    }
+    if (strlen(input_Epub)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&pub.E, input_Epub) == 0);
+    }
+
+    if (strlen(input_P)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.P, input_P) == 0);
+    }
+    if (strlen(input_Q)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.Q, input_Q) == 0);
+    }
+    if (strlen(input_N)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.N, input_N) == 0);
+    }
+    if (strlen(input_E)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.E, input_E) == 0);
+    }
+    if (strlen(input_D)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.D, input_D) == 0);
+    }
+#if !defined(MBEDTLS_RSA_NO_CRT)
+    if (strlen(input_DP)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.DP, input_DP) == 0);
+    }
+    if (strlen(input_DQ)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.DQ, input_DQ) == 0);
+    }
+    if (strlen(input_QP)) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&prv.QP, input_QP) == 0);
+    }
+#else
+    ((void) input_DP);
+    ((void) input_DQ);
+    ((void) input_QP);
+#endif
+
+    TEST_ASSERT(mbedtls_rsa_check_pub_priv(&pub, &prv) == result);
+
+exit:
+    mbedtls_rsa_free(&pub);
+    mbedtls_rsa_free(&prv);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_GENPRIME */
+void mbedtls_rsa_gen_key(int nrbits, int exponent, int result)
+{
+    mbedtls_rsa_context ctx;
+    mbedtls_rsa_init(&ctx);
+
+    /* This test uses an insecure RNG, suitable only for testing.
+     * In production, always use a cryptographically strong RNG! */
+    TEST_ASSERT(mbedtls_rsa_gen_key(&ctx, mbedtls_test_rnd_std_rand, NULL, nrbits,
+                                    exponent) == result);
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&ctx.P, &ctx.Q) > 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_deduce_private_exponent(char *input_P,
+                                         char *input_Q,
+                                         char *input_E,
+                                         char *output_D,
+                                         int corrupt, int result)
+{
+    mbedtls_mpi P, Q, D, Dp, E, R, Rp;
+
+    mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
+    mbedtls_mpi_init(&D); mbedtls_mpi_init(&Dp);
+    mbedtls_mpi_init(&E);
+    mbedtls_mpi_init(&R); mbedtls_mpi_init(&Rp);
+
+    TEST_ASSERT(mbedtls_test_read_mpi(&P, input_P) == 0);
+    TEST_ASSERT(mbedtls_test_read_mpi(&Q, input_Q) == 0);
+    TEST_ASSERT(mbedtls_test_read_mpi(&E, input_E) == 0);
+    TEST_ASSERT(mbedtls_test_read_mpi(&Dp, output_D) == 0);
+
+    if (corrupt) {
+        /* Make E even */
+        TEST_ASSERT(mbedtls_mpi_set_bit(&E, 0, 0) == 0);
+    }
+
+    /* Try to deduce D from N, P, Q, E. */
+    TEST_ASSERT(mbedtls_rsa_deduce_private_exponent(&P, &Q,
+                                                    &E, &D) == result);
+
+    if (!corrupt) {
+        /*
+         * Check that D and Dp agree modulo LCM(P-1, Q-1).
+         */
+
+        /* Replace P,Q by P-1, Q-1 */
+        TEST_ASSERT(mbedtls_mpi_sub_int(&P, &P, 1) == 0);
+        TEST_ASSERT(mbedtls_mpi_sub_int(&Q, &Q, 1) == 0);
+
+        /* Check D == Dp modulo P-1 */
+        TEST_ASSERT(mbedtls_mpi_mod_mpi(&R,  &D,  &P) == 0);
+        TEST_ASSERT(mbedtls_mpi_mod_mpi(&Rp, &Dp, &P) == 0);
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R,  &Rp)     == 0);
+
+        /* Check D == Dp modulo Q-1 */
+        TEST_ASSERT(mbedtls_mpi_mod_mpi(&R,  &D,  &Q) == 0);
+        TEST_ASSERT(mbedtls_mpi_mod_mpi(&Rp, &Dp, &Q) == 0);
+        TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R,  &Rp)     == 0);
+    }
+
+exit:
+
+    mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+    mbedtls_mpi_free(&D); mbedtls_mpi_free(&Dp);
+    mbedtls_mpi_free(&E);
+    mbedtls_mpi_free(&R); mbedtls_mpi_free(&Rp);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_rsa_validate_params(char *input_N,
+                                 char *input_P,
+                                 char *input_Q,
+                                 char *input_D,
+                                 char *input_E,
+                                 int prng, int result)
+{
+    /* Original MPI's with which we set up the RSA context */
+    mbedtls_mpi N, P, Q, D, E;
+
+    const int have_N = (strlen(input_N) > 0);
+    const int have_P = (strlen(input_P) > 0);
+    const int have_Q = (strlen(input_Q) > 0);
+    const int have_D = (strlen(input_D) > 0);
+    const int have_E = (strlen(input_E) > 0);
+
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
+    mbedtls_mpi_init(&D); mbedtls_mpi_init(&E);
+
+    if (have_N) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&N, input_N) == 0);
+    }
+
+    if (have_P) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&P, input_P) == 0);
+    }
+
+    if (have_Q) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&Q, input_Q) == 0);
+    }
+
+    if (have_D) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&D, input_D) == 0);
+    }
+
+    if (have_E) {
+        TEST_ASSERT(mbedtls_test_read_mpi(&E, input_E) == 0);
+    }
+
+    /* This test uses an insecure RNG, suitable only for testing.
+     * In production, always use a cryptographically strong RNG! */
+    TEST_ASSERT(mbedtls_rsa_validate_params(have_N ? &N : NULL,
+                                            have_P ? &P : NULL,
+                                            have_Q ? &Q : NULL,
+                                            have_D ? &D : NULL,
+                                            have_E ? &E : NULL,
+                                            prng ? mbedtls_test_rnd_std_rand : NULL,
+                                            prng ? NULL : NULL) == result);
+
+exit:
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+    mbedtls_mpi_free(&D); mbedtls_mpi_free(&E);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_parse_pkcs1_key(int is_public, data_t *input, int exp_ret_val)
+{
+    mbedtls_rsa_context rsa_ctx;
+
+    mbedtls_rsa_init(&rsa_ctx);
+
+    if (is_public) {
+        TEST_EQUAL(mbedtls_rsa_parse_pubkey(&rsa_ctx, input->x, input->len), exp_ret_val);
+    } else {
+        TEST_EQUAL(mbedtls_rsa_parse_key(&rsa_ctx, input->x, input->len), exp_ret_val);
+    }
+
+exit:
+    mbedtls_rsa_free(&rsa_ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_parse_write_pkcs1_key(int is_public, data_t *input)
+{
+    mbedtls_rsa_context rsa_ctx;
+    unsigned char *output_buf = NULL;
+    unsigned char *output_end, *output_p;
+    size_t output_len;
+
+    mbedtls_rsa_init(&rsa_ctx);
+
+    TEST_CALLOC(output_buf, input->len);
+    output_end = output_buf + input->len;
+    output_p = output_end;
+
+    /* Parse the key and write it back to output_buf. */
+    if (is_public) {
+        TEST_EQUAL(mbedtls_rsa_parse_pubkey(&rsa_ctx, input->x, input->len), 0);
+        TEST_EQUAL(mbedtls_rsa_write_pubkey(&rsa_ctx, output_buf, &output_p), input->len);
+    } else {
+        TEST_EQUAL(mbedtls_rsa_parse_key(&rsa_ctx, input->x, input->len), 0);
+        TEST_EQUAL(mbedtls_rsa_write_key(&rsa_ctx, output_buf, &output_p), input->len);
+    }
+    output_len = output_end - output_p;
+
+    /* Check that the written key matches with the one provided in input. */
+    TEST_MEMORY_COMPARE(output_p, output_len, input->x, input->len);
+
+exit:
+    mbedtls_free(output_buf);
+    mbedtls_rsa_free(&rsa_ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void rsa_key_write_incremental(int is_public, data_t *input)
+{
+    mbedtls_rsa_context rsa_ctx;
+    unsigned char *buf = NULL, *end, *p;
+    size_t i, written_data;
+
+    mbedtls_rsa_init(&rsa_ctx);
+
+    /* This is supposed to succeed as the real target of this test are the
+     * write attempt below. */
+    if (is_public) {
+        TEST_EQUAL(mbedtls_rsa_parse_pubkey(&rsa_ctx, input->x, input->len), 0);
+    } else {
+        TEST_EQUAL(mbedtls_rsa_parse_key(&rsa_ctx, input->x, input->len), 0);
+    }
+
+    /* Test with an output buffer smaller than required. */
+    for (i = 1; i < input->len; i++) {
+        TEST_CALLOC(buf, i);
+        end = buf + i;
+        p = end;
+        /* We don't care much about the return value as long as it fails. */
+        if (is_public) {
+            TEST_ASSERT(mbedtls_rsa_write_pubkey(&rsa_ctx, buf, &p) != 0);
+        } else {
+            TEST_ASSERT(mbedtls_rsa_write_key(&rsa_ctx, buf, &p) != 0);
+        }
+        mbedtls_free(buf);
+        buf = NULL;
+    }
+
+    /* Test with an output buffer equal or larger than what it is strictly required. */
+    for (i = input->len; i < (2 * input->len); i++) {
+        TEST_CALLOC(buf, i);
+        end = buf + i;
+        p = end;
+        /* This time all write functions must succeed. */
+        if (is_public) {
+            TEST_ASSERT(mbedtls_rsa_write_pubkey(&rsa_ctx, buf, &p) > 0);
+        } else {
+            TEST_ASSERT(mbedtls_rsa_write_key(&rsa_ctx, buf, &p) > 0);
+        }
+        written_data = (end - p);
+        TEST_MEMORY_COMPARE(p, written_data, input->x, input->len);
+        mbedtls_free(buf);
+        buf = NULL;
+    }
+
+exit:
+    mbedtls_free(buf);
+    mbedtls_rsa_free(&rsa_ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void rsa_selftest()
+{
+    MD_PSA_INIT();
+    TEST_ASSERT(mbedtls_rsa_self_test(1) == 0);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15 */
+void pkcs1_rsaes_v15_encrypt(int mod, data_t *input_N,
+                             data_t *input_E, int hash,
+                             data_t *message_str, data_t *rnd_buf,
+                             data_t *result_str, int result)
+{
+    unsigned char output[128];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_buf_info info;
+
+    info.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    info.fallback_p_rng = NULL;
+    info.buf = rnd_buf->x;
+    info.length = rnd_buf->len;
+
+    mbedtls_rsa_init(&ctx);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V15);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), MBEDTLS_MD_NONE);
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V15, hash) == 0);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V15);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    if (message_str->len == 0) {
+        message_str->x = NULL;
+    }
+    TEST_ASSERT(mbedtls_rsa_pkcs1_encrypt(&ctx,
+                                          &mbedtls_test_rnd_buffer_rand,
+                                          &info, message_str->len,
+                                          message_str->x,
+                                          output) == result);
+    if (result == 0) {
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15 */
+void pkcs1_rsaes_v15_decrypt(int mod, data_t *input_P, data_t *input_Q,
+                             data_t *input_N, data_t *input_E, int hash,
+                             data_t *result_str, char *seed,
+                             data_t *message_str, int result)
+{
+    unsigned char output[128];
+    mbedtls_rsa_context ctx;
+    size_t output_len;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    ((void) seed);
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V15, hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V15);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    memset(output, 0x00, sizeof(output));
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    if (result_str->len == 0) {
+        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                              &mbedtls_test_rnd_pseudo_rand,
+                                              &rnd_info,
+                                              &output_len, message_str->x,
+                                              NULL, 0) == result);
+    } else {
+        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                              &mbedtls_test_rnd_pseudo_rand,
+                                              &rnd_info,
+                                              &output_len, message_str->x,
+                                              output, 1000) == result);
+        if (result == 0) {
+            TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                            output_len,
+                                            result_str->len) == 0);
+        }
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15 */
+void pkcs1_v15_decode(data_t *input,
+                      int expected_plaintext_length_arg,
+                      int output_size_arg,
+                      int expected_result)
+{
+    size_t expected_plaintext_length = expected_plaintext_length_arg;
+    size_t output_size = output_size_arg;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    mbedtls_rsa_context ctx;
+    static unsigned char N[128] = {
+        0xc4, 0x79, 0x4c, 0x6d, 0xb2, 0xe9, 0xdf, 0xc5,
+        0xe5, 0xd7, 0x55, 0x4b, 0xfb, 0x6c, 0x2e, 0xec,
+        0x84, 0xd0, 0x88, 0x12, 0xaf, 0xbf, 0xb4, 0xf5,
+        0x47, 0x3c, 0x7e, 0x92, 0x4c, 0x58, 0xc8, 0x73,
+        0xfe, 0x8f, 0x2b, 0x8f, 0x8e, 0xc8, 0x5c, 0xf5,
+        0x05, 0xeb, 0xfb, 0x0d, 0x7b, 0x2a, 0x93, 0xde,
+        0x15, 0x0d, 0xc8, 0x13, 0xcf, 0xd2, 0x6f, 0x0d,
+        0x9d, 0xad, 0x30, 0xe5, 0x70, 0x20, 0x92, 0x9e,
+        0xb3, 0x6b, 0xba, 0x5c, 0x50, 0x0f, 0xc3, 0xb2,
+        0x7e, 0x64, 0x07, 0x94, 0x7e, 0xc9, 0x4e, 0xc1,
+        0x65, 0x04, 0xaf, 0xb3, 0x9f, 0xde, 0xa8, 0x46,
+        0xfa, 0x6c, 0xf3, 0x03, 0xaf, 0x1c, 0x1b, 0xec,
+        0x75, 0x44, 0x66, 0x77, 0xc9, 0xde, 0x51, 0x33,
+        0x64, 0x27, 0xb0, 0xd4, 0x8d, 0x31, 0x6a, 0x11,
+        0x27, 0x3c, 0x99, 0xd4, 0x22, 0xc0, 0x9d, 0x12,
+        0x01, 0xc7, 0x4a, 0x73, 0xac, 0xbf, 0xc2, 0xbb
+    };
+    static unsigned char E[1] = { 0x03 };
+    static unsigned char P[64] = {
+        0xe5, 0x53, 0x1f, 0x88, 0x51, 0xee, 0x59, 0xf8,
+        0xc1, 0xe4, 0xcc, 0x5b, 0xb3, 0x75, 0x8d, 0xc8,
+        0xe8, 0x95, 0x2f, 0xd0, 0xef, 0x37, 0xb4, 0xcd,
+        0xd3, 0x9e, 0x48, 0x8b, 0x81, 0x58, 0x60, 0xb9,
+        0x27, 0x1d, 0xb6, 0x28, 0x92, 0x64, 0xa3, 0xa5,
+        0x64, 0xbd, 0xcc, 0x53, 0x68, 0xdd, 0x3e, 0x55,
+        0xea, 0x9d, 0x5e, 0xcd, 0x1f, 0x96, 0x87, 0xf1,
+        0x29, 0x75, 0x92, 0x70, 0x8f, 0x28, 0xfb, 0x2b
+    };
+    static unsigned char Q[64] = {
+        0xdb, 0x53, 0xef, 0x74, 0x61, 0xb4, 0x20, 0x3b,
+        0x3b, 0x87, 0x76, 0x75, 0x81, 0x56, 0x11, 0x03,
+        0x59, 0x31, 0xe3, 0x38, 0x4b, 0x8c, 0x7a, 0x9c,
+        0x05, 0xd6, 0x7f, 0x1e, 0x5e, 0x60, 0xf0, 0x4e,
+        0x0b, 0xdc, 0x34, 0x54, 0x1c, 0x2e, 0x90, 0x83,
+        0x14, 0xef, 0xc0, 0x96, 0x5c, 0x30, 0x10, 0xcc,
+        0xc1, 0xba, 0xa0, 0x54, 0x3f, 0x96, 0x24, 0xca,
+        0xa3, 0xfb, 0x55, 0xbc, 0x71, 0x29, 0x4e, 0xb1
+    };
+    unsigned char original[128];
+    unsigned char intermediate[128];
+    static unsigned char default_content[128] = {
+        /* A randomly generated pattern. */
+        0x4c, 0x27, 0x54, 0xa0, 0xce, 0x0d, 0x09, 0x4a,
+        0x1c, 0x38, 0x8e, 0x2d, 0xa3, 0xc4, 0xe0, 0x19,
+        0x4c, 0x99, 0xb2, 0xbf, 0xe6, 0x65, 0x7e, 0x58,
+        0xd7, 0xb6, 0x8a, 0x05, 0x2f, 0xa5, 0xec, 0xa4,
+        0x35, 0xad, 0x10, 0x36, 0xff, 0x0d, 0x08, 0x50,
+        0x74, 0x47, 0xc9, 0x9c, 0x4a, 0xe7, 0xfd, 0xfa,
+        0x83, 0x5f, 0x14, 0x5a, 0x1e, 0xe7, 0x35, 0x08,
+        0xad, 0xf7, 0x0d, 0x86, 0xdf, 0xb8, 0xd4, 0xcf,
+        0x32, 0xb9, 0x5c, 0xbe, 0xa3, 0xd2, 0x89, 0x70,
+        0x7b, 0xc6, 0x48, 0x7e, 0x58, 0x4d, 0xf3, 0xef,
+        0x34, 0xb7, 0x57, 0x54, 0x79, 0xc5, 0x8e, 0x0a,
+        0xa3, 0xbf, 0x6d, 0x42, 0x83, 0x25, 0x13, 0xa2,
+        0x95, 0xc0, 0x0d, 0x32, 0xec, 0x77, 0x91, 0x2b,
+        0x68, 0xb6, 0x8c, 0x79, 0x15, 0xfb, 0x94, 0xde,
+        0xb9, 0x2b, 0x94, 0xb3, 0x28, 0x23, 0x86, 0x3d,
+        0x37, 0x00, 0xe6, 0xf1, 0x1f, 0x4e, 0xd4, 0x42
+    };
+    unsigned char final[128];
+    size_t output_length = 0x7EA0;
+    data_t P_data = { .x = P, .len = sizeof(P) };
+    data_t Q_data = { .x = Q, .len = sizeof(Q) };
+    data_t N_data = { .x = N, .len = sizeof(N) };
+    data_t E_data = { .x = E, .len = sizeof(E) };
+
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+    mbedtls_rsa_init(&ctx);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, &N_data, &E_data, NULL, &P_data, &Q_data) == 0);
+
+    TEST_ASSERT(input->len <= sizeof(N));
+    memcpy(original, input->x, input->len);
+    memset(original + input->len, 'd', sizeof(original) - input->len);
+    TEST_ASSERT(mbedtls_rsa_public(&ctx, original, intermediate) == 0);
+
+    memcpy(final, default_content, sizeof(final));
+    TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                          &mbedtls_test_rnd_pseudo_rand,
+                                          &rnd_info, &output_length,
+                                          intermediate, final,
+                                          output_size) == expected_result);
+    if (expected_result == 0) {
+        TEST_ASSERT(output_length == expected_plaintext_length);
+        TEST_ASSERT(memcmp(original + sizeof(N) - output_length,
+                           final,
+                           output_length) == 0);
+    } else if (expected_result == MBEDTLS_ERR_RSA_INVALID_PADDING ||
+               expected_result == MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE) {
+        size_t max_payload_length =
+            output_size > sizeof(N) - 11 ? sizeof(N) - 11 : output_size;
+        size_t i;
+        size_t count = 0;
+
+        /* Check that the output in invalid cases is what the default
+         * implementation currently does. Alternative implementations
+         * may produce different output, so we only perform these precise
+         * checks when using the default implementation. */
+        TEST_ASSERT(output_length == max_payload_length);
+        for (i = 0; i < max_payload_length; i++) {
+            TEST_ASSERT(final[i] == 0);
+        }
+
+        /* Even in alternative implementations, the outputs must have
+         * changed, otherwise it indicates at least a timing vulnerability
+         * because no write to the outputs is performed in the bad case. */
+        TEST_ASSERT(output_length != 0x7EA0);
+        for (i = 0; i < max_payload_length; i++) {
+            count += (final[i] == default_content[i]);
+        }
+        /* If more than 16 bytes are unchanged in final, that's evidence
+         * that final wasn't overwritten. */
+        TEST_ASSERT(count < 16);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15 */
+void pkcs1_rsassa_v15_sign(int mod, data_t *input_P,
+                           data_t *input_Q, data_t *input_N,
+                           data_t *input_E, int digest, int hash,
+                           data_t *message_str, data_t *rnd_buf,
+                           data_t *result_str, int result)
+{
+    unsigned char output[128];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_buf_info info;
+
+    info.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    info.fallback_p_rng = NULL;
+    info.buf = rnd_buf->x;
+    info.length = rnd_buf->len;
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V15, hash) == 0);
+
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V15);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_sign(
+                    &ctx, &mbedtls_test_rnd_buffer_rand, &info,
+                    digest, message_str->len, message_str->x,
+                    output) == result);
+    if (result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, result_str->x,
+                                        ctx.len, result_str->len) == 0);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V15 */
+void pkcs1_rsassa_v15_verify(int mod, data_t *input_N, data_t *input_E,
+                             int digest, int hash, data_t *message_str,
+                             char *salt, data_t *result_str, int result)
+{
+    mbedtls_rsa_context ctx;
+    ((void) salt);
+
+    mbedtls_rsa_init(&ctx);
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V15, hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V15);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_verify(&ctx, digest, message_str->len, message_str->x,
+                                         result_str->x) == result);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V21*/
+void pkcs1_rsaes_oaep_encrypt(int mod, data_t *input_N, data_t *input_E,
+                              int hash, data_t *message_str, data_t *rnd_buf,
+                              data_t *result_str, int result)
+{
+    unsigned char output[256];
+    mbedtls_rsa_context ctx;
+    mbedtls_test_rnd_buf_info info;
+
+    mbedtls_rsa_init(&ctx);
+
+    info.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    info.fallback_p_rng = NULL;
+    info.buf = rnd_buf->x;
+    info.length = rnd_buf->len;
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V21, hash) == 0);
+    memset(output, 0x00, sizeof(output));
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V21);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    if (message_str->len == 0) {
+        message_str->x = NULL;
+    }
+    TEST_ASSERT(mbedtls_rsa_pkcs1_encrypt(&ctx,
+                                          &mbedtls_test_rnd_buffer_rand,
+                                          &info, message_str->len,
+                                          message_str->x,
+                                          output) == result);
+    if (result == 0) {
+        TEST_MEMORY_COMPARE(output, ctx.len, result_str->x, result_str->len);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V21*/
+void pkcs1_rsaes_oaep_decrypt(int mod, data_t *input_P, data_t *input_Q,
+                              data_t *input_N, data_t *input_E, int hash,
+                              data_t *result_str, char *seed, data_t *message_str,
+                              int result)
+{
+    unsigned char output[64];
+    mbedtls_rsa_context ctx;
+    mbedtls_rsa_init(&ctx);
+    size_t output_len;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    ((void) seed);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V21, hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V21);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    memset(output, 0x00, sizeof(output));
+    memset(&rnd_info, 0, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    if (result_str->len == 0) {
+        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                              &mbedtls_test_rnd_pseudo_rand,
+                                              &rnd_info,
+                                              &output_len, message_str->x,
+                                              NULL, 0) == result);
+    } else {
+        TEST_ASSERT(mbedtls_rsa_pkcs1_decrypt(&ctx,
+                                              &mbedtls_test_rnd_pseudo_rand,
+                                              &rnd_info,
+                                              &output_len, message_str->x,
+                                              output,
+                                              sizeof(output)) == result);
+        if (result == 0) {
+            TEST_MEMORY_COMPARE(output, output_len, result_str->x, result_str->len);
+        }
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V21*/
+void pkcs1_rsassa_pss_sign(int mod, data_t *input_P, data_t *input_Q,
+                           data_t *input_N, data_t *input_E, int digest,
+                           int hash, data_t *hash_digest, data_t *rnd_buf,
+                           data_t *result_str, int fixed_salt_length,
+                           int result)
+{
+    unsigned char output[512];
+    mbedtls_rsa_context ctx;
+    mbedtls_rsa_init(&ctx);
+    mbedtls_test_rnd_buf_info info;
+
+    info.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    info.fallback_p_rng = NULL;
+    info.buf = rnd_buf->x;
+    info.length = rnd_buf->len;
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V21, hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V21);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E,
+                                              NULL, input_P, input_Q) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_privkey(&ctx) == 0);
+
+    if (fixed_salt_length == MBEDTLS_RSA_SALT_LEN_ANY) {
+        TEST_ASSERT(mbedtls_rsa_pkcs1_sign(
+                        &ctx, &mbedtls_test_rnd_buffer_rand, &info,
+                        digest, hash_digest->len, hash_digest->x, output) == result);
+        if (result == 0) {
+            TEST_MEMORY_COMPARE(output, ctx.len, result_str->x, result_str->len);
+        }
+
+        info.buf = rnd_buf->x;
+        info.length = rnd_buf->len;
+    }
+
+    TEST_ASSERT(mbedtls_rsa_rsassa_pss_sign_ext(
+                    &ctx, &mbedtls_test_rnd_buffer_rand, &info,
+                    digest, hash_digest->len, hash_digest->x,
+                    fixed_salt_length, output) == result);
+    if (result == 0) {
+        TEST_MEMORY_COMPARE(output, ctx.len, result_str->x, result_str->len);
+    }
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V21 */
+void pkcs1_rsassa_pss_verify(int mod, data_t *input_N, data_t *input_E,
+                             int digest, int hash, data_t *hash_digest,
+                             char *salt, data_t *result_str, int result)
+{
+    mbedtls_rsa_context ctx;
+    ((void) salt);
+
+    mbedtls_rsa_init(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V21, hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V21);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_verify(&ctx, digest, hash_digest->len, hash_digest->x,
+                                         result_str->x) == result);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS1_V21 */
+void pkcs1_rsassa_pss_verify_ext(int mod, data_t *input_N, data_t *input_E,
+                                 int msg_digest_id, int ctx_hash,
+                                 int mgf_hash, int salt_len,
+                                 data_t *hash_digest,
+                                 data_t *result_str, int result_simple,
+                                 int result_full)
+{
+    mbedtls_rsa_context ctx;
+
+    mbedtls_rsa_init(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_rsa_set_padding(&ctx,
+                                        MBEDTLS_RSA_PKCS_V21, ctx_hash) == 0);
+
+    TEST_EQUAL(mbedtls_rsa_get_padding_mode(&ctx), MBEDTLS_RSA_PKCS_V21);
+    TEST_EQUAL(mbedtls_rsa_get_md_alg(&ctx), ctx_hash);
+
+    TEST_ASSERT(mbedtls_rsa_test_fill_context(&ctx, input_N, input_E, NULL, NULL, NULL) == 0);
+    TEST_ASSERT(mbedtls_rsa_get_len(&ctx) == (size_t) ((mod + 7) / 8));
+    TEST_ASSERT(mbedtls_rsa_check_pubkey(&ctx) == 0);
+
+    TEST_ASSERT(mbedtls_rsa_pkcs1_verify(&ctx, msg_digest_id,
+                                         hash_digest->len, hash_digest->x,
+                                         result_str->x) == result_simple);
+
+    TEST_ASSERT(mbedtls_rsa_rsassa_pss_verify_ext(&ctx, msg_digest_id, hash_digest->len,
+                                                  hash_digest->x, mgf_hash, salt_len,
+                                                  result_str->x) == result_full);
+
+exit:
+    mbedtls_rsa_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */

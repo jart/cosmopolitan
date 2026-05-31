@@ -1,0 +1,11 @@
+# Python package requirements for Mbed TLS testing.
+
+# At the time of writing, only needed for scripts/audit-validity-dates.py.
+# It needs >=35.0.0 for correct operation, and that requires Python >=3.6.
+# >=35.0.0 also requires Rust to build from source, which we are forced to do on
+# FreeBSD, since PyPI doesn't carry binary wheels for the BSDs.
+cryptography >= 35.0.0; platform_system == 'Linux'
+
+# At the time of writing, only needed for
+# scripts/generate_server9_bad_saltlen.py.
+asn1crypto; platform_system == 'Linux'

@@ -281,7 +281,7 @@ static int LuaFetch(lua_State *L) {
     if (sslcliused) {
       mbedtls_ssl_session_reset(&sslcli);
     } else {
-      ReseedRng(&rngcli, "child");
+      ReseedRng();
     }
     sslcliused = true;
     DEBUGF("(ftch) client handshaking %`'s", host);
@@ -319,7 +319,8 @@ static int LuaFetch(lua_State *L) {
   for (i = 0; i < requestlen; i += rc) {
 #ifndef UNSECURE
     if (usingssl) {
-      rc = mbedtls_ssl_write(&sslcli, request + i, requestlen - i);
+      rc = mbedtls_ssl_write(&sslcli, (const unsigned char *)(request + i),
+                             requestlen - i);
       if (rc <= 0) {
         if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED)
           goto VerifyFailed;
@@ -351,7 +352,8 @@ static int LuaFetch(lua_State *L) {
     NOISEF("(ftch) client reading");
 #ifndef UNSECURE
     if (usingssl) {
-      if ((rc = mbedtls_ssl_read(&sslcli, inbuf.p + inbuf.n,
+      if ((rc = mbedtls_ssl_read(&sslcli,
+                                 (unsigned char *)(inbuf.p + inbuf.n),
                                  inbuf.c - inbuf.n)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
@@ -581,8 +583,9 @@ VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
   close(sock);
   return LuaNilTlsError(
-      L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
+      L, gc(DescribeSslVerifyFailure(mbedtls_ssl_get_verify_result(&sslcli))),
       ret);
 #endif
 #undef ssl
+return 0;
 }

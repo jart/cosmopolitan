@@ -1,0 +1,19 @@
+# Python package requirements for driver implementers.
+
+# Jinja2 <3.0 needs an older version of markupsafe, but does not
+# declare it.
+#   https://github.com/pallets/markupsafe/issues/282
+#   https://github.com/pallets/jinja/issues/1585
+markupsafe < 2.1
+
+# Use the version of Jinja that's in Ubuntu 20.04.
+# See https://github.com/Mbed-TLS/mbedtls/pull/5067#discussion_r738794607 .
+# Note that Jinja 3.0 drops support for Python 3.5, so we need to support
+# Jinja 2.x as long as we're still using Python 3.5 anywhere.
+# Jinja 2.10.1 doesn't support Python 3.10+
+Jinja2 >= 2.10.1; python_version <  '3.10'
+Jinja2 >= 2.10.3; python_version >= '3.10'
+# Jinja2 >=2.10, <3.0 needs a separate package for type annotations
+types-Jinja2 >= 2.11.9
+jsonschema >= 3.2.0
+types-jsonschema >= 3.2.0

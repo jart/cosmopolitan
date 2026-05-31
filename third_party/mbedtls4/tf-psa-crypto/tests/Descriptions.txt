@@ -1,0 +1,5 @@
+test_suites
+    The various 'test_suite_XXX' programs from the 'tests' directory, executed
+    using 'make check' (Unix make) or 'make test' (Cmake), include test cases
+    (reference test vectors, sanity checks, malformed input for parsing
+    functions, etc.) for all modules except the SSL modules.

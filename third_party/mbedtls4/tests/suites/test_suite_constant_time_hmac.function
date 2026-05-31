@@ -1,0 +1,108 @@
+/* BEGIN_HEADER */
+
+#include <mbedtls/constant_time.h>
+#include <mbedtls/md.h>
+#include <constant_time_internal.h>
+#include "mbedtls/psa_util.h"
+#include <ssl_misc.h>
+
+#include <test/constant_flow.h>
+/* END_HEADER */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_SOME_SUITES_USE_MAC:MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC:MBEDTLS_TEST_HOOKS */
+void ssl_cf_hmac(int hash)
+{
+    /*
+     * Test the function mbedtls_ct_hmac() against a reference
+     * implementation.
+     */
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_algorithm_t alg;
+    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    size_t out_len, block_size;
+    size_t min_in_len, in_len, max_in_len, i;
+    /* TLS additional data is 13 bytes (hence the "lucky 13" name) */
+    unsigned char add_data[13];
+    unsigned char ref_out[MBEDTLS_MD_MAX_SIZE];
+    unsigned char *data = NULL;
+    unsigned char *out = NULL;
+    unsigned char rec_num = 0;
+
+    USE_PSA_INIT();
+
+    alg = PSA_ALG_HMAC(mbedtls_md_psa_alg_from_type(hash));
+
+    out_len = PSA_HASH_LENGTH(alg);
+    block_size = PSA_HASH_BLOCK_LENGTH(alg);
+
+    /* mbedtls_ct_hmac() requires the key to be exportable */
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT |
+                            PSA_KEY_USAGE_VERIFY_HASH);
+    psa_set_key_algorithm(&attributes, PSA_ALG_HMAC(alg));
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_HMAC);
+
+    /* Use allocated out buffer to catch overwrites */
+    TEST_CALLOC(out, out_len);
+
+    /* Set up dummy key */
+    memset(ref_out, 42, sizeof(ref_out));
+    TEST_EQUAL(PSA_SUCCESS, psa_import_key(&attributes,
+                                           ref_out, out_len,
+                                           &key));
+    /*
+     * Test all possible lengths up to a point. The difference between
+     * max_in_len and min_in_len is at most 255, and make sure they both vary
+     * by at least one block size.
+     */
+    for (max_in_len = 0; max_in_len <= 255 + block_size; max_in_len++) {
+        mbedtls_test_set_step(max_in_len * 10000);
+
+        /* Use allocated in buffer to catch overreads */
+        TEST_CALLOC(data, max_in_len);
+
+        min_in_len = max_in_len > 255 ? max_in_len - 255 : 0;
+        for (in_len = min_in_len; in_len <= max_in_len; in_len++) {
+            mbedtls_test_set_step(max_in_len * 10000 + in_len);
+
+            /* Set up dummy data and add_data */
+            rec_num++;
+            memset(add_data, rec_num, sizeof(add_data));
+            for (i = 0; i < in_len; i++) {
+                data[i] = (i & 0xff) ^ rec_num;
+            }
+
+            /* Get the function's result */
+            TEST_CF_SECRET(&in_len, sizeof(in_len));
+            TEST_EQUAL(0, mbedtls_ct_hmac(key, PSA_ALG_HMAC(alg),
+                                          add_data, sizeof(add_data),
+                                          data, in_len,
+                                          min_in_len, max_in_len,
+                                          out));
+            TEST_CF_PUBLIC(&in_len, sizeof(in_len));
+            TEST_CF_PUBLIC(out, out_len);
+
+            TEST_EQUAL(PSA_SUCCESS, psa_mac_verify_setup(&operation,
+                                                         key, alg));
+            TEST_EQUAL(PSA_SUCCESS, psa_mac_update(&operation, add_data,
+                                                   sizeof(add_data)));
+            TEST_EQUAL(PSA_SUCCESS, psa_mac_update(&operation,
+                                                   data, in_len));
+            TEST_EQUAL(PSA_SUCCESS, psa_mac_verify_finish(&operation,
+                                                          out, out_len));
+        }
+
+        mbedtls_free(data);
+        data = NULL;
+    }
+
+exit:
+    psa_mac_abort(&operation);
+    psa_destroy_key(key);
+
+    mbedtls_free(data);
+    mbedtls_free(out);
+
+    USE_PSA_DONE();
+}
+/* END_CASE */

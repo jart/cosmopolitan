@@ -1,0 +1,85 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/poly1305.h"
+#include <stddef.h>
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_POLY1305_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mbedtls_poly1305(data_t *key, data_t *expected_mac, data_t *src_str)
+{
+    unsigned char mac[16]; /* size set by the standard */
+    mbedtls_poly1305_context ctx;
+
+    memset(mac, 0x00, sizeof(mac));
+
+    /*
+     * Test the integrated API
+     */
+    TEST_ASSERT(mbedtls_poly1305_mac(key->x, src_str->x,
+                                     src_str->len, mac) == 0);
+
+    TEST_MEMORY_COMPARE(mac, expected_mac->len,
+                        expected_mac->x, expected_mac->len);
+
+    /*
+     * Test the streaming API
+     */
+    mbedtls_poly1305_init(&ctx);
+
+    TEST_ASSERT(mbedtls_poly1305_starts(&ctx, key->x) == 0);
+
+    TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x, src_str->len) == 0);
+
+    TEST_ASSERT(mbedtls_poly1305_finish(&ctx, mac) == 0);
+
+    TEST_MEMORY_COMPARE(mac, expected_mac->len,
+                        expected_mac->x, expected_mac->len);
+
+    /*
+     * Test the streaming API again, piecewise
+     */
+
+    /* Don't free/init the context, in order to test that starts() does the
+     * right thing. */
+    if (src_str->len >= 1) {
+        TEST_ASSERT(mbedtls_poly1305_starts(&ctx, key->x) == 0);
+
+        TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x, 1) == 0);
+        TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x + 1, src_str->len - 1) == 0);
+
+        TEST_ASSERT(mbedtls_poly1305_finish(&ctx, mac) == 0);
+
+        TEST_MEMORY_COMPARE(mac, expected_mac->len,
+                            expected_mac->x, expected_mac->len);
+    }
+
+    /*
+     * Again with more pieces
+     */
+    if (src_str->len >= 2) {
+        TEST_ASSERT(mbedtls_poly1305_starts(&ctx, key->x) == 0);
+
+        TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x, 1) == 0);
+        TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x + 1, 1) == 0);
+        TEST_ASSERT(mbedtls_poly1305_update(&ctx, src_str->x + 2, src_str->len - 2) == 0);
+
+        TEST_ASSERT(mbedtls_poly1305_finish(&ctx, mac) == 0);
+
+        TEST_MEMORY_COMPARE(mac, expected_mac->len,
+                            expected_mac->x, expected_mac->len);
+    }
+
+    mbedtls_poly1305_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void poly1305_selftest()
+{
+    TEST_ASSERT(mbedtls_poly1305_self_test(1) == 0);
+}
+/* END_CASE */

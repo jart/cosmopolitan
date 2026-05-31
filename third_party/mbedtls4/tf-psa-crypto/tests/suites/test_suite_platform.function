@@ -1,0 +1,136 @@
+/* BEGIN_HEADER */
+
+/* This test module exercises the platform_* module. Since, depending on the
+ * underlying operating system, the time routines are not always reliable,
+ * this suite only performs very basic sanity checks of the timing API.
+ */
+
+#include <limits.h>
+
+#if defined(MBEDTLS_HAVE_TIME)
+#include "mbedtls/platform_time.h"
+
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || \
+    defined(__MINGW32__) || defined(_WIN64)
+#include <windows.h>
+#elif _POSIX_C_SOURCE >= 199309L
+#include <time.h>
+#else
+#include <unistd.h>
+#endif
+static void sleep_ms(int milliseconds)
+{
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || \
+    defined(__MINGW32__) || defined(_WIN64)
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
+    usleep(milliseconds * 1000);
+#endif
+}
+#endif
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES */
+
+/* END_DEPENDENCIES */
+
+/* BEGIN_CASE depends_on:MBEDTLS_HAVE_TIME */
+void time_get_milliseconds()
+{
+    mbedtls_ms_time_t current = mbedtls_ms_time();
+    (void) current;
+    /* This goto is added to avoid warnings from the generated code. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_HAVE_TIME */
+void time_get_seconds()
+{
+    mbedtls_time_t current = mbedtls_time(NULL);
+    (void) current;
+    /* This goto is added to avoid warnings from the generated code. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_HAVE_TIME */
+void time_delay_milliseconds(int delay_ms)
+{
+    mbedtls_ms_time_t current = mbedtls_ms_time();
+    mbedtls_ms_time_t elapsed_ms;
+
+    /*
+     * WARNING: DO NOT ENABLE THIS TEST. We keep the code here to document the
+     *          reason.
+     *
+     *          Windows CI reports random test fail on platform-suite. It might
+     *          be caused by this case.
+     */
+    sleep_ms(delay_ms);
+
+    elapsed_ms = mbedtls_ms_time() - current;
+    TEST_ASSERT(elapsed_ms >= delay_ms && elapsed_ms < 4000 + delay_ms);
+    /* This goto is added to avoid warnings from the generated code. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_HAVE_TIME */
+
+/*
+ * WARNING: DO NOT ENABLE THIS TEST. We keep the code here to document the
+ *          reason.
+ *
+ *          The test often failed on the CI. See #1517. CI failures cannot be
+ *          completely avoided due to out-of-sync clock sources.
+ */
+void time_delay_seconds(int delay_secs)
+{
+    mbedtls_time_t current = mbedtls_time(NULL);
+    mbedtls_time_t elapsed_secs;
+
+    sleep_ms(delay_secs * 1000);
+
+    elapsed_secs = mbedtls_time(NULL) - current;
+
+    /*
+     * `mbedtls_time()` was defined as c99 function `time()`, returns the number
+     * of seconds since the Epoch. And it is affected by discontinuous changes
+     * from automatic drift adjustment or time setting system call. The POSIX.1
+     * specification for clock_settime says that discontinuous changes in
+     * CLOCK_REALTIME should not affect `nanosleep()`.
+     *
+     * If discontinuous changes occur during `nanosleep()`, we will get
+     * `elapsed_secs < delay_secs` for backward or `elapsed_secs > delay_secs`
+     * for forward.
+     *
+     * The following tolerance windows cannot be guaranteed.
+     * PLEASE DO NOT ENABLE IT IN CI TEST.
+     */
+    TEST_ASSERT(elapsed_secs - delay_secs >= -1 &&
+                elapsed_secs - delay_secs <   4);
+    /* This goto is added to avoid warnings from the generated code. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void check_mbedtls_calloc_overallocation(intmax_t num, intmax_t size)
+{
+    unsigned char *buf;
+    buf = mbedtls_calloc((size_t) num, (size_t) size);
+    /* Dummy usage of the pointer to prevent optimizing it */
+    mbedtls_printf("calloc pointer : %p\n", (void *) buf);
+    TEST_ASSERT(buf == NULL);
+
+exit:
+    mbedtls_free(buf);
+}
+/* END_CASE */

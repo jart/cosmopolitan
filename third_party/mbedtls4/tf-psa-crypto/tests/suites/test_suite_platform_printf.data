@@ -1,0 +1,139 @@
+# The test cases for printf and integers have two purposes: they exercise
+# the printf function family, and they exercise the passing of integers
+# and strings through the test framework.
+
+printf "%d", 0
+printf_integer:"%d":PRINTF_CAST_INT:0:"0"
+
+printf "%d", -0
+printf_integer:"%d":PRINTF_CAST_INT:-0:"0"
+
+printf "%d", 0x0
+printf_integer:"%d":PRINTF_CAST_INT:0x0:"0"
+
+printf "%d", 0x00
+printf_integer:"%d":PRINTF_CAST_INT:0x00:"0"
+
+printf "%d", 0x000000000000000000000000000000000000000000
+printf_integer:"%d":PRINTF_CAST_INT:0x000000000000000000000000000000000000000000:"0"
+
+printf "%d", -0x0
+printf_integer:"%d":PRINTF_CAST_INT:-0x0:"0"
+
+printf "%d", 1
+printf_integer:"%d":PRINTF_CAST_INT:1:"1"
+
+printf "%d", 0x1
+printf_integer:"%d":PRINTF_CAST_INT:0x1:"1"
+
+printf "%d", 0x0000000000000000000000000000000000000000001
+printf_integer:"%d":PRINTF_CAST_INT:0x0000000000000000000000000000000000000000001:"1"
+
+printf "%d", -1
+printf_integer:"%d":PRINTF_CAST_INT:-1:"-1"
+
+printf "%d", -0x1
+printf_integer:"%d":PRINTF_CAST_INT:-0x1:"-1"
+
+printf "%d", -0x0000000000000000000000000000000000000000001
+printf_integer:"%d":PRINTF_CAST_INT:-0x0000000000000000000000000000000000000000001:"-1"
+
+printf "%d", 2147483647
+printf_integer:"%d":PRINTF_CAST_INT:2147483647:"2147483647"
+
+printf "%d", 0x7fffffff
+printf_integer:"%d":PRINTF_CAST_INT:0x7fffffff:"2147483647"
+
+printf "%d", -2147483647
+printf_integer:"%d":PRINTF_CAST_INT:-2147483647:"-2147483647"
+
+printf "%d", -0x7fffffff
+printf_integer:"%d":PRINTF_CAST_INT:-0x7fffffff:"-2147483647"
+
+printf "%d", -2147483648
+printf_integer:"%d":PRINTF_CAST_INT:-2147483648:"-2147483648"
+
+printf "%d", -0x80000000
+printf_integer:"%d":PRINTF_CAST_INT:-0x80000000:"-2147483648"
+
+printf "%u", 0x80000000
+printf_integer:"%u":PRINTF_CAST_INT:-0x80000000:"2147483648"
+
+printf "%zx", 0x12345678
+printf_integer:"%zx":PRINTF_CAST_SIZE_T:0x12345678:"12345678"
+
+printf "%zu", 0x80000000
+printf_integer:"%zu":PRINTF_CAST_SIZE_T:0x80000000:"2147483648"
+
+printf "%zx", 0xffffffff
+printf_integer:"%zx":PRINTF_CAST_SIZE_T:0xffffffff:"ffffffff"
+
+printf "%zx", 0xffffffffffffffff
+depends_on:SIZE_T_AT_LEAST_64_BIT
+printf_integer:"%zx":PRINTF_CAST_SIZE_T:0xffffffffffffffff:"ffffffffffffffff"
+
+printf "%lld", 0x7fffffffffffffff
+printf_integer:"%lld":PRINTF_CAST_LONG_LONG:0x7fffffffffffffff:"9223372036854775807"
+
+printf "%lld", -0x8000000000000000
+printf_integer:"%lld":PRINTF_CAST_LONG_LONG:-0x8000000000000000:"-9223372036854775808"
+
+printf "%llx", 0x102030405060708
+printf_integer:"%llx":PRINTF_CAST_UNSIGNED_LONG_LONG:0x0102030405060708:"102030405060708"
+
+# Test that LONG_MAX is coming out untruncated through the test framework.
+printf "%lx", LONG_MAX
+printf_long_max:"%lx":LONG_MAX
+
+# The next few test cases exercise how the test framework handles special
+# characters in strings.
+printf "%c%c", SPACE, SPACE
+printf_char2:"%c%c":SPACE_CHAR:SPACE_CHAR:"  "
+
+printf "%c%c", NEWLINE, SPACE
+printf_char2:"%c%c":NEWLINE_CHAR:SPACE_CHAR:"\n "
+
+printf "%c%c", DOUBLE QUOTE, SPACE
+printf_char2:"%c%c":DOUBLE_QUOTE_CHAR:SPACE_CHAR:"\" "
+
+printf "%c%c", COLON, SPACE
+printf_char2:"%c%c":COLON_CHAR:SPACE_CHAR:"\: "
+
+printf "%c%c", QUESTION, SPACE
+printf_char2:"%c%c":QUESTION_CHAR:SPACE_CHAR:"? "
+
+printf "%c%c", BACKSLASH, SPACE
+printf_char2:"%c%c":BACKSLASH_CHAR:SPACE_CHAR:"\\ "
+
+printf "%c%c", SPACE, BACKSLASH
+printf_char2:"%c%c":SPACE_CHAR:BACKSLASH_CHAR:" \\"
+
+printf "%c%c", COLON, COLON
+printf_char2:"%c%c":COLON_CHAR:COLON_CHAR:"\:\:"
+
+printf "%c%c", COLON, NEWLINE
+printf_char2:"%c%c":COLON_CHAR:NEWLINE_CHAR:"\:\n"
+
+printf "%c%c", QUESTION, QUESTION
+printf_char2:"%c%c":QUESTION_CHAR:QUESTION_CHAR:"??"
+
+printf "%c%c", QUESTION, NEWLINE
+printf_char2:"%c%c":QUESTION_CHAR:NEWLINE_CHAR:"?\n"
+
+printf "%c%c", BACKSLASH, NEWLINE
+printf_char2:"%c%c":BACKSLASH_CHAR:NEWLINE_CHAR:"\\\n"
+
+printf "%c%c", BACKSLASH, DOUBLE QUOTE
+printf_char2:"%c%c":BACKSLASH_CHAR:DOUBLE_QUOTE_CHAR:"\\\""
+
+printf "%c%c", BACKSLASH, COLON
+printf_char2:"%c%c":BACKSLASH_CHAR:COLON_CHAR:"\\\:"
+
+printf "%c%c", BACKSLASH, QUESTION
+printf_char2:"%c%c":BACKSLASH_CHAR:QUESTION_CHAR:"\\?"
+
+printf "%c%c", BACKSLASH, BACKSLASH
+printf_char2:"%c%c":BACKSLASH_CHAR:BACKSLASH_CHAR:"\\\\"
+
+printf "%c%c", BACKSLASH, n
+printf_char2:"%c%c":BACKSLASH_CHAR:LOWERCASE_N_CHAR:"\\n"

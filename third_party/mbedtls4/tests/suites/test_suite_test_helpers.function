@@ -1,0 +1,40 @@
+/* BEGIN_HEADER */
+
+/* Test some parts of the test framework. */
+
+#include <test/helpers.h>
+#include <test/memory.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES */
+
+/* END_DEPENDENCIES */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_MEMORY_CAN_POISON */
+/* Test that poison+unpoison leaves the memory accessible. */
+/* We can't test that poisoning makes the memory inaccessible:
+ * there's no sane way to catch an Asan/Valgrind complaint.
+ * That negative testing is done in framework/tests/programs/metatest.c. */
+void memory_poison_unpoison(int align, int size)
+{
+    unsigned char *buf = NULL;
+    const size_t buffer_size = align + size;
+    TEST_CALLOC(buf, buffer_size);
+
+    for (size_t i = 0; i < buffer_size; i++) {
+        buf[i] = (unsigned char) (i & 0xff);
+    }
+
+    const unsigned char *start = buf == NULL ? NULL : buf + align;
+    mbedtls_test_memory_poison(start, (size_t) size);
+    mbedtls_test_memory_unpoison(start, (size_t) size);
+
+    for (size_t i = 0; i < buffer_size; i++) {
+        TEST_EQUAL(buf[i], (unsigned char) (i & 0xff));
+    }
+
+exit:
+    mbedtls_free(buf);
+}
+/* END_CASE */

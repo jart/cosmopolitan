@@ -1,0 +1,92 @@
+/* BEGIN_HEADER */
+#include "x509_oid.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/asn1write.h"
+#include "string.h"
+/* END_HEADER */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CRT_PARSE_C:!MBEDTLS_X509_REMOVE_INFO */
+void oid_get_certificate_policies(data_t *oid, char *result_str)
+{
+    mbedtls_asn1_buf asn1_buf = { 0, 0, NULL };
+    int ret;
+    const char *desc;
+
+    asn1_buf.tag = MBEDTLS_ASN1_OID;
+    asn1_buf.p = oid->x;
+    asn1_buf.len = oid->len;
+
+    ret = mbedtls_x509_oid_get_certificate_policies(&asn1_buf, &desc);
+    if (strlen(result_str) == 0) {
+        TEST_ASSERT(ret == MBEDTLS_ERR_X509_UNKNOWN_OID);
+    } else {
+        TEST_ASSERT(ret == 0);
+        TEST_ASSERT(strcmp((char *) desc, result_str) == 0);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CRT_PARSE_C:!MBEDTLS_X509_REMOVE_INFO */
+void oid_get_extended_key_usage(data_t *oid, char *result_str)
+{
+    mbedtls_asn1_buf asn1_buf = { 0, 0, NULL };
+    int ret;
+    const char *desc;
+
+    asn1_buf.tag = MBEDTLS_ASN1_OID;
+    asn1_buf.p = oid->x;
+    asn1_buf.len = oid->len;
+
+    ret = mbedtls_x509_oid_get_extended_key_usage(&asn1_buf, &desc);
+    if (strlen(result_str) == 0) {
+        TEST_ASSERT(ret == MBEDTLS_ERR_X509_UNKNOWN_OID);
+    } else {
+        TEST_ASSERT(ret == 0);
+        TEST_ASSERT(strcmp((char *) desc, result_str) == 0);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_OID_HAVE_GET_X509_EXT_TYPE */
+void oid_get_x509_extension(data_t *oid, int exp_type)
+{
+    mbedtls_asn1_buf ext_oid = { 0, 0, NULL };
+    int ret;
+    int ext_type;
+
+    ext_oid.tag = MBEDTLS_ASN1_OID;
+    ext_oid.p = oid->x;
+    ext_oid.len = oid->len;
+
+    ret = mbedtls_x509_oid_get_x509_ext_type(&ext_oid, &ext_type);
+    if (exp_type == 0) {
+        TEST_ASSERT(ret == MBEDTLS_ERR_X509_UNKNOWN_OID);
+    } else {
+        TEST_ASSERT(ret == 0);
+        TEST_ASSERT(ext_type == exp_type);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_OID_HAVE_GET_MD_ALG */
+void oid_get_md_alg_id(data_t *oid, int exp_md_id)
+{
+    mbedtls_asn1_buf md_oid = { 0, 0, NULL };
+    int ret;
+    mbedtls_md_type_t md_id = 0;
+
+    md_oid.tag = MBEDTLS_ASN1_OID;
+    md_oid.p = oid->x;
+    md_oid.len = oid->len;
+
+    ret = mbedtls_x509_oid_get_md_alg(&md_oid, &md_id);
+
+    if (exp_md_id < 0) {
+        TEST_ASSERT(ret == MBEDTLS_ERR_X509_UNKNOWN_OID);
+        TEST_ASSERT(md_id == 0);
+    } else {
+        TEST_ASSERT(ret == 0);
+        TEST_ASSERT((mbedtls_md_type_t) exp_md_id == md_id);
+    }
+}
+/* END_CASE */

@@ -1,0 +1,162 @@
+Recombine server flight 1: TLS 1.2, nominal
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_NOMINAL:0:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.3, nominal
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_NOMINAL:0:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, coalesce 2
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE:2:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, coalesce 3
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE:3:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, coalesce all
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE:INT_MAX:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+# TLS 1.3 has a single non-encrypted handshake record, so this doesn't
+# actually perform any coalescing. Run the test case anyway, but this does
+# very little beyond exercising the test code itself a little.
+Recombine server flight 1: TLS 1.3, coalesce all
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_COALESCE:INT_MAX:"<= handshake wrapup":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, split first at 4
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:4:"initial handshake fragment\: 4, 0..4 of":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.3, split first at 4
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:4:"initial handshake fragment\: 4, 0..4 of":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, split first at end-1
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:-1:"subsequent handshake fragment\: 1,":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.3, split first at end-1
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:-1:"subsequent handshake fragment\: 1,":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+# The library doesn't support an initial handshake fragment that doesn't
+# contain the full 4-byte handshake header.
+Recombine server flight 1: TLS 1.2, split first at 3 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:3:"handshake message too short\: 3":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, split first at 3 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:3:"handshake message too short\: 3":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, split first at 2 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:2:"handshake message too short\: 2":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, split first at 2 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:2:"handshake message too short\: 2":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, split first at 1 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:1:"handshake message too short\: 1":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, split first at 1 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:1:"handshake message too short\: 1":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, truncate at 4 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_TRUNCATE_FIRST:4:"initial handshake fragment\: 4, 0..4 of":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_WANT_READ
+
+Recombine server flight 1: TLS 1.3, truncate at 4 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_TRUNCATE_FIRST:4:"initial handshake fragment\: 4, 0..4 of":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_WANT_READ
+
+Recombine server flight 1: TLS 1.2, insert empty record after first (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_SPLIT_FIRST:0:"rejecting empty record":"":MBEDTLS_SSL_SERVER_CERTIFICATE:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, insert empty record after first (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_SPLIT_FIRST:0:"rejecting empty record":"":MBEDTLS_SSL_ENCRYPTED_EXTENSIONS:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, insert empty record at start (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_EMPTY:0:"rejecting empty record":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, insert empty record at start (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_EMPTY:0:"rejecting empty record":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, insert empty record at 42 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_EMPTY:42:"rejecting empty record":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, insert empty record at 42 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_EMPTY:42:"rejecting empty record":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, insert ChangeCipherSpec record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.3, insert ChangeCipherSpec record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.2, insert alert record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_ALERT:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.3, insert alert record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_ALERT:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.2, insert data record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_APPLICATION_DATA:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.3, insert data record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_APPLICATION_DATA:"non-handshake message in the middle of a fragmented handshake message":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_UNEXPECTED_MESSAGE
+
+Recombine server flight 1: TLS 1.2, insert CID record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_CID:"unknown record type":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, insert CID record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_RECORD:MBEDTLS_SSL_MSG_CID:"unknown record type":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.2, insert unknown record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_INSERT_RECORD:255:"unknown record type 255":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+Recombine server flight 1: TLS 1.3, insert unknown record at 5 (bad)
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:PSA_WANT_ALG_CHACHA20_POLY1305
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_3:RECOMBINE_INSERT_RECORD:255:"unknown record type 255":"":MBEDTLS_SSL_SERVER_HELLO:MBEDTLS_ERR_SSL_INVALID_RECORD
+
+# Since there is a single unencrypted handshake message in the first flight
+# from the server, and the test code that recombines handshake records can only
+# handle plaintext records, we can't have TLS 1.3 tests with coalesced
+# handshake messages. Hence most coalesce-and-split test cases are 1.2-only.
+
+Recombine server flight 1: TLS 1.2, coalesce and split at 4
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE_SPLIT_ONCE:4:"initial handshake fragment\: 4, 0..4 of":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+# The last message of the first flight from the server is ServerHelloDone,
+# which is an empty handshake message, i.e. of length 4. The library doesn't
+# support fragmentation of a handshake header, so the last place where we
+# can split the flight is 4+1 = 5 bytes before it ends, with 1 byte in the
+# previous handshake message and 4 bytes of ServerHelloDone including header.
+Recombine server flight 1: TLS 1.2, coalesce and split at end-5
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE_SPLIT_ONCE:-5:"subsequent handshake fragment\: 5,":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0
+
+Recombine server flight 1: TLS 1.2, coalesce and split at both ends
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+recombine_server_first_flight:MBEDTLS_SSL_VERSION_TLS1_2:RECOMBINE_COALESCE_SPLIT_BOTH_ENDS:5:"subsequent handshake fragment\: 5,":"<= handshake wrapup":MBEDTLS_SSL_HANDSHAKE_OVER:0

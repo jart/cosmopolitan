@@ -81,13 +81,10 @@
 #include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/iana.h"
-#include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/pk.h"
-#include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/ssl_ticket.h"
-#include "third_party/mbedtls/x509_crt.h"
+#include "third_party/mbedtls4/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls4/tf-psa-crypto/include/mbedtls/pk.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/x509_crt.h"
 #include "third_party/musl/passwd.h"
 #include "third_party/sqlite3/sqlite3.h"
 #include "third_party/zlib/zlib.h"
@@ -424,7 +421,6 @@ struct Worker {
   struct Certs sslcerts;
   mbedtls_ssl_context ssl;
   mbedtls_ssl_config sslconf;
-  mbedtls_ctr_drbg_context sslrng;
 } *g_worker;
 
 // static assets
@@ -992,7 +988,6 @@ void OnHttpWorkerCancel(void *arg) {
   FreeSafeBuffer(w->inbuf);
   DestroyHttpMessage(w->msg);
   mbedtls_ssl_free(&w->ssl);
-  mbedtls_ctr_drbg_free(&w->sslrng);
   mbedtls_ssl_config_free(&w->sslconf);
   CertsDestroy(&w->sslcerts);
   free(w->preload);
@@ -1225,13 +1220,10 @@ ssize_t Read(struct Worker *w, char *buf, size_t size, uint32_t ip) {
       case MBEDTLS_ERR_SSL_TIMEOUT:
         ++g_sslshakefailtimeout;
         break;
-      case MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN:
+      case MBEDTLS_ERR_SSL_HANDSHAKE_FAILURE:
         ++g_sslshakefailnocipher;
         break;
-      case MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE:
-        ++g_sslshakefailcantcipher;
-        break;
-      case MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION:
+      case MBEDTLS_ERR_SSL_BAD_PROTOCOL_VERSION:
         ++g_sslshakefailnoversion;
         break;
       case MBEDTLS_ERR_SSL_INVALID_MAC:
@@ -1243,11 +1235,9 @@ ssize_t Read(struct Worker *w, char *buf, size_t size, uint32_t ip) {
       case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
         ++g_sslshakefailverifyfailed;
         break;
-      case MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO:
-        ++g_sslshakefailbadhello;
-        break;
-      case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
-        switch (w->ssl.fatal_alert) {
+      case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE: {
+        unsigned char alert = mbedtls_ssl_get_fatal_alert(&w->ssl);
+        switch (alert) {
           case MBEDTLS_SSL_ALERT_MSG_CERT_UNKNOWN:
             ++g_sslshakefailunknowncert;
             break;
@@ -1258,16 +1248,13 @@ ssize_t Read(struct Worker *w, char *buf, size_t size, uint32_t ip) {
             ++g_sslshakefailbadcert;
             break;
           default:
-            dprintf(2, "unknown ssl handshake fatal alert %d (%s)\n",
-                    w->ssl.fatal_alert,
-                    GetAlertDescription(w->ssl.fatal_alert));
-            dprintf(g_crash_fd, "unknown ssl handshake fatal alert %d (%s)\n",
-                    w->ssl.fatal_alert,
-                    GetAlertDescription(w->ssl.fatal_alert));
+            dprintf(2, "unknown ssl handshake fatal alert %d\n", alert);
+            dprintf(g_crash_fd, "unknown ssl handshake fatal alert %d\n", alert);
             ++g_sslshakefailfatalalert;
             break;
         }
         break;
+      }
       default:
         ++g_sslshakefailmisc;
         dprintf(2, "unknown ssl handshake failure -0x%04x\n", -err);
@@ -1433,7 +1420,7 @@ void *HttpWorker(void *arg) {
 
   BlockSignals();
   InitHttpMessage(msg, kHttpRequest);
-  InitializeRng(&w->sslrng);
+  InitializeRng();
   ProgramCertificate(&w->sslcerts, ecdsacert.data, ecdsacert.size);
   ProgramPrivateKey(&w->sslcerts, ecdsakey.data, ecdsakey.size);
   /* ProgramCertificate(&w->sslcerts, rsacert.data, rsacert.size); */
@@ -1442,9 +1429,7 @@ void *HttpWorker(void *arg) {
                               MBEDTLS_SSL_TRANSPORT_STREAM,
                               MBEDTLS_SSL_PRESET_DEFAULT);
   mbedtls_ssl_conf_sni(&w->sslconf, TlsRoute, &w->sslcerts);
-  mbedtls_ssl_conf_rng(&w->sslconf, mbedtls_ctr_drbg_random, &w->sslrng);
   npassert(!mbedtls_ssl_conf_alpn_protocols(&w->sslconf, (void *)kAlpn));
-  w->sslconf.disable_compression = true;
   mbedtls_ssl_init(&w->ssl);
   mbedtls_ssl_set_bio(&w->ssl, w, TlsSend, 0, TlsRecv);
   npassert(!mbedtls_ssl_setup(&w->ssl, &w->sslconf));

@@ -1,0 +1,137 @@
+/* BEGIN_HEADER */
+
+#include "mbedtls/net_sockets.h"
+
+#if defined(unix) || defined(__unix__) || defined(__unix) || \
+    defined(__APPLE__) || defined(__QNXNTO__) || \
+    defined(__HAIKU__) || defined(__midipix__)
+#define MBEDTLS_PLATFORM_IS_UNIXLIKE
+#endif
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+/** Open a file on the given file descriptor.
+ *
+ * This is disruptive if there is already something open on that descriptor.
+ * Caller beware.
+ *
+ * \param ctx           An initialized, but unopened socket context.
+ *                      On success, it refers to the opened file (\p wanted_fd).
+ * \param wanted_fd     The desired file descriptor.
+ *
+ * \return              \c 0 on success, a negative error code on error.
+ */
+static int open_file_on_fd(mbedtls_net_context *ctx, int wanted_fd)
+{
+    int got_fd = open("/dev/null", O_RDONLY);
+    TEST_ASSERT(got_fd >= 0);
+    if (got_fd != wanted_fd) {
+        TEST_ASSERT(dup2(got_fd, wanted_fd) >= 0);
+        TEST_ASSERT(close(got_fd) >= 0);
+    }
+    ctx->fd = wanted_fd;
+    return 0;
+exit:
+    return -1;
+}
+#endif /* MBEDTLS_PLATFORM_IS_UNIXLIKE */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_NET_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void context_init_free(int reinit)
+{
+    mbedtls_net_context ctx;
+
+    mbedtls_net_init(&ctx);
+    mbedtls_net_free(&ctx);
+
+    if (reinit) {
+        mbedtls_net_init(&ctx);
+    }
+    mbedtls_net_free(&ctx);
+
+    /* This test case always succeeds, functionally speaking. A plausible
+     * bug might trigger an invalid pointer dereference or a memory leak. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void poll_beyond_fd_setsize()
+{
+    /* Test that mbedtls_net_poll does not misbehave when given a file
+     * descriptor greater or equal to FD_SETSIZE. This code is specific to
+     * platforms with a Unix-like select() function, which is where
+     * FD_SETSIZE is a concern. */
+
+    struct rlimit rlim_nofile;
+    int restore_rlim_nofile = 0;
+    int ret;
+    mbedtls_net_context ctx;
+    uint8_t buf[1];
+
+    mbedtls_net_init(&ctx);
+
+    /* On many systems, by default, the maximum permitted file descriptor
+     * number is less than FD_SETSIZE. If so, raise the limit if
+     * possible.
+     *
+     * If the limit can't be raised, a file descriptor opened by the
+     * net_sockets module will be less than FD_SETSIZE, so the test
+     * is not necessary and we mark it as skipped.
+     * A file descriptor could still be higher than FD_SETSIZE if it was
+     * opened before the limit was lowered (which is something an application
+     * might do); but we don't do such things in our test code, so the unit
+     * test will run if it can.
+     */
+    TEST_ASSERT(getrlimit(RLIMIT_NOFILE, &rlim_nofile) == 0);
+    if (rlim_nofile.rlim_cur < FD_SETSIZE + 1) {
+        rlim_t old_rlim_cur = rlim_nofile.rlim_cur;
+        rlim_nofile.rlim_cur = FD_SETSIZE + 1;
+        TEST_ASSUME(setrlimit(RLIMIT_NOFILE, &rlim_nofile) == 0);
+        rlim_nofile.rlim_cur = old_rlim_cur;
+        restore_rlim_nofile = 1;
+    }
+
+    TEST_ASSERT(open_file_on_fd(&ctx, FD_SETSIZE) == 0);
+
+    /* In principle, mbedtls_net_poll() with valid arguments should succeed.
+     * However, we know that on Unix-like platforms (and others), this function
+     * is implemented on top of select() and fd_set, which do not support
+     * file descriptors greater or equal to FD_SETSIZE. So we expect to hit
+     * this platform limitation.
+     *
+     * If mbedtls_net_poll() does not proprely check that ctx.fd is in range,
+     * it may still happen to return the expected failure code, but if this
+     * is problematic on the particular platform where the code is running,
+     * a memory sanitizer such as UBSan should catch it.
+     */
+    ret = mbedtls_net_poll(&ctx, MBEDTLS_NET_POLL_READ, 0);
+    TEST_EQUAL(ret, MBEDTLS_ERR_NET_POLL_FAILED);
+
+    /* mbedtls_net_recv_timeout() uses select() and fd_set in the same way. */
+    ret = mbedtls_net_recv_timeout(&ctx, buf, sizeof(buf), 0);
+    TEST_EQUAL(ret, MBEDTLS_ERR_NET_POLL_FAILED);
+
+exit:
+    mbedtls_net_free(&ctx);
+    if (restore_rlim_nofile) {
+        setrlimit(RLIMIT_NOFILE, &rlim_nofile);
+    }
+}
+/* END_CASE */

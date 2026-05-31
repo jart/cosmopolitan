@@ -1,0 +1,185 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/pkcs7.h"
+#include "mbedtls/x509.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_crl.h"
+#include "x509_internal.h"
+#include "mbedtls/oid.h"
+#include "sys/types.h"
+#include "sys/stat.h"
+#include "mbedtls/private/rsa.h"
+#include "mbedtls/error.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PKCS7_C
+ * END_DEPENDENCIES
+ */
+/* BEGIN_SUITE_HELPERS */
+static int pkcs7_parse_buffer(unsigned char *pkcs7_buf, int buflen)
+{
+    int res;
+    mbedtls_pkcs7 pkcs7;
+
+    mbedtls_pkcs7_init(&pkcs7);
+    res = mbedtls_pkcs7_parse_der(&pkcs7, pkcs7_buf, buflen);
+    mbedtls_pkcs7_free(&pkcs7);
+    return res;
+}
+/* END_SUITE_HELPERS */
+
+/* BEGIN_CASE */
+void pkcs7_asn1_fail(data_t *pkcs7_buf)
+{
+    int res;
+
+    /* PKCS7 uses X509 which itself relies on PK under the hood and the latter
+     * can use PSA to store keys and perform operations so psa_crypto_init()
+     * must be called before. */
+    USE_PSA_INIT();
+
+    res = pkcs7_parse_buffer(pkcs7_buf->x, pkcs7_buf->len);
+    TEST_ASSERT(res != MBEDTLS_PKCS7_SIGNED_DATA);
+
+exit:
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_FS_IO */
+void pkcs7_parse(char *pkcs7_file, int res_expect)
+{
+    unsigned char *pkcs7_buf = NULL;
+    size_t buflen;
+    int res;
+
+    /* PKCS7 uses X509 which itself relies on PK under the hood and the latter
+     * can use PSA to store keys and perform operations so psa_crypto_init()
+     * must be called before. */
+    USE_PSA_INIT();
+
+    res = mbedtls_pk_load_file(pkcs7_file, &pkcs7_buf, &buflen);
+    TEST_EQUAL(res, 0);
+
+    res = pkcs7_parse_buffer(pkcs7_buf, buflen);
+    TEST_EQUAL(res, res_expect);
+
+exit:
+    mbedtls_free(pkcs7_buf);
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_FS_IO:MBEDTLS_X509_CRT_PARSE_C:PSA_HAVE_ALG_SOME_RSA_VERIFY */
+void pkcs7_verify(char *pkcs7_file,
+                  char *crt_files,
+                  char *filetobesigned,
+                  int do_hash_alg,
+                  int res_expect)
+{
+    unsigned char *pkcs7_buf = NULL;
+    size_t buflen, i, k, cnt = 0, n_crts = 1;
+    unsigned char *data = NULL;
+    char **crt_files_arr = NULL;
+    unsigned char *hash = NULL;
+    struct stat st;
+    size_t datalen;
+    int res;
+    FILE *file;
+    const mbedtls_md_info_t *md_info;
+    mbedtls_pkcs7 pkcs7;
+    mbedtls_x509_crt **crts = NULL;
+
+    USE_PSA_INIT();
+
+    mbedtls_pkcs7_init(&pkcs7);
+
+    /* crt_files are space seprated list */
+    for (i = 0; i < strlen(crt_files); i++) {
+        if (crt_files[i] == ' ') {
+            n_crts++;
+        }
+    }
+
+    TEST_CALLOC(crts, n_crts);
+    TEST_CALLOC(crt_files_arr, n_crts);
+
+    for (i = 0; i < strlen(crt_files); i++) {
+        for (k = i; k < strlen(crt_files); k++) {
+            if (crt_files[k] == ' ') {
+                break;
+            }
+        }
+        TEST_CALLOC(crt_files_arr[cnt], (k-i)+1);
+        crt_files_arr[cnt][k-i] = '\0';
+        memcpy(crt_files_arr[cnt++], crt_files + i, k-i);
+        i = k;
+    }
+
+    for (i = 0; i < n_crts; i++) {
+        TEST_CALLOC(crts[i], 1);
+        mbedtls_x509_crt_init(crts[i]);
+    }
+
+    res = mbedtls_pk_load_file(pkcs7_file, &pkcs7_buf, &buflen);
+    TEST_EQUAL(res, 0);
+
+    res = mbedtls_pkcs7_parse_der(&pkcs7, pkcs7_buf, buflen);
+    TEST_EQUAL(res, MBEDTLS_PKCS7_SIGNED_DATA);
+
+    TEST_EQUAL(pkcs7.signed_data.no_of_signers, n_crts);
+
+    for (i = 0; i < n_crts; i++) {
+        res = mbedtls_x509_crt_parse_file(crts[i], crt_files_arr[i]);
+        TEST_EQUAL(res, 0);
+    }
+
+    res = stat(filetobesigned, &st);
+    TEST_EQUAL(res, 0);
+
+    file = fopen(filetobesigned, "rb");
+    TEST_ASSERT(file != NULL);
+
+    datalen = st.st_size;
+    /* Special-case for zero-length input so that data will be non-NULL */
+    TEST_CALLOC(data, datalen == 0 ? 1 : datalen);
+    buflen = fread((void *) data, sizeof(unsigned char), datalen, file);
+    TEST_EQUAL(buflen, datalen);
+
+    fclose(file);
+
+    if (do_hash_alg) {
+        md_info = mbedtls_md_info_from_type((mbedtls_md_type_t) do_hash_alg);
+        TEST_CALLOC(hash, mbedtls_md_get_size(md_info));
+        res = mbedtls_md(md_info, data, datalen, hash);
+        TEST_EQUAL(res, 0);
+
+        for (i = 0; i < n_crts; i++) {
+            res =
+                mbedtls_pkcs7_signed_hash_verify(&pkcs7, crts[i], hash,
+                                                 mbedtls_md_get_size(md_info));
+            TEST_EQUAL(res, res_expect);
+        }
+    } else {
+        for (i = 0; i < n_crts; i++) {
+            res = mbedtls_pkcs7_signed_data_verify(&pkcs7, crts[i], data, datalen);
+            TEST_EQUAL(res, res_expect);
+        }
+    }
+
+exit:
+    for (i = 0; i < n_crts; i++) {
+        mbedtls_x509_crt_free(crts[i]);
+        mbedtls_free(crts[i]);
+        mbedtls_free(crt_files_arr[i]);
+    }
+    mbedtls_free(hash);
+    mbedtls_pkcs7_free(&pkcs7);
+    mbedtls_free(crt_files_arr);
+    mbedtls_free(crts);
+    mbedtls_free(data);
+    mbedtls_free(pkcs7_buf);
+    USE_PSA_DONE();
+}
+/* END_CASE */

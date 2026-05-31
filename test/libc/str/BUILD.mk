@@ -50,8 +50,7 @@ TEST_LIBC_STR_DIRECTDEPS =					\
 	THIRD_PARTY_COMPILER_RT					\
 	THIRD_PARTY_HACLSTAR					\
 	THIRD_PARTY_LIBCXX					\
-	THIRD_PARTY_MBEDTLS					\
-	THIRD_PARTY_MBEDTLS					\
+	THIRD_PARTY_MBEDTLS4					\
 	THIRD_PARTY_MUSL					\
 	THIRD_PARTY_REGEX					\
 	THIRD_PARTY_SMALLZ4					\
@@ -68,6 +67,12 @@ o/$(MODE)/test/libc/str/str.pkg:				\
 o/$(MODE)/test/libc/str/tpenc_test.o: private			\
 		CFLAGS +=					\
 			$(TRADITIONAL)
+
+o/$(MODE)/test/libc/str/blake2_test.o: private			\
+		CPPFLAGS +=					\
+			-DMBEDTLS_ALLOW_PRIVATE_ACCESS		\
+			-Ithird_party/mbedtls4/tf-psa-crypto/drivers/builtin/include \
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 o/$(MODE)/test/libc/str/%.dbg:					\
 		$(TEST_LIBC_STR_DEPS)				\

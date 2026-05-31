@@ -19,11 +19,14 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/str/slice.h"
+#include "libc/str/str.h"
 #include "net/http/ip.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/x509.h"
-#include "third_party/mbedtls/x509_crt.h"
+#include "third_party/mbedtls4/include/mbedtls/oid.h"
+#include "third_party/mbedtls4/include/mbedtls/x509.h"
+#include "third_party/mbedtls4/include/mbedtls/x509_crt.h"
 
 /**
  * @fileoverview ssl certificate manager
@@ -59,22 +62,24 @@ void AppendCert(struct Certs *certs, mbedtls_x509_crt *cert,
   certs->p[certs->n - 1].key = key;
 }
 
+static bool IsParent(const mbedtls_x509_crt *child,
+                     const mbedtls_x509_crt *parent) {
+  return child->issuer_raw.len == parent->subject_raw.len &&
+         !memcmp(child->issuer_raw.p, parent->subject_raw.p,
+                 child->issuer_raw.len);
+}
+
 static void InternCertificate(struct Certs *certs, mbedtls_x509_crt *cert,
                               mbedtls_x509_crt *prev) {
-  int r;
   size_t i;
   if (cert->next)
     InternCertificate(certs, cert->next, cert);
   if (prev) {
-    if (mbedtls_x509_crt_check_parent(prev, cert, 1)) {
+    if (!IsParent(prev, cert)) {
       DEBUGF("(ssl) unbundling %`'s from %`'s",
              gc(FormatX509Name(&prev->subject)),
              gc(FormatX509Name(&cert->subject)));
       prev->next = 0;
-    } else if ((r = mbedtls_x509_crt_check_signature(prev, cert, 0))) {
-      WARNF("(ssl) invalid signature for %`'s -> %`'s (-0x%04x)",
-            gc(FormatX509Name(&prev->subject)),
-            gc(FormatX509Name(&cert->subject)), -r);
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
@@ -92,12 +97,12 @@ static void InternCertificate(struct Certs *certs, mbedtls_x509_crt *cert,
     }
   }
   LogCertificate("loaded certificate", cert);
-  if (!cert->next && !IsSelfSigned(cert) && cert->max_pathlen) {
+  if (!cert->next && !IsSelfSigned(cert) &&
+      mbedtls_x509_crt_get_ca_istrue(cert)) {
     for (i = 0; i < certs->n; ++i) {
       if (!certs->p[i].cert)
         continue;
-      if (mbedtls_pk_can_do(&cert->pk, certs->p[i].cert->sig_pk) &&
-          !mbedtls_x509_crt_check_parent(cert, certs->p[i].cert, 1) &&
+      if (IsParent(certs->p[i].cert, cert) &&
           !IsSelfSigned(certs->p[i].cert)) {
         if (ChainCertificate(cert, certs->p[i].cert))
           break;
@@ -110,9 +115,8 @@ static void InternCertificate(struct Certs *certs, mbedtls_x509_crt *cert,
         continue;
       if (certs->p[i].cert->next)
         continue;
-      if (certs->p[i].cert->max_pathlen &&
-          mbedtls_pk_can_do(&certs->p[i].cert->pk, cert->sig_pk) &&
-          !mbedtls_x509_crt_check_parent(certs->p[i].cert, cert, 1)) {
+      if (mbedtls_x509_crt_get_ca_istrue(certs->p[i].cert) &&
+          IsParent(cert, certs->p[i].cert)) {
         ChainCertificate(certs->p[i].cert, cert);
       }
     }
@@ -194,20 +198,20 @@ static bool CertHasCommonName(const mbedtls_x509_crt *cert, const void *s,
   return false;
 }
 
-static bool TlsRouteFind(struct Certs *certs, mbedtls_pk_type_t type,
+static bool TlsRouteFind(struct Certs *certs, psa_key_type_t type,
                          mbedtls_ssl_context *ssl, const unsigned char *host,
                          size_t size, int64_t ip) {
   int i;
   for (i = 0; i < certs->n; ++i) {
     if (IsServerCert(certs->p + i, type) &&
-        (((certs->p[i].cert->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME) &&
+        (((mbedtls_x509_crt_has_ext_type(certs->p[i].cert,
+                                         MBEDTLS_X509_EXT_SUBJECT_ALT_NAME)) &&
           (ip == -1 ? CertHasHost(certs->p[i].cert, host, size)
                     : CertHasIp(certs->p[i].cert, ip))) ||
          CertHasCommonName(certs->p[i].cert, host, size))) {
       CHECK_EQ(0, mbedtls_ssl_set_hs_own_cert(ssl, certs->p[i].cert,
                                               certs->p[i].key));
-      DEBUGF("(ssl) TlsRoute(%s, %`'.*s) %s %`'s", mbedtls_pk_type_name(type),
-             size, host, mbedtls_pk_get_name(&certs->p[i].cert->pk),
+      DEBUGF("(ssl) TlsRoute(%`'.*s) %`'s", size, host,
              gc(FormatX509Name(&certs->p[i].cert->subject)));
       return true;
     }
@@ -215,15 +219,14 @@ static bool TlsRouteFind(struct Certs *certs, mbedtls_pk_type_t type,
   return false;
 }
 
-static bool TlsRouteFirst(struct Certs *certs, mbedtls_pk_type_t type,
+static bool TlsRouteFirst(struct Certs *certs, psa_key_type_t type,
                           mbedtls_ssl_context *ssl) {
   int i;
   for (i = 0; i < certs->n; ++i) {
     if (IsServerCert(certs->p + i, type)) {
       CHECK_EQ(0, mbedtls_ssl_set_hs_own_cert(ssl, certs->p[i].cert,
                                               certs->p[i].key));
-      DEBUGF("(ssl) TlsRoute(%s) %s %`'s", mbedtls_pk_type_name(type),
-             mbedtls_pk_get_name(&certs->p[i].cert->pk),
+      DEBUGF("(ssl) TlsRoute %`'s",
              gc(FormatX509Name(&certs->p[i].cert->subject)));
       return true;
     }
@@ -240,12 +243,13 @@ int TlsRoute(void *ctx, mbedtls_ssl_context *ssl, const unsigned char *host,
   bool ok1, ok2;
   struct Certs *certs = ctx;
   ip = ParseIp((const char *)host, size);
-  ok1 = TlsRouteFind(certs, MBEDTLS_PK_ECKEY, ssl, host, size, ip);
-  ok2 = TlsRouteFind(certs, MBEDTLS_PK_RSA, ssl, host, size, ip);
+  ok1 = TlsRouteFind(certs, PSA_KEY_TYPE_ECC_KEY_PAIR_BASE, ssl, host, size,
+                     ip);
+  ok2 = TlsRouteFind(certs, PSA_KEY_TYPE_RSA_KEY_PAIR, ssl, host, size, ip);
   if (!ok1 && !ok2) {
     WARNF("(ssl) TlsRoute(%`'.*s) not found", size, host);
-    ok1 = TlsRouteFirst(certs, MBEDTLS_PK_ECKEY, ssl);
-    ok2 = TlsRouteFirst(certs, MBEDTLS_PK_RSA, ssl);
+    ok1 = TlsRouteFirst(certs, PSA_KEY_TYPE_ECC_KEY_PAIR_BASE, ssl);
+    ok2 = TlsRouteFirst(certs, PSA_KEY_TYPE_RSA_KEY_PAIR, ssl);
   }
   return ok1 || ok2 ? 0 : -1;
 }

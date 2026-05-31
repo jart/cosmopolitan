@@ -1,0 +1,313 @@
+/* BEGIN_HEADER */
+/* Testing of mbedtls_ssl_decrypt_buf() specifically, focusing on negative
+ * testing (using malformed inputs). */
+
+#include <mbedtls/ssl.h>
+#include <ssl_misc.h>
+#include <test/ssl_helpers.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_SSL_TLS_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_SSL_NULL_CIPHERSUITES */
+void ssl_decrypt_null(int hash_id)
+{
+    mbedtls_ssl_transform transform_in, transform_out;
+    mbedtls_ssl_transform_init(&transform_in);
+    mbedtls_ssl_transform_init(&transform_out);
+    const mbedtls_ssl_protocol_version version = MBEDTLS_SSL_VERSION_TLS1_2;
+    const mbedtls_cipher_type_t cipher_type = MBEDTLS_CIPHER_NULL;
+    mbedtls_record rec_good = {
+        .ctr = { 0 },
+        .type = MBEDTLS_SSL_MSG_APPLICATION_DATA,
+        .ver = { 0, 0 },    /* Will be set by a function call below */
+        .buf = NULL,
+        .buf_len = 0,
+        .data_offset = 0,
+        .data_len = 0,
+#if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
+        .cid_len = 0,
+        .cid = { 0 },
+#endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+    };
+    mbedtls_ssl_write_version(rec_good.ver,
+                              MBEDTLS_SSL_TRANSPORT_STREAM,
+                              version);
+    /* We need to tell the compiler that we meant to leave out the null character. */
+    const char sample_plaintext[3] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "ABC";
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_init(&ssl);
+    uint8_t *buf = NULL;
+
+    MD_OR_USE_PSA_INIT();
+
+    TEST_EQUAL(mbedtls_test_ssl_build_transforms(&transform_in, &transform_out,
+                                                 cipher_type, hash_id, 0, 0,
+                                                 version,
+                                                 0, 0), 0);
+
+    const size_t plaintext_length = sizeof(sample_plaintext);
+    rec_good.buf_len = plaintext_length + transform_in.maclen;
+    rec_good.data_len = plaintext_length;
+    TEST_CALLOC(rec_good.buf, rec_good.buf_len);
+    memcpy(rec_good.buf, sample_plaintext, plaintext_length);
+    TEST_EQUAL(mbedtls_test_ssl_prepare_record_mac(&rec_good,
+                                                   &transform_out), 0);
+
+    /* Good case */
+    mbedtls_record rec = rec_good;
+    TEST_EQUAL(mbedtls_ssl_decrypt_buf(&ssl, &transform_in, &rec), 0);
+
+    /* Change any one byte of the plaintext or MAC. The MAC will be wrong. */
+    TEST_CALLOC(buf, rec.buf_len);
+    for (size_t i = 0; i < rec.buf_len; i++) {
+        mbedtls_test_set_step(i);
+        rec = rec_good;
+        rec.buf = buf;
+        memcpy(buf, rec_good.buf, rec.buf_len);
+        buf[i] ^= 1;
+        TEST_EQUAL(mbedtls_ssl_decrypt_buf(&ssl, &transform_in, &rec),
+                   MBEDTLS_ERR_SSL_INVALID_MAC);
+    }
+    mbedtls_free(buf);
+    buf = NULL;
+
+    /* Shorter input buffer. Either the MAC will be wrong, or there isn't
+     * enough room for a MAC. */
+    for (size_t n = 1; n < rec.buf_len; n++) {
+        mbedtls_test_set_step(n);
+        rec = rec_good;
+        TEST_CALLOC(buf, n);
+        rec.buf = buf;
+        rec.buf_len = n;
+        rec.data_len = n;
+        memcpy(buf, rec_good.buf, n);
+        TEST_EQUAL(mbedtls_ssl_decrypt_buf(&ssl, &transform_in, &rec),
+                   MBEDTLS_ERR_SSL_INVALID_MAC);
+        mbedtls_free(buf);
+        buf = NULL;
+    }
+
+    /* For robustness, check a 0-length buffer (non-null, then null).
+     * This should not reach mbedtls_ssl_decrypt_buf() as used in the library,
+     * so the exact error doesn't matter, but we don't want a crash. */
+    {
+        const uint8_t buf1[1] = { 'a' };
+        rec = rec_good;
+        /* We won't write to buf1[0] since it's out of range, so we can cast
+         * the const away. */
+        rec.buf = (uint8_t *) buf1;
+        rec.buf_len = 0;
+        TEST_EQUAL(mbedtls_ssl_decrypt_buf(&ssl, &transform_in, &rec),
+                   MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+    }
+    rec = rec_good;
+    rec.buf = NULL;
+    rec.buf_len = 0;
+    TEST_EQUAL(mbedtls_ssl_decrypt_buf(&ssl, &transform_in, &rec),
+               MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+
+exit:
+    mbedtls_ssl_transform_free(&transform_in);
+    mbedtls_ssl_transform_free(&transform_out);
+    mbedtls_free(rec_good.buf);
+    mbedtls_ssl_free(&ssl);
+    mbedtls_free(buf);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_WANT_ALG_CBC_NO_PADDING:PSA_WANT_KEY_TYPE_AES:MBEDTLS_SSL_PROTO_TLS1_2 */
+void ssl_decrypt_non_etm_cbc(int cipher_type, int hash_id, int trunc_hmac,
+                             int length_selector)
+{
+    /*
+     * Test record decryption for CBC without EtM, focused on the verification
+     * of padding and MAC.
+     *
+     * Actually depends on TLS 1.2 and either AES, ARIA or Camellia, but since
+     * the test framework doesn't support alternation in dependency statements,
+     * just depend on AES.
+     *
+     * The length_selector argument is interpreted as follows:
+     * - if it's -1, the plaintext length is 0 and minimal padding is applied
+     * - if it's -2, the plaintext length is 0 and maximal padding is applied
+     * - otherwise it must be in [0, 255] and is padding_length from RFC 5246:
+     *   it's the length of the rest of the padding, that is, excluding the
+     *   byte that encodes the length. The minimal non-zero plaintext length
+     *   that gives this padding_length is automatically selected.
+     */
+    mbedtls_ssl_context ssl; /* ONLY for debugging */
+    mbedtls_ssl_transform t0, t1;
+    mbedtls_record rec, rec_save;
+    unsigned char *buf = NULL, *buf_save = NULL;
+    size_t buflen, olen = 0;
+    size_t plaintext_len, block_size, i;
+    unsigned char padlen; /* excluding the padding_length byte */
+    int exp_ret;
+    int ret;
+    const unsigned char pad_max_len = 255; /* Per the standard */
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_transform_init(&t0);
+    mbedtls_ssl_transform_init(&t1);
+    MD_OR_USE_PSA_INIT();
+
+    /* Set up transforms with dummy keys */
+    ret = mbedtls_test_ssl_build_transforms(&t0, &t1, cipher_type, hash_id,
+                                            0, trunc_hmac,
+                                            MBEDTLS_SSL_VERSION_TLS1_2,
+                                            0, 0);
+
+    TEST_ASSERT(ret == 0);
+
+    /* Determine padding/plaintext length */
+    TEST_ASSERT(length_selector >= -2 && length_selector <= 255);
+    block_size = t0.ivlen;
+    if (length_selector < 0) {
+        plaintext_len = 0;
+
+        /* Minimal padding
+         * The +1 is for the padding_length byte, not counted in padlen. */
+        padlen = block_size - (t0.maclen + 1) % block_size;
+
+        /* Maximal padding? */
+        if (length_selector == -2) {
+            padlen += block_size * ((pad_max_len - padlen) / block_size);
+        }
+    } else {
+        padlen = length_selector;
+
+        /* Minimal non-zero plaintext_length giving desired padding.
+         * The +1 is for the padding_length byte, not counted in padlen. */
+        plaintext_len = block_size - (padlen + t0.maclen + 1) % block_size;
+    }
+
+    /* Prepare a buffer for record data */
+    buflen = block_size
+             + plaintext_len
+             + t0.maclen
+             + padlen + 1;
+    TEST_CALLOC(buf, buflen);
+    TEST_CALLOC(buf_save, buflen);
+
+    /* Prepare a dummy record header */
+    memset(rec.ctr, 0, sizeof(rec.ctr));
+    rec.type    = MBEDTLS_SSL_MSG_APPLICATION_DATA;
+    mbedtls_ssl_write_version(rec.ver, MBEDTLS_SSL_TRANSPORT_STREAM,
+                              MBEDTLS_SSL_VERSION_TLS1_2);
+#if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
+    rec.cid_len = 0;
+#endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+
+    /* Prepare dummy record content */
+    rec.buf     = buf;
+    rec.buf_len = buflen;
+    rec.data_offset = block_size;
+    rec.data_len = plaintext_len;
+    memset(rec.buf + rec.data_offset, 42, rec.data_len);
+
+    /* Set dummy IV */
+    memset(t0.iv_enc, 0x55, t0.ivlen);
+    memcpy(rec.buf, t0.iv_enc, t0.ivlen);
+
+    /*
+     * Prepare a pre-encryption record (with MAC and padding), and save it.
+     */
+    TEST_EQUAL(0, mbedtls_test_ssl_prepare_record_mac(&rec, &t0));
+
+    /* Pad */
+    memset(rec.buf + rec.data_offset + rec.data_len, padlen, padlen + 1);
+    rec.data_len += padlen + 1;
+
+    /* Save correct pre-encryption record */
+    rec_save = rec;
+    rec_save.buf = buf_save;
+    memcpy(buf_save, buf, buflen);
+
+    /*
+     * Encrypt and decrypt the correct record, expecting success
+     */
+    TEST_EQUAL(0, mbedtls_test_psa_cipher_encrypt_helper(
+                   &t0, t0.iv_enc, t0.ivlen, rec.buf + rec.data_offset,
+                   rec.data_len, rec.buf + rec.data_offset, &olen));
+    rec.data_offset -= t0.ivlen;
+    rec.data_len    += t0.ivlen;
+
+    TEST_EQUAL(0, mbedtls_ssl_decrypt_buf(&ssl, &t1, &rec));
+
+    /*
+     * Modify each byte of the pre-encryption record before encrypting and
+     * decrypting it, expecting failure every time.
+     */
+    for (i = block_size; i < buflen; i++) {
+        mbedtls_test_set_step(i);
+
+        /* Restore correct pre-encryption record */
+        rec = rec_save;
+        rec.buf = buf;
+        memcpy(buf, buf_save, buflen);
+
+        /* Corrupt one byte of the data (could be plaintext, MAC or padding) */
+        rec.buf[i] ^= 0x01;
+
+        /* Encrypt */
+        TEST_EQUAL(0, mbedtls_test_psa_cipher_encrypt_helper(
+                       &t0, t0.iv_enc, t0.ivlen, rec.buf + rec.data_offset,
+                       rec.data_len, rec.buf + rec.data_offset, &olen));
+        rec.data_offset -= t0.ivlen;
+        rec.data_len    += t0.ivlen;
+
+        /* Decrypt and expect failure */
+        TEST_EQUAL(MBEDTLS_ERR_SSL_INVALID_MAC,
+                   mbedtls_ssl_decrypt_buf(&ssl, &t1, &rec));
+    }
+
+    /*
+     * Use larger values of the padding bytes - with small buffers, this tests
+     * the case where the announced padlen would be larger than the buffer
+     * (and before that, than the buffer minus the size of the MAC), to make
+     * sure our padding checking code does not perform any out-of-bounds reads
+     * in this case. (With larger buffers, ie when the plaintext is long or
+     * maximal length padding is used, this is less relevant but still doesn't
+     * hurt to test.)
+     *
+     * (Start the loop with correct padding, just to double-check that record
+     * saving did work, and that we're overwriting the correct bytes.)
+     */
+    for (i = padlen; i <= pad_max_len; i++) {
+        mbedtls_test_set_step(i);
+
+        /* Restore correct pre-encryption record */
+        rec = rec_save;
+        rec.buf = buf;
+        memcpy(buf, buf_save, buflen);
+
+        /* Set padding bytes to new value */
+        memset(buf + buflen - padlen - 1, i, padlen + 1);
+
+        /* Encrypt */
+        TEST_EQUAL(0, mbedtls_test_psa_cipher_encrypt_helper(
+                       &t0, t0.iv_enc, t0.ivlen, rec.buf + rec.data_offset,
+                       rec.data_len, rec.buf + rec.data_offset, &olen));
+        rec.data_offset -= t0.ivlen;
+        rec.data_len    += t0.ivlen;
+
+        /* Decrypt and expect failure except the first time */
+        exp_ret = (i == padlen) ? 0 : MBEDTLS_ERR_SSL_INVALID_MAC;
+        TEST_EQUAL(exp_ret, mbedtls_ssl_decrypt_buf(&ssl, &t1, &rec));
+    }
+
+exit:
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_transform_free(&t0);
+    mbedtls_ssl_transform_free(&t1);
+    mbedtls_free(buf);
+    mbedtls_free(buf_save);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */

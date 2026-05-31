@@ -1,0 +1,11 @@
+# Readthedocs redirects
+# See https://docs.readthedocs.io/en/stable/user-defined-redirects.html
+#
+# Changes to this file do not take effect until they are merged into the
+# 'development' branch. This is because the API token (RTD_TOKEN) is not
+# made available in PR jobs - preventing bad actors from crafting PRs to
+# expose it.
+
+- type: exact
+  from_url: /projects/api/en/latest/*
+  to_url: /projects/api/en/development/:splat

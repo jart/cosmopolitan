@@ -1,0 +1,688 @@
+/* BEGIN_HEADER */
+#include <stdint.h>
+#include <string.h>
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <test/fork_helpers.h>
+#endif
+
+#include <psa/crypto.h>
+
+/* Some tests in this module configure entropy sources. */
+#include "psa_crypto_invasive.h"
+
+#include "mbedtls/private/entropy.h"
+#include "entropy_poll.h"
+
+#define ENTROPY_MIN_NV_SEED_SIZE                                        \
+    MAX(MBEDTLS_ENTROPY_POLL_PLATFORM_MIN, MBEDTLS_ENTROPY_BLOCK_SIZE)
+
+#include "psa_crypto_random_impl.h"
+#if defined(MBEDTLS_PSA_HMAC_DRBG_MD_TYPE)
+/* PSA crypto uses the HMAC_DRBG module. It reads from the entropy source twice:
+ * once for the initial entropy and once for a nonce. The nonce length is
+ * half the entropy length. For SHA-256, SHA-384 or SHA-512, the
+ * entropy length is 256 per the documentation of mbedtls_hmac_drbg_seed(),
+ * and PSA crypto doesn't support other hashes for HMAC_DRBG. */
+#define ENTROPY_NONCE_LEN (256 / 2)
+#else
+/* PSA crypto uses the CTR_DRBG module. In some configurations, it needs
+ * to read from the entropy source twice: once for the initial entropy
+ * and once for a nonce. */
+#include "mbedtls/private/ctr_drbg.h"
+#define ENTROPY_NONCE_LEN MBEDTLS_CTR_DRBG_ENTROPY_NONCE_LEN
+#endif
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+
+typedef struct {
+    size_t threshold; /* Minimum bytes to make mbedtls_entropy_func happy */
+    size_t max_steps;
+    size_t *length_sequence;
+    size_t step;
+} fake_entropy_state_t;
+
+static int fake_entropy_source(void *state_arg,
+                               unsigned char *output, size_t len,
+                               size_t *olen)
+{
+    fake_entropy_state_t *state = state_arg;
+    size_t i;
+
+    if (state->step >= state->max_steps) {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    *olen = MIN(len, state->length_sequence[state->step]);
+    for (i = 0; i < *olen; i++) {
+        output[i] = i;
+    }
+    ++state->step;
+    return 0;
+}
+
+#define ENTROPY_SOURCE_PLATFORM                 0x00000001
+#define ENTROPY_SOURCE_NV_SEED                  0x00000008
+#define ENTROPY_SOURCE_FAKE                     0x40000000
+
+static uint32_t custom_entropy_sources_mask;
+static fake_entropy_state_t fake_entropy_state;
+
+/* This is a modified version of mbedtls_entropy_init() from entropy.c
+ * which chooses entropy sources dynamically. */
+static void custom_entropy_init(mbedtls_entropy_context *ctx)
+{
+    ctx->source_count = 0;
+    memset(ctx->source, 0, sizeof(ctx->source));
+
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_init(&ctx->mutex);
+#endif
+
+    ctx->accumulator_started = 0;
+    mbedtls_md_init(&ctx->accumulator);
+
+#if defined(MBEDTLS_PSA_BUILTIN_GET_ENTROPY) || defined(MBEDTLS_PSA_DRIVER_GET_ENTROPY)
+    if (custom_entropy_sources_mask & ENTROPY_SOURCE_PLATFORM) {
+        mbedtls_entropy_add_source(ctx, mbedtls_entropy_poll_platform, NULL,
+                                   MBEDTLS_ENTROPY_POLL_PLATFORM_MIN,
+                                   MBEDTLS_ENTROPY_SOURCE_STRONG);
+    }
+#endif
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+    if (custom_entropy_sources_mask & ENTROPY_SOURCE_NV_SEED) {
+        mbedtls_entropy_add_source(ctx, mbedtls_nv_seed_poll, NULL,
+                                   MBEDTLS_ENTROPY_BLOCK_SIZE,
+                                   MBEDTLS_ENTROPY_SOURCE_STRONG);
+        ctx->initial_entropy_run = 0;
+    } else {
+        /* Skip the NV seed even though it's compiled in. */
+        ctx->initial_entropy_run = 1;
+    }
+#endif
+
+    if (custom_entropy_sources_mask & ENTROPY_SOURCE_FAKE) {
+        mbedtls_entropy_add_source(ctx,
+                                   fake_entropy_source, &fake_entropy_state,
+                                   fake_entropy_state.threshold,
+                                   MBEDTLS_ENTROPY_SOURCE_STRONG);
+    }
+}
+
+static size_t fake_entropy_lengths[] = {
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+    MBEDTLS_ENTROPY_BLOCK_SIZE,
+};
+
+/** Initialize PSA with a deterministic RNG seed.
+ *
+ * \param max_entropy_queries   Maximum number of queries to the entropy source.
+ *                              Once this number has been reached, the
+ *                              entropy source will fail.
+ */
+static int psa_init_deterministic(size_t max_entropy_queries)
+{
+    TEST_LE_U(max_entropy_queries, ARRAY_LENGTH(fake_entropy_lengths));
+
+    fake_entropy_state.threshold = MBEDTLS_ENTROPY_BLOCK_SIZE;
+    fake_entropy_state.step = 0;
+    fake_entropy_state.max_steps = max_entropy_queries;
+    fake_entropy_state.length_sequence = fake_entropy_lengths;
+
+    custom_entropy_sources_mask = ENTROPY_SOURCE_FAKE;
+    PSA_ASSERT(mbedtls_psa_crypto_configure_entropy_sources(
+                   custom_entropy_init, mbedtls_entropy_free));
+    PSA_INIT();
+    return 1;
+
+exit:
+    return 0;
+}
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE) && \
+    !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+static void child_psa_get_random(void *param,
+                                 uint8_t *output, size_t output_size,
+                                 size_t *output_length)
+{
+    (void) param;
+    PSA_ASSERT(psa_generate_random(output, output_size));
+    *output_length = output_size;
+exit:
+    ;
+}
+#endif  /* MBEDTLS_PLATFORM_IS_UNIXLIKE && !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void create_nv_seed()
+{
+    static unsigned char seed[ENTROPY_MIN_NV_SEED_SIZE];
+    TEST_ASSERT(mbedtls_nv_seed_write(seed, sizeof(seed)) >= 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void custom_entropy_sources(int sources_arg, int expected_init_status_arg)
+{
+    psa_status_t expected_init_status = expected_init_status_arg;
+    uint8_t random[10] = { 0 };
+
+    custom_entropy_sources_mask = sources_arg;
+    PSA_ASSERT(mbedtls_psa_crypto_configure_entropy_sources(
+                   custom_entropy_init, mbedtls_entropy_free));
+
+    TEST_EQUAL(psa_crypto_init(), expected_init_status);
+    if (expected_init_status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void fake_entropy_source(int threshold,
+                         int amount1,
+                         int amount2,
+                         int amount3,
+                         int amount4,
+                         int expected_init_status_arg)
+{
+    psa_status_t expected_init_status = expected_init_status_arg;
+    uint8_t random[10] = { 0 };
+    size_t lengths[4];
+
+    fake_entropy_state.threshold = threshold;
+    fake_entropy_state.step = 0;
+    fake_entropy_state.max_steps = 0;
+    if (amount1 >= 0) {
+        lengths[fake_entropy_state.max_steps++] = amount1;
+    }
+    if (amount2 >= 0) {
+        lengths[fake_entropy_state.max_steps++] = amount2;
+    }
+    if (amount3 >= 0) {
+        lengths[fake_entropy_state.max_steps++] = amount3;
+    }
+    if (amount4 >= 0) {
+        lengths[fake_entropy_state.max_steps++] = amount4;
+    }
+    fake_entropy_state.length_sequence = lengths;
+
+    custom_entropy_sources_mask = ENTROPY_SOURCE_FAKE;
+    PSA_ASSERT(mbedtls_psa_crypto_configure_entropy_sources(
+                   custom_entropy_init, mbedtls_entropy_free));
+
+    TEST_EQUAL(psa_crypto_init(), expected_init_status);
+    if (expected_init_status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void entropy_from_nv_seed(int seed_size_arg,
+                          int expected_init_status_arg)
+{
+    psa_status_t expected_init_status = expected_init_status_arg;
+    uint8_t random[10] = { 0 };
+    uint8_t *seed = NULL;
+    size_t seed_size = seed_size_arg;
+
+    TEST_CALLOC(seed, seed_size);
+    TEST_ASSERT(mbedtls_nv_seed_write(seed, seed_size) >= 0);
+
+    custom_entropy_sources_mask = ENTROPY_SOURCE_NV_SEED;
+    PSA_ASSERT(mbedtls_psa_crypto_configure_entropy_sources(
+                   custom_entropy_init, mbedtls_entropy_free));
+
+    TEST_EQUAL(psa_crypto_init(), expected_init_status);
+    if (expected_init_status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+exit:
+    mbedtls_free(seed);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void reseed_basic()
+{
+    uint8_t random[10];
+    const uint8_t perso[5] = { 'p', 'e', 'r', 's', 'o' };
+
+    TEST_EQUAL(psa_random_reseed(NULL, 0), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_random_deplete(), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_generate_random(random, sizeof(random)), PSA_ERROR_BAD_STATE);
+
+    PSA_INIT();
+
+    PSA_ASSERT(psa_random_reseed(NULL, 0));
+    PSA_ASSERT(psa_random_reseed(perso, sizeof(perso)));
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+    PSA_ASSERT(psa_random_deplete());
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+    mbedtls_psa_crypto_free();
+
+    TEST_EQUAL(psa_random_reseed(NULL, 0), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_random_deplete(), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_generate_random(random, sizeof(random)), PSA_ERROR_BAD_STATE);
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void prediction_resistance_bad_state()
+{
+    uint8_t random[10];
+
+    /* RNG inactive before initialization */
+    TEST_EQUAL(psa_random_set_prediction_resistance(0), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_random_set_prediction_resistance(1), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_generate_random(random, sizeof(random)), PSA_ERROR_BAD_STATE);
+
+    PSA_INIT();
+
+    /* Good cases, as controls */
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    PSA_ASSERT(psa_random_set_prediction_resistance(0));
+#if MBEDTLS_ENTROPY_TRUE_SOURCES > 0
+    PSA_ASSERT(psa_random_set_prediction_resistance(1));
+#endif
+
+    /* RNG inactive after shutdown */
+    mbedtls_psa_crypto_free();
+    TEST_EQUAL(psa_random_set_prediction_resistance(0), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_random_set_prediction_resistance(1), PSA_ERROR_BAD_STATE);
+    TEST_EQUAL(psa_generate_random(random, sizeof(random)), PSA_ERROR_BAD_STATE);
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void prediction_resistance_bad_arguments()
+{
+    uint8_t random[10];
+
+    PSA_INIT();
+
+    TEST_EQUAL(psa_random_set_prediction_resistance(2), PSA_ERROR_INVALID_ARGUMENT);
+    TEST_EQUAL(psa_random_set_prediction_resistance(-1), PSA_ERROR_INVALID_ARGUMENT);
+
+    /* Good cases, as controls */
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    PSA_ASSERT(psa_random_set_prediction_resistance(0));
+#if MBEDTLS_ENTROPY_TRUE_SOURCES > 0
+    PSA_ASSERT(psa_random_set_prediction_resistance(1));
+#else
+    TEST_EQUAL(psa_random_set_prediction_resistance(1), PSA_ERROR_NOT_SUPPORTED);
+#endif
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+/* Check that reseeding consumes entropy.
+ *
+ * For simplicity, this test function assumes that the DRBG has prediction
+ * resistance turned off, so the few RNG queries in this function don't
+ * trigger a reseed.
+ */
+void reseed_consumption()
+{
+    uint8_t random[10] = { 0 };
+    const size_t max_get_entropy = 4;
+
+    if (!psa_init_deterministic(max_get_entropy)) {
+        goto exit;
+    }
+
+    /* Depending on the DRBG parameters, the initial seeding may
+     * consume entropy once or twice. Zero would be deeply unsettling
+     * (how can you initialize the RNG without entropy?). More than 2 would
+     * be ok, but the test code would need to be adapted. */
+    TEST_LE_U(1, fake_entropy_state.step);
+    TEST_LE_U(fake_entropy_state.step, 2);
+    /* Arrange to have exactly 2 entropy blocks remaining. */
+    fake_entropy_state.step = max_get_entropy - 2;
+
+    /* Explicit reseed, consumes 1 entropy block, 1 remaining */
+    PSA_ASSERT(psa_random_reseed(NULL, 0));
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+    /* Explicit reseed, consumes 1 entropy block, 0 remaining */
+    PSA_ASSERT(psa_random_reseed(NULL, 0));
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+    /* All entropy blocks are now consumed */
+    TEST_EQUAL(psa_random_reseed(NULL, 0), PSA_ERROR_INSUFFICIENT_ENTROPY);
+
+    /* The random generator is still fine after failing to reseed
+     * explicitly. Should it be? */
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void deplete_consumption()
+{
+    uint8_t random[10] = { 0 };
+
+    if (!psa_init_deterministic(4)) {
+        goto exit;
+    }
+
+    /* Depending on the DRBG parameters, the initial seeding may
+     * consume entropy once or twice. Reset to 1 to keep things simple. */
+    fake_entropy_state.step = 1;
+
+    PSA_ASSERT(psa_random_deplete());
+    TEST_EQUAL(fake_entropy_state.step, 1);
+
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_LE_U(2, fake_entropy_state.step);
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:MBEDTLS_ENTROPY_HAVE_TRUE_SOURCES */
+void prediction_resistance_consumption()
+{
+    uint8_t random[10] = { 0 };
+
+    if (!psa_init_deterministic(4)) {
+        goto exit;
+    }
+
+    /* Depending on the DRBG parameters, the initial seeding may
+     * consume entropy once or twice. Reset to 1 to keep things simple. */
+    fake_entropy_state.step = 1;
+
+    /* Default: no prediction resistance */
+    /* (Note, we assume that prediction resistance is not effectively enabled
+     * at compile time by setting a very low reseed interval.) */
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_EQUAL(fake_entropy_state.step, 1);
+
+    /* Explicitly enable prediction resistance */
+    PSA_ASSERT(psa_random_set_prediction_resistance(1));
+    TEST_EQUAL(fake_entropy_state.step, 1);
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_EQUAL(fake_entropy_state.step, 2);
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_EQUAL(fake_entropy_state.step, 3);
+
+    /* Explicitly disable prediction resistance */
+    PSA_ASSERT(psa_random_set_prediction_resistance(0));
+    TEST_EQUAL(fake_entropy_state.step, 3);
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_EQUAL(fake_entropy_state.step, 3);
+    PSA_ASSERT(psa_generate_random(random, sizeof(random)));
+    TEST_EQUAL(fake_entropy_state.step, 3);
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void reseed_uniqueness(data_t *perso1, data_t *perso2)
+{
+    uint8_t random0[10] = { 0 };
+    uint8_t random1[10] = { 0 };
+    uint8_t random2[10] = { 0 };
+    uint8_t random_again[10] = { 0 };
+    /* Enough for 2 initial seeding + 2 reseed + 2 getrandom with
+     * prediction resistance */
+    size_t max_entropy_queries = 6;
+
+    /* Reference: no reseed */
+    if (!psa_init_deterministic(max_entropy_queries)) {
+        goto exit;
+    }
+    PSA_ASSERT(psa_generate_random(random0, sizeof(random0)));
+    mbedtls_psa_crypto_free();
+
+    /* Reference: no reseed, again */
+    if (!psa_init_deterministic(max_entropy_queries)) {
+        goto exit;
+    }
+    PSA_ASSERT(psa_generate_random(random_again, sizeof(random_again)));
+    mbedtls_psa_crypto_free();
+    TEST_MEMORY_COMPARE(random0, sizeof(random0),
+                        random_again, sizeof(random_again));
+
+    /* Reseed with a personalization string */
+    if (!psa_init_deterministic(max_entropy_queries)) {
+        goto exit;
+    }
+    PSA_ASSERT(psa_random_reseed(perso1->x, perso1->len));
+    PSA_ASSERT(psa_generate_random(random1, sizeof(random1)));
+    mbedtls_psa_crypto_free();
+    TEST_ASSERT(memcmp(random0, random1, sizeof(random1)) != 0);
+
+    /* Reseed with a personalization string (same or different) */
+    if (!psa_init_deterministic(max_entropy_queries)) {
+        goto exit;
+    }
+    PSA_ASSERT(psa_random_reseed(perso2->x, perso2->len));
+    PSA_ASSERT(psa_generate_random(random2, sizeof(random2)));
+    mbedtls_psa_crypto_free();
+    if (perso1->len == perso2->len &&
+        memcmp(perso1->x, perso2->x, perso1->len) == 0) {
+        TEST_MEMORY_COMPARE(random1, sizeof(random1),
+                            random2, sizeof(random2));
+    } else {
+        TEST_ASSERT(memcmp(random1, random2, sizeof(random2)) != 0);
+    }
+
+    /* Reseed twice */
+    if (!psa_init_deterministic(max_entropy_queries)) {
+        goto exit;
+    }
+    PSA_ASSERT(psa_random_reseed(perso1->x, perso1->len));
+    PSA_ASSERT(psa_random_reseed(perso1->x, perso1->len));
+    PSA_ASSERT(psa_generate_random(random2, sizeof(random2)));
+    mbedtls_psa_crypto_free();
+    TEST_ASSERT(memcmp(random0, random2, sizeof(random2)) != 0);
+    TEST_ASSERT(memcmp(random1, random2, sizeof(random2)) != 0);
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void external_rng_failure_generate()
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_bits(&attributes, 128);
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    uint8_t output[1];
+
+    PSA_ASSERT(psa_crypto_init());
+
+    PSA_ASSERT(psa_generate_random(output, sizeof(output)));
+    PSA_ASSERT(psa_generate_key(&attributes, &key));
+    PSA_ASSERT(psa_destroy_key(key));
+
+    TEST_EQUAL(psa_random_reseed(NULL, 0), PSA_ERROR_NOT_SUPPORTED);
+    TEST_EQUAL(psa_random_deplete(), PSA_ERROR_NOT_SUPPORTED);
+    TEST_EQUAL(psa_random_set_prediction_resistance(0), PSA_ERROR_NOT_SUPPORTED);
+    TEST_EQUAL(psa_random_set_prediction_resistance(1), PSA_ERROR_NOT_SUPPORTED);
+
+    mbedtls_test_disable_insecure_external_rng();
+    TEST_EQUAL(PSA_ERROR_INSUFFICIENT_ENTROPY,
+               psa_generate_random(output, sizeof(output)));
+    TEST_EQUAL(PSA_ERROR_INSUFFICIENT_ENTROPY,
+               psa_generate_key(&attributes, &key));
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+void external_rng_failure_sign(int key_type, data_t *key_data, int alg,
+                               int input_size_arg)
+{
+    /* This test case is only expected to pass if the signature mechanism
+     * requires randomness, either because it is a randomized signature
+     * or because the implementation uses blinding. */
+
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, key_type);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&attributes, alg);
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t input_size = input_size_arg;
+    uint8_t *input = NULL;
+    uint8_t *signature = NULL;
+    size_t signature_size = PSA_SIGNATURE_MAX_SIZE;
+    size_t signature_length;
+
+    TEST_CALLOC(input, input_size);
+    TEST_CALLOC(signature, signature_size);
+
+    PSA_ASSERT(psa_crypto_init());
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
+                              &key));
+    PSA_ASSERT(psa_sign_hash(key, alg,
+                             input, input_size,
+                             signature, signature_size,
+                             &signature_length));
+    PSA_ASSERT(psa_destroy_key(key));
+
+    mbedtls_test_disable_insecure_external_rng();
+    /* Import the key again, because for RSA Mbed TLS caches blinding values
+     * in the key object and this could perturb the test. */
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
+                              &key));
+    TEST_EQUAL(PSA_ERROR_INSUFFICIENT_ENTROPY,
+               psa_sign_hash(key, alg,
+                             input, input_size,
+                             signature, signature_size,
+                             &signature_length));
+    PSA_ASSERT(psa_destroy_key(key));
+
+exit:
+    psa_destroy_key(key);
+    PSA_DONE();
+    mbedtls_free(input);
+    mbedtls_free(signature);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+/* Test that if a program calls fork(), the PSA RNG returns different byte
+ * sequences in each child process, and that they're different from the
+ * parent process.
+ *
+ * The argument parent_when controls when the parent calls
+ * psa_generate_random(): -1 = never, 0 = before forking, >0 = after forking
+ * that many children.
+ *
+ * Note that passing tests don't mean that everything is fine, they only
+ * mean that things are not too obviously broken. It's possible to badly
+ * design the RNG so that, for example, different child processes will
+ * have the same RNG output sequence but at an offset, or so that a child
+ * process's RNG is seeded from RNG output of the parent (making it
+ * predictable if an adversary happens to be able to get the right chunk
+ * of RNG output from th parent), or different sequencing of forking
+ * grand^n-children ends up with them having identical RNG output sequences.
+ * These bad designs are practically impossible to detect through testing,
+ * and must be excluded by human reasoning on the RNG design.
+ */
+void psa_rng_fork(int parent_when)
+{
+    struct {
+        /* We read 16 bytes from the RNG. This is large enough so that the
+         * probability of a coincidence is negligible, and small enough that
+         * the RNG won't spontaneously decide reseed to unless it has
+         * prediction resistance. */
+        unsigned char rng_output[16];
+    } child[2], parent;
+    memset(child, 0, sizeof(child));
+    memset(&parent, 0, sizeof(parent));
+
+    PSA_INIT();
+
+    /* Create some child processes, have them generate random data
+     * and report that data back to the original process. */
+    for (size_t i = 0; i < ARRAY_LENGTH(child); i++) {
+        mbedtls_test_set_step(i);
+        if ((size_t) parent_when == i) {
+            PSA_ASSERT(psa_generate_random(parent.rng_output,
+                                           sizeof(parent.rng_output)));
+        }
+        size_t length;
+        TEST_EQUAL(mbedtls_test_fork_run_child(
+                       child_psa_get_random, NULL,
+                       child[i].rng_output, sizeof(child[i].rng_output),
+                       &length), 0);
+        TEST_EQUAL(length, sizeof(child[i].rng_output));
+    }
+
+    if (parent_when == ARRAY_LENGTH(child)) {
+        PSA_ASSERT(psa_generate_random(parent.rng_output,
+                                       sizeof(parent.rng_output)));
+    }
+
+    /* Did the children have different RNG states? */
+    TEST_ASSERT(memcmp(child[0].rng_output,
+                       child[1].rng_output,
+                       sizeof(parent.rng_output)) != 0);
+    /* If parent_when >= 0: did the children have different RNG states
+     * from the parent?
+     * If parent_when < 0: did the children get nonzero RNG output?
+     */
+    for (size_t i = 0; i < ARRAY_LENGTH(child); i++) {
+        mbedtls_test_set_step(i);
+        TEST_ASSERT(memcmp(parent.rng_output,
+                           child[i].rng_output,
+                           sizeof(parent.rng_output)) != 0);
+    }
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */

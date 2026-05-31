@@ -1,0 +1,674 @@
+Empty length
+parse_prefixes:"04":MBEDTLS_ERR_ASN1_OUT_OF_DATA:UNPREDICTABLE_RESULT
+
+Incomplete length
+parse_prefixes:"0481":MBEDTLS_ERR_ASN1_OUT_OF_DATA:UNPREDICTABLE_RESULT
+
+Prefixes of OCTET STRING, length=0
+parse_prefixes:"0400":0:0
+
+Prefixes of OCTET STRING, length=0 (0 length bytes)
+parse_prefixes:"0480":MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_LENGTH
+
+Prefixes of OCTET STRING, length=1
+parse_prefixes:"040141":0:0
+
+Prefixes of OCTET STRING, length=2
+parse_prefixes:"04024142":0:0
+
+Prefixes of BOOLEAN, length=0
+parse_prefixes:"0100":MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_LENGTH
+
+Prefixes of BOOLEAN, length=1
+parse_prefixes:"010100":0:0
+
+Prefixes of BOOLEAN, length=2
+parse_prefixes:"01020000":MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_LENGTH
+
+Prefixes of INTEGER, length=1
+parse_prefixes:"020141":0:0
+
+Prefixes of INTEGER, length=2
+parse_prefixes:"02024142":0:0
+
+Prefixes of INTEGER, length=5
+parse_prefixes:"02054142434445":0:0
+
+Prefixes of empty BIT STRING
+parse_prefixes:"0300":MBEDTLS_ERR_ASN1_OUT_OF_DATA:UNPREDICTABLE_RESULT
+
+Prefixes of BIT STRING, unused_bits=0, payload_length=0
+parse_prefixes:"030100":0:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+Prefixes of BIT STRING, unused_bits=0, payload_length=1
+parse_prefixes:"0302002a":0:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+Prefixes of BIT STRING, unused_bits=1, payload_length=1
+parse_prefixes:"0302012a":0:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+Prefixes of empty SEQUENCE
+parse_prefixes:"3000":0:0
+
+Prefixes of SEQUENCE of BOOLEAN, INTEGER, INTEGER
+parse_prefixes:"300b01010102012a0203123456":0:0
+
+Prefixes of SEQUENCE of (SEQUENCE of INTEGER, INTEGER), INTEGER
+parse_prefixes:"300b3006020141020142020161":0:0
+
+length=0 (short form)
+get_len:"00":0
+
+length=0 (1 length byte)
+get_len:"8100":0
+
+length=0 (2 length bytes)
+get_len:"820000":0
+
+length=1 (short form)
+get_len:"01":1
+
+length=1 (1 length byte)
+get_len:"8101":1
+
+length=1 (2 length bytes)
+get_len:"820001":1
+
+length=1 (3 length bytes)
+get_len:"83000001":1
+
+length=1 (4 length bytes)
+get_len:"8400000001":1
+
+length=2 (short form)
+get_len:"02":2
+
+length=2 (1 length byte)
+get_len:"8102":2
+
+length=2 (2 length bytes)
+get_len:"820002":2
+
+length=2 (3 length bytes)
+get_len:"83000002":2
+
+length=2 (4 length bytes)
+get_len:"8400000002":2
+
+length=127 (short form)
+get_len:"7f":127
+
+length=128 (1 length byte)
+get_len:"8180":128
+
+length=128 (2 length bytes)
+get_len:"820080":128
+
+length=255 (1 length byte)
+get_len:"81ff":255
+
+length=255 (2 length bytes)
+get_len:"8200ff":255
+
+length=256 (2 length bytes)
+get_len:"820100":256
+
+length=256 (3 length bytes)
+get_len:"83000100":256
+
+length=258 (2 length bytes)
+get_len:"820102":258
+
+length=258 (3 length bytes)
+get_len:"83000102":258
+
+length=65535 (2 length bytes)
+get_len:"82ffff":65535
+
+length=65535 (3 length bytes)
+get_len:"8300ffff":65535
+
+length=65535 (4 length bytes)
+get_len:"840000ffff":65535
+
+length=65536 (3 length bytes)
+get_len:"83010000":65536
+
+length=65536 (4 length bytes)
+get_len:"8400010000":65536
+
+length=16777215 (3 length bytes)
+get_len:"83ffffff":16777215
+
+length=16777215 (4 length bytes)
+get_len:"8400ffffff":16777215
+
+length=16777216 (4 length bytes)
+get_len:"8401000000":16777216
+
+length=16909060 (4 length bytes)
+get_len:"8401020304":16909060
+
+BOOLEAN FALSE
+get_boolean:"010100":0:0
+
+BOOLEAN TRUE (1)
+get_boolean:"010101":1:0
+
+BOOLEAN TRUE (2)
+get_boolean:"010101":1:0
+
+BOOLEAN TRUE (128)
+get_boolean:"010180":1:0
+
+BOOLEAN TRUE (255)
+get_boolean:"0101ff":1:0
+
+Not BOOLEAN
+get_boolean:"020101":0:MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Empty INTEGER
+empty_integer:"0200"
+
+INTEGER 0
+get_integer:"020100":"0":0
+
+INTEGER 0, extra leading 0
+get_integer:"02020000":"0":0
+
+INTEGER 1
+get_integer:"020101":"1":0:
+
+INTEGER 1, extra leading 0
+get_integer:"02020001":"1":0:
+
+INTEGER 0x7f
+get_integer:"02017f":"7f":0
+
+INTEGER 0x80
+get_integer:"02020080":"80":0
+
+INTEGER 0x80, extra leading 0
+get_integer:"0203000080":"80":0
+
+INTEGER 0xff
+get_integer:"020200ff":"ff":0
+
+INTEGER 0x7fff
+get_integer:"02027fff":"7fff":0
+
+INTEGER 0x12345678
+get_integer:"020412345678":"12345678":0
+
+INTEGER 0x12345678, extra leading 0
+get_integer:"02050012345678":"12345678":0
+
+INTEGER 0x7fffffff
+get_integer:"02047fffffff":"7fffffff":0
+
+INTEGER 0x7fffffff, extra leading 0
+get_integer:"0205007fffffff":"7fffffff":0
+
+INTEGER 0x80000000
+get_integer:"02050080000000":"80000000":0
+
+INTEGER 0xffffffff
+get_integer:"020500ffffffff":"ffffffff":0
+
+INTEGER 0x100000000
+get_integer:"02050100000000":"0100000000":0
+
+INTEGER 0x123456789abcdef0
+get_integer:"0208123456789abcdef0":"123456789abcdef0":0
+
+INTEGER 0xfedcab9876543210
+get_integer:"020900fedcab9876543210":"fedcab9876543210":0
+
+INTEGER 0x1fedcab9876543210
+get_integer:"020901fedcab9876543210":"1fedcab9876543210":0
+
+INTEGER with 127 value octets
+get_integer:"027f0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":0
+
+INTEGER with 127 value octets (long length encoding)
+get_integer:"02817f0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd":0
+
+INTEGER with 128 value octets
+get_integer:"0281800123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":0
+
+INTEGER with 128 value octets (leading 0 in length)
+get_integer:"028200800123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":0
+
+INTEGER -1
+get_integer:"0201ff":"-1":0
+
+INTEGER -1, extra leading ff
+get_integer:"0202ffff":"-1":0
+
+INTEGER -0x7f
+get_integer:"020181":"-7f":0
+
+INTEGER -0x80
+get_integer:"020180":"-80":0
+
+INTEGER -0x81
+get_integer:"0202ff7f":"-81":0
+
+INTEGER -0xff
+get_integer:"0202ff01":"-ff":0
+
+INTEGER -0x100
+get_integer:"0202ff00":"-100":0
+
+INTEGER -0x7fffffff
+get_integer:"020480000001":"-7fffffff":0
+
+INTEGER -0x80000000
+get_integer:"020480000000":"-80000000":0
+
+INTEGER -0x80000001
+get_integer:"0205ff7fffffff":"-80000001":0
+
+INTEGER -0xffffffff
+get_integer:"0205ff00000001":"-ffffffff":0
+
+INTEGER -0x100000000
+get_integer:"0205ff00000000":"-100000000":0
+
+INTEGER -0x123456789abcdef0
+get_integer:"0208edcba98765432110":"-123456789abcdef0":0
+
+INTEGER -0xfedcba9876543210
+get_integer:"0209ff0123456789abcdf0":"-fedcba9876543210":0
+
+INTEGER -0x1fedcab9876543210
+get_integer:"0209fe0123546789abcdf0":"-1fedcab9876543210":0
+
+Not INTEGER
+get_integer:"010101":"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Get integer raw, correct encoding, small
+get_integer_raw:"020107":"07":0:-1
+
+Get integer raw, correct encoding, > SIZE_MAX
+get_integer_raw:"0209010000000000000000":"010000000000000000":0:-1
+
+Get integer raw, multibyte length (256)
+get_integer_raw:"028201000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":0:-1
+
+Get integer raw, correct encoding, more data than needed
+get_integer_raw:"02010707":"07":0:3
+
+Get integer raw, correct encoding, zero
+get_integer_raw:"020100":"":0:-1
+
+Get integer raw, negative number
+get_integer_raw:"0201fe":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, one 0 leading byte, valid
+get_integer_raw:"0203008080":"8080":0:-1
+
+Get integer raw, two 0 leading bytes, invalid
+get_integer_raw:"020400008080":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, multibyte length (256), negative
+get_integer_raw:"028201008123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, overlong-encoded positive
+get_integer_raw:"02020001":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, multibyte length (256), overlong encoded
+get_integer_raw:"0282010000000000000000ff0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, wrong tag
+get_integer_raw:"0f0101":"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG:-1
+
+Get integer raw, zero-length
+get_integer_raw:"0200":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+Get integer raw, incomplete (no tag)
+get_integer_raw:"":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, incomplete (no length)
+get_integer_raw:"02":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, incomplete (partial length long form)
+get_integer_raw:"028201":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, incomplete (no contents)
+get_integer_raw:"0201":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, incomplete (partial contents)
+get_integer_raw:"02050100":"":MBEDTLS_ERR_ASN1_OUT_OF_DATA:-1
+
+Get integer raw, leading zero byte, next byte top bit not set, invalid
+get_integer_raw:"0202007f":"":MBEDTLS_ERR_ASN1_INVALID_DATA:-1
+
+INTEGER too large for mpi
+get_mpi_too_large:
+
+ENUMERATED 0
+get_enum:"0A0100":"0":0
+
+ENUMERATED 0, extra leading 0
+get_enum:"0A020000":"0":0
+
+ENUMERATED 1
+get_enum:"0A0101":"1":0
+
+ENUMERATED 1, extra leading 0
+get_enum:"0A020001":"1":0
+
+ENUMERATED 0x7f
+get_enum:"0A017f":"7f":0
+
+ENUMERATED 0x80
+get_enum:"0A020080":"80":0
+
+ENUMERATED 0x80, extra leading 0
+get_enum:"0A03000080":"80":0
+
+ENUMERATED 0xff
+get_enum:"0A0200ff":"ff":0
+
+ENUMERATED 0x7fff
+get_enum:"0A027fff":"7fff":0
+
+ENUMERATED 0x12345678
+get_enum:"0A0412345678":"12345678":0
+
+ENUMERATED 0x12345678, extra leading 0
+get_enum:"0A050012345678":"12345678":0
+
+ENUMERATED 0x7fffffff
+get_enum:"0A047fffffff":"7fffffff":0
+
+ENUMERATED 0x7fffffff, extra leading 0
+get_enum:"0A05007fffffff":"7fffffff":0
+
+ENUMERATED 0x80000000
+get_enum:"0A050080000000":"80000000":0
+
+ENUMERATED 0xffffffff
+get_enum:"0A0500ffffffff":"ffffffff":0
+
+ENUMERATED 0x100000000
+get_enum:"0A050100000000":"0100000000":0
+
+ENUMERATED -1
+get_enum:"0A01ff":"-1":0
+
+ENUMERATED -1, extra leading ff
+get_enum:"0A02ffff":"-1":0
+
+ENUMERATED -0x7f
+get_enum:"0A0181":"-7f":0
+
+ENUMERATED -0x80
+get_enum:"0A0180":"-80":0
+
+ENUMERATED -0x81
+get_enum:"0A02ff7f":"-81":0
+
+ENUMERATED -0xff
+get_enum:"0A02ff01":"-ff":0
+
+ENUMERATED -0x100
+get_enum:"0A02ff00":"-100":0
+
+ENUMERATED -0x7fffffff
+get_enum:"0A0480000001":"-7fffffff":0
+
+ENUMERATED -0x80000000
+get_enum:"0A0480000000":"-80000000":0
+
+ENUMERATED -0x80000001
+get_enum:"0A05ff7fffffff":"-80000001":0
+
+ENUMERATED -0xffffffff
+get_enum:"0A05ff00000001":"-ffffffff":0
+
+ENUMERATED -0x100000000
+get_enum:"0A05ff00000000":"-100000000":0
+
+BIT STRING: empty
+get_bitstring:"0300":0:0:MBEDTLS_ERR_ASN1_OUT_OF_DATA:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=0, unused_bits=0
+get_bitstring:"030100":0:0:0:0
+
+BIT STRING: octets=0, unused_bits=7
+get_bitstring:"030107":0:7:0:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=0, unused_bits=8
+get_bitstring:"030108":0:0:MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=1, unused_bits=0
+get_bitstring:"03020041":1:0:0:0
+
+BIT STRING: octets=1, unused_bits=7
+get_bitstring:"03020741":1:7:0:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=1, unused_bits=8
+get_bitstring:"03020841":1:8:MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=2, unused_bits=0
+get_bitstring:"0303004142":2:0:0:0
+
+BIT STRING: octets=2, unused_bits=7
+get_bitstring:"0303074142":2:7:0:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING: octets=2, unused_bits=8
+get_bitstring:"0303084142":2:8:MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING with trailing garbage, unused_bits=0
+get_bitstring:"030200417e":1:0:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH:0
+
+BIT STRING with trailing garbage, unused_bits=7
+get_bitstring:"030207417e":1:7:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+BIT STRING with trailing garbage, unused_bits=8
+get_bitstring:"030208417e":1:8:MBEDTLS_ERR_ASN1_INVALID_LENGTH:MBEDTLS_ERR_ASN1_INVALID_DATA
+
+Not BIT STRING
+get_bitstring:"04020100":0:0:MBEDTLS_ERR_ASN1_UNEXPECTED_TAG:MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+SEQUENCE OF 0 OCTET STRING
+get_sequence_of:"3000":0x04:"":0
+
+SEQUENCE OF 0 OCTET STRING plus trailing garbage
+get_sequence_of:"30007e":0x04:"":MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+SEQUENCE of 1 OCTET STRING truncated after tag
+get_sequence_of:"300104":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING truncated in length #1
+get_sequence_of:"30020481":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING truncated in length #2
+get_sequence_of:"3003048201":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING truncated in content #1
+get_sequence_of:"30020401":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING truncated in content #2
+get_sequence_of:"3003040241":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING truncated in content #3
+get_sequence_of:"300404034142":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 1 OCTET STRING (0)
+get_sequence_of:"30020400":0x04:"4,0":0
+
+SEQUENCE of 1 OCTET STRING (1)
+get_sequence_of:"3003040141":0x04:"4,1":0
+
+SEQUENCE of 1 OCTET STRING (126)
+get_sequence_of:"308180047e414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141":0x04:"5,126":0
+
+SEQUENCE of 2 OCTET STRINGs, second truncated after tag
+get_sequence_of:"30050402414104":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in length #1
+get_sequence_of:"3006040241410481":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in length #2
+get_sequence_of:"300704024141048201":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #1
+get_sequence_of:"3006040241410401":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #2
+get_sequence_of:"300704024141040241":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs, second truncated in content #3
+get_sequence_of:"30080402414104034142":0x04:"":MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+SEQUENCE of 2 OCTET STRINGs (2, 0)
+get_sequence_of:"3006040241410400":0x04:"4,2,8,0":0
+
+SEQUENCE of 2 OCTET STRINGs (2, 1)
+get_sequence_of:"300704024141040142":0x04:"4,2,8,1":0
+
+SEQUENCE of 2 OCTET STRINGs (0, 2)
+get_sequence_of:"3006040004024141":0x04:"4,0,6,2":0
+
+SEQUENCE of 2 OCTET STRINGs (1, 2)
+get_sequence_of:"300704014104024242":0x04:"4,1,7,2":0
+
+Not a SEQUENCE (not CONSTRUCTED)
+get_sequence_of:"1000":0x04:"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Not a SEQUENCE (not SEQUENCE)
+get_sequence_of:"3100":0x04:"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Traverse empty SEQUENCE
+traverse_sequence_of:"3000":0:0:0:0:"":0
+
+Traverse empty SEQUENCE plus trailing garbage
+traverse_sequence_of:"30007e":0:0:0:0:"":MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+Traverse SEQUENCE of INTEGER: 1 INTEGER
+traverse_sequence_of:"30050203123456":0xff:0x02:0:0:"4,0x02,3":0
+
+Traverse SEQUENCE of INTEGER: 2 INTEGERs
+traverse_sequence_of:"30080203123456020178":0xff:0x02:0:0:"4,0x02,3,9,0x02,1":0
+
+Traverse SEQUENCE of INTEGER: INTEGER, NULL
+traverse_sequence_of:"300702031234560500":0xff:0x02:0:0:"4,0x02,3":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Traverse SEQUENCE of INTEGER: NULL, INTEGER
+traverse_sequence_of:"300705000203123456":0xff:0x02:0:0:"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Traverse SEQUENCE of ANY: NULL, INTEGER
+traverse_sequence_of:"300705000203123456":0:0:0:0:"4,0x05,0,6,0x02,3":0
+
+Traverse SEQUENCE of ANY, skip non-INTEGER: INTEGER, NULL
+traverse_sequence_of:"300702031234560500":0:0:0xff:0x02:"4,0x02,3":0
+
+Traverse SEQUENCE of ANY, skip non-INTEGER: NULL, INTEGER
+traverse_sequence_of:"300705000203123456":0:0:0xff:0x02:"6,0x02,3":0
+
+Traverse SEQUENCE of INTEGER, skip everything
+traverse_sequence_of:"30080203123456020178":0xff:0x02:0:1:"":0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip NULL: OS, NULL
+traverse_sequence_of:"300704031234560500":0xfe:0x04:0xff:0x04:"4,0x04,3":0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip NULL: NULL, OS
+traverse_sequence_of:"300705000403123456":0xfe:0x04:0xff:0x04:"6,0x04,3":0
+
+Traverse SEQUENCE of {NULL, OCTET STRING}, skip everything
+traverse_sequence_of:"300705000403123456":0xfe:0x04:0:1:"":0
+
+Traverse SEQUENCE of INTEGER, stop at 0: NULL
+traverse_sequence_of:"30020500":0xff:0x02:0:0:"":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Traverse SEQUENCE of INTEGER, stop at 0: INTEGER
+traverse_sequence_of:"30050203123456":0xff:0x02:0:0:"":RET_TRAVERSE_STOP
+
+Traverse SEQUENCE of INTEGER, stop at 0: INTEGER, NULL
+traverse_sequence_of:"300702031234560500":0xff:0x02:0:0:"":RET_TRAVERSE_STOP
+
+Traverse SEQUENCE of INTEGER, stop at 1: INTEGER, NULL
+traverse_sequence_of:"300702031234560500":0xff:0x02:0:0:"4,0x02,3":MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Traverse SEQUENCE of INTEGER, stop at 1: INTEGER, INTEGER
+traverse_sequence_of:"30080203123456020178":0xff:0x02:0:0:"4,0x02,3":RET_TRAVERSE_STOP
+
+AlgorithmIdentifier, no params
+get_alg:"300506034f4944":4:3:0:0:0:7:0
+
+AlgorithmIdentifier, no params, trailing garbage
+get_alg:"300506034f49447e":4:3:0:0:0:7:0
+
+AlgorithmIdentifier, null params
+get_alg:"300706034f49440500":4:3:0x05:9:0:9:0
+
+AlgorithmIdentifier, null params, trailing garbage
+get_alg:"300706034f494405007e":4:3:0x05:9:0:9:0
+
+AlgorithmIdentifier, OCTET STRING params
+get_alg:"300c06034f494404056162636465":4:3:0x04:9:5:14:0
+
+AlgorithmIdentifier, truncated before OID
+get_alg:"3000":4:3:0:0:0:2:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated in OID after tag
+get_alg:"300106":0:0:0:0:0:3:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated in OID after length
+get_alg:"30020603":4:3:0:0:0:4:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated inside OID content
+get_alg:"300406034f49":4:3:0:0:0:6:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated in params after tag
+get_alg:"300606034f494404":4:3:0x04:0:0:8:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated in params after length
+get_alg:"300706034f49440405":4:3:0x04:9:0:9:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+AlgorithmIdentifier, truncated inside params content
+get_alg:"300806034f4944040561":4:3:0x04:9:5:10:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+Not an AlgorithmIdentifier (not a SEQUENCE)
+get_alg:"310506034f4944":0:0:0:0:0:0:MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Not an AlgorithmIdentifier (empty SEQUENCE)
+get_alg:"3000":0:0:0:0:0:0:MBEDTLS_ERR_ASN1_OUT_OF_DATA
+
+Not an AlgorithmIdentifier (not an OID)
+get_alg:"3006050006034f4944":0:0:0:0:0:0:MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+
+Not an AlgorithmIdentifier (too many elements)
+get_alg:"300f06034f494406034f494406034f4944":0:0:0:0:0:0:MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+
+Find named data: not found
+find_named_data:"414141":"424242":"434343":"444444":"7f7f7f":0:4
+
+Find named data: empty haystack
+find_named_data:"414141":"424242":"434343":"444444":"7f7f7f":4:4
+
+Find named data: first
+find_named_data:"414141":"424242":"434343":"444444":"414141":0:0
+
+Find named data: last
+find_named_data:"414141":"424242":"434343":"444444":"444444":0:3
+
+Find named data: skip suffix
+find_named_data:"41414141":"414141":"434343":"444444":"414141":0:1
+
+Find named data: skip prefix
+find_named_data:"4141":"414141":"434343":"444444":"414141":0:1
+
+Find named data: first match
+find_named_data:"414141":"414141":"434343":"444444":"414141":0:0
+
+Free named data list (empty)
+free_named_data_list:0
+
+Free named data list (1)
+free_named_data_list:1
+
+Free named data list (2)
+free_named_data_list:2

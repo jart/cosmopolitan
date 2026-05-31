@@ -1,0 +1,9 @@
+# Interesting combinations of TLS options
+
+Config: TLS 1.2 without TLS 1.3
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:!MBEDTLS_SSL_PROTO_TLS1_3
+pass:
+
+Config: TLS 1.3 without TLS 1.2
+depends_on:MBEDTLS_SSL_PROTO_TLS1_3:!MBEDTLS_SSL_PROTO_TLS1_2
+pass:

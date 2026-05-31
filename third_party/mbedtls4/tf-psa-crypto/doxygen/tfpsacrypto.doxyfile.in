@@ -1,0 +1,54 @@
+PROJECT_NAME           = "TF-PSA-Crypto v@TF-PSA-Crypto_VERSION@"
+OUTPUT_DIRECTORY       = ../apidoc/
+FULL_PATH_NAMES        = NO
+OPTIMIZE_OUTPUT_FOR_C  = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+CASE_SENSE_NAMES       = NO
+INPUT                  = ../include input ../tests/include/alt-dummy
+FILE_PATTERNS          = *.h
+EXCLUDE                = ../include/mbedtls/private
+RECURSIVE              = YES
+EXCLUDE_SYMLINKS       = YES
+SOURCE_BROWSER         = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+ALPHABETICAL_INDEX     = NO
+HTML_OUTPUT            = .
+HTML_TIMESTAMP         = YES
+SEARCHENGINE           = YES
+GENERATE_LATEX         = NO
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+INCLUDE_PATH           = ../include ../drivers/builtin/include
+EXPAND_AS_DEFINED      = MBEDTLS_PRIVATE
+CLASS_DIAGRAMS         = NO
+HAVE_DOT               = YES
+DOT_GRAPH_MAX_NODES    = 200
+MAX_DOT_GRAPH_DEPTH    = 1000
+DOT_TRANSPARENT        = YES
+
+# We mostly use \retval declarations to document which error codes a function
+# can return. The reader can follow the hyperlink to the definition of the
+# constant to get the generic documentation of that error code. If we don't
+# have anything to say about the specific error code for the specific
+# function, we can leave the description part of the \retval command blank.
+# This is perfectly valid as far as Doxygen is concerned. However, with
+# Clang >=15, the -Wdocumentation option emits a warning for empty
+# descriptions.
+#   https://github.com/Mbed-TLS/mbedtls/issues/6960
+#   https://github.com/llvm/llvm-project/issues/60315
+# As a workaround, you can write something like
+#     \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+# This avoids writing redundant text and keeps Clang happy.
+ALIASES += emptydescription=""
+
+# Define away macros that make parsing definitions difficult.
+# MBEDTLS_DEPRECATED is not included in this list as it's important to
+# display deprecated status in the documentation.
+PREDEFINED             = "MBEDTLS_CHECK_RETURN_CRITICAL="   \
+                         "MBEDTLS_CHECK_RETURN_TYPICAL="    \
+                         "MBEDTLS_CHECK_RETURN_OPTIONAL="   \
+                         "MBEDTLS_PRINTF_ATTRIBUTE(a,b)="   \
+                         "__DOXYGEN__"                      \

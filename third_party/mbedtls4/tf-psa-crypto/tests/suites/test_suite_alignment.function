@@ -1,0 +1,360 @@
+/* BEGIN_HEADER */
+#include <alignment.h>
+
+#include <stdint.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
+
+/*
+ * Convert a string of the form "abcd" (case-insensitive) to a uint64_t.
+ */
+static int parse_hex_string(char *hex_string, uint64_t *result)
+{
+    uint8_t raw[8] = { 0 };
+    size_t olen;
+    if (mbedtls_test_unhexify(raw, sizeof(raw), hex_string, &olen) != 0) {
+        return 0;
+    }
+
+    *result = 0;
+    for (size_t i = 0; i < olen; i++) {
+        *result |= ((uint64_t) raw[i]) << ((olen - i - 1) * 8);
+    }
+    return 1;
+}
+
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void mbedtls_unaligned_access(int size, int offset)
+{
+    /* Define 64-bit aligned raw byte array */
+    uint64_t raw[2];
+
+    /* Populate with known data */
+    uint8_t *x = (uint8_t *) raw;
+    for (size_t i = 0; i < sizeof(raw); i++) {
+        x[i] = (uint8_t) i;
+    }
+
+    TEST_ASSERT(size == 16 || size == 32 || size == 64);
+
+    uint64_t r = 0;
+    switch (size) {
+        case 16:
+            r = mbedtls_get_unaligned_uint16(x + offset);
+            break;
+        case 32:
+            r = mbedtls_get_unaligned_uint32(x + offset);
+            break;
+        case 64:
+            r = mbedtls_get_unaligned_uint64(x + offset);
+            break;
+    }
+
+    /* Define expected result by manually aligning the raw bytes, and
+     * reading back with a normal pointer access. */
+    uint64_t raw_aligned_64;
+    uint16_t *raw_aligned_16 = (uint16_t *) &raw_aligned_64;
+    uint32_t *raw_aligned_32 = (uint32_t *) &raw_aligned_64;
+    memcpy(&raw_aligned_64, ((uint8_t *) &raw) + offset, size / 8);
+    /* Make a 16/32/64 byte read from the aligned location, and copy to expected */
+    uint64_t expected = 0;
+    switch (size) {
+        case 16:
+            expected = *raw_aligned_16;
+            break;
+        case 32:
+            expected = *raw_aligned_32;
+            break;
+        case 64:
+            expected = raw_aligned_64;
+            break;
+    }
+
+    TEST_EQUAL(r, expected);
+
+    /* Write sentinel to the part of the array we will test writing to */
+    for (size_t i = 0; i < (size_t) (size / 8); i++) {
+        x[i + offset] = 0xff;
+    }
+    /*
+     * Write back to the array with mbedtls_put_unaligned_uint16 and validate
+     * that the array is unchanged as a result.
+     */
+    switch (size) {
+        case 16:
+            mbedtls_put_unaligned_uint16(x + offset, r);
+            break;
+        case 32:
+            mbedtls_put_unaligned_uint32(x + offset, r);
+            break;
+        case 64:
+            mbedtls_put_unaligned_uint64(x + offset, r);
+            break;
+    }
+    for (size_t i = 0; i < sizeof(x); i++) {
+        TEST_EQUAL(x[i], (uint8_t) i);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_byteswap(char *input_str, int size, char *expected_str)
+{
+    uint64_t input = 0, expected = 0;
+    TEST_ASSERT(parse_hex_string(input_str, &input));
+    TEST_ASSERT(parse_hex_string(expected_str, &expected));
+
+    /* Check against expected result */
+    uint64_t r = 0;
+    switch (size) {
+        case 16:
+            r = MBEDTLS_BSWAP16(input);
+            break;
+        case 32:
+            r = MBEDTLS_BSWAP32(input);
+            break;
+        case 64:
+            r = MBEDTLS_BSWAP64(input);
+            break;
+        default:
+            TEST_FAIL("size must be 16, 32 or 64");
+    }
+    TEST_EQUAL(r, expected);
+
+    /*
+     * Check byte by byte by extracting bytes from opposite ends of
+     * input and r.
+     */
+    for (size_t i = 0; i < (size_t) (size / 8); i++) {
+        size_t s1 = i * 8;
+        size_t s2 = ((size / 8 - 1) - i) * 8;
+        uint64_t a = (input & ((uint64_t) 0xff << s1)) >> s1;
+        uint64_t b = (r & ((uint64_t) 0xff << s2)) >> s2;
+        TEST_EQUAL(a, b);
+    }
+
+    /* Check BSWAP(BSWAP(x)) == x */
+    switch (size) {
+        case 16:
+            r = MBEDTLS_BSWAP16(r);
+            TEST_EQUAL(r, input & 0xffff);
+            break;
+        case 32:
+            r = MBEDTLS_BSWAP32(r);
+            TEST_EQUAL(r, input & 0xffffffff);
+            break;
+        case 64:
+            r = MBEDTLS_BSWAP64(r);
+            TEST_EQUAL(r, input);
+            break;
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void get_byte()
+{
+    uint8_t data[16];
+
+    for (size_t i = 0; i < sizeof(data); i++) {
+        data[i] = (uint8_t) i;
+    }
+
+    uint64_t u64 = 0x0706050403020100;
+    for (size_t b = 0; b < 8; b++) {
+        uint8_t expected = b;
+        uint8_t actual = b + 1;
+        switch (b) {
+            case 0:
+                actual = MBEDTLS_BYTE_0(u64);
+                break;
+            case 1:
+                actual = MBEDTLS_BYTE_1(u64);
+                break;
+            case 2:
+                actual = MBEDTLS_BYTE_2(u64);
+                break;
+            case 3:
+                actual = MBEDTLS_BYTE_3(u64);
+                break;
+            case 4:
+                actual = MBEDTLS_BYTE_4(u64);
+                break;
+            case 5:
+                actual = MBEDTLS_BYTE_5(u64);
+                break;
+            case 6:
+                actual = MBEDTLS_BYTE_6(u64);
+                break;
+            case 7:
+                actual = MBEDTLS_BYTE_7(u64);
+                break;
+        }
+        TEST_EQUAL(actual, expected);
+    }
+
+    uint32_t u32 = 0x03020100;
+    for (size_t b = 0; b < 4; b++) {
+        uint8_t expected = b;
+        uint8_t actual = b + 1;
+        switch (b) {
+            case 0:
+                actual = MBEDTLS_BYTE_0(u32);
+                break;
+            case 1:
+                actual = MBEDTLS_BYTE_1(u32);
+                break;
+            case 2:
+                actual = MBEDTLS_BYTE_2(u32);
+                break;
+            case 3:
+                actual = MBEDTLS_BYTE_3(u32);
+                break;
+        }
+        TEST_EQUAL(actual, expected);
+    }
+
+    uint16_t u16 = 0x0100;
+    for (size_t b = 0; b < 2; b++) {
+        uint8_t expected = b;
+        uint8_t actual = b + 1;
+        switch (b) {
+            case 0:
+                actual = MBEDTLS_BYTE_0(u16);
+                break;
+            case 1:
+                actual = MBEDTLS_BYTE_1(u16);
+                break;
+        }
+        TEST_EQUAL(actual, expected);
+    }
+
+    uint8_t u8 = 0x01;
+    uint8_t actual = MBEDTLS_BYTE_0(u8);
+    TEST_EQUAL(actual, u8);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void unaligned_access_endian_aware(int size, int offset, int big_endian)
+{
+    TEST_ASSERT(size == 16 || size == 24 || size == 32 || size == 64);
+    TEST_ASSERT(offset >= 0 && offset < 8);
+
+    /* Define 64-bit aligned raw byte array */
+    uint64_t raw[2];
+    /* Populate with known data: x == { 0, 1, 2, ... } */
+    uint8_t *x = (uint8_t *) raw;
+    for (size_t i = 0; i < sizeof(raw); i++) {
+        x[i] = (uint8_t) i;
+    }
+
+    uint64_t read = 0;
+    if (big_endian) {
+        switch (size) {
+            case 16:
+                read = MBEDTLS_GET_UINT16_BE(x, offset);
+                break;
+            case 24:
+                read = MBEDTLS_GET_UINT24_BE(x, offset);
+                break;
+            case 32:
+                read = MBEDTLS_GET_UINT32_BE(x, offset);
+                break;
+            case 64:
+                read = MBEDTLS_GET_UINT64_BE(x, offset);
+                break;
+        }
+    } else {
+        switch (size) {
+            case 16:
+                read = MBEDTLS_GET_UINT16_LE(x, offset);
+                break;
+            case 24:
+                read = MBEDTLS_GET_UINT24_LE(x, offset);
+                break;
+            case 32:
+                read = MBEDTLS_GET_UINT32_LE(x, offset);
+                break;
+            case 64:
+                read = MBEDTLS_GET_UINT64_LE(x, offset);
+                break;
+        }
+    }
+
+    /* Build up expected value byte by byte, in either big or little endian format */
+    uint64_t expected = 0;
+    for (size_t i = 0; i < (size_t) (size / 8); i++) {
+        uint64_t b = x[i + offset];
+        uint8_t shift = (big_endian) ? (8 * ((size / 8 - 1) - i)) : (8 * i);
+        expected |= b << shift;
+    }
+
+    /* Verify read */
+    TEST_EQUAL(read, expected);
+
+    /* Test writing back to memory. First write sentinel */
+    for (size_t i = 0; i < (size_t) (size / 8); i++) {
+        x[i + offset] = 0xff;
+    }
+    /* Overwrite sentinel with endian-aware write macro */
+    if (big_endian) {
+        switch (size) {
+            case 16:
+                MBEDTLS_PUT_UINT16_BE(read, x, offset);
+                break;
+            case 24:
+                MBEDTLS_PUT_UINT24_BE(read, x, offset);
+                break;
+            case 32:
+                MBEDTLS_PUT_UINT32_BE(read, x, offset);
+                break;
+            case 64:
+                MBEDTLS_PUT_UINT64_BE(read, x, offset);
+                break;
+        }
+    } else {
+        switch (size) {
+            case 16:
+                MBEDTLS_PUT_UINT16_LE(read, x, offset);
+                break;
+            case 24:
+                MBEDTLS_PUT_UINT24_LE(read, x, offset);
+                break;
+            case 32:
+                MBEDTLS_PUT_UINT32_LE(read, x, offset);
+                break;
+            case 64:
+                MBEDTLS_PUT_UINT64_LE(read, x, offset);
+                break;
+        }
+    }
+
+    /* Verify write - check memory is correct */
+    for (size_t i = 0; i < sizeof(raw); i++) {
+        TEST_EQUAL(x[i], (uint8_t) i);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_is_big_endian()
+{
+    uint16_t check = 0x1234;
+    uint8_t *p = (uint8_t *) &check;
+
+    if (MBEDTLS_IS_BIG_ENDIAN) {
+        /* Big-endian: data stored MSB first, i.e. p == { 0x12, 0x34 } */
+        TEST_EQUAL(p[0], 0x12);
+        TEST_EQUAL(p[1], 0x34);
+    } else {
+        /* Little-endian: data stored LSB first, i.e. p == { 0x34, 0x12 } */
+        TEST_EQUAL(p[0], 0x34);
+        TEST_EQUAL(p[1], 0x12);
+    }
+}
+/* END_CASE */

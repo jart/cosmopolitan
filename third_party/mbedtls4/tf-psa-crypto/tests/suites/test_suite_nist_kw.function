@@ -1,0 +1,254 @@
+/* BEGIN_HEADER */
+#include "mbedtls/nist_kw.h"
+static int setup_psa_key(int usage,
+                         int alg,
+                         int key_type,
+                         mbedtls_svc_key_id_t *key_id,
+                         const data_t *key)
+{
+    int ok = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT();
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key->x, key->len, key_id));
+    ok = PSA_SUCCESS;
+exit:
+    return ok;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_NIST_KW_C:PSA_WANT_KEY_TYPE_AES
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void nist_kw_wrap_unwrap(int mode, data_t *kw_key,
+                         data_t *kw_msg, data_t *kw_res)
+{
+    unsigned char *out = NULL;
+    size_t olen = 0;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    TEST_CALLOC(out, kw_res->len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
+                             kw_key));
+    PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, kw_msg->x,
+                                    kw_msg->len, out, kw_res->len, &olen));
+    TEST_MEMORY_COMPARE(out, olen, kw_res->x, kw_res->len);
+    PSA_ASSERT(mbedtls_nist_kw_unwrap(key_id, mode,
+                                      out, olen, out, kw_res->len, &olen));
+
+    TEST_MEMORY_COMPARE(out, olen, kw_msg->x,  kw_msg->len);
+
+exit:
+    psa_destroy_key(key_id);
+    mbedtls_free(out);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void nist_kw_plaintext_lengths(int in_len, int out_len, int mode, int res)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char *plaintext = NULL;
+    unsigned char *ciphertext = NULL;
+    size_t output_len = out_len;
+    uint8_t key_array[16] = { 0 };
+    data_t key = { .len = sizeof(key_array), .x = key_array };;
+
+    TEST_CALLOC(plaintext, in_len);
+
+    TEST_CALLOC(ciphertext, output_len);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
+                             &key));
+
+    TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode,
+                                    plaintext, in_len,
+                                    ciphertext, output_len,
+                                    &output_len), res);
+    if (res == 0) {
+        if (mode == MBEDTLS_KW_MODE_KWP) {
+            TEST_ASSERT(output_len == (size_t) in_len + 8 -
+                        (in_len % 8) + 8);
+        } else {
+            TEST_ASSERT(output_len == (size_t) in_len + 8);
+        }
+    } else {
+        TEST_ASSERT(output_len == 0);
+    }
+exit:
+    mbedtls_free(ciphertext);
+    mbedtls_free(plaintext);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void nist_kw_ciphertext_lengths(int in_len, int out_len, int mode, int res)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    data_t key;
+    unsigned char *plaintext = NULL;
+    unsigned char *ciphertext = NULL;
+    int unwrap_ret;
+    size_t output_len = out_len;
+    uint8_t key_array[16];
+    key.len = 16;
+    key.x = key_array;
+
+    memset(key_array, 0, sizeof(key_array));
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT,
+                             PSA_ALG_ECB_NO_PADDING, PSA_KEY_TYPE_AES, &key_id,
+                             &key));
+
+    TEST_CALLOC(plaintext, output_len);
+    TEST_CALLOC(ciphertext, in_len);
+
+    unwrap_ret = mbedtls_nist_kw_unwrap(key_id, mode, ciphertext, in_len,
+                                        plaintext, output_len,
+                                        &output_len);
+
+    if (res == 0) {
+        TEST_EQUAL(unwrap_ret, PSA_ERROR_INVALID_SIGNATURE);
+    } else {
+        TEST_EQUAL(unwrap_ret, res);
+    }
+
+    TEST_ASSERT(output_len == 0);
+
+exit:
+    mbedtls_free(ciphertext);
+    mbedtls_free(plaintext);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_nist_kw_wrap(int mode, const data_t *key, data_t *msg,
+                          data_t *expected_result)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    size_t result_length, padlen;
+
+    padlen = (msg->len % 8 != 0) ? 8 - (msg->len % 8) : 0;
+    int result_size = msg->len + 8 + padlen;
+    unsigned char *result = NULL;
+
+    TEST_CALLOC(result, result_size);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_ENCRYPT, PSA_ALG_ECB_NO_PADDING,
+                             PSA_KEY_TYPE_AES, &key_id, key));
+    PSA_ASSERT(mbedtls_nist_kw_wrap(key_id, mode, msg->x, msg->len,
+                                    result, result_size, &result_length));
+
+    TEST_EQUAL(result_length, expected_result->len);
+
+    TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result,
+                        result_length);
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_nist_kw_wrap_key_test(int mode,
+                                   const data_t *key,
+                                   int usage,
+                                   int alg,
+                                   int key_type,
+                                   int expected_ret)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    const unsigned char input[16] = { 0 };
+    unsigned char output[32];
+    size_t output_length = 0;
+
+    PSA_ASSERT(setup_psa_key(usage, alg, key_type, &key_id, key));
+
+    TEST_EQUAL(mbedtls_nist_kw_wrap(key_id, mode, input, 16,
+                                    output, sizeof(output), &output_length),
+               expected_ret);
+    if (expected_ret != PSA_SUCCESS) {
+        goto exit;
+    }
+
+exit:
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_nist_kw_unwrap(int mode, data_t *key, data_t *msg,
+                            data_t *expected_result, int expected_ret)
+{
+    size_t result_len;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    unsigned char *result = NULL;
+    int result_size = msg->len - 8;
+    result = mbedtls_calloc(1, result_size);
+
+    PSA_ASSERT(setup_psa_key(PSA_KEY_USAGE_DECRYPT, PSA_ALG_ECB_NO_PADDING,
+                             PSA_KEY_TYPE_AES, &key_id, key));
+
+    /* Test with input == output */
+    TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, msg->x, msg->len,
+                                      result, result_size, &result_len),
+               expected_ret);
+    if (expected_ret == 0) {
+        TEST_MEMORY_COMPARE(expected_result->x, expected_result->len, result, result_len);
+    } else {
+        TEST_EQUAL(result_len, 0);
+    }
+
+exit:
+    mbedtls_free(result);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_nist_kw_unwrap_key_test(int mode,
+                                     data_t *key,
+                                     int usage,
+                                     int alg,
+                                     int key_type,
+                                     int expected_ret)
+{
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+
+    const unsigned char input[16] = { 0 };
+    unsigned char output[32];
+    size_t output_length = 0;
+
+    PSA_ASSERT(setup_psa_key(usage, alg, key_type, &key_id, key));
+
+    /* Test with input == output */
+    TEST_EQUAL(mbedtls_nist_kw_unwrap(key_id, mode, input, 16, output,
+                                      sizeof(output), &output_length),
+               expected_ret);
+
+exit:
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */

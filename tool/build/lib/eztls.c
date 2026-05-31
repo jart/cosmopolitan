@@ -20,25 +20,26 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.h"
 #include "libc/macros.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/x/xsigaction.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/debug.h"
+#include "third_party/mbedtls4/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
 
 _Thread_local int mytid;
 _Thread_local struct EzTlsBio ezbio;
 _Thread_local mbedtls_ssl_config ezconf;
 _Thread_local mbedtls_ssl_context ezssl;
-_Thread_local mbedtls_ctr_drbg_context ezrng;
 
 void EzSanity(void) {
   unassert(mytid);
@@ -216,8 +217,7 @@ void EzInitialize(void) {
   mbedtls_ssl_init(&ezssl);
   mbedtls_ssl_config_init(&ezconf);
   mbedtls_platform_zeroize(&ezbio, sizeof(ezbio));
-  ezconf.disable_compression = 1;
-  InitializeRng(&ezrng);
+  InitializeRng();
 }
 
 static void OnSslDebug(void *ctx, int level, const char *file, int line,
@@ -233,8 +233,8 @@ void EzSetup(char psk[32]) {
   int rc;
   EzSanity();
   mbedtls_ssl_conf_dbg(&ezconf, OnSslDebug, 0);
-  mbedtls_ssl_conf_rng(&ezconf, mbedtls_ctr_drbg_random, &ezrng);
-  if ((rc = mbedtls_ssl_conf_psk(&ezconf, psk, 32, "runit", 5))) {
+  if ((rc = mbedtls_ssl_conf_psk(&ezconf, (const unsigned char *)psk, 32,
+                                 (const unsigned char *)"runit", 5))) {
     EzTlsDie("EzSetup mbedtls_ssl_conf_psk", rc);
   }
   if ((rc = mbedtls_ssl_setup(&ezssl, &ezconf))) {
@@ -248,7 +248,6 @@ void EzDestroy(void) {
     return;
   EzSanity();
   mbedtls_ssl_free(&ezssl);
-  mbedtls_ctr_drbg_free(&ezrng);
   mbedtls_ssl_config_free(&ezconf);
   mytid = 0;
 }

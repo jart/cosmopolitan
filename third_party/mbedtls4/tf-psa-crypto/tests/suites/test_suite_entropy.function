@@ -1,0 +1,622 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/entropy.h"
+#include "entropy_poll.h"
+#include "mbedtls/md.h"
+#include "string.h"
+#include "test/fake_external_rng_for_test.h"
+
+#define TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL       8
+#define TEST_PLATFORM_GET_ENTROPY_EXP_CALL_COUNT                            \
+    (MAX(MBEDTLS_ENTROPY_BLOCK_SIZE, MBEDTLS_ENTROPY_POLL_PLATFORM_MIN) /    \
+     TEST_PLATFORM_GET_ENTROPY_DATA_LENGTH_PER_CALL)
+
+typedef enum {
+    DUMMY_CONSTANT_LENGTH, /* Output context->length bytes */
+    DUMMY_REQUESTED_LENGTH, /* Output whatever length was requested */
+    DUMMY_FAIL, /* Return an error code */
+} entropy_dummy_instruction;
+
+typedef struct {
+    entropy_dummy_instruction instruction;
+    size_t length; /* Length to return for DUMMY_CONSTANT_LENGTH */
+    size_t calls; /* Incremented at each call */
+} entropy_dummy_context;
+
+/*
+ * Dummy entropy source
+ *
+ * If data is NULL, write exactly the requested length.
+ * Otherwise, write the length indicated by data or error if negative
+ */
+static int entropy_dummy_source(void *arg, unsigned char *output,
+                                size_t len, size_t *olen)
+{
+    entropy_dummy_context *context = arg;
+    ++context->calls;
+
+    switch (context->instruction) {
+        case DUMMY_CONSTANT_LENGTH:
+            *olen = context->length;
+            break;
+        case DUMMY_REQUESTED_LENGTH:
+            *olen = len;
+            break;
+        case DUMMY_FAIL:
+            return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    memset(output, 0x2a, *olen);
+    return 0;
+}
+
+/*
+ * Ability to clear entropy sources to allow testing with just predefined
+ * entropy sources. This function or tests depending on it might break if there
+ * are internal changes to how entropy sources are registered.
+ *
+ * To be called immediately after mbedtls_entropy_init().
+ *
+ * Just resetting the counter. New sources will overwrite existing ones.
+ * This might break memory checks in the future if sources need 'free-ing' then
+ * as well.
+ */
+static void entropy_clear_sources(mbedtls_entropy_context *ctx)
+{
+    ctx->source_count = 0;
+}
+
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+
+#if defined(MBEDTLS_MD_LIGHT) && defined(MBEDTLS_PLATFORM_NV_SEED_ALT)
+/*
+ * NV seed read/write functions that use a buffer instead of a file
+ */
+static unsigned char buffer_seed[MBEDTLS_ENTROPY_BLOCK_SIZE];
+
+static int buffer_nv_seed_read(unsigned char *buf, size_t buf_len)
+{
+    if (buf_len != MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        return -1;
+    }
+
+    memcpy(buf, buffer_seed, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    return 0;
+}
+
+static int buffer_nv_seed_write(unsigned char *buf, size_t buf_len)
+{
+    if (buf_len != MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        return -1;
+    }
+
+    memcpy(buffer_seed, buf, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    return 0;
+}
+#endif /* MBEDTLS_MD_LIGHT && MBEDTLS_PLATFORM_NV_SEED_ALT */
+
+#if defined(MBEDTLS_FS_IO)
+/*
+ * NV seed read/write helpers that fill the base seedfile
+ */
+static int write_nv_seed(unsigned char *buf, size_t buf_len)
+{
+    FILE *f;
+
+    if (buf_len != MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        return -1;
+    }
+
+    if ((f = fopen(MBEDTLS_PLATFORM_STD_NV_SEED_FILE, "w")) == NULL) {
+        return -1;
+    }
+
+    if (fwrite(buf, 1, MBEDTLS_ENTROPY_BLOCK_SIZE, f) !=
+        MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        fclose(f);
+        return -1;
+    }
+
+    fclose(f);
+
+    return 0;
+}
+
+#if defined(MBEDTLS_PLATFORM_NV_SEED_ALT)
+static int read_nv_seed(unsigned char *buf, size_t buf_len)
+{
+    FILE *f;
+
+    if (buf_len != MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        return -1;
+    }
+
+    if ((f = fopen(MBEDTLS_PLATFORM_STD_NV_SEED_FILE, "rb")) == NULL) {
+        return -1;
+    }
+
+    if (fread(buf, 1, MBEDTLS_ENTROPY_BLOCK_SIZE, f) !=
+        MBEDTLS_ENTROPY_BLOCK_SIZE) {
+        fclose(f);
+        return -1;
+    }
+
+    fclose(f);
+
+    return 0;
+}
+#endif /* MBEDTLS_PLATFORM_NV_SEED_ALT */
+#endif /* MBEDTLS_FS_IO */
+#endif /* MBEDTLS_ENTROPY_NV_SEED */
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_ENTROPY_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void entropy_init_free(int reinit)
+{
+    mbedtls_entropy_context ctx;
+
+    /* Double free is not explicitly documented to work, but it is convenient
+     * to call mbedtls_entropy_free() unconditionally on an error path without
+     * checking whether it has already been called in the success path. */
+
+    mbedtls_entropy_init(&ctx);
+    mbedtls_entropy_free(&ctx);
+
+    if (reinit) {
+        mbedtls_entropy_init(&ctx);
+    }
+    mbedtls_entropy_free(&ctx);
+
+    /* This test case always succeeds, functionally speaking. A plausible
+     * bug might trigger an invalid pointer dereference or a memory leak. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_count_sources()
+{
+    mbedtls_entropy_context ctx;
+    mbedtls_entropy_init(&ctx);
+
+#if defined(MBEDTLS_ENTROPY_HAVE_SOURCES)
+    TEST_EQUAL(MBEDTLS_ENTROPY_HAVE_SOURCES, ctx.source_count);
+#else
+    TEST_EQUAL(0, ctx.source_count);
+#endif
+
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+    TEST_EQUAL(MBEDTLS_ENTROPY_TRUE_SOURCES + 1, ctx.source_count);
+#else
+    TEST_EQUAL(MBEDTLS_ENTROPY_TRUE_SOURCES, ctx.source_count);
+#endif
+
+exit:
+    mbedtls_entropy_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:MBEDTLS_FS_IO */
+void entropy_seed_file(char *path, int ret)
+{
+    mbedtls_entropy_context ctx;
+    mbedtls_entropy_init(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_write_seed_file(&ctx, path) == ret);
+    TEST_ASSERT(mbedtls_entropy_update_seed_file(&ctx, path) == ret);
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:MBEDTLS_FS_IO */
+void entropy_write_base_seed_file(int ret)
+{
+    mbedtls_entropy_context ctx;
+    mbedtls_entropy_init(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_write_seed_file(&ctx, MBEDTLS_PLATFORM_STD_NV_SEED_FILE) == ret);
+    TEST_ASSERT(mbedtls_entropy_update_seed_file(&ctx, MBEDTLS_PLATFORM_STD_NV_SEED_FILE) == ret);
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_no_sources()
+{
+    mbedtls_entropy_context ctx;
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
+
+    mbedtls_entropy_init(&ctx);
+    entropy_clear_sources(&ctx);
+    TEST_EQUAL(mbedtls_entropy_func(&ctx, buf, sizeof(buf)),
+               MBEDTLS_ERR_ENTROPY_NO_SOURCES_DEFINED);
+
+exit:
+    mbedtls_entropy_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_too_many_sources()
+{
+    mbedtls_entropy_context ctx;
+    size_t i;
+    entropy_dummy_context dummy = { DUMMY_REQUESTED_LENGTH, 0, 0 };
+
+    mbedtls_entropy_init(&ctx);
+
+    /*
+     * It's hard to tell precisely when the error will occur,
+     * since we don't know how many sources were automatically added.
+     */
+    for (i = 0; i < MBEDTLS_ENTROPY_MAX_SOURCES; i++) {
+        (void) mbedtls_entropy_add_source(&ctx, entropy_dummy_source, &dummy,
+                                          16, MBEDTLS_ENTROPY_SOURCE_WEAK);
+    }
+
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source, &dummy,
+                                           16, MBEDTLS_ENTROPY_SOURCE_WEAK)
+                == MBEDTLS_ERR_ENTROPY_MAX_SOURCES);
+
+exit:
+    mbedtls_entropy_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_HAVE_SOURCES */
+void entropy_func_len(int len, int ret)
+{
+    mbedtls_entropy_context ctx;
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE + 10] = { 0 };
+    unsigned char acc[MBEDTLS_ENTROPY_BLOCK_SIZE + 10] = { 0 };
+    size_t i, j;
+
+    mbedtls_entropy_init(&ctx);
+
+    MD_PSA_INIT();
+
+    /*
+     * See comments in mbedtls_entropy_self_test()
+     */
+    for (i = 0; i < 8; i++) {
+        TEST_ASSERT(mbedtls_entropy_func(&ctx, buf, len) == ret);
+        for (j = 0; j < sizeof(buf); j++) {
+            acc[j] |= buf[j];
+        }
+    }
+
+    if (ret == 0) {
+        for (j = 0; j < (size_t) len; j++) {
+            TEST_ASSERT(acc[j] != 0);
+        }
+    }
+
+    for (j = len; j < sizeof(buf); j++) {
+        TEST_ASSERT(acc[j] == 0);
+    }
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_source_fail(char *path)
+{
+    mbedtls_entropy_context ctx;
+    unsigned char buf[16];
+    entropy_dummy_context dummy = { DUMMY_FAIL, 0, 0 };
+
+    mbedtls_entropy_init(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source,
+                                           &dummy, 16,
+                                           MBEDTLS_ENTROPY_SOURCE_WEAK)
+                == 0);
+
+    TEST_ASSERT(mbedtls_entropy_func(&ctx, buf, sizeof(buf))
+                == MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+    TEST_ASSERT(mbedtls_entropy_gather(&ctx)
+                == MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+#if defined(MBEDTLS_FS_IO) && defined(MBEDTLS_ENTROPY_NV_SEED)
+    TEST_ASSERT(mbedtls_entropy_write_seed_file(&ctx, path)
+                == MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+    TEST_ASSERT(mbedtls_entropy_update_seed_file(&ctx, path)
+                == MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+#else
+    ((void) path);
+#endif
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_threshold(int threshold, int chunk_size, int result)
+{
+    mbedtls_entropy_context ctx;
+    entropy_dummy_context strong =
+    { DUMMY_CONSTANT_LENGTH, MBEDTLS_ENTROPY_BLOCK_SIZE, 0 };
+    entropy_dummy_context weak = { DUMMY_CONSTANT_LENGTH, chunk_size, 0 };
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
+    int ret;
+
+    mbedtls_entropy_init(&ctx);
+    entropy_clear_sources(&ctx);
+
+    MD_PSA_INIT();
+
+    /* Set strong source that reaches its threshold immediately and
+     * a weak source whose threshold is a test parameter. */
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source,
+                                           &strong, 1,
+                                           MBEDTLS_ENTROPY_SOURCE_STRONG) == 0);
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source,
+                                           &weak, threshold,
+                                           MBEDTLS_ENTROPY_SOURCE_WEAK) == 0);
+
+    ret = mbedtls_entropy_func(&ctx, buf, sizeof(buf));
+
+    if (result >= 0) {
+        TEST_ASSERT(ret == 0);
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+        /* If the NV seed functionality is enabled, there are two entropy
+         * updates: before and after updating the NV seed. */
+        result *= 2;
+#endif
+        TEST_ASSERT(weak.calls == (size_t) result);
+    } else {
+        TEST_ASSERT(ret == result);
+    }
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void entropy_calls(int strength1, int strength2,
+                   int threshold, int chunk_size,
+                   int result)
+{
+    /*
+     * if result >= 0: result = expected number of calls to source 1
+     * if result < 0: result = expected return code from mbedtls_entropy_func()
+     */
+
+    mbedtls_entropy_context ctx;
+    entropy_dummy_context dummy1 = { DUMMY_CONSTANT_LENGTH, chunk_size, 0 };
+    entropy_dummy_context dummy2 = { DUMMY_CONSTANT_LENGTH, chunk_size, 0 };
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
+    int ret;
+
+    mbedtls_entropy_init(&ctx);
+    entropy_clear_sources(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source,
+                                           &dummy1, threshold,
+                                           strength1) == 0);
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, entropy_dummy_source,
+                                           &dummy2, threshold,
+                                           strength2) == 0);
+
+    ret = mbedtls_entropy_func(&ctx, buf, sizeof(buf));
+
+    if (result >= 0) {
+        TEST_ASSERT(ret == 0);
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+        /* If the NV seed functionality is enabled, there are two entropy
+         * updates: before and after updating the NV seed. */
+        result *= 2;
+#endif
+        TEST_ASSERT(dummy1.calls == (size_t) result);
+    } else {
+        TEST_ASSERT(ret == result);
+    }
+
+exit:
+    mbedtls_entropy_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:MBEDTLS_FS_IO */
+void nv_seed_file_create()
+{
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
+
+    memset(buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    TEST_ASSERT(write_nv_seed(buf, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:MBEDTLS_FS_IO:MBEDTLS_PLATFORM_NV_SEED_ALT */
+void entropy_nv_seed_std_io()
+{
+    unsigned char io_seed[MBEDTLS_ENTROPY_BLOCK_SIZE];
+    unsigned char check_seed[MBEDTLS_ENTROPY_BLOCK_SIZE];
+
+    memset(io_seed, 1, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memset(check_seed, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    mbedtls_platform_set_nv_seed(mbedtls_platform_std_nv_seed_read,
+                                 mbedtls_platform_std_nv_seed_write);
+
+    /* Check if platform NV read and write manipulate the same data */
+    TEST_ASSERT(write_nv_seed(io_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+    TEST_ASSERT(mbedtls_nv_seed_read(check_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) ==
+                MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    TEST_ASSERT(memcmp(io_seed, check_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+
+    memset(check_seed, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    /* Check if platform NV write and raw read manipulate the same data */
+    TEST_ASSERT(mbedtls_nv_seed_write(io_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) ==
+                MBEDTLS_ENTROPY_BLOCK_SIZE);
+    TEST_ASSERT(read_nv_seed(check_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+
+    TEST_ASSERT(memcmp(io_seed, check_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_MD_LIGHT:MBEDTLS_ENTROPY_NV_SEED:MBEDTLS_PLATFORM_NV_SEED_ALT */
+void entropy_nv_seed(data_t *read_seed)
+{
+    const mbedtls_md_info_t *md_info =
+        mbedtls_md_info_from_type(MBEDTLS_ENTROPY_MD);
+
+    mbedtls_md_context_t accumulator;
+    mbedtls_entropy_context ctx;
+    int (*original_mbedtls_nv_seed_read)(unsigned char *buf, size_t buf_len) =
+        mbedtls_nv_seed_read;
+    int (*original_mbedtls_nv_seed_write)(unsigned char *buf, size_t buf_len) =
+        mbedtls_nv_seed_write;
+
+    unsigned char header[2];
+    unsigned char entropy[MBEDTLS_ENTROPY_BLOCK_SIZE];
+    unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
+    unsigned char empty[MBEDTLS_ENTROPY_BLOCK_SIZE];
+    unsigned char check_seed[MBEDTLS_ENTROPY_BLOCK_SIZE];
+    unsigned char check_entropy[MBEDTLS_ENTROPY_BLOCK_SIZE];
+
+    memset(entropy, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memset(buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memset(empty, 0, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memset(check_seed, 2, MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memset(check_entropy, 3, MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    // Make sure we read/write NV seed from our buffers
+    mbedtls_platform_set_nv_seed(buffer_nv_seed_read, buffer_nv_seed_write);
+
+    mbedtls_md_init(&accumulator);
+    mbedtls_entropy_init(&ctx);
+    entropy_clear_sources(&ctx);
+
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_add_source(&ctx, mbedtls_nv_seed_poll, NULL,
+                                           MBEDTLS_ENTROPY_BLOCK_SIZE,
+                                           MBEDTLS_ENTROPY_SOURCE_STRONG) == 0);
+
+    // Set the initial NV seed to read
+    TEST_ASSERT(read_seed->len >= MBEDTLS_ENTROPY_BLOCK_SIZE);
+    memcpy(buffer_seed, read_seed->x, MBEDTLS_ENTROPY_BLOCK_SIZE);
+
+    // Do an entropy run
+    TEST_ASSERT(mbedtls_entropy_func(&ctx, entropy, sizeof(entropy)) == 0);
+    // Determine what should have happened with manual entropy internal logic
+
+    // Init accumulator
+    header[1] = MBEDTLS_ENTROPY_BLOCK_SIZE;
+    TEST_ASSERT(mbedtls_md_setup(&accumulator, md_info, 0) == 0);
+
+    // First run for updating write_seed
+    header[0] = 0;
+    TEST_ASSERT(mbedtls_md_starts(&accumulator) == 0);
+    TEST_ASSERT(mbedtls_md_update(&accumulator, header, 2) == 0);
+    TEST_ASSERT(mbedtls_md_update(&accumulator,
+                                  read_seed->x, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+    TEST_ASSERT(mbedtls_md_finish(&accumulator, buf) == 0);
+
+    TEST_ASSERT(mbedtls_md_starts(&accumulator) == 0);
+    TEST_ASSERT(mbedtls_md_update(&accumulator,
+                                  buf, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+
+    TEST_ASSERT(mbedtls_md(md_info, buf, MBEDTLS_ENTROPY_BLOCK_SIZE,
+                           check_seed) == 0);
+
+    // Second run for actual entropy (triggers mbedtls_entropy_update_nv_seed)
+    header[0] = MBEDTLS_ENTROPY_SOURCE_MANUAL;
+    TEST_ASSERT(mbedtls_md_update(&accumulator, header, 2) == 0);
+    TEST_ASSERT(mbedtls_md_update(&accumulator,
+                                  empty, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+
+    header[0] = 0;
+    TEST_ASSERT(mbedtls_md_update(&accumulator, header, 2) == 0);
+    TEST_ASSERT(mbedtls_md_update(&accumulator,
+                                  check_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+    TEST_ASSERT(mbedtls_md_finish(&accumulator, buf) == 0);
+
+    TEST_ASSERT(mbedtls_md(md_info, buf, MBEDTLS_ENTROPY_BLOCK_SIZE,
+                           check_entropy) == 0);
+
+    // Check result of both NV file and entropy received with the manual calculations
+    TEST_ASSERT(memcmp(check_seed, buffer_seed, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+    TEST_ASSERT(memcmp(check_entropy, entropy, MBEDTLS_ENTROPY_BLOCK_SIZE) == 0);
+
+exit:
+    mbedtls_md_free(&accumulator);
+    mbedtls_entropy_free(&ctx);
+    mbedtls_nv_seed_read = original_mbedtls_nv_seed_read;
+    mbedtls_nv_seed_write = original_mbedtls_nv_seed_write;
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_HAVE_SOURCES:MBEDTLS_SELF_TEST */
+void entropy_selftest(int result)
+{
+    MD_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_entropy_self_test(1) == result);
+
+exit:
+    MD_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_C:MBEDTLS_PSA_DRIVER_GET_ENTROPY */
+void entropy_test_driver_callback(void)
+{
+    uint8_t data[MBEDTLS_ENTROPY_POLL_PLATFORM_MIN];
+    size_t olen;
+
+    /* Simple callback test -> all fine. */
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen), 0);
+    TEST_LE_U(1, olen);
+    TEST_LE_U(olen, sizeof(data));
+
+    mbedtls_test_platform_get_entropy_reset();
+
+    /* Force a failure -> return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED. */
+    mbedtls_test_platform_get_entropy_set_force_failure(1);
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen),
+               MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+
+    mbedtls_test_platform_get_entropy_reset();
+
+    /* Return less entropy than expected -> entropy gathering fails */
+    mbedtls_test_platform_get_entropy_set_entropy_content(8 * (sizeof(data) - 1));
+    TEST_EQUAL(mbedtls_entropy_poll_platform(NULL, data, sizeof(data), &olen),
+               MBEDTLS_ERR_ENTROPY_SOURCE_FAILED);
+
+    mbedtls_test_platform_get_entropy_reset();
+
+exit:
+    mbedtls_test_platform_get_entropy_reset();
+}
+/* END_CASE */

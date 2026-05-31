@@ -1,0 +1,22 @@
+{
+    "prefix":       "mbedtls_test",
+    "type":         "transparent",
+    "mbedtls/h_condition":   "defined(PSA_CRYPTO_DRIVER_TEST)",
+    "headers":      ["test/drivers/test_driver.h"],
+    "capabilities": [
+        {
+            "_comment":     "The Mbed TLS transparent driver supports import key/export key",
+            "mbedtls/c_condition":    "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["import_key"],
+            "fallback":     true
+        },
+        {
+            "_comment":     "The Mbed TLS transparent driver supports export_public key",
+            "mbedtls/c_condition":    "defined(PSA_CRYPTO_DRIVER_TEST)",
+            "entry_points": ["export_public_key"],
+            "fallback":     true,
+            "names":         {"export_public_key":"mbedtls_test_transparent_export_public_key"}
+        }
+
+    ]
+}

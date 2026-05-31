@@ -1,0 +1,303 @@
+/* BEGIN_HEADER */
+
+/* This test file is specific to the ITS implementation in PSA Crypto
+ * on top of stdio. It expects to know what the stdio name of a file is
+ * based on its keystore name.
+ *
+ * Note that if you need to make a change that affects how files are
+ * stored, this may indicate that the key store is changing in a
+ * backward-incompatible way! Think carefully about backward compatibility
+ * before changing how test data is constructed or validated.
+ */
+
+#include "psa_crypto_its.h"
+
+#include "test/psa_helpers.h"
+
+/* Internal definitions of the implementation, copied for the sake of
+ * some of the tests and of the cleanup code. */
+#define PSA_ITS_STORAGE_PREFIX ""
+#define PSA_ITS_STORAGE_FILENAME_PATTERN "%08lx%08lx"
+#define PSA_ITS_STORAGE_SUFFIX ".psa_its"
+#define PSA_ITS_STORAGE_FILENAME_LENGTH                                         \
+    (sizeof(PSA_ITS_STORAGE_PREFIX) - 1 +    /*prefix without terminating 0*/   \
+     16 +  /*UID (64-bit number in hex)*/                                       \
+     16 +  /*UID (64-bit number in hex)*/                                       \
+     sizeof(PSA_ITS_STORAGE_SUFFIX) - 1 +    /*suffix without terminating 0*/   \
+     1 /*terminating null byte*/)
+#define PSA_ITS_STORAGE_TEMP \
+    PSA_ITS_STORAGE_PREFIX "tempfile" PSA_ITS_STORAGE_SUFFIX
+static void psa_its_fill_filename(psa_storage_uid_t uid, char *filename)
+{
+    /* Break up the UID into two 32-bit pieces so as not to rely on
+     * long long support in snprintf. */
+    mbedtls_snprintf(filename, PSA_ITS_STORAGE_FILENAME_LENGTH,
+                     "%s" PSA_ITS_STORAGE_FILENAME_PATTERN "%s",
+                     PSA_ITS_STORAGE_PREFIX,
+                     (unsigned long) (uid >> 32),
+                     (unsigned long) (uid & 0xffffffff),
+                     PSA_ITS_STORAGE_SUFFIX);
+}
+
+/* Maximum uid used by the test, recorded so that cleanup() can delete
+ * all files. 0xffffffffffffffff is always cleaned up, so it does not
+ * need to and should not be taken into account for uid_max. */
+static psa_storage_uid_t uid_max = 0;
+
+static void cleanup(void)
+{
+    /* Call remove() on all the files that a test might have created.
+     * We ignore the error if the file exists but remove() fails because
+     * it can't be checked portably (except by attempting to open the file
+     * first, which is needlessly slow and complicated here). A failure of
+     * remove() on an existing file is very unlikely anyway and would not
+     * have significant consequences other than perhaps failing the next
+     * test case. */
+    char filename[PSA_ITS_STORAGE_FILENAME_LENGTH];
+    psa_storage_uid_t uid;
+    for (uid = 0; uid < uid_max; uid++) {
+        psa_its_fill_filename(uid, filename);
+        (void) remove(filename);
+    }
+    psa_its_fill_filename((psa_storage_uid_t) (-1), filename);
+    (void) remove(filename);
+    (void) remove(PSA_ITS_STORAGE_TEMP);
+    uid_max = 0;
+}
+
+static psa_status_t psa_its_set_wrap(psa_storage_uid_t uid,
+                                     uint32_t data_length,
+                                     const void *p_data,
+                                     psa_storage_create_flags_t create_flags)
+{
+    if (uid_max != (psa_storage_uid_t) (-1) && uid_max < uid) {
+        uid_max = uid;
+    }
+    return psa_its_set(uid, data_length, p_data, create_flags);
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_ITS_FILE_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void set_get_remove(int uid_arg, int flags_arg, data_t *data)
+{
+    psa_storage_uid_t uid = uid_arg;
+    uint32_t flags = flags_arg;
+    struct psa_storage_info_t info;
+    unsigned char *buffer = NULL;
+    size_t ret_len = 0;
+
+    TEST_CALLOC(buffer, data->len);
+
+    PSA_ASSERT(psa_its_set_wrap(uid, data->len, data->x, flags));
+
+    PSA_ASSERT(psa_its_get_info(uid, &info));
+    TEST_ASSERT(info.size == data->len);
+    TEST_ASSERT(info.flags == flags);
+    PSA_ASSERT(psa_its_get(uid, 0, data->len, buffer, &ret_len));
+    TEST_MEMORY_COMPARE(data->x, data->len, buffer, ret_len);
+
+    PSA_ASSERT(psa_its_remove(uid));
+
+exit:
+    mbedtls_free(buffer);
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void set_overwrite(int uid_arg,
+                   int flags1_arg, data_t *data1,
+                   int flags2_arg, data_t *data2)
+{
+    psa_storage_uid_t uid = uid_arg;
+    uint32_t flags1 = flags1_arg;
+    uint32_t flags2 = flags2_arg;
+    struct psa_storage_info_t info;
+    unsigned char *buffer = NULL;
+    size_t ret_len = 0;
+
+    TEST_CALLOC(buffer, MAX(data1->len, data2->len));
+
+    PSA_ASSERT(psa_its_set_wrap(uid, data1->len, data1->x, flags1));
+    PSA_ASSERT(psa_its_get_info(uid, &info));
+    TEST_ASSERT(info.size == data1->len);
+    TEST_ASSERT(info.flags == flags1);
+    PSA_ASSERT(psa_its_get(uid, 0, data1->len, buffer, &ret_len));
+    TEST_MEMORY_COMPARE(data1->x, data1->len, buffer, ret_len);
+
+    PSA_ASSERT(psa_its_set_wrap(uid, data2->len, data2->x, flags2));
+    PSA_ASSERT(psa_its_get_info(uid, &info));
+    TEST_ASSERT(info.size == data2->len);
+    TEST_ASSERT(info.flags == flags2);
+    ret_len = 0;
+    PSA_ASSERT(psa_its_get(uid, 0, data2->len, buffer, &ret_len));
+    TEST_MEMORY_COMPARE(data2->x, data2->len, buffer, ret_len);
+
+    PSA_ASSERT(psa_its_remove(uid));
+
+exit:
+    mbedtls_free(buffer);
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void set_multiple(int first_id, int count)
+{
+    psa_storage_uid_t uid0 = first_id;
+    psa_storage_uid_t uid;
+    char stored[40];
+    char retrieved[40];
+    size_t ret_len = 0;
+
+    memset(stored, '.', sizeof(stored));
+    for (uid = uid0; uid < uid0 + count; uid++) {
+        mbedtls_snprintf(stored, sizeof(stored),
+                         "Content of file 0x%08lx", (unsigned long) uid);
+        PSA_ASSERT(psa_its_set_wrap(uid, sizeof(stored), stored, 0));
+    }
+
+    for (uid = uid0; uid < uid0 + count; uid++) {
+        mbedtls_snprintf(stored, sizeof(stored),
+                         "Content of file 0x%08lx", (unsigned long) uid);
+        PSA_ASSERT(psa_its_get(uid, 0, sizeof(stored), retrieved, &ret_len));
+        TEST_MEMORY_COMPARE(retrieved, ret_len,
+                            stored, sizeof(stored));
+        PSA_ASSERT(psa_its_remove(uid));
+        TEST_ASSERT(psa_its_get(uid, 0, 0, NULL, NULL) ==
+                    PSA_ERROR_DOES_NOT_EXIST);
+    }
+
+exit:
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void nonexistent(int uid_arg, int create_and_remove)
+{
+    psa_storage_uid_t uid = uid_arg;
+    struct psa_storage_info_t info;
+
+    if (create_and_remove) {
+        PSA_ASSERT(psa_its_set_wrap(uid, 0, NULL, 0));
+        PSA_ASSERT(psa_its_remove(uid));
+    }
+
+    TEST_ASSERT(psa_its_remove(uid) == PSA_ERROR_DOES_NOT_EXIST);
+    TEST_ASSERT(psa_its_get_info(uid, &info) ==
+                PSA_ERROR_DOES_NOT_EXIST);
+    TEST_ASSERT(psa_its_get(uid, 0, 0, NULL, NULL) ==
+                PSA_ERROR_DOES_NOT_EXIST);
+
+exit:
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void get_at(int uid_arg, data_t *data,
+            int offset, int length_arg,
+            int expected_status)
+{
+    psa_storage_uid_t uid = uid_arg;
+    unsigned char *buffer = NULL;
+    psa_status_t status;
+    size_t length = length_arg >= 0 ? length_arg : 0;
+    unsigned char *trailer;
+    size_t i;
+    size_t ret_len = 0;
+
+    TEST_CALLOC(buffer, length + 16);
+    trailer = buffer + length;
+    memset(trailer, '-', 16);
+
+    PSA_ASSERT(psa_its_set_wrap(uid, data->len, data->x, 0));
+
+    status = psa_its_get(uid, offset, length_arg, buffer, &ret_len);
+    TEST_ASSERT(status == (psa_status_t) expected_status);
+    if (status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(data->x + offset, (size_t) length_arg,
+                            buffer, ret_len);
+    }
+    for (i = 0; i < 16; i++) {
+        TEST_ASSERT(trailer[i] == '-');
+    }
+    PSA_ASSERT(psa_its_remove(uid));
+
+exit:
+    mbedtls_free(buffer);
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void get_fail(int uid_arg, data_t *data,
+              int overwrite_magic, int cut_header,
+              int expected_status)
+{
+    psa_storage_uid_t uid = uid_arg;
+    unsigned char *buffer = NULL;
+    psa_status_t status;
+    size_t n;
+    size_t ret_len = 0;
+    char filename[PSA_ITS_STORAGE_FILENAME_LENGTH];
+    FILE *stream = NULL;
+    char bad_char = 'X';
+
+    PSA_ASSERT(psa_its_set_wrap(uid, data->len, data->x, 0));
+
+    psa_its_fill_filename(uid, filename);
+    stream = fopen(filename, "rb+");
+    TEST_ASSERT(NULL != stream);
+    if (0 != overwrite_magic) {
+        /* Overwrite the 1st byte of the file, the ITS magic number */
+        TEST_ASSERT(fseek(stream, 0, SEEK_SET) == 0);
+        n = fwrite(&bad_char, 1, 1, stream);
+        TEST_ASSERT(1 == n);
+    }
+    if (0 != cut_header) {
+        /* Reopen file and truncate it to 0 byte by specifying the 'w' flag */
+        stream = freopen(filename, "wb", stream);
+        TEST_ASSERT(NULL != stream);
+    }
+    fclose(stream);
+    stream = NULL;
+
+    status = psa_its_get(uid, 0, 0, buffer, &ret_len);
+    TEST_ASSERT(status == (psa_status_t) expected_status);
+    TEST_ASSERT(0 == ret_len);
+    PSA_ASSERT(psa_its_remove(uid));
+
+    /* Check if the file is really deleted. */
+    stream = fopen(filename, "rb");
+    TEST_ASSERT(NULL == stream);
+
+exit:
+    if (stream != NULL) {
+        fclose(stream);
+    }
+
+    mbedtls_free(buffer);
+    cleanup();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void set_fail(int uid_arg, data_t *data,
+              int expected_status)
+{
+    psa_storage_uid_t uid = uid_arg;
+    TEST_ASSERT(psa_its_set_wrap(uid, data->len, data->x, 0) ==
+                (psa_status_t) expected_status);
+
+exit:
+    cleanup();
+}
+/* END_CASE */

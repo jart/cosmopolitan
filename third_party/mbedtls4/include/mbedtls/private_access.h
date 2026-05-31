@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS4_INCLUDE_MBEDTLS_PRIVATE_ACCESS_H_
+#define COSMOPOLITAN_THIRD_PARTY_MBEDTLS4_INCLUDE_MBEDTLS_PRIVATE_ACCESS_H_
+#include "third_party/mbedtls4/tf-psa-crypto/drivers/builtin/include/mbedtls/private_access.h"
+#endif

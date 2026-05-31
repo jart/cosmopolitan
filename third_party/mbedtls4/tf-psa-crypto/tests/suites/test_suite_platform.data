@@ -1,0 +1,15 @@
+
+Time: get milliseconds
+time_get_milliseconds:
+
+Time: get seconds
+time_get_seconds:
+
+Check mbedtls_calloc overallocation
+# This test case exercises an integer overflow in calloc. Under Asan, with
+# a modern Clang, this triggers an ASan/MSan/TSan complaint. The complaint
+# can be avoided with e.g. ASAN_OPTIONS=allocator_may_return_null=1,
+# but this has to be set in the environment before the program starts,
+# and could hide other errors.
+depends_on:!MBEDTLS_TEST_HAVE_ASAN:!MBEDTLS_TEST_HAVE_MSAN:!MBEDTLS_TEST_HAVE_TSAN
+check_mbedtls_calloc_overallocation:SIZE_MAX/2:SIZE_MAX/2

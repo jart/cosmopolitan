@@ -27,7 +27,7 @@ TOOL_CURL_DIRECTDEPS =				\
 	NET_HTTP				\
 	NET_HTTPS				\
 	THIRD_PARTY_GETOPT			\
-	THIRD_PARTY_MBEDTLS			\
+	THIRD_PARTY_MBEDTLS4			\
 	THIRD_PARTY_MUSL			\
 	THIRD_PARTY_TZ
 
@@ -46,6 +46,12 @@ $(TOOL_CURL_A):					\
 $(TOOL_CURL_A).pkg:				\
 		$(TOOL_CURL_OBJS)		\
 		$(foreach x,$(TOOL_CURL_DIRECTDEPS),$($(x)_A).pkg)
+
+$(TOOL_CURL_OBJS): private			\
+		CPPFLAGS +=			\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 o/$(MODE)/tool/curl/curl.dbg:			\
 		$(TOOL_CURL)			\

@@ -1,0 +1,28 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/sha1.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_SHA1_C
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE */
+void mbedtls_sha1(data_t *src_str, data_t *hash)
+{
+    unsigned char output[41];
+
+    memset(output, 0x00, 41);
+
+
+    TEST_ASSERT(mbedtls_sha1(src_str->x, src_str->len, output) == 0);
+
+    TEST_ASSERT(mbedtls_test_hexcmp(output, hash->x, 20, hash->len) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void sha1_selftest()
+{
+    TEST_ASSERT(mbedtls_sha1_self_test(1) == 0);
+}
+/* END_CASE */

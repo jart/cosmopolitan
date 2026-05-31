@@ -16,8 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
 #include "net/https/https.h"
 
 bool32 IsSelfSigned(mbedtls_x509_crt *cert) {
-  return !mbedtls_x509_name_cmp(&cert->issuer, &cert->subject);
+  char issuer[512], subject[512];
+  if (mbedtls_x509_dn_gets(issuer, sizeof(issuer), &cert->issuer) < 0)
+    return 0;
+  if (mbedtls_x509_dn_gets(subject, sizeof(subject), &cert->subject) < 0)
+    return 0;
+  return !strcmp(issuer, subject);
 }

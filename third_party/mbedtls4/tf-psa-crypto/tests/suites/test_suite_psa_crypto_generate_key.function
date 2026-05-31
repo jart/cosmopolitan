@@ -1,0 +1,48 @@
+/* BEGIN_HEADER */
+
+#include "psa/crypto.h"
+#include "test/psa_crypto_helpers.h"
+
+#define INVALID_KEY_ID mbedtls_svc_key_id_make(0, 0xfedcba98)
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void generate_key(int key_type_arg, int bits_arg, int expected_status_arg)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key_id = INVALID_KEY_ID;
+
+    // key lifetime, usage flags, algorithm are irrelevant for this test
+    psa_key_type_t key_type = key_type_arg;
+    size_t bits = bits_arg;
+    psa_status_t expected_status = expected_status_arg;
+
+    PSA_ASSERT(psa_crypto_init());
+    psa_set_key_type(&attributes, key_type);
+    psa_set_key_bits(&attributes, bits);
+    TEST_EQUAL(psa_generate_key(&attributes, &key_id),
+               expected_status);
+
+    // Verify attributes of the created key on success
+    if (expected_status == PSA_SUCCESS) {
+        psa_reset_key_attributes(&attributes);
+        PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
+        TEST_EQUAL(psa_get_key_lifetime(&attributes), PSA_KEY_LIFETIME_VOLATILE);
+        TEST_EQUAL(psa_get_key_usage_flags(&attributes), 0);
+        TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+        TEST_EQUAL(psa_get_key_type(&attributes), key_type);
+        TEST_EQUAL(psa_get_key_bits(&attributes), bits);
+    }
+
+exit:
+    psa_reset_key_attributes(&attributes);
+    psa_destroy_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */

@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=@PKGCONFIG_INCLUDEDIR@
+libdir=@PKGCONFIG_LIBDIR@
+
+Name: @PROJECT_NAME@
+Description: @PKGCONFIG_PROJECT_DESCRIPTION@
+URL: @PKGCONFIG_PROJECT_HOMEPAGE_URL@
+Version: @PROJECT_VERSION@
+Cflags: -I"${includedir}"
+Libs: -L"${libdir}" -ltfpsacrypto

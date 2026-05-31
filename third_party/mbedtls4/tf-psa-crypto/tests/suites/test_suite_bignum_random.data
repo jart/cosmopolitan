@@ -1,0 +1,340 @@
+MPI core random basic: 0..1
+mpi_core_random_basic:0:"01":0
+
+MPI core random basic: 0..2
+mpi_core_random_basic:0:"02":0
+
+MPI core random basic: 1..2
+mpi_core_random_basic:1:"02":0
+
+MPI core random basic: 2^30..2^31
+mpi_core_random_basic:0x40000000:"80000000":0
+
+MPI core random basic: 0..2^128
+mpi_core_random_basic:0x40000000:"0100000000000000000000000000000000":0
+
+MPI core random basic: 2^30..2^129
+mpi_core_random_basic:0x40000000:"0200000000000000000000000000000000":0
+
+# Use the same data values for mpi_core_random_basic->NOT_ACCEPTABLE
+# and for mpi_XXX_random_values where we want to return NOT_ACCEPTABLE
+# but this isn't checked at runtime.
+MPI core random basic: 2^28-1..2^28+1 (NOT_ACCEPTABLE)
+mpi_core_random_basic:0x0fffffff:"10000001":MBEDTLS_ERR_MPI_NOT_ACCEPTABLE
+
+MPI random legacy=core: 2^28-1..2^28+1 (NOT_ACCEPTABLE)
+mpi_legacy_random_values:0x0fffffff:"10000001"
+
+MPI random mod=core: 2^28-1..2^28+1 (NOT_ACCEPTABLE) (Mont)
+mpi_mod_random_values:0x0fffffff:"10000001":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^28-1..2^28+1 (NOT_ACCEPTABLE) (canon)
+mpi_mod_random_values:0x0fffffff:"10000001":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI core random basic: 2^29-1..2^29+1 (NOT_ACCEPTABLE)
+mpi_core_random_basic:0x1fffffff:"20000001":MBEDTLS_ERR_MPI_NOT_ACCEPTABLE
+
+MPI random legacy=core: 2^29-1..2^29+1 (NOT_ACCEPTABLE)
+mpi_legacy_random_values:0x1fffffff:"20000001"
+
+MPI random mod=core: 2^29-1..2^29+1 (NOT_ACCEPTABLE) (Mont)
+mpi_mod_random_values:0x1fffffff:"20000001":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^29-1..2^29+1 (NOT_ACCEPTABLE) (canon)
+mpi_mod_random_values:0x1fffffff:"20000001":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI core random basic: 2^30-1..2^30+1 (NOT_ACCEPTABLE)
+mpi_core_random_basic:0x3fffffff:"40000001":MBEDTLS_ERR_MPI_NOT_ACCEPTABLE
+
+MPI random legacy=core: 2^30-1..2^30+1 (NOT_ACCEPTABLE)
+mpi_legacy_random_values:0x3fffffff:"40000001"
+
+MPI random mod=core: 2^30-1..2^30+1 (NOT_ACCEPTABLE) (Mont)
+mpi_mod_random_values:0x3fffffff:"40000001":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^30-1..2^30+1 (NOT_ACCEPTABLE) (canon)
+mpi_mod_random_values:0x3fffffff:"40000001":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI core random basic: 2^31-1..2^31+1 (NOT_ACCEPTABLE)
+mpi_core_random_basic:0x7fffffff:"80000001":MBEDTLS_ERR_MPI_NOT_ACCEPTABLE
+
+MPI random legacy=core: 2^31-1..2^31+1 (NOT_ACCEPTABLE)
+mpi_legacy_random_values:0x7fffffff:"80000001"
+
+MPI random mod=core: 2^31-1..2^31+1 (NOT_ACCEPTABLE) (Mont)
+mpi_mod_random_values:0x7fffffff:"80000001":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^31-1..2^31+1 (NOT_ACCEPTABLE) (canon)
+mpi_mod_random_values:0x7fffffff:"80000001":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random in range: 1..2
+mpi_random_many:1:"02":1000
+
+MPI random in range: 1..3
+mpi_random_many:1:"03":1000
+
+MPI random in range: 1..4
+mpi_random_many:1:"04":1000
+
+MPI random in range: 1..5
+mpi_random_many:1:"05":1000
+
+MPI random in range: 1..6
+mpi_random_many:1:"06":1000
+
+MPI random in range: 1..7
+mpi_random_many:1:"07":1000
+
+MPI random in range: 1..8
+mpi_random_many:1:"08":1000
+
+MPI random in range: 1..9
+mpi_random_many:1:"09":1000
+
+MPI random in range: 1..10
+mpi_random_many:1:"0a":1000
+
+MPI random in range: 1..11
+mpi_random_many:1:"0b":1000
+
+MPI random in range: 1..12
+mpi_random_many:1:"0c":1000
+
+MPI random in range: 1..255
+mpi_random_many:1:"ff":200
+
+MPI random in range: 1..256
+mpi_random_many:1:"0100":200
+
+MPI random in range: 1..257
+mpi_random_many:1:"0101":200
+
+MPI random in range: 1..272
+mpi_random_many:1:"0110":200
+
+MPI random in range: 1..2^64-1
+mpi_random_many:1:"ffffffffffffffff":100
+
+MPI random in range: 1..2^64
+mpi_random_many:1:"010000000000000000":100
+
+MPI random in range: 1..2^64+1
+mpi_random_many:1:"010000000000000001":100
+
+MPI random in range: 1..2^64+2^63
+mpi_random_many:1:"018000000000000000":100
+
+MPI random in range: 1..2^65-1
+mpi_random_many:1:"01ffffffffffffffff":100
+
+MPI random in range: 1..2^65
+mpi_random_many:1:"020000000000000000":100
+
+MPI random in range: 1..2^65+1
+mpi_random_many:1:"020000000000000001":100
+
+MPI random in range: 1..2^65+2^64
+mpi_random_many:1:"030000000000000000":100
+
+MPI random in range: 1..2^66+2^65
+mpi_random_many:1:"060000000000000000":100
+
+MPI random in range: 1..2^71-1
+mpi_random_many:1:"7fffffffffffffffff":100
+
+MPI random in range: 1..2^71
+mpi_random_many:1:"800000000000000000":100
+
+MPI random in range: 1..2^71+1
+mpi_random_many:1:"800000000000000001":100
+
+MPI random in range: 1..2^71+2^70
+mpi_random_many:1:"c00000000000000000":100
+
+MPI random in range: 1..2^72-1
+mpi_random_many:1:"ffffffffffffffffff":100
+
+MPI random in range: 1..2^72
+mpi_random_many:1:"01000000000000000000":100
+
+MPI random in range: 1..2^72+1
+mpi_random_many:1:"01000000000000000001":100
+
+MPI random in range: 1..2^72+2^71
+mpi_random_many:1:"01800000000000000000":100
+
+MPI random in range: 0..1
+mpi_random_many:0:"04":10000
+
+MPI random in range: 0..4
+mpi_random_many:0:"04":10000
+
+MPI random in range: 2..4
+mpi_random_many:2:"04":10000
+
+MPI random in range: 3..4
+mpi_random_many:3:"04":10000
+
+MPI random in range: smaller result
+mpi_random_sizes:1:"aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb":1:0
+
+MPI random in range: same size result (32-bit limbs)
+mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":2:0
+
+MPI random in range: same size result (64-bit limbs)
+mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":1:0
+
+MPI random in range: larger result
+mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":3:0
+
+## The "0 limb in upper bound" tests rely on the fact that
+## mbedtls_mpi_read_binary() bases the size of the MPI on the size of
+## the input, without first checking for leading zeros. If this was
+## not the case, the tests would still pass, but would not exercise
+## the advertised behavior.
+MPI random in range: leading 0 limb in upper bound #0
+mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":0:0
+
+MPI random in range: leading 0 limb in upper bound #1
+mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":1:0
+
+MPI random in range: leading 0 limb in upper bound #2
+mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":2:0
+
+MPI random in range: leading 0 limb in upper bound #3
+mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":3:0
+
+MPI random in range: leading 0 limb in upper bound #4
+mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":4:0
+
+MPI random in range: previously small >0
+mpi_random_sizes:1:"1234567890":4:1
+
+MPI random in range: previously small <0
+mpi_random_sizes:1:"1234567890":4:-1
+
+MPI random in range: previously large >0
+mpi_random_sizes:1:"1234":4:65
+
+MPI random in range: previously large <0
+mpi_random_sizes:1:"1234":4:-65
+
+MPI random bad arguments: min < 0
+mpi_random_fail:-1:"04":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random bad arguments: min = N = 0
+mpi_random_fail:0:"00":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random bad arguments: min = N = 1
+mpi_random_fail:1:"01":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random bad arguments: min > N = 0
+mpi_random_fail:1:"00":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random bad arguments: min > N = 1
+mpi_random_fail:2:"01":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random bad arguments: min > N = 1, 0 limb in upper bound
+mpi_random_fail:2:"000000000000000001":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random legacy=core: 0..1
+mpi_legacy_random_values:0:"01"
+
+MPI random legacy=core: 0..2
+mpi_legacy_random_values:0:"02"
+
+MPI random legacy=core: 1..2
+mpi_legacy_random_values:1:"02"
+
+MPI random legacy=core: 2^30..2^31
+mpi_legacy_random_values:0x40000000:"80000000"
+
+MPI random legacy=core: 2^31-1..2^32-1
+mpi_legacy_random_values:0x7fffffff:"ffffffff"
+
+MPI random legacy=core: 0..2^256
+mpi_legacy_random_values:0:"010000000000000000000000000000000000000000000000000000000000000000"
+
+MPI random legacy=core: 0..2^256+1
+mpi_legacy_random_values:0:"010000000000000000000000000000000000000000000000000000000000000001"
+
+MPI random mod=core: 0..1 (Mont)
+mpi_mod_random_values:0:"01":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 0..1 (canon)
+mpi_mod_random_values:0:"01":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod=core: 0..3 (Mont)
+mpi_mod_random_values:0:"03":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 0..3 (canon)
+mpi_mod_random_values:0:"03":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod=core: 1..3 (Mont)
+mpi_mod_random_values:1:"03":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 1..3 (canon)
+mpi_mod_random_values:1:"03":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod=core: 2^30..2^31-1 (Mont)
+mpi_mod_random_values:0x40000000:"7fffffff":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^30..2^31-1 (canon)
+mpi_mod_random_values:0x40000000:"7fffffff":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod=core: 2^31-1..2^32-1 (Mont)
+mpi_mod_random_values:0x7fffffff:"ffffffff":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 2^31-1..2^32-1 (canon)
+mpi_mod_random_values:0x7fffffff:"ffffffff":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod=core: 0..2^256+1 (Mont)
+mpi_mod_random_values:0:"010000000000000000000000000000000000000000000000000000000000000001":MBEDTLS_MPI_MOD_REP_MONTGOMERY
+
+MPI random mod=core: 0..2^256+1 (canon)
+mpi_mod_random_values:0:"010000000000000000000000000000000000000000000000000000000000000001":MBEDTLS_MPI_MOD_REP_OPT_RED
+
+MPI random mod validation: 1 limb, good, 0..1
+mpi_mod_random_validation:0:"1":0:0
+
+MPI random mod validation: 1 limb, good, 1..3
+mpi_mod_random_validation:1:"3":0:0
+
+MPI random mod validation: 1 limb, good, 2..3
+mpi_mod_random_validation:2:"3":0:0
+
+MPI random mod validation: 1 limb, good, 3..5
+mpi_mod_random_validation:3:"5":0:0
+
+MPI random mod validation: 1 limb, good, 4..5
+mpi_mod_random_validation:4:"5":0:0
+
+MPI random mod validation: 1 limb, good, 5..7
+mpi_mod_random_validation:5:"7":0:0
+
+MPI random mod validation: 1 limb, good, 6..7
+mpi_mod_random_validation:6:"7":0:0
+
+MPI random mod validation: 1 limb, good, 0..0x123
+mpi_mod_random_validation:0:"123":0:0
+
+MPI random mod validation: 2+ limbs, good
+mpi_mod_random_validation:0:"01234567890123456789":0:0
+
+MPI random mod validation: 1 limb, output null
+mpi_mod_random_validation:0:"123":-1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random mod validation: 1 limb, output too large
+mpi_mod_random_validation:0:"123":1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random mod validation: 2+ limbs, output too small
+mpi_mod_random_validation:0:"01234567890123456789":-1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random mod validation: 2+ limbs, output too large
+mpi_mod_random_validation:0:"01234567890123456789":1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random mod validation: min == upper bound
+mpi_mod_random_validation:0x123:"123":-1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+MPI random mod validation: min > upper bound
+mpi_mod_random_validation:0x124:"123":-1:MBEDTLS_ERR_MPI_BAD_INPUT_DATA

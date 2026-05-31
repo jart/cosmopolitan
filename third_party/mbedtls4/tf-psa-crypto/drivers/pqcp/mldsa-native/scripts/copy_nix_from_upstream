@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+ROOT="$(realpath "$(dirname "$0")"/../)"
+TMP="$(mktemp -u)-mlkem-native"
+
+if [[ -d $TMP ]]; then
+  echo "$TMP already exists please remove it first"
+  exit 1
+fi
+
+git clone --depth=1 https://github.com/pq-code-package/mlkem-native.git "$TMP"
+
+echo "Copying nix related files from $TMP ..."
+cp -R "$TMP/nix" "$ROOT"
+cp -R "$TMP/.github/actions/setup-nix" "$ROOT/.github/actions/"
+cp "$TMP/.github/workflows/nix.yml" "$ROOT/.github/workflows/nix.yml"
+cp "$TMP/flake.lock" "$ROOT"

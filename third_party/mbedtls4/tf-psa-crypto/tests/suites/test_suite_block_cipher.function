@@ -1,0 +1,96 @@
+/* BEGIN_HEADER */
+#include "block_cipher_internal.h"
+
+#define BLOCK_SIZE 16
+
+#if defined(MBEDTLS_AES_C)
+#define VALID_CIPHER_ID MBEDTLS_CIPHER_ID_AES
+#define BADKEY_ERROR MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
+#elif defined(MBEDTLS_ARIA_C)
+#define VALID_CIPHER_ID MBEDTLS_CIPHER_ID_ARIA
+#define BADKEY_ERROR MBEDTLS_ERR_ARIA_BAD_INPUT_DATA
+#elif defined(MBEDTLS_CAMELLIA_C)
+#define VALID_CIPHER_ID MBEDTLS_CIPHER_ID_CAMELLIA
+#define BADKEY_ERROR MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA
+#else
+#undef VALID_CIPHER_ID
+#endif
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_BLOCK_CIPHER_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:VALID_CIPHER_ID */
+void invalid()
+{
+    /* That size is valid for a key or an input/output block. */
+    unsigned char buf[16] = { 0 };
+    mbedtls_block_cipher_context_t ctx;
+    mbedtls_block_cipher_init(&ctx);
+
+    PSA_INIT();
+
+    /* Bad parameters to setup */
+    TEST_EQUAL(MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA,
+               mbedtls_block_cipher_setup(&ctx, MBEDTLS_CIPHER_ID_NONE));
+
+    /* setkey() before successful setup() */
+    TEST_EQUAL(MBEDTLS_ERR_CIPHER_INVALID_CONTEXT,
+               mbedtls_block_cipher_setkey(&ctx, buf, 128));
+
+    /* encrypt() before successful setup() */
+    TEST_EQUAL(MBEDTLS_ERR_CIPHER_INVALID_CONTEXT,
+               mbedtls_block_cipher_encrypt(&ctx, buf, buf));
+
+    /* free() before successful setup()
+     * No return value to check, but shouldn't cause memory errors. */
+    mbedtls_block_cipher_free(&ctx);
+
+    /* Now properly setup the context */
+    mbedtls_block_cipher_init(&ctx);
+    TEST_EQUAL(0, mbedtls_block_cipher_setup(&ctx, VALID_CIPHER_ID));
+
+    /* Bad parameters to setkey() */
+    int setkey_ret = mbedtls_block_cipher_setkey(&ctx, buf, 42);
+    if (setkey_ret != MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA) {
+        TEST_EQUAL(BADKEY_ERROR, setkey_ret);
+    }
+
+exit:
+    mbedtls_block_cipher_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void test_vec(int cipher_id_arg, data_t *key, data_t *input, data_t *outref)
+{
+    mbedtls_block_cipher_context_t ctx;
+    mbedtls_block_cipher_init(&ctx);
+    mbedtls_cipher_id_t cipher_id = cipher_id_arg;
+    unsigned char output[BLOCK_SIZE];
+    memset(output, 0x00, sizeof(output));
+
+    PSA_INIT();
+
+    TEST_EQUAL(0, mbedtls_block_cipher_setup(&ctx, cipher_id));
+    TEST_EQUAL(0, mbedtls_block_cipher_setkey(&ctx, key->x, 8 * key->len));
+
+    /* Encrypt with input != output */
+    TEST_EQUAL(0, mbedtls_block_cipher_encrypt(&ctx, input->x, output));
+    ASSERT_COMPARE(output, BLOCK_SIZE, outref->x, outref->len);
+
+    /* Encrypt with input == output.
+     * (Also, encrypting again ensures the previous call to encrypt()
+     * did not change the state of the context.) */
+    memcpy(output, input->x, BLOCK_SIZE);
+    TEST_EQUAL(0, mbedtls_block_cipher_encrypt(&ctx, output, output));
+    ASSERT_COMPARE(output, BLOCK_SIZE, outref->x, outref->len);
+
+exit:
+    mbedtls_block_cipher_free(&ctx);
+    PSA_DONE();
+}
+/* END_CASE */

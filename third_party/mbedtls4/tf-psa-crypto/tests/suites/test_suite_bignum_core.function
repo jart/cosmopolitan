@@ -1,0 +1,1829 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/private/entropy.h"
+#include "bignum_core.h"
+#include "bignum_core_invasive.h"
+#include "constant_time_internal.h"
+#include "test/constant_flow.h"
+#include "test/bignum_codepath_check.h"
+#include "mbedtls/asn1write.h"
+
+#if defined(MBEDTLS_ASN1_PARSE_C)
+#include "mbedtls/asn1.h"
+#endif
+
+/** Verifies mbedtls_mpi_core_add().
+ *
+ * \param[in] A       Little-endian presentation of the left operand.
+ * \param[in] B       Little-endian presentation of the right operand.
+ * \param limbs       Number of limbs in each MPI (\p A, \p B, \p S and \p X).
+ * \param[in] S       Little-endian presentation of the expected sum.
+ * \param carry       Expected carry from the addition.
+ * \param[in,out] X   Temporary storage to be used for results.
+ *
+ * \return  1 if mbedtls_mpi_core_add() passes this test, otherwise 0.
+ */
+static int mpi_core_verify_add(mbedtls_mpi_uint *A,
+                               mbedtls_mpi_uint *B,
+                               size_t limbs,
+                               mbedtls_mpi_uint *S,
+                               int carry,
+                               mbedtls_mpi_uint *X)
+{
+    int ret = 0;
+
+    size_t bytes = limbs * sizeof(*A);
+
+    /* The test cases have A <= B to avoid repetition, so we test A + B then,
+     * if A != B, B + A. If A == B, we can test when A and B are aliased */
+
+    /* A + B */
+
+    /* A + B => correct result and carry */
+    TEST_EQUAL(carry, mbedtls_mpi_core_add(X, A, B, limbs));
+    TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+    /* A + B; alias output and first operand => correct result and carry */
+    memcpy(X, A, bytes);
+    TEST_EQUAL(carry, mbedtls_mpi_core_add(X, X, B, limbs));
+    TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+    /* A + B; alias output and second operand => correct result and carry */
+    memcpy(X, B, bytes);
+    TEST_EQUAL(carry, mbedtls_mpi_core_add(X, A, X, limbs));
+    TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+    if (memcmp(A, B, bytes) == 0) {
+        /* A == B, so test where A and B are aliased */
+
+        /* A + A => correct result and carry */
+        TEST_EQUAL(carry, mbedtls_mpi_core_add(X, A, A, limbs));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+        /* A + A, output aliased to both operands => correct result and carry */
+        memcpy(X, A, bytes);
+        TEST_EQUAL(carry, mbedtls_mpi_core_add(X, X, X, limbs));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+    } else {
+        /* A != B, so test B + A */
+
+        /* B + A => correct result and carry */
+        TEST_EQUAL(carry, mbedtls_mpi_core_add(X, B, A, limbs));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+        /* B + A; alias output and first operand => correct result and carry */
+        memcpy(X, B, bytes);
+        TEST_EQUAL(carry, mbedtls_mpi_core_add(X, X, A, limbs));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+        /* B + A; alias output and second operand => correct result and carry */
+        memcpy(X, A, bytes);
+        TEST_EQUAL(carry, mbedtls_mpi_core_add(X, B, X, limbs));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+    }
+
+    ret = 1;
+
+exit:
+    return ret;
+}
+
+/** Verifies mbedtls_mpi_core_add_if().
+ *
+ * \param[in] A       Little-endian presentation of the left operand.
+ * \param[in] B       Little-endian presentation of the right operand.
+ * \param limbs       Number of limbs in each MPI (\p A, \p B, \p S and \p X).
+ * \param[in] S       Little-endian presentation of the expected sum.
+ * \param carry       Expected carry from the addition.
+ * \param[in,out] X   Temporary storage to be used for results.
+ *
+ * \return  1 if mbedtls_mpi_core_add_if() passes this test, otherwise 0.
+ */
+static int mpi_core_verify_add_if(mbedtls_mpi_uint *A,
+                                  mbedtls_mpi_uint *B,
+                                  size_t limbs,
+                                  mbedtls_mpi_uint *S,
+                                  int carry,
+                                  mbedtls_mpi_uint *X)
+{
+    int ret = 0;
+
+    size_t bytes = limbs * sizeof(*A);
+
+    /* The test cases have A <= B to avoid repetition, so we test A + B then,
+     * if A != B, B + A. If A == B, we can test when A and B are aliased */
+
+    /* A + B */
+
+    /* cond = 0 => X unchanged, no carry */
+    memcpy(X, A, bytes);
+    TEST_EQUAL(0, mbedtls_mpi_core_add_if(X, B, limbs, 0));
+    TEST_MEMORY_COMPARE(X, bytes, A, bytes);
+
+    /* cond = 1 => correct result and carry */
+    TEST_EQUAL(carry, mbedtls_mpi_core_add_if(X, B, limbs, 1));
+    TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+
+    if (memcmp(A, B, bytes) == 0) {
+        /* A == B, so test where A and B are aliased */
+
+        /* cond = 0 => X unchanged, no carry */
+        memcpy(X, B, bytes);
+        TEST_EQUAL(0, mbedtls_mpi_core_add_if(X, X, limbs, 0));
+        TEST_MEMORY_COMPARE(X, bytes, B, bytes);
+
+        /* cond = 1 => correct result and carry */
+        TEST_EQUAL(carry, mbedtls_mpi_core_add_if(X, X, limbs, 1));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+    } else {
+        /* A != B, so test B + A */
+
+        /* cond = 0 => d unchanged, no carry */
+        memcpy(X, B, bytes);
+        TEST_EQUAL(0, mbedtls_mpi_core_add_if(X, A, limbs, 0));
+        TEST_MEMORY_COMPARE(X, bytes, B, bytes);
+
+        /* cond = 1 => correct result and carry */
+        TEST_EQUAL(carry, mbedtls_mpi_core_add_if(X, A, limbs, 1));
+        TEST_MEMORY_COMPARE(X, bytes, S, bytes);
+    }
+
+    ret = 1;
+
+exit:
+    return ret;
+}
+
+/*
+ * Return -1 if A < B, +1 if A > B and 0 if A == B
+ */
+static int mpi_core_cmp(const mbedtls_mpi_uint *A, size_t A_limbs,
+                        const mbedtls_mpi_uint *B, size_t B_limbs)
+{
+    TEST_CF_PUBLIC(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(B, B_limbs * sizeof(mbedtls_mpi_uint));
+
+    const mbedtls_mpi AA = {
+        .p = (mbedtls_mpi_uint *) A,
+        .s = 1,
+        .n = (unsigned short) A_limbs,
+    };
+    const mbedtls_mpi BB = {
+        .p = (mbedtls_mpi_uint *) B,
+        .s = 1,
+        .n = (unsigned short) B_limbs,
+    };
+
+    return mbedtls_mpi_cmp_mpi(&AA, &BB);
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_BIGNUM_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void mpi_core_io_null()
+{
+    mbedtls_mpi_uint X = 0;
+    int ret;
+
+    ret = mbedtls_mpi_core_read_be(&X, 1, NULL, 0);
+    TEST_EQUAL(ret, 0);
+    ret = mbedtls_mpi_core_write_be(&X, 1, NULL, 0);
+    TEST_EQUAL(ret, 0);
+
+    ret = mbedtls_mpi_core_read_be(NULL, 0, NULL, 0);
+    TEST_EQUAL(ret, 0);
+    ret = mbedtls_mpi_core_write_be(NULL, 0, NULL, 0);
+    TEST_EQUAL(ret, 0);
+
+    ret = mbedtls_mpi_core_read_le(&X, 1, NULL, 0);
+    TEST_EQUAL(ret, 0);
+    ret = mbedtls_mpi_core_write_le(&X, 1, NULL, 0);
+    TEST_EQUAL(ret, 0);
+
+    ret = mbedtls_mpi_core_read_le(NULL, 0, NULL, 0);
+    TEST_EQUAL(ret, 0);
+    ret = mbedtls_mpi_core_write_le(NULL, 0, NULL, 0);
+    TEST_EQUAL(ret, 0);
+
+exit:
+    ;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_io_be(data_t *input, int nb_int, int nx_32_int, int iret,
+                    int oret)
+{
+    if (iret != 0) {
+        TEST_ASSERT(oret == 0);
+    }
+
+    TEST_LE_S(0, nb_int);
+    size_t nb = nb_int;
+
+    unsigned char buf[1024];
+    TEST_LE_U(nb, sizeof(buf));
+
+    /* nx_32_int is the number of 32 bit limbs, if we have 64 bit limbs we need
+     * to halve the number of limbs to have the same size. */
+    size_t nx;
+    TEST_LE_S(0, nx_32_int);
+    if (sizeof(mbedtls_mpi_uint) == 8) {
+        nx = nx_32_int / 2 + nx_32_int % 2;
+    } else {
+        nx = nx_32_int;
+    }
+
+    mbedtls_mpi_uint X[sizeof(buf) / sizeof(mbedtls_mpi_uint)];
+    TEST_LE_U(nx, sizeof(X) / sizeof(X[0]));
+
+    int ret = mbedtls_mpi_core_read_be(X, nx, input->x, input->len);
+    TEST_EQUAL(ret, iret);
+
+    if (iret == 0) {
+        ret =  mbedtls_mpi_core_write_be(X, nx, buf, nb);
+        TEST_EQUAL(ret, oret);
+    }
+
+    if ((iret == 0) && (oret == 0)) {
+        if (nb > input->len) {
+            size_t leading_zeroes = nb - input->len;
+            TEST_ASSERT(memcmp(buf + nb - input->len, input->x, input->len) == 0);
+            for (size_t i = 0; i < leading_zeroes; i++) {
+                TEST_EQUAL(buf[i], 0);
+            }
+        } else {
+            size_t leading_zeroes = input->len - nb;
+            TEST_ASSERT(memcmp(input->x + input->len - nb, buf, nb) == 0);
+            for (size_t i = 0; i < leading_zeroes; i++) {
+                TEST_EQUAL(input->x[i], 0);
+            }
+        }
+    }
+
+exit:
+    ;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_io_le(data_t *input, int nb_int, int nx_32_int, int iret,
+                    int oret)
+{
+    if (iret != 0) {
+        TEST_ASSERT(oret == 0);
+    }
+
+    TEST_LE_S(0, nb_int);
+    size_t nb = nb_int;
+
+    unsigned char buf[1024];
+    TEST_LE_U(nb, sizeof(buf));
+
+    /* nx_32_int is the number of 32 bit limbs, if we have 64 bit limbs we need
+     * to halve the number of limbs to have the same size. */
+    size_t nx;
+    TEST_LE_S(0, nx_32_int);
+    if (sizeof(mbedtls_mpi_uint) == 8) {
+        nx = nx_32_int / 2 + nx_32_int % 2;
+    } else {
+        nx = nx_32_int;
+    }
+
+    mbedtls_mpi_uint X[sizeof(buf) / sizeof(mbedtls_mpi_uint)];
+    TEST_LE_U(nx, sizeof(X) / sizeof(X[0]));
+
+    int ret =  mbedtls_mpi_core_read_le(X, nx, input->x, input->len);
+    TEST_EQUAL(ret, iret);
+
+    if (iret == 0) {
+        ret =  mbedtls_mpi_core_write_le(X, nx, buf, nb);
+        TEST_EQUAL(ret, oret);
+    }
+
+    if ((iret == 0) && (oret == 0)) {
+        if (nb > input->len) {
+            TEST_ASSERT(memcmp(buf, input->x, input->len) == 0);
+            for (size_t i = input->len; i < nb; i++) {
+                TEST_EQUAL(buf[i], 0);
+            }
+        } else {
+            TEST_ASSERT(memcmp(input->x, buf, nb) == 0);
+            for (size_t i = nb; i < input->len; i++) {
+                TEST_EQUAL(input->x[i], 0);
+            }
+        }
+    }
+
+exit:
+    ;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_bitlen(char *input_X, int nr_bits)
+{
+    mbedtls_mpi_uint *X = NULL;
+    size_t limbs;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&X, &limbs, input_X), 0);
+    TEST_EQUAL(mbedtls_mpi_core_bitlen(X, limbs), nr_bits);
+
+exit:
+    mbedtls_free(X);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void mpi_core_clz(int leading_zeros, int trailing_zeros)
+{
+    if ((size_t) (leading_zeros + trailing_zeros) >= (sizeof(mbedtls_mpi_uint) * 8)) {
+        // can't fit required number of leading and trailing zeros - skip test
+        goto exit;
+    }
+
+    // Construct a test input value where the count of leading zeros and
+    // trailing zeros is given in the test case, and we add ones to fill
+    // the gap.
+    mbedtls_mpi_uint x;
+    if ((leading_zeros + trailing_zeros) > 0) {
+        // some zero bits
+        uint32_t s = (sizeof(mbedtls_mpi_uint) * 8 - leading_zeros - trailing_zeros);
+        x = ((((mbedtls_mpi_uint) 1) << s) - 1) << trailing_zeros;
+    } else {
+        // all bits set
+        x = ~((mbedtls_mpi_uint) 0);
+    }
+
+    size_t n = mbedtls_mpi_core_clz(x);
+    TEST_EQUAL(n, leading_zeros);
+exit:
+    ;
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void mpi_core_lt_ct(char *input_X, char *input_Y, int exp_ret)
+{
+    mbedtls_mpi_uint *X = NULL;
+    size_t X_limbs;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t Y_limbs;
+    int ret;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &X_limbs, input_X));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&Y, &Y_limbs, input_Y));
+
+    /* We need two same-length limb arrays */
+    TEST_EQUAL(X_limbs, Y_limbs);
+
+    TEST_CF_SECRET(X, X_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(Y, X_limbs * sizeof(mbedtls_mpi_uint));
+
+    ret = mbedtls_mpi_core_lt_ct(X, Y, X_limbs);
+    TEST_EQUAL(!!ret, exp_ret);
+
+exit:
+    mbedtls_free(X);
+    mbedtls_free(Y);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_uint_le_mpi(char *input_A)
+{
+    mbedtls_mpi_uint *A = NULL;
+    size_t A_limbs = 0;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&A, &A_limbs, input_A), 0);
+
+    int is_large = 0; /* nonzero limbs beyond the lowest-order one? */
+    for (size_t i = 1; i < A_limbs; i++) {
+        if (A[i] != 0) {
+            is_large = 1;
+            break;
+        }
+    }
+
+    TEST_CF_SECRET(A, A_limbs * sizeof(*A));
+
+    TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi(0, A, A_limbs), 1);
+    TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi(A[0], A, A_limbs), 1);
+
+    if (is_large) {
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi(A[0] + 1,
+                                                  A, A_limbs), 1);
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi((mbedtls_mpi_uint) (-1) >> 1,
+                                                  A, A_limbs), 1);
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi((mbedtls_mpi_uint) (-1),
+                                                  A, A_limbs), 1);
+    } else {
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi(A[0] + 1,
+                                                  A, A_limbs),
+                   A[0] + 1 <= A[0]);
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi((mbedtls_mpi_uint) (-1) >> 1,
+                                                  A, A_limbs),
+                   (mbedtls_mpi_uint) (-1) >> 1 <= A[0]);
+        TEST_EQUAL(!!mbedtls_mpi_core_uint_le_mpi((mbedtls_mpi_uint) (-1),
+                                                  A, A_limbs),
+                   (mbedtls_mpi_uint) (-1) <= A[0]);
+    }
+
+exit:
+    mbedtls_free(A);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_cond_assign(char *input_X,
+                          char *input_Y,
+                          int input_bytes)
+{
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t limbs_X;
+    size_t limbs_Y;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&X, &limbs_X, input_X), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&Y, &limbs_Y, input_Y), 0);
+
+    size_t limbs = limbs_X;
+    size_t copy_limbs = CHARS_TO_LIMBS(input_bytes);
+    size_t bytes = limbs * sizeof(mbedtls_mpi_uint);
+    size_t copy_bytes = copy_limbs * sizeof(mbedtls_mpi_uint);
+
+    TEST_EQUAL(limbs_X, limbs_Y);
+    TEST_ASSERT(copy_limbs <= limbs);
+
+    /* condition is false */
+    TEST_CF_SECRET(X, bytes);
+    TEST_CF_SECRET(Y, bytes);
+
+    mbedtls_mpi_core_cond_assign(X, Y, copy_limbs, 0);
+
+    TEST_CF_PUBLIC(X, bytes);
+    TEST_CF_PUBLIC(Y, bytes);
+
+    TEST_ASSERT(memcmp(X, Y, bytes) != 0);
+
+    /* condition is true */
+    TEST_CF_SECRET(X, bytes);
+    TEST_CF_SECRET(Y, bytes);
+
+    mbedtls_mpi_core_cond_assign(X, Y, copy_limbs, mbedtls_ct_bool(1));
+
+    TEST_CF_PUBLIC(X, bytes);
+    TEST_CF_PUBLIC(Y, bytes);
+
+    /* Check if the given length is copied even it is smaller
+       than the length of the given MPIs. */
+    if (copy_limbs < limbs) {
+        TEST_CF_PUBLIC(X, bytes);
+        TEST_CF_PUBLIC(Y, bytes);
+
+        TEST_MEMORY_COMPARE(X, copy_bytes, Y, copy_bytes);
+        TEST_ASSERT(memcmp(X, Y, bytes) != 0);
+    } else {
+        TEST_MEMORY_COMPARE(X, bytes, Y, bytes);
+    }
+
+exit:
+    mbedtls_free(X);
+    mbedtls_free(Y);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_cond_swap(char *input_X,
+                        char *input_Y,
+                        int input_bytes)
+{
+    mbedtls_mpi_uint *tmp_X = NULL;
+    mbedtls_mpi_uint *tmp_Y = NULL;
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t limbs_X;
+    size_t limbs_Y;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&tmp_X, &limbs_X, input_X), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&tmp_Y, &limbs_Y, input_Y), 0);
+
+    size_t limbs = limbs_X;
+    size_t copy_limbs = CHARS_TO_LIMBS(input_bytes);
+    size_t bytes = limbs * sizeof(mbedtls_mpi_uint);
+    size_t copy_bytes = copy_limbs * sizeof(mbedtls_mpi_uint);
+
+    TEST_EQUAL(limbs_X, limbs_Y);
+    TEST_ASSERT(copy_limbs <= limbs);
+
+    TEST_CALLOC(X, limbs);
+    memcpy(X, tmp_X, bytes);
+
+    TEST_CALLOC(Y, limbs);
+    memcpy(Y, tmp_Y, bytes);
+
+    /* condition is false */
+    TEST_CF_SECRET(X, bytes);
+    TEST_CF_SECRET(Y, bytes);
+
+    mbedtls_mpi_core_cond_swap(X, Y, copy_limbs, 0);
+
+    TEST_CF_PUBLIC(X, bytes);
+    TEST_CF_PUBLIC(Y, bytes);
+
+    TEST_MEMORY_COMPARE(X, bytes, tmp_X, bytes);
+    TEST_MEMORY_COMPARE(Y, bytes, tmp_Y, bytes);
+
+    /* condition is true */
+    TEST_CF_SECRET(X, bytes);
+    TEST_CF_SECRET(Y, bytes);
+
+    mbedtls_mpi_core_cond_swap(X, Y, copy_limbs, mbedtls_ct_bool(1));
+
+    TEST_CF_PUBLIC(X, bytes);
+    TEST_CF_PUBLIC(Y, bytes);
+
+    /* Check if the given length is copied even it is smaller
+       than the length of the given MPIs. */
+    if (copy_limbs < limbs) {
+        TEST_MEMORY_COMPARE(X, copy_bytes, tmp_Y, copy_bytes);
+        TEST_MEMORY_COMPARE(Y, copy_bytes, tmp_X, copy_bytes);
+        TEST_ASSERT(memcmp(X, tmp_X, bytes) != 0);
+        TEST_ASSERT(memcmp(X, tmp_Y, bytes) != 0);
+        TEST_ASSERT(memcmp(Y, tmp_X, bytes) != 0);
+        TEST_ASSERT(memcmp(Y, tmp_Y, bytes) != 0);
+    } else {
+        TEST_MEMORY_COMPARE(X, bytes, tmp_Y, bytes);
+        TEST_MEMORY_COMPARE(Y, bytes, tmp_X, bytes);
+    }
+
+exit:
+    mbedtls_free(tmp_X);
+    mbedtls_free(tmp_Y);
+    mbedtls_free(X);
+    mbedtls_free(Y);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_shift_r(char *input, int count, char *result)
+{
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t limbs, n;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &limbs, input));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&Y, &n, result));
+    TEST_EQUAL(limbs, n);
+
+    mbedtls_mpi_core_shift_r(X, limbs, count);
+    TEST_MEMORY_COMPARE(X, limbs * ciL, Y, limbs * ciL);
+
+exit:
+    mbedtls_free(X);
+    mbedtls_free(Y);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_shift_l(char *input, int count, char *result)
+{
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t limbs, n;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &limbs, input));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&Y, &n, result));
+    TEST_EQUAL(limbs, n);
+
+    mbedtls_mpi_core_shift_l(X, limbs, count);
+    TEST_MEMORY_COMPARE(X, limbs * ciL, Y, limbs * ciL);
+
+exit:
+    mbedtls_free(X);
+    mbedtls_free(Y);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_add_and_add_if(char *input_A, char *input_B,
+                             char *input_S, int carry)
+{
+    mbedtls_mpi_uint *A = NULL; /* first value to add */
+    mbedtls_mpi_uint *B = NULL; /* second value to add */
+    mbedtls_mpi_uint *S = NULL; /* expected result */
+    mbedtls_mpi_uint *X = NULL; /* destination - the in/out first operand */
+    size_t A_limbs, B_limbs, S_limbs;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&A, &A_limbs, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&B, &B_limbs, input_B));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&S, &S_limbs, input_S));
+
+    /* add and add_if expect all operands to be the same length */
+    TEST_EQUAL(A_limbs, B_limbs);
+    TEST_EQUAL(A_limbs, S_limbs);
+
+    size_t limbs = A_limbs;
+    TEST_CALLOC(X, limbs);
+
+    TEST_ASSERT(mpi_core_verify_add(A, B, limbs, S, carry, X));
+    TEST_ASSERT(mpi_core_verify_add_if(A, B, limbs, S, carry, X));
+
+exit:
+    mbedtls_free(A);
+    mbedtls_free(B);
+    mbedtls_free(S);
+    mbedtls_free(X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_sub(char *input_A, char *input_B,
+                  char *input_X, int carry)
+{
+    mbedtls_mpi A, B, X;
+    mbedtls_mpi_uint *a = NULL;
+    mbedtls_mpi_uint *b = NULL;
+    mbedtls_mpi_uint *x = NULL; /* expected */
+    mbedtls_mpi_uint *r = NULL; /* result */
+
+    mbedtls_mpi_init(&A);
+    mbedtls_mpi_init(&B);
+    mbedtls_mpi_init(&X);
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&A, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&B, input_B));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&X, input_X));
+
+    /* All of the inputs are +ve (or zero) */
+    TEST_EQUAL(1, A.s);
+    TEST_EQUAL(1, B.s);
+    TEST_EQUAL(1, X.s);
+
+    /* Get the number of limbs we will need */
+    size_t limbs = MAX(A.n, B.n);
+    size_t bytes = limbs * sizeof(mbedtls_mpi_uint);
+
+    /* The result shouldn't have more limbs than the longest input */
+    TEST_LE_U(X.n, limbs);
+
+    /* Now let's get arrays of mbedtls_mpi_uints, rather than MPI structures */
+
+    /* TEST_CALLOC() uses calloc() under the hood, so these do get zeroed */
+    TEST_CALLOC(a, bytes);
+    TEST_CALLOC(b, bytes);
+    TEST_CALLOC(x, bytes);
+    TEST_CALLOC(r, bytes);
+
+    /* Populate the arrays. As the mbedtls_mpi_uint[]s in mbedtls_mpis (and as
+     * processed by mbedtls_mpi_core_sub()) are little endian, we can just
+     * copy what we have as long as MSBs are 0 (which they are from TEST_CALLOC())
+     */
+    memcpy(a, A.p, A.n * sizeof(mbedtls_mpi_uint));
+    memcpy(b, B.p, B.n * sizeof(mbedtls_mpi_uint));
+    memcpy(x, X.p, X.n * sizeof(mbedtls_mpi_uint));
+
+    TEST_CF_SECRET(a, bytes);
+    TEST_CF_SECRET(b, bytes);
+
+    /* 1a) r = a - b => we should get the correct carry */
+    TEST_EQUAL(carry, mbedtls_mpi_core_sub(r, a, b, limbs));
+
+    TEST_CF_PUBLIC(r, bytes);
+
+    /* 1b) r = a - b => we should get the correct result */
+    TEST_MEMORY_COMPARE(r, bytes, x, bytes);
+
+    /* 2 and 3 test "r may be aliased to a or b" */
+    /* 2a) r = a; r -= b => we should get the correct carry (use r to avoid clobbering a) */
+    memcpy(r, a, bytes);
+
+    TEST_CF_SECRET(r, bytes);
+
+    TEST_EQUAL(carry, mbedtls_mpi_core_sub(r, r, b, limbs));
+
+    TEST_CF_PUBLIC(r, bytes);
+
+    /* 2b) r -= b => we should get the correct result */
+    TEST_MEMORY_COMPARE(r, bytes, x, bytes);
+
+    /* 3a) r = b; r = a - r => we should get the correct carry (use r to avoid clobbering b) */
+    memcpy(r, b, bytes);
+
+    TEST_CF_SECRET(r, bytes);
+
+    TEST_EQUAL(carry, mbedtls_mpi_core_sub(r, a, r, limbs));
+
+    TEST_CF_PUBLIC(r, bytes);
+
+    /* 3b) r = a - b => we should get the correct result */
+    TEST_MEMORY_COMPARE(r, bytes, x, bytes);
+
+    /* 4 tests "r may be aliased to [...] both" */
+    if (A.n == B.n && memcmp(A.p, B.p, bytes) == 0) {
+        memcpy(r, b, bytes);
+        TEST_CF_SECRET(r, bytes);
+        TEST_EQUAL(carry, mbedtls_mpi_core_sub(r, r, r, limbs));
+        TEST_CF_PUBLIC(r, bytes);
+        TEST_MEMORY_COMPARE(r, bytes, x, bytes);
+    }
+
+exit:
+    mbedtls_free(a);
+    mbedtls_free(b);
+    mbedtls_free(x);
+    mbedtls_free(r);
+
+    mbedtls_mpi_free(&A);
+    mbedtls_mpi_free(&B);
+    mbedtls_mpi_free(&X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_mla(char *input_A, char *input_B, char *input_S,
+                  char *input_X4, char *input_cy4,
+                  char *input_X8, char *input_cy8)
+{
+    /* We are testing A += B * s; A, B are MPIs, s is a scalar.
+     *
+     * However, we encode s as an MPI in the .data file as the test framework
+     * currently only supports `int`-typed scalars, and that doesn't cover the
+     * full range of `mbedtls_mpi_uint`.
+     *
+     * We also have the different results for sizeof(mbedtls_mpi_uint) == 4 or 8.
+     */
+    mbedtls_mpi A, B, S, X4, X8, cy4, cy8;
+    mbedtls_mpi_uint *a = NULL;
+    mbedtls_mpi_uint *x = NULL;
+
+    mbedtls_mpi_init(&A);
+    mbedtls_mpi_init(&B);
+    mbedtls_mpi_init(&S);
+    mbedtls_mpi_init(&X4);
+    mbedtls_mpi_init(&X8);
+    mbedtls_mpi_init(&cy4);
+    mbedtls_mpi_init(&cy8);
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&A, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&B, input_B));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&S, input_S));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&X4, input_X4));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&cy4, input_cy4));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&X8, input_X8));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&cy8, input_cy8));
+
+    /* The MPI encoding of scalar s must be only 1 limb */
+    TEST_EQUAL(1, S.n);
+
+    /* We only need to work with X4 or X8, and cy4 or cy8, depending on sizeof(mbedtls_mpi_uint) */
+    mbedtls_mpi *X = (sizeof(mbedtls_mpi_uint) == 4) ? &X4 : &X8;
+    mbedtls_mpi *cy = (sizeof(mbedtls_mpi_uint) == 4) ? &cy4 : &cy8;
+
+    /* The carry should only have one limb */
+    TEST_EQUAL(1, cy->n);
+
+    /* All of the inputs are +ve (or zero) */
+    TEST_EQUAL(1, A.s);
+    TEST_EQUAL(1, B.s);
+    TEST_EQUAL(1, S.s);
+    TEST_EQUAL(1, X->s);
+    TEST_EQUAL(1, cy->s);
+
+    /* Get the (max) number of limbs we will need */
+    size_t limbs = MAX(A.n, B.n);
+    size_t bytes = limbs * sizeof(mbedtls_mpi_uint);
+
+    /* The result shouldn't have more limbs than the longest input */
+    TEST_LE_U(X->n, limbs);
+
+    /* Now let's get arrays of mbedtls_mpi_uints, rather than MPI structures */
+
+    /* TEST_CALLOC() uses calloc() under the hood, so these do get zeroed */
+    TEST_CALLOC(a, bytes);
+    TEST_CALLOC(x, bytes);
+
+    /* Populate the arrays. As the mbedtls_mpi_uint[]s in mbedtls_mpis (and as
+     * processed by mbedtls_mpi_core_mla()) are little endian, we can just
+     * copy what we have as long as MSBs are 0 (which they are from TEST_CALLOC()).
+     */
+    memcpy(a, A.p, A.n * sizeof(mbedtls_mpi_uint));
+    memcpy(x, X->p, X->n * sizeof(mbedtls_mpi_uint));
+
+    TEST_CF_SECRET(a, bytes);
+    TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(S.p, sizeof(mbedtls_mpi_uint));
+
+    /* 1a) A += B * s => we should get the correct carry */
+    TEST_EQUAL(mbedtls_mpi_core_mla(a, limbs, B.p, B.n, *S.p), *cy->p);
+
+    TEST_CF_PUBLIC(a, bytes);
+    TEST_CF_PUBLIC(B.p, B.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(S.p, sizeof(mbedtls_mpi_uint));
+
+    /* 1b) A += B * s => we should get the correct result */
+    TEST_MEMORY_COMPARE(a, bytes, x, bytes);
+
+    if (A.n == B.n && memcmp(A.p, B.p, bytes) == 0) {
+        /* Check when A and B are aliased */
+        memcpy(a, A.p, A.n * sizeof(mbedtls_mpi_uint));
+
+        TEST_CF_SECRET(a, bytes);
+        TEST_CF_SECRET(S.p, sizeof(mbedtls_mpi_uint));
+
+        TEST_EQUAL(mbedtls_mpi_core_mla(a, limbs, a, limbs, *S.p), *cy->p);
+
+        TEST_CF_PUBLIC(a, bytes);
+        TEST_CF_PUBLIC(S.p, sizeof(mbedtls_mpi_uint));
+
+        TEST_MEMORY_COMPARE(a, bytes, x, bytes);
+    }
+
+exit:
+    mbedtls_free(a);
+    mbedtls_free(x);
+
+    mbedtls_mpi_free(&A);
+    mbedtls_mpi_free(&B);
+    mbedtls_mpi_free(&S);
+    mbedtls_mpi_free(&X4);
+    mbedtls_mpi_free(&X8);
+    mbedtls_mpi_free(&cy4);
+    mbedtls_mpi_free(&cy8);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE */
+void mpi_montg_init(char *input_N, char *input_mm)
+{
+    mbedtls_mpi N, mm;
+
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&mm);
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&N, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&mm, input_mm));
+
+    /* The MPI encoding of mm should be 1 limb (sizeof(mbedtls_mpi_uint) == 8) or
+     * 2 limbs (sizeof(mbedtls_mpi_uint) == 4).
+     *
+     * The data file contains the expected result for sizeof(mbedtls_mpi_uint) == 8;
+     * for sizeof(mbedtls_mpi_uint) == 4 it's just the LSW of this.
+     */
+    TEST_ASSERT(mm.n == 1  || mm.n == 2);
+
+    /* All of the inputs are +ve (or zero) */
+    TEST_EQUAL(1, N.s);
+    TEST_EQUAL(1, mm.s);
+
+    /* mbedtls_mpi_core_montmul_init() only returns a result, no error possible */
+    mbedtls_mpi_uint result = mbedtls_mpi_core_montmul_init(N.p);
+
+    /* Check we got the correct result */
+    TEST_EQUAL(result, mm.p[0]);
+
+exit:
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&mm);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_montmul(int limbs_AN4, int limbs_B4,
+                      int limbs_AN8, int limbs_B8,
+                      char *input_A,
+                      char *input_B,
+                      char *input_N,
+                      char *input_X4,
+                      char *input_X8)
+{
+    mbedtls_mpi A, B, N, X4, X8, T, R;
+
+    mbedtls_mpi_init(&A);
+    mbedtls_mpi_init(&B);
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&X4);      /* expected result, sizeof(mbedtls_mpi_uint) == 4 */
+    mbedtls_mpi_init(&X8);      /* expected result, sizeof(mbedtls_mpi_uint) == 8 */
+    mbedtls_mpi_init(&T);
+    mbedtls_mpi_init(&R);       /* for the result */
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&A, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&B, input_B));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&N, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&X4, input_X4));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&X8, input_X8));
+
+    mbedtls_mpi *X = (sizeof(mbedtls_mpi_uint) == 4) ? &X4 : &X8;
+
+    int limbs_AN = (sizeof(mbedtls_mpi_uint) == 4) ? limbs_AN4 : limbs_AN8;
+    int limbs_B = (sizeof(mbedtls_mpi_uint) == 4) ? limbs_B4 : limbs_B8;
+
+    TEST_LE_U(A.n, (size_t) limbs_AN);
+    TEST_LE_U(X->n, (size_t) limbs_AN);
+    TEST_LE_U(B.n, (size_t) limbs_B);
+    TEST_LE_U(limbs_B, limbs_AN);
+
+    /* All of the inputs are +ve (or zero) */
+    TEST_EQUAL(1, A.s);
+    TEST_EQUAL(1, B.s);
+    TEST_EQUAL(1, N.s);
+    TEST_EQUAL(1, X->s);
+
+    TEST_EQUAL(0, mbedtls_mpi_grow(&A, limbs_AN));
+    TEST_EQUAL(0, mbedtls_mpi_grow(&N, limbs_AN));
+    TEST_EQUAL(0, mbedtls_mpi_grow(X, limbs_AN));
+    TEST_EQUAL(0, mbedtls_mpi_grow(&B, limbs_B));
+
+    size_t working_limbs = mbedtls_mpi_core_montmul_working_limbs(limbs_AN);
+    TEST_EQUAL(working_limbs, limbs_AN * 2 + 1);
+    TEST_EQUAL(0, mbedtls_mpi_grow(&T, working_limbs));
+
+    TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+
+    /* Calculate the Montgomery constant (this is unit tested separately) */
+    mbedtls_mpi_uint mm = mbedtls_mpi_core_montmul_init(N.p);
+
+    TEST_EQUAL(0, mbedtls_mpi_grow(&R, limbs_AN));     /* ensure it's got the right number of limbs */
+
+    TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(A.p, A.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_montmul(R.p, A.p, B.p, B.n, N.p, N.n, mm, T.p);
+
+    TEST_CF_PUBLIC(R.p, R.n * sizeof(mbedtls_mpi_uint));
+    size_t bytes = N.n * sizeof(mbedtls_mpi_uint);
+    TEST_MEMORY_COMPARE(R.p, bytes, X->p, bytes);
+
+    /* The output (R, above) may be aliased to A - use R to save the value of A */
+
+    memcpy(R.p, A.p, bytes);
+
+    TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(A.p, A.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_montmul(A.p, A.p, B.p, B.n, N.p, N.n, mm, T.p);
+
+    TEST_CF_PUBLIC(A.p, A.n * sizeof(mbedtls_mpi_uint));
+    TEST_MEMORY_COMPARE(A.p, bytes, X->p, bytes);
+
+    memcpy(A.p, R.p, bytes);    /* restore A */
+
+    /* The output may be aliased to N - use R to save the value of N */
+
+    memcpy(R.p, N.p, bytes);
+
+    TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(A.p, A.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_montmul(N.p, A.p, B.p, B.n, N.p, N.n, mm, T.p);
+
+    TEST_CF_PUBLIC(N.p, N.n * sizeof(mbedtls_mpi_uint));
+    TEST_MEMORY_COMPARE(N.p, bytes, X->p, bytes);
+
+    memcpy(N.p, R.p, bytes);
+
+    TEST_CF_PUBLIC(A.p, A.n * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+    if (limbs_AN == limbs_B) {
+        /* Test when A aliased to B (requires A == B on input values) */
+        if (memcmp(A.p, B.p, bytes) == 0) {
+            /* Test with A aliased to B and output, since this is permitted -
+             * don't bother with yet another test with only A and B aliased */
+
+            TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+            TEST_CF_SECRET(A.p, A.n * sizeof(mbedtls_mpi_uint));
+            TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+            mbedtls_mpi_core_montmul(B.p, B.p, B.p, B.n, N.p, N.n, mm, T.p);
+
+            TEST_CF_PUBLIC(B.p, B.n * sizeof(mbedtls_mpi_uint));
+            TEST_MEMORY_COMPARE(B.p, bytes, X->p, bytes);
+
+            memcpy(B.p, A.p, bytes);    /* restore B from equal value A */
+        }
+
+        /* The output may be aliased to B - last test, so we don't save B */
+
+        TEST_CF_SECRET(N.p, N.n * sizeof(mbedtls_mpi_uint));
+        TEST_CF_SECRET(A.p, A.n * sizeof(mbedtls_mpi_uint));
+        TEST_CF_SECRET(B.p, B.n * sizeof(mbedtls_mpi_uint));
+
+        mbedtls_mpi_core_montmul(B.p, A.p, B.p, B.n, N.p, N.n, mm, T.p);
+
+        TEST_CF_PUBLIC(B.p, B.n * sizeof(mbedtls_mpi_uint));
+        TEST_MEMORY_COMPARE(B.p, bytes, X->p, bytes);
+    }
+
+exit:
+    mbedtls_mpi_free(&A);
+    mbedtls_mpi_free(&B);
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&X4);
+    mbedtls_mpi_free(&X8);
+    mbedtls_mpi_free(&T);
+    mbedtls_mpi_free(&R);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_get_mont_r2_unsafe_neg()
+{
+    mbedtls_mpi N, RR;
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&RR);
+    const char *n = "7ffffffffffffff1";
+
+    /* Test for zero divisor */
+    TEST_EQUAL(MBEDTLS_ERR_MPI_DIVISION_BY_ZERO,
+               mbedtls_mpi_core_get_mont_r2_unsafe(&RR, &N));
+
+    /* Test for negative input */
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&N, n));
+    N.s = -1;
+    TEST_EQUAL(MBEDTLS_ERR_MPI_NEGATIVE_VALUE,
+               mbedtls_mpi_core_get_mont_r2_unsafe(&RR, &N));
+    N.s = 1;
+
+exit:
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&RR);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_get_mont_r2_unsafe(char *input_N,
+                                 char *input_RR_X4,
+                                 char *input_RR_X8)
+{
+    mbedtls_mpi N, RR, RR_REF;
+
+    /* Select the appropriate output */
+    char *input_rr = (sizeof(mbedtls_mpi_uint) == 4) ? input_RR_X4 : input_RR_X8;
+
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&RR);
+    mbedtls_mpi_init(&RR_REF);
+
+    /* Read inputs */
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&N, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi(&RR_REF, input_rr));
+
+    /* All of the inputs are +ve (or zero) */
+    TEST_EQUAL(1, N.s);
+    TEST_EQUAL(1, RR_REF.s);
+
+    /* Test valid input */
+    TEST_EQUAL(0, mbedtls_mpi_core_get_mont_r2_unsafe(&RR, &N));
+
+    /* Test that the moduli is odd */
+    TEST_EQUAL(N.p[0] ^ 1, N.p[0] - 1);
+
+    /* Output is +ve (or zero) */
+    TEST_EQUAL(1, RR_REF.s);
+
+    /* rr is updated to a valid pointer */
+    TEST_ASSERT(RR.p != NULL);
+
+    /* Calculated rr matches expected value */
+    TEST_ASSERT(mbedtls_mpi_cmp_mpi(&RR, &RR_REF) == 0);
+
+exit:
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&RR);
+    mbedtls_mpi_free(&RR_REF);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void mpi_core_ct_uint_table_lookup(int bitlen, int window_size)
+{
+    size_t limbs = BITS_TO_LIMBS(bitlen);
+    size_t count = ((size_t) 1) << window_size;
+
+    mbedtls_mpi_uint *table = NULL;
+    mbedtls_mpi_uint *dest = NULL;
+
+    TEST_CALLOC(table, limbs * count);
+    TEST_CALLOC(dest, limbs);
+
+    /*
+     * Fill the table with a unique counter so that differences are easily
+     * detected. (And have their relationship to the index relatively non-trivial just
+     * to be sure.)
+     */
+    for (size_t i = 0; i < count * limbs; i++) {
+        table[i] = ~i - 1;
+    }
+
+    for (size_t i = 0; i < count; i++) {
+        mbedtls_mpi_uint *current = table + i * limbs;
+        memset(dest, 0x00, limbs * sizeof(*dest));
+
+        /*
+         * We shouldn't leak anything through timing.
+         * We need to set these in every loop as we need to make the loop
+         * variable public for the loop head and the buffers for comparison.
+         */
+        TEST_CF_SECRET(&i, sizeof(i));
+        TEST_CF_SECRET(dest, limbs * sizeof(*dest));
+        TEST_CF_SECRET(table, count * limbs * sizeof(*table));
+
+        mbedtls_mpi_core_ct_uint_table_lookup(dest, table, limbs, count, i);
+
+        TEST_CF_PUBLIC(dest, limbs * sizeof(*dest));
+        TEST_CF_PUBLIC(table, count * limbs * sizeof(*table));
+        TEST_MEMORY_COMPARE(dest, limbs * sizeof(*dest),
+                            current, limbs * sizeof(*current));
+        TEST_CF_PUBLIC(&i, sizeof(i));
+    }
+
+exit:
+    mbedtls_free(table);
+    mbedtls_free(dest);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_fill_random(int wanted_bytes_arg, int extra_rng_bytes,
+                          int extra_limbs, int before, int expected_ret)
+{
+    size_t wanted_bytes = wanted_bytes_arg;
+    mbedtls_mpi_uint *X = NULL;
+    size_t X_limbs = CHARS_TO_LIMBS(wanted_bytes) + extra_limbs;
+    size_t rng_bytes = wanted_bytes + extra_rng_bytes;
+    unsigned char *rnd_data = NULL;
+    mbedtls_test_rnd_buf_info rnd_info = { NULL, rng_bytes, NULL, NULL };
+    int ret;
+
+    /* Prepare an RNG with known output, limited to rng_bytes. */
+    TEST_CALLOC(rnd_data, rng_bytes);
+    TEST_EQUAL(0, mbedtls_test_rnd_std_rand(NULL, rnd_data, rng_bytes));
+    rnd_info.buf = rnd_data;
+
+    /* Allocate an MPI with room for wanted_bytes plus extra_limbs.
+     * extra_limbs may be negative but the total limb count must be positive.
+     * Fill the MPI with the byte value in before. */
+    TEST_LE_U(1, X_limbs);
+    TEST_CALLOC(X, X_limbs);
+    memset(X, before, X_limbs * sizeof(*X));
+
+    ret = mbedtls_mpi_core_fill_random(X, X_limbs, wanted_bytes,
+                                       mbedtls_test_rnd_buffer_rand,
+                                       &rnd_info);
+    TEST_EQUAL(expected_ret, ret);
+
+    if (expected_ret == 0) {
+        /* mbedtls_mpi_core_fill_random is documented to use bytes from the
+         * RNG as a big-endian representation of the number. We used an RNG
+         * with known output, so check that the output contains the
+         * expected value. Bytes above wanted_bytes must be zero. */
+        for (size_t i = 0; i < wanted_bytes; i++) {
+            mbedtls_test_set_step(i);
+            TEST_EQUAL(GET_BYTE(X, i), rnd_data[wanted_bytes - 1 - i]);
+        }
+        for (size_t i = wanted_bytes; i < X_limbs * ciL; i++) {
+            mbedtls_test_set_step(i);
+            TEST_EQUAL(GET_BYTE(X, i), 0);
+        }
+    }
+
+exit:
+    mbedtls_free(rnd_data);
+    mbedtls_free(X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_mul(char *input_A,
+                  char *input_B,
+                  char *result)
+{
+    mbedtls_mpi_uint *A      = NULL;
+    mbedtls_mpi_uint *A_orig = NULL;
+    mbedtls_mpi_uint *B      = NULL;
+    mbedtls_mpi_uint *B_orig = NULL;
+    mbedtls_mpi_uint *R      = NULL;
+    mbedtls_mpi_uint *X      = NULL;
+    size_t A_limbs, B_limbs, R_limbs;
+
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&A, &A_limbs, input_A), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&B, &B_limbs, input_B), 0);
+    TEST_EQUAL(mbedtls_test_read_mpi_core(&R, &R_limbs, result), 0);
+
+    TEST_EQUAL(R_limbs, A_limbs + B_limbs);
+
+    const size_t X_limbs = A_limbs + B_limbs;
+    const size_t X_bytes = X_limbs * sizeof(mbedtls_mpi_uint);
+    TEST_CALLOC(X, X_limbs);
+
+    const size_t A_bytes = A_limbs * sizeof(mbedtls_mpi_uint);
+    TEST_CALLOC(A_orig, A_limbs);
+    memcpy(A_orig, A, A_bytes);
+
+    const size_t B_bytes = B_limbs * sizeof(mbedtls_mpi_uint);
+    TEST_CALLOC(B_orig, B_limbs);
+    memcpy(B_orig, B, B_bytes);
+
+    /* Set result to something that is unlikely to be correct */
+    memset(X, '!', X_bytes);
+
+    /* 1. X = A * B - result should be correct, A and B unchanged */
+    mbedtls_mpi_core_mul(X, A, A_limbs, B, B_limbs);
+    TEST_MEMORY_COMPARE(X, X_bytes, R, X_bytes);
+    TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
+    TEST_MEMORY_COMPARE(B, B_bytes, B_orig, B_bytes);
+
+    /* 2. A == B: alias A and B - result should be correct, A and B unchanged */
+    if (A_bytes == B_bytes && memcmp(A, B, A_bytes) == 0) {
+        memset(X, '!', X_bytes);
+        mbedtls_mpi_core_mul(X, A, A_limbs, A, A_limbs);
+        TEST_MEMORY_COMPARE(X, X_bytes, R, X_bytes);
+        TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
+    }
+    /* 3. X = B * A - result should be correct, A and B unchanged */
+    else {
+        memset(X, '!', X_bytes);
+        mbedtls_mpi_core_mul(X, B, B_limbs, A, A_limbs);
+        TEST_MEMORY_COMPARE(X, X_bytes, R, X_bytes);
+        TEST_MEMORY_COMPARE(A, A_bytes, A_orig, A_bytes);
+        TEST_MEMORY_COMPARE(B, B_bytes, B_orig, B_bytes);
+    }
+
+exit:
+    mbedtls_free(A);
+    mbedtls_free(A_orig);
+    mbedtls_free(B);
+    mbedtls_free(B_orig);
+    mbedtls_free(R);
+    mbedtls_free(X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_exp_mod(char *input_N, char *input_A,
+                      char *input_E, char *input_X)
+{
+    mbedtls_mpi_uint *A = NULL;
+    mbedtls_mpi_uint *A_copy = NULL;
+    mbedtls_mpi_uint *E = NULL;
+    mbedtls_mpi_uint *N = NULL;
+    mbedtls_mpi_uint *X = NULL;
+    size_t A_limbs, E_limbs, N_limbs, X_limbs;
+    const mbedtls_mpi_uint *R2 = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    mbedtls_mpi_uint *T = NULL;
+    /* Legacy MPIs for computing R2 */
+    mbedtls_mpi N_mpi;
+    mbedtls_mpi_init(&N_mpi);
+    mbedtls_mpi R2_mpi;
+    mbedtls_mpi_init(&R2_mpi);
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&A, &A_limbs, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&E, &E_limbs, input_E));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&N, &N_limbs, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &X_limbs, input_X));
+    TEST_CALLOC(Y, N_limbs);
+
+    TEST_EQUAL(A_limbs, N_limbs);
+    TEST_EQUAL(X_limbs, N_limbs);
+
+    TEST_EQUAL(0, mbedtls_mpi_grow(&N_mpi, N_limbs));
+    memcpy(N_mpi.p, N, N_limbs * sizeof(*N));
+    N_mpi.n = N_limbs;
+    TEST_EQUAL(0,
+               mbedtls_mpi_core_get_mont_r2_unsafe(&R2_mpi, &N_mpi));
+    TEST_EQUAL(0, mbedtls_mpi_grow(&R2_mpi, N_limbs));
+    R2 = R2_mpi.p;
+
+    size_t working_limbs = mbedtls_mpi_core_exp_mod_working_limbs(N_limbs,
+                                                                  E_limbs);
+
+    /* No point exactly duplicating the code in mbedtls_mpi_core_exp_mod_working_limbs()
+     * to see if the output is correct, but we can check that it's in a
+     * reasonable range.  The current calculation works out as
+     * `1 + N_limbs * (welem + 3)`, where welem is the number of elements in
+     * the window (1 << 1 up to 1 << 6).
+     */
+    size_t min_expected_working_limbs = 1 + N_limbs * 4;
+    size_t max_expected_working_limbs = 1 + N_limbs * 67;
+
+    TEST_LE_U(min_expected_working_limbs, working_limbs);
+    TEST_LE_U(working_limbs, max_expected_working_limbs);
+
+    /* Should also be at least mbedtls_mpi_core_montmul_working_limbs() */
+    TEST_LE_U(mbedtls_mpi_core_montmul_working_limbs(N_limbs),
+              working_limbs);
+
+    TEST_CALLOC(T, working_limbs);
+
+    /* Test the safe variant */
+    TEST_CF_SECRET(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(N, N_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(E, E_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_exp_mod(Y, A, N, N_limbs, E, E_limbs, R2, T);
+
+    TEST_CF_PUBLIC(Y, N_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_EQUAL(0, memcmp(X, Y, N_limbs * sizeof(mbedtls_mpi_uint)));
+
+    /* Test the unsafe variant */
+    TEST_CF_PUBLIC(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(N, N_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(E, E_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_exp_mod_unsafe(Y, A, N, N_limbs, E, E_limbs, R2, T);
+
+    TEST_EQUAL(0, memcmp(X, Y, N_limbs * sizeof(mbedtls_mpi_uint)));
+
+    /*
+     * Check both with output aliased to input
+     */
+
+    TEST_CALLOC(A_copy, A_limbs);
+    memcpy(A_copy, A, sizeof(*A_copy) * A_limbs); // save A
+
+    /* Safe */
+    TEST_CF_SECRET(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(N, N_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(E, E_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_exp_mod(A, A, N, N_limbs, E, E_limbs, R2, T);
+
+    TEST_CF_PUBLIC(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_EQUAL(0, memcmp(X, A, N_limbs * sizeof(mbedtls_mpi_uint)));
+
+    /* Unsafe */
+    memcpy(A, A_copy, sizeof(*A) * A_limbs); // restore A
+    TEST_CF_PUBLIC(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(N, N_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_PUBLIC(E, E_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_exp_mod_unsafe(A, A, N, N_limbs, E, E_limbs, R2, T);
+
+    TEST_EQUAL(0, memcmp(X, A, N_limbs * sizeof(mbedtls_mpi_uint)));
+
+exit:
+    mbedtls_free(T);
+    mbedtls_free(A);
+    mbedtls_free(A_copy);
+    mbedtls_free(E);
+    mbedtls_free(N);
+    mbedtls_free(X);
+    mbedtls_free(Y);
+    mbedtls_mpi_free(&N_mpi);
+    mbedtls_mpi_free(&R2_mpi);
+    // R2 doesn't need to be freed as it is only aliasing R2_mpi
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_sub_int(char *input_A, char *input_B,
+                      char *input_X, int borrow)
+{
+    /* We are testing A - b, where A is an MPI and b is a scalar, expecting
+     * result X with borrow borrow.  However, for ease of handling we encode b
+     * as a 1-limb MPI (B) in the .data file. */
+
+    mbedtls_mpi_uint *A = NULL;
+    mbedtls_mpi_uint *B = NULL;
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *R = NULL;
+    size_t A_limbs, B_limbs, X_limbs;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&A, &A_limbs, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&B, &B_limbs, input_B));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &X_limbs, input_X));
+
+    /* The MPI encoding of scalar b must be only 1 limb */
+    TEST_EQUAL(B_limbs, 1);
+
+    /* The subtraction is fixed-width, so A and X must have the same number of limbs */
+    TEST_EQUAL(A_limbs, X_limbs);
+    size_t limbs = A_limbs;
+
+    TEST_CALLOC(R, limbs);
+
+#define TEST_COMPARE_CORE_MPIS(A, B, limbs) \
+    TEST_MEMORY_COMPARE(A, (limbs) * sizeof(mbedtls_mpi_uint), \
+                        B, (limbs) * sizeof(mbedtls_mpi_uint))
+
+    /* 1. R = A - b. Result and borrow should be correct */
+    TEST_EQUAL(mbedtls_mpi_core_sub_int(R, A, B[0], limbs), borrow);
+    TEST_COMPARE_CORE_MPIS(R, X, limbs);
+
+    /* 2. A = A - b. Result and borrow should be correct */
+    TEST_EQUAL(mbedtls_mpi_core_sub_int(A, A, B[0], limbs), borrow);
+    TEST_COMPARE_CORE_MPIS(A, X, limbs);
+
+exit:
+    mbedtls_free(A);
+    mbedtls_free(B);
+    mbedtls_free(X);
+    mbedtls_free(R);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_check_zero_ct(char *input_X, int expected_is_zero)
+{
+    mbedtls_mpi_uint *X = NULL;
+    size_t X_limbs;
+
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &X_limbs, input_X));
+
+    TEST_CF_SECRET(X, X_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_uint check = mbedtls_mpi_core_check_zero_ct(X, X_limbs);
+    int is_zero = (check == 0);
+    TEST_EQUAL(is_zero, expected_is_zero);
+
+exit:
+    mbedtls_free(X);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_ASN1_PARSE_C */
+/* Get a raw bignum with mbedtls_asn1_get_integer() and parse
+ * it with mbedtls_mpi_core_read_be(). */
+void asn1_get_and_parse_integer(const data_t *input,
+                                int expected_result,
+                                const char *expected_output)
+{
+    int ret;
+    unsigned char *p = input->x;
+    /* Initialize pointer and length to nonsense values so that we can
+     * distinguish leaving them unchanged from setting them in the error
+     * case. */
+    unsigned char *integer_head;
+    size_t integer_length;
+
+    mbedtls_mpi_uint *integer = NULL;
+
+    mbedtls_mpi_uint *expected = NULL;
+    size_t expected_limbs = 0;
+
+    ret = mbedtls_asn1_get_integer(&p, input->x + input->len,
+                                   &integer_head, &integer_length);
+
+    TEST_EQUAL(ret, expected_result);
+
+    if (expected_result == 0) {
+        /* On success, try parsing the resulting integer */
+
+        /* Calculate the number of limbs required (int ceil operation) */
+        TEST_ASSERT(integer_length > 0);
+        size_t limbs = CHARS_TO_LIMBS(integer_length);
+        TEST_CALLOC(integer, limbs);
+
+        ret = mbedtls_mpi_core_read_be(integer, limbs,
+                                       integer_head, integer_length);
+        TEST_EQUAL(ret, 0);
+
+        ret = mbedtls_test_read_mpi_core(&expected, &expected_limbs,
+                                         expected_output);
+        TEST_EQUAL(ret, 0);
+
+        /* Check that the integer we get is the same as the one we
+         * expected to get. */
+        TEST_MEMORY_COMPARE(integer, limbs * sizeof(*integer),
+                            expected, expected_limbs * sizeof(*expected));
+    }
+
+exit:
+    mbedtls_free(integer);
+    mbedtls_free(expected);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void encode_decode_asn1_bignum(const data_t *input,
+                               int asn1_frame_length,
+                               int expected_result)
+{
+    int output_buffer_length = 0;
+    size_t number_of_leading_zeros = 0;
+    unsigned char *p = NULL;
+    unsigned char *asn1_frame = NULL;
+    size_t integer_length;
+
+    TEST_CALLOC(asn1_frame, asn1_frame_length);
+
+    unsigned char *integer_head = NULL;
+
+    p = asn1_frame + asn1_frame_length;
+
+    output_buffer_length = mbedtls_asn1_write_integer(&p, asn1_frame, input->x, input->len);
+
+    TEST_EQUAL(output_buffer_length, expected_result);
+
+    if (output_buffer_length > 0) {
+        while (number_of_leading_zeros < input->len
+               && input->x[number_of_leading_zeros] == 0x0) {
+            number_of_leading_zeros++;
+        }
+        TEST_EQUAL(mbedtls_asn1_get_integer(&p, asn1_frame + asn1_frame_length, &integer_head,
+                                            &integer_length), 0);
+        TEST_MEMORY_COMPARE(input->x + number_of_leading_zeros,
+                            input->len - number_of_leading_zeros,
+                            integer_head,
+                            integer_length);
+    }
+
+exit:
+    mbedtls_free(asn1_frame);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_gcd_modinv_odd(char *input_A, char *input_N,
+                             char *input_exp_G, char *input_exp_I)
+{
+    mbedtls_mpi_uint *A = NULL;
+    size_t A_limbs = 0;
+    mbedtls_mpi_uint *N = NULL;
+    size_t N_limbs = 0;
+    mbedtls_mpi_uint *exp_G = NULL;
+    size_t exp_G_limbs = 0;
+    mbedtls_mpi_uint *exp_I = NULL;
+    size_t exp_I_limbs = 0;
+    mbedtls_mpi_uint *G = NULL, *I = NULL, *T = NULL;
+
+    /* Read test parameters into MPI structures */
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&A, &A_limbs, input_A));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&N, &N_limbs, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&exp_G, &exp_G_limbs, input_exp_G));
+    const unsigned char got_I = strlen(input_exp_I) != 0;
+    if (got_I) {
+        TEST_EQUAL(0, mbedtls_test_read_mpi_core(&exp_I, &exp_I_limbs, input_exp_I));
+    }
+
+    /* The function under test wants this */
+    TEST_EQUAL(N[0] & 1, 1);
+    TEST_LE_U(A_limbs, N_limbs);
+    TEST_ASSERT(mpi_core_cmp(A, A_limbs, N, N_limbs) <= 0);
+
+    const size_t N_bytes = N_limbs * sizeof(mbedtls_mpi_uint);
+
+    TEST_CF_SECRET(A, A_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(N, N_limbs * sizeof(mbedtls_mpi_uint));
+
+#define FREE_G_I_T      \
+    mbedtls_free(G);    \
+    G = NULL;           \
+    mbedtls_free(I);    \
+    I = NULL;           \
+    mbedtls_free(T);    \
+    T = NULL
+
+    /*
+     * Test GCD only (I == NULL)
+     */
+    TEST_CALLOC(G, N_limbs);
+    memset(G, 'G', N_bytes);
+
+    TEST_CALLOC(T, 4 * N_limbs);
+    memset(T, 'T', 4 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, A, A_limbs, N, N_limbs, T);
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+
+    FREE_G_I_T;
+
+    /* GCD only, G aliased to N */
+    TEST_CALLOC(G, N_limbs);
+    memcpy(G, N, N_bytes);
+
+    TEST_CALLOC(T, 4 * N_limbs);
+    memset(T, 'T', 4 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, A, A_limbs, /* N */ G, N_limbs, T);
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+
+    FREE_G_I_T;
+
+    /* GCD only, G aliased to A (hence A_limbs = N_limbs) */
+    TEST_CALLOC(G, N_limbs);
+    memcpy(G, A, A_limbs * sizeof(mbedtls_mpi_uint));
+
+    TEST_CALLOC(T, 4 * N_limbs);
+    memset(T, 'T', 4 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, /* A */ G, N_limbs, N, N_limbs, T);
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+
+    FREE_G_I_T;
+
+    /*
+     * Test GCD + modinv
+     */
+    TEST_CALLOC(G, N_limbs);
+    memset(G, 'G', N_bytes);
+
+    TEST_CALLOC(I, N_limbs);
+    memset(I, 'I', N_bytes);
+
+    TEST_CALLOC(T, 5 * N_limbs);
+    memset(T, 'T', 5 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, A, A_limbs, N, N_limbs, T);
+
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+    if (got_I) {
+        TEST_EQUAL(mpi_core_cmp(I, N_limbs, exp_I, exp_I_limbs), 0);
+    }
+
+    FREE_G_I_T;
+
+    /* GCD + modinv, G aliased to A */
+    TEST_CALLOC(G, N_limbs);
+    memcpy(G, A, A_limbs * sizeof(mbedtls_mpi_uint));
+
+    TEST_CALLOC(I, N_limbs);
+    memset(I, 'I', N_bytes);
+
+    TEST_CALLOC(T, 5 * N_limbs);
+    memset(T, 'T', 5 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, /* A */ G, N_limbs, N, N_limbs, T);
+
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+    if (got_I) {
+        TEST_EQUAL(mpi_core_cmp(I, N_limbs, exp_I, exp_I_limbs), 0);
+    }
+
+    FREE_G_I_T;
+
+    /* GCD + modinv, I aliased to A */
+    TEST_CALLOC(G, N_limbs);
+    memset(G, 'G', N_bytes);
+
+    TEST_CALLOC(I, N_limbs);
+    memcpy(I, A, A_limbs * sizeof(mbedtls_mpi_uint));
+
+    TEST_CALLOC(T, 5 * N_limbs);
+    memset(T, 'T', 5 * N_bytes);
+
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, /* A */ I, N_limbs, N, N_limbs, T);
+
+    TEST_EQUAL(mpi_core_cmp(G, N_limbs, exp_G, exp_G_limbs), 0);
+    if (got_I) {
+        TEST_EQUAL(mpi_core_cmp(I, N_limbs, exp_I, exp_I_limbs), 0);
+    }
+
+    FREE_G_I_T;
+
+#undef FREE_G_I_T
+exit:
+    mbedtls_free(A);
+    mbedtls_free(N);
+    mbedtls_free(exp_G);
+    mbedtls_free(exp_I);
+    mbedtls_free(G);
+    mbedtls_free(I);
+    mbedtls_free(T);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mpi_core_gcd_modinv_odd_preconditions()
+{
+    /*
+     * The purpose of this test function is to ensure that the function doesn't
+     * crash (but just outputs garbage) when preconditions are not met.
+     */
+
+    mbedtls_mpi_uint A[1];
+    mbedtls_mpi_uint N[2];
+    mbedtls_mpi_uint AAA[3];
+    mbedtls_mpi_uint *G = NULL, *I = NULL, *TG = NULL, *TI = NULL;
+
+    /* We'll always use a two-limbs N */
+    TEST_CALLOC(G, 2);
+    TEST_CALLOC(I, 2);
+    TEST_CALLOC(TG, 4 * 2);  // For I == NULL
+    TEST_CALLOC(TI, 5 * 2);  // For I != NULL
+
+    /*
+     * Input values
+     */
+
+    /* N is not odd */
+    N[0] = 2;       // N = 2^n + 2
+    N[1] = 1;
+    A[0] = 42;      // A = 42
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, A, 1, N, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, A, 1, N, 2, TI);
+
+    /* A > N */
+    N[0] = 3;       // N = 3
+    N[1] = 0;
+    A[0] = 42;      // A = 42
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, A, 1, N, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, A, 1, N, 2, TI);
+
+    /* A_limbs > N_limbs (but A <= N) */
+    N[0] = 3;       // N = 3
+    N[1] = 0;
+    AAA[0] = 1;     // A = 1
+    AAA[1] = 0;
+    AAA[2] = 0;
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, AAA, 3, N, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, AAA, 3, N, 2, TI);
+
+    /* A_limbs > N_limbs (and A > N) */
+    N[0] = 3;       // N = 3
+    N[1] = 0;
+    AAA[0] = 0;     // A = 2^2n
+    AAA[1] = 0;
+    AAA[2] = 1;
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, AAA, 3, N, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, AAA, 3, N, 2, TI);
+
+    /* I != NULL but N is 1 */
+    N[0] = 1;       // N = 1
+    N[1] = 0;
+    A[0] = 1;       // A = 1
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, N, 2, A, 1, TI);
+
+    /*
+     * Aliasing
+     */
+
+    /* Now use valid values for remaining tests */
+    N[0] = 1;       // N = 2^n + 1
+    N[1] = 1;
+    A[0] = 42;      // A = 42
+
+    /* A aliased to N */
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, N, 2, N, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, N, 2, N, 2, TI);
+
+    /* G aliased to A and N */
+    memcpy(G, N, 2 * sizeof(mbedtls_mpi_uint));
+    mbedtls_mpi_core_gcd_modinv_odd(G, NULL, G, 2, G, 2, TG);
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, G, 2, G, 2, TI);
+
+    /* I != NULL, G aliased to N */
+    memcpy(G, N, 2 * sizeof(mbedtls_mpi_uint));
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, A, 1, G, 2, TI);
+
+    /* I != NULL, I aliased to N */
+    memcpy(I, N, 2 * sizeof(mbedtls_mpi_uint));
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, A, 1, I, 2, TI);
+
+    /* I aliased to A and N */
+    memcpy(I, N, 2 * sizeof(mbedtls_mpi_uint));
+    mbedtls_mpi_core_gcd_modinv_odd(G, I, I, 2, I, 2, TI);
+
+exit:
+    mbedtls_free(G);
+    mbedtls_free(I);
+    mbedtls_free(TG);
+    mbedtls_free(TI);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void mpi_core_div2_mod_odd(char *input_X, char *input_N, char *input_exp_X)
+{
+    mbedtls_mpi_uint *X = NULL;
+    size_t X_limbs = 0;
+    mbedtls_mpi_uint *N = NULL;
+    size_t N_limbs = 0;
+    mbedtls_mpi_uint *exp_X = NULL;
+    size_t exp_X_limbs = 0;
+
+    /* Read test parameters into MPI structures */
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&X, &X_limbs, input_X));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&N, &N_limbs, input_N));
+    TEST_EQUAL(0, mbedtls_test_read_mpi_core(&exp_X, &exp_X_limbs, input_exp_X));
+
+    /* The function under test requires this */
+    TEST_EQUAL(X_limbs, N_limbs);
+
+    TEST_CF_SECRET(X, X_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_CF_SECRET(N, N_limbs * sizeof(mbedtls_mpi_uint));
+
+    mbedtls_mpi_core_div2_mod_odd(X, N, N_limbs);
+
+    TEST_CF_PUBLIC(X, X_limbs * sizeof(mbedtls_mpi_uint));
+    TEST_EQUAL(0, mpi_core_cmp(X, X_limbs, exp_X, exp_X_limbs));
+
+exit:
+    mbedtls_free(X);
+    mbedtls_free(N);
+    mbedtls_free(exp_X);
+}
+/* END_CASE */

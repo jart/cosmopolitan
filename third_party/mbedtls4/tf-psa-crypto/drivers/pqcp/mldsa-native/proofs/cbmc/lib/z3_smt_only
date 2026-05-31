@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Copyright (c) The mldsa-native project authors
+# Copyright (c) The mlkem-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+# Disable initial simplify tactic and go straight to main SMT tactic
+# This can prevent divergence of Z3 on different platforms
+z3 tactic.default_tactic=smt "$@"

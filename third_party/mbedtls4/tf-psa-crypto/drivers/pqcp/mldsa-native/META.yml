@@ -1,0 +1,24 @@
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+name: ML-DSA
+type: signature
+implementations:
+  - name: ML-DSA-44
+    claimed-nist-level: 2
+    length-public-key: 1312
+    length-secret-key: 2560
+    length-signature: 2420
+    kat-sha256: 33e7eb7e3b4965fc8b8274ebf8a222c519008ec242b3f753d1bc240f1ee3cb1f
+  - name: ML-DSA-65
+    claimed-nist-level: 3
+    length-public-key: 1952
+    length-secret-key: 4032
+    length-signature: 3309
+    kat-sha256: 2ff0ddcd0dc08b746aa04853d6f84c82c6c8ac38783c9061aed78e29c1698ae5
+  - name: ML-DSA-87
+    claimed-nist-level: 5
+    length-public-key: 2592
+    length-secret-key: 4896
+    length-signature: 4627
+    kat-sha256: 1bfb25b29f6f2bc89057e3bddee055a8f7df563b0e747004b2968159f7739afa

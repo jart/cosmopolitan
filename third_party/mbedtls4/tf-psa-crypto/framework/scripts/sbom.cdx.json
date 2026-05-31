@@ -1,0 +1,48 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "authors": [
+      {
+        "name": "@VCS_SBOM_AUTHORS@"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:github/Mbed-TLS/mbedtls@@VCS_TAG@",
+      "cpe": "cpe:2.3:a:trustedfirmware:mbed_tls_framework:@VCS_TAG@:*:*:*:*:*:*:*",
+      "name": "mbedtls-framework",
+      "version": "@VCS_VERSION@",
+      "description": "Version-independent build and test framework for TF-PSA-Crypto and Mbed TLS",
+      "authors": [
+        {
+          "name": "@VCS_AUTHORS@"
+        }
+      ],
+      "supplier": {
+        "name": "Trusted Firmware"
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-2.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Mbed-TLS/mbedtls-framework"
+        }
+      ]
+    }
+  ]
+}

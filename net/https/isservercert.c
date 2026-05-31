@@ -17,13 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/https/https.h"
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/oid.h"
+#include "third_party/mbedtls4/include/mbedtls/oid.h"
 
-bool32 IsServerCert(const struct Cert *cert, mbedtls_pk_type_t type) {
-  return cert->cert && cert->key && !cert->cert->ca_istrue &&
-         mbedtls_pk_get_type(cert->key) == type &&
-         !mbedtls_x509_crt_check_extended_key_usage(
-             cert->cert, MBEDTLS_OID_SERVER_AUTH,
-             MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH));
+bool32 IsServerCert(const struct Cert *cert, psa_key_type_t type) {
+  psa_key_type_t kt;
+  if (!cert->cert || !cert->key || mbedtls_x509_crt_get_ca_istrue(cert->cert))
+    return false;
+  kt = mbedtls_pk_get_key_type(cert->key);
+  if (PSA_KEY_TYPE_IS_RSA(type) && !PSA_KEY_TYPE_IS_RSA(kt))
+    return false;
+  if (PSA_KEY_TYPE_IS_ECC(type) && !PSA_KEY_TYPE_IS_ECC(kt))
+    return false;
+  return !mbedtls_x509_crt_check_extended_key_usage(
+      cert->cert, MBEDTLS_OID_SERVER_AUTH,
+      MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH));
 }

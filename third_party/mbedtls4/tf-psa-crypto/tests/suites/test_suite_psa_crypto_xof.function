@@ -1,0 +1,353 @@
+/* BEGIN_HEADER */
+
+#include <psa/crypto.h>
+
+#include <test/psa_crypto_helpers.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_CLIENT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void xof_setup_fail(int alg, int expected_status)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+
+    PSA_INIT();
+
+    TEST_EQUAL(psa_xof_setup(&operation, alg), expected_status);
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_inactive()
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* Redundant abort OK */
+    PSA_ASSERT(psa_xof_abort(&operation));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* Any function other than abort and setup requires prior setup */
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_EQUAL(psa_xof_update(&operation, input, sizeof(input)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_EQUAL(psa_xof_output(&operation, output, sizeof(output)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_set_context(int alg, psa_status_t expected_status)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+
+    PSA_INIT();
+
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               expected_status);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_good_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* After setup: abort OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): update OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): output OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_late_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* set_context bad after update */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* set_context bad after output */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* set_context bad after update+output */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, input, sizeof(input)));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    TEST_EQUAL(psa_xof_set_context(&operation, context, sizeof(context)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_bad_context(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t input[] = "sample input";
+    uint8_t output[42];
+
+    PSA_INIT();
+
+    /* After setup: abort OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): update OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    TEST_EQUAL(psa_xof_update(&operation, input, sizeof(input)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* After setup (and maybe set_context): output OK */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    TEST_EQUAL(psa_xof_output(&operation, output, sizeof(output)),
+               PSA_ERROR_BAD_STATE);
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_state_skip_update(int alg, int set_context)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t context[] = "sample context";
+    uint8_t output[42];
+    uint8_t output_ref[sizeof(output)];
+
+    PSA_INIT();
+
+    /* Skip update */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_output(&operation, output_ref, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+
+    /* update(NULL, 0) */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    PSA_ASSERT(psa_xof_update(&operation, NULL, 0));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_MEMORY_COMPARE(output, sizeof(output),
+                        output_ref, sizeof(output));
+
+    /* update("A", 0) */
+    PSA_ASSERT(psa_xof_setup(&operation, alg));
+    if (set_context) {
+        PSA_ASSERT(psa_xof_set_context(&operation, context, sizeof(context)));
+    }
+    uint8_t a[1] = { 'A' };
+    PSA_ASSERT(psa_xof_update(&operation, a, 0));
+    PSA_ASSERT(psa_xof_output(&operation, output, sizeof(output)));
+    PSA_ASSERT(psa_xof_abort(&operation));
+    TEST_MEMORY_COMPARE(output, sizeof(output),
+                        output_ref, sizeof(output));
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_multi_update(int alg, int set_context, data_t *context,
+                      data_t *input, data_t *expected_output)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t *input1 = NULL;
+    uint8_t *input2 = NULL;
+    uint8_t *input3 = NULL;
+    uint8_t *output = NULL;
+
+    PSA_INIT();
+
+    TEST_CALLOC(output, expected_output->len);
+
+    /* Skipping update() when input->len == 0 is tested separately in
+     * xof_state_skip_update(). */
+    for (size_t n1 = 0; n1 <= input->len; n1++) {
+        TEST_CALLOC(input1, n1);
+        if (n1 != 0) {
+            memcpy(input1, input->x, n1);
+        }
+        for (size_t n2 = 0; n2 <= input->len - n1; n2++) {
+            size_t n3 = input->len - n1 - n2;
+            mbedtls_test_set_step(n1 * 1000000 + n2 * 1000 + n3);
+            TEST_CALLOC(input2, n2);
+            if (n2 != 0) {
+                memcpy(input2, input->x + n1, n2);
+            }
+            TEST_CALLOC(input3, n3);
+            if (n3 != 0) {
+                memcpy(input3, input->x + n1 + n2, n3);
+            }
+            PSA_ASSERT(psa_xof_setup(&operation, alg));
+            if (set_context) {
+                PSA_ASSERT(psa_xof_set_context(&operation,
+                                               context->x, context->len));
+            }
+            PSA_ASSERT(psa_xof_update(&operation, input1, n1));
+            PSA_ASSERT(psa_xof_update(&operation, input2, n2));
+            PSA_ASSERT(psa_xof_update(&operation, input3, n3));
+            PSA_ASSERT(psa_xof_output(&operation, output, expected_output->len));
+            PSA_ASSERT(psa_xof_abort(&operation));
+            TEST_MEMORY_COMPARE(output, expected_output->len,
+                                expected_output->x, expected_output->len);
+            mbedtls_free(input3);
+            input3 = NULL;
+            mbedtls_free(input2);
+            input2 = NULL;
+        }
+        mbedtls_free(input1);
+        input1 = NULL;
+    }
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+    mbedtls_free(input1);
+    mbedtls_free(input2);
+    mbedtls_free(input3);
+    mbedtls_free(output);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_multi_output(int alg, int set_context, data_t *context,
+                      data_t *input, data_t *expected_output)
+{
+    psa_xof_operation_t operation = psa_xof_operation_init();
+    uint8_t *output1 = NULL;
+    uint8_t *output2 = NULL;
+
+    PSA_INIT();
+
+    /* Skipping update() when input->len == 0 is tested separately in
+     * xof_state_skip_update(). */
+    for (size_t n1 = 0; n1 <= expected_output->len; n1++) {
+        for (size_t n2 = 0; n2 <= expected_output->len - n1; n2++) {
+            mbedtls_test_set_step(n1 * 1000 + n2);
+            TEST_CALLOC(output1, n1);
+            TEST_CALLOC(output2, n2);
+            PSA_ASSERT(psa_xof_setup(&operation, alg));
+            if (set_context) {
+                PSA_ASSERT(psa_xof_set_context(&operation,
+                                               context->x, context->len));
+            }
+            PSA_ASSERT(psa_xof_update(&operation, input->x, input->len));
+            PSA_ASSERT(psa_xof_output(&operation, output1, n1));
+            PSA_ASSERT(psa_xof_output(&operation, output2, n2));
+            PSA_ASSERT(psa_xof_abort(&operation));
+            TEST_MEMORY_COMPARE(output1, n1,
+                                expected_output->x, n1);
+            TEST_MEMORY_COMPARE(output2, n2,
+                                expected_output->x + n1, n2);
+            mbedtls_free(output1);
+            output1 = NULL;
+            mbedtls_free(output2);
+            output2 = NULL;
+        }
+    }
+
+exit:
+    psa_xof_abort(&operation);
+    PSA_DONE();
+    mbedtls_free(output1);
+    mbedtls_free(output2);
+}
+/* END_CASE */

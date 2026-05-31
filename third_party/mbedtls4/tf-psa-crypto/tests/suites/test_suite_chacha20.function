@@ -1,0 +1,75 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/chacha20.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CHACHA20_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void chacha20_crypt(data_t *key_str,
+                    data_t *nonce_str,
+                    int counter,
+                    data_t *src_str,
+                    data_t *expected_output_str)
+{
+    unsigned char output[375];
+    mbedtls_chacha20_context ctx;
+
+    memset(output, 0x00, sizeof(output));
+
+    TEST_ASSERT(src_str->len   == expected_output_str->len);
+    TEST_ASSERT(key_str->len   == 32U);
+    TEST_ASSERT(nonce_str->len == 12U);
+
+    /*
+     * Test the integrated API
+     */
+    TEST_ASSERT(mbedtls_chacha20_crypt(key_str->x, nonce_str->x, counter, src_str->len, src_str->x,
+                                       output) == 0);
+
+    TEST_MEMORY_COMPARE(output, expected_output_str->len,
+                        expected_output_str->x, expected_output_str->len);
+
+    /*
+     * Test the streaming API
+     */
+    mbedtls_chacha20_init(&ctx);
+
+    TEST_ASSERT(mbedtls_chacha20_setkey(&ctx, key_str->x) == 0);
+
+    TEST_ASSERT(mbedtls_chacha20_starts(&ctx, nonce_str->x, counter) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    TEST_ASSERT(mbedtls_chacha20_update(&ctx, src_str->len, src_str->x, output) == 0);
+
+    TEST_MEMORY_COMPARE(output, expected_output_str->len,
+                        expected_output_str->x, expected_output_str->len);
+
+    /*
+     * Test the streaming API again, piecewise
+     */
+
+    /* Don't free/init the context nor set the key again,
+     * in order to test that starts() does the right thing. */
+    TEST_ASSERT(mbedtls_chacha20_starts(&ctx, nonce_str->x, counter) == 0);
+
+    memset(output, 0x00, sizeof(output));
+    TEST_ASSERT(mbedtls_chacha20_update(&ctx, 1, src_str->x, output) == 0);
+    TEST_ASSERT(mbedtls_chacha20_update(&ctx, src_str->len - 1,
+                                        src_str->x + 1, output + 1) == 0);
+
+    TEST_MEMORY_COMPARE(output, expected_output_str->len,
+                        expected_output_str->x, expected_output_str->len);
+
+    mbedtls_chacha20_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void chacha20_self_test()
+{
+    TEST_ASSERT(mbedtls_chacha20_self_test(1) == 0);
+}
+/* END_CASE */

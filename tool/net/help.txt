@@ -24,11 +24,12 @@ OVERVIEW
 
 FEATURES
 
-  - Lua v5.4
+  - Mbed TLS 4.1.0
+  - Lua v5.4.6
   - SQLite 3.35.5
-  - TLS v1.2 / v1.1 / v1.0
+  - TLS v1.3 / v1.2
   - HTTP v1.1 / v1.0 / v0.9
-  - Chromium-Zlib Compression
+  - Chromium-Zlib Compression 1.2.11
   - Statusz Monitoring Statistics
   - Self-Modifying PKZIP Object Store
   - Linux + Windows + Mac + FreeBSD + OpenBSD + NetBSD

@@ -1,0 +1,117 @@
+Create NV seed file
+create_nv_seed:
+
+Custom entropy sources: all standard
+custom_entropy_sources:0x0000ffff:PSA_SUCCESS
+
+Custom entropy sources: none
+custom_entropy_sources:0:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+Fake entropy: never returns anything
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:0:0:0:0:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+Fake entropy: less than the block size
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:MBEDTLS_ENTROPY_BLOCK_SIZE - 1:-1:-1:-1:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+Fake entropy: not enough for a nonce
+depends_on:ENTROPY_NONCE_LEN != 0
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:ENTROPY_NONCE_LEN - 1:-1:-1:-1:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+Fake entropy: one block eventually
+depends_on:ENTROPY_NONCE_LEN == 0
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:0:0:0:MBEDTLS_ENTROPY_BLOCK_SIZE:PSA_SUCCESS
+
+Fake entropy: one block in two steps
+depends_on:ENTROPY_NONCE_LEN == 0
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:MBEDTLS_ENTROPY_BLOCK_SIZE - 1:1:-1:-1:PSA_SUCCESS
+
+Fake entropy: more than one block in two steps
+depends_on:ENTROPY_NONCE_LEN == 0
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:MBEDTLS_ENTROPY_BLOCK_SIZE - 1:MBEDTLS_ENTROPY_BLOCK_SIZE - 1:-1:-1:PSA_SUCCESS
+
+Fake entropy: two blocks eventually
+fake_entropy_source:MBEDTLS_ENTROPY_BLOCK_SIZE:0:MBEDTLS_ENTROPY_BLOCK_SIZE:0:MBEDTLS_ENTROPY_BLOCK_SIZE:PSA_SUCCESS
+
+NV seed only: less than minimum
+entropy_from_nv_seed:MBEDTLS_ENTROPY_POLL_PLATFORM_MIN - 1:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+NV seed only: less than one block
+entropy_from_nv_seed:MBEDTLS_ENTROPY_BLOCK_SIZE - 1:PSA_ERROR_INSUFFICIENT_ENTROPY
+
+NV seed only: just enough
+entropy_from_nv_seed:ENTROPY_MIN_NV_SEED_SIZE:PSA_SUCCESS
+
+Explicit reseed: basic tests
+reseed_basic:
+
+Explicit reseed: entropy consumption
+reseed_consumption:
+
+Deplete: entropy consumption
+deplete_consumption:
+
+Prediction resistance: entropy consumption
+prediction_resistance_consumption:
+
+Prediction resistance: bad state
+prediction_resistance_bad_state:
+
+Prediction resistance: bad arguments
+prediction_resistance_bad_arguments:
+
+Explicit reseed: uniqueness tests (0 = 0)
+reseed_uniqueness:"":""
+
+Explicit reseed: uniqueness tests (0 != 5)
+reseed_uniqueness:"":"706572736f"
+
+Explicit reseed: uniqueness tests (5 = 5)
+reseed_uniqueness:"706572736f":"706572736f"
+
+Explicit reseed: uniqueness tests (5 != 5)
+reseed_uniqueness:"706572736f":"706572736e"
+
+Explicit reseed: uniqueness tests (5 != 10)
+reseed_uniqueness:"706572736f":"706572736f706572736f"
+
+PSA external RNG failure: generate random and key
+external_rng_failure_generate:
+
+# When verifying the impact of a forced RNG failure, depend on the built-in
+# implementation of the algorithm that uses randomization, whether it's
+# because the algorithm is randomized or because our implementation uses
+# randomization for (e.g.) blinding. An external implementation could use
+# its own randomness source which is not affected by the forced failure of
+# the RNG driver.
+# Key types and non-randomized auxiliary algorithms (in practice, hashes) can
+# use an external implementation.
+PSA external RNG failure: randomized ECDSA
+depends_on:PSA_WANT_ALG_ECDSA:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:MBEDTLS_PSA_BUILTIN_ALG_ECDSA:PSA_WANT_ECC_SECP_R1_256
+external_rng_failure_sign:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):"ab45435712649cb30bbddac49197eebf2740ffc7f874d9244c3460f54f322d3a":PSA_ALG_ECDSA_ANY:32
+
+PSA external RNG failure: deterministic ECDSA (software implementation)
+depends_on:PSA_WANT_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA:PSA_WANT_ECC_SECP_R1_256
+external_rng_failure_sign:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):"ab45435712649cb30bbddac49197eebf2740ffc7f874d9244c3460f54f322d3a":PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256):32
+
+PSA external RNG failure: RSA-PSS
+depends_on:PSA_WANT_ALG_RSA_PSS:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_PSA_BUILTIN_ALG_RSA_PSS
+external_rng_failure_sign:PSA_KEY_TYPE_RSA_KEY_PAIR:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":PSA_ALG_RSA_PSS(PSA_ALG_SHA_256):32
+
+PSA external RNG failure: RSA PKCS#1v1.5 (software implementation)
+depends_on:PSA_WANT_ALG_RSA_PKCS1V15_SIGN:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_SIGN
+external_rng_failure_sign:PSA_KEY_TYPE_RSA_KEY_PAIR:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":PSA_ALG_RSA_PKCS1V15_SIGN_RAW:32
+
+PSA RNG after fork: parent gets random never
+psa_rng_fork:-1
+
+PSA RNG after fork: parent gets random before
+psa_rng_fork:0
+
+PSA RNG after fork: parent gets random between
+psa_rng_fork:1
+
+PSA RNG after fork: parent gets random after
+psa_rng_fork:2
+
+Recreate NV seed file
+create_nv_seed:

@@ -1,0 +1,12 @@
+<unistd.h> smoke test
+unistd_available:
+
+# At the time of writing, we don't actually use CLOCK_REALTIME.
+# But it's the only clock that's guaranteed by POSIX.
+clock_gettime(CLOCK_REALTIME) smoke test
+clock_gettime_available:CLOCK_REALTIME
+
+# Used for mbedtls_ms_time() on platforms where we don't think
+# CLOCK_BOOTTIME is available.
+clock_gettime(CLOCK_MONOTONIC) smoke test
+clock_gettime_available:CLOCK_MONOTONIC

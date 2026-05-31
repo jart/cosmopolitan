@@ -1,0 +1,1164 @@
+/* BEGIN_HEADER */
+
+#include <stdlib.h>
+
+#include "mps_reader.h"
+
+/*
+ * Compile-time configuration for test suite.
+ */
+
+/* Comment/Uncomment this to disable/enable the
+ * testing of the various MPS layers.
+ * This can be useful for time-consuming instrumentation
+ * tasks such as the conversion of E-ACSL annotations
+ * into runtime assertions. */
+#define TEST_SUITE_MPS_READER
+
+/* End of compile-time configuration. */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_SSL_PROTO_TLS1_3
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_no_pausing_single_step_single_round(int with_acc)
+{
+    /* This test exercises the most basic use of the MPS reader:
+     * - The 'producing' layer provides a buffer
+     * - The 'consuming' layer fetches it in a single go.
+     * - After processing, the consuming layer commits the data
+     *   and the reader is moved back to producing mode.
+     *
+     * Parameters:
+     * - with_acc: 0 if the reader should be initialized without accumulator.
+     *             1 if the reader should be initialized with accumulator.
+     *
+     *             Whether the accumulator is present or not should not matter,
+     *             since the consumer's request can be fulfilled from the data
+     *             that the producer has provided.
+     */
+    unsigned char bufA[100];
+    unsigned char acc[10];
+    unsigned char *tmp;
+    int paused;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    if (with_acc == 0) {
+        mbedtls_mps_reader_init(&rd, NULL, 0);
+    } else {
+        mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    }
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+    /* Consumption (upper layer) */
+    /* Consume exactly what's available */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 100, bufA, 100);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, &paused) == 0);
+    TEST_ASSERT(paused == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_no_pausing_single_step_multiple_rounds(int with_acc)
+{
+    /* This test exercises multiple rounds of the basic use of the MPS reader:
+     * - The 'producing' layer provides a buffer
+     * - The 'consuming' layer fetches it in a single go.
+     * - After processing, the consuming layer commits the data
+     *   and the reader is moved back to producing mode.
+     *
+     * Parameters:
+     * - with_acc: 0 if the reader should be initialized without accumulator.
+     *             1 if the reader should be initialized with accumulator.
+     *
+     *             Whether the accumulator is present or not should not matter,
+     *             since the consumer's request can be fulfilled from the data
+     *             that the producer has provided.
+     */
+
+    unsigned char bufA[100], bufB[100];
+    unsigned char acc[10];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    if (with_acc == 0) {
+        mbedtls_mps_reader_init(&rd, NULL, 0);
+    } else {
+        mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    }
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+    /* Consumption (upper layer) */
+    /* Consume exactly what's available */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 100, bufA, 100);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, sizeof(bufB)) == 0);
+    /* Consumption */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 100, bufB, 100);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_no_pausing_multiple_steps_single_round(int with_acc)
+{
+    /* This test exercises one round of the following:
+     * - The 'producing' layer provides a buffer
+     * - The 'consuming' layer fetches it in multiple calls
+     *   to `mbedtls_mps_reader_get()`, without committing in between.
+     * - After processing, the consuming layer commits the data
+     *   and the reader is moved back to producing mode.
+     *
+     * Parameters:
+     * - with_acc: 0 if the reader should be initialized without accumulator.
+     *             1 if the reader should be initialized with accumulator.
+     *
+     *             Whether the accumulator is present or not should not matter,
+     *             since the consumer's requests can be fulfilled from the data
+     *             that the producer has provided.
+     */
+
+    /* Lower layer provides data that the upper layer fully consumes
+     * through multiple `get` calls. */
+    unsigned char buf[100];
+    unsigned char acc[10];
+    unsigned char *tmp;
+    mbedtls_mps_size_t tmp_len;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    if (with_acc == 0) {
+        mbedtls_mps_reader_init(&rd, NULL, 0);
+    } else {
+        mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    }
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 10, buf, 10);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 70, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 70, buf + 10, 70);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 30, &tmp, &tmp_len) == 0);
+    TEST_MEMORY_COMPARE(tmp, tmp_len, buf + 80, 20);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_no_pausing_multiple_steps_multiple_rounds(int with_acc)
+{
+    /* This test exercises one round of fetching a buffer in multiple chunks
+     * and passing it back to the producer afterwards, followed by another
+     * single-step sequence of feed-fetch-commit-reclaim.
+     */
+    unsigned char bufA[100], bufB[100];
+    unsigned char acc[10];
+    unsigned char *tmp;
+    mbedtls_mps_size_t tmp_len;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    if (with_acc == 0) {
+        mbedtls_mps_reader_init(&rd, NULL, 0);
+    } else {
+        mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    }
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 10, bufA, 10);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 70, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 70, bufA + 10, 70);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 30, &tmp, &tmp_len) == 0);
+    TEST_MEMORY_COMPARE(tmp, tmp_len, bufA + 80, 20);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, sizeof(bufB)) == 0);
+    /* Consumption */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 100, bufB, 100);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_pausing_needed_disabled()
+{
+    /* This test exercises the behaviour of the MPS reader when a read request
+     * of the consumer exceeds what has been provided by the producer, and when
+     * no accumulator is available in the reader.
+     *
+     * In this case, we expect the reader to fail.
+     */
+
+    unsigned char buf[100];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, NULL, 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf, 50);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                MBEDTLS_ERR_MPS_READER_NEED_ACCUMULATOR);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_pausing_needed_buffer_too_small()
+{
+    /* This test exercises the behaviour of the MPS reader with accumulator
+     * in the situation where a read request goes beyond the bounds of the
+     * current read buffer, _and_ the reader's accumulator is too small to
+     * hold the requested amount of data.
+     *
+     * In this case, we expect mbedtls_mps_reader_reclaim() to fail,
+     * but it should be possible to continue fetching data as if
+     * there had been no excess request via mbedtls_mps_reader_get()
+     * and the call to mbedtls_mps_reader_reclaim() had been rejected
+     * because of data remaining.
+     */
+
+    unsigned char buf[100];
+    unsigned char acc[10];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+    mbedtls_mps_size_t tmp_len;
+
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf, 50);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 10, buf + 50, 10);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                MBEDTLS_ERR_MPS_READER_ACCUMULATOR_TOO_SMALL);
+
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, &tmp_len) == 0);
+    TEST_MEMORY_COMPARE(tmp, tmp_len, buf + 50, 50);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_reclaim_overflow()
+{
+    /* This test exercises the behaviour of the MPS reader with accumulator
+     * in the situation where upon calling mbedtls_mps_reader_reclaim(), the
+     * uncommitted data together with the excess data missing in the last
+     * call to mbedtls_mps_reader_get() exceeds the bounds of the type
+     * holding the buffer length.
+     */
+
+    unsigned char buf[100];
+    unsigned char acc[50];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf, 50);
+    /* Excess request */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, (mbedtls_mps_size_t) -1, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+    /* Wrapup (lower layer) */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                MBEDTLS_ERR_MPS_READER_ACCUMULATOR_TOO_SMALL);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_pausing(int option)
+{
+    /* This test exercises the behaviour of the reader when the
+     * accumulator is used to fulfill a consumer's request.
+     *
+     * More detailed:
+     * - The producer feeds some data.
+     * - The consumer asks for more data than what's available.
+     * - The reader remembers the request and goes back to
+     *   producing mode, waiting for more data from the producer.
+     * - The producer provides another chunk of data which is
+     *   sufficient to fulfill the original read request.
+     * - The consumer retries the original read request, which
+     *   should now succeed.
+     *
+     * This test comes in multiple variants controlled by the
+     * `option` parameter and documented below.
+     */
+
+    unsigned char bufA[100], bufB[100];
+    unsigned char *tmp;
+    unsigned char acc[40];
+    int paused;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+
+    /* Consumption (upper layer) */
+    /* Ask for more than what's available. */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 80, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 80, bufA, 80);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+    switch (option) {
+        case 0:  /* Single uncommitted fetch at pausing */
+        case 1:
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            break;
+        default: /* Multiple uncommitted fetches at pausing */
+            break;
+    }
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, &paused) == 0);
+    TEST_ASSERT(paused == 1);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, sizeof(bufB)) == 0);
+
+    /* Consumption */
+    switch (option) {
+        case 0: /* Single fetch at pausing, re-fetch with commit. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            break;
+
+        case 1: /* Single fetch at pausing, re-fetch without commit. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            break;
+
+        case 2: /* Multiple fetches at pausing, repeat without commit. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            break;
+
+        case 3: /* Multiple fetches at pausing, repeat with commit 1. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            break;
+
+        case 4: /* Multiple fetches at pausing, repeat with commit 2. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            break;
+
+        case 5: /* Multiple fetches at pausing, repeat with commit 3. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            break;
+
+        default:
+            TEST_ASSERT(0);
+    }
+
+    /* In all cases, fetch the rest of the second buffer. */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 90, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 90, bufB + 10, 90);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_pausing_multiple_feeds(int option)
+{
+    /* This test exercises the behaviour of the MPS reader
+     * in the following situation:
+     * - The consumer has asked for more than what's available, so the
+     *   reader pauses and waits for further input data via
+     *   `mbedtls_mps_reader_feed()`
+     * - Multiple such calls to `mbedtls_mps_reader_feed()` are necessary
+     *   to fulfill the original request, and the reader needs to do
+     *   the necessary bookkeeping under the hood.
+     *
+     * This test comes in a few variants differing in the number and
+     * size of feed calls that the producer issues while the reader is
+     * accumulating the necessary data - see the comments below.
+     */
+
+    unsigned char bufA[100], bufB[100];
+    unsigned char *tmp;
+    unsigned char acc[70];
+    mbedtls_mps_reader rd;
+    mbedtls_mps_size_t fetch_len;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+
+    /* Consumption (upper layer) */
+    /* Ask for more than what's available. */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 80, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 80, bufA, 80);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* 20 left, ask for 70 -> 50 overhead */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 70, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    switch (option) {
+        case 0: /* 10 + 10 + 80 byte feed */
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, 10) ==
+                        MBEDTLS_ERR_MPS_READER_NEED_MORE);
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + 10, 10) ==
+                        MBEDTLS_ERR_MPS_READER_NEED_MORE);
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + 20, 80) == 0);
+            break;
+
+        case 1: /* 50 x 1byte */
+            for (size_t num_feed = 0; num_feed < 49; num_feed++) {
+                TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + num_feed, 1) ==
+                            MBEDTLS_ERR_MPS_READER_NEED_MORE);
+            }
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + 49, 1) == 0);
+            break;
+
+        case 2: /* 49 x 1byte + 51bytes */
+            for (size_t num_feed = 0; num_feed < 49; num_feed++) {
+                TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + num_feed, 1) ==
+                            MBEDTLS_ERR_MPS_READER_NEED_MORE);
+            }
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB + 49, 51) == 0);
+            break;
+
+        default:
+            TEST_ASSERT(0);
+            break;
+    }
+
+    /* Consumption */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 70, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 20, bufA + 80, 20);
+    TEST_MEMORY_COMPARE(tmp + 20, 50, bufB, 50);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 1000, &tmp, &fetch_len) == 0);
+    switch (option) {
+        case 0:
+            TEST_ASSERT(fetch_len == 50);
+            break;
+
+        case 1:
+            TEST_ASSERT(fetch_len == 0);
+            break;
+
+        case 2:
+            TEST_ASSERT(fetch_len == 50);
+            break;
+
+        default:
+            TEST_ASSERT(0);
+            break;
+    }
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_reclaim_data_left(int option)
+{
+    /* This test exercises the behaviour of the MPS reader when a
+     * call to mbedtls_mps_reader_reclaim() is made before all data
+     * provided by the producer has been fetched and committed. */
+
+    unsigned char buf[100];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, NULL, 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+
+    /* Consumption (upper layer) */
+    switch (option) {
+        case 0:
+            /* Fetch (but not commit) the entire buffer. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, sizeof(buf), &tmp, NULL)
+                        == 0);
+            TEST_MEMORY_COMPARE(tmp, 100, buf, 100);
+            break;
+
+        case 1:
+            /* Fetch (but not commit) parts of the buffer. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, sizeof(buf) / 2,
+                                               &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, sizeof(buf) / 2, buf, sizeof(buf) / 2);
+            break;
+
+        case 2:
+            /* Fetch and commit parts of the buffer, then
+             * fetch but not commit the rest of the buffer. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, sizeof(buf) / 2,
+                                               &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, sizeof(buf) / 2, buf, sizeof(buf) / 2);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, sizeof(buf) / 2,
+                                               &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, sizeof(buf) / 2,
+                                buf + sizeof(buf) / 2,
+                                sizeof(buf) / 2);
+            break;
+
+        default:
+            TEST_ASSERT(0);
+            break;
+    }
+
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                MBEDTLS_ERR_MPS_READER_DATA_LEFT);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_reclaim_data_left_retry()
+{
+    /* This test exercises the behaviour of the MPS reader when an attempt
+     * by the producer to reclaim the reader fails because of more data pending
+     * to be processed, and the consumer subsequently fetches more data. */
+    unsigned char buf[100];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, NULL, 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf, 50);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf + 50, 50);
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                MBEDTLS_ERR_MPS_READER_DATA_LEFT);
+    /* Consumption */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 50, buf + 50, 50);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_multiple_pausing(int option)
+{
+    /* This test exercises the behaviour of the MPS reader
+     * in the following situation:
+     * - A read request via `mbedtls_mps_reader_get()` can't
+     *   be served and the reader is paused to accumulate
+     *   the desired amount of data from the producer.
+     * - Once enough data is available, the consumer successfully
+     *   reads the data from the reader, but afterwards exceeds
+     *   the available data again - pausing is necessary for a
+     *   second time.
+     */
+
+    unsigned char bufA[100], bufB[20], bufC[10];
+    unsigned char *tmp;
+    unsigned char acc[50];
+    mbedtls_mps_size_t tmp_len;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufC); i++) {
+        bufC[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+
+    /* Consumption (upper layer) */
+    /* Ask for more than what's available. */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 80, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 80, bufA, 80);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, sizeof(bufB)) == 0);
+
+    switch (option) {
+        case 0: /* Fetch same chunks, commit afterwards, and
+                 * then exceed bounds of new buffer; accumulator
+                 * large enough. */
+
+            /* Consume */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, &tmp_len) == 0);
+            TEST_MEMORY_COMPARE(tmp, tmp_len, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+            /* Prepare */
+            TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufC, sizeof(bufC)) == 0);;
+
+            /* Consume */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufB + 10, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufC, 10);
+            break;
+
+        case 1: /* Fetch same chunks, commit afterwards, and
+                 * then exceed bounds of new buffer; accumulator
+                 * not large enough. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 51, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+            /* Prepare */
+            TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_ACCUMULATOR_TOO_SMALL);
+            break;
+
+        case 2: /* Fetch same chunks, don't commit afterwards, and
+                 * then exceed bounds of new buffer; accumulator
+                 * large enough. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+            /* Prepare */
+            TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufC, sizeof(bufC)) == 0);;
+
+            /* Consume */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 50, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 20, bufA + 80, 20);
+            TEST_MEMORY_COMPARE(tmp + 20, 20, bufB, 20);
+            TEST_MEMORY_COMPARE(tmp + 40, 10, bufC, 10);
+            break;
+
+        case 3: /* Fetch same chunks, don't commit afterwards, and
+                 * then exceed bounds of new buffer; accumulator
+                 * not large enough. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 80, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 10, bufA + 90, 10);
+            TEST_MEMORY_COMPARE(tmp + 10, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 21, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+
+            /* Prepare */
+            TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_ACCUMULATOR_TOO_SMALL);
+            break;
+
+        default:
+            TEST_ASSERT(0);
+            break;
+    }
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER:MBEDTLS_MPS_STATE_VALIDATION */
+void mbedtls_mps_reader_random_usage(int num_out_chunks,
+                                     int max_chunk_size,
+                                     int max_request,
+                                     int acc_size)
+
+{
+    /* Randomly pass a reader object back and forth between lower and
+     * upper layer and let each of them call the respective reader API
+     * functions in a random fashion.
+     *
+     * On the lower layer, we're tracking and concatenating
+     * the data passed to successful feed calls.
+     *
+     * For the upper layer, we track and concatenate buffers
+     * obtained from successful get calls.
+     *
+     * As long as the lower layer calls reclaim at least once, (resetting the
+     * fetched but not-yet-committed data), this should always lead to the same
+     * stream of outgoing/incoming data for the lower/upper layers, even if
+     * most of the random calls fail.
+     *
+     * NOTE: This test uses rand() for random data, which is not optimal.
+     *       Instead, it would be better to get the random data from a
+     *       static buffer. This both eases reproducibility and allows
+     *       simple conversion to a fuzz target.
+     */
+    int ret;
+    unsigned char *acc = NULL;
+    unsigned char *outgoing = NULL, *incoming = NULL;
+    unsigned char *cur_chunk = NULL;
+    size_t cur_out_chunk, out_pos, in_commit, in_fetch;
+    int rand_op;  /* Lower layer:
+                   * - Reclaim (0)
+                   * - Feed (1)
+                   * Upper layer:
+                   * - Get, do tolerate smaller output (0)
+                   * - Get, don't tolerate smaller output (1)
+                   * - Commit (2) */
+    int mode = 0; /* Lower layer (0) or Upper layer (1) */
+    int reclaimed = 1; /* Have to call reclaim at least once before
+                        * returning the reader to the upper layer. */
+    mbedtls_mps_reader rd;
+
+    if (acc_size > 0) {
+        TEST_CALLOC(acc, acc_size);
+    }
+
+    /* This probably needs to be changed because we want
+     * our tests to be deterministic. */
+    //    srand( time( NULL ) );
+
+    TEST_CALLOC(outgoing, num_out_chunks * max_chunk_size);
+    TEST_CALLOC(incoming, num_out_chunks * max_chunk_size);
+
+    mbedtls_mps_reader_init(&rd, acc, acc_size);
+
+    cur_out_chunk = 0;
+    in_commit = 0;
+    in_fetch = 0;
+    out_pos = 0;
+    while (cur_out_chunk < (unsigned) num_out_chunks) {
+        if (mode == 0) {
+            /* Choose randomly between reclaim and feed */
+            rand_op = rand() % 2;
+
+            if (rand_op == 0) {
+                /* Reclaim */
+                ret = mbedtls_mps_reader_reclaim(&rd, NULL);
+
+                if (ret == 0) {
+                    TEST_ASSERT(cur_chunk != NULL);
+                    mbedtls_free(cur_chunk);
+                    cur_chunk = NULL;
+                }
+                reclaimed = 1;
+            } else {
+                /* Feed reader with a random chunk */
+                unsigned char *tmp = NULL;
+                size_t tmp_size;
+                if (cur_out_chunk == (unsigned) num_out_chunks) {
+                    continue;
+                }
+
+                tmp_size = (rand() % max_chunk_size) + 1;
+                TEST_CALLOC(tmp, tmp_size);
+
+                TEST_ASSERT(mbedtls_test_rnd_std_rand(NULL, tmp, tmp_size) == 0);
+                ret = mbedtls_mps_reader_feed(&rd, tmp, tmp_size);
+
+                if (ret == 0 || ret == MBEDTLS_ERR_MPS_READER_NEED_MORE) {
+                    cur_out_chunk++;
+                    memcpy(outgoing + out_pos, tmp, tmp_size);
+                    out_pos += tmp_size;
+                }
+
+                if (ret == 0) {
+                    TEST_ASSERT(cur_chunk == NULL);
+                    cur_chunk = tmp;
+                } else {
+                    mbedtls_free(tmp);
+                }
+
+            }
+
+            /* Randomly switch to consumption mode if reclaim
+             * was called at least once. */
+            if (reclaimed == 1 && rand() % 3 == 0) {
+                in_fetch = 0;
+                mode = 1;
+            }
+        } else {
+            /* Choose randomly between get tolerating fewer data,
+             * get not tolerating fewer data, and commit. */
+            rand_op = rand() % 3;
+            if (rand_op == 0 || rand_op == 1) {
+                mbedtls_mps_size_t get_size, real_size;
+                unsigned char *chunk_get;
+                get_size = (rand() % max_request) + 1;
+                if (rand_op == 0) {
+                    ret = mbedtls_mps_reader_get(&rd, get_size, &chunk_get,
+                                                 &real_size);
+                } else {
+                    real_size = get_size;
+                    ret = mbedtls_mps_reader_get(&rd, get_size, &chunk_get, NULL);
+                }
+
+                /* Check if output is in accordance with what was written */
+                if (ret == 0) {
+                    memcpy(incoming + in_commit + in_fetch,
+                           chunk_get, real_size);
+                    TEST_ASSERT(memcmp(incoming + in_commit + in_fetch,
+                                       outgoing + in_commit + in_fetch,
+                                       real_size) == 0);
+                    in_fetch += real_size;
+                }
+            } else if (rand_op == 2) { /* Commit */
+                ret = mbedtls_mps_reader_commit(&rd);
+                if (ret == 0) {
+                    in_commit += in_fetch;
+                    in_fetch = 0;
+                }
+            }
+
+            /* Randomly switch back to preparation */
+            if (rand() % 3 == 0) {
+                reclaimed = 0;
+                mode = 0;
+            }
+        }
+    }
+
+exit:
+    /* Cleanup */
+    mbedtls_mps_reader_free(&rd);
+    mbedtls_free(incoming);
+    mbedtls_free(outgoing);
+    mbedtls_free(acc);
+    mbedtls_free(cur_chunk);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_reader_inconsistent_usage(int option)
+{
+    /* This test exercises the behaviour of the MPS reader
+     * in the following situation:
+     * - The consumer asks for more data than what's available
+     * - The reader is paused and receives more data from the
+     *   producer until the original read request can be fulfilled.
+     * - The consumer does not repeat the original request but
+     *   requests data in a different way.
+     *
+     * The reader does not guarantee that inconsistent read requests
+     * after pausing will succeed, and this test triggers some cases
+     * where the request fails.
+     */
+
+    unsigned char bufA[100], bufB[100];
+    unsigned char *tmp;
+    unsigned char acc[40];
+    mbedtls_mps_reader rd;
+    int success = 0;
+    for (size_t i = 0; (unsigned) i < sizeof(bufA); i++) {
+        bufA[i] = (unsigned char) i;
+    }
+    for (size_t i = 0; (unsigned) i < sizeof(bufB); i++) {
+        bufB[i] = ~((unsigned char) i);
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, acc, sizeof(acc));
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufA, sizeof(bufA)) == 0);
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 80, &tmp, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 20, &tmp, NULL) ==
+                MBEDTLS_ERR_MPS_READER_OUT_OF_DATA);
+    /* Preparation */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, bufB, sizeof(bufB)) == 0);
+    /* Consumption */
+    switch (option) {
+        case 0:
+            /* Ask for buffered data in a single chunk, no commit */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 30, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 20, bufA + 80, 20);
+            TEST_MEMORY_COMPARE(tmp + 20, 10, bufB, 10);
+            success = 1;
+            break;
+
+        case 1:
+            /* Ask for buffered data in a single chunk, with commit */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 30, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 20, bufA + 80, 20);
+            TEST_MEMORY_COMPARE(tmp + 20, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            success = 1;
+            break;
+
+        case 2:
+            /* Ask for more than was requested when pausing, #1 */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 31, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_INCONSISTENT_REQUESTS);
+            break;
+
+        case 3:
+            /* Ask for more than was requested when pausing #2 */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, (mbedtls_mps_size_t) -1, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_INCONSISTENT_REQUESTS);
+            break;
+
+        case 4:
+            /* Asking for buffered data in different
+             * chunks than before CAN fail. */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 15, bufA + 80, 15);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 10, &tmp, NULL) ==
+                        MBEDTLS_ERR_MPS_READER_INCONSISTENT_REQUESTS);
+            break;
+
+        case 5:
+            /* Asking for buffered data different chunks
+             * than before NEED NOT fail - no commits */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 15, bufA + 80, 15);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 5, bufA + 95, 5);
+            TEST_MEMORY_COMPARE(tmp + 5, 10, bufB, 10);
+            success = 1;
+            break;
+
+        case 6:
+            /* Asking for buffered data different chunks
+             * than before NEED NOT fail - intermediate commit */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 15, bufA + 80, 15);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 5, bufA + 95, 5);
+            TEST_MEMORY_COMPARE(tmp + 5, 10, bufB, 10);
+            success = 1;
+            break;
+
+        case 7:
+            /* Asking for buffered data different chunks
+             * than before NEED NOT fail - end commit */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 15, bufA + 80, 15);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 5, bufA + 95, 5);
+            TEST_MEMORY_COMPARE(tmp + 5, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            success = 1;
+            break;
+
+        case 8:
+            /* Asking for buffered data different chunks
+             * than before NEED NOT fail - intermediate & end commit */
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_MEMORY_COMPARE(tmp, 15, bufA + 80, 15);
+            TEST_ASSERT(mbedtls_mps_reader_get(&rd, 15, &tmp, NULL) == 0);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            TEST_MEMORY_COMPARE(tmp, 5, bufA + 95, 5);
+            TEST_MEMORY_COMPARE(tmp + 5, 10, bufB, 10);
+            TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+            success = 1;
+            break;
+
+        default:
+            TEST_ASSERT(0);
+            break;
+    }
+
+    if (success == 1) {
+        /* In all succeeding cases, fetch the rest of the second buffer. */
+        TEST_ASSERT(mbedtls_mps_reader_get(&rd, 90, &tmp, NULL) == 0);
+        TEST_MEMORY_COMPARE(tmp, 90, bufB + 10, 90);
+        TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+
+        /* Wrapup */
+        TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+    }
+
+exit:
+    /* Wrapup */
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:TEST_SUITE_MPS_READER */
+void mbedtls_mps_reader_feed_empty()
+{
+    /* This test exercises the behaviour of the reader when it is
+     * fed with a NULL buffer. */
+    unsigned char buf[100];
+    unsigned char *tmp;
+    mbedtls_mps_reader rd;
+    for (size_t i = 0; (unsigned) i < sizeof(buf); i++) {
+        buf[i] = (unsigned char) i;
+    }
+
+    /* Preparation (lower layer) */
+    mbedtls_mps_reader_init(&rd, NULL, 0);
+
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, NULL, sizeof(buf)) ==
+                MBEDTLS_ERR_MPS_READER_INVALID_ARG);
+
+    /* Subsequent feed-calls should still succeed. */
+    TEST_ASSERT(mbedtls_mps_reader_feed(&rd, buf, sizeof(buf)) == 0);
+
+    /* Consumption (upper layer) */
+    TEST_ASSERT(mbedtls_mps_reader_get(&rd, 100, &tmp, NULL) == 0);
+    TEST_MEMORY_COMPARE(tmp, 100, buf, 100);
+    TEST_ASSERT(mbedtls_mps_reader_commit(&rd) == 0);
+
+    /* Wrapup */
+    TEST_ASSERT(mbedtls_mps_reader_reclaim(&rd, NULL) == 0);
+
+exit:
+    mbedtls_mps_reader_free(&rd);
+}
+/* END_CASE */

@@ -1,0 +1,238 @@
+Public key write check RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C
+pk_write_pubkey_check:"../framework/data_files/server1.pubkey":TEST_PEM
+
+Public key write check RSA (DER)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_write_pubkey_check:"../framework/data_files/server1.pubkey.der":TEST_DER
+
+Public key write check RSA 4096
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_check:"../framework/data_files/rsa4096_pub.pem":TEST_PEM
+
+Public key write check RSA 4096 (DER)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_check:"../framework/data_files/rsa4096_pub.der":TEST_DER
+
+Public key write check EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_check:"../framework/data_files/ec_256_pub.pem":TEST_PEM
+
+Public key write check EC 256 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_check:"../framework/data_files/ec_256_pub.der":TEST_DER
+
+Public key write check EC 521 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_check:"../framework/data_files/ec_521_pub.pem":TEST_PEM
+
+Public key write check EC 521 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_check:"../framework/data_files/ec_521_pub.der":TEST_DER
+
+Public key write check EC Brainpool 512 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_write_pubkey_check:"../framework/data_files/ec_bp512_pub.pem":TEST_PEM
+
+Public key write check EC Brainpool 512 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_write_pubkey_check:"../framework/data_files/ec_bp512_pub.der":TEST_DER
+
+Public key write check EC X25519
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_MONTGOMERY_255
+pk_write_pubkey_check:"../framework/data_files/ec_x25519_pub.pem":TEST_PEM
+
+Public key write check EC X25519 (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_write_pubkey_check:"../framework/data_files/ec_x25519_pub.der":TEST_DER
+
+Public key write check EC X448
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_MONTGOMERY_448
+pk_write_pubkey_check:"../framework/data_files/ec_x448_pub.pem":TEST_PEM
+
+Public key write check EC X448 (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_448
+pk_write_pubkey_check:"../framework/data_files/ec_x448_pub.der":TEST_DER
+
+Private key write check RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C
+pk_write_key_check:"../framework/data_files/server1.key":TEST_PEM
+
+Private key write check RSA (DER)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_write_key_check:"../framework/data_files/server1.key.der":TEST_DER
+
+Private key write check RSA 4096
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_key_check:"../framework/data_files/rsa4096_prv.pem":TEST_PEM
+
+Private key write check RSA 4096 (DER)
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_key_check:"../framework/data_files/rsa4096_prv.der":TEST_DER
+
+Private key write check EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_prv.pem":TEST_PEM
+
+Private key write check EC 256 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_prv.der":TEST_DER
+
+Private key write check EC 256 bits (top bit set)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_long_prv.pem":TEST_PEM
+
+Private key write check EC 256 bits (top bit set) (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_key_check:"../framework/data_files/ec_256_long_prv.der":TEST_DER
+
+Private key write check EC 521 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_521
+pk_write_key_check:"../framework/data_files/ec_521_prv.pem":TEST_PEM
+
+Private key write check EC 521 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_write_key_check:"../framework/data_files/ec_521_prv.der":TEST_DER
+
+Private key write check EC 521 bits (top byte is 0)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_SECP_R1_521
+pk_write_key_check:"../framework/data_files/ec_521_short_prv.pem":TEST_PEM
+
+Private key write check EC 521 bits (top byte is 0) (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_write_key_check:"../framework/data_files/ec_521_short_prv.der":TEST_DER
+
+Private key write check EC Brainpool 512 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_write_key_check:"../framework/data_files/ec_bp512_prv.pem":TEST_PEM
+
+Private key write check EC Brainpool 512 bits (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_write_key_check:"../framework/data_files/ec_bp512_prv.der":TEST_DER
+
+Private key write check EC X25519
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_MONTGOMERY_255
+pk_write_key_check:"../framework/data_files/ec_x25519_prv.pem":TEST_PEM
+
+Private key write check EC X25519 (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_write_key_check:"../framework/data_files/ec_x25519_prv.der":TEST_DER
+
+Private key write check EC X448
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:MBEDTLS_PEM_PARSE_C:MBEDTLS_PEM_WRITE_C:PSA_WANT_ECC_MONTGOMERY_448
+pk_write_key_check:"../framework/data_files/ec_x448_prv.pem":TEST_PEM
+
+Private key write check EC X448 (DER)
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_448
+pk_write_key_check:"../framework/data_files/ec_x448_prv.der":TEST_DER
+
+Derive public key RSA
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_write_public_from_private:"../framework/data_files/server1.key.der":"../framework/data_files/server1.pubkey.der"
+
+Derive public key RSA 4096
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_public_from_private:"../framework/data_files/rsa4096_prv.der":"../framework/data_files/rsa4096_pub.der"
+
+Derive public key EC 256 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_public_from_private:"../framework/data_files/ec_256_prv.der":"../framework/data_files/ec_256_pub.der"
+
+Derive public key EC 521 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_write_public_from_private:"../framework/data_files/ec_521_prv.der":"../framework/data_files/ec_521_pub.der"
+
+Derive public key EC Brainpool 512 bits
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_BRAINPOOL_P_R1_512
+pk_write_public_from_private:"../framework/data_files/ec_bp512_prv.der":"../framework/data_files/ec_bp512_pub.der"
+
+Derive public key EC X25519
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_255
+pk_write_public_from_private:"../framework/data_files/ec_x25519_prv.der":"../framework/data_files/ec_x25519_pub.der"
+
+Derive public key EC X448
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_MONTGOMERY_448
+pk_write_public_from_private:"../framework/data_files/ec_x448_prv.der":"../framework/data_files/ec_x448_pub.der"
+
+Export public key PSA - Parse public - EC key secp256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_psa_from_file:"../framework/data_files/ec_256_pub.der":TEST_PUBLIC_KEY
+
+Export public key PSA - Parse public - EC key secp521r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_psa_from_file:"../framework/data_files/ec_521_pub.der":TEST_PUBLIC_KEY
+
+Export public key PSA - Parse public - RSA 2048 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY
+pk_write_pubkey_psa_from_file:"../framework/data_files/server1.pubkey.der":TEST_PUBLIC_KEY
+
+Export public key PSA - Parse public - RSA 4096 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_psa_from_file:"../framework/data_files/rsa4096_pub.der":TEST_PUBLIC_KEY
+
+Export public key PSA - Parse private - EC key secp256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_psa_from_file:"../framework/data_files/ec_256_prv.der":TEST_PRIVATE_KEY
+
+Export public key PSA - Parse private - EC key secp521r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_psa_from_file:"../framework/data_files/ec_521_prv.der":TEST_PRIVATE_KEY
+
+Export public key PSA - Parse private - RSA 2048 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT
+pk_write_pubkey_psa_from_file:"../framework/data_files/server1.key.der":TEST_PRIVATE_KEY
+
+Export public key PSA - Parse private - RSA 4096 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_psa_from_file:"../framework/data_files/rsa4096_prv.der":TEST_PRIVATE_KEY
+
+Export public key PSA - pk_wrap_psa - EC key secp256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256:TEST_PK_WRAP_PSA
+
+Export public key PSA - pk_wrap_psa - EC key secp521r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):521:TEST_PK_WRAP_PSA
+
+Export public key PSA - pk_wrap_psa - RSA 1024 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:1024:TEST_PK_WRAP_PSA
+
+Export public key PSA - pk_wrap_psa - RSA 4096 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:4096:TEST_PK_WRAP_PSA
+
+Export public key PSA - pk_copy_from_psa - EC key secp256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256:TEST_PK_COPY_FROM_PSA
+
+Export public key PSA - pk_copy_from_psa - EC key secp521r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):521:TEST_PK_COPY_FROM_PSA
+
+Export public key PSA - pk_copy_from_psa - RSA 1024 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:1024:TEST_PK_COPY_FROM_PSA
+
+Export public key PSA - pk_copy_from_psa - RSA 4096 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:4096:TEST_PK_COPY_FROM_PSA
+
+Export public key PSA - pk_copy_public_from_psa - EC key secp256r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_256
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):256:TEST_PK_COPY_PUBLIC_FROM_PSA
+
+Export public key PSA - pk_copy_public_from_psa - EC key secp521r1
+depends_on:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT:PSA_WANT_ECC_SECP_R1_521
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):521:TEST_PK_COPY_PUBLIC_FROM_PSA
+
+Export public key PSA - pk_copy_public_from_psa - RSA 1024 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:1024:TEST_PK_COPY_PUBLIC_FROM_PSA
+
+Export public key PSA - pk_copy_public_from_psa - RSA 4096 bits
+depends_on:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT:PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT:MBEDTLS_TEST_PK_ALLOW_RSA_KEY_PAIR_4096
+pk_write_pubkey_psa_from_psa:PSA_KEY_TYPE_RSA_KEY_PAIR:4096:TEST_PK_COPY_PUBLIC_FROM_PSA
+
+Export public key PSA - unpopulated PK context
+pk_write_pubkey_psa_unpopulated:

@@ -1,0 +1,587 @@
+Test mbedtls_mpi_core_io functions with null pointers
+mpi_core_io_null
+
+Test mbedtls_mpi_core_io_be #1 (Buffer and limbs just fit, input limb-aligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:24:0:0
+
+Test mbedtls_mpi_core_io_be #2  (Buffer and limbs just fit, input unaligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:24:0:0
+
+Test mbedtls_mpi_core_io_be #3 (Buffer just fits, extra limbs, input limb-aligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:28:0:0
+
+Test mbedtls_mpi_core_io_be #4 (Buffer just fits, extra limbs, input unaligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:28:0:0
+
+Test mbedtls_mpi_core_io_be #5 (Extra limbs, buffer aligned to extra limbs, input limb-aligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":112:28:0:0
+
+Test mbedtls_mpi_core_io_be #6 (Extra limbs, buffer aligned to extra limbs, input unaligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":112:28:0:0
+
+Test mbedtls_mpi_core_io_be #7 (Buffer and limbs just fit, input limb-aligned with leading zeroes)
+mpi_core_io_be:"00000000000000001fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":88:24:0:0
+
+Test mbedtls_mpi_core_io_be #8 (Buffer and limbs just fit, input unaligned with leading zeroes)
+mpi_core_io_be:"00000000000000001fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":86:24:0:0
+
+Test mbedtls_mpi_core_io_be #9 (Buffer just fits, extra limbs, input limb-aligned with leading zeroes)
+mpi_core_io_be:"00000000000000001fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":88:28:0:0
+
+Test mbedtls_mpi_core_io_be #10 (Buffer just fits, extra limbs, input unaligned with leading zeroes)
+mpi_core_io_be:"00000000000000001fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":86:28:0:0
+
+Test mbedtls_mpi_core_io_be #11 (Zero)
+mpi_core_io_be:"00":1:1:0:0
+
+Test mbedtls_mpi_core_io_be #12 (Zero, empty output)
+mpi_core_io_be:"00":0:1:0:0
+
+Test mbedtls_mpi_core_io_be #13 (Zero, empty input)
+mpi_core_io_be:"":1:1:0:0
+
+Test mbedtls_mpi_core_io_be #14 (One)
+mpi_core_io_be:"01":1:1:0:0
+
+Test mbedtls_mpi_core_io_be #15 (One limb, 32 bit)
+depends_on:MBEDTLS_HAVE_INT32
+mpi_core_io_be:"ff000000":4:1:0:0
+
+Test mbedtls_mpi_core_io_be #16 (One limb, 64 bit)
+depends_on:MBEDTLS_HAVE_INT64
+mpi_core_io_be:"ff00000000000000":8:2:0:0
+
+Test mbedtls_mpi_core_io_be #17 (not enough limbs, input limb-aligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:22:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:0
+
+Test mbedtls_mpi_core_io_be #18 (not enough limbs, input unaligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:22:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:0
+
+Test mbedtls_mpi_core_io_be #19 (buffer too small, input limb-aligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":95:24:0:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL
+
+Test mbedtls_mpi_core_io_be #20 (buffer too small, input unaligned)
+mpi_core_io_be:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":93:24:0:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL
+
+Test mbedtls_mpi_core_io_be #21 (Buffer and limbs fit, input unaligned, odd number of limbs)
+mpi_core_io_be:"00de4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":82:21:0:0
+
+Test mbedtls_mpi_core_io_le #1 (Buffer and limbs just fit, input limb-aligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:24:0:0
+
+Test mbedtls_mpi_core_io_le #2  (Buffer and limbs just fit, input unaligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:24:0:0
+
+Test mbedtls_mpi_core_io_le #3 (Buffer just fits, extra limbs, input limb-aligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:28:0:0
+
+Test mbedtls_mpi_core_io_le #4 (Buffer just fits, extra limbs, input unaligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:28:0:0
+
+Test mbedtls_mpi_core_io_le #5 (Extra limbs, buffer aligned to extra limbs, input limb-aligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":112:28:0:0
+
+Test mbedtls_mpi_core_io_le #6 (Extra limbs, buffer aligned to extra limbs, input unaligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":112:28:0:0
+
+Test mbedtls_mpi_core_io_le #7 (Buffer and limbs just fit, input limb-aligned with leading zeroes)
+mpi_core_io_le:"1fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b44240000000000000000":88:24:0:0
+
+Test mbedtls_mpi_core_io_le #8 (Buffer and limbs just fit, input unaligned with leading zeroes)
+mpi_core_io_le:"1fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b0000000000000000":86:24:0:0
+
+Test mbedtls_mpi_core_io_le #9 (Buffer just fits, extra limbs, input limb-aligned with leading zeroes)
+mpi_core_io_le:"1fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b44240000000000000000":88:28:0:0
+
+Test mbedtls_mpi_core_io_le #10 (Buffer just fits, extra limbs, input unaligned with leading zeroes)
+mpi_core_io_le:"1fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b0000000000000000":86:28:0:0
+
+Test mbedtls_mpi_core_io_le #11 (Zero)
+mpi_core_io_le:"00":1:1:0:0
+
+Test mbedtls_mpi_core_io_le #12 (Zero, empty output)
+mpi_core_io_le:"00":0:1:0:0
+
+Test mbedtls_mpi_core_io_le #13 (Zero, empty input)
+mpi_core_io_le:"":1:1:0:0
+
+Test mbedtls_mpi_core_io_le #14 (One)
+mpi_core_io_le:"01":1:1:0:0
+
+Test mbedtls_mpi_core_io_le #15 (One limb)
+depends_on:MBEDTLS_HAVE_INT32
+mpi_core_io_le:"000000ff":4:1:0:0
+
+Test mbedtls_mpi_core_io_le #16 (One limb)
+depends_on:MBEDTLS_HAVE_INT64
+mpi_core_io_le:"00000000000000ff":8:2:0:0
+
+Test mbedtls_mpi_core_io_le #17 (not enough limbs, input limb-aligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":96:22:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:0
+
+Test mbedtls_mpi_core_io_le #18 (not enough limbs, input unaligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":94:22:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:0
+
+Test mbedtls_mpi_core_io_le #19 (buffer too small, input limb-aligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":95:24:0:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL
+
+Test mbedtls_mpi_core_io_le #20 (buffer too small, input unaligned)
+mpi_core_io_le:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b":93:24:0:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL
+
+Test mbedtls_mpi_core_io_le #21 (Buffer and limbs fit, input unaligned, odd number of limbs)
+mpi_core_io_le:"de4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b442400":82:21:0:0
+
+Test mbedtls_mpi_core_bitlen 764-bit
+mpi_core_bitlen:"941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":764
+
+Test mbedtls_mpi_core_bitlen 0x18
+mpi_core_bitlen:"18":5
+
+Test mbedtls_mpi_core_bitlen 0x18 with leading 0 limb(s)
+mpi_core_bitlen:"00000000000000018":5
+
+Test mbedtls_mpi_core_bitlen 0x18 << 64
+mpi_core_bitlen:"180000000000000000":69
+
+Test mbedtls_mpi_core_bitlen 0x01
+mpi_core_bitlen:"1":1
+
+Test mbedtls_mpi_core_bitlen 0x0f
+mpi_core_bitlen:"f":4
+
+Test mbedtls_mpi_core_bitlen 0x10
+mpi_core_bitlen:"10":5
+
+Test mbedtls_mpi_core_bitlen 0x0a
+mpi_core_bitlen:"a":4
+
+Test mbedtls_mpi_core_bitlen: 0 (1 limb)
+mpi_core_bitlen:"0":0
+
+mbedtls_mpi_core_lt_ct: x=y (1 limb)
+mpi_core_lt_ct:"2B5":"2B5":0
+
+mbedtls_mpi_core_lt_ct: x>y (1 limb)
+mpi_core_lt_ct:"2B5":"2B4":0
+
+mbedtls_mpi_core_lt_ct: x<y (1 limb)
+mpi_core_lt_ct:"2B5":"2B6":1
+
+mbedtls_mpi_core_lt_ct: x>y (63 bit x, y first byte greater)
+mpi_core_lt_ct:"7FFFFFFFFFFFFFFF":"00000000000000FF":0
+
+mbedtls_mpi_core_lt_ct: x<y (63 bit y, x first byte greater)
+mpi_core_lt_ct:"00000000000000FF":"7FFFFFFFFFFFFFFF":1
+
+mbedtls_mpi_core_lt_ct: x>y (64 bit x, y=x-1)
+mpi_core_lt_ct:"8000000000000000":"7FFFFFFFFFFFFFFF":0
+
+mbedtls_mpi_core_lt_ct: x<y (64 bit y, x=y-1)
+mpi_core_lt_ct:"7FFFFFFFFFFFFFFF":"8000000000000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (64 bit x, y=1)
+mpi_core_lt_ct:"8000000000000000":"0000000000000001":0
+
+mbedtls_mpi_core_lt_ct: x<y (64 bit y, x=1)
+mpi_core_lt_ct:"0000000000000001":"8000000000000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (64 bit x, y=0)
+mpi_core_lt_ct:"8000000000000000":"0000000000000000":0
+
+mbedtls_mpi_core_lt_ct: x<y (64 bit y, x=0)
+mpi_core_lt_ct:"0000000000000000":"8000000000000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (64 bit x, first bytes equal)
+mpi_core_lt_ct:"FFFFFFFFFFFFFFFF":"00000000000000FF":0
+
+mbedtls_mpi_core_lt_ct: x<y (64 bit y, first bytes equal)
+mpi_core_lt_ct:"00000000000000FF":"FFFFFFFFFFFFFFFF":1
+
+mbedtls_mpi_core_lt_ct: x>y (31 bit x, y first byte greater)
+mpi_core_lt_ct:"7FFFFFFF":"000000FF":0
+
+mbedtls_mpi_core_lt_ct: x<y (31 bit y, x first byte greater)
+mpi_core_lt_ct:"000000FF":"7FFFFFFF":1
+
+mbedtls_mpi_core_lt_ct: x>y (32 bit x, y=x-1)
+mpi_core_lt_ct:"80000000":"7FFFFFFF":0
+
+mbedtls_mpi_core_lt_ct: x<y (32 bit y, x=y-1)
+mpi_core_lt_ct:"7FFFFFFF":"80000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (32 bit x, y=1)
+mpi_core_lt_ct:"80000000":"00000001":0
+
+mbedtls_mpi_core_lt_ct: x<y (32 bit y, x=1)
+mpi_core_lt_ct:"00000001":"80000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (32 bit x, y=0)
+mpi_core_lt_ct:"80000000":"00000000":0
+
+mbedtls_mpi_core_lt_ct: x<y (32 bit y, x=0)
+mpi_core_lt_ct:"00000000":"80000000":1
+
+mbedtls_mpi_core_lt_ct: x>y (32 bit x, first bytes equal)
+mpi_core_lt_ct:"FFFFFFFF":"000000FF":0
+
+mbedtls_mpi_core_lt_ct: x<y (32 bit y, first bytes equal)
+mpi_core_lt_ct:"000000FF":"FFFFFFFF":1
+
+mbedtls_mpi_core_lt_ct: x<y, zero vs non-zero MS limb
+mpi_core_lt_ct:"0FFFFFFFFFFFFFFFF":"1FFFFFFFFFFFFFFFF":1
+
+mbedtls_mpi_core_lt_ct: x>y, equal MS limbs
+mpi_core_lt_ct:"EEFFFFFFFFFFFFFFFF":"EEFFFFFFFFFFFFFFF1":0
+
+mbedtls_mpi_core_lt_ct: x=y (multi-limb)
+mpi_core_lt_ct:"EEFFFFFFFFFFFFFFFF":"EEFFFFFFFFFFFFFFFF":0
+
+mbedtls_mpi_core_lt_ct: x<y (alternating limbs)
+mpi_core_lt_ct:"11FFFFFFFFFFFFFFFF":"FF1111111111111111":1
+
+mbedtls_mpi_core_lt_ct: x>y (alternating limbs)
+mpi_core_lt_ct:"FF1111111111111111":"11FFFFFFFFFFFFFFFF":0
+
+Test mbedtls_mpi_core_uint_le_mpi: 0 (1 limb)
+mpi_core_uint_le_mpi:"00"
+
+Test mbedtls_mpi_core_uint_le_mpi: 0 (>=2 limbs)
+mpi_core_uint_le_mpi:"000000000000000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 1 (1 limb)
+mpi_core_uint_le_mpi:"01"
+
+Test mbedtls_mpi_core_uint_le_mpi: 1 (>=2 limbs)
+mpi_core_uint_le_mpi:"000000000000000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 42 (1 limb)
+mpi_core_uint_le_mpi:"2a"
+
+Test mbedtls_mpi_core_uint_le_mpi: 42 (>=2 limbs)
+mpi_core_uint_le_mpi:"000000000000000042"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^31-1
+mpi_core_uint_le_mpi:"7fffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^31-1 with leading zero limb
+mpi_core_uint_le_mpi:"00000000007fffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32-1
+mpi_core_uint_le_mpi:"ffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32-1 with leading zero limb
+mpi_core_uint_le_mpi:"0000000000ffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32
+mpi_core_uint_le_mpi:"10000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32 with leading zero limb
+mpi_core_uint_le_mpi:"000000000010000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32+1
+mpi_core_uint_le_mpi:"10000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32+1 with leading zero limb
+mpi_core_uint_le_mpi:"000000000010000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^63-1
+mpi_core_uint_le_mpi:"7fffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^63-1 with leading zero limb
+mpi_core_uint_le_mpi:"007fffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64-1
+mpi_core_uint_le_mpi:"ffffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64-1 with leading zero limb
+mpi_core_uint_le_mpi:"00ffffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64
+mpi_core_uint_le_mpi:"010000000000000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64+1
+mpi_core_uint_le_mpi:"010000000000000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64+2
+mpi_core_uint_le_mpi:"010000000000000002"
+
+mbedtls_mpi_core_cond_assign: 1 limb
+mpi_core_cond_assign:"FFFFFFFF":"11111111":4
+
+mbedtls_mpi_core_cond_assign: more limbs #1
+mpi_core_cond_assign:"00000000FFFFFFFF55555555AAAAAAAA":"0123456789ABCDEF0123456789ABCDEF":16
+
+mbedtls_mpi_core_cond_assign: more limbs #2
+mpi_core_cond_assign:"11111111EEEEEEEE77777777CCCCCCCC":"FEDCBA9876543210FEDCBA9876543210":16
+
+mbedtls_mpi_core_cond_assign: more limbs #3
+mpi_core_cond_assign:"562D2B7E83BDC6FF783CEC0D6F46EAE7":"4C314E3B5CEB009C25F3300D5ECF670A":16
+
+mbedtls_mpi_core_cond_assign: copy 256 bytes of limbs
+mpi_core_cond_assign:"00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF":"6E3173EEAC8D68A5AB53D259F32D9E9C298FD2C4FAD3BEE9151DC103EA2382F5480C7D11F451C060A1E3D887E05A620EF6395763CB7A40FC473DD0771456A018E18635EA971C36DCAD09D60E8BD0E2E0CCD1AECB8BE0ABA881DBE60163F6C45947EC0B05FDAAA3DF944627DD4FACBAD3FF2AB4B99D91E548C06A4AF320A9CA0D2FD0CB19B90B9D6A8BF59CB631DD925B6DEA621FE962099D3D0BED6B13C0C546DC6B563A7FC63B1B77D277897DD7B9DF28C4C9213A183B83D982964C6AD8192CE7354B11ED727EDEF85074C46E4E2E6C1728FB7980385CDB36512F927847C6A14A118624ABC12B09DBEE60D651B5431AAD982228C61655EABB80C263871AE1CF":256
+
+mbedtls_mpi_core_cond_assign: copy half of the limbs
+mpi_core_cond_assign:"00000000FFFFFFFF55555555AAAAAAAA":"FEDCBA9876543210FEDCBA9876543210":8
+
+mbedtls_mpi_core_cond_swap: same value
+mpi_core_cond_swap:"FFFFFFFF":"FFFFFFFF":4
+
+mbedtls_mpi_core_cond_swap: 1 limb
+mpi_core_cond_swap:"FFFFFFFF":"11111111":4
+
+mbedtls_mpi_core_cond_swap: more limbs #1
+mpi_core_cond_swap:"00000000FFFFFFFF55555555AAAAAAAA":"0123456789ABCDEF0123456789ABCDEF":16
+
+mbedtls_mpi_core_cond_swap: more limbs #2
+mpi_core_cond_swap:"11111111EEEEEEEE77777777CCCCCCCC":"FEDCBA9876543210FEDCBA9876543210":16
+
+mbedtls_mpi_core_cond_swap: more limbs #3
+mpi_core_cond_swap:"562D2B7E83BDC6FF783CEC0D6F46EAE7":"4C314E3B5CEB009C25F3300D5ECF670A":16
+
+mbedtls_mpi_core_cond_swap: copy 256 bytes of limbs
+mpi_core_cond_swap:"00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF00000000111111112222222233333333444444445555555566666666777777778888888899999999AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFF":"9FBBA284460D8EAB5E0D66B634BD18FBA58C0C25417DD637526A7622C6425B46E09AEFBB8C2340AC823DFE990A62C85DB23BCDBEA734134606CEEB4BCF7444569D5EC4E32341ED09D7A5D0BB8B11D7B726BAECCF37D4FC1BEBD892CADD7BE9E093343C1A68D7A188DFE145C1EDBD8048B24E20A076F981D75ABE44318ADC40ED316C444774B6A90D3EE49557315AA6FAB162A498C0B2E2C15BD94186A665E12DDC39211583FA5F21218A3B46999FEBA4DFF454FB6ED35B8F3AE5F8EA840838BD76006DA112F85EDAA2CC07518FFC9724D5695BAF74F16C8D1A3A06029D2F5C1023D9E8A84D1267BD9AF82D1F5F77092D34BE4E8C4D1EA8C58F90B094DCFD6920":256
+
+mbedtls_mpi_core_cond_swap: copy half of the limbs
+mpi_core_cond_swap:"00000000FFFFFFFF55555555AAAAAAAA":"FEDCBA9876543210FEDCBA9876543210":8
+
+mbedtls_mpi_montg_init #1
+mpi_montg_init:"000000000000001d":"cb08d3dcb08d3dcb"
+
+mbedtls_mpi_montg_init #2
+mpi_montg_init:"0000000000000009":"71c71c71c71c71c7"
+
+mbedtls_mpi_montg_init #3
+mpi_montg_init:"000000000001869f":"34d76bc8e5e3eaa1"
+
+mbedtls_mpi_montg_init #4
+mpi_montg_init:"00000000000080000000000000000001":"ffffffffffffffff"
+
+mbedtls_mpi_montg_init #5
+mpi_montg_init:"0000000000a1ffffffffffffffffffff":"0000000000000001"
+
+mbedtls_mpi_montg_init #6
+mpi_montg_init:"00000000000257ffffffffffffffffff":"0000000000000001"
+
+mbedtls_mpi_montg_init #7
+mpi_montg_init:"b91ba63180c726fbd57786f27f1ede97a3b40c59a7fcfb5898f076e9af57028d":"32edc7e1ac2e6fbb"
+
+mbedtls_mpi_montg_init #8
+mpi_montg_init:"b3a119602ee213cde28581ecd892e0f592a338655dce4ca88054b3d124d0e561":"e41cfb909805815f"
+
+mbedtls_mpi_montg_init #9
+mpi_montg_init:"0284139ea19c139ebe09a8111926aaa39a2c2be12ed487a809d3cb5bc55854725b4cdcb5734c58f90b2f60d99cc1950cdbc8d651793e93c9c6f0ead752500a32c56c62082912b66132b2a6aa42ada923e1ad22ceb7ba0123":"c02e2164b293c975"
+
+mbedtls_mpi_montg_init #10
+mpi_montg_init:"00000000000000011a9351d2d32ccd568e75bf8b4ebbb2a36be691b55832edac662ff79803df8af525fba453068be16ac3920bcc1b468f8f7fe786e0fa4ecbabcad31e5e3b05def802eb8600deaf11ef452487db878df20a80606e4bb6a163b83895d034cc8b53dbcd005be42ffdd2ce99bed06089a0b79d":"ffec8978c055794b"
+
+mbedtls_mpi_montg_init #11
+mpi_montg_init:"eeaf0ab9adb38dd69c33f80afa8fc5e86072618775ff3c0b9ea2314c9c256576d674df7496ea81d3383b4813d692c6e0e0d5d8e250b98be48e495c1d6089dad15dc7d7b46154d6b6ce8ef4ad69b15d4982559b297bcf1885c529f566660e57ec68edbc3c05726cc02fd4cbf4976eaa9afd5138fe8376435b9fc61d2fc0eb06e3":"7b07a0b0379b9135"
+
+mbedtls_mpi_montg_init #12
+mpi_montg_init:"00000007a364ab3de755f924642bd5273524234f78395da1ed9098f39af4fe248288b0cb7f1c27214588969479d7dc9f0d327b5544dd4c095aa1fa271df421fe9ee460855cc8423d223e2c85dc793f6babdca7fc804ea1f408f867db053bfd98c45085ea5d805c78d2863bacdfcaf4c6147ebb74a9056045074785714c0b84ed":"8f54b233c070871b"
+
+mbedtls_mpi_montg_init #13
+mpi_montg_init:"e2df85c83ee8463b3af26805791cc0b1ba1af89564e887a63d5ba18ea72fb593b664cf8ace78241ea3109b7644510e02324a5c1e9a85daada3c383759d7678ce8d8886b51a3237dc84b543de4f843c77fc77ba08ef90e7e96ba622478f6b96daa3e9b8511f36279fb0120ef93bad2090e7878346fe4ae29ad61be48b6835e8407d0849422e05c7a4d1e02322f2675056d73d4c5a1ab376bfaccfd61ff7d64b715c9525a7ed8dcda1144f8722c30d12ba3d95221d897edc825a1598a645e2c457":"b777a905d9239899"
+
+mbedtls_mpi_montg_init #14
+mpi_montg_init:"baea2d65939296fc2536f18f2a4042a741f33088ecd5000e76c67a466e7a1e696f8ee9a15497168b3a2b597799dc9475909ebbc64b96f233430c6aa3e4a86e9352b0230081502da09ef41dc0a164a1c6a31bd1338e359a28c78ef50c89f06a46b46a27d7245bba7468334625687201d62ef084de4c5190dfe70c14a318204492de6edd138e14e9337fda739dcadd0212302db7770de28d8c5c79b6a6b5f927e656e157cd7e41204ec39731fe3608ecd4b885a194647fe7f02b74639cc76cdf03":"827ef0810f71fc55"
+
+mbedtls_mpi_montg_init #15
+mpi_montg_init:"bf741f75e28a44e271cf43e68dbadd23c72d2f2e1fc78a6d6aaaadf2ccbf26c9a232aff5b3f3f29323b114f3018144ed9438943e07820e222137d3bb229b61671e61f75f6021a26436df9e669929fa392df021f105d2fce0717468a522018721ccde541b9a7b558128419f457ef33a5753f00c20c2d709727eef6278c55b278b10abe1d13e538514128b5dcb7bfd015e0fdcb081555071813974135d5ab5000630a94f5b0f4021a504ab4f3df2403e6140b9939f8bbe714635f5cff10744be03":"aab901da57bba355"
+
+mbedtls_mpi_core_get_mont_r2_unsafe_neg
+mpi_core_get_mont_r2_unsafe_neg:
+
+mbedtls_mpi_core_get_mont_r2_unsafe #1
+mpi_core_get_mont_r2_unsafe:"f":"1":"1"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #2
+mpi_core_get_mont_r2_unsafe:"fd":"ec":"24"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #3
+mpi_core_get_mont_r2_unsafe:"eeff99aa37":"a23bd6a686":"a23bd6a686"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #4
+mpi_core_get_mont_r2_unsafe:"eeff99aa11":"3308cb71":"3308cb71"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #5
+mpi_core_get_mont_r2_unsafe:"800000000005":"6400000000":"6400000000"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #6
+mpi_core_get_mont_r2_unsafe:"7fffffffffffffff":"4":"4"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #7
+mpi_core_get_mont_r2_unsafe:"80fe000a10000001":"5dbc6e833bad575a":"5dbc6e833bad575a"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #8
+mpi_core_get_mont_r2_unsafe:"25a55a46e5da99c71c7":"11637ce1347edeaf669":"1e455bf7451c05bc711"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #9
+mpi_core_get_mont_r2_unsafe:"314dc643fb763f2b8c0e2de00879":"1058ad82120c3a10196bb36229c1":"1058ad82120c3a10196bb36229c1"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #10
+mpi_core_get_mont_r2_unsafe:"8335616aed761f1f7f44e6bd49e807b82e3bf2bf11bfa63":"5d96a26447dca0cb7209c048f9e63e8dc623d67c8f44396":"5d96a26447dca0cb7209c048f9e63e8dc623d67c8f44396"
+
+mbedtls_mpi_core_get_mont_r2_unsafe #11
+mpi_core_get_mont_r2_unsafe:"d1cece570f2f991013f26dd5b03c4c5b65f97be5905f36cb4664f2c78ff80aa8135a4aaf57ccb8a0aca2f394909a74cef1ef6758a64d11e2c149c393659d124bfc94196f0ce88f7d7d567efa5a649e2deefaa6e10fdc3deac60d606bf63fc540ac95294347031aefd73d6a9ee10188aaeb7a90d920894553cb196881691cadc51808715a07e8b24fcb1a63df047c7cdf084dd177ba368c806f3d51ddb5d3898c863e687ecaf7d649a57a46264a582f94d3c8f2edaf59f77a7f6bdaf83c991e8f06abe220ec8507386fce8c3da84c6c3903ab8f3ad4630a204196a7dbcbd9bcca4e40ec5cc5c09938d49f5e1e6181db8896f33bb12e6ef73f12ec5c5ea7a8a337":"12d7243d92ebc8338221f6dcec8ad8a2ec64c10a98339c8721beb1cb79e629253a7aa35e25d5421e6c2b43ddc4310cf4443875c070a7a5a5cc2c4c3eefa8a133af2e477fb7bb5b5058c6120946a7f9f08f2fab51e2f243b9ba206d2bfd62e4ef647dda49100d7004794f28172be2d715905fbd2e9ab8588c774523c0e096b49b6855a10e5ce0d8498370949a29d71d293788bf10a71e2447d4b2f11959a72f7290e2950772d14c83f15532468745fa58a83fca8883b0b6169a27ec0cf922c4f39d283bb20fca5ff1de01d9c66b8a710108b951af634d56c843d9505bf2edd5a7b8f0b72a5c95672151e60075a78084e83fbe284617a90c74c8335cce38bb012e":"12d7243d92ebc8338221f6dcec8ad8a2ec64c10a98339c8721beb1cb79e629253a7aa35e25d5421e6c2b43ddc4310cf4443875c070a7a5a5cc2c4c3eefa8a133af2e477fb7bb5b5058c6120946a7f9f08f2fab51e2f243b9ba206d2bfd62e4ef647dda49100d7004794f28172be2d715905fbd2e9ab8588c774523c0e096b49b6855a10e5ce0d8498370949a29d71d293788bf10a71e2447d4b2f11959a72f7290e2950772d14c83f15532468745fa58a83fca8883b0b6169a27ec0cf922c4f39d283bb20fca5ff1de01d9c66b8a710108b951af634d56c843d9505bf2edd5a7b8f0b72a5c95672151e60075a78084e83fbe284617a90c74c8335cce38bb012e"
+
+Fill random core: 0 bytes
+mpi_core_fill_random:0:0:1:0:0
+
+Fill random core: 1 byte, RNG stops at 0
+mpi_core_fill_random:1:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 1 byte, RNG just sufficient
+mpi_core_fill_random:1:0:0:0:0
+
+Fill random core: 1 byte, RNG not exhausted
+mpi_core_fill_random:1:1:0:0:0
+
+Fill random core: 1 byte, prior content nonzero
+mpi_core_fill_random:1:0:0:0xba:0
+
+Fill random core: 1 byte, 1 extra limb
+mpi_core_fill_random:1:0:1:0:0
+
+Fill random core: 1 byte, 1 extra limb, prior content nonzero
+mpi_core_fill_random:1:0:1:0xba:0
+
+Fill random core: 8 bytes, RNG stops before
+mpi_core_fill_random:8:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 8 bytes, RNG just sufficient
+mpi_core_fill_random:8:0:0:0:0
+
+Fill random core: 8 bytes, RNG not exhausted
+mpi_core_fill_random:8:1:0:0:0
+
+Fill random core: 8 bytes, prior content nonzero
+mpi_core_fill_random:8:0:0:0xba:0
+
+Fill random core: 8 bytes, 1 extra limb
+mpi_core_fill_random:8:0:1:0:0
+
+Fill random core: 8 bytes, 1 extra limb, prior content nonzero
+mpi_core_fill_random:8:0:1:0xba:0
+
+Fill random core: 9 bytes, 1 missing limb
+mpi_core_fill_random:9:0:-1:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+Fill random core: 42 bytes, RNG stops before
+mpi_core_fill_random:42:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 42 bytes, RNG just sufficient
+mpi_core_fill_random:42:0:0:0:0
+
+Fill random core: 42 bytes, RNG not exhausted
+mpi_core_fill_random:42:1:0:0:0
+
+Fill random core: 42 bytes, prior content nonzero
+mpi_core_fill_random:42:0:0:0xba:0
+
+Fill random core: 42 bytes, 1 extra limb
+mpi_core_fill_random:42:0:1:0:0
+
+Fill random core: 42 bytes, 1 extra limb, prior content nonzero
+mpi_core_fill_random:42:0:1:0xba:0
+
+Fill random core: 42 bytes, 1 missing limb
+mpi_core_fill_random:42:0:-1:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+Fill random core: 42 bytes, 5 missing limbs
+mpi_core_fill_random:42:0:-5:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+CLZ: 0 0: all ones
+mpi_core_clz:0:0
+
+CLZ: 1 0
+mpi_core_clz:1:0
+
+CLZ: 1 1
+mpi_core_clz:1:1
+
+CLZ: 4 5
+mpi_core_clz:4:5
+
+CLZ: 8 16
+mpi_core_clz:8:16
+
+CLZ: 31 0
+mpi_core_clz:31:0
+
+CLZ: 32 0
+mpi_core_clz:32:0
+
+CLZ: 33 0
+mpi_core_clz:33:0
+
+CLZ: 63 0
+mpi_core_clz:63:0
+
+CLZ: 64 0
+mpi_core_clz:64:0
+
+CLZ: 100000 0: skip overly long input
+mpi_core_clz:100000:0
+
+Parse raw ASN.1 integer, correct encoding, small
+asn1_get_and_parse_integer:"020107":0:"07"
+
+Parse raw ASN.1 integer, correct encoding, > SIZE_MAX
+asn1_get_and_parse_integer:"0209010000000000000000":0:"010000000000000000"
+
+Parse raw ASN.1 integer, negative, should return unsuccessfully
+asn1_get_and_parse_integer:"0201ff":MBEDTLS_ERR_ASN1_INVALID_DATA:""
+
+Parse raw ASN.1 integer, multibyte length (256)
+asn1_get_and_parse_integer:"028201000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef":0:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+Parse raw ASN.1 integer, correct encoding, more data than needed
+asn1_get_and_parse_integer:"02010707":0:"07"
+
+asn_write TC2 Output buffer less than minimum size of 3
+encode_decode_asn1_bignum:"1234567891234567":1:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC3 Output buffer too small for integer
+encode_decode_asn1_bignum:"1234567891234567":4:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC4 Output buffer too small for frame
+encode_decode_asn1_bignum:"1234567891234567":8:MBEDTLS_ERR_ASN1_BUF_TOO_SMALL
+
+asn_write TC5 Large output buffer
+encode_decode_asn1_bignum:"1234567891234567":11:10
+
+asn_write TC6 Basic test positive
+encode_decode_asn1_bignum:"1234567891234567":10:10
+
+asn_write TC11 X.690-0207 Clause 8.3.2 1's
+encode_decode_asn1_bignum:"FF01456789123456":11:11
+
+asn_write TC12 X.690-0207 Clause 8.3.2 leading zero's
+encode_decode_asn1_bignum:"0023456789123456":10:9
+
+GCD-modinv random 80-bit, non-trivial GCD -> no inverse
+mpi_core_gcd_modinv_odd:"e4518a1900fce698fa3":"1a84113636607520200d":"3":""
+
+GCD-modinv random 80-bit, trivial GCD -> inverse
+mpi_core_gcd_modinv_odd:"7f2405d6de7db80a7bc":"1a84113636607520200d":"1":"15f158844a59cd7a3ed2"
+
+# This data results in the gcd-modinv loop converging to its final state
+# only in the last iteration. See python script in commit message.
+GCD-modinv (almost) max iterations
+mpi_core_gcd_modinv_odd:"8000000000000000":"b26eb5721a2cb24c36acb4550b176671":"1":"77e1dd63583a6b3c8deefe7737862c89"
+
+GCD-modinv preconditions not met
+mpi_core_gcd_modinv_odd_preconditions:
+
+Div2 mod odd: even value
+mpi_core_div2_mod_odd:"4":"7":"2"
+
+Div2 mod odd: odd value, no carry
+mpi_core_div2_mod_odd:"5":"7":"6"
+
+Div2 mod odd: odd value with carry
+mpi_core_div2_mod_odd:"8000000000000001":"8000000000000003":"8000000000000002"
+
+Div2 mod odd: even value with top bit set
+mpi_core_div2_mod_odd:"8000000000000002":"8000000000000003":"4000000000000001"

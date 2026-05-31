@@ -1,0 +1,17 @@
+{# One Shot function's dispatch code for opaque drivers.
+Expected inputs:
+* drivers: the list of driver descriptions.
+* entry_point: the name of the entry point that this function dispatches to.
+* entry_point_param(driver): the parameters to pass to the entry point.
+* nest_indent: number of extra spaces to indent the code to.
+-#}
+{% for driver in drivers if driver.type == "opaque" -%}
+{% for capability in driver.capabilities if entry_point in capability.entry_points -%}
+#if ({% if capability['mbedtls/c_condition'] is defined -%}{{ capability['mbedtls/c_condition'] }} {% else -%} {{ 1 }} {% endif %})
+{%- filter indent(width = nest_indent) %}
+case {{ driver.location }}:
+    return( {{ entry_point_name(capability, entry_point, driver) }}({{entry_point_param(driver) | indent(20)}}));
+{% endfilter -%}
+#endif
+{% endfor %}
+{% endfor %}

@@ -1,0 +1,62 @@
+Block xor, length 0
+mbedtls_xor:0
+
+Block xor, length 1
+mbedtls_xor:1
+
+Block xor, length 3
+mbedtls_xor:3
+
+Block xor, length 4
+mbedtls_xor:4
+
+Block xor, length 7
+mbedtls_xor:7
+
+Block xor, length 8
+mbedtls_xor:8
+
+Block xor, length 16
+mbedtls_xor:16
+
+Block xor, length 64
+mbedtls_xor:64
+
+Block xor, length 256
+mbedtls_xor:256
+
+Block xor, length 257
+mbedtls_xor:257
+
+Block xor, length 16+8
+mbedtls_xor:24
+
+Block xor, length 16+8+4
+mbedtls_xor:28
+
+Block xor, length 16+8+4+1
+mbedtls_xor:29
+
+Block xor, length 16+8+1
+mbedtls_xor:25
+
+Block xor, length 16+4
+mbedtls_xor:20
+
+Block xor, length 16+4+1
+mbedtls_xor:21
+
+Block xor, length 16+1
+mbedtls_xor:17
+
+Block xor, length 8+4
+mbedtls_xor:12
+
+Block xor, length 8+4+1
+mbedtls_xor:13
+
+Block xor, length 8+1
+mbedtls_xor:9
+
+Block xor, length 4+1
+mbedtls_xor:5

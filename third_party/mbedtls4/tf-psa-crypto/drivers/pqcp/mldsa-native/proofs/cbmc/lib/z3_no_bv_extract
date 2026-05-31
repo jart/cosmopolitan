@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Copyright (c) The mlkem-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+
+# Disable re-writing of bit-vector expressions within quantifiers.
+# Such re-writing can cause quantifier e-matching to fail in complex cases.
+z3 rewriter.bv_le2extract=false "$@"

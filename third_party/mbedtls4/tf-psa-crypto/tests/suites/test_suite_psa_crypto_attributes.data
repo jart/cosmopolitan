@@ -1,0 +1,24 @@
+PSA key attributes structure
+depends_on:PSA_WANT_ALG_CCM:PSA_WANT_KEY_TYPE_AES
+attributes_set_get:0xffff1234:0x6963:PSA_KEY_LIFETIME_PERSISTENT:PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT:PSA_ALG_CCM:PSA_KEY_TYPE_AES:128
+
+PSA key attributes: id only
+persistence_attributes:0x1234:0x5678:-1:-1:0:0x1234:0x5678:PSA_KEY_LIFETIME_PERSISTENT
+
+PSA key attributes: lifetime=3 only
+persistence_attributes:-1:0:3:-1:0:0:0:3
+
+PSA key attributes: id then back to volatile
+persistence_attributes:0x1234:0x5678:PSA_KEY_LIFETIME_VOLATILE:-1:0:0:0x5678:PSA_KEY_LIFETIME_VOLATILE
+
+PSA key attributes: id then back to non local volatile
+persistence_attributes:0x1234:0x5678:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_LIFETIME_VOLATILE,1):-1:0:0:0x5678:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_LIFETIME_VOLATILE,1)
+
+PSA key attributes: id then lifetime
+persistence_attributes:0x1234:0x5678:3:-1:0:0x1234:0x5678:3
+
+PSA key attributes: lifetime then id
+persistence_attributes:0x1234:0x5678:3:0x1235:0x5679:0x1235:0x5679:3
+
+PSA key attributes: non local volatile lifetime then id
+persistence_attributes:0x1234:0x5678:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_LIFETIME_VOLATILE,3):0x1235:0x5679:0x1235:0x5679:PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_LIFETIME_PERSISTENT,3)

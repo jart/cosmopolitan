@@ -1,0 +1,767 @@
+/* BEGIN_HEADER */
+/* Test macros that provide metadata about algorithms and key types.
+ * This test suite only contains tests that don't require executing
+ * code. Other test suites validate macros that require creating a key
+ * and using it. */
+
+#if defined(MBEDTLS_PSA_CRYPTO_SPM)
+#include "spm/psa_defs.h"
+#endif
+
+#include "psa/crypto.h"
+#include "psa_crypto_invasive.h"
+
+/* Flags for algorithm classification macros. There is a flag for every
+ * algorithm classification macro PSA_ALG_IS_xxx except for the
+ * category test macros, which are hard-coded in each
+ * category-specific function. The name of the flag is the name of the
+ * classification macro without the PSA_ prefix. */
+#define ALG_IS_VENDOR_DEFINED           (1u << 0)
+#define ALG_IS_HMAC                     (1u << 1)
+#define ALG_IS_BLOCK_CIPHER_MAC         (1u << 2)
+#define ALG_IS_STREAM_CIPHER            (1u << 3)
+#define ALG_IS_RSA_PKCS1V15_SIGN        (1u << 4)
+#define ALG_IS_RSA_PSS                  (1u << 5)
+#define ALG_IS_RSA_PSS_ANY_SALT         (1u << 6)
+#define ALG_IS_RSA_PSS_STANDARD_SALT    (1u << 7)
+#define ALG_IS_DSA                      (1u << 8)
+#define ALG_DSA_IS_DETERMINISTIC        (1u << 9)
+#define ALG_IS_DETERMINISTIC_DSA        (1u << 10)
+#define ALG_IS_RANDOMIZED_DSA           (1u << 11)
+#define ALG_IS_ECDSA                    (1u << 12)
+#define ALG_ECDSA_IS_DETERMINISTIC      (1u << 13)
+#define ALG_IS_DETERMINISTIC_ECDSA      (1u << 14)
+#define ALG_IS_RANDOMIZED_ECDSA         (1u << 15)
+#define ALG_IS_HASH_EDDSA               (1u << 16)
+#define ALG_IS_SIGN_HASH                (1u << 17)
+#define ALG_IS_HASH_AND_SIGN            (1u << 18)
+#define ALG_IS_RSA_OAEP                 (1u << 19)
+#define ALG_IS_HKDF                     (1u << 20)
+#define ALG_IS_HKDF_EXTRACT             (1u << 21)
+#define ALG_IS_HKDF_EXPAND              (1u << 22)
+#define ALG_IS_FFDH                     (1u << 23)
+#define ALG_IS_ECDH                     (1u << 24)
+#define ALG_IS_WILDCARD                 (1u << 25)
+#define ALG_IS_RAW_KEY_AGREEMENT        (1u << 26)
+#define ALG_IS_AEAD_ON_BLOCK_CIPHER     (1u << 27)
+#define ALG_IS_TLS12_PRF                (1u << 28)
+#define ALG_IS_TLS12_PSK_TO_MS          (1u << 29)
+#define ALG_FLAG_MASK_PLUS_ONE          (1u << 30)   /* must be last! */
+
+/* Flags for key type classification macros. There is a flag for every
+ * key type classification macro PSA_KEY_TYPE_IS_xxx except for some that
+ * are tested as derived from other macros. The name of the flag is
+ * the name of the classification macro without the PSA_ prefix. */
+#define KEY_TYPE_IS_VENDOR_DEFINED      (1u << 0)
+#define KEY_TYPE_IS_UNSTRUCTURED        (1u << 1)
+#define KEY_TYPE_IS_PUBLIC_KEY          (1u << 2)
+#define KEY_TYPE_IS_KEY_PAIR            (1u << 3)
+#define KEY_TYPE_IS_RSA                 (1u << 4)
+#define KEY_TYPE_IS_DSA                 (1u << 5)
+#define KEY_TYPE_IS_ECC                 (1u << 6)
+#define KEY_TYPE_IS_DH                  (1u << 7)
+#define KEY_TYPE_FLAG_MASK_PLUS_ONE     (1u << 8)   /* must be last! */
+
+/* Flags for lifetime classification macros. There is a flag for every
+ * lifetime classification macro PSA_KEY_LIFETIME_IS_xxx. The name of the
+ * flag is the name of the classification macro without the PSA_ prefix. */
+#define KEY_LIFETIME_IS_VOLATILE        (1u << 0)
+#define KEY_LIFETIME_IS_READ_ONLY       (1u << 1)
+#define KEY_LIFETIME_FLAG_MASK_PLUS_ONE (1u << 2)   /* must be last! */
+
+/* Check that in the value of flags, the bit flag (which should be a macro
+ * expanding to a number of the form 1 << k) is set if and only if
+ * PSA_##flag(alg) is true.
+ *
+ * Only perform this check if cond is true. Typically cond is 1, but it can
+ * be different if the value of the flag bit is only specified under specific
+ * conditions.
+ *
+ * Unconditionally mask flag into the ambient variable
+ * classification_flags_tested.
+ */
+#define TEST_CLASSIFICATION_MACRO(cond, flag, alg, flags)       \
+    do                                                          \
+    {                                                           \
+        if (cond)                                               \
+        {                                                       \
+            if ((flags) & (flag))                               \
+            TEST_ASSERT(PSA_##flag(alg));                       \
+            else                                                \
+            TEST_ASSERT(!PSA_##flag(alg));                      \
+        }                                                       \
+        classification_flags_tested |= (flag);                  \
+    }                                                           \
+    while (0)
+
+/* Check the parity of value.
+ *
+ * There are several numerical encodings for which the PSA Cryptography API
+ * specification deliberately defines encodings that all have the same
+ * parity. This way, a data glitch that flips one bit in the data cannot
+ * possibly turn a valid encoding into another valid encoding. Here in
+ * the tests, we check that the values (including Mbed TLS vendor-specific
+ * values) have the expected parity.
+ *
+ * The expected parity is even so that 0 is considered a valid encoding.
+ *
+ * Return a nonzero value if value has even parity and 0 otherwise. */
+static int has_even_parity(uint32_t value)
+{
+    value ^= value >> 16;
+    value ^= value >> 8;
+    value ^= value >> 4;
+    return 0x9669 & 1 << (value & 0xf);
+}
+#define TEST_PARITY(value)                    \
+    TEST_ASSERT(has_even_parity(value))
+
+static void algorithm_classification(psa_algorithm_t alg, unsigned flags)
+{
+    unsigned classification_flags_tested = 0;
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_VENDOR_DEFINED, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HMAC, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_BLOCK_CIPHER_MAC, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_STREAM_CIPHER, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PKCS1V15_SIGN, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS_ANY_SALT, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_PSS_STANDARD_SALT, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(PSA_ALG_IS_DSA(alg),
+                              ALG_DSA_IS_DETERMINISTIC, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DETERMINISTIC_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RANDOMIZED_DSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_ECDSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(PSA_ALG_IS_ECDSA(alg),
+                              ALG_ECDSA_IS_DETERMINISTIC, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_DETERMINISTIC_ECDSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RANDOMIZED_ECDSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HASH_EDDSA, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_SIGN_HASH, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HASH_AND_SIGN, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RSA_OAEP, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HKDF, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HKDF_EXTRACT, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_HKDF_EXPAND, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_WILDCARD, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_ECDH, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_FFDH, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_RAW_KEY_AGREEMENT, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_AEAD_ON_BLOCK_CIPHER, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_TLS12_PRF, alg, flags);
+    TEST_CLASSIFICATION_MACRO(1, ALG_IS_TLS12_PSK_TO_MS, alg, flags);
+    TEST_EQUAL(classification_flags_tested, ALG_FLAG_MASK_PLUS_ONE - 1);
+exit:;
+}
+
+static void key_type_classification(psa_key_type_t type, unsigned flags)
+{
+    unsigned classification_flags_tested = 0;
+
+    /* Macros tested based on the test case parameter */
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_VENDOR_DEFINED, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_UNSTRUCTURED, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_PUBLIC_KEY, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_KEY_PAIR, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_RSA, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_DSA, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_ECC, type, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_TYPE_IS_DH, type, flags);
+    TEST_EQUAL(classification_flags_tested, KEY_TYPE_FLAG_MASK_PLUS_ONE - 1);
+
+    /* Macros with derived semantics */
+    TEST_EQUAL(PSA_KEY_TYPE_IS_ASYMMETRIC(type),
+               (PSA_KEY_TYPE_IS_PUBLIC_KEY(type) ||
+                PSA_KEY_TYPE_IS_KEY_PAIR(type)));
+    TEST_EQUAL(PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type),
+               (PSA_KEY_TYPE_IS_ECC(type) &&
+                PSA_KEY_TYPE_IS_KEY_PAIR(type)));
+    TEST_EQUAL(PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(type),
+               (PSA_KEY_TYPE_IS_ECC(type) &&
+                PSA_KEY_TYPE_IS_PUBLIC_KEY(type)));
+    TEST_EQUAL(PSA_KEY_TYPE_IS_DH_KEY_PAIR(type),
+               (PSA_KEY_TYPE_IS_DH(type) &&
+                PSA_KEY_TYPE_IS_KEY_PAIR(type)));
+    TEST_EQUAL(PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(type),
+               (PSA_KEY_TYPE_IS_DH(type) &&
+                PSA_KEY_TYPE_IS_PUBLIC_KEY(type)));
+
+    TEST_PARITY(type);
+
+exit:;
+}
+
+static void mac_algorithm_core(psa_algorithm_t alg, int classification_flags,
+                               psa_key_type_t key_type, size_t key_bits,
+                               size_t length)
+{
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+
+    /* Length */
+    TEST_EQUAL(length, PSA_MAC_LENGTH(key_type, key_bits, alg));
+
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PSA_CRYPTO_C)
+    PSA_ASSERT(psa_mac_key_can_do(alg, key_type));
+#endif
+
+exit:;
+}
+
+static void aead_algorithm_core(psa_algorithm_t alg, int classification_flags,
+                                psa_key_type_t key_type, size_t key_bits,
+                                size_t tag_length)
+{
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+
+    /* Tag length */
+    TEST_EQUAL(tag_length, PSA_AEAD_TAG_LENGTH(key_type, key_bits, alg));
+
+exit:;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_CLIENT
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void hash_algorithm(int alg_arg, int length_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    size_t length = length_arg;
+    psa_algorithm_t hmac_alg = PSA_ALG_HMAC(alg);
+    psa_algorithm_t rsa_pkcs1v15_sign_alg = PSA_ALG_RSA_PKCS1V15_SIGN(alg);
+    psa_algorithm_t rsa_pss_alg = PSA_ALG_RSA_PSS(alg);
+    psa_algorithm_t dsa_alg = PSA_ALG_DSA(alg);
+    psa_algorithm_t deterministic_dsa_alg = PSA_ALG_DETERMINISTIC_DSA(alg);
+    psa_algorithm_t ecdsa_alg = PSA_ALG_ECDSA(alg);
+    psa_algorithm_t deterministic_ecdsa_alg = PSA_ALG_DETERMINISTIC_ECDSA(alg);
+    psa_algorithm_t rsa_oaep_alg = PSA_ALG_RSA_OAEP(alg);
+    psa_algorithm_t hkdf_alg = PSA_ALG_HKDF(alg);
+
+    /* Algorithm classification */
+    TEST_ASSERT(PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, 0);
+
+    /* Dependent algorithms */
+    TEST_EQUAL(PSA_ALG_HMAC_GET_HASH(hmac_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(rsa_pkcs1v15_sign_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(rsa_pss_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(dsa_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(deterministic_dsa_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(ecdsa_alg), alg);
+    TEST_EQUAL(PSA_ALG_SIGN_GET_HASH(deterministic_ecdsa_alg), alg);
+    TEST_EQUAL(PSA_ALG_RSA_OAEP_GET_HASH(rsa_oaep_alg), alg);
+    TEST_EQUAL(PSA_ALG_HKDF_GET_HASH(hkdf_alg), alg);
+
+    /* Hash length */
+    TEST_EQUAL(length, PSA_HASH_LENGTH(alg));
+    TEST_ASSERT(length <= PSA_HASH_MAX_SIZE);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mac_algorithm(int alg_arg, int classification_flags,
+                   int length_arg,
+                   int key_type_arg, int key_bits_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    size_t length = length_arg;
+    size_t n;
+    size_t key_type = key_type_arg;
+    size_t key_bits = key_bits_arg;
+
+    mac_algorithm_core(alg, classification_flags,
+                       key_type, key_bits, length);
+    TEST_EQUAL(PSA_ALG_FULL_LENGTH_MAC(alg), alg);
+    TEST_ASSERT(length <= PSA_MAC_MAX_SIZE);
+
+    /* Truncated versions */
+    for (n = 1; n <= length; n++) {
+        psa_algorithm_t truncated_alg = PSA_ALG_TRUNCATED_MAC(alg, n);
+        mac_algorithm_core(truncated_alg, classification_flags,
+                           key_type, key_bits, n);
+        TEST_EQUAL(PSA_ALG_FULL_LENGTH_MAC(truncated_alg), alg);
+        /* Check that calling PSA_ALG_TRUNCATED_MAC twice gives the length
+         * of the outer truncation (even if the outer length is smaller than
+         * the inner length). */
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(truncated_alg, 1),
+                   PSA_ALG_TRUNCATED_MAC(alg, 1));
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(truncated_alg, length - 1),
+                   PSA_ALG_TRUNCATED_MAC(alg, length - 1));
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(truncated_alg, length),
+                   PSA_ALG_TRUNCATED_MAC(alg, length));
+
+        /* Check that calling PSA_ALG_TRUNCATED_MAC on an algorithm
+         * earlier constructed with PSA_ALG_AT_LEAST_THIS_LENGTH_MAC gives the
+         * length of the outer truncation (even if the outer length is smaller
+         * than the inner length). */
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(
+                       PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(truncated_alg, n), 1),
+                   PSA_ALG_TRUNCATED_MAC(alg, 1));
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(
+                       PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(truncated_alg, n), length - 1),
+                   PSA_ALG_TRUNCATED_MAC(alg, length - 1));
+        TEST_EQUAL(PSA_ALG_TRUNCATED_MAC(
+                       PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(truncated_alg, n), length),
+                   PSA_ALG_TRUNCATED_MAC(alg, length));
+    }
+
+    /* At-leat-this-length versions */
+    for (n = 1; n <= length; n++) {
+        psa_algorithm_t policy_alg = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, n);
+        mac_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
+                           key_type, key_bits, n);
+        TEST_EQUAL(PSA_ALG_FULL_LENGTH_MAC(policy_alg), alg);
+        /* Check that calling PSA_ALG_AT_LEAST_THIS_LENGTH_MAC twice gives the
+         * length of the outer truncation (even if the outer length is smaller
+         * than the inner length). */
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(policy_alg, 1),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, 1));
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(policy_alg, length - 1),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, length - 1));
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(policy_alg, length),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, length));
+
+        /* Check that calling PSA_ALG_AT_LEAST_THIS_LENGTH_MAC on an algorithm
+         * earlier constructed with PSA_ALG_TRUNCATED_MAC gives the length of
+         * the outer truncation (even if the outer length is smaller than the
+         * inner length). */
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(
+                       PSA_ALG_TRUNCATED_MAC(policy_alg, n), 1),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, 1));
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(
+                       PSA_ALG_TRUNCATED_MAC(policy_alg, n), length - 1),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, length - 1));
+        TEST_EQUAL(PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(
+                       PSA_ALG_TRUNCATED_MAC(policy_alg, n), length),
+                   PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(alg, length));
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void hmac_algorithm(int alg_arg,
+                    int length_arg,
+                    int block_size_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t hash_alg = PSA_ALG_HMAC_GET_HASH(alg);
+    size_t block_size = block_size_arg;
+    size_t length = length_arg;
+    size_t n;
+
+    TEST_ASSERT(PSA_ALG_IS_HASH(hash_alg));
+    TEST_EQUAL(PSA_ALG_HMAC(hash_alg), alg);
+
+    TEST_ASSERT(block_size == PSA_HASH_BLOCK_LENGTH(alg));
+    TEST_ASSERT(block_size <= PSA_HMAC_MAX_HASH_BLOCK_SIZE);
+
+    test_mac_algorithm(alg_arg, ALG_IS_HMAC, length,
+                       PSA_KEY_TYPE_HMAC, PSA_BYTES_TO_BITS(length));
+
+    for (n = 1; n <= length; n++) {
+        psa_algorithm_t truncated_alg = PSA_ALG_TRUNCATED_MAC(alg, n);
+        TEST_EQUAL(PSA_ALG_HMAC_GET_HASH(truncated_alg), hash_alg);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void cipher_algorithm(int alg_arg, int classification_flags)
+{
+    psa_algorithm_t alg = alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void aead_algorithm(int alg_arg, int classification_flags,
+                    int tag_length_arg,
+                    int key_type_arg, int key_bits_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    size_t tag_length = tag_length_arg;
+    size_t n;
+    psa_key_type_t key_type = key_type_arg;
+    size_t key_bits = key_bits_arg;
+
+    aead_algorithm_core(alg, classification_flags,
+                        key_type, key_bits, tag_length);
+
+    /* Truncated versions */
+    for (n = 1; n <= tag_length; n++) {
+        psa_algorithm_t truncated_alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, n);
+        aead_algorithm_core(truncated_alg, classification_flags,
+                            key_type, key_bits, n);
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(truncated_alg),
+                   alg);
+        /* Check that calling PSA_ALG_AEAD_WITH_SHORTENED_TAG twice gives
+         * the length of the outer truncation (even if the outer length is
+         * smaller than the inner length). */
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(truncated_alg, 1),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(truncated_alg, tag_length - 1),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, tag_length - 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(truncated_alg, tag_length),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, tag_length));
+
+        /* Check that calling PSA_ALG_AEAD_WITH_SHORTENED_TAG on an algorithm
+         * earlier constructed with PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG
+         * gives the length of the outer truncation (even if the outer length is
+         * smaller than the inner length). */
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(
+                       PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(truncated_alg, n), 1),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(
+                       PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(truncated_alg,
+                                                                  n), tag_length - 1),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, tag_length - 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_SHORTENED_TAG(
+                       PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(truncated_alg, n), tag_length),
+                   PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg, tag_length));
+    }
+
+    /* At-leat-this-length versions */
+    for (n = 1; n <= tag_length; n++) {
+        psa_algorithm_t policy_alg = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, n);
+        aead_algorithm_core(policy_alg, classification_flags | ALG_IS_WILDCARD,
+                            key_type, key_bits, n);
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(policy_alg),
+                   alg);
+        /* Check that calling PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG twice
+         * gives the length of the outer truncation (even if the outer length is
+         * smaller than the inner length). */
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(policy_alg, 1),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(policy_alg, tag_length - 1),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, tag_length - 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(policy_alg, tag_length),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, tag_length));
+
+        /* Check that calling PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG on an
+         * algorithm earlier constructed with PSA_ALG_AEAD_WITH_SHORTENED_TAG
+         * gives the length of the outer truncation (even if the outer length is
+         * smaller than the inner length). */
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(
+                       PSA_ALG_AEAD_WITH_SHORTENED_TAG(policy_alg, n), 1),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(
+                       PSA_ALG_AEAD_WITH_SHORTENED_TAG(policy_alg, n), tag_length - 1),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, tag_length - 1));
+        TEST_EQUAL(PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(
+                       PSA_ALG_AEAD_WITH_SHORTENED_TAG(policy_alg, n), tag_length),
+                   PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(alg, tag_length));
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void asymmetric_signature_algorithm(int alg_arg, int classification_flags)
+{
+    psa_algorithm_t alg = alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void asymmetric_signature_wildcard(int alg_arg, int classification_flags)
+{
+    classification_flags |= ALG_IS_WILDCARD;
+    classification_flags |= ALG_IS_SIGN_HASH;
+    classification_flags |= ALG_IS_HASH_AND_SIGN;
+    test_asymmetric_signature_algorithm(alg_arg, classification_flags);
+    /* Any failure of this test function comes from
+     * asymmetric_signature_algorithm. Pacify -Werror=unused-label. */
+    goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void asymmetric_encryption_algorithm(int alg_arg, int classification_flags)
+{
+    psa_algorithm_t alg = alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_derivation_algorithm(int alg_arg, int classification_flags)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t ecdh_alg = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, alg);
+    psa_algorithm_t ffdh_alg = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, alg);
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+
+    /* Check combinations with key agreements */
+    TEST_ASSERT(PSA_ALG_IS_KEY_AGREEMENT(ecdh_alg));
+    TEST_ASSERT(PSA_ALG_IS_KEY_AGREEMENT(ffdh_alg));
+    TEST_EQUAL(PSA_ALG_KEY_AGREEMENT_GET_KDF(ecdh_alg), alg);
+    TEST_EQUAL(PSA_ALG_KEY_AGREEMENT_GET_KDF(ffdh_alg), alg);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_agreement_algorithm(int alg_arg, int classification_flags,
+                             int ka_alg_arg, int kdf_alg_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t actual_ka_alg = PSA_ALG_KEY_AGREEMENT_GET_BASE(alg);
+    psa_algorithm_t expected_ka_alg = ka_alg_arg;
+    psa_algorithm_t actual_kdf_alg = PSA_ALG_KEY_AGREEMENT_GET_KDF(alg);
+    psa_algorithm_t expected_kdf_alg = kdf_alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+    algorithm_classification(alg, classification_flags);
+
+    /* Shared secret derivation properties */
+    TEST_EQUAL(actual_ka_alg, expected_ka_alg);
+    TEST_EQUAL(actual_kdf_alg, expected_kdf_alg);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void pake_algorithm(int alg_arg)
+{
+    psa_algorithm_t alg = alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(!PSA_ALG_IS_XOF(alg));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void xof_algorithm(int alg_arg, int has_context)
+{
+    psa_algorithm_t alg = alg_arg;
+
+    /* Algorithm classification */
+    TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
+    TEST_ASSERT(!PSA_ALG_IS_MAC(alg));
+    TEST_ASSERT(!PSA_ALG_IS_CIPHER(alg));
+    TEST_ASSERT(!PSA_ALG_IS_AEAD(alg));
+    TEST_ASSERT(!PSA_ALG_IS_SIGN(alg));
+    TEST_ASSERT(!PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_AGREEMENT(alg));
+    TEST_ASSERT(!PSA_ALG_IS_KEY_DERIVATION(alg));
+    TEST_ASSERT(!PSA_ALG_IS_PAKE(alg));
+    TEST_ASSERT(PSA_ALG_IS_XOF(alg));
+
+    TEST_EQUAL(has_context, PSA_ALG_XOF_HAS_CONTEXT(alg));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_type(int type_arg, int classification_flags)
+{
+    psa_key_type_t type = type_arg;
+
+    key_type_classification(type, classification_flags);
+
+    /* For asymmetric types, check the corresponding pair/public type */
+    if (classification_flags & KEY_TYPE_IS_PUBLIC_KEY) {
+        psa_key_type_t pair_type = PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(type);
+        TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(pair_type), type);
+        key_type_classification(pair_type,
+                                (classification_flags
+                                 & ~KEY_TYPE_IS_PUBLIC_KEY)
+                                | KEY_TYPE_IS_KEY_PAIR);
+        TEST_EQUAL(PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type), type);
+    }
+    if (classification_flags & KEY_TYPE_IS_KEY_PAIR) {
+        psa_key_type_t public_type = PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type);
+        TEST_EQUAL(PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(public_type), type);
+        key_type_classification(public_type,
+                                (classification_flags
+                                 & ~KEY_TYPE_IS_KEY_PAIR)
+                                | KEY_TYPE_IS_PUBLIC_KEY);
+        TEST_EQUAL(PSA_KEY_TYPE_KEY_PAIR_OF_PUBLIC_KEY(type), type);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void block_cipher_key_type(int type_arg, int block_size_arg)
+{
+    psa_key_type_t type = type_arg;
+    size_t block_size = block_size_arg;
+
+    test_key_type(type_arg, KEY_TYPE_IS_UNSTRUCTURED);
+
+    TEST_EQUAL(type & PSA_KEY_TYPE_CATEGORY_MASK,
+               PSA_KEY_TYPE_CATEGORY_SYMMETRIC);
+    TEST_EQUAL(PSA_BLOCK_CIPHER_BLOCK_LENGTH(type), block_size);
+
+    /* Check that the block size is a power of 2. This is required, at least,
+       for PSA_ROUND_UP_TO_MULTIPLE(block_size, length) in crypto_sizes.h. */
+    TEST_ASSERT(((block_size - 1) & block_size) == 0);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void stream_cipher_key_type(int type_arg)
+{
+    psa_key_type_t type = type_arg;
+
+    test_key_type(type_arg, KEY_TYPE_IS_UNSTRUCTURED);
+
+    TEST_EQUAL(type & PSA_KEY_TYPE_CATEGORY_MASK,
+               PSA_KEY_TYPE_CATEGORY_SYMMETRIC);
+    TEST_EQUAL(PSA_BLOCK_CIPHER_BLOCK_LENGTH(type), 1);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_KEY_TYPE_ECC_PUBLIC_KEY:PSA_KEY_TYPE_ECC_KEY_PAIR */
+void ecc_key_family(int curve_arg)
+{
+    psa_ecc_family_t curve = curve_arg;
+    psa_key_type_t public_type = PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve);
+    psa_key_type_t pair_type = PSA_KEY_TYPE_ECC_KEY_PAIR(curve);
+
+    TEST_PARITY(curve);
+
+    test_key_type(public_type, KEY_TYPE_IS_ECC | KEY_TYPE_IS_PUBLIC_KEY);
+    test_key_type(pair_type, KEY_TYPE_IS_ECC | KEY_TYPE_IS_KEY_PAIR);
+
+    TEST_EQUAL(PSA_KEY_TYPE_ECC_GET_FAMILY(public_type), curve);
+    TEST_EQUAL(PSA_KEY_TYPE_ECC_GET_FAMILY(pair_type), curve);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:PSA_KEY_TYPE_DH_PUBLIC_KEY:PSA_KEY_TYPE_DH_KEY_PAIR */
+void dh_key_family(int group_arg)
+{
+    psa_dh_family_t group = group_arg;
+    psa_key_type_t public_type = PSA_KEY_TYPE_DH_PUBLIC_KEY(group);
+    psa_key_type_t pair_type = PSA_KEY_TYPE_DH_KEY_PAIR(group);
+
+    TEST_PARITY(group);
+
+    test_key_type(public_type, KEY_TYPE_IS_DH | KEY_TYPE_IS_PUBLIC_KEY);
+    test_key_type(pair_type, KEY_TYPE_IS_DH | KEY_TYPE_IS_KEY_PAIR);
+
+    TEST_EQUAL(PSA_KEY_TYPE_DH_GET_FAMILY(public_type), group);
+    TEST_EQUAL(PSA_KEY_TYPE_DH_GET_FAMILY(pair_type), group);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void lifetime(int lifetime_arg, int classification_flags,
+              int persistence_arg, int location_arg)
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_persistence_t persistence = persistence_arg;
+    psa_key_location_t location = location_arg;
+    unsigned flags = classification_flags;
+    unsigned classification_flags_tested = 0;
+
+    TEST_CLASSIFICATION_MACRO(1, KEY_LIFETIME_IS_VOLATILE, lifetime, flags);
+    TEST_CLASSIFICATION_MACRO(1, KEY_LIFETIME_IS_READ_ONLY, lifetime, flags);
+    TEST_EQUAL(classification_flags_tested,
+               KEY_LIFETIME_FLAG_MASK_PLUS_ONE - 1);
+
+    TEST_EQUAL(PSA_KEY_LIFETIME_GET_PERSISTENCE(lifetime), persistence);
+    TEST_EQUAL(PSA_KEY_LIFETIME_GET_LOCATION(lifetime), location);
+}
+/* END_CASE */

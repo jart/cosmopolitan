@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+# Last matching pattern has precedence
+
+* @pq-code-package/pqcp-mldsa-native-admin

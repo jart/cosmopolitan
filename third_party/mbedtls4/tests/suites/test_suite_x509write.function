@@ -1,0 +1,691 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/bignum.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_csr.h"
+#include "x509_internal.h"
+#include "mbedtls/pem.h"
+#include "mbedtls/oid.h"
+#include "x509_oid.h"
+#include "mbedtls/private/rsa.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/asn1write.h"
+#include "mbedtls/pk.h"
+#if defined(MBEDTLS_PK_HAVE_PRIVATE_HEADER)
+#include <mbedtls/private/pk_private.h>
+#endif /* MBEDTLS_PK_HAVE_PRIVATE_HEADER */
+#include "mbedtls/psa_util.h"
+
+#if defined(MBEDTLS_PEM_WRITE_C) && defined(MBEDTLS_X509_CSR_WRITE_C)
+static int x509_crt_verifycsr(const unsigned char *buf, size_t buflen)
+{
+    unsigned char hash[PSA_HASH_MAX_SIZE];
+    mbedtls_x509_csr csr;
+    int ret = 0;
+
+    mbedtls_x509_csr_init(&csr);
+
+    if (mbedtls_x509_csr_parse(&csr, buf, buflen) != 0) {
+        ret = MBEDTLS_ERR_X509_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+    psa_algorithm_t psa_alg = mbedtls_md_psa_alg_from_type(csr.sig_md);
+    size_t hash_size = 0;
+    psa_status_t status = psa_hash_compute(psa_alg, csr.cri.p, csr.cri.len,
+                                           hash, PSA_HASH_MAX_SIZE, &hash_size);
+
+    if (status != PSA_SUCCESS) {
+        /* Note: this can't happen except after an internal error */
+        ret = MBEDTLS_ERR_X509_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+    if (mbedtls_pk_verify_ext(csr.sig_pk, &csr.pk,
+                              csr.sig_md, hash, mbedtls_md_get_size_from_type(csr.sig_md),
+                              csr.sig.p, csr.sig.len) != 0) {
+        ret = MBEDTLS_ERR_X509_CERT_VERIFY_FAILED;
+        goto cleanup;
+    }
+
+cleanup:
+
+    mbedtls_x509_csr_free(&csr);
+    return ret;
+}
+#endif /* MBEDTLS_PEM_WRITE_C && MBEDTLS_X509_CSR_WRITE_C */
+
+#if defined(MBEDTLS_X509_CSR_WRITE_C)
+
+/*
+ * The size of this temporary buffer is given by the sequence of functions
+ * called hereinafter:
+ * - mbedtls_asn1_write_oid()
+ *     - 8 bytes for MBEDTLS_OID_EXTENDED_KEY_USAGE raw value
+ *     - 1 byte for MBEDTLS_OID_EXTENDED_KEY_USAGE length
+ *     - 1 byte for MBEDTLS_ASN1_OID tag
+ * - mbedtls_asn1_write_len()
+ *     - 1 byte since we're dealing with sizes which are less than 0x80
+ * - mbedtls_asn1_write_tag()
+ *     - 1 byte
+ *
+ * This length is fine as long as this function is called using the
+ * MBEDTLS_OID_SERVER_AUTH OID. If this is changed in the future, then this
+ * buffer's length should be adjusted accordingly.
+ * Unfortunately there's no predefined max size for OIDs which can be used
+ * to set an overall upper boundary which is always guaranteed.
+ */
+#define EXT_KEY_USAGE_TMP_BUF_MAX_LENGTH    12
+
+static int csr_set_extended_key_usage(mbedtls_x509write_csr *ctx,
+                                      const char *oid, size_t oid_len)
+{
+    unsigned char buf[EXT_KEY_USAGE_TMP_BUF_MAX_LENGTH] = { 0 };
+    unsigned char *p = buf + sizeof(buf);
+    int ret;
+    size_t len = 0;
+
+    /*
+     * Following functions fail anyway if the temporary buffer is not large,
+     * but we set an extra check here to emphasize a possible source of errors
+     */
+    if (oid_len > EXT_KEY_USAGE_TMP_BUF_MAX_LENGTH) {
+        return MBEDTLS_ERR_X509_BAD_INPUT_DATA;
+    }
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_oid(&p, buf, oid, oid_len));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&p, buf, ret));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&p, buf,
+                                                     MBEDTLS_ASN1_CONSTRUCTED |
+                                                     MBEDTLS_ASN1_SEQUENCE));
+
+    ret = mbedtls_x509write_csr_set_extension(ctx,
+                                              MBEDTLS_OID_EXTENDED_KEY_USAGE,
+                                              MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE),
+                                              0,
+                                              p,
+                                              len);
+
+    return ret;
+}
+#endif  /* MBEDTLS_X509_CSR_WRITE_C */
+
+/* Due to inconsistencies in the input size limits applied by different
+ * library functions, some write-parse tests may fail. */
+#define MAY_FAIL_GET_NAME       0x0001
+#define MAY_FAIL_DN_GETS        0x0002
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CSR_WRITE_C */
+void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
+                    int key_usage, int set_key_usage, int cert_type,
+                    int set_cert_type, int set_extension)
+{
+    mbedtls_pk_context key;
+    mbedtls_x509write_csr req;
+    unsigned char buf[4096];
+    int ret;
+    unsigned char check_buf[4000];
+    FILE *f;
+    size_t olen = 0;
+    size_t pem_len = 0, buf_index;
+    int der_len = -1;
+    const char *subject_name = "C=NL,O=PolarSSL,CN=PolarSSL Server 1";
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    mbedtls_x509_san_list san_ip;
+    mbedtls_x509_san_list san_dns;
+    mbedtls_x509_san_list san_uri;
+    mbedtls_x509_san_list san_mail;
+    mbedtls_x509_san_list san_dn;
+    mbedtls_x509_san_list *san_list = NULL;
+    mbedtls_asn1_named_data *ext_san_dirname = NULL;
+
+    const char san_ip_name[] = { 0x7f, 0x00, 0x00, 0x01 }; // 127.0.0.1
+    const char *san_dns_name = "example.com";
+    const char *san_dn_name = "C=UK,O=Mbed TLS,CN=Mbed TLS directoryName SAN";
+    const char *san_mail_name = "mail@example.com";
+    const char *san_uri_name = "http://pki.example.com";
+
+    san_mail.node.type = MBEDTLS_X509_SAN_RFC822_NAME;
+    san_mail.node.san.unstructured_name.p = (unsigned char *) san_mail_name;
+    san_mail.node.san.unstructured_name.len = strlen(san_mail_name);
+    san_mail.next = NULL;
+
+    san_dns.node.type = MBEDTLS_X509_SAN_DNS_NAME;
+    san_dns.node.san.unstructured_name.p = (unsigned char *) san_dns_name;
+    san_dns.node.san.unstructured_name.len = strlen(san_dns_name);
+    san_dns.next = &san_mail;
+
+    san_dn.node.type = MBEDTLS_X509_SAN_DIRECTORY_NAME;
+    TEST_ASSERT(mbedtls_x509_string_to_names(&ext_san_dirname,
+                                             san_dn_name) == 0);
+    san_dn.node.san.directory_name = *ext_san_dirname;
+    san_dn.next = &san_dns;
+
+    san_ip.node.type = MBEDTLS_X509_SAN_IP_ADDRESS;
+    san_ip.node.san.unstructured_name.p = (unsigned char *) san_ip_name;
+    san_ip.node.san.unstructured_name.len = sizeof(san_ip_name);
+    san_ip.next = &san_dn;
+
+    san_uri.node.type = MBEDTLS_X509_SAN_UNIFORM_RESOURCE_IDENTIFIER;
+    san_uri.node.san.unstructured_name.p = (unsigned char *) san_uri_name;
+    san_uri.node.san.unstructured_name.len = strlen(san_uri_name);
+    san_uri.next = &san_ip;
+
+    san_list = &san_uri;
+
+    memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    mbedtls_x509write_csr_init(&req);
+    mbedtls_pk_init(&key);
+    MD_OR_USE_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL) == 0);
+
+    mbedtls_x509write_csr_set_md_alg(&req, md_type);
+    mbedtls_x509write_csr_set_key(&req, &key);
+    TEST_ASSERT(mbedtls_x509write_csr_set_subject_name(&req, subject_name) == 0);
+    if (set_key_usage != 0) {
+        TEST_ASSERT(mbedtls_x509write_csr_set_key_usage(&req, key_usage) == 0);
+    }
+    if (set_cert_type != 0) {
+        TEST_ASSERT(mbedtls_x509write_csr_set_ns_cert_type(&req, cert_type) == 0);
+    }
+    if (set_extension != 0) {
+        TEST_ASSERT(csr_set_extended_key_usage(&req, MBEDTLS_OID_SERVER_AUTH,
+                                               MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) == 0);
+
+        TEST_ASSERT(mbedtls_x509write_csr_set_subject_alternative_name(&req, san_list) == 0);
+    }
+
+    ret = mbedtls_x509write_csr_pem(&req, buf, sizeof(buf));
+    TEST_ASSERT(ret == 0);
+
+    pem_len = strlen((char *) buf);
+
+    for (buf_index = pem_len; buf_index < sizeof(buf); ++buf_index) {
+        TEST_ASSERT(buf[buf_index] == 0);
+    }
+
+    f = fopen(cert_req_check_file, "r"); //open the file
+    TEST_ASSERT(f != NULL); //check the file has been opened.
+    olen = fread(check_buf, 1, sizeof(check_buf), f); // read the file
+    fclose(f); // close the file
+
+    TEST_ASSERT(olen >= pem_len - 1);
+    TEST_ASSERT(memcmp(buf, check_buf, pem_len - 1) == 0);
+
+
+    der_len = mbedtls_x509write_csr_der(&req, buf, sizeof(buf));
+    TEST_ASSERT(der_len >= 0);
+
+    if (der_len == 0) {
+        goto exit;
+    }
+
+    der_len -= 1;
+    ret = mbedtls_x509write_csr_der(&req, buf, (size_t) (der_len));
+    TEST_ASSERT(ret == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
+
+exit:
+    mbedtls_asn1_free_named_data_list(&ext_san_dirname);
+    mbedtls_x509write_csr_free(&req);
+    mbedtls_pk_free(&key);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CSR_WRITE_C */
+void x509_csr_check_opaque(char *key_file, int md_type, int key_usage,
+                           int cert_type)
+{
+    mbedtls_pk_context key;
+    mbedtls_pk_init(&key);
+
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+
+    mbedtls_x509write_csr req;
+    mbedtls_x509write_csr_init(&req);
+
+    unsigned char buf[4096];
+    int ret;
+    size_t pem_len = 0;
+    const char *subject_name = "C=NL,O=PolarSSL,CN=PolarSSL Server 1";
+    mbedtls_test_rnd_pseudo_info rnd_info;
+
+    MD_OR_USE_PSA_INIT();
+
+    memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL) == 0);
+
+    /* Turn the PK context into an opaque one. */
+    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&key, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&key, &key_attr, &key_id), 0);
+    mbedtls_pk_free(&key);
+    mbedtls_pk_init(&key);
+    TEST_EQUAL(mbedtls_pk_wrap_psa(&key, key_id), 0);
+
+    mbedtls_x509write_csr_set_md_alg(&req, md_type);
+    mbedtls_x509write_csr_set_key(&req, &key);
+    TEST_ASSERT(mbedtls_x509write_csr_set_subject_name(&req, subject_name) == 0);
+    if (key_usage != 0) {
+        TEST_ASSERT(mbedtls_x509write_csr_set_key_usage(&req, key_usage) == 0);
+    }
+    if (cert_type != 0) {
+        TEST_ASSERT(mbedtls_x509write_csr_set_ns_cert_type(&req, cert_type) == 0);
+    }
+
+    ret = mbedtls_x509write_csr_pem(&req, buf, sizeof(buf) - 1);
+
+    TEST_ASSERT(ret == 0);
+
+    pem_len = strlen((char *) buf);
+    buf[pem_len] = '\0';
+    TEST_ASSERT(x509_crt_verifycsr(buf, pem_len + 1) == 0);
+
+
+exit:
+    mbedtls_x509write_csr_free(&req);
+    mbedtls_pk_free(&key);
+    psa_destroy_key(key_id);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CRT_WRITE_C:MBEDTLS_X509_CRT_PARSE_C:PSA_WANT_ALG_SHA_1 */
+void x509_crt_check(char *subject_key_file, char *subject_pwd,
+                    char *subject_name, char *issuer_key_file,
+                    char *issuer_pwd, char *issuer_name,
+                    data_t *serial_arg, char *not_before, char *not_after,
+                    int md_type, int key_usage, int set_key_usage,
+                    char *ext_key_usage,
+                    int cert_type, int set_cert_type, int auth_ident,
+                    int ver, char *cert_check_file, int pk_wrap, int is_ca,
+                    char *cert_verify_file, int set_subjectAltNames)
+{
+    mbedtls_pk_context subject_key, issuer_key, issuer_key_alt;
+    mbedtls_pk_context *key = &issuer_key;
+
+    mbedtls_x509write_cert crt;
+    unsigned char buf[4096];
+    unsigned char check_buf[5000];
+    unsigned char *p, *end;
+    unsigned char tag, sz;
+    int ret, before_tag, after_tag;
+    size_t olen = 0, pem_len = 0, buf_index = 0;
+    int der_len = -1;
+    FILE *f;
+    mbedtls_test_rnd_pseudo_info rnd_info;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_pk_type_t issuer_key_type;
+    mbedtls_x509_san_list san_ip;
+    mbedtls_x509_san_list san_dns;
+    mbedtls_x509_san_list san_uri;
+    mbedtls_x509_san_list san_mail;
+    mbedtls_x509_san_list san_dn;
+    mbedtls_asn1_named_data *ext_san_dirname = NULL;
+    const char san_ip_name[] = { 0x01, 0x02, 0x03, 0x04 };
+    const char *san_dns_name = "example.com";
+    const char *san_dn_name = "C=UK,O=Mbed TLS,CN=SubjectAltName test";
+    const char *san_mail_name = "mail@example.com";
+    const char *san_uri_name = "http://pki.example.com";
+    mbedtls_x509_san_list *san_list = NULL;
+
+    if (set_subjectAltNames) {
+        san_mail.node.type = MBEDTLS_X509_SAN_RFC822_NAME;
+        san_mail.node.san.unstructured_name.p = (unsigned char *) san_mail_name;
+        san_mail.node.san.unstructured_name.len = strlen(san_mail_name);
+        san_mail.next = NULL;
+
+        san_dns.node.type = MBEDTLS_X509_SAN_DNS_NAME;
+        san_dns.node.san.unstructured_name.p = (unsigned char *) san_dns_name;
+        san_dns.node.san.unstructured_name.len = strlen(san_dns_name);
+        san_dns.next = &san_mail;
+
+        san_dn.node.type = MBEDTLS_X509_SAN_DIRECTORY_NAME;
+        TEST_ASSERT(mbedtls_x509_string_to_names(&ext_san_dirname,
+                                                 san_dn_name) == 0);
+        san_dn.node.san.directory_name = *ext_san_dirname;
+        san_dn.next = &san_dns;
+
+        san_ip.node.type = MBEDTLS_X509_SAN_IP_ADDRESS;
+        san_ip.node.san.unstructured_name.p = (unsigned char *) san_ip_name;
+        san_ip.node.san.unstructured_name.len = sizeof(san_ip_name);
+        san_ip.next = &san_dn;
+
+        san_uri.node.type = MBEDTLS_X509_SAN_UNIFORM_RESOURCE_IDENTIFIER;
+        san_uri.node.san.unstructured_name.p = (unsigned char *) san_uri_name;
+        san_uri.node.san.unstructured_name.len = strlen(san_uri_name);
+        san_uri.next = &san_ip;
+
+        san_list = &san_uri;
+    }
+
+    memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
+
+    mbedtls_pk_init(&subject_key);
+    mbedtls_pk_init(&issuer_key);
+    mbedtls_pk_init(&issuer_key_alt);
+    mbedtls_x509write_crt_init(&crt);
+    MD_OR_USE_PSA_INIT();
+
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&subject_key, subject_key_file,
+                                         subject_pwd) == 0);
+
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&issuer_key, issuer_key_file,
+                                         issuer_pwd) == 0);
+
+    issuer_key_type = mbedtls_pk_get_type(&issuer_key);
+
+    /* Turn the issuer PK context into an opaque one. */
+    if (pk_wrap == 2) {
+        TEST_EQUAL(mbedtls_pk_get_psa_attributes(&issuer_key, PSA_KEY_USAGE_SIGN_HASH,
+                                                 &key_attr), 0);
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&issuer_key, &key_attr, &key_id), 0);
+        mbedtls_pk_free(&issuer_key);
+        mbedtls_pk_init(&issuer_key);
+        TEST_EQUAL(mbedtls_pk_wrap_psa(&issuer_key, key_id), 0);
+    }
+
+    if (pk_wrap == 2) {
+        TEST_ASSERT(mbedtls_pk_get_type(&issuer_key) == MBEDTLS_PK_OPAQUE);
+    }
+
+    if (ver != -1) {
+        mbedtls_x509write_crt_set_version(&crt, ver);
+    }
+
+    TEST_ASSERT(mbedtls_x509write_crt_set_serial_raw(&crt, serial_arg->x,
+                                                     serial_arg->len) == 0);
+    TEST_ASSERT(mbedtls_x509write_crt_set_validity(&crt, not_before,
+                                                   not_after) == 0);
+    mbedtls_x509write_crt_set_md_alg(&crt, md_type);
+    TEST_ASSERT(mbedtls_x509write_crt_set_issuer_name(&crt, issuer_name) == 0);
+    TEST_ASSERT(mbedtls_x509write_crt_set_subject_name(&crt, subject_name) == 0);
+    mbedtls_x509write_crt_set_subject_key(&crt, &subject_key);
+
+    mbedtls_x509write_crt_set_issuer_key(&crt, key);
+
+    if (crt.version >= MBEDTLS_X509_CRT_VERSION_3) {
+        /* For the CA case, a path length of -1 means unlimited. */
+        TEST_ASSERT(mbedtls_x509write_crt_set_basic_constraints(&crt, is_ca,
+                                                                (is_ca ? -1 : 0)) == 0);
+        TEST_ASSERT(mbedtls_x509write_crt_set_subject_key_identifier(&crt) == 0);
+        if (auth_ident) {
+            TEST_ASSERT(mbedtls_x509write_crt_set_authority_key_identifier(&crt) == 0);
+        }
+        if (set_key_usage != 0) {
+            TEST_ASSERT(mbedtls_x509write_crt_set_key_usage(&crt, key_usage) == 0);
+        }
+        if (set_cert_type != 0) {
+            TEST_ASSERT(mbedtls_x509write_crt_set_ns_cert_type(&crt, cert_type) == 0);
+        }
+        if (strcmp(ext_key_usage, "NULL") != 0) {
+            mbedtls_asn1_sequence exts[2];
+            memset(exts, 0, sizeof(exts));
+
+#define SET_OID(x, oid)                \
+    do {                               \
+        x.len = MBEDTLS_OID_SIZE(oid); \
+        x.p   = (unsigned char *) oid;   \
+        x.tag = MBEDTLS_ASN1_OID;      \
+    }                                  \
+    while (0)
+
+            if (strcmp(ext_key_usage, "serverAuth") == 0) {
+                SET_OID(exts[0].buf, MBEDTLS_OID_SERVER_AUTH);
+            } else if (strcmp(ext_key_usage, "codeSigning,timeStamping") == 0) {
+                SET_OID(exts[0].buf, MBEDTLS_OID_CODE_SIGNING);
+                exts[0].next = &exts[1];
+                SET_OID(exts[1].buf, MBEDTLS_OID_TIME_STAMPING);
+            }
+            TEST_ASSERT(mbedtls_x509write_crt_set_ext_key_usage(&crt, exts) == 0);
+        }
+    }
+
+    if (set_subjectAltNames) {
+        TEST_ASSERT(mbedtls_x509write_crt_set_subject_alternative_name(&crt, san_list) == 0);
+    }
+    ret = mbedtls_x509write_crt_pem(&crt, buf, sizeof(buf));
+    TEST_ASSERT(ret == 0);
+
+    pem_len = strlen((char *) buf);
+
+    // check that the rest of the buffer remains clear
+    for (buf_index = pem_len; buf_index < sizeof(buf); ++buf_index) {
+        TEST_ASSERT(buf[buf_index] == 0);
+    }
+
+    if (issuer_key_type != MBEDTLS_PK_RSA) {
+        mbedtls_x509_crt crt_parse, trusted;
+        uint32_t flags;
+
+        mbedtls_x509_crt_init(&crt_parse);
+        mbedtls_x509_crt_init(&trusted);
+
+        TEST_ASSERT(mbedtls_x509_crt_parse_file(&trusted,
+                                                cert_verify_file) == 0);
+        TEST_ASSERT(mbedtls_x509_crt_parse(&crt_parse,
+                                           buf, sizeof(buf)) == 0);
+
+        ret = mbedtls_x509_crt_verify(&crt_parse, &trusted, NULL, NULL, &flags,
+                                      NULL, NULL);
+
+        mbedtls_x509_crt_free(&crt_parse);
+        mbedtls_x509_crt_free(&trusted);
+
+        TEST_EQUAL(flags, 0);
+        TEST_EQUAL(ret, 0);
+    } else if (*cert_check_file != '\0') {
+        f = fopen(cert_check_file, "r");
+        TEST_ASSERT(f != NULL);
+        olen = fread(check_buf, 1, sizeof(check_buf), f);
+        fclose(f);
+        TEST_ASSERT(olen < sizeof(check_buf));
+
+        TEST_EQUAL(olen, pem_len);
+        TEST_ASSERT(olen >= pem_len - 1);
+        TEST_ASSERT(memcmp(buf, check_buf, pem_len - 1) == 0);
+    }
+
+    der_len = mbedtls_x509write_crt_der(&crt, buf, sizeof(buf));
+    TEST_ASSERT(der_len >= 0);
+
+    if (der_len == 0) {
+        goto exit;
+    }
+
+    // Not testing against file, check date format
+    if (*cert_check_file == '\0') {
+        // UTC tag if before 2050, 2 digits less for year
+        if (not_before[0] == '2' && (not_before[1] > '0' || not_before[2] > '4')) {
+            before_tag = MBEDTLS_ASN1_GENERALIZED_TIME;
+        } else {
+            before_tag = MBEDTLS_ASN1_UTC_TIME;
+            not_before += 2;
+        }
+        if (not_after[0] == '2' && (not_after[1] > '0' || not_after[2] > '4')) {
+            after_tag = MBEDTLS_ASN1_GENERALIZED_TIME;
+        } else {
+            after_tag = MBEDTLS_ASN1_UTC_TIME;
+            not_after += 2;
+        }
+        end = buf + sizeof(buf);
+        for (p = end - der_len; p < end;) {
+            tag = *p++;
+            sz = *p++;
+            if (tag == MBEDTLS_ASN1_UTC_TIME || tag == MBEDTLS_ASN1_GENERALIZED_TIME) {
+                // Check correct tag and time written
+                TEST_ASSERT(before_tag == tag);
+                TEST_ASSERT(memcmp(p, not_before, sz - 1) == 0);
+                p += sz;
+                tag = *p++;
+                sz = *p++;
+                TEST_ASSERT(after_tag == tag);
+                TEST_ASSERT(memcmp(p, not_after, sz - 1) == 0);
+                break;
+            }
+            // Increment if long form ASN1 length
+            if (sz & 0x80) {
+                p += sz & 0x0F;
+            }
+            if (tag != (MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) {
+                p += sz;
+            }
+        }
+        TEST_ASSERT(p < end);
+    }
+
+    der_len -= 1;
+
+    ret = mbedtls_x509write_crt_der(&crt, buf, (size_t) (der_len));
+    TEST_ASSERT(ret == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
+
+exit:
+    mbedtls_asn1_free_named_data_list(&ext_san_dirname);
+    mbedtls_x509write_crt_free(&crt);
+    mbedtls_pk_free(&issuer_key_alt);
+    mbedtls_pk_free(&subject_key);
+    mbedtls_pk_free(&issuer_key);
+    psa_destroy_key(key_id);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CRT_WRITE_C */
+void x509_set_serial_check()
+{
+    mbedtls_x509write_cert ctx;
+    uint8_t invalid_serial[MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN + 1];
+
+    USE_PSA_INIT();
+    memset(invalid_serial, 0x01, sizeof(invalid_serial));
+
+    TEST_EQUAL(mbedtls_x509write_crt_set_serial_raw(&ctx, invalid_serial,
+                                                    sizeof(invalid_serial)),
+               MBEDTLS_ERR_X509_BAD_INPUT_DATA);
+
+exit:
+    ;
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CREATE_C:MBEDTLS_X509_USE_C */
+void mbedtls_x509_string_to_names(char *name, char *parsed_name,
+                                  int result, int may_fail)
+{
+    int ret;
+    size_t len = 0;
+    mbedtls_asn1_named_data *names = NULL;
+    mbedtls_x509_name parsed;
+    memset(&parsed, 0, sizeof(parsed));
+    mbedtls_x509_name *parsed_cur = NULL;
+    mbedtls_x509_name *parsed_prv = NULL;
+    unsigned char buf[1024] = { 0 };
+    unsigned char out[1024] = { 0 };
+    unsigned char *c = buf + sizeof(buf);
+
+    USE_PSA_INIT();
+
+    ret = mbedtls_x509_string_to_names(&names, name);
+    TEST_EQUAL(ret, result);
+
+    if (ret != 0) {
+        goto exit;
+    }
+
+    ret = mbedtls_x509_write_names(&c, buf, names);
+    TEST_LE_S(1, ret);
+
+    TEST_EQUAL(mbedtls_asn1_get_tag(&c, buf + sizeof(buf), &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE), 0);
+    ret = mbedtls_x509_get_name(&c, buf + sizeof(buf), &parsed);
+    if ((may_fail & MAY_FAIL_GET_NAME) && ret < 0) {
+        /* Validation inconsistency between mbedtls_x509_string_to_names() and
+         * mbedtls_x509_get_name(). Accept it for now. */
+        goto exit;
+    }
+    TEST_EQUAL(ret, 0);
+
+    ret = mbedtls_x509_dn_gets((char *) out, sizeof(out), &parsed);
+    if ((may_fail & MAY_FAIL_DN_GETS) && ret < 0) {
+        /* Validation inconsistency between mbedtls_x509_string_to_names() and
+         * mbedtls_x509_dn_gets(). Accept it for now. */
+        goto exit;
+    }
+    TEST_LE_S(1, ret);
+    TEST_ASSERT(strcmp((char *) out, parsed_name) == 0);
+
+    /* Check that calling a 2nd time with the same param (now non-NULL)
+     * returns an error as expected. */
+    ret = mbedtls_x509_string_to_names(&names, name);
+    TEST_EQUAL(ret, MBEDTLS_ERR_X509_BAD_INPUT_DATA);
+
+exit:
+    mbedtls_asn1_free_named_data_list(&names);
+
+    parsed_cur = parsed.next;
+    while (parsed_cur != 0) {
+        parsed_prv = parsed_cur;
+        parsed_cur = parsed_cur->next;
+        mbedtls_free(parsed_prv);
+    }
+    USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CSR_WRITE_C */
+void x509_set_extension_length_check()
+{
+    int ret = 0;
+
+    mbedtls_x509write_csr ctx;
+    mbedtls_x509write_csr_init(&ctx);
+
+    unsigned char buf[EXT_KEY_USAGE_TMP_BUF_MAX_LENGTH] = { 0 };
+    unsigned char *p = buf + sizeof(buf);
+
+    ret = mbedtls_x509_set_extension(&(ctx.MBEDTLS_PRIVATE(extensions)),
+                                     MBEDTLS_OID_EXTENDED_KEY_USAGE,
+                                     MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE),
+                                     0,
+                                     p,
+                                     SIZE_MAX);
+    TEST_ASSERT(MBEDTLS_ERR_X509_BAD_INPUT_DATA == ret);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_X509_CREATE_C */
+void oid_from_numeric_string(char *oid_str, int error_ret,
+                             data_t *exp_oid_buf)
+{
+    mbedtls_asn1_buf oid = { 0, 0, NULL };
+    mbedtls_asn1_buf exp_oid = { 0, 0, NULL };
+    int ret;
+
+    exp_oid.tag = MBEDTLS_ASN1_OID;
+    exp_oid.p = exp_oid_buf->x;
+    exp_oid.len = exp_oid_buf->len;
+
+    ret = mbedtls_oid_from_numeric_string(&oid, oid_str, strlen(oid_str));
+
+    if (error_ret == 0) {
+        TEST_EQUAL(oid.len, exp_oid.len);
+        TEST_ASSERT(memcmp(oid.p, exp_oid.p, oid.len) == 0);
+        mbedtls_free(oid.p);
+        oid.p = NULL;
+        oid.len = 0;
+    } else {
+        TEST_EQUAL(ret, error_ret);
+    }
+}
+/* END_CASE */

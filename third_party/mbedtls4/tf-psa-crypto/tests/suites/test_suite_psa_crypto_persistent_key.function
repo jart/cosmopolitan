@@ -1,0 +1,578 @@
+/* BEGIN_HEADER */
+
+/* The tests in this module verify the contents of key store files. They
+ * access internal key storage functions directly. Some of the tests depend
+ * on the storage format. On the other hand, these tests treat the storage
+ * subsystem as a black box, and in particular have no reliance on the
+ * internals of the ITS implementation.
+ *
+ * Note that if you need to make a change that affects how files are
+ * stored, this may indicate that the key store is changing in a
+ * backward-incompatible way! Think carefully about backward compatibility
+ * before changing how test data is constructed or validated.
+ */
+
+#include <stdint.h>
+
+#include "mbedtls/private/ctr_drbg.h"
+#include "psa_crypto_its.h"
+#include "psa_crypto_slot_management.h"
+#include "psa_crypto_storage.h"
+
+#define KEY_ID_IN_USER_RANGE(id)                                        \
+    (PSA_KEY_ID_USER_MIN <= (id) && (id) <= PSA_KEY_ID_USER_MAX)
+
+#define KEY_ID_IN_VOLATILE_RANGE(id)                                    \
+    (PSA_KEY_ID_VOLATILE_MIN <= (id) && (id) <= PSA_KEY_ID_VOLATILE_MAX)
+
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+#define KEY_ID_IN_BUILTIN_RANGE(id)                                     \
+    (MBEDTLS_PSA_KEY_ID_BUILTIN_MIN <= (id) && (id) <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX)
+#else
+#define KEY_ID_IN_BUILTIN_RANGE(id) 0
+#endif
+
+/* Range of file UIDs reserved for uses other than storing a key.
+ * Defined by the TF-PSA-Crypto storage specification
+ * docs/architecture/mbed-crypto-storage-specification.md */
+#define KEY_ID_IN_RESERVED_FILE_ID_RANGE(id) (0xffff0000 <= ((id) & 0xffffffff))
+
+/* Define a key ID that is in none of the recognized ranges and not 0 */
+#define KEY_ID_OUTSIDE_DEFINED_RANGES 0x7fffffffu
+
+#define PSA_KEY_STORAGE_MAGIC_HEADER "PSA\0KEY"
+#define PSA_KEY_STORAGE_MAGIC_HEADER_LENGTH (sizeof(PSA_KEY_STORAGE_MAGIC_HEADER))
+
+/* Enforce the storage format for keys. The storage format is not a public
+ * documented interface, but it must be preserved between versions so that
+ * upgrades work smoothly, so it's a stable interface nonetheless.
+ */
+typedef struct {
+    uint8_t magic[PSA_KEY_STORAGE_MAGIC_HEADER_LENGTH];
+    uint8_t version[4];
+    uint8_t lifetime[sizeof(psa_key_lifetime_t)];
+    uint8_t type[4];
+    uint8_t policy[sizeof(psa_key_policy_t)];
+    uint8_t data_len[4];
+    uint8_t key_data[];
+} psa_persistent_key_storage_format;
+
+const size_t persistent_key_payload_offset =
+    offsetof(psa_persistent_key_storage_format, key_data);
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_PSA_CRYPTO_STORAGE_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void format_storage_data_check(data_t *key_data,
+                               data_t *expected_file_data,
+                               int key_lifetime, int key_type, int key_bits,
+                               int key_usage, int key_alg, int key_alg2)
+{
+    uint8_t *file_data = NULL;
+    size_t file_data_length =
+        key_data->len + sizeof(psa_persistent_key_storage_format);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    psa_set_key_lifetime(&attributes, key_lifetime);
+    psa_set_key_type(&attributes, key_type);
+    psa_set_key_bits(&attributes, key_bits);
+    psa_set_key_usage_flags(&attributes, key_usage);
+    psa_set_key_algorithm(&attributes, key_alg);
+    psa_set_key_enrollment_algorithm(&attributes, key_alg2);
+
+    TEST_CALLOC(file_data, file_data_length);
+    psa_format_key_data_for_storage(key_data->x, key_data->len,
+                                    &attributes,
+                                    file_data);
+
+    TEST_MEMORY_COMPARE(expected_file_data->x, expected_file_data->len,
+                        file_data, file_data_length);
+
+exit:
+    mbedtls_free(file_data);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void parse_storage_data_check(data_t *file_data,
+                              data_t *expected_key_data,
+                              int expected_key_lifetime,
+                              int expected_key_type,
+                              int expected_key_bits,
+                              int expected_key_usage,
+                              int expected_key_alg,
+                              int expected_key_alg2,
+                              int expected_status)
+{
+    uint8_t *key_data = NULL;
+    size_t key_data_length = 0;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t status;
+
+    status = psa_parse_key_data_from_storage(file_data->x, file_data->len,
+                                             &key_data, &key_data_length,
+                                             &attributes);
+
+    TEST_EQUAL(status, expected_status);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    TEST_EQUAL(psa_get_key_lifetime(&attributes),
+               (psa_key_type_t) expected_key_lifetime);
+    TEST_EQUAL(psa_get_key_type(&attributes),
+               (psa_key_type_t) expected_key_type);
+    TEST_EQUAL(psa_get_key_bits(&attributes),
+               (psa_key_bits_t) expected_key_bits);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes),
+               (uint32_t) expected_key_usage);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes),
+               (uint32_t) expected_key_alg);
+    TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes),
+               (uint32_t) expected_key_alg2);
+    TEST_MEMORY_COMPARE(expected_key_data->x, expected_key_data->len,
+                        key_data, key_data_length);
+
+exit:
+    mbedtls_free(key_data);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_id_ranges()
+{
+    /* PSA Crypto API specification */
+    TEST_EQUAL(PSA_KEY_ID_NULL, 0x00000000);
+    TEST_EQUAL(PSA_KEY_ID_USER_MIN, 0x00000001);
+    TEST_EQUAL(PSA_KEY_ID_USER_MAX, 0x3fffffff);
+    TEST_EQUAL(PSA_KEY_ID_VENDOR_MIN, 0x40000000);
+    TEST_EQUAL(PSA_KEY_ID_VENDOR_MAX, 0x7fffffff);
+
+    /* Volatile key IDs */
+    TEST_LE_U(PSA_KEY_ID_VENDOR_MIN, PSA_KEY_ID_VOLATILE_MIN);
+    TEST_LE_U(PSA_KEY_ID_VOLATILE_MAX, PSA_KEY_ID_VENDOR_MAX);
+    TEST_LE_U(PSA_KEY_ID_VOLATILE_MIN, PSA_KEY_ID_VOLATILE_MAX);
+
+    /* Built-in key IDs */
+    /* Mbed TLS 2.27 reserved  0x7fff0000..0x7fffefff for built-in keys.
+     * Integrators may have hard-coded built-in key IDs in this range,
+     * so if this range starts conflicting with something else, it's
+     * an incompatible change. */
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MIN, 0x7fff0000);
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, 0x7fffefff);
+    TEST_LE_U(PSA_KEY_ID_VENDOR_MIN, MBEDTLS_PSA_KEY_ID_BUILTIN_MIN);
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, PSA_KEY_ID_VENDOR_MAX);
+#endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
+    /* To avoid confusion, make sure we avoid the built-in key ID range
+     * even in builds without built-in keys.. */
+    if (PSA_KEY_ID_VOLATILE_MIN <= 0x7fff0000) {
+        TEST_LE_U(PSA_KEY_ID_VOLATILE_MAX + 1, 0x7fff0000);
+    } else {
+        TEST_LE_U(0x7fffefff + 1, PSA_KEY_ID_VOLATILE_MIN);
+    }
+
+    /* Sanity check on test data */
+    TEST_ASSERT(!KEY_ID_IN_USER_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_VOLATILE_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_BUILTIN_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_RESERVED_FILE_ID_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void save_large_persistent_key(int data_length_arg, int expected_status)
+{
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 42);
+    uint8_t *data = NULL;
+    size_t data_length = data_length_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    TEST_CALLOC(data, data_length);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    TEST_EQUAL(psa_import_key(&attributes, data, data_length, &key_id),
+               expected_status);
+
+    if (expected_status == PSA_SUCCESS) {
+        PSA_ASSERT(psa_destroy_key(key_id));
+    }
+
+exit:
+    mbedtls_free(data);
+    PSA_DONE();
+    psa_destroy_persistent_key(key_id);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
+                            int first_type_arg, data_t *first_data,
+                            int second_type_arg, data_t *second_data)
+{
+    mbedtls_svc_key_id_t key_id =
+        mbedtls_svc_key_id_make(owner_id_arg, key_id_arg);
+    mbedtls_svc_key_id_t returned_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_type_t first_type = (psa_key_type_t) first_type_arg;
+    psa_key_type_t second_type = (psa_key_type_t) second_type_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, first_type);
+
+    PSA_ASSERT(psa_import_key(&attributes, first_data->x, first_data->len,
+                              &returned_key_id));
+
+    if (restart) {
+        psa_purge_key(key_id);
+        PSA_DONE();
+        PSA_ASSERT(psa_crypto_init());
+    }
+    TEST_EQUAL(psa_is_key_present_in_storage(key_id), 1);
+
+    /* Destroy the key */
+    PSA_ASSERT(psa_destroy_key(key_id));
+
+    /* Check key slot storage is removed */
+    TEST_EQUAL(psa_is_key_present_in_storage(key_id), 0);
+
+    /* Shutdown and restart */
+    PSA_DONE();
+    PSA_ASSERT(psa_crypto_init());
+
+    /* Create another key in the same slot */
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, second_type);
+    PSA_ASSERT(psa_import_key(&attributes, second_data->x, second_data->len,
+                              &returned_key_id));
+
+    PSA_ASSERT(psa_destroy_key(key_id));
+
+exit:
+    PSA_DONE();
+    psa_destroy_persistent_key(key_id);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void persistent_key_import(int owner_id_arg, int key_id_arg, int type_arg,
+                           data_t *data, int restart, int expected_status)
+{
+    mbedtls_svc_key_id_t key_id =
+        mbedtls_svc_key_id_make(owner_id_arg, key_id_arg);
+    mbedtls_svc_key_id_t returned_key_id;
+    psa_key_type_t type = (psa_key_type_t) type_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, type);
+    TEST_EQUAL(psa_import_key(&attributes, data->x, data->len, &returned_key_id),
+               expected_status);
+
+    if (expected_status != PSA_SUCCESS) {
+        TEST_ASSERT(mbedtls_svc_key_id_is_null(returned_key_id));
+        TEST_EQUAL(psa_is_key_present_in_storage(key_id), 0);
+        goto exit;
+    }
+
+    TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, key_id));
+
+    if (restart) {
+        PSA_ASSERT(psa_purge_key(key_id));
+        PSA_DONE();
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    psa_reset_key_attributes(&attributes);
+    PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(psa_get_key_id(&attributes),
+                                         key_id));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes),
+               PSA_KEY_LIFETIME_PERSISTENT);
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), 0);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+
+    PSA_ASSERT(psa_destroy_key(key_id));
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+
+    psa_destroy_persistent_key(key_id);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void import_export_persistent_key(data_t *data, int type_arg,
+                                  int expected_bits,
+                                  int restart, int key_not_exist)
+{
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 42);
+    psa_key_type_t type = (psa_key_type_t) type_arg;
+    mbedtls_svc_key_id_t returned_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char *exported = NULL;
+    size_t export_size = data->len;
+    size_t exported_length;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    TEST_CALLOC(exported, export_size);
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_type(&attributes, type);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+
+    /* Import the key */
+    PSA_ASSERT(psa_import_key(&attributes, data->x, data->len,
+                              &returned_key_id));
+
+
+    if (restart) {
+        PSA_ASSERT(psa_purge_key(key_id));
+        PSA_DONE();
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* Test the key information */
+    psa_reset_key_attributes(&attributes);
+    PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
+    TEST_ASSERT(mbedtls_svc_key_id_equal(
+                    psa_get_key_id(&attributes), key_id));
+    TEST_EQUAL(psa_get_key_lifetime(&attributes),
+               PSA_KEY_LIFETIME_PERSISTENT);
+    TEST_EQUAL(psa_get_key_type(&attributes), type);
+    TEST_EQUAL(psa_get_key_bits(&attributes), (size_t) expected_bits);
+    TEST_EQUAL(psa_get_key_usage_flags(&attributes), PSA_KEY_USAGE_EXPORT);
+    TEST_EQUAL(psa_get_key_algorithm(&attributes), 0);
+
+    TEST_EQUAL(psa_is_key_present_in_storage(key_id), 1);
+
+    if (key_not_exist) {
+        psa_destroy_persistent_key(key_id);
+    }
+    /* Export the key */
+    PSA_ASSERT(psa_export_key(key_id, exported, export_size,
+                              &exported_length));
+
+    TEST_MEMORY_COMPARE(data->x, data->len, exported, exported_length);
+
+    /* Destroy the key */
+    PSA_ASSERT(psa_destroy_key(key_id));
+    TEST_EQUAL(psa_is_key_present_in_storage(key_id), 0);
+
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&attributes);
+
+    mbedtls_free(exported);
+    PSA_DONE();
+    psa_destroy_persistent_key(key_id);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void destroy_nonexistent(int id_arg, int expected_status_arg)
+{
+    mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(1, id_arg);
+    psa_status_t expected_status = expected_status_arg;
+
+    PSA_INIT();
+
+    TEST_EQUAL(expected_status, psa_destroy_key(id));
+
+exit:
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Write content to the file that corresponds to the given key ID,
+ * then attempt to use a key with this ID.
+ * Depending on the validity of the key ID and storage content,
+ * this may or may not work.
+ */
+void load_primed_storage(int32_t owner_id,
+                         int64_t key_id_arg, /* 0..2^32-1 */
+                         data_t *content,
+                         int expected_attributes_status_arg,
+                         int expected_export_status_arg,
+                         int expected_destroy_status_arg)
+{
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(owner_id, key_id_arg);
+    /* Storage UID (file name) for the given key ID, following the storage
+     * specification. */
+    psa_storage_uid_t uid = (uint64_t) owner_id << 32 | key_id_arg;
+    psa_status_t expected_attributes_status = expected_attributes_status_arg;
+    psa_status_t expected_export_status = expected_export_status_arg;
+    psa_status_t expected_destroy_status = expected_destroy_status_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *key_data = NULL;
+    struct psa_storage_info_t info;
+
+    /* Sanity checks on the test data */
+    /* The test framework doesn't support unsigned types, so check that
+     * the key ID is in the actual valid range here. */
+    TEST_LE_U(0, key_id_arg);
+    TEST_LE_U(key_id_arg, 0xffffffff);
+#if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+    TEST_EQUAL(owner_id, 0);
+#endif
+
+    PSA_INIT();
+
+    /* This is the start of the test case, so normally, no key exists.
+     * The test data is based on the assumption that the key doesn't exist.
+     * However, there are some cases where a key does exist:
+     * - A volatile key used by the PSA RNG.
+     * - A built-in key provided by the platform (in our test code:
+     *   mbedtls_psa_platform_get_builtin_key() in platform_builtin_keys.c).
+     * In such cases, we'll have different expectations.
+     */
+    int key_already_existed =
+        psa_get_key_attributes(key_id, &attributes) == PSA_SUCCESS;
+    if (key_already_existed) {
+        expected_attributes_status = PSA_SUCCESS;
+        expected_export_status =
+            (psa_get_key_usage_flags(&attributes) & PSA_KEY_USAGE_EXPORT ?
+             PSA_SUCCESS :
+             PSA_KEY_TYPE_IS_PUBLIC_KEY(psa_get_key_type(&attributes)) ?
+             PSA_SUCCESS :
+             PSA_ERROR_NOT_PERMITTED);
+    }
+    /* In case this is a built-in key, psa_get_key_attributes()
+     * loads it into the cache. Purge the cache to make sure the loading
+     * code gets triggered. */
+    psa_purge_key(key_id);
+
+    /* Prime the storage. */
+    psa_status_t file_status = psa_its_get_info(uid, &info);
+    if (uid == 0) {
+        /* 0 is not a valid file ID, according to the PSA secure storage
+         * API specification. */
+        if (file_status == PSA_ERROR_DOES_NOT_EXIST) {
+            /* Our own partial storage implementation (psa_its_file.c)
+             * is not compliant, it returns the wrong error code here.
+             * That's not a problem, just let it go. */
+        } else {
+            TEST_EQUAL(file_status, PSA_ERROR_INVALID_ARGUMENT);
+        }
+    } else if (KEY_ID_IN_RESERVED_FILE_ID_RANGE(key_id_arg) &&
+               file_status == PSA_SUCCESS) {
+        /* The key ID corresponds to a reserved file (e.g. transaction
+         * log or entropy seed). Don't corrupt that file. */
+    } else {
+        TEST_EQUAL(file_status, PSA_ERROR_DOES_NOT_EXIST);
+        TEST_EQUAL(psa_its_set(uid, content->len, content->x, 0), PSA_SUCCESS);
+    }
+
+    /* Reading attributes should work for any valid key. */
+    TEST_EQUAL(psa_get_key_attributes(key_id, &attributes),
+               expected_attributes_status);
+    if (expected_attributes_status == PSA_SUCCESS && !key_already_existed) {
+        /* It's not our job here to validate the attributes, but do
+         * sanity-check the attributes related to persistence. */
+        TEST_ASSERT(mbedtls_svc_key_id_equal(key_id,
+                                             psa_get_key_id(&attributes)));
+        TEST_EQUAL(psa_get_key_lifetime(&attributes),
+                   PSA_KEY_LIFETIME_PERSISTENT);
+    }
+
+    /* Extract the key material from the file.
+     * We assume that the file uses the standard key representation in
+     * storage, which is always the case at the time of writing.
+     * If the file is truncated, there is no key material, and we just
+     * declare an empty buffer here.
+     */
+    const uint8_t *payload = NULL;
+    size_t payload_length = 0;
+    if (content->len >= persistent_key_payload_offset) {
+        payload = content->x + persistent_key_payload_offset;
+        payload_length = content->len - persistent_key_payload_offset;
+    }
+
+    /* Exporting should work for a valid key that has export permission. */
+    /* Allocate enough memory for the key data (assuming the key
+     * representation in storage is not compressed compared to the
+     * export format). */
+    size_t key_data_size = content->len;
+    size_t key_data_length = SIZE_MAX;
+    TEST_CALLOC(key_data, key_data_size);
+    TEST_EQUAL(psa_export_key(key_id,
+                              key_data, key_data_size, &key_data_length),
+               expected_export_status);
+    if (expected_export_status == PSA_SUCCESS) {
+        if (key_already_existed) {
+            /* The key already existed. We don't know what it is,
+             * but check that it is not what we put in storage. */
+            TEST_ASSERT(key_data_length != payload_length ||
+                        memcmp(key_data, payload, payload_length));
+        } else {
+            TEST_MEMORY_COMPARE(key_data, key_data_length,
+                                payload, payload_length);
+        }
+    }
+    /* Assert that the data length is sensible even if export failed.
+     * This reduces the risk of memory corruption if an application
+     * doesn't check the return status of export(). */
+    TEST_LE_U(key_data_length, key_data_size);
+
+    if (key_already_existed) {
+        /* There was a key with the key ID under test, for example a key
+         * used by the PSA RNG. Don't disrupt whatever is using that key.
+         * Pure the key cache: this is necessary if the key was a built-in
+         * key which got loaded into the cache by the get_attributes and
+         * export calls above, otherwise PSA_DONE() would legitimately
+         * complain about a non-empty cache.
+         */
+        psa_purge_key(key_id);
+    } else {
+        /* Destroying the key should work even for malformed content.
+         * But it should not work for reserved file IDs. */
+        TEST_EQUAL(psa_destroy_key(key_id), expected_destroy_status);
+        if (uid == 0) {
+            /* Invalid file UID. No point in asserting anything about the file. */
+        } else if (expected_destroy_status == PSA_SUCCESS) {
+            file_status = psa_its_get_info(uid, &info);
+            if (key_id_arg == 0) {
+                /* psa_destroy_key(0) is defined as a no-op, so it should not
+                 * affect the file. */
+                TEST_EQUAL(file_status, PSA_SUCCESS);
+            } else {
+                TEST_EQUAL(file_status, PSA_ERROR_DOES_NOT_EXIST);
+            }
+        }
+    }
+
+exit:
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+    if (!KEY_ID_IN_RESERVED_FILE_ID_RANGE(key_id_arg)) {
+        /* The key ID corresponds to a reserved file (e.g. transaction
+         * log or entropy seed). Don't corrupt that file. */
+        psa_its_remove(uid);
+    }
+    mbedtls_free(key_data);
+}
+/* END_CASE */

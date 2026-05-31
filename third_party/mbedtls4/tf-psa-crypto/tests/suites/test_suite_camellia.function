@@ -1,0 +1,197 @@
+/* BEGIN_HEADER */
+#include "mbedtls/private/camellia.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_CAMELLIA_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void camellia_invalid_param()
+{
+    mbedtls_camellia_context ctx;
+    unsigned char buf[16] = { 0 };
+    const int invalid_mode = 42;
+    size_t off;
+    ((void) off);
+
+    TEST_EQUAL(MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA,
+               mbedtls_camellia_crypt_ecb(&ctx,
+                                          invalid_mode,
+                                          buf, buf));
+
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
+    TEST_EQUAL(MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA,
+               mbedtls_camellia_crypt_cbc(&ctx,
+                                          invalid_mode,
+                                          sizeof(buf),
+                                          buf, buf, buf));
+#endif /* MBEDTLS_CIPHER_MODE_CBC */
+
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+    TEST_EQUAL(MBEDTLS_ERR_CAMELLIA_BAD_INPUT_DATA,
+               mbedtls_camellia_crypt_cfb128(&ctx,
+                                             invalid_mode,
+                                             sizeof(buf),
+                                             &off, buf,
+                                             buf, buf));
+#endif /* MBEDTLS_CIPHER_MODE_CFB */
+
+exit:
+    return;
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void camellia_encrypt_ecb(data_t *key_str, data_t *src_str,
+                          data_t *dst, int setkey_result)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    TEST_ASSERT(mbedtls_camellia_setkey_enc(&ctx, key_str->x, key_str->len * 8) == setkey_result);
+    if (setkey_result == 0) {
+        TEST_ASSERT(mbedtls_camellia_crypt_ecb(&ctx, MBEDTLS_CAMELLIA_ENCRYPT, src_str->x,
+                                               output) == 0);
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, 16, dst->len) == 0);
+    }
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
+void camellia_decrypt_ecb(data_t *key_str, data_t *src_str,
+                          data_t *dst, int setkey_result)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    TEST_ASSERT(mbedtls_camellia_setkey_dec(&ctx, key_str->x, key_str->len * 8) == setkey_result);
+    if (setkey_result == 0) {
+        TEST_ASSERT(mbedtls_camellia_crypt_ecb(&ctx, MBEDTLS_CAMELLIA_DECRYPT, src_str->x,
+                                               output) == 0);
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, 16, dst->len) == 0);
+    }
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CBC */
+void camellia_encrypt_cbc(data_t *key_str, data_t *iv_str,
+                          data_t *src_str, data_t *dst, int cbc_result)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    mbedtls_camellia_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_camellia_crypt_cbc(&ctx, MBEDTLS_CAMELLIA_ENCRYPT, src_str->len, iv_str->x,
+                                           src_str->x, output) == cbc_result);
+    if (cbc_result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, src_str->len,
+                                        dst->len) == 0);
+    }
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CBC */
+void camellia_decrypt_cbc(data_t *key_str, data_t *iv_str,
+                          data_t *src_str, data_t *dst,
+                          int cbc_result)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    mbedtls_camellia_setkey_dec(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_camellia_crypt_cbc(&ctx, MBEDTLS_CAMELLIA_DECRYPT, src_str->len, iv_str->x,
+                                           src_str->x, output) == cbc_result);
+    if (cbc_result == 0) {
+
+        TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, src_str->len,
+                                        dst->len) == 0);
+    }
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CFB */
+void camellia_encrypt_cfb128(data_t *key_str, data_t *iv_str,
+                             data_t *src_str, data_t *dst)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    mbedtls_camellia_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_camellia_crypt_cfb128(&ctx, MBEDTLS_CAMELLIA_ENCRYPT, 16, &iv_offset,
+                                              iv_str->x, src_str->x, output) == 0);
+
+    TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, 16, dst->len) == 0);
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CFB */
+void camellia_decrypt_cfb128(data_t *key_str, data_t *iv_str,
+                             data_t *src_str,
+                             data_t *dst)
+{
+    unsigned char output[100];
+    mbedtls_camellia_context ctx;
+    size_t iv_offset = 0;
+
+    memset(output, 0x00, 100);
+    mbedtls_camellia_init(&ctx);
+
+
+    mbedtls_camellia_setkey_enc(&ctx, key_str->x, key_str->len * 8);
+    TEST_ASSERT(mbedtls_camellia_crypt_cfb128(&ctx, MBEDTLS_CAMELLIA_DECRYPT, 16, &iv_offset,
+                                              iv_str->x, src_str->x, output) == 0);
+
+    TEST_ASSERT(mbedtls_test_hexcmp(output, dst->x, 16, dst->len) == 0);
+
+exit:
+    mbedtls_camellia_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void camellia_selftest()
+{
+    TEST_ASSERT(mbedtls_camellia_self_test(1) == 0);
+}
+/* END_CASE */

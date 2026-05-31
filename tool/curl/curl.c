@@ -16,6 +16,7 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.h"
 #include "libc/mem/gc.h"
+#include "libc/dce.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
@@ -33,13 +34,10 @@
 #include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/iana.h"
-#include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/x509.h"
+#include "third_party/mbedtls4/include/mbedtls/debug.h"
+#include "third_party/mbedtls4/include/mbedtls/net_sockets.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl.h"
+#include "third_party/mbedtls4/include/mbedtls/x509.h"
 #include "third_party/musl/netdb.h"
 
 /**
@@ -67,14 +65,6 @@ static const char *DescribeErrno(void) {
   if (!(reason = _strerdoc(errno)))
     reason = "Unknown error";
   return reason;
-}
-
-static int GetSslEntropy(void *c, unsigned char *p, size_t n) {
-  if (getrandom(p, n, 0) != n) {
-    perror("getrandom");
-    exit(1);
-  }
-  return 0;
 }
 
 static void OnSslDebug(void *ctx, int level, const char *file, int line,
@@ -165,7 +155,7 @@ int _curl(int argc, char *argv[]) {
   } headers = {0};
   uint64_t method = 0;
   int authmode = MBEDTLS_SSL_VERIFY_REQUIRED;
-  int ciphersuite = MBEDTLS_SSL_PRESET_SUITEC;
+  int ciphersuite = MBEDTLS_SSL_PRESET_DEFAULT;
   bool includeheaders = false;
   const char *postdata = NULL;
   const char *agent = "hurl/1.o (https://github.com/jart/cosmopolitan)";
@@ -200,7 +190,7 @@ int _curl(int argc, char *argv[]) {
         }
         break;
       case 'V':
-        ++mbedtls_debug_threshold;
+        mbedtls_debug_set_threshold(1);
         break;
       case 'k':
         authmode = MBEDTLS_SSL_VERIFY_NONE;
@@ -361,18 +351,15 @@ int _curl(int argc, char *argv[]) {
    */
   mbedtls_ssl_config conf;
   mbedtls_ssl_context ssl;
-  mbedtls_ctr_drbg_context drbg;
   if (usessl) {
+    InitializeRng();
     mbedtls_ssl_init(&ssl);
-    mbedtls_ctr_drbg_init(&drbg);
     mbedtls_ssl_config_init(&conf);
-    unassert(!mbedtls_ctr_drbg_seed(&drbg, GetSslEntropy, 0, "justine", 7));
     unassert(!mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
                                           MBEDTLS_SSL_TRANSPORT_STREAM,
                                           ciphersuite));
     mbedtls_ssl_conf_authmode(&conf, authmode);
     mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
-    mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
 #ifndef NDEBUG
     mbedtls_ssl_conf_dbg(&conf, OnSslDebug, 0);
 #endif
@@ -381,8 +368,7 @@ int _curl(int argc, char *argv[]) {
     mbedtls_ssl_set_bio(&ssl, &sock, TlsSend, 0, TlsRecv);
     if ((ret = mbedtls_ssl_handshake(&ssl))) {
       tinyprint(2, prog, ": ssl negotiation with ", host,
-                " failed: ", DescribeSslClientHandshakeError(&ssl, ret), "\n",
-                NULL);
+                " failed: ", GetTlsError(ret), "\n", NULL);
       exit(1);
     }
   }
@@ -395,10 +381,10 @@ int _curl(int argc, char *argv[]) {
   n = appendz(request).i;
   for (i = 0; i < n; i += rc) {
     if (usessl) {
-      rc = mbedtls_ssl_write(&ssl, request + i, n - i);
+      rc = mbedtls_ssl_write(&ssl, (const unsigned char *)(request + i),
+                             n - i);
       if (rc <= 0) {
-        tinyprint(2, prog, ": ssl send failed: ", DescribeMbedtlsErrorCode(rc),
-                  "\n", NULL);
+        tinyprint(2, prog, ": ssl send failed: ", GetTlsError(rc), "\n", NULL);
         exit(1);
       }
     } else {
@@ -426,12 +412,11 @@ int _curl(int argc, char *argv[]) {
       p = realloc(p, n);
     }
     if (usessl) {
-      if ((rc = mbedtls_ssl_read(&ssl, p + i, n - i)) < 0) {
+      if ((rc = mbedtls_ssl_read(&ssl, (unsigned char *)(p + i), n - i)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
         } else {
-          tinyprint(2, prog,
-                    ": ssl recv failed: ", DescribeMbedtlsErrorCode(rc), "\n",
+          tinyprint(2, prog, ": ssl recv failed: ", GetTlsError(rc), "\n",
                     NULL);
           exit(1);
         }
@@ -545,9 +530,7 @@ Finished:
   free(headers.p);
   if (usessl) {
     mbedtls_ssl_free(&ssl);
-    mbedtls_ctr_drbg_free(&drbg);
     mbedtls_ssl_config_free(&conf);
-    mbedtls_ctr_drbg_free(&drbg);
   }
 
   return 0;

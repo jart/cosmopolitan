@@ -36,7 +36,7 @@ NET_TURFWAR_DIRECTDEPS =				\
 	NET_HTTPS					\
 	THIRD_PARTY_DLMALLOC				\
 	THIRD_PARTY_GETOPT				\
-	THIRD_PARTY_MBEDTLS				\
+	THIRD_PARTY_MBEDTLS4				\
 	THIRD_PARTY_MUSL				\
 	THIRD_PARTY_NSYNC				\
 	THIRD_PARTY_NSYNC_MEM				\
@@ -79,6 +79,12 @@ o/$(MODE)/net/turfwar/.init.lua.zip.o: private		\
 $(NET_TURFWAR_OBJS):					\
 		$(BUILD_FILES)				\
 		net/turfwar/BUILD.mk
+
+$(NET_TURFWAR_OBJS): private				\
+		CPPFLAGS +=				\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include
 
 .PHONY: o/$(MODE)/net/turfwar
 o/$(MODE)/net/turfwar: $(NET_TURFWAR_BINS) $(NET_TURFWAR_CHECKS)

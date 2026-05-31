@@ -17,56 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/testlib.h"
-#include "third_party/mbedtls/config.h"
-#include "third_party/mbedtls/ssl_ciphersuites.h"
+#include "third_party/mbedtls4/include/mbedtls/ssl_ciphersuites.h"
 
-int GetCipherId(const char *s) {
-  const mbedtls_ssl_ciphersuite_t *c;
-  if ((c = GetCipherSuite(s))) {
-    return c->id;
-  } else {
-    return -1;
-  }
+static int GetCipherId(const char *name) {
+  const mbedtls_ssl_ciphersuite_t *c = mbedtls_ssl_ciphersuite_from_string(name);
+  return c ? mbedtls_ssl_ciphersuite_get_id(c) : -1;
 }
-
-#ifdef MBEDTLS_CIPHER_MODE_CBC
-TEST(GetCipherSuite, theOlde) {
-  EXPECT_EQ(0x002F, GetCipherId("RSA-AES128-CBC-SHA"));            // Cosmo
-  EXPECT_EQ(0x002F, GetCipherId("TLS_RSA_AES_128_CBC_SHA1"));      // GnuTLS
-  EXPECT_EQ(0x002F, GetCipherId("TLS_RSA_WITH_AES_128_CBC_SHA"));  // IANA
-  // EXPECT_EQ(0x002F, GetCipherId("AES128-SHA"));                 // OpenSSL
-}
-#endif
-
-#ifdef MBEDTLS_DES_C
-TEST(GetCipherSuite, theAncient) {
-  EXPECT_EQ(0x000A, GetCipherId("RSA-3DES-EDE-CBC-SHA"));           // Cosmo
-  EXPECT_EQ(0x000A, GetCipherId("TLS_RSA_3DES_EDE_CBC_SHA1"));      // GnuTLS
-  EXPECT_EQ(0x000A, GetCipherId("TLS_RSA_WITH_3DES_EDE_CBC_SHA"));  // IANA
-  // EXPECT_EQ(0x000A, GetCipherId("DES-CBC3-SHA"));
-}
-#endif
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-TEST(GetCipherSuite, theUltimo) {
-  EXPECT_EQ(0xC02C, GetCipherId("ECDHE-ECDSA-AES256-GCM-SHA384"));
-  EXPECT_EQ(0xC02C, GetCipherId("ECDHE-ECDSA-WITH-AES-256-GCM-SHA384"));
+TEST(GetCipherSuite, ecdhEcdsa) {
   EXPECT_EQ(0xC02C, GetCipherId("TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384"));
-  EXPECT_EQ(0xC02C, GetCipherId("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"));
+  EXPECT_EQ(0xC02B, GetCipherId("TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256"));
 }
 #endif
 
 #ifdef MBEDTLS_CHACHAPOLY_C
-TEST(GetCipherSuite, arcfourReborn) {
-  EXPECT_EQ(0xCCA8, GetCipherId("ECDHE-RSA-CHACHA20-POLY1305-SHA256"));
-  EXPECT_EQ(0xCCA8, GetCipherId("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"));
-  // EXPECT_EQ(0xCCA8, GetCipherId("TLS_ECDHE_RSA_CHACHA20_POLY1305"));
-  // EXPECT_EQ(0xCCA8, GetCipherId("ECDHE-RSA-CHACHA20-POLY1305"));
+TEST(GetCipherSuite, chacha20poly1305) {
+  EXPECT_EQ(0xCCA8, GetCipherId("TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256"));
+  EXPECT_EQ(0xCCA9, GetCipherId("TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256"));
 }
 #endif
 
-TEST(GetCipherSuite, forTheeNotForMe) {
-  EXPECT_EQ(0x0004, GetCipherId("RSA-RC4-128-MD5"));           // Cosmo
-  EXPECT_EQ(0x0004, GetCipherId("TLS_RSA_WITH_RC4_128_MD5"));  // IANA
-  // EXPECT_EQ(0x0004, GetCipherId("TLS_RSA_ARCFOUR_128_MD5"));
+TEST(GetCipherSuite, unknownReturnsNull) {
+  /* Suites removed in mbedTLS 4 (RSA key exchange, RC4, 3DES) */
+  EXPECT_EQ(-1, GetCipherId("TLS-RSA-WITH-AES-128-CBC-SHA"));
+  EXPECT_EQ(-1, GetCipherId("TLS-RSA-WITH-RC4-128-MD5"));
+  EXPECT_EQ(-1, GetCipherId("TLS-RSA-WITH-3DES-EDE-CBC-SHA"));
+  EXPECT_EQ(-1, GetCipherId("unknown-nonsense"));
 }

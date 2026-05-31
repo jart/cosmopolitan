@@ -1,0 +1,165 @@
+/* BEGIN_HEADER */
+/* Unit tests for internal functions for built-in ECC mechanisms. */
+#include <psa/crypto.h>
+
+#include "psa_crypto_ecp.h"
+
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+/*
+ * Check if a buffer is all-0 bytes:
+ * return   1 if it is,
+ *          0 if it isn't.
+ *
+ * TODO: we use this in multiple test suites. Move it to tests/src.
+ */
+static int buffer_is_all_zero(const uint8_t *buf, size_t size)
+{
+    for (size_t i = 0; i < size; i++) {
+        if (buf[i] != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+typedef struct {
+    unsigned bit_bot;           /* lowest non-forced bit */
+    unsigned bit_top;           /* highest non-forced bit */
+} ecc_private_key_stats_t;
+
+/* Do some sanity checks on an ECC private key. This is not intended to be
+ * a full validity check, just to catch some potential mistakes. */
+static int check_ecc_private_key(psa_ecc_family_t family, size_t bits,
+                                 const uint8_t *key, size_t key_length,
+                                 ecc_private_key_stats_t *stats)
+{
+    int ok = 0;
+
+    /* Check the expected length (same calculation for all curves). */
+    TEST_EQUAL(PSA_BITS_TO_BYTES(bits), key_length);
+
+    /* All-bits zero is invalid and means no key material was copied to the
+     * output buffer, or a grave RNG pluming failure. */
+    TEST_ASSERT(!buffer_is_all_zero(key, key_length));
+
+    /* Check the top byte of the value for non-byte-aligned curve sizes.
+     * This is a partial endianness check. */
+    if (bits % 8 != 0) {
+        /* All supported non-byte-aligned curve sizes are for Weierstrass
+         * curves with a big-endian representation. */
+        uint8_t top_byte = key[0];
+        uint8_t mask = 0xff << (bits & 8);
+        TEST_EQUAL(top_byte & mask, 0);
+    }
+
+    /* Check masked bits on Curve25519 and Curve448 scalars.
+     * See RFC 7748 \S4.1 (we expect the "decoded" form here). */
+#if defined(MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_255)
+    if (family == PSA_ECC_FAMILY_MONTGOMERY && bits == 255) {
+        TEST_EQUAL(key[0] & 0xf8, key[0]);
+        TEST_EQUAL(key[31] & 0xc0, 0x40);
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_255 */
+#if defined(MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_448)
+    if (family == PSA_ECC_FAMILY_MONTGOMERY && bits == 448) {
+        TEST_EQUAL(key[0] & 0xfc, key[0]);
+        TEST_EQUAL(key[55] & 0x80, 0x80);
+    }
+#endif /* MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_448 */
+
+    /* Don't bother to check that the value is in the exact permitted range
+     * (1 to p-1 for Weierstrass curves, 2^{n-1} to p-1 for Montgomery curves).
+     * We would need to bring in bignum machinery, and on most curves
+     * the probability of a number being out of range is negligible.
+     */
+
+    /* Collect statistics on random-valued bits */
+    /* Defaults for big-endian numbers */
+    uint8_t bit_bot_mask = 0x01;
+    size_t bit_bot_index = key_length - 1;
+    uint8_t bit_top_mask = (bits % 8 == 0 ? 0x80 : 1 << (bits % 8 - 1));
+    size_t bit_top_index = 0;
+    if (family == PSA_ECC_FAMILY_MONTGOMERY) {
+        bit_bot_index = 0;
+        bit_top_index = key_length - 1;
+        if (bits == 255) {
+            bit_bot_mask = 0x08;
+            bit_top_mask = 0x20;
+        } else {
+            bit_bot_mask = 0x04;
+            bit_top_mask = 0x40;
+        }
+    }
+    if (key[bit_bot_index] & bit_bot_mask) {
+        ++stats->bit_bot;
+    }
+    if (key[bit_top_index] & bit_top_mask) {
+        ++stats->bit_top;
+    }
+
+    ok = 1;
+exit:
+    return ok;
+}
+#endif
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
+void generate_key(int family_arg, int bits_arg,
+                  int output_size_arg,
+                  psa_status_t expected_status)
+{
+    psa_ecc_family_t family = family_arg;
+    size_t bits = bits_arg;
+    size_t output_size = output_size_arg;
+
+    uint8_t *output = NULL;
+    size_t output_length = SIZE_MAX;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(family));
+    psa_set_key_bits(&attributes, bits);
+    ecc_private_key_stats_t stats = { 0, 0 };
+
+    PSA_INIT();
+    TEST_CALLOC(output, output_size);
+
+    /* In success cases, run multiple iterations so that we can make
+     * statistical observations. */
+    unsigned iteration_count = expected_status == PSA_SUCCESS ? 256 : 1;
+    for (unsigned i = 0; i < iteration_count; i++) {
+        mbedtls_test_set_step(i);
+        TEST_EQUAL(mbedtls_psa_ecp_generate_key(&attributes,
+                                                output, output_size,
+                                                &output_length),
+                   expected_status);
+        if (expected_status == PSA_SUCCESS) {
+            TEST_LE_U(output_length, output_size);
+            TEST_ASSERT(check_ecc_private_key(family, bits,
+                                              output, output_length,
+                                              &stats));
+        }
+    }
+
+    if (expected_status == PSA_SUCCESS) {
+        /* For selected bits, check that we saw the values 0 and 1 each
+         * at least some minimum number of times. The iteration count and
+         * the minimum are chosen so that a random failure is unlikely
+         * to more than cryptographic levels. */
+        unsigned const min_times = 10;
+        TEST_LE_U(min_times, stats.bit_bot);
+        TEST_LE_U(stats.bit_bot, iteration_count - min_times);
+        TEST_LE_U(min_times, stats.bit_top);
+        TEST_LE_U(stats.bit_top, iteration_count - min_times);
+    }
+
+exit:
+    PSA_DONE();
+    mbedtls_free(output);
+}
+/* END_CASE */

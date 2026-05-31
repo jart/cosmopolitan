@@ -1,0 +1,23 @@
+/* BEGIN_HEADER */
+
+/* Test the MLDSA driver based on mldsa-native.
+ *
+ * We generally assume that the underlying implementation is functionally
+ * correct. The main objective of this test suite is to cover parameter
+ * validation.
+ */
+
+#include <psa_crypto_mldsa.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:TF_PSA_CRYPTO_PQCP_MLDSA_ENABLED:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES */
+
+/* BEGIN_CASE */
+void smoke_test()
+{
+    TEST_ASSERT(tf_psa_crypto_pqcp_driver_exists);
+}
+/* END_CASE */

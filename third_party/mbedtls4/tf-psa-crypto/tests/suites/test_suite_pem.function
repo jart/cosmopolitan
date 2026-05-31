@@ -1,0 +1,91 @@
+/* BEGIN_HEADER */
+#include "mbedtls/base64.h"
+#include "mbedtls/pem.h"
+#include "mbedtls/private/aes.h"
+/* END_HEADER */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C */
+void mbedtls_pem_write_buffer(char *start, char *end, data_t *buf,
+                              char *result_str)
+{
+    unsigned char *check_buf = NULL;
+    int ret;
+    size_t olen = 0, olen2 = 0;
+
+
+    ret = mbedtls_pem_write_buffer(start, end, buf->x, buf->len, NULL, 0, &olen);
+    TEST_EQUAL(ret, MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL);
+
+    check_buf = (unsigned char *) mbedtls_calloc(1, olen);
+    TEST_ASSERT(check_buf != NULL);
+
+    ret = mbedtls_pem_write_buffer(start, end, buf->x, buf->len, check_buf, olen, &olen2);
+
+    TEST_LE_U(olen2, olen);
+    TEST_LE_U(strlen((char *) result_str) + 1, olen);
+    TEST_EQUAL(ret, 0);
+    TEST_ASSERT(strncmp((char *) check_buf, (char *) result_str, olen) == 0);
+
+exit:
+    mbedtls_free(check_buf);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C */
+void mbedtls_pem_write_buffer_lengths()
+{
+    unsigned char data[256] = { 0 };
+    unsigned char buf[1024];
+    size_t olen_needed, olen;
+    int ret;
+    for (size_t l = 0; l <= sizeof(data); l++) {
+        ret = mbedtls_pem_write_buffer("\n", "\n", data, l, NULL, 0, &olen_needed);
+        TEST_EQUAL(ret, MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL);
+
+        /* Test that a bigger buffer still only requires `olen_needed` */
+        ret = mbedtls_pem_write_buffer("\n", "\n", data, l, buf, sizeof(buf), &olen);
+        TEST_EQUAL(ret, 0);
+        TEST_EQUAL(olen_needed, olen);
+
+        /* Test that a buffer of exactly `olen_needed` works */
+        memset(buf, 1, sizeof(buf));
+        ret = mbedtls_pem_write_buffer("\n", "\n", data, l, buf, olen_needed, &olen);
+        TEST_EQUAL(ret, 0);
+        TEST_EQUAL(olen_needed, olen);
+        /* Test the function didn't overflow the given buffer */
+        for (size_t i = olen_needed; i < sizeof(buf); i++) {
+            TEST_EQUAL(buf[i], 1);
+        }
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_PARSE_C */
+void mbedtls_pem_read_buffer(char *header, char *footer, char *data,
+                             char *pwd, int res, data_t *out)
+{
+    mbedtls_pem_context ctx;
+    mbedtls_pem_init(&ctx);
+    int ret;
+    size_t use_len = 0;
+    size_t pwd_len = strlen(pwd);
+    const unsigned char *buf;
+
+    MD_PSA_INIT();
+
+    ret = mbedtls_pem_read_buffer(&ctx, header, footer, (unsigned char *) data,
+                                  (unsigned char *) pwd, pwd_len, &use_len);
+    TEST_EQUAL(ret, res);
+    if (ret != 0) {
+        goto exit;
+    }
+
+    use_len = 0;
+    buf = mbedtls_pem_get_buffer(&ctx, &use_len);
+    TEST_MEMORY_COMPARE(out->x, out->len, buf, use_len);
+
+exit:
+    mbedtls_pem_free(&ctx);
+    MD_PSA_DONE();
+}
+/* END_CASE */

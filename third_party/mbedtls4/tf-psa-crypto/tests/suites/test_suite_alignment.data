@@ -1,0 +1,119 @@
+Aligned 16-bit access
+mbedtls_unaligned_access:16:0
+
+Aligned 32-bit access
+mbedtls_unaligned_access:32:0
+
+Aligned 64-bit access
+mbedtls_unaligned_access:64:0
+
+Unaligned 16-bit access offset=1
+mbedtls_unaligned_access:16:1
+
+Unaligned 32-bit access offset=1
+mbedtls_unaligned_access:32:1
+
+Unaligned 64-bit access offset=1
+mbedtls_unaligned_access:64:1
+
+Unaligned 16-bit access offset=4
+mbedtls_unaligned_access:16:4
+
+Unaligned 32-bit access offset=4
+mbedtls_unaligned_access:32:4
+
+Unaligned 64-bit access offset=4
+mbedtls_unaligned_access:64:4
+
+Unaligned 16-bit access offset=7
+mbedtls_unaligned_access:16:7
+
+Unaligned 32-bit access offset=7
+mbedtls_unaligned_access:32:7
+
+Unaligned 64-bit access offset=7
+mbedtls_unaligned_access:64:7
+
+Unaligned 16-bit access offset=8
+mbedtls_unaligned_access:16:8
+
+Unaligned 32-bit access offset=8
+mbedtls_unaligned_access:32:8
+
+Unaligned 64-bit access offset=8
+mbedtls_unaligned_access:64:8
+
+Byteswap 16
+mbedtls_byteswap:"0100":16:"0001"
+
+Byteswap 16 with truncation
+mbedtls_byteswap:"0706050403020100":16:"0001"
+
+Byteswap 16 all-zero
+mbedtls_byteswap:"0000":16:"0000"
+
+Byteswap 16 all-ones
+mbedtls_byteswap:"ffffffffffffffff":16:"ffff"
+
+Byteswap 32
+mbedtls_byteswap:"03020100":32:"00010203"
+
+Byteswap 32 with truncation
+mbedtls_byteswap:"0706050403020100":32:"00010203"
+
+Byteswap 32 all-zero
+mbedtls_byteswap:"00000000":32:"00000000"
+
+Byteswap 32 all-ones
+mbedtls_byteswap:"ffffffffffffffff":32:"ffffffff"
+
+Byteswap 64
+mbedtls_byteswap:"0706050403020100":64:"01020304050607"
+
+Byteswap 64 all-zero
+mbedtls_byteswap:"0000000000000000":64:"0000000000000000"
+
+Byteswap 64 all-ones
+mbedtls_byteswap:"ffffffffffffffff":64:"ffffffffffffffff"
+
+Get individual bytes
+get_byte
+
+Endian-aware unaligned 16-bit BE offset=0
+unaligned_access_endian_aware:16:0:1
+
+Endian-aware unaligned 16-bit BE offset=3
+unaligned_access_endian_aware:16:3:1
+
+Endian-aware unaligned 16-bit LE offset=0
+unaligned_access_endian_aware:16:0:0
+
+Endian-aware unaligned 16-bit LE offset=3
+unaligned_access_endian_aware:16:3:0
+
+Endian-aware unaligned 32-bit BE offset=0
+unaligned_access_endian_aware:32:0:1
+
+Endian-aware unaligned 32-bit BE offset=3
+unaligned_access_endian_aware:32:3:1
+
+Endian-aware unaligned 32-bit LE offset=0
+unaligned_access_endian_aware:32:0:0
+
+Endian-aware unaligned 32-bit LE offset=3
+unaligned_access_endian_aware:32:3:0
+
+Endian-aware unaligned 64-bit BE offset=0
+unaligned_access_endian_aware:64:0:1
+
+Endian-aware unaligned 64-bit BE offset=3
+unaligned_access_endian_aware:64:3:1
+
+Endian-aware unaligned 64-bit LE offset=0
+unaligned_access_endian_aware:64:0:0
+
+Endian-aware unaligned 64-bit LE offset=3
+unaligned_access_endian_aware:64:3:0
+
+Big-endian check
+mbedtls_is_big_endian

@@ -64,7 +64,7 @@ TOOL_NET_DIRECTDEPS =							\
 	THIRD_PARTY_LUA_UNIX						\
 	THIRD_PARTY_MAXMIND						\
 	THIRD_PARTY_MUSL						\
-	THIRD_PARTY_MBEDTLS						\
+	THIRD_PARTY_MBEDTLS4					\
 	THIRD_PARTY_REGEX						\
 	THIRD_PARTY_SQLITE3						\
 	THIRD_PARTY_TZ							\
@@ -121,6 +121,13 @@ o/$(MODE)/tool/net/lsqlite3.o: private					\
 		CFLAGS +=						\
 			-DSQLITE_ENABLE_SESSION				\
 			-DSQLITE_ENABLE_DESERIALIZE
+
+$(TOOL_NET_OBJS): private					\
+		CPPFLAGS +=						\
+			-iquotethird_party/mbedtls4/generated		\
+			-Ithird_party/mbedtls4/include			\
+			-Ithird_party/mbedtls4/tf-psa-crypto/include	\
+			-Ithird_party/mbedtls4/tf-psa-crypto/drivers/builtin/include
 
 # REDBEAN-DEMO
 #

@@ -1,0 +1,106 @@
+OID get Any Policy certificate policy
+oid_get_certificate_policies:"551D2000":"Any Policy"
+
+OID get certificate policy invalid oid
+oid_get_certificate_policies:"5533445566":""
+
+OID get certificate policy wrong oid - id-ce-authorityKeyIdentifier
+oid_get_certificate_policies:"551D23":""
+
+OID get Ext Key Usage - id-kp-serverAuth
+oid_get_extended_key_usage:"2B06010505070301":"TLS Web Server Authentication"
+
+OID get Ext Key Usage - id-kp-clientAuth
+oid_get_extended_key_usage:"2B06010505070302":"TLS Web Client Authentication"
+
+OID get Ext Key Usage - id-kp-codeSigning
+oid_get_extended_key_usage:"2B06010505070303":"Code Signing"
+
+OID get Ext Key Usage - id-kp-emailProtection
+oid_get_extended_key_usage:"2B06010505070304":"E-mail Protection"
+
+OID get Ext Key Usage - id-kp-timeStamping
+oid_get_extended_key_usage:"2B06010505070308":"Time Stamping"
+
+OID get Ext Key Usage - id-kp-OCSPSigning
+oid_get_extended_key_usage:"2B06010505070309":"OCSP Signing"
+
+OID get Ext Key Usage - id-kp-wisun-fan-device
+oid_get_extended_key_usage:"2B0601040182E42501":"Wi-SUN Alliance Field Area Network (FAN)"
+
+OID get Ext Key Usage invalid oid
+oid_get_extended_key_usage:"5533445566":""
+
+OID get Ext Key Usage wrong oid - id-ce-authorityKeyIdentifier
+oid_get_extended_key_usage:"551D23":""
+
+OID get x509 extension - id-ce-basicConstraints
+oid_get_x509_extension:"551D13":MBEDTLS_X509_EXT_BASIC_CONSTRAINTS
+
+OID get x509 extension - id-ce-keyUsage
+oid_get_x509_extension:"551D0F":MBEDTLS_X509_EXT_KEY_USAGE
+
+OID get x509 extension - id-ce-extKeyUsage
+oid_get_x509_extension:"551D25":MBEDTLS_X509_EXT_EXTENDED_KEY_USAGE
+
+OID get x509 extension - id-ce-subjectAltName
+oid_get_x509_extension:"551D11":MBEDTLS_X509_EXT_SUBJECT_ALT_NAME
+
+OID get x509 extension - id-netscape-certtype
+oid_get_x509_extension:"6086480186F8420101":MBEDTLS_X509_EXT_NS_CERT_TYPE
+
+OID get x509 extension - id-ce-certificatePolicies
+oid_get_x509_extension:"551D20":MBEDTLS_X509_EXT_CERTIFICATE_POLICIES
+
+OID get x509 extension - invalid oid
+oid_get_x509_extension:"5533445566":0
+
+OID get x509 extension - wrong oid - id-ce
+oid_get_x509_extension:"551D":0
+
+OID hash id - id-md5
+depends_on:PSA_WANT_ALG_MD5
+oid_get_md_alg_id:"2A864886f70d0205":MBEDTLS_MD_MD5
+
+OID hash id - id-sha1
+depends_on:PSA_WANT_ALG_SHA_1
+oid_get_md_alg_id:"2b0e03021a":MBEDTLS_MD_SHA1
+
+OID hash id - id-sha224
+depends_on:PSA_WANT_ALG_SHA_224
+oid_get_md_alg_id:"608648016503040204":MBEDTLS_MD_SHA224
+
+OID hash id - id-sha256
+depends_on:PSA_WANT_ALG_SHA_256
+oid_get_md_alg_id:"608648016503040201":MBEDTLS_MD_SHA256
+
+OID hash id - id-sha384
+depends_on:PSA_WANT_ALG_SHA_384
+oid_get_md_alg_id:"608648016503040202":MBEDTLS_MD_SHA384
+
+OID hash id - id-sha512
+depends_on:PSA_WANT_ALG_SHA_512
+oid_get_md_alg_id:"608648016503040203":MBEDTLS_MD_SHA512
+
+OID hash id - id-sha3-224
+depends_on:PSA_WANT_ALG_SHA3_224
+oid_get_md_alg_id:"608648016503040207":MBEDTLS_MD_SHA3_224
+
+OID hash id - id-sha3-256
+depends_on:PSA_WANT_ALG_SHA3_256
+oid_get_md_alg_id:"608648016503040208":MBEDTLS_MD_SHA3_256
+
+OID hash id - id-sha3-384
+depends_on:PSA_WANT_ALG_SHA3_384
+oid_get_md_alg_id:"608648016503040209":MBEDTLS_MD_SHA3_384
+
+OID hash id - id-sha3-512
+depends_on:PSA_WANT_ALG_SHA3_512
+oid_get_md_alg_id:"60864801650304020a":MBEDTLS_MD_SHA3_512
+
+OID hash id - id-ripemd160
+depends_on:PSA_WANT_ALG_RIPEMD160
+oid_get_md_alg_id:"2b24030201":MBEDTLS_MD_RIPEMD160
+
+OID hash id - invalid oid
+oid_get_md_alg_id:"2B864886f70d0204":-1

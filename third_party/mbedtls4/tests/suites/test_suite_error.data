@@ -1,0 +1,16 @@
+Single low error
+depends_on:MBEDTLS_AES_C
+error_strerror:-0x0020:"AES - Invalid key length"
+
+Single high error
+depends_on:PSA_WANT_ALG_SHA_256:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:MBEDTLS_X509_CRT_PARSE_C
+error_strerror:-0x2280:"X509 - The serial tag or value is invalid"
+
+Non existing high error
+error_strerror:-0x8880:"UNKNOWN ERROR CODE (8880)"
+
+Non existing low error
+error_strerror:-0x007F:"UNKNOWN ERROR CODE (007F)"
+
+Non existing low and high error
+error_strerror:-0x88FF:"UNKNOWN ERROR CODE (8880) \: UNKNOWN ERROR CODE (007F)"

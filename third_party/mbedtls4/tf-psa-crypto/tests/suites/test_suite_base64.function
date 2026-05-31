@@ -1,0 +1,222 @@
+/* BEGIN_HEADER */
+#include "mbedtls/base64.h"
+#include "base64_internal.h"
+#include "constant_time_internal.h"
+#include <test/constant_flow.h>
+
+#if defined(MBEDTLS_TEST_HOOKS)
+static const char base64_digits[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+#endif /* MBEDTLS_TEST_HOOKS */
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_BASE64_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void enc_chars()
+{
+    for (unsigned value = 0; value < 64; value++) {
+        mbedtls_test_set_step(value);
+        TEST_CF_SECRET(&value, sizeof(value));
+        unsigned char digit = mbedtls_ct_base64_enc_char(value);
+        TEST_CF_PUBLIC(&value, sizeof(value));
+        TEST_CF_PUBLIC(&digit, sizeof(digit));
+        TEST_EQUAL(digit, base64_digits[value]);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void dec_chars()
+{
+    char *p;
+    signed char expected;
+
+    for (unsigned c = 0; c <= 0xff; c++) {
+        mbedtls_test_set_step(c);
+        /* base64_digits is 0-terminated. sizeof()-1 excludes the trailing 0. */
+        p = memchr(base64_digits, c, sizeof(base64_digits) - 1);
+        if (p == NULL) {
+            expected = -1;
+        } else {
+            expected = p - base64_digits;
+        }
+        TEST_CF_SECRET(&c, sizeof(c));
+        signed char actual = mbedtls_ct_base64_dec_value(c);
+        TEST_CF_PUBLIC(&c, sizeof(c));
+        TEST_CF_PUBLIC(&actual, sizeof(actual));
+        TEST_EQUAL(actual, expected);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_base64_encode(char *src_string, char *dst_string,
+                           int dst_buf_size, int result)
+{
+    unsigned char src_str[1000];
+    unsigned char dst_str[1000];
+    size_t len, src_len;
+
+    memset(src_str, 0x00, 1000);
+    memset(dst_str, 0x00, 1000);
+
+    strncpy((char *) src_str, src_string, sizeof(src_str) - 1);
+    src_len = strlen((char *) src_str);
+
+    TEST_CF_SECRET(src_str, sizeof(src_str));
+    TEST_ASSERT(mbedtls_base64_encode(dst_str, dst_buf_size, &len, src_str, src_len) == result);
+    TEST_CF_PUBLIC(src_str, sizeof(src_str));
+
+    /* dest_str will have had tainted data copied to it, prevent the TEST_ASSERT below from triggering
+       CF failures by unmarking it. */
+    TEST_CF_PUBLIC(dst_str, len);
+
+    if (result == 0) {
+        TEST_ASSERT(strcmp((char *) dst_str, dst_string) == 0);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void mbedtls_base64_decode(char *src_string, char *dst_string, int result)
+{
+    unsigned char *src = NULL;
+    size_t src_len = strlen(src_string);
+    unsigned char *dst = NULL;
+    size_t correct_dst_len = strlen(dst_string);
+    size_t dst_size = correct_dst_len;
+    size_t len;
+
+    /* Allocate exactly the size of the input, to ensure there's no buffer
+     * overread in builds with ASan. (src_string has at least one extra null
+     * character at the end.) */
+    TEST_CALLOC(src, src_len);
+    if (src_len != 0) {
+        memcpy(src, src_string, src_len);
+    }
+
+    /* Allocate exactly the size of the input, to ensure there's no buffer
+     * overflow in builds with ASan. */
+    TEST_CALLOC(dst, dst_size);
+
+    /* Test normal operation */
+    TEST_EQUAL(mbedtls_base64_decode(dst, dst_size, &len,
+                                     src, src_len),
+               result);
+    if (result == 0) {
+        TEST_MEMORY_COMPARE(dst_string, correct_dst_len, dst, len);
+    }
+
+    /* Test an output buffer that's one byte too small */
+    if (result == 0 && dst_size != 0) {
+        mbedtls_free(dst);
+        dst = NULL;
+        TEST_CALLOC(dst, dst_size - 1);
+        TEST_EQUAL(mbedtls_base64_decode(dst, dst_size - 1, &len,
+                                         src, src_len),
+                   MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL);
+        TEST_EQUAL(correct_dst_len, len);
+    }
+
+    /* Test an empty output buffer. `mbedtls_base64_decode()` must return
+     * `BUFFER_TOO_SMALL` but report the correct output length.
+     * Skip this when dst_size==0 since that would be a valid call to
+     * `mbedtls_base64_decode()` which should return 0.
+     */
+    if (result == 0 && dst_size != 0) {
+        TEST_EQUAL(mbedtls_base64_decode(NULL, 0, &len,
+                                         src, src_len),
+                   MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL);
+        TEST_EQUAL(correct_dst_len, len);
+    }
+
+    /* Test dst=NULL with dlen!=0 (explicitly documented as supported) */
+    if (result == 0 && dst_size != 0) {
+        TEST_EQUAL(mbedtls_base64_decode(NULL, 42, &len,
+                                         src, src_len),
+                   MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL);
+        TEST_EQUAL(correct_dst_len, len);
+    }
+
+exit:
+    mbedtls_free(src);
+    mbedtls_free(dst);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void base64_encode_hex(data_t *src, char *dst, int dst_buf_size,
+                       int result)
+{
+    unsigned char *res = NULL;
+    size_t len;
+
+    res = mbedtls_test_zero_alloc(dst_buf_size);
+
+    TEST_CF_SECRET(src->x, src->len);
+    TEST_ASSERT(mbedtls_base64_encode(res, dst_buf_size, &len, src->x, src->len) == result);
+    TEST_CF_PUBLIC(src->x, src->len);
+
+    /* res will have had tainted data copied to it, prevent the TEST_ASSERT below from triggering
+       CF failures by unmarking it. */
+    TEST_CF_PUBLIC(res, len);
+
+    if (result == 0) {
+        TEST_ASSERT(len == strlen(dst));
+        TEST_ASSERT(memcmp(dst, res, len) == 0);
+    }
+
+exit:
+    mbedtls_free(res);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void base64_decode_hex(char *src, data_t *dst, int dst_buf_size,
+                       int result)
+{
+    unsigned char *res = NULL;
+    size_t len;
+
+    res = mbedtls_test_zero_alloc(dst_buf_size);
+
+    TEST_ASSERT(mbedtls_base64_decode(res, dst_buf_size, &len, (unsigned char *) src,
+                                      strlen(src)) == result);
+    if (result == 0) {
+        TEST_ASSERT(len == dst->len);
+        TEST_ASSERT(memcmp(dst->x, res, len) == 0);
+    }
+
+exit:
+    mbedtls_free(res);
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void base64_decode_hex_src(data_t *src, char *dst_ref, int result)
+{
+    unsigned char dst[1000] = { 0 };
+    size_t len;
+
+    TEST_ASSERT(mbedtls_base64_decode(dst, sizeof(dst), &len, src->x, src->len) == result);
+    if (result == 0) {
+        TEST_ASSERT(len == strlen(dst_ref));
+        TEST_ASSERT(memcmp(dst, dst_ref, len) == 0);
+    }
+
+exit:
+    ;;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
+void base64_selftest()
+{
+    TEST_ASSERT(mbedtls_base64_self_test(1) == 0);
+}
+/* END_CASE */

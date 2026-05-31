@@ -1,0 +1,86 @@
+/* BEGIN_HEADER */
+#include "tf_psa_crypto_common.h"
+
+static void fill_arrays(unsigned char *a,
+                        unsigned char *b,
+                        unsigned char *r1,
+                        unsigned char *r2,
+                        size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        a[i]  = (unsigned char) i * 3;
+        b[i]  = (unsigned char) i * 3 + 1;
+        r1[i] = (unsigned char) i * 3 + 2;
+        r2[i] = r1[i];
+    }
+}
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void mbedtls_xor(int len)
+{
+    size_t n = (size_t) len;
+    unsigned char *a = NULL, *b = NULL, *r1 = NULL, *r2 = NULL;
+    TEST_CALLOC(a, n + 1);
+    TEST_CALLOC(b, n + 1);
+    TEST_CALLOC(r1, n + 1);
+    TEST_CALLOC(r2, n + 1);
+
+    /* Test non-overlapping */
+    fill_arrays(a, b, r1, r2, n);
+    for (size_t i = 0; i < n; i++) {
+        r1[i] = a[i] ^ b[i];
+    }
+    mbedtls_xor(r2, a, b, n);
+    TEST_MEMORY_COMPARE(r1, n, r2, n);
+
+    /* Test r == a */
+    fill_arrays(a, b, r1, r2, n);
+    for (size_t i = 0; i < n; i++) {
+        r1[i] = r1[i] ^ b[i];
+    }
+    mbedtls_xor(r2, r2, b, n);
+    TEST_MEMORY_COMPARE(r1, n, r2, n);
+
+    /* Test r == b */
+    fill_arrays(a, b, r1, r2, n);
+    for (size_t i = 0; i < n; i++) {
+        r1[i] = a[i] ^ r1[i];
+    }
+    mbedtls_xor(r2, a, r2, n);
+    TEST_MEMORY_COMPARE(r1, n, r2, n);
+
+    /* Test a == b */
+    fill_arrays(a, b, r1, r2, n);
+    for (size_t i = 0; i < n; i++) {
+        r1[i] = a[i] ^ a[i];
+    }
+    mbedtls_xor(r2, a, a, n);
+    TEST_MEMORY_COMPARE(r1, n, r2, n);
+
+    /* Test a == b == r */
+    fill_arrays(a, b, r1, r2, n);
+    for (size_t i = 0; i < n; i++) {
+        r1[i] = r1[i] ^ r1[i];
+    }
+    mbedtls_xor(r2, r2, r2, n);
+    TEST_MEMORY_COMPARE(r1, n, r2, n);
+
+    /* Test non-word-aligned buffers, for all combinations of alignedness */
+    for (int i = 0; i < 7; i++) {
+        int r_off = i & 1, a_off = (i & 2) >> 1, b_off = (i & 4) >> 2;
+        fill_arrays(a, b, r1, r2, n + 1);
+
+        for (size_t j = 0; j < n; j++) {
+            r1[j + r_off] = a[j + a_off] ^ b[j + b_off];
+        }
+        mbedtls_xor(r2 + r_off, a + a_off, b + b_off, n);
+        TEST_MEMORY_COMPARE(r1 + r_off, n, r2 + r_off, n);
+    }
+exit:
+    mbedtls_free(a);
+    mbedtls_free(b);
+    mbedtls_free(r1);
+    mbedtls_free(r2);
+}
+/* END_CASE */

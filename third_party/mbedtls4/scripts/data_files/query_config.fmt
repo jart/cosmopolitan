@@ -1,0 +1,63 @@
+/* -*-c-*-
+ *  Query Mbed TLS compile time configurations from mbedtls_config.h
+ *
+ *  Copyright The Mbed TLS Contributors
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ */
+
+#include "mbedtls/build_info.h"
+
+#include "query_config.h"
+
+#include "mbedtls/platform.h"
+#include <string.h>
+
+/* Work around https://github.com/Mbed-TLS/TF-PSA-Crypto/issues/393 */
+#if defined(MBEDTLS_HAVE_TIME)
+#include <mbedtls/platform_time.h>
+#endif
+
+/* *INDENT-OFF* */
+INCLUDE_HEADERS
+/* *INDENT-ON* */
+
+/*
+ * Helper macros to convert a macro or its expansion into a string
+ * WARNING: This does not work for expanding function-like macros. However,
+ * Mbed TLS does not currently have configuration options used in this fashion.
+ */
+#define MACRO_EXPANSION_TO_STR(macro)   MACRO_NAME_TO_STR(macro)
+#define MACRO_NAME_TO_STR(macro)                                        \
+    mbedtls_printf("%s", strlen( #macro "") > 0 ? #macro "\n" : "")
+
+#define STRINGIFY(macro)  #macro
+#define OUTPUT_MACRO_NAME_VALUE(macro) mbedtls_printf( #macro "%s\n",   \
+                                                       (STRINGIFY(macro) "")[0] != 0 ? "=" STRINGIFY( \
+                                                           macro) : "")
+
+#if defined(_MSC_VER)
+/*
+ * Visual Studio throws the warning 4003 because many Mbed TLS feature macros
+ * are defined empty. This means that from the preprocessor's point of view
+ * the macro MBEDTLS_EXPANSION_TO_STR is being invoked without arguments as
+ * some macros expand to nothing. We suppress that specific warning to get a
+ * clean build and to ensure that tests treating warnings as errors do not
+ * fail.
+ */
+#pragma warning(push)
+#pragma warning(disable:4003)
+#endif /* _MSC_VER */
+
+int query_config(const char *config)
+{
+    CHECK_CONFIG /* If the symbol is not found, return an error */
+    return 1;
+}
+
+void list_config(void)
+{
+    LIST_CONFIG
+}
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif /* _MSC_VER */

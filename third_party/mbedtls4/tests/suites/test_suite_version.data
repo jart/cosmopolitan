@@ -1,0 +1,15 @@
+Check compile time library version
+check_compiletime_version:"4.1.0"
+
+Check runtime library version
+check_runtime_version:"4.1.0"
+
+Check for MBEDTLS_VERSION_C
+check_feature:"MBEDTLS_VERSION_C":0
+
+Check for MBEDTLS_TIMING_C when already present
+depends_on:MBEDTLS_TIMING_C
+check_feature:"MBEDTLS_TIMING_C":0
+
+Check for unknown define
+check_feature:"MBEDTLS_UNKNOWN":-1

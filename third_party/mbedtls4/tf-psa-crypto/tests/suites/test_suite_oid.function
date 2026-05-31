@@ -1,0 +1,29 @@
+/* BEGIN_HEADER */
+#include "crypto_oid.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/asn1write.h"
+#include "string.h"
+/* END_HEADER */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PKCS5_C:MBEDTLS_ASN1_PARSE_C */
+void mbedtls_oid_get_md_hmac(data_t *oid, int exp_md_id)
+{
+    mbedtls_asn1_buf md_oid = { 0, 0, NULL };
+    int ret;
+    mbedtls_md_type_t md_id = 0;
+
+    md_oid.tag = MBEDTLS_ASN1_OID;
+    md_oid.p = oid->x;
+    md_oid.len = oid->len;
+
+    ret = mbedtls_oid_get_md_hmac(&md_oid, &md_id);
+
+    if (exp_md_id < 0) {
+        TEST_ASSERT(ret == MBEDTLS_ERR_OID_NOT_FOUND);
+        TEST_ASSERT(md_id == 0);
+    } else {
+        TEST_ASSERT(ret == 0);
+        TEST_ASSERT((mbedtls_md_type_t) exp_md_id == md_id);
+    }
+}
+/* END_CASE */

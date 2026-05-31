@@ -1,0 +1,47 @@
+Zeroize len 0, null
+mbedtls_platform_zeroize:0:1
+
+Zeroize len 0, non-null
+mbedtls_platform_zeroize:0:0
+
+Zeroize len 1
+mbedtls_platform_zeroize:1:0
+
+Zeroize len 4
+mbedtls_platform_zeroize:1:0
+
+Zeroize len 5
+mbedtls_platform_zeroize:1:0
+
+Zeroize len 32
+mbedtls_platform_zeroize:32:0
+
+Zeroize len 127
+mbedtls_platform_zeroize:127:0
+
+Zeroize len 128
+mbedtls_platform_zeroize:128:0
+
+Zeroize uninitialised 1 0
+mbedtls_platform_zeroize_uninitialised:1:0
+
+Zeroize uninitialised 16 0
+mbedtls_platform_zeroize_uninitialised:16:0
+
+Zeroize uninitialised 16 1
+mbedtls_platform_zeroize_uninitialised:16:1
+
+Zeroize uninitialised 16 10
+mbedtls_platform_zeroize_uninitialised:16:10
+
+Zeroize uninitialised 16 15
+mbedtls_platform_zeroize_uninitialised:16:15
+
+Zeroize uninitialised 128 0
+mbedtls_platform_zeroize_uninitialised:128:0
+
+Zeroize uninitialised 128 64
+mbedtls_platform_zeroize_uninitialised:128:64
+
+Zeroize uninitialised 128 127
+mbedtls_platform_zeroize_uninitialised:128:127

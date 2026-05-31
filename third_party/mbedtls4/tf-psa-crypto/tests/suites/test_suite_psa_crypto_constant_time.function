@@ -1,0 +1,310 @@
+/* BEGIN_HEADER */
+/* Positive test cases for PSA crypto APIs that assert constant-time
+ * (more accurately constant-flow) behavior. */
+
+#include <psa/crypto.h>
+#include <test/constant_flow.h>
+
+/* Our software AES implementation is not constant-time. For constant-time
+ * testing involving AES, require a hardware-assisted AES that is
+ * constant-time.
+ *
+ * We assume that if the hardware-assisted version is available in the build,
+ * it will be available at runtime. The AES tests will fail if run on a
+ * processor without AESNI/AESCE.
+ */
+#include "aesce.h"
+#include "aesni.h"
+#if defined(MBEDTLS_AESCE_HAVE_CODE) || defined(MBEDTLS_AESNI_HAVE_CODE)
+#define HAVE_CONSTANT_TIME_AES
+#endif
+
+static int ct_cipher_multipart(psa_cipher_operation_t *operation,
+                               const data_t *iv,
+                               const data_t *input,
+                               size_t output_size,
+                               const data_t *expected_output,
+                               psa_status_t expected_finish_status)
+{
+    unsigned char *output = NULL;
+    size_t update_length = SIZE_MAX;
+    size_t finish_length = SIZE_MAX;
+    psa_status_t status;
+    int ok = 0;
+
+    TEST_CALLOC(output, output_size);
+
+    PSA_ASSERT(psa_cipher_set_iv(operation, iv->x, iv->len));
+    status = psa_cipher_update(operation,
+                               input->x, input->len,
+                               output, output_size, &update_length);
+    if (expected_finish_status == PSA_ERROR_BUFFER_TOO_SMALL &&
+        status == PSA_ERROR_BUFFER_TOO_SMALL) {
+        /* The output buffer is already too small for update. That's ok. */
+        ok = 1;
+        goto exit;
+    } else {
+        PSA_ASSERT(status);
+    }
+    TEST_LE_U(update_length, output_size);
+    TEST_EQUAL(psa_cipher_finish(operation,
+                                 output + update_length,
+                                 output_size - update_length,
+                                 &finish_length),
+               expected_finish_status);
+
+    TEST_CF_PUBLIC(output, output_size);
+    if (expected_finish_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                            output, update_length + finish_length);
+    }
+    ok = 1;
+
+exit:
+    mbedtls_free(output);
+    psa_cipher_abort(operation);
+    return ok;
+}
+
+static int ct_cipher_decrypt_oneshot(mbedtls_svc_key_id_t key,
+                                     psa_algorithm_t alg,
+                                     const data_t *input,
+                                     size_t output_size,
+                                     const data_t *expected_output,
+                                     psa_status_t expected_status)
+{
+    unsigned char *output = NULL;
+    size_t output_length = SIZE_MAX;
+    int ok = 0;
+
+    TEST_CALLOC(output, output_size);
+
+    TEST_EQUAL(psa_cipher_decrypt(key, alg,
+                                  input->x, input->len,
+                                  output, output_size, &output_length),
+               expected_status);
+
+    TEST_CF_PUBLIC(output, output_size);
+    if (expected_status == PSA_SUCCESS) {
+        TEST_MEMORY_COMPARE(expected_output->x, expected_output->len,
+                            output, output_length);
+    }
+    ok = 1;
+
+exit:
+    mbedtls_free(output);
+    return ok;
+}
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+/* Known answer test for cipher multipart encryption.
+ * There is no known answer test for one-shot encryption because that
+ * uses a random IV. */
+void ct_cipher_encrypt(int alg_arg,
+                       int key_type_arg, const data_t *key_data,
+                       const data_t *iv,
+                       const data_t *plaintext,
+                       const data_t *expected_ciphertext)
+{
+    psa_key_type_t key_type = key_type_arg;
+    psa_algorithm_t alg = alg_arg;
+    size_t sufficient_output_size =
+        PSA_CIPHER_ENCRYPT_OUTPUT_SIZE(key_type, alg, plaintext->len);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+
+    PSA_INIT();
+    TEST_CF_SECRET(key_data->x, key_data->len);
+    TEST_CF_SECRET(plaintext->x, plaintext->len);
+    //TEST_ASSERT(key_data->x[0] != 42); // uncomment to trip constant-flow test
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len, &key));
+
+    /* Output buffer too small for the actual output */
+    mbedtls_test_set_step(1);
+    PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, alg));
+    if (!ct_cipher_multipart(&operation, iv, plaintext,
+                             expected_ciphertext->len - 1,
+                             expected_ciphertext,
+                             PSA_ERROR_BUFFER_TOO_SMALL)) {
+        goto exit;
+    }
+
+    if (expected_ciphertext->len < sufficient_output_size) {
+        /* For a buffer of intermediate size (between the actual output length
+         * and the guaranteed sufficient size), either PSA_SUCCESS or
+         * PSA_ERROR_BUFFER_TOO_SMALL is acceptable. Require what the our
+         * built-in implementation currently does. */
+        psa_status_t intermediate_size_status = PSA_SUCCESS;
+
+        /* Output buffer size just large enough for the actual output
+         * but less than the guaranteed sufficient size */
+        mbedtls_test_set_step(2);
+        PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, alg));
+        if (!ct_cipher_multipart(&operation, iv, plaintext,
+                                 expected_ciphertext->len,
+                                 expected_ciphertext,
+                                 intermediate_size_status)) {
+            goto exit;
+        }
+
+        /* Output buffer size large enough for the actual output
+         * but one less than the guaranteed sufficient size */
+        mbedtls_test_set_step(3);
+        PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, alg));
+        if (!ct_cipher_multipart(&operation, iv, plaintext,
+                                 sufficient_output_size - 1,
+                                 expected_ciphertext,
+                                 intermediate_size_status)) {
+            goto exit;
+        }
+    }
+
+    /* Guaranteed sufficient output buffer size */
+    mbedtls_test_set_step(4);
+    PSA_ASSERT(psa_cipher_encrypt_setup(&operation, key, alg));
+    if (!ct_cipher_multipart(&operation, iv, plaintext,
+                             sufficient_output_size,
+                             expected_ciphertext,
+                             PSA_SUCCESS)) {
+        goto exit;
+    }
+
+exit:
+    psa_cipher_abort(&operation);
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Known answer for cipher decryption (one-shot and multipart).
+ * Supports good cases and invalid padding cases. */
+void ct_cipher_decrypt(int alg_arg,
+                       int key_type_arg, const data_t *key_data,
+                       const data_t *iv,
+                       const data_t *ciphertext,
+                       const data_t *expected_plaintext,
+                       int expect_invalid_padding)
+{
+    psa_key_type_t key_type = key_type_arg;
+    psa_algorithm_t alg = alg_arg;
+    size_t sufficient_output_size =
+        PSA_CIPHER_DECRYPT_OUTPUT_SIZE(key_type, alg, ciphertext->len);
+    psa_status_t expected_status =
+        expect_invalid_padding ? PSA_ERROR_INVALID_PADDING : PSA_SUCCESS;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_cipher_operation_t operation = PSA_CIPHER_OPERATION_INIT;
+    data_t input = { NULL, iv->len + ciphertext->len };
+
+    PSA_INIT();
+    TEST_CF_SECRET(key_data->x, key_data->len);
+    TEST_CF_SECRET(ciphertext->x, ciphertext->len);
+    //TEST_ASSERT(key_data->x[0] != 42); // uncomment to trip constant-flow test
+
+    TEST_CALLOC(input.x, input.len);
+    memcpy(input.x, iv->x, iv->len);
+    memcpy(input.x + iv->len, ciphertext->x, ciphertext->len);
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_type(&attributes, key_type);
+    PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len, &key));
+
+    /* Output buffer too small for the actual output */
+    mbedtls_test_set_step(1);
+    PSA_ASSERT(psa_cipher_decrypt_setup(&operation, key, alg));
+    if (!ct_cipher_multipart(&operation, iv, ciphertext,
+                             expected_plaintext->len - 1,
+                             expected_plaintext,
+                             PSA_ERROR_BUFFER_TOO_SMALL)) {
+        goto exit;
+    }
+    if (!ct_cipher_decrypt_oneshot(key, alg, &input,
+                                   expected_plaintext->len - 1,
+                                   expected_plaintext,
+                                   PSA_ERROR_BUFFER_TOO_SMALL)) {
+        goto exit;
+    }
+
+    if (expected_plaintext->len < sufficient_output_size) {
+        /* For a buffer of intermediate size (between the actual output length
+         * and the guaranteed sufficient size), either PSA_SUCCESS (or
+         * PSA_ERROR_INVALID_PADDING if the padding is invalid) or
+         * PSA_ERROR_BUFFER_TOO_SMALL is acceptable. Require what the our
+         * built-in implementation currently does. */
+        psa_status_t intermediate_size_status = expected_status;
+        if (alg == PSA_ALG_CBC_PKCS7) {
+            intermediate_size_status = PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+
+        /* Output buffer size just large enough for the actual output
+         * but less than the guaranteed sufficient size */
+        mbedtls_test_set_step(2);
+        PSA_ASSERT(psa_cipher_decrypt_setup(&operation, key, alg));
+        if (!ct_cipher_multipart(&operation, iv, ciphertext,
+                                 expected_plaintext->len,
+                                 expected_plaintext,
+                                 intermediate_size_status)) {
+            goto exit;
+        }
+        if (!ct_cipher_decrypt_oneshot(key, alg, &input,
+                                       expected_plaintext->len - 1,
+                                       expected_plaintext,
+                                       intermediate_size_status)) {
+            goto exit;
+        }
+
+        /* Output buffer size large enough for the actual output
+         * but one less than the guaranteed sufficient size */
+        mbedtls_test_set_step(3);
+        PSA_ASSERT(psa_cipher_decrypt_setup(&operation, key, alg));
+        if (!ct_cipher_multipart(&operation, iv, ciphertext,
+                                 sufficient_output_size - 1,
+                                 expected_plaintext,
+                                 intermediate_size_status)) {
+            goto exit;
+        }
+        if (!ct_cipher_decrypt_oneshot(key, alg, &input,
+                                       sufficient_output_size - 1,
+                                       expected_plaintext,
+                                       intermediate_size_status)) {
+            goto exit;
+        }
+    }
+
+    /* Guaranteed sufficient output buffer size */
+    mbedtls_test_set_step(4);
+    PSA_ASSERT(psa_cipher_decrypt_setup(&operation, key, alg));
+    if (!ct_cipher_multipart(&operation, iv, ciphertext,
+                             sufficient_output_size,
+                             expected_plaintext,
+                             expected_status)) {
+        goto exit;
+    }
+    if (!ct_cipher_decrypt_oneshot(key, alg, &input,
+                                   sufficient_output_size,
+                                   expected_plaintext,
+                                   expected_status)) {
+        goto exit;
+    }
+
+exit:
+    mbedtls_free(input.x);
+    psa_cipher_abort(&operation);
+    psa_destroy_key(key);
+    PSA_DONE();
+}
+/* END_CASE */

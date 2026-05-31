@@ -1,0 +1,8 @@
+Timing: get timer
+timing_get_timer:
+
+Timing: delay 0ms
+timing_delay:0:
+
+Timing: delay 100ms
+timing_delay:100:

@@ -1,0 +1,91 @@
+[MASTER]
+init-hook='import sys; sys.path.append("scripts"); sys.path.append("framework/scripts")'
+min-similarity-lines=10
+
+[BASIC]
+# We're ok with short funtion argument names.
+# [invalid-name]
+argument-rgx=[a-z_][a-z0-9_]*$
+
+# Allow filter and map.
+# [bad-builtin]
+bad-functions=input
+
+# We prefer docstrings, but we don't require them on all functions.
+# Require them only on long functions (for some value of long).
+# [missing-docstring]
+docstring-min-length=10
+
+# No upper limit on method names. Pylint <2.1.0 has an upper limit of 30.
+# [invalid-name]
+method-rgx=[a-z_][a-z0-9_]{2,}$
+
+# Allow module names containing a dash (but no underscore or uppercase letter).
+# They are whole programs, not meant to be included by another module.
+# [invalid-name]
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+)|[a-z][-0-9a-z]+)$
+
+# Some functions don't need docstrings.
+# [missing-docstring]
+no-docstring-rgx=(run_)?main$
+
+# We're ok with short local or global variable names.
+# [invalid-name]
+variable-rgx=[a-z_][a-z0-9_]*$
+
+[DESIGN]
+# Allow more than the default 7 attributes.
+# [too-many-instance-attributes]
+max-attributes=15
+
+[FORMAT]
+# Allow longer modules than the default recommended maximum.
+# [too-many-lines]
+max-module-lines=2000
+
+[MESSAGES CONTROL]
+# * locally-disabled, locally-enabled: If we disable or enable a message
+#   locally, it's by design. There's no need to clutter the Pylint output
+#   with this information.
+# * logging-format-interpolation: Pylint warns about things like
+#   ``log.info('...'.format(...))``. It insists on ``log.info('...', ...)``.
+#   This is of minor utility (mainly a performance gain when there are
+#   many messages that use formatting and are below the log level).
+#   Some versions of Pylint (including 1.8, which is the version on
+#   Ubuntu 18.04) only recognize old-style format strings using '%',
+#   and complain about something like ``log.info('{}', foo)`` with
+#   logging-too-many-args (Pylint supports new-style formatting if
+#   declared globally with logging_format_style under [LOGGING] but
+#   this requires Pylint >=2.2).
+# * no-else-return: Allow the perfectly reasonable idiom
+#    if condition1:
+#        return value1
+#    else:
+#        return value2
+# * unnecessary-pass: If we take the trouble of adding a line with "pass",
+#   it's because we think the code is clearer that way.
+disable=locally-disabled,locally-enabled,logging-format-interpolation,no-else-return,unnecessary-pass
+
+[REPORTS]
+# Don't diplay statistics. Just the facts.
+reports=no
+
+[STRING]
+# Complain about
+# ```
+# list_of_strings = [
+#    'foo' # <-- missing comma
+#    'bar',
+#    'corge',
+# ]
+# ```
+check-str-concat-over-line-jumps=yes
+
+[VARIABLES]
+# Allow unused variables if their name starts with an underscore.
+# [unused-argument]
+dummy-variables-rgx=_.*
+
+[SIMILARITIES]
+# Ignore imports when computing similarities.
+ignore-imports=yes

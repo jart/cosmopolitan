@@ -30,44 +30,44 @@ TEST_TOOL_NET_CHECKS =						\
 
 TEST_TOOL_NET_DIRECTDEPS =					\
 	LIBC_CALLS						\
-	LIBC_FMT						\
+	LIBC_FMT							\
 	LIBC_INTRIN						\
-	LIBC_LOG						\
-	LIBC_MEM						\
-	LIBC_NEXGEN32E						\
-	LIBC_PROC						\
-	LIBC_RUNTIME						\
-	LIBC_SOCK						\
+	LIBC_LOG							\
+	LIBC_MEM							\
+	LIBC_NEXGEN32E				\
+	LIBC_PROC							\
+	LIBC_RUNTIME					\
+	LIBC_SOCK							\
 	LIBC_STDIO						\
-	LIBC_STR						\
-	LIBC_SYSV						\
-	LIBC_TESTLIB						\
+	LIBC_STR							\
+	LIBC_SYSV							\
+	LIBC_TESTLIB					\
 	LIBC_THREAD						\
 	LIBC_THREAD						\
-	LIBC_X							\
-	THIRD_PARTY_MBEDTLS					\
-	THIRD_PARTY_REGEX					\
+	LIBC_X								\
+	THIRD_PARTY_MBEDTLS4	\
+	THIRD_PARTY_REGEX			\
 	THIRD_PARTY_SQLITE3
 
 TEST_TOOL_NET_DEPS :=						\
 	$(call uniq,$(foreach x,$(TEST_TOOL_NET_DIRECTDEPS),$($(x))))
 
-$(TEST_TOOL_NET_A):						\
+$(TEST_TOOL_NET_A):					\
 		test/tool/net/					\
-		$(TEST_TOOL_NET_A).pkg				\
+		$(TEST_TOOL_NET_A).pkg	\
 		$(TEST_TOOL_NET_OBJS)
 
-$(TEST_TOOL_NET_A).pkg:						\
+$(TEST_TOOL_NET_A).pkg:					\
 		$(TEST_TOOL_NET_OBJS)				\
 		$(foreach x,$(TEST_TOOL_NET_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/tool/net/%.dbg:					\
-		$(TEST_TOOL_NET_DEPS)				\
-		$(TEST_TOOL_NET_A)				\
+o/$(MODE)/test/tool/net/%.dbg:			\
+		$(TEST_TOOL_NET_DEPS)						\
+		$(TEST_TOOL_NET_A)							\
 		o/$(MODE)/test/tool/net/%.o			\
-		$(TEST_TOOL_NET_A).pkg				\
-		$(LIBC_TESTMAIN)				\
-		$(CRT)						\
+		$(TEST_TOOL_NET_A).pkg					\
+		$(LIBC_TESTMAIN)								\
+		$(CRT)													\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/https/https.h"
-#include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls4/include/mbedtls/error.h"
 
 char *GetTlsError(int r) {
   static _Thread_local char b[128];

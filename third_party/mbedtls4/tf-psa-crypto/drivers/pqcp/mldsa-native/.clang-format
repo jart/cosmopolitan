@@ -1,0 +1,29 @@
+# Copyright (c) The mlkem-native project authors
+# Copyright (c) The mldsa-native project authors
+# SPDX-License-Identifier: Apache-2.0 OR ISC OR MIT
+#
+# clang-format style file for mldsa-native
+#
+BasedOnStyle: Google
+MaxEmptyLinesToKeep: 3
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: false
+PointerAlignment: Right
+# TODO(davidben): The default for Google style is now Regroup, but the default
+# IncludeCategories does not recognize <openssl/header.h>. We should
+# reconfigure IncludeCategories to match. For now, keep it at Preserve.
+IncludeBlocks: Preserve
+
+# Designate CBMC contracts/macros that appear in .h files
+# as "attributes" so they don't get increasingly indented line after line
+BreakBeforeBraces: Allman
+InsertBraces: true
+IndentExternBlock: NoIndent
+WhitespaceSensitiveMacros: ['__contract__', '__loop__' ]
+Macros:
+ # Make this artifically long to avoid function bodies after short contracts
+ - __contract__(x)={ void a; void b; void c; void d; void e; void f; } void abcdefghijklmnopqrstuvw()
+ - __loop__(x)={} do
+ # Make this artifically long to force line break
+ - MLD_INTERNAL_API=void abcdefghijklmnopqrstuvwabcdefghijklmnopqrstuvwabcdefg();
