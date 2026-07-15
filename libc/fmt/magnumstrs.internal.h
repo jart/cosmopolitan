@@ -17,7 +17,6 @@ struct MagnumStr {
 };
 
 extern const struct MagnumStr kClockNames[];
-extern const struct MagnumStr kErrnoNames[];
 extern const struct MagnumStr kIpOptnames[];
 extern const struct MagnumStr kIpv6Optnames[];
 extern const struct MagnumStr kSockOptnames[];

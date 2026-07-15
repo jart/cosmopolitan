@@ -23,8 +23,7 @@
 
 /*
  * If these tests break, it's probably because
- * libc/sysv/consts.sh changed and
- * libc/sysv/kErrnoNames.S needs updating.
+ * libc/sysv/consts/ changed.
  */
 
 TEST(strerror, e2big) {
