@@ -1,0 +1,53 @@
+{
+  "rules": {
+    "no-std": "In Cosmopolitan, no-std implies avoiding standard glibc headers to prevent dynamic linking, using crt.h and runtime.h instead.",
+    "alignment": "Stack alignment in APE must be 16-byte boundary compliant for SSE/AVX instructions.",
+    "binary_size": "Binary size can be reduced using -ffunction-sections and -fdata-sections to allow the linker to perform dead code elimination."
+  },
+  "forbidden_c_headers": ["stdio.h", "stdlib.h", "string.h", "pthread.h"],
+  "forbidden_cpp_headers": ["iostream", "fstream", "string", "vector", "thread"],
+  "forbidden_rust_keywords": ["use std::", "extern crate std;"],
+  "compiler_errors": [
+    {
+      "pattern": "undefined reference to `WinMain'",
+      "explanation": "The linker is looking for a Windows entry point, but Cosmopolitan handles the platform abstraction internally.",
+      "suggestion": "Always use standard `int main(int argc, char **argv)` in Cosmopolitan, even when compiling for Windows."
+    },
+    {
+      "pattern": "undefined reference to `(.*?)'",
+      "explanation": "The linker cannot find function `{0}`.\nPossible reasons:\n\u2022 Object not linked\n\u2022 BUILD.mk missing dependency\n\u2022 Library not exported",
+      "suggestion": "Check if you need to add LIBC_CALLS or the relevant package to _DIRECTDEPS in your BUILD.mk."
+    },
+    {
+      "pattern": "No rule to make target `(.*?)'",
+      "explanation": "Make doesn't know how to build `{0}`.\nPossible reasons:\n\u2022 Missing file\n\u2022 Typo in _SRCS or _HDRS\n\u2022 Path is outside hermetic repo",
+      "suggestion": "Verify the file path exists and is correctly spelled in your BUILD.mk."
+    },
+    {
+      "pattern": "fatal error: (.*?): No such file or directory",
+      "explanation": "The compiler cannot find the header `{0}`.\nPossible reasons:\n\u2022 Header not added to _HDRS in its module\n\u2022 The module providing this header is missing from _DIRECTDEPS\n\u2022 Typo in the include path",
+      "suggestion": "If `{0}` belongs to another Cosmopolitan package, add that package to your BUILD.mk dependencies."
+    },
+    {
+      "pattern": "warning: integer overflow in expression",
+      "explanation": "A mathematical operation exceeded the capacity of its data type. This results in undefined behavior for signed integers.",
+      "suggestion": "Review the arithmetic logic. Test boundary values using: `python guardian.py math add <a> <b> <dtype>`",
+      "trigger": "overflow"
+    },
+    {
+      "pattern": "(jtckdint|checked integer|ckd_add)",
+      "explanation": "A checked integer arithmetic issue was detected. If using -std=c99, strict ANSI disables GCC built-ins, causing ckd_add to fallback to returning 0.",
+      "suggestion": "Compile with -std=gnu99 or -std=c11 to allow __builtin_add_overflow to function correctly."
+    },
+    {
+      "pattern": "(?i)exec format error",
+      "explanation": "The OS failed to recognize the APE binary format.",
+      "suggestion": "On Linux, ensure binfmt_misc is configured via 'ape-install', or verify the file has executable permissions (`chmod +x`)."
+    },
+    {
+      "pattern": "pledge(.*)failed",
+      "explanation": "Pledge/Unveil failed at runtime. Cosmopolitan polyfills this on Windows/Mac, but it can be extremely restrictive.",
+      "suggestion": "Check that your unveil paths use forward slashes ('/') even on Windows, and ensure you aren't violating Windows-specific strict mode limits."
+    }
+  ]
+}

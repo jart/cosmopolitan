@@ -1,0 +1,34 @@
+name: Cosmo Guardian CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  guardian-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Run Cosmo Guardian Architecture Analysis
+      run: |
+        echo "Running static analysis on BUILD.mk files..."
+        python cosmo-gardian/guardian.py analyze
+        
+    - name: Run Cosmo Guardian Code Linter
+      run: |
+        echo "Linting test files for Cosmopolitan philosophy..."
+        # Example of linting a specific tool. In a real scenario, we could use
+        # `git diff` to find changed files and pass them to the linter.
+        if [ -f "tool/hello/hello.c" ]; then
+          python cosmo-gardian/guardian.py lint tool/hello/hello.c
+        fi

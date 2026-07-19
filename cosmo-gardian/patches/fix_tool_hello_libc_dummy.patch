@@ -1,0 +1,10 @@
+--- a/tool/hello/BUILD.mk
++++ b/tool/hello/BUILD.mk
+@@ -19,6 +19,7 @@
+ 	o/$(MODE)/tool/hello/hello-unix			\
+ 
+ TOOL_HELLO_DIRECTDEPS =					\
++		LIBC_DUMMY \
+ 	LIBC_CALLS					\
+ 	LIBC_RUNTIME
+ 

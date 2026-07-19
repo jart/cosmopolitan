@@ -1,0 +1,530 @@
+{
+  "version": "3.1",
+  "issues": [
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\core\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\core\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\mpeg\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\scale\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\scale\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\tty\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "dsp\\tty\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\calls\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\calls\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\fmt\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\fmt\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\intrin\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\log\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\log\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\nexgen32e\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\nexgen32e\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\runtime\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\runtime\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\stdio\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\str\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\str\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\system\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\system\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\sysv\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\sysv\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "libc\\tinymath\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "net\\http\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "net\\http\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\c11\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\c11\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\fmt\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\fmt\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\intrin\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\intrin\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\mem\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\mem\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\nexgen32e\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\nexgen32e\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\runtime\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\runtime\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\stdio\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\stdio\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\str\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\str\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\tinymath\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\libc\\tinymath\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\math\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "test\\math\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\argon2\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\awk\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\awk\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\bzip2\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\compiler_rt\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\compiler_rt\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\dash\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\dash\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\dlmalloc\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\gdtoa\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\haclstar\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\less\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\less\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\linenoise\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\lua\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\make\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\make\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\maxmind\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\mbedtls\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\mbedtls\\test\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\miniaudio\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\musl\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\musl\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\ncurses\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\ncurses\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\python\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\readline\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\readline\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\regex\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\regex\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\sqlite3\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\stb\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\tz\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\unzip\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\unzip\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\xed\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\xed\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\zlib\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\zlib\\gz\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\zstd\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "third_party\\zstd\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\build\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\build\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\decode\\lib\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\hello\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\hello\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\lambda\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\lambda\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\net\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\net\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\plinko\\lib\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\plinko\\lib\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\viz\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\viz\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\viz\\lib\\BUILD.mk",
+      "message": "Missing -ffunction-sections / -fdata-sections for optimal dead code elimination."
+    },
+    {
+      "type": "BuildFlagMissing",
+      "file": "tool\\viz\\lib\\BUILD.mk",
+      "message": "Consider verifying stack alignment (-mpreferred-stack-boundary=4) or -mno-red-zone for kernel-level compatibility."
+    },
+    {
+      "type": "ParallelismSuggestion",
+      "message": "Package THIRD_PARTY_LIBCXXABI_TEST is very dense (51 sources).",
+      "suggestion": "Consider subdividing THIRD_PARTY_LIBCXXABI_TEST to improve make parallelism."
+    }
+  ]
+}

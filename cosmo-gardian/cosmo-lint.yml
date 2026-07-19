@@ -1,0 +1,68 @@
+
+name: Cosmo Sentinel CI
+
+on: [pull_request]
+
+jobs:
+  lint_cosmo_project:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Copy cosmo_agent.py (simulated)
+      run: cp /content/cosmo_agent.py cosmo_agent.py
+
+    - name: Lint BUILD.mk files
+      run: |
+        echo "Running BUILD.mk linting..."
+        # Simulate finding and linting a BUILD.mk file
+        # In a real scenario, this would iterate through actual project files
+        python cosmo_agent.py LIBC_SRCS "main.c README.md"
+        python cosmo_agent.py NET_PKGS "/usr/local libc/net"
+
+    - name: Lint C code for no-std violations
+      run: |
+        echo "Running C code no-std linting..."
+        # Simulate finding and linting C code files
+        C_CODE_INVALID='#include <stdio.h>
+int main() { return 0; }'
+        C_CODE_VALID='#include <libc/runtime/runtime.h>
+int main() { return 0; }'
+
+        python cosmo_agent.py validate_c_code "${C_CODE_INVALID}"
+        python cosmo_agent.py validate_c_code "${C_CODE_VALID}"
+
+    - name: Automated C Code Validation Test
+      run: |
+        echo "Running automated C code validation test..."
+        # Simulate a C file for validation
+        echo '#include <stdio.h>
+int main() { return 0; }' > test_c_file_invalid.c
+        echo '#include <libc/runtime/runtime.h>
+int main() { return 0; }' > test_c_file_valid.c
+
+        # This step is expected to fail for invalid code and pass for valid code
+        # We'll run it in a way that doesn't stop the workflow immediately for the invalid case,
+        # but still captures the output.
+
+        # Test with invalid C code (expected to show errors)
+        ! python cosmo_agent.py validate_c_code "$(cat test_c_file_invalid.c)"
+
+        # Test with valid C code (expected to pass)
+        python cosmo_agent.py validate_c_code "$(cat test_c_file_valid.c)"
+      env:
+        PYTHONUNBUFFERED: 1
+
+    - name: Report success
+      if: success()
+      run: echo "Cosmo Sentinel CI: All checks passed!"
+
+    - name: Report failure
+      if: failure()
+      run: echo "Cosmo Sentinel CI: Detected issues. Please check logs."
