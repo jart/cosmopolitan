@@ -34,6 +34,10 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/ldrdatatableentry.h"
+#include "libc/nt/struct/peb.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/nt/loader.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
@@ -351,6 +355,62 @@ void __maps_unmark(void *addr, size_t size) {
   }
 }
 
+textwindows static int __maps_prot_nt2sysv(uint32_t protect) {
+  int prot = PROT_NONE;
+  if (protect & kNtPageExecute) {
+    prot |= PROT_EXEC;
+  }
+  if (protect & kNtPageExecuteRead) {
+    prot |= PROT_EXEC | PROT_READ;
+  }
+  if (protect & kNtPageExecuteReadwrite) {
+    prot |= PROT_EXEC | PROT_READ | PROT_WRITE;
+  }
+  if (protect & kNtPageReadonly) {
+    prot |= PROT_READ;
+  }
+  if (protect & kNtPageReadwrite) {
+    prot |= PROT_READ | PROT_WRITE;
+  }
+  return prot;
+}
+
+textwindows static int __maps_track_dll(char *base, uint32_t size) {
+  int rc = 0;
+
+  struct NtMemoryBasicInformation mi = {0};
+  for (char *p = base; p < base + size;
+       p = (char *)mi.BaseAddress + mi.RegionSize) {
+    mi = (struct NtMemoryBasicInformation){0};
+    if (!VirtualQuery(p, &mi, sizeof(mi)))
+      continue;
+
+    if (!__maps_track(mi.BaseAddress, mi.RegionSize,
+                     __maps_prot_nt2sysv(mi.Protect), MAP_NOFORK))
+      rc = -1;
+  }
+
+  return rc;
+}
+
+textwindows dontinline static void __msabi __maps_dll_notify(
+    uint32_t reason, const union NtLdrDllNotificationData *data, void *context) {
+  switch (reason) {
+    case kNtLdrDllNotificationReasonLoaded: {
+      __maps_lock();
+      __maps_track_dll(data->Loaded.DllBase, data->Loaded.SizeOfImage);
+      __maps_unlock();
+      break;
+    }
+    case kNtLdrDllNotificationReasonUnloaded: {
+      __maps_lock();
+      __maps_untrack(data->Unloaded.DllBase, data->Unloaded.SizeOfImage);
+      __maps_unlock();
+      break;
+    }
+  }
+}
+
 textstartup void __maps_init(void) {
   if (__maps.once)
     return;
@@ -385,6 +445,30 @@ textstartup void __maps_init(void) {
     struct AddrSize stack = __get_main_stack();
     __maps_stack(stack.addr - guardsize, pagesz, guardsize,
                  guardsize + stack.size, (uintptr_t)ape_stack_prot);
+  }
+
+  if (IsWindows()) {
+    // walk PPEB->Ldr and record all PE mappings
+    const struct NtPeb *peb = NtCurrentPeb();
+    const struct NtLdr *ldr = peb->Ldr;
+    const struct NtLinkedList *const head = ldr->InMemoryOrderModuleList.Next;
+    const struct NtLinkedList *node = head;
+
+    do {
+      const struct NtLdrDataTableEntry *entry =
+          TREE_CONTAINER(struct NtLdrDataTableEntry, InMemoryOrderLinks, node);
+
+      node = node->Next;
+
+      // ignore ourselves
+      if (entry->DllBase == peb->ImageBaseAddress) continue;
+
+      __maps_track_dll(entry->DllBase, entry->SizeOfImage);
+    } while (node != head);
+
+    // TODO: do we need to unregister this in {@linkcode __maps_wipe}?
+    void* cookie;
+    LdrRegisterDllNotification(0, __maps_dll_notify, NULL, &cookie);
   }
 
   // record .text and .data mappings

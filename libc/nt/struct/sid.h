@@ -2,6 +2,12 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SID_H_
 
 struct NtSidIdentifierAuthority {
+#define kNtSecurityNullSidAuthority         {0, 0, 0, 0, 0, 0}
+#define kNtSecurityWorldSidAuthority        {0, 0, 0, 0, 0, 1}
+#define kNtSecurityLocalSidAuthority        {0, 0, 0, 0, 0, 2}
+#define kNtSecurityCreatorSidAuthority      {0, 0, 0, 0, 0, 3}
+#define kNtSecurityNonUniqueAuthority       {0, 0, 0, 0, 0, 4}
+#define kNtSecurityResourceManagerAuthority {0, 0, 0, 0, 0, 9}
   uint8_t Value[6];
 };
 
@@ -10,16 +16,6 @@ struct NtSid {
   uint8_t SubAuthorityCount;
   struct NtSidIdentifierAuthority IdentifierAuthority;
   uint32_t SubAuthority[1];
-};
-
-struct NtSidIdentifierAuthority {
-#define kNtSecurityNullSidAuthority         {0, 0, 0, 0, 0, 0}
-#define kNtSecurityWorldSidAuthority        {0, 0, 0, 0, 0, 1}
-#define kNtSecurityLocalSidAuthority        {0, 0, 0, 0, 0, 2}
-#define kNtSecurityCreatorSidAuthority      {0, 0, 0, 0, 0, 3}
-#define kNtSecurityNonUniqueAuthority       {0, 0, 0, 0, 0, 4}
-#define kNtSecurityResourceManagerAuthority {0, 0, 0, 0, 0, 9}
-  uint8_t Value[6];
 };
 
 #define kNtSecurityNullRid               0x00000000u

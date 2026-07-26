@@ -31,11 +31,13 @@
 #include "libc/intrin/maps.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.h"
+#include "libc/isystem/stdalign.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/struct/teb.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
@@ -274,8 +276,12 @@ textstartup void __enable_tls(void) {
   _pthread_list = &_pthread_static.list;
 
   // ask the operating system to change the x86 segment register
-  if (IsWindows())
-    __tls_index = TlsAlloc();
+  if (IsWindows()) {
+    unsigned int tls_index = TlsAlloc();
+    unassert(tls_index != kNtTlsOutOfIndexes &&
+             tls_index < ARRAYLEN((struct NtTeb){}.TlsSlots));
+    __tls_index = tls_index;
+  }
   __set_tls(tib);
 
   // we are now allowed to use tls
