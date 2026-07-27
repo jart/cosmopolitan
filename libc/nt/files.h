@@ -53,6 +53,7 @@ COSMOPOLITAN_C_START_
 intptr_t LoadResource(int64_t hModule, int64_t hResInfo);
 uint32_t SetHandleCount(uint32_t uNumber);
 uint32_t GetLogicalDrives(void);
+unsigned int GetDriveTypeA(const char *lpRootPathName);
 uint32_t GetLogicalDriveStringsA(uint32_t nBufferLength, char *lpBuffer);
 bool32 FlushFileBuffers(int64_t hFile);
 
