@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.h"
@@ -24,7 +25,10 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/sysv/errno.h"
 #include "libc/sysv/pib.h"
 
 /**
@@ -41,8 +45,8 @@
  * @see libc/sysv/consts.sh for tuning catalogue
  * @see setsockopt()
  */
-int getsockopt(int fd, int level, int optname, void *out_opt_optval,
-               uint32_t *out_optlen) {
+int getsockopt(int fd, int level, int optname, void* out_opt_optval,
+               uint32_t* out_optlen) {
   int rc;
 
   if (level == -1 || !optname) {
@@ -51,6 +55,10 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
     rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
+    if (level == SOL_SOCKET && optname == SO_ERROR) {
+      assert(*out_optlen == sizeof(int));
+      *(int*)out_opt_optval = __errno_host2linux(*((int*)out_opt_optval));
+    }
   } else if (!__isfdopen(fd)) {
     rc = ebadf();
   } else if (__isfdkind(fd, kFdSocket)) {
