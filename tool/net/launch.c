@@ -66,7 +66,7 @@ void launch_browser(const char *url) {
   // determine which command opens browser tab
   const char *cmd;
   if (IsWindows()) {
-    cmd = "/c/windows/explorer.exe";
+    cmd = "explorer.exe";
   } else if (IsXnu()) {
     cmd = "open";
   } else {
