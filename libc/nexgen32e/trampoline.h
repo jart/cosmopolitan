@@ -3,7 +3,7 @@
 
 #define TRAMPOLINE(FUNCTION, THUNK)   \
   ({                                  \
-    typeof(FUNCTION) *Tramp;          \
+    __typeof__(FUNCTION) *Tramp;          \
     asm(".section .text.trampoline\n" \
         "183:\n\t"                    \
         "mov\t%1,%%eax\n\t"           \
