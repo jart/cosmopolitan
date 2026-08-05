@@ -9,3 +9,6 @@ ORIGIN
   Author: Mark Wielaard <mark@klomp.org>
   Date:   Sat Jul 13 17:17:58 2019 +0200
   Prepare for 1.0.8 release.
+
+local vulnerability fix:
+- Fix CVE-2019-12900
