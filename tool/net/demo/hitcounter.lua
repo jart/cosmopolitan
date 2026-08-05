@@ -29,7 +29,9 @@ t = DecodeJson(s)
 Unlock()
 
 for k,v in pairs(t) do
-    Write('<dt>%s<dd>%d\n' % {EscapeHtml(k), v})
+    if type(v) == 'number' then
+        Write('<dt>%s<dd>%d\n' % {EscapeHtml(k), v})
+    end
 end
 
 Write('</dl>')
