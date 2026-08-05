@@ -395,7 +395,7 @@ scall	sys_fchmodat2		0xfffffffffffff1c4	0x1c4	globl # no wrapper Linux 6.6+
 #	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Arm64	Type	Directives & Commentary
 scall	sys_ktrace		0x02d02d02dfffffff	0xfff	globl # no wrapper
 scall	sys_kqueue		0x15810d16a216afff	0xfff	globl # no wrapper
-scall	sys_kevent		0x1b30482302171fff	0xfff	globl # no wrapper
+scall	sys_kevent		0x1b3048230216bfff	0xfff	globl # no wrapper
 scall	sys_revoke		0x0380380382038fff	0xfff	globl # no wrapper
 scall	sys_setlogin		0xfff0320322032fff	0xfff	globl # no wrapper
 scall	sys_getfh		0x18b0a10a120a1fff	0xfff	globl # no wrapper
