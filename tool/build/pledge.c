@@ -554,10 +554,16 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
       if ((p = getenv("TMPDIR"))) {
         UnveilIfExists(
             __join_paths(buf, sizeof(buf), p, ".ape-" APE_VERSION_STR), "rx");
+        UnveilIfExists(__join_paths(buf, sizeof(buf), p,
+                                    ".ape-" APE_VERSION_STR GetXnuSuffix()),
+                       "rx");
       }
       if ((p = getenv("HOME"))) {
         UnveilIfExists(
             __join_paths(buf, sizeof(buf), p, ".ape-" APE_VERSION_STR), "rx");
+        UnveilIfExists(__join_paths(buf, sizeof(buf), p,
+                                    ".ape-" APE_VERSION_STR GetXnuSuffix()),
+                       "rx");
       }
     }
   }
