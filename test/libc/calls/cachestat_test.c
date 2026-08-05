@@ -61,7 +61,7 @@ void SetUpOnce(void) {
 #if 0  // TODO: raises ENOTSUP on Linux pi5 6.12.20+rpt-rpi-2712
 TEST(cachestat, testCachestatOnDevices) {
   const char *const files[] = {
-      "/dev/zero", "/dev/null", "/dev/urandom", "/proc/version", "/proc",
+      "/dev/zero", "/dev/null", "/dev/urandom", "/proc/self/comm",
   };
   struct cachestat_range range = {0, 4 * pagesize};
   struct cachestat cs;
