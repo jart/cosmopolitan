@@ -25,6 +25,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/proc/vfork.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -40,7 +41,8 @@ __static_yoink("zipos");
 
 int fds[2];
 char buf[8];
-bool SupportsFexecve = false;
+bool SupportsZiposFexecve = false;
+bool SupportsElf = false;
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
 }
@@ -61,11 +63,14 @@ void SetUp(void) {
     ASSERT_STREQ(buf, __argv[3]);
     exit(0);
   }
-  if (IsLinux()) {
-    if (!__is_linux_2_6_23()) return;
+  if (IsLinux() && __is_linux_2_6_23()) {
     // TODO check for memfd
     struct stat st;
-    SupportsFexecve = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
+    SupportsZiposFexecve = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
+  }
+  // TODO(G4Vi): Confirm if OpenBSD actually has an issue with this, see note in posix_spawn_test.c
+  if (!IsOpenbsd() && !IsXnu() && !IsWindows() && !IsMetal()) {
+    SupportsElf = true;
   }
 }
 
@@ -85,13 +90,30 @@ TEST(execve, testArgPassing) {
   }
 }
 
+TEST(execve, elf) {
+  if (!SupportsElf) return;
+  testlib_extract("/zip/echo.elf", "echo", 0555);
+  ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
+  SPAWN(vfork);
+  ASSERT_SYS(0, 1, dup2(4, 1));
+  ASSERT_SYS(
+      0, 0,
+      execve("echo", (char *const[]){"echo", "hi", 0}, (char *const[]){0}));
+  exit(1);
+  EXITS(0);
+  bzero(buf, 8);
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 3, read(3, buf, 7));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_STREQ("hi\n", buf);
+}
+
 TEST(execve, elfIsUnreadable_mayBeExecuted) {
-  if (IsWindows() || IsXnu()) return;
-  int extracted_mode = 0111;
+  if (!SupportsElf) return;
   if (IsAarch64() && IsQemuUser()) {
-    extracted_mode = 0555;
+    return;
   }
-  testlib_extract("/zip/echo.elf", "echo", extracted_mode);
+  testlib_extract("/zip/echo.elf", "echo", 0111);
   ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
   SPAWN(vfork);
   ASSERT_SYS(0, 1, dup2(4, 1));
@@ -108,8 +130,8 @@ TEST(execve, elfIsUnreadable_mayBeExecuted) {
 }
 
 TEST(execve, ziposELF) {
-  if (IsWindows()) return;
-  if (!SupportsFexecve) {
+  if (!SupportsElf) return;
+  if (!SupportsZiposFexecve) {
     EXPECT_SYS(ENOSYS, -1,
                execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
     return;
@@ -121,7 +143,7 @@ TEST(execve, ziposELF) {
 }
 
 TEST(execve, ziposAPE) {
-  if (!SupportsFexecve) {
+  if (!SupportsZiposFexecve) {
     EXPECT_EQ(
         -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
     return;
@@ -130,6 +152,16 @@ TEST(execve, ziposAPE) {
   execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
+}
+
+TEST(execve, ziposVforked) {
+  if (!SupportsZiposFexecve || !__has_vfork()) {
+    return;
+  }
+  SPAWN(vfork);
+  EXPECT_SYS(ENOTSUP, -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
+  _exit(0);
+  EXITS(0);
 }
 
 // clang-format off

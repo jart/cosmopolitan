@@ -17,6 +17,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
+#include "libc/proc/vfork.internal.h"
 
 int __has_vfork(void) {
   if (_weaken(kloghandle))

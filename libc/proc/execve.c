@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -136,13 +137,17 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
   if (!rc) {
     if (_weaken(__zipos_parseuri) &&
         (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
-      rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
-      if (rc != -1) {
-        const int zipFD = rc;
-        strace_enabled(-1);
-        rc = fexecve(zipFD, argv, envp);
-        close(zipFD);
-        strace_enabled(+1);
+      if (__vforked) {
+        rc = enotsup();
+      } else {
+        rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
+        if (rc != -1) {
+          const int zipFD = rc;
+          //strace_enabled(-1);
+          rc = fexecve(zipFD, argv, envp);
+          close(zipFD);
+          strace_enabled(+1);
+        }
       }
     } else if (!IsWindows()) {
       rc = sys_execve(prog, argv, envp);

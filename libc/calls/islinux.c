@@ -33,7 +33,7 @@ static struct {
 
 static bool __is_linux_2_6_23_impl(void) {
   int rc;
-  if (IsGenuineBlink())
+  if (IsGenuineBlink() || IsQemuUser())
     return true;
   asm volatile("syscall"
                : "=a"(rc)

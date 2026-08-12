@@ -97,8 +97,10 @@ static inline int isZipFile(const void *data, size_t data_size) {
 }
 
 static int isFdAZipFile(const int fd) {
-  if (!_weaken(mmap) || !_weaken(munmap) || !_weaken(GetZipEocd) || __vforked) {
+  if (!_weaken(mmap) || !_weaken(munmap) || !_weaken(GetZipEocd)) {
     return enosys();
+  } else if(__vforked) {
+    return enotsup();
   }
 
   struct stat st;
@@ -144,6 +146,8 @@ static inline int getFexeFlags(const void *data, size_t data_size) {
 static int fd_to_mem_fd(const int infd, FEXEF *flags) {
   if ((!IsLinux() && !IsFreebsd()) || !_weaken(mmap) || !_weaken(munmap)) {
     return enosys();
+  } else if(__vforked) {
+    return enotsup();
   }
 
   struct stat st;
@@ -237,7 +241,6 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         }
         bool execute_only = IsLinux() && flags & _O_PATH;
         if (!execute_only && !__vforked) {
-          STRACE("not vforked");
           int isFdAZipFileRc;
           BLOCK_SIGNALS;
           BLOCK_CANCELATION;
