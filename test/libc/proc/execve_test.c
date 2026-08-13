@@ -41,6 +41,7 @@ __static_yoink("zipos");
 
 int fds[2];
 char buf[8];
+int o_cloexec = O_CLOEXEC;
 bool SupportsZiposFexecve = false;
 bool SupportsElf = false;
 void SetUpOnce(void) {
@@ -63,9 +64,12 @@ void SetUp(void) {
     ASSERT_STREQ(buf, __argv[3]);
     exit(0);
   }
-  if (IsLinux() && __is_linux_3_17()) {
+  if (IsLinux()) {
+    if (!__is_linux_2_6_23()) {
+      o_cloexec = 0;
+    }
     struct stat st;
-    SupportsZiposFexecve = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
+    SupportsZiposFexecve = __is_linux_3_17() && stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
   }
   // TODO(G4Vi): Confirm if OpenBSD actually has an issue with this, see note in posix_spawn_test.c
   if (!IsOpenbsd() && !IsXnu() && !IsWindows() && !IsMetal()) {
@@ -92,7 +96,7 @@ TEST(execve, testArgPassing) {
 TEST(execve, elf) {
   if (!SupportsElf) return;
   testlib_extract("/zip/echo.elf", "echo", 0555);
-  ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
+  ASSERT_SYS(0, 0, pipe2(fds, o_cloexec));
   SPAWN(vfork);
   ASSERT_SYS(0, 1, dup2(4, 1));
   ASSERT_SYS(
@@ -113,7 +117,7 @@ TEST(execve, elfIsUnreadable_mayBeExecuted) {
     return;
   }
   testlib_extract("/zip/echo.elf", "echo", 0111);
-  ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
+  ASSERT_SYS(0, 0, pipe2(fds, o_cloexec));
   SPAWN(vfork);
   ASSERT_SYS(0, 1, dup2(4, 1));
   ASSERT_SYS(

@@ -36,25 +36,32 @@ __static_yoink("zipos");
 int fds[2];
 char buf[8];
 uint8_t elf_buf[4096];
+int o_cloexec = 0;
+bool SupportsOPATH = false;
+bool SupportsMemfdCreate = false;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
 }
 
 void SetUp(void) {
-  if (IsFreebsd()) exit(0);           // TODO: fixme on freebsd
-  if (IsLinux() && !__is_linux_2_6_23()) exit(0);  // TODO: fixme on old linux
-  // linux fexecve relies on execve from /proc
   if (IsLinux()) {
+    // linux fexecve relies on execve from /proc
     struct stat st;
     if (stat("/proc/self/fd", &st) != 0 || !S_ISDIR(st.st_mode)) {
       exit(0);
     }
+    o_cloexec = __is_linux_2_6_23() ? O_CLOEXEC : 0;
+    SupportsOPATH = __is_linux_2_6_39();
+    SupportsMemfdCreate = __is_linux_3_17();
+  } else {
+    // TODO: FreeBSD and other OSes
+    exit(0);
   }
 }
 
 TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
-  if (!IsLinux()) return;
+  if (!SupportsOPATH) return;
   int extracted_mode = 0111;
   int open_flags = _O_PATH | O_CLOEXEC;
   if (IsAarch64() && IsQemuUser()) {
@@ -78,7 +85,7 @@ TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
 }
 
 TEST(fexecve, memfd_create) {
-  if (!IsLinux()) return;
+  if (!SupportsMemfdCreate) return;
   int life_fd = open("/zip/life.elf", O_RDONLY);
   ASSERT_NE(-1, life_fd);
   const int memfd_flags = (IsAarch64() && IsQemuUser()) ? 0 : MFD_CLOEXEC;
@@ -103,7 +110,6 @@ TEST(fexecve, memfd_create) {
 }
 
 TEST(fexecve, APE) {
-  if (!IsLinux() && !IsFreebsd()) return;
   testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
   int fd = open("life-nomod", O_RDONLY);
@@ -113,10 +119,9 @@ TEST(fexecve, APE) {
 }
 
 TEST(fexecve, APE_cloexec) {
-  if (!IsLinux() && !IsFreebsd()) return;
   testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
-  int fd = open("life-nomod", O_RDONLY | O_CLOEXEC);
+  int fd = open("life-nomod", O_RDONLY | o_cloexec);
   ASSERT_NE(-1, fd);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
@@ -126,7 +131,7 @@ TEST(fexecve, APE_cloexec) {
 // probably need to avoid setting memfd close_exec on AARCH64 Qemu
 
 TEST(fexecve, zipos) {
-  if (!IsLinux() && !IsFreebsd()) return;
+  if (!SupportsMemfdCreate) return;
   int fd = open("/zip/life.elf", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
@@ -136,7 +141,7 @@ TEST(fexecve, zipos) {
 }
 
 TEST(fexecve, ziposAPE) {
-  if (!IsLinux() && !IsFreebsd()) return;
+  if (!SupportsMemfdCreate) return;
   int fd = open("/zip/life-nomod", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
@@ -146,7 +151,7 @@ TEST(fexecve, ziposAPE) {
 }
 
 TEST(fexecve, ziposAPEHasZipos) {
-  if (!IsLinux() && !IsFreebsd()) return;
+  if (!SupportsMemfdCreate) return;
   int fd = open("/zip/zipread", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);

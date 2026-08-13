@@ -103,6 +103,18 @@ static void ___is_linux_uname_release_init(void) {
  * Returns true if we're running Linux with memfd_create support.
  * @note this function must only be called on Linux
  */
+bool __is_linux_2_6_39(void) {
+  unassert(IsLinux());  // should be checked by caller
+  cosmo_once(&___is_linux_uname_release.once, ___is_linux_uname_release_init);
+  if (!___is_linux_uname_release.valid)
+    return false;
+  return ___is_linux_uname_release.major > 2 || (___is_linux_uname_release.major == 2 && (___is_linux_uname_release.minor > 6 || (___is_linux_uname_release.minor == 6 && ___is_linux_uname_release.patch >= 39)));
+}
+
+/**
+ * Returns true if we're running Linux with memfd_create support.
+ * @note this function must only be called on Linux
+ */
 bool __is_linux_3_17(void) {
   unassert(IsLinux());  // should be checked by caller
   cosmo_once(&___is_linux_uname_release.once, ___is_linux_uname_release_init);
