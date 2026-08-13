@@ -63,8 +63,7 @@ void SetUp(void) {
     ASSERT_STREQ(buf, __argv[3]);
     exit(0);
   }
-  if (IsLinux() && __is_linux_2_6_23()) {
-    // TODO check for memfd
+  if (IsLinux() && __is_linux_3_17()) {
     struct stat st;
     SupportsZiposFexecve = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
   }

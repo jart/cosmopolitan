@@ -143,7 +143,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
         rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
         if (rc != -1) {
           const int zipFD = rc;
-          //strace_enabled(-1);
+          strace_enabled(-1);
           rc = fexecve(zipFD, argv, envp);
           close(zipFD);
           strace_enabled(+1);
