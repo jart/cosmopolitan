@@ -145,6 +145,20 @@ TEST(execve, ziposELF) {
   EXITS(42);
 }
 
+TEST(execve, ziposELFwithoutZip) {
+  if (!SupportsElf) return;
+  if (!SupportsZiposFexecve) {
+    EXPECT_SYS(ENOSYS, -1,
+               execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0}));
+    return;
+  }
+  SPAWN(fork);
+  execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0});
+  kprintf("execve failed: %m\n");
+  EXITS(42);
+}
+
+
 TEST(execve, ziposAPE) {
   if (!SupportsZiposFexecve) {
     EXPECT_EQ(
@@ -156,6 +170,8 @@ TEST(execve, ziposAPE) {
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
+
+// TODO APE without zip
 
 TEST(execve, ziposVforked) {
   if (!SupportsZiposFexecve || !__has_vfork()) {

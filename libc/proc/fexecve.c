@@ -262,7 +262,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         ALLOW_SIGNALS;
         fflags |= (int)isAPE << 1;
       }
-      if (fflags) {
+      if (fflags || (IsAarch64() && IsQemuUser())) {
         int flags;
         BLOCK_SIGNALS;
         BLOCK_CANCELATION;

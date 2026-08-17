@@ -106,6 +106,7 @@ o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o	\
 		o/$(MODE)/test/libc/proc/echo.elf.zip.o			\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
 		$(LIBC_TESTMAIN)					\
@@ -153,9 +154,17 @@ o/$(MODE)/test/libc/proc/echo.elf:				\
 		o/$(MODE)/tool/build/assimilate -bcef	\
 		o/$(MODE)/test/libc/proc/echo.elf
 
+o/$(MODE)/test/libc/proc/life-nozip.elf:				\
+		o/$(MODE)/tool/build/cp			\
+		o/$(MODE)/tool/build/zipremove		\
+		o/$(MODE)/test/libc/mem/prog/life.elf
+	o/$(MODE)/tool/build/cp o/$(MODE)/test/libc/mem/prog/life.elf o/$(MODE)/test/libc/proc/life-nozip.elf
+	o/$(MODE)/tool/build/zipremove o/$(MODE)/test/libc/proc/life-nozip.elf
+
 o/$(MODE)/test/libc/proc/life.zip.o					\
 o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o			\
 o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o			\
+o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o				\
 o/$(MODE)/test/libc/proc/life-pe.zip.o			\
 o/$(MODE)/test/libc/proc/echo.elf.zip.o					\
 o/$(MODE)/test/libc/proc/zipread.zip.o: private		\
