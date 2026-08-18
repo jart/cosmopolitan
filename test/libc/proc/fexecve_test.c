@@ -60,6 +60,39 @@ void SetUp(void) {
   }
 }
 
+TEST(fexecve, elf) {
+  if (!SupportsOPATH) return;
+  int extracted_mode = 0555;
+  int open_flags = _O_PATH | o_cloexec;
+  if (IsAarch64() && IsQemuUser()) {
+    extracted_mode = 0555;
+    open_flags &= ~O_CLOEXEC;
+  }
+  testlib_extract("/zip/life-nozip.elf", "life-nozip.elf", extracted_mode);
+  SPAWN(vfork);
+  ASSERT_SYS(0, 3, open("life-nozip.elf", open_flags));
+  ASSERT_SYS(0, 0,
+             fexecve(3, (char *const[]){"life-nozip.elf", 0}, (char *const[]){0}));
+  exit(1);
+  EXITS(42);
+}
+
+
+TEST(fexecve, elf_with_zipos) {
+  int extracted_mode = 0555;
+  int open_flags = _O_PATH | o_cloexec;
+  if (IsAarch64() && IsQemuUser()) {
+    extracted_mode = 0555;
+    open_flags &= ~O_CLOEXEC;
+  }
+  testlib_extract("/zip/zipread.elf", "zipread.elf", extracted_mode);
+  SPAWN(vfork);
+  ASSERT_SYS(0, 3, open("zipread.elf", open_flags));
+  ASSERT_SYS(0, 0,
+             fexecve(3, (char *const[]){"zipread.elf", 0}, (char *const[]){0}));
+  EXITS(42);
+}
+
 TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
   if (!SupportsOPATH) return;
   int extracted_mode = 0111;
@@ -110,6 +143,15 @@ TEST(fexecve, memfd_create) {
 }
 
 TEST(fexecve, APE) {
+  testlib_extract("/zip/life-nozip", "life-nozip", 0555);
+  SPAWN(fork);
+  int fd = open("life-nozip", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+}
+
+TEST(fexecve, APE_with_zipos) {
   testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
   int fd = open("life-nomod", O_RDONLY);
@@ -118,19 +160,28 @@ TEST(fexecve, APE) {
   EXITS(42);
 }
 
+// TODO(G4Vi): This might be a bad test, APE's cannot run with O_CLOEXEC right now
 TEST(fexecve, APE_cloexec) {
+  if (!o_cloexec) return;
   testlib_extract("/zip/life-nomod", "life-nomod", 0555);
   SPAWN(fork);
-  int fd = open("life-nomod", O_RDONLY | o_cloexec);
+  int fd = open("life-nomod", O_RDONLY | O_CLOEXEC);
   ASSERT_NE(-1, fd);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
 }
 
-// TODO zipos elf where the elf is not a zip file
-// probably need to avoid setting memfd close_exec on AARCH64 Qemu
+TEST(fexecve, zipos_elf) {
+  if (!SupportsMemfdCreate) return;
+  int fd = open("/zip/life-nozip.elf", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  SPAWN(fork);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+  close(fd);
+}
 
-TEST(fexecve, zipos) {
+TEST(fexecve, zipos_elf_with_zipos) {
   if (!SupportsMemfdCreate) return;
   int fd = open("/zip/life.elf", O_RDONLY);
   ASSERT_NE(-1, fd);

@@ -122,7 +122,10 @@ o/$(MODE)/test/libc/proc/fexecve_test.dbg:				\
 		o/$(MODE)/test/libc/proc/echo.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
+		o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o		\
+		o/$(MODE)/test/libc/proc/life-nozip.zip.o		\
 		o/$(MODE)/test/libc/proc/zipread.zip.o			\
+		o/$(MODE)/test/libc/proc/zipread.elf.zip.o		\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
@@ -142,6 +145,18 @@ o/$(MODE)/test/libc/proc/zipread.dbg:			\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/zipread.elf:				\
+		o/$(MODE)/tool/build/assimilate		\
+		o/$(MODE)/test/libc/proc/zipread		\
+		o/$(MODE)/tool/build/cp
+	@$(COMPILE) -wACP -T$@					\
+		o/$(MODE)/tool/build/cp				\
+		o/$(MODE)/test/libc/proc/zipread		\
+		o/$(MODE)/test/libc/proc/zipread.elf
+	@$(COMPILE) -wAASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate -bcef	\
+		o/$(MODE)/test/libc/proc/zipread.elf
 
 o/$(MODE)/test/libc/proc/echo.elf:				\
 		o/$(MODE)/tool/build/assimilate		\
@@ -186,6 +201,7 @@ o/$(MODE)/test/libc/proc/life-nozip.zip.o				\
 o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o				\
 o/$(MODE)/test/libc/proc/life-pe.zip.o			\
 o/$(MODE)/test/libc/proc/echo.elf.zip.o					\
+o/$(MODE)/test/libc/proc/zipread.elf.zip.o				\
 o/$(MODE)/test/libc/proc/zipread.zip.o: private		\
 		ZIPOBJ_FLAGS +=					\
 			-B
