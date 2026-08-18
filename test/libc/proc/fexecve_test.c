@@ -22,6 +22,7 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/proc/vfork.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/mfd.h"
@@ -61,9 +62,8 @@ void SetUp(void) {
 }
 
 TEST(fexecve, elf) {
-  if (!SupportsOPATH) return;
   int extracted_mode = 0555;
-  int open_flags = _O_PATH | o_cloexec;
+  int open_flags = O_RDONLY | o_cloexec;
   if (IsAarch64() && IsQemuUser()) {
     extracted_mode = 0555;
     open_flags &= ~O_CLOEXEC;
@@ -78,9 +78,9 @@ TEST(fexecve, elf) {
 }
 
 
-TEST(fexecve, elf_with_zipos) {
+TEST(fexecve, elfWithZipos) {
   int extracted_mode = 0555;
-  int open_flags = _O_PATH | o_cloexec;
+  int open_flags = O_RDONLY | o_cloexec;
   if (IsAarch64() && IsQemuUser()) {
     extracted_mode = 0555;
     open_flags &= ~O_CLOEXEC;
@@ -92,6 +92,8 @@ TEST(fexecve, elf_with_zipos) {
              fexecve(3, (char *const[]){"zipread.elf", 0}, (char *const[]){0}));
   EXITS(42);
 }
+
+// TODO(G4Vi): with O_CLOEXEC should fail
 
 TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
   if (!SupportsOPATH) return;
@@ -119,7 +121,7 @@ TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
 
 TEST(fexecve, memfd_create) {
   if (!SupportsMemfdCreate) return;
-  int life_fd = open("/zip/life.elf", O_RDONLY);
+  int life_fd = open("/zip/life-nozip.elf", O_RDONLY);
   ASSERT_NE(-1, life_fd);
   const int memfd_flags = (IsAarch64() && IsQemuUser()) ? 0 : MFD_CLOEXEC;
   int fd = sys_memfd_create("foo", memfd_flags);
@@ -151,29 +153,29 @@ TEST(fexecve, APE) {
   EXITS(42);
 }
 
-TEST(fexecve, APE_with_zipos) {
-  testlib_extract("/zip/life-nomod", "life-nomod", 0555);
-  SPAWN(fork);
-  int fd = open("life-nomod", O_RDONLY);
-  ASSERT_NE(-1, fd);
-  fexecve(fd, (char *const[]){0}, (char *const[]){0});
-  EXITS(42);
-}
-
-// TODO(G4Vi): This might be a bad test, APE's cannot run with O_CLOEXEC right now
+// TODO(G4Vi): This test will need to change, APE's cannot run with O_CLOEXEC right now
 TEST(fexecve, APE_cloexec) {
   if (!o_cloexec) return;
-  testlib_extract("/zip/life-nomod", "life-nomod", 0555);
+  testlib_extract("/zip/life-nozip", "life-nozip", 0555);
   SPAWN(fork);
-  int fd = open("life-nomod", O_RDONLY | O_CLOEXEC);
+  int fd = open("life-nozip", O_RDONLY | O_CLOEXEC);
   ASSERT_NE(-1, fd);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
 }
 
-TEST(fexecve, zipos_elf) {
+TEST(fexecve, APEwithZipos) {
+  testlib_extract("/zip/zipread", "zipread", 0555);
+  SPAWN(fork);
+  int fd = open("zipread", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+}
+
+TEST(fexecve, ziposELF) {
   if (!SupportsMemfdCreate) return;
-  int fd = open("/zip/life-nozip.elf", O_RDONLY);
+  int fd = open("/zip/life-nozip.elf", O_RDONLY | o_cloexec);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
@@ -181,19 +183,21 @@ TEST(fexecve, zipos_elf) {
   close(fd);
 }
 
-TEST(fexecve, zipos_elf_with_zipos) {
+TEST(fexecve, ziposELFwithZipos) {
   if (!SupportsMemfdCreate) return;
-  int fd = open("/zip/life.elf", O_RDONLY);
+  int fd = open("/zip/zipread.elf", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
   close(fd);
 }
+
+// TODO(G4Vi): check O_CLOEXEC fails
 
 TEST(fexecve, ziposAPE) {
   if (!SupportsMemfdCreate) return;
-  int fd = open("/zip/life-nomod", O_RDONLY);
+  int fd = open("/zip/life-nozip", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
@@ -201,12 +205,27 @@ TEST(fexecve, ziposAPE) {
   close(fd);
 }
 
-TEST(fexecve, ziposAPEHasZipos) {
+// TODO(G4Vi): check O_CLOEXEC fails
+
+TEST(fexecve, ziposAPEwithZipos) {
   if (!SupportsMemfdCreate) return;
   int fd = open("/zip/zipread", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
+  close(fd);
+}
+
+TEST(fexecve, ziposVforked) {
+  if (!SupportsMemfdCreate || !__has_vfork()) {
+    return;
+  }
+  int fd = open("/zip/life-nozip.elf", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  SPAWN(vfork);
+  ASSERT_SYS(ENOTSUP, -1, fexecve(fd, (char *const[]){0}, (char *const[]){0}));
+  _exit(0);
+  EXITS(0);
   close(fd);
 }

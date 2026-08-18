@@ -101,13 +101,13 @@ o/$(MODE)/test/libc/proc/posix_spawn_test.dbg:				\
 o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/execve_test.o			\
-		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
 		o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o	\
 		o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o	\
 		o/$(MODE)/test/libc/proc/echo.elf.zip.o			\
-		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/life-nozip.zip.o		\
+		o/$(MODE)/test/libc/proc/zipread.zip.o			\
+		o/$(MODE)/test/libc/proc/zipread.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
 		$(LIBC_TESTMAIN)					\
@@ -119,9 +119,7 @@ o/$(MODE)/test/libc/proc/fexecve_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/fexecve_test.o			\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
-		o/$(MODE)/test/libc/proc/echo.elf.zip.o		\
-		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
-		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
+		o/$(MODE)/test/libc/proc/echo.elf.zip.o			\
 		o/$(MODE)/test/libc/proc/life-nozip.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/life-nozip.zip.o		\
 		o/$(MODE)/test/libc/proc/zipread.zip.o			\

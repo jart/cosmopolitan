@@ -133,11 +133,10 @@ TEST(execve, elfIsUnreadable_mayBeExecuted) {
 }
 
 TEST(execve, ziposWithoutSupport) {
-  if (!SupportsElf) return;
   if (SupportsZiposFexecve) return;
   SPAWN(fork);
   ASSERT_SYS(ENOSYS, -1,
-               execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
+               execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0}));
   _exit(0);
   EXITS(0);
 }
@@ -146,16 +145,16 @@ TEST(execve, ziposELF) {
   if (!SupportsElf) return;
   if (!SupportsZiposFexecve) return;
   SPAWN(fork);
-  execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0});
+  execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
 
-TEST(execve, ziposELFwithoutZip) {
+TEST(execve, ziposELFwithZipos) {
   if (!SupportsElf) return;
   if (!SupportsZiposFexecve) return;
   SPAWN(fork);
-  execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0});
+  execve("/zip/zipread.elf", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
@@ -163,15 +162,15 @@ TEST(execve, ziposELFwithoutZip) {
 TEST(execve, ziposAPE) {
   if (!SupportsZiposFexecve) return;
   SPAWN(fork);
-  execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0});
+  execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
 
-TEST(execve, ziposAPEwithoutZip) {
+TEST(execve, ziposAPEwithZipos) {
   if (!SupportsZiposFexecve) return;
   SPAWN(fork);
-  execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0});
+  execve("/zip/zipread", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
@@ -181,7 +180,7 @@ TEST(execve, ziposVforked) {
     return;
   }
   SPAWN(vfork);
-  ASSERT_SYS(ENOTSUP, -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
+  ASSERT_SYS(ENOTSUP, -1, execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0}));
   _exit(0);
   EXITS(0);
 }
