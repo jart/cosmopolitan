@@ -18,10 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/bsdstdlib.h"
+#include "libc/calls/struct/utsname-linux.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/pr.h"
 
 #ifdef __x86_64__
@@ -33,7 +37,7 @@ static struct {
 
 static bool __is_linux_2_6_23_impl(void) {
   int rc;
-  if (IsGenuineBlink())
+  if (IsGenuineBlink() || IsQemuUser())
     return true;
   asm volatile("syscall"
                : "=a"(rc)
@@ -60,4 +64,61 @@ bool __is_linux_2_6_23(void) {
 #else
   return true;
 #endif
+}
+
+static struct {
+  atomic_uint once;
+  bool valid;
+  unsigned major;
+  unsigned minor;
+  unsigned patch;
+} ___is_linux_uname_release;
+
+static void ___is_linux_uname_release_init(void) {
+  struct utsname_linux linux;
+  if (sys_uname_linux(&linux)) {
+    return;
+  }
+  const char *seps[] = {".", ".", "-"};
+  char *to_parse = linux.release;
+  unsigned results[3];
+  for (int i = 0; i < 3; i++) {
+    const char *num = strsep(&to_parse, seps[i]);
+    if (!num) {
+      return;
+    }
+    const char *errstr;
+    results[i] = strtonum(num, 0, UINT_MAX, &errstr);
+    if (errstr) {
+      return;
+    }
+  }
+  ___is_linux_uname_release.major = results[0];
+  ___is_linux_uname_release.minor = results[1];
+  ___is_linux_uname_release.patch = results[2];
+  ___is_linux_uname_release.valid = true;
+}
+
+/**
+ * Returns true if we're running Linux with memfd_create support.
+ * @note this function must only be called on Linux
+ */
+bool __is_linux_2_6_39(void) {
+  unassert(IsLinux());  // should be checked by caller
+  cosmo_once(&___is_linux_uname_release.once, ___is_linux_uname_release_init);
+  if (!___is_linux_uname_release.valid)
+    return false;
+  return ___is_linux_uname_release.major > 2 || (___is_linux_uname_release.major == 2 && (___is_linux_uname_release.minor > 6 || (___is_linux_uname_release.minor == 6 && ___is_linux_uname_release.patch >= 39)));
+}
+
+/**
+ * Returns true if we're running Linux with memfd_create support.
+ * @note this function must only be called on Linux
+ */
+bool __is_linux_3_17(void) {
+  unassert(IsLinux());  // should be checked by caller
+  cosmo_once(&___is_linux_uname_release.once, ___is_linux_uname_release_init);
+  if (!___is_linux_uname_release.valid)
+    return false;
+  return ___is_linux_uname_release.major > 3 || (___is_linux_uname_release.major == 3 && ___is_linux_uname_release.minor >= 17);
 }

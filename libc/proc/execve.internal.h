@@ -2,7 +2,8 @@
 #define COSMOPOLITAN_LIBC_CALLS_EXECVE_SYSV_H_
 COSMOPOLITAN_C_START_
 
-bool IsApeLoadable(char[8]) libcesque;
+bool IsApeLoadable(char[8]);
+bool IsApeMagic(const char[8]);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_EXECVE_SYSV_H_ */
