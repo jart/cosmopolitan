@@ -132,13 +132,19 @@ TEST(execve, elfIsUnreadable_mayBeExecuted) {
   ASSERT_STREQ("hi\n", buf);
 }
 
+TEST(execve, ziposWithoutSupport) {
+  if (!SupportsElf) return;
+  if (SupportsZiposFexecve) return;
+  SPAWN(fork);
+  ASSERT_SYS(ENOSYS, -1,
+               execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
+  _exit(0);
+  EXITS(0);
+}
+
 TEST(execve, ziposELF) {
   if (!SupportsElf) return;
-  if (!SupportsZiposFexecve) {
-    EXPECT_SYS(ENOSYS, -1,
-               execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
-    return;
-  }
+  if (!SupportsZiposFexecve) return;
   SPAWN(fork);
   execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
@@ -147,38 +153,35 @@ TEST(execve, ziposELF) {
 
 TEST(execve, ziposELFwithoutZip) {
   if (!SupportsElf) return;
-  if (!SupportsZiposFexecve) {
-    EXPECT_SYS(ENOSYS, -1,
-               execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0}));
-    return;
-  }
+  if (!SupportsZiposFexecve) return;
   SPAWN(fork);
   execve("/zip/life-nozip.elf", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
 
-
 TEST(execve, ziposAPE) {
-  if (!SupportsZiposFexecve) {
-    EXPECT_EQ(
-        -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
-    return;
-  }
+  if (!SupportsZiposFexecve) return;
   SPAWN(fork);
   execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0});
   kprintf("execve failed: %m\n");
   EXITS(42);
 }
 
-// TODO APE without zip
+TEST(execve, ziposAPEwithoutZip) {
+  if (!SupportsZiposFexecve) return;
+  SPAWN(fork);
+  execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0});
+  kprintf("execve failed: %m\n");
+  EXITS(42);
+}
 
 TEST(execve, ziposVforked) {
   if (!SupportsZiposFexecve || !__has_vfork()) {
     return;
   }
   SPAWN(vfork);
-  EXPECT_SYS(ENOTSUP, -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
+  ASSERT_SYS(ENOTSUP, -1, execve("/zip/life-nomod", (char *const[]){0}, (char *const[]){0}));
   _exit(0);
   EXITS(0);
 }
