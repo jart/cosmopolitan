@@ -1,0 +1,4 @@
+# Pins for a reproducible sibling checkout. Format: repo branch sha
+github.com/dwomick/cosmopolitan cherrybean 429e50dc6dcaa21f96458ca3b6d4b805b667551b
+github.com/dwomick/sqlcipher cherrybean 63697beb0fafcb61faa7a3e6fd267036548ab11b
+cosmocc 3.9.2 f4ff13af65fcd309f3f1cfd04275996fb7f72a4897726628a8c9cf732e850193
