@@ -9,7 +9,7 @@ TOOL_NET_HDRS = $(filter %.h,$(TOOL_NET_FILES))
 TOOL_NET_INCS = $(filter %.inc,$(TOOL_NET_FILES))
 
 TOOL_NET_OBJS =								\
-	$(TOOL_NET_SRCS:%.c=o/$(MODE)/%.o)
+	$(filter-out o/$(MODE)/tool/net/lsqlite3-sqlcipher.o,$(TOOL_NET_SRCS:%.c=o/$(MODE)/%.o))
 
 TOOL_NET_BINS =								\
 	$(TOOL_NET_COMS)						\
@@ -26,6 +26,7 @@ TOOL_NET_COMS =								\
 	o/$(MODE)/tool/net/libresolv_query				\
 	o/$(MODE)/tool/net/redbean-unsecure				\
 	o/$(MODE)/tool/net/redbean-original				\
+	o/$(MODE)/tool/net/cherrybean					\
 
 TOOL_NET_CHECKS =							\
 	o/$(MODE)/tool/net/net.pkg					\
@@ -121,6 +122,41 @@ o/$(MODE)/tool/net/lsqlite3.o: private					\
 		CFLAGS +=						\
 			-DSQLITE_ENABLE_SESSION				\
 			-DSQLITE_ENABLE_DESERIALIZE
+
+# CHERRYBEAN
+#
+# redbean with SQLCipher instead of vanilla SQLite. Same Lua surface,
+# plus db:key() / db:rekey() (or PRAGMA key / sqlcipher_export()).
+
+TOOL_NET_CHERRYBEAN_LUA_MODULES =					\
+	$(filter-out o/$(MODE)/tool/net/lsqlite3.o,$(TOOL_NET_REDBEAN_LUA_MODULES)) \
+	o/$(MODE)/tool/net/lsqlite3-sqlcipher.o
+
+TOOL_NET_CHERRYBEAN_DIRECTDEPS =					\
+	$(filter-out THIRD_PARTY_SQLITE3,$(TOOL_NET_DIRECTDEPS))	\
+	THIRD_PARTY_SQLCIPHER
+
+TOOL_NET_CHERRYBEAN_DEPS :=						\
+	$(call uniq,$(foreach x,$(TOOL_NET_CHERRYBEAN_DIRECTDEPS),$($(x))))
+
+o/$(MODE)/tool/net/lsqlite3-sqlcipher.o: private			\
+		CFLAGS +=						\
+			-DCHERRYBEAN_SQLCIPHER				\
+			-DSQLITE_HAS_CODEC				\
+			-DSQLITE_ENABLE_DESERIALIZE
+
+o/$(MODE)/tool/net/cherrybean.dbg:					\
+		$(TOOL_NET_CHERRYBEAN_DEPS)				\
+		$(TOOL_NET_CHERRYBEAN_LUA_MODULES)			\
+		o/$(MODE)/tool/net/.init.lua.zip.o			\
+		o/$(MODE)/tool/net/favicon.ico.zip.o			\
+		o/$(MODE)/tool/net/redbean.png.zip.o			\
+		o/$(MODE)/tool/net/help.txt.zip.o			\
+		o/$(MODE)/tool/net/cherrybean.o				\
+		o/$(MODE)/tool/net/net.pkg				\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 # REDBEAN-DEMO
 #

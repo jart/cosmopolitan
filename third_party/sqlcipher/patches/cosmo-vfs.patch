@@ -1,0 +1,65 @@
+--- a/src/os_unix.c	2026-08-20 07:29:39.726965409 -0400
++++ b/src/os_unix.c	2026-08-20 07:29:58.099572866 -0400
+@@ -72,7 +72,7 @@
+ #endif
+ 
+ /* Use pread() and pwrite() if they are available */
+-#if defined(__APPLE__) || defined(__linux__)
++#if defined(__APPLE__) || defined(__linux__) || defined(__COSMOPOLITAN__)
+ # define HAVE_PREAD 1
+ # define HAVE_PWRITE 1
+ #endif
+@@ -3925,6 +3925,14 @@
+   */
+   SimulateDiskfullError( return SQLITE_FULL );
+ 
++#if SQLITE_MAX_MMAP_SIZE>0
++  /* cherrybean-cosmo-vfs: Windows FlushViewOfFile; OpenBSD mmap/pread.
++  ** Cosmopolitan fdatasync-nt does not flush mapped views (see libc). */
++  if( pFile->pMapRegion ){
++    msync(pFile->pMapRegion, pFile->mmapSizeActual, 0);
++  }
++#endif
++
+   assert( pFile );
+   OSTRACE(("SYNC    %-3d\n", pFile->h));
+   rc = full_fsync(pFile->h, isFullsync, isDataOnly);
+@@ -6311,6 +6319,7 @@
+   const char *zDir;
+   int iLimit = 0;
+   int rc = SQLITE_OK;
++  int e = errno; /* cherrybean-cosmo-vfs: don't pollute strace / errno */
+ 
+   /* It's odd to simulate an io-error here, but really this is just
+   ** using the io-error infrastructure to test that SQLite handles this
+@@ -6338,6 +6347,7 @@
+     }while( osAccess(zBuf,0)==0 );
+   }
+   sqlite3_mutex_leave(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_TEMPDIR));
++  errno = e; /* cherrybean-cosmo-vfs */
+   return rc;
+ }
+ 
+@@ -6894,8 +6904,10 @@
+ 
+   if( flags==SQLITE_ACCESS_EXISTS ){
+     struct stat buf;
++    int e = errno; /* cherrybean-cosmo-vfs: don't clobber errno */
+     *pResOut = 0==osStat(zPath, &buf) &&
+                 (!S_ISREG(buf.st_mode) || buf.st_size>0);
++    errno = e; /* cherrybean-cosmo-vfs */
+   }else{
+     *pResOut = osAccess(zPath, W_OK|R_OK)==0;
+   }
+--- a/src/sqliteInt.h	2026-08-20 07:29:39.730393347 -0400
++++ b/src/sqliteInt.h	2026-08-20 07:29:58.022570812 -0400
+@@ -1098,7 +1098,8 @@
+   || (defined(__APPLE__) && defined(__MACH__)) \
+   || defined(__sun) \
+   || defined(__FreeBSD__) \
+-  || defined(__DragonFly__)
++  || defined(__DragonFly__) \
++  || defined(__COSMOPOLITAN__)
+ #   define SQLITE_MAX_MMAP_SIZE 0x7fff0000  /* 2147418112 */
+ # else
+ #   define SQLITE_MAX_MMAP_SIZE 0

@@ -1,0 +1,29 @@
+Cosmo APE VFS hunks applied to SQLCipher *source* at amalgamation time.
+
+Do not edit sqlite3.c by hand. Do not put these edits in the SQLCipher
+git tree (keep that rebaseable against sqlcipher/sqlcipher).
+
+  patches/cosmo-vfs.patch
+    src/os_unix.c
+      - HAVE_PREAD/PWRITE when __COSMOPOLITAN__
+      - msync() mapped pages in unixSync (Windows FlushViewOfFile;
+        OpenBSD mmap/pread coherence)
+      - save/restore errno in unixGetTempname and unixAccess
+    src/sqliteInt.h
+      - SQLITE_MAX_MMAP_SIZE on __COSMOPOLITAN__
+
+Not included (on purpose, for upgrade ease):
+
+  - F2FS batch-atomic ioctls / IsLinux()  — cherrybean does not set
+    SQLITE_ENABLE_BATCH_ATOMIC_WRITE; Cosmo vanilla sqlite does. Add
+    both the flag and runtime IsLinux() guards together if you want it.
+  - full_fsync F_FULLFSYNC rewrite — Cosmo libc fsync/fdatasync already
+    do XNU F_FULLFSYNC and Windows FlushFileBuffers.
+  - Cosmo-style include rewrite (libc/dce.h, linux/f2fs.h, …)
+
+Refresh after a SQLCipher bump:
+
+  git -C ../sqlcipher/cherrybean merge   # or rebase onto upstream
+  third_party/sqlcipher/upgrade.sh
+  # if patch -p1 fails, edit cosmo-vfs.patch against the new files
+  grep cherrybean-cosmo-vfs third_party/sqlcipher/sqlite3.c

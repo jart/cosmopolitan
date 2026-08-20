@@ -1,0 +1,49 @@
+DESCRIPTION
+
+    SQLCipher is SQLite with 256-bit AES page encryption, HMAC tamper
+    detection, and PBKDF2 key derivation. Cherrybean links this package
+    instead of third_party/sqlite3.
+
+BUILD (from this Cosmo worktree)
+
+    make -j8 o//tool/net/cherrybean
+    o//tool/net/cherrybean -i third_party/sqlcipher/encrypt.lua
+
+GITHUB
+
+    Branch cherrybean of https://github.com/dwomick/cosmopolitan
+    vendors this amalgamation. SQLCipher source for upgrade.sh is
+    https://github.com/dwomick/sqlcipher branch cherrybean
+    (upstream https://github.com/sqlcipher/sqlcipher).
+
+ORIGIN
+
+    https://github.com/sqlcipher/sqlcipher  (4.18.0, SQLite 3.53.4)
+    Amalgamation generated with third_party/sqlcipher/upgrade.sh
+    (configure --with-tempstore=yes --disable-tcl --disable-shared
+     && make sqlite3.c), after applying patches/cosmo-vfs.patch.
+
+LICENSE
+
+    SQLCipher: BSD-3-Clause (Zetetic LLC)
+    SQLite core: Public Domain
+
+LOCAL CHANGES
+
+  - crypto_mbedtls.c: sqlcipher_provider using Cosmopolitan mbedtls
+    (AES-256-CBC via AES-ECB, HMAC-SHA1/256/512, PBKDF2, getrandom)
+  - sqlite3_cosmo.c wraps the amalgamation plus that provider
+  - patches/cosmo-vfs.patch: small APE VFS hunks (pread, mmap msync,
+    errno). See patches/README. Not F2FS, not include rewrite.
+
+UPGRADING
+
+  SQLCipher git (../sqlcipher/cherrybean) tracks upstream. Cosmo git
+  vendors the amalgamation plus crypto_mbedtls.c. After either side
+  moves:
+
+    third_party/sqlcipher/upgrade.sh [path-to-sqlcipher]
+
+  Keep cherrybean.c / lsqlite3-sqlcipher.c as thin wrappers around
+  Cosmo's redbean.c and lsqlite3.c so redbean updates are a merge
+  of those two Cosmo files plus the CHERRYBEAN_SQLCIPHER ifdefs.

@@ -34,8 +34,12 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#ifdef CHERRYBEAN_SQLCIPHER
+#include "third_party/sqlcipher/sqlite3.h"
+#else
 #include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3.h"
+#endif
 // clang-format off
 
 __notice(lsqlite3_notice, "\
@@ -1562,6 +1566,24 @@ static int db_exec_callback(void* user, int columns, char **data, char **names) 
     return result;
 }
 
+#ifdef CHERRYBEAN_SQLCIPHER
+static int db_key(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    size_t nKey = 0;
+    const char *pKey = luaL_checklstring(L, 2, &nKey);
+    lua_pushinteger(L, sqlite3_key(db->db, pKey, (int)nKey));
+    return 1;
+}
+
+static int db_rekey(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    size_t nKey = 0;
+    const char *pKey = luaL_checklstring(L, 2, &nKey);
+    lua_pushinteger(L, sqlite3_rekey(db->db, pKey, (int)nKey));
+    return 1;
+}
+#endif
+
 static int db_exec(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     const char *sql = luaL_checkstring(L, 2);
@@ -2410,7 +2432,9 @@ static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
         /* database handle already in the stack - return it */
+#ifndef CHERRYBEAN_SQLCIPHER
         sqlite3_zipfile_init(db->db, 0, 0);
+#endif
         return 1;
     }
 
@@ -2648,6 +2672,10 @@ static const luaL_Reg dblib[] = {
     {"urows",               db_urows                },
     {"nrows",               db_nrows                },
 
+#ifdef CHERRYBEAN_SQLCIPHER
+    {"key",                 db_key                  },
+    {"rekey",               db_rekey                },
+#endif
     {"exec",                db_exec                 },
     {"execute",             db_exec                 },
     {"close",               db_close                },

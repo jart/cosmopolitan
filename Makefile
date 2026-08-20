@@ -338,6 +338,7 @@ include third_party/finger/BUILD.mk
 include third_party/argon2/BUILD.mk
 include third_party/smallz4/BUILD.mk
 include third_party/sqlite3/BUILD.mk
+include third_party/sqlcipher/BUILD.mk
 include third_party/mbedtls/test/BUILD.mk
 include third_party/lz4cli/BUILD.mk
 include third_party/zip/BUILD.mk
