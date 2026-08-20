@@ -76,7 +76,8 @@ static int __get_length(const char *s) {
 static uintptr_t __get_main_top(int pagesz) {
   uintptr_t top;
   const char *s;
-  if ((s = __get_last(__envp)) || (s = __get_last(__argv))) {
+  if ((s = __get_last(__envp)) || (s = __get_last(__argv)) ||
+      (s = __program_executable_name)) {
     top = (uintptr_t)s + __get_length(s);
   } else {
     unsigned long *xp = __auxv;

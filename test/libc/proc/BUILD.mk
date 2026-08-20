@@ -99,6 +99,7 @@ o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/execve_test.o			\
 		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
+		o/$(MODE)/test/libc/calls/zipread.zip.o			\
 		o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o	\
 		o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o	\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
