@@ -1661,6 +1661,8 @@ static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
     p = stpcpy(p, "if [ \"$m\" = ppc64le ]");
   } else if (loader->machine == EM_MIPS) {
     p = stpcpy(p, "if [ \"$m\" = mips64 ]");
+  } else if (loader->machine == EM_RISCV) {
+    p = stpcpy(p, "if [ \"$m\" = riscv64 ]");
   } else {
     Die(loader->path, "unsupported cpu architecture");
   }

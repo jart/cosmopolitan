@@ -23,6 +23,9 @@ installations of the many OSes and architectures.
   - FreeBSD
   - Windows (non-native)
 
+- RISC-V RV64
+  - Linux
+
 ## File Header
 
 APE defines three separate file magics, all of which are 8 characters
