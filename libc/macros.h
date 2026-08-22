@@ -175,6 +175,15 @@
 	.cfi_adjust_cfa_offset 16
 	.cfi_rel_offset x29,0
 	.cfi_rel_offset x30,8
+#elif defined(__riscv)
+	addi	sp,sp,-16
+	sd	s0,0(sp)
+	sd	ra,8(sp)
+	addi	s0,sp,16
+	.cfi_adjust_cfa_offset 16
+	.cfi_rel_offset s0,0
+	.cfi_rel_offset ra,8
+	.cfi_def_cfa s0,0
 #else
 #error "unsupported architecture"
 #endif
@@ -191,6 +200,14 @@
 	.cfi_adjust_cfa_offset -16
 	.cfi_restore x30
 	.cfi_restore x29
+#elif defined(__riscv)
+	.cfi_def_cfa sp,16
+	ld	ra,8(sp)
+	ld	s0,0(sp)
+	addi	sp,sp,16
+	.cfi_adjust_cfa_offset -16
+	.cfi_restore ra
+	.cfi_restore s0
 #else
 #error "unsupported architecture"
 #endif

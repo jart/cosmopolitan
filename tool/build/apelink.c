@@ -1643,6 +1643,8 @@ static char *GenerateScriptIfMachine(char *p, struct Input *in) {
     return stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]; then\n");
   } else if (in->elf->e_machine == EM_PPC64) {
     return stpcpy(p, "if [ \"$m\" = ppc64le ]; then\n");
+  } else if (in->elf->e_machine == EM_RISCV) {
+    return stpcpy(p, "if [ \"$m\" = riscv64 ]; then\n");
   } else {
     Die(in->path, "unsupported cpu architecture");
   }
@@ -1659,6 +1661,8 @@ static char *GenerateScriptIfLoaderMachine(char *p, struct Loader *loader) {
     p = stpcpy(p, "if [ \"$m\" = ppc64le ]");
   } else if (loader->machine == EM_MIPS) {
     p = stpcpy(p, "if [ \"$m\" = mips64 ]");
+  } else if (loader->machine == EM_RISCV) {
+    p = stpcpy(p, "if [ \"$m\" = riscv64 ]");
   } else {
     Die(loader->path, "unsupported cpu architecture");
   }
