@@ -1643,6 +1643,8 @@ static char *GenerateScriptIfMachine(char *p, struct Input *in) {
     return stpcpy(p, "if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]; then\n");
   } else if (in->elf->e_machine == EM_PPC64) {
     return stpcpy(p, "if [ \"$m\" = ppc64le ]; then\n");
+  } else if (in->elf->e_machine == EM_RISCV) {
+    return stpcpy(p, "if [ \"$m\" = riscv64 ]; then\n");
   } else {
     Die(in->path, "unsupported cpu architecture");
   }
