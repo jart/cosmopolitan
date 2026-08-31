@@ -22,6 +22,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
@@ -89,6 +90,28 @@ __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
       }
     }
     exit(0);
+  } else if (argc == 0) {
+    // test argc == 0 childs
+    int rc;
+    if (!IsWindows()) {
+      rc = sys_chdir("/");
+    } else {
+      rc = sys_chdir_nt("/");
+    }
+    if (rc) {
+      exit(122);
+    }
+    if (loaded && kisdangerous(__program_executable_name)) {
+      exit(125);
+    }
+    const char *name = GetProgramExecutableName();
+    if (kisdangerous(name)) {
+      exit(126);
+    }
+    if (strlen(name) == 0) {
+      exit(127);
+    }
+    exit(0);
   }
 }
 
@@ -152,6 +175,19 @@ TEST(GetProgramExecutableName, movedSelf) {
   SPAWN(fork);
   execve("./test", (char *[]){"hello", "Child", buf, skiparg0 ? 0 : "hello", 0},
          (char *[]){0});
+  abort();
+  EXITS(0);
+}
+
+TEST(GetProgramExecutableName, nullArgvAPELoader) {
+  // TODO(G4Vi): Confirm if OpenBSD actually has an issue running elfs. See note
+  //             in posix_spawn_test.c
+  if (skiptests || IsOpenbsd() || IsXnu() || IsWindows() || IsMetal())
+    return;
+  testlib_extract("/zip/ape.elf", "ape.elf", 0555);
+  char *prog = "./ape.elf";
+  SPAWN(fork);
+  execve(prog, (char *const[]){prog, "-", self, NULL}, (char *[]){0});
   abort();
   EXITS(0);
 }

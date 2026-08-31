@@ -74,7 +74,7 @@ static int __get_length(const char *s) {
 }
 
 static uintptr_t __get_main_top(int pagesz) {
-  uintptr_t top;
+  uintptr_t top, alttop;
   const char *s;
   if ((s = __get_last(__envp)) || (s = __get_last(__argv))) {
     top = (uintptr_t)s + __get_length(s);
@@ -83,6 +83,10 @@ static uintptr_t __get_main_top(int pagesz) {
     while (*xp)
       xp += 2;
     top = (uintptr_t)xp;
+  }
+  if ((s = __program_executable_name)) {
+    alttop = (uintptr_t)s + __get_length(s);
+    top = MAX(top, alttop);
   }
   return ROUNDUP(top, pagesz);
 }

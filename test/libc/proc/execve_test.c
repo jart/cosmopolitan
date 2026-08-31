@@ -24,6 +24,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/temp.h"
@@ -62,6 +63,17 @@ TEST(execve, testArgPassing) {
     kprintf("execve failed: %m\n");
     EXITS(0);
   }
+}
+
+TEST(execve, APEwithZipos) {
+  testlib_extract("/zip/zipread", "zipread", 0555);
+  char *zipread = realpath("zipread", NULL);
+  ASSERT_NE(NULL, zipread);
+  SPAWN(fork);
+  execve(zipread, (char *const[]){0}, (char *const[]){0});
+  kprintf("execve failed: %m\n");
+  EXITS(42);
+  free(zipread);
 }
 
 TEST(execve, ziposELF) {
