@@ -20,7 +20,6 @@ TEST_LIBC_CALLS_BINS =							\
 	$(TEST_LIBC_CALLS_COMS:%=%.dbg)					\
 	o/$(MODE)/test/libc/calls/life-nomod				\
 	o/$(MODE)/test/libc/calls/life-classic				\
-	o/$(MODE)/test/libc/calls/zipread.dbg				\
 	o/$(MODE)/test/libc/calls/zipread
 
 TEST_LIBC_CALLS_TESTS =							\
@@ -71,6 +70,16 @@ o/$(MODE)/test/libc/calls/%.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/calls/getprogramexecutablename_test.dbg:					\
+		$(TEST_LIBC_CALLS_DEPS)						\
+		o/$(MODE)/test/libc/calls/getprogramexecutablename_test.o	\
+		o/$(MODE)/test/libc/calls/ape.elf.zip.o				\
+		o/$(MODE)/test/libc/calls/calls.pkg				\
+		$(LIBC_TESTMAIN)						\
+		$(CRT)								\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/test/libc/calls/stat_test.dbg:				\
 		$(TEST_LIBC_CALLS_DEPS)					\
 		o/$(MODE)/test/libc/calls/stat_test.o			\
@@ -117,6 +126,23 @@ o/$(MODE)/test/libc/calls/life-nomod.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/calls/zipread.dbg:				\
+		$(LIBC_RUNTIME)						\
+		o/$(MODE)/test/libc/calls/zipread.o			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/ape.elf:			\
+		o/$(MODE)/tool/build/cp		\
+		o/$(MODE)/ape/ape.elf
+	@$(COMPILE) -wACP -T$@					\
+		o/$(MODE)/tool/build/cp				\
+		o/$(MODE)/ape/ape.elf			\
+		o/$(MODE)/test/libc/calls/ape.elf
+
+o/$(MODE)/test/libc/calls/ape.elf.zip.o					\
 o/$(MODE)/test/libc/calls/tiny64.elf.zip.o				\
 o/$(MODE)/test/libc/calls/life-nomod.zip.o				\
 o/$(MODE)/test/libc/calls/life-classic.zip.o				\

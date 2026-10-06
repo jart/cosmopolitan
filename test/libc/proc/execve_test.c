@@ -2,6 +2,7 @@
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2026 Gavin Hayes                                                   │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -24,6 +25,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/temp.h"
@@ -62,6 +64,17 @@ TEST(execve, testArgPassing) {
     kprintf("execve failed: %m\n");
     EXITS(0);
   }
+}
+
+TEST(execve, APEwithZipos) {
+  testlib_extract("/zip/zipread", "zipread", 0555);
+  char *zipread = realpath("zipread", NULL);
+  ASSERT_NE(NULL, zipread);
+  SPAWN(fork);
+  execve(zipread, (char *const[]){0}, (char *const[]){0});
+  kprintf("execve failed: %m\n");
+  EXITS(42);
+  free(zipread);
 }
 
 TEST(execve, ziposELF) {
