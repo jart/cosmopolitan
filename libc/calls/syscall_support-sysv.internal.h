@@ -14,6 +14,8 @@ int __syscall4i(long, long, long, long, int) asm("__syscall4");
 
 bool __is_evil_path(const char *);
 bool __is_linux_2_6_23(void);
+bool __is_linux_2_6_39(void);
+bool __is_linux_3_17(void);
 bool32 sys_isatty_metal(int);
 int __fixupnewfd(int, int);
 int __linux2sig(int);

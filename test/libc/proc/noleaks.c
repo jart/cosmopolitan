@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Gavin Arthur Hayes                                            │
+│ Copyright 2026 Gavin Arthur Hayes                                            │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,25 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/f.h"
 
-__static_yoink("zipos");
+static int CheckFdLeaked(int fd) {
+  int e = errno;
+  if (fcntl(fd, F_GETFL) == -1) {
+    if (errno != EBADF) {
+      _exit(2);
+    }
+    errno = e;
+    return 0;
+  }
+  kprintf("file descriptor %d leaked!\n", fd);
+  return 1;
+}
+
+static void CheckForFdLeaks(void) {
+  int i, l = 0;
+  for (i = 3; i < 50; ++i) {
+    l += CheckFdLeaked(i);
+  }
+  for (i = 9001; i < 9051; ++i) {
+    l += CheckFdLeaked(i);
+  }
+  if (l) {
+    _exit(3);
+  }
+}
 
 int main(int argc, char *argv[]) {
-  int fd = open("/zip/life.elf", O_RDONLY);
-  if (fd != -1) {
-    uint8_t buf[4] = {0};
-    ssize_t readres = read(fd, buf, sizeof(buf));
-    if (readres == sizeof(buf)) {
-      if (memcmp(buf,
-                 "\x7F"
-                 "ELF",
-                 sizeof(buf)) == 0) {
-        return 42;
-      }
-    }
-    close(fd);
-  }
-  return 1;
+  CheckForFdLeaks();
+  return 42;
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2026 Gavin Arthur Hayes                                            │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -21,18 +21,21 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.h"
 #include "libc/intrin/strace.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/paths.h"
 #include "libc/proc/execve.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
@@ -40,13 +43,14 @@
 #include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/shm.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.h"
 
-static bool IsAPEFd(const int fd) {
-  char buf[8];
-  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsApeLoadable(buf);
-}
+__notice(fexecve_notice, "\
+Cosmopolitan fexecve (ISC)\n\
+Copyright (c) 2026 Gavin Arthur Hayes <gavin@computoid.com>");
 
 static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
   int rc;
@@ -62,196 +66,293 @@ static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
   return rc;
 }
 
-typedef enum {
-  PTF_NUM = 1 << 0,
-  PTF_NUM2 = 1 << 1,
-  PTF_NUM3 = 1 << 2,
-  PTF_ANY = 1 << 3
-} PTF_PARSE;
-
-static bool ape_to_elf(void *ape, const size_t apesize) {
-  static const char printftok[] = "printf '";
-  static const size_t printftoklen = sizeof(printftok) - 1;
-  const char *tok = memmem(ape, apesize, printftok, printftoklen);
-  if (tok) {
-    tok += printftoklen;
-    uint8_t *dest = ape;
-    PTF_PARSE state = PTF_ANY;
-    uint8_t value = 0;
-    for (; tok < (const char *)(dest + apesize); tok++) {
-      if ((state & (PTF_NUM | PTF_NUM2 | PTF_NUM3)) &&
-          (*tok >= '0' && *tok <= '7')) {
-        value = (value << 3) | (*tok - '0');
-        state <<= 1;
-        if (state & PTF_ANY) {
-          *dest++ = value;
-        }
-      } else if (state & PTF_NUM) {
-        break;
-      } else {
-        if (state & (PTF_NUM2 | PTF_NUM3)) {
-          *dest++ = value;
-        }
-        if (*tok == '\\') {
-          state = PTF_NUM;
-          value = 0;
-        } else if (*tok == '\'') {
-          return true;
-        } else {
-          *dest++ = *tok;
-          state = PTF_ANY;
-        }
-      }
-    }
+static int isZipFile(const void *data, size_t data_size) {
+  if (!_weaken(GetZipEocd)) {
+    return enosys();
   }
-  errno = ENOEXEC;
-  return false;
+  int ziperror;
+  return _weaken(GetZipEocd)(data, data_size, &ziperror) != NULL;
+}
+
+typedef enum { FEXEF_ZIP = 1 << 0, FEXEF_APE = 1 << 1 } FEXEF;
+
+static int getFexeFlags(const void *data, size_t data_size) {
+  if (!_weaken(GetZipEocd)) {
+    return enosys();
+  }
+  int rc = isZipFile(data, data_size);
+  if (rc == -1) {
+    return -1;
+  }
+  int flags = rc << 0;
+  if (data_size >= 8) {
+    flags |= (int)IsApeMagic(data) << 1;
+  }
+  return flags;
+}
+
+//  __sys_mmap used instead of mmap to be vfork safer
+static int __getFdFexeFlags(const int fd) {
+  if (!_weaken(GetZipEocd)) {
+    return enosys();
+  }
+  struct stat st;
+  if (fstat(fd, &st) == -1) {
+    return -1;
+  }
+  void *space = __sys_mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0, 0);
+  if (space == MAP_FAILED) {
+    return -1;
+  }
+  int flags = getFexeFlags(space, st.st_size);
+  if (__sys_munmap(space, st.st_size) == -1) {
+    return -1;
+  }
+  return flags;
 }
 
 /**
  * Creates a memfd and copies fd to it.
  *
- * This does an inplace conversion of APE to ELF when detected!!!!
+ * If file is a zip file or ape file, FD_CLOEXEC is NOT set, however the file
+ * descriptor number will be over 9000 to keep it out of the way of the new
+ * process. If the file is not a zip file and not a ape file, FD_CLOEXEC will be
+ * set unless executing under aarch64 QEMU user. These transformations are
+ * applied to make executing from zipos work as expected, avoid leaking file
+ * descriptors when possible, but when not possible, avoid conflicts with
+ * programs that assume file descriptor numbers are available.
+ *
+ * FD_CLOEXEC is always set on zipos file descriptors, however, FD_CLOEXEC
+ * makes the program inaccessible to the APE loader as when the APE loader
+ * starts, the fd descriptor is closed. Additionally, closing the file
+ * descriptor prevents it from being usable in COSMOPOLITAN_INIT_ZIPOS=,
+ * preventing working zipos in the newly executed. Therefore, FD_CLOEXEC cannot
+ * be set on APEs or zip files. Likewise with the APE loader, FD_CLOEXEC
+ * prevents the qemu aarch64 user interpreter from accessing the ELF, so we
+ * don't set it then either.
+ *
+ * @param outfd should have a pthread_cleanup handler registered such as
+ * close_memfd so the created memfd isn't leaked in the event of pthread
+ * cancellation.
  */
-static int fd_to_mem_fd(const int infd, char *path) {
-  if ((!IsLinux() && !IsFreebsd()) || !_weaken(mmap) || !_weaken(munmap)) {
-    return enosys();
+static bool fd_to_mem_fd(const int infd, FEXEF *flags, int *outfd) {
+  struct stat st;
+  void *space;
+  int fexe_flags, fd;
+  int savedErrno = 0;
+  bool success = false;
+
+  if (!IsLinux() && !IsFreebsd()) {
+    enosys();
+    return false;
+  } else if (__vforked) {
+    enotsup();
+    return false;
   }
 
-  struct stat st;
+  BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
+  strace_enabled(-1);
   if (fstat(infd, &st) == -1) {
-    return -1;
+    goto fd_to_mem_fd_ALLOW;
   }
-  int fd;
   if (IsLinux()) {
-    fd = sys_memfd_create(__func__, MFD_CLOEXEC);
+    fd = sys_memfd_create(__func__, 0);
   } else if (IsFreebsd()) {
     fd = sys_shm_open(SHM_ANON, O_CREAT | O_RDWR, 0);
   } else {
-    return enosys();
+    fd = enosys();
   }
   if (fd == -1) {
-    return -1;
+    goto fd_to_mem_fd_ALLOW;
   }
-  void *space;
-  if ((sys_ftruncate(fd, st.st_size, st.st_size) != -1) &&
-      ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                              fd, 0)) != MAP_FAILED)) {
-    ssize_t readRc;
-    readRc = pread(infd, space, st.st_size, 0);
-    bool success = readRc != -1;
-    if (success && (st.st_size > 8) && IsApeLoadable(space)) {
+  if ((sys_ftruncate(fd, st.st_size, st.st_size) == -1) ||
+      ((space = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                     0)) == MAP_FAILED)) {
+    goto fd_to_mem_fd_CLOSE;
+  }
+  success = (pread(infd, space, st.st_size, 0) == st.st_size) &&
+            ((fexe_flags = getFexeFlags(space, st.st_size)) != -1);
+  if (!success) {
+    savedErrno = errno;
+  }
+  if ((success = ((munmap(space, st.st_size) == 0) && success))) {
+    if (((fexe_flags & (FEXEF_ZIP | FEXEF_APE)) == 0) &&
+        (!IsAarch64() || !IsQemuUser())) {
+      // setting cloexec isn't strictly required, don't fail if it does
       int flags = fcntl(fd, F_GETFD);
-      if ((success = (flags != -1) &&
-                     (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
-                     ape_to_elf(space, st.st_size))) {
-        const int newfd = fcntl(fd, F_DUPFD, 9001);
-        if (newfd != -1) {
-          close(fd);
-          fd = newfd;
-        }
+      if (flags != -1) {
+        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+      }
+    } else {
+      // The dup isn't strictly required, don't fail if it does
+      const int highfd = fcntl(fd, F_DUPFD, 9001);
+      if (highfd != -1) {
+        close(fd);
+        fd = highfd;
       }
     }
-    const int e = errno;
-    if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
-      if (path) {
-        FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
-      }
-      unassert(readRc == st.st_size);
-      return fd;
-    } else if (!success) {
-      errno = e;
+    *flags = fexe_flags;
+    *outfd = fd;
+  } else {
+    if (savedErrno != 0) {
+      errno = savedErrno;
+    }
+  fd_to_mem_fd_CLOSE:
+    savedErrno = errno;
+    close(fd);
+    errno = savedErrno;
+  }
+fd_to_mem_fd_ALLOW:
+  strace_enabled(+1);
+  ALLOW_CANCELATION;
+  ALLOW_SIGNALS;
+  return success;
+}
+
+/**
+ * Determines if a file is a zip and/or APE file.
+ *
+ * On Linux if O_PATH is set, no determination is made as the file is not
+ * readable.
+ */
+static int getFdFexeFlags(const int fd) {
+  char buf[8];
+  ssize_t rcRead;
+  int fl_flags;
+  int fd_flags = 0;
+  FEXEF fflags = -1;
+  BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
+  strace_enabled(-1);
+  if ((fl_flags = fcntl(fd, F_GETFL)) == -1) {
+    fflags = -1;
+  } else if (IsLinux() && fl_flags & _O_PATH) {
+    fflags = 0;
+  } else if ((fd_flags = fcntl(fd, F_GETFD)) == -1) {
+    fflags = -1;
+  } else if ((fd_flags & FD_CLOEXEC) == 0) {
+    fflags = __getFdFexeFlags(fd);
+  } else if ((rcRead = sys_pread(fd, buf, 8, 0, 0)) == -1) {
+    fflags = -1;
+  } else {
+    int isAPE = (rcRead == 8) && IsApeMagic(buf);
+    fflags = isAPE << 1;
+  }
+  strace_enabled(+1);
+  ALLOW_CANCELATION;
+  ALLOW_SIGNALS;
+  if ((fflags != -1) && (fd_flags & FD_CLOEXEC)) {
+    if (fflags & FEXEF_APE) {
+      STRACE("warning: APE fd (%d) has FD_CLOEXEC set, APE loading likely not "
+             "possible",
+             fd);
+    } else if (IsAarch64() && IsQemuUser()) {
+      STRACE("warning: fd (%d) has FD_CLOEXEC set, qemu user loading likely "
+             "not possible",
+             fd);
     }
   }
-  const int e = errno;
+  return fflags;
+}
+
+void close_memfd(void *pFd) {
+  int fd = *(int *)pFd;
+  if (fd == -1) {
+    return;
+  }
+  int keepErrno = errno;
+  BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
+  strace_enabled(-1);
   close(fd);
-  errno = e;
-  return -1;
+  strace_enabled(+1);
+  ALLOW_CANCELATION;
+  ALLOW_SIGNALS;
+  errno = keepErrno;
+}
+
+static void fexecve_with_zipos(int fd, char *const argv[], char *const envp[],
+                               FEXEF fflags) {
+  if (fflags & FEXEF_ZIP) {
+    char *path = alloca(PATH_MAX);
+    FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
+    size_t numenvs;
+    for (numenvs = 0; envp[numenvs];)
+      ++numenvs;
+    static _Thread_local char *envs[500];
+    memcpy(envs, envp, numenvs * sizeof(char *));
+    envs[numenvs] = path;
+    envs[numenvs + 1] = NULL;
+    envp = envs;
+  }
+  fexecve_impl(fd, argv, envp);
+  char path[14 + 12];
+  FormatInt32(stpcpy(path, "/dev/fd/"), fd);
+  STRACE("execve(%#s, %s) due to %s", path, DescribeStringList(argv),
+         _strerrno(errno));
+  sys_execve(path, argv, envp);
 }
 
 /**
  * Executes binary executable at file descriptor.
  *
- * This is only supported on Linux and FreeBSD. APE binaries are
- * supported. Zipos is supported. Zipos fds or FD_CLOEXEC APE fds or
- * fds that fail fexecve with ENOEXEC are copied to a new memfd (with
- * in-memory APE to ELF conversion) and fexecve is (re)attempted.
+ * Linux is fully supported on x86_64 and aarch64. FreeBSD is supported, but no
+ * testing has been done to confirm, in particular, running APE binaries,
+ * running from a zipos fd and passing zipos fd via COSMOPOLITAN_INIT_ZIPOS= may
+ * not work on FreeBSD. No support is provided for other systems.
+ *
+ * Interpreted binaries / scripts such as APEs or executables loaded with
+ * qemu user aarch64 will not load if FD_CLOEXEC is set. Zipos may fail to
+ * initialize if FD_CLOEXEC is set.
+ *
+ * When a zipos fd is passed, its FD_CLOEXEC setting is ignored and it is copied
+ * to a memfd to make it "real". If it's not an APE file or a zip file and we're
+ * not running on qemu user aarch64, FD_CLOEXEC is set on the memfd. If we do
+ * not set FD_CLOEXEC, the fd is dup'd to over 9000 to prevent interference with
+ * programs that assume fd numbering.
  *
  * @param fd is opened executable and current file position is ignored
  * @return doesn't return on success, otherwise -1 w/ errno
- * @raise ENOEXEC if file at `fd` isn't an assimilated ELF executable
+ * @raise ENOEXEC if file at `fd` fails to execute
  * @raise ENOSYS on Windows, XNU, OpenBSD, NetBSD, and Metal
+ * @raise ENOTSUP if a zipos file is passed when vforked
+ * @asyncsignalsafe
+ * @vforksafe
  */
 int fexecve(int fd, char *const argv[], char *const envp[]) {
   int rc = 0;
-  if (!argv || !envp) {
-    rc = efault();
-  } else {
-    STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
-           DescribeStringList(envp));
-    int savedErr = 0;
-    do {
-      if (!IsLinux() && !IsFreebsd()) {
-        rc = enosys();
-        break;
-      }
-      if (!__isfdkind(fd, kFdZip)) {
-        bool memfdReq;
-        BLOCK_SIGNALS;
-        BLOCK_CANCELATION;
-        strace_enabled(-1);
-        memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) &&
-                   IsAPEFd(fd);
-        strace_enabled(+1);
-        ALLOW_CANCELATION;
-        ALLOW_SIGNALS;
-        if (rc == -1) {
-          break;
-        } else if (!memfdReq) {
-          fexecve_impl(fd, argv, envp);
-          if (errno != ENOEXEC) {
-            break;
-          }
-          savedErr = ENOEXEC;
-        }
-      }
-      int newfd;
-      char *path = alloca(PATH_MAX);
-      BLOCK_SIGNALS;
-      BLOCK_CANCELATION;
-      strace_enabled(-1);
-      newfd = fd_to_mem_fd(fd, path);
-      strace_enabled(+1);
-      ALLOW_CANCELATION;
-      ALLOW_SIGNALS;
-      if (newfd == -1) {
-        break;
-      }
-      size_t numenvs;
-      for (numenvs = 0; envp[numenvs];)
-        ++numenvs;
-      // const size_t desenvs = min(500, max(numenvs + 1, 2));
-      static _Thread_local char *envs[500];
-      memcpy(envs, envp, numenvs * sizeof(char *));
-      envs[numenvs] = path;
-      envs[numenvs + 1] = NULL;
-      fexecve_impl(newfd, argv, envs);
-      if (!savedErr) {
-        savedErr = errno;
-      }
-      BLOCK_SIGNALS;
-      BLOCK_CANCELATION;
-      strace_enabled(-1);
-      close(newfd);
-      strace_enabled(+1);
-      ALLOW_CANCELATION;
-      ALLOW_SIGNALS;
-    } while (0);
-    if (savedErr) {
-      errno = savedErr;
+  STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
+         DescribeStringList(envp));
+  do {
+    if (!argv || !envp) {
+      rc = efault();
+      break;
     }
-    rc = -1;
-  }
+    if (!IsLinux() && !IsFreebsd()) {
+      rc = enosys();
+      break;
+    }
+    FEXEF fflags = 0;
+    if (__isfdkind(fd, kFdZip)) {
+      if (__vforked) {
+        rc = enotsup();
+        break;
+      }
+      int memfd = -1;
+      pthread_cleanup_push(&close_memfd, &memfd);
+      if (fd_to_mem_fd(fd, &fflags, &memfd)) {
+        fexecve_with_zipos(memfd, argv, envp, fflags);
+      }
+      pthread_cleanup_pop(1);
+    } else {
+      if ((fflags = getFdFexeFlags(fd)) == -1) {
+        break;
+      }
+      fexecve_with_zipos(fd, argv, envp, fflags);
+    }
+  } while (0);
+  rc = -1;
   STRACE("fexecve(%d) failed %d% m", fd, rc);
   return rc;
 }
