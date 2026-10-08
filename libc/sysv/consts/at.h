@@ -12,6 +12,7 @@ extern const int AT_SYMLINK_FOLLOW;
 extern const int AT_SYMLINK_NOFOLLOW;
 extern const int AT_REMOVEDIR;
 extern const int AT_EACCESS;
+extern const int _AT_EMPTY_PATH;
 
 COSMOPOLITAN_C_END_
 
@@ -20,5 +21,6 @@ COSMOPOLITAN_C_END_
 #define AT_SYMLINK_NOFOLLOW AT_SYMLINK_NOFOLLOW
 #define AT_REMOVEDIR        AT_REMOVEDIR
 #define AT_EACCESS          AT_EACCESS
+#define _AT_EMPTY_PATH      _AT_EMPTY_PATH
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_AT_H_ */
