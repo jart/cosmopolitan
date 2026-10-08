@@ -28,6 +28,15 @@ _start:	mov	x1,sp
 	bl	ApeLoader
 	.endfn	_start,globl
 
+#elif defined(__riscv)
+
+_start:	mv	a1,sp
+	andi	sp,sp,-16
+	li	a0,0
+	li	a2,0
+	call	ApeLoader
+	.endfn	_start,globl
+
 #else
 
 XnuEntrypoint:

@@ -102,6 +102,79 @@ o/$(MODE)/ape/systemcall.o: ape/systemcall.S
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape: o/$(MODE)/ape/ape.elf
 
+else ifeq ($(ARCH), riscv64)
+
+APE = o/$(MODE)/ape/ape.elf
+APE_SRCS = ape/start.S ape/launch.S ape/systemcall.S ape/loader.c
+APE_OBJS =					\
+	o/$(MODE)/ape/start.o			\
+	o/$(MODE)/ape/loader.o		\
+	o/$(MODE)/ape/launch.o		\
+	o/$(MODE)/ape/systemcall.o
+APE_NO_MODIFY_SELF = $(APE)
+APE_COPY_SELF = $(APE)
+
+APE_LOADER_FLAGS =				\
+	-DNDEBUG				\
+	-DSUPPORT_VECTOR=1			\
+	-iquote.				\
+	-Wall					\
+	-Wextra				\
+	-Werror				\
+	-pedantic-errors			\
+	-Os					\
+	-ffreestanding				\
+	-fno-asynchronous-unwind-tables		\
+	-fno-pie				\
+	-fno-pic				\
+	-fno-stack-protector			\
+	-fno-tree-loop-distribute-patterns	\
+	-march=rv64imac				\
+	-mabi=lp64				\
+	-mcmodel=medany				\
+	-c					\
+	$(OUTPUT_OPTION)			\
+	$<
+
+APE_LOADER_ASFLAGS =				\
+	-I.					\
+	-march=rv64imac				\
+	-mabi=lp64				\
+	-mcmodel=medany				\
+	-c					\
+	$(OUTPUT_OPTION)			\
+	$<
+
+APE_LOADER_LDFLAGS =				\
+	-static					\
+	-nostdlib				\
+	--no-dynamic-linker			\
+	--build-id=none				\
+	-e _start				\
+	-z noexecstack				\
+	-z norelro				\
+	-z common-page-size=0x1000		\
+	-z max-page-size=0x1000			\
+	-T ape/loader.lds
+
+o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -g $< $@
+
+o/$(MODE)/ape/ape.elf.dbg: $(APE_OBJS) ape/loader.lds
+	@$(COMPILE) -ALINK.elf $(LD) $(APE_LOADER_LDFLAGS) -o $@ $(APE_OBJS)
+
+o/$(MODE)/ape/loader.o: ape/loader.c ape/ape.h
+	@$(COMPILE) -AOBJECTIFY.c $(CC) $(APE_LOADER_FLAGS)
+o/$(MODE)/ape/start.o: ape/start.S libc/macros.h
+	@$(COMPILE) -AOBJECTIFY.S $(CC) $(APE_LOADER_ASFLAGS)
+o/$(MODE)/ape/launch.o: ape/launch.S libc/macros.h
+	@$(COMPILE) -AOBJECTIFY.S $(CC) $(APE_LOADER_ASFLAGS)
+o/$(MODE)/ape/systemcall.o: ape/systemcall.S libc/macros.h
+	@$(COMPILE) -AOBJECTIFY.S $(CC) $(APE_LOADER_ASFLAGS)
+
+.PHONY: o/$(MODE)/ape
+o/$(MODE)/ape: o/$(MODE)/ape/ape.elf
+
 else
 
 APE =	o/$(MODE)/ape/ape.o			\

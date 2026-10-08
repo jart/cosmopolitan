@@ -37,6 +37,9 @@ SystemCall:
 	ret
 1:	neg	x0,x0
 	ret
+#elif defined(__riscv)
+	ecall
+	ret
 #else
 	mov	%rcx,%r10
 	mov	16(%rsp),%eax
