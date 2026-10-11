@@ -344,11 +344,29 @@ void nsync_waiter_wipe_ (void) {
 		dll_init (&w->same_condition);
 		dll_init (&w->nw.q);
 		if (w->wipe_mu) {
-			atomic_init(&w->wipe_mu->word, 0);
+			uint32_t mw = atomic_load_explicit (&w->wipe_mu->word,
+							    memory_order_relaxed);
+			if (mw & (MU_WLOCK | MU_RLOCK_FIELD)) {
+				/* After fork, only the forking thread survives.
+				   If a mutex is held, it must be held by the
+				   survivor — preserve lock state but strip
+				   stale waiter metadata. */
+				atomic_init (&w->wipe_mu->word,
+					     mw & (MU_WLOCK | MU_RLOCK_FIELD));
+			} else {
+				atomic_init (&w->wipe_mu->word, 0);
+			}
 			w->wipe_mu->waiters = 0;
 		}
 		if (w->wipe_cv) {
-			atomic_init(&w->wipe_cv->word, 0);
+			uint32_t cw = atomic_load_explicit (&w->wipe_cv->word,
+							    memory_order_relaxed);
+			if (cw & (MU_WLOCK | MU_RLOCK_FIELD)) {
+				atomic_init (&w->wipe_cv->word,
+					     cw & (MU_WLOCK | MU_RLOCK_FIELD));
+			} else {
+				atomic_init (&w->wipe_cv->word, 0);
+			}
 			w->wipe_cv->waiters = 0;
 		}
 		if (!nsync_mu_semaphore_init (&w->sem))
