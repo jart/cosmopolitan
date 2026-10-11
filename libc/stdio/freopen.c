@@ -54,6 +54,9 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
         stream->oflags = flags;
         stream->beg = 0;
         stream->end = 0;
+        // "The error and end-of-file indicators for the stream shall be
+        //  cleared." ──Quoth POSIX.1-2024
+        stream->state = 0;
         res = stream;
       } else {
         res = NULL;
