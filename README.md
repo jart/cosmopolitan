@@ -187,7 +187,7 @@ src
 ```
 
 You normally run the `.dbg` file under gdb. If you need to debug the
-`` file itself, then you can load the debug symbols independently as
+executable itself, then you can load the debug symbols independently as
 
 ```sh
 gdb foo -ex 'add-symbol-file foo.dbg 0x401000'
