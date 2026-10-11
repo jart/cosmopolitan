@@ -172,11 +172,36 @@ void Put(void) {
   ip = newip;
 }
 
+/*
+ * Called from Abs() when a lambda is reached with no continuation. The
+ * original code unconditionally treated mem[ip+2] as an exit code. That
+ * assumes ip is at a `λ.N` ABS whose body is exactly `VAR N`, in which
+ * case mem[ip+1]==VAR and mem[ip+2]==N. The intent is to reach this via
+ * the exit ABS at ROM position 24 (mem[24]=ABS, mem[25]=VAR, mem[26]=0),
+ * giving a clean exit(0).
+ *
+ * In practice the wrapper allows execution to terminate at other ABS
+ * positions whose bodies are not `VAR N`. For example, in bit mode, when
+ * the lazy input list bottoms out via NIL, control commonly returns to
+ * ip=14 (the inner `\\.0 wr0 wr1`). There mem[15]=APP and mem[16]=4 (a
+ * span operand), so the old code reported a spurious "CONTINUATIONS
+ * EXHAUSTED" error and exited 4. Reproducer:
+ *
+ *   ( cat tromp_AIT/take1k.blc; printf 'hello world!' ) | ./lambda
+ *
+ * Tromp's `uni` (https://github.com/tromp/AIT) exits 0 with identical
+ * output bytes on the same input.
+ *
+ * Only interpret mem[ip+2] as an exit code when the body looks like
+ * `VAR N`. Otherwise exit cleanly.
+ */
 void Bye(void) {
-  int rc = mem[ip + 2];  // (λ 0) [exitcode]
-  if (rc)
-    Error(rc, "CONTINUATIONS EXHAUSTED");
-  if (postdump && !rc)
+  if (mem[ip + 1] == VAR) {
+    int rc = mem[ip + 2];
+    if (rc)
+      Error(rc, "CONTINUATIONS EXHAUSTED");
+  }
+  if (postdump)
     Dump(0, end, stderr);
   exit(0);
 }
