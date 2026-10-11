@@ -2123,7 +2123,7 @@ static char *AppendContentType(char *p, const char *ct) {
       p = stpcpy(p, "; charset=utf-8");
     }
     if (!cpm.referrerpolicy && startswith(ct + 5, "html")) {
-      cpm.referrerpolicy = "no-referrer-when-downgrade";
+      cpm.referrerpolicy = "strict-origin-when-cross-origin";
     }
   }
   cpm.hascontenttype = true;
