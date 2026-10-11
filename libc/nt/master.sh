@@ -721,6 +721,7 @@ imp	'LdrGetDllHandle'					LdrGetDllHandle						ntdll		4
 imp	'LdrGetProcedureAddress'				LdrGetProcedureAddress					ntdll		4
 imp	'LdrLoadDll'						LdrLoadDll						ntdll		4
 imp	'LdrUnloadDll'						LdrUnloadDll						ntdll		1
+imp	'LdrRegisterDllNotification'				LdrRegisterDllNotification				ntdll		4
 imp	'NtAllocateVirtualMemory'				NtAllocateVirtualMemory					ntdll		6
 imp	'NtCallbackReturn'					NtCallbackReturn					ntdll		3
 imp	'NtCancelIoFile'					NtCancelIoFile						ntdll		2

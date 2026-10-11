@@ -14,6 +14,11 @@
 #endif
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#include "libc/intrin/likely.h"
+#include "libc/macros.h"
+#include "libc/nt/struct/teb.h"
+#include "libc/nt/thread.h"
+
 COSMOPOLITAN_C_START_
 
 struct CosmoFtrace {   /* 16 */
@@ -108,7 +113,7 @@ forceinline pureconst struct CosmoTib *__get_tls_win32(void) {
           : "memory");
   return tib;
 #else
-  return 0;
+  return (struct CosmoTib *)NtCurrentTeb()->TlsSlots[__tls_index];
 #endif
 }
 
@@ -118,6 +123,8 @@ forceinline void __set_tls_win32(void *tls) {
                    : /* no outputs */
                    : "r"((long)__tls_index), "r"(tls)
                    : "memory");
+#else
+  NtCurrentTeb()->TlsSlots[__tls_index] = tls;
 #endif
 }
 
