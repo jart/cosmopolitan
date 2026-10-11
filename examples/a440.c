@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifndef M_PIf
+#define M_PIf 3.14159265358979323846f
+#endif
+
 /**
  * @fileoverview plays pure A.440 tone on speakers for 1 second
  * @see https://en.wikipedia.org/wiki/A440_%28pitch_standard%29
