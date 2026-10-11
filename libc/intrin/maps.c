@@ -267,41 +267,45 @@ void __maps_free(struct Map *map) {
   }
 }
 
+// bitmap has one bit per 4096 bytes, regardless of __pagesize. readers
+// like kisdangerous() only consult the bit at the start of each page, so
+// we're free to mark every 4096-byte unit within the interval. it allows
+// us to compute each 64-bit word's mask in closed form, rather than one
+// bit at a time, and directory levels are only walked once per 2mb leaf
 void __maps_mark(void *addr, size_t size) {
   MAPS_ASSERT(!((uintptr_t)addr & (__pagesize - 1)));
   int olderr = errno;
-  uintptr_t w = (uintptr_t)addr;
-  uintptr_t e = (uintptr_t)addr + size;
-  struct MapPageDirectory *pd;
+  uintptr_t w = (uintptr_t)addr >> 12;
+  uintptr_t e = ((uintptr_t)addr + size + 4095) >> 12;
+  struct MapPageDirectory *root, *pd;
   struct MapPageTable *pt;
-  while (w < e) {
-    if (!(pd = __maps_getpd(&__maps.alive)))
+  if (w >= e)
+    return;
+  if (!(root = __maps_getpd(&__maps.alive)))
+    goto OutOfMemory;
+  do {
+    if (!(pd = __maps_getpd(&root->p[(w >> 36) & 511].pd)))
       goto OutOfMemory;
-    size_t i = (w >> 48) & 511;
-    if (!(pd = __maps_getpd(&pd->p[i].pd)))
+    if (!(pd = __maps_getpd(&pd->p[(w >> 27) & 511].pd)))
       goto OutOfMemory;
-    i = (w >> 39) & 511;
-    if (!(pd = __maps_getpd(&pd->p[i].pd)))
+    if (!(pd = __maps_getpd(&pd->p[(w >> 18) & 511].pd)))
       goto OutOfMemory;
-    i = (w >> 30) & 511;
-    if (!(pd = __maps_getpd(&pd->p[i].pd)))
+    if (!(pt = __maps_getpt(&pd->p[(w >> 9) & 511].pt)))
       goto OutOfMemory;
-    i = (w >> 21) & 511;
-    if (!(pt = __maps_getpt(&pd->p[i].pt)))
-      goto OutOfMemory;
-    i = (w >> 12) & 511;
-    uint_fast64_t mask = 1ull << (i & 63);
-    w += __pagesize;
-    while (w < e) {
-      int i2 = (w >> 12) & 511;
-      if (i2 / 64 != i / 64)
-        break;
-      i = i2;
-      mask |= 1ull << (i & 63);
-      w += __pagesize;
-    }
-    atomic_fetch_or_explicit(&pt->p[i / 64], mask, memory_order_release);
-  }
+    do {
+      uintptr_t n = MIN(e, (w | 63) + 1) - w;
+      uint_fast64_t mask = -1ull >> (64 - n) << (w & 63);
+      if (mask == -1ull) {
+        // or'ing all ones is the same as storing them, minus the lock
+        atomic_store_explicit(&pt->p[(w >> 6) & 7], mask,
+                              memory_order_release);
+      } else {
+        atomic_fetch_or_explicit(&pt->p[(w >> 6) & 7], mask,
+                                 memory_order_release);
+      }
+      w += n;
+    } while (w < e && (w & 511));
+  } while (w < e);
   return;
 OutOfMemory:
   errno = olderr;
@@ -309,45 +313,46 @@ OutOfMemory:
 
 void __maps_unmark(void *addr, size_t size) {
   MAPS_ASSERT(!((uintptr_t)addr & (__pagesize - 1)));
-  uintptr_t w = (uintptr_t)addr;
-  uintptr_t e = (uintptr_t)addr + size;
+  uintptr_t w = (uintptr_t)addr >> 12;
+  uintptr_t e = ((uintptr_t)addr + size + 4095) >> 12;
   struct MapPageDirectory *pd;
   struct MapPageTable *pt;
+  if (!(pd = atomic_load_explicit(&__maps.alive, memory_order_relaxed)))
+    return;
+  struct MapPageDirectory *root = pd;
   while (w < e) {
-    if (!(pd = atomic_load_explicit(&__maps.alive, memory_order_relaxed)))
-      return;
-    size_t i = (w >> 48) & 511;
-    if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed))) {
-      w += __pagesize;
+    // skip entire subtrees which don't exist
+    if (!(pd = atomic_load_explicit(&root->p[(w >> 36) & 511].pd,
+                                    memory_order_relaxed))) {
+      w = (w | ((1ull << 36) - 1)) + 1;
       continue;
     }
-    i = (w >> 39) & 511;
-    if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed))) {
-      w += __pagesize;
+    if (!(pd = atomic_load_explicit(&pd->p[(w >> 27) & 511].pd,
+                                    memory_order_relaxed))) {
+      w = (w | ((1ull << 27) - 1)) + 1;
       continue;
     }
-    i = (w >> 30) & 511;
-    if (!(pd = atomic_load_explicit(&pd->p[i].pd, memory_order_relaxed))) {
-      w += __pagesize;
+    if (!(pd = atomic_load_explicit(&pd->p[(w >> 18) & 511].pd,
+                                    memory_order_relaxed))) {
+      w = (w | ((1ull << 18) - 1)) + 1;
       continue;
     }
-    i = (w >> 21) & 511;
-    if (!(pt = atomic_load_explicit(&pd->p[i].pt, memory_order_relaxed))) {
-      w += __pagesize;
+    if (!(pt = atomic_load_explicit(&pd->p[(w >> 9) & 511].pt,
+                                    memory_order_relaxed))) {
+      w = (w | 511) + 1;
       continue;
     }
-    i = (w >> 12) & 511;
-    uint_fast64_t mask = 1ull << (i & 63);
-    w += __pagesize;
-    while (w < e) {
-      int i2 = (w >> 12) & 511;
-      if (i2 / 64 != i / 64)
-        break;
-      i = i2;
-      mask |= 1ull << (i & 63);
-      w += __pagesize;
-    }
-    atomic_fetch_and_explicit(&pt->p[i / 64], ~mask, memory_order_release);
+    do {
+      uintptr_t n = MIN(e, (w | 63) + 1) - w;
+      uint_fast64_t mask = -1ull >> (64 - n) << (w & 63);
+      if (mask == -1ull) {
+        atomic_store_explicit(&pt->p[(w >> 6) & 7], 0, memory_order_release);
+      } else {
+        atomic_fetch_and_explicit(&pt->p[(w >> 6) & 7], ~mask,
+                                  memory_order_release);
+      }
+      w += n;
+    } while (w < e && (w & 511));
   }
 }
 

@@ -20,7 +20,6 @@ typedef unsigned long jmp_buf[18];
 typedef unsigned long jmp_buf[26];
 #endif
 
-void mcount(void) libcesque;
 int daemon(int, int) libcesque;
 unsigned long getauxval(unsigned long) libcesque;
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
@@ -61,6 +60,7 @@ int acct(const char *) libcesque;
 
 #if defined(_GNU_SOURCE) || defined(_COSMO_SOURCE)
 extern char **environ;
+void mcount(void) libcesque;
 char *secure_getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
 #endif
 
