@@ -1,21 +1,10 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
-╚─────────────────────────────────────────────────────────────────────────────*/
+#/*─────────────────────────────────────────────────────────────────╗
+ │ To the extent possible under law, Justin Tunney has waived       │
+ │ all copyright and related or neighboring rights to this file,    │
+ │ as it is written in the following disclaimers:                   │
+ │   • http://unlicense.org/                                        │
+ │   • http://creativecommons.org/publicdomain/zero/1.0/            │
+ ╚─────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -33,24 +22,31 @@ __static_yoink("zipos");
 __static_yoink("plinko");
 __static_yoink("library.lisp");
 __static_yoink("library_test.lisp");
+__static_yoink("plan_test.lisp");
+__static_yoink("expand_test.lisp");
 __static_yoink("binarytrees.lisp");
 __static_yoink("algebra.lisp");
 __static_yoink("algebra_test.lisp");
 __static_yoink("infix.lisp");
+__static_yoink("kanren.lisp");
+__static_yoink("kanren_test.lisp");
 __static_yoink("ok.lisp");
 
 static const char *const kSauces[] = {
     "/zip/library.lisp",       //
     "/zip/library_test.lisp",  //
+    "/zip/plan_test.lisp",     //
+    "/zip/expand_test.lisp",   //
     "/zip/binarytrees.lisp",   //
     "/zip/algebra.lisp",       //
     "/zip/algebra_test.lisp",  //
     "/zip/infix.lisp",         //
+    "/zip/kanren.lisp",        //
+    "/zip/kanren_test.lisp",   //
     "/zip/ok.lisp",            //
 };
 
 void SetUpOnce(void) {
-  exit(0);  // TODO(jart): How can we safely disable TLS with *NSYNC?
   int fdin, fdout;
   testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
@@ -61,7 +57,7 @@ void SetUpOnce(void) {
   EXPECT_EQ(0, close(fdin));
 }
 
-TEST(plinko, worksOrPrintsNiceError) {
+static void RunPlinko(const char *flag) {
   ssize_t rc, got;
   char buf[1024], drain[64];
   sigset_t chldmask, savemask;
@@ -89,7 +85,8 @@ TEST(plinko, worksOrPrintsNiceError) {
     sigaction(SIGQUIT, &savequit, 0);
     sigaction(SIGPIPE, &savepipe, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    execve("bin/plinko", (char *const[]){"bin/plinko", 0}, (char *const[]){0});
+    execve("bin/plinko", (char *const[]){"bin/plinko", (char *)flag, 0},
+           (char *const[]){0});
     _exit(127);
   }
   close(pfds[0][0]);
@@ -110,12 +107,8 @@ TEST(plinko, worksOrPrintsNiceError) {
   EXPECT_NE(-1, close(pfds[1][0]));
   EXPECT_NE(-1, waitpid(pid, &wstatus, 0));
   EXPECT_TRUE(WIFEXITED(wstatus));
-  if (!startswith(buf, "error: ")) {
-    EXPECT_STREQ("OKCOMPUTER\n", buf);
-    EXPECT_EQ(0, WEXITSTATUS(wstatus));
-  } else {
-    EXPECT_EQ(1, WEXITSTATUS(wstatus));
-  }
+  EXPECT_STREQ("OKCOMPUTER\n", buf);
+  EXPECT_EQ(0, WEXITSTATUS(wstatus));
   sigaction(SIGINT, &saveint, 0);
   sigaction(SIGQUIT, &savequit, 0);
   sigaction(SIGPIPE, &savepipe, 0);
@@ -123,4 +116,14 @@ TEST(plinko, worksOrPrintsNiceError) {
   if (g_testlib_failed) {
     kprintf("note: got the following in pipe: %s%n", buf);
   }
+}
+
+TEST(plinko, works) {
+  RunPlinko(0);
+}
+
+// -P disables the planner's optimizations, so the same tests passing in
+// both modes shows the optimized dispatches behave like the plain ones
+TEST(plinko, worksUnplanned) {
+  RunPlinko("-P");
 }

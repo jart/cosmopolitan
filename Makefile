@@ -358,7 +358,6 @@ include tool/decode/lib/BUILD.mk
 include tool/decode/BUILD.mk
 include tool/lambda/lib/BUILD.mk
 include tool/lambda/BUILD.mk
-include tool/plinko/lib/BUILD.mk
 include tool/plinko/BUILD.mk
 include test/tool/plinko/BUILD.mk
 include tool/net/BUILD.mk

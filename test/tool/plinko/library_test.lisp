@@ -1,18 +1,12 @@
-#| plinko - a really fast lisp tarpit
- | Copyright 2022 Justine Alexandra Roberts Tunney
+#| plinko - a lisp tarpit
  |
- | Permission to use, copy, modify, and/or distribute this software for
- | any purpose with or without fee is hereby granted, provided that the
- | above copyright notice and this permission notice appear in all copies.
+ | To the extent possible under law, Justin Tunney has waived
+ | all copyright and related or neighboring rights to this file,
+ | as it is written in the following disclaimers:
  |
- | THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- | WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- | WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- | AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- | DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- | PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- | TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- | PERFORMANCE OF THIS SOFTWARE.
+ |   - http://unlicense.org/
+ |   - http://creativecommons.org/publicdomain/zero/1.0/
+ |
  |#
 
 (test   nil  (cmp 'a 'a))
@@ -220,3 +214,37 @@
      ((error '(enclosed memory failed to propagate upward))))
   (ignore))
 
+
+; every car/cdr composition up to four deep, to check Plan() picks
+; the right indexer (it once compiled (car (car (cdr x))) as caaar)
+(define cxr-tree '((((xaaaa . xaaad) . (xaada . xaadd)) . ((xadaa . xadad) . (xadda . xaddd))) . (((xdaaa . xdaad) . (xdada . xdadd)) . ((xddaa . xddad) . (xddda . xdddd)))))
+(test '(((xaaaa . xaaad) . (xaada . xaadd)) . ((xadaa . xadad) . (xadda . xaddd))) (car cxr-tree))
+(test '(((xdaaa . xdaad) . (xdada . xdadd)) . ((xddaa . xddad) . (xddda . xdddd))) (cdr cxr-tree))
+(test '((xaaaa . xaaad) . (xaada . xaadd)) (car (car cxr-tree)))
+(test '((xadaa . xadad) . (xadda . xaddd)) (cdr (car cxr-tree)))
+(test '((xdaaa . xdaad) . (xdada . xdadd)) (car (cdr cxr-tree)))
+(test '((xddaa . xddad) . (xddda . xdddd)) (cdr (cdr cxr-tree)))
+(test '(xaaaa . xaaad) (car (car (car cxr-tree))))
+(test '(xaada . xaadd) (cdr (car (car cxr-tree))))
+(test '(xadaa . xadad) (car (cdr (car cxr-tree))))
+(test '(xadda . xaddd) (cdr (cdr (car cxr-tree))))
+(test '(xdaaa . xdaad) (car (car (cdr cxr-tree))))
+(test '(xdada . xdadd) (cdr (car (cdr cxr-tree))))
+(test '(xddaa . xddad) (car (cdr (cdr cxr-tree))))
+(test '(xddda . xdddd) (cdr (cdr (cdr cxr-tree))))
+(test 'xaaaa (car (car (car (car cxr-tree)))))
+(test 'xaaad (cdr (car (car (car cxr-tree)))))
+(test 'xaada (car (cdr (car (car cxr-tree)))))
+(test 'xaadd (cdr (cdr (car (car cxr-tree)))))
+(test 'xadaa (car (car (cdr (car cxr-tree)))))
+(test 'xadad (cdr (car (cdr (car cxr-tree)))))
+(test 'xadda (car (cdr (cdr (car cxr-tree)))))
+(test 'xaddd (cdr (cdr (cdr (car cxr-tree)))))
+(test 'xdaaa (car (car (car (cdr cxr-tree)))))
+(test 'xdaad (cdr (car (car (cdr cxr-tree)))))
+(test 'xdada (car (cdr (car (cdr cxr-tree)))))
+(test 'xdadd (cdr (cdr (car (cdr cxr-tree)))))
+(test 'xddaa (car (car (cdr (cdr cxr-tree)))))
+(test 'xddad (cdr (car (cdr (cdr cxr-tree)))))
+(test 'xddda (car (cdr (cdr (cdr cxr-tree)))))
+(test 'xdddd (cdr (cdr (cdr (cdr cxr-tree)))))

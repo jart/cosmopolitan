@@ -1,8 +1,6 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
-ifeq ($(ARCH), x86_64)
-
 PKGS += TEST_TOOL_PLINKO
 
 TEST_TOOL_PLINKO = $(TOOL_PLINKO_A_DEPS) $(TOOL_PLINKO_A)
@@ -16,13 +14,17 @@ TEST_TOOL_PLINKO_COMS = $(TEST_TOOL_PLINKO_OBJS:%.o=%)
 TEST_TOOL_PLINKO_OBJS =						\
 	$(TEST_TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%.o)		\
 	o/$(MODE)/tool/plinko/plinko.zip.o			\
-	o/$(MODE)/tool/plinko/lib/library.lisp.zip.o		\
-	o/$(MODE)/tool/plinko/lib/binarytrees.lisp.zip.o	\
-	o/$(MODE)/tool/plinko/lib/algebra.lisp.zip.o		\
-	o/$(MODE)/tool/plinko/lib/infix.lisp.zip.o		\
-	o/$(MODE)/tool/plinko/lib/ok.lisp.zip.o			\
+	o/$(MODE)/tool/plinko/library.lisp.zip.o		\
+	o/$(MODE)/tool/plinko/binarytrees.lisp.zip.o		\
+	o/$(MODE)/tool/plinko/algebra.lisp.zip.o		\
+	o/$(MODE)/tool/plinko/infix.lisp.zip.o			\
+	o/$(MODE)/tool/plinko/kanren.lisp.zip.o			\
+	o/$(MODE)/tool/plinko/ok.lisp.zip.o			\
 	o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o	\
-	o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o
+	o/$(MODE)/test/tool/plinko/plan_test.lisp.zip.o		\
+	o/$(MODE)/test/tool/plinko/expand_test.lisp.zip.o	\
+	o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o	\
+	o/$(MODE)/test/tool/plinko/kanren_test.lisp.zip.o
 
 TEST_TOOL_PLINKO_COMS =						\
 	$(TEST_TOOL_PLINKO_SRCS:%.c=o/$(MODE)/%)
@@ -78,17 +80,15 @@ o/$(MODE)/test/tool/plinko/%.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/test/tool/plinko/plinko_test.runs: private		\
-		QUOTA =	-M100g
+		QUOTA =	-M2g
 
 o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
 o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/plan_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/expand_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/kanren_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
 
 .PHONY: o/$(MODE)/test/tool/plinko
 o/$(MODE)/test/tool/plinko:					\
 		$(TEST_TOOL_PLINKO_BINS)			\
 		$(TEST_TOOL_PLINKO_CHECKS)
-
-else
-.PHONY: o/$(MODE)/test/tool/plinko
-o/$(MODE)/test/tool/plinko:
-endif
