@@ -110,11 +110,6 @@ o/$(MODE)/examples/examples.pkg:				\
 		$(EXAMPLES_OBJS)				\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/examples/unbourne.o: private				\
-		CPPFLAGS +=					\
-			-DSTACK_FRAME_UNLIMITED			\
-			-fpie
-
 o/$(MODE)/examples/%.dbg:					\
 		$(EXAMPLES_DEPS)				\
 		o/$(MODE)/examples/%.o				\
@@ -126,14 +121,6 @@ o/$(MODE)/examples/hellolua.dbg:				\
 		$(EXAMPLES_DEPS)				\
 		o/$(MODE)/examples/hellolua.o			\
 		o/$(MODE)/examples/hellolua.lua.zip.o		\
-		o/$(MODE)/examples/examples.pkg			\
-		$(EXAMPLES_BOOTLOADER)
-	@$(APELINK)
-
-o/$(MODE)/examples/ispell.dbg:					\
-		$(EXAMPLES_DEPS)				\
-		o/$(MODE)/examples/ispell.o			\
-		o/$(MODE)/usr/share/dict/words.zip.o		\
 		o/$(MODE)/examples/examples.pkg			\
 		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
