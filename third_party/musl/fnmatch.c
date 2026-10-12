@@ -152,7 +152,7 @@ static int match_bracket(const char *p, int k, int kfold)
 	for (; *p != ']'; p++) {
 		if (p[0]=='-' && p[1]!=']') {
 			wchar_t wc2;
-			int l = mbtowc(&wc2, p+1, 4);
+			int l = mbtowc(&wc2, ++p, 4);
 			if (l < 0) return 0;
 			if (wc <= wc2)
 				if ((unsigned)k-wc <= wc2-wc ||
@@ -183,7 +183,8 @@ static int match_bracket(const char *p, int k, int kfold)
 			if (l < 0) return 0;
 			p += l-1;
 		}
-		if (wc==k || wc==kfold) return !inv;
+		if ((wc==k || wc==kfold) && (p[1]!='-' || p[2]==']'))
+			return !inv;
 	}
 	return inv;
 }
@@ -196,7 +197,7 @@ static int fnmatch_internal(const char *pat, size_t m, const char *str, size_t n
 	int c, k, kfold;
 
 	if (flags & FNM_PERIOD) {
-		if (*str == '.' && *pat != '.')
+		if (*str == '.' && *pat != '.' && *pat != '\\')
 			return FNM_NOMATCH;
 	}
 	for (;;) {

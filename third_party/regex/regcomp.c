@@ -436,6 +436,8 @@ typedef struct {
 	int position;
 	/* The highest back reference or -1 if none seen so far. */
 	int max_backref;
+	/* Bit mask of submatch IDs that can be back referenced. */
+	int backref_ok;
 	/* Compilation flags. */
 	int cflags;
 } tre_parse_ctx_t;
@@ -796,6 +798,8 @@ static reg_errcode_t marksub(tre_parse_ctx_t *ctx, tre_ast_node_t *node, int sub
 	node->submatch_id = subid;
 	node->num_submatches++;
 	ctx->n = node;
+	if (subid < 10)
+		ctx->backref_ok |= 1<<subid;
 	return REG_OK;
 }
 
@@ -891,6 +895,8 @@ static reg_errcode_t parse_atom(tre_parse_ctx_t *ctx, const char *s)
 			if (!ere && (unsigned)*s-'1' < 9) {
 				/* back reference */
 				int val = *s - '0';
+				if (!(ctx->backref_ok & 1<<val))
+					return REG_ESUBREG;
 				node = tre_ast_new_literal(ctx->mem, BACKREF, val, ctx->position++);
 				ctx->max_backref = MAX(val, ctx->max_backref);
 			} else {

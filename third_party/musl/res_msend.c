@@ -119,8 +119,8 @@ int __res_msend_rc(int nqueries, const unsigned char *const *queries,
 	int fd;
 	int timeout, attempts, retry_interval, servfail_retry = 0;
 	union {
-		struct sockaddr_in sin;
 		struct sockaddr_in6 sin6;
+		struct sockaddr_in sin;
 	} sa = {0}, ns[MAXNS] = {0};
 	socklen_t sl = sizeof sa.sin;
 	int nns = 0;
@@ -135,10 +135,12 @@ int __res_msend_rc(int nqueries, const unsigned char *const *queries,
 	int r;
 	unsigned long t0, t1, t2;
 
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-
 	timeout = 1000*conf->timeout;
 	attempts = conf->attempts;
+	if (!attempts)
+		return -1;
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
 
 	for (nns=0; nns<conf->nns; nns++) {
 		const struct address *iplit = &conf->ns[nns];
@@ -160,7 +162,7 @@ int __res_msend_rc(int nqueries, const unsigned char *const *queries,
 
 	/* Handle case where system lacks IPv6 support */
 	if (fd < 0 && family == AF_INET6 && errno == EAFNOSUPPORT) {
-		for (i=0; i<nns && conf->ns[nns].family == AF_INET6; i++);
+		for (i=0; i<nns && conf->ns[i].family == AF_INET6; i++);
 		if (i==nns) {
 			pthread_setcancelstate(cs, 0);
 			return -1;
