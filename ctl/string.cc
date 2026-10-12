@@ -277,7 +277,7 @@ size_t
 string::find(const char ch, const size_t pos) const noexcept
 {
     char* q;
-    if ((q = (char*)memchr(data(), ch, size())))
+    if (pos < size() && (q = (char*)memchr(data() + pos, ch, size() - pos)))
         return q - data();
     return npos;
 }

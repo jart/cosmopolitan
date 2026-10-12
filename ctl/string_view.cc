@@ -29,7 +29,7 @@ size_t
 string_view::find(const char ch, const size_t pos) const noexcept
 {
     char* q;
-    if (n && (q = (char*)memchr(p, ch, n)))
+    if (pos < n && (q = (char*)memchr(p + pos, ch, n - pos)))
         return q - p;
     return npos;
 }
