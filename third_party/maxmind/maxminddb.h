@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MAXMIND_MAXMINDDB_H_
 #define COSMOPOLITAN_THIRD_PARTY_MAXMIND_MAXMINDDB_H_
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/stdio.h"
 
 #define MMDB_MODE_MMAP 1
@@ -40,6 +41,8 @@
 #define MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR 9
 #define MMDB_INVALID_NODE_NUMBER_ERROR             10
 #define MMDB_IPV6_LOOKUP_IN_IPV4_DATABASE_ERROR    11
+#define MMDB_INVALID_NETWORK_ADDRESS_ERROR 12
+#define MMDB_DECODER_LIMIT_ERROR 13
 
 COSMOPOLITAN_C_START_
 
@@ -163,6 +166,7 @@ typedef struct MMDB_search_node_s {
 void MMDB_close(MMDB_s *);
 int MMDB_open(const char *, uint32_t, MMDB_s *);
 MMDB_lookup_result_s MMDB_lookup(const MMDB_s *, uint32_t, int *);
+MMDB_lookup_result_s MMDB_lookup_sockaddr(const MMDB_s *const, const struct sockaddr *const, int *const);
 int MMDB_read_node(const MMDB_s *, uint32_t, MMDB_search_node_s *);
 int MMDB_get_value(MMDB_entry_s *, MMDB_entry_data_s *, ...);
 int MMDB_vget_value(MMDB_entry_s *, MMDB_entry_data_s *, va_list);

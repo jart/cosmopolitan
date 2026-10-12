@@ -1,13 +1,10 @@
 ORIGIN
 
   git@github.com:maxmind/libmaxminddb.git
-  commit d918412fe7d514108d01e346a832d51e5ccf83c0
-  Author: Will Storey <wstorey@maxmind.com>
-  Date:   Thu Apr 29 11:53:54 2021 -0700
-  Merge pull request #265 from maxmind/greg/release
-  1.6.0
+  commit 3572ddc0c4c19e34fafeeaea1b7935909343b3cd
+  Author: William Storey <will@summercat.com>
+  Date:   Mon Sep 28 09:40:44 2026 -0700
 
 LOCAL CHANGES
 
-- Added MMDB_lookup()
-- Remove Berkeleyisms from API design w.r.t. IPs.
+- Added MMDB_lookup() for simpler IPv4 lookups
