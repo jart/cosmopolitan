@@ -126,6 +126,7 @@ typedef struct {
 #define thatispacked __attribute__((__packed__))
 
 #define printfesque(n)   __attribute__((__format__(__gnu_printf__, n, n + 1)))
+#define vprintfesque(n)  __attribute__((__format__(__gnu_printf__, n, 0)))
 #define scanfesque(n)    __attribute__((__format__(__gnu_scanf__, n, n + 1)))
 #define strftimeesque(n) __attribute__((__format__(__strftime__, n, 0)))
 

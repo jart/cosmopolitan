@@ -185,14 +185,14 @@
 #define PUCHAR UCHAR*
 #define PSZ char*
 #define DWORD uint32_t
-#define WINBOOL BOOL
-#define BOOLEAN BOOL
+#define WINBOOL LONG
+#define BOOLEAN BYTE
 #define BYTE unsigned char
 #define WORD unsigned short
 #define FLOAT float
 #define PFLOAT FLOAT*
 #define PBOOL WINBOOL*
-#define PBOOLEAN WINBOOL*
+#define PBOOLEAN BOOLEAN*
 #define LPBOOL WINBOOL*
 #define PBYTE BYTE*
 #define LPBYTE BYTE*

@@ -3,6 +3,8 @@
 #include "libc/nt/struct/context.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/struct/teb.h"
+#include "libc/nt/struct/tib.h"
 #include "libc/nt/thunk/msabi.h"
 COSMOPOLITAN_C_START_
 /*                            ░░░░
@@ -55,6 +57,8 @@ bool32 CancelSynchronousIo(int64_t hThread);
 bool32 CancelIo(int64_t hFile);
 bool32 CancelIoEx(int64_t hFile, struct NtOverlapped *opt_lpOverlapped);
 
+#define kNtTlsOutOfIndexes 0xffffffff
+
 uint32_t TlsAlloc(void);
 bool32 TlsFree(uint32_t);
 bool32 TlsSetValue(uint32_t, void *);
@@ -69,6 +73,34 @@ void *SetThreadDescription(int64_t hThread,
                            const char16_t *lpThreadDescription);
 void *GetThreadDescription(int64_t hThread,
                            char16_t *out_ppszThreadDescription);
+
+forceinline pureconst struct NtTeb *NtCurrentTeb(void) {
+#ifdef __x86_64__
+  struct NtTib *tib;
+  __asm__("movq\t%%gs:%a1,%0"
+          : "=r"(tib)
+          : "n"(offsetof(struct NtTib, Self))
+          : "memory");
+  return (struct NtTeb *)tib;
+#elif defined(__aarch64__)
+  register struct NtTeb *teb __asm__("x18");
+  return teb;
+#else
+  return 0;
+#endif
+}
+forceinline pureconst struct NtPeb *NtCurrentPeb(void) {
+#ifdef __x86_64__
+  struct NtPeb *peb;
+  __asm__("movq\t%%gs:%a1,%0"
+          : "=r"(peb)
+          : "n"(offsetof(struct NtTeb, ProcessEnvironmentBlock))
+          : "memory");
+  return peb;
+#else
+  return NtCurrentTeb()->ProcessEnvironmentBlock;
+#endif
+}
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"

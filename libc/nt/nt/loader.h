@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_NT_NT_LOADER_H_
 #include "libc/nt/enum/status.h"
 #include "libc/nt/typedef/wambda.h"
+#include "libc/nt/typedef/ldrdllnotificationfunction.h"
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -47,6 +48,10 @@ NtStatus LdrGetProcedureAddress(void *ModuleHandle,
 NtStatus LdrGetDllHandle(const char16_t *opt_PathToFile, uint32_t opt_Unused,
                          struct NtUnicodeString *ModuleFileName,
                          void **out_ModuleHandle);
+NtStatus LdrRegisterDllNotification(uint32_t Flags,
+				    NtLdrDllNotificationFunction NotificationFunction,
+				    void *opt_Context,
+				    void **out_Cookie);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_NT_NT_LOADER_H_ */
