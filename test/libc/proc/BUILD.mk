@@ -221,6 +221,12 @@ o/$(MODE)/test/libc/proc/zipread.zip.o: private		\
 		ZIPOBJ_FLAGS +=					\
 			-B
 
+o/$(MODE)/test/libc/proc/execve_test.runs:				\
+		private .SANDBOXED = 0  # for memfd_create()
+
+o/$(MODE)/test/libc/proc/fexecve_test.runs:				\
+		private .SANDBOXED = 0  # for memfd_create()
+
 o/$(MODE)/test/libc/proc/vfork_test.runs:				\
 		private .UNVEIL = r:/dev/random r:/dev/urandom
 
