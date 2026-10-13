@@ -175,12 +175,6 @@ o/$(MODE)/test/libc/calls/setrlimit_test.runs:				\
 o/$(MODE)/test/libc/calls/specialfile_test.runs:			\
 		private .UNVEIL = r:/dev/random r:/dev/urandom
 
-o/$(MODE)/test/libc/calls/fexecve_test.runs:				\
-		private .SANDBOXED = 0  # for memfd_create()
-
-o/$(MODE)/test/libc/calls/execve_test.runs:				\
-		private .SANDBOXED = 0  # for memfd_create()
-
 o/$(MODE)/test/libc/calls/read_test.runs:				\
 		private .UNVEIL += /dev/zero
 
