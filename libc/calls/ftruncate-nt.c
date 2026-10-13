@@ -49,7 +49,7 @@ textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
   }
 
   // ask operating system to extend file
-  if (!SetFileInformationByHandle(handle, kNtFileAllocationInfo, &length,
+  if (!SetFileInformationByHandle(handle, kNtFileEndOfFileInfo, &length,
                                   sizeof(length))) {
     switch (GetLastError()) {
       case kNtErrorAccessDenied:
