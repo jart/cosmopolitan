@@ -47,7 +47,8 @@ void SetUpOnce(void) {
 
 void SetUp(void) {
   if (IsLinux()) {
-    // linux fexecve relies on execve from /proc
+    // linux fexecve relies on /proc, sometimes even with execveat support
+    // https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1082001
     struct stat st;
     if (stat("/proc/self/fd", &st) != 0 || !S_ISDIR(st.st_mode)) {
       exit(0);

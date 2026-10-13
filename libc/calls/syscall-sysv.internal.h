@@ -34,6 +34,7 @@ i32 sys_dup(i32);
 i32 sys_dup2(i32, i32, i32);
 i32 sys_dup3(i32, i32, i32);
 i32 sys_execve(const char *, char *const[], char *const[]);
+i32 sys_execve_fallback(const char *, char *const[], char *const[]);
 i32 sys_execveat(i32, const char *, char *const[], char *const[], i32);
 i32 sys_faccessat(i32, const char *, i32, u32);
 i32 sys_faccessat2(i32, const char *, i32, u32);
