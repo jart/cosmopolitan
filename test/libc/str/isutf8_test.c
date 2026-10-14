@@ -42,10 +42,16 @@ TEST(isutf8, good) {
 }
 
 TEST(isutf8, bad) {
-  ASSERT_FALSE(isutf8("\300\200", -1));              // overlong nul
-  ASSERT_FALSE(isutf8("\200\300", -1));              // latin1 c1 control code
-  ASSERT_FALSE(isutf8("\300\300", -1));              // missing continuation
-  ASSERT_FALSE(isutf8("\377\200\200\200\200", -1));  // thompson-pike varint
+  ASSERT_FALSE(isutf8("\300\200", -1));                  // overlong nul
+  ASSERT_FALSE(isutf8("\200\300", -1));                  // latin1 c1 control code
+  ASSERT_FALSE(isutf8("\300\300", -1));                  // missing continuation
+  ASSERT_FALSE(isutf8("\377\200\200\200\200", -1));      // thompson-pike varint
+  ASSERT_FALSE(isutf8("\355\240\200", -1));              // single utf-16 surrogate (high)
+  ASSERT_FALSE(isutf8("\355\277\277", -1));              // single utf-16 surrogate (low)
+  ASSERT_FALSE(isutf8("\355\240\200\355\260\200", -1));  // paired utf-16 surrogates (range begin)
+  ASSERT_FALSE(isutf8("\355\257\277\355\277\277", -1));  // paired utf-16 surrogates (range end)
+  ASSERT_FALSE(isutf8("\364\220\200\200", -1));          // boundary condition
+  ASSERT_FALSE(isutf8("\220", -1));                      // boundary condition
 }
 
 TEST(isutf8, oob) {
