@@ -101,10 +101,10 @@
 #define IsOpenbsd() (SupportsOpenbsd() && os == OPENBSD)
 #define IsNetbsd()  (SupportsNetbsd() && os == NETBSD)
 
-#ifdef __aarch64__
-#define IsAarch64() 1
+#if defined(__aarch64__) || defined(__riscv)
+#define UsesLinuxGenericSyscalls() 1
 #else
-#define IsAarch64() 0
+#define UsesLinuxGenericSyscalls() 0
 #endif
 
 #ifdef __cplusplus
@@ -127,6 +127,7 @@
 #define ELFDATA2LSB                 1
 #define EM_NEXGEN32E                62
 #define EM_AARCH64                  183
+#define EM_RISCV                    243
 #define ET_EXEC                     2
 #define ET_DYN                      3
 #define PT_LOAD                     1
@@ -288,6 +289,16 @@ static const char *MemChr(const char *s, unsigned char c, unsigned long n) {
   return 0;
 }
 
+#ifdef __riscv
+void *memcpy(void *d, const void *s, unsigned long n) {
+  char *p = (char *)d;
+  const char *q = (const char *)s;
+  while (n--)
+    *p++ = *q++;
+  return d;
+}
+#endif
+
 static void *MemMove(void *a, const void *b, unsigned long n) {
   long w;
   char *d;
@@ -376,7 +387,7 @@ __attribute__((__noinline__)) static long CallSystem(long arg1, long arg2,
 __attribute__((__noreturn__)) static void Exit(long rc, int os) {
   int numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 94;
     } else {
       numba = 60;
@@ -391,7 +402,7 @@ __attribute__((__noreturn__)) static void Exit(long rc, int os) {
 static int Close(int fd, int os) {
   int numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 57;
     } else {
       numba = 3;
@@ -405,7 +416,7 @@ static int Close(int fd, int os) {
 static long Pread(int fd, void *data, unsigned long size, long off, int os) {
   long numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 0x043;
     } else {
       numba = 0x011;
@@ -427,7 +438,7 @@ static long Pread(int fd, void *data, unsigned long size, long off, int os) {
 static long Write(int fd, const void *data, unsigned long size, int os) {
   int numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 64;
     } else {
       numba = 1;
@@ -439,7 +450,7 @@ static long Write(int fd, const void *data, unsigned long size, int os) {
 }
 
 static int Access(const char *path, int mode, int os) {
-  if (IsLinux() && IsAarch64()) {
+  if (IsLinux() && UsesLinuxGenericSyscalls()) {
     return SystemCall(-100, (long)path, mode, 0, 0, 0, 0, 48);
   } else {
     return CallSystem((long)path, mode, 0, 0, 0, 0, 0, IsLinux() ? 21 : 33, os);
@@ -455,7 +466,7 @@ static int Msyscall(long p, unsigned long n, int os) {
 }
 
 static int Open(const char *path, int flags, int mode, int os) {
-  if (IsLinux() && IsAarch64()) {
+  if (IsLinux() && UsesLinuxGenericSyscalls()) {
     return SystemCall(-100, (long)path, flags, mode, 0, 0, 0, 56);
   } else {
     return CallSystem((long)path, flags, mode, 0, 0, 0, 0, IsLinux() ? 2 : 5,
@@ -466,7 +477,7 @@ static int Open(const char *path, int flags, int mode, int os) {
 static int Mprotect(void *addr, unsigned long size, int prot, int os) {
   int numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 226;
     } else {
       numba = 10;
@@ -481,7 +492,7 @@ static long Mmap(void *addr, unsigned long size, int prot, int flags, int fd,
                  long off, int os) {
   long numba;
   if (IsLinux()) {
-    if (IsAarch64()) {
+    if (UsesLinuxGenericSyscalls()) {
       numba = 222;
     } else {
       numba = 9;
@@ -831,6 +842,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 #ifdef __aarch64__
   if (e->e_machine != EM_AARCH64) {
     return "couldn't find ELF header with AARCH64 machine type";
+  }
+#elif defined(__riscv)
+  if (e->e_machine != EM_RISCV) {
+    return "couldn't find ELF header with RISC-V machine type";
   }
 #else
   if (e->e_machine != EM_NEXGEN32E) {
