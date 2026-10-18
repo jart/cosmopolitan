@@ -43,6 +43,7 @@ __static_yoink("_init_program_executable_name");
 
 #define CTL_KERN                   1
 #define KERN_PROC                  14
+#define KERN_PROC_ARGS             48
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 
@@ -173,13 +174,15 @@ static inline void InitProgramExecutableNameImpl(void) {
   if (IsFreebsd() || IsNetbsd()) {
     int cmd[4];
     cmd[0] = CTL_KERN;
-    cmd[1] = KERN_PROC;
     if (IsFreebsd()) {
+      cmd[1] = KERN_PROC;
       cmd[2] = KERN_PROC_PATHNAME_FREEBSD;
+      cmd[3] = -1;  // current process
     } else {
-      cmd[2] = KERN_PROC_PATHNAME_NETBSD;
+      cmd[1] = KERN_PROC_ARGS;
+      cmd[2] = -1;  // current process
+      cmd[3] = KERN_PROC_PATHNAME_NETBSD;
     }
-    cmd[3] = -1;  // current process
     if (sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
       if (!OldApeLoader(b)) {
         goto UseBuf;
