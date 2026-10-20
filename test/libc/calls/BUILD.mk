@@ -73,6 +73,7 @@ o/$(MODE)/test/libc/calls/getprogramexecutablename_test.dbg:					\
 		$(TEST_LIBC_CALLS_DEPS)						\
 		o/$(MODE)/test/libc/calls/getprogramexecutablename_test.o	\
 		o/$(MODE)/test/libc/calls/ape.elf.zip.o				\
+		o/$(MODE)/test/libc/calls/gpenchild.elf.zip.o			\
 		o/$(MODE)/test/libc/calls/calls.pkg				\
 		$(LIBC_TESTMAIN)						\
 		$(CRT)								\
@@ -125,13 +126,24 @@ o/$(MODE)/test/libc/calls/life-nomod.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/calls/zipread.dbg:				\
-		$(LIBC_RUNTIME)						\
-		o/$(MODE)/test/libc/calls/zipread.o			\
-		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
-		$(CRT)							\
+o/$(MODE)/test/libc/calls/gpenchild.dbg:			\
+		$(LIBC_RUNTIME)					\
+		o/$(MODE)/test/libc/calls/gpenchild.o		\
+		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/gpenchild.elf:				\
+		o/$(MODE)/tool/build/assimilate		\
+		o/$(MODE)/test/libc/calls/gpenchild		\
+		o/$(MODE)/tool/build/cp
+	@$(COMPILE) -wACP -T$@					\
+		o/$(MODE)/tool/build/cp				\
+		o/$(MODE)/test/libc/calls/gpenchild		\
+		o/$(MODE)/test/libc/calls/gpenchild.elf
+	@$(COMPILE) -wAASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate -bcef	\
+		o/$(MODE)/test/libc/calls/gpenchild.elf
 
 o/$(MODE)/test/libc/calls/ape.elf:			\
 		o/$(MODE)/tool/build/cp		\
@@ -142,6 +154,7 @@ o/$(MODE)/test/libc/calls/ape.elf:			\
 		o/$(MODE)/test/libc/calls/ape.elf
 
 o/$(MODE)/test/libc/calls/ape.elf.zip.o					\
+o/$(MODE)/test/libc/calls/gpenchild.elf.zip.o				\
 o/$(MODE)/test/libc/calls/tiny64.elf.zip.o				\
 o/$(MODE)/test/libc/calls/life-nomod.zip.o				\
 o/$(MODE)/test/libc/calls/life-classic.zip.o: private				\

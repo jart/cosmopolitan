@@ -19,6 +19,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -70,6 +71,18 @@ void SetUpOnce(void) {
   }
 }
 
+static bool isAbsPath(const char *path) {
+  return strlen(path) >= 2 && path[0] == '/' && path[1] != '/';
+}
+
+static bool isSameFile(const char *a, const char *b) {
+  struct stat st_a, st_b;
+  if (stat(a, &st_a) || stat(b, &st_b)) {
+    return false;
+  }
+  return (st_a.st_dev == st_b.st_dev) && (st_a.st_ino == st_b.st_ino);
+}
+
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   loaded = !!__program_executable_name;
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
@@ -82,7 +95,8 @@ __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
     if (rc) {
       exit(122);
     }
-    if (strcmp(argv[2], GetProgramExecutableName())) {
+    const char *path = GetProgramExecutableName();
+    if (!path || !isAbsPath(path) || !isSameFile(argv[2], path)) {
       exit(123);
     }
     if (argc >= 4) {
@@ -189,6 +203,26 @@ TEST(GetProgramExecutableName, nullArgvAPELoader) {
   char *prog = "./ape.elf";
   SPAWN(fork);
   execve(prog, (char *const[]){prog, "-", self, NULL}, (char *[]){0});
+  abort();
+  EXITS(0);
+}
+
+TEST(GetProgramExecutableName, elf) {
+  if (skiptests || IsOpenbsd() || IsXnu() || IsWindows() || IsMetal())
+    return;
+  char buf[BUFSIZ];
+  testlib_extract("/zip/gpenchild.elf", "test.elf", 0555);
+  ASSERT_NE(NULL, getcwd(buf, BUFSIZ - 5));
+  stpcpy(buf + strlen(buf), "/test.elf");
+  SPAWN(fork);
+  execve(buf, (char *[]){"hello", "Child", buf, skiparg0 ? 0 : "hello", 0},
+         (char *[]){0});
+  abort();
+  EXITS(0);
+  SPAWN(fork);
+  execve("./test.elf",
+         (char *[]){"hello", "Child", buf, skiparg0 ? 0 : "hello", 0},
+         (char *[]){0});
   abort();
   EXITS(0);
 }
