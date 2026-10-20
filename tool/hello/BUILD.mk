@@ -74,8 +74,8 @@ o/$(MODE)/tool/hello/hello-pe.dbg:			\
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x4200000
 o/$(MODE)/tool/hello/hello-pe.ape:			\
 		o/$(MODE)/tool/hello/hello-pe.dbg	\
-		o/$(MODE)/tool/build/elf2pe
-	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -o $@ $<
+		$(ELF2PE)
+	@$(COMPILE) -AELF2PE $(ELF2PE) -o $@ $<
 
 # elf2pe can generate binaries that don't have dll imports
 o/$(MODE)/tool/hello/life-pe.dbg:			\
@@ -83,8 +83,8 @@ o/$(MODE)/tool/hello/life-pe.dbg:			\
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x140000000
 o/$(MODE)/tool/hello/life-pe.ape:			\
 		o/$(MODE)/tool/hello/life-pe.dbg	\
-		o/$(MODE)/tool/build/elf2pe
-	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -o $@ $<
+		$(ELF2PE)
+	@$(COMPILE) -AELF2PE $(ELF2PE) -o $@ $<
 
 # demonstrates in process monitor the lowest resource usage a win32 app can have
 o/$(MODE)/tool/hello/wait-pe.dbg:			\
@@ -92,8 +92,8 @@ o/$(MODE)/tool/hello/wait-pe.dbg:			\
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x4200000
 o/$(MODE)/tool/hello/wait-pe.ape:			\
 		o/$(MODE)/tool/hello/wait-pe.dbg	\
-		o/$(MODE)/tool/build/elf2pe
-	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -R 64kb -S 4kb -o $@ $<
+		$(ELF2PE)
+	@$(COMPILE) -AELF2PE $(ELF2PE) -R 64kb -S 4kb -o $@ $<
 
 # our new ape loader for windows
 o/$(MODE)/tool/hello/launch.o: private CFLAGS += $(NO_MAGIC) -fno-asynchronous-unwind-tables
@@ -102,8 +102,8 @@ o/$(MODE)/tool/hello/launch.dbg:			\
 	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain -Ttext-segment=0x7f000000
 o/$(MODE)/tool/hello/launch:				\
 		o/$(MODE)/tool/hello/launch.dbg		\
-		o/$(MODE)/tool/build/elf2pe
-	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe -o $@ $<
+		$(ELF2PE)
+	@$(COMPILE) -AELF2PE $(ELF2PE) -o $@ $<
 
 o/$(MODE)/tool/hello/life-pe.ape.zip.o: private ZIPOBJ_FLAGS += -B
 

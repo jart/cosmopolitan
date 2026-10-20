@@ -113,6 +113,7 @@ PKG = $(BOOTSTRAP)/package.ape
 MKDEPS = build/bootstrap/mkdeps
 ZIPOBJ = $(BOOTSTRAP)/zipobj
 ZIPCOPY = $(BOOTSTRAP)/zipcopy
+ELF2PE = build/bootstrap/elf2pe
 PECHECK = $(BOOTSTRAP)/pecheck
 FIXUPOBJ = build/bootstrap/fixupobj
 OBJBINCOPY = $(BOOTSTRAP)/objbincopy
