@@ -18,12 +18,12 @@
 #define kNtFileIdExtdDirectoryInfo        19 /* win8+ */
 #define kNtFileIdExtdDirectoryRestartInfo 20 /* win8+ */
 
-#define kNtFileRenameInfo         4
-#define kNtFileDispositionInfo    5
-#define kNtFileAllocationInfo     6
-#define kNtFileEndOfFileInfo      7
-#define kNtFileIoPriorityHintInfo 13
-#define kNtFileDispositionInfoEx  22 /* win10+ */
-#define kNtFileRenameInfoEx       23 /* win10+ */
+#define kNtFileRenameInfo         3
+#define kNtFileDispositionInfo    4
+#define kNtFileAllocationInfo     5
+#define kNtFileEndOfFileInfo      6
+#define kNtFileIoPriorityHintInfo 12
+#define kNtFileDispositionInfoEx  21 /* win10+ */
+#define kNtFileRenameInfoEx       22 /* win10+ */
 
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_FILEINFOBYHANDLECLASS_H_ */
