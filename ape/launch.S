@@ -68,6 +68,14 @@ Launch:
 	mov	x30,0
 	br	x16
 
+#elif defined(__riscv)
+
+	mv	t0,a1
+	mv	sp,a4
+	li	ra,0
+	li	a0,0
+	jr	t0
+
 #else
 
 	mov	%r8,%rsp
