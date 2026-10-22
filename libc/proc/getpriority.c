@@ -82,7 +82,9 @@ int getpriority(int which, unsigned who) {
 #else
   rc = sys_getpriority(which, who);
   if (rc != -1) {
-    rc = NZERO - rc;
+    if (!IsXnu()) {
+      rc = NZERO - rc;
+    }
   }
 #endif
   STRACE("getpriority(%s, %u) → %d% m", DescribeWhichPrio(which), who, rc);
