@@ -462,6 +462,8 @@ scall	sys_profil		0x02c02c02cfffffff	0xfff	globl # no wrapper
 scall	sys_fhstatfs		0xfff04122efffffff	0xfff	globl # no wrapper
 scall	sys_utrace		0x1320d114ffffffff	0xfff	globl # no wrapper
 scall	sys_closefrom		0xfff11f1fdfffffff	0xfff	globl hidden
+#─────────────────────FREEBSD & NETBSD───────────────────────────────────────
+scall	sys_fexecve		0x1d1fff1ecfffffff	0xfff	globl hidden
 #───────────────────────────XNU──────────────────────────────────────────────
 #scall	__pthread_markcancel	0xfffffffff214cfff	0xfff	globl
 #scall	__pthread_kill		0xfffffffff2148fff	0xfff	globl
@@ -664,7 +666,6 @@ scall	sys_bsdthread_register	0xfffffffff216efff	0xfff	globl hidden
 #scall	extattr_set_file	0x169fff164fffffff	0xfff	globl
 #scall	extattr_set_link	0x16ffff19cfffffff	0xfff	globl
 #scall	extattrctl		0x168fff163fffffff	0xfff	globl
-scall	sys_fexecve		0xffffff1ecfffffff	0xfff	globl hidden
 #scall	ffclock_getcounter	0xffffff0f1fffffff	0xfff	globl
 #scall	ffclock_getestimate	0xffffff0f3fffffff	0xfff	globl
 #scall	ffclock_setestimate	0xffffff0f2fffffff	0xfff	globl

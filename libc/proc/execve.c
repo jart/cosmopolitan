@@ -123,6 +123,7 @@
  * @raise ENOEXEC if file is executable but not a valid format
  * @raise ENOMEM if remaining stack memory is insufficient
  * @raise EACCES if execute permission was denied
+ * @raise ENOTSUP if zipos file and built with MODE=tiny or vforked
  * @asyncsignalsafe
  * @vforksafe
  */
@@ -137,7 +138,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
   if (!rc) {
     if (_weaken(__zipos_parseuri) &&
         (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
-      if (__vforked) {
+      if (IsTiny() || __vforked) {
         rc = enotsup();
       } else {
         rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
