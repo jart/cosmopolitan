@@ -44,6 +44,7 @@ __static_yoink("zipos");
 int fds[2];
 char buf[8];
 int o_cloexec = O_CLOEXEC;
+bool SupportsFexecve = false;
 bool SupportsZiposFexecve = false;
 bool SupportsElf = false;
 void SetUpOnce(void) {
@@ -71,15 +72,16 @@ void SetUp(void) {
       o_cloexec = 0;
     }
     struct stat st;
-    SupportsZiposFexecve = __is_linux_3_17() &&
+    SupportsZiposFexecve = !IsTiny() && __is_linux_3_17() &&
                            stat("/proc/self/fd", &st) == 0 &&
                            S_ISDIR(st.st_mode);
+  } else if (IsNetbsd() || IsWindows()) {
+    SupportsZiposFexecve = !IsTiny();
   }
   // TODO(G4Vi): Confirm if OpenBSD actually has an issue with this, see note in
   // posix_spawn_test.c
-  if (!IsOpenbsd() && !IsXnu() && !IsWindows() && !IsMetal()) {
-    SupportsElf = true;
-  }
+  SupportsElf = IsLinux() || IsNetbsd() || IsFreebsd();
+  SupportsFexecve = IsLinux() || IsNetbsd() || IsWindows();
 }
 
 TEST(execve, testArgPassing) {
@@ -154,7 +156,7 @@ TEST(execve, ziposWithoutSupport) {
   if (SupportsZiposFexecve)
     return;
   SPAWN(fork);
-  ASSERT_SYS(ENOSYS, -1,
+  ASSERT_SYS(ENOTSUP, -1,
              execve("/zip/life-nozip", (char *const[]){0}, (char *const[]){0}));
   _exit(0);
   EXITS(0);
@@ -214,7 +216,7 @@ TEST(execve, ziposAPEwithZipos) {
 }
 
 TEST(execve, ziposVforked) {
-  if (!SupportsZiposFexecve || !__has_vfork()) {
+  if (!SupportsFexecve || !__has_vfork()) {
     return;
   }
   SPAWN(vfork);
