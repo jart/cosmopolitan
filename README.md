@@ -122,6 +122,16 @@ all the unit tests in the `TEST_POSIX` package, you could say:
 .cosmocc/current/bin/make o//test/posix
 ```
 
+### Fat APE Binaries
+
+To compile a native-execution Fat APE binary across both Apple Silicon (aarch64) and x86_64, use the provided helper script. For example, to build a fat binary for redbean:
+
+```sh
+build/fat.sh tool/net/redbean
+```
+
+This will sequentially build the x86_64 and aarch64 targets and merge them using apelink into a unified `o/fat/tool/net/redbean.com` binary ready for multi-arch execution.
+
 Cosmopolitan provides a variety of build modes. For example, if you want
 really tiny binaries (as small as 12kb in size) then you'd say:
 
