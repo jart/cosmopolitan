@@ -4953,6 +4953,37 @@ unix = {
     X_OK = nil
 }
 
+---@class TlsContext
+---@field connect fun(self: TlsContext, server_name: string, server_port: string): boolean, string?
+---@field write fun(self: TlsContext, data: string): integer, string?
+---@field read fun(self: TlsContext, bufsiz?: integer): string?, string?
+---@field close fun(self: TlsContext)
+
+---@class tls
+local tls = {}
+
+--- Creates a new TLS client.
+---@param fd integer File descriptor of the socket
+---@param verify? boolean Whether to verify the server's certificate (default: true)
+---@param timeout? integer Read timeout in milliseconds (default: 0, no timeout)
+---@return TlsContext|nil context
+---@return string? error
+function tls.TlsClient(fd, verify, timeout) end
+
+--- Writes data to the TLS connection.
+---@param context TlsContext
+---@param data string
+---@return integer bytes_written
+---@return string? error
+function tls:write(data) end
+
+--- Reads data from the TLS connection.
+---@param context TlsContext
+---@param bufsiz? integer Maximum number of bytes to read (default: BUFSIZ)
+---@return string? data
+---@return string? error
+function tls:read(bufsiz) end
+
 --- Opens file.
 ---
 --- Returns a file descriptor integer that needs to be closed, e.g.
