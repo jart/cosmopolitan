@@ -34,7 +34,7 @@
 #
 # NOTES
 #
-#   If you enjoy this tutorial, let us know jtunney@gmail. If
+#   If you enjoy this tutorial, let us know jtunney@gmail.com. If
 #   you're building something cool, then we can we can add you to
 #   our .gitowners file which grants you commit access so you can
 #   indepnedently maintain your package, as part of the mono-repo
@@ -98,7 +98,7 @@ o/$(MODE)/examples/pylife/pylife.dbg: \
 		$(APE_NO_MODIFY_SELF)
 	@$(COMPILE) -ALINK.ape $(LINK) $(LINKARGS) -o $@
 
-# # Unwrap the APE  binary, that's embedded within the linked file
+# # Unwrap the APE binary, that's embedded within the linked file
 # # NOTE: This line can be commented out, since it's in build/rules.mk
 # o/$(MODE)/examples/pylife/pylife: \
 # 		o/$(MODE)/examples/pylife/pylife.dbg
