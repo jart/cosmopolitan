@@ -18,14 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/o.h"
 
 int __open_executable(void) {
-  tinyprint(2,
-            "error: redbean StoreAsset() support is currently unavailable "
-            "because __open_executable() in a regressed state, due to the "
-            "work we're doing on Arm64 support; we're hoping to address "
-            "this soon; please try using redbean v2.2 or rewinding to "
-            "commit 38112aeb206cc95ef615c268ca809cad693ecb9e\n",
-            NULL);
-  exit(1);
+  const char* path = GetProgramExecutableName();
+  if (!path)
+    return -1;
+  return open(path, O_RDWR);
 }
