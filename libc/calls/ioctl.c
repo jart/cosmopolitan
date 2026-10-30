@@ -44,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/serialize.h"
+#include "libc/sock/in.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/ifreq.h"
@@ -71,6 +72,11 @@ static struct HostAdapterInfoNode {
   struct sockaddr unicast;
   struct sockaddr netmask;
   struct sockaddr broadcast;
+  uint16_t ifindex6;  /* Interface index */
+  uint16_t flags6;    /* Flags */
+  uint8_t scope6;     /* Addr scope */
+  uint8_t prefixlen6; /* Prefix length */
+  struct in6_addr addr6;
   short flags;
 } *__hostInfo;
 
@@ -156,7 +162,8 @@ static textwindows struct HostAdapterInfoNode *findAdapterByName(
     const char *name) {
   struct HostAdapterInfoNode *node = __hostInfo;
   while (node) {
-    if (!strncmp(name, node->name, IFNAMSIZ)) {
+    if (!strncmp(name, node->name, IFNAMSIZ) &&
+        node->unicast.sa_family == AF_INET) {
       return node;
     }
     node = node->next;
@@ -180,8 +187,8 @@ static textwindows struct HostAdapterInfoNode *appendHostInfo(
     struct NtIpAdapterUnicastAddress *
         *ptrUA, /* Ptr to ptr to unicast address list node */
     struct NtIpAdapterPrefix *
-        *ptrAP,  /* Ptr to ptr to Adapter prefix list node */
-    int count) { /* count is used to create a unique name in case of alias */
+        *ptrAP,    /* Ptr to ptr to Adapter prefix list node */
+    int *ip4cnt) { /* count is used to create a unique name in case of alias */
 
   struct HostAdapterInfoNode *temp;
   struct HostAdapterInfoNode *node;
@@ -196,44 +203,44 @@ static textwindows struct HostAdapterInfoNode *appendHostInfo(
 
   memcpy(node->name, baseName, IFNAMSIZ);
 
-  /* Are there more than a single unicast address ? */
-  if (count > 0 || ((*ptrUA)->Next != NULL)) {
-    /* Yes, compose it using <baseName>:<count> */
+  /* Are there more than a single IPv4 unicast address ? */
+  if (*ip4cnt > 0) {
+    /* Yes, compose it using <baseName>:<ip4cnt> */
     size_t nameLen = strlen(node->name);
     if (nameLen + 2 > IFNAMSIZ - 2) {
       /* Appending the ":x" will exceed the size, need to chop the end */
       nameLen -= 2;
     }
     node->name[nameLen - 2] = ':';
-    node->name[nameLen - 1] = '0' + count;
+    node->name[nameLen - 1] = '0' + *ip4cnt;
     node->name[nameLen] = '\0';
-  }
 
-  /* Is there a name clash with other interfaces? */
-  for (attemptNum = 0; attemptNum < MAX_NAME_CLASH; ++attemptNum) {
-    temp = findAdapterByName(node->name);
-    if (!temp) {
-      break;
-    } else {
-      /* Yes, this name has been already used, append an extra
-       * character to resolve conflict. Note since the max length
-       * of the string now is IFNAMSIZ-2, we have just enough space for this.
-       * E.g. 'Ethernet_1' -> 'Ethernet_1a'
-       */
-      size_t pos = strlen(node->name);
-      node->name[pos] = 'a' + attemptNum;
-      node->name[pos + 1] = '\0';
-      /* Try again */
+    /* Is there a name clash with other interfaces? */
+    for (attemptNum = 0; attemptNum < MAX_NAME_CLASH; ++attemptNum) {
+      temp = findAdapterByName(node->name);
+      if (!temp) {
+        break;
+      } else {
+        /* Yes, this name has been already used, append an extra
+         * character to resolve conflict. Note since the max length
+         * of the string now is IFNAMSIZ-2, we have just enough space for this.
+         * E.g. 'Ethernet_1' -> 'Ethernet_1a'
+         */
+        size_t pos = strlen(node->name);
+        node->name[pos] = 'a' + attemptNum;
+        node->name[pos + 1] = '\0';
+        /* Try again */
+      }
     }
-  }
 
-  if (attemptNum == MAX_NAME_CLASH) {
-    /* Cannot resolve the conflict */
-    if (_weaken(free)) {
-      _weaken(free)(node);
+    if (attemptNum == MAX_NAME_CLASH) {
+      /* Cannot resolve the conflict */
+      if (_weaken(free)) {
+        _weaken(free)(node);
+      }
+      errno = EEXIST;
+      return NULL;
     }
-    errno = EEXIST;
-    return NULL;
   }
 
   /* Finally we got a unique short and friendly name */
@@ -270,56 +277,83 @@ static textwindows struct HostAdapterInfoNode *appendHostInfo(
       node->flags = 0;
   }
 
-  ip = ntohl(
-      ((struct sockaddr_in *)(*ptrUA)->Address.lpSockaddr)->sin_addr.s_addr);
-  netmask = (uint32_t)-1 << (32 - (*ptrUA)->OnLinkPrefixLength);
-  broadcast = (ip & netmask) | (~netmask & -1);
+  int family = ((struct sockaddr_in *)(*ptrUA)->Address.lpSockaddr)->sin_family;
+  if (family == AF_INET) {
+    *ip4cnt += 1;
+    ip = ntohl(
+        ((struct sockaddr_in *)(*ptrUA)->Address.lpSockaddr)->sin_addr.s_addr);
+    netmask = (uint32_t)-1 << (32 - (*ptrUA)->OnLinkPrefixLength);
+    broadcast = (ip & netmask) | (~netmask & -1);
 
-  a = (struct sockaddr_in *)&node->netmask;
-  a->sin_family = AF_INET;
-  a->sin_addr.s_addr = htonl(netmask);
+    a = (struct sockaddr_in *)&node->netmask;
+    a->sin_family = AF_INET;
+    a->sin_addr.s_addr = htonl(netmask);
 
-  a = (struct sockaddr_in *)&node->broadcast;
-  a->sin_family = AF_INET;
-  a->sin_addr.s_addr = htonl(broadcast);
+    a = (struct sockaddr_in *)&node->broadcast;
+    a->sin_family = AF_INET;
+    a->sin_addr.s_addr = htonl(broadcast);
 
-  /* Process the prefix and extract the netmask and broadcast */
-  /* According to the doc:
-   *
-   *     On Windows Vista and later, the linked IP_ADAPTER_PREFIX
-   *     structures pointed to by the FirstPrefix member include three
-   *     IP adapter prefixes for each IP address assigned to the
-   *     adapter. These include the host IP address prefix, the subnet
-   *     IP address prefix, and the subnet broadcast IP address prefix.
-   *     In addition, for each adapter there is a multicast address
-   *     prefix and a broadcast address prefix.
-   *                   -Source: MSDN on IP_ADAPTER_ADDRESSES_LH
-   *
-   * For example, interface "Ethernet", with 2 unicast addresses:
-   *
-   *  - 192.168.1.84
-   *  - 192.168.5.99
-   *
-   * The Prefix list has 8 elements:
-   *
-   *  #1: 192.168.1.0/24      <- Network, use the PrefixLength for netmask
-   *  #2: 192.168.1.84/32     <- Host IP
-   *  #3: 192.168.1.255/32    <- Subnet broadcast
-   *
-   *  #4: 192.168.5.0/24      <- Network
-   *  #5: 192.168.5.99/32     <- Host IP
-   *  #6: 192.168.5.255/32    <- Subnet broadcast
-   *
-   *  #7: 224.0.0.0/4         <- Multicast
-   *  #8: 255.255.255.255/32  <- Broadcast
-   */
+    /* Process the prefix and extract the netmask and broadcast */
+    /* According to the doc:
+     *
+     *     On Windows Vista and later, the linked IP_ADAPTER_PREFIX
+     *     structures pointed to by the FirstPrefix member include three
+     *     IP adapter prefixes for each IP address assigned to the
+     *     adapter. These include the host IP address prefix, the subnet
+     *     IP address prefix, and the subnet broadcast IP address prefix.
+     *     In addition, for each adapter there is a multicast address
+     *     prefix and a broadcast address prefix.
+     *                   -Source: MSDN on IP_ADAPTER_ADDRESSES_LH
+     *
+     * For example, interface "Ethernet", with 2 unicast addresses:
+     *
+     *  - 192.168.1.84
+     *  - 192.168.5.99
+     *
+     * The Prefix list has 8 elements:
+     *
+     *  #1: 192.168.1.0/24      <- Network, use the PrefixLength for netmask
+     *  #2: 192.168.1.84/32     <- Host IP
+     *  #3: 192.168.1.255/32    <- Subnet broadcast
+     *
+     *  #4: 192.168.5.0/24      <- Network
+     *  #5: 192.168.5.99/32     <- Host IP
+     *  #6: 192.168.5.255/32    <- Subnet broadcast
+     *
+     *  #7: 224.0.0.0/4         <- Multicast
+     *  #8: 255.255.255.255/32  <- Broadcast
+     */
 
-  if (ptrAP && *ptrAP) {
-    *ptrAP = (*ptrAP)->Next; /* skip net ip */
-    if (*ptrAP) {
-      *ptrAP = (*ptrAP)->Next; /* skip host ip */
+    if (ptrAP && *ptrAP) {
+      *ptrAP = (*ptrAP)->Next; /* skip net ip */
       if (*ptrAP) {
-        node->broadcast = *((*ptrAP)->Address.lpSockaddr);
+        *ptrAP = (*ptrAP)->Next; /* skip host ip */
+        if (*ptrAP) {
+          node->broadcast = *((*ptrAP)->Address.lpSockaddr);
+        }
+      }
+    }
+  } else if (family == AF_INET6) {
+    node->addr6 =
+        ((struct sockaddr_in6 *)(*ptrUA)->Address.lpSockaddr)->sin6_addr;
+    node->ifindex6 =
+        ((struct sockaddr_in6 *)(*ptrUA)->Address.lpSockaddr)->sin6_scope_id;
+    node->prefixlen6 = (*ptrUA)->OnLinkPrefixLength;
+    node->scope6 = 0;
+    if (IN6_IS_ADDR_LINKLOCAL(&node->addr6)) {
+      node->scope6 = 0x20;  // link
+    } else if (IN6_IS_ADDR_SITELOCAL(&node->addr6)) {
+      node->scope6 = 0x40;  // site
+    } else if (IN6_IS_ADDR_LOOPBACK(&node->addr6)) {
+      node->scope6 = 0x10;  // host
+    }
+    node->flags6 = 0;  // TODO ipv6 addr flags
+
+    // Move Prefix ptr
+    if (ptrAP && *ptrAP) {
+      *ptrAP = (*ptrAP)->Next; /* skip net ip */
+      if (*ptrAP) {
+        *ptrAP = (*ptrAP)->Next; /* skip host ip */
       }
     }
   }
@@ -344,14 +378,13 @@ static textwindows int createHostInfo(
   struct NtIpAdapterPrefix *ap;
   struct HostAdapterInfoNode *node = NULL;
   char baseName[IFNAMSIZ];
-  int count, i;
+  int ip4cnt, i;
   /* __hostInfo must be empty */
   unassert(__hostInfo == NULL);
   for (aa = firstAdapter; aa; aa = aa->Next) {
-    /* Skip all the interfaces with no address and the ones that are not AF_INET
+    /* Skip all the interfaces with no address
      */
-    if (!aa->FirstUnicastAddress ||
-        aa->FirstUnicastAddress->Address.lpSockaddr->sa_family != AF_INET) {
+    if (!aa->FirstUnicastAddress) {
       continue;
     }
     /* Use max IFNAMSIZ-1 chars, leave the last char for eventual conflicts */
@@ -364,9 +397,11 @@ static textwindows int createHostInfo(
       if (!baseName[i])
         break;
     }
-    for (count = 0, ua = aa->FirstUnicastAddress, ap = aa->FirstPrefix;
-         (ua != NULL) && (count < MAX_UNICAST_ADDR); ++count) {
-      node = appendHostInfo(node, baseName, aa, &ua, &ap, count);
+    ua = aa->FirstUnicastAddress;
+    ap = aa->FirstPrefix;
+    ip4cnt = 0;
+    while (ua != NULL) {
+      node = appendHostInfo(node, baseName, aa, &ua, &ap, &ip4cnt);
       if (!node)
         goto err;
       if (!__hostInfo) {
@@ -393,9 +428,9 @@ static textwindows int readAdapterAddresses(void) {
   struct NtIpAdapterAddresses *aa = NULL;
   /*
    * Calculate the required data size
-   * Note: alternatively you can use AF_UNSPEC to also return IPv6 interfaces
+   * Note: AF_UNSPEC return both IPv4 and IPv6 interfaces
    */
-  rc = GetAdaptersAddresses(AF_INET,
+  rc = GetAdaptersAddresses(AF_UNSPEC,
                             kNtGaaFlagSkipAnycast | kNtGaaFlagSkipMulticast |
                                 kNtGaaFlagSkipDnsServer |
                                 kNtGaaFlagIncludePrefix,
@@ -412,7 +447,7 @@ static textwindows int readAdapterAddresses(void) {
     goto err;
   }
   /* Re-run GetAdaptersAddresses this time with a valid buffer */
-  rc = GetAdaptersAddresses(AF_INET,
+  rc = GetAdaptersAddresses(AF_UNSPEC,
                             kNtGaaFlagSkipAnycast | kNtGaaFlagSkipMulticast |
                                 kNtGaaFlagSkipDnsServer |
                                 kNtGaaFlagIncludePrefix,
@@ -446,8 +481,19 @@ static textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
   for (ptr = ifc->ifc_req, node = __hostInfo;
        (((char *)(ptr + 1) - ifc->ifc_buf) < ifc->ifc_len) && node;
        ptr++, node = node->next) {
+    bzero(ptr, sizeof(struct ifreq));
     memcpy(ptr->ifr_name, node->name, IFNAMSIZ);
-    memcpy(&ptr->ifr_addr, &node->unicast, sizeof(struct sockaddr));
+    int family = node->unicast.sa_family;
+    if (family == AF_INET) {
+      memcpy(&ptr->ifr_addr, &node->unicast, sizeof(struct sockaddr));
+    } else if (family == AF_INET6) {
+      ptr->ifr_ifru.in6.sa_family = AF_INET6;
+      ptr->ifr6_ifindex = node->ifindex6;
+      ptr->ifr6_flags = node->flags6;
+      ptr->ifr6_scope = node->scope6;
+      ptr->ifr6_prefixlen = node->prefixlen6;
+      memcpy(&ptr->ifr6_addr, &node->addr6, sizeof(struct in6_addr));
+    }
   }
   ifc->ifc_len = (char *)ptr - ifc->ifc_buf;
   return 0;
