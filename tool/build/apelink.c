@@ -1996,7 +1996,7 @@ int main(int argc, char *argv[]) {
         p = stpcpy(p, "jartsr='\n\n");
         p = FinishGeneratingDosHeader(p);
       } else {
-        p = stpcpy(p, "jartsr=\n");
+        p = stpcpy(p, "jartsr=''\n");
       }
     }
     if (support_vector & _HOSTMETAL) {
