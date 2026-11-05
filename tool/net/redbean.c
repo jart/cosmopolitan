@@ -7046,7 +7046,7 @@ static void TlsInit(void) {
   sslinitialized = true;
 
   LoadCertificates();
-  mbedtls_ssl_conf_sni(&conf, TlsRoute, 0);
+  mbedtls_ssl_conf_sni(&conf, TlsRoute, &certs);
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
   mbedtls_ssl_conf_dbg(&confcli, TlsDebug, 0);
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
