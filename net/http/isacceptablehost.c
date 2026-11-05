@@ -19,6 +19,7 @@
 #include "libc/ctype.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
+#include "net/http/ip.h"
 
 #define DNS_NAME_MAX 253
 
@@ -28,14 +29,17 @@ extern const char kHostChars[256];  // -_0-9A-Za-z
  * Returns true if host seems legit.
  *
  * This function may be called after ParseUrl() or ParseHost() has
- * already handled things like percent encoding. There's currently
- * no support for IPv6 and IPv7.
+ * already handled things like percent encoding. IPv6 literals are
+ * accepted without brackets since ParseAuthority() strips them.
  *
  * Here's examples of permitted inputs:
  *
  * - ""
  * - 1.2.3.4
  * - 1.2.3.4.arpa
+ * - ::
+ * - ::1
+ * - 2001:db8::1
  * - localservice
  * - hello.example
  * - _hello.example
@@ -44,11 +48,12 @@ extern const char kHostChars[256];  // -_0-9A-Za-z
  *
  * Here's some examples of forbidden inputs:
  *
- * - ::1
  * - 1.2.3
  * - 1.2.3.4.5
  * - .hi.example
  * - hi..example
+ * - ::g
+ * - fe80::1%eth0
  *
  * @param n if -1 implies strlen
  */
@@ -59,6 +64,10 @@ bool32 IsAcceptableHost(const char *s, size_t n) {
     n = s ? strlen(s) : 0;
   if (!n)
     return true;
+  if (memchr(s, ':', n)) {
+    uint8_t ip[16];
+    return !ParseIp6(s, n, ip);
+  }
   if (n > DNS_NAME_MAX) {
     return false;
   }

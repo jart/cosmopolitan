@@ -21,6 +21,7 @@ NET_HTTP_A_DIRECTDEPS =				\
 	LIBC_INTRIN				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
+	LIBC_SOCK				\
 	LIBC_STDIO				\
 	LIBC_STR				\
 	LIBC_SYSV				\
