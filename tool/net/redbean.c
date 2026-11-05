@@ -67,6 +67,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/hex.internal.h"
 #include "libc/stdio/rand.h"
@@ -87,6 +88,7 @@
 #include "libc/sysv/consts/hwcap.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/ipv6.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
@@ -268,9 +270,15 @@ struct DeflateGenerator {
   struct Asset *a;
 };
 
+struct Ip {
+  bool is6;
+  uint32_t v4;
+  uint8_t v6[16];
+};
+
 static struct Ips {
   size_t n;
-  uint32_t *p;
+  struct Ip *p;
 } ips;
 
 static struct Ports {
@@ -282,7 +290,7 @@ static struct Servers {
   size_t n;
   struct Server {
     int fd;
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
   } * p;
 } servers;
 
@@ -348,6 +356,76 @@ static struct TrustedIps {
     uint32_t mask;
   } * p;
 } trustedips;
+
+static struct TrustedIps6 {
+  size_t n;
+  struct TrustedIp6 {
+    uint8_t ip[16];
+    uint8_t mask[16];
+  } *p;
+} trustedips6;
+
+// ipv4-mapped ipv6 addresses are always normalized to ipv4
+static void NormalizeIp(struct Ip *ip) {
+  int64_t mapped;
+  if (ip->is6 && (mapped = GetIpv4Mapped(ip->v6)) != -1) {
+    ip->is6 = false;
+    ip->v4 = mapped;
+    bzero(ip->v6, sizeof(ip->v6));
+  }
+}
+
+static void SetIp(struct Ip *ip, const struct sockaddr *sa) {
+  bzero(ip, sizeof(*ip));
+  if (sa->sa_family == AF_INET6) {
+    memcpy(ip->v6, ((const struct sockaddr_in6 *)sa)->sin6_addr.s6_addr, 16);
+    ip->is6 = true;
+    NormalizeIp(ip);
+  } else {
+    ip->v4 = ntohl(((const struct sockaddr_in *)sa)->sin_addr.s_addr);
+  }
+}
+
+static uint16_t GetSockPort(const struct sockaddr *sa) {
+  if (sa->sa_family == AF_INET6) {
+    return ntohs(((const struct sockaddr_in6 *)sa)->sin6_port);
+  } else {
+    return ntohs(((const struct sockaddr_in *)sa)->sin_port);
+  }
+}
+
+// inet_ntop() based formatter that preserves the ipv4 dotted quad text
+static char *FormatIp(char buf[46], const struct Ip *ip) {
+  if (ip->is6) {
+    inet_ntop(AF_INET6, ip->v6, buf, 46);
+  } else {
+    uint32_t ip4 = htonl(ip->v4);
+    inet_ntop(AF_INET, &ip4, buf, 46);
+  }
+  return buf;
+}
+
+// maps wildcard addresses to loopback for display and browser use
+static void ReplaceUnspecifiedIp(struct Ip *ip) {
+  int i;
+  if (ip->is6) {
+    for (i = 0; i < 16 && !ip->v6[i]; ++i) {
+    }
+    if (i == 16)
+      ip->v6[15] = 1;  // :: becomes ::1
+  } else if (!ip->v4) {
+    ip->v4 = INADDR_LOOPBACK;
+  }
+}
+
+// a client controls its entire /64 prefix so hash that as the token key
+static uint32_t GetTokenIp(const struct Ip *ip) {
+  if (!ip->is6) {
+    return ip->v4;
+  } else {
+    return crc32c(0, ip->v6, 8);
+  }
+}
 
 struct TokenBucket {
   signed char cidr;
@@ -516,8 +594,8 @@ static struct timespec startserver;
 static struct timespec startrequest;
 static struct timespec lastheartbeat;
 static struct timespec startconnection;
-static struct sockaddr_in clientaddr;
-static struct sockaddr_in *serveraddr;
+static struct sockaddr_storage clientaddr;
+static struct sockaddr_storage *serveraddr;
 
 static mbedtls_ssl_config conf;
 static mbedtls_ssl_context ssl;
@@ -716,22 +794,26 @@ static void ProgramSslTicketLifetime(long x) {
 static void ProgramAddr(const char *addr) {
   ssize_t rc;
   int64_t ip;
-  if ((ip = ParseIp(addr, -1)) == -1) {
-    if (!IsTiny()) {
-      struct addrinfo *ai = NULL;
-      struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM,
-                              IPPROTO_TCP};
-      if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != 0) {
-        FATALF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
-      }
-      ip = ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr);
-      freeaddrinfo(ai);
-    } else {
-      FATALF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
+  struct Ip a;
+  bzero(&a, sizeof(a));
+  if ((ip = ParseIp(addr, -1)) != -1) {
+    a.v4 = ip;
+  } else if (!ParseIp6(addr, -1, a.v6)) {
+    a.is6 = true;
+    NormalizeIp(&a);
+  } else if (!IsTiny()) {
+    struct addrinfo *ai = NULL;
+    struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
+    if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != 0) {
+      FATALF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
     }
+    a.v4 = ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr);
+    freeaddrinfo(ai);
+  } else {
+    FATALF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
   }
   ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
-  ips.p[ips.n - 1] = ip;
+  ips.p[ips.n - 1] = a;
 }
 
 static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
@@ -787,107 +869,161 @@ static void ProgramTrustedIp(uint32_t ip, int cidr) {
   trustedips.p[trustedips.n - 1].mask = mask;
 }
 
-static bool IsTrustedIp(uint32_t ip) {
+static void ProgramTrustedIp6(const uint8_t ip[16], int cidr) {
   int i;
+  trustedips6.p =
+      xrealloc(trustedips6.p, ++trustedips6.n * sizeof(*trustedips6.p));
+  memcpy(trustedips6.p[trustedips6.n - 1].ip, ip, 16);
+  for (i = 0; i < 16; ++i, cidr -= 8) {
+    trustedips6.p[trustedips6.n - 1].mask[i] = cidr >= 8  ? 0xff
+                                               : cidr > 0 ? 0xff << (8 - cidr)
+                                                          : 0;
+  }
+}
+
+static bool HasIp6HostBits(const uint8_t ip[16], int cidr) {
+  int i;
+  for (i = 0; i < 16; ++i, cidr -= 8) {
+    uint8_t mask = cidr >= 8 ? 0xff : cidr > 0 ? 0xff << (8 - cidr) : 0;
+    if (ip[i] & ~mask) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool IsTrustedIp(const struct Ip *ip) {
+  int i, j;
   uint32_t *p;
-  if (interfaces) {
+  if (trustedips.n || trustedips6.n) {
+    if (ip->is6) {
+      for (i = 0; i < trustedips6.n; ++i) {
+        for (j = 0; j < 16; ++j) {
+          if ((ip->v6[j] & trustedips6.p[i].mask[j]) !=
+              trustedips6.p[i].ip[j]) {
+            break;
+          }
+        }
+        if (j == 16) {
+          DEBUGF("(token) ip is trusted because it's %s", "whitelisted");
+          return true;
+        }
+      }
+    } else {
+      for (i = 0; i < trustedips.n; ++i) {
+        if ((ip->v4 & trustedips.p[i].mask) == trustedips.p[i].ip) {
+          DEBUGF("(token) ip is trusted because it's %s", "whitelisted");
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  if (!ip->is6 && interfaces) {
     for (p = interfaces; *p; ++p) {
-      if (ip == *p && !IsTestnetIp(ip)) {
+      if (ip->v4 == *p && !IsTestnetIp(ip->v4)) {
         DEBUGF("(token) ip is trusted because it's %s", "a local interface");
         return true;
       }
     }
   }
-  if (trustedips.n) {
-    for (i = 0; i < trustedips.n; ++i) {
-      if ((ip & trustedips.p[i].mask) == trustedips.p[i].ip) {
-        DEBUGF("(token) ip is trusted because it's %s", "whitelisted");
-        return true;
-      }
+  if (ip->is6) {
+    if (IsPrivateIp6(ip->v6) && !IsTestnetIp6(ip->v6)) {
+      DEBUGF("(token) ip is trusted because it's %s", "private");
+      return true;
+    } else if (IsLoopbackIp6(ip->v6)) {
+      DEBUGF("(token) ip is trusted because it's %s", "loopback");
+      return true;
     }
-    return false;
-  } else if (IsPrivateIp(ip) && !IsTestnetIp(ip)) {
+  } else if (IsPrivateIp(ip->v4) && !IsTestnetIp(ip->v4)) {
     DEBUGF("(token) ip is trusted because it's %s", "private");
     return true;
-  } else if (IsLoopbackIp(ip)) {
+  } else if (IsLoopbackIp(ip->v4)) {
     DEBUGF("(token) ip is trusted because it's %s", "loopback");
     return true;
+  }
+  return false;
+}
+
+static void DescribeAddress(char buf[64], const struct Ip *ip, uint16_t port) {
+  char str[46];
+  if (ip->is6) {
+    snprintf(buf, 64, "[%s]:%hu", FormatIp(str, ip), port);
   } else {
-    return false;
+    snprintf(buf, 64, "%s:%hu", FormatIp(str, ip), port);
   }
 }
 
-static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
-  char *p;
-  p = buf;
-  p = FormatUint32(p, (addr & 0xFF000000) >> 030), *p++ = '.';
-  p = FormatUint32(p, (addr & 0x00FF0000) >> 020), *p++ = '.';
-  p = FormatUint32(p, (addr & 0x0000FF00) >> 010), *p++ = '.';
-  p = FormatUint32(p, (addr & 0x000000FF) >> 000), *p++ = ':';
-  p = FormatUint32(p, port);
-  *p = '\0';
-  assert(p - buf < 40);
-}
-
-static inline int GetServerAddr(uint32_t *ip, uint16_t *port) {
-  *ip = ntohl(serveraddr->sin_addr.s_addr);
+static inline int GetServerAddr(struct Ip *ip, uint16_t *port) {
+  SetIp(ip, (const struct sockaddr *)serveraddr);
   if (port)
-    *port = ntohs(serveraddr->sin_port);
+    *port = GetSockPort((const struct sockaddr *)serveraddr);
   return 0;
 }
 
-static inline int GetClientAddr(uint32_t *ip, uint16_t *port) {
-  *ip = ntohl(clientaddr.sin_addr.s_addr);
+static inline int GetClientAddr(struct Ip *ip, uint16_t *port) {
+  SetIp(ip, (const struct sockaddr *)&clientaddr);
   if (port)
-    *port = ntohs(clientaddr.sin_port);
+    *port = GetSockPort((const struct sockaddr *)&clientaddr);
   return 0;
 }
 
-static inline int GetRemoteAddr(uint32_t *ip, uint16_t *port) {
+static inline int GetRemoteAddr(struct Ip *ip, uint16_t *port) {
+  char str[46];
   GetClientAddr(ip, port);
   if (HasHeader(kHttpXForwardedFor)) {
-    if (IsTrustedIp(*ip)) {
+    if (IsTrustedIp(ip)) {
       if (ParseForwarded(HeaderData(kHttpXForwardedFor),
-                         HeaderLength(kHttpXForwardedFor), ip, port) == -1) {
-        VERBOSEF("could not parse x-forwarded-for %`'.*s len=%ld",
-                 HeaderLength(kHttpXForwardedFor),
-                 HeaderData(kHttpXForwardedFor),
-                 HeaderLength(kHttpXForwardedFor));
-        return -1;
+                         HeaderLength(kHttpXForwardedFor), &ip->v4,
+                         port) == -1) {
+        uint8_t v6[16];
+        if (ParseForwarded6(HeaderData(kHttpXForwardedFor),
+                            HeaderLength(kHttpXForwardedFor), v6, port) == -1) {
+          VERBOSEF("could not parse x-forwarded-for %`'.*s len=%ld",
+                   HeaderLength(kHttpXForwardedFor),
+                   HeaderData(kHttpXForwardedFor),
+                   HeaderLength(kHttpXForwardedFor));
+          return -1;
+        }
+        ip->is6 = true;
+        memcpy(ip->v6, v6, 16);
+        NormalizeIp(ip);
+      } else {
+        ip->is6 = false;
+        bzero(ip->v6, sizeof(ip->v6));
       }
     } else {
-      WARNF(
-          "%hhu.%hhu.%hhu.%hhu isn't authorized to send x-forwarded-for %`'.*s",
-          *ip >> 24, *ip >> 16, *ip >> 8, *ip, HeaderLength(kHttpXForwardedFor),
-          HeaderData(kHttpXForwardedFor));
+      WARNF("%s isn't authorized to send x-forwarded-for %`'.*s",
+            FormatIp(str, ip), HeaderLength(kHttpXForwardedFor),
+            HeaderData(kHttpXForwardedFor));
     }
   }
   return 0;
 }
 
 static char *DescribeClient(void) {
-  char str[40];
+  char str[64];
   uint16_t port;
-  uint32_t client;
+  struct Ip client;
   static char description[128];
   GetClientAddr(&client, &port);
-  if (HasHeader(kHttpXForwardedFor) && IsTrustedIp(client)) {
-    DescribeAddress(str, client, port);
+  if (HasHeader(kHttpXForwardedFor) && IsTrustedIp(&client)) {
+    DescribeAddress(str, &client, port);
     snprintf(description, sizeof(description), "%'.*s via %s",
              HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor),
              str);
   } else {
-    DescribeAddress(description, client, port);
+    DescribeAddress(description, &client, port);
   }
   return description;
 }
 
 static char *DescribeServer(void) {
-  uint32_t ip;
+  struct Ip ip;
   uint16_t port;
-  static char serveraddrstr[40];
+  static char serveraddrstr[64];
   GetServerAddr(&ip, &port);
-  DescribeAddress(serveraddrstr, ip, port);
+  DescribeAddress(serveraddrstr, &ip, port);
   return serveraddrstr;
 }
 
@@ -1108,18 +1244,26 @@ static void LuaEvalFile(const char *path) {
   LuaEvalCode(f);
 }
 
+static void LuaPushIp(lua_State *L, const struct Ip *ip) {
+  if (ip->is6) {
+    LuaPushIp6(L, ip->v6);
+  } else {
+    lua_pushinteger(L, ip->v4);
+  }
+}
+
 static bool LuaOnClientConnection(void) {
   bool dropit = false;
 #ifndef STATIC
-  uint32_t ip, serverip;
+  struct Ip ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
   lua_getglobal(L, "OnClientConnection");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
-  lua_pushinteger(L, ip);
+  LuaPushIp(L, &ip);
   lua_pushinteger(L, port);
-  lua_pushinteger(L, serverip);
+  LuaPushIp(L, &serverip);
   lua_pushinteger(L, serverport);
   if (LuaCallWithTrace(L, 4, 1, NULL) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
@@ -1149,16 +1293,16 @@ static void LuaOnLogLatency(long reqtime, long contime) {
 
 static void LuaOnProcessCreate(int pid) {
 #ifndef STATIC
-  uint32_t ip, serverip;
+  struct Ip ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
   lua_getglobal(L, "OnProcessCreate");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
   lua_pushinteger(L, pid);
-  lua_pushinteger(L, ip);
+  LuaPushIp(L, &ip);
   lua_pushinteger(L, port);
-  lua_pushinteger(L, serverip);
+  LuaPushIp(L, &serverip);
   lua_pushinteger(L, serverport);
   if (LuaCallWithTrace(L, 5, 0, NULL) != LUA_OK) {
     LogLuaError("OnProcessCreate", lua_tostring(L, -1));
@@ -1168,13 +1312,13 @@ static void LuaOnProcessCreate(int pid) {
 #endif
 }
 
-static bool LuaOnServerListen(int fd, uint32_t ip, uint16_t port) {
+static bool LuaOnServerListen(int fd, const struct Ip *ip, uint16_t port) {
   bool nouse = false;
 #ifndef STATIC
   lua_State *L = GL;
   lua_getglobal(L, "OnServerListen");
   lua_pushinteger(L, fd);
-  lua_pushinteger(L, ip);
+  LuaPushIp(L, ip);
   lua_pushinteger(L, port);
   if (LuaCallWithTrace(L, 3, 1, NULL) == LUA_OK) {
     nouse = lua_toboolean(L, -1);
@@ -1706,9 +1850,9 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
   //   3. add subject alt name (san) entry to cert for *.hostname
   //
   for (int i = 0; i < ips.n; ++i) {
-    uint32_t ip = ips.p[i];
-    if (IsLoopbackIp(ip))
+    if (ips.p[i].is6 || IsLoopbackIp(ips.p[i].v4))
       continue;
+    uint32_t ip = ips.p[i].v4;
     char rname[NI_MAXHOST];
     struct sockaddr_in addr4 = {AF_INET, 0, {htonl(ip)}};
     if (getnameinfo((struct sockaddr *)&addr4, sizeof(addr4), rname,
@@ -1736,12 +1880,17 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
 
   // add san entry to cert for each ip address owned by system
   for (int i = 0; i < ips.n; ++i) {
-    uint32_t ip = ips.p[i];
-    if (IsLoopbackIp(ip))
+    struct Ip *ip = &ips.p[i];
+    if (ip->is6 ? IsLoopbackIp6(ip->v6) : IsLoopbackIp(ip->v4))
       continue;
     san = realloc(san, ++nsan * sizeof(*san));
-    san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
-    san[nsan - 1].ip4 = ip;
+    if (ip->is6) {
+      san[nsan - 1].tag = MBEDTLS_X509_SAN_IP6_ADDRESS_INTERNAL;
+      memcpy(san[nsan - 1].ip6, ip->v6, 16);
+    } else {
+      san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
+      san[nsan - 1].ip4 = ip->v4;
+    }
   }
   char notbefore[16], notafter[16];
   ChooseCertificateLifetime(notbefore, notafter);
@@ -2754,20 +2903,25 @@ static const char *GetSystemUrlLauncherCommand(void) {
 }
 
 static void LaunchBrowser(const char *path) {
+  char ipstr[46], host[64];
   uint16_t port = 80;
-  struct in_addr addr;
+  struct Ip addr = {0};
   path = firstnonnull(path, "/");
   // use the first server address if there is at least one server
   if (servers.n) {
-    addr = servers.p[0].addr.sin_addr;
-    port = ntohs(servers.p[0].addr.sin_port);
+    SetIp(&addr, (const struct sockaddr *)&servers.p[0].addr);
+    port = GetSockPort((const struct sockaddr *)&servers.p[0].addr);
   }
   // assign a loopback address if no server or unknown server address
-  if (!servers.n || !addr.s_addr)
-    addr.s_addr = htonl(INADDR_LOOPBACK);
+  ReplaceUnspecifiedIp(&addr);
+  if (addr.is6) {
+    snprintf(host, sizeof(host), "[%s]", FormatIp(ipstr, &addr));
+  } else {
+    snprintf(host, sizeof(host), "%s", FormatIp(ipstr, &addr));
+  }
   if (*path != '/')
     path = gc(xasprintf("/%s", path));
-  launch_browser(gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path)));
+  launch_browser(gc(xasprintf("http://%s:%d%s", host, port, path)));
 }
 
 static char *BadMethod(void) {
@@ -3061,12 +3215,16 @@ static char *ServeIndex(const char *path, size_t pathlen) {
 }
 
 static bool ShouldServeCrashReportDetails(void) {
-  uint32_t ip;
+  struct Ip ip;
   uint16_t port;
   if (leakcrashreports) {
     return true;
+  } else if (GetRemoteAddr(&ip, &port)) {
+    return false;
+  } else if (ip.is6) {
+    return IsLoopbackIp6(ip.v6) || IsPrivateIp6(ip.v6);
   } else {
-    return !GetRemoteAddr(&ip, &port) && (IsLoopbackIp(ip) || IsPrivateIp(ip));
+    return IsLoopbackIp(ip.v4) || IsPrivateIp(ip.v4);
   }
 }
 
@@ -3328,39 +3486,78 @@ static int LuaRoute(lua_State *L) {
   return 1;
 }
 
+static void LuaCheckIpAddr(lua_State *L, int i, struct Ip *ip, bool strict) {
+  lua_Integer x;
+  uint32_t v4;
+  uint8_t v6[16];
+  bzero(ip, sizeof(*ip));
+  if (lua_type(L, i) == LUA_TNUMBER) {
+    x = luaL_checkinteger(L, i);
+    if (strict && !(0 <= x && x <= 0xffffffff)) {
+      luaL_argerror(L, i, "ip out of range");
+      __builtin_unreachable();
+    }
+    ip->v4 = x;
+  } else if (LuaCheckIp(L, i, &v4, v6) == AF_INET6) {
+    ip->is6 = true;
+    memcpy(ip->v6, v6, 16);
+  } else {
+    ip->v4 = v4;
+  }
+}
+
 static int LuaProgramTrustedIp(lua_State *L) {
-  lua_Integer ip, cidr;
-  uint32_t ip32, imask;
-  ip = luaL_checkinteger(L, 1);
-  cidr = luaL_optinteger(L, 2, 32);
-  if (!(0 <= ip && ip <= 0xffffffff)) {
-    luaL_argerror(L, 1, "ip out of range");
-    __builtin_unreachable();
+  struct Ip ip;
+  lua_Integer ip4, cidr;
+  uint32_t imask;
+  uint8_t v6[16];
+  bzero(&ip, sizeof(ip));
+  if (lua_type(L, 1) == LUA_TNUMBER) {
+    ip4 = luaL_checkinteger(L, 1);
+    if (!(0 <= ip4 && ip4 <= 0xffffffff)) {
+      luaL_argerror(L, 1, "ip out of range");
+      __builtin_unreachable();
+    }
+    ip.v4 = ip4;
+  } else if (LuaCheckIp(L, 1, &ip.v4, v6) == AF_INET6) {
+    ip.is6 = true;
+    memcpy(ip.v6, v6, 16);
   }
-  if (!(0 <= cidr && cidr <= 32)) {
-    luaL_argerror(L, 2, "cidr should be 0 .. 32");
-    __builtin_unreachable();
+  if (ip.is6) {
+    cidr = luaL_optinteger(L, 2, 128);
+    if (!(0 <= cidr && cidr <= 128)) {
+      luaL_argerror(L, 2, "cidr should be 0 .. 128");
+      __builtin_unreachable();
+    }
+    if (HasIp6HostBits(ip.v6, cidr)) {
+      luaL_argerror(L, 1,
+                    "ip address isn't the network address; "
+                    "it has bits masked by the cidr");
+      __builtin_unreachable();
+    }
+    ProgramTrustedIp6(ip.v6, cidr);
+  } else {
+    cidr = luaL_optinteger(L, 2, 32);
+    if (!(0 <= cidr && cidr <= 32)) {
+      luaL_argerror(L, 2, "cidr should be 0 .. 32");
+      __builtin_unreachable();
+    }
+    imask = ~(0xffffffffu << (32 - cidr));
+    if (ip.v4 & imask) {
+      luaL_argerror(L, 1,
+                    "ip address isn't the network address; "
+                    "it has bits masked by the cidr");
+      __builtin_unreachable();
+    }
+    ProgramTrustedIp(ip.v4, cidr);
   }
-  ip32 = ip;
-  imask = ~(0xffffffffu << (32 - cidr));
-  if (ip32 & imask) {
-    luaL_argerror(L, 1,
-                  "ip address isn't the network address; "
-                  "it has bits masked by the cidr");
-    __builtin_unreachable();
-  }
-  ProgramTrustedIp(ip, cidr);
   return 0;
 }
 
 static int LuaIsTrusted(lua_State *L) {
-  lua_Integer ip;
-  ip = luaL_checkinteger(L, 1);
-  if (!(0 <= ip && ip <= 0xffffffff)) {
-    luaL_argerror(L, 1, "ip out of range");
-    __builtin_unreachable();
-  }
-  lua_pushboolean(L, IsTrustedIp(ip));
+  struct Ip ip;
+  LuaCheckIpAddr(L, 1, &ip, true);
+  lua_pushboolean(L, IsTrustedIp(&ip));
   return 1;
 }
 
@@ -3806,11 +4003,11 @@ static int LuaGetMethod(lua_State *L) {
   return 1;
 }
 
-static int LuaGetAddr(lua_State *L, int GetAddr(uint32_t *, uint16_t *)) {
-  uint32_t ip;
+static int LuaGetAddr(lua_State *L, int GetAddr(struct Ip *, uint16_t *)) {
+  struct Ip ip;
   uint16_t port;
   if (!GetAddr(&ip, &port)) {
-    lua_pushinteger(L, ip);
+    LuaPushIp(L, &ip);
     lua_pushinteger(L, port);
     return 2;
   } else {
@@ -4005,24 +4202,29 @@ static int LuaGetPass(lua_State *L) {
 }
 
 static int LuaGetHost(lua_State *L) {
-  char b[16];
+  char b[46];
+  struct Ip ip;
   OnlyCallDuringRequest(L, "GetHost");
   if (url.host.n) {
     lua_pushlstring(L, url.host.p, url.host.n);
   } else {
-    inet_ntop(AF_INET, &serveraddr->sin_addr.s_addr, b, sizeof(b));
-    lua_pushstring(L, b);
+    GetServerAddr(&ip, 0);
+    lua_pushstring(L, FormatIp(b, &ip));
   }
   return 1;
 }
 
 static int LuaGetPort(lua_State *L) {
   int i, x = 0;
+  uint16_t port;
+  struct Ip ip;
   OnlyCallDuringRequest(L, "GetPort");
   for (i = 0; i < url.port.n; ++i)
     x = url.port.p[i] - '0' + x * 10;
-  if (!x)
-    x = ntohs(serveraddr->sin_port);
+  if (!x) {
+    GetServerAddr(&ip, &port);
+    x = port;
+  }
   lua_pushinteger(L, x);
   return 1;
 }
@@ -4413,7 +4615,8 @@ static int LuaProgramAddr(lua_State *L) {
   if (lua_isinteger(L, 1)) {
     ip = luaL_checkinteger(L, 1);
     ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
-    ips.p[ips.n - 1] = ip;
+    bzero(ips.p + ips.n - 1, sizeof(*ips.p));
+    ips.p[ips.n - 1].v4 = ip;
   } else {
     ProgramAddr(luaL_checkstring(L, 1));
   }
@@ -4678,12 +4881,19 @@ static int LuaIsAssetCompressed(lua_State *L) {
   return 1;
 }
 
-static bool Blackhole(uint32_t ip) {
-  char buf[4];
+static bool Blackhole(const struct Ip *ip) {
+  int n;
+  char buf[16];
+  if (ip->is6) {
+    memcpy(buf, ip->v6, 16);
+    n = 16;
+  } else {
+    WRITE32BE(buf, ip->v4);
+    n = 4;
+  }
   if (blackhole.fd <= 0)
     return false;
-  WRITE32BE(buf, ip);
-  if (sendto(blackhole.fd, &buf, 4, 0, (struct sockaddr *)&blackhole.addr,
+  if (sendto(blackhole.fd, &buf, n, 0, (struct sockaddr *)&blackhole.addr,
              sizeof(blackhole.addr)) != -1) {
     return true;
   } else {
@@ -4694,13 +4904,9 @@ static bool Blackhole(uint32_t ip) {
 }
 
 static int LuaBlackhole(lua_State *L) {
-  lua_Integer ip;
-  ip = luaL_checkinteger(L, 1);
-  if (!(0 <= ip && ip <= 0xffffffff)) {
-    luaL_argerror(L, 1, "ip out of range");
-    __builtin_unreachable();
-  }
-  lua_pushboolean(L, Blackhole(ip));
+  struct Ip ip;
+  LuaCheckIpAddr(L, 1, &ip, true);
+  lua_pushboolean(L, Blackhole(&ip));
   return 1;
 }
 
@@ -4731,26 +4937,34 @@ static void BlockSignals(void) {
 }
 
 static int LuaAcquireToken(lua_State *L) {
-  uint32_t ip;
+  struct Ip ip;
   if (!tokenbucket.cidr) {
     luaL_error(L, "ProgramTokenBucket() needs to be called first");
     __builtin_unreachable();
   }
-  GetClientAddr(&ip, 0);
-  lua_pushinteger(L, AcquireToken(tokenbucket.b, luaL_optinteger(L, 1, ip),
-                                  tokenbucket.cidr));
+  if (lua_isnoneornil(L, 1)) {
+    GetClientAddr(&ip, 0);
+  } else {
+    LuaCheckIpAddr(L, 1, &ip, false);
+  }
+  lua_pushinteger(
+      L, AcquireToken(tokenbucket.b, GetTokenIp(&ip), tokenbucket.cidr));
   return 1;
 }
 
 static int LuaCountTokens(lua_State *L) {
-  uint32_t ip;
+  struct Ip ip;
   if (!tokenbucket.cidr) {
     luaL_error(L, "ProgramTokenBucket() needs to be called first");
     __builtin_unreachable();
   }
-  GetClientAddr(&ip, 0);
-  lua_pushinteger(L, CountTokens(tokenbucket.b, luaL_optinteger(L, 1, ip),
-                                 tokenbucket.cidr));
+  if (lua_isnoneornil(L, 1)) {
+    GetClientAddr(&ip, 0);
+  } else {
+    LuaCheckIpAddr(L, 1, &ip, false);
+  }
+  lua_pushinteger(
+      L, CountTokens(tokenbucket.b, GetTokenIp(&ip), tokenbucket.cidr));
   return 1;
 }
 
@@ -5413,6 +5627,7 @@ static void MemDestroy(void) {
   Free(&launchbrowser);
   Free(&serverheader);
   Free(&trustedips.p);
+  Free(&trustedips6.p);
   Free(&interfaces);
   Free(&extrahdrs);
   Free(&pidpath);
@@ -5832,12 +6047,12 @@ static char *SynchronizeStream(void) {
 }
 
 static void ParseRequestParameters(void) {
-  uint32_t ip;
+  struct Ip ip;
   FreeLater(ParseUrl(inbuf.p + cpm.msg.uri.a, cpm.msg.uri.b - cpm.msg.uri.a,
                      &url, kUrlPlus | kUrlLatin1));
   if (!url.host.p) {
     if (HasHeader(kHttpXForwardedHost) &&  //
-        !GetRemoteAddr(&ip, 0) && IsTrustedIp(ip)) {
+        !GetRemoteAddr(&ip, 0) && IsTrustedIp(&ip)) {
       FreeLater(ParseHost(HeaderData(kHttpXForwardedHost),
                           HeaderLength(kHttpXForwardedHost), &url));
     } else if (HasHeader(kHttpHost)) {
@@ -6521,7 +6736,8 @@ static int EnableSandbox(void) {
 }
 
 static int HandleConnection(size_t i) {
-  uint32_t ip;
+  char ipstr[46];
+  struct Ip ip;
   int pid, tok, rc = 0;
   clientaddrsize = sizeof(clientaddr);
   if ((client = accept4(servers.p[i].fd, (struct sockaddr *)&clientaddr,
@@ -6529,35 +6745,34 @@ static int HandleConnection(size_t i) {
     LockInc(&shared->c.accepts);
     GetClientAddr(&ip, 0);
     if (tokenbucket.cidr && tokenbucket.reject >= 0) {
-      if (!IsTrustedIp(ip)) {
-        tok = AcquireToken(tokenbucket.b, ip, tokenbucket.cidr);
+      if (!IsTrustedIp(&ip)) {
+        tok = AcquireToken(tokenbucket.b, GetTokenIp(&ip), tokenbucket.cidr);
         if (tok <= tokenbucket.ban && tokenbucket.ban >= 0) {
-          WARNF("(token) banning %hhu.%hhu.%hhu.%hhu who only has %d tokens",
-                ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          WARNF("(token) banning %s who only has %d tokens",
+                FormatIp(ipstr, &ip), tok);
           LockInc(&shared->c.bans);
-          Blackhole(ip);
+          Blackhole(&ip);
           close(client);
           return 0;
         } else if (tok <= tokenbucket.ignore && tokenbucket.ignore >= 0) {
-          DEBUGF("(token) ignoring %hhu.%hhu.%hhu.%hhu who only has %d tokens",
-                 ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          DEBUGF("(token) ignoring %s who only has %d tokens",
+                 FormatIp(ipstr, &ip), tok);
           LockInc(&shared->c.ignores);
           close(client);
           return 0;
         } else if (tok < tokenbucket.reject) {
-          WARNF("(token) rejecting %hhu.%hhu.%hhu.%hhu who only has %d tokens",
-                ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          WARNF("(token) rejecting %s who only has %d tokens",
+                FormatIp(ipstr, &ip), tok);
           LockInc(&shared->c.rejects);
           SendTooManyRequests();
           close(client);
           return 0;
         } else {
-          DEBUGF("(token) %hhu.%hhu.%hhu.%hhu has %d tokens", ip >> 24,
-                 ip >> 16, ip >> 8, ip, tok - 1);
+          DEBUGF("(token) %s has %d tokens", FormatIp(ipstr, &ip), tok - 1);
         }
       } else {
-        DEBUGF("(token) won't acquire token for trusted ip %hhu.%hhu.%hhu.%hhu",
-               ip >> 24, ip >> 16, ip >> 8, ip);
+        DEBUGF("(token) won't acquire token for trusted ip %s",
+               FormatIp(ipstr, &ip));
       }
     } else {
       DEBUGF("(token) can't acquire accept() token for client");
@@ -6814,8 +7029,10 @@ static int HandlePoll(int ms) {
 
 static void Listen(void) {
   char ipbuf[16];
+  char ipstr[46];
+  char addrstr[64];
   size_t i, j, n;
-  uint32_t ip, port, addrsize, *ifp;
+  uint32_t port, addrsize, *ifp;
   bool hasonserverlisten = IsHookDefined("OnServerListen");
   bool is_default_port = false;
   if (!ports.n) {
@@ -6835,17 +7052,36 @@ static void Listen(void) {
   }
   servers.p = malloc(ips.n * ports.n * sizeof(*servers.p));
   for (n = i = 0; i < ips.n; ++i) {
+    int family = ips.p[i].is6 ? AF_INET6 : AF_INET;
     for (j = 0; j < ports.n; ++j, ++n) {
+      struct sockaddr_in *sin4;
+      struct sockaddr_in6 *sin6;
+      struct Ip bound;
       bzero(servers.p + n, sizeof(*servers.p));
-      servers.p[n].addr.sin_family = AF_INET;
-      servers.p[n].addr.sin_port = htons(ports.p[j]);
-      servers.p[n].addr.sin_addr.s_addr = htonl(ips.p[i]);
-      if ((servers.p[n].fd = GoodSocket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC,
+      sin4 = (struct sockaddr_in *)&servers.p[n].addr;
+      sin6 = (struct sockaddr_in6 *)&servers.p[n].addr;
+      if (family == AF_INET6) {
+        sin6->sin6_family = AF_INET6;
+        sin6->sin6_port = htons(ports.p[j]);
+        memcpy(sin6->sin6_addr.s6_addr, ips.p[i].v6, 16);
+      } else {
+        sin4->sin_family = AF_INET;
+        sin4->sin_port = htons(ports.p[j]);
+        sin4->sin_addr.s_addr = htonl(ips.p[i].v4);
+      }
+      if ((servers.p[n].fd = GoodSocket(family, SOCK_STREAM | SOCK_CLOEXEC,
                                         IPPROTO_TCP, true, &timeout)) == -1) {
         DIEF("(srvr) socket: %m");
       }
+      if (family == AF_INET6) {
+        int opt = 1;
+        if (setsockopt(servers.p[n].fd, IPPROTO_IPV6, IPV6_V6ONLY, &opt,
+                       sizeof(opt)) == -1) {
+          DIEF("(srvr) setsockopt(IPV6_V6ONLY): %m");
+        }
+      }
       if (hasonserverlisten &&
-          LuaOnServerListen(servers.p[n].fd, ips.p[i], ports.p[j])) {
+          LuaOnServerListen(servers.p[n].fd, &ips.p[i], ports.p[j])) {
         close(servers.p[n].fd);
         n--;  // skip this server instance
         continue;
@@ -6855,9 +7091,13 @@ static void Listen(void) {
       int attempt;
       bool bind_success = false;
       for (attempt = 0; attempt < max_attempts; attempt++) {
-        servers.p[n].addr.sin_port = htons(ports.p[j]);
+        if (family == AF_INET6) {
+          sin6->sin6_port = htons(ports.p[j]);
+        } else {
+          sin4->sin_port = htons(ports.p[j]);
+        }
         if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
-                 sizeof(servers.p[n].addr)) == 0) {
+                 family == AF_INET6 ? sizeof(*sin6) : sizeof(*sin4)) == 0) {
           bind_success = true;
           break;
         }
@@ -6870,28 +7110,27 @@ static void Listen(void) {
       }
       if (!bind_success) {
         if (errno == EADDRINUSE) {
-          DIEF("(srvr) bind error: Port %hu is already in use on %hhu.%hhu.%hhu.%hhu\n"
+          DIEF("(srvr) bind error: Port %hu is already in use on %s\n"
                "       Try a different port with: redbean -p <port>",
-               ports.p[j], ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i]);
+               ports.p[j], FormatIp(ipstr, &ips.p[i]));
         } else {
-          DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
-               ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
+          DescribeAddress(addrstr, &ips.p[i], ports.p[j]);
+          DIEF("(srvr) bind error: %m: %s", addrstr);
         }
       }
       if (listen(servers.p[n].fd, 10) == -1) {
         DIEF("(srvr) listen error: %m");
       }
-      addrsize = sizeof(servers.p[n].addr);
+      addrsize = family == AF_INET6 ? sizeof(*sin6) : sizeof(*sin4);
       if (getsockname(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
                       &addrsize) == -1) {
         DIEF("(srvr) getsockname error: %m");
       }
-      port = ntohs(servers.p[n].addr.sin_port);
-      ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
-      if (ip == INADDR_ANY)
-        ip = INADDR_LOOPBACK;
-      INFOF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
-            ip >> 8, ip, port);
+      SetIp(&bound, (const struct sockaddr *)&servers.p[n].addr);
+      port = GetSockPort((const struct sockaddr *)&servers.p[n].addr);
+      ReplaceUnspecifiedIp(&bound);
+      DescribeAddress(addrstr, &bound, port);
+      INFOF("(srvr) listen http://%s", addrstr);
       if (printport && !ports.p[j]) {
         printf("%d\r\n", port);
         fflush(stdout);
@@ -7003,6 +7242,36 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
   return -1;
 }
 
+static bool TlsRouteFindIp6(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl,
+                            const uint8_t ip6[16]) {
+  int i;
+  for (i = 0; i < certs.n; ++i) {
+    if (IsServerCert(certs.p + i, type) &&
+        (certs.p[i].cert->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME) &&
+        CertHasIp6(certs.p[i].cert, ip6)) {
+      CHECK_EQ(
+          0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
+      return true;
+    }
+  }
+  return false;
+}
+
+static int TlsRouteIp6(void *ctx, mbedtls_ssl_context *ssl,
+                       const unsigned char *host, size_t size) {
+  uint8_t ip6[16];
+  bool ok1, ok2;
+  if (ParseIp6((const char *)host, size, ip6)) {
+    return TlsRoute(ctx, ssl, host, size);
+  }
+  ok1 = TlsRouteFindIp6(MBEDTLS_PK_ECKEY, ssl, ip6);
+  ok2 = TlsRouteFindIp6(MBEDTLS_PK_RSA, ssl, ip6);
+  if (!ok1 && !ok2) {
+    return TlsRoute(ctx, ssl, host, size);
+  }
+  return 0;
+}
+
 static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
@@ -7046,7 +7315,7 @@ static void TlsInit(void) {
   sslinitialized = true;
 
   LoadCertificates();
-  mbedtls_ssl_conf_sni(&conf, TlsRoute, &certs);
+  mbedtls_ssl_conf_sni(&conf, TlsRouteIp6, &certs);
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
   mbedtls_ssl_conf_dbg(&confcli, TlsDebug, 0);
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);

@@ -747,7 +747,7 @@ function EscapeHtml(str) end
 ---@param path string?
 function LaunchBrowser(path) end
 
----@param ip uint32
+---@param ip uint32|string # IPv4 integer or 16-byte IPv6 string
 ---@return string # a string describing the IP address. This is currently Class A granular. It can tell you if traffic originated from private networks, ARIN, APNIC, DOD, etc.
 ---@nodiscard
 function CategorizeIp(ip) end
@@ -1141,18 +1141,22 @@ function Fetch(url, body) end
 ---@nodiscard rfc1123
 function FormatHttpDateTime(seconds) end
 
---- Turns integer like `0x01020304` into a string like `"1.2.3.4"`. See also
---- `ParseIp` for the inverse operation.
----@param uint32 integer
+--- Turns integer like `0x01020304` into a string like `"1.2.3.4"`. IPv6
+--- addresses are 16-byte binary strings and are formatted using RFC 5952
+--- notation. See also `ParseIp` for the inverse operation.
+---@param uint32 integer|string
 ---@return string
 ---@nodiscard
 function FormatIp(uint32) end
 
---- Returns client ip4 address and port, e.g. `0x01020304`,`31337` would represent
---- `1.2.3.4:31337`. This is the same as `GetClientAddr` except it will use the
---- ip:port from the `X-Forwarded-For` header, only if `IsPrivateIp` or
---- `IsPrivateIp` returns `true`.
----@return integer ip, integer port uint32 and uint16 respectively
+--- Returns client ip address and port, e.g. `0x01020304`,`31337` would represent
+--- `1.2.3.4:31337`. IPv6 addresses are returned as 16-byte binary strings. This
+--- is the same as `GetClientAddr` except it will use the ip:port from the
+--- `X-Forwarded-For` header, only if the client address is trusted. The header
+--- may contain an IPv4 address or an IPv6 address, optionally in brackets with a
+--- port.
+---@return integer|string ip uint32 or 16-byte IPv6 string
+---@return integer port uint16
 ---@nodiscard
 function GetRemoteAddr() end
 
@@ -1161,19 +1165,20 @@ function GetRemoteAddr() end
 --- returns an empty string during streaming.
 function GetResponseBody() end
 
---- Returns client socket ip4 address and port, e.g. `0x01020304,31337` would
---- represent `1.2.3.4:31337`. Please consider using `GetRemoteAddr` instead,
---- since the latter takes into consideration reverse proxy scenarios.
----@return uint32 ip uint32
+--- Returns client socket ip address and port, e.g. `0x01020304,31337` would
+--- represent `1.2.3.4:31337`. IPv6 addresses are returned as 16-byte binary
+--- strings. Please consider using `GetRemoteAddr` instead, since the latter
+--- takes into consideration reverse proxy scenarios.
+---@return uint32|string ip uint32 or 16-byte IPv6 string
 ---@return uint16 port uint16
 ---@nodiscard
 function GetClientAddr() end
 
 --- Returns address to which listening server socket is bound, e.g.
---- `0x01020304,8080` would represent `1.2.3.4:8080`. If `-p 0` was supplied as
---- the listening port, then the port in this string will be whatever number the
---- operating system assigned.
----@return uint32 ip uint32
+--- `0x01020304,8080` would represent `1.2.3.4:8080`. IPv6 addresses are returned
+--- as 16-byte binary strings. If `-p 0` was supplied as the listening port, then
+--- the port in this string will be whatever number the operating system assigned.
+---@return uint32|string ip uint32 or 16-byte IPv6 string
 ---@return uint16 port uint16
 ---@nodiscard
 function GetServerAddr() end
@@ -1364,14 +1369,14 @@ function HidePath(prefix) end
 ---@nodiscard
 function IsHiddenPath(path) end
 
----@param uint32 integer
+---@param uint32 integer|string # IPv4 integer or 16-byte IPv6 string
 ---@return boolean # `true` if IP address is not a private network (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) and is not localhost (`127.0.0.0/8`).
 --- Note: we intentionally regard TEST-NET IPs as public.
 ---@nodiscard
 function IsPublicIp(uint32) end
 
----@param uint32 integer
----@return boolean # `true` if IP address is part of a private network (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+---@param uint32 integer|string # IPv4 integer or 16-byte IPv6 string
+---@return boolean # `true` if IP address is part of a private network (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7).
 ---@nodiscard
 function IsPrivateIp(uint32) end
 
@@ -1379,8 +1384,8 @@ function IsPrivateIp(uint32) end
 ---@nodiscard
 function IsLoopbackClient() end
 
----@param uint32 integer
----@return boolean # true if IP address is part of the localhost network (127.0.0.0/8).
+---@param uint32 integer|string # IPv4 integer or 16-byte IPv6 string
+---@return boolean # true if IP address is part of the localhost network (127.0.0.0/8 or ::1).
 ---@nodiscard
 function IsLoopbackIp(uint32) end
 
@@ -1513,9 +1518,11 @@ function IsReasonablePath(str) end
 function EncodeUrl(url) end
 
 --- Converts IPv4 address string to integer, e.g. "1.2.3.4" → 0x01020304, or
---- returns -1 for invalid inputs. See also `FormatIp` for the inverse operation.
+--- returns -1 for invalid inputs. IPv6 addresses are returned as 16-byte
+--- binary strings, except IPv4-mapped addresses which are normalized to
+--- integers. See also `FormatIp` for the inverse operation.
 ---@param ip string
----@return integer ip
+---@return integer|string ip
 ---@nodiscard
 function ParseIp(ip) end
 
@@ -1612,10 +1619,11 @@ function GetCryptoHash(name, payload, key) end
 --- to set more than one address. If an integer is provided then it should be a
 --- word-encoded IPv4 address, such as the ones returned by `ResolveIp()`. If a
 --- string is provided, it will first be passed to ParseIp() to see if it's an
---- IPv4 address. If it isn't, then a HOSTS.TXT lookup is performed, with fallback
---- to the system-configured DNS resolution service. Please note that in MODE=tiny
---- the HOSTS.TXT and DNS resolution isn't included, and therefore an IP must be
---- provided.
+--- IPv4 address, then ParseIp6() for an IPv6 address, so an IPv6 listen address
+--- is passed as text, e.g. `ProgramAddr("::1")`. If it isn't either, then a
+--- HOSTS.TXT lookup is performed, with fallback to the system-configured DNS
+--- resolution service. Please note that in MODE=tiny the HOSTS.TXT and DNS
+--- resolution isn't included, and therefore an IP must be provided.
 ---@param ip integer
 ---@overload fun(host:string)
 function ProgramAddr(ip) end
@@ -2157,14 +2165,15 @@ function bin(int) end
 ---
 --- This function first checks if hostname is already an IP address, in which case
 --- it returns the result of `ParseIp`. Otherwise, it checks HOSTS.TXT on the local
---- system and returns the first IPv4 address associated with hostname. If no such
+--- system and returns the first address associated with hostname. If no such
 --- entry is found, a DNS lookup is performed using the system configured (e.g.
---- `/etc/resolv.conf`) DNS resolution service. If the service returns multiple IN
---- A records then only the first one is returned.
+--- `/etc/resolv.conf`) DNS resolution service. IPv4 A records are preferred; AAAA
+--- records are used only if no A record exists.
 ---
---- The returned address is word-encoded in host endian order. For example,
---- 1.2.3.4 is encoded as 0x01020304. The `FormatIp` function may be used to turn
---- this value back into a string.
+--- An IPv4 address is word-encoded in host endian order. For example, 1.2.3.4 is
+--- encoded as 0x01020304. An IPv6 address is returned as a 16-byte binary
+--- string. The `FormatIp` function may be used to turn these values back into
+--- strings.
 ---
 --- If no IP address could be found, then `nil` is returned alongside a string of
 --- unspecified format describing the error. Calls to this function may be wrapped
@@ -2178,13 +2187,15 @@ function ResolveIp(hostname) end
 --- Returns `true` if IP address is trustworthy.
 --- If the `ProgramTrustedIp()` function has NOT been called then redbean
 --- will consider the networks 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
---- and 192.168.0.0/16 to be trustworthy too. If `ProgramTrustedIp()` HAS
---- been called at some point earlier in your redbean's lifecycle, then
---- it'll trust the IPs and network subnets you specify instead.
+--- and 192.168.0.0/16 to be trustworthy too, as well as IPv6 loopback
+--- (::1/128) and private networks (fc00::/7). Link-local IPv6 addresses are
+--- never trusted by default. If `ProgramTrustedIp()` HAS been called at some
+--- point earlier in your redbean's lifecycle, then it'll trust only the IPs and
+--- network subnets you specify, for both address families.
 --- The network interface addresses used by the host machine are always
 --- considered trustworthy, e.g. 127.0.0.1. This may change soon, if we
 --- decide to export a `GetHostIps()` API which queries your NIC devices.
----@param ip integer
+---@param ip integer|string
 ---@return boolean
 function IsTrustedIp(ip) end
 
@@ -2212,9 +2223,13 @@ function IsTrustedIp(ip) end
 ---     ProgramTrustedIp(ParseIp("197.234.240.0"), 22);
 ---     ProgramTrustedIp(ParseIp("198.41.128.0"), 17);
 ---
+--- IPv6 networks are given as the 16-byte binary address returned by
+--- `ParseIp()`, with a prefix length in the range 0 to 128 (default 128), e.g.
+--- `ProgramTrustedIp(ParseIp("2001:db8::"), 32)`.
+---
 --- Although you might want consider trusting redbean's open source
 --- freedom embracing solution to DDOS protection instead!
----@param ip integer
+---@param ip integer|string
 ---@param cidr integer?
 function ProgramTrustedIp(ip, cidr) end
 
@@ -2247,9 +2262,11 @@ function ProgramTrustedIp(ip, cidr) end
 --- is called from the main server process, which is well before fork()
 --- or read() or any Lua code happens. redbean then takes action, based
 --- on the token count, which can be accept / reject / ignore / ban. If
---- redbean determines a ban is warrented, then 4-byte datagram is sent
---- to the unix domain socket `/var/run/blackhole.sock` which should be
---- operated using the blackholed program we distribute separately.
+--- redbean determines a ban is warrented, then a 4-byte (IPv4) or 16-byte
+--- (IPv6) datagram is sent to the unix domain socket
+--- `/var/run/blackhole.sock` which should be operated using the blackholed
+--- program we distribute separately. IPv6 clients are banned by their /64
+--- prefix, since a client controls that entire prefix.
 ---
 --- The trick redbean uses on Linux for example is insert rules in your
 --- raw prerouting table. redbean is very fast at the application layer
@@ -2317,12 +2334,14 @@ function ProgramTokenBucket(replenish, cidr, reject, ignore, ban) end
 --- The return value is the token count before the subtraction happened.
 --- No action is taken based on the count, since the caller will decide.
 ---
---- `ip` should be an IPv4 address and this defaults to `GetClientAddr()`,
---- although other interpretations of its meaning are possible.
+--- `ip` should be an IPv4 address or a 16-byte IPv6 address, and this defaults
+--- to `GetClientAddr()`. IPv6 addresses are hashed to a 32-bit key using their
+--- /64 prefix, since a client controls its whole /64. Other interpretations of
+--- its meaning are possible.
 ---
 --- Your token buckets are stored in shared memory so this can be called
 --- from multiple forked processes. which operate on the same values.
----@param ip uint32?
+---@param ip uint32|string?
 ---@return int8
 function AcquireToken(ip) end
 
@@ -2331,9 +2350,10 @@ function AcquireToken(ip) end
 --- This function is the same as AcquireToken() except no subtraction is
 --- performed, i.e. no token is taken.
 ---
---- `ip` should be an IPv4 address and this defaults to GetClientAddr(),
---- although other interpretations of its meaning are possible.
----@param ip uint32?
+--- `ip` should be an IPv4 address or a 16-byte IPv6 address, and this defaults
+--- to GetClientAddr(). IPv6 addresses are keyed using their /64 prefix, just
+--- like AcquireToken(). Other interpretations of its meaning are possible.
+---@param ip uint32|string?
 ---@return int8
 function CountTokens(ip) end
 
@@ -2350,9 +2370,15 @@ function CountTokens(ip) end
 --- running, or if a lot of processes are sending messages to it and the
 --- operation would have blocked.
 ---
+--- The blackholed wire protocol carries both IPv4 and IPv6 addresses.
+--- Calling this function with an IPv6 address bans its /64 prefix, since a
+--- client controls that entire prefix.
+---
 --- It's assumed that the blackholed service is running locally in the
 --- background.
----@param ip uint32
+---@param ip uint32|string
+---@return boolean?
+---@return string? error
 function Blackhole(ip) end
 
 -- MODULES
@@ -3873,7 +3899,7 @@ function maxmind.open(filepath) end
 ---@class maxmind.Db
 maxmind.Db = {}
 
----@param ip uint32 IPv4 address as uint32
+---@param ip uint32|string IPv4 address as uint32 or 16-byte IPv6 string
 ---@return maxmind.Result? result
 ---@nodiscard
 function maxmind.Db:lookup(ip) end
@@ -6276,7 +6302,7 @@ function unix.socketpair(family, type, protocol) end
 ---  Further note that calling `unix.bind(sock)` is equivalent to not
 ---  calling bind() at all, since the above behavior is the default.
 ---@param fd integer
----@param ip? uint32
+---@param ip? uint32|string
 ---@param port? uint16
 ---@return true
 ---@overload fun(fd: integer, unixpath: string): true
@@ -6574,7 +6600,7 @@ function unix.listen(fd, backlog) end
 ---
 ---@param serverfd integer
 ---@param flags integer?
----@return integer clientfd, uint32 ip, uint16 port
+---@return integer clientfd, uint32|string ip, uint16 port
 ---@nodiscard
 ---@overload fun(serverfd:integer, flags:integer?):clientfd:integer, unixpath:string
 ---@overload fun(serverfd:integer, flags:integer?):nil, unix.Errno
@@ -6586,7 +6612,7 @@ function unix.accept(serverfd, flags) end
 ---  remembers the intended address so that `send()` or `write()` may be used
 ---  rather than `sendto()`.
 ---@param fd integer
----@param ip uint32
+---@param ip uint32|string
 ---@param port uint16
 ---@return true
 ---@overload fun(fd:integer, ip:integer, port:integer): nil, unix.Errno
@@ -6596,7 +6622,7 @@ function unix.connect(fd, ip, port) end
 
 --- Retrieves the local address of a socket.
 ---@param fd integer
----@return uint32 ip, uint16 port
+---@return uint32|string ip, uint16 port
 ---@nodiscard
 ---@overload fun(fd: integer): unixpath:string
 ---@overload fun(fd: integer): nil, unix.Errno
@@ -6608,7 +6634,7 @@ function unix.getsockname(fd) end
 --- empty string.
 ---
 ---@param fd integer
----@return uint32 ip, uint16 port
+---@return uint32|string ip, uint16 port
 ---@nodiscard
 ---@overload fun(fd: integer): unixpath:string
 ---@overload fun(fd: integer): nil, unix.Errno
@@ -6633,7 +6659,7 @@ function unix.recv(fd, bufsiz, flags) end
 --- - `MSG_DONTROUTE`
 --- - `MSG_PEEK`
 --- - `MSG_OOB`
----@return string data, integer ip, integer port
+---@return string data, integer|string ip, integer port
 ---@nodiscard
 ---@overload fun(fd: integer, bufsiz?: integer, flags?: integer): data: string, unixpath: string
 ---@overload fun(fd: integer, bufsiz?: integer, flags?: integer): nil, unix.Errno
@@ -6657,7 +6683,7 @@ function unix.send(fd, data, flags) end
 ---
 ---@param fd integer
 ---@param data string
----@param ip uint32
+---@param ip uint32|string
 ---@param port uint16
 ---@param flags? integer may have any combination (using bitwise OR) of:
 --- - `MSG_OOB`

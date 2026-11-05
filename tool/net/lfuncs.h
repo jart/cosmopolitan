@@ -94,6 +94,9 @@ int LuaUuidV4(lua_State *);
 int LuaUuidV7(lua_State *);
 int LuaVisualizeControlCodes(lua_State *);
 
+int LuaCheckIp(lua_State *, int, uint32_t *, uint8_t[16]);
+void LuaPushIp6(lua_State *, const uint8_t[16]);
+
 void LuaPushUrlView(lua_State *, struct UrlView *);
 char *FormatUnixHttpDateTime(char *, int64_t);
 
