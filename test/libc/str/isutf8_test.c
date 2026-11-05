@@ -39,6 +39,9 @@ TEST(isutf8, good) {
                      "剑号巨阙 珠称夜光 果珍李柰 菜重芥姜 海咸河淡 鳞潜羽翔"
                      "龙师火帝 鸟官人皇 始制文字 乃服衣裳 推位让国 有虞陶唐",
                      -1));
+  EXPECT_TRUE(isutf8("\xf4\x8f\xbf\xbf", -1));
+  EXPECT_TRUE(isutf8("\xed\x9f\xbf", -1));
+  EXPECT_TRUE(isutf8("\xee\x80\x80", -1));
 }
 
 TEST(isutf8, bad) {
@@ -46,6 +49,9 @@ TEST(isutf8, bad) {
   ASSERT_FALSE(isutf8("\200\300", -1));              // latin1 c1 control code
   ASSERT_FALSE(isutf8("\300\300", -1));              // missing continuation
   ASSERT_FALSE(isutf8("\377\200\200\200\200", -1));  // thompson-pike varint
+  ASSERT_FALSE(isutf8("\xf4\x90\x80\x80", -1));      // over limit
+  ASSERT_FALSE(isutf8("\xed\xa0\x80", -1));
+  ASSERT_FALSE(isutf8("\xed\xbf\xbf", -1));          // surrogate pairs
 }
 
 TEST(isutf8, oob) {
