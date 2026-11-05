@@ -105,11 +105,20 @@ TryAgain:
   }
 }
 
+textwindows static unsigned int sys_fork_nt_alloc_tls(void) {
+  unsigned int tls_index = __imp_TlsAlloc();
+  if (tls_index == kNtTlsOutOfIndexes)
+    AbortFork("sys_fork_nt_alloc_tls", NULL);
+  if (tls_index >= ARRAYLEN((struct NtTeb){}.TlsSlots))
+    AbortFork("sys_fork_nt_alloc_tls", TlsGetValue(tls_index));
+  return tls_index;
+}
+
 textwindows static void sys_fork_nt_child(void) {
 
   // setup runtime
   __klog_handle = 0;
-  __tls_index = __imp_TlsAlloc();
+  __tls_index = sys_fork_nt_alloc_tls();
   __set_tls_win32(__winmain_tib);
   __tls_enabled = true;
 
