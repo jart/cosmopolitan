@@ -121,6 +121,7 @@ imp	'GetCurrentProcessorNumberEx'				GetCurrentProcessorNumberEx				kernel32	1
 imp	'GetCurrentThread'					GetCurrentThread					kernel32	0
 imp	'GetCurrentThreadId'					GetCurrentThreadId					kernel32	0
 imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				kernel32	1
+imp 	'GetDriveTypeA'						GetDriveTypeA						kernel32	1
 imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					kernel32	1
 imp	'GetEnvironmentVariable'				GetEnvironmentVariableW					kernel32	3
 imp	'GetExitCodeThread'					GetExitCodeThread					kernel32	2
@@ -241,6 +242,7 @@ imp	'ReadConsoleOutputCharacter'				ReadConsoleOutputCharacterW				kernel32	5
 imp	'ReadFile'						ReadFile						kernel32	5
 imp	'ReadFileEx'						ReadFileEx						kernel32	5
 imp	'ReadFileScatter'					ReadFileScatter						kernel32	5
+imp 	'ReadDirectoryChanges'					ReadDirectoryChangesW					kernel32	8
 imp	'RegisterWaitForSingleObject'				RegisterWaitForSingleObject				kernel32	6
 imp	'ReleaseMutex'						ReleaseMutex						kernel32	1
 imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	1
