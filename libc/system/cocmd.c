@@ -815,7 +815,7 @@ static int TryBuiltin(bool wantexec) {
     return Fake(_tr, wantexec);
   if (!strcmp(args[0], "sed"))
     return Fake(_sed, wantexec);
-  if (_weaken(_awk) && strcmp(args[0], "awk"))
+  if (_weaken(_awk) && !strcmp(args[0], "awk"))
     return Fake(_weaken(_awk), wantexec);
   if (_weaken(_curl) && !strcmp(args[0], "curl")) {
     return Fake(_weaken(_curl), wantexec);
