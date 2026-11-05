@@ -64,6 +64,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/serialize.h"
 #include "libc/sock/goodsocket.internal.h"
+#include "libc/sock/ifaddrs.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -273,6 +274,7 @@ struct DeflateGenerator {
 struct Ip {
   bool is6;
   uint32_t v4;
+  uint32_t scope;
   uint8_t v6[16];
 };
 
@@ -371,6 +373,7 @@ static void NormalizeIp(struct Ip *ip) {
   if (ip->is6 && (mapped = GetIpv4Mapped(ip->v6)) != -1) {
     ip->is6 = false;
     ip->v4 = mapped;
+    ip->scope = 0;
     bzero(ip->v6, sizeof(ip->v6));
   }
 }
@@ -379,6 +382,7 @@ static void SetIp(struct Ip *ip, const struct sockaddr *sa) {
   bzero(ip, sizeof(*ip));
   if (sa->sa_family == AF_INET6) {
     memcpy(ip->v6, ((const struct sockaddr_in6 *)sa)->sin6_addr.s6_addr, 16);
+    ip->scope = ((const struct sockaddr_in6 *)sa)->sin6_scope_id;
     ip->is6 = true;
     NormalizeIp(ip);
   } else {
@@ -791,16 +795,68 @@ static void ProgramSslTicketLifetime(long x) {
   sslticketlifetime = x;
 }
 
+static uint32_t GetZoneIndex(const char *name, const char *addr) {
+  struct ifaddrs *ifa, *ifp;
+  uint32_t scope = 0;
+  if (IsTiny())
+    FATALF("(cfg) error: ProgramAddr() needs a numeric zone in MODE=tiny: %s",
+           addr);
+  if (getifaddrs(&ifp) == -1)
+    FATALF("(cfg) error: getifaddrs: %m");
+  for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
+    if (ifa->ifa_name && !strcmp(ifa->ifa_name, name) && ifa->ifa_addr &&
+        ifa->ifa_addr->sa_family == AF_INET6) {
+      scope = ((const struct sockaddr_in6 *)ifa->ifa_addr)->sin6_scope_id;
+      if (scope)
+        break;
+    }
+  }
+  freeifaddrs(ifp);
+  if (!scope)
+    FATALF("(cfg) error: interface %`'s not found for IPv6 zone in addr: %s "
+           "(try the numeric scope id)",
+           name, addr);
+  return scope;
+}
+
+static uint32_t ParseZone(const char *zone, const char *addr) {
+  const char *p;
+  uint64_t scope = 0;
+  if (!*zone)
+    FATALF("(cfg) error: empty IPv6 zone in addr: %s", addr);
+  for (p = zone; *p; ++p) {
+    if (!isdigit(*p))
+      return GetZoneIndex(zone, addr);
+    if ((scope = scope * 10 + (*p - '0')) > UINT32_MAX)
+      FATALF("(cfg) error: IPv6 zone out of range in addr: %s", addr);
+  }
+  if (!scope)
+    FATALF("(cfg) error: IPv6 zone may not be zero in addr: %s", addr);
+  return scope;
+}
+
 static void ProgramAddr(const char *addr) {
   ssize_t rc;
   int64_t ip;
   struct Ip a;
+  const char *zone;
   bzero(&a, sizeof(a));
-  if ((ip = ParseIp(addr, -1)) != -1) {
+  if ((zone = strchr(addr, '%'))) {
+    a.is6 = true;
+    if (ParseIp6(addr, zone - addr, a.v6))
+      FATALF("(cfg) error: bad addr: %s", addr);
+    NormalizeIp(&a);
+    if (!IsLinkLocalIp6(a.v6))
+      FATALF("(cfg) error: IPv6 zone only allowed on link-local addr: %s",
+             addr);
+    a.scope = ParseZone(zone + 1, addr);
+  } else if ((ip = ParseIp(addr, -1)) != -1) {
     a.v4 = ip;
   } else if (!ParseIp6(addr, -1, a.v6)) {
     a.is6 = true;
     NormalizeIp(&a);
+    if (IsLinkLocalIp6(a.v6))
+      FATALF("(cfg) error: link-local IPv6 addr needs a zone: %s", addr);
   } else if (!IsTiny()) {
     struct addrinfo *ai = NULL;
     struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
@@ -948,7 +1004,11 @@ static bool IsTrustedIp(const struct Ip *ip) {
 static void DescribeAddress(char buf[64], const struct Ip *ip, uint16_t port) {
   char str[46];
   if (ip->is6) {
-    snprintf(buf, 64, "[%s]:%hu", FormatIp(str, ip), port);
+    if (ip->scope && IsLinkLocalIp6(ip->v6)) {
+      snprintf(buf, 64, "[%s%%25%u]:%hu", FormatIp(str, ip), ip->scope, port);
+    } else {
+      snprintf(buf, 64, "[%s]:%hu", FormatIp(str, ip), port);
+    }
   } else {
     snprintf(buf, 64, "%s:%hu", FormatIp(str, ip), port);
   }
@@ -2915,7 +2975,12 @@ static void LaunchBrowser(const char *path) {
   // assign a loopback address if no server or unknown server address
   ReplaceUnspecifiedIp(&addr);
   if (addr.is6) {
-    snprintf(host, sizeof(host), "[%s]", FormatIp(ipstr, &addr));
+    if (addr.scope && IsLinkLocalIp6(addr.v6)) {
+      snprintf(host, sizeof(host), "[%s%%25%u]", FormatIp(ipstr, &addr),
+               addr.scope);
+    } else {
+      snprintf(host, sizeof(host), "[%s]", FormatIp(ipstr, &addr));
+    }
   } else {
     snprintf(host, sizeof(host), "%s", FormatIp(ipstr, &addr));
   }
@@ -7063,6 +7128,7 @@ static void Listen(void) {
       if (family == AF_INET6) {
         sin6->sin6_family = AF_INET6;
         sin6->sin6_port = htons(ports.p[j]);
+        sin6->sin6_scope_id = ips.p[i].scope;
         memcpy(sin6->sin6_addr.s6_addr, ips.p[i].v6, 16);
       } else {
         sin4->sin_family = AF_INET;

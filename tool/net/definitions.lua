@@ -1620,10 +1620,13 @@ function GetCryptoHash(name, payload, key) end
 --- word-encoded IPv4 address, such as the ones returned by `ResolveIp()`. If a
 --- string is provided, it will first be passed to ParseIp() to see if it's an
 --- IPv4 address, then ParseIp6() for an IPv6 address, so an IPv6 listen address
---- is passed as text, e.g. `ProgramAddr("::1")`. If it isn't either, then a
---- HOSTS.TXT lookup is performed, with fallback to the system-configured DNS
---- resolution service. Please note that in MODE=tiny the HOSTS.TXT and DNS
---- resolution isn't included, and therefore an IP must be provided.
+--- is passed as text, e.g. `ProgramAddr("::1")`. Link-local IPv6 addresses
+--- require a zone suffix naming the interface, e.g.
+--- `ProgramAddr("fe80::1%eth0")` or `ProgramAddr("fe80::1%2")`. Web browsers
+--- handle IPv6 zones poorly. If it isn't either, then a HOSTS.TXT lookup is
+--- performed, with fallback to the system-configured DNS resolution service.
+--- Please note that in MODE=tiny the HOSTS.TXT and DNS resolution isn't
+--- included, and therefore an IP must be provided.
 ---@param ip integer
 ---@overload fun(host:string)
 function ProgramAddr(ip) end

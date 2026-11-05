@@ -82,8 +82,9 @@ FLAGS
   --ftrace  enables function call tracing (see also -f)
 
   IPv6 listen addresses must be literal addresses, e.g. -l ::1. Link-local
-  addresses such as fe80:: aren't supported since they need a zone suffix,
-  and local IPv6 interfaces aren't discovered automatically.
+  addresses require a zone suffix naming the interface, e.g. -l fe80::1%eth0
+  or -l fe80::1%2. Web browsers handle IPv6 zones poorly, so prefer a global
+  address when possible.
 
 KEYBOARD
 
@@ -1494,9 +1495,12 @@ FUNCTIONS
           as the ones returned by ResolveIp(). If a string is provided,
           it will first be passed to ParseIp() to see if it's an IPv4
           address, then ParseIp6() for an IPv6 address, so an IPv6 listen
-          address is passed as text, e.g. ProgramAddr("::1"). If it isn't
-          either, then a HOSTS.TXT lookup is performed, with fallback to
-          the system-configured DNS resolution service. Please note that
+          address is passed as text, e.g. ProgramAddr("::1"). Link-local
+          IPv6 addresses require a zone suffix naming the interface, e.g.
+          ProgramAddr("fe80::1%eth0") or ProgramAddr("fe80::1%2"). Web
+          browsers handle IPv6 zones poorly. If it isn't either, then a
+          HOSTS.TXT lookup is performed, with fallback to the
+          system-configured DNS resolution service. Please note that
           in MODE=tiny the HOSTS.TXT and DNS resolution isn't included,
           and therefore an IP must be provided.
 
