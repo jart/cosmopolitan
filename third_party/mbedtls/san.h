@@ -3,11 +3,22 @@
 #include "third_party/mbedtls/x509_crt.h"
 COSMOPOLITAN_C_START_
 
+/**
+ * Internal tag for an IPv6 subject alternative name.
+ *
+ * This is not an ASN.1 SAN type; san.c encodes it as
+ * MBEDTLS_X509_SAN_IP_ADDRESS. It exists because existing callers set only
+ * `tag` and `ip4` on freshly reallocated entries, so an `iplen` field would
+ * be left indeterminate. Keeping the length in the tag avoids that.
+ */
+#define MBEDTLS_X509_SAN_IP6_ADDRESS_INTERNAL 9
+
 struct mbedtls_san {
   int tag;
   union {
     const char *val;
     uint32_t ip4;
+    uint8_t ip6[16];
   };
 };
 
