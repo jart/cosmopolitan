@@ -202,6 +202,7 @@ bool32 IsAcceptableHost(const char *, size_t) libcesque;
 bool32 IsAcceptablePort(const char *, size_t) libcesque;
 bool32 IsReasonablePath(const char *, size_t) libcesque;
 int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *) libcesque;
+int ParseForwarded6(const char *, size_t, uint8_t[16], uint16_t *) libcesque;
 bool32 IsMimeType(const char *, size_t, const char *) libcesque;
 ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *) libcesque;
 const char *FindContentType(const char *, size_t) libcesque;

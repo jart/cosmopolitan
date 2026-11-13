@@ -148,10 +148,83 @@ function UnixTest()
 
 end
 
+function Ipv6Test()
+   -- 1. reject addresses that aren't 16 binary bytes
+   -- 2. bind ::1 on a tcp socket
+   -- 3. learn the ephemeral port with getsockname
+   -- 4. connect and accept
+   -- 5. exchange data
+   local loopback = ("\0"):rep(15) .. "\1"
+   local zeros6 = ("\0"):rep(16)
+   local ok6, server6 = pcall(unix.socket, unix.AF_INET6, unix.SOCK_STREAM)
+   if ok6 and server6 then
+      local ok, err = unix.bind(server6, "short")
+      assert(not ok)
+      assert(err:errno() == unix.EINVAL)
+      ok, err = unix.bind(server6, 1, 0)
+      assert(not ok)
+      assert(err:errno() == unix.EINVAL)
+      ok, err = unix.bind(server6, loopback, 0)
+      if not ok then
+         unix.close(server6)
+         server6 = nil
+      end
+   end
+   if server6 then
+      local boundip, boundport = assert(unix.getsockname(server6))
+      assert(boundip == loopback)
+      assert(boundport ~= 0)
+      assert(unix.listen(server6))
+      local client6 = assert(unix.socket(unix.AF_INET6, unix.SOCK_STREAM))
+      assert(unix.connect(client6, loopback, boundport))
+      local accepted, peerip, peerport = assert(unix.accept(server6))
+      assert(peerip == loopback)
+      assert(peerport ~= 0)
+      assert(unix.write(client6, "hello ipv6"))
+      assert(unix.read(accepted, 10) == "hello ipv6")
+      assert(unix.close(accepted))
+      assert(unix.close(client6))
+      assert(unix.close(server6))
+
+      -- bind without an ip on an ipv6 socket means ::
+      local wildcard6 = assert(unix.socket(unix.AF_INET6, unix.SOCK_DGRAM))
+      assert(unix.bind(wildcard6))
+      local anyip = assert(unix.getsockname(wildcard6))
+      assert(anyip == zeros6)
+      assert(unix.close(wildcard6))
+
+      -- ipv6 socket options
+      local optsock = assert(unix.socket(unix.AF_INET6, unix.SOCK_STREAM))
+      assert(unix.setsockopt(optsock, unix.IPPROTO_IPV6, unix.IPV6_V6ONLY, true))
+      assert(unix.getsockopt(optsock, unix.IPPROTO_IPV6, unix.IPV6_V6ONLY) ~= 0)
+      assert(unix.close(optsock))
+
+      -- udp sendto / recvfrom
+      local udp6 = assert(unix.socket(unix.AF_INET6, unix.SOCK_DGRAM))
+      assert(unix.bind(udp6, loopback, 0))
+      local udpip, udpport = assert(unix.getsockname(udp6))
+      assert(udpip == loopback)
+      assert(unix.sendto(udp6, "ping6", loopback, udpport))
+      local data, fromip = assert(unix.recvfrom(udp6, 1500))
+      assert(data == "ping6")
+      assert(fromip == loopback)
+      assert(unix.close(udp6))
+   else
+      print("ipv6 loopback unavailable")
+   end
+end
+
 function main()
    assert(unix.makedirs(tmpdir))
    unix.unveil(tmpdir, "rwc")
    unix.unveil(nil, nil)
+   -- getsockopt(IPV6_V6ONLY) isn't allowed by the inet pledge, so run these
+   -- tests before restricting the process
+   local ok, err = pcall(Ipv6Test)
+   if not ok then
+      print(err)
+      error('Ipv6Test failed (%s)' % {tmpdir})
+   end
    assert(unix.pledge("stdio rpath wpath cpath proc"))
    ok, err = pcall(UnixTest)
    if ok then

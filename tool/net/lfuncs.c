@@ -44,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/highwayhash64.h"
 #include "libc/str/str.h"
@@ -245,42 +246,107 @@ int LuaGetHostIsa(lua_State *L) {
   return 1;
 }
 
+/**
+ * Reads an IP address from Lua stack index `i`.
+ *
+ * @return AF_INET and stores `*v4`, or AF_INET6 and stores 16 bytes in
+ *     `v6`; IPv4-mapped addresses are normalized to AF_INET
+ */
+int LuaCheckIp(lua_State *L, int i, uint32_t *v4, uint8_t v6[16]) {
+  int64_t mapped;
+  size_t n;
+  const char *s;
+  if (lua_type(L, i) == LUA_TSTRING) {
+    s = lua_tolstring(L, i, &n);
+    if (n == 16) {
+      if ((mapped = GetIpv4Mapped((const uint8_t *)s)) != -1) {
+        *v4 = mapped;
+        return AF_INET;
+      }
+      memcpy(v6, s, 16);
+      return AF_INET6;
+    }
+  }
+  *v4 = luaL_checkinteger(L, i);
+  return AF_INET;
+}
+
+/**
+ * Pushes an IPv6 address using the Lua IP representation.
+ *
+ * IPv4-mapped addresses are pushed as integers.
+ */
+void LuaPushIp6(lua_State *L, const uint8_t v6[16]) {
+  int64_t mapped;
+  if ((mapped = GetIpv4Mapped(v6)) != -1) {
+    lua_pushinteger(L, mapped);
+  } else {
+    lua_pushlstring(L, (const char *)v6, 16);
+  }
+}
+
 int LuaFormatIp(lua_State *L) {
-  char b[16];
+  char b[46];
   uint32_t ip;
-  ip = htonl(luaL_checkinteger(L, 1));
-  inet_ntop(AF_INET, &ip, b, sizeof(b));
+  uint8_t v6[16];
+  if (LuaCheckIp(L, 1, &ip, v6) == AF_INET6) {
+    inet_ntop(AF_INET6, v6, b, sizeof(b));
+  } else {
+    ip = htonl(ip);
+    inet_ntop(AF_INET, &ip, b, sizeof(b));
+  }
   lua_pushstring(L, b);
   return 1;
 }
 
 int LuaParseIp(lua_State *L) {
+  int64_t ip;
   size_t n;
+  uint8_t v6[16];
   const char *s;
   s = luaL_checklstring(L, 1, &n);
-  lua_pushinteger(L, ParseIp(s, n));
+  if ((ip = ParseIp(s, n)) != -1) {
+    lua_pushinteger(L, ip);
+  } else if (!ParseIp6(s, n, v6)) {
+    LuaPushIp6(L, v6);
+  } else {
+    lua_pushinteger(L, -1);
+  }
   return 1;
 }
 
-static int LuaIsIp(lua_State *L, bool IsIp(uint32_t)) {
-  lua_pushboolean(L, IsIp(luaL_checkinteger(L, 1)));
+static int LuaIsIp(lua_State *L, bool IsIp(uint32_t),
+                   bool IsIp6(const uint8_t[16])) {
+  uint32_t v4;
+  uint8_t v6[16];
+  if (LuaCheckIp(L, 1, &v4, v6) == AF_INET6) {
+    lua_pushboolean(L, IsIp6(v6));
+  } else {
+    lua_pushboolean(L, IsIp(v4));
+  }
   return 1;
 }
 
 int LuaIsPublicIp(lua_State *L) {
-  return LuaIsIp(L, IsPublicIp);
+  return LuaIsIp(L, IsPublicIp, IsPublicIp6);
 }
 
 int LuaIsPrivateIp(lua_State *L) {
-  return LuaIsIp(L, IsPrivateIp);
+  return LuaIsIp(L, IsPrivateIp, IsPrivateIp6);
 }
 
 int LuaIsLoopbackIp(lua_State *L) {
-  return LuaIsIp(L, IsLoopbackIp);
+  return LuaIsIp(L, IsLoopbackIp, IsLoopbackIp6);
 }
 
 int LuaCategorizeIp(lua_State *L) {
-  lua_pushstring(L, GetIpCategoryName(CategorizeIp(luaL_checkinteger(L, 1))));
+  uint32_t v4;
+  uint8_t v6[16];
+  if (LuaCheckIp(L, 1, &v4, v6) == AF_INET6) {
+    lua_pushstring(L, GetIpCategoryName(CategorizeIp6(v6)));
+  } else {
+    lua_pushstring(L, GetIpCategoryName(CategorizeIp(v4)));
+  }
   return 1;
 }
 
@@ -562,6 +628,7 @@ int LuaBarf(lua_State *L) {
 int LuaResolveIp(lua_State *L) {
   ssize_t rc;
   int64_t ip;
+  uint8_t v6[16];
   const char *host;
   struct addrinfo *ai = NULL;
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
@@ -569,16 +636,28 @@ int LuaResolveIp(lua_State *L) {
   if ((ip = ParseIp(host, -1)) != -1) {
     lua_pushinteger(L, ip);
     return 1;
-  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == 0) {
-    lua_pushinteger(
-        L, ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr));
-    freeaddrinfo(ai);
+  }
+  if (!ParseIp6(host, -1, v6)) {
+    LuaPushIp6(L, v6);
     return 1;
-  } else {
+  }
+  if ((rc = getaddrinfo(host, "0", &hint, &ai)) != 0) {
+    hint.ai_family = AF_INET6;
+    rc = getaddrinfo(host, "0", &hint, &ai);
+  }
+  if (rc) {
     lua_pushnil(L);
     lua_pushfstring(L, "%s: DNS lookup failed: EAI_%s", host, gai_strerror(rc));
     return 2;
   }
+  if (ai->ai_family == AF_INET6) {
+    LuaPushIp6(L, ((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr.s6_addr);
+  } else {
+    lua_pushinteger(
+        L, ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr));
+  }
+  freeaddrinfo(ai);
+  return 1;
 }
 
 static int LuaCheckControlFlags(lua_State *L, int idx) {

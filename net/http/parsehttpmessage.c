@@ -140,9 +140,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           ch = kToUpper[ch];
           r->method |= (uint64_t)ch << r->a;
           r->a += 8;
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateUri:
@@ -163,9 +163,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           } else if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateVersion:
@@ -204,9 +204,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           } else {
             return ebadmsg();
           }
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateMessage:
@@ -219,9 +219,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           } else if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateCr:
@@ -252,9 +252,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           } else if (!kHttpToken[ch]) {
             return ebadmsg();
           }
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateColon:
@@ -302,9 +302,9 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n, size_t c) {
           } else if ((ch < 0x20 && ch != '\t') || (0x7F <= ch && ch < 0xA0)) {
             return ebadmsg();
           }
-          if (++r->i == n)
+          if (r->i + 1 == n)
             break;
-          ch = p[r->i] & 255;
+          ch = p[++r->i] & 255;
         }
         break;
       case kHttpStateLf2:

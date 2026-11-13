@@ -70,7 +70,7 @@ FLAGS
   -M INT    tunes max message payload size    [def. 65536]
   -t INT    timeout ms or keepalive sec if <0 [def. 60000]
   -p PORT   listen port                       [def. 8080; repeatable]
-  -l ADDR   listen addr                       [def. 0.0.0.0; repeatable]
+  -l ADDR   listen addr (v4 or v6)            [def. 0.0.0.0; repeatable]
   -c SEC    configures static cache-control
   -W TTY    use tty path to monitor memory pages
   -L PATH   log file location
@@ -80,6 +80,11 @@ FLAGS
   -w PATH   launch browser on startup
   --strace  enables system call tracing (see also -Z)
   --ftrace  enables function call tracing (see also -f)
+
+  IPv6 listen addresses must be literal addresses, e.g. -l ::1. Link-local
+  addresses require a zone suffix naming the interface, e.g. -l fe80::1%eth0
+  or -l fe80::1%2. Web browsers handle IPv6 zones poorly, so prefer a global
+  address when possible.
 
 KEYBOARD
 
@@ -721,10 +726,11 @@ FUNCTIONS
           with EscapePath if needed, as it's not escaped automatically.
           This function may be called from /.init.lua.
 
-  CategorizeIp(ip:uint32) → str
-          Returns a string describing an IP address. This is currently Class
-          A granular. It can tell you if traffic originated from private
-          networks, ARIN, APNIC, DOD, etc.
+  CategorizeIp(ip:uint32|str) → str
+          Returns a string describing an IP address. IPv6 addresses are
+          16-byte binary strings. This is currently Class A granular. It can
+          tell you if traffic originated from private networks, ARIN, APNIC,
+          DOD, etc.
 
   DecodeLatin1(iso-8859-1:str) → utf-8:str
           Turns ISO-8859-1 string into UTF-8.
@@ -1104,9 +1110,10 @@ FUNCTIONS
           Converts UNIX timestamp to an RFC1123 string that looks like this:
           Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
 
-  FormatIp(uint32) → str
-          Turns integer like 0x01020304 into a string like 1.2.3.4. See also
-          ParseIp for the inverse operation.
+  FormatIp(uint32|str) → str
+          Turns integer like 0x01020304 into a string like 1.2.3.4. IPv6
+          addresses are 16-byte binary strings and are formatted using RFC
+          5952 notation. See also ParseIp for the inverse operation.
 
   GetAssetComment(path:str) → str
           Returns comment text associated with asset in the ZIP central
@@ -1159,16 +1166,19 @@ FUNCTIONS
             true
 
   GetRemoteAddr()
-      ├─→ ip:uint32,port:uint16
+      ├─→ ip:uint32|str,port:uint16
       └─→ nil
-          Returns client ip4 address and port, e.g. 0x01020304,31337 would
-          represent 1.2.3.4:31337. This is the same as GetClientAddr except
-          it will use the ip:port from the X-Forwarded-For header when the
-          IP returned by GetClientAddr is a trusted IP (returns true when
+          Returns client ip address and port, e.g. 0x01020304,31337 would
+          represent 1.2.3.4:31337. IPv6 addresses are returned as 16-byte
+          binary strings. This is the same as GetClientAddr except it will
+          use the ip:port from the X-Forwarded-For header when the IP
+          returned by GetClientAddr is a trusted IP (returns true when
           checked against IsTrustedIp). When multiple addresses are present
-          in the header, the last/right-most address is used.
-          Returns `nil` if the address doesn't parse as IPv4 value (e.g.
-          because it is misformatted or an IPv6 address).
+          in the header, the last/right-most address is used. The header may
+          contain either an IPv4 address or an IPv6 address, optionally in
+          brackets with a port.
+          Returns `nil` if the address doesn't parse as an IP value (e.g.
+          because it is misformatted).
 
   GetResponseBody()
       ├─→ body:str
@@ -1178,11 +1188,11 @@ FUNCTIONS
           streaming, as the full content may not be known at the call time.
           Returns an error when decompression fails.
 
-  GetClientAddr() → ip:uint32,port:uint16
-          Returns client socket ip4 address and port, e.g. 0x01020304,31337
-          would represent 1.2.3.4:31337. Please consider using GetRemoteAddr
-          instead, since the latter takes into consideration reverse proxy
-          scenarios.
+  GetClientAddr() → ip:uint32|str,port:uint16
+          Returns client socket ip address and port, e.g. 0x01020304,31337
+          would represent 1.2.3.4:31337. IPv6 addresses are returned as
+          16-byte binary strings. Please consider using GetRemoteAddr instead,
+          since the latter takes into consideration reverse proxy scenarios.
 
   GetClientFd() → int
           Returns file descriptor being used for client connection.
@@ -1193,11 +1203,12 @@ FUNCTIONS
           the MbedTLS security layer. This is an important thing to
           consider if a script is taking control of GetClientFd()
 
-  GetServerAddr() → ip:uint32,port:uint16
+  GetServerAddr() → ip:uint32|str,port:uint16
           Returns address to which listening server socket is bound, e.g.
-          0x01020304,8080 would represent 1.2.3.4:8080. If -p 0 was supplied
-          as the listening port, then the port in this string will be
-          whatever number the operating system assigned.
+          0x01020304,8080 would represent 1.2.3.4:8080. IPv6 addresses are
+          returned as 16-byte binary strings. If -p 0 was supplied as the
+          listening port, then the port in this string will be whatever
+          number the operating system assigned.
 
   GetDate() → seconds:int
           Returns date associated with request that's used to generate the
@@ -1355,18 +1366,20 @@ FUNCTIONS
   IsHiddenPath(path:str) → bool
           Returns true if the prefix of the given path is set with HidePath.
 
-  IsPublicIp(uint32) → bool
+  IsPublicIp(uint32|str) → bool
           Returns true if IP address is not a private network (10.0.0.0/8,
           172.16.0.0/12, 192.168.0.0/16) and is not localhost (127.0.0.0/8).
-          Note: we intentionally regard TEST-NET IPs as public.
+          IPv6 addresses are 16-byte binary strings. Note: we intentionally
+          regard TEST-NET IPs as public.
 
-  IsPrivateIp(uint32) → bool
+  IsPrivateIp(uint32|str) → bool
           Returns true if IP address is part of a private network
-          (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+          (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7). IPv6
+          addresses are 16-byte binary strings.
 
-  IsLoopbackIp(uint32) → bool
+  IsLoopbackIp(uint32|str) → bool
           Returns true if IP address is part of the localhost network
-          (127.0.0.0/8).
+          (127.0.0.0/8 or ::1). IPv6 addresses are 16-byte binary strings.
 
   IsAssetCompressed(path:str) → bool
           Returns true if ZIP artifact at path is stored on disk using
@@ -1467,10 +1480,12 @@ FUNCTIONS
           many URI parsers won't understand things like an unescaped
           question mark in path.
 
-  ParseIp(str) → int
+  ParseIp(str) → int|str
           Converts IPv4 address string to integer, e.g. "1.2.3.4" →
-          0x01020304, or returns -1 for invalid inputs. See also FormatIp
-          for the inverse operation.
+          0x01020304, or returns -1 for invalid inputs. IPv6 addresses are
+          returned as 16-byte binary strings, except IPv4-mapped addresses
+          which are normalized to integers. See also FormatIp for the
+          inverse operation.
 
   ProgramAddr(ip:int)
   ProgramAddr(host:str)
@@ -1479,10 +1494,15 @@ FUNCTIONS
           provided then it should be a word-encoded IPv4 address, such
           as the ones returned by ResolveIp(). If a string is provided,
           it will first be passed to ParseIp() to see if it's an IPv4
-          address. If it isn't, then a HOSTS.TXT lookup is performed,
-          with fallback to the system-configured DNS resolution service.
-          Please note that in MODE=tiny the HOSTS.TXT and DNS resolution
-          isn't included, and therefore an IP must be provided.
+          address, then ParseIp6() for an IPv6 address, so an IPv6 listen
+          address is passed as text, e.g. ProgramAddr("::1"). Link-local
+          IPv6 addresses require a zone suffix naming the interface, e.g.
+          ProgramAddr("fe80::1%eth0") or ProgramAddr("fe80::1%2"). Web
+          browsers handle IPv6 zones poorly. If it isn't either, then a
+          HOSTS.TXT lookup is performed, with fallback to the
+          system-configured DNS resolution service. Please note that
+          in MODE=tiny the HOSTS.TXT and DNS resolution isn't included,
+          and therefore an IP must be provided.
 
   ProgramBrand(str)
           Changes HTTP Server header, as well as the <h1> title on the /
@@ -1934,43 +1954,47 @@ FUNCTIONS
     currently modulo 2^64. Negative numbers are converted to unsigned.
 
   ResolveIp(hostname:str)
-      ├─→ ip:uint32
+      ├─→ ip:uint32|str
       └─→ nil, error:str
 
     Gets IP address associated with hostname.
 
     This function first checks if hostname is already an IP address, in
     which case it returns the result of `ParseIp`. Otherwise, it checks
-    HOSTS.TXT on the local system and returns the first IPv4 address
-    associated with hostname. If no such entry is found, a DNS lookup is
-    performed using the system configured (e.g. /etc/resolv.conf) DNS
-    resolution service. If the service returns multiple IN A records
-    then only the first one is returned.
+    HOSTS.TXT on the local system and returns the first address associated
+    with hostname. If no such entry is found, a DNS lookup is performed
+    using the system configured (e.g. /etc/resolv.conf) DNS resolution
+    service. IPv4 A records are preferred; AAAA records are used only if
+    no A record exists.
 
-    The returned address is word-encoded in host endian order. For
-    example, 1.2.3.4 is encoded as 0x01020304. The `FormatIp` function
-    may be used to turn this value back into a string.
+    An IPv4 address is word-encoded in host endian order. For example,
+    1.2.3.4 is encoded as 0x01020304. An IPv6 address is returned as a
+    16-byte binary string. The `FormatIp` function may be used to turn
+    these values back into strings.
 
     If no IP address could be found, then nil is returned alongside a
     string of unspecified format describing the error. Calls to this
     function may be wrapped in assert() if an exception is desired.
 
-  IsTrustedIp(ip:int)
+  IsTrustedIp(ip:int|str)
       └─→ bool
 
     Returns true if IP address is trustworthy.
 
     If the ProgramTrustedIp() function has NOT been called then redbean
     will consider the networks 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
-    and 192.168.0.0/16 to be trustworthy too. If ProgramTrustedIp() HAS
-    been called at some point earlier in your redbean's lifecycle, then
-    it'll trust the IPs and network subnets you specify instead.
+    and 192.168.0.0/16 to be trustworthy too, as well as IPv6 loopback
+    (::1/128) and private networks (fc00::/7). Link-local IPv6 addresses
+    are never trusted by default. If ProgramTrustedIp() HAS been called
+    at some point earlier in your redbean's lifecycle, then it'll trust
+    only the IPs and network subnets you specify, for both address
+    families.
 
     The network interface addresses used by the host machine are always
     considered trustworthy, e.g. 127.0.0.1. This may change soon, if we
     decide to export a GetHostIps() API which queries your NIC devices.
 
-  ProgramTrustedIp(ip:int[, cidr:int])
+  ProgramTrustedIp(ip:int|str[, cidr:int])
 
     Trusts an IP address or network.
 
@@ -1996,6 +2020,10 @@ FUNCTIONS
         ProgramTrustedIp(ParseIp("190.93.240.0"), 20);
         ProgramTrustedIp(ParseIp("197.234.240.0"), 22);
         ProgramTrustedIp(ParseIp("198.41.128.0"), 17);
+
+    IPv6 networks are given as the 16-byte binary address returned by
+    ParseIp(), with a prefix length in the range 0 to 128 (default 128),
+    e.g. ProgramTrustedIp(ParseIp("2001:db8::"), 32).
 
     Although you might want consider trusting redbean's open source
     freedom embracing solution to DDOS protection instead!
@@ -2032,9 +2060,12 @@ FUNCTIONS
     is called from the main server process, which is well before fork()
     or read() or any Lua code happens. redbean then takes action, based
     on the token count, which can be accept / reject / ignore / ban. If
-    redbean determines a ban is warrented, then 4-byte datagram is sent
-    to the unix domain socket `/var/run/blackhole.sock` which should be
-    operated using the blackholed program we distribute separately.
+    redbean determines a ban is warrented, then a 4-byte (IPv4) or
+    16-byte (IPv6) datagram is sent to the unix domain socket
+    `/var/run/blackhole.sock` which should be operated using the
+    blackholed program we distribute separately. IPv6 clients are
+    banned by their /64 prefix, since a client controls that entire
+    prefix.
 
     The trick redbean uses on Linux for example is insert rules in your
     raw prerouting table. redbean is very fast at the application layer
@@ -2090,7 +2121,7 @@ FUNCTIONS
 
     This feature is not available in unsecure mode.
 
-  AcquireToken([ip:uint32])
+  AcquireToken([ip:uint32|str])
       └─→ int8
 
     Atomically acquires token.
@@ -2099,13 +2130,15 @@ FUNCTIONS
     The return value is the token count before the subtraction happened.
     No action is taken based on the count, since the caller will decide.
 
-    `ip` should be an IPv4 address and this defaults to GetClientAddr(),
-    although other interpretations of its meaning are possible.
+    `ip` should be an IPv4 address or a 16-byte IPv6 address, and this
+    defaults to GetClientAddr(). IPv6 addresses are hashed to a 32-bit
+    key using their /64 prefix, since a client controls its whole /64.
+    Other interpretations of its meaning are possible.
 
     Your token buckets are stored in shared memory so this can be called
     from multiple forked processes. which operate on the same values.
 
-  CountTokens([ip:uint32])
+  CountTokens([ip:uint32|str])
       └─→ int8
 
     Counts number of tokens in bucket.
@@ -2113,11 +2146,14 @@ FUNCTIONS
     This function is the same as AcquireToken() except no subtraction is
     performed, i.e. no token is taken.
 
-    `ip` should be an IPv4 address and this defaults to GetClientAddr(),
-    although other interpretations of its meaning are possible.
+    `ip` should be an IPv4 address or a 16-byte IPv6 address, and this
+    defaults to GetClientAddr(). IPv6 addresses are keyed using their
+    /64 prefix, just like AcquireToken(). Other interpretations of its
+    meaning are possible.
 
-  Blackhole(ip:uint32)
+  Blackhole(ip:uint32|str)
       └─→ bool
+      └─→ nil, error:str
 
     Sends IP address to blackholed service.
 
@@ -2131,6 +2167,10 @@ FUNCTIONS
     Otherwise false is returned, which can happen if blackholed isn't
     running, or if a lot of processes are sending messages to it and the
     operation would have blocked.
+
+    The blackholed wire protocol carries both IPv4 and IPv6 addresses.
+    Calling this function with an IPv6 address bans its /64 prefix,
+    since a client controls that entire prefix.
 
     It's assumed that the blackholed service is running locally in the
     background.
@@ -3842,7 +3882,7 @@ UNIX MODULE
 
     `protocol` defaults to `0`.
 
-  unix.bind(fd:int[, ip:uint32, port:uint16])
+  unix.bind(fd:int[, ip:uint32|str, port:uint16])
   unix.bind(fd:int[, unixpath:str])
       ├─→ true
       └─→ nil, unix.Errno
@@ -3870,6 +3910,9 @@ UNIX MODULE
            print("got client ip", FormatIp(clientip), "port", clientport)
            unix.close(client)
         end
+
+    An IPv6 address is a 16-byte binary string, which is distinguished
+    from an `AF_UNIX` path by the family of the socket being bound.
 
     Further note that calling `unix.bind(sock)` is equivalent to not
     calling bind() at all, since the above behavior is the default.
@@ -4047,7 +4090,7 @@ UNIX MODULE
     Begins listening for incoming connections on a socket.
 
   unix.accept(serverfd:int[, flags:int])
-      ├─→ clientfd:int, ip:uint32, port:uint16
+      ├─→ clientfd:int, ip:uint32|str, port:uint16
       ├─→ clientfd:int, unixpath:str
       └─→ nil, unix.Errno
 
@@ -4058,7 +4101,7 @@ UNIX MODULE
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
 
-  unix.connect(fd:int, ip:uint32, port:uint16)
+  unix.connect(fd:int, ip:uint32|str, port:uint16)
   unix.connect(fd:int, unixpath:str)
       ├─→ true
       └─→ nil, unix.Errno
@@ -4070,14 +4113,14 @@ UNIX MODULE
     rather than sendto().
 
   unix.getsockname(fd:int)
-      ├─→ ip:uint32, port:uint16
+      ├─→ ip:uint32|str, port:uint16
       ├─→ unixpath:str
       └─→ nil, unix.Errno
 
     Retrieves the local address of a socket.
 
   unix.getpeername(fd:int)
-      ├─→ ip:uint32, port:uint16
+      ├─→ ip:uint32|str, port:uint16
       ├─→ unixpath:str
       └─→ nil, unix.Errno
 
@@ -4100,7 +4143,7 @@ UNIX MODULE
     - `MSG_OOB`
 
   unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
-      ├─→ data:str, ip:uint32, port:uint16
+      ├─→ data:str, ip:uint32|str, port:uint16
       ├─→ data:str, unixpath:str
       └─→ nil, unix.Errno
 
@@ -4127,7 +4170,7 @@ UNIX MODULE
     - `MSG_DONTROUTE`: Don't go through gateway (for diagnostics)
     - `MSG_MORE`: Manual corking to belay nodelay (0 on non-Linux)
 
-  unix.sendto(fd:int, data:str, ip:uint32, port:uint16[, flags:int])
+  unix.sendto(fd:int, data:str, ip:uint32|str, port:uint16[, flags:int])
   unix.sendto(fd:int, data:str, unixpath:str[, flags:int])
       ├─→ sent:int
       └─→ nil, unix.Errno

@@ -23,7 +23,10 @@
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/inet6.h"
 #include "libc/sysv/consts/s.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
@@ -1685,12 +1688,36 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
              */
             case MBEDTLS_X509_SAN_IP_ADDRESS:
             {
-                ret = mbedtls_snprintf( p, n, "\n%s    iPAddress : %hhu.%hhu.%hhu.%hhu",
-                                        prefix, san.san.ip>>24,
-                                        san.san.ip>>16,
-                                        san.san.ip>>8,
-                                        san.san.ip);
-                MBEDTLS_X509_SAFE_SNPRINTF;
+                if( cur->buf.len == 4 )
+                {
+                    ret = mbedtls_snprintf( p, n,
+                                            "\n%s    iPAddress : %hhu.%hhu.%hhu.%hhu",
+                                            prefix, cur->buf.p[0], cur->buf.p[1],
+                                            cur->buf.p[2], cur->buf.p[3] );
+                    MBEDTLS_X509_SAFE_SNPRINTF;
+                }
+                else if( cur->buf.len == 16 )
+                {
+                    char ip[INET6_ADDRSTRLEN];
+                    if( inet_ntop( AF_INET6, cur->buf.p, ip, sizeof( ip ) ) )
+                    {
+                        ret = mbedtls_snprintf( p, n, "\n%s    iPAddress : %s",
+                                                prefix, ip );
+                    }
+                    else
+                    {
+                        ret = mbedtls_snprintf( p, n, "\n%s    iPAddress : <invalid>",
+                                                prefix );
+                    }
+                    MBEDTLS_X509_SAFE_SNPRINTF;
+                }
+                else
+                {
+                    ret = mbedtls_snprintf( p, n,
+                                            "\n%s    iPAddress : <invalid length %u>",
+                                            prefix, (unsigned) cur->buf.len );
+                    MBEDTLS_X509_SAFE_SNPRINTF;
+                }
             }
             break;
             /*
@@ -1796,7 +1823,8 @@ int mbedtls_x509_parse_subject_alt_name( const mbedtls_x509_buf *san_buf,
         {
             mbedtls_platform_zeroize( san, sizeof( mbedtls_x509_subject_alternative_name ) );
             san->type = MBEDTLS_X509_SAN_IP_ADDRESS;
-            san->san.ip = READ32BE(san_buf->p);
+            if( san_buf->len == 4 )
+                san->san.ip = READ32BE(san_buf->p);
         }
         break;
         /*
@@ -2798,10 +2826,22 @@ static int x509_crt_check_san( const mbedtls_x509_buf *name,
     /* dNSName */
     if( san_type == MBEDTLS_X509_SAN_DNS_NAME )
         return( x509_crt_check_cn( name, cn, cn_len ) );
-    if( san_type == MBEDTLS_X509_SAN_IP_ADDRESS &&
-        name->len == 4 && ( ip = ParseIp( cn, cn_len ) ) != -1 &&
-        ip == READ32BE( name->p ) ) {
-        return( 0 );
+    if( san_type == MBEDTLS_X509_SAN_IP_ADDRESS )
+    {
+        if( name->len == 4 && ( ip = ParseIp( cn, cn_len ) ) != -1 &&
+            ip == READ32BE( name->p ) )
+        {
+            return( 0 );
+        }
+        if( name->len == 16 )
+        {
+            uint8_t ip6[16];
+            if( ParseIp6( cn, cn_len, ip6 ) != -1 &&
+                memcmp( ip6, name->p, 16 ) == 0 )
+            {
+                return( 0 );
+            }
+        }
     }
     /* (We may handle other types here later.) */
     /* Unrecognized type */
