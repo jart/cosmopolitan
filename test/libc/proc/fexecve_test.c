@@ -37,9 +37,11 @@ __static_yoink("zipos");
 int fds[2];
 char buf[8];
 uint8_t elf_buf[4096];
-int o_cloexec = 0;
-bool SupportsOPATH = false;
+int o_cloexec = O_CLOEXEC;
+bool SupportsElf = false;
 bool SupportsMemfdCreate = false;
+bool SupportsOPATH = false;
+bool SupportsZiposFexecve = false;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
@@ -53,18 +55,26 @@ void SetUp(void) {
     if (stat("/proc/self/fd", &st) != 0 || !S_ISDIR(st.st_mode)) {
       exit(0);
     }
-    o_cloexec = __is_linux_2_6_23() ? O_CLOEXEC : 0;
+    if (!__is_linux_2_6_23()) {
+      o_cloexec = 0;
+    }
     SupportsOPATH = __is_linux_2_6_39();
     SupportsMemfdCreate = __is_linux_3_17();
+    SupportsZiposFexecve = !IsTiny() && SupportsMemfdCreate;
+  } else if (IsNetbsd() || IsWindows()) {
+    SupportsZiposFexecve = !IsTiny();
   } else {
     // TODO: FreeBSD and other OSes
     exit(0);
   }
+  SupportsElf = IsLinux() || IsNetbsd();
 }
 
 TEST(fexecve, elf) {
+  if (!SupportsElf)
+    return;
   int open_flags = O_RDONLY | o_cloexec;
-  if (IsAarch64() && IsQemuUser()) {
+  if ((IsTiny() && !IsLinux()) || (IsAarch64() && IsQemuUser())) {
     open_flags &= ~O_CLOEXEC;
   }
   testlib_extract("/zip/life-nozip.elf", "life-nozip.elf", 0555);
@@ -78,6 +88,8 @@ TEST(fexecve, elf) {
 }
 
 TEST(fexecve, elfWithZipos) {
+  if (!SupportsElf)
+    return;
   testlib_extract("/zip/zipread.elf", "zipread.elf", 0555);
   SPAWN(vfork);
   ASSERT_SYS(0, 3, open("zipread.elf", O_RDONLY));
@@ -89,9 +101,9 @@ TEST(fexecve, elfWithZipos) {
 // With a file on disk is fexecve'd the path is still available to `open` zipos
 // so COSMOPOLITAN_INIT_ZIPOS= is not needed.
 TEST(fexecve, elfWithZiposCloexec) {
-  if (!o_cloexec)
+  if (!SupportsElf || !o_cloexec)
     return;
-  if (IsAarch64() && IsQemuUser())
+  if ((IsTiny() && !IsLinux()) || (IsAarch64() && IsQemuUser()))
     return;
   testlib_extract("/zip/zipread.elf", "zipread.elf", 0555);
   SPAWN(vfork);
@@ -153,6 +165,8 @@ TEST(fexecve, memfd_create) {
 }
 
 TEST(fexecve, APE) {
+  if (IsTiny() && IsWindows())
+    return;
   testlib_extract("/zip/life-nozip", "life-nozip", 0555);
   SPAWN(vfork);
   int fd = open("life-nozip", O_RDONLY);
@@ -162,6 +176,8 @@ TEST(fexecve, APE) {
 }
 
 TEST(fexecve, APEwithZipos) {
+  if (IsTiny() && IsWindows())
+    return;
   testlib_extract("/zip/zipread", "zipread", 0555);
   SPAWN(vfork);
   int fd = open("zipread", O_RDONLY);
@@ -171,7 +187,7 @@ TEST(fexecve, APEwithZipos) {
 }
 
 TEST(fexecve, ziposELF) {
-  if (!SupportsMemfdCreate)
+  if (!SupportsElf || !SupportsZiposFexecve)
     return;
   int fd = open("/zip/life-nozip.elf", O_RDONLY);
   ASSERT_NE(-1, fd);
@@ -182,7 +198,7 @@ TEST(fexecve, ziposELF) {
 }
 
 TEST(fexecve, ziposELFNoFdLeaks) {
-  if (!SupportsMemfdCreate)
+  if (!SupportsElf || !SupportsZiposFexecve)
     return;
   if (IsAarch64() && IsQemuUser())
     return;
@@ -195,7 +211,7 @@ TEST(fexecve, ziposELFNoFdLeaks) {
 }
 
 TEST(fexecve, ziposELFwithZipos) {
-  if (!SupportsMemfdCreate)
+  if (!SupportsElf || !SupportsZiposFexecve)
     return;
   int fd = open("/zip/zipread.elf", O_RDONLY);
   ASSERT_NE(-1, fd);
@@ -206,7 +222,7 @@ TEST(fexecve, ziposELFwithZipos) {
 }
 
 TEST(fexecve, ziposAPE) {
-  if (!SupportsMemfdCreate)
+  if (!SupportsZiposFexecve)
     return;
   int fd = open("/zip/life-nozip", O_RDONLY);
   ASSERT_NE(-1, fd);
@@ -217,7 +233,7 @@ TEST(fexecve, ziposAPE) {
 }
 
 TEST(fexecve, ziposAPEwithZipos) {
-  if (!SupportsMemfdCreate)
+  if (!SupportsZiposFexecve)
     return;
   int fd = open("/zip/zipread", O_RDONLY);
   ASSERT_NE(-1, fd);
@@ -228,14 +244,37 @@ TEST(fexecve, ziposAPEwithZipos) {
 }
 
 TEST(fexecve, ziposVforked) {
-  if (!SupportsMemfdCreate || !__has_vfork()) {
+  if (!__has_vfork()) {
+    return;
+  }
+  int fd = open("/zip/life-nozip", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  SPAWN(vfork);
+  if (!IsTiny()) {
+    fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  } else {
+    ASSERT_SYS(IsWindows() ? ENOSYS : ENOTSUP, -1,
+               fexecve(fd, (char *const[]){0}, (char *const[]){0}));
+  }
+  _exit(0);
+  EXITS(!IsTiny() ? 42 : 0);
+  close(fd);
+}
+
+TEST(fexecve, ziposVforkedElf) {
+  if (!SupportsElf || !__has_vfork()) {
     return;
   }
   int fd = open("/zip/life-nozip.elf", O_RDONLY);
   ASSERT_NE(-1, fd);
   SPAWN(vfork);
-  ASSERT_SYS(ENOTSUP, -1, fexecve(fd, (char *const[]){0}, (char *const[]){0}));
+  if (!IsTiny()) {
+    fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  } else {
+    ASSERT_SYS(ENOTSUP, -1,
+               fexecve(fd, (char *const[]){0}, (char *const[]){0}));
+  }
   _exit(0);
-  EXITS(0);
+  EXITS(!IsTiny() ? 42 : 0);
   close(fd);
 }

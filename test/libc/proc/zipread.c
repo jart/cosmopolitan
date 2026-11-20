@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
@@ -53,6 +54,14 @@ static void CheckForFdLeaks(void) {
 }
 
 int main(int argc, char *argv[]) {
+  if (IsWindows() && !secure_getenv("COSMOPOLITAN_INIT_ZIPOS")) {
+    // fexecve via fexecve_impl_tmpfile doesn't use COSMOPOLITAN_INIT_ZIPOS so
+    // the fd won't be cleaned up in the open(). If a zipos fd is passed to
+    // fexecve_impl_tmpfile, no fd will be leaked in that case.
+    if (CheckFdLeaked(3)) {
+      close(3);
+    }
+  }
   int fd = open("/zip/life.elf", O_RDONLY);
   if (fd != -1) {
     uint8_t buf[4] = {0};

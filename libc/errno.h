@@ -73,6 +73,7 @@
 #define EOVERFLOW       75  /* Overflow error */
 #define EBADFD          77  /* File descriptor in bad state */
 #define EFTYPE          79  /* Inappropriate file type or format */
+#define _ELIBBAD        80  /* Accessing a corrupted shared library (on Linux)*/
 #define EILSEQ          84  /* Unicode decoding error */
 #define ERESTART        85  /* Please restart syscall */
 #define EUSERS          87  /* Too many users */
