@@ -33,7 +33,7 @@
  */
 int mbedtls_x509write_crt_set_subject_alternative_name(
     mbedtls_x509write_cert *ctx, const struct mbedtls_san *san, size_t sanlen) {
-  int ret;
+  int ret, tag;
   const unsigned char *item;
   size_t i, len, cap, itemlen;
   unsigned char *pc, *buf, ip4[4];
@@ -55,10 +55,17 @@ int mbedtls_x509write_crt_set_subject_alternative_name(
         item = ip4;
         itemlen = 4;
         break;
+      case MBEDTLS_X509_SAN_IP6_ADDRESS_INTERNAL:
+        item = san[i].ip6;
+        itemlen = 16;
+        break;
       default:
         ret = MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE;
         goto finish;
     }
+    tag = san[i].tag == MBEDTLS_X509_SAN_IP6_ADDRESS_INTERNAL
+              ? MBEDTLS_X509_SAN_IP_ADDRESS
+              : san[i].tag;
     if (itemlen > 253) {
       ret = MBEDTLS_ERR_ASN1_INVALID_LENGTH;
       goto finish;
@@ -70,7 +77,7 @@ int mbedtls_x509write_crt_set_subject_alternative_name(
     if (ret < 0) goto finish;
     len += ret;
     ret = mbedtls_asn1_write_tag(&pc, buf,
-                                 MBEDTLS_ASN1_CONTEXT_SPECIFIC | san[i].tag);
+                                 MBEDTLS_ASN1_CONTEXT_SPECIFIC | tag);
     if (ret < 0) goto finish;
     len += ret;
   }

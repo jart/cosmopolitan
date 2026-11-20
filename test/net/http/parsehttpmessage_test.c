@@ -38,6 +38,48 @@ static char *slice(const char *m, struct HttpSlice s) {
   return p;
 }
 
+static void CheckSameMessage(struct HttpMessage *a, struct HttpMessage *b) {
+  int i;
+  ASSERT_EQ(a->status, b->status);
+  ASSERT_EQ(a->version, b->version);
+  ASSERT_EQ(a->method, b->method);
+  ASSERT_EQ(a->uri.a, b->uri.a);
+  ASSERT_EQ(a->uri.b, b->uri.b);
+  ASSERT_EQ(a->message.a, b->message.a);
+  ASSERT_EQ(a->message.b, b->message.b);
+  for (i = 0; i < kHttpHeadersMax; ++i) {
+    ASSERT_EQ(a->headers[i].a, b->headers[i].a);
+    ASSERT_EQ(a->headers[i].b, b->headers[i].b);
+  }
+  ASSERT_EQ(a->xheaders.n, b->xheaders.n);
+  for (i = 0; i < a->xheaders.n; ++i) {
+    ASSERT_EQ(a->xheaders.p[i].k.a, b->xheaders.p[i].k.a);
+    ASSERT_EQ(a->xheaders.p[i].k.b, b->xheaders.p[i].k.b);
+    ASSERT_EQ(a->xheaders.p[i].v.a, b->xheaders.p[i].v.a);
+    ASSERT_EQ(a->xheaders.p[i].v.b, b->xheaders.p[i].v.b);
+  }
+}
+
+static void CheckIncrementalParse(const char *m, int type) {
+  int rc;
+  size_t i, len = strlen(m);
+  struct HttpMessage whole[1], inc[1];
+  InitHttpMessage(whole, type);
+  ASSERT_EQ(len, ParseHttpMessage(whole, m, len, len));
+  InitHttpMessage(inc, type);
+  for (i = 1; i <= len; ++i) {
+    rc = ParseHttpMessage(inc, m, i, len);
+    if (i < len) {
+      ASSERT_EQ(0, rc);
+    } else {
+      ASSERT_EQ(len, rc);
+    }
+  }
+  CheckSameMessage(whole, inc);
+  DestroyHttpMessage(whole);
+  DestroyHttpMessage(inc);
+}
+
 void TearDown(void) {
   DestroyHttpMessage(req);
 }
@@ -449,6 +491,28 @@ Content-Length: 12\r\n\
   InitHttpMessage(req, kHttpResponse);
   EXPECT_EQ(0, ParseHttpMessage(req, m, strlen(m) - 1, strlen(m)));
   EXPECT_EQ(200, req->status);
+}
+
+TEST(ParseHttpMessage, testIncrementalRequestByteAtATime) {
+  static const char m[] = "\
+GET /foo HTTP/1.1\r\n\
+Host: 127.0.0.1:8080\r\n\
+Accept: text/html\r\n\
+X-Custom: hello world \t\r\n\
+User-Agent: curl/8.0\r\n\
+\r\n";
+  CheckIncrementalParse(m, kHttpRequest);
+}
+
+TEST(ParseHttpMessage, testIncrementalResponseByteAtATime) {
+  static const char m[] = "\
+HTTP/1.1 200 OK\r\n\
+Date: Thu, 05 Nov 2026 00:00:00 GMT\r\n\
+Content-Type: text/html; charset=utf-8\r\n\
+Content-Length: 5\r\n\
+Connection: close\r\n\
+\r\n";
+  CheckIncrementalParse(m, kHttpResponse);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

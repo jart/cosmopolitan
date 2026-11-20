@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
   int rc = 0;
   for (int i = 1; i < argc; ++i) {
     int64_t ip;
+    uint8_t ip6[16];
     char buf[4];
     if ((ip = ParseIp(argv[i], -1)) != -1) {
       WRITE32BE(buf, ip);
@@ -55,8 +56,15 @@ int main(int argc, char *argv[]) {
                 strerror(errno));
         rc |= 2;
       }
+    } else if (!ParseIp6(argv[i], -1, ip6)) {
+      if (sendto(fd, ip6, 16, 0, (struct sockaddr *)&addr, sizeof(addr)) ==
+          -1) {
+        kprintf("error: sendto(%#s) failed: %s\n", addr.sun_path,
+                strerror(errno));
+        rc |= 2;
+      }
     } else {
-      kprintf("error: bad ipv4 address: %s\n", argv[i]);
+      kprintf("error: bad ip address: %s\n", argv[i]);
       rc |= 1;
     }
   }

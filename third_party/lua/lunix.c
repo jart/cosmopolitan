@@ -45,6 +45,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/fds.h"
 #include "libc/serialize.h"
 #include "libc/intrin/strace.h"
 #include "libc/limits.h"
@@ -73,6 +74,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/ip.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/ipv6.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/log.h"
@@ -86,6 +88,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/pib.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
@@ -244,10 +247,47 @@ static int SysretInteger(lua_State *L, const char *call, int olderr,
   }
 }
 
-static int MakeSockaddr(lua_State *L, int i, struct sockaddr_storage *ss,
-                        uint32_t *salen) {
+static int GetSocketFamily(int fd) {
+  uint32_t locallen;
+  struct sockaddr_storage local;
+  if (IsWindows()) {
+    if (fd >= 0 && fd < __get_pib()->fds.n &&
+        __get_pib()->fds.p[fd].kind == kFdSocket) {
+      return __get_pib()->fds.p[fd].family;
+    }
+  }
+  local.ss_family = AF_UNSPEC;
+  locallen = sizeof(local);
+  if (getsockname(fd, (struct sockaddr *)&local, &locallen) != -1)
+    return local.ss_family;
+  return AF_UNSPEC;
+}
+
+static int MakeSockaddr(lua_State *L, const char *call, int fd, int i,
+                        struct sockaddr_storage *ss, uint32_t *salen) {
+  int family, olderr = errno;
+  const char *ip;
+  size_t len;
   bzero(ss, sizeof(*ss));
-  if (!lua_isinteger(L, i)) {
+  family = GetSocketFamily(fd);
+  errno = olderr;
+  if (family == AF_UNSPEC)
+    family = (lua_isnoneornil(L, i) || lua_isinteger(L, i)) ? AF_INET : AF_UNIX;
+  if (!lua_isnoneornil(L, i) && !lua_isinteger(L, i)) {
+    if (family == AF_INET6) {
+      ip = luaL_checklstring(L, i, &len);
+      if (len != 16) {
+        einval();
+        LuaUnixSysretErrno(L, call, olderr);
+        return -1;
+      }
+      ((struct sockaddr_in6 *)ss)->sin6_family = AF_INET6;
+      memcpy(&((struct sockaddr_in6 *)ss)->sin6_addr, ip, 16);
+      ((struct sockaddr_in6 *)ss)->sin6_port =
+          htons(luaL_optinteger(L, i + 1, 0));
+      *salen = sizeof(struct sockaddr_in6);
+      return i + 2;
+    }
     ((struct sockaddr_un *)ss)->sun_family = AF_UNIX;
     if (!memccpy(((struct sockaddr_un *)ss)->sun_path, luaL_checkstring(L, i),
                  0, sizeof(((struct sockaddr_un *)ss)->sun_path))) {
@@ -256,6 +296,17 @@ static int MakeSockaddr(lua_State *L, int i, struct sockaddr_storage *ss,
     }
     *salen = sizeof(struct sockaddr_un);
     return i + 1;
+  } else if (family == AF_INET6) {
+    if (!lua_isnoneornil(L, i) && lua_tointeger(L, i) != 0) {
+      einval();
+      LuaUnixSysretErrno(L, call, olderr);
+      return -1;
+    }
+    ((struct sockaddr_in6 *)ss)->sin6_family = AF_INET6;
+    ((struct sockaddr_in6 *)ss)->sin6_port =
+        htons(luaL_optinteger(L, i + 1, 0));
+    *salen = sizeof(struct sockaddr_in6);
+    return i + 2;
   } else {
     ((struct sockaddr_in *)ss)->sin_family = AF_INET;
     ((struct sockaddr_in *)ss)->sin_addr.s_addr =
@@ -271,6 +322,11 @@ static int PushSockaddr(lua_State *L, const struct sockaddr_storage *ss) {
     lua_pushinteger(L,
                     ntohl(((const struct sockaddr_in *)ss)->sin_addr.s_addr));
     lua_pushinteger(L, ntohs(((const struct sockaddr_in *)ss)->sin_port));
+    return 2;
+  } else if (ss->ss_family == AF_INET6) {
+    lua_pushlstring(
+        L, (const char *)&((const struct sockaddr_in6 *)ss)->sin6_addr, 16);
+    lua_pushinteger(L, ntohs(((const struct sockaddr_in6 *)ss)->sin6_port));
     return 2;
   } else if (ss->ss_family == AF_UNIX) {
     lua_pushstring(L, ((const struct sockaddr_un *)ss)->sun_path);
@@ -1184,6 +1240,8 @@ static bool IsSockoptBool(int l, int x) {
            x == TCP_DEFER_ACCEPT;        //
   } else if (l == SOL_IP) {
     return x == IP_HDRINCL;  //
+  } else if (l == SOL_IPV6) {
+    return x == IPV6_V6ONLY;  //
   } else {
     return false;
   }
@@ -1371,11 +1429,11 @@ static int LuaUnixSocketpair(lua_State *L) {
 static int LuaUnixBind(lua_State *L) {
   uint32_t salen;
   struct sockaddr_storage ss;
-  int olderr = errno;
-  MakeSockaddr(L, 2, &ss, &salen);
-  return SysretBool(
-      L, "bind", olderr,
-      bind(luaL_checkinteger(L, 1), (struct sockaddr *)&ss, salen));
+  int fd, olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  if (MakeSockaddr(L, "bind", fd, 2, &ss, &salen) == -1) return 2;
+  return SysretBool(L, "bind", olderr,
+                    bind(fd, (struct sockaddr *)&ss, salen));
 }
 
 // unix.connect(fd:int, ip:uint32, port:uint16)
@@ -1385,11 +1443,11 @@ static int LuaUnixBind(lua_State *L) {
 static int LuaUnixConnect(lua_State *L) {
   uint32_t salen;
   struct sockaddr_storage ss;
-  int olderr = errno;
-  MakeSockaddr(L, 2, &ss, &salen);
-  return SysretBool(
-      L, "connect", olderr,
-      connect(luaL_checkinteger(L, 1), (struct sockaddr *)&ss, salen));
+  int fd, olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  if (MakeSockaddr(L, "connect", fd, 2, &ss, &salen) == -1) return 2;
+  return SysretBool(L, "connect", olderr,
+                    connect(fd, (struct sockaddr *)&ss, salen));
 }
 
 // unix.listen(fd:int[, backlog:int])
@@ -1676,7 +1734,7 @@ static int LuaUnixSendto(lua_State *L) {
   int i, fd, flags, olderr = errno;
   fd = luaL_checkinteger(L, 1);
   data = luaL_checklstring(L, 2, &size);
-  i = MakeSockaddr(L, 3, &ss, &salen);
+  if ((i = MakeSockaddr(L, "sendto", fd, 3, &ss, &salen)) == -1) return 2;
   flags = luaL_optinteger(L, i, 0);
   return SysretInteger(
       L, "sendto", olderr,
@@ -3555,6 +3613,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "AF_UNSPEC", AF_UNSPEC);
   LuaSetIntField(L, "AF_UNIX", AF_UNIX);
   LuaSetIntField(L, "AF_INET", AF_INET);
+  LuaSetIntField(L, "AF_INET6", AF_INET6);
 
   // socket() type
   LuaSetIntField(L, "SOCK_STREAM", SOCK_STREAM);
@@ -3571,6 +3630,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "IPPROTO_TCP", IPPROTO_TCP);
   LuaSetIntField(L, "IPPROTO_UDP", IPPROTO_UDP);
   LuaSetIntField(L, "IPPROTO_RAW", IPPROTO_RAW);
+  LuaSetIntField(L, "IPPROTO_IPV6", IPPROTO_IPV6);
 
   // shutdown() how
   LuaSetIntField(L, "SHUT_RD", SHUT_RD);
@@ -3648,6 +3708,8 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "SOL_SOCKET", SOL_SOCKET);
   LuaSetIntField(L, "SOL_TCP", SOL_TCP);
   LuaSetIntField(L, "SOL_UDP", SOL_UDP);
+  LuaSetIntField(L, "SOL_IPV6", SOL_IPV6);
+  LuaSetIntField(L, "IPV6_V6ONLY", IPV6_V6ONLY);
 
   // sigaction() flags
   LuaSetIntField(L, "SA_RESTART", SA_RESTART);

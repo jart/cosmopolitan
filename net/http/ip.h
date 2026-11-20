@@ -29,8 +29,23 @@ struct Cidr {
   int cidr;
 };
 
+struct Cidr6 {
+  int cidr;
+  uint8_t addr[16];
+};
+
 int64_t ParseIp(const char *, size_t) libcesque;
 struct Cidr ParseCidr(const char *, size_t) libcesque;
+int ParseIp6(const char *, size_t, uint8_t[16]) libcesque;
+struct Cidr6 ParseCidr6(const char *, size_t) libcesque;
+bool IsLoopbackIp6(const uint8_t[16]) libcesque;
+bool IsPrivateIp6(const uint8_t[16]) libcesque;
+bool IsLinkLocalIp6(const uint8_t[16]) libcesque;
+bool IsMulticastIp6(const uint8_t[16]) libcesque;
+bool IsTestnetIp6(const uint8_t[16]) libcesque;
+bool IsPublicIp6(const uint8_t[16]) libcesque;
+int64_t GetIpv4Mapped(const uint8_t[16]) libcesque;
+int CategorizeIp6(const uint8_t[16]) libcesque;
 bool IsDodIp(uint32_t) libcesque;
 bool IsArinIp(uint32_t) libcesque;
 bool IsRipeIp(uint32_t) libcesque;

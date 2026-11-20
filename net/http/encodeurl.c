@@ -69,7 +69,7 @@ static bool NeedsSquareBrackets(struct Url *h) {
   } else {
     for (i = 0; i < h->host.n; ++i) {
       c = h->host.p[i] & 0xFF;
-      if (!(kHexToInt[c] || c == '.' || c == ':')) {
+      if (!(kHexToInt[c] != -1 || c == '.' || c == ':')) {
         return false;
       }
     }

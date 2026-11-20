@@ -49,6 +49,17 @@ TEST(IsAcceptableHost, test) {
   EXPECT_TRUE(IsAcceptableHost("ws-eu53", -1));
   EXPECT_TRUE(IsAcceptableHost("gitpod", -1));
   EXPECT_TRUE(IsAcceptableHost("io", -1));
+  EXPECT_TRUE(IsAcceptableHost("::1", -1));
+  EXPECT_TRUE(IsAcceptableHost("2001:db8::1", -1));
+  EXPECT_TRUE(IsAcceptableHost("::ffff:1.2.3.4", -1));
+  EXPECT_TRUE(IsAcceptableHost("1:2:3:4:5:6:7:8", -1));
+  EXPECT_TRUE(IsAcceptableHost("::", -1));
+  EXPECT_FALSE(IsAcceptableHost(":::", -1));
+  EXPECT_FALSE(IsAcceptableHost("::g", -1));
+  EXPECT_FALSE(IsAcceptableHost("fe80::1%eth0", -1));
+  EXPECT_FALSE(IsAcceptableHost(":", -1));
+  EXPECT_FALSE(IsAcceptableHost("1:2", -1));
+  EXPECT_FALSE(IsAcceptableHost("[::1]", -1));
 }
 
 TEST(IsAcceptablePort, test) {

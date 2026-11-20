@@ -33,8 +33,10 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
+#include "libc/sock/ifaddrs.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clock.h"
@@ -82,14 +84,18 @@ Usage:\n\
 Protocol:\n\
   Send a 4 byte datagram to the unix socket file containing\n\
   the IPv4 address you want banned encoded using big endian\n\
-  a.k.a. network byte order. We ignore these ips: 0.0.0.0/8\n\
-  and 127.0.0.0/8 so sending 0 to the socket is a good test\n"
+  a.k.a. network byte order, or a 16 byte datagram containing\n\
+  an IPv6 address. IPv6 clients are banned by their /64 prefix\n\
+  since a client controls that entire prefix. We ignore these\n\
+  ips: 0.0.0.0/8, 127.0.0.0/8, ::1, link-local, private, and\n\
+  our own addresses, so sending 0 to the socket is a good test\n"
 
 #define LINUX_DOCS \
   "\n\
 Linux Requirements:\n\
   sudo modprobe ip_tables\n\
   sudo echo ip_tables >>/etc/modules\n\
+  sudo ipset create badhosts6 hash:net family inet6  # for IPv6\n\
 \n\
 Administration Notes:\n\
   This program inserts IP bans into the prerouting chain in iptables raw\n\
@@ -135,6 +141,12 @@ struct SortedInts {
   int *p;
 };
 
+struct SortedIp6s {
+  int n;
+  int c;
+  uint8_t (*p)[16];
+};
+
 int g_logfd;
 int g_sockmode;
 bool g_daemonize;
@@ -149,6 +161,8 @@ const char *g_ipset;
 sig_atomic_t g_shutdown;
 struct SortedInts g_blocked;
 struct SortedInts g_whitelisted;
+struct SortedIp6s g_blocked6;
+struct SortedIp6s g_myips6;
 
 static wontreturn void ShowUsage(int fd, int rc) {
   write(fd, USAGE, sizeof(USAGE) - 1);
@@ -230,6 +244,46 @@ bool InsertInt(struct SortedInts *t, int k, bool u) {
   return true;
 }
 
+int LeftmostIp6(const struct SortedIp6s *t, const uint8_t k[16]) {
+  int l, m, r;
+  l = 0;
+  r = t->n;
+  while (l < r) {
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
+    if (memcmp(t->p[m], k, 16) < 0) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  unassert(l == 0 || memcmp(k, t->p[l - 1], 16) >= 0);
+  unassert(l == t->n || memcmp(k, t->p[l], 16) <= 0);
+  return l;
+}
+
+bool InsertIp6(struct SortedIp6s *t, const uint8_t k[16], bool u) {
+  int l;
+  unassert(t->n >= 0);
+  unassert(t->n <= t->c);
+  if (t->n == t->c) {
+    ++t->c;
+    if (!IsModeDbg()) {
+      t->c += t->c >> 1;
+    }
+    t->p = realloc(t->p, t->c * sizeof(*t->p));
+  }
+  l = LeftmostIp6(t, k);
+  if (l < t->n) {
+    if (u && !memcmp(t->p[l], k, 16)) {
+      return false;
+    }
+    memmove(t->p + l + 1, t->p + l, (t->n - l) * sizeof(*t->p));
+  }
+  memcpy(t->p[l], k, 16);
+  t->n++;
+  return true;
+}
+
 void GetOpts(int argc, char *argv[]) {
   int opt;
   int64_t ip;
@@ -291,6 +345,11 @@ char *FormatIp(uint32_t ip) {
   return ipbuf;
 }
 
+char *FormatIp6(char buf[64], const uint8_t ip[16]) {
+  inet_ntop(AF_INET6, ip, buf, 64);
+  return buf;
+}
+
 void BlockIp(uint32_t ip) {
   if (!vfork()) {
     if (g_ipset) {
@@ -310,6 +369,40 @@ void BlockIp(uint32_t ip) {
                  "-t", "badhosts",  //
                  "-T", "add",       //
                  FormatIp(ip),      //
+                 0,                 //
+             },
+             (char *const[]){0});
+    }
+    _Exit(127);
+  }
+}
+
+void BlockIp6(const uint8_t ip[16]) {
+  char addr[64];
+  char prefix[80];
+  uint8_t net[16];
+  // a client controls its entire /64 prefix, like redbean's rate limiter
+  memcpy(net, ip, 16);
+  memset(net + 8, 0, 8);
+  ksnprintf(prefix, sizeof(prefix), "%s/64", FormatIp6(addr, net));
+  if (!vfork()) {
+    if (g_ipset) {
+      execve(g_ipset,
+             (char *const[]){
+                 "ipset",      //
+                 "add",        //
+                 "badhosts6",  //
+                 prefix,       //
+                 0,            //
+             },
+             (char *const[]){0});
+    } else if (g_pfctl) {
+      execve(g_pfctl,
+             (char *const[]){
+                 "pfctl",           //
+                 "-t", "badhosts",  //
+                 "-T", "add",       //
+                 prefix,            //
                  0,                 //
              },
              (char *const[]){0});
@@ -440,6 +533,51 @@ bool IsMyIp(uint32_t ip) {
   return false;
 }
 
+void LoadHostIp6s(void) {
+  struct ifaddrs *ifa, *p;
+  if (getifaddrs(&ifa)) {
+    LOG("failed to get host IPv6 addresses: %s", strerror(errno));
+    return;
+  }
+  for (p = ifa; p; p = p->ifa_next) {
+    if (p->ifa_addr && p->ifa_addr->sa_family == AF_INET6) {
+      InsertIp6(&g_myips6,
+                ((struct sockaddr_in6 *)p->ifa_addr)->sin6_addr.s6_addr, true);
+    }
+  }
+  freeifaddrs(ifa);
+}
+
+bool IsMyIp6(const uint8_t ip[16]) {
+  int i;
+  if (IsLoopbackIp6(ip) || IsLinkLocalIp6(ip) || IsPrivateIp6(ip)) {
+    return true;
+  }
+  for (i = 0; i < g_myips6.n; ++i) {
+    if (!memcmp(ip, g_myips6.p[i], 8) && !IsTestnetIp6(ip)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void HandleIpv4(uint32_t ip) {
+  if (!ip) {
+    return;
+  }
+  if (IsMyIp(ip) ||                       // nics
+      ContainsInt(&g_whitelisted, ip) ||  // protected
+      (ip & 0xff000000) == 0x00000000 ||  // 0.0.0.0/8
+      (ip & 0xff000000) == 0x7f000000) {  // 127.0.0.0/8
+    LOG("won't block %s", FormatIp(ip));
+  } else if (InsertInt(&g_blocked, ip, true)) {
+    BlockIp(ip);
+    LOG("blocked %s", FormatIp(ip));
+  } else {
+    LOG("already blocked %s", FormatIp(ip));
+  }
+}
+
 int main(int argc, char *argv[]) {
 
   closefrom(3);
@@ -455,6 +593,7 @@ int main(int argc, char *argv[]) {
   if (!(g_myips = GetHostIps())) {
     LOG("failed to get host network interface addresses: %s", strerror(errno));
   }
+  LoadHostIp6s();
 
   int server;
   struct sockaddr_un addr = {AF_UNIX};
@@ -495,8 +634,7 @@ int main(int argc, char *argv[]) {
 
   while (!g_shutdown) {
     ssize_t rc;
-    uint32_t ip;
-    char msg[16];
+    char msg[17];
 
     if (!(rc = read(server, msg, sizeof(msg)))) {
       LOG("error: impossible eof", strerror(errno));
@@ -508,24 +646,37 @@ int main(int argc, char *argv[]) {
       }
       LOG("error: read failed: %s", strerror(errno));
       continue;
-    } else if (rc != 4) {
+    } else if (rc != 4 && rc != 16) {
       LOG("error: read unexpected size of %ld: %s", rc, strerror(errno));
       continue;
     }
 
     BLOCK_SIGNALS;
 
-    if ((ip = READ32BE(msg))) {
-      if (IsMyIp(ip) ||                       // nics
-          ContainsInt(&g_whitelisted, ip) ||  // protected
-          (ip & 0xff000000) == 0x00000000 ||  // 0.0.0.0/8
-          (ip & 0xff000000) == 0x7f000000) {  // 127.0.0.0/8
-        LOG("won't block %s", FormatIp(ip));
-      } else if (InsertInt(&g_blocked, ip, true)) {
-        BlockIp(ip);
-        LOG("blocked %s", FormatIp(ip));
+    if (rc == 4) {
+      HandleIpv4(READ32BE(msg));
+    } else {
+      int i;
+      int64_t mapped;
+      uint8_t ip6[16];
+      char buf[64];
+      memcpy(ip6, msg, 16);
+      for (i = 0; i < 16 && !ip6[i]; ++i) {
+      }
+      if (i == 16) {
+        // :: is the all-zero test address, like 0.0.0.0/8
+      } else if ((mapped = GetIpv4Mapped(ip6)) != -1) {
+        HandleIpv4(mapped);
+      } else if (IsMyIp6(ip6)) {
+        LOG("won't block %s", FormatIp6(buf, ip6));
       } else {
-        LOG("already blocked %s", FormatIp(ip));
+        memset(ip6 + 8, 0, 8);  // ban the whole /64 the client controls
+        if (InsertIp6(&g_blocked6, ip6, true)) {
+          BlockIp6(ip6);
+          LOG("blocked %s/64", FormatIp6(buf, ip6));
+        } else {
+          LOG("already blocked %s/64", FormatIp6(buf, ip6));
+        }
       }
     }
 

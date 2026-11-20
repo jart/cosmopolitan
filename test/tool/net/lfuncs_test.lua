@@ -91,6 +91,40 @@ assert(Underlong("hello\xc0\x80") == "hello\x00")
 
 assert(ParseIp("x") == -1)
 assert(ParseIp("127.0.0.1") == 0x7f000001)
+assert(FormatIp(0x7f000001) == "127.0.0.1")
+assert(FormatIp("2130706433") == "127.0.0.1")
+
+-- IPv6 addresses use a 16-byte binary string
+assert(FormatIp(ParseIp("::1")) == "::1")
+assert(FormatIp(ParseIp("2001:db8::1")) == "2001:db8::1")
+assert(FormatIp(ParseIp("::")) == "::")
+assert(#ParseIp("2001:db8::1") == 16)
+assert(type(ParseIp("2001:db8::1")) == "string")
+assert(ParseIp("2001:db8:::1") == -1)
+assert(ParseIp("::g") == -1)
+
+-- IPv4-mapped addresses are normalized to uint32
+assert(ParseIp("::ffff:127.0.0.1") == 0x7f000001)
+assert(type(ParseIp("::ffff:127.0.0.1")) == "number")
+assert(FormatIp("\0\0\0\0\0\0\0\0\0\0\255\255\127\0\0\1") ==
+       "127.0.0.1")
+
+-- IPv6 classification
+assert(IsLoopbackIp(ParseIp("::1")))
+assert(not IsLoopbackIp(ParseIp("2001:db8::1")))
+assert(IsPrivateIp(ParseIp("fc00::1")))
+assert(not IsPrivateIp(ParseIp("2001:db8::1")))
+assert(IsPublicIp(ParseIp("2606:4700:4700::1111")))
+assert(not IsPublicIp(ParseIp("2001:db8::1")))
+assert(CategorizeIp(ParseIp("::1")) == "LOOPBACK")
+assert(CategorizeIp(ParseIp("fc00::1")) == "PRIVATE")
+assert(CategorizeIp(ParseIp("2001:db8::1")) == "TESTNET")
+assert(FormatIp(ResolveIp("::1")) == "::1")
+assert(ResolveIp("127.0.0.1") == 0x7f000001)
+
+-- bad IPv6 lengths are rejected
+assert(not pcall(function() IsPublicIp("abc") end))
+assert(not pcall(function() FormatIp("\0\0") end))
 
 assert(GetMonospaceWidth('c') == 1)
 assert(GetMonospaceWidth(string.byte('c')) == 1)

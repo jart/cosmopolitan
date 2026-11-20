@@ -421,6 +421,68 @@ TEST(ParseHost, testObviouslyIllegalIpLiteral_getsTreatedAsRegName) {
   ASSERT_STREQ("//vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
 }
 
+TEST(ParseHost, testIpv6) {
+  struct Url h = {0};
+  gc(ParseHost("[::1]:8080", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(3, h.host.n);
+  ASSERT_BINEQ(u"::1", h.host.p);
+  ASSERT_EQ(4, h.port.n);
+  ASSERT_BINEQ(u"8080", h.port.p);
+  ASSERT_STREQ("//[::1]:8080", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseHost, testIpv6WithoutPort) {
+  struct Url h = {0};
+  gc(ParseHost("[2001:db8::1]", -1, &h));
+  gc(h.params.p);
+  ASSERT_EQ(11, h.host.n);
+  ASSERT_BINEQ(u"2001:db8::1", h.host.p);
+  ASSERT_EQ(0, h.port.n);
+  ASSERT_EQ(0, h.port.p);
+}
+
+TEST(ParseUrl, testIpv6Absolute) {
+  struct Url h;
+  gc(ParseUrl("http://[::1]:80/x", -1, &h, 0));
+  gc(h.params.p);
+  ASSERT_EQ(4, h.scheme.n);
+  ASSERT_BINEQ(u"http", h.scheme.p);
+  ASSERT_EQ(3, h.host.n);
+  ASSERT_BINEQ(u"::1", h.host.p);
+  ASSERT_EQ(2, h.port.n);
+  ASSERT_BINEQ(u"80", h.port.p);
+  ASSERT_EQ(2, h.path.n);
+  ASSERT_BINEQ(u"/x", h.path.p);
+}
+
+TEST(ParseUrl, testIpv6RoundTrip) {
+  struct Url h;
+  gc(ParseUrl("http://[2001:db8::1]:8080/", -1, &h, 0));
+  gc(h.params.p);
+  ASSERT_EQ(4, h.scheme.n);
+  ASSERT_BINEQ(u"http", h.scheme.p);
+  ASSERT_EQ(11, h.host.n);
+  ASSERT_BINEQ(u"2001:db8::1", h.host.p);
+  ASSERT_EQ(4, h.port.n);
+  ASSERT_BINEQ(u"8080", h.port.p);
+  ASSERT_STREQ("http://[2001:db8::1]:8080/", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testLoopbackIpv6Unchanged) {
+  struct Url h;
+  gc(ParseUrl("http://[::1]/", -1, &h, 0));
+  gc(h.params.p);
+  ASSERT_STREQ("http://[::1]/", gc(EncodeUrl(&h, 0)));
+}
+
+TEST(ParseUrl, testNonHexHostWithColon_escapesColon) {
+  struct Url h;
+  gc(ParseUrl("http://[vf.::1%00]", -1, &h, 0));
+  gc(h.params.p);
+  ASSERT_STREQ("http://vf.%3A%3A1%00", gc(EncodeUrl(&h, 0)));
+}
+
 TEST(ParseHost, testUnclosedIpv6_doesntSetPort) {
   struct Url h = {0};
   gc(ParseHost("2001:db8:cafe::17", -1, &h));
@@ -428,7 +490,7 @@ TEST(ParseHost, testUnclosedIpv6_doesntSetPort) {
   ASSERT_STREQ("2001:db8:cafe::17", gc(strndup(h.host.p, h.host.n)));
   ASSERT_EQ(0, h.port.n);
   ASSERT_EQ(0, h.port.p);
-  ASSERT_STREQ("//2001%3Adb8%3Acafe%3A%3A17", gc(EncodeUrl(&h, 0)));
+  ASSERT_STREQ("//[2001:db8:cafe::17]", gc(EncodeUrl(&h, 0)));
 }
 
 TEST(EncodeUrl, testHostPortPlacedInHostField_ungoodIdea) {

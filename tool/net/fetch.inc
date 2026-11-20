@@ -19,7 +19,7 @@ static int LuaFetch(lua_State *L) {
   const char *host, *port;
   char *request;
   struct TlsBio *bio;
-  struct addrinfo *addr;
+  struct addrinfo *addr, *ai;
   struct Buffer inbuf;     // shadowing intentional
   struct HttpMessage msg;  // shadowing intentional
   struct HttpUnchunker u;
@@ -36,9 +36,11 @@ static int LuaFetch(lua_State *L) {
   int keepalive = kaNONE;
   char canmethod[9] = {0};
   uint64_t imethod;
+  int saved_errno = 0;
   int numredirects = 0, maxredirects = 5;
   bool followredirect = true;
-  struct addrinfo hints = {.ai_family = AF_INET,
+  uint8_t ip6[16];
+  struct addrinfo hints = {.ai_family = AF_UNSPEC,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
@@ -183,6 +185,9 @@ static int LuaFetch(lua_State *L) {
   } else if ((ip = ParseIp(urlarg, -1)) != -1) {
     host = urlarg;
     port = "80";
+  } else if (!ParseIp6(urlarg, -1, ip6)) {
+    host = urlarg;
+    port = "80";
   } else {
     return LuaNilError(L, "invalid host");
   }
@@ -192,8 +197,13 @@ static int LuaFetch(lua_State *L) {
   if (!IsAcceptablePort(port, -1)) {
     return LuaNilError(L, "invalid port");
   }
-  if (!hosthdr)
-    hosthdr = gc(xasprintf("%s:%s", host, port));
+  if (!hosthdr) {
+    if (!ParseIp6(host, -1, ip6)) {
+      hosthdr = gc(xasprintf("[%s]:%s", host, port));
+    } else {
+      hosthdr = gc(xasprintf("%s:%s", host, port));
+    }
+  }
 
   // check if hosthdr is in keepalive table
   if (keepalive && lua_istable(L, 2)) {
@@ -260,18 +270,34 @@ static int LuaFetch(lua_State *L) {
     /*
      * Connect to server.
      */
-    ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
-    DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
-           ip >> 16, ip >> 8, ip,
-           ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
-    CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
-                                    addr->ai_protocol, false, &timeout)));
-    rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
-    freeaddrinfo(addr), addr = 0;
-    if (rc == -1) {
+    for (ai = addr; ai; ai = ai->ai_next) {
+      char ipbuf[46];
+      void *sin_addr;
+      if (ai->ai_family == AF_INET) {
+        sin_addr = &((struct sockaddr_in *)ai->ai_addr)->sin_addr;
+      } else if (ai->ai_family == AF_INET6) {
+        sin_addr = &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr;
+      } else {
+        continue;
+      }
+      inet_ntop(ai->ai_family, sin_addr, ipbuf, sizeof(ipbuf));
+      DEBUGF("(ftch) client connecting %s", ipbuf);
+      if ((sock = GoodSocket(ai->ai_family, ai->ai_socktype, ai->ai_protocol,
+                             false, &timeout)) == -1) {
+        saved_errno = errno;
+        continue;
+      }
+      if (connect(sock, ai->ai_addr, ai->ai_addrlen) != -1) {
+        break;
+      }
+      saved_errno = errno;
       close(sock);
+      sock = -1;
+    }
+    freeaddrinfo(addr), addr = 0;
+    if (!ai) {
       return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
-                         strerror(errno));
+                         strerror(saved_errno));
     }
   }
 

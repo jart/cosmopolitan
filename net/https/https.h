@@ -33,6 +33,7 @@ char *FormatX509Name(const mbedtls_x509_name *);
 void TlsDie(const char *, int) wontreturn;
 bool32 ChainCertificate(mbedtls_x509_crt *, mbedtls_x509_crt *);
 bool32 CertHasIp(const mbedtls_x509_crt *, uint32_t);
+bool32 CertHasIp6(const mbedtls_x509_crt *, const uint8_t[16]);
 bool32 CertHasHost(const mbedtls_x509_crt *, const void *, size_t);
 bool32 IsServerCert(const struct Cert *, mbedtls_pk_type_t);
 void TlsDebug(void *, int, const char *, int, const char *);

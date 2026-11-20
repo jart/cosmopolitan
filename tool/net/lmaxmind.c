@@ -17,11 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr6.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/x/x.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/maxmind/maxminddb.h"
+#include "tool/net/lfuncs.h"
 
 struct MaxmindDb {
   int refs;
@@ -29,7 +34,9 @@ struct MaxmindDb {
 };
 
 struct MaxmindResult {
+  bool isv6;
   uint32_t ip;
+  uint8_t ip6[16];
   struct MaxmindDb *db;
   MMDB_lookup_result_s mmlr;
 };
@@ -83,38 +90,61 @@ static int LuaMaxmindOpen(lua_State *L) {
 
 [[noreturn]] static void LuaThrowMaxmindIpError(lua_State *L,
                                                 const char *function_name,
-                                                uint32_t ip, int err) {
-  luaL_error(L, "%s(%d.%d.%d.%d) → MMDB_%s", function_name,
-             (ip & 0xff000000) >> 030, (ip & 0x00ff0000) >> 020,
-             (ip & 0x0000ff00) >> 010, (ip & 0x000000ff) >> 000,
-             GetMmdbError(err));
+                                                bool isv6, uint32_t ip,
+                                                const uint8_t ip6[16],
+                                                int err) {
+  char b[46];
+  if (isv6) {
+    inet_ntop(AF_INET6, ip6, b, sizeof(b));
+  } else {
+    uint32_t be = htonl(ip);
+    inet_ntop(AF_INET, &be, b, sizeof(b));
+  }
+  luaL_error(L, "%s(%s) → MMDB_%s", function_name, b, GetMmdbError(err));
   __builtin_unreachable();
 }
 
 static int LuaMaxmindDbLookup(lua_State *L) {
   int err;
-  lua_Integer ip;
+  int af;
+  uint32_t ip;
+  uint8_t ip6[16];
+  struct sockaddr_in6 sa6;
   struct MaxmindDb **udb, *db;
   struct MaxmindResult **ur, *r;
   udb = luaL_checkudata(L, 1, "MaxmindDb*");
-  ip = luaL_checkinteger(L, 2);
-  if (ip < 0 || ip > 0xffffffff) {
-    lua_pushnil(L);
-    return 1;
+  if (lua_type(L, 2) == LUA_TNUMBER) {
+    lua_Integer x = luaL_checkinteger(L, 2);
+    if (x < 0 || x > 0xffffffff) {
+      lua_pushnil(L);
+      return 1;
+    }
   }
+  af = LuaCheckIp(L, 2, &ip, ip6);
   db = *udb;
   r = xmalloc(sizeof(struct MaxmindResult));
-  r->mmlr = MMDB_lookup(&db->mmdb, ip, &err);
+  r->isv6 = af == AF_INET6;
+  if (af == AF_INET6) {
+    memcpy(r->ip6, ip6, 16);
+    r->ip = 0;
+    bzero(&sa6, sizeof(sa6));
+    sa6.sin6_family = AF_INET6;
+    memcpy(sa6.sin6_addr.s6_addr, ip6, 16);
+    r->mmlr =
+        MMDB_lookup_sockaddr(&db->mmdb, (const struct sockaddr *)&sa6, &err);
+  } else {
+    r->ip = ip;
+    r->mmlr = MMDB_lookup(&db->mmdb, ip, &err);
+  }
   if (err) {
     free(r);
-    LuaThrowMaxmindIpError(L, "MMDB_lookup", ip, err);
+    LuaThrowMaxmindIpError(L, "MMDB_lookup", af == AF_INET6, ip, ip6, err);
   }
   if (!r->mmlr.found_entry) {
     free(r);
     lua_pushnil(L);
     return 1;
   }
-  r->ip = ip;
   r->db = db;
   r->db->refs++;
   ur = lua_newuserdatauv(L, sizeof(r), 1);
@@ -126,7 +156,11 @@ static int LuaMaxmindDbLookup(lua_State *L) {
 static int LuaMaxmindResultNetmask(lua_State *L) {
   struct MaxmindResult **ur;
   ur = luaL_checkudata(L, 1, "MaxmindResult*");
-  lua_pushinteger(L, (*ur)->mmlr.netmask - (128 - 32));
+  if ((*ur)->isv6) {
+    lua_pushinteger(L, (*ur)->mmlr.netmask);
+  } else {
+    lua_pushinteger(L, (*ur)->mmlr.netmask - (128 - 32));
+  }
   return 1;
 }
 
@@ -212,7 +246,8 @@ static int LuaMaxmindResultGet(lua_State *L) {
         lua_pushnil(L);
         return 1;
       } else {
-        LuaThrowMaxmindIpError(L, "getpath", (*ur)->ip, err);
+        LuaThrowMaxmindIpError(L, "getpath", (*ur)->isv6, (*ur)->ip, (*ur)->ip6,
+                               err);
       }
     }
     if (!edata.offset) {
@@ -225,7 +260,8 @@ static int LuaMaxmindResultGet(lua_State *L) {
   }
   err = MMDB_get_entry_data_list(ep, &dl);
   if (err)
-    LuaThrowMaxmindIpError(L, "getlist", (*ur)->ip, err);
+    LuaThrowMaxmindIpError(L, "getlist", (*ur)->isv6, (*ur)->ip, (*ur)->ip6,
+                           err);
   LuaMaxmindDump(L, dl);
   MMDB_free_entry_data_list(dl);
   return 1;

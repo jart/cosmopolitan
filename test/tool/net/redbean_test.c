@@ -23,8 +23,10 @@
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
+#include "libc/sock/ifaddrs.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -93,6 +95,72 @@ char *SendHttpRequest(const char *s) {
   return p;
 }
 
+bool HasIpv6Loopback(void) {
+  int fd;
+  struct sockaddr_in6 addr = {AF_INET6};
+  addr.sin6_addr.s6_addr[15] = 1;
+  if ((fd = GoodSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP, false, 0)) == -1)
+    return false;
+  bool ok = bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0;
+  close(fd);
+  return ok;
+}
+
+char *SendHttpRequest6Scope(const char *s, const uint8_t ip[16],
+                            uint32_t scope) {
+  int fd;
+  char *p;
+  size_t n;
+  ssize_t rc;
+  struct sockaddr_in6 addr = {AF_INET6, htons(port)};
+  memcpy(addr.sin6_addr.s6_addr, ip, 16);
+  addr.sin6_scope_id = scope;
+  EXPECT_NE(-1,
+            (fd = GoodSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP, false, 0)));
+  EXPECT_NE(-1, connect(fd, (struct sockaddr *)&addr, sizeof(addr)));
+  n = strlen(s);
+  EXPECT_EQ(n, write(fd, s, n));
+  shutdown(fd, SHUT_WR);
+  for (p = 0, n = 0;; n += rc) {
+    p = xrealloc(p, n + 512);
+    EXPECT_NE(-1, (rc = read(fd, p + n, 512)));
+    if (rc <= 0)
+      break;
+  }
+  p = xrealloc(p, n + 1);
+  p[n] = 0;
+  close(fd);
+  return p;
+}
+
+char *SendHttpRequest6(const char *s) {
+  static const uint8_t loopback[16] = {[15] = 1};
+  return SendHttpRequest6Scope(s, loopback, 0);
+}
+
+bool FindLinkLocalIp6(char name[64], uint8_t ip[16], uint32_t *scope) {
+  struct ifaddrs *ifa, *ifp;
+  bool found = false;
+  if (getifaddrs(&ifp) == -1)
+    return false;
+  for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
+    if (ifa->ifa_name && ifa->ifa_addr &&
+        ifa->ifa_addr->sa_family == AF_INET6) {
+      struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ifa->ifa_addr;
+      if (sin6->sin6_scope_id && sin6->sin6_addr.s6_addr[0] == 0xfe &&
+          (sin6->sin6_addr.s6_addr[1] & 0xc0) == 0x80) {
+        snprintf(name, 64, "%s", ifa->ifa_name);
+        memcpy(ip, sin6->sin6_addr.s6_addr, 16);
+        *scope = sin6->sin6_scope_id;
+        found = true;
+        break;
+      }
+    }
+  }
+  freeifaddrs(ifp);
+  return found;
+}
+
 bool Matches(const char *regex, const char *str) {
   bool r;
   regex_t re;
@@ -142,6 +210,105 @@ TEST(redbean, testOptions) {
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
+}
+
+TEST(redbean, testIpv6) {
+  if (IsWindows())
+    return;
+  if (!HasIpv6Loopback())
+    return;
+  char portbuf[16];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  sigaddset(&chldmask, SIGCHLD);
+  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    setpgrp();
+    close(0);
+    open("/dev/null", O_RDWR);
+    close(1);
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", "-l::1",
+                          __strace > 0 ? "--strace" : 0, 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+  EXPECT_TRUE(Matches("HTTP/1\\.1 200 OK\r\n"
+                      "Accept: \\*/\\*\r\n"
+                      "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
+                      "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
+                      "Date: .*\r\n"
+                      "Server: redbean/.*\r\n"
+                      "Content-Length: 0\r\n"
+                      "\r\n",
+                      gc(SendHttpRequest6("OPTIONS * HTTP/1.1\n\n"))));
+  EXPECT_EQ(0, close(pipefds[0]));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
+}
+
+void TestLinkLocalListen(const char *ipstr, const uint8_t ip[16],
+                         uint32_t scope, const char *zone) {
+  char portbuf[16], listen[128];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  snprintf(listen, sizeof(listen), "-l%s%%%s", ipstr, zone);
+  sigaddset(&chldmask, SIGCHLD);
+  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    setpgrp();
+    close(0);
+    open("/dev/null", O_RDWR);
+    close(1);
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean-tester",
+          (char *const[]){"bin/redbean-tester", "-vvszXp0", listen,
+                          __strace > 0 ? "--strace" : 0, 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+  EXPECT_TRUE(Matches("HTTP/1\\.1 200 OK\r\n"
+                      "Accept: \\*/\\*\r\n"
+                      "Accept-Charset: utf-8,ISO-8859-1;q=0\\.7,\\*;q=0\\.5\r\n"
+                      "Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS\r\n"
+                      "Date: .*\r\n"
+                      "Server: redbean/.*\r\n"
+                      "Content-Length: 0\r\n"
+                      "\r\n",
+                      gc(SendHttpRequest6Scope("OPTIONS * HTTP/1.1\n\n", ip,
+                                               scope))));
+  EXPECT_EQ(0, close(pipefds[0]));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
+}
+
+TEST(redbean, testLinkLocal) {
+  char name[64], ipstr[46], zone[16];
+  uint8_t ip[16];
+  uint32_t scope;
+  if (IsWindows())
+    return;
+  if (!FindLinkLocalIp6(name, ip, &scope))
+    return;
+  inet_ntop(AF_INET6, ip, ipstr, sizeof(ipstr));
+  TestLinkLocalListen(ipstr, ip, scope, name);
+  snprintf(zone, sizeof(zone), "%u", scope);
+  TestLinkLocalListen(ipstr, ip, scope, zone);
 }
 
 TEST(redbean, testPipeline) {
