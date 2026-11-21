@@ -20,7 +20,7 @@
 ENTRY(ElfEntrypoint)
 
 PHDRS {
-  text PT_LOAD FLAGS(1) FILEHDR PHDRS; /* PF_X */
+  text PT_LOAD FLAGS(5) FILEHDR PHDRS; /* PF_R|PF_X */
   rodata PT_LOAD FLAGS(4); /* PF_R */
   stack PT_GNU_STACK FLAGS(6); /* PF_W|PF_R */
   note PT_NOTE FLAGS(4); /* PF_R */
