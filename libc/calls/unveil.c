@@ -66,11 +66,15 @@
 #define UNVEIL_WRITE \
   (LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_TRUNCATE)
 #define UNVEIL_EXEC (LANDLOCK_ACCESS_FS_EXECUTE)
+// "c" also allows the removal of a file and of a directory, as unveil()
+// of OpenBSD does. Without these rights in the ruleset, Landlock does not
+// control unlink() and rmdir().
 #define UNVEIL_CREATE                                             \
   (LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR |   \
    LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SOCK |   \
    LANDLOCK_ACCESS_FS_MAKE_FIFO | LANDLOCK_ACCESS_FS_MAKE_BLOCK | \
-   LANDLOCK_ACCESS_FS_MAKE_SYM)
+   LANDLOCK_ACCESS_FS_MAKE_SYM | LANDLOCK_ACCESS_FS_REMOVE_DIR |  \
+   LANDLOCK_ACCESS_FS_REMOVE_FILE)
 
 #define FILE_BITS                                                 \
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_WRITE_FILE | \
