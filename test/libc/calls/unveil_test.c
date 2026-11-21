@@ -169,6 +169,32 @@ TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
   EXITS(0);
 }
 
+TEST(unveil, rw_removeFileAndDirectory_raisesEacces) {
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("folder", 0755));
+  ASSERT_SYS(0, 0, mkdir("folder/empty", 0755));
+  ASSERT_SYS(0, 0, touch("folder/file", 0644));
+  ASSERT_SYS(0, 0, unveil("folder", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  // "c" controls the removal of a path, as on OpenBSD
+  ASSERT_SYS(EACCES, -1, unlink("folder/file"));
+  ASSERT_SYS(EACCES, -1, rmdir("folder/empty"));
+  ASSERT_SYS(0, 0, stat("folder/file", &st));
+  EXITS(0);
+}
+
+TEST(unveil, rwc_removeFileAndDirectory_isAllowed) {
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("folder", 0755));
+  ASSERT_SYS(0, 0, mkdir("folder/empty", 0755));
+  ASSERT_SYS(0, 0, touch("folder/file", 0644));
+  ASSERT_SYS(0, 0, unveil("folder", "rwc"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 0, unlink("folder/file"));
+  ASSERT_SYS(0, 0, rmdir("folder/empty"));
+  EXITS(0);
+}
+
 TEST(unveil, dirfdHacking_doesntWork) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
